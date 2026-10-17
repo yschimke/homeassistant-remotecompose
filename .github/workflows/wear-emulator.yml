@@ -1,0 +1,112 @@
+name: Wear emulator
+
+on:
+  # Slow (APK build plus a 15-minute cold-boot budget for the API 37 image) and not a required
+  # check: it runs only for changes to the Wear app's own code and this harness, never on pushes
+  # to main. Dispatch it by hand (or CI's wear-only input) to check anything else.
+  pull_request:
+    branches: [main]
+    paths:
+      - 'wear/src/main/**'
+      - 'wear/src/androidTest/**'
+      - 'wear/build.gradle.kts'
+      - 'wear-sync-proto/**'
+      - '.github/workflows/wear-emulator.yml'
+      - 'scripts/run-wear-connected-tests.sh'
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wear-emulator-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  wear-test:
+    name: Wear OS 7 instrumentation (API 37)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          sudo udevadm settle
+          ls -l /dev/kvm
+          test -r /dev/kvm && test -w /dev/kvm
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: 21.0.12+101.0.LTS
+      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: ./.github/actions/android-sdk
+      - name: Build Wear app and test APKs before booting
+        run: ./gradlew :wear:assembleDebug :wear:assembleDebugAndroidTest --stacktrace --max-workers=2
+      # The runner image's avdmanager writes target=android-0 into the AVD root ini for a
+      # minor-versioned package (android-37.0), so the emulator treats the AVD as API 3 and skips the
+      # Vulkan / GLDirectMem auto-enable the API 37 image's display stack needs (square/okhttp#9572).
+      # sdkmanager won't overwrite the preinstalled tools; it installs them as latest-2.
+      - name: Update SDK cmdline-tools
+        run: |
+          sdk="$ANDROID_HOME"
+          yes | "$sdk/cmdline-tools/latest/bin/sdkmanager" --install "cmdline-tools;latest" > /dev/null
+          if [ -d "$sdk/cmdline-tools/latest-2" ]; then
+            rm -rf "$sdk/cmdline-tools/latest"
+            mv "$sdk/cmdline-tools/latest-2" "$sdk/cmdline-tools/latest"
+          fi
+          "$sdk/cmdline-tools/latest/bin/sdkmanager" --version
+      - name: Run Wear connected tests
+        uses: reactivecircus/android-emulator-runner@v2.38.0
+        with:
+          api-level: '37.0'
+          target: android-wear-signed
+          arch: x86_64
+          # The stable emulator (37.2.12) boot-loops this image under every GPU mode (below); take the
+          # emulator, and the image, from the canary channel.
+          channel: canary
+          profile: wearos_small_round
+          ram-size: 4096M
+          disk-size: 2G
+          disable-linux-hw-accel: false
+          emulator-boot-timeout: 900
+          # With the old avdmanager's AVD (above) the image never finished booting under any GPU mode
+          # (swiftshader_indirect, swangle_indirect, guest): system_server's android.display thread
+          # crashed natively right after loading mapper/ranchu, zygote restarted every ~5 s and adb
+          # stayed "offline". API 37 takes OkHttp's settings: `-gpu auto` and 4 GB.
+          # `-show-kernel` puts the guest console in the job log, the only trace a boot loop leaves.
+          emulator-options: -no-window -gpu auto -no-snapshot -noaudio -no-boot-anim -camera-back none -memory 4096 -show-kernel -logcat-output /tmp/wear-guest-logcat.txt
+          # Wear OS 6+ images are only published signed (release-keys, ro.adb.secure=1), so adbd
+          # accepts only an authorized host key. The emulator passes ~/.android/adbkey.pub to the
+          # guest at boot only if it already exists, so create it before launch.
+          pre-emulator-launch-script: |
+            "$ANDROID_HOME/platform-tools/adb" start-server
+            test -s ~/.android/adbkey.pub
+            cat ~/.android/avd/test.ini
+          disable-animations: true
+          script: bash scripts/run-wear-connected-tests.sh
+      - name: Show the guest's crash log
+        if: failure()
+        run: |
+          f=/tmp/wear-guest-logcat.txt
+          test -s "$f" || { echo "no guest logcat at $f"; exit 0; }
+          wc -l "$f"
+          grep -nE ' F DEBUG|F libc|FATAL EXCEPTION|AndroidRuntime|Abort message|backtrace:|^.*#[0-9]{2} pc |signal [0-9]+ \(' "$f" | head -300 || true
+          mkdir -p build/wear-runtime && cp "$f" build/wear-runtime/guest-logcat.txt
+      - name: Show instrumented test failures
+        if: failure()
+        run: python3 scripts/summarize-android-test-failures.py
+      - name: Upload Wear runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: wear-api-37-runtime
+          path: |
+            wear/build/reports/androidTests/**
+            wear/build/outputs/androidTest-results/**
+            build/wear-runtime/**
+          if-no-files-found: warn

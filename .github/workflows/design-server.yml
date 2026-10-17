@@ -12,6 +12,9 @@ on:
       - card-designs/**
       - design-server/**
       - embed/**
+      - lovelace-catalog/**
+      - app-ui/**
+      - rc-player-ui/**
       - rc-converter/src/main/**
       - rc-components/src/main/**
       - ha-model/src/**
@@ -70,21 +73,35 @@ jobs:
           curl -sf localhost:8080/embed/v1/ha-card.js | grep -q "customElements.define('ha-card'"
       - name: Test cross-origin Card Studio handoffs in Chromium
         run: STUDIO_SMOKE_REQUIRED=1 STUDIO_SERVER_URL=http://localhost:8080 node --test design-server/test/*.test.mjs
-      - name: Build the container image
+      - name: Build the production WASM demo
+        # The public /demo is the shared WASM host, packaged alongside the design server.
+        # Keep this slower compilation in CI.
+        run: ./gradlew :app-ui:wasmJsBrowserDistribution --stacktrace
+      - name: Build the container with the demo
         run: docker build -f design-server/Dockerfile -t card-design-server .
       - name: Run the image with UI Builder and seed a design
         run: |
           docker run -d --name designs -p 8081:8080 -p 8724:8724 -e UI_BUILDER_TOKEN=ci-token card-design-server
           for i in $(seq 1 60); do curl -sf localhost:8081/healthz >/dev/null && break; sleep 2; done
           for i in $(seq 1 90); do curl -sf -o /dev/null "localhost:8724/ui-builder/remote-m3/?token=ci-token" && break; sleep 2; done
+          curl -sf localhost:8081/demo/ | grep -q 'id="app"'
+          curl -sf localhost:8081/demo/bootstrap.js | grep -q 'showLoadFailure'
           curl -sf -c cookies.txt -o /dev/null "localhost:8081/edit?token=ci-token"
-          location=$(curl -s -b cookies.txt -o /dev/null -w '%{redirect_url}' -X POST localhost:8081/ui-builder/designs \
-            --data-urlencode 'card={"type":"entities","title":"Living room","entities":["light.kitchen","sensor.temp"]}')
+          location=$(curl -sS --fail-with-body -b cookies.txt -o seed-response.txt -w '%{redirect_url}' -X POST localhost:8081/ui-builder/designs \
+            --data-urlencode 'card={"type":"entities","title":"Living room","entities":["light.kitchen","sensor.temp"]}') || { cat seed-response.txt; exit 1; }
           echo "editor: $location"
           id=$(echo "$location" | sed -E 's#.*/ui-builder/([^?]+)\?.*#\1#')
           test -n "$id"
           curl -sf -o seeded.png "localhost:8724/api/ui-builder/v1/designs/$id/export.png?token=ci-token"
           file seeded.png | grep -q PNG
+          # Resolve the actual published catalog, not just the static dashboard shell.
+          curl -fsS localhost:8081/api/studio/dashboard/catalog -o dashboard-catalog.json
+          python3 -c 'import json; c=json.load(open("dashboard-catalog.json")); assert c["statusSemantics"]["platform"] == "lovelace"'
+          # The dashboard host serves the packaged editor on its own origin even without Caddy.
+          curl -sf localhost:8081/studio/dashboard/editor.html | grep -q '/studio/dashboard/assets/uiBuilder.mjs'
+          curl -sf localhost:8081/studio/dashboard/assets/uiBuilder.mjs -o dashboard-editor.mjs
+          test -s dashboard-editor.mjs
+          curl -sfI localhost:8081/studio/dashboard/assets/uiBuilder.wasm | grep -qi 'application/wasm'
       - name: Open an app draft in the bundled editor in Chromium
         run: STUDIO_SMOKE_REQUIRED=1 STUDIO_SERVER_URL=http://localhost:8081 STUDIO_OPERATOR_TOKEN=ci-token node --test design-server/test/*.test.mjs
       - name: Publish the image to GHCR

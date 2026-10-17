@@ -1,0 +1,65 @@
+name: Home Assistant plugin
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - 'home-assistant/**'
+      - 'embed/**'
+      - 'app-ui/**'
+      - 'ha-client/**'
+      - 'scripts/package-home-assistant.py'
+      - '.github/workflows/home-assistant-plugin.yml'
+  pull_request:
+    paths: *paths
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ha-plugin-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  plugin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: ./.github/actions/setup
+        with:
+          cache-read-only: 'true'
+      - name: Build existing renderers and run shared checks
+        run: ./gradlew :app-ui:wasmJsBrowserDistribution :design-server:embedResources :ha-client:jvmTest :app-ui:jvmTest ktfmtCheck --stacktrace
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.14'
+      - name: Package locally served integration
+        run: |
+          python -m unittest discover -s home-assistant/test -p '*_test.py'
+          python scripts/package-home-assistant.py
+      - name: Install browser tools
+        run: |
+          npm install --no-save --prefix embed playwright@1.56.1
+          npx --prefix embed playwright install --with-deps chromium
+      - name: Test real TS-player card and panel session bridge
+        run: node --test home-assistant/test/frontend.test.mjs
+      - name: Run packaged plugin inside Home Assistant
+        run: |
+          mkdir -p build/ha-config
+          cp -R build/home-assistant/custom_components build/ha-config/
+          cp home-assistant/test/configuration.yaml build/ha-config/
+          cp home-assistant/test/ui-lovelace.yaml build/ha-config/
+          docker run -d --name ha-plugin -p 127.0.0.1:8123:8123 -v "$PWD/build/ha-config:/config" ghcr.io/home-assistant/home-assistant:stable
+          for i in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8123/api/onboarding >/dev/null; then break; fi
+            sleep 2
+          done
+          node --test home-assistant/test/installed.test.mjs
+      - name: Home Assistant diagnostics
+        if: always()
+        run: docker logs ha-plugin 2>&1 | tail -100
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: home-assistant-plugin
+          path: |
+            build/home-assistant/terrazzo-home-assistant.zip
+            build/ha-plugin-evidence/

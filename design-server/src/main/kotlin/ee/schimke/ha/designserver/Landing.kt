@@ -80,6 +80,7 @@ object Landing {
           "width=\"822\" height=\"1462\">"
       )
     }
+    append("<a class=\"button quiet\" href=\"/studio/dashboard\">Edit a dashboard</a>")
     append("</div></section>")
 
     append("<section class=\"features\">")

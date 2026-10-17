@@ -44,6 +44,9 @@ dependencies {
   // Render-harness seam for the `.rc` IR sidecar — see `RcDocumentCapture.kt`.
   // Only the preview module needs it; nothing shipped in the app depends on it.
   implementation(libs.composeai.data.render.core)
+  implementation(platform(libs.composeai.daemon.bom))
+  implementation(libs.composeai.preview.annotations)
+  implementation("ee.schimke.composeai:data-preview-overrides-runtime")
 
   // Coil + fake engine — previews that exercise `CoilBitmapLoader`
   // resolve named bitmaps through `FakeImageLoaderEngine` instead of

@@ -1,0 +1,13 @@
+title: Wall panel
+views:
+  - title: Home
+    cards:
+      - type: entities
+        entities:
+          - input_boolean.wall_light
+      - type: custom:remote-compose-card
+        card:
+          type: tile
+          entity: light.wall_light
+          tap_action:
+            action: toggle

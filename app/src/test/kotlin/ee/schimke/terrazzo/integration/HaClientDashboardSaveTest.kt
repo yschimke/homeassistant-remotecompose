@@ -93,6 +93,30 @@ class HaClientDashboardSaveTest {
     }
   }
 
+  @Test
+  fun conditionalSaveAndUndoRefuseExternalChanges() = runBlocking {
+    val client = client()
+    try {
+      client.connect()
+      val original = client.fetchDashboardConfig("garden")
+      configs["garden"] = config("External edit")
+      assertFailsWith<ee.schimke.ha.client.dashboard.DashboardConflictException> {
+        client.compareAndReplaceDashboardConfig(original, config("Draft"), "garden")
+      }
+      assertEquals(config("External edit"), client.fetchDashboardConfig("garden"))
+      configs["garden"] = original
+      client.compareAndReplaceDashboardConfig(original, config("Draft"), "garden")
+      assertEquals(config("Draft"), client.fetchDashboardConfig("garden"))
+      configs["garden"] = config("External after save")
+      assertFailsWith<ee.schimke.ha.client.dashboard.DashboardConflictException> {
+        client.compareAndReplaceDashboardConfig(config("Draft"), original, "garden")
+      }
+      assertEquals(config("External after save"), client.fetchDashboardConfig("garden"))
+    } finally {
+      client.close()
+    }
+  }
+
   private fun newServer(port: Int): EmbeddedServer<*, *> =
     embeddedServer(CIO, port = port, host = "127.0.0.1") {
         install(WebSockets)

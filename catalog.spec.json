@@ -118,6 +118,7 @@
         { "componentId": "Brand/AppIcon-Light", "preview": "AppIcon_Light", "caption": "Adaptive app icon (light)." },
         { "componentId": "Brand/AppIcon-Dark", "preview": "AppIcon_Dark", "caption": "Adaptive app icon (dark)." }
       ]
-    }
+    },
+    {"name":"Dashboard editor","components":[{"componentId":"Dashboard/CardEditor","preview":"LovelaceCardPreview","caption":"Host-supplied card config and live snapshot through the actual harc converters."}]}
   ]
 }

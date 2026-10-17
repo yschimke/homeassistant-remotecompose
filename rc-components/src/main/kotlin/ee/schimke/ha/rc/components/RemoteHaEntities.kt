@@ -182,6 +182,8 @@ private fun FittedEntityRow(
       largeText -> HaType.Body
       else -> HaType.Label
     }
+  // The whole row is the tap target; the switch drawn in it takes no tap of its own (it would be a
+  // 36 × 22dp target for the same action, under the 48dp minimum).
   RemoteRow(
     modifier = modifier.then(clickable),
     verticalAlignment = RemoteAlignment.CenterVertically,
@@ -229,7 +231,6 @@ private fun FittedEntityRow(
           progress = (if (data.accent.initiallyOn) 1f else 0f).rf,
           activeAccent = look.activeAccent,
           inactiveAccent = look.inactiveAccent,
-          clickable = clickable,
         )
       } else {
         stateText(RemoteModifier)
@@ -244,7 +245,6 @@ private fun FittedEntityRow(
             activeAccent = look.activeAccent,
             inactiveAccent = look.inactiveAccent,
             modifier = switchModifier,
-            tapAction = data.tapAction,
           )
         },
         state = stateText,

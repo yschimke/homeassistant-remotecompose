@@ -19,6 +19,7 @@ val embedPlayerArchive = embedPlayer.incoming.artifacts.resolvedArtifacts.map { 
 
 val embedResources by
   tasks.registering(Sync::class) {
+    from(rootProject.file("lovelace-catalog/templates.json")) { into("dashboard") }
     from(files(rootProject.file("embed/ha-card.js"), rootProject.file("embed/demo.html"))) {
       into("embed/v1")
     }
@@ -46,6 +47,9 @@ sourceSets.main {
 }
 
 tasks.test {
+  val catalogs = project.file("catalogs.json")
+  inputs.file(catalogs)
+  systemProperty("designServer.catalogs", catalogs.path)
   // Pins the embed's binding port to ha-model; see EmbedBindingsGoldenTest.
   val golden = rootProject.file("embed/test/bindings-golden.json")
   inputs.file(golden)

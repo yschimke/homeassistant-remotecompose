@@ -1,0 +1,30 @@
+default_config:
+terrazzo:
+  dashboard: wall-panel
+input_boolean:
+  wall_light:
+    name: Wall light
+lovelace:
+  mode: yaml
+  resources:
+    - url: /terrazzo-static/remote-compose-card.js
+      type: module
+  dashboards:
+    wall-panel:
+      mode: yaml
+      title: Wall panel
+      show_in_sidebar: true
+      filename: ui-lovelace.yaml
+template:
+  - light:
+      - name: Wall light
+        unique_id: wall_light
+        state: '{{ is_state("input_boolean.wall_light", "on") }}'
+        turn_on:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.wall_light
+        turn_off:
+          action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.wall_light

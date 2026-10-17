@@ -34,6 +34,9 @@ import kotlinx.serialization.json.putJsonArray
 class PictureGlanceCardConverter : CardConverter {
   override val cardType: String = CardTypes.PICTURE_GLANCE
 
+  /** A picture's height follows its width: it keeps a grid column's width. */
+  override fun gridKeepsColumnWidth(card: CardConfig, snapshot: HaSnapshot): Boolean = true
+
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 168
 
   override fun gridMinCellWidthDp(card: CardConfig, snapshot: HaSnapshot): Int =
