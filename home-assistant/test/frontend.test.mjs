@@ -125,12 +125,15 @@ test('panel passes only same-origin session capability, refreshes auth and clean
       const token = await panel.frame.terrazzoHost.getAccessToken();
       const path = panel.frame.src;
       const dashboard = panel.frame.terrazzoHost.getDashboard();
+      const height = panel.frame.getBoundingClientRect().height;
+      const viewportHeight = window.innerHeight;
       panel.remove();
       let denied = false;
       try { await panel.frame.terrazzoHost.getAccessToken(); } catch { denied = true; }
       document.body.append(panel);
-      return {fresh: token === 'fresh-fixture', path, dashboard, denied, reattached: panel.frame.src};
+      return {height, viewportHeight, fresh: token === 'fresh-fixture', path, dashboard, denied, reattached: panel.frame.src};
     });
+    assert.equal(result.height, result.viewportHeight, 'panel must fill HA height without a percentage-height ancestor');
     assert.equal(result.fresh, true);
     assert.equal(result.path, 'https://ha.test/terrazzo-static/wasm/index.html?ha-panel');
     assert.equal(result.dashboard, 'wall-panel');

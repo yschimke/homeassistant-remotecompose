@@ -28,6 +28,12 @@ class PackageTest(unittest.TestCase):
                              'frontend/remote-compose-card.js', 'frontend/terrazzo-panel.js']:
                     self.assertIn('custom_components/terrazzo/' + name, names)
                 self.assertFalse(any('__pycache__' in name for name in names))
+            stale = root / 'output/custom_components/terrazzo/frontend/wasm/removed.js'
+            stale.write_text('obsolete executable')
+            module.package(wasm, player, root / 'output')
+            self.assertFalse(stale.exists())
+            with zipfile.ZipFile(archive) as bundle:
+                self.assertFalse(any(name.endswith('/removed.js') for name in bundle.namelist()))
 
     def test_missing_build_fails(self):
         with tempfile.TemporaryDirectory() as directory:
