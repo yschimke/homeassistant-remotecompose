@@ -11,6 +11,7 @@ import aiohttp
 async def bootstrap():
     private = Path('/private')
     private.mkdir(mode=0o700, exist_ok=True)
+    private.chmod(0o700)  # Compose may have created the bind-mount directory as 0755.
     token_file = private / 'ha_token'
     if token_file.exists():
         print('Private token already exists; leaving instance unchanged.')
