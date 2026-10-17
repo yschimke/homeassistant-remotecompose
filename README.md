@@ -172,6 +172,8 @@ Local packaging: `./gradlew :app-ui:packageDistributionForCurrentOS`. Override t
 
 The production Wasm app is deployed by **Wasm website** to [GitHub Pages](https://yschimke.github.io/homeassistant-remotecompose/). Pull requests build the same production distribution and exercise browser flows before deployment. Existing documentation and Android authentication pages remain available alongside the app.
 
+The `/demo/` entry (or `?demo=1` on the root Wasm app) opens a generic fake-data dashboard with inline design controls and an offline fallback. The design-server image also packages this entry for `ha.coo.ee/demo`; its edge route must be deployed with the image. For a local Home Assistant `/terrazzo` panel and individual `custom:terrazzo-card` Remote Compose cards, see the [integration package and installation guide](home-assistant/README.md).
+
 Local build: `./gradlew :app-ui:wasmJsBrowserDistribution`. Serve `app-ui/build/dist/wasmJs/productionExecutable` over HTTP on localhost or over HTTPS; opening `index.html` directly from disk does not work.
 
 Use an HTTPS Home Assistant URL and a long-lived access token from your profile. The browser connects over WSS, authenticates, loads your dashboards, and subscribes to state changes. Tokens remain in memory for the current session. Browser access requires a reachable Home Assistant endpoint with a valid TLS certificate. Supported entity, entities, tile and markdown cards use shared Compose UI; specialized Android card converters are not yet available on Wasm.

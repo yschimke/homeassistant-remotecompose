@@ -500,8 +500,7 @@ internal fun NativeCard(
                 Switch(
                   checked = value?.state == "on",
                   onCheckedChange = { toggle(id) },
-                  enabled = !readOnly,
-                  enabled = value?.state in setOf("on", "off"),
+                  enabled = !readOnly && value?.state in setOf("on", "off"),
                 )
             },
           )

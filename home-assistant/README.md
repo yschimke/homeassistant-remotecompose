@@ -61,7 +61,10 @@ Values update whenever HA supplies a new `hass` object. Use templates covered by
 the [host-reproducible binding contract](../docs/architecture/live-card-updates.md),
 such as tile/entity/entities cards. Converter-only structures (history, forecast,
 dynamic lists) need a fresh conversion; published templates alone cannot keep
-those structures live. Unsupported dashboard cards use the shared host's built-in
+those structures live. Templates with declarations this host cannot populate are
+rejected, so a library example cannot masquerade as live data. Relative-time
+labels refresh every 20 seconds even when HA's entity state is unchanged.
+Unsupported dashboard cards use the shared host's built-in
 fallback, with an explicit design-unavailable message when appropriate.
 
 ## Build and verify

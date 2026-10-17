@@ -44,6 +44,7 @@ export class TerrazzoCard extends HTMLElement {
     surface.setAttribute('library', library.href);
     surface.setAttribute('theme', config.theme ?? 'auto');
     surface.setAttribute('read-only', '');
+    surface.setAttribute('require-host-bindings', '');
     if (config.height) surface.setAttribute('height', String(config.height));
     surface.setStates(this._hass?.states ?? {});
     this.status = document.createElement('p');

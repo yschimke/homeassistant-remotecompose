@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.js.ExperimentalWasmJsInterop::class)
+
 package ee.schimke.terrazzo.web
 
 import androidx.compose.material3.Text

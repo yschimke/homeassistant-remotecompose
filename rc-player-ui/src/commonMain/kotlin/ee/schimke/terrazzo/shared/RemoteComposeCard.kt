@@ -17,6 +17,21 @@ import ee.schimke.composeai.rcplayer.runtime.RcPlayerEvent
 /** External images need a host resolver; keep that capability check at the player boundary. */
 fun canPlayWithCmp(bytes: ByteArray): Boolean = decodePlayableDocument(bytes).isSuccess
 
+/** A values-free template is safe only when the host can populate every data declaration. */
+fun canBindWithCmp(bytes: ByteArray, bindings: Map<String, RcNamedValue>): Boolean =
+  decodePlayableDocument(bytes).getOrNull()?.operations?.filterIsInstance<RcNamedVariable>()?.all {
+    it.type == RcNamedVariable.COLOR_TYPE ||
+      acceptsBinding(it.type, bindings[it.name.removePrefix("USER:")])
+  } == true
+
+private fun acceptsBinding(type: Int?, value: RcNamedValue?): Boolean =
+  when (value) {
+    is RcNamedValue.Text -> type == RcNamedVariable.STRING_TYPE
+    is RcNamedValue.Integer -> type == RcNamedVariable.INT_TYPE
+    is RcNamedValue.FloatValue -> type == RcNamedVariable.FLOAT_TYPE
+    else -> false
+  }
+
 private fun decodePlayableDocument(bytes: ByteArray): Result<RcDocument> = runCatching {
   RcDocumentCodec.decode(bytes).also { document ->
     check(document.composeSupportReport().fullyRenderable) {
@@ -46,12 +61,7 @@ fun RemoteComposeCard(
   val values = rememberRcNamedValues()
   val accepted = bindings.filter { (name, value) ->
     val type = declared[name] ?: declared["USER:$name"]
-    when (value) {
-      is RcNamedValue.Text -> type == RcNamedVariable.STRING_TYPE
-      is RcNamedValue.Integer -> type == RcNamedVariable.INT_TYPE
-      is RcNamedValue.FloatValue -> type == RcNamedVariable.FLOAT_TYPE
-      else -> false
-    }
+    acceptsBinding(type, value)
   }
   SideEffect {
     values.keys.toList().filter { it !in accepted }.forEach(values::remove)

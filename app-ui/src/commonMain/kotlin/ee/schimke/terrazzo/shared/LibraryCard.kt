@@ -1,6 +1,6 @@
 package ee.schimke.terrazzo.shared
 
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -9,11 +9,13 @@ import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.isRelativeTimeState
 import io.ktor.client.HttpClient
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.*
 
 /** Values stay in the host. Resolution sends only card type and anonymous domain slots. */
@@ -27,15 +29,24 @@ internal fun LibraryCard(
 ) {
   var bytes by remember(card, style, dark) { mutableStateOf<ByteArray?>(null) }
   var failed by remember(card, style, dark) { mutableStateOf(false) }
+  val hasRelativeTime =
+    CardDesignSlots.slotEntries(card).orEmpty().any {
+      isRelativeTimeState(snapshot.states[it.entityId])
+    }
+  // Same 20-second contract as the mobile host. Only relative-time cards run this timer.
+  val tick by
+    produceState(0L, hasRelativeTime) {
+      if (hasRelativeTime)
+        while (true) {
+          delay(20_000)
+          value++
+        }
+    }
+  val values = remember(card, snapshot, tick) { templateBindings(card, snapshot) }
   LaunchedEffect(card, style, dark) {
     val http = HttpClient()
     try {
-      val slots = CardDesignSlots.slotMap(card).values.toList()
-      val anonymous = buildJsonObject {
-        put("type", card.type)
-        if (card.raw["entity"] != null && slots.isNotEmpty()) put("entity", slots.first())
-        else if (slots.isNotEmpty()) put("entities", JsonArray(slots.map(::JsonPrimitive)))
-      }
+      val anonymous = anonymousTemplateCard(card)
       val response =
         http.post("https://ha.coo.ee/api/cards/resolve") {
           contentType(ContentType.Text.Plain)
@@ -56,11 +67,12 @@ internal fun LibraryCard(
       check(blob.status.isSuccess())
       val loaded = blob.bodyAsBytes()
       check(Sha256.hex(loaded) == sha)
-      check(canPlayWithCmp(loaded))
+      check(canBindWithCmp(loaded, templateBindings(card, snapshot)))
       bytes = loaded
     } catch (e: CancellationException) {
       throw e
-    } catch (_: Exception) {
+    } catch (_: Throwable) {
+      // Browser fetch failures are JsException (a Throwable, not a Kotlin Exception).
       failed = true
     } finally {
       http.close()
@@ -68,17 +80,33 @@ internal fun LibraryCard(
   }
   val current = bytes
   if (current == null) {
-    fallback()
-    if (failed) Text("Design unavailable · showing built-in card")
+    Column {
+      key(tick) { fallback() }
+      if (failed) Text("Design unavailable · showing built-in card")
+    }
   } else {
-    val slots = CardDesignSlots.slotBindings(card, snapshot)
-    val values =
-      buildMap<String, RcNamedValue> {
-        slots.strings.forEach { (k, v) -> put(k, RcNamedValue.Text(v)) }
-        slots.booleans.forEach { (k, v) -> put(k, RcNamedValue.Integer(if (v) 1 else 0)) }
-        slots.ints.forEach { (k, v) -> put(k, RcNamedValue.Integer(v)) }
-        slots.floats.forEach { (k, v) -> put(k, RcNamedValue.FloatValue(v)) }
-      }
     RemoteComposeCard(current, Modifier.fillMaxWidth(), values)
+  }
+}
+
+internal fun anonymousTemplateCard(card: CardConfig): JsonObject {
+  val slots =
+    CardDesignSlots.slotEntries(card).orEmpty().mapIndexed { index, entry ->
+      CardDesignSlots.slotId(CardDesignSlots.domainOf(entry.entityId), index)
+    }
+  return buildJsonObject {
+    put("type", card.type)
+    if (card.raw["entity"] != null && slots.isNotEmpty()) put("entity", slots.first())
+    else if (slots.isNotEmpty()) put("entities", JsonArray(slots.map(::JsonPrimitive)))
+  }
+}
+
+internal fun templateBindings(card: CardConfig, snapshot: HaSnapshot): Map<String, RcNamedValue> {
+  val slots = CardDesignSlots.slotBindings(card, snapshot)
+  return buildMap {
+    slots.strings.forEach { (k, v) -> put(k, RcNamedValue.Text(v)) }
+    slots.booleans.forEach { (k, v) -> put(k, RcNamedValue.Integer(if (v) 1 else 0)) }
+    slots.ints.forEach { (k, v) -> put(k, RcNamedValue.Integer(v)) }
+    slots.floats.forEach { (k, v) -> put(k, RcNamedValue.FloatValue(v)) }
   }
 }

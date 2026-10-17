@@ -1355,6 +1355,22 @@ export class HaCardElement extends BaseElement {
     this.player = player;
     this.pushed.clear();
     patchStringOverrides(player.getRemoteContext());
+    if (this.hasAttribute('require-host-bindings')) {
+      const bindings = slotBindings(card, this.states);
+      for (const [name, variable] of player.getRemoteContext().namedVariables) {
+        const key = name.replace(/^USER:/, '');
+        const supported = variable.type === 2 ||
+          (variable.type === 0 && Object.hasOwn(bindings.strings, key)) ||
+          (variable.type === 1 && Object.hasOwn(bindings.floats, key)) ||
+          (variable.type === 4 && (Object.hasOwn(bindings.ints, key) || Object.hasOwn(bindings.booleans, key)));
+        if (!supported) {
+          player.destroy();
+          this.player = null;
+          this.canvas.style.visibility = 'hidden';
+          throw new Error('this template needs converter bindings unavailable in this host');
+        }
+      }
+    }
     doc.addActionCallback({
       onAction: (name, value) => {
         if (name === HA_ACTION_NAME) this.tap(resolveTap(card, value));
