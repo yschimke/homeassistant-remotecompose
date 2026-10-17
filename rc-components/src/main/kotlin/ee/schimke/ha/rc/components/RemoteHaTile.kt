@@ -40,14 +40,11 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
   val theme = haTheme()
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val isOnBinding =
-    if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
-  val accent: RemoteColor =
-    isOnBinding?.select(data.accent.themed().activeAccent, data.accent.themed().inactiveAccent)
-      ?: data.accent.themed().activeAccent
+  val look = entityLook(data.entityId, data.accent)
+  val accent: RemoteColor = look.accent
   // Toggleable entities always get the chip (color varies with isOn);
   // read-only entities (no isOn binding) render icon plain.
-  val renderChip = isOnBinding != null
+  val renderChip = look.isOn != null
 
   RemoteBox(
     modifier =
@@ -68,12 +65,8 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
         ) {
           HaStateIcon(
             icon = data.icon,
-            activeIcon = data.accent.activeIcon,
-            entityId = data.entityId,
-            activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
-            initiallyUnavailable = data.accent.initiallyUnavailable,
-            initiallyOn = data.accent.initiallyOn,
-            isOn = isOnBinding,
+            accent = data.accent,
+            look = look,
             tint = accent,
             contentDescription = entityName(data.entityId, data.name),
             modifier = RemoteModifier.size(20.rdp),
@@ -82,12 +75,8 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
       } else {
         HaStateIcon(
           icon = data.icon,
-          activeIcon = data.accent.activeIcon,
-          entityId = data.entityId,
-          activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
-          initiallyUnavailable = data.accent.initiallyUnavailable,
-          initiallyOn = data.accent.initiallyOn,
-          isOn = isOnBinding,
+          accent = data.accent,
+          look = look,
           tint = accent,
           contentDescription = entityName(data.entityId, data.name),
           modifier = RemoteModifier.size(24.rdp),
@@ -96,7 +85,7 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
       RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
         RemoteText(
           text = entityName(data.entityId, data.name),
-          color = theme.primaryText,
+          color = look.dim(theme.primaryText),
           fontSize = HaType.Body,
           fontWeight = FontWeight.Medium,
           style = haTextStyle(),
@@ -108,7 +97,7 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
         // lowest-contrast text on the card.)
         RemoteText(
           text = data.state,
-          color = theme.primaryText,
+          color = look.dim(theme.primaryText),
           fontSize = HaType.Body,
           style = haTextStyle(),
           maxLines = 1,
@@ -143,7 +132,7 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
  * * **Static accent, no live `isOn` `select`.** The full tier already registers `<entity>.is_on`;
  *   re-registering that named `RemoteBoolean` here collides and blanks the other branch (a
  *   duplicate named `RemoteString` like `state` is fine — a duplicate `RemoteBoolean` is not). The
- *   accent is resolved from the encode-time state instead.
+ *   accent, and the unavailable dimming, are resolved from the encode-time state instead.
  * * **No clipped circle backing.** A `.clip(RemoteCircleShape)` + `background` box in this branch
  *   likewise blanks the sibling full tier at playback. The tinted glyph alone carries the identity
  *   — the circle halo is the cosmetic part, and dropping it costs nothing semantically.
@@ -157,9 +146,8 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
   val theme = haTheme()
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val accent: RemoteColor =
-    if (data.accent.toggleable && !data.accent.initiallyOn) data.accent.themed().inactiveAccent
-    else data.accent.themed().activeAccent
+  val look = entityLook(data.entityId, data.accent, live = false)
+  val accent: RemoteColor = look.accent
 
   RemoteColumn(
     modifier = modifier.then(clickable).fillMaxSize().padding(4.rdp),
@@ -169,12 +157,8 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
     // Static like the accent: this tier registers no `is_on` binding.
     HaStateIcon(
       icon = data.icon,
-      activeIcon = data.accent.activeIcon,
-      entityId = data.entityId,
-      activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
-      initiallyUnavailable = data.accent.initiallyUnavailable,
-      initiallyOn = data.accent.initiallyOn,
-      isOn = null,
+      accent = data.accent,
+      look = look,
       tint = accent,
       contentDescription = entityName(data.entityId, data.name),
       modifier = RemoteModifier.size(32.rdp),
@@ -183,7 +167,7 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
       // The chip's only text, so it reads as the value: primary ink, a step above a caption.
       RemoteText(
         text = data.state,
-        color = theme.primaryText,
+        color = look.dim(theme.primaryText),
         fontSize = HaType.Label,
         style = haTextStyle(),
         maxLines = 1,

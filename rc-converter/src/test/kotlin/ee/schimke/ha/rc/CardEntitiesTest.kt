@@ -93,14 +93,18 @@ class CardEntitiesTest {
       bindings.strings,
     )
     assertEquals(
-      mapOf("light.kitchen.is_on" to true, "sensor.temp.is_on" to false),
+      mapOf(
+        "light.kitchen.is_on" to true,
+        "light.kitchen.is_available" to true,
+        "sensor.temp.is_on" to false,
+        "sensor.temp.is_available" to true,
+      ),
       bindings.booleans,
     )
     // Numeric states get a parsed float binding so gauges track the value;
     // non-numeric states (`on`) contribute none.
     assertEquals(mapOf("sensor.temp.numeric_state" to 21.4f), bindings.floats)
-    // Every entity carries its availability (`CardDesignSlots.statusOf`, 0 = available).
-    assertEquals(mapOf("light.kitchen.status" to 0, "sensor.temp.status" to 0), bindings.ints)
+    assertTrue(bindings.ints.isEmpty())
   }
 
   @Test
@@ -113,30 +117,7 @@ class CardEntitiesTest {
     val bindings = cardSnapshotBindings(setOf("alarm_control_panel.home"), snapshot)
     // Alarm panels carry a domain-keyed int so the armed/disarmed chrome
     // variant flips without a re-encode.
-    assertEquals(
-      setOf("alarm_control_panel.home.state_int", "alarm_control_panel.home.status"),
-      bindings.ints.keys,
-    )
-  }
-
-  @Test
-  fun snapshotBindingsCarryAvailability() {
-    val snapshot =
-      HaSnapshot(
-        states =
-          mapOf(
-            "light.a" to EntityState("light.a", "unavailable"),
-            "light.b" to EntityState("light.b", "unknown"),
-            "light.c" to EntityState("light.c", "off"),
-          )
-      )
-    val bindings = cardSnapshotBindings(setOf("light.a", "light.b", "light.c"), snapshot)
-    // `is_on` can't tell unavailable from off; `status` can (an on/off icon pair needs it).
-    assertEquals(false, bindings.booleans["light.a.is_on"])
-    assertEquals(
-      mapOf("light.a.status" to 1, "light.b.status" to 2, "light.c.status" to 0),
-      bindings.ints,
-    )
+    assertEquals(setOf("alarm_control_panel.home.state_int"), bindings.ints.keys)
   }
 
   @Test
@@ -157,7 +138,26 @@ class CardEntitiesTest {
     val snapshot = HaSnapshot(states = mapOf("light.kitchen" to EntityState("light.kitchen", "on")))
     val bindings = cardSnapshotBindings(setOf("light.kitchen", "sensor.missing"), snapshot)
     assertEquals(setOf("light.kitchen.state"), bindings.strings.keys)
-    assertEquals(setOf("light.kitchen.is_on"), bindings.booleans.keys)
+    assertEquals(setOf("light.kitchen.is_on", "light.kitchen.is_available"), bindings.booleans.keys)
+  }
+
+  @Test
+  fun snapshotBindingsCarryAvailability() {
+    // An entity going offline (or coming back) restyles through `is_available`, like `is_on`.
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "binary_sensor.driveway" to EntityState("binary_sensor.driveway", "unavailable"),
+            "light.hall" to EntityState("light.hall", "unknown"),
+            "binary_sensor.contact" to EntityState("binary_sensor.contact", "stale"),
+          )
+      )
+    val bindings = cardSnapshotBindings(snapshot.states.keys, snapshot)
+    assertEquals(false, bindings.booleans["binary_sensor.driveway.is_available"])
+    assertEquals(false, bindings.booleans["light.hall.is_available"])
+    assertEquals(true, bindings.booleans["binary_sensor.contact.is_available"])
+    assertEquals(false, bindings.booleans["binary_sensor.contact.is_on"])
   }
 
   @Test

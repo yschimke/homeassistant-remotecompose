@@ -172,11 +172,12 @@ private fun Cell(cell: HaPictureGlanceCell, theme: RemoteHaTheme) {
     HaStateIcon(
       icon = cell.icon,
       activeIcon = cell.activeIcon,
-      entityId = cell.entityId,
-      activeWhenUnavailable = cell.activeIconWhenUnavailable,
-      initiallyUnavailable = cell.initiallyUnavailable,
       initiallyOn = cell.initiallyActive,
       isOn = isActive,
+      activeWhenUnavailable = cell.activeIconWhenUnavailable,
+      initiallyAvailable = cell.initiallyAvailable,
+      isAvailable =
+        pairAvailability(cell.entityId, cell.activeIconWhenUnavailable, cell.initiallyAvailable),
       tint = tint,
       contentDescription = entityName(cell.entityId, cell.label),
       modifier = RemoteModifier.size(18.rdp),
@@ -284,11 +285,16 @@ private fun Element(
         HaStateIcon(
           icon = element.icon,
           activeIcon = element.activeIcon,
-          entityId = element.entityId,
-          activeWhenUnavailable = element.activeIconWhenUnavailable,
-          initiallyUnavailable = element.initiallyUnavailable,
           initiallyOn = element.initiallyActive,
           isOn = isActive,
+          activeWhenUnavailable = element.activeIconWhenUnavailable,
+          initiallyAvailable = element.initiallyAvailable,
+          isAvailable =
+            pairAvailability(
+              element.entityId,
+              element.activeIconWhenUnavailable,
+              element.initiallyAvailable,
+            ),
           tint = tint,
           contentDescription = "element".rs,
           modifier = RemoteModifier.size(16.rdp),

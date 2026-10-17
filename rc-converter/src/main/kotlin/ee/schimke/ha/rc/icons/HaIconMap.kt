@@ -2,6 +2,7 @@ package ee.schimke.ha.rc.icons
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.icons.mdi.MdiIcons
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
@@ -305,3 +306,10 @@ data class HaEntityIcons(
   /** The entity is unavailable or unknown now. */
   val unavailable: Boolean = false,
 )
+
+/**
+ * This accent with [icons]' on glyph ([HaToggleAccent.activeIcon]) and whether it is also the
+ * unavailable glyph, for a component that swaps the pair in-document.
+ */
+fun HaToggleAccent.withIcons(icons: HaEntityIcons): HaToggleAccent =
+  copy(activeIcon = icons.activeIcon, activeIconWhenUnavailable = icons.activeWhenUnavailable)

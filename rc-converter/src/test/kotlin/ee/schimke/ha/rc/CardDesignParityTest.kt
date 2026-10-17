@@ -220,7 +220,7 @@ class CardDesignParityTest {
 
   /**
    * `is_on` is false while unavailable, but HA draws a light's default `lightbulb` then, not
-   * `lightbulb-off`: the template, captured off, follows `<slot>.status` to the same glyph.
+   * `lightbulb-off`: the template, captured off, follows `<slot>.is_available` to the same glyph.
    */
   @Test
   fun lightUnavailable() =
@@ -363,6 +363,81 @@ class CardDesignParityTest {
       listStates,
       dark = false,
     )
+
+  // Availability: a template is captured available (placeholder `off`) and dims only once the
+  // pushed `<slot>.is_available` says otherwise, so these also prove the dimming follows the live
+  // binding rather than the capture.
+
+  private val unavailableStates =
+    listOf(
+      entity("light.kitchen", "unavailable", "friendly_name" to "Kitchen"),
+      entity(
+        "sensor.temp",
+        "unknown",
+        "device_class" to "temperature",
+        "unit_of_measurement" to "°C",
+      ),
+      entity("binary_sensor.front_door", "off", "device_class" to "door"),
+      entity("switch.fan", "on", "friendly_name" to "Fan"),
+    )
+
+  @Test
+  fun tileUnavailableMotion() =
+    assertParity(
+      "tile-unavailable-motion",
+      tile("binary_sensor.driveway", "Driveway"),
+      entity("binary_sensor.driveway", "unavailable", "device_class" to "motion"),
+      dark = false,
+    )
+
+  @Test
+  fun tileMotionOn() =
+    assertParity(
+      "tile-motion-on",
+      tile("binary_sensor.hall", "Hall"),
+      entity("binary_sensor.hall", "on", "device_class" to "motion"),
+      dark = false,
+    )
+
+  @Test
+  fun buttonUnavailable() =
+    assertParity(
+      "button-unavailable",
+      card("button") { put("entity", "switch.fan") },
+      entity("switch.fan", "unavailable", "friendly_name" to "Fan"),
+      dark = false,
+    )
+
+  @Test
+  fun tileProblemOnDark() =
+    assertParity(
+      "tile-problem-on",
+      tile("binary_sensor.hms", "HMS errors"),
+      entity("binary_sensor.hms", "on", "device_class" to "problem"),
+      dark = true,
+    )
+
+  @Test
+  fun tileConnectivityOff() =
+    assertParity(
+      "tile-connectivity-off",
+      tile("binary_sensor.broker", "MQTT broker"),
+      entity("binary_sensor.broker", "off", "device_class" to "connectivity"),
+      dark = false,
+    )
+
+  @Test
+  fun entitiesWithUnavailableRows() =
+    assertParity(
+      "entities-unavailable",
+      listCard("entities", "Downstairs"),
+      unavailableStates,
+      dark = false,
+    )
+
+  @Test
+  fun glanceWithUnavailableCellsDark() =
+    assertParity("glance-unavailable", listCard("glance", null), unavailableStates, dark = true)
 
   @Test
   fun alarmPanelArmedAway() =

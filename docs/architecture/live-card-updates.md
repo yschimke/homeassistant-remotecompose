@@ -26,9 +26,9 @@ derived by `HaLiveBindings` / `cardSnapshotBindings` (the host):
 | --- | --- | --- |
 | `<id>.state` | string | `formatState(entity)` — the **formatted** display string |
 | `<id>.is_on` | bool | `HaLiveBindings.isOn(id, state)`: the typed `HaEntity.isActive` (climate `heat`/`cool`/…, cover `open`/`opening`/`closing`, lock `locked`, media `playing`, …), else `state == "on"` or `"open"`. Converters seed `LiveValues.isOn` from the same function. |
+| `<id>.is_available` | bool | `HaLiveBindings.isAvailable(state)`: false for `unavailable` / `unknown`. Entity rows, tiles, glance cells and buttons read it to dim the entity and swap its accent for a neutral one, so an entity going offline or coming back restyles without a re-encode. Converters seed it through `HaStateColor.toggleAccentFor` (false too for a configured entity missing from the snapshot). |
 | `<id>.numeric_state` | float | parsed numeric state (gauges/arcs derive their sweep in-document) |
 | `<id>.state_int` | int | domain-keyed variant (alarm panel today) |
-| `<id>.status` | int | `CardDesignSlots.statusOf`: 0 available, 1 unavailable, 2 unknown (an on/off icon pair shows its on glyph while unavailable when HA's default is the on glyph) |
 | `<id>.current_temperature`, `<id>.target_temperature` | float | `HaLiveBindings.attributeFloats`: a climate entity's `current_temperature` and `temperature` attributes (its state is the mode, so it has no `numeric_state`). A missing attribute — a thermostat switched off has no set point — is pushed as `HaLiveBindings.ABSENT` (−9999, not NaN), so the document clears it instead of keeping a stale value. The `ha-cards/thermostat` builder dial computes its fractions and labels from them in-document |
 
 The golden rule: **a binding's value must be reproducible by the host
@@ -122,8 +122,8 @@ state-following glyph has its path:
   A component without an `is_on` binding draws `HaIconMap.resolve`, which for these entities is
   the pair's non-negated glyph whatever the state. `is_on` is false while the entity is
   unavailable or unknown too, where HA draws the rule's default — the on glyph for a light or a
-  fan — so those pairs also follow `<id>.status` (0 available, 1 unavailable, 2 unknown), which
-  both hosts push for every entity.
+  fan — so those pairs also show their on glyph while `<id>.is_available` is false. Widgets
+  (Fixed mode) carry no availability binding, so there the glyph is chosen at capture.
 - **Other state glyphs** (sun, alarm panel, weather, lock, cover, update, person, …): the
   converter bakes the current state's glyph and `cardIconSignature` changes with it. The app's
   dashboard folds that into the card's cache key, so the card re-encodes when the glyph changes

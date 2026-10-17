@@ -13,7 +13,6 @@ import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
@@ -49,8 +48,8 @@ fun RemoteHaButton(
   // Static accent: read-only buttons stay on the active accent; a
   // toggleable entity selects active/inactive off its live binding
   // with no crossfade (the animated variant is [RemoteHaToggleButton]).
-  val isOn = data.liveIsOn()
-  ButtonBody(data, data.staticAccent(isOn), isOn, modifier, compact)
+  val look = entityLook(data.entityId, data.accent)
+  ButtonBody(data, look.accent, look, modifier, compact)
 }
 
 /**
@@ -74,23 +73,30 @@ fun RemoteHaToggleButton(
 ) {
   // Live host binding for the entity's on/off state. Seeded from the
   // snapshot; the host pushes updates by name (`<entityId>.is_on`).
-  val isOnBinding =
-    if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
+  val look = entityLook(data.entityId, data.accent)
+  val isOnBinding = look.isOn
 
   // Tween the accent between inactive ↔ active so a host writeback
   // crossfades the icon halo and tint instead of snapping. Falls back
   // to the active accent unconditionally when there's no live binding
-  // (preview / non-toggleable / null entityId).
+  // (preview / non-toggleable / null entityId). An unavailable entity
+  // takes the look's neutral accent instead.
   val accent: RemoteColor =
     if (isOnBinding != null) {
       val accentProgress =
         animateRemoteFloat(isOnBinding.select(1f.rf, 0f.rf), durationSeconds = 0.20f)
-      tween(data.accent.themed().inactiveAccent, data.accent.themed().activeAccent, accentProgress)
+      look.available(
+        tween(
+          data.accent.themed().inactiveAccent,
+          data.accent.themed().activeAccent,
+          accentProgress,
+        )
+      )
     } else {
-      data.accent.themed().activeAccent
+      look.accent
     }
 
-  ButtonBody(data, accent, isOnBinding, modifier, compact)
+  ButtonBody(data, accent, look, modifier, compact)
 }
 
 /**
@@ -103,32 +109,17 @@ fun RemoteHaToggleButton(
 @RemoteComposable
 fun RemoteHaButtonIcon(data: HaButtonData, modifier: RemoteModifier = RemoteModifier) {
   val theme = haTheme()
-  val isOn = data.liveIsOn()
-  val accent = data.staticAccent(isOn)
+  val look = entityLook(data.entityId, data.accent)
+  val accent = look.accent
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   RemoteBox(
     modifier = modifier.then(clickable).then(cardChrome(theme.cardBackground, theme.divider)),
     contentAlignment = RemoteAlignment.Center,
   ) {
-    ButtonIconChip(data, isOn, accent, FullChipDp, FullIconDp)
+    ButtonIconChip(data, look, accent, FullChipDp, FullIconDp)
   }
 }
-
-/**
- * Read-only / un-animated accent: select active ↔ inactive off the live binding for a toggleable
- * entity, else the active accent. Shared by the plain full button and the icon-only tier.
- */
-@Composable
-private fun HaButtonData.staticAccent(isOnBinding: RemoteBoolean?): RemoteColor {
-  val themed = accent.themed()
-  return isOnBinding?.select(themed.activeAccent, themed.inactiveAccent) ?: themed.activeAccent
-}
-
-/** The entity's live `is_on` binding, for a toggleable entity. */
-@Composable
-private fun HaButtonData.liveIsOn(): RemoteBoolean? =
-  if (accent.toggleable) LiveValues.isOn(entityId, accent.initiallyOn) else null
 
 /**
  * Shared icon + name body. The outer box applies [modifier] and centres its content: pass
@@ -145,7 +136,7 @@ private fun HaButtonData.liveIsOn(): RemoteBoolean? =
 private fun ButtonBody(
   data: HaButtonData,
   accent: RemoteColor,
-  isOn: RemoteBoolean?,
+  look: HaEntityLook,
   modifier: RemoteModifier,
   compact: Boolean,
 ) {
@@ -176,12 +167,12 @@ private fun ButtonBody(
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteColumn(horizontalAlignment = RemoteAlignment.CenterHorizontally) {
-      ButtonIconChip(data, isOn, accent, chipDp, iconDp)
+      ButtonIconChip(data, look, accent, chipDp, iconDp)
       if (data.showName) {
         RemoteBox(modifier = RemoteModifier.padding(top = namePadDp.rdp)) {
           RemoteText(
             text = entityName(data.entityId, data.name),
-            color = theme.primaryText,
+            color = look.dim(theme.primaryText),
             fontSize = nameSize,
             fontWeight = FontWeight.Medium,
             style = haTextStyle(),
@@ -199,7 +190,7 @@ private fun ButtonBody(
 @RemoteComposable
 private fun ButtonIconChip(
   data: HaButtonData,
-  isOn: RemoteBoolean?,
+  look: HaEntityLook,
   accent: RemoteColor,
   chipDp: Int,
   iconDp: Int,
@@ -213,12 +204,8 @@ private fun ButtonIconChip(
   ) {
     HaStateIcon(
       icon = data.icon,
-      activeIcon = data.accent.activeIcon,
-      entityId = data.entityId,
-      activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
-      initiallyUnavailable = data.accent.initiallyUnavailable,
-      initiallyOn = data.accent.initiallyOn,
-      isOn = isOn,
+      accent = data.accent,
+      look = look,
       tint = accent,
       contentDescription = entityName(data.entityId, data.name),
       modifier = RemoteModifier.size(iconDp.rdp),

@@ -1,6 +1,5 @@
 package ee.schimke.ha.rc
 
-import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
@@ -67,6 +66,8 @@ private fun addEntityId(value: JsonPrimitive, out: MutableSet<String>) {
  *   converters bake), not the raw HA state. Pushing the raw state would replace e.g. `"21.5 °C"`
  *   with `"21.5"` on the first update.
  * - `<id>.is_on` (bool) — active flag.
+ * - `<id>.is_available` (bool) — false while the entity is `unavailable` / `unknown`
+ *   ([HaLiveBindings.isAvailable]); cards dim it.
  * - `<id>.state_int` (int) — domain-keyed state variant, where one exists
  *   ([HaLiveBindings.stateInt]); used by alarm-panel chrome.
  * - `<id>.numeric_state` (float) — parsed numeric state ([HaLiveBindings.numericState]); used by
@@ -111,7 +112,7 @@ fun cardSnapshotBindings(entityIds: Set<String>, snapshot: HaSnapshot): CardSnap
     val state = snapshot.states[id] ?: continue
     strings["$id.state"] = formatState(state)
     booleans["$id.is_on"] = HaLiveBindings.isOn(id, state.state)
-    ints["$id.status"] = CardDesignSlots.statusOf(state)
+    booleans["$id.is_available"] = HaLiveBindings.isAvailable(state.state)
     HaLiveBindings.stateInt(id, state.state)?.let { ints["$id.state_int"] = it }
     HaLiveBindings.numericState(state.state)?.let { floats["$id.numeric_state"] = it }
     HaLiveBindings.attributeFloats(id, state.attributes).forEach { (suffix, value) ->

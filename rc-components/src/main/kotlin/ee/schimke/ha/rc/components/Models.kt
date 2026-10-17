@@ -25,8 +25,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 /**
  * State-binding + colour pair for a toggleable entity. The component builds `<entityId>.is_on` and
  * uses `isOn.select(activeAccent, inactiveAccent)` so a live player can flip the accent without
- * re-encoding. For non-toggleable entities (sensors, etc.) leave the parent's `entityId` null and
- * the activeAccent is used unconditionally.
+ * re-encoding. Availability is a third, orthogonal state: `<entityId>.is_available` (seeded from
+ * [initiallyAvailable]) overrides either accent with a neutral one and dims the content. For
+ * non-toggleable entities (sensors, etc.) leave the parent's `entityId` null and the activeAccent
+ * is used unconditionally.
  *
  * [initiallyOn] is the boolean value at authoring time — named `RemoteBoolean`s don't carry a
  * `constantValueOrNull`, so the composable needs this separately to seed an in-document
@@ -42,6 +44,13 @@ data class HaToggleAccent(
    */
   val toggleable: Boolean = true,
   /**
+   * Whether the entity had a real state at authoring time — false when it was `unavailable`,
+   * `unknown` or missing from the snapshot. Seeds the live `<entityId>.is_available` binding the
+   * component reads to dim the whole row / tile and swap the accent for a neutral one (see
+   * [entityLook]); the host flips it at runtime the same way it flips `is_on`.
+   */
+  val initiallyAvailable: Boolean = true,
+  /**
    * The glyph drawn while the entity is on, when it differs from the data's `icon` (drawn while
    * off): a light's `lightbulb` over `lightbulb-off`, a door sensor's `door-open` over
    * `door-closed`. With the `is_on` binding the component bakes both and swaps them in-document, so
@@ -51,12 +60,10 @@ data class HaToggleAccent(
   val activeIcon: ImageVector? = null,
   /**
    * Whether [activeIcon] is also the glyph while the entity is unavailable or unknown (Home
-   * Assistant's default for the state is the on glyph, as for a light), which `is_on` alone can't
-   * tell from off: the component then also follows `<entityId>.status`.
+   * Assistant's default for those states is the on glyph, as for a light), which `is_on` alone
+   * can't tell from off: the component then also follows `<entityId>.is_available`.
    */
   val activeIconWhenUnavailable: Boolean = false,
-  /** The entity was unavailable or unknown at capture: seeds `<entityId>.status`. */
-  val initiallyUnavailable: Boolean = false,
 )
 
 /** HA tile card model. */
@@ -588,8 +595,8 @@ data class HaPictureGlanceCell(
   val activeIcon: ImageVector? = null,
   /** See [HaToggleAccent.activeIconWhenUnavailable]. */
   val activeIconWhenUnavailable: Boolean = false,
-  /** See [HaToggleAccent.initiallyUnavailable]. */
-  val initiallyUnavailable: Boolean = false,
+  /** See [HaToggleAccent.initiallyAvailable]. */
+  val initiallyAvailable: Boolean = true,
 )
 
 /**
@@ -624,8 +631,8 @@ sealed interface HaPictureElement {
     val activeIcon: ImageVector? = null,
     /** See [HaToggleAccent.activeIconWhenUnavailable]. */
     val activeIconWhenUnavailable: Boolean = false,
-    /** See [HaToggleAccent.initiallyUnavailable]. */
-    val initiallyUnavailable: Boolean = false,
+    /** See [HaToggleAccent.initiallyAvailable]. */
+    val initiallyAvailable: Boolean = true,
   ) : HaPictureElement
 
   data class StateLabel(

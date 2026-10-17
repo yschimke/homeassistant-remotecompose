@@ -204,7 +204,7 @@ private fun mapElement(obj: JsonObject, snapshot: HaSnapshot): HaPictureElement?
         icon = icons.icon,
         activeIcon = icons.activeIcon,
         activeIconWhenUnavailable = icons.activeWhenUnavailable,
-        initiallyUnavailable = icons.unavailable,
+        initiallyAvailable = !icons.unavailable,
         accent = HaStateColor.activeFor(entity),
         initiallyActive = entity != null && HaLiveBindings.isOn(entityId, entity.state),
         tapAction = parseTap(obj, entityId),

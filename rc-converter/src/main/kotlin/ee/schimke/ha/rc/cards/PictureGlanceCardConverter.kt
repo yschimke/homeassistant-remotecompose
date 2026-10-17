@@ -115,7 +115,7 @@ class PictureGlanceCardConverter : CardConverter {
         icon = icons.icon,
         activeIcon = icons.activeIcon,
         activeIconWhenUnavailable = icons.activeWhenUnavailable,
-        initiallyUnavailable = icons.unavailable,
+        initiallyAvailable = !icons.unavailable,
         accent = HaStateColor.activeFor(entity),
         initiallyActive = active,
         label = name,

@@ -59,6 +59,14 @@ fun RemoteHaPictureEntity(
   val theme = haTheme()
   val isOnBinding =
     if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
+  // Only for an on/off glyph pair that differs while unavailable: no other part of this card reads
+  // availability, and widgets (Fixed mode) carry no availability binding at all.
+  val isAvailable =
+    pairAvailability(
+      data.entityId,
+      data.accent.activeIconWhenUnavailable,
+      data.accent.initiallyAvailable,
+    )
   val accent =
     isOnBinding?.select(data.accent.themed().activeAccent, data.accent.themed().inactiveAccent)
       ?: data.accent.themed().activeAccent
@@ -128,11 +136,11 @@ fun RemoteHaPictureEntity(
             HaStateIcon(
               icon = data.icon,
               activeIcon = data.accent.activeIcon,
-              entityId = data.entityId,
-              activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
-              initiallyUnavailable = data.accent.initiallyUnavailable,
               initiallyOn = data.accent.initiallyOn,
               isOn = isOnBinding,
+              activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
+              initiallyAvailable = data.accent.initiallyAvailable,
+              isAvailable = isAvailable,
               tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
               contentDescription = entityName(data.entityId, data.name),
               modifier = RemoteModifier.size(40.rdp),
@@ -142,11 +150,11 @@ fun RemoteHaPictureEntity(
           HaStateIcon(
             icon = data.icon,
             activeIcon = data.accent.activeIcon,
-            entityId = data.entityId,
-            activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
-            initiallyUnavailable = data.accent.initiallyUnavailable,
             initiallyOn = data.accent.initiallyOn,
             isOn = isOnBinding,
+            activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
+            initiallyAvailable = data.accent.initiallyAvailable,
+            isAvailable = isAvailable,
             tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
             contentDescription = entityName(data.entityId, data.name),
             modifier = RemoteModifier.size(40.rdp),

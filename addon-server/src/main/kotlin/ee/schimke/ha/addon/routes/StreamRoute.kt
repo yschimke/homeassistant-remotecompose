@@ -2,7 +2,6 @@ package ee.schimke.ha.addon.routes
 
 import ee.schimke.ha.addon.bridge.HaEvent
 import ee.schimke.ha.addon.bridge.HaSupervisorBridge
-import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.rc.formatState
@@ -157,7 +156,7 @@ internal fun JsonObjectBuilder.putStateBindings(state: EntityState) {
   val entityId = state.entityId
   put("$entityId.state", JsonPrimitive(formatState(state)))
   put("$entityId.is_on", JsonPrimitive(HaLiveBindings.isOn(entityId, state.state)))
-  put("$entityId.status", JsonPrimitive(CardDesignSlots.statusOf(state)))
+  put("$entityId.is_available", JsonPrimitive(HaLiveBindings.isAvailable(state.state)))
   putStateInt(entityId, state.state)
   putNumericState(entityId, state.state)
   HaLiveBindings.attributeFloats(entityId, state.attributes).forEach { (suffix, value) ->
