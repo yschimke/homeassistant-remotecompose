@@ -37,6 +37,8 @@ jobs:
             | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+          sudo udevadm settle
+          ls -l /dev/kvm
           test -r /dev/kvm && test -w /dev/kvm
       - uses: actions/setup-java@v6.1.0
         with:
