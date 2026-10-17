@@ -120,7 +120,7 @@ class SectionsGridTest {
         sections = listOf(Section(columnSpan = 2), Section()),
         denseSectionPlacement = true,
       )
-    val layout = SectionsGrid.layout(view, 2000f, gap)
+    val layout = SectionsGrid.layout(view, 2000f)
     assertEquals(1, layout.columnCount)
     assertEquals(listOf(0, 1), layout.placements.map { it.row })
   }
@@ -134,7 +134,7 @@ class SectionsGridTest {
 
   @Test
   fun readableCap_appliesOnlyToSingleTrackLayouts() {
-    // F4: a landscape phone (Medium) with full-span sections reads as one capped column.
+    // A Medium window whose full-span sections read as one column takes the readable cap.
     val cap = SectionsGrid.readableMaxWidthDp(732f)
     assertEquals(SectionsGrid.MEDIUM_MAX_CONTENT_WIDTH_DP, cap)
     val landscape = SectionsGrid.layout(spans(4), 700f, gap, singleTrackMaxWidthDp = cap)
@@ -149,6 +149,52 @@ class SectionsGridTest {
     // The cap never widens HA's own single-column limit.
     val narrow = SectionsGrid.layout(spans(1), 700f, gap, singleTrackMaxWidthDp = 840f)
     assertEquals(500f, narrow.maxWidthDp)
+  }
+
+  @Test
+  fun columnGap_isHaResponsiveGap() {
+    // `@media (max-width: 600px)` switches to the narrow gap; the boundary is inclusive.
+    assertEquals(8f, SectionsGrid.columnGapDp(411f))
+    assertEquals(8f, SectionsGrid.columnGapDp(600f))
+    assertEquals(32f, SectionsGrid.columnGapDp(601f))
+    assertEquals(32f, SectionsGrid.columnGapDp(1280f))
+  }
+
+  @Test
+  fun layoutInView_takesHaPaddingAndGapsOffTheViewWidth() {
+    fun columns(viewWidth: Float) =
+      SectionsGrid.layoutInView(spans(1, 1, 1, 1), viewWidth).columnCount
+
+    // floor((w - 2·gap + gap) / (320 + gap))
+    assertEquals(1, columns(411f)) // phone portrait, 8 dp gap
+    assertEquals(1, columns(600f)) // (600 - 16 + 8) / 328 = 1.8
+    // Phone landscape (732 dp): (732 - 64 + 32) / 352 = 1.99, so one column, as in HA.
+    assertEquals(1, columns(732f))
+    assertEquals(1, columns(735f))
+    assertEquals(2, columns(736f))
+    assertEquals(2, columns(800f)) // tablet preview
+    assertEquals(3, columns(1280f))
+    assertEquals(4, columns(1440f))
+
+    val landscape = SectionsGrid.layoutInView(spans(4, 4), 732f)
+    assertEquals(32f, landscape.columnGapDp)
+    assertEquals(24f, landscape.rowGapDp)
+    assertEquals(32f, landscape.horizontalPaddingDp)
+    assertEquals(500f, landscape.maxWidthDp)
+    assertTrue(landscape.singleTrack)
+
+    val phone = SectionsGrid.layoutInView(spans(4), 411f)
+    assertEquals(8f, phone.columnGapDp)
+    assertEquals(8f, phone.horizontalPaddingDp)
+
+    // The gap follows the window, not the view: a narrow view in a wide window keeps 32 dp.
+    assertEquals(32f, SectionsGrid.layoutInView(spans(1), 500f, windowWidthDp = 900f).columnGapDp)
+  }
+
+  @Test
+  fun maxWidth_usesTheResponsiveGap() {
+    val wide = SectionsGrid.layoutInView(spans(1, 1, 1), 3000f)
+    assertEquals(3 * 500f + 2 * 32f, wide.maxWidthDp)
   }
 
   @Test

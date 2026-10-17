@@ -20,14 +20,16 @@ import ee.schimke.ha.model.SectionsGridLayout
  * grows the last of them only when it is taller than the rows it spans together.
  *
  * [content] must emit exactly one child per placement, in placement (authored) order. The grid
- * fills the incoming width; cap it with [SectionsGridLayout.maxWidthDp] in [modifier].
+ * fills the incoming width; pad it by [SectionsGridLayout.horizontalPaddingDp] and cap it with
+ * [SectionsGridLayout.maxWidthDp] in [modifier]. The gaps default to the layout's own (HA's
+ * responsive column gap and 24 dp row gap when laid out with [SectionsGrid.layoutInView]).
  */
 @Composable
 fun LovelaceSectionsGrid(
   grid: SectionsGridLayout,
   modifier: Modifier = Modifier,
-  columnGap: Dp = 16.dp,
-  rowGap: Dp = 16.dp,
+  columnGap: Dp = grid.columnGapDp.dp,
+  rowGap: Dp = grid.rowGapDp.dp,
   content: @Composable () -> Unit,
 ) {
   Layout(content = content, modifier = modifier) { measurables, constraints ->

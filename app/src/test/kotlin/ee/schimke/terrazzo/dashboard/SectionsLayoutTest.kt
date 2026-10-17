@@ -76,37 +76,50 @@ class SectionsLayoutTest {
   }
 
   @Test
-  fun phoneLandscape_fullSpanSectionsReadAsOneCappedColumn() {
-    // Screen_DashboardView_PhoneLandscapeMedium: 732 dp window, 16 dp gutters.
+  fun phoneLandscape_isOneHaColumn() {
+    // Screen_DashboardView_PhoneLandscapeMedium: a 732 dp window. HA pads the view by its 32 dp
+    // column gap either side, so (732 - 64 + 32) / (320 + 32) = 1.99 → one column, 500 dp wide.
     val security = buildDashboardLayout(DemoData.dashboard(null)).views.single()
-    val grid = security.sectionsGrid(700f, 16f, SectionsGrid.readableMaxWidthDp(732f))
-    assertEquals(2, grid.columnCount)
+    val grid = security.sectionsGrid(732f, 732f, SectionsGrid.readableMaxWidthDp(732f))
+    assertEquals(1, grid.columnCount)
     assertTrue(grid.singleTrack)
-    assertEquals(SectionsGrid.MEDIUM_MAX_CONTENT_WIDTH_DP, grid.maxWidthDp)
+    assertEquals(SectionsGrid.COLUMN_MAX_WIDTH_DP, grid.maxWidthDp)
+    assertEquals(32f, grid.horizontalPaddingDp)
+    assertEquals(32f, grid.columnGapDp)
+    assertEquals(24f, grid.rowGapDp)
+  }
+
+  @Test
+  fun phonePortrait_usesHaNarrowGap() {
+    val security = buildDashboardLayout(DemoData.dashboard(null)).views.single()
+    val grid = security.sectionsGrid(411f)
+    assertEquals(1, grid.columnCount)
+    assertEquals(8f, grid.columnGapDp)
+    assertEquals(8f, grid.horizontalPaddingDp)
   }
 
   @Test
   fun tablet_columnSpanIsHonoured() {
-    val tabletWidth = 1280f - 48f
+    val tabletWidth = 1280f
     val cap = SectionsGrid.readableMaxWidthDp(1280f)
 
     // Climate: two `column_span: 4` sections stack full width instead of two unequal columns.
     val climate = buildDashboardLayout(DemoData.dashboard("climate")).views.single()
-    val climateGrid = climate.sectionsGrid(tabletWidth, 16f, cap)
+    val climateGrid = climate.sectionsGrid(tabletWidth, tabletWidth, cap)
     assertEquals(3, climateGrid.columnCount)
     assertEquals(listOf(0, 1), climateGrid.placements.map { it.row })
     assertTrue(climateGrid.placements.all { it.columnSpan == 3 })
 
     // 3D printing overview: two span-2 sections can't share a 3-column row (HA's sparse flow).
     val printing = buildDashboardLayout(DemoData.dashboard("3d-printing")).views.first()
-    val printingGrid = printing.sectionsGrid(tabletWidth, 16f, cap)
+    val printingGrid = printing.sectionsGrid(tabletWidth, tabletWidth, cap)
     assertEquals(listOf(0, 1), printingGrid.placements.map { it.row })
     assertTrue(printingGrid.placements.all { it.columnSpan == 2 })
     assertFalse(printingGrid.singleTrack)
 
     // Without spans the same two sections sit side by side.
     val spanOne = printing.copy(sections = printing.sections.map { it.copy(columnSpan = null) })
-    val spanOneGrid = spanOne.sectionsGrid(tabletWidth, 16f, cap)
+    val spanOneGrid = spanOne.sectionsGrid(tabletWidth, tabletWidth, cap)
     assertEquals(2, spanOneGrid.columnCount)
     assertEquals(listOf(0 to 0, 0 to 1), spanOneGrid.placements.map { it.row to it.column })
   }

@@ -48,18 +48,20 @@ data class ViewLayout(
   val denseSectionPlacement: Boolean = false,
 ) {
   /**
-   * Place this view's sections for a host [availableWidthDp] wide, with HA's sections-grid rules
-   * ([SectionsGrid]). [singleTrackMaxWidthDp] caps a layout whose sections all span the full width.
+   * Place this view's sections in a view [viewWidthDp] wide inside a window [windowWidthDp] wide,
+   * with HA's sections-grid rules ([SectionsGrid.layoutInView]: responsive column gap, 24 dp row
+   * gap, one column gap of padding either side). [singleTrackMaxWidthDp] caps a layout whose
+   * sections all span the full width.
    */
   fun sectionsGrid(
-    availableWidthDp: Float,
-    columnGapDp: Float,
+    viewWidthDp: Float,
+    windowWidthDp: Float = viewWidthDp,
     singleTrackMaxWidthDp: Float? = null,
   ): SectionsGridLayout =
-    SectionsGrid.layout(
+    SectionsGrid.layoutInView(
       spans = sections.map { SectionSpan(it.columnSpan, it.rowSpan) },
-      availableWidthDp = availableWidthDp,
-      columnGapDp = columnGapDp,
+      viewWidthDp = viewWidthDp,
+      windowWidthDp = windowWidthDp,
       maxColumns = maxColumns,
       dense = denseSectionPlacement,
       singleTrackMaxWidthDp = singleTrackMaxWidthDp,

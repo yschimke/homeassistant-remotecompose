@@ -51,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
@@ -320,16 +321,15 @@ private fun DashboardList(
     else Modifier.fillMaxSize().background(haTheme.dashboardBackground)
   BoxWithConstraints(modifier = dashboardModifier, contentAlignment = Alignment.TopCenter) {
     // Each sections view is placed with HA's sections-grid rules (shared with the preview
-    // harness via [ViewLayout.sectionsGrid]): columns that fit at HA's 320 dp minimum, clamped to
-    // `max_columns` and to the sections' total `column_span`, each section spanning
+    // harness via [ViewLayout.sectionsGrid]): HA's responsive column gap (8 dp up to a 600 dp
+    // window, 32 dp above) as padding either side, columns that fit at HA's 320 dp minimum,
+    // clamped to `max_columns` and to the sections' total `column_span`, each section spanning
     // `min(column_span, columns)`. A view whose sections all span the full width reads as one
-    // column and takes the readable cap, so a landscape phone doesn't stretch every card.
-    val availableWidthDp = (maxWidth - cfg.horizontalGutter * 2).value.coerceAtLeast(0f)
+    // column and takes the readable cap, so a tablet doesn't stretch every card.
+    val viewWidthDp = maxWidth.value
     val sectionGrids =
-      remember(layout, availableWidthDp, readableCap) {
-        layout.views.map {
-          it.sectionsGrid(availableWidthDp, SECTION_GAP.value, readableCap?.value)
-        }
+      remember(layout, viewWidthDp, readableCap) {
+        layout.views.map { it.sectionsGrid(viewWidthDp, viewWidthDp, readableCap?.value) }
       }
     val singleTrackViews = sectionGrids.map { it.singleTrack }
 
@@ -436,9 +436,6 @@ private fun SectionGroupSurface(
   }
 }
 
-/** Gap between section columns and rows in the sections grid. */
-private val SECTION_GAP = 16.dp
-
 /**
  * Emit one view's blocks into the parent [LazyListScope]: the view header's card, then orphan cards
  * (legacy `view.cards`) as a single column, then the sections as [grid] placed them. A
@@ -467,7 +464,11 @@ private fun LazyListScope.renderView(
 ) {
   val viewKey = "v$viewIndex"
   val contentWidth = grid.maxWidthDp.dp
-  val contentModifier = Modifier.widthIn(max = contentWidth).fillMaxWidth()
+  // HA pads the sections wrapper by one column gap either side; the list already has the app's
+  // gutter, so add only what is missing.
+  val sectionsPadding = (grid.horizontalPaddingDp.dp - cfg.horizontalGutter).coerceAtLeast(0.dp)
+  val contentModifier =
+    Modifier.padding(horizontal = sectionsPadding).widthIn(max = contentWidth).fillMaxWidth()
 
   val header = view.header
   val headerCard = header?.card
@@ -516,7 +517,10 @@ private fun LazyListScope.renderView(
       val collapsible = collapsedMode
       val expanded = !collapsible || expandedSectionIndex == sectionIndex
       item(key = sectionKey) {
-        SectionGroupSurface(haTheme, modifier = Modifier.widthIn(max = contentWidth)) {
+        SectionGroupSurface(
+          haTheme,
+          modifier = Modifier.padding(horizontal = sectionsPadding).widthIn(max = contentWidth),
+        ) {
           val headingModel = resolveSectionHeading(section, sectionIndex)
           val headingTitle = headingModel.title
           val showHeading = collapsible || section.title != null
@@ -564,8 +568,6 @@ private fun LazyListScope.renderView(
       LovelaceSectionsGrid(
         grid = grid,
         modifier = contentModifier,
-        columnGap = SECTION_GAP,
-        rowGap = SECTION_GAP,
       ) {
         view.sections.forEachIndexed { sectionIndex, section ->
           SectionColumn(
@@ -812,7 +814,7 @@ private fun SectionGrid(
     modifier = modifier,
     config = {
       repeat(grid.columnCount) { column(1.fr) }
-      gap(row = SECTION_GAP, column = SECTION_GAP)
+      gap(row = grid.rowGapDp.dp, column = grid.columnGapDp.dp)
     },
   ) {
     sections.forEachIndexed { sectionIndex, section ->

@@ -9,8 +9,11 @@ import kotlin.math.min
  * sections with the same function and cannot drift.
  *
  * HA's rules, reproduced here:
- * - **Columns that fit.** `floor((width + gap) / (columnMinWidth + gap))`, at least 1, with a 320
- *   px minimum column width.
+ * - **Gaps and padding.** A 32 px column gap (8 px when the window is at most 600 px wide, HA's
+ *   `@media (max-width: 600px)` narrow gap), a 24 px row gap, and the wrapper padded by one column
+ *   gap either side (`.wrapper { padding: 0 var(--column-gap) }`).
+ * - **Columns that fit.** `floor((width - padding + gap) / (columnMinWidth + gap))`, at least 1,
+ *   with a 320 px minimum column width.
  * - **`max_columns`.** That count is clamped to the view's `max_columns` (default 4).
  * - **No more columns than content.** The grid never has more columns than the sum of the sections'
  *   `column_span`s, so one span-1 section is one column, not one column beside empty ones.
@@ -19,13 +22,14 @@ import kotlin.math.min
  * - **Placement.** CSS grid auto-placement in authored order: `grid-auto-flow: row`, or `row dense`
  *   when the view sets `dense_section_placement`. Rows size to their tallest section and sections
  *   align to the top of their row (`align-items: start`); there is no masonry.
- * - **Width cap.** The grid is at most `columns × 500 px` plus gaps wide, centred.
+ * - **Width cap.** The grid is at most `columns × 500 px` plus gaps wide (excluding the padding),
+ *   centred.
  *
  * One addition HA does not have: when every section ends up spanning the full width (a
  * [SectionsGridLayout.singleTrack] layout, which is what the common `column_span: 4` dashboards
- * produce on a phone or a small tablet), the caller may pass a readable cap ([readableMaxWidthDp]).
- * HA's cards fill such a row with their own 12-column grids; ours do not yet, so without a cap a
- * landscape phone stretches every tile across the screen.
+ * produce on a tablet), the caller may pass a readable cap ([readableMaxWidthDp]). HA's cards fill
+ * such a row with their own 12-column grids; ours do not yet, so without a cap a tablet stretches
+ * every tile across the screen.
  */
 object SectionsGrid {
   /** HA's `DEFAULT_MAX_COLUMNS`. */
@@ -36,6 +40,23 @@ object SectionsGrid {
 
   /** HA's `--ha-view-sections-column-max-width`. */
   const val COLUMN_MAX_WIDTH_DP: Float = 500f
+
+  /** HA's `--ha-view-sections-column-gap`. */
+  const val COLUMN_GAP_DP: Float = 32f
+
+  /**
+   * HA's `--ha-view-sections-narrow-column-gap`, used when the window is [NARROW_MAX_WIDTH_DP] or
+   * less.
+   */
+  const val NARROW_COLUMN_GAP_DP: Float = 8f
+
+  /** HA's `--ha-view-sections-row-gap`. */
+  const val ROW_GAP_DP: Float = 24f
+
+  /**
+   * The `@media (max-width: 600px)` breakpoint below which HA switches to the narrow column gap.
+   */
+  const val NARROW_MAX_WIDTH_DP: Float = 600f
 
   /** `hui-view-header`'s `.heading { max-width: 700px }`. */
   const val HEADER_MAX_WIDTH_DP: Float = 700f
@@ -59,6 +80,14 @@ object SectionsGrid {
     }
 
   /**
+   * HA's column gap for a window [windowWidthDp] wide: [NARROW_COLUMN_GAP_DP] up to and including
+   * [NARROW_MAX_WIDTH_DP], [COLUMN_GAP_DP] above. The view's wrapper is padded by the same amount
+   * on each side.
+   */
+  fun columnGapDp(windowWidthDp: Float): Float =
+    if (windowWidthDp <= NARROW_MAX_WIDTH_DP) NARROW_COLUMN_GAP_DP else COLUMN_GAP_DP
+
+  /**
    * How many [COLUMN_MIN_WIDTH_DP] columns separated by [columnGapDp] fit in [availableWidthDp].
    */
   fun fittingColumns(availableWidthDp: Float, columnGapDp: Float): Int {
@@ -66,24 +95,56 @@ object SectionsGrid {
     return fit.coerceAtLeast(1)
   }
 
-  /** Lay out [view]'s sections; see [layout]. */
+  /**
+   * Lay out [view]'s sections in a view [viewWidthDp] wide, in a window [windowWidthDp] wide; see
+   * [layoutInView].
+   */
   fun layout(
     view: View,
-    availableWidthDp: Float,
-    columnGapDp: Float,
+    viewWidthDp: Float,
+    windowWidthDp: Float = viewWidthDp,
     singleTrackMaxWidthDp: Float? = null,
   ): SectionsGridLayout =
-    layout(
+    layoutInView(
       spans = view.sections.map { SectionSpan(it.columnSpan, it.rowSpan) },
-      availableWidthDp = availableWidthDp,
-      columnGapDp = columnGapDp,
+      viewWidthDp = viewWidthDp,
+      windowWidthDp = windowWidthDp,
       maxColumns = view.maxColumns,
       dense = view.denseSectionPlacement == true,
       singleTrackMaxWidthDp = singleTrackMaxWidthDp,
     )
 
   /**
-   * Lay out sections with the given authored [spans] in a grid [availableWidthDp] wide.
+   * HA's whole sections view: [viewWidthDp] is the view's full width (HA's `contentRect.width`) and
+   * [windowWidthDp] the window's, which picks the column gap ([columnGapDp]). The wrapper padding
+   * (one column gap either side, [SectionsGridLayout.horizontalPaddingDp]) comes off the width
+   * before columns are counted; draw the grid inside that padding.
+   */
+  fun layoutInView(
+    spans: List<SectionSpan>,
+    viewWidthDp: Float,
+    windowWidthDp: Float = viewWidthDp,
+    maxColumns: Int? = null,
+    dense: Boolean = false,
+    singleTrackMaxWidthDp: Float? = null,
+  ): SectionsGridLayout {
+    val columnGap = columnGapDp(windowWidthDp)
+    return layout(
+        spans = spans,
+        availableWidthDp = (viewWidthDp - 2 * columnGap).coerceAtLeast(0f),
+        columnGapDp = columnGap,
+        rowGapDp = ROW_GAP_DP,
+        maxColumns = maxColumns,
+        dense = dense,
+        singleTrackMaxWidthDp = singleTrackMaxWidthDp,
+      )
+      .copy(horizontalPaddingDp = columnGap)
+  }
+
+  /**
+   * Lay out sections with the given authored [spans] in a grid [availableWidthDp] wide (padding
+   * already removed) with the given gaps. [layoutInView] derives those from the view and window
+   * widths the way HA does.
    *
    * @param singleTrackMaxWidthDp optional readable cap applied only when the result is
    *   [SectionsGridLayout.singleTrack]; see the class docs.
@@ -92,6 +153,7 @@ object SectionsGrid {
     spans: List<SectionSpan>,
     availableWidthDp: Float,
     columnGapDp: Float,
+    rowGapDp: Float = ROW_GAP_DP,
     maxColumns: Int? = null,
     dense: Boolean = false,
     singleTrackMaxWidthDp: Float? = null,
@@ -119,6 +181,8 @@ object SectionsGrid {
       placements = placements,
       maxWidthDp = maxWidth,
       singleTrack = singleTrack,
+      columnGapDp = columnGapDp,
+      rowGapDp = rowGapDp,
     )
   }
 
@@ -195,12 +259,19 @@ data class GridPlacement(
  * @property maxWidthDp the widest the grid should be drawn; centre it when the host is wider.
  * @property singleTrack every section spans the full width, so the view reads as one column (the
  *   phone layout, with sections stacked).
+ * @property columnGapDp gap between section columns.
+ * @property rowGapDp gap between section rows.
+ * @property horizontalPaddingDp padding either side of the grid (HA's wrapper padding); zero unless
+ *   laid out with [SectionsGrid.layoutInView]. [maxWidthDp] excludes it.
  */
 data class SectionsGridLayout(
   val columnCount: Int,
   val placements: List<GridPlacement>,
   val maxWidthDp: Float,
   val singleTrack: Boolean,
+  val columnGapDp: Float = SectionsGrid.COLUMN_GAP_DP,
+  val rowGapDp: Float = SectionsGrid.ROW_GAP_DP,
+  val horizontalPaddingDp: Float = 0f,
 ) {
   /** Rows the placements occupy. */
   val rowCount: Int

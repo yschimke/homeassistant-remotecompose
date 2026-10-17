@@ -160,12 +160,6 @@ private fun DashboardPreview(name: String, transformView: (View) -> View = { it 
   }
 }
 
-/** Gap between section columns and rows in the sections grid. */
-private val SECTION_GAP = 12.dp
-
-/** Horizontal padding either side of the sections grid. */
-private val SECTIONS_GUTTER = 8.dp
-
 @Composable
 private fun ViewBlock(view: View, snapshot: HaSnapshot, bitmapLoader: BitmapLoader) {
   if (view.title != null) {
@@ -189,8 +183,9 @@ private fun ViewBlock(view: View, snapshot: HaSnapshot, bitmapLoader: BitmapLoad
 
 /**
  * `type: sections` view layout, placed by [SectionsGrid] — the same function the app's
- * `DashboardViewScreen` uses, so the harness shows what the app does: HA's column count for the
- * canvas width (320 dp minimum columns, `max_columns`, never more columns than total
+ * `DashboardViewScreen` uses, so the harness shows what the app does: HA's responsive column gap (8
+ * dp up to a 600 dp canvas, 32 dp above) as padding either side and a 24 dp row gap, HA's column
+ * count for the canvas width (320 dp minimum columns, `max_columns`, never more columns than total
  * `column_span`), each section spanning `min(column_span, columns)` in sparse row flow, the grid
  * capped at HA's 500 dp per column and centred. A view whose sections all span the full width takes
  * the window-size readable cap ([SectionsGrid.readableMaxWidthDp]), as the app does.
@@ -201,20 +196,21 @@ private fun ViewBlock(view: View, snapshot: HaSnapshot, bitmapLoader: BitmapLoad
 @Composable
 private fun SectionsView(view: View, snapshot: HaSnapshot, bitmapLoader: BitmapLoader) {
   BoxWithConstraints(
-    modifier = Modifier.uiFillMaxWidth().padding(horizontal = SECTIONS_GUTTER),
+    modifier = Modifier.uiFillMaxWidth(),
     contentAlignment = Alignment.TopCenter,
   ) {
     val grid =
       SectionsGrid.layout(
         view = view,
-        availableWidthDp = maxWidth.value,
-        columnGapDp = SECTION_GAP.value,
-        singleTrackMaxWidthDp =
-          SectionsGrid.readableMaxWidthDp(maxWidth.value + 2 * SECTIONS_GUTTER.value),
+        viewWidthDp = maxWidth.value,
+        singleTrackMaxWidthDp = SectionsGrid.readableMaxWidthDp(maxWidth.value),
       )
     Column(
-      modifier = Modifier.widthIn(max = grid.maxWidthDp.dp).uiFillMaxWidth(),
-      verticalArrangement = Arrangement.spacedBy(SECTION_GAP),
+      modifier =
+        Modifier.padding(horizontal = grid.horizontalPaddingDp.dp)
+          .widthIn(max = grid.maxWidthDp.dp)
+          .uiFillMaxWidth(),
+      verticalArrangement = Arrangement.spacedBy(grid.rowGapDp.dp),
     ) {
       view.header?.card?.let { headerCard ->
         Box(
@@ -228,7 +224,7 @@ private fun SectionsView(view: View, snapshot: HaSnapshot, bitmapLoader: BitmapL
         }
       }
       if (view.sections.isNotEmpty()) {
-        LovelaceSectionsGrid(grid = grid, columnGap = SECTION_GAP, rowGap = SECTION_GAP) {
+        LovelaceSectionsGrid(grid = grid) {
           view.sections.forEach { section -> SectionBlock(section, snapshot, bitmapLoader) }
         }
       }
