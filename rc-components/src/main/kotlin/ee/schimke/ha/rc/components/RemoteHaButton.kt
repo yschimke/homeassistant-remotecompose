@@ -151,7 +151,9 @@ private fun ButtonBody(
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   val chipDp = if (compact) CompactChipDp else FullChipDp
   val iconDp = if (compact) CompactIconDp else FullIconDp
-  val verticalPadDp = if (compact) 6 else 12
+  // The dashboard tier keeps HA's 187×91 reference canvas: 8dp + the 48dp chip + 6dp gap + a
+  // Body (15sp, ~20dp) line + 8dp is ~90dp. HA web's 12dp padding fit its 13px name, not this one.
+  val verticalPadDp = if (compact) 6 else 8
   val namePadDp = if (compact) 4 else 6
   // Widget (compact) tier gives the name a touch more presence than
   // the dashboard's Body — a single button has no extra data to fill a
