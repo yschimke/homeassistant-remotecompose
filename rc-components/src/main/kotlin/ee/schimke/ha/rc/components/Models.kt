@@ -25,8 +25,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 /**
  * State-binding + colour pair for a toggleable entity. The component builds `<entityId>.is_on` and
  * uses `isOn.select(activeAccent, inactiveAccent)` so a live player can flip the accent without
- * re-encoding. For non-toggleable entities (sensors, etc.) leave the parent's `entityId` null and
- * the activeAccent is used unconditionally.
+ * re-encoding. Availability is a third, orthogonal state: `<entityId>.is_available` (seeded from
+ * [initiallyAvailable]) overrides either accent with a neutral one and dims the content. For
+ * non-toggleable entities (sensors, etc.) leave the parent's `entityId` null and the activeAccent
+ * is used unconditionally.
  *
  * [initiallyOn] is the boolean value at authoring time — named `RemoteBoolean`s don't carry a
  * `constantValueOrNull`, so the composable needs this separately to seed an in-document
@@ -41,6 +43,13 @@ data class HaToggleAccent(
    * toggle binding is informational.
    */
   val toggleable: Boolean = true,
+  /**
+   * Whether the entity had a real state at authoring time — false when it was `unavailable`,
+   * `unknown` or missing from the snapshot. Seeds the live `<entityId>.is_available` binding the
+   * component reads to dim the whole row / tile and swap the accent for a neutral one (see
+   * [entityLook]); the host flips it at runtime the same way it flips `is_on`.
+   */
+  val initiallyAvailable: Boolean = true,
 )
 
 /** HA tile card model. */
