@@ -59,10 +59,11 @@ jobs:
           disk-size: 2G
           disable-linux-hw-accel: false
           emulator-boot-timeout: 900
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
-          # Wear OS 6+ images are only published signed (release-keys, ro.adb.secure=1): adbd stays
-          # "offline" unless the host's key is authorized. The emulator authorizes
-          # ~/.android/adbkey.pub at boot only if it already exists, so create it before launch.
+          # -show-kernel: a boot that never brings adbd online otherwise logs nothing after "full startup".
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -show-kernel
+          # Wear OS 6+ images are only published signed (release-keys, ro.adb.secure=1), so adbd
+          # accepts only an authorized host key. The emulator passes ~/.android/adbkey.pub to the
+          # guest at boot only if it already exists, so create it before launch.
           pre-emulator-launch-script: |
             "$ANDROID_HOME/platform-tools/adb" start-server
             test -s ~/.android/adbkey.pub
