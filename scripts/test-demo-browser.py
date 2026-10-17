@@ -53,6 +53,8 @@ try:
             page.goto(f'http://127.0.0.1:{server.server_port}/demo/', wait_until='networkidle')
             expect(page.get_by_text('Example home · fake data · read only', exact=True)).to_be_visible(timeout=30000)
             expect(page.get_by_text('21.5 °C', exact=True)).to_be_visible()
+            # The built-in light fallback has switches; the real RC tile has its own content.
+            expect(page.get_by_role('switch')).to_have_count(0)
             expect(page.get_by_role('textbox', name='Long-lived access token')).to_have_count(0)
             page.screenshot(path=f'_wasm-test/demo-{name}-classic.png')
             page.get_by_text('Console', exact=True).click(force=True)
