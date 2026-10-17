@@ -14,6 +14,7 @@ import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.cards.resolveBambuDevices
 import ee.schimke.terrazzo.core.pin.MobilePinnedCard
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection
 import ee.schimke.terrazzo.core.pin.PinStore
@@ -125,6 +126,12 @@ class MobileWearSyncManager(
   /** The cards in assigned Wear widget slots: whose pictures the watch needs. */
   private val wearSlotCards: MutableStateFlow<List<CardConfig>> = MutableStateFlow(emptyList())
 
+  /**
+   * The session's latest snapshot, device registry included. The watch's values carry entity states
+   * only, so the cards sent to it are resolved against this first ([resolvedFor]).
+   */
+  private val registrySnapshot: MutableStateFlow<HaSnapshot> = MutableStateFlow(HaSnapshot())
+
   /** Per entity: the picture URL last pushed, its PNG's hash, and when. */
   private val pushedPictures = HashMap<String, PushedPicture>()
 
@@ -189,19 +196,21 @@ class MobileWearSyncManager(
     // WidgetStore (phone home-screen widgets) to the new PinStore so
     // the watch's top-level nav reflects the user's explicit Wear
     // pins, decoupled from the phone widget set.
+    // Each card resolved against the registry first: the watch has none to resolve a Bambu card's
+    // configured printer with.
     scope.launch {
-      pinStore.cards
-        .map { it.toProto() }
+      combine(pinStore.cards, registrySnapshot) { cards, snapshot -> cards.resolvedFor(snapshot) }
         .distinctUntilChanged()
-        .collect { writeDataItem(WearSyncPaths.PINNED, encodeProto(it)) }
+        .collect { writeDataItem(WearSyncPaths.PINNED, encodeProto(it.toProto())) }
     }
 
     // Pinned sections → /wear/sections.
     scope.launch {
-      pinStore.sections
-        .map { it.toProto() }
+      combine(pinStore.sections, registrySnapshot) { sections, snapshot ->
+          sections.resolvedFor(snapshot)
+        }
         .distinctUntilChanged()
-        .collect { writeDataItem(WearSyncPaths.SECTIONS, encodeProto(it)) }
+        .collect { writeDataItem(WearSyncPaths.SECTIONS, encodeProto(it.toProto())) }
     }
 
     // Wear-widget slots → /wear/slots. Empty assignments survive
@@ -276,7 +285,7 @@ class MobileWearSyncManager(
           DashboardData(
             urlPath = summary.urlPath ?: "",
             title = dashboard.title ?: summary.title,
-            cards = cards.map { it.toSummary(snapshot.states) },
+            cards = cards.map { resolveBambuDevices(it, snapshot).toSummary(snapshot.states) },
             updatedAtMs = System.currentTimeMillis(),
           )
         writeDataItem(WearSyncPaths.dashboardPath(summary.urlPath), encodeProto(data))
@@ -312,6 +321,7 @@ class MobileWearSyncManager(
         .onFailure { if (it is CancellationException) throw it }
         .getOrNull()
       if (snapshot != null) {
+        registrySnapshot.value = snapshot
         val current = snapshot.states.mapValues { (_, state) -> state.toEntityValue() }
         val delivery = valuesDelivery(hasPinned, watchAppOpen = isLeaseFresh(leaseState.value))
         if (delivery.stream) pushStream(current)
@@ -493,6 +503,36 @@ internal fun valuesDelivery(hasPinned: Boolean, watchAppOpen: Boolean): ValuesDe
   ValuesDelivery(stream = hasPinned || watchAppOpen, dataItem = !watchAppOpen)
 
 private class PushedPicture(val url: String, val pngHash: Int, val atMs: Long)
+
+/**
+ * This pinned card as the watch should get it: a Bambu Lab card's configured printer resolved
+ * through [snapshot]'s device registry ([resolveBambuDevices]), which the watch doesn't have.
+ * Anything else, or a snapshot without the registry, is unchanged.
+ */
+internal fun PinnedCardData.resolvedFor(snapshot: HaSnapshot): PinnedCardData {
+  // Cheap filter first: this runs for every pin on every snapshot tick.
+  if (snapshot.devices.isEmpty() || BAMBU_CARD_MARKER !in rawJson) return this
+  val card = rawJson.toCardConfigOrNull() ?: return this
+  val resolved = resolveBambuDevices(card, snapshot)
+  if (resolved == card) return this
+  return copy(rawJson = json.encodeToString(JsonObject.serializer(), resolved.raw))
+}
+
+@JvmName("pinnedCardsResolvedFor")
+internal fun List<MobilePinnedCard>.resolvedFor(snapshot: HaSnapshot): List<MobilePinnedCard> =
+  map {
+    it.copy(card = it.card.resolvedFor(snapshot))
+  }
+
+@JvmName("pinnedSectionsResolvedFor")
+internal fun List<MobilePinnedSection>.resolvedFor(
+  snapshot: HaSnapshot
+): List<MobilePinnedSection> = map { section ->
+  section.copy(cards = section.cards.map { it.resolvedFor(snapshot) })
+}
+
+/** In every Bambu Lab card type (`custom:ha-bambulab-…`), stacked or not. */
+private const val BAMBU_CARD_MARKER = "ha-bambulab"
 
 private fun String.toCardConfigOrNull(): CardConfig? = runCatching {
   val raw = json.parseToJsonElement(this) as JsonObject

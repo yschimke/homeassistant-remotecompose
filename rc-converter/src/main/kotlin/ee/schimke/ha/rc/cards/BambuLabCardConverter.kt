@@ -35,6 +35,7 @@ import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
+import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaBambuPrintPhase
 import ee.schimke.ha.rc.components.HaType
 import ee.schimke.ha.rc.components.LiveValues
@@ -42,6 +43,9 @@ import ee.schimke.ha.rc.components.cardChrome
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.formatValueWithUnit
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -59,24 +63,29 @@ import kotlinx.serialization.json.jsonPrimitive
  * Visual reference: card screenshots live on the integration's docs site
  * (`docs.page/greghesp/ha-bambulab`) — no inline assets in the cards repo.
  *
- * Today every variant renders the same chrome (variant label + the configured printer entity +
- * state). Override [Render] in a subclass once the per-variant visuals (AMS grid, progress ring,
- * control pad) are built.
+ * Every card finds its printer with [resolveBambuPrinter]: the configured device through the
+ * registry, else the only printer there is. With several printers and no way to tell which one a
+ * card means, a card says so ("Choose a printer") and never shows, or acts on, a guessed printer.
+ *
+ * The base [Render] is the chrome-only fallback: variant label, printer, state.
  */
 open class BambuLabCardConverter(
   final override val cardType: String,
   private val variantLabel: String,
 ) : CardConverter {
 
-  // Signature for the chrome-only fallback render (variant label + the configured
-  // printer entity + state) — baked, not bound (see CardConverter.dataSignature).
-  // The id lives under `printer:` or `entity:`, which cardEntityIds doesn't walk.
-  // Subclasses that discover sensors via resolvePrinterPrefix override this to base
-  // the signature on the entities they actually render.
+  // Signature for the chrome-only fallback render (variant label + printer + state) — baked, not
+  // bound (see CardConverter.dataSignature). Which printer was resolved is part of it, so a change
+  // of printer (the registry arriving, a second printer appearing) re-encodes.
   override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String {
-    val printer = card.raw["printer"]?.jsonPrimitive?.content
-    val id = printer ?: card.raw["entity"]?.jsonPrimitive?.content ?: return ""
-    return cardDataSignature(setOf(id), snapshot)
+    val printer = resolveBambuPrinter(card, snapshot)
+    val ids =
+      printer.prefix?.let(::printStatusEntityIds)
+        ?: setOfNotNull(card.raw["entity"]?.jsonPrimitive?.contentOrNull).takeUnless {
+          printer.ambiguous
+        }
+        ?: emptySet()
+    return "${printer.signature}|${cardDataSignature(ids, snapshot)}"
   }
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 96
@@ -84,14 +93,30 @@ open class BambuLabCardConverter(
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val theme = currentRemoteHaTheme()
-    val entityId =
-      card.raw["printer"]?.jsonPrimitive?.content ?: card.raw["entity"]?.jsonPrimitive?.content
-    val entity = entityId?.let { snapshot.states[it] }
+    val printer = resolveBambuPrinter(card, snapshot)
+    val prefix = printer.prefix
+    // A configured `entity:` (never `printer:`, which is a device id, not an entity).
+    val entity =
+      card.raw["entity"]
+        ?.jsonPrimitive
+        ?.contentOrNull
+        ?.let { snapshot.states[it] }
+        .takeIf { prefix == null && !printer.ambiguous }
     val name =
-      entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
-        ?: entityId
-        ?: "Bambu Lab printer"
-    val state = formatState(entity)
+      when {
+        printer.ambiguous -> "Choose a printer"
+        prefix != null -> bambuPrinterName(prefix, snapshot)
+        else ->
+          entity?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull
+            ?: entity?.entityId
+            ?: "Bambu Lab printer"
+      }
+    val state =
+      when {
+        printer.ambiguous -> ""
+        prefix != null -> buildPrintStatusData(prefix, snapshot).phase.label
+        else -> formatState(entity)
+      }
 
     RemoteBox(
       modifier =
@@ -140,15 +165,24 @@ open class BambuLabCardConverter(
             maxLines = 1,
           )
         }
+        if (printer.ambiguous) {
+          RemoteText(
+            text =
+              "${printer.candidates.size} printers here, and this card's printer isn't known".rs,
+            color = theme.secondaryText,
+            fontSize = HaType.Caption,
+            style = RemoteTextStyle.Default,
+          )
+        }
       }
     }
   }
 }
 
 /**
- * AMS spool grid. Discovers tray entities `sensor.<prefix>_ams_<n>_tray_<m>` where n defaults to 1;
- * the card config's `ams:` device id isn't resolvable without a registry channel, so we use the
- * first AMS that matches and rely on `entity_prefix:` for disambiguation.
+ * AMS spool grid: the tray entities `sensor.<prefix>_ams_<n>_tray_<m>`. The card config's `ams:`
+ * device id names the AMS through the registry, which gives both the printer and `n`; without it,
+ * the only printer's first AMS (see [resolveBambuPrinter]).
  */
 class BambuLabAmsCardConverter :
   BambuLabCardConverter(cardType = "custom:ha-bambulab-ams-card", variantLabel = "AMS") {
@@ -158,12 +192,13 @@ class BambuLabAmsCardConverter :
    * names its trays with [BambuDesign.PREFIX]; the client renames its printer's onto it.
    */
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
-    val prefix = resolvePrinterPrefix(card, snapshot) ?: return null
-    val slots = readSpoolSlots(prefix, snapshot, amsIndex = 1)
+    val printer = resolveBambuPrinter(card, snapshot)
+    val prefix = printer.prefix ?: return null
+    val slots = readSpoolSlots(prefix, snapshot, printer.amsIndex)
     if (slots.isEmpty()) return null
     return DesignProperties.build {
       slots.forEach { slot ->
-        val tray = slot.entityId!!.substringAfterLast('_')
+        val tray = trayNumber(slot)
         enum("t$tray", if (slot.active) 2 else 1)
         enum("t$tray.remain", if (slot.remainPercent != null) 1 else 0)
       }
@@ -174,26 +209,31 @@ class BambuLabAmsCardConverter :
     BambuDesign.amsTemplate(cardType, properties)
 
   override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings {
-    val prefix = resolvePrinterPrefix(card, snapshot) ?: return BambuDesign.NONE
-    val slots = readSpoolSlots(prefix, snapshot, amsIndex = 1)
-    return BambuDesign.slotBindings(slots.associateWith { it.entityId!!.renamePrefix(prefix) })
+    val printer = resolveBambuPrinter(card, snapshot)
+    val prefix = printer.prefix ?: return BambuDesign.NONE
+    val slots = readSpoolSlots(prefix, snapshot, printer.amsIndex)
+    // The template's trays are AMS 1's, whichever AMS this card shows.
+    return BambuDesign.slotBindings(slots.associateWith { BambuDesign.trayId(trayNumber(it)) })
   }
 
-  // Renders discovered `sensor.<prefix>_ams_1_tray_*`, not the configured printer
-  // entity — base over the discovered trays so live tray changes re-encode.
+  // Renders discovered `sensor.<prefix>_ams_<n>_tray_*`, not the configured device — base over the
+  // discovered trays (and which printer and AMS they are) so live tray changes re-encode.
   override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String {
-    val prefix = resolvePrinterPrefix(card, snapshot) ?: return super.dataSignature(card, snapshot)
-    return cardDataSignature(amsTrayEntityIds(prefix), snapshot)
+    val printer = resolveBambuPrinter(card, snapshot)
+    val prefix = printer.prefix ?: return super.dataSignature(card, snapshot)
+    return "${printer.signature}|" +
+      cardDataSignature(amsTrayEntityIds(prefix, printer.amsIndex), snapshot)
   }
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val prefix = resolvePrinterPrefix(card, snapshot)
+    val printer = resolveBambuPrinter(card, snapshot)
+    val prefix = printer.prefix
     if (prefix == null) {
       super.Render(card, snapshot, modifier)
       return
     }
-    val slots = readSpoolSlots(prefix, snapshot, amsIndex = 1)
+    val slots = readSpoolSlots(prefix, snapshot, printer.amsIndex)
     if (slots.isEmpty()) {
       super.Render(card, snapshot, modifier)
       return
@@ -206,9 +246,9 @@ class BambuLabAmsCardConverter :
 }
 
 /**
- * Single-spool detail. The card config has `spool:<id>`; we don't have a spool↔entity map, so we
- * surface the active tray (or tray 1 if none active). The fixture path is the most reliable; live
- * HA users can override with `entity_prefix:` + `slot:` to pin a specific tray.
+ * Single-spool detail. The card config's `spool:` names the spool: its entity (a tray, or the
+ * external spool) directly, or its device through the registry. Without either we surface the
+ * printer's active tray (or tray 1 if none is active); `slot:` pins a tray.
  */
 class BambuLabSpoolCardConverter :
   BambuLabCardConverter(cardType = "custom:ha-bambulab-spool-card", variantLabel = "Spool") {
@@ -237,38 +277,34 @@ class BambuLabSpoolCardConverter :
       )
   }
 
-  private fun chosenSlot(
+  internal fun chosenSlot(
     card: CardConfig,
     snapshot: HaSnapshot,
   ): ee.schimke.ha.rc.components.HaBambuSpoolSlot? {
-    val prefix = resolvePrinterPrefix(card, snapshot) ?: return null
-    val slots = readSpoolSlots(prefix, snapshot, amsIndex = 1)
+    val printer = resolveBambuPrinter(card, snapshot)
+    val prefix = printer.prefix ?: return null
+    // The spool the config names (its entity, or its device's spool entities).
+    val named = printer.deviceEntities.sorted().mapNotNull { spoolSlot(it, snapshot) }
+    if (named.isNotEmpty()) return named.firstOrNull { it.active } ?: named.first()
+    val slots = readSpoolSlots(prefix, snapshot, printer.amsIndex)
     val pinnedSlot = card.raw["slot"]?.jsonPrimitive?.content?.toIntOrNull()
     return pinnedSlot?.let { idx -> slots.getOrNull(idx - 1) }
       ?: slots.firstOrNull { it.active }
       ?: slots.firstOrNull()
   }
 
-  // Renders one of the discovered `sensor.<prefix>_ams_1_tray_*` slots — base over
-  // the whole tray set so a change to any (or to which is active) re-encodes.
+  // Renders one of the discovered spool slots — base over the whole tray set and the named spool so
+  // a change to any (or to which is active) re-encodes, and over which printer it is.
   override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String {
-    val prefix = resolvePrinterPrefix(card, snapshot) ?: return super.dataSignature(card, snapshot)
-    return cardDataSignature(amsTrayEntityIds(prefix), snapshot)
+    val printer = resolveBambuPrinter(card, snapshot)
+    val prefix = printer.prefix ?: return super.dataSignature(card, snapshot)
+    val ids = amsTrayEntityIds(prefix, printer.amsIndex) + printer.deviceEntities
+    return "${printer.signature}|${cardDataSignature(ids, snapshot)}"
   }
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val prefix = resolvePrinterPrefix(card, snapshot)
-    if (prefix == null) {
-      super.Render(card, snapshot, modifier)
-      return
-    }
-    val slots = readSpoolSlots(prefix, snapshot, amsIndex = 1)
-    val pinnedSlot = card.raw["slot"]?.jsonPrimitive?.content?.toIntOrNull()
-    val slot =
-      pinnedSlot?.let { idx -> slots.getOrNull(idx - 1) }
-        ?: slots.firstOrNull { it.active }
-        ?: slots.firstOrNull()
+    val slot = chosenSlot(card, snapshot)
     if (slot == null) {
       super.Render(card, snapshot, modifier)
       return
@@ -285,29 +321,52 @@ private fun readSpoolSlots(
   snapshot: HaSnapshot,
   amsIndex: Int,
 ): List<ee.schimke.ha.rc.components.HaBambuSpoolSlot> {
-  val s = snapshot.states
   return (1..4).mapNotNull { trayIdx ->
-    val key = "sensor.${prefix}_ams_${amsIndex}_tray_$trayIdx"
-    val entity = s[key] ?: return@mapNotNull null
-    val attrs = entity.attributes
-    val material = entity.state.takeUnless { it == "unknown" || it == "unavailable" } ?: "Empty"
-    val color = parseHexArgb(attrs["color"]?.jsonPrimitive?.content)
-    val remain =
-      (attrs["remain"]?.jsonPrimitive?.content?.toIntOrNull())?.takeIf {
-        attrs["remain_enabled"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() != false
-      }
-    val active = attrs["active"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() == true
-    ee.schimke.ha.rc.components.HaBambuSpoolSlot(
-      entityId = entity.entityId,
-      slotLabel = "Slot $trayIdx",
-      material = LiveValues.state(entity.entityId, material),
-      color = color,
-      remainPercent = remain,
-      active = active,
-      materialText = material,
-    )
+    spoolSlot("sensor.${prefix}_ams_${amsIndex}_tray_$trayIdx", snapshot)
   }
 }
+
+/** The tray's number within its AMS (`…_tray_3` → 3). */
+private fun trayNumber(slot: ee.schimke.ha.rc.components.HaBambuSpoolSlot): Int =
+  slot.entityId!!.substringAfterLast('_').toInt()
+
+/**
+ * The spool [entityId] holds — an AMS tray (`sensor.<prefix>_ams_<n>_tray_<m>`, "Slot m") or the
+ * external spool (`sensor.<prefix>_externalspool_external_spool`) — or null for any other entity.
+ */
+private fun spoolSlot(
+  entityId: String,
+  snapshot: HaSnapshot,
+): ee.schimke.ha.rc.components.HaBambuSpoolSlot? {
+  val label =
+    TrayEntity.matchEntire(entityId)?.let { "Slot ${it.groupValues[3]}" }
+      ?: "External spool".takeIf { entityId.startsWith("sensor.") && entityId.endsWith(EXTERNAL) }
+      ?: return null
+  val entity = snapshot.states[entityId] ?: return null
+  val attrs = entity.attributes
+  val material = entity.state.takeUnless { it == "unknown" || it == "unavailable" } ?: "Empty"
+  val color = parseHexArgb(attrs["color"]?.jsonPrimitive?.content)
+  val remain =
+    (attrs["remain"]?.jsonPrimitive?.content?.toIntOrNull())?.takeIf {
+      attrs["remain_enabled"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() != false
+    }
+  val active = attrs["active"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() == true
+  return ee.schimke.ha.rc.components.HaBambuSpoolSlot(
+    entityId = entity.entityId,
+    slotLabel = label,
+    material = LiveValues.state(entity.entityId, material),
+    color = color,
+    remainPercent = remain,
+    active = active,
+    materialText = material,
+  )
+}
+
+/** `sensor.<prefix>_ams_<n>_tray_<m>`. */
+private val TrayEntity = Regex("""sensor\.(.+)_ams_(\d+)_tray_(\d+)""")
+
+/** The external spool sensor's suffix. */
+private const val EXTERNAL = "_externalspool_external_spool"
 
 /**
  * Parse `#RRGGBB` / `#RRGGBBAA` into a Compose [androidx.compose.ui.graphics.Color]. Returns
@@ -339,10 +398,8 @@ private fun parseHexArgb(hex: String?): androidx.compose.ui.graphics.Color {
  * Current print job + progress.
  *
  * HA's bambulab integration exposes a flock of `sensor.<prefix>_*` entities per printer; the card
- * config references a device id that we can't resolve without a device-registry channel. We
- * discover the prefix by scanning the snapshot for the first `sensor.*_print_progress` and pull
- * related sensors by suffix. Configurations with multiple printers can override via an
- * `entity_prefix:` config field.
+ * config's `printer:` device id finds the prefix through the registry ([resolveBambuPrinter]), and
+ * related sensors are read by suffix.
  */
 class BambuLabPrintStatusCardConverter :
   BambuLabCardConverter(
@@ -356,7 +413,7 @@ class BambuLabPrintStatusCardConverter :
    * progress, the state and the printer's name are bindings, under [BambuDesign.PREFIX].
    */
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
-    val prefix = resolvePrinterPrefix(card, snapshot) ?: return null
+    val prefix = resolveBambuPrinter(card, snapshot).prefix ?: return null
     val data = buildPrintStatusData(prefix, snapshot)
     return DesignProperties.build {
       enum("phase", data.phase.ordinal)
@@ -393,7 +450,7 @@ class BambuLabPrintStatusCardConverter :
   }
 
   override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings {
-    val prefix = resolvePrinterPrefix(card, snapshot) ?: return BambuDesign.NONE
+    val prefix = resolveBambuPrinter(card, snapshot).prefix ?: return BambuDesign.NONE
     val data = buildPrintStatusData(prefix, snapshot)
     // The template's entities are fixed: progress (else status), stage, current layer, ….
     val strings = buildMap {
@@ -427,15 +484,16 @@ class BambuLabPrintStatusCardConverter :
   }
 
   // Renders discovered `sensor.<prefix>_*` (progress, stage, layers, temps), not the
-  // configured printer entity — base over those so live print data re-encodes.
+  // configured printer device — base over those (and which printer) so live print data re-encodes.
   override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String {
-    val prefix = resolvePrinterPrefix(card, snapshot) ?: return super.dataSignature(card, snapshot)
-    return cardDataSignature(printStatusEntityIds(prefix), snapshot)
+    val printer = resolveBambuPrinter(card, snapshot)
+    val prefix = printer.prefix ?: return super.dataSignature(card, snapshot)
+    return "${printer.signature}|${cardDataSignature(printStatusEntityIds(prefix), snapshot)}"
   }
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val prefix = resolvePrinterPrefix(card, snapshot)
+    val prefix = resolveBambuPrinter(card, snapshot).prefix
     if (prefix == null) {
       super.Render(card, snapshot, modifier)
       return
@@ -466,38 +524,210 @@ class BambuLabPrintStatusCardConverter :
 private const val PRINT_STATUS_WIDE_MIN_DP = 260
 
 /**
- * Best-effort discovery: explicit `entity_prefix` wins; otherwise the first
- * `sensor.*_print_progress` entity's prefix. Returns null when the snapshot has no Bambu-shaped
- * entities, in which case the caller falls back to the chrome-only renderer.
+ * Which printer a Bambu Lab card shows. [prefix] is its entity prefix (`p2s_sn2` for
+ * `sensor.p2s_sn2_print_progress`), null when it can't be told; [candidates] every printer the
+ * snapshot has; [deviceEntities] the entities of the device the config names, when the registry (or
+ * the config itself) named them: an AMS's trays, a spool.
  */
-internal fun resolvePrinterPrefix(card: CardConfig, snapshot: HaSnapshot): String? {
-  val explicit = card.raw["entity_prefix"]?.jsonPrimitive?.content
-  if (!explicit.isNullOrEmpty()) return explicit
-  // Try the most discriminating sensors first; fall through so an
-  // AMS- or controls-only snapshot still resolves.
-  val sensorSuffixes = listOf("_print_progress", "_print_status", "_current_stage")
-  for (suffix in sensorSuffixes) {
-    val hit = snapshot.states.keys.firstOrNull { it.startsWith("sensor.") && it.endsWith(suffix) }
-    if (hit != null) return hit.removePrefix("sensor.").removeSuffix(suffix)
-  }
-  // AMS tray sensors look like sensor.<prefix>_ams_<n>_tray_<m>.
-  val tray =
-    snapshot.states.keys.firstOrNull {
-      it.startsWith("sensor.") && Regex(".*_ams_\\d+_tray_\\d+$").matches(it)
-    }
-  if (tray != null) {
-    return tray.removePrefix("sensor.").substringBeforeLast("_ams_")
-  }
-  // Print-control buttons.
-  val btn =
-    snapshot.states.keys.firstOrNull { it.startsWith("button.") && it.endsWith("_pause_printing") }
-  if (btn != null) return btn.removePrefix("button.").removeSuffix("_pause_printing")
-  return null
+internal data class BambuPrinter(
+  val prefix: String?,
+  val candidates: List<String>,
+  val deviceEntities: Set<String> = emptySet(),
+) {
+  /** Several printers and nothing to tell which one the card means: the card must not guess. */
+  val ambiguous: Boolean
+    get() = prefix == null && candidates.size > 1
+
+  /** The AMS the configured device is (`…_ams_2_tray_1` → 2), else the first. */
+  val amsIndex: Int
+    get() =
+      deviceEntities
+        .firstNotNullOfOrNull { TrayEntity.matchEntire(it)?.groupValues?.get(2) }
+        ?.toIntOrNull() ?: 1
+
+  /** What the resolution decided, for data signatures: a change of printer re-encodes. */
+  val signature: String
+    get() = prefix?.let { "printer=$it@$amsIndex" } ?: "printer?${candidates.joinToString(",")}"
 }
 
-/** Tray sensors the AMS / spool render paths read (`sensor.<prefix>_ams_1_tray_1..4`). */
-private fun amsTrayEntityIds(prefix: String): Set<String> =
-  (1..4).map { "sensor.${prefix}_ams_1_tray_$it" }.toSet()
+/**
+ * The printer [card] shows, in order:
+ * 1. an explicit `entity_prefix:` (design templates, and an override for any card);
+ * 2. the configured device — `printer:` (print status / control), `ams:` or `spool:` — through the
+ *    registry: the printer whose entities belong to that device id. `spool:` may name the spool's
+ *    entity instead;
+ * 3. the card's own entities (`entity:`, `entities:`), when they are one printer's;
+ * 4. the only printer, when there is exactly one.
+ *
+ * Otherwise the prefix is null: with no printer the card falls back to its chrome, and with several
+ * it is [BambuPrinter.ambiguous]. It never picks one of several printers by position.
+ */
+internal fun resolveBambuPrinter(card: CardConfig, snapshot: HaSnapshot): BambuPrinter {
+  val candidates = bambuPrinters(snapshot)
+  fun printerOf(entityId: String): String? {
+    val objectId = entityId.substringAfter('.', "")
+    return candidates.filter { objectId.startsWith("${it}_") }.maxByOrNull { it.length }
+  }
+  card.raw["entity_prefix"]
+    ?.jsonPrimitive
+    ?.contentOrNull
+    ?.takeIf { it.isNotEmpty() }
+    ?.let { prefix ->
+      // An `ams:` / `spool:` naming one of this printer's entities still says which AMS or spool.
+      val named =
+        DeviceKeys.mapNotNull { key ->
+            (card.raw[key] as? JsonPrimitive)?.contentOrNull?.trim()?.takeIf {
+              it in snapshot.states && it.substringAfter('.', "").startsWith("${prefix}_")
+            }
+          }
+          .toSet()
+      return BambuPrinter(prefix, candidates, named)
+    }
+  for (key in DeviceKeys) {
+    val configured = card.raw[key]?.jsonPrimitive?.contentOrNull?.trim()
+    if (configured.isNullOrEmpty()) continue
+    // `spool:` may be the spool's entity id.
+    if (configured in snapshot.states) {
+      printerOf(configured)?.let {
+        return BambuPrinter(it, candidates, setOf(configured))
+      }
+    }
+    val owned = snapshot.devices.filterValues { it.deviceId == configured }.keys
+    val printers = owned.mapNotNull(::printerOf).toSet()
+    if (printers.size == 1) return BambuPrinter(printers.single(), candidates, owned)
+  }
+  val own = cardEntityIds(card).mapNotNull(::printerOf).toSet()
+  if (own.size == 1) return BambuPrinter(own.single(), candidates)
+  return BambuPrinter(candidates.singleOrNull(), candidates)
+}
+
+/** The config keys that name a Bambu card's device. */
+private val DeviceKeys = listOf("printer", "ams", "spool")
+
+/** The Bambu Lab cards' types: every card [resolveBambuPrinter] finds a printer for. */
+private val BambuCardTypes =
+  setOf(
+    "custom:ha-bambulab-print_status-card",
+    "custom:ha-bambulab-print_control-card",
+    "custom:ha-bambulab-skipobject-card",
+    "custom:ha-bambulab-ams-card",
+    "custom:ha-bambulab-spool-card",
+  )
+
+/**
+ * [card] with every Bambu Lab card in it (stacks and grids included) carrying the printer its
+ * configured device resolves to, for a host that renders it from a snapshot without the device
+ * registry: a Wear widget or tile, whose values carry entity states only.
+ *
+ * A Bambu card names its printer, AMS or spool by device id (`printer:`, `ams:`, `spool:`), and
+ * only [HaSnapshot.devices] says which entities that device has. Resolved here, on the side that
+ * has the registry, the card gains the explicit `entity_prefix:` step 1 of [resolveBambuPrinter]
+ * honours, and an `ams:` / `spool:` device id becomes that device's own tray or spool entity (which
+ * AMS, which spool) — so the reduced host shows and controls the same printer, without guessing
+ * among several.
+ *
+ * A card that already resolves the same without the registry (an explicit prefix, its own entities,
+ * the only printer) or that the registry can't resolve either is returned unchanged.
+ */
+fun resolveBambuDevices(card: CardConfig, snapshot: HaSnapshot): CardConfig {
+  if (snapshot.devices.isEmpty()) return card
+  val raw = resolveBambuDevices(card.raw, snapshot)
+  return if (raw == card.raw) card else card.copy(raw = raw)
+}
+
+private fun resolveBambuDevices(raw: JsonObject, snapshot: HaSnapshot): JsonObject {
+  val type = (raw["type"] as? JsonPrimitive)?.contentOrNull
+  var out =
+    if (type != null && type in BambuCardTypes) pinBambuDevice(CardConfig(type, raw), snapshot)
+    else raw
+  // Stacks and grids: their cards are rendered from the same reduced snapshot.
+  (out["cards"] as? JsonArray)?.let { cards ->
+    val resolved =
+      JsonArray(
+        cards.map { (it as? JsonObject)?.let { c -> resolveBambuDevices(c, snapshot) } ?: it }
+      )
+    if (resolved != cards) out = JsonObject(out + ("cards" to resolved))
+  }
+  (out["card"] as? JsonObject)?.let { inner ->
+    val resolved = resolveBambuDevices(inner, snapshot)
+    if (resolved != inner) out = JsonObject(out + ("card" to resolved))
+  }
+  return out
+}
+
+/** One Bambu card's config with its registry-resolved printer made explicit; see above. */
+private fun pinBambuDevice(card: CardConfig, snapshot: HaSnapshot): JsonObject {
+  val printer = resolveBambuPrinter(card, snapshot)
+  val prefix = printer.prefix ?: return card.raw
+  val reduced = snapshot.copy(devices = emptyMap())
+  if (resolveBambuPrinter(card, reduced).sameAs(printer)) return card.raw
+  // The device's own tray / spool entity: which AMS an AMS card shows, which spool a spool card.
+  val deviceEntity = printer.spoolEntities.minOrNull()
+  val pinned = buildMap {
+    putAll(card.raw)
+    put("entity_prefix", JsonPrimitive(prefix))
+    if (deviceEntity != null) {
+      for (key in listOf("ams", "spool")) {
+        val configured = (card.raw[key] as? JsonPrimitive)?.contentOrNull?.trim()
+        if (!configured.isNullOrEmpty() && configured !in snapshot.states) {
+          put(key, JsonPrimitive(deviceEntity))
+        }
+      }
+    }
+  }
+  return JsonObject(pinned)
+}
+
+/** The same printer, AMS and spool: what a card renders from the resolution. */
+private fun BambuPrinter.sameAs(other: BambuPrinter): Boolean =
+  prefix == other.prefix && amsIndex == other.amsIndex && spoolEntities == other.spoolEntities
+
+/** The configured device's tray and spool entities. */
+private val BambuPrinter.spoolEntities: Set<String>
+  get() =
+    deviceEntities
+      .filter { TrayEntity.matches(it) || (it.startsWith("sensor.") && it.endsWith(EXTERNAL)) }
+      .toSet()
+
+/**
+ * Every Bambu printer in [snapshot], by entity prefix: whatever has a print progress, status or
+ * stage sensor, an AMS tray or a print button. An entity the registry says another integration
+ * provides is not a Bambu printer's.
+ */
+internal fun bambuPrinters(snapshot: HaSnapshot): List<String> {
+  val prefixes = sortedSetOf<String>()
+  for (id in snapshot.states.keys) {
+    val integration = snapshot.devices[id]?.integration
+    if (integration != null && integration != BAMBU_INTEGRATION) continue
+    val prefix =
+      PrinterSignals.firstNotNullOfOrNull { (domain, suffix) ->
+        id
+          .takeIf { it.startsWith(domain) && it.endsWith(suffix) }
+          ?.removePrefix(domain)
+          ?.removeSuffix(suffix)
+      } ?: TrayEntity.matchEntire(id)?.groupValues?.get(1)
+    if (!prefix.isNullOrEmpty()) prefixes += prefix
+  }
+  return prefixes.toList()
+}
+
+/** The ha-bambulab integration's domain. */
+private const val BAMBU_INTEGRATION = "bambu_lab"
+
+/** `domain.` and suffix of the entities that mark a printer. */
+private val PrinterSignals =
+  listOf(
+    "sensor." to "_print_progress",
+    "sensor." to "_print_status",
+    "sensor." to "_current_stage",
+    "button." to "_pause_printing",
+    "button." to "_resume_printing",
+    "button." to "_stop_printing",
+  )
+
+/** Tray sensors the AMS / spool render paths read (`sensor.<prefix>_ams_<n>_tray_1..4`). */
+private fun amsTrayEntityIds(prefix: String, amsIndex: Int): Set<String> =
+  (1..4).map { "sensor.${prefix}_ams_${amsIndex}_tray_$it" }.toSet()
 
 /** Sensors [buildPrintStatusData] reads for the print-status card. */
 private fun printStatusEntityIds(prefix: String): Set<String> = buildSet {
@@ -508,22 +738,35 @@ private fun printStatusEntityIds(prefix: String): Set<String> = buildSet {
   add("sensor.${prefix}_total_layer_count")
   add("sensor.${prefix}_remaining_time")
   add("sensor.${prefix}_nozzle_temperature")
-  add("sensor.${prefix}_target_nozzle_temperature")
+  NozzleTargets.forEach { add("sensor.${prefix}_$it") }
   add("sensor.${prefix}_bed_temperature")
-  add("sensor.${prefix}_target_bed_temperature")
+  BedTargets.forEach { add("sensor.${prefix}_$it") }
   add("sensor.${prefix}_printer_name")
   add("binary_sensor.${prefix}_online")
 }
 
-/** Buttons + name sensors [buildPrintControlData] reads for the control pad. */
+/** Buttons, phase and name sensors [buildPrintControlData] reads for the control pad. */
 private fun printControlEntityIds(prefix: String): Set<String> = buildSet {
   add("button.${prefix}_pause_printing")
   add("button.${prefix}_resume_printing")
   add("button.${prefix}_stop_printing")
+  // What decides the phase, so pausing or finishing re-encodes which controls show.
+  add("sensor.${prefix}_print_status")
+  add("sensor.${prefix}_current_stage")
+  add("sensor.${prefix}_print_progress")
+  add("sensor.${prefix}_total_layer_count")
+  add("binary_sensor.${prefix}_online")
   // Every source [bambuPrinterName] reads, so a renamed printer re-encodes the pad.
   add("sensor.${prefix}_printer_name")
   BambuNameSources.forEach { (suffix, _) -> add("sensor.${prefix}_$suffix") }
 }
+
+/**
+ * The target-temperature sensors' suffixes. The integration names them `nozzle_target_temperature`
+ * / `bed_target_temperature`; older releases (and some entity renames) `target_<part>_temperature`.
+ */
+private val NozzleTargets = listOf("nozzle_target_temperature", "target_nozzle_temperature")
+private val BedTargets = listOf("bed_target_temperature", "target_bed_temperature")
 
 /**
  * Whole minutes left on the job. The integration states `remaining_time` in hours (`h`) today and
@@ -593,7 +836,7 @@ internal fun buildPrintStatusData(
   val nozzle = nozzleEntity?.state?.toFloatOrNull()
   val nozzleUnit =
     nozzleEntity?.attributes?.get("unit_of_measurement")?.jsonPrimitive?.content ?: "°C"
-  val nozzleTarget = sensor("target_nozzle_temperature")?.state?.toFloatOrNull()
+  val nozzleTarget = NozzleTargets.firstNotNullOfOrNull { sensor(it)?.state?.toFloatOrNull() }
   val nozzleLine = nozzle?.let {
     val tgt =
       nozzleTarget?.let { t ->
@@ -605,7 +848,7 @@ internal fun buildPrintStatusData(
   val bedEntity = sensor("bed_temperature")
   val bed = bedEntity?.state?.toFloatOrNull()
   val bedUnit = bedEntity?.attributes?.get("unit_of_measurement")?.jsonPrimitive?.content ?: "°C"
-  val bedTarget = sensor("target_bed_temperature")?.state?.toFloatOrNull()
+  val bedTarget = BedTargets.firstNotNullOfOrNull { sensor(it)?.state?.toFloatOrNull() }
   val bedLine = bed?.let {
     val tgt =
       bedTarget?.let { t ->
@@ -669,7 +912,7 @@ internal fun bambuPrintPhase(
 }
 
 /** The headline a printer that is not printing shows. */
-private val HaBambuPrintPhase.label: String
+internal val HaBambuPrintPhase.label: String
   get() =
     when (this) {
       HaBambuPrintPhase.Printing -> "Printing"
@@ -763,9 +1006,10 @@ private fun formatTemp(value: Float): String =
   if (value == value.toInt().toFloat()) value.toInt().toString() else "%.1f".format(value)
 
 /**
- * Pause / resume / cancel pad. Wires the printer's three button entities into a 3-button row; tap
- * fires `button.press` on the matching entity. Falls back to chrome-only when the snapshot has no
- * Bambu-shaped buttons.
+ * Pause / resume / cancel pad: the printer's button entities that apply now — Pause while printing,
+ * Resume while paused, Stop in either — and a tap fires `button.press` on that entity. A button
+ * whose entity is unavailable is shown greyed out and does nothing. Falls back to chrome-only (or
+ * "Choose a printer") when the printer can't be told: it never offers another printer's buttons.
  */
 class BambuLabPrintControlCardConverter :
   BambuLabCardConverter(
@@ -789,12 +1033,10 @@ class BambuLabPrintControlCardConverter :
   ): ee.schimke.ha.rc.components.HaAction? =
     BambuDesign.controlAction(card, snapshot, templateAction)
 
-  // Renders discovered `button.<prefix>_*` controls + a name sensor, not the
-  // configured printer entity — base over those so availability changes re-encode.
-  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String {
-    val prefix = resolvePrinterPrefix(card, snapshot) ?: return super.dataSignature(card, snapshot)
-    return cardDataSignature(printControlEntityIds(prefix), snapshot)
-  }
+  // Renders discovered `button.<prefix>_*` controls, the phase + a name sensor, not the configured
+  // printer device — base over those (and which printer) so availability changes re-encode.
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String =
+    printControlSignature(card, snapshot) ?: super.dataSignature(card, snapshot)
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
@@ -830,12 +1072,10 @@ class BambuLabSkipObjectCardConverter :
   ): ee.schimke.ha.rc.components.HaAction? =
     BambuDesign.controlAction(card, snapshot, templateAction)
 
-  // Renders discovered `button.<prefix>_*` controls + a name sensor, not the
-  // configured printer entity — base over those so availability changes re-encode.
-  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String {
-    val prefix = resolvePrinterPrefix(card, snapshot) ?: return super.dataSignature(card, snapshot)
-    return cardDataSignature(printControlEntityIds(prefix), snapshot)
-  }
+  // Renders discovered `button.<prefix>_*` controls, the phase + a name sensor, not the configured
+  // printer device — base over those (and which printer) so availability changes re-encode.
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String =
+    printControlSignature(card, snapshot) ?: super.dataSignature(card, snapshot)
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
@@ -848,67 +1088,101 @@ class BambuLabSkipObjectCardConverter :
   }
 }
 
-private fun buildPrintControlData(
+private fun printControlSignature(card: CardConfig, snapshot: HaSnapshot): String? {
+  val printer = resolveBambuPrinter(card, snapshot)
+  val prefix = printer.prefix ?: return null
+  return "${printer.signature}|${cardDataSignature(printControlEntityIds(prefix), snapshot)}"
+}
+
+/** What a print's state lets the pad do. */
+internal enum class BambuControlPhase {
+  /** Printing (or preparing): Pause and Stop. */
+  Running,
+  /** Paused: Resume and Stop. */
+  Paused,
+  /** Idle, finished, failed or offline: nothing to control. */
+  Stopped,
+  /**
+   * The printer reports no print state at all (no status, stage or progress sensor): every control
+   * it has, each still gated on its own availability.
+   */
+  Unknown,
+}
+
+internal fun bambuControlPhase(prefix: String, snapshot: HaSnapshot): BambuControlPhase {
+  val stateSensors = listOf("print_status", "current_stage", "print_progress")
+  if (stateSensors.none { "sensor.${prefix}_$it" in snapshot.states }) {
+    return BambuControlPhase.Unknown
+  }
+  val status = snapshot.states["sensor.${prefix}_print_status"]?.state?.trim()?.lowercase()
+  if (status == "pause" || status == "paused") return BambuControlPhase.Paused
+  return when (buildPrintStatusData(prefix, snapshot).phase) {
+    HaBambuPrintPhase.Printing -> BambuControlPhase.Running
+    else -> BambuControlPhase.Stopped
+  }
+}
+
+/**
+ * The pad for [card]'s printer, or null when the printer can't be told ([resolveBambuPrinter]).
+ * Only the controls that apply to the print's [BambuControlPhase] are present; one whose entity is
+ * `unavailable` is present but not enabled. With none, [HaBambuPrintControlData.statusLine] says
+ * why.
+ */
+internal fun buildPrintControlData(
   card: CardConfig,
   snapshot: HaSnapshot,
 ): ee.schimke.ha.rc.components.HaBambuPrintControlData? {
-  val prefix = resolvePrinterPrefix(card, snapshot) ?: return null
-  val s = snapshot.states
-  fun btn(suffix: String) = s["button.${prefix}_$suffix"]?.entityId
+  val prefix = resolveBambuPrinter(card, snapshot).prefix ?: return null
+  val phase = bambuControlPhase(prefix, snapshot)
 
-  val pause =
-    btn("pause_printing")?.let {
-      ee.schimke.ha.rc.components.HaBambuControlButton(
-        label = "Pause",
-        icon = Icons.Filled.Pause,
-        accent = androidx.compose.ui.graphics.Color(0xFFFFA000),
-        tapAction =
-          ee.schimke.ha.rc.components.HaAction.CallService(
-            domain = "button",
-            service = "press",
-            entityId = it,
-            serviceData = kotlinx.serialization.json.JsonObject(emptyMap()),
-          ),
-      )
-    }
-  val resume =
-    btn("resume_printing")?.let {
-      ee.schimke.ha.rc.components.HaBambuControlButton(
-        label = "Resume",
-        icon = Icons.Filled.PlayArrow,
-        accent = androidx.compose.ui.graphics.Color(0xFF43A047),
-        tapAction =
-          ee.schimke.ha.rc.components.HaAction.CallService(
-            domain = "button",
-            service = "press",
-            entityId = it,
-            serviceData = kotlinx.serialization.json.JsonObject(emptyMap()),
-          ),
-      )
-    }
-  val stop =
-    btn("stop_printing")?.let {
-      ee.schimke.ha.rc.components.HaBambuControlButton(
-        label = "Stop",
-        icon = Icons.Filled.Stop,
-        accent = androidx.compose.ui.graphics.Color(0xFFE53935),
-        tapAction =
-          ee.schimke.ha.rc.components.HaAction.CallService(
-            domain = "button",
-            service = "press",
-            entityId = it,
-            serviceData = kotlinx.serialization.json.JsonObject(emptyMap()),
-          ),
-      )
-    }
-  if (pause == null && resume == null && stop == null) return null
+  fun control(
+    suffix: String,
+    appliesWhen: Set<BambuControlPhase>,
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    accent: Long,
+  ): ee.schimke.ha.rc.components.HaBambuControlButton? {
+    if (phase !in appliesWhen) return null
+    val entity = snapshot.states["button.${prefix}_$suffix"] ?: return null
+    return ee.schimke.ha.rc.components.HaBambuControlButton(
+      label = label,
+      icon = icon,
+      accent = androidx.compose.ui.graphics.Color(accent),
+      tapAction =
+        ee.schimke.ha.rc.components.HaAction.CallService(
+          domain = "button",
+          service = "press",
+          entityId = entity.entityId,
+          serviceData = kotlinx.serialization.json.JsonObject(emptyMap()),
+        ),
+      enabled = entity.state != "unavailable",
+    )
+  }
 
-  val printerName = bambuPrinterName(prefix, snapshot)
+  val running = setOf(BambuControlPhase.Running, BambuControlPhase.Unknown)
+  val paused = setOf(BambuControlPhase.Paused, BambuControlPhase.Unknown)
+  val pause = control("pause_printing", running, "Pause", Icons.Filled.Pause, 0xFFFFA000)
+  val resume = control("resume_printing", paused, "Resume", Icons.Filled.PlayArrow, 0xFF43A047)
+  val stop = control("stop_printing", running + paused, "Stop", Icons.Filled.Stop, 0xFFE53935)
+  val statusLine =
+    if (pause != null || resume != null || stop != null) null
+    else
+      when (phase) {
+        BambuControlPhase.Stopped ->
+          when (buildPrintStatusData(prefix, snapshot).phase) {
+            HaBambuPrintPhase.Finished -> "Print finished"
+            HaBambuPrintPhase.Failed -> "Print failed"
+            HaBambuPrintPhase.Offline -> "Printer offline"
+            else -> "Nothing printing"
+          }
+        else -> "No controls for this printer"
+      }
   return ee.schimke.ha.rc.components.HaBambuPrintControlData(
-    printerName = printerName,
+    printerName = bambuPrinterName(prefix, snapshot),
     pause = pause,
     resume = resume,
     stop = stop,
+    statusLine = statusLine,
   )
 }
 
@@ -985,24 +1259,41 @@ internal object BambuDesign {
 
   private val controls = listOf("pause_printing", "resume_printing", "stop_printing")
 
+  /** A control's property: 0 not shown, 1 shown, 2 shown but unavailable. */
+  private fun controlState(button: ee.schimke.ha.rc.components.HaBambuControlButton?): Int =
+    when {
+      button == null -> 0
+      button.enabled -> 1
+      else -> 2
+    }
+
   fun controlProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
     val data = buildPrintControlData(card, snapshot) ?: return null
     return DesignProperties.build {
-      enum("pause", if (data.pause != null) 1 else 0)
-      enum("resume", if (data.resume != null) 1 else 0)
-      enum("stop", if (data.stop != null) 1 else 0)
+      enum("pause", controlState(data.pause))
+      enum("resume", controlState(data.resume))
+      enum("stop", controlState(data.stop))
     }
   }
 
   fun controlTemplate(cardType: String, properties: DesignProperties): DesignTemplateInput? {
-    if (properties["pause"] == null) return null
+    val shown = listOf("pause", "resume", "stop").map { properties[it] ?: return null }
+    val (pause, resume, stop) = shown
+    // A print state under which exactly the shown controls apply (see buildPrintControlData): no
+    // state at all when Pause and Resume both show.
+    val status =
+      when {
+        pause != "0" && resume != "0" -> null
+        resume != "0" -> "pause"
+        pause != "0" || stop != "0" -> "running"
+        else -> "idle"
+      }
     val states = buildList {
-      add(sensor("print_status", "printing"))
-      for ((control, key) in controls.zip(listOf("pause", "resume", "stop"))) {
-        if (properties[key] == "1") {
-          val id = "button.${PREFIX}_$control"
-          add(CardDesignSlots.templateEntity(id, "unknown"))
-        }
+      status?.let { add(sensor("print_status", it)) }
+      for ((control, value) in controls.zip(shown)) {
+        if (value == "0") continue
+        val id = "button.${PREFIX}_$control"
+        add(CardDesignSlots.templateEntity(id, if (value == "1") "unknown" else "unavailable"))
       }
     }
     return template(cardType, states)
@@ -1011,7 +1302,10 @@ internal object BambuDesign {
   fun controlBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings {
     val data = buildPrintControlData(card, snapshot) ?: return NONE
     return CardSnapshotBindings(
-      mapOf("card.printer" to data.printerName),
+      buildMap {
+        put("card.printer", data.printerName)
+        data.statusLine?.let { put("card.status", it) }
+      },
       emptyMap(),
       emptyMap(),
       emptyMap(),
@@ -1029,19 +1323,16 @@ internal object BambuDesign {
       (action as? ee.schimke.ha.rc.components.HaAction.CallService)?.entityId ?: return null
     val control = controls.firstOrNull { pressed == "button.${PREFIX}_$it" } ?: return null
     val data = buildPrintControlData(card, snapshot) ?: return null
+    // Only a control that is shown and available acts.
     return when (control) {
-      "pause_printing" -> data.pause
-      "resume_printing" -> data.resume
-      else -> data.stop
-    }?.tapAction
+        "pause_printing" -> data.pause
+        "resume_printing" -> data.resume
+        else -> data.stop
+      }
+      ?.takeIf { it.enabled }
+      ?.tapAction
   }
 }
-
-/**
- * [this] tray / sensor id of [prefix]'s printer, renamed onto the template's [BambuDesign.PREFIX].
- */
-private fun String.renamePrefix(prefix: String): String =
-  replaceFirst(".${prefix}_", ".${BambuDesign.PREFIX}_")
 
 /** What a tray's material line shows. */
 private fun slotMaterial(slot: ee.schimke.ha.rc.components.HaBambuSpoolSlot): String =

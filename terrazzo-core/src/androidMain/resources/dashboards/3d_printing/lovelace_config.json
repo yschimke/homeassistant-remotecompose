@@ -250,7 +250,7 @@
             },
             {
               "type": "custom:ha-bambulab-print_status-card",
-              "printer": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "printer": "demo-p2s-sn2",
               "style": "full",
               "grid_options": {
                 "columns": "full"
@@ -362,7 +362,7 @@
             },
             {
               "type": "custom:ha-bambulab-print_control-card",
-              "printer": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "printer": "demo-p2s-sn2",
               "grid_options": {
                 "columns": "full"
               }
@@ -752,7 +752,7 @@
             },
             {
               "type": "custom:ha-bambulab-print_status-card",
-              "printer": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "printer": "demo-a1mini-sn1",
               "style": "full",
               "grid_options": {
                 "columns": "full"
@@ -877,7 +877,7 @@
             },
             {
               "type": "custom:ha-bambulab-print_control-card",
-              "printer": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "printer": "demo-a1mini-sn1",
               "grid_options": {
                 "columns": "full"
               }
@@ -1265,7 +1265,7 @@
             },
             {
               "type": "custom:ha-bambulab-ams-card",
-              "ams": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "ams": "demo-p2s-sn2-ams-1",
               "style": "full",
               "grid_options": {
                 "columns": "full"
@@ -1364,7 +1364,7 @@
             },
             {
               "type": "custom:ha-bambulab-spool-card",
-              "spool": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "spool": "demo-p2s-sn2-external-spool",
               "grid_options": {
                 "columns": "full"
               }
@@ -1402,7 +1402,7 @@
             },
             {
               "type": "custom:ha-bambulab-ams-card",
-              "ams": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "ams": "demo-a1mini-sn1-ams-1",
               "style": "full",
               "grid_options": {
                 "columns": "full"
@@ -1489,7 +1489,7 @@
             },
             {
               "type": "custom:ha-bambulab-spool-card",
-              "spool": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "spool": "demo-a1mini-sn1-external-spool",
               "grid_options": {
                 "columns": "full"
               }

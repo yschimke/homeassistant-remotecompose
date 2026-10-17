@@ -134,4 +134,36 @@ class BambuPrintStatusDataTest {
       ),
     )
   }
+
+  @Test
+  fun targetTemperaturesAreReadUnderEitherName() {
+    // The integration's ids, as the demo P2S reports them while heating.
+    val current =
+      buildPrintStatusData(
+        "p2s_sn2",
+        snapshot(
+          entity("sensor.p2s_sn2_print_status", "idle"),
+          entity("sensor.p2s_sn2_nozzle_temperature", "180", "unit_of_measurement" to "°C"),
+          entity("sensor.p2s_sn2_nozzle_target_temperature", "220"),
+          entity("sensor.p2s_sn2_bed_temperature", "50", "unit_of_measurement" to "°C"),
+          entity("sensor.p2s_sn2_bed_target_temperature", "65"),
+        ),
+      )
+    assertEquals("Nozzle 180 °C → 220 °C", current.nozzleLine)
+    assertEquals("Bed 50 °C → 65 °C", current.bedLine)
+    // The older `target_<part>_temperature` ids still read.
+    val older =
+      buildPrintStatusData(
+        "a1mini_sn1",
+        snapshot(
+          entity("sensor.a1mini_sn1_print_status", "idle"),
+          entity("sensor.a1mini_sn1_nozzle_temperature", "180", "unit_of_measurement" to "°C"),
+          entity("sensor.a1mini_sn1_target_nozzle_temperature", "220"),
+          entity("sensor.a1mini_sn1_bed_temperature", "50", "unit_of_measurement" to "°C"),
+          entity("sensor.a1mini_sn1_target_bed_temperature", "65"),
+        ),
+      )
+    assertEquals("Nozzle 180 °C → 220 °C", older.nozzleLine)
+    assertEquals("Bed 50 °C → 65 °C", older.bedLine)
+  }
 }

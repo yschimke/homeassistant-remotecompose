@@ -6,6 +6,9 @@ import kotlinx.serialization.Serializable
  * What Home Assistant knows about the device behind an entity: the integration that provides it,
  * the device's manufacturer and model, and the entity's translation key (`flow_temperature`). Any
  * field may be unknown, for instance when the user can't read the device registry.
+ *
+ * [deviceId] is the registry id of that one device (what a card config such as the Bambu Lab cards'
+ * `printer:` names). It says which device, not what kind, so design matching ignores it.
  */
 @Serializable
 data class DeviceInfo(
@@ -13,6 +16,7 @@ data class DeviceInfo(
   val manufacturer: String? = null,
   val model: String? = null,
   val translationKey: String? = null,
+  val deviceId: String? = null,
 )
 
 /**

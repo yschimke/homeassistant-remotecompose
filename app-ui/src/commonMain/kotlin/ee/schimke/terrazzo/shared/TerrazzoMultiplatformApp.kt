@@ -201,7 +201,7 @@ private fun DashboardShell(connection: AppConnection, onSignOut: () -> Unit) {
       if (state == HaClient.ConnectionState.Ready) {
         try {
           val events = connection.client.subscribeEvents("state_changed")
-          stateSnapshots(events) { connection.client.snapshot() }
+          stateSnapshots(events) { connection.client.snapshotWithDevices() }
             .collect {
               snapshot = it
               connectionError = null
