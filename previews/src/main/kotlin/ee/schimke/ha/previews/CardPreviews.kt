@@ -227,12 +227,12 @@ fun Entities_Availability_Dark() =
 fun Glance_Availability_Light() =
   CardHost(HaTheme.Light) { RenderChild(availabilityGlanceCard(), Fixtures.availability) }
 
-@Preview(name = "tiles availability (light)", showBackground = false, widthDp = 381, heightDp = 200)
+@Preview(name = "tiles availability (light)", showBackground = false, widthDp = 381, heightDp = 260)
 @Composable
 fun Tiles_Availability_Light() =
   CardHost(HaTheme.Light) { RenderChild(availabilityTilesCard(), Fixtures.availability) }
 
-@Preview(name = "tiles availability (dark)", showBackground = false, widthDp = 381, heightDp = 200)
+@Preview(name = "tiles availability (dark)", showBackground = false, widthDp = 381, heightDp = 260)
 @Composable
 fun Tiles_Availability_Dark() =
   CardHost(HaTheme.Dark) { RenderChild(availabilityTilesCard(), Fixtures.availability) }

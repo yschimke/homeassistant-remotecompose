@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
 import ee.schimke.composeai.rcplayer.edit.bitmapUrls
@@ -255,6 +256,32 @@ class LauncherDesignsTest {
         )
       ),
     )
+
+  /**
+   * A widget of an unavailable entity carries the uber theme's unavailable treatment: its design
+   * key gains `unavailable`, so the baked template is captured with the entity unavailable and
+   * draws the faded card and its label exactly as a direct capture does.
+   */
+  @Test
+  fun bakedWidgetOfAnUnavailableEntityShowsTheThemesTreatment() {
+    val card = card("tile", "sensor.temp")
+    val snapshot =
+      snapshotOf(entity("sensor.temp", "unavailable", "friendly_name" to "Living room"))
+    assertEquals(
+      "1",
+      ee.schimke.ha.design.DesignProperties.parse(
+          assertNotNull(
+            registry.converterFor("tile")?.framedDesignProperties(card, snapshot)?.shape
+          )
+        )[UNAVAILABLE_DESIGN_PROPERTY],
+      "the design key marks the entity unavailable",
+    )
+    assertWidgetParity("tile-unavailable", card, snapshot, played = true)
+    assertTrue(
+      compose.onAllNodesWithText("Unavailable").fetchSemanticsNodes().isNotEmpty(),
+      "the baked widget shows the label",
+    )
+  }
 
   /** A direct Fixed-mode widget capture of [card], as the provider's fallback path builds it. */
   private fun directWidget(card: CardConfig, snapshot: HaSnapshot, widthDp: Int, heightDp: Int) =

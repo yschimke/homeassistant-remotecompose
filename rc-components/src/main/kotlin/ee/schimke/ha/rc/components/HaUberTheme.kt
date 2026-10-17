@@ -110,6 +110,7 @@ enum class HaSurfaceMaterial {
  * @property fontFamily the typeface every card text uses.
  * @property letterSpacingSp extra tracking, in sp, for every card text.
  * @property valueWeight the weight of readings (`HaType.Value*`).
+ * @property unavailable how every card in the theme shows that its entity is unavailable.
  */
 data class HaUberTheme(
   val id: String,
@@ -126,6 +127,7 @@ data class HaUberTheme(
   val fontFamily: RemoteFontFamily = RemoteFontFamily.Default,
   val letterSpacingSp: Float = 0f,
   val valueWeight: FontWeight = FontWeight.SemiBold,
+  val unavailable: HaUnavailableStyle = HaUnavailableStyle(),
 ) {
   init {
     require(light != null || dark != null) { "$id needs a light or a dark palette" }
@@ -246,6 +248,8 @@ data class HaUberTheme(
         darkHotInk = Color(0xFFFF6B6B),
         fontFamily = RemoteFontFamily.Monospace,
         valueWeight = FontWeight.Bold,
+        // An LCD with no reading shows dashes, in its own ink.
+        unavailable = HaUnavailableStyle(label = "----", labelAlpha = 1f),
       )
 
     /**
@@ -288,6 +292,13 @@ data class HaUberTheme(
         visuals = HaVisualFamily.Braun,
         fontFamily = RemoteFontFamily.SansSerif,
         valueWeight = FontWeight.Medium,
+        // Rams' quiet type: the word in lowercase and a regular weight; the content recedes.
+        unavailable =
+          HaUnavailableStyle(
+            label = "unavailable",
+            labelAlpha = 0.7f,
+            labelWeight = FontWeight.Normal,
+          ),
       )
 
     /**
