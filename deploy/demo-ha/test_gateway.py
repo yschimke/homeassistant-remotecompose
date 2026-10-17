@@ -129,6 +129,23 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
                 with self.assertRaisesRegex(AssertionError, 'battery'):
                     await verify(str(self.client.make_url('')).rstrip('/'), stream=False)
 
+    async def test_initial_unknown_entities_do_not_make_gateway_ready(self):
+        self.g.states, self.g.updated = {}, 0
+        battery = next(s for s in self.rows if s['entity_id'] == 'sensor.demo_battery')
+        for value in ['unknown', 'unavailable']:
+            battery['state'] = value
+            with self.assertRaisesRegex(ValueError, 'initializ'):
+                await self.g.poll_once(self.session)
+            self.assertEqual((await self.client.get('/healthz')).status, 503)
+            self.assertEqual(self.g.states, {})
+        battery['state'] = '78.0'
+        await self.g.poll_once(self.session)
+        self.assertEqual((await self.client.get('/healthz')).status, 200)
+        # Once initialized, genuine availability changes still reach clients.
+        battery['state'] = 'unavailable'
+        await self.g.poll_once(self.session)
+        self.assertEqual(self.g.states['sensor.demo_battery']['state'], 'unavailable')
+
     async def test_readiness_deadline_includes_slow_request_time(self):
         async def slow_health(request):
             await asyncio.sleep(2)
