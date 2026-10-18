@@ -63,7 +63,9 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
         .then(cardChrome(theme.cardBackground, theme.divider))
         .padding(horizontal = 14.rdp, vertical = 12.rdp)
   ) {
-    if (visualFamily().isCommunity) {
+    if (visualFamily() == HaVisualFamily.HomeAssistant) {
+      HomeAssistantGaugeReading(data, fraction, severityColor)
+    } else if (visualFamily().isCommunity) {
       CommunityReadingLayout(
         entityName(data.entityId, data.name),
         data.valueText,
@@ -118,6 +120,52 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
         }
       }
     }
+  }
+}
+
+/** The built-in HA layout puts the live reading inside the half gauge and its name below. */
+@Composable
+@RemoteComposable
+private fun HomeAssistantGaugeReading(
+  data: HaGaugeData,
+  fraction: RemoteFloat,
+  color: RemoteColor,
+) {
+  val theme = haTheme()
+  RemoteColumn(
+    modifier = RemoteModifier.fillMaxWidth(),
+    verticalArrangement = RemoteArrangement.spacedBy(12.rdp),
+    horizontalAlignment = RemoteAlignment.CenterHorizontally,
+  ) {
+    RemoteBox(
+      modifier = RemoteModifier.fillMaxWidth().height(120.rdp),
+      contentAlignment = RemoteAlignment.BottomCenter,
+    ) {
+      RemoteHaArcMeter(
+        fraction = fraction,
+        color = color,
+        modifier = RemoteModifier.fillMaxSize(),
+        zones = gaugeZones(data),
+      )
+      RemoteText(
+        text = data.valueText,
+        modifier = RemoteModifier.padding(bottom = 4.rdp),
+        color = theme.primaryText,
+        fontSize = HaType.Display,
+        fontWeight = haValueWeight(),
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
+    RemoteText(
+      text = entityName(data.entityId, data.name),
+      color = theme.primaryText,
+      fontSize = HaType.Body,
+      style = haTextStyle(),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+    )
   }
 }
 

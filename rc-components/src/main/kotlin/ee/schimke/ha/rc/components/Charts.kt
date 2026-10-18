@@ -73,6 +73,7 @@ internal fun RemoteDrawScope.familySparkline(
     HaVisualFamily.Arctic,
     HaVisualFamily.Aeon -> communitySparkline(family, look, fractions)
 
+    HaVisualFamily.HomeAssistant,
     HaVisualFamily.Classic -> {
       baseline(look.track)
       line(2f, look.value)
@@ -202,6 +203,7 @@ internal fun RemoteDrawScope.familyBars(
       }
     }
 
+    HaVisualFamily.HomeAssistant,
     HaVisualFamily.Classic,
     HaVisualFamily.Braun -> {
       val share = if (family == HaVisualFamily.Braun) 0.3f else 0.7f

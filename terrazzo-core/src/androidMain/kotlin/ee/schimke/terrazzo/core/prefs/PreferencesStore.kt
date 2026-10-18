@@ -43,6 +43,7 @@ enum class ThemePref {
  */
 enum class CardStylePref(val id: String) {
   Classic("classic"),
+  HomeAssistant("home-assistant"),
   Expressive("expressive"),
   Trinitron("trinitron"),
   Lcd("lcd"),

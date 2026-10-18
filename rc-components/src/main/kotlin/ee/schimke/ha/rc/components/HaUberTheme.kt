@@ -42,6 +42,8 @@ import com.materialkolor.dynamicColorScheme
 enum class HaVisualFamily {
   /** The cards' own visuals: liquid thermometer, outlined battery, smooth arc and bar. */
   Classic,
+  /** Built-in HA dashboard: flat-ended half gauges and rounded thermostat rings. */
+  HomeAssistant,
   /** Material 3 Expressive: fat capsules with a track gap and stop dot, no bulb. */
   Expressive,
   /** Sony hi-fi: a needle VU meter, LED level columns and strips with a red peak zone. */
@@ -166,6 +168,23 @@ data class HaUberTheme(
         displayName = "Classic",
         light = HaTheme.Light,
         dark = HaTheme.Dark,
+      )
+
+    /** Built-in Home Assistant, with both modes under one stable style id. */
+    val HomeAssistant =
+      HaUberTheme(
+        id = "home-assistant",
+        displayName = "Home Assistant",
+        light = HaTheme.Light.copy(secondaryText = Color(0xFF5E5E5E), linkText = Color(0xFF009AC7)),
+        dark =
+          HaTheme.Dark.copy(
+            secondaryText = Color(0xFF9B9B9B),
+            linkText = Color(0xFF009AC7),
+            divider = Color(0xFF343434),
+          ),
+        visuals = HaVisualFamily.HomeAssistant,
+        fontFamily = RemoteFontFamily.SansSerif,
+        valueWeight = FontWeight.Normal,
       )
 
     /**
@@ -424,6 +443,7 @@ data class HaUberTheme(
     val all: List<HaUberTheme> =
       listOf(
         Classic,
+        HomeAssistant,
         Expressive,
         Trinitron,
         Lcd,

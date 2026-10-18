@@ -158,3 +158,19 @@ fun UberCards_Ikea_Light() = UberSheet(HaUberTheme.Ikea, Cards)
 @Preview(name = "uber cards: IKEA Showroom (dark)", widthDp = 381, heightDp = 1000)
 @Composable
 fun UberCards_Ikea_Dark() = UberSheet(HaUberTheme.Ikea, Cards, dark = true)
+
+@Preview(name = "uber dials: Home Assistant (light)", widthDp = 360, heightDp = 900)
+@Composable
+fun UberDials_HomeAssistant_Light() = UberSheet(HaUberTheme.HomeAssistant, Dials)
+
+@Preview(name = "uber dials: Home Assistant (dark)", widthDp = 360, heightDp = 900)
+@Composable
+fun UberDials_HomeAssistant_Dark() = UberSheet(HaUberTheme.HomeAssistant, Dials, dark = true)
+
+@Preview(name = "uber cards: Home Assistant (light)", widthDp = 360, heightDp = 1200)
+@Composable
+fun UberCards_HomeAssistant_Light() = UberSheet(HaUberTheme.HomeAssistant, Cards)
+
+@Preview(name = "uber cards: Home Assistant (dark)", widthDp = 360, heightDp = 1200)
+@Composable
+fun UberCards_HomeAssistant_Dark() = UberSheet(HaUberTheme.HomeAssistant, Cards, dark = true)

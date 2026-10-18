@@ -56,6 +56,8 @@ internal fun RemoteDrawScope.familyDial(
   stroke: Float,
 ) {
   when (family) {
+    HaVisualFamily.HomeAssistant ->
+      homeAssistantDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Expressive -> expressiveDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Trinitron -> trinitronDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Lcd -> lcdDial(look, value, target, targetVisible, box, stroke)
@@ -94,6 +96,43 @@ internal fun RemoteDrawScope.familyDial(
     }
     HaVisualFamily.Classic,
     HaVisualFamily.Console -> Unit
+  }
+}
+
+/** HA's rounded thermostat track with a small current marker and white target handle. */
+private fun RemoteDrawScope.homeAssistantDial(
+  look: MeterLook,
+  value: RemoteFloat,
+  target: RemoteFloat?,
+  targetVisible: RemoteBoolean?,
+  box: DialBox,
+  stroke: Float,
+) {
+  drawArc(
+    strokePaint(stroke, look.track),
+    DialStart.rf,
+    DialSweep.rf,
+    false,
+    box.topLeft(0f),
+    box.size(0f),
+  )
+  drawArc(
+    strokePaint(stroke, look.value),
+    DialStart.rf,
+    value * DialSweep.rf,
+    false,
+    box.topLeft(0f),
+    box.size(0f),
+  )
+  rotate(value * DialSweep.rf, box.center) {
+    drawCircle(fillPaint(look.surface), (stroke * 0.2f).rf, box.point(DialStart, box.radius))
+  }
+  if (target != null) {
+    rotate(target * DialSweep.rf, box.center) {
+      val point = box.point(DialStart, box.radius)
+      drawCircle(fillPaint(shown(look.value, targetVisible)), (stroke * 0.57f).rf, point)
+      drawCircle(fillPaint(shown(Color.White.rc, targetVisible)), (stroke * 0.42f).rf, point)
+    }
   }
 }
 

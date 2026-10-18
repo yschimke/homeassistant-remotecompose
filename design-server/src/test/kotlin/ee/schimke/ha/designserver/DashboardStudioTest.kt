@@ -181,6 +181,18 @@ class DashboardStudioTest {
       }
     assertEquals(HttpStatusCode.OK, ikea.status)
     assertEquals(12, renders)
+    expectedStyle = "home-assistant"
+    assertTrue(page.contains("<option>home-assistant</option>"))
+    assertEquals(
+      HttpStatusCode.OK,
+      client
+        .post("/api/studio/dashboard/preview") {
+          header(HttpHeaders.Cookie, "design-server-edit=operator")
+          setBody(body.replace("braun", "home-assistant"))
+        }
+        .status,
+    )
+    assertEquals(13, renders)
     assertEquals(
       HttpStatusCode.UnprocessableEntity,
       client
