@@ -295,12 +295,21 @@ private val SeverityNormal = HaStatusColors.Normal
 private val SeverityWarning = HaStatusColors.Warning
 private val SeverityCritical = HaStatusColors.Critical
 
-/** The gauge's range line, e.g. `0 – 100 °C`. */
+/**
+ * The gauge's range line, e.g. `0 – 100 °C`. A design template computes the same line from its
+ * binding recipe on every host (ha-model's `CardBindingRecipe.rangeText`), so the two must agree:
+ * whole numbers bare, others to one decimal rounding half up, always with a `.`.
+ */
 fun gaugeRangeText(min: Double, max: Double, unit: String?): String =
   "${formatRange(min)} – ${formatRange(max)} ${unit.orEmpty()}"
 
-private fun formatRange(d: Double): String =
-  if (d == d.toLong().toDouble()) d.toLong().toString() else "%.1f".format(d)
+private fun formatRange(d: Double): String {
+  if (!d.isFinite()) return d.toString()
+  if (d == d.toLong().toDouble()) return d.toLong().toString()
+  val tenths = kotlin.math.floor(d * 10 + 0.5).toLong()
+  val sign = if (tenths < 0) "-" else ""
+  return "$sign${kotlin.math.abs(tenths) / 10}.${kotlin.math.abs(tenths) % 10}"
+}
 
 /**
  * The gauge's hot zone for the visual families that draw one (a Trinitron red peak zone, LCD hot
