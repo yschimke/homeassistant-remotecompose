@@ -1,0 +1,9 @@
+# Mount at /run/caddy-sites/native-demo.caddy in the existing edge Caddy.
+# DNS for ha-demo.coo.ee must point at that host. Caddy handles TLS.
+ha-demo.coo.ee {
+	import edge_common
+	import crawler_block
+	# The read-only guard serves HA assets and filters every HTTP/WS API request.
+	# Caddy never joins the private network and cannot address Home Assistant directly.
+	reverse_proxy demo-ha-native:8080
+}
