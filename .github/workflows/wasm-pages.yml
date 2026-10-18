@@ -17,6 +17,8 @@ on:
       - 'scripts/test-wasm-browser.py'
       - 'scripts/test-demo-browser.py'
       - 'scripts/test-adaptive-dashboard-browser.py'
+      - 'scripts/test-printing-dashboard-browser.py'
+      - 'scripts/fixtures/printing/**'
       - 'scripts/fixtures/demo/**'
       - 'scripts/stage-wasm-demo.py'
       - '.github/workflows/wasm-pages.yml'
@@ -47,12 +49,14 @@ jobs:
           python-version: '3.15.0'
       - name: Install browser test tools
         run: |
-          python -m pip install playwright==1.62.0
+          python -m pip install playwright==1.62.0 pillow==12.3.0
           python -m playwright install --with-deps chromium
       - name: Test browser flows at the GitHub Pages project path
         run: python scripts/test-wasm-browser.py app-ui/build/dist/wasmJs/productionExecutable
       - name: Test adaptive sections and MeshCore conversation cards
         run: python scripts/test-adaptive-dashboard-browser.py app-ui/build/dist/wasmJs/productionExecutable
+      - name: Test printing cards, live pictures and scroll reuse
+        run: python scripts/test-printing-dashboard-browser.py app-ui/build/dist/wasmJs/productionExecutable
       - name: Test the public demo
         run: python scripts/test-demo-browser.py app-ui/build/dist/wasmJs/productionExecutable
       - name: Build existing documentation and authentication pages

@@ -34,6 +34,7 @@ kotlin {
       api(libs.cmp.foundation)
       api(libs.cmp.ui)
       api(libs.cmp.material3)
+      implementation(compose.components.resources)
       implementation(libs.cmp.navigation3.runtime)
       implementation(libs.cmp.navigation3.ui)
       implementation(libs.cmp.adaptive)
@@ -53,6 +54,7 @@ kotlin {
     commonTest.dependencies {
       implementation(libs.kotlin.test)
       implementation(libs.kotlinx.coroutines.test)
+      implementation(libs.ktor.client.mock)
     }
   }
 }
