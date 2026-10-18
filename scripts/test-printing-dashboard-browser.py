@@ -195,17 +195,51 @@ try:
             assert len(resolutions) == old_resolutions, (old_resolutions, len(resolutions))
             if name == 'phone':
                 page.mouse.move(190, 650); page.mouse.wheel(0, 550); page.wait_for_timeout(300)
+                def light_states(style):
+                    calls_before = len([c for c in commands if c['type'] == 'call_service'])
+                    update('light.p2s_chamber', 'on')
+                    lit = page.get_by_role('img', name='Light on', exact=True)
+                    expect(lit).to_be_visible()
+                    expect(page.get_by_role('switch').first).to_be_checked()
+                    page.evaluate('() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))')
+                    lit_pixels = lit.screenshot()
+                    assert painted_color((255, 200, 87) if style == 'console' else (156, 87, 0)) > 10, 'A lit bulb must use visible amber ink'
+                    page.screenshot(path=f'_wasm-test/printing-light-{style}-on-phone.png')
+                    update('light.p2s_chamber', 'off')
+                    unlit = page.get_by_role('img', name='Light off', exact=True)
+                    expect(unlit).to_be_visible()
+                    expect(page.get_by_role('switch').first).not_to_be_checked()
+                    expect(lit).to_have_count(0)
+                    page.evaluate('() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))')
+                    assert unlit.screenshot() != lit_pixels, 'On/off must change the actual glyph, not just its label'
+                    page.screenshot(path=f'_wasm-test/printing-light-{style}-off-phone.png')
+                    assert len([c for c in commands if c['type'] == 'call_service']) == calls_before, 'Incoming light updates must not send actions'
+                    update('light.p2s_chamber', 'on')
+                    expect(page.get_by_role('img', name='Light on', exact=True)).to_be_visible()
+
+                light_states('classic')
                 page.screenshot(path='_wasm-test/printing-after-readings-phone.png')
                 page.get_by_role('button', name='Card style: Classic', exact=True).click(force=True, delay=100)
                 page.get_by_text('Lcd', exact=True).click(force=True, delay=100)
                 page.wait_for_timeout(700)
                 page.screenshot(path='_wasm-test/printing-after-lcd-phone.png')
                 assert painted_color((185, 195, 162)) > 1000, 'LCD fallback cards must use LCD chrome'
+                # Check the value's painted lower half, where the old unavailable overlay hid it.
+                for label in ('Start Unavailable', 'ETA Unknown'):
+                    card_box = page.get_by_role('button', name=label, exact=True).bounding_box()
+                    assert card_box and card_box['y'] >= 0 and card_box['y'] + card_box['height'] < height - 60
+                    value_box = {**card_box, 'y': card_box['y'] + card_box['height'] / 2, 'height': card_box['height'] / 2}
+                    value = Image.open(io.BytesIO(page.screenshot(clip=value_box))).convert('RGB')
+                    pixels = value.get_flattened_data() if hasattr(value, 'get_flattened_data') else value.getdata()
+                    ink = sum(1 for pixel in pixels if all(abs(a-b) < 4 for a, b in zip(pixel, (28, 36, 22))))
+                    assert ink > 20, label + ' must paint full-contrast value text rather than a faded overlay'
+                light_states('lcd')
                 for previous, style, rgb in [('Lcd', 'Console', (47, 74, 87)), ('Console', 'Braun', (248, 246, 240))]:
                     page.get_by_role('button', name='Card style: ' + previous, exact=True).click(force=True, delay=100)
                     page.get_by_text(style, exact=True).click(force=True, delay=100)
                     page.wait_for_timeout(500)
                     assert painted_color(rgb) > 1000, style + ' fallback cards must use their selected palette'
+                    light_states(style.lower())
                     page.screenshot(path=f'_wasm-test/printing-after-{style.lower()}-phone.png')
                 expect(page.get_by_role('switch')).to_have_count(2)
                 expect(page.get_by_role('switch').first).to_be_checked()
@@ -221,6 +255,7 @@ try:
             update('sensor.p2s_fixture_start_time', '2026-10-18T17:00:00Z')
             expect(page.get_by_role('button', name='Start Unavailable', exact=True)).to_have_count(0)
             expect(page.get_by_text('2026-10-18T17:00:00Z', exact=True)).to_have_count(0)
+            expect(page.get_by_role('button', name=re.compile(r'^Start (?:[0-9]|just now|in )'))).to_have_count(1)
             assert not errors, errors
             page.close()
         browser.close()

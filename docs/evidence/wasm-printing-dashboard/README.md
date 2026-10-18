@@ -74,7 +74,11 @@ python scripts/test-demo-browser.py app-ui/build/dist/wasmJs/productionExecutabl
 
 The printing browser test checks actual fetched pixels, same-URL live frame replacement,
 conditional state changes, readable missing values, and resolution counts across scroll-away /
-scroll-back cycles. The switch check also verifies its checked state before and after a live HA update, preventing
+scroll-back cycles. The browser also checks full-contrast ink in the lower LCD Start/ETA value region, including
+unavailable/unknown values and a live timestamp replacement. Light cards use an amber lit
+bulb with rays for on and a neutral outline for off. Live on/off changes update both the glyph
+and switch without issuing a service call. Pixel checks cover all four palettes; JVM checks
+cover lit-icon contrast against light and dark card surfaces. The switch check also verifies its checked state before and after a live HA update, preventing
 a parent button from swallowing the switch’s accessibility state. The JVM regressions cover condition rules, printer isolation, picture
 URL/token/frame handling, and request sharing across cancellation, failure and bounded eviction.
 Before evidence is captured by passing `--before` against the baseline build; that mode makes
@@ -110,8 +114,20 @@ The lower fixed captures follow the live updates from 100%/128 to 62%/129 and th
 change from finished to running. Coloured preview pixels change from blue to red on a same-URL
 image update. The initial captures show the original fixture values.
 
-Observed validation: production build and formatting passed; 35 app-ui, 75 ha-client and
+Observed validation: production build and formatting passed; 36 app-ui, 75 ha-client and
 3 rc-player-ui JVM tests passed. The focused printing browser suite passed all three widths
 and all four authenticated card palettes. The general authenticated, adaptive/chat and public
 curated-demo browser suites passed as well. Existing toolchain/deprecation/Skiko warnings remain;
 this work does not change their versions or remove their workarounds.
+
+## Light state and LCD readability
+
+These captures include the Start/ETA values above Controls and the same chamber light
+after live on/off state updates. They use the synthetic fixture described above.
+
+| Palette | On | Off |
+| --- | --- | --- |
+| Classic | [Lit](light-classic-on-phone.png) | [Unlit](light-classic-off-phone.png) |
+| LCD | [Lit](light-lcd-on-phone.png) | [Unlit](light-lcd-off-phone.png) |
+| Console | [Lit](light-console-on-phone.png) | [Unlit](light-console-off-phone.png) |
+| Braun | [Lit](light-braun-on-phone.png) | [Unlit](light-braun-off-phone.png) |

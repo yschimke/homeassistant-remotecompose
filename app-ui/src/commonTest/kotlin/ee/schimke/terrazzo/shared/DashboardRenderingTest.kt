@@ -1,5 +1,7 @@
 package ee.schimke.terrazzo.shared
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.design.DeviceInfo
 import ee.schimke.ha.model.*
@@ -205,5 +207,26 @@ class DashboardRenderingTest {
     assertFailsWith<IllegalStateException> { cache.get("failure") }
     assertEquals(2, failures)
     assertEquals("still alive", cache.get("still alive"))
+  }
+
+  @Test
+  fun lightStatesStayDistinctAndLitInkContrastsWithEveryCardPalette() {
+    val neutral = Color(0xFF46503A)
+    assertEquals("Light on", lightIconDescription("on"))
+    assertEquals("Light off", lightIconDescription("off"))
+    assertEquals("Light unavailable", lightIconDescription("unavailable"))
+    assertEquals("Light unknown", lightIconDescription("unknown"))
+    for (surface in listOf(0xFFFFF8FF, 0xFFF8F6F0, 0xFFB9C3A2, 0xFF2F4A57, 0xFF07263A)) {
+      val background = Color(surface)
+      val lit = lightIconTint("on", background, neutral)
+      val ratio =
+        (maxOf(lit.luminance(), background.luminance()) + 0.05f) /
+          (minOf(lit.luminance(), background.luminance()) + 0.05f)
+      assertTrue(ratio >= 3f, "Lit icon needs 3:1 contrast against $surface: $ratio")
+      assertEquals(1f, lit.alpha)
+      assertNotEquals(neutral, lit)
+      assertEquals(neutral, lightIconTint("off", background, neutral))
+      assertEquals(neutral, lightIconTint("unavailable", background, neutral))
+    }
   }
 }

@@ -10,6 +10,10 @@ below.
 [Material Design Icons](https://pictogrammers.com/library/mdi/) 7.4.47 (npm `@mdi/js` and
 `@mdi/svg`), by the [Pictogrammers](https://pictogrammers.com/) icon group.
 
+The shared host UI also reuses the `lightbulb-on` and `lightbulb-outline` path data in
+`app-ui/src/commonMain/kotlin/ee/schimke/terrazzo/shared/LightStateIcon.kt`. The same attribution
+and licence apply to those two glyphs.
+
 > Pictogrammers Free License
 >
 > This icon collection is released as free, open source, and GPL friendly by the Pictogrammers

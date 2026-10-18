@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
@@ -636,15 +637,22 @@ internal fun NativeCard(
     else Modifier
   OutlinedCard(Modifier.fillMaxWidth().entityDetails(entityId, onMoreInfo).then(tapModifier)) {
     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-      Text(
-        (card.raw["name"] as? JsonPrimitive)?.contentOrNull
-          ?: (card.raw["title"] as? JsonPrimitive)?.contentOrNull
-          ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull
-          ?: entityId
-          ?: if (card.type == "entities") "Status"
-          else card.type.replace('-', ' ').replaceFirstChar { it.uppercaseChar() },
-        style = MaterialTheme.typography.titleMedium,
-      )
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+      ) {
+        if (entityId?.substringBefore('.') == "light") LightStateIcon(entity?.state)
+        Text(
+          (card.raw["name"] as? JsonPrimitive)?.contentOrNull
+            ?: (card.raw["title"] as? JsonPrimitive)?.contentOrNull
+            ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull
+            ?: entityId
+            ?: if (card.type == "entities") "Status"
+            else card.type.replace('-', ' ').replaceFirstChar { it.uppercaseChar() },
+          style = MaterialTheme.typography.titleMedium,
+          modifier = Modifier.weight(1f),
+        )
+      }
       if (card.type == "markdown") {
         val source = (card.raw["content"] as? JsonPrimitive)?.contentOrNull.orEmpty()
         Text(
@@ -661,6 +669,8 @@ internal fun NativeCard(
           val value = snapshot.states[id]
           ListItem(
             modifier = Modifier.entityDetails(id, onMoreInfo),
+            leadingContent =
+              if (id.substringBefore('.') == "light") ({ LightStateIcon(value?.state) }) else null,
             headlineContent = {
               Text(value?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull ?: id)
             },
