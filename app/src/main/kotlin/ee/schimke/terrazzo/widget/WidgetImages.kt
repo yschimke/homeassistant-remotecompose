@@ -28,7 +28,7 @@ object WidgetImages {
     val stack = (context.terrazzoGraph() as? ee.schimke.terrazzo.di.AppGraph)?.haImageStack
     stack ?: return null
     stack.ensureBaseUrl(baseUrl)
-    val bitmap = stack.resolve(target(baseUrl, url), fresh) ?: return null
+    val bitmap = stack.resolve(target(baseUrl, url), fresh, maxDimensionPx = maxPx) ?: return null
     return encode(bitmap, maxPx, maxBytes)
   }
 

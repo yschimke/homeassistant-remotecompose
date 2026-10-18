@@ -75,6 +75,125 @@ class WidgetPreviewParityTest {
   }
 
   @Test
+  fun pictureWidgetsEmbedImagesInTemplateAndDirectCapturesAtEverySize() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val file = java.io.File(context.cacheDir, "launcher-picture.png")
+    fun writeImage(color: Int) {
+      val bitmap = Bitmap.createBitmap(1200, 600, Bitmap.Config.ARGB_8888)
+      bitmap.eraseColor(color)
+      file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+      bitmap.recycle()
+    }
+    val entityId = "camera.driveway"
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            entityId to
+              EntityState(
+                entityId,
+                "idle",
+                buildJsonObject {
+                  put("friendly_name", "Driveway")
+                  put("entity_picture", file.toURI().toString())
+                },
+              )
+          )
+      )
+    val configs =
+      listOf(
+        // Eligible for the baked template path.
+        """{"type":"picture-entity","entity":"camera.driveway","show_name":false,"show_state":false}""",
+        // Real bundled camera card shape: these extra keys require direct capture.
+        """{"type":"picture-entity","entity":"camera.driveway","camera_image":"camera.driveway","camera_view":"auto","aspect_ratio":"16:9","show_name":false,"show_state":false}""",
+        """{"type":"picture-entity","entity":"camera.driveway","tap_action":{"action":"more-info"},"show_name":false,"show_state":false}""",
+      )
+    fun pixels(card: CardConfig, size: WidgetSizeDp, installed: Boolean): IntArray {
+      val views =
+        checkNotNull(
+          TerrazzoWidgetProvider()
+            .renderPreview(
+              context,
+              DemoData.BASE_URL,
+              card,
+              snapshot,
+              size,
+              if (installed) 42 else AppWidgetManager.INVALID_APPWIDGET_ID,
+            )
+        )
+      val width = WidgetSizing.dpToPx(context, size.widthDp)
+      val height = WidgetSizing.dpToPx(context, size.heightDp)
+      val view = onMain { inflateWidgetPreview(context, views) }
+      val bitmap = renderInWindow(view, width, height)
+      return IntArray(width * height).also {
+        bitmap.getPixels(it, 0, width, 0, 0, width, height)
+        bitmap.recycle()
+      }
+    }
+    try {
+      for (raw in configs) {
+        val json =
+          kotlinx.serialization.json.Json.parseToJsonElement(raw)
+            as kotlinx.serialization.json.JsonObject
+        val card = CardConfig("picture-entity", json)
+        for (size in
+          listOf(WidgetSizeDp(144, 168), WidgetSizeDp(288, 252), WidgetSizeDp(432, 336))) {
+          writeImage(android.graphics.Color.MAGENTA)
+          val preview = pixels(card, size, installed = false)
+          assertTrue(
+            "$raw at $size must display the loaded image",
+            preview.count { it == android.graphics.Color.MAGENTA } > preview.size / 2,
+          )
+          // Same URL, new pixels: a launcher update must bypass stale memory/disk image caches.
+          writeImage(android.graphics.Color.CYAN)
+          val updated = pixels(card, size, installed = true)
+          assertTrue(
+            "$raw at $size must refresh an image changed in place",
+            updated.count { it == android.graphics.Color.CYAN } > updated.size / 2,
+          )
+        }
+      }
+    } finally {
+      file.delete()
+    }
+  }
+
+  @Test
+  fun unavailableDirectPictureStillInflatesWithItsNameAndState() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val raw =
+      kotlinx.serialization.json.Json.parseToJsonElement(
+        """{"type":"picture-entity","entity":"camera.missing","name":"Unavailable camera","aspect_ratio":"16:9"}"""
+      ) as kotlinx.serialization.json.JsonObject
+    val card = CardConfig("picture-entity", raw)
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "camera.missing" to
+              EntityState(
+                "camera.missing",
+                "unavailable",
+                buildJsonObject { put("entity_picture", "file:///missing-widget-image.png") },
+              )
+          )
+      )
+    val views =
+      checkNotNull(
+        TerrazzoWidgetProvider()
+          .renderPreview(context, DemoData.BASE_URL, card, snapshot, WidgetSizeDp(288, 252))
+      )
+    val bitmap = renderInWindow(onMain { inflateWidgetPreview(context, views) }, 576, 504)
+    val pixels = IntArray(bitmap.width * bitmap.height)
+    bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+    assertTrue(
+      "Unavailable pictures must retain useful icon and text content",
+      pixels.distinct().size > 10,
+    )
+    bitmap.recycle()
+  }
+
+  @Test
   fun multiEntityWidgetsKeepAndUpdateTheFifthEntity() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val entities = (1..5).map { "sensor.room_$it" }

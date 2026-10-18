@@ -230,6 +230,86 @@ class WidgetPreparationTest {
 
   @Test
   fun editPreviewCancelThenConfirmInstallationPersistsEditedCard() {
+    installJourney(card, snapshot("on"), "")
+  }
+
+  @Test
+  fun pictureUrlOnlyCaptureReproducesTheOriginalPreviewFailure() {
+    // Reproduce the old direct capture: no inline strategy and no image fetching. This isolates
+    // native host decoding from network access, bitmap size and the Home Assistant connection.
+    val legacyCapture: WidgetPreviewCapture = { ctx, _, cfg, state, size ->
+      val profile = ee.schimke.ha.rc.widgetsProfile
+      val captured = runBlocking {
+        androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument(
+          context = ctx,
+          creationDisplayInfo =
+            androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo(
+              WidgetSizing.dpToPx(ctx, size.widthDp),
+              WidgetSizing.dpToPx(ctx, size.heightDp),
+              ctx.resources.configuration.densityDpi,
+            ),
+          profile = profile,
+        ) {
+          ee.schimke.ha.rc.LauncherWidgetContent(
+            ee.schimke.ha.rc.cards.defaultRegistry(),
+            profile,
+            false,
+            ee.schimke.ha.rc.components.WidgetActionRegistry(),
+            cfg,
+            state,
+            ee.schimke.ha.rc.WidgetCaptureSizeDp(size.widthDp, size.heightDp),
+          )
+        }
+      }
+      android.widget.RemoteViews(
+        android.widget.RemoteViews.DrawInstructions.Builder(
+            listOf(ee.schimke.ha.rc.platformWidgetDocument(captured.bytes))
+          )
+          .build()
+      )
+    }
+    val json =
+      kotlinx.serialization.json.Json.parseToJsonElement(
+        """{"type":"picture-entity","entity":"camera.g5_turret_ultra_high_resolution_channel","camera_view":"auto","aspect_ratio":"16:9","name":"Driveway"}"""
+      ) as kotlinx.serialization.json.JsonObject
+    compose.setContent {
+      CompositionLocalProvider(
+        LocalTerrazzoGraph provides graph,
+        LocalWidgetPreviewCapture provides legacyCapture,
+      ) {
+        MaterialTheme {
+          WidgetInstallSheet(
+            DemoData.BASE_URL,
+            "",
+            CardConfig("picture-entity", json),
+            DemoData.snapshot(),
+            {},
+          )
+        }
+      }
+    }
+    compose.waitUntil(60_000) {
+      compose.onAllNodesWithTag("widget-preview-error").fetchSemanticsNodes().isNotEmpty()
+    }
+    compose.onNodeWithText("Install widget").assertIsNotEnabled()
+    screenshot("picture-before-preview-error")
+  }
+
+  @Test
+  fun picturePreviewAndConfirmedLauncherInstallation() {
+    val json =
+      kotlinx.serialization.json.Json.parseToJsonElement(
+        """{"type":"picture-entity","entity":"camera.g5_turret_ultra_high_resolution_channel","camera_image":"camera.g5_turret_ultra_high_resolution_channel","camera_view":"auto","aspect_ratio":"16:9","name":"Driveway"}"""
+      ) as kotlinx.serialization.json.JsonObject
+    installJourney(CardConfig("picture-entity", json), DemoData.snapshot(), "picture-")
+  }
+
+  private fun installJourney(
+    card: CardConfig,
+    initialSnapshot: HaSnapshot,
+    evidencePrefix: String,
+  ) {
+    val editedName = if (evidencePrefix.isEmpty()) "My magical light" else "My driveway camera"
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     assertTrue(
       "The emulator launcher must support widget pinning",
@@ -240,7 +320,6 @@ class WidgetPreparationTest {
     runBlocking { WidgetSync.reconcile(context) }
     val before = runBlocking { graph.widgetStore.installed.first().map { it.widgetId }.toSet() }
     var dismissed = false
-    val initialSnapshot = snapshot("on")
     compose.setContent {
       CompositionLocalProvider(LocalTerrazzoGraph provides graph) {
         MaterialTheme {
@@ -249,7 +328,7 @@ class WidgetPreparationTest {
       }
     }
     compose.onNodeWithText("Widget name").performTextClearance()
-    compose.onNodeWithText("Widget name").performTextInput("My magical light")
+    compose.onNodeWithText("Widget name").performTextInput(editedName)
     compose.onNodeWithText("Widget name").performImeAction()
     compose.onNodeWithText("Roomy").performScrollTo().performClick()
     compose.waitUntil(60_000) {
@@ -258,6 +337,7 @@ class WidgetPreparationTest {
         .fetchSemanticsNodes()
         .isNotEmpty()
     }
+    screenshot("${evidencePrefix}prepared-preview")
     compose.onNodeWithText("Install widget").assertIsEnabled().performClick()
     assertTrue(
       device.wait(
@@ -279,7 +359,7 @@ class WidgetPreparationTest {
       runBlocking { graph.widgetStore.installed.first().map { it.widgetId }.toSet() },
     )
     assertFalse("cancelling must return to the edited preparation", dismissed)
-    compose.onNodeWithText("My magical light").assertExists()
+    compose.onNodeWithText(editedName).assertExists()
     compose.waitUntil(60_000) {
       compose
         .onAllNodes(hasText("Install widget") and isEnabled())
@@ -293,7 +373,7 @@ class WidgetPreparationTest {
         30_000,
       )
     )
-    screenshot("launcher-confirmation")
+    screenshot("${evidencePrefix}launcher-confirmation")
     val add =
       device.wait(
         Until.findObject(
@@ -314,7 +394,7 @@ class WidgetPreparationTest {
     val installed = runBlocking {
       graph.widgetStore.installed.first().first { it.widgetId !in before }
     }
-    assertEquals("My magical light", installed.card.raw["name"]?.jsonPrimitive?.content)
+    assertEquals(editedName, installed.card.raw["name"]?.jsonPrimitive?.content)
     device.pressHome()
     device.waitForIdle()
     val hostSelector = By.clazz(java.util.regex.Pattern.compile(".*AppWidgetHostView"))
@@ -354,7 +434,61 @@ class WidgetPreparationTest {
         }
       }
     }
-    screenshot("installed-widget")
+    if (evidencePrefix.isEmpty()) screenshot("installed-widget")
+    if (evidencePrefix.isNotEmpty()) {
+      fun cameraPixels(): IntArray? {
+        val bitmap =
+          checkNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot())
+        return try {
+          device
+            .findObjects(hostSelector)
+            .mapNotNull { host ->
+              val bounds = host.visibleBounds
+              if (bounds.isEmpty) null
+              else {
+                val pixels = IntArray(bounds.width() * bounds.height())
+                bitmap.getPixels(
+                  pixels,
+                  0,
+                  bounds.width(),
+                  bounds.left,
+                  bounds.top,
+                  bounds.width(),
+                  bounds.height(),
+                )
+                pixels
+              }
+            }
+            .maxByOrNull { it.distinct().size }
+        } finally {
+          bitmap.recycle()
+        }
+      }
+      compose.waitUntil(60_000) { (cameraPixels()?.distinct()?.size ?: 0) > 1000 }
+      screenshot("picture-installed-widget")
+      val original = checkNotNull(cameraPixels())
+      assertTrue(
+        "Installed camera must show a scene, not an icon or platform warning",
+        original.distinct().size > 1000,
+      )
+      val frame = System.currentTimeMillis() / DemoData.CAMERA_FRAME_MILLIS
+      compose.waitUntil(20_000) {
+        System.currentTimeMillis() / DemoData.CAMERA_FRAME_MILLIS > frame
+      }
+      // Exercise the actual provider publication path for the launcher-owned id.
+      context.sendBroadcast(
+        android.content.Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).apply {
+          component = android.content.ComponentName(context, TerrazzoWidgetProvider::class.java)
+          putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(installed.widgetId))
+        }
+      )
+      compose.waitUntil(60_000) {
+        cameraPixels()?.let {
+          it.size == original.size && !it.contentEquals(original) && it.distinct().size > 1000
+        } == true
+      }
+      screenshot("picture-installed-updated")
+    }
     val manager = AppWidgetManager.getInstance(context)
     val small =
       Bundle().apply {
