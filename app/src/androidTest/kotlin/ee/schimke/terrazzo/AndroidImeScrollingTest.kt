@@ -1,0 +1,260 @@
+package ee.schimke.terrazzo
+
+import android.content.ContentValues
+import android.graphics.Bitmap
+import android.provider.MediaStore
+import android.view.WindowManager
+import androidx.activity.ComponentActivity
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
+import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.terrazzo.discovery.DiscoveryForm
+import ee.schimke.terrazzo.discovery.HaInstance
+import ee.schimke.terrazzo.shared.CardStudioScreen
+import ee.schimke.terrazzo.ui.AndroidImeHost
+import kotlinx.serialization.json.buildJsonObject
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+/** Real IME tests: a frozen preview cannot verify viewport resizing or focus relocation. */
+@RunWith(AndroidJUnit4::class)
+class AndroidImeScrollingTest {
+  @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
+  private val instrumentation = InstrumentationRegistry.getInstrumentation()
+  private val device = UiDevice.getInstance(instrumentation)
+  private var originalHardwareKeyboardSetting = "0"
+
+  @Before
+  fun configureWindow() {
+    originalHardwareKeyboardSetting =
+      device.executeShellCommand("settings get secure show_ime_with_hard_keyboard").trim()
+    device.executeShellCommand("settings put secure show_ime_with_hard_keyboard 1")
+    compose.runOnUiThread {
+      compose.activity.enableEdgeToEdge()
+      compose.activity.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+    }
+  }
+
+  @After
+  fun restoreKeyboard() {
+    device.pressBack()
+    if (originalHardwareKeyboardSetting == "null") {
+      device.executeShellCommand("settings delete secure show_ime_with_hard_keyboard")
+    } else {
+      device.executeShellCommand(
+        "settings put secure show_ime_with_hard_keyboard $originalHardwareKeyboardSetting"
+      )
+    }
+  }
+
+  @Test
+  fun mainActivityRequestsResize() {
+    val info =
+      compose.activity.packageManager.getActivityInfo(
+        android.content.ComponentName(compose.activity, MainActivity::class.java),
+        0,
+      )
+    assertEquals(
+      WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE,
+      info.softInputMode and WindowManager.LayoutParams.SOFT_INPUT_MASK_ADJUST,
+    )
+  }
+
+  @Test
+  fun discoveredInstancesDoNotStrandUrlOrBottomActionsBehindKeyboard() {
+    var connected = false
+    var demoSelected = false
+    compose.setContent {
+      MaterialTheme {
+        AndroidImeHost {
+          var host by remember { mutableStateOf("http://homeassistant:8123") }
+          DiscoveryForm(
+            instances =
+              listOf(
+                HaInstance("Garage", "http://172.30.32.1:8123", "2026.4.1"),
+                HaInstance("Home", "http://homeassistant:8123", "2026.10.0"),
+              ),
+            host = host,
+            onHostChange = { host = it },
+            onConnect = { connected = true },
+            onInstancePicked = {},
+            onDemoSelected = { demoSelected = true },
+          )
+        }
+      }
+    }
+    val field = compose.onNode(hasSetTextAction())
+    // Request real text-input focus even when the initial layout clips the bottom field.
+    // Capture the keyboard-visible starting state before testing scrollability.
+    field.performSemanticsAction(SemanticsActions.RequestFocus) { it() }
+    compose.runOnIdle {
+      WindowInsetsControllerCompat(compose.activity.window, compose.activity.window.decorView)
+        .show(WindowInsetsCompat.Type.ime())
+    }
+    waitForIme(true)
+    screenshot("discovery-open-ime")
+    assertAboveKeyboard(field)
+    field.performScrollTo()
+    field.performTextReplacement("http://homeassistant.local:8123")
+    screenshot("discovery-focused-ime")
+    assertAboveKeyboard(field)
+    val connect = compose.onNodeWithText("Connect", useUnmergedTree = false)
+    connect.performScrollTo().assertIsDisplayed()
+    assertAboveKeyboard(connect)
+    connect.performClick()
+    compose.runOnIdle { assertTrue(connected) }
+    val demo = compose.onNodeWithText("Try demo mode (no login)")
+    demo.performScrollTo().assertIsDisplayed()
+    scrollFormToBottom()
+    screenshot("discovery-bottom-ime")
+    assertAboveKeyboard(demo)
+    assertNoExtraBottomInset(demo)
+    demo.performClick()
+    compose.runOnIdle { assertTrue(demoSelected) }
+    waitForIme(true)
+
+    device.pressBack()
+    waitForIme(false)
+    field.performScrollTo().assertIsDisplayed()
+    field.assertTextContains("http://homeassistant.local:8123")
+    demo.performScrollTo().assertIsDisplayed()
+    scrollFormToBottom()
+    assertNoExtraBottomInset(demo)
+    screenshot("discovery-bottom-closed")
+    // Opening a second time catches stale padding/scroll-range state after IME dismissal.
+    field.performScrollTo().performClick()
+    waitForIme(true)
+    demo.performScrollTo().assertIsDisplayed()
+    assertAboveKeyboard(demo)
+  }
+
+  @Test
+  fun lastCardStudioFieldAndActionsRemainReachableWithIme() {
+    compose.setContent {
+      MaterialTheme {
+        AndroidImeHost {
+          CardStudioScreen(
+            card = CardConfig("tile", buildJsonObject {}),
+            snapshot = HaSnapshot(),
+            onBack = {},
+            preview = {},
+          )
+        }
+      }
+    }
+    val field = compose.onNodeWithText("Create a missing design or describe the issue")
+    field.performScrollTo().performClick()
+    waitForIme(true)
+    field.performTextInput("Make the last field easy to reach")
+    screenshot("card-studio-focused-ime")
+    assertAboveKeyboard(field)
+    val action = compose.onNodeWithText("Generate or fix draft")
+    action.performScrollTo().assertIsDisplayed()
+    screenshot("card-studio-bottom-ime")
+    assertAboveKeyboard(action)
+    waitForIme(true)
+    device.pressBack()
+    waitForIme(false)
+    action.performScrollTo().assertIsDisplayed()
+    screenshot("card-studio-bottom-closed")
+  }
+
+  private fun windowInsets(): WindowInsetsCompat =
+    checkNotNull(ViewCompat.getRootWindowInsets(compose.activity.window.decorView))
+
+  private fun waitForIme(visible: Boolean) {
+    compose.waitUntil(10_000) {
+      compose.runOnIdle { windowInsets().isVisible(WindowInsetsCompat.Type.ime()) == visible }
+    }
+    device.waitForIdle()
+    compose.waitForIdle()
+  }
+
+  private fun assertAboveKeyboard(node: SemanticsNodeInteraction) {
+    node.assertIsDisplayed()
+    val semantics = node.fetchSemanticsNode()
+    val bottom = semantics.positionInWindow.y + semantics.size.height
+    val keyboardTop = compose.runOnIdle {
+      compose.activity.window.decorView.height -
+        windowInsets().getInsets(WindowInsetsCompat.Type.ime()).bottom
+    }
+    assertTrue(
+      "Entire control must be above the real IME: bottom $bottom, IME top $keyboardTop",
+      bottom <= keyboardTop + 1,
+    )
+  }
+
+  private fun scrollFormToBottom() {
+    compose
+      .onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange))
+      .performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 100_000f) }
+    compose.waitForIdle()
+  }
+
+  private fun assertNoExtraBottomInset(lastAction: SemanticsNodeInteraction) {
+    // At the scroll limit the form has 24dp of design padding below its last 48dp button.
+    // Compare against max(IME, navigation bar), never their sum (important in three-button mode).
+    val bounds = lastAction.fetchSemanticsNode().boundsInWindow
+    val availableBottom = compose.runOnIdle {
+      compose.activity.window.decorView.height -
+        windowInsets()
+          .getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.systemBars())
+          .bottom
+    }
+    val density = compose.activity.resources.displayMetrics.density
+    val gap = (availableBottom - bounds.bottom) / density
+    // Text semantics exclude the button's internal padding; allow that plus rounding.
+    assertTrue("No doubled or stale bottom inset: gap=${gap}dp", gap in 23f..41f)
+  }
+
+  private fun screenshot(name: String) {
+    val context = instrumentation.targetContext
+    val uri =
+      checkNotNull(
+        context.contentResolver.insert(
+          MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+          ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, "$name.png")
+            put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+            put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/TerrazzoImeTests")
+          },
+        )
+      )
+    val original = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
+    val scale = minOf(1f, 1800f / maxOf(original.width, original.height))
+    val bitmap =
+      if (scale < 1f)
+        Bitmap.createScaledBitmap(
+          original,
+          (original.width * scale).toInt(),
+          (original.height * scale).toInt(),
+          true,
+        )
+      else original
+    checkNotNull(context.contentResolver.openOutputStream(uri)).use {
+      assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it))
+    }
+    if (bitmap !== original) bitmap.recycle()
+    original.recycle()
+  }
+}

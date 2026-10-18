@@ -412,6 +412,13 @@ class HaClient(
     }
   }
 
+  /** Authenticated, entity-scoped conversation history; message text stays on the HA connection. */
+  suspend fun fetchLogbook(entityId: String, startTime: Instant): JsonArray =
+    runCommandArray("logbook/get_events") {
+      put("start_time", startTime.toString())
+      put("entity_ids", buildJsonArray { add(entityId) })
+    }
+
   /**
    * Fetch recorder history for [entityIds] over `[startTime, endTime]` via HA's
    * `history/history_during_period` WebSocket command. The result is keyed by entity id; each value

@@ -57,6 +57,7 @@ fun RemoteHaArcMeter(
       HaVisualFamily.Braun -> braunArc(look, fraction, baseline)
       HaVisualFamily.Nixie -> nixieArc(look, fraction, strokeWidthPx, baseline)
       HaVisualFamily.Console -> consoleArc(look, fraction, baseline, zones)
+      HaVisualFamily.Ikea -> ikeaArc(look, fraction, baseline)
     }
   }
 }
@@ -87,6 +88,7 @@ fun RemoteHaBarMeter(
       HaVisualFamily.Braun -> braunBar(look, fraction, vertical)
       HaVisualFamily.Nixie -> nixieBar(look, fraction, vertical)
       HaVisualFamily.Console -> consoleBar(look, fraction, vertical)
+      HaVisualFamily.Ikea -> ikeaBar(look, fraction, vertical)
     }
   }
 }
@@ -116,6 +118,7 @@ fun RemoteHaThermometerGlyph(
       HaVisualFamily.Braun -> braunThermometer(look, fraction, zones)
       HaVisualFamily.Nixie -> nixieThermometer(look, fraction)
       HaVisualFamily.Console -> consoleThermometer(look, fraction, zones)
+      HaVisualFamily.Ikea -> ikeaThermometer(look, fraction, zones)
     }
   }
 }
@@ -144,6 +147,7 @@ fun RemoteHaBatteryGlyph(
       HaVisualFamily.Braun -> braunBattery(look, fraction)
       HaVisualFamily.Nixie -> nixieBattery(look, fraction)
       HaVisualFamily.Console -> consoleBattery(look, fraction, zones)
+      HaVisualFamily.Ikea -> ikeaBattery(look, fraction, zones)
     }
   }
 }

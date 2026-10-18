@@ -3,6 +3,7 @@ package ee.schimke.ha.rc
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
+import ee.schimke.ha.design.CardBindingRecipe
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -106,7 +107,16 @@ interface CardConverter {
    * `cardText` / `cardFloat`), or a slot value the card reads differently. They are pushed on top
    * of `CardDesignSlots.slotBindings`.
    */
-  fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings? = null
+  fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings? =
+    designRecipe()?.evaluate(card, snapshot)
+
+  /**
+   * The [designBindings] of this card as data, when they can be written that way: a template
+   * captured from this converter carries it ([CardBindingRecipe.BINDING]), so a host without the
+   * converters (the JavaScript embed) can compute the same card-level bindings. A converter that
+   * declares one leaves [designBindings] to its default, so the two cannot disagree.
+   */
+  fun designRecipe(): CardBindingRecipe? = null
 
   /**
    * [designBindings] with "now" read from [clock]. Template playback calls this one, passing the

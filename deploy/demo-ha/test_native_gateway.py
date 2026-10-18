@@ -1,6 +1,7 @@
 """Prove native UI reads work and denied requests never reach upstream HA."""
 import json
 import unittest
+from unittest.mock import patch
 
 from aiohttp import web
 from aiohttp import FormData
@@ -132,9 +133,20 @@ class CommandTests(unittest.TestCase):
             self.assertFalse(command_allowed(message))
 
     def test_markdown_only_accepts_the_reviewed_literal(self):
-        self.assertTrue(command_allowed({'type': 'render_template', 'template': next(iter(STATIC_MARKDOWN))}))
-        for template in ['{{ states }}', '{% for state in states %}{{ state }}{% endfor %}', 'unlisted literal']:
-            self.assertFalse(command_allowed({'type': 'render_template', 'template': template}))
+        for literal in STATIC_MARKDOWN:
+            self.assertTrue(command_allowed({'type': 'render_template', 'template': literal}))
+        # The richer dashboard has no Markdown cards. Exercise the positive policy
+        # with an explicit reviewed fixture as well as the current empty allowlist.
+        with patch('native_gateway.STATIC_MARKDOWN', frozenset({'reviewed literal'})):
+            self.assertTrue(command_allowed({'type': 'render_template', 'template': 'reviewed literal'}))
+            for template in ['{{ states }}', '{% for state in states %}{{ state }}{% endfor %}', 'unlisted literal']:
+                self.assertFalse(command_allowed({'type': 'render_template', 'template': template}))
+
+    def test_dashboard_without_markdown_rejects_all_template_requests(self):
+        with patch('native_gateway.STATIC_MARKDOWN', frozenset()):
+            for template in ['reviewed literal', '{{ states }}', 'unlisted literal']:
+                self.assertFalse(command_allowed({'type': 'render_template', 'template': template}))
+
 
 
 if __name__ == '__main__':

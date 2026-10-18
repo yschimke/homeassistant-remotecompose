@@ -9,7 +9,11 @@ import ee.schimke.ha.client.HaConfig
 import ee.schimke.terrazzo.shared.*
 import kotlin.js.JsString
 import kotlin.js.Promise
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.await
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 @JsFun(
   "() => /\\/demo\\/?$/.test(location.pathname) || new URLSearchParams(location.search).get('demo') === '1' ? 'demo' : 'app'"
@@ -17,9 +21,6 @@ import kotlinx.coroutines.await
 private external fun entryMode(): String
 
 @JsFun("() => location.origin + '/demo-ha'") private external fun demoBackendUrl(): String
-
-@JsFun("() => new URLSearchParams(location.search).get('data') === 'fake'")
-private external fun fakeDataRequested(): Boolean
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
@@ -56,19 +57,44 @@ private suspend fun currentPanelAccessToken(): String = panelAccessToken().await
 
 @Composable
 private fun PublicDemo() {
-  var mode by remember {
-    mutableStateOf(if (fakeDataRequested()) DemoDataMode.FAKE else DemoDataMode.AUTO)
-  }
   val source = remember { PublicDemoDataSource(demoBackendUrl()) }
   DisposableEffect(source) { onDispose { source.close() } }
-  val frame by
-    remember(mode, source) { demoFrames(mode, source) }
-      .collectAsState(DemoFrame(DemoData.Fake, DemoDataStatus.FAKE))
+  var frame by remember { mutableStateOf(DemoFrame(null, DemoDataStatus.CONNECTING)) }
+  var controlError by remember { mutableStateOf<String?>(null) }
+  var pending by remember { mutableStateOf(false) }
+  val scope = rememberCoroutineScope()
+  LaunchedEffect(source) { demoFrames(source).collect { frame = it } }
+  fun control(action: suspend () -> Unit) {
+    if (pending || frame.status != DemoDataStatus.LIVE) return
+    controlError = null
+    pending = true
+    scope.launch {
+      try {
+        val updated =
+          withTimeout(10_000) {
+            action()
+            source.read()
+          }
+        if (frame.status == DemoDataStatus.LIVE) frame = DemoFrame(updated, DemoDataStatus.LIVE)
+      } catch (_: TimeoutCancellationException) {
+        controlError = "Could not update demo state · try again"
+      } catch (e: CancellationException) {
+        throw e
+      } catch (_: Throwable) {
+        controlError = "Could not update demo state · try again"
+      } finally {
+        pending = false
+      }
+    }
+  }
+  val enabled = !pending && frame.status == DemoDataStatus.LIVE
   DashboardExperience(
-    frame.data.dashboard,
-    frame.data.snapshot,
+    frame.data?.dashboard,
+    frame.data?.snapshot,
     dataStatus = frame.status,
-    dataMode = mode,
-    onDataModeChange = { mode = it },
+    controlError = controlError,
+    onToggle = if (!enabled) null else { id -> control { source.toggle(id) } },
+    onTemperatureChange =
+      if (!enabled) null else { temperature -> control { source.setTemperature(temperature) } },
   )
 }

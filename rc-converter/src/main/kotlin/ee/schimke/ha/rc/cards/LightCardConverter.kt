@@ -60,7 +60,22 @@ class LightCardConverter : CardConverter {
     snapshot: HaSnapshot?,
     slot: Int,
     templateAction: HaAction,
-  ): HaAction? = dial.action(card, snapshot, templateAction)
+  ): HaAction? {
+    // IKEA's explicit power keys must remain explicit after replacing a template slot.
+    // Brightness still uses DialCard's fresh snapshot-derived stepper payloads.
+    if (
+      snapshot != null &&
+        slot == 0 &&
+        templateAction is HaAction.CallService &&
+        templateAction.domain == "light" &&
+        templateAction.service in setOf("turn_on", "turn_off") &&
+        templateAction.serviceData.isEmpty()
+    ) {
+      val id = card.raw["entity"]?.jsonPrimitive?.content ?: return null
+      return templateAction.copy(entityId = id)
+    }
+    return dial.action(card, snapshot, templateAction)
+  }
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {

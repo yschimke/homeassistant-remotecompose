@@ -11,6 +11,7 @@ import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.di.AppGraph
+import ee.schimke.terrazzo.ui.AndroidImeHost
 import ee.schimke.terrazzo.ui.TerrazzoTheme
 import ee.schimke.terrazzo.ui.toThemeStyle
 import ee.schimke.terrazzo.ui.toUberTheme
@@ -82,7 +83,9 @@ class MainActivity : ComponentActivity() {
           darkMode = darkPref,
           cardStyle = cardStylePref.toUberTheme(),
         ) {
-          TerrazzoApp(initialDashboard = initialDashboard, initialSession = initialSession)
+          AndroidImeHost {
+            TerrazzoApp(initialDashboard = initialDashboard, initialSession = initialSession)
+          }
         }
       }
     }

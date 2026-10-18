@@ -16,117 +16,85 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.*
-import kotlinx.serialization.json.*
-
-/** Public, deterministic fixture. No connection, credentials, persistence or HA writes. */
-object DemoDashboard {
-  private val json = Json { ignoreUnknownKeys = true }
-  val dashboard: Dashboard =
-    json.decodeFromString(
-      """{
-      "title":"Demo home",
-      "views":[
-        {"title":"Home","path":"home","sections":[
-          {"title":"Living spaces","cards":[
-            {"type":"tile","entity":"light.living_room","name":"Living room"},
-            {"type":"tile","entity":"light.kitchen","name":"Kitchen"},
-            {"type":"entities","title":"Comfort","entities":["sensor.temperature","sensor.humidity"]}
-          ]},
-          {"title":"Around the house","cards":[
-            {"type":"tile","entity":"binary_sensor.front_door","name":"Front door"},
-            {"type":"entities","title":"Energy","entities":["sensor.solar","sensor.home_power"]}
-          ]}
-        ]},
-        {"title":"Rooms","path":"rooms","cards":[
-          {"type":"entities","title":"Living room","entities":["light.living_room","sensor.temperature","sensor.humidity"]},
-          {"type":"tile","entity":"light.kitchen","name":"Kitchen"}
-        ]}
-      ]
-    }"""
-    )
-
-  val snapshot =
-    HaSnapshot(
-      states =
-        listOf(
-            entity("light.living_room", "on", "Living room"),
-            entity("light.kitchen", "off", "Kitchen"),
-            entity("sensor.temperature", "21.5", "Temperature", "°C"),
-            entity("sensor.humidity", "44", "Humidity", "%"),
-            entity("binary_sensor.front_door", "off", "Front door", deviceClass = "door"),
-            entity("sensor.solar", "2.4", "Solar production", "kW"),
-            entity("sensor.home_power", "860", "Home power", "W"),
-          )
-          .associateBy { it.entityId }
-    )
-
-  private fun entity(
-    id: String,
-    state: String,
-    name: String,
-    unit: String? = null,
-    deviceClass: String? = null,
-  ) =
-    EntityState(
-      id,
-      state,
-      buildJsonObject {
-        put("friendly_name", name)
-        unit?.let { put("unit_of_measurement", it) }
-        deviceClass?.let { put("device_class", it) }
-      },
-    )
-}
 
 /** Data-independent demo surface; the host supplies its current dashboard and snapshot. */
 @Composable
 fun DashboardExperience(
-  dashboard: Dashboard = DemoDashboard.dashboard,
-  snapshot: HaSnapshot = DemoDashboard.snapshot,
+  dashboard: Dashboard?,
+  snapshot: HaSnapshot?,
   demo: Boolean = true,
-  dataStatus: DemoDataStatus = DemoDataStatus.FAKE,
-  dataMode: DemoDataMode = DemoDataMode.FAKE,
-  onDataModeChange: ((DemoDataMode) -> Unit)? = null,
+  dataStatus: DemoDataStatus,
+  onToggle: ((String) -> Unit)? = null,
+  onTemperatureChange: ((Double) -> Unit)? = null,
+  controlError: String? = null,
 ) {
+  var detailsEntity by remember(dashboard) { mutableStateOf<String?>(null) }
   var design by rememberSaveable { mutableStateOf("classic") }
   var dark by rememberSaveable { mutableStateOf(false) }
   MaterialTheme(
     colorScheme = if (dark || design == "console") darkColorScheme() else lightColorScheme()
   ) {
+    val selectedEntity = detailsEntity
+    if (selectedEntity != null && snapshot != null) {
+      EntityDetailsDialog(selectedEntity, snapshot) { detailsEntity = null }
+    }
     Scaffold(
       topBar = {
         DemoToolbar(
-          title = if (demo) "Demo home" else dashboard.title ?: "Home Assistant",
+          title = if (demo) "Demo home" else dashboard?.title ?: "Home Assistant",
           status =
             if (!demo) "Read only"
             else
               when (dataStatus) {
-                DemoDataStatus.LIVE -> "Live · read only"
-                DemoDataStatus.FAKE -> "Fake · read only"
-                DemoDataStatus.CONNECTING -> "Connecting… · read only"
-                DemoDataStatus.UNAVAILABLE -> "Offline · fake data"
+                DemoDataStatus.LIVE -> "Live · try the switches"
+                DemoDataStatus.CONNECTING -> "Connecting to demo HA…"
+                DemoDataStatus.UNAVAILABLE -> "Demo HA unavailable · retrying"
               },
           design = design,
           onDesignChange = { design = it },
           dark = dark,
           onDarkChange = { dark = it },
-          dataMode = dataMode,
-          dataStatus = dataStatus,
-          onDataModeChange = onDataModeChange,
         )
       }
     ) { padding ->
       Column(Modifier.fillMaxSize().padding(padding)) {
-        DashboardContent(
-          dashboard,
-          if (demo) "demo" else "ha-panel",
-          snapshot,
-          Modifier.weight(1f),
-        ) { _, card ->
-          LibraryCard(card, snapshot, design, dark || design == "console") {
-            NativeCard(card, snapshot, readOnly = true) {}
-          }
+        controlError?.let {
+          Text(
+            it,
+            Modifier.padding(horizontal = 16.dp),
+            color = MaterialTheme.colorScheme.error,
+          )
         }
+        // A changed HA dashboard must not retain the previous grid's cards or semantics.
+        // State-only refreshes keep the same key, preserving playback and selected views.
+        if (dashboard != null && snapshot != null)
+          key(dashboard) {
+            DashboardContent(
+              dashboard,
+              if (demo) "demo" else "ha-panel",
+              snapshot,
+              Modifier.weight(1f),
+            ) { _, card ->
+              LibraryCard(
+                card,
+                snapshot,
+                design,
+                dark || design == "console",
+                onToggle,
+                onMoreInfo = { detailsEntity = it },
+                onTemperatureChange = onTemperatureChange,
+              ) {
+                NativeCard(
+                  card,
+                  snapshot,
+                  readOnly = onToggle == null,
+                  onMoreInfo = { detailsEntity = it },
+                ) {
+                  onToggle?.invoke(it)
+                }
+              }
+            }
+          }
       }
     }
   }
@@ -141,12 +109,15 @@ private fun DemoToolbar(
   onDesignChange: (String) -> Unit,
   dark: Boolean,
   onDarkChange: (Boolean) -> Unit,
-  dataMode: DemoDataMode,
-  dataStatus: DemoDataStatus,
-  onDataModeChange: ((DemoDataMode) -> Unit)?,
 ) {
   val styles =
-    listOf("classic" to "Classic", "braun" to "Braun", "lcd" to "LCD", "console" to "Console")
+    listOf(
+      "classic" to "Classic",
+      "braun" to "Braun",
+      "lcd" to "LCD",
+      "console" to "Console",
+      "ikea" to "IKEA Showroom",
+    )
   var stylesExpanded by remember { mutableStateOf(false) }
   var optionsExpanded by remember { mutableStateOf(false) }
   TopAppBar(
@@ -199,31 +170,6 @@ private fun DemoToolbar(
               optionsExpanded = false
             },
           )
-          if (onDataModeChange != null) {
-            HorizontalDivider()
-            listOf(DemoDataMode.AUTO to "Live when available", DemoDataMode.FAKE to "Fake data")
-              .forEach { (mode, label) ->
-                DropdownMenuItem(
-                  text = { Text(label) },
-                  modifier = Modifier.semantics { selected = dataMode == mode },
-                  trailingIcon = { if (dataMode == mode) Text("✓") },
-                  onClick = {
-                    onDataModeChange(mode)
-                    optionsExpanded = false
-                  },
-                )
-              }
-            if (
-              dataStatus == DemoDataStatus.CONNECTING || dataStatus == DemoDataStatus.UNAVAILABLE
-            ) {
-              Text(
-                if (dataStatus == DemoDataStatus.CONNECTING) "Connecting to public demo…"
-                else "Live demo unavailable · using fake data · retrying",
-                Modifier.widthIn(max = 280.dp).padding(horizontal = 16.dp, vertical = 8.dp),
-                style = MaterialTheme.typography.bodySmall,
-              )
-            }
-          }
         }
       }
     },

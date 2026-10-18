@@ -30,7 +30,8 @@ test('public native HA login, dashboard, live updates and server-enforced read-o
     await page.getByLabel('Password', { exact: true }).fill('demo');
     await page.getByRole('button', { name: 'Log in', exact: true }).click();
     await page.waitForFunction(() => document.querySelector('home-assistant')?.hass?.states?.['sensor.demo_temperature'], null, { timeout: 60_000 });
-    await page.getByText('Live simulated readings. Public access is read-only.', { exact: false }).waitFor();
+    await page.locator('hui-thermostat-card').waitFor({ state: 'visible' });
+    await page.locator('hui-gauge-card').first().waitFor({ state: 'visible' });
     await page.screenshot({ path: `${evidence}/dashboard-before.png` });
     const initial = await page.evaluate(() => {
       const hass = document.querySelector('home-assistant').hass;
@@ -42,6 +43,7 @@ test('public native HA login, dashboard, live updates and server-enforced read-o
       const failures = [];
       for (const command of [
         { type: 'call_service', domain: 'switch', service: 'toggle', target: { entity_id: 'switch.demo_coffee' } },
+        { type: 'call_service', domain: 'climate', service: 'set_temperature', service_data: { temperature: 22.5 }, target: { entity_id: 'climate.demo_thermostat' } },
         { type: 'lovelace/config/save', config: { views: [] } },
         { type: 'fire_event', event_type: 'test' },
         { type: 'auth/long_lived_access_token', client_name: 'denied', lifespan: 1 },
@@ -60,7 +62,7 @@ test('public native HA login, dashboard, live updates and server-enforced read-o
       return { failures, statuses, battery: hass.states['sensor.demo_battery'].state,
         views: (await hass.callWS({ type: 'lovelace/config' })).views.length };
     });
-    assert.deepEqual(rejected.failures, Array(6).fill('read_only'));
+    assert.deepEqual(rejected.failures, Array(7).fill('read_only'));
     assert.deepEqual(rejected.statuses, [403, 403, 403]);
     assert.equal(Number(rejected.battery), 78);
     assert.equal(rejected.views, 1);

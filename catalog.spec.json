@@ -48,6 +48,17 @@
       ]
     },
     {
+      "name": "IKEA Showroom",
+      "components": [
+        { "componentId": "Uber/Ikea-Light", "preview": "Uber_Ikea_Light", "caption": "IKEA-inspired showroom: square furniture frames, compartment meters and tactile paddles (light)." },
+        { "componentId": "Uber/Ikea-Dark", "preview": "Uber_Ikea_Dark", "caption": "Charcoal furniture, warm paper labels and blue accents (dark)." },
+        { "componentId": "Uber/Ikea-Dials-Light", "preview": "UberDials_Ikea_Light", "caption": "STYRBAR-inspired light remote, opal climate and humidity rings (light)." },
+        { "componentId": "Uber/Ikea-Dials-Dark", "preview": "UberDials_Ikea_Dark", "caption": "Smart-light remote and climate controls (dark)." },
+        { "componentId": "Uber/Ikea-Cards-Light", "preview": "UberCards_Ikea_Light", "caption": "Shelf-like charts, media transport and security keys (light)." },
+        { "componentId": "Uber/Ikea-Cards-Dark", "preview": "UberCards_Ikea_Dark", "caption": "Charts, media and security in the evening showroom (dark)." }
+      ]
+    },
+    {
       "name": "Cards",
       "components": [
         { "componentId": "Card/Button-Light", "preview": "Button_On_Light", "caption": "Button card — a light entity, on (light)." },

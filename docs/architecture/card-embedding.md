@@ -103,6 +103,11 @@ The page pushes the **slot bindings** a template reads, which is everything
 
 Names go to the player in the `USER:` domain, as the AndroidX player's `setUserLocal*` writes them.
 
+A template that carries a **binding recipe** (`meta.binding_recipe`, see
+[card-design-server.md](card-design-server.md#binding-recipes)) also gets the card-level bindings
+the recipe computes from the card config and states (a gauge's `card.min`, `card.range`, …), pushed
+on top of the slot bindings.
+
 `.state` reads the way Home Assistant's frontend shows it (`HaStateFormat.kt`): binary-sensor words
 by device class (`Open`, `Detected`), `Unknown` apart from `Unavailable`, the entity's
 `display_precision` / `suggested_display_precision` else a device-class default, currency
@@ -121,7 +126,8 @@ loader for a few string functions. The port is pinned to Kotlin by one golden fi
 `embed/test/bindings-golden.json`:
 
 - `EmbedBindingsGoldenTest` (design-server, JVM) checks that every case's `expected` is exactly
-  what `CardDesignSlots.slotBindings` returns. `-Pembed.golden.update=true` rewrites them.
+  what `CardDesignSlots.slotBindings` returns, plus `CardBindingRecipe.evaluate` for a case with a
+  `recipe`. `-Pembed.golden.update=true` rewrites them.
 - `embed/test/bindings.test.mjs` checks that the port returns the same values.
 
 The cases cover HALF_UP rounding and its carries, exponents, `12.xx` placeholders, Kotlin's

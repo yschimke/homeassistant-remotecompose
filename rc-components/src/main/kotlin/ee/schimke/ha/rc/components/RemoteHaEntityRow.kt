@@ -260,6 +260,14 @@ fun RemoteHaToggleSwitchByProgress(
   modifier: RemoteModifier = RemoteModifier,
   clickable: RemoteModifier = RemoteModifier,
 ) {
+  if (visualFamily() == HaVisualFamily.Ikea) {
+    IkeaControlFace(
+      tween(inactiveAccent, activeAccent, progress),
+      progress,
+      modifier.size(width = TrackWidth, height = TrackHeight).then(clickable),
+    )
+    return
+  }
   if (visualFamily() == HaVisualFamily.Console) {
     ConsoleControlFace(
       tween(ConsoleSlot.rc, activeAccent, progress),

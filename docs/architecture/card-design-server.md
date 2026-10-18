@@ -98,8 +98,9 @@ Deliberate spike limits, each owned by a milestone below:
   The gauge's properties are its entity's domain (which names the slot) and whether its range
   line shows (`has_unit`): `min`, `max` and the
   severity thresholds are card-level float bindings (`card.min`, `card.severity_red`, …), the
-  range text is `card.range`, and the document picks the band from the live value
-  (`CardConverter.designBindings` supplies the card-level values).
+  range text is `card.range`, and the document picks the band from the live value. Those
+  card-level values are a **binding recipe** (see [Binding recipes](#binding-recipes)), so hosts
+  without the converters compute them too.
   The clock is keyed on which lines show and its time format; the date line is `card.date` and
   another zone's offset `card.zone_offset_minutes`, so neither DST nor midnight changes its
   structure. The unsupported placeholder shows only its type, which is already in the key.
@@ -253,8 +254,9 @@ config, then pushes values under the slot names.
 | `s<N>.status` | int | `0` available, `1` unavailable, `2` unknown, `3` entity missing |
 | `s<N>.name` | string | `name:` from config, else `friendly_name` |
 | `s<N>.icon` | bitmap | icon rendered by the client (MDI path → bitmap) |
-| `s<N>.min`, `s<N>.max` | float | range from config (`min:` / `max:`), else the card's default |
-| `s<N>.threshold.<band>` | float | configured band starts (gauge `severity.green` / `yellow` / `red`) |
+| `card.min`, `card.max` | float | range from config (`min:` / `max:`), else the card's default; from the template's binding recipe |
+| `card.severity_<band>` | float | configured band starts (gauge `severity.green` / `yellow` / `red`), `1e30` when unset; from the recipe |
+| `card.range` | string | the gauge's range line, `0 – 100 %`, only when it has a unit; from the recipe |
 | `s<N>.rgb` | color | `rgb_color` attribute passed through as-is (lights) |
 | `card.title` | string | card-level `title:` / `name:` |
 | `card.count` | int | number of populated rows, for list-shaped cards |
@@ -263,6 +265,45 @@ config, then pushes values under the slot names.
 The `<id>.state` rules in `live-card-updates.md` still hold, with
 `s<N>` standing in for `<id>`. The client must be able to rebuild every
 value from the entity state plus the card config alone.
+
+### Binding recipes
+
+Slot bindings are the same for every card. **Card-level** bindings (`card.min`, `card.range`, a
+slot value a card reads its own way) differ per card type: `CardConverter.designBindings` computes
+them in Kotlin, which a host without the converters cannot run. So a converter declares them as
+data instead, `CardConverter.designRecipe()` returning a `CardBindingRecipe` (ha-model), and a
+template captured from it carries that recipe as the named string `meta.binding_recipe`. Nothing
+draws it. A host reads it once when the template loads and evaluates it on every update.
+
+```json
+{ "v": 1, "prototype": "gauge",
+  "floats": {
+    "card.min": { "first": [{ "number": { "config": "min" } }, 0] },
+    "card.severity_red": { "first": [{ "number": { "config": "severity.red" } }, 1e30] },
+    "$0.numeric_state": { "first": [{ "number": { "state": 0 } }, { "ref": "card.min" }] } },
+  "strings": {
+    "card.range": { "fn": "range_text", "args": [{ "ref": "card.min" }, { "ref": "card.max" },
+                    { "first": [{ "config": "unit" }, { "attr": "unit_of_measurement", "slot": 0 }] }] } } }
+```
+
+- **Expressions** are a closed set: literals, `config` (a dotted path into the card config),
+  `state` / `attr` (slot `i`'s raw state or an attribute), `number`, `first` (first non-null),
+  `ref` (an earlier binding) and `fn` (a named function: `range_text`). A binding whose expression
+  is null is left out; `$<i>.` names slot `i`. A new function or expression form is a new `v`, and
+  a host ignores a recipe whose `v` it doesn't know.
+- **`prototype`** names the card type the recipe was written for. It never changes the result; a
+  host may use it for diagnostics or a built-in implementation.
+- **One source.** A converter with a recipe leaves `designBindings` to its default, which evaluates
+  that recipe, so the app's template playback and every other host compute the same values. The
+  embed's port (`recipeBindings` in `embed/ha-card.js`) is pinned to Kotlin by recipe cases in
+  `embed/test/bindings-golden.json`.
+- **Strict hosts** (`require-host-bindings`, the Home Assistant card) accept a template only when
+  every data binding it declares has a value: slot bindings, its recipe's bindings, or the recipe
+  itself. A template declaring a card-level binding with no recipe is still rejected, never shown
+  with its fixture values.
+
+The gauge declares one (`CardBindingRecipes.GAUGE`). Other converters with card-level bindings
+still compute them in Kotlin only, so their templates work in the app but not yet in the embed.
 
 **Producing templates costs almost nothing.** Run the existing
 converters against a **design snapshot** whose entity IDs are the slot

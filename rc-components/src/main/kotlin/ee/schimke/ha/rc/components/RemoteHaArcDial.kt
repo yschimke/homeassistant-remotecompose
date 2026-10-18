@@ -67,6 +67,10 @@ import androidx.wear.compose.remote.material3.RemoteIcon
 @Composable
 @RemoteComposable
 fun RemoteHaArcDial(data: HaArcDialData, modifier: RemoteModifier = RemoteModifier) {
+  if (isIkeaLight(data)) {
+    IkeaLightRemote(data, modifier)
+    return
+  }
   val theme = haTheme()
   val click =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
@@ -142,18 +146,27 @@ fun RemoteHaArcDialWide(
   ) {
     RemoteBox(
       modifier =
-        if (isConsoleThermostat(data)) RemoteModifier.size((if (compact) 32 else 56).rdp)
+        if (isConsoleThermostat(data) || isIkeaLight(data))
+          RemoteModifier.size((if (compact) 32 else 56).rdp)
         else RemoteModifier.fillMaxHeight().size(56.rdp),
       contentAlignment = RemoteAlignment.Center,
     ) {
-      ArcCanvas(
-        data = data,
-        theme = theme,
-        trackStrokePx = 6f,
-        fillStrokePx = 6f,
-        markerStrokePx = 8f,
-        paddingPx = 3f,
-      )
+      if (isIkeaLight(data)) {
+        IkeaControlFace(
+          dialAccent(data),
+          LiveValues.isOn(data.entityId, data.showSteppers)?.select(1f.rf, 0f.rf) ?: 0f.rf,
+          RemoteModifier.fillMaxSize(),
+        )
+      } else {
+        ArcCanvas(
+          data = data,
+          theme = theme,
+          trackStrokePx = 6f,
+          fillStrokePx = 6f,
+          markerStrokePx = 8f,
+          paddingPx = 3f,
+        )
+      }
     }
     RemoteColumn(
       modifier = RemoteModifier.weight(1f),
@@ -234,6 +247,10 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
     }
   }
 }
+
+@Composable
+private fun isIkeaLight(data: HaArcDialData): Boolean =
+  visualFamily() == HaVisualFamily.Ikea && data.centerLabelAttribute == "brightness_pct"
 
 /** A thermostat is a room display beside a set-point control, never a display on a moving cap. */
 @Composable
@@ -513,7 +530,8 @@ private fun StepperButton(
         .size(36.rdp)
         .clip(haControlShape(18, round = true))
         .border(1.rdp, theme.divider, haControlShape(18, round = true))
-        .then(consoleKeyChrome(accent)),
+        .then(consoleKeyChrome(accent))
+        .then(if (visualFamily() == HaVisualFamily.Ikea) ikeaKeyChrome(accent) else RemoteModifier),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(

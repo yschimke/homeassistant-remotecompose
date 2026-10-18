@@ -58,6 +58,8 @@ enum class HaVisualFamily {
    * dial, mechanical keys and rockers with pilot lamps, and a smoked-glass LED clock.
    */
   Console,
+  /** IKEA showroom: shelf compartments, birch rails and moulded smart controls. */
+  Ikea,
 }
 
 /** How a reading's value text is set in the measurement presentations. */
@@ -94,6 +96,8 @@ enum class HaSurfaceMaterial {
    * switch knob is a machined metal cap in a recessed slot.
    */
   PaintedMetal,
+  /** Laminated furniture frame with a recessed face and a fine timber edge. */
+  BirchFrame,
 }
 
 /**
@@ -373,14 +377,52 @@ data class HaUberTheme(
         valueWeight = FontWeight.Medium,
       )
 
+    /** IKEA-inspired furniture and Home smart controls. Original drawings; no brand assets. */
+    val Ikea =
+      HaUberTheme(
+        id = "ikea",
+        displayName = "IKEA Showroom",
+        light = ikeaPalette(false),
+        dark = ikeaPalette(true),
+        shape =
+          HaCardShapeStyle(
+            cornerDp = 4,
+            borderDp = 1,
+            controlCornerDp = 5,
+            squareKnob = true,
+            material = HaSurfaceMaterial.BirchFrame,
+          ),
+        visuals = HaVisualFamily.Ikea,
+        readout = HaReadoutStyle.Plate,
+        fontFamily = RemoteFontFamily.SansSerif,
+        valueWeight = FontWeight.Bold,
+      )
+
     /** Every uber theme, [Classic] first. */
-    val all: List<HaUberTheme> = listOf(Classic, Expressive, Trinitron, Lcd, Braun, Nixie, Console)
+    val all: List<HaUberTheme> =
+      listOf(Classic, Expressive, Trinitron, Lcd, Braun, Nixie, Console, Ikea)
 
     /** The theme with [id], or [Classic]. */
     fun byId(id: String): HaUberTheme =
       all.firstOrNull { it.id.equals(id.trim(), ignoreCase = true) } ?: Classic
   }
 }
+
+/** Paper, white laminate and birch by day; charcoal stained furniture by night. */
+private fun ikeaPalette(dark: Boolean): HaTheme =
+  HaTheme(
+    cardBackground = Color(if (dark) 0xFF252A2C else 0xFFFFFDF8),
+    dashboardBackground = Color(if (dark) 0xFF14191C else 0xFFECE8DF),
+    sectionBackground = Color(if (dark) 0xFF1C2225 else 0xFFF4F0E7),
+    primaryText = Color(if (dark) 0xFFF7F4EA else 0xFF172A35),
+    secondaryText = Color(if (dark) 0xFFC5C5B8 else 0xFF535A59),
+    linkText = Color(if (dark) 0xFF8FCBFF else 0xFF00589D),
+    divider = Color(if (dark) 0xFF777568 else 0xFFB5A58A),
+    placeholderAccent = Color(if (dark) 0xFFFBD75B else 0xFF00589D),
+    placeholderBackground = Color(if (dark) 0xFF343B3D else 0xFFEAE3D5),
+    unknownAccent = Color(if (dark) 0xFFC5C5B8 else 0xFF535A59),
+    isDark = dark,
+  )
 
 /** The Expressive tonal palette: M3's baseline purple through materialkolor's Expressive style. */
 private fun expressivePalette(dark: Boolean): HaTheme {
