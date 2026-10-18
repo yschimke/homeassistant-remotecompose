@@ -42,3 +42,31 @@ HA web interface at `/lovelace?more-info-entity-id=<entity_id>` in another tab, 
 [more-info URL parameter](https://github.com/home-assistant/frontend/blob/dev/src/common/url/more-info-query-params.ts).
 The URL contains no access token. No native HA frontend or administrator capability is
 exposed through the public demo gateway.
+
+## Instruments and theme changes
+
+The live dashboard includes a Generic Thermostat backed by a private simulated heater,
+plus humidity, battery, power and solar gauges. These are entities in the dedicated HA
+instance, not client fixtures. `climate.set_temperature` is the only new public climate
+action: one fixed entity, half-degree values from 16 through 28°C, and no other fields.
+The HA integration is [Generic Thermostat](https://www.home-assistant.io/integrations/generic_thermostat/).
+
+The WASM host derives the thermostat's current/target labels, dial fractions and HVAC
+accent from each HA snapshot, and gauge ranges/severity thresholds from the card config.
+Every published template declaration still needs a host-supplied value; resolver example
+values are never used as readings. Removed temperatures clear their labels and fractions.
+
+Thermostat template steppers follow `DialCard`'s capture contract (20°C, ±0.5° actions).
+The host matches those action identities and rebuilds the requested setpoint from the
+current HA target; it never submits the template's placeholder target. Accessible host
+steppers use the same bounded action. Unknown template actions remain inert.
+
+Generic library body actions respect a local card's configured toggle action. Native
+button/tile fallbacks also expose that action, with disabled controls while pending or
+unavailable. An unsupported library design uses the built-in renderer; failed downloads
+and invalid templates still report a design failure.
+
+Players receive live bindings before their first composition. The demo also provides
+`LocalRcLayoutAnimations=false`: geometry and text widths snap during theme changes and
+responsive resizing, while document numeric/dial animations keep running. Other player
+hosts retain their existing layout-animation default.

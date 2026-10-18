@@ -16,7 +16,7 @@ docker compose version >/dev/null
 docker info >/dev/null
 "${compose[@]}" config --quiet
 "${compose[@]}" --profile setup --profile verify build gateway bootstrap verify
-"${compose[@]}" up -d homeassistant
+"${compose[@]}" up -d --force-recreate homeassistant
 "${compose[@]}" --profile setup run --rm bootstrap
 "${compose[@]}" up -d gateway
 "${compose[@]}" --profile verify run --rm verify

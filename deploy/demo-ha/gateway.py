@@ -2,6 +2,7 @@
 import asyncio
 import contextlib
 import json
+import math
 import os
 from pathlib import Path
 import time
@@ -10,7 +11,7 @@ import aiohttp
 from aiohttp import web
 
 ROOT = Path(__file__).parent
-VERSION = "demo-controls-v2"
+VERSION = "demo-controls-v3"
 CONFIG = {
     "version": VERSION, "location_name": "Demo Home", "time_zone": "UTC",
     "unit_system": {"temperature": "°C", "length": "km", "mass": "kg", "volume": "L"},
@@ -20,7 +21,7 @@ CONFIG = {
 ATTRIBUTES = frozenset((
     "friendly_name", "unit_of_measurement", "device_class", "state_class", "icon",
     "brightness", "color_temp_kelvin", "rgb_color", "supported_color_modes", "color_mode",
-    "temperature", "current_temperature", "hvac_modes", "hvac_action", "min_temp", "max_temp",
+    "temperature", "current_temperature", "hvac_modes", "hvac_action", "min_temp", "max_temp", "target_temp_step",
     "humidity", "pressure", "wind_speed", "temperature_unit", "pressure_unit", "wind_speed_unit",
     "current_position", "supported_features", "battery_level", "percentage",
 ))
@@ -92,12 +93,20 @@ class Gateway:
 
     async def call_service(self, domain, service, data, target=None):
         # Construct a fresh request from a finite policy, never relay client payloads.
-        controls = {"light": "light.demo_lamp", "switch": "switch.demo_coffee"}
+        controls = {"light": "light.demo_lamp", "switch": "switch.demo_coffee",
+                    "climate": "climate.demo_thermostat"}
         if not isinstance(domain, str) or domain not in controls:
             return "forbidden"
-        if not isinstance(service, str) or service not in ("turn_on", "turn_off", "toggle"):
+        climate = domain == "climate"
+        services = ("set_temperature",) if climate else ("turn_on", "turn_off", "toggle")
+        if not isinstance(service, str) or service not in services:
             return "forbidden"
-        if not isinstance(data, dict) or set(data) - {"entity_id"}:
+        allowed = {"entity_id", "temperature"} if climate else {"entity_id"}
+        if not isinstance(data, dict) or set(data) - allowed:
+            return "forbidden"
+        temperature = data.get("temperature")
+        if climate and (type(temperature) not in (int, float) or not math.isfinite(temperature)
+                        or not 16 <= temperature <= 28 or temperature * 2 != int(temperature * 2)):
             return "forbidden"
         if target is not None and (not isinstance(target, dict) or set(target) != {"entity_id"}):
             return "forbidden"
@@ -116,7 +125,9 @@ class Gateway:
                     async with session.post(
                         self.upstream + "/api/services/" + domain + "/" + service,
                         headers={"Authorization": "Bearer " + self.token},
-                        json={"entity_id": controls[domain]}, allow_redirects=False,
+                        json={"entity_id": controls[domain],
+                              **({"temperature": temperature} if climate else {})},
+                        allow_redirects=False,
                     ) as response:
                         response.raise_for_status()
                         if response.status != 200:

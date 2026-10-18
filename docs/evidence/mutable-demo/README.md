@@ -45,3 +45,7 @@ and closes cleanly without a service call. Authenticated browser checks cover an
 more-info deep link in a separate tab and the actual `terrazzo-panel.js` bridge emitting
 one `hass-more-info` event for the selected entity. These checks stub HA's login/state
 transport; they do not launch a complete HA frontend or native more-info dialog.
+
+The expanded nine-entity Console showcase and its fixture limitations are documented
+in [Console demo evidence](../console-demo/README.md). Earlier real-HA evidence above
+uses the previously deployed six-entity configuration, not the new thermostat configuration.

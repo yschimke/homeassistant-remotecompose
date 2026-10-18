@@ -77,6 +77,26 @@ class PublicDemoDataSource(baseUrl: String) : DemoDataSource {
     check(response.status.value == 200) { "Demo control unavailable" }
   }
 
+  suspend fun setTemperature(temperature: Double) {
+    require(
+      temperature.isFinite() &&
+        temperature in 16.0..28.0 &&
+        temperature * 2 == (temperature * 2).toInt().toDouble()
+    )
+    val response =
+      http.post("$base/api/services/climate/set_temperature") {
+        contentType(ContentType.Application.Json)
+        setBody(
+          buildJsonObject {
+            put("entity_id", "climate.demo_thermostat")
+            put("temperature", temperature)
+          }
+            .toString()
+        )
+      }
+    check(response.status.value == 200) { "Demo thermostat unavailable" }
+  }
+
   fun close() = http.close()
 }
 

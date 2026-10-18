@@ -2,6 +2,7 @@
 
 package ee.schimke.terrazzo.shared
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -19,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
@@ -512,7 +514,20 @@ internal fun NativeCard(
         }
       }
       .orEmpty()
-  OutlinedCard(Modifier.fillMaxWidth().entityDetails(entityId, onMoreInfo)) {
+  val configuredTap =
+    ((card.raw["tap_action"] as? JsonObject)?.get("action") as? JsonPrimitive)?.contentOrNull
+  val toggleCard =
+    entityId != null && configuredTap == "toggle" && card.type in setOf("tile", "button")
+  val tapModifier =
+    if (toggleCard)
+      Modifier.clickable(
+        enabled = !readOnly && entity?.state in setOf("on", "off"),
+        role = Role.Button,
+      ) {
+        toggle(requireNotNull(entityId))
+      }
+    else Modifier
+  OutlinedCard(Modifier.fillMaxWidth().entityDetails(entityId, onMoreInfo).then(tapModifier)) {
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
       Text(
         (card.raw["name"] as? JsonPrimitive)?.contentOrNull
@@ -550,7 +565,10 @@ internal fun NativeCard(
         }
       } else if (entity != null) {
         Text(formatState(entity, snapshot), style = MaterialTheme.typography.headlineSmall)
-        if (entityId?.substringBefore('.') in setOf("light", "switch", "input_boolean", "fan")) {
+        if (
+          !toggleCard &&
+            entityId?.substringBefore('.') in setOf("light", "switch", "input_boolean", "fan")
+        ) {
           Switch(
             checked = entity.state == "on",
             onCheckedChange = { toggle(requireNotNull(entityId)) },

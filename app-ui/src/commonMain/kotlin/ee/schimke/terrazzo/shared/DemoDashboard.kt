@@ -25,6 +25,7 @@ fun DashboardExperience(
   demo: Boolean = true,
   dataStatus: DemoDataStatus,
   onToggle: ((String) -> Unit)? = null,
+  onTemperatureChange: ((Double) -> Unit)? = null,
   controlError: String? = null,
 ) {
   var detailsEntity by remember(dashboard) { mutableStateOf<String?>(null) }
@@ -81,6 +82,7 @@ fun DashboardExperience(
                 dark || design == "console",
                 onToggle,
                 onMoreInfo = { detailsEntity = it },
+                onTemperatureChange = onTemperatureChange,
               ) {
                 NativeCard(
                   card,

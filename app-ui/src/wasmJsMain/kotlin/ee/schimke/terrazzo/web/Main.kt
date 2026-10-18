@@ -64,37 +64,37 @@ private fun PublicDemo() {
   var pending by remember { mutableStateOf(false) }
   val scope = rememberCoroutineScope()
   LaunchedEffect(source) { demoFrames(source).collect { frame = it } }
+  fun control(action: suspend () -> Unit) {
+    if (pending || frame.status != DemoDataStatus.LIVE) return
+    controlError = null
+    pending = true
+    scope.launch {
+      try {
+        val updated =
+          withTimeout(10_000) {
+            action()
+            source.read()
+          }
+        if (frame.status == DemoDataStatus.LIVE) frame = DemoFrame(updated, DemoDataStatus.LIVE)
+      } catch (_: TimeoutCancellationException) {
+        controlError = "Could not update demo state · try again"
+      } catch (e: CancellationException) {
+        throw e
+      } catch (_: Throwable) {
+        controlError = "Could not update demo state · try again"
+      } finally {
+        pending = false
+      }
+    }
+  }
+  val enabled = !pending && frame.status == DemoDataStatus.LIVE
   DashboardExperience(
     frame.data?.dashboard,
     frame.data?.snapshot,
     dataStatus = frame.status,
     controlError = controlError,
-    onToggle =
-      if (pending || frame.status != DemoDataStatus.LIVE) null
-      else
-        { id ->
-          controlError = null
-          pending = true
-          scope.launch {
-            try {
-              val updated =
-                withTimeout(10_000) {
-                  source.toggle(id)
-                  source.read()
-                }
-              if (frame.status == DemoDataStatus.LIVE) {
-                frame = DemoFrame(updated, DemoDataStatus.LIVE)
-              }
-            } catch (_: TimeoutCancellationException) {
-              controlError = "Could not update demo state · try again"
-            } catch (e: CancellationException) {
-              throw e
-            } catch (_: Throwable) {
-              controlError = "Could not update demo state · try again"
-            } finally {
-              pending = false
-            }
-          }
-        },
+    onToggle = if (!enabled) null else { id -> control { source.toggle(id) } },
+    onTemperatureChange =
+      if (!enabled) null else { temperature -> control { source.setTemperature(temperature) } },
   )
 }

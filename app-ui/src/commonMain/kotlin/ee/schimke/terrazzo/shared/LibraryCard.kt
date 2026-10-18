@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo.shared
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -8,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import ee.schimke.composeai.rcplayer.runtime.RcHostActionValue
 import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import ee.schimke.composeai.rcplayer.runtime.RcPlayerEvent
@@ -33,6 +35,7 @@ internal fun LibraryCard(
   dark: Boolean,
   onToggle: ((String) -> Unit)? = null,
   onMoreInfo: ((String) -> Unit)? = null,
+  onTemperatureChange: ((Double) -> Unit)? = null,
   fallback: @Composable () -> Unit,
 ) {
   var bytes by remember(card, style, dark) { mutableStateOf<ByteArray?>(null) }
@@ -67,6 +70,7 @@ internal fun LibraryCard(
               .toString()
           )
         }
+      if (response.status == HttpStatusCode.NotFound) return@LaunchedEffect
       check(response.status.isSuccess())
       val sha =
         Json.parseToJsonElement(response.bodyAsText()).jsonObject["sha256"]!!.jsonPrimitive.content
@@ -87,47 +91,77 @@ internal fun LibraryCard(
     }
   }
   val current = bytes
-  if (current == null) {
-    Column {
-      key(tick) { fallback() }
-      if (failed) Text("Design unavailable · showing built-in card")
-    }
-  } else {
-    Column(
-      Modifier.entityDetails(
-        CardDesignSlots.slotEntries(card).orEmpty().map { it.entityId }.distinct().singleOrNull(),
-        onMoreInfo,
-      )
-    ) {
-      RemoteComposeCard(current, Modifier.fillMaxWidth(), values) { event ->
-        if (event is RcPlayerEvent.HostNamedAction && event.name == "ha") {
-          val payload = (event.value as? RcHostActionValue.TextValue)?.value
-          demoToggleEntity(card, payload)?.let { onToggle?.invoke(it) }
-        }
+  Column {
+    if (current == null) {
+      Column {
+        key(tick) { fallback() }
+        if (failed) Text("Design unavailable · showing built-in card")
       }
-      // Accessible host controls also work with templates without action regions.
-      CardDesignSlots.slotEntries(card)
-        .orEmpty()
-        .map { it.entityId }
-        .distinct()
-        .forEach { id ->
-          val entity = snapshot.states[id]
-          if (id.substringBefore('.') in setOf("light", "switch")) {
-            val label = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull ?: id
-            ListItem(
-              modifier = Modifier.entityDetails(id, onMoreInfo),
-              headlineContent = { Text(label) },
-              trailingContent = {
-                Switch(
-                  modifier = Modifier.semantics { contentDescription = label },
-                  checked = entity?.state == "on",
-                  enabled = onToggle != null && entity?.state in setOf("on", "off"),
-                  onCheckedChange = { onToggle?.invoke(id) },
-                )
-              },
-            )
+    } else {
+      Column(
+        Modifier.entityDetails(
+          CardDesignSlots.slotEntries(card).orEmpty().map { it.entityId }.distinct().singleOrNull(),
+          onMoreInfo,
+        )
+      ) {
+        // Theme swaps and responsive resizes should not animate text through clipped widths.
+        RemoteComposeCard(current, Modifier.fillMaxWidth(), values, animateLayoutChanges = false) {
+          event ->
+          if (event is RcPlayerEvent.HostNamedAction && event.name == "ha") {
+            val payload = (event.value as? RcHostActionValue.TextValue)?.value
+            val toggle = demoToggleEntity(card, payload)
+            if (toggle != null) onToggle?.invoke(toggle)
+            else demoMoreInfoEntity(card, payload)?.let { onMoreInfo?.invoke(it) }
+            demoThermostatTarget(card, snapshot, payload)?.let { onTemperatureChange?.invoke(it) }
           }
         }
+        // Accessible host controls also work with templates without action regions.
+        CardDesignSlots.slotEntries(card)
+          .orEmpty()
+          .map { it.entityId }
+          .distinct()
+          .forEach { id ->
+            val entity = snapshot.states[id]
+            if (id.substringBefore('.') in setOf("light", "switch")) {
+              val label =
+                entity?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull ?: id
+              ListItem(
+                modifier = Modifier.entityDetails(id, onMoreInfo),
+                headlineContent = { Text(label) },
+                trailingContent = {
+                  Switch(
+                    modifier = Modifier.semantics { contentDescription = label },
+                    checked = entity?.state == "on",
+                    enabled = onToggle != null && entity?.state in setOf("on", "off"),
+                    onCheckedChange = { onToggle?.invoke(id) },
+                  )
+                },
+              )
+            }
+          }
+      }
+    }
+    if (
+      card.type == "thermostat" &&
+        card.raw["entity"]?.jsonPrimitive?.contentOrNull == "climate.demo_thermostat"
+    ) {
+      val attrs = snapshot.states["climate.demo_thermostat"]?.attributes
+      val target = (attrs?.get("temperature") as? JsonPrimitive)?.doubleOrNull
+      Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Button(
+          onClick = { target?.let { onTemperatureChange?.invoke((it - 0.5).coerceAtLeast(16.0)) } },
+          enabled = onTemperatureChange != null && target != null && target > 16.0,
+        ) {
+          Text("Cooler")
+        }
+        Text(target?.let { "$it °C target" } ?: "No target")
+        Button(
+          onClick = { target?.let { onTemperatureChange?.invoke((it + 0.5).coerceAtMost(28.0)) } },
+          enabled = onTemperatureChange != null && target != null && target < 28.0,
+        ) {
+          Text("Warmer")
+        }
+      }
     }
   }
 }
@@ -137,8 +171,11 @@ internal fun demoToggleEntity(card: CardConfig, payload: String?): String? {
   if (payload == null) return null
   val action =
     runCatching { Json.parseToJsonElement(payload).jsonObject }.getOrNull() ?: return null
-  if ((action["type"] as? JsonPrimitive)?.contentOrNull?.substringAfterLast('.') != "Toggle")
-    return null
+  val kind = (action["type"] as? JsonPrimitive)?.contentOrNull?.substringAfterLast('.')
+  val configured =
+    ((card.raw["tap_action"] as? JsonObject)?.get("action") as? JsonPrimitive)?.contentOrNull
+  // A library's generic body action must honor this dashboard's host-owned toggle configuration.
+  if (kind != "Toggle" && !(kind == "MoreInfo" && configured == "toggle")) return null
   val slot = (action["entityId"] as? JsonPrimitive)?.contentOrNull ?: return null
   return CardDesignSlots.slotEntries(card)
     .orEmpty()
@@ -170,5 +207,60 @@ internal fun templateBindings(card: CardConfig, snapshot: HaSnapshot): Map<Strin
     slots.booleans.forEach { (k, v) -> put(k, RcNamedValue.Integer(if (v) 1 else 0)) }
     slots.ints.forEach { (k, v) -> put(k, RcNamedValue.Integer(v)) }
     slots.floats.forEach { (k, v) -> put(k, RcNamedValue.FloatValue(v)) }
+    putAll(instrumentTemplateBindings(card, snapshot))
   }
+}
+
+internal fun demoMoreInfoEntity(card: CardConfig, payload: String?): String? {
+  val action =
+    payload?.let { runCatching { Json.parseToJsonElement(it).jsonObject }.getOrNull() }
+      ?: return null
+  if ((action["type"] as? JsonPrimitive)?.contentOrNull?.substringAfterLast('.') != "MoreInfo")
+    return null
+  val slot = (action["entityId"] as? JsonPrimitive)?.contentOrNull ?: return null
+  return CardDesignSlots.slotEntries(card)
+    .orEmpty()
+    .mapIndexedNotNull { index, entry ->
+      entry.entityId.takeIf { slot == CardDesignSlots.slotId(CardDesignSlots.domainOf(it), index) }
+    }
+    .firstOrNull()
+}
+
+/** Match the default thermostat template's ±0.5° actions, then rebuild from live HA state. */
+internal fun demoThermostatTarget(
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  payload: String?,
+): Double? {
+  if (
+    card.type != "thermostat" ||
+      card.raw["entity"]?.jsonPrimitive?.contentOrNull != "climate.demo_thermostat"
+  )
+    return null
+  val action =
+    payload?.let { runCatching { Json.parseToJsonElement(it).jsonObject }.getOrNull() }
+      ?: return null
+  fun text(key: String) = (action[key] as? JsonPrimitive)?.contentOrNull
+  if (
+    text("type")?.substringAfterLast('.') != "CallService" ||
+      text("domain") != "climate" ||
+      text("service") != "set_temperature" ||
+      text("entityId") != "climate.s0"
+  )
+    return null
+  val data = action["serviceData"] as? JsonObject ?: return null
+  if (data.keys != setOf("temperature")) return null
+  // DialCard's placeholder is 20°C. These literals identify direction, never the requested
+  // setpoint.
+  val delta =
+    when ((data["temperature"] as? JsonPrimitive)?.doubleOrNull) {
+      20.5 -> 0.5
+      19.5 -> -0.5
+      else -> return null
+    }
+  val current =
+    (snapshot.states["climate.demo_thermostat"]?.attributes?.get("temperature") as? JsonPrimitive)
+      ?.doubleOrNull
+      ?.takeIf { it.isFinite() && it in 16.0..28.0 } ?: return null
+  return (current + delta).coerceIn(16.0, 28.0).takeUnless { it == current }
 }

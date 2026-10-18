@@ -2,6 +2,7 @@
 import argparse
 import asyncio
 import json
+from pathlib import Path
 
 import aiohttp
 
@@ -31,7 +32,8 @@ async def verify(base, stream, wait_ready=0):
         async with session.get(base + '/api/states') as r:
             assert r.status == 200, f'states: HTTP {r.status}'
             rows = await r.json()
-            assert len(rows) == 6, f'Expected six generic entities, got {len(rows)}'
+            expected = set(json.loads(Path(__file__).with_name('entities.json').read_text()))
+            assert {row['entity_id'] for row in rows} == expected
             battery = next(s for s in rows if s['entity_id'] == 'sensor.demo_battery')
             # HA numeric sensors can serialize the configured 78 as "78.0".
             try:
@@ -47,7 +49,7 @@ async def verify(base, stream, wait_ready=0):
         async with session.get(base + '/api/config') as r:
             assert r.status == 200
             assert (await r.json())['read_only'] is False
-        print('PASS: health, six generic HA entities, dashboard and safe config')
+        print('PASS: health, allowlisted generic HA entities, dashboard and safe config')
         attempts = [
             ('POST', '/api/states/sensor.demo_battery', {'state': 'MUTATED'}),
             ('DELETE', '/api/states/sensor.demo_battery', {}),
@@ -104,7 +106,25 @@ async def verify(base, stream, wait_ready=0):
                 await ws.send_json({'id': 42, 'type': 'get_states'})
                 restored = (await ws.receive_json())['result']
                 assert next(s for s in restored if s['entity_id'] == entity)['state'] == original
-            print('PASS: REST controls change real HA state; WebSocket controls restore it')
+            climate = next(row for row in rows if row['entity_id'] == 'climate.demo_thermostat')
+            original = climate['attributes']['temperature']
+            desired = 22.5 if original != 22.5 else 22
+            try:
+                async with session.post(base + '/api/services/climate/set_temperature', json={
+                    'entity_id': 'climate.demo_thermostat', 'temperature': desired}) as r:
+                    assert r.status == 200
+                    changed = next(row for row in await r.json() if row['entity_id'] == 'climate.demo_thermostat')
+                    assert changed['attributes']['temperature'] == desired
+            finally:
+                await ws.send_json({'id': 50, 'type': 'call_service', 'domain': 'climate',
+                                    'service': 'set_temperature',
+                                    'target': {'entity_id': 'climate.demo_thermostat'},
+                                    'service_data': {'temperature': original}})
+                assert (await ws.receive_json())['success']
+            await ws.send_json({'id': 51, 'type': 'get_states'})
+            restored = (await ws.receive_json())['result']
+            assert next(row for row in restored if row['entity_id'] == 'climate.demo_thermostat')['attributes']['temperature'] == original
+            print('PASS: REST controls change real HA lamp, coffee and thermostat state; WebSocket restores it')
             if stream:
                 await ws.send_json({'id': 22, 'type': 'subscribe_events', 'event_type': 'state_changed'})
                 assert (await ws.receive_json())['success']

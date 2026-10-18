@@ -24,6 +24,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     mutations = []
     temperature = '21.5'
     gateway_requests = []
+    showcase = False
+    target_temperature = 22.0
+    coffee = 'off'
+    power = '1100'
 
     def do_GET(self):
         if self.path.startswith('/demo-ha/'):
@@ -44,6 +48,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                             'last_changed': '2026-10-17T12:00:00Z', 'last_updated': '2026-10-17T12:01:00Z'},
                            {'entity_id': 'sensor.demo_last_seen', 'state': '2026-10-17T12:01:00Z',
                             'attributes': {'friendly_name': 'Last seen', 'device_class': 'timestamp'}}]
+            if Handler.showcase:
+                if self.path == '/demo-ha/dashboard':
+                    payload = json.loads(Path('deploy/demo-ha/dashboard.json').read_text())
+                else:
+                    payload = [
+                        {'entity_id':'climate.demo_thermostat','state':'heat','attributes':{
+                            'friendly_name':'Demo thermostat','current_temperature':float(Handler.temperature),
+                            'temperature':Handler.target_temperature,'min_temp':16,'max_temp':28,
+                            'target_temp_step':0.5,'hvac_action':'heating','temperature_unit':'°C'}},
+                        {'entity_id':'light.demo_lamp','state':Handler.lamp,'attributes':{'friendly_name':'Demo lamp'}},
+                        {'entity_id':'switch.demo_coffee','state':Handler.coffee,'attributes':{'friendly_name':'Demo coffee'}},
+                        {'entity_id':'binary_sensor.demo_motion','state':'on','attributes':{'device_class':'motion'}},
+                    ] + [{'entity_id':'sensor.demo_'+name,'state':value,'attributes':{
+                        'friendly_name':name,'unit_of_measurement':unit}} for name,value,unit in [
+                        ('temperature',Handler.temperature,'°C'),('humidity','47','%'),('battery','78','%'),
+                        ('power',Handler.power,'W'),('solar','2600','W')]]
             self.wfile.write(json.dumps(payload).encode())
             return
         super().do_GET()
@@ -51,10 +71,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
         Handler.mutations.append((self.path, data))
-        assert self.path == '/demo-ha/api/services/light/toggle'
-        assert data == {'entity_id': 'light.demo_lamp'}
-        if Handler.live and not Handler.reject_controls:
-            Handler.lamp = 'on' if Handler.lamp == 'off' else 'off'
+        if self.path == '/demo-ha/api/services/climate/set_temperature':
+            assert data['entity_id'] == 'climate.demo_thermostat'
+            assert 16 <= data['temperature'] <= 28
+            if Handler.live and not Handler.reject_controls:
+                Handler.target_temperature = data['temperature']
+        else:
+            entity = data['entity_id']
+            assert (self.path, entity) in [('/demo-ha/api/services/light/toggle','light.demo_lamp'),
+                                          ('/demo-ha/api/services/switch/toggle','switch.demo_coffee')]
+            assert set(data) == {'entity_id'}
+            if Handler.live and not Handler.reject_controls:
+                if entity == 'light.demo_lamp': Handler.lamp = 'on' if Handler.lamp == 'off' else 'off'
+                else: Handler.coffee = 'on' if Handler.coffee == 'off' else 'off'
         self.send_response(200 if Handler.live and not Handler.reject_controls else 503)
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
@@ -135,7 +164,10 @@ try:
             count = len(Handler.mutations)
             # The real RC fixture tile sits immediately above its host switch row.
             # Press inside its canvas, exercising interception before the RC player.
+            expect(switch).to_be_visible()
+            capture(page, f'_wasm-test/demo-{name}-ready.png')
             box = switch.bounding_box()
+            assert box, 'The live lamp switch must have a painted layout'
             page.mouse.click(box['x'] + box['width'] / 2, box['y'] - 70, button='right', delay=100)
             page.wait_for_function('window.entityMenuPrevented === true')
             details = page.get_by_role('dialog')
@@ -156,6 +188,17 @@ try:
             click_control(details.get_by_role('button', name='Close', exact=True))
             expect(page.get_by_role('button', name='Close', exact=True)).to_have_count(0)
             assert len(Handler.mutations) == count
+            expect(switch).to_be_visible()
+            capture(page, f'_wasm-test/demo-{name}-ready.png')
+            box = switch.bounding_box()
+            assert box, 'The live lamp switch must have a painted layout'
+            page.mouse.click(box['x'] + box['width'] / 2, box['y'] - 70, delay=100)
+            expect(switch).to_be_checked()
+            assert len(Handler.mutations) == count + 1
+            page.mouse.click(box['x'] + box['width'] / 2, box['y'] - 70, delay=100)
+            expect(switch).not_to_be_checked()
+            assert len(Handler.mutations) == count + 2
+            count += 2
             click_control(switch)
             expect(switch).to_be_checked()
             assert len(Handler.mutations) == count + 1
@@ -284,7 +327,105 @@ try:
             expect(switch).to_be_checked()
         assert not live_errors, live_errors
         assert not target_errors, target_errors
+        page.close()
+        Handler.showcase = True
+        Handler.live = True
+        Handler.temperature = '21.5'
+        instruments = {kind: Path(f'scripts/fixtures/demo/{kind}-console.rc').read_bytes()
+                       for kind in ('gauge','thermostat')}
+        instrument_blobs = {hashlib.sha256(data).hexdigest():data for data in instruments.values()}
+        for name, width, height in [('phone',390,844),('wall',1440,900)]:
+            page = browser.new_page(viewport={'width':width,'height':height},device_scale_factor=1)
+            Handler.temperature = '21.5'
+            Handler.power = '1100'
+            instrument_errors, instrument_requests = [], []
+            page.on('pageerror',lambda error:instrument_errors.append(str(error)))
+            def resolve_instrument(route):
+                request=json.loads(route.request.post_data)
+                instrument_requests.append(request)
+                kind=request['card']['type']
+                if request['cardStyle'] == 'console' and kind in instruments:
+                    route.fulfill(json={'sha256':hashlib.sha256(instruments[kind]).hexdigest()},
+                                  headers={'Access-Control-Allow-Origin':'*'})
+                else: route.fulfill(status=404,headers={'Access-Control-Allow-Origin':'*'})
+            page.route('https://ha.coo.ee/api/cards/resolve',resolve_instrument)
+            page.route('https://ha.coo.ee/designs/v1/blobs/*.rc',lambda route:route.fulfill(
+                body=instrument_blobs[route.request.url.rsplit('/',1)[-1].removesuffix('.rc')],
+                content_type='application/octet-stream',headers={'Access-Control-Allow-Origin':'*'}))
+            page.clock.install(time=datetime.datetime(2026,10,17,12,2,tzinfo=datetime.timezone.utc))
+            page.goto(f'http://127.0.0.1:{server.server_port}/demo/',wait_until='networkidle')
+            expect(page.get_by_text('Live · try the switches',exact=True)).to_be_visible(timeout=30000)
+            page.get_by_role('button',name='Card style: Classic').click(force=True,delay=100)
+            page.get_by_text('Console',exact=True).click(force=True,delay=100)
+            page.wait_for_load_state('networkidle')
+            # SCH-13: inactive RC layouts also export text; the active full dial is first.
+            expect(page.get_by_text('21.5°C',exact=True).filter(visible=True).first).to_be_visible()
+            expect(page.get_by_text('↑ 22°C',exact=True).filter(visible=True).first).to_be_visible()
+            expect(page.get_by_text('Design unavailable · showing built-in card',exact=True)).to_have_count(0)
+            expect(page.get_by_text(f'{Handler.target_temperature} °C target',exact=True)).to_be_visible()
+            count=len(Handler.mutations)
+            before=Handler.target_temperature
+            resolved_before=len([r for r in instrument_requests if r['card']['type']=='thermostat'])
+            # Physical keys in the pinned Console RC fixture sit above the accessible host row.
+            key=page.get_by_role('button',name='Warmer',exact=True).bounding_box()
+            page.mouse.click(key['x']+10,key['y']-46,delay=100)
+            expect(page.get_by_text(f'{before+0.5} °C target',exact=True)).to_be_visible()
+            assert len(Handler.mutations) == count+1
+            page.mouse.click(key['x']-75,key['y']-46,delay=100)
+            expect(page.get_by_text(f'{before} °C target',exact=True)).to_be_visible()
+            assert len(Handler.mutations) == count+2
+            count += 2
+            click_control(page.get_by_role('button',name='Warmer',exact=True))
+            expect(page.get_by_text(f'{before+0.5} °C target',exact=True)).to_be_visible()
+            expect(page.get_by_text('↑ 22.5°C',exact=True).filter(visible=True).first).to_be_visible()
+            assert len(Handler.mutations) == count+1
+            assert Handler.mutations[-1] == ('/demo-ha/api/services/climate/set_temperature',
+                                             {'entity_id':'climate.demo_thermostat','temperature':before+0.5})
+            click_control(page.get_by_role('button',name='Cooler',exact=True))
+            expect(page.get_by_text(f'{before} °C target',exact=True)).to_be_visible()
+            Handler.temperature = '22.0'
+            expect(page.get_by_text('22°C',exact=True).filter(visible=True).first).to_be_visible(timeout=10000)
+            assert len([r for r in instrument_requests if r['card']['type']=='thermostat']) == resolved_before
+            capture(page,f'_wasm-test/demo-console-{name}-climate.png')
+            if name == 'phone':
+                page.mouse.move(180,550)
+                page.mouse.wheel(0,600)
+            expect(page.get_by_text('Power station',exact=True)).to_be_visible()
+            page.wait_for_load_state('networkidle')
+            expect(page.get_by_role('button',name='1100 W Power draw 0 – 3000 W',exact=True)).to_be_visible()
+            expect(page.get_by_role('button',name='2600 W Solar output 0 – 4000 W',exact=True)).to_be_visible()
+            Handler.power = '900'
+            expect(page.get_by_role('button',name='900 W Power draw 0 – 3000 W',exact=True)).to_be_visible(timeout=10000)
+            assert {'thermostat','gauge'} <= {r['card']['type'] for r in instrument_requests if r['cardStyle']=='console'}
+            capture(page,f'_wasm-test/demo-console-{name}-power.png')
+            page.mouse.move(180, min(550,height-30))
+            page.mouse.wheel(0,1000 if name == 'phone' else 350)
+            capture(page,f'_wasm-test/demo-console-{name}-controls.png')
+            coffee=page.get_by_role('button').filter(has_text='Coffee machine')
+            expect(coffee).to_be_in_viewport(ratio=1)
+            count=len(Handler.mutations)
+            previous=Handler.coffee
+            click_control(coffee)
+            expect(coffee).to_contain_text('On' if previous == 'off' else 'Off')
+            assert len(Handler.mutations) == count+1
+            assert Handler.mutations[-1] == ('/demo-ha/api/services/switch/toggle',{'entity_id':'switch.demo_coffee'})
+            click_control(coffee)
+            expect(coffee).to_contain_text('Off' if previous == 'off' else 'On')
+            assert len(Handler.mutations) == count+2, 'One card press must dispatch exactly one action'
+            if name == 'wall':
+                page.mouse.move(5,5)
+                pause=datetime.datetime.fromtimestamp((page.evaluate('Date.now()')+1000)/1000,
+                                                      tz=datetime.timezone.utc)
+                page.clock.pause_at(pause)
+                page.set_viewport_size({'width':1280,'height':900})
+                page.clock.run_for(100)
+                first=page.screenshot(path='_wasm-test/demo-console-resize-first.png')
+                page.clock.run_for(500)
+                settled=page.screenshot(path='_wasm-test/demo-console-resize-settled.png')
+                assert first == settled, 'Responsive layout must land immediately without text/bounds tweens'
+            assert not instrument_errors, instrument_errors
+            page.close()
         browser.close()
-        print('Demo: mobile/wall layouts, real RC playback, inline style/theme, credential-free, HA-only states and controls, right-click details with live updates, live refresh, outage clearing and automatic reconnection passed')
+        print('Demo: mobile/wall layouts, real RC playback, inline style/theme, credential-free, HA-only states and controls, RC/native primary clicks, live thermostat/gauge playback and controls, right-click details with live updates, live refresh, outage clearing and automatic reconnection passed')
 finally:
     server.shutdown()
