@@ -11,7 +11,7 @@ permissions:
 jobs:
   readonly:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: deploy/demo-ha
@@ -26,11 +26,29 @@ jobs:
       - name: Validate and start dedicated Home Assistant
         run: |
           bash provision.sh
+      - name: Enable guarded native dashboard
+        run: |
+          bash enable-native.sh
+          docker compose -f compose.yaml -f compose.native.yaml -f compose.native-ci.yaml up -d --no-deps native
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: '22'
+      - name: Install native dashboard browser tools
+        run: |
+          npm install --no-save --prefix ../../embed playwright@1.56.1
+          ../../embed/node_modules/.bin/playwright install --with-deps chromium
+      - name: Verify native login, live dashboard and denied writes
+        run: node --test native_browser.test.mjs
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: native-demo-evidence
+          path: build/native-demo-evidence/
       - name: Diagnose container startup on failure
         if: failure()
         run: |
-          docker compose ps --all
-          docker compose logs --no-color --tail 100 homeassistant gateway
+          docker compose -f compose.yaml -f compose.native.yaml ps --all
+          docker compose -f compose.yaml -f compose.native.yaml logs --no-color --tail 100 homeassistant gateway native
       - name: Stop isolated demo
         if: always()
-        run: docker compose --profile setup --profile verify down --volumes
+        run: docker compose -f compose.yaml -f compose.native.yaml --profile setup --profile verify --profile native-setup down --volumes

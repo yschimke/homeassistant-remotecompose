@@ -1,0 +1,10 @@
+# Append this absolute overlay path to the edge stack's existing COMPOSE_FILE list.
+services:
+  caddy:
+    volumes:
+      - ${NATIVE_DEMO_CONFIG_DIR:?Set the absolute demo-ha directory}/native.caddy:/run/caddy-sites/native-demo.caddy:ro
+    networks: [default, demo-ha]
+networks:
+  demo-ha:
+    external: true
+    name: public-demo-ha_edge

@@ -4,6 +4,83 @@ Dedicated Home Assistant **2026.10.2**, six generic simulated entities, and a pu
 facade for the Wasm `/demo`. This does not connect to a real home. Deployment requires host access;
 creating this configuration or passing unit tests does not mean the public endpoint is deployed.
 
+An optional **native Home Assistant dashboard** is available through the guarded service below.
+Its proposed public URL is `https://ha-demo.coo.ee/lovelace/home`; enabling it requires the native
+overlay, edge routing and DNS. It is separate from the existing `/demo-ha` API.
+
+## Native HA dashboard (opt in)
+
+The native frontend uses a deliberately public guest login: username **`demo`**, password
+**`demo`**. These are not operator credentials. Only use this on the isolated synthetic instance,
+never on a real home. A normal non-admin HA user can control entities; this account belongs
+exclusively to HA's **`system-read-only`** group instead.
+
+Two boundaries enforce read-only access: HA's entity permission policy and
+[`native_gateway.py`](native_gateway.py)'s HTTP/WebSocket allowlists. The gateway accepts only
+the provisioned guest's identity, serves the native HA frontend assets, permits dashboard/entity
+reads and live subscriptions, and denies service calls, event firing, dashboard edits, user-data
+writes, credential creation and all unknown commands. Login, token exchange, refresh and logout
+are the explicit session-management exceptions to the HTTP write prohibition. The gateway has
+no owner password or administrative bearer token. Controls in native cards may still appear;
+attempting one returns a read-only error. Settings, history, media, Assist and arbitrary custom
+dashboard resources are outside this demo's supported public surface.
+
+First provision the backend as described below. Then run from this persistent deployment bundle:
+
+```sh
+bash deploy/demo-ha/enable-native.sh
+```
+
+The script pins the existing `public-demo-ha` project and adds `compose.native.yaml`. It builds
+the native guard before stopping HA, then runs `native_prepare.py` offline in the same pinned HA
+image. Setup creates or validates the read-only guest, flushes HA's auth storage, and marks
+onboarding complete without running the normal core-config step's cloud integration setup.
+HA must be stopped for these storage writes; the script restarts it on setup failure too. Expect
+a brief interruption to the existing demo while HA restarts. Existing owner credentials, gateway
+token and HA volume are retained. Re-running setup validates the existing guest rather than
+adding another user; conflicting permissions or credentials cause setup to fail.
+
+Neither HA nor the native guard publishes a host port. The guard joins the private and edge
+networks as `demo-ha-native`; Caddy remains on edge only. To expose it:
+
+1. Point `ha-demo.coo.ee` DNS at the existing edge host.
+2. In the edge stack's existing deployment settings, set `NATIVE_DEMO_CONFIG_DIR` to the absolute
+   path of **this `deploy/demo-ha` directory**. This is a machine path, not a credential.
+3. Append the absolute path to [`caddy.native.yaml`](caddy.native.yaml) to that stack's saved
+   `COMPOSE_FILE` list, retaining **every existing Compose file**, including the `/demo-ha` overlay.
+4. Validate and recreate only Caddy from its usual working directory and project:
+
+   ```sh
+   docker compose config --quiet
+   docker compose run --rm --no-deps caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+   docker compose up -d --no-deps --no-build --pull never caddy
+   ```
+
+The overlay mounts [`native.caddy`](native.caddy) into the preview server image's existing
+`/run/caddy-sites/*.caddy` import. It does not replace the Caddyfile or modify the preview/design
+routes. Caddy provisions HTTPS for the new hostname. Both the hostname in `native.caddy` and
+`NATIVE_PUBLIC_URL` in `compose.native.yaml` must agree if an operator chooses another address.
+
+Verify the actual public URL after routing, using the same real-browser check as CI:
+
+```sh
+npm install --no-save --prefix embed playwright@1.56.1
+embed/node_modules/.bin/playwright install chromium
+NATIVE_DEMO_URL=https://ha-demo.coo.ee node --test deploy/demo-ha/native_browser.test.mjs
+```
+
+It signs in through HA's real login page, waits for native cards, checks guest identity, rejects
+REST/WS mutations, confirms the battery and dashboard remain unchanged, observes a live sensor
+update, refreshes the session, and saves screenshots at 1200 × 800. A local or CI pass does not
+establish public deployment. `/healthz` is only guard liveness; the browser test establishes
+end-to-end readiness. Re-run the original `verify_public.py` against `/demo-ha` after rollout too.
+
+Rollback: remove only the native Caddy overlay from the edge's saved file list and recreate Caddy,
+then stop `native` using `docker compose -f compose.yaml -f compose.native.yaml stop native` in
+this directory. Retain the HA volume and private files. The existing `/demo-ha` route continues to
+work; the harmless read-only guest and completed onboarding can remain. Never route this hostname
+straight to `homeassistant:8123`.
+
 ## Frontend connection contract (v1)
 
 - Base URL: `https://ha.coo.ee/demo-ha`
@@ -115,7 +192,7 @@ neither. Owner credentials stay in host-only `private/owner.json` (0600, parent 
 in `private/ha_token` (0600, UID 65532), ignored by git. The token is mounted only into the facade.
 Bootstrap stops if owner creation already happened without a saved token; recover using the private
 owner file via an operator-only tunnel/container network rather than resetting or exposing HA.
-The remaining onboarding steps are intentionally not completed: HA's core-config onboarding step
+Without the native overlay, the remaining onboarding steps are intentionally not completed: HA's core-config onboarding step
 would install cloud-backed integrations. The facade does not depend on those steps or HA's UI.
 Rotate the token privately before its expiry and recreate the gateway; never send it to the frontend.
 

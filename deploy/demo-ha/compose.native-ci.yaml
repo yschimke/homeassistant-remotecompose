@@ -1,0 +1,6 @@
+# CI-only loopback exposure of the guarded service. HA itself stays private.
+services:
+  native:
+    ports: [127.0.0.1:8129:8080]
+    environment:
+      NATIVE_PUBLIC_URL: http://127.0.0.1:8129

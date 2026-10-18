@@ -11,7 +11,7 @@ SCRIPT = Path(__file__).with_name('provision.sh').resolve()
 
 
 class ProvisionTests(unittest.TestCase):
-    def run_script(self, *args, fail_on=''):
+    def run_script(self, *args, fail_on='', script=SCRIPT):
         with tempfile.TemporaryDirectory(prefix='demo host ') as directory:
             root = Path(directory)
             docker = root / 'docker'
@@ -26,7 +26,7 @@ class ProvisionTests(unittest.TestCase):
             docker.chmod(0o755)
             calls = root / 'calls'
             result = subprocess.run(
-                ['bash', str(SCRIPT), *args], cwd=root, text=True, capture_output=True,
+                ['bash', str(script), *args], cwd=root, text=True, capture_output=True,
                 env={**os.environ, 'PATH': f'{root}:{os.environ["PATH"]}',
                      'DOCKER_CALLS': str(calls), 'FAIL_ON': fail_on,
                      'COMPOSE_FILE': '/unrelated/preview.yaml',
@@ -67,6 +67,20 @@ class ProvisionTests(unittest.TestCase):
         result, commands = self.run_script('--wrong')
         self.assertEqual(result.returncode, 2)
         self.assertEqual(commands, [])
+
+    def test_native_setup_stops_ha_before_writing_auth_and_starts_it_afterwards(self):
+        result, commands = self.run_script(script=SCRIPT.with_name('enable-native.sh'))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        setup = next(index for index, command in enumerate(commands) if command[-4:] == ['native-setup', 'run', '--rm', 'native-setup'])
+        self.assertEqual(commands[setup - 1][-2:], ['stop', 'homeassistant'])
+        self.assertEqual(commands[setup + 1][-4:], ['up', '-d', 'homeassistant', 'native'])
+        self.assertTrue(all(str(SCRIPT.parent / 'compose.native.yaml') in command for command in commands))
+
+    def test_failed_native_setup_restarts_existing_ha_without_exposing_native(self):
+        result, commands = self.run_script(script=SCRIPT.with_name('enable-native.sh'), fail_on='native-setup run --rm native-setup')
+        self.assertEqual(result.returncode, 42)
+        self.assertEqual(commands[-1][-3:], ['up', '-d', 'homeassistant'])
+        self.assertFalse(any(command[-1:] == ['native'] and 'up' in command for command in commands))
 
 
 if __name__ == '__main__':
