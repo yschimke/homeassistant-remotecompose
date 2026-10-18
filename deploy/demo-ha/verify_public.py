@@ -27,7 +27,7 @@ async def verify(base, stream, wait_ready=0):
             await wait_until_ready(session, base, wait_ready)
         async with session.get(base + '/healthz') as r:
             assert r.status == 200, f'healthz: HTTP {r.status}'
-            assert (await r.json())['read_only'] is True
+            assert (await r.json())['read_only'] is False
         async with session.get(base + '/api/states') as r:
             assert r.status == 200, f'states: HTTP {r.status}'
             rows = await r.json()
@@ -46,14 +46,15 @@ async def verify(base, stream, wait_ready=0):
             assert dashboard['title'] == 'Demo Home'
         async with session.get(base + '/api/config') as r:
             assert r.status == 200
-            assert (await r.json())['read_only'] is True
+            assert (await r.json())['read_only'] is False
         print('PASS: health, six generic HA entities, dashboard and safe config')
         attempts = [
             ('POST', '/api/states/sensor.demo_battery', {'state': 'MUTATED'}),
             ('DELETE', '/api/states/sensor.demo_battery', {}),
             ('PUT', '/api/config', {'location_name': 'MUTATED'}),
             ('PATCH', '/api/config', {'location_name': 'MUTATED'}),
-            ('POST', '/api/services/switch/turn_on', {'entity_id': 'switch.demo_coffee'}),
+            ('POST', '/api/services/homeassistant/restart', {}),
+            ('POST', '/api/services/light/turn_on', {'entity_id': 'all'}),
             ('POST', '/api/events/demo_write_probe', {}),
             ('POST', '/api/template', {'template': '{{ 1 + 1 }}'}),
             ('POST', '/auth/token', {}),
@@ -61,10 +62,10 @@ async def verify(base, stream, wait_ready=0):
         for method, path, data in attempts:
             async with session.request(method, base + path, json=data) as r:
                 assert r.status == 403, f'{method} {path}: expected 403, got {r.status}'
-                assert (await r.json())['code'] == 'read_only'
+                assert (await r.json())['code'] == 'forbidden'
         async with session.get(base + '/api/services') as r:
             assert r.status == 404
-        print('PASS: REST mutation attempts rejected; unlisted reads blocked')
+        print('PASS: REST admin and unlisted targets rejected; unlisted reads blocked')
         async with session.ws_connect(base + '/api/websocket') as ws:
             assert (await ws.receive_json())['type'] == 'auth_required'
             await ws.send_json({'type': 'auth', 'access_token': 'public-demo'})
@@ -76,13 +77,34 @@ async def verify(base, stream, wait_ready=0):
                 await ws.send_json({'id': ident, 'type': kind, 'domain': 'switch', 'service': 'turn_on',
                                     'service_data': {'entity_id': 'switch.demo_coffee'}, 'config': {}})
                 reply = await ws.receive_json()
-                assert reply['success'] is False and reply['error']['code'] == 'read_only', kind
+                assert reply['success'] is False and reply['error']['code'] == 'forbidden', kind
             await ws.send_json({'id': 20, 'type': 'get_states'})
             states = (await ws.receive_json())['result']
             assert next(s for s in states if s['entity_id'] == 'sensor.demo_battery')['state'] == battery['state']
             await ws.send_json({'id': 21, 'type': 'lovelace/config'})
             assert (await ws.receive_json())['result'] == dashboard
-            print('PASS: WebSocket reads allowed, mutations rejected, battery/dashboard unchanged')
+            print('PASS: WebSocket admin commands rejected, battery/dashboard unchanged')
+            # Real service calls must update the named HA entities, not just return success.
+            for domain, entity in [('light', 'light.demo_lamp'), ('switch', 'switch.demo_coffee')]:
+                original = next(s for s in states if s['entity_id'] == entity)['state']
+                assert original in ('on', 'off'), (entity, original)
+                desired = 'off' if original == 'on' else 'on'
+                try:
+                    async with session.post(base + f'/api/services/{domain}/turn_{desired}', json={'entity_id': entity}) as r:
+                        assert r.status == 200
+                        changed = await r.json()
+                        assert next(s for s in changed if s['entity_id'] == entity)['state'] == desired
+                    await ws.send_json({'id': 40, 'type': 'get_states'})
+                    changed = (await ws.receive_json())['result']
+                    assert next(s for s in changed if s['entity_id'] == entity)['state'] == desired
+                finally:
+                    await ws.send_json({'id': 41, 'type': 'call_service', 'domain': domain,
+                                        'service': 'turn_' + original, 'target': {'entity_id': entity}})
+                    assert (await ws.receive_json())['success']
+                await ws.send_json({'id': 42, 'type': 'get_states'})
+                restored = (await ws.receive_json())['result']
+                assert next(s for s in restored if s['entity_id'] == entity)['state'] == original
+            print('PASS: REST controls change real HA state; WebSocket controls restore it')
             if stream:
                 await ws.send_json({'id': 22, 'type': 'subscribe_events', 'event_type': 'state_changed'})
                 assert (await ws.receive_json())['success']

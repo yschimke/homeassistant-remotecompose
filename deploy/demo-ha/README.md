@@ -1,10 +1,10 @@
 # Public demo Home Assistant backend
 
-Dedicated Home Assistant **2026.10.2**, six generic simulated entities, and a public read-only
+Dedicated Home Assistant **2026.10.2**, six public generic simulated entities, and a public entity-control
 facade for the Wasm `/demo`. This does not connect to a real home. Deployment requires host access;
 creating this configuration or passing unit tests does not mean the public endpoint is deployed.
 
-## Frontend connection contract (v1)
+## Frontend connection contract (v2)
 
 - Base URL: `https://ha.coo.ee/demo-ha`
 - WebSocket: `wss://ha.coo.ee/demo-ha/api/websocket`
@@ -26,17 +26,17 @@ creating this configuration or passing unit tests does not mean the public endpo
 
   Values are strings as in HA. Only the six IDs in [entities.json](entities.json) are exposed.
   Only named display attributes survive filtering. Config is a fixed public projection with
-  `location_name: "Demo Home"`, `version: "demo-readonly-v1"`, `time_zone: "UTC"`,
-  `read_only: true`, metric `unit_system`, `internal_url: null`, public `external_url`.
+  `location_name: "Demo Home"`, `version: "demo-controls-v2"`, `time_zone: "UTC"`,
+  `read_only: false`, metric `unit_system`, `internal_url: null`, public `external_url`.
   No raw HA config, user/device metadata, paths, coordinates, history, logs, tokens, or media URLs.
 - Cross-origin HTTP reads allow `https://ha.coo.ee` with no cookies. Same-origin use is preferred.
-  Browser origins are not the security boundary: the server rejects writes for every client.
+  Browser origins are not the security boundary: the server allows only the named demo controls for every client.
 
 ### WebSocket protocol and updates
 
 The framing follows the [HA WebSocket API](https://developers.home-assistant.io/docs/api/websocket/).
-Server opens with `{"type":"auth_required","ha_version":"demo-readonly-v1"}`. Send
-`{"type":"auth","access_token":"public-demo"}`; receive `{"type":"auth_ok","ha_version":"demo-readonly-v1"}`.
+Server opens with `{"type":"auth_required","ha_version":"demo-controls-v2"}`. Send
+`{"type":"auth","access_token":"public-demo"}`; receive `{"type":"auth_ok","ha_version":"demo-controls-v2"}`.
 The token field is ignored, never forwarded. Commands need positive integer IDs:
 
 ```json
@@ -66,17 +66,40 @@ Other allowed commands: `get_config`, `lovelace/dashboards/list` (one `demo` das
 `unsubscribe_events` with `subscription: <id>`. One subscription per connection; only explicit
 `state_changed` is allowed. `lovelace/config` accepts omitted/null `url_path`, `lovelace` or `demo`.
 
+### Public state controls
+
+Only `light.demo_lamp` and `switch.demo_coffee` accept `turn_on`, `turn_off`, and `toggle`,
+using their matching `light` or `switch` domain. These simulated entities use private input-boolean state holders:
+controls change their HA state rather than following the clock. They start off on a fresh
+HA startup; the helpers and their services are not exposed by the gateway. State is shared by visitors.
+Sensors remain live simulated readings. Direct state writes and all administration stay blocked.
+
+REST: `POST /api/services/light/toggle` with `{"entity_id":"light.demo_lamp"}` returns the
+sanitized refreshed state array. WebSocket: `{"id":4,"type":"call_service","domain":"light",
+"service":"toggle","target":{"entity_id":"light.demo_lamp"}}` (or `service_data.entity_id`).
+Exactly one entity must be supplied, as a string or a one-element list. Additional service data,
+area/device targets, conflicting targets, unlisted entities, domains and services are rejected.
+`return_response` may be absent or false. No client payload or upstream response is relayed.
+After a successful call, the gateway refreshes its shared snapshot and emits state-change events.
+Calls are serialized with polling and refused while the cached upstream state is stale.
+
+When upgrading an existing deployment, restart the dedicated demo Home Assistant to load
+the changed template configuration, then rebuild/recreate the gateway and run the public
+verifier before publishing the frontend. Rebuilding the gateway alone does not change the
+running HA templates. Preserve the existing HA volume, credentials and deployment overlays.
+
 ### Error behavior
 
-- Every HTTP verb other than GET/HEAD/OPTIONS returns **403**
-  `{"code":"read_only","message":"Demo is read-only"}`. OPTIONS is 204 and changes nothing.
+- Apart from the allowlisted service POSTs above, every HTTP verb other than GET/HEAD/OPTIONS
+  returns **403** `{"code":"forbidden","message":"Demo administration is disabled"}`.
+  Invalid service payloads return `forbidden`; malformed JSON returns **400**. OPTIONS is 204.
 - Unknown paths / entities: **404** `{"code":"not_found"}`. No fallback to upstream HA.
 - Unready or last successful poll older than 15 seconds: **503** `{"code":"upstream_unavailable"}`
   for reads/health; state reads on an existing WebSocket return that error code and polling closes
   sockets with 1013 when stale. Reconnect with backoff; do not silently show old data as live.
-- Every unlisted WebSocket command, including `call_service`, `fire_event`, `render_template`,
+- Every unlisted WebSocket command, including `fire_event`, `render_template`,
   `lovelace/config/save`, registry updates and token creation, returns
-  `{"id":n,"type":"result","success":false,"error":{"code":"read_only","message":"read only"}}`.
+  `{"id":n,"type":"result","success":false,"error":{"code":"forbidden","message":"forbidden"}}`.
   Unknown dashboard/unsubscribe IDs use `not_found`; duplicate subscriptions use `subscription_limit`.
 - Malformed JSON / missing or invalid IDs close the connection (1007/1008); frames over 16 KiB
   are refused. Maximum 100 concurrent sockets (new handshakes receive HTTP 429), 30-second
@@ -124,9 +147,9 @@ network route. Both Compose networks are internal. Neither HA nor the facade pub
 Docker internal networks do not provide the host-port reachability a loopback probe would need.
 The private network contains HA + facade; edge contains facade + Caddy and the optional verifier.
 The verifier has no private network or credentials and probes the same facade address as Caddy. The public
-facade makes exactly one fixed upstream request, `GET /api/states`, with its own credential.
-It never relays client headers, bodies, paths or commands. Its public dashboard/config/registries
-are fixed reviewed projections. The native HA state API and service API are never exposed.
+facade reads `GET /api/states` and constructs allowlisted service POSTs with its own credential.
+It never relays client headers, bodies, paths or arbitrary commands. Its public dashboard/config/registries
+are fixed reviewed projections. The native HA state API and unrestricted service API are never exposed.
 
 ### Enable the committed public route
 
@@ -184,6 +207,6 @@ never reach it. It checks filtering, stale state, malformed frames, subscription
 including private onboarding and the verifier with a real minute-based update. This VM has no Docker; use GitHub CI
 for that lane. The Compose `verify` profile runs the public verifier inside the isolated edge network, waits up
 to 120 seconds for readiness, then requires the same reads, rejected writes and a live update.
-The verifier attempts REST and WebSocket mutations with no admin token and checks
-that battery state and dashboard remain unchanged. Run it again against the public HTTPS URL after
+The verifier changes and restores both controllable entities through REST and WebSocket,
+rejects administrative operations, and checks that battery state and dashboard remain unchanged. Run it again against the public HTTPS URL after
 deploying; a successful local test is not evidence about the deployed edge.

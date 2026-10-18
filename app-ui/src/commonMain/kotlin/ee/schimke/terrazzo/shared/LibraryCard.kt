@@ -1,10 +1,16 @@
 package ee.schimke.terrazzo.shared
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import ee.schimke.composeai.rcplayer.runtime.RcHostActionValue
 import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
+import ee.schimke.composeai.rcplayer.runtime.RcPlayerEvent
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
@@ -25,6 +31,7 @@ internal fun LibraryCard(
   snapshot: HaSnapshot,
   style: String,
   dark: Boolean,
+  onToggle: ((String) -> Unit)? = null,
   fallback: @Composable () -> Unit,
 ) {
   var bytes by remember(card, style, dark) { mutableStateOf<ByteArray?>(null) }
@@ -85,8 +92,56 @@ internal fun LibraryCard(
       if (failed) Text("Design unavailable · showing built-in card")
     }
   } else {
-    RemoteComposeCard(current, Modifier.fillMaxWidth(), values)
+    Column {
+      RemoteComposeCard(current, Modifier.fillMaxWidth(), values) { event ->
+        if (event is RcPlayerEvent.HostNamedAction && event.name == "ha") {
+          val payload = (event.value as? RcHostActionValue.TextValue)?.value
+          demoToggleEntity(card, payload)?.let { onToggle?.invoke(it) }
+        }
+      }
+      // Accessible host controls also work with templates without action regions.
+      CardDesignSlots.slotEntries(card)
+        .orEmpty()
+        .map { it.entityId }
+        .distinct()
+        .forEach { id ->
+          val entity = snapshot.states[id]
+          if (id.substringBefore('.') in setOf("light", "switch")) {
+            val label = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull ?: id
+            ListItem(
+              headlineContent = { Text(label) },
+              trailingContent = {
+                Switch(
+                  modifier = Modifier.semantics { contentDescription = label },
+                  checked = entity?.state == "on",
+                  enabled = onToggle != null && entity?.state in setOf("on", "off"),
+                  onCheckedChange = { onToggle?.invoke(id) },
+                )
+              },
+            )
+          }
+        }
+    }
   }
+}
+
+/** Remote bytes may select a local entity slot, never an arbitrary service or entity. */
+internal fun demoToggleEntity(card: CardConfig, payload: String?): String? {
+  if (payload == null) return null
+  val action =
+    runCatching { Json.parseToJsonElement(payload).jsonObject }.getOrNull() ?: return null
+  if ((action["type"] as? JsonPrimitive)?.contentOrNull?.substringAfterLast('.') != "Toggle")
+    return null
+  val slot = (action["entityId"] as? JsonPrimitive)?.contentOrNull ?: return null
+  return CardDesignSlots.slotEntries(card)
+    .orEmpty()
+    .mapIndexedNotNull { index, entry ->
+      val domain = CardDesignSlots.domainOf(entry.entityId)
+      entry.entityId.takeIf {
+        domain in setOf("light", "switch") && slot == CardDesignSlots.slotId(domain, index)
+      }
+    }
+    .firstOrNull()
 }
 
 internal fun anonymousTemplateCard(card: CardConfig): JsonObject {

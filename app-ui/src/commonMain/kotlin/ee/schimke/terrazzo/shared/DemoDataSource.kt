@@ -2,8 +2,9 @@ package ee.schimke.terrazzo.shared
 
 import ee.schimke.ha.model.*
 import io.ktor.client.HttpClient
-import io.ktor.client.request.get
+import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -65,7 +66,7 @@ fun demoFrames(mode: DemoDataMode, source: DemoDataSource): Flow<DemoFrame> = fl
   }
 }
 
-/** Fixed public gateway only. No OAuth, stored credentials, private HA URL or write commands. */
+/** Fixed public gateway only. No OAuth, stored credentials or private HA URL. */
 class PublicDemoDataSource(baseUrl: String) : DemoDataSource {
   private val base = baseUrl.trimEnd('/')
   private val http = HttpClient()
@@ -79,6 +80,17 @@ class PublicDemoDataSource(baseUrl: String) : DemoDataSource {
     }
     val dashboard = json.decodeFromJsonElement<Dashboard>(readJson("dashboard"))
     return DemoData(dashboard, decodeDemoStates(readJson("api/states").jsonArray))
+  }
+
+  suspend fun toggle(entityId: String) {
+    require(entityId in setOf("light.demo_lamp", "switch.demo_coffee"))
+    val domain = entityId.substringBefore('.')
+    val response =
+      http.post("$base/api/services/$domain/toggle") {
+        contentType(ContentType.Application.Json)
+        setBody(buildJsonObject { put("entity_id", entityId) }.toString())
+      }
+    check(response.status.value == 200) { "Demo control unavailable" }
   }
 
   fun close() = http.close()

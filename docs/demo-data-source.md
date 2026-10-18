@@ -12,8 +12,13 @@ fixed same-origin `/demo-ha/dashboard` and `/demo-ha/api/states` gateway routes,
 every five seconds, and marks the result live only after both reads succeed. Request
 budget is four seconds. A failed/stale backend read discards the previous live snapshot,
 visibly switches to fake data and retries after fifteen seconds. No backend exception
-body is displayed. The backend independently refuses writes; disabled UI is not its
-security boundary. See [the gateway contract](../deploy/demo-ha/README.md).
+body is displayed. The backend independently enforces a named entity/service allowlist;
+UI controls are not its security boundary. `PublicDemoDataSource.toggle()` accepts only the demo lamp and coffee switch,
+POSTs to their fixed gateway service route and refreshes HA state. Errors are visible without
+changing the displayed state optimistically. Fake-mode toggles update only the in-memory
+fixture. Remote templates can select a local light/switch slot with a Toggle action;
+other encoded actions are ignored. Accessible host switches also work with templates
+that lack action regions. See [the gateway contract](../deploy/demo-ha/README.md).
 
 The in-page **Fake data** option cancels live loading and performs no gateway reads.
 `/demo/?data=fake` starts in that mode for local development, stable screenshots and

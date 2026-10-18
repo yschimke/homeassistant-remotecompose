@@ -48,7 +48,12 @@ object DemoDashboard {
             entity("light.kitchen", "off", "Kitchen"),
             entity("sensor.temperature", "21.5", "Temperature", "°C"),
             entity("sensor.humidity", "44", "Humidity", "%"),
-            entity("binary_sensor.front_door", "off", "Front door", deviceClass = "door"),
+            entity(
+              "binary_sensor.front_door",
+              "off",
+              "Front door",
+              deviceClass = "door",
+            ),
             entity("sensor.solar", "2.4", "Solar production", "kW"),
             entity("sensor.home_power", "860", "Home power", "W"),
           )
@@ -82,6 +87,8 @@ fun DashboardExperience(
   dataStatus: DemoDataStatus = DemoDataStatus.FAKE,
   dataMode: DemoDataMode = DemoDataMode.FAKE,
   onDataModeChange: ((DemoDataMode) -> Unit)? = null,
+  onToggle: ((String) -> Unit)? = null,
+  controlError: String? = null,
 ) {
   var design by rememberSaveable { mutableStateOf("classic") }
   var dark by rememberSaveable { mutableStateOf(false) }
@@ -101,11 +108,19 @@ fun DashboardExperience(
       Column(Modifier.fillMaxSize().padding(padding)) {
         Text(
           if (!demo) "Home Assistant · read only"
-          else if (dataStatus == DemoDataStatus.LIVE) "Example home · live demo data · read only"
-          else "Example home · fake data · read only",
+          else if (dataStatus == DemoDataStatus.LIVE)
+            "Example home · live demo data · try the switches"
+          else "Example home · fake data · try the switches",
           Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
           style = MaterialTheme.typography.labelLarge,
         )
+        controlError?.let {
+          Text(
+            it,
+            Modifier.padding(horizontal = 16.dp),
+            color = MaterialTheme.colorScheme.error,
+          )
+        }
         if (onDataModeChange != null) {
           Row(
             Modifier.padding(horizontal = 16.dp),
@@ -144,7 +159,12 @@ fun DashboardExperience(
             .padding(horizontal = 16.dp),
           horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-          listOf("classic" to "Classic", "braun" to "Braun", "lcd" to "LCD", "console" to "Console")
+          listOf(
+              "classic" to "Classic",
+              "braun" to "Braun",
+              "lcd" to "LCD",
+              "console" to "Console",
+            )
             .forEach { (id, label) ->
               FilterChip(
                 selected = design == id,
@@ -159,8 +179,8 @@ fun DashboardExperience(
           snapshot,
           Modifier.weight(1f),
         ) { _, card ->
-          LibraryCard(card, snapshot, design, dark || design == "console") {
-            NativeCard(card, snapshot, readOnly = true) {}
+          LibraryCard(card, snapshot, design, dark || design == "console", onToggle) {
+            NativeCard(card, snapshot, readOnly = onToggle == null) { onToggle?.invoke(it) }
           }
         }
       }
