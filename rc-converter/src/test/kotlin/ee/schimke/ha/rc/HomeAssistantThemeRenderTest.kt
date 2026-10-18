@@ -24,9 +24,11 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ProvideHaUberTheme
+import ee.schimke.ha.rc.components.ThemeStyle
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -34,6 +36,7 @@ import kotlinx.serialization.json.put
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
@@ -81,7 +84,7 @@ class HomeAssistantThemeRenderTest {
     assertTrue(bitmap.width <= 1800 && bitmap.height <= 1800)
     System.getProperty("lovelaceRenderEvidence")?.let { path ->
       File(path, "$name.png")
-        .also { it.parentFile.mkdirs() }
+        .also { it.parentFile?.mkdirs() }
         .outputStream()
         .use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
@@ -96,6 +99,28 @@ class HomeAssistantThemeRenderTest {
         """{"type":"gauge","entity":"sensor.power","min":0,"max":100}"""
       }
     val card = Json.decodeFromString(CardConfig.serializer(), json)
+    // The production template path supplies host-reproducible dial bindings. The raw thermostat
+    // converter deliberately uses dataSignature/re-encoding instead of those named fractions.
+    val templates =
+      listOf(HaUberTheme.Classic, HaUberTheme.HomeAssistant)
+        .flatMap { style ->
+          listOf(false, true).map { mode ->
+            val key =
+              assertNotNull(
+                CardDesignTemplates.keyFor(
+                  card,
+                  snapshot(thermostat),
+                  ThemeStyle.TerrazzoHome,
+                  mode,
+                  cardStyle = style,
+                )
+              )
+            val built = CardDesignTemplates.capture(RuntimeEnvironment.getApplication(), key)
+            captures++
+            (style.id to mode) to CardDesignTemplates.playback(card, built.bytes)
+          }
+        }
+        .toMap()
     compose.setContent {
       val currentTheme = theme
       val currentDark = dark
@@ -110,6 +135,7 @@ class HomeAssistantThemeRenderTest {
           profile = androidXExperimentalWrap,
           card = card,
           snapshot = currentSnapshot,
+          template = templates.getValue(currentTheme.id to currentDark),
         ) {
           captures++
           ProvideHaUberTheme(currentTheme, currentDark) {
