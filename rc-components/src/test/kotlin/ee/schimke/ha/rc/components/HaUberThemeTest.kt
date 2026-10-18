@@ -100,4 +100,47 @@ class HaUberThemeTest {
     val white = androidx.compose.ui.graphics.Color.White
     assertEquals(white, legibleOn(console, white))
   }
+
+  @Test
+  fun communityFamiliesHaveTwoAccessibleModesAndDistinctDesigns() {
+    val ids =
+      setOf(
+        "mushroom",
+        "bubble",
+        "minimalist",
+        "cupertino",
+        "catppuccin",
+        "obsidian",
+        "noctis",
+        "lcars",
+        "arctic",
+        "aeon",
+      )
+    val families = HaUberTheme.all.filter { it.id in ids }
+    assertEquals(ids, families.map { it.id }.toSet())
+    assertEquals(10, families.map { it.visuals }.toSet().size)
+    families.forEach { theme ->
+      assertTrue(theme.description.isNotBlank(), theme.id)
+      assertTrue(theme.light != null && theme.dark != null, theme.id)
+      for (dark in listOf(false, true)) {
+        val palette = theme.palette(dark)
+        assertTrue(
+          contrast(palette.primaryText, palette.cardBackground) >= 4.5f,
+          "${theme.id}: primary",
+        )
+        assertTrue(
+          contrast(palette.secondaryText, palette.cardBackground) >= 4.5f,
+          "${theme.id}: secondary",
+        )
+        assertTrue(contrast(palette.linkText, palette.cardBackground) >= 4.5f, "${theme.id}: link")
+        val green = androidx.compose.ui.graphics.Color(0xFF43A047)
+        assertTrue(
+          contrast(legibleOn(HaActiveUberTheme(theme, dark), green), palette.cardBackground) >=
+            4.5f,
+          "${theme.id}: status text remains legible",
+        )
+        assertNull(theme.inkFor(dark), "${theme.id}: preserve semantic hot/low colours")
+      }
+    }
+  }
 }

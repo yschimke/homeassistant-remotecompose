@@ -25,7 +25,6 @@ import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cardDataSignature
-import ee.schimke.ha.rc.cardSizeConstraints
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.ProvideCardChrome
@@ -39,7 +38,7 @@ import ee.schimke.terrazzo.LocalHaImageStack
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.LocalThemeStyle
-import ee.schimke.terrazzo.widget.WidgetSizeClass
+import ee.schimke.terrazzo.widget.LauncherWidgetSpec
 
 /** Embedded card preview for Android 15, where native launcher widgets are unavailable. */
 @Composable
@@ -62,19 +61,9 @@ internal fun LegacyCardPreview(session: HaSession, card: CardConfig, snapshot: H
       )
     }
 
-  // Quantise the card's continuous size hint onto the launcher size
-  // class, then read its resize range in whole cells from the same
-  // appwidget-provider metadata the launcher uses.
-  val sizeClass =
-    remember(card, snapshot) {
-      WidgetSizeClass.forConstraints(registry.cardSizeConstraints(card, snapshot))
-    }
-  val bounds = remember(sizeClass, context) { sizeClass.gridBounds(context) }
-
-  // Current slot, in cells. Starts at the comfortable default the
-  // widget pins at; resized by dragging the corner handle.
-  var cellsW by remember(sizeClass) { mutableIntStateOf(bounds.defaultCellsW) }
-  var cellsH by remember(sizeClass) { mutableIntStateOf(bounds.defaultCellsH) }
+  val bounds = remember(context) { LauncherWidgetSpec.gridBounds(context) }
+  var cellsW by remember(bounds) { mutableIntStateOf(bounds.defaultCellsW) }
+  var cellsH by remember(bounds) { mutableIntStateOf(bounds.defaultCellsH) }
 
   val gridColor = MaterialTheme.colorScheme.outlineVariant
   val smallestColor = MaterialTheme.colorScheme.tertiary

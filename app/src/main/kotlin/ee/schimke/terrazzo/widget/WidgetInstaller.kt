@@ -5,10 +5,6 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import ee.schimke.ha.model.CardConfig
-import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.cardSizeConstraints
-import ee.schimke.ha.rc.cards.defaultRegistry
-import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
@@ -45,15 +41,9 @@ class WidgetInstaller(private val context: Context) {
     val appWidgetManager = AppWidgetManager.getInstance(context)
     if (!isSupported()) return false
 
-    // Pick the provider variant whose appwidget-provider metadata
-    // matches the card's supported-size band, so the launcher offers
-    // the right default cell + resize bounds. Rendering is identical
-    // across variants (all inherit TerrazzoWidgetProvider). The
-    // snapshot only feeds payload-dependent sizing (e.g. entities
-    // row count comes from card.raw), so an empty one is fine here.
-    val registry = defaultRegistry().withEnhancedShutter()
-    val constraints = registry.cardSizeConstraints(card, HaSnapshot())
-    val provider = WidgetSizeClass.forConstraints(constraints).componentName(context)
+    // Preview dimensions do not override placement size. The single provider advertises 1x1;
+    // the launcher owns the actual slot and reports later resizes through widget options.
+    val provider = LauncherWidgetSpec.componentName(context)
 
     val callback =
       Intent(context, WidgetInstallReceiver::class.java).apply {

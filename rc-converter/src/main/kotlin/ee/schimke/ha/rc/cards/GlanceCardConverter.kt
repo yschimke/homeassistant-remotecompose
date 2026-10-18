@@ -51,6 +51,7 @@ class GlanceCardConverter : CardConverter {
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+    if (CompactLauncherList(card, snapshot, modifier)) return
     val title = card.raw["title"]?.jsonPrimitive?.content
     val entries: List<JsonElement> = card.raw["entities"]?.jsonArray ?: emptyList()
 
