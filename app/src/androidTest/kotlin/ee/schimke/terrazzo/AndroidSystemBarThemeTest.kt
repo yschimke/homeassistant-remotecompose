@@ -13,6 +13,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /** Exercise the production Activity and preference flow, not a copy of its system-bar wiring. */
+@AndroidWindowInsetsRegression
 @RunWith(AndroidJUnit4::class)
 class AndroidSystemBarThemeTest {
   @get:Rule val compose = createAndroidComposeRule<MainActivity>()

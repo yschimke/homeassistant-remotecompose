@@ -37,6 +37,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /** Real IME tests: a frozen preview cannot verify viewport resizing or focus relocation. */
+@AndroidWindowInsetsRegression
 @RunWith(AndroidJUnit4::class)
 class AndroidImeScrollingTest {
   @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
