@@ -28,8 +28,11 @@ gesture, saved-card retention, selection restoration and screenshot collection.
 The initial sizing revision `405494da` passed the native Android 16 suite in
 [run 39129813511](https://github.com/yschimke/homeassistant-remotecompose/actions/runs/39129813511).
 It verified installation at 1×1, the real launcher resize gesture, preserved card
-configuration and setup selection restoration. The single-provider consolidation
-will run the updated 4×4 preview checks in CI as well.
+configuration and setup selection restoration. The single-provider consolidation `b5166e8c` passed all 17 app instrumented tests
+(0 failures/errors/skips) in [Android 16 run 39131106912](https://github.com/yschimke/homeassistant-remotecompose/actions/runs/39131106912).
+This includes the common 4×4 preview, initial 1×1 placement and actual horizontal
+and vertical resizing beyond the former 2×2 Small-provider cap. The same patch was
+applied onto current main for the follow-up after #915 merged the initial defaults.
 
 ## Native baseline
 
@@ -43,10 +46,16 @@ Default selected and the old installation copy.
 
 ## Native installation and real resize
 
-These Android 16 screenshots are from revision `405494da`, artifact
-`android-test-reports` (12136953951). The subsequent provider consolidation keeps
-the same 1×1 content and responsive renderer, removes the duplicate components and
-allows resizing beyond the former card-specific caps.
+These Android 16 after screenshots are from single-provider revision `b5166e8c`,
+artifact `android-test-reports` (12137924056). The install/resize suite passed with
+one provider and without maximum resize dimensions. Resizing preserves the widget's
+saved card. The setup preview opens at Compact / 1×1 with the corrected copy.
+
+| Native setup before | Native setup after |
+| --- | --- |
+| ![Before](native-before-setup.png) | ![After](native-after-setup.png) |
+
+![Setup sheet with rendered preview and enabled installation](native-after-sheet.png)
 
 | Before: previous 2×1 installation default | After: 1×1 installation | Real launcher resize |
 | --- | --- | --- |
