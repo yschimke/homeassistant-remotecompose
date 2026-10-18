@@ -14,6 +14,9 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 concurrency:
   group: android-ime-${{ github.ref }}-${{ inputs.baseline || false }}
   cancel-in-progress: true

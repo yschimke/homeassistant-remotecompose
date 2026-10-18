@@ -3,13 +3,12 @@ name: Desktop installers
 on:
   pull_request:
     paths:
-      - 'desktop-app/**'
       - 'app-ui/**'
-      - 'meshcore-*/**'
       - 'ha-client/**'
       - 'ha-model/**'
       - 'rc-player-ui/**'
       - 'gradle/**'
+      - 'build-logic/**'
       - '*.gradle.kts'
       - 'gradle.properties'
       - '.github/actions/**'

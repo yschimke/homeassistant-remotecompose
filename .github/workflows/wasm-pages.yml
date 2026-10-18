@@ -21,6 +21,11 @@ on:
       - 'scripts/fixtures/printing/**'
       - 'scripts/fixtures/demo/**'
       - 'scripts/stage-wasm-demo.py'
+      # Read by the browser tests: the hosted-panel test loads the HA panel
+      # script and the demo test serves the demo dashboard.
+      - 'custom_components/terrazzo/frontend/terrazzo-panel.js'
+      - 'deploy/demo-ha/dashboard.json'
+      - 'kotlin-js-store/**'
       - '.github/workflows/wasm-pages.yml'
       - '.github/actions/**'
   workflow_dispatch:
