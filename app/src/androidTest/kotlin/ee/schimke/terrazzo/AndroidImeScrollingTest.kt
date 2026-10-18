@@ -151,13 +151,14 @@ class AndroidImeScrollingTest {
 
   @Test
   fun lastCardStudioFieldAndActionsRemainReachableWithIme() {
+    var backedOut = false
     compose.setContent {
       MaterialTheme {
         AndroidImeHost {
           CardStudioScreen(
             card = CardConfig("tile", buildJsonObject {}),
             snapshot = HaSnapshot(),
-            onBack = {},
+            onBack = { backedOut = true },
             preview = {},
           )
         }
@@ -166,16 +167,27 @@ class AndroidImeScrollingTest {
     val field = compose.onNodeWithText("Create a missing design or describe the issue")
     field.performScrollTo().performClick()
     waitForIme(true)
-    field.performTextInput("Make the last field easy to reach")
+    val draft = "Make the last field easy to reach\nKeep the reading clear\nKeep Send reachable"
+    field.performTextInput(draft)
+    field.assertTextContains(draft)
     captureWindowEvidence("card-studio-focused-ime")
     assertAboveKeyboard(field)
     val action = compose.onNodeWithText("Generate or fix draft")
     action.performScrollTo().assertIsDisplayed()
     captureWindowEvidence("card-studio-bottom-ime")
     assertAboveKeyboard(action)
+    if (InstrumentationRegistry.getArguments().getString("expectedRotation") == "1") {
+      val back = compose.onNodeWithText("Back")
+      back.performScrollTo().assertIsDisplayed()
+      assertAboveKeyboard(back)
+      captureWindowEvidence("card-studio-compact-back-ime")
+      back.performClick()
+      compose.runOnIdle { assertTrue("Compact toolbar must retain Back", backedOut) }
+    }
     waitForIme(true)
     device.pressBack()
     waitForIme(false)
+    field.performScrollTo().assertTextContains(draft)
     action.performScrollTo().assertIsDisplayed()
     captureWindowEvidence("card-studio-bottom-closed")
   }
@@ -232,6 +244,8 @@ class AndroidImeScrollingTest {
 
 internal fun captureWindowEvidence(name: String) {
   val instrumentation = InstrumentationRegistry.getInstrumentation()
+  // Window appearance flags change before System UI finishes animating the icons/pill.
+  UiDevice.getInstance(instrumentation).waitForIdle()
   val context = instrumentation.targetContext
   val uri =
     checkNotNull(
