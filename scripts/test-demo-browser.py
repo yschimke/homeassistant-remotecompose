@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise credential-free demo routes, inline designs and offline fallback at two sizes."""
+"""Exercise credential-free demo routes, inline designs and HA-only outage recovery at two sizes."""
 import datetime
 import hashlib
 import http.server
@@ -18,7 +18,7 @@ blobs = {hashlib.sha256(data).hexdigest(): data for data in templates.values()}
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
-    live = False
+    live = True
     lamp = 'off'
     reject_controls = False
     mutations = []
@@ -34,6 +34,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             if self.path == '/demo-ha/dashboard':
                 payload = {'title': 'Public demo', 'views': [{'title': 'Home', 'cards': [
+                    {'type': 'tile', 'entity': 'light.demo_lamp', 'name': 'Demo lamp'},
                     {'type': 'entities', 'title': 'Live comfort', 'entities': ['light.demo_lamp', 'sensor.demo_temperature', 'sensor.demo_last_seen']}
                 ]}]}
             else:
@@ -103,22 +104,21 @@ try:
             page.route('https://ha.coo.ee/designs/v1/blobs/*.rc', lambda route: route.fulfill(
                 body=blobs[route.request.url.rsplit('/', 1)[-1].removesuffix('.rc')], content_type='application/octet-stream', headers={'Access-Control-Allow-Origin': '*'}))
             page.goto(f'http://127.0.0.1:{server.server_port}/demo/?data=fake', wait_until='networkidle')
-            expect(page.get_by_text('Example home · fake data · try the switches', exact=True)).to_be_visible(timeout=30000)
-            page.get_by_text('Rooms', exact=True).click(force=True)
-            if os.environ.get('DEMO_DEBUG'):
-                print(page.locator('body').inner_text())
-                page.screenshot(path=f'_wasm-test/demo-{name}-debug.png')
+            # Legacy fake URLs must still fetch and display server-owned state.
+            expect(page.get_by_text('Example home · live demo data · try the switches', exact=True)).to_be_visible(timeout=30000)
+            expect(page.get_by_text('Fake data', exact=True)).to_have_count(0)
+            expect(page.get_by_text('Live when available', exact=True)).to_have_count(0)
             expect(page.get_by_text('21.5 °C')).to_be_visible()
-            page.get_by_text('Home', exact=True).click(force=True)
-            expect(page.get_by_text('Living spaces', exact=True)).to_be_visible()
             page.wait_for_load_state('networkidle')
-            # The built-in light fallback has switches; the real RC tile has its own content.
             expect(page.get_by_role('switch')).to_have_count(2)
-            switch = page.get_by_role('switch', name='Living room', exact=True)
+            switch = page.get_by_role('switch').first
+            expect(switch).not_to_be_checked()
+            count = len(Handler.mutations)
+            click_control(switch)
             expect(switch).to_be_checked()
+            assert len(Handler.mutations) == count + 1
             click_control(switch)
             expect(switch).not_to_be_checked()
-            assert not Handler.mutations
             expect(page.get_by_role('textbox', name='Long-lived access token')).to_have_count(0)
             page.screenshot(path=f'_wasm-test/demo-{name}-classic.png')
             page.get_by_text('Console', exact=True).click(force=True)
@@ -135,22 +135,24 @@ try:
             assert not errors, errors
             page.close()
 
+        Handler.live = False
         page = browser.new_page(viewport={'width': 390, 'height': 844})
         offline_errors = []
         page.on('pageerror', lambda error: offline_errors.append(str(error)))
         page.route('https://ha.coo.ee/**', lambda route: route.abort())
         page.goto(f'http://127.0.0.1:{server.server_port}/demo/', wait_until='networkidle')
-        page.get_by_text('Rooms', exact=True).click(force=True)
-        expect(page.get_by_text('21.5 °C')).to_be_visible(timeout=30000)
-        for switch in page.get_by_role('switch').all():
-            expect(switch).to_be_enabled()
+        expect(page.get_by_text('Demo Home Assistant unavailable · retrying', exact=True)).to_be_visible(timeout=30000)
+        expect(page.get_by_role('switch')).to_have_count(0)
+        expect(page.get_by_text('21.5 °C')).to_have_count(0)
+        expect(page.get_by_text('Fake data', exact=True)).to_have_count(0)
         page.get_by_role('button', name='Dark', exact=True).click(force=True)
         expect(page.get_by_role('button', name='Light', exact=True)).to_be_visible()
         assert not offline_errors, offline_errors
         page.screenshot(path='_wasm-test/demo-mobile-offline.png')
-        # Real WASM/Ktor HTTP reads, refresh, stale-data removal and explicit fake-mode isolation.
         page.close()
+        # Real WASM/Ktor HTTP reads, control requests, refresh and automatic reconnection.
         Handler.live = True
+        Handler.mutations.clear()
         Handler.gateway_requests.clear()
         page = browser.new_page(viewport={'width': 1440, 'height': 900})
         page.clock.install(time=datetime.datetime(2026, 10, 17, 12, 2, tzinfo=datetime.timezone.utc))
@@ -183,37 +185,32 @@ try:
         expect(switch).to_be_checked()
         page.screenshot(path='_wasm-test/demo-wall-live.png')
         Handler.live = False
-        expect(page.get_by_text('Live demo unavailable · using fake data · retrying', exact=True)).to_be_visible(timeout=10000)
+        expect(page.get_by_text('Demo Home Assistant unavailable · retrying', exact=True)).to_be_visible(timeout=10000)
         # Deliver the removal frame after changing grids under the test clock.
         page.clock.run_for(100)
         expect(page.get_by_text('Live comfort', exact=True)).to_have_count(0)
-        page.screenshot(path='_wasm-test/demo-wall-live-fallback.png')
-        page.get_by_text('Fake data', exact=True).click(force=True)
-        count = len(Handler.gateway_requests)
-        page.wait_for_timeout(6000)
-        assert len(Handler.gateway_requests) == count, Handler.gateway_requests
+        expect(page.get_by_role('switch')).to_have_count(0)
+        expect(page.get_by_text('22.8 °C')).to_have_count(0)
+        page.screenshot(path='_wasm-test/demo-wall-unavailable.png')
         Handler.live = True
-        page.get_by_text('Live when available', exact=True).click(force=True)
+        # Keep the same page: only the automatic retry can restore the HA cards.
+        page.clock.run_for(15000)
         expect(page.get_by_text('Example home · live demo data · try the switches', exact=True)).to_be_visible(timeout=10000)
         expect(page.get_by_text('Live comfort', exact=True)).to_be_visible()
-        expect(page.get_by_text('Living spaces', exact=True)).to_have_count(0)
-        # Exercise repeated source changes: neither source may retain the other's grid.
-        for cycle in range(3):
+        expect(page.get_by_text('22.8 °C')).to_be_visible()
+        expect(switch).to_be_checked()
+        for cycle in range(2):
             Handler.live = False
-            expect(page.get_by_text('Live demo unavailable · using fake data · retrying', exact=True)).to_be_visible(timeout=10000)
+            expect(page.get_by_text('Demo Home Assistant unavailable · retrying', exact=True)).to_be_visible(timeout=10000)
             expect(page.get_by_text('Live comfort', exact=True)).to_have_count(0)
-            expect(page.get_by_text('Living spaces', exact=True)).to_be_visible()
+            expect(page.get_by_role('switch')).to_have_count(0)
             Handler.live = True
-            click_control(page.get_by_text('Fake data', exact=True))
-            # Mode changes cancel/restart the collector on a composition frame.
-            # Observe Fake mode completing before asking it to reconnect.
-            expect(page.get_by_text('Live demo unavailable · using fake data · retrying', exact=True)).to_have_count(0)
-            click_control(page.get_by_text('Live when available', exact=True))
+            page.clock.run_for(15000)
             expect(page.get_by_text('Example home · live demo data · try the switches', exact=True)).to_be_visible(timeout=10000)
             expect(page.get_by_text('Live comfort', exact=True)).to_be_visible()
-            expect(page.get_by_text('Living spaces', exact=True)).to_have_count(0)
+            expect(switch).to_be_checked()
         assert not live_errors, live_errors
         browser.close()
-        print('Demo: mobile/wall layouts, real RC playback, inline style/theme, credential-free, offline fallback, live refresh, outage recovery and fake-mode isolation passed')
+        print('Demo: mobile/wall layouts, real RC playback, inline style/theme, credential-free, HA-only states and controls, live refresh, outage clearing and automatic reconnection passed')
 finally:
     server.shutdown()

@@ -22,9 +22,6 @@ private external fun entryMode(): String
 
 @JsFun("() => location.origin + '/demo-ha'") private external fun demoBackendUrl(): String
 
-@JsFun("() => new URLSearchParams(location.search).get('data') === 'fake'")
-private external fun fakeDataRequested(): Boolean
-
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
   val hosted = isHomeAssistantPanel()
@@ -60,61 +57,42 @@ private suspend fun currentPanelAccessToken(): String = panelAccessToken().await
 
 @Composable
 private fun PublicDemo() {
-  var mode by remember {
-    mutableStateOf(if (fakeDataRequested()) DemoDataMode.FAKE else DemoDataMode.AUTO)
-  }
   val source = remember { PublicDemoDataSource(demoBackendUrl()) }
   DisposableEffect(source) { onDispose { source.close() } }
-  var frame by remember { mutableStateOf(DemoFrame(DemoData.Fake, DemoDataStatus.FAKE)) }
-  var controlError by remember(mode) { mutableStateOf<String?>(null) }
+  var frame by remember { mutableStateOf(DemoFrame(null, DemoDataStatus.CONNECTING)) }
+  var controlError by remember { mutableStateOf<String?>(null) }
   var pending by remember { mutableStateOf(false) }
-  var fakeSnapshot by remember(mode, frame.status) { mutableStateOf(DemoDashboard.snapshot) }
   val scope = rememberCoroutineScope()
-  LaunchedEffect(mode, source) { demoFrames(mode, source).collect { frame = it } }
-  val live = mode == DemoDataMode.AUTO && frame.status == DemoDataStatus.LIVE
+  LaunchedEffect(source) { demoFrames(source).collect { frame = it } }
   DashboardExperience(
-    frame.data.dashboard,
-    if (live) frame.data.snapshot else fakeSnapshot,
+    frame.data?.dashboard,
+    frame.data?.snapshot,
     dataStatus = frame.status,
-    dataMode = mode,
-    onDataModeChange = { mode = it },
     controlError = controlError,
     onToggle =
-      if (pending) null
+      if (pending || frame.status != DemoDataStatus.LIVE) null
       else
         { id ->
           controlError = null
-          if (!live) {
-            val entity = fakeSnapshot.states[id]
-            if (entity != null && id.substringBefore('.') in setOf("light", "switch")) {
-              fakeSnapshot =
-                fakeSnapshot.copy(
-                  states =
-                    fakeSnapshot.states +
-                      (id to entity.copy(state = if (entity.state == "on") "off" else "on"))
-                )
-            }
-          } else {
-            pending = true
-            scope.launch {
-              try {
-                val updated =
-                  withTimeout(10_000) {
-                    source.toggle(id)
-                    source.read()
-                  }
-                if (mode == DemoDataMode.AUTO && frame.status == DemoDataStatus.LIVE) {
-                  frame = DemoFrame(updated, DemoDataStatus.LIVE)
+          pending = true
+          scope.launch {
+            try {
+              val updated =
+                withTimeout(10_000) {
+                  source.toggle(id)
+                  source.read()
                 }
-              } catch (_: TimeoutCancellationException) {
-                controlError = "Could not update demo state · try again"
-              } catch (e: CancellationException) {
-                throw e
-              } catch (_: Throwable) {
-                controlError = "Could not update demo state · try again"
-              } finally {
-                pending = false
+              if (frame.status == DemoDataStatus.LIVE) {
+                frame = DemoFrame(updated, DemoDataStatus.LIVE)
               }
+            } catch (_: TimeoutCancellationException) {
+              controlError = "Could not update demo state · try again"
+            } catch (e: CancellationException) {
+              throw e
+            } catch (_: Throwable) {
+              controlError = "Could not update demo state · try again"
+            } finally {
+              pending = false
             }
           }
         },

@@ -1,5 +1,9 @@
 # Public WASM demo evidence
 
+Historical integration evidence. The public demo now uses HA exclusively; fake mode
+and outage fixtures shown below were removed. See the [current demo contract](../../demo-data-source.md)
+and [current control evidence](../mutable-demo/README.md).
+
 All data shown here is generic fixture data. Captures use Chromium at device scale
 1: phone 390 × 844, wall 1440 × 900. No capture exceeds 1800 px in either dimension.
 
