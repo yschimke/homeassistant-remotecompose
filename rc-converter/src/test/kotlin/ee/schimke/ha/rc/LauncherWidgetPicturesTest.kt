@@ -84,7 +84,7 @@ class LauncherWidgetPicturesTest {
     )
     val nested = card("""{"type":"vertical-stack","cards":[${camera.raw}]}""")
     for (card in listOf(camera, nested)) {
-      for ((width, height) in listOf(144 to 168, 288 to 252, 432 to 336)) {
+      for ((width, height) in listOf(72 to 84, 144 to 168, 288 to 252, 432 to 336)) {
         val fetched = mutableListOf<String>()
         val image = png(Color.MAGENTA)
         val capture =

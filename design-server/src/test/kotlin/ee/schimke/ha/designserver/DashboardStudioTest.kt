@@ -144,6 +144,35 @@ class DashboardStudioTest {
         .content
     assertContentEquals(bytes, Base64.getDecoder().decode(encoded))
     assertEquals(1, renders)
+    val page = client.get("/studio/dashboard").bodyAsText()
+    val communityStyles =
+      listOf(
+        "mushroom",
+        "bubble",
+        "minimalist",
+        "cupertino",
+        "catppuccin",
+        "obsidian",
+        "noctis",
+        "lcars",
+        "arctic",
+        "aeon",
+      )
+    for (style in communityStyles) {
+      assertTrue(page.contains("<option>$style</option>"), "$style is discoverable")
+      expectedStyle = style
+      assertEquals(
+        HttpStatusCode.OK,
+        client
+          .post("/api/studio/dashboard/preview") {
+            header(HttpHeaders.Cookie, "design-server-edit=operator")
+            setBody(body.replace("\"braun\"", "\"$style\""))
+          }
+          .status,
+        "$style reaches the render port",
+      )
+    }
+    assertEquals(11, renders)
     expectedStyle = "ikea"
     val ikea =
       client.post("/api/studio/dashboard/preview") {
@@ -151,7 +180,7 @@ class DashboardStudioTest {
         setBody(body.replace("braun", "ikea"))
       }
     assertEquals(HttpStatusCode.OK, ikea.status)
-    assertEquals(2, renders)
+    assertEquals(12, renders)
     assertEquals(
       HttpStatusCode.UnprocessableEntity,
       client

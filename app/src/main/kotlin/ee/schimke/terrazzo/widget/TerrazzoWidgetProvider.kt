@@ -16,7 +16,6 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.LauncherLook
 import ee.schimke.ha.rc.captureLauncherWidgetDocument
-import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaUberTheme
@@ -146,13 +145,10 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     val snapshot =
       if (DemoData.isDemo(entry.baseUrl)) DemoData.snapshot()
       else context.terrazzoGraph().offlineCache.snapshot(entry.baseUrl, null) ?: EMPTY_SNAPSHOT
-    val registry = defaultRegistry().withEnhancedShutter()
-
     val targetSizeDp =
       WidgetSizing.forWidgetCapture(
         appWidgetManager = appWidgetManager,
         widgetId = widgetId,
-        cardHeightDp = registry.cardHeightDp(entry.card, snapshot),
       )
     val remoteViews =
       renderPreview(context, entry.baseUrl, entry.card, snapshot, targetSizeDp, widgetId) ?: return
@@ -385,17 +381,3 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     const val WIDGET_IMAGE_MAX_PX = 512
   }
 }
-
-/**
- * Size-class provider variants. They share [TerrazzoWidgetProvider]'s id-driven rendering verbatim
- * — the only thing that differs is the `appwidget-provider` metadata declared against each in the
- * manifest (`targetCell*` default + `min/maxResize*` bounds), which is how a card's
- * [WidgetSizeClass][ee.schimke.terrazzo.widget.WidgetSizeClass] reaches the launcher's resize UI.
- * [WidgetInstaller] picks the matching component at pin time; refresh broadcasts can still target
- * the base provider since rendering only ever keys off the widget id.
- *
- * @see WidgetSizeClass
- */
-class TerrazzoWidgetProviderSmall : TerrazzoWidgetProvider()
-
-class TerrazzoWidgetProviderTall : TerrazzoWidgetProvider()

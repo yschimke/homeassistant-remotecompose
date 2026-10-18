@@ -77,6 +77,10 @@ private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolea
   val accent: RemoteColor = look.accent
   val inline =
     data.features.firstOrNull()?.takeIf { data.featuresPosition == HaTileFeaturePosition.Inline }
+  if (inline == null && data.badge == null && visualFamily().isCommunity) {
+    CommunityTileInfo(data, look, renderChip)
+    return
+  }
   RemoteRow(
     modifier = if (inline != null) RemoteModifier.fillMaxWidth() else RemoteModifier,
     verticalAlignment = RemoteAlignment.CenterVertically,
@@ -214,7 +218,7 @@ fun RemoteHaTileCompact(data: HaTileData, modifier: RemoteModifier = RemoteModif
         .padding(horizontal = 12.rdp, vertical = 3.rdp)
   ) {
     RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
-      // Static like the accent: this tier registers no `is_on` binding.
+      // A capture-selected launcher tier can bind state without colliding with hidden siblings.
       RemoteBox(
         modifier =
           RemoteModifier.size(24.rdp)
@@ -292,16 +296,23 @@ const val TileTwoLineMinHeightDp: Int = 56
  *   likewise blanks the sibling full tier at playback. The tinted glyph alone carries the identity
  *   — the circle halo is the cosmetic part, and dropping it costs nothing semantically.
  *
+ * [bindState] is safe when capture selected only this tier (launcher templates): it lets the bake
+ * apply the real on/off tint instead of the placeholder entity's state.
+ *
  * Both are cosmetic — the icon, not its tint animation or halo, is what says what kind of card this
  * is. Revisit the circle / live colour once the alpha010 state-layout bugs (#224) lift.
  */
 @Composable
 @RemoteComposable
-fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaIconChip(
+  data: HaTileData,
+  modifier: RemoteModifier = RemoteModifier,
+  bindState: Boolean = false,
+) {
   val theme = haTheme()
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val look = entityLook(data.entityId, data.accent, live = false)
+  val look = entityLook(data.entityId, data.accent, live = bindState)
   val accent: RemoteColor = look.accent
 
   RemoteColumn(
@@ -309,7 +320,7 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
     verticalArrangement = RemoteArrangement.Center,
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
-    // Static like the accent: this tier registers no `is_on` binding.
+    // A capture-selected launcher tier can bind state without colliding with hidden siblings.
     RemoteBox(
       modifier =
         RemoteModifier.size(32.rdp)
@@ -336,5 +347,48 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
         overflow = TextOverflow.Ellipsis,
       )
     }
+  }
+}
+
+@Composable
+private fun CommunityTileInfo(data: HaTileData, look: HaEntityLook, renderChip: Boolean) {
+  val family = visualFamily()
+  val theme = haTheme()
+  val label: @Composable () -> Unit = {
+    RemoteText(
+      entityName(data.entityId, data.name),
+      color = look.dim(theme.primaryText),
+      fontSize = HaType.Body,
+      style = haTextStyle(),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+    )
+  }
+  val state: @Composable () -> Unit = {
+    RemoteText(
+      data.state,
+      color = look.dim(theme.primaryText),
+      fontSize = HaType.BodyLarge,
+      fontWeight = haValueWeight(),
+      style = haTextStyle(),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+    )
+  }
+  RemoteRow(RemoteModifier.fillMaxWidth(), verticalAlignment = RemoteAlignment.CenterVertically) {
+    if (family != HaVisualFamily.Minimalist && family != HaVisualFamily.Arctic)
+      TileIcon(data, look, renderChip)
+    RemoteColumn(RemoteModifier.weight(1f).padding(horizontal = 10.rdp)) {
+      if (family == HaVisualFamily.Cupertino || family == HaVisualFamily.Minimalist) {
+        state()
+        label()
+      } else {
+        label()
+        if (family != HaVisualFamily.Bubble) state()
+      }
+    }
+    if (family == HaVisualFamily.Bubble) state()
+    if (family == HaVisualFamily.Minimalist || family == HaVisualFamily.Arctic)
+      TileIcon(data, look, renderChip)
   }
 }

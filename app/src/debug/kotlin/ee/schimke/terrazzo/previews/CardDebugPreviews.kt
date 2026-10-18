@@ -47,7 +47,7 @@ import ee.schimke.terrazzo.dashboard.LauncherGrid
 import ee.schimke.terrazzo.dashboard.ResizeLegend
 import ee.schimke.terrazzo.ui.TerrazzoTheme
 import ee.schimke.terrazzo.widget.LauncherGridBounds
-import ee.schimke.terrazzo.widget.WidgetSizeClass
+import ee.schimke.terrazzo.widget.LauncherWidgetSpec
 import kotlin.time.Instant
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -192,8 +192,8 @@ private fun FauxDashboardBackdrop() {
  * Animated walk-through of the card-history screen's resizable launcher preview ([LauncherGrid] /
  * [ResizeLegend]). An infinite transition steps the slot diagonally out to the largest size and
  * back — the same cell-snapped path a finger drag on the corner handle produces — so the handle,
- * current-slot outline, and legend animate across the size class's range against the static
- * smallest/largest guides. `@AnimatedPreview` captures it as a GIF.
+ * current-slot outline, and legend animate across the preview grid's sample range against the
+ * static smallest/largest guides. `@AnimatedPreview` captures it as a GIF.
  */
 @Preview(name = "Resize widget preview", widthDp = 360, heightDp = 460, showBackground = true)
 @AnimatedPreview(durationMs = 4500, frameIntervalMs = 150, showCurves = false)
@@ -201,7 +201,7 @@ private fun FauxDashboardBackdrop() {
 private fun ResizeWidgetPreview() {
   TerrazzoTheme(style = ThemeStyle.TerrazzoHome, darkMode = DarkModePref.Light) {
     val context = LocalContext.current
-    val bounds = remember(context) { WidgetSizeClass.Standard.gridBounds(context) }
+    val bounds = remember(context) { LauncherWidgetSpec.gridBounds(context) }
     val steps = remember(bounds) { dragSteps(bounds) }
     val transition = rememberInfiniteTransition(label = "resize-demo")
     val t by

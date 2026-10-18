@@ -45,7 +45,7 @@ channels to those converters.
 ## Regression checks
 
 - `LauncherWidgetPicturesTest`: realistic non-templated camera configuration,
-  nested stack, three cell sizes, fresh image bytes, invalid/unavailable images,
+  nested stack, four cell sizes (including 1×1), fresh image bytes, invalid/unavailable images,
   retained host actions, and no URLs/tokens in the fallback document.
 - `WidgetImageLoadingTest`: real local HTTP PNG, same-host bearer, preserved
   signed query, no bearer on an external host, bounded decode, changed pixels at
@@ -53,7 +53,7 @@ channels to those converters.
 - Existing `HaBearerAuthInterceptorTest` and `WidgetImagesTargetTest`: auth and
   widget-server isolation.
 - `WidgetPreviewParityTest`: native Android playback of templated and direct
-  pictures, three sizes, a 1200×600 local PNG, unchanged-URL pixel updates and
+  pictures, four sizes (including 1×1), a 1200×600 local PNG, unchanged-URL pixel updates and
   unavailable-image fallback.
 - `WidgetPreparationTest`: native reproduction of the old URL-only capture, a
   successful demo camera preview, cancellation/confirmation, persisted edited

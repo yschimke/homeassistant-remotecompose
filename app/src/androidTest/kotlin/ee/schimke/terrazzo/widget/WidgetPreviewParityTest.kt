@@ -137,7 +137,12 @@ class WidgetPreviewParityTest {
             as kotlinx.serialization.json.JsonObject
         val card = CardConfig("picture-entity", json)
         for (size in
-          listOf(WidgetSizeDp(144, 168), WidgetSizeDp(288, 252), WidgetSizeDp(432, 336))) {
+          listOf(
+            WidgetSizeDp(72, 84),
+            WidgetSizeDp(144, 168),
+            WidgetSizeDp(288, 252),
+            WidgetSizeDp(432, 336),
+          )) {
           writeImage(android.graphics.Color.MAGENTA)
           val preview = pixels(card, size, installed = false)
           assertTrue(
