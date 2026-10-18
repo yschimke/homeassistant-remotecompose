@@ -6,8 +6,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
@@ -21,6 +24,9 @@ import androidx.wear.compose.material3.RadioButton
 import androidx.wear.compose.material3.Text
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.terrazzo.shared.PUBLIC_FEEDBACK_WARNING
+import ee.schimke.terrazzo.shared.PUBLIC_ISSUE_TRACKER
+import ee.schimke.terrazzo.shared.feedbackIssueUrl
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 
 /**
@@ -38,6 +44,56 @@ fun WearSettingsScreen(
   cardStyle: String = HaUberTheme.Classic.id,
   onSelectCardStyle: (String) -> Unit = {},
 ) {
+  var reporting by remember { mutableStateOf(false) }
+  var failed by remember { mutableStateOf(false) }
+  val uriHandler = LocalUriHandler.current
+  val context = LocalContext.current
+  androidx.activity.compose.BackHandler(enabled = reporting) { reporting = false }
+  if (reporting) {
+    val version =
+      remember(context) {
+        context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "Unknown"
+      }
+    ScalingLazyColumn(
+      state = rememberScalingLazyListState(initialCenterItemIndex = 0),
+      modifier = modifier.fillMaxWidth(),
+      contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+      verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+      item { ListHeader { Text("PUBLIC issue") } }
+      item { Text(PUBLIC_FEEDBACK_WARNING, style = MaterialTheme.typography.bodySmall) }
+      item {
+        Text(
+          "Included: app version $version; Wear OS. No Home Assistant data or attachments. Review, edit and explicitly submit on GitHub (account required)."
+        )
+      }
+      if (failed) {
+        item {
+          Text("Could not open GitHub. Open this address on your phone and choose New issue:")
+        }
+        item { SelectionContainer { Text(PUBLIC_ISSUE_TRACKER) } }
+      }
+      item {
+        Text(
+          "PUBLIC on GitHub. Never include credentials or private Home Assistant details.",
+          style = MaterialTheme.typography.bodySmall,
+        )
+      }
+      item {
+        Button(
+          onClick = {
+            failed =
+              runCatching { uriHandler.openUri(feedbackIssueUrl(version, "Wear OS")) }.isFailure
+            if (!failed) reporting = false
+          }
+        ) {
+          Text(if (failed) "Retry PUBLIC draft" else "Review PUBLIC draft")
+        }
+      }
+      item { Button(onClick = { reporting = false }) { Text("Cancel") } }
+    }
+    return
+  }
   val listState = rememberScalingLazyListState()
   ScalingLazyColumn(
     state = listState,
@@ -45,6 +101,16 @@ fun WearSettingsScreen(
     verticalArrangement = Arrangement.spacedBy(4.dp),
     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
   ) {
+    item {
+      Button(
+        onClick = {
+          reporting = true
+          failed = false
+        }
+      ) {
+        Text("Report a bug")
+      }
+    }
     item { ListHeader { Text("Theme") } }
 
     item {

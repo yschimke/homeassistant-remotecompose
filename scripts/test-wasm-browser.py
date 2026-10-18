@@ -6,6 +6,7 @@ import os
 import time
 import sys
 import threading
+from urllib.parse import parse_qs, urlparse
 from pathlib import Path
 
 from playwright.sync_api import expect, sync_playwright
@@ -124,8 +125,66 @@ try:
         Path('_wasm-test').mkdir(exist_ok=True)
         page.screenshot(path='_wasm-test/homeassistant-live.png')
         page.get_by_role('tab', name='Settings').dispatch_event('click')
+        # Bug reports open a reviewable public draft, never an API submission.
+        expect(page.get_by_role('button', name='Report a bug', exact=True)).to_be_visible()
+        page.screenshot(path='_wasm-test/feedback-settings.png')
+        page.get_by_role('button', name='Report a bug', exact=True).dispatch_event('click')
+        expect(page.get_by_text('Report a PUBLIC issue', exact=True)).to_be_visible()
+        expect(page.get_by_text('This issue and anything you include will be PUBLIC', exact=False)).to_be_visible()
+        expect(page.get_by_text('Included: app version', exact=False)).to_contain_text('Web (Wasm)')
+        page.screenshot(path='_wasm-test/feedback-public-warning.png')
+        page.get_by_role('button', name='Cancel', exact=True).dispatch_event('click')
+        expect(page.get_by_text('Report a PUBLIC issue', exact=True)).not_to_be_visible()
+        assert len(page.context.pages) == 1
+        page.get_by_role('button', name='Report a bug', exact=True).dispatch_event('click')
+        github_requests = []
+
+        def github_draft(route):
+            github_requests.append(route.request)
+            route.fulfill(content_type='text/html', body='<p>Editable GitHub draft fixture</p>')
+
+        page.context.route('https://github.com/yschimke/homeassistant-remotecompose/issues/new**', github_draft)
+        with page.expect_popup() as opened:
+            page.get_by_role('button', name='Review on GitHub', exact=True).click(force=True)
+        draft = opened.value
+        draft.wait_for_url('https://github.com/**')
+        parsed = urlparse(draft.url)
+        assert parsed.path == '/yschimke/homeassistant-remotecompose/issues/new'
+        query = parse_qs(parsed.query)
+        assert set(query) == {'body'}
+        body = query['body'][0]
+        assert 'App version:' in body and 'Platform: Web (Wasm)' in body
+        assert 'Steps to reproduce (optional)' in body and 'Expected behavior' in body and 'Actual behavior' in body
+        assert 'PUBLIC' in body and 'credentials' in body
+        for private in ['browser-test-token', 'ha.example.test', 'switch.lamp', 'Lamp', 'lamp-device']:
+            assert private not in draft.url and private not in body
+        assert draft.evaluate('window.opener === null')
+        assert len(github_requests) == 1
+        assert not github_requests[0].headers.get('referer')
+        draft.close()
+        # Popup blocking keeps the warning and a selectable manual recovery URL visible.
+        page.evaluate('window.feedbackOriginalOpen = window.open; window.open = () => null')
+        page.get_by_role('button', name='Report a bug', exact=True).dispatch_event('click')
+        page.get_by_role('button', name='Review on GitHub', exact=True).click(force=True)
+        expect(page.get_by_text('Could not open GitHub.', exact=False)).to_be_visible()
+        expect(page.get_by_text('https://github.com/yschimke/homeassistant-remotecompose/issues', exact=True)).to_be_visible()
+        expect(page.get_by_text('This issue and anything you include will be PUBLIC', exact=False)).to_be_visible()
+        page.screenshot(path='_wasm-test/feedback-popup-blocked.png')
+        page.evaluate('window.open = window.feedbackOriginalOpen; delete window.feedbackOriginalOpen')
+        with page.expect_popup() as retried:
+            page.get_by_role('button', name='Try GitHub again', exact=True).click(force=True)
+        retried.value.wait_for_url('https://github.com/**')
+        assert retried.value.url == draft.url
+        retried.value.close()
+        expect(page.get_by_text('Report a PUBLIC issue', exact=True)).not_to_be_visible()
         page.get_by_role('button', name='Sign out').dispatch_event('click')
         expect(page.get_by_role('button', name='Connect', exact=True)).to_be_disabled()
+        page.set_viewport_size({'width': 360, 'height': 800})
+        page.get_by_role('button', name='Report a bug', exact=True).dispatch_event('click')
+        expect(page.get_by_text('Report a PUBLIC issue', exact=True)).to_be_visible()
+        expect(page.get_by_role('button', name='Review on GitHub', exact=True)).to_be_visible()
+        page.screenshot(path='_wasm-test/feedback-small-screen.png')
+        page.get_by_role('button', name='Cancel', exact=True).dispatch_event('click')
         assert not page.evaluate('Object.keys(localStorage).length || Object.keys(sessionStorage).length')
         assert not errors, errors
         # Embedded HA uses its native dialog capability rather than opening another tab.
