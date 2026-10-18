@@ -1,0 +1,7 @@
+RAW_INTRINSIC width=180 height=800 expectedHeight=40
+RAW_RESIZE paint 180x90 corner=ffffffff center=ff1565c0
+RAW_RESIZE paint 280x140 corner=0 center=ff1565c0
+RAW_RESIZE paint 100x30 corner=ff1565c0 center=ff1565c0
+RAW_RESIZE wrap 180x90 corner=ffffffff center=ff1565c0
+RAW_RESIZE wrap 280x140 corner=0 center=ff1565c0
+RAW_RESIZE wrap 100x30 corner=ff1565c0 center=ff1565c0

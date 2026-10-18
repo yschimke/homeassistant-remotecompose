@@ -133,7 +133,10 @@ fun WrapAdaptiveRemoteDocumentPlayer(
       val widthDp = with(density) { clampWarmupDimension(view.measuredWidth, maxWPx).toDp() }
       val heightDp = with(density) { clampWarmupDimension(view.measuredHeight, maxHPx).toDp() }
       Box(modifier = Modifier.size(widthDp, heightDp)) {
-        AndroidView(factory = { view }, modifier = Modifier.fillMaxSize())
+        // AndroidView's factory runs once per composition node. A new remembered player must
+        // replace that node too, otherwise changed bytes keep painting the previous document.
+        // Keep the same lifecycle as the fixed-slot path, including constraint-driven warmup.
+        key(view) { AndroidView(factory = { view }, modifier = Modifier.fillMaxSize()) }
       }
     }
   }
