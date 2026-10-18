@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>IKEA Showroom · RemoteCompose browser evidence</title>
+<style>
+  body{margin:0;background:#ece8df;color:#172a35;font:15px system-ui,sans-serif}
+  main{max-width:760px;margin:auto;padding:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  header{grid-column:1/-1}h1{font-size:24px;margin:0 0 4px}p{margin:0;color:#535a59}
+  section{min-width:0;padding:8px;background:#f4f0e7;display:flex;gap:8px;flex-direction:column}
+  section.dark{background:#14191c;color:#f7f4ea}h2{font-size:14px;margin:0 0 4px}
+  canvas{width:100%;display:block}#status{grid-column:1/-1;font-size:12px}
+  @media(max-width:600px){main{grid-template-columns:1fr;padding:12px}}
+</style>
+<script src="rc-player.js"></script>
+<main>
+<header><h1>IKEA Showroom</h1><p>Original product-inspired controls · realistic demo data</p></header>
+<section data-mode="light"><h2>Day · paper &amp; birch</h2></section>
+<section class="dark" data-mode="dark"><h2>Evening · charcoal &amp; warm labels</h2></section>
+<div id="status">Loading actual RemoteCompose documents…</div>
+</main>
+<script>
+(async()=>{
+ const players=[];
+ for(const section of document.querySelectorAll('section')){
+  const mode=section.dataset.mode;
+  for(const filename of [`light-${mode}-50`,`climate-${mode}`,`paddle-${mode}-on`,`media-${mode}`]){
+   const canvas=document.createElement('canvas');canvas.width=Math.round(section.clientWidth-16);canvas.height=400;section.append(canvas);
+   const player=new RC.RcdPlayer(canvas);player.setDensity(1);player.setTheme(mode);players.push(player);
+   const bytes=await(await fetch(filename+'.rc')).arrayBuffer();
+   await new Promise((resolve,reject)=>{player.setOnLoad(resolve);player.loadFromArrayBuffer(bytes).catch(reject)});
+   const root=player.getDocument().mRootLayoutComponent;
+   const height=Math.ceil(Math.max(...(root.mChildren??[]).map(c=>(c.mY??0)+(c.mHeight??0))));
+   if(height>0)player.resize(canvas.width,height);
+   player.repaint();
+  }
+ }
+ window.players=players;
+ document.getElementById('status').textContent='Rendered in the shipped TypeScript player. These browser fixtures are baked snapshots; live updates are tested separately in the app player.';
+ window.evidenceReady=true;
+})().catch(e=>{document.getElementById('status').textContent=e.stack;window.evidenceError=String(e)});
+</script>
+</html>

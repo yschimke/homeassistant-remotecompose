@@ -23,15 +23,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
 /**
- * Shared tactile key mount for every Console command, including text keys and compact controls.
- * Applied inside the existing target so its action, semantics and hit area remain with the caller.
- * A bound [accent] keeps live state/selection visible on the rim. Other themes are untouched.
+ * Shared tactile key mount for Console commands and IKEA moulded controls. Applied inside the
+ * existing target so its action, semantics and hit area remain with the caller. A bound [accent]
+ * keeps live state/selection visible on the rim. Flat themes return a no-op.
  */
 @Composable
 internal fun consoleKeyChrome(
   accent: RemoteColor? = null,
   selected: Boolean? = null,
 ): RemoteModifier {
+  if (visualFamily() == HaVisualFamily.Ikea) return ikeaKeyChrome(accent)
   if (visualFamily() != HaVisualFamily.Console) return RemoteModifier
   return RemoteModifier.drawWithContent {
     val edge = width.min(height) * 0.045f.rf

@@ -132,7 +132,9 @@ private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolea
 private fun TileIcon(data: HaTileData, look: HaEntityLook, renderChip: Boolean) {
   // Decorative: the tile draws the name beside it.
   val accent = look.accent
-  if (renderChip && visualFamily() == HaVisualFamily.Console) {
+  if (renderChip && visualFamily() == HaVisualFamily.Ikea && look.isOn != null) {
+    IkeaControlFace(accent, look.isOn.select(1f.rf, 0f.rf), RemoteModifier.size(32.rdp))
+  } else if (renderChip && visualFamily() == HaVisualFamily.Console) {
     ConsoleControlFace(
       look.isOn?.select(accent, ConsoleSlot.rc) ?: accent,
       RemoteModifier.size(32.rdp),

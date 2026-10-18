@@ -60,6 +60,7 @@ fun cardChrome(
   // into shade at the bottom edge. It is a fixed overlay, so a live background still shows through.
   val clipped =
     if (style.material == HaSurfaceMaterial.PaintedMetal) filled.background(panelSheen())
+    else if (style.material == HaSurfaceMaterial.BirchFrame) filled.then(ikeaFrameChrome(border))
     else filled
   val borderDp = borderWidthDp ?: style.borderDp
   return if (borderDp > 0) clipped.border(borderDp.rdp, border, shape) else clipped
