@@ -97,3 +97,36 @@ enum AppRoute: Hashable, Identifiable {
   case settings
   var id: Self { self }
 }
+
+// Keep JSON bytes across the actor boundary, preserving arrays, objects, null and scalar types.
+struct ServiceCall: Sendable {
+  let domain: String
+  let service: String
+  let entityID: String?
+  let serviceData: Data
+
+  init?(metadata: String) {
+    let payload = metadata.components(separatedBy: "\n--RC-METADATA-V1--\n").first ?? metadata
+    guard let data = payload.data(using: .utf8),
+      let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+    else { return nil }
+    let type = (object["type"] as? String ?? "").lowercased()
+    entityID = (object["entityId"] ?? object["entity_id"]) as? String
+    if type.hasSuffix("toggle"), let entityID {
+      domain = entityID.split(separator: ".").first.map(String.init) ?? "homeassistant"
+      service = "toggle"
+    } else if type.hasSuffix("callservice"),
+      let domain = object["domain"] as? String,
+      let service = object["service"] as? String
+    {
+      self.domain = domain
+      self.service = service
+    } else {
+      return nil
+    }
+    guard let serviceData = try? JSONSerialization.data(
+      withJSONObject: object["serviceData"] as? [String: Any] ?? [:])
+    else { return nil }
+    self.serviceData = serviceData
+  }
+}

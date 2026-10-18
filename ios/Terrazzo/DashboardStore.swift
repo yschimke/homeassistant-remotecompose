@@ -22,7 +22,10 @@ final class DashboardStore: ObservableObject {
 
   private let cache = CardCache()
   private let credentialStore = CredentialStore()
-  private let liveStream = LiveBindingStream()
+  private let liveStream: LiveBindingStream
+  private let makeService: (ServerConfiguration) -> RemoteComposeService
+  private var connectionRevision = 0
+  private var activeRefreshID = UUID()
   private var service: RemoteComposeService?
   private var documentGenerator: any CardDocumentGenerator = RecordedCardDocumentGenerator()
   private var refreshTask: Task<Void, Never>?
@@ -34,7 +37,16 @@ final class DashboardStore: ObservableObject {
     return dashboards.first(where: { $0.id == selectedDashboardID }) ?? dashboards.first
   }
 
-  init() {
+  init(
+    liveStream: LiveBindingStream = LiveBindingStream(),
+    restoreOnLaunch: Bool = true,
+    makeService: @escaping (ServerConfiguration) -> RemoteComposeService = {
+      RemoteComposeService(configuration: $0)
+    }
+  ) {
+    self.liveStream = liveStream
+    self.makeService = makeService
+    guard restoreOnLaunch else { return }
     if ProcessInfo.processInfo.arguments.contains("--demo") {
       startDemo()
     } else {
@@ -51,22 +63,44 @@ final class DashboardStore: ObservableObject {
     credentialStore.saveToken(token)
     isDemo = false
     phase = .loading
-    let nextService = RemoteComposeService(configuration: configuration)
+    stopLiveUpdates()
+    bindings = [:]
+    streamMessage = nil
+    let nextService = makeService(configuration)
     service = nextService
     documentGenerator = GatewayCardDocumentGenerator(service: nextService)
     refreshTask?.cancel()
     documentRefreshTask?.cancel()
     documentRefreshTask = nil
     pendingDocumentCardIDs.removeAll()
-    refreshTask = Task { [weak self] in await self?.refresh() }
+    let revision = connectionRevision
+    refreshTask = Task { [weak self] in
+      guard let self else { return }
+      await liveStream.disconnect()
+      guard revision == connectionRevision, !Task.isCancelled else { return }
+      await refresh()
+    }
   }
 
-  func startDemo() {
+  // Invalidate callbacks synchronously, before crossing to the stream actor.
+  private func stopLiveUpdates() {
+    connectionRevision &+= 1
+    activeRefreshID = UUID()
     refreshTask?.cancel()
     documentRefreshTask?.cancel()
     documentRefreshTask = nil
     pendingDocumentCardIDs.removeAll()
-    Task { await liveStream.disconnect() }
+    let revision = connectionRevision
+    Task {
+      guard revision == connectionRevision else { return }
+      await liveStream.disconnect()
+    }
+  }
+
+  func startDemo() {
+    stopLiveUpdates()
+    bindings = [:]
+    streamMessage = nil
     service = nil
     documentGenerator = RecordedCardDocumentGenerator()
     isDemo = true
@@ -81,32 +115,38 @@ final class DashboardStore: ObservableObject {
 
   func refresh() async {
     guard let service else { return }
+    let revision = connectionRevision
+    let refreshID = UUID()
+    activeRefreshID = refreshID
+    func isCurrent() -> Bool {
+      revision == connectionRevision && refreshID == activeRefreshID && !Task.isCancelled
+    }
     phase = feed == nil ? .loading : .ready
     do {
       let nextFeed = try await service.fetchFeed()
+      guard isCurrent() else { return }
       try await cache.save(feed: nextFeed)
+      guard isCurrent() else { return }
       feed = nextFeed
       selectedDashboardID = selectedDashboardID ?? nextFeed.dashboards.first?.id
       await loadDocuments(in: nextFeed)
-      try await connectStream(feed: nextFeed, service: service)
+      guard isCurrent() else { return }
+      try await connectStream(feed: nextFeed, service: service, revision: revision)
+      guard isCurrent() else { return }
       streamMessage = nil
       phase = .ready
     } catch {
+      guard isCurrent() else { return }
       if feed == nil { await restoreCachedFeed() }
+      guard isCurrent() else { return }
       if feed == nil { phase = .failed(error.localizedDescription) } else { phase = .ready }
       streamMessage = "Showing cached data"
     }
   }
 
   func signOut() {
-    refreshTask?.cancel()
-    documentRefreshTask?.cancel()
-    documentRefreshTask = nil
-    pendingDocumentCardIDs.removeAll()
-    Task {
-      await liveStream.disconnect()
-      try? await cache.clear()
-    }
+    stopLiveUpdates()
+    Task { try? await cache.clear() }
     UserDefaults.standard.removeObject(forKey: "serverURL")
     credentialStore.clearToken()
     service = nil
@@ -132,32 +172,10 @@ final class DashboardStore: ObservableObject {
       return
     }
 
-    let entityID = (object["entityId"] ?? object["entity_id"]) as? String
-    let domain: String
-    let serviceName: String
-    if type.hasSuffix("toggle"), let entityID {
-      domain = entityID.split(separator: ".").first.map(String.init) ?? "homeassistant"
-      serviceName = "toggle"
-    } else if type.hasSuffix("callservice"),
-      let actionDomain = object["domain"] as? String,
-      let actionService = object["service"] as? String
-    {
-      domain = actionDomain
-      serviceName = actionService
-    } else {
-      return
-    }
-
-    let stringData = (object["serviceData"] as? [String: Any] ?? [:]).compactMapValues {
-      value -> String? in
-      if let value = value as? String { return value }
-      if let value = value as? NSNumber { return value.stringValue }
-      return nil
-    }
+    guard let call = ServiceCall(metadata: metadata) else { return }
     Task {
       do {
-        try await liveStream.callService(
-          domain: domain, service: serviceName, entityID: entityID, serviceData: stringData)
+        try await liveStream.callService(call)
       } catch {
         streamMessage = error.localizedDescription
       }
@@ -180,6 +198,8 @@ final class DashboardStore: ObservableObject {
   }
 
   private func loadDocuments(in feed: DashboardFeed) async {
+    let revision = connectionRevision
+    let refreshID = activeRefreshID
     let generator = documentGenerator
     await withTaskGroup(of: (String, String, Data?).self) { group in
       for card in feed.dashboards.flatMap(\.cards) {
@@ -191,6 +211,10 @@ final class DashboardStore: ObservableObject {
         }
       }
       for await (cardID, cacheKey, data) in group {
+        guard revision == connectionRevision, refreshID == activeRefreshID, !Task.isCancelled else {
+          group.cancelAll()
+          return
+        }
         guard let data else { continue }
         documents[cardID] = data
         try? await cache.save(document: data, key: cacheKey)
@@ -198,14 +222,16 @@ final class DashboardStore: ObservableObject {
     }
   }
 
-  private func connectStream(feed: DashboardFeed, service: RemoteComposeService) async throws {
+  private func connectStream(
+    feed: DashboardFeed, service: RemoteComposeService, revision: Int
+  ) async throws {
     let entities = Set(feed.dashboards.flatMap(\.cards).flatMap(\.entities))
-    guard !entities.isEmpty else { return }
     let url = try await service.streamURL(for: feed)
     let authorization = await service.authorizationHeader()
+    guard revision == connectionRevision, !Task.isCancelled else { return }
     await liveStream.connect(url: url, authorization: authorization, entities: entities) {
       [weak self] event in
-      guard let self else { return }
+      guard let self, revision == connectionRevision else { return }
       switch event {
       case .bindings(let next):
         bindings.merge(next) { _, latest in latest }
@@ -225,8 +251,10 @@ final class DashboardStore: ObservableObject {
     guard let feed else { return }
     let cards = feed.dashboards.flatMap(\.cards).filter { cardIDs.contains($0.id) }
     let generator = documentGenerator
+    let revision = connectionRevision
     for card in cards {
       guard let data = try? await generator.document(for: card) else { continue }
+      guard revision == connectionRevision, !Task.isCancelled else { return }
       documents[card.id] = data
       try? await cache.save(document: data, key: card.documentURL)
     }
@@ -242,7 +270,7 @@ final class DashboardStore: ObservableObject {
         pendingDocumentCardIDs.removeAll()
         await reloadDocuments(cardIDs: next)
       }
-      documentRefreshTask = nil
+      if !Task.isCancelled { documentRefreshTask = nil }
     }
   }
 }

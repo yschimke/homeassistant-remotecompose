@@ -1,5 +1,15 @@
 import Foundation
 
+// A transport seam lets tests terminate a connection or suspend a receive/backoff deterministically.
+protocol LiveWebSocket: Sendable {
+  func resume()
+  func cancel(with closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?)
+  func send(_ message: URLSessionWebSocketTask.Message) async throws
+  func receive() async throws -> URLSessionWebSocketTask.Message
+}
+
+extension URLSessionWebSocketTask: LiveWebSocket {}
+
 actor LiveBindingStream {
   enum StreamEvent: Sendable {
     case bindings([String: BindingValue])
@@ -8,9 +18,24 @@ actor LiveBindingStream {
     case disconnected(String)
   }
 
-  private var task: URLSessionWebSocketTask?
+  private let makeSocket: @Sendable (URLRequest) -> any LiveWebSocket
+  private let sleep: @Sendable (UInt64) async throws -> Void
+  private var task: (any LiveWebSocket)?
   private var receiveTask: Task<Void, Never>?
+  private var generation = 0
   private var nextCommandID = 2
+
+  init(
+    makeSocket: @escaping @Sendable (URLRequest) -> any LiveWebSocket = {
+      URLSession.shared.webSocketTask(with: $0)
+    },
+    sleep: @escaping @Sendable (UInt64) async throws -> Void = {
+      try await Task.sleep(nanoseconds: $0)
+    }
+  ) {
+    self.makeSocket = makeSocket
+    self.sleep = sleep
+  }
 
   func connect(
     url: URL,
@@ -19,18 +44,38 @@ actor LiveBindingStream {
     onEvent: @escaping @MainActor @Sendable (StreamEvent) -> Void
   ) {
     disconnect()
+    let connectionGeneration = generation
     var request = URLRequest(url: url)
     if let authorization { request.setValue(authorization, forHTTPHeaderField: "Authorization") }
-    let socket = URLSession.shared.webSocketTask(with: request)
-    task = socket
-    socket.resume()
-
     receiveTask = Task { [weak self] in
-      guard let self else { return }
+      await self?.receive(
+        request: request, entities: entities, generation: connectionGeneration, onEvent: onEvent)
+    }
+  }
+
+  private func isCurrent(_ generation: Int) -> Bool {
+    self.generation == generation && !Task.isCancelled
+  }
+
+  private func receive(
+    request: URLRequest,
+    entities: Set<String>,
+    generation: Int,
+    onEvent: @escaping @MainActor @Sendable (StreamEvent) -> Void
+  ) async {
+    var retryDelay: UInt64 = 1_000_000_000
+    while isCurrent(generation) {
+      let socket = makeSocket(request)
+      task = socket
+      socket.resume()
       do {
-        try await self.sendSubscription(entities)
-        while !Task.isCancelled {
+        try await socket.send(Self.jsonMessage([
+          "id": 1, "type": "subscribe", "entities": entities.sorted(),
+        ]))
+        while isCurrent(generation) {
           let message = try await socket.receive()
+          guard isCurrent(generation) else { return }
+          retryDelay = 1_000_000_000
           let text: String
           switch message {
           case .string(let value): text = value
@@ -39,47 +84,47 @@ actor LiveBindingStream {
           }
           if let event = Self.decode(text) { await onEvent(event) }
         }
-      } catch is CancellationError {
-        return
       } catch {
+        guard isCurrent(generation) else { return }
+        task = nil
+        socket.cancel(with: .goingAway, reason: nil)
         await onEvent(.disconnected(error.localizedDescription))
       }
+      guard isCurrent(generation) else { return }
+      do { try await sleep(retryDelay) } catch { return }
+      retryDelay = min(retryDelay * 2, 30_000_000_000)
     }
   }
 
   func disconnect() {
+    generation &+= 1
     receiveTask?.cancel()
     receiveTask = nil
     task?.cancel(with: .goingAway, reason: nil)
     task = nil
   }
 
-  func callService(
-    domain: String,
-    service: String,
-    entityID: String?,
-    serviceData: [String: String] = [:]
-  ) async throws {
+  func callService(_ call: ServiceCall) async throws {
     guard let task else { throw URLError(.notConnectedToInternet) }
     let commandID = nextCommandID
     nextCommandID += 1
     var object: [String: Any] = [
       "id": commandID,
       "type": "call_service",
-      "domain": domain,
-      "service": service,
-      "service_data": serviceData,
+      "domain": call.domain,
+      "service": call.service,
+      "service_data": try JSONSerialization.jsonObject(with: call.serviceData),
     ]
-    if let entityID { object["target"] = ["entity_id": entityID] }
-    let data = try JSONSerialization.data(withJSONObject: object)
-    try await task.send(.data(data))
+    if let entityID = call.entityID { object["target"] = ["entity_id": entityID] }
+    // Commands are never replayed after a failure: the server may already have executed them.
+    try await task.send(Self.jsonMessage(object))
   }
 
-  private func sendSubscription(_ entities: Set<String>) async throws {
-    guard let task else { return }
-    let object: [String: Any] = ["id": 1, "type": "subscribe", "entities": entities.sorted()]
+  nonisolated private static func jsonMessage(_ object: [String: Any]) throws
+    -> URLSessionWebSocketTask.Message
+  {
     let data = try JSONSerialization.data(withJSONObject: object)
-    try await task.send(.data(data))
+    return .string(String(decoding: data, as: UTF8.self))
   }
 
   nonisolated private static func decode(_ text: String) -> StreamEvent? {
