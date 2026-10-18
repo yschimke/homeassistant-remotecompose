@@ -2,5 +2,11 @@
 services:
   native:
     ports: [127.0.0.1:8129:8080]
+    # Docker does not expose published ports from internal-only networks. This
+    # bridge is only for the CI browser; HA remains on its private internal network.
+    networks:
+      ci: {}
     environment:
       NATIVE_PUBLIC_URL: http://127.0.0.1:8129
+networks:
+  ci: {}

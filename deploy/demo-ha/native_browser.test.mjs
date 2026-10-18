@@ -12,12 +12,14 @@ mkdirSync(evidence, { recursive: true });
 
 test('public native HA login, dashboard, live updates and server-enforced read-only access', { timeout: 180_000 }, async () => {
   const api = await request.newContext();
+  let ready = false;
   for (let attempt = 0; attempt < 60; attempt++) {
     try {
-      if ((await api.get(`${base}/auth/providers`)).ok()) break;
+      if ((await api.get(`${base}/auth/providers`)).ok()) { ready = true; break; }
     } catch {}
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
+  assert.equal(ready, true, 'native gateway must be reachable and serve HA auth providers before browser login');
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1200, height: 800 }, deviceScaleFactor: 1 });
   try {
