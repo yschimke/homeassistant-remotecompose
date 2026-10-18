@@ -150,7 +150,10 @@ class WidgetPreviewRefreshTest {
       root.postInvalidateOnAnimation()
       true
     }
-    compose.runOnIdle { root.viewTreeObserver.addOnPreDrawListener(listener) }
+    compose.runOnIdle {
+      root.viewTreeObserver.addOnPreDrawListener(listener)
+      root.postInvalidateOnAnimation()
+    }
     try {
       // Three five-second polling intervals on the Compose test clock, including 750ms of blocked
       // capture each time.
@@ -179,8 +182,22 @@ class WidgetPreviewRefreshTest {
         }
       }
       val density = context.resources.displayMetrics.density
-      compose.onNodeWithTag("widget-resize-handle").performScrollTo().performTouchInput {
-        swipe(center, center - Offset(80 * density, 92 * density))
+      val handle = compose.onNodeWithTag("widget-resize-handle").performScrollTo()
+      val dimensions =
+        checkNotNull(
+            Regex("""(\d+) by (\d+) cells""")
+              .matchEntire(
+                handle
+                  .fetchSemanticsNode()
+                  .config[androidx.compose.ui.semantics.SemanticsProperties.StateDescription]
+              )
+          )
+          .groupValues
+          .drop(1)
+          .map(String::toInt)
+      handle.performTouchInput {
+        // Cross touch slop before travelling a full cell in each direction.
+        swipe(center, center - Offset(112 * density, 128 * density))
       }
       val dragged = nextRequest()
       Thread.sleep(750)
@@ -191,7 +208,7 @@ class WidgetPreviewRefreshTest {
         compose.runOnIdle { text = visibleText(root)?.text?.toString() }
         text == dragged.text
       }
-      compose.onNodeWithText("1 × 1 cells").assertExists()
+      compose.onNodeWithText("${dimensions[0] - 1} × ${dimensions[1] - 1} cells").assertExists()
       compose.onNodeWithText("Install widget").assertIsEnabled()
     } finally {
       compose.runOnIdle { root.viewTreeObserver.removeOnPreDrawListener(listener) }

@@ -62,6 +62,11 @@ identical cards on different Home Assistant instances.
   before an atomic child swap in the existing host. The last successful preview
   stays visible during refresh, resize and replacement failures. New edits and
   failed replacements invalidate installation; cancelled captures cannot publish.
+- Installed widgets always read the default dashboard's cache, so a card prepared
+  from a named dashboard could immediately fall back to generic "Unavailable"
+  content. They now read the instance's latest successful full snapshot, preserving
+  device mappings for printer cards. Older caches recover the newest valid payload;
+  the app's per-dashboard offline reads keep their existing slots.
 - Opening details froze the install snapshot. The sheet refreshes data while
   open, retaining local edits and the selected preview size.
 - A rejected pin request closed the sheet. It now leaves the preparation open

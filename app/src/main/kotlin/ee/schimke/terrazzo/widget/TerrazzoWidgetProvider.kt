@@ -151,7 +151,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     // just one dashboard's), refreshed while a session is bound.
     val snapshot =
       if (DemoData.isDemo(entry.baseUrl)) DemoData.snapshot()
-      else context.terrazzoGraph().offlineCache.snapshot(entry.baseUrl, null) ?: EMPTY_SNAPSHOT
+      else context.terrazzoGraph().offlineCache.latestSnapshot(entry.baseUrl) ?: EMPTY_SNAPSHOT
     val registry = defaultRegistry().withEnhancedShutter()
 
     val targetSizeDp =
