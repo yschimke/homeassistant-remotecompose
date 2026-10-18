@@ -303,11 +303,9 @@ private fun DashboardList(
   // production renders are untouched; reads are cheap StateFlows.
   val flashOnDataChange by preferencesStore.flashOnDataChange.collectAsState(initial = false)
   val dataGridOverlay by preferencesStore.dataGridOverlay.collectAsState(initial = false)
-  // The card designs the user's settings choose from the design server (off when its URL is empty).
-  val designContext = androidx.compose.ui.platform.LocalContext.current
-  val designChoice by
-    remember(preferencesStore) { CardDesignSync.choice(designContext, preferencesStore) }
-      .collectAsState(initial = null)
+  // The card designs the user's settings choose from the design server (off when its URL is empty),
+  // preloaded at app start so the first frame plays them; null only while that first read runs.
+  val preloadedDesigns = rememberPreloadedCardDesigns()
   // Pull the process-singleton image stack (a Metro AppScope binding —
   // see AppGraph.haImageStack). Coil documents that exactly one
   // DiskCache per directory is safe; the stack owns that single
@@ -373,7 +371,16 @@ private fun DashboardList(
         }
       }
 
-    val cardDesigns = designChoice?.let { rememberCardDesigns(context, it) } ?: CardDesigns()
+    // Hold the cards (briefly, see rememberPreloadedCardDesigns) rather than paint them with the
+    // local library's designs and swap to the server's a moment later.
+    val cardDesigns =
+      preloadedDesigns
+        ?: run {
+          Box(Modifier.fillMaxSize().padding(contentPadding).padding(24.dp)) {
+            CircularProgressIndicator()
+          }
+          return@BoxWithConstraints
+        }
     val cardDesignOverrides by
       remember(context) { CardDesignOverrideStore.of(context).overrides }.collectAsState()
     CompositionLocalProvider(
