@@ -226,6 +226,12 @@ fun ProvideWidgetActionRegistry(registry: WidgetActionRegistry, content: @Compos
 }
 
 /**
+ * A tap on a launcher widget outside any of its card's own controls: opens the app. Its own action,
+ * so a host can tell it from the card's taps (it runs no Home Assistant action).
+ */
+val WidgetOpenApp: HaAction = HaAction.Navigate("terrazzo://open-app")
+
+/**
  * Wrap an [HaAction] as a RemoteCompose [Action] ready to be plugged into
  * `Modifier.clickable(action)`. Returns null for [HaAction.None] so callers can treat "no action"
  * as "no interaction handler".
