@@ -115,5 +115,6 @@ class LauncherGridTest {
       swipe(center, center + Offset(0f, 110.dp.toPx()), durationMillis = 500)
     }
     compose.onNodeWithTag("grid-content").assertHeightIsEqualTo(168.dp)
+    compose.onNodeWithTag("grid-content").assertWidthIsEqualTo(144.dp)
   }
 }

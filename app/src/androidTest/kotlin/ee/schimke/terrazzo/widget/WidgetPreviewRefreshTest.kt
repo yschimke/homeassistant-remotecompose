@@ -181,8 +181,11 @@ class WidgetPreviewRefreshTest {
           text == request.text
         }
       }
+      // Scroll the outer sheet first: the handle's closest scroll parent only pans horizontally.
+      compose.onNodeWithTag("widget-grid-viewport").performScrollTo()
       val density = context.resources.displayMetrics.density
       val handle = compose.onNodeWithTag("widget-resize-handle").performScrollTo()
+      handle.assertIsDisplayed()
       val dimensions =
         checkNotNull(
             Regex("""(\d+) by (\d+) cells""")
