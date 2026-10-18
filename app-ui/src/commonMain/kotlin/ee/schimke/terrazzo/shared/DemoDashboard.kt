@@ -173,14 +173,18 @@ fun DashboardExperience(
               )
             }
         }
-        DashboardContent(
-          dashboard,
-          if (demo) "demo" else "ha-panel",
-          snapshot,
-          Modifier.weight(1f),
-        ) { _, card ->
-          LibraryCard(card, snapshot, design, dark || design == "console", onToggle) {
-            NativeCard(card, snapshot, readOnly = onToggle == null) { onToggle?.invoke(it) }
+        // Different dashboard sources must not retain the old grid's cards or semantics.
+        // State-only refreshes keep the same key, preserving playback and selected views.
+        key(dashboard) {
+          DashboardContent(
+            dashboard,
+            if (demo) "demo" else "ha-panel",
+            snapshot,
+            Modifier.weight(1f),
+          ) { _, card ->
+            LibraryCard(card, snapshot, design, dark || design == "console", onToggle) {
+              NativeCard(card, snapshot, readOnly = onToggle == null) { onToggle?.invoke(it) }
+            }
           }
         }
       }

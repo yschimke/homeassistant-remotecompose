@@ -195,6 +195,20 @@ try:
         Handler.live = True
         page.get_by_text('Live when available', exact=True).click(force=True)
         expect(page.get_by_text('Example home · live demo data · try the switches', exact=True)).to_be_visible(timeout=10000)
+        expect(page.get_by_text('Live comfort', exact=True)).to_be_visible()
+        expect(page.get_by_text('Living spaces', exact=True)).to_have_count(0)
+        # Exercise repeated source changes: neither source may retain the other's grid.
+        for cycle in range(3):
+            Handler.live = False
+            expect(page.get_by_text('Live demo unavailable · using fake data · retrying', exact=True)).to_be_visible(timeout=10000)
+            expect(page.get_by_text('Live comfort', exact=True)).to_have_count(0)
+            expect(page.get_by_text('Living spaces', exact=True)).to_be_visible()
+            Handler.live = True
+            page.get_by_text('Fake data', exact=True).click(force=True)
+            page.get_by_text('Live when available', exact=True).click(force=True)
+            expect(page.get_by_text('Example home · live demo data · try the switches', exact=True)).to_be_visible(timeout=10000)
+            expect(page.get_by_text('Live comfort', exact=True)).to_be_visible()
+            expect(page.get_by_text('Living spaces', exact=True)).to_have_count(0)
         assert not live_errors, live_errors
         browser.close()
         print('Demo: mobile/wall layouts, real RC playback, inline style/theme, credential-free, offline fallback, live refresh, outage recovery and fake-mode isolation passed')
