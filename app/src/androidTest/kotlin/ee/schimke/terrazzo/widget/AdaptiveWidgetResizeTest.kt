@@ -143,12 +143,22 @@ class AdaptiveWidgetResizeTest {
     }
   }
 
+  private fun optionsFor(size: WidgetSizeDp) =
+    android.os.Bundle().apply {
+      putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, size.widthDp)
+      putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, size.widthDp)
+      putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, size.heightDp)
+      putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, size.heightDp)
+    }
+
   private class ObservedHostView(context: Context) : AppWidgetHostView(context) {
     @Volatile var received: CountDownLatch? = null
+    @Volatile var hasDocument: Boolean = false
 
     override fun updateAppWidget(remoteViews: RemoteViews?) {
       super.updateAppWidget(remoteViews)
       if (remoteViews != null) {
+        hasDocument = true
         received?.countDown()
       }
     }
@@ -171,18 +181,6 @@ class AdaptiveWidgetResizeTest {
     }
     val id = appHost.allocateAppWidgetId()
     try {
-      automation.adoptShellPermissionIdentity("android.permission.BIND_APPWIDGET")
-      try {
-        assertTrue(
-          "Fixture widget must bind",
-          manager.bindAppWidgetIdIfAllowed(
-            id,
-            ComponentName(context, TerrazzoWidgetProvider::class.java),
-          ),
-        )
-      } finally {
-        automation.dropShellPermissionIdentity()
-      }
       val card =
         CardConfig(
           "entity",
@@ -194,27 +192,49 @@ class AdaptiveWidgetResizeTest {
           },
         )
       runBlocking { context.terrazzoGraph().widgetStore.put(id, DemoData.BASE_URL, card) }
+      val initialSize = WidgetSizeDp(180, 90)
+      automation.adoptShellPermissionIdentity("android.permission.BIND_APPWIDGET")
+      try {
+        assertTrue(
+          "Fixture widget must bind",
+          manager.bindAppWidgetIdIfAllowed(
+            id,
+            ComponentName(context, TerrazzoWidgetProvider::class.java),
+            optionsFor(initialSize),
+          ),
+        )
+      } finally {
+        automation.dropShellPermissionIdentity()
+      }
+
       lateinit var view: ObservedHostView
       lateinit var container: FrameLayout
+      val firstDocument = CountDownLatch(1)
       activity.scenario.onActivity {
         container = FrameLayout(it)
         it.setContentView(container)
         view = appHost.createView(it, id, manager.getAppWidgetInfo(id)) as ObservedHostView
-        container.addView(view)
+        // Wait for the real provider's first document before attachment and the first draw.
+        // Cached or newly delivered initial RemoteViews are both valid.
+        view.received = firstDocument
+        if (view.hasDocument) firstDocument.countDown()
         appHost.startListening()
       }
+      assertTrue("Initial provider document must arrive", firstDocument.await(30, TimeUnit.SECONDS))
+      val initial =
+        captureWindow(
+          container,
+          view,
+          WidgetSizing.dpToPx(context, initialSize.widthDp),
+          WidgetSizing.dpToPx(context, initialSize.heightDp),
+        )
+      save(context, "options-initial", initial)
+      assertContent(initial, "initial registered widget")
+      initial.recycle()
       for (size in listOf(WidgetSizeDp(144, 168), WidgetSizeDp(288, 252), WidgetSizeDp(72, 84))) {
         val received = CountDownLatch(1)
         view.received = received
-        manager.updateAppWidgetOptions(
-          id,
-          android.os.Bundle().apply {
-            putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, size.widthDp)
-            putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, size.widthDp)
-            putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, size.heightDp)
-            putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, size.heightDp)
-          },
-        )
+        manager.updateAppWidgetOptions(id, optionsFor(size))
         assertTrue(
           "$size: options callback must publish a new document",
           received.await(30, TimeUnit.SECONDS),

@@ -131,6 +131,21 @@ the same document before attachment. These captures use PixelCopy after two comm
 | --- | --- |
 | ![First document paints only its frame](evidence/adaptive-player/platform-empty-host-first-document.png) | ![Same bytes with document-first initialization](evidence/adaptive-player/platform-document-before-attach.png) |
 
+The subsequent [run 39144803089](https://github.com/yschimke/homeassistant-remotecompose/actions/runs/39144803089)
+passed the attached synthetic resize/byte matrix, including strict full-frame equality with fresh
+references. The real registered-widget fixture exposed an initialization race: binding could
+start the async provider before its store row existed, and options could be changed before its
+first document was drawn. It now saves the card before binding with explicit initial dimensions,
+waits for the first real provider document before attachment, and verifies that first frame before
+requesting any resize. Every subsequent options callback still has to deliver a document whose
+window pixels exactly match a fresh size-specific capture.
+
+These are actual committed-window frames from the passing synthetic sequence in that run:
+
+| First size and value 1 | Larger size and value 2 | Smaller size and value 3 |
+| --- | --- | --- |
+| ![144 by 168 native widget](evidence/adaptive-player/platform-recapture-144.png) | ![288 by 252 native widget](evidence/adaptive-player/platform-recapture-288.png) | ![72 by 84 native widget](evidence/adaptive-player/platform-recapture-72.png) |
+
 The final API 36 rerun is recorded in the PR.
 
 The first fixture exports PNGs through MediaStore to `Pictures/TerrazzoWidgetTests`, collected by
