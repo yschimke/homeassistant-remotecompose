@@ -2,10 +2,14 @@
 
 A phone user chooses a dashboard card, opens its details, and taps **Prepare a
 home screen widget** above the history charts. **Make it yours** provides a local
-name edit and a live home screen preview. Compact, Default and Roomy presets plus
+name edit and a live home screen preview. Compact (1×1), Medium and Roomy presets plus
 a corner drag let the user test the provider's advertised resize range before
 pressing **Install widget**. The install action stays visible while the preview
-scrolls. Android then asks for confirmation and a home screen position.
+scrolls. Android then asks for confirmation and a home screen position. Every launcher provider
+starts new widgets at 1×1 and allows resizing upward. Trying a larger preview does not
+change that installation default. Existing installed widgets keep their launcher sizes and
+saved card choices; there is no size migration. Preview selection survives live refreshes,
+name edits and activity recreation. Wear widget sizing is independent.
 
 The name edit applies only to the widget. Installation persists the edited card
 only after the launcher confirms. Cancellation consumes no slot and returns to the edited preparation. The Android
@@ -89,7 +93,9 @@ home screen after installation.
 It checks that actual rendered pixels are non-empty, change with light state,
 and remain non-empty at Compact and Roomy sizes. Roomy must reveal more content, not just enlarge the canvas. It edits a name, requests a pin,
 cancels, confirms another pin and verifies the persisted edited card. Screenshots are retained through MediaStore so CI cleanup cannot erase the evidence. The install screenshot waits for actual content inside launcher widget bounds. It also
-exercises the provider's launcher size options after installation.
+asserts a fresh install uses the one-cell provider default and exercises the provider's launcher size options after installation. `WidgetSizingTest` covers every provider's metadata, missing host options and preservation of positive host sizes.
+`LauncherDesignsTest` checks 1×1 icon/state content, live rebaking and fuller layouts
+after resizing, including entities and glance lists.
 
 ```sh
 ./gradlew :app:connectedDebugAndroidTest \

@@ -9,27 +9,9 @@ import kotlin.math.roundToInt
 import org.xmlpull.v1.XmlPullParser
 
 /**
- * Quantises a card's continuous [WidgetSizeConstraints] band onto the small, fixed set of launcher
- * provider variants we ship.
- *
- * The launcher learns a widget's default cell and resize limits from static `appwidget-provider`
- * metadata, which is per-provider — a single provider can only advertise one band. So instead of
- * one provider, each size class is backed by its own [AppWidgetProvider] subclass +
- * `appwidget-provider` XML (see [providerClass] and the `@xml/terrazzo_widget_info*` resources).
- * [WidgetInstaller] reads the card's [WidgetSizeConstraints], maps it here, and pins the matching
- * component.
- *
- * Each class is an **opinionated range** — a `targetCell*` default plus `min/maxResize*` bounds —
- * so the launcher offers a sensible default cell and won't let the card be dragged out to an
- * oversized slot it would only half-fill:
- *
- * * [Small] — ~1x1 .. 2x2 (single-entity chips)
- * * [Standard] — ~2x1 .. 4x3 (default list/hero)
- * * [Tall] — ~2x2 .. 4x4 (many-row lists)
- *
- * Rendering itself is identical across variants — every provider subclass inherits
- * [TerrazzoWidgetProvider]'s id-driven capture — so adding a class is just a new subclass + XML +
- * manifest receiver, no render logic.
+ * Launcher provider variants retain their component identities and card-specific maximum sizes. All
+ * variants start at 1x1 and allow resizing upward in both axes. Provider metadata controls new
+ * installations; existing widget IDs, host options and persisted card choices stay intact.
  */
 internal enum class WidgetSizeClass(val providerClass: Class<out TerrazzoWidgetProvider>) {
   /**
@@ -39,13 +21,13 @@ internal enum class WidgetSizeClass(val providerClass: Class<out TerrazzoWidgetP
   Small(TerrazzoWidgetProviderSmall::class.java),
 
   /**
-   * The default: wide list/hero cards at a comfortable couple of rows. Backed by the base
-   * [TerrazzoWidgetProvider] so existing installs keep working. `@xml/terrazzo_widget_info`.
+   * Wide list/hero cards with room to grow. Backed by the base [TerrazzoWidgetProvider] so existing
+   * installs keep working. `@xml/terrazzo_widget_info`.
    */
   Standard(TerrazzoWidgetProvider::class.java),
 
   /**
-   * Tall list cards (entities/glance with many rows) that want vertical room by default.
+   * Tall list cards (entities/glance with many rows) with a larger vertical resize range.
    * `@xml/terrazzo_widget_info_tall`.
    */
   Tall(TerrazzoWidgetProviderTall::class.java);
@@ -63,7 +45,7 @@ internal enum class WidgetSizeClass(val providerClass: Class<out TerrazzoWidgetP
 
   /**
    * The launcher resize range for this size class, in whole grid cells — the smallest and largest
-   * home-screen slots the widget will occupy, plus the comfortable default it pins at.
+   * home-screen slots the widget will occupy, plus the 1x1 default it pins at.
    *
    * Read straight from the matching `@xml/terrazzo_widget_info*` provider metadata — the same
    * `appwidget-provider` element the launcher itself reads — so the card-history resize preview and
@@ -75,7 +57,7 @@ internal enum class WidgetSizeClass(val providerClass: Class<out TerrazzoWidgetP
     readProviderGridBounds(context, providerInfoXmlRes)
 
   companion object {
-    /** Default height (dp) at or above which a Full-width card pins Tall. */
+    /** Natural height (dp) at or above which a Full-width card uses the Tall resize range. */
     private const val TALL_DEFAULT_HEIGHT_DP = 200
 
     /**
@@ -104,7 +86,7 @@ internal const val LAUNCHER_CELL_HEIGHT_DP = 84
 
 /**
  * A [WidgetSizeClass]'s resize range expressed in whole launcher cells: the smallest and largest
- * slots the launcher will let the widget occupy, plus the comfortable default it pins at. See
+ * slots the launcher will let the widget occupy, plus the 1x1 default it pins at. See
  * [WidgetSizeClass.gridBounds].
  */
 internal data class LauncherGridBounds(

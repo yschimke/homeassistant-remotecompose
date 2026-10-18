@@ -204,19 +204,14 @@ interface CardConverter {
     gridSquareCell(card, snapshot)
 
   /**
-   * The comfortable default size this card wants when pinned as a launcher widget, in dp — the cell
-   * it should occupy before the user resizes it.
+   * Preferred content size in dp, used to select a launcher's provider resize range.
    *
-   * This is the **per-card supported-size contract**: it answers "what size should this widget pin
-   * at?" so the host can offer a sensible default cell. We deliberately don't express hard min/max
-   * bounds — the launcher's own grid governs how small or large a widget can get, and the card's
-   * Fixed-mode breakpoint ladders adapt to whatever cell results. On the phone, `WidgetSizeClass`
-   * maps this default onto a provider variant whose `targetCell*` matches.
+   * Every phone launcher provider installs at 1x1. This hint selects how far the widget can grow:
+   * compact cards use the Small provider, while taller lists get a larger vertical range. It never
+   * overrides the installed widget's host options or resets a user's size.
    *
-   * The default derives from [naturalWidthClass] (Compact cards pin small and near-square; Full
-   * cards pin wide) and [naturalHeightDp] (so payload-sized cards like `entities` advertise a
-   * taller default as rows are added). Override when a card's comfortable size doesn't follow from
-   * those two.
+   * The hint derives from [naturalWidthClass] and [naturalHeightDp]; Fixed-mode breakpoint ladders
+   * adapt the content to the actual cell, starting with a useful one-cell identity tier.
    */
   fun sizeConstraints(card: CardConfig, snapshot: HaSnapshot): WidgetSizeConstraints {
     val height = naturalHeightDp(card, snapshot)
@@ -230,10 +225,10 @@ interface CardConverter {
 }
 
 /**
- * A card's comfortable default launcher-widget size, in dp. Emitted by
- * [CardConverter.sizeConstraints] and mapped onto a host's discrete cells (on the phone, a
- * `WidgetSizeClass` provider variant). It's a preferred default, not a hard bound — resize beyond
- * it is up to the launcher; the card's breakpoint ladders adapt to whatever results.
+ * A card's preferred content size in dp, emitted by [CardConverter.sizeConstraints]. The phone uses
+ * this hint to pick a provider's maximum resize range. All providers install at 1x1; the launcher
+ * owns installed sizes, and card breakpoint ladders adapt to them. The field names are retained for
+ * callers that use the preferred dimensions as layout hints.
  */
 data class WidgetSizeConstraints(val defaultWidthDp: Int, val defaultHeightDp: Int) {
   init {

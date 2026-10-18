@@ -14,6 +14,7 @@ import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaEntityRowData
 import ee.schimke.ha.rc.components.HaTileData
@@ -37,7 +38,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * tier is wrapped in [CenteredCell] so a tall cell centres the row instead of leaving a blank lower
  * half.
  *
- * Base launcher shape is `2×1` (see [CardPreviewMatrix_Entity]) — the old `3×1` left the matrix
+ * Matrix reference shape is `2×1` (see [CardPreviewMatrix_Entity]) — the old `3×1` left the matrix
  * `+1` neighbour ~70 % empty (Q5).
  */
 class EntityCardConverter : CardConverter {
@@ -63,7 +64,12 @@ class EntityCardConverter : CardConverter {
         RemoteSizeBreakpoint(thresholdsDp = intArrayOf(96), modifier = modifier.fillMaxSize()) {
           tier ->
           when (tier) {
-            0 -> RemoteHaIconChip(iconChipData(card, snapshot), RemoteModifier.fillMaxSize())
+            0 ->
+              RemoteHaIconChip(
+                iconChipData(card, snapshot),
+                RemoteModifier.fillMaxSize(),
+                bindState = LocalWidgetCaptureSizeDp.current != null,
+              )
             // The row fills the cell and self-centres via its
             // own `CenterVertically` (like RemoteHaGaugeWide),
             // so a tall cell isn't top-glued (Principle 8). A

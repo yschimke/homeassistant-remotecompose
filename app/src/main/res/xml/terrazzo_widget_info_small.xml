@@ -1,17 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  SMALL Terrazzo size class — button-shaped single-entity cards (tile,
-  button, entity). Backed by TerrazzoWidgetProviderSmall; chosen by
-  WidgetSizeClass.Small.
-
-  Opinionated range, ~1x1 .. 2x2 cells: a near-square chip that pairs
-  with other small widgets and can't be stretched into a list-sized
-  slot. See terrazzo_widget_info.xml for the shared rationale.
+  SMALL — single-entity cards, resizable up to about 2x2 cells.
+  Every launcher variant starts at 1x1 and can resize in both axes.
+  Keep provider identities and maximums so existing installations retain their slots.
+  Updates are driven by Home Assistant state changes, not framework polling.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="50dp"
     android:minHeight="50dp"
-    android:targetCellWidth="2"
+    android:targetCellWidth="1"
     android:targetCellHeight="1"
     android:minResizeWidth="50dp"
     android:minResizeHeight="50dp"

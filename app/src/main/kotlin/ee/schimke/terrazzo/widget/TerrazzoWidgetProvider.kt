@@ -19,7 +19,6 @@ import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.LauncherLook
 import ee.schimke.ha.rc.LauncherWidgetContent
 import ee.schimke.ha.rc.WidgetCaptureSizeDp
-import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaUberTheme
@@ -152,13 +151,10 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     val snapshot =
       if (DemoData.isDemo(entry.baseUrl)) DemoData.snapshot()
       else context.terrazzoGraph().offlineCache.snapshot(entry.baseUrl, null) ?: EMPTY_SNAPSHOT
-    val registry = defaultRegistry().withEnhancedShutter()
-
     val targetSizeDp =
       WidgetSizing.forWidgetCapture(
         appWidgetManager = appWidgetManager,
         widgetId = widgetId,
-        cardHeightDp = registry.cardHeightDp(entry.card, snapshot),
       )
     val remoteViews =
       renderPreview(context, entry.baseUrl, entry.card, snapshot, targetSizeDp, widgetId) ?: return
