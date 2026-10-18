@@ -206,6 +206,20 @@ private fun Chip(reading: HaReading, modifier: RemoteModifier) {
  */
 @Composable
 private fun Expanded(reading: HaReading, modifier: RemoteModifier) {
+  if (visualFamily().isCommunity) {
+    CommunityReadingLayout(
+      reading.nameText(),
+      reading.text,
+      reading.rangeText(),
+      reading.fraction(),
+      reading.color(),
+      modifier.fillMaxSize().padding(6.rdp),
+      small = true,
+    ) {
+      RemoteHaMeasurementGlyph(reading, it)
+    }
+    return
+  }
   val theme = haTheme()
   val plate = currentHaUberTheme().theme.readout == HaReadoutStyle.Plate
   RemoteColumn(

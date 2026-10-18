@@ -7,7 +7,10 @@ import android.appwidget.AppWidgetProviderInfo
 import android.content.ComponentName
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Canvas
+import android.graphics.Rect
+import android.os.Handler
+import android.os.Looper
+import android.view.PixelCopy
 import android.widget.FrameLayout
 import android.widget.RemoteViews
 import androidx.activity.ComponentActivity
@@ -40,6 +43,99 @@ class AdaptiveWidgetResizeTest {
     var result: Result<T>? = null
     InstrumentationRegistry.getInstrumentation().runOnMainSync { result = runCatching(block) }
     return checkNotNull(result).getOrThrow()
+  }
+
+  /**
+   * Capture the actual hardware-rendered frame, after layout and GPU frame commitment. A software
+   * View.draw canvas can paint a different rounded edge or omit native text.
+   */
+  private fun captureWindow(
+    container: FrameLayout,
+    target: AppWidgetHostView,
+    w: Int,
+    h: Int,
+  ): Bitmap {
+    check(w in 1..1800 && h in 1..1800)
+    val committed = CountDownLatch(1)
+    onMain {
+      container.removeAllViews()
+      container.addView(
+        target,
+        FrameLayout.LayoutParams(
+          w + target.paddingLeft + target.paddingRight,
+          h + target.paddingTop + target.paddingBottom,
+        ),
+      )
+      assertTrue("Fixture requires a hardware-rendered window", target.isHardwareAccelerated)
+      target.viewTreeObserver.registerFrameCommitCallback {
+        // Native RemoteCompose initializes its paint context during the first draw. Commit
+        // another frame as well, including any layout requested by that initialization.
+        target.post {
+          target.viewTreeObserver.registerFrameCommitCallback { committed.countDown() }
+          target.invalidate()
+        }
+      }
+      target.invalidate()
+    }
+    assertTrue("Widget must commit its frame", committed.await(30, TimeUnit.SECONDS))
+    val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+    val copied = CountDownLatch(1)
+    var status = PixelCopy.ERROR_UNKNOWN
+    onMain {
+      val location = IntArray(2)
+      target.getLocationInWindow(location)
+      val left = location[0] + target.paddingLeft
+      val top = location[1] + target.paddingTop
+      activity.scenario.onActivity { owner ->
+        PixelCopy.request(
+          owner.window,
+          Rect(left, top, left + w, top + h),
+          bitmap,
+          {
+            status = it
+            copied.countDown()
+          },
+          Handler(Looper.getMainLooper()),
+        )
+      }
+    }
+    assertTrue("Widget pixels must be copied", copied.await(30, TimeUnit.SECONDS))
+    org.junit.Assert.assertEquals("Window capture must succeed", PixelCopy.SUCCESS, status)
+    return bitmap
+  }
+
+  private fun pixels(bitmap: Bitmap): IntArray =
+    IntArray(bitmap.width * bitmap.height).also {
+      bitmap.getPixels(it, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+    }
+
+  private fun assertContent(bitmap: Bitmap, label: String) {
+    // Exclude the rounded frame: its antialiased corners alone contain >10 colors.
+    val interior = mutableSetOf<Int>()
+    for (y in bitmap.height / 5 until bitmap.height * 4 / 5) {
+      for (x in bitmap.width / 5 until bitmap.width * 4 / 5) interior.add(bitmap.getPixel(x, y))
+    }
+    assertTrue("$label must contain text inside its frame", interior.size > 10)
+  }
+
+  private fun save(context: Context, name: String, bitmap: Bitmap) {
+    val uri =
+      checkNotNull(
+        context.contentResolver.insert(
+          android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+          android.content.ContentValues().apply {
+            put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, "adaptive-$name.png")
+            put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/png")
+            put(
+              android.provider.MediaStore.Images.Media.RELATIVE_PATH,
+              "Pictures/TerrazzoWidgetTests",
+            )
+          },
+        )
+      )
+    checkNotNull(context.contentResolver.openOutputStream(uri)).use {
+      assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it))
+    }
   }
 
   private class ObservedHostView(context: Context) : AppWidgetHostView(context) {
@@ -120,47 +216,29 @@ class AdaptiveWidgetResizeTest {
         )
         val w = WidgetSizing.dpToPx(context, size.widthDp)
         val h = WidgetSizing.dpToPx(context, size.heightDp)
-        fun draw(target: AppWidgetHostView): IntArray {
-          val ready = CountDownLatch(1)
-          onMain {
-            container.removeAllViews()
-            container.addView(
-              target,
-              FrameLayout.LayoutParams(
-                w + target.paddingLeft + target.paddingRight,
-                h + target.paddingTop + target.paddingBottom,
-              ),
-            )
-            target.postOnAnimation { target.postOnAnimation { ready.countDown() } }
-          }
-          assertTrue("$size must draw after delivery", ready.await(30, TimeUnit.SECONDS))
-          return onMain {
-            val bitmap = Bitmap.createBitmap(target.width, target.height, Bitmap.Config.ARGB_8888)
-            target.draw(Canvas(bitmap))
-            IntArray(w * h).also {
-              bitmap.getPixels(it, 0, w, target.paddingLeft, target.paddingTop, w, h)
-              bitmap.recycle()
-            }
-          }
-        }
-        val actual = draw(view)
-        assertTrue("$size must display content after recapture", actual.distinct().size > 10)
+        val actual = captureWindow(container, view, w, h)
+        save(context, "options-${size.widthDp}-actual", actual)
+        assertContent(actual, "$size after recapture")
         val expectedViews =
           checkNotNull(
             TerrazzoWidgetProvider()
               .renderPreview(context, DemoData.BASE_URL, card, DemoData.snapshot(), size, id)
           )
         val fresh = onMain {
-          AppWidgetHostView(context).apply {
+          AppWidgetHostView(view.context).apply {
             setAppWidget(id, manager.getAppWidgetInfo(id))
             updateAppWidget(expectedViews)
           }
         }
+        val expected = captureWindow(container, fresh, w, h)
+        save(context, "options-${size.widthDp}-expected", expected)
         assertArrayEquals(
           "$size: callback capture must match a new capture at the requested size",
-          draw(fresh),
-          actual,
+          pixels(expected),
+          pixels(actual),
         )
+        actual.recycle()
+        expected.recycle()
       }
     } finally {
       onMain { appHost.stopListening() }
@@ -204,64 +282,19 @@ class AdaptiveWidgetResizeTest {
         checkNotNull(provider.renderPreview(context, DemoData.BASE_URL, card, snapshot, size, 42))
       val w = WidgetSizing.dpToPx(context, size.widthDp)
       val h = WidgetSizing.dpToPx(context, size.heightDp)
-      fun draw(target: AppWidgetHostView): Bitmap {
-        val ready = CountDownLatch(1)
-        onMain {
-          container.removeAllViews()
-          container.addView(
-            target,
-            FrameLayout.LayoutParams(
-              w + target.paddingLeft + target.paddingRight,
-              h + target.paddingTop + target.paddingBottom,
-            ),
-          )
-          target.postOnAnimation { target.postOnAnimation { ready.countDown() } }
-        }
-        assertTrue("Launcher host received frames", ready.await(30, TimeUnit.SECONDS))
-        return onMain {
-          val outer = Bitmap.createBitmap(target.width, target.height, Bitmap.Config.ARGB_8888)
-          target.draw(Canvas(outer))
-          Bitmap.createBitmap(outer, target.paddingLeft, target.paddingTop, w, h).also {
-            if (it !== outer) outer.recycle()
-          }
-        }
-      }
       onMain { host.updateAppWidget(document) }
-      val actual = draw(host)
+      val actual = captureWindow(container, host, w, h)
+      save(context, "recapture-$index-actual", actual)
       val fresh = onMain {
-        AppWidgetHostView(context).apply {
+        AppWidgetHostView(host.context).apply {
           setAppWidget(42, info)
           updateAppWidget(document)
         }
       }
-      val expected = draw(fresh)
-      fun pixels(bitmap: Bitmap) = IntArray(w * h).also { bitmap.getPixels(it, 0, w, 0, 0, w, h) }
+      val expected = captureWindow(container, fresh, w, h)
       val actualPixels = pixels(actual)
-      assertTrue(
-        "$size must contain visible text rather than a blank/error surface",
-        actualPixels.distinct().size > 10,
-      )
-      val uri =
-        checkNotNull(
-          context.contentResolver.insert(
-            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            android.content.ContentValues().apply {
-              put(
-                android.provider.MediaStore.Images.Media.DISPLAY_NAME,
-                "adaptive-resize-$index.png",
-              )
-              put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/png")
-              put(
-                android.provider.MediaStore.Images.Media.RELATIVE_PATH,
-                "Pictures/TerrazzoWidgetTests",
-              )
-            },
-          )
-        )
-      check(maxOf(actual.width, actual.height) <= 1800)
-      checkNotNull(context.contentResolver.openOutputStream(uri)).use {
-        assertTrue(actual.compress(Bitmap.CompressFormat.PNG, 100, it))
-      }
+      save(context, "recapture-$index-expected", expected)
+      assertContent(actual, "$size after resize")
       assertArrayEquals(
         "$size: reused host must match a fresh host",
         pixels(expected),

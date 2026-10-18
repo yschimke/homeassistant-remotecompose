@@ -18,6 +18,7 @@ import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
+import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
@@ -150,10 +151,11 @@ internal fun thermostatDial(card: CardConfig, snapshot: HaSnapshot): HaArcDialDa
 }
 
 /**
- * Width ladder shared by thermostat / humidifier / light. Mirrors the gauge single-gate pattern in
- * [GaugeCardConverter]: arc-left Wide row when the runtime cell is too narrow for the full vertical
- * card with steppers, full card otherwise. A single threshold avoids the alpha010 nested
- * `RemoteStateLayout` quirk that collapses multi-tier ladders (#224).
+ * Two-dimensional ladder shared by thermostat / humidifier / light: the arc-left Wide row handles a
+ * cell that is too narrow or short for the full vertical card with steppers. The full card needs
+ * both dimensions, so a short wide launcher does not hide its reading and actions below the cell. A
+ * single threshold avoids the alpha010 nested `RemoteStateLayout` quirk that collapses multi-tier
+ * ladders (#224).
  *
  * On a Wear slot ([LocalFixedCanvasAxis] is [BreakpointAxis.Height]) every container is narrower
  * than the full card, so the gate moves to height: the small slot, too short for the Wide row's
@@ -174,20 +176,21 @@ internal fun RenderArcDial(data: HaArcDialData, modifier: RemoteModifier) {
             RemoteHaArcDialWide(data, RemoteModifier.fillMaxSize(), compact = tier == 0)
           }
         BreakpointAxis.Width ->
-          RemoteSizeBreakpoint(
-            thresholdsDp = intArrayOf(ArcDialFullMinDp),
+          RemoteMinSizeGate(
+            minWidthDp = ArcDialFullMinDp,
+            minHeightDp = ArcDialFullMinHeightDp,
             modifier = modifier.fillMaxSize(),
-          ) { tier ->
-            when (tier) {
-              0 -> RemoteHaArcDialWide(data, RemoteModifier.fillMaxSize())
-              else -> RemoteHaArcDial(data, RemoteModifier.fillMaxSize())
-            }
+          ) { roomy ->
+            if (roomy) RemoteHaArcDial(data, RemoteModifier.fillMaxSize())
+            else RemoteHaArcDialWide(data, RemoteModifier.fillMaxSize())
           }
       }
   }
 }
 
 private const val ArcDialFullMinDp = 260
+// Name, 180dp dial, 48dp stepper targets and chrome need the thermostat's natural height.
+private const val ArcDialFullMinHeightDp = 290
 
 /**
  * The Wide row's mode, value and target lines (~59dp: a line is ~1.33× its type size) inside its

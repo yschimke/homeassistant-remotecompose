@@ -20,6 +20,7 @@ import ee.schimke.ha.rc.HaNamedColor
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
+import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
@@ -166,7 +167,12 @@ class TileCardConverter : CardConverter {
                 modifier = modifier.fillMaxSize(),
               ) { tier ->
                 when (tier) {
-                  0 -> RemoteHaIconChip(tileData(card, snapshot), RemoteModifier.fillMaxSize())
+                  0 ->
+                    RemoteHaIconChip(
+                      tileData(card, snapshot),
+                      RemoteModifier.fillMaxSize(),
+                      bindState = LocalWidgetCaptureSizeDp.current != null,
+                    )
                   else -> CenteredCell { FullTile(card, snapshot, RemoteModifier.fillMaxWidth()) }
                 }
               }
@@ -188,6 +194,12 @@ class TileCardConverter : CardConverter {
    */
   @Composable
   private fun FeaturesGate(data: HaTileData, modifier: RemoteModifier) {
+    // Features do not make a one-cell widget wide enough for the name/state row.
+    // This capture contains only the chip, so its on/off binding cannot collide with a sibling.
+    if (LocalWidgetCaptureSizeDp.current?.widthDp?.let { it < 96 } == true) {
+      RemoteHaIconChip(data, modifier.fillMaxSize(), bindState = true)
+      return
+    }
     val rows = tileFeatureRows(data.features.size, data.featuresPosition)
     RemoteMinSizeGate(
       minWidthDp = FeaturesMinWidthDp,

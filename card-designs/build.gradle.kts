@@ -44,6 +44,8 @@ tasks
   .matching { it.name.endsWith("UnitTest") }
   .configureEach {
     inputs.files(robolectricSdk)
+    // The published sticker-sheet selection is part of the preview discovery contract.
+    inputs.file(rootProject.file("catalog.spec.json"))
     dependsOn(prepareRobolectricSdk)
     systemProperty("robolectric.offline", "true")
     systemProperty(

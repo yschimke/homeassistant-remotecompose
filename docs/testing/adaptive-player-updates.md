@@ -98,10 +98,23 @@ platform runtime behaves; its verification is below.
 `AdaptiveWidgetResizeTest` is an API 36 instrumentation fixture. It covers:
 
 - One reused framework `AppWidgetHostView`, newly captured bytes and changing entity values at
-  144x168 → 288x252 → 72x84dp. Each attached, drawn host must contain text and match a fresh host.
+  144x168 → 288x252 → 72x84dp. Each attached host must contain text and match a fresh host.
 - A registered widget bound through `AppWidgetHost`/`AppWidgetManager`. Updating launcher options
   must invoke the provider and deliver a new document; its rendered pixels must match a fresh
   capture at the requested size. The fixture only removes its own allocated widget and store row.
+
+Both fixtures wait for two GPU frame commitments and use `PixelCopy` to read the actual window,
+with identical host contexts for the reused and fresh views. The entire content canvas is compared
+exactly; the text-presence assertion examines the interior so antialiased corners cannot pass it.
+Actual and expected PNGs are saved before comparison.
+
+The original API 36 [run 39131208555](https://github.com/yschimke/homeassistant-remotecompose/actions/runs/39131208555)
+passed 17 app instrumentation tests, including the install/resize journey, and failed only these two
+new fixtures. Both failed at their **first** 144x168 size, before any resize, at the same rounded-edge
+pixel (`f9ededed` versus `ffefefef`). The saved software `View.draw` image contained only a blank
+frame; its corner antialiasing had made the old whole-image color-count check pass. These are
+fixture failures, not evidence that platform resize regressed. The revised capture keeps the exact
+pixel comparison and strengthens visible-content validation. Its API 36 rerun is recorded in the PR.
 
 The first fixture exports PNGs through MediaStore to `Pictures/TerrazzoWidgetTests`, collected by
 the existing `scripts/run-connected-tests.sh` CI runner. Images never exceed 1800px.

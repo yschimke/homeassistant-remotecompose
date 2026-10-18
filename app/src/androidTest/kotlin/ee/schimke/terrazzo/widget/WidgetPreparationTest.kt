@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -140,7 +141,7 @@ class WidgetPreparationTest {
       attempts.get() >= 2 &&
         compose.onAllNodesWithTag("widget-preview-error").fetchSemanticsNodes().isNotEmpty()
     }
-    compose.onNodeWithText("Try compact").performClick()
+    compose.onNodeWithText("Retry preview").performClick()
     compose.waitUntil(60_000) {
       compose.onAllNodesWithTag("widget-render").fetchSemanticsNodes().isNotEmpty()
     }
@@ -167,6 +168,9 @@ class WidgetPreparationTest {
       }
     }
     compose.waitUntil(60_000) { captures > 0 }
+    compose.onNodeWithText("1 × 1 cells").assertExists()
+    compose.onNodeWithText("Compact").assertIsSelected()
+    compose.onNodeWithText("Default").assertDoesNotExist()
     fun pixels(): List<Int> {
       compose.waitForIdle()
       val bounds = compose.onNodeWithTag("widget-render").fetchSemanticsNode().boundsInWindow
@@ -194,6 +198,10 @@ class WidgetPreparationTest {
     compose.waitUntil(60_000) { pixels() != off }
     assertFalse("a live state change must alter rendered pixels", off == pixels())
     screenshot("preview-on")
+    val beforeMedium = captures
+    compose.onNodeWithText("Medium").performClick()
+    compose.waitUntil(60_000) { captures > beforeMedium }
+    compose.onNodeWithText("2 × 2 cells").assertExists()
     val beforeCompact = captures
     compose.onNodeWithText("Compact").performClick()
     compose.waitUntil(60_000) {
@@ -229,6 +237,49 @@ class WidgetPreparationTest {
   }
 
   @Test
+  fun selectedSizeSurvivesLiveDataEditsAndStateRestoration() {
+    val restoration = StateRestorationTester(compose)
+    val currentCard = mutableStateOf(card)
+    val currentSnapshot = mutableStateOf(snapshot("on"))
+    val requests = java.util.concurrent.ConcurrentLinkedQueue<WidgetSizeDp>()
+    val capture: WidgetPreviewCapture = { ctx, _, _, _, size ->
+      requests.add(size)
+      android.widget.RemoteViews(
+        ctx.packageName,
+        ee.schimke.terrazzo.R.layout.terrazzo_widget_initial,
+      )
+    }
+    restoration.setContent {
+      MaterialTheme {
+        CompositionLocalProvider(LocalWidgetPreviewCapture provides capture) {
+          Column {
+            WidgetPreparationPreview(DemoData.BASE_URL, currentCard.value, currentSnapshot.value) {}
+          }
+        }
+      }
+    }
+    compose.waitUntil(60_000) { requests.isNotEmpty() }
+    assertEquals(WidgetSizeDp(72, 84), requests.last())
+    compose.onNodeWithText("Roomy").performClick()
+    compose.waitUntil(60_000) { requests.last() == WidgetSizeDp(288, 336) }
+    compose.runOnIdle {
+      currentCard.value =
+        card.copy(
+          raw =
+            kotlinx.serialization.json.JsonObject(
+              card.raw + ("name" to kotlinx.serialization.json.JsonPrimitive("Renamed"))
+            )
+        )
+      currentSnapshot.value = snapshot("off")
+    }
+    compose.waitForIdle()
+    compose.onNodeWithText("Roomy").assertIsSelected()
+    restoration.emulateSavedInstanceStateRestore()
+    compose.onNodeWithText("Roomy").assertIsSelected()
+    compose.onNodeWithText("4 × 4 cells").assertExists()
+  }
+
+  @Test
   fun editPreviewCancelThenConfirmInstallationPersistsEditedCard() {
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     assertTrue(
@@ -251,13 +302,17 @@ class WidgetPreparationTest {
     compose.onNodeWithText("Widget name").performTextClearance()
     compose.onNodeWithText("Widget name").performTextInput("My magical light")
     compose.onNodeWithText("Widget name").performImeAction()
-    compose.onNodeWithText("Roomy").performScrollTo().performClick()
+    compose.onNodeWithText("1 × 1 cells").performScrollTo().assertExists()
+    compose.onNodeWithText("Compact").assertIsSelected()
     compose.waitUntil(60_000) {
       compose
         .onAllNodes(hasText("Install widget") and isEnabled())
         .fetchSemanticsNodes()
         .isNotEmpty()
     }
+    compose.onNodeWithTag("widget-grid-viewport").performScrollTo()
+    compose.onNodeWithTag("widget-render").assertExists()
+    screenshot("setup-initial-one-cell")
     compose.onNodeWithText("Install widget").assertIsEnabled().performClick()
     assertTrue(
       device.wait(
@@ -356,6 +411,55 @@ class WidgetPreparationTest {
     }
     screenshot("installed-widget")
     val manager = AppWidgetManager.getInstance(context)
+    val info = manager.getAppWidgetInfo(installed.widgetId)
+    assertEquals("new launcher widget width", 1, info.targetCellWidth)
+    assertEquals("new launcher widget height", 1, info.targetCellHeight)
+    val initialSize = WidgetSizing.forWidgetCapture(manager, installed.widgetId)
+    assertTrue("initial install must occupy one column: $initialSize", initialSize.widthDp < 130)
+    assertTrue("initial install must occupy one row: $initialSize", initialSize.heightDp < 120)
+    // Exercise the launcher's actual resize handle, not just a synthetic options bundle.
+    val host = device.findObjects(hostSelector).last()
+    val hostBounds = host.visibleBounds
+    host.longClick()
+    device.waitForIdle()
+    screenshot("launcher-resize-handles")
+    assertTrue(
+      device.drag(
+        hostBounds.right,
+        hostBounds.centerY(),
+        (hostBounds.right + 2 * hostBounds.width() + 30).coerceAtMost(device.displayWidth - 20),
+        hostBounds.centerY(),
+        40,
+      )
+    )
+    compose.waitUntil(60_000) {
+      WidgetSizing.forWidgetCapture(manager, installed.widgetId).widthDp > initialSize.widthDp
+    }
+    // Grow vertically too, beyond the former Small provider's 2x2 cap.
+    val widerBounds = device.findObjects(hostSelector).last().visibleBounds
+    assertTrue(
+      device.drag(
+        widerBounds.centerX(),
+        widerBounds.bottom,
+        widerBounds.centerX(),
+        (widerBounds.bottom + 2 * hostBounds.height() + 30).coerceAtMost(
+          device.displayHeight - 120
+        ),
+        40,
+      )
+    )
+    compose.waitUntil(60_000) {
+      val resized = WidgetSizing.forWidgetCapture(manager, installed.widgetId)
+      resized.widthDp > 144 && resized.heightDp > 168
+    }
+    device.pressBack()
+    device.waitForIdle()
+    screenshot("installed-widget-resized")
+    assertEquals(
+      "resizing keeps the saved widget choice",
+      installed.card,
+      runBlocking { graph.widgetStore.get(installed.widgetId) }!!.card,
+    )
     val small =
       Bundle().apply {
         putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 72)
@@ -364,7 +468,7 @@ class WidgetPreparationTest {
     manager.updateAppWidgetOptions(installed.widgetId, small)
     assertEquals(
       WidgetSizeDp(72, 84),
-      WidgetSizing.forWidgetCapture(manager, installed.widgetId, 84),
+      WidgetSizing.forWidgetCapture(manager, installed.widgetId),
     )
     val large =
       Bundle(small).apply {
@@ -374,7 +478,7 @@ class WidgetPreparationTest {
     manager.updateAppWidgetOptions(installed.widgetId, large)
     assertEquals(
       WidgetSizeDp(144, 168),
-      WidgetSizing.forWidgetCapture(manager, installed.widgetId, 84),
+      WidgetSizing.forWidgetCapture(manager, installed.widgetId),
     )
   }
 }
