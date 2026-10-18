@@ -1293,6 +1293,16 @@ private fun cardStyleTagline(pref: CardStylePref): String =
     CardStylePref.Nixie -> "Glowing tubes · black glass, orange filaments"
     CardStylePref.Ikea -> "IKEA showroom · birch shelves, tactile smart-light controls"
     CardStylePref.Console -> "Skeuomorphic studio desk · VU meters, faders, knobs"
+    CardStylePref.Mushroom,
+    CardStylePref.Bubble,
+    CardStylePref.Minimalist,
+    CardStylePref.Cupertino,
+    CardStylePref.Catppuccin,
+    CardStylePref.Obsidian,
+    CardStylePref.Noctis,
+    CardStylePref.Lcars,
+    CardStylePref.Arctic,
+    CardStylePref.Aeon -> pref.toUberTheme().description
   }
 
 @Composable

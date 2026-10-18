@@ -121,7 +121,26 @@ fun Route.dashboardStudioRoutes(
       val style = (body["style"] as? JsonPrimitive)?.content ?: "classic"
       require(
         style in
-          setOf("classic", "expressive", "trinitron", "lcd", "braun", "nixie", "console", "ikea")
+          setOf(
+            "classic",
+            "expressive",
+            "trinitron",
+            "lcd",
+            "braun",
+            "nixie",
+            "console",
+            "ikea",
+            "mushroom",
+            "bubble",
+            "minimalist",
+            "cupertino",
+            "catppuccin",
+            "obsidian",
+            "noctis",
+            "lcars",
+            "arctic",
+            "aeon",
+          )
       )
       val dark = (body["dark"] as? JsonPrimitive)?.booleanOrNull ?: false
       val bytes =
