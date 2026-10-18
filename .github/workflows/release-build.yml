@@ -30,6 +30,14 @@ on:
         required: false
         default: true
         type: boolean
+      publish_release:
+        # github.event_name inside a called workflow is the caller's event
+        # (push or workflow_dispatch), never 'workflow_call', so callers say
+        # whether to publish explicitly.
+        description: 'Attach assets to the GitHub release and publish desktop installers'
+        required: false
+        default: true
+        type: boolean
       publish_wear:
         description: 'Also publish :wear bundle to Play'
         required: false
@@ -68,7 +76,7 @@ jobs:
       contents: write
     with:
       tag: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
-      publish: ${{ github.event_name == 'push' || github.event_name == 'workflow_call' }}
+      publish: ${{ github.event_name == 'push' || inputs.publish_release == true }}
 
   ios-assets:
     name: Build Apple release assets
@@ -271,7 +279,7 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
 
       - name: Attach assets to GitHub release
-        if: github.event_name == 'push' || github.event_name == 'workflow_call'
+        if: github.event_name == 'push' || inputs.publish_release == true
         uses: softprops/action-gh-release@v3.0.3
         with:
           tag_name: ${{ env.TAG_NAME }}
@@ -280,7 +288,7 @@ jobs:
           files: _release/*
 
       - name: Upload workflow artifact
-        if: github.event_name == 'workflow_dispatch'
+        if: ${{ !(github.event_name == 'push' || inputs.publish_release == true) }}
         uses: actions/upload-artifact@v7.0.2
         with:
           name: release-${{ steps.stage.outputs.version }}
