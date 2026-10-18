@@ -2,13 +2,18 @@
 
 package ee.schimke.terrazzo.shared
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.*
 import kotlinx.serialization.json.*
@@ -90,69 +95,28 @@ fun DashboardExperience(
   ) {
     Scaffold(
       topBar = {
-        TopAppBar(
-          title = { Text(if (demo) "Demo home" else dashboard.title ?: "Home Assistant") },
-          actions = {
-            TextButton(onClick = { dark = !dark }) { Text(if (dark) "Light" else "Dark") }
-          },
+        DemoToolbar(
+          title = if (demo) "Demo home" else dashboard.title ?: "Home Assistant",
+          status =
+            if (!demo) "Read only"
+            else
+              when (dataStatus) {
+                DemoDataStatus.LIVE -> "Live · read only"
+                DemoDataStatus.FAKE -> "Fake · read only"
+                DemoDataStatus.CONNECTING -> "Connecting… · read only"
+                DemoDataStatus.UNAVAILABLE -> "Offline · fake data"
+              },
+          design = design,
+          onDesignChange = { design = it },
+          dark = dark,
+          onDarkChange = { dark = it },
+          dataMode = dataMode,
+          dataStatus = dataStatus,
+          onDataModeChange = onDataModeChange,
         )
       }
     ) { padding ->
       Column(Modifier.fillMaxSize().padding(padding)) {
-        Text(
-          if (!demo) "Home Assistant · read only"
-          else if (dataStatus == DemoDataStatus.LIVE) "Example home · live demo data · read only"
-          else "Example home · fake data · read only",
-          Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-          style = MaterialTheme.typography.labelLarge,
-        )
-        if (onDataModeChange != null) {
-          Row(
-            Modifier.padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-          ) {
-            FilterChip(
-              selected = dataMode == DemoDataMode.AUTO,
-              onClick = { onDataModeChange(DemoDataMode.AUTO) },
-              label = { Text("Live when available") },
-            )
-            FilterChip(
-              selected = dataMode == DemoDataMode.FAKE,
-              onClick = { onDataModeChange(DemoDataMode.FAKE) },
-              label = { Text("Fake data") },
-            )
-          }
-          when (dataStatus) {
-            DemoDataStatus.CONNECTING ->
-              Text(
-                "Connecting to public demo…",
-                Modifier.padding(horizontal = 16.dp),
-                style = MaterialTheme.typography.labelMedium,
-              )
-            DemoDataStatus.UNAVAILABLE ->
-              Text(
-                "Live demo unavailable · using fake data · retrying",
-                Modifier.padding(horizontal = 16.dp),
-                style = MaterialTheme.typography.labelMedium,
-              )
-            else -> Unit
-          }
-        }
-        Row(
-          Modifier.fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp),
-          horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-          listOf("classic" to "Classic", "braun" to "Braun", "lcd" to "LCD", "console" to "Console")
-            .forEach { (id, label) ->
-              FilterChip(
-                selected = design == id,
-                onClick = { design = id },
-                label = { Text(label) },
-              )
-            }
-        }
         DashboardContent(
           dashboard,
           if (demo) "demo" else "ha-panel",
@@ -166,4 +130,102 @@ fun DashboardExperience(
       }
     }
   }
+}
+
+/** Keep controls in one app bar even on narrow phones; menus overlay the dashboard. */
+@Composable
+private fun DemoToolbar(
+  title: String,
+  status: String,
+  design: String,
+  onDesignChange: (String) -> Unit,
+  dark: Boolean,
+  onDarkChange: (Boolean) -> Unit,
+  dataMode: DemoDataMode,
+  dataStatus: DemoDataStatus,
+  onDataModeChange: ((DemoDataMode) -> Unit)?,
+) {
+  val styles =
+    listOf("classic" to "Classic", "braun" to "Braun", "lcd" to "LCD", "console" to "Console")
+  var stylesExpanded by remember { mutableStateOf(false) }
+  var optionsExpanded by remember { mutableStateOf(false) }
+  TopAppBar(
+    title = {
+      Column {
+        Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(
+          status,
+          style = MaterialTheme.typography.labelSmall,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+      }
+    },
+    actions = {
+      Box {
+        TextButton(
+          onClick = { stylesExpanded = true },
+          modifier =
+            Modifier.heightIn(min = 48.dp).semantics {
+              contentDescription = "Card style: ${styles.first { it.first == design }.second}"
+            },
+        ) {
+          Text(styles.first { it.first == design }.second)
+          Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+        }
+        DropdownMenu(expanded = stylesExpanded, onDismissRequest = { stylesExpanded = false }) {
+          styles.forEach { (id, label) ->
+            DropdownMenuItem(
+              text = { Text(label) },
+              modifier = Modifier.semantics { selected = design == id },
+              trailingIcon = { if (design == id) Text("✓") },
+              onClick = {
+                onDesignChange(id)
+                stylesExpanded = false
+              },
+            )
+          }
+        }
+      }
+      Box {
+        IconButton(onClick = { optionsExpanded = true }, modifier = Modifier.size(48.dp)) {
+          Icon(Icons.Default.MoreVert, contentDescription = "Demo options")
+        }
+        DropdownMenu(expanded = optionsExpanded, onDismissRequest = { optionsExpanded = false }) {
+          DropdownMenuItem(
+            text = { Text(if (dark) "Use light theme" else "Use dark theme") },
+            onClick = {
+              onDarkChange(!dark)
+              optionsExpanded = false
+            },
+          )
+          if (onDataModeChange != null) {
+            HorizontalDivider()
+            listOf(DemoDataMode.AUTO to "Live when available", DemoDataMode.FAKE to "Fake data")
+              .forEach { (mode, label) ->
+                DropdownMenuItem(
+                  text = { Text(label) },
+                  modifier = Modifier.semantics { selected = dataMode == mode },
+                  trailingIcon = { if (dataMode == mode) Text("✓") },
+                  onClick = {
+                    onDataModeChange(mode)
+                    optionsExpanded = false
+                  },
+                )
+              }
+            if (
+              dataStatus == DemoDataStatus.CONNECTING || dataStatus == DemoDataStatus.UNAVAILABLE
+            ) {
+              Text(
+                if (dataStatus == DemoDataStatus.CONNECTING) "Connecting to public demo…"
+                else "Live demo unavailable · using fake data · retrying",
+                Modifier.widthIn(max = 280.dp).padding(horizontal = 16.dp, vertical = 8.dp),
+                style = MaterialTheme.typography.bodySmall,
+              )
+            }
+          }
+        }
+      }
+    },
+  )
 }
