@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -114,7 +115,7 @@ fun DashboardSummary.selectionKey(): String = urlPath ?: DEFAULT_DASHBOARD_SENTI
 @Composable
 private fun LoadingBody(padding: PaddingValues) {
   Column(
-    Modifier.fillMaxSize().padding(padding).padding(24.dp),
+    Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).padding(24.dp),
     verticalArrangement = Arrangement.spacedBy(8.dp),
   ) {
     CircularProgressIndicator()
@@ -124,7 +125,7 @@ private fun LoadingBody(padding: PaddingValues) {
 
 @Composable
 private fun ErrorBody(message: String, padding: PaddingValues) {
-  Column(Modifier.fillMaxSize().padding(padding).padding(24.dp)) {
+  Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).padding(24.dp)) {
     Text("Couldn't load dashboards", style = MaterialTheme.typography.titleMedium)
     Text(message)
   }
@@ -148,7 +149,9 @@ private fun ReadyBody(
     }
   var selected by remember(merged) { mutableStateOf(seed) }
 
-  Column(modifier = Modifier.fillMaxSize().padding(contentPadding)) {
+  Column(
+    modifier = Modifier.fillMaxSize().padding(contentPadding).consumeWindowInsets(contentPadding)
+  ) {
     LazyColumn(
       modifier = Modifier.weight(1f).fillMaxWidth(),
       verticalArrangement = Arrangement.spacedBy(8.dp),

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -106,7 +107,7 @@ internal fun LogsContent(
     contentWindowInsets = WindowInsets.safeDrawing,
   ) { padding ->
     LazyColumn(
-      modifier = Modifier.fillMaxSize().padding(padding),
+      modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
       contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {

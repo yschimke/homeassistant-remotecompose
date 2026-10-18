@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Grid
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -234,11 +235,21 @@ fun DashboardViewScreen(
   ) {
     when (val s = state) {
       DashboardState.Loading ->
-        Box(Modifier.fillMaxSize().padding(contentPadding).padding(24.dp)) {
+        Box(
+          Modifier.fillMaxSize()
+            .padding(contentPadding)
+            .consumeWindowInsets(contentPadding)
+            .padding(24.dp)
+        ) {
           CircularProgressIndicator()
         }
       is DashboardState.Error ->
-        Box(Modifier.fillMaxSize().padding(contentPadding).padding(24.dp)) {
+        Box(
+          Modifier.fillMaxSize()
+            .padding(contentPadding)
+            .consumeWindowInsets(contentPadding)
+            .padding(24.dp)
+        ) {
           Text("Failed: ${s.message}", style = MaterialTheme.typography.bodyMedium)
         }
       is DashboardState.Ready ->
@@ -371,7 +382,10 @@ private fun DashboardList(
       LocalCardDesignOverrides provides cardDesignOverrides,
     ) {
       LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(horizontal = cfg.horizontalGutter),
+        modifier =
+          Modifier.fillMaxSize()
+            .consumeWindowInsets(contentPadding)
+            .padding(horizontal = cfg.horizontalGutter),
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

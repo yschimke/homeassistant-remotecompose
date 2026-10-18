@@ -128,6 +128,7 @@ private fun ConnectionScreen(
   Scaffold(topBar = { TopAppBar(title = { Text("Terrazzo") }) }) { padding ->
     Column(
       Modifier.padding(padding)
+        .consumeWindowInsets(padding)
         .padding(24.dp)
         .widthIn(max = 560.dp)
         .fillMaxWidth()
@@ -284,7 +285,10 @@ private fun DashboardShell(
           entry<SettingsDestination> {
             Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) }) { padding ->
               Column(
-                Modifier.padding(padding).padding(24.dp).verticalScroll(rememberScrollState()),
+                Modifier.padding(padding)
+                  .consumeWindowInsets(padding)
+                  .padding(24.dp)
+                  .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
               ) {
                 Text(connection.config.baseUrl, style = MaterialTheme.typography.titleMedium)
@@ -319,7 +323,7 @@ private fun DashboardShell(
                 route.path,
                 snapshot,
                 connectionError,
-                Modifier.fillMaxSize().padding(padding),
+                Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
                 designServer,
               )
             }

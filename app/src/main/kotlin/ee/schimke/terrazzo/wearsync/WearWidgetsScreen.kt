@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -92,7 +93,13 @@ internal fun WearWidgetsContent(
     },
     contentWindowInsets = WindowInsets.safeDrawing,
   ) { padding ->
-    Column(modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp)) {
+    Column(
+      modifier =
+        Modifier.fillMaxSize()
+          .padding(padding)
+          .consumeWindowInsets(padding)
+          .padding(horizontal = 16.dp)
+    ) {
       Text(
         text =
           "Each slot maps to one widget provider on your watch. " +

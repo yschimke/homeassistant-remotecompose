@@ -107,7 +107,7 @@ fun CardStudioScreen(
   ) { padding ->
     val url = editorUrl
     if (url != null) {
-      Column(Modifier.fillMaxSize().padding(padding)) {
+      Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
         FlowRow(
           Modifier.fillMaxWidth().padding(8.dp),
           horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -123,6 +123,7 @@ fun CardStudioScreen(
       Column(
         Modifier.fillMaxSize()
           .padding(padding)
+          .consumeWindowInsets(padding)
           .verticalScroll(rememberScrollState())
           .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),

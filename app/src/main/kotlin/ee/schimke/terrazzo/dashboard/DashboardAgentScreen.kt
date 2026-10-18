@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -84,6 +85,7 @@ fun DashboardAgentScreen(
       modifier =
         Modifier.fillMaxSize()
           .padding(padding)
+          .consumeWindowInsets(padding)
           .verticalScroll(rememberScrollState())
           .padding(16.dp),
       verticalArrangement = Arrangement.spacedBy(16.dp),

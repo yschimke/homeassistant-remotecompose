@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import ee.schimke.terrazzo.core.prefs.CardStylePref
@@ -12,9 +13,11 @@ import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.di.AppGraph
 import ee.schimke.terrazzo.ui.AndroidImeHost
+import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.TerrazzoTheme
 import ee.schimke.terrazzo.ui.toThemeStyle
 import ee.schimke.terrazzo.ui.toUberTheme
+import ee.schimke.terrazzo.ui.updateSystemBars
 import kotlinx.coroutines.runBlocking
 
 class MainActivity : ComponentActivity() {
@@ -83,6 +86,8 @@ class MainActivity : ComponentActivity() {
           darkMode = darkPref,
           cardStyle = cardStylePref.toUberTheme(),
         ) {
+          val darkTheme = LocalIsDarkTheme.current
+          SideEffect { updateSystemBars(darkTheme) }
           AndroidImeHost {
             TerrazzoApp(initialDashboard = initialDashboard, initialSession = initialSession)
           }

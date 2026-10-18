@@ -112,11 +112,11 @@ class AndroidImeScrollingTest {
         .show(WindowInsetsCompat.Type.ime())
     }
     waitForIme(true)
-    screenshot("discovery-open-ime")
+    captureWindowEvidence("discovery-open-ime")
     assertAboveKeyboard(field)
     field.performScrollTo()
     field.performTextReplacement("http://homeassistant.local:8123")
-    screenshot("discovery-focused-ime")
+    captureWindowEvidence("discovery-focused-ime")
     assertAboveKeyboard(field)
     val connect = compose.onNodeWithText("Connect", useUnmergedTree = false)
     connect.performScrollTo().assertIsDisplayed()
@@ -126,7 +126,7 @@ class AndroidImeScrollingTest {
     val demo = compose.onNodeWithText("Try demo mode (no login)")
     demo.performScrollTo().assertIsDisplayed()
     scrollFormToBottom()
-    screenshot("discovery-bottom-ime")
+    captureWindowEvidence("discovery-bottom-ime")
     assertAboveKeyboard(demo)
     assertNoExtraBottomInset(demo)
     demo.performClick()
@@ -140,7 +140,7 @@ class AndroidImeScrollingTest {
     demo.performScrollTo().assertIsDisplayed()
     scrollFormToBottom()
     assertNoExtraBottomInset(demo)
-    screenshot("discovery-bottom-closed")
+    captureWindowEvidence("discovery-bottom-closed")
     // Opening a second time catches stale padding/scroll-range state after IME dismissal.
     field.performScrollTo().performClick()
     waitForIme(true)
@@ -166,17 +166,17 @@ class AndroidImeScrollingTest {
     field.performScrollTo().performClick()
     waitForIme(true)
     field.performTextInput("Make the last field easy to reach")
-    screenshot("card-studio-focused-ime")
+    captureWindowEvidence("card-studio-focused-ime")
     assertAboveKeyboard(field)
     val action = compose.onNodeWithText("Generate or fix draft")
     action.performScrollTo().assertIsDisplayed()
-    screenshot("card-studio-bottom-ime")
+    captureWindowEvidence("card-studio-bottom-ime")
     assertAboveKeyboard(action)
     waitForIme(true)
     device.pressBack()
     waitForIme(false)
     action.performScrollTo().assertIsDisplayed()
-    screenshot("card-studio-bottom-closed")
+    captureWindowEvidence("card-studio-bottom-closed")
   }
 
   private fun windowInsets(): WindowInsetsCompat =
@@ -213,7 +213,8 @@ class AndroidImeScrollingTest {
 
   private fun assertNoExtraBottomInset(lastAction: SemanticsNodeInteraction) {
     // At the scroll limit the form has 24dp of design padding below its last 48dp button.
-    // Compare against max(IME, navigation bar), never their sum (important in three-button mode).
+    // Compare against max(IME, navigation bar), never their sum (important in three-button
+    // mode).
     val bounds = lastAction.fetchSemanticsNode().boundsInWindow
     val availableBottom = compose.runOnIdle {
       compose.activity.window.decorView.height -
@@ -226,35 +227,36 @@ class AndroidImeScrollingTest {
     // Text semantics exclude the button's internal padding; allow that plus rounding.
     assertTrue("No doubled or stale bottom inset: gap=${gap}dp", gap in 23f..41f)
   }
+}
 
-  private fun screenshot(name: String) {
-    val context = instrumentation.targetContext
-    val uri =
-      checkNotNull(
-        context.contentResolver.insert(
-          MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-          ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, "$name.png")
-            put(MediaStore.Images.Media.MIME_TYPE, "image/png")
-            put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/TerrazzoImeTests")
-          },
-        )
+internal fun captureWindowEvidence(name: String) {
+  val instrumentation = InstrumentationRegistry.getInstrumentation()
+  val context = instrumentation.targetContext
+  val uri =
+    checkNotNull(
+      context.contentResolver.insert(
+        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+        ContentValues().apply {
+          put(MediaStore.Images.Media.DISPLAY_NAME, "$name.png")
+          put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+          put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/TerrazzoImeTests")
+        },
       )
-    val original = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
-    val scale = minOf(1f, 1800f / maxOf(original.width, original.height))
-    val bitmap =
-      if (scale < 1f)
-        Bitmap.createScaledBitmap(
-          original,
-          (original.width * scale).toInt(),
-          (original.height * scale).toInt(),
-          true,
-        )
-      else original
-    checkNotNull(context.contentResolver.openOutputStream(uri)).use {
-      assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it))
-    }
-    if (bitmap !== original) bitmap.recycle()
-    original.recycle()
+    )
+  val original = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
+  val scale = minOf(1f, 1800f / maxOf(original.width, original.height))
+  val bitmap =
+    if (scale < 1f)
+      Bitmap.createScaledBitmap(
+        original,
+        (original.width * scale).toInt(),
+        (original.height * scale).toInt(),
+        true,
+      )
+    else original
+  checkNotNull(context.contentResolver.openOutputStream(uri)).use {
+    assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it))
   }
+  if (bitmap !== original) bitmap.recycle()
+  original.recycle()
 }
