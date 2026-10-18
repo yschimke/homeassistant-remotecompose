@@ -206,6 +206,41 @@ class LauncherDesignsTest {
     }
   }
 
+  @Test
+  fun consoleThermostatBakesReadingsAndRealStepperActions() {
+    val card = card("thermostat", "climate.studio")
+    val snapshot =
+      snapshotOf(
+        entity(
+          "climate.studio",
+          "heat",
+          "current_temperature" to "19",
+          "temperature" to "22",
+          "friendly_name" to "Studio",
+        )
+      )
+    for ((width, height) in listOf(180 to 80, 360 to 290)) {
+      val baked = bake(card, snapshot, width, height, LauncherLook(HaUberTheme.Console))
+      val document = RcDocumentCodec.decode(baked.bytes, RcWireLimits())
+      assertTrue(
+        document.namedVariables.none { "climate.s0" in it.name },
+        "all climate readings are baked",
+      )
+      if (width >= 260) {
+        val steps = baked.actions.values.filterIsInstance<HaAction.CallService>()
+        assertEquals(2, steps.size)
+        steps.forEach {
+          assertEquals("climate.studio", it.entityId)
+          assertEquals("set_temperature", it.service)
+        }
+        assertEquals(
+          setOf("21.5", "22.5"),
+          steps.map { it.serviceData["temperature"].toString() }.toSet(),
+        )
+      }
+    }
+  }
+
   private fun bake(
     card: CardConfig,
     snapshot: HaSnapshot,

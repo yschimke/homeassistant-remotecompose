@@ -3,6 +3,7 @@ package ee.schimke.ha.rc
 import android.graphics.Bitmap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
@@ -58,6 +59,7 @@ class ConsoleDesignRenderTest {
     val dark: Boolean = true,
     val clock: HaClock,
     val direct: Boolean = false,
+    val fixed: Boolean = false,
   )
 
   private var frame by mutableStateOf<Frame?>(null)
@@ -119,12 +121,14 @@ class ConsoleDesignRenderTest {
       CompositionLocalProvider(LocalHaClock provides f.clock) {
         Box(
           Modifier.width(f.width.dp)
+            .then(if (f.fixed) Modifier.height(80.dp) else Modifier)
             .background(if (f.dark) Color(0xFF111315) else Color(0xFFF2F1ED))
             .testTag("card")
         ) {
           key(f.playback ?: if (f.direct) f.card else null) {
             CachedCardPreview(
-              cacheKey = f.playback ?: if (f.direct) f.card else "thermometer",
+              cacheKey =
+                f.playback ?: if (f.direct) Triple(f.card, f.width, f.fixed) else "thermometer",
               profile = androidXExperimentalWrap,
               card = f.card,
               snapshot = f.snapshot,
@@ -136,8 +140,10 @@ class ConsoleDesignRenderTest {
                 f.dark,
               ) {
                 if (f.direct) {
-                  ProvideCardRegistry(ee.schimke.ha.rc.cards.defaultRegistry()) {
-                    RenderChild(f.card, f.snapshot, RemoteModifier.fillMaxWidth())
+                  ProvideCardSizeMode(if (f.fixed) CardSizeMode.Fixed else CardSizeMode.Wrap) {
+                    ProvideCardRegistry(ee.schimke.ha.rc.cards.defaultRegistry()) {
+                      RenderChild(f.card, f.snapshot, RemoteModifier.fillMaxWidth())
+                    }
                   }
                 } else
                   androidx.compose.remote.creation.compose.layout.RemoteBox(
@@ -304,6 +310,59 @@ class ConsoleDesignRenderTest {
         android.graphics.Color.red(it) > 200 && android.graphics.Color.green(it) < 150
       } > 100,
       "console clock has real red LED emitters, not ordinary theme text",
+    )
+  }
+
+  @Test
+  fun thermostatSeparatesRoomReadingFromSetPointKnob() {
+    startRendering()
+    val thermostat = card("thermostat", "entity" to "climate.studio")
+    fun climate(current: String, target: String? = "22", mode: String = "heat") =
+      snapshot(
+        state(
+          "climate.studio",
+          mode,
+          *buildList {
+            add("friendly_name" to "Studio")
+            add("current_temperature" to current)
+            if (target != null) add("temperature" to target)
+            add(
+              "hvac_action" to
+                if (mode == "cool") "cooling" else if (mode == "off") "off" else "idle"
+            )
+          }
+            .toTypedArray(),
+        )
+      )
+    val initial = climate("19")
+    val playback = template(thermostat, initial)
+    val cold = capture("thermostat-room-19", Frame(thermostat, initial, playback, clock = dawn))
+    val warm =
+      capture("thermostat-room-26", Frame(thermostat, climate("26"), playback, clock = dawn))
+    val adjusted =
+      capture("thermostat-set-28", Frame(thermostat, climate("26", "28"), playback, clock = dawn))
+    capture(
+      "thermostat-cooling",
+      Frame(thermostat, climate("26", "18", "cool"), playback, clock = dawn),
+    )
+    val off = climate("19", null, "off")
+    capture("thermostat-no-target", Frame(thermostat, off, template(thermostat, off), clock = dawn))
+    capture("thermostat-narrow", Frame(thermostat, initial, playback, width = 260, clock = dawn))
+    capture(
+      "thermostat-compact",
+      Frame(thermostat, initial, null, width = 180, clock = dawn, direct = true, fixed = true),
+    )
+    assertTrue(differs(cold, warm) > 20, "room reading stays live in the same document")
+    assertTrue(differs(warm, adjusted) > 20, "set point stays live in the same document")
+    // This region is the physical knob and printed scale, excluding the separate readouts.
+    fun knobChanges(a: Bitmap, b: Bitmap): Int =
+      (108 until 220).sumOf { y ->
+        (94 until 198).count { x -> a.getPixel(x, y) != b.getPixel(x, y) }
+      }
+    assertEquals(0, knobChanges(cold, warm), "a room sensor cannot turn a set-point knob")
+    assertTrue(
+      knobChanges(warm, adjusted) > 10,
+      "the knob index follows the live requested temperature",
     )
   }
 
