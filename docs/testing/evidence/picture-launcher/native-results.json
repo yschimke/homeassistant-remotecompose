@@ -1,0 +1,86 @@
+{
+  "run": "https://github.com/yschimke/homeassistant-remotecompose/actions/runs/39144819129",
+  "job": "https://github.com/yschimke/homeassistant-remotecompose/actions/runs/39144819129/job/117726412634",
+  "commit": "3b8ed7d34",
+  "platform": "Android 16 / API 36, default x86_64 emulator",
+  "suite": {
+    "tests": "22",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  "widgetTests": [
+    {
+      "name": "boundedFreshImagesKeepSameHostAuthenticationAndSignedQueriesWithoutLoggingSecrets",
+      "classname": "ee.schimke.terrazzo.image.WidgetImageLoadingTest",
+      "time": "0.311",
+      "status": "passed"
+    },
+    {
+      "name": "adaptiveWidgetPreviewRendersResizesAndTracksState",
+      "classname": "ee.schimke.terrazzo.widget.WidgetPreparationTest",
+      "time": "2.347",
+      "status": "passed"
+    },
+    {
+      "name": "editPreviewCancelThenConfirmInstallationPersistsEditedCard",
+      "classname": "ee.schimke.terrazzo.widget.WidgetPreparationTest",
+      "time": "15.405",
+      "status": "passed"
+    },
+    {
+      "name": "failedPreviewHasRecoveryActionsWithoutAResizeGrid",
+      "classname": "ee.schimke.terrazzo.widget.WidgetPreparationTest",
+      "time": "1.200",
+      "status": "passed"
+    },
+    {
+      "name": "picturePreviewAndConfirmedLauncherInstallation",
+      "classname": "ee.schimke.terrazzo.widget.WidgetPreparationTest",
+      "time": "8.132",
+      "status": "passed"
+    },
+    {
+      "name": "pictureUrlOnlyCaptureReproducesTheOriginalPreviewFailure",
+      "classname": "ee.schimke.terrazzo.widget.WidgetPreparationTest",
+      "time": "0.837",
+      "status": "passed"
+    },
+    {
+      "name": "selectedSizeSurvivesLiveDataEditsAndStateRestoration",
+      "classname": "ee.schimke.terrazzo.widget.WidgetPreparationTest",
+      "time": "0.979",
+      "status": "passed"
+    },
+    {
+      "name": "multiEntityWidgetsKeepAndUpdateTheFifthEntity",
+      "classname": "ee.schimke.terrazzo.widget.WidgetPreviewParityTest",
+      "time": "0.966",
+      "status": "passed"
+    },
+    {
+      "name": "unavailableDirectPictureStillInflatesWithItsNameAndState",
+      "classname": "ee.schimke.terrazzo.widget.WidgetPreviewParityTest",
+      "time": "0.603",
+      "status": "passed"
+    },
+    {
+      "name": "nativePreviewMatchesLauncherContentForSizeAndState",
+      "classname": "ee.schimke.terrazzo.widget.WidgetPreviewParityTest",
+      "time": "1.196",
+      "status": "passed"
+    },
+    {
+      "name": "pictureWidgetsEmbedImagesInTemplateAndDirectCapturesAtEverySize",
+      "classname": "ee.schimke.terrazzo.widget.WidgetPreviewParityTest",
+      "time": "3.312",
+      "status": "passed"
+    },
+    {
+      "name": "boilerCardVariantsRenderOnThePlatform",
+      "classname": "ee.schimke.terrazzo.widget.WidgetPreviewParityTest",
+      "time": "1.309",
+      "status": "passed"
+    }
+  ]
+}

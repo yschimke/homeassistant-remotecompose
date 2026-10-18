@@ -281,6 +281,86 @@ class WidgetPreparationTest {
 
   @Test
   fun editPreviewCancelThenConfirmInstallationPersistsEditedCard() {
+    installJourney(card, snapshot("on"), "")
+  }
+
+  @Test
+  fun pictureUrlOnlyCaptureReproducesTheOriginalPreviewFailure() {
+    // Reproduce the old direct capture: no inline strategy and no image fetching. This isolates
+    // native host decoding from network access, bitmap size and the Home Assistant connection.
+    val legacyCapture: WidgetPreviewCapture = { ctx, _, cfg, state, size ->
+      val profile = ee.schimke.ha.rc.widgetsProfile
+      val captured = runBlocking {
+        androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument(
+          context = ctx,
+          creationDisplayInfo =
+            androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo(
+              WidgetSizing.dpToPx(ctx, size.widthDp),
+              WidgetSizing.dpToPx(ctx, size.heightDp),
+              ctx.resources.configuration.densityDpi,
+            ),
+          profile = profile,
+        ) {
+          ee.schimke.ha.rc.LauncherWidgetContent(
+            ee.schimke.ha.rc.cards.defaultRegistry(),
+            profile,
+            false,
+            ee.schimke.ha.rc.components.WidgetActionRegistry(),
+            cfg,
+            state,
+            ee.schimke.ha.rc.WidgetCaptureSizeDp(size.widthDp, size.heightDp),
+          )
+        }
+      }
+      android.widget.RemoteViews(
+        android.widget.RemoteViews.DrawInstructions.Builder(
+            listOf(ee.schimke.ha.rc.platformWidgetDocument(captured.bytes))
+          )
+          .build()
+      )
+    }
+    val json =
+      kotlinx.serialization.json.Json.parseToJsonElement(
+        """{"type":"picture-entity","entity":"camera.g5_turret_ultra_high_resolution_channel","camera_view":"auto","aspect_ratio":"16:9","name":"Driveway"}"""
+      ) as kotlinx.serialization.json.JsonObject
+    compose.setContent {
+      CompositionLocalProvider(
+        LocalTerrazzoGraph provides graph,
+        LocalWidgetPreviewCapture provides legacyCapture,
+      ) {
+        MaterialTheme {
+          WidgetInstallSheet(
+            DemoData.BASE_URL,
+            "",
+            CardConfig("picture-entity", json),
+            DemoData.snapshot(),
+            {},
+          )
+        }
+      }
+    }
+    compose.waitUntil(60_000) {
+      compose.onAllNodesWithTag("widget-preview-error").fetchSemanticsNodes().isNotEmpty()
+    }
+    compose.onNodeWithText("Install widget").assertIsNotEnabled()
+    screenshot("picture-before-preview-error")
+  }
+
+  @Test
+  fun picturePreviewAndConfirmedLauncherInstallation() {
+    val json =
+      kotlinx.serialization.json.Json.parseToJsonElement(
+        """{"type":"picture-entity","entity":"camera.g5_turret_ultra_high_resolution_channel","camera_image":"camera.g5_turret_ultra_high_resolution_channel","camera_view":"auto","aspect_ratio":"16:9","name":"Driveway"}"""
+      ) as kotlinx.serialization.json.JsonObject
+    installJourney(CardConfig("picture-entity", json), DemoData.snapshot(), "picture-")
+  }
+
+  private fun installJourney(
+    card: CardConfig,
+    initialSnapshot: HaSnapshot,
+    evidencePrefix: String,
+  ) {
+    val editedName = if (evidencePrefix.isEmpty()) "My magical light" else "My driveway camera"
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     assertTrue(
       "The emulator launcher must support widget pinning",
@@ -291,7 +371,6 @@ class WidgetPreparationTest {
     runBlocking { WidgetSync.reconcile(context) }
     val before = runBlocking { graph.widgetStore.installed.first().map { it.widgetId }.toSet() }
     var dismissed = false
-    val initialSnapshot = snapshot("on")
     compose.setContent {
       CompositionLocalProvider(LocalTerrazzoGraph provides graph) {
         MaterialTheme {
@@ -300,7 +379,7 @@ class WidgetPreparationTest {
       }
     }
     compose.onNodeWithText("Widget name").performTextClearance()
-    compose.onNodeWithText("Widget name").performTextInput("My magical light")
+    compose.onNodeWithText("Widget name").performTextInput(editedName)
     compose.onNodeWithText("Widget name").performImeAction()
     compose.onNodeWithText("1 × 1 cells").performScrollTo().assertExists()
     compose.onNodeWithText("Compact").assertIsSelected()
@@ -310,9 +389,63 @@ class WidgetPreparationTest {
         .fetchSemanticsNodes()
         .isNotEmpty()
     }
+    // Target the grid viewport so performScrollTo finds the sheet's vertical scroller rather
+    // than the grid's own horizontal scroller. A visible sliver is insufficient evidence.
     compose.onNodeWithTag("widget-grid-viewport").performScrollTo()
-    compose.onNodeWithTag("widget-render").assertExists()
-    screenshot("setup-initial-one-cell")
+    compose.waitForIdle()
+    val previewNode = compose.onNodeWithTag("widget-render").fetchSemanticsNode()
+    assertTrue(
+      "The complete preview height must be visible in the setup screenshot",
+      previewNode.boundsInRoot.height >= previewNode.size.height - 1f,
+    )
+    // Compare scene content, rather than colour count: a genuine 1×1 camera can have fewer
+    // than 1,000 distinct pixels. Use the image region (above the state label) as a reference.
+    fun sceneHistogram(
+      bitmap: android.graphics.Bitmap,
+      bounds: android.graphics.Rect,
+    ): DoubleArray {
+      val region = android.graphics.Rect(bounds)
+      region.inset(region.width() / 8, 0)
+      region.bottom = region.top + region.height() * 3 / 5
+      val histogram = DoubleArray(512)
+      for (y in region.top until region.bottom) {
+        for (x in region.left until region.right) {
+          val color = bitmap.getPixel(x, y)
+          val bin = ((color shr 21) and 7) * 64 + ((color shr 13) and 7) * 8 + ((color shr 5) and 7)
+          histogram[bin]++
+        }
+      }
+      val count = histogram.sum()
+      return histogram.map { it / count }.toDoubleArray()
+    }
+    val previewScene =
+      if (evidencePrefix.isNotEmpty()) {
+        val bounds = compose.onNodeWithTag("widget-render").fetchSemanticsNode().boundsInWindow
+        val bitmap =
+          checkNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot())
+        try {
+          sceneHistogram(
+            bitmap,
+            android.graphics.Rect(
+              bounds.left.toInt(),
+              bounds.top.toInt(),
+              bounds.right.toInt(),
+              bounds.bottom.toInt(),
+            ),
+          )
+        } finally {
+          bitmap.recycle()
+        }
+      } else null
+    if (previewScene != null) {
+      assertTrue(
+        "Preview must contain the camera scene, not a flat placeholder",
+        previewScene.count { it > 0.05 } >= 3,
+      )
+    }
+    screenshot("${evidencePrefix}prepared-preview")
+    if (evidencePrefix.isEmpty()) screenshot("setup-initial-one-cell")
+
     compose.onNodeWithText("Install widget").assertIsEnabled().performClick()
     assertTrue(
       device.wait(
@@ -334,7 +467,7 @@ class WidgetPreparationTest {
       runBlocking { graph.widgetStore.installed.first().map { it.widgetId }.toSet() },
     )
     assertFalse("cancelling must return to the edited preparation", dismissed)
-    compose.onNodeWithText("My magical light").assertExists()
+    compose.onNodeWithText(editedName).assertExists()
     compose.waitUntil(60_000) {
       compose
         .onAllNodes(hasText("Install widget") and isEnabled())
@@ -348,7 +481,7 @@ class WidgetPreparationTest {
         30_000,
       )
     )
-    screenshot("launcher-confirmation")
+    screenshot("${evidencePrefix}launcher-confirmation")
     val add =
       device.wait(
         Until.findObject(
@@ -369,7 +502,7 @@ class WidgetPreparationTest {
     val installed = runBlocking {
       graph.widgetStore.installed.first().first { it.widgetId !in before }
     }
-    assertEquals("My magical light", installed.card.raw["name"]?.jsonPrimitive?.content)
+    assertEquals(editedName, installed.card.raw["name"]?.jsonPrimitive?.content)
     device.pressHome()
     device.waitForIdle()
     val hostSelector = By.clazz(java.util.regex.Pattern.compile(".*AppWidgetHostView"))
@@ -409,7 +542,66 @@ class WidgetPreparationTest {
         }
       }
     }
-    screenshot("installed-widget")
+    if (evidencePrefix.isEmpty()) screenshot("installed-widget")
+    if (evidencePrefix.isNotEmpty()) {
+      fun cameraPixels(): IntArray? {
+        val bitmap =
+          checkNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot())
+        return try {
+          // Accessibility traversal order does not identify the newly pinned widget. Match
+          // its camera scene against the successful preview, excluding the state label.
+          val reference = checkNotNull(previewScene)
+          val host =
+            device.findObjects(hostSelector).maxByOrNull { host ->
+              val histogram = sceneHistogram(bitmap, host.visibleBounds)
+              histogram.indices.sumOf { minOf(histogram[it], reference[it]) }
+            }
+          host?.let {
+            val bounds = it.visibleBounds
+            if (bounds.isEmpty) return null
+            val histogram = sceneHistogram(bitmap, bounds)
+            val overlap = histogram.indices.sumOf { minOf(histogram[it], reference[it]) }
+            if (overlap < 0.6) return null
+            IntArray(bounds.width() * bounds.height()).also { pixels ->
+              bitmap.getPixels(
+                pixels,
+                0,
+                bounds.width(),
+                bounds.left,
+                bounds.top,
+                bounds.width(),
+                bounds.height(),
+              )
+            }
+          }
+        } finally {
+          bitmap.recycle()
+        }
+      }
+      screenshot("picture-installed-before-scene-check")
+      compose.waitUntil(60_000) { cameraPixels() != null }
+      screenshot("picture-installed-widget")
+      val original = checkNotNull(cameraPixels())
+      assertNotNull(
+        "Installed camera must match the prepared scene, not an icon or warning",
+        original,
+      )
+      val frame = System.currentTimeMillis() / DemoData.CAMERA_FRAME_MILLIS
+      compose.waitUntil(20_000) {
+        System.currentTimeMillis() / DemoData.CAMERA_FRAME_MILLIS > frame
+      }
+      // Exercise the actual provider publication path for the launcher-owned id.
+      context.sendBroadcast(
+        android.content.Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).apply {
+          component = android.content.ComponentName(context, TerrazzoWidgetProvider::class.java)
+          putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(installed.widgetId))
+        }
+      )
+      compose.waitUntil(60_000) {
+        cameraPixels()?.let { it.size == original.size && !it.contentEquals(original) } == true
+      }
+      screenshot("picture-installed-updated")
+    }
     val manager = AppWidgetManager.getInstance(context)
     val info = manager.getAppWidgetInfo(installed.widgetId)
     assertEquals("new launcher widget width", 1, info.targetCellWidth)
@@ -417,44 +609,48 @@ class WidgetPreparationTest {
     val initialSize = WidgetSizing.forWidgetCapture(manager, installed.widgetId)
     assertTrue("initial install must occupy one column: $initialSize", initialSize.widthDp < 130)
     assertTrue("initial install must occupy one row: $initialSize", initialSize.heightDp < 120)
-    // Exercise the launcher's actual resize handle, not just a synthetic options bundle.
-    val host = device.findObjects(hostSelector).last()
-    val hostBounds = host.visibleBounds
-    host.longClick()
-    device.waitForIdle()
-    screenshot("launcher-resize-handles")
-    assertTrue(
-      device.drag(
-        hostBounds.right,
-        hostBounds.centerY(),
-        (hostBounds.right + 2 * hostBounds.width() + 30).coerceAtMost(device.displayWidth - 20),
-        hostBounds.centerY(),
-        40,
+    // The original tile journey owns the real launcher resize gesture regression. The camera
+    // journey installs another widget beside that expanded tile and checks image updates there.
+    if (evidencePrefix.isEmpty()) {
+      // Exercise the launcher's actual resize handle, not just a synthetic options bundle.
+      val host = device.findObjects(hostSelector).last()
+      val hostBounds = host.visibleBounds
+      host.longClick()
+      device.waitForIdle()
+      screenshot("launcher-resize-handles")
+      assertTrue(
+        device.drag(
+          hostBounds.right,
+          hostBounds.centerY(),
+          (hostBounds.right + 2 * hostBounds.width() + 30).coerceAtMost(device.displayWidth - 20),
+          hostBounds.centerY(),
+          40,
+        )
       )
-    )
-    compose.waitUntil(60_000) {
-      WidgetSizing.forWidgetCapture(manager, installed.widgetId).widthDp > initialSize.widthDp
-    }
-    // Grow vertically too, beyond the former Small provider's 2x2 cap.
-    val widerBounds = device.findObjects(hostSelector).last().visibleBounds
-    assertTrue(
-      device.drag(
-        widerBounds.centerX(),
-        widerBounds.bottom,
-        widerBounds.centerX(),
-        (widerBounds.bottom + 2 * hostBounds.height() + 30).coerceAtMost(
-          device.displayHeight - 120
-        ),
-        40,
+      compose.waitUntil(60_000) {
+        WidgetSizing.forWidgetCapture(manager, installed.widgetId).widthDp > initialSize.widthDp
+      }
+      // Grow vertically too, beyond the former Small provider's 2x2 cap.
+      val widerBounds = device.findObjects(hostSelector).last().visibleBounds
+      assertTrue(
+        device.drag(
+          widerBounds.centerX(),
+          widerBounds.bottom,
+          widerBounds.centerX(),
+          (widerBounds.bottom + 2 * hostBounds.height() + 30).coerceAtMost(
+            device.displayHeight - 120
+          ),
+          40,
+        )
       )
-    )
-    compose.waitUntil(60_000) {
-      val resized = WidgetSizing.forWidgetCapture(manager, installed.widgetId)
-      resized.widthDp > 144 && resized.heightDp > 168
+      compose.waitUntil(60_000) {
+        val resized = WidgetSizing.forWidgetCapture(manager, installed.widgetId)
+        resized.widthDp > 144 && resized.heightDp > 168
+      }
+      device.pressBack()
+      device.waitForIdle()
+      screenshot("installed-widget-resized")
     }
-    device.pressBack()
-    device.waitForIdle()
-    screenshot("installed-widget-resized")
     assertEquals(
       "resizing keeps the saved widget choice",
       installed.card,

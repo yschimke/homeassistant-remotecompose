@@ -12,19 +12,14 @@ import android.os.Build
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.LauncherLook
-import ee.schimke.ha.rc.LauncherWidgetContent
-import ee.schimke.ha.rc.WidgetCaptureSizeDp
+import ee.schimke.ha.rc.captureLauncherWidgetDocument
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaUberTheme
-import ee.schimke.ha.rc.components.WidgetActionRegistry
 import ee.schimke.ha.rc.encodeHaAction
-import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.platformWidgetDocument
 import ee.schimke.ha.rc.systemThemedWidgetsProfile
 import ee.schimke.ha.rc.widgetsProfile
@@ -34,7 +29,6 @@ import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.terrazzoGraph
 import ee.schimke.terrazzo.ui.toThemeStyle
 import ee.schimke.terrazzo.ui.toUberTheme
-import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -53,9 +47,9 @@ import kotlinx.coroutines.sync.withLock
  * Flow:
  * 1. Framework or our own broadcast triggers [onUpdate].
  * 2. For each pinned widget id, look up the [WidgetStore.Entry] and headlessly capture the card via
- *    [captureSingleRemoteDocument] with `profile = widgetsProfile`. The composition is wrapped with
- *    [ProvideCardRegistry] + [ProvideSystemHaTheme] so API 37+ launchers resolve Android's system
- *    colors at playback; older hosts receive the matching concrete light/dark fallback.
+ *    [captureLauncherWidgetDocument] with `profile = widgetsProfile`. The composition is wrapped
+ *    with [ProvideCardRegistry] + [ProvideSystemHaTheme] so API 37+ launchers resolve Android's
+ *    system colors at playback; older hosts receive the matching concrete light/dark fallback.
  * 3. Wrap the bytes in `RemoteViews.DrawInstructions` and publish via
  *    `AppWidgetManager.updateAppWidget(widgetId, …)`.
  *
@@ -207,6 +201,28 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
 
     val look = launcherLook(context, card)
 
+    // Share fetches (including failures) between the template and direct paths. Keep image bytes
+    // comfortably below Binder's transaction limit even for cards containing several pictures.
+    val images = mutableMapOf<String, ByteArray?>()
+    var remainingImageBytes = 512 * 1024
+    val fetchImage: (String) -> ByteArray? = { url ->
+      if (url in images) images[url]
+      else {
+        runBlocking {
+          WidgetImages.png(
+            context,
+            baseUrl,
+            url,
+            WIDGET_IMAGE_MAX_PX,
+            maxBytes = minOf(256 * 1024, remainingImageBytes),
+            fresh = true,
+          )
+        }
+          ?.also { remainingImageBytes -= it.size }
+          .also { images[url] = it }
+      }
+    }
+
     // Design first: the card's launcher template with its values baked in. Cards with no design,
     // or one that can't be baked, capture directly.
     val baked = runCatching {
@@ -220,7 +236,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         dark = dark,
         systemTheme = captureProfile === systemThemedWidgetsProfile,
         registry = registry,
-        fetchImage = { url -> fetchWidgetImage(context, baseUrl, url) },
+        fetchImage = fetchImage,
         look = look,
       )
     }
@@ -256,6 +272,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
           captureProfile,
           dark,
           look,
+          fetchImage,
         ) ?: return null
       }
     return remoteViews
@@ -274,33 +291,22 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     captureProfile: androidx.compose.remote.creation.profile.Profile,
     dark: Boolean,
     look: LauncherLook,
+    fetchImage: (String) -> ByteArray?,
   ): RemoteViews? {
-    val widgetActions =
-      WidgetActionRegistry(
-        snapshot.states.mapValues { (_, entity) -> formatState(entity, snapshot) }
-      )
     val captured = runCatching {
-      runBlocking {
-        captureSingleRemoteDocument(
-          context = context,
-          creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
-          profile = captureProfile,
-        ) {
-          LauncherWidgetContent(
-            registry,
-            captureProfile,
-            dark,
-            widgetActions,
-            card,
-            snapshot,
-            WidgetCaptureSizeDp(
-              (widthPx * 160f / densityDpi).roundToInt(),
-              (heightPx * 160f / densityDpi).roundToInt(),
-            ),
-            look,
-          )
-        }
-      }
+      captureLauncherWidgetDocument(
+        context,
+        card,
+        snapshot,
+        registry,
+        widthPx,
+        heightPx,
+        densityDpi,
+        captureProfile,
+        dark,
+        look,
+        fetchImage,
+      )
     }
       .getOrElse {
         // The widgets profile rejects ops outside the launcher's vocabulary —
@@ -312,7 +318,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
       RemoteViews(
         RemoteViews.DrawInstructions.Builder(listOf(platformWidgetDocument(captured.bytes))).build()
       )
-    widgetActions.entries
+    captured.actions
       .filterKeys { widgetId != AppWidgetManager.INVALID_APPWIDGET_ID }
       .forEach { (actionId, payload) ->
         // The RC document emits HostActionMetadata(actionId, payload). Android's launcher-widget
@@ -326,15 +332,6 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
       }
     return remoteViews
   }
-
-  /**
-   * The bytes of [url] for a baked widget (the launcher can't fetch it): fetched through the app's
-   * image stack, scaled to fit the slot pictures are captured for, as PNG.
-   */
-  private fun fetchWidgetImage(context: Context, baseUrl: String, url: String): ByteArray? =
-    runBlocking {
-      WidgetImages.png(context, baseUrl, url, WIDGET_IMAGE_MAX_PX)
-    }
 
   private fun widgetActionPendingIntent(
     context: Context,
