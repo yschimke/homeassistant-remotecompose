@@ -46,6 +46,7 @@ class HomeAssistantThemeRenderTest {
   private var dark by mutableStateOf(false)
   private var theme by mutableStateOf(HaUberTheme.HomeAssistant)
   private var value by mutableStateOf(20f)
+  private var target by mutableStateOf<Float?>(25f)
   private var captures = 0
 
   private fun snapshot(thermostat: Boolean): HaSnapshot {
@@ -63,7 +64,7 @@ class HomeAssistantThemeRenderTest {
                   put("min_temp", 0)
                   put("max_temp", 100)
                   put("current_temperature", value)
-                  put("temperature", value + 5)
+                  target?.let { put("temperature", it) }
                   put("temperature_unit", "°C")
                 } else {
                   put("unit_of_measurement", "W")
@@ -124,6 +125,7 @@ class HomeAssistantThemeRenderTest {
         dark = mode
         theme = HaUberTheme.Classic
         value = 20f
+        target = 25f
       }
       frame("ha-$thermostat-$mode-before-classic")
       compose.runOnIdle { theme = HaUberTheme.HomeAssistant }
@@ -140,7 +142,26 @@ class HomeAssistantThemeRenderTest {
         if (low.getPixel(x, y) != high.getPixel(x, y)) changed++
       }
       assertTrue(changed > 20, "The gauge arc / thermostat handle must move with host values")
+      if (thermostat) {
+        compose.runOnIdle { target = 85f }
+        val moved = frame("ha-target-$mode-moved")
+        assertEquals(count, captures, "A target-only update must not recapture")
+        assertTrue(edgeChanges(high, moved) > 20, "The target handle must move independently")
+        compose.runOnIdle { target = null }
+        val absent = frame("ha-target-$mode-absent")
+        assertEquals(count, captures, "A missing target must not recapture")
+        assertTrue(edgeChanges(moved, absent) > 20, "A missing target must hide its handle")
+      }
     }
+  }
+
+  /** Excludes central readings and labels, so changed text cannot hide a frozen target handle. */
+  private fun edgeChanges(a: Bitmap, b: Bitmap): Int {
+    var changed = 0
+    for (y in 40 until minOf(230, a.height)) for (x in 0 until a.width) {
+      if ((x < 130 || x >= 230) && a.getPixel(x, y) != b.getPixel(x, y)) changed++
+    }
+    return changed
   }
 
   @Test fun gaugeKeepsItsLiveArcInBothModes() = verifyInstrument(thermostat = false)
