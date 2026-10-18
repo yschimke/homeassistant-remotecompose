@@ -321,8 +321,8 @@ private fun ProgressBar(
   RemoteBox(
     modifier =
       RemoteModifier.fillMaxWidth()
-        .height(3.rdp)
         .padding(top = 4.rdp)
+        .height(3.rdp)
         .clip(RemoteRoundedCornerShape(1.rdp))
         .background(theme.divider)
   ) {

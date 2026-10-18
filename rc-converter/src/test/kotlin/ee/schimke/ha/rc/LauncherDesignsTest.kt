@@ -592,6 +592,137 @@ class LauncherDesignsTest {
       played = true,
     )
 
+  @Test
+  fun shortWideClimateWidgetsKeepTheReadingVisibleWithoutHiddenSteppers() {
+    val cases =
+      listOf(
+        Triple(
+          "thermostat",
+          "climate.studio",
+          entity(
+            "climate.studio",
+            "heat",
+            "current_temperature" to "19",
+            "temperature" to "22",
+            "friendly_name" to "Studio",
+          ),
+        ),
+        Triple(
+          "humidifier",
+          "humidifier.bedroom",
+          entity(
+            "humidifier.bedroom",
+            "on",
+            "current_humidity" to "45",
+            "humidity" to "55",
+            "friendly_name" to "Bedroom",
+          ),
+        ),
+        Triple(
+          "light",
+          "light.kitchen",
+          entity("light.kitchen", "on", "brightness" to "128", "friendly_name" to "Kitchen"),
+        ),
+      )
+    val (type, id, state) = cases.first()
+    renderRegression(
+      "short-wide-climate",
+      bakeRegression(card(type, id), snapshotOf(state), 304, 80),
+      304,
+      80,
+    )
+    for ((kind, entityId, entityState) in cases) {
+      for (family in listOf(HaUberTheme.Classic, HaUberTheme.Console, HaUberTheme.Ikea)) {
+        val snapshot = snapshotOf(entityState)
+        val config = card(kind, entityId)
+        val look = LauncherLook(family)
+        val short = bake(config, snapshot, 304, 80, look)
+        assertTrue(
+          short.actions.values.none { it is HaAction.CallService },
+          "$kind/${family.id}: a short widget must not capture off-screen steppers",
+        )
+        val full = bake(config, snapshot, 304, 320, look)
+        assertTrue(
+          full.actions.values.filterIsInstance<HaAction.CallService>().size >= 2,
+          "$kind/${family.id}: a tall widget retains controls",
+        )
+      }
+    }
+  }
+
+  @Test
+  fun mediaWidgetShowsAContinuousSeekTrackForItsPosition() {
+    val snapshot =
+      snapshotOf(
+        entity(
+          "media_player.office",
+          "paused",
+          "friendly_name" to "Office speaker",
+          "media_title" to "The Anthem",
+          "media_artist" to "Good Charlotte",
+          "media_position" to "100",
+          "media_duration" to "200",
+        )
+      )
+    val baked = bakeRegression(card("media-control", "media_player.office"), snapshot, 320, 180)
+    val pixels = renderRegression("media-seek-track", baked, 320, 180)
+    var longest = 0
+    for (y in 0 until pixels.height) {
+      var run = 0
+      for (x in 0 until pixels.width) {
+        if (pixels[x, y] == androidx.compose.ui.graphics.Color(0xFF673AB7)) {
+          run++
+          longest = maxOf(longest, run)
+        } else run = 0
+      }
+    }
+    assertTrue(
+      longest > 60 * pixels.width / 320,
+      "a half-full seek track must draw a continuous accent run, got $longest px",
+    )
+    assertEquals(
+      3,
+      baked.actions.values.filterIsInstance<HaAction.CallService>().size,
+      "transport actions remain present",
+    )
+  }
+
+  // Match these pixel assertions to the mdpi Compose host, rather than the 420dpi documents
+  // used by the separate platform-encoding and action-parity tests above.
+  private fun bakeRegression(card: CardConfig, snapshot: HaSnapshot, width: Int, height: Int) =
+    assertNotNull(
+      LauncherDesigns.render(
+        org.robolectric.RuntimeEnvironment.getApplication(),
+        card,
+        snapshot,
+        width,
+        height,
+        160,
+        dark = false,
+        systemTheme = false,
+        registry = registry,
+      )
+    )
+
+  private fun renderRegression(
+    name: String,
+    baked: LauncherDesigns.Baked,
+    width: Int,
+    height: Int,
+  ): androidx.compose.ui.graphics.PixelMap {
+    compose.setContent {
+      Box(Modifier.size(width.dp, height.dp).testTag("widget")) {
+        HaRcComposePlayer(
+          documentBytes = baked.bytes,
+          modifier = Modifier.size(width.dp, height.dp),
+          fallback = { error("regression document must render") },
+        )
+      }
+    }
+    compose.waitForIdle()
+    return capture(name)
+  }
+
   /**
    * With [played], both documents play in a player of the widget's size, as a launcher plays a
    * widget, rather than the wrap-height card preview: a card that fills its widget (the expanded
