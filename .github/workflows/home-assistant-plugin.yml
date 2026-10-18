@@ -30,7 +30,7 @@ jobs:
         run: ./gradlew :app-ui:wasmJsBrowserDistribution :design-server:embedResources :ha-client:jvmTest :app-ui:jvmTest ktfmtCheck --stacktrace
       - uses: actions/setup-python@v7.0.0
         with:
-          python-version: '3.14'
+          python-version: '3.14.8'
       - name: Package locally served integration
         run: |
           python -m unittest discover -s home-assistant/test -p '*_test.py'
