@@ -71,7 +71,7 @@ final class DashboardStore: ObservableObject {
     documentGenerator = GatewayCardDocumentGenerator(service: nextService)
     let revision = connectionRevision
     refreshTask = Task { [weak self] in
-      guard let self else { return }
+      guard let self, revision == connectionRevision, !Task.isCancelled else { return }
       await liveStream.disconnect()
       guard revision == connectionRevision, !Task.isCancelled else { return }
       await refresh()

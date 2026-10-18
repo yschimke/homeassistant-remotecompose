@@ -60,6 +60,16 @@ final class DashboardStoreTests: XCTestCase {
     XCTAssertEqual(sockets.all[1].0.url?.host, "new.test")
     XCTAssertEqual(try json(sockets.all[1].1.sent[0])["entities"] as? [String], [])
     XCTAssertEqual(store.feed?.dashboards.first?.id, "new.test")
+    store.dispatch(metadata: #"{"type":"callService","domain":"light","service":"turn_on","serviceData":{"rgb_color":[255,0,0],"enabled":true,"nested":{"value":null},"brightness":128}}"#)
+    await eventually { sockets.all[1].1.sent.count == 2 }
+    let command = try json(sockets.all[1].1.sent[1])
+    let values = try XCTUnwrap(command["service_data"] as? [String: Any])
+    XCTAssertEqual(values["rgb_color"] as? [Int], [255, 0, 0])
+    XCTAssertEqual(values["brightness"] as? Int, 128)
+    XCTAssertEqual(values["enabled"] as? Bool, true)
+    XCTAssertNotNil(values["nested"] as? [String: Any])
+    XCTAssertFalse(values["brightness"] is String)
+    XCTAssertFalse(values["enabled"] is String)
     let documents = FeedProtocol.count("/card.rc")
     sockets.all[1].1.deliver(.success(.string(#"{"type":"documents_changed","card_ids":["static"]}"#)))
     await eventually { FeedProtocol.count("/card.rc") > documents }
