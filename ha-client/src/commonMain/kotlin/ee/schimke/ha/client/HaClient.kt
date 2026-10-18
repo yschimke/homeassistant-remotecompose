@@ -17,12 +17,17 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.close
 import io.ktor.websocket.readText
 import io.ktor.websocket.send
+import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -34,6 +39,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -134,41 +140,71 @@ class HaClient(
     Error,
   }
 
+  /**
+   * How long opening the socket and the auth exchange may take. Without a bound, a proxy or captive
+   * portal that accepts the upgrade but never speaks would hold [sessionMutex] — and every later
+   * command, [disconnect] and [close] — forever, with [state] stuck at Connecting.
+   */
+  internal var handshakeTimeout: Duration = 30.seconds
+
   suspend fun connect() {
     sessionMutex.withLock {
       if (session != null) return
       _state.value = ConnectionState.Connecting
-      val accessToken = accessTokenProvider?.invoke() ?: config.accessToken
-      val wsUrl = config.baseUrl.toWsUrl() + "/api/websocket"
-      val s = httpClient.webSocketSession { url(wsUrl) }
-
-      // Handshake on this coroutine — then spin up the receive loop.
-      val authRequired = readMessage(s)
-      require(authRequired["type"]?.jsonPrimitive?.content == "auth_required") {
-        "expected auth_required, got $authRequired"
-      }
-      _state.value = ConnectionState.Authenticating
-      s.send(
-        json.encodeToString(
-          JsonObject.serializer(),
-          buildJsonObject {
-            put("type", "auth")
-            put("access_token", accessToken)
-          },
-        )
-      )
-      val authResult = readMessage(s)
-      when (authResult["type"]?.jsonPrimitive?.content) {
-        "auth_ok" -> _state.value = ConnectionState.Ready
-        else -> {
-          _state.value = ConnectionState.Error
-          runCatching { s.close(CloseReason(CloseReason.Codes.PROTOCOL_ERROR, "auth")) }
-          throw IllegalStateException("auth rejected: $authResult")
+      var socket: DefaultWebSocketSession? = null
+      try {
+        val accessToken = accessTokenProvider?.invoke() ?: config.accessToken
+        val wsUrl = config.baseUrl.toWsUrl() + "/api/websocket"
+        withTimeout(handshakeTimeout) {
+          val s = httpClient.webSocketSession { url(wsUrl) }.also { socket = it }
+          handshake(s, accessToken)
         }
+      } catch (t: Throwable) {
+        // Leave no half-open socket behind and no state that reads as "still connecting".
+        _state.value =
+          if (t is CancellationException && t !is TimeoutCancellationException) {
+            ConnectionState.Disconnected
+          } else {
+            ConnectionState.Error
+          }
+        socket?.let { s ->
+          withContext(NonCancellable) {
+            runCatching { s.close(CloseReason(CloseReason.Codes.PROTOCOL_ERROR, "handshake")) }
+          }
+        }
+        // A timeout is a failed connect, not a cancellation of the caller: reconnect loops rethrow
+        // CancellationException and would stop retrying.
+        if (t is TimeoutCancellationException) {
+          throw IllegalStateException("Home Assistant did not answer within $handshakeTimeout", t)
+        }
+        throw t
       }
 
+      val s = checkNotNull(socket)
+      _state.value = ConnectionState.Ready
       session = s
       receiveJob = scope.launch { receiveLoop(s) }
+    }
+  }
+
+  private suspend fun handshake(s: DefaultWebSocketSession, accessToken: String) {
+    val authRequired = readMessage(s)
+    require(authRequired["type"]?.jsonPrimitive?.content == "auth_required") {
+      "expected auth_required, got $authRequired"
+    }
+    _state.value = ConnectionState.Authenticating
+    s.send(
+      json.encodeToString(
+        JsonObject.serializer(),
+        buildJsonObject {
+          put("type", "auth")
+          put("access_token", accessToken)
+        },
+      )
+    )
+    val authResult = readMessage(s)
+    if (authResult["type"]?.jsonPrimitive?.content != "auth_ok") {
+      throw IllegalStateException("auth rejected: $authResult")
     }
   }
 
