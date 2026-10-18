@@ -2,6 +2,7 @@
 
 package ee.schimke.terrazzo.shared
 
+import ee.schimke.ha.model.*
 import kotlin.test.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -10,22 +11,30 @@ import kotlinx.serialization.json.*
 
 class DemoDataSourceTest {
   @Test
-  fun fakeModeNeverReadsGateway() = runTest {
-    val frames = demoFrames(DemoDataMode.FAKE) { error("Must not connect") }.toList()
-    assertEquals(listOf(DemoFrame(DemoData.Fake, DemoDataStatus.FAKE)), frames)
+  fun startsWithoutInventedDataAndReadsGateway() = runTest {
+    val live = DemoData(Dashboard(), HaSnapshot())
+    var reads = 0
+    val frames = demoFrames {
+      reads++
+      live
+    }
+      .take(2)
+      .toList()
+    assertEquals(DemoFrame(null, DemoDataStatus.CONNECTING), frames.first())
+    assertEquals(DemoFrame(live, DemoDataStatus.LIVE), frames.last())
+    assertEquals(1, reads)
   }
 
   @Test
   fun outageDropsLiveDataAndRecovers() = runTest {
     var reads = 0
-    val live = DemoData(DemoDashboard.dashboard, DemoDashboard.snapshot.copy(states = emptyMap()))
-    val frames =
-      demoFrames(DemoDataMode.AUTO) {
-          if (++reads == 2) error("Gateway stale")
-          live
-        }
-        .take(4)
-        .toList()
+    val live = DemoData(Dashboard(), HaSnapshot())
+    val frames = demoFrames {
+      if (++reads == 2) error("Gateway stale")
+      live
+    }
+      .take(4)
+      .toList()
     assertEquals(
       listOf(
         DemoDataStatus.CONNECTING,
@@ -35,21 +44,23 @@ class DemoDataSourceTest {
       ),
       frames.map { it.status },
     )
-    assertEquals(DemoData.Fake, frames[2].data)
+    assertNull(frames[2].data)
+    assertEquals(live, frames[3].data)
     assertEquals(20_000, testScheduler.currentTime)
   }
 
   @Test
-  fun hungRequestFallsBackAfterFourSeconds() = runTest {
-    val frames = demoFrames(DemoDataMode.AUTO) { awaitCancellation() }.take(2).toList()
+  fun hungRequestShowsUnavailableAfterFourSeconds() = runTest {
+    val frames = demoFrames { awaitCancellation() }.take(2).toList()
     assertEquals(DemoDataStatus.UNAVAILABLE, frames.last().status)
+    assertNull(frames.last().data)
     assertEquals(4_000, testScheduler.currentTime)
   }
 
   @Test
   fun hostCancellationPropagates() = runTest {
     assertFailsWith<CancellationException> {
-      demoFrames(DemoDataMode.AUTO) { throw CancellationException("Leaving demo") }.toList()
+      demoFrames { throw CancellationException("Leaving demo") }.toList()
     }
   }
 
