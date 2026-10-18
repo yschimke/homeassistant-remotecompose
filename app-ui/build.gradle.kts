@@ -69,6 +69,26 @@ val desktopVersion =
     )
     .get()
 
+// One version source for installed desktop builds and the web app, including tagged releases.
+val feedbackBuildInfo =
+  tasks.register("generateFeedbackBuildInfo") {
+    val output = layout.buildDirectory.dir("generated/feedback/commonMain")
+    val version = desktopVersion
+    inputs.property("version", version)
+    outputs.dir(output)
+    doLast {
+      output.get().file("ee/schimke/terrazzo/shared/FeedbackBuildInfo.kt").asFile.apply {
+        parentFile.mkdirs()
+        writeText(
+          "package ee.schimke.terrazzo.shared\n\n" +
+            "internal object FeedbackBuildInfo {\n  const val VERSION = \"$version\"\n}\n"
+        )
+      }
+    }
+  }
+
+kotlin.sourceSets.commonMain { kotlin.srcDir(feedbackBuildInfo) }
+
 require(Regex("[0-9]+\\.[0-9]+\\.[0-9]+").matches(desktopVersion)) {
   "desktopVersion must be MAJOR.MINOR.PATCH"
 }

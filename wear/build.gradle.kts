@@ -85,6 +85,7 @@ play {
 }
 
 dependencies {
+  implementation(project(":app-ui"))
   implementation(project(":rc-components"))
   implementation(project(":rc-converter"))
   implementation(project(":rc-card-shutter"))

@@ -28,6 +28,7 @@ import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.terrazzoColorScheme
 import ee.schimke.ha.rc.components.terrazzoTypographyFor
+import ee.schimke.terrazzo.shared.ReportFeedbackButton
 import ee.schimke.terrazzo.tv.data.TvPrefs
 import ee.schimke.terrazzo.tv.ui.TvCardStylePicker
 import ee.schimke.terrazzo.tv.ui.TvKioskPreview
@@ -69,6 +70,11 @@ private fun TvApp() {
         modifier = Modifier.width(360.dp).verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(24.dp),
       ) {
+        ReportFeedbackButton(
+          version =
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "Unknown",
+          platform = "Android TV",
+        )
         TvThemePicker(
           selected = style,
           onSelect = { picked -> scope.launch { prefs.setThemeStyle(picked) } },
@@ -77,6 +83,7 @@ private fun TvApp() {
           selected = cardStyle,
           onSelect = { picked -> scope.launch { prefs.setCardStyle(picked) } },
         )
+
         TvDemoToggle(enabled = demoMode, onChange = { v -> scope.launch { prefs.setDemoMode(v) } })
       }
       TvKioskPreview(
