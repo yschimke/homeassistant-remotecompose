@@ -210,7 +210,15 @@ fun cardTemplateFor(
   val server = forDevice ?: designs.byKey[preferred] ?: designs.byKey[key]
   designs.loadedFor?.let { CardDesignSources.record(it, key, fromServer = server != null) }
   val bytes = server ?: CardDesignLibrary.template(context, key, registry)
-  return CardDesignTemplates.playback(card, bytes, registry)
+  // Designs read the player's display (Host density); fold this phone's in once.
+  val metrics = context.resources.displayMetrics
+  val folded =
+    CardDesignTemplates.forDisplay(
+      bytes,
+      metrics.density,
+      context.resources.configuration.fontScale,
+    )
+  return CardDesignTemplates.playback(card, folded, registry)
 }
 
 /**
