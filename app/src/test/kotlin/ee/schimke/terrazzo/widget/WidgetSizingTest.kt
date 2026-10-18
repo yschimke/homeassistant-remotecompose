@@ -18,52 +18,50 @@ class WidgetSizingTest {
   private val context: Application = RuntimeEnvironment.getApplication()
 
   @Test
-  fun everyProviderStartsAtOneCellAndAllowsUpwardResizing() {
-    val xmls =
-      listOf(
-        R.xml.terrazzo_widget_info_small,
-        R.xml.terrazzo_widget_info,
-        R.xml.terrazzo_widget_info_tall,
-      )
-    for ((sizeClass, xml) in WidgetSizeClass.entries.zip(xmls)) {
-      val bounds = sizeClass.gridBounds(context)
-      assertEquals(1, bounds.minCellsW, sizeClass.name)
-      assertEquals(1, bounds.minCellsH, sizeClass.name)
-      assertEquals(1, bounds.defaultCellsW, sizeClass.name)
-      assertEquals(1, bounds.defaultCellsH, sizeClass.name)
-      assertTrue(bounds.maxCellsW > 1 && bounds.maxCellsH > 1, sizeClass.name)
-      context.resources.getXml(xml).use { parser ->
-        while (parser.eventType != org.xmlpull.v1.XmlPullParser.START_TAG) parser.next()
+  fun oneProviderStartsAtOneCellAndResizesWithoutAnAppImposedMaximum() {
+    val bounds = LauncherWidgetSpec.gridBounds(context)
+    assertEquals(LauncherGridBounds(1, 1, 1, 1, 4, 4), bounds)
+    val receivers =
+      context.packageManager
+        .getPackageInfo(
+          context.packageName,
+          android.content.pm.PackageManager.GET_RECEIVERS or
+            android.content.pm.PackageManager.MATCH_DISABLED_COMPONENTS,
+        )
+        .receivers
+        .orEmpty()
+        .filter { it.name.startsWith(TerrazzoWidgetProvider::class.java.name) }
+    assertEquals(listOf(TerrazzoWidgetProvider::class.java.name), receivers.map { it.name })
+    assertEquals(
+      TerrazzoWidgetProvider::class.java.name,
+      LauncherWidgetSpec.componentName(context).className,
+    )
+    context.resources.getXml(R.xml.terrazzo_widget_info).use { parser ->
+      while (parser.eventType != org.xmlpull.v1.XmlPullParser.START_TAG) parser.next()
+      val namespace = "http://schemas.android.com/apk/res/android"
+      kotlin.test.assertNull(parser.getAttributeValue(namespace, "maxResizeWidth"))
+      kotlin.test.assertNull(parser.getAttributeValue(namespace, "maxResizeHeight"))
+      for (dimension in listOf(android.R.attr.minWidth, android.R.attr.minHeight)) {
         val attrs =
           context.obtainStyledAttributes(
             android.util.Xml.asAttributeSet(parser),
-            intArrayOf(android.R.attr.minWidth),
+            intArrayOf(dimension),
           )
         try {
           assertTrue(attrs.getDimension(0, 0f) / context.resources.displayMetrics.density <= 50)
         } finally {
           attrs.recycle()
         }
-        val height =
-          context.obtainStyledAttributes(
-            android.util.Xml.asAttributeSet(parser),
-            intArrayOf(android.R.attr.minHeight),
-          )
-        try {
-          assertTrue(height.getDimension(0, 0f) / context.resources.displayMetrics.density <= 50)
-        } finally {
-          height.recycle()
-        }
-        val resize =
-          context.obtainStyledAttributes(
-            android.util.Xml.asAttributeSet(parser),
-            intArrayOf(android.R.attr.resizeMode),
-          )
-        try {
-          assertEquals(android.appwidget.AppWidgetProviderInfo.RESIZE_BOTH, resize.getInt(0, 0))
-        } finally {
-          resize.recycle()
-        }
+      }
+      val resize =
+        context.obtainStyledAttributes(
+          android.util.Xml.asAttributeSet(parser),
+          intArrayOf(android.R.attr.resizeMode),
+        )
+      try {
+        assertEquals(android.appwidget.AppWidgetProviderInfo.RESIZE_BOTH, resize.getInt(0, 0))
+      } finally {
+        resize.recycle()
       }
     }
   }
@@ -82,6 +80,7 @@ class WidgetSizingTest {
         WidgetSizeDp(72, 84),
         WidgetSizeDp(144, 84),
         WidgetSizeDp(288, 252),
+        WidgetSizeDp(504, 672),
       )) {
       val options =
         options(size.widthDp, size.heightDp).apply {

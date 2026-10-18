@@ -384,17 +384,3 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     const val WIDGET_IMAGE_MAX_PX = 512
   }
 }
-
-/**
- * Size-class provider variants. They share [TerrazzoWidgetProvider]'s id-driven rendering verbatim
- * — the only thing that differs is the `appwidget-provider` metadata declared against each in the
- * manifest (`targetCell*` default + `min/maxResize*` bounds), which is how a card's
- * [WidgetSizeClass][ee.schimke.terrazzo.widget.WidgetSizeClass] reaches the launcher's resize UI.
- * [WidgetInstaller] picks the matching component at pin time; refresh broadcasts can still target
- * the base provider since rendering only ever keys off the widget id.
- *
- * @see WidgetSizeClass
- */
-class TerrazzoWidgetProviderSmall : TerrazzoWidgetProvider()
-
-class TerrazzoWidgetProviderTall : TerrazzoWidgetProvider()

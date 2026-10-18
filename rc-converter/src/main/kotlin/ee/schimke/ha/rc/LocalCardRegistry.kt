@@ -111,20 +111,6 @@ fun CardRegistry.cardWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWid
 }
 
 /**
- * Host-side lookup of a card's [WidgetSizeConstraints] — the preferred content size used to pick a
- * launcher provider's resize range. Unknown / unsupported cards fall back to the
- * unsupported-placeholder converter's size; failing that, a conservative full-width default.
- */
-fun CardRegistry.cardSizeConstraints(
-  card: CardConfig,
-  snapshot: HaSnapshot,
-): WidgetSizeConstraints {
-  val converter = get(card.type) ?: get(UNSUPPORTED_CARD_TYPE)
-  return converter?.sizeConstraints(card, snapshot)
-    ?: WidgetSizeConstraints(defaultWidthDp = 320, defaultHeightDp = 160)
-}
-
-/**
  * Host-side lookup of a card's [CardConverter.dataSignature] — the fingerprint of baked,
  * non-bindable content used to invalidate the render cache key. Null when the card keeps up through
  * named bindings (the common case) or its type is unknown. The dashboard folds a non-null result
