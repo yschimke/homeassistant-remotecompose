@@ -10,6 +10,11 @@ lovelace:
     - url: /terrazzo-static/remote-compose-card.js
       type: module
   dashboards:
+    second-panel:
+      mode: yaml
+      title: Second panel
+      show_in_sidebar: false
+      filename: second-dashboard.yaml
     wall-panel:
       mode: yaml
       title: Wall panel

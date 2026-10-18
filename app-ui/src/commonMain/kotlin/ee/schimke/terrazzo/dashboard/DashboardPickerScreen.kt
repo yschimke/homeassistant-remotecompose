@@ -52,6 +52,18 @@ fun DashboardPickerScreen(
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
+        item {
+          Text(
+            "Choose a Lovelace dashboard. Built-in pages and generated dashboards need Home Assistant's frontend.",
+            Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+          )
+          if (state.dashboards.isEmpty()) {
+            Text(
+              "No supported dashboards found. Create a Lovelace dashboard with explicit views in Home Assistant, then reconnect.",
+              Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+            )
+          }
+        }
         items(state.dashboards, key = { it.urlPath ?: "__default__" }) { d ->
           Card(
             modifier =

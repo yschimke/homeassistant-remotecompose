@@ -6,25 +6,116 @@ backend or separate renderer service is needed. It registers an authenticated
 sidebar panel at **`https://YOUR-HA/terrazzo`** and serves both renderers locally.
 Use that URL as the start page in a wall-panel browser. Normal HA login runs first.
 
-## Install
+## Install and update with HACS
 
-Download `terrazzo-home-assistant.zip` from the **Home Assistant plugin** workflow's
-`home-assistant-plugin` artifact (Actions → successful run → artifacts). Unzip it
-into your HA configuration directory, so the manifest is at
-`/config/custom_components/terrazzo/manifest.json`. Restart after adding:
+The release pipeline publishes two ZIPs containing the same built renderers:
+`terrazzo.zip` for HACS and `terrazzo-home-assistant.zip` for manual installation.
+**HACS installation becomes available after the first release containing these
+assets is published.** Older releases and the source checkout do not include the
+built renderers. Do not select the default branch in HACS.
+
+1. Install [HACS](https://www.hacs.xyz/docs/use/) if you do not have it already.
+2. In HACS, open **Custom repositories**, add
+   `https://github.com/yschimke/homeassistant-remotecompose`, and select
+   **Integration** (not Dashboard). Terrazzo is a custom repository; it does not
+   need to be listed in the default HACS store.
+3. Find **Terrazzo Remote Compose**, download a published release containing
+   `terrazzo.zip`, and add the configuration below. HACS installs its complete
+   contents into `/config/custom_components/terrazzo/`.
+4. Check your HA configuration, restart Home Assistant, and open `/terrazzo`.
+
+If you installed manually before, back up the existing integration outside
+`custom_components` and your YAML first, then add the custom repository and
+redownload the selected release in HACS. Keep your existing `terrazzo:` settings
+and Lovelace resources; no second configuration is needed.
+
+HACS tracks new releases through a Home Assistant **update entity**. Use its
+install action to download an update, then restart HA at a convenient time and
+refresh wall-panel/browser tabs. Discovery is automatic; installation and restart
+remain user-triggered by default. You can later automate `update.install` for the
+Terrazzo update entity, but it does not replace the required restart. Confirm the
+entity ID in your instance rather than copying a guessed ID.
+
+## Manual installation
+
+Download `terrazzo-home-assistant.zip` and `SHA256SUMS-home-assistant.txt` from a
+[GitHub release](https://github.com/yschimke/homeassistant-remotecompose/releases)
+that includes both. Verify the checksum before extracting. For an agent/operator
+with GitHub CLI, choose the published tag explicitly:
+
+```sh
+TAG=vX.Y.Z  # replace with a published release containing the plugin assets
+mkdir -p /tmp/terrazzo-download
+cd /tmp/terrazzo-download
+gh release download "$TAG" --repo yschimke/homeassistant-remotecompose \
+  --pattern terrazzo-home-assistant.zip --pattern SHA256SUMS-home-assistant.txt
+sha256sum --check --ignore-missing SHA256SUMS-home-assistant.txt
+unzip -l terrazzo-home-assistant.zip
+# After backing up any previous integration outside custom_components:
+unzip terrazzo-home-assistant.zip -d /config
+```
+
+`/config` means your HA configuration directory; use the mounted config directory
+for Container/Core. The manifest must end up at
+`/config/custom_components/terrazzo/manifest.json`. The HACS ZIP has a different
+layout: do not extract `terrazzo.zip` into `/config`.
+For a first install, add the configuration below, check it and restart HA.
+For a manual update, back up and replace the entire old `terrazzo` directory with
+the verified package rather than overlaying it, then check configuration, restart
+and refresh browser tabs. A successful **Home Assistant plugin** workflow also
+retains these packages in its `home-assistant-plugin` artifact for testing; use
+published releases for normal installations.
+
+## Configure
 
 ```yaml
 # configuration.yaml
 terrazzo:
   title: Wall panel
-  dashboard: wall-panel  # existing Lovelace dashboard URL path; omit for default
+  dashboard: wall-panel  # optional initial Lovelace dashboard; omit to show the picker
 ```
 
 Open `/terrazzo`. The existing shared WASM app loads the configured Lovelace
 configuration and live entities over HA's authenticated WebSocket API. Existing
 dashboard selection, card rendering and service dispatch are reused. Do not copy
-HA tokens into YAML, URLs or card configuration. This package is manually
-installable; it is not currently listed in HACS.
+HA tokens into YAML, URLs or card configuration.
+
+## Choose any supported dashboard
+
+`/terrazzo` opens the dashboard picker unless `terrazzo.dashboard` sets an initial
+choice. That setting is a default, not a restriction: use **Dashboards** or the
+dashboard title's switcher to open another dashboard. Choices come from HA's
+Lovelace dashboard list, including dashboards hidden from the sidebar, and are
+checked for a readable configuration with explicit views. HA still enforces the
+signed-in user's access.
+
+Bookmark `/terrazzo?dashboard=wall-panel` to open a particular named dashboard.
+Use `/terrazzo?dashboard=` to open the picker even when YAML sets an initial
+dashboard. No token belongs in either URL.
+
+HA also has built-in pages such as Home and Energy which are not ordinary
+Lovelace configurations. These cannot be rendered by Terrazzo. Frontend-generated
+Lovelace strategies also need HA's JavaScript frontend, so they are excluded from
+the picker. The unnamed Overview is offered only if its actual configuration has
+explicit views; Terrazzo does not invent a Home entry. A dashboard *named* Home
+with normal Lovelace views works. Unsupported/unavailable bookmarked dashboards
+show an explanation; choose another through **Dashboards**. If none are supported,
+create a Lovelace dashboard with explicit views in HA first, then reconnect.
+
+## Verify and roll back
+
+After installation or an update, check HA logs for integration load errors, open
+`/terrazzo`, confirm a live entity changes, and test an action on a safe test entity.
+If you use the Lovelace card below, verify it separately too. Actions use the
+signed-in user's permissions. A restart interrupts HA; arrange the restart with
+the instance owner when an agent installs or updates it.
+
+To roll back with HACS, use its redownload/version selector to choose a previous
+release that contains `terrazzo.zip`, restart HA and refresh tabs. For a manual
+rollback, restore the backed-up integration directory (outside `custom_components`
+until replacement), or replace it with a checksum-verified older manual ZIP.
+Restore YAML only if it changed. Keep a backup of the last known working package;
+releases predating plugin publication cannot serve as HACS rollback versions.
 
 ## Add a Remote Compose Lovelace card
 
@@ -154,3 +245,34 @@ It adds no second dashboard storage or editor implementation.
 
 API references: [HA custom panels](https://developers.home-assistant.io/docs/frontend/custom-ui/creating-custom-panels/),
 [HA custom cards](https://contributors.home-assistant.io/frontend/custom-ui/card/).
+
+## Publishing (maintainers)
+
+The integration uses the repository's release version. Release Please updates
+`custom_components/terrazzo/manifest.json` together with the application version.
+After the release PR is reviewed and merged, Release Please creates the tag and
+GitHub release and calls `release-build.yml`. Its Home Assistant job calls the
+same `home-assistant-plugin.yml` checks used for PRs, at that exact tag. It:
+
+1. Rejects a tag that does not match the source integration version.
+2. Builds both renderers, verifies both ZIP layouts and checksums, and runs the
+   frontend and installed-Home-Assistant browser checks using the HACS ZIP.
+3. Uploads the tested `terrazzo.zip`, `terrazzo-home-assistant.zip`, and
+   `SHA256SUMS-home-assistant.txt` to that existing GitHub release only after all
+   plugin checks pass. Screenshots remain in the separate
+   `home-assistant-plugin-evidence` workflow artifact.
+
+PRs and main builds never publish plugin assets. A build-only manual run can
+check any ref; for a tagged build enter its tag. To recover missing publication,
+run **Home Assistant plugin** manually, select the release tag, and explicitly
+check **publish**. It requires an existing stable `vX.Y.Z` tag and GitHub release,
+rebuilds/tests that tag, and does not overwrite existing release assets. Investigate
+partial uploads before retrying; never replace an already distributed package
+with different bytes under the same version. A bare tag push must already have
+an associated GitHub release before upload succeeds.
+
+The first release carrying this setup enables HACS installation. Publication can
+lag creation of the GitHub release while tests run; check the Home Assistant job
+and presence of all three assets before announcing availability. The site links
+to this guide; deploying the updated site is a separate operation. Default HACS
+store inclusion is optional and is not performed by this workflow.

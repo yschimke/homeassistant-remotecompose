@@ -19,6 +19,11 @@
         {
           "type": "generic",
           "path": "wear/build.gradle.kts"
+        },
+        {
+          "type": "json",
+          "path": "custom_components/terrazzo/manifest.json",
+          "jsonpath": "$.version"
         }
       ]
     }

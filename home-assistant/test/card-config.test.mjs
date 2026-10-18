@@ -15,7 +15,7 @@ const directory = mkdtempSync(join(tmpdir(), 'ha-card-config-'));
 let RemoteComposeCard;
 try {
   copyFileSync(new URL('../../embed/ha-card.js', import.meta.url), join(directory, 'ha-card.js'));
-  copyFileSync(new URL('../custom_components/terrazzo/frontend/remote-compose-card.js', import.meta.url), join(directory, 'remote-compose-card.js'));
+  copyFileSync(new URL('../../custom_components/terrazzo/frontend/remote-compose-card.js', import.meta.url), join(directory, 'remote-compose-card.js'));
   ({ RemoteComposeCard } = await import(pathToFileURL(join(directory, 'remote-compose-card.js'))));
 } finally {
   rmSync(directory, { recursive: true, force: true });
