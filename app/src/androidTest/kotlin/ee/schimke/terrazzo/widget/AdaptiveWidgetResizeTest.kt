@@ -157,7 +157,7 @@ class AdaptiveWidgetResizeTest {
     val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
     val descriptor =
       automation.executeShellCommand(
-        "timeout 30s am wait-for-broadcast-idle --flush-broadcast-loopers 2>&1; echo BROADCAST_BARRIER_EXIT:${'$'}?"
+        "timeout 30s am wait-for-broadcast-idle --flush-broadcast-loopers"
       )
     val output =
       android.os.ParcelFileDescriptor.AutoCloseInputStream(descriptor).bufferedReader().use {
@@ -165,7 +165,7 @@ class AdaptiveWidgetResizeTest {
       }
     assertTrue(
       "Provider broadcasts must finish: $output",
-      output.lineSequence().any { it.trim() == "BROADCAST_BARRIER_EXIT:0" },
+      output.lineSequence().any { it.trim() == "All broadcast queues are idle!" },
     )
     InstrumentationRegistry.getInstrumentation().waitForIdleSync()
   }
