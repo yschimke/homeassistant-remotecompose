@@ -44,7 +44,12 @@ actor RemoteComposeService {
     guard let absolute = URL(string: relative, relativeTo: configuration.baseURL)?.absoluteURL,
       var components = URLComponents(url: absolute, resolvingAgainstBaseURL: true)
     else { throw URLError(.badURL) }
-    components.scheme = components.scheme == "https" ? "wss" : "ws"
+    switch components.scheme?.lowercased() {
+    case "http": components.scheme = "ws"
+    case "https": components.scheme = "wss"
+    case "ws", "wss": break
+    default: throw URLError(.badURL)
+    }
     guard let url = components.url else { throw URLError(.badURL) }
     return url
   }
