@@ -1,5 +1,7 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.ha.design.CardBindingRecipe
+import ee.schimke.ha.design.CardBindingRecipes
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
@@ -21,8 +23,9 @@ import kotlinx.serialization.json.put
 /**
  * Pins the embed's JavaScript port of the slot bindings (`embed/ha-card.js`) to ha-model: every
  * case in `embed/test/bindings-golden.json` must carry exactly the bindings
- * [CardDesignSlots.slotBindings] derives. `embed/test/bindings.test.mjs` checks the port against
- * the same file, so the two can only agree through it.
+ * [CardDesignSlots.slotBindings] derives, plus those of the case's binding recipe
+ * ([CardBindingRecipe.evaluate]) when it has one. `embed/test/bindings.test.mjs` checks the port
+ * against the same file, so the two can only agree through it.
  *
  * After changing a case, rewrite the expectations with `./gradlew :design-server:test --tests
  * '*EmbedBindingsGoldenTest*' -Pembed.golden.update=true`.
@@ -36,7 +39,11 @@ class EmbedBindingsGoldenTest {
   fun portMatchesHaModel() {
     val golden = Json.parseToJsonElement(file.readText()).jsonObject
     val cases = golden.getValue("cases").jsonArray.map { it.jsonObject }
-    val computed = cases.map { case -> JsonObject(case + ("expected" to expected(case))) }
+    val computed = cases.map { case ->
+      val recipe = recipeOf(case)
+      val resolved = recipe?.let { mapOf("recipe_json" to it.toJson()) }.orEmpty()
+      JsonObject(case + resolved + ("expected" to expected(case, recipe)))
+    }
 
     if (System.getProperty("embed.golden.update") == "true") {
       val updated = JsonObject(golden + ("cases" to kotlinx.serialization.json.JsonArray(computed)))
@@ -52,7 +59,22 @@ class EmbedBindingsGoldenTest {
     }
   }
 
-  private fun expected(case: JsonObject): JsonObject {
+  /**
+   * A case's binding recipe: `"recipe"` names a built-in one ([CardBindingRecipes.forPrototype]) or
+   * is one inline. The test writes it out as `recipe_json`, which is what the embed evaluates.
+   */
+  private fun recipeOf(case: JsonObject): CardBindingRecipe? =
+    when (val recipe = case["recipe"]) {
+      null -> null
+      is JsonObject ->
+        requireNotNull(CardBindingRecipe.parse(recipe)) { "bad recipe in ${case["name"]}" }
+      else ->
+        requireNotNull(CardBindingRecipes.forPrototype(recipe.jsonPrimitive.content)) {
+          "no built-in recipe ${recipe.jsonPrimitive.content}"
+        }
+    }
+
+  private fun expected(case: JsonObject, recipe: CardBindingRecipe?): JsonObject {
     val card = case.getValue("card").jsonObject
     val states =
       case.getValue("states").jsonObject.mapValues { (id, value) ->
@@ -64,7 +86,10 @@ class EmbedBindingsGoldenTest {
         )
       }
     val config = CardConfig(card["type"]?.jsonPrimitive?.contentOrNull.orEmpty(), card)
-    val bindings = CardDesignSlots.slotBindings(config, HaSnapshot(states = states))
+    val snapshot = HaSnapshot(states = states)
+    val slots = CardDesignSlots.slotBindings(config, snapshot)
+    // As template playback pushes them: the card-level bindings on top of the slot ones.
+    val bindings = recipe?.let { slots + it.evaluate(config, snapshot) } ?: slots
     return buildJsonObject {
       put("strings", JsonObject(bindings.strings.mapValues { JsonPrimitive(it.value) }))
       put("booleans", JsonObject(bindings.booleans.mapValues { JsonPrimitive(it.value) }))

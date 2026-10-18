@@ -1,5 +1,5 @@
 {
-    "_comment": "Inputs for the slot-binding port in embed/ha-card.js. `expected` is written by design-server's EmbedBindingsGoldenTest from ha-model (CardDesignSlots.slotBindings); run it with -Pembed.golden.update=true after changing a case. Floats are exact float values as doubles, or \"NaN\".",
+    "_comment": "Inputs for the slot-binding and binding-recipe ports in embed/ha-card.js. `expected` (and `recipe_json`, for a case with a `recipe`: a built-in prototype name or an inline recipe) is written by design-server's EmbedBindingsGoldenTest from ha-model (CardDesignSlots.slotBindings plus CardBindingRecipe.evaluate); run it with -Pembed.golden.update=true after changing a case. Floats are exact float values as doubles, or \"NaN\".",
     "cases": [
         {
             "name": "numeric and text formatting",
@@ -1772,6 +1772,708 @@
                     "sensor.s37.numeric_state": "NaN",
                     "sensor.s38.numeric_state": "NaN",
                     "sensor.s39.numeric_state": 5.0
+                }
+            }
+        },
+        {
+            "name": "gauge recipe defaults",
+            "recipe": "gauge",
+            "card": {
+                "type": "gauge",
+                "entity": "sensor.cpu"
+            },
+            "states": {
+                "sensor.cpu": {
+                    "state": "64",
+                    "attributes": {
+                        "unit_of_measurement": "%",
+                        "friendly_name": "CPU"
+                    }
+                }
+            },
+            "recipe_json": {
+                "v": 1,
+                "prototype": "gauge",
+                "floats": {
+                    "card.min": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "min"
+                                }
+                            },
+                            0
+                        ]
+                    },
+                    "card.max": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "max"
+                                }
+                            },
+                            100
+                        ]
+                    },
+                    "card.severity_green": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "severity.green"
+                                }
+                            },
+                            1.0E30
+                        ]
+                    },
+                    "card.severity_yellow": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "severity.yellow"
+                                }
+                            },
+                            1.0E30
+                        ]
+                    },
+                    "card.severity_red": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "severity.red"
+                                }
+                            },
+                            1.0E30
+                        ]
+                    },
+                    "$0.numeric_state": {
+                        "first": [
+                            {
+                                "number": {
+                                    "state": 0
+                                }
+                            },
+                            {
+                                "ref": "card.min"
+                            }
+                        ]
+                    }
+                },
+                "strings": {
+                    "card.range": {
+                        "fn": "range_text",
+                        "args": [
+                            {
+                                "ref": "card.min"
+                            },
+                            {
+                                "ref": "card.max"
+                            },
+                            {
+                                "first": [
+                                    {
+                                        "config": "unit"
+                                    },
+                                    {
+                                        "attr": "unit_of_measurement",
+                                        "slot": 0
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            "expected": {
+                "strings": {
+                    "sensor.s0.state": "64 %",
+                    "sensor.s0.name": "CPU",
+                    "card.range": "0 – 100 %"
+                },
+                "booleans": {
+                    "sensor.s0.is_on": false,
+                    "sensor.s0.is_available": true
+                },
+                "ints": {
+                    "sensor.s0.state_int": -1,
+                    "sensor.s0.status": 0
+                },
+                "floats": {
+                    "sensor.s0.numeric_state": 64.0,
+                    "card.min": 0.0,
+                    "card.max": 100.0,
+                    "card.severity_green": 1.0000000150474662E30,
+                    "card.severity_yellow": 1.0000000150474662E30,
+                    "card.severity_red": 1.0000000150474662E30
+                }
+            }
+        },
+        {
+            "name": "gauge recipe config",
+            "recipe": "gauge",
+            "card": {
+                "type": "gauge",
+                "entity": "sensor.cpu",
+                "name": "Processor",
+                "min": "-10",
+                "max": 42.5,
+                "unit": "°C",
+                "severity": {
+                    "green": 0,
+                    "yellow": "30.25",
+                    "red": 40
+                }
+            },
+            "states": {
+                "sensor.cpu": {
+                    "state": "unavailable",
+                    "attributes": {
+                        "unit_of_measurement": "%",
+                        "friendly_name": "CPU"
+                    }
+                }
+            },
+            "recipe_json": {
+                "v": 1,
+                "prototype": "gauge",
+                "floats": {
+                    "card.min": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "min"
+                                }
+                            },
+                            0
+                        ]
+                    },
+                    "card.max": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "max"
+                                }
+                            },
+                            100
+                        ]
+                    },
+                    "card.severity_green": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "severity.green"
+                                }
+                            },
+                            1.0E30
+                        ]
+                    },
+                    "card.severity_yellow": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "severity.yellow"
+                                }
+                            },
+                            1.0E30
+                        ]
+                    },
+                    "card.severity_red": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "severity.red"
+                                }
+                            },
+                            1.0E30
+                        ]
+                    },
+                    "$0.numeric_state": {
+                        "first": [
+                            {
+                                "number": {
+                                    "state": 0
+                                }
+                            },
+                            {
+                                "ref": "card.min"
+                            }
+                        ]
+                    }
+                },
+                "strings": {
+                    "card.range": {
+                        "fn": "range_text",
+                        "args": [
+                            {
+                                "ref": "card.min"
+                            },
+                            {
+                                "ref": "card.max"
+                            },
+                            {
+                                "first": [
+                                    {
+                                        "config": "unit"
+                                    },
+                                    {
+                                        "attr": "unit_of_measurement",
+                                        "slot": 0
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            "expected": {
+                "strings": {
+                    "sensor.s0.state": "Unavailable",
+                    "sensor.s0.name": "Processor",
+                    "card.range": "-10 – 42.5 °C"
+                },
+                "booleans": {
+                    "sensor.s0.is_on": false,
+                    "sensor.s0.is_available": false
+                },
+                "ints": {
+                    "sensor.s0.state_int": -1,
+                    "sensor.s0.status": 1
+                },
+                "floats": {
+                    "sensor.s0.numeric_state": -10.0,
+                    "card.min": -10.0,
+                    "card.max": 42.5,
+                    "card.severity_green": 0.0,
+                    "card.severity_yellow": 30.25,
+                    "card.severity_red": 40.0
+                }
+            }
+        },
+        {
+            "name": "gauge recipe decimals and no unit",
+            "recipe": "gauge",
+            "card": {
+                "type": "gauge",
+                "entity": "sensor.cpu",
+                "min": 0.25,
+                "max": 99.95
+            },
+            "states": {
+                "sensor.cpu": {
+                    "state": " 12.5f ",
+                    "attributes": {}
+                }
+            },
+            "recipe_json": {
+                "v": 1,
+                "prototype": "gauge",
+                "floats": {
+                    "card.min": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "min"
+                                }
+                            },
+                            0
+                        ]
+                    },
+                    "card.max": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "max"
+                                }
+                            },
+                            100
+                        ]
+                    },
+                    "card.severity_green": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "severity.green"
+                                }
+                            },
+                            1.0E30
+                        ]
+                    },
+                    "card.severity_yellow": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "severity.yellow"
+                                }
+                            },
+                            1.0E30
+                        ]
+                    },
+                    "card.severity_red": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "severity.red"
+                                }
+                            },
+                            1.0E30
+                        ]
+                    },
+                    "$0.numeric_state": {
+                        "first": [
+                            {
+                                "number": {
+                                    "state": 0
+                                }
+                            },
+                            {
+                                "ref": "card.min"
+                            }
+                        ]
+                    }
+                },
+                "strings": {
+                    "card.range": {
+                        "fn": "range_text",
+                        "args": [
+                            {
+                                "ref": "card.min"
+                            },
+                            {
+                                "ref": "card.max"
+                            },
+                            {
+                                "first": [
+                                    {
+                                        "config": "unit"
+                                    },
+                                    {
+                                        "attr": "unit_of_measurement",
+                                        "slot": 0
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            "expected": {
+                "strings": {
+                    "sensor.s0.state": " 12.5f ",
+                    "sensor.s0.name": "sensor.cpu"
+                },
+                "booleans": {
+                    "sensor.s0.is_on": false,
+                    "sensor.s0.is_available": true
+                },
+                "ints": {
+                    "sensor.s0.state_int": -1,
+                    "sensor.s0.status": 0
+                },
+                "floats": {
+                    "sensor.s0.numeric_state": 12.5,
+                    "card.min": 0.25,
+                    "card.max": 99.94999694824219,
+                    "card.severity_green": 1.0000000150474662E30,
+                    "card.severity_yellow": 1.0000000150474662E30,
+                    "card.severity_red": 1.0000000150474662E30
+                }
+            }
+        },
+        {
+            "name": "gauge recipe missing entity",
+            "recipe": "gauge",
+            "card": {
+                "type": "gauge",
+                "entity": "sensor.cpu",
+                "min": "abc"
+            },
+            "states": {},
+            "recipe_json": {
+                "v": 1,
+                "prototype": "gauge",
+                "floats": {
+                    "card.min": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "min"
+                                }
+                            },
+                            0
+                        ]
+                    },
+                    "card.max": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "max"
+                                }
+                            },
+                            100
+                        ]
+                    },
+                    "card.severity_green": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "severity.green"
+                                }
+                            },
+                            1.0E30
+                        ]
+                    },
+                    "card.severity_yellow": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "severity.yellow"
+                                }
+                            },
+                            1.0E30
+                        ]
+                    },
+                    "card.severity_red": {
+                        "first": [
+                            {
+                                "number": {
+                                    "config": "severity.red"
+                                }
+                            },
+                            1.0E30
+                        ]
+                    },
+                    "$0.numeric_state": {
+                        "first": [
+                            {
+                                "number": {
+                                    "state": 0
+                                }
+                            },
+                            {
+                                "ref": "card.min"
+                            }
+                        ]
+                    }
+                },
+                "strings": {
+                    "card.range": {
+                        "fn": "range_text",
+                        "args": [
+                            {
+                                "ref": "card.min"
+                            },
+                            {
+                                "ref": "card.max"
+                            },
+                            {
+                                "first": [
+                                    {
+                                        "config": "unit"
+                                    },
+                                    {
+                                        "attr": "unit_of_measurement",
+                                        "slot": 0
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            "expected": {
+                "strings": {
+                    "sensor.s0.state": "Unavailable",
+                    "sensor.s0.name": "sensor.cpu"
+                },
+                "booleans": {
+                    "sensor.s0.is_on": false,
+                    "sensor.s0.is_available": false
+                },
+                "ints": {
+                    "sensor.s0.state_int": -1,
+                    "sensor.s0.status": 3
+                },
+                "floats": {
+                    "sensor.s0.numeric_state": 0.0,
+                    "card.min": 0.0,
+                    "card.max": 100.0,
+                    "card.severity_green": 1.0000000150474662E30,
+                    "card.severity_yellow": 1.0000000150474662E30,
+                    "card.severity_red": 1.0000000150474662E30
+                }
+            }
+        },
+        {
+            "name": "inline recipe edge cases",
+            "recipe": {
+                "v": 1,
+                "prototype": "edge",
+                "floats": {
+                    "a": {
+                        "config": {
+                            "nested": 1
+                        }
+                    },
+                    "b": {
+                        "fn": "nope",
+                        "args": []
+                    },
+                    "c": {
+                        "attr": [
+                            1
+                        ]
+                    },
+                    "$9.x": 1,
+                    "d": {
+                        "first": [
+                            {
+                                "config": "missing"
+                            },
+                            7
+                        ]
+                    },
+                    "e": {
+                        "number": {
+                            "attr": "level",
+                            "slot": "0"
+                        }
+                    },
+                    "f": {
+                        "number": "NaN"
+                    },
+                    "$0.custom": {
+                        "number": {
+                            "state": 0
+                        }
+                    }
+                },
+                "strings": {
+                    "s": {
+                        "ref": "d"
+                    },
+                    "t": {
+                        "attr": "friendly_name"
+                    },
+                    "u": {
+                        "fn": "range_text",
+                        "args": [
+                            {
+                                "ref": "d"
+                            },
+                            {
+                                "ref": "e"
+                            },
+                            "x"
+                        ]
+                    },
+                    "v": {
+                        "config": "title"
+                    }
+                }
+            },
+            "card": {
+                "type": "gauge",
+                "entity": "sensor.cpu",
+                "title": 5
+            },
+            "states": {
+                "sensor.cpu": {
+                    "state": "1e2",
+                    "attributes": {
+                        "friendly_name": "CPU",
+                        "level": "3.5"
+                    }
+                }
+            },
+            "recipe_json": {
+                "v": 1,
+                "prototype": "edge",
+                "floats": {
+                    "a": {
+                        "config": {
+                            "nested": 1
+                        }
+                    },
+                    "b": {
+                        "fn": "nope",
+                        "args": []
+                    },
+                    "c": {
+                        "attr": [
+                            1
+                        ]
+                    },
+                    "$9.x": 1,
+                    "d": {
+                        "first": [
+                            {
+                                "config": "missing"
+                            },
+                            7
+                        ]
+                    },
+                    "e": {
+                        "number": {
+                            "attr": "level",
+                            "slot": "0"
+                        }
+                    },
+                    "f": {
+                        "number": "NaN"
+                    },
+                    "$0.custom": {
+                        "number": {
+                            "state": 0
+                        }
+                    }
+                },
+                "strings": {
+                    "s": {
+                        "ref": "d"
+                    },
+                    "t": {
+                        "attr": "friendly_name"
+                    },
+                    "u": {
+                        "fn": "range_text",
+                        "args": [
+                            {
+                                "ref": "d"
+                            },
+                            {
+                                "ref": "e"
+                            },
+                            "x"
+                        ]
+                    },
+                    "v": {
+                        "config": "title"
+                    }
+                }
+            },
+            "expected": {
+                "strings": {
+                    "card.title": "5",
+                    "sensor.s0.state": "100",
+                    "sensor.s0.name": "CPU",
+                    "s": "7",
+                    "t": "CPU",
+                    "u": "7 – 3.5 x",
+                    "v": "5"
+                },
+                "booleans": {
+                    "sensor.s0.is_on": false,
+                    "sensor.s0.is_available": true
+                },
+                "ints": {
+                    "sensor.s0.state_int": -1,
+                    "sensor.s0.status": 0
+                },
+                "floats": {
+                    "sensor.s0.numeric_state": 100.0,
+                    "d": 7.0,
+                    "e": 3.5,
+                    "f": "NaN",
+                    "sensor.s0.custom": 100.0
                 }
             }
         }

@@ -652,6 +652,165 @@ export function slotBindings(card, states) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Binding recipes: a port of ha-model's `CardBindingRecipe`, a template's card-level bindings
+// (`card.min`, `card.range`, …) as data.
+// ---------------------------------------------------------------------------------------------
+
+/** `CardBindingRecipe.BINDING`: the named string a template carries its recipe in. */
+export const RECIPE_BINDING = 'meta.binding_recipe';
+const RECIPE_VERSION = 1;
+const JAVA_SPECIAL = /^[\x00-\x20]*([+-]?)(NaN|Infinity)[\x00-\x20]*$/;
+
+/** Kotlin's `String.toDoubleOrNull` (decimal forms; hexadecimal floats read as null). */
+function toDoubleOrNull(text) {
+  const special = JAVA_SPECIAL.exec(text);
+  if (special) return special[2] === 'NaN' ? Number.NaN : special[1] === '-' ? -Infinity : Infinity;
+  if (!JAVA_DECIMAL.test(text)) return null;
+  // eslint-disable-next-line no-control-regex
+  const value = Number(text.replace(/^[\x00-\x20]+|[\x00-\x20]+$/g, '').replace(/[fFdD]$/, ''));
+  return Number.isNaN(value) ? null : value;
+}
+
+/** `CardBindingRecipe.formatRangeNumber`: whole numbers bare, else one decimal, half up. */
+export function formatRangeNumber(d) {
+  if (!Number.isFinite(d)) return String(d);
+  if (Number.isInteger(d)) return BigInt(d).toString();
+  const tenths = Math.floor(d * 10 + 0.5);
+  const sign = tenths < 0 ? '-' : '';
+  const abs = Math.abs(tenths);
+  return `${sign}${Math.floor(abs / 10)}.${abs % 10}`;
+}
+
+/** `CardBindingRecipe.rangeText`. */
+export function rangeText(min, max, unit) {
+  return `${formatRangeNumber(min)} – ${formatRangeNumber(max)} ${unit ?? ''}`;
+}
+
+/** `CardBindingRecipe.FUNCTIONS`. */
+const RECIPE_FUNCTIONS = {
+  range_text: ([min, max, unit]) =>
+    typeof min === 'number' && typeof max === 'number' && typeof unit === 'string'
+      ? rangeText(min, max, unit)
+      : null,
+};
+
+/** `CardBindingRecipe.parse`: the recipe in [json] (text or object), or null. */
+export function parseRecipe(json) {
+  let recipe = json;
+  if (typeof json === 'string') {
+    try {
+      recipe = JSON.parse(json);
+    } catch {
+      return null;
+    }
+  }
+  if (!isObject(recipe) || recipe.v !== RECIPE_VERSION || typeof recipe.prototype !== 'string') return null;
+  return {
+    prototype: recipe.prototype,
+    floats: isObject(recipe.floats) ? recipe.floats : {},
+    strings: isObject(recipe.strings) ? recipe.strings : {},
+  };
+}
+
+/** `CardBindingRecipe.evaluate`: the bindings [recipe] gives for [card] and [states]. */
+export function recipeBindings(recipe, card, states) {
+  const slots = (slotEntries(card) ?? []).map((e) => e.entityId);
+  const values = new Map();
+  const floats = {};
+  const strings = {};
+  const number = (v) => (typeof v === 'number' ? v : typeof v === 'string' ? toDoubleOrNull(v) : null);
+  // kotlinx `intOrNull`: the primitive's text as an Int.
+  const slotIndex = (slot) => {
+    const text = content(slot);
+    return text !== null && /^[+-]?\d{1,9}$/.test(text) ? Number(text) : null;
+  };
+  const entity = (slot) => {
+    const index = slotIndex(slot);
+    return index !== null && index >= 0 && index < slots.length ? states[slots[index]] ?? null : null;
+  };
+  const bindingName = (name) => {
+    if (!name.startsWith('$')) return name;
+    const dot = name.indexOf('.');
+    const index = name.substring(1, dot < 0 ? name.length : dot);
+    if (!/^[+-]?\d+$/.test(index)) return null;
+    const entityId = slots[Number(index)];
+    if (entityId === undefined) return null;
+    const slot = slotId(domainOf(entityId), Number(index));
+    return dot < 0 ? slot : slot + name.substring(dot);
+  };
+  const evaluate = (expr) => {
+    if (expr === null || expr === undefined || Array.isArray(expr)) return null;
+    if (typeof expr === 'string') return expr;
+    if (typeof expr === 'number') return expr;
+    if (typeof expr === 'boolean') return null;
+    if ('config' in expr) {
+      const path = typeof expr.config === 'string' || typeof expr.config === 'number' ? String(expr.config) : null;
+      if (path === null) return null;
+      let node = card;
+      for (const part of path.split('.')) {
+        if (!isObject(node) || !(part in node)) return null;
+        node = node[part];
+      }
+      return content(node);
+    }
+    if ('state' in expr) {
+      const state = entity(expr.state);
+      return state ? state.state : null;
+    }
+    if ('attr' in expr) {
+      const name = content(expr.attr);
+      const state = entity('slot' in expr ? expr.slot : 0);
+      if (name === null || !state || !isObject(state.attributes)) return null;
+      return content(state.attributes[name]);
+    }
+    if ('number' in expr) return number(evaluate(expr.number));
+    if ('first' in expr) {
+      if (!Array.isArray(expr.first)) return null;
+      for (const e of expr.first) {
+        const v = evaluate(e);
+        if (v !== null) return v;
+      }
+      return null;
+    }
+    if ('ref' in expr) return values.get(content(expr.ref)) ?? null;
+    if ('fn' in expr) {
+      const fn = Object.hasOwn(RECIPE_FUNCTIONS, content(expr.fn) ?? '') ? RECIPE_FUNCTIONS[content(expr.fn)] : null;
+      const args = Array.isArray(expr.args) ? expr.args.map(evaluate) : [];
+      return fn ? fn(args) : null;
+    }
+    return null;
+  };
+  for (const [name, expr] of Object.entries(recipe.floats)) {
+    const value = number(evaluate(expr));
+    const key = bindingName(name);
+    if (value === null || key === null) continue;
+    values.set(name, value);
+    floats[key] = Math.fround(value);
+  }
+  for (const [name, expr] of Object.entries(recipe.strings)) {
+    const v = evaluate(expr);
+    const value = v === null ? null : typeof v === 'number' ? formatRangeNumber(v) : String(v);
+    const key = bindingName(name);
+    if (value === null || key === null) continue;
+    values.set(name, value);
+    strings[key] = value;
+  }
+  return { strings, floats };
+}
+
+/** Slot bindings with [recipe]'s card-level ones on top (`slotBindings + designBindings`). */
+export function cardBindings(card, states, recipe) {
+  const bindings = slotBindings(card, states);
+  if (!recipe) return bindings;
+  const extra = recipeBindings(recipe, card, states);
+  return {
+    ...bindings,
+    strings: { ...bindings.strings, ...extra.strings },
+    floats: { ...bindings.floats, ...extra.floats },
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
 // Actions: a template only picks which of the card's own actions runs.
 // ---------------------------------------------------------------------------------------------
 
@@ -1170,6 +1329,20 @@ function patchStringOverrides(context) {
   context.__haCardTexts = texts;
 }
 
+/**
+ * The binding recipe a loaded template carries ([RECIPE_BINDING]), or null: a template captured
+ * from a converter whose card-level bindings are data (`CardConverter.designRecipe`).
+ */
+function templateRecipe(context) {
+  const variable = context && context.namedVariables && context.namedVariables.get(`USER:${RECIPE_BINDING}`);
+  if (!variable || variable.type !== 0) return null;
+  try {
+    return parseRecipe(context.getText(variable.id));
+  } catch {
+    return null;
+  }
+}
+
 /** Height of the laid-out card in canvas pixels, read from the root layout; 0 if unknown. */
 function contentHeight(player) {
   try {
@@ -1376,13 +1549,16 @@ export class HaCardElement extends BaseElement {
     this.player = player;
     this.pushed.clear();
     patchStringOverrides(player.getRemoteContext());
+    this.recipe = templateRecipe(player.getRemoteContext());
     if (this.hasAttribute('require-host-bindings')) {
-      const bindings = slotBindings(card, this.states);
+      const bindings = cardBindings(card, this.states, this.recipe);
       for (const [name, variable] of player.getRemoteContext().namedVariables) {
         const key = name.replace(/^USER:/, '');
         // Colors are template/theme constants. Every data declaration must have a host value;
         // leaving a converter-specific declaration alone would display the library's fixture.
+        // The recipe declares the card-level values; it is read, never shown.
         const supported = variable.type === 2 ||
+          (variable.type === 0 && key === RECIPE_BINDING) ||
           (variable.type === 0 && Object.hasOwn(bindings.strings, key)) ||
           (variable.type === 1 && Object.hasOwn(bindings.floats, key)) ||
           (variable.type === 4 && (Object.hasOwn(bindings.ints, key) || Object.hasOwn(bindings.booleans, key)));
@@ -1474,7 +1650,7 @@ export class HaCardElement extends BaseElement {
     if (!player || !card) return;
     const context = player.getRemoteContext();
     if (!context) return;
-    const bindings = slotBindings(card, this.states);
+    const bindings = cardBindings(card, this.states, this.recipe);
     const push = (name, value, set) => {
       const key = `USER:${name}`;
       if (Object.is(this.pushed.get(key), value)) return false;

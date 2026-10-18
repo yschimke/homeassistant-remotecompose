@@ -5,6 +5,8 @@ package ee.schimke.ha.rc.cards
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.design.CardBindingRecipe
+import ee.schimke.ha.design.CardBindingRecipes
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
@@ -14,7 +16,6 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
-import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
@@ -24,7 +25,6 @@ import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaGauge
 import ee.schimke.ha.rc.components.RemoteHaGaugeStacked
 import ee.schimke.ha.rc.components.RemoteHaGaugeWide
-import ee.schimke.ha.rc.components.gaugeRangeText
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.parseHaAction
@@ -101,29 +101,8 @@ class GaugeCardConverter : CardConverter {
     return DesignTemplateInput(card, HaSnapshot(states = mapOf(slot to entity)))
   }
 
-  override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings {
-    val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull
-    val entity = entityId?.let { snapshot.states[it] }
-    val (min, max) = rangeOf(card)
-    val bands = bandsOf(card)
-    val floats = buildMap {
-      put("card.min", min.toFloat())
-      put("card.max", max.toFloat())
-      // An unset band is a threshold no value reaches, as RemoteHaGauge bakes it.
-      put("card.severity_green", bands.green?.toFloat() ?: UNSET_THRESHOLD)
-      put("card.severity_yellow", bands.yellow?.toFloat() ?: UNSET_THRESHOLD)
-      put("card.severity_red", bands.red?.toFloat() ?: UNSET_THRESHOLD)
-      // A non-numeric state sits at `min`, as gaugeData reads it.
-      entityId?.let {
-        val slot = CardDesignSlots.slotId(CardDesignSlots.domainOf(it), 0)
-        put("$slot.numeric_state", (entity?.state?.toDoubleOrNull() ?: min).toFloat())
-      }
-    }
-    val strings = buildMap {
-      unitOf(card, entity)?.let { put("card.range", gaugeRangeText(min, max, it)) }
-    }
-    return CardSnapshotBindings(strings, emptyMap(), emptyMap(), floats)
-  }
+  /** Range, severity bands and range line, as data: [CardBindingRecipes.GAUGE]. */
+  override fun designRecipe(): CardBindingRecipe = CardBindingRecipes.GAUGE
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
@@ -167,9 +146,6 @@ class GaugeCardConverter : CardConverter {
     val SEVERITY_KEYS = setOf("green", "yellow", "red")
     const val HAS_UNIT = "has_unit"
     const val DOMAIN = "domain"
-
-    /** Mirrors RemoteHaGauge's threshold for an unset band. */
-    const val UNSET_THRESHOLD = 1e30f
   }
 
   @Composable
