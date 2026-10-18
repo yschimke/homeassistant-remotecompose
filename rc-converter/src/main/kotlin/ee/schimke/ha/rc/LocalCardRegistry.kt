@@ -111,9 +111,9 @@ fun CardRegistry.cardWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWid
 }
 
 /**
- * Host-side lookup of a card's [WidgetSizeConstraints] — the comfortable default size used to pick
- * a launcher widget's cell. Unknown / unsupported cards fall back to the unsupported-placeholder
- * converter's size; failing that, a conservative full-width default.
+ * Host-side lookup of a card's [WidgetSizeConstraints] — the preferred content size used to pick a
+ * launcher provider's resize range. Unknown / unsupported cards fall back to the
+ * unsupported-placeholder converter's size; failing that, a conservative full-width default.
  */
 fun CardRegistry.cardSizeConstraints(
   card: CardConfig,

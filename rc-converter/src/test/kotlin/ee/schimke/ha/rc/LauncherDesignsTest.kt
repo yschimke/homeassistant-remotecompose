@@ -112,8 +112,8 @@ class LauncherDesignsTest {
   fun resizeSelectsTheFullLayoutRatherThanOnlyStretchingTheIcon() {
     val card = card("tile", "light.kitchen")
     val snapshot = snapshotOf(entity("light.kitchen", "on"))
-    fun textLayouts(width: Int): Int {
-      val document = bake(card, snapshot, width, 168)
+    fun textLayouts(width: Int, height: Int): Int {
+      val document = bake(card, snapshot, width, height)
       val operations = arrayListOf<Operation>()
       RemoteComposeBuffer.fromInputStream(platformWidgetDocument(document.bytes).inputStream())
         .inflateFromBuffer(operations)
@@ -121,14 +121,88 @@ class LauncherDesignsTest {
         it is androidx.compose.remote.core.operations.layout.managers.TextLayout
       }
     }
-    assertEquals(1, textLayouts(72), "Compact shows the state beneath the icon")
-    assertEquals(2, textLayouts(144), "Wide widgets show both the editable name and state")
+    assertEquals(1, textLayouts(72, 84), "Compact shows the state beneath the icon")
+    assertEquals(2, textLayouts(144, 168), "Wide widgets show both the editable name and state")
   }
+
+  @Test
+  fun oneCellListsBakeTheFirstEntityAndResizeRevealsMore() {
+    val snapshot = snapshotOf(entity("light.kitchen", "on"), entity("sensor.hall", "23.5"))
+    for (type in listOf("entities", "glance")) {
+      val card =
+        CardConfig(
+          type,
+          kotlinx.serialization.json.Json.parseToJsonElement(
+            """{"type":"$type","entities":[{"entity":"light.kitchen","name":"Kitchen"},"sensor.hall"]}"""
+          ) as JsonObject,
+        )
+      val compact = bake(card, snapshot, 72, 84)
+      val roomy = bake(card, snapshot, 288, 252)
+      fun text(bytes: ByteArray) = String(bytes, Charsets.UTF_8)
+      assertTrue("On" in text(compact.bytes), "$type must show the first entity state at 1x1")
+      assertFalse("23.5" in text(compact.bytes), "$type must not cram the second row into 1x1")
+      assertTrue("23.5" in text(roomy.bytes), "$type resize must reveal the other entities")
+      assertTrue(RcDocumentCodec.decode(compact.bytes, RcWireLimits()).namedVariables.isEmpty())
+      assertTrue(
+        compact.actions.values.any { it != HaAction.None },
+        "$type keeps the first entity action",
+      )
+      val off =
+        bake(
+          card,
+          snapshotOf(entity("light.kitchen", "off"), entity("sensor.hall", "23.5")),
+          72,
+          84,
+        )
+      assertFalse(compact.bytes.contentEquals(off.bytes), "$type state must refresh at 1x1")
+    }
+  }
+
+  @Test
+  fun oneCellTileMatchesDirectCaptureWithTheLiveOffTint() =
+    assertWidgetParity(
+      "one-cell-tile-off",
+      card("tile", "light.kitchen"),
+      snapshotOf(entity("light.kitchen", "off")),
+      widthDp = 72,
+      heightDp = 84,
+      played = true,
+    )
+
+  @Test
+  fun twoCellTileMatchesDirectCaptureAfterResizing() =
+    assertWidgetParity(
+      "two-cell-tile-off",
+      card("tile", "light.kitchen"),
+      snapshotOf(entity("light.kitchen", "off", "friendly_name" to "Kitchen")),
+      widthDp = 144,
+      heightDp = 84,
+      played = true,
+    )
+
+  @Test
+  fun oneCellEntitiesMatchesDirectCaptureWithTheLiveOffTint() =
+    assertWidgetParity(
+      "one-cell-entities-off",
+      CardConfig(
+        "entities",
+        kotlinx.serialization.json.Json.parseToJsonElement(
+          """{"type":"entities","entities":["light.kitchen","sensor.hall"]}"""
+        ) as JsonObject,
+      ),
+      snapshotOf(entity("light.kitchen", "off"), entity("sensor.hall", "23.5")),
+      widthDp = 72,
+      heightDp = 84,
+      played = true,
+    )
 
   @get:Rule val compose = createComposeRule()
 
   private val registry = CardDesignTemplates.defaultTemplateRegistry
-  private val density = 420
+  // Match the player's device density: capturing at 420dpi then playing at Robolectric's
+  // default 160dpi clips text and icons even when the baked/direct pixels match.
+  private val density =
+    org.robolectric.RuntimeEnvironment.getApplication().resources.configuration.densityDpi
   private val widthDp = 180
   private val heightDp = 80
 

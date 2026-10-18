@@ -1,22 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  TALL Terrazzo size class — list cards (entities/glance) with enough
-  rows to want vertical room by default. Backed by
-  TerrazzoWidgetProviderTall; chosen by WidgetSizeClass.Tall.
-
-  Opinionated range, ~2x2 .. 4x4 cells: room for several rows, but
-  capped so a list can't be dragged out to a slot far taller than its
-  content. The width-axis reflow still kicks in past ~260dp wide; the
-  widget surface fills the cell either way. See terrazzo_widget_info.xml
-  for the shared rationale.
+  TALL — many-row lists, resizable up to about 4x4 cells.
+  Every launcher variant starts at 1x1 and can resize in both axes.
+  Keep provider identities and maximums so existing installations retain their slots.
+  Updates are driven by Home Assistant state changes, not framework polling.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="150dp"
-    android:minHeight="120dp"
-    android:targetCellWidth="4"
-    android:targetCellHeight="3"
-    android:minResizeWidth="150dp"
-    android:minResizeHeight="120dp"
+    android:minWidth="50dp"
+    android:minHeight="50dp"
+    android:targetCellWidth="1"
+    android:targetCellHeight="1"
+    android:minResizeWidth="50dp"
+    android:minResizeHeight="50dp"
     android:maxResizeWidth="300dp"
     android:maxResizeHeight="340dp"
     android:resizeMode="horizontal|vertical"

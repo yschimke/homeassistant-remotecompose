@@ -214,7 +214,7 @@ fun RemoteHaTileCompact(data: HaTileData, modifier: RemoteModifier = RemoteModif
         .padding(horizontal = 12.rdp, vertical = 3.rdp)
   ) {
     RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
-      // Static like the accent: this tier registers no `is_on` binding.
+      // A capture-selected launcher tier can bind state without colliding with hidden siblings.
       RemoteBox(
         modifier =
           RemoteModifier.size(24.rdp)
@@ -292,16 +292,23 @@ const val TileTwoLineMinHeightDp: Int = 56
  *   likewise blanks the sibling full tier at playback. The tinted glyph alone carries the identity
  *   — the circle halo is the cosmetic part, and dropping it costs nothing semantically.
  *
+ * [bindState] is safe when capture selected only this tier (launcher templates): it lets the bake
+ * apply the real on/off tint instead of the placeholder entity's state.
+ *
  * Both are cosmetic — the icon, not its tint animation or halo, is what says what kind of card this
  * is. Revisit the circle / live colour once the alpha010 state-layout bugs (#224) lift.
  */
 @Composable
 @RemoteComposable
-fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaIconChip(
+  data: HaTileData,
+  modifier: RemoteModifier = RemoteModifier,
+  bindState: Boolean = false,
+) {
   val theme = haTheme()
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val look = entityLook(data.entityId, data.accent, live = false)
+  val look = entityLook(data.entityId, data.accent, live = bindState)
   val accent: RemoteColor = look.accent
 
   RemoteColumn(
@@ -309,7 +316,7 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
     verticalArrangement = RemoteArrangement.Center,
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
-    // Static like the accent: this tier registers no `is_on` binding.
+    // A capture-selected launcher tier can bind state without colliding with hidden siblings.
     RemoteBox(
       modifier =
         RemoteModifier.size(32.rdp)
