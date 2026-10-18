@@ -1,0 +1,35 @@
+# Opt-in native HA UI. The existing /demo-ha API remains a separate service.
+services:
+  native:
+    build: .
+    image: public-demo-ha-native:latest
+    restart: unless-stopped
+    environment:
+      HA_URL: http://homeassistant:8123
+      NATIVE_PUBLIC_URL: https://ha-demo.coo.ee
+    secrets: [native_user_id]
+    networks:
+      private: {}
+      edge:
+        aliases: [demo-ha-native]
+    command: [python, native_gateway.py]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 0.5
+    logging:
+      driver: json-file
+      options: {max-size: 5m, max-file: "2"}
+  native-setup:
+    image: ghcr.io/home-assistant/home-assistant:2026.10.2
+    profiles: [native-setup]
+    network_mode: none
+    volumes:
+      - ha_config:/config
+      - ./private:/private
+      - ./native_prepare.py:/native_prepare.py:ro
+    command: [python, /native_prepare.py]
+secrets:
+  native_user_id:
+    file: ./private/native_user_id

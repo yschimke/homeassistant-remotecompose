@@ -31,7 +31,8 @@
               "entity": "sensor.demo_temperature",
               "name": "Room temperature"
             }
-          ]
+          ],
+          "type": "grid"
         },
         {
           "title": "Power station",
@@ -67,7 +68,8 @@
                 "green": 50
               }
             }
-          ]
+          ],
+          "type": "grid"
         },
         {
           "title": "Around the house",
@@ -105,9 +107,11 @@
                 "switch.demo_coffee"
               ]
             }
-          ]
+          ],
+          "type": "grid"
         }
-      ]
+      ],
+      "type": "sections"
     }
   ]
 }
