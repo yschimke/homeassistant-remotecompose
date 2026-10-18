@@ -82,11 +82,18 @@ class HaDiscovery(context: Context) {
           override fun onServiceResolved(resolved: NsdServiceInfo) {
             if (cont.isCompleted) return
             val attrs = resolved.attributes
-            val address = resolved.hostAddresses.firstOrNull()?.hostAddress
             val baseUrl =
-              attrs["internal_url"]?.decode()
-                ?: attrs["base_url"]?.decode()
-                ?: "http://$address:${resolved.port}"
+              discoveredBaseUrl(
+                internalUrl = attrs["internal_url"]?.decode(),
+                baseUrl = attrs["base_url"]?.decode(),
+                address = resolved.hostAddresses.firstOrNull()?.hostAddress,
+                port = resolved.port,
+              )
+            if (baseUrl == null) {
+              Log.w(TAG, "resolved ${resolved.serviceName} without a usable address")
+              cont.resumeWith(Result.success(null))
+              return
+            }
             cont.resumeWith(
               Result.success(
                 HaInstance(
@@ -107,4 +114,33 @@ class HaDiscovery(context: Context) {
     const val TAG = "HaDiscovery"
     const val SERVICE_TYPE = "_home-assistant._tcp."
   }
+}
+
+/**
+ * The URL to offer for a resolved instance. Home Assistant advertises `internal_url` and `base_url`
+ * as empty strings when they are unset, so blanks fall through to the resolved address; an IPv6
+ * address is bracketed (and its zone escaped) so the URL parses. Null when there is nothing to
+ * connect to.
+ */
+internal fun discoveredBaseUrl(
+  internalUrl: String?,
+  baseUrl: String?,
+  address: String?,
+  port: Int,
+): String? {
+  internalUrl
+    ?.trim()
+    ?.takeIf { it.isNotEmpty() }
+    ?.let {
+      return it
+    }
+  baseUrl
+    ?.trim()
+    ?.takeIf { it.isNotEmpty() }
+    ?.let {
+      return it
+    }
+  val host = address?.takeIf { it.isNotBlank() } ?: return null
+  val authority = if (':' in host) "[${host.replace("%", "%25")}]" else host
+  return "http://$authority:$port"
 }
