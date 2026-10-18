@@ -80,6 +80,7 @@ class DashboardStudioTest {
   fun cardPreviewRequiresEditorAuthorizationAndDelegatesToActualHarcRenderPort() = testApplication {
     val bytes = checkNotNull(javaClass.getResourceAsStream("/tile-light.rc")).use { it.readBytes() }
     var renders = 0
+    var expectedStyle = "braun"
     externalServices {
       hosts("https://builder.test") {
         routing {
@@ -92,7 +93,7 @@ class DashboardStudioTest {
               Json.parseToJsonElement(body.getValue("knob.cardJson").jsonPrimitive.content)
                 .jsonObject
             assertEquals(JsonPrimitive("tile"), card["type"])
-            assertEquals(JsonPrimitive("braun"), body["knob.cardStyle"])
+            assertEquals(JsonPrimitive(expectedStyle), body["knob.cardStyle"])
             assertEquals(JsonPrimitive("true"), body["knob.dark"])
             renders++
             call.respondBytes(bytes, ContentType.Application.OctetStream)
@@ -143,6 +144,35 @@ class DashboardStudioTest {
         .content
     assertContentEquals(bytes, Base64.getDecoder().decode(encoded))
     assertEquals(1, renders)
+    val page = client.get("/studio/dashboard").bodyAsText()
+    val communityStyles =
+      listOf(
+        "mushroom",
+        "bubble",
+        "minimalist",
+        "cupertino",
+        "catppuccin",
+        "obsidian",
+        "noctis",
+        "lcars",
+        "arctic",
+        "aeon",
+      )
+    for (style in communityStyles) {
+      assertTrue(page.contains("<option>$style</option>"), "$style is discoverable")
+      expectedStyle = style
+      assertEquals(
+        HttpStatusCode.OK,
+        client
+          .post("/api/studio/dashboard/preview") {
+            header(HttpHeaders.Cookie, "design-server-edit=operator")
+            setBody(body.replace("\"braun\"", "\"$style\""))
+          }
+          .status,
+        "$style reaches the render port",
+      )
+    }
+    assertEquals(11, renders)
     assertEquals(
       HttpStatusCode.UnprocessableEntity,
       client

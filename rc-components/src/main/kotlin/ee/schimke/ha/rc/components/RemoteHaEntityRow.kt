@@ -268,6 +268,15 @@ fun RemoteHaToggleSwitchByProgress(
     )
     return
   }
+  if (visualFamily().isCommunity) {
+    CommunitySwitch(
+      progress,
+      activeAccent,
+      inactiveAccent,
+      modifier.size(width = TrackWidth, height = TrackHeight).then(clickable),
+    )
+    return
+  }
   // The uber theme's control shape and ink: an LCD switch is a square-knobbed block printed in its
   // ink, a Trinitron one a hairline-cornered slider.
   val uber = currentHaUberTheme()

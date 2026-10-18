@@ -1655,9 +1655,19 @@
             "lcd",
             "braun",
             "nixie",
-            "console"
+            "console",
+            "mushroom",
+            "bubble",
+            "minimalist",
+            "cupertino",
+            "catppuccin",
+            "obsidian",
+            "noctis",
+            "lcars",
+            "arctic",
+            "aeon"
           ],
-          "notes": "A whole look for everything inside: palette, card shape, typeface, how meters are drawn and, for the monochrome themes, one ink. `classic` is the cards' own look; `expressive` Material 3 Expressive (28dp corners, chunky meters with a track gap and stop dot); `trinitron` graphite and tick-scale meters, monospace; `lcd` a segment display with ghost segments (Indiglo backlight in dark mode); `braun` Dieter Rams' warm off-white and hairlines; `nixie` black glass and glowing orange filaments; `console` a skeuomorphic 1970s studio desk (lit hammertone panel, backlit VU meters, metal fader caps, a knob in a lamp ring for dials)."
+          "notes": "A whole look for everything inside: palette, card shape, typeface, how meters are drawn and, for the monochrome themes, one ink. `classic` is the cards' own look; `expressive` Material 3 Expressive (28dp corners, chunky meters with a track gap and stop dot); `trinitron` graphite and tick-scale meters, monospace; `lcd` a segment display with ghost segments (Indiglo backlight in dark mode); `braun` Dieter Rams' warm off-white and hairlines; `nixie` black glass and glowing orange filaments; `console` a skeuomorphic 1970s studio desk (lit hammertone panel, backlit VU meters, metal fader caps, a knob in a lamp ring for dials). Community-inspired families: `mushroom` petal scales; `bubble` round bead meters; `minimalist` index tabs; `cupertino` concentric rings and filled sliders; `catppuccin` stitched lozenges; `obsidian` ruled scales; `noctis` orbital rails; `lcars` elbow bands; `arctic` horizon needles; `aeon` diamond indexes. All ten have light and dark palettes and retain semantic state colours."
         },
         {
           "name": "dark",

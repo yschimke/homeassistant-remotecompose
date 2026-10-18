@@ -48,7 +48,7 @@ import java.time.ZonedDateTime
 private val PreviewNow: ZonedDateTime = ZonedDateTime.of(2026, 5, 5, 10, 8, 0, 0, ZoneOffset.UTC)
 
 @Composable
-private fun UberShowcase(theme: HaUberTheme, darkTheme: Boolean) {
+internal fun UberShowcase(theme: HaUberTheme, darkTheme: Boolean) {
   Box(
     Modifier.uiFillMaxSize().background(theme.palette(darkTheme).dashboardBackground).padding(8.dp)
   ) {

@@ -41,8 +41,11 @@ private val SheetNow: ZonedDateTime = ZonedDateTime.of(2026, 5, 5, 10, 8, 0, 0, 
 private fun HaUberTheme.sheetDark(): Boolean = light == null
 
 @Composable
-private fun UberSheet(theme: HaUberTheme, cards: List<Pair<String, HaSnapshot>>) {
-  val dark = theme.sheetDark()
+internal fun UberSheet(
+  theme: HaUberTheme,
+  cards: List<Pair<String, HaSnapshot>>,
+  dark: Boolean = theme.sheetDark(),
+) {
   Box(Modifier.uiFillMaxSize().background(theme.palette(dark).dashboardBackground).padding(8.dp)) {
     CapturingRemoteContentPreview(profile = androidXExperimental) {
       CompositionLocalProvider(LocalHaClock provides FixedHaClock(SheetNow)) {
@@ -63,14 +66,14 @@ private fun UberSheet(theme: HaUberTheme, cards: List<Pair<String, HaSnapshot>>)
   }
 }
 
-private val Dials =
+internal val Dials =
   listOf(
     """{"type":"thermostat","entity":"climate.living_room"}""" to Fixtures.thermostat,
     """{"type":"humidifier","entity":"humidifier.bedroom"}""" to Fixtures.humidifier,
     """{"type":"light","entity":"light.kitchen"}""" to Fixtures.brightLight,
   )
 
-private val Cards =
+internal val Cards =
   listOf(
     """{"type":"history-graph","title":"Temperature","hours_to_show":24,
         "entities":["sensor.outside_temp","sensor.upstairs_temp"]}""" to

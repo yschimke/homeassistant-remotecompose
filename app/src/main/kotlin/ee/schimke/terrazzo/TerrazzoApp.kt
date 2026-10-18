@@ -1292,6 +1292,16 @@ private fun cardStyleTagline(pref: CardStylePref): String =
     CardStylePref.Braun -> "Dieter Rams · dials and tuning scales"
     CardStylePref.Nixie -> "Glowing tubes · black glass, orange filaments"
     CardStylePref.Console -> "Skeuomorphic studio desk · VU meters, faders, knobs"
+    CardStylePref.Mushroom,
+    CardStylePref.Bubble,
+    CardStylePref.Minimalist,
+    CardStylePref.Cupertino,
+    CardStylePref.Catppuccin,
+    CardStylePref.Obsidian,
+    CardStylePref.Noctis,
+    CardStylePref.Lcars,
+    CardStylePref.Arctic,
+    CardStylePref.Aeon -> pref.toUberTheme().description
   }
 
 @Composable

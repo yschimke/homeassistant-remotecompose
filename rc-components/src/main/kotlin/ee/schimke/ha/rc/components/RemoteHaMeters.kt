@@ -57,6 +57,16 @@ fun RemoteHaArcMeter(
       HaVisualFamily.Braun -> braunArc(look, fraction, baseline)
       HaVisualFamily.Nixie -> nixieArc(look, fraction, strokeWidthPx, baseline)
       HaVisualFamily.Console -> consoleArc(look, fraction, baseline, zones)
+      HaVisualFamily.Mushroom,
+      HaVisualFamily.Bubble,
+      HaVisualFamily.Minimalist,
+      HaVisualFamily.Cupertino,
+      HaVisualFamily.Catppuccin,
+      HaVisualFamily.Obsidian,
+      HaVisualFamily.Noctis,
+      HaVisualFamily.Lcars,
+      HaVisualFamily.Arctic,
+      HaVisualFamily.Aeon -> communityArc(family, look, fraction, strokeWidthPx, baseline, zones)
     }
   }
 }
@@ -87,6 +97,16 @@ fun RemoteHaBarMeter(
       HaVisualFamily.Braun -> braunBar(look, fraction, vertical)
       HaVisualFamily.Nixie -> nixieBar(look, fraction, vertical)
       HaVisualFamily.Console -> consoleBar(look, fraction, vertical)
+      HaVisualFamily.Mushroom,
+      HaVisualFamily.Bubble,
+      HaVisualFamily.Minimalist,
+      HaVisualFamily.Cupertino,
+      HaVisualFamily.Catppuccin,
+      HaVisualFamily.Obsidian,
+      HaVisualFamily.Noctis,
+      HaVisualFamily.Lcars,
+      HaVisualFamily.Arctic,
+      HaVisualFamily.Aeon -> communityBar(family, look, fraction, vertical, zones)
     }
   }
 }
@@ -116,6 +136,16 @@ fun RemoteHaThermometerGlyph(
       HaVisualFamily.Braun -> braunThermometer(look, fraction, zones)
       HaVisualFamily.Nixie -> nixieThermometer(look, fraction)
       HaVisualFamily.Console -> consoleThermometer(look, fraction, zones)
+      HaVisualFamily.Mushroom,
+      HaVisualFamily.Bubble,
+      HaVisualFamily.Minimalist,
+      HaVisualFamily.Cupertino,
+      HaVisualFamily.Catppuccin,
+      HaVisualFamily.Obsidian,
+      HaVisualFamily.Noctis,
+      HaVisualFamily.Lcars,
+      HaVisualFamily.Arctic,
+      HaVisualFamily.Aeon -> communityThermometer(family, look, fraction, zones)
     }
   }
 }
@@ -144,6 +174,16 @@ fun RemoteHaBatteryGlyph(
       HaVisualFamily.Braun -> braunBattery(look, fraction)
       HaVisualFamily.Nixie -> nixieBattery(look, fraction)
       HaVisualFamily.Console -> consoleBattery(look, fraction, zones)
+      HaVisualFamily.Mushroom,
+      HaVisualFamily.Bubble,
+      HaVisualFamily.Minimalist,
+      HaVisualFamily.Cupertino,
+      HaVisualFamily.Catppuccin,
+      HaVisualFamily.Obsidian,
+      HaVisualFamily.Noctis,
+      HaVisualFamily.Lcars,
+      HaVisualFamily.Arctic,
+      HaVisualFamily.Aeon -> communityBattery(family, look, fraction, zones)
     }
   }
 }

@@ -49,6 +49,16 @@ enum class CardStylePref(val id: String) {
   Braun("braun"),
   Nixie("nixie"),
   Console("console"),
+  Mushroom("mushroom"),
+  Bubble("bubble"),
+  Minimalist("minimalist"),
+  Cupertino("cupertino"),
+  Catppuccin("catppuccin"),
+  Obsidian("obsidian"),
+  Noctis("noctis"),
+  Lcars("lcars"),
+  Arctic("arctic"),
+  Aeon("aeon"),
 }
 
 /**

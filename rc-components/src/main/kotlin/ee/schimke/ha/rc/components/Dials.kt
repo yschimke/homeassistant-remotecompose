@@ -61,6 +61,36 @@ internal fun RemoteDrawScope.familyDial(
     HaVisualFamily.Lcd -> lcdDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Braun -> braunDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Nixie -> nixieDial(look, value, target, targetVisible, box, stroke)
+    HaVisualFamily.Mushroom,
+    HaVisualFamily.Bubble,
+    HaVisualFamily.Minimalist,
+    HaVisualFamily.Cupertino,
+    HaVisualFamily.Catppuccin,
+    HaVisualFamily.Obsidian,
+    HaVisualFamily.Noctis,
+    HaVisualFamily.Lcars,
+    HaVisualFamily.Arctic,
+    HaVisualFamily.Aeon -> {
+      communityRing(
+        family,
+        look,
+        value,
+        box.cx,
+        box.cy,
+        box.radius - (stroke * 1.8f).rf,
+        DialStart,
+        DialSweep,
+        stroke,
+      )
+      if (target != null)
+        rotate(target * DialSweep.rf, box.center) {
+          drawCircle(
+            fillPaint(shown(look.text, targetVisible)),
+            (stroke * 0.35f).rf,
+            box.point(DialStart, box.radius - (stroke * 1.8f).rf),
+          )
+        }
+    }
     HaVisualFamily.Classic,
     HaVisualFamily.Console -> Unit
   }

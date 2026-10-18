@@ -37,7 +37,7 @@ import com.materialkolor.dynamicColorScheme
  * The family of visuals a theme draws its meters with. A family is a different *design* of each
  * Layer 2 visual, not a restyle of one drawing: an LCD thermometer is a framed column of segments
  * with no bulb, a Trinitron gauge is a VU meter with a needle, a Braun thermometer is a tuning
- * scale with a pointer. Each family lives in its own `Meters<Family>.kt`.
+ * scale with a pointer. The community adaptations share their vector kit in `MetersCommunity.kt`.
  */
 enum class HaVisualFamily {
   /** The cards' own visuals: liquid thermometer, outlined battery, smooth arc and bar. */
@@ -58,6 +58,16 @@ enum class HaVisualFamily {
    * dial, mechanical keys and rockers with pilot lamps, and a smoked-glass LED clock.
    */
   Console,
+  Mushroom,
+  Bubble,
+  Minimalist,
+  Cupertino,
+  Catppuccin,
+  Obsidian,
+  Noctis,
+  Lcars,
+  Arctic,
+  Aeon,
 }
 
 /** How a reading's value text is set in the measurement presentations. */
@@ -129,6 +139,7 @@ data class HaUberTheme(
   val letterSpacingSp: Float = 0f,
   val valueWeight: FontWeight = FontWeight.SemiBold,
   val unavailable: HaUnavailableStyle = HaUnavailableStyle(),
+  val description: String = "",
 ) {
   init {
     require(light != null || dark != null) { "$id needs a light or a dark palette" }
@@ -373,8 +384,38 @@ data class HaUberTheme(
         valueWeight = FontWeight.Medium,
       )
 
+    val Mushroom = CommunityThemes.Mushroom
+    val Bubble = CommunityThemes.Bubble
+    val Minimalist = CommunityThemes.Minimalist
+    val Cupertino = CommunityThemes.Cupertino
+    val Catppuccin = CommunityThemes.Catppuccin
+    val Obsidian = CommunityThemes.Obsidian
+    val Noctis = CommunityThemes.Noctis
+    val Lcars = CommunityThemes.Lcars
+    val Arctic = CommunityThemes.Arctic
+    val Aeon = CommunityThemes.Aeon
+
     /** Every uber theme, [Classic] first. */
-    val all: List<HaUberTheme> = listOf(Classic, Expressive, Trinitron, Lcd, Braun, Nixie, Console)
+    val all: List<HaUberTheme> =
+      listOf(
+        Classic,
+        Expressive,
+        Trinitron,
+        Lcd,
+        Braun,
+        Nixie,
+        Console,
+        Mushroom,
+        Bubble,
+        Minimalist,
+        Cupertino,
+        Catppuccin,
+        Obsidian,
+        Noctis,
+        Lcars,
+        Arctic,
+        Aeon,
+      )
 
     /** The theme with [id], or [Classic]. */
     fun byId(id: String): HaUberTheme =
@@ -538,7 +579,9 @@ internal fun legibleOn(active: HaActiveUberTheme, color: Color): Color {
   val surface = palette.cardBackground
   var mixed = color
   var t = 0f
-  while (contrast(mixed, surface) < MinAccentContrast && t < 1f) {
+  // Community families use marking accents for normal-size status text too.
+  val minimum = if (active.theme.visuals.isCommunity) 4.5f else MinAccentContrast
+  while (contrast(mixed, surface) < minimum && t < 1f) {
     t += 0.1f
     mixed = lerp(color, palette.primaryText, t)
   }

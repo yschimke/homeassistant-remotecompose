@@ -62,6 +62,17 @@ internal fun RemoteDrawScope.familySparkline(
       RemoteOffset(plot.left + plot.width, plot.bottom),
     )
   when (family) {
+    HaVisualFamily.Mushroom,
+    HaVisualFamily.Bubble,
+    HaVisualFamily.Minimalist,
+    HaVisualFamily.Cupertino,
+    HaVisualFamily.Catppuccin,
+    HaVisualFamily.Obsidian,
+    HaVisualFamily.Noctis,
+    HaVisualFamily.Lcars,
+    HaVisualFamily.Arctic,
+    HaVisualFamily.Aeon -> communitySparkline(family, look, fractions)
+
     HaVisualFamily.Classic -> {
       baseline(look.track)
       line(2f, look.value)
@@ -155,6 +166,30 @@ internal fun RemoteDrawScope.familyBars(
   val fractions = values.map { (it - base) / span }
   fun x(i: Int, share: Float) = plot.left + slot * i.toFloat().rf + slot * ((1f - share) / 2f).rf
   when (family) {
+    HaVisualFamily.Mushroom,
+    HaVisualFamily.Bubble,
+    HaVisualFamily.Minimalist,
+    HaVisualFamily.Cupertino,
+    HaVisualFamily.Catppuccin,
+    HaVisualFamily.Obsidian,
+    HaVisualFamily.Noctis,
+    HaVisualFamily.Lcars,
+    HaVisualFamily.Arctic,
+    HaVisualFamily.Aeon -> {
+      for (i in 0 until n) {
+        communityBar(
+          family,
+          look,
+          fractions[i],
+          true,
+          canvasWidth = slot * 0.72f.rf,
+          canvasHeight = plot.height,
+          originX = x(i, 0.72f),
+          originY = plot.top,
+        )
+      }
+    }
+
     HaVisualFamily.Classic,
     HaVisualFamily.Braun -> {
       val share = if (family == HaVisualFamily.Braun) 0.3f else 0.7f
@@ -216,5 +251,75 @@ internal fun RemoteDrawScope.familyBars(
         fillRound(look.value, x(i, 0.6f), y, w, plot.bottom - y, 1.5f.rf)
       }
     }
+  }
+}
+
+/** Each family keeps its scale grammar in charts, without changing the host's history contract. */
+private fun RemoteDrawScope.communitySparkline(
+  family: HaVisualFamily,
+  look: MeterLook,
+  fractions: List<RemoteFloat>,
+) {
+  val p = Plot(this)
+  val n = fractions.size
+  val lineWidth =
+    when (family) {
+      HaVisualFamily.Mushroom -> 3f
+      HaVisualFamily.Bubble -> 5f
+      HaVisualFamily.Cupertino -> 3.5f
+      HaVisualFamily.Lcars -> 6f
+      else -> 1.5f
+    }
+  for (i in 0 until n - 1) {
+    val a = RemoteOffset(p.x(i, n), p.y(fractions[i]))
+    val b = RemoteOffset(p.x(i + 1, n), p.y(fractions[i + 1]))
+    when (family) {
+      HaVisualFamily.Minimalist,
+      HaVisualFamily.Catppuccin,
+      HaVisualFamily.Lcars -> {
+        drawLine(strokePaint(lineWidth, look.value, false), a, RemoteOffset(b.x, a.y))
+        drawLine(strokePaint(lineWidth, look.value, false), RemoteOffset(b.x, a.y), b)
+      }
+      HaVisualFamily.Noctis -> {
+        drawLine(strokePaint(7f, look.track), a, b)
+        drawLine(strokePaint(1.5f, look.value), a, b)
+      }
+      else -> drawLine(strokePaint(lineWidth, look.value), a, b)
+    }
+  }
+  when (family) {
+    HaVisualFamily.Mushroom,
+    HaVisualFamily.Bubble,
+    HaVisualFamily.Catppuccin -> {
+      for (i in fractions.indices) drawCircle(
+        fillPaint(look.value),
+        (if (family == HaVisualFamily.Bubble) 4f else 2.5f).rf,
+        RemoteOffset(p.x(i, n), p.y(fractions[i])),
+      )
+    }
+    HaVisualFamily.Cupertino -> {
+      drawCircle(
+        strokePaint(2f, look.text),
+        4f.rf,
+        RemoteOffset(p.x(n - 1, n), p.y(fractions.last())),
+      )
+    }
+    HaVisualFamily.Obsidian -> {
+      for (i in 0..4) fillRect(look.track, p.left, p.top + p.height * (i / 4f).rf, p.width, 1f.rf)
+    }
+    HaVisualFamily.Arctic -> {
+      fillRect(look.muted, p.left, p.bottom, p.width, 1f.rf)
+      drawLine(
+        strokePaint(1f, look.accent),
+        RemoteOffset(p.x(n - 1, n), p.top),
+        RemoteOffset(p.x(n - 1, n), p.bottom),
+      )
+    }
+    HaVisualFamily.Aeon -> {
+      outlineRect(look.accent, 0f.rf, 0f.rf, width, height, 1f.rf)
+      val at = RemoteOffset(p.x(n - 1, n), p.y(fractions.last()))
+      rotate(45f.rf, at) { fillRect(look.value, at.x - 3f.rf, at.y - 3f.rf, 6f.rf, 6f.rf) }
+    }
+    else -> Unit
   }
 }
