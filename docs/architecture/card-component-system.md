@@ -172,7 +172,7 @@ The [`ha-cards` catalog](../../ha-cards-catalog/) offers each layer as a builder
 | `ha-cards/arc-meter`, `ha-cards/bar-meter` | 2 | bare meters for composing a card of your own; `entityId` binds the value |
 | `ha-cards/thermometer`, `ha-cards/battery` | 3 | typed |
 | `ha-cards/measurement` | 3 | `kind` picks the visual, and `auto` reads the unit |
-| `ha-cards/thermostat` | 3 | a climate entity's 270° dial; live through `<id>.current_temperature` / `<id>.target_temperature`; a knob in a lamp ring under `console` |
+| `ha-cards/thermostat` | 3 | a climate entity's 270° dial; live through `<id>.current_temperature` / `<id>.target_temperature`; a set-point knob beside a separate temperature window under `console` |
 
 Every measurement takes `presentation`: one of the five rungs, or `adaptive`. The policy's
 `allowedValues` are held to the code by `HaCardMeasurementsTest`. The starter templates use
@@ -269,7 +269,7 @@ drawn per family too (`Dials.kt`; Console's knob in `MetersConsole.kt`), and so 
 | `lcd` | 15 chunky blocks with ghosts, pointer bar | bar graph of segments with ghosts | chunky segments with ghosts |
 | `braun` | hairline scale with ticks, pointer bar in the accent | hairline trace, the latest reading an orange dot | thin bars |
 | `nixie` | electrode dots and a glowing filament, a lit bead at target | glowing filament | glowing columns |
-| `console` | knurled knob in a lamp ring | trace in a recessed screen | lamp-lit columns in a recessed screen |
+| `console` | thermostat: plain set-point knob and printed scale, separate recessed readout; other dials: knob in a lamp ring | trace in a recessed screen | lamp-lit columns in a recessed screen |
 
 **Controls and ink inside cards.** `haControlShape(classicDp, round)` gives a key, button, chip or
 badge its shape under the theme: Classic keeps its own; the square-cornered themes (Trinitron,
