@@ -15,6 +15,19 @@ ROOT = Path(sys.argv[1]).resolve()
 PREFIX = '/homeassistant-remotecompose/'
 
 
+def wait_for_compose_frame(page):
+    # Semantics can update before the canvas and its pointer handlers. Coordinate
+    # clicks must wait for the rendered frame, especially when reopening a dialog.
+    page.evaluate('() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
+
+
+def open_feedback_review(page):
+    page.get_by_role('button', name='Report a bug', exact=True).dispatch_event('click')
+    expect(page.get_by_text('Report a PUBLIC issue', exact=True)).to_be_visible()
+    expect(page.get_by_role('button', name='Review on GitHub', exact=True)).to_be_visible()
+    wait_for_compose_frame(page)
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def translate_path(self, path):
         if path == '/terrazzo-static/terrazzo-panel.js':
@@ -128,7 +141,7 @@ try:
         # Bug reports open a reviewable public draft, never an API submission.
         expect(page.get_by_role('button', name='Report a bug', exact=True)).to_be_visible()
         page.screenshot(path='_wasm-test/feedback-settings.png')
-        page.get_by_role('button', name='Report a bug', exact=True).dispatch_event('click')
+        open_feedback_review(page)
         expect(page.get_by_text('Report a PUBLIC issue', exact=True)).to_be_visible()
         expect(page.get_by_text('This issue and anything you include will be PUBLIC', exact=False)).to_be_visible()
         expect(page.get_by_text('Included: app version', exact=False)).to_contain_text('Web (Wasm)')
@@ -136,7 +149,7 @@ try:
         page.get_by_role('button', name='Cancel', exact=True).dispatch_event('click')
         expect(page.get_by_text('Report a PUBLIC issue', exact=True)).not_to_be_visible()
         assert len(page.context.pages) == 1
-        page.get_by_role('button', name='Report a bug', exact=True).dispatch_event('click')
+        open_feedback_review(page)
         github_requests = []
 
         def github_draft(route):
@@ -162,15 +175,30 @@ try:
         assert len(github_requests) == 1
         assert not github_requests[0].headers.get('referer')
         draft.close()
+        page.bring_to_front()
+        expect(page.get_by_text('Report a PUBLIC issue', exact=True)).not_to_be_visible()
+        wait_for_compose_frame(page)
         # Popup blocking keeps the warning and a selectable manual recovery URL visible.
-        page.evaluate('window.feedbackOriginalOpen = window.open; window.open = () => null')
-        page.get_by_role('button', name='Report a bug', exact=True).dispatch_event('click')
+        page.evaluate('''() => {
+            window.feedbackOriginalOpen = window.open;
+            window.feedbackBlockedOpenCount = 0;
+            window.open = () => { window.feedbackBlockedOpenCount++; return null; };
+        }''')
+        open_feedback_review(page)
         page.get_by_role('button', name='Review on GitHub', exact=True).click(force=True)
+        page.wait_for_function('window.feedbackBlockedOpenCount === 1')
         expect(page.get_by_text('Could not open GitHub.', exact=False)).to_be_visible()
         expect(page.get_by_text('https://github.com/yschimke/homeassistant-remotecompose/issues', exact=True)).to_be_visible()
         expect(page.get_by_text('This issue and anything you include will be PUBLIC', exact=False)).to_be_visible()
+        assert len(page.context.pages) == 1
+        assert len(github_requests) == 1
+        wait_for_compose_frame(page)
         page.screenshot(path='_wasm-test/feedback-popup-blocked.png')
-        page.evaluate('window.open = window.feedbackOriginalOpen; delete window.feedbackOriginalOpen')
+        page.evaluate('''() => {
+            window.open = window.feedbackOriginalOpen;
+            delete window.feedbackOriginalOpen;
+            delete window.feedbackBlockedOpenCount;
+        }''')
         with page.expect_popup() as retried:
             page.get_by_role('button', name='Try GitHub again', exact=True).click(force=True)
         retried.value.wait_for_url('https://github.com/**')
@@ -180,7 +208,7 @@ try:
         page.get_by_role('button', name='Sign out').dispatch_event('click')
         expect(page.get_by_role('button', name='Connect', exact=True)).to_be_disabled()
         page.set_viewport_size({'width': 360, 'height': 800})
-        page.get_by_role('button', name='Report a bug', exact=True).dispatch_event('click')
+        open_feedback_review(page)
         expect(page.get_by_text('Report a PUBLIC issue', exact=True)).to_be_visible()
         expect(page.get_by_role('button', name='Review on GitHub', exact=True)).to_be_visible()
         page.screenshot(path='_wasm-test/feedback-small-screen.png')
@@ -220,6 +248,6 @@ try:
         assert len([command for command in commands if command['type'] == 'call_service']) == count
         hosted.close()
         browser.close()
-        print('Wasm browser: project path, login, live on/off updates, single action, right-click HA deep link/native panel dispatch, no polling, reconnect and sign-out passed')
+        print('Wasm browser: project path, login, live on/off updates, single action, right-click HA deep link/native panel dispatch, no polling, reconnect, public feedback review/popup recovery and sign-out passed')
 finally:
     server.shutdown()
