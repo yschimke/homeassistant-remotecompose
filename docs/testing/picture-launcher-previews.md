@@ -71,3 +71,8 @@ launcher:
 
 The CI wrapper pulls the screenshots into `build/widget-test-screenshots` before
 the emulator exits. They are included in the `android-test-reports` artifact.
+
+## Captured evidence
+
+[Native reports and inspected screenshots](evidence/picture-launcher/README.md)
+record the Android 16 reproduction, confirmed installation and provider update.

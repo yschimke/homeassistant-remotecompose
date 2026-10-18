@@ -337,6 +337,7 @@ class WidgetPreparationTest {
         .fetchSemanticsNodes()
         .isNotEmpty()
     }
+    compose.onNodeWithTag("widget-render").performScrollTo()
     screenshot("${evidencePrefix}prepared-preview")
     compose.onNodeWithText("Install widget").assertIsEnabled().performClick()
     assertTrue(
