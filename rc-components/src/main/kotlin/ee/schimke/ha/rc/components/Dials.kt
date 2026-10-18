@@ -56,8 +56,7 @@ internal fun RemoteDrawScope.familyDial(
   stroke: Float,
 ) {
   when (family) {
-    HaVisualFamily.HomeAssistant ->
-      homeAssistantDial(look, value, target, targetVisible, box, stroke)
+    HaVisualFamily.HomeAssistant -> homeAssistantDial(look, value, target, targetVisible, box)
     HaVisualFamily.Expressive -> expressiveDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Trinitron -> trinitronDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Lcd -> lcdDial(look, value, target, targetVisible, box, stroke)
@@ -99,39 +98,44 @@ internal fun RemoteDrawScope.familyDial(
   }
 }
 
-/** HA's rounded thermostat track with a small current marker and white target handle. */
+/** HA's rounded thermostat track and white target handle scale with the canvas at playback. */
 private fun RemoteDrawScope.homeAssistantDial(
   look: MeterLook,
   value: RemoteFloat,
   target: RemoteFloat?,
   targetVisible: RemoteBoolean?,
   box: DialBox,
-  stroke: Float,
 ) {
+  val thickness = box.radius * 0.16f.rf
+  val inner = box.radius - thickness
+  val middle = box.radius - thickness / 2f.rf
+  val innerTopLeft = RemoteOffset(box.cx - inner, box.cy - inner)
+  val innerSize = RemoteSize(inner * 2f.rf, inner * 2f.rf)
+  // Filled sectors avoid a fixed document-pixel stroke, which becomes too thin at high density.
+  drawArc(fillPaint(look.track), DialStart.rf, DialSweep.rf, true, box.topLeft(0f), box.size(0f))
   drawArc(
-    strokePaint(stroke, look.track),
-    DialStart.rf,
-    DialSweep.rf,
-    false,
-    box.topLeft(0f),
-    box.size(0f),
-  )
-  drawArc(
-    strokePaint(stroke, look.value),
+    fillPaint(look.value),
     DialStart.rf,
     value * DialSweep.rf,
-    false,
+    true,
     box.topLeft(0f),
     box.size(0f),
   )
+  drawArc(fillPaint(look.surface), 0f.rf, 360f.rf, true, innerTopLeft, innerSize)
+  val cap = thickness / 2f.rf
+  drawCircle(fillPaint(look.track), cap, box.point(DialStart, middle))
+  drawCircle(fillPaint(look.track), cap, box.point(DialStart + DialSweep, middle))
+  val active = value.isGreaterThanOrEqualTo(0.001f.rf).select(look.value, Color.Transparent.rc)
+  drawCircle(fillPaint(active), cap, box.point(DialStart, middle))
   rotate(value * DialSweep.rf, box.center) {
-    drawCircle(fillPaint(look.surface), (stroke * 0.2f).rf, box.point(DialStart, box.radius))
+    drawCircle(fillPaint(active), cap, box.point(DialStart, middle))
+    drawCircle(fillPaint(look.surface), thickness * 0.2f.rf, box.point(DialStart, middle))
   }
   if (target != null) {
     rotate(target * DialSweep.rf, box.center) {
-      val point = box.point(DialStart, box.radius)
-      drawCircle(fillPaint(shown(look.value, targetVisible)), (stroke * 0.57f).rf, point)
-      drawCircle(fillPaint(shown(Color.White.rc, targetVisible)), (stroke * 0.42f).rf, point)
+      val point = box.point(DialStart, middle)
+      drawCircle(fillPaint(shown(look.value, targetVisible)), thickness * 0.57f.rf, point)
+      drawCircle(fillPaint(shown(Color.White.rc, targetVisible)), thickness * 0.42f.rf, point)
     }
   }
 }
