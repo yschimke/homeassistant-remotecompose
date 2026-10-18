@@ -148,7 +148,12 @@ object CardDesignPreload {
       CardDesignSync.choice(context, prefs)
         .distinctUntilChanged()
         .combine(CardDesignSync.revision) { choice, _ -> choice }
-        .collectLatest { choice -> _designs.value = loadCardDesigns(context, choice) }
+        .collectLatest { choice ->
+          // Another choice's designs are the wrong ones (another variant, author or server):
+          // drop them while this one reads. A sync for the same choice keeps them until then.
+          if (_designs.value?.loadedFor != choice) _designs.value = null
+          _designs.value = loadCardDesigns(context, choice)
+        }
     }
   }
 }
