@@ -143,7 +143,17 @@ private final class NativeInputView: UIStackView, UITextFieldDelegate, UITextVie
     guard writable else { return }
     let action = component.text(.init(NativeSwiftInput.submit))
     guard !action.isEmpty else { return }
-    var values = drafts.values
+    var root: UIView = self
+    while let parent = root.superview {
+      root = parent
+      if parent is RemoteComposeNativePlayerView { break }
+    }
+    func keys(_ view: UIView) -> [String] {
+      guard !view.isHidden else { return [] }
+      if let input = view as? NativeInputView { return [input.key] }
+      return view.subviews.flatMap(keys)
+    }
+    var values = drafts.values(for: Set(keys(root)))
     values[key] = drafts.value(for: key, documentValue: component.text(.init(NativeSwiftInput.value)))
     onSubmit(action, values); endEditing(true)
   }

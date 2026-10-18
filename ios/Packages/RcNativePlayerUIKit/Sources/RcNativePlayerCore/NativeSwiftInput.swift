@@ -25,6 +25,8 @@ public final class NativeSwiftInputDrafts {
   private var edits: [String: String] = [:]
   private var defaults: [String: String] = [:]
   public var values: [String: String] { defaults.merging(edits) { _, edit in edit } }
+  /// Submit only fields in the current form; retain dormant edits for future replacements.
+  public func values(for keys: Set<String>) -> [String: String] { values.filter { keys.contains($0.key) } }
   public init() {}
   public func value(for key: String, documentValue: String) -> String {
     defaults[key] = documentValue
