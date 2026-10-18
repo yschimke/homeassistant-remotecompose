@@ -7,6 +7,16 @@ export class RemoteComposeCard extends HaCardElement {
     if (!config.card || !['tile', 'button', 'entity', 'gauge'].includes(config.card.type)) {
       throw new Error('Remote Compose requires a tile, button, entity or gauge card with live bindings.');
     }
+    if (config.template_url != null) {
+      if (typeof config.template_url !== 'string' || !config.template_url.trim()) {
+        throw new Error('template_url must be a non-empty URL or path.');
+      }
+      const url = new URL(config.template_url, document.baseURI);
+      if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) {
+        throw new Error('template_url must be HTTP(S) without credentials.');
+      }
+      if (config.design != null) throw new Error('Use template_url or design, not both.');
+    }
     this.config = structuredClone(config);
     this.setAttribute('require-host-bindings', '');
     // Set local mode before attributes can trigger an asynchronous start/OAuth.
@@ -15,6 +25,7 @@ export class RemoteComposeCard extends HaCardElement {
       card: JSON.stringify(config.card),
       library: config.library ?? 'https://ha.coo.ee/designs/v1/',
       design: config.design,
+      'template-url': config.template_url,
       'card-style': config.card_style ?? 'classic',
       height: config.height,
       theme: this._hass?.themes?.darkMode ? 'dark' : 'light',

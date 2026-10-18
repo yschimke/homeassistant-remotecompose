@@ -18,12 +18,18 @@ Buffer.from('card.bad.name').copy(unsupportedTemplate, variableOffset);
 const unsupportedSha = createHash('sha256').update(unsupportedTemplate).digest('hex');
 const frontend = `${root}home-assistant/custom_components/terrazzo/frontend/`;
 
-test('HA custom card uses signed-in state/actions, updates live and renders real RC bytes', async () => {
+['library', 'local-url', 'remote-url'].forEach((source) => test(`HA custom card uses signed-in state/actions, updates live and renders real RC bytes (${source})`, async () => {
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage({ viewport: { width: 640, height: 360 }, deviceScaleFactor: 1 });
     const errors = [];
+    const templateRequests = [];
     page.on('pageerror', (e) => errors.push(e.message));
+    await page.route('https://templates.test/**', (route) => {
+      templateRequests.push(route.request().url());
+      return route.fulfill({ body: template, contentType: 'application/octet-stream',
+        headers: { 'Access-Control-Allow-Origin': '*' } });
+    });
     await page.route('https://ha.test/**', (route) => {
       const path = new URL(route.request().url()).pathname;
       if (path.endsWith('.js')) {
@@ -31,13 +37,17 @@ test('HA custom card uses signed-in state/actions, updates live and renders real
         const file = name === 'ha-card.js' ? `${root}embed/ha-card.js` : name === 'rc-player.js' ? playerPath : `${frontend}${name}`;
         return route.fulfill({ contentType: 'text/javascript', body: readFileSync(file) });
       }
-      if (path.endsWith('.rc')) return route.fulfill({ body: path.endsWith(`${unsupportedSha}.rc`) ? unsupportedTemplate : template, contentType: 'application/octet-stream' });
+      if (path.endsWith('.rc')) {
+        templateRequests.push(route.request().url());
+        return route.fulfill({ body: path.endsWith(`${unsupportedSha}.rc`) ? unsupportedTemplate : template, contentType: 'application/octet-stream' });
+      }
+      if (path === '/api/cards/resolve') throw new Error('explicit templates must bypass the resolver');
       return route.fulfill({ contentType: 'text/html', body: `<!doctype html><meta charset="utf-8"><style>body{font:16px system-ui;background:#f4f4f4;margin:24px}remote-compose-card{width:400px;background:white;border-radius:16px}</style>
         <p>Home Assistant · Remote Compose</p><script>window.NativeHaCard = class extends HTMLElement {}; customElements.define('ha-card', NativeHaCard);</script>
         <script type="module" src="/terrazzo-static/remote-compose-card.js"></script>` });
     });
     await page.goto('https://ha.test/lovelace/0');
-    await page.evaluate(async ({sha}) => {
+    await page.evaluate(async ({sha, source}) => {
       await customElements.whenDefined('remote-compose-card');
       window.calls = [];
       window.moreInfo = [];
@@ -47,19 +57,23 @@ test('HA custom card uses signed-in state/actions, updates live and renders real
         callService: async (...args) => window.calls.push(args),
       };
       const card = document.createElement('remote-compose-card');
-      card.setConfig({ type: 'custom:remote-compose-card', library: 'https://ha.test/designs/v1/', design: sha,
+      const templateConfig = source === 'library' ? { library: 'https://ha.test/designs/v1/', design: sha }
+        : { template_url: source === 'local-url' ? '/local/cards/kitchen.rc' : 'https://templates.test/kitchen.rc' };
+      card.setConfig({ type: 'custom:remote-compose-card', ...templateConfig,
         card: { type: 'tile', entity: 'light.kitchen', tap_action: { action: 'toggle' } } });
       card.hass = window.hassFixture;
       card.addEventListener('hass-more-info', (e) => moreInfo.push(e.detail.entityId));
       document.body.append(card);
       window.card = card;
-    }, {sha});
+    }, {sha, source});
     await page.waitForFunction(() => card.dataset.status === 'live' && card.player);
+    assert.ok(templateRequests.includes(source === 'library' ? `https://ha.test/designs/v1/blobs/${sha}.rc`
+      : source === 'local-url' ? 'https://ha.test/local/cards/kitchen.rc' : 'https://templates.test/kitchen.rc'));
     assert.equal(await page.evaluate(() => customElements.get('ha-card') === customElements.get('remote-compose-card')), false);
     await page.waitForFunction(() => card.pushed.get('USER:light.s0.state') === 'Off');
     const canvas = page.locator('remote-compose-card canvas');
     const before = await canvas.screenshot();
-    const evidence = process.env.HA_PLUGIN_EVIDENCE ?? `${root}build/ha-plugin-evidence`;
+    const evidence = `${process.env.HA_PLUGIN_EVIDENCE ?? `${root}build/ha-plugin-evidence`}${source === 'library' ? '' : `/${source}`}`;
     mkdirSync(evidence, { recursive: true });
     await page.screenshot({ path: `${evidence}/card-before.png` });
     // A real document tap routes to hass.callService with the viewer's connection.
@@ -97,7 +111,9 @@ test('HA custom card uses signed-in state/actions, updates live and renders real
     assert.equal(await page.evaluate(() => card.pushed.get('USER:light.s0.state')), 'Unavailable');
     assert.deepEqual(errors, []);
     assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
-    await page.evaluate((design) => card.setConfig({...card.config,design}), unsupportedSha);
+    await page.evaluate(({source, unsupportedSha}) => card.setConfig(source === 'library'
+      ? {...card.config, design: unsupportedSha}
+      : {...card.config, template_url: `/local/cards/${unsupportedSha}.rc`}), {source, unsupportedSha});
     await page.waitForFunction(() => card.dataset.status === 'error');
     assert.match(await page.locator('remote-compose-card .status').textContent(), /converter bindings unavailable/);
     assert.equal(await page.evaluate(() => card.player), null, 'never show fixture values from an incompatible template');
@@ -114,7 +130,7 @@ test('HA custom card uses signed-in state/actions, updates live and renders real
     assert.equal(await early.evaluate(() => !!customElements.get('ha-card')), false);
     await early.close();
   } finally { await browser.close(); }
-});
+}));
 
 test('panel passes only same-origin session capability, refreshes auth and cleans up iframe', async () => {
   const browser = await chromium.launch({ headless: true });
