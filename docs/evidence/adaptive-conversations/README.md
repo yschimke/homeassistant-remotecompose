@@ -24,7 +24,8 @@ conversation; phone metrics wrap in two columns; raw Jinja and per-card studio l
 are absent from normal viewing; and Console can play the real gauge binary.
 It reads entity-scoped HA logbook messages, refreshes a later message, sends exactly
 one reply with the right channel, retains a refused draft, edits a select/text helper,
-and invokes the dashboard's explicitly configured service action. The HA WebSocket
+and invokes the dashboard's explicitly configured service action. A live HA update during
+helper editing reproduces draft loss on the prior build and preserves the draft on the fixed build. The HA WebSocket
 transport is mocked. No radio message was sent to a real network.
 
 Native source values continue to arrive through the existing live state subscription.

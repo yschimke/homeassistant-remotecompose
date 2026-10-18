@@ -43,6 +43,8 @@ states += [{'entity_id': 'select.meshcore_recipient', 'state': 'Public', 'attrib
            {'entity_id': 'text.meshcore_message', 'state': 'Ready', 'attributes': {'friendly_name': 'Message helper'}}]
 commands, history_reads, errors = [], [], []
 reject_send = False
+latest_socket = None
+latest_subscription = None
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def translate_path(self, path):
@@ -67,14 +69,18 @@ def settled_capture(page, path):
 
 
 def socket_route(socket):
+    global latest_socket
+    latest_socket = socket
     socket.send(json.dumps({'type': 'auth_required'}))
     def receive(raw):
+        global latest_subscription
         msg = json.loads(raw)
         if msg['type'] == 'auth':
             assert msg['access_token'] == 'fixture-token'
             socket.send(json.dumps({'type': 'auth_ok'})); return
         commands.append(msg)
         kind = msg['type']
+        if kind == 'subscribe_events': latest_subscription = msg['id']
         result = {'get_states': states, 'lovelace/dashboards/list': [{'url_path': 'mesh', 'title': 'Mesh network'}],
                   'lovelace/config': dashboard, 'subscribe_events': None, 'config/entity_registry/list_for_display': {'entities': []},
                   'config/device_registry/list': [], 'call_service': {}}
@@ -181,6 +187,9 @@ try:
                 value = page.get_by_role('textbox', name='Value', exact=True)
                 value.click(force=True, delay=100)
                 page.keyboard.press('ControlOrMeta+A'); page.keyboard.insert_text('Message from helper')
+                latest_socket.send(json.dumps({'id': latest_subscription, 'type': 'event', 'event': {'event_type': 'state_changed', 'data': {'entity_id': 'text.meshcore_message', 'new_state': {'entity_id': 'text.meshcore_message', 'state': 'Changed elsewhere', 'attributes': {'friendly_name': 'Message helper'}}}}}))
+                expect(page.get_by_role('list')).to_contain_text('Message helper Changed elsewhere')
+                expect(value).to_contain_text('Message from helper')
                 page.get_by_role('button', name='Save', exact=True).click(force=True, delay=100)
                 page.wait_for_timeout(150)
                 assert [c for c in commands if c['type'] == 'call_service'][-1]['service_data'] == {'entity_id': 'text.meshcore_message', 'value': 'Message from helper'}

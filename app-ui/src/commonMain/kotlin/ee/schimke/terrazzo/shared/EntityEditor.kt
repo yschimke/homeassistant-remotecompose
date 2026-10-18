@@ -47,7 +47,8 @@ internal fun EntityEditor(
     }
   } else {
     var editing by remember(entity.entityId) { mutableStateOf(false) }
-    var draft by remember(entity.entityId, entity.state) { mutableStateOf(entity.state) }
+    var draft by remember(entity.entityId) { mutableStateOf(entity.state) }
+    LaunchedEffect(entity.state, editing) { if (!editing) draft = entity.state }
     TextButton(enabled = available, onClick = { editing = true }) { Text("Edit") }
     if (editing)
       AlertDialog(
