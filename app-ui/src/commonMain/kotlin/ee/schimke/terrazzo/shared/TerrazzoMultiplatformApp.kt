@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
@@ -57,9 +58,13 @@ private class AppConnection(
   val hostedAction: ((String) -> Boolean)? = null,
 ) {
   val hosted = accessTokenProvider != null
+  val pictures = EntityPictureClient(config, accessTokenProvider)
   val client = HaClient(config, accessTokenProvider = accessTokenProvider)
 
-  suspend fun close() = client.close()
+  suspend fun close() {
+    pictures.close()
+    client.close()
+  }
 }
 
 /** The shared dashboard application runs on Android, desktop and Wasm. */
@@ -343,6 +348,14 @@ private fun LiveDashboard(
   var dashboard by remember(connection, path) { mutableStateOf<Dashboard?>(null) }
   var error by remember(connection, path) { mutableStateOf<String?>(null) }
   val scope = rememberCoroutineScope()
+  val designCache =
+    remember(connection, path) { DashboardLoadCache(scope, load = ::loadLibraryDesign) }
+  val pictureCache =
+    remember(connection, path) {
+      DashboardLoadCache(scope, capacity = 12) { key: EntityPictureKey ->
+        decodeEntityPicture(connection.pictures.load(key))
+      }
+    }
   LaunchedEffect(connection, path) {
     connection.client.state.collectLatest { state ->
       if (state == HaClient.ConnectionState.Ready && dashboard == null) {
@@ -445,6 +458,8 @@ private fun LiveDashboard(
               card,
               snapshot,
               connection.client,
+              designCache,
+              pictureCache,
               cardStyle,
               dark,
               onMoreInfo = ::moreInfo,
@@ -534,6 +549,9 @@ fun DashboardContent(
             }
           }
           groups.forEach { group ->
+            val visibleCards =
+              group.cards.filter { visibleDashboardCard(it.second, snapshot) != null }
+            if (visibleCards.isEmpty()) return@forEach
             item(key = group.id) {
               Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 group.title?.let {
@@ -543,7 +561,7 @@ fun DashboardContent(
                     modifier = Modifier.padding(vertical = 4.dp),
                   )
                 }
-                group.cards.forEach { (cardKey, card) ->
+                visibleCards.forEach { (cardKey, card) ->
                   key(cardKey.toCacheKey()) { renderCard(cardKey, card) }
                 }
               }
@@ -566,7 +584,7 @@ internal fun NativeCard(
 ) {
   val children = childCards(card)
   if (children.isNotEmpty() && card.type in setOf("grid", "horizontal-stack", "vertical-stack")) {
-    CardCluster(card) { child ->
+    CardCluster(card, snapshot) { child ->
       NativeCard(child, snapshot, readOnly, onMoreInfo, onService, toggle)
     }
     return
@@ -598,6 +616,9 @@ internal fun NativeCard(
     ((card.raw["tap_action"] as? JsonObject)?.get("action") as? JsonPrimitive)?.contentOrNull
   val toggleCard =
     entityId != null && configuredTap == "toggle" && card.type in setOf("tile", "button")
+  val inlineToggle =
+    !toggleCard &&
+      entityId?.substringBefore('.') in setOf("light", "switch", "input_boolean", "fan")
   val tapModifier =
     if (toggleCard)
       Modifier.clickable(
@@ -606,18 +627,32 @@ internal fun NativeCard(
       ) {
         toggle(requireNotNull(entityId))
       }
+    else if (
+      entityId != null &&
+        !inlineToggle &&
+        onMoreInfo != null &&
+        configuredTap in setOf(null, "more-info")
+    )
+      Modifier.clickable(role = Role.Button) { onMoreInfo(entityId) }
     else Modifier
   OutlinedCard(Modifier.fillMaxWidth().entityDetails(entityId, onMoreInfo).then(tapModifier)) {
-    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-      Text(
-        (card.raw["name"] as? JsonPrimitive)?.contentOrNull
-          ?: (card.raw["title"] as? JsonPrimitive)?.contentOrNull
-          ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull
-          ?: entityId
-          ?: if (card.type == "entities") "Status"
-          else card.type.replace('-', ' ').replaceFirstChar { it.uppercaseChar() },
-        style = MaterialTheme.typography.titleMedium,
-      )
+    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+      ) {
+        if (entityId?.substringBefore('.') == "light") LightStateIcon(entity?.state)
+        Text(
+          (card.raw["name"] as? JsonPrimitive)?.contentOrNull
+            ?: (card.raw["title"] as? JsonPrimitive)?.contentOrNull
+            ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull
+            ?: entityId
+            ?: if (card.type == "entities") "Status"
+            else card.type.replace('-', ' ').replaceFirstChar { it.uppercaseChar() },
+          style = MaterialTheme.typography.titleMedium,
+          modifier = Modifier.weight(1f),
+        )
+      }
       if (card.type == "markdown") {
         val source = (card.raw["content"] as? JsonPrimitive)?.contentOrNull.orEmpty()
         Text(
@@ -634,6 +669,8 @@ internal fun NativeCard(
           val value = snapshot.states[id]
           ListItem(
             modifier = Modifier.entityDetails(id, onMoreInfo),
+            leadingContent =
+              if (id.substringBefore('.') == "light") ({ LightStateIcon(value?.state) }) else null,
             headlineContent = {
               Text(value?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull ?: id)
             },
@@ -657,11 +694,8 @@ internal fun NativeCard(
           )
         }
       } else if (entity != null) {
-        Text(formatState(entity, snapshot), style = MaterialTheme.typography.headlineSmall)
-        if (
-          !toggleCard &&
-            entityId?.substringBefore('.') in setOf("light", "switch", "input_boolean", "fan")
-        ) {
+        Text(formatState(entity, snapshot), style = MaterialTheme.typography.bodyLarge)
+        if (inlineToggle) {
           Switch(
             checked = entity.state == "on",
             onCheckedChange = { toggle(requireNotNull(entityId)) },
@@ -671,6 +705,8 @@ internal fun NativeCard(
       } else {
         Text(
           if (entityId != null) "Entity not found"
+          else if (card.type == "conditional")
+            "This condition needs Home Assistant’s evaluator. Open the original dashboard to view it."
           else "Open this card in Home Assistant for its full view."
         )
       }
