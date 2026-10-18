@@ -1,7 +1,8 @@
 val wearVersionName = "0.1.44" // x-release-please-version
 
 // Keep Wear version tied to release-please while reserving a unique code
-// lane for the shared package id (`ee.schimke.harc`).
+// lane for the shared package id (`ee.schimke.harc`): same base as `:app`
+// (whose lane is 0), suffix 2.
 val wearVersionCode: Int = run {
   val parts = wearVersionName.split(".", "-").mapNotNull { it.toIntOrNull() }
   val major = parts.getOrNull(0) ?: 0

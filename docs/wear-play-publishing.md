@@ -8,11 +8,20 @@ bundle on the shared `internal` track.
 | | Phone (`:app`) | Wear (`:wear`) |
 |---|---|---|
 | Package | `ee.schimke.harc` | `ee.schimke.harc` |
-| `versionCode` | `MMmmpp` (e.g. `144` for 0.1.44) | `MMmmpp * 10 + 2` (e.g. `1442`) — never collides |
+| `versionCode` | `MMmmpp * 10` (e.g. `1450` for 0.1.45) | `MMmmpp * 10 + 2` (e.g. `1452`) |
 | Play track | `internal` | `wear:internal` |
 | Upload key | `HARC_*` keystore | same keystore (one key lineage per Play app) |
 | Release notes | `app/src/main/play/release-notes/en-GB/internal.txt` | `wear/src/main/play/release-notes/en-GB/default.txt` |
 | Listing text and graphics | `app/src/main/play/listings/en-GB/` | none: the listing is shared, so Wear screenshots go in the app's `graphics/wear-screenshots/` |
+
+The shared code base keeps every release's phone code above the previous
+release's Wear code. Play Publisher refuses an upload whose code is not above
+the app's highest existing one, across all tracks, so a per-module scheme
+would break the phone upload after the first Wear release. (0.1.44 and
+earlier phone builds used plain `MMmmpp`; the ×10 jump is monotonic.)
+
+The listing is shared too, so `full-description.txt` there must mention
+Wear OS: Google rejects Wear releases whose description doesn't.
 
 Both versions follow release-please (`x-release-please-version`), so a release
 bumps them together; nothing to bump by hand.
