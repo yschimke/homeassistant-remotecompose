@@ -7,6 +7,15 @@
       "icon": "mdi:console",
       "sections": [
         {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "markdown",
+              "content": "Shared demo home: switches and thermostat affect every visitor. Only these demo controls are enabled. If busy, wait a few seconds and try again. Readings drift every 30 seconds; switches stay as you set them."
+            }
+          ]
+        },
+        {
           "title": "Comfort & climate",
           "cards": [
             {

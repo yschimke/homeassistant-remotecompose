@@ -11,7 +11,7 @@ import aiohttp
 from aiohttp import web
 
 ROOT = Path(__file__).parent
-VERSION = "demo-controls-v3"
+VERSION = "demo-controls-v4"
 CONFIG = {
     "version": VERSION, "location_name": "Demo Home", "time_zone": "UTC",
     "unit_system": {"temperature": "°C", "length": "km", "mass": "kg", "volume": "L"},
@@ -39,6 +39,19 @@ class Gateway:
         self.updated = 0
         self.sockets = {}
         self.upstream_lock = asyncio.Lock()
+        # One budget for the entire shared home, across HTTP, sockets and reconnects.
+        # No client-controlled identity, proxy header or unbounded per-IP map.
+        self.action_tokens = 8.0
+        self.action_updated = time.monotonic()
+
+    def reserve_action(self):
+        now = time.monotonic()
+        self.action_tokens = min(8.0, self.action_tokens + max(0, now - self.action_updated) / 2)
+        self.action_updated = now
+        if self.action_tokens < 1:
+            return False
+        self.action_tokens -= 1
+        return True
 
     def fresh(self):
         return self.updated > 0 and time.monotonic() - self.updated < self.max_age
@@ -120,6 +133,8 @@ class Gateway:
         async with self.upstream_lock:
             if not self.fresh():
                 return "upstream_unavailable"
+            if not self.reserve_action():
+                return "rate_limited"
             try:
                 async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as session:
                     async with session.post(
@@ -170,7 +185,9 @@ class Gateway:
                 return web.json_response({"code": "invalid_json"}, status=400)
             code = await self.call_service(parts[3], parts[4], data)
             if code:
-                return web.json_response({"code": code}, status=403 if code == "forbidden" else 503)
+                status = {"forbidden": 403, "rate_limited": 429}.get(code, 503)
+                return web.json_response({"code": code}, status=status,
+                                         headers={"Retry-After": "2"} if status == 429 else None)
             return web.json_response(list(self.states.values()))
         if request.method not in ("GET", "HEAD"):
             return web.json_response({"code": "forbidden", "message": "Demo administration is disabled"}, status=403)

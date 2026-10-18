@@ -124,7 +124,7 @@ straight to `homeassistant:8123`.
 
   Values are strings as in HA. Only the nine IDs in [entities.json](entities.json) are exposed.
   Only named display attributes survive filtering. Config is a fixed public projection with
-  `location_name: "Demo Home"`, `version: "demo-controls-v3"`, `time_zone: "UTC"`,
+  `location_name: "Demo Home"`, `version: "demo-controls-v4"`, `time_zone: "UTC"`,
   `read_only: false`, metric `unit_system`, `internal_url: null`, public `external_url`.
   No raw HA config, user/device metadata, paths, coordinates, history, logs, tokens, or media URLs.
 - Cross-origin HTTP reads allow `https://ha.coo.ee` with no cookies. Same-origin use is preferred.
@@ -133,8 +133,8 @@ straight to `homeassistant:8123`.
 ### WebSocket protocol and updates
 
 The framing follows the [HA WebSocket API](https://developers.home-assistant.io/docs/api/websocket/).
-Server opens with `{"type":"auth_required","ha_version":"demo-controls-v3"}`. Send
-`{"type":"auth","access_token":"public-demo"}`; receive `{"type":"auth_ok","ha_version":"demo-controls-v3"}`.
+Server opens with `{"type":"auth_required","ha_version":"demo-controls-v4"}`. Send
+`{"type":"auth","access_token":"public-demo"}`; receive `{"type":"auth_ok","ha_version":"demo-controls-v4"}`.
 The token field is ignored, never forwarded. Commands need positive integer IDs:
 
 ```json
@@ -173,7 +173,15 @@ HA startup; the helpers and their services are not exposed by the gateway. State
 The generic thermostat controls a private input-boolean heater; no physical devices are connected.
 Only `climate.set_temperature` for `climate.demo_thermostat` is allowed, with a numeric
 half-degree setpoint from 16 through 28°C and no extra parameters. HVAC-mode, preset,
-helper and administrative actions remain blocked. Sensors remain live simulated HA readings.
+helper and administrative actions remain blocked. Sensors are HA-owned bounded random walks on a single 30-second HA time trigger.
+Temperature drifts at most 0.2°C/tick toward the thermostat target while heating, otherwise
+20°C, and stays within 16–28°C. Humidity moves at most 1% within 38–55%; solar moves at
+most 80W within 600–2400W; battery moves at most 0.1% within 45–95% according to the
+previous solar/load balance. Power is 160W ±20W plus 12W for the lamp, 850W for coffee
+and 600W for heating. Motion may change only every two minutes. Restart initializes safe
+values (HA may restore prior trigger-sensor values); no visitor creates a simulation job.
+The simulator never changes switch state or the user-selected thermostat target. Appliance
+load catches up at the next simulation tick (at most 30 seconds).
 The dashboard includes thermostat, humidity/battery gauges and power/solar meters.
 
 REST: `POST /api/services/light/toggle` with `{"entity_id":"light.demo_lamp"}` returns the
@@ -189,6 +197,15 @@ The provisioner recreates only the dedicated demo HA container to load the check
 configuration, preserving its volume and credentials. It then rebuilds/recreates the gateway
 and runs the verifier before frontend publication. The verifier changes and restores the
 lamp, coffee switch and thermostat through the real HA REST/WebSocket paths. Rebuilding the gateway alone does not change the running HA configuration. Preserve the existing HA volume, credentials and deployment overlays.
+
+A shared token bucket permits a burst of eight accepted service attempts, then refills one
+action every two seconds (30/minute sustained across all visitors). HTTP and WebSocket
+calls, new connections and spoofed forwarding headers share the same budget. Failed upstream
+attempts also consume it; rejected policy payloads never reach HA. No per-client identity is
+trusted or stored. A restart replenishes the eight-action burst; run one gateway replica for
+this shared home. Rate exhaustion returns HTTP 429 with `Retry-After: 2`, or WebSocket
+`rate_limited`. Reads and simulation continue. The UI reports a failed action and resumes
+from shared server state; it does not auto-retry a toggle that might invert another visit.
 
 ### Error behavior
 
