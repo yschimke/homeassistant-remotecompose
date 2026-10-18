@@ -1,0 +1,6 @@
+title: Second panel
+views:
+  - title: Second view
+    cards:
+      - type: markdown
+        content: Second dashboard is selected

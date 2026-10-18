@@ -13,7 +13,11 @@ export class TerrazzoPanel extends HTMLElement {
         if (auth.expired) await auth.refreshAccessToken();
         return auth.accessToken;
       },
-      getDashboard: () => this._panel?.config?.dashboard || '',
+      getDashboard: () => {
+        // A bookmark can target any dashboard; configuration is only the default.
+        const query = new URLSearchParams(location.search);
+        return query.has('dashboard') ? query.get('dashboard') : this._panel?.config?.dashboard || '';
+      },
       dispatchAction: (payload) => {
         const action = JSON.parse(payload);
         const kind = action.type?.split('.').pop();

@@ -17,7 +17,7 @@ PREFIX = '/homeassistant-remotecompose/'
 class Handler(http.server.SimpleHTTPRequestHandler):
     def translate_path(self, path):
         if path == '/terrazzo-static/terrazzo-panel.js':
-            return str(Path('home-assistant/custom_components/terrazzo/frontend/terrazzo-panel.js').resolve())
+            return str(Path('custom_components/terrazzo/frontend/terrazzo-panel.js').resolve())
         if path.startswith('/terrazzo-static/wasm/'):
             return str(ROOT / path.removeprefix('/terrazzo-static/wasm/').split('?')[0])
         if not path.startswith(PREFIX):

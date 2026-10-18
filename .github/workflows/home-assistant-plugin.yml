@@ -4,6 +4,11 @@ on:
     branches: [main]
     paths: &paths
       - 'home-assistant/**'
+      - 'custom_components/terrazzo/**'
+      - 'hacs.json'
+      - '.github/release-please-config.json'
+      - '.github/workflows/release-build.yml'
+      - '.github/workflows/release-please.yml'
       - 'embed/**'
       - 'app-ui/**'
       - 'ha-client/**'
@@ -12,17 +17,44 @@ on:
   pull_request:
     paths: *paths
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag (required to publish); blank builds this ref only'
+        type: string
+        default: ''
+      publish:
+        description: 'Attach tested packages to the existing GitHub release'
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      publish:
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
-  group: ha-plugin-${{ github.ref }}
-  cancel-in-progress: true
+  group: ha-plugin-${{ inputs.tag || github.ref }}
+  cancel-in-progress: ${{ !inputs.publish }}
 jobs:
   plugin:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+      - name: Require a stable tag for publication
+        if: inputs.publish
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'A stable vX.Y.Z release tag is required'; exit 1; }
+          test "$(git rev-parse HEAD)" = "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")"
+
       - uses: ./.github/actions/setup
         with:
           cache-read-only: 'true'
@@ -30,23 +62,32 @@ jobs:
         run: ./gradlew :app-ui:wasmJsBrowserDistribution :design-server:embedResources :ha-client:jvmTest :app-ui:jvmTest ktfmtCheck --stacktrace
       - uses: actions/setup-python@v7.0.0
         with:
-          python-version: '3.14'
+          python-version: '3.15.0'
       - name: Package locally served integration
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
           python -m unittest discover -s home-assistant/test -p '*_test.py'
-          python scripts/package-home-assistant.py
+          if [ -n "$RELEASE_TAG" ]; then
+            python scripts/package-home-assistant.py --version "$RELEASE_TAG"
+          else
+            python scripts/package-home-assistant.py
+          fi
+          (cd build/home-assistant && sha256sum -c SHA256SUMS-home-assistant.txt)
       - name: Install browser tools
         run: |
           npm install --no-save --prefix embed playwright@1.56.1
           npx --prefix embed playwright install --with-deps chromium
       - name: Test real TS-player card and panel session bridge
-        run: node --test home-assistant/test/card-config.test.mjs home-assistant/test/frontend.test.mjs
+        run: node --test home-assistant/test/card-config.test.mjs home-assistant/test/frontend.test.mjs home-assistant/test/dashboards.test.mjs
       - name: Run packaged plugin inside Home Assistant
         run: |
           mkdir -p build/ha-config
-          cp -R build/home-assistant/custom_components build/ha-config/
+          mkdir -p build/ha-config/custom_components/terrazzo
+          # Exercise HACS extraction semantics with the actual release payload.
+          unzip -q build/home-assistant/terrazzo.zip -d build/ha-config/custom_components/terrazzo
           cp home-assistant/test/configuration.yaml build/ha-config/
-          cp home-assistant/test/ui-lovelace.yaml build/ha-config/
+          cp home-assistant/test/ui-lovelace.yaml home-assistant/test/second-dashboard.yaml build/ha-config/
           docker run -d --name ha-plugin -p 127.0.0.1:8123:8123 -v "$PWD/build/ha-config:/config" ghcr.io/home-assistant/home-assistant:stable
           for i in $(seq 1 90); do
             if curl -fsS http://127.0.0.1:8123/api/onboarding >/dev/null; then break; fi
@@ -57,9 +98,38 @@ jobs:
         if: always()
         run: docker logs ha-plugin 2>&1 | tail -100
       - uses: actions/upload-artifact@v7.0.2
-        if: always()
         with:
           name: home-assistant-plugin
+          if-no-files-found: error
           path: |
             build/home-assistant/terrazzo-home-assistant.zip
-            build/ha-plugin-evidence/
+            build/home-assistant/terrazzo.zip
+            build/home-assistant/SHA256SUMS-home-assistant.txt
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: home-assistant-plugin-evidence
+          path: build/ha-plugin-evidence/
+
+  publish:
+    name: Publish tested Home Assistant packages
+    needs: plugin
+    if: inputs.publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          name: home-assistant-plugin
+          path: package
+      - name: Verify and attach to the existing release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        working-directory: package
+        run: |
+          sha256sum -c SHA256SUMS-home-assistant.txt
+          gh release view "$RELEASE_TAG" >/dev/null
+          gh release upload "$RELEASE_TAG" terrazzo.zip terrazzo-home-assistant.zip SHA256SUMS-home-assistant.txt

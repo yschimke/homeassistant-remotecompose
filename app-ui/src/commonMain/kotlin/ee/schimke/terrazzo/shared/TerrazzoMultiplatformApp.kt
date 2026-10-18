@@ -26,9 +26,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
-import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.HaConfig
+import ee.schimke.ha.client.UnsupportedDashboardException
+import ee.schimke.ha.client.listRenderableDashboards
 import ee.schimke.ha.client.stateSnapshots
 import ee.schimke.ha.model.*
 import ee.schimke.ha.rc.formatState
@@ -56,12 +57,13 @@ private class AppConnection(
   accessTokenProvider: (suspend () -> String)? = null,
   val hostedAction: ((String) -> Boolean)? = null,
 ) {
+  val hosted = accessTokenProvider != null
   val client = HaClient(config, accessTokenProvider = accessTokenProvider)
 
   suspend fun close() = client.close()
 }
 
-/** The same dashboard-first application runs on Android, desktop and Wasm. */
+/** The shared dashboard application runs on Android, desktop and Wasm. */
 @Composable
 fun TerrazzoMultiplatformApp(
   hostedConfig: HaConfig? = null,
@@ -197,7 +199,12 @@ private fun DashboardShell(
   onSignOut: () -> Unit,
 ) {
   var list by remember { mutableStateOf<DashboardListState>(DashboardListState.Loading) }
-  val stack = remember { mutableStateListOf<NavKey>(DashboardDestination(initialDashboardPath)) }
+  val stack = remember {
+    mutableStateListOf<NavKey>(
+      if (connection.hosted && initialDashboardPath == null) DashboardsDestination
+      else DashboardDestination(initialDashboardPath)
+    )
+  }
   var snapshot by remember(connection) { mutableStateOf(HaSnapshot()) }
   var connectionError by remember(connection) { mutableStateOf<String?>(null) }
   var designServer by remember { mutableStateOf("https://ha.coo.ee") }
@@ -238,11 +245,7 @@ private fun DashboardShell(
     connection.client.state.collectLatest { state ->
       if (state != HaClient.ConnectionState.Ready) return@collectLatest
       try {
-        val fetched = connection.client.listDashboards()
-        list =
-          DashboardListState.Ready(
-            listOf(DashboardSummary(null, "Home")) + fetched.filter { it.urlPath != null }
-          )
+        list = DashboardListState.Ready(connection.client.listRenderableDashboards())
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
@@ -348,7 +351,10 @@ private fun LiveDashboard(
         } catch (e: CancellationException) {
           throw e
         } catch (e: Exception) {
-          error = "Could not load this dashboard. Reconnect to retry."
+          error =
+            if (e is UnsupportedDashboardException) e.message
+            else
+              "This dashboard is unavailable or is not a Lovelace dashboard. Choose another from Dashboards."
         }
       }
     }
@@ -384,7 +390,7 @@ private fun LiveDashboard(
       Text(it, Modifier.padding(16.dp), color = MaterialTheme.colorScheme.error)
     }
     if (current == null) {
-      CircularProgressIndicator(Modifier.padding(24.dp))
+      if (error == null) CircularProgressIndicator(Modifier.padding(24.dp))
     } else
       DashboardContent(current, path, snapshot, Modifier.weight(1f)) { _, card ->
         Column {

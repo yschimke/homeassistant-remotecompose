@@ -310,6 +310,9 @@ class DesignServerTest {
     serve(library()) {
       val page = client.get("/").bodyAsText()
       assertTrue("<h1>Terrazzo</h1>" in page)
+      assertTrue("href=\"#home-assistant\"" in page)
+      assertTrue("id=\"home-assistant\"" in page)
+      assertTrue("/blob/main/docs/HOME_ASSISTANT.md\">Installation and updates" in page)
       assertTrue("href=\"${SiteConfig.DEFAULT_DESIGNER_URL}\"" in page, "links the card designer")
       assertTrue("href=\"${SiteConfig.DEFAULT_CATALOG_URL}\"" in page, "links the catalog")
       assertTrue("href=\"/designs\"" in page, "links the template browser")

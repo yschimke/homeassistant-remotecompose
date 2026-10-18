@@ -9,10 +9,6 @@ sealed interface DashboardListState {
 
   data class Error(val message: String) : DashboardListState
 
-  /**
-   * Dashboards as returned by HA, with one synthetic exception: HA returns an *empty* list when the
-   * only dashboard is the default one, so we materialise a `(urlPath = null, title = "Home")` entry
-   * in that case so the picker / switcher always have something to render.
-   */
+  /** Dashboard choices supplied by the host; the shared shell validates Lovelace views. */
   data class Ready(val dashboards: List<DashboardSummary>) : DashboardListState
 }
