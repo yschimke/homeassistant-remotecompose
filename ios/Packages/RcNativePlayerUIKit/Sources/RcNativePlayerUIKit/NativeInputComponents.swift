@@ -25,7 +25,7 @@ extension RemoteComposeNativeCustomComponentRegistry {
 }
 
 @MainActor
-private final class NativeInputView: UIStackView, UITextFieldDelegate, UITextViewDelegate {
+final class NativeInputView: UIStackView, UITextFieldDelegate, UITextViewDelegate {
   private var component: RemoteComposeNativeCustomComponent
   private let drafts: NativeSwiftInputDrafts
   private let editable: Bool
@@ -40,6 +40,8 @@ private final class NativeInputView: UIStackView, UITextFieldDelegate, UITextVie
   private let range = UISlider()
   private let validation = UILabel()
   private let send = UIButton(type: .system)
+  private var pendingChanges = 0
+  private var submitRequested = false
   private var key: String { component.text(.init(NativeSwiftInput.key)) }
   private var writable: Bool {
     editable && component.integer(.init(NativeSwiftInput.enabled, default: 1)) == 1 && !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
@@ -111,6 +113,7 @@ private final class NativeInputView: UIStackView, UITextFieldDelegate, UITextVie
     }
     if isRange { caption.text = "\(label): \(value)" }
     field.keyboardType = component.config == NativeSwiftInput.number ? .numbersAndPunctuation : .default
+    validation.text = "Enter a valid value"
     validation.isHidden = !writable || valid
     let isMultiline = component.config == NativeSwiftInput.text && component.integer(.init(NativeSwiftInput.multiline)) == NativeSwiftInput.LineMode.multiline.rawValue
     fallback.isHidden = writable
@@ -123,8 +126,8 @@ private final class NativeInputView: UIStackView, UITextFieldDelegate, UITextVie
     send.isHidden = !writable || component.text(.init(NativeSwiftInput.submit)).isEmpty
     field.returnKeyType = send.isHidden ? .next : .send
     // Never replace an active marked-text composition or reset its selection on a live update.
-    if field.markedTextRange == nil && field.text != value { field.text = value }
-    if multiline.markedTextRange == nil && multiline.text != value { multiline.text = value }
+    if pendingChanges == 0 && field.markedTextRange == nil && field.text != value { field.text = value }
+    if pendingChanges == 0 && multiline.markedTextRange == nil && multiline.text != value { multiline.text = value }
     choice.setTitle(value.isEmpty ? "Choose…" : value, for: .normal)
     let options = component.text(.init(NativeSwiftInput.options)).split(separator: "\n").map(String.init)
     if #available(iOS 14.0, *) {
@@ -134,7 +137,7 @@ private final class NativeInputView: UIStackView, UITextFieldDelegate, UITextVie
       }
     })
     }
-    if writable && value != documentValue {
+    if writable && pendingChanges == 0 && value != documentValue {
       component.send(value, to: .init(NativeSwiftInput.valueReturn))
     }
   }
@@ -152,9 +155,44 @@ private final class NativeInputView: UIStackView, UITextFieldDelegate, UITextVie
     }
   }
   private func changed(_ value: String) {
-    guard writable, component.send(value, to: .init(NativeSwiftInput.valueReturn)) else { return }
-    drafts.update(value, for: key); validation.isHidden = valid; onChange(key, value)
-    choice.setTitle(value, for: .normal)
+    guard writable else { return }
+    let editedKey = key
+    pendingChanges += 1
+    component.send(value, to: .init(NativeSwiftInput.valueReturn)) { [weak self] accepted in
+      guard let self else { return }
+      self.pendingChanges -= 1
+      guard self.key == editedKey else { return }
+      if accepted {
+        self.drafts.update(value, for: editedKey)
+        self.onChange(editedKey, value)
+      } else { self.submitRequested = false }
+      if self.pendingChanges == 0 {
+        self.update(self.component)
+        if !accepted {
+          self.validation.isHidden = false
+          self.validation.text = "Edit was not accepted"
+          UIAccessibility.post(notification: .announcement, argument: "Edit was not accepted")
+        }
+      }
+      self.completePendingSubmissions(accepted: accepted)
+    }
+  }
+  private func formRoot() -> UIView {
+    var root: UIView = self
+    while let parent = root.superview {
+      root = parent
+      if parent is RemoteComposeNativePlayerView { break }
+    }
+    return root
+  }
+  private func completePendingSubmissions(accepted: Bool) {
+    func visit(_ view: UIView) {
+      if let input = view as? NativeInputView {
+        if !accepted { input.submitRequested = false }
+        else if input.submitRequested { input.submit() }
+      } else { view.subviews.forEach(visit) }
+    }
+    visit(formRoot())
   }
   @objc private func toggleChanged() { changed(toggle.isOn ? "true" : "false") }
   @objc private func rangeChanged() {
@@ -186,11 +224,14 @@ private final class NativeInputView: UIStackView, UITextFieldDelegate, UITextVie
     guard writable else { return }
     let action = component.text(.init(NativeSwiftInput.submit))
     guard !action.isEmpty else { return }
-    var root: UIView = self
-    while let parent = root.superview {
-      root = parent
-      if parent is RemoteComposeNativePlayerView { break }
+    let root = formRoot()
+    func pending(_ view: UIView) -> Bool {
+      if view.isHidden { return false }
+      if let input = view as? NativeInputView { return input.pendingChanges > 0 }
+      return view.subviews.contains(where: pending)
     }
+    if pending(root) { submitRequested = true; return }
+    submitRequested = false
     func keys(_ view: UIView) -> [String] {
       guard !view.isHidden else { return [] }
       if let input = view as? NativeInputView { return input.component.integer(.init(NativeSwiftInput.enabled, default: 1)) == 1 ? [input.key] : [] }

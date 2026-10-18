@@ -23,10 +23,24 @@ val embedResources by
     from(files(rootProject.file("embed/ha-card.js"), rootProject.file("embed/demo.html"))) {
       into("embed/v1")
     }
-    from(zipTree(embedPlayerArchive)) {
-      include("bundle.js")
-      rename { "rc-player.js" }
-      into("embed/v1")
+    val playersSource =
+      providers
+        .gradleProperty("rcPlayersDir")
+        .orElse(providers.environmentVariable("RC_PLAYERS_DIR"))
+    if (playersSource.isPresent) {
+      val sourceBundle =
+        file(playersSource.get()).resolve("third_party/remote-compose-player/web-player/bundle.js")
+      inputs.file(sourceBundle).withPropertyName("sourcePlayerBundle")
+      from(sourceBundle) {
+        rename { "rc-player.js" }
+        into("embed/v1")
+      }
+    } else {
+      from(zipTree(embedPlayerArchive)) {
+        include("bundle.js")
+        rename { "rc-player.js" }
+        into("embed/v1")
+      }
     }
     into(layout.buildDirectory.dir("generated/embed"))
   }

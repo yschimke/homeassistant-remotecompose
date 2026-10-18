@@ -118,3 +118,16 @@ if (builderSource.isPresent || providers.gradleProperty("typedAdapterCatalog").o
 if (providers.gradleProperty("adaptiveUidPilot").orNull == "true") {
   include(":adaptive-uid-pilot")
 }
+
+// The input-control consumer targets the next player release. PR CI validates its exact source
+// revision until Maven/JS 2.16.0 is published; release builds continue to use the pinned artifacts.
+providers
+  .gradleProperty("rcPlayersDir")
+  .orElse(providers.environmentVariable("RC_PLAYERS_DIR"))
+  .orNull
+  ?.let { playersDir ->
+    require(file(playersDir).resolve("settings.gradle.kts").isFile) {
+      "rcPlayersDir must point to an rc-players checkout"
+    }
+    includeBuild(playersDir)
+  }

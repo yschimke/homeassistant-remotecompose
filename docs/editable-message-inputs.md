@@ -111,3 +111,10 @@ custom authors can wrap the component in their own themed container and visible 
 default chrome unless you provide that visible labeling/layout yourself. Styling cannot enable a
 widget, demo or read-only host. Older players ignore the optional property; consume the updated
 2.16.0 player before relying on this appearance.
+
+PR CI builds Kotlin inputs and the JS player from the same immutable revision in
+`.github/actions/rc-players-source/action.yml`. `RC_PLAYERS_DIR` (or `-PrcPlayersDir`) selects that
+composite build and its already-built browser bundle. This validates the cross-repository change
+before publication; it does not substitute a read-only old player or skip any checks. Release jobs
+still resolve the declared 2.16.0 artifacts. After player publication, remove the temporary source
+setup from CI and validate those artifact pins before releasing the consumer.

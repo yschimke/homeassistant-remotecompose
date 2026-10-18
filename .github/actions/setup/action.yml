@@ -21,3 +21,5 @@ runs:
       with:
         cache-read-only: ${{ inputs.cache-read-only }}
     - uses: ./.github/actions/android-sdk
+    - uses: ./.github/actions/rc-players-source
+      if: github.event_name == 'pull_request'
