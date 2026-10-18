@@ -39,10 +39,13 @@ export class RemoteComposeCard extends HaCardElement {
   }
   set hass(hass) {
     const wasAuthenticated = !!this._hass;
+    const accountChanged = this._hass?.user?.id != null && this._hass.user.id !== hass?.user?.id;
+    if (accountChanged) { this.inputDrafts.clear(); this.stop(); }
     this._hass = hass;
     this.setStates(hass.states);
     if (!wasAuthenticated && this.player) this.configureInputPlayer(this.player, this.config.card);
     this.setAttribute('theme', hass.themes?.darkMode ? 'dark' : 'light');
+    if (accountChanged) this.start();
   }
   configureInputPlayer(player, card) {
     if (card.type !== MESSAGE_CARD_TYPE) return super.configureInputPlayer(player, card);

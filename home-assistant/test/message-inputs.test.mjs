@@ -81,6 +81,11 @@ test('message card renders real RC inputs, preserves drafts/focus, and sends via
     assert.equal(await page.getByRole('textbox').count(), 0);
     assert.equal(await page.getByRole('button', { name: 'Send' }).count(), 0);
     await page.screenshot({ path: `${out}/read-only.png` });
+    await page.evaluate(() => { card.removeAttribute('read-only'); card.hass = { ...card._hass, user: { id: 'other-account' } }; });
+    await message.waitFor();
+    await page.waitForFunction(() => card.shadowRoot.querySelector('textarea')?.value === '');
+    assert.equal(await message.inputValue(), '', 'an account change clears the previous account draft');
+    assert.equal(await page.getByRole('combobox', { name: 'Contact / Room' }).inputValue(), 'Kitchen');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

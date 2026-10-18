@@ -1,6 +1,12 @@
 # Editable message cards
 
-This first implementation supports plain single-line text, multiline text, and single-choice
+The public [input controls v1 contract](https://github.com/yschimke/rc-players/blob/agent/editable-card-inputs/docs/design/RC_INPUT_COMPONENTS.md)
+is independent of Home Assistant. The player SDK also supports boolean toggles, numeric entry and
+bounded ranges; published `rc-player-protocol` factories/fragments and `rc-creation-bridge` Compose
+helpers let other authors create them. The HA **message schema** below deliberately binds text and
+choice strings; it does not silently coerce new control types into HA service data.
+
+This message implementation supports plain single-line text, multiline text, and single-choice
 values. Selects use their declared options; `input_select`/`select` entity rows use HA's options,
 and `input_text` rows use text fields. Numeric/date/password/rich-text/multi-select inputs are not
 implemented. Unsupported/missing choices are reported instead of silently turning into free text.

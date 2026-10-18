@@ -13,7 +13,7 @@ extension RemoteComposeNativeCustomComponentRegistry {
     onChange: @escaping (String, String) -> Void = { _, _ in },
     onSubmit: @escaping (String, [String: String]) -> Void = { _, _ in }
   ) -> Self {
-    for config in [NativeSwiftInput.text, NativeSwiftInput.choice] {
+    for config in NativeSwiftInput.configs.sorted() {
       register(config, makeUIView: { component in
         NativeInputView(component: component, drafts: drafts, editable: editable,
                         onChange: onChange, onSubmit: onSubmit)
@@ -36,12 +36,24 @@ private final class NativeInputView: UIStackView, UITextFieldDelegate, UITextVie
   private let field = UITextField()
   private let multiline = UITextView()
   private let choice = UIButton(type: .system)
+  private let toggle = UISwitch()
+  private let range = UISlider()
+  private let validation = UILabel()
   private let send = UIButton(type: .system)
   private var key: String { component.text(.init(NativeSwiftInput.key)) }
   private var writable: Bool {
-    editable && !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+    editable && component.integer(.init(NativeSwiftInput.enabled, default: 1)) == 1 && !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
       component.properties.contains { $0.id == NativeSwiftInput.valueReturn &&
         $0.kind == .textReturn }
+  }
+
+  private func constraint(_ id: Int) -> Double? { Double(component.text(.init(id))) }
+  private var valid: Bool {
+    let value = drafts.value(for: key, documentValue: component.text(.init(NativeSwiftInput.value)))
+    return [NativeSwiftInput.minimum, NativeSwiftInput.maximum, NativeSwiftInput.step].allSatisfy { component.text(.init($0)).isEmpty || constraint($0)?.isFinite == true } &&
+      NativeSwiftInput.isValid(config: component.config, value: value,
+        options: component.text(.init(NativeSwiftInput.options)).split(separator: "\n").map(String.init),
+        minimum: constraint(NativeSwiftInput.minimum), maximum: constraint(NativeSwiftInput.maximum), step: constraint(NativeSwiftInput.step))
   }
 
   init(component: RemoteComposeNativeCustomComponent, drafts: NativeSwiftInputDrafts,
@@ -52,7 +64,7 @@ private final class NativeInputView: UIStackView, UITextFieldDelegate, UITextVie
     super.init(frame: .zero)
     axis = .vertical; spacing = 4; isLayoutMarginsRelativeArrangement = true
     directionalLayoutMargins = .init(top: 6, leading: 8, bottom: 6, trailing: 8)
-    [caption, fallback, field, multiline, choice, send].forEach(addArrangedSubview)
+    [caption, fallback, field, multiline, choice, toggle, range, validation, send].forEach(addArrangedSubview)
     caption.font = .preferredFont(forTextStyle: .caption1)
     fallback.numberOfLines = 0
     field.borderStyle = .roundedRect; field.delegate = self
@@ -60,6 +72,9 @@ private final class NativeInputView: UIStackView, UITextFieldDelegate, UITextVie
     multiline.delegate = self; multiline.font = .preferredFont(forTextStyle: .body)
     if #available(iOS 14.0, *) { choice.showsMenuAsPrimaryAction = true }
     else { choice.addTarget(self, action: #selector(choose), for: .touchUpInside) }
+    toggle.addTarget(self, action: #selector(toggleChanged), for: .valueChanged)
+    range.addTarget(self, action: #selector(rangeChanged), for: .valueChanged)
+    validation.text = "Enter a valid value"; validation.textColor = .systemRed
     send.setTitle("Send", for: .normal)
     send.addTarget(self, action: #selector(submit), for: .touchUpInside)
     update(component)
@@ -76,12 +91,28 @@ private final class NativeInputView: UIStackView, UITextFieldDelegate, UITextVie
     let documentValue = component.text(.init(NativeSwiftInput.value))
     let value = drafts.value(for: key, documentValue: documentValue)
     let isChoice = component.config == NativeSwiftInput.choice
-    let isMultiline = component.integer(.init(NativeSwiftInput.multiline)) == NativeSwiftInput.LineMode.multiline.rawValue
+    let isToggle = component.config == NativeSwiftInput.toggle
+    let isRange = component.config == NativeSwiftInput.range
+    toggle.accessibilityLabel = label; range.accessibilityLabel = label
+    toggle.isHidden = !writable || !isToggle
+    range.isHidden = !writable || !isRange
+    toggle.isOn = value == "true"
+    if isRange, let minimum = constraint(NativeSwiftInput.minimum), let maximum = constraint(NativeSwiftInput.maximum), let step = constraint(NativeSwiftInput.step), step > 0, minimum < maximum, ((maximum-minimum)/step).isFinite {
+      range.minimumValue = 0; range.maximumValue = Float(min(10000, (maximum-minimum)/step))
+      range.value = Float(((Double(value) ?? minimum)-minimum)/step)
+      range.accessibilityValue = value
+    }
+    if isRange { caption.text = "\(label): \(value)" }
+    field.keyboardType = component.config == NativeSwiftInput.number ? .numbersAndPunctuation : .default
+    validation.isHidden = !writable || valid
+    let isMultiline = component.config == NativeSwiftInput.text && component.integer(.init(NativeSwiftInput.multiline)) == NativeSwiftInput.LineMode.multiline.rawValue
     fallback.isHidden = writable
-    fallback.text = "\(value) · Open in app to edit"
-    field.isHidden = !writable || isChoice || isMultiline
-    multiline.isHidden = !writable || isChoice || !isMultiline
+    fallback.text = "\(value) · \(component.integer(.init(NativeSwiftInput.enabled, default: 1)) != 1 ? "Unavailable" : "Open in app to edit")"
+    field.isHidden = !writable || isChoice || isToggle || isRange || isMultiline
+    multiline.isHidden = !writable || isChoice || isToggle || isRange || !isMultiline
     choice.isHidden = !writable || !isChoice
+    let submitLabel = component.text(.init(NativeSwiftInput.submitLabel))
+    send.setTitle(submitLabel.isEmpty ? "Send" : submitLabel, for: .normal)
     send.isHidden = !writable || component.text(.init(NativeSwiftInput.submit)).isEmpty
     field.returnKeyType = send.isHidden ? .next : .send
     // Never replace an active marked-text composition or reset its selection on a live update.
@@ -115,8 +146,13 @@ private final class NativeInputView: UIStackView, UITextFieldDelegate, UITextVie
   }
   private func changed(_ value: String) {
     guard writable, component.send(value, to: .init(NativeSwiftInput.valueReturn)) else { return }
-    drafts.update(value, for: key); onChange(key, value)
+    drafts.update(value, for: key); validation.isHidden = valid; onChange(key, value)
     choice.setTitle(value, for: .normal)
+  }
+  @objc private func toggleChanged() { changed(toggle.isOn ? "true" : "false") }
+  @objc private func rangeChanged() {
+    guard let minimum = constraint(NativeSwiftInput.minimum), let step = constraint(NativeSwiftInput.step) else { return }
+    range.value = range.value.rounded(); changed(String(minimum + Double(range.value)*step))
   }
   @objc private func fieldChanged() { changed(field.text ?? "") }
   func textViewDidChange(_ textView: UITextView) { changed(textView.text) }
@@ -150,9 +186,15 @@ private final class NativeInputView: UIStackView, UITextFieldDelegate, UITextVie
     }
     func keys(_ view: UIView) -> [String] {
       guard !view.isHidden else { return [] }
-      if let input = view as? NativeInputView { return [input.key] }
+      if let input = view as? NativeInputView { return input.component.integer(.init(NativeSwiftInput.enabled, default: 1)) == 1 ? [input.key] : [] }
       return view.subviews.flatMap(keys)
     }
+    func validInputs(_ view: UIView) -> Bool {
+      if view.isHidden { return true }
+      if let input = view as? NativeInputView { return input.component.integer(.init(NativeSwiftInput.enabled, default: 1)) != 1 || input.valid }
+      return view.subviews.allSatisfy(validInputs)
+    }
+    guard validInputs(root) else { UIAccessibility.post(notification: .announcement, argument: "Enter a valid value"); return }
     var values = drafts.values(for: Set(keys(root)))
     values[key] = drafts.value(for: key, documentValue: component.text(.init(NativeSwiftInput.value)))
     onSubmit(action, values); endEditing(true)
