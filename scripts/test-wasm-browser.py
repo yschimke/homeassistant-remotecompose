@@ -74,6 +74,7 @@ try:
         executable = os.environ.get('CHROMIUM_PATH')
         browser = p.chromium.launch(executable_path=executable, args=['--no-sandbox'])
         page = browser.new_page(viewport={'width': 1200, 'height': 800})
+        page.route('https://ha.coo.ee/**', lambda route: route.fulfill(status=404, headers={'Access-Control-Allow-Origin': '*'}))
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.route_web_socket('wss://ha.example.test/api/websocket', route_socket)
@@ -129,6 +130,7 @@ try:
         assert not errors, errors
         # Embedded HA uses its native dialog capability rather than opening another tab.
         hosted = browser.new_page(viewport={'width': 1200, 'height': 800})
+        hosted.route('https://ha.coo.ee/**', lambda route: route.fulfill(status=404, headers={'Access-Control-Allow-Origin': '*'}))
         hosted.route_web_socket(f'ws://127.0.0.1:{server.server_port}/api/websocket', route_socket)
         hosted.route(f'http://127.0.0.1:{server.server_port}/hosted', lambda route: route.fulfill(
             content_type='text/html', body="""<script type="module">

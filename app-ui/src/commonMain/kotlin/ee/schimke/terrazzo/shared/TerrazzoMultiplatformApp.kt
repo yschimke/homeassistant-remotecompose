@@ -6,9 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -372,6 +371,27 @@ private fun LiveDashboard(
       }
     }
   }
+  var cardStyle by rememberSaveable { mutableStateOf("classic") }
+  var styleMenu by remember { mutableStateOf(false) }
+  var customizing by rememberSaveable { mutableStateOf(false) }
+  val dark = isSystemInDarkTheme()
+  fun moreInfo(entityId: String) {
+    val payload = buildJsonObject {
+      put("type", "ee.schimke.ha.rc.components.HaAction.MoreInfo")
+      put("entityId", entityId)
+    }
+      .toString()
+    try {
+      if (connection.hostedAction?.invoke(payload) != true)
+        uriHandler.openUri(
+          connection.config.baseUrl.trimEnd('/') +
+            "/lovelace?more-info-entity-id=" +
+            entityId.encodeURLParameter()
+        )
+    } catch (_: Exception) {
+      error = "Could not open Home Assistant entity details."
+    }
+  }
   val editing = designCard
   if (editing != null) {
     CardStudioScreen(
@@ -392,39 +412,64 @@ private fun LiveDashboard(
     if (current == null) {
       if (error == null) CircularProgressIndicator(Modifier.padding(24.dp))
     } else
-      DashboardContent(current, path, snapshot, Modifier.weight(1f)) { _, card ->
-        Column {
-          NativeCard(
-            card,
-            snapshot,
-            onMoreInfo = { entityId ->
-              val payload = buildJsonObject {
-                put("type", "ee.schimke.ha.rc.components.HaAction.MoreInfo")
-                put("entityId", entityId)
+      Column(Modifier.weight(1f)) {
+        Row(
+          Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+          horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+          Box {
+            TextButton(onClick = { styleMenu = true }) {
+              Text("Card style: ${cardStyle.replaceFirstChar { it.uppercaseChar() }}")
+            }
+            DropdownMenu(styleMenu, { styleMenu = false }) {
+              listOf("classic", "braun", "lcd", "console").forEach { style ->
+                DropdownMenuItem(
+                  text = { Text(style.replaceFirstChar { it.uppercaseChar() }) },
+                  onClick = {
+                    cardStyle = style
+                    styleMenu = false
+                  },
+                )
               }
-                .toString()
-              try {
-                if (connection.hostedAction?.invoke(payload) != true) {
-                  uriHandler.openUri(
-                    connection.config.baseUrl.trimEnd('/') +
-                      "/lovelace?more-info-entity-id=" +
-                      entityId.encodeURLParameter()
-                  )
-                }
-              } catch (_: Exception) {
-                error = "Could not open Home Assistant entity details."
-              }
-            },
-          ) { entityId ->
-            dispatch(
-              buildJsonObject {
-                put("type", "ee.schimke.ha.rc.components.HaAction.Toggle")
-                put("entityId", entityId)
-              }
-                .toString()
-            )
+            }
           }
-          TextButton(onClick = { designCard = card }) { Text("Design or fix this card") }
+          TextButton(onClick = { customizing = !customizing }) {
+            Text(if (customizing) "Done customizing" else "Customize")
+          }
+        }
+        DashboardContent(current, path, snapshot, Modifier.weight(1f)) { _, card ->
+          Column {
+            AuthenticatedCard(
+              card,
+              snapshot,
+              connection.client,
+              cardStyle,
+              dark,
+              onMoreInfo = ::moreInfo,
+              onToggle = { entityId ->
+                dispatch(
+                  buildJsonObject {
+                    put("type", "ee.schimke.ha.rc.components.HaAction.Toggle")
+                    put("entityId", entityId)
+                  }
+                    .toString()
+                )
+              },
+              onService = { domain, service, data ->
+                dispatch(
+                  buildJsonObject {
+                    put("type", "ee.schimke.ha.rc.components.HaAction.CallService")
+                    put("domain", domain)
+                    put("service", service)
+                    put("serviceData", data)
+                  }
+                    .toString()
+                )
+              },
+            )
+            if (customizing)
+              TextButton(onClick = { designCard = card }) { Text("Design or fix this card") }
+          }
         }
       }
   }
@@ -457,29 +502,50 @@ fun DashboardContent(
         }
       }
     }
-    if (view == null || (view.cards.isEmpty() && view.sections.all { it.cards.isEmpty() })) {
+    if (
+      view == null ||
+        (view.header?.card == null &&
+          view.cards.isEmpty() &&
+          view.sections.all { it.cards.isEmpty() })
+    ) {
       Text("This dashboard has no cards.", Modifier.padding(24.dp))
     } else {
-      LazyVerticalGrid(
-        columns = GridCells.Adaptive(300.dp),
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-      ) {
-        view.cards.forEachIndexed { i, card ->
-          val key = CardKey(path, view.path ?: "view-$index", cardIndex = i, type = card.type)
-          item(key = key.toCacheKey()) { renderCard(key, card) }
-        }
-        view.sections.forEachIndexed { sectionIndex, section ->
-          section.title?.let { title ->
-            item(span = { GridItemSpan(maxLineSpan) }) {
-              Text(title, style = MaterialTheme.typography.titleLarge)
+      val groups = remember(view, path, index) { dashboardGroups(view, path, index) }
+      BoxWithConstraints(Modifier.fillMaxSize()) {
+        val columns = dashboardColumnCount((maxWidth - 32.dp).value, view.maxColumns)
+        LazyVerticalStaggeredGrid(
+          columns = StaggeredGridCells.Fixed(columns),
+          modifier = Modifier.fillMaxSize(),
+          contentPadding = PaddingValues(16.dp),
+          horizontalArrangement = Arrangement.spacedBy(16.dp),
+          verticalItemSpacing = 16.dp,
+        ) {
+          view.header?.card?.let { header ->
+            item(
+              key = "view-header",
+              span = androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan.FullLine,
+            ) {
+              renderCard(
+                CardKey(path, view.path ?: "view-$index", cardIndex = -1, type = header.type),
+                header,
+              )
             }
           }
-          section.cards.forEachIndexed { i, card ->
-            val key = CardKey(path, view.path ?: "view-$index", sectionIndex, i, card.type)
-            item(key = key.toCacheKey()) { renderCard(key, card) }
+          groups.forEach { group ->
+            item(key = group.id) {
+              Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                group.title?.let {
+                  Text(
+                    it,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(vertical = 4.dp),
+                  )
+                }
+                group.cards.forEach { (cardKey, card) ->
+                  key(cardKey.toCacheKey()) { renderCard(cardKey, card) }
+                }
+              }
+            }
           }
         }
       }
@@ -493,19 +559,25 @@ internal fun NativeCard(
   snapshot: HaSnapshot,
   readOnly: Boolean = false,
   onMoreInfo: ((String) -> Unit)? = null,
+  onService: ((String, String, JsonObject) -> Unit)? = null,
   toggle: (String) -> Unit,
 ) {
-  val children =
-    (card.raw["cards"] as? JsonArray)
-      ?.mapNotNull { raw ->
-        val obj = raw as? JsonObject ?: return@mapNotNull null
-        (obj["type"] as? JsonPrimitive)?.contentOrNull?.let { CardConfig(it, obj) }
-      }
-      .orEmpty()
-  if (children.isNotEmpty()) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-      children.forEach { child -> NativeCard(child, snapshot, readOnly, onMoreInfo, toggle) }
+  val children = childCards(card)
+  if (children.isNotEmpty() && card.type in setOf("grid", "horizontal-stack", "vertical-stack")) {
+    CardCluster(card) { child ->
+      NativeCard(child, snapshot, readOnly, onMoreInfo, onService, toggle)
     }
+    return
+  }
+  if (card.type == "markdown") {
+    DashboardMarkdown(card, snapshot)
+    return
+  }
+  if (card.type == "heading") {
+    Text(
+      (card.raw["heading"] as? JsonPrimitive)?.contentOrNull.orEmpty(),
+      style = MaterialTheme.typography.titleLarge,
+    )
     return
   }
   val entityId = (card.raw["entity"] as? JsonPrimitive)?.contentOrNull
@@ -540,11 +612,16 @@ internal fun NativeCard(
           ?: (card.raw["title"] as? JsonPrimitive)?.contentOrNull
           ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull
           ?: entityId
-          ?: card.type,
+          ?: if (card.type == "entities") "Status"
+          else card.type.replace('-', ' ').replaceFirstChar { it.uppercaseChar() },
         style = MaterialTheme.typography.titleMedium,
       )
       if (card.type == "markdown") {
-        Text((card.raw["content"] as? JsonPrimitive)?.contentOrNull.orEmpty())
+        val source = (card.raw["content"] as? JsonPrimitive)?.contentOrNull.orEmpty()
+        Text(
+          JinjaTemplate.render(source, snapshot)
+            ?: "This template needs Home Assistant’s renderer. Open entity details in Home Assistant."
+        )
       } else if (card.type == "heading") {
         Text(
           (card.raw["heading"] as? JsonPrimitive)?.contentOrNull.orEmpty(),
@@ -558,9 +635,17 @@ internal fun NativeCard(
             headlineContent = {
               Text(value?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull ?: id)
             },
-            supportingContent = { Text(formatState(value, snapshot)) },
+            supportingContent = {
+              Text(if (value == null) "Entity not found" else formatState(value, snapshot))
+            },
             trailingContent = {
-              if (id.substringBefore('.') in setOf("light", "switch", "input_boolean", "fan"))
+              if (
+                value != null &&
+                  onService != null &&
+                  id.substringBefore('.') in setOf("select", "input_select", "text", "input_text")
+              )
+                EntityEditor(value, !readOnly, onService)
+              else if (id.substringBefore('.') in setOf("light", "switch", "input_boolean", "fan"))
                 Switch(
                   checked = value?.state == "on",
                   onCheckedChange = { toggle(id) },
@@ -582,8 +667,19 @@ internal fun NativeCard(
           )
         }
       } else {
-        Text("This card type is not supported on desktop or web yet.")
+        Text(
+          if (entityId != null) "Entity not found"
+          else "Open this card in Home Assistant for its full view."
+        )
       }
+      val action = cardServiceAction(card)
+      if (action != null && onService != null)
+        Button(
+          enabled = !readOnly && entity?.state !in setOf("unknown", "unavailable"),
+          onClick = { onService(action.domain, action.service, action.data) },
+        ) {
+          Text("Run action")
+        }
     }
   }
 }

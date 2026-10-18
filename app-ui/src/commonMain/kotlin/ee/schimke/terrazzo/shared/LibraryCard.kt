@@ -36,6 +36,7 @@ internal fun LibraryCard(
   onToggle: ((String) -> Unit)? = null,
   onMoreInfo: ((String) -> Unit)? = null,
   onTemperatureChange: ((Double) -> Unit)? = null,
+  showFallbackNotice: Boolean = true,
   fallback: @Composable () -> Unit,
 ) {
   var bytes by remember(card, style, dark) { mutableStateOf<ByteArray?>(null) }
@@ -95,7 +96,7 @@ internal fun LibraryCard(
     if (current == null) {
       Column {
         key(tick) { fallback() }
-        if (failed) Text("Design unavailable · showing built-in card")
+        if (failed && showFallbackNotice) Text("Design unavailable · showing built-in card")
       }
     } else {
       Column(
@@ -175,6 +176,7 @@ internal fun demoToggleEntity(card: CardConfig, payload: String?): String? {
   val configured =
     ((card.raw["tap_action"] as? JsonObject)?.get("action") as? JsonPrimitive)?.contentOrNull
   // A library's generic body action must honor this dashboard's host-owned toggle configuration.
+  if (configured != null && configured != "toggle") return null
   if (kind != "Toggle" && !(kind == "MoreInfo" && configured == "toggle")) return null
   val slot = (action["entityId"] as? JsonPrimitive)?.contentOrNull ?: return null
   return CardDesignSlots.slotEntries(card)
@@ -215,7 +217,13 @@ internal fun demoMoreInfoEntity(card: CardConfig, payload: String?): String? {
   val action =
     payload?.let { runCatching { Json.parseToJsonElement(it).jsonObject }.getOrNull() }
       ?: return null
-  if ((action["type"] as? JsonPrimitive)?.contentOrNull?.substringAfterLast('.') != "MoreInfo")
+  val kind = (action["type"] as? JsonPrimitive)?.contentOrNull?.substringAfterLast('.')
+  val configured =
+    ((card.raw["tap_action"] as? JsonObject)?.get("action") as? JsonPrimitive)?.contentOrNull
+  if (
+    !((kind == "MoreInfo" && configured in setOf(null, "more-info", "toggle")) ||
+      (kind == "Toggle" && configured == "more-info"))
+  )
     return null
   val slot = (action["entityId"] as? JsonPrimitive)?.contentOrNull ?: return null
   return CardDesignSlots.slotEntries(card)
