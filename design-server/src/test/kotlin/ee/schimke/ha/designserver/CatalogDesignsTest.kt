@@ -1,5 +1,6 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.composeai.rcplayer.protocol.*
 import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.client.design.DesignPublisher
 import ee.schimke.ha.design.DesignKey
@@ -118,6 +119,22 @@ class CatalogDesignsTest {
       store.publish("new-design", 0, source, key, template, 1, null, "github:admin", "base")
     File(dir, "blobs/${revision.entry.sha256}.rc").writeText("broken")
     assertFailsWith<IllegalStateException> { CatalogDesignStore(dir) }
+  }
+
+  @Test
+  fun newEntityColorBindingsCannotBypassTheLiveHostContract() {
+    val document = RcDocumentCodec.decode(template, RcWireLimits())
+    fun withColor(name: String) =
+      RcDocumentCodec.encode(
+        document.copy(
+          operations = document.operations + RcNamedVariable(9000, RcNamedVariable.COLOR_TYPE, name)
+        )
+      )
+    assertEquals(
+      "Unknown host binding",
+      catalogTemplateProblem(withColor("light.s0.new_color"), template, key),
+    )
+    assertNull(catalogTemplateProblem(withColor("WearM3.primary"), template, key))
   }
 
   @Test

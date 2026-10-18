@@ -34,7 +34,15 @@ internal fun catalogTemplateProblem(
   val required = bindings(base)
   if (required.any { (name, type) -> actual[name] != type })
     return "Required live bindings are missing or changed type"
-  if (actual.keys.any { '.' in it && it !in required && actual[it] != RcNamedVariable.COLOR_TYPE })
+  // The catalog's Remote Material palette exports WearM3 roles with in-document defaults.
+  // Arbitrary entity colors still need an existing host contract, just like numeric readings.
+  if (
+    actual.keys.any {
+      '.' in it &&
+        it !in required &&
+        !(it.startsWith("WearM3.") && actual[it] == RcNamedVariable.COLOR_TYPE)
+    }
+  )
     return "Unknown host binding"
   // Compare semantic host payloads, not generated text IDs. An expression-generated host payload
   // needs its own equivalence checker; refuse that migration instead of treating it as equivalent.
