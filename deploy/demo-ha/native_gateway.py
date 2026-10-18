@@ -12,9 +12,20 @@ from aiohttp import web
 
 ROOT = Path(__file__).parent
 ENTITIES = frozenset(json.loads((ROOT / 'entities.json').read_text()))
-STATIC_MARKDOWN = frozenset(card['content'] for view in json.loads((ROOT / 'dashboard.json').read_text())['views']
-                            for card in view.get('cards', []) if card.get('type') == 'markdown'
-                            and not any(marker in card.get('content', '') for marker in ('{{', '{%', '{#')))
+def literal_markdown(node):
+    if isinstance(node, dict):
+        content = node.get('content')
+        if node.get('type') == 'markdown' and isinstance(content, str) and not any(
+                marker in content for marker in ('{{', '{%', '{#')):
+            yield content
+        for value in node.values():
+            yield from literal_markdown(value)
+    elif isinstance(node, list):
+        for value in node:
+            yield from literal_markdown(value)
+
+
+STATIC_MARKDOWN = frozenset(literal_markdown(json.loads((ROOT / 'dashboard.json').read_text())))
 READ_COMMANDS = frozenset({
     'auth/current_user', 'get_config', 'get_states', 'get_services', 'get_panels',
     'frontend/get_themes', 'frontend/get_translations', 'frontend/get_icons', 'frontend/get_user_data',

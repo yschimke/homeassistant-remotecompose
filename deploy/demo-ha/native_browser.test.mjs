@@ -64,7 +64,7 @@ test('public native HA login, dashboard, live updates and server-enforced read-o
     });
     assert.deepEqual(rejected.failures, Array(7).fill('read_only'));
     assert.deepEqual(rejected.statuses, [403, 403, 403]);
-    assert.equal(Number(rejected.battery), 78);
+    assert.ok(Number(rejected.battery) >= 45 && Number(rejected.battery) <= 95, 'battery follows bounded simulation while writes remain rejected');
     assert.equal(rejected.views, 1);
     await page.waitForFunction((previous) => document.querySelector('home-assistant').hass.states['sensor.demo_temperature'].state !== previous,
       initial.state, { timeout: 80_000 });

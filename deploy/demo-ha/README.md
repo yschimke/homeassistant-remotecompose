@@ -329,3 +329,12 @@ to 120 seconds for readiness, then requires the same reads, rejected writes and 
 The verifier changes and restores both controllable entities through REST and WebSocket,
 rejects administrative operations, and checks that battery state and dashboard remain unchanged. Run it again against the public HTTPS URL after
 deploying; a successful local test is not evidence about the deployed edge.
+
+## Real WASM integration smoke
+
+Install Playwright in a separate test environment and its Chromium browser, then run
+`python scripts/test-live-demo-browser.py` from the repository root. It tests the public
+controls-v4 deployment with two visitors, visible simulator changes and control restoration.
+For isolated verification use `--gateway http://127.0.0.1:8080`; only demo API requests are
+redirected, while the actual published frontend is loaded. Output and screenshots explicitly
+distinguish the isolated run from production. The test uses no administrative credentials.
