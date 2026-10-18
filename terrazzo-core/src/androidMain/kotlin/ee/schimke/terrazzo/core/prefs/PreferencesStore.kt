@@ -50,6 +50,16 @@ enum class CardStylePref(val id: String) {
   Nixie("nixie"),
   Console("console"),
   Ikea("ikea"),
+  Mushroom("mushroom"),
+  Bubble("bubble"),
+  Minimalist("minimalist"),
+  Cupertino("cupertino"),
+  Catppuccin("catppuccin"),
+  Obsidian("obsidian"),
+  Noctis("noctis"),
+  Lcars("lcars"),
+  Arctic("arctic"),
+  Aeon("aeon"),
 }
 
 /**

@@ -63,45 +63,59 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
         .then(cardChrome(theme.cardBackground, theme.divider))
         .padding(horizontal = 14.rdp, vertical = 12.rdp)
   ) {
-    RemoteColumn(
-      modifier = RemoteModifier.fillMaxWidth(),
-      verticalArrangement = RemoteArrangement.spacedBy(4.rdp),
-      horizontalAlignment = RemoteAlignment.CenterHorizontally,
-    ) {
-      RemoteHaArcMeter(
-        zones = gaugeZones(data),
-        fraction = fraction,
-        color = severityColor,
-        modifier = RemoteModifier.fillMaxWidth().height(72.rdp),
-        strokeWidthPx = 10f,
-      )
+    if (visualFamily().isCommunity) {
+      CommunityReadingLayout(
+        entityName(data.entityId, data.name),
+        data.valueText,
+        if (data.unit != null) cardText("range", gaugeRangeText(data.min, data.max, data.unit))
+        else null,
+        fraction,
+        severityColor,
+        RemoteModifier.fillMaxWidth().height(144.rdp),
+      ) { meter ->
+        RemoteHaArcMeter(fraction, severityColor, meter, zones = gaugeZones(data))
+      }
+    } else {
+      RemoteColumn(
+        modifier = RemoteModifier.fillMaxWidth(),
+        verticalArrangement = RemoteArrangement.spacedBy(4.rdp),
+        horizontalAlignment = RemoteAlignment.CenterHorizontally,
+      ) {
+        RemoteHaArcMeter(
+          zones = gaugeZones(data),
+          fraction = fraction,
+          color = severityColor,
+          modifier = RemoteModifier.fillMaxWidth().height(72.rdp),
+          strokeWidthPx = 10f,
+        )
 
-      RemoteText(
-        text = data.valueText,
-        color = theme.primaryText,
-        fontSize = HaType.Value,
-        fontWeight = haValueWeight(),
-        style = haTextStyle(),
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-      )
-      RemoteText(
-        text = entityName(data.entityId, data.name),
-        color = theme.secondaryText,
-        fontSize = HaType.Body,
-        style = haTextStyle(),
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-      )
-      if (data.unit != null) {
         RemoteText(
-          text = cardText("range", gaugeRangeText(data.min, data.max, data.unit)),
-          color = theme.secondaryText,
-          fontSize = HaType.Caption,
+          text = data.valueText,
+          color = theme.primaryText,
+          fontSize = HaType.Value,
+          fontWeight = haValueWeight(),
           style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
+        RemoteText(
+          text = entityName(data.entityId, data.name),
+          color = theme.secondaryText,
+          fontSize = HaType.Body,
+          style = haTextStyle(),
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+        if (data.unit != null) {
+          RemoteText(
+            text = cardText("range", gaugeRangeText(data.min, data.max, data.unit)),
+            color = theme.secondaryText,
+            fontSize = HaType.Caption,
+            style = haTextStyle(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+        }
       }
     }
   }

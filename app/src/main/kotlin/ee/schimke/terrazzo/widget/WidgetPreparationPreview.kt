@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
@@ -21,9 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.cardSizeConstraints
-import ee.schimke.ha.rc.cards.defaultRegistry
-import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.terrazzo.dashboard.LauncherGrid
 import kotlinx.coroutines.CancellationException
@@ -70,14 +68,9 @@ internal fun WidgetPreparationPreview(
     with(LocalDensity.current) {
       context.resources.getDimension(android.R.dimen.system_app_widget_background_radius).toDp()
     }
-  val registry = remember { defaultRegistry().withEnhancedShutter() }
-  val bounds =
-    remember(card) {
-      WidgetSizeClass.forConstraints(registry.cardSizeConstraints(card, snapshot))
-        .gridBounds(context)
-    }
-  var width by remember(bounds) { mutableIntStateOf(bounds.defaultCellsW) }
-  var height by remember(bounds) { mutableIntStateOf(bounds.defaultCellsH) }
+  val bounds = remember(context) { LauncherWidgetSpec.gridBounds(context) }
+  var width by rememberSaveable(bounds) { mutableIntStateOf(bounds.defaultCellsW) }
+  var height by rememberSaveable(bounds) { mutableIntStateOf(bounds.defaultCellsH) }
   var views by remember { mutableStateOf<RemoteViews?>(null) }
   var failed by remember { mutableStateOf(false) }
   var attempt by remember { mutableIntStateOf(0) }
@@ -136,13 +129,17 @@ internal fun WidgetPreparationPreview(
   }
   Text("Try it on your home screen", style = MaterialTheme.typography.titleMedium)
   Text(
-    "Adaptive layout · drag the corner or try a size. New widgets start at Default; resize them on the home screen.",
+    "Adaptive layout · drag the corner or try a size. New widgets start at 1 × 1; resize them on the home screen. This preview shows up to 4 × 4.",
     style = MaterialTheme.typography.bodySmall,
   )
   FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
     listOf(
         Triple("Compact", bounds.minCellsW, bounds.minCellsH),
-        Triple("Default", bounds.defaultCellsW, bounds.defaultCellsH),
+        Triple(
+          "Medium",
+          2.coerceAtMost(bounds.maxCellsW),
+          (if (bounds.maxCellsH > 2) 2 else 1).coerceAtMost(bounds.maxCellsH),
+        ),
         Triple("Roomy", bounds.maxCellsW, bounds.maxCellsH),
       )
       .forEach { (label, w, h) ->

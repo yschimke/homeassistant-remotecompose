@@ -116,6 +116,10 @@ private fun DemoToolbar(
     when (id) {
       "ikea" -> "IKEA Showroom"
       "lcd" -> "LCD"
+      "minimalist" -> "UI Minimalist"
+      "cupertino" -> "Control Centre"
+      "obsidian" -> "Obsidian Minimal"
+      "lcars" -> "LCARS · Starship"
       else -> id.replaceFirstChar { it.uppercaseChar() }
     }
   var optionsExpanded by remember { mutableStateOf(false) }

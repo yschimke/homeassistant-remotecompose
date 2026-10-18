@@ -63,6 +63,7 @@ class EntitiesCardConverter : CardConverter {
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+    if (CompactLauncherList(card, snapshot, modifier)) return
     when (LocalCardSizeMode.current) {
       CardSizeMode.Wrap -> FullList(card, snapshot, modifier, maxRows = Int.MAX_VALUE)
       CardSizeMode.Fixed ->
@@ -139,7 +140,8 @@ class EntitiesCardConverter : CardConverter {
   @Composable
   private fun LauncherList(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val title = card.raw["title"]?.jsonPrimitive?.content
-    val sizedAtCapture = LocalWidgetCaptureSizeDp.current != null
+    val captureSize = LocalWidgetCaptureSizeDp.current
+    val sizedAtCapture = captureSize != null
     val rowCount = card.raw["entities"]?.jsonArray?.size ?: 0
     val fit = HaEntitiesFit.Expanded
     val minHeightDp =
@@ -167,8 +169,13 @@ class EntitiesCardConverter : CardConverter {
           card,
           snapshot,
           RemoteModifier.fillMaxWidth(),
-          maxRows = Int.MAX_VALUE,
-          forceTitle = true,
+          // A short launcher slot shows whole rows, then reveals more on resize. Keep the
+          // dashboard/unsized adaptive document unchanged.
+          maxRows =
+            captureSize
+              ?.takeIf { it.heightDp < 120 }
+              ?.let { ((it.heightDp - 20) / 28).coerceAtLeast(1) } ?: Int.MAX_VALUE,
+          forceTitle = captureSize == null || captureSize.heightDp >= 120,
           dense = true,
         )
       }

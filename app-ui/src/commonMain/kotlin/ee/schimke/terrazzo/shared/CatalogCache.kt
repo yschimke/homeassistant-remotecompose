@@ -45,7 +45,24 @@ internal fun cacheTemplate(cache: CatalogCache, key: String, bytes: ByteArray) {
   }
 }
 
-private val fallbackStyles = listOf("classic", "braun", "lcd", "console", "ikea")
+private val fallbackStyles =
+  listOf(
+    "classic",
+    "braun",
+    "lcd",
+    "console",
+    "ikea",
+    "mushroom",
+    "bubble",
+    "minimalist",
+    "cupertino",
+    "catppuccin",
+    "obsidian",
+    "noctis",
+    "lcars",
+    "arctic",
+    "aeon",
+  )
 
 /** A last-good discovery cache plus bundled styles; refresh while the application stays open. */
 @Composable
