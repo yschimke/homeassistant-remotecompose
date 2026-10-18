@@ -111,8 +111,9 @@ to occupy when it has no further constraint. That shape is the
 **base** of the matrix preview and the geometry the converter's
 `Full` tier targets. Phone launcher widgets install at **1×1**, independently
 of this reference shape, and resize upward through the converter's tiers.
-Provider size hints choose the maximum resize range; existing installed
-widgets keep their launcher sizes. A one-cell entities or glance card shows
+One shared provider serves every card and imposes no maximum resize dimensions;
+the launcher owns the available grid and reports the actual capture size. The
+setup preview samples up to 4×4 cells. A one-cell entities or glance card shows
 the first entity's icon and current state, then reveals list content on resize.
 Wear sizing follows its own host contract.
 

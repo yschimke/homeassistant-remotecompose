@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  STANDARD — list/hero cards, resizable up to about 4x3 cells.
-  Every launcher variant starts at 1x1 and can resize in both axes.
-  Keep provider identities and maximums so existing installations retain their slots.
+  One provider for every card. Start at 1x1 and allow resizing in both axes.
+  No maximum resize dimensions: the launcher owns the available grid extent.
   Updates are driven by Home Assistant state changes, not framework polling.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
@@ -12,8 +11,6 @@
     android:targetCellHeight="1"
     android:minResizeWidth="50dp"
     android:minResizeHeight="50dp"
-    android:maxResizeWidth="300dp"
-    android:maxResizeHeight="220dp"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen"

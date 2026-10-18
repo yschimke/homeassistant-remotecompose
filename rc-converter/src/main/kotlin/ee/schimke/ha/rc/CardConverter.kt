@@ -202,40 +202,6 @@ interface CardConverter {
    */
   fun gridKeepsColumnWidth(card: CardConfig, snapshot: HaSnapshot): Boolean =
     gridSquareCell(card, snapshot)
-
-  /**
-   * Preferred content size in dp, used to select a launcher's provider resize range.
-   *
-   * Every phone launcher provider installs at 1x1. This hint selects how far the widget can grow:
-   * compact cards use the Small provider, while taller lists get a larger vertical range. It never
-   * overrides the installed widget's host options or resets a user's size.
-   *
-   * The hint derives from [naturalWidthClass] and [naturalHeightDp]; Fixed-mode breakpoint ladders
-   * adapt the content to the actual cell, starting with a useful one-cell identity tier.
-   */
-  fun sizeConstraints(card: CardConfig, snapshot: HaSnapshot): WidgetSizeConstraints {
-    val height = naturalHeightDp(card, snapshot)
-    return when (naturalWidthClass(card, snapshot)) {
-      CardWidthClass.Compact ->
-        WidgetSizeConstraints(defaultWidthDp = 160, defaultHeightDp = height.coerceAtLeast(40))
-      CardWidthClass.Full ->
-        WidgetSizeConstraints(defaultWidthDp = 320, defaultHeightDp = height.coerceAtLeast(48))
-    }
-  }
-}
-
-/**
- * A card's preferred content size in dp, emitted by [CardConverter.sizeConstraints]. The phone uses
- * this hint to pick a provider's maximum resize range. All providers install at 1x1; the launcher
- * owns installed sizes, and card breakpoint ladders adapt to them. The field names are retained for
- * callers that use the preferred dimensions as layout hints.
- */
-data class WidgetSizeConstraints(val defaultWidthDp: Int, val defaultHeightDp: Int) {
-  init {
-    require(defaultWidthDp > 0 && defaultHeightDp > 0) {
-      "default size must be positive: $defaultWidthDp x $defaultHeightDp"
-    }
-  }
 }
 
 /**
