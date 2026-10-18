@@ -20,7 +20,7 @@ The website publication store overlays the bundled library by runtime `DesignKey
 `publications.json` retains the exact UID, compiler release, generated artifact digest, example and
 publisher at every revision. `/api/designs/<id>/source.uid` returns those exact stored documents.
 For every other key the existing library remains authoritative until an equivalence review passes.
-IKEA (#912) and the ten family designs (#913) remain converter-owned during that review. Their style
+IKEA (#912) and the ten family designs (#913, now merged) remain converter-owned during that review. Their style
 IDs are discovered from publications; there is no new parallel implementation of their artwork.
 
 ## Admin workflow
@@ -94,7 +94,9 @@ public snapshots contain neither unpublished work nor access-control state.
 
 ## Release and rollout order
 
-1. Publish a corrected HA authoring catalog before changing ownership. Its discovery must include
+1. Release [compose-ai-tools #6085](https://github.com/yschimke/compose-ai-tools/pull/6085),
+   then pin this repository's producer to that actual release and publish a corrected HA authoring
+   catalog before changing ownership. Do not leave the producer pinned to the IR-pruning release. Its discovery must include
    `HaCardTemplate` / `HaCardUberTheme` as callable library components, and its native bundle must
    retain those callable classes even when stickers already have baked IR. The published 2.66.0
    bundle prunes the sticker/component facade; successful sticker replay does not prove native
