@@ -57,6 +57,11 @@ identical cards on different Home Assistant instances.
   installation, with the original dashboard configuration preserved.
 - A large preview could push installation off screen. The primary install
   action is fixed below the scrolling preparation controls.
+- Each five-second snapshot refresh used to clear the native preview and replace it
+  with a spinner, then recreate its host. Capture and native inflation now finish
+  before an atomic child swap in the existing host. The last successful preview
+  stays visible during refresh, resize and replacement failures. New edits and
+  failed replacements invalidate installation; cancelled captures cannot publish.
 - Opening details froze the install snapshot. The sheet refreshes data while
   open, retaining local edits and the selected preview size.
 - A rejected pin request closed the sheet. It now leaves the preparation open
@@ -101,3 +106,19 @@ launcher resize handles; programmatic option updates alone do not prove the
 launcher resize gesture works. The long-press regression now checks the visible preparation action above history,
 rather than looking for the old link below the fold. It exercises the dashboard
 entry point separately from the isolated render/install tests.
+
+`WidgetPreviewRefreshTest` adds temporal coverage of the setup lifecycle with
+controllably delayed native RemoteViews captures. It observes every pre-draw over
+three five-second refresh intervals on the Compose test clock, then Roomy/Compact size changes and a corner drag,
+checking that content never disappears and the native host keeps its identity.
+It writes `Download/TerrazzoWidgetTests/widget-preview-frames.csv` (elapsed time,
+host identity and displayed live value); `run-connected-tests.sh` pulls it into
+the instrumented-test artifact alongside the real renderer's screenshots. This
+isolates replacement lifecycle from image conversion, which has separate parity
+coverage. The second test covers failed inflation, retry, stale capture cancellation
+and invalidating installation while a card edit is pending.
+
+```sh
+./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=ee.schimke.terrazzo.widget.WidgetPreviewRefreshTest
+```
