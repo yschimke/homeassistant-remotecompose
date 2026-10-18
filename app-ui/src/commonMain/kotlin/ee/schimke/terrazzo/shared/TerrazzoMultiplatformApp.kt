@@ -164,6 +164,7 @@ private fun ConnectionScreen(
       ) {
         Text(if (busy) "Connecting…" else "Connect")
       }
+      ReportFeedbackButton()
     }
   }
 }
@@ -283,7 +284,7 @@ private fun DashboardShell(
           entry<SettingsDestination> {
             Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) }) { padding ->
               Column(
-                Modifier.padding(padding).padding(24.dp),
+                Modifier.padding(padding).padding(24.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
               ) {
                 Text(connection.config.baseUrl, style = MaterialTheme.typography.titleMedium)
@@ -294,6 +295,7 @@ private fun DashboardShell(
                   label = { Text("Card design server") },
                   singleLine = true,
                 )
+                ReportFeedbackButton()
                 Button(onClick = onSignOut) { Text("Sign out") }
               }
             }

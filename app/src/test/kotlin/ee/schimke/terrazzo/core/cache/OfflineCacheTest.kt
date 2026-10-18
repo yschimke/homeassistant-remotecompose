@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo.core.cache
 
 import ee.schimke.ha.client.DashboardSummary
+import ee.schimke.ha.design.DeviceInfo
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.EntityState
@@ -160,5 +161,52 @@ class OfflineCacheTest {
       JsonPrimitive("Living Room"),
       read.states["sensor.t"]?.attributes?.get("friendly_name"),
     )
+  }
+
+  @Test
+  fun latestSnapshot_tracks_named_dashboard_refreshes_per_instance_and_survives_restart() {
+    val root = Files.createTempDirectory("latest-snapshot-test").toFile()
+    val c = OfflineCacheStorage(root)
+    val id = "sensor.p2s_print_status"
+    val finished =
+      HaSnapshot(
+        states = mapOf(id to EntityState(id, "finish")),
+        devices = mapOf(id to DeviceInfo(integration = "bambu_lab", deviceId = "printer-device")),
+      )
+    val printing = finished.copy(states = mapOf(id to EntityState(id, "running")))
+    assertNull(c.latestSnapshot(instance))
+    c.putSnapshot(instance, "printer-dashboard", finished)
+    // Installing a card from a named dashboard must work without ever opening the default one.
+    assertNull(c.snapshot(instance, null))
+    assertEquals(finished, OfflineCacheStorage(root).latestSnapshot(instance))
+    c.putSnapshot(instance2, null, HaSnapshot())
+    assertEquals(finished, c.latestSnapshot(instance))
+    c.putSnapshot(instance, null, finished)
+    c.putSnapshot(instance, "printer-dashboard", printing)
+    assertEquals(printing, c.latestSnapshot(instance))
+    // Dashboard-specific offline reads retain their own snapshot, independently of widgets.
+    assertEquals(finished, c.snapshot(instance, null))
+    c.clearInstance(instance)
+    assertNull(c.latestSnapshot(instance))
+    assertEquals(HaSnapshot(), c.latestSnapshot(instance2))
+  }
+
+  @Test
+  fun latestSnapshot_recovers_legacy_named_dashboard_cache_and_skips_corrupt_payloads() {
+    val root = Files.createTempDirectory("legacy-snapshot-test").toFile()
+    val c = OfflineCacheStorage(root)
+    val id = "sensor.p2s_print_status"
+    val old = HaSnapshot(states = mapOf(id to EntityState(id, "idle")))
+    val fresh = HaSnapshot(states = mapOf(id to EntityState(id, "finish")))
+    c.putSnapshot(instance, null, old)
+    c.putSnapshot(instance, "printer-dashboard", fresh)
+    val directory = java.io.File(root, "cache/${OfflineCacheStorage.instanceKey(instance)}")
+    // Simulate an existing install made before the latest-snapshot pointer was introduced.
+    java.io.File(directory, "latest-snapshot-pointer.json").delete()
+    java.io.File(directory, "snapshot/_default.json").setLastModified(1_000)
+    java.io.File(directory, "snapshot/printer-dashboard.json").setLastModified(2_000)
+    assertEquals(fresh, OfflineCacheStorage(root).latestSnapshot(instance))
+    java.io.File(directory, "snapshot/printer-dashboard.json").writeText("broken JSON")
+    assertEquals(old, c.latestSnapshot(instance))
   }
 }

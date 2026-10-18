@@ -10,6 +10,7 @@ import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -86,6 +87,34 @@ class CachedHaSessionTest {
     assertEquals(sampleDashboard, d2)
     assertEquals(sampleSnapshot, s2)
   }
+
+  @Test
+  fun namedDashboardRefresh_updates_widget_snapshot_but_failed_fetch_keeps_last_success() =
+    runTest {
+      val cache = storage()
+      var fresh = sampleSnapshot
+      var failNext = false
+      val session =
+        CachedHaSession(
+          FakeSession(
+            baseUrl = baseUrl,
+            loadProvider = {
+              if (failNext) error("offline")
+              sampleDashboard to fresh
+            },
+          ),
+          cache,
+        )
+      session.loadDashboard("printer-dashboard")
+      assertNull(cache.snapshot(baseUrl, null))
+      assertEquals(sampleSnapshot, cache.latestSnapshot(baseUrl))
+      fresh = HaSnapshot(states = mapOf("sw.x" to EntityState("sw.x", "off")))
+      session.loadDashboard("printer-dashboard")
+      assertEquals(fresh, cache.latestSnapshot(baseUrl))
+      failNext = true
+      session.loadDashboard("printer-dashboard")
+      assertEquals(fresh, cache.latestSnapshot(baseUrl))
+    }
 
   @Test
   fun loadDashboard_falls_back_to_empty_snapshot_when_only_dashboard_was_cached() = runTest {

@@ -137,8 +137,13 @@ references. The real registered-widget fixture exposed an initialization race: b
 start the async provider before its store row existed, and options could be changed before its
 first document was drawn. It now saves the card before binding with explicit initial dimensions,
 waits for the first real provider document before attachment, and verifies that first frame before
-requesting any resize. Every subsequent options callback still has to deliver a document whose
-window pixels exactly match a fresh size-specific capture.
+requesting any resize. Each resize first applies the new cell dimensions to the attached host, just as a launcher does,
+then changes AppWidgetManager options. The fixture waits for Android's broadcast-idle barrier
+(including the provider's `goAsync` work) and UI delivery before checking the frame. Merely seeing
+any host callback is insufficient: it can belong to initial publication. Feeding new instructions
+before resizing the cell can also let a replacement native player cache its first draw at the old
+size. Old-document frames before recapture are saved separately. Every subsequent options callback
+still has to deliver a document whose window pixels exactly match a fresh size-specific capture.
 
 These are actual committed-window frames from the passing synthetic sequence in that run:
 

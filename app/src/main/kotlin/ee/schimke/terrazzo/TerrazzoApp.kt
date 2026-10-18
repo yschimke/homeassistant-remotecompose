@@ -81,6 +81,7 @@ import ee.schimke.terrazzo.dashboard.rememberSelectedDashboardListState
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.shared.AppScreen
 import ee.schimke.terrazzo.shared.CardStudioScreen
+import ee.schimke.terrazzo.shared.ReportFeedbackButton
 import ee.schimke.terrazzo.shared.TerrazzoNavigation
 import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
@@ -880,6 +881,7 @@ internal fun SettingsScreen(
           .padding(24.dp),
       verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+      ReportFeedbackButton(version = BuildConfig.VERSION_NAME)
       Text("Connected to", style = MaterialTheme.typography.labelMedium)
       Text(
         if (isDemo) "Demo mode — offline fake data" else session.baseUrl,

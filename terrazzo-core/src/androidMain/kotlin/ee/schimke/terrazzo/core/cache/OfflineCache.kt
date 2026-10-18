@@ -91,8 +91,29 @@ open class OfflineCacheStorage(rootDir: File) {
   fun snapshot(baseUrl: String, urlPath: String?): HaSnapshot? =
     readJson(snapshotFile(baseUrl, urlPath), HaSnapshot.serializer())
 
+  @Synchronized
   fun putSnapshot(baseUrl: String, urlPath: String?, snapshot: HaSnapshot) {
     writeJson(snapshotFile(baseUrl, urlPath), HaSnapshot.serializer(), snapshot)
+    // A live snapshot contains every entity and the device registry, regardless of which
+    // dashboard was fetched. Widgets need this latest instance data, not the default dashboard's
+    // possibly absent or stale slot. Point at the payload rather than writing it twice.
+    writeJson(snapshotPointerFile(baseUrl), SnapshotPointer.serializer(), SnapshotPointer(urlPath))
+  }
+
+  /** Latest successful instance snapshot, including device mappings used by printer cards. */
+  fun latestSnapshot(baseUrl: String): HaSnapshot? {
+    readJson(snapshotPointerFile(baseUrl), SnapshotPointer.serializer())?.let { pointer ->
+      snapshot(baseUrl, pointer.urlPath)?.let {
+        return it
+      }
+    }
+    // Older installs have no pointer. Also recover if its payload was lost or corrupted.
+    return File(instanceDir(baseUrl), "snapshot")
+      .listFiles()
+      .orEmpty()
+      .filter { it.isFile && it.extension == "json" }
+      .sortedByDescending { it.lastModified() }
+      .firstNotNullOfOrNull { readJson(it, HaSnapshot.serializer()) }
   }
 
   /**
@@ -129,6 +150,11 @@ open class OfflineCacheStorage(rootDir: File) {
 
   private fun snapshotFile(baseUrl: String, urlPath: String?): File =
     File(File(instanceDir(baseUrl), "snapshot"), "${urlPath.encodeUrlPath()}.json")
+
+  private fun snapshotPointerFile(baseUrl: String): File =
+    File(instanceDir(baseUrl), "latest-snapshot-pointer.json")
+
+  @kotlinx.serialization.Serializable private data class SnapshotPointer(val urlPath: String?)
 
   @kotlinx.serialization.Serializable private data class InstancePointer(val baseUrl: String)
 

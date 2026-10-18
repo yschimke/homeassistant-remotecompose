@@ -151,6 +151,25 @@ class AdaptiveWidgetResizeTest {
       putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, size.heightDp)
     }
 
+  private fun awaitProviderBroadcasts() {
+    // Options updates run through goAsync. A host callback can be an older initial update;
+    // wait for the system's broadcast completion barrier before inspecting the resized frame.
+    val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
+    val descriptor =
+      automation.executeShellCommand(
+        "timeout 30s am wait-for-broadcast-idle --flush-broadcast-loopers 2>&1; echo BROADCAST_BARRIER_EXIT:${'$'}?"
+      )
+    val output =
+      android.os.ParcelFileDescriptor.AutoCloseInputStream(descriptor).bufferedReader().use {
+        it.readText()
+      }
+    assertTrue(
+      "Provider broadcasts must finish: $output",
+      output.lineSequence().any { it.trim() == "BROADCAST_BARRIER_EXIT:0" },
+    )
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+  }
+
   private class ObservedHostView(context: Context) : AppWidgetHostView(context) {
     @Volatile var received: CountDownLatch? = null
     @Volatile var hasDocument: Boolean = false
@@ -206,6 +225,7 @@ class AdaptiveWidgetResizeTest {
       } finally {
         automation.dropShellPermissionIdentity()
       }
+      awaitProviderBroadcasts()
 
       lateinit var view: ObservedHostView
       lateinit var container: FrameLayout
@@ -232,15 +252,21 @@ class AdaptiveWidgetResizeTest {
       assertContent(initial, "initial registered widget")
       initial.recycle()
       for (size in listOf(WidgetSizeDp(144, 168), WidgetSizeDp(288, 252), WidgetSizeDp(72, 84))) {
+        val w = WidgetSizing.dpToPx(context, size.widthDp)
+        val h = WidgetSizing.dpToPx(context, size.heightDp)
+        // A launcher lays out the resized cell before asking the provider for new bytes.
+        // Retain the old-document frame separately; recapture is the sizing workaround.
+        val before = captureWindow(container, view, w, h)
+        save(context, "options-${size.widthDp}-before-recapture", before)
+        before.recycle()
         val received = CountDownLatch(1)
         view.received = received
         manager.updateAppWidgetOptions(id, optionsFor(size))
+        awaitProviderBroadcasts()
         assertTrue(
           "$size: options callback must publish a new document",
           received.await(30, TimeUnit.SECONDS),
         )
-        val w = WidgetSizing.dpToPx(context, size.widthDp)
-        val h = WidgetSizing.dpToPx(context, size.heightDp)
         val actual = captureWindow(container, view, w, h)
         save(context, "options-${size.widthDp}-actual", actual)
         assertContent(actual, "$size after recapture")
@@ -308,6 +334,11 @@ class AdaptiveWidgetResizeTest {
         checkNotNull(provider.renderPreview(context, DemoData.BASE_URL, card, snapshot, size, 42))
       val w = WidgetSizing.dpToPx(context, size.widthDp)
       val h = WidgetSizing.dpToPx(context, size.heightDp)
+      if (index > 0) {
+        val before = captureWindow(container, host, w, h)
+        save(context, "recapture-$index-before-update", before)
+        before.recycle()
+      }
       onMain { host.updateAppWidget(document) }
       val actual = captureWindow(container, host, w, h)
       save(context, "recapture-$index-actual", actual)

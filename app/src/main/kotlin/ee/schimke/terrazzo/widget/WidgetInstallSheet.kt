@@ -81,7 +81,8 @@ fun WidgetInstallSheet(
           raw = kotlinx.serialization.json.JsonObject(card.raw + ("name" to JsonPrimitive(name)))
         )
     }
-  var renderedPreview by remember(editedCard) { mutableStateOf<android.widget.RemoteViews?>(null) }
+  var renderedPreview by
+    remember(baseUrl, editedCard) { mutableStateOf<android.widget.RemoteViews?>(null) }
   var liveSnapshot by remember(card) { mutableStateOf(snapshot) }
   LaunchedEffect(snapshot) { liveSnapshot = snapshot }
   val latestRefresh by rememberUpdatedState(refreshSnapshot)
