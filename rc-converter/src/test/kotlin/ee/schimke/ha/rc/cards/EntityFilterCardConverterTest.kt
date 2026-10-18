@@ -49,4 +49,20 @@ class EntityFilterCardConverterTest {
   fun anExplicitStateFilterStillMatchesRawStates() {
     assertEquals(listOf("lock.back"), filteredEntities(card(listOf("unlocked")), snapshot))
   }
+
+  @Test
+  fun anInvalidRegexFilterMatchesNothingInsteadOfThrowing() {
+    val filter =
+      JsonObject(mapOf("operator" to JsonPrimitive("regex"), "value" to JsonPrimitive("(")))
+    val raw = JsonObject(card().raw + ("state_filter" to JsonArray(listOf(filter))))
+    assertEquals(emptyList<String>(), filteredEntities(CardConfig("entity-filter", raw), snapshot))
+  }
+
+  @Test
+  fun aValidRegexFilterStillMatches() {
+    val filter =
+      JsonObject(mapOf("operator" to JsonPrimitive("regex"), "value" to JsonPrimitive("un.*")))
+    val raw = JsonObject(card().raw + ("state_filter" to JsonArray(listOf(filter))))
+    assertEquals(listOf("lock.back"), filteredEntities(CardConfig("entity-filter", raw), snapshot))
+  }
 }
