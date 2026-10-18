@@ -89,6 +89,36 @@ fun DiscoveryScreen(
 
   val instances = rememberDiscoveredInstances(enabled = localNetworkGranted)
 
+  DiscoveryForm(
+    instances = instances,
+    host = host,
+    onHostChange = { host = it },
+    onConnect = {
+      val trimmed = host.trim().removeSuffix("/")
+      if (needsLocalNetworkPermission(context, trimmed)) {
+        pendingBaseUrl = trimmed
+        permissionLauncher.launch(ACCESS_LOCAL_NETWORK)
+      } else {
+        onInstancePicked(trimmed)
+      }
+    },
+    onInstancePicked = onInstancePicked,
+    onDemoSelected = onDemoSelected,
+    snackbarHost = snackbarHost,
+  )
+}
+
+/** Stateless form so discovery and permission timing don't affect layout or keyboard tests. */
+@Composable
+internal fun DiscoveryForm(
+  instances: List<HaInstance>,
+  host: String,
+  onHostChange: (String) -> Unit,
+  onConnect: () -> Unit,
+  onInstancePicked: (String) -> Unit,
+  onDemoSelected: () -> Unit,
+  snackbarHost: @Composable () -> Unit = {},
+) {
   Scaffold(snackbarHost = snackbarHost) { innerPadding ->
     Column(
       modifier = Modifier.fillMaxSize().imePadding().padding(innerPadding).padding(24.dp),
@@ -125,21 +155,13 @@ fun DiscoveryScreen(
 
       OutlinedTextField(
         value = host,
-        onValueChange = { host = it },
+        onValueChange = onHostChange,
         label = { Text("Base URL") },
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
       )
       Button(
-        onClick = {
-          val trimmed = host.trim().removeSuffix("/")
-          if (needsLocalNetworkPermission(context, trimmed)) {
-            pendingBaseUrl = trimmed
-            permissionLauncher.launch(ACCESS_LOCAL_NETWORK)
-          } else {
-            onInstancePicked(trimmed)
-          }
-        },
+        onClick = onConnect,
         enabled = host.isNotBlank(),
       ) {
         Text("Connect")
