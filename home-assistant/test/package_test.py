@@ -78,6 +78,12 @@ class PackageTest(unittest.TestCase):
         self.assertTrue(metadata['zip_release'])
         self.assertTrue(metadata['hide_default_branch'])
         self.assertEqual(metadata['filename'], 'terrazzo.zip')
+        # __init__.py registers its frontend with StaticPathConfig / async_register_static_paths,
+        # which arrived in Home Assistant 2024.7; HACS must not offer it to older cores.
+        init = (module.ROOT / 'custom_components/terrazzo/__init__.py').read_text()
+        if 'async_register_static_paths' in init:
+            floor = tuple(int(part) for part in metadata['homeassistant'].split('.')[:2])
+            self.assertGreaterEqual(floor, (2024, 7))
         config = json.loads((module.ROOT / '.github/release-please-config.json').read_text())
         self.assertIn({'type': 'json', 'path': 'custom_components/terrazzo/manifest.json',
                        'jsonpath': '$.version'}, config['packages']['.']['extra-files'])

@@ -10,9 +10,9 @@ Use that URL as the start page in a wall-panel browser. Normal HA login runs fir
 
 The release pipeline publishes two ZIPs containing the same built renderers:
 `terrazzo.zip` for HACS and `terrazzo-home-assistant.zip` for manual installation.
-**HACS installation becomes available after the first release containing these
-assets is published.** Older releases and the source checkout do not include the
-built renderers. Do not select the default branch in HACS.
+Releases before 0.1.44 and the source checkout do not include the built
+renderers. Do not select the default branch in HACS. Home Assistant 2024.7 or
+newer is required.
 
 1. Install [HACS](https://www.hacs.xyz/docs/use/) if you do not have it already.
 2. In HACS, open **Custom repositories**, add

@@ -16,27 +16,15 @@ see [`README.md`](README.md).
 
 | Tool | Version | Why |
 |---|---|---|
-| JDK 17 | exact | Kotlin toolchain target — every JVM module is compiled to bytecode 17 |
-| JDK 21 | exact | Gradle daemon. The Metro KSP plugin (used by `:app` and friends) needs runtime 21+ |
-| `./gradlew` | shipped | Pins Gradle 9.3.x |
+| JDK 21 | exact | Kotlin toolchain (`java = "21"` in `gradle/libs.versions.toml`) and the Gradle daemon |
+| `./gradlew` | shipped | Pins the Gradle version (`gradle/wrapper/gradle-wrapper.properties`) |
 | Docker + Compose v2 | recent | Add-on packaging + e2e test |
 | `jq`, `curl` | any | Smoke checks |
 
-Install both JDKs, then either set `JAVA_HOME` to JDK 21 (daemon) and pass
-`-Dorg.gradle.java.installations.paths=…/jdk-17,…/jdk-21` once, or use the
-`.github/actions/setup` recipe locally — it sets `JAVA_HOME_17_X64` and
-`JAVA_HOME_21_X64` so Gradle's auto-detection finds both.
-
-If you only have JDK 21 installed, the build fails at:
-
-```
-Cannot find a Java installation … matching: {languageVersion=17, …}.
-Toolchain download repositories have not been configured.
-```
-
-The repo doesn't include a foojay toolchain resolver on purpose — CI
-pre-installs both JDKs and we'd rather not auto-download a toolchain
-during a developer build.
+Point `JAVA_HOME` at a JDK 21. The repo doesn't include a foojay toolchain
+resolver on purpose — CI pre-installs the JDK and we'd rather not
+auto-download a toolchain during a developer build — so without one the build
+fails with `Cannot find a Java installation … matching: {languageVersion=21, …}`.
 
 ### Build
 
