@@ -58,14 +58,19 @@ class AdaptiveWidgetResizeTest {
     check(w in 1..1800 && h in 1..1800)
     val committed = CountDownLatch(1)
     onMain {
-      container.removeAllViews()
-      container.addView(
-        target,
+      // Keep the player under test attached across updates/resizes. The fresh reference
+      // is a separate child; hiding it must not recreate the reused player's lifecycle.
+      if (target.parent == null) container.addView(target)
+      for (index in 0 until container.childCount) {
+        val child = container.getChildAt(index)
+        child.visibility =
+          if (child === target) android.view.View.VISIBLE else android.view.View.INVISIBLE
+      }
+      target.layoutParams =
         FrameLayout.LayoutParams(
           w + target.paddingLeft + target.paddingRight,
           h + target.paddingTop + target.paddingBottom,
-        ),
-      )
+        )
       assertTrue("Fixture requires a hardware-rendered window", target.isHardwareAccelerated)
       target.viewTreeObserver.registerFrameCommitCallback {
         // Native RemoteCompose initializes its paint context during the first draw. Commit
@@ -259,8 +264,9 @@ class AdaptiveWidgetResizeTest {
     activity.scenario.onActivity {
       container = FrameLayout(it)
       it.setContentView(container)
+      // Match AppWidgetHost.createView/fresh reference initialization: apply the first
+      // document before attachment, then reuse this attached view for every later update.
       host = AppWidgetHostView(it).apply { setAppWidget(42, info) }
-      container.addView(host)
     }
     val card =
       CardConfig(

@@ -114,7 +114,24 @@ new fixtures. Both failed at their **first** 144x168 size, before any resize, at
 pixel (`f9ededed` versus `ffefefef`). The saved software `View.draw` image contained only a blank
 frame; its corner antialiasing had made the old whole-image color-count check pass. These are
 fixture failures, not evidence that platform resize regressed. The revised capture keeps the exact
-pixel comparison and strengthens visible-content validation. Its API 36 rerun is recorded in the PR.
+pixel comparison and strengthens visible-content validation. The first committed-frame rerun ([39144022680](https://github.com/yschimke/homeassistant-remotecompose/actions/runs/39144022680))
+passed the registered-widget callback test at all three sizes. The synthetic fixture still failed
+before resizing: its first baked document was delivered into an already-attached empty host before
+cell dimensions were applied, whereas the fresh reference received its first document before
+attachment. The fixture now initializes both the same way, then keeps the reused host attached
+across all subsequent document and constraint changes. It does not remove/recreate the player
+between actual/reference captures. Interior content and exact full-frame comparisons remain.
+
+The distinct first-document initialization behavior is retained as platform evidence, not claimed
+fixed by the AndroidX host patch. Reproduce by attaching an empty AppWidgetHostView without cell
+LayoutParams, then applying a baked entity document before assigning its cell; compare with applying
+the same document before attachment. These captures use PixelCopy after two committed frames:
+
+| Empty host attached before first document | First document applied before attachment |
+| --- | --- |
+| ![First document paints only its frame](evidence/adaptive-player/platform-empty-host-first-document.png) | ![Same bytes with document-first initialization](evidence/adaptive-player/platform-document-before-attach.png) |
+
+The final API 36 rerun is recorded in the PR.
 
 The first fixture exports PNGs through MediaStore to `Pictures/TerrazzoWidgetTests`, collected by
 the existing `scripts/run-connected-tests.sh` CI runner. Images never exceed 1800px.
