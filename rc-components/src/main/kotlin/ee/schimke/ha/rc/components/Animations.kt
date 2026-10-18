@@ -68,6 +68,9 @@ fun animateRemoteFloat(
   easing: Int = RcEasing.Standard,
 ): RemoteFloat {
   if (!LocalRemoteAnimationsEnabled.current) return input
+  // Community widgets are baked snapshots. Settled values let the baker fold segmented colours
+  // into constants for the platform player; a startup tween would keep those colours dynamic.
+  if (isWidgetActionCapture() && visualFamily().isCommunity) return input
   // `AnimatedRemoteFloat` is `@RememberInComposition` since remote-compose alpha21.
   return remember(input, durationSeconds, easing) {
     AnimatedRemoteFloat(

@@ -220,6 +220,23 @@ class TileFeaturesCaptureTest {
     )
   }
 
+  @Test
+  fun oneCellFeatureTileUsesTheIconStateTierAndResizeRestoresControls() {
+    val card = climateTile("climate.kids_room", "Kitchen")
+    fun textLayouts(width: Int, height: Int): Int {
+      val operations = arrayListOf<androidx.compose.remote.core.Operation>()
+      androidx.compose.remote.core.RemoteComposeBuffer.fromInputStream(
+          directWidget(card, width, height).inputStream()
+        )
+        .inflateFromBuffer(operations)
+      return operations.count {
+        it is androidx.compose.remote.core.operations.layout.managers.TextLayout
+      }
+    }
+    assertTrue(textLayouts(72, 84) == 1, "1x1 keeps the icon and one state line")
+    assertTrue(textLayouts(288, 252) > 2, "resizing reveals the name and feature controls")
+  }
+
   private fun directWidget(card: CardConfig, widthDp: Int, heightDp: Int): ByteArray = runBlocking {
     val density = 420
     captureSingleRemoteDocument(

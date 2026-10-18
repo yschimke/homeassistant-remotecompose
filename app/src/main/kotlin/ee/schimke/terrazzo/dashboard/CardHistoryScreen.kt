@@ -82,7 +82,7 @@ import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.widget.LAUNCHER_CELL_HEIGHT_DP
 import ee.schimke.terrazzo.widget.LAUNCHER_CELL_WIDTH_DP
 import ee.schimke.terrazzo.widget.LauncherGridBounds
-import ee.schimke.terrazzo.widget.WidgetSizeClass
+import ee.schimke.terrazzo.widget.LauncherWidgetSpec
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
@@ -185,13 +185,12 @@ fun CardHistoryScreen(
 /**
  * Top region: the card previewed as a launcher widget on a resizable slot.
  *
- * The card's [WidgetSizeClass] — the same one [ee.schimke.terrazzo.widget.WidgetInstaller] pins
- * when you tap "Add to Home Screen" — defines a resize range in whole launcher cells, with a
- * smallest and largest slot. We draw that grid behind the card, dash-outline the smallest and
- * largest sizes, and let the user drag the corner handle to resize the widget across the range a
- * cell at a time. The card re-renders in launcher mode (fixed size, full-bleed surface, no in-app
- * chrome) at each slot, so it's a faithful preview of how the widget reflows before committing to a
- * home-screen position.
+ * The shared [LauncherWidgetSpec] supplies the provider's 1x1 minimum/default and a 4x4 sample
+ * extent. The launcher owns the actual upper resize limit. We draw that grid behind the card,
+ * dash-outline the smallest and largest sizes, and let the user drag the corner handle to resize
+ * the widget across the range a cell at a time. The card re-renders in launcher mode (fixed size,
+ * full-bleed surface, no in-app chrome) at each slot, so it's a faithful preview of how the widget
+ * reflows before committing to a home-screen position.
  */
 @Composable
 internal fun CardPreviewCard(session: HaSession, card: CardConfig, snapshot: HaSnapshot) {
@@ -301,7 +300,7 @@ internal fun LauncherGrid(
 
       // Resize handle at the current slot's bottom-right corner. A
       // drag of one cell's width / height steps the slot by one cell,
-      // clamped to the size class's min/max range.
+      // clamped to the preview grid's sample range.
       Box(
         modifier =
           Modifier.align(Alignment.TopStart)
@@ -346,7 +345,13 @@ internal fun LauncherGrid(
               }
             }
             .pointerInput(bounds, cellWpx, cellHpx) {
+              var gestureCells = currentCells
               detectDragGestures(
+                onDragStart = {
+                  gestureCells = currentCells
+                  dragX = 0f
+                  dragY = 0f
+                },
                 onDragEnd = {
                   dragX = 0f
                   dragY = 0f
@@ -359,8 +364,8 @@ internal fun LauncherGrid(
                 change.consume()
                 dragX += drag.x
                 dragY += drag.y
-                var w = currentCells.first
-                var h = currentCells.second
+                var w = gestureCells.first
+                var h = gestureCells.second
                 while (dragX >= cellWpx && w < bounds.maxCellsW) {
                   w++
                   dragX -= cellWpx
@@ -383,7 +388,11 @@ internal fun LauncherGrid(
                 if (w == bounds.minCellsW) dragX = dragX.coerceAtLeast(0f)
                 if (h == bounds.maxCellsH) dragY = dragY.coerceAtMost(0f)
                 if (h == bounds.minCellsH) dragY = dragY.coerceAtLeast(0f)
-                if (w != currentCells.first || h != currentCells.second) currentOnResize(w, h)
+                if (w != gestureCells.first || h != gestureCells.second) {
+                  // Pointer events can arrive before recomposition publishes the previous step.
+                  gestureCells = w to h
+                  currentOnResize(w, h)
+                }
               }
             },
         contentAlignment = Alignment.Center,
@@ -421,7 +430,7 @@ internal fun ResizeLegend(
     Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
       LegendSwatch(currentColor, "Now $cellsW×$cellsH")
       LegendSwatch(smallestColor, "Min ${bounds.minCellsW}×${bounds.minCellsH}")
-      LegendSwatch(largestColor, "Max ${bounds.maxCellsW}×${bounds.maxCellsH}")
+      LegendSwatch(largestColor, "Preview ${bounds.maxCellsW}×${bounds.maxCellsH}")
     }
     Text(
       "Drag the handle to resize the widget",

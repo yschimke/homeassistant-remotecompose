@@ -199,6 +199,13 @@ needle, and a Braun thermometer has no fill. Every part reads the theme through
 | `nixie` | glowing filament over electrode dots | **IN-9 bargraph tube** in its socket | horizontal tube | tube | plain | 14 dp · 4 dp |
 | `console`: skeuomorphic studio desk | **backlit VU meter** behind glass: cream face, the standard VU scale, red from 0 VU, needle and pivot bridge | **glass liquid column** and reservoir on an ivory enamel scale, red marks past hot | **lamp in a metal bezel**, red when low | fader | ruled plate | 6 dp **painted-metal panel** (sheen) · recessed keys and rockers with separate pilot lamps; dials are a **knob in a lamp ring**, clocks red LED modules behind smoked glass |
 
+Ten additional community-inspired families (`mushroom`, `bubble`, `minimalist`, `cupertino`,
+`catppuccin`, `obsidian`, `noctis`, `lcars`, `arctic`, `aeon`) each add their own live meter,
+control-ring, switch and chart grammar in `MetersCommunity.kt`, `CommunityControls.kt` and
+`Charts.kt`. Both modes, source-selection evidence, original design directions, licensing and
+card/platform coverage are documented in [community-families.md](../design/community-families.md).
+They share the same host binding and signature contracts as the original families.
+
 How each part takes it:
 
 - **Meters**: `RemoteHaMeters.kt` dispatches each visual to the family's drawing in

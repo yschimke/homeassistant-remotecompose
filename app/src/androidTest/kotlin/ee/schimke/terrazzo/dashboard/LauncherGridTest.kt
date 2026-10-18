@@ -117,4 +117,14 @@ class LauncherGridTest {
     compose.onNodeWithTag("grid-content").assertHeightIsEqualTo(168.dp)
     compose.onNodeWithTag("grid-content").assertWidthIsEqualTo(144.dp)
   }
+
+  @Test
+  fun diagonalDragRetainsBothCellChangesBeforeRecomposition() {
+    val cells = grid(2, 2)
+    compose.onNodeWithTag("widget-resize-handle").performTouchInput {
+      swipe(center, center - Offset(112.dp.toPx(), 128.dp.toPx()))
+    }
+    compose.onNodeWithTag("grid-content").assertWidthIsEqualTo(72.dp).assertHeightIsEqualTo(84.dp)
+    compose.runOnIdle { assertEquals(1 to 1, cells.value) }
+  }
 }
