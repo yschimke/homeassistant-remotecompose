@@ -59,7 +59,16 @@ fun RemoteHaBambuAms(data: HaBambuAmsData, modifier: RemoteModifier = RemoteModi
         horizontalArrangement = RemoteArrangement.SpaceBetween,
         verticalAlignment = RemoteAlignment.Top,
       ) {
-        data.slots.forEach { slot -> SpoolSlot(slot, theme, big = false) }
+        data.slots.forEach { slot ->
+          SpoolSlot(
+            slot,
+            theme,
+            big = false,
+            modifier =
+              if (visualFamily() == HaVisualFamily.Console) RemoteModifier.weight(1f)
+              else RemoteModifier,
+          )
+        }
       }
     }
   }
@@ -86,15 +95,17 @@ fun RemoteHaBambuSpool(data: HaBambuSpoolDetail, modifier: RemoteModifier = Remo
           fontSize = HaType.Caption,
           style = haTextStyle(),
         )
-        RemoteText(
-          text = data.slot.material,
-          color = theme.primaryText,
-          fontSize = HaType.Title,
-          fontWeight = FontWeight.Medium,
-          style = haTextStyle(),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
+        if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel(data.slot.material)
+        else
+          RemoteText(
+            text = data.slot.material,
+            color = theme.primaryText,
+            fontSize = HaType.Title,
+            fontWeight = FontWeight.Medium,
+            style = haTextStyle(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
         RemoteText(
           text =
             LiveValues.attribute(
@@ -112,19 +123,27 @@ fun RemoteHaBambuSpool(data: HaBambuSpoolDetail, modifier: RemoteModifier = Remo
 }
 
 @Composable
-private fun SpoolSlot(slot: HaBambuSpoolSlot, theme: RemoteHaTheme, big: Boolean) {
-  RemoteColumn(horizontalAlignment = RemoteAlignment.CenterHorizontally) {
+private fun SpoolSlot(
+  slot: HaBambuSpoolSlot,
+  theme: RemoteHaTheme,
+  big: Boolean,
+  modifier: RemoteModifier = RemoteModifier,
+) {
+  RemoteColumn(modifier = modifier, horizontalAlignment = RemoteAlignment.CenterHorizontally) {
     SpoolSwatch(slot, big = big, theme = theme)
     RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
-      RemoteText(
-        text = slot.material,
-        color = theme.primaryText,
-        fontSize = HaType.Caption,
-        fontWeight = FontWeight.Medium,
-        style = haTextStyle(),
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-      )
+      if (visualFamily() == HaVisualFamily.Console)
+        ConsoleTapeLabel(slot.material, modifier = RemoteModifier.fillMaxWidth(), compact = true)
+      else
+        RemoteText(
+          text = slot.material,
+          color = theme.primaryText,
+          fontSize = HaType.Caption,
+          fontWeight = FontWeight.Medium,
+          style = haTextStyle(),
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
     }
     RemoteText(
       text =

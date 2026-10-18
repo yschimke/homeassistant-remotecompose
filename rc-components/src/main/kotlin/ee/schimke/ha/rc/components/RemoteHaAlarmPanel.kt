@@ -234,12 +234,13 @@ private fun ActionPill(action: HaAlarmAction, theme: RemoteHaTheme) {
         .clip(haControlShape(6))
         .background(accent.copy(alpha = accent.alpha * 0.0f.rf))
         .border(1.rdp, accent, haControlShape(6))
+        .then(consoleKeyChrome(accent))
         .padding(horizontal = 14.rdp, vertical = 8.rdp),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteText(
       text = action.label.rs,
-      color = accent,
+      color = if (visualFamily() == HaVisualFamily.Console) theme.primaryText else accent,
       fontSize = HaType.Label,
       fontWeight = FontWeight.Medium,
       style = haTextStyle(),
@@ -378,12 +379,13 @@ private fun KeypadKey(
       RemoteModifier.then(click)
         .size(48.rdp)
         .clip(haControlShape(6))
-        .border(1.rdp, haInk(accent), haControlShape(6)),
+        .border(1.rdp, haInk(accent), haControlShape(6))
+        .then(consoleKeyChrome(haInk(accent))),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteText(
       text = label.rs,
-      color = haInk(accent),
+      color = if (visualFamily() == HaVisualFamily.Console) theme.primaryText else haInk(accent),
       fontSize = HaType.Title,
       fontWeight = FontWeight.Medium,
       style = haTextStyle(),

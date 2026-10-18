@@ -34,28 +34,31 @@ fun RemoteHaUnsupported(data: HaUnsupportedData, modifier: RemoteModifier = Remo
         .padding(12.rdp),
     contentAlignment = RemoteAlignment.CenterStart,
   ) {
-    RemoteColumn {
-      RemoteIcon(
-        imageVector = Icons.Filled.Widgets.toRemoteImageVector(),
-        contentDescription = "Unsupported card".rs,
-        modifier = RemoteModifier.size(24.rdp),
-        tint = theme.placeholderAccent,
-      )
-      RemoteBox(modifier = RemoteModifier.padding(top = 8.rdp)) {
+    if (visualFamily() == HaVisualFamily.Console) {
+      ConsoleTapeLabel("Not yet supported".rs, detail = data.cardType.rs)
+    } else
+      RemoteColumn {
+        RemoteIcon(
+          imageVector = Icons.Filled.Widgets.toRemoteImageVector(),
+          contentDescription = "Unsupported card".rs,
+          modifier = RemoteModifier.size(24.rdp),
+          tint = theme.placeholderAccent,
+        )
+        RemoteBox(modifier = RemoteModifier.padding(top = 8.rdp)) {
+          RemoteText(
+            text = "Not yet supported".rs,
+            color = theme.primaryText,
+            fontSize = HaType.BodyLarge,
+            fontWeight = FontWeight.Medium,
+            style = haTextStyle(),
+          )
+        }
         RemoteText(
-          text = "Not yet supported".rs,
-          color = theme.primaryText,
-          fontSize = HaType.BodyLarge,
-          fontWeight = FontWeight.Medium,
+          text = data.cardType.rs,
+          color = theme.secondaryText,
+          fontSize = HaType.Label,
           style = haTextStyle(),
         )
       }
-      RemoteText(
-        text = data.cardType.rs,
-        color = theme.secondaryText,
-        fontSize = HaType.Label,
-        style = haTextStyle(),
-      )
-    }
   }
 }

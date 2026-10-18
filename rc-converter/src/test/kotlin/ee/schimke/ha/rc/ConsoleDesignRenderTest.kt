@@ -57,6 +57,7 @@ class ConsoleDesignRenderTest {
     val width: Int = 360,
     val dark: Boolean = true,
     val clock: HaClock,
+    val direct: Boolean = false,
   )
 
   private var frame by mutableStateOf<Frame?>(null)
@@ -112,8 +113,7 @@ class ConsoleDesignRenderTest {
   private fun differs(a: Bitmap, b: Bitmap) =
     pixels(a).zip(pixels(b)).count { it.first != it.second }
 
-  @Test
-  fun physicalInstrumentsRenderAndUpdate() {
+  private fun startRendering() {
     compose.setContent {
       val f = frame ?: return@setContent
       CompositionLocalProvider(LocalHaClock provides f.clock) {
@@ -122,9 +122,9 @@ class ConsoleDesignRenderTest {
             .background(if (f.dark) Color(0xFF111315) else Color(0xFFF2F1ED))
             .testTag("card")
         ) {
-          key(f.playback) {
+          key(f.playback ?: if (f.direct) f.card else null) {
             CachedCardPreview(
-              cacheKey = f.playback ?: "thermometer",
+              cacheKey = f.playback ?: if (f.direct) f.card else "thermometer",
               profile = androidXExperimentalWrap,
               card = f.card,
               snapshot = f.snapshot,
@@ -135,33 +135,43 @@ class ConsoleDesignRenderTest {
                 HaUberTheme.Console.cardPalette(style, f.dark),
                 f.dark,
               ) {
-                androidx.compose.remote.creation.compose.layout.RemoteBox(
-                  RemoteModifier.fillMaxWidth()
-                    .then(
-                      cardChrome(
-                        currentRemoteHaTheme().cardBackground,
-                        currentRemoteHaTheme().divider,
+                if (f.direct) {
+                  ProvideCardRegistry(ee.schimke.ha.rc.cards.defaultRegistry()) {
+                    RenderChild(f.card, f.snapshot, RemoteModifier.fillMaxWidth())
+                  }
+                } else
+                  androidx.compose.remote.creation.compose.layout.RemoteBox(
+                    RemoteModifier.fillMaxWidth()
+                      .then(
+                        cardChrome(
+                          currentRemoteHaTheme().cardBackground,
+                          currentRemoteHaTheme().divider,
+                        )
                       )
+                  ) {
+                    RemoteHaThermometer(
+                      HaReading.live(
+                        "sensor.temp",
+                        "Room temperature",
+                        "21.5 °C",
+                        21.5f,
+                        "°C",
+                        HaMeasureKind.Temperature,
+                      ),
+                      modifier = RemoteModifier.fillMaxWidth(),
                     )
-                ) {
-                  RemoteHaThermometer(
-                    HaReading.live(
-                      "sensor.temp",
-                      "Room temperature",
-                      "21.5 °C",
-                      21.5f,
-                      "°C",
-                      HaMeasureKind.Temperature,
-                    ),
-                    modifier = RemoteModifier.fillMaxWidth(),
-                  )
-                }
+                  }
               }
             }
           }
         }
       }
     }
+  }
+
+  @Test
+  fun physicalInstrumentsRenderAndUpdate() {
+    startRendering()
     val fan = card("button", "entity" to "switch.fan", "name" to "Fan")
     val off = snapshot(state("switch.fan", "off", "friendly_name" to "Fan"))
     val on = snapshot(state("switch.fan", "on", "friendly_name" to "Fan"))
@@ -295,5 +305,158 @@ class ConsoleDesignRenderTest {
       } > 100,
       "console clock has real red LED emitters, not ordinary theme text",
     )
+  }
+
+  @Test
+  fun remainingControlsAndServiceTapeRender() {
+    startRendering()
+    fun jsonCard(type: String, raw: String) =
+      CardConfig(type, kotlinx.serialization.json.Json.parseToJsonElement(raw) as JsonObject)
+    val base =
+      snapshot(
+        state("switch.fan", "on", "friendly_name" to "Fan"),
+        state("light.kitchen", "on", "friendly_name" to "Kitchen"),
+        state("sensor.temp", "21.5", "friendly_name" to "Room", "unit_of_measurement" to "°C"),
+        state(
+          "alarm_control_panel.home",
+          "disarmed",
+          "code_format" to "number",
+          "friendly_name" to "Alarm",
+        ),
+        state(
+          "sensor.x1c_ams_1_tray_1",
+          "Bambu PLA Basic",
+          "active" to "true",
+          "color" to "#F2C200FF",
+          "remain" to "80",
+        ),
+        state(
+          "sensor.x1c_ams_1_tray_2",
+          "unknown",
+          "active" to "false",
+          "remain_enabled" to "false",
+        ),
+        state(
+          "sensor.x1c_ams_1_tray_3",
+          "Generic PETG",
+          "active" to "false",
+          "color" to "#1E5AA8FF",
+          "remain" to "35",
+        ),
+        state(
+          "sensor.x1c_ams_1_tray_4",
+          "Bambu PLA very long material name",
+          "active" to "false",
+          "remain_enabled" to "false",
+        ),
+        state("button.restart", "2026-10-17T05:17:28Z", "friendly_name" to "Restart"),
+        state("todo.empty", "0", "friendly_name" to "Empty list"),
+        state("calendar.empty", "off", "friendly_name" to "Calendar"),
+        EntityState(
+          "climate.room",
+          "heat",
+          kotlinx.serialization.json.Json.parseToJsonElement(
+            """{"friendly_name":"Studio","current_temperature":21.5,"temperature":22,"min_temp":10,"max_temp":32,"supported_features":401,"hvac_modes":["heat","off"]}"""
+          ) as JsonObject,
+        ),
+        EntityState(
+          "todo.shopping",
+          "1",
+          kotlinx.serialization.json.Json.parseToJsonElement(
+            """{"friendly_name":"Shopping","items":[{"uid":"1","summary":"Milk","status":"needs_action"},{"uid":"2","summary":"Bread","status":"completed"}]}"""
+          ) as JsonObject,
+        ),
+      )
+    val controls =
+      listOf(
+        "alarm-keys" to
+          jsonCard(
+            "alarm-panel",
+            """{"type":"alarm-panel","entity":"alarm_control_panel.home","show_keypad":true}""",
+          ),
+        "dial-steppers" to card("thermostat", "entity" to "climate.room"),
+        "tile-features" to
+          jsonCard(
+            "tile",
+            """{"type":"tile","entity":"climate.room","features":[{"type":"target-temperature"},{"type":"climate-hvac-modes"}]}""",
+          ),
+        "tile-command" to
+          jsonCard(
+            "tile",
+            """{"type":"tile","entity":"button.restart","tap_action":{"action":"call-service","service":"button.press","target":{"entity_id":"button.restart"}}}""",
+          ),
+        "area-actions" to
+          jsonCard(
+            "area",
+            """{"type":"area","area":"living_room","entities":["sensor.temp","light.kitchen","switch.fan"]}""",
+          ),
+        "glance-keys" to
+          jsonCard("glance", """{"type":"glance","entities":["light.kitchen","switch.fan"]}"""),
+        "picture-keys" to
+          jsonCard(
+            "picture-glance",
+            """{"type":"picture-glance","title":"Studio","image":"/local/studio.jpg","entities":["switch.fan","light.kitchen"]}""",
+          ),
+        "service-keys" to
+          jsonCard(
+            "picture-elements",
+            """{"type":"picture-elements","image":"/local/studio.jpg","elements":[{"type":"state-icon","entity":"switch.fan","style":{"left":"20%","top":"60%"}},{"type":"service-button","title":"All off","service":"light.turn_off"}]}""",
+          ),
+        "spool-labels" to card("custom:ha-bambulab-ams-card", "entity_prefix" to "x1c"),
+        "todo-keys" to card("todo-list", "entity" to "todo.shopping"),
+      )
+    for ((name, card) in controls) capture(
+      "audit-$name",
+      Frame(
+        card,
+        base,
+        if (name.startsWith("tile-")) null else template(card, base),
+        clock = dawn,
+        direct = name.startsWith("tile-"),
+      ),
+    )
+    val placeholders =
+      listOf(
+        "no-controls" to card("custom:ha-bambulab-print_control-card", "entity_prefix" to "empty"),
+        "unsupported" to card("custom:missing-console-card"),
+        "no-image" to card("picture-entity", "entity" to "switch.fan"),
+        "no-history" to
+          jsonCard("history-graph", """{"type":"history-graph","entities":["sensor.temp"]}"""),
+        "no-items" to card("todo-list", "entity" to "todo.empty"),
+        "no-events" to
+          jsonCard("calendar", """{"type":"calendar","entities":["calendar.empty"]}"""),
+        "no-activity" to jsonCard("logbook", """{"type":"logbook","entities":[]}"""),
+      )
+    fun paperPixels(image: Bitmap) =
+      pixels(image).count {
+        android.graphics.Color.red(it) > 210 &&
+          android.graphics.Color.green(it) > 210 &&
+          android.graphics.Color.blue(it) > 200
+      }
+    for ((name, card) in placeholders) {
+      val image =
+        capture(
+          "tape-$name",
+          Frame(
+            card,
+            base,
+            if (name == "no-activity") null else template(card, base),
+            clock = dawn,
+            direct = name == "no-activity",
+          ),
+        )
+      assertTrue(paperPixels(image) > 400, "$name is a legible white tape note")
+    }
+    val fan = card("button", "entity" to "switch.fan")
+    val playback = template(fan, base)
+    val available = capture("tape-available", Frame(fan, base, playback, clock = dawn))
+    val missing = snapshot(state("switch.fan", "unavailable", "friendly_name" to "Fan"))
+    val unavailable = capture("tape-unavailable", Frame(fan, missing, playback, clock = dawn))
+    assertTrue(
+      paperPixels(unavailable) > paperPixels(available) + 400,
+      "the same document shows tape on loss of availability",
+    )
+    val recovered = capture("tape-recovered", Frame(fan, base, playback, clock = dawn))
+    assertEquals(0, differs(available, recovered), "tape disappears when the entity returns")
   }
 }

@@ -75,12 +75,15 @@ fun RemoteHaTodoList(data: HaTodoListData, modifier: RemoteModifier = RemoteModi
       }
       // Note: an empty stub when both sections empty.
       if (data.activeItems.isEmpty() && data.completedItems.isEmpty()) {
-        RemoteText(
-          text = "No items".rs,
-          color = theme.secondaryText,
-          fontSize = HaType.Label,
-          style = haTextStyle(),
-        )
+        if (visualFamily() == HaVisualFamily.Console)
+          ConsoleTapeLabel("No items".rs, compact = false)
+        else
+          RemoteText(
+            text = "No items".rs,
+            color = theme.secondaryText,
+            fontSize = HaType.Label,
+            style = haTextStyle(),
+          )
       }
     }
   }
@@ -153,14 +156,22 @@ private fun Row(key: String, item: HaTodoItem, completed: Boolean, theme: Remote
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
     RemoteBox(modifier = RemoteModifier.width(0.rdp).height(MinTouchTargetDp.rdp))
-    RemoteIcon(
-      imageVector =
-        (if (completed) Icons.Filled.CheckBox else Icons.Outlined.CheckBoxOutlineBlank)
-          .toRemoteImageVector(),
-      contentDescription = summary,
-      modifier = RemoteModifier.size(18.rdp),
-      tint = if (completed) theme.placeholderAccent else theme.secondaryText,
-    )
+    RemoteBox(
+      modifier =
+        RemoteModifier.size((if (visualFamily() == HaVisualFamily.Console) 22 else 18).rdp)
+          .then(consoleKeyChrome()),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      RemoteIcon(
+        imageVector =
+          (if (completed) Icons.Filled.CheckBox else Icons.Outlined.CheckBoxOutlineBlank)
+            .toRemoteImageVector(),
+        contentDescription = summary,
+        modifier = RemoteModifier.size(18.rdp),
+        tint = if (completed) theme.placeholderAccent else theme.secondaryText,
+      )
+    }
+
     RemoteBox(modifier = RemoteModifier.padding(start = 10.rdp)) {
       RemoteText(
         text = summary,

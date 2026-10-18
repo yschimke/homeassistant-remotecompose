@@ -27,6 +27,7 @@ import androidx.compose.remote.creation.compose.modifier.offset
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
+import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
@@ -88,15 +89,21 @@ fun RemoteHaMediaControl(
           modifier =
             RemoteModifier.size(96.rdp)
               .clip(haControlShape(8))
-              .background(haInk(data.accent).copy(alpha = haInk(data.accent).alpha * 0.15f.rf)),
+              .background(
+                if (visualFamily() == HaVisualFamily.Console) ConsoleSlot.rc
+                else haInk(data.accent).copy(alpha = haInk(data.accent).alpha * 0.15f.rf)
+              ),
           contentAlignment = RemoteAlignment.Center,
         ) {
-          RemoteIcon(
-            imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
-            contentDescription = LiveValues.attribute(data.entityId, "media_title", data.title),
-            modifier = RemoteModifier.size(40.rdp),
-            tint = haInk(data.accent),
-          )
+          if (visualFamily() == HaVisualFamily.Console)
+            ConsoleTapeLabel("No artwork".rs, RemoteModifier.padding(6.rdp))
+          else
+            RemoteIcon(
+              imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
+              contentDescription = LiveValues.attribute(data.entityId, "media_title", data.title),
+              modifier = RemoteModifier.size(40.rdp),
+              tint = haInk(data.accent),
+            )
         }
       }
     }
@@ -208,15 +215,20 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
       modifier =
         RemoteModifier.size(40.rdp)
           .clip(haControlShape(6))
-          .background(haInk(data.accent).copy(alpha = haInk(data.accent).alpha * 0.15f.rf)),
+          .background(
+            if (visualFamily() == HaVisualFamily.Console) ConsoleSlot.rc
+            else haInk(data.accent).copy(alpha = haInk(data.accent).alpha * 0.15f.rf)
+          ),
       contentAlignment = RemoteAlignment.Center,
     ) {
-      RemoteIcon(
-        imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
-        contentDescription = LiveValues.attribute(data.entityId, "media_title", data.title),
-        modifier = RemoteModifier.size(22.rdp),
-        tint = haInk(data.accent),
-      )
+      if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel("No art".rs, compact = true)
+      else
+        RemoteIcon(
+          imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
+          contentDescription = LiveValues.attribute(data.entityId, "media_title", data.title),
+          modifier = RemoteModifier.size(22.rdp),
+          tint = haInk(data.accent),
+        )
     }
     RemoteColumn(
       modifier = RemoteModifier.weight(1f),

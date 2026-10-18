@@ -79,6 +79,10 @@ fun RemoteHaUnavailableFrame(
 @Composable
 @RemoteComposable
 private fun UnavailableLabel(style: HaUnavailableStyle, modifier: RemoteModifier) {
+  if (visualFamily() == HaVisualFamily.Console) {
+    ConsoleTapeLabel(style.label.rs, modifier)
+    return
+  }
   val theme = haTheme()
   val ink = haInk(theme.primaryText)
   val plate =

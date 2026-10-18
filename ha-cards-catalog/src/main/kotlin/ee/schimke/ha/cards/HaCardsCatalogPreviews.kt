@@ -568,3 +568,35 @@ fun HaCardConsoleControlsSticker() = HaCardSticker {
     }
   }
 }
+
+@CatalogComponent(
+  id = "HaCard/ConsoleServiceLabels",
+  group = "Containment",
+  noReference = NO_KIT,
+  caption =
+    "White service tape labels Console's missing, unsupported and unavailable content, " +
+      "while preserving the original message and live recovery behavior.",
+)
+@Preview(widthDp = CARD_WIDTH_DP, heightDp = 280)
+@Composable
+fun HaCardConsoleServiceLabelsSticker() = HaCardSticker {
+  HaCardUberTheme(theme = "console", dark = true) {
+    RemoteColumn(RemoteModifier.fillMaxWidth(), horizontalAlignment = RemoteAlignment.Start) {
+      ee.schimke.ha.rc.components.RemoteHaUnsupported(
+        ee.schimke.ha.rc.components.HaUnsupportedData("custom:missing-card")
+      )
+      ee.schimke.ha.rc.components.RemoteHaUnavailableFrame(false.rb, false) { modifier ->
+        HaCardButton(name = "Fan", toggleable = true, modifier = modifier.fillMaxWidth())
+      }
+      RemoteHaBambuPrintControl(
+        HaBambuPrintControlData(
+          printerName = "Transport",
+          pause = null,
+          resume = null,
+          stop = null,
+          statusLine = "No controls for this printer",
+        )
+      )
+    }
+  }
+}

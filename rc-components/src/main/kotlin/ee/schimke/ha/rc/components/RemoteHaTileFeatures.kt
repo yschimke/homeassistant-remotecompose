@@ -224,7 +224,10 @@ private fun StepButton(
   val theme = haTheme()
   val click = action.toRemoteAction()?.let { RemoteModifier.clickable(it) }
   RemoteBox(
-    modifier = RemoteModifier.then(click ?: RemoteModifier).size(heightDp.rdp),
+    modifier =
+      RemoteModifier.then(click ?: RemoteModifier)
+        .size(heightDp.rdp)
+        .then(consoleKeyChrome(if (click != null) theme.primaryText else theme.secondaryText)),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(
@@ -266,7 +269,10 @@ private fun ModeSelect(
         }
       val ink = if (option.selected) Color.White.rc else theme.primaryText
       RemoteColumn(
-        modifier = segment,
+        modifier =
+          segment.then(
+            consoleKeyChrome(if (option.selected) accent else null, selected = option.selected)
+          ),
         verticalArrangement = RemoteArrangement.Center,
         horizontalAlignment = RemoteAlignment.CenterHorizontally,
       ) {

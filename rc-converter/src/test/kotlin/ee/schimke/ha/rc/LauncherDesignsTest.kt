@@ -184,6 +184,28 @@ class LauncherDesignsTest {
     }
   }
 
+  @Test
+  fun consoleControlsBakeAtCompactSizesAndKeepTheirActions() {
+    val snapshot = snapshotOf(entity("switch.fan", "on", "friendly_name" to "Fan"))
+    for (type in listOf("tile", "button")) for ((width, height) in listOf(96 to 64, 180 to 48)) {
+      val baked =
+        bake(
+          card(type, "switch.fan"),
+          snapshot,
+          width,
+          height,
+          LauncherLook(HaUberTheme.Console),
+        )
+      val document = RcDocumentCodec.decode(baked.bytes, RcWireLimits())
+      assertTrue(
+        document.namedVariables.none { "switch.s0" in it.name },
+        "$type at $width × $height has its state baked",
+      )
+      assertTrue(baked.actions.isNotEmpty(), "$type retains its action")
+      baked.actions.values.forEach { assertEquals(defaultTapActionFor("switch.fan"), it) }
+    }
+  }
+
   private fun bake(
     card: CardConfig,
     snapshot: HaSnapshot,

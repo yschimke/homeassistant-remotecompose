@@ -325,3 +325,17 @@ When you add or change a part or a card:
    check the smallest and largest cells against adaptive-card-layouts.md's design-review checklist.
 6. A new part that the builder should offer gets a `ha-cards` wrapper (scalar arguments only), a
    sticker and a policy entry.
+
+### Console command and service surfaces
+
+Every built-in Console button uses either `ConsoleControlFace` (a transport key with a pilot
+lamp, or an on/off rocker) or `consoleKeyChrome` (a beveled key mount for text, number, selector
+and compact icon controls). Apply the physical surface inside the existing target: do not add
+a second action, change its label or reduce its touch area. Selected mode keys retain the
+selection accent; disabled keys retain the original inert action and quiet ink.
+
+`ConsoleTapeLabel` is the service label for unavailable or placeholder content. It accepts the
+original `RemoteString`, so template labels keep their bindings. It owns no action. Availability
+uses the existing visibility binding, and image notes sit behind the bitmap so successful loading
+covers them. Tape is an instrument material: white paper with dark ink in either host mode.
+See the [control audit](../design/evidence/console-controls-and-tape/README.md) for every owning path.
