@@ -28,7 +28,7 @@ public enum NativeSwiftInput {
   /// Raw edits remain strings. Hosts validate values again before domain actions.
   public static func isValid(config: String, value: String, options: [String] = [], minimum: Double? = nil, maximum: Double? = nil, step: Double? = nil) -> Bool {
     if config == text { return true }
-    if config == choice { return options.contains(value) }
+    if config == choice { return !options.isEmpty && options.allSatisfy { !$0.isEmpty && !$0.contains("\n") } && Set(options).count == options.count && options.contains(value) }
     if config == toggle { return value == "true" || value == "false" }
     guard config == number || config == range else { return false }
     guard [minimum, maximum, step].compactMap({ $0 }).allSatisfy({ $0.isFinite }),
