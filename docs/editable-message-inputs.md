@@ -103,3 +103,11 @@ and helper entity rows; common desktop/Wasm and the HA TS adapter support the ex
 Wear app supports the message form with phone acknowledgement. The existing Wear summary rows and
 common desktop/Wasm entity summaries remain summaries. The underlying CMP/Swift/TS input renderers
 share the same contract wherever an interactive document host registers them.
+
+Per-field `chrome: none` forwards the shared input contract's CHROME=1 property on every player;
+omitting it uses `default`. It removes generic caption, padding, editor background and border so
+custom authors can wrap the component in their own themed container and visible label. The accessible
+`label` remains required. The built-in message card has no per-field custom wrapper, so keep its
+default chrome unless you provide that visible labeling/layout yourself. Styling cannot enable a
+widget, demo or read-only host. Older players ignore the optional property; consume the updated
+2.16.0 player before relying on this appearance.

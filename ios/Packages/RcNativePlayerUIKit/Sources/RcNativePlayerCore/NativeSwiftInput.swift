@@ -2,6 +2,11 @@ import Foundation
 
 /// Versioned LAYOUT_CUSTOM input contract. Property storage is the existing native wire contract.
 public enum NativeSwiftInput {
+  public enum ChromeMode: Int, Sendable {
+    case standard = 0
+    case none = 1
+  }
+
   public enum LineMode: Int, Sendable {
     case singleLine = 0
     case multiline = 1
@@ -17,6 +22,7 @@ public enum NativeSwiftInput {
   public static let step = 10
   public static let enabled = 11
   public static let submitLabel = 12
+  public static let chrome = 13
   public static let value = 1
   public static let valueReturn = 2
   public static let key = 3

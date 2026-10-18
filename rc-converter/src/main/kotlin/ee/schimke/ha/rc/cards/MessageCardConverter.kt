@@ -45,6 +45,7 @@ class MessageCardConverter : CardConverter {
                   )
                 )
             else "",
+          chrome = field.chrome,
         )
       }
     }

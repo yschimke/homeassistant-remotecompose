@@ -85,6 +85,13 @@ private final class NativeInputView: UIStackView, UITextFieldDelegate, UITextVie
 
   func update(_ component: RemoteComposeNativeCustomComponent) {
     self.component = component
+    let plain = component.integer(.init(NativeSwiftInput.chrome)) == NativeSwiftInput.ChromeMode.none.rawValue
+    directionalLayoutMargins = plain ? .zero : .init(top: 6, leading: 8, bottom: 6, trailing: 8)
+    caption.isHidden = plain
+    field.borderStyle = plain ? .none : .roundedRect
+    multiline.backgroundColor = plain ? .clear : .systemBackground
+    multiline.textContainerInset = plain ? .zero : .init(top: 8, left: 0, bottom: 8, right: 0)
+    multiline.textContainer.lineFragmentPadding = plain ? 0 : 5
     let label = component.text(.init(NativeSwiftInput.label))
     caption.text = label; field.accessibilityLabel = label
     multiline.accessibilityLabel = label; choice.accessibilityLabel = label

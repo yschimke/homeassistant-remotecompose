@@ -7,7 +7,7 @@ class MessageCardTest {
   private fun card(): CardConfig {
     val raw =
       Json.parseToJsonElement(
-          """{"type":"custom:terrazzo-message","inputs":[{"key":"channel","label":"Channel","type":"choice","entity":"input_select.channel"},{"key":"message","label":"Message","type":"multiline"}],"tap_action":{"action":"perform-action","perform_action":"script.send_room_message","data":{"message":"{{input.message}}","channel":"{{input.channel}}"}}}"""
+          """{"type":"custom:terrazzo-message","inputs":[{"key":"channel","label":"Channel","type":"choice","entity":"input_select.channel"},{"key":"message","label":"Message","type":"multiline","chrome":"none"}],"tap_action":{"action":"perform-action","perform_action":"script.send_room_message","data":{"message":"{{input.message}}","channel":"{{input.channel}}"}}}"""
         )
         .jsonObject
     return CardConfig(MESSAGE_CARD_TYPE, raw)
@@ -36,6 +36,8 @@ class MessageCardTest {
     val fields = messageInputs(card(), snapshot())
     assertEquals(listOf("matrix", "telegram"), fields[0].options)
     assertTrue(fields[1].multiline)
+    assertEquals("default", fields[0].chrome)
+    assertEquals("none", fields[1].chrome)
     val message = "Hello \"room\" 🏡\n{{literal}}"
     val action = messageAction(card(), snapshot("telegram"), mapOf("message" to message))
     assertEquals("send_room_message", action["service"]?.jsonPrimitive?.content)

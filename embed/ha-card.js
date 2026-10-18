@@ -769,13 +769,15 @@ export function messageInputs(card, states = {}) {
     const entity = states[field.entity];
     const type = field.type ?? (['select', 'input_select'].includes(domainOf(field.entity ?? '')) ? 'choice' : 'text');
     if (!['text', 'multiline', 'choice'].includes(type)) throw new Error(`Unsupported input type: ${type}`);
+    const chrome = field.chrome ?? 'default';
+    if (!['default', 'none'].includes(chrome)) throw new Error('Unsupported input chrome');
     const options = type === 'choice' ? (field.options ?? entity?.attributes?.options ?? []) : [];
     if (!Array.isArray(options) || (type === 'choice' && !options.length) ||
         options.some(o => typeof o !== 'string' || !o || o.includes('\n')) || new Set(options).size !== options.length) {
       throw new Error('Choice input needs unique, non-empty options');
     }
     return { key: field.key, label: field.label ?? field.key, value: entity?.state ?? field.value ?? '',
-      options, multiline: type === 'multiline', submit: index === card.inputs.length - 1 ? MESSAGE_SUBMIT : '' };
+      options, chrome, multiline: type === 'multiline', submit: index === card.inputs.length - 1 ? MESSAGE_SUBMIT : '' };
   });
 }
 /** Exact data placeholders only. Never template service names or targets, or evaluate code. */

@@ -34,6 +34,10 @@ internal fun MessageComposeCard(
                 field.options,
                 field.multiline,
                 if (index == inputs.lastIndex) MESSAGE_SUBMIT else "",
+                chrome =
+                  if (field.chrome == "none")
+                    ee.schimke.composeai.rcplayer.protocol.RcInputChrome.NONE
+                  else ee.schimke.composeai.rcplayer.protocol.RcInputChrome.DEFAULT,
               )
             }
           )

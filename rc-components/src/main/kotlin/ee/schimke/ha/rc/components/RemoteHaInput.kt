@@ -24,6 +24,7 @@ fun RemoteHaInput(
   options: List<String> = emptyList(),
   multiline: Boolean = false,
   submit: String = "",
+  chrome: String = "default",
 ) {
   if (!supportsInputComponents()) {
     androidx.compose.remote.creation.compose.layout.RemoteText(
@@ -47,6 +48,7 @@ fun RemoteHaInput(
       property(RcInput.MULTILINE, if (multiline) 1 else 0)
       property(RcInput.OPTIONS, options.joinToString("\n"))
       property(RcInput.SUBMIT, submit)
+      property(RcInput.CHROME, if (chrome == "none") 1 else 0)
     },
   )
 }

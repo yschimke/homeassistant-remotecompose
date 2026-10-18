@@ -11,6 +11,7 @@ data class MessageInput(
   val value: String,
   val options: List<String>,
   val multiline: Boolean,
+  val chrome: String = "default",
 )
 
 /** Local configuration and snapshot only: drafts and service data never reach a design server. */
@@ -39,12 +40,15 @@ fun messageInputs(card: CardConfig, snapshot: HaSnapshot): List<MessageInput> {
         require(
           options.all { it.isNotEmpty() && '\n' !in it } && options.distinct().size == options.size
         )
+        val chrome = field["chrome"]?.jsonPrimitive?.content ?: "default"
+        require(chrome in setOf("default", "none")) { "Unsupported input chrome: $chrome" }
         MessageInput(
           key,
           field["label"]?.jsonPrimitive?.content ?: key,
           entity?.state ?: field["value"]?.jsonPrimitive?.content.orEmpty(),
           if (type == "choice") options else emptyList(),
           type == "multiline",
+          chrome,
         )
       }
   require(fields.isNotEmpty() && fields.map { it.key }.distinct().size == fields.size)

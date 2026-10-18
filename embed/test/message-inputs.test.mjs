@@ -31,3 +31,12 @@ test('invalid choices, unsupported types, duplicate keys and unknown bindings fa
   assert.throws(() => messageAction({ ...card, tap_action: { ...card.tap_action, data: { message: '{{input.missing}}' } } }, states, {}), /Unknown input/);
   assert.throws(() => messageAction(card, states, { message: 'x'.repeat(4097) }), /valid/);
 });
+
+
+test('optional input chrome is preserved and validated independently of action binding', () => {
+  const themed={...card,inputs:card.inputs.map(field=>({...field,chrome:'none'}))};
+  assert(messageInputs(themed,states).every(field=>field.chrome === 'none'));
+  assert(messageInputs(card,states).every(field=>field.chrome === 'default'));
+  assert.deepEqual(messageAction(themed,states,{message:'Hello'}),messageAction(card,states,{message:'Hello'}));
+  assert.throws(()=>messageInputs({...card,inputs:[{key:'message',chrome:'unrecognized'}]},states),/chrome/);
+});
