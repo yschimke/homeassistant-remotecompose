@@ -22,9 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.cardSizeConstraints
-import ee.schimke.ha.rc.cards.defaultRegistry
-import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.terrazzo.dashboard.LauncherGrid
 import kotlinx.coroutines.CancellationException
@@ -71,12 +68,7 @@ internal fun WidgetPreparationPreview(
     with(LocalDensity.current) {
       context.resources.getDimension(android.R.dimen.system_app_widget_background_radius).toDp()
     }
-  val registry = remember { defaultRegistry().withEnhancedShutter() }
-  val bounds =
-    remember(card) {
-      WidgetSizeClass.forConstraints(registry.cardSizeConstraints(card, snapshot))
-        .gridBounds(context)
-    }
+  val bounds = remember(context) { LauncherWidgetSpec.gridBounds(context) }
   var width by rememberSaveable(bounds) { mutableIntStateOf(bounds.defaultCellsW) }
   var height by rememberSaveable(bounds) { mutableIntStateOf(bounds.defaultCellsH) }
   var views by remember { mutableStateOf<RemoteViews?>(null) }
@@ -137,7 +129,7 @@ internal fun WidgetPreparationPreview(
   }
   Text("Try it on your home screen", style = MaterialTheme.typography.titleMedium)
   Text(
-    "Adaptive layout · drag the corner or try a size. New widgets start at 1 × 1; resize them on the home screen.",
+    "Adaptive layout · drag the corner or try a size. New widgets start at 1 × 1; resize them on the home screen. This preview shows up to 4 × 4.",
     style = MaterialTheme.typography.bodySmall,
   )
   FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

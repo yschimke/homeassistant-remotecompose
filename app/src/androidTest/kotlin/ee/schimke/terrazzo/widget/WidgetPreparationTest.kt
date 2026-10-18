@@ -201,7 +201,7 @@ class WidgetPreparationTest {
     val beforeMedium = captures
     compose.onNodeWithText("Medium").performClick()
     compose.waitUntil(60_000) { captures > beforeMedium }
-    compose.onNodeWithText("2 × 1 cells").assertExists()
+    compose.onNodeWithText("2 × 2 cells").assertExists()
     val beforeCompact = captures
     compose.onNodeWithText("Compact").performClick()
     compose.waitUntil(60_000) {
@@ -261,7 +261,7 @@ class WidgetPreparationTest {
     compose.waitUntil(60_000) { requests.isNotEmpty() }
     assertEquals(WidgetSizeDp(72, 84), requests.last())
     compose.onNodeWithText("Roomy").performClick()
-    compose.waitUntil(60_000) { requests.last() == WidgetSizeDp(144, 168) }
+    compose.waitUntil(60_000) { requests.last() == WidgetSizeDp(288, 336) }
     compose.runOnIdle {
       currentCard.value =
         card.copy(
@@ -276,7 +276,7 @@ class WidgetPreparationTest {
     compose.onNodeWithText("Roomy").assertIsSelected()
     restoration.emulateSavedInstanceStateRestore()
     compose.onNodeWithText("Roomy").assertIsSelected()
-    compose.onNodeWithText("2 × 2 cells").assertExists()
+    compose.onNodeWithText("4 × 4 cells").assertExists()
   }
 
   @Test
@@ -304,13 +304,15 @@ class WidgetPreparationTest {
     compose.onNodeWithText("Widget name").performImeAction()
     compose.onNodeWithText("1 × 1 cells").performScrollTo().assertExists()
     compose.onNodeWithText("Compact").assertIsSelected()
-    screenshot("setup-initial-one-cell")
     compose.waitUntil(60_000) {
       compose
         .onAllNodes(hasText("Install widget") and isEnabled())
         .fetchSemanticsNodes()
         .isNotEmpty()
     }
+    compose.onNodeWithTag("widget-grid-viewport").performScrollTo()
+    compose.onNodeWithTag("widget-render").assertExists()
+    screenshot("setup-initial-one-cell")
     compose.onNodeWithText("Install widget").assertIsEnabled().performClick()
     assertTrue(
       device.wait(
@@ -425,13 +427,30 @@ class WidgetPreparationTest {
       device.drag(
         hostBounds.right,
         hostBounds.centerY(),
-        (hostBounds.right + hostBounds.width() + 30).coerceAtMost(device.displayWidth - 20),
+        (hostBounds.right + 2 * hostBounds.width() + 30).coerceAtMost(device.displayWidth - 20),
         hostBounds.centerY(),
         40,
       )
     )
     compose.waitUntil(60_000) {
       WidgetSizing.forWidgetCapture(manager, installed.widgetId).widthDp > initialSize.widthDp
+    }
+    // Grow vertically too, beyond the former Small provider's 2x2 cap.
+    val widerBounds = device.findObjects(hostSelector).last().visibleBounds
+    assertTrue(
+      device.drag(
+        widerBounds.centerX(),
+        widerBounds.bottom,
+        widerBounds.centerX(),
+        (widerBounds.bottom + 2 * hostBounds.height() + 30).coerceAtMost(
+          device.displayHeight - 120
+        ),
+        40,
+      )
+    )
+    compose.waitUntil(60_000) {
+      val resized = WidgetSizing.forWidgetCapture(manager, installed.widgetId)
+      resized.widthDp > 144 && resized.heightDp > 168
     }
     device.pressBack()
     device.waitForIdle()
