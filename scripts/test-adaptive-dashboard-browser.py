@@ -113,7 +113,7 @@ try:
                 assert 'states' not in data and 'fixture-token' not in route.request.post_data
                 assert not any(value in route.request.post_data for value in ['meshcore_radio', 'Room node', 'sensor.battery'])
                 if data['card']['type'] == 'gauge' and data['cardStyle'] == 'console':
-                    route.fulfill(json={'sha256': sha}, headers={'Access-Control-Allow-Origin': '*'})
+                    route.fulfill(json={'sha256': sha, 'exact': True}, headers={'Access-Control-Allow-Origin': '*'})
                 else: route.fulfill(status=404, headers={'Access-Control-Allow-Origin': '*'})
             page.route('https://ha.coo.ee/api/cards/resolve', resolve)
             page.route('https://ha.coo.ee/designs/v1/blobs/*.rc', lambda route: route.fulfill(body=gauge, content_type='application/octet-stream', headers={'Access-Control-Allow-Origin': '*'}))
@@ -131,7 +131,7 @@ try:
                 page.screenshot(path=f'_wasm-test/adaptive-instance-before-{name}.png')
                 page.close(); continue
             expect(page.get_by_role('button', name='Design or fix this card')).to_have_count(0)
-            expect(page.get_by_text('Connected', exact=True)).to_be_visible()
+            expect(page.get_by_role('button', name='Radio Connected', exact=True)).to_be_visible()
             expect(page.get_by_text('Hub: Connected', exact=True)).to_be_visible()
             expect(page.get_by_text(re.compile(r'\{\{|\{%'))).to_have_count(0)
             if name == 'wall':

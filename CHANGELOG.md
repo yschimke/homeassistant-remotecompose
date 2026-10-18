@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.1.44](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.43...v0.1.44) (2026-10-18)
+
+
+### Features
+
+* add IKEA Showroom card design ([#912](https://github.com/yschimke/homeassistant-remotecompose/issues/912)) ([6b00df1](https://github.com/yschimke/homeassistant-remotecompose/commit/6b00df1dfaf5f46483b921e87e9e1e629365c535))
+* add public bug report feedback flow ([#919](https://github.com/yschimke/homeassistant-remotecompose/issues/919)) ([71d69df](https://github.com/yschimke/homeassistant-remotecompose/commit/71d69df516e9ed74f2bccdd2188b3dc107bf34b2))
+* add ten distinct Uber design families ([#913](https://github.com/yschimke/homeassistant-remotecompose/issues/913)) ([62b4646](https://github.com/yschimke/homeassistant-remotecompose/commit/62b4646ded17153f2b6c6ddc4daf3a269f151c16))
+* **dashboard:** pack adaptive sections and add MeshCore chat ([#898](https://github.com/yschimke/homeassistant-remotecompose/issues/898)) ([4dd5d86](https://github.com/yschimke/homeassistant-remotecompose/commit/4dd5d86b694db1306d02a1e3aca5d4da9aacc845))
+* **demo:** expose guarded native read-only HA dashboard ([#906](https://github.com/yschimke/homeassistant-remotecompose/issues/906)) ([8d0aa3f](https://github.com/yschimke/homeassistant-remotecompose/commit/8d0aa3fc14c1d10fdfcee33f03ab5f844d7ddf17))
+* **design:** binding recipes so non-Kotlin hosts can play gauge templates ([#911](https://github.com/yschimke/homeassistant-remotecompose/issues/911)) ([e5b3c1f](https://github.com/yschimke/homeassistant-remotecompose/commit/e5b3c1fa74f5a5871d9f3eed251d28672d77eb10))
+* **ha:** publish HACS packages and select dashboards ([#904](https://github.com/yschimke/homeassistant-remotecompose/issues/904)) ([9d4b78c](https://github.com/yschimke/homeassistant-remotecompose/commit/9d4b78c855733e4de7d625024d177941e760d538))
+* script native demo Caddy route setup ([#924](https://github.com/yschimke/homeassistant-remotecompose/issues/924)) ([3cb5c0c](https://github.com/yschimke/homeassistant-remotecompose/commit/3cb5c0c9432bdb93b0ead883eefa2518d2369c95))
+
+
+### Bug Fixes
+
+* **android:** correct system bar contrast and inset layouts ([#923](https://github.com/yschimke/homeassistant-remotecompose/issues/923)) ([c50b6e6](https://github.com/yschimke/homeassistant-remotecompose/commit/c50b6e6a6541a8cbb0711dd0cb7fb1e725d03642))
+* **android:** keep bottom fields and actions reachable with keyboard open ([#907](https://github.com/yschimke/homeassistant-remotecompose/issues/907)) ([524ca98](https://github.com/yschimke/homeassistant-remotecompose/commit/524ca98970ff89ab813e8f08c36a4c615b0c9bfc))
+* consolidate launcher cards onto one resizable widget ([#921](https://github.com/yschimke/homeassistant-remotecompose/issues/921)) ([583ef82](https://github.com/yschimke/homeassistant-remotecompose/commit/583ef829b53f76d8b659a883c12cdd806fde3100))
+* default launcher widgets to resizable 1x1 cells ([#915](https://github.com/yschimke/homeassistant-remotecompose/issues/915)) ([3e58106](https://github.com/yschimke/homeassistant-remotecompose/commit/3e581069301589f5facab838e93ed39564cd3042))
+* embed pictures in direct launcher widget captures ([#917](https://github.com/yschimke/homeassistant-remotecompose/issues/917)) ([9b78b03](https://github.com/yschimke/homeassistant-remotecompose/commit/9b78b0388c0671d55335c63470e17bba51c0c452))
+* keep short climate widgets readable and show media progress ([#918](https://github.com/yschimke/homeassistant-remotecompose/issues/918)) ([75bccf4](https://github.com/yschimke/homeassistant-remotecompose/commit/75bccf42207e00ea6712a9e7d367edd60f766d63))
+* keep widget previews stable and installed data current ([#914](https://github.com/yschimke/homeassistant-remotecompose/issues/914)) ([44291e9](https://github.com/yschimke/homeassistant-remotecompose/commit/44291e9ae21916818d50aaa9c8ca1bbdadd8840c))
+* restore iOS live updates and structured service calls ([#916](https://github.com/yschimke/homeassistant-remotecompose/issues/916)) ([d67dc37](https://github.com/yschimke/homeassistant-remotecompose/commit/d67dc3736d91d8a1670841131f06073553dc01b3))
+* stabilize WASM dashboard cards and render HA images ([#925](https://github.com/yschimke/homeassistant-remotecompose/issues/925)) ([fcdd86e](https://github.com/yschimke/homeassistant-remotecompose/commit/fcdd86e3e5b71bc39a5438d065db3816737b9e83))
+* update adaptive player documents on stable wrap slots ([#920](https://github.com/yschimke/homeassistant-remotecompose/issues/920)) ([e6423ed](https://github.com/yschimke/homeassistant-remotecompose/commit/e6423ed7152ac922f68631cdca169a1bdf8a7242))
+
 ## [0.1.43](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.42...v0.1.43) (2026-10-18)
 
 

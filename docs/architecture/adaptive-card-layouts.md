@@ -104,13 +104,18 @@ Don't think _small / medium / large_. Think:
 Each card declares its own ladder; three rungs is typical, five for
 heavyweight cards (gauge, entities, weather-forecast).
 
-### 6. The default container layout matches the content layout
+### 6. The matrix reference shape matches the content layout
 
 Every card has a _natural launcher shape_ — the cells the card wants
 to occupy when it has no further constraint. That shape is the
-**base** of the matrix preview, the size the user defaults to when
-they pin the card to the home screen, and the geometry the converter's
-`Full` tier targets.
+**base** of the matrix preview and the geometry the converter's
+`Full` tier targets. Phone launcher widgets install at **1×1**, independently
+of this reference shape, and resize upward through the converter's tiers.
+One shared provider serves every card and imposes no maximum resize dimensions;
+the launcher owns the available grid and reports the actual capture size. The
+setup preview samples up to 4×4 cells. A one-cell entities or glance card shows
+the first entity's icon and current state, then reveals list content on resize.
+Wear sizing follows its own host contract.
 
 It is **not** the wrap-mode dimensions. Wrap mode is the _expanded_
 form — a stack-of-elements layout pinned to a wide dashboard slot.

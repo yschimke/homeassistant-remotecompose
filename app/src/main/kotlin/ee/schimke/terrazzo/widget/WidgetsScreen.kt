@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.widget
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -50,7 +51,11 @@ fun WidgetsScreen(onBack: () -> Unit) {
     // so this is a proper centred empty state rather than a stray
     // line of text pinned to the top-left.
     Column(
-      modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 32.dp),
+      modifier =
+        Modifier.fillMaxSize()
+          .padding(padding)
+          .consumeWindowInsets(padding)
+          .padding(horizontal = 32.dp),
       verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {

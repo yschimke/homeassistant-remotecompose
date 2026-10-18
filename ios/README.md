@@ -65,7 +65,11 @@ bytes to the same native player; SwiftUI does not depend on where those bytes we
 The stream follows the add-on's existing `/v1/stream` protocol. The app sends
 `{"type":"subscribe","entities":[...]}` and applies scalar values from `bindings` directly to
 the native player's named values. This is the live-card update path: cards are not frozen at the
-first frame. `lovelace_updated` causes a manifest/document refresh.
+first frame. `lovelace_updated` causes a manifest/document refresh. Commands use JSON text frames, including
+service calls with structured JSON data. Entity-free dashboards also subscribe so document and
+configuration invalidations keep working. Unexpected disconnects reconnect and re-subscribe with
+exponential delays from 1 to 30 seconds; switching servers, demo mode, and sign-out cancel retries.
+Service calls are not replayed after a disconnect because they may already have executed.
 
 Cards whose converter uses a `dataSignature` declare `"update_mode":"document"`. When one of
 their signatures changes, the temporary gateway emits
@@ -94,14 +98,17 @@ unsupported-operation diagnostic rather than silently displaying an unfiltered c
 a filter restores the normal drawing path. JSON on/off bindings use integer values; ordinary
 numeric bindings retain their float type.
 
-On macOS, run the native package tests and the app's Foundation-only binding tests:
+On macOS, run the native package tests and the app's binding, live-transport and dashboard-state tests:
 
 ```sh
 swift test --package-path ios/Packages/RcNativePlayerUIKit
 scripts/test-ios-bindings.sh
 ```
 
-The iOS CI job runs both commands before linking the client and building the SwiftUI app.
+The transport suite includes a real `URLSessionWebSocketTask` round trip against a local Python
+text-frame fixture, plus deterministic disconnect/backoff tests. Store networking/state tests run
+on macOS with UIKit URL opening excluded. The iOS CI job runs both commands before linking the
+client and building the complete SwiftUI app with Xcode.
 
 ## Release assets
 

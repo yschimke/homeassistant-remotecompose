@@ -2,10 +2,15 @@
 
 A phone user chooses a dashboard card, opens its details, and taps **Prepare a
 home screen widget** above the history charts. **Make it yours** provides a local
-name edit and a live home screen preview. Compact, Default and Roomy presets plus
-a corner drag let the user test the provider's advertised resize range before
+name edit and a live home screen preview. Compact (1×1), Medium and Roomy presets plus
+a corner drag let the user try a representative resize range before
 pressing **Install widget**. The install action stays visible while the preview
-scrolls. Android then asks for confirmation and a home screen position.
+scrolls. Android then asks for confirmation and a home screen position. The single launcher provider
+starts every card at 1×1 and allows resizing upward to the launcher’s grid limits.
+The setup sheet shows a representative 4×4 sample, not an upper resize cap. Trying a larger preview does not
+change that installation default. Launcher-reported sizes and saved card choices are preserved.
+The unused Small/Tall provider variants are removed without migration, as requested. Preview selection survives live refreshes,
+name edits and activity recreation. Wear widget sizing is independent.
 
 The name edit applies only to the widget. Installation persists the edited card
 only after the launcher confirms. Cancellation consumes no slot and returns to the edited preparation. The Android
@@ -57,6 +62,16 @@ identical cards on different Home Assistant instances.
   installation, with the original dashboard configuration preserved.
 - A large preview could push installation off screen. The primary install
   action is fixed below the scrolling preparation controls.
+- Each five-second snapshot refresh used to clear the native preview and replace it
+  with a spinner, then recreate its host. Capture and native inflation now finish
+  before an atomic child swap in the existing host. The last successful preview
+  stays visible during refresh, resize and replacement failures. New edits and
+  failed replacements invalidate installation; cancelled captures cannot publish.
+- Installed widgets always read the default dashboard's cache, so a card prepared
+  from a named dashboard could immediately fall back to generic "Unavailable"
+  content. They now read the instance's latest successful full snapshot, preserving
+  device mappings for printer cards. Older caches recover the newest valid payload;
+  the app's per-dashboard offline reads keep their existing slots.
 - Opening details froze the install snapshot. The sheet refreshes data while
   open, retaining local edits and the selected preview size.
 - A rejected pin request closed the sheet. It now leaves the preparation open
@@ -89,7 +104,9 @@ home screen after installation.
 It checks that actual rendered pixels are non-empty, change with light state,
 and remain non-empty at Compact and Roomy sizes. Roomy must reveal more content, not just enlarge the canvas. It edits a name, requests a pin,
 cancels, confirms another pin and verifies the persisted edited card. Screenshots are retained through MediaStore so CI cleanup cannot erase the evidence. The install screenshot waits for actual content inside launcher widget bounds. It also
-exercises the provider's launcher size options after installation.
+asserts a fresh install uses the one-cell provider default and exercises the provider's launcher size options after installation. `WidgetSizingTest` covers the single provider's metadata, missing host options and preservation of positive host sizes.
+`LauncherDesignsTest` checks 1×1 icon/state content, live rebaking and fuller layouts
+after resizing, including entities and glance lists.
 
 ```sh
 ./gradlew :app:connectedDebugAndroidTest \
@@ -101,3 +118,19 @@ launcher resize handles; programmatic option updates alone do not prove the
 launcher resize gesture works. The long-press regression now checks the visible preparation action above history,
 rather than looking for the old link below the fold. It exercises the dashboard
 entry point separately from the isolated render/install tests.
+
+`WidgetPreviewRefreshTest` adds temporal coverage of the setup lifecycle with
+controllably delayed native RemoteViews captures. It observes every pre-draw over
+three five-second refresh intervals on the Compose test clock, then Roomy/Compact size changes and a corner drag,
+checking that content never disappears and the native host keeps its identity.
+It writes `Download/TerrazzoWidgetTests/widget-preview-frames.csv` (elapsed time,
+host identity and displayed live value); `run-connected-tests.sh` pulls it into
+the instrumented-test artifact alongside the real renderer's screenshots. This
+isolates replacement lifecycle from image conversion, which has separate parity
+coverage. The second test covers failed inflation, retry, stale capture cancellation
+and invalidating installation while a card edit is pending.
+
+```sh
+./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=ee.schimke.terrazzo.widget.WidgetPreviewRefreshTest
+```

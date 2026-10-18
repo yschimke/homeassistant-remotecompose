@@ -97,152 +97,171 @@ fun CardStudioScreen(
     }
   }
 
-  Scaffold(
-    topBar = {
-      TopAppBar(
-        title = { Text("Design or fix this card", maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        navigationIcon = { TextButton(onClick = onBack) { Text("Back") } },
-      )
-    }
-  ) { padding ->
-    val url = editorUrl
-    if (url != null) {
-      Column(Modifier.fillMaxSize().padding(padding)) {
-        FlowRow(
-          Modifier.fillMaxWidth().padding(8.dp),
-          horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-          TextButton(onClick = { editorUrl = null }) { Text("Agent controls") }
-          TextButton(onClick = { uriHandler.openUri(externalUrl ?: url) }) {
-            Text("Open in browser")
-          }
-        }
-        CardEditorBrowser(url, Modifier.fillMaxWidth().weight(1f)) { externalUrl = it }
+  BoxWithConstraints(Modifier.fillMaxSize()) {
+    // A landscape IME can leave less height than a toolbar plus a multiline field.
+    // Let the toolbar scroll with the form in short viewports, keeping Back reachable.
+    val compactHeight = maxHeight < 240.dp
+    Scaffold(
+      topBar = {
+        if (!compactHeight)
+          TopAppBar(
+            title = {
+              Text("Design or fix this card", maxLines = 1, overflow = TextOverflow.Ellipsis)
+            },
+            navigationIcon = { TextButton(onClick = onBack) { Text("Back") } },
+          )
       }
-    } else {
-      Column(
-        Modifier.fillMaxSize()
-          .padding(padding)
-          .verticalScroll(rememberScrollState())
-          .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-      ) {
-        Text("Current card", style = MaterialTheme.typography.titleMedium)
-        preview()
-        OutlinedTextField(
-          server,
-          {
-            server = it
-            draft = null
-            message = null
-          },
-          label = { Text("Design server") },
-          singleLine = true,
-          enabled = !busy,
-          modifier = Modifier.fillMaxWidth(),
-        )
-        Button(onClick = { run(false) }, enabled = !busy && server.isNotBlank()) {
-          Text(if (draft == null) "Design in UI Builder" else "Preview draft in UI Builder")
-        }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          TextButton(
-            onClick = { run(false, refresh = true) },
-            enabled = !busy && server.isNotBlank(),
+    ) { padding ->
+      val url = editorUrl
+      if (url != null) {
+        Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
+          FlowRow(
+            Modifier.fillMaxWidth().padding(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
           ) {
-            Text("Refresh preview data")
+            if (compactHeight) TextButton(onClick = onBack) { Text("Back") }
+            TextButton(onClick = { editorUrl = null }) { Text("Agent controls") }
+            TextButton(onClick = { uriHandler.openUri(externalUrl ?: url) }) {
+              Text("Open in browser")
+            }
           }
-          if (busy && !agentRequest) TextButton(onClick = { job?.cancel() }) { Text("Cancel") }
+          CardEditorBrowser(url, Modifier.fillMaxWidth().weight(1f)) { externalUrl = it }
         }
-        if (!agentRequest) StudioRequestFeedback(busy, message, requestFailed)
-        HorizontalDivider()
-        Text("Connect an agent", style = MaterialTheme.typography.titleMedium)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          CardAgentProvider.entries.forEach { option ->
-            FilterChip(
-              provider == option,
-              {
-                if (provider != option) {
-                  provider = option
-                  apiKey = ""
-                  model = ""
-                }
-              },
-              label = { Text(option.label) },
+      } else {
+        Column(
+          Modifier.fillMaxSize()
+            .padding(padding)
+            .consumeWindowInsets(padding)
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+          verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+          if (compactHeight) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+              TextButton(onClick = onBack) { Text("Back") }
+              Text("Design or fix this card", style = MaterialTheme.typography.titleLarge)
+            }
+          }
+          Text("Current card", style = MaterialTheme.typography.titleMedium)
+          preview()
+          OutlinedTextField(
+            server,
+            {
+              server = it
+              draft = null
+              message = null
+            },
+            label = { Text("Design server") },
+            singleLine = true,
+            enabled = !busy,
+            modifier = Modifier.fillMaxWidth(),
+          )
+          Button(onClick = { run(false) }, enabled = !busy && server.isNotBlank()) {
+            Text(if (draft == null) "Design in UI Builder" else "Preview draft in UI Builder")
+          }
+          FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(
+              onClick = { run(false, refresh = true) },
+              enabled = !busy && server.isNotBlank(),
+            ) {
+              Text("Refresh preview data")
+            }
+            if (busy && !agentRequest) TextButton(onClick = { job?.cancel() }) { Text("Cancel") }
+          }
+          if (!agentRequest) StudioRequestFeedback(busy, message, requestFailed)
+          HorizontalDivider()
+          Text("Connect an agent", style = MaterialTheme.typography.titleMedium)
+          FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            CardAgentProvider.entries.forEach { option ->
+              FilterChip(
+                provider == option,
+                {
+                  if (provider != option) {
+                    provider = option
+                    apiKey = ""
+                    model = ""
+                  }
+                },
+                label = { Text(option.label) },
+                enabled = !busy,
+              )
+            }
+          }
+          if (provider == CardAgentProvider.Agent) {
+            OutlinedTextField(
+              endpoint,
+              { endpoint = it },
+              label = { Text("Agent chat-completions HTTPS endpoint") },
               enabled = !busy,
+              singleLine = true,
+              modifier = Modifier.fillMaxWidth(),
             )
           }
-        }
-        if (provider == CardAgentProvider.Agent) {
           OutlinedTextField(
-            endpoint,
-            { endpoint = it },
-            label = { Text("Agent chat-completions HTTPS endpoint") },
+            apiKey,
+            { apiKey = it },
+            label = { Text("API key · this session only") },
+            enabled = !busy,
+            singleLine = true,
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth(),
+          )
+          OutlinedTextField(
+            model,
+            { model = it },
+            label = { Text("Model ID") },
             enabled = !busy,
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
           )
-        }
-        OutlinedTextField(
-          apiKey,
-          { apiKey = it },
-          label = { Text("API key · this session only") },
-          enabled = !busy,
-          singleLine = true,
-          visualTransformation = PasswordVisualTransformation(),
-          modifier = Modifier.fillMaxWidth(),
-        )
-        OutlinedTextField(
-          model,
-          { model = it },
-          label = { Text("Model ID") },
-          enabled = !busy,
-          singleLine = true,
-          modifier = Modifier.fillMaxWidth(),
-        )
-        OutlinedTextField(
-          instruction,
-          { instruction = it },
-          label = { Text("Create a missing design or describe the issue") },
-          placeholder = { Text("Make the state easier to read and fit this card at phone width.") },
-          enabled = !busy,
-          minLines = 3,
-          modifier = Modifier.fillMaxWidth(),
-        )
-        Text(
-          "Sending shares the selected card's display text and current values with ${provider.label}. Other entities, Home Assistant tokens and entity-picture URLs stay on this device.",
-          style = MaterialTheme.typography.bodySmall,
-        )
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          Button(
-            onClick = { run(true) },
-            enabled =
-              !busy &&
-                apiKey.isNotBlank() &&
-                model.isNotBlank() &&
-                instruction.isNotBlank() &&
-                server.isNotBlank() &&
-                (provider != CardAgentProvider.Agent || endpoint.isNotBlank()),
-          ) {
-            Text(if (busy && agentRequest) "Working…" else "Generate or fix draft")
-          }
-          if (busy && agentRequest) TextButton(onClick = { job?.cancel() }) { Text("Cancel") }
-          if (draft != null && !busy) {
-            TextButton(onClick = { run(false) }) { Text("Review draft") }
-            TextButton(
-              onClick = {
-                draft = null
-                message = null
-              }
+          OutlinedTextField(
+            instruction,
+            { instruction = it },
+            label = { Text("Create a missing design or describe the issue") },
+            placeholder = {
+              Text("Make the state easier to read and fit this card at phone width.")
+            },
+            enabled = !busy,
+            minLines = if (compactHeight) 2 else 3,
+            maxLines = if (compactHeight) 2 else Int.MAX_VALUE,
+            modifier = Modifier.fillMaxWidth(),
+          )
+          Text(
+            "Sending shares the selected card's display text and current values with ${provider.label}. Other entities, Home Assistant tokens and entity-picture URLs stay on this device.",
+            style = MaterialTheme.typography.bodySmall,
+          )
+          FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+              onClick = { run(true) },
+              enabled =
+                !busy &&
+                  apiKey.isNotBlank() &&
+                  model.isNotBlank() &&
+                  instruction.isNotBlank() &&
+                  server.isNotBlank() &&
+                  (provider != CardAgentProvider.Agent || endpoint.isNotBlank()),
             ) {
-              Text("Reset draft")
+              Text(if (busy && agentRequest) "Working…" else "Generate or fix draft")
+            }
+            if (busy && agentRequest) TextButton(onClick = { job?.cancel() }) { Text("Cancel") }
+            if (draft != null && !busy) {
+              TextButton(onClick = { run(false) }) { Text("Review draft") }
+              TextButton(
+                onClick = {
+                  draft = null
+                  message = null
+                }
+              ) {
+                Text("Reset draft")
+              }
             }
           }
+          if (agentRequest) StudioRequestFeedback(busy, message, requestFailed)
+          Text(
+            "Designs remain drafts. Saving in UI Builder does not change your Home Assistant dashboard.",
+            style = MaterialTheme.typography.bodySmall,
+          )
         }
-        if (agentRequest) StudioRequestFeedback(busy, message, requestFailed)
-        Text(
-          "Designs remain drafts. Saving in UI Builder does not change your Home Assistant dashboard.",
-          style = MaterialTheme.typography.bodySmall,
-        )
       }
     }
   }

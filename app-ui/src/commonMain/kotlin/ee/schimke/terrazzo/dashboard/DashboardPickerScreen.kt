@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -35,20 +36,28 @@ fun DashboardPickerScreen(
   when (state) {
     DashboardListState.Loading ->
       Column(
-        Modifier.fillMaxSize().padding(contentPadding).padding(24.dp),
+        Modifier.fillMaxSize()
+          .padding(contentPadding)
+          .consumeWindowInsets(contentPadding)
+          .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
         CircularProgressIndicator()
         Text("Fetching dashboards…")
       }
     is DashboardListState.Error ->
-      Column(Modifier.fillMaxSize().padding(contentPadding).padding(24.dp)) {
+      Column(
+        Modifier.fillMaxSize()
+          .padding(contentPadding)
+          .consumeWindowInsets(contentPadding)
+          .padding(24.dp)
+      ) {
         Text("Couldn't load dashboards", style = MaterialTheme.typography.titleMedium)
         Text(state.message)
       }
     is DashboardListState.Ready ->
       LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().consumeWindowInsets(contentPadding),
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {

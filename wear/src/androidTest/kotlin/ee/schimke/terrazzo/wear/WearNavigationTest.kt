@@ -43,6 +43,10 @@ class WearNavigationTest {
       compose.onNodeWithText("Pinned · Demo").assertExists()
       click("Settings")
       compose.onNodeWithText("Theme").assertExists()
+      click("Report a bug")
+      compose.onNodeWithText("PUBLIC issue").assertExists()
+      activity.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+      compose.onNodeWithText("Theme").assertExists()
       activity.onActivity { it.onBackPressedDispatcher.onBackPressed() }
       compose.onNodeWithText("Pinned · Demo").assertExists()
     }

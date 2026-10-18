@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -81,6 +82,7 @@ import ee.schimke.terrazzo.dashboard.rememberSelectedDashboardListState
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.shared.AppScreen
 import ee.schimke.terrazzo.shared.CardStudioScreen
+import ee.schimke.terrazzo.shared.ReportFeedbackButton
 import ee.schimke.terrazzo.shared.TerrazzoNavigation
 import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
@@ -877,9 +879,11 @@ internal fun SettingsScreen(
         Modifier.fillMaxSize()
           .verticalScroll(rememberScrollState())
           .padding(padding)
+          .consumeWindowInsets(padding)
           .padding(24.dp),
       verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+      ReportFeedbackButton(version = BuildConfig.VERSION_NAME)
       Text("Connected to", style = MaterialTheme.typography.labelMedium)
       Text(
         if (isDemo) "Demo mode — offline fake data" else session.baseUrl,
@@ -1293,6 +1297,16 @@ private fun cardStyleTagline(pref: CardStylePref): String =
     CardStylePref.Nixie -> "Glowing tubes · black glass, orange filaments"
     CardStylePref.Ikea -> "IKEA showroom · birch shelves, tactile smart-light controls"
     CardStylePref.Console -> "Skeuomorphic studio desk · VU meters, faders, knobs"
+    CardStylePref.Mushroom,
+    CardStylePref.Bubble,
+    CardStylePref.Minimalist,
+    CardStylePref.Cupertino,
+    CardStylePref.Catppuccin,
+    CardStylePref.Obsidian,
+    CardStylePref.Noctis,
+    CardStylePref.Lcars,
+    CardStylePref.Arctic,
+    CardStylePref.Aeon -> pref.toUberTheme().description
   }
 
 @Composable

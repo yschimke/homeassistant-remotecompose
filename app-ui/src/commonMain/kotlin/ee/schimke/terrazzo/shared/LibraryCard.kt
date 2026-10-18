@@ -37,9 +37,23 @@ internal fun LibraryCard(
   onMoreInfo: ((String) -> Unit)? = null,
   onTemperatureChange: ((Double) -> Unit)? = null,
   showFallbackNotice: Boolean = true,
+  requireExactDesign: Boolean = false,
+  designCache: DashboardLoadCache<LibraryDesignKey, ByteArray?>? = null,
   fallback: @Composable () -> Unit,
 ) {
-  var bytes by remember(card, style, dark) { mutableStateOf<ByteArray?>(null) }
+  val scope = rememberCoroutineScope()
+  val cache =
+    designCache ?: remember(scope) { DashboardLoadCache(scope, load = ::loadLibraryDesign) }
+  val designKey =
+    remember(card, style, dark, requireExactDesign) {
+      LibraryDesignKey(anonymousTemplateCard(card), style, dark, requireExactDesign)
+    }
+  var bytes by
+    remember(card, designKey, cache) {
+      mutableStateOf(
+        cache.peek(designKey)?.takeIf { canBindWithCmp(it, templateBindings(card, snapshot)) }
+      )
+    }
   var failed by remember(card, style, dark) { mutableStateOf(false) }
   val hasRelativeTime =
     CardDesignSlots.slotEntries(card).orEmpty().any {
@@ -55,40 +69,14 @@ internal fun LibraryCard(
         }
     }
   val values = remember(card, snapshot, tick) { templateBindings(card, snapshot) }
-  LaunchedEffect(card, style, dark) {
-    val http = HttpClient()
+  LaunchedEffect(designKey, cache) {
     try {
-      val anonymous = anonymousTemplateCard(card)
-      val response =
-        http.post("https://ha.coo.ee/api/cards/resolve") {
-          contentType(ContentType.Text.Plain)
-          setBody(
-            buildJsonObject {
-              put("card", anonymous)
-              put("cardStyle", style)
-              put("dark", dark)
-            }
-              .toString()
-          )
-        }
-      if (response.status == HttpStatusCode.NotFound) return@LaunchedEffect
-      check(response.status.isSuccess())
-      val sha =
-        Json.parseToJsonElement(response.bodyAsText()).jsonObject["sha256"]!!.jsonPrimitive.content
-      check(Regex("[0-9a-f]{64}").matches(sha))
-      val blob = http.get("https://ha.coo.ee/designs/v1/blobs/$sha.rc")
-      check(blob.status.isSuccess())
-      val loaded = blob.bodyAsBytes()
-      check(Sha256.hex(loaded) == sha)
-      check(canBindWithCmp(loaded, templateBindings(card, snapshot)))
-      bytes = loaded
+      val loaded = cache.get(designKey)
+      if (loaded != null && canBindWithCmp(loaded, templateBindings(card, snapshot))) bytes = loaded
     } catch (e: CancellationException) {
       throw e
     } catch (_: Throwable) {
-      // Browser fetch failures are JsException (a Throwable, not a Kotlin Exception).
       failed = true
-    } finally {
-      http.close()
     }
   }
   val current = bytes
@@ -271,4 +259,47 @@ internal fun demoThermostatTarget(
       ?.doubleOrNull
       ?.takeIf { it.isFinite() && it in 16.0..28.0 } ?: return null
   return (current + delta).coerceIn(16.0, 28.0).takeUnless { it == current }
+}
+
+/**
+ * Only an exact structural match is playable. Domain-only guesses can bake a thermometer for any
+ * sensor, and can bake the wrong availability layout or theme. Never send private state.
+ */
+internal data class LibraryDesignKey(
+  val card: JsonObject,
+  val style: String,
+  val dark: Boolean,
+  val requireExact: Boolean = false,
+)
+
+internal fun exactLibraryDesign(response: JsonObject): Boolean =
+  (response["exact"] as? JsonPrimitive)?.booleanOrNull == true
+
+internal suspend fun loadLibraryDesign(key: LibraryDesignKey): ByteArray? {
+  val http = HttpClient()
+  try {
+    val response =
+      http.post("https://ha.coo.ee/api/cards/resolve") {
+        contentType(ContentType.Text.Plain)
+        setBody(
+          buildJsonObject {
+            put("card", key.card)
+            put("cardStyle", key.style)
+            put("dark", key.dark)
+          }
+            .toString()
+        )
+      }
+    if (response.status == HttpStatusCode.NotFound) return null
+    check(response.status.isSuccess())
+    val resolved = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+    if (key.requireExact && !exactLibraryDesign(resolved)) return null
+    val sha = resolved["sha256"]!!.jsonPrimitive.content
+    check(Regex("[0-9a-f]{64}").matches(sha))
+    val blob = http.get("https://ha.coo.ee/designs/v1/blobs/$sha.rc")
+    check(blob.status.isSuccess())
+    return blob.bodyAsBytes().also { check(Sha256.hex(it) == sha) }
+  } finally {
+    http.close()
+  }
 }

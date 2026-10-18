@@ -61,6 +61,27 @@ The overlay mounts [`native.caddy`](native.caddy) into the preview server image'
 routes. Caddy provisions HTTPS for the new hostname. Both the hostname in `native.caddy` and
 `NATIVE_PUBLIC_URL` in `compose.native.yaml` must agree if an operator chooses another address.
 
+For a stack whose existing settings live in `.env`, steps 2–4 can instead be applied with
+the checked-in helper (Python 3 and Docker Compose v2 required):
+
+```sh
+# Example host layout: HA bundle and preview/Caddy stack are separate directories.
+python3 /root/public-demo-ha/enable-native-route.py /root/compose-preview-server/deploy/image
+```
+
+The argument is the existing stack that owns Caddy, not the HA bundle. The helper derives the
+native overlay location from its own directory, reads the stack's effective `COMPOSE_FILE`,
+preserves every existing overlay and unrelated environment setting, validates the proposed
+Compose and Caddy configuration, saves a private `.env.backup-*`, then recreates only Caddy.
+An absent explicit `COMPOSE_FILE` causes it to stop rather than guess the deployment's files.
+Pass `--env-file /absolute/path/to/deployment.env` for a different existing environment file.
+Run with the same project/environment settings as the usual deployment command. If your deployment
+job supplies its own `COMPOSE_FILE`, append the native overlay in that job too; `.env` cannot
+override a value supplied by the job. The helper requires `enable-native.sh` to have succeeded
+first, and public readiness still requires the browser verification below. If Caddy recreation
+fails after settings are saved, the helper retains the new settings and backup for diagnosis;
+it does not claim deployment success or remove the backup.
+
 Verify the actual public URL after routing, using the same real-browser check as CI:
 
 ```sh

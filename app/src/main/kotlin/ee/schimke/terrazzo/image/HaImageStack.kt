@@ -125,14 +125,15 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
    * skipped (the result is still cached): for a periodic refresh of a URL whose image changes in
    * place, such as a camera proxy.
    */
-  suspend fun resolve(url: String, fresh: Boolean = false): Bitmap? {
+  suspend fun resolve(url: String, fresh: Boolean = false, maxDimensionPx: Int? = null): Bitmap? {
     val resolved = resolveAgainstBase(url)
-    Log.d(TAG, "resolve request input=$url resolved=$resolved fresh=$fresh")
+    Log.d(TAG, "resolve request fresh=$fresh")
     val request =
       ImageRequest.Builder(context)
         .data(resolved)
         .allowHardware(false)
         .apply {
+          maxDimensionPx?.let { size(it, it) }
           if (fresh) {
             memoryCachePolicy(CachePolicy.WRITE_ONLY)
             diskCachePolicy(CachePolicy.WRITE_ONLY)
@@ -146,14 +147,13 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
         if (bitmap != null) {
           Log.d(
             TAG,
-            "resolve SUCCESS input=$url resolved=$resolved " +
+            "resolve SUCCESS " +
               "bitmap=${bitmap.width}x${bitmap.height} dataSource=${result.dataSource}",
           )
         } else {
           Log.w(
             TAG,
-            "resolve UNEXPECTED input=$url resolved=$resolved " +
-              "image=${img::class.java.simpleName} (not a BitmapImage)",
+            "resolve UNEXPECTED " + "image=${img::class.java.simpleName} (not a BitmapImage)",
           )
         }
         bitmap
@@ -161,8 +161,7 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
       is ErrorResult -> {
         Log.w(
           TAG,
-          "resolve ERROR input=$url resolved=$resolved " +
-            "throwable=${result.throwable::class.java.simpleName}: ${result.throwable.message}",
+          "resolve ERROR throwable=${result.throwable::class.java.simpleName}",
         )
         null
       }
@@ -192,7 +191,7 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
    */
   private object LoggingEventListener : EventListener() {
     override fun fetchStart(request: ImageRequest, fetcher: Fetcher, options: Options) {
-      Log.d(TAG, "fetchStart data=${request.data} fetcher=${fetcher::class.java.simpleName}")
+      Log.d(TAG, "fetchStart fetcher=${fetcher::class.java.simpleName}")
     }
 
     override fun fetchEnd(
@@ -209,7 +208,7 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
         }
       Log.d(
         TAG,
-        "fetchEnd data=${request.data} fetcher=${fetcher::class.java.simpleName} " +
+        "fetchEnd fetcher=${fetcher::class.java.simpleName} " +
           "result=${result?.let { it::class.java.simpleName } ?: "null"} dataSource=$source",
       )
     }
@@ -219,14 +218,13 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
       val dims =
         if (img is BitmapImage) "${img.bitmap.width}x${img.bitmap.height}"
         else img::class.java.simpleName
-      Log.d(TAG, "onSuccess data=${request.data} dataSource=${result.dataSource} image=$dims")
+      Log.d(TAG, "onSuccess dataSource=${result.dataSource} image=$dims")
     }
 
     override fun onError(request: ImageRequest, result: ErrorResult) {
       Log.w(
         TAG,
-        "onError data=${request.data} " +
-          "throwable=${result.throwable::class.java.simpleName}: ${result.throwable.message}",
+        "onError throwable=${result.throwable::class.java.simpleName}",
       )
     }
   }

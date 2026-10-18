@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -98,7 +99,8 @@ internal fun ManagePinnedContent(
   ) { padding ->
     if (items.isEmpty()) {
       Column(
-        modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+        modifier =
+          Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
         Text("No pins yet", style = MaterialTheme.typography.titleMedium)
@@ -112,7 +114,11 @@ internal fun ManagePinnedContent(
     }
 
     LazyColumn(
-      modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp),
+      modifier =
+        Modifier.fillMaxSize()
+          .padding(padding)
+          .consumeWindowInsets(padding)
+          .padding(horizontal = 16.dp),
       contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 12.dp),
       verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {

@@ -1,7 +1,6 @@
 package ee.schimke.terrazzo.widget
 
 import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.content.Context
 import ee.schimke.terrazzo.terrazzoGraph
 
@@ -20,28 +19,13 @@ import ee.schimke.terrazzo.terrazzoGraph
  */
 object WidgetSync {
 
-  /**
-   * Live widget ids the launcher currently hosts across every provider variant we install
-   * ([WidgetSizeClass]). The variants share their rendering but are distinct components, so each
-   * must be queried separately and the results unioned.
-   */
-  fun liveWidgetIds(context: Context): Set<Int> {
-    val manager = AppWidgetManager.getInstance(context)
-    return buildSet {
-      for (provider in providerClasses) {
-        manager.getAppWidgetIds(ComponentName(context, provider)).forEach { add(it) }
-      }
-    }
-  }
+  /** Live widget IDs hosted by the single launcher provider. */
+  fun liveWidgetIds(context: Context): Set<Int> =
+    AppWidgetManager.getInstance(context)
+      .getAppWidgetIds(LauncherWidgetSpec.componentName(context))
+      .toSet()
 
   /** Prunes orphaned `WidgetStore` rows; returns the number removed. */
   suspend fun reconcile(context: Context): Int =
     context.terrazzoGraph().widgetStore.retainOnly(liveWidgetIds(context))
-
-  private val providerClasses =
-    listOf(
-      TerrazzoWidgetProvider::class.java,
-      TerrazzoWidgetProviderSmall::class.java,
-      TerrazzoWidgetProviderTall::class.java,
-    )
 }

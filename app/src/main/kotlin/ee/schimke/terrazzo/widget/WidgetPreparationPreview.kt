@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
@@ -21,9 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.cardSizeConstraints
-import ee.schimke.ha.rc.cards.defaultRegistry
-import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.terrazzo.dashboard.LauncherGrid
 import kotlinx.coroutines.CancellationException
@@ -70,34 +68,41 @@ internal fun WidgetPreparationPreview(
     with(LocalDensity.current) {
       context.resources.getDimension(android.R.dimen.system_app_widget_background_radius).toDp()
     }
-  val registry = remember { defaultRegistry().withEnhancedShutter() }
-  val bounds =
-    remember(card) {
-      WidgetSizeClass.forConstraints(registry.cardSizeConstraints(card, snapshot))
-        .gridBounds(context)
-    }
-  var width by remember(bounds) { mutableIntStateOf(bounds.defaultCellsW) }
-  var height by remember(bounds) { mutableIntStateOf(bounds.defaultCellsH) }
-  var views by remember { mutableStateOf<RemoteViews?>(null) }
+  val bounds = remember(context) { LauncherWidgetSpec.gridBounds(context) }
+  var width by rememberSaveable(bounds) { mutableIntStateOf(bounds.defaultCellsW) }
+  var height by rememberSaveable(bounds) { mutableIntStateOf(bounds.defaultCellsH) }
+  var prepared by remember { mutableStateOf<PreparedWidgetPreview?>(null) }
+
   var failed by remember { mutableStateOf(false) }
   var attempt by remember { mutableIntStateOf(0) }
-  // Do not keep an older card's document enabled while a new one is being captured.
+  // Keep the last inflated view on screen during refresh/resize, but never install an older edit.
   val latestOnPreview by rememberUpdatedState(onPreview)
   LaunchedEffect(baseUrl, card, snapshot, width, height, attempt, capture) {
-    views = null
-    latestOnPreview(null)
+    if (prepared?.baseUrl != baseUrl || prepared?.card != card) latestOnPreview(null)
     failed = false
     // Coalesce typing/drag steps and keep capture/image loading off the UI thread.
     delay(100)
-    views =
+    val replacement =
       try {
-        withContext(Dispatchers.Default) {
-          capture(
-            context,
+        val views =
+          withContext(Dispatchers.Default) {
+            capture(
+              context,
+              baseUrl,
+              card,
+              snapshot,
+              WidgetSizeDp(width * LAUNCHER_CELL_WIDTH_DP, height * LAUNCHER_CELL_HEIGHT_DP),
+            )
+          }
+        // Inflate on the UI thread before publishing. A failed capture or bitmap/layout
+        // inflation must not tear down the last working native view.
+        views?.let {
+          PreparedWidgetPreview(
             baseUrl,
             card,
-            snapshot,
-            WidgetSizeDp(width * LAUNCHER_CELL_WIDTH_DP, height * LAUNCHER_CELL_HEIGHT_DP),
+            it,
+            inflateWidgetPreview(context, it),
+            "$label preview, $stateLabel, $width by $height cells",
           )
         }
       } catch (cancelled: CancellationException) {
@@ -110,7 +115,9 @@ internal fun WidgetPreparationPreview(
         )
         null
       }
-    failed = views == null
+    failed = replacement == null
+    if (replacement != null) prepared = replacement
+    latestOnPreview(replacement?.views)
   }
   if (failed) {
     OutlinedCard(Modifier.fillMaxWidth().testTag("widget-preview-error")) {
@@ -132,17 +139,21 @@ internal fun WidgetPreparationPreview(
         }
       }
     }
-    return
+    if (prepared == null) return
   }
   Text("Try it on your home screen", style = MaterialTheme.typography.titleMedium)
   Text(
-    "Adaptive layout · drag the corner or try a size. New widgets start at Default; resize them on the home screen.",
+    "Adaptive layout · drag the corner or try a size. New widgets start at 1 × 1; resize them on the home screen. This preview shows up to 4 × 4.",
     style = MaterialTheme.typography.bodySmall,
   )
   FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
     listOf(
         Triple("Compact", bounds.minCellsW, bounds.minCellsH),
-        Triple("Default", bounds.defaultCellsW, bounds.defaultCellsH),
+        Triple(
+          "Medium",
+          2.coerceAtMost(bounds.maxCellsW),
+          (if (bounds.maxCellsH > 2) 2 else 1).coerceAtMost(bounds.maxCellsH),
+        ),
         Triple("Roomy", bounds.maxCellsW, bounds.maxCellsH),
       )
       .forEach { (label, w, h) ->
@@ -172,47 +183,43 @@ internal fun WidgetPreparationPreview(
     MaterialTheme.colorScheme.secondary,
     MaterialTheme.colorScheme.primary,
   ) {
-    val current = views
+    val current = prepared
     if (current != null) {
-      key(current) {
-        Box(
-          modifier =
-            Modifier.fillMaxSize()
-              .clip(RoundedCornerShape(cornerRadius))
-              .testTag("widget-render")
-              .semantics {
-                contentDescription = "$label preview, $stateLabel, $width by $height cells"
-              }
-        ) {
-          AndroidView(
-            factory = { ctx ->
-              runCatching { inflateWidgetPreview(ctx, current) }
-                .onSuccess { latestOnPreview(current) }
-                .getOrElse { failure ->
-                  android.util.Log.e(
-                    "WidgetPreparationPreview",
-                    "Could not inflate launcher preview",
-                    failure,
-                  )
-                  views = null
-                  failed = true
-                  latestOnPreview(null)
-                  FrameLayout(ctx)
-                }
-                .also { frame ->
-                  // Expose a read-only description through Compose, not inactive virtual click
-                  // targets.
-                  frame.importantForAccessibility =
-                    android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
-                }
-            },
-            modifier = Modifier.fillMaxSize(),
-          )
-        }
+      Box(
+        modifier =
+          Modifier.fillMaxSize()
+            .clip(RoundedCornerShape(cornerRadius))
+            .testTag("widget-render")
+            .semantics { contentDescription = current.description }
+      ) {
+        AndroidView(
+          factory = { ctx ->
+            FrameLayout(ctx).apply {
+              importantForAccessibility =
+                android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+            }
+          },
+          update = { host ->
+            if (host.getChildAt(0) !== current.frame) {
+              // Both operations happen before the next draw; the host itself stays attached.
+              host.removeAllViews()
+              host.addView(current.frame, FrameLayout.LayoutParams(-1, -1))
+            }
+          },
+          modifier = Modifier.fillMaxSize(),
+        )
       }
     } else CircularProgressIndicator(modifier = Modifier.padding(12.dp))
   }
 }
+
+private data class PreparedWidgetPreview(
+  val baseUrl: String,
+  val card: CardConfig,
+  val views: RemoteViews,
+  val frame: FrameLayout,
+  val description: String,
+)
 
 /** Native RemoteViews inflation, shared by both in-app previews and the launcher-parity test. */
 internal fun inflateWidgetPreview(

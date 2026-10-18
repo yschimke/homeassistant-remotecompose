@@ -55,6 +55,7 @@ private struct ConnectView: View {
         }
         Section {
           Button("Try demo mode (no login)") { store.startDemo() }
+          ReportFeedbackButton()
         } footer: {
           Text("Demo mode is offline and uses the same native Swift card player as a live dashboard.")
         }
@@ -203,6 +204,7 @@ private struct SettingsView: View {
   var body: some View {
     NavigationStack {
       Form {
+        Section { ReportFeedbackButton() }
         Section("Rendering") {
           LabeledContent("Player", value: "Native Swift / UIKit")
           LabeledContent("rc-players", value: "1.68.0")
@@ -220,5 +222,75 @@ private struct SettingsView: View {
         ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
       }
     }
+  }
+}
+
+// Only app metadata enters the draft. Home Assistant configuration and credentials stay local.
+private struct ReportFeedbackButton: View {
+  @Environment(\.openURL) private var openURL
+  @State private var reviewing = false
+  @State private var failed = false
+  private let tracker = "https://github.com/yschimke/homeassistant-remotecompose/issues"
+  private let warning = "This issue and anything you include will be PUBLIC on GitHub. Do not include credentials, tokens, server URLs, entity IDs or names, or private Home Assistant details. Only attach files or screenshots you explicitly choose and review for private information."
+  private var version: String {
+    Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
+  }
+  private var draftURL: URL? {
+    var components = URLComponents(string: tracker + "/new")
+    components?.queryItems = [URLQueryItem(name: "body", value: """
+      ## Bug description
+
+      ## Steps to reproduce (optional)
+      1.
+
+      ## Expected behavior
+
+      ## Actual behavior
+
+      ## App context (review and edit)
+      App version: \(version)
+      Platform: iOS
+
+      ## Privacy reminder
+      \(warning)
+      No Home Assistant data, logs, or attachments were automatically included.
+      """)]
+    return components?.url
+  }
+
+  var body: some View {
+    Button("Report a bug") { failed = false; reviewing = true }
+      .sheet(isPresented: $reviewing) {
+        NavigationStack {
+          Form {
+            Section { Text(warning) }
+            Section {
+              Text("Included: app version \(version); platform iOS. No Home Assistant data or attachments are included.")
+              Text("Continue to GitHub to edit the draft, optionally add reproduction steps and expected/actual behavior, and explicitly submit it. A GitHub account is required.")
+            }
+            if failed {
+              Section {
+                Text("Could not open GitHub. Copy this address into a browser, then choose New issue:")
+                Text(tracker).textSelection(.enabled)
+              }
+            }
+            Section {
+              Button(failed ? "Try GitHub again" : "Review on GitHub") {
+                guard let url = draftURL else { failed = true; return }
+                openURL(url) { accepted in
+                  failed = !accepted
+                  if accepted { reviewing = false }
+                }
+              }
+            }
+          }
+          .navigationTitle("Report a PUBLIC issue")
+          .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+              Button("Cancel") { reviewing = false }
+            }
+          }
+        }
+      }
   }
 }
