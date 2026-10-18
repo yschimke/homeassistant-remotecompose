@@ -69,7 +69,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         pass
 
 
-def click_switch(switch):
+def click_control(switch):
     # Compose's canvas handles pointers; its accessibility DOM sits underneath it.
     # Wait for the current layout before sending a real press/release through the canvas.
     switch.wait_for(state='visible')
@@ -116,7 +116,7 @@ try:
             expect(page.get_by_role('switch')).to_have_count(2)
             switch = page.get_by_role('switch', name='Living room', exact=True)
             expect(switch).to_be_checked()
-            click_switch(switch)
+            click_control(switch)
             expect(switch).not_to_be_checked()
             assert not Handler.mutations
             expect(page.get_by_role('textbox', name='Long-lived access token')).to_have_count(0)
@@ -162,17 +162,17 @@ try:
         expect(page.get_by_text('21.5 °C')).to_be_visible()
         switch = page.get_by_role('switch').first
         expect(switch).not_to_be_checked()
-        click_switch(switch)
+        click_control(switch)
         expect(switch).to_be_checked()
         assert Handler.mutations == [('/demo-ha/api/services/light/toggle', {'entity_id': 'light.demo_lamp'})]
         Handler.reject_controls = True
-        click_switch(switch)
+        click_control(switch)
         expect(page.get_by_text('Could not update demo state · try again', exact=True)).to_be_visible()
         expect(switch).to_be_checked()
         Handler.reject_controls = False
-        click_switch(switch)
+        click_control(switch)
         expect(switch).not_to_be_checked()
-        click_switch(switch)
+        click_control(switch)
         expect(switch).to_be_checked()
         expect(page.get_by_text('Could not update demo state · try again', exact=True)).to_have_count(0)
         expect(page.get_by_text('1 min ago')).to_be_visible()
@@ -204,8 +204,11 @@ try:
             expect(page.get_by_text('Live comfort', exact=True)).to_have_count(0)
             expect(page.get_by_text('Living spaces', exact=True)).to_be_visible()
             Handler.live = True
-            page.get_by_text('Fake data', exact=True).click(force=True)
-            page.get_by_text('Live when available', exact=True).click(force=True)
+            click_control(page.get_by_text('Fake data', exact=True))
+            # Mode changes cancel/restart the collector on a composition frame.
+            # Observe Fake mode completing before asking it to reconnect.
+            expect(page.get_by_text('Live demo unavailable · using fake data · retrying', exact=True)).to_have_count(0)
+            click_control(page.get_by_text('Live when available', exact=True))
             expect(page.get_by_text('Example home · live demo data · try the switches', exact=True)).to_be_visible(timeout=10000)
             expect(page.get_by_text('Live comfort', exact=True)).to_be_visible()
             expect(page.get_by_text('Living spaces', exact=True)).to_have_count(0)
