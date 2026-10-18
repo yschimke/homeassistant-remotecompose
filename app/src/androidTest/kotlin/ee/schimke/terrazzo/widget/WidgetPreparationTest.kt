@@ -337,7 +337,15 @@ class WidgetPreparationTest {
         .fetchSemanticsNodes()
         .isNotEmpty()
     }
-    compose.onNodeWithTag("widget-render").performScrollTo()
+    // Target the grid viewport so performScrollTo finds the sheet's vertical scroller rather
+    // than the grid's own horizontal scroller. A visible sliver is insufficient evidence.
+    compose.onNodeWithTag("widget-grid-viewport").performScrollTo()
+    compose.waitForIdle()
+    val previewNode = compose.onNodeWithTag("widget-render").fetchSemanticsNode()
+    assertTrue(
+      "The complete preview height must be visible in the setup screenshot",
+      previewNode.boundsInRoot.height >= previewNode.size.height - 1f,
+    )
     screenshot("${evidencePrefix}prepared-preview")
     compose.onNodeWithText("Install widget").assertIsEnabled().performClick()
     assertTrue(
