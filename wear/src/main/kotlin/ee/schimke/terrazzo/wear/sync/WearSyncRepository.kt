@@ -30,6 +30,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Watch-side counterpart to `MobileWearSyncManager`. Keeps state for:
@@ -101,7 +103,64 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
     events.release()
   }
 
+  private val inputRequests =
+    java.util.concurrent.ConcurrentHashMap<
+      String,
+      kotlinx.coroutines.CompletableDeferred<ByteArray>,
+    >()
+
+  /** Foreground app only. No offline queue or automatic retry of a side-effecting send. */
+  suspend fun sendInputs(card: String, values: Map<String, String>) {
+    check(
+      _settings.value.inputEditingEnabled &&
+        !_settings.value.demoMode &&
+        _settings.value.baseUrl.isNotEmpty()
+    ) {
+      "Sign in on the phone"
+    }
+    val node = nodeClient.connectedNodes.await().firstOrNull() ?: error("Connect the phone to send")
+    val id = java.util.UUID.randomUUID().toString()
+    val response = kotlinx.coroutines.CompletableDeferred<ByteArray>()
+    inputRequests[id] = response
+    try {
+      val request =
+        kotlinx.serialization.json
+          .buildJsonObject {
+            put("id", kotlinx.serialization.json.JsonPrimitive(id))
+            put("card", kotlinx.serialization.json.JsonPrimitive(card))
+            put(
+              "values",
+              kotlinx.serialization.json.JsonObject(
+                values.mapValues { kotlinx.serialization.json.JsonPrimitive(it.value) }
+              ),
+            )
+          }
+          .toString()
+          .encodeToByteArray()
+      require(request.size <= 32768) { "Message is too long" }
+      messageClient.sendMessage(node.id, "/wear/input/v1", request).await()
+      val result =
+        kotlinx.serialization.json.Json.parseToJsonElement(
+            kotlinx.coroutines.withTimeout(15000) { response.await() }.decodeToString()
+          )
+          .jsonObject
+      check(result["ok"]?.jsonPrimitive?.content == "true") {
+        result["error"]?.jsonPrimitive?.content ?: "Message was not sent"
+      }
+    } finally {
+      inputRequests.remove(id)
+    }
+  }
+
   private val messageListener = MessageClient.OnMessageReceivedListener { event ->
+    if (event.path == "/wear/input-result/v1") {
+      val result = runCatching {
+        kotlinx.serialization.json.Json.parseToJsonElement(event.data.decodeToString()).jsonObject
+      }
+        .getOrNull()
+      result?.get("id")?.jsonPrimitive?.content?.let { inputRequests[it]?.complete(event.data) }
+      return@OnMessageReceivedListener
+    }
     if (event.path != WearSyncPaths.STREAM_MESSAGE) return@OnMessageReceivedListener
     val frame: StreamUpdate = decodeProto(event.data) ?: return@OnMessageReceivedListener
     val merged = mergeStreamUpdate(offline.readValues(), frame) ?: return@OnMessageReceivedListener

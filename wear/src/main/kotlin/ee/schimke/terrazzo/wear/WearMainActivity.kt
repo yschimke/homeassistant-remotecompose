@@ -150,6 +150,14 @@ private fun WearApp(repo: WearSyncRepository) {
             } else {
               WearSectionScreen(
                 section = resolved,
+                onInputSend =
+                  if (
+                    settings.inputEditingEnabled &&
+                      !settings.demoMode &&
+                      settings.baseUrl.isNotEmpty()
+                  )
+                    repo::sendInputs
+                  else null,
                 values = values,
                 onBack = { screen = WearScreen.TopLevel },
                 modifier = Modifier.fillMaxSize(),
@@ -172,6 +180,14 @@ private fun WearApp(repo: WearSyncRepository) {
             if (board != null) {
               WearDashboardScreen(
                 dashboard = board,
+                onInputSend =
+                  if (
+                    settings.inputEditingEnabled &&
+                      !settings.demoMode &&
+                      settings.baseUrl.isNotEmpty()
+                  )
+                    repo::sendInputs
+                  else null,
                 values = values,
                 onBack = { screen = WearScreen.Dashboards },
                 modifier = Modifier.fillMaxSize(),

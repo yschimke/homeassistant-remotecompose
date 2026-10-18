@@ -35,6 +35,7 @@ fun WearSectionScreen(
   values: Map<String, EntityValue>,
   onBack: () -> Unit,
   modifier: Modifier = Modifier,
+  onInputSend: (suspend (String, Map<String, String>) -> Unit)? = null,
 ) {
   val listState = rememberScalingLazyListState()
   ScalingLazyColumn(
@@ -57,20 +58,24 @@ fun WearSectionScreen(
       }
     } else {
       items(cards) { card ->
-        val value = values[card.primaryEntityId]
-        val displayState = value?.displayState(card.primaryEntityId).orEmpty()
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp)) {
-          Text(
-            text = card.title.ifEmpty { card.primaryEntityId.ifEmpty { card.type } },
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-          )
-          if (displayState.isNotEmpty()) {
+        if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
+          WearMessageCard(card.rawJson, values, onInputSend)
+        } else {
+          val value = values[card.primaryEntityId]
+          val displayState = value?.displayState(card.primaryEntityId).orEmpty()
+          Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp)) {
             Text(
-              text = displayState,
-              style = MaterialTheme.typography.bodyMedium,
-              color = MaterialTheme.colorScheme.primary,
+              text = card.title.ifEmpty { card.primaryEntityId.ifEmpty { card.type } },
+              style = MaterialTheme.typography.titleSmall,
+              fontWeight = FontWeight.SemiBold,
             )
+            if (displayState.isNotEmpty()) {
+              Text(
+                text = displayState,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+              )
+            }
           }
         }
       }

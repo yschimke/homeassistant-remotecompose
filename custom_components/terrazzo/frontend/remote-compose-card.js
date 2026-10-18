@@ -1,10 +1,10 @@
-import { HaCardElement, serviceCallFor } from './ha-card.js?register=false';
+import { HaCardElement, serviceCallFor, MESSAGE_CARD_TYPE, MESSAGE_SUBMIT, messageInputs, messageAction } from './ha-card.js?register=false';
 
 // Register a distinct tag: HA already owns <ha-card> for its card chrome.
 export class RemoteComposeCard extends HaCardElement {
   static get observedAttributes() { return HaCardElement.observedAttributes; }
   setConfig(config) {
-    if (!config.card || !['tile', 'button', 'entity', 'gauge'].includes(config.card.type)) {
+    if (!config.card || !['tile', 'button', 'entity', 'gauge', MESSAGE_CARD_TYPE].includes(config.card.type)) {
       throw new Error('Remote Compose requires a tile, button, entity or gauge card with live bindings.');
     }
     if (config.template_url != null) {
@@ -17,6 +17,8 @@ export class RemoteComposeCard extends HaCardElement {
       }
       if (config.design != null) throw new Error('Use template_url or design, not both.');
     }
+    const previous = JSON.stringify(this.config?.card);
+    if (previous !== JSON.stringify(config.card)) this.inputDrafts?.clear();
     this.config = structuredClone(config);
     this.setAttribute('require-host-bindings', '');
     // Set local mode before attributes can trigger an asynchronous start/OAuth.
@@ -36,14 +38,28 @@ export class RemoteComposeCard extends HaCardElement {
     }
   }
   set hass(hass) {
+    const wasAuthenticated = !!this._hass;
     this._hass = hass;
     this.setStates(hass.states);
+    if (!wasAuthenticated && this.player) this.configureInputPlayer(this.player, this.config.card);
     this.setAttribute('theme', hass.themes?.darkMode ? 'dark' : 'light');
+  }
+  configureInputPlayer(player, card) {
+    if (card.type !== MESSAGE_CARD_TYPE) return super.configureInputPlayer(player, card);
+    if (!player.configureInputs) throw new Error('Update the player to use message inputs');
+    const editable = !!this._hass && !this.hasAttribute('read-only');
+    player.configureInputs({ editable, drafts: this.inputDrafts,
+      onSubmit: (action) => {
+        if (action !== MESSAGE_SUBMIT || !this._hass || this.hasAttribute('read-only')) return;
+        try { this.tap(messageAction(this.config.card, this._hass.states, this.inputDrafts)); }
+        catch (error) { this.setStatus('error', error.message); }
+      },
+    });
   }
   getCardSize() { return Math.max(1, Math.ceil((this.offsetHeight || 120) / 50)); }
   getGridOptions() { return { columns: 12, rows: 'auto' }; }
   async tap(action) {
-    if (!this._hass || !action || action.kind === 'None') return;
+    if (this.hasAttribute('read-only') || !this._hass || !action || action.kind === 'None') return;
     const confirmation = this.config.card.tap_action?.confirmation;
     if (confirmation && !confirmation.exemptions?.some((e) => e.user === this._hass.user.id)) {
       if (!window.confirm(confirmation.text || 'Run this action?')) return;

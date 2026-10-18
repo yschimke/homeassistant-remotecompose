@@ -389,15 +389,18 @@ private fun LiveDashboard(
     } else
       DashboardContent(current, path, snapshot, Modifier.weight(1f)) { _, card ->
         Column {
-          NativeCard(card, snapshot) { entityId ->
-            dispatch(
-              buildJsonObject {
-                put("type", "ee.schimke.ha.rc.components.HaAction.Toggle")
-                put("entityId", entityId)
-              }
-                .toString()
-            )
-          }
+          if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
+            MessageComposeCard(card, snapshot, editable = true, onAction = ::dispatch)
+          } else
+            NativeCard(card, snapshot) { entityId ->
+              dispatch(
+                buildJsonObject {
+                  put("type", "ee.schimke.ha.rc.components.HaAction.Toggle")
+                  put("entityId", entityId)
+                }
+                  .toString()
+              )
+            }
           TextButton(onClick = { designCard = card }) { Text("Design or fix this card") }
         }
       }
@@ -468,6 +471,10 @@ internal fun NativeCard(
   readOnly: Boolean = false,
   toggle: (String) -> Unit,
 ) {
+  if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
+    MessageComposeCard(card, snapshot)
+    return
+  }
   val children =
     (card.raw["cards"] as? JsonArray)
       ?.mapNotNull { raw ->

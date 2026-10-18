@@ -22,6 +22,7 @@ import ee.schimke.ha.rc.CardRegistry
  *   sensor, entity-filter, iframe.
  */
 fun defaultConverters(): List<CardConverter> = buildList {
+  add(MessageCardConverter())
   add(TileCardConverter())
   add(ButtonCardConverter())
   add(EntityCardConverter())

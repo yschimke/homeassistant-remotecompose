@@ -18,15 +18,22 @@ import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
+import ee.schimke.ha.rc.cardDataSignature
+import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.EntityRowMinHeightDp
+import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaEntitiesData
 import ee.schimke.ha.rc.components.HaEntitiesFit
 import ee.schimke.ha.rc.components.HaEntityRowData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaEntities
 import ee.schimke.ha.rc.components.RemoteHaEntitiesFitted
+import ee.schimke.ha.rc.components.RemoteHaEntityRow
+import ee.schimke.ha.rc.components.RemoteHaInput
+import ee.schimke.ha.rc.components.RemoteHaInputForm
 import ee.schimke.ha.rc.components.entityLooks
 import ee.schimke.ha.rc.defaultTapActionFor
+import ee.schimke.ha.rc.encodeHaAction
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.icons.withIcons
@@ -56,10 +63,16 @@ class EntitiesCardConverter : CardConverter {
    * properties of its entity, plus the row count and the title's size bucket.
    */
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? =
-    EntityDesign.list(card, snapshot, TEMPLATE_CONFIG_KEYS)
+    if (cardEntityIds(card).any { it.substringBefore('.') in INPUT_DOMAINS }) null
+    else EntityDesign.list(card, snapshot, TEMPLATE_CONFIG_KEYS)
 
   override fun designTemplate(properties: DesignProperties): DesignTemplateInput? =
     EntityDesign.listTemplate(cardType, properties)
+
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String? =
+    if (cardEntityIds(card).any { it.substringBefore('.') in INPUT_DOMAINS })
+      cardDataSignature(cardEntityIds(card), snapshot)
+    else null
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
@@ -186,7 +199,55 @@ class EntitiesCardConverter : CardConverter {
   ) {
     val title = if (forceTitle) card.raw["title"]?.jsonPrimitive?.content else null
     val rows = rows(card, snapshot).take(maxRows)
-    RemoteHaEntities(HaEntitiesData(title = title, rows = rows), modifier = modifier, dense = dense)
+    if (
+      LocalCardSizeMode.current == CardSizeMode.Wrap &&
+        rows.any { it.entityId?.substringBefore('.') in INPUT_DOMAINS }
+    ) {
+      RemoteHaInputForm(title, false, modifier) {
+        rows.forEach { row ->
+          val id = row.entityId
+          val entity = snapshot.states[id]
+          val domain = id?.substringBefore('.')
+          val options =
+            (entity?.attributes?.get("options") as? kotlinx.serialization.json.JsonArray)
+              ?.map { it.jsonPrimitive.content }
+              .orEmpty()
+          if (
+            id != null &&
+              entity != null &&
+              domain in INPUT_DOMAINS &&
+              entity.state !in setOf("unavailable", "unknown") &&
+              (domain == "input_text" || options.isNotEmpty())
+          ) {
+            val action =
+              HaAction.CallService(
+                domain = domain!!,
+                service = if (domain == "input_text") "set_value" else "select_option",
+                entityId = id,
+                serviceData =
+                  kotlinx.serialization.json.buildJsonObject {
+                    put(
+                      if (domain == "input_text") "value" else "option",
+                      kotlinx.serialization.json.JsonPrimitive("{{input.$id}}"),
+                    )
+                  },
+              )
+            RemoteHaInput(
+              id,
+              row.name,
+              entity.state,
+              if (domain == "input_text") emptyList() else options,
+              submit = ee.schimke.ha.model.MESSAGE_SUBMIT + ":" + encodeHaAction(action),
+            )
+          } else RemoteHaEntityRow(row)
+        }
+      }
+    } else
+      RemoteHaEntities(
+        HaEntitiesData(title = title, rows = rows),
+        modifier = modifier,
+        dense = dense,
+      )
   }
 
   /** Every configured entity as a row. */
@@ -211,12 +272,13 @@ class EntitiesCardConverter : CardConverter {
         icon = icons.icon,
         accent = HaStateColor.toggleAccentFor(eid, entity).withIcons(icons),
         tapAction = tapAction,
-        toggle = eid?.substringBefore('.') !in READ_ONLY_DOMAINS,
+        toggle = eid?.substringBefore('.') !in (READ_ONLY_DOMAINS + INPUT_DOMAINS),
       )
     }
   }
 
   private companion object {
+    val INPUT_DOMAINS = setOf("input_text", "input_select", "select")
     val TEMPLATE_CONFIG_KEYS = setOf("type", "title", "entities")
 
     /**

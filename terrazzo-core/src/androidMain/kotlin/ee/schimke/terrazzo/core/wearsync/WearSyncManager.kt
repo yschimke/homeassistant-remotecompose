@@ -35,6 +35,7 @@ interface WearSyncManager {
     prefs: PreferencesStore,
     pinStore: PinStore,
     slotsStore: WearWidgetSlotsStore,
+    inputEditing: StateFlow<Boolean> = MutableStateFlow(false),
   )
 }
 
@@ -54,5 +55,6 @@ class NoOpWearSyncManager : WearSyncManager {
     prefs: PreferencesStore,
     pinStore: PinStore,
     slotsStore: WearWidgetSlotsStore,
+    inputEditing: StateFlow<Boolean>,
   ) {}
 }
