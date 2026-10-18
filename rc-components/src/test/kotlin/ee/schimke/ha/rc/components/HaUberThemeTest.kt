@@ -15,6 +15,22 @@ class HaUberThemeTest {
   }
 
   @Test
+  fun ikeaHasAccessiblePaperAndCharcoalPalettes() {
+    val ikea = HaUberTheme.byId("ikea")
+    assertEquals(HaUberTheme.Ikea, ikea)
+    assertEquals(HaVisualFamily.Ikea, ikea.visuals)
+    assertEquals(HaSurfaceMaterial.BirchFrame, ikea.shape.material)
+    for (dark in listOf(false, true)) {
+      val palette = ikea.palette(dark)
+      assertTrue(contrast(palette.primaryText, palette.cardBackground) >= 4.5f)
+      assertTrue(contrast(palette.secondaryText, palette.cardBackground) >= 4.5f)
+      assertTrue(contrast(palette.linkText, palette.cardBackground) >= 4.5f)
+      assertTrue(contrast(palette.primaryText, palette.placeholderBackground) >= 4.5f)
+    }
+    assertNull(ikea.ink, "Warnings and readings retain their semantic colours")
+  }
+
+  @Test
   fun classicIsTheCardsOwnLook() {
     val classic = HaUberTheme.Classic
     assertEquals(HaTheme.Light, classic.palette(darkTheme = false))

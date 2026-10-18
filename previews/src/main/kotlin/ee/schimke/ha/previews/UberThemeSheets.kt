@@ -142,3 +142,19 @@ fun UberCards_Nixie() = UberSheet(HaUberTheme.Nixie, Cards)
 @Preview(name = "uber cards: Console", widthDp = 381, heightDp = 1000)
 @Composable
 fun UberCards_Console() = UberSheet(HaUberTheme.Console, Cards)
+
+@Preview(name = "uber dials: IKEA Showroom (light)", widthDp = 360, heightDp = 900)
+@Composable
+fun UberDials_Ikea_Light() = UberSheet(HaUberTheme.Ikea, Dials)
+
+@Preview(name = "uber dials: IKEA Showroom (dark)", widthDp = 360, heightDp = 900)
+@Composable
+fun UberDials_Ikea_Dark() = UberSheet(HaUberTheme.Ikea, Dials, dark = true)
+
+@Preview(name = "uber cards: IKEA Showroom (light)", widthDp = 381, heightDp = 1000)
+@Composable
+fun UberCards_Ikea_Light() = UberSheet(HaUberTheme.Ikea, Cards)
+
+@Preview(name = "uber cards: IKEA Showroom (dark)", widthDp = 381, heightDp = 1000)
+@Composable
+fun UberCards_Ikea_Dark() = UberSheet(HaUberTheme.Ikea, Cards, dark = true)

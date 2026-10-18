@@ -129,6 +129,7 @@ fun Route.dashboardStudioRoutes(
             "braun",
             "nixie",
             "console",
+            "ikea",
             "mushroom",
             "bubble",
             "minimalist",

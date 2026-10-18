@@ -208,3 +208,11 @@ fun Uber_Console_Desk() {
     }
   }
 }
+
+@Preview(name = "uber: IKEA Showroom (light)", widthDp = 360, heightDp = 900)
+@Composable
+fun Uber_Ikea_Light() = UberShowcase(HaUberTheme.Ikea, darkTheme = false)
+
+@Preview(name = "uber: IKEA Showroom (dark)", widthDp = 360, heightDp = 900)
+@Composable
+fun Uber_Ikea_Dark() = UberShowcase(HaUberTheme.Ikea, darkTheme = true)

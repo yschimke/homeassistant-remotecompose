@@ -61,6 +61,7 @@ internal fun RemoteDrawScope.familyDial(
     HaVisualFamily.Lcd -> lcdDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Braun -> braunDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Nixie -> nixieDial(look, value, target, targetVisible, box, stroke)
+    HaVisualFamily.Ikea -> ikeaDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Mushroom,
     HaVisualFamily.Bubble,
     HaVisualFamily.Minimalist,

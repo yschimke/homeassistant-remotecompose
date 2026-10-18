@@ -25,9 +25,27 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
         entities = json.loads((Path(__file__).parent / 'entities.json').read_text())
         self.rows = [dict(state(), entity_id=entity) for entity in entities]
         next(s for s in self.rows if s['entity_id'] == 'sensor.demo_battery')['state'] = '78'
+        for row in self.rows:
+            if row['entity_id'] in ('light.demo_lamp', 'switch.demo_coffee'):
+                row['state'] = 'off'
+        climate = next(row for row in self.rows if row['entity_id'] == 'climate.demo_thermostat')
+        climate['state'] = 'heat'
+        climate['attributes'].update(temperature=22, current_temperature=21.5, min_temp=16,
+                                     max_temp=28, target_temp_step=0.5)
         self.rows.append(dict(state(), entity_id='sensor.private_device'))
         async def upstream(request):
             self.requests.append((request.method, request.path, request.headers.get('Authorization')))
+            if request.method == 'POST':
+                data = await request.json()
+                self.service_data = data
+                entity = data['entity_id']
+                service = request.path.rsplit('/', 1)[-1]
+                row = next(row for row in self.rows if row['entity_id'] == entity)
+                if service == 'set_temperature':
+                    row['attributes']['temperature'] = data['temperature']
+                    return web.json_response([])
+                row['state'] = ('off' if row['state'] == 'on' else 'on') if service == 'toggle' else ('on' if service == 'turn_on' else 'off')
+                return web.json_response([{'private': 'upstream-response-secret'}])
             return web.json_response(self.rows)
         app = web.Application()
         app.router.add_route('*', '/{path:.*}', upstream)
@@ -59,7 +77,7 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
             for private in ['secret-token', 'private-value', 'private_device', 'private-user', 'camera_proxy']:
                 self.assertNotIn(private, body)
             self.assertEqual(response.headers['Cache-Control'], 'no-store')
-        self.assertEqual(len(await (await self.client.get('/api/states')).json()), 6)
+        self.assertEqual(len(await (await self.client.get('/api/states')).json()), len(self.g.entities))
         self.assertEqual((await self.client.get('/api/states/sensor.private_device')).status, 404)
 
     async def test_rest_denies_all_mutation_and_unlisted_read_routes(self):
@@ -81,7 +99,7 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
             await ws.send_json({'id': ident, 'type': kind, 'domain': 'light', 'service': 'turn_on'})
             response = await ws.receive_json()
             self.assertFalse(response['success'], str(kind))
-            self.assertEqual(response['error']['code'], 'read_only')
+            self.assertEqual(response['error']['code'], 'forbidden')
         await ws.send_json({'id': 30, 'type': 'subscribe_events'})
         self.assertFalse((await ws.receive_json())['success'])
         await ws.send_json({'id': 31, 'type': 'subscribe_events', 'event_type': 'state_changed'})
@@ -100,6 +118,103 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(all(m == 'GET' and p == '/api/states' for m, p, _ in self.requests))
         await ws.close()
 
+    async def test_thermostat_setpoint_is_bounded_and_updates_live_attributes(self):
+        response = await self.client.post('/api/services/climate/set_temperature',
+                                          json={'entity_id': 'climate.demo_thermostat', 'temperature': 23.5})
+        self.assertEqual(response.status, 200)
+        rows = await response.json()
+        climate = next(row for row in rows if row['entity_id'] == 'climate.demo_thermostat')
+        self.assertEqual(climate['attributes']['temperature'], 23.5)
+        self.assertEqual(climate['attributes']['current_temperature'], 21.5)
+        self.assertEqual(self.service_data, {'entity_id': 'climate.demo_thermostat', 'temperature': 23.5})
+        ws = await self.connect()
+        await ws.send_json({'id': 1, 'type': 'call_service', 'domain': 'climate',
+                            'service': 'set_temperature', 'target': {'entity_id': 'climate.demo_thermostat'},
+                            'service_data': {'temperature': 22}})
+        self.assertTrue((await ws.receive_json())['success'])
+        self.assertEqual(self.g.states['climate.demo_thermostat']['attributes']['temperature'], 22)
+        await ws.close()
+
+    async def test_thermostat_rejects_private_targets_bad_values_and_other_actions(self):
+        before = len(self.requests)
+        payload = {'entity_id': 'climate.demo_thermostat', 'temperature': 22}
+        for data in [dict(payload, temperature=v) for v in [True, None, '22', 15.5, 28.5, 22.1, float('nan'), float('inf')]] + [
+            dict(payload, entity_id='climate.private'), dict(payload, hvac_mode='off'),
+            {'entity_id': 'climate.demo_thermostat'}, dict(payload, area_id='all'),
+        ]:
+            response = await self.client.post('/api/services/climate/set_temperature', json=data)
+            self.assertEqual(response.status, 403)
+        for service in ['set_hvac_mode', 'toggle', 'turn_off', 'set_preset_mode']:
+            response = await self.client.post('/api/services/climate/' + service, json=payload)
+            self.assertEqual(response.status, 403)
+        self.assertEqual(len(self.requests), before)
+
+    async def test_rest_controls_only_named_demo_entities_and_returns_sanitized_updates(self):
+        for domain, entity in [('light', 'light.demo_lamp'), ('switch', 'switch.demo_coffee')]:
+            for service, expected in [('turn_on', 'on'), ('toggle', 'off'), ('turn_off', 'off')]:
+                response = await self.client.post(f'/api/services/{domain}/{service}', json={'entity_id': entity})
+                self.assertEqual(response.status, 200)
+                body = await response.text()
+                self.assertNotIn('secret', body)
+                rows = json.loads(body)
+                self.assertEqual(next(r for r in rows if r['entity_id'] == entity)['state'], expected)
+                self.assertEqual(self.service_data, {'entity_id': entity})
+        self.assertEqual(sum(m == 'POST' for m, _, _ in self.requests), 6)
+
+    async def test_invalid_service_targets_and_admin_actions_never_reach_upstream(self):
+        before = list(self.requests)
+        for path in ['/api/services/light/turn_on', '/api/services/homeassistant/turn_off',
+                     '/api/services/homeassistant/restart', '/api/services/light/reload',
+                     '/api/services/script/turn_on', '/api/services/light/turn_on/extra']:
+            for data in [None, [], {}, {'entity_id': 'all'}, {'entity_id': 'light.private'},
+                         {'entity_id': ['light.demo_lamp', 'light.private']},
+                         {'entity_id': 'switch.demo_coffee'},
+                         {'entity_id': 'light.demo_lamp', 'area_id': 'all'},
+                         {'entity_id': 'light.demo_lamp', 'brightness': 255}]:
+                response = await self.client.post(path, json=data)
+                self.assertIn(response.status, (400, 403), (path, data))
+        self.assertEqual(self.requests, before)
+        ws = await self.connect()
+        for ident, payload in enumerate([
+            {'domain': 'homeassistant', 'service': 'restart'},
+            {'domain': 'light', 'service': 'toggle', 'target': {'area_id': 'all'}},
+            {'domain': 'light', 'service': 'toggle', 'target': {'entity_id': 'light.private'}},
+            {'domain': 'light', 'service': 'toggle', 'service_data': {'entity_id': 'light.demo_lamp'}, 'return_response': True},
+            {'domain': 'light', 'service': 'toggle', 'service_data': {'entity_id': 'light.demo_lamp'}, 'extra': 'value'},
+            {'domain': [], 'service': []},
+        ], 1):
+            await ws.send_json({'id': ident, 'type': 'call_service', **payload})
+            self.assertFalse((await ws.receive_json())['success'])
+        self.assertEqual(self.requests, before)
+        await ws.close()
+
+    async def test_websocket_control_publishes_real_changed_state_to_other_visitors(self):
+        subscriber = await self.connect()
+        await subscriber.send_json({'id': 1, 'type': 'subscribe_events', 'event_type': 'state_changed'})
+        self.assertTrue((await subscriber.receive_json())['success'])
+        ws = await self.connect()
+        await ws.send_json({'id': 2, 'type': 'call_service', 'domain': 'light', 'service': 'turn_on',
+                            'target': {'entity_id': ['light.demo_lamp']}})
+        self.assertTrue((await ws.receive_json())['success'])
+        event = await asyncio.wait_for(subscriber.receive_json(), 2)
+        self.assertEqual(event['event']['data']['entity_id'], 'light.demo_lamp')
+        self.assertEqual(event['event']['data']['new_state']['state'], 'on')
+        self.assertNotIn('secret', json.dumps(event))
+        await subscriber.close()
+        await ws.close()
+
+    async def test_stale_controls_fail_closed_and_upstream_errors_do_not_leak(self):
+        before = list(self.requests)
+        self.g.updated = time.monotonic() - 60
+        response = await self.client.post('/api/services/light/toggle', json={'entity_id': 'light.demo_lamp'})
+        self.assertEqual(response.status, 503)
+        self.assertEqual(self.requests, before)
+        self.g.updated = time.monotonic()
+        await self.ha.close()
+        response = await self.client.post('/api/services/light/toggle', json={'entity_id': 'light.demo_lamp'})
+        self.assertEqual(response.status, 503)
+        self.assertNotIn('secret', await response.text())
+
     async def test_partial_startup_or_reload_does_not_mark_incomplete_data_fresh(self):
         previous_states, previous_updated = self.g.states, self.g.updated
         self.rows = [state('99')]
@@ -115,7 +230,13 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_public_verifier_runs_without_private_credentials(self):
         await verify(str(self.client.make_url('')).rstrip('/'), stream=False, wait_ready=1)
-        self.assertEqual(self.requests, [('GET', '/api/states', 'Bearer secret-token')])
+        writes = [(m, p) for m, p, _ in self.requests if m == 'POST']
+        self.assertEqual(writes, [('POST', f'/api/services/{domain}/{service}')
+                                 for domain in ('light', 'switch')
+                                 for service in ('turn_on', 'turn_off')] +
+                         [('POST', '/api/services/climate/set_temperature')] * 2)
+        for entity in ('light.demo_lamp', 'switch.demo_coffee'):
+            self.assertEqual(self.g.states[entity]['state'], 'off')
 
     async def test_public_verifier_accepts_ha_numeric_format_and_rejects_wrong_battery(self):
         battery = next(s for s in self.rows if s['entity_id'] == 'sensor.demo_battery')

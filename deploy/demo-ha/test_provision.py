@@ -45,7 +45,7 @@ class ProvisionTests(unittest.TestCase):
         self.assertEqual(commands[2:], [prefix + command for command in [
             ['config', '--quiet'],
             ['--profile', 'setup', '--profile', 'verify', 'build', 'gateway', 'bootstrap', 'verify'],
-            ['up', '-d', 'homeassistant'],
+            ['up', '-d', '--force-recreate', 'homeassistant'],
             ['--profile', 'setup', 'run', '--rm', 'bootstrap'],
             ['up', '-d', 'gateway'],
             ['--profile', 'verify', 'run', '--rm', 'verify'],

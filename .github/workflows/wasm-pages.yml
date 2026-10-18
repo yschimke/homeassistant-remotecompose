@@ -16,6 +16,7 @@ on:
       - 'docs/**'
       - 'scripts/test-wasm-browser.py'
       - 'scripts/test-demo-browser.py'
+      - 'scripts/test-adaptive-dashboard-browser.py'
       - 'scripts/fixtures/demo/**'
       - 'scripts/stage-wasm-demo.py'
       - '.github/workflows/wasm-pages.yml'
@@ -50,6 +51,8 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Test browser flows at the GitHub Pages project path
         run: python scripts/test-wasm-browser.py app-ui/build/dist/wasmJs/productionExecutable
+      - name: Test adaptive sections and MeshCore conversation cards
+        run: python scripts/test-adaptive-dashboard-browser.py app-ui/build/dist/wasmJs/productionExecutable
       - name: Test the public demo
         run: python scripts/test-demo-browser.py app-ui/build/dist/wasmJs/productionExecutable
       - name: Build existing documentation and authentication pages

@@ -63,45 +63,59 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
         .then(cardChrome(theme.cardBackground, theme.divider))
         .padding(horizontal = 14.rdp, vertical = 12.rdp)
   ) {
-    RemoteColumn(
-      modifier = RemoteModifier.fillMaxWidth(),
-      verticalArrangement = RemoteArrangement.spacedBy(4.rdp),
-      horizontalAlignment = RemoteAlignment.CenterHorizontally,
-    ) {
-      RemoteHaArcMeter(
-        zones = gaugeZones(data),
-        fraction = fraction,
-        color = severityColor,
-        modifier = RemoteModifier.fillMaxWidth().height(72.rdp),
-        strokeWidthPx = 10f,
-      )
+    if (visualFamily().isCommunity) {
+      CommunityReadingLayout(
+        entityName(data.entityId, data.name),
+        data.valueText,
+        if (data.unit != null) cardText("range", gaugeRangeText(data.min, data.max, data.unit))
+        else null,
+        fraction,
+        severityColor,
+        RemoteModifier.fillMaxWidth().height(144.rdp),
+      ) { meter ->
+        RemoteHaArcMeter(fraction, severityColor, meter, zones = gaugeZones(data))
+      }
+    } else {
+      RemoteColumn(
+        modifier = RemoteModifier.fillMaxWidth(),
+        verticalArrangement = RemoteArrangement.spacedBy(4.rdp),
+        horizontalAlignment = RemoteAlignment.CenterHorizontally,
+      ) {
+        RemoteHaArcMeter(
+          zones = gaugeZones(data),
+          fraction = fraction,
+          color = severityColor,
+          modifier = RemoteModifier.fillMaxWidth().height(72.rdp),
+          strokeWidthPx = 10f,
+        )
 
-      RemoteText(
-        text = data.valueText,
-        color = theme.primaryText,
-        fontSize = HaType.Value,
-        fontWeight = haValueWeight(),
-        style = haTextStyle(),
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-      )
-      RemoteText(
-        text = entityName(data.entityId, data.name),
-        color = theme.secondaryText,
-        fontSize = HaType.Body,
-        style = haTextStyle(),
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-      )
-      if (data.unit != null) {
         RemoteText(
-          text = cardText("range", gaugeRangeText(data.min, data.max, data.unit)),
-          color = theme.secondaryText,
-          fontSize = HaType.Caption,
+          text = data.valueText,
+          color = theme.primaryText,
+          fontSize = HaType.Value,
+          fontWeight = haValueWeight(),
           style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
+        RemoteText(
+          text = entityName(data.entityId, data.name),
+          color = theme.secondaryText,
+          fontSize = HaType.Body,
+          style = haTextStyle(),
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+        if (data.unit != null) {
+          RemoteText(
+            text = cardText("range", gaugeRangeText(data.min, data.max, data.unit)),
+            color = theme.secondaryText,
+            fontSize = HaType.Caption,
+            style = haTextStyle(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+        }
       }
     }
   }
@@ -295,12 +309,21 @@ private val SeverityNormal = HaStatusColors.Normal
 private val SeverityWarning = HaStatusColors.Warning
 private val SeverityCritical = HaStatusColors.Critical
 
-/** The gauge's range line, e.g. `0 – 100 °C`. */
+/**
+ * The gauge's range line, e.g. `0 – 100 °C`. A design template computes the same line from its
+ * binding recipe on every host (ha-model's `CardBindingRecipe.rangeText`), so the two must agree:
+ * whole numbers bare, others to one decimal rounding half up, always with a `.`.
+ */
 fun gaugeRangeText(min: Double, max: Double, unit: String?): String =
   "${formatRange(min)} – ${formatRange(max)} ${unit.orEmpty()}"
 
-private fun formatRange(d: Double): String =
-  if (d == d.toLong().toDouble()) d.toLong().toString() else "%.1f".format(d)
+private fun formatRange(d: Double): String {
+  if (!d.isFinite()) return d.toString()
+  if (d == d.toLong().toDouble()) return d.toLong().toString()
+  val tenths = kotlin.math.floor(d * 10 + 0.5).toLong()
+  val sign = if (tenths < 0) "-" else ""
+  return "$sign${kotlin.math.abs(tenths) / 10}.${kotlin.math.abs(tenths) % 10}"
+}
 
 /**
  * The gauge's hot zone for the visual families that draw one (a Trinitron red peak zone, LCD hot

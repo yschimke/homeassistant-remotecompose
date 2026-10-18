@@ -6,9 +6,13 @@ import android.content.Context
 import androidx.compose.remote.core.CoreDocument
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.drawWithContent
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.state.RemoteState
+import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.runtime.CompositionLocalProvider
 import ee.schimke.ha.client.design.BuiltDesign
+import ee.schimke.ha.design.CardBindingRecipe
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignProperties
@@ -208,7 +212,11 @@ object CardDesignTemplates {
           CompositionLocalProvider(LocalTemplateBindings provides TemplateBindings()) {
             ProvideCardRegistry(registry) {
               ProvideCardStyle(cardStyle, palette, dark) {
-                RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                RenderChild(
+                  card,
+                  snapshot,
+                  RemoteModifier.fillMaxWidth().declaringRecipe(converter.designRecipe()),
+                )
               }
             }
           }
@@ -224,6 +232,27 @@ object CardDesignTemplates {
 
   /** Build every spike template. */
   fun buildAll(context: Context): List<BuiltDesign> = spikeKeys().map { capture(context, it) }
+
+  /**
+   * This modifier, also declaring [recipe] in the document being captured as the named string
+   * [CardBindingRecipe.BINDING], for hosts that compute card-level bindings from the template alone
+   * (the JavaScript embed). Nothing draws it. It is written from the draw pass because the capture
+   * forbids document writes during composition; with no recipe the modifier is unchanged, so such
+   * templates' bytes are too.
+   */
+  private fun RemoteModifier.declaringRecipe(recipe: CardBindingRecipe?): RemoteModifier {
+    if (recipe == null) return this
+    val text =
+      RemoteString.createNamedRemoteString(
+        CardBindingRecipe.BINDING,
+        recipe.toJson().toString(),
+        RemoteState.Domain.User,
+      )
+    return drawWithContent {
+      text.getIdForCreationState(remoteComposeCreationState)
+      drawContent()
+    }
+  }
 
   /** Registry used when the caller doesn't pass its own; designs only need the built-in cards. */
   internal val defaultTemplateRegistry: CardRegistry by lazy {

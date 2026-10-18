@@ -206,6 +206,7 @@ private fun ButtonIconChip(
         .clip(haControlShape(20, round = true))
         .then(
           if (console) RemoteModifier
+          else if (visualFamily() == HaVisualFamily.Ikea) ikeaKeyChrome(accent)
           else RemoteModifier.background(accent.copy(alpha = accent.alpha * 0.2f.rf))
         ),
     contentAlignment = RemoteAlignment.Center,

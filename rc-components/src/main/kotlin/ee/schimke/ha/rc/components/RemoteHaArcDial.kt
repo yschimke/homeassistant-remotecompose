@@ -19,6 +19,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteSize
 import androidx.compose.remote.creation.compose.layout.RemoteStateLayout
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
@@ -28,6 +29,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteString
@@ -67,6 +69,10 @@ import androidx.wear.compose.remote.material3.RemoteIcon
 @Composable
 @RemoteComposable
 fun RemoteHaArcDial(data: HaArcDialData, modifier: RemoteModifier = RemoteModifier) {
+  if (isIkeaLight(data)) {
+    IkeaLightRemote(data, modifier)
+    return
+  }
   val theme = haTheme()
   val click =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
@@ -93,9 +99,32 @@ fun RemoteHaArcDial(data: HaArcDialData, modifier: RemoteModifier = RemoteModifi
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
-      DialBody(data, theme)
-      if (data.showSteppers) {
-        Steppers(dialAccent(data), data.incrementAction, data.decrementAction, theme)
+      if (
+        visualFamily().isCommunity &&
+          visualFamily() in
+            setOf(
+              HaVisualFamily.Bubble,
+              HaVisualFamily.Cupertino,
+              HaVisualFamily.Lcars,
+              HaVisualFamily.Aeon,
+            )
+      ) {
+        RemoteRow(
+          RemoteModifier.fillMaxWidth(),
+          verticalAlignment = RemoteAlignment.CenterVertically,
+        ) {
+          RemoteBox(RemoteModifier.weight(1f)) { DialBody(data, theme) }
+          if (data.showSteppers) {
+            RemoteColumn(RemoteModifier.width(120.rdp).padding(start = 6.rdp)) {
+              Steppers(dialAccent(data), data.incrementAction, data.decrementAction, theme)
+            }
+          }
+        }
+      } else {
+        DialBody(data, theme)
+        if (data.showSteppers) {
+          Steppers(dialAccent(data), data.incrementAction, data.decrementAction, theme)
+        }
       }
     }
   }
@@ -142,18 +171,27 @@ fun RemoteHaArcDialWide(
   ) {
     RemoteBox(
       modifier =
-        if (isConsoleThermostat(data)) RemoteModifier.size((if (compact) 32 else 56).rdp)
+        if (isConsoleThermostat(data) || isIkeaLight(data))
+          RemoteModifier.size((if (compact) 32 else 56).rdp)
         else RemoteModifier.fillMaxHeight().size(56.rdp),
       contentAlignment = RemoteAlignment.Center,
     ) {
-      ArcCanvas(
-        data = data,
-        theme = theme,
-        trackStrokePx = 6f,
-        fillStrokePx = 6f,
-        markerStrokePx = 8f,
-        paddingPx = 3f,
-      )
+      if (isIkeaLight(data)) {
+        IkeaControlFace(
+          dialAccent(data),
+          LiveValues.isOn(data.entityId, data.showSteppers)?.select(1f.rf, 0f.rf) ?: 0f.rf,
+          RemoteModifier.fillMaxSize(),
+        )
+      } else {
+        ArcCanvas(
+          data = data,
+          theme = theme,
+          trackStrokePx = 6f,
+          fillStrokePx = 6f,
+          markerStrokePx = 8f,
+          paddingPx = 3f,
+        )
+      }
     }
     RemoteColumn(
       modifier = RemoteModifier.weight(1f),
@@ -189,6 +227,73 @@ fun RemoteHaArcDialWide(
 private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
   if (isConsoleThermostat(data)) {
     ConsoleThermostatBody(data, theme)
+    return
+  }
+  if (visualFamily() == HaVisualFamily.Cupertino) {
+    val fraction =
+      animateRemoteFloat(
+        data.live?.valueFraction
+          ?: LiveValues.namedFloat(
+            data.entityId,
+            "value_fraction",
+            data.valueFraction.coerceIn(0f, 1f),
+          ),
+        DialAnimationSeconds,
+      )
+    val rawTarget =
+      if (data.live != null) data.live.targetFraction
+      else
+        data.targetFraction?.let {
+          LiveValues.namedFloat(data.entityId, "target_fraction", it.coerceIn(0f, 1f))
+        }
+    val target = rawTarget?.let { animateRemoteFloat(it, DialAnimationSeconds) }
+    val targetInk =
+      data.live?.targetVisible?.select(theme.primaryText, Color.Transparent.rc) ?: theme.primaryText
+    RemoteColumn(
+      RemoteModifier.fillMaxWidth(),
+      horizontalAlignment = RemoteAlignment.CenterHorizontally,
+    ) {
+      ModeChip(data, dialAccent(data))
+      RemoteBox(
+        RemoteModifier.size(78.rdp, 120.rdp)
+          .clip(haControlShape(28))
+          .background(theme.placeholderBackground)
+          .padding(8.rdp)
+      ) {
+        RemoteHaBarMeter(fraction, dialAccent(data), RemoteModifier.fillMaxSize(), vertical = true)
+        if (target != null)
+          RemoteCanvas(RemoteModifier.fillMaxSize()) {
+            fillRound(targetInk, 0f.rf, (height - 2f.rf) * (1f.rf - target), width, 2f.rf, 1f.rf)
+          }
+        if (data.centerIcon != null)
+          RemoteBox(RemoteModifier.fillMaxSize(), contentAlignment = RemoteAlignment.BottomCenter) {
+            RemoteIcon(
+              data.centerIcon.toRemoteImageVector(),
+              contentDescription = null,
+              modifier = RemoteModifier.size(30.rdp),
+              tint = theme.primaryText,
+            )
+          }
+      }
+      RemoteText(
+        centerText(data),
+        color = theme.primaryText,
+        fontSize = HaType.ValueLarge,
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+      supportingText(data)?.let {
+        RemoteText(
+          it,
+          color = theme.secondaryText,
+          fontSize = HaType.Label,
+          style = haTextStyle(),
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+      }
+    }
     return
   }
   RemoteBox(modifier = RemoteModifier.size(180.rdp), contentAlignment = RemoteAlignment.Center) {
@@ -234,6 +339,10 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
     }
   }
 }
+
+@Composable
+private fun isIkeaLight(data: HaArcDialData): Boolean =
+  visualFamily() == HaVisualFamily.Ikea && data.centerLabelAttribute == "brightness_pct"
 
 /** A thermostat is a room display beside a set-point control, never a display on a moving cap. */
 @Composable
@@ -513,7 +622,8 @@ private fun StepperButton(
         .size(36.rdp)
         .clip(haControlShape(18, round = true))
         .border(1.rdp, theme.divider, haControlShape(18, round = true))
-        .then(consoleKeyChrome(accent)),
+        .then(consoleKeyChrome(accent))
+        .then(if (visualFamily() == HaVisualFamily.Ikea) ikeaKeyChrome(accent) else RemoteModifier),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(

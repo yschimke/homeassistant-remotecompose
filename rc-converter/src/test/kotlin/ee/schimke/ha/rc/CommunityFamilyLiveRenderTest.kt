@@ -21,6 +21,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
+import ee.schimke.composeai.rcplayer.edit.namedVariables
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -154,6 +155,128 @@ class CommunityFamilyLiveRenderTest {
         if (low.getPixel(x, y) != high.getPixel(x, y)) switchChanges++
       }
       assertTrue(switchChanges > 5, "${family.id}/$mode switch thumb follows live progress")
+    }
+  }
+
+  @Test
+  fun launcherBakesEveryFamilyWithConcreteReadingsAndActions() {
+    val context = org.robolectric.RuntimeEnvironment.getApplication()
+    val registry = ee.schimke.ha.rc.cards.defaultRegistry()
+    val measurements =
+      listOf(
+        Triple("temperature", "°C", -10f to 40f),
+        Triple("battery", "%", 0f to 100f),
+        Triple("humidity", "%", 0f to 100f),
+        Triple("", "%", 0f to 100f),
+      )
+    for (family in families) for (mode in listOf(false, true)) {
+      val look = LauncherLook(family, ThemeStyle.TerrazzoHome)
+      for ((device, unit, range) in measurements) {
+        val id = "sensor.reading"
+        val config =
+          CardConfig(
+            "sensor",
+            buildJsonObject {
+              put("type", "sensor")
+              put("entity", id)
+            },
+          )
+        fun bake(value: Float): LauncherDesigns.Baked {
+          val snapshot =
+            HaSnapshot(
+              states =
+                mapOf(
+                  id to
+                    EntityState(
+                      id,
+                      value.toString(),
+                      buildJsonObject {
+                        put("friendly_name", "Reading")
+                        put("unit_of_measurement", unit)
+                        put("device_class", device)
+                      },
+                    )
+                )
+            )
+          val baked =
+            kotlin.test.assertNotNull(
+              LauncherDesigns.render(
+                context,
+                config,
+                snapshot,
+                96,
+                96,
+                160,
+                dark = mode,
+                systemTheme = false,
+                registry = registry,
+                look = look,
+              ),
+              "${family.id}/$device bakes",
+            )
+          val decoded =
+            ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec.decode(
+              baked.bytes,
+              ee.schimke.composeai.rcplayer.protocol.RcWireLimits(),
+            )
+          assertTrue(
+            decoded.namedVariables.none {
+              it.name.endsWith(".state") || it.name.endsWith(".numeric_state")
+            },
+            "widget readings must be constants",
+          )
+          val operations = arrayListOf<androidx.compose.remote.core.Operation>()
+          androidx.compose.remote.core.RemoteComposeBuffer.fromInputStream(
+              platformWidgetDocument(baked.bytes).inputStream()
+            )
+            .inflateFromBuffer(operations)
+          assertTrue(
+            operations.none { it is androidx.compose.remote.core.operations.ColorExpression },
+            "${family.id}/$device widget colours must fold for the platform player: " +
+              operations
+                .filterIsInstance<androidx.compose.remote.core.operations.ColorExpression>()
+                .joinToString(),
+          )
+          return baked
+        }
+        val low = bake(range.first)
+        val high = bake(range.second)
+        assertTrue(
+          !low.bytes.contentEquals(high.bytes),
+          "${family.id}/$device rebakes changed values",
+        )
+      }
+      val id = "light.kitchen"
+      val config =
+        CardConfig(
+          "button",
+          buildJsonObject {
+            put("type", "button")
+            put("entity", id)
+          },
+        )
+      val snapshot =
+        HaSnapshot(
+          states =
+            mapOf(id to EntityState(id, "on", buildJsonObject { put("friendly_name", "Kitchen") }))
+        )
+      val baked =
+        kotlin.test.assertNotNull(
+          LauncherDesigns.render(
+            context,
+            config,
+            snapshot,
+            96,
+            96,
+            160,
+            dark = mode,
+            systemTheme = false,
+            registry = registry,
+            look = look,
+          )
+        )
+      assertTrue(baked.actions.isNotEmpty())
+      baked.actions.values.forEach { assertEquals(defaultTapActionFor(id), it) }
     }
   }
 }

@@ -70,6 +70,7 @@ internal object CommunityThemes {
       HaCardShapeStyle(14, 1, 8),
       HaReadoutStyle.Screen,
       FontWeight.Medium,
+      RemoteFontFamily.Monospace,
     )
   val Obsidian =
     family(

@@ -16,6 +16,16 @@ logger:
 lovelace:
   mode: yaml
 
+# Private state holders give a fresh installation deterministic off states.
+# The gateway never exposes these helpers or their services.
+input_boolean:
+  demo_heating_state:
+    initial: false
+  demo_lamp_state:
+    initial: false
+  demo_coffee_state:
+    initial: false
+
 template:
   - sensor:
       - name: Demo temperature
@@ -28,6 +38,16 @@ template:
         device_class: humidity
         unit_of_measurement: "%"
         state: "{{ 42 + now().minute % 8 }}"
+      - name: Demo power
+        unique_id: demo_power
+        device_class: power
+        unit_of_measurement: "W"
+        state: "{{ 650 + (now().minute % 12) * 75 }}"
+      - name: Demo solar
+        unique_id: demo_solar
+        device_class: power
+        unit_of_measurement: "W"
+        state: "{{ 1400 + (now().minute % 10) * 180 }}"
       - name: Demo battery
         unique_id: demo_battery
         device_class: battery
@@ -41,12 +61,35 @@ template:
   - light:
       - name: Demo lamp
         unique_id: demo_lamp
-        state: "{{ now().minute % 4 < 2 }}"
-        turn_on: []
-        turn_off: []
+        state: "{{ is_state('input_boolean.demo_lamp_state', 'on') }}"
+        optimistic: true
+        turn_on:
+          - action: input_boolean.turn_on
+            target: {entity_id: input_boolean.demo_lamp_state}
+        turn_off:
+          - action: input_boolean.turn_off
+            target: {entity_id: input_boolean.demo_lamp_state}
   - switch:
       - name: Demo coffee
         unique_id: demo_coffee
-        state: "{{ now().minute % 6 < 3 }}"
-        turn_on: []
-        turn_off: []
+        state: "{{ is_state('input_boolean.demo_coffee_state', 'on') }}"
+        optimistic: true
+        turn_on:
+          - action: input_boolean.turn_on
+            target: {entity_id: input_boolean.demo_coffee_state}
+        turn_off:
+          - action: input_boolean.turn_off
+            target: {entity_id: input_boolean.demo_coffee_state}
+
+# A real HA thermostat drives a private simulated heater, never physical hardware.
+climate:
+  - platform: generic_thermostat
+    name: Demo thermostat
+    unique_id: demo_thermostat
+    heater: input_boolean.demo_heating_state
+    target_sensor: sensor.demo_temperature
+    min_temp: 16
+    max_temp: 28
+    target_temp: 22
+    initial_hvac_mode: "heat"
+    precision: 0.5

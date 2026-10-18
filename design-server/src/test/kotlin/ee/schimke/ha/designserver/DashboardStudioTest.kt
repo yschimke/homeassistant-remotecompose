@@ -173,6 +173,14 @@ class DashboardStudioTest {
       )
     }
     assertEquals(11, renders)
+    expectedStyle = "ikea"
+    val ikea =
+      client.post("/api/studio/dashboard/preview") {
+        header(HttpHeaders.Cookie, "design-server-edit=operator")
+        setBody(body.replace("braun", "ikea"))
+      }
+    assertEquals(HttpStatusCode.OK, ikea.status)
+    assertEquals(12, renders)
     assertEquals(
       HttpStatusCode.UnprocessableEntity,
       client

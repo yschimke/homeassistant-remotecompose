@@ -1,12 +1,117 @@
 {
   "title": "Demo Home",
-  "views": [{
-    "title": "Home", "path": "home", "icon": "mdi:home", "cards": [
-      {"type": "markdown", "content": "## Demo Home\nLive simulated readings. Public access is read-only."},
-      {"type": "tile", "entity": "light.demo_lamp", "tap_action": {"action": "none"}},
-      {"type": "tile", "entity": "sensor.demo_temperature"},
-      {"type": "gauge", "entity": "sensor.demo_humidity", "min": 0, "max": 100},
-      {"type": "entities", "title": "At home", "show_header_toggle": false, "entities": ["binary_sensor.demo_motion", "switch.demo_coffee", "sensor.demo_battery"]}
-    ]
-  }]
+  "views": [
+    {
+      "title": "Control room",
+      "path": "home",
+      "icon": "mdi:console",
+      "sections": [
+        {
+          "title": "Comfort & climate",
+          "cards": [
+            {
+              "type": "thermostat",
+              "entity": "climate.demo_thermostat",
+              "name": "Lounge thermostat"
+            },
+            {
+              "type": "gauge",
+              "entity": "sensor.demo_humidity",
+              "name": "Humidity",
+              "min": 0,
+              "max": 100,
+              "severity": {
+                "green": 30,
+                "yellow": 60,
+                "red": 80
+              }
+            },
+            {
+              "type": "tile",
+              "entity": "sensor.demo_temperature",
+              "name": "Room temperature"
+            }
+          ],
+          "type": "grid"
+        },
+        {
+          "title": "Power station",
+          "cards": [
+            {
+              "type": "gauge",
+              "entity": "sensor.demo_power",
+              "name": "Power draw",
+              "min": 0,
+              "max": 3000,
+              "severity": {
+                "green": 0,
+                "yellow": 1600,
+                "red": 2400
+              }
+            },
+            {
+              "type": "gauge",
+              "entity": "sensor.demo_solar",
+              "name": "Solar output",
+              "min": 0,
+              "max": 4000
+            },
+            {
+              "type": "gauge",
+              "entity": "sensor.demo_battery",
+              "name": "Battery reserve",
+              "min": 0,
+              "max": 100,
+              "severity": {
+                "red": 0,
+                "yellow": 20,
+                "green": 50
+              }
+            }
+          ],
+          "type": "grid"
+        },
+        {
+          "title": "Around the house",
+          "cards": [
+            {
+              "type": "tile",
+              "entity": "light.demo_lamp",
+              "name": "Lounge lamp",
+              "tap_action": {
+                "action": "toggle"
+              }
+            },
+            {
+              "type": "button",
+              "entity": "switch.demo_coffee",
+              "name": "Coffee machine",
+              "tap_action": {
+                "action": "toggle"
+              }
+            },
+            {
+              "type": "tile",
+              "entity": "binary_sensor.demo_motion",
+              "name": "Motion"
+            },
+            {
+              "type": "entities",
+              "title": "Live readings",
+              "show_header_toggle": false,
+              "entities": [
+                "sensor.demo_temperature",
+                "sensor.demo_humidity",
+                "sensor.demo_power",
+                "sensor.demo_solar",
+                "switch.demo_coffee"
+              ]
+            }
+          ],
+          "type": "grid"
+        }
+      ],
+      "type": "sections"
+    }
+  ]
 }

@@ -48,6 +48,12 @@ fun RemoteHaMediaControl(
   modifier: RemoteModifier = RemoteModifier,
   fillHeight: Boolean = false,
 ) {
+  if (
+    visualFamily() in setOf(HaVisualFamily.Cupertino, HaVisualFamily.Arctic, HaVisualFamily.Aeon)
+  ) {
+    CommunityMediaPanel(data, modifier, fillHeight)
+    return
+  }
   val theme = haTheme()
   RemoteBox(
     modifier =
@@ -293,6 +299,9 @@ private fun TransportButton(
   RemoteHaTouchTarget(size, size, action.toRemoteAction(), label.rs) {
     val console = visualFamily() == HaVisualFamily.Console
     if (console) ConsoleControlFace(haInk(accent), RemoteModifier.size(size.rdp))
+    if (visualFamily() == HaVisualFamily.Ikea) {
+      RemoteBox(RemoteModifier.size(size.rdp).then(ikeaKeyChrome(haInk(accent))))
+    }
     RemoteIcon(
       imageVector = icon.toRemoteImageVector(),
       contentDescription = null,
@@ -324,5 +333,75 @@ private fun ProgressBar(
         .background(theme.divider)
   ) {
     RemoteBox(modifier = RemoteModifier.fillMaxWidth(f).height(3.rdp).background(haInk(accent)))
+  }
+}
+
+/** Distinct control-centre, landscape and cinema compositions share the original live controls. */
+@Composable
+private fun CommunityMediaPanel(
+  data: HaMediaControlData,
+  modifier: RemoteModifier,
+  fillHeight: Boolean,
+) {
+  val theme = haTheme()
+  val family = visualFamily()
+  val artwork: @Composable (RemoteModifier) -> Unit = { artModifier ->
+    RemoteBox(
+      artModifier.clip(haControlShape(16)).background(theme.placeholderBackground),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      RemoteIcon(
+        Icons.Filled.MusicNote.toRemoteImageVector(),
+        contentDescription = "No artwork".rs,
+        modifier = RemoteModifier.size(32.rdp),
+        tint = haInk(data.accent),
+      )
+    }
+  }
+  RemoteColumn(
+    modifier
+      .then(if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth())
+      .then(cardChrome(theme.cardBackground, theme.divider))
+      .padding(14.rdp)
+  ) {
+    when (family) {
+      HaVisualFamily.Cupertino -> {
+        RemoteRow(
+          RemoteModifier.fillMaxWidth(),
+          verticalAlignment = RemoteAlignment.CenterVertically,
+        ) {
+          artwork(RemoteModifier.size(60.rdp))
+          RemoteColumn(RemoteModifier.weight(1f).padding(start = 12.rdp)) {
+            TitleBlock(data, theme)
+          }
+        }
+        if (fillHeight) RemoteBox(RemoteModifier.weight(1f))
+        RemoteRow(RemoteModifier.fillMaxWidth(), horizontalArrangement = RemoteArrangement.Center) {
+          TransportRow(data)
+        }
+        SeekBlock(data, theme)
+      }
+      HaVisualFamily.Arctic -> {
+        TitleBlock(data, theme)
+        if (fillHeight) RemoteBox(RemoteModifier.weight(1f))
+        RemoteRow(
+          RemoteModifier.fillMaxWidth(),
+          verticalAlignment = RemoteAlignment.CenterVertically,
+        ) {
+          RemoteBox(RemoteModifier.weight(1f)) { TransportRow(data) }
+          artwork(RemoteModifier.size(52.rdp))
+        }
+        SeekBlock(data, theme)
+      }
+      else -> {
+        artwork(RemoteModifier.fillMaxWidth().height(84.rdp))
+        TitleBlock(data, theme)
+        if (fillHeight) RemoteBox(RemoteModifier.weight(1f))
+        RemoteRow(RemoteModifier.fillMaxWidth(), horizontalArrangement = RemoteArrangement.Center) {
+          TransportRow(data)
+        }
+        SeekBlock(data, theme)
+      }
+    }
   }
 }

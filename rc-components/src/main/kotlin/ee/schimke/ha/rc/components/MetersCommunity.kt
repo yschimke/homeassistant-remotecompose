@@ -242,6 +242,9 @@ internal fun RemoteDrawScope.communityBar(
   originX: RemoteFloat = 0f.rf,
   originY: RemoteFloat = 0f.rf,
 ) {
+  // Emit the state-only semantic colour before canvas-size arithmetic. The widget baker can
+  // resolve it independently of dimensions that are measured only during playback.
+  look.value.getIdForCreationState(remoteComposeCreationState)
   val len = if (vertical) canvasHeight else canvasWidth
   val thick = if (vertical) canvasWidth else canvasHeight
   fun rect(
@@ -251,13 +254,14 @@ internal fun RemoteDrawScope.communityBar(
     offset: RemoteFloat,
     breadth: RemoteFloat,
     round: Boolean = false,
+    visible: androidx.compose.remote.creation.compose.state.RemoteBoolean? = null,
   ) {
     val x = if (vertical) offset else from
     val y = if (vertical) len - from - length else offset
     // Keep empty fills geometrically non-degenerate at playback. A transparent subpixel box
     // expresses an empty sample without passing a zero-size shape through the player.
     val safeLength = remoteMax(length, 0.01f.rf)
-    val ink = length.isGreaterThanOrEqualTo(0.0001f.rf).select(color, Color.Transparent.rc)
+    val ink = visible?.select(color, Color.Transparent.rc) ?: color
     val w = if (vertical) breadth else safeLength
     val h = if (vertical) safeLength else breadth
     if (round) fillRound(ink, originX + x, originY + y, w, h, breadth / 2f.rf)
@@ -274,6 +278,9 @@ internal fun RemoteDrawScope.communityBar(
       round,
     )
   }
+  // Visibility depends only on the reading, so widget baking can fold every colour expression.
+  // Geometry may still depend on playback canvas size.
+  val hasFill = value.isGreaterThanOrEqualTo(0.000001f.rf)
   when (family) {
     HaVisualFamily.Mushroom -> {
       rect(look.track, 0f.rf, len, thick * 0.4f.rf, thick * 0.2f.rf, true)
@@ -282,12 +289,12 @@ internal fun RemoteDrawScope.communityBar(
     HaVisualFamily.Bubble -> cells(5, 0.78f, true)
     HaVisualFamily.Minimalist -> {
       rect(look.track, 0f.rf, len, thick * 0.4f.rf, thick * 0.2f.rf)
-      rect(look.value, 0f.rf, len * value, thick * 0.4f.rf, thick * 0.2f.rf)
+      rect(look.value, 0f.rf, len * value, thick * 0.4f.rf, thick * 0.2f.rf, visible = hasFill)
       rect(look.value, (len - thick * 0.4f.rf) * value, thick * 0.4f.rf, 0f.rf, thick)
     }
     HaVisualFamily.Cupertino -> {
       rect(look.track, 0f.rf, len, 0f.rf, thick, true)
-      rect(look.value, 0f.rf, len * value, 0f.rf, thick, true)
+      rect(look.value, 0f.rf, len * value, 0f.rf, thick, true, visible = hasFill)
       rect(look.surface, len * 0.08f.rf, len * 0.1f.rf, thick * 0.4f.rf, thick * 0.2f.rf, true)
     }
     HaVisualFamily.Catppuccin -> {
@@ -308,7 +315,15 @@ internal fun RemoteDrawScope.communityBar(
     HaVisualFamily.Noctis -> {
       rect(look.track, 0f.rf, len, thick * 0.1f.rf, thick * 0.12f.rf)
       rect(look.track, 0f.rf, len, thick * 0.78f.rf, thick * 0.12f.rf)
-      rect(look.value, 0f.rf, len * value, thick * 0.4f.rf, thick * 0.2f.rf, true)
+      rect(
+        look.value,
+        0f.rf,
+        len * value,
+        thick * 0.4f.rf,
+        thick * 0.2f.rf,
+        true,
+        visible = hasFill,
+      )
     }
     HaVisualFamily.Lcars -> {
       cells(4, 0.9f, false)
@@ -322,7 +337,7 @@ internal fun RemoteDrawScope.communityBar(
     HaVisualFamily.Aeon -> {
       rect(look.accent, 0f.rf, len, 0f.rf, thick * 0.08f.rf)
       rect(look.accent, 0f.rf, len, thick * 0.92f.rf, thick * 0.08f.rf)
-      rect(look.value, 0f.rf, len * value, thick * 0.25f.rf, thick * 0.5f.rf)
+      rect(look.value, 0f.rf, len * value, thick * 0.25f.rf, thick * 0.5f.rf, visible = hasFill)
       rect(look.accent, 0f.rf, thick * 0.08f.rf, 0f.rf, thick)
       rect(look.accent, len - thick * 0.08f.rf, thick * 0.08f.rf, 0f.rf, thick)
     }

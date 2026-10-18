@@ -9,11 +9,15 @@ import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.clickable
+import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
@@ -55,12 +59,23 @@ fun RemoteHaEntities(
         )
         RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp))
       }
-      data.rows.forEach { row ->
-        RemoteHaEntityRow(
-          row,
-          verticalPaddingDp = if (dense) DenseRowPaddingDp else 6,
-          minHeightDp = if (dense) 0 else EntityRowMinHeightDp,
-        )
+      if (visualFamily() in setOf(HaVisualFamily.Cupertino, HaVisualFamily.Minimalist)) {
+        data.rows.chunked(2).forEach { pair ->
+          RemoteRow(RemoteModifier.fillMaxWidth()) {
+            pair.forEach { row ->
+              CommunityAccessory(row, RemoteModifier.weight(1f).padding(3.rdp))
+            }
+            if (pair.size == 1) RemoteBox(RemoteModifier.weight(1f))
+          }
+        }
+      } else {
+        data.rows.forEach { row ->
+          RemoteHaEntityRow(
+            row,
+            verticalPaddingDp = if (dense) DenseRowPaddingDp else 6,
+            minHeightDp = if (dense) 0 else EntityRowMinHeightDp,
+          )
+        }
       }
     }
   }
@@ -263,3 +278,54 @@ class HaEntityLooks internal constructor(internal val looks: List<HaEntityLook>)
 @Composable
 fun entityLooks(rows: List<HaEntityRowData>): HaEntityLooks =
   HaEntityLooks(rows.map { entityLook(it.entityId, it.accent) })
+
+@Composable
+private fun CommunityAccessory(data: HaEntityRowData, modifier: RemoteModifier) {
+  val theme = haTheme()
+  val look = entityLook(data.entityId, data.accent)
+  val clickable =
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  RemoteColumn(
+    modifier
+      .then(clickable)
+      .clip(haControlShape(12))
+      .background(theme.placeholderBackground)
+      .padding(8.rdp)
+  ) {
+    RemoteRow(
+      RemoteModifier.fillMaxWidth(),
+      horizontalArrangement =
+        androidx.compose.remote.creation.compose.layout.RemoteArrangement.SpaceBetween,
+      verticalAlignment = RemoteAlignment.CenterVertically,
+    ) {
+      RemoteBox(RemoteModifier.width(0.rdp).height(32.rdp))
+      HaStateIcon(data.icon, data.accent, look, look.accent, null, RemoteModifier.size(20.rdp))
+      TrailingSwitchOrState(
+        look,
+        data.toggle,
+        switch = { isOn, switchModifier ->
+          RemoteHaToggleSwitch(isOn, look.activeAccent, look.inactiveAccent, switchModifier)
+        },
+        state = {
+          RemoteText(
+            data.state,
+            modifier = it,
+            color = theme.primaryText,
+            fontSize = HaType.Label,
+            style = haTextStyle(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+        },
+      )
+    }
+    RemoteText(
+      entityName(data.entityId, data.name),
+      color = look.dim(theme.primaryText),
+      fontSize = HaType.Label,
+      style = haTextStyle(),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+    )
+  }
+}

@@ -6,23 +6,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.FixedHaClock
 import ee.schimke.ha.rc.LocalHaClock
-import ee.schimke.ha.rc.ProvideCardRegistry
-import ee.schimke.ha.rc.ProvideCardSizeMode
-import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
-import ee.schimke.ha.rc.components.ProvideHaUberTheme
 
 // Individually named entries publish PNG + .rc through the existing preview catalog pipeline.
 // The same realistic fixtures as the established families make comparisons meaningful.
@@ -30,8 +23,8 @@ import ee.schimke.ha.rc.components.ProvideHaUberTheme
 @Preview(
   name = "community: Mushroom (light)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Mushroom_Light() = UberShowcase(HaUberTheme.Mushroom, darkTheme = false)
@@ -39,8 +32,8 @@ fun Community_Mushroom_Light() = UberShowcase(HaUberTheme.Mushroom, darkTheme = 
 @Preview(
   name = "community: Mushroom (dark)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Mushroom_Dark() = UberShowcase(HaUberTheme.Mushroom, darkTheme = true)
@@ -66,8 +59,8 @@ fun CommunityCards_Mushroom() = UberSheet(HaUberTheme.Mushroom, Cards.take(2))
 @Preview(
   name = "community: Bubble (light)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Bubble_Light() = UberShowcase(HaUberTheme.Bubble, darkTheme = false)
@@ -75,8 +68,8 @@ fun Community_Bubble_Light() = UberShowcase(HaUberTheme.Bubble, darkTheme = fals
 @Preview(
   name = "community: Bubble (dark)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Bubble_Dark() = UberShowcase(HaUberTheme.Bubble, darkTheme = true)
@@ -102,8 +95,8 @@ fun CommunityCards_Bubble() = UberSheet(HaUberTheme.Bubble, Cards.take(2))
 @Preview(
   name = "community: Minimalist (light)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Minimalist_Light() = UberShowcase(HaUberTheme.Minimalist, darkTheme = false)
@@ -111,8 +104,8 @@ fun Community_Minimalist_Light() = UberShowcase(HaUberTheme.Minimalist, darkThem
 @Preview(
   name = "community: Minimalist (dark)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Minimalist_Dark() = UberShowcase(HaUberTheme.Minimalist, darkTheme = true)
@@ -138,8 +131,8 @@ fun CommunityCards_Minimalist() = UberSheet(HaUberTheme.Minimalist, Cards.take(2
 @Preview(
   name = "community: Cupertino (light)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Cupertino_Light() = UberShowcase(HaUberTheme.Cupertino, darkTheme = false)
@@ -147,8 +140,8 @@ fun Community_Cupertino_Light() = UberShowcase(HaUberTheme.Cupertino, darkTheme 
 @Preview(
   name = "community: Cupertino (dark)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Cupertino_Dark() = UberShowcase(HaUberTheme.Cupertino, darkTheme = true)
@@ -174,8 +167,8 @@ fun CommunityCards_Cupertino() = UberSheet(HaUberTheme.Cupertino, Cards.take(2))
 @Preview(
   name = "community: Catppuccin (light)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Catppuccin_Light() = UberShowcase(HaUberTheme.Catppuccin, darkTheme = false)
@@ -183,8 +176,8 @@ fun Community_Catppuccin_Light() = UberShowcase(HaUberTheme.Catppuccin, darkThem
 @Preview(
   name = "community: Catppuccin (dark)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Catppuccin_Dark() = UberShowcase(HaUberTheme.Catppuccin, darkTheme = true)
@@ -210,8 +203,8 @@ fun CommunityCards_Catppuccin() = UberSheet(HaUberTheme.Catppuccin, Cards.take(2
 @Preview(
   name = "community: Obsidian (light)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Obsidian_Light() = UberShowcase(HaUberTheme.Obsidian, darkTheme = false)
@@ -219,8 +212,8 @@ fun Community_Obsidian_Light() = UberShowcase(HaUberTheme.Obsidian, darkTheme = 
 @Preview(
   name = "community: Obsidian (dark)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Obsidian_Dark() = UberShowcase(HaUberTheme.Obsidian, darkTheme = true)
@@ -246,8 +239,8 @@ fun CommunityCards_Obsidian() = UberSheet(HaUberTheme.Obsidian, Cards.take(2))
 @Preview(
   name = "community: Noctis (light)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Noctis_Light() = UberShowcase(HaUberTheme.Noctis, darkTheme = false)
@@ -255,8 +248,8 @@ fun Community_Noctis_Light() = UberShowcase(HaUberTheme.Noctis, darkTheme = fals
 @Preview(
   name = "community: Noctis (dark)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Noctis_Dark() = UberShowcase(HaUberTheme.Noctis, darkTheme = true)
@@ -282,8 +275,8 @@ fun CommunityCards_Noctis() = UberSheet(HaUberTheme.Noctis, Cards.take(2))
 @Preview(
   name = "community: Lcars (light)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Lcars_Light() = UberShowcase(HaUberTheme.Lcars, darkTheme = false)
@@ -291,8 +284,8 @@ fun Community_Lcars_Light() = UberShowcase(HaUberTheme.Lcars, darkTheme = false)
 @Preview(
   name = "community: Lcars (dark)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Lcars_Dark() = UberShowcase(HaUberTheme.Lcars, darkTheme = true)
@@ -318,8 +311,8 @@ fun CommunityCards_Lcars() = UberSheet(HaUberTheme.Lcars, Cards.take(2))
 @Preview(
   name = "community: Arctic (light)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Arctic_Light() = UberShowcase(HaUberTheme.Arctic, darkTheme = false)
@@ -327,8 +320,8 @@ fun Community_Arctic_Light() = UberShowcase(HaUberTheme.Arctic, darkTheme = fals
 @Preview(
   name = "community: Arctic (dark)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Arctic_Dark() = UberShowcase(HaUberTheme.Arctic, darkTheme = true)
@@ -354,8 +347,8 @@ fun CommunityCards_Arctic() = UberSheet(HaUberTheme.Arctic, Cards.take(2))
 @Preview(
   name = "community: Aeon (light)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Aeon_Light() = UberShowcase(HaUberTheme.Aeon, darkTheme = false)
@@ -363,8 +356,8 @@ fun Community_Aeon_Light() = UberShowcase(HaUberTheme.Aeon, darkTheme = false)
 @Preview(
   name = "community: Aeon (dark)",
   widthDp = 360,
-  heightDp = 640,
-  device = "spec:width=360dp,height=640dp,dpi=160",
+  heightDp = 680,
+  device = "spec:width=360dp,height=680dp,dpi=160",
 )
 @Composable
 fun Community_Aeon_Dark() = UberShowcase(HaUberTheme.Aeon, darkTheme = true)
@@ -450,17 +443,25 @@ private fun CommunityWidgetCell(
       CompositionLocalProvider(
         LocalHaClock provides FixedHaClock(java.time.ZonedDateTime.parse("2026-05-05T10:08:00Z"))
       ) {
-        ProvideCardRegistry(defaultRegistry()) {
-          ProvideHaUberTheme(theme, true) {
-            ProvideCardSizeMode(CardSizeMode.Fixed) {
-              ee.schimke.ha.rc.components.ProvideCardChrome(enabled = false) {
-                ee.schimke.ha.rc.components.RemoteHaWidgetSurface {
-                  RenderChild(config, snapshot, RemoteModifier.fillMaxWidth())
-                }
+        ee.schimke.ha.rc.LauncherWidgetContent(
+          registry = defaultRegistry(),
+          profile = ee.schimke.ha.rc.androidXExperimentalWrap,
+          dark = true,
+          widgetActions =
+            ee.schimke.ha.rc.components.WidgetActionRegistry(
+              snapshot.states.mapValues { (_, entity) ->
+                ee.schimke.ha.rc.formatState(entity, snapshot)
               }
-            }
-          }
-        }
+            ),
+          card = config,
+          snapshot = snapshot,
+          captureSizeDp = ee.schimke.ha.rc.WidgetCaptureSizeDp(width, height),
+          look =
+            ee.schimke.ha.rc.LauncherLook(
+              theme,
+              ee.schimke.ha.rc.components.ThemeStyle.TerrazzoHome,
+            ),
+        )
       }
     }
   }

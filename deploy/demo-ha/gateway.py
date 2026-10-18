@@ -1,7 +1,8 @@
-"""Public read-only HA facade. Client input never selects an upstream request."""
+"""Public HA facade with explicitly allowlisted demo entity controls."""
 import asyncio
 import contextlib
 import json
+import math
 import os
 from pathlib import Path
 import time
@@ -10,17 +11,17 @@ import aiohttp
 from aiohttp import web
 
 ROOT = Path(__file__).parent
-VERSION = "demo-readonly-v1"
+VERSION = "demo-controls-v3"
 CONFIG = {
     "version": VERSION, "location_name": "Demo Home", "time_zone": "UTC",
     "unit_system": {"temperature": "°C", "length": "km", "mass": "kg", "volume": "L"},
     "internal_url": None, "external_url": "https://ha.coo.ee/demo-ha",
-    "components": [], "state": "RUNNING", "read_only": True,
+    "components": [], "state": "RUNNING", "read_only": False,
 }
 ATTRIBUTES = frozenset((
     "friendly_name", "unit_of_measurement", "device_class", "state_class", "icon",
     "brightness", "color_temp_kelvin", "rgb_color", "supported_color_modes", "color_mode",
-    "temperature", "current_temperature", "hvac_modes", "hvac_action", "min_temp", "max_temp",
+    "temperature", "current_temperature", "hvac_modes", "hvac_action", "min_temp", "max_temp", "target_temp_step",
     "humidity", "pressure", "wind_speed", "temperature_unit", "pressure_unit", "wind_speed_unit",
     "current_position", "supported_features", "battery_level", "percentage",
 ))
@@ -37,6 +38,7 @@ class Gateway:
         self.states = {}
         self.updated = 0
         self.sockets = {}
+        self.upstream_lock = asyncio.Lock()
 
     def fresh(self):
         return self.updated > 0 and time.monotonic() - self.updated < self.max_age
@@ -53,7 +55,11 @@ class Gateway:
         }
 
     async def poll_once(self, session):
-        # This is the entire runtime upstream API. No client URL, method, body or headers enter it.
+        async with self.upstream_lock:
+            await self._poll_once(session)
+
+    async def _poll_once(self, session):
+        # The read path is fixed; credentials and response metadata stay private.
         async with session.get(
             self.upstream + "/api/states", headers={"Authorization": "Bearer " + self.token},
             allow_redirects=False,
@@ -85,6 +91,52 @@ class Gateway:
                     except (ConnectionError, asyncio.TimeoutError, RuntimeError):
                         await ws.close()
 
+    async def call_service(self, domain, service, data, target=None):
+        # Construct a fresh request from a finite policy, never relay client payloads.
+        controls = {"light": "light.demo_lamp", "switch": "switch.demo_coffee",
+                    "climate": "climate.demo_thermostat"}
+        if not isinstance(domain, str) or domain not in controls:
+            return "forbidden"
+        climate = domain == "climate"
+        services = ("set_temperature",) if climate else ("turn_on", "turn_off", "toggle")
+        if not isinstance(service, str) or service not in services:
+            return "forbidden"
+        allowed = {"entity_id", "temperature"} if climate else {"entity_id"}
+        if not isinstance(data, dict) or set(data) - allowed:
+            return "forbidden"
+        temperature = data.get("temperature")
+        if climate and (type(temperature) not in (int, float) or not math.isfinite(temperature)
+                        or not 16 <= temperature <= 28 or temperature * 2 != int(temperature * 2)):
+            return "forbidden"
+        if target is not None and (not isinstance(target, dict) or set(target) != {"entity_id"}):
+            return "forbidden"
+        if target is not None and "entity_id" in data:
+            return "forbidden"
+        entity = (target if target is not None else data).get("entity_id")
+        if isinstance(entity, list) and len(entity) == 1:
+            entity = entity[0]
+        if entity != controls[domain] or entity not in self.entities:
+            return "forbidden"
+        async with self.upstream_lock:
+            if not self.fresh():
+                return "upstream_unavailable"
+            try:
+                async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as session:
+                    async with session.post(
+                        self.upstream + "/api/services/" + domain + "/" + service,
+                        headers={"Authorization": "Bearer " + self.token},
+                        json={"entity_id": controls[domain],
+                              **({"temperature": temperature} if climate else {})},
+                        allow_redirects=False,
+                    ) as response:
+                        response.raise_for_status()
+                        if response.status != 200:
+                            return "service_failed"
+                    await self._poll_once(session)
+            except (aiohttp.ClientError, asyncio.TimeoutError, ValueError, KeyError, TypeError):
+                return "upstream_unavailable"
+        return None
+
     async def lifecycle(self, app):
         async def polling():
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as session:
@@ -108,8 +160,20 @@ class Gateway:
     async def http(self, request):
         if request.method == "OPTIONS":
             return web.Response(status=204)
+        if request.method == "POST" and request.path.startswith("/api/services/"):
+            parts = request.path.split("/")
+            if len(parts) != 5:
+                return web.json_response({"code": "forbidden"}, status=403)
+            try:
+                data = await request.json()
+            except (ValueError, TypeError):
+                return web.json_response({"code": "invalid_json"}, status=400)
+            code = await self.call_service(parts[3], parts[4], data)
+            if code:
+                return web.json_response({"code": code}, status=403 if code == "forbidden" else 503)
+            return web.json_response(list(self.states.values()))
         if request.method not in ("GET", "HEAD"):
-            return web.json_response({"code": "read_only", "message": "Demo is read-only"}, status=403)
+            return web.json_response({"code": "forbidden", "message": "Demo administration is disabled"}, status=403)
         path = request.path
         if path == "/api/websocket":
             return await self.websocket(request)
@@ -119,9 +183,9 @@ class Gateway:
         if not self.fresh():
             return web.json_response({"code": "upstream_unavailable"}, status=503)
         if path == "/healthz":
-            return web.json_response({"status": "ok", "read_only": True})
+            return web.json_response({"status": "ok", "read_only": False})
         if path == "/api/":
-            return web.json_response({"message": "API running.", "read_only": True})
+            return web.json_response({"message": "API running.", "read_only": False})
         if path == "/api/config":
             return web.json_response(CONFIG)
         if path == "/dashboard":
@@ -175,6 +239,14 @@ class Gateway:
         def error(code):
             return {"id": ident, "type": "result", "success": False,
                     "error": {"code": code, "message": code.replace("_", " ")}}
+        if kind == "call_service":
+            if set(msg) - {"id", "type", "domain", "service", "service_data", "target", "return_response"}:
+                return error("forbidden")
+            if msg.get("return_response", False) is not False:
+                return error("forbidden")
+            code = await self.call_service(msg.get("domain"), msg.get("service"),
+                                           msg.get("service_data", {}), msg.get("target"))
+            return error(code) if code else result({"context": {"id": None, "parent_id": None, "user_id": None}, "response": None})
         if kind == "ping":
             return {"id": ident, "type": "pong"}
         if kind == "get_states":
@@ -191,7 +263,7 @@ class Gateway:
             return result([])
         if kind == "subscribe_events":
             if msg.get("event_type") != "state_changed":
-                return error("read_only")
+                return error("forbidden")
             if self.sockets[ws]:
                 return error("subscription_limit")
             self.sockets[ws].add(ident)
@@ -202,8 +274,8 @@ class Gateway:
                 return error("not_found")
             self.sockets[ws].remove(sub)
             return result()
-        # Deny by default, including unknown future HA commands and every mutation.
-        return error("read_only")
+        # Deny by default, including unknown future HA commands and administrative mutations.
+        return error("forbidden")
 
 
 @web.middleware
@@ -211,7 +283,7 @@ async def headers(request, handler):
     response = await handler(request)
     response.headers.update({
         "Access-Control-Allow-Origin": "https://ha.coo.ee",
-        "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+        "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
         "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
     })

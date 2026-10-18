@@ -77,6 +77,10 @@ private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolea
   val accent: RemoteColor = look.accent
   val inline =
     data.features.firstOrNull()?.takeIf { data.featuresPosition == HaTileFeaturePosition.Inline }
+  if (inline == null && data.badge == null && visualFamily().isCommunity) {
+    CommunityTileInfo(data, look, renderChip)
+    return
+  }
   RemoteRow(
     modifier = if (inline != null) RemoteModifier.fillMaxWidth() else RemoteModifier,
     verticalAlignment = RemoteAlignment.CenterVertically,
@@ -132,7 +136,9 @@ private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolea
 private fun TileIcon(data: HaTileData, look: HaEntityLook, renderChip: Boolean) {
   // Decorative: the tile draws the name beside it.
   val accent = look.accent
-  if (renderChip && visualFamily() == HaVisualFamily.Console) {
+  if (renderChip && visualFamily() == HaVisualFamily.Ikea && look.isOn != null) {
+    IkeaControlFace(accent, look.isOn.select(1f.rf, 0f.rf), RemoteModifier.size(32.rdp))
+  } else if (renderChip && visualFamily() == HaVisualFamily.Console) {
     ConsoleControlFace(
       look.isOn?.select(accent, ConsoleSlot.rc) ?: accent,
       RemoteModifier.size(32.rdp),
@@ -334,5 +340,48 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
         overflow = TextOverflow.Ellipsis,
       )
     }
+  }
+}
+
+@Composable
+private fun CommunityTileInfo(data: HaTileData, look: HaEntityLook, renderChip: Boolean) {
+  val family = visualFamily()
+  val theme = haTheme()
+  val label: @Composable () -> Unit = {
+    RemoteText(
+      entityName(data.entityId, data.name),
+      color = look.dim(theme.primaryText),
+      fontSize = HaType.Body,
+      style = haTextStyle(),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+    )
+  }
+  val state: @Composable () -> Unit = {
+    RemoteText(
+      data.state,
+      color = look.dim(theme.primaryText),
+      fontSize = HaType.BodyLarge,
+      fontWeight = haValueWeight(),
+      style = haTextStyle(),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+    )
+  }
+  RemoteRow(RemoteModifier.fillMaxWidth(), verticalAlignment = RemoteAlignment.CenterVertically) {
+    if (family != HaVisualFamily.Minimalist && family != HaVisualFamily.Arctic)
+      TileIcon(data, look, renderChip)
+    RemoteColumn(RemoteModifier.weight(1f).padding(horizontal = 10.rdp)) {
+      if (family == HaVisualFamily.Cupertino || family == HaVisualFamily.Minimalist) {
+        state()
+        label()
+      } else {
+        label()
+        if (family != HaVisualFamily.Bubble) state()
+      }
+    }
+    if (family == HaVisualFamily.Bubble) state()
+    if (family == HaVisualFamily.Minimalist || family == HaVisualFamily.Arctic)
+      TileIcon(data, look, renderChip)
   }
 }

@@ -176,3 +176,82 @@ test('panel passes only same-origin session capability, refreshes auth and clean
     assert.equal(result.reattached, result.path);
   } finally { await browser.close(); }
 });
+
+// A gauge's range, bands and range line are card-level bindings no slot provides: the template
+// carries a binding recipe (`meta.binding_recipe`, CardBindingRecipe in ha-model) that computes
+// them here. Captured by rc-converter's CardBindingRecipeTemplateTest; checked by design-server's
+// RecipeFixtureTest.
+const gaugeTemplate = readFileSync(`${root}design-server/src/test/resources/gauge-unit.rc`);
+// The same document with its recipe renamed away: nothing then supplies `card.min` and friends.
+const gaugeWithoutRecipe = Buffer.from(gaugeTemplate);
+const recipeOffset = gaugeWithoutRecipe.indexOf(Buffer.from('meta.binding_recipe'));
+assert.ok(recipeOffset >= 0, 'the gauge fixture carries a recipe');
+Buffer.from('card.binding_recipe').copy(gaugeWithoutRecipe, recipeOffset);
+
+test('HA custom card computes a gauge template\'s card-level bindings from its recipe', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage({ viewport: { width: 640, height: 360 }, deviceScaleFactor: 1 });
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.route('https://ha.test/**', (route) => {
+      const path = new URL(route.request().url()).pathname;
+      if (path.endsWith('.js')) {
+        const name = path.split('/').pop();
+        const file = name === 'ha-card.js' ? `${root}embed/ha-card.js` : name === 'rc-player.js' ? playerPath : `${frontend}${name}`;
+        return route.fulfill({ contentType: 'text/javascript', body: readFileSync(file) });
+      }
+      if (path.endsWith('.rc')) {
+        return route.fulfill({ body: path.endsWith('no-recipe.rc') ? gaugeWithoutRecipe : gaugeTemplate, contentType: 'application/octet-stream' });
+      }
+      return route.fulfill({ contentType: 'text/html', body: `<!doctype html><meta charset="utf-8"><style>body{margin:24px}remote-compose-card{width:400px}</style>
+        <script>customElements.define('ha-card', class extends HTMLElement {});</script>
+        <script type="module" src="/terrazzo-static/remote-compose-card.js"></script>` });
+    });
+    await page.goto('https://ha.test/lovelace/0');
+    await page.evaluate(async () => {
+      await customElements.whenDefined('remote-compose-card');
+      const card = document.createElement('remote-compose-card');
+      card.setConfig({ type: 'custom:remote-compose-card', template_url: '/local/cards/gauge.rc',
+        card: { type: 'gauge', entity: 'sensor.print_progress', name: 'Progress', min: 0, max: 100, severity: { green: 50, red: 90 } } });
+      card.hass = { states: { 'sensor.print_progress': { state: '42', attributes: { unit_of_measurement: '%', friendly_name: 'Print progress' } } },
+        themes: { darkMode: false }, user: { id: 'limited-user' }, callService: async () => {} };
+      document.body.append(card);
+      window.card = card;
+    });
+    await page.waitForFunction(() => card.dataset.status === 'live' && card.player);
+    const pushed = await page.evaluate(() => Object.fromEntries(card.pushed));
+    assert.equal(pushed['USER:card.min'], 0);
+    assert.equal(pushed['USER:card.max'], 100);
+    assert.equal(pushed['USER:card.severity_green'], 50);
+    assert.equal(pushed['USER:card.severity_red'], 90);
+    assert.equal(pushed['USER:card.severity_yellow'], Math.fround(1e30));
+    assert.equal(pushed['USER:sensor.s0.numeric_state'], 42);
+    assert.equal(pushed['USER:card.range'], '0 – 100 %');
+    assert.equal(pushed['USER:sensor.s0.name'], 'Progress');
+    // The sweep animates to a pushed value; let it settle before keeping the picture.
+    await page.waitForTimeout(1500);
+    const evidence = process.env.HA_PLUGIN_EVIDENCE ?? `${root}build/ha-plugin-evidence`;
+    mkdirSync(evidence, { recursive: true });
+    await page.screenshot({ path: `${evidence}/gauge-recipe.png` });
+    // Live: a new state and a non-numeric one (which sits at min) both reach the template.
+    const before = await page.locator('remote-compose-card canvas').screenshot();
+    await page.evaluate(() => {
+      card.hass = { ...card._hass, states: { 'sensor.print_progress': { state: '97', attributes: { unit_of_measurement: '%' } } } };
+    });
+    await page.waitForFunction(() => card.pushed.get('USER:sensor.s0.numeric_state') === 97);
+    assert.notDeepEqual(await page.locator('remote-compose-card canvas').screenshot(), before);
+    await page.evaluate(() => {
+      card.hass = { ...card._hass, states: { 'sensor.print_progress': { state: 'unavailable', attributes: {} } } };
+    });
+    await page.waitForFunction(() => card.pushed.get('USER:sensor.s0.numeric_state') === 0);
+    // Without the recipe the same template is rejected, never shown with the library's fixture values.
+    await page.evaluate(() => card.setConfig({ ...card.config, template_url: '/local/cards/no-recipe.rc' }));
+    await page.waitForFunction(() => card.dataset.status === 'error');
+    assert.match(await page.locator('remote-compose-card .status').textContent(), /converter bindings unavailable/);
+    assert.equal(await page.evaluate(() => card.player), null);
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+  }
+});

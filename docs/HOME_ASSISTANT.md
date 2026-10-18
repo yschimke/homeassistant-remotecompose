@@ -181,8 +181,10 @@ The standalone web embed accepts the same option as a `template-url` attribute
 on `<ha-card>`.
 
 The first version accepts `tile`, `button`, `entity` and `gauge` cards backed by
-live named bindings. Templates declaring data bindings that the host cannot populate are rejected with
-a visible error, including gauges requiring converter-only range/severity fields.
+live named bindings. A gauge's range, severity bands and range line come from the binding
+recipe its template carries (`meta.binding_recipe`), computed here from the card's own `min`,
+`max`, `severity` and `unit`. Templates declaring data bindings that the host cannot populate,
+including a gauge template captured before recipes, are rejected with a visible error.
 Snapshot-only designs (history, forecast, baked lists) are not supported by this custom card. It updates values, availability and theme
 from HA's `hass` property and refreshes relative timestamps on the embed's timer.
 Remote Compose chooses the appearance; the card's own Lovelace configuration

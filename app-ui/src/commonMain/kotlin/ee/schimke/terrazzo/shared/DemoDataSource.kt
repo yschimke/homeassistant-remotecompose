@@ -2,8 +2,9 @@ package ee.schimke.terrazzo.shared
 
 import ee.schimke.ha.model.*
 import io.ktor.client.HttpClient
-import io.ktor.client.request.get
+import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -14,40 +15,24 @@ import kotlinx.serialization.json.*
 /**
  * The public renderer consumes only a dashboard and a snapshot, never an authenticated HA client.
  */
-data class DemoData(val dashboard: Dashboard, val snapshot: HaSnapshot) {
-  companion object {
-    val Fake = DemoData(DemoDashboard.dashboard, DemoDashboard.snapshot)
-  }
-}
-
-enum class DemoDataMode {
-  AUTO,
-  FAKE,
-}
+data class DemoData(val dashboard: Dashboard, val snapshot: HaSnapshot)
 
 enum class DemoDataStatus {
-  FAKE,
   CONNECTING,
   LIVE,
   UNAVAILABLE,
 }
 
-data class DemoFrame(val data: DemoData, val status: DemoDataStatus)
+data class DemoFrame(val data: DemoData?, val status: DemoDataStatus)
 
 /** Read-only boundary shared by the demo host and backend adapter. No action/write API. */
 fun interface DemoDataSource {
   suspend fun read(): DemoData
 }
 
-/** Always start with a usable fixture; discard stale live data on every failed refresh. */
-fun demoFrames(mode: DemoDataMode, source: DemoDataSource): Flow<DemoFrame> = flow {
-  emit(
-    DemoFrame(
-      DemoData.Fake,
-      if (mode == DemoDataMode.FAKE) DemoDataStatus.FAKE else DemoDataStatus.CONNECTING,
-    )
-  )
-  if (mode == DemoDataMode.FAKE) return@flow
+/** Only publish HA-owned data; clear unavailable snapshots and retry without substituting data. */
+fun demoFrames(source: DemoDataSource): Flow<DemoFrame> = flow {
+  emit(DemoFrame(null, DemoDataStatus.CONNECTING))
   while (true) {
     val frame =
       try {
@@ -55,17 +40,17 @@ fun demoFrames(mode: DemoDataMode, source: DemoDataSource): Flow<DemoFrame> = fl
       } catch (e: CancellationException) {
         // A request timeout is recoverable; cancellation of the host is not.
         if (e !is kotlinx.coroutines.TimeoutCancellationException) throw e
-        DemoFrame(DemoData.Fake, DemoDataStatus.UNAVAILABLE)
+        DemoFrame(null, DemoDataStatus.UNAVAILABLE)
       } catch (_: Throwable) {
         // Browser fetch failures are JsException (Throwable, not Exception).
-        DemoFrame(DemoData.Fake, DemoDataStatus.UNAVAILABLE)
+        DemoFrame(null, DemoDataStatus.UNAVAILABLE)
       }
     emit(frame)
     delay(if (frame.status == DemoDataStatus.LIVE) 5_000 else 15_000)
   }
 }
 
-/** Fixed public gateway only. No OAuth, stored credentials, private HA URL or write commands. */
+/** Fixed public gateway only. No OAuth, stored credentials or private HA URL. */
 class PublicDemoDataSource(baseUrl: String) : DemoDataSource {
   private val base = baseUrl.trimEnd('/')
   private val http = HttpClient()
@@ -79,6 +64,37 @@ class PublicDemoDataSource(baseUrl: String) : DemoDataSource {
     }
     val dashboard = json.decodeFromJsonElement<Dashboard>(readJson("dashboard"))
     return DemoData(dashboard, decodeDemoStates(readJson("api/states").jsonArray))
+  }
+
+  suspend fun toggle(entityId: String) {
+    require(entityId in setOf("light.demo_lamp", "switch.demo_coffee"))
+    val domain = entityId.substringBefore('.')
+    val response =
+      http.post("$base/api/services/$domain/toggle") {
+        contentType(ContentType.Application.Json)
+        setBody(buildJsonObject { put("entity_id", entityId) }.toString())
+      }
+    check(response.status.value == 200) { "Demo control unavailable" }
+  }
+
+  suspend fun setTemperature(temperature: Double) {
+    require(
+      temperature.isFinite() &&
+        temperature in 16.0..28.0 &&
+        temperature * 2 == (temperature * 2).toInt().toDouble()
+    )
+    val response =
+      http.post("$base/api/services/climate/set_temperature") {
+        contentType(ContentType.Application.Json)
+        setBody(
+          buildJsonObject {
+            put("entity_id", "climate.demo_thermostat")
+            put("temperature", temperature)
+          }
+            .toString()
+        )
+      }
+    check(response.status.value == 200) { "Demo thermostat unavailable" }
   }
 
   fun close() = http.close()

@@ -5,7 +5,7 @@ curated set of recognizable whole-interface directions, **not a global top-ten
 installation ranking**. Stars measure repository interest, not active installs;
 Catppuccin and Obsidian have audiences beyond Home Assistant. Kodi skins add
 media-centre design languages rather than claiming equivalent HA adoption.
-IKEA belongs to a separate implementation; the physical Console remains unchanged.
+The independently delivered IKEA Showroom and the physical Console retain their own designs.
 
 | Inspiration / primary source | GitHub stars at selection | Why selected / original adaptation |
 |---|---:|---|
@@ -31,8 +31,23 @@ change instruments, control faces, type weights, readout arrangement and shapes.
 
 Each family has its own `HaVisualFamily` and both light and dark palettes. The
 family grammar is used by every Layer 2 arc, bar, thermometer and battery, by the
-270° climate/light/humidifier dial, and by history and statistics charts. Existing
-card layouts consume shared chrome, text, control shapes and reading treatments:
+climate/light/humidifier controls, and history and statistics charts. Card composition now also belongs to the family: it is not just a change of palette
+or meter face. The same bound name, value and range slots reflow into ten layouts:
+
+| Family | Composition |
+|---|---|
+| Mushroom | Round instrument badge beside a friendly name/value stack. |
+| Bubble | Horizontal capsule, trailing value lozenge, full-width bead track. |
+| UI Minimalist | Value-first module, small corner instrument, accessory grid. |
+| Control Centre | Tall filled slider beside a large reading; accessory tiles, slider-based climate/light controls and a compact media transport. |
+| Catppuccin | Workspace tab header, monospace readout, segmented footer and window marks. |
+| Obsidian Minimal | Left notebook margin, ruled heading, editorial reading and footnote. |
+| Noctis | Split instrument/readout navigation panel, right edge rail. |
+| LCARS | Asymmetric command spine, top segmented rail and right-aligned readout. |
+| Arctic | Open value-first landscape panel, low horizon scale and wide media row. |
+| Aeon | Cinema frame, side poster-like fill column and media banner. |
+
+Specialized card layouts consume the same chrome, text and control shapes:
 
 | Surface | Treatment / live contract |
 |---|---|
@@ -56,6 +71,11 @@ palettes and capture-time marking accents used for status text are tested at
 checks all four meter regions independently of text, checks switch movement and
 asserts no capture occurs during the update. Screenshot coverage is complementary,
 not evidence of this live-data contract by itself.
+The launcher test also bakes all ten families in both modes, checks concrete
+readings and action payloads, and requires colour expressions to fold for the
+platform player. Community widget captures use settled values: a startup tween
+would prevent constant colour folding in segmented scales. Live in-app documents
+keep their animations and named updates.
 
 ## Discovery and publication
 
@@ -69,6 +89,9 @@ not evidence of this live-data contract by itself.
   path. `CommunityCompact_*` uses a separate document per actual widget cell,
   so it intentionally publishes a PNG without a misleading single-document sidecar. The card-design generator already
   walks every registered theme/mode, so it captures the same supported templates.
+- `catalog.spec.json` explicitly selects all 70 new previews for the published sticker
+  sheet. A test compares that selection with the compiled preview functions, so a
+  family cannot disappear from the gallery while remaining selectable in the app.
 - Existing CI publishes catalogs/design libraries after integration. Adding source
   entries does not deploy or update an already-running server; the browser needs
   the newly generated library before it can resolve these styles.
@@ -88,7 +111,7 @@ not replace the sizing architecture.
 
 Android/Compose rendering, browser/desktop RemoteCompose playback and published
 `.rc` templates share geometry, but font rasterization differs by platform. The
-four host font families are used rather than downloaded fonts, SF Pro, LCARS fonts,
+host font families are used rather than downloaded fonts, SF Pro, LCARS fonts,
 or product artwork. Control Centre uses opaque layered surfaces for legibility;
 backdrop blur is not available in the shared card format. Cross-platform device
 validation and deployment status are recorded with the rendered evidence.

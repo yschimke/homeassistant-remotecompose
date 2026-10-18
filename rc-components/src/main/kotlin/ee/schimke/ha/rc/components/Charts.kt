@@ -131,6 +131,18 @@ internal fun RemoteDrawScope.familySparkline(
       look.glow?.let { line(6f, it) }
       line(1.5f, look.value)
     }
+    HaVisualFamily.Ikea -> {
+      for (g in 1..3) {
+        fillRect(look.track, plot.left, plot.top + plot.height * (g / 4f).rf, plot.width, 1f.rf)
+      }
+      baseline(look.muted)
+      line(3f, look.value)
+      drawCircle(
+        fillPaint(look.accent),
+        3f.rf,
+        RemoteOffset(plot.x(n - 1, n), plot.y(fractions.last())),
+      )
+    }
     // A trace in a recessed screen with a faint graticule.
     HaVisualFamily.Console -> {
       fillRound(ConsoleSlot.rc, 0f.rf, 0f.rf, width, height, 3f.rf)
@@ -240,6 +252,15 @@ internal fun RemoteDrawScope.familyBars(
         val y = plot.y(fractions[i])
         look.glow?.let { fillRect(it, x(i, 0.6f), y, slot * 0.6f.rf, plot.bottom - y) }
         fillRect(look.value, x(i, 0.25f), y, slot * 0.25f.rf, plot.bottom - y)
+      }
+    }
+    HaVisualFamily.Ikea -> {
+      // Shelf-like columns: solid value, pale side rail and a fine top highlight.
+      for (i in 0 until n) {
+        val y = plot.y(fractions[i])
+        val w = slot * 0.65f.rf
+        fillRect(look.value, x(i, 0.65f), y, w, plot.bottom - y)
+        fillRect(look.track, x(i, 0.65f), y, w * 0.12f.rf, plot.bottom - y)
       }
     }
     // Lamp-lit columns in a recessed screen.
