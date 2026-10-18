@@ -192,14 +192,15 @@ class AndroidImeScrollingTest {
 
   private fun assertAboveKeyboard(node: SemanticsNodeInteraction) {
     node.assertIsDisplayed()
-    val bounds = node.fetchSemanticsNode().boundsInWindow
+    val semantics = node.fetchSemanticsNode()
+    val bottom = semantics.positionInWindow.y + semantics.size.height
     val keyboardTop = compose.runOnIdle {
       compose.activity.window.decorView.height -
         windowInsets().getInsets(WindowInsetsCompat.Type.ime()).bottom
     }
     assertTrue(
-      "Control must be above the real IME: $bounds, IME top $keyboardTop",
-      bounds.bottom <= keyboardTop + 1,
+      "Entire control must be above the real IME: bottom $bottom, IME top $keyboardTop",
+      bottom <= keyboardTop + 1,
     )
   }
 
