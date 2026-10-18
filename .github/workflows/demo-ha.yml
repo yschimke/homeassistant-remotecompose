@@ -39,6 +39,8 @@ jobs:
           ../../embed/node_modules/.bin/playwright install --with-deps chromium
       - name: Verify native login, live dashboard and denied writes
         run: node --test native_browser.test.mjs
+      - name: Recheck existing public API after native setup
+        run: docker compose --profile verify run --rm verify
       - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
