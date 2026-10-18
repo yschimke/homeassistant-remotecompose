@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo
 
+import android.content.res.Configuration
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
@@ -16,16 +17,19 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.shared.CardStudioScreen
 import ee.schimke.terrazzo.ui.AndroidImeHost
 import kotlinx.serialization.json.buildJsonObject
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@AndroidWindowInsetsRegression
 @RunWith(AndroidJUnit4::class)
 class AndroidEdgeToEdgeTest {
   @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
@@ -60,6 +64,21 @@ class AndroidEdgeToEdgeTest {
     compose.runOnIdle {
       val d = checkNotNull(density)
       val systemBars = checkNotNull(bars)
+      val arguments = InstrumentationRegistry.getArguments()
+      if (arguments.getString("expectedRotation") == "1") {
+        assertEquals(
+          "Landscape slot must actually rotate",
+          Configuration.ORIENTATION_LANDSCAPE,
+          compose.activity.resources.configuration.orientation,
+        )
+        if (arguments.getString("expectedCutout", "none") != "none") {
+          assertTrue(
+            "Landscape cutout must create a real side inset",
+            systemBars.getLeft(d, LayoutDirection.Ltr) > 0 ||
+              systemBars.getRight(d, LayoutDirection.Ltr) > 0,
+          )
+        }
+      }
       val applied = checkNotNull(consumed)
       assertTrue("Test needs a visible status bar", systemBars.getTop(d) > 0)
       assertTrue(
