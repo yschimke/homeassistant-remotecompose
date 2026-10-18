@@ -48,7 +48,8 @@ actor LiveBindingStream {
     var request = URLRequest(url: url)
     if let authorization { request.setValue(authorization, forHTTPHeaderField: "Authorization") }
     receiveTask = Task { [weak self] in
-      await self?.receive(
+      guard let self else { return }
+      await self.receive(
         request: request, entities: entities, generation: connectionGeneration, onEvent: onEvent)
     }
   }

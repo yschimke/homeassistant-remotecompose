@@ -12,12 +12,13 @@ done
 sed 's/import UIKit/import Combine/; s/UIApplication.shared.open(url)/_ = url/' \
   "$repo_root/ios/Terrazzo/DashboardStore.swift" > "$bindings_test_dir/Sources/TerrazzoBindingModels/DashboardStore.swift"
 cp "$repo_root/ios/Tests/"*Tests.swift "$bindings_test_dir/Tests/BindingValueTests/"
+cp -R "$repo_root/ios/Tests/Fixtures" "$bindings_test_dir/Tests/BindingValueTests/"
 cat > "$bindings_test_dir/Package.swift" <<'PACKAGE'
 // swift-tools-version:5.9
 import PackageDescription
 let package = Package(name: "TerrazzoBindingModels", platforms: [.macOS(.v13)], targets: [
   .target(name: "TerrazzoBindingModels"),
-  .testTarget(name: "BindingValueTests", dependencies: ["TerrazzoBindingModels"]),
+  .testTarget(name: "BindingValueTests", dependencies: ["TerrazzoBindingModels"], exclude: ["Fixtures"]),
 ])
 PACKAGE
 swift test --package-path "$bindings_test_dir" "$@"

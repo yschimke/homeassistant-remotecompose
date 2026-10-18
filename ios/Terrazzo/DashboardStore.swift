@@ -69,10 +69,6 @@ final class DashboardStore: ObservableObject {
     let nextService = makeService(configuration)
     service = nextService
     documentGenerator = GatewayCardDocumentGenerator(service: nextService)
-    refreshTask?.cancel()
-    documentRefreshTask?.cancel()
-    documentRefreshTask = nil
-    pendingDocumentCardIDs.removeAll()
     let revision = connectionRevision
     refreshTask = Task { [weak self] in
       guard let self else { return }

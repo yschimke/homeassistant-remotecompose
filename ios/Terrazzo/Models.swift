@@ -111,7 +111,8 @@ struct ServiceCall: Sendable {
       let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
     else { return nil }
     let type = (object["type"] as? String ?? "").lowercased()
-    entityID = (object["entityId"] ?? object["entity_id"]) as? String
+    let entityID = (object["entityId"] ?? object["entity_id"]) as? String
+    self.entityID = entityID
     if type.hasSuffix("toggle"), let entityID {
       domain = entityID.split(separator: ".").first.map(String.init) ?? "homeassistant"
       service = "toggle"
