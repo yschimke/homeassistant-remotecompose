@@ -1015,8 +1015,7 @@ private val BambuModelNames =
     "H2S" to "H2S",
   )
 
-private fun formatTemp(value: Float): String =
-  if (value == value.toInt().toFloat()) value.toInt().toString() else "%.1f".format(value)
+private fun formatTemp(value: Float): String = decimalText(value.toDouble(), 1)
 
 /**
  * Pause / resume / cancel pad: the printer's button entities that apply now — Pause while printing,

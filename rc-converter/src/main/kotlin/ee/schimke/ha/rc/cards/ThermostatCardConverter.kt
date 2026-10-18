@@ -253,5 +253,4 @@ fun climateAccent(mode: String, hvacAction: String? = null): Color =
     else -> AccentOff
   }
 
-private fun formatTemp(v: Float): String =
-  if (v == v.toInt().toFloat()) v.toInt().toString() else "%.1f".format(v)
+private fun formatTemp(v: Float): String = decimalText(v.toDouble(), 1)

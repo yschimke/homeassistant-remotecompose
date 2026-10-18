@@ -191,8 +191,7 @@ class StatisticCardConverter : CardConverter {
   }
 }
 
-private fun formatValue(d: Double): String =
-  if (d == d.toLong().toDouble()) d.toLong().toString() else "%.2f".format(d)
+private fun formatValue(d: Double): String = decimalText(d, 2)
 
 private val TEMPLATE_CONFIG_KEYS = setOf("type", "entity", "name", "stat_type", "period")
 private const val HAS_UNIT = "has_unit"

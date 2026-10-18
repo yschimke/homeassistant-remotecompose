@@ -201,9 +201,7 @@ private fun summarise(points: List<HistoryPoint>): String {
   if (numeric.isEmpty()) return "${points.size} samples"
   val min = numeric.min()
   val max = numeric.max()
-  val fmt: (Double) -> String = { d ->
-    if (d == d.toLong().toDouble()) d.toLong().toString() else "%.1f".format(d)
-  }
+  val fmt: (Double) -> String = { d -> decimalText(d, 1) }
   return "${fmt(min)} – ${fmt(max)} (${points.size})"
 }
 

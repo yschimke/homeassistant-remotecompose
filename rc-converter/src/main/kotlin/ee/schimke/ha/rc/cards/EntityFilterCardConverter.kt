@@ -90,7 +90,8 @@ private fun matches(state: String, filter: kotlinx.serialization.json.JsonElemen
             else -> false
           }
         }
-        "regex" -> Regex(value).matches(state)
+        // A pattern the user mistyped matches nothing rather than failing the whole card.
+        "regex" -> runCatching { Regex(value) }.getOrNull()?.matches(state) == true
         else -> false
       }
     }
