@@ -263,6 +263,10 @@ Reference definitions: HA's [theme tokens](https://github.com/home-assistant/fro
 and [gauge](https://github.com/home-assistant/frontend/blob/dev/src/components/ha-gauge.ts).
 `HomeAssistantThemeRenderTest` checks gauge and thermostat graphics after host updates without
 recapturing, in both modes, and can save before/after images with `-PlovelaceRenderEvidence=...`.
+It exercises the production design-template path: current readings and target movement update
+the same document, while target removal changes the structural template key and removes its
+handle and stepper actions with a new document. The raw thermostat converter retains its existing
+`dataSignature` re-encode path.
 The `Uber_HomeAssistant_*`, `UberDials_HomeAssistant_*` and `UberCards_HomeAssistant_*` previews
 cover both palettes for the catalog/PR render pipeline.
 

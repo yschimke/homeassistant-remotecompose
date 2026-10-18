@@ -28,6 +28,7 @@ import ee.schimke.ha.rc.components.ThemeStyle
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
@@ -50,9 +51,10 @@ class HomeAssistantThemeRenderTest {
   private var theme by mutableStateOf(HaUberTheme.HomeAssistant)
   private var value by mutableStateOf(20f)
   private var target by mutableStateOf<Float?>(25f)
+  private var absentTemplate by mutableStateOf<CardTemplatePlayback?>(null)
   private var captures = 0
 
-  private fun snapshot(thermostat: Boolean): HaSnapshot {
+  private fun snapshot(thermostat: Boolean, setpoint: Float? = target): HaSnapshot {
     val id = if (thermostat) "climate.room" else "sensor.power"
     return HaSnapshot(
       states =
@@ -67,7 +69,7 @@ class HomeAssistantThemeRenderTest {
                   put("min_temp", 0)
                   put("max_temp", 100)
                   put("current_temperature", value)
-                  target?.let { put("temperature", it) }
+                  setpoint?.let { put("temperature", it) }
                   put("temperature_unit", "°C")
                 } else {
                   put("unit_of_measurement", "W")
@@ -125,17 +127,20 @@ class HomeAssistantThemeRenderTest {
       val currentTheme = theme
       val currentDark = dark
       val currentSnapshot = snapshot(thermostat)
+      val playback =
+        (if (thermostat && target == null) absentTemplate else null)
+          ?: templates.getValue(currentTheme.id to currentDark)
       Box(
         Modifier.width(360.dp)
           .background(currentTheme.palette(currentDark).dashboardBackground)
           .testTag("card")
       ) {
         CachedCardPreview(
-          cacheKey = "ha-theme-${currentTheme.id}-$currentDark-$thermostat",
+          cacheKey = playback,
           profile = androidXExperimentalWrap,
           card = card,
           snapshot = currentSnapshot,
-          template = templates.getValue(currentTheme.id to currentDark),
+          template = playback,
         ) {
           captures++
           ProvideHaUberTheme(currentTheme, currentDark) {
@@ -173,9 +178,37 @@ class HomeAssistantThemeRenderTest {
         val moved = frame("ha-target-$mode-moved")
         assertEquals(count, captures, "A target-only update must not recapture")
         assertTrue(edgeChanges(high, moved) > 20, "The target handle must move independently")
-        compose.runOnIdle { target = null }
+        // Presence of a target is a structural property in the production template key. Losing
+        // it selects a new document (also removing its stepper actions), rather than leaving a
+        // stale handle or attempting a named update to a document with a different structure.
+        val presentKey =
+          CardDesignTemplates.keyFor(
+            card,
+            snapshot(true),
+            ThemeStyle.TerrazzoHome,
+            mode,
+            cardStyle = HaUberTheme.HomeAssistant,
+          )
+        val absentKey =
+          assertNotNull(
+            CardDesignTemplates.keyFor(
+              card,
+              snapshot(true, setpoint = null),
+              ThemeStyle.TerrazzoHome,
+              mode,
+              cardStyle = HaUberTheme.HomeAssistant,
+            )
+          )
+        assertNotEquals(presentKey, absentKey)
+        val absentDocument =
+          CardDesignTemplates.capture(RuntimeEnvironment.getApplication(), absentKey)
+        captures++
+        compose.runOnIdle {
+          absentTemplate = CardDesignTemplates.playback(card, absentDocument.bytes)
+          target = null
+        }
         val absent = frame("ha-target-$mode-absent")
-        assertEquals(count, captures, "A missing target must not recapture")
+        assertEquals(count + 1, captures, "Target removal must select exactly one new template")
         assertTrue(edgeChanges(moved, absent) > 20, "A missing target must hide its handle")
       }
     }
@@ -184,7 +217,7 @@ class HomeAssistantThemeRenderTest {
   /** Excludes central readings and labels, so changed text cannot hide a frozen target handle. */
   private fun edgeChanges(a: Bitmap, b: Bitmap): Int {
     var changed = 0
-    for (y in 40 until minOf(230, a.height)) for (x in 0 until a.width) {
+    for (y in 60 until minOf(190, a.height, b.height)) for (x in 0 until a.width) {
       if ((x < 130 || x >= 230) && a.getPixel(x, y) != b.getPixel(x, y)) changed++
     }
     return changed
