@@ -57,7 +57,7 @@ fun DashboardExperience(
         )
       }
     ) { padding ->
-      Column(Modifier.fillMaxSize().padding(padding)) {
+      Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
         controlError?.let {
           Text(
             it,

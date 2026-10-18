@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -150,7 +151,9 @@ internal fun DataGridOverlay(
     }
   }
 
-  Box(modifier = modifier.fillMaxSize().padding(contentPadding)) {
+  Box(
+    modifier = modifier.fillMaxSize().padding(contentPadding).consumeWindowInsets(contentPadding)
+  ) {
     Surface(
       color = Color(0xE61C1B1F),
       contentColor = Color.White,

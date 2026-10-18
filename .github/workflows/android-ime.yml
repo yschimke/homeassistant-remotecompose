@@ -8,14 +8,19 @@ on:
       - '.github/workflows/android-ime.yml'
       - 'scripts/run-ime-tests.sh'
   workflow_dispatch:
+    inputs:
+      baseline:
+        description: Run current regression tests against the pre-fix production sources (expected failures)
+        type: boolean
+        default: false
 
 concurrency:
-  group: android-ime-${{ github.ref }}
+  group: android-ime-${{ github.ref }}-${{ inputs.baseline || false }}
   cancel-in-progress: true
 
 jobs:
   ime:
-    name: IME (${{ matrix.api }}, ${{ matrix.navigation }}, ${{ matrix.size }})
+    name: IME (${{ matrix.api }}, ${{ matrix.navigation }}, ${{ matrix.size }}, rotation ${{ matrix.rotation }})
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
@@ -25,14 +30,34 @@ jobs:
           - api: 35
             navigation: gestural
             size: 640x1136
+            night: "no"
+            cutout: none
+            rotation: 0
           - api: 36
             navigation: gestural
             size: 720x1280
+            night: "no"
+            cutout: none
+            rotation: 0
           - api: 36
             navigation: threebutton
             size: 720x1280
+            night: "no"
+            cutout: none
+            rotation: 0
+          - api: 36
+            navigation: gestural
+            size: 720x1280
+            night: "yes"
+            cutout: tall
+            rotation: 1
     steps:
       - uses: actions/checkout@v7.0.1
+      - name: Restore pre-fix production sources for comparison
+        if: ${{ inputs.baseline }}
+        run: |
+          git fetch origin 71d69df516e9ed74f2bccdd2188b3dc107bf34b2
+          git restore --source=FETCH_HEAD -- app/src/main app-ui/src/commonMain
       - uses: actions/setup-java@v6.1.0
         with:
           distribution: temurin
@@ -51,12 +76,12 @@ jobs:
           arch: x86_64
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: bash scripts/run-ime-tests.sh '${{ matrix.size }}' '${{ matrix.navigation }}'
+          script: bash scripts/run-ime-tests.sh '${{ matrix.size }}' '${{ matrix.navigation }}' '${{ matrix.night }}' '${{ matrix.cutout }}' '${{ matrix.rotation }}'
       - name: Upload keyboard-visible evidence and reports
         if: always()
         uses: actions/upload-artifact@v7.0.2
         with:
-          name: ime-${{ matrix.api }}-${{ matrix.navigation }}-${{ matrix.size }}
+          name: ime-${{ matrix.api }}-${{ matrix.navigation }}-${{ matrix.size }}-r${{ matrix.rotation }}
           path: |
             build/ime-evidence/**
             app/build/reports/androidTests/**
