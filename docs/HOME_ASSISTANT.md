@@ -62,6 +62,33 @@ entity states**. To keep design requests local too, set `library` to your own
 server and `design` to the SHA-256 of a compatible values-free template. That
 server needs CORS permission for the HA origin if it is on another origin.
 
+Alternatively, load a compatible RC template directly by URL, without a design
+library or resolver:
+
+```yaml
+type: custom:remote-compose-card
+template_url: /local/cards/kitchen.rc
+card:
+  type: tile
+  entity: light.kitchen
+  tap_action:
+    action: toggle
+```
+
+Place that file at `/config/www/cards/kitchen.rc`, or use an absolute HTTPS URL
+with CORS permission for your HA origin. Relative paths resolve against the HA
+page. Do not combine `template_url` with `design`. Template requests omit cookies,
+authorization and the page referrer; do not put credentials in the URL. Only
+HTTP(S) is accepted, subject to browser mixed-content restrictions. A direct URL
+uses whatever bytes its publisher currently serves when the card loads; use
+`library` plus `design` for SHA-256 integrity verification instead. URLs are not
+polled for changes. The document must use the same host-supported slot bindings
+as library templates; arbitrary snapshot exports are not automatically live.
+Live values and actions still come from `card` and HA, never from the URL server.
+
+The standalone web embed accepts the same option as a `template-url` attribute
+on `<ha-card>`.
+
 The first version accepts `tile`, `button`, `entity` and `gauge` cards backed by
 live named bindings. Templates declaring data bindings that the host cannot populate are rejected with
 a visible error, including gauges requiring converter-only range/severity fields.
@@ -104,7 +131,7 @@ python3 scripts/package-home-assistant.py
 python3 -m unittest discover -s home-assistant/test -p '*_test.py'
 npm install --no-save --prefix embed playwright@1.56.1
 npx --prefix embed playwright install chromium
-node --test home-assistant/test/frontend.test.mjs
+node --test home-assistant/test/card-config.test.mjs home-assistant/test/frontend.test.mjs
 ```
 
 The focused browser suite loads real RC bytes and the TS player with HA's native

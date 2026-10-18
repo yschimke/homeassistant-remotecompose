@@ -1076,6 +1076,17 @@ async function sha256Hex(bytes) {
 
 const SHA256 = /^[0-9a-f]{64}$/;
 
+/** Fetch only template bytes; never send HA credentials or the embedding page's URL. */
+export async function fetchTemplateUrl(value, baseUrl, fetcher = fetch) {
+  const url = new URL(value, baseUrl);
+  if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) {
+    throw new Error('template URL must be HTTP(S) without credentials');
+  }
+  const response = await fetcher(url, { credentials: 'omit', referrerPolicy: 'no-referrer' });
+  if (!response.ok) throw new Error(`template URL request failed (${response.status})`);
+  return response.arrayBuffer();
+}
+
 /** The template's bytes: by sha256, or by design key looked up in the library's manifest. */
 async function fetchTemplate(library, design, designKey) {
   let sha = design;
@@ -1187,6 +1198,8 @@ const BaseElement = globalThis.HTMLElement ?? class {};
  *   neither, the design server picks the design that draws the card (`POST /api/cards/resolve`).
  * - `card-style`: with neither, the card style to draw in (an `HaUberTheme` id; default `classic`).
  * - `library`: the design library (default: `/designs/v1/` on the host serving this script).
+ * - `template-url`: a direct HTTP(S) RC template URL, relative to the embedding page if needed.
+ *   Bypasses library lookup; cannot be combined with `design` or `design-key`.
  * - `theme`: `light`, `dark` or `auto` (default).
  * - `height`: a fixed CSS height in px (default: the card's own).
  * - `read-only`: taps run no service calls.
@@ -1199,7 +1212,7 @@ const BaseElement = globalThis.HTMLElement ?? class {};
  */
 export class HaCardElement extends BaseElement {
   static get observedAttributes() {
-    return ['hass', 'card', 'design', 'design-key', 'card-style', 'library', 'theme', 'height', 'require-host-bindings'];
+    return ['hass', 'card', 'design', 'design-key', 'template-url', 'card-style', 'library', 'theme', 'height', 'require-host-bindings'];
   }
 
   constructor() {
@@ -1310,7 +1323,12 @@ export class HaCardElement extends BaseElement {
       if (!library.pathname.endsWith('/')) library.pathname += '/';
       const designKey = this.getAttribute('design-key');
       let design = this.getAttribute('design');
-      if (!design && !designKey) {
+      const templateUrl = this.getAttribute('template-url');
+      if (templateUrl !== null && (design || designKey)) {
+        throw new Error('template-url cannot be combined with design or design-key');
+      }
+      if (templateUrl !== null && !templateUrl.trim()) throw new Error('template-url must not be empty');
+      if (templateUrl === null && !design && !designKey) {
         // Neither given: the library's own server picks the design for this card.
         const theme = this.getAttribute('theme');
         const dark =
@@ -1325,7 +1343,9 @@ export class HaCardElement extends BaseElement {
       }
       const [RC, bytes] = await Promise.all([
         loadPlayer(new URL('rc-player.js', import.meta.url).toString()),
-        fetchTemplate(library, design, designKey ? JSON.parse(designKey) : null),
+        templateUrl !== null
+          ? fetchTemplateUrl(templateUrl, document.baseURI)
+          : fetchTemplate(library, design, designKey ? JSON.parse(designKey) : null),
       ]);
       if (!current()) return;
       await this.play(RC, bytes, card);
