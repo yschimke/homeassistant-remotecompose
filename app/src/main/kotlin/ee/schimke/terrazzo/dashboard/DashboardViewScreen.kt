@@ -244,6 +244,7 @@ fun DashboardViewScreen(
       is DashboardState.Ready ->
         DashboardList(
           dashboard = s.dashboard,
+          placeholderSession = session,
           snapshot = s.snapshot,
           baseUrl = session.baseUrl,
           dashboardUrlPath = urlPath ?: "",
@@ -267,6 +268,7 @@ private sealed interface DashboardState {
 @Composable
 private fun DashboardList(
   dashboard: Dashboard,
+  placeholderSession: HaSession,
   snapshot: HaSnapshot,
   baseUrl: String,
   dashboardUrlPath: String,
@@ -374,6 +376,12 @@ private fun DashboardList(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
       ) {
+        item(key = "local-card-briefs") {
+          DashboardPlaceholders(
+            session = placeholderSession,
+            urlPath = dashboardUrlPath.takeIf { it.isNotEmpty() },
+          )
+        }
         layout.views.forEachIndexed { viewIndex, view ->
           val grid = sectionGrids[viewIndex]
           renderView(

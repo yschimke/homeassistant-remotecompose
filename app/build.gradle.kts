@@ -104,6 +104,7 @@ android {
   // no client for the suffixed package) and, even past that, Play would reject
   // a bundle whose package isn't the listing's.
   playConfigs { register("experimental") { enabled.set(false) } }
+  testOptions { unitTests.isIncludeAndroidResources = true }
   buildFeatures {
     compose = true
     buildConfig = true
@@ -233,6 +234,8 @@ dependencies {
   }
 
   testImplementation(libs.kotlin.test.junit)
+  testImplementation(libs.compose.ui.test.junit4)
+  debugImplementation(libs.compose.ui.test.manifest)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation("org.robolectric:robolectric:4.17")
   robolectricSdk(libs.robolectric.sdk35)

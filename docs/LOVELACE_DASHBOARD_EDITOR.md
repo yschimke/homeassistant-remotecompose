@@ -63,3 +63,23 @@ node --test design-server/test/dashboard-model.test.mjs
 Release order: builder release → preview-server pin/release → harc design-server archive pin,
 catalog/preview publication and host image deployment. Verify with the fixture on
 `https://ha.coo.ee/studio/dashboard`; do not use a person's existing dashboard for test writes.
+
+## Plan cards on Android
+
+The Android dashboard has **Add placeholder card** above its HA cards. Give a planned card a title
+and description; optionally name HA entity IDs and the Remote Compose component/binding map you
+want (for example, a soil-moisture gauge with the sensor state bound to its value). You can edit
+or remove each brief. Briefs survive app restarts on this phone and are scoped by HA server and
+dashboard. They are local planning items, so they are available in read-only mode and are never
+written into the HA dashboard or sent to the renderer as custom Lovelace cards.
+
+**Copy implementation prompt** reads the current dashboard and entity snapshot using the existing
+HA session. The clipboard contains the brief, dashboard JSON, and entity names/states, so review it
+before sharing. The prompt asks a coding agent to implement fetching/subscriptions in the existing
+host/client layer, reuse Remote Compose components, define live named bindings (or a dataSignature
+re-encode), and test updates, unavailable values and reconnects. Unknown entity IDs are identified
+as unresolved rather than invented. The prompt does not include the session's credentials.
+
+This is a handoff to a coding agent, not an in-app code executor. Install the agent's implementation
+and place its supported card through the usual dashboard workflow; then remove the brief manually.
+The web visual editor and the mobile **Edit with an agent** JSON-import flow remain separate.
