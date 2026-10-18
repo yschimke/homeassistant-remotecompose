@@ -51,6 +51,11 @@ concurrency:
 #   PLAY_SERVICE_ACCOUNT_JSON     service account JSON; presence gates Play upload
 #   GOOGLE_SERVICES_JSON          base64 of app/google-services.json; presence
 #                                 enables Firebase Crashlytics in release builds
+# Optional repository variable:
+#   PLAY_PUBLISH_WEAR             'true' publishes :wear to the wear:internal
+#                                 track on every release (same as the
+#                                 publish_wear input); see
+#                                 docs/wear-play-publishing.md
 jobs:
   home-assistant:
     name: Home Assistant release assets
@@ -148,7 +153,7 @@ jobs:
       HAS_SIGNING_KEYSTORE: ${{ secrets.SIGNING_KEYSTORE != '' }}
       HAS_PLAY_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
       HAS_GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
-      PUBLISH_WEAR: ${{ inputs.publish_wear || false }}
+      PUBLISH_WEAR: ${{ inputs.publish_wear || vars.PLAY_PUBLISH_WEAR == 'true' }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -212,7 +217,7 @@ jobs:
         run: ./gradlew :app:publishBundle --stacktrace
 
 
-      - name: Publish Wear to Play (internal track)
+      - name: Publish Wear to Play (wear:internal track)
         if: env.PUBLISH_WEAR == 'true' && env.HAS_PLAY_CREDENTIALS == 'true' && env.HAS_SIGNING_KEYSTORE == 'true'
         env:
           HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
@@ -234,7 +239,7 @@ jobs:
             echo "- Crashlytics configured: ${HAS_GOOGLE_SERVICES}"
             if [[ "${HAS_SIGNING_KEYSTORE}" == "true" && "${HAS_PLAY_CREDENTIALS}" == "true" ]]; then
               echo "- Play publish step: app attempted (internal track)"
-              echo "- Wear publish enabled: ${PUBLISH_WEAR}"
+              echo "- Wear publish enabled: ${PUBLISH_WEAR} (wear:internal track)"
             else
               echo "- Play publish step: skipped"
               echo "- Reason: release secrets were not fully configured"

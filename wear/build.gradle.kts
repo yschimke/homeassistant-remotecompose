@@ -32,6 +32,26 @@ android {
     versionName = wearVersionName
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
+  // Same upload key as `:app` — Wear ships inside the phone's Play listing
+  // (`ee.schimke.harc`), so both must be signed by one key lineage.
+  val releaseKeystorePath = System.getenv("HARC_KEYSTORE_PATH")
+  signingConfigs {
+    if (releaseKeystorePath != null) {
+      create("release") {
+        storeFile = file(releaseKeystorePath)
+        storePassword = System.getenv("HARC_KEYSTORE_PASSWORD")
+        keyAlias = System.getenv("HARC_KEY_ALIAS")
+        keyPassword = System.getenv("HARC_KEY_PASSWORD")
+      }
+    }
+  }
+  buildTypes {
+    getByName("release") {
+      if (releaseKeystorePath != null) {
+        signingConfig = signingConfigs.getByName("release")
+      }
+    }
+  }
   buildFeatures { compose = true }
   compileOptions {
     sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
@@ -76,8 +96,9 @@ tasks
   }
 
 play {
-  // First Wear rollout uses Play internal testing for watch-only QA.
-  track.set("internal")
+  // Wear's dedicated form-factor track. Publishing to the shared `internal`
+  // track instead would replace the phone bundle's release on it.
+  track.set("wear:internal")
   defaultToAppBundles.set(true)
   releaseStatus.set(com.github.triplet.gradle.androidpublisher.ReleaseStatus.DRAFT)
   // Only publish when CI/local env provides a Play service-account json file path.
