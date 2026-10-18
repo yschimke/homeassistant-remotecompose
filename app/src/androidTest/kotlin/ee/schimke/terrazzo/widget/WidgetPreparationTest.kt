@@ -398,6 +398,51 @@ class WidgetPreparationTest {
       "The complete preview height must be visible in the setup screenshot",
       previewNode.boundsInRoot.height >= previewNode.size.height - 1f,
     )
+    // Compare scene content, rather than colour count: a genuine 1×1 camera can have fewer
+    // than 1,000 distinct pixels. Use the image region (above the state label) as a reference.
+    fun sceneHistogram(
+      bitmap: android.graphics.Bitmap,
+      bounds: android.graphics.Rect,
+    ): DoubleArray {
+      val region = android.graphics.Rect(bounds)
+      region.inset(region.width() / 8, 0)
+      region.bottom = region.top + region.height() * 3 / 5
+      val histogram = DoubleArray(512)
+      for (y in region.top until region.bottom) {
+        for (x in region.left until region.right) {
+          val color = bitmap.getPixel(x, y)
+          val bin = ((color shr 21) and 7) * 64 + ((color shr 13) and 7) * 8 + ((color shr 5) and 7)
+          histogram[bin]++
+        }
+      }
+      val count = histogram.sum()
+      return histogram.map { it / count }.toDoubleArray()
+    }
+    val previewScene =
+      if (evidencePrefix.isNotEmpty()) {
+        val bounds = compose.onNodeWithTag("widget-render").fetchSemanticsNode().boundsInWindow
+        val bitmap =
+          checkNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot())
+        try {
+          sceneHistogram(
+            bitmap,
+            android.graphics.Rect(
+              bounds.left.toInt(),
+              bounds.top.toInt(),
+              bounds.right.toInt(),
+              bounds.bottom.toInt(),
+            ),
+          )
+        } finally {
+          bitmap.recycle()
+        }
+      } else null
+    if (previewScene != null) {
+      assertTrue(
+        "Preview must contain the camera scene, not a flat placeholder",
+        previewScene.count { it > 0.05 } >= 3,
+      )
+    }
     screenshot("${evidencePrefix}prepared-preview")
     if (evidencePrefix.isEmpty()) screenshot("setup-initial-one-cell")
 
@@ -503,33 +548,43 @@ class WidgetPreparationTest {
         val bitmap =
           checkNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot())
         return try {
-          device.findObjects(hostSelector).lastOrNull()?.let { host ->
-            val bounds = host.visibleBounds
-            if (bounds.isEmpty) null
-            else {
-              IntArray(bounds.width() * bounds.height()).also { pixels ->
-                bitmap.getPixels(
-                  pixels,
-                  0,
-                  bounds.width(),
-                  bounds.left,
-                  bounds.top,
-                  bounds.width(),
-                  bounds.height(),
-                )
-              }
+          // Accessibility traversal order does not identify the newly pinned widget. Match
+          // its camera scene against the successful preview, excluding the state label.
+          val reference = checkNotNull(previewScene)
+          val host =
+            device.findObjects(hostSelector).maxByOrNull { host ->
+              val histogram = sceneHistogram(bitmap, host.visibleBounds)
+              histogram.indices.sumOf { minOf(histogram[it], reference[it]) }
+            }
+          host?.let {
+            val bounds = it.visibleBounds
+            if (bounds.isEmpty) return null
+            val histogram = sceneHistogram(bitmap, bounds)
+            val overlap = histogram.indices.sumOf { minOf(histogram[it], reference[it]) }
+            if (overlap < 0.6) return null
+            IntArray(bounds.width() * bounds.height()).also { pixels ->
+              bitmap.getPixels(
+                pixels,
+                0,
+                bounds.width(),
+                bounds.left,
+                bounds.top,
+                bounds.width(),
+                bounds.height(),
+              )
             }
           }
         } finally {
           bitmap.recycle()
         }
       }
-      compose.waitUntil(60_000) { (cameraPixels()?.distinct()?.size ?: 0) > 1000 }
+      screenshot("picture-installed-before-scene-check")
+      compose.waitUntil(60_000) { cameraPixels() != null }
       screenshot("picture-installed-widget")
       val original = checkNotNull(cameraPixels())
-      assertTrue(
-        "Installed camera must show a scene, not an icon or platform warning",
-        original.distinct().size > 1000,
+      assertNotNull(
+        "Installed camera must match the prepared scene, not an icon or warning",
+        original,
       )
       val frame = System.currentTimeMillis() / DemoData.CAMERA_FRAME_MILLIS
       compose.waitUntil(20_000) {
@@ -543,9 +598,7 @@ class WidgetPreparationTest {
         }
       )
       compose.waitUntil(60_000) {
-        cameraPixels()?.let {
-          it.size == original.size && !it.contentEquals(original) && it.distinct().size > 1000
-        } == true
+        cameraPixels()?.let { it.size == original.size && !it.contentEquals(original) } == true
       }
       screenshot("picture-installed-updated")
     }
