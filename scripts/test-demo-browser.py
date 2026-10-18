@@ -86,6 +86,9 @@ try:
         browser = p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH'), args=['--no-sandbox'])
         for name, width, height in [('mobile', 390, 844), ('wall', 1440, 900)]:
             page = browser.new_page(viewport={'width': width, 'height': height}, device_scale_factor=1)
+            page.add_init_script("""document.addEventListener('contextmenu', event => {
+                setTimeout(() => { window.entityMenuPrevented = event.defaultPrevented; }, 0);
+            }, true);""")
             errors, sockets, requests = [], [], []
             page.on('pageerror', lambda e: errors.append(str(e)))
             page.on('websocket', lambda socket: sockets.append(socket.url))
@@ -114,6 +117,29 @@ try:
             switch = page.get_by_role('switch').first
             expect(switch).not_to_be_checked()
             count = len(Handler.mutations)
+            # The real RC fixture tile sits immediately above its host switch row.
+            # Press inside its canvas, exercising interception before the RC player.
+            box = switch.bounding_box()
+            page.mouse.click(box['x'] + box['width'] / 2, box['y'] - 70, button='right', delay=100)
+            page.wait_for_function('window.entityMenuPrevented === true')
+            details = page.get_by_role('dialog')
+            expect(details.get_by_text('light.demo_lamp', exact=True)).to_be_visible()
+            expect(details.get_by_text('Off', exact=True)).to_be_visible()
+            assert len(Handler.mutations) == count, 'Right-click must not toggle the entity'
+            Handler.lamp = 'on'
+            expect(details.get_by_text('On', exact=True)).to_be_visible(timeout=10000)
+            Handler.lamp = 'off'
+            expect(details.get_by_text('Off', exact=True)).to_be_visible(timeout=10000)
+            page.screenshot(path=f'_wasm-test/demo-{name}-entity-details.png')
+            click_control(details.get_by_role('button', name='Close', exact=True))
+            expect(page.get_by_role('button', name='Close', exact=True)).to_have_count(0)
+            # An entities-card row must open that row's entity, not its first sibling.
+            page.get_by_text('21.5 °C').click(button='right', force=True, delay=100)
+            expect(details.get_by_text('sensor.demo_temperature', exact=True)).to_be_visible()
+            expect(details.get_by_text('21.5 °C', exact=True)).to_be_visible()
+            click_control(details.get_by_role('button', name='Close', exact=True))
+            expect(page.get_by_role('button', name='Close', exact=True)).to_have_count(0)
+            assert len(Handler.mutations) == count
             click_control(switch)
             expect(switch).to_be_checked()
             assert len(Handler.mutations) == count + 1
@@ -211,6 +237,6 @@ try:
             expect(switch).to_be_checked()
         assert not live_errors, live_errors
         browser.close()
-        print('Demo: mobile/wall layouts, real RC playback, inline style/theme, credential-free, HA-only states and controls, live refresh, outage clearing and automatic reconnection passed')
+        print('Demo: mobile/wall layouts, real RC playback, inline style/theme, credential-free, HA-only states and controls, right-click details with live updates, live refresh, outage clearing and automatic reconnection passed')
 finally:
     server.shutdown()

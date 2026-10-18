@@ -32,6 +32,7 @@ internal fun LibraryCard(
   style: String,
   dark: Boolean,
   onToggle: ((String) -> Unit)? = null,
+  onMoreInfo: ((String) -> Unit)? = null,
   fallback: @Composable () -> Unit,
 ) {
   var bytes by remember(card, style, dark) { mutableStateOf<ByteArray?>(null) }
@@ -92,7 +93,12 @@ internal fun LibraryCard(
       if (failed) Text("Design unavailable · showing built-in card")
     }
   } else {
-    Column {
+    Column(
+      Modifier.entityDetails(
+        CardDesignSlots.slotEntries(card).orEmpty().map { it.entityId }.distinct().singleOrNull(),
+        onMoreInfo,
+      )
+    ) {
       RemoteComposeCard(current, Modifier.fillMaxWidth(), values) { event ->
         if (event is RcPlayerEvent.HostNamedAction && event.name == "ha") {
           val payload = (event.value as? RcHostActionValue.TextValue)?.value
@@ -109,6 +115,7 @@ internal fun LibraryCard(
           if (id.substringBefore('.') in setOf("light", "switch")) {
             val label = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull ?: id
             ListItem(
+              modifier = Modifier.entityDetails(id, onMoreInfo),
               headlineContent = { Text(label) },
               trailingContent = {
                 Switch(

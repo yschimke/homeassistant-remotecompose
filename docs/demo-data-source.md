@@ -27,3 +27,18 @@ This route accepts no OAuth credentials or private Home Assistant address. The p
 demo and authenticated HA plugin remain separate hosts. The plugin supplies its own
 host-owned dashboard/snapshot and must never redirect the public demo to a private
 instance or embed an administrative credential.
+
+## Entity details
+
+Right-click a single-entity card or an entity row to inspect that entity. The public
+demo opens an details dialog showing the current HA state, last-update timestamp
+and sanitized public attributes. It keeps polling while details are open. Close returns
+to the selected dashboard view; an HA outage clears the details with the dashboard.
+Right-click does not issue a service call or change state.
+
+Inside the authenticated HA panel the same gesture uses the host's `hass-more-info`
+bridge and HA's native dialog. A standalone authenticated dashboard opens the configured
+HA web interface at `/lovelace?more-info-entity-id=<entity_id>` in another tab, using HA's
+[more-info URL parameter](https://github.com/home-assistant/frontend/blob/dev/src/common/url/more-info-query-params.ts).
+The URL contains no access token. No native HA frontend or administrator capability is
+exposed through the public demo gateway.

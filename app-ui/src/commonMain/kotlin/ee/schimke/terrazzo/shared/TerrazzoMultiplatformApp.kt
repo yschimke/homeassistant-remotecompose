@@ -18,6 +18,7 @@ import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffo
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
@@ -32,6 +33,7 @@ import ee.schimke.ha.rc.formatState
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
+import io.ktor.http.encodeURLParameter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
@@ -330,6 +332,7 @@ private fun LiveDashboard(
   modifier: Modifier,
   designServer: String,
 ) {
+  val uriHandler = LocalUriHandler.current
   var designCard by remember(connection, path) { mutableStateOf<CardConfig?>(null) }
   var dashboard by remember(connection, path) { mutableStateOf<Dashboard?>(null) }
   var error by remember(connection, path) { mutableStateOf<String?>(null) }
@@ -383,7 +386,28 @@ private fun LiveDashboard(
     } else
       DashboardContent(current, path, snapshot, Modifier.weight(1f)) { _, card ->
         Column {
-          NativeCard(card, snapshot) { entityId ->
+          NativeCard(
+            card,
+            snapshot,
+            onMoreInfo = { entityId ->
+              val payload = buildJsonObject {
+                put("type", "ee.schimke.ha.rc.components.HaAction.MoreInfo")
+                put("entityId", entityId)
+              }
+                .toString()
+              try {
+                if (connection.hostedAction?.invoke(payload) != true) {
+                  uriHandler.openUri(
+                    connection.config.baseUrl.trimEnd('/') +
+                      "/lovelace?more-info-entity-id=" +
+                      entityId.encodeURLParameter()
+                  )
+                }
+              } catch (_: Exception) {
+                error = "Could not open Home Assistant entity details."
+              }
+            },
+          ) { entityId ->
             dispatch(
               buildJsonObject {
                 put("type", "ee.schimke.ha.rc.components.HaAction.Toggle")
@@ -460,6 +484,7 @@ internal fun NativeCard(
   card: CardConfig,
   snapshot: HaSnapshot,
   readOnly: Boolean = false,
+  onMoreInfo: ((String) -> Unit)? = null,
   toggle: (String) -> Unit,
 ) {
   val children =
@@ -471,7 +496,7 @@ internal fun NativeCard(
       .orEmpty()
   if (children.isNotEmpty()) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-      children.forEach { child -> NativeCard(child, snapshot, readOnly, toggle) }
+      children.forEach { child -> NativeCard(child, snapshot, readOnly, onMoreInfo, toggle) }
     }
     return
   }
@@ -487,7 +512,7 @@ internal fun NativeCard(
         }
       }
       .orEmpty()
-  OutlinedCard(Modifier.fillMaxWidth()) {
+  OutlinedCard(Modifier.fillMaxWidth().entityDetails(entityId, onMoreInfo)) {
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
       Text(
         (card.raw["name"] as? JsonPrimitive)?.contentOrNull
@@ -508,6 +533,7 @@ internal fun NativeCard(
         entities.forEach { id ->
           val value = snapshot.states[id]
           ListItem(
+            modifier = Modifier.entityDetails(id, onMoreInfo),
             headlineContent = {
               Text(value?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull ?: id)
             },

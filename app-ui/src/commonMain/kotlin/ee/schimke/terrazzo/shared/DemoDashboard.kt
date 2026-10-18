@@ -22,11 +22,16 @@ fun DashboardExperience(
   onToggle: ((String) -> Unit)? = null,
   controlError: String? = null,
 ) {
+  var detailsEntity by remember(dashboard) { mutableStateOf<String?>(null) }
   var design by rememberSaveable { mutableStateOf("classic") }
   var dark by rememberSaveable { mutableStateOf(false) }
   MaterialTheme(
     colorScheme = if (dark || design == "console") darkColorScheme() else lightColorScheme()
   ) {
+    val selectedEntity = detailsEntity
+    if (selectedEntity != null && snapshot != null) {
+      EntityDetailsDialog(selectedEntity, snapshot) { detailsEntity = null }
+    }
     Scaffold(
       topBar = {
         TopAppBar(
@@ -86,8 +91,22 @@ fun DashboardExperience(
               snapshot,
               Modifier.weight(1f),
             ) { _, card ->
-              LibraryCard(card, snapshot, design, dark || design == "console", onToggle) {
-                NativeCard(card, snapshot, readOnly = onToggle == null) { onToggle?.invoke(it) }
+              LibraryCard(
+                card,
+                snapshot,
+                design,
+                dark || design == "console",
+                onToggle,
+                onMoreInfo = { detailsEntity = it },
+              ) {
+                NativeCard(
+                  card,
+                  snapshot,
+                  readOnly = onToggle == null,
+                  onMoreInfo = { detailsEntity = it },
+                ) {
+                  onToggle?.invoke(it)
+                }
               }
             }
           }

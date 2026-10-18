@@ -16,6 +16,10 @@ PREFIX = '/homeassistant-remotecompose/'
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def translate_path(self, path):
+        if path == '/terrazzo-static/terrazzo-panel.js':
+            return str(Path('home-assistant/custom_components/terrazzo/frontend/terrazzo-panel.js').resolve())
+        if path.startswith('/terrazzo-static/wasm/'):
+            return str(ROOT / path.removeprefix('/terrazzo-static/wasm/').split('?')[0])
         if not path.startswith(PREFIX):
             return str(ROOT / 'not-found')
         return str(ROOT / path.removeprefix(PREFIX).split('?')[0])
@@ -92,6 +96,14 @@ try:
         expect(toggle).to_be_checked()
         state_changed('off')
         expect(toggle).not_to_be_checked()
+        page.context.route('https://ha.example.test/lovelace**', lambda route: route.fulfill(
+            content_type='text/html', body='<p>Home Assistant entity details fixture</p>'))
+        with page.expect_popup() as opened:
+            toggle.click(button='right', force=True, delay=100)
+        details = opened.value
+        expect(details).to_have_url('https://ha.example.test/lovelace?more-info-entity-id=switch.lamp')
+        assert not [command for command in commands if command['type'] == 'call_service']
+        details.close()
         toggle.click(force=True)
         page.wait_for_timeout(500)
         calls = [command for command in commands if command['type'] == 'call_service']
@@ -115,7 +127,33 @@ try:
         expect(page.get_by_role('button', name='Connect', exact=True)).to_be_disabled()
         assert not page.evaluate('Object.keys(localStorage).length || Object.keys(sessionStorage).length')
         assert not errors, errors
+        # Embedded HA uses its native dialog capability rather than opening another tab.
+        hosted = browser.new_page(viewport={'width': 1200, 'height': 800})
+        hosted.route_web_socket(f'ws://127.0.0.1:{server.server_port}/api/websocket', route_socket)
+        hosted.route(f'http://127.0.0.1:{server.server_port}/hosted', lambda route: route.fulfill(
+            content_type='text/html', body="""<script type="module">
+            import '/terrazzo-static/terrazzo-panel.js';
+            window.moreInfo = [];
+            const panel = document.createElement('terrazzo-panel');
+            panel.hass = {auth: {expired: false, accessToken: 'browser-test-token'}};
+            panel.panel = {config: {dashboard: ''}};
+            panel.addEventListener('hass-more-info', event => window.moreInfo.push(event.detail));
+            document.body.append(panel);
+            </script>"""))
+        hosted.goto(f'http://127.0.0.1:{server.server_port}/hosted')
+        hosted_toggle = hosted.frame_locator('terrazzo-panel iframe').get_by_role('switch')
+        expect(hosted_toggle).to_be_visible(timeout=30000)
+        count = len([command for command in commands if command['type'] == 'call_service'])
+        hosted_toggle.scroll_into_view_if_needed()
+        # Wait for the child canvas layout and pointer handlers, not just its semantics DOM.
+        hosted.locator('terrazzo-panel iframe').evaluate("""frame => new Promise(resolve =>
+            frame.contentWindow.requestAnimationFrame(() => frame.contentWindow.requestAnimationFrame(resolve)))""")
+        hosted_toggle.click(button='right', force=True, delay=100)
+        hosted.wait_for_function('window.moreInfo.length === 1')
+        assert hosted.evaluate('window.moreInfo') == [{'entityId': 'switch.lamp'}]
+        assert len([command for command in commands if command['type'] == 'call_service']) == count
+        hosted.close()
         browser.close()
-        print('Wasm browser: project path, login, live on/off updates, single action, no polling, reconnect and sign-out passed')
+        print('Wasm browser: project path, login, live on/off updates, single action, right-click HA deep link/native panel dispatch, no polling, reconnect and sign-out passed')
 finally:
     server.shutdown()
