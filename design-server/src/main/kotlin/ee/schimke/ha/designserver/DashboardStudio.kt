@@ -120,7 +120,8 @@ fun Route.dashboardStudioRoutes(
       val snapshot = body["snapshot"] as? JsonObject ?: JsonObject(emptyMap())
       val style = (body["style"] as? JsonPrimitive)?.content ?: "classic"
       require(
-        style in setOf("classic", "expressive", "trinitron", "lcd", "braun", "nixie", "console")
+        style in
+          setOf("classic", "expressive", "trinitron", "lcd", "braun", "nixie", "console", "ikea")
       )
       val dark = (body["dark"] as? JsonPrimitive)?.booleanOrNull ?: false
       val bytes =

@@ -293,6 +293,9 @@ private fun TransportButton(
   RemoteHaTouchTarget(size, size, action.toRemoteAction(), label.rs) {
     val console = visualFamily() == HaVisualFamily.Console
     if (console) ConsoleControlFace(haInk(accent), RemoteModifier.size(size.rdp))
+    if (visualFamily() == HaVisualFamily.Ikea) {
+      RemoteBox(RemoteModifier.size(size.rdp).then(ikeaKeyChrome(haInk(accent))))
+    }
     RemoteIcon(
       imageVector = icon.toRemoteImageVector(),
       contentDescription = null,

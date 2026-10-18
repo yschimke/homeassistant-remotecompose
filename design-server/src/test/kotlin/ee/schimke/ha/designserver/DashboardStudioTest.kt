@@ -80,6 +80,7 @@ class DashboardStudioTest {
   fun cardPreviewRequiresEditorAuthorizationAndDelegatesToActualHarcRenderPort() = testApplication {
     val bytes = checkNotNull(javaClass.getResourceAsStream("/tile-light.rc")).use { it.readBytes() }
     var renders = 0
+    var expectedStyle = "braun"
     externalServices {
       hosts("https://builder.test") {
         routing {
@@ -92,7 +93,7 @@ class DashboardStudioTest {
               Json.parseToJsonElement(body.getValue("knob.cardJson").jsonPrimitive.content)
                 .jsonObject
             assertEquals(JsonPrimitive("tile"), card["type"])
-            assertEquals(JsonPrimitive("braun"), body["knob.cardStyle"])
+            assertEquals(JsonPrimitive(expectedStyle), body["knob.cardStyle"])
             assertEquals(JsonPrimitive("true"), body["knob.dark"])
             renders++
             call.respondBytes(bytes, ContentType.Application.OctetStream)
@@ -143,6 +144,14 @@ class DashboardStudioTest {
         .content
     assertContentEquals(bytes, Base64.getDecoder().decode(encoded))
     assertEquals(1, renders)
+    expectedStyle = "ikea"
+    val ikea =
+      client.post("/api/studio/dashboard/preview") {
+        header(HttpHeaders.Cookie, "design-server-edit=operator")
+        setBody(body.replace("braun", "ikea"))
+      }
+    assertEquals(HttpStatusCode.OK, ikea.status)
+    assertEquals(2, renders)
     assertEquals(
       HttpStatusCode.UnprocessableEntity,
       client

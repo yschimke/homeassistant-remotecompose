@@ -160,6 +160,8 @@ class LauncherDesignsTest {
       listOf(
         LauncherLook(HaUberTheme.Lcd),
         LauncherLook(HaUberTheme.Lcd, ThemeStyle.TerrazzoHome),
+        LauncherLook(HaUberTheme.Ikea),
+        LauncherLook(HaUberTheme.Ikea, ThemeStyle.TerrazzoHome),
         LauncherLook(HaUberTheme.Classic, ThemeStyle.entries.last()),
       )
     for (look in looks) {
@@ -178,9 +180,36 @@ class LauncherDesignsTest {
       listOf(
         LauncherLook(HaUberTheme.Lcd),
         LauncherLook(HaUberTheme.Lcd, ThemeStyle.TerrazzoHome),
+        LauncherLook(HaUberTheme.Ikea),
+        LauncherLook(HaUberTheme.Ikea, ThemeStyle.TerrazzoHome),
       )) {
       val styled = bake(card, snapshot, look = look)
       assertFalse(classic.bytes.contentEquals(styled.bytes), "$look draws differently")
+    }
+  }
+
+  @Test
+  fun ikeaRemoteBakesReadingsAndExplicitPowerActions() {
+    val light = card("light", "light.reading")
+    val snapshot = snapshotOf(entity("light.reading", "on", "brightness" to "128"))
+    for ((width, height) in listOf(180 to 80, 360 to 290)) {
+      val baked = bake(light, snapshot, width, height, LauncherLook(HaUberTheme.Ikea))
+      val document = RcDocumentCodec.decode(baked.bytes, RcWireLimits())
+      assertTrue(document.namedVariables.none { "light.s0" in it.name }, "widget values are baked")
+      assertTrue(baked.actions.isNotEmpty())
+      if (width >= 260) {
+        val services = baked.actions.values.filterIsInstance<HaAction.CallService>()
+        assertTrue(services.all { it.entityId == "light.reading" })
+        assertTrue(services.any { it.service == "turn_off" })
+        assertTrue(services.any { it.service == "turn_on" && it.serviceData.isEmpty() })
+        assertEquals(
+          setOf("103", "153"),
+          services
+            .filter { it.serviceData.isNotEmpty() }
+            .map { it.serviceData["brightness"].toString() }
+            .toSet(),
+        )
+      }
     }
   }
 

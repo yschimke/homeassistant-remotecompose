@@ -600,3 +600,27 @@ fun HaCardConsoleServiceLabelsSticker() = HaCardSticker {
     }
   }
 }
+
+@CatalogComponent(
+  id = "HaCard/UberThemeIkea",
+  group = "Containment",
+  noReference = NO_KIT,
+  caption =
+    "IKEA Showroom: timber-edged frames, rechargeable-cell meters and moulded smart-control paddles. Original product-inspired drawings; portable sans typography.",
+)
+@Preview(widthDp = CARD_WIDTH_DP, heightDp = 560)
+@Composable
+fun HaCardUberThemeIkeaSticker() = HaCardSticker {
+  HaCardUberTheme(theme = "ikea") {
+    RemoteColumn(RemoteModifier.fillMaxWidth(), horizontalAlignment = RemoteAlignment.Start) {
+      HaCardThermostat(name = "Living room", current = 21.5f, target = 22f)
+      HaCardGauge(name = "Room humidity", value = 62f, unit = "%")
+      HaCardSurface {
+        RemoteColumn(RemoteModifier.fillMaxWidth(), horizontalAlignment = RemoteAlignment.Start) {
+          HaCardBattery(name = "Reading remote", value = 64f, presentation = "compact")
+          HaCardEntityRow(name = "Reading lamp", state = "On", toggleable = true, isOn = true)
+        }
+      }
+    }
+  }
+}

@@ -146,7 +146,13 @@ private fun DemoToolbar(
   onDataModeChange: ((DemoDataMode) -> Unit)?,
 ) {
   val styles =
-    listOf("classic" to "Classic", "braun" to "Braun", "lcd" to "LCD", "console" to "Console")
+    listOf(
+      "classic" to "Classic",
+      "braun" to "Braun",
+      "lcd" to "LCD",
+      "console" to "Console",
+      "ikea" to "IKEA Showroom",
+    )
   var stylesExpanded by remember { mutableStateOf(false) }
   var optionsExpanded by remember { mutableStateOf(false) }
   TopAppBar(
