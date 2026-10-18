@@ -27,37 +27,65 @@ input_boolean:
     initial: false
 
 template:
-  - sensor:
+  # One HA-managed trigger, independent of visitor count. No spawned jobs or catch-up.
+  - triggers:
+      - trigger: homeassistant
+        event: start
+      - trigger: time_pattern
+        seconds: "/30"
+    sensor:
       - name: Demo temperature
         unique_id: demo_temperature
         device_class: temperature
         unit_of_measurement: "°C"
-        state: "{{ (21 + (now().minute % 10) / 10) | round(1) }}"
+        state: >-
+          {% set previous = this.state | float(21.5) %}
+          {% set target = state_attr('climate.demo_thermostat', 'temperature') | float(22) %}
+          {% set heating = is_state('input_boolean.demo_heating_state', 'on') %}
+          {% set goal = target if heating else 20 %}
+          {% set drift = 0.1 if previous < goal else -0.1 if previous > goal else 0 %}
+          {% set noise = [-0.1, 0, 0, 0.1] | random %}
+          {{ ([16, ([28, previous + drift + noise] | min)] | max) | round(1) }}
       - name: Demo humidity
         unique_id: demo_humidity
         device_class: humidity
         unit_of_measurement: "%"
-        state: "{{ 42 + now().minute % 8 }}"
+        state: >-
+          {{ [38, ([55, (this.state | float(45)) + ([-1, 0, 1] | random)] | min)] | max }}
       - name: Demo power
         unique_id: demo_power
         device_class: power
         unit_of_measurement: "W"
-        state: "{{ 650 + (now().minute % 12) * 75 }}"
+        state: >-
+          {% set lamp = 12 if is_state('light.demo_lamp', 'on') else 0 %}
+          {% set coffee = 850 if is_state('switch.demo_coffee', 'on') else 0 %}
+          {% set heater = 600 if is_state('input_boolean.demo_heating_state', 'on') else 0 %}
+          {{ 160 + lamp + coffee + heater + ([-20, -10, 0, 10, 20] | random) }}
       - name: Demo solar
         unique_id: demo_solar
         device_class: power
         unit_of_measurement: "W"
-        state: "{{ 1400 + (now().minute % 10) * 180 }}"
+        state: >-
+          {{ [600, ([2400, (this.state | float(1400)) + ([-80, -40, 0, 40, 80] | random)] | min)] | max }}
       - name: Demo battery
         unique_id: demo_battery
         device_class: battery
         unit_of_measurement: "%"
-        state: "78"
-  - binary_sensor:
+        state: >-
+          {% set previous = this.state | float(78) %}
+          {% set balance = (states('sensor.demo_solar') | float(1400)) - (states('sensor.demo_power') | float(160)) %}
+          {% set drift = 0.1 if balance > 0 else -0.1 %}
+          {{ ([45, ([95, previous + drift] | min)] | max) | round(1) }}
+    binary_sensor:
       - name: Demo motion
         unique_id: demo_motion
         device_class: motion
-        state: "{{ now().minute % 2 == 0 }}"
+        state: >-
+          {% if now().minute % 2 == 0 and now().second == 0 %}
+            {{ [true, false] | random }}
+          {% else %}
+            {{ this.state == 'on' }}
+          {% endif %}
   - light:
       - name: Demo lamp
         unique_id: demo_lamp

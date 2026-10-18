@@ -69,6 +69,29 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await ws.receive_json())['type'], 'auth_ok')
         return ws
 
+    async def test_shared_action_budget_covers_http_ws_reconnects_and_recovers(self):
+        from unittest.mock import patch
+        # Exhaust through HTTP, including parallel callers. Rejected requests never reach HA.
+        replies = await asyncio.gather(*[
+            self.client.post('/api/services/light/toggle', json={'entity_id': 'light.demo_lamp'})
+            for _ in range(12)])
+        self.assertEqual(sorted(r.status for r in replies), [200] * 8 + [429] * 4)
+        self.assertTrue(all(r.headers['Retry-After'] == '2' for r in replies if r.status == 429))
+        before = len(self.requests)
+        for _ in range(2):
+            ws = await self.connect()
+            await ws.send_json({'id': 1, 'type': 'call_service', 'domain': 'switch',
+                                'service': 'toggle', 'target': {'entity_id': 'switch.demo_coffee'}})
+            self.assertEqual((await ws.receive_json())['error']['code'], 'rate_limited')
+            await ws.close()
+        self.assertEqual(len(self.requests), before)
+        # Reads and policy rejection remain usable even when the write budget is empty.
+        self.assertEqual((await self.client.get('/api/states')).status, 200)
+        self.assertEqual((await self.client.post('/api/services/homeassistant/restart', json={})).status, 403)
+        with patch('gateway.time.monotonic', return_value=self.g.action_updated + 2):
+            self.assertIsNone(await self.g.call_service('switch', 'toggle', {'entity_id': 'switch.demo_coffee'}))
+        self.assertEqual(sum(m == 'POST' for m, _, _ in self.requests), 9)
+
     async def test_rest_reads_are_sanitized_and_do_not_leak_private_metadata(self):
         for path in ['/api/', '/api/config', '/api/states', '/api/states/sensor.demo_temperature', '/dashboard', '/healthz']:
             response = await self.client.get(path)
@@ -243,7 +266,7 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
         battery['state'] = '78.0'
         await self.g.poll_once(self.session)
         await verify(str(self.client.make_url('')).rstrip('/'), stream=False)
-        for value in ['77.0', 'unknown', 'unavailable', 'NaN', 'Infinity']:
+        for value in ['44.9', '95.1', 'unknown', 'unavailable', 'NaN', 'Infinity']:
             with self.subTest(value=value):
                 battery['state'] = value
                 await self.g.poll_once(self.session)

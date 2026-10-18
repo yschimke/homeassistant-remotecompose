@@ -39,8 +39,8 @@ async def verify(base, stream, wait_ready=0):
             try:
                 battery_value = float(battery['state'])
             except (ValueError, TypeError):
-                raise AssertionError(f"Expected demo battery 78%, got {battery['state']!r}") from None
-            assert battery_value == 78, f"Expected demo battery 78%, got {battery['state']!r}"
+                raise AssertionError(f"Expected bounded demo battery, got {battery['state']!r}") from None
+            assert 45 <= battery_value <= 95, f"Expected bounded demo battery, got {battery['state']!r}"
             assert all(s['entity_id'].split('.')[1].startswith('demo_') for s in rows)
         async with session.get(base + '/dashboard') as r:
             assert r.status == 200
@@ -82,10 +82,10 @@ async def verify(base, stream, wait_ready=0):
                 assert reply['success'] is False and reply['error']['code'] == 'forbidden', kind
             await ws.send_json({'id': 20, 'type': 'get_states'})
             states = (await ws.receive_json())['result']
-            assert next(s for s in states if s['entity_id'] == 'sensor.demo_battery')['state'] == battery['state']
+            assert 45 <= float(next(s for s in states if s['entity_id'] == 'sensor.demo_battery')['state']) <= 95
             await ws.send_json({'id': 21, 'type': 'lovelace/config'})
             assert (await ws.receive_json())['result'] == dashboard
-            print('PASS: WebSocket admin commands rejected, battery/dashboard unchanged')
+            print('PASS: WebSocket admin commands rejected, bounded battery and unchanged dashboard')
             # Real service calls must update the named HA entities, not just return success.
             for domain, entity in [('light', 'light.demo_lamp'), ('switch', 'switch.demo_coffee')]:
                 original = next(s for s in states if s['entity_id'] == entity)['state']
