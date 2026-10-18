@@ -1,6 +1,6 @@
 # Editable message cards
 
-The public [input controls v1 contract](https://github.com/yschimke/rc-players/blob/agent/editable-card-inputs/docs/design/RC_INPUT_COMPONENTS.md)
+The public [input controls v1 contract](https://github.com/yschimke/rc-players/blob/v2.16.1/docs/design/RC_INPUT_COMPONENTS.md)
 is independent of Home Assistant. The player SDK also supports boolean toggles, numeric entry and
 bounded ranges; published `rc-player-protocol` factories/fragments and `rc-creation-bridge` Compose
 helpers let other authors create them. The HA **message schema** below deliberately binds text and
@@ -89,12 +89,11 @@ This excludes widgets, not the foreground Wear app.
 
 ## Compatibility/release ordering
 
-The consumer pins Maven player and JS bundle to **2.16.0**, the expected rc-players feature release.
-Release the paired rc-players change first, then package this consumer with its matching JS bundle.
-During development, `./gradlew --include-build <rc-players-checkout> …` substitutes the local player
-artifacts. This dependency is intentionally unavailable until that release lands; do not publish the
-consumer first. The native source additions must ship with the consumer. Do not hand-edit release
-SPM URLs/checksums.
+The consumer pins the Kotlin player artifacts to published **2.16.0** and the separately released
+JS bundle to **2.16.1**. These versions share the input contract. The corrected browser distribution
+includes the input API; 2.16.0's JS archive contained an older bundle and cannot render the form. CI and release builds resolve the same Maven Central artifacts,
+without a player source checkout. Release/package the player before updating the consumer. The
+native source additions ship with the consumer. Do not hand-edit release SPM URLs/checksums.
 
 Rendered evidence and its test commands are in `docs/evidence/editable-message/README.md`.
 
@@ -104,17 +103,14 @@ Wear app supports the message form with phone acknowledgement. The existing Wear
 common desktop/Wasm entity summaries remain summaries. The underlying CMP/Swift/TS input renderers
 share the same contract wherever an interactive document host registers them.
 
-Per-field `chrome: none` forwards the shared input contract's CHROME=1 property on every player;
+Per-field `chrome: none` forwards the shared input contract's CHROME property (13) with NONE (1);
 omitting it uses `default`. It removes generic caption, padding, editor background and border so
 custom authors can wrap the component in their own themed container and visible label. The accessible
 `label` remains required. The built-in message card has no per-field custom wrapper, so keep its
 default chrome unless you provide that visible labeling/layout yourself. Styling cannot enable a
-widget, demo or read-only host. Older players ignore the optional property; consume the updated
-2.16.0 player before relying on this appearance.
+widget, demo or read-only host. Older players ignore the optional property; consume Kotlin 2.16.0
+and JS 2.16.1 before relying on this appearance.
 
-PR CI builds Kotlin inputs and the JS player from the same immutable revision in
-`.github/actions/rc-players-source/action.yml`. `RC_PLAYERS_DIR` (or `-PrcPlayersDir`) selects that
-composite build and its already-built browser bundle. This validates the cross-repository change
-before publication; it does not substitute a read-only old player or skip any checks. Release jobs
-still resolve the declared 2.16.0 artifacts. After player publication, remove the temporary source
-setup from CI and validate those artifact pins before releasing the consumer.
+CI validates published Kotlin 2.16.0 dependencies and the 2.16.1 browser bundle. Local Kotlin development
+can still use Gradle's `--include-build <rc-players-checkout>`; the embedded browser player always
+comes from the declared JS distribution, so tests exercise what the consumer will ship.
