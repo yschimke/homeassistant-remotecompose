@@ -49,6 +49,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -238,6 +239,9 @@ internal fun LauncherGrid(
   // gestures so a fresh drag starts from the current slot edge.
   var dragX by remember { mutableFloatStateOf(0f) }
   var dragY by remember { mutableFloatStateOf(0f) }
+  // Presets and accessibility actions resize without restarting the ongoing pointer handler.
+  val currentCells by rememberUpdatedState(cellsW to cellsH)
+  val currentOnResize by rememberUpdatedState(onResize)
 
   val gridWidthDp = (bounds.maxCellsW * LAUNCHER_CELL_WIDTH_DP).dp
   val gridHeightDp = (bounds.maxCellsH * LAUNCHER_CELL_HEIGHT_DP).dp
@@ -340,8 +344,14 @@ internal fun LauncherGrid(
                   )
               }
             }
-            .pointerInput(bounds) {
+            .pointerInput(bounds, cellWpx, cellHpx) {
+              var gestureCells = currentCells
               detectDragGestures(
+                onDragStart = {
+                  gestureCells = currentCells
+                  dragX = 0f
+                  dragY = 0f
+                },
                 onDragEnd = {
                   dragX = 0f
                   dragY = 0f
@@ -354,8 +364,8 @@ internal fun LauncherGrid(
                 change.consume()
                 dragX += drag.x
                 dragY += drag.y
-                var w = cellsW
-                var h = cellsH
+                var w = gestureCells.first
+                var h = gestureCells.second
                 while (dragX >= cellWpx && w < bounds.maxCellsW) {
                   w++
                   dragX -= cellWpx
@@ -378,7 +388,11 @@ internal fun LauncherGrid(
                 if (w == bounds.minCellsW) dragX = dragX.coerceAtLeast(0f)
                 if (h == bounds.maxCellsH) dragY = dragY.coerceAtMost(0f)
                 if (h == bounds.minCellsH) dragY = dragY.coerceAtLeast(0f)
-                if (w != cellsW || h != cellsH) onResize(w, h)
+                if (w != gestureCells.first || h != gestureCells.second) {
+                  // Pointer events can arrive before recomposition publishes the previous step.
+                  gestureCells = w to h
+                  currentOnResize(w, h)
+                }
               }
             },
         contentAlignment = Alignment.Center,
