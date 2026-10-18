@@ -52,6 +52,7 @@ data class CardDesignChoice(
    * The server's device token, so the manifest lists the user's private designs; blank for none.
    */
   val token: String = "",
+  val catalogStyleId: String = "",
 ) {
   val enabled: Boolean
     get() = serverUrl.isNotBlank()
@@ -62,10 +63,16 @@ data class CardDesignChoice(
   /** The designs to download: every theme this palette and style draw in, by variant and author. */
   val queries: List<DesignQuery>
     get() {
-      val cardStyles = listOf(cardStyle) + overrides.cardStyles.map(HaUberTheme::byId)
+      val cardStyles = listOf(catalogStyleId.ifBlank { cardStyle.id }) + overrides.cardStyles
       val themes =
         cardStyles
-          .flatMap { s -> listOf(false, true).map { CardDesignTemplates.bakedTheme(style, it, s) } }
+          .flatMap { id ->
+            listOf(false, true).map { dark ->
+              val bundled = HaUberTheme.all.firstOrNull { it.id == id }
+              if (bundled != null) CardDesignTemplates.bakedTheme(style, dark, bundled)
+              else DesignKey.styledTheme(id, dark)
+            }
+          }
           .distinct()
       val variants = (listOf(variant) + overrides.variants + DesignKey.DEFAULT_VARIANT).distinct()
       return themes.flatMap { theme ->
@@ -150,14 +157,24 @@ fun cardTemplateFor(
   val key =
     CardDesignTemplates.keyFor(card, snapshot, style, dark, registry, cardStyle = cardStyle)
       ?: return null
-  val preferred = key.copy(variant = variant ?: designs.variant)
+  val remoteStyle = designs.loadedFor?.catalogStyleId.orEmpty()
+  val remoteKey =
+    if (remoteStyle.isNotBlank()) {
+      val bundled = HaUberTheme.all.firstOrNull { it.id == remoteStyle }
+      key.copy(
+        theme =
+          if (bundled != null) CardDesignTemplates.bakedTheme(style, dark, bundled)
+          else DesignKey.styledTheme(remoteStyle, dark)
+      )
+    } else key
+  val preferred = remoteKey.copy(variant = variant ?: designs.variant)
   // A design made for this card's device wins over the generic one, in either variant.
   val forDevice =
     cardDevice(card, snapshot)?.let { device ->
       DeviceMatch.pick(designs.deviceByKey[preferred].orEmpty(), device)
-        ?: DeviceMatch.pick(designs.deviceByKey[key].orEmpty(), device)
+        ?: DeviceMatch.pick(designs.deviceByKey[remoteKey].orEmpty(), device)
     }
-  val server = forDevice ?: designs.byKey[preferred] ?: designs.byKey[key]
+  val server = forDevice ?: designs.byKey[preferred] ?: designs.byKey[remoteKey]
   designs.loadedFor?.let { CardDesignSources.record(it, key, fromServer = server != null) }
   val bytes = server ?: CardDesignLibrary.template(context, key, registry)
   return CardDesignTemplates.playback(card, bytes, registry)

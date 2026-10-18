@@ -1,0 +1,9 @@
+{
+  "beforeStatus": 410,
+  "beforeUrl": "https://ha.coo.ee/studio/catalog",
+  "after": "local synthetic admin import only; native publication not yet verified",
+  "viewport": {
+    "width": 1200,
+    "height": 900
+  }
+}

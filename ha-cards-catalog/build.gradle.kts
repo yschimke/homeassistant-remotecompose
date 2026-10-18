@@ -27,6 +27,9 @@ plugins {
 composePreview {
   // compileSdk 37 here; Robolectric ships SDK frameworks up to 36.
   sdkVersion.set(35)
+  // These are authored library components, including semantic wrappers. Project-target
+  // inference otherwise filters themes and selects a child instead of the binding scope.
+  componentLibraryPrefixes.add("ee.schimke.ha.cards.HaCardComponentsKt")
 }
 
 android {
@@ -74,7 +77,16 @@ dependencies {
   // The `.rc` sidecar seam, so the published catalog carries each sticker's RemoteDocument.
   implementation(libs.composeai.data.render.core)
 
+  testImplementation(libs.composeai.preview.discovery)
+  testImplementation("io.github.classgraph:classgraph:4.8.197")
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.serialization.json)
+}
+
+val authoringLibraryOwners = composePreview.componentLibraryPrefixes
+
+tasks.withType<Test>().configureEach {
+  inputs.property("authoringLibraryOwners", authoringLibraryOwners)
+  systemProperty("haCards.componentLibraryPrefixes", authoringLibraryOwners.get().joinToString(","))
 }

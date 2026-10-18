@@ -1,5 +1,7 @@
 # Card design server
 
+> Historical design/spike notes. See [website-owned card designs](catalog-owned-card-designs.md) for current ownership, implementation and rollout gates.
+
 > Status: **plan**. Nothing here is implemented yet. This document says
 > what to build, in what order, and which questions need a spike first.
 

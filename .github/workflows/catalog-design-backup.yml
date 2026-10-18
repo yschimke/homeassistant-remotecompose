@@ -1,0 +1,66 @@
+name: Back up website-owned card designs
+
+on:
+  schedule:
+    - cron: '23 4 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - scripts/import-catalog-designs.py
+      - scripts/test-import-catalog-designs.py
+      - .github/workflows/catalog-design-backup.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalog-design-backup
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - run: python3 scripts/test-import-catalog-designs.py
+  backup:
+    if: github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Reuse the review branch without rewriting its history
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if git show-ref --verify --quiet refs/remotes/origin/agent/catalog-backup; then
+            git switch --track origin/agent/catalog-backup
+            git merge origin/main --no-edit
+          else
+            git switch -c agent/catalog-backup
+          fi
+      - name: Download and verify public sources and derived artifacts
+        # Public read endpoint: no server operator token, no write or deployment credential.
+        run: python3 scripts/import-catalog-designs.py
+      - name: Propose reviewable backup updates
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git add catalog-backup
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'chore: back up published website card designs'
+          git push origin agent/catalog-backup
+          if gh pr list --head agent/catalog-backup --json number --jq 'length' | grep -qx 0; then
+            cat > /tmp/backup-pr.md <<'BODY'
+          Back up published .uid sources, exact catalog/runtime pins, publication history and verified content-addressed .rc artifacts from ha.coo.ee. This is a read-only snapshot: merging it never uploads or deploys designs. Repeated imports are idempotent; history loss, rollback and mismatched artifacts stop the import.
+
+          Generated with [Hive](https://friendlyai.dev/?ref=hive-pr#join) using Codex · GPT-6.1 Sol
+          Hive session: https://hive.codes/?session=session-1792328153883-eb2b48
+          BODY
+            gh pr create --draft --base main --head agent/catalog-backup --title 'chore: back up published website card designs' --body-file /tmp/backup-pr.md
+          fi

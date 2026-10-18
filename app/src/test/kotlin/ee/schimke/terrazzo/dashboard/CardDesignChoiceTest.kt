@@ -37,6 +37,20 @@ class CardDesignChoiceTest {
   private fun CardDesignChoice.wants(entry: DesignEntry) = queries.any { it.matches(entry) }
 
   @Test
+  fun websiteStyleDoesNotNeedAnEnumEntry() {
+    val choice =
+      CardDesignChoice(
+        "https://designs.test",
+        ThemeStyle.Material3,
+        HaUberTheme.Classic,
+        catalogStyleId = "brand-new",
+      )
+    assertTrue(choice.wants(entry(DesignKey.styledTheme("brand-new", dark = false))))
+    assertTrue(choice.wants(entry(DesignKey.styledTheme("brand-new", dark = true))))
+    assertFalse(choice.wants(entry(DesignKey.bakedTheme("Material3", dark = false))))
+  }
+
+  @Test
   fun classicDownloadsItsPaletteInBothModes() {
     val choice =
       CardDesignChoice("https://designs.test", ThemeStyle.TerrazzoHome, HaUberTheme.Classic)

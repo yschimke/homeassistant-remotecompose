@@ -154,6 +154,20 @@ private constructor(
       return DesignLibrary(dir, manifest, manifestBytes, catalog, blobBytes)
     }
 
+    fun overlay(
+      base: DesignLibrary,
+      manifest: DesignManifest,
+      catalog: DesignCatalog,
+      extra: Map<String, ByteArray>,
+    ): DesignLibrary =
+      DesignLibrary(
+        base.dir,
+        manifest,
+        json.encodeToString(DesignManifest.serializer(), manifest).encodeToByteArray(),
+        catalog,
+        base.blobBytes + extra,
+      )
+
     const val MANIFEST = "manifest.json"
 
     /** Id of a design with no catalog entry: the same short key hash the generator uses. */

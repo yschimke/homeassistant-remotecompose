@@ -28,7 +28,22 @@ fun main(args: Array<String>) {
   val dir = File(args.firstOrNull() ?: System.getenv("DESIGN_LIBRARY") ?: "card-designs")
   val port = System.getenv("PORT")?.toIntOrNull() ?: 8080
   val host = System.getenv("HOST") ?: "0.0.0.0"
-  val holder = LibraryHolder(dir)
+  val catalogDesigns =
+    System.getenv("CATALOG_DESIGNS_DIR")
+      ?.takeIf { it.isNotBlank() }
+      ?.let { CatalogDesignStore(File(it)) }
+  val catalogAdmins =
+    System.getenv("CATALOG_SETTINGS_FILE")
+      ?.takeIf { it.isNotBlank() }
+      ?.let { path ->
+        kotlinx.serialization.json.Json.parseToJsonElement(File(path).readText()).let { element ->
+          val settings = element as kotlinx.serialization.json.JsonObject
+          (settings["adminActors"] as kotlinx.serialization.json.JsonArray)
+            .map { (it as kotlinx.serialization.json.JsonPrimitive).content }
+            .toSet()
+        }
+      } ?: emptySet()
+  val holder = LibraryHolder(dir, catalogDesigns = catalogDesigns)
   val library = holder.current()
   println(
     "card design server: ${library.designs.size} designs (serial ${library.manifest.serial}) " +
@@ -59,7 +74,15 @@ fun main(args: Array<String>) {
   if (userDesigns != null) println("user designs: revision ${userDesigns.revision}")
   embeddedServer(CIO, port = port, host = host) {
       install(CallLogging)
-      designServer(holder, uiBuilder, github, SiteConfig.fromEnvironment(), userDesigns)
+      designServer(
+        holder,
+        uiBuilder,
+        github,
+        SiteConfig.fromEnvironment(),
+        userDesigns,
+        catalogDesigns,
+        catalogAdmins,
+      )
     }
     .start(wait = true)
 }

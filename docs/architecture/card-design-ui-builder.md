@@ -1,5 +1,7 @@
 # Designing cards in UI Builder
 
+> Historical design/spike notes. See [website-owned card designs](catalog-owned-card-designs.md) for current ownership, implementation and rollout gates.
+
 How a card goes from its schema (or a Lovelace JSON) to a UI Builder design of its responsive
 content, and what is missing between that design and a template the
 [card design server](card-design-server.md) publishes. Written against compose-preview-server

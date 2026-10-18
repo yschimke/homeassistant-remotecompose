@@ -373,6 +373,7 @@ private fun LiveDashboard(
   }
   var cardStyle by rememberSaveable { mutableStateOf("classic") }
   var styleMenu by remember { mutableStateOf(false) }
+  val catalogStyles = rememberCatalogStyles(styleMenu)
   var customizing by rememberSaveable { mutableStateOf(false) }
   val dark = isSystemInDarkTheme()
   fun moreInfo(entityId: String) {
@@ -422,7 +423,7 @@ private fun LiveDashboard(
               Text("Card style: ${cardStyle.replaceFirstChar { it.uppercaseChar() }}")
             }
             DropdownMenu(styleMenu, { styleMenu = false }) {
-              listOf("classic", "braun", "lcd", "console").forEach { style ->
+              catalogStyles.forEach { style ->
                 DropdownMenuItem(
                   text = { Text(style.replaceFirstChar { it.uppercaseChar() }) },
                   onClick = {

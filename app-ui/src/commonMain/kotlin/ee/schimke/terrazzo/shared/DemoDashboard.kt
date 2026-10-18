@@ -110,15 +110,14 @@ private fun DemoToolbar(
   dark: Boolean,
   onDarkChange: (Boolean) -> Unit,
 ) {
-  val styles =
-    listOf(
-      "classic" to "Classic",
-      "braun" to "Braun",
-      "lcd" to "LCD",
-      "console" to "Console",
-      "ikea" to "IKEA Showroom",
-    )
   var stylesExpanded by remember { mutableStateOf(false) }
+  val styles = rememberCatalogStyles(stylesExpanded)
+  fun label(id: String) =
+    when (id) {
+      "ikea" -> "IKEA Showroom"
+      "lcd" -> "LCD"
+      else -> id.replaceFirstChar { it.uppercaseChar() }
+    }
   var optionsExpanded by remember { mutableStateOf(false) }
   TopAppBar(
     title = {
@@ -138,16 +137,16 @@ private fun DemoToolbar(
           onClick = { stylesExpanded = true },
           modifier =
             Modifier.heightIn(min = 48.dp).semantics {
-              contentDescription = "Card style: ${styles.first { it.first == design }.second}"
+              contentDescription = "Card style: ${label(design)}"
             },
         ) {
-          Text(styles.first { it.first == design }.second)
+          Text(label(design))
           Icon(Icons.Default.ArrowDropDown, contentDescription = null)
         }
         DropdownMenu(expanded = stylesExpanded, onDismissRequest = { stylesExpanded = false }) {
-          styles.forEach { (id, label) ->
+          styles.forEach { id ->
             DropdownMenuItem(
-              text = { Text(label) },
+              text = { Text(label(id)) },
               modifier = Modifier.semantics { selected = design == id },
               trailingIcon = { if (design == id) Text("✓") },
               onClick = {

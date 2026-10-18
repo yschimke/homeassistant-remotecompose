@@ -42,6 +42,7 @@ ENV DESIGN_LIBRARY=/library \
     UI_BUILDER_PORT=8724 \
     UI_BUILDER_STATE_DIR=/data/ui-builder \
     USER_DESIGNS_DIR=/data/user-designs \
+    CATALOG_DESIGNS_DIR=/data/catalog-designs \
     UI_BUILDER_ARGS="--catalogs-file /app/catalogs.json --catalog-cache-dir /data/catalog-cache --ui-builder-catalogs remote-m3,ha-cards,lovelace"
 USER designs
 WORKDIR /data

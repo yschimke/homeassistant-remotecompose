@@ -39,6 +39,7 @@ internal fun LibraryCard(
   showFallbackNotice: Boolean = true,
   fallback: @Composable () -> Unit,
 ) {
+  val catalogCache = rememberCatalogCache()
   var bytes by remember(card, style, dark) { mutableStateOf<ByteArray?>(null) }
   var failed by remember(card, style, dark) { mutableStateOf(false) }
   val hasRelativeTime =
@@ -57,36 +58,50 @@ internal fun LibraryCard(
   val values = remember(card, snapshot, tick) { templateBindings(card, snapshot) }
   LaunchedEffect(card, style, dark) {
     val http = HttpClient()
+    val anonymous = anonymousTemplateCard(card)
+    val cacheKey = Sha256.hex((anonymous.toString() + ":" + style + ":" + dark).encodeToByteArray())
+    cachedTemplate(catalogCache, cacheKey)
+      ?.takeIf { canBindWithCmp(it, templateBindings(card, snapshot)) }
+      ?.let { bytes = it }
     try {
-      val anonymous = anonymousTemplateCard(card)
-      val response =
-        http.post("https://ha.coo.ee/api/cards/resolve") {
-          contentType(ContentType.Text.Plain)
-          setBody(
-            buildJsonObject {
-              put("card", anonymous)
-              put("cardStyle", style)
-              put("dark", dark)
+      while (true) {
+        try {
+          val response =
+            http.post("https://ha.coo.ee/api/cards/resolve") {
+              contentType(ContentType.Text.Plain)
+              setBody(
+                buildJsonObject {
+                  put("card", anonymous)
+                  put("cardStyle", style)
+                  put("dark", dark)
+                }
+                  .toString()
+              )
             }
-              .toString()
-          )
+          check(response.status != HttpStatusCode.NotFound)
+          check(response.status.isSuccess())
+          val sha =
+            Json.parseToJsonElement(response.bodyAsText())
+              .jsonObject["sha256"]!!
+              .jsonPrimitive
+              .content
+          check(Regex("[0-9a-f]{64}").matches(sha))
+          val blob = http.get("https://ha.coo.ee/designs/v1/blobs/$sha.rc")
+          check(blob.status.isSuccess())
+          val loaded = blob.bodyAsBytes()
+          check(Sha256.hex(loaded) == sha)
+          check(canBindWithCmp(loaded, templateBindings(card, snapshot)))
+          bytes = loaded
+          cacheTemplate(catalogCache, cacheKey, loaded)
+          failed = false
+        } catch (e: CancellationException) {
+          throw e
+        } catch (_: Throwable) {
+          // Browser fetch failures are JsException (a Throwable, not a Kotlin Exception).
+          failed = true
         }
-      if (response.status == HttpStatusCode.NotFound) return@LaunchedEffect
-      check(response.status.isSuccess())
-      val sha =
-        Json.parseToJsonElement(response.bodyAsText()).jsonObject["sha256"]!!.jsonPrimitive.content
-      check(Regex("[0-9a-f]{64}").matches(sha))
-      val blob = http.get("https://ha.coo.ee/designs/v1/blobs/$sha.rc")
-      check(blob.status.isSuccess())
-      val loaded = blob.bodyAsBytes()
-      check(Sha256.hex(loaded) == sha)
-      check(canBindWithCmp(loaded, templateBindings(card, snapshot)))
-      bytes = loaded
-    } catch (e: CancellationException) {
-      throw e
-    } catch (_: Throwable) {
-      // Browser fetch failures are JsException (a Throwable, not a Kotlin Exception).
-      failed = true
+        delay(60_000)
+      }
     } finally {
       http.close()
     }

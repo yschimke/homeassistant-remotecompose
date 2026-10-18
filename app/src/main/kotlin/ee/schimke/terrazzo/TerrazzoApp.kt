@@ -1131,6 +1131,8 @@ internal fun SettingsScreen(
         onVariantChange = { scope.launch { graph.preferencesStore.setDesignVariant(it) } },
         onAuthorChange = { scope.launch { graph.preferencesStore.setDesignAuthor(it) } },
         onTokenChange = { scope.launch { graph.preferencesStore.setDesignToken(it) } },
+        catalogStyle = graph.preferencesStore.catalogCardStyle.collectAsState(initial = "").value,
+        onCatalogStyleChange = { scope.launch { graph.preferencesStore.setCatalogCardStyle(it) } },
       )
 
       Row(
@@ -1343,6 +1345,8 @@ private fun DesignServerSetting(
   onVariantChange: (String) -> Unit,
   onAuthorChange: (String) -> Unit,
   onTokenChange: (String) -> Unit,
+  catalogStyle: String,
+  onCatalogStyleChange: (String) -> Unit,
 ) {
   val context = LocalContext.current
   var draft by remember(url) { mutableStateOf(url) }
@@ -1380,6 +1384,18 @@ private fun DesignServerSetting(
       DesignSourcesSummary()
     }
     tags?.let { tags ->
+      DesignTagPicker(
+        title = "Catalog card style",
+        options =
+          listOf("" to "Use bundled style") +
+            (tags.style.keys + catalogStyle)
+              .filter { it.isNotBlank() }
+              .distinct()
+              .sorted()
+              .map { it to it },
+        selected = catalogStyle,
+        onSelect = onCatalogStyleChange,
+      )
       DesignTagPicker(
         title = "Variant",
         // The chosen variant stays listed even when this server has none of it yet.

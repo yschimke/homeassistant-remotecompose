@@ -1,5 +1,9 @@
 # Card design server
 
+Website-owned UID source revisions, admin publication, runtime discovery and read-only repository
+backups are staged in [the ownership runbook](../docs/architecture/catalog-owned-card-designs.md).
+Published keys overlay the bundled library; unverified existing designs keep their converter fallback.
+
 Hosts a card design library for the app and a browser of its templates. Design and protocol:
 [`docs/architecture/card-design-server.md`](../docs/architecture/card-design-server.md#the-server-design-server).
 

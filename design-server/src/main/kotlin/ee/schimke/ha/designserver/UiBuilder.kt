@@ -251,6 +251,76 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
     )
   }
 
+  /** Read a committed source with the browser's identity, never borrowing operator read rights. */
+  suspend fun source(designId: String, revision: Long?, cookie: String?): JsonObject {
+    require(Regex("[a-zA-Z0-9_-]{1,160}").matches(designId))
+    val response =
+      http.get(
+        "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/designs/$designId" +
+          (revision?.let { "?revision=$it" } ?: "")
+      ) {
+        cookie?.let { header(HttpHeaders.Cookie, it) }
+      }
+    check(response.status.isSuccess()) { "Cannot read this design as the signed-in admin" }
+    return Json.parseToJsonElement(response.bodyAsText()).jsonObject
+  }
+
+  /** Forward only the session cookie to the trusted builder host, never an operator token. */
+  suspend fun catalogActor(cookie: String?): String? {
+    if (cookie.isNullOrBlank()) return null
+    val response =
+      http.get("${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/identity") {
+        header(HttpHeaders.Cookie, cookie)
+      }
+    if (!response.status.isSuccess()) return null
+    val identity = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+    return identity["actorId"]?.jsonPrimitive?.content?.takeIf {
+      identity["signedIn"] == JsonPrimitive(true) && identity["canWrite"] == JsonPrimitive(true)
+    }
+  }
+
+  /** The released server bundles the renderer and builder; retain its release with source pins. */
+  suspend fun compilerVersion(): String {
+    val response = http.get("${config.apiUrl.trimEnd('/')}/version")
+    check(response.status.isSuccess()) { "Compiler release identity unavailable" }
+    val version =
+      Json.parseToJsonElement(response.bodyAsText())
+        .jsonObject
+        .getValue("version")
+        .jsonPrimitive
+        .content
+    check(Regex("[0-9]+\\.[0-9]+\\.[0-9]+").matches(version)) { "A released compiler is required" }
+    return version
+  }
+
+  /** Compile these exact source bytes. No latest-revision race and no source rewrite/repinning. */
+  suspend fun compileSource(source: JsonObject): ByteArray {
+    // Native capture compiles the catalog's actual components. It does not depend on the
+    // experimental flat-operation lowerer, which cannot represent arbitrary catalog components.
+    val response =
+      http.post("${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/documents/native-capture") {
+        header("X-Compose-Preview-Token", config.token)
+        contentType(ContentType.Application.Json)
+        setBody(source.toString())
+      }
+    check(response.status.isSuccess()) {
+      "Catalog native capture refused the pinned source (${response.status.value})"
+    }
+    val captured = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+    check(captured["designId"] == source["id"] && captured["revision"] == source["revision"]) {
+      "Compiler captured another source revision"
+    }
+    val location = captured.getValue("documentUrl").jsonPrimitive.content
+    // Never follow a compiler-supplied external URL or put credentials in a URL.
+    check(Regex("/d/[A-Za-z0-9_-]+").matches(location)) { "Unexpected captured-document location" }
+    val blob =
+      http.get("${config.apiUrl.trimEnd('/')}$location/raw") {
+        header("X-Compose-Preview-Token", config.token)
+      }
+    check(blob.status.isSuccess()) { "Captured document unavailable" }
+    return blob.bodyAsBytes()
+  }
+
   /** Resolve the published revision on the host that will validate and render this draft. */
   private suspend fun pinToServedCatalog(document: JsonObject): JsonObject {
     val system = document.getValue("catalogPin").jsonObject.getValue("systemId")

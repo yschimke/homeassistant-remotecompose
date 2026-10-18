@@ -161,6 +161,7 @@ composeai-data-render-core = { module = "ee.schimke.composeai:data-render-core",
 composeai-daemon-bom = { module = "ee.schimke.composeai:compose-preview-daemon-bom", version.ref = "compose-preview-daemon" }
 # Debug-only: @AnimatedPreview drives the compose-preview GIF capture.
 # Versionless: resolved through composeai-daemon-bom. Never add a version here.
+composeai-preview-discovery = { module = "ee.schimke.composeai:preview-discovery", version.ref = "compose-preview-plugin" }
 composeai-preview-annotations = { module = "ee.schimke.composeai:preview-annotations" }
 
 # Compose

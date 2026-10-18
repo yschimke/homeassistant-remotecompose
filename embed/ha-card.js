@@ -1308,7 +1308,7 @@ async function askResolver(resolveUrl, card, cardStyle, dark, fetchImpl) {
  * update and the document's own TextData puts back on every pass. Keep each overridden text in
  * that cache ourselves. Skipped on a player that already has the fix (`textOverrides`).
  */
-function patchStringOverrides(context) {
+export function patchStringOverrides(context) {
   if (context.textOverrides instanceof Map || context.__haCardTexts) return;
   const texts = new Map();
   const paint = context.canvasPaintContext;

@@ -38,6 +38,7 @@ class LibraryHolder(
   private val dir: File,
   private val checkIntervalMs: Long = 5_000,
   private val clock: () -> Long = System::currentTimeMillis,
+  private val catalogDesigns: CatalogDesignStore? = null,
 ) {
   @Volatile private var library: DesignLibrary = DesignLibrary.load(dir)
   @Volatile private var loadedModified = manifestModified()
@@ -59,6 +60,12 @@ class LibraryHolder(
           }
       }
     }
+    return catalogDesigns?.overlay(library) ?: library
+  }
+
+  /** Stable validation contracts remain available after a website publication replaces a key. */
+  fun baseline(): DesignLibrary {
+    current() // apply any validated library reload first
     return library
   }
 
@@ -97,6 +104,8 @@ fun Application.designServer(
   site: SiteConfig = SiteConfig(),
   /** Designs people published; with GitHub sign-in it also serves `/my` and `/api/my/...`. */
   userDesigns: UserDesignStore? = null,
+  catalogDesigns: CatalogDesignStore? = null,
+  catalogAdmins: Set<String> = emptySet(),
 ) {
   install(DefaultHeaders)
   install(AutoHeadResponse)
@@ -107,6 +116,8 @@ fun Application.designServer(
     }
   }
   routing {
+    if (catalogDesigns != null)
+      catalogDesignRoutes(holder, catalogDesigns, uiBuilder, github, catalogAdmins)
     dashboardStudioRoutes(uiBuilder, github)
     demoSite(File(System.getenv("WASM_SITE_DIR") ?: "/app/wasm"))
     cardStudioRoutes(holder, uiBuilder, github)
@@ -172,6 +183,23 @@ fun Application.designServer(
       // Not content-addressed: a page keeps loading the same URL across releases.
       call.response.header(HttpHeaders.CacheControl, "public, max-age=300")
       call.respondBytes(bytes, type)
+    }
+
+    get("/api/designs/catalog/styles") {
+      call.response.header(HttpHeaders.CacheControl, "no-cache")
+      call.allowAnyOrigin()
+      val styles =
+        holder
+          .current()
+          .designs
+          .filterNot { it.entry.revoked }
+          .map { it.key.cardStyle }
+          .distinct()
+          .sorted()
+      call.respondText(
+        kotlinx.serialization.json.JsonArray(styles.map(::JsonPrimitive)).toString(),
+        ContentType.Application.Json,
+      )
     }
 
     get("/api/designs") {
@@ -240,7 +268,10 @@ fun Application.designServer(
           .toString(),
       )
       call.respondText(
-        json.encodeToString(JsonObject.serializer(), HaCardsSeed.source(library, design)) + "\n",
+        json.encodeToString(
+          JsonObject.serializer(),
+          catalogDesigns?.source(design.id) ?: HaCardsSeed.source(library, design),
+        ) + "\n",
         ContentType.Application.Json,
       )
     }

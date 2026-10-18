@@ -319,6 +319,15 @@ class PreferencesStore(private val context: Context) {
   }
 
   /** The card design variant to prefer (`DesignKey.variant`); cards without one use `default`. */
+  /** Website catalog style ID; empty uses the bundled style preference. */
+  val catalogCardStyle: Flow<String>
+    get() = context.store.data.map { it[CATALOG_CARD_STYLE_KEY] ?: "" }
+
+  suspend fun setCatalogCardStyle(id: String) {
+    require(id.isEmpty() || Regex("[a-z0-9][a-z0-9-]{0,79}").matches(id))
+    context.store.edit { it[CATALOG_CARD_STYLE_KEY] = id }
+  }
+
   val designVariant: Flow<String>
     get() = context.store.data.map { it[DESIGN_VARIANT_KEY] ?: DEFAULT_DESIGN_VARIANT }
 
@@ -368,6 +377,7 @@ class PreferencesStore(private val context: Context) {
     private val PERMANENT_WRITE_KEY = booleanPreferencesKey("permanent_write_mode")
     private val SELECTED_DASHBOARDS_KEY = stringPreferencesKey("selected_dashboards")
     private val DESIGN_SERVER_URL_KEY = stringPreferencesKey("design_server_url")
+    private val CATALOG_CARD_STYLE_KEY = stringPreferencesKey("catalog_card_style")
     private val DESIGN_VARIANT_KEY = stringPreferencesKey("design_variant")
     private val DESIGN_AUTHOR_KEY = stringPreferencesKey("design_author")
     private val DESIGN_TOKEN_KEY = stringPreferencesKey("design_token")
