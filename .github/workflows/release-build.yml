@@ -106,7 +106,7 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent \
             "ha-client/build/XCFrameworks/release/TerrazzoKit.xcframework" \
             "_release-ios/TerrazzoKit-${version}.xcframework.zip"
-          shasum -a 256 _release-ios/* > _release-ios/SHA256SUMS-apple.txt
+          (cd _release-ios && shasum -a 256 *.zip > SHA256SUMS-apple.txt)
           ls -lah _release-ios/
 
       - name: Upload Apple release assets

@@ -67,46 +67,60 @@ fun RemoteHaPicture(
       modifier.then(click).then(sizeModifier).then(cardChrome(theme.divider, theme.divider)),
     contentAlignment = RemoteAlignment.Center,
   ) {
-    RemoteIcon(
-      imageVector = data.placeholderIcon.toRemoteImageVector(),
-      contentDescription = data.name?.let { cardText("name", it) } ?: "image".rs,
-      modifier = RemoteModifier.size(48.rdp),
-      tint = theme.placeholderAccent,
-    )
-    if (data.name != null) {
-      RemoteBox(
-        modifier =
-          RemoteModifier.fillMaxWidth()
-            .background(theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.85f.rf))
-            .padding(horizontal = 12.rdp, vertical = 6.rdp)
+    if (visualFamily() == HaVisualFamily.Console) {
+      RemoteColumn(
+        horizontalAlignment = RemoteAlignment.CenterHorizontally,
+        verticalArrangement = RemoteArrangement.spacedBy(6.rdp),
+        modifier = RemoteModifier.padding(8.rdp),
       ) {
-        RemoteText(
-          text = cardText("name", data.name),
-          color = theme.primaryText,
-          fontSize = HaType.Body,
-          fontWeight = FontWeight.Medium,
-          style = haTextStyle(),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
+        ConsoleTapeLabel("Image unavailable".rs)
+        data.name?.let { ConsoleTapeLabel(cardText("name", it), compact = true) }
+        data.captionUrl?.let { ConsoleTapeLabel(cardText("image", it), compact = true) }
       }
-    }
-    if (data.captionUrl != null) {
-      RemoteBox(
-        modifier =
-          RemoteModifier.padding(8.rdp)
-            .clip(RemoteRoundedCornerShape(4.rdp))
-            .background(theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.7f.rf))
-            .padding(horizontal = 6.rdp, vertical = 2.rdp)
-      ) {
-        RemoteText(
-          text = cardText("image", data.captionUrl),
-          color = theme.secondaryText,
-          fontSize = HaType.Micro,
-          style = haTextStyle(),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+    } else {
+      if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel("Image unavailable".rs)
+      else
+        RemoteIcon(
+          imageVector = data.placeholderIcon.toRemoteImageVector(),
+          contentDescription = data.name?.let { cardText("name", it) } ?: "image".rs,
+          modifier = RemoteModifier.size(48.rdp),
+          tint = theme.placeholderAccent,
         )
+      if (data.name != null) {
+        RemoteBox(
+          modifier =
+            RemoteModifier.fillMaxWidth()
+              .background(theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.85f.rf))
+              .padding(horizontal = 12.rdp, vertical = 6.rdp)
+        ) {
+          RemoteText(
+            text = cardText("name", data.name),
+            color = theme.primaryText,
+            fontSize = HaType.Body,
+            fontWeight = FontWeight.Medium,
+            style = haTextStyle(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+        }
+      }
+      if (data.captionUrl != null) {
+        RemoteBox(
+          modifier =
+            RemoteModifier.padding(8.rdp)
+              .clip(RemoteRoundedCornerShape(4.rdp))
+              .background(theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.7f.rf))
+              .padding(horizontal = 6.rdp, vertical = 2.rdp)
+        ) {
+          RemoteText(
+            text = cardText("image", data.captionUrl),
+            color = theme.secondaryText,
+            fontSize = HaType.Micro,
+            style = haTextStyle(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+        }
       }
     }
   }
@@ -179,12 +193,14 @@ private fun GlanceImage(data: HaPictureGlanceData, theme: RemoteHaTheme, modifie
     modifier = modifier.background(theme.divider),
     contentAlignment = RemoteAlignment.Center,
   ) {
-    RemoteIcon(
-      imageVector = data.placeholderIcon.toRemoteImageVector(),
-      contentDescription = data.title?.let { cardTitle(it) } ?: "image".rs,
-      modifier = RemoteModifier.size(40.rdp),
-      tint = theme.placeholderAccent,
-    )
+    if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel("Image unavailable".rs)
+    else
+      RemoteIcon(
+        imageVector = data.placeholderIcon.toRemoteImageVector(),
+        contentDescription = data.title?.let { cardTitle(it) } ?: "image".rs,
+        modifier = RemoteModifier.size(40.rdp),
+        tint = theme.placeholderAccent,
+      )
   }
 }
 
@@ -212,7 +228,10 @@ private fun Cell(cell: HaPictureGlanceCell, theme: RemoteHaTheme) {
   ) {
     RemoteBox(
       modifier =
-        RemoteModifier.size(CELL_DP.rdp).clip(haControlShape(16, round = true)).background(bg),
+        RemoteModifier.size(CELL_DP.rdp)
+          .clip(haControlShape(16, round = true))
+          .background(bg)
+          .then(consoleKeyChrome(tint)),
       contentAlignment = RemoteAlignment.Center,
     ) {
       HaStateIcon(
@@ -269,12 +288,14 @@ fun RemoteHaPictureElements(
       modifier = RemoteModifier.fillMaxWidth().height(PICTURE_ELEMENTS_CANVAS_H_DP.rdp),
       contentAlignment = RemoteAlignment.Center,
     ) {
-      RemoteIcon(
-        imageVector = data.placeholderIcon.toRemoteImageVector(),
-        contentDescription = "elements".rs,
-        modifier = RemoteModifier.size(40.rdp),
-        tint = theme.placeholderAccent,
-      )
+      if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel("Image unavailable".rs)
+      else
+        RemoteIcon(
+          imageVector = data.placeholderIcon.toRemoteImageVector(),
+          contentDescription = "elements".rs,
+          modifier = RemoteModifier.size(40.rdp),
+          tint = theme.placeholderAccent,
+        )
     }
     positioned.forEach { element ->
       val pos = element.position!!
@@ -330,7 +351,12 @@ private fun Element(
 
       RemoteBox(
         modifier =
-          modifier.then(click).size(28.rdp).clip(haControlShape(14, round = true)).background(bg),
+          modifier
+            .then(click)
+            .size(28.rdp)
+            .clip(haControlShape(14, round = true))
+            .background(bg)
+            .then(consoleKeyChrome(tint)),
         contentAlignment = RemoteAlignment.Center,
       ) {
         HaStateIcon(
@@ -373,6 +399,7 @@ private fun Element(
             .then(click)
             .clip(haControlShape(6))
             .border(1.rdp, accent, haControlShape(6))
+            .then(consoleKeyChrome(accent))
             .padding(horizontal = 10.rdp, vertical = 6.rdp)
       ) {
         RemoteText(

@@ -24,7 +24,7 @@ import kotlin.math.sin
 // Console: a 1970s broadcast desk, drawn skeuomorphically — light, depth and material, not flat
 // shapes. A dial is a VU meter: a cream face backlit from behind glass, the standard VU scale with
 // its red zone from 0 VU, a black needle swinging from a pivot below the face. A bar and a
-// thermometer are faders: a machined metal cap riding a recessed slot lit amber behind it. A
+// thermometer use a metal fader and a glass liquid column respectively. A
 // battery is a lamp in a metal bezel. Everything here is an original drawing of the genre; the VU
 // scale marks are the ANSI C16.5 standard's.
 //
@@ -70,11 +70,23 @@ private fun shaderPaint(
     .also { paint -> with(brush) { scope.applyTo(paint, size) } }
 
 /** A vertical metal gradient over the box at [y] of height [h]: light at the top, dark below. */
-private fun RemoteDrawScope.metalPaint(y: RemoteFloat, h: RemoteFloat): RemotePaint =
+internal fun RemoteDrawScope.metalPaint(y: RemoteFloat, h: RemoteFloat): RemotePaint =
   shaderPaint(
     this,
     RemoteBrush.linearGradient(
       listOf(MetalLight.rc, MetalMid.rc, MetalDark.rc),
+      RemoteOffset(0f.rf, y),
+      RemoteOffset(0f.rf, y + h),
+    ),
+    RemoteSize(width, height),
+  )
+
+/** Moulded control cap with a soft overhead reflection and a shaded lower edge. */
+internal fun RemoteDrawScope.consoleCapPaint(y: RemoteFloat, h: RemoteFloat): RemotePaint =
+  shaderPaint(
+    this,
+    RemoteBrush.linearGradient(
+      listOf(Color(0xFF4D606B).rc, Color(0xFF263740).rc, Color(0xFF101A20).rc),
       RemoteOffset(0f.rf, y),
       RemoteOffset(0f.rf, y + h),
     ),
@@ -245,33 +257,81 @@ internal fun RemoteDrawScope.consoleBar(look: MeterLook, fraction: RemoteFloat, 
   else fader(look, fraction, false, 0f.rf, width, 0f.rf, height)
 }
 
-/** A vertical fader beside a silkscreened scale, at 1 : 3; the scale's marks past hot are red. */
+/** A glass liquid-column thermometer mounted on an ivory enamel scale. */
 internal fun RemoteDrawScope.consoleThermometer(
   look: MeterLook,
   fraction: RemoteFloat,
   zones: HaMeterZones,
 ) {
-  val box = FitBox(width, height, 1f / 3f)
-  val scaleW = box.width * 0.32f.rf
-  val faderX = box.left + box.width * 0.4f.rf
-  val faderW = box.width * 0.6f.rf
-  val capLen = (faderW * 0.9f.rf).min(box.height * 0.22f.rf)
-  val stroke = (box.width * 0.045f.rf).min(2f.rf)
-  for (i in 0..10) {
-    val at = i / 10f
-    val y = box.bottom - capLen / 2f.rf - (box.height - capLen) * at.rf
-    val len = if (i % 5 == 0) scaleW else scaleW * 0.5f.rf
-    val hot = zones.hotFrom
-    val ink: RemoteColor =
-      when {
-        zones.hotFromLive != null ->
-          at.rf.isGreaterThanOrEqualTo(zones.hotFromLive).select(ScaleRed.rc, look.muted)
-        hot != null && at >= hot -> ScaleRed.rc
-        else -> look.muted
-      }
-    fillRect(ink, box.left + scaleW - len, y - stroke / 2f.rf, len, stroke)
+  val box = FitBox(width, height, 0.38f)
+  val w = box.width
+  val h = box.height
+  val x = box.left
+  val y = box.top
+  fillRound(Bezel.rc, x, y, w, h, w * 0.12f.rf)
+  fillRound(
+    FaceLit.rc,
+    x + w * 0.04f.rf,
+    y + h * 0.015f.rf,
+    w * 0.92f.rf,
+    h * 0.97f.rf,
+    w * 0.08f.rf,
+  )
+  val cx = x + w * 0.64f.rf
+  val bulbY = y + h * 0.86f.rf
+  val top = y + h * 0.08f.rf
+  val travel = bulbY - top
+  for (i in 0..20) {
+    val at = i / 20f
+    val ty = bulbY - travel * at.rf
+    val len = w * (if (i % 5 == 0) 0.27f else 0.14f).rf
+    val hot =
+      zones.hotFromLive?.let { at.rf.isGreaterThanOrEqualTo(it).select(ScaleRed.rc, ScaleInk.rc) }
+        ?: if (zones.hotFrom != null && at >= zones.hotFrom) ScaleRed.rc else ScaleInk.rc
+    fillRect(hot, x + w * 0.4f.rf - len, ty, len, h * 0.006f.rf)
   }
-  fader(look, fraction, true, box.top, box.height, faderX, faderW)
+  // Metal channel, clear glass, continuous red alcohol and a rounded reservoir.
+  fillRound(
+    MetalDark.rc,
+    cx - w * 0.12f.rf,
+    top - w * 0.05f.rf,
+    w * 0.24f.rf,
+    travel + w * 0.08f.rf,
+    w * 0.12f.rf,
+  )
+  fillRound(
+    Color(0xFFD8E4E2).rc,
+    cx - w * 0.085f.rf,
+    top,
+    w * 0.17f.rf,
+    travel,
+    w * 0.08f.rf,
+  )
+  drawCircle(fillPaint(MetalDark.rc), w * 0.22f.rf, RemoteOffset(cx, bulbY))
+  drawCircle(fillPaint(Color(0xFFD8E4E2).rc), w * 0.185f.rf, RemoteOffset(cx, bulbY))
+  val liquid = Color(0xFFCC3028).rc
+  fillRound(
+    liquid,
+    cx - w * 0.045f.rf,
+    bulbY - travel * fraction,
+    w * 0.09f.rf,
+    travel * fraction,
+    w * 0.04f.rf,
+  )
+  drawCircle(fillPaint(liquid), w * 0.14f.rf, RemoteOffset(cx, bulbY))
+  fillRound(
+    Color.White.copy(alpha = 0.65f).rc,
+    cx - w * 0.07f.rf,
+    top + w * 0.04f.rf,
+    w * 0.025f.rf,
+    travel * 0.94f.rf,
+    w * 0.01f.rf,
+  )
+  drawCircle(
+    fillPaint(Color.White.copy(alpha = 0.55f).rc),
+    w * 0.04f.rf,
+    RemoteOffset(cx - w * 0.06f.rf, bulbY - w * 0.06f.rf),
+  )
 }
 
 /**
@@ -337,7 +397,8 @@ internal fun RemoteDrawScope.consoleBattery(
  * A rotary control's face for a 270° dial (thermostat, light) fitting [side] at ([left], [top]): a
  * dark knurled knob with a lamp ring of [LampCount] dots round it, lit in [accent] up to
  * [fraction], and a red index lamp at [target], dark while [targetVisible] is false. The centre is
- * left for the dial's text.
+ * left for the dial's text. A [mechanical] thermostat instead has a fixed printed scale and a plain
+ * cap whose index follows the set point; its readout lives outside this drawing.
  */
 internal fun RemoteDrawScope.consoleDial(
   accent: RemoteColor,
@@ -347,6 +408,7 @@ internal fun RemoteDrawScope.consoleDial(
   top: RemoteFloat,
   side: RemoteFloat,
   targetVisible: RemoteBoolean? = null,
+  mechanical: Boolean = false,
 ) {
   val r = side / 2f.rf
   val cx = left + r
@@ -354,14 +416,26 @@ internal fun RemoteDrawScope.consoleDial(
   // The lamps: unlit ones are dark glass with a faint rim, lit ones the accent.
   val ringR = r * 0.92f.rf
   val lampR = (r * 0.035f.rf).min(5f.rf)
-  for (i in 0 until LampCount) {
-    val at = i / (LampCount - 1f)
-    val p = polar(cx, cy, 135f + at * 270f, ringR)
-    val lit = fraction.isGreaterThanOrEqualTo((at - 0.001f).rf)
-    drawCircle(fillPaint(SlotLip.rc), lampR * 1.35f.rf, p)
-    drawCircle(fillPaint(lit.select(accent, SlotDeep.rc)), lampR, p)
-  }
-  if (target != null) {
+  if (mechanical) {
+    // Silk-screened scale on the stationary panel. No electronic fill or travelling target lamp.
+    for (i in 0..28) {
+      val deg = 135f + i * 270f / 28f
+      val inner = if (i % 4 == 0) 0.85f else 0.9f
+      drawLine(
+        strokePaint(if (i % 4 == 0) 1.5f else 1f, MetalLight.rc, round = false),
+        polar(cx, cy, deg, r * inner.rf),
+        polar(cx, cy, deg, r * 0.97f.rf),
+      )
+    }
+  } else
+    for (i in 0 until LampCount) {
+      val at = i / (LampCount - 1f)
+      val p = polar(cx, cy, 135f + at * 270f, ringR)
+      val lit = fraction.isGreaterThanOrEqualTo((at - 0.001f).rf)
+      drawCircle(fillPaint(SlotLip.rc), lampR * 1.35f.rf, p)
+      drawCircle(fillPaint(lit.select(accent, SlotDeep.rc)), lampR, p)
+    }
+  if (!mechanical && target != null) {
     // The index lamp rides the ring at the target; drawn at 135° and swung by the target.
     rotate(target * 270f.rf, RemoteOffset(cx, cy)) {
       val lamp = targetVisible?.select(ScaleRed.rc, Color.Transparent.rc) ?: ScaleRed.rc
@@ -369,7 +443,7 @@ internal fun RemoteDrawScope.consoleDial(
     }
   }
   // The knob: a soft drop shadow, a knurled metal skirt, and a dark cap lit from the top left.
-  val knobR = r * 0.78f.rf
+  val knobR = r * (if (mechanical) 0.73f else 0.78f).rf
   drawCircle(
     fillPaint(Color.Black.copy(alpha = 0.35f).rc),
     knobR,
@@ -396,7 +470,11 @@ internal fun RemoteDrawScope.consoleDial(
     RemoteOffset(cx, cy),
   )
   // The pointer line on the cap, swung with the value.
-  rotate(fraction * 270f.rf, RemoteOffset(cx, cy)) {
+  // A thermostat knob follows the requested temperature, not the room sensor. With no
+  // set point it parks at the low stop; builder bindings can remove/restore it in-document.
+  val position =
+    if (mechanical) targetVisible?.select(target ?: 0f.rf, 0f.rf) ?: target ?: 0f.rf else fraction
+  rotate(position * 270f.rf, RemoteOffset(cx, cy)) {
     drawLine(
       strokePaint(3f, MetalLight.rc),
       polar(cx, cy, 135f, capR * 0.62f.rf),

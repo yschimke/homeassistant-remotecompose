@@ -95,12 +95,15 @@ fun RemoteHaHistoryGraph(
           style = haTextStyle(),
         )
         if (data.rows.isEmpty()) {
-          RemoteText(
-            text = "No entities".rs,
-            color = theme.secondaryText,
-            fontSize = HaType.Body,
-            style = haTextStyle(),
-          )
+          if (visualFamily() == HaVisualFamily.Console)
+            ConsoleTapeLabel("No entities".rs, compact = true)
+          else
+            RemoteText(
+              text = "No entities".rs,
+              color = theme.secondaryText,
+              fontSize = HaType.Body,
+              style = haTextStyle(),
+            )
         } else {
           data.rows.forEach { row -> Row(row, theme) }
         }
@@ -161,14 +164,20 @@ fun RemoteHaHistoryGraphIdentity(
       } else {
         // The cell's height is fixed and small: a short caption, like the tile's compact name +
         // value, never a wrapped sentence.
-        RemoteText(
-          text = (if (data.rows.isEmpty()) "No entities" else COMPACT_EMPTY_LABEL).rs,
-          color = theme.primaryText,
-          fontSize = HaType.Label,
-          style = haTextStyle(),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
+        if (visualFamily() == HaVisualFamily.Console)
+          ConsoleTapeLabel(
+            (if (data.rows.isEmpty()) "No entities" else COMPACT_EMPTY_LABEL).rs,
+            compact = true,
+          )
+        else
+          RemoteText(
+            text = (if (data.rows.isEmpty()) "No entities" else COMPACT_EMPTY_LABEL).rs,
+            color = theme.primaryText,
+            fontSize = HaType.Label,
+            style = haTextStyle(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
       }
     }
   }
@@ -181,14 +190,16 @@ fun RemoteHaHistoryGraphIdentity(
  */
 @Composable
 private fun EmptyState(data: HaHistoryGraphData, theme: RemoteHaTheme) {
-  RemoteText(
-    text = cardText("empty", data.emptyLabel),
-    color = theme.secondaryText,
-    fontSize = HaType.Body,
-    style = haTextStyle(),
-    maxLines = 2,
-    overflow = TextOverflow.Ellipsis,
-  )
+  if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel(cardText("empty", data.emptyLabel))
+  else
+    RemoteText(
+      text = cardText("empty", data.emptyLabel),
+      color = theme.secondaryText,
+      fontSize = HaType.Body,
+      style = haTextStyle(),
+      maxLines = 2,
+      overflow = TextOverflow.Ellipsis,
+    )
   RemoteText(
     text = legend(data),
     color = theme.primaryText,
@@ -221,13 +232,16 @@ private fun CompactEmptyState(data: HaHistoryGraphData, theme: RemoteHaTheme) {
       overflow = TextOverflow.Ellipsis,
       modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
     )
-    RemoteText(
-      text = COMPACT_EMPTY_LABEL.rs,
-      color = theme.secondaryText,
-      fontSize = HaType.Caption,
-      style = haTextStyle(),
-      maxLines = 1,
-    )
+    if (visualFamily() == HaVisualFamily.Console)
+      ConsoleTapeLabel(COMPACT_EMPTY_LABEL.rs, compact = true)
+    else
+      RemoteText(
+        text = COMPACT_EMPTY_LABEL.rs,
+        color = theme.secondaryText,
+        fontSize = HaType.Caption,
+        style = haTextStyle(),
+        maxLines = 1,
+      )
   }
 }
 

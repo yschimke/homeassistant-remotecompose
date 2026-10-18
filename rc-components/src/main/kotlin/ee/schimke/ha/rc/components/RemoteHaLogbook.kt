@@ -58,12 +58,15 @@ fun RemoteHaLogbook(data: HaLogbookData, modifier: RemoteModifier = RemoteModifi
         )
       }
       if (data.entries.isEmpty()) {
-        RemoteText(
-          text = "No recent activity".rs,
-          color = theme.secondaryText,
-          fontSize = HaType.Label,
-          style = haTextStyle(),
-        )
+        if (visualFamily() == HaVisualFamily.Console)
+          ConsoleTapeLabel("No recent activity".rs, compact = false)
+        else
+          RemoteText(
+            text = "No recent activity".rs,
+            color = theme.secondaryText,
+            fontSize = HaType.Label,
+            style = haTextStyle(),
+          )
       } else {
         data.entries.forEachIndexed { i, entry -> Entry(i, entry, theme) }
       }
@@ -91,12 +94,15 @@ fun RemoteHaLogbookIdentity(data: HaLogbookData, modifier: RemoteModifier = Remo
     contentAlignment = RemoteAlignment.Center,
   ) {
     if (latest == null) {
-      RemoteText(
-        text = "No recent activity".rs,
-        color = theme.secondaryText,
-        fontSize = HaType.Body,
-        style = haTextStyle(),
-      )
+      if (visualFamily() == HaVisualFamily.Console)
+        ConsoleTapeLabel("No recent activity".rs, compact = true)
+      else
+        RemoteText(
+          text = "No recent activity".rs,
+          color = theme.secondaryText,
+          fontSize = HaType.Body,
+          style = haTextStyle(),
+        )
     } else {
       RemoteRow(
         modifier = RemoteModifier.fillMaxWidth(),

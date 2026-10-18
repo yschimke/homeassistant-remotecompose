@@ -14,6 +14,7 @@ import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.RemoteColor
+import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.tween
@@ -198,22 +199,36 @@ private fun ButtonIconChip(
   iconDp: Int,
   iconOnly: Boolean = false,
 ) {
+  val console = visualFamily() == HaVisualFamily.Console
   RemoteBox(
     modifier =
       RemoteModifier.size(chipDp.rdp)
         .clip(haControlShape(20, round = true))
-        .background(accent.copy(alpha = accent.alpha * 0.2f.rf)),
+        .then(
+          if (console) RemoteModifier
+          else RemoteModifier.background(accent.copy(alpha = accent.alpha * 0.2f.rf))
+        ),
     contentAlignment = RemoteAlignment.Center,
   ) {
+    if (console)
+      ConsoleControlFace(
+        look.isOn?.select(accent, ConsoleSlot.rc) ?: accent,
+        RemoteModifier.size(chipDp.rdp),
+        look.isOn?.select(1f.rf, 0f.rf),
+      )
     HaStateIcon(
       icon = data.icon,
       accent = data.accent,
       look = look,
-      tint = accent,
+      tint = if (console) look.dim(haTheme().primaryText) else accent,
       // Decorative when the name is drawn under it; the icon alone carries it otherwise.
       contentDescription =
         if (data.showName && !iconOnly) null else entityName(data.entityId, data.name),
-      modifier = RemoteModifier.size(iconDp.rdp),
+      modifier =
+        RemoteModifier.then(
+            if (console) RemoteModifier.padding(end = (chipDp * 0.28f).rdp) else RemoteModifier
+          )
+          .size((if (console) iconDp - 6 else iconDp).rdp),
     )
   }
 }

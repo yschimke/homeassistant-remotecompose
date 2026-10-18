@@ -116,7 +116,11 @@ private fun ActionChip(action: HaAreaAction, theme: RemoteHaTheme) {
 
   RemoteBox(
     modifier =
-      RemoteModifier.then(click).size(40.rdp).clip(haControlShape(20, round = true)).background(bg),
+      RemoteModifier.then(click)
+        .size(40.rdp)
+        .clip(haControlShape(20, round = true))
+        .background(bg)
+        .then(consoleKeyChrome(tint)),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(

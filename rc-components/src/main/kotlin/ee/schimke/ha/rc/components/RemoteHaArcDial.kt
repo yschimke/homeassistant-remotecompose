@@ -22,6 +22,7 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.modifier.drawWithContent
 import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
@@ -140,7 +141,9 @@ fun RemoteHaArcDialWide(
     horizontalArrangement = RemoteArrangement.spacedBy(10.rdp),
   ) {
     RemoteBox(
-      modifier = RemoteModifier.fillMaxHeight().size(56.rdp),
+      modifier =
+        if (isConsoleThermostat(data)) RemoteModifier.size((if (compact) 32 else 56).rdp)
+        else RemoteModifier.fillMaxHeight().size(56.rdp),
       contentAlignment = RemoteAlignment.Center,
     ) {
       ArcCanvas(
@@ -184,6 +187,10 @@ fun RemoteHaArcDialWide(
 
 @Composable
 private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
+  if (isConsoleThermostat(data)) {
+    ConsoleThermostatBody(data, theme)
+    return
+  }
   RemoteBox(modifier = RemoteModifier.size(180.rdp), contentAlignment = RemoteAlignment.Center) {
     ArcCanvas(
       data = data,
@@ -223,6 +230,72 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
           style = haTextStyle(),
           maxLines = 1,
         )
+      }
+    }
+  }
+}
+
+/** A thermostat is a room display beside a set-point control, never a display on a moving cap. */
+@Composable
+private fun isConsoleThermostat(data: HaArcDialData): Boolean =
+  visualFamily() == HaVisualFamily.Console &&
+    data.centerLabelAttribute == "current_temperature_label"
+
+@Composable
+private fun ConsoleThermostatBody(data: HaArcDialData, theme: RemoteHaTheme) {
+  RemoteColumn(
+    horizontalAlignment = RemoteAlignment.CenterHorizontally,
+    verticalArrangement = RemoteArrangement.spacedBy(8.rdp),
+  ) {
+    RemoteColumn(
+      modifier =
+        RemoteModifier.size(180.rdp, 62.rdp).drawWithContent {
+          // A fixed monochrome instrument window, recessed behind a metal lip.
+          fillRound(ConsoleSlot.rc, 0f.rf, 0f.rf, width, height, 3f.rf)
+          fillRound(ConsoleSlotLip.rc, 1f.rf, 1f.rf, width - 2f.rf, height - 2f.rf, 2f.rf)
+          fillRect(Color(0xFFADB9A1).rc, 4f.rf, 4f.rf, width - 8f.rf, height - 8f.rf)
+          fillRect(Color.Black.copy(alpha = 0.12f).rc, 4f.rf, 4f.rf, width - 8f.rf, 3f.rf)
+          drawContent()
+        },
+      horizontalAlignment = RemoteAlignment.CenterHorizontally,
+      verticalArrangement = RemoteArrangement.Center,
+    ) {
+      RemoteText(
+        "TEMPERATURE".rs,
+        color = Color(0xFF354033).rc,
+        fontSize = HaType.Micro,
+        style = haTextStyle(),
+      )
+      RemoteText(
+        text = centerText(data),
+        color = Color(0xFF202B22).rc,
+        fontSize = HaType.ValueLarge,
+        fontWeight = haValueWeight(),
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
+    RemoteRow(
+      verticalAlignment = RemoteAlignment.CenterVertically,
+      horizontalArrangement = RemoteArrangement.spacedBy(12.rdp),
+    ) {
+      RemoteBox(RemoteModifier.size(116.rdp)) { ArcCanvas(data, theme, 6f, 6f, 8f, 3f) }
+      RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(4.rdp)) {
+        RemoteText(
+          "SET POINT".rs,
+          color = theme.secondaryText,
+          fontSize = HaType.Micro,
+          style = haTextStyle(),
+        )
+        RemoteText(
+          supportingText(data) ?: "—".rs,
+          color = theme.primaryText,
+          fontSize = HaType.ValueSmall,
+          style = haTextStyle(),
+          maxLines = 1,
+        )
+        ModeChip(data, dialAccent(data))
       }
     }
   }
@@ -307,6 +380,7 @@ private fun ArcCanvas(
   val accent = dialAccent(data)
   val family = visualFamily()
   val look = meterLook(accent, theme.divider)
+  val mechanical = isConsoleThermostat(data)
 
   RemoteCanvas(modifier = RemoteModifier.fillMaxSize()) {
     val w = width
@@ -330,6 +404,7 @@ private fun ArcCanvas(
         top,
         side,
         data.live?.targetVisible,
+        mechanical = mechanical,
       )
       return@RemoteCanvas
     }
@@ -437,7 +512,8 @@ private fun StepperButton(
       RemoteModifier.then(click)
         .size(36.rdp)
         .clip(haControlShape(18, round = true))
-        .border(1.rdp, theme.divider, haControlShape(18, round = true)),
+        .border(1.rdp, theme.divider, haControlShape(18, round = true))
+        .then(consoleKeyChrome(accent)),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(

@@ -60,6 +60,14 @@ object DashboardAgentPrompt {
     appendLine("## Request")
     appendLine(request.trim().ifEmpty { "Improve this dashboard." })
     appendLine()
+    append(context(dashboard, states, title))
+  }
+
+  internal fun context(
+    dashboard: JsonObject,
+    states: Collection<EntityState>,
+    title: String? = null,
+  ): String = buildString {
     appendLine("## Current dashboard${title?.let { " ($it)" }.orEmpty()}")
     appendLine("```json")
     appendLine(pretty.encodeToString(JsonObject.serializer(), dashboard))

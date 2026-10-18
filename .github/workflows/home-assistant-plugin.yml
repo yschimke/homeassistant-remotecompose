@@ -40,7 +40,7 @@ jobs:
           npm install --no-save --prefix embed playwright@1.56.1
           npx --prefix embed playwright install --with-deps chromium
       - name: Test real TS-player card and panel session bridge
-        run: node --test home-assistant/test/frontend.test.mjs
+        run: node --test home-assistant/test/card-config.test.mjs home-assistant/test/frontend.test.mjs
       - name: Run packaged plugin inside Home Assistant
         run: |
           mkdir -p build/ha-config

@@ -184,6 +184,63 @@ class LauncherDesignsTest {
     }
   }
 
+  @Test
+  fun consoleControlsBakeAtCompactSizesAndKeepTheirActions() {
+    val snapshot = snapshotOf(entity("switch.fan", "on", "friendly_name" to "Fan"))
+    for (type in listOf("tile", "button")) for ((width, height) in listOf(96 to 64, 180 to 48)) {
+      val baked =
+        bake(
+          card(type, "switch.fan"),
+          snapshot,
+          width,
+          height,
+          LauncherLook(HaUberTheme.Console),
+        )
+      val document = RcDocumentCodec.decode(baked.bytes, RcWireLimits())
+      assertTrue(
+        document.namedVariables.none { "switch.s0" in it.name },
+        "$type at $width × $height has its state baked",
+      )
+      assertTrue(baked.actions.isNotEmpty(), "$type retains its action")
+      baked.actions.values.forEach { assertEquals(defaultTapActionFor("switch.fan"), it) }
+    }
+  }
+
+  @Test
+  fun consoleThermostatBakesReadingsAndRealStepperActions() {
+    val card = card("thermostat", "climate.studio")
+    val snapshot =
+      snapshotOf(
+        entity(
+          "climate.studio",
+          "heat",
+          "current_temperature" to "19",
+          "temperature" to "22",
+          "friendly_name" to "Studio",
+        )
+      )
+    for ((width, height) in listOf(180 to 80, 360 to 290)) {
+      val baked = bake(card, snapshot, width, height, LauncherLook(HaUberTheme.Console))
+      val document = RcDocumentCodec.decode(baked.bytes, RcWireLimits())
+      assertTrue(
+        document.namedVariables.none { "climate.s0" in it.name },
+        "all climate readings are baked",
+      )
+      if (width >= 260) {
+        val steps = baked.actions.values.filterIsInstance<HaAction.CallService>()
+        assertEquals(2, steps.size)
+        steps.forEach {
+          assertEquals("climate.studio", it.entityId)
+          assertEquals("set_temperature", it.service)
+        }
+        assertEquals(
+          setOf("21.5", "22.5"),
+          steps.map { it.serviceData["temperature"].toString() }.toSet(),
+        )
+      }
+    }
+  }
+
   private fun bake(
     card: CardConfig,
     snapshot: HaSnapshot,

@@ -172,7 +172,7 @@ The [`ha-cards` catalog](../../ha-cards-catalog/) offers each layer as a builder
 | `ha-cards/arc-meter`, `ha-cards/bar-meter` | 2 | bare meters for composing a card of your own; `entityId` binds the value |
 | `ha-cards/thermometer`, `ha-cards/battery` | 3 | typed |
 | `ha-cards/measurement` | 3 | `kind` picks the visual, and `auto` reads the unit |
-| `ha-cards/thermostat` | 3 | a climate entity's 270° dial; live through `<id>.current_temperature` / `<id>.target_temperature`; a knob in a lamp ring under `console` |
+| `ha-cards/thermostat` | 3 | a climate entity's 270° dial; live through `<id>.current_temperature` / `<id>.target_temperature`; a set-point knob beside a separate temperature window under `console` |
 
 Every measurement takes `presentation`: one of the five rungs, or `adaptive`. The policy's
 `allowedValues` are held to the code by `HaCardMeasurementsTest`. The starter templates use
@@ -197,7 +197,7 @@ needle, and a Braun thermometer has no fill. Every part reads the theme through
 | `lcd`: segment display | 12 blocks with ghosts | **framed column of bars**, no bulb, **hot bars in a red ink** | **phone battery**, four bars, red when low | chunky segments | value in a **recessed screen** | 4 dp bezel · square block switch |
 | `braun`: Dieter Rams | half-circle dial, index ticks, **orange pointer** on a black hub | **tuning scale**: spine, ticks, orange pointer, red ticks past hot | hairline, softly rounded | tuning scale | plain | 18 dp, borderless |
 | `nixie` | glowing filament over electrode dots | **IN-9 bargraph tube** in its socket | horizontal tube | tube | plain | 14 dp · 4 dp |
-| `console`: skeuomorphic studio desk | **backlit VU meter** behind glass: cream face, the standard VU scale, red from 0 VU, needle and pivot bridge | **fader**: metal cap in a lit slot beside a silkscreen scale, red marks past hot | **lamp in a metal bezel**, red when low | fader | ruled plate | 6 dp **painted-metal panel** (sheen) · metal cap in a recessed slot; dials are a **knob in a lamp ring** |
+| `console`: skeuomorphic studio desk | **backlit VU meter** behind glass: cream face, the standard VU scale, red from 0 VU, needle and pivot bridge | **glass liquid column** and reservoir on an ivory enamel scale, red marks past hot | **lamp in a metal bezel**, red when low | fader | ruled plate | 6 dp **painted-metal panel** (sheen) · recessed keys and rockers with separate pilot lamps; dials are a **knob in a lamp ring**, clocks red LED modules behind smoked glass |
 
 How each part takes it:
 
@@ -214,11 +214,16 @@ How each part takes it:
 - **Card chrome and controls**: `cardChrome` takes the theme's corner and border, and the toggle
   switch takes its corner and square or round knob (`HaCardShapeStyle`). `HaSurfaceMaterial` says
   what they are made of: `Flat`, or Console's `PaintedMetal`, where `cardChrome` lays a fixed
-  top-lit sheen over the card colour (so a live background still shows) and the switch knob is a
-  machined cap (a gradient brush) in a recessed slot.
+  top-lit sheen over the card colour (so a live background still shows). `ConsoleControls.kt`
+  draws recessed keys and rockers with a separate pilot lamp; the rocker seam and cap depth follow
+  the same live on/off expression as the standard switch. Transport lamps indicate an available
+  command, while switch lamps indicate on/off. Disabled transport controls remain inert.
+- **Console clocks**: `ConsoleClock.kt` draws seven-segment LED modules behind smoked glass.
+  Digits use the player's hour/minute/second fields and the existing zone-offset binding; the
+  original time string remains the accessibility label. The date and title keep their bindings.
 - **Skeuomorphism stays live and original.** Console draws light and material with gradient
   shaders (`RemoteBrush` linear and radial gradients, applied to a paint) and shadows as offset
-  translucent shapes — all vectors, sized from the canvas at playback, with the needle, fader cap
+  translucent shapes — all vectors, sized from the canvas at playback, with the needle, fader cap, liquid column
   and lamps moved by the live fraction. It is an original drawing of the 1970s-console genre; the
   only borrowed thing is the VU scale itself (ANSI C16.5), which is a standard. Don't trace a
   product's artwork: raster knobs from a CC-licensed gallery would also be legal with attribution,
@@ -264,7 +269,7 @@ drawn per family too (`Dials.kt`; Console's knob in `MetersConsole.kt`), and so 
 | `lcd` | 15 chunky blocks with ghosts, pointer bar | bar graph of segments with ghosts | chunky segments with ghosts |
 | `braun` | hairline scale with ticks, pointer bar in the accent | hairline trace, the latest reading an orange dot | thin bars |
 | `nixie` | electrode dots and a glowing filament, a lit bead at target | glowing filament | glowing columns |
-| `console` | knurled knob in a lamp ring | trace in a recessed screen | lamp-lit columns in a recessed screen |
+| `console` | thermostat: plain set-point knob and printed scale, separate recessed readout; other dials: knob in a lamp ring | trace in a recessed screen | lamp-lit columns in a recessed screen |
 
 **Controls and ink inside cards.** `haControlShape(classicDp, round)` gives a key, button, chip or
 badge its shape under the theme: Classic keeps its own; the square-cornered themes (Trinitron,
@@ -320,3 +325,17 @@ When you add or change a part or a card:
    check the smallest and largest cells against adaptive-card-layouts.md's design-review checklist.
 6. A new part that the builder should offer gets a `ha-cards` wrapper (scalar arguments only), a
    sticker and a policy entry.
+
+### Console command and service surfaces
+
+Every built-in Console button uses either `ConsoleControlFace` (a transport key with a pilot
+lamp, or an on/off rocker) or `consoleKeyChrome` (a beveled key mount for text, number, selector
+and compact icon controls). Apply the physical surface inside the existing target: do not add
+a second action, change its label or reduce its touch area. Selected mode keys retain the
+selection accent; disabled keys retain the original inert action and quiet ink.
+
+`ConsoleTapeLabel` is the service label for unavailable or placeholder content. It accepts the
+original `RemoteString`, so template labels keep their bindings. It owns no action. Availability
+uses the existing visibility binding, and image notes sit behind the bitmap so successful loading
+covers them. Tape is an instrument material: white paper with dark ink in either host mode.
+See the [control audit](../design/evidence/console-controls-and-tape/README.md) for every owning path.

@@ -27,6 +27,7 @@ import androidx.compose.remote.creation.compose.modifier.offset
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
+import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
@@ -88,15 +89,21 @@ fun RemoteHaMediaControl(
           modifier =
             RemoteModifier.size(96.rdp)
               .clip(haControlShape(8))
-              .background(haInk(data.accent).copy(alpha = haInk(data.accent).alpha * 0.15f.rf)),
+              .background(
+                if (visualFamily() == HaVisualFamily.Console) ConsoleSlot.rc
+                else haInk(data.accent).copy(alpha = haInk(data.accent).alpha * 0.15f.rf)
+              ),
           contentAlignment = RemoteAlignment.Center,
         ) {
-          RemoteIcon(
-            imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
-            contentDescription = LiveValues.attribute(data.entityId, "media_title", data.title),
-            modifier = RemoteModifier.size(40.rdp),
-            tint = haInk(data.accent),
-          )
+          if (visualFamily() == HaVisualFamily.Console)
+            ConsoleTapeLabel("No artwork".rs, RemoteModifier.padding(6.rdp))
+          else
+            RemoteIcon(
+              imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
+              contentDescription = LiveValues.attribute(data.entityId, "media_title", data.title),
+              modifier = RemoteModifier.size(40.rdp),
+              tint = haInk(data.accent),
+            )
         }
       }
     }
@@ -208,15 +215,20 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
       modifier =
         RemoteModifier.size(40.rdp)
           .clip(haControlShape(6))
-          .background(haInk(data.accent).copy(alpha = haInk(data.accent).alpha * 0.15f.rf)),
+          .background(
+            if (visualFamily() == HaVisualFamily.Console) ConsoleSlot.rc
+            else haInk(data.accent).copy(alpha = haInk(data.accent).alpha * 0.15f.rf)
+          ),
       contentAlignment = RemoteAlignment.Center,
     ) {
-      RemoteIcon(
-        imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
-        contentDescription = LiveValues.attribute(data.entityId, "media_title", data.title),
-        modifier = RemoteModifier.size(22.rdp),
-        tint = haInk(data.accent),
-      )
+      if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel("No art".rs, compact = true)
+      else
+        RemoteIcon(
+          imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
+          contentDescription = LiveValues.attribute(data.entityId, "media_title", data.title),
+          modifier = RemoteModifier.size(22.rdp),
+          tint = haInk(data.accent),
+        )
     }
     RemoteColumn(
       modifier = RemoteModifier.weight(1f),
@@ -244,13 +256,23 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
     // same RemoteAction captured in both breakpoint branches blanks
     // the Full tier in alpha010, and a tiny chip is a glance target —
     // the tap opens the full card.
-    RemoteIcon(
-      imageVector =
-        (if (data.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow).toRemoteImageVector(),
-      contentDescription = "play/pause".rs,
-      modifier = RemoteModifier.size(22.rdp),
-      tint = haInk(data.accent),
-    )
+    val console = visualFamily() == HaVisualFamily.Console
+    RemoteBox(
+      modifier = RemoteModifier.size((if (console) 32 else 22).rdp),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      if (console) ConsoleControlFace(haInk(data.accent), RemoteModifier.size(32.rdp))
+      RemoteIcon(
+        imageVector =
+          (if (data.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow)
+            .toRemoteImageVector(),
+        contentDescription = "play/pause".rs,
+        modifier =
+          RemoteModifier.then(if (console) RemoteModifier.padding(end = 9.rdp) else RemoteModifier)
+            .size((if (console) 18 else 22).rdp),
+        tint = if (console) theme.primaryText else haInk(data.accent),
+      )
+    }
   }
 }
 
@@ -269,11 +291,17 @@ private fun TransportButton(
   val size = if (big) 40 else 32
   val iconSize = if (big) 22.rdp else 18.rdp
   RemoteHaTouchTarget(size, size, action.toRemoteAction(), label.rs) {
+    val console = visualFamily() == HaVisualFamily.Console
+    if (console) ConsoleControlFace(haInk(accent), RemoteModifier.size(size.rdp))
     RemoteIcon(
       imageVector = icon.toRemoteImageVector(),
       contentDescription = null,
-      modifier = RemoteModifier.size(iconSize),
-      tint = haInk(accent),
+      modifier =
+        RemoteModifier.then(
+            if (console) RemoteModifier.padding(end = (size * 0.28f).rdp) else RemoteModifier
+          )
+          .size(iconSize),
+      tint = if (console) haTheme().primaryText else haInk(accent),
     )
   }
 }

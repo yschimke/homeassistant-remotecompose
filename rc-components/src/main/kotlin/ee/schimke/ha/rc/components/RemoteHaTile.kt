@@ -18,6 +18,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.RemoteColor
+import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
@@ -131,7 +132,13 @@ private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolea
 private fun TileIcon(data: HaTileData, look: HaEntityLook, renderChip: Boolean) {
   // Decorative: the tile draws the name beside it.
   val accent = look.accent
-  if (renderChip) {
+  if (renderChip && visualFamily() == HaVisualFamily.Console) {
+    ConsoleControlFace(
+      look.isOn?.select(accent, ConsoleSlot.rc) ?: accent,
+      RemoteModifier.size(32.rdp),
+      look.isOn?.select(1f.rf, 0f.rf),
+    )
+  } else if (renderChip) {
     RemoteBox(
       modifier =
         RemoteModifier.size(32.rdp)
@@ -146,6 +153,20 @@ private fun TileIcon(data: HaTileData, look: HaEntityLook, renderChip: Boolean) 
         tint = accent,
         contentDescription = null,
         modifier = RemoteModifier.size(20.rdp),
+      )
+    }
+  } else if (visualFamily() == HaVisualFamily.Console && data.tapAction is HaAction.CallService) {
+    RemoteBox(
+      modifier = RemoteModifier.size(24.rdp).then(consoleKeyChrome(accent)),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      HaStateIcon(
+        icon = data.icon,
+        accent = data.accent,
+        look = look,
+        tint = accent,
+        contentDescription = null,
+        modifier = RemoteModifier.size(18.rdp),
       )
     }
   } else {
@@ -192,15 +213,24 @@ fun RemoteHaTileCompact(data: HaTileData, modifier: RemoteModifier = RemoteModif
   ) {
     RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
       // Static like the accent: this tier registers no `is_on` binding.
-      HaStateIcon(
-        icon = data.icon,
-        accent = data.accent,
-        look = look,
-        tint = accent,
-        // Decorative: the name is drawn beside it.
-        contentDescription = null,
-        modifier = RemoteModifier.size(24.rdp),
-      )
+      RemoteBox(
+        modifier =
+          RemoteModifier.size(24.rdp)
+            .then(
+              if (data.tapAction != HaAction.None) consoleKeyChrome(accent) else RemoteModifier
+            ),
+        contentAlignment = RemoteAlignment.Center,
+      ) {
+        HaStateIcon(
+          icon = data.icon,
+          accent = data.accent,
+          look = look,
+          tint = accent,
+          // Decorative: the name is drawn beside it.
+          contentDescription = null,
+          modifier = RemoteModifier.size(24.rdp),
+        )
+      }
       RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
         RemoteText(
           text = entityName(data.entityId, data.name),
@@ -278,14 +308,21 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
     // Static like the accent: this tier registers no `is_on` binding.
-    HaStateIcon(
-      icon = data.icon,
-      accent = data.accent,
-      look = look,
-      tint = accent,
-      contentDescription = entityName(data.entityId, data.name),
-      modifier = RemoteModifier.size(32.rdp),
-    )
+    RemoteBox(
+      modifier =
+        RemoteModifier.size(32.rdp)
+          .then(if (data.tapAction != HaAction.None) consoleKeyChrome(accent) else RemoteModifier),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      HaStateIcon(
+        icon = data.icon,
+        accent = data.accent,
+        look = look,
+        tint = accent,
+        contentDescription = entityName(data.entityId, data.name),
+        modifier = RemoteModifier.size(32.rdp),
+      )
+    }
     RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
       // The chip's only text, so it reads as the value: primary ink, a step above a caption.
       RemoteText(
