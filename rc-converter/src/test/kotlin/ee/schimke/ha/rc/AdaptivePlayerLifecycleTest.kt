@@ -17,14 +17,18 @@ import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInf
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteBox
+import androidx.compose.remote.creation.compose.layout.RemoteColumn
+import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
+import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.profile.Profile
 import androidx.compose.remote.player.core.RemoteDocument
 import androidx.compose.remote.player.view.RemoteComposePlayer
@@ -85,6 +89,65 @@ class AdaptivePlayerLifecycleTest {
       is ViewGroup -> (0 until view.childCount).flatMap { players(view.getChildAt(it)) }
       else -> emptyList()
     }
+
+  /** Same content structure as WrapContentHeightRepro, including naturally measured text. */
+  private fun textDocument(text: String): ByteArray = runBlocking {
+    captureSingleRemoteDocument(
+        context = compose.activity,
+        creationDisplayInfo = RemoteCreationDisplayInfo(300, 400, 160),
+        profile = androidXExperimentalWrap,
+      ) {
+        RemoteBox(RemoteModifier.fillMaxWidth().background(blue.rc)) {
+          RemoteColumn(RemoteModifier.fillMaxWidth().padding(4.rdp)) {
+            RemoteText(text.rs, modifier = RemoteModifier.fillMaxWidth())
+          }
+        }
+      }
+      .bytes
+  }
+
+  private fun textHeight(name: String, width: Int): Int {
+    compose.waitForIdle()
+    return compose.runOnIdle {
+      val player = players(compose.activity.window.decorView).single()
+      assertEquals(width, player.width)
+      val image = Bitmap.createBitmap(player.width, player.height, Bitmap.Config.ARGB_8888)
+      player.draw(Canvas(image))
+      save(name, image)
+      assertEquals(android.graphics.Color.rgb(21, 101, 192), image.getPixel(2, 2))
+      image.recycle()
+      player.height
+    }
+  }
+
+  @Test
+  fun widthOnlyTextPropagatesIntrinsicHeightAcrossDocumentReplacement() {
+    val first = textDocument("Hello")
+    val multiline = textDocument("Hello\nHello\nHello")
+    var bytes by mutableStateOf(first)
+    compose.setContent { WrapAdaptiveRemoteDocumentPlayer(bytes, Modifier.width(180.dp)) }
+    val singleHeight = textHeight("text-single", 180)
+    assertTrue(singleHeight in 20..40, "text's intrinsic height, not the 400px authored canvas")
+    compose.runOnIdle { bytes = multiline }
+    assertTrue(textHeight("text-multiline", 180) >= singleHeight * 2)
+    compose.runOnIdle { bytes = first }
+    assertEquals(singleHeight, textHeight("text-restored", 180))
+  }
+
+  @Test
+  fun widthOnlyTextReflowsAfterFirstDrawAtSmallerAndLargerWidths() {
+    val bytes =
+      textDocument(
+        "One naturally measured text paragraph that must reflow as its available width changes."
+      )
+    var width by mutableStateOf(280)
+    compose.setContent { WrapAdaptiveRemoteDocumentPlayer(bytes, Modifier.width(width.dp)) }
+    val wide = textHeight("text-wide", 280)
+    compose.runOnIdle { width = 100 }
+    assertTrue(textHeight("text-narrow", 100) > wide, "narrow text must take more lines")
+    compose.runOnIdle { width = 280 }
+    assertEquals(wide, textHeight("text-wide-restored", 280))
+  }
 
   private fun frame(name: String, color: Color, width: Int, height: Int, marker: Boolean = false) {
     compose.waitForIdle()

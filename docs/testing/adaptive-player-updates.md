@@ -41,7 +41,7 @@ hosted View as well. Existing measurement warmup and fixed-slot recreation remai
 transition waits for idle and draws the **attached** player; assertions check dimensions and
 pixels. There are no caller-provided keys. Fixed fill documents include a white bottom-end
 marker, whose position must change with both axes, so a background-only frame cannot pass.
-Eight methods cover six regression cases plus two upstream observation fixtures.
+Ten methods cover eight regression cases plus two upstream observation fixtures.
 
 | Host / profile | Transitions after first draw | Expected and observed with fix |
 | --- | --- | --- |
@@ -51,9 +51,15 @@ Eight methods cover six regression cases plus two upstream observation fixtures.
 | Fixed, paint-measure on | Same size and byte matrix | Full fill, correct marker position and replacement color |
 | Width constrained, bounded wrap, paint-measure off | Same size and byte matrix, 70px content | Width follows constraints; heights 70 → 70 → 30 → 70; updated pixels |
 | Fixed width 180, intrinsic 40px document | Natural 40 → slack 80 → tight 20 | Exact host heights; content stays intrinsic in slack slot, clips in tight slot |
+| Width 180, naturally measured text (same structure as `WrapContentHeightRepro`) | One line → three lines → one line, changed bytes | Heights **22 → 50 → 22px** |
+| Naturally measured paragraph, stable bytes | Width 280 → 100 → 280 after first draw | Heights **36 → 92 → 36px**; text reflows |
 
 ![Host after growth](evidence/adaptive-player/host-grow.png)
 ![Host after shrinkage](evidence/adaptive-player/host-shrink.png)
+
+| Text at width 280 | The same bytes after shrinking to width 100 |
+| --- | --- |
+| ![Wide natural text](evidence/adaptive-player/text-wide.png) | ![Narrow reflowed text](evidence/adaptive-player/text-narrow.png) |
 
 ## Upstream observations, kept separate
 
