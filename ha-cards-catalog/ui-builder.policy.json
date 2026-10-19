@@ -1650,6 +1650,7 @@
           "required": true,
           "allowedValues": [
             "classic",
+            "home-assistant",
             "expressive",
             "trinitron",
             "lcd",

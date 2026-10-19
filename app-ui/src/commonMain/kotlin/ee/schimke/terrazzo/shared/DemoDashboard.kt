@@ -113,6 +113,7 @@ private fun DemoToolbar(
   val styles =
     listOf(
       "classic" to "Classic",
+      "home-assistant" to "Home Assistant",
       "braun" to "Braun",
       "lcd" to "LCD",
       "console" to "Console",

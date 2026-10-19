@@ -46,11 +46,17 @@ fun RemoteHaArcMeter(
   trackColor: RemoteColor? = null,
   zones: HaMeterZones = HaMeterZones(),
 ) {
-  val look = meterLook(color, trackColor)
   val family = visualFamily()
+  val look =
+    meterLook(
+      color,
+      trackColor
+        ?: if (family == HaVisualFamily.HomeAssistant) haTheme().dashboardBackground else null,
+    )
   RemoteCanvas(modifier = modifier) {
     when (family) {
       HaVisualFamily.Classic -> classicArc(look, fraction, strokeWidthPx, baseline)
+      HaVisualFamily.HomeAssistant -> homeAssistantArc(look, fraction, baseline)
       HaVisualFamily.Expressive -> expressiveArc(look, fraction, strokeWidthPx, baseline)
       HaVisualFamily.Trinitron -> trinitronArc(look, fraction, baseline, zones)
       HaVisualFamily.Lcd -> lcdArc(look, fraction, strokeWidthPx, baseline, zones)
@@ -91,6 +97,7 @@ fun RemoteHaBarMeter(
   val family = visualFamily()
   RemoteCanvas(modifier = modifier) {
     when (family) {
+      HaVisualFamily.HomeAssistant,
       HaVisualFamily.Classic -> classicBar(look, fraction, vertical)
       HaVisualFamily.Expressive -> expressiveBar(look, fraction, vertical)
       HaVisualFamily.Trinitron -> trinitronBar(look, fraction, vertical, zones)
@@ -131,6 +138,7 @@ fun RemoteHaThermometerGlyph(
   val family = visualFamily()
   RemoteCanvas(modifier = modifier) {
     when (family) {
+      HaVisualFamily.HomeAssistant,
       HaVisualFamily.Classic -> classicThermometer(look, fraction)
       HaVisualFamily.Expressive -> expressiveThermometer(look, fraction)
       HaVisualFamily.Trinitron -> trinitronThermometer(look, fraction, zones)
@@ -170,6 +178,7 @@ fun RemoteHaBatteryGlyph(
   val family = visualFamily()
   RemoteCanvas(modifier = modifier) {
     when (family) {
+      HaVisualFamily.HomeAssistant,
       HaVisualFamily.Classic -> classicBattery(look, fraction)
       HaVisualFamily.Expressive -> expressiveBattery(look, fraction)
       HaVisualFamily.Trinitron -> trinitronBattery(look, fraction, zones)

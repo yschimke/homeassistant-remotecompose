@@ -7,6 +7,26 @@ import kotlin.test.assertTrue
 
 class HaUberThemeTest {
   @Test
+  fun homeAssistantUsesBuiltInTokensInBothModes() {
+    val theme = HaUberTheme.byId("HOME-ASSISTANT")
+    assertEquals(HaUberTheme.HomeAssistant, theme)
+    assertEquals(HaVisualFamily.HomeAssistant, theme.visuals)
+    assertEquals(HaCardShapeStyle(cornerDp = 12, borderDp = 1), theme.shape)
+    assertEquals(androidx.compose.ui.text.font.FontWeight.Normal, theme.valueWeight)
+    assertEquals(androidx.compose.ui.graphics.Color(0xFF5E5E5E), theme.light!!.secondaryText)
+    assertEquals(androidx.compose.ui.graphics.Color(0xFF9B9B9B), theme.dark!!.secondaryText)
+    assertEquals(androidx.compose.ui.graphics.Color(0xFF009AC7), theme.light!!.linkText)
+    assertEquals(theme.light!!.linkText, theme.dark!!.linkText)
+    for (dark in listOf(false, true)) {
+      val palette = theme.palette(dark)
+      assertTrue(contrast(palette.primaryText, palette.cardBackground) >= 4.5f)
+      assertTrue(contrast(palette.secondaryText, palette.cardBackground) >= 4.5f)
+      assertEquals(palette.dashboardBackground, palette.sectionBackground)
+      assertNull(theme.inkFor(dark))
+    }
+  }
+
+  @Test
   fun idsAreUniqueAndResolve() {
     val ids = HaUberTheme.all.map { it.id }
     assertEquals(ids.toSet().size, ids.size)

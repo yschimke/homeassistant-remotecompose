@@ -123,6 +123,7 @@ fun Route.dashboardStudioRoutes(
         style in
           setOf(
             "classic",
+            "home-assistant",
             "expressive",
             "trinitron",
             "lcd",

@@ -1290,6 +1290,8 @@ private fun LauncherColoursSection(
 private fun cardStyleTagline(pref: CardStylePref): String =
   when (pref) {
     CardStylePref.Classic -> "The cards' own look, in your theme's palette"
+    CardStylePref.HomeAssistant ->
+      "Built-in HA · light and dark cards, half gauges and thermostat rings"
     CardStylePref.Expressive -> "Material 3 Expressive · big shapes, capsule meters"
     CardStylePref.Trinitron -> "Graphite hi-fi · VU needles, LED level meters"
     CardStylePref.Lcd -> "Segment LCD · bar graphs with ghost segments"
