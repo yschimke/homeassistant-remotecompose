@@ -101,7 +101,8 @@ play {
   // track instead would replace the phone bundle's release on it.
   track.set("wear:internal")
   defaultToAppBundles.set(true)
-  releaseStatus.set(com.github.triplet.gradle.androidpublisher.ReleaseStatus.DRAFT)
+  // Roll straight out to internal testers; promote to wear:production in the Console.
+  releaseStatus.set(com.github.triplet.gradle.androidpublisher.ReleaseStatus.COMPLETED)
   // Only publish when CI/local env provides a Play service-account json file path.
   enabled.set(System.getenv("ANDROID_PUBLISHER_CREDENTIALS") != null)
 }
