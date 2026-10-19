@@ -248,7 +248,7 @@ try:
                 page.wait_for_timeout(200)
                 changes = [c for c in commands if c['type'] == 'call_service']
                 assert len(changes) == calls + 1, changes
-                assert changes[-1]['domain'] == 'light' and changes[-1]['service'] == 'toggle'
+                assert changes[-1]['domain'] == 'homeassistant' and changes[-1]['service'] == 'toggle'
                 assert changes[-1]['target']['entity_id'] == 'light.p2s_chamber'
                 update('light.p2s_chamber', 'off')
                 expect(page.get_by_role('switch').first).not_to_be_checked()
