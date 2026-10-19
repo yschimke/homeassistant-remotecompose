@@ -55,7 +55,7 @@ indriya = "2.2.4"
 # of the plugin marker. The preview-baselines / preview-comment GitHub
 # Actions read this key (`catalog-key: compose-preview-plugin`) to pin
 # the CLI release they install on the runner.
-compose-preview-plugin = "2.66.0"
+compose-preview-plugin = "2.69.1"
 # The `ee.schimke.composeai:*-core` protocol artifacts are versioned on their
 # own 2.x line, NOT with the plugin. Tying `data-render-core` to
 # `compose-preview-plugin` is what pinned this repo at 1.47.0: that is the last
@@ -72,7 +72,7 @@ composeai-contracts = "3.32.0"
 # pin at a release version 404s the first time a release skips a module (the
 # daemon BOM 3.15.0 carries preview-annotations 3.13.2). Resolve it versionless
 # through the BOM. It must not predate the daemon baked into the preview plugin.
-compose-preview-daemon = "3.18.5"
+compose-preview-daemon = "3.20.1"
 tapmoc = "0.5.0"
 
 # Image loading (BitmapLoader / RemoteCompose named-bitmap resolution)
