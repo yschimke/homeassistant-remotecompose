@@ -32,6 +32,8 @@ data class WearSettings(
   val demoMode: Boolean = false,
   val baseUrl: String = "",
   val updatedAtMs: Long = 0L,
+  /** Explicit capability from the phone; absent on older phones means read-only. */
+  val inputEditingEnabled: Boolean = false,
 )
 
 /** Card extract phone-side; wear renders a list row from this. */

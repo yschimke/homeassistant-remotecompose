@@ -916,6 +916,54 @@ export function serviceCallFor(action) {
   return null;
 }
 
+/** Versioned form schema. Editing remains a player custom component, not a host-only control. */
+export const MESSAGE_CARD_TYPE = 'custom:terrazzo-message';
+export const MESSAGE_SUBMIT = 'ha:submit-inputs:v1';
+export function messageInputs(card, states = {}) {
+  if (!Array.isArray(card.inputs) || !card.inputs.length) throw new Error('Message card needs inputs');
+  const seen = new Set();
+  return card.inputs.map((field, index) => {
+    if (!/^[a-z][a-z0-9_]*$/.test(field.key) || seen.has(field.key)) throw new Error('Invalid/duplicate input key');
+    seen.add(field.key);
+    const entity = states[field.entity];
+    const type = field.type ?? (['select', 'input_select'].includes(domainOf(field.entity ?? '')) ? 'choice' : 'text');
+    if (!['text', 'multiline', 'choice'].includes(type)) throw new Error(`Unsupported input type: ${type}`);
+    const chrome = field.chrome ?? 'default';
+    if (!['default', 'none'].includes(chrome)) throw new Error('Unsupported input chrome');
+    const options = type === 'choice' ? (field.options ?? entity?.attributes?.options ?? []) : [];
+    if (!Array.isArray(options) || (type === 'choice' && !options.length) ||
+        options.some(o => typeof o !== 'string' || !o || o.includes('\n')) || new Set(options).size !== options.length) {
+      throw new Error('Choice input needs unique, non-empty options');
+    }
+    return { key: field.key, label: field.label ?? field.key, value: entity?.state ?? field.value ?? '',
+      options, chrome, multiline: type === 'multiline', submit: index === card.inputs.length - 1 ? MESSAGE_SUBMIT : '' };
+  });
+}
+/** Exact data placeholders only. Never template service names or targets, or evaluate code. */
+export function messageAction(card, states, drafts) {
+  const values = {};
+  for (const field of messageInputs(card, states)) {
+    const value = drafts instanceof Map ? drafts.get(field.key) ?? field.value : drafts[field.key] ?? field.value;
+    if (typeof value !== 'string' || value.length > 4096 || (field.options.length && !field.options.includes(value))) {
+      throw new Error(`Enter a valid ${field.label}`);
+    }
+    values[field.key] = value;
+  }
+  const action = parseLovelaceAction(card.tap_action, null);
+  if (action?.kind !== 'CallService') throw new Error('Message card needs a configured service action');
+  const bind = value => {
+    if (typeof value === 'string' && value.startsWith('{{input.') && value.endsWith('}}')) {
+      const key = value.slice(8, -2);
+      if (!Object.hasOwn(values, key)) throw new Error(`Unknown input ${key}`);
+      return values[key];
+    }
+    if (Array.isArray(value)) return value.map(bind);
+    if (isObject(value)) return Object.fromEntries(Object.entries(value).map(([key, v]) => [key, bind(v)]));
+    return value;
+  };
+  return { ...action, serviceData: bind(action.serviceData) };
+}
+
 // ---------------------------------------------------------------------------------------------
 // Home Assistant: OAuth (client_id = this page's origin) and the WebSocket API.
 // ---------------------------------------------------------------------------------------------
@@ -1385,13 +1433,14 @@ const BaseElement = globalThis.HTMLElement ?? class {};
  */
 export class HaCardElement extends BaseElement {
   static get observedAttributes() {
-    return ['hass', 'card', 'design', 'design-key', 'template-url', 'card-style', 'library', 'theme', 'height', 'require-host-bindings'];
+    return ['hass', 'card', 'design', 'design-key', 'template-url', 'card-style', 'library', 'theme', 'height', 'require-host-bindings', 'read-only'];
   }
 
   constructor() {
     super();
     this.states = {};
     this.pushed = new Map();
+    this.inputDrafts = new Map();
     this.generation = 0;
     this.player = null;
     this.unsubscribe = null;
@@ -1400,12 +1449,13 @@ export class HaCardElement extends BaseElement {
     root.innerHTML = `
       <style>
         :host { display: block; position: relative; }
+        .player { position: relative; }
         canvas { display: block; width: 100%; }
         .status { font: 14px system-ui, sans-serif; padding: 8px 0; color: #555; }
         .status:empty { display: none; }
         button { font: inherit; cursor: pointer; }
       </style>
-      <canvas part="canvas"></canvas>
+      <div class="player"><canvas part="canvas"></canvas></div>
       <div class="status" part="status"></div>`;
     this.canvas = root.querySelector('canvas');
     this.statusLine = root.querySelector('.status');
@@ -1492,6 +1542,16 @@ export class HaCardElement extends BaseElement {
     if (!card) return this.setStatus('error', 'ha-card: the card attribute is not a JSON card config.');
     this.setStatus('loading');
     try {
+      if (card.type === MESSAGE_CARD_TYPE) {
+        const RC = await loadPlayer(new URL('rc-player.js', import.meta.url).toString());
+        if (!RC.inputDocument) throw new Error('Update the Remote Compose player for message inputs');
+        const bytes = RC.inputDocument(messageInputs(card, this.states));
+        if (!current()) return;
+        await this.play(RC, bytes, card);
+        if (this.localStates) return this.setStatus('live');
+        await this.connectHass(card, current);
+        return;
+      }
       const library = new URL(this.getAttribute('library') ?? new URL('../../designs/v1/', import.meta.url));
       if (!library.pathname.endsWith('/')) library.pathname += '/';
       const designKey = this.getAttribute('design-key');
@@ -1531,15 +1591,20 @@ export class HaCardElement extends BaseElement {
     await this.connectHass(card, current);
   }
 
+  configureInputPlayer(player, _card) {
+    player.configureInputs?.({ editable: false, drafts: this.inputDrafts });
+  }
+
   async play(RC, bytes, card) {
     const dpr = globalThis.devicePixelRatio || 1;
     // Laid out tall first, so nothing is clipped, then fitted to the card's own height; hidden
     // until then.
     this.canvas.style.visibility = 'hidden';
-    this.canvas.width = Math.round((this.clientWidth || 360) * dpr);
+    this.canvas.width = Math.round((this.canvas.parentElement?.clientWidth || this.clientWidth || 360) * dpr);
     this.canvas.height = Math.round(Number(this.getAttribute('height') || 1200) * dpr);
     const player = new RC.RcdPlayer(this.canvas);
     player.setDensity(dpr);
+    this.configureInputPlayer(player, card);
     const theme = this.getAttribute('theme');
     if (theme === 'light' || theme === 'dark') player.setTheme(theme);
     const doc = await new Promise((resolve, reject) => {
@@ -1547,6 +1612,8 @@ export class HaCardElement extends BaseElement {
       player.loadFromArrayBuffer(bytes).catch(reject);
     });
     this.player = player;
+    this.inputRuntime = RC;
+    this.inputSignature = card.type === MESSAGE_CARD_TYPE ? JSON.stringify(messageInputs(card, this.states)) : null;
     this.pushed.clear();
     patchStringOverrides(player.getRemoteContext());
     this.recipe = templateRecipe(player.getRemoteContext());
@@ -1648,6 +1715,20 @@ export class HaCardElement extends BaseElement {
     const player = this.player;
     const card = this.card;
     if (!player || !card) return;
+    if (card.type === MESSAGE_CARD_TYPE) {
+      try {
+        const fields = messageInputs(card, this.states);
+        const signature = JSON.stringify(fields);
+        if (signature !== this.inputSignature) {
+          this.inputSignature = signature;
+          player.loadFromArrayBuffer(this.inputRuntime.inputDocument(fields)).then(() => {
+            if (this.player === player) { player.repaint(); this.fit(); }
+          }).catch(error => this.setStatus('error', error.message));
+        }
+        this.fit();
+      } catch (error) { this.setStatus('error', error.message); }
+      return;
+    }
     const context = player.getRemoteContext();
     if (!context) return;
     const bindings = cardBindings(card, this.states, this.recipe);
@@ -1676,7 +1757,7 @@ export class HaCardElement extends BaseElement {
     const player = this.player;
     if (!player) return;
     const dpr = globalThis.devicePixelRatio || 1;
-    const width = Math.round((this.clientWidth || 360) * dpr);
+    const width = Math.round((this.canvas.parentElement?.clientWidth || this.clientWidth || 360) * dpr);
     const fixed = Number(this.getAttribute('height'));
     if (width !== this.canvas.width) player.resize(width, this.canvas.height);
     const height = fixed > 0 ? Math.round(fixed * dpr) : contentHeight(player);

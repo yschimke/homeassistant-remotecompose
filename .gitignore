@@ -33,3 +33,6 @@ ios/**/*.xcodeproj/xcuserdata/
 
 # The card embed's test dependencies (Playwright), installed by CI and locally.
 embed/node_modules/
+
+# Immutable PR-only composite dependency checkout.
+.ci-dependencies/

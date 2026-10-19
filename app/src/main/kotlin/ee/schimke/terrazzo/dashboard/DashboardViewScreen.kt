@@ -252,6 +252,7 @@ fun DashboardViewScreen(
 
   CompositionLocalProvider(
     LocalHaActionDispatcher provides actionDispatcher,
+    ee.schimke.ha.rc.LocalHaInputEditing provides (!readOnly && session !is DemoHaSession),
     LocalCardCaptureEpoch provides demoEpoch,
     // Cards showing a relative time ("3 h ago") refresh on this tick, not only on new data.
     ee.schimke.ha.rc.LocalRelativeTimeTick provides ee.schimke.ha.rc.rememberRelativeTimeTick(),

@@ -134,7 +134,7 @@ private struct DashboardView: View {
             ForEach(section.cards) { card in
               CardView(
                 card: card, data: store.documents[card.id], bindings: store.bindings,
-                revision: store.bindingRevision, partial: partialCards.contains(card.id),
+                revision: store.bindingRevision, inputEditing: !store.isDemo, partial: partialCards.contains(card.id),
                 onAction: store.dispatch,
                 onPartialChanged: { isPartial in
                   if isPartial { partialCards.insert(card.id) } else { partialCards.remove(card.id) }
@@ -162,6 +162,7 @@ private struct CardView: View {
   let data: Data?
   let bindings: [String: BindingValue]
   let revision: Int
+  let inputEditing: Bool
   let partial: Bool
   let onAction: (String) -> Void
   let onPartialChanged: (Bool) -> Void
@@ -170,7 +171,7 @@ private struct CardView: View {
     Group {
       if let data {
         NativeCardPlayer(
-          data: data, bindings: bindings, revision: revision,
+          data: data, bindings: bindings, revision: revision, inputEditing: inputEditing,
           onMetadataAction: onAction,
           onDiagnostics: { onPartialChanged($0.isPartial) })
           .accessibilityLabel(card.title ?? card.type)

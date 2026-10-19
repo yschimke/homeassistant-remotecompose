@@ -86,7 +86,22 @@ fun HaRcComposePlayer(
   namedValues: SnapshotStateMap<String, RcNamedValue> = rememberRcNamedValues(),
   onNamedAction: (name: String, value: Any?) -> Unit = { _, _ -> },
   fallback: @Composable () -> Unit,
+  inputDrafts: ee.schimke.composeai.rcplayer.runtime.RcInputDrafts = remember {
+    ee.schimke.composeai.rcplayer.runtime.RcInputDrafts()
+  },
+  onInputSubmit: (String, Map<String, String>) -> Unit = { _, _ -> },
 ) {
+  val error = remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+  val inputs =
+    ee.schimke.composeai.rcplayer.compose.rcInputComponents(
+      inputDrafts,
+      LocalHaInputEditing.current,
+      onSubmit = { action, values ->
+        runCatching { onInputSubmit(action, values) }
+          .onSuccess { error.value = null }
+          .onFailure { error.value = it.message ?: "Message was not sent" }
+      },
+    )
   val document = remember(documentBytes) { decodeForComposePlayer(documentBytes) }
   if (document == null) {
     fallback()
@@ -115,6 +130,7 @@ fun HaRcComposePlayer(
     RcComposePlayer(
       document,
       imageLoader,
+      customComponents = inputs,
       modifier = modifier.wrapUnpinnedHeight(),
       namedValues = playerValues,
       onEvent = { event ->
@@ -129,6 +145,7 @@ fun HaRcComposePlayer(
   } else {
     player()
   }
+  error.value?.let { androidx.compose.foundation.text.BasicText(it) }
 }
 
 /**
@@ -158,7 +175,12 @@ internal fun decodeForComposePlayer(bytes: ByteArray): RcDocument? {
       .onFailure { Log.w(TAG, "rc-player-compose could not decode the document", it) }
       .getOrNull() ?: return null
   val report =
-    runCatching { document.composeSupportReport(allowExternalImagePlaceholders = true) }
+    runCatching {
+      document.composeSupportReport(
+        allowExternalImagePlaceholders = true,
+        availableCustomComponents = ee.schimke.composeai.rcplayer.protocol.RcInput.configs,
+      )
+    }
       .onFailure { Log.w(TAG, "rc-player-compose capability report failed", it) }
       .getOrNull() ?: return null
   if (!report.fullyRenderable) {

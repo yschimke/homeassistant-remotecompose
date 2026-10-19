@@ -1,3 +1,4 @@
+import RcNativePlayerCore
 import RcNativePlayerUIKit
 import SwiftUI
 
@@ -5,6 +6,7 @@ struct NativeCardPlayer: UIViewRepresentable {
   let data: Data
   let bindings: [String: BindingValue]
   let revision: Int
+  var inputEditing: Bool = false
   var onMetadataAction: (String) -> Void = { _ in }
   var onDiagnostics: (RemoteComposeNativePlayerDiagnostics) -> Void = { _ in }
 
@@ -16,6 +18,7 @@ struct NativeCardPlayer: UIViewRepresentable {
       background: .transparent,
       compatibilityPolicy: .compatible,
       androidCompatibility: .enabled,
+      customComponents: context.coordinator.inputRegistry(editable: inputEditing, onAction: onMetadataAction),
       onEvent: handle,
       onDiagnostics: onDiagnostics)
     context.coordinator.didLoad(data)
@@ -26,6 +29,7 @@ struct NativeCardPlayer: UIViewRepresentable {
   func updateUIView(_ view: RemoteComposeNativePlayerView, context: Context) {
     view.onEvent = handle
     view.onDiagnostics = onDiagnostics
+    view.configureCustomComponents(context.coordinator.inputRegistry(editable: inputEditing, onAction: onMetadataAction))
     context.coordinator.load(data, into: view)
     context.coordinator.apply(bindings, revision: revision, to: view)
   }
@@ -39,7 +43,37 @@ struct NativeCardPlayer: UIViewRepresentable {
     }
   }
 
+  @MainActor
   final class Coordinator {
+    private let drafts = NativeSwiftInputDrafts()
+    private var inputs: RemoteComposeNativeCustomComponentRegistry?
+    private var inputPolicy: Bool?
+    func inputRegistry(editable: Bool, onAction: @escaping (String) -> Void) -> RemoteComposeNativeCustomComponentRegistry {
+      if let inputs, inputPolicy == editable { return inputs }
+      inputPolicy = editable
+      let registry = RemoteComposeNativeCustomComponentRegistry().registerInputs(drafts: drafts, editable: editable,
+        onSubmit: { action, values in
+          let prefix = "ha:submit-inputs:v1:"
+          guard editable, action.hasPrefix(prefix), values.values.allSatisfy({ $0.count <= 4096 }),
+            let data = String(action.dropFirst(prefix.count)).data(using: .utf8),
+            var object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+          else { return }
+          func bind(_ value: Any) -> Any {
+            if let text = value as? String, text.hasPrefix("{{input."), text.hasSuffix("}}") {
+              return values[String(text.dropFirst(8).dropLast(2))] ?? ""
+            }
+            if let object = value as? [String: Any] { return object.mapValues(bind) }
+            if let array = value as? [Any] { return array.map(bind) }
+            return value
+          }
+          object["serviceData"] = bind(object["serviceData"] ?? [:])
+          guard let data = try? JSONSerialization.data(withJSONObject: object), let payload = String(data: data, encoding: .utf8) else { return }
+          onAction(payload)
+        })
+      inputs = registry
+      return registry
+    }
+
     private var revision = -1
     private var loadedData: Data?
     private var task: Task<Void, Never>?

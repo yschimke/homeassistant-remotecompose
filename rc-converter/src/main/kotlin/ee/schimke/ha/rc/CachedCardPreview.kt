@@ -197,6 +197,7 @@ fun CachedCardPreview(
   SideEffect { onDocument?.invoke(cardDocument.bytes) }
 
   val dispatcher = LocalHaActionDispatcher.current
+  val inputDrafts = remember(card) { ee.schimke.composeai.rcplayer.runtime.RcInputDrafts() }
 
   val entityIds = remember(card) { entityIds(card) }
   // Compose player: live values the running document reads by name. Re-created with the document
@@ -289,6 +290,53 @@ fun CachedCardPreview(
         namedValues = namedValues,
         onNamedAction = onNamedAction,
         fallback = androidXPlayer,
+        inputDrafts = inputDrafts,
+        onInputSubmit = { action, values ->
+          if (card != null && snapshot != null) {
+            if (
+              action.startsWith(ee.schimke.ha.model.MESSAGE_SUBMIT + ":") &&
+                card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE
+            ) {
+              decodeHaAction(ee.schimke.ha.model.messageAction(card, snapshot, values).toString())
+                ?.let(dispatcher::dispatch)
+            } else if (
+              card.type == "entities" && action.startsWith(ee.schimke.ha.model.MESSAGE_SUBMIT + ":")
+            ) {
+              val configured =
+                decodeHaAction(action.removePrefix(ee.schimke.ha.model.MESSAGE_SUBMIT + ":"))
+                  as? ee.schimke.ha.rc.components.HaAction.CallService
+              val id = configured?.entityId
+              val value = values[id]
+              if (id != null && value != null && id in cardEntityIds(card)) {
+                val domain = id.substringBefore('.')
+                val options =
+                  (snapshot.states[id]?.attributes?.get("options")
+                      as? kotlinx.serialization.json.JsonArray)
+                    ?.map { (it as kotlinx.serialization.json.JsonPrimitive).content }
+                    .orEmpty()
+                if (
+                  value.length <= 4096 &&
+                    (domain == "input_text" ||
+                      (domain in setOf("select", "input_select") && value in options))
+                ) {
+                  dispatcher.dispatch(
+                    ee.schimke.ha.rc.components.HaAction.CallService(
+                      domain,
+                      if (domain == "input_text") "set_value" else "select_option",
+                      id,
+                      kotlinx.serialization.json.buildJsonObject {
+                        put(
+                          if (domain == "input_text") "value" else "option",
+                          kotlinx.serialization.json.JsonPrimitive(value),
+                        )
+                      },
+                    )
+                  )
+                }
+              }
+            }
+          }
+        },
       )
     CardPlayback.LauncherWidget -> androidXPlayer()
   }

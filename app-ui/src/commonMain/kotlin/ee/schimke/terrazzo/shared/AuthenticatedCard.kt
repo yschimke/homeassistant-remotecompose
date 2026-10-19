@@ -18,13 +18,17 @@ internal fun AuthenticatedCard(
   style: String,
   dark: Boolean,
   onMoreInfo: (String) -> Unit,
+  onAction: (String) -> Unit,
   onToggle: (String) -> Unit,
   onService: (String, String, JsonObject) -> Unit,
 ) {
   DashboardCardTheme(style, dark) {
     CardCluster(card, snapshot) { leaf ->
       val conversation = conversationEntity(leaf)
-      if (conversation != null) ConversationCard(leaf, conversation, snapshot, client, onMoreInfo)
+      if (leaf.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE)
+        MessageComposeCard(leaf, snapshot, editable = true, onAction = onAction)
+      else if (conversation != null)
+        ConversationCard(leaf, conversation, snapshot, client, onMoreInfo)
       else if (isEntityPictureCard(leaf))
         EntityPictureCard(
           leaf,

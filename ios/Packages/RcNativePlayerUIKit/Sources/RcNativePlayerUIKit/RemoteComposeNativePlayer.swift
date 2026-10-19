@@ -776,18 +776,27 @@
     private func performCustomReturn(
       componentID: Int, propertyID: Int, value: NativeCustomReturnValue
     ) {
+      let completion: ((Bool) -> Void)?
+      let operation: NativeCustomReturnValue
+      if case .acknowledgedText(let text, let reply) = value {
+        completion = reply; operation = .text(text)
+      } else { completion = nil; operation = value }
       Task { [weak self] in
-        guard let self else { return }
-        _ = await self.updateSession { session, time in
-          switch value {
-          case .float(let value):
-            try await session.returnCustomFloat(
-              value, componentID: componentID, propertyID: propertyID, at: time)
-          case .text(let value):
-            try await session.returnCustomText(
-              value, componentID: componentID, propertyID: propertyID, at: time)
+        guard let self else { completion?(false); return }
+        let accepted: Bool
+        switch operation {
+        case .float(let value):
+          accepted = await self.updateSession { session, time in
+            try await session.returnCustomFloat(value, componentID: componentID, propertyID: propertyID, at: time)
           }
+        case .text(let value):
+          accepted = await self.updateSession { session, time in
+            try await session.returnCustomText(value, componentID: componentID, propertyID: propertyID, at: time)
+          }
+        case .acknowledgedText:
+          accepted = false
         }
+        completion?(accepted)
       }
     }
 

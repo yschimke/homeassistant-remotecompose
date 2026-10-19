@@ -29,6 +29,8 @@ message WearSettings {
     string base_url = 2;
     // Wall-clock time of the last write, for diagnostics.
     int64 updated_at_ms = 3;
+    // Explicit foreground input capability; older phones default to read-only.
+    bool input_editing_enabled = 4;
 }
 
 // Card surfaces shown on Wear. Phone extracts the minimum each row

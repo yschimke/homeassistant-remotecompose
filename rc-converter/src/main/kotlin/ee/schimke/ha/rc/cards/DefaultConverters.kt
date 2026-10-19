@@ -20,6 +20,7 @@ import ee.schimke.ha.rc.CardRegistry
  * registry's catch-all [UnsupportedCardConverter].
  */
 fun defaultConverters(): List<CardConverter> = buildList {
+  add(MessageCardConverter())
   add(TileCardConverter())
   add(ButtonCardConverter())
   add(EntityCardConverter())

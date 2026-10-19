@@ -36,7 +36,13 @@ private fun acceptsBinding(type: Int?, value: RcNamedValue?): Boolean =
 
 private fun decodePlayableDocument(bytes: ByteArray): Result<RcDocument> = runCatching {
   RcDocumentCodec.decode(bytes).also { document ->
-    check(document.composeSupportReport().fullyRenderable) {
+    check(
+      document
+        .composeSupportReport(
+          availableCustomComponents = ee.schimke.composeai.rcplayer.protocol.RcInput.configs
+        )
+        .fullyRenderable
+    ) {
       "Document needs unsupported playback capabilities"
     }
   }
@@ -49,6 +55,11 @@ fun RemoteComposeCard(
   modifier: Modifier = Modifier,
   bindings: Map<String, RcNamedValue> = emptyMap(),
   animateLayoutChanges: Boolean = true,
+  inputDrafts: ee.schimke.composeai.rcplayer.runtime.RcInputDrafts = remember {
+    ee.schimke.composeai.rcplayer.runtime.RcInputDrafts()
+  },
+  inputEditing: Boolean = false,
+  onInputSubmit: (String, Map<String, String>) -> Unit = { _, _ -> },
   onEvent: (RcPlayerEvent) -> Unit = {},
 ) {
   val decoded = remember(bytes) { decodePlayableDocument(bytes) }
@@ -83,6 +94,12 @@ fun RemoteComposeCard(
         modifier = modifier,
         namedValues = values,
         onEvent = onEvent,
+        customComponents =
+          ee.schimke.composeai.rcplayer.compose.rcInputComponents(
+            inputDrafts,
+            inputEditing,
+            onSubmit = onInputSubmit,
+          ),
       )
     }
   }

@@ -470,6 +470,7 @@ private fun LiveDashboard(
               cardStyle,
               dark,
               onMoreInfo = ::moreInfo,
+              onAction = ::dispatch,
               onToggle = { entityId ->
                 dispatch(
                   buildJsonObject {
@@ -589,6 +590,10 @@ internal fun NativeCard(
   onService: ((String, String, JsonObject) -> Unit)? = null,
   toggle: (String) -> Unit,
 ) {
+  if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
+    MessageComposeCard(card, snapshot)
+    return
+  }
   val children = childCards(card)
   if (children.isNotEmpty() && card.type in setOf("grid", "horizontal-stack", "vertical-stack")) {
     CardCluster(card, snapshot) { child ->

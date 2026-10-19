@@ -26,6 +26,8 @@ val NoOpHaActionDispatcher: HaActionDispatcher = HaActionDispatcher { /* no-op *
  * `CompositionLocalProvider(LocalHaActionDispatcher provides …)` so [CachedCardPreview] and
  * [CardPlayer] can forward decoded actions without each card having to wire a callback.
  */
+val LocalHaInputEditing = staticCompositionLocalOf { false }
+
 val LocalHaActionDispatcher = staticCompositionLocalOf { NoOpHaActionDispatcher }
 
 /**

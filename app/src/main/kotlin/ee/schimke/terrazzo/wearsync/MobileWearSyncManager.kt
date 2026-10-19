@@ -71,6 +71,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
@@ -143,7 +144,82 @@ class MobileWearSyncManager(
   /** Per entity: the picture URL last pushed, its PNG's hash, and when. */
   private val pushedPictures = HashMap<String, PushedPicture>()
 
+  private var inputEditingMode: StateFlow<Boolean> = MutableStateFlow(false)
+  private val inputCards = MutableStateFlow<Map<String, CardConfig>>(emptyMap())
+  private val inputMutex = kotlinx.coroutines.sync.Mutex()
+  private val handledInputRequests = linkedSetOf<String>()
+
+  private suspend fun handleInputRequest(event: com.google.android.gms.wearable.MessageEvent) {
+    if (event.data.size > 32768) return
+    val request =
+      runCatching { json.parseToJsonElement(event.data.decodeToString()).jsonObject }.getOrNull()
+        ?: return
+    val id = request["id"]?.jsonPrimitive?.contentOrNull ?: return
+    if (id.length > 100) return
+    inputMutex.lock()
+    try {
+      val outcome = runCatching {
+        val session = requireNotNull(sessionState.value) { "Sign in on the phone" }
+        require(session !is ee.schimke.terrazzo.core.session.DemoHaSession) {
+          "Demo mode is read-only"
+        }
+        require(handledInputRequests.add(event.sourceNodeId + id)) {
+          "This request was already submitted"
+        }
+        while (handledInputRequests.size > 100) handledInputRequests.remove(
+          handledInputRequests.first()
+        )
+        val raw = request["card"]?.jsonPrimitive?.contentOrNull
+        val values =
+          (request["values"] as? JsonObject)?.mapValues { it.value.jsonPrimitive.content }.orEmpty()
+        val action =
+          wearInputAction(
+            raw,
+            values,
+            inputCards.value,
+            registrySnapshot.value,
+            readOnly =
+              !inputEditingMode.value || session is ee.schimke.terrazzo.core.session.DemoHaSession,
+          )
+        check(session === sessionState.value) { "Session changed" }
+        session.callService(action.domain, action.service, action.entityId, action.serviceData)
+      }
+      if (outcome.exceptionOrNull() is CancellationException) throw outcome.exceptionOrNull()!!
+      val response =
+        kotlinx.serialization.json.buildJsonObject {
+          put("id", kotlinx.serialization.json.JsonPrimitive(id))
+          put("ok", kotlinx.serialization.json.JsonPrimitive(outcome.isSuccess))
+          if (outcome.isFailure)
+            put(
+              "error",
+              kotlinx.serialization.json.JsonPrimitive(
+                "Message was not sent. Check the phone connection and card choices."
+              ),
+            )
+        }
+      messageClient
+        .sendMessage(
+          event.sourceNodeId,
+          "/wear/input-result/v1",
+          response.toString().encodeToByteArray(),
+        )
+        .await()
+    } finally {
+      inputMutex.unlock()
+    }
+  }
+
   private val leaseListener = MessageClient.OnMessageReceivedListener { event ->
+    if (event.path == "/wear/input/v1") {
+      managerScope.launch {
+        runCatching { handleInputRequest(event) }
+          .onFailure {
+            if (it is CancellationException) throw it
+            handleFailure("inputRequest", it)
+          }
+      }
+      return@OnMessageReceivedListener
+    }
     if (event.path != WearSyncPaths.LEASE_MESSAGE) return@OnMessageReceivedListener
     val now = System.currentTimeMillis()
     val lease: WearLease = decodeProto<WearLease>(event.data) ?: WearLease(sentAtMs = now)
@@ -153,6 +229,7 @@ class MobileWearSyncManager(
 
   /** Update the active session whenever login/demo state changes. */
   override fun setSession(session: HaSession?) {
+    inputCards.value = emptyMap()
     sessionState.value = session
   }
 
@@ -223,8 +300,10 @@ class MobileWearSyncManager(
     prefs: PreferencesStore,
     pinStore: PinStore,
     slotsStore: WearWidgetSlotsStore,
+    inputEditing: StateFlow<Boolean>,
   ) {
     managerScope = scope
+    inputEditingMode = inputEditing
     // addListener returns a Task; observe it so an API_NOT_CONNECTED
     // failure (no Wearable component on this device) flips us into
     // the disabled state instead of silently never delivering leases.
@@ -237,9 +316,14 @@ class MobileWearSyncManager(
 
     // Demo-mode flag → /wear/settings (and base url annotation).
     scope.launch {
-      combine(prefs.demoMode, sessionState) { demo, session ->
+      combine(prefs.demoMode, sessionState, inputEditing) { demo, session, editing ->
           WearSettings(
             demoMode = demo,
+            inputEditingEnabled =
+              editing &&
+                !demo &&
+                session != null &&
+                session !is ee.schimke.terrazzo.core.session.DemoHaSession,
             baseUrl = session?.baseUrl.orEmpty(),
             updatedAtMs = System.currentTimeMillis(),
           )
@@ -346,7 +430,13 @@ class MobileWearSyncManager(
       val summaries = session.listDashboards()
       for (summary in summaries) {
         val (dashboard, snapshot) = session.loadDashboard(summary.urlPath)
-        val cards = dashboard.views.flatMap { it.cards }
+        val cards =
+          dashboard.views.flatMap { it.cards + it.sections.flatMap { section -> section.cards } }
+        inputCards.value =
+          inputCards.value +
+            cards
+              .filter { it.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE }
+              .associateBy { json.encodeToString(JsonObject.serializer(), it.raw) }
         val data =
           DashboardData(
             urlPath = summary.urlPath ?: "",
@@ -559,7 +649,10 @@ internal fun EntityState.toEntityValue(snapshot: HaSnapshot): EntityValue {
           // is skipped rather than thrown on (that would stop the whole sync).
           (attrs[key] as? JsonPrimitive)?.contentOrNull?.let { key to it }
         }
-        .toMap(),
+        .toMap() +
+        (attrs["options"] as? kotlinx.serialization.json.JsonArray)
+          ?.let { mapOf("input_options" to it.toString()) }
+          .orEmpty(),
   )
 }
 

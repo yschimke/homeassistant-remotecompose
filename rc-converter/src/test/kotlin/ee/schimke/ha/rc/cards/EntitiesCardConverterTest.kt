@@ -92,6 +92,31 @@ class EntitiesCardConverterTest {
   }
 
   @Test
+  fun editableInputsDoNotBecomeToggleRows() {
+    val inputs = card {
+      add("input_text.message")
+      addJsonObject { put("type", "divider") }
+      add("input_select.mode")
+      add("select.source")
+      add("switch.coffee")
+      addJsonObject {
+        put("type", "simple-entity")
+        put("entity", "switch.coffee")
+      }
+    }
+    assertEquals(
+      listOf(
+        "input_text.message" to false,
+        "input_select.mode" to false,
+        "select.source" to false,
+        "switch.coffee" to true,
+        "switch.coffee" to false,
+      ),
+      EntitiesCardConverter.entityRows(inputs).map { it.entityId to it.toggle },
+    )
+  }
+
+  @Test
   fun aRowWithNoEntityNeverToggles() {
     val rows = EntitiesCardConverter.entityRows(card { addJsonObject { put("name", "Nothing") } })
     assertEquals(listOf<String?>(null), rows.map { it.entityId })

@@ -23,7 +23,9 @@ import ee.schimke.terrazzo.monitor.createMonitor
 import ee.schimke.terrazzo.wearsync.MobileSyncStatsStore
 import ee.schimke.terrazzo.wearsync.MobileWearSyncManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 
@@ -87,6 +89,17 @@ class TerrazzoApplication : Application() {
       prefs = graph.preferencesStore,
       pinStore = graph.pinStore,
       slotsStore = graph.wearWidgetSlotsStore,
+      inputEditing =
+        combine(graph.preferencesStore.permanentWriteMode, graph.sessionWriteMode.writeMode) {
+            permanent,
+            session ->
+            session ?: permanent
+          }
+          .stateIn(
+            ProcessLifecycleOwner.get().lifecycleScope,
+            kotlinx.coroutines.flow.SharingStarted.Eagerly,
+            false,
+          ),
     )
     // Designs the server lacks are captured from the app's own converters once and kept on disk
     // (the library's store), instead of on every start; stale ones from an earlier build go.
