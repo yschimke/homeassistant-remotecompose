@@ -29,7 +29,12 @@ stage() {
     echo "missing render: $RENDERS/$stem[-<hash>].png" >&2
     exit 1
   fi
-  install -m 0644 "$found" "$dst"
+  # The icon may keep its alpha channel (Play takes a 32-bit PNG); the feature
+  # graphic must be 24-bit, so drop it there. Renders are opaque either way.
+  case $dst in
+    */feature-graphic/*) convert "$found" -alpha off "$dst" && chmod 0644 "$dst" ;;
+    *) install -m 0644 "$found" "$dst" ;;
+  esac
 }
 
 # Single file per slot — overwrite instead of wipe-and-replace so a

@@ -9,6 +9,8 @@ import androidx.wear.compose.material3.TimeSource
 import androidx.wear.compose.material3.TimeText
 import androidx.wear.tooling.preview.devices.WearDevices
 import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.terrazzo.wear.widget.SlotWidgetPreview_EntitiesLarge
+import ee.schimke.terrazzo.wear.widget.SlotWidgetPreview_TileSmall
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
@@ -239,15 +241,20 @@ private const val PLAY_WEAR_DEVICE = "spec:width=227dp,height=227dp,dpi=320,isRo
 @Composable
 fun Play_Wear_01_Home() = WearTopLevelPreview_Live()
 
-/** Wear slot 2 — a dashboard's cards. */
+/** Wear slot 2 — a large watch widget: an entities card's rows on the watch face. */
+@Preview(name = "play · wear · widget (large)", device = PLAY_WEAR_DEVICE)
+@Composable
+fun Play_Wear_02_WidgetLarge() = SlotWidgetPreview_EntitiesLarge()
+
+/** Wear slot 3 — a small watch widget: one tile. */
+@Preview(name = "play · wear · widget (small)", device = PLAY_WEAR_DEVICE)
+@Composable
+fun Play_Wear_03_WidgetSmall() = SlotWidgetPreview_TileSmall()
+
+/** Wear slot 4 — a dashboard's cards. */
 @Preview(name = "play · wear · dashboard", device = PLAY_WEAR_DEVICE)
 @Composable
-fun Play_Wear_02_Dashboard() = WearDashboardPreview()
-
-/** Wear slot 3 — a pinned section. */
-@Preview(name = "play · wear · section", device = PLAY_WEAR_DEVICE)
-@Composable
-fun Play_Wear_03_Section() = WearSectionPreview()
+fun Play_Wear_04_Dashboard() = WearDashboardPreview()
 
 /** Shared fixture: Wear-Material theme + ScreenScaffold so each preview reads like a real frame. */
 @Composable

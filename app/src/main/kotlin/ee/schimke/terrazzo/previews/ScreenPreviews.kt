@@ -845,12 +845,23 @@ class ThemeStyleProvider : PreviewParameterProvider<ThemeStyle> {
 // listing slot (01, 02, …) and the upload order, so the function names
 // below are picked to sort cleanly.
 
+/**
+ * The demo board the Play home shots open on. 3D Printing settles in the renderer (no animation
+ * left running), has a rendered print bed and no "Unavailable" tiles; Climate, Energy, MeshCore and
+ * Networks keep animating, and Security leads with unavailable garage sensors.
+ */
+private const val PLAY_HOME_BOARD = "3d_printing"
+
 /** Phone slot 1 — light dashboard (the "home screen"). */
 @Preview(name = "play · phone · home (light)", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
 fun Play_Phone_01_HomeLight() =
   PhoneHost(darkMode = DarkModePref.Light) {
-    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
+    DashboardViewScreen(
+      session = demoSession(),
+      urlPath = PLAY_HOME_BOARD,
+      onCardLongPress = { _, _ -> },
+    )
   }
 
 /** Phone slot 2 — dark dashboard (the "home screen"). */
@@ -858,7 +869,11 @@ fun Play_Phone_01_HomeLight() =
 @Composable
 fun Play_Phone_02_HomeDark() =
   PhoneHost(darkMode = DarkModePref.Dark) {
-    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
+    DashboardViewScreen(
+      session = demoSession(),
+      urlPath = PLAY_HOME_BOARD,
+      onCardLongPress = { _, _ -> },
+    )
   }
 
 /** Phone slot 3 — discovery / first-launch flow. */
@@ -875,15 +890,8 @@ fun Play_Phone_03_Discovery() =
 fun Play_Phone_04_Picker() =
   PhoneHost(darkMode = DarkModePref.Light) {
     DashboardPickerScreen(
-      state =
-        DashboardListState.Ready(
-          dashboards =
-            listOf(
-              DashboardSummary(urlPath = null, title = "Home"),
-              DashboardSummary(urlPath = "lovelace-mobile", title = "Living room"),
-              DashboardSummary(urlPath = "lovelace-garage", title = "Garage"),
-            )
-        ),
+      // The demo's own boards, as the picker lists them in demo mode.
+      state = DashboardListState.Ready(dashboards = DemoData.dashboards),
       onDashboardPicked = {},
       // The real screen hosts the picker inside a Scaffold and hands
       // it the top-bar inset as contentPadding; mirror that here so
@@ -893,18 +901,31 @@ fun Play_Phone_04_Picker() =
     )
   }
 
-/** Phone slot 5 — installed widgets. */
-@Preview(name = "play · phone · widgets", showBackground = false, device = PIXEL_2_DEVICE)
+/** Phone slot 5 — the watch's widget slots, set up from the phone. */
+@Preview(name = "play · phone · wear widgets", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
-fun Play_Phone_05_Widgets() =
-  PhoneHost(darkMode = DarkModePref.Light) { WidgetsScreen(onBack = {}) }
+fun Play_Phone_05_WearWidgets() =
+  PhoneHost(darkMode = DarkModePref.Light) {
+    WearWidgetsContent(
+      slots = SAMPLE_WEAR_SLOTS,
+      pinnedCards = SAMPLE_WEAR_CARDS,
+      onAssign = { _, _ -> },
+      onClear = {},
+      onSizeChange = { _, _ -> },
+      onBack = {},
+    )
+  }
 
 /** 7-inch tablet slot 1 — home (dashboard view). */
 @Preview(name = "play · 7-inch · home", showBackground = false, device = TABLET_7_DEVICE)
 @Composable
 fun Play_Tablet7_01_Home() =
   PhoneHost(darkMode = DarkModePref.Light) {
-    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
+    DashboardViewScreen(
+      session = demoSession(),
+      urlPath = PLAY_HOME_BOARD,
+      onCardLongPress = { _, _ -> },
+    )
   }
 
 /** 10-inch tablet slot 1 — home (dashboard view). */
@@ -912,5 +933,9 @@ fun Play_Tablet7_01_Home() =
 @Composable
 fun Play_Tablet10_01_Home() =
   PhoneHost(darkMode = DarkModePref.Light) {
-    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
+    DashboardViewScreen(
+      session = demoSession(),
+      urlPath = PLAY_HOME_BOARD,
+      onCardLongPress = { _, _ -> },
+    )
   }

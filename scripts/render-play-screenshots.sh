@@ -60,11 +60,15 @@ keep_committed() {
   git checkout HEAD -- "$2" 2>/dev/null || echo "::warning::no committed $2 to keep" >&2
 }
 
+# Play takes screenshots as JPEG or 24-bit PNG, without an alpha channel. The
+# renders are RGBA but fully opaque (PhoneHost paints its background), so
+# dropping the channel changes no pixel.
 stage() {
   local src
   src=$(render_for "$RENDERS" "$1")
   if unsettled "$src"; then keep_committed "$src" "$2"; return; fi
-  install -m 0644 "$src" "$2"
+  convert "$src" -alpha off "$2"
+  chmod 0644 "$2"
 }
 
 # Round watch renders are clipped to a transparent circle, but Play rejects
@@ -86,12 +90,13 @@ stage Play_Phone_01_HomeLight_play_phone_home_light    "$PHONE/01-home-light.png
 stage Play_Phone_02_HomeDark_play_phone_home_dark      "$PHONE/02-home-dark.png"
 stage Play_Phone_03_Discovery_play_phone_discovery     "$PHONE/03-discovery.png"
 stage Play_Phone_04_Picker_play_phone_picker           "$PHONE/04-dashboard-picker.png"
-stage Play_Phone_05_Widgets_play_phone_widgets         "$PHONE/05-widgets.png"
+stage Play_Phone_05_WearWidgets_play_phone_wear_widgets "$PHONE/05-wear-widgets.png"
 stage Play_Tablet7_01_Home_play_7_inch_home            "$T7/01-home.png"
 stage Play_Tablet10_01_Home_play_10_inch_home          "$T10/01-home.png"
 stage_wear Play_Wear_01_Home_play_wear_home            "$WEAR/01-home.png"
-stage_wear Play_Wear_02_Dashboard_play_wear_dashboard  "$WEAR/02-dashboard.png"
-stage_wear Play_Wear_03_Section_play_wear_section      "$WEAR/03-section.png"
+stage_wear Play_Wear_02_WidgetLarge_play_wear_widget_large "$WEAR/02-widget-large.png"
+stage_wear Play_Wear_03_WidgetSmall_play_wear_widget_small "$WEAR/03-widget-small.png"
+stage_wear Play_Wear_04_Dashboard_play_wear_dashboard  "$WEAR/04-dashboard.png"
 
 echo "Staged Play Store screenshots:"
 ls -1 "$PHONE" "$T7" "$T10" "$WEAR"
