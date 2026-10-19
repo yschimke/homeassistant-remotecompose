@@ -83,7 +83,8 @@ def socket_route(socket):
         if kind == 'subscribe_events': latest_subscription = msg['id']
         result = {'get_states': states, 'lovelace/dashboards/list': [{'url_path': 'mesh', 'title': 'Mesh network'}],
                   'lovelace/config': dashboard, 'subscribe_events': None, 'config/entity_registry/list_for_display': {'entities': []},
-                  'config/device_registry/list': [], 'call_service': {}}
+                  'config/device_registry/list': [], 'call_service': {},
+                  'get_config': {'unit_system': {'temperature': '°C', 'length': 'km', 'mass': 'kg', 'volume': 'L'}}}
         if kind == 'logbook/get_events':
             assert msg['entity_ids'] == [conversation]
             assert 'start_time' in msg

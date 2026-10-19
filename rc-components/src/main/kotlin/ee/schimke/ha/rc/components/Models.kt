@@ -133,7 +133,11 @@ data class HaTileModeOption(
   val action: HaAction,
 )
 
-/** HA button card model. */
+/**
+ * HA button card model. [showName] / [showIcon] are HA's `show_name` / `show_icon` (both default
+ * true); [state] is the state line HA draws under the name with `show_state: true` — null when the
+ * card doesn't show it. Pass the live `<id>.state` binding (`LiveValues.state`) so it updates.
+ */
 data class HaButtonData(
   val entityId: String?,
   val name: String,
@@ -141,6 +145,8 @@ data class HaButtonData(
   val accent: HaToggleAccent,
   val showName: Boolean = true,
   val tapAction: HaAction = HaAction.None,
+  val showIcon: Boolean = true,
+  val state: RemoteString? = null,
 )
 
 /** One row in an Entities card / the entire Entity card. */

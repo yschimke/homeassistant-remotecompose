@@ -18,7 +18,9 @@ import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -336,10 +338,28 @@ class LiveHaSession(
 
   override suspend fun listDashboards(): List<DashboardSummary> = client.listDashboards()
 
-  override suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot> {
-    val dashboard = client.fetchDashboard(urlPath)
-    val snapshot = client.snapshot().copy(devices = devices())
-    return dashboard to snapshot
+  override suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot> =
+    coroutineScope {
+      // Read alongside the dashboard and states, never in front of them; bounded and best effort.
+      val unit = async { temperatureUnit() }
+      val dashboard = client.fetchDashboard(urlPath)
+      val snapshot = client.snapshot().copy(devices = devices(), temperatureUnit = unit.await())
+      dashboard to snapshot
+    }
+
+  // The instance's unit system: asked once a session. An instance that doesn't answer (or refuses
+  // get_config) isn't asked again, so it never costs a reload or reconnect a wait; its cards use
+  // the
+  // entity's own unit, then °C.
+  @Volatile private var temperatureUnitAsked = false
+  @Volatile private var temperatureUnitCache: String? = null
+
+  private suspend fun temperatureUnit(): String? {
+    if (temperatureUnitAsked) return temperatureUnitCache
+    return client.fetchTemperatureUnit().also {
+      temperatureUnitCache = it
+      temperatureUnitAsked = true
+    }
   }
 
   // Which device is behind each entity changes rarely: read once a session. A failure (an older

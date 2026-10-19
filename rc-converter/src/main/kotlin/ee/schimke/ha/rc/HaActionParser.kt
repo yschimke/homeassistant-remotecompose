@@ -1,9 +1,11 @@
 package ee.schimke.ha.rc
 
+import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.rc.components.HaAction
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -64,19 +66,34 @@ internal fun parseHaAction(cfg: JsonObject?, defaultEntityId: String?): HaAction
 }
 
 /**
- * HA's default tap action per entity domain — mirrors `home-assistant/frontend`
- * `src/panels/lovelace/cards/hui-tile-card.ts` default action resolution.
+ * The domains a default tap toggles: `home-assistant/frontend` `src/common/const.ts`
+ * `DOMAINS_TOGGLE`, verbatim. Cover, lock and media player are deliberately absent: a tap on a
+ * garage door or a front-door lock opens its more-info dialog, never actuates it.
+ */
+internal val DOMAINS_TOGGLE: Set<String> =
+  setOf("fan", "input_boolean", "light", "switch", "group", "automation", "humidifier", "valve")
+
+/**
+ * HA's toggle-or-more-info default: a [DOMAINS_TOGGLE] entity toggles, anything else opens
+ * more-info. This is `hui-button-card`'s `getEntityDefaultButtonAction`, a `picture-glance` entity
+ * icon's default and the tile icon's (`getEntityDefaultTileIconAction`). Every card without a
+ * `tap_action` takes it: HA's entity, glance, gauge and picture cards fall back to more-info even
+ * for a light, but more-info isn't a view in every host here, so they keep the toggle.
  */
 internal fun defaultTapActionFor(entityId: String?): HaAction {
   val domain = entityId?.substringBefore('.') ?: return HaAction.None
-  return when (domain) {
-    "light",
-    "switch",
-    "input_boolean",
-    "fan",
-    "cover",
-    "media_player",
-    "lock" -> HaAction.Toggle(entityId)
-    else -> HaAction.MoreInfo(entityId)
-  }
+  return if (domain in DOMAINS_TOGGLE) HaAction.Toggle(entityId) else HaAction.MoreInfo(entityId)
+}
+
+/**
+ * The default tap of [card] (or one of its rows) on [entityId], when there is no `tap_action`:
+ * [defaultTapActionFor], except that a `picture-glance` with `force_dialog: true` opens more-info
+ * for every entity, as HA's does.
+ */
+internal fun defaultTapActionFor(card: CardConfig, entityId: String?): HaAction {
+  val forceDialog =
+    card.type == "picture-glance" &&
+      (card.raw["force_dialog"] as? JsonPrimitive)?.booleanOrNull == true
+  return if (forceDialog) entityId?.let(HaAction::MoreInfo) ?: HaAction.None
+  else defaultTapActionFor(entityId)
 }

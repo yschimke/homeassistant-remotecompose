@@ -85,6 +85,20 @@ class InstrumentTemplateBindingsTest {
   }
 
   @Test
+  fun thermostatLabelsUseTheInstancesUnitSystem() {
+    val card = card("thermostat", "climate.demo_thermostat")
+    val snapshot =
+      climate("""{"current_temperature":68.5,"temperature":70,"min_temp":45,"max_temp":95}""")
+        .copy(temperatureUnit = "°F")
+    val values = templateBindings(card, snapshot)
+    assertEquals(
+      RcNamedValue.Text("68.5°F"),
+      values["climate.s0.attributes.current_temperature_label"],
+    )
+    assertEquals(RcNamedValue.Text("↑ 70°F"), values["climate.s0.attributes.temperature_label"])
+  }
+
+  @Test
   fun thermostatActionsRebuildFromLiveTargetAndRejectUnrelatedPayloads() {
     val card = card("thermostat", "climate.demo_thermostat")
     val snapshot = climate("""{"temperature":23}""")

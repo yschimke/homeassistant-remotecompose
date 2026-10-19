@@ -118,7 +118,7 @@ by the host rather than computed in-document, and refreshed on a tick:
 - **Binding (path 1):** entity, glance, tile (a plain one — a tile that bakes a
   `state_content` line, a climate `hvac_action` badge or `features:` re-encodes, see below),
   area, entities,
-  button, picture-entity (its `entity_picture` URL is the exception: a
+  button (its `show_state` line is `<id>.state`), picture-entity (its `entity_picture` URL is the exception: a
   picture is fetched once per document, so `CachedCardPreview` folds
   `cardPictureSignature` into the document key and a rotated camera token
   or new frame plays as a new document), gauge

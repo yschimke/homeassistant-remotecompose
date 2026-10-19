@@ -1,5 +1,6 @@
 package ee.schimke.ha.rc
 
+import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.rc.components.HaAction
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -181,14 +182,60 @@ class HaActionParserTest {
   }
 
   @Test
-  fun defaultTapActionTogglesToggleableDomains() {
-    listOf("light.a", "switch.a", "input_boolean.a", "fan.a", "cover.a", "media_player.a", "lock.a")
+  fun defaultTapActionTogglesHaToggleDomains() {
+    // home-assistant/frontend src/common/const.ts DOMAINS_TOGGLE.
+    listOf(
+        "fan.a",
+        "input_boolean.a",
+        "light.a",
+        "switch.a",
+        "group.a",
+        "automation.a",
+        "humidifier.a",
+        "valve.a",
+      )
       .forEach { id -> assertEquals(HaAction.Toggle(id), defaultTapActionFor(id)) }
+  }
+
+  @Test
+  fun defaultTapActionNeverActuatesCoversLocksOrMediaPlayers() {
+    // A tap on a garage door or a lock opens more-info in HA; it must not open or unlock it.
+    listOf("cover.garage_door", "lock.front_door", "media_player.tv", "climate.hall").forEach { id
+      ->
+      assertEquals(HaAction.MoreInfo(id), defaultTapActionFor(id))
+    }
   }
 
   @Test
   fun defaultTapActionShowsMoreInfoForOtherDomains() {
     assertEquals(HaAction.MoreInfo("sensor.temp"), defaultTapActionFor("sensor.temp"))
     assertEquals(HaAction.None, defaultTapActionFor(null))
+  }
+
+  @Test
+  fun toggleCardsToggleOnlyHaToggleDomains() {
+    for (type in listOf("button", "tile", "picture-glance", "entity", "glance", "gauge")) {
+      assertEquals(
+        HaAction.Toggle("light.kitchen"),
+        defaultTapActionFor(CardConfig(type), "light.kitchen"),
+      )
+      assertEquals(
+        HaAction.MoreInfo("cover.garage_door"),
+        defaultTapActionFor(CardConfig(type), "cover.garage_door"),
+      )
+    }
+  }
+
+  @Test
+  fun pictureGlanceForceDialogOpensMoreInfo() {
+    val card =
+      CardConfig(
+        "picture-glance",
+        buildJsonObject {
+          put("type", "picture-glance")
+          put("force_dialog", true)
+        },
+      )
+    assertEquals(HaAction.MoreInfo("light.kitchen"), defaultTapActionFor(card, "light.kitchen"))
   }
 }

@@ -229,8 +229,22 @@ class LiveHaSessionReconnectTest {
       return when (type) {
         "lovelace/config" -> result(id, dashboardConfig())
         "get_states" -> result(id, buildJsonArray {})
+        "get_config" -> result(id, config())
         else -> null
       }
+    }
+
+    private fun config() = buildJsonObject {
+      put("version", "test")
+      put(
+        "unit_system",
+        buildJsonObject {
+          put("length", "km")
+          put("mass", "kg")
+          put("temperature", "°C")
+          put("volume", "L")
+        },
+      )
     }
 
     private fun dashboardConfig() = buildJsonObject {
