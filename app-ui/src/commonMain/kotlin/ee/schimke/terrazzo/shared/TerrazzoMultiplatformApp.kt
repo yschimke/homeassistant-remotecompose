@@ -352,8 +352,11 @@ private fun LiveDashboard(
   var dashboard by remember(connection, path) { mutableStateOf<Dashboard?>(null) }
   var error by remember(connection, path) { mutableStateOf<String?>(null) }
   val scope = rememberCoroutineScope()
+  // Keyed on the configured server so changing the setting reloads designs from it.
   val designCache =
-    remember(connection, path) { DashboardLoadCache(scope, load = ::loadLibraryDesign) }
+    remember(connection, path, designServer) {
+      DashboardLoadCache(scope) { key: LibraryDesignKey -> loadLibraryDesign(key, designServer) }
+    }
   val pictureCache =
     remember(connection, path) {
       DashboardLoadCache(scope, capacity = 12) { key: EntityPictureKey ->
