@@ -10,7 +10,7 @@ class HaBearerAuthInterceptorTest {
 
   @Test
   fun attaches_bearer_for_matching_host() {
-    val interceptor = HaBearerAuthInterceptor({ "ha.example.test" }, { "tok-123" })
+    val interceptor = HaBearerAuthInterceptor({ "https://ha.example.test" }, { "tok-123" })
     val chain =
       FakeChain(Request.Builder().url("https://ha.example.test/api/image_proxy/x").build())
 
@@ -23,7 +23,7 @@ class HaBearerAuthInterceptorTest {
   fun matches_host_case_insensitively() {
     // OkHttp lowercases hosts internally, but explicit case-insensitive
     // matching keeps the contract resilient to upstream changes.
-    val interceptor = HaBearerAuthInterceptor({ "HA.Example.Test" }, { "tok-x" })
+    val interceptor = HaBearerAuthInterceptor({ "https://HA.Example.Test" }, { "tok-x" })
     val chain = FakeChain(Request.Builder().url("https://ha.example.test/api/state").build())
 
     interceptor.intercept(chain)
@@ -35,8 +35,8 @@ class HaBearerAuthInterceptorTest {
   fun does_not_attach_bearer_to_different_host() {
     // The HA dashboard may reference an external CDN icon. Sending
     // the HA bearer to that CDN would leak the user's credentials —
-    // this test pins the host-only behaviour.
-    val interceptor = HaBearerAuthInterceptor({ "ha.example.test" }, { "tok-x" })
+    // this test pins the origin-only behaviour.
+    val interceptor = HaBearerAuthInterceptor({ "https://ha.example.test" }, { "tok-x" })
     val chain = FakeChain(Request.Builder().url("https://cdn.example.test/icon.png").build())
 
     interceptor.intercept(chain)
@@ -46,8 +46,28 @@ class HaBearerAuthInterceptorTest {
 
   @Test
   fun does_not_attach_bearer_to_subdomain_of_ha_host() {
-    val interceptor = HaBearerAuthInterceptor({ "ha.example.test" }, { "tok-x" })
+    val interceptor = HaBearerAuthInterceptor({ "https://ha.example.test" }, { "tok-x" })
     val chain = FakeChain(Request.Builder().url("https://api.ha.example.test/icon.png").build())
+
+    interceptor.intercept(chain)
+
+    assertNull(chain.lastProceededRequest!!.header("Authorization"))
+  }
+
+  @Test
+  fun does_not_attach_bearer_to_another_port_on_the_ha_host() {
+    val interceptor = HaBearerAuthInterceptor({ "http://ha.example.test:8123" }, { "tok-x" })
+    val chain = FakeChain(Request.Builder().url("http://ha.example.test:8080/icon.png").build())
+
+    interceptor.intercept(chain)
+
+    assertNull(chain.lastProceededRequest!!.header("Authorization"))
+  }
+
+  @Test
+  fun does_not_attach_bearer_over_http_to_an_https_instance() {
+    val interceptor = HaBearerAuthInterceptor({ "https://ha.example.test" }, { "tok-x" })
+    val chain = FakeChain(Request.Builder().url("http://ha.example.test/icon.png").build())
 
     interceptor.intercept(chain)
 
@@ -60,7 +80,7 @@ class HaBearerAuthInterceptorTest {
     // serve multiple sessions: a rotated token shows up on the very
     // next request without rebuilding the OkHttp client.
     var token: String? = "first"
-    val interceptor = HaBearerAuthInterceptor({ "ha.example.test" }, { token })
+    val interceptor = HaBearerAuthInterceptor({ "https://ha.example.test" }, { token })
     val urlBuilder = Request.Builder().url("https://ha.example.test/api/state")
     val chain1 = FakeChain(urlBuilder.build())
     interceptor.intercept(chain1)
