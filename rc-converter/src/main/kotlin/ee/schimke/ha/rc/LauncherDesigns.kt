@@ -36,6 +36,7 @@ import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
 import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.WidgetActionRegistry
+import ee.schimke.ha.rc.components.WidgetOpenApp
 import ee.schimke.ha.rc.components.cardPalette
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.runBlocking
@@ -242,7 +243,10 @@ object LauncherDesigns {
     // Each host action the template registered runs the card's own action for it. A PIN typed into
     // the widget resolves to an empty AlarmPin on the real entity; the receiver takes the digits
     // from the tap's metadata.
-    val actions = templateActions.mapValues { (_, action) -> playback.resolveTap(action, snapshot) }
+    // The surface's open-app tap is the host's own, not one of the card's.
+    val actions = templateActions.mapValues { (_, action) ->
+      if (action == WidgetOpenApp) action else playback.resolveTap(action, snapshot)
+    }
     return Baked(bytes, actions)
   }
 

@@ -4,6 +4,8 @@ package ee.schimke.ha.rc
 
 import android.content.Context
 import androidx.compose.remote.core.CoreDocument
+import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
+import androidx.compose.remote.creation.compose.capture.RemoteDensity
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.drawWithContent
@@ -11,6 +13,10 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.runtime.CompositionLocalProvider
+import ee.schimke.composeai.rcplayer.edit.hardcodeDensity
+import ee.schimke.composeai.rcplayer.edit.optimize
+import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
+import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.design.CardBindingRecipe
 import ee.schimke.ha.design.CardDesignSlots
@@ -108,6 +114,9 @@ object CardDesignTemplates {
   }
 
   private const val MAX_DELEGATION = 8
+
+  /** A template's capture canvas: 400 × 800 dp at mdpi, whatever machine captures it. */
+  private val TEMPLATE_DISPLAY = RemoteCreationDisplayInfo(400, 800, 160)
 
   /**
    * Template playback for [card] with [bytes] from the design repository. Bindings and tap actions
@@ -207,7 +216,17 @@ object CardDesignTemplates {
         }
     val palette = cardStyle.cardPalette(style, dark)
     val bytes = runBlocking {
-      captureSingleRemoteDocument(context = context, profile = androidXExperimentalWrap) {
+      // Host density: every dp and sp reads the player's display, never the capture's, so a design
+      // captured once (on the design server) plays at any phone's density and font scale. The
+      // device folds its own display in once (forDisplay).
+      captureSingleRemoteDocument(
+          context = context,
+          // The header records a canvas; a fixed one keeps the bytes the same on every machine
+          // (a wrap-mode card lays out for the width its host gives it, not this).
+          creationDisplayInfo = TEMPLATE_DISPLAY,
+          remoteDensity = RemoteDensity.Host,
+          profile = androidXExperimentalWrap,
+        ) {
           // Bound name / title text instead of literals: see LocalTemplateBindings.
           CompositionLocalProvider(LocalTemplateBindings provides TemplateBindings()) {
             ProvideCardRegistry(registry) {
@@ -229,6 +248,40 @@ object CardDesignTemplates {
       bytes = bytes,
     )
   }
+
+  /**
+   * [template] (a Host-density design) with this display's [density] and [fontScale] written in and
+   * the document optimised: the expressions that read the player's display become constants, so a
+   * phone pays for them once rather than on every frame. Folded once per template and display;
+   * [template] itself when it can't be folded, which still plays correctly.
+   */
+  fun forDisplay(template: ByteArray, density: Float, fontScale: Float): ByteArray {
+    val display = density to fontScale
+    synchronized(folded) {
+      folded[template]
+        ?.takeIf { it.first == display }
+        ?.let {
+          return it.second ?: template
+        }
+    }
+    val bytes = runCatching {
+      RcDocumentCodec.encode(
+        RcDocumentCodec.decode(template, RcWireLimits())
+          .hardcodeDensity(density, fontScale)
+          .optimize()
+      )
+    }
+      .getOrNull()
+    // Null for "can't be folded": the map must never hold its own key strongly.
+    synchronized(folded) { folded[template] = display to bytes }
+    return bytes ?: template
+  }
+
+  /**
+   * Folded templates, by the template's own array: designs and library templates keep one array per
+   * key, so a key is folded once, and a template dropped from both goes from here too.
+   */
+  private val folded = java.util.WeakHashMap<ByteArray, Pair<Pair<Float, Float>, ByteArray?>>()
 
   /** Build every spike template. */
   fun buildAll(context: Context): List<BuiltDesign> = spikeKeys().map { capture(context, it) }

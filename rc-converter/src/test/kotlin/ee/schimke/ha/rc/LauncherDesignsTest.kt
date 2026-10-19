@@ -33,6 +33,7 @@ import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.WidgetActionRegistry
+import ee.schimke.ha.rc.components.WidgetOpenApp
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -304,8 +305,9 @@ class LauncherDesignsTest {
         document.namedVariables.none { "switch.s0" in it.name },
         "$type at $width × $height has its state baked",
       )
-      assertTrue(baked.actions.isNotEmpty(), "$type retains its action")
-      baked.actions.values.forEach { assertEquals(defaultTapActionFor("switch.fan"), it) }
+      val cardActions = baked.actions.values - WidgetOpenApp
+      assertTrue(cardActions.isNotEmpty(), "$type retains its action")
+      cardActions.forEach { assertEquals(defaultTapActionFor("switch.fan"), it) }
     }
   }
 
@@ -395,8 +397,11 @@ class LauncherDesignsTest {
     assertEquals(emptyList(), slotNames, "every slot binding is baked")
     assertTrue("Kitchen" in String(baked.bytes, Charsets.ISO_8859_1), "the name is baked in")
     // The tile's tap reaches the real light, never the template's slot.
-    assertTrue(baked.actions.isNotEmpty())
-    for (action in baked.actions.values) {
+    // Beside the card's taps, the widget surface opens the app.
+    assertTrue(WidgetOpenApp in baked.actions.values, "the widget opens the app")
+    val cardActions = baked.actions.values - WidgetOpenApp
+    assertTrue(cardActions.isNotEmpty())
+    for (action in cardActions) {
       assertEquals(defaultTapActionFor("light.kitchen"), action)
     }
   }

@@ -28,8 +28,18 @@ import ee.schimke.ha.rc.LocalDesignStore
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import java.io.File
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
@@ -105,26 +115,66 @@ val LocalCardDesigns = staticCompositionLocalOf { CardDesigns() }
 
 /**
  * The server designs cached on disk for [choice]. With no server this is empty and does no work. It
- * never touches the network: [CardDesignSync] fills the cache, and when a sync stores new designs
- * ([CardDesignSync.revision]) they are read again, so they show without restarting the app.
+ * never touches the network: [CardDesignSync] fills the cache.
+ */
+suspend fun loadCardDesigns(context: Context, choice: CardDesignChoice): CardDesigns {
+  if (!choice.enabled) return CardDesigns(variant = choice.variant)
+  val repository = CardDesignSync.cachedRepository(context, choice.serverUrl)
+  return CardDesigns(
+    repository.resolveAll(prefer = choice.prefer),
+    choice.variant,
+    choice,
+    repository.resolveDeviceDesigns(prefer = choice.prefer),
+  )
+}
+
+/**
+ * The user's server designs, read from disk once per process and kept in memory, so a dashboard's
+ * first frame already plays them. Reading them on the dashboard's own composition left every card
+ * on the local library's design for its first frames, then swapped to the server's: a different
+ * document, which can lay out differently (a grid's per-row count, its cells' sizes).
+ *
+ * [start] runs from the application's start, well before a dashboard composes; it reads again when
+ * the choice changes or a sync stores new designs ([CardDesignSync.revision]).
+ */
+object CardDesignPreload {
+  private val _designs = MutableStateFlow<CardDesigns?>(null)
+
+  /** The designs for the current choice; null until the first read from disk completes. */
+  val designs: StateFlow<CardDesigns?> = _designs.asStateFlow()
+
+  fun start(context: Context, prefs: PreferencesStore, scope: CoroutineScope) {
+    scope.launch {
+      CardDesignSync.choice(context, prefs)
+        .distinctUntilChanged()
+        .combine(CardDesignSync.revision) { choice, _ -> choice }
+        .collectLatest { choice ->
+          // Another choice's designs are the wrong ones (another variant, author or server):
+          // drop them while this one reads. A sync for the same choice keeps them until then.
+          if (_designs.value?.loadedFor != choice) _designs.value = null
+          _designs.value = loadCardDesigns(context, choice)
+        }
+    }
+  }
+}
+
+/** How long a dashboard holds its cards for the first design read before using local designs. */
+internal const val DESIGN_PRELOAD_WAIT_MS = 1_500L
+
+/**
+ * The preloaded designs ([CardDesignPreload]), or null while the first read is still running. It
+ * waits at most [DESIGN_PRELOAD_WAIT_MS]: after that a slow or broken cache never holds the
+ * dashboard back, and the cards render from the local library until the read lands.
  */
 @Composable
-fun rememberCardDesigns(context: Context, choice: CardDesignChoice): CardDesigns {
-  if (!choice.enabled) return CardDesigns(variant = choice.variant)
-  val revision by CardDesignSync.revision.collectAsState()
-  val repository =
-    remember(choice.serverUrl) { CardDesignSync.cachedRepository(context, choice.serverUrl) }
-  var designs by remember(repository, choice) { mutableStateOf<CardDesigns?>(null) }
-  LaunchedEffect(repository, choice, revision) {
-    designs =
-      CardDesigns(
-        repository.resolveAll(prefer = choice.prefer),
-        choice.variant,
-        choice,
-        repository.resolveDeviceDesigns(prefer = choice.prefer),
-      )
+fun rememberPreloadedCardDesigns(): CardDesigns? {
+  val preloaded by CardDesignPreload.designs.collectAsState()
+  var waitedOut by remember { mutableStateOf(false) }
+  LaunchedEffect(Unit) {
+    delay(DESIGN_PRELOAD_WAIT_MS)
+    waitedOut = true
   }
-  return designs ?: CardDesigns(variant = choice.variant)
+  return preloaded ?: if (waitedOut) CardDesigns() else null
 }
 
 /** The user's per-card and per-card-type design overrides, kept on the device. */
@@ -160,7 +210,15 @@ fun cardTemplateFor(
   val server = forDevice ?: designs.byKey[preferred] ?: designs.byKey[key]
   designs.loadedFor?.let { CardDesignSources.record(it, key, fromServer = server != null) }
   val bytes = server ?: CardDesignLibrary.template(context, key, registry)
-  return CardDesignTemplates.playback(card, bytes, registry)
+  // Designs read the player's display (Host density); fold this phone's in once.
+  val metrics = context.resources.displayMetrics
+  val folded =
+    CardDesignTemplates.forDisplay(
+      bytes,
+      metrics.density,
+      context.resources.configuration.fontScale,
+    )
+  return CardDesignTemplates.playback(card, folded, registry)
 }
 
 /**

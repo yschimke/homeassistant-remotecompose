@@ -14,6 +14,7 @@ import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.crash.CrashReporter
+import ee.schimke.terrazzo.dashboard.CardDesignPreload
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.FileLocalDesignStore
 import ee.schimke.terrazzo.di.AppGraph
@@ -93,6 +94,12 @@ class TerrazzoApplication : Application() {
       CardDesignLibrary.store = store
       (ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO).launch { store.prune() }
     }
+    // Read the cached server designs now, so the first dashboard frame already plays them.
+    CardDesignPreload.start(
+      applicationContext,
+      graph.preferencesStore,
+      ProcessLifecycleOwner.get().lifecycleScope + graph.logStore.coroutineExceptionHandler,
+    )
     // Keep the card design sync scheduled for the server (cancelled when its URL is blank), and
     // sync
     // once whenever the design choice changes — on start too, which costs nothing while the cache

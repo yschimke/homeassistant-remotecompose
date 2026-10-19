@@ -275,8 +275,10 @@ class CommunityFamilyLiveRenderTest {
             look = look,
           )
         )
-      assertTrue(baked.actions.isNotEmpty())
-      baked.actions.values.forEach { assertEquals(defaultTapActionFor(id), it) }
+      // The surface's open-app tap aside, every tap is the card's own.
+      val cardActions = baked.actions.values - WidgetOpenApp
+      assertTrue(cardActions.isNotEmpty())
+      cardActions.forEach { assertEquals(defaultTapActionFor(id), it) }
     }
   }
 }
