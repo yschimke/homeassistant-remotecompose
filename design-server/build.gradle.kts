@@ -81,6 +81,7 @@ dependencies {
   implementation(libs.ktor.server.default.headers)
   implementation(libs.ktor.server.auto.head.response)
   implementation(libs.ktor.server.status.pages)
+  implementation(libs.ktor.server.body.limit)
 
   // Creates designs on UI Builder (`UiBuilderClient`).
   implementation(libs.ktor.client.core)
