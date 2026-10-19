@@ -231,9 +231,19 @@ class GithubAuth(
     private const val DEVICE = "device"
     private const val DEVICE_TTL_MS = 365L * 24 * 60 * 60 * 1000
 
-    /** Only a same-site path: never an absolute URL a sign-in could be bounced to. */
+    /**
+     * Only a same-site path: never an absolute URL a sign-in could be bounced to. Control
+     * characters are refused too: browsers drop tabs and newlines while parsing a URL, so
+     * `/\t/evil.example` would otherwise reach the `Location` header and resolve as
+     * `//evil.example`.
+     */
     fun safeReturn(path: String?): String =
-      path?.takeIf { it.startsWith("/") && !it.startsWith("//") && '\\' !in it } ?: "/"
+      path?.takeIf {
+        it.startsWith("/") &&
+          !it.startsWith("//") &&
+          '\\' !in it &&
+          it.none { c -> c < ' ' || c == '\u007f' }
+      } ?: "/"
 
     /**
      * From the environment: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `PUBLIC_URL` and
