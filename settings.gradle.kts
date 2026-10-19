@@ -74,28 +74,36 @@ dependencyResolutionManagement {
 
 rootProject.name = "homeassistant-remotecompose"
 
-include(
-  ":ha-model",
-  ":ha-client",
-  ":rc-components",
-  ":rc-components-ui",
-  ":rc-converter",
-  ":rc-card-shutter",
-  ":rc-image-coil",
-  ":previews",
-  ":demo-app",
-  ":terrazzo-core",
-  ":app",
-  ":wear",
-  ":tv",
-  ":integration",
-  ":addon-server",
-  ":card-designs",
-  ":design-server",
-  ":app-ui",
-  ":rc-player-ui",
-  ":ha-cards-catalog",
-)
+// `-PaddonServerOnly=true` includes just the Home Assistant add-on server and the two modules it
+// depends on. The add-on image (`addon-server/addon/Dockerfile`) copies only those directories, and
+// Gradle 9 refuses to configure an included project whose directory is missing. None of the three
+// needs an Android SDK to build their JVM targets.
+if (providers.gradleProperty("addonServerOnly").orNull == "true") {
+  include(":ha-model", ":ha-client", ":addon-server")
+} else {
+  include(
+    ":ha-model",
+    ":ha-client",
+    ":rc-components",
+    ":rc-components-ui",
+    ":rc-converter",
+    ":rc-card-shutter",
+    ":rc-image-coil",
+    ":previews",
+    ":demo-app",
+    ":terrazzo-core",
+    ":app",
+    ":wear",
+    ":tv",
+    ":integration",
+    ":addon-server",
+    ":card-designs",
+    ":design-server",
+    ":app-ui",
+    ":rc-player-ui",
+    ":ha-cards-catalog",
+  )
+}
 
 // The typed discovery API is released; the renderer SDK still uses a pinned source checkout.
 val builderSource =

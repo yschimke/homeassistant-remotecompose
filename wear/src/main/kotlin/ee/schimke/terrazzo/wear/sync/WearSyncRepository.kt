@@ -94,6 +94,7 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
 
   private val dataListener = DataClient.OnDataChangedListener { events: DataEventBuffer ->
     for (event in events) {
+      if (event.type == DataEvent.TYPE_DELETED) forget(event.dataItem.uri.path.orEmpty())
       if (event.type != DataEvent.TYPE_CHANGED) continue
       val item = event.dataItem
       val mapItem = DataMapItem.fromDataItem(item)
@@ -254,6 +255,20 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
           _dashboards.value = current.sortedBy { it.title }
           offline.writeDashboard(dashboard)
         }
+    }
+  }
+
+  /** The phone deleted the item at [path] (sign-out, a removed dashboard): drop our copy too. */
+  private fun forget(path: String) {
+    when (val item = offline.forget(path)) {
+      ForgottenItem.Settings -> _settings.value = WearSettings()
+      ForgottenItem.Pinned -> _pinned.value = PinnedCardSet()
+      ForgottenItem.Sections -> _sections.value = PinnedSectionSet()
+      ForgottenItem.Slots -> _slots.value = WearWidgetSlots()
+      ForgottenItem.Values -> _values.value = emptyMap()
+      is ForgottenItem.Dashboard -> _dashboards.value = _dashboards.value.filterNot(item::matches)
+      is ForgottenItem.Picture,
+      null -> Unit
     }
   }
 

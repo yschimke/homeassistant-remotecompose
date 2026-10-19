@@ -64,6 +64,7 @@ def route_socket(socket):
             return
         commands.append(message)
         results = {'lovelace/dashboards/list': [], 'get_states': [entity], 'lovelace/config': dashboard,
+                   'get_config': {'unit_system': {'temperature': '°C', 'length': 'km', 'mass': 'kg', 'volume': 'L'}},
                    'subscribe_events': None, 'unsubscribe_events': None, 'call_service': {},
                    'config/entity_registry/list_for_display': {'entity_categories': {}, 'entities': [
                        {'ei': 'switch.lamp', 'pl': 'demo', 'di': 'lamp-device'}]},
@@ -127,7 +128,7 @@ try:
         page.wait_for_timeout(500)
         calls = [command for command in commands if command['type'] == 'call_service']
         assert len(calls) == 1, f'One click dispatched {len(calls)} service calls'
-        assert calls[0]['domain'] == 'switch' and calls[0]['service'] == 'toggle'
+        assert calls[0]['domain'] == 'homeassistant' and calls[0]['service'] == 'toggle'
         assert calls[0]['target']['entity_id'] == 'switch.lamp'
         page.wait_for_timeout(4500)
         assert len([command for command in commands if command['type'] == 'get_states']) == 1

@@ -110,7 +110,8 @@ class TileCardConverter : CardConverter {
   override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String? {
     val entityId = entityIdOf(card) ?: return null
     if (!TileContent.bakes(card, entityId, snapshot.states[entityId])) return null
-    return cardDataSignature(setOf(entityId), snapshot)
+    // The unit system its temperatures are written in is baked too.
+    return cardDataSignature(setOf(entityId), snapshot) + "|" + snapshot.temperatureUnit.orEmpty()
   }
 
   override fun naturalWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWidthClass =
@@ -214,7 +215,11 @@ class TileCardConverter : CardConverter {
   private fun entityIdOf(card: CardConfig): String? = card.raw["entity"]?.jsonPrimitive?.content
 
   private fun features(card: CardConfig, snapshot: HaSnapshot) =
-    TileContent.features(card, entityIdOf(card)?.let { snapshot.states[it] })
+    TileContent.features(
+      card,
+      entityIdOf(card)?.let { snapshot.states[it] },
+      snapshot.temperatureUnit,
+    )
 
   @Composable
   private fun tileData(card: CardConfig, snapshot: HaSnapshot): HaTileData {
@@ -235,7 +240,12 @@ class TileCardConverter : CardConverter {
     val content = TileContent.stateContent(card, entityId)
     val state =
       if (content == null) LiveValues.state(entityId, formatState(entity, snapshot))
-      else LiveValues.named(entityId, "state_label", TileContent.secondaryText(content, entity))
+      else
+        LiveValues.named(
+          entityId,
+          "state_label",
+          TileContent.secondaryText(content, entity, snapshot.temperatureUnit),
+        )
     // HA: a configured colour is the active colour; inactive stays the neutral look.
     val stateAccent = HaStateColor.toggleAccentFor(entityId, entity)
     val accent =
@@ -251,7 +261,7 @@ class TileCardConverter : CardConverter {
       accent = accent.withIcons(icons),
       tapAction = tapAction,
       badge = TileContent.badge(entity)?.let { HaTileBadge(it.icon, it.color, it.description) },
-      features = TileContent.features(card, entity),
+      features = TileContent.features(card, entity, snapshot.temperatureUnit),
       featuresPosition = TileContent.featuresPosition(card),
     )
   }

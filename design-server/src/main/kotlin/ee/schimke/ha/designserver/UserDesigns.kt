@@ -29,6 +29,12 @@ private data class UserDesignIndex(
   /** Bumped on every change, so a manifest that folds these in can raise its serial. */
   val revision: Long = 0,
   val designs: List<UserDesign> = emptyList(),
+  /**
+   * Bumped on every change to the shared set, so the manifest everyone sees can raise its serial
+   * without counting private publishes. Null in an index written before it existed: read as
+   * [revision], which every earlier anonymous serial was built from, so it never steps back.
+   */
+  val sharedRevision: Long? = null,
 )
 
 /**
@@ -56,6 +62,10 @@ class UserDesignStore(
   /** Changes so far: folded into the served manifest's serial. */
   val revision: Long
     get() = index.revision
+
+  /** Changes to the shared designs so far: folded into the anonymous manifest's serial. */
+  val sharedRevision: Long
+    get() = index.sharedRevision ?: index.revision
 
   /** [login]'s designs, newest first. */
   fun designs(login: String): List<UserDesign> =
@@ -109,7 +119,7 @@ class UserDesignStore(
         revision = revision,
         publishedAtEpochMs = clock(),
       )
-    save(index.designs.filterNot { it === replaced } + design)
+    save(index.designs.filterNot { it === replaced } + design, sharedChanged = design.shared)
     return design
   }
 
@@ -121,12 +131,17 @@ class UserDesignStore(
       index.designs.firstOrNull { it.entry.author == author && it.entry.sha256 == sha256 }
         ?: return null
     val updated = target.copy(shared = shared)
-    save(index.designs.map { if (it === target) updated else it })
+    save(index.designs.map { if (it === target) updated else it }, sharedChanged = true)
     return updated
   }
 
-  private fun save(designs: List<UserDesign>) {
-    val next = UserDesignIndex(revision = index.revision + 1, designs = designs)
+  private fun save(designs: List<UserDesign>, sharedChanged: Boolean) {
+    val next =
+      UserDesignIndex(
+        revision = index.revision + 1,
+        designs = designs,
+        sharedRevision = sharedRevision + if (sharedChanged) 1 else 0,
+      )
     writeAtomically(
       indexFile,
       json.encodeToString(UserDesignIndex.serializer(), next).encodeToByteArray(),

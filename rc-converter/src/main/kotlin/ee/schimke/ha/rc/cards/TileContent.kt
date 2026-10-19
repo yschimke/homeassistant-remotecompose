@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaLiveBindings
+import ee.schimke.ha.model.temperatureUnitFor
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaTileFeature
@@ -111,15 +112,20 @@ internal object TileContent {
 
   /**
    * The secondary line for [content]: each part HA's `state-display` would show, joined with " · ";
-   * parts with no value are skipped, and with none at all the plain state is shown.
+   * parts with no value are skipped, and with none at all the plain state is shown. [unitSystem] is
+   * the instance's temperature unit ([ee.schimke.ha.model.HaSnapshot.temperatureUnit]).
    */
-  fun secondaryText(content: List<String>, entity: EntityState?): String {
+  fun secondaryText(
+    content: List<String>,
+    entity: EntityState?,
+    unitSystem: String? = null,
+  ): String {
     if (entity == null) return formatState(null)
-    val parts = content.mapNotNull { part(it, entity) }
+    val parts = content.mapNotNull { part(it, entity, unitSystem) }
     return if (parts.isEmpty()) formatState(entity) else parts.joinToString(SEPARATOR)
   }
 
-  private fun part(content: String, entity: EntityState): String? {
+  private fun part(content: String, entity: EntityState, unitSystem: String?): String? {
     val domain = domainOf(entity.entityId)
     return when (content) {
       "state" -> formatState(entity)
@@ -127,19 +133,25 @@ internal object TileContent {
       "entity_id" -> entity.entityId
       "last_changed" -> entity.lastChanged?.let { formatTimestamp(it.toEpochMilliseconds()) }
       "last_updated" -> entity.lastUpdated?.let { formatTimestamp(it.toEpochMilliseconds()) }
-      else -> attributeValue(domain, content, entity)
+      else -> attributeValue(domain, content, entity, unitSystem)
     }
   }
 
   /** An attribute as HA's `formatEntityAttributeValue` shows it, or null when it has none. */
-  fun attributeValue(domain: String, attribute: String, entity: EntityState): String? {
+  fun attributeValue(
+    domain: String,
+    attribute: String,
+    entity: EntityState,
+    unitSystem: String? = null,
+  ): String? {
     val raw = entity.attributes[attribute] as? JsonPrimitive ?: return null
     val text = raw.contentOrNull ?: return null
     val number = raw.doubleOrNull
     if (number != null) {
       if (number == 0.0 && attribute in HIDDEN_ZERO[domain].orEmpty()) return null
       return when {
-        attribute in TEMPERATURE_ATTRIBUTES -> formatValueWithUnit(text, temperatureUnit(entity))
+        attribute in TEMPERATURE_ATTRIBUTES ->
+          formatValueWithUnit(text, temperatureUnitFor(entity, unitSystem))
         // HA shows a light's brightness (0–255) as a percentage.
         attribute == "brightness" && domain == "light" ->
           formatValueWithUnit((number / 255.0 * 100.0).toInt().toString(), "%")
@@ -184,13 +196,17 @@ internal object TileContent {
    * don't apply to the entity, or that a document can't do (a slider, a dropdown that opens), are
    * left out; a dropdown mode select draws as buttons, since a document can't open a menu.
    */
-  fun features(card: CardConfig, entity: EntityState?): List<HaTileFeature> {
+  fun features(
+    card: CardConfig,
+    entity: EntityState?,
+    unitSystem: String? = null,
+  ): List<HaTileFeature> {
     entity ?: return emptyList()
     val configs = card.raw["features"] as? JsonArray ?: return emptyList()
     return configs.mapNotNull { config ->
       val obj = config as? JsonObject ?: return@mapNotNull null
       when (obj.string("type")) {
-        "target-temperature" -> targetTemperature(entity)
+        "target-temperature" -> targetTemperature(entity, unitSystem)
         "climate-hvac-modes" -> hvacModes(entity, obj)
         "climate-preset-modes" -> modeSelect(entity, obj, ClimatePresetModes, defaultIcons = false)
         "climate-fan-modes" -> modeSelect(entity, obj, ClimateFanModes, defaultIcons = false)
@@ -218,7 +234,10 @@ internal object TileContent {
    * thermostat (`target_temp_low` / `high` without `temperature`) isn't drawn; one with no set
    * point right now (switched off) draws disabled, as HA does.
    */
-  fun targetTemperature(entity: EntityState): HaTileFeature.NumberButtons? {
+  fun targetTemperature(
+    entity: EntityState,
+    unitSystem: String? = null,
+  ): HaTileFeature.NumberButtons? {
     val domain = domainOf(entity.entityId)
     if (domain != "climate" && domain != "water_heater") return null
     val target = entity.number("temperature")
@@ -229,7 +248,7 @@ internal object TileContent {
           features and (CLIMATE_TARGET_TEMPERATURE or CLIMATE_TARGET_TEMPERATURE_RANGE) != 0)
     if (!supported) return null
     if (target == null && entity.number("target_temp_low") != null) return null
-    val unit = temperatureUnit(entity)
+    val unit = temperatureUnitFor(entity, unitSystem)
     val step = entity.number("target_temp_step") ?: if (unit == "°F") 1.0 else 0.5
     val description = "Target temperature"
     if (target == null || !HaLiveBindings.isAvailable(entity.state)) {
@@ -425,10 +444,6 @@ internal object TileContent {
   // --- helpers --------------------------------------------------------------------------------
 
   private fun domainOf(entityId: String): String = entityId.substringBefore('.')
-
-  /** The climate temperature unit: the entity's own, else °C (no unit system in the snapshot). */
-  private fun temperatureUnit(entity: EntityState): String =
-    entity.string("temperature_unit") ?: entity.string("unit_of_measurement") ?: "°C"
 
   private val TimestampFormat = DateTimeFormatter.ofPattern("d MMM HH:mm", Locale.US)
 

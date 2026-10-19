@@ -7,19 +7,17 @@ import ee.schimke.ha.rc.CardRegistry
 /**
  * Built-in converters that ship with the library.
  *
- * **Fully implemented** (produce visually-correct output): tile, button, entity, entities, glance,
- * heading, markdown, vertical-stack, horizontal-stack, grid, conditional, gauge, weather-forecast,
- * picture-entity, logbook.
+ * **Real converters**, one per card type: tile, button, entity, entities, glance, heading,
+ * markdown, vertical-stack, horizontal-stack, grid, conditional, map, history-graph, gauge,
+ * picture-entity, weather-forecast, logbook, thermostat, humidifier, light, clock,
+ * statistics-graph, alarm-panel, media-control, todo-list, calendar, area, picture, picture-glance,
+ * picture-elements, statistic, sensor, entity-filter, and the `custom:ha-bambulab-*` cards (AMS,
+ * spool, print status, print control, skip object). `map` draws its tracked entities on a flat
+ * chrome rather than map tiles, which a `.rc` document can't carry.
  *
- * **Summary chrome** (registered with a real converter that renders a card chrome but skips the
- * rich visualisation — replace with the full `RemoteHa…` composable when ready): map,
- * history-graph, custom:ha-bambulab-*.
- *
- * **Placeholder-only** (registered so the dashboard renders, but with a "not yet supported" badge —
- * extend by writing a `RemoteHa…` composable
- * + converter shim): thermostat, humidifier, light, media-control, alarm-panel, clock, area,
- *   calendar, todo-list, picture, picture-glance, picture-elements, statistics-graph, statistic,
- *   sensor, entity-filter, iframe.
+ * **Placeholder-only** ([PLACEHOLDER_CARD_TYPES], an [UnsupportedCardConverter] with a "not yet
+ * supported" badge so the dashboard keeps the slot): iframe. Any other type falls back to the
+ * registry's catch-all [UnsupportedCardConverter].
  */
 fun defaultConverters(): List<CardConverter> = buildList {
   add(MessageCardConverter())

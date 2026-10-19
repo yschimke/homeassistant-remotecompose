@@ -18,21 +18,25 @@ import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalGridSquareCells
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.components.HaButtonData
+import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaButton
 import ee.schimke.ha.rc.components.RemoteHaButtonIcon
 import ee.schimke.ha.rc.components.RemoteHaToggleButton
 import ee.schimke.ha.rc.defaultTapActionFor
+import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.icons.withIcons
 import ee.schimke.ha.rc.parseHaAction
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 /**
- * `button` card. Toggleable entities (lights / switches / locks / covers / media-players etc)
- * render through [RemoteHaToggleButton] so tap crossfades the accent when the host writes the new
- * state back; read-only entities go through the simpler [RemoteHaButton].
+ * `button` card. Honours HA's `show_name`, `show_icon` and `show_state` (defaults true, true,
+ * false). Toggleable entities (lights / switches / locks / covers / media-players etc) render
+ * through [RemoteHaToggleButton] so tap crossfades the accent when the host writes the new state
+ * back; read-only entities go through the simpler [RemoteHaButton].
  *
  * In [CardSizeMode.Fixed] the converter encodes a 2-tier ladder driven by the runtime canvas
  * (mirrors the button ladder in `docs/architecture/adaptive-card-layouts.md` §button):
@@ -92,6 +96,11 @@ class ButtonCardConverter : CardConverter {
 
   @Composable
   private fun AdaptiveButton(data: HaButtonData, modifier: RemoteModifier) {
+    // `show_icon: false` leaves no icon for the icon-only tier: the full button fills every cell.
+    if (!data.showIcon) {
+      RenderButton(data, modifier.fillMaxSize(), compact = true)
+      return
+    }
     RemoteMinSizeGate(
       minWidthDp = MinIconNameWidthDp,
       minHeightDp = MinIconNameHeightDp,
@@ -145,6 +154,10 @@ private fun buttonData(card: CardConfig, snapshot: HaSnapshot): HaButtonData {
       ?: entityId
       ?: "Button"
   val showName = showName(card)
+  // HA's button card: `show_icon` defaults true, `show_state` false. The state line is the host's
+  // `<id>.state` binding (formatState), so it updates live (live-card-updates.md, path 1).
+  val showIcon = card.flag("show_icon") ?: true
+  val showState = card.flag("show_state") ?: false
   val tapCfg = card.raw["tap_action"]?.jsonObject
   val tapAction =
     if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
@@ -157,8 +170,14 @@ private fun buttonData(card: CardConfig, snapshot: HaSnapshot): HaButtonData {
     accent = HaStateColor.toggleAccentFor(entityId, entity).withIcons(icons),
     showName = showName,
     tapAction = tapAction,
+    showIcon = showIcon,
+    state =
+      if (showState && entity != null) LiveValues.state(entityId, formatState(entity, snapshot))
+      else null,
   )
 }
 
-private fun showName(card: CardConfig): Boolean =
-  card.raw["show_name"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
+private fun showName(card: CardConfig): Boolean = card.flag("show_name") ?: true
+
+private fun CardConfig.flag(key: String): Boolean? =
+  (raw[key] as? JsonPrimitive)?.content?.toBooleanStrictOrNull()

@@ -17,6 +17,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.Url
 import io.ktor.http.parameters
 import io.ktor.server.request.header
 import io.ktor.server.request.receiveParameters
@@ -567,6 +568,56 @@ class UiBuilderTest {
     assertEquals("/", GithubAuth.safeReturn("/\t/evil.example/"))
     assertEquals("/", GithubAuth.safeReturn("/\n/evil.example/"))
     assertEquals("/", GithubAuth.safeReturn("/\r\n/evil.example/"))
+  }
+
+  @Test
+  fun uiBuilderUrlsEncodeTheirPartsForTheirPlaceInTheUrl() = testApplication {
+    // A design id that is not one path segment as written, and a token that is not one query value.
+    val designId = "my design/1+2"
+    val token = "s&t=1 +%"
+    val seen = mutableListOf<Pair<String, String?>>()
+    externalServices {
+      hosts("http://uib") {
+        routing {
+          put("/api/ui-builder/v1/designs/{id}") {
+            seen += "put ${call.parameters["id"]}" to call.request.queryParameters["token"]
+            call.respondText("created", status = HttpStatusCode.Created)
+          }
+          get("/api/ui-builder/v1/designs/{id}/export.rc") {
+            seen += "export ${call.parameters["id"]}" to call.request.queryParameters["token"]
+            call.respondText("rc")
+          }
+          post("/ui-builder/{id}/access") {
+            seen += "share ${call.parameters["id"]}" to call.request.queryParameters["token"]
+            call.respondText("", status = HttpStatusCode.SeeOther)
+          }
+          studioCatalogFixture(token = token)
+        }
+      }
+    }
+    val config = UiBuilderConfig(apiUrl = "http://uib", browserUrl = "https://b.example", token)
+    val client = UiBuilderClient(config, createClient { followRedirects = false })
+    val document = buildJsonObject {
+      put("id", designId)
+      put("catalogPin", buildJsonObject { put("systemId", "ha-cards") })
+    }
+
+    assertEquals(designId, client.create(document, resolveCatalog = true))
+    client.exportRc(designId).getOrThrow()
+    client.share(designId, "github:someone", editor = true)
+    assertEquals(
+      listOf("put", "export", "share").map<String, Pair<String, String?>> {
+        "$it $designId" to token
+      },
+      seen,
+    )
+
+    // Path segments percent-encode (a space is %20, not the form encoding's +); the query value
+    // escapes what would end it.
+    assertEquals("https://b.example/ui-builder/my%20design%2F1+2", config.designUrl(designId))
+    val editor = Url(config.editorUrl(designId))
+    assertEquals("/ui-builder/my%20design%2F1+2", editor.encodedPath)
+    assertEquals(token, editor.parameters["token"])
   }
 
   private fun cookieOf(response: io.ktor.client.statement.HttpResponse): String =

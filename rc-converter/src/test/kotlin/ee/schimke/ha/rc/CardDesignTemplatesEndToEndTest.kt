@@ -223,6 +223,38 @@ class CardDesignTemplatesEndToEndTest {
   }
 
   @Test
+  fun templateDefaultTapsNeverActuateCoversOrLocks() {
+    fun tap(type: String, entity: String) =
+      CardDesignTemplates.playback(
+          CardConfig(
+            type = type,
+            raw =
+              buildJsonObject {
+                put("type", type)
+                put("entity", entity)
+              },
+          ),
+          ByteArray(0),
+        )
+        .tapAction
+    // A light still toggles, but a garage door or a lock opens more-info, as in HA.
+    for (type in listOf("button", "tile", "entity")) {
+      assertEquals(
+        ee.schimke.ha.rc.components.HaAction.Toggle("light.kitchen"),
+        tap(type, "light.kitchen"),
+      )
+      assertEquals(
+        ee.schimke.ha.rc.components.HaAction.MoreInfo("cover.garage_door"),
+        tap(type, "cover.garage_door"),
+      )
+      assertEquals(
+        ee.schimke.ha.rc.components.HaAction.MoreInfo("lock.front_door"),
+        tap(type, "lock.front_door"),
+      )
+    }
+  }
+
+  @Test
   fun listTemplateTapRunsTheTappedRowsOwnAction() {
     val list =
       CardConfig(

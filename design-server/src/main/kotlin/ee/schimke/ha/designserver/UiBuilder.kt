@@ -13,10 +13,11 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
+import io.ktor.http.encodeURLPathPart
 import io.ktor.http.isSuccess
 import io.ktor.http.parameters
 import java.io.File
-import java.net.URLEncoder
 import java.security.SecureRandom
 import java.util.Base64
 import kotlinx.coroutines.CancellationException
@@ -44,10 +45,12 @@ import kotlinx.serialization.json.putJsonObject
  */
 data class UiBuilderConfig(val apiUrl: String, val browserUrl: String, val token: String) {
   /** The editor for [designId], ready to open: UI Builder reads its operator token from the URL. */
-  fun editorUrl(designId: String): String = "${designUrl(designId)}?token=${enc(token)}"
+  fun editorUrl(designId: String): String =
+    "${designUrl(designId)}?token=${token.encodeURLParameter()}"
 
   /** The editor for [designId] without the operator token: for a person signed in to UI Builder. */
-  fun designUrl(designId: String): String = "${browserUrl.trimEnd('/')}/ui-builder/${enc(designId)}"
+  fun designUrl(designId: String): String =
+    "${browserUrl.trimEnd('/')}/ui-builder/${designId.encodeURLPathPart()}"
 
   companion object {
     /**
@@ -148,8 +151,6 @@ data class UiBuilderConfig(val apiUrl: String, val browserUrl: String, val token
       Base64.getUrlEncoder()
         .withoutPadding()
         .encodeToString(ByteArray(24).also { SecureRandom().nextBytes(it) })
-
-    private fun enc(value: String) = URLEncoder.encode(value, Charsets.UTF_8)
   }
 }
 
@@ -209,7 +210,8 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
     val id = (document["id"] as JsonPrimitive).content
     val response =
       http.put(
-        "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/designs/$id?token=${config.token}"
+        "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/designs/${id.encodeURLPathPart()}" +
+          "?token=${config.token.encodeURLParameter()}"
       ) {
         // The route creates and never replaces: a clash is a refusal, not an overwrite.
         header(HttpHeaders.IfNoneMatch, "*")
@@ -228,11 +230,11 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
    * design or refuses to compile it.
    */
   suspend fun exportRc(designId: String, revision: Long? = null): Result<ExportedDocument> {
-    val id = URLEncoder.encode(designId, Charsets.UTF_8)
+    val id = designId.encodeURLPathPart()
     val response =
       http.get(
         "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/designs/$id/export.rc" +
-          "?token=${URLEncoder.encode(config.token, Charsets.UTF_8)}" +
+          "?token=${config.token.encodeURLParameter()}" +
           (revision?.let { "&revision=$it" } ?: "")
       )
     if (!response.status.isSuccess()) {
@@ -255,7 +257,10 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
   private suspend fun pinToServedCatalog(document: JsonObject): JsonObject {
     val system = document.getValue("catalogPin").jsonObject.getValue("systemId")
     val response =
-      http.post("${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/requests?token=${config.token}") {
+      http.post(
+        "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/requests" +
+          "?token=${config.token.encodeURLParameter()}"
+      ) {
         contentType(ContentType.Application.Json)
         setBody(
           buildJsonObject {
@@ -294,7 +299,7 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
       // header with 401.
       http.post(
         "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/requests" +
-          "?token=${URLEncoder.encode(config.token, Charsets.UTF_8)}"
+          "?token=${config.token.encodeURLParameter()}"
       ) {
         contentType(ContentType.Application.Json)
         setBody(
@@ -390,8 +395,8 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
   suspend fun share(designId: String, actorId: String, editor: Boolean) {
     val response =
       http.submitForm(
-        "${config.apiUrl.trimEnd('/')}/ui-builder/${URLEncoder.encode(designId, Charsets.UTF_8)}" +
-          "/access?token=${URLEncoder.encode(config.token, Charsets.UTF_8)}",
+        "${config.apiUrl.trimEnd('/')}/ui-builder/${designId.encodeURLPathPart()}" +
+          "/access?token=${config.token.encodeURLParameter()}",
         parameters {
           append("actorId", actorId)
           append("role", if (editor) "editor" else "viewer")

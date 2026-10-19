@@ -352,8 +352,11 @@ private fun LiveDashboard(
   var dashboard by remember(connection, path) { mutableStateOf<Dashboard?>(null) }
   var error by remember(connection, path) { mutableStateOf<String?>(null) }
   val scope = rememberCoroutineScope()
+  // Keyed on the configured server so changing the setting reloads designs from it.
   val designCache =
-    remember(connection, path) { DashboardLoadCache(scope, load = ::loadLibraryDesign) }
+    remember(connection, path, designServer) {
+      DashboardLoadCache(scope) { key: LibraryDesignKey -> loadLibraryDesign(key, designServer) }
+    }
   val pictureCache =
     remember(connection, path) {
       DashboardLoadCache(scope, capacity = 12) { key: EntityPictureKey ->
@@ -732,20 +735,6 @@ internal fun NativeCard(
 }
 
 internal suspend fun dispatchCardAction(client: HaClient, payload: String) {
-  val obj = Json.parseToJsonElement(payload).jsonObject
-  when (obj["type"]?.jsonPrimitive?.content?.substringAfterLast('.')) {
-    "Toggle" -> {
-      val id = requireNotNull(obj["entityId"]?.jsonPrimitive?.content)
-      client.callService(id.substringBefore('.'), "toggle", id)
-    }
-    "CallService" ->
-      client.callService(
-        requireNotNull(obj["domain"]?.jsonPrimitive?.content),
-        requireNotNull(obj["service"]?.jsonPrimitive?.content),
-        obj["entityId"]?.jsonPrimitive?.contentOrNull,
-        obj["serviceData"] as? JsonObject ?: JsonObject(emptyMap()),
-      )
-    "None" -> Unit
-    else -> error("This action is not supported on this platform yet.")
-  }
+  val call = cardActionCall(payload) ?: return
+  client.callService(call.domain, call.service, call.entityId, call.serviceData)
 }

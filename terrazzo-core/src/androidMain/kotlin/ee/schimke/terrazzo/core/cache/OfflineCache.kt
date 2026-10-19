@@ -91,6 +91,10 @@ open class OfflineCacheStorage(rootDir: File) {
   fun snapshot(baseUrl: String, urlPath: String?): HaSnapshot? =
     readJson(snapshotFile(baseUrl, urlPath), HaSnapshot.serializer())
 
+  /** When [snapshot] for [urlPath] was written (that is, fetched), in epoch ms; null if none. */
+  fun snapshotSavedAtMs(baseUrl: String, urlPath: String?): Long? =
+    snapshotFile(baseUrl, urlPath).lastModified().takeIf { it > 0L }
+
   @Synchronized
   fun putSnapshot(baseUrl: String, urlPath: String?, snapshot: HaSnapshot) {
     writeJson(snapshotFile(baseUrl, urlPath), HaSnapshot.serializer(), snapshot)

@@ -300,6 +300,28 @@ class TileContentTest {
   }
 
   @Test
+  fun aFahrenheitInstanceWritesClimateTemperaturesInFahrenheit() {
+    // A climate entity carries no unit: HA's unit system (get_config) decides it.
+    val content = listOf("state", "current_temperature")
+    assertEquals(
+      "Heat · 71.5 °F",
+      TileContent.secondaryText(content, climate(current = 71.5), unitSystem = "°F"),
+    )
+    val f =
+      assertNotNull(
+        TileContent.targetTemperature(
+          climate(
+            target = 70.0,
+            extra = arrayOf("min_temp" to JsonPrimitive(45), "max_temp" to JsonPrimitive(95)),
+          ),
+          unitSystem = "°F",
+        )
+      )
+    assertEquals("70 °F", f.valueLabel)
+    assertEquals(setTemperature(71.0), f.increment)
+  }
+
+  @Test
   fun aThermostatWithNoSetPointDrawsDisabled() {
     val off = assertNotNull(TileContent.targetTemperature(climate(state = "off", target = null)))
     assertEquals("—", off.valueLabel)

@@ -132,6 +132,8 @@ fun TerrazzoApp(initialDashboard: String? = null, initialSession: HaSession? = n
   // cold start goes back to discovery. [reason] is shown on the sign-in screen.
   fun signOut(signedOut: HaSession?, reason: Throwable? = null) {
     val previousBaseUrl = signedOut?.baseUrl
+    // Delete the account's dashboards, values and pins from the watch too.
+    wearSync.clearWatchData()
     scope.launch {
       graph.preferencesStore.setDemoMode(false)
       graph.preferencesStore.clearLastViewedDashboard()
@@ -519,7 +521,9 @@ private fun DashboardsRoot(
   val dashboards by rememberSelectedDashboardListState(session)
   val context = LocalContext.current
   val app = remember(context) { context.applicationContext as TerrazzoApplication }
-  val wearWidgetsSupported by app.wearCapabilityProbe.stateFlow(scope).collectAsState()
+  // One eager StateFlow (and capability listener) per screen, not one per recomposition.
+  val wearWidgetsFlow = remember(app, scope) { app.wearCapabilityProbe.stateFlow(scope) }
+  val wearWidgetsSupported by wearWidgetsFlow.collectAsState()
   val logsViewEnabled by graph.preferencesStore.logsViewEnabled.collectAsState(initial = false)
 
   var opened by rememberSaveable { mutableStateOf(initialDashboardToOpened(initialDashboard)) }

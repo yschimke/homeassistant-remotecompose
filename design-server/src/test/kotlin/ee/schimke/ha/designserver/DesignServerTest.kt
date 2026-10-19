@@ -14,12 +14,19 @@ import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.design.DesignTags
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.OutgoingContent
+import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.ktor.utils.io.ByteWriteChannel
+import io.ktor.utils.io.writeFully
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.Test
@@ -399,5 +406,56 @@ class DesignServerTest {
     File(dir, DesignLibrary.MANIFEST).setLastModified(System.currentTimeMillis() + 20_000)
     now = 2_000
     assertEquals(2, holder.current().manifest.serial)
+  }
+
+  @Test
+  fun refusesAnOversizedBodyBeforeReadingIt() =
+    serve(library()) {
+      val card = """{"card":{"type":"entities","entities":["light.kitchen"]}}"""
+      // A legitimate body well over the routes' own caps still goes through.
+      val ok =
+        client.post("/api/schema") {
+          contentType(ContentType.Application.Json)
+          setBody(card + " ".repeat(1_000_000))
+        }
+      assertEquals(HttpStatusCode.OK, ok.status)
+
+      // Declared too large: refused up front, by its Content-Length.
+      val declared =
+        client.post("/api/schema") {
+          contentType(ContentType.Application.Json)
+          setBody(card + " ".repeat(MAX_REQUEST_BODY_BYTES.toInt()))
+        }
+      assertEquals(HttpStatusCode.PayloadTooLarge, declared.status)
+
+      // Streamed with no length: cut off once it passes the cap.
+      val streamed =
+        client.post("/schema") {
+          setBody(
+            object : OutgoingContent.WriteChannelContent() {
+              override val contentType = ContentType.Application.FormUrlEncoded
+
+              override suspend fun writeTo(channel: ByteWriteChannel) {
+                channel.writeFully("card=".encodeToByteArray())
+                val chunk = ByteArray(64 * 1024) { 'a'.code.toByte() }
+                repeat((MAX_REQUEST_BODY_BYTES / chunk.size).toInt() + 2) {
+                  channel.writeFully(chunk)
+                }
+              }
+            }
+          )
+        }
+      assertEquals(HttpStatusCode.PayloadTooLarge, streamed.status)
+    }
+
+  @Test
+  fun tokensMatchOnlyTheSameToken() {
+    assertTrue(tokensMatch("secret", "secret"))
+    assertTrue(tokensMatch("sécret", "sécret"))
+    assertFalse(tokensMatch(null, "secret"))
+    assertFalse(tokensMatch("", "secret"))
+    assertFalse(tokensMatch("secreT", "secret"))
+    assertFalse(tokensMatch("secret-and-more", "secret"))
+    assertFalse(tokensMatch("sécret", "secret"))
   }
 }

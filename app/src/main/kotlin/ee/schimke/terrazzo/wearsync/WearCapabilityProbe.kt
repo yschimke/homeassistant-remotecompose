@@ -20,10 +20,10 @@ import kotlinx.coroutines.flow.stateIn
  * capability — i.e. the watch is running Wear OS 6+ where the Terrazzo wear app advertises widget
  * support.
  *
- * The capability `terrazzo_wear_widgets` is added at runtime by the watch (see
- * `WearSyncRepository.start`) when its OS version supports Wear widgets. Phone uses
- * [CapabilityClient.getCapability] + the [CapabilityClient.OnCapabilityChangedListener] to track
- * updates without polling.
+ * The capability `terrazzo_wear_widgets` is declared statically by the watch app
+ * (`wear/src/main/res/values-v37/wear.xml`), so a watch whose OS supports Wear widgets advertises
+ * it whether or not the watch app is running. Phone uses [CapabilityClient.getCapability] + the
+ * [CapabilityClient.OnCapabilityChangedListener] to track updates without polling.
  */
 class WearCapabilityProbe(context: Context) {
 
@@ -76,7 +76,8 @@ class WearCapabilityProbe(context: Context) {
   companion object {
     /**
      * Capability name advertised by the wear app on Wear OS 6+ (Android 16, API 36+) where the new
-     * Wear Widgets framework is available. Mirrored in `WearSyncRepository.start`.
+     * Wear Widgets framework is available. Mirrored in the wear app's `values-v37/wear.xml` and
+     * `WearSlotsController.CAPABILITY`.
      */
     const val CAPABILITY: String = "terrazzo_wear_widgets"
 

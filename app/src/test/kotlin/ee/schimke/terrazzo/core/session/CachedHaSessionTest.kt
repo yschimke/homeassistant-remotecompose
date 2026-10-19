@@ -117,6 +117,51 @@ class CachedHaSessionTest {
     }
 
   @Test
+  fun snapshotFetchedAt_is_null_when_live_and_the_fetch_time_when_served_from_cache() = runTest {
+    val cache = storage()
+    var failNext = false
+    val session =
+      CachedHaSession(
+        FakeSession(
+          baseUrl = baseUrl,
+          loadProvider = {
+            if (failNext) error("backgrounded") else sampleDashboard to sampleSnapshot
+          },
+        ),
+        cache,
+      )
+    val before = System.currentTimeMillis()
+    session.loadDashboard(null)
+    val after = System.currentTimeMillis()
+    // Live: the caller's "now" is the honest time.
+    assertNull(session.snapshotFetchedAtMs(null))
+
+    failNext = true
+    session.loadDashboard(null)
+    // Cached: the time it was fetched, not now.
+    val fetchedAt = session.snapshotFetchedAtMs(null)!!
+    assertTrue(fetchedAt in before..after, "fetchedAt=$fetchedAt not in $before..$after")
+    // Another dashboard's state is its own.
+    assertNull(session.snapshotFetchedAtMs("other"))
+
+    failNext = false
+    session.loadDashboard(null)
+    assertNull(session.snapshotFetchedAtMs(null))
+  }
+
+  @Test
+  fun snapshotFetchedAt_after_a_cold_start_fallback_is_the_cache_write_time() = runTest {
+    val cache = storage()
+    cache.putDashboard(baseUrl, null, sampleDashboard)
+    cache.putSnapshot(baseUrl, null, sampleSnapshot)
+    val written = cache.snapshotSavedAtMs(baseUrl, null)!!
+    val session =
+      CachedHaSession(FakeSession(baseUrl = baseUrl, loadProvider = { error("offline") }), cache)
+    session.loadDashboard(null)
+    assertEquals(written, session.snapshotFetchedAtMs(null))
+  }
+
+  @Test
   fun loadDashboard_falls_back_to_empty_snapshot_when_only_dashboard_was_cached() = runTest {
     val cache = storage()
     // Pre-seed only the dashboard, not the snapshot — simulates the

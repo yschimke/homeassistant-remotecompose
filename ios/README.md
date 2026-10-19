@@ -34,6 +34,12 @@ GET  /v1/apple/manifest.json
 WS   /v1/stream
 ```
 
+**Plain HTTP is local-network only.** The app's App Transport Security policy sets only
+`NSAllowsLocalNetworking`, so `http://` / `ws://` work for local addresses such as
+`homeassistant.local`, unqualified host names, and LAN IPs. A remote Home Assistant instance or
+add-on gateway (Nabu Casa, a reverse proxy, any public host name) must be reached over
+`https://` / `wss://`; iOS blocks plain HTTP to those hosts, and the connect screen says so.
+
 The manifest is versioned and currently contains URLs for already-encoded cards. This gateway is a
 temporary `CardDocumentGenerator` implementation while AndroidX Remote Compose authoring remains
 Android-only. The intended shipping implementation runs the KMP converter on-device and hands its
@@ -77,7 +83,7 @@ their signatures changes, the temporary gateway emits
 updates the cache. The future in-process KMP generator drives the same invalidation path locally.
 
 Remote Compose `ha` actions are decoded by the host. Toggle and call-service actions go back over
-the same stream; URL actions open through the system. Demo documents remain read-only.
+the same stream (a toggle is `homeassistant.toggle` targeting the entity, as on Android); URL actions open through the system. Demo documents remain read-only.
 
 Successful manifests and card documents are written atomically under Application Support. A cold
 launch can therefore reopen the last dashboard without a network, matching the Android

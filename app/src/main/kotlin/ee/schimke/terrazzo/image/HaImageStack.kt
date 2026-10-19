@@ -39,12 +39,12 @@ import okio.Path.Companion.toOkioPath
  * anyone else who renders cards) reuse the same loader instead of constructing per-screen ones
  * pointing at the same `cacheDir/ha_image_cache` path.
  *
- * The bearer-auth interceptor reads its token through a provider lambda that closes over [haHost] /
- * [accessToken], so the loader itself never has to be rebuilt when the session changes. Callers
+ * The bearer-auth interceptor reads its token through a provider lambda that closes over [baseUrl]
+ * / [accessToken], so the loader itself never has to be rebuilt when the session changes. Callers
  * push the active session via [setAuth] (`HaSession` exposes `baseUrl` + `accessToken`); the
- * interceptor picks up the new values on the next request. The session host is matched
- * case-insensitively; only same-host requests get the bearer, so external CDN thumbnails referenced
- * from a dashboard don't leak the token.
+ * interceptor picks up the new values on the next request. Only requests on the session's origin
+ * (host, effective port, no https-to-http downgrade) get the bearer, so external CDN thumbnails and
+ * other services on the same host don't receive the token.
  *
  * Also exposes [resolve] for hosts that need to pre-fetch a URL to an Android [Bitmap] — used by
  * widget capture, which has no playback-time `BitmapLoader` and must bake fetched bytes into the
@@ -56,7 +56,6 @@ import okio.Path.Companion.toOkioPath
 class HaImageStack(private val context: Context, private val lanPolicy: LanConnectionPolicy) {
 
   @Volatile private var baseUrl: String? = null
-  @Volatile private var haHost: String? = null
   @Volatile private var accessToken: String? = null
 
   /**
@@ -66,7 +65,6 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
    */
   fun setAuth(baseUrl: String?, accessToken: String?) {
     this.baseUrl = baseUrl
-    this.haHost = baseUrl?.toHttpUrlOrNull()?.host
     this.accessToken = accessToken
   }
 
@@ -102,9 +100,12 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
     val client =
       OkHttpClient.Builder()
         .addInterceptor(LanConnectionPolicyInterceptor(lanPolicy))
-        .addInterceptor(HaBearerAuthInterceptor({ haHost }, { accessToken }))
+        .addInterceptor(HaBearerAuthInterceptor({ baseUrl }, { accessToken }))
         .build()
-    Log.d(TAG, "imageLoader building (host=$haHost hasToken=${accessToken != null})")
+    Log.d(
+      TAG,
+      "imageLoader building (host=${baseUrl?.toHttpUrlOrNull()?.host} hasToken=${accessToken != null})",
+    )
     ImageLoader.Builder(context.applicationContext)
       .components {
         // Demo mode's pictures are on a host nothing serves; draw stand-ins for them. Answers only

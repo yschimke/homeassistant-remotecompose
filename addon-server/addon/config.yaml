@@ -18,15 +18,20 @@ startup: application
 boot: auto
 init: false
 
-# Required so the supervisor injects SUPERVISOR_TOKEN with rights against
-# Home Assistant Core's WebSocket + REST API.
+# homeassistant_api: SUPERVISOR_TOKEN may use Core's API through the
+# supervisor proxy — the bridge's `ws://supervisor/core/websocket` session.
 homeassistant_api: true
+# hassio_api: `GET http://supervisor/core/info` (default role), to find
+# Core's port on the internal network. Direct-port callers' tokens are
+# validated against Core there, because the supervisor's /core proxy only
+# accepts add-on tokens. `auth_api` is not requested: that is the
+# username/password `/auth` endpoint, which bearer-token auth doesn't use.
 hassio_api: true
-auth_api: true
 
-# Ingress lets users open the add-on through HA's authenticated proxy. We
-# don't ship a UI; ingress is here so future debug/admin pages live under
-# the user's HA session.
+# Ingress lets users open the add-on through HA's authenticated proxy.
+# Requests from the ingress gateway (172.30.32.2) are trusted; every other
+# request — including the optional direct port below — needs
+# `Authorization: Bearer <HA access token>`.
 ingress: true
 ingress_port: 8099
 panel_icon: mdi:remote

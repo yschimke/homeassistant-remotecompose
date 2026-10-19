@@ -96,7 +96,8 @@ def socket_route(socket):
                   'config/entity_registry/list_for_display': {'entities': [
                       {'ei': item['entity_id'], 'di': 'printer-device', 'pl': 'bambu_lab'} for item in states
                   ]}, 'config/device_registry/list': [{'id': 'printer-device', 'manufacturer': 'Bambu Lab', 'model': 'P2S'}],
-                  'call_service': {}}
+                  'call_service': {},
+                  'get_config': {'unit_system': {'temperature': '°C', 'length': 'km', 'mass': 'kg', 'volume': 'L'}}}
         assert kind in result, kind
         socket.send(json.dumps({'id': msg['id'], 'type': 'result', 'success': True, 'result': result[kind]}))
     socket.on_message(receive)
@@ -248,7 +249,7 @@ try:
                 page.wait_for_timeout(200)
                 changes = [c for c in commands if c['type'] == 'call_service']
                 assert len(changes) == calls + 1, changes
-                assert changes[-1]['domain'] == 'light' and changes[-1]['service'] == 'toggle'
+                assert changes[-1]['domain'] == 'homeassistant' and changes[-1]['service'] == 'toggle'
                 assert changes[-1]['target']['entity_id'] == 'light.p2s_chamber'
                 update('light.p2s_chamber', 'off')
                 expect(page.get_by_role('switch').first).not_to_be_checked()

@@ -137,7 +137,11 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
         ws = await self.connect()
         for ident, kind in enumerate(['get_states', 'get_config', 'lovelace/config', 'lovelace/dashboards/list', 'config/entity_registry/list_for_display', 'config/device_registry/list'], 1):
             await ws.send_json({'id': ident, 'type': kind})
-            self.assertTrue((await ws.receive_json())['success'], kind)
+            reply = await ws.receive_json()
+            self.assertTrue(reply['success'], kind)
+            if kind == 'get_config':
+                # Apps read the unit system from get_config; the demo answers a synthetic one.
+                self.assertEqual(reply['result']['unit_system']['temperature'], '°C')
         for ident, kind in enumerate(['call_service', 'fire_event', 'lovelace/config/save', 'config/core/update', 'auth/long_lived_access_token', 'render_template', 'subscribe_entities', 'future_write', ['call_service']], 10):
             await ws.send_json({'id': ident, 'type': kind, 'domain': 'light', 'service': 'turn_on'})
             response = await ws.receive_json()

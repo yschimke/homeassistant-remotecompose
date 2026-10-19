@@ -19,6 +19,8 @@ import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
+import ee.schimke.ha.rc.cardDataSignature
+import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaMeasureVisual
 import ee.schimke.ha.rc.components.HaPresentation
 import ee.schimke.ha.rc.components.HaSensorCardData
@@ -53,6 +55,15 @@ class SensorCardConverter : CardConverter {
   override val cardType: String = CardTypes.SENSOR
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 120
+
+  /**
+   * The sparkline's samples and y-range are baked from `snapshot.history`, which no host pushes as
+   * a binding, so a captured sensor card re-encodes when its entity's history (or state) moves:
+   * path 2 of live-card-updates.md, as the history-graph card. The design path pushes the same
+   * samples as `SeriesDesign` slot bindings instead.
+   */
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String =
+    cardDataSignature(cardEntityIds(card), snapshot)
 
   /**
    * A sensor card renders from a card design: the value is the state binding, the history line is

@@ -37,16 +37,26 @@ Then:
 
 ```sh
 curl http://localhost:8099/healthz
-curl http://localhost:8099/v1/dashboards
-curl http://localhost:8099/v1/snapshot | jq '.states | length'
+curl -H "Authorization: Bearer $HA_TOKEN" http://localhost:8099/v1/dashboards
+curl -H "Authorization: Bearer $HA_TOKEN" http://localhost:8099/v1/snapshot | jq '.states | length'
 ```
+
+Everything except `/healthz` and `/readyz` needs an HA access token, checked
+against `HA_BASE_URL` (or `HA_AUTH_URL`).
 
 ## Running as an HA add-on
 
 The add-on runs against the supervisor-injected `SUPERVISOR_TOKEN`; no
 extra config required. Once published to a repo and installed, the
-endpoints are reachable via ingress (in-frontend) or via the LAN port
-exposed in `addon/config.yaml`.
+endpoints are reachable via ingress (in-frontend, no token needed) or via
+the LAN port exposed in `addon/config.yaml`, which requires
+`Authorization: Bearer <HA access token>` — see INSTALL.md §3.3.
+
+Build the image from the repository root:
+
+```sh
+docker build -f addon-server/addon/Dockerfile .
+```
 
 ## End-to-end test
 

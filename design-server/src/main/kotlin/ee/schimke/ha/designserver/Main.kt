@@ -1,6 +1,7 @@
 package ee.schimke.ha.designserver
 
 import io.ktor.client.HttpClient
+import io.ktor.http.encodeURLParameter
 import io.ktor.server.application.install
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
@@ -46,7 +47,7 @@ fun main(args: Array<String>) {
           if (github != null) " - editing: sign in with GitHub"
           else
             " - edit link (keep it private, it unlocks editing): " +
-              "http://localhost:$port/edit?token=${config.token}"
+              "http://localhost:$port/edit?token=${config.token.encodeURLParameter()}"
       )
       UiBuilderIntegration(config, UiBuilderClient(config, http))
     }

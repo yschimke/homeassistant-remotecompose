@@ -28,8 +28,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -41,6 +45,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -269,15 +274,7 @@ class HaClient(
    * to pick up the user's configured `external_url` (Nabu Casa / reverse-proxy hostname) so the app
    * can route over the public URL when away from the LAN.
    */
-  suspend fun fetchConfig(): HaInstanceConfig {
-    val result = runCommand("get_config")
-    return HaInstanceConfig(
-      version = result["version"]?.jsonPrimitive?.content,
-      locationName = result["location_name"]?.jsonPrimitive?.content,
-      internalUrl = result["internal_url"]?.nullableString(),
-      externalUrl = result["external_url"]?.nullableString(),
-    )
-  }
+  suspend fun fetchConfig(): HaInstanceConfig = instanceConfigOf(runCommand("get_config"))
 
   /**
    * The device behind each entity, for device-specific card designs. The entity registry's display
@@ -347,7 +344,9 @@ class HaClient(
    * [snapshot] with the device registry ([fetchDevices]), what a card configured by device (a Bambu
    * Lab printer) resolves through. A registry that can't be read leaves it out.
    */
-  suspend fun snapshotWithDevices(): HaSnapshot {
+  suspend fun snapshotWithDevices(): HaSnapshot = coroutineScope {
+    // The unit system is read alongside the states, never in front of them.
+    val unit = async { fetchTemperatureUnit() }
     val devices =
       try {
         fetchDevices()
@@ -356,8 +355,25 @@ class HaClient(
       } catch (e: Exception) {
         emptyMap()
       }
-    return snapshot().copy(devices = devices)
+    snapshot().copy(devices = devices, temperatureUnit = unit.await())
   }
+
+  /**
+   * Home Assistant's configured temperature unit ([HaInstanceConfig.temperatureUnit]), what climate
+   * cards show their temperatures in. Best effort and bounded by [timeout]: null when `get_config`
+   * fails, is refused (a proxy that allows only some commands) or doesn't answer in time, and cards
+   * fall back to the entity's own unit, then °C. Only the caller's own cancellation propagates.
+   */
+  suspend fun fetchTemperatureUnit(timeout: Duration = CONFIG_TIMEOUT): String? =
+    try {
+      withTimeoutOrNull(timeout) { fetchConfig().temperatureUnit }
+    } catch (e: CancellationException) {
+      // A timeout inside the command is not the caller's cancellation: only rethrow that.
+      currentCoroutineContext().ensureActive()
+      null
+    } catch (e: Exception) {
+      null
+    }
 
   /**
    * Call a Home Assistant service (`call_service` WebSocket command).
@@ -744,6 +760,9 @@ class HaAuthInvalidException(message: String) : IllegalStateException(message)
 @Serializable
 data class DashboardSummary(val urlPath: String?, val title: String, val icon: String? = null)
 
+/** How long [HaClient.fetchTemperatureUnit] waits for `get_config` before going on without it. */
+private val CONFIG_TIMEOUT: Duration = 3.seconds
+
 /**
  * Subset of HA's `config` payload we care about. HA's `external_url` is set when the user has
  * configured remote access (Nabu Casa, reverse proxy, etc.); `internal_url` is what the user
@@ -755,7 +774,22 @@ data class HaInstanceConfig(
   val locationName: String? = null,
   val internalUrl: String? = null,
   val externalUrl: String? = null,
+  /** `unit_system.temperature`: `°C` or `°F`, the unit climate temperatures are reported in. */
+  val temperatureUnit: String? = null,
 )
+
+/** Read a `get_config` result (the same shape as REST `GET /api/config`). */
+internal fun instanceConfigOf(result: JsonObject): HaInstanceConfig =
+  HaInstanceConfig(
+    version = result["version"]?.jsonPrimitive?.content,
+    locationName = result["location_name"]?.jsonPrimitive?.content,
+    internalUrl = result["internal_url"]?.nullableString(),
+    externalUrl = result["external_url"]?.nullableString(),
+    temperatureUnit =
+      ((result["unit_system"] as? JsonObject)?.get("temperature"))?.nullableString()?.takeIf {
+        it.isNotBlank()
+      },
+  )
 
 private fun kotlinx.serialization.json.JsonElement.nullableString(): String? =
   when (this) {
