@@ -203,6 +203,11 @@ class OfflineFirstWebSocketFlowTest {
         "lovelace/dashboards/list" -> result(id, dashboardsList())
         "lovelace/config" -> result(id, dashboardConfig())
         "get_states" -> result(id, statesArray())
+        "get_config" ->
+          result(
+            id,
+            buildJsonObject { put("unit_system", buildJsonObject { put("temperature", "°C") }) },
+          )
         else -> null
       }
     }

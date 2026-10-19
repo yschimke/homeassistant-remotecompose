@@ -54,6 +54,7 @@ test('hosted WASM selects hidden dashboards, supports bookmarks and recovers fro
           get_states:[], subscribe_events:null, unsubscribe_events:null,
           'config/entity_registry/list_for_display':{entity_categories:{},entities:[]},
           'config/device_registry/list':[],
+          get_config:{unit_system:{temperature:'°C',length:'km',mass:'kg',volume:'L'}},
         };
         let result = results[message.type];
         if (message.type === 'lovelace/config') {

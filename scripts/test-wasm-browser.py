@@ -64,6 +64,7 @@ def route_socket(socket):
             return
         commands.append(message)
         results = {'lovelace/dashboards/list': [], 'get_states': [entity], 'lovelace/config': dashboard,
+                   'get_config': {'unit_system': {'temperature': '°C', 'length': 'km', 'mass': 'kg', 'volume': 'L'}},
                    'subscribe_events': None, 'unsubscribe_events': None, 'call_service': {},
                    'config/entity_registry/list_for_display': {'entity_categories': {}, 'entities': [
                        {'ei': 'switch.lamp', 'pl': 'demo', 'di': 'lamp-device'}]},

@@ -28,8 +28,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -41,6 +45,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -339,7 +344,9 @@ class HaClient(
    * [snapshot] with the device registry ([fetchDevices]), what a card configured by device (a Bambu
    * Lab printer) resolves through. A registry that can't be read leaves it out.
    */
-  suspend fun snapshotWithDevices(): HaSnapshot {
+  suspend fun snapshotWithDevices(): HaSnapshot = coroutineScope {
+    // The unit system is read alongside the states, never in front of them.
+    val unit = async { fetchTemperatureUnit() }
     val devices =
       try {
         fetchDevices()
@@ -348,18 +355,22 @@ class HaClient(
       } catch (e: Exception) {
         emptyMap()
       }
-    return snapshot().copy(devices = devices, temperatureUnit = fetchTemperatureUnit())
+    snapshot().copy(devices = devices, temperatureUnit = unit.await())
   }
 
   /**
    * Home Assistant's configured temperature unit ([HaInstanceConfig.temperatureUnit]), what climate
-   * cards show their temperatures in; null when the config can't be read.
+   * cards show their temperatures in. Best effort and bounded by [timeout]: null when `get_config`
+   * fails, is refused (a proxy that allows only some commands) or doesn't answer in time, and cards
+   * fall back to the entity's own unit, then °C. Only the caller's own cancellation propagates.
    */
-  suspend fun fetchTemperatureUnit(): String? =
+  suspend fun fetchTemperatureUnit(timeout: Duration = CONFIG_TIMEOUT): String? =
     try {
-      fetchConfig().temperatureUnit
-    } catch (e: kotlinx.coroutines.CancellationException) {
-      throw e
+      withTimeoutOrNull(timeout) { fetchConfig().temperatureUnit }
+    } catch (e: CancellationException) {
+      // A timeout inside the command is not the caller's cancellation: only rethrow that.
+      currentCoroutineContext().ensureActive()
+      null
     } catch (e: Exception) {
       null
     }
@@ -748,6 +759,9 @@ class HaAuthInvalidException(message: String) : IllegalStateException(message)
 
 @Serializable
 data class DashboardSummary(val urlPath: String?, val title: String, val icon: String? = null)
+
+/** How long [HaClient.fetchTemperatureUnit] waits for `get_config` before going on without it. */
+private val CONFIG_TIMEOUT: Duration = 3.seconds
 
 /**
  * Subset of HA's `config` payload we care about. HA's `external_url` is set when the user has

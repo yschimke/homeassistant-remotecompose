@@ -96,7 +96,8 @@ def socket_route(socket):
                   'config/entity_registry/list_for_display': {'entities': [
                       {'ei': item['entity_id'], 'di': 'printer-device', 'pl': 'bambu_lab'} for item in states
                   ]}, 'config/device_registry/list': [{'id': 'printer-device', 'manufacturer': 'Bambu Lab', 'model': 'P2S'}],
-                  'call_service': {}}
+                  'call_service': {},
+                  'get_config': {'unit_system': {'temperature': '°C', 'length': 'km', 'mass': 'kg', 'volume': 'L'}}}
         assert kind in result, kind
         socket.send(json.dumps({'id': msg['id'], 'type': 'result', 'success': True, 'result': result[kind]}))
     socket.on_message(receive)
