@@ -203,6 +203,9 @@ fun TerrazzoApp(initialDashboard: String? = null, initialSession: HaSession? = n
   // can render dashboards / live values from whatever's current.
   LaunchedEffect(session) { wearSync.setSession(session) }
 
+  // Widget taps send their calls on this session while it is connected, instead of opening one.
+  LaunchedEffect(session) { ee.schimke.terrazzo.widget.WidgetActionRunner.setAppSession(session) }
+
   // Once a live session has finished connecting, ask HA for its
   // config and stash the `external_url` so the OkHttp interceptor
   // can swap in the public host when LAN isn't reachable
