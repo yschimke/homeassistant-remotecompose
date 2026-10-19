@@ -97,6 +97,7 @@ import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.PinnedCardData
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.core.session.liveDashboardSnapshots
 import ee.schimke.terrazzo.feedback.rememberInteractionFeedback
 import ee.schimke.terrazzo.ui.LayoutConfig
 import ee.schimke.terrazzo.ui.LocalCardStyle
@@ -188,7 +189,17 @@ fun DashboardViewScreen(
           state = DashboardState.Error(t.message ?: t::class.simpleName ?: "error")
         }
       }
-      val interval = session.refreshIntervalMillis ?: break
+      val interval = session.refreshIntervalMillis
+      if (interval == null) {
+        // Live sessions push HA's `state_changed` events instead of being polled: follow them,
+        // re-armed by the session on every reconnect, so cards update in place.
+        val ready = state as? DashboardState.Ready ?: break
+        session.liveDashboardSnapshots(ready.snapshot).collect { snapshot ->
+          state = DashboardState.Ready(ready.dashboard, snapshot)
+          logStore.recordDashboardSnapshot(ready.dashboard, snapshot)
+        }
+        break
+      }
       delay(interval)
     }
   }

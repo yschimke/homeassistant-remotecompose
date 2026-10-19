@@ -1,15 +1,18 @@
 package ee.schimke.terrazzo.core.session
 
 import ee.schimke.ha.client.DashboardSummary
+import ee.schimke.ha.client.HaAuthInvalidException
 import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.client.HaInstanceConfig
+import ee.schimke.ha.client.stateSnapshots
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.HistoryPoint
 import io.ktor.client.engine.HttpClientEngine
 import kotlin.concurrent.Volatile
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.CoroutineScope
@@ -47,10 +50,28 @@ interface HaSession {
 
   /**
    * If non-null, dashboard screens should re-fetch snapshots at this cadence so values visibly
-   * change on screen. Live sessions return null until we wire real subscriptions.
+   * change on screen. Live sessions return null: they push changes through [liveStates] instead.
    */
   val refreshIntervalMillis: Long?
     get() = null
+
+  /**
+   * Every entity's current state, kept current by Home Assistant's `state_changed` events while the
+   * session is connected: fetched once per connection, then patched per event, and re-armed on
+   * every reconnect. Null while there's no live feed — not connected yet, between reconnects, or a
+   * session that can't observe HA (demo, offline). Dashboards follow it with
+   * [liveDashboardSnapshots].
+   */
+  val liveStates: StateFlow<HaSnapshot?>
+    get() = NO_LIVE_STATES
+
+  /**
+   * True once Home Assistant refused this session's stored credentials (the refresh token was
+   * revoked or the user deactivated). Reconnecting can't recover; the app signs the user out so
+   * they can sign in again. Sessions without credentials stay false.
+   */
+  val needsReauth: StateFlow<Boolean>
+    get() = NEVER_NEEDS_REAUTH
 
   /**
    * Current set of HA *persistent notifications* — the bell-icon list in HA's frontend. Updated
@@ -66,6 +87,8 @@ interface HaSession {
 
   companion object {
     private val EMPTY_NOTIFICATIONS: StateFlow<List<HaNotification>> = MutableStateFlow(emptyList())
+    private val NO_LIVE_STATES: StateFlow<HaSnapshot?> = MutableStateFlow(null)
+    private val NEVER_NEEDS_REAUTH: StateFlow<Boolean> = MutableStateFlow(false)
   }
 
   suspend fun connect()
@@ -158,14 +181,41 @@ enum class SessionConnectionStatus {
   Disconnected,
 }
 
-/** Live session backed by an HA WebSocket. */
+/**
+ * Live session backed by an HA WebSocket.
+ *
+ * Each connect asks [tokens] for an access token, so a session outliving its ~30 minute token mints
+ * a new one from the stored refresh token instead of failing every reconnect with `auth_invalid`.
+ */
 class LiveHaSession(
   override val baseUrl: String,
-  override val accessToken: String,
+  private val tokens: HaAccessTokens,
   engine: HttpClientEngine? = null,
 ) : HaSession {
+  /** A session pinned to one access token, never refreshed. */
+  constructor(
+    baseUrl: String,
+    accessToken: String,
+    engine: HttpClientEngine? = null,
+  ) : this(baseUrl, HaAccessTokens(accessToken), engine)
+
+  override val accessToken: String?
+    get() = tokens.current
+
+  override val needsReauth: StateFlow<Boolean>
+    get() = tokens.needsReauth
+
+  // The token the latest connect offered, so an `auth_invalid` reply invalidates that one.
+  @Volatile private var offeredToken: String? = null
+
   private val client =
-    HaClient(HaConfig(baseUrl = baseUrl, accessToken = accessToken), engine = engine)
+    HaClient(
+      HaConfig(baseUrl = baseUrl, accessToken = tokens.current.orEmpty()),
+      engine = engine,
+      accessTokenProvider = { tokens.get().also { offeredToken = it } },
+    )
+  private val _liveStates = MutableStateFlow<HaSnapshot?>(null)
+  override val liveStates: StateFlow<HaSnapshot?> = _liveStates.asStateFlow()
   private val _connectionStatus = MutableStateFlow(SessionConnectionStatus.Connecting)
   override val connectionStatus: StateFlow<SessionConnectionStatus> = _connectionStatus
   private val _notifications = MutableStateFlow<List<HaNotification>>(emptyList())
@@ -222,17 +272,51 @@ class LiveHaSession(
           }
       }
     }
+
+    // Live entity states, as the shared Wasm / desktop host does: on every Ready transition
+    // subscribe to `state_changed`, fetch every state once, then patch it per event. Each socket
+    // gets its own subscription, so a reconnect re-arms it; until then the feed reads null rather
+    // than a stale connection's states.
+    scope.launch {
+      client.state.collectLatest { state ->
+        if (state != HaClient.ConnectionState.Ready) {
+          _liveStates.value = null
+          return@collectLatest
+        }
+        try {
+          val events = client.subscribeEvents("state_changed")
+          stateSnapshots(events) { client.snapshot().copy(devices = devices()) }
+            .collect { _liveStates.value = it }
+        } catch (e: CancellationException) {
+          throw e
+        } catch (e: Exception) {
+          // Without the feed cards would silently go stale. Drop the socket, as the shared host
+          // does, so the app's reconnect loop re-arms it on a fresh connection.
+          _liveStates.value = null
+          runCatching { client.disconnect() }
+        }
+      }
+    }
   }
 
   override suspend fun connect() {
     parked = false
     _connectionStatus.value = SessionConnectionStatus.Connecting
-    runCatching { client.connect() }
-      .onSuccess { _connectionStatus.value = SessionConnectionStatus.Connected }
-      .onFailure {
-        _connectionStatus.value = SessionConnectionStatus.Failed
-        throw it
+    try {
+      try {
+        client.connect()
+      } catch (e: HaAuthInvalidException) {
+        // The token expired or was revoked: drop it and connect once more, which mints a fresh one
+        // from the refresh token. A session pinned to one token fails here as before.
+        if (!tokens.canRefresh) throw e
+        offeredToken?.let { tokens.invalidate(it) }
+        client.connect()
       }
+      _connectionStatus.value = SessionConnectionStatus.Connected
+    } catch (e: Throwable) {
+      _connectionStatus.value = SessionConnectionStatus.Failed
+      throw e
+    }
   }
 
   override suspend fun disconnect() {

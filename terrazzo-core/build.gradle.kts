@@ -32,6 +32,14 @@ kotlin {
       implementation(libs.kotlinx.serialization.protobuf)
       implementation(libs.ktor.client.core)
     }
+    commonTest.dependencies {
+      implementation(libs.kotlin.test)
+      implementation(libs.kotlinx.coroutines.test)
+    }
+    jvmTest.dependencies {
+      implementation(libs.ktor.server.test.host)
+      implementation(libs.ktor.server.websockets)
+    }
     androidMain.dependencies {
       implementation(libs.androidx.datastore)
       implementation(libs.androidx.datastore.preferences)

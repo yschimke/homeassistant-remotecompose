@@ -181,9 +181,13 @@ class HaClient(
       }
 
       val s = checkNotNull(socket)
-      _state.value = ConnectionState.Ready
+      // Publish the socket before Ready: collectors that react to Ready by subscribing (the
+      // `state_changed` feed, notifications) would otherwise race this assignment and fail with
+      // "Not connected", leaving that connection without its subscription. A socket dying right
+      // away can't overwrite Ready backwards: receiveLoop's teardown waits for [sessionMutex].
       session = s
       receiveJob = scope.launch { receiveLoop(s) }
+      _state.value = ConnectionState.Ready
     }
   }
 
@@ -204,7 +208,7 @@ class HaClient(
     )
     val authResult = readMessage(s)
     if (authResult["type"]?.jsonPrimitive?.content != "auth_ok") {
-      throw IllegalStateException("auth rejected: $authResult")
+      throw HaAuthInvalidException("auth rejected: $authResult")
     }
   }
 
@@ -729,6 +733,13 @@ private fun String.toWsUrl(): String =
     startsWith("http://") -> "ws://" + removePrefix("http://").removeSuffix("/")
     else -> "ws://" + removeSuffix("/")
   }
+
+/**
+ * Home Assistant refused the access token in the WebSocket handshake (`auth_invalid`): it expired
+ * or was revoked. Reconnecting with the same token can't succeed; a caller holding a refresh token
+ * mints a new one (the [HaClient] `accessTokenProvider` is asked again on every connect).
+ */
+class HaAuthInvalidException(message: String) : IllegalStateException(message)
 
 @Serializable
 data class DashboardSummary(val urlPath: String?, val title: String, val icon: String? = null)
