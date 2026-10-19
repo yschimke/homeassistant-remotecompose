@@ -176,8 +176,10 @@ jobs:
       HAS_PLAY_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
       HAS_GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
       PUBLISH_WEAR: ${{ inputs.publish_wear || vars.PLAY_PUBLISH_WEAR == 'true' }}
-      # Tag pushes have no inputs and always publish; dispatch and call pass a boolean (default true).
-      PUBLISH_APP: ${{ github.event_name == 'push' || inputs.publish_app }}
+      # Publish unless the input is explicitly false. A direct tag push has no inputs ('' here);
+      # dispatch and call pass a boolean, default true. Not keyed on event_name: a reusable call
+      # keeps its caller's context, so release-please's call also reads as a push.
+      PUBLISH_APP: ${{ format('{0}', inputs.publish_app) != 'false' }}
       PUBLISH_LISTING: ${{ vars.PLAY_PUBLISH_LISTING == 'true' }}
     steps:
       - uses: actions/checkout@v7.0.1
