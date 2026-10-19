@@ -216,6 +216,7 @@ dependencies {
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.process)
+  implementation(libs.androidx.lifecycle.viewmodel)
   implementation(libs.androidx.work.runtime)
   implementation(libs.androidx.navigation3.runtime)
   implementation(libs.androidx.navigation3.ui)
