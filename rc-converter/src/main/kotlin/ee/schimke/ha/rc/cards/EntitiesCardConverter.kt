@@ -31,22 +31,27 @@ import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.icons.withIcons
 import ee.schimke.ha.rc.parseHaAction
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * HA `entities` card — a titled list of entity rows. Each entry is either a bare `entity_id` or `{
  * entity, name?, icon?, tap_action? }`.
+ *
+ * HA's special rows — an entry with a `type` and no `entity` (`section`, `divider`, `weblink`,
+ * `buttons`, `call-service` / `perform-action`, `cast`, `conditional`, `custom:*`) — are not drawn:
+ * they are not entity rows, and drawing them as one gave a "—" row with a switch.
  */
 class EntitiesCardConverter : CardConverter {
   override val cardType: String = CardTypes.ENTITIES
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
-    val rows = card.raw["entities"]?.jsonArray?.size ?: 0
+    val rows = entityRows(card).size
     val title = if (card.raw["title"] != null) 36 else 0
     return title + 16 + EntityRowMinHeightDp * rows // title + top-pad + one touch-target row each.
   }
@@ -142,7 +147,7 @@ class EntitiesCardConverter : CardConverter {
     val title = card.raw["title"]?.jsonPrimitive?.content
     val captureSize = LocalWidgetCaptureSizeDp.current
     val sizedAtCapture = captureSize != null
-    val rowCount = card.raw["entities"]?.jsonArray?.size ?: 0
+    val rowCount = entityRows(card).size
     val fit = HaEntitiesFit.Expanded
     val minHeightDp =
       fit.verticalPaddingDp +
@@ -198,10 +203,8 @@ class EntitiesCardConverter : CardConverter {
 
   /** Every configured entity as a row. */
   @Composable
-  private fun rows(card: CardConfig, snapshot: HaSnapshot): List<HaEntityRowData> {
-    val entries: List<JsonElement> = card.raw["entities"]?.jsonArray ?: emptyList()
-    return entries.map { el ->
-      val (eid, row) = normalize(el)
+  private fun rows(card: CardConfig, snapshot: HaSnapshot): List<HaEntityRowData> =
+    entityRows(card).map { (eid, row, toggle) ->
       val entity = eid?.let { snapshot.states[it] }
       val name =
         row?.get("name")?.jsonPrimitive?.content
@@ -218,43 +221,71 @@ class EntitiesCardConverter : CardConverter {
         icon = icons.icon,
         accent = HaStateColor.toggleAccentFor(eid, entity).withIcons(icons),
         tapAction = tapAction,
-        toggle = eid?.substringBefore('.') !in READ_ONLY_DOMAINS,
+        toggle = toggle,
       )
     }
-  }
 
-  private companion object {
-    val TEMPLATE_CONFIG_KEYS = setOf("type", "title", "entities")
+  /** A configured row drawn as an entity row; [toggle] is whether it ends in a switch. */
+  internal data class EntityRow(val entityId: String?, val row: JsonObject?, val toggle: Boolean)
+
+  internal companion object {
+    /**
+     * The card's `entities:` drawn as entity rows, in order. A special row (a `type` and no
+     * `entity`) is dropped. A row switches only for an entity outside [READ_ONLY_DOMAINS] and
+     * without a non-toggle row `type` ([NO_TOGGLE_ROW_TYPES]).
+     */
+    fun entityRows(card: CardConfig): List<EntityRow> {
+      val entries: List<JsonElement> = card.raw["entities"] as? JsonArray ?: emptyList()
+      return entries.mapNotNull { el ->
+        val (eid, row) = normalize(el)
+        val type = (row?.get("type") as? JsonPrimitive)?.contentOrNull
+        if (eid == null && type != null) return@mapNotNull null
+        val toggle =
+          eid != null &&
+            eid.substringBefore('.') !in READ_ONLY_DOMAINS &&
+            type !in NO_TOGGLE_ROW_TYPES
+        EntityRow(eid, row, toggle)
+      }
+    }
+
+    private fun normalize(el: JsonElement): Pair<String?, JsonObject?> =
+      when (el) {
+        is JsonPrimitive -> el.content to null
+        is JsonObject -> (el["entity"]?.jsonPrimitive?.content) to el
+        else -> null to null
+      }
+
+    /**
+     * Row types that name an entity but show a value, never a switch: `attribute` shows one of its
+     * attributes, `simple-entity` its state text.
+     */
+    private val NO_TOGGLE_ROW_TYPES = setOf("attribute", "simple-entity")
+
+    private val TEMPLATE_CONFIG_KEYS = setOf("type", "title", "entities")
 
     /**
      * Domains with an on/off state that nothing can switch: HA's entities card gives them its
      * simple row (the state text, "Detected" / "Clear") rather than the toggle row.
      */
-    val READ_ONLY_DOMAINS = setOf("binary_sensor", "sensor", "device_tracker", "person", "update")
+    private val READ_ONLY_DOMAINS =
+      setOf("binary_sensor", "sensor", "device_tracker", "person", "update")
 
     /**
      * Wear height gate: between the small slot (~44dp of content, 60dp in the matrix) and the large
      * one (~96dp, 112dp in the matrix).
      */
-    const val WEAR_LARGE_MIN_HEIGHT_DP = 80
+    private const val WEAR_LARGE_MIN_HEIGHT_DP = 80
 
     /** Compact rows (20dp: an 18dp icon beside a 13sp line) in the small slot's ~44dp. */
-    const val WEAR_SMALL_ROWS = 2
+    private const val WEAR_SMALL_ROWS = 2
 
     /** Body-size rows (~23dp) under a ~22dp title in the large slot's ~96dp. */
-    const val WEAR_LARGE_ROWS = 3
+    private const val WEAR_LARGE_ROWS = 3
 
     /**
      * Narrowest launcher widget that takes the expanded rows: a `4×N` cell (~288dp) and wider; a
      * `3×N` cell keeps the dense list.
      */
-    const val LAUNCHER_EXPANDED_MIN_WIDTH_DP = 260
+    private const val LAUNCHER_EXPANDED_MIN_WIDTH_DP = 260
   }
-
-  private fun normalize(el: JsonElement): Pair<String?, JsonObject?> =
-    when (el) {
-      is JsonPrimitive -> el.content to null
-      is JsonObject -> (el["entity"]?.jsonPrimitive?.content) to el
-      else -> null to null
-    }
 }
