@@ -135,7 +135,7 @@ final class DashboardStore: ObservableObject {
       guard isCurrent() else { return }
       if feed == nil { await restoreCachedFeed() }
       guard isCurrent() else { return }
-      if feed == nil { phase = .failed(error.localizedDescription) } else { phase = .ready }
+      if feed == nil { phase = .failed(connectionFailureMessage(error)) } else { phase = .ready }
       streamMessage = "Showing cached data"
     }
   }

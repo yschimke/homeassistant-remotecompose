@@ -185,9 +185,18 @@ final class LiveBindingStreamTests: XCTestCase {
 
   func testToggleAndEmptyServiceDataRemainSupported() throws {
     let call = try XCTUnwrap(ServiceCall(metadata: #"{"type":"toggle","entity_id":"switch.test"}"#))
-    XCTAssertEqual(call.domain, "switch")
+    XCTAssertEqual(call.domain, "homeassistant")
     XCTAssertEqual(call.service, "toggle")
+    XCTAssertEqual(call.entityID, "switch.test")
     XCTAssertEqual(try JSONSerialization.jsonObject(with: call.serviceData) as? NSDictionary, [:])
     XCTAssertNil(ServiceCall(metadata: #"{"type":"url","url":"https://example.test"}"#))
+  }
+
+  func testAppTransportSecurityFailureExplainsLocalOnlyHTTP() {
+    let message = connectionFailureMessage(URLError(.appTransportSecurityRequiresSecureConnection))
+    XCTAssertTrue(message.contains("only allowed for local network addresses"))
+    XCTAssertTrue(message.contains("https://"))
+    let other = URLError(.timedOut)
+    XCTAssertEqual(connectionFailureMessage(other), other.localizedDescription)
   }
 }
