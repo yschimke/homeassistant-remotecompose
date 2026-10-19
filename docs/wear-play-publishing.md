@@ -49,9 +49,11 @@ bumps them together; nothing to bump by hand.
 ## Releasing
 
 Once `PLAY_PUBLISH_WEAR` is `true`, every release the release-please PR cuts
-also runs `:wear:publishBundle`, uploading a **draft** to `wear:internal`
-alongside the phone draft on `internal`. Review and roll out both in the
-Console, then promote Wear to `wear:production` there when ready.
+also runs `:wear:publishBundle`. Both bundles go out as **completed**
+releases (`releaseStatus = COMPLETED`), so merging the release-please PR is the
+only manual step: the phone build reaches `internal` testers and the Wear build
+`wear:internal` testers without a Console visit. Promote beyond internal
+testing (`production` / `wear:production`) in the Console when ready.
 
 Without the variable, publish one release by hand: **Actions → Release → Run
 workflow** with the tag and **publish_wear** ticked. For a version whose phone
