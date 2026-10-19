@@ -9,7 +9,9 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
+import io.ktor.server.plugins.PayloadTooLargeException
 import io.ktor.server.plugins.autohead.AutoHeadResponse
+import io.ktor.server.plugins.bodylimit.RequestBodyLimit
 import io.ktor.server.plugins.defaultheaders.DefaultHeaders
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.header
@@ -25,6 +27,7 @@ import io.ktor.server.routing.options
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import java.io.File
+import java.security.MessageDigest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -100,7 +103,13 @@ fun Application.designServer(
 ) {
   install(DefaultHeaders)
   install(AutoHeadResponse)
+  // Refuses a body over the cap before it is buffered: by its Content-Length up front, or while it
+  // streams in. Routes still apply their own, smaller caps.
+  install(RequestBodyLimit) { bodyLimit { MAX_REQUEST_BODY_BYTES } }
   install(StatusPages) {
+    exception<PayloadTooLargeException> { call, _ ->
+      call.respondText("request body too large", status = HttpStatusCode.PayloadTooLarge)
+    }
     exception<Throwable> { call, cause ->
       call.application.environment.log.error("request failed", cause)
       call.respondText("internal error", status = HttpStatusCode.InternalServerError)
@@ -326,7 +335,7 @@ fun Application.designServer(
     get("/edit") {
       val integration = uiBuilder ?: return@get call.notFound()
       if (github != null) return@get call.notFound()
-      if (call.request.queryParameters["token"] != integration.config.token) {
+      if (!tokensMatch(call.request.queryParameters["token"], integration.config.token)) {
         return@get call.respondText("wrong edit token", status = HttpStatusCode.Forbidden)
       }
       call.response.cookies.append(
@@ -440,9 +449,26 @@ internal fun ApplicationCall.editor(
     else ->
       EditorState(
         enabled = true,
-        authorized = request.cookies[EDIT_COOKIE] == uiBuilder.config.token,
+        authorized = tokensMatch(request.cookies[EDIT_COOKIE], uiBuilder.config.token),
       )
   }
+
+/**
+ * Whether [presented] is [expected], in time that doesn't depend on where they differ: a secret
+ * compared with `==` leaks its prefix to someone timing the answers.
+ */
+internal fun tokensMatch(presented: String?, expected: String): Boolean =
+  presented != null &&
+    MessageDigest.isEqual(presented.encodeToByteArray(), expected.encodeToByteArray())
+
+/**
+ * The largest request body any route reads. The biggest legitimate ones are a card's JSON with its
+ * entities' states (`/api/schema`, `/schema`, `/api/cards/resolve`): a large Home Assistant's whole
+ * state snapshot is a few hundred KB to ~1 MB. Studio drafts are capped lower still (128-256 KB),
+ * and publishing sends only ids. 4 MiB leaves headroom for those without letting a client make the
+ * server buffer an arbitrary body.
+ */
+internal const val MAX_REQUEST_BODY_BYTES: Long = 4L * 1024 * 1024
 
 /** The client protocol's base path: the app's design server URL is `<host>$API_BASE`. */
 const val API_BASE = "/designs/v1"
