@@ -93,6 +93,16 @@ struct ServerConfiguration: Codable, Equatable, Sendable {
   }
 }
 
+/// App Transport Security permits plain HTTP only for local-network hosts
+/// (`NSAllowsLocalNetworking`); explain that instead of the system's generic ATS text.
+func connectionFailureMessage(_ error: Error) -> String {
+  if let urlError = error as? URLError, urlError.code == .appTransportSecurityRequiresSecureConnection {
+    return "Plain HTTP is only allowed for local network addresses (for example homeassistant.local "
+      + "or a LAN IP). Use an https:// URL for a remote Home Assistant or gateway."
+  }
+  return error.localizedDescription
+}
+
 enum AppRoute: Hashable, Identifiable {
   case settings
   var id: Self { self }
@@ -113,8 +123,10 @@ struct ServiceCall: Sendable {
     let type = (object["type"] as? String ?? "").lowercased()
     let entityID = (object["entityId"] ?? object["entity_id"]) as? String
     self.entityID = entityID
-    if type.hasSuffix("toggle"), let entityID {
-      domain = entityID.split(separator: ".").first.map(String.init) ?? "homeassistant"
+    if type.hasSuffix("toggle"), let entityID, !entityID.isEmpty {
+      // Match Android's DashboardActionDispatcher: `homeassistant.toggle` flips every
+      // toggleable domain, so the entity prefix is never used as the service domain.
+      domain = "homeassistant"
       service = "toggle"
     } else if type.hasSuffix("callservice"),
       let domain = object["domain"] as? String,

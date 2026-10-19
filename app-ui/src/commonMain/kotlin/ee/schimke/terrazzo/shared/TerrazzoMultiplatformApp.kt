@@ -727,20 +727,6 @@ internal fun NativeCard(
 }
 
 internal suspend fun dispatchCardAction(client: HaClient, payload: String) {
-  val obj = Json.parseToJsonElement(payload).jsonObject
-  when (obj["type"]?.jsonPrimitive?.content?.substringAfterLast('.')) {
-    "Toggle" -> {
-      val id = requireNotNull(obj["entityId"]?.jsonPrimitive?.content)
-      client.callService(id.substringBefore('.'), "toggle", id)
-    }
-    "CallService" ->
-      client.callService(
-        requireNotNull(obj["domain"]?.jsonPrimitive?.content),
-        requireNotNull(obj["service"]?.jsonPrimitive?.content),
-        obj["entityId"]?.jsonPrimitive?.contentOrNull,
-        obj["serviceData"] as? JsonObject ?: JsonObject(emptyMap()),
-      )
-    "None" -> Unit
-    else -> error("This action is not supported on this platform yet.")
-  }
+  val call = cardActionCall(payload) ?: return
+  client.callService(call.domain, call.service, call.entityId, call.serviceData)
 }
