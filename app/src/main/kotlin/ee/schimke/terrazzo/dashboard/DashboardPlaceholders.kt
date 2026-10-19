@@ -30,9 +30,19 @@ import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
-/** Planning stays local even when the dashboard is in read-only mode. */
+/**
+ * A dashboard's planned (placeholder) cards. A new one starts from a long press on a section
+ * heading, which sets [planning]: the editor opens here, above the planned cards, and
+ * [onPlanningDone] runs once it saves or is dismissed. Planning stays local even when the dashboard
+ * is in read-only mode.
+ */
 @Composable
-internal fun DashboardPlaceholders(session: HaSession, urlPath: String?) {
+internal fun DashboardPlaceholders(
+  session: HaSession,
+  urlPath: String?,
+  planning: Boolean,
+  onPlanningDone: () -> Unit,
+) {
   val context = LocalContext.current
   val store = remember(context) { PlaceholderCardStore.of(context) }
   val scope = rememberCoroutineScope()
@@ -42,7 +52,6 @@ internal fun DashboardPlaceholders(session: HaSession, urlPath: String?) {
   var busy by remember { mutableStateOf(false) }
   var message by remember { mutableStateOf<String?>(null) }
   var editing by remember { mutableStateOf<PlaceholderCard?>(null) }
-  var adding by remember { mutableStateOf(false) }
 
   LaunchedEffect(session.baseUrl, urlPath) {
     try {
@@ -62,7 +71,7 @@ internal fun DashboardPlaceholders(session: HaSession, urlPath: String?) {
         store.write(session.baseUrl, urlPath, next)
         cards = next
         editing = null
-        adding = false
+        onPlanningDone()
         message = "Saved on this phone. Home Assistant is unchanged."
       } catch (cancelled: CancellationException) {
         throw cancelled
@@ -74,21 +83,17 @@ internal fun DashboardPlaceholders(session: HaSession, urlPath: String?) {
     }
   }
 
+  val editorOpen = planning || editing != null
   Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    FilledTonalButton(
-      enabled = loaded && !busy && !adding && editing == null,
-      onClick = { adding = true },
-    ) {
-      Text("Add placeholder card")
-    }
-    if (adding || editing != null) {
+    if (editorOpen) {
       PlaceholderCardEditor(
         initial = editing,
-        busy = busy,
+        // Saving rewrites the dashboard's whole list, so wait for the stored cards first.
+        busy = busy || !loaded,
         onDismiss = {
           if (!busy) {
-            adding = false
             editing = null
+            onPlanningDone()
           }
         },
         onSave = { updated ->
@@ -103,7 +108,7 @@ internal fun DashboardPlaceholders(session: HaSession, urlPath: String?) {
     cards.forEach { card ->
       PlaceholderCardView(
         card = card,
-        enabled = !busy && !adding && editing == null,
+        enabled = !busy && !editorOpen,
         onEdit = { editing = card },
         onRemove = { save(cards.filterNot { it.id == card.id }) },
         onCopyPrompt = {

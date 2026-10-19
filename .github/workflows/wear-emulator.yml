@@ -10,7 +10,6 @@ on:
       - 'wear/src/main/**'
       - 'wear/src/androidTest/**'
       - 'wear/build.gradle.kts'
-      - 'wear-sync-proto/**'
       - '.github/workflows/wear-emulator.yml'
       - 'scripts/run-wear-connected-tests.sh'
   workflow_dispatch:

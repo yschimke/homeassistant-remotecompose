@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
@@ -49,6 +51,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -97,6 +101,7 @@ import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.PinnedCardData
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.core.session.liveDashboardSnapshots
 import ee.schimke.terrazzo.feedback.rememberInteractionFeedback
 import ee.schimke.terrazzo.ui.LayoutConfig
 import ee.schimke.terrazzo.ui.LocalCardStyle
@@ -188,7 +193,17 @@ fun DashboardViewScreen(
           state = DashboardState.Error(t.message ?: t::class.simpleName ?: "error")
         }
       }
-      val interval = session.refreshIntervalMillis ?: break
+      val interval = session.refreshIntervalMillis
+      if (interval == null) {
+        // Live sessions push HA's `state_changed` events instead of being polled: follow them,
+        // re-armed by the session on every reconnect, so cards update in place.
+        val ready = state as? DashboardState.Ready ?: break
+        session.liveDashboardSnapshots(ready.snapshot).collect { snapshot ->
+          state = DashboardState.Ready(ready.dashboard, snapshot)
+          logStore.recordDashboardSnapshot(ready.dashboard, snapshot)
+        }
+        break
+      }
       delay(interval)
     }
   }
@@ -297,6 +312,11 @@ private fun DashboardList(
   val cfg = rememberLayoutConfig()
   val pinStore = LocalTerrazzoGraph.current.pinStore
   val pinScope = rememberCoroutineScope()
+  // Long-pressing a section heading plans a placeholder card for this dashboard. Its editor sits at
+  // the top of the list, so scroll there: the section pressed may be far down.
+  var planningCard by remember(baseUrl, dashboardUrlPath) { mutableStateOf(false) }
+  val listState = rememberLazyListState()
+  LaunchedEffect(planningCard) { if (planningCard) listState.animateScrollToItem(0) }
   val preferencesStore = LocalTerrazzoGraph.current.preferencesStore
   val useGridLayout by preferencesStore.experimentalGridLayout.collectAsState(initial = false)
   val collapsedMode by preferencesStore.collapsedMode.collectAsState(initial = true)
@@ -304,11 +324,9 @@ private fun DashboardList(
   // production renders are untouched; reads are cheap StateFlows.
   val flashOnDataChange by preferencesStore.flashOnDataChange.collectAsState(initial = false)
   val dataGridOverlay by preferencesStore.dataGridOverlay.collectAsState(initial = false)
-  // The card designs the user's settings choose from the design server (off when its URL is empty).
-  val designContext = androidx.compose.ui.platform.LocalContext.current
-  val designChoice by
-    remember(preferencesStore) { CardDesignSync.choice(designContext, preferencesStore) }
-      .collectAsState(initial = null)
+  // The card designs the user's settings choose from the design server (off when its URL is empty),
+  // preloaded at app start so the first frame plays them; null only while that first read runs.
+  val preloadedDesigns = rememberPreloadedCardDesigns()
   // Pull the process-singleton image stack (a Metro AppScope binding —
   // see AppGraph.haImageStack). Coil documents that exactly one
   // DiskCache per directory is safe; the stack owns that single
@@ -374,7 +392,16 @@ private fun DashboardList(
         }
       }
 
-    val cardDesigns = designChoice?.let { rememberCardDesigns(context, it) } ?: CardDesigns()
+    // Hold the cards (briefly, see rememberPreloadedCardDesigns) rather than paint them with the
+    // local library's designs and swap to the server's a moment later.
+    val cardDesigns =
+      preloadedDesigns
+        ?: run {
+          Box(Modifier.fillMaxSize().padding(contentPadding).padding(24.dp)) {
+            CircularProgressIndicator()
+          }
+          return@BoxWithConstraints
+        }
     val cardDesignOverrides by
       remember(context) { CardDesignOverrideStore.of(context).overrides }.collectAsState()
     CompositionLocalProvider(
@@ -383,6 +410,7 @@ private fun DashboardList(
       LocalCardDesignOverrides provides cardDesignOverrides,
     ) {
       LazyColumn(
+        state = listState,
         modifier =
           Modifier.fillMaxSize()
             .consumeWindowInsets(contentPadding)
@@ -395,6 +423,8 @@ private fun DashboardList(
           DashboardPlaceholders(
             session = placeholderSession,
             urlPath = dashboardUrlPath.takeIf { it.isNotEmpty() },
+            planning = planningCard,
+            onPlanningDone = { planningCard = false },
           )
         }
         layout.views.forEachIndexed { viewIndex, view ->
@@ -425,6 +455,7 @@ private fun DashboardList(
                 viewPath = view.viewPath,
                 pinStore = pinStore,
                 onPinAction = { action -> pinScope.launch { action() } },
+                onPlanCard = { planningCard = true },
               ),
           )
         }
@@ -687,19 +718,35 @@ private fun CardConfig.headingLikeTitle(): String =
 /**
  * Heading for a section title. Shared between single-column and wide layouts. In single-column mode
  * with collapsed sections enabled, the heading also acts as the tap target that toggles the section
- * open and shows a chevron reflecting the current state.
+ * open and shows a chevron reflecting the current state. A long press runs [onLongClick] (planning
+ * a placeholder card) when one is given.
  */
 @Composable
-private fun SectionHeading(
+internal fun SectionHeading(
   title: String,
   collapsible: Boolean = false,
   expanded: Boolean = true,
   onClick: () -> Unit = {},
+  onLongClick: (() -> Unit)? = null,
   trailing: @Composable (() -> Unit)? = null,
 ) {
+  val haptics = LocalHapticFeedback.current
   val rowModifier =
     Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp).let {
-      if (collapsible) it.clickable(onClick = onClick) else it
+      when {
+        onLongClick != null ->
+          it.combinedClickable(
+            onClickLabel = if (collapsible) (if (expanded) "Collapse" else "Expand") else null,
+            onLongClickLabel = "Plan a card",
+            onLongClick = {
+              haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+              onLongClick()
+            },
+            onClick = { if (collapsible) onClick() },
+          )
+        collapsible -> it.clickable(onClick = onClick)
+        else -> it
+      }
     }
   Row(modifier = rowModifier, verticalAlignment = Alignment.CenterVertically) {
     Text(
@@ -721,7 +768,8 @@ private fun SectionHeading(
 
 /**
  * Context plumbed from [DashboardList] down through every section renderer. Carries enough to
- * compute a stable pin key ([PinStore.sectionKey]) and to dispatch pin/unpin coroutines.
+ * compute a stable pin key ([PinStore.sectionKey]) and to dispatch pin/unpin coroutines, plus
+ * [onPlanCard], which a long press on a section heading runs to plan a placeholder card.
  */
 private data class SectionPinContext(
   val baseUrl: String,
@@ -729,6 +777,7 @@ private data class SectionPinContext(
   val viewPath: String,
   val pinStore: PinStore,
   val onPinAction: (suspend () -> Unit) -> Unit,
+  val onPlanCard: () -> Unit,
 )
 
 /**
@@ -761,6 +810,7 @@ private fun PinnableSectionHeading(
     collapsible = collapsible,
     expanded = expanded,
     onClick = onClick,
+    onLongClick = pinContext.onPlanCard,
     trailing = {
       IconButton(
         onClick = {

@@ -61,7 +61,9 @@ import ee.schimke.terrazzo.core.prefs.LauncherColoursPref
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.DemoHaSession
+import ee.schimke.terrazzo.core.session.HaReauthRequiredException
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.core.session.ReconnectBackoff
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.dashboard.CardActionsSheet
 import ee.schimke.terrazzo.dashboard.CardDesignSources
@@ -89,7 +91,9 @@ import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import ee.schimke.terrazzo.widget.WidgetsScreen
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -123,6 +127,27 @@ fun TerrazzoApp(initialDashboard: String? = null, initialSession: HaSession? = n
   val widgetScheduler = remember(context) { WidgetRefreshScheduler(context.applicationContext) }
   val wearSync = graph.wearSyncManager
 
+  // Sign out of [signedOut]'s instance: wipe its cached dashboards / snapshots and refresh-token
+  // vault entry so the next user on this device can't read the previous account's data, and so
+  // cold start goes back to discovery. [reason] is shown on the sign-in screen.
+  fun signOut(signedOut: HaSession?, reason: Throwable? = null) {
+    val previousBaseUrl = signedOut?.baseUrl
+    scope.launch {
+      graph.preferencesStore.setDemoMode(false)
+      graph.preferencesStore.clearLastViewedDashboard()
+      graph.preferencesStore.clearSelectedDashboardUrls()
+      if (previousBaseUrl != null) {
+        graph.offlineCache.clearInstance(previousBaseUrl)
+        runCatching { graph.tokenVault.clear(previousBaseUrl) }
+        graph.remoteUrlStore.clear(previousBaseUrl)
+      }
+      signedOut?.close()
+    }
+    widgetScheduler.cancelDemo()
+    if (session === signedOut) session = null
+    lastError = reason
+  }
+
   // Persisted demo-mode flag survives process restarts, so a user who
   // opted into demo doesn't see the login screen again on relaunch.
   // Also re-arms the widget refresh chain in case the worker queue
@@ -147,13 +172,29 @@ fun TerrazzoApp(initialDashboard: String? = null, initialSession: HaSession? = n
             // swap if we're still on the cache-only stub.
             if (access != null && session === initialSession) {
               val previous = session
-              session = graph.sessionFactory.create(baseUrl, access)
+              session =
+                graph.sessionFactory.create(baseUrl, access, tokens.expiresInSeconds?.seconds)
               previous?.close()
             }
             tokens.refreshToken?.let { graph.tokenVault.put(baseUrl, it) }
           }
+          .onFailure { error ->
+            // HA refused the stored refresh token: no retry can recover, so send the user back
+            // to sign in rather than leave them on a cached dashboard that never connects.
+            if (error is HaReauthRequiredException && session === initialSession) {
+              signOut(initialSession, SignedOutException())
+            }
+          }
       }
     }
+  }
+
+  // A live session whose refresh token HA refuses mid-flight (revoked, user deactivated) can't
+  // reconnect; sign out so the user can sign in again instead of retrying forever.
+  LaunchedEffect(session) {
+    val s = session ?: return@LaunchedEffect
+    s.needsReauth.first { it }
+    signOut(s, SignedOutException())
   }
 
   // Mirror the active session to the wear data layer so the watch
@@ -178,8 +219,15 @@ fun TerrazzoApp(initialDashboard: String? = null, initialSession: HaSession? = n
   // sessions clear the bearer (`accessToken=null`) — the
   // interceptor then passes requests through unmodified.
   val imageStack = LocalHaImageStack.current
+  // A live session re-mints its access token as connects need one, so re-read it on each
+  // connection change rather than keeping the bearer it started with.
   LaunchedEffect(imageStack, session) {
-    imageStack?.setAuth(session?.baseUrl, session?.accessToken)
+    val s = session
+    if (s == null) {
+      imageStack?.setAuth(null, null)
+      return@LaunchedEffect
+    }
+    s.connectionStatus.collect { imageStack?.setAuth(s.baseUrl, s.accessToken) }
   }
 
   val login =
@@ -236,27 +284,7 @@ fun TerrazzoApp(initialDashboard: String? = null, initialSession: HaSession? = n
             widgetScheduler.cancelDemo()
           }
         },
-        onSignOut = {
-          val previous = session
-          val previousBaseUrl = previous?.baseUrl
-          scope.launch {
-            graph.preferencesStore.setDemoMode(false)
-            graph.preferencesStore.clearLastViewedDashboard()
-            graph.preferencesStore.clearSelectedDashboardUrls()
-            // Wipe cached dashboards / snapshots and the
-            // refresh-token vault entry so the next user on
-            // this device can't read the previous account's
-            // data, and so cold start goes back to discovery.
-            if (previousBaseUrl != null) {
-              graph.offlineCache.clearInstance(previousBaseUrl)
-              runCatching { graph.tokenVault.clear(previousBaseUrl) }
-              graph.remoteUrlStore.clear(previousBaseUrl)
-            }
-            previous?.close()
-          }
-          widgetScheduler.cancelDemo()
-          session = null
-        },
+        onSignOut = { signOut(session) },
       )
   }
 }
@@ -561,15 +589,18 @@ private fun DashboardsRoot(
   //  - On entering the foreground, if we parked the socket on the way
   //    out (or a prior attempt failed), reconnect now so the user sees
   //    "Connecting" immediately instead of a stale status.
-  //  - While foregrounded, watch for a Failed status and retry with a
-  //    short backoff. Each retry lands at Connected (loop idles) or at
-  //    Failed (StateFlow re-emits and we retry again).
+  //  - While foregrounded, watch for a Failed status and retry with an
+  //    exponential backoff (2 s doubling to 5 min, reset on success).
+  //    Each retry lands at Connected (loop idles) or at Failed
+  //    (StateFlow re-emits and we retry again). A session whose
+  //    credentials HA refused stops retrying; TerrazzoApp signs out.
   //  - On leaving the foreground, cleanly disconnect. Without this the
   //    OS tears the idle socket down in the background and the next
   //    read-loop failure logs a spurious Error; a clean disconnect logs
   //    a neutral "Disconnected" instead.
   LaunchedEffect(session, lifecycleOwner) {
     lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+      val backoff = ReconnectBackoff()
       val status = session.connectionStatus.value
       if (
         status == SessionConnectionStatus.Disconnected || status == SessionConnectionStatus.Failed
@@ -579,10 +610,12 @@ private fun DashboardsRoot(
       try {
         while (true) {
           session.connectionStatus.first { it == SessionConnectionStatus.Failed }
-          delay(RECONNECT_BACKOFF_MS)
+          if (session.needsReauth.value) awaitCancellation()
+          delay(backoff.next())
           if (session.connectionStatus.value == SessionConnectionStatus.Failed) {
             runCatching { session.connect() }
           }
+          if (session.connectionStatus.value == SessionConnectionStatus.Connected) backoff.reset()
         }
       } finally {
         // repeatOnLifecycle has cancelled us; close the socket
@@ -772,12 +805,9 @@ private fun DashboardsRoot(
 /** Sentinel for "no dashboard opened yet". null is a valid urlPath (the default dashboard). */
 private const val DASHBOARD_UNSET = "__none__"
 
-/**
- * Backoff between automatic reconnect attempts while the activity is resumed. Short enough that a
- * brief network blip recovers quickly, long enough that we don't hammer a genuinely-down HA
- * instance.
- */
-private const val RECONNECT_BACKOFF_MS = 5_000L
+/** Home Assistant refused the stored refresh token; shown on the sign-in screen. */
+private class SignedOutException :
+  IllegalStateException("Home Assistant signed this device out. Sign in again.")
 
 enum class ConnectionStatus(val label: String) {
   Failed("Failed"),
@@ -1290,6 +1320,8 @@ private fun LauncherColoursSection(
 private fun cardStyleTagline(pref: CardStylePref): String =
   when (pref) {
     CardStylePref.Classic -> "The cards' own look, in your theme's palette"
+    CardStylePref.HomeAssistant ->
+      "Built-in HA · light and dark cards, half gauges and thermostat rings"
     CardStylePref.Expressive -> "Material 3 Expressive · big shapes, capsule meters"
     CardStylePref.Trinitron -> "Graphite hi-fi · VU needles, LED level meters"
     CardStylePref.Lcd -> "Segment LCD · bar graphs with ghost segments"

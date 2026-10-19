@@ -18,7 +18,9 @@ import ee.schimke.ha.rc.LauncherLook
 import ee.schimke.ha.rc.captureLauncherWidgetDocument
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
+import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.decodeHaAction
 import ee.schimke.ha.rc.encodeHaAction
 import ee.schimke.ha.rc.platformWidgetDocument
 import ee.schimke.ha.rc.systemThemedWidgetsProfile
@@ -255,7 +257,14 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
                 val payload = encodeHaAction(action)
                 views.setOnClickPendingIntent(
                   actionId,
-                  widgetActionPendingIntent(context, widgetId, actionId, payload, resolved = true),
+                  appPendingIntent(context, widgetId, actionId, action)
+                    ?: widgetActionPendingIntent(
+                      context,
+                      widgetId,
+                      actionId,
+                      payload,
+                      resolved = true,
+                    ),
                 )
               }
           }
@@ -327,10 +336,44 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         // platform forwarded metadata and remains a fallback on platform builds that omit it.
         remoteViews.setOnClickPendingIntent(
           actionId,
-          widgetActionPendingIntent(context, widgetId, actionId, payload),
+          appPendingIntent(context, widgetId, actionId, decodeHaAction(payload))
+            ?: widgetActionPendingIntent(context, widgetId, actionId, payload),
         )
       }
     return remoteViews
+  }
+
+  /**
+   * An activity [PendingIntent] for a tap that needs the app (or a browser) in front: the surface's
+   * open-app tap ([ee.schimke.ha.rc.components.WidgetOpenApp]), and the card's more-info and
+   * navigate taps, open the app; a URL tap opens it. Null for an action the receiver handles. A
+   * receiver can't start an activity from the background, so these must be activity intents of
+   * their own.
+   */
+  private fun appPendingIntent(
+    context: Context,
+    widgetId: Int,
+    actionId: Int,
+    action: HaAction?,
+  ): PendingIntent? {
+    val intent =
+      when (action) {
+        is HaAction.Url -> Intent(Intent.ACTION_VIEW, Uri.parse(action.url))
+        is HaAction.MoreInfo,
+        is HaAction.Navigate ->
+          context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return null
+        else -> return null
+      }.apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        // Identity only (see widgetActionPendingIntent); a launch intent keeps its own extras.
+        identifier = "terrazzo://widget-open/$widgetId/$actionId"
+      }
+    return PendingIntent.getActivity(
+      context,
+      actionId,
+      intent,
+      PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+    )
   }
 
   private fun widgetActionPendingIntent(

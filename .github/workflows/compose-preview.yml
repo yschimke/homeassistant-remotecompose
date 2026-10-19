@@ -5,7 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-    types: [opened, synchronize]
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 # Workflow-level: read only. The render job widens to write below so fork

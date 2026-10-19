@@ -22,6 +22,7 @@ import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.ConnectionStatus
 import ee.schimke.terrazzo.DashboardTopBar
+import ee.schimke.terrazzo.LocalHaImageStack
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.SettingsScreen
 import ee.schimke.terrazzo.core.auth.HaAuthService
@@ -59,6 +60,7 @@ import ee.schimke.terrazzo.dashboard.PinRowItem
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
 import ee.schimke.terrazzo.dashboard.historyEntityIds
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
+import ee.schimke.terrazzo.image.HaImageStack
 import ee.schimke.terrazzo.logs.LogsContent
 import ee.schimke.terrazzo.ui.TerrazzoTheme
 import ee.schimke.terrazzo.wearsync.SyncDiagnosticsContent
@@ -176,8 +178,15 @@ private fun PhoneHost(
   content: @Composable () -> Unit,
 ) {
   val graph = rememberPreviewGraph()
+  // The app's image stack, as MainActivity provides it: its loader draws demo mode's stand-in
+  // pictures (camera frames, image entities) for `demo://` URLs, which Coil's default can't fetch.
+  val context = LocalContext.current.applicationContext
+  val imageStack = remember(context) { HaImageStack(context, graph.lanConnectionPolicy) }
   TerrazzoTheme(style = style, darkMode = darkMode) {
-    CompositionLocalProvider(LocalTerrazzoGraph provides graph) {
+    CompositionLocalProvider(
+      LocalTerrazzoGraph provides graph,
+      LocalHaImageStack provides imageStack,
+    ) {
       // Paint the Material 3 surface as the page background — the
       // dashboard cards sit on top, and without an explicit fill
       // the preview's transparent background shows through and

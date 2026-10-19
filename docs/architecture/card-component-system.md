@@ -192,6 +192,7 @@ needle, and a Braun thermometer has no fill. Every part reads the theme through
 | Theme | Dial (gauge, arc) | Thermometer | Battery | Bar | Readout | Card · controls |
 |---|---|---|---|---|---|---|
 | `classic` (default) | smooth arc | liquid tube over a bulb | outlined, filled | rounded bar | plain | 12 dp, border · pill switch |
+| `home-assistant`: built-in HA | thick, flat-ended half gauge, reading inside | liquid tube over a bulb | outlined, filled | rounded bar | regular-weight sans serif | 12 dp, 1 dp border · rounded thermostat ring with white target handle |
 | `expressive`: Material 3 Expressive | thick arc, **track gap + stop dot** | **fat capsule**, gap and stop dot, no bulb | pill with gap and dot | capsule with gap | value on a **tonal pill** | 28 dp, borderless · 16 dp |
 | `trinitron`: techy Sony | **VU meter**: hairline scale, index ticks, red peak zone, swinging needle | **LED level column** beside a tick scale, red past the peak | hairline frame of LED cells | LED strip | **tracked label ruled off above** the value | 2 dp, hairline · square knob |
 | `lcd`: segment display | 12 blocks with ghosts | **framed column of bars**, no bulb, **hot bars in a red ink** | **phone battery**, four bars, red when low | chunky segments | value in a **recessed screen** | 4 dp bezel · square block switch |
@@ -243,6 +244,31 @@ How each part takes it:
 
 `classic` is exactly the look the cards had before uber themes (`HaUberThemeTest` pins it), so
 nothing changes until a host provides another.
+
+**Built-in Home Assistant.** Select **Home Assistant** (`home-assistant`) and use the host's
+existing light/dark toggle. This is one style with two palettes, independent of the app palette.
+Card/dashboard surfaces, text and link colours were checked against the native demo's built-in
+theme (HA 2026.10.2); light secondary text is `#5e5e5e`, dark is `#9b9b9b`, and the primary accent
+is `#009ac7`. The border remains separate from the gauge track, which uses the dashboard background
+as HA's gauge does. Readings use normal-weight platform sans serif (Roboto on Android), preserving
+the shared `HaType` size roles. The gauge has a 12:40 stroke/radius proportion and flat ends,
+with the live reading inside and the name below; compact widget layouts keep their existing
+adaptive presentations. Thermostats retain their named current/target bindings and use a rounded
+ring with a white target handle. Other controls, charts, thermometers and batteries reuse the
+shared components. This matches the built-in visual language rather than importing arbitrary
+user-installed HA themes or reproducing every Lovelace layout pixel for pixel.
+
+Reference definitions: HA's [theme tokens](https://github.com/home-assistant/frontend/tree/dev/src/resources/theme),
+[typography](https://github.com/home-assistant/frontend/blob/dev/src/resources/theme/typography.globals.ts),
+and [gauge](https://github.com/home-assistant/frontend/blob/dev/src/components/ha-gauge.ts).
+`HomeAssistantThemeRenderTest` checks gauge and thermostat graphics after host updates without
+recapturing, in both modes, and can save before/after images with `-PlovelaceRenderEvidence=...`.
+It exercises the production design-template path: current readings and target movement update
+the same document, while target removal changes the structural template key and removes its
+handle and stepper actions with a new document. The raw thermostat converter retains its existing
+`dataSignature` re-encode path.
+The `Uber_HomeAssistant_*`, `UberDials_HomeAssistant_*` and `UberCards_HomeAssistant_*` previews
+cover both palettes for the catalog/PR render pipeline.
 
 **In the app**, Settings has a **Card style** picker (`CardStylePref`, beside the palette).
 Classic follows the app palette (`cardPalette` → `haThemeFor`), and every other style brings its

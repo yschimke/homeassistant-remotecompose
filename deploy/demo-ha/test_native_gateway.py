@@ -7,7 +7,18 @@ from aiohttp import web
 from aiohttp import FormData
 from aiohttp.test_utils import TestClient, TestServer
 
-from native_gateway import NativeGateway, command_allowed, create_app, ENTITIES, STATIC_MARKDOWN
+from native_gateway import NativeGateway, command_allowed, create_app, ENTITIES, STATIC_MARKDOWN, literal_markdown
+
+
+class MarkdownTests(unittest.TestCase):
+    def test_nested_sections_only_allow_exact_literal_markdown(self):
+        dashboard = {'views': [{'sections': [{'cards': [
+            {'type': 'markdown', 'content': 'Shared safe notice'},
+            {'type': 'markdown', 'content': '{{ states }}'},
+            {'type': 'markdown', 'content': '{% dangerous %}'},
+            {'type': 'markdown', 'content': {'unexpected': 'object'}},
+            {'type': 'button', 'content': 'not markdown'}]}]}]}
+        self.assertEqual(set(literal_markdown(dashboard)), {'Shared safe notice'})
 
 
 class NativeTests(unittest.IsolatedAsyncioTestCase):

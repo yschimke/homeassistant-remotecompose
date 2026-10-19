@@ -11,7 +11,7 @@ import aiohttp
 from aiohttp import web
 
 ROOT = Path(__file__).parent
-VERSION = "demo-controls-v3"
+VERSION = "demo-controls-v4"
 CONFIG = {
     "version": VERSION, "location_name": "Demo Home", "time_zone": "UTC",
     "unit_system": {"temperature": "°C", "length": "km", "mass": "kg", "volume": "L"},
@@ -25,6 +25,85 @@ ATTRIBUTES = frozenset((
     "humidity", "pressure", "wind_speed", "temperature_unit", "pressure_unit", "wind_speed_unit",
     "current_position", "supported_features", "battery_level", "percentage",
 ))
+# Per-socket delivery bounds. A visitor that stops reading is disconnected, never waited on.
+SEND_TIMEOUT = 1.0
+CLOSE_TIMEOUT = 5.0
+OUTBOX_LIMIT = 64  # several full broadcasts of every demo entity plus pending replies
+_CLOSE = object()
+
+
+class Outbox:
+    """Ordered, bounded sender owned by one WebSocket.
+
+    Broadcasts and replies only enqueue; this socket's own task performs every network write,
+    in order. A full queue or a send that outlives SEND_TIMEOUT aborts this socket alone, so a
+    slow visitor cannot stall polling, call_service or anyone else.
+    """
+
+    def __init__(self, ws, limit=OUTBOX_LIMIT, timeout=SEND_TIMEOUT):
+        self.ws, self.timeout = ws, timeout
+        self.queue = asyncio.Queue(limit)
+        self.closer = None
+        self.finishing = False
+        self.sender = asyncio.create_task(self._drain())
+
+    def send(self, message):
+        """Queue a message without waiting; False if this socket is (now) being dropped."""
+        if self.closer or self.finishing:
+            return False
+        try:
+            self.queue.put_nowait(message)
+        except asyncio.QueueFull:
+            self.abort()
+            return False
+        return True
+
+    def finish(self, code=aiohttp.WSCloseCode.OK, message=b""):
+        """Close after already-queued messages are delivered, without waiting here."""
+        if self.closer or self.finishing:
+            return
+        try:
+            self.queue.put_nowait((_CLOSE, code, message))
+            self.finishing = True
+        except asyncio.QueueFull:
+            self.abort(code, message)
+
+    def abort(self, code=aiohttp.WSCloseCode.TRY_AGAIN_LATER, message=b"Client too slow"):
+        """Discard queued messages and close in the background."""
+        if self.closer is None:
+            self.sender.cancel()
+            self.closer = asyncio.create_task(self._close(code, message))
+        return self.closer
+
+    async def shutdown(self):
+        """Flush and close within a bound, then force-close if the visitor still is not reading."""
+        self.finish()
+        await asyncio.wait({self.sender}, timeout=CLOSE_TIMEOUT)
+        if not self.sender.done():
+            self.abort()
+        if self.closer:
+            await self.closer
+
+    async def _close(self, code, message):
+        await asyncio.wait({self.sender})
+        await self._close_ws(code, message)
+
+    async def _close_ws(self, code, message):
+        # A timed-out close tears down the transport instead of waiting for the visitor.
+        with contextlib.suppress(ConnectionError, asyncio.TimeoutError, RuntimeError):
+            await asyncio.wait_for(self.ws.close(code=code, message=message), CLOSE_TIMEOUT)
+
+    async def _drain(self):
+        while True:
+            message = await self.queue.get()
+            if isinstance(message, tuple) and message[0] is _CLOSE:
+                await self._close_ws(message[1], message[2])
+                return
+            try:
+                await asyncio.wait_for(self.ws.send_json(message), self.timeout)
+            except (ConnectionError, asyncio.TimeoutError, RuntimeError):
+                self.abort()
+                return
 
 
 class Gateway:
@@ -38,7 +117,21 @@ class Gateway:
         self.states = {}
         self.updated = 0
         self.sockets = {}
+        self.outboxes = {}
         self.upstream_lock = asyncio.Lock()
+        # One budget for the entire shared home, across HTTP, sockets and reconnects.
+        # No client-controlled identity, proxy header or unbounded per-IP map.
+        self.action_tokens = 8.0
+        self.action_updated = time.monotonic()
+
+    def reserve_action(self):
+        now = time.monotonic()
+        self.action_tokens = min(8.0, self.action_tokens + max(0, now - self.action_updated) / 2)
+        self.action_updated = now
+        if self.action_tokens < 1:
+            return False
+        self.action_tokens -= 1
+        return True
 
     def fresh(self):
         return self.updated > 0 and time.monotonic() - self.updated < self.max_age
@@ -82,14 +175,15 @@ class Gateway:
                 "entity_id": entity, "old_state": old.get(entity), "new_state": states.get(entity),
             }, "origin": "LOCAL", "time_fired": states.get(entity, old.get(entity))["last_updated"],
                 "context": {"id": None, "parent_id": None, "user_id": None}}
+            # Enqueue only: each socket's own sender writes, so the upstream lock is never
+            # held across a visitor's network I/O.
             for ws, subscriptions in list(self.sockets.items()):
+                outbox = self.outboxes.get(ws)
                 for subscription in list(subscriptions):
-                    try:
-                        await asyncio.wait_for(ws.send_json({
-                            "id": subscription, "type": "event", "event": event,
-                        }), timeout=1)
-                    except (ConnectionError, asyncio.TimeoutError, RuntimeError):
-                        await ws.close()
+                    if outbox is None or not outbox.send({
+                        "id": subscription, "type": "event", "event": event,
+                    }):
+                        break
 
     async def call_service(self, domain, service, data, target=None):
         # Construct a fresh request from a finite policy, never relay client payloads.
@@ -120,6 +214,8 @@ class Gateway:
         async with self.upstream_lock:
             if not self.fresh():
                 return "upstream_unavailable"
+            if not self.reserve_action():
+                return "rate_limited"
             try:
                 async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as session:
                     async with session.post(
@@ -146,16 +242,18 @@ class Gateway:
                     except (aiohttp.ClientError, asyncio.TimeoutError, ValueError, KeyError, TypeError):
                         # Never log upstream bodies or credentials; fail closed when cache expires.
                         if not self.fresh():
-                            for ws in list(self.sockets):
-                                await ws.close(code=1013, message=b"Demo temporarily unavailable")
+                            for outbox in list(self.outboxes.values()):
+                                outbox.finish(aiohttp.WSCloseCode.TRY_AGAIN_LATER,
+                                              b"Demo temporarily unavailable")
                     await asyncio.sleep(self.poll_seconds)
         task = asyncio.create_task(polling())
         yield
         task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await task
-        for ws in list(self.sockets):
-            await ws.close(code=1001)
+        for outbox in list(self.outboxes.values()):
+            outbox.finish(aiohttp.WSCloseCode.GOING_AWAY)
+        await asyncio.gather(*(outbox.shutdown() for outbox in list(self.outboxes.values())))
 
     async def http(self, request):
         if request.method == "OPTIONS":
@@ -170,7 +268,9 @@ class Gateway:
                 return web.json_response({"code": "invalid_json"}, status=400)
             code = await self.call_service(parts[3], parts[4], data)
             if code:
-                return web.json_response({"code": code}, status=403 if code == "forbidden" else 503)
+                status = {"forbidden": 403, "rate_limited": 429}.get(code, 503)
+                return web.json_response({"code": code}, status=status,
+                                         headers={"Retry-After": "2"} if status == 429 else None)
             return web.json_response(list(self.states.values()))
         if request.method not in ("GET", "HEAD"):
             return web.json_response({"code": "forbidden", "message": "Demo administration is disabled"}, status=403)
@@ -202,34 +302,38 @@ class Gateway:
             return web.json_response({"code": "upstream_unavailable"}, status=503)
         ws = web.WebSocketResponse(heartbeat=30, max_msg_size=16384, receive_timeout=90)
         await ws.prepare(request)
+        outbox = Outbox(ws)
         self.sockets[ws] = set()
+        self.outboxes[ws] = outbox
         try:
-            await ws.send_json({"type": "auth_required", "ha_version": VERSION})
+            outbox.send({"type": "auth_required", "ha_version": VERSION})
             try:
                 auth = await asyncio.wait_for(ws.receive_json(), timeout=10)
             except (ValueError, TypeError, asyncio.TimeoutError):
                 return ws
             if not isinstance(auth, dict) or auth.get("type") != "auth":
-                await ws.send_json({"type": "auth_invalid", "message": "Expected public demo auth"})
+                outbox.send({"type": "auth_invalid", "message": "Expected public demo auth"})
                 return ws
             # Compatibility handshake only. No credential is needed or forwarded.
-            await ws.send_json({"type": "auth_ok", "ha_version": VERSION})
+            outbox.send({"type": "auth_ok", "ha_version": VERSION})
             async for frame in ws:
                 if frame.type != aiohttp.WSMsgType.TEXT:
                     break
                 try:
                     msg = json.loads(frame.data)
                 except ValueError:
-                    await ws.close(code=1007, message=b"Expected JSON object")
+                    outbox.finish(aiohttp.WSCloseCode.INVALID_TEXT, b"Expected JSON object")
                     break
                 if not isinstance(msg, dict) or type(msg.get("id")) is not int or msg["id"] <= 0:
-                    await ws.close(code=1008, message=b"Expected positive integer id")
+                    outbox.finish(aiohttp.WSCloseCode.POLICY_VIOLATION, b"Expected positive integer id")
                     break
                 reply = await self.command(ws, msg)
-                await ws.send_json(reply)
+                if not outbox.send(reply):
+                    break
         finally:
             self.sockets.pop(ws, None)
-            await ws.close()
+            self.outboxes.pop(ws, None)
+            await outbox.shutdown()
         return ws
 
     async def command(self, ws, msg):

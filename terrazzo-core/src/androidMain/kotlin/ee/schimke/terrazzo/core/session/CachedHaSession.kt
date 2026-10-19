@@ -42,6 +42,12 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
   override val notifications: StateFlow<List<HaNotification>>
     get() = delegate.notifications
 
+  override val liveStates: StateFlow<HaSnapshot?>
+    get() = delegate.liveStates
+
+  override val needsReauth: StateFlow<Boolean>
+    get() = delegate.needsReauth
+
   override suspend fun connect() {
     runCatching { delegate.connect() }
     // Even if connect() failed, mark this as the most-recent instance

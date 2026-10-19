@@ -117,6 +117,27 @@ open class OfflineCacheStorage(rootDir: File) {
   }
 
   /**
+   * Set [entityId]'s state in [baseUrl]'s latest snapshot (the one [latestSnapshot] reads) to what
+   * [update] returns for its current one, leaving every other entity as it is: a widget shows the
+   * state a tap on it asked for before a live session reports it. Atomic with [putSnapshot], so a
+   * live refresh landing meanwhile is never overwritten with an older copy. Returns whether it
+   * changed anything; [update] returning null leaves the entity alone.
+   */
+  @Synchronized
+  fun updateLatestState(baseUrl: String, entityId: String, update: (String) -> String?): Boolean {
+    val snapshot = latestSnapshot(baseUrl) ?: return false
+    val entity = snapshot.states[entityId] ?: return false
+    val state = update(entity.state)?.takeIf { it != entity.state } ?: return false
+    val pointer = readJson(snapshotPointerFile(baseUrl), SnapshotPointer.serializer())
+    putSnapshot(
+      baseUrl,
+      pointer?.urlPath,
+      snapshot.copy(states = snapshot.states + (entityId to entity.copy(state = state))),
+    )
+    return true
+  }
+
+  /**
    * Wipe every cached payload for [baseUrl]. Called by sign-out so a subsequent user on the device
    * can't read the previous account's dashboard config off disk.
    */

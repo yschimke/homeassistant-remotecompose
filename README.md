@@ -75,11 +75,14 @@ Glance widgets, Wear launcher tiles, ESP32 devices, etc.).
 
 ## Key library references
 
-- `androidx.compose.remote:remote-creation-compose:1.0.0-alpha08` — the
+Versions live in [`gradle/libs.versions.toml`](gradle/libs.versions.toml)
+(`remote-compose`, `remote-material3`).
+
+- `androidx.compose.remote:remote-creation-compose` — the
   authoring DSL. Alpha, API shifts between releases.
-- `androidx.compose.remote:remote-player-compose:1.0.0-alpha08` — playback
+- `androidx.compose.remote:remote-player-compose` — playback
   inside a Compose app.
-- `androidx.wear.compose.remote:remote-material3:1.0.0-alpha02` —
+- `androidx.wear.compose.remote:remote-material3` —
   **Wear-only** mirror of Wear Material3. Not used for phone cards; for
   phone-sized HA cards we build on core RC primitives + hand-written
   Material3-flavoured wrappers.

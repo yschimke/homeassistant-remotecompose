@@ -7,7 +7,7 @@ import unittest
 from aiohttp import ClientSession, WSMsgType, web
 from aiohttp.test_utils import TestClient, TestServer
 
-from gateway import Gateway, create_app
+from gateway import Gateway, Outbox, create_app
 from verify_public import verify
 
 
@@ -17,6 +17,26 @@ def state(value='21.5'):
                            'access_token': 'private-value', 'entity_picture': '/api/camera_proxy/private'},
             'last_changed': '2026-10-17T12:00:00Z', 'last_updated': '2026-10-17T12:00:00Z',
             'context': {'user_id': 'private-user'}}
+
+
+class StalledSocket:
+    """A visitor that never drains its socket: every send blocks until it is closed."""
+
+    def __init__(self, delay=None):
+        self.sent, self.close_code, self.delay = [], None, delay
+        self.closed = asyncio.Event()
+
+    async def send_json(self, data):
+        self.sent.append(data)
+        if self.delay is None:
+            await self.closed.wait()
+            raise ConnectionResetError
+        await asyncio.sleep(self.delay)
+
+    async def close(self, *, code=1000, message=b''):
+        self.close_code = code
+        self.closed.set()
+        return True
 
 
 class GatewayTest(unittest.IsolatedAsyncioTestCase):
@@ -68,6 +88,29 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
         await ws.send_json({'type': 'auth', 'access_token': 'public-demo'})
         self.assertEqual((await ws.receive_json())['type'], 'auth_ok')
         return ws
+
+    async def test_shared_action_budget_covers_http_ws_reconnects_and_recovers(self):
+        from unittest.mock import patch
+        # Exhaust through HTTP, including parallel callers. Rejected requests never reach HA.
+        replies = await asyncio.gather(*[
+            self.client.post('/api/services/light/toggle', json={'entity_id': 'light.demo_lamp'})
+            for _ in range(12)])
+        self.assertEqual(sorted(r.status for r in replies), [200] * 8 + [429] * 4)
+        self.assertTrue(all(r.headers['Retry-After'] == '2' for r in replies if r.status == 429))
+        before = len(self.requests)
+        for _ in range(2):
+            ws = await self.connect()
+            await ws.send_json({'id': 1, 'type': 'call_service', 'domain': 'switch',
+                                'service': 'toggle', 'target': {'entity_id': 'switch.demo_coffee'}})
+            self.assertEqual((await ws.receive_json())['error']['code'], 'rate_limited')
+            await ws.close()
+        self.assertEqual(len(self.requests), before)
+        # Reads and policy rejection remain usable even when the write budget is empty.
+        self.assertEqual((await self.client.get('/api/states')).status, 200)
+        self.assertEqual((await self.client.post('/api/services/homeassistant/restart', json={})).status, 403)
+        with patch('gateway.time.monotonic', return_value=self.g.action_updated + 2):
+            self.assertIsNone(await self.g.call_service('switch', 'toggle', {'entity_id': 'switch.demo_coffee'}))
+        self.assertEqual(sum(m == 'POST' for m, _, _ in self.requests), 9)
 
     async def test_rest_reads_are_sanitized_and_do_not_leak_private_metadata(self):
         for path in ['/api/', '/api/config', '/api/states', '/api/states/sensor.demo_temperature', '/dashboard', '/healthz']:
@@ -203,6 +246,70 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
         await subscriber.close()
         await ws.close()
 
+    def stall(self, subscription=99, **kwargs):
+        stalled = StalledSocket()
+        self.g.sockets[stalled] = {subscription}
+        self.g.outboxes[stalled] = Outbox(stalled, **kwargs)
+        return stalled
+
+    async def test_stalled_visitor_does_not_block_polling_others_or_controls(self):
+        stalled = self.stall(timeout=30)
+        subscriber = await self.connect()
+        await subscriber.send_json({'id': 1, 'type': 'subscribe_events', 'event_type': 'state_changed'})
+        self.assertTrue((await subscriber.receive_json())['success'])
+        for value in ('22.1', '22.2', '22.3'):
+            self.rows[0] = state(value)
+            # Fan-out only enqueues: polling never waits on the stuck socket's send.
+            await asyncio.wait_for(self.g.poll_once(self.session), 0.5)
+            event = await asyncio.wait_for(subscriber.receive_json(), 1)
+            self.assertEqual(event['event']['data']['new_state']['state'], value)
+        self.assertFalse(self.g.upstream_lock.locked())
+        response = await asyncio.wait_for(
+            self.client.post('/api/services/light/turn_on', json={'entity_id': 'light.demo_lamp'}), 2)
+        self.assertEqual(response.status, 200)
+        event = await asyncio.wait_for(subscriber.receive_json(), 1)
+        self.assertEqual(event['event']['data']['entity_id'], 'light.demo_lamp')
+        await subscriber.send_json({'id': 2, 'type': 'call_service', 'domain': 'switch', 'service': 'turn_on',
+                                    'target': {'entity_id': 'switch.demo_coffee'}})
+        # The state event is queued during the call, so it precedes the reply on this socket.
+        event = await asyncio.wait_for(subscriber.receive_json(), 1)
+        self.assertEqual(event['event']['data']['entity_id'], 'switch.demo_coffee')
+        reply = await asyncio.wait_for(subscriber.receive_json(), 1)
+        self.assertEqual((reply['id'], reply['success']), (2, True))
+        # The stuck socket got exactly one write attempt; the rest waits in its own queue.
+        self.assertEqual(len(stalled.sent), 1)
+        self.assertIsNone(stalled.close_code)
+        self.g.sockets.pop(stalled)
+        await self.g.outboxes.pop(stalled).abort()
+        self.assertEqual(stalled.close_code, 1013)
+        await subscriber.close()
+
+    async def test_slow_or_overflowing_visitor_is_dropped_not_waited_on(self):
+        timed_out = self.stall(timeout=0.1)
+        overflowing = self.stall(limit=2, timeout=30)
+        self.rows[0] = state('22.1')
+        await self.g.poll_once(self.session)
+        await asyncio.wait_for(timed_out.closed.wait(), 1)
+        self.assertEqual(timed_out.close_code, 1013)
+        self.assertFalse(self.g.outboxes[timed_out].send({'type': 'late'}))
+        for value in ('22.2', '22.3', '22.4'):
+            self.rows[0] = state(value)
+            await asyncio.wait_for(self.g.poll_once(self.session), 0.5)
+        await asyncio.wait_for(overflowing.closed.wait(), 1)
+        self.assertEqual(overflowing.close_code, 1013)
+        self.assertEqual(len(overflowing.sent), 1)
+
+    async def test_outbox_preserves_order_and_flushes_before_close(self):
+        slow = StalledSocket(delay=0.01)
+        outbox = Outbox(slow)
+        for ident in range(1, 21):
+            self.assertTrue(outbox.send({'id': ident}))
+        outbox.finish(1013, b'bye')
+        self.assertFalse(outbox.send({'id': 99}))
+        await asyncio.wait_for(outbox.shutdown(), 2)
+        self.assertEqual([m['id'] for m in slow.sent], list(range(1, 21)))
+        self.assertEqual(slow.close_code, 1013)
+
     async def test_stale_controls_fail_closed_and_upstream_errors_do_not_leak(self):
         before = list(self.requests)
         self.g.updated = time.monotonic() - 60
@@ -243,7 +350,7 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
         battery['state'] = '78.0'
         await self.g.poll_once(self.session)
         await verify(str(self.client.make_url('')).rstrip('/'), stream=False)
-        for value in ['77.0', 'unknown', 'unavailable', 'NaN', 'Infinity']:
+        for value in ['44.9', '95.1', 'unknown', 'unavailable', 'NaN', 'Infinity']:
             with self.subTest(value=value):
                 battery['state'] = value
                 await self.g.poll_once(self.session)

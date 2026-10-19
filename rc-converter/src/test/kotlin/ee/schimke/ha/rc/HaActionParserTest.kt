@@ -3,9 +3,14 @@ package ee.schimke.ha.rc
 import ee.schimke.ha.rc.components.HaAction
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 
 class HaActionParserTest {
@@ -89,6 +94,72 @@ class HaActionParserTest {
     assertEquals("switch", action.domain)
     assertEquals("toggle", action.service)
     assertEquals("switch.fan", action.entityId)
+  }
+
+  @Test
+  fun callServiceWithASingleEntityListTargetsThatEntity() {
+    val cfg = buildJsonObject {
+      put("action", "perform-action")
+      put("perform_action", "light.turn_on")
+      putJsonObject("target") { putJsonArray("entity_id") { add("light.den") } }
+    }
+    val action = parseHaAction(cfg, "light.ignored") as HaAction.CallService
+    assertEquals("light.den", action.entityId)
+  }
+
+  @Test
+  fun callServiceWithSeveralEntitiesCarriesThemInServiceData() {
+    // A list used to throw from .jsonPrimitive and drop the whole card.
+    val cfg = buildJsonObject {
+      put("action", "perform-action")
+      put("perform_action", "light.turn_off")
+      putJsonObject("target") {
+        putJsonArray("entity_id") {
+          add("light.den")
+          add("light.hall")
+        }
+      }
+      putJsonObject("data") { put("transition", 2) }
+    }
+    val action = parseHaAction(cfg, "light.ignored") as HaAction.CallService
+    assertNull(action.entityId)
+    assertEquals(
+      buildJsonArray {
+        add("light.den")
+        add("light.hall")
+      },
+      action.serviceData["entity_id"],
+    )
+    assertEquals(JsonPrimitive(2), action.serviceData["transition"])
+  }
+
+  @Test
+  fun callServiceWithAnAreaTargetDoesNotFallBackToTheCardEntity() {
+    val cfg = buildJsonObject {
+      put("action", "perform-action")
+      put("perform_action", "light.turn_on")
+      putJsonObject("target") { put("area_id", "kitchen") }
+    }
+    val action = parseHaAction(cfg, "light.card_entity") as HaAction.CallService
+    assertNull(action.entityId)
+    assertEquals(JsonPrimitive("kitchen"), action.serviceData["area_id"])
+  }
+
+  @Test
+  fun callServiceWithLegacyServiceDataEntityListKeepsIt() {
+    val cfg = buildJsonObject {
+      put("action", "call-service")
+      put("service", "switch.turn_on")
+      putJsonObject("service_data") {
+        putJsonArray("entity_id") {
+          add("switch.a")
+          add("switch.b")
+        }
+      }
+    }
+    val action = parseHaAction(cfg, "switch.card") as HaAction.CallService
+    assertNull(action.entityId)
+    assertEquals(2, (action.serviceData["entity_id"] as JsonArray).size)
   }
 
   @Test

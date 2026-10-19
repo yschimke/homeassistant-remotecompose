@@ -3,6 +3,10 @@ You configure your own Home Assistant URL and authenticate via
 IndieAuth / OAuth2; the app renders your existing dashboards using
 Jetpack RemoteCompose.
 
+On Wear OS, the watch app shows your pinned cards with live values and
+offers five configurable watch widgets. It syncs from the paired phone
+app, so set up Home Assistant on your phone first.
+
 This is a single-developer hobby project; you can read all the source
 code at https://github.com/yschimke/homeassistant-remotecompose.
 

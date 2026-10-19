@@ -12,10 +12,10 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.rc.components.immediateSwap
+import ee.schimke.ha.rc.components.rememberExpressionName
 import java.text.DecimalFormat
 
 /**
@@ -87,12 +87,8 @@ fun RemoteSizeBreakpoint(
     return
   }
 
-  // Use a per-call-site unique name so each breakpoint registers its
-  // own expression. Sharing a stable name across captures (the
-  // tempting "memoize by thresholds" path) lets alpha010 hand back a
-  // cached expression bound to the *first* capture's component, which
-  // makes every subsequent cell read the same baked dimension.
-  val uniqueName = remember { "${BreakpointExpressionPrefix}${java.util.UUID.randomUUID()}" }
+  // Each breakpoint registers its own expression (see rememberExpressionName).
+  val uniqueName = rememberExpressionName(BreakpointExpressionPrefix)
   val dimension =
     RemoteFloat.createNamedRemoteFloatExpression(
       name = uniqueName,

@@ -28,7 +28,14 @@ object WidgetImages {
     val stack = (context.terrazzoGraph() as? ee.schimke.terrazzo.di.AppGraph)?.haImageStack
     stack ?: return null
     stack.ensureBaseUrl(baseUrl)
-    val bitmap = stack.resolve(target(baseUrl, url), fresh, maxDimensionPx = maxPx) ?: return null
+    val target = target(baseUrl, url)
+    // A fresh fetch fails once the widget's process has no live session (no token, an expired
+    // one, or a stale signed URL in the cached snapshot): keep the last image it showed rather
+    // than dropping to the placeholder.
+    val bitmap =
+      stack.resolve(target, fresh, maxDimensionPx = maxPx)
+        ?: if (fresh) stack.resolve(target, fresh = false, maxDimensionPx = maxPx) else null
+    bitmap ?: return null
     return encode(bitmap, maxPx, maxBytes)
   }
 

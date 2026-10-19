@@ -10,18 +10,25 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
@@ -52,7 +59,7 @@ class DashboardPlaceholdersTest {
   }
 
   @Test
-  fun addEditHandoffAndRemoveNeverWriteToHomeAssistant() {
+  fun sectionLongPressPlansACardAndNothingWritesToHomeAssistant() {
     var writes = 0
     val session =
       object : HaSession by DemoHaSession() {
@@ -68,21 +75,29 @@ class DashboardPlaceholdersTest {
         }
       }
     compose.setContent {
+      var planning by remember { mutableStateOf(false) }
       MaterialTheme {
         Surface(Modifier.fillMaxSize()) {
           Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp)) {
-            DashboardPlaceholders(session, "garden")
+            DashboardPlaceholders(
+              session,
+              "garden",
+              planning = planning,
+              onPlanningDone = { planning = false },
+            )
+            SectionHeading(title = "Garden", onLongClick = { planning = true })
           }
         }
       }
     }
     compose.waitForIdle()
-    // Storage is read asynchronously; wait until the add button is ready.
-    compose.waitUntil(10_000) {
-      runCatching { compose.onNodeWithText("Add placeholder card").assertIsEnabled() }.isSuccess
-    }
+    assertTrue(
+      compose.onAllNodesWithText("Add placeholder card").fetchSemanticsNodes().isEmpty(),
+      "planning starts from a section long press, not a button",
+    )
     screenshot("before-add")
-    compose.onNodeWithText("Add placeholder card").performClick()
+    compose.onNodeWithText("Garden").performTouchInput { longClick() }
+    compose.onNodeWithText("Plan a card").assertExists()
     compose.onNodeWithText("Save placeholder").assertIsNotEnabled()
     compose.onNodeWithText("Card title").performTextInput("Garden moisture")
     compose
@@ -102,7 +117,7 @@ class DashboardPlaceholdersTest {
     compose.waitUntil(10_000) {
       runCatching { compose.onNodeWithText("Edit").assertIsEnabled() }.isSuccess
     }
-    compose.onNodeWithText("Add placeholder card").performScrollTo()
+    compose.onNodeWithText("Plan a card").assertDoesNotExist()
     screenshot("after-add")
     compose.onNodeWithText("Copy implementation prompt").performScrollTo().performClick()
     compose.waitUntil(10_000) {

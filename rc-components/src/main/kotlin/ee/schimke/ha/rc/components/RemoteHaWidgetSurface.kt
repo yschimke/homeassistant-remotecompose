@@ -6,6 +6,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
+import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
@@ -29,6 +30,9 @@ import androidx.compose.runtime.Composable
  * own content-sized frame and doesn't double up inside this one — mirroring how the Wear slot
  * surface already suppresses per-card chrome. Used by the launcher widget
  * (`TerrazzoWidgetProvider`).
+ *
+ * The whole surface taps as [WidgetOpenApp] when it is captured for a launcher (a widget action
+ * registry is in scope). The card's own controls sit inside it and take their taps first.
  */
 @Composable
 fun RemoteHaWidgetSurface(
@@ -39,10 +43,12 @@ fun RemoteHaWidgetSurface(
 ) {
   val theme = haTheme()
   val shape = RemoteRoundedCornerShape(cornerRadiusDp.rdp)
+  val openApp = if (isWidgetActionCapture()) WidgetOpenApp.toRemoteAction() else null
   RemoteBox(
     modifier =
       modifier
         .fillMaxSize()
+        .let { if (openApp != null) it.clickable(openApp) else it }
         .clip(shape)
         .background(theme.cardBackground)
         .border(borderWidthDp.rdp, theme.divider, shape)

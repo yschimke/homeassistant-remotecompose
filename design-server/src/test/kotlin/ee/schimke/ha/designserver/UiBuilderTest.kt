@@ -564,6 +564,9 @@ class UiBuilderTest {
     assertEquals("/", GithubAuth.safeReturn("https://evil.example/"))
     assertEquals("/", GithubAuth.safeReturn("//evil.example/"))
     assertEquals("/", GithubAuth.safeReturn(null))
+    assertEquals("/", GithubAuth.safeReturn("/\t/evil.example/"))
+    assertEquals("/", GithubAuth.safeReturn("/\n/evil.example/"))
+    assertEquals("/", GithubAuth.safeReturn("/\r\n/evil.example/"))
   }
 
   private fun cookieOf(response: io.ktor.client.statement.HttpResponse): String =

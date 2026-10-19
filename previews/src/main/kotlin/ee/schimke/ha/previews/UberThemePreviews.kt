@@ -216,3 +216,21 @@ fun Uber_Ikea_Light() = UberShowcase(HaUberTheme.Ikea, darkTheme = false)
 @Preview(name = "uber: IKEA Showroom (dark)", widthDp = 360, heightDp = 900)
 @Composable
 fun Uber_Ikea_Dark() = UberShowcase(HaUberTheme.Ikea, darkTheme = true)
+
+@Preview(
+  name = "uber: Home Assistant (light)",
+  widthDp = 360,
+  heightDp = 900,
+  device = "spec:width=360dp,height=900dp,dpi=160",
+)
+@Composable
+fun Uber_HomeAssistant_Light() = UberShowcase(HaUberTheme.HomeAssistant, darkTheme = false)
+
+@Preview(
+  name = "uber: Home Assistant (dark)",
+  widthDp = 360,
+  heightDp = 900,
+  device = "spec:width=360dp,height=900dp,dpi=160",
+)
+@Composable
+fun Uber_HomeAssistant_Dark() = UberShowcase(HaUberTheme.HomeAssistant, darkTheme = true)

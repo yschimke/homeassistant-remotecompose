@@ -30,6 +30,14 @@ on:
         required: false
         default: true
         type: boolean
+      publish_release:
+        # github.event_name inside a called workflow is the caller's event
+        # (push or workflow_dispatch), never 'workflow_call', so callers say
+        # whether to publish explicitly.
+        description: 'Attach assets to the GitHub release and publish desktop installers'
+        required: false
+        default: true
+        type: boolean
       publish_wear:
         description: 'Also publish :wear bundle to Play'
         required: false
@@ -51,6 +59,15 @@ concurrency:
 #   PLAY_SERVICE_ACCOUNT_JSON     service account JSON; presence gates Play upload
 #   GOOGLE_SERVICES_JSON          base64 of app/google-services.json; presence
 #                                 enables Firebase Crashlytics in release builds
+# Optional repository variable:
+#   PLAY_PUBLISH_WEAR             'true' publishes :wear to the wear:internal
+#                                 track on every release (same as the
+#                                 publish_wear input); see
+#                                 docs/wear-play-publishing.md
+#   PLAY_PUBLISH_LISTING          'true' uploads the store listing (text and
+#                                 the graphics under app/src/main/play/listings)
+#                                 on every release, replacing what the Play
+#                                 Console shows
 jobs:
   home-assistant:
     name: Home Assistant release assets
@@ -68,7 +85,7 @@ jobs:
       contents: write
     with:
       tag: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
-      publish: ${{ github.event_name == 'push' || github.event_name == 'workflow_call' }}
+      publish: ${{ github.event_name == 'push' || inputs.publish_release == true }}
 
   ios-assets:
     name: Build Apple release assets
@@ -148,7 +165,8 @@ jobs:
       HAS_SIGNING_KEYSTORE: ${{ secrets.SIGNING_KEYSTORE != '' }}
       HAS_PLAY_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
       HAS_GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
-      PUBLISH_WEAR: ${{ inputs.publish_wear || false }}
+      PUBLISH_WEAR: ${{ inputs.publish_wear || vars.PLAY_PUBLISH_WEAR == 'true' }}
+      PUBLISH_LISTING: ${{ vars.PLAY_PUBLISH_LISTING == 'true' }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -211,8 +229,20 @@ jobs:
           ANDROID_PUBLISHER_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
         run: ./gradlew :app:publishBundle --stacktrace
 
+      # `publishBundle` uploads only the bundle and release notes. The listing
+      # (shared by phone and Wear) is its own task: it replaces the Console's
+      # text and images with what's committed, so it's opt-in.
+      - name: Publish store listing to Play
+        if: env.PUBLISH_LISTING == 'true' && env.HAS_PLAY_CREDENTIALS == 'true' && env.HAS_SIGNING_KEYSTORE == 'true'
+        env:
+          HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
+          HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
+          HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
+          ANDROID_PUBLISHER_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: ./gradlew :app:publishListing --stacktrace
 
-      - name: Publish Wear to Play (internal track)
+
+      - name: Publish Wear to Play (wear:internal track)
         if: env.PUBLISH_WEAR == 'true' && env.HAS_PLAY_CREDENTIALS == 'true' && env.HAS_SIGNING_KEYSTORE == 'true'
         env:
           HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
@@ -234,7 +264,8 @@ jobs:
             echo "- Crashlytics configured: ${HAS_GOOGLE_SERVICES}"
             if [[ "${HAS_SIGNING_KEYSTORE}" == "true" && "${HAS_PLAY_CREDENTIALS}" == "true" ]]; then
               echo "- Play publish step: app attempted (internal track)"
-              echo "- Wear publish enabled: ${PUBLISH_WEAR}"
+              echo "- Wear publish enabled: ${PUBLISH_WEAR} (wear:internal track)"
+              echo "- Store listing publish enabled: ${PUBLISH_LISTING}"
             else
               echo "- Play publish step: skipped"
               echo "- Reason: release secrets were not fully configured"
@@ -271,7 +302,7 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
 
       - name: Attach assets to GitHub release
-        if: github.event_name == 'push' || github.event_name == 'workflow_call'
+        if: github.event_name == 'push' || inputs.publish_release == true
         uses: softprops/action-gh-release@v3.0.3
         with:
           tag_name: ${{ env.TAG_NAME }}
@@ -280,7 +311,7 @@ jobs:
           files: _release/*
 
       - name: Upload workflow artifact
-        if: github.event_name == 'workflow_dispatch'
+        if: ${{ !(github.event_name == 'push' || inputs.publish_release == true) }}
         uses: actions/upload-artifact@v7.0.2
         with:
           name: release-${{ steps.stage.outputs.version }}
