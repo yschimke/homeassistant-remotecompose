@@ -128,7 +128,7 @@ try:
         page.wait_for_timeout(500)
         calls = [command for command in commands if command['type'] == 'call_service']
         assert len(calls) == 1, f'One click dispatched {len(calls)} service calls'
-        assert calls[0]['domain'] == 'switch' and calls[0]['service'] == 'toggle'
+        assert calls[0]['domain'] == 'homeassistant' and calls[0]['service'] == 'toggle'
         assert calls[0]['target']['entity_id'] == 'switch.lamp'
         page.wait_for_timeout(4500)
         assert len([command for command in commands if command['type'] == 'get_states']) == 1
