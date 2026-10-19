@@ -224,6 +224,31 @@ fun WearSettingsPreview() {
   }
 }
 
+// --- Play Store listing graphics ----------------------------------------
+//
+// The PNGs these emit are copied into
+// `app/src/main/play/listings/en-GB/graphics/wear-screenshots/` by
+// `scripts/render-play-screenshots.sh` (Wear shares the phone's Play listing). Play wants square
+// 1:1 shots of at least 384 px with no circular mask, so these render a large round watch without
+// the system-UI frame: the corners stay background, as in a real watch screenshot.
+
+private const val PLAY_WEAR_DEVICE = "spec:width=227dp,height=227dp,dpi=320,isRound=true"
+
+/** Wear slot 1 — pinned cards and sections with live values. */
+@Preview(name = "play · wear · home", device = PLAY_WEAR_DEVICE)
+@Composable
+fun Play_Wear_01_Home() = WearTopLevelPreview_Live()
+
+/** Wear slot 2 — a dashboard's cards. */
+@Preview(name = "play · wear · dashboard", device = PLAY_WEAR_DEVICE)
+@Composable
+fun Play_Wear_02_Dashboard() = WearDashboardPreview()
+
+/** Wear slot 3 — a pinned section. */
+@Preview(name = "play · wear · section", device = PLAY_WEAR_DEVICE)
+@Composable
+fun Play_Wear_03_Section() = WearSectionPreview()
+
 /** Shared fixture: Wear-Material theme + ScreenScaffold so each preview reads like a real frame. */
 @Composable
 private fun WearPreviewFrame(content: @Composable () -> Unit) {

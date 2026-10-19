@@ -1,9 +1,17 @@
 # Play Store graphics
 
-Drop image files directly into the subdirectories below. Gradle Play
-Publisher (GPP) auto-uploads them on `publishBundle`. All files in a
-given directory are treated as the set of images for that asset, in
-filename order.
+These images are rendered from `@Preview` composables, not drawn by
+hand: `scripts/render-play-screenshots.sh` (phone, tablet and Wear
+screenshots, from the `Play_*` previews in `:app` and `:wear`) and
+`scripts/render-play-assets.sh` (icon and feature graphic, from
+`:previews`). The **Play Store graphics** workflow reruns both weekly and
+opens a PR when the output changes.
+
+Gradle Play Publisher (GPP) uploads them with `:app:publishListing`, not
+`publishBundle`. Releases run it when the `PLAY_PUBLISH_LISTING` repository
+variable is `true`; it replaces the Play Console's listing text and images
+with what's committed here. All files in a given directory are treated as
+the set of images for that asset, in filename order.
 
 | Directory | Required? | Format | Dimensions | Notes |
 |---|---|---|---|---|

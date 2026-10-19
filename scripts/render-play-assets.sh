@@ -18,22 +18,25 @@ LISTING=app/src/main/play/listings/en-GB/graphics
 
 compose-preview render --module previews --filter Play_
 
+# The CLI names a render `<function>_<preview name>[-<hash>].png` (older ones
+# prefixed the `<File>Kt.` class); match on the stem so either resolves, and
+# take the newest when an earlier run left stale hashes behind.
 stage() {
-  local src=$1 dst=$2
-  if [[ ! -f $RENDERS/$src ]]; then
-    echo "missing render: $RENDERS/$src" >&2
+  local stem=$1 dst=$2 found
+  found=$(ls -t "$RENDERS/$stem".png "$RENDERS/$stem"-*.png \
+    "$RENDERS"/*."$stem".png 2>/dev/null | head -n 1 || true)
+  if [[ -z $found ]]; then
+    echo "missing render: $RENDERS/$stem[-<hash>].png" >&2
     exit 1
   fi
-  install -m 0644 "$RENDERS/$src" "$dst"
+  install -m 0644 "$found" "$dst"
 }
 
 # Single file per slot — overwrite instead of wipe-and-replace so a
 # rename of the source @Preview is visible as a single file rename in
 # git review rather than as paired add/delete.
-stage PlayStoreGraphicsPreviewsKt.Play_Icon_512_play_icon_512.png \
-  "$LISTING/icon/icon.png"
-stage PlayStoreGraphicsPreviewsKt.Play_Feature_1024x500_play_feature_1024x500.png \
-  "$LISTING/feature-graphic/feature.png"
+stage Play_Icon_512_play_icon_512 "$LISTING/icon/icon.png"
+stage Play_Feature_1024x500_play_feature_1024x500 "$LISTING/feature-graphic/feature.png"
 
 echo "Staged Play Store branding assets:"
 ls -1 "$LISTING/icon" "$LISTING/feature-graphic"

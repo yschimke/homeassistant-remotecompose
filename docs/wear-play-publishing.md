@@ -33,9 +33,13 @@ bumps them together; nothing to bump by hand.
    creates the Wear form-factor tracks, `wear:internal` among them.
 2. Under **Testing → Internal testing**, switch the form-factor selector to
    **Wear OS only** and add your tester list.
-3. Add at least one Wear screenshot to the store listing (Console, or commit
-   it to `app/src/main/play/listings/en-GB/graphics/wear-screenshots/` and run
-   `:app:publishListing`). Play won't review the Wear release without one.
+3. Get Wear screenshots onto the store listing; Play won't review the Wear
+   release without one. They're rendered from the `Play_Wear_*` previews in
+   `wear/.../ui/WearPreviews.kt` into
+   `app/src/main/play/listings/en-GB/graphics/wear-screenshots/` by
+   `scripts/render-play-screenshots.sh` (the **Play Store graphics** workflow
+   reruns it weekly). Upload them by setting `PLAY_PUBLISH_LISTING=true`, so
+   releases run `:app:publishListing`, or upload them by hand in the Console.
 4. The service account in `PLAY_SERVICE_ACCOUNT_JSON` already has access to
    this app for the phone; it needs **Release to testing tracks** (or Release
    manager), which covers the Wear tracks too.
