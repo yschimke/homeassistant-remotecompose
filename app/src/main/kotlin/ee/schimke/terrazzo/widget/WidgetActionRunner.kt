@@ -5,14 +5,16 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.terrazzoGraph
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Runs a launcher widget's toggle or service call against Home Assistant from the background: the
@@ -47,18 +49,30 @@ internal object WidgetActionRunner {
       return
     }
     val entityId = actionEntityId(action) ?: return
-    val before = graph.offlineCache.latestSnapshot(entry.baseUrl)
-    val expected = before?.let { optimisticState(action, it) }
-    if (before != null && expected != null) {
-      graph.offlineCache.putLatestSnapshot(entry.baseUrl, before.withState(entityId, expected))
-      redraw(context, widgetId)
-    }
+    // Only the tapped entity changes, atomically with any live refresh writing the same snapshot.
+    var before: String? = null
+    var expected: String? = null
+    val shown =
+      graph.offlineCache.updateLatestState(entry.baseUrl, entityId) { current ->
+        optimisticState(action, current)?.also {
+          before = current
+          expected = it
+        }
+      }
+    if (shown) redraw(context, widgetId)
     val result = runCatching { withTimeout(CALL_TIMEOUT_MS) { call(graph, entry.baseUrl, action) } }
     result.exceptionOrNull()?.let { failure ->
       Log.w(TAG, "Widget $widgetId action on $entityId failed", failure)
       graph.logStore.recordLocalAction("Widget action failed", entityId)
-      if (before != null && expected != null) {
-        graph.offlineCache.putLatestSnapshot(entry.baseUrl, before)
+      val original = before
+      // Put it back only if it still shows this tap's guess: a newer live state stands.
+      if (
+        shown &&
+          original != null &&
+          graph.offlineCache.updateLatestState(entry.baseUrl, entityId) { current ->
+            original.takeIf { current == expected }
+          }
+      ) {
         redraw(context, widgetId)
       }
     }
@@ -81,29 +95,42 @@ internal object WidgetActionRunner {
       tokensMutex.withLock { tokens.remove(baseUrl) }
       throw failure
     } finally {
-      runCatching { session.close() }
+      // A timed-out call is cancelled; the socket must still close, so close outside that.
+      withContext(NonCancellable) {
+        withTimeoutOrNull(CLOSE_TIMEOUT_MS) { runCatching { session.close() } }
+      }
     }
   }
 
-  private val tokensMutex = Mutex()
-  private val tokens = HashMap<String, Pair<String, Long>>()
+  /** A minted access token, the refresh token it was minted from, and when to stop using it. */
+  private class CachedToken(val refreshToken: String, val accessToken: String, val until: Long)
 
-  /** An access token for [baseUrl]: the cached one until shortly before it expires. */
+  private val tokensMutex = Mutex()
+  private val tokens = HashMap<String, CachedToken>()
+
+  /**
+   * An access token for [baseUrl]: the cached one until shortly before it expires, and only while
+   * the vault still holds the refresh token it came from. Signing out clears the vault, and signing
+   * in again (another user too) stores a new one, so a widget never acts on an old login.
+   */
   private suspend fun accessToken(graph: TerrazzoGraph, baseUrl: String): String =
     tokensMutex.withLock {
+      val refresh = graph.tokenVault.get(baseUrl)
+      if (refresh == null) {
+        tokens.remove(baseUrl)
+        error("Signed out of $baseUrl: no refresh token")
+      }
       val now = System.currentTimeMillis()
       tokens[baseUrl]
-        ?.takeIf { (_, expiresAt) -> expiresAt > now }
-        ?.let { (token, _) ->
-          return@withLock token
+        ?.takeIf { it.refreshToken == refresh && it.until > now }
+        ?.let {
+          return@withLock it.accessToken
         }
-      val refresh =
-        graph.tokenVault.get(baseUrl) ?: error("Signed out of $baseUrl: no refresh token")
       val minted = graph.authService.refreshAccessToken(baseUrl, refresh)
-      minted.refreshToken?.let { graph.tokenVault.put(baseUrl, it) }
+      val stored = minted.refreshToken?.also { graph.tokenVault.put(baseUrl, it) } ?: refresh
       val token = minted.accessToken ?: error("Token refresh for $baseUrl returned no token")
       val lifetimeMs = (minted.expiresInSeconds ?: DEFAULT_TOKEN_LIFETIME_S) * 1000
-      tokens[baseUrl] = token to now + lifetimeMs - TOKEN_EXPIRY_MARGIN_MS
+      tokens[baseUrl] = CachedToken(stored, token, now + lifetimeMs - TOKEN_EXPIRY_MARGIN_MS)
       token
     }
 
@@ -120,6 +147,7 @@ internal object WidgetActionRunner {
 
   /** Under a broadcast's 10 s budget, with room for the token refresh. */
   private const val CALL_TIMEOUT_MS = 8_000L
+  private const val CLOSE_TIMEOUT_MS = 2_000L
   private const val DEFAULT_TOKEN_LIFETIME_S = 1_800L
   private const val TOKEN_EXPIRY_MARGIN_MS = 60_000L
 }
@@ -139,13 +167,11 @@ internal fun actionEntityId(action: HaAction): String? =
   }
 
 /**
- * The state [action] puts its entity in, for actions whose result is plain on/off: a toggle of an
- * `on` / `off` entity, a `turn_on` / `turn_off` call. Null for anything else (a cover moving, a
- * value set), which the widget shows once a live session reports it.
+ * The state [action] puts its entity in from [current], for actions whose result is plain on/off: a
+ * toggle of an `on` / `off` entity, a `turn_on` / `turn_off` call. Null for anything else (a cover
+ * moving, a value set), which the widget shows once a live session reports it.
  */
-internal fun optimisticState(action: HaAction, snapshot: HaSnapshot): String? {
-  val entityId = actionEntityId(action) ?: return null
-  val current = snapshot.states[entityId]?.state ?: return null
+internal fun optimisticState(action: HaAction, current: String): String? {
   val service =
     when (action) {
       is HaAction.Toggle -> "toggle"
@@ -163,9 +189,4 @@ internal fun optimisticState(action: HaAction, snapshot: HaSnapshot): String? {
       }
     else -> null
   }
-}
-
-private fun HaSnapshot.withState(entityId: String, state: String): HaSnapshot {
-  val entity = states[entityId] ?: return this
-  return copy(states = states + (entityId to entity.copy(state = state)))
 }

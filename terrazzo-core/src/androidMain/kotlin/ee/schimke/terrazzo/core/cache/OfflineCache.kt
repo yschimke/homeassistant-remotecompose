@@ -117,13 +117,24 @@ open class OfflineCacheStorage(rootDir: File) {
   }
 
   /**
-   * Replace [baseUrl]'s latest snapshot (the one [latestSnapshot] reads) with [snapshot]: a widget
-   * shows the state a tap on it asked for before a live session reports it.
+   * Set [entityId]'s state in [baseUrl]'s latest snapshot (the one [latestSnapshot] reads) to what
+   * [update] returns for its current one, leaving every other entity as it is: a widget shows the
+   * state a tap on it asked for before a live session reports it. Atomic with [putSnapshot], so a
+   * live refresh landing meanwhile is never overwritten with an older copy. Returns whether it
+   * changed anything; [update] returning null leaves the entity alone.
    */
   @Synchronized
-  fun putLatestSnapshot(baseUrl: String, snapshot: HaSnapshot) {
+  fun updateLatestState(baseUrl: String, entityId: String, update: (String) -> String?): Boolean {
+    val snapshot = latestSnapshot(baseUrl) ?: return false
+    val entity = snapshot.states[entityId] ?: return false
+    val state = update(entity.state)?.takeIf { it != entity.state } ?: return false
     val pointer = readJson(snapshotPointerFile(baseUrl), SnapshotPointer.serializer())
-    putSnapshot(baseUrl, pointer?.urlPath, snapshot)
+    putSnapshot(
+      baseUrl,
+      pointer?.urlPath,
+      snapshot.copy(states = snapshot.states + (entityId to entity.copy(state = state))),
+    )
+    return true
   }
 
   /**

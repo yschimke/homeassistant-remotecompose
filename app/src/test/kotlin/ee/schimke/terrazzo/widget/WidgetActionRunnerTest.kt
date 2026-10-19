@@ -1,7 +1,5 @@
 package ee.schimke.terrazzo.widget
 
-import ee.schimke.ha.model.EntityState
-import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.encodeHaAction
 import kotlin.test.Test
@@ -43,22 +41,16 @@ class WidgetActionRunnerTest {
 
   @Test
   fun onOffActionsShowAtOnce() {
-    val snapshot =
-      HaSnapshot(
-        states =
-          listOf(EntityState("light.kitchen", "off"), EntityState("cover.garage", "closed"))
-            .associateBy { it.entityId }
-      )
-    assertEquals("on", optimisticState(toggle, snapshot))
+    assertEquals("on", optimisticState(toggle, "off"))
+    assertEquals("off", optimisticState(toggle, "on"))
     assertEquals(
       "off",
-      optimisticState(HaAction.CallService("light", "turn_off", "light.kitchen"), snapshot),
+      optimisticState(HaAction.CallService("light", "turn_off", "light.kitchen"), "on"),
     )
-    // A cover's motion, or an entity the snapshot doesn't hold, waits for Home Assistant.
+    // A cover's motion, or a toggle of a state that isn't on/off, waits for Home Assistant.
     assertNull(
-      optimisticState(HaAction.CallService("cover", "open_cover", "cover.garage"), snapshot)
+      optimisticState(HaAction.CallService("cover", "open_cover", "cover.garage"), "closed")
     )
-    assertNull(optimisticState(HaAction.Toggle("cover.garage"), snapshot))
-    assertNull(optimisticState(HaAction.Toggle("light.unknown"), snapshot))
+    assertNull(optimisticState(HaAction.Toggle("cover.garage"), "closed"))
   }
 }
