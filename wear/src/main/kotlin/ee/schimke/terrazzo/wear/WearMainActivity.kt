@@ -58,8 +58,8 @@ class WearMainActivity : ComponentActivity() {
     // Lease tracker — heartbeats while activity is foreground, so
     // phone streams live deltas instead of batching to DataStore.
     lifecycle.addObserver(WearLeaseController(lifecycleScope, repo))
-    // Slot widget plumbing — advertises the wear-widgets capability
-    // when the runtime supports it, then keeps each Slot{N}WidgetService
+    // Slot widget plumbing (the wear-widgets capability is declared
+    // statically in values-v37/wear.xml) — keeps each Slot{N}WidgetService
     // component enabled-state in lockstep with the phone-side
     // WearWidgetSlotsStore.
     slotsController = WearSlotsController(applicationContext, lifecycleScope, repo)
@@ -83,7 +83,6 @@ class WearMainActivity : ComponentActivity() {
   override fun onDestroy() {
     super.onDestroy()
     repo.stop()
-    slotsController.stop()
   }
 }
 

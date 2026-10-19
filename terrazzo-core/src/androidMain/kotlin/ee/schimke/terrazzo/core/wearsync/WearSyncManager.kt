@@ -17,6 +17,13 @@ import kotlinx.coroutines.flow.StateFlow
 interface WearSyncManager {
   fun setSession(session: HaSession?)
 
+  /**
+   * Sign-out: ends the session ([setSession] `null`) and deletes the account's data — dashboards,
+   * entity values, pictures, pins — from the watch, which forgets each item as its deletion
+   * arrives. A later session publishes its own again.
+   */
+  fun clearWatchData() {}
+
   val streamActive: StateFlow<Boolean>
 
   /**

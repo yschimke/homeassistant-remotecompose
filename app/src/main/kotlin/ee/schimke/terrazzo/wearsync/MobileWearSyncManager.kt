@@ -8,6 +8,7 @@ import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.NodeClient
 import com.google.android.gms.wearable.PutDataMapRequest
+import com.google.android.gms.wearable.PutDataRequest
 import com.google.android.gms.wearable.Wearable
 import com.google.android.horologist.data.WearDataLayerRegistry
 import ee.schimke.ha.client.design.CardDesignOverrides
@@ -51,13 +52,16 @@ import ee.schimke.terrazzo.widget.WidgetImages
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -152,6 +156,54 @@ class MobileWearSyncManager(
     sessionState.value = session
   }
 
+  override fun clearWatchData() {
+    // First, so no account write is issued after the deletes below ([writeDataItem] checks it).
+    sessionState.value = null
+    if (!::managerScope.isInitialized) return
+    managerScope.launch {
+      streamJob?.cancelAndJoin()
+      deleteDataItems(WATCH_ACCOUNT_DATA)
+    }
+  }
+
+  /** Deletes [targets] from the Data Layer, on every node that wrote them. */
+  private suspend fun deleteDataItems(targets: List<WearDataItems>) {
+    if (!wearableAvailableState.value) return
+    for (target in targets) {
+      val filter = if (target.prefix) DataClient.FILTER_PREFIX else DataClient.FILTER_LITERAL
+      runCatching { dataClient.deleteDataItems(wearUri(target.path), filter).await() }
+        .onFailure {
+          if (it is CancellationException) throw it
+          handleFailure("deleteDataItems ${target.path}", it)
+        }
+    }
+  }
+
+  /** The paths of the Data Layer items under [prefix]; empty if they can't be read. */
+  private suspend fun dataItemPaths(prefix: String): List<String> {
+    if (!wearableAvailableState.value) return emptyList()
+    val buffer =
+      runCatching { dataClient.getDataItems(wearUri(prefix), DataClient.FILTER_PREFIX).await() }
+        .onFailure {
+          if (it is CancellationException) throw it
+          handleFailure("getDataItems $prefix", it)
+        }
+        .getOrNull() ?: return emptyList()
+    return try {
+      buffer.mapNotNull { it.uri.path }
+    } finally {
+      buffer.release()
+    }
+  }
+
+  /** Account items (pins, slots) are held back while signed out and re-sent on the next session. */
+  private fun <T : Any> Flow<T>.whileSignedIn(): Flow<T> =
+    this.combine(sessionState.map { it != null }.distinctUntilChanged()) { value, signedIn ->
+        value.takeIf { signedIn }
+      }
+      .distinctUntilChanged()
+      .filterNotNull()
+
   /**
    * Whether the wear node currently has an active lease. Combined with pinned-cards count to decide
    * between streaming and batched DataStore writes.
@@ -210,6 +262,7 @@ class MobileWearSyncManager(
           cards.resolvedFor(snapshot) to overrides
         }
         .distinctUntilChanged()
+        .whileSignedIn()
         .collect { (cards, overrides) ->
           writeDataItem(WearSyncPaths.PINNED, encodeProto(cards.toWearPinnedCards(overrides)))
         }
@@ -221,6 +274,7 @@ class MobileWearSyncManager(
           sections.resolvedFor(snapshot)
         }
         .distinctUntilChanged()
+        .whileSignedIn()
         .collect { writeDataItem(WearSyncPaths.SECTIONS, encodeProto(it.toProto())) }
     }
 
@@ -230,6 +284,7 @@ class MobileWearSyncManager(
       slotsStore.slots
         .map { it.toProto() }
         .distinctUntilChanged()
+        .whileSignedIn()
         .collect { writeDataItem(WearSyncPaths.SLOTS, encodeProto(it)) }
     }
 
@@ -301,6 +356,10 @@ class MobileWearSyncManager(
           )
         writeDataItem(WearSyncPaths.dashboardPath(summary.urlPath), encodeProto(data))
       }
+      // Every dashboard listed and written: drop the ones Home Assistant no longer has.
+      val current = summaries.map { WearSyncPaths.dashboardPath(it.urlPath) }
+      val stale = staleDashboardPaths(dataItemPaths(WearSyncPaths.DASHBOARD_PREFIX), current)
+      deleteDataItems(stale.map { WearDataItems(it, prefix = false) })
     }
       .onFailure {
         if (it is CancellationException) throw it
@@ -334,9 +393,12 @@ class MobileWearSyncManager(
       if (snapshot != null) {
         registrySnapshot.value = snapshot
         val current = snapshot.states.mapValues { (_, state) -> state.toEntityValue(snapshot) }
+        // When the snapshot was fetched: a cached one (app backgrounded, offline) isn't fresh.
+        val capturedAtMs =
+          valuesCapturedAtMs(session.snapshotFetchedAtMs(null), System.currentTimeMillis())
         val delivery = valuesDelivery(hasPinned, watchAppOpen = isLeaseFresh(leaseState.value))
-        if (delivery.stream) pushStream(current)
-        if (delivery.dataItem) pushValuesItem(current)
+        if (delivery.stream) pushStream(current, capturedAtMs)
+        if (delivery.dataItem) pushValuesItem(current, capturedAtMs)
         pushPictures(session.baseUrl, snapshot)
       }
       delay(cadence)
@@ -344,35 +406,36 @@ class MobileWearSyncManager(
   }
 
   /** The `/wear/values` DataItem, when [values] changed since the last one written. */
-  private suspend fun pushValuesItem(values: Map<String, EntityValue>) {
+  private suspend fun pushValuesItem(values: Map<String, EntityValue>, capturedAtMs: Long) {
     if (values == lastValuesItem) return
-    val payload = LiveValues(values = values, capturedAtMs = System.currentTimeMillis())
+    val payload = LiveValues(values = values, capturedAtMs = capturedAtMs)
     // Urgent: it is the widgets' only update path while the app is closed, and a non-urgent item
     // can wait up to 30 minutes to sync. Recorded only once written, so a failed write is retried.
     if (writeDataItem(WearSyncPaths.VALUES, encodeProto(payload))) lastValuesItem = values
   }
 
-  private suspend fun pushStream(values: Map<String, EntityValue>) {
+  private suspend fun pushStream(values: Map<String, EntityValue>, capturedAtMs: Long) {
     if (!wearableAvailableState.value) return
     val deltas =
-      values.entries
-        .filter { (k, v) -> lastSnapshot[k] != v }
-        .map { (k, v) -> EntityDelta(entityId = k, value = v) }
+      streamDeltas(lastSnapshot, values).map { (k, v) -> EntityDelta(entityId = k, value = v) }
     if (deltas.isEmpty()) return
-    val frame = StreamUpdate(deltas = deltas, capturedAtMs = System.currentTimeMillis())
-    runCatching {
+    val frame = StreamUpdate(deltas = deltas, capturedAtMs = capturedAtMs)
+    val delivered = runCatching {
       val nodes = nodeClient.connectedNodes.await()
       val bytes = encodeProto(frame)
       for (node in nodes) {
         messageClient.sendMessage(node.id, WearSyncPaths.STREAM_MESSAGE, bytes).await()
       }
       statsStore.recordMessageSent(System.currentTimeMillis())
+      nodes.isNotEmpty()
     }
       .onFailure {
         if (it is CancellationException) throw it
         handleFailure("pushStream", it)
       }
-    lastSnapshot = values
+      .getOrDefault(false)
+    // A failed (or watchless) send keeps the old baseline, so its deltas go out again next tick.
+    lastSnapshot = streamBaselineAfterSend(lastSnapshot, values, delivered)
   }
 
   /**
@@ -403,6 +466,8 @@ class MobileWearSyncManager(
   /** Writes [bytes] at [path]; false when the wearable API is unavailable or the write failed. */
   private suspend fun writeDataItem(path: String, bytes: ByteArray): Boolean {
     if (!wearableAvailableState.value) return false
+    // Signed out: nothing of the account may land after [clearWatchData]'s deletes.
+    if (path != WearSyncPaths.SETTINGS && sessionState.value == null) return false
     return runCatching {
       val request =
         PutDataMapRequest.create(path).apply {
@@ -659,6 +724,10 @@ private fun PinnedCardData.toProto(): CardSummary =
     primaryEntityId = this.primaryEntity,
     rawJson = this.rawJson,
   )
+
+/** The Data Layer items at [path] written by any node: the URI with the `*` (any node) host. */
+private fun wearUri(path: String): android.net.Uri =
+  android.net.Uri.Builder().scheme(PutDataRequest.WEAR_URI_SCHEME).authority("*").path(path).build()
 
 private suspend fun <T> com.google.android.gms.tasks.Task<T>.await(): T =
   kotlinx.coroutines.suspendCancellableCoroutine { cont ->
