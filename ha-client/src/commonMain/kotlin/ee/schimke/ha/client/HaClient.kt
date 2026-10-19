@@ -608,7 +608,7 @@ class HaClient(
     type: String,
     extra: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit,
   ): JsonObject {
-    val s = session ?: error("Not connected — call connect() first")
+    val s = session ?: throw CommandNotSentException("Not connected — call connect() first")
     val id = idMutex.withLock { nextId++ }
     val deferred = CompletableDeferred<JsonObject>()
     pendingMutex.withLock { pending[id] = Pending(s, deferred) }
@@ -625,8 +625,12 @@ class HaClient(
       // current socket across the write so a reconnect can't swap it
       // out under us.
       sessionMutex.withLock {
-        val live = session ?: error("Not connected — socket closed before send (cmd=$type)")
-        if (live !== s) error("Connection replaced before send (cmd=$type)")
+        val live =
+          session
+            ?: throw CommandNotSentException(
+              "Not connected — socket closed before send (cmd=$type)"
+            )
+        if (live !== s) throw CommandNotSentException("Connection replaced before send (cmd=$type)")
         live.send(json.encodeToString(JsonObject.serializer(), msg))
       }
       return withTimeout(30_000) {
@@ -797,3 +801,10 @@ private fun kotlinx.serialization.json.JsonElement.nullableString(): String? =
     is kotlinx.serialization.json.JsonPrimitive -> content
     else -> null
   }
+
+/**
+ * A command refused before it was written to the socket (none open, or it closed or was replaced
+ * first): Home Assistant never saw it, so it is safe to send again on another connection. Any other
+ * failure may have reached Home Assistant.
+ */
+class CommandNotSentException(message: String) : IllegalStateException(message)

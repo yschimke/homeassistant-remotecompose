@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import ee.schimke.ha.client.CommandNotSentException
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.session.DemoData
@@ -97,13 +98,25 @@ internal object WidgetActionRunner {
     val live = appSession?.takeIf {
       it.baseUrl == baseUrl && it.connectionStatus.value == SessionConnectionStatus.Connected
     }
-    // A failed call on the live socket isn't retried on a new one: Home Assistant may have run it
-    // with only the reply lost, and a second toggle would undo the first.
-    if (live != null) send(live, action) else callOnNewSession(graph, baseUrl, action)
+    // The app's socket may be closing as it is picked (the app just went to the background). A call
+    // it refused before sending goes on a new session; any other failure isn't retried, since Home
+    // Assistant may have run it with only the reply lost, and a second toggle would undo the first.
+    val path =
+      if (live == null) {
+        callOnNewSession(graph, baseUrl, action)
+        "a new session"
+      } else {
+        try {
+          send(live, action)
+          "the app's session"
+        } catch (notSent: CommandNotSentException) {
+          callOnNewSession(graph, baseUrl, action)
+          "a new session (the app's was closing)"
+        }
+      }
     Log.i(
       TAG,
-      "Widget ${actionEntityId(action)} on ${if (live != null) "the app's session" else "a new session"}" +
-        " in ${(System.nanoTime() - started) / 1_000_000} ms",
+      "Widget ${actionEntityId(action)} on $path in ${(System.nanoTime() - started) / 1_000_000} ms",
     )
   }
 
