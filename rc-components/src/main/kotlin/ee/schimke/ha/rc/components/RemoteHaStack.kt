@@ -17,11 +17,9 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import java.text.DecimalFormat
-import java.util.UUID
 
 /**
  * Layout wrappers mirroring HA's `vertical-stack`, `horizontal-stack` and `grid` card types. The
@@ -53,7 +51,7 @@ fun RemoteHaHorizontalStack(
   cell: @Composable @RemoteComposable (index: Int) -> Unit,
 ) {
   val columns = cellCount.coerceAtLeast(1)
-  val name = remember { "$GridWidthExpressionPrefix${UUID.randomUUID()}" }
+  val name = rememberExpressionName(GridWidthExpressionPrefix)
   val stackWidthPx =
     RemoteFloat.createNamedRemoteFloatExpression(name = name, domain = RemoteState.Domain.User) {
       componentWidth()
@@ -110,7 +108,7 @@ fun RemoteHaGrid(
   cell: @Composable @RemoteComposable (index: Int) -> Unit,
 ) {
   val columns = perRow.coerceAtLeast(1)
-  val name = remember { "$GridWidthExpressionPrefix${UUID.randomUUID()}" }
+  val name = rememberExpressionName(GridWidthExpressionPrefix)
   val gridWidthPx =
     RemoteFloat.createNamedRemoteFloatExpression(name = name, domain = RemoteState.Domain.User) {
       componentWidth()

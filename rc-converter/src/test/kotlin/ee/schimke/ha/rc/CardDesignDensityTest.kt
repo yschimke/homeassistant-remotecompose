@@ -9,6 +9,7 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.rc.cards.TileCardConverter
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -50,13 +51,6 @@ class CardDesignDensityTest {
       theme = DesignKey.bakedTheme("Material3", true),
     )
 
-  /**
-   * [bytes] with each `RemoteSizeBreakpoint`'s name made constant: a breakpoint names its width
-   * expression with a fresh UUID per capture, which is unique per document, not a display value.
-   */
-  private fun withoutBreakpointIds(bytes: ByteArray): ByteArray =
-    String(bytes, Charsets.ISO_8859_1).replace(BREAKPOINT_ID, "-").toByteArray(Charsets.ISO_8859_1)
-
   private fun captureAt(qualifiers: String, key: DesignKey): ByteArray {
     RuntimeEnvironment.setQualifiers(qualifiers)
     return CardDesignTemplates.capture(context, key).bytes
@@ -66,11 +60,25 @@ class CardDesignDensityTest {
   fun aTemplateIsTheSameAtEveryDensity() {
     for (key in listOf(tile, grid)) {
       assertContentEquals(
-        withoutBreakpointIds(captureAt("xhdpi", key)),
-        withoutBreakpointIds(captureAt("xxhdpi", key)),
+        captureAt("xhdpi", key),
+        captureAt("xxhdpi", key),
         "${key.cardType} captures the same at xhdpi and xxhdpi",
       )
     }
+  }
+
+  @Test
+  fun aTemplateCapturesTheSameEveryTime() {
+    val first = captureAt("xhdpi", grid)
+    assertContentEquals(first, captureAt("xhdpi", grid), "the grid captures reproducibly")
+    // Reproducible, but still one expression per call site: the grid's width gate, and the grid
+    // width each of its two tiers lays its cells out by.
+    val names =
+      Regex("__terrazzo_(breakpoint|grid_width)_[0-9a-f]+")
+        .findAll(String(first, Charsets.ISO_8859_1))
+        .map { it.value }
+        .toSet()
+    assertEquals(3, names.size, "each call site names its own expression: $names")
   }
 
   @Test
@@ -93,9 +101,5 @@ class CardDesignDensityTest {
     assertFalse(xxhdpi.contentEquals(large), "and so is the font scale")
     // Folded once: the same bytes come back for the same display.
     kotlin.test.assertSame(xxhdpi, CardDesignTemplates.forDisplay(template, 3f, 1f))
-  }
-
-  private companion object {
-    val BREAKPOINT_ID = Regex("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
   }
 }

@@ -12,10 +12,9 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import ee.schimke.ha.rc.components.rememberExpressionName
 import java.text.DecimalFormat
-import java.util.UUID
 
 /**
  * A two-dimensional, single-gate breakpoint: [content] is captured twice, `roomy = true` for a cell
@@ -53,7 +52,7 @@ fun RemoteMinSizeGate(
     return
   }
 
-  val gateName = remember { "__min_size_gate_${UUID.randomUUID()}" }
+  val gateName = rememberExpressionName("__min_size_gate_")
   // ratio = minW/minH, so `h · ratio ≥ minW` ⇔ `h ≥ minH`.
   val ratio = minWidthDp.toFloat() / minHeightDp.toFloat()
   val gate =

@@ -11,8 +11,6 @@ import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.toRemoteDp
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import java.util.UUID
 
 /**
  * A full-width box whose height follows its **live** width: `height = width ÷ ratio`.
@@ -39,7 +37,7 @@ fun RemoteAspectRatioBox(
   content: @Composable @RemoteComposable () -> Unit,
 ) {
   require(ratio > 0f && ratio.isFinite()) { "aspect ratio must be positive: $ratio" }
-  val name = remember { "$AspectExpressionPrefix${UUID.randomUUID()}" }
+  val name = rememberExpressionName(AspectExpressionPrefix)
   // In a grid cell, the cell's width as the grid computes it; anywhere else, this box's own.
   val widthPx =
     LocalGridCellWidthPx.current
