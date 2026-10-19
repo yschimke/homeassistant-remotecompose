@@ -1,0 +1,53 @@
+name: Add-on image
+
+# Builds the Home Assistant add-on image (addon-server/addon/Dockerfile) and smoke-tests it. The
+# Dockerfile copies only the modules the add-on needs and builds them without an Android SDK, so
+# this catches a new module dependency or build-logic change that would break the image. Unit
+# tests for :addon-server run in ci.yml's `./gradlew test`.
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - addon-server/**
+      - ha-client/**
+      - ha-model/**
+      - build-logic/**
+      - gradle/**
+      - settings.gradle.kts
+      - build.gradle.kts
+      - gradle.properties
+      - .github/workflows/addon-server.yml
+  pull_request:
+    branches: [main]
+    paths: *paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: addon-server-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  image:
+    name: Build and smoke-test the add-on image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Build the image
+        run: docker build -f addon-server/addon/Dockerfile -t ha-remotecompose-addon .
+      - name: Smoke-test health and auth
+        # No Home Assistant here: the bridge just retries in the background. Health stays public,
+        # and with no ingress gateway every /v1 call needs a token HA would have to accept.
+        run: |
+          docker run -d --name addon -p 8099:8099 \
+            -e HA_BASE_URL=http://127.0.0.1:9 -e HA_TOKEN=ci-token ha-remotecompose-addon
+          for _ in $(seq 1 60); do curl -sf localhost:8099/healthz >/dev/null && break; sleep 1; done
+          curl -sf localhost:8099/healthz | grep -qx ok
+          status=$(curl -s -o /dev/null -w '%{http_code}' localhost:8099/v1/snapshot)
+          test "$status" = 401 || { echo "expected 401 without a token, got $status"; exit 1; }
+      - name: Container logs
+        if: always()
+        run: docker logs addon 2>&1 | tail -100 || true

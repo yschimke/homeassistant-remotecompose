@@ -225,9 +225,10 @@ authenticated` on either side of the gap.
 
 `addon/config.yaml` declares `ingress: true`, `ingress_port: 8099`. The
 supervisor reverse-proxies HA's browser session at
-`/api/hassio_ingress/<token>/...` straight into our Ktor server. No
-authentication code on our side — the supervisor only forwards requests
-from already-authenticated HA users.
+`/api/hassio_ingress/<token>/...` straight into our Ktor server. The
+supervisor only forwards requests from already-authenticated HA users, and
+always from its ingress gateway address `172.30.32.2`; `AddonAuth` trusts
+requests whose TCP peer is that address (never a forwarded header).
 
 This path is "free": every existing HA web user can hit our REST + WS
 endpoints under their existing login. Nothing else needs to be wired up
@@ -240,11 +241,23 @@ also publishes its port on the LAN. `addon/config.yaml` exposes
 `8099/tcp` (default mapping is `null` — the user picks the host port in
 the add-on UI). Clients then talk to `http://<ha-host>:<port>/v1/...`.
 
-This path needs explicit auth. The current prototype trusts whoever
-reaches the port; the production behaviour described in PLAN.md
-"§Auth → External" is `Authorization: Bearer <ha-token>`, validated by
-proxying a `GET /api/` to HA Core with the supplied token. **Not yet
-implemented** — landing it is M4 in the plan.
+Every request that doesn't come from the ingress gateway — REST and the
+`/v1/stream` WebSocket upgrade alike — must carry
+`Authorization: Bearer <HA access token>` (a long-lived token from
+Profile → Security). `AddonAuth` validates it with `GET /api/` against
+Home Assistant Core *using that token*, and caches a successful check for
+60 s; a missing or rejected token gets `401`, and `503` if Core can't be
+asked. Only `/healthz` and `/readyz` are public.
+
+Where the token is checked:
+
+- **supervisor** mode: Core directly at `http://homeassistant:<port>`, the
+  port read from `GET http://supervisor/core/info` (`hassio_api`). The
+  supervisor's `/core/api` proxy can't be used — it only accepts add-on
+  tokens. If Core serves TLS itself, its certificate doesn't name
+  `homeassistant`, so direct-port requests fail closed (`503`) and only
+  ingress works.
+- **external** mode: `HA_AUTH_URL` if set, else `HA_BASE_URL`.
 
 ### 3.4 Installing the add-on into a real HA Supervisor
 
