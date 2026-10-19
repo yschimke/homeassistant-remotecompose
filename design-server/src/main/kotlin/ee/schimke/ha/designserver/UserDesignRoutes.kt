@@ -33,19 +33,19 @@ class ServedManifest(val bytes: ByteArray, val etag: String)
 
 /**
  * The manifest [login] (null for anyone) is served: the library's, plus every design its author
- * shared, plus [login]'s own private ones. Its serial adds the store's revision to the library's,
- * so it rises whenever either changes and a client never takes it for a rollback. With nothing to
- * add, the library's manifest goes out byte for byte.
+ * shared, plus [login]'s own private ones. Its serial adds a store revision to the library's (the
+ * shared-set revision for anyone, every change for a signed-in caller), so it rises whenever either
+ * changes and never falls, even once the last shared design is unshared: a client never takes it
+ * for a rollback. Only while the store has never changed what the caller sees does the library's
+ * manifest go out byte for byte, signature and all.
  */
 fun DesignLibrary.manifestFor(store: UserDesignStore?, login: String?): ServedManifest {
-  val extra =
-    store
-      ?.let { (it.shared() + login?.let(it::designs).orEmpty()).distinctBy { d -> d.entry } }
-      .orEmpty()
-  if (extra.isEmpty()) return ServedManifest(manifestBytes, manifestEtag)
+  val offset = store?.let { if (login == null) it.sharedRevision else it.revision } ?: 0L
+  if (store == null || offset == 0L) return ServedManifest(manifestBytes, manifestEtag)
+  val extra = (store.shared() + login?.let(store::designs).orEmpty()).distinctBy { d -> d.entry }
   val merged: DesignManifest =
     manifest.copy(
-      serial = manifest.serial + store!!.revision,
+      serial = manifest.serial + offset,
       designs = manifest.designs + extra.map { it.entry },
       // The library's signature covers the library alone.
       signature = null,
