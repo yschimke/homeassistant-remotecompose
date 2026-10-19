@@ -21,11 +21,13 @@ import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.semantics
 import androidx.compose.remote.creation.compose.modifier.width
+import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.RemoteTextUnit
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.text.RemoteFontFamily
+import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -44,70 +46,108 @@ import androidx.compose.ui.text.style.TextOverflow
 @Composable
 @RemoteComposable
 fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModifier) {
-  val theme = haTheme()
-  RemoteBox(
-    modifier =
-      modifier
-        .fillMaxWidth()
-        .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 12.rdp, vertical = 10.rdp)
-  ) {
-    RemoteColumn {
-      if (data.title != null) {
-        RemoteText(
-          text = cardTitle(data.title),
-          color = theme.primaryText,
-          fontSize = adaptiveTitleSize(data.title),
-          fontWeight = FontWeight.Medium,
-          style = haTextStyle(),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
-        RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp))
-      }
-      data.blocks.forEach { block ->
-        when (block.kind) {
-          MarkdownBlock.Kind.Heading -> {
-            val size =
-              when (block.level) {
-                1 -> HaType.Title
-                2,
-                3 -> HaType.BodyLarge
-                else -> HaType.Body
-              }
-            MarkdownLine(
-              block = block,
-              theme = theme,
-              fontSize = size,
-              fontWeight = FontWeight.SemiBold,
-            )
-          }
-          MarkdownBlock.Kind.Bullet ->
-            MarkdownLine(
-              block = block,
-              theme = theme,
-              fontSize = HaType.Body,
-              fontWeight = FontWeight.Normal,
-              bullet = true,
-            )
-          MarkdownBlock.Kind.Divider -> {
-            RemoteBox(
-              modifier =
-                RemoteModifier.padding(vertical = 4.rdp)
-                  .fillMaxWidth()
-                  .height(1.rdp)
-                  .background(theme.divider)
-            )
-          }
-          MarkdownBlock.Kind.Paragraph ->
-            MarkdownLine(
-              block = block,
-              theme = theme,
-              fontSize = HaType.Body,
-              fontWeight = FontWeight.Normal,
-            )
+  // The note's material is its visual family's (docs/design/everyday-cards.md §4): what it sits
+  // on, how its title is set, and how its blocks are marked. Blocks keep their live bindings.
+  val material = markdownMaterial()
+  RemoteColumn(modifier = modifier.fillMaxWidth()) {
+    RemoteBox(modifier = RemoteModifier.fillMaxWidth().then(material.surface)) {
+      RemoteColumn(
+        modifier = RemoteModifier.fillMaxWidth().then(material.decoration).then(material.padding)
+      ) {
+        if (data.title != null) {
+          MarkdownTitle(cardTitle(data.title), adaptiveTitleSize(data.title), material.ink)
+          RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp))
+        }
+        val screen = material.screen
+        if (screen != null) {
+          RemoteColumn(modifier = screen) { MarkdownBlocks(data, material) }
+        } else {
+          MarkdownBlocks(data, material)
         }
       }
+    }
+    if (visualFamily() == HaVisualFamily.Bubble && LocalCardChromeEnabled.current) BubbleTail()
+  }
+}
+
+/** The note's blocks, dressed by [material]. */
+@Composable
+@RemoteComposable
+private fun MarkdownBlocks(data: HaMarkdownData, material: MarkdownMaterial) {
+  val theme = haTheme()
+  var step = 0
+  data.blocks.forEachIndexed { index, block ->
+    if (material.dividesBlocks && index > 0 && block.kind != MarkdownBlock.Kind.Divider) {
+      RemoteBox(
+        modifier =
+          RemoteModifier.padding(vertical = 6.rdp)
+            .fillMaxWidth()
+            .height(1.rdp)
+            .background(theme.divider)
+      )
+    }
+    when (block.kind) {
+      MarkdownBlock.Kind.Heading -> {
+        val size =
+          when (block.level) {
+            1 -> HaType.Title
+            2,
+            3 -> HaType.BodyLarge
+            else -> HaType.Body
+          }
+        val marker =
+          if (material.showsMarkers) "#".repeat(block.level.coerceIn(1, 6)) + " " else null
+        val line: @Composable () -> Unit = {
+          MarkdownLine(
+            block = block,
+            theme = theme,
+            fontSize = size,
+            fontWeight = FontWeight.SemiBold,
+            material = material,
+            marker = marker,
+          )
+        }
+        if (material.numbersHeadings) {
+          step += 1
+          val number = step
+          RemoteRow(
+            modifier = RemoteModifier.padding(vertical = 2.rdp),
+            verticalAlignment = RemoteAlignment.CenterVertically,
+            horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
+          ) {
+            LeafletStep(number)
+            line()
+          }
+        } else {
+          line()
+        }
+      }
+      MarkdownBlock.Kind.Bullet ->
+        MarkdownLine(
+          block = block,
+          theme = theme,
+          fontSize = HaType.Body,
+          fontWeight = material.bodyWeight,
+          material = material,
+          marker = if (material.showsMarkers) "- " else "• ",
+        )
+      MarkdownBlock.Kind.Divider -> {
+        RemoteBox(
+          modifier =
+            RemoteModifier.padding(vertical = 4.rdp)
+              .fillMaxWidth()
+              .height(1.rdp)
+              .background(theme.divider)
+        )
+      }
+      MarkdownBlock.Kind.Paragraph ->
+        MarkdownLine(
+          block = block,
+          theme = theme,
+          fontSize = HaType.Body,
+          fontWeight = material.bodyWeight,
+          material = material,
+        )
     }
   }
 }
@@ -123,38 +163,40 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
 fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = RemoteModifier) {
   val theme = haTheme()
   val firstLine = data.blocks.firstOrNull { it.kind != MarkdownBlock.Kind.Divider }
+  // The same material as the full note, so a launcher cell reads as the same family's note.
+  val material = markdownMaterial()
+  val haReference =
+    visualFamily().let { it == HaVisualFamily.Classic || it == HaVisualFamily.HomeAssistant }
   RemoteBox(
-    modifier =
-      modifier
-        .fillMaxSize()
-        .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 12.rdp, vertical = 10.rdp),
+    modifier = modifier.fillMaxSize().then(material.surface),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteColumn(
-      modifier = RemoteModifier.fillMaxWidth(),
-      verticalArrangement = RemoteArrangement.spacedBy(4.rdp),
+      modifier = RemoteModifier.fillMaxSize().then(material.decoration).then(material.padding),
+      verticalArrangement = RemoteArrangement.spacedBy(4.rdp, RemoteAlignment.CenterVertically),
     ) {
       if (data.title != null) {
-        RemoteText(
-          text = cardTitle(data.title),
-          color = theme.primaryText,
-          fontSize = HaType.Title,
-          fontWeight = FontWeight.SemiBold,
-          style = haTextStyle(),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
+        if (haReference)
+          RemoteText(
+            text = cardTitle(data.title),
+            color = theme.primaryText,
+            fontSize = HaType.Title,
+            fontWeight = FontWeight.SemiBold,
+            style = haTextStyle(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+        else MarkdownTitle(cardTitle(data.title), HaType.Title, material.ink)
       }
       if (firstLine != null) {
         val emphasis = firstLine.drawnStyle
         RemoteText(
           text = firstLine.boundText ?: firstLine.text.rs,
-          color = theme.secondaryText,
+          color = if (currentHaUberTheme().ink != null) material.ink else theme.secondaryText,
           fontSize = HaType.Body,
           fontWeight = emphasis.weight(FontWeight.Normal),
           fontFamily = emphasis.fontFamily,
-          style = haTextStyle(),
+          style = material.bodyStyle,
           maxLines = if (data.title != null) 2 else 3,
           overflow = TextOverflow.Ellipsis,
         )
@@ -175,49 +217,77 @@ private fun MarkdownLine(
   theme: RemoteHaTheme,
   fontSize: RemoteTextUnit,
   fontWeight: FontWeight,
-  bullet: Boolean = false,
+  material: MarkdownMaterial,
+  marker: String? = null,
 ) {
-  val primary = theme.primaryText
+  val primary = material.ink
+  val style = material.bodyStyle
+  // Obsidian keeps the source markers, muted, in their own run; elsewhere a bullet's dot leads
+  // the line in the body ink.
+  val mutedMarker: @Composable () -> Unit = {
+    if (marker != null) {
+      RemoteText(
+        text = marker.rs,
+        color = theme.secondaryText,
+        fontSize = fontSize,
+        fontWeight = fontWeight,
+        fontFamily = RemoteFontFamily.Monospace,
+        style = style,
+      )
+    }
+  }
   if (!block.hasInlineMarkup) {
     val text = block.boundText ?: block.text.rs
     val emphasis = block.drawnStyle
-    RemoteText(
-      text = if (bullet) "• ".rs + text else text,
-      color = primary,
-      fontSize = fontSize,
-      fontWeight = emphasis.weight(fontWeight),
-      fontFamily = emphasis.fontFamily,
-      style = haTextStyle(),
-    )
+    val line: @Composable () -> Unit = {
+      RemoteText(
+        text = if (marker != null && !material.showsMarkers) marker.rs + text else text,
+        color = primary,
+        fontSize = fontSize,
+        fontWeight = emphasis.weight(fontWeight),
+        fontFamily = emphasis.fontFamily,
+        style = style,
+      )
+    }
+    if (marker != null && material.showsMarkers) {
+      RemoteRow {
+        mutedMarker()
+        line()
+      }
+    } else {
+      line()
+    }
     return
   }
 
   val content: @Composable () -> Unit = {
-    if (bullet) {
-      RemoteText(
-        text = "• ".rs,
-        color = primary,
-        fontSize = fontSize,
-        fontWeight = fontWeight,
-        style = haTextStyle(),
-      )
+    if (marker != null) {
+      if (material.showsMarkers) mutedMarker()
+      else
+        RemoteText(
+          text = marker.rs,
+          color = primary,
+          fontSize = fontSize,
+          fontWeight = fontWeight,
+          style = style,
+        )
     }
     flowItems(block.inlines).forEach { item ->
       when (item) {
         is FlowItem.Word ->
           if (item.pieces.size == 1) {
             val (text, emphasis) = item.pieces.single()
-            EmphasisText(text, emphasis, primary, fontSize, fontWeight)
+            EmphasisText(text, emphasis, primary, fontSize, fontWeight, style)
           } else {
             // A word that changes emphasis part-way (`**bold**,`) stays one
             // unbreakable flow item, its pieces abutting with no gap.
             RemoteRow {
               item.pieces.forEach { (text, emphasis) ->
-                EmphasisText(text, emphasis, primary, fontSize, fontWeight)
+                EmphasisText(text, emphasis, primary, fontSize, fontWeight, style)
               }
             }
           }
-        is FlowItem.Span -> InlineSpan(item.inline, theme, fontSize, fontWeight)
+        is FlowItem.Span -> InlineSpan(item.inline, theme, primary, fontSize, fontWeight, style)
       }
     }
   }
@@ -287,9 +357,10 @@ private fun flowItems(inlines: List<MarkdownInline>): List<FlowItem> {
 private fun EmphasisText(
   text: String,
   emphasis: MarkdownStyle,
-  color: androidx.compose.remote.creation.compose.state.RemoteColor,
+  color: RemoteColor,
   fontSize: RemoteTextUnit,
   fontWeight: FontWeight,
+  style: RemoteTextStyle,
 ) {
   RemoteText(
     text = text.rs,
@@ -297,7 +368,7 @@ private fun EmphasisText(
     fontSize = fontSize,
     fontWeight = emphasis.weight(fontWeight),
     fontFamily = emphasis.fontFamily,
-    style = haTextStyle(),
+    style = style,
   )
 }
 
@@ -307,10 +378,11 @@ private fun EmphasisText(
 private fun InlineSpan(
   inline: MarkdownInline,
   theme: RemoteHaTheme,
+  primary: RemoteColor,
   fontSize: RemoteTextUnit,
   fontWeight: FontWeight,
+  style: RemoteTextStyle,
 ) {
-  val primary = theme.primaryText
   val link = theme.linkText
   when (inline) {
     is MarkdownInline.Text -> {
@@ -324,7 +396,7 @@ private fun InlineSpan(
         fontSize = fontSize,
         fontWeight = emphasis.weight(fontWeight),
         fontFamily = emphasis.fontFamily,
-        style = haTextStyle(),
+        style = style,
       )
     }
     is MarkdownInline.Link -> {
@@ -336,7 +408,7 @@ private fun InlineSpan(
         fontSize = fontSize,
         fontWeight = emphasis.weight(fontWeight),
         fontFamily = emphasis.fontFamily,
-        style = haTextStyle(),
+        style = style,
         modifier = click?.let { RemoteModifier.clickable(it) } ?: RemoteModifier,
       )
     }
