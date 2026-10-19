@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.46](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.45...v0.1.46) (2026-10-19)
+
+
+### Features
+
+* show the four most common cards under every uber theme ([#965](https://github.com/yschimke/homeassistant-remotecompose/issues/965)) ([cab4908](https://github.com/yschimke/homeassistant-remotecompose/commit/cab49088a726314d31434628ae7537d8331aa5c5))
+
+
+### Bug Fixes
+
+* **android:** hoist the HA session into a ViewModel so it survives rotation ([#956](https://github.com/yschimke/homeassistant-remotecompose/issues/956)) ([cd8b361](https://github.com/yschimke/homeassistant-remotecompose/commit/cd8b3618eeb2dcf8f476284af92f522c2e6c77ec))
+* **android:** keep sign-in working when the Activity is recreated mid-login ([#957](https://github.com/yschimke/homeassistant-remotecompose/issues/957)) ([c682401](https://github.com/yschimke/homeassistant-remotecompose/commit/c682401ae5099bbd20dff86dd06fc9a0363ec874))
+* **deps:** update compose-ai-tools ([#962](https://github.com/yschimke/homeassistant-remotecompose/issues/962)) ([38c9aea](https://github.com/yschimke/homeassistant-remotecompose/commit/38c9aea751b2e1b945eae1966ef12bfa4f1ecaf2))
+* **deps:** update dependency ee.schimke.composeai:data-render-core to v3.37.0 ([#963](https://github.com/yschimke/homeassistant-remotecompose/issues/963)) ([57ccb61](https://github.com/yschimke/homeassistant-remotecompose/commit/57ccb6182175fad610144b09c2f66a4345572b79))
+* **deps:** update kotlinx to v1.12.0 ([#964](https://github.com/yschimke/homeassistant-remotecompose/issues/964)) ([3295110](https://github.com/yschimke/homeassistant-remotecompose/commit/329511028207fc4635fdab74f98f8f36bf384fa5))
+
 ## [0.1.45](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.44...v0.1.45) (2026-10-19)
 
 

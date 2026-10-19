@@ -1,6 +1,6 @@
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 
-val appVersionName = "0.1.45" // x-release-please-version
+val appVersionName = "0.1.46" // x-release-please-version
 
 // Pack MAJOR.MINOR.PATCH into a monotonic int, times ten for a form-factor
 // lane: phone ends in 0, `:wear` (same package) in 2. Both share the base so
