@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.47](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.46...v0.1.47) (2026-10-19)
+
+
+### Features
+
+* give every uber theme its own tile, heading, markdown and history graph ([#970](https://github.com/yschimke/homeassistant-remotecompose/issues/970)) ([9456bd3](https://github.com/yschimke/homeassistant-remotecompose/commit/9456bd382590c4333bad120ac8ff4bdc7562bf19))
+* **play:** roll releases straight out to internal testing ([#969](https://github.com/yschimke/homeassistant-remotecompose/issues/969)) ([b624a2a](https://github.com/yschimke/homeassistant-remotecompose/commit/b624a2a0dfcd5c7159e447fe863dc97b5cc811a8))
+
+
+### Bug Fixes
+
+* **deps:** update compose-ai-tools ([#967](https://github.com/yschimke/homeassistant-remotecompose/issues/967)) ([a6b4d83](https://github.com/yschimke/homeassistant-remotecompose/commit/a6b4d83deef896210d86f5b9a14ce331af462b27))
+
 ## [0.1.46](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.45...v0.1.46) (2026-10-19)
 
 
