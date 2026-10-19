@@ -83,6 +83,12 @@ data class HaTileData(
   val badge: HaTileBadge? = null,
   val features: List<HaTileFeature> = emptyList(),
   val featuresPosition: HaTileFeaturePosition = HaTileFeaturePosition.Bottom,
+  /**
+   * A measurable sensor's reading (temperature, humidity, battery, …). Its text is [state] and its
+   * value the `<id>.numeric_state` binding, so the uber theme's meter glyph can stand in for the
+   * icon (docs/design/everyday-cards.md §1) and keep up through bindings alone.
+   */
+  val reading: HaReading? = null,
 )
 
 /**

@@ -5,11 +5,13 @@ package ee.schimke.ha.rc.cards
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
+import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
@@ -24,6 +26,8 @@ import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
+import ee.schimke.ha.rc.components.HaMeasureKind
+import ee.schimke.ha.rc.components.HaReading
 import ee.schimke.ha.rc.components.HaTileBadge
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.LiveValues
@@ -39,6 +43,7 @@ import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.icons.withIcons
 import ee.schimke.ha.rc.parseHaAction
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -263,6 +268,41 @@ class TileCardConverter : CardConverter {
       badge = TileContent.badge(entity)?.let { HaTileBadge(it.icon, it.color, it.description) },
       features = TileContent.features(card, entity, snapshot.temperatureUnit),
       featuresPosition = TileContent.featuresPosition(card),
+      reading = sensorReading(entityId, entity, name, state),
+    )
+  }
+
+  /**
+   * A measurable sensor's [HaReading], so the uber theme can draw its meter glyph in the icon's
+   * slot (docs/design/everyday-cards.md §1). The text is the tile's own state binding (never a
+   * second `<id>.state`) and the value `<id>.numeric_state`, which the host pushes for any numeric
+   * state: path 1, no re-encode. Null for a non-numeric state — a card design's placeholder entity
+   * is `off`, so templates keep the icon — and for kinds with no meaningful scale (an energy
+   * total).
+   */
+  private fun sensorReading(
+    entityId: String?,
+    entity: EntityState?,
+    name: String,
+    text: RemoteString,
+  ): HaReading? {
+    if (entityId == null || entity == null || !entityId.startsWith("sensor.")) return null
+    val numeric = entity.state.toFloatOrNull()?.takeIf { it.isFinite() } ?: return null
+    val deviceClass = entity.attributes["device_class"]?.jsonPrimitive?.contentOrNull
+    if (deviceClass == "energy") return null
+    val unit = entity.attributes["unit_of_measurement"]?.jsonPrimitive?.contentOrNull
+    val kind = HaMeasureKind.of(deviceClass, unit)
+    if (kind == HaMeasureKind.Generic) return null
+    val range = kind.defaultRange(unit)
+    return HaReading(
+      entityId = entityId,
+      name = name,
+      text = text,
+      value = LiveValues.numericState(entityId, numeric),
+      unit = unit,
+      min = range.start,
+      max = range.endInclusive,
+      kind = kind,
     )
   }
 }
