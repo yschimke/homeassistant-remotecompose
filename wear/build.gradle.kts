@@ -1,7 +1,8 @@
 val wearVersionName = "0.1.44" // x-release-please-version
 
 // Keep Wear version tied to release-please while reserving a unique code
-// lane for the shared package id (`ee.schimke.harc`).
+// lane for the shared package id (`ee.schimke.harc`): same base as `:app`
+// (whose lane is 0), suffix 2.
 val wearVersionCode: Int = run {
   val parts = wearVersionName.split(".", "-").mapNotNull { it.toIntOrNull() }
   val major = parts.getOrNull(0) ?: 0
@@ -31,6 +32,26 @@ android {
     versionCode = wearVersionCode
     versionName = wearVersionName
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+  }
+  // Same upload key as `:app` — Wear ships inside the phone's Play listing
+  // (`ee.schimke.harc`), so both must be signed by one key lineage.
+  val releaseKeystorePath = System.getenv("HARC_KEYSTORE_PATH")
+  signingConfigs {
+    if (releaseKeystorePath != null) {
+      create("release") {
+        storeFile = file(releaseKeystorePath)
+        storePassword = System.getenv("HARC_KEYSTORE_PASSWORD")
+        keyAlias = System.getenv("HARC_KEY_ALIAS")
+        keyPassword = System.getenv("HARC_KEY_PASSWORD")
+      }
+    }
+  }
+  buildTypes {
+    getByName("release") {
+      if (releaseKeystorePath != null) {
+        signingConfig = signingConfigs.getByName("release")
+      }
+    }
   }
   buildFeatures { compose = true }
   compileOptions {
@@ -76,8 +97,9 @@ tasks
   }
 
 play {
-  // First Wear rollout uses Play internal testing for watch-only QA.
-  track.set("internal")
+  // Wear's dedicated form-factor track. Publishing to the shared `internal`
+  // track instead would replace the phone bundle's release on it.
+  track.set("wear:internal")
   defaultToAppBundles.set(true)
   releaseStatus.set(com.github.triplet.gradle.androidpublisher.ReleaseStatus.DRAFT)
   // Only publish when CI/local env provides a Play service-account json file path.

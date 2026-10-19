@@ -2,13 +2,17 @@ import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 
 val appVersionName = "0.1.44" // x-release-please-version
 
-// Pack MAJOR.MINOR.PATCH into a monotonic int. Caps at major < 22.
+// Pack MAJOR.MINOR.PATCH into a monotonic int, times ten for a form-factor
+// lane: phone ends in 0, `:wear` (same package) in 2. Both share the base so
+// each release's phone code exceeds the previous release's Wear code — Play
+// Publisher refuses an upload below the app's highest existing code. Caps at
+// major < 21.
 val appVersionCode: Int = run {
   val parts = appVersionName.split(".", "-").mapNotNull { it.toIntOrNull() }
   val major = parts.getOrNull(0) ?: 0
   val minor = parts.getOrNull(1) ?: 0
   val patch = parts.getOrNull(2) ?: 0
-  major * 10_000 + minor * 100 + patch
+  (major * 10_000 + minor * 100 + patch) * 10
 }
   .coerceAtLeast(1)
 

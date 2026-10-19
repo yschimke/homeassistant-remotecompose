@@ -12,6 +12,7 @@ filename order.
 | `phone-screenshots/` | yes (≥ 2, ≤ 8) | PNG / JPEG | between 320 px and 3840 px on either side; aspect ratio 16:9 or 9:16 | The screenshots Google shows on phone listings. |
 | `seven-inch-screenshots/` | recommended (≥ 2, ≤ 8) | PNG / JPEG | between 320 px and 3840 px on either side | Shown on 7″-class tablets. Currently 1200×1920 placeholders. |
 | `ten-inch-screenshots/` | recommended (≥ 2, ≤ 8) | PNG / JPEG | between 320 px and 3840 px on either side | Shown on 10″-class tablets. Currently 1600×2560 placeholders. |
+| `wear-screenshots/` | needed once Wear ships (≥ 1, ≤ 8) | PNG / JPEG | square, e.g. 384 × 384 | Wear OS screenshots for the shared listing. `:wear` publishes into this same Play app, so its graphics live here, not under `wear/`. No round masks or watch frames. |
 | `tv-banner/` | leave empty | — | — | TV app variant publishes from `tv/`, not here. |
 
 Tip: capture phone screenshots on a clean Pixel emulator running the
