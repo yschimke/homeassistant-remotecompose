@@ -13,6 +13,7 @@ With no paths, scans the bundled dashboards and the demo fixtures.
 import argparse
 import collections
 import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -29,8 +30,11 @@ NOT_CARDS = {"sections", "masonry", "panel", "sidebar"}
 
 def load(path: Path):
     if path.suffix in (".yaml", ".yml"):
-        import yaml  # optional: only needed for YAML dashboards
-
+        try:
+            import yaml  # optional: only needed for YAML dashboards
+        except ModuleNotFoundError:
+            print(f"skipping {path}: pip install pyyaml to include YAML dashboards", file=sys.stderr)
+            return None
         return yaml.safe_load(path.read_text())
     return json.loads(path.read_text())
 
@@ -63,9 +67,14 @@ def main():
 
     content, layout, tiles = collections.Counter(), collections.Counter(), collections.Counter()
     dashboards_using = collections.Counter()
+    scanned = 0
     for path in paths:
+        dashboard = load(path)
+        if dashboard is None:
+            continue
+        scanned += 1
         seen = set()
-        for card in cards(load(path)):
+        for card in cards(dashboard):
             kind = card["type"]
             if kind in NOT_CARDS:
                 continue
@@ -79,11 +88,9 @@ def main():
         dashboards_using.update(seen)
 
     total = sum(content.values())
-    print(f"{len(paths)} dashboards, {total} content cards, {sum(layout.values())} layout containers\n")
+    print(f"{scanned} dashboards, {total} content cards, {sum(layout.values())} layout containers\n")
     print(f"{'cards':>6} {'share':>6} {'dashboards':>10}  type")
-    running = 0
     for i, (kind, n) in enumerate(content.most_common()):
-        running += n
         marker = "*" if i < args.top else " "
         print(f"{n:6d} {n / total:6.1%} {dashboards_using[kind]:10d} {marker}{kind}")
     top = content.most_common(args.top)
