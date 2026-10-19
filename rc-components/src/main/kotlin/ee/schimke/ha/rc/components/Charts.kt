@@ -4,7 +4,6 @@ package ee.schimke.ha.rc.components
 
 import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
 import androidx.compose.remote.creation.compose.layout.RemoteOffset
-import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rf
@@ -16,12 +15,24 @@ import androidx.compose.remote.creation.compose.state.rf
 // sample is a live RemoteFloat, so each design moves with the pushed window like the classic line.
 // ---------------------------------------------------------------------------------------------
 
-/** The plot area of a graph row canvas: a small inset so strokes and dots aren't clipped. */
-private class Plot(scope: RemoteDrawScope) {
-  val left: RemoteFloat = 2f.rf
-  val top: RemoteFloat = 3f.rf
-  val width: RemoteFloat = scope.width - 4f.rf
-  val height: RemoteFloat = scope.height - 6f.rf
+/**
+ * The plot area of a graph row canvas, inset so strokes and dots aren't clipped. A design that
+ * frames its trace (a scale, a screen, a tube) insets further; [leftRf] / [rightRf] take an inset
+ * that depends on the canvas size.
+ */
+internal class Plot(
+  scope: RemoteDrawScope,
+  left: Float = 2f,
+  top: Float = 3f,
+  right: Float = 2f,
+  bottom: Float = 3f,
+  leftRf: RemoteFloat? = null,
+  rightRf: RemoteFloat? = null,
+) {
+  val left: RemoteFloat = leftRf ?: left.rf
+  val top: RemoteFloat = top.rf
+  val width: RemoteFloat = scope.width - this.left - (rightRf ?: right.rf)
+  val height: RemoteFloat = scope.height - (top + bottom).rf
   val bottom: RemoteFloat
     get() = top + height
 
@@ -31,8 +42,9 @@ private class Plot(scope: RemoteDrawScope) {
 }
 
 /**
- * A sparkline of [values] on the scale [min] .. min + [span], drawn in [family]'s design. Classic
- * is a 2px round line over a hairline baseline.
+ * A sparkline of [values] on the scale [min] .. min + [span], drawn in [family]'s design
+ * ([historyTrace], docs/design/everyday-cards.md §2). Classic is a 2px round line over a hairline
+ * baseline.
  */
 internal fun RemoteDrawScope.familySparkline(
   family: HaVisualFamily,
@@ -41,124 +53,8 @@ internal fun RemoteDrawScope.familySparkline(
   min: RemoteFloat,
   span: RemoteFloat,
 ) {
-  val plot = Plot(this)
-  val n = values.size
-  if (n < 2) return
-  val fractions = values.map { (it - min) / span }
-  fun line(widthPx: Float, color: RemoteColor) {
-    val paint = strokePaint(widthPx, color)
-    for (i in 0 until n - 1) {
-      drawLine(
-        paint,
-        RemoteOffset(plot.x(i, n), plot.y(fractions[i])),
-        RemoteOffset(plot.x(i + 1, n), plot.y(fractions[i + 1])),
-      )
-    }
-  }
-  fun baseline(color: RemoteColor) =
-    drawLine(
-      strokePaint(1f, color, round = false),
-      RemoteOffset(plot.left, plot.bottom),
-      RemoteOffset(plot.left + plot.width, plot.bottom),
-    )
-  when (family) {
-    HaVisualFamily.Mushroom,
-    HaVisualFamily.Bubble,
-    HaVisualFamily.Minimalist,
-    HaVisualFamily.Cupertino,
-    HaVisualFamily.Catppuccin,
-    HaVisualFamily.Obsidian,
-    HaVisualFamily.Noctis,
-    HaVisualFamily.Lcars,
-    HaVisualFamily.Arctic,
-    HaVisualFamily.Aeon -> communitySparkline(family, look, fractions)
-
-    HaVisualFamily.HomeAssistant,
-    HaVisualFamily.Classic -> {
-      baseline(look.track)
-      line(2f, look.value)
-    }
-    // A soft area in the track tone under a thick round line.
-    HaVisualFamily.Expressive -> {
-      val slot = plot.width / (n - 1).toFloat().rf
-      for (i in 0 until n) {
-        val y = plot.y(fractions[i])
-        fillRect(look.track, plot.x(i, n) - slot / 2f.rf, y, slot, plot.bottom - y)
-      }
-      line(4f, look.value)
-    }
-    // Hairline trace over a dotted graticule, the newest sample marked.
-    HaVisualFamily.Trinitron -> {
-      for (g in 1..3) {
-        val y = plot.top + plot.height * (g / 4f).rf
-        for (d in 0 until 40) {
-          if (d % 2 == 0) {
-            val x0 = plot.left + plot.width * (d / 40f).rf
-            fillRect(look.track, x0, y, plot.width / 40f.rf, 1f.rf)
-          }
-        }
-      }
-      baseline(look.muted)
-      line(1.5f, look.value)
-      drawCircle(
-        fillPaint(look.value),
-        2.5f.rf,
-        RemoteOffset(plot.x(n - 1, n), plot.y(fractions.last())),
-      )
-    }
-    // A bar graph of segments: every column's ghost, lit to the sample's height.
-    HaVisualFamily.Lcd -> {
-      val slot = plot.width / n.toFloat().rf
-      val bar = slot * 0.7f.rf
-      for (i in 0 until n) {
-        val x = plot.left + slot * i.toFloat().rf + (slot - bar) / 2f.rf
-        fillRect(look.ghost, x, plot.top, bar, plot.height)
-        val y = plot.y(fractions[i])
-        fillRect(look.value, x, y, bar, plot.bottom - y)
-      }
-    }
-    // A hairline trace on a hairline baseline; the latest reading an orange dot.
-    HaVisualFamily.Braun -> {
-      baseline(look.muted)
-      line(1.5f, look.value)
-      drawCircle(
-        fillPaint(look.accent),
-        3f.rf,
-        RemoteOffset(plot.x(n - 1, n), plot.y(fractions.last())),
-      )
-    }
-    // A glowing filament.
-    HaVisualFamily.Nixie -> {
-      look.glow?.let { line(6f, it) }
-      line(1.5f, look.value)
-    }
-    HaVisualFamily.Ikea -> {
-      for (g in 1..3) {
-        fillRect(look.track, plot.left, plot.top + plot.height * (g / 4f).rf, plot.width, 1f.rf)
-      }
-      baseline(look.muted)
-      line(3f, look.value)
-      drawCircle(
-        fillPaint(look.accent),
-        3f.rf,
-        RemoteOffset(plot.x(n - 1, n), plot.y(fractions.last())),
-      )
-    }
-    // A trace in a recessed screen with a faint graticule.
-    HaVisualFamily.Console -> {
-      fillRound(ConsoleSlot.rc, 0f.rf, 0f.rf, width, height, 3f.rf)
-      for (g in 1..3) {
-        fillRect(
-          ConsoleSlotLip.rc,
-          plot.left,
-          plot.top + plot.height * (g / 4f).rf,
-          plot.width,
-          1f.rf,
-        )
-      }
-      line(2f, look.value)
-    }
-  }
+  if (values.size < 2) return
+  historyTrace(family, look, values.map { (it - min) / span })
 }
 
 /**
@@ -274,75 +170,5 @@ internal fun RemoteDrawScope.familyBars(
         fillRound(look.value, x(i, 0.6f), y, w, plot.bottom - y, 1.5f.rf)
       }
     }
-  }
-}
-
-/** Each family keeps its scale grammar in charts, without changing the host's history contract. */
-private fun RemoteDrawScope.communitySparkline(
-  family: HaVisualFamily,
-  look: MeterLook,
-  fractions: List<RemoteFloat>,
-) {
-  val p = Plot(this)
-  val n = fractions.size
-  val lineWidth =
-    when (family) {
-      HaVisualFamily.Mushroom -> 3f
-      HaVisualFamily.Bubble -> 5f
-      HaVisualFamily.Cupertino -> 3.5f
-      HaVisualFamily.Lcars -> 6f
-      else -> 1.5f
-    }
-  for (i in 0 until n - 1) {
-    val a = RemoteOffset(p.x(i, n), p.y(fractions[i]))
-    val b = RemoteOffset(p.x(i + 1, n), p.y(fractions[i + 1]))
-    when (family) {
-      HaVisualFamily.Minimalist,
-      HaVisualFamily.Catppuccin,
-      HaVisualFamily.Lcars -> {
-        drawLine(strokePaint(lineWidth, look.value, false), a, RemoteOffset(b.x, a.y))
-        drawLine(strokePaint(lineWidth, look.value, false), RemoteOffset(b.x, a.y), b)
-      }
-      HaVisualFamily.Noctis -> {
-        drawLine(strokePaint(7f, look.track), a, b)
-        drawLine(strokePaint(1.5f, look.value), a, b)
-      }
-      else -> drawLine(strokePaint(lineWidth, look.value), a, b)
-    }
-  }
-  when (family) {
-    HaVisualFamily.Mushroom,
-    HaVisualFamily.Bubble,
-    HaVisualFamily.Catppuccin -> {
-      for (i in fractions.indices) drawCircle(
-        fillPaint(look.value),
-        (if (family == HaVisualFamily.Bubble) 4f else 2.5f).rf,
-        RemoteOffset(p.x(i, n), p.y(fractions[i])),
-      )
-    }
-    HaVisualFamily.Cupertino -> {
-      drawCircle(
-        strokePaint(2f, look.text),
-        4f.rf,
-        RemoteOffset(p.x(n - 1, n), p.y(fractions.last())),
-      )
-    }
-    HaVisualFamily.Obsidian -> {
-      for (i in 0..4) fillRect(look.track, p.left, p.top + p.height * (i / 4f).rf, p.width, 1f.rf)
-    }
-    HaVisualFamily.Arctic -> {
-      fillRect(look.muted, p.left, p.bottom, p.width, 1f.rf)
-      drawLine(
-        strokePaint(1f, look.accent),
-        RemoteOffset(p.x(n - 1, n), p.top),
-        RemoteOffset(p.x(n - 1, n), p.bottom),
-      )
-    }
-    HaVisualFamily.Aeon -> {
-      outlineRect(look.accent, 0f.rf, 0f.rf, width, height, 1f.rf)
-      val at = RemoteOffset(p.x(n - 1, n), p.y(fractions.last()))
-      rotate(45f.rf, at) { fillRect(look.value, at.x - 3f.rf, at.y - 3f.rf, 6f.rf, 6f.rf) }
-    }
-    else -> Unit
   }
 }

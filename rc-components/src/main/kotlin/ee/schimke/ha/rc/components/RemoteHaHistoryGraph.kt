@@ -47,6 +47,11 @@ import androidx.compose.ui.text.style.TextOverflow
  * is one line, the title (else the series' names) and a short "No history" caption beside it, the
  * same shape as an empty row.
  *
+ * [plotHeightDp] is each row's trace height. The `history-graph` card draws
+ * [HISTORY_PLOT_HEIGHT_DP] so a family's framed design (docs/design/everyday-cards.md §2) reads;
+ * the sensor card and the statistics-graph line mode keep the compact [SPARKLINE_HEIGHT_DP] under
+ * their larger value.
+ *
  * Sparkline is captured from numeric `HistoryPoint`s. Each sample is bound to
  * `<entityId>.numeric.<index>`, so a host can push a sliding window of values without re-encoding
  * the document. The y-axis range is captured from the initial values; samples that drift well
@@ -59,6 +64,7 @@ fun RemoteHaHistoryGraph(
   modifier: RemoteModifier = RemoteModifier,
   singleEmptyState: Boolean = false,
   compactEmptyState: Boolean = false,
+  plotHeightDp: Int = SPARKLINE_HEIGHT_DP,
 ) {
   val theme = haTheme()
   RemoteBox(
@@ -105,7 +111,7 @@ fun RemoteHaHistoryGraph(
               style = haTextStyle(),
             )
         } else {
-          data.rows.forEach { row -> Row(row, theme) }
+          data.rows.forEach { row -> Row(row, theme, plotHeightDp) }
         }
       }
     }
@@ -159,7 +165,7 @@ fun RemoteHaHistoryGraphIdentity(
           overflow = TextOverflow.Ellipsis,
         )
         if (row.points.size >= 2) {
-          Sparkline(row.entityId, row.points, row.accent, theme)
+          Sparkline(row.entityId, row.points, row.accent, theme, SPARKLINE_HEIGHT_DP)
         }
       } else {
         // The cell's height is fixed and small: a short caption, like the tile's compact name +
@@ -257,7 +263,7 @@ const val COMPACT_EMPTY_LABEL: String = "No history"
 private const val LEGEND_SEPARATOR = "  ·  "
 
 @Composable
-private fun Row(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
+private fun Row(row: HaHistoryGraphRow, theme: RemoteHaTheme, plotHeightDp: Int) {
   RemoteRow(
     modifier = RemoteModifier.fillMaxWidth(),
     verticalAlignment = RemoteAlignment.CenterVertically,
@@ -282,11 +288,17 @@ private fun Row(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
     )
   }
   // An empty row stays one line, its name and "no data": no second stub line under it.
-  if (row.hasLine) Sparkline(row.entityId, row.points, row.accent, theme)
+  if (row.hasLine) Sparkline(row.entityId, row.points, row.accent, theme, plotHeightDp)
 }
 
 @Composable
-private fun Sparkline(entityId: String?, points: List<Float>, accent: Color, theme: RemoteHaTheme) {
+private fun Sparkline(
+  entityId: String?,
+  points: List<Float>,
+  accent: Color,
+  theme: RemoteHaTheme,
+  heightDp: Int,
+) {
   // A fixed number of samples, one named RemoteFloat each (`<entityId>.numeric.<i>`), so the
   // series length is never part of the document's structure and a host can push the next window
   // without re-encoding. The y-range is `<entityId>.series_min` / `series_span`: constants in a
@@ -300,7 +312,7 @@ private fun Sparkline(entityId: String?, points: List<Float>, accent: Color, the
   // row's accent.
   val look = meterLook(accent.rc, theme.divider)
   val family = visualFamily()
-  RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(28.rdp)) {
+  RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(heightDp.rdp)) {
     familySparkline(family, look, bound, minRf, spanRf)
   }
 }
@@ -312,6 +324,12 @@ private fun Color.toArgb(): Int =
     (green * 255f).toInt(),
     (blue * 255f).toInt(),
   )
+
+/** A sparkline row's compact trace height: the sensor card, statistics graph and identity tier. */
+const val SPARKLINE_HEIGHT_DP: Int = 28
+
+/** The `history-graph` card's trace height, tall enough for each family's framed design. */
+const val HISTORY_PLOT_HEIGHT_DP: Int = 40
 
 /** How many samples every sparkline draws, whatever the history length. */
 const val SPARKLINE_SAMPLES: Int = 48
