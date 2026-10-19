@@ -4,18 +4,19 @@ import android.content.Intent
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.auth.TokenVault
 import ee.schimke.terrazzo.core.mobileapp.MobileAppRegistrar
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
@@ -31,31 +32,35 @@ import net.openid.appauth.AuthorizationResponse
  *
  * The controller:
  * 1. Builds the AppAuth authorize intent for `baseUrl`.
- * 2. Launches it via `rememberLauncherForActivityResult` — AppAuth renders in a Custom Tab.
+ * 2. Launches it via [rememberKeyedLauncher] — AppAuth renders in a Custom Tab.
  * 3. When the tab redirects to `rcha://auth-callback`, the manifest- registered
- *    `RedirectUriReceiverActivity` finishes, and the original launch delivers the response.
- * 4. Exchanges the code for tokens, writes the refresh token to [TokenVault] keyed by `instanceId`
- *    (= `baseUrl`), and hands the access token to the caller.
+ *    `RedirectUriReceiverActivity` finishes, and the original launch delivers the response — to a
+ *    recreated Activity too, if the system rotated or killed it while the tab was open.
+ * 4. [LoginResultHandler] exchanges the code for tokens, writes the refresh token to [TokenVault]
+ *    keyed by `instanceId` (= `baseUrl`), and hands the access token to the caller.
  */
 class LoginController
 internal constructor(
   private val authService: HaAuthService,
-  private val vault: TokenVault,
-  private val mobileAppRegistrar: MobileAppRegistrar,
-  private val launcher: ActivityResultLauncher<Intent>,
-  private val scope: kotlinx.coroutines.CoroutineScope,
-  private val pendingBaseUrl: MutableState<String?>,
-  private val onReady: (instanceId: String, accessToken: String) -> Unit,
-  private val onError: (Throwable) -> Unit,
+  private val launch: (baseUrl: String, intent: Intent) -> Unit,
 ) {
 
   fun start(baseUrl: String) {
     val normalized = baseUrl.trim().removeSuffix("/")
-    pendingBaseUrl.value = normalized
-    launcher.launch(authService.prepareAuthIntent(normalized))
+    launch(normalized, authService.prepareAuthIntent(normalized))
   }
+}
 
-  internal fun onResult(result: ActivityResult) {
+internal class LoginResultHandler(
+  private val authService: HaAuthService,
+  private val vault: TokenVault,
+  private val mobileAppRegistrar: MobileAppRegistrar,
+  private val scope: CoroutineScope,
+  private val onReady: (instanceId: String, accessToken: String) -> Unit,
+  private val onError: (Throwable) -> Unit,
+) {
+
+  fun onResult(baseUrl: String, result: ActivityResult) {
     val data =
       result.data
         ?: run {
@@ -79,7 +84,6 @@ internal constructor(
           onError(IllegalStateException("No authorization response in redirect"))
           return
         }
-    val baseUrl = pendingBaseUrl.value ?: return
     scope.launch {
       runCatching { authService.exchangeCode(response) }
         .onSuccess { tokens ->
@@ -125,30 +129,48 @@ fun rememberLoginController(
 ): LoginController {
   val graph = LocalTerrazzoGraph.current
   val authService = graph.authService
-  val vault = graph.tokenVault
-  val mobileAppRegistrar = graph.mobileAppRegistrar
   val scope = rememberCoroutineScope()
-  val pendingBaseUrl = remember { mutableStateOf<String?>(null) }
-
-  val controllerRef = remember { mutableStateOf<LoginController?>(null) }
-  val launcher =
-    rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-      controllerRef.value?.onResult(result)
-    }
-
-  val controller =
-    remember(launcher) {
-      LoginController(
+  val currentOnReady by rememberUpdatedState(onReady)
+  val currentOnError by rememberUpdatedState(onError)
+  val results =
+    remember(scope) {
+      LoginResultHandler(
         authService,
-        vault,
-        mobileAppRegistrar,
-        launcher,
+        graph.tokenVault,
+        graph.mobileAppRegistrar,
         scope,
-        pendingBaseUrl,
-        onReady,
-        onError,
+        onReady = { instanceId, accessToken -> currentOnReady(instanceId, accessToken) },
+        onError = { currentOnError(it) },
       )
     }
-  LaunchedEffect(controller) { controllerRef.value = controller }
-  return controller
+  val launch = rememberKeyedLauncher(results::onResult)
+  return remember(authService, launch) { LoginController(authService, launch) }
+}
+
+/**
+ * An activity-result launcher that hands [onResult] the key it was launched with.
+ *
+ * Sign-in leaves the app for a Custom Tab, and the system may recreate the Activity meanwhile (a
+ * rotation, or process death while backgrounded). The recreated launcher delivers the pending
+ * result as soon as it registers — before any effect has run — so the key lives in saved state and
+ * the result is handled straight from the launcher's callback, with nothing that a later effect has
+ * to wire up first.
+ */
+@Composable
+internal fun rememberKeyedLauncher(
+  onResult: (key: String, result: ActivityResult) -> Unit
+): (key: String, intent: Intent) -> Unit {
+  val pendingKey = rememberSaveable { mutableStateOf<String?>(null) }
+  val launcher =
+    rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+      val key = pendingKey.value ?: return@rememberLauncherForActivityResult
+      pendingKey.value = null
+      onResult(key, result)
+    }
+  return remember(launcher) {
+    { key: String, intent: Intent ->
+      pendingKey.value = key
+      launcher.launch(intent)
+    }
+  }
 }
