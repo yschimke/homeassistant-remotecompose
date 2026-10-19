@@ -14,6 +14,15 @@ data class AddonConfig(
   val haBaseUrl: String,
   val haAccessToken: String,
   val logLevel: String,
+  /** Set when running as an add-on; enables ingress trust and Core URL discovery for auth. */
+  val supervisorToken: String? = null,
+  /**
+   * Home Assistant Core base URL that caller tokens are validated against (`GET <url>/api/`).
+   * `HA_AUTH_URL`, else `HA_BASE_URL` (local dev talks to Core directly); null under the
+   * supervisor, where it is discovered from `/core/info` because `http://supervisor/core` won't
+   * accept user tokens.
+   */
+  val authBaseUrl: String? = null,
 ) {
   companion object {
     private const val SUPERVISOR_URL = "http://supervisor/core"
@@ -29,11 +38,14 @@ data class AddonConfig(
         supervisor ?: env["HA_TOKEN"] ?: error("no HA auth: set SUPERVISOR_TOKEN or HA_TOKEN")
       val port = env["PORT"]?.toIntOrNull() ?: 8099
       val logLevel = env["LOG_LEVEL"] ?: "info"
+      val authBaseUrl = env["HA_AUTH_URL"] ?: env["HA_BASE_URL"]
       return AddonConfig(
         port = port,
         haBaseUrl = baseUrl,
         haAccessToken = token,
         logLevel = logLevel,
+        supervisorToken = supervisor,
+        authBaseUrl = authBaseUrl,
       )
     }
   }

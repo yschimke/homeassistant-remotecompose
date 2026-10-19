@@ -95,8 +95,26 @@ echo "==> ready"
 echo "==> /healthz"
 curl -fsS "${ADDON_URL}/healthz" | grep -qx "ok"
 
+# The published port is the add-on's direct port: every /v1 call needs the
+# caller's HA token, which the add-on validates against HA.
+AUTH=(-H "Authorization: Bearer ${HA_TOKEN}")
+
+echo "==> /v1/snapshot without a token is refused"
+status=$(curl -s -o /dev/null -w "%{http_code}" "${ADDON_URL}/v1/snapshot")
+if [[ "$status" != "401" ]]; then
+  echo "FAIL: expected 401 without a token, got $status" >&2
+  exit 1
+fi
+
+echo "==> /v1/snapshot with a bad token is refused"
+status=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer not-a-token" "${ADDON_URL}/v1/snapshot")
+if [[ "$status" != "401" ]]; then
+  echo "FAIL: expected 401 for a bad token, got $status" >&2
+  exit 1
+fi
+
 echo "==> /v1/snapshot has entities"
-snapshot=$(curl -fsS "${ADDON_URL}/v1/snapshot")
+snapshot=$(curl -fsS "${AUTH[@]}" "${ADDON_URL}/v1/snapshot")
 count=$(jq '.states | length' <<<"$snapshot")
 if (( count <= 0 )); then
   echo "FAIL: /v1/snapshot returned 0 entities" >&2
@@ -106,10 +124,10 @@ fi
 echo "    $count entities"
 
 echo "==> /v1/dashboards is a JSON array"
-curl -fsS "${ADDON_URL}/v1/dashboards" | jq -e 'type == "array"' >/dev/null
+curl -fsS "${AUTH[@]}" "${ADDON_URL}/v1/dashboards" | jq -e 'type == "array"' >/dev/null
 
 echo "==> /v1/cards/x.rc returns the typed 501 placeholder"
-status=$(curl -s -o /dev/null -w "%{http_code}" "${ADDON_URL}/v1/cards/whatever.rc")
+status=$(curl -s -o /dev/null -w "%{http_code}" "${AUTH[@]}" "${ADDON_URL}/v1/cards/whatever.rc")
 if [[ "$status" != "501" ]]; then
   echo "FAIL: expected 501 for unimplemented .rc endpoint, got $status" >&2
   exit 1
