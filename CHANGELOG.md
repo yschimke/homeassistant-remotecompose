@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.1.45](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.44...v0.1.45) (2026-10-19)
+
+
+### Features
+
+* add built-in Home Assistant Uber theme ([#927](https://github.com/yschimke/homeassistant-remotecompose/issues/927)) ([dd496cd](https://github.com/yschimke/homeassistant-remotecompose/commit/dd496cd9f3ff4a732844a932e019b880ca22ee2d))
+* add portable editable message cards and authenticated input actions ([#910](https://github.com/yschimke/homeassistant-remotecompose/issues/910)) ([2e93be0](https://github.com/yschimke/homeassistant-remotecompose/commit/2e93be0a1710a5cf4d963b5994f72f14b52b3949))
+* bound shared demo controls and simulate coherent live readings ([#926](https://github.com/yschimke/homeassistant-remotecompose/issues/926)) ([2a66d79](https://github.com/yschimke/homeassistant-remotecompose/commit/2a66d799673bbeece01ffb3bdd858da5de7851eb))
+* plan placeholder cards by long-pressing a section; automate Play graphics ([#941](https://github.com/yschimke/homeassistant-remotecompose/issues/941)) ([b95faeb](https://github.com/yschimke/homeassistant-remotecompose/commit/b95faebfd371db0d9e57873ef450a490ad1dcda5))
+* **widgets:** run widget toggles and service calls; reproducible design bytes ([#939](https://github.com/yschimke/homeassistant-remotecompose/issues/939)) ([2de8937](https://github.com/yschimke/homeassistant-remotecompose/commit/2de893768f594c2e4052bdb053ee8b7752ae214e))
+
+
+### Bug Fixes
+
+* **addon:** require ingress or HA token and fix image build ([#940](https://github.com/yschimke/homeassistant-remotecompose/issues/940)) ([f682f9d](https://github.com/yschimke/homeassistant-remotecompose/commit/f682f9d586611f1a2413999250e84456704ad131))
+* **android:** build valid base URLs for discovered Home Assistant instances ([#937](https://github.com/yschimke/homeassistant-remotecompose/issues/937)) ([c16675d](https://github.com/yschimke/homeassistant-remotecompose/commit/c16675db77dd9b5fbf5d177698dcdfc808d99816))
+* **android:** drop stale dashboard loads ([#950](https://github.com/yschimke/homeassistant-remotecompose/issues/950)) ([ed4049a](https://github.com/yschimke/homeassistant-remotecompose/commit/ed4049a02e05ddb848aaec1c1fa3b3f2300096dd))
+* **android:** preload host-density card designs; open the app from widgets ([#930](https://github.com/yschimke/homeassistant-remotecompose/issues/930)) ([a8efa7c](https://github.com/yschimke/homeassistant-remotecompose/commit/a8efa7c6926ba7936a684cab557203edeba86cb1))
+* **android:** send the HA bearer to images on the instance origin only ([#946](https://github.com/yschimke/homeassistant-remotecompose/issues/946)) ([7bed10c](https://github.com/yschimke/homeassistant-remotecompose/commit/7bed10cf8a4bb2e12431784559c66f525804c07f))
+* **android:** subscribe to live state and refresh HA tokens ([#942](https://github.com/yschimke/homeassistant-remotecompose/issues/942)) ([ef29721](https://github.com/yschimke/homeassistant-remotecompose/commit/ef2972177fa6b967b32d5b0739262ec69dcc1f7a))
+* **ci:** publish release assets when release-please is dispatched ([#931](https://github.com/yschimke/homeassistant-remotecompose/issues/931)) ([d35334a](https://github.com/yschimke/homeassistant-remotecompose/commit/d35334af243096fd22381bcd4b0c39de29ad613a))
+* **demo:** stop slow sockets stalling the demo gateway ([#943](https://github.com/yschimke/homeassistant-remotecompose/issues/943)) ([93d82e9](https://github.com/yschimke/homeassistant-remotecompose/commit/93d82e98d31d03e9557933ca59b1bda107d3be40))
+* **design-server:** cap request bodies, compare tokens in constant time, encode builder URLs ([#949](https://github.com/yschimke/homeassistant-remotecompose/issues/949)) ([bb0bbbe](https://github.com/yschimke/homeassistant-remotecompose/commit/bb0bbbe7c39c95dfc60b4376b024ded9aadb56c4))
+* **design-server:** keep the served manifest serial from falling ([#945](https://github.com/yschimke/homeassistant-remotecompose/issues/945)) ([8ff8bff](https://github.com/yschimke/homeassistant-remotecompose/commit/8ff8bffdd566da2d0f8fecd8ac91a71bbf5c0729))
+* **design-server:** refuse control characters in sign-in return paths ([#933](https://github.com/yschimke/homeassistant-remotecompose/issues/933)) ([8b88f2b](https://github.com/yschimke/homeassistant-remotecompose/commit/8b88f2bd52825599e626d1bd0e86b96048c330d6))
+* **ha-client:** bound the WebSocket handshake and close the socket on failure ([#935](https://github.com/yschimke/homeassistant-remotecompose/issues/935)) ([127c11f](https://github.com/yschimke/homeassistant-remotecompose/commit/127c11f4e3ee8c9059aa26b7d18cea7530d538ee))
+* honour the Wasm design-server setting, dedupe the Wear probe, fail fast on HA readiness ([#944](https://github.com/yschimke/homeassistant-remotecompose/issues/944)) ([5d896d5](https://github.com/yschimke/homeassistant-remotecompose/commit/5d896d58e981b5c3ba9b5036b77c80bb1e4aa205))
+* **ios:** limit plain HTTP to local networks and send homeassistant.toggle ([#948](https://github.com/yschimke/homeassistant-remotecompose/issues/948)) ([0ee47e3](https://github.com/yschimke/homeassistant-remotecompose/commit/0ee47e38eb7acd5b93e7f868716d38d911cc5a05))
+* match Home Assistant's toggle domains, button options and thermostat unit ([#952](https://github.com/yschimke/homeassistant-remotecompose/issues/952)) ([d5628c7](https://github.com/yschimke/homeassistant-remotecompose/commit/d5628c7fd7835f189442ed99efda86d9dc9f690e))
+* **rc-converter:** accept list and area targets, guard filter regexes, format numbers locale-free ([#936](https://github.com/yschimke/homeassistant-remotecompose/issues/936)) ([bc48937](https://github.com/yschimke/homeassistant-remotecompose/commit/bc489372347b934bd4e5b37bd882e0bfe9fc8c93))
+* **rc-converter:** keep alarm panel, sensor sparkline and entity-filter cards live ([#951](https://github.com/yschimke/homeassistant-remotecompose/issues/951)) ([3f3c773](https://github.com/yschimke/homeassistant-remotecompose/commit/3f3c773367ac623d1506333c09cb951f682745fa))
+* **rc-converter:** skip entities-card special rows instead of drawing toggle rows ([#947](https://github.com/yschimke/homeassistant-remotecompose/issues/947)) ([1673062](https://github.com/yschimke/homeassistant-remotecompose/commit/1673062606c2ea4d0377df1486e80f9f5087b8f7))
+* **wear:** clear watch data on sign-out and keep sync freshness honest ([#953](https://github.com/yschimke/homeassistant-remotecompose/issues/953)) ([6cf3ebe](https://github.com/yschimke/homeassistant-remotecompose/commit/6cf3ebec7b5a87a3590aabc36eaf24e9f887477d))
+
+
+### Performance Improvements
+
+* **widgets:** send widget calls on the app's connected session ([#955](https://github.com/yschimke/homeassistant-remotecompose/issues/955)) ([20222e1](https://github.com/yschimke/homeassistant-remotecompose/commit/20222e1812f7de7db3a4052f3a2b386bacffbb12))
+
 ## [0.1.44](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.43...v0.1.44) (2026-10-18)
 
 
