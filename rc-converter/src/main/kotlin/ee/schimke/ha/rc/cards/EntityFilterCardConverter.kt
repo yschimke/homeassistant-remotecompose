@@ -7,6 +7,9 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardRegistry
+import ee.schimke.ha.rc.cardDataSignature
+import ee.schimke.ha.rc.cardEntityIds
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -31,6 +34,27 @@ class EntityFilterCardConverter : CardConverter {
    */
   override fun designDelegate(card: CardConfig, snapshot: HaSnapshot): CardConfig =
     filteredCard(card, snapshot)
+
+  /**
+   * Which entities pass the filter is baked into the captured document: [Render] draws the card
+   * over the matching entities as of capture, and no binding adds or removes a row. So when the
+   * card renders through its converter (no design for it), an entity starting or stopping to match
+   * must re-encode it: the signature is the matching ids followed by the shown card's own
+   * signature, or, for a card that keeps up through bindings, its entities' data (a re-encode card
+   * takes no binding push, so the rows' values must be in it too). The design path re-keys on the
+   * same change through [designDelegate].
+   */
+  override fun dataSignature(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    registry: CardRegistry,
+  ): String {
+    val shown = filteredCard(card, snapshot)
+    val shownSignature =
+      registry.cardDataSignature(shown, snapshot)
+        ?: cardDataSignature(cardEntityIds(shown), snapshot)
+    return filteredEntities(card, snapshot).joinToString(",", postfix = "|") + shownSignature
+  }
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
@@ -90,8 +114,10 @@ private fun matches(state: String, filter: kotlinx.serialization.json.JsonElemen
             else -> false
           }
         }
+        // Home Assistant tests the pattern with JavaScript's `RegExp(value).test(state)`, a search
+        // anywhere in the state rather than a whole-string match; anchor with ^…$ for the latter.
         // A pattern the user mistyped matches nothing rather than failing the whole card.
-        "regex" -> runCatching { Regex(value) }.getOrNull()?.matches(state) == true
+        "regex" -> runCatching { Regex(value) }.getOrNull()?.containsMatchIn(state) == true
         else -> false
       }
     }

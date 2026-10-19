@@ -62,7 +62,9 @@ override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String =
 Hosts read the signature through `CardRegistry.cardDataSignature`, which asks the
 registry-aware `dataSignature(card, snapshot, registry)`: a container (vertical / horizontal stack,
 grid) folds in its children's signatures (`childrenDataSignature`, null only when every child is),
-and a wrapper (conditional, entity filter) answers with its shown card's. A re-encode card nested
+and a conditional answers with its shown card's. An entity filter always has one: which entities
+match is baked into its document, so its signature is the matching ids plus the shown card's
+signature (or, for a binding card, its entities' `cardDataSignature`). A re-encode card nested
 in a grid therefore re-encodes the grid's document, while a grid of binding cards keeps the
 binding push. Never call `converter.dataSignature(card, snapshot)` directly from a host.
 
@@ -113,13 +115,13 @@ by the host rather than computed in-document, and refreshed on a tick:
 
 ## Card matrix (current)
 
-- **Binding (path 1):** sensor, entity, glance, tile (a plain one — a tile that bakes a
+- **Binding (path 1):** entity, glance, tile (a plain one — a tile that bakes a
   `state_content` line, a climate `hvac_action` badge or `features:` re-encodes, see below),
   area, entities,
   button, picture-entity (its `entity_picture` URL is the exception: a
   picture is fetched once per document, so `CachedCardPreview` folds
   `cardPictureSignature` into the document key and a rotated camera token
-  or new frame plays as a new document), alarm-panel (`state_int`), gauge
+  or new frame plays as a new document), gauge
   (`numeric_state`; the severity band is picked in-document), markdown (`.state` tokens + Jinja `templateValues`).
   Every typed measurement (thermometer, battery, arc / bar meters) is path 1 by construction:
   `HaReading` binds `<id>.state` and `<id>.numeric_state`, and the fill fraction and band colour
@@ -130,6 +132,10 @@ by the host rather than computed in-document, and refreshed on a tick:
   cover / humidifier / valve default secondary line such as "Heat · 22.8 °C", a configured
   `state_content`, the `hvac_action` badge, or `features:` whose stepped `set_temperature` payloads
   and selected mode are baked; its line goes under `<id>.state_label`, never `<id>.state`),
+  sensor (its history sparkline; on the design path the samples are `SeriesDesign` slot bindings),
+  alarm-panel (its button row is the configured ARM states while `disarmed` and DISARM in every
+  other state, as in HA; the status variants still switch on `state_int`, and on the design path
+  the `disarm_row` property picks the template), entity-filter (which entities match),
   calendar, logbook, to-do, history-graph,
   statistics-graph, statistic, map, weather-forecast, thermostat /
   humidifier / light (arc fill + labels), media-control, Bambu (AMS /
