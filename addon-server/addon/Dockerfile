@@ -39,4 +39,6 @@ WORKDIR /app
 COPY --from=build /src/addon-server/build/install/addon-server /app
 EXPOSE 8099
 ENV LOG_LEVEL=info
-ENTRYPOINT ["/app/bin/addon-server"]
+# Distroless has no shell, so installDist's `bin/addon-server` start script
+# can't run; invoke the JVM directly (it expands the `lib/*` wildcard itself).
+ENTRYPOINT ["java", "-cp", "/app/lib/*", "ee.schimke.ha.addon.MainKt"]
