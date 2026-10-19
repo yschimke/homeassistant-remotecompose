@@ -20,6 +20,7 @@ import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
+import ee.schimke.ha.rc.components.HISTORY_PLOT_HEIGHT_DP
 import ee.schimke.ha.rc.components.HaHistoryGraphData
 import ee.schimke.ha.rc.components.HaHistoryGraphRow
 import ee.schimke.ha.rc.components.LiveValues
@@ -58,9 +59,10 @@ class HistoryGraphCardConverter : CardConverter {
     val graphed = ids.count { SeriesDesign.hasData(snapshot, it) }
     // No series has a line: one empty-state message plus a line of names.
     if (ids.isNotEmpty() && graphed == 0) return title + 16 + 44 + 20
-    // ~52 dp per graphed row (label + sparkline + spacing), ~22 dp per empty row (label only),
-    // + range label + padding.
-    return title + 16 + 52 * graphed.coerceAtLeast(1) + 22 * (ids.size - graphed) + 20
+    // Per graphed row: ~24 dp of label and spacing over the trace; ~22 dp per empty row (label
+    // only), + range label + padding.
+    val graphedRow = 24 + HISTORY_PLOT_HEIGHT_DP
+    return title + 16 + graphedRow * graphed.coerceAtLeast(1) + 22 * (ids.size - graphed) + 20
   }
 
   /**
@@ -162,8 +164,15 @@ class HistoryGraphCardConverter : CardConverter {
       )
 
     when (LocalCardSizeMode.current) {
-      // Dashboard: the full per-row graph (HA reference).
-      CardSizeMode.Wrap -> RemoteHaHistoryGraph(data, modifier = modifier, singleEmptyState = true)
+      // Dashboard: the full per-row graph (HA reference), each trace at the family's framed
+      // height. Fixed cells keep the compact trace.
+      CardSizeMode.Wrap ->
+        RemoteHaHistoryGraph(
+          data,
+          modifier = modifier,
+          singleEmptyState = true,
+          plotHeightDp = HISTORY_PLOT_HEIGHT_DP,
+        )
       // Launcher / Wear: a single width gate (alpha010 collapses
       // multi-rung ladders to tier 0 — #224, see GaugeCardConverter).
       // Narrow → identity tier (first spark + latest value); wider →

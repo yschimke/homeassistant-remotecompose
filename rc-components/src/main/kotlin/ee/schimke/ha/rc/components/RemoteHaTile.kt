@@ -77,9 +77,16 @@ private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolea
   val accent: RemoteColor = look.accent
   val inline =
     data.features.firstOrNull()?.takeIf { data.featuresPosition == HaTileFeaturePosition.Inline }
-  if (inline == null && data.badge == null && visualFamily().isCommunity) {
-    CommunityTileInfo(data, look, renderChip)
-    return
+  if (inline == null && data.badge == null) {
+    val family = visualFamily()
+    val identity: @Composable () -> Unit = {
+      TileIdentity(data, look, renderChip) { TileIcon(data, look, renderChip) }
+    }
+    if (FamilyTileInfo(family, data, look, identity)) return
+    if (family.isCommunity) {
+      CommunityTileInfo(data, look, identity)
+      return
+    }
   }
   RemoteRow(
     modifier = if (inline != null) RemoteModifier.fillMaxWidth() else RemoteModifier,
@@ -91,7 +98,7 @@ private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolea
         TileIcon(data, look, renderChip)
       }
     } else {
-      TileIcon(data, look, renderChip)
+      TileIdentity(data, look, renderChip) { TileIcon(data, look, renderChip) }
     }
     RemoteColumn(
       modifier =
@@ -351,7 +358,11 @@ fun RemoteHaIconChip(
 }
 
 @Composable
-private fun CommunityTileInfo(data: HaTileData, look: HaEntityLook, renderChip: Boolean) {
+private fun CommunityTileInfo(
+  data: HaTileData,
+  look: HaEntityLook,
+  identity: @Composable () -> Unit,
+) {
   val family = visualFamily()
   val theme = haTheme()
   val label: @Composable () -> Unit = {
@@ -376,8 +387,7 @@ private fun CommunityTileInfo(data: HaTileData, look: HaEntityLook, renderChip: 
     )
   }
   RemoteRow(RemoteModifier.fillMaxWidth(), verticalAlignment = RemoteAlignment.CenterVertically) {
-    if (family != HaVisualFamily.Minimalist && family != HaVisualFamily.Arctic)
-      TileIcon(data, look, renderChip)
+    if (family != HaVisualFamily.Minimalist && family != HaVisualFamily.Arctic) identity()
     RemoteColumn(RemoteModifier.weight(1f).padding(horizontal = 10.rdp)) {
       if (family == HaVisualFamily.Cupertino || family == HaVisualFamily.Minimalist) {
         state()
@@ -388,7 +398,6 @@ private fun CommunityTileInfo(data: HaTileData, look: HaEntityLook, renderChip: 
       }
     }
     if (family == HaVisualFamily.Bubble) state()
-    if (family == HaVisualFamily.Minimalist || family == HaVisualFamily.Arctic)
-      TileIcon(data, look, renderChip)
+    if (family == HaVisualFamily.Minimalist || family == HaVisualFamily.Arctic) identity()
   }
 }
