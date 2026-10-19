@@ -521,7 +521,9 @@ private fun DashboardsRoot(
   val dashboards by rememberSelectedDashboardListState(session)
   val context = LocalContext.current
   val app = remember(context) { context.applicationContext as TerrazzoApplication }
-  val wearWidgetsSupported by app.wearCapabilityProbe.stateFlow(scope).collectAsState()
+  // One eager StateFlow (and capability listener) per screen, not one per recomposition.
+  val wearWidgetsFlow = remember(app, scope) { app.wearCapabilityProbe.stateFlow(scope) }
+  val wearWidgetsSupported by wearWidgetsFlow.collectAsState()
   val logsViewEnabled by graph.preferencesStore.logsViewEnabled.collectAsState(initial = false)
 
   var opened by rememberSaveable { mutableStateOf(initialDashboardToOpened(initialDashboard)) }

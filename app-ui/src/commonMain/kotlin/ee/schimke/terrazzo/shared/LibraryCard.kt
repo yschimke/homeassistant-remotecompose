@@ -43,7 +43,10 @@ internal fun LibraryCard(
 ) {
   val scope = rememberCoroutineScope()
   val cache =
-    designCache ?: remember(scope) { DashboardLoadCache(scope, load = ::loadLibraryDesign) }
+    designCache
+      ?: remember(scope) {
+        DashboardLoadCache(scope) { key: LibraryDesignKey -> loadLibraryDesign(key) }
+      }
   val designKey =
     remember(card, style, dark, requireExactDesign) {
       LibraryDesignKey(anonymousTemplateCard(card), style, dark, requireExactDesign)
@@ -275,11 +278,26 @@ internal data class LibraryDesignKey(
 internal fun exactLibraryDesign(response: JsonObject): Boolean =
   (response["exact"] as? JsonPrimitive)?.booleanOrNull == true
 
-internal suspend fun loadLibraryDesign(key: LibraryDesignKey): ByteArray? {
+internal const val DEFAULT_CARD_DESIGN_SERVER = "https://ha.coo.ee"
+
+/** The configured "Card design server" origin; blank falls back to the hosted library. */
+internal fun cardDesignServerBase(server: String): String =
+  server.trim().trimEnd('/').ifEmpty { DEFAULT_CARD_DESIGN_SERVER }
+
+internal fun cardDesignResolveUrl(server: String): String =
+  "${cardDesignServerBase(server)}/api/cards/resolve"
+
+internal fun cardDesignBlobUrl(server: String, sha: String): String =
+  "${cardDesignServerBase(server)}/designs/v1/blobs/$sha.rc"
+
+internal suspend fun loadLibraryDesign(
+  key: LibraryDesignKey,
+  server: String = DEFAULT_CARD_DESIGN_SERVER,
+): ByteArray? {
   val http = HttpClient()
   try {
     val response =
-      http.post("https://ha.coo.ee/api/cards/resolve") {
+      http.post(cardDesignResolveUrl(server)) {
         contentType(ContentType.Text.Plain)
         setBody(
           buildJsonObject {
@@ -296,7 +314,7 @@ internal suspend fun loadLibraryDesign(key: LibraryDesignKey): ByteArray? {
     if (key.requireExact && !exactLibraryDesign(resolved)) return null
     val sha = resolved["sha256"]!!.jsonPrimitive.content
     check(Regex("[0-9a-f]{64}").matches(sha))
-    val blob = http.get("https://ha.coo.ee/designs/v1/blobs/$sha.rc")
+    val blob = http.get(cardDesignBlobUrl(server, sha))
     check(blob.status.isSuccess())
     return blob.bodyAsBytes().also { check(Sha256.hex(it) == sha) }
   } finally {
