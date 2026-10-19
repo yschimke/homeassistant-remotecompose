@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -61,7 +62,6 @@ import ee.schimke.terrazzo.core.prefs.LauncherColoursPref
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.DemoHaSession
-import ee.schimke.terrazzo.core.session.HaReauthRequiredException
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.ReconnectBackoff
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
@@ -91,7 +91,6 @@ import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import ee.schimke.terrazzo.widget.WidgetsScreen
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
@@ -113,12 +112,13 @@ import kotlinx.coroutines.withContext
  * [HaSession] for a deterministic fake so the app can be explored without a working HA instance.
  */
 @Composable
-fun TerrazzoApp(initialDashboard: String? = null, initialSession: HaSession? = null) {
-  // Cold-start auto-resume: [initialSession] is a cache-only session
-  // built in MainActivity from the last-known instance, so the first
-  // frame paints from disk while we re-mint the access token in the
-  // background. A new sign-in or demo toggle replaces this state.
-  var session by remember { mutableStateOf(initialSession) }
+fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) {
+  // The session is hoisted into [SessionHolder] (a ViewModel) so it
+  // survives rotation. MainActivity seeds it with a cache-only session
+  // for the last-known instance, so the first frame paints from disk,
+  // and runs the cold-start resume there. A new sign-in or demo toggle
+  // replaces it here.
+  var session by sessionHolder::session
   var lastError by remember { mutableStateOf<Throwable?>(null) }
 
   val graph = LocalTerrazzoGraph.current
@@ -150,45 +150,14 @@ fun TerrazzoApp(initialDashboard: String? = null, initialSession: HaSession? = n
     lastError = reason
   }
 
-  // Persisted demo-mode flag survives process restarts, so a user who
-  // opted into demo doesn't see the login screen again on relaunch.
-  // Also re-arms the widget refresh chain in case the worker queue
-  // was flushed (e.g. "Clear data" via system Settings). When a
-  // cache-only [initialSession] was passed in (cold-start auto-resume
-  // from a prior login), the demo path overrides it; otherwise we
-  // mint a fresh access token from the vault's refresh token and
-  // swap the stub for a real live session in the background.
-  LaunchedEffect(Unit) {
-    if (graph.preferencesStore.demoModeNow()) {
-      session = graph.sessionFactory.createDemo()
-      widgetScheduler.scheduleDemo()
-    } else if (initialSession != null) {
-      val baseUrl = initialSession.baseUrl
-      val refreshToken = graph.tokenVault.get(baseUrl)
-      if (refreshToken != null) {
-        runCatching { graph.authService.refreshAccessToken(baseUrl, refreshToken) }
-          .onSuccess { tokens ->
-            val access = tokens.accessToken
-            // The user may have signed out or toggled demo
-            // in the time the refresh was in flight; only
-            // swap if we're still on the cache-only stub.
-            if (access != null && session === initialSession) {
-              val previous = session
-              session =
-                graph.sessionFactory.create(baseUrl, access, tokens.expiresInSeconds?.seconds)
-              previous?.close()
-            }
-            tokens.refreshToken?.let { graph.tokenVault.put(baseUrl, it) }
-          }
-          .onFailure { error ->
-            // HA refused the stored refresh token: no retry can recover, so send the user back
-            // to sign in rather than leave them on a cached dashboard that never connects.
-            if (error is HaReauthRequiredException && session === initialSession) {
-              signOut(initialSession, SignedOutException())
-            }
-          }
-      }
-    }
+  // The cold-start resume found the stored refresh token refused: no
+  // retry can recover, so send the user back to sign in rather than
+  // leave them on a cached dashboard that never connects. Only if they
+  // are still on that cache-only stub.
+  LaunchedEffect(sessionHolder.refusedSession) {
+    val refused = sessionHolder.refusedSession ?: return@LaunchedEffect
+    sessionHolder.refusedSession = null
+    if (session === refused) signOut(refused, SignedOutException())
   }
 
   // A live session whose refresh token HA refuses mid-flight (revoked, user deactivated) can't
@@ -568,6 +537,7 @@ private fun DashboardsRoot(
   val connectionStatus = sessionConnection.toUiConnectionStatus()
   val snackbars = remember { SnackbarHostState() }
   val lifecycleOwner = LocalLifecycleOwner.current
+  val activity = LocalActivity.current
   val notifications by session.notifications.collectAsState()
 
   // Snackbar pop on arrival: remember the ids we've already announced
@@ -604,7 +574,9 @@ private fun DashboardsRoot(
   //  - On leaving the foreground, cleanly disconnect. Without this the
   //    OS tears the idle socket down in the background and the next
   //    read-loop failure logs a spurious Error; a clean disconnect logs
-  //    a neutral "Disconnected" instead.
+  //    a neutral "Disconnected" instead. A configuration change
+  //    (rotation) isn't leaving: the session outlives the Activity in
+  //    [SessionHolder], so keep the socket for the recreated one.
   LaunchedEffect(session, lifecycleOwner) {
     lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
       val backoff = ReconnectBackoff()
@@ -627,7 +599,9 @@ private fun DashboardsRoot(
       } finally {
         // repeatOnLifecycle has cancelled us; close the socket
         // outside the cancelled scope so the suspend call runs.
-        withContext(NonCancellable) { runCatching { session.disconnect() } }
+        if (activity?.isChangingConfigurations != true) {
+          withContext(NonCancellable) { runCatching { session.disconnect() } }
+        }
       }
     }
   }
