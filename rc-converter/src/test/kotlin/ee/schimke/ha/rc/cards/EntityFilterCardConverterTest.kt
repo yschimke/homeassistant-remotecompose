@@ -3,8 +3,11 @@ package ee.schimke.ha.rc.cards
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.cardDataSignature
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -64,5 +67,49 @@ class EntityFilterCardConverterTest {
       JsonObject(mapOf("operator" to JsonPrimitive("regex"), "value" to JsonPrimitive("un.*")))
     val raw = JsonObject(card().raw + ("state_filter" to JsonArray(listOf(filter))))
     assertEquals(listOf("lock.back"), filteredEntities(CardConfig("entity-filter", raw), snapshot))
+  }
+
+  private fun regexCard(pattern: String): CardConfig {
+    val filter =
+      JsonObject(mapOf("operator" to JsonPrimitive("regex"), "value" to JsonPrimitive(pattern)))
+    return CardConfig(
+      "entity-filter",
+      JsonObject(card().raw + ("state_filter" to JsonArray(listOf(filter)))),
+    )
+  }
+
+  @Test
+  fun aRegexFilterSearchesTheStateAsHomeAssistantsRegExpTestDoes() {
+    // HA evaluates `RegExp(value).test(state)`: a match anywhere in the state counts.
+    assertEquals(listOf("lock.front", "lock.back"), filteredEntities(regexCard("lock"), snapshot))
+    assertEquals(
+      listOf("cover.garage", "valve.garden"),
+      filteredEntities(regexCard("^open"), snapshot),
+    )
+    // Anchoring both ends still asks for the whole state.
+    assertEquals(listOf("valve.garden"), filteredEntities(regexCard("^open$"), snapshot))
+  }
+
+  private val registry = defaultRegistry()
+
+  private fun withState(id: String, state: String) =
+    snapshot.copy(states = snapshot.states + (id to EntityState(id, state)))
+
+  @Test
+  fun anEntityStartingOrStoppingToMatchReEncodesTheCard() {
+    val base = assertNotNull(registry.cardDataSignature(card(), snapshot))
+    // light.hall turning on joins the filtered glance: the captured document must be rebuilt.
+    assertNotEquals(base, registry.cardDataSignature(card(), withState("light.hall", "on")))
+    // light.kitchen turning off leaves it.
+    assertNotEquals(base, registry.cardDataSignature(card(), withState("light.kitchen", "off")))
+    assertEquals(base, registry.cardDataSignature(card(), snapshot), "deterministic")
+  }
+
+  @Test
+  fun aShownEntitysNewValueReEncodesTheCardToo() {
+    // A re-encode card takes no binding push, so a row's value is in the signature as well.
+    val filtered = card(listOf("21.5", "22.0"))
+    val base = assertNotNull(registry.cardDataSignature(filtered, snapshot))
+    assertNotEquals(base, registry.cardDataSignature(filtered, withState("sensor.temp", "22.0")))
   }
 }

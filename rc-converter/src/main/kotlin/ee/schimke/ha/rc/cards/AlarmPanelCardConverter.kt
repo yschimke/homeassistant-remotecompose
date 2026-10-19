@@ -23,6 +23,8 @@ import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
+import ee.schimke.ha.rc.cardDataSignature
+import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaAlarmAction
 import ee.schimke.ha.rc.components.HaAlarmPanelData
@@ -42,8 +44,13 @@ import kotlinx.serialization.json.putJsonArray
 
 /**
  * `alarm-panel` card. Maps `alarm_control_panel.*` entity state into a panel showing the
- * disarmed/armed status, ARM action buttons (driven by `states:` config — defaults to away/home),
- * and the numeric keypad.
+ * disarmed/armed status, a row of action buttons and the numeric keypad. As in Home Assistant's
+ * card, the row is the ARM buttons of the `states:` config (defaulting to away/home) while the
+ * entity is `disarmed`, and a single DISARM button in every other state ([alarmButtonServices]).
+ *
+ * Which buttons show is baked, so the card follows its entity by document re-encode
+ * ([dataSignature], live-card-updates.md path 2) and, on the design path, by the `disarm_row`
+ * property, which picks a template captured with that row.
  *
  * Each ARM/DISARM button emits an [HaAction.AlarmIntent] (rather than a direct call-service); each
  * keypad press emits an [HaAction.AlarmKey]. The host's `AlarmKeypadCoordinator` buffers keys and
@@ -57,23 +64,36 @@ class AlarmPanelCardConverter : CardConverter {
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 380
 
   /**
+   * The button row is baked from the entity's state (ARM buttons while disarmed, DISARM otherwise),
+   * so arming or disarming must rebuild the document. The status hero and title are baked from the
+   * same entity, and a re-encode card takes no binding push, so the whole entity is folded in.
+   */
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String =
+    cardDataSignature(cardEntityIds(card), snapshot)
+
+  /**
    * An alarm panel renders from a card design: its status variants already switch in-document on
-   * `<slot>.state_int`, so only the ARM buttons (`states`) and the keypad (`show_keypad`) are
-   * structure. The code length only shapes the actions, which [designAction] rebuilds locally.
+   * `<slot>.state_int`, so only the button row (the configured `states`, or DISARM while the entity
+   * isn't disarmed: `disarm_row`) and the keypad (`show_keypad`) are structure. The code length
+   * only shapes the actions, which [designAction] rebuilds locally.
    */
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
     if (!TEMPLATE_CONFIG_KEYS.containsAll(card.raw.keys)) return null
     val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull ?: return null
     if (CardDesignSlots.domainOf(entityId) != DOMAIN) return null
-    if (entityId !in snapshot.states) return null
+    val entity = snapshot.states[entityId] ?: return null
     val states = armStates(card)
     if (states.any { ',' in it || ';' in it }) return null
     // A launcher widget accumulates a known-length PIN in the document; that length is structure.
-    val pinLength = codeLengthFor(card, snapshot.states[entityId])?.takeIf { it in 1..9 } ?: 0
+    val pinLength =
+      codeLengthFor(card, entity, alarmButtonServices(card, entity).first())?.takeIf { it in 1..9 }
+        ?: 0
     return DesignProperties.build {
       string(STATES, states.joinToString(","))
       enum(SHOW_KEYPAD, if (showKeypad(card)) 1 else 0)
       enum(PIN_LENGTH, pinLength)
+      // Only while the row is DISARM, so a disarmed panel keeps the design key it always had.
+      if (offersDisarm(entity)) enum(DISARM_ROW, 1)
     }
   }
 
@@ -92,14 +112,16 @@ class AlarmPanelCardConverter : CardConverter {
             properties[PIN_LENGTH]?.toIntOrNull()?.takeIf { it > 0 }?.let { put("code_length", it) }
           },
       )
-    val entity = CardDesignSlots.templateEntity(slot, placeholderState = "disarmed")
+    // Any armed state draws the DISARM row; the status itself is the pushed `<slot>.state_int`.
+    val placeholderState = if (properties[DISARM_ROW] == "1") "armed_away" else "disarmed"
+    val entity = CardDesignSlots.templateEntity(slot, placeholderState = placeholderState)
     return DesignTemplateInput(card, HaSnapshot(states = mapOf(slot to entity)))
   }
 
   /**
-   * Which ARM button or keypad key a template tap pressed, rebuilt from this card's own `states`
-   * and code length against its real entity; keys only while the card shows its keypad. Anything
-   * else gets the slot's default tap.
+   * Which ARM / DISARM button or keypad key a template tap pressed, rebuilt from the buttons this
+   * card's own config shows for its real entity's current state ([alarmButtonServices]) and code
+   * length; keys only while the card shows its keypad. Anything else gets the slot's default tap.
    */
   override fun designAction(
     card: CardConfig,
@@ -109,17 +131,17 @@ class AlarmPanelCardConverter : CardConverter {
   ): HaAction? {
     if (slot != 0) return null
     val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull ?: return null
+    val entity = snapshot?.states?.get(entityId)
+    val services = alarmButtonServices(card, entity)
     return when (templateAction) {
       is HaAction.AlarmIntent ->
         templateAction.service
-          .takeIf { it in armStates(card) }
-          ?.let {
-            HaAction.AlarmIntent(entityId, it, codeLengthFor(card, snapshot?.states?.get(entityId)))
-          }
+          .takeIf { it in services }
+          ?.let { HaAction.AlarmIntent(entityId, it, codeLengthFor(card, entity, it)) }
       // A PIN typed into a launcher widget: the digits arrive with the tap, the entity is ours.
       is HaAction.AlarmPin ->
         HaAction.AlarmPin(entityId, "").takeIf {
-          showKeypad(card) && (codeLengthFor(card, snapshot?.states?.get(entityId)) ?: 0) in 1..9
+          showKeypad(card) && (codeLengthFor(card, entity, services.first()) ?: 0) in 1..9
         }
       is HaAction.AlarmKey ->
         templateAction.key
@@ -139,18 +161,21 @@ class AlarmPanelCardConverter : CardConverter {
         ?: entityId
         ?: "Alarm"
     val state = entity?.state ?: "unknown"
-    val statesArr = armStates(card)
-    val codeLength = codeLengthFor(card, entity)
+    val services = alarmButtonServices(card, entity)
+    val codeLength = codeLengthFor(card, entity, services.first())
     val actions =
       entityId
         ?.let { id ->
-          statesArr.map { suffix ->
-            val label = suffix.removePrefix("arm_").replace('_', ' ').uppercase()
+          services.map { service ->
             HaAlarmAction(
-              label = "ARM $label",
-              accent = armAccent(suffix),
+              label = actionLabel(service),
+              accent = armAccent(service),
               tapAction =
-                HaAction.AlarmIntent(entityId = id, service = suffix, codeLength = codeLength),
+                HaAction.AlarmIntent(
+                  entityId = id,
+                  service = service,
+                  codeLength = codeLengthFor(card, entity, service),
+                ),
             )
           }
         }
@@ -192,6 +217,8 @@ private const val DOMAIN = "alarm_control_panel"
 private const val STATES = "states"
 private const val SHOW_KEYPAD = "show_keypad"
 private const val PIN_LENGTH = "pin_length"
+private const val DISARM_ROW = "disarm_row"
+private const val DISARM = "disarm"
 private val TEMPLATE_CONFIG_KEYS =
   setOf("type", "entity", "name", "states", "show_keypad", "code_length")
 private val KEYPAD_KEYS = (0..9).map { it.toString() }.toSet() + setOf("backspace", "clear")
@@ -200,17 +227,44 @@ private fun armStates(card: CardConfig): List<String> =
   (card.raw["states"] as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.content }
     ?: listOf("arm_away", "arm_home")
 
+/**
+ * Whether the card offers DISARM instead of its ARM buttons: Home Assistant's alarm panel card
+ * shows the configured `states` only while the entity is `disarmed`, and DISARM in every other
+ * state (armed_*, pending, arming, disarming, triggered, unavailable, unknown). A missing entity
+ * keeps the ARM row; HA shows a warning there instead of a panel.
+ */
+private fun offersDisarm(entity: EntityState?): Boolean =
+  entity != null && entity.state != "disarmed"
+
+/** The services the card's button row offers for [entity], in order (see [offersDisarm]). */
+private fun alarmButtonServices(card: CardConfig, entity: EntityState?): List<String> =
+  if (offersDisarm(entity)) listOf(DISARM) else armStates(card)
+
+/** A button's label: `DISARM`, or `ARM AWAY` for `arm_away`. */
+private fun actionLabel(service: String): String =
+  if (service == DISARM) "DISARM"
+  else "ARM " + service.removePrefix("arm_").replace('_', ' ').uppercase()
+
 private fun showKeypad(card: CardConfig): Boolean =
   card.raw["show_keypad"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
 
 /**
- * The code length the alarm actions carry: 0 when the entity reports `code_arm_required: false`,
- * else the dashboard's `code_length:` (HA doesn't surface a structured length; attribute-level
- * hints are strings like "number" we don't parse), else unknown.
+ * The code length the action for [service] carries: 0 when no code is needed (arming an entity that
+ * reports `code_arm_required: false`, or disarming one whose `code_format` is null, i.e. it has no
+ * code at all; `code_arm_required` doesn't apply to disarming), else the dashboard's `code_length:`
+ * (HA doesn't surface a structured length; attribute-level hints are strings like "number" we don't
+ * parse), else unknown.
  */
-private fun codeLengthFor(card: CardConfig, entity: EntityState?): Int? {
+private fun codeLengthFor(card: CardConfig, entity: EntityState?, service: String): Int? {
   val codeRequired =
-    entity?.attributes?.get("code_arm_required")?.jsonPrimitive?.booleanOrNull ?: true
+    if (service == DISARM) {
+      val attributes = entity?.attributes
+      attributes == null ||
+        "code_format" !in attributes ||
+        (attributes["code_format"] as? JsonPrimitive)?.contentOrNull != null
+    } else {
+      entity?.attributes?.get("code_arm_required")?.jsonPrimitive?.booleanOrNull ?: true
+    }
   val configuredLen = card.raw["code_length"]?.jsonPrimitive?.intOrNull
   return when {
     !codeRequired -> 0
