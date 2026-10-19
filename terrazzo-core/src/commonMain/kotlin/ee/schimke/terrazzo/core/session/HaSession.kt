@@ -332,6 +332,8 @@ class LiveHaSession(
 
   override suspend fun disconnect() {
     parked = true
+    // Published before the socket goes, so nothing picks this session as connected while it closes.
+    _connectionStatus.value = SessionConnectionStatus.Disconnected
     runCatching { client.disconnect() }
     _connectionStatus.value = SessionConnectionStatus.Disconnected
   }

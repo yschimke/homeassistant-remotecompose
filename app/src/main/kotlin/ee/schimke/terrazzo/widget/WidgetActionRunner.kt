@@ -5,9 +5,12 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import ee.schimke.ha.client.CommandNotSentException
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.session.DemoData
+import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.terrazzoGraph
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
@@ -25,10 +28,11 @@ import kotlinx.coroutines.withTimeoutOrNull
  * server, and only a toggle or a service call. A pinned widget is a deliberate control, so the
  * dashboard's read-only lock (a guard against stray taps while scrolling) doesn't apply.
  *
- * The connection is the app's own login: the stored refresh token mints an access token (kept until
- * it expires), and a short-lived session sends `call_service` and closes. An on/off action shows on
- * the widget at once (its cached state flipped and the widget redrawn), and is put back if the call
- * fails.
+ * The connection is the app's own login. While the app runs with a connected session for the
+ * widget's server, the call goes on that socket ([setAppSession]). Otherwise the stored refresh
+ * token mints an access token (kept until it expires), and a short-lived session sends
+ * `call_service` and closes. An on/off action shows on the widget at once (its cached state flipped
+ * and the widget redrawn), and is put back if the call fails.
  */
 internal object WidgetActionRunner {
 
@@ -78,18 +82,60 @@ internal object WidgetActionRunner {
     }
   }
 
+  /**
+   * The app's own session while it runs, from `TerrazzoApp`. A tap on a widget of the same server
+   * sends its call on that socket while it is connected, skipping the token refresh, connect and
+   * auth round trips; it is the signed-in session by definition (signing out clears it).
+   */
+  @Volatile private var appSession: HaSession? = null
+
+  fun setAppSession(session: HaSession?) {
+    appSession = session
+  }
+
   private suspend fun call(graph: TerrazzoGraph, baseUrl: String, action: HaAction) {
+    val started = System.nanoTime()
+    val live = appSession?.takeIf {
+      it.baseUrl == baseUrl && it.connectionStatus.value == SessionConnectionStatus.Connected
+    }
+    // The app's socket may be closing as it is picked (the app just went to the background). A call
+    // it refused before sending goes on a new session; any other failure isn't retried, since Home
+    // Assistant may have run it with only the reply lost, and a second toggle would undo the first.
+    val path =
+      if (live == null) {
+        callOnNewSession(graph, baseUrl, action)
+        "a new session"
+      } else {
+        try {
+          send(live, action)
+          "the app's session"
+        } catch (notSent: CommandNotSentException) {
+          callOnNewSession(graph, baseUrl, action)
+          "a new session (the app's was closing)"
+        }
+      }
+    Log.i(
+      TAG,
+      "Widget ${actionEntityId(action)} on $path in ${(System.nanoTime() - started) / 1_000_000} ms",
+    )
+  }
+
+  private suspend fun send(session: HaSession, action: HaAction) {
+    when (action) {
+      // `homeassistant.toggle` flips on/off across every domain that supports it.
+      is HaAction.Toggle ->
+        session.callService("homeassistant", "toggle", entityId = action.entityId)
+      is HaAction.CallService ->
+        session.callService(action.domain, action.service, action.entityId, action.serviceData)
+      else -> Unit
+    }
+  }
+
+  private suspend fun callOnNewSession(graph: TerrazzoGraph, baseUrl: String, action: HaAction) {
     val session = graph.sessionFactory.create(baseUrl, accessToken(graph, baseUrl))
     try {
       session.connect()
-      when (action) {
-        // `homeassistant.toggle` flips on/off across every domain that supports it.
-        is HaAction.Toggle ->
-          session.callService("homeassistant", "toggle", entityId = action.entityId)
-        is HaAction.CallService ->
-          session.callService(action.domain, action.service, action.entityId, action.serviceData)
-        else -> Unit
-      }
+      send(session, action)
     } catch (failure: Throwable) {
       // A refused token is dropped, so the next tap mints a fresh one.
       tokensMutex.withLock { tokens.remove(baseUrl) }
