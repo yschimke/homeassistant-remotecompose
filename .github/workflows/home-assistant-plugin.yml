@@ -89,10 +89,17 @@ jobs:
           cp home-assistant/test/configuration.yaml build/ha-config/
           cp home-assistant/test/ui-lovelace.yaml home-assistant/test/second-dashboard.yaml build/ha-config/
           docker run -d --name ha-plugin -p 127.0.0.1:8123:8123 -v "$PWD/build/ha-config:/config" ghcr.io/home-assistant/home-assistant:stable
-          for i in $(seq 1 90); do
-            if curl -fsS http://127.0.0.1:8123/api/onboarding >/dev/null; then break; fi
+          ready=false
+          for _ in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8123/api/onboarding >/dev/null; then ready=true; break; fi
             sleep 2
           done
+          if [ "$ready" != true ]; then
+            echo "::error::Home Assistant did not answer /api/onboarding within 180 s"
+            docker ps -a --filter name=ha-plugin
+            docker logs ha-plugin 2>&1 | tail -200
+            exit 1
+          fi
           node --test home-assistant/test/installed.test.mjs
       - name: Home Assistant diagnostics
         if: always()
