@@ -120,6 +120,10 @@ try:
         assert not [command for command in commands if command['type'] == 'call_service']
         details.close()
         toggle.click(force=True)
+        # Wait for the first call on a deadline (slow runners), then give a duplicate time to land.
+        deadline = time.monotonic() + 15
+        while not any(command['type'] == 'call_service' for command in commands) and time.monotonic() < deadline:
+            page.wait_for_timeout(100)
         page.wait_for_timeout(500)
         calls = [command for command in commands if command['type'] == 'call_service']
         assert len(calls) == 1, f'One click dispatched {len(calls)} service calls'
