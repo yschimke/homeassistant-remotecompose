@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.platform.LocalInspectionMode
 import ee.schimke.ha.client.design.CardDesignOverrides
 import ee.schimke.ha.client.design.DesignStore
 import ee.schimke.ha.client.design.Sha256
@@ -165,10 +166,14 @@ internal const val DESIGN_PRELOAD_WAIT_MS = 1_500L
  * The preloaded designs ([CardDesignPreload]), or null while the first read is still running. It
  * waits at most [DESIGN_PRELOAD_WAIT_MS]: after that a slow or broken cache never holds the
  * dashboard back, and the cards render from the local library until the read lands.
+ *
+ * Previews (inspection mode) never start the preload and don't advance the clock through the wait,
+ * so they render from the local library straight away instead of capturing the hold's spinner.
  */
 @Composable
 fun rememberPreloadedCardDesigns(): CardDesigns? {
   val preloaded by CardDesignPreload.designs.collectAsState()
+  if (LocalInspectionMode.current) return preloaded ?: CardDesigns()
   var waitedOut by remember { mutableStateOf(false) }
   LaunchedEffect(Unit) {
     delay(DESIGN_PRELOAD_WAIT_MS)

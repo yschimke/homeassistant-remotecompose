@@ -1,0 +1,85 @@
+name: Play Store graphics
+
+# Re-renders the Play listing images from their @Preview sources
+# (scripts/render-play-screenshots.sh, scripts/render-play-assets.sh) and
+# opens — or refreshes — one PR when the committed PNGs drift. Uploading them
+# to Play is a separate, opt-in release step (`PLAY_PUBLISH_LISTING`, see
+# release-build.yml), so a merged refresh reaches the store on the next release.
+#
+# The PR is opened with this workflow's GITHUB_TOKEN, like release-please's, so
+# its pull_request checks don't start on their own: re-run them from the PR or
+# push to the branch if a required check needs to report.
+
+on:
+  schedule:
+    - cron: '17 6 * * 1' # Mondays
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: play-assets
+  cancel-in-progress: false
+
+env:
+  BRANCH: play-assets/refresh
+
+jobs:
+  render:
+    name: Render and propose Play graphics
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: ./.github/actions/setup
+        with:
+          cache-read-only: 'true'
+      - uses: yschimke/compose-ai-tools/.github/actions/install@v2.68.0
+        with:
+          version: catalog
+          catalog-key: compose-preview-plugin
+
+      # `convert` flattens the round Wear shots; `compare` drops renders whose
+      # pixels didn't change. Usually preinstalled on ubuntu-latest.
+      - name: Ensure ImageMagick
+        run: command -v convert >/dev/null || { sudo apt-get update -q && sudo apt-get install -yq imagemagick; }
+
+      - name: Render phone, tablet and Wear screenshots
+        run: scripts/render-play-screenshots.sh
+      - name: Render icon and feature graphic
+        run: scripts/render-play-assets.sh
+      - name: Keep committed PNGs whose pixels didn't change
+        run: scripts/restore-unchanged-play-graphics.sh
+
+      - name: Open or update the refresh PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          listing=app/src/main/play/listings
+          if [[ -z "$(git status --porcelain -- "$listing")" ]]; then
+            echo "Play graphics are up to date." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git status --short -- "$listing" | tee -a "$GITHUB_STEP_SUMMARY"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -C "$BRANCH"
+          git add -A -- "$listing"
+          git commit -m 'chore(play): refresh Play Store graphics' \
+            -m "Re-rendered from the Play_* @Preview sources by the ${GITHUB_WORKFLOW} workflow."
+          git push --force origin "$BRANCH"
+
+          existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [[ -n "$existing" ]]; then
+            echo "Updated PR #${existing}." | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            gh pr create --base main --head "$BRANCH" \
+              --title 'chore(play): refresh Play Store graphics' \
+              --body "Re-rendered Play listing images from the \`Play_*\` @Preview composables (run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}). Merging lands them in \`${listing}/\`; a release with \`PLAY_PUBLISH_LISTING=true\` uploads them to Play."
+          fi

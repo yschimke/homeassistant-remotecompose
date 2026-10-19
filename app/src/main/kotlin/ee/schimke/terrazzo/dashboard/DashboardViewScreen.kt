@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
@@ -49,6 +51,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -307,6 +311,11 @@ private fun DashboardList(
   val cfg = rememberLayoutConfig()
   val pinStore = LocalTerrazzoGraph.current.pinStore
   val pinScope = rememberCoroutineScope()
+  // Long-pressing a section heading plans a placeholder card for this dashboard. Its editor sits at
+  // the top of the list, so scroll there: the section pressed may be far down.
+  var planningCard by remember(baseUrl, dashboardUrlPath) { mutableStateOf(false) }
+  val listState = rememberLazyListState()
+  LaunchedEffect(planningCard) { if (planningCard) listState.animateScrollToItem(0) }
   val preferencesStore = LocalTerrazzoGraph.current.preferencesStore
   val useGridLayout by preferencesStore.experimentalGridLayout.collectAsState(initial = false)
   val collapsedMode by preferencesStore.collapsedMode.collectAsState(initial = true)
@@ -400,6 +409,7 @@ private fun DashboardList(
       LocalCardDesignOverrides provides cardDesignOverrides,
     ) {
       LazyColumn(
+        state = listState,
         modifier =
           Modifier.fillMaxSize()
             .consumeWindowInsets(contentPadding)
@@ -412,6 +422,8 @@ private fun DashboardList(
           DashboardPlaceholders(
             session = placeholderSession,
             urlPath = dashboardUrlPath.takeIf { it.isNotEmpty() },
+            planning = planningCard,
+            onPlanningDone = { planningCard = false },
           )
         }
         layout.views.forEachIndexed { viewIndex, view ->
@@ -442,6 +454,7 @@ private fun DashboardList(
                 viewPath = view.viewPath,
                 pinStore = pinStore,
                 onPinAction = { action -> pinScope.launch { action() } },
+                onPlanCard = { planningCard = true },
               ),
           )
         }
@@ -704,19 +717,35 @@ private fun CardConfig.headingLikeTitle(): String =
 /**
  * Heading for a section title. Shared between single-column and wide layouts. In single-column mode
  * with collapsed sections enabled, the heading also acts as the tap target that toggles the section
- * open and shows a chevron reflecting the current state.
+ * open and shows a chevron reflecting the current state. A long press runs [onLongClick] (planning
+ * a placeholder card) when one is given.
  */
 @Composable
-private fun SectionHeading(
+internal fun SectionHeading(
   title: String,
   collapsible: Boolean = false,
   expanded: Boolean = true,
   onClick: () -> Unit = {},
+  onLongClick: (() -> Unit)? = null,
   trailing: @Composable (() -> Unit)? = null,
 ) {
+  val haptics = LocalHapticFeedback.current
   val rowModifier =
     Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp).let {
-      if (collapsible) it.clickable(onClick = onClick) else it
+      when {
+        onLongClick != null ->
+          it.combinedClickable(
+            onClickLabel = if (collapsible) (if (expanded) "Collapse" else "Expand") else null,
+            onLongClickLabel = "Plan a card",
+            onLongClick = {
+              haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+              onLongClick()
+            },
+            onClick = { if (collapsible) onClick() },
+          )
+        collapsible -> it.clickable(onClick = onClick)
+        else -> it
+      }
     }
   Row(modifier = rowModifier, verticalAlignment = Alignment.CenterVertically) {
     Text(
@@ -738,7 +767,8 @@ private fun SectionHeading(
 
 /**
  * Context plumbed from [DashboardList] down through every section renderer. Carries enough to
- * compute a stable pin key ([PinStore.sectionKey]) and to dispatch pin/unpin coroutines.
+ * compute a stable pin key ([PinStore.sectionKey]) and to dispatch pin/unpin coroutines, plus
+ * [onPlanCard], which a long press on a section heading runs to plan a placeholder card.
  */
 private data class SectionPinContext(
   val baseUrl: String,
@@ -746,6 +776,7 @@ private data class SectionPinContext(
   val viewPath: String,
   val pinStore: PinStore,
   val onPinAction: (suspend () -> Unit) -> Unit,
+  val onPlanCard: () -> Unit,
 )
 
 /**
@@ -778,6 +809,7 @@ private fun PinnableSectionHeading(
     collapsible = collapsible,
     expanded = expanded,
     onClick = onClick,
+    onLongClick = pinContext.onPlanCard,
     trailing = {
       IconButton(
         onClick = {
