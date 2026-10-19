@@ -127,7 +127,8 @@ class PictureGlanceCardConverter : CardConverter {
         accent = HaStateColor.activeFor(entity),
         initiallyActive = active,
         label = name,
-        tapAction = defaultTapActionFor(id),
+        // HA: a DOMAINS_TOGGLE entity's icon toggles, unless `force_dialog: true`.
+        tapAction = defaultTapActionFor(card, id),
       )
     }
 

@@ -170,9 +170,12 @@ private fun ButtonBody(
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteColumn(horizontalAlignment = RemoteAlignment.CenterHorizontally) {
-      ButtonIconChip(data, look, accent, chipDp, iconDp)
+      // HA's `show_icon: false` drops the icon; the name (and state) then lead the column.
+      if (data.showIcon) ButtonIconChip(data, look, accent, chipDp, iconDp)
       if (data.showName) {
-        RemoteBox(modifier = RemoteModifier.padding(top = namePadDp.rdp)) {
+        RemoteBox(
+          modifier = RemoteModifier.padding(top = (if (data.showIcon) namePadDp else 0).rdp)
+        ) {
           RemoteText(
             text = entityName(data.entityId, data.name),
             color = look.dim(theme.primaryText),
@@ -183,6 +186,18 @@ private fun ButtonBody(
             overflow = TextOverflow.Ellipsis,
           )
         }
+      }
+      // HA's `show_state: true` line under the name: the live `<id>.state` binding, so it follows
+      // the entity without a re-encode.
+      data.state?.let { state ->
+        RemoteText(
+          text = state,
+          color = look.dim(theme.secondaryText),
+          fontSize = HaType.Label,
+          style = haTextStyle(),
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
       }
     }
   }

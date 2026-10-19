@@ -329,9 +329,16 @@ class LiveHaSession(
 
   override suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot> {
     val dashboard = client.fetchDashboard(urlPath)
-    val snapshot = client.snapshot().copy(devices = devices())
+    val snapshot = client.snapshot().copy(devices = devices(), temperatureUnit = temperatureUnit())
     return dashboard to snapshot
   }
+
+  // The instance's unit system: read once a session, retried after a failure (cards fall back to
+  // the entity's own unit, then °C, meanwhile).
+  @Volatile private var temperatureUnitCache: String? = null
+
+  private suspend fun temperatureUnit(): String? =
+    temperatureUnitCache ?: client.fetchTemperatureUnit()?.also { temperatureUnitCache = it }
 
   // Which device is behind each entity changes rarely: read once a session. A failure (an older
   // Home Assistant, a refused registry) leaves cards on their generic designs and is retried.

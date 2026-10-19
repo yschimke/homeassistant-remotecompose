@@ -269,15 +269,7 @@ class HaClient(
    * to pick up the user's configured `external_url` (Nabu Casa / reverse-proxy hostname) so the app
    * can route over the public URL when away from the LAN.
    */
-  suspend fun fetchConfig(): HaInstanceConfig {
-    val result = runCommand("get_config")
-    return HaInstanceConfig(
-      version = result["version"]?.jsonPrimitive?.content,
-      locationName = result["location_name"]?.jsonPrimitive?.content,
-      internalUrl = result["internal_url"]?.nullableString(),
-      externalUrl = result["external_url"]?.nullableString(),
-    )
-  }
+  suspend fun fetchConfig(): HaInstanceConfig = instanceConfigOf(runCommand("get_config"))
 
   /**
    * The device behind each entity, for device-specific card designs. The entity registry's display
@@ -356,8 +348,21 @@ class HaClient(
       } catch (e: Exception) {
         emptyMap()
       }
-    return snapshot().copy(devices = devices)
+    return snapshot().copy(devices = devices, temperatureUnit = fetchTemperatureUnit())
   }
+
+  /**
+   * Home Assistant's configured temperature unit ([HaInstanceConfig.temperatureUnit]), what climate
+   * cards show their temperatures in; null when the config can't be read.
+   */
+  suspend fun fetchTemperatureUnit(): String? =
+    try {
+      fetchConfig().temperatureUnit
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      null
+    }
 
   /**
    * Call a Home Assistant service (`call_service` WebSocket command).
@@ -755,7 +760,22 @@ data class HaInstanceConfig(
   val locationName: String? = null,
   val internalUrl: String? = null,
   val externalUrl: String? = null,
+  /** `unit_system.temperature`: `°C` or `°F`, the unit climate temperatures are reported in. */
+  val temperatureUnit: String? = null,
 )
+
+/** Read a `get_config` result (the same shape as REST `GET /api/config`). */
+internal fun instanceConfigOf(result: JsonObject): HaInstanceConfig =
+  HaInstanceConfig(
+    version = result["version"]?.jsonPrimitive?.content,
+    locationName = result["location_name"]?.jsonPrimitive?.content,
+    internalUrl = result["internal_url"]?.nullableString(),
+    externalUrl = result["external_url"]?.nullableString(),
+    temperatureUnit =
+      ((result["unit_system"] as? JsonObject)?.get("temperature"))?.nullableString()?.takeIf {
+        it.isNotBlank()
+      },
+  )
 
 private fun kotlinx.serialization.json.JsonElement.nullableString(): String? =
   when (this) {

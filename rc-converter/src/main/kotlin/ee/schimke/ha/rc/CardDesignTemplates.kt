@@ -139,13 +139,15 @@ object CardDesignTemplates {
             (obj?.get("entity") as? JsonPrimitive)?.contentOrNull
               ?: (row as? JsonPrimitive)?.contentOrNull
               ?: return@mapNotNull null
-          tapActionOf(obj?.get("tap_action") as? JsonObject, id)
+          tapActionOf(card, obj?.get("tap_action") as? JsonObject, id)
         }
       } else if (card.raw["cards"] is JsonArray) {
         // A container: every child slot's tap is resolved by the container (designAction).
         List(CardDesignSlots.slotEntities(card)?.size ?: 0) { HaAction.None }
       } else {
-        listOfNotNull(entityId?.let { tapActionOf(card.raw["tap_action"] as? JsonObject, it) })
+        listOfNotNull(
+          entityId?.let { tapActionOf(card, card.raw["tap_action"] as? JsonObject, it) }
+        )
       }
     return CardTemplatePlayback(
       bytes = bytes,
@@ -153,7 +155,7 @@ object CardDesignTemplates {
         val slots = CardDesignSlots.slotBindings(card, snapshot)
         converter?.designBindings(card, snapshot, clock)?.let { slots + it } ?: slots
       },
-      tapAction = tapActionOf(card.raw["tap_action"] as? JsonObject, entityId),
+      tapAction = tapActionOf(card, card.raw["tap_action"] as? JsonObject, entityId),
       slotTapActions = slotTaps,
       bitmapUrl = { url, snapshot -> CardDesignSlots.resolvePictureUrl(url, card, snapshot) },
       slotAction = { snapshot, slot, action ->
@@ -162,8 +164,8 @@ object CardDesignTemplates {
     )
   }
 
-  private fun tapActionOf(config: JsonObject?, entityId: String?) =
-    if (config != null) parseHaAction(config, entityId) else defaultTapActionFor(entityId)
+  private fun tapActionOf(card: CardConfig, config: JsonObject?, entityId: String?) =
+    if (config != null) parseHaAction(config, entityId) else defaultTapActionFor(card, entityId)
 
   /**
    * The keys the spike publishes to a server: tile × domain × theme style × light/dark, mobile app

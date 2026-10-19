@@ -4,6 +4,7 @@ import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.temperatureUnitFor
 import ee.schimke.ha.rc.formatValueWithUnit
 import kotlinx.serialization.json.*
 
@@ -53,7 +54,7 @@ internal fun instrumentTemplateBindings(
         val min = attributes.number("min_temp") ?: 7.0
         val max = attributes.number("max_temp") ?: 35.0
         val span = (max - min).coerceAtLeast(0.0001)
-        val unit = attributes.text("temperature_unit") ?: "°C"
+        val unit = snapshot.temperatureUnitFor(entity)
         number(
           "$slot.value_fraction",
           (((current ?: target ?: min) - min) / span).coerceIn(0.0, 1.0),

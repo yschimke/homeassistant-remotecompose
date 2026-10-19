@@ -25,7 +25,35 @@ data class HaSnapshot(
    * card designs match on. Empty when the registries weren't read.
    */
   val devices: Map<String, ee.schimke.ha.design.DeviceInfo> = emptyMap(),
+  /**
+   * Home Assistant's configured temperature unit (`get_config` → `unit_system.temperature`, `°C` or
+   * `°F`): the unit a climate entity's temperatures are in. Null when the config wasn't read.
+   */
+  val temperatureUnit: String? = null,
 )
+
+/**
+ * The unit [entity]'s temperatures are shown in, the way Home Assistant's climate cards pick it:
+ * the entity's own `temperature_unit` / `unit_of_measurement` attribute, else the instance's unit
+ * system ([HaSnapshot.temperatureUnit]), else `°C`.
+ */
+fun HaSnapshot.temperatureUnitFor(entity: EntityState?): String =
+  temperatureUnitFor(entity, temperatureUnit)
+
+/**
+ * [HaSnapshot.temperatureUnitFor] with the instance's [unitSystem] temperature unit given alone.
+ */
+fun temperatureUnitFor(entity: EntityState?, unitSystem: String?): String {
+  fun attribute(key: String) =
+    (entity?.attributes?.get(key) as? kotlinx.serialization.json.JsonPrimitive)
+      ?.takeIf { it.isString }
+      ?.content
+      ?.takeIf { it.isNotBlank() }
+  return attribute("temperature_unit")
+    ?: attribute("unit_of_measurement")
+    ?: unitSystem?.takeIf { it.isNotBlank() }
+    ?: "°C"
+}
 
 @Serializable
 data class EntityState(
