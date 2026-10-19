@@ -11,7 +11,6 @@ metro = "1.4.5"
 
 # Compose
 compose-bom = "2026.09.00"
-compose-compiler = "1.5.15"
 
 # RemoteCompose + the Wear widget stack that sits on it (APIs change per alpha).
 # These three move in lockstep — `remote-material3` and `glance-wear` both
