@@ -14,6 +14,11 @@ on:
         required: false
         default: false
         type: boolean
+      publish_app:
+        description: 'Publish the :app bundle to Play (untick to upload only Wear for an already-published phone version)'
+        required: false
+        default: true
+        type: boolean
       publish_wear:
         description: 'Also publish :wear bundle to Play'
         required: false
@@ -35,6 +40,11 @@ on:
         # (push or workflow_dispatch), never 'workflow_call', so callers say
         # whether to publish explicitly.
         description: 'Attach assets to the GitHub release and publish desktop installers'
+        required: false
+        default: true
+        type: boolean
+      publish_app:
+        description: 'Publish the :app bundle to Play (untick to upload only Wear for an already-published phone version)'
         required: false
         default: true
         type: boolean
@@ -166,6 +176,8 @@ jobs:
       HAS_PLAY_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
       HAS_GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
       PUBLISH_WEAR: ${{ inputs.publish_wear || vars.PLAY_PUBLISH_WEAR == 'true' }}
+      # Tag pushes have no inputs and always publish; dispatch and call pass a boolean (default true).
+      PUBLISH_APP: ${{ github.event_name == 'push' || inputs.publish_app }}
       PUBLISH_LISTING: ${{ vars.PLAY_PUBLISH_LISTING == 'true' }}
     steps:
       - uses: actions/checkout@v7.0.1
@@ -221,7 +233,7 @@ jobs:
 
       - name: Publish to Play (internal track)
         id: play_publish
-        if: env.HAS_PLAY_CREDENTIALS == 'true' && env.HAS_SIGNING_KEYSTORE == 'true'
+        if: env.PUBLISH_APP == 'true' && env.HAS_PLAY_CREDENTIALS == 'true' && env.HAS_SIGNING_KEYSTORE == 'true'
         env:
           HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
           HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
@@ -263,7 +275,7 @@ jobs:
             echo "- Play credentials configured: ${HAS_PLAY_CREDENTIALS}"
             echo "- Crashlytics configured: ${HAS_GOOGLE_SERVICES}"
             if [[ "${HAS_SIGNING_KEYSTORE}" == "true" && "${HAS_PLAY_CREDENTIALS}" == "true" ]]; then
-              echo "- Play publish step: app attempted (internal track)"
+              echo "- Phone publish enabled: ${PUBLISH_APP} (internal track)"
               echo "- Wear publish enabled: ${PUBLISH_WEAR} (wear:internal track)"
               echo "- Store listing publish enabled: ${PUBLISH_LISTING}"
             else

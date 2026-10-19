@@ -54,7 +54,10 @@ alongside the phone draft on `internal`. Review and roll out both in the
 Console, then promote Wear to `wear:production` there when ready.
 
 Without the variable, publish one release by hand: **Actions → Release → Run
-workflow** with the tag and **publish_wear** ticked.
+workflow** with the tag and **publish_wear** ticked. For a version whose phone
+bundle is already on Play (any tag a release-please run already published),
+also untick **publish_app**: Play Publisher refuses to upload the same phone
+version code twice, and that failure would stop the job before the Wear step.
 
 The Wear step needs the same secrets as the phone upload
 (`SIGNING_KEYSTORE`, `HARC_KEYSTORE_PASSWORD`, `HARC_KEY_ALIAS`,
