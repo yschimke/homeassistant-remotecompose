@@ -101,6 +101,7 @@ import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.PinnedCardData
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.core.session.LatestWins
 import ee.schimke.terrazzo.core.session.liveDashboardSnapshots
 import ee.schimke.terrazzo.feedback.rememberInteractionFeedback
 import ee.schimke.terrazzo.ui.LayoutConfig
@@ -165,19 +166,23 @@ fun DashboardViewScreen(
       mutableStateOf(seed)
     }
 
+  // The poll loop, the live feed and a demo tap's refetch all write `state`: only the most recently
+  // started load may, so a slow poll landing after a tap's refetch can't bring stale values back.
+  val loads = remember(session, urlPath) { LatestWins() }
   val logStore = LocalTerrazzoGraph.current.logStore
   LaunchedEffect(session, urlPath) {
     // Poll when the session opts in (demo mode does, at ~1s) so
     // values visibly change; a one-shot fetch otherwise.
     while (true) {
       try {
-        val (dashboard, snapshot) = session.loadDashboard(urlPath)
-        state = DashboardState.Ready(dashboard, snapshot)
-        // Feed the debug log buffer. The store diffs each
-        // snapshot against the previous one and emits a
-        // DataUpdate per changed entity, filtered to entities
-        // this dashboard actually references.
-        logStore.recordDashboardSnapshot(dashboard, snapshot)
+        loads.load({ session.loadDashboard(urlPath) }) { (dashboard, snapshot) ->
+          state = DashboardState.Ready(dashboard, snapshot)
+          // Feed the debug log buffer. The store diffs each
+          // snapshot against the previous one and emits a
+          // DataUpdate per changed entity, filtered to entities
+          // this dashboard actually references.
+          logStore.recordDashboardSnapshot(dashboard, snapshot)
+        }
       } catch (ce: CancellationException) {
         // Dashboard switch or composition leaving — let the new
         // LaunchedEffect take over. `runCatching` used to absorb
@@ -199,6 +204,8 @@ fun DashboardViewScreen(
         // re-armed by the session on every reconnect, so cards update in place.
         val ready = state as? DashboardState.Ready ?: break
         session.liveDashboardSnapshots(ready.snapshot).collect { snapshot ->
+          // A pushed state is the newest there is: it supersedes any load still in flight.
+          loads.begin()
           state = DashboardState.Ready(ready.dashboard, snapshot)
           logStore.recordDashboardSnapshot(ready.dashboard, snapshot)
         }
@@ -218,11 +225,12 @@ fun DashboardViewScreen(
         // Skip the seed value (epoch == 0). Subsequent bumps are
         // user-driven taps and warrant an immediate re-fetch.
         if (epoch > 0L) {
-          runCatching { session.loadDashboard(urlPath) }
-            .onSuccess { (dashboard, snapshot) ->
+          runCatching {
+            loads.load({ session.loadDashboard(urlPath) }) { (dashboard, snapshot) ->
               state = DashboardState.Ready(dashboard, snapshot)
               logStore.recordDashboardSnapshot(dashboard, snapshot)
             }
+          }
         }
       }
       epoch
