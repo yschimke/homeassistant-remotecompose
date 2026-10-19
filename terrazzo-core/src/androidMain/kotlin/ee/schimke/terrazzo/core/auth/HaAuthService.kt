@@ -7,6 +7,8 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import ee.schimke.terrazzo.core.di.AppScope
 import ee.schimke.terrazzo.core.network.HttpEngineFactory
+import ee.schimke.terrazzo.core.session.HaReauthRequiredException
+import ee.schimke.terrazzo.core.session.isRefreshTokenRejected
 import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.statement.bodyAsText
@@ -147,6 +149,10 @@ class HaAuthService(context: Context, httpEngineFactory: HttpEngineFactory) {
       )
     val body = response.bodyAsText()
     if (!response.status.isSuccess()) {
+      if (isRefreshTokenRejected(response.status.value, body)) {
+        // Retrying can't help: the refresh token is gone. The caller signs the user out.
+        throw HaReauthRequiredException("HA refused the refresh token: ${response.status} $body")
+      }
       error("HA token refresh failed: ${response.status} $body")
     }
     return parseTokenResponse(body)
