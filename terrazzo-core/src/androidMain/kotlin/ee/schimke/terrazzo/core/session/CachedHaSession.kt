@@ -6,6 +6,7 @@ import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.core.cache.OfflineCacheStorage
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.JsonObject
 
@@ -70,10 +71,29 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
       }
     return runCatching { delegate.loadDashboard(urlPath) }
       .onSuccess { (dashboard, snapshot) ->
+        liveFetchedAtMs[urlPath.orEmpty()] = System.currentTimeMillis()
+        servedFromCache.remove(urlPath.orEmpty())
         cache.putDashboard(baseUrl, urlPath, dashboard)
         cache.putSnapshot(baseUrl, urlPath, snapshot)
       }
-      .getOrElse { ex -> cached ?: throw ex }
+      .getOrElse { ex -> (cached ?: throw ex).also { servedFromCache.add(urlPath.orEmpty()) } }
+  }
+
+  /** Per dashboard (`""` for the default): when this session last fetched its snapshot live. */
+  private val liveFetchedAtMs = ConcurrentHashMap<String, Long>()
+
+  /** The dashboards whose last [loadDashboard] fell back to the cache. */
+  private val servedFromCache: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
+  /**
+   * Null after a live fetch; after a fallback, when the cached snapshot was fetched — this
+   * session's own last live fetch if it made one, else the cache file's write time (0 when even
+   * that is unknown, so it reads as old rather than fresh).
+   */
+  override fun snapshotFetchedAtMs(urlPath: String?): Long? {
+    val key = urlPath.orEmpty()
+    if (key !in servedFromCache) return null
+    return liveFetchedAtMs[key] ?: cache.snapshotSavedAtMs(baseUrl, urlPath) ?: 0L
   }
 
   override suspend fun fetchInstanceConfig(): HaInstanceConfig? = delegate.fetchInstanceConfig()

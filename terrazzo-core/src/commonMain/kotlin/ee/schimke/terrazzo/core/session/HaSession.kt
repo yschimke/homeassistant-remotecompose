@@ -110,6 +110,15 @@ interface HaSession {
   suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot>
 
   /**
+   * When the snapshot the last [loadDashboard] for [urlPath] returned was fetched from Home
+   * Assistant, in epoch milliseconds — or null when it was fetched by that call. A session that
+   * serves a cached snapshot (the app backgrounded, the network down) answers with the cache's
+   * time, so a consumer that stamps values (the Wear sync) can say how old they really are instead
+   * of stamping them as fresh.
+   */
+  fun snapshotFetchedAtMs(urlPath: String?): Long? = null
+
+  /**
    * A dashboard's Lovelace config as Home Assistant stores it, for an agent to edit. Null for
    * sessions that can't read it (demo, offline).
    */

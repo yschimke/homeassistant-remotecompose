@@ -132,6 +132,8 @@ fun TerrazzoApp(initialDashboard: String? = null, initialSession: HaSession? = n
   // cold start goes back to discovery. [reason] is shown on the sign-in screen.
   fun signOut(signedOut: HaSession?, reason: Throwable? = null) {
     val previousBaseUrl = signedOut?.baseUrl
+    // Delete the account's dashboards, values and pins from the watch too.
+    wearSync.clearWatchData()
     scope.launch {
       graph.preferencesStore.setDemoMode(false)
       graph.preferencesStore.clearLastViewedDashboard()

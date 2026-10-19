@@ -7,6 +7,7 @@ import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.WearPicture
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
+import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
 import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
@@ -96,7 +97,75 @@ class WearOfflineStore(context: Context) {
     val name = (value.urlPath.takeIf { it.isNotEmpty() }?.replace('/', '_') ?: "_default") + ".pb"
     File(dashboardsDir, name).atomicWriteBytes(encodeProto(value))
   }
+
+  /**
+   * Forgets what the phone sent at Data Layer [path], now that it deleted the item there (on
+   * sign-out, or a dashboard Home Assistant no longer has). Returns what was forgotten, or null for
+   * a path this store doesn't mirror.
+   */
+  fun forget(path: String): ForgottenItem? {
+    val item = forgottenItemFor(path) ?: return null
+    when (item) {
+      ForgottenItem.Settings -> File(root, "settings.pb").delete()
+      ForgottenItem.Pinned -> File(root, "pinned.pb").delete()
+      ForgottenItem.Sections -> File(root, "sections.pb").delete()
+      ForgottenItem.Slots -> File(root, "slots.pb").delete()
+      ForgottenItem.Values -> File(root, "values.pb").delete()
+      is ForgottenItem.Picture -> pictureFile(item.entityId).delete()
+      // Named like the item's path: `writeDashboard` and `dashboardPath` encode alike.
+      is ForgottenItem.Dashboard -> File(dashboardsDir, item.fileStem + ".pb").delete()
+    }
+    return item
+  }
+
+  /** Forgets every picture: the phone deleted them all. */
+  fun forgetAllPictures() {
+    picturesDir.listFiles().orEmpty().forEach { it.delete() }
+  }
 }
+
+/** What a deleted Data Layer item was, by its path: see [WearOfflineStore.forget]. */
+sealed interface ForgottenItem {
+  data object Settings : ForgottenItem
+
+  data object Pinned : ForgottenItem
+
+  data object Sections : ForgottenItem
+
+  data object Slots : ForgottenItem
+
+  data object Values : ForgottenItem
+
+  data class Picture(val entityId: String) : ForgottenItem
+
+  /** [fileStem]: the path after the prefix, `_default` for the default dashboard. */
+  data class Dashboard(val fileStem: String) : ForgottenItem {
+    /** Whether [dashboard] is this one: its `urlPath` encodes to [fileStem]. */
+    fun matches(dashboard: DashboardData): Boolean =
+      WearSyncPaths.dashboardPath(dashboard.urlPath) == WearSyncPaths.DASHBOARD_PREFIX + fileStem
+  }
+}
+
+/** The item at Data Layer [path], or null for a path the watch doesn't mirror. */
+internal fun forgottenItemFor(path: String): ForgottenItem? =
+  when {
+    path == WearSyncPaths.SETTINGS -> ForgottenItem.Settings
+    path == WearSyncPaths.PINNED -> ForgottenItem.Pinned
+    path == WearSyncPaths.SECTIONS -> ForgottenItem.Sections
+    path == WearSyncPaths.SLOTS -> ForgottenItem.Slots
+    path == WearSyncPaths.VALUES -> ForgottenItem.Values
+    path.startsWith(WearSyncPaths.PICTURE_PREFIX) ->
+      path
+        .removePrefix(WearSyncPaths.PICTURE_PREFIX)
+        .takeIf { it.isNotEmpty() }
+        ?.let { ForgottenItem.Picture(it) }
+    path.startsWith(WearSyncPaths.DASHBOARD_PREFIX) ->
+      path
+        .removePrefix(WearSyncPaths.DASHBOARD_PREFIX)
+        .takeIf { it.isNotEmpty() }
+        ?.let { ForgottenItem.Dashboard(it) }
+    else -> null
+  }
 
 private fun File.readBytesOrNull(): ByteArray? = runCatching {
   if (exists()) readBytes() else null

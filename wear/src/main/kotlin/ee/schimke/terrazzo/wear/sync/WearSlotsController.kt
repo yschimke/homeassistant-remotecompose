@@ -5,8 +5,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
-import com.google.android.gms.wearable.CapabilityClient
-import com.google.android.gms.wearable.Wearable
 import ee.schimke.terrazzo.wear.widget.Slot0LargeWidgetService
 import ee.schimke.terrazzo.wear.widget.Slot0SmallWidgetService
 import ee.schimke.terrazzo.wear.widget.Slot1LargeWidgetService
@@ -49,25 +47,21 @@ import kotlinx.coroutines.launch
  * the alpha library short-circuits its own bind path on older Wear OS versions, and an enabled-but-
  * broken component would only confuse the picker.
  *
- * Capability advertisement: when the runtime supports widgets, this controller adds the
- * `terrazzo_wear_widgets` local capability so the phone's [WearCapabilityProbe] can discover us.
- * Removed when the controller stops, so the phone gracefully hides the slot UI again.
+ * Capability advertisement: the `terrazzo_wear_widgets` capability the phone's
+ * `WearCapabilityProbe` discovers us by is declared statically (`res/values-v37/wear.xml`, the same
+ * API floor as [WEAR_WIDGETS_MIN_SDK]), so it holds while the watch app is closed. It used to be
+ * added here at runtime and removed when the activity was destroyed, which hid the phone's slot UI
+ * whenever the watch app wasn't open.
  */
 class WearSlotsController(
   private val context: Context,
   private val scope: CoroutineScope,
   private val repo: WearSyncRepository,
 ) {
-  private val capabilityClient: CapabilityClient by lazy {
-    Wearable.getCapabilityClient(context.applicationContext)
-  }
-
   fun start() {
-    if (supportsWearWidgets()) {
-      advertiseCapability()
-    } else {
-      // Older Wear OS — keep all components disabled and don't
-      // advertise the capability so the phone hides the slot UI.
+    if (!supportsWearWidgets()) {
+      // Older Wear OS — keep all components disabled. The static
+      // capability is API 37+ only, so the phone hides the slot UI.
       disableAll()
       return
     }
@@ -84,17 +78,6 @@ class WearSlotsController(
           // widget, even when the provider's enabled state did not change.
           refreshAllSlotWidgets(context.applicationContext)
         }
-    }
-  }
-
-  fun stop() {
-    // Fire-and-forget; the Task completes asynchronously and we
-    // only care about clearing the local advertisement on
-    // best-effort basis.
-    runCatching {
-      capabilityClient.removeLocalCapability(CAPABILITY).addOnFailureListener {
-        Log.w(TAG, "removeLocalCapability failed", it)
-      }
     }
   }
 
@@ -146,14 +129,6 @@ class WearSlotsController(
     (SLOT_SMALL_COMPONENTS + SLOT_LARGE_COMPONENTS).forEach { applyComponent(pm, it, false) }
   }
 
-  private fun advertiseCapability() {
-    runCatching {
-      capabilityClient.addLocalCapability(CAPABILITY).addOnFailureListener {
-        Log.w(TAG, "addLocalCapability failed", it)
-      }
-    }
-  }
-
   /**
    * Whether this device's runtime supports Glance Wear widgets. Mirrors the alpha library's
    * internal `forceIsAtLeast37ForTesting` test knob — the public companion check is `internal` in
@@ -176,8 +151,8 @@ class WearSlotsController(
     private const val TAG = "WearSlots"
 
     /**
-     * Capability advertised when the runtime supports Glance Wear widgets. Mirrored on the phone in
-     * `WearCapabilityProbe.CAPABILITY`.
+     * Capability advertised when the runtime supports Glance Wear widgets, declared in
+     * `res/values-v37/wear.xml`. Mirrored on the phone in `WearCapabilityProbe.CAPABILITY`.
      */
     const val CAPABILITY: String = "terrazzo_wear_widgets"
 

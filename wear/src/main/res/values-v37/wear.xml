@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!--
+      Capabilities this watch advertises on the Wearable Data Layer, declared statically as
+      Google recommends so they hold whether or not the watch app is running.
+
+      `terrazzo_wear_widgets` is what the phone's WearCapabilityProbe looks up to show the
+      Wear widget slot UI. It lives in values-v37 because Glance Wear widgets only render from
+      API 37 (WearSlotsController.WEAR_WIDGETS_MIN_SDK): an older watch resolves no array and
+      advertises nothing, so the phone keeps the slot UI hidden there.
+    -->
+    <string-array name="android_wear_capabilities" translatable="false" tools:ignore="UnusedResources">
+        <item>terrazzo_wear_widgets</item>
+    </string-array>
+</resources>
