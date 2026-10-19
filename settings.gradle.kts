@@ -5,7 +5,9 @@ pluginManagement {
   // applies — one definition instead of cross-project root configuration.
   includeBuild("build-logic")
   repositories {
-    gradlePluginPortal()
+    // Google Maven ahead of the plugin portal, so AGP's plugin dependencies never
+    // reach the portal (a Maven Central proxy), whose HTTP 429 under load fails
+    // the build where a 404 would have moved on.
     google {
       mavenContent {
         includeGroupAndSubgroups("androidx")
@@ -13,6 +15,7 @@ pluginManagement {
         includeGroupAndSubgroups("com.google")
       }
     }
+    gradlePluginPortal()
     mavenCentral()
   }
 }
