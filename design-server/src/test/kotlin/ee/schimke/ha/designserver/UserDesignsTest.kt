@@ -133,6 +133,58 @@ class UserDesignsTest {
         .bodyAsText(),
     )
 
+  private fun DesignLibrary.serialFor(store: UserDesignStore, login: String?): Long =
+    json
+      .decodeFromString(
+        DesignManifest.serializer(),
+        manifestFor(store, login).bytes.decodeToString(),
+      )
+      .serial
+
+  @Test
+  fun theServedSerialNeverFallsAcrossUnsharingAndRestarts() {
+    val lib = DesignLibrary.load(library())
+    val dir = Files.createTempDirectory("user-designs").toFile()
+    val store = UserDesignStore(dir, clock = { 42 })
+    val seen = mutableListOf<Pair<Long, Long>>()
+    fun record(s: UserDesignStore) {
+      seen += lib.serialFor(s, null) to lib.serialFor(s, "octocat")
+    }
+
+    record(store)
+    val design = store.publish("octocat", key.copy(variant = "garage"), template, 1, "good", 3)
+    record(store)
+    store.share("octocat", design.entry.sha256, true)
+    record(store)
+    // The last shared design goes private: anyone's manifest loses it, but not its serial.
+    store.share("octocat", design.entry.sha256, false)
+    record(store)
+    // A restart reads the persisted revisions back.
+    record(UserDesignStore(dir, clock = { 42 }))
+
+    seen.zipWithNext().forEach { (before, after) ->
+      assertTrue(after.first >= before.first, "anonymous serial fell: $seen")
+      assertTrue(after.second >= before.second, "signed-in serial fell: $seen")
+    }
+    assertTrue(seen.last().first > seen.first().first, "unsharing still raised it: $seen")
+    // A private publish leaves everyone else's manifest the library's, signature and all.
+    assertEquals(5, seen[1].first)
+  }
+
+  @Test
+  fun anIndexFromBeforeSharedRevisionsKeepsItsAnonymousSerial() {
+    val lib = DesignLibrary.load(library())
+    val dir = Files.createTempDirectory("user-designs").toFile()
+    val store = UserDesignStore(dir, clock = { 42 })
+    val design = store.publish("octocat", key.copy(variant = "garage"), template, 1, "good", 3)
+    store.share("octocat", design.entry.sha256, true)
+    // As an older server wrote it: anyone's serial was library + revision.
+    val index = File(dir, "index.json")
+    index.writeText(index.readText().replace(Regex(""",?\s*"sharedRevision":\s*\d+"""), ""))
+    val legacy = UserDesignStore(dir, clock = { 42 })
+    assertEquals(5 + legacy.revision, lib.serialFor(legacy, null))
+  }
+
   @Test
   fun publishingNeedsSignIn() = testApplication {
     val f = fixture()
