@@ -10,13 +10,18 @@ import ee.schimke.ha.rc.decodeHaAction
 import ee.schimke.terrazzo.terrazzoGraph
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /**
  * Endpoint for numeric actions fired by the launcher's RemoteCompose `RemoteViews` player.
  *
- * This prototype deliberately stops at a decoded, observable app event. Calling Home Assistant from
- * here needs a background session plus an explicit write-policy decision; opening UI from a
- * receiver is also subject to Android's background-activity launch restrictions.
+ * Toggles and service calls run against Home Assistant from here ([WidgetActionRunner]), within the
+ * broadcast's time budget; taps that need the app in front never reach this receiver (they are
+ * activity `PendingIntent`s, see `TerrazzoWidgetProvider`). Every action is also recorded for the
+ * debug log.
  */
 class WidgetActionReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
@@ -61,6 +66,21 @@ class WidgetActionReceiver : BroadcastReceiver() {
 
     Log.i(TAG, "Decoded widget actionType=${action.javaClass.simpleName}")
     recordAction(context, action)
+    if (!WidgetActionRunner.runs(action)) return
+    if (
+      !trustedWidgetAction(action, fallbackPayload, intent.getStringExtra(EXTRA_RESOLVED_ACTION))
+    ) {
+      Log.w(TAG, "Refusing a widget action the app didn't put on widget $widgetId")
+      return
+    }
+    val pending = goAsync()
+    runnerScope.launch {
+      try {
+        WidgetActionRunner.run(context.applicationContext, widgetId, action)
+      } finally {
+        pending.finish()
+      }
+    }
   }
 
   private fun recordAction(context: Context, action: HaAction) {
@@ -81,6 +101,8 @@ class WidgetActionReceiver : BroadcastReceiver() {
   }
 
   companion object {
+    private val runnerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     const val ACTION_WIDGET_ACTION = "ee.schimke.terrazzo.WIDGET_ACTION"
     const val EXTRA_WIDGET_ID = "widget_id"
     const val EXTRA_ACTION_ID = "action_id"
@@ -99,6 +121,18 @@ class WidgetActionReceiver : BroadcastReceiver() {
     private const val TAG = "WidgetActionReceiver"
   }
 }
+
+/**
+ * Whether [action] may write to Home Assistant: it must be exactly the action the app itself put on
+ * the widget's `PendingIntent` ([resolvedAction], else [fallbackPayload]). The launcher can fill in
+ * the RemoteCompose metadata extra, but it can't replace the app's own extras, so a write never
+ * runs from metadata alone.
+ */
+internal fun trustedWidgetAction(
+  action: HaAction,
+  fallbackPayload: String?,
+  resolvedAction: String?,
+): Boolean = decodeHaAction(resolvedAction ?: fallbackPayload)?.let { it == action } == true
 
 /** Decode a delivered action, rejecting capture-time PIN placeholders that contain no digits. */
 internal fun decodeDeliveredWidgetAction(
