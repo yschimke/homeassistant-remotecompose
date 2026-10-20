@@ -70,7 +70,7 @@ not a separate pristine checkout of every module.
 
 Executed locally:
 
-- Full Wear unit/Robolectric suite: 33 tests passed, including actual native-graphics playback.
+- Full Wear unit/Robolectric suite: 34 tests passed, including actual native-graphics playback.
 - Full phone unit suite: 186 tests passed initially; all 10 focused Wear style/Bambu sync tests
   passed after the review fixes.
 - Shared desktop JVM suite: 44 tests passed, including the new Compose fallback/theme test.
@@ -145,3 +145,16 @@ A separate pre-existing iOS cache/account-isolation issue was tracked as
 [SCH-44](https://linear.app/yschimke/issue/SCH-44/scope-ios-offline-card-documents-and-manifests-to-the-gateway):
 two gateways using the same relative document URL share a cache key. It needs a server/account
 namespace and migration policy, independently of the within-feed document-identity fix here.
+
+## Published Wear preview fixtures
+
+The original screen previews supplied title-only summaries without `rawJson`. Once the activity
+started rendering real cards, those fixtures correctly hit the unavailable-config fallback.
+They now provide complete card configs, and the regression test calls the published dashboard,
+section and pinned-screen preview functions directly. Explicit LCD and Braun variants verify
+selected artwork rather than only the default style. These are native-graphics captures of those
+functions; CI also republishes their round-watch preview images.
+
+| Classic | LCD | Braun |
+| --- | --- | --- |
+| ![Classic preview](wear-published-preview-0.png) | ![LCD preview](wear-published-preview-1.png) | ![Braun preview](wear-published-preview-2.png) |

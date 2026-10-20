@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -104,6 +105,36 @@ class WearDashboardRenderingTest {
       }
     }
     compose.onNodeWithText("grid").assertDoesNotExist()
+  }
+
+  @Test
+  fun publishedPreviewFixturesRenderCardsAndSelectedDesigns() {
+    var selected by mutableStateOf(0)
+    compose.setContent {
+      Box(Modifier.size(240.dp).testTag("screen")) {
+        key(selected) {
+          when (selected) {
+            0 -> WearDashboardPreview()
+            1 -> WearDashboardPreview_Lcd()
+            2 -> WearDashboardPreview_Braun()
+            3 -> WearSectionPreview()
+            4 -> WearTopLevelPreview_Live()
+            else -> WearTopLevelPreview_Demo()
+          }
+        }
+      }
+    }
+    val frames = mutableListOf<Bitmap>()
+    for (index in 0..5) {
+      compose.runOnIdle { selected = index }
+      compose.waitForIdle()
+      compose.onNodeWithText("Card unavailable").assertDoesNotExist()
+      val frame = screenshot()
+      frames += frame
+      save("wear-published-preview-$index", frame)
+    }
+    assertFalse(frames[0].sameAs(frames[1]), "The LCD preview must render its selected design")
+    assertFalse(frames[1].sameAs(frames[2]), "The Braun preview must render its selected design")
   }
 
   @Test
