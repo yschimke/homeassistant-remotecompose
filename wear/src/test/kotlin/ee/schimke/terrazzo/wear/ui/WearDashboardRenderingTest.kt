@@ -10,11 +10,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material3.MaterialTheme
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
@@ -102,6 +107,40 @@ class WearDashboardRenderingTest {
   }
 
   @Test
+  fun pinnedMessageUsesTheSendCapableHost() {
+    val raw =
+      """{"type":"custom:terrazzo-message","inputs":[{"key":"message","label":"Message","value":""}]}"""
+    var sent: Map<String, String>? = null
+    compose.setContent {
+      MaterialTheme {
+        WearTopLevelScreen(
+          ee.schimke.terrazzo.wearsync.proto.WearSettings(),
+          ee.schimke.terrazzo.wearsync.proto.PinnedCardSet(
+            cards =
+              listOf(
+                ee.schimke.terrazzo.wearsync.proto.PinnedCard(
+                  card = CardSummary(type = ee.schimke.ha.model.MESSAGE_CARD_TYPE, rawJson = raw)
+                )
+              )
+          ),
+          ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet(),
+          emptyMap(),
+          {},
+          {},
+          {},
+          onInputSend = { config, fields ->
+            assertTrue(config == raw)
+            sent = fields
+          },
+        )
+      }
+    }
+    compose.onNode(hasSetTextAction()).performTextInput("Hello")
+    compose.onNode(hasSetTextAction()).performImeAction()
+    compose.runOnIdle { assertTrue(sent == mapOf("message" to "Hello")) }
+  }
+
+  @Test
   fun malformedContainerHasAnExplicitFallbackWithoutLeakingItsType() {
     compose.setContent {
       MaterialTheme { WearRemoteCard(grid.copy(rawJson = "invalid"), emptyMap()) }
@@ -117,9 +156,10 @@ class WearDashboardRenderingTest {
     var look by mutableStateOf(WearCardLook(style = "classic"))
     var live by mutableStateOf(values("20"))
     var visible by mutableStateOf(true)
+    var density by mutableStateOf(Density(1f, 1f))
     compose.setContent {
       MaterialTheme {
-        CompositionLocalProvider(LocalWearCardLook provides look) {
+        CompositionLocalProvider(LocalWearCardLook provides look, LocalDensity provides density) {
           Box(
             Modifier.size(240.dp).background(MaterialTheme.colorScheme.background).testTag("screen")
           ) {
@@ -146,6 +186,12 @@ class WearDashboardRenderingTest {
     assertTrue(updated.sameAs(screenshot()), "Cached replay must seed the current value")
     compose.runOnIdle { summary = grid }
     assertFalse(updated.sameAs(screenshot()), "Clearing override must restore watch style")
+    val beforeFontChange = screenshot()
+    compose.runOnIdle { density = Density(1f, 1.3f) }
+    assertFalse(
+      beforeFontChange.sameAs(screenshot()),
+      "Font scale changes must refresh cached artwork",
+    )
     save("wear-grid-classic", classic)
     save("wear-grid-lcd", lcd)
     save("wear-grid-braun", overridden)

@@ -1,5 +1,8 @@
 package ee.schimke.terrazzo.wearsync
 
+import ee.schimke.ha.client.design.CardDesignOverride
+import ee.schimke.ha.client.design.CardDesignOverrides
+import ee.schimke.ha.client.design.CardDesignScope
 import ee.schimke.ha.design.DeviceInfo
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
@@ -76,6 +79,34 @@ class WearBambuSyncTest {
       entityId = "button.rcslot_pause_printing",
       serviceData = JsonObject(emptyMap()),
     )
+
+  @Test
+  fun deviceResolutionPreservesOriginalCardScopedStyleOnEverySurface() {
+    val original = onWatch(pinned)
+    val overrides =
+      CardDesignOverrides()
+        .with(CardDesignScope.CardType, original, CardDesignOverride(cardStyle = "braun"))
+        .with(CardDesignScope.Card, original, CardDesignOverride(cardStyle = "lcd"))
+    val pin = MobilePinnedCard("k", "https://ha", "", pinned)
+    val section =
+      MobilePinnedSection("s", "https://ha", "", "printing", 0, "Printers", listOf(pinned))
+    val summaries =
+      listOf(
+        listOf(pin).toWearPinnedCards(overrides, snapshot = phone).cards.single().card,
+        listOf(section)
+          .toWearPinnedSections(overrides, snapshot = phone)
+          .sections
+          .single()
+          .cards
+          .single(),
+        original.toWearDashboardSummary(phone, overrides),
+      )
+    for (summary in summaries) {
+      assertEquals("lcd", summary.cardStyleOverride)
+      val resolved = watchJson.decodeFromString(CardConfig.serializer(), summary.rawJson)
+      assertEquals(JsonPrimitive("p2s_sn2"), resolved.raw["entity_prefix"])
+    }
+  }
 
   @Test
   fun theWatchCannotTellTheConfiguredPrinterFromTheCardAsPinned() {

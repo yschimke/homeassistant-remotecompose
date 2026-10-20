@@ -15,11 +15,12 @@ The activity now decodes the original config and plays local Remote Compose desi
 shared converter registry and Compose player. Grid/stack conversion, conditional visibility and
 live template bindings follow the same paths as the phone. It waits for the persisted watch style
 and palette before its first capture. The document identity includes style and baked/structural state;
-named values seed current data before playback, including cached replay. Message editing keeps
-its existing native control in dashboard and section screens.
+named values seed current data before playback, including cached replay. Message editing uses
+its existing native control and gated sender in dashboards, sections and top-level pins.
 
 Phone explicit card/type style overrides already accompanied individual pins, but did not accompany
-sections or dashboard cards. All three now use the same resolver. Section and dashboard publication
+sections or dashboard cards. All three now use the same resolver, matching overrides against the original config before
+Bambu device resolution rewrites it. Section and dashboard publication
 observe override changes, including clearing an override; dashboard publication also retries after
 Wear API recovery. The wire field is unchanged and survives the existing offline stores.
 
@@ -69,12 +70,18 @@ not a separate pristine checkout of every module.
 
 Executed locally:
 
-- Full Wear unit/Robolectric suite: 32 tests passed, including actual native-graphics playback.
-- Full phone unit suite: 186 tests passed, including style propagation/serialization tests.
+- Full Wear unit/Robolectric suite: 33 tests passed, including actual native-graphics playback.
+- Full phone unit suite: 186 tests passed initially; all 10 focused Wear style/Bambu sync tests
+  passed after the review fixes.
 - Shared desktop JVM suite: 44 tests passed, including the new Compose fallback/theme test.
 - Focused shared converter/player tests: 25 passed (`FirstFrameLiveValuesTest` and
   `LauncherDesignsTest`), including actual launcher-widget playback and first-frame values.
 - TV and Wasm Kotlin compilation passed.
+- CI executed the iOS stale-design test successfully, built the iOS app, and passed Wear OS 7
+  instrumentation, Android instrumentation, desktop installers and the full unit-test job.
+- Wear lint passed after the configuration-aware density fix.
+- The full public demo browser script passed against the CI-built Wasm bundle, including
+  exact missing-design notices, live instrument values/actions, resize and offline recovery.
 - Formatting checks passed for app, Wear and shared UI; `git diff --check` passed.
 
 Regression coverage includes:
@@ -90,10 +97,12 @@ Regression coverage includes:
   labels at these sizes.
 - Shared-host missing design notice and selected fallback theme after a style change.
 - iOS manifest switching a card to an unavailable design clears the previous document.
+- Font-scale changes refresh Wear artwork; pinned message inputs reach the gated sender;
+  device resolution preserves card-specific Bambu styles.
 
 ### Visual evidence
 
-All images are actual test captures, at most 240×240. The Wear activity is rendered in a
+All Wear images are actual test captures, at most 240×240. The Wear activity is rendered in a
 Robolectric native-graphics Compose host; widgets are captured by Glance Wear and played by
 `HaRcComposePlayer`, not photographed on a watch.
 
@@ -113,13 +122,21 @@ Robolectric native-graphics Compose host; widgets are captured by Glance Wear an
 | --- | --- | --- |
 | ![Braun](offline-grid-braun-on-112.png) | ![Console](offline-grid-console-off-112.png) | ![LCD reading](style-lcd-60.png) |
 
+### Browser evidence
+
+Real Chromium screenshots of the CI-built shared host, with the test server deliberately
+returning missing designs for non-instrument cards:
+
+| Phone layout | Wall layout |
+| --- | --- |
+| ![Phone browser](browser-console-phone.png) | ![Wall browser](browser-console-wall.png) |
+
 ### Verification limits
 
 No paired watch/phone or Wear OS system widget host was available. Data Layer delivery, widget
 picker placement, system-host playback and physical tap behavior need device verification. TV
-was compiled and audited, not run on a TV. iOS tests require macOS/Xcode and were added but not
-executed here. Desktop shared Compose behavior was tested, not a complete signed-in desktop
-session. Browser end-to-end checks were not run locally; the Wasm workflow covers those in CI.
+was compiled and audited, not run on a TV. iOS tests require macOS/Xcode and passed in CI, including the new stale-design regression. Desktop shared Compose behavior was tested, not a complete signed-in desktop
+session. The public demo browser flow is also checked against the CI-built Wasm bundle.
 
 No upstream workaround was removed: Glance FlowLayout fallback, fixed-canvas breakpoints,
 AndroidX wrap capture/measurement handling and player capability fallbacks remain intact.

@@ -58,6 +58,7 @@ fun WearTopLevelScreen(
   onBrowseDashboards: () -> Unit,
   onOpenSettings: () -> Unit,
   modifier: Modifier = Modifier,
+  onInputSend: (suspend (String, Map<String, String>) -> Unit)? = null,
 ) {
   val listState = rememberScalingLazyListState()
   val items = remember(pinned, sections) { mergeOrdered(pinned.cards, sections.sections) }
@@ -78,7 +79,14 @@ fun WearTopLevelScreen(
     } else {
       items(items, key = { it.key }) { entry ->
         when (entry) {
-          is TopLevelEntry.Card -> WearRemoteCard(entry.card.card, values)
+          is TopLevelEntry.Card -> {
+            val card = entry.card.card
+            if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
+              WearMessageCard(card.rawJson, values, onInputSend)
+            } else {
+              WearRemoteCard(card, values)
+            }
+          }
           is TopLevelEntry.Section ->
             PinnedSectionRow(section = entry.section, onClick = { onOpenSection(entry.section) })
         }

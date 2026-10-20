@@ -366,7 +366,11 @@ try:
             # SCH-13: inactive RC layouts also export text; the active full dial is first.
             expect(page.get_by_text('21.5°C',exact=True).filter(visible=True).first).to_be_visible()
             expect(page.get_by_text('↑ 22°C',exact=True).filter(visible=True).first).to_be_visible()
-            expect(page.get_by_text('Design unavailable · showing built-in card',exact=True)).to_have_count(0)
+            # The fixture resolves only gauge/thermostat designs. The two other cards
+            # visible in the phone viewport deliberately return 404; the wall composes
+            # all six non-instrument cards. Each must disclose its built-in fallback.
+            # The instrument reading assertions above still require actual RC playback.
+            expect(page.get_by_text('Design unavailable · showing built-in card',exact=True)).to_have_count(2 if name == 'phone' else 6)
             expect(page.get_by_text(f'{Handler.target_temperature} °C target',exact=True)).to_be_visible()
             count=len(Handler.mutations)
             before=Handler.target_temperature

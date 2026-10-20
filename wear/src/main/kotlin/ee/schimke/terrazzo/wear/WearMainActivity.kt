@@ -148,6 +148,14 @@ private fun WearApp(repo: WearSyncRepository) {
                 },
                 onBrowseDashboards = { screen = WearScreen.Dashboards },
                 onOpenSettings = { screen = WearScreen.Settings },
+                onInputSend =
+                  if (
+                    settings.inputEditingEnabled &&
+                      !settings.demoMode &&
+                      settings.baseUrl.isNotEmpty()
+                  )
+                    repo::sendInputs
+                  else null,
                 modifier = Modifier.fillMaxSize(),
               )
             WearScreen.Section -> {

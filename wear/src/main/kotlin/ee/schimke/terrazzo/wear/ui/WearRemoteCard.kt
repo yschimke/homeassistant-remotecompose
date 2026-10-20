@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.wear.compose.material3.Text
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -58,19 +59,20 @@ internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValu
   val look = LocalWearCardLook.current
   val style = wearWidgetCardStyle(summary.cardStyleOverride, look.style)
   val context = LocalContext.current
+  val density = LocalDensity.current
   val design = CardDesignTemplates.designCard(card, snapshot, registry)
   val designKey =
     CardDesignTemplates.keyFor(design, snapshot, look.palette, true, registry, cardStyle = style)
   val template =
-    remember(design, designKey) {
+    remember(design, designKey, density) {
       designKey?.let {
         val bytes = CardDesignLibrary.template(context, it, registry)
         CardDesignTemplates.playback(
           design,
           CardDesignTemplates.forDisplay(
             bytes,
-            context.resources.displayMetrics.density,
-            context.resources.configuration.fontScale,
+            density.density,
+            density.fontScale,
           ),
           registry,
         )
@@ -85,6 +87,7 @@ internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValu
       card,
       look,
       style.id,
+      density,
       signature,
       cardIconSignature(card, snapshot),
       cardVisibilitySignature(card, snapshot),
