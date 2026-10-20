@@ -11,6 +11,9 @@ import threading
 import time
 from playwright.sync_api import expect, sync_playwright
 
+# A design blob, with or without the app's `?client=` release tag (template usage, phase 1).
+DESIGN_BLOB = re.compile(r'^https://ha\.coo\.ee/designs/v1/blobs/[^/?]+\.rc(\?.*)?$')
+
 root = Path(sys.argv[1]).resolve()
 before = '--before' in sys.argv
 heading = lambda name: {'type': 'heading', 'heading': name}
@@ -121,7 +124,7 @@ try:
                     'key': {'shape': 'device_class=temperature;domain=sensor'}},
                     headers={'Access-Control-Allow-Origin': '*'})
             page.route('https://ha.coo.ee/api/cards/resolve', resolve)
-            page.route('https://ha.coo.ee/designs/v1/blobs/*.rc', lambda route: route.fulfill(body=sensor,
+            page.route(DESIGN_BLOB, lambda route: route.fulfill(body=sensor,
                 content_type='application/octet-stream', headers={'Access-Control-Allow-Origin': '*'}))
             from PIL import Image
             import io

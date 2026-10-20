@@ -5,12 +5,16 @@ import hashlib
 import http.server
 import json
 import os
+import re
 from pathlib import Path
 import sys
 import threading
 import time
 
 from playwright.sync_api import expect, sync_playwright
+
+# A design blob, with or without the app's `?client=` release tag (template usage, phase 1).
+DESIGN_BLOB = re.compile(r'^https://ha\.coo\.ee/designs/v1/blobs/[^/?]+\.rc(\?.*)?$')
 
 root = Path(sys.argv[1]).resolve()
 templates = {style: Path(f'scripts/fixtures/demo/tile-{style}.rc').read_bytes() for style in ('classic', 'console')}
@@ -149,7 +153,7 @@ try:
                     route.fulfill(status=404, headers={'Access-Control-Allow-Origin': '*'})
 
             page.route('https://ha.coo.ee/api/cards/resolve', resolve)
-            page.route('https://ha.coo.ee/designs/v1/blobs/*.rc', lambda route: route.fulfill(
+            page.route(DESIGN_BLOB, lambda route: route.fulfill(
                 body=blobs[route.request.url.rsplit('/', 1)[-1].removesuffix('.rc')], content_type='application/octet-stream', headers={'Access-Control-Allow-Origin': '*'}))
             page.goto(f'http://127.0.0.1:{server.server_port}/demo/?data=fake', wait_until='networkidle')
             # Legacy fake URLs must still fetch and display server-owned state.
@@ -350,7 +354,7 @@ try:
                                   headers={'Access-Control-Allow-Origin':'*'})
                 else: route.fulfill(status=404,headers={'Access-Control-Allow-Origin':'*'})
             page.route('https://ha.coo.ee/api/cards/resolve',resolve_instrument)
-            page.route('https://ha.coo.ee/designs/v1/blobs/*.rc',lambda route:route.fulfill(
+            page.route(DESIGN_BLOB,lambda route:route.fulfill(
                 body=instrument_blobs[route.request.url.rsplit('/',1)[-1].removesuffix('.rc')],
                 content_type='application/octet-stream',headers={'Access-Control-Allow-Origin':'*'}))
             page.clock.install(time=datetime.datetime(2026,10,17,12,2,tzinfo=datetime.timezone.utc))
