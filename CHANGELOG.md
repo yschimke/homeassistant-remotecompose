@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.1.49](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.48...v0.1.49) (2026-10-20)
+
+
+### Features
+
+* add the generated Wear baseline profile ([#992](https://github.com/yschimke/homeassistant-remotecompose/issues/992)) ([ca3fd01](https://github.com/yschimke/homeassistant-remotecompose/commit/ca3fd01ba5a6b3e6aacb39c423e4608bf3431f2a))
+* draw the meter glyph on sensor tiles rendered from card designs ([#990](https://github.com/yschimke/homeassistant-remotecompose/issues/990)) ([1692c52](https://github.com/yschimke/homeassistant-remotecompose/commit/1692c5254e09678c319be2d6823170ba7697ce6c))
+* **home-assistant:** add the Remote Compose card's Lovelace resource on setup ([#986](https://github.com/yschimke/homeassistant-remotecompose/issues/986)) ([67fa179](https://github.com/yschimke/homeassistant-remotecompose/commit/67fa1797ee5522033a21940fae59a1543eff014a))
+* offer the watch app and Wear widgets from the phone dashboard ([#989](https://github.com/yschimke/homeassistant-remotecompose/issues/989)) ([605b33d](https://github.com/yschimke/homeassistant-remotecompose/commit/605b33d150fb3a468591c1d3a8b9b9a273d519c8))
+
+
+### Bug Fixes
+
+* dashboard navigate, more-info and markdown links do something ([#988](https://github.com/yschimke/homeassistant-remotecompose/issues/988)) ([2347f60](https://github.com/yschimke/homeassistant-remotecompose/commit/2347f60387e72ce7333ea9a1703fe90587e23cb5))
+* **deps:** update dependency ee.schimke.composeai:remote-compose-player-js-dist to v2.17.0 ([#984](https://github.com/yschimke/homeassistant-remotecompose/issues/984)) ([0c2f217](https://github.com/yschimke/homeassistant-remotecompose/commit/0c2f2178d161c1ca9dcd4d922834dc009f398f53))
+* find Wear benchmark list rows with slow drags ([#987](https://github.com/yschimke/homeassistant-remotecompose/issues/987)) ([6daccc0](https://github.com/yschimke/homeassistant-remotecompose/commit/6daccc0afdb3dcd7b6107235a496957d31e04df1))
+* forget a shown navigation view; keep frontend routes out of views ([#993](https://github.com/yschimke/homeassistant-remotecompose/issues/993)) ([ecd486c](https://github.com/yschimke/homeassistant-remotecompose/commit/ecd486c50b191d92eed142d4e4f722d696416bb6))
+
 ## [0.1.48](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.47...v0.1.48) (2026-10-20)
 
 
