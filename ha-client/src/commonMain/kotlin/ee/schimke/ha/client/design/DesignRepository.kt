@@ -41,6 +41,12 @@ data class DesignServerConfig(
    * request so it lists the signed-in person's private designs too. Blank for none.
    */
   val token: String = "",
+  /**
+   * The fixed User-Agent sent with every manifest and blob request ([UsageUserAgent.header]:
+   * `Terrazzo/<version> (<platform>; surface=<surface>)`), so the server can count which templates
+   * each app fetches. It names a release, never an install; null sends the HTTP engine's own.
+   */
+  val userAgent: UsageUserAgent? = null,
 ) {
   val enabled: Boolean
     get() = !baseUrl.isNullOrBlank()
@@ -359,6 +365,7 @@ class DesignRepository(
   private suspend fun fetchManifest(baseUrl: String, stored: StoredManifest?, now: Long): Fetch {
     val response: HttpResponse =
       httpClient!!.get("$baseUrl/manifest.json") {
+        config.userAgent?.let { header(HttpHeaders.UserAgent, it.header) }
         stored?.etag?.let { header(HttpHeaders.IfNoneMatch, it) }
         config.token
           .takeIf { it.isNotBlank() }
@@ -374,7 +381,10 @@ class DesignRepository(
   }
 
   private suspend fun fetchBlob(baseUrl: String, entry: DesignEntry): ByteArray? {
-    val response = httpClient!!.get("$baseUrl/${DesignManifest.blobPath(entry.sha256)}")
+    val response =
+      httpClient!!.get("$baseUrl/${DesignManifest.blobPath(entry.sha256)}") {
+        config.userAgent?.let { header(HttpHeaders.UserAgent, it.header) }
+      }
     if (!response.status.isSuccess()) return null
     val bytes = response.bodyAsBytes()
     // Content addressing: a blob that doesn't hash to its name is never stored.
