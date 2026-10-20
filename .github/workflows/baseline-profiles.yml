@@ -1,15 +1,16 @@
 name: Baseline profiles
 
-# Generates the phone and Wear baseline profiles on emulators, then smoke-runs the startup and
-# scroll macrobenchmarks against the result. The profiles come out as the `baseline-profiles-app`
+# Generates the phone and Wear baseline profiles on emulators, then runs the startup and
+# scroll macrobenchmarks against the result and prints a Perfetto breakdown of the scroll traces
+# (scripts/analyze-benchmark-traces.py). The profiles come out as the `baseline-profiles-app`
 # and `baseline-profiles-wear` artifacts: commit their files over
 # `app/src/main/generated/baselineProfiles/` and `wear/src/release/generated/baselineProfiles/`.
 # The workflow never commits itself: a push made with its token would land without CI.
 # The emulator step also prints each profile set into the job log as a base64 tarball between
 # `BASELINE-PROFILES-BEGIN` / `-END` markers, for readers that can reach logs but not artifacts.
 #
-# Emulator benchmark numbers only catch large regressions; dispatch with `full-benchmarks` for
-# complete runs, or run `:app-benchmark` / `:wear-benchmark` against a physical device.
+# Emulator benchmark numbers only catch large regressions (SwiftShader renders the frames); run
+# `:app-benchmark` / `:wear-benchmark` against a physical device for numbers to compare.
 
 on:
   pull_request:
@@ -21,8 +22,8 @@ on:
       - 'scripts/run-baseline-profiles.sh'
   workflow_dispatch:
     inputs:
-      full-benchmarks:
-        description: Run every benchmark iteration instead of a one-pass dry run
+      dry-run:
+        description: Run each benchmark once instead of every iteration (faster, no usable numbers)
         type: boolean
         default: false
 
@@ -60,10 +61,10 @@ jobs:
             profile: wearos_small_round
             profiles-dir: wear/src/release/generated/baselineProfiles
     env:
-      # Macrobenchmark refuses emulators unless told otherwise; the dry run does one pass.
+      # Macrobenchmark refuses emulators unless told otherwise.
       BENCHMARK_ARGS: >-
         -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR
-        ${{ inputs.full-benchmarks != true && '-Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.dryRunMode.enable=true' || '' }}
+        ${{ inputs.dry-run == true && '-Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.dryRunMode.enable=true' || '' }}
     steps:
       - uses: actions/checkout@v7.0.1
       - name: Enable KVM
@@ -97,6 +98,21 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: bash scripts/run-baseline-profiles.sh ${{ matrix.module }} '${{ matrix.generate }}' ':${{ matrix.module }}-benchmark:connectedBenchmarkReleaseAndroidTest' ${{ matrix.profiles-dir }}
+      # Metrics and a Perfetto breakdown of the scroll traces in the log, where they can be read
+      # without the artifact: frame timeline jank, what the over-budget frames spent their time on
+      # (main thread and RenderThread), and JIT activity — near zero when the profile is loaded.
+      # The emulator renders with SwiftShader, so RenderThread/GPU time is inflated; main-thread
+      # composition and RemoteCompose playback are the comparable part.
+      - name: Analyse the benchmark traces
+        if: always()
+        run: |
+          out='${{ matrix.module }}-benchmark/build/outputs/connected_android_test_additional_output'
+          test -d "$out" || { echo "no benchmark output"; exit 0; }
+          python3 -m pip install --quiet perfetto==0.58.2
+          mkdir -p build
+          python3 scripts/analyze-benchmark-traces.py --match Scroll "$out" | tee build/trace-analysis.txt
+          { echo '### ${{ matrix.name }} traces'; echo '```'; cat build/trace-analysis.txt; echo '```'; } \
+            >> "$GITHUB_STEP_SUMMARY"
       - name: Show the device diagnostics
         if: failure()
         run: |

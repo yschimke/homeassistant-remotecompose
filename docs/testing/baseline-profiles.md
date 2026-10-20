@@ -27,8 +27,10 @@ Seeding the watch's data layer would extend the profile to the card screens.
 ## Generating
 
 For now the profiles come from emulators. `.github/workflows/baseline-profiles.yml` boots a
-phone (API 36) and a Wear (API 33, `android-wear`) emulator, generates both profiles, smoke-runs
-the benchmarks in dry-run mode, and uploads the profiles as `baseline-profiles-app` and
+phone (API 36) and a Wear (API 33, `android-wear`) emulator, generates both profiles, runs the
+benchmarks, prints a Perfetto breakdown of the scroll traces
+(`scripts/analyze-benchmark-traces.py`: frame-timeline jank, where over-budget frames spent their
+time, JIT activity) into the job log and summary, and uploads the profiles as `baseline-profiles-app` and
 `baseline-profiles-wear`. It runs on PRs that touch the benchmark modules and on dispatch; commit
 the artifacts' files over:
 
