@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo.previews
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -29,6 +30,7 @@ import ee.schimke.terrazzo.DashboardTopBar
 import ee.schimke.terrazzo.LocalHaImageStack
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.SettingsScreen
+import ee.schimke.terrazzo.UsageSharingSetting
 import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.auth.TokenVault
 import ee.schimke.terrazzo.core.cache.OfflineCache
@@ -603,6 +605,16 @@ fun Screen_Settings_ThemeStyle(@PreviewParameter(ThemeStyleProvider::class) styl
       onManageDashboards = {},
     )
   }
+
+/** The usage-sharing setting, off (its default) and on. */
+@Preview(name = "settings · usage sharing", showBackground = false, widthDp = PHONE_WIDTH_DP)
+@Composable
+fun Screen_Settings_UsageSharing() = PhoneHost {
+  Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    UsageSharingSetting(checked = false, onCheckedChange = {})
+    UsageSharingSetting(checked = true, onCheckedChange = {})
+  }
+}
 
 /**
  * The card style picker expanded: every style over a sample tile drawn in it, so a regression in

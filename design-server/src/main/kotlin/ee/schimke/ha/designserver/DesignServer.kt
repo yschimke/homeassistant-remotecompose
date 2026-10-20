@@ -8,6 +8,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.ApplicationStopping
 import io.ktor.server.application.install
 import io.ktor.server.plugins.PayloadTooLargeException
 import io.ktor.server.plugins.autohead.AutoHeadResponse
@@ -28,6 +29,8 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import java.io.File
 import java.security.MessageDigest
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -100,6 +103,10 @@ fun Application.designServer(
   site: SiteConfig = SiteConfig(),
   /** Designs people published; with GitHub sign-in it also serves `/my` and `/api/my/...`. */
   userDesigns: UserDesignStore? = null,
+  /** Anonymous template usage: counts fetches and takes reports ([UsageStats]). */
+  usage: UsageStats? = null,
+  /** GitHub logins that may read `/stats/templates`; empty serves it to nobody. */
+  statsUsers: Set<String> = emptySet(),
 ) {
   install(DefaultHeaders)
   install(AutoHeadResponse)
@@ -115,7 +122,20 @@ fun Application.designServer(
       call.respondText("internal error", status = HttpStatusCode.InternalServerError)
     }
   }
+  if (usage != null) {
+    val flusher = launch {
+      while (true) {
+        delay(USAGE_FLUSH_MS)
+        runCatching { usage.flush() }
+      }
+    }
+    monitor.subscribe(ApplicationStopping) {
+      flusher.cancel()
+      runCatching { usage.flush() }
+    }
+  }
   routing {
+    if (usage != null) usageRoutes(usage, github, statsUsers)
     dashboardStudioRoutes(uiBuilder, github)
     demoSite(File(System.getenv("WASM_SITE_DIR") ?: "/app/wasm"))
     cardStudioRoutes(holder, uiBuilder, github)
@@ -128,6 +148,7 @@ fun Application.designServer(
       // A device token adds its owner's private designs; everyone gets the shared ones.
       val login = github?.user(call)
       val served = holder.current().manifestFor(userDesigns, login)
+      usage?.manifestFetched(call.request.header(HttpHeaders.UserAgent))
       call.response.header(HttpHeaders.ETag, served.etag)
       call.allowAnyOrigin()
       call.response.header(HttpHeaders.Vary, HttpHeaders.Authorization)
@@ -149,6 +170,9 @@ fun Application.designServer(
       val bytes =
         sha?.let { holder.current().blob(it) ?: userDesigns?.blob(it) }
           ?: return@get call.notFound()
+      (holder.current().entry(sha!!) ?: userDesigns?.entry(sha))?.let {
+        usage?.blobFetched(it, call.request.header(HttpHeaders.UserAgent))
+      }
       call.response.header(HttpHeaders.ETag, "\"$sha\"")
       call.allowAnyOrigin()
       call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable")
@@ -469,6 +493,9 @@ internal fun tokensMatch(presented: String?, expected: String): Boolean =
  * server buffer an arbitrary body.
  */
 internal const val MAX_REQUEST_BODY_BYTES: Long = 4L * 1024 * 1024
+
+/** How often counted usage is written to disk. */
+private const val USAGE_FLUSH_MS: Long = 60_000
 
 /** The client protocol's base path: the app's design server URL is `<host>$API_BASE`. */
 const val API_BASE = "/designs/v1"

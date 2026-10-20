@@ -882,7 +882,9 @@ Each manifest entry gets a `catalogId` and appears in the
 4. **Who can publish.** Signing in CI means anyone who can merge to
    `main` can ship UI to every client. Is that acceptable, or do design
    releases need their own approval step?
-5. **Telemetry.** Do we want a count of which `(variant, surface,
-   source)` rendered (remote, stale, inbuilt, local)? Without it we can't
-   tell how out of date clients are. With it, the server is no longer
-   strictly anonymous. Proposal: no telemetry in v1.
+5. **Telemetry.** Decided: the server counts design fetches per day by
+   template and app release (a fixed User-Agent, no identifiers), and
+   apps whose users opt in report bucketed render counts per template
+   and source. Counts under 5 are never shown. See
+   [template-usage-tracking.md](../followups/template-usage-tracking.md)
+   and [the privacy policy](../privacy.md).

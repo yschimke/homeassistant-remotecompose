@@ -122,6 +122,7 @@ object CardDesignSync {
           allowUnsigned = true,
           choice = choice.queries,
           token = choice.token,
+          userAgent = CardUsage.userAgent,
         ),
       store = FileDesignStore(storeDir(context, choice.serverUrl)),
       clock = System::currentTimeMillis,
@@ -165,7 +166,16 @@ class CardDesignSyncWorker(context: Context, params: WorkerParameters) :
         CardDesignSync.networkRepository(applicationContext, choice).refresh()
       }
     if (result == RefreshResult.Updated || result == RefreshResult.Filled) CardDesignSync.stored()
-    Log.d(TAG, "card design sync: $result")
+    // Yesterday's card usage goes up with the nightly refresh, only if the user shares it.
+    val sent = runCatching {
+      CardUsage.upload(
+        applicationContext,
+        applicationContext.terrazzoGraph().preferencesStore,
+        choice.serverUrl,
+      )
+    }
+      .getOrDefault(0)
+    Log.d(TAG, "card design sync: $result, usage days sent: $sent")
     return Result.success()
   }
 

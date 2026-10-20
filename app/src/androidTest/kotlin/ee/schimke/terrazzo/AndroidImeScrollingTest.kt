@@ -2,6 +2,7 @@ package ee.schimke.terrazzo
 
 import android.content.ContentValues
 import android.graphics.Bitmap
+import android.os.SystemClock
 import android.provider.MediaStore
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -35,6 +36,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+
+/** Long enough to outlast the IME's show/resize animation on a slow emulator. */
+private const val IME_SETTLE_MS = 600L
 
 /** Real IME tests: a frozen preview cannot verify viewport resizing or focus relocation. */
 @AndroidWindowInsetsRegression
@@ -117,6 +121,10 @@ class AndroidImeScrollingTest {
     assertAboveKeyboard(field)
     field.performScrollTo()
     field.performTextReplacement("http://homeassistant.local:8123")
+    // Typing can resize the keyboard (its suggestion strip appears), which shrinks the viewport
+    // after the scroll above; let it settle and bring the field back before measuring.
+    awaitImeSettled()
+    field.performScrollTo()
     captureWindowEvidence("discovery-focused-ime")
     assertAboveKeyboard(field)
     val connect = compose.onNodeWithText("Connect", useUnmergedTree = false)
@@ -124,6 +132,7 @@ class AndroidImeScrollingTest {
     assertAboveKeyboard(connect)
     connect.performClick()
     compose.runOnIdle { assertTrue(connected) }
+    awaitImeSettled()
     val demo = compose.onNodeWithText("Try demo mode (no login)")
     demo.performScrollTo().assertIsDisplayed()
     scrollFormToBottom()
@@ -200,6 +209,33 @@ class AndroidImeScrollingTest {
       compose.runOnIdle { windowInsets().isVisible(WindowInsetsCompat.Type.ime()) == visible }
     }
     device.waitForIdle()
+    compose.waitForIdle()
+    awaitImeSettled()
+  }
+
+  /**
+   * Waits until the keyboard's height has held still for [IME_SETTLE_MS]. [waitForIme] only sees
+   * the target visibility: the IME can still be animating in, or change height after typing (its
+   * suggestion strip), and `imePadding()` follows it frame by frame. A scroll made before that
+   * lands on a viewport that then shrinks, leaving the scrolled-to control under the keyboard on a
+   * slow emulator. Settling first keeps the assertions about layout, not about timing.
+   */
+  private fun awaitImeSettled() {
+    var lastBottom = -1
+    var stableSince = 0L
+    compose.waitUntil(5_000) {
+      val bottom = compose.runOnIdle {
+        windowInsets().getInsets(WindowInsetsCompat.Type.ime()).bottom
+      }
+      val now = SystemClock.uptimeMillis()
+      if (bottom != lastBottom) {
+        lastBottom = bottom
+        stableSince = now
+        false
+      } else {
+        now - stableSince >= IME_SETTLE_MS
+      }
+    }
     compose.waitForIdle()
   }
 

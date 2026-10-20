@@ -76,6 +76,10 @@ class UserDesignStore(
   /** Every design its author shared. */
   fun shared(): List<UserDesign> = index.designs.filter { it.shared }
 
+  /** The entry of a published design whose blob is [sha256], or null. */
+  fun entry(sha256: String): DesignEntry? =
+    index.designs.firstOrNull { it.entry.sha256 == sha256 }?.entry
+
   /** A published blob's bytes, or null. */
   fun blob(sha256: String): ByteArray? {
     if (!SHA.matches(sha256)) return null

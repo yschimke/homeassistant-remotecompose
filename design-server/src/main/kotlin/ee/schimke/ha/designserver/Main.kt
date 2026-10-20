@@ -24,6 +24,10 @@ import java.io.File
  *   ([SiteConfig.fromEnvironment]).
  * - `USER_DESIGNS_DIR`: where designs people publish are kept ([UserDesignStore]); defaults to
  *   `user-designs` under `UI_BUILDER_STATE_DIR` when that is set. Publishing needs GitHub sign-in.
+ * - `USAGE_DIR`: where anonymous template usage counts are kept by day ([UsageStats]); defaults to
+ *   `usage` under `UI_BUILDER_STATE_DIR`. Without either, counts last until a restart.
+ * - `STATS_USERS`: comma-separated GitHub logins that may read `/stats/templates`; empty (the
+ *   default) shows it to nobody.
  */
 fun main(args: Array<String>) {
   val dir = File(args.firstOrNull() ?: System.getenv("DESIGN_LIBRARY") ?: "card-designs")
@@ -58,9 +62,31 @@ fun main(args: Array<String>) {
           ?.let { File(it, "user-designs") })
       ?.let(::UserDesignStore)
   if (userDesigns != null) println("user designs: revision ${userDesigns.revision}")
+  val usage =
+    UsageStats(
+      System.getenv("USAGE_DIR")?.takeIf { it.isNotBlank() }?.let(::File)
+        ?: System.getenv("UI_BUILDER_STATE_DIR")
+          ?.takeIf { it.isNotBlank() }
+          ?.let { File(it, "usage") }
+    )
+  val statsUsers =
+    System.getenv("STATS_USERS")
+      .orEmpty()
+      .split(',')
+      .map { it.trim() }
+      .filter { it.isNotEmpty() }
+      .toSet()
   embeddedServer(CIO, port = port, host = host) {
       install(CallLogging)
-      designServer(holder, uiBuilder, github, SiteConfig.fromEnvironment(), userDesigns)
+      designServer(
+        holder,
+        uiBuilder,
+        github,
+        SiteConfig.fromEnvironment(),
+        userDesigns,
+        usage,
+        statsUsers,
+      )
     }
     .start(wait = true)
 }

@@ -2,6 +2,8 @@ package ee.schimke.terrazzo.dashboard
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Rect
+import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -140,12 +142,39 @@ class LongPressHistoryTest {
     assertTrue("install sheet did not surface from the history screen", sheetVisible)
   }
 
+  /**
+   * The first dashboard card, once the dashboard has settled. A card's semantics node appears while
+   * the rest of the board is still composing — each card's first document capture runs on the main
+   * thread — so a long-press sent straight away can arrive while the main thread is busy and be
+   * read as a tap. Waiting for an idle main thread and a card that has stopped moving keeps this
+   * test about the long-press path rather than about load timing.
+   */
   private fun waitForFirstCard(): UiObject2 {
-    val anyCard = device.wait(Until.findObject(By.descStartsWith("dashboard-card:")), 10_000)
+    val selector = By.descStartsWith("dashboard-card:")
     assertNotNull(
       "no card with semantics descriptor 'dashboard-card:*' rendered within 10s",
-      anyCard,
+      device.wait(Until.findObject(selector), 10_000),
     )
-    return anyCard!!
+    var lastBounds: Rect? = null
+    var stableSince = SystemClock.uptimeMillis()
+    val deadline = stableSince + 10_000
+    while (SystemClock.uptimeMillis() < deadline) {
+      device.waitForIdle()
+      val bounds = device.findObject(selector)?.visibleBounds
+      val now = SystemClock.uptimeMillis()
+      if (bounds == null || bounds != lastBounds) {
+        lastBounds = bounds
+        stableSince = now
+      } else if (now - stableSince >= CARD_SETTLE_MS) {
+        break
+      }
+      SystemClock.sleep(100)
+    }
+    return device.findObject(selector)
+      ?: throw AssertionError("first dashboard card disappeared while the board settled")
+  }
+
+  private companion object {
+    const val CARD_SETTLE_MS = 750L
   }
 }
