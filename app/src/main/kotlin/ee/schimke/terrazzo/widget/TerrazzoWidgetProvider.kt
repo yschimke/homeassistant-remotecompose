@@ -16,6 +16,7 @@ import ee.schimke.ha.client.design.UsageSource
 import ee.schimke.ha.client.design.UsageSurfaces
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.LauncherLook
 import ee.schimke.ha.rc.captureLauncherWidgetDocument
@@ -170,10 +171,10 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         onRendered =
           if (DemoData.isDemo(entry.baseUrl)) null
           else
-            { source, style ->
+            { source, style, cardType ->
               CardUsage.record(
                 entry.card,
-                cardType = entry.card.type,
+                cardType = cardType,
                 variant = DesignKey.DEFAULT_VARIANT,
                 style = style,
                 source = source,
@@ -204,8 +205,10 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
 
   /**
    * The install preview and the installed widget share the exact same capture and theme.
-   * [onRendered] hears how the card was drawn (its launcher design, else its converter) and in
-   * which card style, for template usage; install previews pass none.
+   * [onRendered] hears how the card was drawn (its launcher design, else its converter), in which
+   * card style, and the card type whose design drew it (a wrapper such as `conditional` draws its
+   * shown card's), for template usage; install previews pass none. Launcher designs have no style
+   * variant — their key's variant is the cell size, which usage never records.
    */
   internal fun renderPreview(
     context: Context,
@@ -214,7 +217,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     snapshot: HaSnapshot,
     targetSizeDp: WidgetSizeDp,
     widgetId: Int = AppWidgetManager.INVALID_APPWIDGET_ID,
-    onRendered: ((UsageSource, String) -> Unit)? = null,
+    onRendered: ((source: UsageSource, cardStyle: String, cardType: String) -> Unit)? = null,
   ): RemoteViews? {
     val registry = defaultRegistry().withEnhancedShutter()
     val widthPx = WidgetSizing.dpToPx(context, targetSizeDp.widthDp)
@@ -322,6 +325,8 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         else -> UsageSource.Converter
       },
       look.cardStyle.id,
+      if (baked != null) CardDesignTemplates.designCard(card, snapshot, registry).type
+      else card.type,
     )
     return remoteViews
   }

@@ -15,6 +15,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 
@@ -221,6 +223,29 @@ class TemplateUsageTest {
       usage.upload(client, "https://designs.test/designs/v1", agent, sendUserAgentHeader = false),
     )
     assertFalse(agents.single().orEmpty().startsWith("Terrazzo/"))
+  }
+
+  @Test
+  fun aRecordWaitingOnTheLockNeverOutlivesTurningSharingOff() = runTest {
+    // clear() holds the lock (its delete suspends) while a record() that saw sharing on waits.
+    val deleting = CompletableDeferred<Unit>()
+    val gated =
+      object : UsageStore by store {
+        override suspend fun delete() {
+          deleting.await()
+          store.delete()
+        }
+      }
+    val usage = TemplateUsage(gated, sharing = { sharing }, today = { day })
+    val clearing = launch { usage.clear() }
+    testScheduler.runCurrent()
+    val recording = launch { usage.record(tile, "card-a") }
+    testScheduler.runCurrent()
+    sharing = false // The switch flips, then its clear completes.
+    deleting.complete(Unit)
+    clearing.join()
+    recording.join()
+    assertNull(store.ledger)
   }
 
   @Test

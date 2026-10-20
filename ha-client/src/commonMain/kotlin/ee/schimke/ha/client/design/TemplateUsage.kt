@@ -163,8 +163,10 @@ class TemplateUsage(
    * no-op while sharing is off.
    */
   suspend fun record(key: UsageKey, fingerprint: String) {
-    if (!sharing()) return
     lock.withLock {
+      // Checked under the lock, never before it: turning sharing off flips the setting and then
+      // [clear]s under this lock, so a record that waited for it can't write a deleted day back.
+      if (!sharing()) return
       val ledger = store.read() ?: UsageLedger()
       val day = today()
       val keys = ledger.days[day].orEmpty()
