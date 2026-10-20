@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.50](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.49...v0.1.50) (2026-10-20)
+
+
+### Features
+
+* **home-assistant:** wall-panel mode for the /terrazzo panel ([#998](https://github.com/yschimke/homeassistant-remotecompose/issues/998)) ([6a677f7](https://github.com/yschimke/homeassistant-remotecompose/commit/6a677f79080085880da34d505b4740389c7f694c))
+* opt-in template usage counts per app ([#997](https://github.com/yschimke/homeassistant-remotecompose/issues/997)) ([17cc274](https://github.com/yschimke/homeassistant-remotecompose/commit/17cc274e97e0dfc62496f7f89376cf7ac5b7b9ff))
+
+
+### Bug Fixes
+
+* **deps:** update compose-ai-tools ([#995](https://github.com/yschimke/homeassistant-remotecompose/issues/995)) ([48cf2e9](https://github.com/yschimke/homeassistant-remotecompose/commit/48cf2e9ef3da060b1bde68e3ac19026a561465f5))
+* keep the widget preview rendering in the preview host ([#999](https://github.com/yschimke/homeassistant-remotecompose/issues/999)) ([b60046d](https://github.com/yschimke/homeassistant-remotecompose/commit/b60046d68f743a66f4ae034c4fc9a7844817e397))
+* stabilise the flaky API 36 instrumented tests ([#996](https://github.com/yschimke/homeassistant-remotecompose/issues/996)) ([86f3811](https://github.com/yschimke/homeassistant-remotecompose/commit/86f3811f530e7301da53484b543e1d01825c5745))
+
 ## [0.1.49](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.48...v0.1.49) (2026-10-20)
 
 
