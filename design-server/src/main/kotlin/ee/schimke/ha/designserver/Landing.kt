@@ -207,8 +207,10 @@ object Landing {
     append(
       "<li><h3>Open it</h3><p>Pick it in the sidebar or go to " +
         "<code>https://YOUR-HA/terrazzo</code>. Bookmark " +
-        "<code>/terrazzo?dashboard=wall-panel</code> as a wall panel's start page. No token " +
-        "goes in the URL: you sign in to Home Assistant as usual.</p></li>"
+        "<code>/terrazzo?dashboard=wall-panel&amp;wall</code> as a wall panel's start page: " +
+        "<code>wall</code> adds full screen, keep-awake, a return to the dashboard after use " +
+        "and a screensaver clock. No token goes in the URL: you sign in to Home Assistant as " +
+        "usual.</p></li>"
     )
     append("</ol>")
     append("<details><summary>Without HACS</summary>")

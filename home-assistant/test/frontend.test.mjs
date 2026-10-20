@@ -283,3 +283,101 @@ test('two Lovelace resources for the card at different URLs register it once', a
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
+
+async function wallPanelPage(browser, query) {
+  const page = await browser.newPage({ viewport: { width: 800, height: 480 } });
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.addInitScript(() => {
+    window.wakeLocks = 0;
+    Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: {
+      request: async () => { window.wakeLocks++; return { released: false, release: async () => {} }; },
+    } });
+    window.fullscreenRequests = 0;
+    HTMLElement.prototype.requestFullscreen = function () { window.fullscreenRequests++; return Promise.resolve(); };
+  });
+  await page.route('https://ha.test/**', (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith('terrazzo-panel.js')) return route.fulfill({ contentType: 'text/javascript', body: readFileSync(`${frontend}terrazzo-panel.js`) });
+    // A stand-in dashboard that counts the taps it receives.
+    if (path.startsWith('/terrazzo-static/wasm/')) return route.fulfill({ contentType: 'text/html',
+      body: '<body style="margin:0;height:100vh" onpointerdown="parent.dashboardTaps++">dashboard</body>' });
+    return route.fulfill({ contentType: 'text/html', body: '<body style="margin:0"><script>window.dashboardTaps = 0</script><script type="module" src="/terrazzo-static/terrazzo-panel.js"></script></body>' });
+  });
+  await page.goto(`https://ha.test/terrazzo${query}`);
+  await page.evaluate(async () => {
+    await customElements.whenDefined('terrazzo-panel');
+    const panel = document.createElement('terrazzo-panel');
+    panel.hass = { auth: {}, locale: { language: 'en-GB' } }; panel.panel = { config: { dashboard: '' } };
+    document.body.append(panel);
+    await new Promise((resolve) => panel.frame.addEventListener('load', resolve, { once: true }));
+    window.returns = 0;
+    panel.frame.terrazzoHost.setReturnHome(() => window.returns++);
+  });
+  return { page, errors, cover: () => page.evaluate(() => {
+    const cover = document.querySelector('terrazzo-panel').shadowRoot.querySelector('.cover');
+    return { hidden: cover.hidden, kind: cover.className, time: cover.querySelector('.time').textContent };
+  }) };
+}
+
+test('wall panel settings come from the bookmarked URL, with ?wall as a preset', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const { page } = await wallPanelPage(browser, '');
+    const parse = (query) => page.evaluate(async (query) =>
+      (await import('/terrazzo-static/terrazzo-panel.js')).wallSettings(query), query);
+    assert.deepEqual(await parse(''), { kiosk: false, keepAwake: false, returnAfter: 0, screensaverAfter: 0 });
+    assert.deepEqual(await parse('?wall'), { kiosk: true, keepAwake: true, returnAfter: 120, screensaverAfter: 600 });
+    assert.deepEqual(await parse('?wall&kiosk=0&screensaver_after=0&return_after=30'),
+      { kiosk: false, keepAwake: true, returnAfter: 30, screensaverAfter: 0 });
+    assert.deepEqual(await parse('?keep_awake&return_after=nonsense'), { kiosk: false, keepAwake: true, returnAfter: 0, screensaverAfter: 0 });
+    // Nothing asked for: no wake lock, no cover, no timers.
+    assert.equal(await page.evaluate(() => window.wakeLocks), 0);
+    assert.equal((await page.evaluate(() => document.querySelector('terrazzo-panel').shadowRoot.querySelector('.cover').hidden)), true);
+  } finally { await browser.close(); }
+});
+
+test('wall panel keeps awake, returns home only after use, and a screensaver swallows the waking tap', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const { page, errors, cover } = await wallPanelPage(browser, '?keep_awake&return_after=0.4&screensaver_after=1.5');
+    assert.equal(await page.evaluate(() => window.wakeLocks), 1, 'wake lock requested on open');
+    await page.waitForTimeout(700);
+    assert.equal(await page.evaluate(() => window.returns), 0, 'an untouched panel is already home');
+    await page.frameLocator('terrazzo-panel iframe').locator('body').click();
+    assert.equal(await page.evaluate(() => window.dashboardTaps), 1);
+    await page.waitForFunction(() => window.returns === 1, null, { timeout: 2000 });
+    await page.waitForTimeout(500);
+    assert.equal(await page.evaluate(() => window.returns), 1, 'one return per use');
+    await page.waitForFunction(() => !document.querySelector('terrazzo-panel').shadowRoot.querySelector('.cover').hidden, null, { timeout: 3000 });
+    const shown = await cover();
+    assert.equal(shown.kind, 'cover screensaver');
+    assert.match(shown.time, /\d/);
+    await page.screenshot({ path: `${root}build/ha-plugin-evidence/wall-panel-screensaver.png` }).catch(() => {});
+    await page.mouse.click(400, 240);
+    assert.equal((await cover()).hidden, true, 'a tap wakes the panel');
+    assert.equal(await page.evaluate(() => window.dashboardTaps), 1, 'the waking tap never reaches the dashboard');
+    await page.waitForTimeout(700);
+    assert.equal(await page.evaluate(() => window.returns), 1, 'waking the screensaver is not use');
+    // Leaving the panel releases everything; nothing fires afterwards.
+    await page.evaluate(() => document.querySelector('terrazzo-panel').remove());
+    await page.waitForTimeout(2000);
+    assert.equal(await page.evaluate(() => window.returns), 1);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('kiosk mode asks for one tap to go full screen, and again after leaving it', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const { page, errors, cover } = await wallPanelPage(browser, '?kiosk');
+    assert.deepEqual((await cover()).kind, 'cover start');
+    await page.mouse.click(400, 240);
+    assert.equal(await page.evaluate(() => window.fullscreenRequests), 1);
+    assert.equal((await cover()).hidden, true);
+    assert.equal(await page.evaluate(() => window.dashboardTaps), 0, 'the start tap never reaches the dashboard');
+    await page.evaluate(() => document.dispatchEvent(new Event('fullscreenchange')));
+    assert.equal((await cover()).kind, 'cover start', 'leaving full screen offers it again');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});

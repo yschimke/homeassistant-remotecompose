@@ -324,6 +324,7 @@ class DesignServerTest {
       assertTrue("redirect/config_flow_start/?domain=terrazzo" in page, "starts the setup")
       assertFalse("configuration.yaml" in page, "sets up in the UI, not YAML")
       assertTrue("/terrazzo?dashboard=" in page, "says where the dashboard opens")
+      assertTrue("dashboard=wall-panel&amp;wall" in page, "offers the wall-panel preset")
       assertTrue(
         "/releases/latest/download/terrazzo-home-assistant.zip" in page,
         "offers the manual ZIP",
