@@ -2,7 +2,7 @@ package ee.schimke.terrazzo.crash
 
 import ee.schimke.terrazzo.BuildConfig
 import kotlin.test.Test
-import kotlin.test.assertEquals
+import kotlin.test.assertNotSame
 import kotlin.test.assertSame
 
 class CrashReporterTest {
@@ -17,10 +17,14 @@ class CrashReporterTest {
   }
 
   @Test
-  fun keylessBuildSelectsNone() {
-    // The test build has no google-services.json and no harc.crashReporter override, so `auto`
-    // must resolve to none — the default build carries no crash SDK.
-    assertEquals("none", BuildConfig.CRASH_REPORTER)
-    assertSame(NoopCrashReporter, CrashReporter.create())
+  fun buildBackendResolves() {
+    // Holds for whichever backend this build selected (none by default, firebase when a key is
+    // present): a selected backend's class is compiled in, so it never silently falls back.
+    val reporter = CrashReporter.create()
+    if (BuildConfig.CRASH_REPORTER == "none") {
+      assertSame(NoopCrashReporter, reporter)
+    } else {
+      assertNotSame(NoopCrashReporter, reporter)
+    }
   }
 }
