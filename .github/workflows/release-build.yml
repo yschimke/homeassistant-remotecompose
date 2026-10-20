@@ -99,7 +99,7 @@ jobs:
 
   ios-assets:
     name: Build Apple release assets
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 60
     env:
       TAG_NAME: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}

@@ -30,7 +30,7 @@ jobs:
     # version lines, all of which main's push CI already built. Matches the
     # bot-authored PR (or a bot dispatch); humans and main always run it.
     if: ${{ inputs.wear-only != true && !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7.0.1
