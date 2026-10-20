@@ -66,6 +66,8 @@ internal fun CardStyleSample(
       dark,
       registry,
       cardStyle,
+      // A sample, not one of the user's cards.
+      recordUsage = false,
     )
   }
   // The library captures a template the first time a key is asked for. Expanding the picker asks
