@@ -8,23 +8,25 @@ import ee.schimke.ha.designserver.Pages.esc
  * from a server running anywhere else, which has no such routes.
  * - [designerUrl]: the card designer, the HA-branded UI Builder.
  * - [catalogUrl]: every HA card and component, in the catalog.
- * - [storeUrl]: where to get the app; without one the page points at the source instead.
+ * - [storeUrl]: where to get the app, its Google Play listing by default.
  */
 data class SiteConfig(
   val designerUrl: String = DEFAULT_DESIGNER_URL,
   val catalogUrl: String = DEFAULT_CATALOG_URL,
-  val storeUrl: String? = null,
+  val storeUrl: String = DEFAULT_STORE_URL,
 ) {
   companion object {
     const val DEFAULT_DESIGNER_URL = "https://ha.coo.ee/ui-builder/"
     const val DEFAULT_CATALOG_URL = "https://ha.coo.ee/homeassistant-remotecompose/"
+    /** The phone app, `ee.schimke.harc`, on Google Play. */
+    const val DEFAULT_STORE_URL = "https://play.google.com/store/apps/details?id=ee.schimke.harc"
 
     /** `DESIGNER_URL`, `CATALOG_URL` and `STORE_URL`. */
     fun fromEnvironment(env: Map<String, String> = System.getenv()): SiteConfig =
       SiteConfig(
         designerUrl = env["DESIGNER_URL"]?.takeIf { it.isNotBlank() } ?: DEFAULT_DESIGNER_URL,
         catalogUrl = env["CATALOG_URL"]?.takeIf { it.isNotBlank() } ?: DEFAULT_CATALOG_URL,
-        storeUrl = env["STORE_URL"]?.takeIf { it.isNotBlank() },
+        storeUrl = env["STORE_URL"]?.takeIf { it.isNotBlank() } ?: DEFAULT_STORE_URL,
       )
   }
 }
@@ -78,9 +80,7 @@ object Landing {
         "No web view, no setup: sign in and the dashboards you already have are there.</p>"
     )
     append("<div class=\"actions\">")
-    if (site.storeUrl != null)
-      append("<a class=\"button\" href=\"${esc(site.storeUrl)}\">Get the app</a>")
-    else append("<a class=\"button\" href=\"$SOURCE_URL\">Get the app</a>")
+    append("<a class=\"button\" href=\"${esc(site.storeUrl)}\">Get the app</a>")
     append("<a class=\"button quiet\" href=\"#designer\">Design your own cards</a>")
     append("<a class=\"button quiet\" href=\"#home-assistant\">Install in Home Assistant</a>")
     append("</div></div>")
