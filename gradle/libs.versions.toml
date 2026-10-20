@@ -101,7 +101,7 @@ cmp-navigation3 = "1.2.0-rc01"
 cmp-navigation3-runtime = "1.2.0"
 cmp-icons = "1.7.3"
 cmp-adaptive = "1.3.0"
-rc-player = "2.16.0"
+rc-player = "2.17.0"
 compose-webview = "2.0.3"
 # KCEF requests 2.5.0, which was not published to Central. Keep both halves on the
 # supported 2.6.0 release from Central, including the native libraries for desktop.
