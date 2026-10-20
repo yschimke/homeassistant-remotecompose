@@ -23,15 +23,13 @@ internal fun MacrobenchmarkScope.startTopLevel() {
 
 /** Opens Settings from the top-level list; the longest list the unpaired app has. */
 internal fun MacrobenchmarkScope.openSettings() {
-  findScrollingTo("Settings").click()
   // The list opens centred on its second item, so either of the first two may be the one on screen.
-  awaitText("Report a bug", "Theme")
+  open("Settings", "Report a bug", "Theme")
 }
 
 /** Opens the dashboard library from the top-level list. */
 internal fun MacrobenchmarkScope.openDashboards() {
-  findScrollingTo("Browse dashboards").click()
-  awaitText("Dashboards", "Back")
+  open("Browse dashboards", "Dashboards", "Back")
 }
 
 /** Returns to the top-level list with the system back gesture. */
@@ -49,15 +47,44 @@ internal fun MacrobenchmarkScope.scrollList() {
   repeat(4) { swipe(up = false) }
 }
 
+/**
+ * Taps the [entry] row and waits for any of [landmarks] on the screen it opens. A tap that lands
+ * while the list is still settling from a fling can miss its row, so one miss is retried with a
+ * fresh lookup.
+ */
+private fun MacrobenchmarkScope.open(entry: String, vararg landmarks: String) {
+  findScrollingTo(entry).click()
+  if (waitForAny(landmarks, UI_TIMEOUT_MS / 3)) return
+  device.findObject(By.text(entry))?.click()
+  awaitText(*landmarks)
+}
+
+/**
+ * Finds [text] in the current list, dragging it up a little at a time. Slow drags rather than
+ * flings: a fling can carry a short round-screen list past its last rows, which then sit scaled at
+ * the edge where uiautomator does not report them.
+ */
 private fun MacrobenchmarkScope.findScrollingTo(text: String): UiObject2 {
-  repeat(6) {
-    device.findObject(By.text(text))?.let {
+  repeat(8) {
+    device.wait(Until.findObject(By.text(text)), 1_000)?.let {
       return it
     }
-    swipe(up = true)
+    drag(up = true)
   }
-  return device.findObject(By.text(text)) ?: error("'$text' not found")
+  return device.findObject(By.text(text)) ?: error("'$text' not found; on screen: ${onScreen()}")
 }
+
+/** A slow drag of a third of the screen, which moves the list without flinging it. */
+private fun MacrobenchmarkScope.drag(up: Boolean) {
+  val x = device.displayWidth / 2
+  val low = device.displayHeight * 2 / 3
+  val high = device.displayHeight / 3
+  if (up) device.swipe(x, low, x, high, 40) else device.swipe(x, high, x, low, 40)
+  device.waitForIdle()
+}
+
+private fun MacrobenchmarkScope.onScreen(): List<String> =
+  device.findObjects(By.text(Pattern.compile(".+"))).map { it.text }
 
 /** One fast vertical swipe through the middle of the round screen. */
 private fun MacrobenchmarkScope.swipe(up: Boolean) {
@@ -70,8 +97,12 @@ private fun MacrobenchmarkScope.swipe(up: Boolean) {
 
 /** Waits for any of [texts]: a lazy list only lays out what is on screen. */
 private fun MacrobenchmarkScope.awaitText(vararg texts: String) {
-  val pattern = Pattern.compile(texts.joinToString("|") { Pattern.quote(it) })
-  check(device.wait(Until.hasObject(By.text(pattern)), UI_TIMEOUT_MS)) {
-    "none of ${texts.toList()} appeared"
+  check(waitForAny(texts, UI_TIMEOUT_MS)) {
+    "none of ${texts.toList()} appeared; on screen: ${onScreen()}"
   }
+}
+
+private fun MacrobenchmarkScope.waitForAny(texts: Array<out String>, timeoutMs: Long): Boolean {
+  val pattern = Pattern.compile(texts.joinToString("|") { Pattern.quote(it) })
+  return device.wait(Until.hasObject(By.text(pattern)), timeoutMs)
 }

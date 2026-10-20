@@ -54,6 +54,9 @@ object Landing {
   private const val HACS_REDIRECT_URL =
     "https://my.home-assistant.io/redirect/hacs_repository/" +
       "?owner=yschimke&amp;repository=homeassistant-remotecompose&amp;category=integration"
+  /** My Home Assistant's link that starts Terrazzo's setup in the visitor's own instance. */
+  private const val ADD_INTEGRATION_URL =
+    "https://my.home-assistant.io/redirect/config_flow_start/?domain=terrazzo"
   /** `hacs.json`'s `homeassistant`. */
   private const val MIN_HA_VERSION = "2024.7"
 
@@ -191,20 +194,21 @@ object Landing {
         "<b>Integration</b>.</p></li>"
     )
     append(
-      "<li><h3>Download it</h3><p>Find <b>Terrazzo Remote Compose</b> and download the latest " +
-        "release. Pick a release, not the default branch: only releases carry the built " +
-        "dashboard.</p></li>"
+      "<li><h3>Download it and restart</h3><p>Find <b>Terrazzo Remote Compose</b>, download the " +
+        "latest release and restart Home Assistant. Pick a release, not the default branch: " +
+        "only releases carry the built dashboard.</p></li>"
     )
     append(
-      "<li><h3>Turn it on</h3><p>Add this to <code>configuration.yaml</code>:</p>" +
-        "<pre><code>terrazzo:\n  title: Wall panel\n  dashboard: wall-panel  " +
-        "# optional: the dashboard to open first</code></pre></li>"
+      "<li><h3>Add the integration</h3><p><a href=\"$ADD_INTEGRATION_URL\">Add Terrazzo to " +
+        "Home Assistant</a>, or go to <b>Settings → Devices &amp; services → Add integration</b> " +
+        "and search for Terrazzo. Name its sidebar entry and, if you like, pick the dashboard " +
+        "it opens first. <b>Configure</b> changes either later; no YAML or restart needed.</p></li>"
     )
     append(
-      "<li><h3>Restart and open</h3><p>Restart Home Assistant, then pick <b>Wall panel</b> in " +
-        "the sidebar or go to <code>https://YOUR-HA/terrazzo</code>. Bookmark " +
+      "<li><h3>Open it</h3><p>Pick it in the sidebar or go to " +
+        "<code>https://YOUR-HA/terrazzo</code>. Bookmark " +
         "<code>/terrazzo?dashboard=wall-panel</code> as a wall panel's start page. No token " +
-        "goes in the URL or the YAML: you sign in to Home Assistant as usual.</p></li>"
+        "goes in the URL: you sign in to Home Assistant as usual.</p></li>"
     )
     append("</ol>")
     append("<details><summary>Without HACS</summary>")
@@ -214,15 +218,14 @@ object Landing {
         "<a href=\"$RELEASE_DOWNLOAD_URL/SHA256SUMS-home-assistant.txt\">" +
         "<code>SHA256SUMS-home-assistant.txt</code></a>. Extract it into your Home Assistant " +
         "config folder so that <code>custom_components/terrazzo/manifest.json</code> exists, " +
-        "then carry on from step 3. To update, replace the whole <code>terrazzo</code> folder " +
+        "restart Home Assistant and carry on from step 3. To update, replace the whole <code>terrazzo</code> folder " +
         "rather than extracting over it.</p>"
     )
     append("</details>")
     append(
       "<p class=\"note\">Updates appear in Home Assistant as an update from HACS. Install it, restart, and " +
-        "refresh any wall-panel tabs. Cards on your existing Lovelace dashboards can use Remote " +
-        "Compose too: add <code>/terrazzo-static/remote-compose-card.js</code> as a JavaScript " +
-        "module resource.</p>"
+        "refresh any wall-panel tabs. Setup also adds a <b>Remote Compose</b> card to the card " +
+        "picker of your existing Lovelace dashboards.</p>"
     )
     append("<div class=\"actions\">")
     append(
@@ -257,7 +260,6 @@ h1{font-size:44px;line-height:1.1;margin:0 0 12px}h2{font-size:30px;line-height:
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;align-items:start;margin:0 0 24px}
 .cards img{display:block;width:100%;height:auto;border-radius:12px;background:var(--card)}
 .steps{margin:0 0 20px;padding-left:22px;display:grid;gap:14px;max-width:44em}.steps li{min-width:0}.steps p{margin:0;color:var(--muted)}.designer p code{overflow-wrap:anywhere}
-pre{margin:8px 0 0;padding:12px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line);overflow-x:auto;font-size:14px}
 details{margin:0 0 16px;max-width:44em}summary{cursor:pointer;font-weight:600}details p,.note{color:var(--muted);max-width:44em}
 footer{display:flex;flex-wrap:wrap;gap:20px;padding:32px 0 0;font-size:14px}
 @media (max-width:760px){.hero{grid-template-columns:1fr}.phones{max-width:360px}h1{font-size:36px}.designer{padding:20px}}
