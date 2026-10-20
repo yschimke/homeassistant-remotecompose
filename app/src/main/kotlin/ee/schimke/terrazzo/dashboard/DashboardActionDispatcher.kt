@@ -32,12 +32,13 @@ import kotlinx.coroutines.launch
  * Build the [HaActionDispatcher] that backs `LocalHaActionDispatcher` for the dashboard surface.
  * The dispatcher fans actions out by type:
  *
- * - [HaAction.Url] → `Intent.ACTION_VIEW` (opens a browser)
+ * - [HaAction.Url] → `Intent.ACTION_VIEW` (opens a browser); an app-relative `/path` opens on the
+ *   session's Home Assistant.
  * - [HaAction.Toggle] / [HaAction.CallService] → live `HaSession` calls through `call_service`
  *   (`homeassistant.toggle` for the bare `Toggle` form); demo sessions route through
  *   [DemoHaSession.actionRouter] so taps are visible without a network round-trip.
- * - [HaAction.Navigate] / [HaAction.MoreInfo] → logged for now — these need in-app navigation that
- *   the dashboard doesn't expose yet.
+ * - [HaAction.Navigate] → [onNavigate], which moves the dashboard to the path's dashboard and view.
+ * - [HaAction.MoreInfo] → [onMoreInfo], which shows the entity's details.
  *
  * With [feedback], every action that changes something is also felt (and, if the user turned sounds
  * on, heard): a toggle-on / toggle-off for switches — [stateOf] tells which way a bare toggle flips
@@ -54,6 +55,8 @@ fun rememberDashboardActionDispatcher(
   readOnly: Boolean = true,
   feedback: InteractionFeedback? = null,
   stateOf: (String) -> String? = { null },
+  onNavigate: (String) -> Unit = {},
+  onMoreInfo: (String) -> Unit = {},
 ): HaActionDispatcher {
   val context = LocalContext.current
   val cache = LocalCardDocumentCache.current
@@ -63,6 +66,8 @@ fun rememberDashboardActionDispatcher(
   // recreating the dispatcher (and losing AlarmKeypadCoordinator state).
   val readOnlyState = rememberUpdatedState(readOnly)
   val stateOfState = rememberUpdatedState(stateOf)
+  val onNavigateState = rememberUpdatedState(onNavigate)
+  val onMoreInfoState = rememberUpdatedState(onMoreInfo)
   return remember(session, context, cache, scope, logStore, feedback) {
     val core =
       DashboardActionDispatcher(
@@ -73,6 +78,8 @@ fun rememberDashboardActionDispatcher(
         logStore,
         readOnly = { readOnlyState.value },
         onFailure = { feedback?.play(FeedbackCue.Reject) },
+        onNavigate = { onNavigateState.value(it) },
+        onMoreInfo = { onMoreInfoState.value(it) },
       )
     // The keypad coordinator buffers per-key host actions and
     // translates ARM intents into a single `call_service` with the
@@ -101,6 +108,8 @@ private class DashboardActionDispatcher(
   private val logStore: LogStore,
   private val readOnly: () -> Boolean,
   private val onFailure: () -> Unit = {},
+  private val onNavigate: (String) -> Unit = {},
+  private val onMoreInfo: (String) -> Unit = {},
 ) : HaActionDispatcher {
   override fun dispatch(action: HaAction) {
     // Log every dispatched action (before any network round-trip)
@@ -124,8 +133,9 @@ private class DashboardActionDispatcher(
         }
         handleCallService(action)
       }
-      is HaAction.MoreInfo,
-      is HaAction.Navigate,
+      // Navigation and more-info only show something: read-only mode keeps them.
+      is HaAction.Navigate -> onNavigate(action.path)
+      is HaAction.MoreInfo -> onMoreInfo(action.entityId)
       // AlarmKey / AlarmIntent should be intercepted upstream by
       // AlarmKeypadCoordinator; logging here means an alarm-panel
       // action escaped the coordinator (most likely a bug).
@@ -154,8 +164,15 @@ private class DashboardActionDispatcher(
   }
 
   private fun launchUrl(url: String) {
+    // HA opens an app-relative `url_path` (`/config/areas`) on its own origin.
+    val resolved =
+      resolveAgainstBase(session.baseUrl, url)
+        ?: run {
+          Log.w(TAG, "No Home Assistant URL to open $url against")
+          return
+        }
     val uri =
-      runCatching { Uri.parse(url) }.getOrNull()
+      runCatching { Uri.parse(resolved) }.getOrNull()
         ?: run {
           Log.w(TAG, "Refusing to launch unparseable URL: $url")
           return

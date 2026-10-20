@@ -400,7 +400,7 @@ private fun InlineSpan(
       )
     }
     is MarkdownInline.Link -> {
-      val click = HaAction.Url(inline.url).toRemoteAction()
+      val click = markdownLinkAction(inline.url).toRemoteAction()
       val emphasis = inline.style.drawn
       RemoteText(
         text = inline.boundText ?: inline.text.rs,
@@ -415,6 +415,13 @@ private fun InlineSpan(
     is MarkdownInline.Image -> MarkdownBadge(inline)
   }
 }
+
+/**
+ * What a tap on a markdown link does. HA's `ha-markdown` navigates in the frontend for an
+ * app-relative link (`[P2s](/dashboard-bambu/p2s)`) and opens anything else as a URL.
+ */
+internal fun markdownLinkAction(url: String): HaAction =
+  if (url.startsWith("/") && !url.startsWith("//")) HaAction.Navigate(url) else HaAction.Url(url)
 
 /** Bold emphasis lifts the block's weight to [FontWeight.Bold]; anything else keeps it. */
 private fun MarkdownStyle.weight(base: FontWeight): FontWeight =
@@ -442,7 +449,7 @@ private val MarkdownStyle.fontFamily: RemoteFontFamily?
 @Composable
 @RemoteComposable
 private fun MarkdownBadge(image: MarkdownInline.Image) {
-  val click = image.href?.let { HaAction.Url(it).toRemoteAction() }
+  val click = image.href?.let { markdownLinkAction(it).toRemoteAction() }
   val rb =
     rememberLocalNamedRemoteBitmap(
       name = image.url,
