@@ -321,7 +321,8 @@ class DesignServerTest {
       assertTrue("id=\"home-assistant\"" in page)
       assertTrue("/blob/main/docs/HOME_ASSISTANT.md\">Installation and updates" in page)
       assertTrue("my.home-assistant.io/redirect/hacs_repository/" in page, "opens HACS")
-      assertTrue("<pre><code>terrazzo:" in page, "gives the configuration")
+      assertTrue("redirect/config_flow_start/?domain=terrazzo" in page, "starts the setup")
+      assertFalse("configuration.yaml" in page, "sets up in the UI, not YAML")
       assertTrue("/terrazzo?dashboard=" in page, "says where the dashboard opens")
       assertTrue(
         "/releases/latest/download/terrazzo-home-assistant.zip" in page,
