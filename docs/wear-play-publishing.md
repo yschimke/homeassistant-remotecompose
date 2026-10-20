@@ -56,7 +56,7 @@ no row. Update this table and the form together.
    `app/src/main/play/listings/en-GB/graphics/wear-screenshots/` by
    `scripts/render-play-screenshots.sh` (the **Play Store graphics** workflow
    reruns it weekly). Upload them by setting `PLAY_PUBLISH_LISTING=true`, so
-   releases run `:app:publishListing`, or upload them by hand in the Console.
+   releases run `:app:publishReleaseListing`, or upload them by hand in the Console.
 4. The service account in `PLAY_SERVICE_ACCOUNT_JSON` already has access to
    this app for the phone; it needs **Release to testing tracks** (or Release
    manager), which covers the Wear tracks too.
@@ -66,7 +66,7 @@ no row. Update this table and the form together.
 ## Releasing
 
 Once `PLAY_PUBLISH_WEAR` is `true`, every release the release-please PR cuts
-also runs `:wear:publishBundle`. Both bundles go out as **completed**
+also runs `:wear:publishReleaseBundle`. Both bundles go out as **completed**
 releases (`releaseStatus = COMPLETED`), so merging the release-please PR is the
 only manual step: the phone build reaches `internal` testers and the Wear build
 `wear:internal` testers without a Console visit. Promote beyond internal
@@ -88,7 +88,7 @@ skipped and the run summary says so.
 ```sh
 export HARC_KEYSTORE_PATH=/path/upload.jks HARC_KEYSTORE_PASSWORD=… HARC_KEY_ALIAS=… HARC_KEY_PASSWORD=…
 ./gradlew :wear:bundleRelease                      # signed AAB under wear/build/outputs/bundle/release/
-ANDROID_PUBLISHER_CREDENTIALS="$(cat key.json)" ./gradlew :wear:publishBundle
+ANDROID_PUBLISHER_CREDENTIALS="$(cat key.json)" ./gradlew :wear:publishReleaseBundle
 ```
 
 Without `ANDROID_PUBLISHER_CREDENTIALS` the Play tasks are disabled; without

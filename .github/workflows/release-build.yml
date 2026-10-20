@@ -241,9 +241,14 @@ jobs:
           HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
           HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
           ANDROID_PUBLISHER_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-        run: ./gradlew :app:publishBundle --stacktrace
+        run: ./gradlew :app:publishReleaseBundle --stacktrace
 
-      # `publishBundle` uploads only the bundle and release notes. The listing
+      # Publish tasks name the `release` variant. The umbrella `publishBundle`
+      # also covers the baseline-profile plugin's `benchmark*`/`nonMinified*`
+      # variants (and `*Experimental`, whose `.experimental` package has no
+      # google-services.json client), which fails the job before any upload.
+      #
+      # `publishReleaseBundle` uploads only the bundle and release notes. The listing
       # (shared by phone and Wear) is its own task: it replaces the Console's
       # text and images with what's committed, so it's opt-in.
       - name: Publish store listing to Play
@@ -253,7 +258,7 @@ jobs:
           HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
           HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
           ANDROID_PUBLISHER_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-        run: ./gradlew :app:publishListing --stacktrace
+        run: ./gradlew :app:publishReleaseListing --stacktrace
 
 
       - name: Publish Wear to Play (wear:internal track)
@@ -263,7 +268,7 @@ jobs:
           HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
           HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
           ANDROID_PUBLISHER_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-        run: ./gradlew :wear:publishBundle --stacktrace
+        run: ./gradlew :wear:publishReleaseBundle --stacktrace
 
       - name: Release publish summary
         if: always()
