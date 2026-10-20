@@ -4,6 +4,7 @@ import androidx.benchmark.macro.MacrobenchmarkScope
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
+import java.util.regex.Pattern
 
 /** `:wear`'s application id (shared with `:app`). */
 internal const val TARGET_PACKAGE = "ee.schimke.harc"
@@ -23,19 +24,20 @@ internal fun MacrobenchmarkScope.startTopLevel() {
 /** Opens Settings from the top-level list; the longest list the unpaired app has. */
 internal fun MacrobenchmarkScope.openSettings() {
   findScrollingTo("Settings").click()
-  awaitText("Theme")
+  // The list opens centred on its second item, so either of the first two may be the one on screen.
+  awaitText("Report a bug", "Theme")
 }
 
 /** Opens the dashboard library from the top-level list. */
 internal fun MacrobenchmarkScope.openDashboards() {
   findScrollingTo("Browse dashboards").click()
-  awaitText("Dashboards")
+  awaitText("Dashboards", "Back")
 }
 
 /** Returns to the top-level list with the system back gesture. */
 internal fun MacrobenchmarkScope.backToTopLevel() {
   device.pressBack()
-  awaitText("Browse dashboards")
+  awaitText("Pinned", "Browse dashboards", "Settings")
 }
 
 /**
@@ -66,6 +68,10 @@ private fun MacrobenchmarkScope.swipe(up: Boolean) {
   device.waitForIdle()
 }
 
-private fun MacrobenchmarkScope.awaitText(text: String) {
-  check(device.wait(Until.hasObject(By.text(text)), UI_TIMEOUT_MS)) { "'$text' did not appear" }
+/** Waits for any of [texts]: a lazy list only lays out what is on screen. */
+private fun MacrobenchmarkScope.awaitText(vararg texts: String) {
+  val pattern = Pattern.compile(texts.joinToString("|") { Pattern.quote(it) })
+  check(device.wait(Until.hasObject(By.text(pattern)), UI_TIMEOUT_MS)) {
+    "none of ${texts.toList()} appeared"
+  }
 }
