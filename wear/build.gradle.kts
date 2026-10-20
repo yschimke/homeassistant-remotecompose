@@ -18,6 +18,7 @@ plugins {
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.play.publisher)
+  alias(libs.plugins.androidx.baselineprofile)
 }
 
 android {
@@ -96,6 +97,13 @@ tasks
     )
   }
 
+baselineProfile {
+  // Generated on a Wear emulator (`.github/workflows/baseline-profiles.yml`) and checked in
+  // under src/release/generated/baselineProfiles; a normal build never needs a device.
+  automaticGenerationDuringBuild = false
+  saveInSrc = true
+}
+
 play {
   // Wear's dedicated form-factor track. Publishing to the shared `internal`
   // track instead would replace the phone bundle's release on it.
@@ -125,6 +133,8 @@ dependencies {
   implementation(libs.compose.ui.tooling.preview)
   debugImplementation(libs.compose.ui.tooling)
   implementation(libs.activity.compose)
+  implementation(libs.androidx.profileinstaller)
+  baselineProfile(project(":wear-benchmark"))
 
   implementation(libs.wear.compose.material3)
   implementation(libs.wear.compose.foundation)
