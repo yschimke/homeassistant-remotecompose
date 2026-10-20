@@ -35,7 +35,12 @@ class StartupBenchmark {
       compilationMode = compilationMode,
       startupMode = StartupMode.COLD,
       iterations = 10,
-      setupBlock = { pressHome() },
+      setupBlock = {
+        pressHome()
+        // Demo mode arms widget-refresh work that can bring the process back between
+        // macrobenchmark's own kill and its cold-start check; kill it again right before launch.
+        killProcess()
+      },
     ) {
       startDemoDashboard()
     }
