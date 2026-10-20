@@ -28,9 +28,9 @@ android {
   targetProjectPath = ":wear"
   kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
   testOptions.managedDevices.allDevices {
-    create("wearSmallRoundApi34", ManagedVirtualDevice::class.java) {
+    create("wearSmallRoundApi33", ManagedVirtualDevice::class.java) {
       device = "Wear OS Small Round"
-      apiLevel = 34
+      apiLevel = 33
       systemImageSource = "android-wear"
     }
   }
@@ -44,7 +44,7 @@ androidComponents {
 
 baselineProfile {
   val gmd = providers.gradleProperty("benchmark.gmd").orNull == "true"
-  if (gmd) managedDevices += "wearSmallRoundApi34"
+  if (gmd) managedDevices += "wearSmallRoundApi33"
   useConnectedDevices = !gmd
 }
 

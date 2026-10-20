@@ -27,7 +27,7 @@ Seeding the watch's data layer would extend the profile to the card screens.
 ## Generating
 
 For now the profiles come from emulators. `.github/workflows/baseline-profiles.yml` boots a
-phone (API 36) and a Wear (API 34, `android-wear`) emulator, generates both profiles, smoke-runs
+phone (API 36) and a Wear (API 33, `android-wear`) emulator, generates both profiles, smoke-runs
 the benchmarks in dry-run mode, and uploads the profiles as `baseline-profiles-app` and
 `baseline-profiles-wear`. It runs on PRs that touch the benchmark modules and on dispatch; commit
 the artifacts' files over:
@@ -42,7 +42,7 @@ Locally, with an emulator running (API 33+):
 ./gradlew :wear:generateReleaseBaselineProfile
 ```
 
-Or let Gradle manage the device (`pixel6Api35`, and `wearSmallRoundApi34` for Wear):
+Or let Gradle manage the device (`pixel6Api35`, and `wearSmallRoundApi33` for Wear):
 
 ```sh
 ./gradlew :app:generateBaselineProfile -Pbenchmark.gmd=true

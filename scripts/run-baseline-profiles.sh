@@ -32,7 +32,9 @@ mkdir -p "$out"
   echo "## dumpsys package $target (dexopt)"
   adb shell dumpsys package "$target" 2>&1 | grep -i -A3 -E 'dexopt|compil|\[status' | head -40
   echo "## logcat"
-  adb logcat -d 2>&1 | grep -i -E 'dex2oat|artd.*harc|PackageManager.*(harc|dexopt)|ArtService' | tail -40
+  # Warnings and errors only (threadtime's 5th column is the level): the exception heads.
+  adb logcat -d 2>&1 | grep -E 'dex2oat|ArtService|installd|PackageManager' \
+    | awk '$5 ~ /^[WEF]$/' | grep -v '^.*	at ' | head -80
 } > "$out/compile-probe.txt" 2>&1
 cat "$out/compile-probe.txt"
 

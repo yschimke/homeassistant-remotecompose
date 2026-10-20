@@ -49,12 +49,13 @@ jobs:
             target: default
             profile: pixel_6
             profiles-dir: app/src/main/generated/baselineProfiles
-          # API 34 is the newest unsigned Wear image: adb works without the key dance the API 37
-          # image needs (wear-emulator.yml), and profile capture needs 33+.
-          - name: Wear (API 34)
+          # API 33 (Wear OS 4), unsigned: adb works without the key dance the API 37 image needs
+          # (wear-emulator.yml), and it predates ArtService, which on the API 34 image refused every
+          # `cmd package compile` of this app (verify included), so macrobenchmark could not start.
+          - name: Wear (API 33)
             module: wear
             generate: ':wear:generateReleaseBaselineProfile'
-            api-level: 34
+            api-level: 33
             target: android-wear
             profile: wearos_small_round
             profiles-dir: wear/src/release/generated/baselineProfiles
