@@ -46,7 +46,18 @@ test('installed HA /terrazzo and Lovelace custom card render and act as the sign
     await page.goto(`${base}/terrazzo`);
     const panel = page.frameLocator('terrazzo-panel iframe');
     const toggle = panel.getByRole('switch');
-    await toggle.waitFor({timeout:90_000});
+    try {
+      await toggle.waitFor({timeout:90_000});
+    } catch (error) {
+      await page.screenshot({path:`${evidence}/installed-panel-failure.png`});
+      // Synthetic fixture only. Never dump hass/auth objects, storage or request headers.
+      const frames = await Promise.all(page.frames().map(async (frame) => ({
+        path: new URL(frame.url() || 'about:blank').pathname,
+        text: await frame.locator('body').innerText({timeout:2000}).catch(() => '<unavailable>'),
+      })));
+      console.error('Installed panel diagnostics:', JSON.stringify({errors,frames}));
+      throw error;
+    }
     assert.equal(await toggle.isChecked(), false);
     await page.screenshot({path:`${evidence}/dashboard-before.png`});
     await toggle.click({force:true});
