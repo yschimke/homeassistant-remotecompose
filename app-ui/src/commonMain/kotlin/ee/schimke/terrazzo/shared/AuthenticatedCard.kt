@@ -1,8 +1,10 @@
 package ee.schimke.terrazzo.shared
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.ImageBitmap
 import ee.schimke.ha.client.HaClient
+import ee.schimke.ha.client.design.UsageSource
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -24,20 +26,30 @@ internal fun AuthenticatedCard(
 ) {
   DashboardCardTheme(style, dark) {
     CardCluster(card, snapshot) { leaf ->
+      // Template usage (opt-in, AppCardUsage): a design-backed card reports once its lookup
+      // settles; everything else is drawn by the app's own code.
+      val drawnByApp: @Composable () -> Unit = {
+        LaunchedEffect(leaf, style) { AppCardUsage.record(leaf, style, UsageSource.Converter) }
+      }
       val conversation = conversationEntity(leaf)
-      if (leaf.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE)
+      if (leaf.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
+        drawnByApp()
         MessageComposeCard(leaf, snapshot, editable = true, onAction = onAction)
-      else if (conversation != null)
+      } else if (conversation != null) {
+        drawnByApp()
         ConversationCard(leaf, conversation, snapshot, client, onMoreInfo)
-      else if (isEntityPictureCard(leaf))
+      } else if (isEntityPictureCard(leaf)) {
+        drawnByApp()
         EntityPictureCard(
           leaf,
           snapshot.states[(leaf.raw["entity"] as? JsonPrimitive)?.contentOrNull],
           pictureCache,
           onMoreInfo,
         )
-      else if (isBambuStatus(leaf)) BambuStatusFallback(leaf, snapshot, onMoreInfo)
-      else {
+      } else if (isBambuStatus(leaf)) {
+        drawnByApp()
+        BambuStatusFallback(leaf, snapshot, onMoreInfo)
+      } else {
         val fallback: @Composable () -> Unit = {
           NativeCard(
             leaf,
@@ -83,9 +95,13 @@ internal fun AuthenticatedCard(
             showFallbackNotice = false,
             designCache = designCache,
             requireExactDesign = true,
+            onSource = { AppCardUsage.record(leaf, style, it) },
             fallback = fallback,
           )
-        else fallback()
+        else {
+          drawnByApp()
+          fallback()
+        }
       }
     }
   }

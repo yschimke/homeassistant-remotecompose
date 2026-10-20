@@ -15,6 +15,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 
@@ -175,6 +177,75 @@ class TemplateUsageTest {
     assertFalse(TemplateUsage.isPermanentRejection(HttpStatusCode.TooManyRequests))
     assertFalse(TemplateUsage.isPermanentRejection(HttpStatusCode.RequestTimeout))
     assertFalse(TemplateUsage.isPermanentRejection(HttpStatusCode.ServiceUnavailable))
+  }
+
+  @Test
+  fun surfacesAreCountedApart_andThePhoneStaysOutOfTheJson() = runTest {
+    usage.record(tile, "card-a")
+    usage.record(tile.copy(surface = UsageSurfaces.WIDGET), "card-a")
+    day = "2026-10-21"
+    val rows = usage.pending("Terrazzo", "0.1.48", "android").single().rows
+    assertEquals(listOf(UsageSurfaces.PHONE, UsageSurfaces.WIDGET), rows.map { it.surface })
+    // The phone's rows read exactly as before surfaces, so an older server still takes them.
+    val phone = Json.encodeToString(UsageRow.serializer(), rows.first())
+    assertFalse("surface" in phone)
+    assertEquals(
+      UsageSurfaces.PHONE,
+      Json.decodeFromString(UsageKey.serializer(), Json.encodeToString(UsageKey.serializer(), tile))
+        .surface,
+    )
+  }
+
+  @Test
+  fun utcDayIsTheCivilDate() {
+    assertEquals("1970-01-01", TemplateUsage.utcDay(0))
+    assertEquals("1969-12-31", TemplateUsage.utcDay(-1))
+    assertEquals("2024-02-29", TemplateUsage.utcDay(1_709_208_000_000L)) // 12:00Z
+    assertEquals("2026-10-20", TemplateUsage.utcDay(1_792_497_600_000L))
+    assertEquals("2026-10-20", TemplateUsage.utcDay(1_792_540_799_999L)) // 23:59:59.999Z
+    assertEquals("2000-03-01", TemplateUsage.utcDay(951_868_800_000L))
+  }
+
+  @Test
+  fun aBrowserUploadSendsNoUserAgentHeader() = runTest {
+    usage.record(tile, "card-a")
+    day = "2026-10-21"
+    val agents = mutableListOf<String?>()
+    val client =
+      HttpClient(
+        MockEngine {
+          agents += it.headers[HttpHeaders.UserAgent]
+          respond("")
+        }
+      )
+    assertEquals(
+      1,
+      usage.upload(client, "https://designs.test/designs/v1", agent, sendUserAgentHeader = false),
+    )
+    assertFalse(agents.single().orEmpty().startsWith("Terrazzo/"))
+  }
+
+  @Test
+  fun aRecordWaitingOnTheLockNeverOutlivesTurningSharingOff() = runTest {
+    // clear() holds the lock (its delete suspends) while a record() that saw sharing on waits.
+    val deleting = CompletableDeferred<Unit>()
+    val gated =
+      object : UsageStore by store {
+        override suspend fun delete() {
+          deleting.await()
+          store.delete()
+        }
+      }
+    val usage = TemplateUsage(gated, sharing = { sharing }, today = { day })
+    val clearing = launch { usage.clear() }
+    testScheduler.runCurrent()
+    val recording = launch { usage.record(tile, "card-a") }
+    testScheduler.runCurrent()
+    sharing = false // The switch flips, then its clear completes.
+    deleting.complete(Unit)
+    clearing.join()
+    recording.join()
+    assertNull(store.ledger)
   }
 
   @Test

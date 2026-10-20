@@ -11,6 +11,7 @@ import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import io.ktor.server.routing.options
 import io.ktor.server.routing.post
 import java.time.LocalDate
 import kotlinx.serialization.builtins.ListSerializer
@@ -27,7 +28,17 @@ import kotlinx.serialization.json.Json
 fun Route.usageRoutes(usage: UsageStats, github: GithubAuth?, statsUsers: Set<String>) {
   val limit = UsageRateLimit()
 
+  // The web app posts its report from the page's own origin (the Home Assistant panel or the hosted
+  // site), so the endpoint answers a CORS preflight for its JSON body.
+  options("$API_BASE/${TemplateUsage.USAGE_PATH}") {
+    call.allowAnyOrigin()
+    call.response.header(HttpHeaders.AccessControlAllowMethods, "POST, OPTIONS")
+    call.response.header(HttpHeaders.AccessControlAllowHeaders, "Content-Type")
+    call.respondText("", status = HttpStatusCode.NoContent)
+  }
+
   post("$API_BASE/${TemplateUsage.USAGE_PATH}") {
+    call.allowAnyOrigin()
     if (!limit.allow()) {
       return@post call.respondText("slow down", status = HttpStatusCode.TooManyRequests)
     }
@@ -126,9 +137,9 @@ object StatsPage {
       table(
         "Rendered cards (device-days)",
         appRows.filter { it.cell.kind == UsageStats.RENDER },
-        listOf("Card", "Variant", "Style", "Source", "Cards a day"),
+        listOf("Surface", "Card", "Variant", "Style", "Source", "Cards a day"),
       ) {
-        listOf(it.cardType, it.variant, it.style, it.source, it.bucket)
+        listOf(it.surface, it.cardType, it.variant, it.style, it.source, it.bucket)
       }
       val renders = appRows.filter { it.cell.kind == UsageStats.RENDER }
       if (renders.isNotEmpty()) {

@@ -228,6 +228,12 @@ private fun DashboardShell(
   var snapshot by remember(connection) { mutableStateOf(HaSnapshot()) }
   var connectionError by remember(connection) { mutableStateOf<String?>(null) }
   var designServer by remember { mutableStateOf("https://ha.coo.ee") }
+  // Opt-in template usage: once a launch (and when the server setting settles on a new value),
+  // send the finished days. The delay restarts on every keystroke in the server field.
+  LaunchedEffect(designServer) {
+    delay(10_000)
+    AppCardUsage.upload(designServer)
+  }
   // One subscription per connection, surviving navigation between dashboard views.
   LaunchedEffect(connection) {
     while (true) {
@@ -329,6 +335,7 @@ private fun DashboardShell(
                     label = { Text("Card design server") },
                     singleLine = true,
                   )
+                  CardUsageSetting(designServer)
                   ReportFeedbackButton()
                   Button(onClick = onSignOut) { Text("Sign out") }
                 }
@@ -381,7 +388,9 @@ private fun LiveDashboard(
   // Keyed on the configured server so changing the setting reloads designs from it.
   val designCache =
     remember(connection, path, designServer) {
-      DashboardLoadCache(scope) { key: LibraryDesignKey -> loadLibraryDesign(key, designServer) }
+      DashboardLoadCache(scope) { key: LibraryDesignKey ->
+        loadLibraryDesign(key, designServer, AppCardUsage.userAgent?.header)
+      }
     }
   val pictureCache =
     remember(connection, path) {

@@ -171,7 +171,13 @@ fun Application.designServer(
         sha?.let { holder.current().blob(it) ?: userDesigns?.blob(it) }
           ?: return@get call.notFound()
       (holder.current().entry(sha!!) ?: userDesigns?.entry(sha))?.let {
-        usage?.blobFetched(it, call.request.header(HttpHeaders.UserAgent))
+        usage?.blobFetched(
+          it,
+          ClientAgent.of(
+            call.request.header(HttpHeaders.UserAgent),
+            call.request.queryParameters["client"],
+          ),
+        )
       }
       call.response.header(HttpHeaders.ETag, "\"$sha\"")
       call.allowAnyOrigin()

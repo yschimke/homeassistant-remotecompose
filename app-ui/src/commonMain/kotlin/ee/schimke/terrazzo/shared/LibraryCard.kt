@@ -14,6 +14,7 @@ import ee.schimke.composeai.rcplayer.runtime.RcHostActionValue
 import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import ee.schimke.composeai.rcplayer.runtime.RcPlayerEvent
 import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.client.design.UsageSource
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -39,6 +40,8 @@ internal fun LibraryCard(
   showFallbackNotice: Boolean = true,
   requireExactDesign: Boolean = false,
   designCache: DashboardLoadCache<LibraryDesignKey, ByteArray?>? = null,
+  /** Hears, once the design lookup settles, whether the card drew from a design or [fallback]. */
+  onSource: ((UsageSource) -> Unit)? = null,
   fallback: @Composable () -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -81,6 +84,7 @@ internal fun LibraryCard(
     } catch (_: Throwable) {
       failed = true
     }
+    onSource?.invoke(if (bytes != null) UsageSource.Remote else UsageSource.Converter)
   }
   val current = bytes
   Column {
@@ -287,12 +291,23 @@ internal fun cardDesignServerBase(server: String): String =
 internal fun cardDesignResolveUrl(server: String): String =
   "${cardDesignServerBase(server)}/api/cards/resolve"
 
-internal fun cardDesignBlobUrl(server: String, sha: String): String =
-  "${cardDesignServerBase(server)}/designs/v1/blobs/$sha.rc"
+/** The design server's published-designs API: manifest, blobs and the usage endpoint. */
+internal fun cardDesignApiBase(server: String): String =
+  "${cardDesignServerBase(server)}/designs/v1"
+
+/**
+ * A design blob's URL. [client] is the app's fixed release tag (`UsageUserAgent.header`), sent as a
+ * query parameter because a browser page can't set its own User-Agent; the server counts the fetch
+ * under it (phase 1 of docs/followups/template-usage-tracking.md).
+ */
+internal fun cardDesignBlobUrl(server: String, sha: String, client: String? = null): String =
+  "${cardDesignApiBase(server)}/blobs/$sha.rc" +
+    (client?.let { "?client=" + it.encodeURLParameter() } ?: "")
 
 internal suspend fun loadLibraryDesign(
   key: LibraryDesignKey,
   server: String = DEFAULT_CARD_DESIGN_SERVER,
+  client: String? = null,
 ): ByteArray? {
   val http = HttpClient()
   try {
@@ -314,7 +329,7 @@ internal suspend fun loadLibraryDesign(
     if (key.requireExact && !exactLibraryDesign(resolved)) return null
     val sha = resolved["sha256"]!!.jsonPrimitive.content
     check(Regex("[0-9a-f]{64}").matches(sha))
-    val blob = http.get(cardDesignBlobUrl(server, sha))
+    val blob = http.get(cardDesignBlobUrl(server, sha, client))
     check(blob.status.isSuccess())
     return blob.bodyAsBytes().also { check(Sha256.hex(it) == sha) }
   } finally {

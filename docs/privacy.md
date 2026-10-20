@@ -19,8 +19,9 @@ your device and sent only to the Home Assistant URL you configure. None
 of that data is sent to us or to any third party.
 
 The developer runs one service the app talks to, the **card design
-server** (`https://ha.coo.ee/designs/v1` unless you change or clear it
-in Settings). From it we keep only anonymous, aggregate counts:
+server** (`https://ha.coo.ee/designs/v1` on Android, `https://ha.coo.ee`
+in the desktop and web app, unless you change or clear it in Settings).
+From it we keep only anonymous, aggregate counts:
 
 1. **Which designs are downloaded** (always, while a design server is
    set). When the app checks for or downloads card designs it sends a
@@ -28,13 +29,19 @@ in Settings). From it we keep only anonymous, aggregate counts:
    `Terrazzo/0.1.48 (android; surface=phone)` — every install of a
    release sends the same one. The server counts, per day, how many
    checks and downloads there were for each design (card type, variant,
-   card style) and each app release.
+   card style) and each app release. The desktop and web app put the
+   same kind of label (`Terrazzo/0.1.51 (web; surface=web)`) in the
+   download address, because a web page can't set its own label.
 2. **Which designs draw your cards** (only if you turn on
    *Settings → Share anonymous card usage*; **off by default**). Once a
    day the app sends, for the previous day, which designs drew its
-   dashboard cards — card type, design variant, card style, and whether
+   cards — card type, design variant, card style, where it drew them
+   (phone dashboard, home-screen widget, desktop or web app), and whether
    the design came from the server, the app itself, or neither — with a
-   rough count per design (1, 2–5, 6–20 or 21+ cards).
+   rough count per design (1, 2–5, 6–20 or 21+ cards). On Android the
+   setting covers the dashboard and the home-screen widgets; the desktop
+   and web app each have their own setting, kept on that computer or in
+   that browser. The Wear OS and Android TV apps send nothing.
 
 What is **not** collected: your IP address (the design server doesn't
 record it), any device or install identifier, your Home Assistant
@@ -47,9 +54,11 @@ Counts waiting on your device to be sent are deleted once sent, and
 deleted at once if you turn sharing off.
 
 **Turning it off.** Usage sharing is off unless you turn it on, and you
-can turn it off again in Settings at any time. Clearing the design
-server address in Settings stops all contact with the design server
-(the app then uses only its own designs).
+can turn it off again in Settings at any time. On Android, clearing the
+design server address in Settings stops all contact with the design
+server (the app then uses only its own designs). In the desktop and web
+app an empty address falls back to `https://ha.coo.ee` for designs, but
+usage is never sent without an address set.
 
 ## How Terrazzo communicates
 

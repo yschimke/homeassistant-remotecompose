@@ -7,6 +7,7 @@ import ee.schimke.ha.client.design.UsageKey
 import ee.schimke.ha.client.design.UsageLedger
 import ee.schimke.ha.client.design.UsageSource
 import ee.schimke.ha.client.design.UsageStore
+import ee.schimke.ha.client.design.UsageSurfaces
 import ee.schimke.ha.client.design.UsageUserAgent
 import ee.schimke.ha.client.design.uploadWithDefaultClient
 import ee.schimke.ha.model.CardConfig
@@ -67,8 +68,9 @@ object CardUsage {
 
   /**
    * Notes that [card] rendered from [source] with the design for [cardType], [variant] and [style]
-   * (an uber theme id). The card itself is reduced to a local fingerprint that never leaves the
-   * device. A no-op before [start] and while sharing is off.
+   * (an uber theme id), on [surface]: the dashboard ([UsageSurfaces.PHONE]) or a launcher widget
+   * ([UsageSurfaces.WIDGET]). The card itself is reduced to a local fingerprint that never leaves
+   * the device. A no-op before [start] and while sharing is off.
    */
   fun record(
     card: CardConfig,
@@ -76,11 +78,12 @@ object CardUsage {
     variant: String,
     style: String,
     source: UsageSource,
+    surface: String = UsageSurfaces.PHONE,
   ) {
     val usage = usage ?: return
     val scope = scope ?: return
     val fingerprint = Sha256.hex(card.raw.toString().encodeToByteArray())
-    scope.launch { usage.record(UsageKey(cardType, variant, style, source), fingerprint) }
+    scope.launch { usage.record(UsageKey(cardType, variant, style, source, surface), fingerprint) }
   }
 
   /** Uploads finished days to [serverUrl]; called by the nightly sync. */

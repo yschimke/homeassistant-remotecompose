@@ -11,6 +11,9 @@ import threading
 import time
 from playwright.sync_api import expect, sync_playwright
 
+# A design blob, with or without the app's `?client=` release tag (template usage, phase 1).
+DESIGN_BLOB = re.compile(r'^https://ha\.coo\.ee/designs/v1/blobs/[^/?]+\.rc(\?.*)?$')
+
 root = Path(sys.argv[1]).resolve()
 before = '--before' in sys.argv
 heading = lambda name: {'type': 'heading', 'heading': name}
@@ -117,7 +120,7 @@ try:
                     route.fulfill(json={'sha256': sha, 'exact': True}, headers={'Access-Control-Allow-Origin': '*'})
                 else: route.fulfill(status=404, headers={'Access-Control-Allow-Origin': '*'})
             page.route('https://ha.coo.ee/api/cards/resolve', resolve)
-            page.route('https://ha.coo.ee/designs/v1/blobs/*.rc', lambda route: route.fulfill(body=gauge, content_type='application/octet-stream', headers={'Access-Control-Allow-Origin': '*'}))
+            page.route(DESIGN_BLOB, lambda route: route.fulfill(body=gauge, content_type='application/octet-stream', headers={'Access-Control-Allow-Origin': '*'}))
             page.goto(f'http://127.0.0.1:{server.server_port}/', wait_until='networkidle')
             for label, value in [('Home Assistant URL', 'https://ha.example.test'), ('Long-lived access token', 'fixture-token')]:
                 page.get_by_role('textbox', name=label, exact=True).click(force=True, delay=100)

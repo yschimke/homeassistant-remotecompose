@@ -191,6 +191,9 @@ val LocalCardDesignOverrides = staticCompositionLocalOf { CardDesignOverrides() 
  * ([variant] when the card overrides it, else the choice's), then in the `default` variant,
  * otherwise the local library's. Null only when the card has no template shape (an unsupported type
  * or config, or an entity not loaded yet); those cards capture through their converter.
+ *
+ * A dashboard card counts towards template usage ([CardUsage]); [recordUsage] false is for samples
+ * that aren't the user's cards (the card style picker).
  */
 fun cardTemplateFor(
   context: Context,
@@ -202,6 +205,7 @@ fun cardTemplateFor(
   registry: CardRegistry,
   cardStyle: HaUberTheme = HaUberTheme.Classic,
   variant: String? = null,
+  recordUsage: Boolean = true,
 ): CardTemplatePlayback? {
   val key =
     CardDesignTemplates.keyFor(card, snapshot, style, dark, registry, cardStyle = cardStyle)
@@ -217,13 +221,15 @@ fun cardTemplateFor(
       ?: listOf(preferred, key).firstNotNullOfOrNull { k -> designs.byKey[k]?.let { it to k } }
       ?: (null to key)
   designs.loadedFor?.let { CardDesignSources.record(it, key, fromServer = server != null) }
-  CardUsage.record(
-    card,
-    cardType = key.cardType,
-    variant = usedKey.variant,
-    style = key.cardStyle,
-    source = if (server != null) UsageSource.Remote else UsageSource.Local,
-  )
+  if (recordUsage) {
+    CardUsage.record(
+      card,
+      cardType = key.cardType,
+      variant = usedKey.variant,
+      style = key.cardStyle,
+      source = if (server != null) UsageSource.Remote else UsageSource.Local,
+    )
+  }
   val bytes = server ?: CardDesignLibrary.template(context, key, registry)
   // Designs read the player's display (Host density); fold this phone's in once.
   val metrics = context.resources.displayMetrics

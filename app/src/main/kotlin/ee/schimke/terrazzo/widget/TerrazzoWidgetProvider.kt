@@ -12,7 +12,11 @@ import android.os.Build
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
+import ee.schimke.ha.client.design.UsageSource
+import ee.schimke.ha.client.design.UsageSurfaces
+import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.LauncherLook
 import ee.schimke.ha.rc.captureLauncherWidgetDocument
@@ -20,6 +24,7 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.converterFor
 import ee.schimke.ha.rc.decodeHaAction
 import ee.schimke.ha.rc.encodeHaAction
 import ee.schimke.ha.rc.platformWidgetDocument
@@ -28,6 +33,7 @@ import ee.schimke.ha.rc.widgetsProfile
 import ee.schimke.terrazzo.core.prefs.LauncherColoursPref
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
+import ee.schimke.terrazzo.dashboard.CardUsage
 import ee.schimke.terrazzo.terrazzoGraph
 import ee.schimke.terrazzo.ui.toThemeStyle
 import ee.schimke.terrazzo.ui.toUberTheme
@@ -154,7 +160,28 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         widgetId = widgetId,
       )
     val remoteViews =
-      renderPreview(context, entry.baseUrl, entry.card, snapshot, targetSizeDp, widgetId) ?: return
+      renderPreview(
+        context,
+        entry.baseUrl,
+        entry.card,
+        snapshot,
+        targetSizeDp,
+        widgetId,
+        // An installed widget on live data is one of the user's cards; the demo's aren't.
+        onRendered =
+          if (DemoData.isDemo(entry.baseUrl)) null
+          else
+            { source, style, cardType ->
+              CardUsage.record(
+                entry.card,
+                cardType = cardType,
+                variant = DesignKey.DEFAULT_VARIANT,
+                style = style,
+                source = source,
+                surface = UsageSurfaces.WIDGET,
+              )
+            },
+      ) ?: return
     appWidgetManager.updateAppWidget(widgetId, remoteViews)
   }
 
@@ -176,7 +203,13 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
       )
     }
 
-  /** The install preview and the installed widget share the exact same capture and theme. */
+  /**
+   * The install preview and the installed widget share the exact same capture and theme.
+   * [onRendered] hears how the card was drawn (its launcher design, else its converter), in which
+   * card style, and the card type whose design drew it (a wrapper such as `conditional` draws its
+   * shown card's), for template usage; install previews pass none. Launcher designs have no style
+   * variant — their key's variant is the cell size, which usage never records.
+   */
   internal fun renderPreview(
     context: Context,
     baseUrl: String,
@@ -184,6 +217,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     snapshot: HaSnapshot,
     targetSizeDp: WidgetSizeDp,
     widgetId: Int = AppWidgetManager.INVALID_APPWIDGET_ID,
+    onRendered: ((source: UsageSource, cardStyle: String, cardType: String) -> Unit)? = null,
   ): RemoteViews? {
     val registry = defaultRegistry().withEnhancedShutter()
     val widthPx = WidgetSizing.dpToPx(context, targetSizeDp.widthDp)
@@ -284,6 +318,16 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
           fetchImage,
         ) ?: return null
       }
+    onRendered?.invoke(
+      when {
+        baked != null -> UsageSource.Local
+        registry.converterFor(card.type) == null -> UsageSource.Unsupported
+        else -> UsageSource.Converter
+      },
+      look.cardStyle.id,
+      if (baked != null) CardDesignTemplates.designCard(card, snapshot, registry).type
+      else card.type,
+    )
     return remoteViews
   }
 

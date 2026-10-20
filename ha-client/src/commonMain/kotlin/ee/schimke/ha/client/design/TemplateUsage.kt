@@ -73,7 +73,20 @@ data class UsageKey(
   /** The uber theme id the card was drawn in (`DesignKey.cardStyle`). */
   val style: String,
   val source: UsageSource,
+  /**
+   * Where the card was drawn: [UsageSurfaces.PHONE] (the default, left out of the JSON so a ledger
+   * or report from before surfaces reads the same), a launcher widget, the desktop or the web app.
+   */
+  val surface: String = UsageSurfaces.PHONE,
 )
+
+/** The [UsageKey.surface] tags apps report. */
+object UsageSurfaces {
+  const val PHONE: String = "phone"
+  const val WIDGET: String = "widget"
+  const val DESKTOP: String = "desktop"
+  const val WEB: String = "web"
+}
 
 /** A [UsageKey] with how many distinct cards used it that day, as a bucket ([bucketOf]). */
 @Serializable
@@ -83,6 +96,8 @@ data class UsageRow(
   val style: String,
   val source: UsageSource,
   val bucket: String,
+  /** [UsageKey.surface]; a report without it is from the phone. */
+  val surface: String = UsageSurfaces.PHONE,
 )
 
 /** One day's usage, as uploaded: the app that sent it and its bucketed rows. */
@@ -148,8 +163,10 @@ class TemplateUsage(
    * no-op while sharing is off.
    */
   suspend fun record(key: UsageKey, fingerprint: String) {
-    if (!sharing()) return
     lock.withLock {
+      // Checked under the lock, never before it: turning sharing off flips the setting and then
+      // [clear]s under this lock, so a record that waited for it can't write a deleted day back.
+      if (!sharing()) return
       val ledger = store.read() ?: UsageLedger()
       val day = today()
       val keys = ledger.days[day].orEmpty()
@@ -179,10 +196,23 @@ class TemplateUsage(
               keys
                 .map { (id, cards) ->
                   val key = json.decodeFromString(UsageKey.serializer(), id)
-                  UsageRow(key.cardType, key.variant, key.style, key.source, bucketOf(cards.size))
+                  UsageRow(
+                    key.cardType,
+                    key.variant,
+                    key.style,
+                    key.source,
+                    bucketOf(cards.size),
+                    key.surface,
+                  )
                 }
                 .sortedWith(
-                  compareBy({ it.cardType }, { it.variant }, { it.style }, { it.source })
+                  compareBy(
+                    { it.surface },
+                    { it.cardType },
+                    { it.variant },
+                    { it.style },
+                    { it.source },
+                  )
                 ),
           )
         }
@@ -210,6 +240,7 @@ class TemplateUsage(
     httpClient: HttpClient,
     baseUrl: String,
     userAgent: UsageUserAgent,
+    sendUserAgentHeader: Boolean = true,
   ): Int {
     if (!sharing()) {
       clear()
@@ -224,7 +255,10 @@ class TemplateUsage(
       val status = runCatching {
         httpClient
           .post("${baseUrl.trimEnd('/')}/$USAGE_PATH") {
-            headers.append(io.ktor.http.HttpHeaders.UserAgent, userAgent.header)
+            // A browser won't send a page's own User-Agent; the report names the app anyway.
+            if (sendUserAgentHeader) {
+              headers.append(io.ktor.http.HttpHeaders.UserAgent, userAgent.header)
+            }
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UsageReport.serializer(), report))
           }
@@ -253,6 +287,25 @@ class TemplateUsage(
         status != HttpStatusCode.RequestTimeout &&
         status != HttpStatusCode.TooManyRequests
 
+    /**
+     * The UTC day of [epochMs] as `yyyy-mm-dd`, for hosts without java.time (the desktop and web
+     * app); the same day Android's `LocalDate.now(ZoneOffset.UTC)` gives.
+     */
+    fun utcDay(epochMs: Long): String {
+      // Days since 1970-01-01 to a civil date (Howard Hinnant's days_from_civil, inverted).
+      val z = epochMs.floorDiv(86_400_000L) + 719_468
+      val era = z.floorDiv(146_097L)
+      val doe = z - era * 146_097
+      val yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365
+      val doy = doe - (365 * yoe + yoe / 4 - yoe / 100)
+      val mp = (5 * doy + 2) / 153
+      val day = doy - (153 * mp + 2) / 5 + 1
+      val month = if (mp < 10) mp + 3 else mp - 9
+      val year = yoe + era * 400 + if (month <= 2) 1 else 0
+      return "${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-" +
+        day.toString().padStart(2, '0')
+    }
+
     /** The upload path under the design server's base URL. */
     const val USAGE_PATH: String = "usage"
 
@@ -274,10 +327,14 @@ class TemplateUsage(
  * [TemplateUsage.upload] with the platform's default HTTP engine, opened only for this upload; for
  * hosts that don't depend on Ktor themselves.
  */
-suspend fun TemplateUsage.uploadWithDefaultClient(baseUrl: String, userAgent: UsageUserAgent): Int {
+suspend fun TemplateUsage.uploadWithDefaultClient(
+  baseUrl: String,
+  userAgent: UsageUserAgent,
+  sendUserAgentHeader: Boolean = true,
+): Int {
   val client = HttpClient()
   try {
-    return upload(client, baseUrl, userAgent)
+    return upload(client, baseUrl, userAgent, sendUserAgentHeader)
   } finally {
     client.close()
   }
