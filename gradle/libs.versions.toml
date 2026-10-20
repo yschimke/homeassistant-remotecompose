@@ -108,7 +108,7 @@ compose-webview = "2.0.3"
 jogamp = "2.6.0"
 # The TypeScript Remote Compose player the card embed loads (`design-server` serves it). Released
 # separately from the Kotlin player, so its versions do not line up with `rc-player`.
-rc-player-js = "2.16.1"
+rc-player-js = "2.17.0"
 compose-multiplatform = "1.13.0-alpha02"
 cmp-material3 = "1.13.0-alpha02"
 
