@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import ee.schimke.ha.client.design.UsageSharing
 import ee.schimke.terrazzo.core.di.AppScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -374,8 +375,22 @@ class PreferencesStore(private val context: Context) {
     context.store.edit { it[DESIGN_TOKEN_KEY] = token.trim() }
   }
 
+  /**
+   * Whether anonymous card usage is shared with the design server
+   * (docs/followups/template-usage-tracking.md). Stored as the [UsageSharing] tri-state, starting
+   * at [UsageSharing.Default], which follows [UsageSharing.DEFAULT_SHARES] (off: opt-in). Settings
+   * writes only [UsageSharing.Enabled] or [UsageSharing.Disabled].
+   */
+  val usageSharing: Flow<UsageSharing>
+    get() = context.store.data.map { UsageSharing.parse(it[USAGE_SHARING_KEY]) }
+
+  suspend fun setUsageSharing(sharing: UsageSharing) {
+    context.store.edit { it[USAGE_SHARING_KEY] = sharing.name }
+  }
+
   companion object {
     private val Context.store by preferencesDataStore(name = "terrazzo_prefs")
+    private val USAGE_SHARING_KEY = stringPreferencesKey("usage_sharing")
     private val DEMO_KEY = booleanPreferencesKey("demo_mode")
     private val THEME_KEY = stringPreferencesKey("theme_style")
     private val DARK_KEY = stringPreferencesKey("dark_mode")

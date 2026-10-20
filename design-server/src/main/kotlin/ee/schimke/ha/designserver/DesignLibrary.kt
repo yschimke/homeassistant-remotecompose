@@ -66,6 +66,9 @@ private constructor(
 
   fun design(id: String): LibraryDesign? = byId[id]
 
+  /** The manifest entry whose blob is [sha256], or null when it isn't one of this library's. */
+  fun entry(sha256: String): DesignEntry? = blobs[sha256]
+
   /** A blob's bytes, or null when [sha256] isn't one of this library's designs. */
   fun blob(sha256: String): ByteArray? = blobBytes[sha256]
 

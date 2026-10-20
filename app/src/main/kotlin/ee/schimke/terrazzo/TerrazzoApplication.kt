@@ -16,6 +16,7 @@ import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.crash.CrashReporter
 import ee.schimke.terrazzo.dashboard.CardDesignPreload
 import ee.schimke.terrazzo.dashboard.CardDesignSync
+import ee.schimke.terrazzo.dashboard.CardUsage
 import ee.schimke.terrazzo.dashboard.FileLocalDesignStore
 import ee.schimke.terrazzo.di.AppGraph
 import ee.schimke.terrazzo.image.HaImageStack
@@ -113,6 +114,12 @@ class TerrazzoApplication : Application() {
       CardDesignLibrary.store = store
       (ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO).launch { store.prune() }
     }
+    // Anonymous card usage: counts nothing unless the user turned sharing on.
+    CardUsage.start(
+      applicationContext,
+      graph.preferencesStore,
+      ProcessLifecycleOwner.get().lifecycleScope + graph.logStore.coroutineExceptionHandler,
+    )
     // Read the cached server designs now, so the first dashboard frame already plays them.
     CardDesignPreload.start(
       applicationContext,
