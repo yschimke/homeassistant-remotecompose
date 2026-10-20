@@ -9,11 +9,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import issue_registry as ir
 
 from .const import (
+    CARD_URL,
     CONF_DASHBOARD,
     CONF_TITLE,
     DEFAULT_TITLE,
     DOMAIN,
     PANEL_URL_PATH,
+    STATIC_URL,
     clean_options,
 )
 
@@ -65,7 +67,7 @@ async def async_setup_entry(hass, entry):
     # Static routes can't be removed, so a reloaded entry keeps the first registration.
     if not state.get("static"):
         await hass.http.async_register_static_paths(
-            [StaticPathConfig("/terrazzo-static", str(Path(__file__).parent / "frontend"), False)]
+            [StaticPathConfig(STATIC_URL, str(Path(__file__).parent / "frontend"), False)]
         )
         state["static"] = True
     options = entry.options
@@ -75,16 +77,20 @@ async def async_setup_entry(hass, entry):
         webcomponent_name="terrazzo-panel",
         sidebar_title=options.get(CONF_TITLE) or DEFAULT_TITLE,
         sidebar_icon="mdi:view-dashboard",
-        module_url="/terrazzo-static/terrazzo-panel.js",
+        module_url=f"{STATIC_URL}/terrazzo-panel.js",
         config={"dashboard": options.get(CONF_DASHBOARD, "")},
         require_admin=False,
     )
+    # The Remote Compose Lovelace card, for every dashboard and either Lovelace mode, without
+    # touching the user's resources. A manual resource at the same URL shares the one module.
+    frontend.add_extra_js_url(hass, CARD_URL)
+    entry.async_on_unload(lambda: frontend.remove_extra_js_url(hass, CARD_URL))
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     return True
 
 
 async def async_unload_entry(hass, entry):
-    """Take the panel out of the sidebar; the static code stays served until restart."""
+    """Take the panel and card out of the frontend; the static code stays served until restart."""
     frontend.async_remove_panel(hass, PANEL_URL_PATH)
     return True
 

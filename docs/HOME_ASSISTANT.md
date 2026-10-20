@@ -28,9 +28,8 @@ newer is required.
 
 If you installed manually before, back up the existing integration outside
 `custom_components` and your YAML first, then add the custom repository and
-redownload the selected release in HACS. Keep your existing `terrazzo:` settings
-and Lovelace resources; they are imported on start, so no second configuration
-is needed.
+redownload the selected release in HACS. Keep your existing `terrazzo:` settings; they
+are imported on start, so no second configuration is needed.
 
 HACS tracks new releases through a Home Assistant **update entity**. Use its
 install action to download an update, then restart HA at a convenient time and
@@ -146,16 +145,12 @@ releases predating plugin publication cannot serve as HACS rollback versions.
 
 ## Add a Remote Compose Lovelace card
 
-In **Settings → Dashboards → Resources**, add
-`/terrazzo-static/remote-compose-card.js` as a **JavaScript module**. For dashboards
-whose resources are maintained in YAML:
-
-```yaml
-lovelace:
-  resources:
-    - url: /terrazzo-static/remote-compose-card.js
-      type: module
-```
+Once Terrazzo is set up, the card is available on every dashboard, in storage
+and YAML mode alike: the integration loads `/terrazzo-static/remote-compose-card.js`
+into Home Assistant's frontend itself, and it shows up in the card picker as
+**Remote Compose**. There is no Lovelace resource to add. A resource you added
+by hand in an earlier release does no harm and can be removed from
+**Settings → Dashboards → Resources** (or `lovelace: resources:` in YAML).
 
 Add this card to an existing dashboard, replacing the entity with your own:
 

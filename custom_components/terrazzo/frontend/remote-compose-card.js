@@ -93,8 +93,12 @@ export class RemoteComposeCard extends HaCardElement {
     }
   }
 }
-customElements.define('remote-compose-card', RemoteComposeCard);
-window.customCards = window.customCards || [];
-window.customCards.push({ type: 'remote-compose-card', name: 'Remote Compose',
-  description: 'Live Home Assistant card rendered by the TypeScript Remote Compose player',
-  preview: false });
+// The integration loads this module on every frontend page; a Lovelace resource with another URL
+// (an older manual setup, a cache-busting query) loads a second copy that must not redefine it.
+if (!customElements.get('remote-compose-card')) {
+  customElements.define('remote-compose-card', RemoteComposeCard);
+  window.customCards = window.customCards || [];
+  window.customCards.push({ type: 'remote-compose-card', name: 'Remote Compose',
+    description: 'Live Home Assistant card rendered by the TypeScript Remote Compose player',
+    preview: false });
+}

@@ -6,9 +6,6 @@ input_boolean:
     name: Wall light
 lovelace:
   mode: yaml
-  resources:
-    - url: /terrazzo-static/remote-compose-card.js
-      type: module
   dashboards:
     second-panel:
       mode: yaml
