@@ -35,26 +35,32 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 /**
- * One fixed tile card drawn in [cardStyle], on the app's palette and dark mode: what the card style
- * picker in Settings shows beside each style, so a style can be judged by a real card rather than
- * its name. Renders the way a dashboard slot does — the local design library's template where the
- * tile has one, else its converter — but from a frozen sample, so it never changes and needs no
- * session.
+ * A tile card drawn in [cardStyle], on the app's palette and dark mode, that names the style
+ * ([name]) and describes it ([description]): each option of the card style picker in Settings, so a
+ * style is judged by a real card rather than a label. Renders the way a dashboard slot does — the
+ * local design library's template where the tile has one, else its converter — but from a frozen
+ * sample, so it never changes and needs no session.
  */
 @Composable
-internal fun CardStyleSample(cardStyle: HaUberTheme, modifier: Modifier = Modifier) {
+internal fun CardStyleSample(
+  cardStyle: HaUberTheme,
+  name: String,
+  description: String,
+  modifier: Modifier = Modifier,
+) {
   val context = LocalContext.current
   val registry = remember { defaultRegistry().withEnhancedShutter() }
   val style = LocalThemeStyle.current
   val dark = LocalIsDarkTheme.current
   val haTheme = remember(style, dark, cardStyle) { cardStyle.cardPalette(style, dark) }
+  val snapshot = remember(name, description) { sampleSnapshot(name, description) }
   // Plain CardDesigns: the local library only. The server's designs are fetched for the chosen
   // style alone, and reading them here would log the other styles as the server's gaps.
   val loadTemplate = {
     cardTemplateFor(
       context,
       SAMPLE_CARD,
-      SAMPLE_SNAPSHOT,
+      snapshot,
       CardDesigns(),
       style,
       dark,
@@ -67,13 +73,16 @@ internal fun CardStyleSample(cardStyle: HaUberTheme, modifier: Modifier = Modifi
   // and hold their height until then. Previews load in place, so a render shows the card.
   val inspection = LocalInspectionMode.current
   val inPlace =
-    remember(style, dark, cardStyle) { if (inspection) SampleTemplate(loadTemplate()) else null }
+    remember(style, dark, cardStyle, snapshot) {
+      if (inspection) SampleTemplate(loadTemplate()) else null
+    }
   val loaded by
     produceState(
       initialValue = inPlace,
       style,
       dark,
       cardStyle,
+      snapshot,
     ) {
       if (value == null) value = SampleTemplate(withContext(Dispatchers.Default) { loadTemplate() })
     }
@@ -83,16 +92,16 @@ internal fun CardStyleSample(cardStyle: HaUberTheme, modifier: Modifier = Modifi
     return
   }
   CachedCardPreview(
-    cacheKey = CardStyleSampleKey(style, dark, cardStyle.id),
+    cacheKey = CardStyleSampleKey(style, dark, cardStyle.id, name, description),
     profile = androidXExperimentalWrap,
     modifier = modifier.fillMaxWidth(),
     card = SAMPLE_CARD,
-    snapshot = SAMPLE_SNAPSHOT,
+    snapshot = snapshot,
     template = template,
   ) {
     ProvideCardRegistry(registry) {
       ProvideCardStyle(cardStyle, haTheme, dark) {
-        RenderChild(SAMPLE_CARD, SAMPLE_SNAPSHOT, RemoteModifier.rcFillMaxWidth())
+        RenderChild(SAMPLE_CARD, snapshot, RemoteModifier.rcFillMaxWidth())
       }
     }
   }
@@ -107,9 +116,11 @@ private data class CardStyleSampleKey(
   val style: ThemeStyle,
   val dark: Boolean,
   val cardStyle: String,
+  val name: String,
+  val description: String,
 )
 
-private const val SAMPLE_ENTITY = "light.living_room"
+private const val SAMPLE_ENTITY = "sensor.card_style"
 
 private val SAMPLE_CARD =
   CardConfig(
@@ -121,20 +132,25 @@ private val SAMPLE_CARD =
       },
   )
 
-private val SAMPLE_SNAPSHOT =
+/**
+ * A text sensor whose state is the style's [name] and whose name is its [description]. The state
+ * slot is the one every style draws, and draws large (an LCD's segments, an Expressive pill), so
+ * the style's name always shows in full; the description fills the smaller name line where the
+ * style has one. Plain entity state rather than `state_content`, which would take the tile off the
+ * template path and capture it on the UI thread.
+ */
+private fun sampleSnapshot(name: String, description: String) =
   HaSnapshot(
     states =
       mapOf(
         SAMPLE_ENTITY to
           EntityState(
             entityId = SAMPLE_ENTITY,
-            state = "on",
+            state = name,
             attributes =
               buildJsonObject {
-                put("friendly_name", "Living room")
-                put("icon", "mdi:sofa")
-                put("brightness", 178)
-                put("color_mode", "brightness")
+                put("friendly_name", description)
+                put("icon", "mdi:palette")
               },
           )
       )
