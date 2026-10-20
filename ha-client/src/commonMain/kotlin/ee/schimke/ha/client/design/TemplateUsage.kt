@@ -4,6 +4,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.sync.Mutex
@@ -220,7 +221,7 @@ class TemplateUsage(
         sent(report.day)
         continue
       }
-      val ok = runCatching {
+      val status = runCatching {
         httpClient
           .post("${baseUrl.trimEnd('/')}/$USAGE_PATH") {
             headers.append(io.ktor.http.HttpHeaders.UserAgent, userAgent.header)
@@ -228,17 +229,30 @@ class TemplateUsage(
             setBody(json.encodeToString(UsageReport.serializer(), report))
           }
           .status
-          .isSuccess()
       }
-        .getOrDefault(false)
-      if (!ok) break
-      sent(report.day)
-      sent++
+        .getOrNull()
+      when {
+        status == null -> break // Network trouble: retry this day next time.
+        status.isSuccess() -> {
+          sent(report.day)
+          sent++
+        }
+        // The server will never take this report (too old, malformed): drop it, or it would
+        // block every newer day behind it.
+        isPermanentRejection(status) -> sent(report.day)
+        else -> break // Rate limited or a server error: retry next time.
+      }
     }
     return sent
   }
 
   companion object {
+    /** A 4xx other than 408 / 429: retrying the same report can never succeed. */
+    internal fun isPermanentRejection(status: HttpStatusCode): Boolean =
+      status.value in 400..499 &&
+        status != HttpStatusCode.RequestTimeout &&
+        status != HttpStatusCode.TooManyRequests
+
     /** The upload path under the design server's base URL. */
     const val USAGE_PATH: String = "usage"
 

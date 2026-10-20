@@ -207,21 +207,20 @@ fun cardTemplateFor(
     CardDesignTemplates.keyFor(card, snapshot, style, dark, registry, cardStyle = cardStyle)
       ?: return null
   val preferred = key.copy(variant = variant ?: designs.variant)
-  // A design made for this card's device wins over the generic one, in either variant.
-  val forDevice =
-    cardDevice(card, snapshot)?.let { device ->
-      DeviceMatch.pick(designs.deviceByKey[preferred].orEmpty(), device)
-        ?: DeviceMatch.pick(designs.deviceByKey[key].orEmpty(), device)
+  // A design made for this card's device wins over the generic one, in either variant. Each
+  // lookup keeps the key it matched under, so usage reports the variant whose bytes were used.
+  val device = cardDevice(card, snapshot)
+  val (server, usedKey) =
+    listOf(preferred, key).firstNotNullOfOrNull { k ->
+      device?.let { DeviceMatch.pick(designs.deviceByKey[k].orEmpty(), it) }?.let { it to k }
     }
-  val server = forDevice ?: designs.byKey[preferred] ?: designs.byKey[key]
+      ?: listOf(preferred, key).firstNotNullOfOrNull { k -> designs.byKey[k]?.let { it to k } }
+      ?: (null to key)
   designs.loadedFor?.let { CardDesignSources.record(it, key, fromServer = server != null) }
   CardUsage.record(
     card,
     cardType = key.cardType,
-    variant =
-      if (server != null && (forDevice != null || designs.byKey[preferred] != null))
-        preferred.variant
-      else key.variant,
+    variant = usedKey.variant,
     style = key.cardStyle,
     source = if (server != null) UsageSource.Remote else UsageSource.Local,
   )

@@ -144,6 +144,40 @@ class TemplateUsageTest {
   }
 
   @Test
+  fun aRejectedReportIsDropped_soNewerDaysStillGo() = runTest {
+    usage.record(tile, "card-a")
+    day = "2026-10-21"
+    usage.record(heading, "card-b")
+    day = "2026-10-22"
+    val sentDays = mutableListOf<String>()
+    val client =
+      HttpClient(
+        MockEngine { request ->
+          val report =
+            Json.decodeFromString(UsageReport.serializer(), (request.body as TextContent).text)
+          // The server refuses the oldest day for good (e.g. older than it accepts).
+          if (report.day == "2026-10-20") respondError(HttpStatusCode.BadRequest)
+          else {
+            sentDays += report.day
+            respond("")
+          }
+        }
+      )
+    assertEquals(1, usage.upload(client, "https://designs.test/designs/v1", agent))
+    assertEquals(listOf("2026-10-21"), sentDays)
+    assertTrue(usage.pending("Terrazzo", "0.1.48", "android").isEmpty())
+  }
+
+  @Test
+  fun rateLimitedOrTimedOutUploadsAreRetried() {
+    assertTrue(TemplateUsage.isPermanentRejection(HttpStatusCode.BadRequest))
+    assertTrue(TemplateUsage.isPermanentRejection(HttpStatusCode.PayloadTooLarge))
+    assertFalse(TemplateUsage.isPermanentRejection(HttpStatusCode.TooManyRequests))
+    assertFalse(TemplateUsage.isPermanentRejection(HttpStatusCode.RequestTimeout))
+    assertFalse(TemplateUsage.isPermanentRejection(HttpStatusCode.ServiceUnavailable))
+  }
+
+  @Test
   fun designRequestsCarryTheFixedUserAgent() = runTest {
     val agents = mutableListOf<String?>()
     val key =
