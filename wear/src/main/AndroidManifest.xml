@@ -30,7 +30,7 @@
 
         <!--
           Forgets what the phone deletes from the Data Layer (sign-out, a removed dashboard)
-          while the app isn't running. Exported for Play services, which delivers Data Layer
+          while the app isn't running, and redraws the widgets for new slot Wear designs. Exported for Play services, which delivers Data Layer
           events through this action; it wakes for the rarely written items only, never for
           /wear/values or pictures. Paths mirror WearSyncPaths.
         -->
@@ -43,6 +43,7 @@
                 <data android:scheme="wear" android:host="*" android:path="/wear/pinned" />
                 <data android:scheme="wear" android:host="*" android:path="/wear/sections" />
                 <data android:scheme="wear" android:host="*" android:path="/wear/slots" />
+                <data android:scheme="wear" android:host="*" android:path="/wear/slot-designs" />
             </intent-filter>
         </service>
 

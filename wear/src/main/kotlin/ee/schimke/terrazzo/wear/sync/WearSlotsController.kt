@@ -71,7 +71,9 @@ class WearSlotsController(
       // card.type) and the init race where /wear/slots arrives
       // before /wear/pinned both need a re-apply, not just slot
       // edits. `combine` emits on every change of either source.
-      combine(repo.slots, repo.pinned) { slots, pinned -> slots to pinned }
+      // The slot cards' Wear designs join them: a newly synced design (another variant, a design
+      // the server only now has) must redraw the placed widget too.
+      combine(repo.slots, repo.pinned, repo.slotDesigns) { slots, pinned, _ -> slots to pinned }
         .collectLatest { (slots, pinned) ->
           applySlots(slots, pinned)
           // Reassigning a placed slot or editing its phone style must redraw the installed

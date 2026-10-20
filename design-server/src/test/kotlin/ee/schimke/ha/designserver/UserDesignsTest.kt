@@ -329,6 +329,13 @@ class UserDesignsTest {
     val shared = f.client.manifest().designs.filter { it.author == "github:octocat" }
     assertEquals(setOf(card.entry.key, wear.entry.key), shared.map { it.key }.toSet())
 
+    // Unsharing from the Wear widget's own row unshares its card too: one group.
+    f.client.post("/api/my/designs/${wear.entry.sha256}/share") {
+      header(HttpHeaders.Cookie, f.cookie)
+      setBody("""{"shared":false}""")
+    }
+    assertTrue(f.client.manifest().designs.none { it.author == "github:octocat" })
+
     // A republish whose Wear widgets no longer export drops the stale one.
     f.publish("good")
     assertTrue(

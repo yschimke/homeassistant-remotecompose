@@ -58,6 +58,12 @@ class DataLayerDeletionTest {
   }
 
   @Test
+  fun aNewDesignIndexRedrawsTheWidgetsAndOtherChangesDoNot() {
+    assertTrue(redrawsOnChange(listOf(WearSyncPaths.SLOT_DESIGNS)))
+    assertFalse(redrawsOnChange(listOf(WearSyncPaths.PINNED, WearSyncPaths.dashboardPath("x"))))
+  }
+
+  @Test
   fun aRemovedDashboardForgetsThatDashboardOnly() {
     val path = WearSyncPaths.dashboardPath("old-board")
     assertEquals(listOf(path), forgottenOnDeletion(listOf(path)))

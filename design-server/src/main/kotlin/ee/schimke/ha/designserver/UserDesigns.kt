@@ -163,8 +163,9 @@ class UserDesignStore(
   }
 
   /**
-   * Share or unshare [login]'s design [sha256], and the Wear widget designs made from it; null when
-   * they have none by that hash.
+   * Share or unshare [login]'s design [sha256] together with its card design and the Wear widget
+   * designs made from that (one group, whichever of them is picked); null when they have none by
+   * that hash.
    */
   @Synchronized
   fun share(login: String, sha256: String, shared: Boolean): UserDesign? {
@@ -172,18 +173,14 @@ class UserDesignStore(
     val target =
       index.designs.firstOrNull { it.entry.author == author && it.entry.sha256 == sha256 }
         ?: return null
-    val updated = target.copy(shared = shared)
+    val card = target.wearOf ?: target.entry.sha256
+    fun inGroup(design: UserDesign) =
+      design.entry.author == author && (design.entry.sha256 == card || design.wearOf == card)
     save(
-      index.designs.map {
-        when {
-          it === target -> updated
-          it.entry.author == author && it.wearOf == sha256 -> it.copy(shared = shared)
-          else -> it
-        }
-      },
+      index.designs.map { if (inGroup(it)) it.copy(shared = shared) else it },
       sharedChanged = true,
     )
-    return updated
+    return target.copy(shared = shared)
   }
 
   private fun save(designs: List<UserDesign>, sharedChanged: Boolean) {

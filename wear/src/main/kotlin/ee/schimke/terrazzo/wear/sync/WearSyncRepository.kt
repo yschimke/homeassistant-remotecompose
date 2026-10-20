@@ -90,6 +90,11 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
     MutableStateFlow(offline.readAllDashboards().sortedBy { it.title })
   val dashboards: StateFlow<List<DashboardData>> = _dashboards.asStateFlow()
 
+  private val _slotDesigns: MutableStateFlow<WearSlotDesigns> =
+    MutableStateFlow(offline.readSlotDesigns() ?: WearSlotDesigns())
+  /** The slot cards' Wear widget designs the phone chose: placed widgets redraw when it changes. */
+  val slotDesigns: StateFlow<WearSlotDesigns> = _slotDesigns.asStateFlow()
+
   private val _values: MutableStateFlow<Map<String, EntityValue>> =
     MutableStateFlow(offline.readValues()?.values ?: emptyMap())
   val values: StateFlow<Map<String, EntityValue>> = _values.asStateFlow()
@@ -251,8 +256,10 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
         decodeProto<WearPicture>(bytes)?.let { offline.writePicture(it) }
       path == WearSyncPaths.SLOT_DESIGNS ->
         decodeProto<WearSlotDesigns>(bytes)?.let { designs ->
-          newerThan(designs, offline.readSlotDesigns(), WearSlotDesigns::updatedAtMs)
-            ?.let(offline::writeSlotDesigns)
+          newerThan(designs, offline.readSlotDesigns(), WearSlotDesigns::updatedAtMs)?.let {
+            offline.writeSlotDesigns(it)
+            _slotDesigns.value = it
+          }
         }
       path.startsWith(WearSyncPaths.DESIGN_PREFIX) ->
         decodeProto<WearDesignBlob>(bytes)?.let { offline.writeDesign(it) }
@@ -276,8 +283,8 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
       ForgottenItem.Slots -> _slots.value = WearWidgetSlots()
       ForgottenItem.Values -> _values.value = emptyMap()
       is ForgottenItem.Dashboard -> _dashboards.value = _dashboards.value.filterNot(item::matches)
+      ForgottenItem.SlotDesigns -> _slotDesigns.value = WearSlotDesigns()
       is ForgottenItem.Picture,
-      ForgottenItem.SlotDesigns,
       is ForgottenItem.Design,
       null -> Unit
     }

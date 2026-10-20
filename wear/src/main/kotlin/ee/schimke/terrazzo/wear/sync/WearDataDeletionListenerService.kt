@@ -14,15 +14,25 @@ import kotlinx.coroutines.runBlocking
  * the app runs.)
  *
  * The manifest filter wakes this only for the rarely written items — dashboards, pins, sections,
- * slots — never for `/wear/values` or pictures, which change on every refresh: see
- * [forgottenOnDeletion].
+ * slots, the slot cards' Wear design index — never for `/wear/values` or pictures, which change on
+ * every refresh: see [forgottenOnDeletion]. A changed design index redraws the widgets
+ * ([redrawsOnChange]), which read their new designs from the Data Layer.
  */
 class WearDataDeletionListenerService : WearableListenerService() {
 
   override fun onDataChanged(events: DataEventBuffer) {
     val deleted =
       events.filter { it.type == DataEvent.TYPE_DELETED }.mapNotNull { it.dataItem.uri.path }
-    if (deleted.isEmpty()) return
+    val changed =
+      events.filter { it.type == DataEvent.TYPE_CHANGED }.mapNotNull { it.dataItem.uri.path }
+    if (deleted.isEmpty()) {
+      // New Wear designs for the slot cards: the widgets read them from the Data Layer as they
+      // redraw.
+      if (redrawsOnChange(changed)) {
+        runBlocking { runCatching { refreshAllSlotWidgets(applicationContext) } }
+      }
+      return
+    }
     val store = WearOfflineStore(applicationContext)
     for (path in forgottenOnDeletion(deleted)) {
       if (path == WearSyncPaths.PICTURE_PREFIX) store.forgetAllPictures() else store.forget(path)
@@ -46,6 +56,10 @@ internal fun forgottenOnDeletion(deleted: Collection<String>): List<String> {
     } else emptyList()
   return (deleted + extra).distinct()
 }
+
+/** Whether the items changed at [changed] paths need the placed widgets redrawn: a design index. */
+internal fun redrawsOnChange(changed: Collection<String>): Boolean =
+  WearSyncPaths.SLOT_DESIGNS in changed
 
 private val SIGN_OUT_MARKERS =
   setOf(WearSyncPaths.PINNED, WearSyncPaths.SECTIONS, WearSyncPaths.SLOTS)
