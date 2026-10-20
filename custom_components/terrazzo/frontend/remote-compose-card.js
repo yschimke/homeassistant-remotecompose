@@ -93,8 +93,8 @@ export class RemoteComposeCard extends HaCardElement {
     }
   }
 }
-// The integration loads this module on every frontend page; a Lovelace resource with another URL
-// (an older manual setup, a cache-busting query) loads a second copy that must not redefine it.
+// Terrazzo adds this module as a Lovelace resource; a resource the user added with another URL
+// (a cache-busting query, an absolute URL) loads a second copy that must not redefine it.
 if (!customElements.get('remote-compose-card')) {
   customElements.define('remote-compose-card', RemoteComposeCard);
   window.customCards = window.customCards || [];

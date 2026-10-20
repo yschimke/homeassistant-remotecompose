@@ -7,6 +7,8 @@ CONF_TITLE = "title"
 DEFAULT_TITLE = "Terrazzo"
 STATIC_URL = "/terrazzo-static"
 CARD_URL = f"{STATIC_URL}/remote-compose-card.js"
+# Entry data: the Lovelace resource id Terrazzo added for the card, or None for the user's own.
+DATA_CARD_RESOURCE = "card_resource"
 
 
 def clean_options(values):

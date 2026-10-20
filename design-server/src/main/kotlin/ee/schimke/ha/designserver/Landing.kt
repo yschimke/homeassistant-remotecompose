@@ -224,8 +224,8 @@ object Landing {
     append("</details>")
     append(
       "<p class=\"note\">Updates appear in Home Assistant as an update from HACS. Install it, restart, and " +
-        "refresh any wall-panel tabs. Your existing Lovelace dashboards get a " +
-        "<b>Remote Compose</b> card too, in the card picker once Terrazzo is set up.</p>"
+        "refresh any wall-panel tabs. Setup also adds a <b>Remote Compose</b> card to the card " +
+        "picker of your existing Lovelace dashboards.</p>"
     )
     append("<div class=\"actions\">")
     append(

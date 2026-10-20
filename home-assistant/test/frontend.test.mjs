@@ -256,7 +256,7 @@ test('HA custom card computes a gauge template\'s card-level bindings from its r
   }
 });
 
-test('a manual Lovelace resource beside the integration-loaded card registers it once', async () => {
+test('two Lovelace resources for the card at different URLs register it once', async () => {
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
@@ -269,7 +269,7 @@ test('a manual Lovelace resource beside the integration-loaded card registers it
         const file = name === 'ha-card.js' ? `${root}embed/ha-card.js` : name === 'rc-player.js' ? playerPath : `${frontend}${name}`;
         return route.fulfill({ contentType: 'text/javascript', body: readFileSync(file) });
       }
-      // The integration's extra module, and an older resource whose query makes it a second copy.
+      // Terrazzo's resource, and the user's own whose query makes it a second copy.
       return route.fulfill({ contentType: 'text/html', body: `<!doctype html><meta charset="utf-8">
         <script>window.NativeHaCard = class extends HTMLElement {}; customElements.define('ha-card', NativeHaCard);</script>
         <script type="module" src="/terrazzo-static/remote-compose-card.js"></script>
