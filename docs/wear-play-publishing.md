@@ -38,7 +38,10 @@ Since template usage tracking
 | App activity → Other app activity | Yes | No | Yes (opt-in, off by default) | Analytics | Anonymous, aggregate: which card designs drew cards, bucketed counts, no identifiers |
 
 Data is encrypted in transit (HTTPS) and users can turn it off in
-Settings; pending counts are deleted when they do. Design downloads also
+Settings; pending counts are deleted when they do. On the phone the one
+setting covers the dashboard and its home-screen widgets (rows tagged
+`surface` `phone` or `widget`); the Wear app collects nothing, so the
+Wear form factor adds nothing to this table. Design downloads also
 send a fixed per-release User-Agent that the server counts; that is not
 user data (it is the same for every install of a release), so it needs
 no row. Update this table and the form together.

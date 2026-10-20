@@ -1,6 +1,8 @@
 # Template usage by app
 
-> Status: **implemented** (both phases). Answers open question 5
+> Status: **implemented** (both phases) on the phone, its launcher
+> widgets, and the desktop and web app; see [Form factors](#form-factors)
+> for Wear and TV. Answers open question 5
 > (Telemetry) in
 > [`card-design-server.md`](../architecture/card-design-server.md#open-questions).
 > What users are told is in [`docs/privacy.md`](../privacy.md).
@@ -82,10 +84,34 @@ or reports behind it is dropped before anyone sees it. Only GitHub
 logins in `STATS_USERS` can open them; with none set (the default) the
 routes don't exist.
 
+## Form factors
+
+Each report row carries a `surface` (`UsageKey.surface`): `phone`,
+`widget`, `desktop` or `web`. `phone` is the default and is left out of
+the JSON, so a ledger or report from before surfaces reads the same, and
+the server reads a row without one as `phone`. (A new client sending
+`widget` to a server older than this change gets a 400 and drops that
+day, so the server ships first.)
+
+| Form factor | Where cards render | Design server today | Setting | What it sends |
+| --- | --- | --- | --- | --- |
+| Phone dashboard | Phone app (`cardTemplateFor`, converter fallback in `DashboardViewScreen`) | Yes: manifest + blobs (`DesignRepository`), nightly `CardDesignSync` | Phone Settings | Fetch counts (User-Agent `android; surface=phone`); with opt-in, rows with `surface` `phone` |
+| Launcher widgets | Phone process (`TerrazzoWidgetProvider` bakes the launcher design or captures the converter) | No fetches of their own (local launcher designs) | The phone's | With opt-in, installed live widgets count as rows with `surface` `widget`, uploaded with the phone's. Install previews and demo widgets don't count. |
+| Card style samples | Phone (`CardStyleSample`) | No | — | Nothing: samples aren't the user's cards (`recordUsage = false`). |
+| Desktop app | `app-ui` JVM (`AuthenticatedCard`: a library design via `/api/cards/resolve` + blob, else the app's own card) | Yes: resolve + blobs from the "Card design server" setting (`https://ha.coo.ee`) | app-ui Settings; choice in `~/.terrazzo/usage/sharing`, ledger in `~/.terrazzo/usage/ledger.json` | Blob fetches tagged `?client=Terrazzo/<v> (desktop; surface=desktop)`; with opt-in, rows with `surface` `desktop`, uploaded 10 s after launch |
+| Web app (HA panel, hosted site) | `app-ui` Wasm, same code as desktop | Yes, as desktop (cross-origin) | app-ui Settings; choice and ledger in the page origin's `localStorage` | Blob fetches tagged `?client=Terrazzo/<v> (web; surface=web)` (a page can't set its User-Agent); with opt-in, rows with `surface` `web`. The usage endpoint answers the CORS preflight. The public demo counts nothing. |
+| Wear (slot widgets, app) | On the watch (`SlotWidget`, Glance Wear capture) from card configs and values the phone syncs | No: designs are captured on the watch | Watch (`WearPrefs`) | **Nothing.** The watch has no design server, and reports would need a new watch→phone data path. |
+| TV kiosk | On the TV (`TvKioskCards`) | No | TV (`TvPrefs`) | **Nothing.** No design server configured, so nothing to send to. |
+
+Desktop and web build their counts with the shared `TemplateUsage` and
+`UsageSharing` (`app-ui` `AppCardUsage`), so the rules are the phone's:
+off by default, an explicit choice is never overridden, and turning it
+off deletes pending counts. The app-ui hosts have no periodic sync, so
+they upload finished days once a launch.
+
 ## Not done
 
-- Only the Android phone app fetches designs and counts renders.
-  Launcher widgets, Wear, TV and the desktop/web hosts don't use the
-  design server, so they neither send the User-Agent nor count.
-- Renders are counted on the dashboard only, not in widgets.
+- Wear and TV (see above). Covering Wear would need either a design
+  server on the watch or a watch→phone report path; TV would need a
+  design server setting.
 - A catalog data product exporting the same rows is still to do.
