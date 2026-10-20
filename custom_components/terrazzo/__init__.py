@@ -7,13 +7,17 @@ from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.collection import ItemNotFound
 
 from .const import (
+    CARD_URL,
     CONF_DASHBOARD,
     CONF_TITLE,
+    DATA_CARD_RESOURCE,
     DEFAULT_TITLE,
     DOMAIN,
     PANEL_URL_PATH,
+    STATIC_URL,
     clean_options,
 )
 
@@ -65,7 +69,7 @@ async def async_setup_entry(hass, entry):
     # Static routes can't be removed, so a reloaded entry keeps the first registration.
     if not state.get("static"):
         await hass.http.async_register_static_paths(
-            [StaticPathConfig("/terrazzo-static", str(Path(__file__).parent / "frontend"), False)]
+            [StaticPathConfig(STATIC_URL, str(Path(__file__).parent / "frontend"), False)]
         )
         state["static"] = True
     options = entry.options
@@ -75,10 +79,12 @@ async def async_setup_entry(hass, entry):
         webcomponent_name="terrazzo-panel",
         sidebar_title=options.get(CONF_TITLE) or DEFAULT_TITLE,
         sidebar_icon="mdi:view-dashboard",
-        module_url="/terrazzo-static/terrazzo-panel.js",
+        module_url=f"{STATIC_URL}/terrazzo-panel.js",
         config={"dashboard": options.get(CONF_DASHBOARD, "")},
         require_admin=False,
     )
+    # Before the update listener: recording the resource in the entry must not reload it.
+    await _async_add_card_resource(hass, entry)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     return True
 
@@ -87,6 +93,50 @@ async def async_unload_entry(hass, entry):
     """Take the panel out of the sidebar; the static code stays served until restart."""
     frontend.async_remove_panel(hass, PANEL_URL_PATH)
     return True
+
+
+async def async_remove_entry(hass, entry):
+    """Delete the card resource if Terrazzo added it and it is still there."""
+    if (resource_id := entry.data.get(DATA_CARD_RESOURCE)) and (
+        resources := await _async_storage_resources(hass)
+    ):
+        try:
+            await resources.async_delete_item(resource_id)
+        except ItemNotFound:
+            pass
+
+
+async def _async_storage_resources(hass):
+    """Lovelace's resource collection when it is editable (storage mode), else None."""
+    lovelace = hass.data.get("lovelace")
+    if isinstance(lovelace, dict):  # Before LovelaceData, HA kept a plain dict here.
+        mode, resources = lovelace.get("resource_mode"), lovelace.get("resources")
+    else:
+        mode, resources = getattr(lovelace, "resource_mode", None), getattr(lovelace, "resources", None)
+    if mode != "storage" or resources is None:
+        return None
+    if not resources.loaded:
+        await resources.async_load()
+        resources.loaded = True
+    return resources
+
+
+async def _async_add_card_resource(hass, entry):
+    """Add the Remote Compose card as a Lovelace resource, once.
+
+    A real resource rather than `frontend.add_extra_js_url`: Lovelace loads resources after HA's
+    scoped custom-element registry is in place, where an extra module can define the element too
+    early and lose it (home-assistant/frontend#53890), and Cast receivers load only resources.
+    It is added once: a user who deletes it keeps it deleted. In YAML mode the resource list is
+    the user's to edit, so the docs give the line to add.
+    """
+    if DATA_CARD_RESOURCE in entry.data or (resources := await _async_storage_resources(hass)) is None:
+        return
+    if any(item.get("url", "").split("?")[0] == CARD_URL for item in resources.async_items()):
+        resource_id = None  # The user's own resource; never delete it.
+    else:
+        resource_id = (await resources.async_create_item({"res_type": "module", "url": CARD_URL}))["id"]
+    hass.config_entries.async_update_entry(entry, data={**entry.data, DATA_CARD_RESOURCE: resource_id})
 
 
 async def _async_options_updated(hass, entry):

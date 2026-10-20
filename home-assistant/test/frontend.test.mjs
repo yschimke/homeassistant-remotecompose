@@ -255,3 +255,31 @@ test('HA custom card computes a gauge template\'s card-level bindings from its r
     await browser.close();
   }
 });
+
+test('two Lovelace resources for the card at different URLs register it once', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.route('https://ha.test/**', (route) => {
+      const path = new URL(route.request().url()).pathname;
+      if (path.endsWith('.js')) {
+        const name = path.split('/').pop();
+        const file = name === 'ha-card.js' ? `${root}embed/ha-card.js` : name === 'rc-player.js' ? playerPath : `${frontend}${name}`;
+        return route.fulfill({ contentType: 'text/javascript', body: readFileSync(file) });
+      }
+      // Terrazzo's resource, and the user's own whose query makes it a second copy.
+      return route.fulfill({ contentType: 'text/html', body: `<!doctype html><meta charset="utf-8">
+        <script>window.NativeHaCard = class extends HTMLElement {}; customElements.define('ha-card', NativeHaCard);</script>
+        <script type="module" src="/terrazzo-static/remote-compose-card.js"></script>
+        <script type="module" src="/terrazzo-static/remote-compose-card.js?v=old"></script>` });
+    });
+    await page.goto('https://ha.test/lovelace/0');
+    await page.evaluate(() => customElements.whenDefined('remote-compose-card'));
+    await page.waitForLoadState('load');
+    const pickerEntries = await page.evaluate(() => window.customCards.filter((card) => card.type === 'remote-compose-card').length);
+    assert.equal(pickerEntries, 1, 'one card picker entry');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
