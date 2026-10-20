@@ -152,7 +152,10 @@ under a newer snapshot must never draw the stale bake, frame by frame.
 ## Card matrix (current)
 
 - **Binding (path 1):** entity, glance, tile (a plain one — a tile that bakes a
-  `state_content` line, a climate `hvac_action` badge or `features:` re-encodes, see below),
+  `state_content` line, a climate `hvac_action` badge or `features:` re-encodes, see below; a
+  metered sensor tile's glyph reads `<id>.numeric_state`, decided from `device_class` and unit so
+  it is baked even while the sensor is unavailable, and on the design path the template's `tile`
+  binding recipe rests a non-numeric slot at 0),
   area, entities,
   button (its `show_state` line is `<id>.state`), picture-entity (its `entity_picture` URL is the exception: a
   picture is fetched once per document, so `CachedCardPreview` folds

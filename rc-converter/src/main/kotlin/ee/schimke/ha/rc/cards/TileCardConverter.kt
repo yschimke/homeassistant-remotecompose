@@ -8,6 +8,8 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.design.CardBindingRecipe
+import ee.schimke.ha.design.CardBindingRecipes
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -16,6 +18,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaNamedColor
@@ -127,10 +130,32 @@ class TileCardConverter : CardConverter {
 
   /**
    * A plain tile (`entity` plus optional `name` / `icon`) renders from a card design, with the
-   * [EntityDesign] properties of its entity. The name and the state are bindings.
+   * [EntityDesign] properties of its entity. The name and the state are bindings. A sensor whose
+   * reading draws a meter glyph adds its unit ([EntityDesign.UNIT]): with `device_class` it picks
+   * the glyph's kind and scale (°C or °F), so the template bakes the same reading the converter
+   * would. Both are attributes, never the state, so a value never changes the template.
    */
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? =
-    EntityDesign.single(card, snapshot, TEMPLATE_CONFIG_KEYS)
+    EntityDesign.single(card, snapshot, TEMPLATE_CONFIG_KEYS) {
+      val entityId = entityIdOf(card)
+      val entity = entityId?.let { snapshot.states[it] }
+      if (entityId != null && entity != null && measureKind(entityId, entity) != null) {
+        string(EntityDesign.UNIT, entity.unit())
+      }
+    }
+
+  /**
+   * A template that draws a meter glyph carries [CardBindingRecipes.TILE], so a non-numeric slot
+   * state rests the glyph at 0 instead of NaN. Every other tile template stays recipe-free.
+   */
+  override fun designRecipe(properties: DesignProperties): CardBindingRecipe? {
+    val slot = designTemplate(properties)?.snapshot?.states?.values?.firstOrNull() ?: return null
+    return CardBindingRecipes.TILE.takeIf { measureKind(slot.entityId, slot) != null }
+  }
+
+  /** The recipe the card's own template carries ([designRecipe]), evaluated for [snapshot]. */
+  override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings? =
+    designProperties(card, snapshot)?.let { designRecipe(it) }?.evaluate(card, snapshot)
 
   override fun designTemplate(properties: DesignProperties): DesignTemplateInput? =
     EntityDesign.singleTemplate(cardType, properties)
@@ -276,9 +301,11 @@ class TileCardConverter : CardConverter {
    * A measurable sensor's [HaReading], so the uber theme can draw its meter glyph in the icon's
    * slot (docs/design/everyday-cards.md §1). The text is the tile's own state binding (never a
    * second `<id>.state`) and the value `<id>.numeric_state`, which the host pushes for any numeric
-   * state: path 1, no re-encode. Null for a non-numeric state — a card design's placeholder entity
-   * is `off`, so templates keep the icon — and for kinds with no meaningful scale (an energy
-   * total).
+   * state: path 1, no re-encode.
+   *
+   * Whether there is a glyph follows the entity's attributes ([measureKind]), never its state: a
+   * tile captured while its sensor is unavailable — or a card design's placeholder, whose state is
+   * `off` — still bakes the glyph, seeded with [meterSeed] until a numeric value is pushed.
    */
   private fun sensorReading(
     entityId: String?,
@@ -286,23 +313,41 @@ class TileCardConverter : CardConverter {
     name: String,
     text: RemoteString,
   ): HaReading? {
-    if (entityId == null || entity == null || !entityId.startsWith("sensor.")) return null
-    val numeric = entity.state.toFloatOrNull()?.takeIf { it.isFinite() } ?: return null
-    val deviceClass = entity.attributes["device_class"]?.jsonPrimitive?.contentOrNull
-    if (deviceClass == "energy") return null
-    val unit = entity.attributes["unit_of_measurement"]?.jsonPrimitive?.contentOrNull
-    val kind = HaMeasureKind.of(deviceClass, unit)
-    if (kind == HaMeasureKind.Generic) return null
+    if (entityId == null || entity == null) return null
+    val kind = measureKind(entityId, entity) ?: return null
+    val unit = entity.unit()
     val range = kind.defaultRange(unit)
     return HaReading(
       entityId = entityId,
       name = name,
       text = text,
-      value = LiveValues.numericState(entityId, numeric),
+      value = LiveValues.numericState(entityId, meterSeed(entity)),
       unit = unit,
       min = range.start,
       max = range.endInclusive,
       kind = kind,
     )
   }
+
+  /**
+   * The value a metered tile's glyph is captured with: the state's number, else 0 — the same
+   * fallback [CardBindingRecipes.TILE] pushes to a design template's slot, so a tile reads the same
+   * from either path while its sensor is unavailable.
+   */
+  internal fun meterSeed(entity: EntityState): Float =
+    entity.state.toFloatOrNull()?.takeIf { it.isFinite() } ?: 0f
+
+  /**
+   * The meter kind a sensor tile draws, from `device_class` and the unit; null outside `sensor`,
+   * for kinds with no meaningful scale (an energy total) and for an unclassified reading.
+   */
+  private fun measureKind(entityId: String, entity: EntityState): HaMeasureKind? {
+    if (!entityId.startsWith("sensor.")) return null
+    val deviceClass = entity.attributes["device_class"]?.jsonPrimitive?.contentOrNull
+    if (deviceClass == "energy") return null
+    return HaMeasureKind.of(deviceClass, entity.unit()).takeIf { it != HaMeasureKind.Generic }
+  }
+
+  private fun EntityState.unit(): String? =
+    attributes["unit_of_measurement"]?.jsonPrimitive?.contentOrNull
 }

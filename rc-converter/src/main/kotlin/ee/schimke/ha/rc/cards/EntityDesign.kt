@@ -46,6 +46,8 @@ internal object EntityDesign {
   const val DEVICE_CLASS = "device_class"
   const val ICON = "icon"
   const val CARD_ICON = "card_icon"
+  /** A sensor tile's `unit_of_measurement`, when its reading draws a meter glyph (tile only). */
+  const val UNIT = "unit"
   const val COUNT = "count"
   const val TITLE_SIZE = "title_size"
 
@@ -92,6 +94,7 @@ internal object EntityDesign {
         buildMap {
           properties[prefix + DEVICE_CLASS]?.let { put(DEVICE_CLASS, it) }
           properties[prefix + ICON]?.let { put(ICON, it) }
+          properties[prefix + UNIT]?.let { put("unit_of_measurement", it) }
         },
     )
   }

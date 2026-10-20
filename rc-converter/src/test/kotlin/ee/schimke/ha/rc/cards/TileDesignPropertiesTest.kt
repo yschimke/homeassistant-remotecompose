@@ -111,4 +111,47 @@ class TileDesignPropertiesTest {
       tile.designProperties(input.card, input.snapshot)?.shape,
     )
   }
+
+  @Test
+  fun aMeteredSensorCarriesItsUnit_neverItsValue() {
+    val reading = arrayOf("device_class" to "temperature", "unit_of_measurement" to "°F")
+    val warm = snapshotOf(state("sensor.porch", "71.6", *reading))
+    val offline = snapshotOf(state("sensor.porch", "unavailable", *reading))
+    val shape = "device_class=temperature;domain=sensor;unit=°F"
+    assertEquals(shape, tile.designProperties(card("sensor.porch"), warm)?.shape)
+    // The glyph is decided from attributes, so an unavailable sensor keys the same template.
+    assertEquals(shape, tile.designProperties(card("sensor.porch"), offline)?.shape)
+    // An unclassified reading, or an energy total, draws no glyph: its unit is no property.
+    val plain = snapshotOf(state("sensor.count", "3", "unit_of_measurement" to "items"))
+    assertEquals("domain=sensor", tile.designProperties(card("sensor.count"), plain)?.shape)
+    val energy =
+      snapshotOf(
+        state("sensor.meter", "12", "device_class" to "energy", "unit_of_measurement" to "kWh")
+      )
+    assertEquals(
+      "device_class=energy;domain=sensor",
+      tile.designProperties(card("sensor.meter"), energy)?.shape,
+    )
+  }
+
+  @Test
+  fun theTemplateSlotCarriesTheUnit() {
+    val properties = DesignProperties.parse("device_class=temperature;domain=sensor;unit=°F")
+    val input = assertNotNull(tile.designTemplate(properties))
+    val entity = assertNotNull(input.snapshot.states["sensor.s0"])
+    assertEquals("°F", entity.attributes["unit_of_measurement"]?.jsonPrimitive?.content)
+    assertEquals(properties, tile.designProperties(input.card, input.snapshot))
+  }
+
+  @Test
+  fun unavailableMeterReadsTheSameFromEitherPath() {
+    for (value in listOf("unavailable", "unknown", "21.5")) {
+      val sensor =
+        state("sensor.temp", value, "device_class" to "temperature", "unit_of_measurement" to "°C")
+      val snapshot = snapshotOf(sensor)
+      val pushed =
+        tile.designBindings(card("sensor.temp"), snapshot)?.floats?.get("sensor.s0.numeric_state")
+      assertEquals(pushed, tile.meterSeed(sensor), "state $value")
+    }
+  }
 }

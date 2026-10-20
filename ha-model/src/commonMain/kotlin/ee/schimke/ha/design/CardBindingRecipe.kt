@@ -270,7 +270,20 @@ object CardBindingRecipes {
       )
     }
 
-  private val byPrototype = listOf(GAUGE).associateBy { it.prototype }
+  /**
+   * `tile`: a sensor tile draws its reading's meter glyph off `<slot>.numeric_state`, which the
+   * slot bindings leave NaN for a non-numeric state (unavailable, unknown). The glyph rests at 0
+   * then; the tile is dimmed through `is_available` anyway.
+   */
+  val TILE: CardBindingRecipe =
+    with(CardBindingRecipe) {
+      CardBindingRecipe(
+        prototype = "tile",
+        floats = linkedMapOf("\$0.numeric_state" to first(number(state(0)), literal(0))),
+      )
+    }
+
+  private val byPrototype = listOf(GAUGE, TILE).associateBy { it.prototype }
 
   fun forPrototype(prototype: String): CardBindingRecipe? = byPrototype[prototype]
 }
