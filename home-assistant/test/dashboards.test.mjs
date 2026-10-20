@@ -61,7 +61,8 @@ test('hosted WASM selects hidden dashboards, supports bookmarks and recovers fro
           requested.push(message.url_path ?? null);
           if (message.url_path === 'generated-home') result = {strategy:{type:'home'}};
           else if (['wall-panel','hidden-panel'].includes(message.url_path)) result = {
-            views:[{title:'Lights',cards:[{type:'markdown',content:`Selected ${message.url_path}`}]}],
+            views:[{title:'Lights',cards:[{type:'markdown',content:`Selected ${message.url_path}`}]},
+              {title:'Garden',cards:[{type:'markdown',content:`Garden of ${message.url_path}`}]}],
           };
           else return socket.send(JSON.stringify({id:message.id,type:'result',success:false,
             error:{code:'config_not_found',message:'No config found.'}}));
@@ -88,6 +89,20 @@ test('hosted WASM selects hidden dashboards, supports bookmarks and recovers fro
     await frame.getByText('Selected hidden-panel', {exact:true}).waitFor({timeout:60_000});
     await page.goto('https://ha.test/terrazzo');
     await frame.getByText('Selected wall-panel', {exact:true}).waitFor({timeout:60_000});
+    // A wall panel left idle goes back to its dashboard's first view, from another view or
+    // another dashboard.
+    await page.goto('https://ha.test/terrazzo?return_after=1');
+    await frame.getByText('Selected wall-panel', {exact:true}).waitFor({timeout:60_000});
+    // Views are filter chips above the cards, not tabs.
+    await frame.getByText('Garden', {exact:true}).click({force:true});
+    await frame.getByText('Garden of wall-panel', {exact:true}).waitFor();
+    await page.mouse.click(600, 400);
+    await frame.getByText('Selected wall-panel', {exact:true}).waitFor({timeout:5_000});
+    await page.screenshot({path:`${evidence}/dashboard-returned-home.png`});
+    await frame.getByRole('tab', {name:'Dashboards',exact:true}).dispatchEvent('click');
+    await frame.getByRole('button', {name:'Hidden panel hidden-panel',exact:true}).click({force:true});
+    await frame.getByText('Selected hidden-panel', {exact:true}).waitFor();
+    await frame.getByText('Selected wall-panel', {exact:true}).waitFor({timeout:5_000});
     await page.goto('https://ha.test/terrazzo?dashboard=home');
     await frame.getByText(/This dashboard is unavailable or is not a Lovelace dashboard/).waitFor({timeout:60_000});
     await page.screenshot({path:`${evidence}/dashboard-unavailable.png`});

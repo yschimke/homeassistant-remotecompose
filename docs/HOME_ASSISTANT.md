@@ -128,6 +128,29 @@ with normal Lovelace views works. Unsupported/unavailable bookmarked dashboards
 show an explanation; choose another through **Dashboards**. If none are supported,
 create a Lovelace dashboard with explicit views in HA first, then reconnect.
 
+## Wall panels
+
+A tablet on the wall wants a few things a phone doesn't. Turn them on in the URL
+the tablet opens, so only that device gets them:
+
+```
+https://YOUR-HA/terrazzo?dashboard=wall-panel&wall
+```
+
+`wall` turns on everything below with its default. Each setting also works on
+its own, and overrides `wall` when both are given (`0` turns one off):
+
+| Setting | Default with `wall` | What it does |
+| --- | --- | --- |
+| `kiosk` | on | The first tap goes full screen, hiding Home Assistant's sidebar and the browser's bars. Browsers only allow full screen after a tap, so the panel shows **Tap to start full screen** until then, and again if full screen is left. That tap doesn't reach the dashboard. |
+| `keep_awake` | on | Keeps the screen on while the panel is open, through the Screen Wake Lock API. Browsers allow it only on **HTTPS** pages; over plain `http://` use the tablet's or kiosk browser's own keep-awake setting. |
+| `return_after` | `120` | Seconds without a tap before the panel goes back to the dashboard it started on, its first view and the top of the page. It happens only after someone used the panel, so an untouched panel never reloads. |
+| `screensaver_after` | `600` | Seconds without a tap before a black screen with the time and date. The clock moves every minute against burn-in. The tap that wakes the panel doesn't reach the dashboard. |
+
+For example, `?dashboard=hallway&wall&screensaver_after=0&return_after=60` gives
+a full-screen, always-on hallway panel with no screensaver, back on its first
+view a minute after use.
+
 ## Verify and roll back
 
 After installation or an update, check HA logs for integration load errors, open

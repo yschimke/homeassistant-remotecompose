@@ -33,6 +33,7 @@ fun main() {
         hostedAccessToken = if (hosted) ::currentPanelAccessToken else null,
         initialDashboardPath = if (hosted) panelDashboard().ifBlank { null } else null,
         hostedAction = if (hosted) ::panelAction else null,
+        registerReturnHome = if (hosted) ::panelReturnHome else null,
       )
   }
 }
@@ -52,6 +53,10 @@ private external fun panelDashboard(): String
 
 @JsFun("(payload) => window.frameElement.terrazzoHost.dispatchAction(payload)")
 private external fun panelAction(payload: String): Boolean
+
+// A panel older than this app has no setReturnHome; the wall panel's idle return then does nothing.
+@JsFun("(returnHome) => window.frameElement.terrazzoHost.setReturnHome?.(returnHome)")
+private external fun panelReturnHome(returnHome: () -> Unit)
 
 private suspend fun currentPanelAccessToken(): String = panelAccessToken().await().toString()
 

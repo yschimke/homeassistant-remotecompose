@@ -67,13 +67,20 @@ private class AppConnection(
   }
 }
 
-/** The shared dashboard application runs on Android, desktop and Wasm. */
+/**
+ * The shared dashboard application runs on Android, desktop and Wasm.
+ *
+ * @param registerReturnHome hands the host a callback that goes back to the starting dashboard, its
+ *   first view and the top of the page. The Home Assistant panel calls it on a wall panel left
+ *   idle.
+ */
 @Composable
 fun TerrazzoMultiplatformApp(
   hostedConfig: HaConfig? = null,
   hostedAccessToken: (suspend () -> String)? = null,
   initialDashboardPath: String? = null,
   hostedAction: ((String) -> Boolean)? = null,
+  registerReturnHome: ((() -> Unit) -> Unit)? = null,
 ) {
   val dark = isSystemInDarkTheme()
   MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
@@ -114,7 +121,12 @@ fun TerrazzoMultiplatformApp(
               withContext(NonCancellable) { active.close() }
             }
           }
-          DashboardShell(active, initialDashboardPath, onSignOut = { connection = null })
+          DashboardShell(
+            active,
+            initialDashboardPath,
+            registerReturnHome,
+            onSignOut = { connection = null },
+          )
         }
       }
     }
@@ -202,15 +214,17 @@ internal fun validServerUrl(value: String): Boolean = runCatching {
 private fun DashboardShell(
   connection: AppConnection,
   initialDashboardPath: String?,
+  registerReturnHome: ((() -> Unit) -> Unit)?,
   onSignOut: () -> Unit,
 ) {
   var list by remember { mutableStateOf<DashboardListState>(DashboardListState.Loading) }
-  val stack = remember {
-    mutableStateListOf<NavKey>(
-      if (connection.hosted && initialDashboardPath == null) DashboardsDestination
-      else DashboardDestination(initialDashboardPath)
-    )
+  val home: NavKey = remember {
+    if (connection.hosted && initialDashboardPath == null) DashboardsDestination
+    else DashboardDestination(initialDashboardPath)
   }
+  val stack = remember { mutableStateListOf(home) }
+  // Bumped to drop every screen's saved state (selected view, scroll) when returning home.
+  var homeVisit by remember { mutableIntStateOf(0) }
   var snapshot by remember(connection) { mutableStateOf(HaSnapshot()) }
   var connectionError by remember(connection) { mutableStateOf<String?>(null) }
   var designServer by remember { mutableStateOf("https://ha.coo.ee") }
@@ -263,6 +277,13 @@ private fun DashboardShell(
     stack.clear()
     stack.add(route)
   }
+  DisposableEffect(registerReturnHome) {
+    registerReturnHome?.invoke {
+      select(home)
+      homeVisit++
+    }
+    onDispose { registerReturnHome?.invoke {} }
+  }
   NavigationSuiteScaffold(
     navigationSuiteItems = {
       item(
@@ -279,62 +300,67 @@ private fun DashboardShell(
       )
     }
   ) {
-    NavDisplay(
-      backStack = stack,
-      onBack = { if (stack.size > 1) stack.removeLastOrNull() },
-      entryProvider =
-        entryProvider {
-          entry<DashboardsDestination> {
-            DashboardPickerScreen(list, onDashboardPicked = { stack.add(DashboardDestination(it)) })
-          }
-          entry<SettingsDestination> {
-            Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) }) { padding ->
-              Column(
-                Modifier.padding(padding)
-                  .consumeWindowInsets(padding)
-                  .padding(24.dp)
-                  .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-              ) {
-                Text(connection.config.baseUrl, style = MaterialTheme.typography.titleMedium)
-                Text("Access tokens are kept only for this session.")
-                OutlinedTextField(
-                  designServer,
-                  { designServer = it },
-                  label = { Text("Card design server") },
-                  singleLine = true,
-                )
-                ReportFeedbackButton()
-                Button(onClick = onSignOut) { Text("Sign out") }
-              }
-            }
-          }
-          entry<DashboardDestination> { route ->
-            Scaffold(
-              topBar = {
-                TopAppBar(
-                  title = {
-                    DashboardSwitcher(
-                      (list as? DashboardListState.Ready)?.dashboards.orEmpty(),
-                      route.path,
-                      onSwitch = { select(DashboardDestination(it)) },
-                    )
-                  }
-                )
-              }
-            ) { padding ->
-              LiveDashboard(
-                connection,
-                route.path,
-                snapshot,
-                connectionError,
-                Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
-                designServer,
+    key(homeVisit) {
+      NavDisplay(
+        backStack = stack,
+        onBack = { if (stack.size > 1) stack.removeLastOrNull() },
+        entryProvider =
+          entryProvider {
+            entry<DashboardsDestination> {
+              DashboardPickerScreen(
+                list,
+                onDashboardPicked = { stack.add(DashboardDestination(it)) },
               )
             }
-          }
-        },
-    )
+            entry<SettingsDestination> {
+              Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) }) { padding ->
+                Column(
+                  Modifier.padding(padding)
+                    .consumeWindowInsets(padding)
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState()),
+                  verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                  Text(connection.config.baseUrl, style = MaterialTheme.typography.titleMedium)
+                  Text("Access tokens are kept only for this session.")
+                  OutlinedTextField(
+                    designServer,
+                    { designServer = it },
+                    label = { Text("Card design server") },
+                    singleLine = true,
+                  )
+                  ReportFeedbackButton()
+                  Button(onClick = onSignOut) { Text("Sign out") }
+                }
+              }
+            }
+            entry<DashboardDestination> { route ->
+              Scaffold(
+                topBar = {
+                  TopAppBar(
+                    title = {
+                      DashboardSwitcher(
+                        (list as? DashboardListState.Ready)?.dashboards.orEmpty(),
+                        route.path,
+                        onSwitch = { select(DashboardDestination(it)) },
+                      )
+                    }
+                  )
+                }
+              ) { padding ->
+                LiveDashboard(
+                  connection,
+                  route.path,
+                  snapshot,
+                  connectionError,
+                  Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
+                  designServer,
+                )
+              }
+            }
+          },
+      )
+    }
   }
 }
 
