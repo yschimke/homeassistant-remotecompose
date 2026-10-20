@@ -465,6 +465,9 @@ private fun DashboardsRoot(
   val logsViewEnabled by graph.preferencesStore.logsViewEnabled.collectAsState(initial = false)
 
   var opened by rememberSaveable { mutableStateOf(initialDashboardToOpened(initialDashboard)) }
+  // The view a card's navigation asked for in the opened dashboard; the picker and switcher clear
+  // it.
+  var openedView by rememberSaveable { mutableStateOf<String?>(null) }
   // Two-layer write-mode state:
   //   - `permanentWriteMode` is the persisted opt-in (Settings).
   //   - `sessionWriteMode` is a process-scoped override the chip writes
@@ -643,6 +646,7 @@ private fun DashboardsRoot(
                 currentUrlPath = openedValue,
                 onSwitch = { newPath ->
                   opened = newPath
+                  openedView = null
                   scope.launch { graph.preferencesStore.setLastViewedDashboard(newPath) }
                 },
               )
@@ -684,6 +688,7 @@ private fun DashboardsRoot(
           state = dashboards,
           onDashboardPicked = { urlPath ->
             opened = urlPath
+            openedView = null
             // Persist for the next cold start. The picker
             // and the switcher are the only entry points
             // that change which dashboard is "current".
@@ -711,6 +716,17 @@ private fun DashboardsRoot(
             // history preview matches the dashboard frame.
             onCardLongPress = { card, snapshot -> actionsTarget = card to snapshot },
             contentPadding = padding,
+            initialViewPath = openedView,
+            // A card's navigation to another dashboard the user can open switches to it.
+            onOpenDashboard = { urlPath, viewPath ->
+              val known = readyDashboards.any { it.urlPath == urlPath }
+              if (known) {
+                opened = urlPath
+                openedView = viewPath
+                scope.launch { graph.preferencesStore.setLastViewedDashboard(urlPath) }
+              }
+              known
+            },
           )
         }
       }

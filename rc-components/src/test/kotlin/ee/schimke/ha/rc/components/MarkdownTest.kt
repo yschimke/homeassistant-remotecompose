@@ -347,4 +347,14 @@ class MarkdownTest {
     assertEquals("docs", l.text)
     assertEquals(MarkdownStyle.Plain, l.style)
   }
+
+  @Test
+  fun appRelativeLinksNavigateInsteadOfOpeningABrowser() {
+    assertEquals(
+      HaAction.Navigate("/dashboard-bambu/p2s"),
+      markdownLinkAction(link("[Open P2s detail →](/dashboard-bambu/p2s)").url),
+    )
+    assertEquals(HaAction.Url("https://example.com"), markdownLinkAction("https://example.com"))
+    assertEquals(HaAction.Url("//cdn.example/x"), markdownLinkAction("//cdn.example/x"))
+  }
 }

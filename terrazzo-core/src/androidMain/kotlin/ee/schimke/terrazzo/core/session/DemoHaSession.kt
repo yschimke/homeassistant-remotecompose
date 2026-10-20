@@ -212,6 +212,8 @@ object DemoData {
       } ?: emptyList()
     return View(
       title = title,
+      // A card's `navigate` action names its view by this path.
+      path = obj["path"]?.jsonPrimitive?.content,
       type = type,
       maxColumns = maxColumns,
       denseSectionPlacement =

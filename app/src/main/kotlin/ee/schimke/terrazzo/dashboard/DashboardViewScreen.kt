@@ -143,6 +143,13 @@ import kotlinx.serialization.json.jsonPrimitive
  * View titles are not rendered: each top-level dashboard has one "view" in the typical case, and
  * the user already saw the view name in the picker. Multi-view dashboards are an HA tab construct;
  * we'd surface them as tabs, not stacked, when we get to that.
+ *
+ * A card's `navigate` action (or a markdown link to `/dashboard/view`) scrolls to that view when it
+ * is in this dashboard; another dashboard goes to [onOpenDashboard], which returns false when it
+ * knows no such dashboard. A path naming no dashboard but a view here (a bundled dashboard's links
+ * carry the author's dashboard name) still lands on the view; anything else opens on Home
+ * Assistant. [initialViewPath] is the view to show first. A `more-info` action opens
+ * [EntityMoreInfoSheet] on the live snapshot.
  */
 @Composable
 fun DashboardViewScreen(
@@ -151,6 +158,8 @@ fun DashboardViewScreen(
   onCardLongPress: (CardConfig, HaSnapshot) -> Unit,
   contentPadding: PaddingValues = PaddingValues(0.dp),
   readOnly: Boolean = true,
+  initialViewPath: String? = null,
+  onOpenDashboard: (urlPath: String?, viewPath: String?) -> Boolean = { _, _ -> false },
 ) {
   val cache = LocalTerrazzoGraph.current.offlineCache
   // Seed from disk so the first composition shows the last-known
@@ -240,6 +249,31 @@ fun DashboardViewScreen(
 
   val feedback = rememberInteractionFeedback()
   val latestState = rememberUpdatedState(state)
+  val context = androidx.compose.ui.platform.LocalContext.current
+  // The view a navigation asked for, until the list has scrolled to it; and the open more-info.
+  var pendingView by remember(urlPath) { mutableStateOf(initialViewPath?.let(::ViewTarget)) }
+  var moreInfoEntity by remember(urlPath) { mutableStateOf<String?>(null) }
+  val navigate: (String) -> Unit = navigate@{ path ->
+    val dashboard = (latestState.value as? DashboardState.Ready)?.dashboard
+    val target = LovelacePath.parse(path)
+    when {
+      target == null -> Unit
+      target.isIn(urlPath) -> {
+        pendingView = ViewTarget(target.view)
+        return@navigate
+      }
+      onOpenDashboard(target.dashboardUrlPath, target.view) -> return@navigate
+      // `/view` alone, or `/<a dashboard this app keys differently>/view`.
+      dashboard != null -> {
+        val segment = target.view ?: target.dashboard
+        if (dashboard.viewIndexOf(segment) != null) {
+          pendingView = ViewTarget(segment)
+          return@navigate
+        }
+      }
+    }
+    openInBrowser(context, resolveAgainstBase(session.baseUrl, path))
+  }
   val actionDispatcher =
     rememberDashboardActionDispatcher(
       session,
@@ -248,6 +282,8 @@ fun DashboardViewScreen(
       stateOf = { id ->
         (latestState.value as? DashboardState.Ready)?.snapshot?.states?.get(id)?.state
       },
+      onNavigate = navigate,
+      onMoreInfo = { moreInfoEntity = it },
     )
 
   CompositionLocalProvider(
@@ -285,8 +321,42 @@ fun DashboardViewScreen(
           dashboardUrlPath = urlPath ?: "",
           onCardLongPress = onCardLongPress,
           contentPadding = contentPadding,
+          pendingView = pendingView,
+          onViewShown = { pendingView = null },
         )
     }
+  }
+
+  moreInfoEntity?.let { entityId ->
+    val historyUrl = resolveAgainstBase(session.baseUrl, "/history?entity_id=$entityId")
+    EntityMoreInfoSheet(
+      entityId = entityId,
+      state = (state as? DashboardState.Ready)?.snapshot?.states?.get(entityId),
+      onOpenHistory = historyUrl?.let { url -> { openInBrowser(context, url) } },
+      onDismiss = { moreInfoEntity = null },
+    )
+  }
+}
+
+/**
+ * A view a navigation asked the list to show; a fresh instance per request, so asking for the same
+ * view again scrolls again.
+ */
+private class ViewTarget(val segment: String?)
+
+private fun openInBrowser(context: android.content.Context, url: String?) {
+  if (url == null) {
+    Log.i(TAG, "Nowhere to open a navigation without a Home Assistant URL")
+    return
+  }
+  val intent =
+    android.content
+      .Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+      .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+  try {
+    context.startActivity(intent)
+  } catch (e: android.content.ActivityNotFoundException) {
+    Log.w(TAG, "No activity found to open $url", e)
   }
 }
 
@@ -309,6 +379,8 @@ private fun DashboardList(
   dashboardUrlPath: String,
   onCardLongPress: (CardConfig, HaSnapshot) -> Unit,
   contentPadding: PaddingValues,
+  pendingView: ViewTarget? = null,
+  onViewShown: () -> Unit = {},
 ) {
   // The inner card renderers only carry a `(CardConfig) -> Unit`
   // long-press lambda; bind the current snapshot here (DashboardList is
@@ -412,6 +484,31 @@ private fun DashboardList(
         }
     val cardDesignOverrides by
       remember(context) { CardDesignOverrideStore.of(context).overrides }.collectAsState()
+    // A navigation to one of this dashboard's views: open its first section if collapsed mode
+    // closed it, and scroll to the view's first item.
+    LaunchedEffect(pendingView, layout) {
+      val target = pendingView ?: return@LaunchedEffect
+      val viewIndex = dashboard.viewIndexOf(target.segment)
+      if (viewIndex != null && viewIndex in layout.views.indices) {
+        if (
+          collapsedMode && singleTrackViews[viewIndex] && expandedSectionByView[viewIndex] == null
+        )
+          expandedSectionByView[viewIndex] = 0
+        // The placeholder briefs are item 0; each view before this one adds its own items.
+        val firstItem =
+          1 +
+            (0 until viewIndex).sumOf { i ->
+              layout.views[i].itemCount(
+                sectionGrids[i],
+                compactPerRow = cfg.compactCardsPerRow,
+              ) { card ->
+                registry.cardWidthClass(card, snapshot)
+              }
+            }
+        listState.animateScrollToItem(firstItem)
+      }
+      onViewShown()
+    }
     CompositionLocalProvider(
       LocalFlashOnDataChange provides flashOnDataChange,
       LocalCardDesigns provides cardDesigns,
@@ -657,6 +754,27 @@ private fun LazyListScope.renderView(
       }
     }
   }
+}
+
+/**
+ * How many [LazyListScope] items [renderView] emits for this view: its header, its orphan card
+ * rows, then one item per section stacked in a single track, or one for the side-by-side grid.
+ */
+private fun ViewLayout.itemCount(
+  grid: SectionsGridLayout,
+  compactPerRow: Int,
+  widthClassOf: (CardConfig) -> CardWidthClass,
+): Int {
+  val header = if (header?.card != null) 1 else 0
+  val orphans =
+    if (orphanCards.isEmpty()) 0 else packAndChunk(orphanCards, compactPerRow, widthClassOf).size
+  val sections =
+    when {
+      sections.isEmpty() -> 0
+      grid.singleTrack -> sections.size
+      else -> 1
+    }
+  return header + orphans + sections
 }
 
 /**
