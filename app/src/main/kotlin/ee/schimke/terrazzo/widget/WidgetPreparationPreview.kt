@@ -78,46 +78,52 @@ internal fun WidgetPreparationPreview(
   // Keep the last inflated view on screen during refresh/resize, but never install an older edit.
   val latestOnPreview by rememberUpdatedState(onPreview)
   LaunchedEffect(baseUrl, card, snapshot, width, height, attempt, capture) {
-    if (prepared?.baseUrl != baseUrl || prepared?.card != card) latestOnPreview(null)
-    failed = false
-    // Coalesce typing/drag steps and keep capture/image loading off the UI thread.
-    delay(100)
-    val replacement =
-      try {
-        val views =
-          withContext(Dispatchers.Default) {
-            capture(
-              context,
+    // Everything here but the capture is UI work: inflation, and the state writes that publish
+    // the preview. Pin it to the main thread rather than relying on where the effect resumes —
+    // under the Compose UI test clock a continuation can resume on the capture's worker thread,
+    // which attached the native views and applied composition changes off the main thread.
+    withContext(Dispatchers.Main.immediate) {
+      if (prepared?.baseUrl != baseUrl || prepared?.card != card) latestOnPreview(null)
+      failed = false
+      // Coalesce typing/drag steps and keep capture/image loading off the UI thread.
+      delay(100)
+      val replacement =
+        try {
+          val views =
+            withContext(Dispatchers.Default) {
+              capture(
+                context,
+                baseUrl,
+                card,
+                snapshot,
+                WidgetSizeDp(width * LAUNCHER_CELL_WIDTH_DP, height * LAUNCHER_CELL_HEIGHT_DP),
+              )
+            }
+          // Inflate on the UI thread before publishing. A failed capture or bitmap/layout
+          // inflation must not tear down the last working native view.
+          views?.let {
+            PreparedWidgetPreview(
               baseUrl,
               card,
-              snapshot,
-              WidgetSizeDp(width * LAUNCHER_CELL_WIDTH_DP, height * LAUNCHER_CELL_HEIGHT_DP),
+              it,
+              inflateWidgetPreview(context, it),
+              "$label preview, $stateLabel, $width by $height cells",
             )
           }
-        // Inflate on the UI thread before publishing. A failed capture or bitmap/layout
-        // inflation must not tear down the last working native view.
-        views?.let {
-          PreparedWidgetPreview(
-            baseUrl,
-            card,
-            it,
-            inflateWidgetPreview(context, it),
-            "$label preview, $stateLabel, $width by $height cells",
+        } catch (cancelled: CancellationException) {
+          throw cancelled
+        } catch (failure: Exception) {
+          android.util.Log.e(
+            "WidgetPreparationPreview",
+            "Could not capture launcher preview",
+            failure,
           )
+          null
         }
-      } catch (cancelled: CancellationException) {
-        throw cancelled
-      } catch (failure: Exception) {
-        android.util.Log.e(
-          "WidgetPreparationPreview",
-          "Could not capture launcher preview",
-          failure,
-        )
-        null
-      }
-    failed = replacement == null
-    if (replacement != null) prepared = replacement
-    latestOnPreview(replacement?.views)
+      failed = replacement == null
+      if (replacement != null) prepared = replacement
+      latestOnPreview(replacement?.views)
+    }
   }
   if (failed) {
     OutlinedCard(Modifier.fillMaxWidth().testTag("widget-preview-error")) {
