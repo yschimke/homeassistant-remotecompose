@@ -7,7 +7,7 @@ screenshots, from the `Play_*` previews in `:app` and `:wear`) and
 `:previews`). The **Play Store graphics** workflow reruns both weekly and
 opens a PR when the output changes.
 
-Gradle Play Publisher (GPP) uploads them with `:app:publishListing`, not
+Gradle Play Publisher (GPP) uploads them with `:app:publishReleaseListing`, not
 `publishBundle`. Releases run it when the `PLAY_PUBLISH_LISTING` repository
 variable is `true`; it replaces the Play Console's listing text and images
 with what's committed here. All files in a given directory are treated as
