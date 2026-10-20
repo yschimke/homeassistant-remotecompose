@@ -1,16 +1,23 @@
 package ee.schimke.terrazzo.dashboard
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth as rcFillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CachedCardPreview
+import ee.schimke.ha.rc.CardTemplatePlayback
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
@@ -22,6 +29,8 @@ import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.cardPalette
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.LocalThemeStyle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -41,19 +50,38 @@ internal fun CardStyleSample(cardStyle: HaUberTheme, modifier: Modifier = Modifi
   val haTheme = remember(style, dark, cardStyle) { cardStyle.cardPalette(style, dark) }
   // Plain CardDesigns: the local library only. The server's designs are fetched for the chosen
   // style alone, and reading them here would log the other styles as the server's gaps.
-  val template =
-    remember(style, dark, cardStyle) {
-      cardTemplateFor(
-        context,
-        SAMPLE_CARD,
-        SAMPLE_SNAPSHOT,
-        CardDesigns(),
-        style,
-        dark,
-        registry,
-        cardStyle,
-      )
+  val loadTemplate = {
+    cardTemplateFor(
+      context,
+      SAMPLE_CARD,
+      SAMPLE_SNAPSHOT,
+      CardDesigns(),
+      style,
+      dark,
+      registry,
+      cardStyle,
+    )
+  }
+  // The library captures a template the first time a key is asked for. Expanding the picker asks
+  // for every style at once, so the samples load off the UI thread (as widget previews capture)
+  // and hold their height until then. Previews load in place, so a render shows the card.
+  val inspection = LocalInspectionMode.current
+  val inPlace =
+    remember(style, dark, cardStyle) { if (inspection) SampleTemplate(loadTemplate()) else null }
+  val loaded by
+    produceState(
+      initialValue = inPlace,
+      style,
+      dark,
+      cardStyle,
+    ) {
+      if (value == null) value = SampleTemplate(withContext(Dispatchers.Default) { loadTemplate() })
     }
+  val template = loaded?.playback
+  if (loaded == null) {
+    Box(modifier.fillMaxWidth().height(SAMPLE_PLACEHOLDER_HEIGHT))
+    return
+  }
   CachedCardPreview(
     cacheKey = CardStyleSampleKey(style, dark, cardStyle.id),
     profile = androidXExperimentalWrap,
@@ -69,6 +97,11 @@ internal fun CardStyleSample(cardStyle: HaUberTheme, modifier: Modifier = Modifi
     }
   }
 }
+
+/** A loaded sample's template; null [playback] when the tile has none and captures directly. */
+private class SampleTemplate(val playback: CardTemplatePlayback?)
+
+private val SAMPLE_PLACEHOLDER_HEIGHT = 64.dp
 
 private data class CardStyleSampleKey(
   val style: ThemeStyle,
