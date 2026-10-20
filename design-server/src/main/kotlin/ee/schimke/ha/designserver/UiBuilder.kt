@@ -253,6 +253,50 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
     )
   }
 
+  /**
+   * [designId]'s UI Builder document (`GET /api/ui-builder/v1/designs/<id>`), at [revision] or its
+   * latest. A failure, saying why, when UI Builder has no such design.
+   */
+  suspend fun design(designId: String, revision: Long? = null): Result<JsonObject> {
+    val id = designId.encodeURLPathPart()
+    val response =
+      http.get(
+        "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/designs/$id" +
+          "?token=${config.token.encodeURLParameter()}" +
+          (revision?.let { "&revision=$it" } ?: "")
+      )
+    if (!response.status.isSuccess()) {
+      return Result.failure(
+        IllegalStateException("UI Builder has no design $designId (${response.status})")
+      )
+    }
+    return runCatching { Json.parseToJsonElement(response.bodyAsText()).jsonObject }
+  }
+
+  /**
+   * The Remote Compose document UI Builder compiles [document] to, without storing it (`POST
+   * /api/ui-builder/v1/documents/export.rc`). A failure, saying why, when it refuses to compile it.
+   */
+  suspend fun exportRc(document: JsonObject): Result<ByteArray> {
+    val response =
+      http.post(
+        "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/documents/export.rc" +
+          "?token=${config.token.encodeURLParameter()}"
+      ) {
+        contentType(ContentType.Application.Json)
+        setBody(Json.encodeToString(JsonObject.serializer(), document))
+      }
+    if (!response.status.isSuccess()) {
+      return Result.failure(
+        IllegalStateException(
+          "UI Builder could not export the document (${response.status}): " +
+            response.bodyAsText().take(300)
+        )
+      )
+    }
+    return Result.success(response.bodyAsBytes())
+  }
+
   /** Resolve the published revision on the host that will validate and render this draft. */
   private suspend fun pinToServedCatalog(document: JsonObject): JsonObject {
     val system = document.getValue("catalogPin").jsonObject.getValue("systemId")

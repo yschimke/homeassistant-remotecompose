@@ -26,6 +26,9 @@ internal val WATCH_ACCOUNT_DATA: List<WearDataItems> =
     WearDataItems(WearSyncPaths.PINNED, prefix = false),
     WearDataItems(WearSyncPaths.SECTIONS, prefix = false),
     WearDataItems(WearSyncPaths.SLOTS, prefix = false),
+    // A slot's Wear design may be the person's private one.
+    WearDataItems(WearSyncPaths.SLOT_DESIGNS, prefix = false),
+    WearDataItems(WearSyncPaths.DESIGN_PREFIX, prefix = true),
   )
 
 /**

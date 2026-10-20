@@ -35,13 +35,15 @@ class WearDataDeletionListenerService : WearableListenerService() {
 /**
  * What the watch forgets when the phone deletes the items at [deleted] paths: those, and — when one
  * is an account-wide item (pins, sections, slots), which the phone deletes only on sign-out — the
- * entity values and every picture too ([WearSyncPaths.PICTURE_PREFIX] standing for all of them),
- * whose own deletions don't wake the listener service.
+ * entity values, every picture ([WearSyncPaths.PICTURE_PREFIX] standing for all of them) and the
+ * slot cards' Wear designs too, whose own deletions don't wake the listener service.
  */
 internal fun forgottenOnDeletion(deleted: Collection<String>): List<String> {
   val signedOut = deleted.any { it in SIGN_OUT_MARKERS }
   val extra =
-    if (signedOut) listOf(WearSyncPaths.VALUES, WearSyncPaths.PICTURE_PREFIX) else emptyList()
+    if (signedOut) {
+      listOf(WearSyncPaths.VALUES, WearSyncPaths.PICTURE_PREFIX, WearSyncPaths.SLOT_DESIGNS)
+    } else emptyList()
   return (deleted + extra).distinct()
 }
 

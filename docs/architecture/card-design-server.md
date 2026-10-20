@@ -186,6 +186,22 @@ Deliberate spike limits, each owned by a milestone below:
   running app).
   Until one has synced, the card keeps the direct capture, which shows the card's icon
   (`SlotWidgetDesignTest`, `WearPictureSyncTest`).
+- **Wear widgets play the card's own design.** A Wear widget isn't a separate design: it is
+  the card's design rooted on the Glance Wear container, Small or Large. Glance Wear draws the
+  container's shape and background into the document, so the card's own surface (background,
+  border) goes and the container's takes its place; the rest adapts to the container as the card
+  does to a dashboard. The design's mobile bytes can't be played as they are: they use ops the
+  Wear widget profile rejects (`CORE_TEXT`, `FlowLayout`), and draw their own surface. Built-in
+  designs are captured on the watch from the card's converter, as above. A design published from
+  UI Builder gets its Wear widgets when it is published: the design server roots the same UI
+  Builder revision on `remote-m3/widget-container-small` and `-large` without its card surfaces
+  (`WearWidgetDesigns`), exports each, and keeps those that pass the Wear widget profile and bind
+  what the card does, as `wear-widget` designs keyed like the card's with a `container`
+  (`small` / `large`). They are shared, unshared and replaced with the card's design. The phone
+  sends each widget slot card's Wear designs (its dark design's, in the card's variant, then
+  `default`; `wearSlotDesigns`) as `/wear/design/<sha256>` blobs and a `/wear/slot-designs`
+  index, and the watch bakes the one for the widget's container, falling back to its own capture
+  (`SlotWidgetServerDesignTest`, `WearSlotDesignPickerTest`).
 - **Launcher widgets are baked** (S1, `LauncherDesigns`): a launcher can't receive bindings, so
   the widget's launcher template — keyed by size (`variant = <w>x<h>`) and widget theme, captured
   from the same tree as a live widget (`LauncherWidgetContent`) — gets the card's values written
@@ -480,7 +496,7 @@ Each surface starts from today's profiles:
 | --- | --- | --- | --- | --- |
 | `mobile-app` | `androidXExperimentalWrap` (latest level) | Wrap | `theme.*` bindings | always |
 | `launcher` | `widgetsProfile` (level 7) / `systemThemedWidgetsProfile` (API 37+) | Fixed, tiered | `ColorTheme` on 37+, otherwise `theme.*` | `WidgetSync.liveWidgetIds()` not empty |
-| `wear-widget` | Glance Wear stable op set (no FlowLayout) | Fixed, small/large | `WearM3.*` | watch paired with `terrazzo_wear_widgets` capability |
+| `wear-widget` | Glance Wear stable op set (no FlowLayout) | Fixed, one design per container (`small` / `large`) | the card's design's, dark | a widget slot card with a Wear design |
 | `wear-app` | AndroidX profile, round-safe | Wrap | `theme.*` / Wear M3 | watch paired with Terrazzo installed |
 | `desktop`, `tv` | to be decided with the CMP player | Wrap | `theme.*` | later |
 
@@ -715,7 +731,9 @@ use it.
   (`designs/<sha256>.rc`) and instantiates locally with the values it
   already receives. The watch app bundles its own inbuilt designs, so a
   watch that never syncs still renders. Watches that render standalone
-  (LTE) can be added later.
+  (LTE) can be added later. Built for `wear-widget` (see
+  [Spike status](#spike-status));
+  `wear-app` not yet.
 - **Desktop, Wasm, TV.** Out of scope until those hosts play RC
   documents. Wasm would also need CORS on the static host.
 

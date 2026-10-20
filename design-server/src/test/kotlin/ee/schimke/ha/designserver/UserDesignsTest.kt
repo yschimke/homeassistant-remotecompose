@@ -18,9 +18,11 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.parameters
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
@@ -53,6 +55,38 @@ class UserDesignsTest {
     )
   private val json = Json { ignoreUnknownKeys = true }
 
+  /** A Small Wear widget of [template]'s card, as Glance Wear captures it (`:wear`'s tests). */
+  private val wearSmall = javaClass.getResource("/tile-light-wear-small.rc")!!.readBytes()
+
+  /** The Wear container roots UI Builder was asked to export. */
+  private val exportedWear = mutableListOf<String>()
+
+  /** The UI Builder source of design `wear`: a card surface in a section. */
+  private val wearSource =
+    UiBuilderSeed.envelope(
+      HaCardsSeed.section(template = null),
+      designId = "wear",
+      title = "Tile",
+      heightDp = 120,
+      stateVariables = emptyList(),
+      nodes =
+        mapOf(
+          "root" to
+            UiBuilderSeed.node(
+              "root",
+              HaCardsSeed.DASHBOARD_SECTION,
+              slots = mapOf("content" to listOf("surface")),
+            ),
+          "surface" to
+            UiBuilderSeed.node(
+              "surface",
+              HaCardsSeed.CARD_SURFACE,
+              slots = mapOf("content" to listOf("tile")),
+            ),
+          "tile" to UiBuilderSeed.node("tile", HaCardsSeed.TILE),
+        ),
+    )
+
   private fun library(): File {
     val dir = Files.createTempDirectory("designs").toFile()
     val output =
@@ -72,10 +106,28 @@ class UserDesignsTest {
     externalServices {
       hosts("http://uib") {
         routing {
+          // `wear`: a card design whose Small Wear widget exports and whose Large one doesn't.
+          get("/api/ui-builder/v1/designs/{id}") {
+            if (call.parameters["id"] != "wear") {
+              return@get call.respondText("no such design", status = HttpStatusCode.NotFound)
+            }
+            call.respondText(wearSource.toString(), ContentType.Application.Json)
+          }
+          post("/api/ui-builder/v1/documents/export.rc") {
+            val document = Json.parseToJsonElement(call.receiveText()).jsonObject
+            val root = document["nodes"]!!.jsonObject["root"]!!.jsonObject
+            exportedWear += root["componentId"]!!.jsonPrimitive.content
+            when (document["id"]!!.jsonPrimitive.content) {
+              "wear-wear-small" -> call.respondBytes(wearSmall, ContentType.Application.OctetStream)
+              // A mobile document: not a Wear widget.
+              else -> call.respondBytes(template, ContentType.Application.OctetStream)
+            }
+          }
           get("/api/ui-builder/v1/designs/{id}/export.rc") {
             assertEquals("secret", call.request.queryParameters["token"])
             when (call.parameters["id"]) {
-              "good" -> {
+              "good",
+              "wear" -> {
                 call.response.headers.append("X-UI-Builder-Revision", "3")
                 call.respondBytes(template, ContentType.Application.OctetStream)
               }
@@ -250,6 +302,38 @@ class UserDesignsTest {
       f.client.post("/api/my/device-token") { header(HttpHeaders.Authorization, "Bearer $token") }
     assertEquals(HttpStatusCode.Unauthorized, response.status)
     assertNull(f.github.deviceLogin(token + "x"))
+  }
+
+  @Test
+  fun aCardDesignGetsTheWearWidgetsThatExportAndTheyShareWithIt() = testApplication {
+    val f = fixture()
+    val published = f.publish("wear")
+    assertEquals(HttpStatusCode.Created, published.status)
+    val card = json.decodeFromString(UserDesign.serializer(), published.bodyAsText())
+    assertEquals(listOf(HaCardsSeed.WEAR_SMALL, HaCardsSeed.WEAR_LARGE), exportedWear)
+
+    // The Small one plays as a Wear widget; the Large export didn't, so there is none.
+    val store = UserDesignStore(f.storeDir)
+    val wear = store.designs("octocat").single { it.entry.key.container != null }
+    assertEquals(card.entry.key.forWearWidget(DesignKey.WEAR_SMALL), wear.entry.key)
+    assertEquals(card.entry.sha256, wear.wearOf)
+    assertEquals(card.revision, wear.revision)
+    assertContentEquals(wearSmall, store.blob(wear.entry.sha256))
+    assertFalse(wear.shared)
+
+    // Shared with its card, so everyone's manifest has both.
+    f.client.post("/api/my/designs/${card.entry.sha256}/share") {
+      header(HttpHeaders.Cookie, f.cookie)
+      setBody("""{"shared":true}""")
+    }
+    val shared = f.client.manifest().designs.filter { it.author == "github:octocat" }
+    assertEquals(setOf(card.entry.key, wear.entry.key), shared.map { it.key }.toSet())
+
+    // A republish whose Wear widgets no longer export drops the stale one.
+    f.publish("good")
+    assertTrue(
+      UserDesignStore(f.storeDir).designs("octocat").none { it.entry.key.container != null }
+    )
   }
 
   @Test

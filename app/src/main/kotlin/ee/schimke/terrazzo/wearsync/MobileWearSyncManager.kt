@@ -29,6 +29,7 @@ import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.core.wearsync.WearSyncManager
 import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
+import ee.schimke.terrazzo.dashboard.CardDesignPreload
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.EntityDelta
@@ -40,9 +41,12 @@ import ee.schimke.terrazzo.wearsync.proto.PinnedSection
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.StreamUpdate
 import ee.schimke.terrazzo.wearsync.proto.WEAR_EXTRA_ATTRIBUTES
+import ee.schimke.terrazzo.wearsync.proto.WearDesignBlob
 import ee.schimke.terrazzo.wearsync.proto.WearLease
 import ee.schimke.terrazzo.wearsync.proto.WearPicture
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
+import ee.schimke.terrazzo.wearsync.proto.WearSlotDesign
+import ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
 import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
 import ee.schimke.terrazzo.wearsync.proto.WidgetSlot
@@ -132,8 +136,18 @@ class MobileWearSyncManager(
   private var lastSnapshot: Map<String, EntityValue> = emptyMap()
   private var lastValuesItem: Map<String, EntityValue>? = null
 
-  /** The cards in assigned Wear widget slots: whose pictures the watch needs. */
-  private val wearSlotCards: MutableStateFlow<List<CardConfig>> = MutableStateFlow(emptyList())
+  /**
+   * The cards in assigned Wear widget slots, by their pin's `cardKey`: whose pictures and Wear
+   * designs the watch needs.
+   */
+  private val wearSlotCards: MutableStateFlow<List<Pair<String, CardConfig>>> =
+    MutableStateFlow(emptyList())
+
+  /** The Wear design blobs written to the Data Layer by this process, by sha256. */
+  private val pushedDesigns = HashSet<String>()
+
+  /** The slot designs last written to `/wear/slot-designs`, so an unchanged choice isn't resent. */
+  private var lastSlotDesigns: List<WearSlotDesign>? = null
 
   /**
    * The session's latest snapshot, device registry included. The watch's values carry entity states
@@ -372,16 +386,31 @@ class MobileWearSyncManager(
         .collect { writeDataItem(WearSyncPaths.SLOTS, encodeProto(it)) }
     }
 
-    // Wear widget slot cards → whose pictures [pushPictures] sends.
+    // Wear widget slot cards → whose pictures [pushPictures] and Wear designs [pushDesigns] send.
     scope.launch {
       combine(slotsStore.slots, pinStore.cards) { slots, cards ->
           val byKey = cards.associateBy { it.key }
           slots
             .filter { it.isAssigned }
-            .mapNotNull { slot -> byKey[slot.cardKey]?.card?.rawJson?.toCardConfigOrNull() }
+            .mapNotNull { slot ->
+              byKey[slot.cardKey]?.card?.rawJson?.toCardConfigOrNull()?.let { slot.cardKey to it }
+            }
         }
         .distinctUntilChanged()
         .collect { wearSlotCards.value = it }
+    }
+
+    // Slot cards' Wear widget designs → /wear/slot-designs and /wear/design/<sha256>.
+    scope.launch {
+      combine(wearSlotCards, CardDesignPreload.designs.filterNotNull(), registrySnapshot) {
+          cards,
+          designs,
+          snapshot ->
+          val picked = wearSlotDesigns(cards, snapshot, designs)
+          picked.map { it.first } to picked.associate { it.first.sha256 to it.second }
+        }
+        .whileSignedIn()
+        .collect { (slotDesigns, blobs) -> pushDesigns(slotDesigns, blobs) }
     }
 
     // Session snapshot pump. Re-driven on every session change so the
@@ -465,10 +494,13 @@ class MobileWearSyncManager(
    */
   private suspend fun sessionPump(session: HaSession, hasPinned: Boolean) {
     val cadence = session.refreshIntervalMillis ?: 30_000L
-    // Reset snapshot baseline so the first push is a full set, and resend this session's pictures.
+    // Reset snapshot baseline so the first push is a full set, and resend this session's pictures
+    // and Wear designs (a sign-out deleted them from the watch).
     lastSnapshot = emptyMap()
     lastValuesItem = null
     pushedPictures.clear()
+    pushedDesigns.clear()
+    lastSlotDesigns = null
     session.connectionStatus.first { it == SessionConnectionStatus.Connected }
     while (true) {
       // Suspend (rather than exit) when the wear API isn't usable
@@ -536,7 +568,7 @@ class MobileWearSyncManager(
   private suspend fun pushPictures(baseUrl: String, snapshot: HaSnapshot) {
     if (!wearableAvailableState.value) return
     val now = System.currentTimeMillis()
-    for ((entityId, url) in wearPictureUrls(wearSlotCards.value, snapshot)) {
+    for ((entityId, url) in wearPictureUrls(wearSlotCards.value.map { it.second }, snapshot)) {
       val last = pushedPictures[entityId]
       if (last != null && now - last.atMs < PICTURE_REFRESH_MS) continue
       val png =
@@ -551,6 +583,31 @@ class MobileWearSyncManager(
         pushedPictures[entityId] = PushedPicture(url, hash, now)
       }
     }
+  }
+
+  /**
+   * The slot cards' Wear widget designs: each blob once ([WearDesignBlob], content-addressed), then
+   * the index naming them ([WearSlotDesigns]), then the blobs no slot uses any more are deleted.
+   * The index is written only once every blob it names is, so the watch never looks one up before
+   * it can arrive. Recorded only once all of it is written, so a failed write is retried on the
+   * next snapshot.
+   */
+  private suspend fun pushDesigns(designs: List<WearSlotDesign>, blobs: Map<String, ByteArray>) {
+    if (!wearableAvailableState.value || designs == lastSlotDesigns) return
+    for ((sha, rc) in blobs) {
+      if (sha in pushedDesigns) continue
+      if (!writeDataItem(WearSyncPaths.designPath(sha), encodeProto(WearDesignBlob(sha, rc)))) {
+        return
+      }
+      pushedDesigns += sha
+    }
+    val index = WearSlotDesigns(designs = designs, updatedAtMs = System.currentTimeMillis())
+    if (!writeDataItem(WearSyncPaths.SLOT_DESIGNS, encodeProto(index))) return
+    val current = blobs.keys.map(WearSyncPaths::designPath).toSet()
+    val stale = dataItemPaths(WearSyncPaths.DESIGN_PREFIX).filter { it !in current }
+    deleteDataItems(stale.map { WearDataItems(it, prefix = false) })
+    pushedDesigns.retainAll(blobs.keys)
+    lastSlotDesigns = designs
   }
 
   /** Writes [bytes] at [path]; false when the wearable API is unavailable or the write failed. */

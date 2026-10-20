@@ -60,7 +60,7 @@ object HaCardsSeed {
   const val CARD_TEMPLATE = "ha-cards/card-template"
 
   /** HA's default dark card background: a Wear widget's own background. */
-  private const val WEAR_BACKGROUND = "#FF1C1C1C"
+  const val WEAR_BACKGROUND = "#FF1C1C1C"
   /** HA's default light card background: a launcher widget's. */
   private const val LAUNCHER_BACKGROUND = "#FFFFFFFF"
 

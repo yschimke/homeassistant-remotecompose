@@ -21,6 +21,8 @@ import kotlinx.serialization.Serializable
  *     - `/wear/values` — [LiveValues]
  *     - `/wear/dashboard/<urlPath>` — [DashboardData]
  *     - `/wear/picture/<entityId>` — [WearPicture]
+ *     - `/wear/slot-designs` — [WearSlotDesigns]
+ *     - `/wear/design/<sha256>` — [WearDesignBlob]
  * - MessageClient (ephemeral):
  *     - `/wear/lease` — [WearLease] (wear → phone heartbeat)
  *     - `/wear/stream` — [StreamUpdate] (phone → wear delta push)
@@ -100,6 +102,30 @@ class WearPicture(
   val png: ByteArray = ByteArray(0),
   val updatedAtMs: Long = 0L,
 )
+
+/**
+ * The Wear widget design the phone chose for each widget slot card, per container: a design server
+ * design made from the card's own design for that container (`small` or `large`). The template
+ * travels as a [WearDesignBlob]; a slot card or container without one draws the card's own design.
+ */
+@Serializable
+data class WearSlotDesigns(
+  val designs: List<WearSlotDesign> = emptyList(),
+  val updatedAtMs: Long = 0L,
+)
+
+@Serializable
+data class WearSlotDesign(
+  /** The slot's card: a [PinnedCard.cardKey]. */
+  val cardKey: String = "",
+  /** `small` or `large`: the Glance Wear container the design fills. */
+  val container: String = "",
+  /** The [WearDesignBlob] holding its template. */
+  val sha256: String = "",
+)
+
+/** A Wear widget design's Remote Compose template, content-addressed by [sha256]. */
+@Serializable class WearDesignBlob(val sha256: String = "", val rc: ByteArray = ByteArray(0))
 
 /** MessageClient stream frame — only entities that changed. */
 @Serializable
@@ -216,11 +242,16 @@ object WearSyncPaths {
   const val VALUES: String = "/wear/values"
   const val DASHBOARD_PREFIX: String = "/wear/dashboard/"
   const val PICTURE_PREFIX: String = "/wear/picture/"
+  const val SLOT_DESIGNS: String = "/wear/slot-designs"
+  const val DESIGN_PREFIX: String = "/wear/design/"
   const val LEASE_MESSAGE: String = "/wear/lease"
   const val STREAM_MESSAGE: String = "/wear/stream"
 
   /** The DataItem path of [entityId]'s [WearPicture]. */
   fun picturePath(entityId: String): String = PICTURE_PREFIX + entityId
+
+  /** The DataItem path of the [WearDesignBlob] whose template hashes to [sha256]. */
+  fun designPath(sha256: String): String = DESIGN_PREFIX + sha256
 
   /** Number of wear-widget slots. Mirrors [WearWidgetSlots] capacity. */
   const val WIDGET_SLOT_COUNT: Int = 5
