@@ -120,9 +120,7 @@ private data class CardStyleSampleKey(
   val description: String,
 )
 
-private const val SAMPLE_ENTITY = "light.card_style"
-
-private const val SAMPLE_STYLE_NAME = "style"
+private const val SAMPLE_ENTITY = "sensor.card_style"
 
 private val SAMPLE_CARD =
   CardConfig(
@@ -131,15 +129,15 @@ private val SAMPLE_CARD =
       buildJsonObject {
         put("type", "tile")
         put("entity", SAMPLE_ENTITY)
-        put("state_content", SAMPLE_STYLE_NAME)
       },
   )
 
 /**
- * A light that is on, carrying the style's [name] as the attribute the tile shows in its state slot
- * and its [description] as the entity's name. The state slot is the one every style draws, and
- * draws large (an LCD's segments, an Expressive pill), so the style's name always shows in full;
- * the description fills the smaller name line where the style has one.
+ * A text sensor whose state is the style's [name] and whose name is its [description]. The state
+ * slot is the one every style draws, and draws large (an LCD's segments, an Expressive pill), so
+ * the style's name always shows in full; the description fills the smaller name line where the
+ * style has one. Plain entity state rather than `state_content`, which would take the tile off the
+ * template path and capture it on the UI thread.
  */
 private fun sampleSnapshot(name: String, description: String) =
   HaSnapshot(
@@ -148,14 +146,11 @@ private fun sampleSnapshot(name: String, description: String) =
         SAMPLE_ENTITY to
           EntityState(
             entityId = SAMPLE_ENTITY,
-            state = "on",
+            state = name,
             attributes =
               buildJsonObject {
                 put("friendly_name", description)
                 put("icon", "mdi:palette")
-                put("brightness", 178)
-                put("color_mode", "brightness")
-                put(SAMPLE_STYLE_NAME, name)
               },
           )
       )
