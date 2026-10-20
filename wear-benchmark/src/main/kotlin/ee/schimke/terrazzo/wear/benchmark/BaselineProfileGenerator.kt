@@ -7,8 +7,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Captures `:wear`'s baseline profile: cold start, scroll the top-level list, and visit Settings
- * and the dashboard library.
+ * Captures `:wear`'s baseline profile: cold start, open and scroll Settings, and visit the
+ * dashboard library. The unpaired top-level list fits a round screen, so it is not scrolled.
  *
  * Run with `./gradlew :wear:generateReleaseBaselineProfile` against a Wear emulator (API 33+, or
  * rooted). The plugin writes the result to `wear/src/release/generated/baselineProfiles/`.
@@ -23,7 +23,6 @@ class BaselineProfileGenerator {
     rule.collect(packageName = TARGET_PACKAGE, includeInStartupProfile = true) {
       pressHome()
       startTopLevel()
-      scrollList()
       openSettings()
       scrollList()
       backToTopLevel()

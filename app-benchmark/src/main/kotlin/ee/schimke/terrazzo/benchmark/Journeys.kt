@@ -38,10 +38,18 @@ internal fun MacrobenchmarkScope.awaitDashboard(board: String) {
   }
 }
 
-/** The dashboard's card list: the tallest scrollable on screen. */
-internal fun MacrobenchmarkScope.dashboardList(): UiObject2 =
-  device.findObjects(By.scrollable(true)).maxByOrNull { it.visibleBounds.height() }
+/** Demo mode's longest board (about 200 cards), the one worth scrolling. */
+internal const val LONG_BOARD = "3D Printing"
+
+/**
+ * The dashboard's card list: the tallest scrollable on screen. Only a board taller than the screen
+ * is scrollable — the default Security board fits a phone, so scroll [LONG_BOARD] and the like.
+ */
+internal fun MacrobenchmarkScope.dashboardList(): UiObject2 {
+  device.wait(Until.hasObject(By.scrollable(true)), UI_TIMEOUT_MS)
+  return device.findObjects(By.scrollable(true)).maxByOrNull { it.visibleBounds.height() }
     ?: error("no scrollable dashboard on screen")
+}
 
 /** Flings the open dashboard to the bottom and back to the top. */
 internal fun MacrobenchmarkScope.scrollDashboard() {

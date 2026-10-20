@@ -11,8 +11,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Frame timing (jank) while flinging the demo dashboard, whose cards are RemoteCompose documents
- * played back as they scroll into view.
+ * Frame timing (jank) while flinging demo mode's longest board, whose cards are RemoteCompose
+ * documents played back as they scroll into view.
  *
  * Run with `./gradlew :app-benchmark:connectedBenchmarkReleaseAndroidTest`.
  */
@@ -37,6 +37,7 @@ class ScrollBenchmark {
       setupBlock = {
         pressHome()
         startDemoDashboard()
+        switchDashboard(LONG_BOARD)
       },
     ) {
       scrollDashboard()

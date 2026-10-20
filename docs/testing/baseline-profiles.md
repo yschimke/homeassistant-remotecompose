@@ -6,8 +6,8 @@ The profiles are produced, and the apps measured, by two `com.android.test` modu
 
 | Module | Target | Journeys |
 | --- | --- | --- |
-| `:app-benchmark` | `:app` | Cold start into demo mode, fling the default dashboard, switch to three more boards and fling each |
-| `:wear-benchmark` | `:wear` | Cold start onto the top-level list, fling it, open Settings and fling it, open the dashboard library |
+| `:app-benchmark` | `:app` | Cold start into demo mode, then switch to the 3D Printing, Meshcore and GitHub boards and fling each (the default Security board fits on one screen) |
+| `:wear-benchmark` | `:wear` | Cold start onto the top-level list, open Settings and fling it, open the dashboard library |
 
 Each module has a `BaselineProfileGenerator`, a `StartupBenchmark` (`StartupTimingMetric`, cold)
 and a `ScrollBenchmark` (`FrameTimingMetric`, i.e. jank), the latter two run with no compilation

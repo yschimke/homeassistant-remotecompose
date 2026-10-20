@@ -16,6 +16,7 @@ on:
       - 'app-benchmark/**'
       - 'wear-benchmark/**'
       - '.github/workflows/baseline-profiles.yml'
+      - 'scripts/run-baseline-profiles.sh'
   workflow_dispatch:
     inputs:
       full-benchmarks:
@@ -92,9 +93,12 @@ jobs:
           emulator-boot-timeout: 900
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: |
-            ./gradlew --stacktrace --max-workers=2 ${{ matrix.generate }}
-            ./gradlew --stacktrace --max-workers=2 :${{ matrix.module }}-benchmark:connectedBenchmarkReleaseAndroidTest $BENCHMARK_ARGS
+          script: bash scripts/run-baseline-profiles.sh '${{ matrix.generate }}' ':${{ matrix.module }}-benchmark:connectedBenchmarkReleaseAndroidTest'
+      - name: Show the device diagnostics
+        if: failure()
+        run: |
+          f=build/baseline-profiles/device.txt
+          test -s "$f" && cat "$f" || echo "no device diagnostics"
       - name: Show instrumented test failures
         if: failure()
         run: python3 scripts/summarize-android-test-failures.py
@@ -124,4 +128,5 @@ jobs:
             ${{ matrix.module }}-benchmark/build/outputs/connected_android_test_additional_output/**
             ${{ matrix.module }}-benchmark/build/outputs/androidTest-results/**
             ${{ matrix.module }}-benchmark/build/reports/androidTests/**
+            build/baseline-profiles/**
           if-no-files-found: warn
