@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.48](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.47...v0.1.48) (2026-10-20)
+
+
+### Features
+
+* baseline profiles and macrobenchmarks for phone and Wear ([#975](https://github.com/yschimke/homeassistant-remotecompose/issues/975)) ([622f0f1](https://github.com/yschimke/homeassistant-remotecompose/commit/622f0f13bcd9a61cab58f4158946b32a6ca94189))
+* card style options are the sample card itself ([#978](https://github.com/yschimke/homeassistant-remotecompose/issues/978)) ([e27356a](https://github.com/yschimke/homeassistant-remotecompose/commit/e27356af5288b4df52da831da8b71cbea2665cbd))
+* **home-assistant:** set Terrazzo up from the UI instead of YAML ([#983](https://github.com/yschimke/homeassistant-remotecompose/issues/983)) ([7fca14a](https://github.com/yschimke/homeassistant-remotecompose/commit/7fca14a33c7142f1dffc5aaea7ef253e77a4bc72))
+* show a sample card per card style in Settings and group settings ([#976](https://github.com/yschimke/homeassistant-remotecompose/issues/976)) ([4886ac1](https://github.com/yschimke/homeassistant-remotecompose/commit/4886ac1808137560c336ee463ec47196282bb0b9))
+* **site:** step-by-step Home Assistant install on ha.coo.ee ([#979](https://github.com/yschimke/homeassistant-remotecompose/issues/979)) ([5faba5c](https://github.com/yschimke/homeassistant-remotecompose/commit/5faba5c9e70a4be1ec98f37c1c690178382401d9))
+
+
+### Bug Fixes
+
+* show current data on a card's first frame, animate only updates ([#980](https://github.com/yschimke/homeassistant-remotecompose/issues/980)) ([e8ff180](https://github.com/yschimke/homeassistant-remotecompose/commit/e8ff180b8329792cb703552ec435187d2ffd7033))
+* stabilise the startup and Wear benchmark journeys ([#981](https://github.com/yschimke/homeassistant-remotecompose/issues/981)) ([775862a](https://github.com/yschimke/homeassistant-remotecompose/commit/775862aacedb7a22b3d56b0c28fc24414f44b386))
+
 ## [0.1.47](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.46...v0.1.47) (2026-10-19)
 
 
