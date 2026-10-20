@@ -1,11 +1,20 @@
-Terrazzo is a Compose-based dashboard client for Home Assistant.
-You configure your own Home Assistant URL and authenticate via
-IndieAuth / OAuth2; the app renders your existing dashboards using
-Jetpack RemoteCompose.
+Terrazzo is a dashboard client for Home Assistant, on your phone, tablet
+and Wear OS watch. You configure your own Home Assistant URL and
+authenticate via IndieAuth / OAuth2; the app renders your existing
+dashboards using Jetpack RemoteCompose.
 
-On Wear OS, the watch app shows your pinned cards with live values and
-offers five configurable watch widgets. It syncs from the paired phone
-app, so set up Home Assistant on your phone first.
+On your phone and tablet:
+- Your existing Home Assistant dashboards, with live entity values
+- Light and dark themes
+- Choose which cards appear on your watch
+
+On your Wear OS watch:
+- Browse your dashboards and pinned cards with live values
+- Five configurable watch widgets and tiles, each in a small or large size
+- Keeps showing the last synced values while your watch is offline
+
+The watch app syncs from the paired phone app, so set up Home Assistant
+on your phone first.
 
 This is a single-developer hobby project; you can read all the source
 code at https://github.com/yschimke/homeassistant-remotecompose.
