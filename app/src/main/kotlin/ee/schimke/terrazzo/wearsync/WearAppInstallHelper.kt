@@ -9,10 +9,13 @@ import com.google.android.horologist.data.AppHelperResultCode
 import com.google.android.horologist.data.WearDataLayerRegistry
 import com.google.android.horologist.datalayer.phone.PhoneDataLayerAppHelper
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retryWhen
 
 /** A watch connected to this phone, and whether the Terrazzo watch app is on it. */
 data class PairedWatch(val nodeId: String, val displayName: String, val appInstalled: Boolean)
@@ -45,11 +48,14 @@ class WearAppInstallHelper(context: Context, scope: CoroutineScope) {
   }
 
   /**
-   * The connected watches, re-read whenever the set with the watch app installed changes. Empty on
-   * a phone without the Wearable API (no Wear OS companion), so callers just show nothing.
+   * The connected watches, re-read whenever the set with the watch app installed changes, and every
+   * [RECHECK_MS] while collected: the Data Layer has no listener for a node connecting, so a watch
+   * without the app (which changes no capability) is only found by asking again. Empty on a phone
+   * without the Wearable API (no Wear OS companion) or after a failed read, which is retried after
+   * [RECHECK_MS] rather than ending the flow.
    */
   val watches: Flow<List<PairedWatch>> =
-    appHelper.connectedAndInstalledNodes
+    combine(appHelper.connectedAndInstalledNodes, every(RECHECK_MS)) { installed, _ -> installed }
       .map { installed ->
         val legacy = runCatching {
           registry.capabilityClient
@@ -63,9 +69,11 @@ class WearAppInstallHelper(context: Context, scope: CoroutineScope) {
           PairedWatch(node.id, node.displayName, appInstalled = node.id in installedIds)
         }
       }
-      .catch { error ->
+      .retryWhen { error, _ ->
         Log.i(TAG, "watch install status unavailable: ${error.message}")
         emit(emptyList())
+        delay(RECHECK_MS)
+        true
       }
       .distinctUntilChanged()
 
@@ -81,5 +89,14 @@ class WearAppInstallHelper(context: Context, scope: CoroutineScope) {
 
   private companion object {
     const val TAG = "WearAppInstall"
+    const val RECHECK_MS = 30_000L
+
+    /** Emits now, then every [periodMs]. */
+    fun every(periodMs: Long): Flow<Unit> = flow {
+      while (true) {
+        emit(Unit)
+        delay(periodMs)
+      }
+    }
   }
 }
