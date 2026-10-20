@@ -49,6 +49,13 @@ object Landing {
 
   private const val TEASER_SIZE = 6
   private const val SOURCE_URL = "https://github.com/yschimke/homeassistant-remotecompose"
+  private const val RELEASE_DOWNLOAD_URL = "$SOURCE_URL/releases/latest/download"
+  /** My Home Assistant's link that opens this repository in the visitor's own HACS. */
+  private const val HACS_REDIRECT_URL =
+    "https://my.home-assistant.io/redirect/hacs_repository/" +
+      "?owner=yschimke&amp;repository=homeassistant-remotecompose&amp;category=integration"
+  /** `hacs.json`'s `homeassistant`. */
+  private const val MIN_HA_VERSION = "2024.7"
 
   fun page(library: DesignLibrary, site: SiteConfig): String = buildString {
     append("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">")
@@ -106,20 +113,7 @@ object Landing {
     )
     append("</section>")
 
-    append("<section id=\"home-assistant\" class=\"designer\">")
-    append("<p class=\"eyebrow\">Home Assistant integration</p>")
-    append("<h2>A dashboard for your wall panel</h2>")
-    append(
-      "<p class=\"lede\">Install Terrazzo in Home Assistant for local dashboards at " +
-        "<code>/terrazzo</code> and Remote Compose cards in Lovelace. " +
-        "Use HACS to track published releases and install updates, or install a release ZIP manually. " +
-        "Home Assistant needs a restart after installation or an update.</p>"
-    )
-    append("<div class=\"actions\">")
-    append(
-      "<a class=\"button\" href=\"$SOURCE_URL/blob/main/docs/HOME_ASSISTANT.md\">Installation and updates</a>"
-    )
-    append("</div></section>")
+    homeAssistant()
 
     append("<section id=\"designer\" class=\"designer\">")
     append("<p class=\"eyebrow\">Card designer</p>")
@@ -174,6 +168,70 @@ object Landing {
     return order.distinct().take(TEASER_SIZE).map { candidates.getValue(it) }
   }
 
+  /**
+   * How to install the Wasm dashboard in Home Assistant, in full: HACS first, then the manual ZIP.
+   * The long form, with updates and rollback, stays in `docs/HOME_ASSISTANT.md`.
+   */
+  private fun StringBuilder.homeAssistant() {
+    append("<section id=\"home-assistant\" class=\"designer\">")
+    append("<p class=\"eyebrow\">Home Assistant integration</p>")
+    append("<h2>Run the dashboard inside Home Assistant</h2>")
+    append(
+      "<p class=\"lede\">Install Terrazzo in Home Assistant and your Lovelace dashboards open " +
+        "at <code>/terrazzo</code>, drawn by the same renderer as the app and behind Home " +
+        "Assistant's own sign-in. Made for wall panels and tablets. It is a custom " +
+        "integration, not an add-on, so it works on HA OS, Container and Core " +
+        "(Home Assistant $MIN_HA_VERSION or newer).</p>"
+    )
+    append("<ol class=\"steps\">")
+    append(
+      "<li><h3>Add Terrazzo to HACS</h3><p>With <a href=\"https://www.hacs.xyz/docs/use/\">HACS</a> " +
+        "installed, <a href=\"$HACS_REDIRECT_URL\">open the repository in HACS</a>. Or in HACS, " +
+        "open <b>⋮ → Custom repositories</b>, add <code>$SOURCE_URL</code> and choose " +
+        "<b>Integration</b>.</p></li>"
+    )
+    append(
+      "<li><h3>Download it</h3><p>Find <b>Terrazzo Remote Compose</b> and download the latest " +
+        "release. Pick a release, not the default branch: only releases carry the built " +
+        "dashboard.</p></li>"
+    )
+    append(
+      "<li><h3>Turn it on</h3><p>Add this to <code>configuration.yaml</code>:</p>" +
+        "<pre><code>terrazzo:\n  title: Wall panel\n  dashboard: wall-panel  " +
+        "# optional: the dashboard to open first</code></pre></li>"
+    )
+    append(
+      "<li><h3>Restart and open</h3><p>Restart Home Assistant, then pick <b>Wall panel</b> in " +
+        "the sidebar or go to <code>https://YOUR-HA/terrazzo</code>. Bookmark " +
+        "<code>/terrazzo?dashboard=wall-panel</code> as a wall panel's start page. No token " +
+        "goes in the URL or the YAML: you sign in to Home Assistant as usual.</p></li>"
+    )
+    append("</ol>")
+    append("<details><summary>Without HACS</summary>")
+    append(
+      "<p>Download <a href=\"$RELEASE_DOWNLOAD_URL/terrazzo-home-assistant.zip\">" +
+        "<code>terrazzo-home-assistant.zip</code></a> and check it against " +
+        "<a href=\"$RELEASE_DOWNLOAD_URL/SHA256SUMS-home-assistant.txt\">" +
+        "<code>SHA256SUMS-home-assistant.txt</code></a>. Extract it into your Home Assistant " +
+        "config folder so that <code>custom_components/terrazzo/manifest.json</code> exists, " +
+        "then carry on from step 3. To update, replace the whole <code>terrazzo</code> folder " +
+        "rather than extracting over it.</p>"
+    )
+    append("</details>")
+    append(
+      "<p class=\"note\">Updates appear in Home Assistant as an update from HACS. Install it, restart, and " +
+        "refresh any wall-panel tabs. Cards on your existing Lovelace dashboards can use Remote " +
+        "Compose too: add <code>/terrazzo-static/remote-compose-card.js</code> as a JavaScript " +
+        "module resource.</p>"
+    )
+    append("<div class=\"actions\">")
+    append(
+      "<a class=\"button\" href=\"$SOURCE_URL/blob/main/docs/HOME_ASSISTANT.md\">Installation and updates</a>"
+    )
+    append("<a class=\"button quiet\" href=\"/demo/\">Try the demo first</a>")
+    append("</div></section>")
+  }
+
   private fun StringBuilder.feature(title: String, text: String) {
     append("<div><h3>${esc(title)}</h3><p>${esc(text)}</p></div>")
   }
@@ -198,6 +256,9 @@ h1{font-size:44px;line-height:1.1;margin:0 0 12px}h2{font-size:30px;line-height:
 .designer{background:var(--tint);border-radius:24px;padding:32px;margin-top:8px}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;align-items:start;margin:0 0 24px}
 .cards img{display:block;width:100%;height:auto;border-radius:12px;background:var(--card)}
+.steps{margin:0 0 20px;padding-left:22px;display:grid;gap:14px;max-width:44em}.steps li{min-width:0}.steps p{margin:0;color:var(--muted)}.designer p code{overflow-wrap:anywhere}
+pre{margin:8px 0 0;padding:12px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line);overflow-x:auto;font-size:14px}
+details{margin:0 0 16px;max-width:44em}summary{cursor:pointer;font-weight:600}details p,.note{color:var(--muted);max-width:44em}
 footer{display:flex;flex-wrap:wrap;gap:20px;padding:32px 0 0;font-size:14px}
 @media (max-width:760px){.hero{grid-template-columns:1fr}.phones{max-width:360px}h1{font-size:36px}.designer{padding:20px}}
 """

@@ -19,6 +19,8 @@ newer is required.
    `https://github.com/yschimke/homeassistant-remotecompose`, and select
    **Integration** (not Dashboard). Terrazzo is a custom repository; it does not
    need to be listed in the default HACS store.
+   With My Home Assistant set up, [open the repository in your HACS](https://my.home-assistant.io/redirect/hacs_repository/?owner=yschimke&repository=homeassistant-remotecompose&category=integration)
+   instead of adding it by hand.
 3. Find **Terrazzo Remote Compose**, download a published release containing
    `terrazzo.zip`, and add the configuration below. HACS installs its complete
    contents into `/config/custom_components/terrazzo/`.
@@ -275,6 +277,6 @@ an associated GitHub release before upload succeeds.
 
 The first release carrying this setup enables HACS installation. Publication can
 lag creation of the GitHub release while tests run; check the Home Assistant job
-and presence of all three assets before announcing availability. The site links
-to this guide; deploying the updated site is a separate operation. Default HACS
+and presence of all three assets before announcing availability. The site at
+`ha.coo.ee` shows the short install steps and links to this guide; deploying the updated site is a separate operation. Default HACS
 store inclusion is optional and is not performed by this workflow.
