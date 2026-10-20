@@ -65,6 +65,25 @@ test('installed HA /terrazzo and Lovelace custom card render and act as the sign
     await page.frameLocator('terrazzo-panel iframe').getByText('Second dashboard is selected', {exact:true}).waitFor();
     await page.goto(`${base}/terrazzo?dashboard=home`);
     await page.frameLocator('terrazzo-panel iframe').getByText(/This dashboard is unavailable|needs Home Assistant's frontend/).waitFor();
+    // configuration.yaml's `terrazzo:` block became the integration's config entry; the panel
+    // follows the entry's options, which Settings → Devices & services → Configure edits.
+    const entries = await (await api.get('/api/config/config_entries/entry?domain=terrazzo', {headers})).json();
+    assert.equal(entries.length, 1, 'YAML is imported into one config entry');
+    const options = await api.post('/api/config/config_entries/options/flow', {headers, data:{handler:entries[0].entry_id}});
+    const optionsForm = await options.json();
+    assert.equal(optionsForm.step_id, 'init');
+    const saved = await api.post(`/api/config/config_entries/options/flow/${optionsForm.flow_id}`,
+      {headers, data:{title:'Hallway', dashboard:'second-panel'}});
+    assert.equal((await saved.json()).type, 'create_entry');
+    await page.goto(`${base}/terrazzo`);
+    await page.waitForFunction(() => document.querySelector('home-assistant')?.hass?.panels?.terrazzo?.title === 'Hallway');
+    await page.frameLocator('terrazzo-panel iframe').getByText('Second dashboard is selected', {exact:true}).waitFor({timeout:60_000});
+    const issues = await page.evaluate(() => document.querySelector('home-assistant').hass.callWS({type:'repairs/list_issues'}));
+    assert.ok(issues.issues.some((issue) => issue.domain === 'terrazzo' && issue.issue_id === 'yaml_overrides_ui'),
+      'YAML users are told it overrides the UI');
+    // Back to the YAML's settings for the read-only user below, who expects the wall panel.
+    const restore = await (await api.post('/api/config/config_entries/options/flow', {headers, data:{handler:entries[0].entry_id}})).json();
+    await api.post(`/api/config/config_entries/options/flow/${restore.flow_id}`, {headers, data:{title:'Terrazzo', dashboard:'wall-panel'}});
     await page.goto(`${base}/wall-panel/0`);
     const card = page.locator('remote-compose-card');
     await card.waitFor({timeout:60_000});

@@ -21,15 +21,16 @@ newer is required.
    need to be listed in the default HACS store.
    With My Home Assistant set up, [open the repository in your HACS](https://my.home-assistant.io/redirect/hacs_repository/?owner=yschimke&repository=homeassistant-remotecompose&category=integration)
    instead of adding it by hand.
-3. Find **Terrazzo Remote Compose**, download a published release containing
-   `terrazzo.zip`, and add the configuration below. HACS installs its complete
-   contents into `/config/custom_components/terrazzo/`.
-4. Check your HA configuration, restart Home Assistant, and open `/terrazzo`.
+3. Find **Terrazzo Remote Compose** and download a published release containing
+   `terrazzo.zip`. HACS installs its complete contents into
+   `/config/custom_components/terrazzo/`.
+4. Restart Home Assistant, then [set it up](#set-up) and open `/terrazzo`.
 
 If you installed manually before, back up the existing integration outside
 `custom_components` and your YAML first, then add the custom repository and
 redownload the selected release in HACS. Keep your existing `terrazzo:` settings
-and Lovelace resources; no second configuration is needed.
+and Lovelace resources; they are imported on start, so no second configuration
+is needed.
 
 HACS tracks new releases through a Home Assistant **update entity**. Use its
 install action to download an update, then restart HA at a convenient time and
@@ -61,14 +62,37 @@ unzip terrazzo-home-assistant.zip -d /config
 for Container/Core. The manifest must end up at
 `/config/custom_components/terrazzo/manifest.json`. The HACS ZIP has a different
 layout: do not extract `terrazzo.zip` into `/config`.
-For a first install, add the configuration below, check it and restart HA.
+For a first install, restart HA and [set it up](#set-up).
 For a manual update, back up and replace the entire old `terrazzo` directory with
 the verified package rather than overlaying it, then check configuration, restart
 and refresh browser tabs. A successful **Home Assistant plugin** workflow also
 retains these packages in its `home-assistant-plugin` artifact for testing; use
 published releases for normal installations.
 
-## Configure
+## Set up
+
+After installing and restarting, add the integration:
+[start Terrazzo's setup in your Home Assistant](https://my.home-assistant.io/redirect/config_flow_start/?domain=terrazzo),
+or go to **Settings → Devices & services → Add integration** and search for
+**Terrazzo**. Setup asks for two things:
+
+- **Sidebar title**: the panel's name in the sidebar (default `Terrazzo`).
+- **Dashboard to open first**: a Lovelace dashboard from the list, or any
+  dashboard URL path typed in. Leave it empty to start on the dashboard picker.
+
+Open `/terrazzo`. The existing shared WASM app loads the chosen Lovelace
+configuration and live entities over HA's authenticated WebSocket API. Existing
+dashboard selection, card rendering and service dispatch are reused. Do not copy
+HA tokens into URLs or card configuration.
+
+To change either setting later, open the integration and choose **Configure**.
+The panel reloads straight away; no restart is needed. Terrazzo can be added
+once per Home Assistant instance.
+
+### Configuring in YAML
+
+Releases before the setup screen were configured in `configuration.yaml`, and
+that still works:
 
 ```yaml
 # configuration.yaml
@@ -77,10 +101,11 @@ terrazzo:
   dashboard: wall-panel  # optional initial Lovelace dashboard; omit to show the picker
 ```
 
-Open `/terrazzo`. The existing shared WASM app loads the configured Lovelace
-configuration and live entities over HA's authenticated WebSocket API. Existing
-dashboard selection, card rendering and service dispatch are reused. Do not copy
-HA tokens into YAML, URLs or card configuration.
+On start, the block is imported into the integration's entry, so nothing else
+is needed after an upgrade. YAML is applied again on every start and replaces
+changes made with **Configure**, and Home Assistant shows a repair notice saying
+so. To manage Terrazzo from the UI instead, delete the `terrazzo:` block and
+restart: the entry keeps the settings it last imported.
 
 ## Choose any supported dashboard
 

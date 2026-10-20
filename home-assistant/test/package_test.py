@@ -27,7 +27,8 @@ class PackageTest(unittest.TestCase):
                 names = bundle.namelist()
                 for name in ['manifest.json', '__init__.py', 'frontend/wasm/app.wasm',
                              'frontend/ha-card.js', 'frontend/rc-player.js',
-                             'frontend/remote-compose-card.js', 'frontend/terrazzo-panel.js']:
+                             'frontend/remote-compose-card.js', 'frontend/terrazzo-panel.js',
+                             'config_flow.py', 'const.py', 'strings.json', 'translations/en.json']:
                     self.assertIn('custom_components/terrazzo/' + name, names)
                 self.assertFalse(any('__pycache__' in name for name in names))
             # HACS unpacks directly into the integration directory. Installing
@@ -87,6 +88,15 @@ class PackageTest(unittest.TestCase):
         config = json.loads((module.ROOT / '.github/release-please-config.json').read_text())
         self.assertIn({'type': 'json', 'path': 'custom_components/terrazzo/manifest.json',
                        'jsonpath': '$.version'}, config['packages']['.']['extra-files'])
+
+    def test_translations_match_strings(self):
+        # HA reads translations/en.json at runtime; strings.json is the source it is copied from.
+        integration = module.ROOT / 'custom_components/terrazzo'
+        self.assertEqual(json.loads((integration / 'strings.json').read_text()),
+                         json.loads((integration / 'translations/en.json').read_text()))
+        manifest = json.loads((integration / 'manifest.json').read_text())
+        self.assertTrue(manifest['config_flow'])
+        self.assertTrue(manifest['single_config_entry'])
 
     def test_missing_build_fails(self):
         with tempfile.TemporaryDirectory() as directory:

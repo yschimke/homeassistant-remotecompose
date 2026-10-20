@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Terrazzo",
+        "description": "Adds a Terrazzo dashboard to the sidebar at /terrazzo. It draws your Lovelace dashboards and signs in as whoever opens it.",
+        "data": {
+          "title": "Sidebar title",
+          "dashboard": "Dashboard to open first"
+        },
+        "data_description": {
+          "title": "The name of the panel in the sidebar.",
+          "dashboard": "Leave empty to start on the dashboard picker. Any dashboard can still be opened from the panel, or bookmarked as /terrazzo?dashboard=<url path>."
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Terrazzo is already set up. Use Configure to change it.",
+      "already_configured": "Terrazzo is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Terrazzo",
+        "data": {
+          "title": "Sidebar title",
+          "dashboard": "Dashboard to open first"
+        },
+        "data_description": {
+          "title": "The name of the panel in the sidebar.",
+          "dashboard": "Leave empty to start on the dashboard picker."
+        }
+      }
+    }
+  },
+  "issues": {
+    "yaml_overrides_ui": {
+      "title": "Terrazzo is configured in YAML",
+      "description": "Terrazzo's `terrazzo:` block in configuration.yaml is applied again on every start, so it replaces changes made under Settings → Devices & services. Your settings are already in the integration: remove the `terrazzo:` block and restart to manage Terrazzo from the UI."
+    }
+  }
+}
