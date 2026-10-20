@@ -290,11 +290,21 @@ async function wallPanelPage(browser, query) {
   page.on('pageerror', (e) => errors.push(e.message));
   await page.addInitScript(() => {
     window.wakeLocks = 0;
+    window.wakeLockReleases = 0;
+    window.wakeLockDelay = 0;
     Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: {
-      request: async () => { window.wakeLocks++; return { released: false, release: async () => {} }; },
+      request: async () => {
+        window.wakeLocks++;
+        await new Promise((resolve) => setTimeout(resolve, window.wakeLockDelay));
+        return { released: false, release: async () => { window.wakeLockReleases++; } };
+      },
     } });
     window.fullscreenRequests = 0;
-    HTMLElement.prototype.requestFullscreen = function () { window.fullscreenRequests++; return Promise.resolve(); };
+    window.refuseFullscreen = false;
+    HTMLElement.prototype.requestFullscreen = function () {
+      window.fullscreenRequests++;
+      return window.refuseFullscreen ? Promise.reject(new TypeError('Permissions check failed')) : Promise.resolve();
+    };
   });
   await page.route('https://ha.test/**', (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -359,6 +369,19 @@ test('wall panel keeps awake, returns home only after use, and a screensaver swa
     assert.equal(await page.evaluate(() => window.dashboardTaps), 1, 'the waking tap never reaches the dashboard');
     await page.waitForTimeout(700);
     assert.equal(await page.evaluate(() => window.returns), 1, 'waking the screensaver is not use');
+    // A wake lock granted only after the panel was left is released at once.
+    await page.evaluate(async () => {
+      window.wakeLockDelay = 300;
+      const panel = document.querySelector('terrazzo-panel');
+      panel.remove();
+      document.body.append(panel);
+      panel.remove();
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      document.body.append(panel);
+      window.wakeLockDelay = 0;
+    });
+    assert.equal(await page.evaluate(() => window.wakeLockReleases), 2, 'the open lock, then the late one');
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 100)));
     // Leaving the panel releases everything; nothing fires afterwards.
     await page.evaluate(() => document.querySelector('terrazzo-panel').remove());
     await page.waitForTimeout(2000);
@@ -378,6 +401,12 @@ test('kiosk mode asks for one tap to go full screen, and again after leaving it'
     assert.equal(await page.evaluate(() => window.dashboardTaps), 0, 'the start tap never reaches the dashboard');
     await page.evaluate(() => document.dispatchEvent(new Event('fullscreenchange')));
     assert.equal((await cover()).kind, 'cover start', 'leaving full screen offers it again');
+    await page.evaluate(() => { window.refuseFullscreen = true; });
+    await page.mouse.click(400, 240);
+    await page.waitForFunction(() => window.fullscreenRequests === 2);
+    await page.waitForFunction(() => !document.querySelector('terrazzo-panel').shadowRoot.querySelector('.cover').hidden);
+    assert.equal((await cover()).kind, 'cover start', 'a refused request offers the tap again');
+    assert.equal(await page.evaluate(() => window.dashboardTaps), 0);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

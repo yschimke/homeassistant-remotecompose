@@ -186,7 +186,8 @@ export class TerrazzoPanel extends HTMLElement {
   }
   enterFullscreen() {
     const request = this.requestFullscreen || this.webkitRequestFullscreen;
-    Promise.resolve(request?.call(this, { navigationUI: 'hide' })).catch(() => {});
+    // A refusal sends no fullscreenchange, so offer the tap again here.
+    Promise.resolve(request?.call(this, { navigationUI: 'hide' })).catch(() => this.showStart());
   }
   /** Screen Wake Lock: browsers grant it only to HTTPS pages, and drop it whenever the tab hides. */
   async keepAwake() {
@@ -196,11 +197,17 @@ export class TerrazzoPanel extends HTMLElement {
       this.warnedWakeLock = true;
       return;
     }
-    if (this.wakeLock && !this.wakeLock.released) return;
+    if ((this.wakeLock && !this.wakeLock.released) || this.wakeLockPending) return;
+    this.wakeLockPending = true;
     try {
-      this.wakeLock = await navigator.wakeLock.request('screen');
+      const lock = await navigator.wakeLock.request('screen');
+      // Granted after the panel was left: let the screen sleep again.
+      if (this.isConnected) this.wakeLock = lock;
+      else lock.release().catch(() => {});
     } catch {
       // Refused (battery saver, no permission); the next tap or visibility change asks again.
+    } finally {
+      this.wakeLockPending = false;
     }
   }
 }
