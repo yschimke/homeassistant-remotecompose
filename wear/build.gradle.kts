@@ -21,6 +21,38 @@ plugins {
   alias(libs.plugins.androidx.baselineprofile)
 }
 
+// Crash reporting: same `-Pharc.crashReporter` switch as `:app` (see
+// selectCrashReporter() in build-logic). With firebase selected, Crashlytics
+// reports fatal crashes with no app code: Firebase initialises itself at
+// process start from the config the Google Services plugin generates. Watch
+// reports land in the phone's Crashlytics project, told apart by their
+// version code (lane 2, below).
+val crashlyticsEnabled = selectCrashReporter() == "firebase"
+
+if (crashlyticsEnabled) {
+  apply(plugin = "com.google.gms.google-services")
+  // Also stamps the build id the Crashlytics SDK needs at startup.
+  apply(plugin = "com.google.firebase.crashlytics")
+  // One key for both apps: the plugin only looks for google-services.json in
+  // this module, so point its tasks at `:app`'s copy instead of keeping a
+  // second one. The plugin sets the files in its own onVariants callback;
+  // registering this from a later onVariants puts it after the plugin's
+  // configure action. Its classes are only on the classpath when a key is
+  // present, hence the reflective property lookup.
+  androidComponents.onVariants { variant ->
+    val taskName = "process${variant.name.replaceFirstChar { it.uppercase() }}GoogleServices"
+    tasks
+      .matching { it.name == taskName }
+      .configureEach {
+        @Suppress("UNCHECKED_CAST")
+        val jsonFiles =
+          javaClass.getMethod("getGoogleServicesJsonFiles").invoke(this)
+            as Property<Collection<File>>
+        jsonFiles.set(listOf(rootDir.resolve(GOOGLE_SERVICES_JSON)))
+      }
+  }
+}
+
 android {
   namespace = "ee.schimke.terrazzo.wear"
   compileSdk {
@@ -173,6 +205,13 @@ dependencies {
   implementation(libs.horologist.datalayer.watch)
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.lifecycle.process)
+
+  // Firebase Crashlytics — only when firebase is the selected crash reporter
+  // (see crashlyticsEnabled). No Analytics on the watch.
+  if (crashlyticsEnabled) {
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
+  }
 
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.serialization.json)

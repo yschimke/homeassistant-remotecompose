@@ -11,15 +11,20 @@ buildscript {
   // app still applied the plugin, failing with "Plugin … not found".
   // Versions are only fetched by developers who have configured a key;
   // bump as needed. `-Pharc.crashReporter=none` (or another backend) keeps
-  // them off even with a key present — see the selector in
-  // app/build.gradle.kts.
+  // them off even with a key present. Mirrors selectCrashReporter() in
+  // build-logic, which this block can't call; `:app` and `:wear` both use it.
   val crashReporter = providers.gradleProperty("harc.crashReporter").orNull?.trim()?.lowercase()
   if (
     rootDir.resolve("app/google-services.json").exists() &&
       (crashReporter == null || crashReporter == "auto" || crashReporter == "firebase")
   ) {
+    // Declaring buildscript repositories makes the root `plugins {}` block
+    // resolve from them too, so mirror settings' pluginManagement order:
+    // the Play publisher plugin is only on the Plugin Portal, and without it
+    // every keyed build failed at configuration.
     repositories {
       google()
+      gradlePluginPortal()
       mavenCentral()
     }
     dependencies {
