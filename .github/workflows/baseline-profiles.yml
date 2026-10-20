@@ -51,8 +51,10 @@ jobs:
             profile: pixel_6
             profiles-dir: app/src/main/generated/baselineProfiles
           # API 33 (Wear OS 4), unsigned: adb works without the key dance the API 37 image needs
-          # (wear-emulator.yml), and it predates ArtService, which on the API 34 image refused every
-          # `cmd package compile` of this app (verify included), so macrobenchmark could not start.
+          # (wear-emulator.yml). The Wear images' dex2oat CPU set does not fit a 2-core emulator
+          # (`Invalid cpu "d" specified in --cpu-set argument (nprocessors = 2)`), so nothing
+          # compiles and macrobenchmark cannot start: hence `cores: 4` below, and the script
+          # clearing the property where adb can be root.
           - name: Wear (API 33)
             module: wear
             generate: ':wear:generateReleaseBaselineProfile'
@@ -93,6 +95,7 @@ jobs:
           arch: x86_64
           profile: ${{ matrix.profile }}
           ram-size: 4096M
+          cores: 4
           disk-size: 4G
           emulator-boot-timeout: 900
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none

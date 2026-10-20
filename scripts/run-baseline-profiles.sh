@@ -21,6 +21,19 @@ out=build/baseline-profiles
 mkdir -p "$out"
 
 {
+  echo "## dex2oat properties"
+  adb shell getprop | grep -E 'dex2oat|cpu.?set|ro.product.cpu' || true
+  adb shell nproc 2>&1 || true
+  # Wear images ship a dex2oat CPU set that names CPUs a small emulator lacks, which fails every
+  # compile. Clear it where the image lets adb be root; the 4-core AVD covers the rest.
+  if [[ "$module" == wear ]] && adb root 2>&1 | grep -q -E 'restarting|already running as root'; then
+    adb wait-for-device
+    for prop in dalvik.vm.dex2oat-cpu-set dalvik.vm.boot-dex2oat-cpu-set \
+      dalvik.vm.image-dex2oat-cpu-set dalvik.vm.background-dex2oat-cpu-set; do
+      adb shell "test -n \"\$(getprop $prop)\" && setprop $prop ''" || true
+    done
+    echo "cleared dex2oat CPU sets as root"
+  fi
   apk=$(ls "$module"/build/outputs/apk/nonMinifiedRelease/*.apk | head -1)
   echo "## install $apk"
   adb install -r "$apk" 2>&1
