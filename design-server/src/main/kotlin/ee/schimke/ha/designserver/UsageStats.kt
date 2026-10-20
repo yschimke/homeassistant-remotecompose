@@ -97,6 +97,7 @@ class UsageStats(
           app = report.app,
           appVersion = report.appVersion,
           platform = report.platform,
+          surface = row.surface,
           cardType = row.cardType,
           variant = row.variant,
           style = row.style,
@@ -230,6 +231,13 @@ data class ClientAgent(
         """(Terrazzo)/([0-9A-Za-z.+\-]{1,32}) \(([a-z0-9]{1,16}); surface=([a-z0-9\-]{1,16})\)"""
       )
 
+    /**
+     * The app behind a request: its User-Agent, else the `client` query parameter carrying the same
+     * fixed string, which a browser app sends because a page can't set its User-Agent.
+     */
+    fun of(userAgent: String?, clientParameter: String?): String? =
+      userAgent?.takeIf { parse(it).app != OTHER } ?: clientParameter ?: userAgent
+
     fun parse(userAgent: String?): ClientAgent {
       val match =
         userAgent?.let { PATTERN.matchEntire(it.trim()) } ?: return ClientAgent(OTHER, "", "", "")
@@ -249,6 +257,7 @@ object UsageReportCheck {
   private val TAG = Regex("[a-z0-9][a-z0-9:_.\\-]{0,63}")
   private val VERSION = Regex("[0-9A-Za-z.+\\-]{1,32}")
   private val PLATFORM = Regex("[a-z0-9]{1,16}")
+  private val SURFACE = Regex("[a-z0-9\\-]{1,16}")
   private const val MAX_ROWS = 500
 
   /** The report in [body], or why it is refused. */
@@ -266,6 +275,7 @@ object UsageReportCheck {
       require(TAG.matches(row.variant)) { "bad variant" }
       require(TAG.matches(row.style)) { "bad style" }
       require(row.bucket in TemplateUsage.BUCKETS) { "bad bucket" }
+      require(SURFACE.matches(row.surface)) { "bad surface" }
     }
     report
   }

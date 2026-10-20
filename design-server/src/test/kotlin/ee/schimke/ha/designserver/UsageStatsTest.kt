@@ -9,6 +9,7 @@ import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.options
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -169,6 +170,70 @@ class UsageStatsTest {
     assertTrue("Fetched templates" in page.bodyAsText())
     val api = client.get("/api/stats/templates") { header(HttpHeaders.Cookie, yuri) }
     assertTrue("\"render\"" in api.bodyAsText())
+  }
+
+  @Test
+  fun rowsCarryTheirSurface_andAReportWithoutOneIsFromThePhone() {
+    val today = "2026-10-20"
+    // A report from before surfaces (no "surface" field) still parses, as the phone's.
+    val old =
+      """{"day":"2026-10-19","app":"Terrazzo","appVersion":"0.1.48","platform":"android",""" +
+        """"rows":[{"cardType":"tile","variant":"default","style":"lcd","source":"Remote",""" +
+        """"bucket":"1"}]}"""
+    assertEquals("phone", UsageReportCheck.parse(old, today).getOrThrow().rows.single().surface)
+    val widget =
+      report()
+        .copy(rows = listOf(UsageRow("tile", "default", "lcd", UsageSource.Local, "1", "widget")))
+    val parsed =
+      UsageReportCheck.parse(Json.encodeToString(UsageReport.serializer(), widget), today)
+        .getOrThrow()
+    val stats = UsageStats(null, clock = { now })
+    repeat(5) { stats.reportReceived(parsed) }
+    assertEquals("widget", stats.rows("2026-10-01", "2026-10-31").single().cell.surface)
+    val bad = widget.copy(rows = listOf(widget.rows.single().copy(surface = "Living Room")))
+    assertTrue(
+      UsageReportCheck.parse(Json.encodeToString(UsageReport.serializer(), bad), today).isFailure
+    )
+  }
+
+  @Test
+  fun aBrowserAppNamesItselfInTheClientParameter() {
+    val web = "Terrazzo/0.1.51 (web; surface=web)"
+    assertEquals(web, ClientAgent.of("Mozilla/5.0 (X11; Linux)", web))
+    // A real app User-Agent wins over the parameter; neither gives the browser's, counted as other.
+    assertEquals(agent, ClientAgent.of(agent, web))
+    assertEquals(ClientAgent.OTHER, ClientAgent.parse(ClientAgent.of("Mozilla/5.0", null)).app)
+  }
+
+  @Test
+  fun webAppsCanPostReports_andTagTheirBlobFetches() = testApplication {
+    val (dir, sha) = library()
+    val stats = UsageStats(null, clock = { now })
+    application { designServer(LibraryHolder(dir), usage = stats) }
+    val preflight =
+      client.options("$API_BASE/usage") {
+        header(HttpHeaders.Origin, "https://homeassistant.local:8123")
+        header(HttpHeaders.AccessControlRequestMethod, "POST")
+        header(HttpHeaders.AccessControlRequestHeaders, "content-type")
+      }
+    assertEquals(HttpStatusCode.NoContent, preflight.status)
+    assertEquals("*", preflight.headers[HttpHeaders.AccessControlAllowOrigin])
+    val posted =
+      client.post("$API_BASE/usage") {
+        header(HttpHeaders.Origin, "https://homeassistant.local:8123")
+        contentType(ContentType.Application.Json)
+        setBody(Json.encodeToString(UsageReport.serializer(), report()))
+      }
+    assertEquals(HttpStatusCode.NoContent, posted.status)
+    assertEquals("*", posted.headers[HttpHeaders.AccessControlAllowOrigin])
+    repeat(5) {
+      client.get(
+        "$API_BASE/blobs/$sha.rc?client=" +
+          java.net.URLEncoder.encode("Terrazzo/0.1.51 (web; surface=web)", "UTF-8")
+      )
+    }
+    val fetch = stats.rows("2026-10-01", "2026-10-31").single { it.cell.kind == UsageStats.FETCH }
+    assertEquals(listOf("web", "web"), listOf(fetch.cell.platform, fetch.cell.surface))
   }
 
   @Test
