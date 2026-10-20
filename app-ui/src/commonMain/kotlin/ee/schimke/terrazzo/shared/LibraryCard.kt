@@ -60,7 +60,7 @@ internal fun LibraryCard(
         cache.peek(designKey)?.takeIf { canBindWithCmp(it, templateBindings(card, snapshot)) }
       )
     }
-  var failed by remember(card, style, dark) { mutableStateOf(false) }
+  var settled by remember(designKey, cache) { mutableStateOf(false) }
   val hasRelativeTime =
     CardDesignSlots.slotEntries(card).orEmpty().any {
       isRelativeTimeState(snapshot.states[it.entityId])
@@ -82,16 +82,17 @@ internal fun LibraryCard(
     } catch (e: CancellationException) {
       throw e
     } catch (_: Throwable) {
-      failed = true
+      // Network failure follows the same explicit fallback as a missing/incompatible design.
     }
+    settled = true
     onSource?.invoke(if (bytes != null) UsageSource.Remote else UsageSource.Converter)
   }
   val current = bytes
   Column {
     if (current == null) {
       Column {
-        key(tick) { fallback() }
-        if (failed && showFallbackNotice) Text("Design unavailable · showing built-in card")
+        DashboardCardTheme(style, dark) { key(tick) { fallback() } }
+        if (settled && showFallbackNotice) Text("Design unavailable · showing built-in card")
       }
     } else {
       Column(

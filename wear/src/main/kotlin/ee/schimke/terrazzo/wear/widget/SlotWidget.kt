@@ -104,53 +104,63 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
     // Slots, pins and values from the Data Layer: the watch app may not have been running to store
     // them as they arrived.
     syncWidgetStateFromDataLayer(app, store)
-    val slot = store.readSlots()?.slots?.firstOrNull { it.slotIndex == slotIndex }
-    val pinned =
-      slot
-        ?.cardKey
-        ?.takeIf { it.isNotEmpty() }
-        ?.let { key -> store.readPinned()?.cards?.firstOrNull { it.cardKey == key } }
-
-    val card = pinned?.card?.rawJson?.takeIf { it.isNotEmpty() }?.toCardConfigOrNull()
-    val snapshot = store.readValues().toSnapshot()
-    // The card's pictures, from the Data Layer: the watch app may not have been running to store
-    // them as they arrived.
-    card?.let { c ->
-      val pictured =
-        CardDesignSlots.slotEntities(c).orEmpty().filter {
-          snapshot.states[it]?.attributes?.containsKey("entity_picture") == true
-        }
-      syncPicturesFromDataLayer(app, store, pictured)
-    }
-
-    val style = WearPrefs(app).themeStyle.first()
-    val cardStyle =
-      wearWidgetCardStyle(pinned?.card?.cardStyleOverride, WearPrefs(app).cardStyle.first())
-    val registry = defaultRegistry().withEnhancedShutter()
-    val wearColors = RemoteColorScheme(terrazzoWearColorScheme(style))
-    // Keep Remote Material's WearM3.* named states, but define the two HA-specific semantic slots:
-    // tertiary is link text and secondary is the unknown-state accent.
-    val updatedColors =
-      wearColors.copy(tertiary = wearColors.primary, secondary = wearColors.onSurfaceVariant)
-
-    // The card's Wear widget designs from the design server, synced by the phone.
-    if (card != null) syncDesignsFromDataLayer(app, store)
-    val designs = store.readSlotDesigns()?.designs.orEmpty().filter { it.cardKey == slot?.cardKey }
-
-    return slotWidgetData(
-      registry,
-      updatedColors,
-      style,
-      card,
-      snapshot,
-      slotIndex,
-      cardStyle,
-      fetchImage = { url -> syncedPicture(store, snapshot, url) },
-      wearDesign = { container ->
-        designs.firstOrNull { it.container == container }?.let { store.readDesign(it.sha256) }
-      },
-    )
+    // The slot cards' Wear widget designs from the design server, synced by the phone.
+    syncDesignsFromDataLayer(app, store)
+    return slotWidgetDataFromStore(app, store, slotIndex)
   }
+}
+
+/** The offline rendering path, also used after a best-effort Data Layer refresh. */
+internal suspend fun slotWidgetDataFromStore(
+  app: Context,
+  store: WearOfflineStore,
+  slotIndex: Int,
+): WearWidgetData {
+  val slot = store.readSlots()?.slots?.firstOrNull { it.slotIndex == slotIndex }
+  val pinned =
+    slot
+      ?.cardKey
+      ?.takeIf { it.isNotEmpty() }
+      ?.let { key -> store.readPinned()?.cards?.firstOrNull { it.cardKey == key } }
+
+  val card = pinned?.card?.rawJson?.takeIf { it.isNotEmpty() }?.toCardConfigOrNull()
+  val snapshot = store.readValues().toSnapshot()
+  // The card's pictures, from the Data Layer: the watch app may not have been running to store
+  // them as they arrived.
+  card?.let { c ->
+    val pictured =
+      CardDesignSlots.slotEntities(c).orEmpty().filter {
+        snapshot.states[it]?.attributes?.containsKey("entity_picture") == true
+      }
+    syncPicturesFromDataLayer(app, store, pictured)
+  }
+
+  val style = WearPrefs(app).themeStyle.first()
+  val cardStyle =
+    wearWidgetCardStyle(pinned?.card?.cardStyleOverride, WearPrefs(app).cardStyle.first())
+  val registry = defaultRegistry().withEnhancedShutter()
+  val wearColors = RemoteColorScheme(terrazzoWearColorScheme(style))
+  // Keep Remote Material's WearM3.* named states, but define the two HA-specific semantic slots:
+  // tertiary is link text and secondary is the unknown-state accent.
+  val updatedColors =
+    wearColors.copy(tertiary = wearColors.primary, secondary = wearColors.onSurfaceVariant)
+
+  // The card's Wear widget designs, as synced from the phone.
+  val designs = store.readSlotDesigns()?.designs.orEmpty().filter { it.cardKey == slot?.cardKey }
+
+  return slotWidgetData(
+    registry,
+    updatedColors,
+    style,
+    card,
+    snapshot,
+    slotIndex,
+    cardStyle,
+    fetchImage = { url -> syncedPicture(store, snapshot, url) },
+    wearDesign = { container ->
+      designs.firstOrNull { it.container == container }?.let { store.readDesign(it.sha256) }
+    },
+  )
 }
 
 /** Unknown ids from a newer phone fall back to this watch's preference. */

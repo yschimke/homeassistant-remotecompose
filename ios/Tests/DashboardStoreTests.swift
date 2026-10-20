@@ -6,7 +6,11 @@ import XCTest
 final class FeedProtocol: URLProtocol, @unchecked Sendable {
   private static let lock = NSLock()
   private static var requests: [URL] = []
-  static func reset() { lock.withLock { requests = [] } }
+  private static var replacementURL: String?
+  static func reset() { lock.withLock { requests = []; replacementURL = nil } }
+  static func replaceDesign() {
+    lock.withLock { replacementURL = "/missing-\(UUID().uuidString).rc" }
+  }
   static func count(_ path: String) -> Int {
     lock.withLock { requests.filter { $0.path == path }.count }
   }
@@ -21,11 +25,14 @@ final class FeedProtocol: URLProtocol, @unchecked Sendable {
       let feed = DashboardFeed(version: 1, dashboards: [
         Dashboard(id: url.host!, title: "Test", sections: [
           DashboardSection(id: "section", cards: [
-            DashboardCard(id: "static", type: "markdown", documentURL: "/card.rc", entities: entities, updateMode: .document)
+            DashboardCard(id: "static", type: "markdown", documentURL: Self.lock.withLock { Self.replacementURL } ?? "/card.rc", entities: entities, updateMode: .document)
           ])
         ])
       ])
       data = try! JSONEncoder().encode(feed)
+    } else if url.path.hasPrefix("/missing-") {
+      client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet))
+      return
     } else { data = Data("test document".utf8) }
     client?.urlProtocol(self, didReceive: HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)!, cacheStoragePolicy: .notAllowed)
     client?.urlProtocol(self, didLoad: data)
@@ -76,6 +83,21 @@ final class DashboardStoreTests: XCTestCase {
     let manifests = FeedProtocol.count("/v1/apple/manifest.json")
     sockets.all[1].1.deliver(.success(.string(#"{"type":"lovelace_updated"}"#)))
     await eventually { FeedProtocol.count("/v1/apple/manifest.json") > manifests && sockets.all.count == 3 }
+    store.signOut()
+    await stream.disconnect()
+  }
+
+  func testChangedDesignNeverReusesPreviousDocumentWhenOffline() async {
+    let sockets = TestSockets()
+    let stream = LiveBindingStream(makeSocket: sockets.make)
+    let store = makeStore(stream)
+    store.connect(baseURL: "https://new.test", token: "")
+    await eventually { sockets.all.first?.1.sent.count == 1 }
+    XCTAssertNotNil(store.documents["static"])
+    FeedProtocol.replaceDesign()
+    await store.refresh()
+    XCTAssertTrue(store.feed!.dashboards[0].cards[0].documentURL.hasPrefix("/missing-"))
+    XCTAssertNil(store.documents["static"], "The previous design must not masquerade as the new selection")
     store.signOut()
     await stream.disconnect()
   }

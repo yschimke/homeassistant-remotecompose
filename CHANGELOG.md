@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.52](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.51...v0.1.52) (2026-10-20)
+
+
+### Features
+
+* roll opt-in card usage out to widgets, desktop and web ([#1006](https://github.com/yschimke/homeassistant-remotecompose/issues/1006)) ([f509e6e](https://github.com/yschimke/homeassistant-remotecompose/commit/f509e6eda1812afa827cbd74712016560e60f1ee))
+* **site:** point "Get the app" at the Google Play listing ([#1010](https://github.com/yschimke/homeassistant-remotecompose/issues/1010)) ([e86b901](https://github.com/yschimke/homeassistant-remotecompose/commit/e86b90160b3543a6a2ad15f5f31e2c2d39098116))
+* **wear:** report watch crashes to Crashlytics ([#1011](https://github.com/yschimke/homeassistant-remotecompose/issues/1011)) ([bda7138](https://github.com/yschimke/homeassistant-remotecompose/commit/bda713874704fad65767376f2e1329091cb0ab7a))
+
+
+### Bug Fixes
+
+* render selected Wear cards and refresh design identities ([#1008](https://github.com/yschimke/homeassistant-remotecompose/issues/1008)) ([545be46](https://github.com/yschimke/homeassistant-remotecompose/commit/545be46bf7975de532306c0eacef9ff750077c0e))
+
 ## [0.1.51](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.50...v0.1.51) (2026-10-20)
 
 

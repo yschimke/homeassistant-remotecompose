@@ -357,23 +357,34 @@ class MobileWearSyncManager(
           cards,
           overrides,
           snapshot ->
-          cards.resolvedFor(snapshot) to overrides
+          cards.toWearPinnedCards(overrides, updatedAtMs = 0, snapshot = snapshot)
         }
         .distinctUntilChanged()
         .whileSignedIn()
-        .collect { (cards, overrides) ->
-          writeDataItem(WearSyncPaths.PINNED, encodeProto(cards.toWearPinnedCards(overrides)))
+        .collect { cards ->
+          writeDataItem(
+            WearSyncPaths.PINNED,
+            encodeProto(cards.copy(updatedAtMs = System.currentTimeMillis())),
+          )
         }
     }
 
     // Pinned sections → /wear/sections.
     scope.launch {
-      combine(pinStore.sections, registrySnapshot) { sections, snapshot ->
-          sections.resolvedFor(snapshot)
+      combine(pinStore.sections, registrySnapshot, CardDesignOverrideStore.of(context).overrides) {
+          sections,
+          snapshot,
+          overrides ->
+          sections.toWearPinnedSections(overrides, updatedAtMs = 0, snapshot = snapshot)
         }
         .distinctUntilChanged()
         .whileSignedIn()
-        .collect { writeDataItem(WearSyncPaths.SECTIONS, encodeProto(it.toProto())) }
+        .collect { sections ->
+          writeDataItem(
+            WearSyncPaths.SECTIONS,
+            encodeProto(sections.copy(updatedAtMs = System.currentTimeMillis())),
+          )
+        }
     }
 
     // Wear-widget slots → /wear/slots. Empty assignments survive
@@ -413,6 +424,20 @@ class MobileWearSyncManager(
         .collect { (slotDesigns, blobs) -> pushDesigns(slotDesigns, blobs) }
     }
 
+    // Republish dashboard styles even when neither pins nor entity values change.
+    scope.launch {
+      combine(
+          sessionState,
+          CardDesignOverrideStore.of(context).overrides,
+          wearableAvailableState,
+        ) { session, overrides, available ->
+          Triple(session, overrides, available)
+        }
+        .collectLatest { (session, overrides, available) ->
+          if (session != null && available) publishDashboards(session, overrides)
+        }
+    }
+
     // Session snapshot pump. Re-driven on every session change so the
     // demo session and live session each get their own loop. The
     // streaming-vs-batched decision now keys off the unified pin set
@@ -425,7 +450,6 @@ class MobileWearSyncManager(
           streamJob?.cancel()
           streamJob = null
           if (session == null) return@collectLatest
-          publishDashboards(session)
           streamJob = scope.launch { sessionPump(session, hasPinned) }
         }
     }
@@ -449,7 +473,7 @@ class MobileWearSyncManager(
     return now - at <= WearSyncPaths.LEASE_WINDOW_MS
   }
 
-  private suspend fun publishDashboards(session: HaSession) {
+  private suspend fun publishDashboards(session: HaSession, overrides: CardDesignOverrides) {
     if (!wearableAvailableState.value) return
     // Wait until the session has finished its initial connect; otherwise
     // listDashboards() hits "Not connected" because the UI drives
@@ -470,7 +494,7 @@ class MobileWearSyncManager(
           DashboardData(
             urlPath = summary.urlPath ?: "",
             title = dashboard.title ?: summary.title,
-            cards = cards.map { resolveBambuDevices(it, snapshot).toSummary(snapshot.states) },
+            cards = cards.map { it.toWearDashboardSummary(snapshot, overrides) },
             updatedAtMs = System.currentTimeMillis(),
           )
         writeDataItem(WearSyncPaths.dashboardPath(summary.urlPath), encodeProto(data))
@@ -813,6 +837,7 @@ private val json = Json { ignoreUnknownKeys = true }
 internal fun List<MobilePinnedCard>.toWearPinnedCards(
   overrides: CardDesignOverrides,
   updatedAtMs: Long = System.currentTimeMillis(),
+  snapshot: HaSnapshot = HaSnapshot(),
 ): PinnedCardSet =
   PinnedCardSet(
     cards =
@@ -822,14 +847,9 @@ internal fun List<MobilePinnedCard>.toWearPinnedCards(
             baseUrl = entry.baseUrl,
             card =
               entry.card
+                .resolvedFor(snapshot)
                 .toProto()
-                .copy(
-                  cardStyleOverride =
-                    entry.card.rawJson
-                      .toCardConfigOrNull()
-                      ?.let { overrides.forCard(it)?.cardStyle }
-                      .orEmpty()
-                ),
+                .withStyleOverride(overrides, entry.card.rawJson),
             cardKey = entry.key,
             orderIndex = entry.orderIndex,
           )
@@ -847,8 +867,11 @@ private fun List<WearWidgetSlot>.toProto(): WearWidgetSlots =
     updatedAtMs = System.currentTimeMillis(),
   )
 
-@JvmName("sectionsToProto")
-private fun List<MobilePinnedSection>.toProto(): PinnedSectionSet =
+internal fun List<MobilePinnedSection>.toWearPinnedSections(
+  overrides: CardDesignOverrides,
+  updatedAtMs: Long = System.currentTimeMillis(),
+  snapshot: HaSnapshot = HaSnapshot(),
+): PinnedSectionSet =
   PinnedSectionSet(
     sections =
       this.sortedBy { it.orderIndex }
@@ -859,13 +882,37 @@ private fun List<MobilePinnedSection>.toProto(): PinnedSectionSet =
             viewPath = entry.viewPath,
             sectionIndex = entry.sectionIndex,
             title = entry.title,
-            cards = entry.cards.map { it.toProto() },
+            cards =
+              entry.cards.map {
+                it.resolvedFor(snapshot).toProto().withStyleOverride(overrides, it.rawJson)
+              },
             sectionKey = entry.key,
             orderIndex = entry.orderIndex,
           )
         },
-    updatedAtMs = System.currentTimeMillis(),
+    updatedAtMs = updatedAtMs,
   )
+
+/** Apply the same selection to pins, sections and dashboard cards, including clearing it. */
+internal fun CardSummary.withStyleOverride(
+  overrides: CardDesignOverrides,
+  originalRawJson: String = rawJson,
+): CardSummary =
+  copy(
+    cardStyleOverride =
+      originalRawJson.toCardConfigOrNull()?.let { overrides.forCard(it)?.cardStyle }.orEmpty()
+  )
+
+/**
+ * Resolve selection against the source config, before device resolution rewrites its fingerprint.
+ */
+internal fun CardConfig.toWearDashboardSummary(
+  snapshot: HaSnapshot,
+  overrides: CardDesignOverrides,
+): CardSummary =
+  resolveBambuDevices(this, snapshot)
+    .toSummary(snapshot.states)
+    .withStyleOverride(overrides, raw.toString())
 
 private fun PinnedCardData.toProto(): CardSummary =
   CardSummary(

@@ -1,13 +1,11 @@
 package ee.schimke.terrazzo.wear.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
@@ -17,13 +15,12 @@ import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
-import ee.schimke.terrazzo.wear.data.displayState
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.PinnedSection
 
 /**
- * Drill-in destination for a pinned section. Shows the section's cards as captured-at-pin-time on
- * the phone, overlaid with live values from the wear sync repository's [EntityValue] map.
+ * Drill-in destination for a pinned section. Renders the synced card configs as Remote Compose
+ * documents with current values and the selected card style.
  *
  * If the section was unpinned mid-flight (e.g. the user toggled it off on the phone), [section] is
  * null and we fall back to the empty state — the caller is expected to navigate back; rendering
@@ -61,22 +58,7 @@ fun WearSectionScreen(
         if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
           WearMessageCard(card.rawJson, values, onInputSend)
         } else {
-          val value = values[card.primaryEntityId]
-          val displayState = value?.displayState(card.primaryEntityId).orEmpty()
-          Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp)) {
-            Text(
-              text = card.title.ifEmpty { card.primaryEntityId.ifEmpty { card.type } },
-              style = MaterialTheme.typography.titleSmall,
-              fontWeight = FontWeight.SemiBold,
-            )
-            if (displayState.isNotEmpty()) {
-              Text(
-                text = displayState,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-              )
-            }
-          }
+          WearRemoteCard(card, values)
         }
       }
     }

@@ -79,6 +79,14 @@ class WearNavigationTest {
   }
 
   private fun click(text: String) {
+    // The activity waits for persisted palette/style before composing its first card.
+    // DataStore IO is outside Compose's idling resources, especially on a cold emulator.
+    compose.waitUntil(timeoutMillis = 10_000) {
+      compose
+        .onAllNodes(hasScrollAction())
+        .fetchSemanticsNodes(atLeastOneRootRequired = false)
+        .isNotEmpty()
+    }
     compose.onNode(hasScrollAction()).performScrollToNode(hasText(text))
     compose.onNodeWithText(text).performClick()
   }
