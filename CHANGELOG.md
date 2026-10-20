@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.51](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.50...v0.1.51) (2026-10-20)
+
+
+### Features
+
+* **app:** select crash-reporter backend at build time ([#1003](https://github.com/yschimke/homeassistant-remotecompose/issues/1003)) ([e3a4917](https://github.com/yschimke/homeassistant-remotecompose/commit/e3a4917e43d0044beb83f584f5c8069e401504cd))
+
+
+### Bug Fixes
+
+* **play:** publish only the release variant to Play ([#1002](https://github.com/yschimke/homeassistant-remotecompose/issues/1002)) ([f202bf0](https://github.com/yschimke/homeassistant-remotecompose/commit/f202bf00e6868a70fdde843860b84a85680a5f00))
+
 ## [0.1.50](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.49...v0.1.50) (2026-10-20)
 
 
