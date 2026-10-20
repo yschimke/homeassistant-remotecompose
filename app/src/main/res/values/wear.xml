@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!--
+      Capabilities this phone advertises on the Wearable Data Layer. Horologist's DataLayerAppHelper
+      looks for `data_layer_app_helper_device_phone` to tell a watch the companion app is installed.
+    -->
+    <string-array name="android_wear_capabilities" translatable="false" tools:ignore="UnusedResources">
+        <item>data_layer_app_helper_device_phone</item>
+    </string-array>
+</resources>

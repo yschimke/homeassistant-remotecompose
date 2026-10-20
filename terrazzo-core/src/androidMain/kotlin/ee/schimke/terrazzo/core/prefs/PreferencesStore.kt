@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -318,6 +319,18 @@ class PreferencesStore(private val context: Context) {
   }
 
   /**
+   * The cross-device prompts (install the watch app on a watch, set up a Wear widget) the user has
+   * already been shown, by key — each is offered once, then stays reachable from the overflow menu
+   * and the Wear widgets screen.
+   */
+  val wearPromptsShown: Flow<Set<String>>
+    get() = context.store.data.map { it[WEAR_PROMPTS_SHOWN_KEY].orEmpty() }
+
+  suspend fun markWearPromptShown(key: String) {
+    context.store.edit { it[WEAR_PROMPTS_SHOWN_KEY] = it[WEAR_PROMPTS_SHOWN_KEY].orEmpty() + key }
+  }
+
+  /**
    * Card design server (`docs/architecture/card-design-server.md`): the base URL that serves
    * `manifest.json` and `blobs/`. [DEFAULT_DESIGN_SERVER_URL] until the user sets one; an empty
    * value they saved switches the server off, and every card renders from the app's own designs.
@@ -382,6 +395,7 @@ class PreferencesStore(private val context: Context) {
     private val DESIGN_VARIANT_KEY = stringPreferencesKey("design_variant")
     private val DESIGN_AUTHOR_KEY = stringPreferencesKey("design_author")
     private val DESIGN_TOKEN_KEY = stringPreferencesKey("design_token")
+    private val WEAR_PROMPTS_SHOWN_KEY = stringSetPreferencesKey("wear_prompts_shown")
 
     /** The public card design server, on by default. */
     const val DEFAULT_DESIGN_SERVER_URL: String = "https://ha.coo.ee/designs/v1"
