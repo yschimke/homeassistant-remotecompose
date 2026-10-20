@@ -305,7 +305,7 @@ class TileCardConverter : CardConverter {
    *
    * Whether there is a glyph follows the entity's attributes ([measureKind]), never its state: a
    * tile captured while its sensor is unavailable — or a card design's placeholder, whose state is
-   * `off` — still bakes the glyph, seeded at the scale's floor until a numeric value is pushed.
+   * `off` — still bakes the glyph, seeded with [meterSeed] until a numeric value is pushed.
    */
   private fun sensorReading(
     entityId: String?,
@@ -317,18 +317,25 @@ class TileCardConverter : CardConverter {
     val kind = measureKind(entityId, entity) ?: return null
     val unit = entity.unit()
     val range = kind.defaultRange(unit)
-    val numeric = entity.state.toFloatOrNull()?.takeIf { it.isFinite() } ?: range.start.toFloat()
     return HaReading(
       entityId = entityId,
       name = name,
       text = text,
-      value = LiveValues.numericState(entityId, numeric),
+      value = LiveValues.numericState(entityId, meterSeed(entity)),
       unit = unit,
       min = range.start,
       max = range.endInclusive,
       kind = kind,
     )
   }
+
+  /**
+   * The value a metered tile's glyph is captured with: the state's number, else 0 — the same
+   * fallback [CardBindingRecipes.TILE] pushes to a design template's slot, so a tile reads the same
+   * from either path while its sensor is unavailable.
+   */
+  internal fun meterSeed(entity: EntityState): Float =
+    entity.state.toFloatOrNull()?.takeIf { it.isFinite() } ?: 0f
 
   /**
    * The meter kind a sensor tile draws, from `device_class` and the unit; null outside `sensor`,

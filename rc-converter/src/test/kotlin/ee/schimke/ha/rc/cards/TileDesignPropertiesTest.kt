@@ -142,4 +142,16 @@ class TileDesignPropertiesTest {
     assertEquals("°F", entity.attributes["unit_of_measurement"]?.jsonPrimitive?.content)
     assertEquals(properties, tile.designProperties(input.card, input.snapshot))
   }
+
+  @Test
+  fun unavailableMeterReadsTheSameFromEitherPath() {
+    for (value in listOf("unavailable", "unknown", "21.5")) {
+      val sensor =
+        state("sensor.temp", value, "device_class" to "temperature", "unit_of_measurement" to "°C")
+      val snapshot = snapshotOf(sensor)
+      val pushed =
+        tile.designBindings(card("sensor.temp"), snapshot)?.floats?.get("sensor.s0.numeric_state")
+      assertEquals(pushed, tile.meterSeed(sensor), "state $value")
+    }
+  }
 }
