@@ -2,7 +2,6 @@ package ee.schimke.terrazzo.wear.benchmark
 
 import androidx.benchmark.macro.MacrobenchmarkScope
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 
@@ -39,29 +38,33 @@ internal fun MacrobenchmarkScope.backToTopLevel() {
   awaitText("Browse dashboards")
 }
 
-/** Flings the screen's list to the end and back. */
+/**
+ * Flings the screen's list to the end and back. Raw swipes, like `:app-benchmark`'s: they do not
+ * depend on uiautomator finding a scrollable node in the Compose tree.
+ */
 internal fun MacrobenchmarkScope.scrollList() {
-  val list = list()
-  list.setGestureMargin(device.displayWidth / 5)
-  repeat(3) { list.fling(Direction.DOWN) }
-  device.waitForIdle()
-  repeat(3) { list.fling(Direction.UP) }
-  device.waitForIdle()
+  repeat(4) { swipe(up = true) }
+  repeat(4) { swipe(up = false) }
 }
 
-private fun MacrobenchmarkScope.list(): UiObject2 =
-  device.findObjects(By.scrollable(true)).maxByOrNull { it.visibleBounds.height() }
-    ?: error("no scrollable list on screen")
+private fun MacrobenchmarkScope.findScrollingTo(text: String): UiObject2 {
+  repeat(6) {
+    device.findObject(By.text(text))?.let {
+      return it
+    }
+    swipe(up = true)
+  }
+  return device.findObject(By.text(text)) ?: error("'$text' not found")
+}
 
-private fun MacrobenchmarkScope.findScrollingTo(text: String): UiObject2 =
-  device.findObject(By.text(text))
-    ?: list()
-      .also { it.setGestureMargin(device.displayWidth / 5) }
-      .scrollUntil(
-        Direction.DOWN,
-        Until.findObject(By.text(text)),
-      )
-    ?: error("'$text' not found")
+/** One fast vertical swipe through the middle of the round screen. */
+private fun MacrobenchmarkScope.swipe(up: Boolean) {
+  val x = device.displayWidth / 2
+  val low = device.displayHeight * 3 / 4
+  val high = device.displayHeight / 4
+  if (up) device.swipe(x, low, x, high, 5) else device.swipe(x, high, x, low, 5)
+  device.waitForIdle()
+}
 
 private fun MacrobenchmarkScope.awaitText(text: String) {
   check(device.wait(Until.hasObject(By.text(text)), UI_TIMEOUT_MS)) { "'$text' did not appear" }

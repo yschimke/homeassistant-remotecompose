@@ -5,6 +5,8 @@ name: Baseline profiles
 # and `baseline-profiles-wear` artifacts: commit their files over
 # `app/src/main/generated/baselineProfiles/` and `wear/src/release/generated/baselineProfiles/`.
 # The workflow never commits itself: a push made with its token would land without CI.
+# The emulator step also prints each profile set into the job log as a base64 tarball between
+# `BASELINE-PROFILES-BEGIN` / `-END` markers, for readers that can reach logs but not artifacts.
 #
 # Emulator benchmark numbers only catch large regressions; dispatch with `full-benchmarks` for
 # complete runs, or run `:app-benchmark` / `:wear-benchmark` against a physical device.
@@ -93,7 +95,7 @@ jobs:
           emulator-boot-timeout: 900
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: bash scripts/run-baseline-profiles.sh '${{ matrix.generate }}' ':${{ matrix.module }}-benchmark:connectedBenchmarkReleaseAndroidTest'
+          script: bash scripts/run-baseline-profiles.sh ${{ matrix.module }} '${{ matrix.generate }}' ':${{ matrix.module }}-benchmark:connectedBenchmarkReleaseAndroidTest' ${{ matrix.profiles-dir }}
       - name: Show the device diagnostics
         if: failure()
         run: |

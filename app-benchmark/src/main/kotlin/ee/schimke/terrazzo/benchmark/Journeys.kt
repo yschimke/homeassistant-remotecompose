@@ -3,8 +3,6 @@ package ee.schimke.terrazzo.benchmark
 import android.content.Intent
 import androidx.benchmark.macro.MacrobenchmarkScope
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.Direction
-import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 
 /** `:app`'s application id (shared with `:wear`). */
@@ -42,23 +40,24 @@ internal fun MacrobenchmarkScope.awaitDashboard(board: String) {
 internal const val LONG_BOARD = "3D Printing"
 
 /**
- * The dashboard's card list: the tallest scrollable on screen. Only a board taller than the screen
- * is scrollable — the default Security board fits a phone, so scroll [LONG_BOARD] and the like.
+ * Flings the open dashboard to the bottom and back to the top. Only a board taller than the screen
+ * scrolls — the default Security board fits a phone, so scroll [LONG_BOARD] and the like.
+ *
+ * Raw swipes rather than `UiObject2.fling`: on the API 36 emulator uiautomator reports no
+ * scrollable node for the dashboard's list, even on a board several screens long.
  */
-internal fun MacrobenchmarkScope.dashboardList(): UiObject2 {
-  device.wait(Until.hasObject(By.scrollable(true)), UI_TIMEOUT_MS)
-  return device.findObjects(By.scrollable(true)).maxByOrNull { it.visibleBounds.height() }
-    ?: error("no scrollable dashboard on screen")
+internal fun MacrobenchmarkScope.scrollDashboard() {
+  repeat(3) { swipe(up = true) }
+  repeat(3) { swipe(up = false) }
 }
 
-/** Flings the open dashboard to the bottom and back to the top. */
-internal fun MacrobenchmarkScope.scrollDashboard() {
-  val list = dashboardList()
-  // Keep flings clear of the system gesture-navigation edges.
-  list.setGestureMargin(device.displayWidth / 5)
-  repeat(2) { list.fling(Direction.DOWN) }
-  device.waitForIdle()
-  repeat(2) { list.fling(Direction.UP) }
+/** One fast vertical swipe through the middle of the screen, clear of the gesture-nav edges. */
+private fun MacrobenchmarkScope.swipe(up: Boolean) {
+  val x = device.displayWidth / 2
+  val low = device.displayHeight * 3 / 4
+  val high = device.displayHeight / 4
+  // Few steps (about 5 ms each) make it a fling rather than a drag.
+  if (up) device.swipe(x, low, x, high, 5) else device.swipe(x, high, x, low, 5)
   device.waitForIdle()
 }
 
