@@ -27,13 +27,42 @@ plugins {
   alias(libs.plugins.androidx.baselineprofile)
 }
 
-// Crashlytics is opt-in and gated on a real key. When
-// `app/google-services.json` is present we apply the Google Services +
-// Crashlytics Gradle plugins, compile the Firebase-backed reporter
-// (src/crashlytics), and pull in the SDK; otherwise the app builds and
-// runs unchanged against NoopCrashReporter. The matching plugin classpath
-// is added conditionally in the root build.gradle.kts.
-val crashlyticsEnabled = file("google-services.json").exists()
+// Off-device crash reporting goes through the CrashReporter seam
+// (src/main/.../crash/CrashReporter.kt); which backend gets compiled in is a
+// build-time choice, `-Pharc.crashReporter=<auto|firebase|sentry|none>`:
+//   auto      (default) firebase when `app/google-services.json` is present,
+//             otherwise none — the historical behaviour.
+//   firebase  Crashlytics; requires `app/google-services.json`.
+//   sentry    reserved, not built yet — fails configuration (see #1001).
+//   none      no backend even when a key is present; the in-app LogStore
+//             stays the only sink.
+// A backend's plugins, SDK, source set and keep rules join the build only
+// when it's selected, so a `none` build carries no crash SDK at all. The
+// Firebase plugin classpath is added conditionally in the root
+// build.gradle.kts.
+val hasGoogleServices = file("google-services.json").exists()
+val crashReporter: String =
+  when (
+    val requested =
+      providers.gradleProperty("harc.crashReporter").orNull?.trim()?.lowercase() ?: "auto"
+  ) {
+    "auto" -> if (hasGoogleServices) "firebase" else "none"
+    "firebase" -> {
+      check(hasGoogleServices) { "harc.crashReporter=firebase needs app/google-services.json" }
+      "firebase"
+    }
+    "sentry" ->
+      throw GradleException(
+        "harc.crashReporter=sentry is not implemented yet, see " +
+          "https://github.com/yschimke/homeassistant-remotecompose/issues/1001"
+      )
+    "none" -> "none"
+    else ->
+      throw GradleException(
+        "Unknown harc.crashReporter '$requested'; expected auto, firebase, sentry or none"
+      )
+  }
+val crashlyticsEnabled = crashReporter == "firebase"
 
 if (crashlyticsEnabled) {
   apply(plugin = "com.google.gms.google-services")
@@ -62,9 +91,9 @@ android {
     // redirect scheme is declared in one place.
     manifestPlaceholders["appAuthRedirectScheme"] = "rcha"
 
-    // Read at runtime by CrashReporter.create() to decide whether to
-    // resolve the Firebase-backed reporter or fall back to a no-op.
-    buildConfigField("boolean", "CRASHLYTICS_ENABLED", crashlyticsEnabled.toString())
+    // Read at runtime by CrashReporter.create() to pick the backend
+    // compiled in above ("firebase" or "none").
+    buildConfigField("String", "CRASH_REPORTER", "\"$crashReporter\"")
 
     // Gates MainActivity's demo-mode launch extra. On for debug builds and the
     // `benchmarkRelease` / `nonMinifiedRelease` variants `:app-benchmark` drives (see
@@ -94,7 +123,7 @@ android {
       }
       // FirebaseCrashReporter is loaded reflectively, so R8 would strip or
       // rename it in minified builds without an explicit keep rule. Only
-      // needed (and the class only present) when a key is configured; the
+      // needed (and the class only present) when firebase is selected; the
       // experimental build type inherits this via initWith below.
       if (crashlyticsEnabled) {
         proguardFiles(file("crashlytics-rules.pro"))
@@ -120,8 +149,8 @@ android {
     compose = true
     buildConfig = true
   }
-  // The Firebase-backed CrashReporter only joins the compilation when a
-  // key is configured; src/main stays free of any Firebase import so the
+  // The Firebase-backed CrashReporter only joins the compilation when it's
+  // the selected backend; src/main stays free of any Firebase import so the
   // no-key build needs none of the SDK.
   if (crashlyticsEnabled) {
     sourceSets.getByName("main").kotlin.directories.add("src/crashlytics/kotlin")
@@ -264,8 +293,8 @@ dependencies {
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.serialization.json)
 
-  // Firebase SDK — only when a google-services.json key is configured (see
-  // crashlyticsEnabled). Analytics rides alongside Crashlytics: it auto-inits
+  // Firebase SDK — only when firebase is the selected crash reporter (see
+  // crashReporter). Analytics rides alongside Crashlytics: it auto-inits
   // via the google-services-generated config and gives Crashlytics richer
   // breadcrumb / user-velocity data; no app code needed.
   if (crashlyticsEnabled) {

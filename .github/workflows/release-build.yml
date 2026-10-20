@@ -196,7 +196,7 @@ jobs:
           path: _release-ios
 
       # Must land at app/google-services.json (the path is hard-coded in the
-      # build logic) and exist before the first Gradle call — `crashlyticsEnabled`
+      # build logic) and exist before the first Gradle call — `harc.crashReporter=auto`
       # is evaluated at configuration time. Present → Crashlytics is wired into
       # the release build; absent → the build is unchanged (no-op reporter).
       - name: Write google-services.json (enables Crashlytics)

@@ -170,9 +170,9 @@ class TerrazzoApplication : Application() {
   }
 
   /**
-   * Optional external crash sink. Resolves to a Firebase-backed reporter only when the app was
-   * built with a Crashlytics key (`google-services.json` present at build time); otherwise it's a
-   * no-op and the app runs crash-reporting-free off the [LogStore] sink alone.
+   * Optional external crash sink: the backend selected at build time (`harc.crashReporter`, see
+   * [CrashReporter.create]). With none selected it's a no-op and the app runs crash-reporting-free
+   * off the [LogStore] sink alone.
    */
   private val crashReporter: CrashReporter by lazy { CrashReporter.create() }
 

@@ -8,10 +8,11 @@ import ee.schimke.terrazzo.BuildConfig
  * directly. The in-app [ee.schimke.terrazzo.core.logs.LogStore] is always the primary sink; this is
  * the *optional* off-device backend layered on top.
  *
- * Whether a real backend exists is a build-time decision: the Firebase implementation and its
- * dependencies are only compiled into the app when a Crashlytics key (`google-services.json`) is
- * present — see the `crashlyticsEnabled` wiring in `app/build.gradle.kts`. Without a key the app
- * builds and runs exactly as before, against [NoopCrashReporter].
+ * Which backend exists is a build-time decision, `-Pharc.crashReporter=<auto|firebase|sentry|none>`
+ * (see `app/build.gradle.kts`): only the selected implementation and its dependencies are compiled
+ * in, and its name lands in [BuildConfig.CRASH_REPORTER]. The default `auto` picks Firebase when a
+ * Crashlytics key (`google-services.json`) is present and otherwise [NoopCrashReporter]. A Sentry
+ * backend is tracked in https://github.com/yschimke/homeassistant-remotecompose/issues/1001.
  */
 interface CrashReporter {
   /**
@@ -29,28 +30,30 @@ interface CrashReporter {
 
   companion object {
     /**
-     * The Firebase-backed reporter when the app was built with a Crashlytics key
-     * ([BuildConfig.CRASHLYTICS_ENABLED]), otherwise a no-op.
+     * The reporter for the backend this app was built with ([BuildConfig.CRASH_REPORTER]), or a
+     * no-op when none was selected.
      *
-     * The Firebase impl lives in the `src/crashlytics` source set, compiled in only when the key is
-     * present, so it's resolved reflectively here to keep `src/main` free of any compile-time
-     * Firebase dependency. The reflection can only succeed when the source set (and thus the class)
-     * is on the classpath, and the `BuildConfig` guard short-circuits before we even try in the
-     * common no-key build.
+     * Each backend lives in its own source set, compiled in only when selected, so it's resolved
+     * reflectively here to keep `src/main` free of any compile-time SDK dependency. A backend
+     * missing from the classpath falls back to the no-op rather than failing app start.
      */
-    fun create(): CrashReporter {
-      if (!BuildConfig.CRASHLYTICS_ENABLED) return NoopCrashReporter
+    fun create(): CrashReporter = create(BuildConfig.CRASH_REPORTER)
+
+    internal fun create(backend: String): CrashReporter {
+      val className = backendClasses[backend] ?: return NoopCrashReporter
       return runCatching {
-          Class.forName("ee.schimke.terrazzo.crash.FirebaseCrashReporter")
-            .getDeclaredConstructor()
-            .newInstance() as CrashReporter
+          Class.forName(className).getDeclaredConstructor().newInstance() as CrashReporter
         }
         .getOrDefault(NoopCrashReporter)
     }
+
+    /** Backend name (the `harc.crashReporter` value) to its implementation class. */
+    private val backendClasses =
+      mapOf("firebase" to "ee.schimke.terrazzo.crash.FirebaseCrashReporter")
   }
 }
 
-/** Used when no Crashlytics key is configured; the LogStore sink stands alone. */
+/** Used when no backend is selected; the LogStore sink stands alone. */
 internal object NoopCrashReporter : CrashReporter {
   override fun install(context: Context) = Unit
 

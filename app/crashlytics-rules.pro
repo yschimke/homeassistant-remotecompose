@@ -5,7 +5,7 @@
 # reporting in exactly the release/experimental builds that need it.
 # Keep the class name and its no-arg constructor. This file is only
 # wired into the build when the crashlytics source set is compiled
-# (see app/build.gradle.kts `crashlyticsEnabled`).
+# (see the `harc.crashReporter` selector in app/build.gradle.kts).
 -keep class ee.schimke.terrazzo.crash.FirebaseCrashReporter {
     <init>();
 }
