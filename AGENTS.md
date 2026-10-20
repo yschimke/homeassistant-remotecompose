@@ -14,6 +14,12 @@
   a new card keeps up with Home Assistant without going stale, and a
   screenshot test (one frozen frame) does **not** prove that — check each
   dynamic value against the contract.
+- **First frame shows current data; only updates animate.** A card must
+  arrive on screen already showing live values — no sweep-from-zero, fade-in
+  or tween from a stale bake when it loads or scrolls back into view. Hosts
+  seed named values before the player's first frame (never only from an
+  effect); converters animate bound values on change, not on appearance. See
+  [`docs/architecture/live-card-updates.md`](docs/architecture/live-card-updates.md#first-frame-shows-current-data-only-updates-animate).
 - **Card parts follow the component system.** Theme roles for chrome, `HaType` for text sizes,
   `HaReading` for numeric values, Layer 2 meters before a new canvas: see
   [`docs/architecture/card-component-system.md`](docs/architecture/card-component-system.md).

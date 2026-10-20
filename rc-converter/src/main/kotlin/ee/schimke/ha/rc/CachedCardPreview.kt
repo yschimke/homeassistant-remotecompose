@@ -200,31 +200,44 @@ fun CachedCardPreview(
   val inputDrafts = remember(card) { ee.schimke.composeai.rcplayer.runtime.RcInputDrafts() }
 
   val entityIds = remember(card) { entityIds(card) }
-  // Compose player: live values the running document reads by name. Re-created with the document
-  // ([cacheKey]) — the new document carries its own initial bake.
-  val namedValues = remember(documentKey, template) { mutableStateMapOf<String, RcNamedValue>() }
-  // AndroidX player (launcher-widget previews, per-document fallback): the View handle survives
-  // recomposition but is replaced if the player is torn down and rebuilt (cache invalidation,
-  // theme flip, resize).
-  val playerHolder = remember { mutableStateOf<RemoteComposePlayer?>(null) }
-  // Track the last value pushed to each player so a redundant snapshot recompose doesn't re-issue
-  // identical writes. Reset when [cacheKey] changes so the next push is unconditional.
-  // A template swapping in (or out) is a new document too, so it resets the push state as well.
-  val pushedNamed = remember(documentKey, template) { HashMap<String, Any?>() }
-  val pushedView = remember(documentKey, template) { HashMap<String, Any?>() }
-
   // [liveBindings] is off for cards that refresh by document re-encode (those that declare a
   // `CardConverter.dataSignature`): their dynamic content is baked, not bound, so pushing the
   // entity's raw named bindings would clobber a per-card-formatted `<id>.state` with the plain
   // value. The re-encode (driven by the signature in the cache key) is authoritative for them.
   // A design template carries no values at all, so it always takes the push — every slot binding
   // the client can derive, on every snapshot.
-  if (
+  val pushBindings =
     (liveBindings || template != null) &&
       card != null &&
       snapshot != null &&
       (entityIds.isNotEmpty() || template != null)
-  ) {
+  // Track the last value pushed to each player so a redundant snapshot recompose doesn't re-issue
+  // identical writes. Reset when [cacheKey] changes so the next push is unconditional.
+  // A template swapping in (or out) is a new document too, so it resets the push state as well.
+  val pushedNamed = remember(documentKey, template) { HashMap<String, Any?>() }
+  val pushedView = remember(documentKey, template) { HashMap<String, Any?>() }
+  // Compose player: live values the running document reads by name. Re-created with the document
+  // ([cacheKey]) — the new document carries its own initial bake.
+  //
+  // Seeded with the current snapshot's bindings before the player's first frame. The cached bytes
+  // carry the values of their first capture, so a card scrolled back into view would otherwise
+  // draw those, then tween every gauge, toggle and label to the live values a frame later — the
+  // first frame shows current data, and only a later change animates
+  // (docs/architecture/live-card-updates.md § First frame).
+  val namedValues =
+    remember(documentKey, template) {
+      mutableStateMapOf<String, RcNamedValue>().also { values ->
+        if (pushBindings) {
+          pushSnapshotBindings(NamedValueWriter(values), bindingsFor(snapshot!!), pushedNamed)
+        }
+      }
+    }
+  // AndroidX player (launcher-widget previews, per-document fallback): the View handle survives
+  // recomposition but is replaced if the player is torn down and rebuilt (cache invalidation,
+  // theme flip, resize).
+  val playerHolder = remember { mutableStateOf<RemoteComposePlayer?>(null) }
+
+  if (pushBindings && snapshot != null) {
     // A relative time ("3 h ago", see `isRelativeTimeState`) moves with the clock, not the
     // entity: while the card shows one, the host's tick (`LocalRelativeTimeTick`) re-runs the
     // push. Only changed values are written, so a tick that rolls no label over writes nothing.

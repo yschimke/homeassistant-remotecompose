@@ -94,6 +94,39 @@ by the host rather than computed in-document, and refreshed on a tick:
   advances): their label is as of the last snapshot. Fixtures with fixed past timestamps render
   as dates, so screenshots stay stable.
 
+## First frame shows current data; only updates animate
+
+A card's first frame must already show the entity's current values. Motion
+is for **changes** the user can watch happen — a toggle flipped, a gauge
+moving to a fresh reading — never for a card arriving on screen. Scrolling
+a long dashboard creates and disposes players constantly, so anything that
+animates "into place" on load plays on every card, every scroll.
+
+How the pieces keep to it:
+
+- **The player starts settled.** rc-player's tween and spring runtimes
+  take the first value they evaluate as both start and target; only a
+  later change animates. So a document played with the right values from
+  frame one never animates in.
+- **Hosts seed values before the first frame.** A value delivered from a
+  `LaunchedEffect` / `snapshotFlow` lands a frame late and becomes a
+  "change" — a tween from whatever the document baked. `CachedCardPreview`
+  pushes the current snapshot's bindings into the Compose player's named
+  values when it creates them, `HaRcComposePlayer` seeds its player map
+  from them synchronously, and `RemoteComposeCard` does the same for the
+  shared hosts. Effects only carry *later* snapshots. This matters most
+  for cached documents: their bytes hold the values of their first
+  capture, which can be long stale by the time the card scrolls back.
+- **Converters animate bindings, not appearance.** Wrap a bound value in
+  `animateRemoteFloat` so updates tween; don't add an entrance animation
+  (a sweep from zero, a fade or scale in) to a card or part. A tween that
+  only ever starts from a constant is an entrance animation.
+- **Re-encode cards (path 2) don't animate at all**: each data change is a
+  new document, which starts settled.
+
+`FirstFrameLiveValuesTest` guards the host side: a cached document replayed
+under a newer snapshot must never draw the stale bake, frame by frame.
+
 ## Checklist for a new / changed converter
 
 1. Does every dynamic value the card shows update on live data? Walk each
@@ -108,7 +141,10 @@ by the host rather than computed in-document, and refreshed on a tick:
    `formatState` there; a custom string belongs under a different
    `LiveValues.named(id, "…_label", …)` suffix (refreshed by re-encode)
    or computed in-document.
-5. New typed bindings (a new suffix, a new domain `state_int` mapping)
+5. Does the card arrive on screen already showing current data? Animate
+   bound values on change only — no entrance animation (see
+   [First frame](#first-frame-shows-current-data-only-updates-animate)).
+6. New typed bindings (a new suffix, a new domain `state_int` mapping)
    must be taught to **both** hosts: add the derivation to
    `HaLiveBindings`, the push to `cardSnapshotBindings` /
    `pushSnapshotBindings`, and the emit to `StreamRoute`.
@@ -177,3 +213,8 @@ holds.
 - History sparkline points (`<id>.numeric.<index>`) are baked at capture
   and refreshed by re-encode; a windowed live push would need history in
   the binding contract.
+- The AndroidX View player (launcher-widget previews and the per-document
+  fallback) still gets its first push from an effect, after the View's
+  priming draw, so a stale cached value there can tween in once on load.
+  Seeding it means writing `setUserLocal*` before `primeFixed` /
+  `primeAndMeasure` in `WrapAdaptiveRemoteDocumentPlayer`.

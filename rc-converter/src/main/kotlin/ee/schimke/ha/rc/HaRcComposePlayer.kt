@@ -116,7 +116,15 @@ fun HaRcComposePlayer(
   // dropped it), and the host pushes every binding of every entity the card references. So the
   // player gets only the values this document declares, with a matching type.
   val declared = remember(document) { document.declaredNamedVariables() }
-  val playerValues = remember(document) { mutableStateMapOf<String, RcNamedValue>() }
+  // Seeded before the player's first frame, so it starts settled on the live values: a value that
+  // only arrives through the effect below lands a frame late and tweens in from the document's
+  // baked one on every load (docs/architecture/live-card-updates.md § First frame).
+  val playerValues =
+    remember(document) {
+      mutableStateMapOf<String, RcNamedValue>().apply {
+        putAll(namedValues.filter { (name, value) -> declared.accepts(name, value) })
+      }
+    }
   LaunchedEffect(playerValues, namedValues) {
     snapshotFlow { namedValues.toMap() }
       .collect { values ->
