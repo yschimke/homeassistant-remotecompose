@@ -5,9 +5,9 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 /**
- * Firebase Crashlytics-backed [CrashReporter]. Compiled into the app only when a Crashlytics key
- * (`google-services.json`) is present at build time — see the `crashlyticsEnabled` source-set
- * wiring in `app/build.gradle.kts`.
+ * Firebase Crashlytics-backed [CrashReporter]. Compiled into the app only when it's the selected
+ * backend (`harc.crashReporter=firebase`, or `auto` with `google-services.json` present) — see the
+ * selector in `app/build.gradle.kts`.
  *
  * Instantiated reflectively by [CrashReporter.create], so it must keep a no-arg constructor and
  * stay `internal` to this source set.

@@ -10,8 +10,14 @@ buildscript {
   // different CWD, which made this classpath silently drop out while the
   // app still applied the plugin, failing with "Plugin … not found".
   // Versions are only fetched by developers who have configured a key;
-  // bump as needed.
-  if (rootDir.resolve("app/google-services.json").exists()) {
+  // bump as needed. `-Pharc.crashReporter=none` (or another backend) keeps
+  // them off even with a key present — see the selector in
+  // app/build.gradle.kts.
+  val crashReporter = providers.gradleProperty("harc.crashReporter").orNull?.trim()?.lowercase()
+  if (
+    rootDir.resolve("app/google-services.json").exists() &&
+      (crashReporter == null || crashReporter == "auto" || crashReporter == "firebase")
+  ) {
     repositories {
       google()
       mavenCentral()
