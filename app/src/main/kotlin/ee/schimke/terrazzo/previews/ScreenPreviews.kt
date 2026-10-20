@@ -2,9 +2,12 @@ package ee.schimke.terrazzo.previews
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -20,6 +23,7 @@ import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.terrazzo.CardStyleSection
 import ee.schimke.terrazzo.ConnectionStatus
 import ee.schimke.terrazzo.DashboardTopBar
 import ee.schimke.terrazzo.LocalHaImageStack
@@ -42,6 +46,7 @@ import ee.schimke.terrazzo.core.pin.PinnedCardData
 import ee.schimke.terrazzo.core.pin.SlotSize
 import ee.schimke.terrazzo.core.pin.WearWidgetSlot
 import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
+import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.DemoData
@@ -598,6 +603,23 @@ fun Screen_Settings_ThemeStyle(@PreviewParameter(ThemeStyleProvider::class) styl
       onManageDashboards = {},
     )
   }
+
+/**
+ * The card style picker expanded: every style over a sample tile drawn in it, so a regression in
+ * any one style's sample shows here. Settings itself opens it collapsed to the current style.
+ */
+@Preview(
+  name = "settings · card styles",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_Settings_CardStyles() = PhoneHost {
+  Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
+    CardStyleSection(selected = CardStylePref.Classic, onSelect = {}, initiallyExpanded = true)
+  }
+}
 
 // --- Secondary / power-user screens -------------------------------------
 //
