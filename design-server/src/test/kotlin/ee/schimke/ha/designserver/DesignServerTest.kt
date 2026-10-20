@@ -331,6 +331,11 @@ class DesignServerTest {
       )
       assertTrue("href=\"${SiteConfig.DEFAULT_DESIGNER_URL}\"" in page, "links the card designer")
       assertTrue("href=\"${SiteConfig.DEFAULT_CATALOG_URL}\"" in page, "links the catalog")
+      assertTrue(
+        "href=\"https://play.google.com/store/apps/details?id=ee.schimke.harc\">Get the app" in
+          page,
+        "sends Get the app to the Play listing",
+      )
       assertTrue("href=\"/designs\"" in page, "links the template browser")
       assertTrue("$API_BASE/previews/" in page, "teases with the library's cards")
       assertEquals(
