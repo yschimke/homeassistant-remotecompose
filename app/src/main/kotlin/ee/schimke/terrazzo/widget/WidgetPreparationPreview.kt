@@ -2,6 +2,7 @@
 
 package ee.schimke.terrazzo.widget
 
+import android.os.Looper
 import android.widget.FrameLayout
 import android.widget.RemoteViews
 import androidx.compose.foundation.layout.*
@@ -24,6 +25,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.formatState
 import ee.schimke.terrazzo.dashboard.LauncherGrid
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -78,27 +80,41 @@ internal fun WidgetPreparationPreview(
   // Keep the last inflated view on screen during refresh/resize, but never install an older edit.
   val latestOnPreview by rememberUpdatedState(onPreview)
   LaunchedEffect(baseUrl, card, snapshot, width, height, attempt, capture) {
-    // Everything here but the capture is UI work: inflation, and the state writes that publish
-    // the preview. Pin it to the main thread rather than relying on where the effect resumes —
-    // under the Compose UI test clock a continuation can resume on the capture's worker thread,
-    // which attached the native views and applied composition changes off the main thread.
-    withContext(Dispatchers.Main.immediate) {
-      if (prepared?.baseUrl != baseUrl || prepared?.card != card) latestOnPreview(null)
-      failed = false
-      // Coalesce typing/drag steps and keep capture/image loading off the UI thread.
-      delay(100)
+    if (prepared?.baseUrl != baseUrl || prepared?.card != card) latestOnPreview(null)
+    failed = false
+    // Coalesce typing/drag steps and keep capture/image loading off the UI thread.
+    delay(100)
+    val views =
+      try {
+        withContext(Dispatchers.Default) {
+          capture(
+            context,
+            baseUrl,
+            card,
+            snapshot,
+            WidgetSizeDp(width * LAUNCHER_CELL_WIDTH_DP, height * LAUNCHER_CELL_HEIGHT_DP),
+          )
+        }
+      } catch (cancelled: CancellationException) {
+        throw cancelled
+      } catch (failure: Exception) {
+        android.util.Log.e(
+          "WidgetPreparationPreview",
+          "Could not capture launcher preview",
+          failure,
+        )
+        null
+      }
+    // Inflation and the state writes that publish the preview are UI work. Under the Compose UI
+    // test clock the continuation can resume on the capture's worker thread, which attached the
+    // native views and applied composition changes off the main thread: hop back only then, so
+    // hosts that already resume on the main looper (the preview renderer among them) are
+    // untouched.
+    val ui =
+      if (Looper.myLooper() == Looper.getMainLooper()) EmptyCoroutineContext else Dispatchers.Main
+    withContext(ui) {
       val replacement =
         try {
-          val views =
-            withContext(Dispatchers.Default) {
-              capture(
-                context,
-                baseUrl,
-                card,
-                snapshot,
-                WidgetSizeDp(width * LAUNCHER_CELL_WIDTH_DP, height * LAUNCHER_CELL_HEIGHT_DP),
-              )
-            }
           // Inflate on the UI thread before publishing. A failed capture or bitmap/layout
           // inflation must not tear down the last working native view.
           views?.let {
@@ -115,7 +131,7 @@ internal fun WidgetPreparationPreview(
         } catch (failure: Exception) {
           android.util.Log.e(
             "WidgetPreparationPreview",
-            "Could not capture launcher preview",
+            "Could not inflate launcher preview",
             failure,
           )
           null
