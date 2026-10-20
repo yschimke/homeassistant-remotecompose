@@ -1,7 +1,6 @@
 package ee.schimke.terrazzo
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,7 +31,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -55,6 +53,8 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignTags
@@ -483,45 +483,31 @@ internal fun CardStyleSection(
   }
 }
 
-/** One card style: its radio button, name and tagline over a sample card drawn in it. */
+/**
+ * One card style: its radio button beside a sample card drawn in it, the card itself naming and
+ * describing the style. The whole row selects it.
+ */
 @Composable
 private fun CardStyleOption(pref: CardStylePref, selected: Boolean, onClick: () -> Unit) {
   val uber = pref.toUberTheme()
-  OutlinedCard(
+  val tagline = cardStyleTagline(pref)
+  Row(
     modifier =
       Modifier.fillMaxWidth()
-        .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
-    border =
-      if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-      else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+        .semantics { contentDescription = "${uber.displayName}. $tagline" },
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(4.dp),
   ) {
-    Column(
-      modifier = Modifier.padding(start = 4.dp, end = 12.dp, top = 4.dp, bottom = 12.dp),
-      verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-      Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-      ) {
-        RadioButton(selected = selected, onClick = null, modifier = Modifier.padding(12.dp))
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-          Text(uber.displayName, style = MaterialTheme.typography.bodyLarge)
-          Text(
-            cardStyleTagline(pref),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-          )
-        }
-      }
-      // The sample is a picture of the style, not a control: a tap on it picks the style rather
-      // than reaching the card, and screen readers hear the option, not the sample's contents.
-      Box(Modifier.padding(start = 8.dp).clearAndSetSemantics {}) {
-        CardStyleSample(uber)
-        Box(
-          Modifier.matchParentSize()
-            .clickable(interactionSource = null, indication = null, onClick = onClick)
-        )
-      }
+    RadioButton(selected = selected, onClick = null, modifier = Modifier.padding(12.dp))
+    // The sample is a picture of the style, not a control: a tap on it picks the style rather
+    // than reaching the card, and screen readers hear the option, not the sample's contents.
+    Box(Modifier.weight(1f).clearAndSetSemantics {}) {
+      CardStyleSample(uber, name = uber.displayName, description = tagline)
+      Box(
+        Modifier.matchParentSize()
+          .clickable(interactionSource = null, indication = null, onClick = onClick)
+      )
     }
   }
 }
