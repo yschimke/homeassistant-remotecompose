@@ -49,6 +49,12 @@ class TerrazzoApplication : Application() {
   val wearCapabilityProbe: ee.schimke.terrazzo.wearsync.WearCapabilityProbe by lazy {
     ee.schimke.terrazzo.wearsync.WearCapabilityProbe(applicationContext)
   }
+  val wearAppInstallHelper: ee.schimke.terrazzo.wearsync.WearAppInstallHelper by lazy {
+    ee.schimke.terrazzo.wearsync.WearAppInstallHelper(
+      applicationContext,
+      ProcessLifecycleOwner.get().lifecycleScope,
+    )
+  }
 
   val graph: TerrazzoGraph by lazy {
     val cardMonitor = createMonitor(applicationContext)

@@ -822,7 +822,7 @@ private fun PinnedCardData.toProto(): CardSummary =
 private fun wearUri(path: String): android.net.Uri =
   android.net.Uri.Builder().scheme(PutDataRequest.WEAR_URI_SCHEME).authority("*").path(path).build()
 
-private suspend fun <T> com.google.android.gms.tasks.Task<T>.await(): T =
+internal suspend fun <T> com.google.android.gms.tasks.Task<T>.await(): T =
   kotlinx.coroutines.suspendCancellableCoroutine { cont ->
     addOnSuccessListener { value -> cont.resumeWith(Result.success(value)) }
     addOnFailureListener { error -> cont.resumeWith(Result.failure(error)) }

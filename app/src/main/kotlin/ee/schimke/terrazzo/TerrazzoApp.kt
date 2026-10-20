@@ -54,6 +54,7 @@ import ee.schimke.terrazzo.shared.AppScreen
 import ee.schimke.terrazzo.shared.CardStudioScreen
 import ee.schimke.terrazzo.shared.TerrazzoNavigation
 import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
+import ee.schimke.terrazzo.wearsync.wearInstallPrompts
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import ee.schimke.terrazzo.widget.WidgetsScreen
@@ -502,6 +503,8 @@ private fun DashboardsRoot(
   val sessionConnection by session.connectionStatus.collectAsState()
   val connectionStatus = sessionConnection.toUiConnectionStatus()
   val snackbars = remember { SnackbarHostState() }
+  // Offers the watch app on a connected watch without it, or a Wear widget once it's there.
+  val installOnWatch = wearInstallPrompts(snackbars, wearWidgetsSupported, onOpenWearWidgets)
   val lifecycleOwner = LocalLifecycleOwner.current
   val activity = LocalActivity.current
   val notifications by session.notifications.collectAsState()
@@ -670,6 +673,7 @@ private fun DashboardsRoot(
               onOpenLogs = if (logsViewEnabled) onOpenLogs else null,
               onSignOut = onSignOut,
               onOpenAgent = agentInOverflow,
+              onInstallOnWatch = installOnWatch,
             )
           },
         )

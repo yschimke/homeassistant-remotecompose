@@ -6,10 +6,14 @@
 
       `terrazzo_wear_widgets` is what the phone's WearCapabilityProbe looks up to show the
       Wear widget slot UI. It lives in values-v37 because Glance Wear widgets only render from
-      API 37 (WearSlotsController.WEAR_WIDGETS_MIN_SDK): an older watch resolves no array and
-      advertises nothing, so the phone keeps the slot UI hidden there.
+      API 37 (WearSlotsController.WEAR_WIDGETS_MIN_SDK): an older watch resolves
+      `values/wear.xml` instead, which leaves it out, so the phone keeps the slot UI hidden there.
+
+      This array replaces `values/wear.xml`'s, so it repeats Horologist's
+      `data_layer_app_helper_device_watch` installed marker.
     -->
     <string-array name="android_wear_capabilities" translatable="false" tools:ignore="UnusedResources">
+        <item>data_layer_app_helper_device_watch</item>
         <item>terrazzo_wear_widgets</item>
     </string-array>
 </resources>

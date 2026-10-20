@@ -19,7 +19,8 @@ import androidx.compose.runtime.setValue
  * stays in the title-side dropdown so users don't have to scroll past "Manage widgets" / "Settings"
  * entries to reach the dashboards they actually want to switch between.
  *
- * [onOpenAgent], when non-null, adds an "Edit with an agent" entry at the top.
+ * [onOpenAgent], when non-null, adds an "Edit with an agent" entry at the top. [onInstallOnWatch],
+ * when non-null, adds "Install on watch" for a connected watch without the watch app.
  */
 @Composable
 fun TopBarOverflowMenu(
@@ -30,6 +31,7 @@ fun TopBarOverflowMenu(
   onOpenLogs: (() -> Unit)?,
   onSignOut: () -> Unit,
   onOpenAgent: (() -> Unit)? = null,
+  onInstallOnWatch: (() -> Unit)? = null,
 ) {
   var expanded by remember { mutableStateOf(false) }
   IconButton(onClick = { expanded = true }) {
@@ -75,6 +77,15 @@ fun TopBarOverflowMenu(
         onClick = {
           expanded = false
           onOpenWearWidgets()
+        },
+      )
+    }
+    if (onInstallOnWatch != null) {
+      DropdownMenuItem(
+        text = { Text("Install on watch") },
+        onClick = {
+          expanded = false
+          onInstallOnWatch()
         },
       )
     }
