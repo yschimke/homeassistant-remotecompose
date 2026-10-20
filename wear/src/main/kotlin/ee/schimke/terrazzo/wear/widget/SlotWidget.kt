@@ -100,46 +100,55 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
     // Slots, pins and values from the Data Layer: the watch app may not have been running to store
     // them as they arrived.
     syncWidgetStateFromDataLayer(app, store)
-    val slot = store.readSlots()?.slots?.firstOrNull { it.slotIndex == slotIndex }
-    val pinned =
-      slot
-        ?.cardKey
-        ?.takeIf { it.isNotEmpty() }
-        ?.let { key -> store.readPinned()?.cards?.firstOrNull { it.cardKey == key } }
+    return slotWidgetDataFromStore(app, store, slotIndex)
+  }
+}
 
-    val card = pinned?.card?.rawJson?.takeIf { it.isNotEmpty() }?.toCardConfigOrNull()
-    val snapshot = store.readValues().toSnapshot()
-    // The card's pictures, from the Data Layer: the watch app may not have been running to store
-    // them as they arrived.
-    card?.let { c ->
-      val pictured =
-        CardDesignSlots.slotEntities(c).orEmpty().filter {
-          snapshot.states[it]?.attributes?.containsKey("entity_picture") == true
-        }
-      syncPicturesFromDataLayer(app, store, pictured)
-    }
+/** The offline rendering path, also used after a best-effort Data Layer refresh. */
+internal suspend fun slotWidgetDataFromStore(
+  app: Context,
+  store: WearOfflineStore,
+  slotIndex: Int,
+): WearWidgetData {
+  val slot = store.readSlots()?.slots?.firstOrNull { it.slotIndex == slotIndex }
+  val pinned =
+    slot
+      ?.cardKey
+      ?.takeIf { it.isNotEmpty() }
+      ?.let { key -> store.readPinned()?.cards?.firstOrNull { it.cardKey == key } }
 
-    val style = WearPrefs(app).themeStyle.first()
-    val cardStyle =
-      wearWidgetCardStyle(pinned?.card?.cardStyleOverride, WearPrefs(app).cardStyle.first())
-    val registry = defaultRegistry().withEnhancedShutter()
-    val wearColors = RemoteColorScheme(terrazzoWearColorScheme(style))
-    // Keep Remote Material's WearM3.* named states, but define the two HA-specific semantic slots:
-    // tertiary is link text and secondary is the unknown-state accent.
-    val updatedColors =
-      wearColors.copy(tertiary = wearColors.primary, secondary = wearColors.onSurfaceVariant)
+  val card = pinned?.card?.rawJson?.takeIf { it.isNotEmpty() }?.toCardConfigOrNull()
+  val snapshot = store.readValues().toSnapshot()
+  // The card's pictures, from the Data Layer: the watch app may not have been running to store
+  // them as they arrived.
+  card?.let { c ->
+    val pictured =
+      CardDesignSlots.slotEntities(c).orEmpty().filter {
+        snapshot.states[it]?.attributes?.containsKey("entity_picture") == true
+      }
+    syncPicturesFromDataLayer(app, store, pictured)
+  }
 
-    return slotWidgetData(
-      registry,
-      updatedColors,
-      style,
-      card,
-      snapshot,
-      slotIndex,
-      cardStyle,
-    ) { url ->
-      syncedPicture(store, snapshot, url)
-    }
+  val style = WearPrefs(app).themeStyle.first()
+  val cardStyle =
+    wearWidgetCardStyle(pinned?.card?.cardStyleOverride, WearPrefs(app).cardStyle.first())
+  val registry = defaultRegistry().withEnhancedShutter()
+  val wearColors = RemoteColorScheme(terrazzoWearColorScheme(style))
+  // Keep Remote Material's WearM3.* named states, but define the two HA-specific semantic slots:
+  // tertiary is link text and secondary is the unknown-state accent.
+  val updatedColors =
+    wearColors.copy(tertiary = wearColors.primary, secondary = wearColors.onSurfaceVariant)
+
+  return slotWidgetData(
+    registry,
+    updatedColors,
+    style,
+    card,
+    snapshot,
+    slotIndex,
+    cardStyle,
+  ) { url ->
+    syncedPicture(store, snapshot, url)
   }
 }
 

@@ -5,6 +5,7 @@ import ee.schimke.ha.client.design.CardDesignOverrides
 import ee.schimke.ha.client.design.CardDesignScope
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.terrazzo.core.pin.MobilePinnedCard
+import ee.schimke.terrazzo.core.pin.MobilePinnedSection
 import ee.schimke.terrazzo.core.pin.PinnedCardData
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
@@ -72,6 +73,34 @@ class WearCardStyleSyncTest {
     assertEquals(
       "",
       decodeProto<CardSummary>(encodeProto(OldCardSummary(type = "sensor")))?.cardStyleOverride,
+    )
+  }
+
+  @Test
+  fun sectionsAndDashboardsCarryAndClearTheSameOverrideAsPins() {
+    val overrides =
+      CardDesignOverrides()
+        .with(CardDesignScope.CardType, card, CardDesignOverride(cardStyle = "lcd"))
+    val section =
+      MobilePinnedSection("section", "demo", "home", "view", 0, "Room", listOf(pin.card))
+    val synced = listOf(section).toWearPinnedSections(overrides, updatedAtMs = 1)
+    assertEquals("lcd", synced.sections.single().cards.single().cardStyleOverride)
+    assertEquals(
+      synced,
+      decodeProto<ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet>(encodeProto(synced)),
+    )
+    val dashboardCard = CardSummary(type = "sensor", rawJson = raw).withStyleOverride(overrides)
+    assertEquals("lcd", dashboardCard.cardStyleOverride)
+    assertEquals("", dashboardCard.withStyleOverride(CardDesignOverrides()).cardStyleOverride)
+    assertEquals(
+      "",
+      listOf(section)
+        .toWearPinnedSections(CardDesignOverrides())
+        .sections
+        .single()
+        .cards
+        .single()
+        .cardStyleOverride,
     )
   }
 

@@ -123,6 +123,15 @@ final class DashboardStore: ObservableObject {
       guard isCurrent() else { return }
       try await cache.save(feed: nextFeed)
       guard isCurrent() else { return }
+      // A stable card id can now point at a different selected design. Keep bytes only when
+      // the document identity still matches; a failed fetch must not leave the old design up.
+      let previousURLs = Dictionary(
+        (feed?.dashboards.flatMap(\.cards) ?? []).map { ($0.id, $0.documentURL) },
+        uniquingKeysWith: { _, last in last })
+      let retainedIDs = Set(nextFeed.dashboards.flatMap(\.cards).filter {
+        previousURLs[$0.id] == $0.documentURL
+      }.map(\.id))
+      documents = documents.filter { retainedIDs.contains($0.key) }
       feed = nextFeed
       selectedDashboardID = selectedDashboardID ?? nextFeed.dashboards.first?.id
       await loadDocuments(in: nextFeed)

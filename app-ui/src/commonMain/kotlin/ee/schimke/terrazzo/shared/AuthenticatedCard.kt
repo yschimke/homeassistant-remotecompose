@@ -92,7 +92,6 @@ internal fun AuthenticatedCard(
             dark,
             onToggle,
             onMoreInfo,
-            showFallbackNotice = false,
             designCache = designCache,
             requireExactDesign = true,
             onSource = { AppCardUsage.record(leaf, style, it) },

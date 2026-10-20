@@ -22,7 +22,6 @@ import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
-import ee.schimke.terrazzo.wear.data.displayState
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.PinnedCard
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
@@ -40,8 +39,8 @@ import ee.schimke.terrazzo.wearsync.proto.WearSettings
  *
  * - **Pinned sections** show as a tonal button with the section title + "N cards"; tap drills into
  *   [WearSectionScreen].
- * - **Pinned cards** show their title + live entity value inline (no drill-in — the user pinned
- *   them precisely because they want top-level access).
+ * - **Pinned cards** play their Remote Compose content inline (no drill-in — the user pinned them
+ *   precisely because they want top-level access).
  *
  * Cards inside a section can also be pinned independently as top-level entries; in that case they
  * show twice (once at the top level, once inside the section). That's the v1 behaviour deliberately
@@ -79,8 +78,7 @@ fun WearTopLevelScreen(
     } else {
       items(items, key = { it.key }) { entry ->
         when (entry) {
-          is TopLevelEntry.Card ->
-            PinnedCardRow(card = entry.card, value = values[entry.card.card.primaryEntityId])
+          is TopLevelEntry.Card -> WearRemoteCard(entry.card.card, values)
           is TopLevelEntry.Section ->
             PinnedSectionRow(section = entry.section, onClick = { onOpenSection(entry.section) })
         }
@@ -169,37 +167,6 @@ private fun EmptyPinned() {
       style = MaterialTheme.typography.bodySmall,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
-  }
-}
-
-@Composable
-private fun PinnedCardRow(card: PinnedCard, value: EntityValue?) {
-  val title = card.card.title.ifEmpty { card.card.primaryEntityId.ifEmpty { card.card.type } }
-  val displayState = value?.displayState(card.card.primaryEntityId).orEmpty()
-  Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp)) {
-    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
-      Column {
-        Text(
-          text = title,
-          style = MaterialTheme.typography.titleSmall,
-          fontWeight = FontWeight.SemiBold,
-          color = MaterialTheme.colorScheme.onSurface,
-        )
-        if (displayState.isNotEmpty()) {
-          Text(
-            text = displayState,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
-          )
-        } else if (card.card.primaryEntityId.isNotEmpty()) {
-          Text(
-            text = card.card.primaryEntityId,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-          )
-        }
-      }
-    }
   }
 }
 

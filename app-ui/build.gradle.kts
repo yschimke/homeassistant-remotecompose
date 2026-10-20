@@ -51,6 +51,7 @@ kotlin {
       runtimeOnly(libs.jogl.runtime)
       runtimeOnly(libs.gluegen.runtime)
     }
+    jvmTest.dependencies { implementation(libs.compose.multiplatform.ui.test.junit4) }
     commonTest.dependencies {
       implementation(libs.kotlin.test)
       implementation(libs.kotlinx.coroutines.test)

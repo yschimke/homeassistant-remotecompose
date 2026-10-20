@@ -354,12 +354,20 @@ class MobileWearSyncManager(
 
     // Pinned sections → /wear/sections.
     scope.launch {
-      combine(pinStore.sections, registrySnapshot) { sections, snapshot ->
-          sections.resolvedFor(snapshot)
+      combine(pinStore.sections, registrySnapshot, CardDesignOverrideStore.of(context).overrides) {
+          sections,
+          snapshot,
+          overrides ->
+          sections.resolvedFor(snapshot) to overrides
         }
         .distinctUntilChanged()
         .whileSignedIn()
-        .collect { writeDataItem(WearSyncPaths.SECTIONS, encodeProto(it.toProto())) }
+        .collect { (sections, overrides) ->
+          writeDataItem(
+            WearSyncPaths.SECTIONS,
+            encodeProto(sections.toWearPinnedSections(overrides)),
+          )
+        }
     }
 
     // Wear-widget slots → /wear/slots. Empty assignments survive
@@ -384,6 +392,20 @@ class MobileWearSyncManager(
         .collect { wearSlotCards.value = it }
     }
 
+    // Republish dashboard styles even when neither pins nor entity values change.
+    scope.launch {
+      combine(
+          sessionState,
+          CardDesignOverrideStore.of(context).overrides,
+          wearableAvailableState,
+        ) { session, overrides, available ->
+          Triple(session, overrides, available)
+        }
+        .collectLatest { (session, overrides, available) ->
+          if (session != null && available) publishDashboards(session, overrides)
+        }
+    }
+
     // Session snapshot pump. Re-driven on every session change so the
     // demo session and live session each get their own loop. The
     // streaming-vs-batched decision now keys off the unified pin set
@@ -396,7 +418,6 @@ class MobileWearSyncManager(
           streamJob?.cancel()
           streamJob = null
           if (session == null) return@collectLatest
-          publishDashboards(session)
           streamJob = scope.launch { sessionPump(session, hasPinned) }
         }
     }
@@ -420,7 +441,7 @@ class MobileWearSyncManager(
     return now - at <= WearSyncPaths.LEASE_WINDOW_MS
   }
 
-  private suspend fun publishDashboards(session: HaSession) {
+  private suspend fun publishDashboards(session: HaSession, overrides: CardDesignOverrides) {
     if (!wearableAvailableState.value) return
     // Wait until the session has finished its initial connect; otherwise
     // listDashboards() hits "Not connected" because the UI drives
@@ -441,7 +462,12 @@ class MobileWearSyncManager(
           DashboardData(
             urlPath = summary.urlPath ?: "",
             title = dashboard.title ?: summary.title,
-            cards = cards.map { resolveBambuDevices(it, snapshot).toSummary(snapshot.states) },
+            cards =
+              cards.map {
+                resolveBambuDevices(it, snapshot)
+                  .toSummary(snapshot.states)
+                  .withStyleOverride(overrides)
+              },
             updatedAtMs = System.currentTimeMillis(),
           )
         writeDataItem(WearSyncPaths.dashboardPath(summary.urlPath), encodeProto(data))
@@ -763,16 +789,7 @@ internal fun List<MobilePinnedCard>.toWearPinnedCards(
         .map { entry ->
           PinnedCard(
             baseUrl = entry.baseUrl,
-            card =
-              entry.card
-                .toProto()
-                .copy(
-                  cardStyleOverride =
-                    entry.card.rawJson
-                      .toCardConfigOrNull()
-                      ?.let { overrides.forCard(it)?.cardStyle }
-                      .orEmpty()
-                ),
+            card = entry.card.toProto().withStyleOverride(overrides),
             cardKey = entry.key,
             orderIndex = entry.orderIndex,
           )
@@ -790,8 +807,10 @@ private fun List<WearWidgetSlot>.toProto(): WearWidgetSlots =
     updatedAtMs = System.currentTimeMillis(),
   )
 
-@JvmName("sectionsToProto")
-private fun List<MobilePinnedSection>.toProto(): PinnedSectionSet =
+internal fun List<MobilePinnedSection>.toWearPinnedSections(
+  overrides: CardDesignOverrides,
+  updatedAtMs: Long = System.currentTimeMillis(),
+): PinnedSectionSet =
   PinnedSectionSet(
     sections =
       this.sortedBy { it.orderIndex }
@@ -802,12 +821,19 @@ private fun List<MobilePinnedSection>.toProto(): PinnedSectionSet =
             viewPath = entry.viewPath,
             sectionIndex = entry.sectionIndex,
             title = entry.title,
-            cards = entry.cards.map { it.toProto() },
+            cards = entry.cards.map { it.toProto().withStyleOverride(overrides) },
             sectionKey = entry.key,
             orderIndex = entry.orderIndex,
           )
         },
-    updatedAtMs = System.currentTimeMillis(),
+    updatedAtMs = updatedAtMs,
+  )
+
+/** Apply the same selection to pins, sections and dashboard cards, including clearing it. */
+internal fun CardSummary.withStyleOverride(overrides: CardDesignOverrides): CardSummary =
+  copy(
+    cardStyleOverride =
+      rawJson.toCardConfigOrNull()?.let { overrides.forCard(it)?.cardStyle }.orEmpty()
   )
 
 private fun PinnedCardData.toProto(): CardSummary =

@@ -19,7 +19,6 @@ import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
-import ee.schimke.terrazzo.wear.data.displayState
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 
@@ -91,7 +90,7 @@ fun WearDashboardsScreen(
   }
 }
 
-/** Single-dashboard drilldown — list each card with its primary entity value. */
+/** Single-dashboard drilldown — play every card, including layout containers and their children. */
 @Composable
 fun WearDashboardScreen(
   dashboard: DashboardData,
@@ -123,22 +122,7 @@ fun WearDashboardScreen(
         if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
           WearMessageCard(card.rawJson, values, onInputSend)
         } else {
-          val value = values[card.primaryEntityId]
-          val displayState = value?.displayState(card.primaryEntityId).orEmpty()
-          Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp)) {
-            Text(
-              text = card.title.ifEmpty { card.primaryEntityId.ifEmpty { card.type } },
-              style = MaterialTheme.typography.titleSmall,
-              fontWeight = FontWeight.SemiBold,
-            )
-            if (displayState.isNotEmpty()) {
-              Text(
-                text = displayState,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-              )
-            }
-          }
+          WearRemoteCard(card, values)
         }
       }
     }
