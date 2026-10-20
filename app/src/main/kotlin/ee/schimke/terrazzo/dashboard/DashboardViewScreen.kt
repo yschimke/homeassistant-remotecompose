@@ -1312,6 +1312,21 @@ private fun CardSlot(
         variant = override?.variant,
       )
     }
+  // A card with no template draws through its converter, or not at all: count which, once per card.
+  LaunchedEffect(designCard, template == null, cardStyle) {
+    if (template == null) {
+      CardUsage.record(
+        designCard,
+        cardType = designCard.type,
+        variant = ee.schimke.ha.design.DesignKey.DEFAULT_VARIANT,
+        style = cardStyle.id,
+        source =
+          if (registry.converterFor(designCard.type) == null)
+            ee.schimke.ha.client.design.UsageSource.Unsupported
+          else ee.schimke.ha.client.design.UsageSource.Converter,
+      )
+    }
+  }
   val bitmapLoader =
     remember(context, baseUrl, imageLoader) {
       CoilBitmapLoader(context.applicationContext, imageLoader = imageLoader, baseUrl = baseUrl)

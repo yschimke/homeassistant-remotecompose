@@ -56,6 +56,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import ee.schimke.ha.client.design.UsageSharing
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignTags
 import ee.schimke.terrazzo.core.prefs.CardStylePref
@@ -114,6 +115,8 @@ internal fun SettingsScreen(
     )
   val designAuthor by graph.preferencesStore.designAuthor.collectAsState(initial = "")
   val designToken by graph.preferencesStore.designToken.collectAsState(initial = "")
+  val usageSharing by
+    graph.preferencesStore.usageSharing.collectAsState(initial = UsageSharing.Default)
   val permanentWriteEnabled by
     graph.preferencesStore.permanentWriteMode.collectAsState(initial = false)
 
@@ -306,6 +309,15 @@ internal fun SettingsScreen(
           onAuthorChange = { scope.launch { graph.preferencesStore.setDesignAuthor(it) } },
           onTokenChange = { scope.launch { graph.preferencesStore.setDesignToken(it) } },
         )
+        if (designServerUrl.isNotBlank()) {
+          UsageSharingSetting(
+            // The switch shows the effective value; touching it stores an explicit choice.
+            checked = usageSharing.effective(),
+            onCheckedChange = {
+              scope.launch { graph.preferencesStore.setUsageSharing(UsageSharing.chosen(it)) }
+            },
+          )
+        }
       }
 
       SettingsGroup("Help", divider = false) {
@@ -322,6 +334,30 @@ internal fun SettingsScreen(
     }
   }
 }
+
+/**
+ * "Share anonymous card usage": off until the user turns it on. Says what is sent and links to the
+ * privacy policy.
+ */
+@Composable
+internal fun UsageSharingSetting(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+  val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+  Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    SettingSwitch(
+      title = "Share anonymous card usage",
+      summary =
+        "Once a day, send the design server which card designs drew your cards (card type, " +
+          "design and style, in rough counts). Never entities, names, states or addresses.",
+      checked = checked,
+      onCheckedChange = onCheckedChange,
+    )
+    TextButton(onClick = { uriHandler.openUri(PRIVACY_POLICY_URL) }) { Text("Privacy policy") }
+  }
+}
+
+/** The published privacy policy (`docs/privacy.md`). */
+internal const val PRIVACY_POLICY_URL: String =
+  "https://yschimke.github.io/homeassistant-remotecompose/privacy/"
 
 /** A titled group of settings, set off from the next by a divider. */
 @Composable

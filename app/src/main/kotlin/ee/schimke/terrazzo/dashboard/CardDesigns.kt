@@ -14,6 +14,7 @@ import ee.schimke.ha.client.design.CardDesignOverrides
 import ee.schimke.ha.client.design.DesignStore
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.client.design.StoredManifest
+import ee.schimke.ha.client.design.UsageSource
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignQuery
@@ -214,6 +215,16 @@ fun cardTemplateFor(
     }
   val server = forDevice ?: designs.byKey[preferred] ?: designs.byKey[key]
   designs.loadedFor?.let { CardDesignSources.record(it, key, fromServer = server != null) }
+  CardUsage.record(
+    card,
+    cardType = key.cardType,
+    variant =
+      if (server != null && (forDevice != null || designs.byKey[preferred] != null))
+        preferred.variant
+      else key.variant,
+    style = key.cardStyle,
+    source = if (server != null) UsageSource.Remote else UsageSource.Local,
+  )
   val bytes = server ?: CardDesignLibrary.template(context, key, registry)
   // Designs read the player's display (Host density); fold this phone's in once.
   val metrics = context.resources.displayMetrics

@@ -257,6 +257,19 @@ class TemplateUsage(
 }
 
 /**
+ * [TemplateUsage.upload] with the platform's default HTTP engine, opened only for this upload; for
+ * hosts that don't depend on Ktor themselves.
+ */
+suspend fun TemplateUsage.uploadWithDefaultClient(baseUrl: String, userAgent: UsageUserAgent): Int {
+  val client = HttpClient()
+  try {
+    return upload(client, baseUrl, userAgent)
+  } finally {
+    client.close()
+  }
+}
+
+/**
  * The fixed, non-identifying User-Agent clients send to the design server: `Terrazzo/<version>
  * (<platform>; surface=<surface>)`. Every install of a release sends the same string.
  */
