@@ -93,7 +93,8 @@ test('hosted WASM selects hidden dashboards, supports bookmarks and recovers fro
     // another dashboard.
     await page.goto('https://ha.test/terrazzo?return_after=1');
     await frame.getByText('Selected wall-panel', {exact:true}).waitFor({timeout:60_000});
-    await frame.getByRole('tab', {name:'Garden',exact:true}).dispatchEvent('click');
+    // Views are filter chips above the cards, not tabs.
+    await frame.getByText('Garden', {exact:true}).click({force:true});
     await frame.getByText('Garden of wall-panel', {exact:true}).waitFor();
     await page.mouse.click(600, 400);
     await frame.getByText('Selected wall-panel', {exact:true}).waitFor({timeout:5_000});
