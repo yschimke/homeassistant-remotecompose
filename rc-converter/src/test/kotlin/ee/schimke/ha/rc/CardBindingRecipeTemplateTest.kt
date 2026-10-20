@@ -89,6 +89,25 @@ class CardBindingRecipeTemplateTest {
   }
 
   @Test
+  fun aMeteredSensorTileCarriesTheTileRecipe() {
+    val card =
+      CardConfig(
+        "tile",
+        buildJsonObject {
+          put("type", "tile")
+          put("entity", cpu.entityId)
+        },
+      )
+    val snapshot = HaSnapshot(states = mapOf(cpu.entityId to cpu))
+    assertEquals(CardBindingRecipes.TILE.toJson(), embeddedRecipe(template(card, snapshot)))
+    // The host computes the same values the embedded recipe gives.
+    assertEquals(
+      CardBindingRecipes.TILE.evaluate(card, snapshot),
+      registry.converterFor("tile")?.designBindings(card, snapshot),
+    )
+  }
+
+  @Test
   fun gaugeRecipeMatchesTheConvertersBindings() {
     val card =
       CardConfig(

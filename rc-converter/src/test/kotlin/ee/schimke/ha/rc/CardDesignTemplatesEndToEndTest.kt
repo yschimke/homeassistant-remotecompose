@@ -6,11 +6,13 @@ import ee.schimke.ha.client.design.DesignServerConfig
 import ee.schimke.ha.client.design.DesignSourceKind
 import ee.schimke.ha.client.design.InMemoryDesignStore
 import ee.schimke.ha.client.design.RefreshResult
+import ee.schimke.ha.design.CardBindingRecipe
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import io.ktor.client.HttpClient
@@ -160,6 +162,62 @@ class CardDesignTemplatesEndToEndTest {
     val bindings = CardDesignSlots.slotBindings(card, snapshot)
     assertEquals("Kitchen", bindings.strings["light.s0.name"])
     assertEquals(true, bindings.booleans["light.s0.is_on"])
+  }
+
+  @Test
+  fun aDesignedSensorTileDrawsItsMeter_onTheNumericBinding() {
+    val context = org.robolectric.RuntimeEnvironment.getApplication()
+    val sensorCard =
+      CardConfig(
+        type = "tile",
+        raw =
+          buildJsonObject {
+            put("type", "tile")
+            put("entity", "sensor.porch")
+          },
+      )
+    fun porch(state: String) =
+      HaSnapshot(
+        states =
+          mapOf(
+            "sensor.porch" to
+              EntityState(
+                "sensor.porch",
+                state,
+                kotlinx.serialization.json.JsonObject(
+                  mapOf(
+                    "device_class" to kotlinx.serialization.json.JsonPrimitive("temperature"),
+                    "unit_of_measurement" to kotlinx.serialization.json.JsonPrimitive("°F"),
+                  )
+                ),
+              )
+          )
+      )
+    val key =
+      assertNotNull(
+        CardDesignTemplates.keyFor(
+          sensorCard,
+          porch("71.6"),
+          ThemeStyle.Material3,
+          dark = true,
+          cardStyle = HaUberTheme.Lcd,
+        )
+      )
+    assertEquals("device_class=temperature;domain=sensor;unit=°F", key.shape)
+
+    // The LCD family draws its segment-column glyph off the slot's numeric binding.
+    val document = String(CardDesignLibrary.template(context, key), Charsets.ISO_8859_1)
+    assertTrue("sensor.s0.numeric_state" in document, "the meter glyph reads numeric_state")
+    assertTrue(CardBindingRecipe.BINDING in document, "the template carries the tile recipe")
+
+    // Host: slot bindings with the card's on top, as playback pushes them. A numeric state goes
+    // through as is; a non-numeric one rests the glyph at 0 rather than NaN.
+    val tile = assertNotNull(defaultRegistry().get("tile"))
+    fun pushed(state: String): Float? =
+      tile.designBindings(sensorCard, porch(state))?.floats?.get("sensor.s0.numeric_state")
+        ?: CardDesignSlots.slotBindings(sensorCard, porch(state)).floats["sensor.s0.numeric_state"]
+    assertEquals(71.6f, pushed("71.6"))
+    assertEquals(0f, pushed("unavailable"))
   }
 
   @Test

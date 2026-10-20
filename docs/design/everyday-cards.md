@@ -30,6 +30,11 @@ other kinds `HaReading` maps from `device_class`) draws the family's compact met
 Nixie, an LED column on Trinitron, a tuning scale on Braun, petals on Mushroom, beads on Bubble,
 pips on Minimalist… Classic and Home Assistant keep the HA icon.
 
+Whether a tile draws the glyph follows the sensor's attributes (`device_class`, unit), never its
+state, so a tile captured while its sensor is unavailable still has it. Card designs carry the
+same glyph: the tile's design properties add the unit, and the template's `tile` binding recipe
+pushes the slot's `numeric_state` (0 while it isn't a number).
+
 ## 5. Tile layout per family
 
 | Family | Layout |

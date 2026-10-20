@@ -2476,6 +2476,108 @@
                     "sensor.s0.custom": 100.0
                 }
             }
+        },
+        {
+            "name": "tile recipe numeric",
+            "recipe": "tile",
+            "card": {
+                "type": "tile",
+                "entity": "sensor.porch"
+            },
+            "states": {
+                "sensor.porch": {
+                    "state": "71.6",
+                    "attributes": {
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°F",
+                        "friendly_name": "Porch"
+                    }
+                }
+            },
+            "recipe_json": {
+                "v": 1,
+                "prototype": "tile",
+                "floats": {
+                    "$0.numeric_state": {
+                        "first": [
+                            {
+                                "number": {
+                                    "state": 0
+                                }
+                            },
+                            0
+                        ]
+                    }
+                }
+            },
+            "expected": {
+                "strings": {
+                    "sensor.s0.state": "71.6 °F",
+                    "sensor.s0.name": "Porch"
+                },
+                "booleans": {
+                    "sensor.s0.is_on": false,
+                    "sensor.s0.is_available": true
+                },
+                "ints": {
+                    "sensor.s0.state_int": -1,
+                    "sensor.s0.status": 0
+                },
+                "floats": {
+                    "sensor.s0.numeric_state": 71.5999984741211
+                }
+            }
+        },
+        {
+            "name": "tile recipe unavailable",
+            "recipe": "tile",
+            "card": {
+                "type": "tile",
+                "entity": "sensor.porch"
+            },
+            "states": {
+                "sensor.porch": {
+                    "state": "unavailable",
+                    "attributes": {
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°F",
+                        "friendly_name": "Porch"
+                    }
+                }
+            },
+            "recipe_json": {
+                "v": 1,
+                "prototype": "tile",
+                "floats": {
+                    "$0.numeric_state": {
+                        "first": [
+                            {
+                                "number": {
+                                    "state": 0
+                                }
+                            },
+                            0
+                        ]
+                    }
+                }
+            },
+            "expected": {
+                "strings": {
+                    "sensor.s0.state": "Unavailable",
+                    "sensor.s0.name": "Porch"
+                },
+                "booleans": {
+                    "sensor.s0.is_on": false,
+                    "sensor.s0.is_available": false
+                },
+                "ints": {
+                    "sensor.s0.state_int": -1,
+                    "sensor.s0.status": 1
+                },
+                "floats": {
+                    "sensor.s0.numeric_state": 0.0
+                }
+            }
         }
     ]
 }

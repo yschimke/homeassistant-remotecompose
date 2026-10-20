@@ -119,6 +119,13 @@ interface CardConverter {
   fun designRecipe(): CardBindingRecipe? = null
 
   /**
+   * The recipe the template for [properties] carries: [designRecipe] unless only some of this
+   * card's shapes need one (a sensor tile's meter glyph). A converter that overrides this derives
+   * [designBindings] from the same properties, so a template and its host still agree.
+   */
+  fun designRecipe(properties: DesignProperties): CardBindingRecipe? = designRecipe()
+
+  /**
    * [designBindings] with "now" read from [clock]. Template playback calls this one, passing the
    * [LocalHaClock] in scope, so a binding derived from the time (a clock card's date line) agrees
    * with what [Render] reads from the same clock on the direct path. A converter whose bindings

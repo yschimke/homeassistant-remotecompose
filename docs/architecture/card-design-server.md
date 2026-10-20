@@ -142,7 +142,10 @@ Deliberate spike limits, each owned by a milestone below:
   presses only the client's printer's own pause / resume / stop button.
 - **Generation properties** (`EntityDesign`) are what changes the look, per bound entity:
   `domain` (icon family, toggle chrome), `device_class` for sensors and binary sensors (icon,
-  colour), the `icon` attribute and a config `icon` (`card_icon`). List cards prefix them with the
+  colour), the `icon` attribute and a config `icon` (`card_icon`). A tile whose sensor draws a
+  meter glyph (`HaMeasureKind`, docs/design/everyday-cards.md §1) adds its `unit`, which with
+  `device_class` picks the glyph's kind and scale (°C or °F); like the rest, it is an attribute,
+  never the state. List cards prefix them with the
   row's slot (`e0.domain`, …) and add `count` and the title's font-size bucket (`title_size`).
   Slot ids keep the domain (`light.s0`, not `s0`) for the same reason. A library template
   therefore draws exactly what the converter drew, with names, titles and states as bindings
@@ -301,6 +304,11 @@ draws it. A host reads it once when the template loads and evaluates it on every
   every data binding it declares has a value: slot bindings, its recipe's bindings, or the recipe
   itself. A template declaring a card-level binding with no recipe is still rejected, never shown
   with its fixture values.
+
+A converter can scope its recipe to some shapes (`CardConverter.designRecipe(properties)`) and then
+derives `designBindings` from the card's own properties, so template and host still agree. The
+tile does: only a metered sensor tile's template carries `CardBindingRecipes.TILE`, which pushes
+`$0.numeric_state` as the state's number, else 0, so the glyph never reads the slot bindings' NaN.
 
 The gauge declares one (`CardBindingRecipes.GAUGE`). Other converters with card-level bindings
 still compute them in Kotlin only, so their templates work in the app but not yet in the embed.

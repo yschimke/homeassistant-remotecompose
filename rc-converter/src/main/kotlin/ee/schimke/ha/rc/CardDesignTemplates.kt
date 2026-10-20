@@ -236,7 +236,8 @@ object CardDesignTemplates {
                 RenderChild(
                   card,
                   snapshot,
-                  RemoteModifier.fillMaxWidth().declaringRecipe(converter.designRecipe()),
+                  RemoteModifier.fillMaxWidth()
+                    .declaringRecipe(converter.designRecipe(DesignProperties.parse(key.shape))),
                 )
               }
             }
