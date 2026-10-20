@@ -1,78 +1,91 @@
 # Template usage by app
 
-> Status: **proposal**. Nothing here is implemented. It answers open
-> question 5 (Telemetry) in
+> Status: **implemented** (both phases). Answers open question 5
+> (Telemetry) in
 > [`card-design-server.md`](../architecture/card-design-server.md#open-questions).
+> What users are told is in [`docs/privacy.md`](../privacy.md).
 
 ## Why
 
 Most of a dashboard is a few cards. `scripts/card-usage.py` over the
 bundled dashboards finds that **tile, heading, markdown and history-graph
 make up ~90% of content cards** (tile alone is ~67%, mostly `sensor.*`).
-The `UberCommon` previews show those four under every uber theme. That
-data comes from fixtures, though, not from real users. To decide which
-templates are worth a bespoke design per theme, and how stale clients
-are, we need counts from the field: **which template, on which app
-surface, under which uber theme, from which source**.
+That comes from fixtures, not from real users. To decide which templates
+are worth a bespoke design per theme, and how stale clients are, we count
+in the field: **which template, on which app surface, under which uber
+theme, from which source**.
 
-## Constraint: privacy policy
+## Phase 1: count what the design server serves
 
-[`docs/privacy.md`](../privacy.md) says the developer collects nothing
-and the app contacts no developer-operated servers apart from the
-optional design server. Any tracking changes that promise, so the
-policy, the Play data-safety form and an in-app setting have to change
-together. **Whether to do this is the owner's call. This doc doesn't
-decide it.**
+Every request the app makes to the design server carries a fixed
+User-Agent naming the release, never the install
+(`UsageUserAgent`: `Terrazzo/<version> (<platform>; surface=<surface>)`,
+set on `DesignServerConfig.userAgent`).
 
-## Proposal: server-side counts first, opt-in client counts second
+The server (`UsageStats`) counts, per UTC day:
 
-### Phase 1: count what the design server already serves (no client change)
+- manifest checks, by app, version, platform and surface;
+- blob downloads, by the design's card type, variant (a person's own
+  design counts as `user`), card style, design surface and RC API level,
+  and the app.
 
-Clients already ask the design server for designs per surface (see
-*Goal* in `card-design-server.md`). Each request names the design id,
-variant, surface, RC API level and profile. The server can bump an
-in-memory counter per
+`ClientAgent` reduces the User-Agent to those fields; anything else
+counts as `other`, so a free-form User-Agent is never stored. No IP
+address, device id, token or Home Assistant data is kept. Days are
+written under `USAGE_DIR` (`/data/usage` in the image) every minute and on
+shutdown, and deleted after `RETENTION_DAYS` (400, about 13 months).
 
-```
-(day, design_id, variant, surface, api_level, app, app_version)
-```
+Fetch counts say which templates each app pulls, not how often they
+render: a cached design is fetched once and rendered many times. Hence
+phase 2.
 
-and flush it daily to an aggregate table. It stores no IP, no HA URL
-and no device id. `app` and `app_version` come from a fixed
-`User-Agent` such as `Terrazzo/1.12 (android; surface=widget)`. Rows
-with fewer than k=5 clients are dropped before anyone sees them.
+## Phase 2: opt-in render counts
 
-This tells us which templates each **app** (phone app, launcher widget,
-Wear app, Wear tile/widget, web, embed) pulls, but not how often they
-render. A cached design is fetched once and then rendered many times.
+`TemplateUsage` (ha-client) counts, per UTC day, which template drew each
+dashboard card: card type, variant, card style (uber theme id) and source
+(`remote`, `local`, `converter`, `unsupported`). A card counts once a day,
+under a local fingerprint (a hash of its config) that never leaves the
+device. The app's nightly design sync uploads finished days to
+`POST /designs/v1/usage`, each row's card count as a bucket
+(`1`, `2-5`, `6-20`, `21+`).
 
-### Phase 2: opt-in render counts
+The server accepts exactly that schema (`UsageReportCheck`: unknown
+fields, exact counts, out-of-range days and non-tag values are refused),
+caps the body at 64 KiB and the rate at 600 reports a minute (in memory,
+keyed on nothing), and adds one per row to the day's counts.
 
-Add a `TemplateUsage` counter next to `CardGenerator`. `CardRender`
-already says which generator won, "for telemetry / debug only". It
-counts renders per `(card type, design id, variant, uber theme id,
-source: remote|stale|inbuilt|local|unsupported)` on the device. It
-never records entity ids, names or states. Once a day it posts the
-bucketed counts with the design refresh, and only when the user has
-turned on **Settings → Share anonymous card usage** (off by default).
-Counts are rounded to buckets (1, 2–5, 6–20, 21+) so a dashboard can't
-be fingerprinted.
+### The setting: a tri-state, opt-in
 
-`unsupported` is also the cheapest way to find which custom cards to
-convert next.
+*Settings → Share anonymous card usage* is stored as
+`UsageSharing`: `Enabled`, `Disabled` or `Default`, starting at
+`Default`.
 
-### Read side
+- `Default` means whatever `UsageSharing.DEFAULT_SHARES` says. That one
+  constant is **false**: sharing is opt-in.
+- `Enabled` and `Disabled` are the user's explicit choice and are never
+  overridden. A later release may flip `DEFAULT_SHARES`; only users still
+  on `Default` follow it (`TemplateUsageTest` pins this).
+- The switch shows the effective value. Touching it writes `Enabled` or
+  `Disabled`, never `Default` again.
+- While the effective value is off nothing is counted or uploaded, and
+  pending counts are deleted (on the change, and again before any
+  upload).
+- The setting only shows while a design server is set; with none, nothing
+  is fetched or sent at all.
 
-A `/stats/templates` page on the design server, behind GitHub auth
-like `/my`, shows a table per app: template, theme, share, source mix.
-The same rows are exported as a catalog data product so the
-`homeassistant-remotecompose` catalog can show usage next to each
-design.
+## Read side
 
-## Questions for the owner
+`/stats/templates` (HTML) and `/api/stats/templates` (JSON) show the last
+30 days per app: fetched templates and rendered cards with their share,
+and the source mix. Any count with fewer than `K_ANONYMITY` (5) requests
+or reports behind it is dropped before anyone sees it. Only GitHub
+logins in `STATS_USERS` can open them; with none set (the default) the
+routes don't exist.
 
-1. Is phase 1 (server logs only, no client change) acceptable under the
-   current policy wording, or does it already need a policy update?
-2. Opt-in (proposed) or opt-out for phase 2?
-3. Does `app` need to split the Wear tile from the Wear widget, or is
-   per-surface enough?
+## Not done
+
+- Only the Android phone app fetches designs and counts renders.
+  Launcher widgets, Wear, TV and the desktop/web hosts don't use the
+  design server, so they neither send the User-Agent nor count.
+- Renders are counted on the dashboard only, not in widgets.
+- A catalog data product exporting the same rows is still to do.

@@ -26,6 +26,23 @@ Wear OS: Google rejects Wear releases whose description doesn't.
 Both versions follow release-please (`x-release-please-version`), so a release
 bumps them together; nothing to bump by hand.
 
+## Data safety form
+
+The phone and Wear apps share one Play listing, so one data safety form.
+Since template usage tracking
+([template-usage-tracking.md](followups/template-usage-tracking.md),
+[privacy policy](privacy.md)) it declares:
+
+| Data type | Collected | Shared | Optional | Purpose | Notes |
+| --- | --- | --- | --- | --- | --- |
+| App activity → Other app activity | Yes | No | Yes (opt-in, off by default) | Analytics | Anonymous, aggregate: which card designs drew cards, bucketed counts, no identifiers |
+
+Data is encrypted in transit (HTTPS) and users can turn it off in
+Settings; pending counts are deleted when they do. Design downloads also
+send a fixed per-release User-Agent that the server counts; that is not
+user data (it is the same for every install of a release), so it needs
+no row. Update this table and the form together.
+
 ## One-time Play Console setup
 
 1. In the existing **Terrazzo** Play app, open **Test and release → Advanced
