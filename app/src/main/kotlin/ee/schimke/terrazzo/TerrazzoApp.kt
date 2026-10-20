@@ -731,6 +731,8 @@ private fun DashboardsRoot(
               }
               known
             },
+            // Once shown, the view isn't asked for again when the screen is recreated.
+            onInitialViewShown = { openedView = null },
           )
         }
       }

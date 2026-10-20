@@ -146,10 +146,12 @@ import kotlinx.serialization.json.jsonPrimitive
  *
  * A card's `navigate` action (or a markdown link to `/dashboard/view`) scrolls to that view when it
  * is in this dashboard; another dashboard goes to [onOpenDashboard], which returns false when it
- * knows no such dashboard. A path naming no dashboard but a view here (a bundled dashboard's links
- * carry the author's dashboard name) still lands on the view; anything else opens on Home
- * Assistant. [initialViewPath] is the view to show first. A `more-info` action opens
- * [EntityMoreInfoSheet] on the live snapshot.
+ * knows no such dashboard. In demo mode a path naming no dashboard but a view here (the bundled
+ * dashboards' links carry their author's dashboard name) still lands on the view; anything else
+ * opens on Home Assistant, so a frontend route like `/config/areas` is never taken for a view.
+ * [initialViewPath] is the view to show first; [onInitialViewShown] runs once the list has scrolled
+ * to it, so a host can stop asking for it. A `more-info` action opens [EntityMoreInfoSheet] on the
+ * live snapshot.
  */
 @Composable
 fun DashboardViewScreen(
@@ -160,6 +162,7 @@ fun DashboardViewScreen(
   readOnly: Boolean = true,
   initialViewPath: String? = null,
   onOpenDashboard: (urlPath: String?, viewPath: String?) -> Boolean = { _, _ -> false },
+  onInitialViewShown: () -> Unit = {},
 ) {
   val cache = LocalTerrazzoGraph.current.offlineCache
   // Seed from disk so the first composition shows the last-known
@@ -263,8 +266,8 @@ fun DashboardViewScreen(
         return@navigate
       }
       onOpenDashboard(target.dashboardUrlPath, target.view) -> return@navigate
-      // `/view` alone, or `/<a dashboard this app keys differently>/view`.
-      dashboard != null -> {
+      // The bundled dashboards' `/<their author's dashboard>/view` links.
+      session is DemoHaSession && dashboard != null -> {
         val segment = target.view ?: target.dashboard
         if (dashboard.viewIndexOf(segment) != null) {
           pendingView = ViewTarget(segment)
@@ -322,7 +325,10 @@ fun DashboardViewScreen(
           onCardLongPress = onCardLongPress,
           contentPadding = contentPadding,
           pendingView = pendingView,
-          onViewShown = { pendingView = null },
+          onViewShown = {
+            pendingView = null
+            onInitialViewShown()
+          },
         )
     }
   }
