@@ -1,0 +1,154 @@
+name: Baseline profiles
+
+# Generates the phone and Wear baseline profiles on emulators, then runs the startup and
+# scroll macrobenchmarks against the result and prints a Perfetto breakdown of the scroll traces
+# (scripts/analyze-benchmark-traces.py). The profiles come out as the `baseline-profiles-app`
+# and `baseline-profiles-wear` artifacts: commit their files over
+# `app/src/main/generated/baselineProfiles/` and `wear/src/release/generated/baselineProfiles/`.
+# The workflow never commits itself: a push made with its token would land without CI.
+# The emulator step also prints each profile set into the job log as a base64 tarball between
+# `BASELINE-PROFILES-BEGIN` / `-END` markers, for readers that can reach logs but not artifacts.
+#
+# Emulator benchmark numbers only catch large regressions (SwiftShader renders the frames); run
+# `:app-benchmark` / `:wear-benchmark` against a physical device for numbers to compare.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app-benchmark/**'
+      - 'wear-benchmark/**'
+      - '.github/workflows/baseline-profiles.yml'
+      - 'scripts/run-baseline-profiles.sh'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Run each benchmark once instead of every iteration (faster, no usable numbers)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: baseline-profiles-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Phone (API 36)
+            module: app
+            generate: ':app:generateBaselineProfile'
+            api-level: 36
+            target: default
+            profile: pixel_6
+            profiles-dir: app/src/main/generated/baselineProfiles
+          # API 33 (Wear OS 4), unsigned: adb works without the key dance the API 37 image needs
+          # (wear-emulator.yml). The Wear images' dex2oat CPU set does not fit a 2-core emulator
+          # (`Invalid cpu "d" specified in --cpu-set argument (nprocessors = 2)`), so nothing
+          # compiles and macrobenchmark cannot start: hence `cores: 4` below, and the script
+          # clearing the property where adb can be root.
+          - name: Wear (API 33)
+            module: wear
+            generate: ':wear:generateReleaseBaselineProfile'
+            api-level: 33
+            target: android-wear
+            profile: wearos_small_round
+            profiles-dir: wear/src/release/generated/baselineProfiles
+    env:
+      # Macrobenchmark refuses emulators unless told otherwise.
+      BENCHMARK_ARGS: >-
+        -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR
+        ${{ inputs.dry-run == true && '-Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.dryRunMode.enable=true' || '' }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: 21.0.12+101.0.LTS
+      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: ./.github/actions/android-sdk
+      - name: Build target and benchmark APKs before booting
+        run: >-
+          ./gradlew --stacktrace --max-workers=2
+          :${{ matrix.module }}:assembleNonMinifiedRelease
+          :${{ matrix.module }}-benchmark:assembleNonMinifiedRelease
+          :${{ matrix.module }}-benchmark:assembleBenchmarkRelease
+      - name: Generate the profile and run the benchmarks
+        uses: reactivecircus/android-emulator-runner@v2.38.0
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: ${{ matrix.target }}
+          arch: x86_64
+          profile: ${{ matrix.profile }}
+          ram-size: 4096M
+          cores: 4
+          disk-size: 4G
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: bash scripts/run-baseline-profiles.sh ${{ matrix.module }} '${{ matrix.generate }}' ':${{ matrix.module }}-benchmark:connectedBenchmarkReleaseAndroidTest' ${{ matrix.profiles-dir }}
+      # Metrics and a Perfetto breakdown of the scroll traces in the log, where they can be read
+      # without the artifact: frame timeline jank, what the over-budget frames spent their time on
+      # (main thread and RenderThread), and JIT activity — near zero when the profile is loaded.
+      # The emulator renders with SwiftShader, so RenderThread/GPU time is inflated; main-thread
+      # composition and RemoteCompose playback are the comparable part.
+      - name: Analyse the benchmark traces
+        if: always()
+        run: |
+          out='${{ matrix.module }}-benchmark/build/outputs/connected_android_test_additional_output'
+          test -d "$out" || { echo "no benchmark output"; exit 0; }
+          python3 -m pip install --quiet perfetto==0.58.2
+          mkdir -p build
+          python3 scripts/analyze-benchmark-traces.py --match Scroll "$out" | tee build/trace-analysis.txt
+          { echo '### ${{ matrix.name }} traces'; echo '```'; cat build/trace-analysis.txt; echo '```'; } \
+            >> "$GITHUB_STEP_SUMMARY"
+      - name: Show the device diagnostics
+        if: failure()
+        run: |
+          f=build/baseline-profiles/device.txt
+          test -s "$f" && cat "$f" || echo "no device diagnostics"
+      - name: Show instrumented test failures
+        if: failure()
+        run: python3 scripts/summarize-android-test-failures.py
+      - name: Summarize the profile
+        if: always()
+        run: |
+          {
+            echo "### ${{ matrix.name }}"
+            find '${{ matrix.profiles-dir }}' -name '*.txt' -exec wc -l {} + 2>/dev/null \
+              || echo "No profile generated."
+            echo
+            git diff --stat -- '${{ matrix.profiles-dir }}' || true
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload the profile
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: baseline-profiles-${{ matrix.module }}
+          path: ${{ matrix.profiles-dir }}/**
+          if-no-files-found: warn
+      - name: Upload benchmark results
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: benchmark-results-${{ matrix.module }}
+          path: |
+            ${{ matrix.module }}-benchmark/build/outputs/connected_android_test_additional_output/**
+            ${{ matrix.module }}-benchmark/build/outputs/androidTest-results/**
+            ${{ matrix.module }}-benchmark/build/reports/androidTests/**
+            build/baseline-profiles/**
+          if-no-files-found: warn

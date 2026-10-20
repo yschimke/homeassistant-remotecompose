@@ -41,15 +41,16 @@ class MainActivity : ComponentActivity() {
     // `terrazzo.test.demo_mode=true` we flip the persisted
     // demo-mode flag synchronously before the first composition,
     // so the auth flow short-circuits to a demo session and a
-    // uiautomator test can land directly on the dashboard. Gated
-    // on BuildConfig.DEBUG so production builds don't expose
-    // the bypass even if the extra is present.
+    // uiautomator test or `:app-benchmark` can land directly on
+    // the dashboard. Gated on BuildConfig.TEST_HOOKS (debug and
+    // the baseline profile / benchmark variants) so production
+    // builds don't expose the bypass even if the extra is present.
     //
     // Also clears the offline-cache instance pointer and the
     // last-viewed-dashboard pref so the test starts on HA's
     // default demo dashboard every time, not auto-resumed onto
     // a previous run's cached dashboard.
-    if (BuildConfig.DEBUG && intent?.getBooleanExtra(EXTRA_TEST_DEMO_MODE, false) == true) {
+    if (BuildConfig.TEST_HOOKS && intent?.getBooleanExtra(EXTRA_TEST_DEMO_MODE, false) == true) {
       runBlocking {
         graph.preferencesStore.setDemoMode(true)
         graph.preferencesStore.clearLastViewedDashboard()

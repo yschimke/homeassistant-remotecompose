@@ -24,6 +24,7 @@ plugins {
   alias(libs.plugins.tapmoc)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.play.publisher)
+  alias(libs.plugins.androidx.baselineprofile)
 }
 
 // Crashlytics is opt-in and gated on a real key. When
@@ -65,6 +66,11 @@ android {
     // resolve the Firebase-backed reporter or fall back to a no-op.
     buildConfigField("boolean", "CRASHLYTICS_ENABLED", crashlyticsEnabled.toString())
 
+    // Gates MainActivity's demo-mode launch extra. On for debug builds and the
+    // `benchmarkRelease` / `nonMinifiedRelease` variants `:app-benchmark` drives (see
+    // `androidComponents` below), off for anything shipped.
+    buildConfigField("boolean", "TEST_HOOKS", "false")
+
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
   val releaseKeystorePath = System.getenv("HARC_KEYSTORE_PATH")
@@ -79,6 +85,7 @@ android {
     }
   }
   buildTypes {
+    getByName("debug") { buildConfigField("boolean", "TEST_HOOKS", "true") }
     getByName("release") {
       isMinifyEnabled = true
       isShrinkResources = true
@@ -120,6 +127,32 @@ android {
     sourceSets.getByName("main").kotlin.directories.add("src/crashlytics/kotlin")
   }
   kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
+}
+
+// The baseline profile plugin derives `nonMinifiedRelease` (profile generation) and
+// `benchmarkRelease` (macrobenchmarks) from `release`. Both are non-debuggable, so the
+// demo-mode hatch needs its own switch; `:app-benchmark` launches straight into demo data.
+androidComponents {
+  onVariants(selector().withBuildType("nonMinifiedRelease")) { it.enableTestHooks() }
+  onVariants(selector().withBuildType("benchmarkRelease")) { it.enableTestHooks() }
+}
+
+fun com.android.build.api.variant.ApplicationVariant.enableTestHooks() {
+  buildConfigFields?.put(
+    "TEST_HOOKS",
+    com.android.build.api.variant.BuildConfigField("boolean", "true", "baseline profile variant"),
+  )
+}
+
+baselineProfile {
+  // Profiles are generated on an emulator (`.github/workflows/baseline-profiles.yml`)
+  // and checked in under src/main/generated/baselineProfiles; a normal build only
+  // merges the checked-in file and never needs a device.
+  automaticGenerationDuringBuild = false
+  saveInSrc = true
+  // `experimental` is a local side-by-side install; it ships the release profile via
+  // `mergeIntoMain`, without its own generation variants.
+  mergeIntoMain = true
 }
 
 // Robolectric's SDK jar, resolved by Gradle (offline at test time) — same setup as
@@ -193,6 +226,8 @@ dependencies {
   debugImplementation(libs.composeai.preview.annotations)
   implementation(libs.activity.compose)
   implementation(libs.materialkolor)
+  implementation(libs.androidx.profileinstaller)
+  baselineProfile(project(":app-benchmark"))
 
   implementation(libs.okhttp)
   implementation(libs.okhttp.coroutines)
