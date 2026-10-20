@@ -29,39 +29,12 @@ plugins {
 
 // Off-device crash reporting goes through the CrashReporter seam
 // (src/main/.../crash/CrashReporter.kt); which backend gets compiled in is a
-// build-time choice, `-Pharc.crashReporter=<auto|firebase|sentry|none>`:
-//   auto      (default) firebase when `app/google-services.json` is present,
-//             otherwise none — the historical behaviour.
-//   firebase  Crashlytics; requires `app/google-services.json`.
-//   sentry    reserved, not built yet — fails configuration (see #1001).
-//   none      no backend even when a key is present; the in-app LogStore
-//             stays the only sink.
-// A backend's plugins, SDK, source set and keep rules join the build only
-// when it's selected, so a `none` build carries no crash SDK at all. The
-// Firebase plugin classpath is added conditionally in the root
-// build.gradle.kts.
-val hasGoogleServices = file("google-services.json").exists()
-val crashReporter: String =
-  when (
-    val requested =
-      providers.gradleProperty("harc.crashReporter").orNull?.trim()?.lowercase() ?: "auto"
-  ) {
-    "auto" -> if (hasGoogleServices) "firebase" else "none"
-    "firebase" -> {
-      check(hasGoogleServices) { "harc.crashReporter=firebase needs app/google-services.json" }
-      "firebase"
-    }
-    "sentry" ->
-      throw GradleException(
-        "harc.crashReporter=sentry is not implemented yet, see " +
-          "https://github.com/yschimke/homeassistant-remotecompose/issues/1001"
-      )
-    "none" -> "none"
-    else ->
-      throw GradleException(
-        "Unknown harc.crashReporter '$requested'; expected auto, firebase, sentry or none"
-      )
-  }
+// build-time choice, `-Pharc.crashReporter=<auto|firebase|sentry|none>`,
+// resolved by selectCrashReporter() in build-logic (shared with `:wear`).
+// With `none` the in-app LogStore stays the only sink. A backend's plugins,
+// SDK, source set and keep rules join the build only when it's selected, so
+// a `none` build carries no crash SDK at all.
+val crashReporter: String = selectCrashReporter()
 val crashlyticsEnabled = crashReporter == "firebase"
 
 if (crashlyticsEnabled) {
