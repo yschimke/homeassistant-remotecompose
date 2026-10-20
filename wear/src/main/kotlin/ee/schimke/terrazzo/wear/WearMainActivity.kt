@@ -6,6 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,11 +21,14 @@ import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.TimeText
-import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.ha.rc.LocalRelativeTimeTick
+import ee.schimke.ha.rc.rememberRelativeTimeTick
 import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.sync.WearLeaseController
 import ee.schimke.terrazzo.wear.sync.WearSlotsController
 import ee.schimke.terrazzo.wear.sync.WearSyncRepository
+import ee.schimke.terrazzo.wear.ui.LocalWearCardLook
+import ee.schimke.terrazzo.wear.ui.WearCardLook
 import ee.schimke.terrazzo.wear.ui.WearDashboardScreen
 import ee.schimke.terrazzo.wear.ui.WearDashboardsScreen
 import ee.schimke.terrazzo.wear.ui.WearSectionScreen
@@ -99,8 +103,8 @@ private fun WearApp(repo: WearSyncRepository) {
   val context = LocalContext.current
   val prefs = remember(context) { WearPrefs(context.applicationContext) }
   val scope = rememberCoroutineScope()
-  val style by prefs.themeStyle.collectAsState(initial = ThemeStyle.TerrazzoHome)
-  val cardStyle by prefs.cardStyle.collectAsState(initial = "classic")
+  val style by prefs.themeStyle.collectAsState(initial = null)
+  val cardStyle by prefs.cardStyle.collectAsState(initial = null)
   val settings: WearSettings by repo.settings.collectAsState()
   val pinned: PinnedCardSet by repo.pinned.collectAsState()
   val sections: PinnedSectionSet by repo.sections.collectAsState()
@@ -117,38 +121,33 @@ private fun WearApp(repo: WearSyncRepository) {
     screen = if (screen == WearScreen.Dashboard) WearScreen.Dashboards else WearScreen.TopLevel
   }
 
+  // Read the persisted selection before capturing the first card document.
+  val selectedCardStyle = cardStyle ?: return
+  val selectedPalette = style ?: return
+
   MaterialTheme(
-    colorScheme = terrazzoWearColorScheme(style),
-    typography = wearTypographyFor(style),
+    colorScheme = terrazzoWearColorScheme(selectedPalette),
+    typography = wearTypographyFor(selectedPalette),
   ) {
-    AppScaffold(timeText = { TimeText() }) {
-      ScreenScaffold {
-        when (screen) {
-          WearScreen.TopLevel ->
-            WearTopLevelScreen(
-              settings = settings,
-              pinned = pinned,
-              sections = sections,
-              values = values,
-              onOpenSection = { section ->
-                openedSectionKey = section.sectionKey
-                screen = WearScreen.Section
-              },
-              onBrowseDashboards = { screen = WearScreen.Dashboards },
-              onOpenSettings = { screen = WearScreen.Settings },
-              modifier = Modifier.fillMaxSize(),
-            )
-          WearScreen.Section -> {
-            val key = openedSectionKey
-            val resolved = sections.sections.firstOrNull { it.sectionKey == key }
-            if (resolved == null && key != null) {
-              // Section was unpinned mid-flight; bounce back so the
-              // user lands somewhere meaningful instead of an empty
-              // detail screen.
-              screen = WearScreen.TopLevel
-            } else {
-              WearSectionScreen(
-                section = resolved,
+    CompositionLocalProvider(
+      LocalWearCardLook provides WearCardLook(selectedPalette, selectedCardStyle),
+      LocalRelativeTimeTick provides rememberRelativeTimeTick(),
+    ) {
+      AppScaffold(timeText = { TimeText() }) {
+        ScreenScaffold {
+          when (screen) {
+            WearScreen.TopLevel ->
+              WearTopLevelScreen(
+                settings = settings,
+                pinned = pinned,
+                sections = sections,
+                values = values,
+                onOpenSection = { section ->
+                  openedSectionKey = section.sectionKey
+                  screen = WearScreen.Section
+                },
+                onBrowseDashboards = { screen = WearScreen.Dashboards },
+                onOpenSettings = { screen = WearScreen.Settings },
                 onInputSend =
                   if (
                     settings.inputEditingEnabled &&
@@ -157,65 +156,87 @@ private fun WearApp(repo: WearSyncRepository) {
                   )
                     repo::sendInputs
                   else null,
-                values = values,
+                modifier = Modifier.fillMaxSize(),
+              )
+            WearScreen.Section -> {
+              val key = openedSectionKey
+              val resolved = sections.sections.firstOrNull { it.sectionKey == key }
+              if (resolved == null && key != null) {
+                // Section was unpinned mid-flight; bounce back so the
+                // user lands somewhere meaningful instead of an empty
+                // detail screen.
+                screen = WearScreen.TopLevel
+              } else {
+                WearSectionScreen(
+                  section = resolved,
+                  onInputSend =
+                    if (
+                      settings.inputEditingEnabled &&
+                        !settings.demoMode &&
+                        settings.baseUrl.isNotEmpty()
+                    )
+                      repo::sendInputs
+                    else null,
+                  values = values,
+                  onBack = { screen = WearScreen.TopLevel },
+                  modifier = Modifier.fillMaxSize(),
+                )
+              }
+            }
+            WearScreen.Dashboards ->
+              WearDashboardsScreen(
+                dashboards = dashboards,
+                onDashboardPicked = {
+                  openedDashboard = it.urlPath
+                  screen = WearScreen.Dashboard
+                },
                 onBack = { screen = WearScreen.TopLevel },
                 modifier = Modifier.fillMaxSize(),
               )
+            WearScreen.Dashboard -> {
+              val urlPath = openedDashboard
+              val board = dashboards.firstOrNull { it.urlPath == urlPath }
+              if (board != null) {
+                WearDashboardScreen(
+                  dashboard = board,
+                  onInputSend =
+                    if (
+                      settings.inputEditingEnabled &&
+                        !settings.demoMode &&
+                        settings.baseUrl.isNotEmpty()
+                    )
+                      repo::sendInputs
+                    else null,
+                  values = values,
+                  onBack = { screen = WearScreen.Dashboards },
+                  modifier = Modifier.fillMaxSize(),
+                )
+              } else {
+                // Dashboard removed mid-flight; bounce back.
+                screen = WearScreen.Dashboards
+              }
             }
-          }
-          WearScreen.Dashboards ->
-            WearDashboardsScreen(
-              dashboards = dashboards,
-              onDashboardPicked = {
-                openedDashboard = it.urlPath
-                screen = WearScreen.Dashboard
-              },
-              onBack = { screen = WearScreen.TopLevel },
-              modifier = Modifier.fillMaxSize(),
-            )
-          WearScreen.Dashboard -> {
-            val urlPath = openedDashboard
-            val board = dashboards.firstOrNull { it.urlPath == urlPath }
-            if (board != null) {
-              WearDashboardScreen(
-                dashboard = board,
-                onInputSend =
-                  if (
-                    settings.inputEditingEnabled &&
-                      !settings.demoMode &&
-                      settings.baseUrl.isNotEmpty()
-                  )
-                    repo::sendInputs
-                  else null,
-                values = values,
-                onBack = { screen = WearScreen.Dashboards },
+            WearScreen.Settings ->
+              WearSettingsScreen(
+                selected = selectedPalette,
+                settings = settings,
+                onSelectTheme = { picked ->
+                  scope.launch {
+                    prefs.setThemeStyle(picked)
+                    refreshAllSlotWidgets(context.applicationContext)
+                  }
+                },
+                onBack = { screen = WearScreen.TopLevel },
                 modifier = Modifier.fillMaxSize(),
+                cardStyle = selectedCardStyle,
+                onSelectCardStyle = { picked ->
+                  scope.launch {
+                    prefs.setCardStyle(picked)
+                    refreshAllSlotWidgets(context.applicationContext)
+                  }
+                },
               )
-            } else {
-              // Dashboard removed mid-flight; bounce back.
-              screen = WearScreen.Dashboards
-            }
           }
-          WearScreen.Settings ->
-            WearSettingsScreen(
-              selected = style,
-              settings = settings,
-              onSelectTheme = { picked ->
-                scope.launch {
-                  prefs.setThemeStyle(picked)
-                  refreshAllSlotWidgets(context.applicationContext)
-                }
-              },
-              onBack = { screen = WearScreen.TopLevel },
-              modifier = Modifier.fillMaxSize(),
-              cardStyle = cardStyle,
-              onSelectCardStyle = { picked ->
-                scope.launch {
-                  prefs.setCardStyle(picked)
-                  refreshAllSlotWidgets(context.applicationContext)
-                }
-              },
-            )
         }
       }
     }

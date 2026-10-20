@@ -315,6 +315,10 @@ green "Arm away" or a purple media accent doesn't sink into Console's blue panel
 control, calendar, area, picture, Bambu, weather and statistic cards take both.
 
 **Wear and TV.** The Wear app has a **Card style** setting of its own (`WearPrefs.cardStyle`).
+The activity plays dashboard, section and pinned cards through `WearRemoteCard`, including
+container children, with the selected style and live bindings. Explicit phone card/type styles
+are synced for all three lists; clearing them restores the watch choice. The persisted watch
+selection is loaded before the first card capture.
 Slot widgets apply it with `ProvideHaUberStyle`, which brings the instruments, type, shapes and
 ink but keeps the watch's palette (the WearM3 colours its host updates); changing it (or the
 watch theme) re-renders placed widgets (`refreshAllSlotWidgets`). An explicit phone per-card or

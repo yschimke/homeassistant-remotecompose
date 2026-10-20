@@ -375,6 +375,144 @@ class SlotWidgetDesignTest {
   }
 
   @Test
+  fun offlineGridWidgetsFollowPersistedSelectionAndFreshValuesAtBothSizes() = runBlocking {
+    val context = RuntimeEnvironment.getApplication()
+    val prefs = ee.schimke.terrazzo.wear.data.WearPrefs(context)
+    val store = ee.schimke.terrazzo.wear.sync.WearOfflineStore(context)
+    val raw =
+      """{"type":"grid","columns":2,"square":false,"cards":[{"type":"button","entity":"light.kitchen","name":"Kitchen"},{"type":"button","entity":"light.office","name":"Office"}]}"""
+    fun pin(override: String) {
+      store.writePinned(
+        ee.schimke.terrazzo.wearsync.proto.PinnedCardSet(
+          cards =
+            listOf(
+              ee.schimke.terrazzo.wearsync.proto.PinnedCard(
+                cardKey = "grid",
+                card =
+                  ee.schimke.terrazzo.wearsync.proto.CardSummary(
+                    type = "grid",
+                    rawJson = raw,
+                    cardStyleOverride = override,
+                  ),
+              )
+            )
+        )
+      )
+    }
+    fun live(state: String) {
+      store.writeValues(
+        ee.schimke.terrazzo.wearsync.proto.LiveValues(
+          values =
+            mapOf(
+              "light.kitchen" to
+                ee.schimke.terrazzo.wearsync.proto.EntityValue(
+                  state = state,
+                  friendlyName = "Kitchen",
+                ),
+              "light.office" to
+                ee.schimke.terrazzo.wearsync.proto.EntityValue(
+                  state = "off",
+                  friendlyName = "Office",
+                ),
+            )
+        )
+      )
+    }
+    store.writeSlots(
+      ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots(
+        slots =
+          listOf(ee.schimke.terrazzo.wearsync.proto.WidgetSlot(slotIndex = 0, cardKey = "grid"))
+      )
+    )
+    data class Frame(val name: String, val height: Float, val bytes: ByteArray)
+    val frames = mutableListOf<Frame>()
+    for ((container, height) in
+      listOf(
+        ContainerInfo.CONTAINER_TYPE_SMALL to 60f,
+        ContainerInfo.CONTAINER_TYPE_LARGE to 112f,
+      )) {
+      val sized =
+        WearWidgetParams(
+          instanceId = params.instanceId,
+          containerType = container,
+          widthDp = 200f,
+          heightDp = height,
+          horizontalPaddingDp = 8f,
+          verticalPaddingDp = 8f,
+          cornerRadiusDp = 26f,
+        )
+      suspend fun render(): ByteArray =
+        slotWidgetDataFromStore(
+            context,
+            ee.schimke.terrazzo.wear.sync.WearOfflineStore(context),
+            0,
+          )
+          .captureRawContent(context, sized, false)
+          .rcDocument
+      prefs.setCardStyle("braun")
+      pin("")
+      live("on")
+      val inherited = render()
+      pin("lcd")
+      val overridden = render()
+      assertFalse(
+        inherited.contentEquals(overridden),
+        "offline pin style overrides the watch style",
+      )
+      live("off")
+      val updated = render()
+      assertFalse(overridden.contentEquals(updated), "a container rebakes current child values")
+      pin("")
+      val cleared = render()
+      assertFalse(
+        updated.contentEquals(cleared),
+        "clearing the persisted override restores the watch style",
+      )
+      prefs.setCardStyle("console")
+      val changedWatch = render()
+      assertFalse(
+        cleared.contentEquals(changedWatch),
+        "watch setting changes invalidate the cached widget design",
+      )
+      for ((name, bytes) in
+        listOf(
+          "braun-on" to inherited,
+          "lcd-on" to overridden,
+          "lcd-off" to updated,
+          "braun-off" to cleared,
+          "console-off" to changedWatch,
+        )) {
+        val document = RcDocumentCodec.decode(bytes, RcWireLimits())
+        assertEquals(emptyList(), document.validateFor(RcTargetProfiles.WEAR_WIDGETS), name)
+        assertFalse(
+          document.namedVariables.any { it.name.startsWith("light.s") },
+          "all child slots are baked",
+        )
+        assertTrue("Kitchen" in String(bytes, Charsets.ISO_8859_1))
+        assertTrue("Office" in String(bytes, Charsets.ISO_8859_1))
+        frames += Frame("offline-grid-$name-${height.toInt()}", height, bytes)
+      }
+    }
+    var frame by mutableStateOf(frames.first())
+    compose.setContent {
+      Box(Modifier.size(200.dp, frame.height.dp).testTag("widget")) {
+        key(frame.name) {
+          HaRcComposePlayer(
+            documentBytes = frame.bytes,
+            modifier = Modifier.size(200.dp, frame.height.dp),
+            fallback = { error("${frame.name} failed playback") },
+          )
+        }
+      }
+    }
+    for (next in frames) {
+      compose.runOnIdle { frame = next }
+      compose.waitForIdle()
+      pixels(next.name)
+    }
+  }
+
+  @Test
   fun pictureCardEmbedsItsSyncedPicture() {
     val fetched = mutableListOf<String>()
     val bytes =

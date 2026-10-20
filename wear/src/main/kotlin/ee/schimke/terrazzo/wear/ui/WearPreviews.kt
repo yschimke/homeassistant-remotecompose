@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo.wear.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.MaterialTheme
@@ -19,6 +20,26 @@ import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSection
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+
+/** Preview data obeys the same raw-config contract as phone-synced cards. */
+private fun previewCard(
+  type: String,
+  title: String,
+  primaryEntityId: String = "sensor.living_room",
+): CardSummary =
+  CardSummary(
+    type = type,
+    title = title,
+    primaryEntityId = primaryEntityId,
+    rawJson = buildJsonObject {
+        put("type", type)
+        put("entity", primaryEntityId)
+        put("name", title)
+      }
+        .toString(),
+  )
 
 /**
  * Wear @Preview fixtures. Render the new sync-driven home screen, the dashboards browse list, and
@@ -32,7 +53,7 @@ private val PINNED_FIXTURE =
         PinnedCard(
           baseUrl = "demo://terrazzo",
           card =
-            CardSummary(
+            previewCard(
               type = "tile",
               title = "Living Room",
               primaryEntityId = "sensor.living_room",
@@ -42,14 +63,14 @@ private val PINNED_FIXTURE =
         ),
         PinnedCard(
           baseUrl = "demo://terrazzo",
-          card = CardSummary(type = "tile", title = "Kitchen", primaryEntityId = "light.kitchen"),
+          card = previewCard(type = "tile", title = "Kitchen", primaryEntityId = "light.kitchen"),
           cardKey = "k1",
           orderIndex = 2,
         ),
         PinnedCard(
           baseUrl = "demo://terrazzo",
           card =
-            CardSummary(type = "tile", title = "Front door", primaryEntityId = "lock.front_door"),
+            previewCard(type = "tile", title = "Front door", primaryEntityId = "lock.front_door"),
           cardKey = "k2",
           orderIndex = 3,
         ),
@@ -68,12 +89,12 @@ private val SECTIONS_FIXTURE =
           title = "Climate",
           cards =
             listOf(
-              CardSummary(
+              previewCard(
                 type = "tile",
                 title = "Living Room",
                 primaryEntityId = "sensor.living_room",
               ),
-              CardSummary(type = "tile", title = "Bedroom", primaryEntityId = "sensor.bedroom"),
+              previewCard(type = "tile", title = "Bedroom", primaryEntityId = "sensor.bedroom"),
             ),
           sectionKey = "s0",
           orderIndex = 1,
@@ -99,17 +120,17 @@ private val DASHBOARDS_FIXTURE =
     DashboardData(
       urlPath = "",
       title = "Home",
-      cards = List(4) { CardSummary(type = "tile", title = "Card $it") },
+      cards = List(4) { previewCard(type = "tile", title = "Card $it") },
     ),
     DashboardData(
       urlPath = "downstairs",
       title = "Downstairs",
-      cards = List(3) { CardSummary(type = "tile", title = "Card $it") },
+      cards = List(3) { previewCard(type = "tile", title = "Card $it") },
     ),
     DashboardData(
       urlPath = "office",
       title = "Office",
-      cards = List(5) { CardSummary(type = "tile", title = "Card $it") },
+      cards = List(5) { previewCard(type = "tile", title = "Card $it") },
     ),
   )
 
@@ -183,8 +204,19 @@ fun WearDashboardsPreview() {
 
 @Preview(name = "Wear: dashboard", device = WearDevices.SMALL_ROUND, showSystemUi = true)
 @Composable
-fun WearDashboardPreview() {
-  WearPreviewFrame {
+fun WearDashboardPreview() = WearDashboardPreviewContent("classic")
+
+@Preview(name = "Wear: dashboard LCD", device = WearDevices.SMALL_ROUND, showSystemUi = true)
+@Composable
+fun WearDashboardPreview_Lcd() = WearDashboardPreviewContent("lcd")
+
+@Preview(name = "Wear: dashboard Braun", device = WearDevices.SMALL_ROUND, showSystemUi = true)
+@Composable
+fun WearDashboardPreview_Braun() = WearDashboardPreviewContent("braun")
+
+@Composable
+private fun WearDashboardPreviewContent(style: String) {
+  WearPreviewFrame(style) {
     WearDashboardScreen(
       dashboard =
         DashboardData(
@@ -192,13 +224,13 @@ fun WearDashboardPreview() {
           title = "Home",
           cards =
             listOf(
-              CardSummary(
+              previewCard(
                 type = "tile",
                 title = "Living Room",
                 primaryEntityId = "sensor.living_room",
               ),
-              CardSummary(type = "tile", title = "Kitchen", primaryEntityId = "light.kitchen"),
-              CardSummary(
+              previewCard(type = "tile", title = "Kitchen", primaryEntityId = "light.kitchen"),
+              previewCard(
                 type = "tile",
                 title = "Coffee maker",
                 primaryEntityId = "switch.coffee_maker",
@@ -258,13 +290,15 @@ fun Play_Wear_04_Dashboard() = WearDashboardPreview()
 
 /** Shared fixture: Wear-Material theme + ScreenScaffold so each preview reads like a real frame. */
 @Composable
-private fun WearPreviewFrame(content: @Composable () -> Unit) {
+private fun WearPreviewFrame(style: String = "classic", content: @Composable () -> Unit) {
   MaterialTheme(
     colorScheme = terrazzoWearColorScheme(ThemeStyle.TerrazzoHome),
     typography = wearTypographyFor(ThemeStyle.TerrazzoHome),
   ) {
-    AppScaffold(timeText = { TimeText(timeSource = PreviewTimeSource) }) {
-      ScreenScaffold { content() }
+    CompositionLocalProvider(LocalWearCardLook provides WearCardLook(style = style)) {
+      AppScaffold(timeText = { TimeText(timeSource = PreviewTimeSource) }) {
+        ScreenScaffold { content() }
+      }
     }
   }
 }
