@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.53](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.52...v0.1.53) (2026-10-21)
+
+
+### Features
+
+* Wear widgets play the card's own design from the design server ([#1013](https://github.com/yschimke/homeassistant-remotecompose/issues/1013)) ([67a62a4](https://github.com/yschimke/homeassistant-remotecompose/commit/67a62a4f6a9749594c2287dd7824aeb697b36027))
+
 ## [0.1.52](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.51...v0.1.52) (2026-10-20)
 
 
