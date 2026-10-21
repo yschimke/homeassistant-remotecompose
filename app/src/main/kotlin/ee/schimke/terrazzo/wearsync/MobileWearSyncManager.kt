@@ -155,6 +155,22 @@ class MobileWearSyncManager(
    */
   private val registrySnapshot: MutableStateFlow<HaSnapshot> = MutableStateFlow(HaSnapshot())
 
+  /**
+   * The entities the cards sent to the watch read, by what sent them: each dashboard (by its
+   * DataItem path), the pinned cards and the pinned sections. Only these entities' values go to the
+   * watch ([wearValues]): every entity Home Assistant has would outgrow a DataItem.
+   */
+  private val dashboardEntities = MutableStateFlow<Map<String, Set<String>>>(emptyMap())
+  private val pinnedEntities = MutableStateFlow<Set<String>>(emptySet())
+  private val sectionEntities = MutableStateFlow<Set<String>>(emptySet())
+
+  /** Every entity a card on the watch reads: see [dashboardEntities]. */
+  private val watchEntityIds: Set<String>
+    get() =
+      dashboardEntities.value.values.flatten().toSet() +
+        pinnedEntities.value +
+        sectionEntities.value
+
   /** Per entity: the picture URL last pushed, its PNG's hash, and when. */
   private val pushedPictures = HashMap<String, PushedPicture>()
 
@@ -362,6 +378,7 @@ class MobileWearSyncManager(
         .distinctUntilChanged()
         .whileSignedIn()
         .collect { cards ->
+          pinnedEntities.value = wearEntityIds(cards.cards.map { it.card.rawJson })
           writeDataItem(
             WearSyncPaths.PINNED,
             encodeProto(cards.copy(updatedAtMs = System.currentTimeMillis())),
@@ -380,6 +397,8 @@ class MobileWearSyncManager(
         .distinctUntilChanged()
         .whileSignedIn()
         .collect { sections ->
+          sectionEntities.value =
+            wearEntityIds(sections.sections.flatMap { section -> section.cards.map { it.rawJson } })
           writeDataItem(
             WearSyncPaths.SECTIONS,
             encodeProto(sections.copy(updatedAtMs = System.currentTimeMillis())),
@@ -497,10 +516,14 @@ class MobileWearSyncManager(
             cards = cards.map { it.toWearDashboardSummary(snapshot, overrides) },
             updatedAtMs = System.currentTimeMillis(),
           )
-        writeDataItem(WearSyncPaths.dashboardPath(summary.urlPath), encodeProto(data))
+        val path = WearSyncPaths.dashboardPath(summary.urlPath)
+        dashboardEntities.value =
+          dashboardEntities.value + (path to wearEntityIds(data.cards.map { it.rawJson }))
+        writeDataItem(path, encodeProto(data))
       }
       // Every dashboard listed and written: drop the ones Home Assistant no longer has.
       val current = summaries.map { WearSyncPaths.dashboardPath(it.urlPath) }
+      dashboardEntities.value = dashboardEntities.value.filterKeys { it in current }
       val stale = staleDashboardPaths(dataItemPaths(WearSyncPaths.DASHBOARD_PREFIX), current)
       deleteDataItems(stale.map { WearDataItems(it, prefix = false) })
     }
@@ -538,7 +561,7 @@ class MobileWearSyncManager(
         .getOrNull()
       if (snapshot != null) {
         registrySnapshot.value = snapshot
-        val current = snapshot.states.mapValues { (_, state) -> state.toEntityValue(snapshot) }
+        val current = wearValues(snapshot, watchEntityIds)
         // When the snapshot was fetched: a cached one (app backgrounded, offline) isn't fresh.
         val capturedAtMs =
           valuesCapturedAtMs(session.snapshotFetchedAtMs(null), System.currentTimeMillis())
@@ -750,6 +773,27 @@ internal fun wearPictureUrls(cards: List<CardConfig>, snapshot: HaSnapshot): Map
         snapshot.states[entityId]?.attributes?.get("entity_picture")?.jsonPrimitive?.contentOrNull
       url?.let { entityId to it }
     }
+    .toMap()
+
+/**
+ * The entities [rawJson] cards read: every entity-id-shaped token in them (`light.kitchen`),
+ * wherever it sits, so a resolved Bambu card's sensors, a markdown card's `states('sensor.x')` and
+ * nested cards count as well as `entity` fields. A token that names no entity matches nothing in
+ * [wearValues].
+ */
+internal fun wearEntityIds(rawJson: List<String>): Set<String> =
+  rawJson.flatMapTo(HashSet()) { raw -> ENTITY_ID.findAll(raw).map { it.value } }
+
+private val ENTITY_ID = Regex("""\b[a-z_][a-z0-9_]*\.[a-z0-9_]+\b""")
+
+/**
+ * The values to send the watch: those of [entityIds] that [snapshot] has. Never all of Home
+ * Assistant's: a large home's states outgrow one DataItem and one message (about 100 KB each), and
+ * then nothing reaches the watch and every card reads unavailable.
+ */
+internal fun wearValues(snapshot: HaSnapshot, entityIds: Set<String>): Map<String, EntityValue> =
+  entityIds
+    .mapNotNull { id -> snapshot.states[id]?.let { id to it.toEntityValue(snapshot) } }
     .toMap()
 
 /** How entity values reach the watch on one pump tick. */
