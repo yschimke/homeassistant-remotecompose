@@ -104,7 +104,7 @@ cmp-adaptive = "1.3.0"
 # rc-players publishes only the modules a release changed, so the player modules can sit on
 # different versions: 2.17.1 shipped `rc-player-compose` alone, on top of runtime, protocol and
 # edit 2.17.0.
-rc-player = "2.17.0"
+rc-player = "2.17.2"
 rc-player-compose = "2.17.1"
 compose-webview = "2.0.3"
 # KCEF requests 2.5.0, which was not published to Central. Keep both halves on the
