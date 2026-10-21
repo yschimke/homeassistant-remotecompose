@@ -5,7 +5,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.MaterialTheme
-import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.TimeSource
 import androidx.wear.compose.material3.TimeText
 import androidx.wear.tooling.preview.devices.WearDevices
@@ -288,7 +287,10 @@ fun Play_Wear_03_WidgetSmall() = SlotWidgetPreview_TileSmall()
 @Composable
 fun Play_Wear_04_Dashboard() = WearDashboardPreview()
 
-/** Shared fixture: Wear-Material theme + ScreenScaffold so each preview reads like a real frame. */
+/**
+ * Shared fixture: Wear-Material theme + AppScaffold so each preview reads like a real frame. Each
+ * screen brings its own ScreenScaffold.
+ */
 @Composable
 private fun WearPreviewFrame(style: String = "classic", content: @Composable () -> Unit) {
   MaterialTheme(
@@ -296,9 +298,7 @@ private fun WearPreviewFrame(style: String = "classic", content: @Composable () 
     typography = wearTypographyFor(ThemeStyle.TerrazzoHome),
   ) {
     CompositionLocalProvider(LocalWearCardLook provides WearCardLook(style = style)) {
-      AppScaffold(timeText = { TimeText(timeSource = PreviewTimeSource) }) {
-        ScreenScaffold { content() }
-      }
+      AppScaffold(timeText = { TimeText(timeSource = PreviewTimeSource) }) { content() }
     }
   }
 }

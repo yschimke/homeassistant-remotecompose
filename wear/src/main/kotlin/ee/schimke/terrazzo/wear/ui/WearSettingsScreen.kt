@@ -1,7 +1,5 @@
 package ee.schimke.terrazzo.wear.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,7 +11,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material3.Button
@@ -54,11 +51,10 @@ fun WearSettingsScreen(
       remember(context) {
         context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "Unknown"
       }
-    ScalingLazyColumn(
+    WearListScreen(
+      modifier = modifier,
       state = rememberScalingLazyListState(initialCenterItemIndex = 0),
-      modifier = modifier.fillMaxWidth(),
-      contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-      verticalArrangement = Arrangement.spacedBy(8.dp),
+      spacing = 8.dp,
     ) {
       item { ListHeader { Text("PUBLIC issue") } }
       item { Text(PUBLIC_FEEDBACK_WARNING, style = MaterialTheme.typography.bodySmall) }
@@ -94,13 +90,7 @@ fun WearSettingsScreen(
     }
     return
   }
-  val listState = rememberScalingLazyListState()
-  ScalingLazyColumn(
-    state = listState,
-    modifier = modifier.fillMaxWidth(),
-    verticalArrangement = Arrangement.spacedBy(4.dp),
-    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-  ) {
+  WearListScreen(modifier = modifier) {
     item {
       Button(
         onClick = {
