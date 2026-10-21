@@ -5,8 +5,8 @@
 (() => {
   const CALLBACK_PARAM = 'terrazzo_auth';
   const STORAGE_KEY = 'terrazzo-oauth';
-  // The server this tab started a sign-in with: a callback for any other server is ignored, so a
-  // crafted link cannot sign the viewer in to someone else's Home Assistant.
+  // The server and random nonce of the sign-in this tab started. A callback must carry both, so a
+  // crafted link cannot sign the viewer in to someone else's account or Home Assistant.
   const PENDING_KEY = 'terrazzo-oauth-pending';
 
   class AuthError extends Error {}
@@ -75,7 +75,14 @@
       } catch {
         // Storage blocked: no sign-in can be completed.
       }
-      if (!pending || state.hassUrl !== pending || state.clientId !== clientId()) return false;
+      const expected = pending ? JSON.parse(pending) : null;
+      if (
+        !expected ||
+        state.hassUrl !== expected.hassUrl ||
+        state.nonce !== expected.nonce ||
+        state.clientId !== clientId()
+      )
+        return false;
       tokens = await tokenRequest(state.hassUrl, {
         grant_type: 'authorization_code',
         code: params.get('code'),
@@ -104,8 +111,9 @@
     /** Send the viewer to Home Assistant's sign-in page; it comes back here with a code. */
     signIn(hassUrl) {
       const origin = new URL(hassUrl).origin;
+      const nonce = crypto.randomUUID();
       try {
-        sessionStorage.setItem(PENDING_KEY, origin);
+        sessionStorage.setItem(PENDING_KEY, JSON.stringify({ hassUrl: origin, nonce }));
       } catch {
         // Storage blocked: the callback will be ignored and the connect screen shown again.
       }
@@ -113,7 +121,7 @@
       url.searchParams.set('response_type', 'code');
       url.searchParams.set('client_id', clientId());
       url.searchParams.set('redirect_uri', redirectUri());
-      url.searchParams.set('state', btoa(JSON.stringify({ hassUrl: origin, clientId: clientId() })));
+      url.searchParams.set('state', btoa(JSON.stringify({ hassUrl: origin, clientId: clientId(), nonce })));
       location.assign(url.toString());
     },
 
