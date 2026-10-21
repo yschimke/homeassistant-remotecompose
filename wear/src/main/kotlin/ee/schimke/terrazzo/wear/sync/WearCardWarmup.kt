@@ -70,7 +70,9 @@ internal object WearCardWarmup {
           val design = CardDesignTemplates.designCard(card, snapshot, registry)
           val key = wearDesignKey(design, snapshot, look, style, registry) ?: continue
           runCatching {
-            preloadForComposePlayer(wearTemplateBytes(app, key, registry, density, fontScale))
+            wearTemplateBytes(app, key, registry, density, fontScale)?.let {
+              preloadForComposePlayer(it)
+            }
           }
             .onFailure { Log.w(TAG, "warm-up failed for ${summary.type}", it) }
         }

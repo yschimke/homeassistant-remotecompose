@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retryWhen
@@ -34,7 +35,7 @@ data class PairedWatch(val nodeId: String, val displayName: String, val appInsta
  * installed too: a user on an older watch build isn't asked to install what they already have.
  */
 @OptIn(ExperimentalHorologistApi::class)
-class WearAppInstallHelper(context: Context, scope: CoroutineScope) {
+class WearAppInstallHelper(private val context: Context, scope: CoroutineScope) {
 
   private val registry: WearDataLayerRegistry by lazy {
     WearDataLayerRegistry.fromContext(
@@ -54,7 +55,12 @@ class WearAppInstallHelper(context: Context, scope: CoroutineScope) {
    * without the Wearable API (no Wear OS companion) or after a failed read, which is retried after
    * [RECHECK_MS] rather than ending the flow.
    */
-  val watches: Flow<List<PairedWatch>> =
+  val watches: Flow<List<PairedWatch>> = flow {
+    // No Wearable call at all where one would crash the app (see WearableApiGuard).
+    if (WearableApiGuard.isUsable(context)) emitAll(connectedWatches()) else emit(emptyList())
+  }
+
+  private fun connectedWatches(): Flow<List<PairedWatch>> =
     combine(appHelper.connectedAndInstalledNodes, every(RECHECK_MS)) { installed, _ -> installed }
       .map { installed ->
         val legacy = runCatching {
@@ -83,9 +89,10 @@ class WearAppInstallHelper(context: Context, scope: CoroutineScope) {
    * finishes the install on the watch.
    */
   suspend fun installOnWatch(nodeId: String): Boolean =
-    runCatching { appHelper.installOnNode(nodeId) }
-      .onFailure { Log.w(TAG, "install on $nodeId failed", it) }
-      .getOrNull() == AppHelperResultCode.APP_HELPER_RESULT_SUCCESS
+    WearableApiGuard.isUsable(context) &&
+      runCatching { appHelper.installOnNode(nodeId) }
+        .onFailure { Log.w(TAG, "install on $nodeId failed", it) }
+        .getOrNull() == AppHelperResultCode.APP_HELPER_RESULT_SUCCESS
 
   private companion object {
     const val TAG = "WearAppInstall"
