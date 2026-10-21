@@ -168,7 +168,7 @@ class WidgetPreparationTest {
       }
     }
     compose.waitUntil(60_000) { captures > 0 }
-    compose.onNodeWithText("1 × 1 cells").assertExists()
+    compose.onNodeWithText("Preview at 1 × 1 ", substring = true).assertExists()
     compose.onNodeWithText("Compact").assertIsSelected()
     compose.onNodeWithText("Default").assertDoesNotExist()
     fun pixels(): List<Int> {
@@ -201,7 +201,7 @@ class WidgetPreparationTest {
     val beforeMedium = captures
     compose.onNodeWithText("Medium").performClick()
     compose.waitUntil(60_000) { captures > beforeMedium }
-    compose.onNodeWithText("2 × 2 cells").assertExists()
+    compose.onNodeWithText("Preview at 2 × 2 ", substring = true).assertExists()
     val beforeCompact = captures
     compose.onNodeWithText("Compact").performClick()
     compose.waitUntil(60_000) {
@@ -276,7 +276,7 @@ class WidgetPreparationTest {
     compose.onNodeWithText("Roomy").assertIsSelected()
     restoration.emulateSavedInstanceStateRestore()
     compose.onNodeWithText("Roomy").assertIsSelected()
-    compose.onNodeWithText("4 × 4 cells").assertExists()
+    compose.onNodeWithText("Preview at 4 × 4 ", substring = true).assertExists()
   }
 
   @Test
@@ -342,7 +342,7 @@ class WidgetPreparationTest {
     compose.waitUntil(60_000) {
       compose.onAllNodesWithTag("widget-preview-error").fetchSemanticsNodes().isNotEmpty()
     }
-    compose.onNodeWithText("Install widget").assertIsNotEnabled()
+    compose.onNodeWithText("Add to home screen").assertIsNotEnabled()
     screenshot("picture-before-preview-error")
   }
 
@@ -378,14 +378,14 @@ class WidgetPreparationTest {
         }
       }
     }
-    compose.onNodeWithText("Widget name").performTextClearance()
-    compose.onNodeWithText("Widget name").performTextInput(editedName)
-    compose.onNodeWithText("Widget name").performImeAction()
-    compose.onNodeWithText("1 × 1 cells").performScrollTo().assertExists()
+    compose.onNodeWithText("Label (optional)").performTextClearance()
+    compose.onNodeWithText("Label (optional)").performTextInput(editedName)
+    compose.onNodeWithText("Label (optional)").performImeAction()
+    compose.onNodeWithText("Preview at 1 × 1 ", substring = true).performScrollTo().assertExists()
     compose.onNodeWithText("Compact").assertIsSelected()
     compose.waitUntil(60_000) {
       compose
-        .onAllNodes(hasText("Install widget") and isEnabled())
+        .onAllNodes(hasText("Add to home screen") and isEnabled())
         .fetchSemanticsNodes()
         .isNotEmpty()
     }
@@ -446,7 +446,7 @@ class WidgetPreparationTest {
     screenshot("${evidencePrefix}prepared-preview")
     if (evidencePrefix.isEmpty()) screenshot("setup-initial-one-cell")
 
-    compose.onNodeWithText("Install widget").assertIsEnabled().performClick()
+    compose.onNodeWithText("Add to home screen").assertIsEnabled().performClick()
     assertTrue(
       device.wait(
         Until.hasObject(By.text(java.util.regex.Pattern.compile("(?i).*add to home screen.*"))),
@@ -470,11 +470,11 @@ class WidgetPreparationTest {
     compose.onNodeWithText(editedName).assertExists()
     compose.waitUntil(60_000) {
       compose
-        .onAllNodes(hasText("Install widget") and isEnabled())
+        .onAllNodes(hasText("Add to home screen") and isEnabled())
         .fetchSemanticsNodes()
         .isNotEmpty()
     }
-    compose.onNodeWithText("Install widget").assertIsEnabled().performClick()
+    compose.onNodeWithText("Add to home screen").assertIsEnabled().performClick()
     assertTrue(
       device.wait(
         Until.hasObject(By.text(java.util.regex.Pattern.compile("(?i).*add to home screen.*"))),

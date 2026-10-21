@@ -83,7 +83,7 @@ internal fun WearWidgetsContent(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Wear widgets") },
+        title = { Text("Watch widgets") },
         navigationIcon = {
           IconButton(onClick = onBack) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

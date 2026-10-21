@@ -161,7 +161,7 @@ class WidgetPreviewRefreshTest {
         val request = nextRequest()
         Thread.sleep(750)
         compose.onNodeWithTag("widget-render").assertExists()
-        compose.onNodeWithText("Install widget").assertIsEnabled()
+        compose.onNodeWithText("Add to home screen").assertIsEnabled()
         request.succeed()
         compose.waitUntil(10_000) {
           var text: String? = null
@@ -212,7 +212,7 @@ class WidgetPreviewRefreshTest {
         text == dragged.text
       }
       compose.onNodeWithText("${dimensions[0] - 1} × ${dimensions[1] - 1} cells").assertExists()
-      compose.onNodeWithText("Install widget").assertIsEnabled()
+      compose.onNodeWithText("Add to home screen").assertIsEnabled()
     } finally {
       compose.runOnIdle { root.viewTreeObserver.removeOnPreDrawListener(listener) }
       val uri =

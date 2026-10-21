@@ -163,10 +163,12 @@ internal fun WidgetPreparationPreview(
     }
     if (prepared == null) return
   }
-  Text("Try it on your home screen", style = MaterialTheme.typography.titleMedium)
+  // One line of guidance: the widget adapts, so sizing here is a look, not a setting.
   Text(
-    "Adaptive layout · drag the corner or try a size. New widgets start at 1 × 1; resize them on the home screen. This preview shows up to 4 × 4.",
+    "Preview at $width × $height · drag the corner or pick a size. It adapts when you resize " +
+      "it on your home screen.",
     style = MaterialTheme.typography.bodySmall,
+    color = MaterialTheme.colorScheme.onSurfaceVariant,
   )
   FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
     listOf(
@@ -191,7 +193,6 @@ internal fun WidgetPreparationPreview(
         )
       }
   }
-  Text("$width × $height cells", style = MaterialTheme.typography.labelLarge)
   LauncherGrid(
     bounds,
     width,
