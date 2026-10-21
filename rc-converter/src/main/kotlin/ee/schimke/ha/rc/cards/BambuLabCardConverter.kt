@@ -668,6 +668,29 @@ private fun resolveBambuDevices(raw: JsonObject, snapshot: HaSnapshot): JsonObje
   return out
 }
 
+/**
+ * The entities a host rendering [card] from part of [snapshot] needs for its Bambu Lab cards
+ * (stacks and grids included): every entity of every printer in [snapshot], since a card's printer
+ * can be resolved from those entities alone ([resolveBambuPrinter]: an `entity_prefix:`, its own
+ * entities, or the only printer) and its readings and controls are named from the printer's prefix.
+ * Empty when [card] holds no Bambu card.
+ */
+fun bambuEntityIds(card: CardConfig, snapshot: HaSnapshot): Set<String> {
+  if (!hasBambuCard(card.raw)) return emptySet()
+  val printers = bambuPrinters(snapshot)
+  return snapshot.states.keys
+    .filter { id ->
+      val objectId = id.substringAfter('.', "")
+      printers.any { objectId.startsWith("${it}_") }
+    }
+    .toSet()
+}
+
+private fun hasBambuCard(raw: JsonObject): Boolean =
+  (raw["type"] as? JsonPrimitive)?.contentOrNull in BambuCardTypes ||
+    (raw["cards"] as? JsonArray).orEmpty().any { it is JsonObject && hasBambuCard(it) } ||
+    (raw["card"] as? JsonObject)?.let(::hasBambuCard) == true
+
 /** One Bambu card's config with its registry-resolved printer made explicit; see above. */
 private fun pinBambuDevice(card: CardConfig, snapshot: HaSnapshot): JsonObject {
   val printer = resolveBambuPrinter(card, snapshot)
