@@ -87,7 +87,7 @@ internal fun ManagePinnedContent(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Manage pinned") },
+        title = { Text("Cards on your watch") },
         navigationIcon = {
           IconButton(onClick = onBack) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -103,10 +103,10 @@ internal fun ManagePinnedContent(
           Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
-        Text("No pins yet", style = MaterialTheme.typography.titleMedium)
+        Text("Nothing on your watch yet", style = MaterialTheme.typography.titleMedium)
         Text(
-          "Pin sections from a dashboard's section heading or pin cards from " +
-            "the long-press sheet. Pinned items become Wear nav destinations.",
+          "Long-press a card and turn on Show on watch, or tap the pin on a section " +
+            "heading. They appear in this order in the watch app.",
           style = MaterialTheme.typography.bodyMedium,
         )
       }

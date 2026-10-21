@@ -505,6 +505,26 @@ private fun DashboardList(
         }
     val cardDesignOverrides by
       remember(context) { CardDesignOverrideStore.of(context).overrides }.collectAsState()
+    // Every card's template resolved in the background, top to bottom, so a card scrolling on
+    // screen for the first time finds it ready rather than capturing, folding and decoding it on
+    // that frame. Snapshot changes don't restart it: they move values, which arrive as bindings.
+    // Not in previews: a render harness composes each card on its own and wants no other work.
+    val inspecting = androidx.compose.ui.platform.LocalInspectionMode.current
+    val warmSnapshot by rememberUpdatedState(snapshot)
+    LaunchedEffect(layout, cardDesigns, cardDesignOverrides, style, dark, cardStyle) {
+      if (inspecting) return@LaunchedEffect
+      warmCardTemplates(
+        context.applicationContext,
+        layout.cardsInOrder(),
+        warmSnapshot,
+        cardDesigns,
+        cardDesignOverrides,
+        style,
+        dark,
+        registry,
+        cardStyle,
+      )
+    }
     // A navigation to one of this dashboard's views: open its first section if collapsed mode
     // closed it, and scroll to the view's first item.
     LaunchedEffect(pendingView, layout) {
@@ -694,6 +714,14 @@ private fun ViewLayout.stackedSections(
         .map { row -> row.indices.map(cards::get) }
     StackedSection(heading, rows)
   }
+}
+
+/**
+ * Every card [CardSlot] draws, in the order the dashboard shows them: each view's header, its loose
+ * cards, then its sections'.
+ */
+private fun DashboardLayout.cardsInOrder(): List<CardConfig> = views.flatMap { view ->
+  listOfNotNull(view.header?.card) + view.orphanCards + view.sections.flatMap { it.cards }
 }
 
 /** HA pads the sections wrapper by one column gap either side; the list already has [gutter]. */
@@ -1328,6 +1356,26 @@ internal fun StudioCardPreview(session: HaSession, card: CardConfig, snapshot: H
       {},
       Modifier.fillMaxWidth().semantics { contentDescription = "Current card preview" },
     )
+  }
+}
+
+/**
+ * [StudioCardPreview] with what the dashboard puts around its cards: the user's per-card style
+ * overrides and the preloaded server designs. Screens outside [DashboardViewScreen] that promise
+ * the card "as the dashboard draws it" (history, the style sheet) use this so a card with a style
+ * of its own doesn't fall back to the dashboard-wide style.
+ */
+@Composable
+internal fun DashboardCardPreview(session: HaSession, card: CardConfig, snapshot: HaSnapshot) {
+  val context = androidx.compose.ui.platform.LocalContext.current
+  val overrides by
+    remember(context) { CardDesignOverrideStore.of(context).overrides }.collectAsState()
+  val designs = rememberPreloadedCardDesigns() ?: CardDesigns()
+  CompositionLocalProvider(
+    LocalCardDesigns provides designs,
+    LocalCardDesignOverrides provides overrides,
+  ) {
+    StudioCardPreview(session, card, snapshot)
   }
 }
 

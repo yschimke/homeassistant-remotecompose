@@ -4,24 +4,17 @@ package ee.schimke.terrazzo.widget
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PushPin
-import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -31,7 +24,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -43,17 +35,17 @@ import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.LocalTerrazzoGraph
-import ee.schimke.terrazzo.core.pin.MobilePinnedCard
-import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.widget.WidgetStore
-import ee.schimke.terrazzo.dashboard.toPinnedData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonPrimitive
 
-/** Review a local card edit, try adaptive sizes, then hand its live preview to the launcher. */
+/**
+ * Puts a card on the launcher: its live widget preview first, sized on a launcher grid, then an
+ * optional label, then the one button that asks the launcher to place it. Nothing else — the watch,
+ * the card style and monitoring live in the card's actions sheet, so this sheet does one job.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WidgetInstallSheet(
@@ -62,7 +54,6 @@ fun WidgetInstallSheet(
   card: CardConfig,
   snapshot: HaSnapshot,
   onDismiss: () -> Unit,
-  onMonitor: (() -> Unit)? = null,
   refreshSnapshot: (suspend () -> HaSnapshot)? = null,
 ) {
   val context = LocalContext.current
@@ -70,9 +61,8 @@ fun WidgetInstallSheet(
   val keyboard = LocalSoftwareKeyboardController.current
   val installer = remember { WidgetInstaller(context.applicationContext) }
   val store = LocalTerrazzoGraph.current.widgetStore
-  val pinStore = LocalTerrazzoGraph.current.pinStore
-  val pinScope = rememberCoroutineScope()
-  var name by remember(card) { mutableStateOf(card.raw["name"]?.jsonPrimitive?.content ?: "") }
+  val originalName = remember(card) { card.raw["name"]?.jsonPrimitive?.content ?: "" }
+  var name by remember(card) { mutableStateOf(originalName) }
   val editedCard =
     remember(card, name) {
       if (name.isBlank() || name == (card.raw["name"]?.jsonPrimitive?.content ?: "")) card
@@ -118,13 +108,6 @@ fun WidgetInstallSheet(
   val capHit = installedCount >= WidgetStore.MAX_WIDGETS
   val pinSupported = remember { installer.isSupported() }
 
-  val cardData = remember(editedCard) { editedCard.toPinnedData() }
-  val pinKey =
-    remember(baseUrl, dashboardUrlPath, cardData.rawJson) {
-      PinStore.cardKey(baseUrl, dashboardUrlPath, cardData.rawJson)
-    }
-  val isCardPinned by pinStore.isCardPinned(pinKey).collectAsState(initial = false)
-
   ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f)) {
       Column(
@@ -132,12 +115,8 @@ fun WidgetInstallSheet(
           Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
       ) {
-        Text("Make it yours", style = MaterialTheme.typography.headlineSmall)
-        Text(
-          "This widget will keep itself up to date. ${WidgetStore.MAX_WIDGETS - installedCount} of " +
-            "${WidgetStore.MAX_WIDGETS} slots free.",
-          style = MaterialTheme.typography.bodyMedium,
-        )
+        Text("Home screen widget", style = MaterialTheme.typography.headlineSmall)
+        WidgetPreparationPreview(baseUrl, editedCard, liveSnapshot) { renderedPreview = it }
 
         OutlinedTextField(
           value = name,
@@ -145,8 +124,9 @@ fun WidgetInstallSheet(
             name = it
             installError = null
           },
-          label = { Text("Widget name") },
-          placeholder = { Text("Keep the original name") },
+          label = { Text("Label (optional)") },
+          placeholder = { Text(originalName.ifBlank { "Keep the card's own name" }) },
+          supportingText = { Text("Only this widget. Your dashboard stays as it is.") },
           singleLine = true,
           keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
           keyboardActions =
@@ -157,11 +137,6 @@ fun WidgetInstallSheet(
               }
             ),
           modifier = Modifier.fillMaxWidth(),
-        )
-        WidgetPreparationPreview(baseUrl, editedCard, liveSnapshot) { renderedPreview = it }
-        Text(
-          "This edit is just for your widget. Your Home Assistant dashboard stays as it is.",
-          style = MaterialTheme.typography.bodySmall,
         )
         installError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
 
@@ -174,59 +149,34 @@ fun WidgetInstallSheet(
             style = MaterialTheme.typography.bodySmall,
           )
         }
-
-        OutlinedButton(
+      }
+      Column(
+        Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+      ) {
+        Text(
+          if (capHit)
+            "All ${WidgetStore.MAX_WIDGETS} widgets are in use. Remove one from your home " +
+              "screen to add this card."
+          else
+            "Keeps itself up to date · ${WidgetStore.MAX_WIDGETS - installedCount} of " +
+              "${WidgetStore.MAX_WIDGETS} widgets left",
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Button(
           onClick = {
-            pinScope.launch {
-              if (isCardPinned) {
-                pinStore.unpinCard(pinKey)
-              } else {
-                pinStore.pinCard(
-                  MobilePinnedCard(
-                    key = pinKey,
-                    baseUrl = baseUrl,
-                    dashboardUrlPath = dashboardUrlPath,
-                    card = cardData,
-                  )
-                )
-              }
-            }
-            onDismiss()
+            focusManager.clearFocus()
+            keyboard?.hide()
+            if (installer.requestPin(baseUrl, editedCard, renderedPreview)) {
+              requestedIds = installed.map { it.widgetId }.toSet()
+            } else installError = "Your launcher could not start installation. Try again."
           },
+          enabled = pinSupported && !capHit && renderedPreview != null,
           modifier = Modifier.fillMaxWidth(),
         ) {
-          Icon(
-            imageVector = if (isCardPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-            contentDescription = null,
-          )
-          Spacer(Modifier.width(8.dp))
-          Text(text = if (isCardPinned) "Unpin from Wear" else "Pin to Wear")
+          Text("Add widget")
         }
-
-        onMonitor?.let { start ->
-          OutlinedButton(
-            onClick = {
-              start()
-              onDismiss()
-            },
-            modifier = Modifier.fillMaxWidth(),
-          ) {
-            Text("Monitor for 15 min")
-          }
-        }
-      }
-      Button(
-        onClick = {
-          focusManager.clearFocus()
-          keyboard?.hide()
-          if (installer.requestPin(baseUrl, editedCard, renderedPreview)) {
-            requestedIds = installed.map { it.widgetId }.toSet()
-          } else installError = "Your launcher could not start installation. Try again."
-        },
-        enabled = pinSupported && !capHit && renderedPreview != null,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
-      ) {
-        Text(if (capHit) "All 5 slots in use" else "Install widget")
       }
     }
   }

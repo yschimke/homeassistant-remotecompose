@@ -8,7 +8,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
@@ -74,14 +73,14 @@ class LongPressHistoryTest {
   @Test
   fun forkUsesTheDashboardPreviewInsteadOfTheLauncherGrid() {
     waitForFirstCard().longClick()
-    val fork = device.wait(Until.findObject(By.text("Fork in card designer")), 10_000)
+    val fork = device.wait(Until.findObject(By.text("Redesign a copy in Card Studio")), 10_000)
     assertNotNull(fork)
     fork!!.click()
     assertTrue(device.wait(Until.hasObject(By.text("Design or fix this card")), 10_000))
     assertTrue(device.wait(Until.hasObject(By.descContains("Current card preview")), 15_000))
     assertTrue(
       "Forking must not show launcher size controls",
-      !device.hasObject(By.text("Try it on your home screen")),
+      !device.hasObject(By.textStartsWith("Preview at ")),
     )
     assertTrue(device.wait(Until.hasObject(By.text("Design in UI Builder")), 10_000))
   }
@@ -99,20 +98,17 @@ class LongPressHistoryTest {
     // `viewConfiguration.longPressTimeoutMillis` measures against.
     card.longClick()
 
-    // Long-press offers the card's actions first: fork, home screen, history.
-    val forkAction = device.wait(Until.findObject(By.text("Fork in card designer")), 10_000)
+    // Long-press offers the card's actions first: home screen, watch, style, history.
+    val historyAction = device.wait(Until.findObject(By.text("History")), 10_000)
     assertNotNull(
       "card actions did not surface after long-press — long-press is being swallowed by the " +
         "RC player again, see Modifier.longPressBeforeChild",
-      forkAction,
+      historyAction,
     )
-    device.findObject(By.text("History and details"))!!.click()
+    assertTrue(device.hasObject(By.text("Add to home screen")))
+    assertTrue(device.hasObject(By.text("Show on watch")))
+    historyAction!!.click()
 
-    // The details screen's top bar is the signal that it opened: everything below it scrolls, and
-    // the launcher preview at the top is tall enough to push the widget button below the fold on
-    // a phone-sized emulator, where uiautomator's By.text matches only what is on screen. Looking
-    // for that button without scrolling misdiagnosed a correctly opened screen as a lost
-    // long-press.
     val historyVisible = device.wait(Until.hasObject(By.desc("Back")), 10_000)
     assertTrue(
       "card-history screen did not surface after long-press — long-press " +
@@ -120,25 +116,21 @@ class LongPressHistoryTest {
         "Modifier.longPressBeforeChild",
       historyVisible,
     )
-
+    // History shows the card as the dashboard draws it; launcher sizing is the install sheet's.
+    assertTrue(device.wait(Until.hasObject(By.descContains("Current card preview")), 15_000))
     assertTrue(
-      "card details must render the native launcher preview before installation",
-      device.wait(Until.hasObject(By.descContains(" preview,")), 15_000),
+      "card history must not show launcher size controls",
+      !device.hasObject(By.textStartsWith("Preview at ")),
     )
 
-    // The "Prepare a home screen widget" button opens the existing install sheet. The screen's
-    // column is the tallest scrollable; the launcher grid inside it scrolls only sideways.
-    val installLink =
-      device.findObject(By.text("Prepare a home screen widget"))
-        ?: device
-          .findObjects(By.scrollable(true))
-          .maxByOrNull { it.visibleBounds.height() }
-          ?.scrollUntil(Direction.DOWN, Until.findObject(By.text("Prepare a home screen widget")))
-    assertNotNull("history screen missing the Add to Home Screen link", installLink)
-    installLink!!.click()
+    // The top bar's actions button reopens the same sheet, which leads to the install sheet.
+    device.findObject(By.desc("Card actions"))!!.click()
+    val install = device.wait(Until.findObject(By.text("Add to home screen")), 10_000)
+    assertNotNull("card actions did not reopen from the history screen", install)
+    install!!.click()
 
-    // WidgetInstallSheet.kt opens with this descriptive line.
-    val sheetVisible = device.wait(Until.hasObject(By.text("Make it yours")), 10_000)
+    // WidgetInstallSheet.kt opens with this title.
+    val sheetVisible = device.wait(Until.hasObject(By.text("Home screen widget")), 10_000)
     assertTrue("install sheet did not surface from the history screen", sheetVisible)
   }
 

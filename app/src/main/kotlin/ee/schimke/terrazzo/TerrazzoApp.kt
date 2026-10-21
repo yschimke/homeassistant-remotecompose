@@ -37,6 +37,7 @@ import ee.schimke.terrazzo.core.session.ReconnectBackoff
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.dashboard.CardActionsSheet
 import ee.schimke.terrazzo.dashboard.CardHistoryScreen
+import ee.schimke.terrazzo.dashboard.CardStyleSheet
 import ee.schimke.terrazzo.dashboard.DashboardAgentScreen
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
@@ -46,7 +47,6 @@ import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.dashboard.ManagePinnedScreen
 import ee.schimke.terrazzo.dashboard.StudioCardPreview
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
-import ee.schimke.terrazzo.dashboard.historyTitle
 import ee.schimke.terrazzo.dashboard.rememberDashboardListState
 import ee.schimke.terrazzo.dashboard.rememberSelectedDashboardListState
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
@@ -483,9 +483,11 @@ private fun DashboardsRoot(
   // links). Holds the pressed card plus the snapshot it was pressed
   // against, so the preview at the top matches the dashboard frame.
   var historyTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
-  // Long-press first offers a menu (CardActionsSheet): fork, home screen, or history.
+  // Long-press first offers the card's actions (CardActionsSheet): home screen, watch, style,
+  // history, Card Studio. Each target below is one of those, opened from the sheet.
   var actionsTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
   var studioTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
+  var styleTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
   // "Edit with an agent" for the opened dashboard, and a count of saves that re-keys it to reload.
   var agentOpen by remember { mutableStateOf(false) }
   var dashboardSaves by remember { mutableIntStateOf(0) }
@@ -633,8 +635,7 @@ private fun DashboardsRoot(
       card = historyCard,
       snapshot = historySnapshot,
       onBack = { historyTarget = null },
-      onAddToHomeScreen = { installPending = historyCard to historySnapshot },
-      onDesignCard = { studioTarget = historyCard to historySnapshot },
+      onShowActions = { actionsTarget = historyCard to historySnapshot },
     )
   } else {
     Scaffold(
@@ -739,27 +740,20 @@ private fun DashboardsRoot(
     }
   }
 
+  val dashboardUrlPath = openedValue.takeIf { it != DASHBOARD_UNSET } ?: ""
   actionsTarget?.let { target ->
+    val (card, snapshot) = target
     CardActionsSheet(
-      title = target.first.historyTitle(),
-      onFork = { studioTarget = target },
-      onAddToHomeScreen = { installPending = target },
-      onShowDetails = { historyTarget = target },
-      onDismiss = { actionsTarget = null },
-    )
-  }
-
-  val monitorContext = LocalContext.current
-  installPending?.let { (card, snapshot) ->
-    WidgetInstallSheet(
       baseUrl = session.baseUrl,
-      dashboardUrlPath = openedValue.takeIf { it != DASHBOARD_UNSET } ?: "",
+      dashboardUrlPath = dashboardUrlPath,
       card = card,
       snapshot = snapshot,
-      onDismiss = { installPending = null },
-      refreshSnapshot = {
-        session.loadDashboard(openedValue.takeIf { it != DASHBOARD_UNSET }).second
-      },
+      onAddToHomeScreen = { installPending = target },
+      onChangeStyle = { styleTarget = target },
+      // Reopened from the history screen, the sheet doesn't offer the screen it sits on.
+      onShowHistory = if (historyTarget == null) ({ historyTarget = target }) else null,
+      onOpenInStudio = { studioTarget = target },
+      onDismiss = { actionsTarget = null },
       // Only offer monitoring in demo mode — the service pulls
       // state from DemoData today. Live mode needs a shared
       // non-UI HA session; landing in a follow-up.
@@ -767,6 +761,28 @@ private fun DashboardsRoot(
         if (session is DemoHaSession && graph.cardMonitor.isEnabled) {
           { graph.cardMonitor.start(card) }
         } else null,
+    )
+  }
+
+  styleTarget?.let { (card, snapshot) ->
+    CardStyleSheet(
+      session = session,
+      card = card,
+      snapshot = snapshot,
+      onDismiss = { styleTarget = null },
+    )
+  }
+
+  installPending?.let { (card, snapshot) ->
+    WidgetInstallSheet(
+      baseUrl = session.baseUrl,
+      dashboardUrlPath = dashboardUrlPath,
+      card = card,
+      snapshot = snapshot,
+      onDismiss = { installPending = null },
+      refreshSnapshot = {
+        session.loadDashboard(openedValue.takeIf { it != DASHBOARD_UNSET }).second
+      },
     )
   }
 }
