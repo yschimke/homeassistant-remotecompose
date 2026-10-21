@@ -246,7 +246,7 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
         decodeProto<LiveValues>(bytes)?.let { live ->
           // A cold DataItem may predate the last streamed delta persisted on disk. Keep the
           // newer snapshot, just as a widget's Data Layer read does.
-          newerThan(live, offline.readValues(), LiveValues::capturedAtMs)?.let {
+          valuesNotOlder(live, offline.readValues())?.let {
             _values.value = it.values
             offline.writeValues(it)
           }
@@ -312,7 +312,7 @@ internal suspend fun syncWidgetStateFromDataLayer(context: Context, store: WearO
     ?.let(store::writePinned)
   // Stream deltas the running app merged carry their own capture time, so the newer one wins.
   val valuesTime = LiveValues::capturedAtMs
-  newerThan(dataItem(client, WearSyncPaths.VALUES, valuesTime), store.readValues(), valuesTime)
+  valuesNotOlder(dataItem(client, WearSyncPaths.VALUES, valuesTime), store.readValues())
     ?.let(store::writeValues)
 }
 
@@ -352,9 +352,22 @@ internal fun <T : Any> newerThan(candidate: T?, stored: T?, time: (T) -> Long): 
     stored == null || time(it) > time(stored)
   }
 
-/** Ignore delayed stream frames; merge fresh deltas without dropping other entities. */
+/**
+ * [candidate] values unless they are older than [stored]. Values captured at the same time are
+ * taken: the phone sends a cached snapshot with its fetch time, and when the cards on the watch
+ * read more entities it resends that same snapshot with them added.
+ */
+internal fun valuesNotOlder(candidate: LiveValues?, stored: LiveValues?): LiveValues? =
+  candidate?.takeIf {
+    stored == null || it.capturedAtMs >= stored.capturedAtMs
+  }
+
+/**
+ * Ignore delayed stream frames; merge fresh deltas without dropping other entities. A frame from
+ * the same capture as [stored] is merged (see [valuesNotOlder]).
+ */
 internal fun mergeStreamUpdate(stored: LiveValues?, frame: StreamUpdate): LiveValues? {
-  if (stored != null && frame.capturedAtMs <= stored.capturedAtMs) return null
+  if (stored != null && frame.capturedAtMs < stored.capturedAtMs) return null
   val values = stored?.values.orEmpty().toMutableMap()
   frame.deltas.forEach { values[it.entityId] = it.value }
   return LiveValues(values = values, capturedAtMs = frame.capturedAtMs)

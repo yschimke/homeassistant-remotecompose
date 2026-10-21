@@ -37,7 +37,23 @@ class DataLayerSyncTest {
     val stored = values("on", at = 200)
     val frame = StreamUpdate(listOf(EntityDelta("light.kitchen", EntityValue(state = "off"))), 100)
     assertNull(mergeStreamUpdate(stored, frame))
-    assertNull(mergeStreamUpdate(stored, frame.copy(capturedAtMs = 200)))
+  }
+
+  @Test
+  fun valuesFromTheSameCaptureAreTakenSoEntitiesAddedToACachedSnapshotArrive() {
+    // The phone serves a cached snapshot, stamped with its fetch time, and resends it with the
+    // entities a newly synced card reads.
+    val stored = values("on", at = 200)
+    val grown =
+      LiveValues(
+        values = stored.values + ("sensor.p2s_online" to EntityValue(state = "on")),
+        capturedAtMs = 200,
+      )
+    assertEquals(grown, valuesNotOlder(grown, stored))
+    assertNull(valuesNotOlder(values("off", at = 100), stored))
+    val frame =
+      StreamUpdate(listOf(EntityDelta("sensor.p2s_online", EntityValue(state = "on"))), 200)
+    assertEquals("on", mergeStreamUpdate(stored, frame)!!.values["sensor.p2s_online"]?.state)
   }
 
   @Test

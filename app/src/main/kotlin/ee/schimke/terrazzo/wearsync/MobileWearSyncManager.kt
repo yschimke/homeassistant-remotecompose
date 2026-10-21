@@ -515,7 +515,15 @@ class MobileWearSyncManager(
     runCatching {
       val summaries = session.listDashboards()
       for (summary in summaries) {
-        val (dashboard, snapshot) = session.loadDashboard(summary.urlPath)
+        // One dashboard the app can't render (a strategy dashboard, one Home Assistant refuses)
+        // mustn't keep the others from the watch.
+        val (dashboard, snapshot) =
+          runCatching { session.loadDashboard(summary.urlPath) }
+            .onFailure {
+              if (it is CancellationException) throw it
+              handleFailure("loadDashboard ${summary.urlPath ?: "(default)"}", it)
+            }
+            .getOrNull() ?: continue
         val cards =
           dashboard.views.flatMap { it.cards + it.sections.flatMap { section -> section.cards } }
         inputCards.value =
@@ -570,10 +578,15 @@ class MobileWearSyncManager(
       // so a transient API_NOT_CONNECTED disconnect pauses the
       // pump and resumes once the recovery probe re-flips the flag.
       wearableAvailableState.first { it }
+      // The states alone: never the default dashboard, whose config may be auto-generated or a
+      // strategy the app can't load, which would keep every value from the watch.
       val snapshot = runCatching {
-        session.loadDashboard(null).second
+        session.loadSnapshot()
       }
-        .onFailure { if (it is CancellationException) throw it }
+        .onFailure {
+          if (it is CancellationException) throw it
+          handleFailure("loadSnapshot", it)
+        }
         .getOrNull()
       if (snapshot != null) {
         registrySnapshot.value = snapshot
