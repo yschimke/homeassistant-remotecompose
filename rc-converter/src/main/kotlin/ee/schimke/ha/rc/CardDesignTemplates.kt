@@ -334,9 +334,11 @@ object CardDesignTemplates {
  * so there is one rendering path.
  *
  * A template is captured on first use, on the calling thread like any local card capture, and kept
- * for the process. With a [store] it is also kept on disk, so a key is captured once per store
- * rather than on every start: the host scopes the store to what a capture depends on (this build of
- * the app, the display's density and font scale).
+ * for the process. A key is captured once even when two threads ask at once (a background warm-up
+ * and the first frame): the second waits for the first's capture rather than repeating it. With a
+ * [store] it is also kept on disk, so a key is captured once per store rather than on every start:
+ * the host scopes the store to what a capture depends on (this build of the app, the display's
+ * density and font scale).
  */
 object CardDesignLibrary {
   private val templates = java.util.concurrent.ConcurrentHashMap<DesignKey, ByteArray>()
@@ -349,7 +351,7 @@ object CardDesignLibrary {
     key: DesignKey,
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
   ): ByteArray =
-    templates.getOrPut(key) {
+    templates.computeIfAbsent(key) {
       val store = store
       store?.read(key)
         ?: CardDesignTemplates.capture(context, key, registry).bytes.also { store?.write(key, it) }

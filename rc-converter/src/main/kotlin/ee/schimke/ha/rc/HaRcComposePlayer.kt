@@ -188,6 +188,15 @@ internal class DecodedForComposePlayer(val document: RcDocument?) {
  */
 private val decodedDocuments = java.util.WeakHashMap<ByteArray, DecodedForComposePlayer>()
 
+/**
+ * Decodes [documentBytes] for the Compose player ahead of time, off the main thread, so the first
+ * frame that plays the same array finds it decoded. A host warming the cards it is about to show
+ * calls this with the bytes it will play.
+ */
+fun preloadForComposePlayer(documentBytes: ByteArray) {
+  decodedForComposePlayer(documentBytes)
+}
+
 /** [decodeForComposePlayer], decoded once per array ([decodedDocuments]). */
 internal fun decodedForComposePlayer(bytes: ByteArray): DecodedForComposePlayer {
   synchronized(decodedDocuments) {

@@ -24,6 +24,7 @@ import androidx.wear.compose.material3.TimeText
 import ee.schimke.ha.rc.LocalRelativeTimeTick
 import ee.schimke.ha.rc.rememberRelativeTimeTick
 import ee.schimke.terrazzo.wear.data.WearPrefs
+import ee.schimke.terrazzo.wear.sync.WearCardWarmup
 import ee.schimke.terrazzo.wear.sync.WearLeaseController
 import ee.schimke.terrazzo.wear.sync.WearSlotsController
 import ee.schimke.terrazzo.wear.sync.WearSyncRepository
@@ -57,6 +58,9 @@ class WearMainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    // Have the pinned cards' templates ready (from disk, captured in the background otherwise)
+    // while the first frame composes; usually already done since the phone last sent pins.
+    lifecycleScope.launch { WearCardWarmup.run(applicationContext) }
     repo = WearSyncRepository(applicationContext, lifecycleScope)
     repo.start()
     // Lease tracker — heartbeats while activity is foreground, so

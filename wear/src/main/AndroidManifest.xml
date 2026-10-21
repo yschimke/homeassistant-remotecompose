@@ -4,6 +4,7 @@
     <uses-feature android:name="android.hardware.type.watch" />
 
     <application
+        android:name=".TerrazzoWearApplication"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="Terrazzo"
@@ -28,6 +29,14 @@
             </intent-filter>
         </activity>
 
+        <!-- Warms the pinned cards' templates as soon as an update lands. -->
+        <receiver
+            android:name=".sync.WearPackageReplacedReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
         <!--
           Forgets what the phone deletes from the Data Layer (sign-out, a removed dashboard)
           while the app isn't running, and redraws the widgets for new slot Wear designs. Exported for Play services, which delivers Data Layer
