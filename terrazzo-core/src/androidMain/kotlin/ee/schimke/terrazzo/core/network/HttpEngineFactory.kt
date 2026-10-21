@@ -2,7 +2,7 @@ package ee.schimke.terrazzo.core.network
 
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
-import ee.schimke.ha.client.tls.ForbiddenCertificatesHostnameVerifier
+import ee.schimke.ha.client.SharedOkHttpClient
 import ee.schimke.terrazzo.core.di.AppScope
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttp
@@ -16,8 +16,8 @@ import io.ktor.client.engine.okhttp.OkHttp
  * 2. [LanConnectionPolicyInterceptor] — final gate: rejects requests still aimed at a private /
  *    plaintext destination the current network can't safely reach.
  *
- * It also refuses certificates chaining to a compromised CA the platform still trusts (see
- * [ForbiddenCertificatesHostnameVerifier]).
+ * Built on [SharedOkHttpClient], the app's one OkHttp client, so it shares that client's connection
+ * pool and certificate checks.
  *
  * Singleton so the underlying OkHttp connection pool / dispatcher is shared across `HaClient` and
  * `AddonClient` instances.
@@ -30,8 +30,8 @@ class HttpEngineFactory(
 ) {
 
   val engine: HttpClientEngine = OkHttp.create {
+    preconfigured = SharedOkHttpClient.forKtor()
     addInterceptor(RemoteUrlInterceptor(policy, remoteUrlStore))
     addInterceptor(LanConnectionPolicyInterceptor(policy))
-    config { hostnameVerifier(ForbiddenCertificatesHostnameVerifier()) }
   }
 }
