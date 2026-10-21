@@ -1,5 +1,6 @@
 package ee.schimke.ha.client.design
 
+import ee.schimke.ha.client.platformHttpClient
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -21,7 +22,7 @@ import kotlinx.serialization.json.*
 class CardStudioClient(serverUrl: String, engine: HttpClientEngine? = null) {
   private val base = studioServerUrl(serverUrl)
   private val http =
-    if (engine == null) HttpClient { configure() } else HttpClient(engine) { configure() }
+    if (engine == null) platformHttpClient { configure() } else HttpClient(engine) { configure() }
 
   suspend fun seed(card: CardConfig, snapshot: HaSnapshot): JsonObject =
     request("/api/studio/seed", cardPreviewData(card, snapshot))

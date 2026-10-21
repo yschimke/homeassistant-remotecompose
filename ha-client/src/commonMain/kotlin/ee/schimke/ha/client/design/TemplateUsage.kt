@@ -1,5 +1,6 @@
 package ee.schimke.ha.client.design
 
+import ee.schimke.ha.client.platformHttpClient
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -332,7 +333,7 @@ suspend fun TemplateUsage.uploadWithDefaultClient(
   userAgent: UsageUserAgent,
   sendUserAgentHeader: Boolean = true,
 ): Int {
-  val client = HttpClient()
+  val client = platformHttpClient()
   try {
     return upload(client, baseUrl, userAgent, sendUserAgentHeader)
   } finally {
