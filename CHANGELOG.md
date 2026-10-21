@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.55](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.54...v0.1.55) (2026-10-21)
+
+
+### Bug Fixes
+
+* **deps:** update compose-ai-tools ([#1009](https://github.com/yschimke/homeassistant-remotecompose/issues/1009)) ([d5320a4](https://github.com/yschimke/homeassistant-remotecompose/commit/d5320a4a474603beb339caefbd9a546e74e90e43))
+* **deps:** update compose-ai-tools ([#1025](https://github.com/yschimke/homeassistant-remotecompose/issues/1025)) ([422a2eb](https://github.com/yschimke/homeassistant-remotecompose/commit/422a2ebaac266cda9c0ffcebd2da39e6fb218af7))
+* **wear:** have the pinned cards' templates ready before the app opens ([#1021](https://github.com/yschimke/homeassistant-remotecompose/issues/1021)) ([5f84ffb](https://github.com/yschimke/homeassistant-remotecompose/commit/5f84ffbd595f7f0572751e1d913028f7964a3629))
+* **wear:** send the watch only the values its cards read ([#1024](https://github.com/yschimke/homeassistant-remotecompose/issues/1024)) ([dc868a6](https://github.com/yschimke/homeassistant-remotecompose/commit/dc868a6ada53c6b54ba7d803287397c460a382b3))
+
 ## [0.1.54](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.53...v0.1.54) (2026-10-21)
 
 
