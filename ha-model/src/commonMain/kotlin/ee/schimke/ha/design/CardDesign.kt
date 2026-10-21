@@ -33,6 +33,10 @@ enum class DesignSurface(val wire: String) {
  *   (`baked:<ThemeStyle>:<light|dark>`); a card style with its own palette is `style:<id>:<mode>`
  *   ([styledTheme]), since the app palette doesn't change it. `host` is reserved for designs whose
  *   colours come from `theme.*` bindings, `ColorTheme` or `WearM3`.
+ * @property container which Glance Wear widget container a `wear-widget` design fills ([WEAR_SMALL]
+ *   or [WEAR_LARGE]), null on every other surface. The container draws the widget's shape and
+ *   background into the document, so a Wear design is made per container: its card's design
+ *   ([forWearWidget]) without the card's own surface.
  */
 @Serializable
 data class DesignKey(
@@ -43,7 +47,12 @@ data class DesignKey(
   val shape: String,
   val theme: String,
   val schema: Int = BINDING_SCHEMA_VERSION,
+  val container: String? = null,
 ) {
+  /** This design's Wear widget design for [container]: the same card, variant and theme. */
+  fun forWearWidget(container: String): DesignKey =
+    copy(surface = DesignSurface.WearWidget, container = container)
+
   /**
    * The card style (uber theme id) this design is drawn in: the `style` tag. [CLASSIC_STYLE] for a
    * design baked in an app palette. A legacy `baked:<palette>:<mode>:<id>` theme names it last.
@@ -61,6 +70,15 @@ data class DesignKey(
   companion object {
     const val DEFAULT_VARIANT: String = "default"
     const val BINDING_SCHEMA_VERSION: Int = 1
+
+    /** The Small Glance Wear widget container: a [container]. */
+    const val WEAR_SMALL: String = "small"
+
+    /** The Large Glance Wear widget container: a [container]. */
+    const val WEAR_LARGE: String = "large"
+
+    /** Every Wear widget container a design is made for. */
+    val WEAR_CONTAINERS: List<String> = listOf(WEAR_SMALL, WEAR_LARGE)
 
     /** The card style of every design baked in an app palette. */
     const val CLASSIC_STYLE: String = "classic"

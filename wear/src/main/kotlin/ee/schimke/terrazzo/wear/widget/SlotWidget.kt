@@ -3,6 +3,7 @@
 package ee.schimke.terrazzo.wear.widget
 
 import android.content.Context
+import android.os.Bundle
 import android.util.Log
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteText
@@ -17,11 +18,13 @@ import androidx.glance.wear.GlanceWearWidgetService
 import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetData
 import androidx.glance.wear.WearWidgetDocument
+import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WearWidgetRawContent
 import androidx.wear.compose.remote.material3.RemoteColorScheme
 import androidx.wear.compose.remote.material3.RemoteMaterialTheme
 import ee.schimke.ha.design.CardDesignSlots
+import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.BreakpointAxis
@@ -52,6 +55,7 @@ import ee.schimke.ha.rc.framedDesignTemplate
 import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.data.toEntityState
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
+import ee.schimke.terrazzo.wear.sync.syncDesignsFromDataLayer
 import ee.schimke.terrazzo.wear.sync.syncPicturesFromDataLayer
 import ee.schimke.terrazzo.wear.sync.syncWidgetStateFromDataLayer
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
@@ -100,6 +104,8 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
     // Slots, pins and values from the Data Layer: the watch app may not have been running to store
     // them as they arrived.
     syncWidgetStateFromDataLayer(app, store)
+    // The slot cards' Wear widget designs from the design server, synced by the phone.
+    syncDesignsFromDataLayer(app, store)
     return slotWidgetDataFromStore(app, store, slotIndex)
   }
 }
@@ -139,6 +145,9 @@ internal suspend fun slotWidgetDataFromStore(
   val updatedColors =
     wearColors.copy(tertiary = wearColors.primary, secondary = wearColors.onSurfaceVariant)
 
+  // The card's Wear widget designs, as synced from the phone.
+  val designs = store.readSlotDesigns()?.designs.orEmpty().filter { it.cardKey == slot?.cardKey }
+
   return slotWidgetData(
     registry,
     updatedColors,
@@ -147,9 +156,11 @@ internal suspend fun slotWidgetDataFromStore(
     snapshot,
     slotIndex,
     cardStyle,
-  ) { url ->
-    syncedPicture(store, snapshot, url)
-  }
+    fetchImage = { url -> syncedPicture(store, snapshot, url) },
+    wearDesign = { container ->
+      designs.firstOrNull { it.container == container }?.let { store.readDesign(it.sha256) }
+    },
+  )
 }
 
 /** Unknown ids from a newer phone fall back to this watch's preference. */
@@ -157,11 +168,14 @@ internal fun wearWidgetCardStyle(override: String?, watchStyle: String): HaUberT
   HaUberTheme.all.firstOrNull { it.id == override } ?: HaUberTheme.byId(watchStyle)
 
 /**
- * The widget data for a slot showing [card]. Design first: the card's Wear template, captured by
- * Glance Wear itself (its profile and canvas) and baked with the card's values — a Wear widget
- * can't receive bindings. A slot picture is embedded from [fetchImage] (the phone syncs them: the
- * watch can't fetch one). Cards with no design, or one that can't be baked (a picture not synced
- * yet), keep the direct document. [themeKey] names [colors] in the template cache.
+ * The widget data for a slot showing [card]. Design first: the card's Wear template, baked with the
+ * card's values — a Wear widget can't receive bindings. The template is the design server's Wear
+ * widget design for the container ([wearDesign], by [DesignKey.WEAR_SMALL] /
+ * [DesignKey.WEAR_LARGE]: the card's own design rooted on the Wear container, synced by the phone)
+ * when there is one, else the card's design captured by Glance Wear itself (its profile and
+ * canvas). A slot picture is embedded from [fetchImage] (the phone syncs them: the watch can't
+ * fetch one). Cards with no design, or one that can't be baked (a picture not synced yet), keep the
+ * direct document. [themeKey] names [colors] in the template cache.
  */
 internal fun slotWidgetData(
   registry: CardRegistry,
@@ -172,6 +186,7 @@ internal fun slotWidgetData(
   slotIndex: Int,
   cardStyle: HaUberTheme = HaUberTheme.Classic,
   fetchImage: (url: String) -> ByteArray? = { null },
+  wearDesign: (container: String) -> ByteArray? = { null },
 ): WearWidgetData {
   val direct = slotDocument(registry, colors, card, snapshot, slotIndex, cardStyle = cardStyle)
   if (card == null) return direct
@@ -185,6 +200,13 @@ internal fun slotWidgetData(
       params: WearWidgetParams,
       isPreview: Boolean,
     ): WearWidgetRawContent {
+      // The server's Wear design for this container: no chrome of its own, the container's.
+      containerOf(params.containerType)?.let(wearDesign)?.let { synced ->
+        val playback = CardDesignTemplates.playback(design, synced, registry)
+        LauncherDesigns.bakeValues(synced, playback, snapshot, fetchImage)?.let {
+          return WearWidgetRawContent(it, Bundle(), null)
+        }
+      }
       val key =
         WearTemplateKey(
           cardType = design.type,
@@ -219,6 +241,14 @@ internal fun slotWidgetData(
     }
   }
 }
+
+/** The [DesignKey.container] of a Glance Wear container type, or null for another one. */
+internal fun containerOf(containerType: Int): String? =
+  when (containerType) {
+    ContainerInfo.CONTAINER_TYPE_SMALL -> DesignKey.WEAR_SMALL
+    ContainerInfo.CONTAINER_TYPE_LARGE -> DesignKey.WEAR_LARGE
+    else -> null
+  }
 
 /** The direct (not design) document for a slot: what [slotWidgetData] falls back to. */
 internal fun slotDirectDocument(
@@ -264,7 +294,7 @@ private val wearTemplates =
  * A slot's widget document: [card] under the Wear theme, Fixed size mode, without the card's own
  * chrome. With [template] it is captured as a design template: names and titles bound, not baked.
  */
-private fun slotDocument(
+internal fun slotDocument(
   registry: CardRegistry,
   colors: RemoteColorScheme,
   card: CardConfig?,

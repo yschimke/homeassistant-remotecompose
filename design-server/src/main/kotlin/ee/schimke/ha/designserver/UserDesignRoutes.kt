@@ -1,5 +1,6 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.composeai.rcplayer.edit.RcTargetProfile
 import ee.schimke.composeai.rcplayer.edit.RcTargetProfiles
 import ee.schimke.composeai.rcplayer.edit.namedVariables
 import ee.schimke.composeai.rcplayer.edit.validateFor
@@ -8,6 +9,7 @@ import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
+import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.design.DeviceMatch
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -75,18 +77,24 @@ data class PublishRequest(
 )
 
 /**
- * Why [bytes] can't stand in for [base], or null when they can: they must decode, play on the app's
- * Remote Compose profile, and bind only values the card provides (what [base] binds). Named values
- * without a dot are the design's own state, which a card never pushes, so they are allowed.
+ * Why [bytes] can't stand in for [base], or null when they can: they must decode, play on [profile]
+ * (the app's Remote Compose profile, or a Wear widget's), and bind only values the card provides
+ * (what [base] binds). Named values without a dot are the design's own state, which a card never
+ * pushes, so they are allowed; so are the colours a Wear widget host supplies (`WearM3.*`) when
+ * [profile] is the Wear widgets'.
  */
-fun userTemplateProblem(bytes: ByteArray, base: DecodedTemplate): String? {
+fun userTemplateProblem(
+  bytes: ByteArray,
+  base: DecodedTemplate,
+  profile: RcTargetProfile = RcTargetProfiles.ANDROIDX_EXPERIMENTAL,
+): String? {
   val document = runCatching {
     RcDocumentCodec.decode(bytes, RcWireLimits())
   }
     .getOrElse {
       return "it isn't a Remote Compose document (${it.message ?: it.javaClass.simpleName})"
     }
-  document.validateFor(RcTargetProfiles.ANDROIDX_EXPERIMENTAL).firstOrNull()?.let {
+  document.validateFor(profile).firstOrNull()?.let {
     return "it uses something the app can't play: ${it.message}"
   }
   val provided = base.bindings.map { it.name }.toSet()
@@ -94,6 +102,7 @@ fun userTemplateProblem(bytes: ByteArray, base: DecodedTemplate): String? {
     document.namedVariables
       .map { it.name.removePrefix(DesignLibrary.USER_PREFIX) }
       .filter { '.' in it && it !in provided }
+      .filterNot { profile == RcTargetProfiles.WEAR_WIDGETS && it.startsWith(WEAR_HOST_COLOURS) }
       .distinct()
       .sorted()
   if (unknown.isNotEmpty()) {
@@ -101,6 +110,9 @@ fun userTemplateProblem(bytes: ByteArray, base: DecodedTemplate): String? {
   }
   return null
 }
+
+/** The named colours a Glance Wear widget host supplies (Remote Material 3's). */
+private const val WEAR_HOST_COLOURS = "WearM3."
 
 private val VARIANT = Regex("[a-z0-9][a-z0-9-]{0,39}")
 
@@ -298,7 +310,8 @@ object MyPage {
           design.entry.device?.let {
             listOfNotNull(it.integration, it.manufacturer, it.model).joinToString(" ")
           } ?: "any"
-        append("<tr><td>${esc(key.cardType)}</td><td>${esc(key.variant)}</td>")
+        val card = key.cardType + (key.container?.let { " (Wear widget, $it)" } ?: "")
+        append("<tr><td>${esc(card)}</td><td>${esc(key.variant)}</td>")
         append("<td>${esc(device)}</td>")
         append("<td>${esc(key.theme)}</td><td>${if (design.shared) "yes" else "no"}</td><td>")
         append("<form method=\"post\" action=\"/my/designs/${design.entry.sha256}/share\">")
@@ -363,18 +376,48 @@ private suspend fun publish(
       "That design can't be published: $it",
     )
   }
-  return Published.Done(
+  val key = baseKey.copy(variant = request.variant)
+  // Stored canonical, so a republish that only changes case replaces its earlier design.
+  val device = request.device?.normalized()
+  val design =
     store.publish(
       login = login,
-      key = baseKey.copy(variant = request.variant),
+      key = key,
       bytes = exported.bytes,
       slots = base.entry.slots,
       sourceDesignId = request.designId,
       revision = exported.revision,
-      // Stored canonical, so a republish that only changes case replaces its earlier design.
-      device = request.device?.normalized(),
+      device = device,
     )
-  )
+  // Its Wear widgets, from the same UI Builder revision. Best effort: a card that can't be a Wear
+  // widget still publishes, and the watch draws the card's own design instead.
+  val wear =
+    if (key.surface != DesignSurface.MobileApp) emptyMap()
+    else wearWidgets(client, request.designId, exported.revision, library.decode(base))
+  store.publishWear(login, design, wear)
+  return Published.Done(design)
+}
+
+/**
+ * The Wear widget designs of UI Builder design [designId] at [revision], by container: the design
+ * rooted on each container ([WearWidgetDesigns]), exported, and kept when it plays as a Wear widget
+ * and binds what [base] does. A container whose design fails is left out.
+ */
+private suspend fun wearWidgets(
+  client: UiBuilderClient,
+  designId: String,
+  revision: Long?,
+  base: DecodedTemplate,
+): Map<String, ByteArray> {
+  val source = client.design(designId, revision).getOrNull() ?: return emptyMap()
+  return DesignKey.WEAR_CONTAINERS.mapNotNull { container ->
+      val document = WearWidgetDesigns.document(source, container) ?: return@mapNotNull null
+      val bytes = client.exportRc(document).getOrNull() ?: return@mapNotNull null
+      bytes
+        .takeIf { userTemplateProblem(it, base, RcTargetProfiles.WEAR_WIDGETS) == null }
+        ?.let { container to it }
+    }
+    .toMap()
 }
 
 /** The device match a form names (`integration`, `manufacturer`, `model`), or null for none. */

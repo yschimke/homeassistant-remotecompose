@@ -5,8 +5,10 @@ import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
+import ee.schimke.terrazzo.wearsync.proto.WearDesignBlob
 import ee.schimke.terrazzo.wearsync.proto.WearPicture
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
+import ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
 import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
@@ -28,6 +30,8 @@ import java.io.File
  *   values.pb          — LiveValues  (last full snapshot or merged stream)
  *   dashboards/<file>  — DashboardData per `urlPath`
  *   pictures/<file>    — WearPicture per entity (Wear widget pictures)
+ *   slot-designs.pb    — WearSlotDesigns (each widget slot card's Wear designs)
+ *   designs/<sha256>.rc — a Wear widget design's template, as sent (WearDesignBlob)
  * ```
  *
  * Files are proto wire bytes (the same encoding the wear data layer itself uses), written via
@@ -38,6 +42,7 @@ class WearOfflineStore(context: Context) {
   private val root: File = File(context.filesDir, "terrazzo/wear").apply { mkdirs() }
   private val dashboardsDir: File = File(root, "dashboards").apply { mkdirs() }
   private val picturesDir: File = File(root, "pictures").apply { mkdirs() }
+  private val designsDir: File = File(root, "designs").apply { mkdirs() }
 
   fun readSettings(): WearSettings? =
     File(root, "settings.pb").readBytesOrNull()?.let { decodeProto<WearSettings>(it) }
@@ -93,6 +98,29 @@ class WearOfflineStore(context: Context) {
   private fun pictureFile(entityId: String): File =
     File(picturesDir, entityId.replace(Regex("[^A-Za-z0-9._-]"), "_") + ".pb")
 
+  fun readSlotDesigns(): WearSlotDesigns? =
+    File(root, "slot-designs.pb").readBytesOrNull()?.let { decodeProto<WearSlotDesigns>(it) }
+
+  /** Stores [value], and forgets the designs it no longer names. */
+  fun writeSlotDesigns(value: WearSlotDesigns) {
+    File(root, "slot-designs.pb").atomicWriteBytes(encodeProto(value))
+    val named = value.designs.map { it.sha256 }.toSet()
+    designsDir.listFiles().orEmpty().forEach { if (it.nameWithoutExtension !in named) it.delete() }
+  }
+
+  /** The template of the design [sha256] names, or null when it isn't here or doesn't verify. */
+  fun readDesign(sha256: String): ByteArray? =
+    designFile(sha256)?.readBytesOrNull()?.takeIf { sha256Hex(it) == sha256 }
+
+  /** Stores [value]'s template when it hashes to its name. */
+  fun writeDesign(value: WearDesignBlob) {
+    if (sha256Hex(value.rc) != value.sha256) return
+    designFile(value.sha256)?.atomicWriteBytes(value.rc)
+  }
+
+  private fun designFile(sha256: String): File? =
+    sha256.takeIf { SHA256.matches(it) }?.let { File(designsDir, "$it.rc") }
+
   fun writeDashboard(value: DashboardData) {
     val name = (value.urlPath.takeIf { it.isNotEmpty() }?.replace('/', '_') ?: "_default") + ".pb"
     File(dashboardsDir, name).atomicWriteBytes(encodeProto(value))
@@ -112,6 +140,12 @@ class WearOfflineStore(context: Context) {
       ForgottenItem.Slots -> File(root, "slots.pb").delete()
       ForgottenItem.Values -> File(root, "values.pb").delete()
       is ForgottenItem.Picture -> pictureFile(item.entityId).delete()
+      // The designs go with their index: nothing names them any more.
+      ForgottenItem.SlotDesigns -> {
+        File(root, "slot-designs.pb").delete()
+        designsDir.listFiles().orEmpty().forEach { it.delete() }
+      }
+      is ForgottenItem.Design -> designFile(item.sha256)?.delete()
       // Named like the item's path: `writeDashboard` and `dashboardPath` encode alike.
       is ForgottenItem.Dashboard -> File(dashboardsDir, item.fileStem + ".pb").delete()
     }
@@ -138,6 +172,10 @@ sealed interface ForgottenItem {
 
   data class Picture(val entityId: String) : ForgottenItem
 
+  data object SlotDesigns : ForgottenItem
+
+  data class Design(val sha256: String) : ForgottenItem
+
   /** [fileStem]: the path after the prefix, `_default` for the default dashboard. */
   data class Dashboard(val fileStem: String) : ForgottenItem {
     /** Whether [dashboard] is this one: its `urlPath` encodes to [fileStem]. */
@@ -154,6 +192,12 @@ internal fun forgottenItemFor(path: String): ForgottenItem? =
     path == WearSyncPaths.SECTIONS -> ForgottenItem.Sections
     path == WearSyncPaths.SLOTS -> ForgottenItem.Slots
     path == WearSyncPaths.VALUES -> ForgottenItem.Values
+    path == WearSyncPaths.SLOT_DESIGNS -> ForgottenItem.SlotDesigns
+    path.startsWith(WearSyncPaths.DESIGN_PREFIX) ->
+      path
+        .removePrefix(WearSyncPaths.DESIGN_PREFIX)
+        .takeIf { it.isNotEmpty() }
+        ?.let { ForgottenItem.Design(it) }
     path.startsWith(WearSyncPaths.PICTURE_PREFIX) ->
       path
         .removePrefix(WearSyncPaths.PICTURE_PREFIX)
@@ -165,6 +209,13 @@ internal fun forgottenItemFor(path: String): ForgottenItem? =
         .takeIf { it.isNotEmpty() }
         ?.let { ForgottenItem.Dashboard(it) }
     else -> null
+  }
+
+private val SHA256 = Regex("[0-9a-f]{64}")
+
+private fun sha256Hex(bytes: ByteArray): String =
+  java.security.MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") {
+    "%02x".format(it)
   }
 
 private fun File.readBytesOrNull(): ByteArray? = runCatching {

@@ -18,9 +18,11 @@ import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.StreamUpdate
+import ee.schimke.terrazzo.wearsync.proto.WearDesignBlob
 import ee.schimke.terrazzo.wearsync.proto.WearLease
 import ee.schimke.terrazzo.wearsync.proto.WearPicture
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
+import ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
 import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
@@ -87,6 +89,11 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
   private val _dashboards: MutableStateFlow<List<DashboardData>> =
     MutableStateFlow(offline.readAllDashboards().sortedBy { it.title })
   val dashboards: StateFlow<List<DashboardData>> = _dashboards.asStateFlow()
+
+  private val _slotDesigns: MutableStateFlow<WearSlotDesigns> =
+    MutableStateFlow(offline.readSlotDesigns() ?: WearSlotDesigns())
+  /** The slot cards' Wear widget designs the phone chose: placed widgets redraw when it changes. */
+  val slotDesigns: StateFlow<WearSlotDesigns> = _slotDesigns.asStateFlow()
 
   private val _values: MutableStateFlow<Map<String, EntityValue>> =
     MutableStateFlow(offline.readValues()?.values ?: emptyMap())
@@ -247,6 +254,15 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
       // Read straight from disk by the Wear widgets when they bake.
       path.startsWith(WearSyncPaths.PICTURE_PREFIX) ->
         decodeProto<WearPicture>(bytes)?.let { offline.writePicture(it) }
+      path == WearSyncPaths.SLOT_DESIGNS ->
+        decodeProto<WearSlotDesigns>(bytes)?.let { designs ->
+          newerThan(designs, offline.readSlotDesigns(), WearSlotDesigns::updatedAtMs)?.let {
+            offline.writeSlotDesigns(it)
+            _slotDesigns.value = it
+          }
+        }
+      path.startsWith(WearSyncPaths.DESIGN_PREFIX) ->
+        decodeProto<WearDesignBlob>(bytes)?.let { offline.writeDesign(it) }
       path.startsWith(WearSyncPaths.DASHBOARD_PREFIX) ->
         decodeProto<DashboardData>(bytes)?.let { dashboard ->
           val current = _dashboards.value.toMutableList()
@@ -267,7 +283,9 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
       ForgottenItem.Slots -> _slots.value = WearWidgetSlots()
       ForgottenItem.Values -> _values.value = emptyMap()
       is ForgottenItem.Dashboard -> _dashboards.value = _dashboards.value.filterNot(item::matches)
+      ForgottenItem.SlotDesigns -> _slotDesigns.value = WearSlotDesigns()
       is ForgottenItem.Picture,
+      is ForgottenItem.Design,
       null -> Unit
     }
   }
@@ -296,6 +314,21 @@ internal suspend fun syncWidgetStateFromDataLayer(context: Context, store: WearO
   val valuesTime = LiveValues::capturedAtMs
   newerThan(dataItem(client, WearSyncPaths.VALUES, valuesTime), store.readValues(), valuesTime)
     ?.let(store::writeValues)
+}
+
+/**
+ * Copies the slot cards' Wear widget designs from the Data Layer into [store]: the index where
+ * newer, then the designs it names that [store] lacks. See [syncWidgetStateFromDataLayer].
+ */
+internal suspend fun syncDesignsFromDataLayer(context: Context, store: WearOfflineStore) {
+  val client = Wearable.getDataClient(context)
+  val time = WearSlotDesigns::updatedAtMs
+  newerThan(dataItem(client, WearSyncPaths.SLOT_DESIGNS, time), store.readSlotDesigns(), time)
+    ?.let(store::writeSlotDesigns)
+  for (sha in store.readSlotDesigns()?.designs.orEmpty().map { it.sha256 }.distinct()) {
+    if (store.readDesign(sha) != null) continue
+    dataItem<WearDesignBlob>(client, WearSyncPaths.designPath(sha)) { 0L }?.let(store::writeDesign)
+  }
 }
 
 /** Copies [entityIds]' pictures from the Data Layer into [store], where newer: see above. */

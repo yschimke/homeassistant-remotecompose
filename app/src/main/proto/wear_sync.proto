@@ -86,6 +86,27 @@ message WearPicture {
     int64 updated_at_ms = 4;
 }
 
+// DataItem at `/wear/slot-designs`: the Wear widget design the phone chose for
+// each widget slot card, per container (`small` / `large`), by its blob's
+// sha256. A slot card or container without one draws the card's own design.
+message WearSlotDesigns {
+    repeated WearSlotDesign designs = 1;
+    int64 updated_at_ms = 2;
+}
+
+message WearSlotDesign {
+    string card_key = 1;
+    string container = 2;
+    string sha256 = 3;
+}
+
+// DataItem at `/wear/design/<sha256>`: a Wear widget design's Remote Compose
+// template, content-addressed.
+message WearDesignBlob {
+    string sha256 = 1;
+    bytes rc = 2;
+}
+
 // Sent via MessageClient at `/wear/stream` when phone has a live lease
 // from wear (or pinned cards force a stream). Carries only changed
 // entities to keep traffic small.

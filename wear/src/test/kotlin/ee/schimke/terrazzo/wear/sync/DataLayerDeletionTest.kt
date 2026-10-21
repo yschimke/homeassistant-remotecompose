@@ -22,6 +22,8 @@ class DataLayerDeletionTest {
       ForgottenItem.Picture("camera.door"),
       forgottenItemFor(WearSyncPaths.picturePath("camera.door")),
     )
+    assertEquals(ForgottenItem.SlotDesigns, forgottenItemFor(WearSyncPaths.SLOT_DESIGNS))
+    assertEquals(ForgottenItem.Design("ab12"), forgottenItemFor(WearSyncPaths.designPath("ab12")))
     assertEquals(
       ForgottenItem.Dashboard("energy"),
       forgottenItemFor(WearSyncPaths.dashboardPath("energy")),
@@ -33,6 +35,7 @@ class DataLayerDeletionTest {
     assertNull(forgottenItemFor("/somebody/else"))
     assertNull(forgottenItemFor(WearSyncPaths.DASHBOARD_PREFIX))
     assertNull(forgottenItemFor(WearSyncPaths.PICTURE_PREFIX))
+    assertNull(forgottenItemFor(WearSyncPaths.DESIGN_PREFIX))
   }
 
   @Test
@@ -50,7 +53,14 @@ class DataLayerDeletionTest {
     val forgotten = forgottenOnDeletion(listOf(WearSyncPaths.PINNED, WearSyncPaths.SLOTS))
     assertTrue(WearSyncPaths.VALUES in forgotten)
     assertTrue(WearSyncPaths.PICTURE_PREFIX in forgotten)
+    assertTrue(WearSyncPaths.SLOT_DESIGNS in forgotten)
     assertTrue(WearSyncPaths.PINNED in forgotten)
+  }
+
+  @Test
+  fun aNewDesignIndexRedrawsTheWidgetsAndOtherChangesDoNot() {
+    assertTrue(redrawsOnChange(listOf(WearSyncPaths.SLOT_DESIGNS)))
+    assertFalse(redrawsOnChange(listOf(WearSyncPaths.PINNED, WearSyncPaths.dashboardPath("x"))))
   }
 
   @Test

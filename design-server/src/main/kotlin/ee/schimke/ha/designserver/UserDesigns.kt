@@ -13,7 +13,8 @@ import kotlinx.serialization.json.Json
 /**
  * A design a person published from UI Builder: a manifest [entry] by `github:<login>`, private to
  * them until they [shared] it. [sourceDesignId] and [revision] say which UI Builder design and
- * revision it was exported from.
+ * revision it was exported from. A Wear widget design made from a card design names that design's
+ * blob in [wearOf], and is shared, unshared and replaced with it.
  */
 @Serializable
 data class UserDesign(
@@ -22,6 +23,7 @@ data class UserDesign(
   val sourceDesignId: String? = null,
   val revision: Long? = null,
   val publishedAtEpochMs: Long = 0,
+  val wearOf: String? = null,
 )
 
 @Serializable
@@ -127,16 +129,58 @@ class UserDesignStore(
     return design
   }
 
-  /** Share or unshare [login]'s design [sha256]; null when they have none by that hash. */
+  /**
+   * Replace [login]'s Wear widget designs made from [card] (a design they just published) with
+   * [wear], by container: the same key on the Wear widget surface, shared as [card] is. A container
+   * missing from [wear] drops the earlier design for it, so a watch never draws a stale one.
+   */
+  @Synchronized
+  fun publishWear(login: String, card: UserDesign, wear: Map<String, ByteArray>) {
+    val author = authorOf(login)
+    val keys = DesignKey.WEAR_CONTAINERS.map { card.entry.key.forWearWidget(it) }.toSet()
+    val replaced =
+      index.designs.filter {
+        it.entry.author == author && it.entry.key in keys && it.entry.device == card.entry.device
+      }
+    if (replaced.isEmpty() && wear.isEmpty()) return
+    val added = wear.map { (container, bytes) ->
+      val sha = Sha256.hex(bytes)
+      writeAtomically(File(dir, "blobs/$sha.rc"), bytes)
+      card.copy(
+        entry =
+          card.entry.copy(
+            key = card.entry.key.forWearWidget(container),
+            sha256 = sha,
+            bytes = bytes.size,
+          ),
+        wearOf = card.entry.sha256,
+      )
+    }
+    save(
+      index.designs.filterNot { it in replaced } + added,
+      sharedChanged = card.shared || replaced.any { it.shared },
+    )
+  }
+
+  /**
+   * Share or unshare [login]'s design [sha256] together with its card design and the Wear widget
+   * designs made from that (one group, whichever of them is picked); null when they have none by
+   * that hash.
+   */
   @Synchronized
   fun share(login: String, sha256: String, shared: Boolean): UserDesign? {
     val author = authorOf(login)
     val target =
       index.designs.firstOrNull { it.entry.author == author && it.entry.sha256 == sha256 }
         ?: return null
-    val updated = target.copy(shared = shared)
-    save(index.designs.map { if (it === target) updated else it }, sharedChanged = true)
-    return updated
+    val card = target.wearOf ?: target.entry.sha256
+    fun inGroup(design: UserDesign) =
+      design.entry.author == author && (design.entry.sha256 == card || design.wearOf == card)
+    save(
+      index.designs.map { if (inGroup(it)) it.copy(shared = shared) else it },
+      sharedChanged = true,
+    )
+    return target.copy(shared = shared)
   }
 
   private fun save(designs: List<UserDesign>, sharedChanged: Boolean) {
