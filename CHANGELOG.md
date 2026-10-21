@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.56](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.55...v0.1.56) (2026-10-21)
+
+
+### Features
+
+* **android:** one focused actions sheet per card ([#1033](https://github.com/yschimke/homeassistant-remotecompose/issues/1033)) ([1a5793c](https://github.com/yschimke/homeassistant-remotecompose/commit/1a5793c38b854f03c1c5aa9c6823e6b251a7c9cf))
+* **wear:** one Wear widget template for every container, made concrete on the watch ([#1027](https://github.com/yschimke/homeassistant-remotecompose/issues/1027)) ([fe05750](https://github.com/yschimke/homeassistant-remotecompose/commit/fe05750a623ac541a188dcedc603d6e3cf227159))
+
+
+### Bug Fixes
+
+* **deps:** update compose-ai-tools ([#1026](https://github.com/yschimke/homeassistant-remotecompose/issues/1026)) ([e9fd967](https://github.com/yschimke/homeassistant-remotecompose/commit/e9fd967aa2adc3d662bdcb9f0a046aaaab0c66ab))
+* **deps:** update rc-player-compose to 2.17.1 ([#1032](https://github.com/yschimke/homeassistant-remotecompose/issues/1032)) ([3264269](https://github.com/yschimke/homeassistant-remotecompose/commit/32642698d6a7d994dd01e11267b3bca709ab72a2))
+* **wear:** read the watch's values without loading the default dashboard ([#1030](https://github.com/yschimke/homeassistant-remotecompose/issues/1030)) ([a9e26c8](https://github.com/yschimke/homeassistant-remotecompose/commit/a9e26c827ba831a7d83c4afa218bda4061150ce3))
+
 ## [0.1.55](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.54...v0.1.55) (2026-10-21)
 
 
