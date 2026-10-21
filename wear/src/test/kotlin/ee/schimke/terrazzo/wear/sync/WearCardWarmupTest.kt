@@ -93,6 +93,17 @@ class WearCardWarmupTest {
     assertEquals(listOf(dashboard), store.readAllDashboards())
     assertNull(store.readValues())
 
+    // An older copy (another node's, or a late event) never replaces a newer one.
+    val older = PinnedCardSet(listOf(PinnedCard(card = summary("tile", "light.old"))), 3L)
+    store.persistChanged(WearSyncPaths.PINNED, encodeProto(older))
+    assertEquals(pinned, store.readPinned())
+    val olderDashboard = dashboard.copy(title = "Old", updatedAtMs = -1L)
+    store.persistChanged(WearSyncPaths.dashboardPath("energy"), encodeProto(olderDashboard))
+    assertEquals(listOf(dashboard), store.readAllDashboards())
+    val newer = pinned.copy(updatedAtMs = 8L, cards = emptyList())
+    store.persistChanged(WearSyncPaths.PINNED, encodeProto(newer))
+    assertEquals(newer, store.readPinned())
+
     assertTrue(warmsOnChange(listOf(WearSyncPaths.PINNED)))
     assertTrue(warmsOnChange(listOf(WearSyncPaths.SECTIONS)))
     assertFalse(warmsOnChange(listOf(WearSyncPaths.SLOTS, WearSyncPaths.dashboardPath("energy"))))
@@ -117,7 +128,7 @@ class WearCardWarmupTest {
         }
       }
 
-    runBlocking { WearCardWarmup.run(context) }
+    runBlocking { WearCardWarmup.run(context, syncFirst = false) }
 
     // The key the app's card will ask for: the watch's default look, the card's own style.
     val registry = defaultRegistry()

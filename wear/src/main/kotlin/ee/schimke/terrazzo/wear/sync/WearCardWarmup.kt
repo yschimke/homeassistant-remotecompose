@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Gets the watch's pinned cards ready before the app shows them. Each card plays a design template
@@ -42,11 +43,22 @@ internal object WearCardWarmup {
   /** One warm-up at a time: a second waits, then finds the first's templates ready. */
   private val running = Mutex()
 
-  suspend fun run(context: Context) =
+  /**
+   * [syncFirst] brings the pins and entity values up to date from the Data Layer before deriving
+   * the cards' design keys: some keys depend on an entity's state (a gauge, the weather), and the
+   * kept values may be missing (a fresh install) or older than the phone's last send.
+   */
+  suspend fun run(context: Context, syncFirst: Boolean = true) =
     withContext(Dispatchers.Default) {
       running.withLock {
         val app = context.applicationContext
         val store = WearOfflineStore(app)
+        if (syncFirst) {
+          runCatching {
+            withTimeoutOrNull(SYNC_TIMEOUT_MS) { syncWidgetStateFromDataLayer(app, store) }
+          }
+            .onFailure { Log.w(TAG, "Data Layer sync before warm-up failed", it) }
+        }
         val prefs = WearPrefs(app)
         val look = WearCardLook(prefs.themeStyle.first(), prefs.cardStyle.first())
         val snapshot = wearSnapshot(store.readValues()?.values.orEmpty())
@@ -64,6 +76,9 @@ internal object WearCardWarmup {
         }
       }
     }
+
+  /** A Data Layer that doesn't answer (no Play services) never holds the warm-up back for long. */
+  private const val SYNC_TIMEOUT_MS = 5_000L
 
   private const val TAG = "WearCardWarmup"
 }

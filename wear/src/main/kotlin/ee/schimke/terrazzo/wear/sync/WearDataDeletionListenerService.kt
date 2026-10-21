@@ -88,14 +88,30 @@ internal fun forgottenOnDeletion(deleted: Collection<String>): List<String> {
  * Keeps the item the phone changed at [path] when it is one the app opens on and this service is
  * woken for: pins, sections, widget slots, dashboards. (The slot cards' design index is the
  * widgets' to read from the Data Layer.) [WearSyncRepository] does the same while the app runs.
+ *
+ * Only a newer copy than the one kept replaces it ([newerThan]): each node that ever wrote a path
+ * (a replaced phone, say) keeps its own item, and their events can arrive in any order.
  */
 internal fun WearOfflineStore.persistChanged(path: String, bytes: ByteArray) {
   when {
-    path == WearSyncPaths.PINNED -> decodeProto<PinnedCardSet>(bytes)?.let(::writePinned)
-    path == WearSyncPaths.SECTIONS -> decodeProto<PinnedSectionSet>(bytes)?.let(::writeSections)
-    path == WearSyncPaths.SLOTS -> decodeProto<WearWidgetSlots>(bytes)?.let(::writeSlots)
+    path == WearSyncPaths.PINNED ->
+      newerThan(decodeProto<PinnedCardSet>(bytes), readPinned(), PinnedCardSet::updatedAtMs)
+        ?.let(::writePinned)
+    path == WearSyncPaths.SECTIONS ->
+      newerThan(
+          decodeProto<PinnedSectionSet>(bytes),
+          readSections(),
+          PinnedSectionSet::updatedAtMs,
+        )
+        ?.let(::writeSections)
+    path == WearSyncPaths.SLOTS ->
+      newerThan(decodeProto<WearWidgetSlots>(bytes), readSlots(), WearWidgetSlots::updatedAtMs)
+        ?.let(::writeSlots)
     path.startsWith(WearSyncPaths.DASHBOARD_PREFIX) ->
-      decodeProto<DashboardData>(bytes)?.let(::writeDashboard)
+      decodeProto<DashboardData>(bytes)?.let { changed ->
+        val kept = readAllDashboards().firstOrNull { it.urlPath == changed.urlPath }
+        newerThan(changed, kept, DashboardData::updatedAtMs)?.let(::writeDashboard)
+      }
   }
 }
 
