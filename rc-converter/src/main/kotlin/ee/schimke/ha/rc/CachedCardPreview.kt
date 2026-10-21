@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -110,11 +111,16 @@ fun CachedCardPreview(
   val context = LocalContext.current
   val cache = LocalCardDocumentCache.current
   val debugBorders = LocalRcDebugBorders.current
+  // A capture bakes the display's density and font scale into its sizes, and the cache outlives
+  // them (a display-size or font-size change; a render run's previews of several devices), so
+  // they key the document too: otherwise a card replays bytes captured for another display.
+  val density = LocalDensity.current
   // Mix the debug-borders flag into the cache key so toggling it
   // re-encodes the document (the wrapper changes the captured bytes).
   val effectiveCacheKey =
-    remember(cacheKey, debugBorders) {
-      if (debugBorders) DebugBorderedCacheKey(cacheKey) else cacheKey
+    remember(cacheKey, debugBorders, density.density, density.fontScale) {
+      val displayed = DisplayKeyedCacheKey(cacheKey, density.density, density.fontScale)
+      if (debugBorders) DebugBorderedCacheKey(displayed) else displayed
     }
 
   val pictureSignature =
@@ -378,6 +384,9 @@ private data class DebugBorderedCacheKey(val inner: Any)
 
 /** [inner] with its picture-entity slots' current URLs ([cardPictureSignature]): a new picture. */
 private data class PictureKeyedCacheKey(val inner: Any, val pictures: String)
+
+/** [inner] as captured on a display of [density] and [fontScale]. */
+private data class DisplayKeyedCacheKey(val inner: Any, val density: Float, val fontScale: Float)
 
 /** Where [pushSnapshotBindings] writes: the Compose player's named values or the View player. */
 internal interface BindingWriter {
