@@ -258,8 +258,13 @@ object CardDesignTemplates {
    * phone pays for them once rather than on every frame. Folded once per template and display;
    * [template] itself when it can't be folded, which still plays correctly.
    */
-  fun forDisplay(template: ByteArray, density: Float, fontScale: Float): ByteArray {
-    val display = density to fontScale
+  fun forDisplay(template: ByteArray, density: Float, fontScale: Float): ByteArray =
+    // Per template, so a background warm-up and the first frame asking at once fold it once: the
+    // second waits for the first's result instead of folding it again.
+    synchronized(template) { foldOnce(template, density to fontScale) }
+
+  private fun foldOnce(template: ByteArray, display: Pair<Float, Float>): ByteArray {
+    val (density, fontScale) = display
     synchronized(folded) {
       folded[template]
         ?.takeIf { it.first == display }

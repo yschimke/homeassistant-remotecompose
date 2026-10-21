@@ -136,9 +136,10 @@ fun CachedCardPreview(
   val cardDocument =
     remember(documentKey, template) {
       template?.let {
-        // Template bytes never change; a copy is a new document to the player, which decodes it
-        // again and fetches its slot pictures from the current snapshot's URLs. The same pictures
-        // play the same copy, so a card scrolled back into view isn't decoded again.
+        // Template bytes never change; a clone is a new document to the player, which fetches its
+        // slot pictures from the current snapshot's URLs, but shares the template's decode. The
+        // same pictures play the same clone, so a card scrolled back into view is the same
+        // document.
         val bytes =
           if (pictureSignature.isEmpty()) it.bytes else pictureCopy(it.bytes, pictureSignature)
         CardDocument(bytes = bytes, widthPx = 0, heightPx = 0)
@@ -375,7 +376,7 @@ private val pictureCopies = java.util.WeakHashMap<ByteArray, Pair<String, ByteAr
 private fun pictureCopy(template: ByteArray, pictures: String): ByteArray =
   synchronized(pictureCopies) {
     pictureCopies[template]?.takeIf { it.first == pictures }?.second
-      ?: template.copyOf().also { pictureCopies[template] = pictures to it }
+      ?: cloneForPlayer(template).also { pictureCopies[template] = pictures to it }
   }
 
 /**
