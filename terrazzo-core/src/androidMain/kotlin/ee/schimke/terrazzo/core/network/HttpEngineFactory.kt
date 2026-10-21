@@ -17,7 +17,7 @@ import io.ktor.client.engine.okhttp.OkHttp
  *    plaintext destination the current network can't safely reach.
  *
  * Built on [SharedOkHttpClient], the app's one OkHttp client, so it shares that client's connection
- * pool and certificate checks.
+ * pool and certificate checks. Never closed, for the reason [SharedOkHttpClient.ktorEngine] gives.
  *
  * Singleton so the underlying OkHttp connection pool / dispatcher is shared across `HaClient` and
  * `AddonClient` instances.
@@ -30,7 +30,7 @@ class HttpEngineFactory(
 ) {
 
   val engine: HttpClientEngine = OkHttp.create {
-    preconfigured = SharedOkHttpClient.forKtor()
+    preconfigured = SharedOkHttpClient.client
     addInterceptor(RemoteUrlInterceptor(policy, remoteUrlStore))
     addInterceptor(LanConnectionPolicyInterceptor(policy))
   }
