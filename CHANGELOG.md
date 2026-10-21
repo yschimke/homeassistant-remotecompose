@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.54](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.53...v0.1.54) (2026-10-21)
+
+
+### Bug Fixes
+
+* **android:** refuse certificates from the CVE-2026-111943 CAs ([#1017](https://github.com/yschimke/homeassistant-remotecompose/issues/1017)) ([a0839ec](https://github.com/yschimke/homeassistant-remotecompose/commit/a0839ec4dc05e0b160704d5e5e7a8654466abc35))
+* stop dropping frames when a dashboard section scrolls on screen ([#1016](https://github.com/yschimke/homeassistant-remotecompose/issues/1016)) ([3710973](https://github.com/yschimke/homeassistant-remotecompose/commit/3710973289b9d2482a6e13dd312b3b566a2248e0))
+
 ## [0.1.53](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.52...v0.1.53) (2026-10-21)
 
 
