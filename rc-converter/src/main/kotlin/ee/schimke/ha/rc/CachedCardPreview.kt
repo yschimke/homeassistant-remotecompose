@@ -131,8 +131,10 @@ fun CachedCardPreview(
     remember(documentKey, template) {
       template?.let {
         // Template bytes never change; a copy is a new document to the player, which decodes it
-        // again and fetches its slot pictures from the current snapshot's URLs.
-        val bytes = if (pictureSignature.isEmpty()) it.bytes else it.bytes.copyOf()
+        // again and fetches its slot pictures from the current snapshot's URLs. The same pictures
+        // play the same copy, so a card scrolled back into view isn't decoded again.
+        val bytes =
+          if (pictureSignature.isEmpty()) it.bytes else pictureCopy(it.bytes, pictureSignature)
         CardDocument(bytes = bytes, widthPx = 0, heightPx = 0)
       }
         ?: cache.get(documentKey)
@@ -354,6 +356,19 @@ fun CachedCardPreview(
     CardPlayback.LauncherWidget -> androidXPlayer()
   }
 }
+
+/**
+ * Per template array, the copy last played for one set of slot pictures. A rotating picture (a
+ * camera's token) replaces it; keyed weakly by the template, so a dropped template takes it along.
+ */
+private val pictureCopies = java.util.WeakHashMap<ByteArray, Pair<String, ByteArray>>()
+
+/** [template]'s copy for [pictures]: the one played before when the pictures haven't changed. */
+private fun pictureCopy(template: ByteArray, pictures: String): ByteArray =
+  synchronized(pictureCopies) {
+    pictureCopies[template]?.takeIf { it.first == pictures }?.second
+      ?: template.copyOf().also { pictureCopies[template] = pictures to it }
+  }
 
 /**
  * Wrapper key that distinguishes a debug-bordered render of [inner] from the plain render — same
