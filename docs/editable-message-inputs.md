@@ -89,7 +89,7 @@ This excludes widgets, not the foreground Wear app.
 
 ## Compatibility/release ordering
 
-The consumer pins the Kotlin player artifacts to published **2.17.1** and the separately released
+The consumer pins the Kotlin player artifacts to published **2.17.0** (`rc-player-compose` **2.17.1**) and the separately released
 JS bundle to **2.16.1**. These versions share the input contract. The corrected browser distribution
 includes the input API; 2.16.0's JS archive contained an older bundle and cannot render the form. CI and release builds resolve the same Maven Central artifacts,
 without a player source checkout. Release/package the player before updating the consumer. The
@@ -111,6 +111,6 @@ default chrome unless you provide that visible labeling/layout yourself. Styling
 widget, demo or read-only host. Older players ignore the optional property; consume Kotlin 2.16.0
 and JS 2.16.1 before relying on this appearance.
 
-CI validates published Kotlin 2.17.1 dependencies and the 2.16.1 browser bundle. Local Kotlin development
+CI validates published Kotlin 2.17.0/2.17.1 dependencies and the 2.16.1 browser bundle. Local Kotlin development
 can still use Gradle's `--include-build <rc-players-checkout>`; the embedded browser player always
 comes from the declared JS distribution, so tests exercise what the consumer will ship.
