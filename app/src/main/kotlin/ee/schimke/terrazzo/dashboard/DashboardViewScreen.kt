@@ -1331,6 +1331,26 @@ internal fun StudioCardPreview(session: HaSession, card: CardConfig, snapshot: H
   }
 }
 
+/**
+ * [StudioCardPreview] with what the dashboard puts around its cards: the user's per-card style
+ * overrides and the preloaded server designs. Screens outside [DashboardViewScreen] that promise
+ * the card "as the dashboard draws it" (history, the style sheet) use this so a card with a style
+ * of its own doesn't fall back to the dashboard-wide style.
+ */
+@Composable
+internal fun DashboardCardPreview(session: HaSession, card: CardConfig, snapshot: HaSnapshot) {
+  val context = androidx.compose.ui.platform.LocalContext.current
+  val overrides by
+    remember(context) { CardDesignOverrideStore.of(context).overrides }.collectAsState()
+  val designs = rememberPreloadedCardDesigns() ?: CardDesigns()
+  CompositionLocalProvider(
+    LocalCardDesigns provides designs,
+    LocalCardDesignOverrides provides overrides,
+  ) {
+    StudioCardPreview(session, card, snapshot)
+  }
+}
+
 @Composable
 private fun CardSlot(
   card: CardConfig,

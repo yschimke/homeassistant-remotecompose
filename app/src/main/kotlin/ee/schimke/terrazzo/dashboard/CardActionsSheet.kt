@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Brush
@@ -28,6 +30,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -50,7 +53,9 @@ import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.widget.WidgetStore
 import ee.schimke.terrazzo.ui.LocalCardStyle
+import ee.schimke.terrazzo.widget.WidgetSync
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -86,6 +91,8 @@ fun CardActionsSheet(
     }
   val onWatch by pinStore.isCardPinned(pinKey).collectAsState(initial = false)
   val installed by graph.widgetStore.installed.collectAsState(initial = emptyList())
+  // Drop rows for widgets removed from the launcher before the count can disable "Add".
+  LaunchedEffect(Unit) { WidgetSync.reconcile(context.applicationContext) }
   val overrides by
     remember(context) { CardDesignOverrideStore.of(context).overrides }.collectAsState()
   val entityIds = remember(card) { card.historyEntityIds() }
@@ -93,7 +100,8 @@ fun CardActionsSheet(
     CardActionsState(
       title = card.historyTitle(),
       stateLabel = card.stateLabel(snapshot),
-      homeScreenCount = installed.count { it.baseUrl == baseUrl && it.card == card },
+      homeScreenCount =
+        installed.count { it.baseUrl == baseUrl && it.card.withoutName() == card.withoutName() },
       widgetsInUse = installed.size,
       onWatch = onWatch,
       style = cardStyleLabel(card, overrides, LocalCardStyle.current),
@@ -179,7 +187,8 @@ fun CardActions(
   onMonitor: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  Column(modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+  // Scrolls so the last actions stay reachable in landscape, split screen or with large text.
+  Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 16.dp)) {
     Column(
       Modifier.padding(horizontal = 24.dp).padding(bottom = 8.dp),
       verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -328,6 +337,12 @@ private fun SecondaryAction(icon: ImageVector, label: String, onClick: () -> Uni
     modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
   )
 }
+
+/**
+ * The card without its `name`: the install sheet's optional label is written into the widget's copy
+ * as `name`, so a labelled widget still counts as this card's.
+ */
+private fun CardConfig.withoutName(): CardConfig = copy(raw = JsonObject(raw - "name"))
 
 /** The card's primary entity and its formatted state, e.g. "Front door · Closed". */
 private fun CardConfig.stateLabel(snapshot: HaSnapshot): String? {

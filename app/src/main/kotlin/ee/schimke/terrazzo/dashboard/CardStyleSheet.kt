@@ -22,7 +22,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -80,9 +79,7 @@ fun CardStyleSheet(
       },
       onDone = onDismiss,
     ) {
-      CompositionLocalProvider(LocalCardDesignOverrides provides overrides) {
-        StudioCardPreview(session, card, snapshot)
-      }
+      DashboardCardPreview(session, card, snapshot)
     }
   }
 }

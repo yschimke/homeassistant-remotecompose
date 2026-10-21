@@ -175,7 +175,7 @@ fun WidgetInstallSheet(
           enabled = pinSupported && !capHit && renderedPreview != null,
           modifier = Modifier.fillMaxWidth(),
         ) {
-          Text("Add to home screen")
+          Text("Add widget")
         }
       }
     }

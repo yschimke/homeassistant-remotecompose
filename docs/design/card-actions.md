@@ -58,7 +58,8 @@ for 15 minutes* (where monitoring is available) and *Redesign a copy in Card Stu
 
 **The install sheet installs.** "Home screen widget": the live preview and its size controls
 first, then an optional label ("Only this widget. Your dashboard stays as it is."), then the
-button, which reads *Add to home screen* with the widgets left above it.
+button, which reads *Add widget* with the widgets left above it (not "Add to home screen", which is
+the launcher's own confirmation that follows).
 
 **History is history.** The details screen shows the card as the dashboard draws it, the history
 charts, and *Open in Home Assistant*. Its top bar's actions button reopens the card's sheet, so

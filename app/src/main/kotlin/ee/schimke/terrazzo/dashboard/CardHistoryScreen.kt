@@ -156,7 +156,7 @@ fun CardHistoryScreen(
           .padding(horizontal = 16.dp, vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-      StudioCardPreview(session, card, snapshot)
+      DashboardCardPreview(session, card, snapshot)
 
       if (entityIds.isEmpty()) {
         Text(

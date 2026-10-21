@@ -342,7 +342,7 @@ class WidgetPreparationTest {
     compose.waitUntil(60_000) {
       compose.onAllNodesWithTag("widget-preview-error").fetchSemanticsNodes().isNotEmpty()
     }
-    compose.onNodeWithText("Add to home screen").assertIsNotEnabled()
+    compose.onNodeWithText("Add widget").assertIsNotEnabled()
     screenshot("picture-before-preview-error")
   }
 
@@ -384,10 +384,7 @@ class WidgetPreparationTest {
     compose.onNodeWithText("Preview at 1 × 1 ", substring = true).performScrollTo().assertExists()
     compose.onNodeWithText("Compact").assertIsSelected()
     compose.waitUntil(60_000) {
-      compose
-        .onAllNodes(hasText("Add to home screen") and isEnabled())
-        .fetchSemanticsNodes()
-        .isNotEmpty()
+      compose.onAllNodes(hasText("Add widget") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
     }
     // Target the grid viewport so performScrollTo finds the sheet's vertical scroller rather
     // than the grid's own horizontal scroller. A visible sliver is insufficient evidence.
@@ -446,7 +443,7 @@ class WidgetPreparationTest {
     screenshot("${evidencePrefix}prepared-preview")
     if (evidencePrefix.isEmpty()) screenshot("setup-initial-one-cell")
 
-    compose.onNodeWithText("Add to home screen").assertIsEnabled().performClick()
+    compose.onNodeWithText("Add widget").assertIsEnabled().performClick()
     assertTrue(
       device.wait(
         Until.hasObject(By.text(java.util.regex.Pattern.compile("(?i).*add to home screen.*"))),
@@ -469,12 +466,9 @@ class WidgetPreparationTest {
     assertFalse("cancelling must return to the edited preparation", dismissed)
     compose.onNodeWithText(editedName).assertExists()
     compose.waitUntil(60_000) {
-      compose
-        .onAllNodes(hasText("Add to home screen") and isEnabled())
-        .fetchSemanticsNodes()
-        .isNotEmpty()
+      compose.onAllNodes(hasText("Add widget") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
     }
-    compose.onNodeWithText("Add to home screen").assertIsEnabled().performClick()
+    compose.onNodeWithText("Add widget").assertIsEnabled().performClick()
     assertTrue(
       device.wait(
         Until.hasObject(By.text(java.util.regex.Pattern.compile("(?i).*add to home screen.*"))),
