@@ -186,6 +186,16 @@ Deliberate spike limits, each owned by a milestone below:
   running app).
   Until one has synced, the card keeps the direct capture, which shows the card's icon
   (`SlotWidgetDesignTest`, `WearPictureSyncTest`).
+- **One Wear widget template fits every container** (`WearWidgetTemplate`): the slot's content
+  in Glance Wear's container with the padding and corner radius left as named values
+  (`wear.container.horizontal_padding`, `…vertical_padding`, `…corner_radius`, dp), captured once
+  per card shape and theme with the app's profile (so `CORE_TEXT` is fine) at host density. Per
+  widget the watch writes in that widget's `WearWidgetParams` values, takes the header Glance Wear
+  writes for those params (from an empty `WearWidgetDocument` capture: canvas, density, profile),
+  folds in its density and font scale, and `adaptTo`s the Wear widget profile (`CORE_TEXT` as text
+  layout), then bakes the card's values; if that isn't playable, Glance Wear captures the
+  container itself as before (`WearWidgetTemplateTest` checks the header, the profile and the
+  pixels against Glance Wear's own capture, Small, Large and other insets and corners).
 - **Wear widgets play the card's own design.** A Wear widget isn't a separate design: it is
   the card's design rooted on the Glance Wear container, Small or Large. Glance Wear draws the
   container's shape and background into the document, so the card's own surface (background,

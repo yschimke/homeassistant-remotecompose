@@ -207,6 +207,36 @@ internal fun slotWidgetData(
           return WearWidgetRawContent(it, Bundle(), null)
         }
       }
+      // The card's container-neutral template, made into this widget's document on the watch.
+      val neutralKey =
+        WearNeutralTemplateKey(design.type, properties.shape, themeKey to cardStyle.id)
+      val neutral =
+        neutralTemplates[neutralKey]
+          ?: runCatching {
+            WearWidgetTemplate.capture(context) {
+              SlotContent(
+                registry,
+                colors,
+                input.card,
+                input.snapshot,
+                slotIndex,
+                template = true,
+                cardStyle = cardStyle,
+              )
+            }
+          }
+            .onFailure { Log.w("SlotWidget", "neutral template capture failed", it) }
+            .getOrNull()
+            ?.also { neutralTemplates[neutralKey] = it }
+      neutral
+        ?.let { WearWidgetTemplate.instantiate(context, it, params, isPreview) }
+        ?.let { widget ->
+          val playback = CardDesignTemplates.playback(design, widget.rcDocument, registry)
+          LauncherDesigns.bakeValues(widget.rcDocument, playback, snapshot, fetchImage)?.let {
+            return WearWidgetRawContent(it, widget.extras, widget.widgetTitle)
+          }
+        }
+      // Otherwise Glance Wear captures the template for this container itself.
       val key =
         WearTemplateKey(
           cardType = design.type,
@@ -287,12 +317,19 @@ private data class WearTemplateKey(
 
 private val NO_PICTURES = PictureImageStrategy.Inline { null }
 
+/** One container-neutral Wear template per card shape and theme: see [WearWidgetTemplate]. */
+private data class WearNeutralTemplateKey(val cardType: String, val shape: String, val theme: Any)
+
+private val neutralTemplates =
+  java.util.concurrent.ConcurrentHashMap<WearNeutralTemplateKey, ByteArray>()
+
 private val wearTemplates =
   java.util.concurrent.ConcurrentHashMap<WearTemplateKey, WearWidgetRawContent>()
 
 /**
  * A slot's widget document: [card] under the Wear theme, Fixed size mode, without the card's own
- * chrome. With [template] it is captured as a design template: names and titles bound, not baked.
+ * chrome, in Glance Wear's container for the widget's params. With [template] it is captured as a
+ * design template: names and titles bound, not baked.
  */
 internal fun slotDocument(
   registry: CardRegistry,
@@ -305,42 +342,49 @@ internal fun slotDocument(
 ): WearWidgetDocument =
   WearWidgetDocument(
     background = WearWidgetBrush.Companion,
-    content = {
-      // The watch's widget host has no image loader. A template names its slot pictures by URL,
-      // and baking embeds the phone-synced bytes; a direct capture can't, so it shows the card's
-      // icon.
-      CompositionLocalProvider(
-        LocalTemplateBindings provides if (template) TemplateBindings() else null,
-        LocalPictureImageStrategy provides
-          if (template) PictureImageStrategy.DefaultAppUrl else NO_PICTURES,
-      ) {
-        ProvideCardRegistry(registry) {
-          RemoteMaterialTheme(colorScheme = colors) {
-            val theme = RemoteMaterialTheme.colorScheme.asHaTheme()
-            // The user's card style brings its instruments, type and shapes; the watch keeps
-            // its own palette (the WearM3 colours the widget host updates).
-            ProvideHaUberStyle(cardStyle, darkTheme = true) {
-              ProvideCardSizeMode(CardSizeMode.Fixed) {
-                // The Glance Wear container already supplies its
-                // own shape + brush via WearWidgetBrush, so
-                // suppress the per-card rounded clip + divider
-                // border that would otherwise double up.
-                //
-                // Glance Wear's capture profile is fixed by
-                // AndroidX to a stable op set that rejects
-                // FlowLayout (op 240). Tell HA card components
-                // to use a non-wrapping row fallback so cards
-                // that lean on `RemoteFlowRow` (glance / grid /
-                // entity-filter) capture instead of throwing.
-                ProvideCardChrome(enabled = false) {
-                  ProvideFixedCanvasAxis(BreakpointAxis.Height) {
-                    ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
-                      if (card != null) {
-                        RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
-                      } else {
-                        EmptySlotPlaceholder(slotIndex, theme)
-                      }
-                    }
+    content = { SlotContent(registry, colors, card, snapshot, slotIndex, template, cardStyle) },
+  )
+
+/** What a slot's widget shows inside its container: see [slotDocument]. */
+@Composable
+internal fun SlotContent(
+  registry: CardRegistry,
+  colors: RemoteColorScheme,
+  card: CardConfig?,
+  snapshot: HaSnapshot,
+  slotIndex: Int,
+  template: Boolean,
+  cardStyle: HaUberTheme,
+) {
+  // The watch's widget host has no image loader. A template names its slot pictures by URL, and
+  // baking embeds the phone-synced bytes; a direct capture can't, so it shows the card's icon.
+  CompositionLocalProvider(
+    LocalTemplateBindings provides if (template) TemplateBindings() else null,
+    LocalPictureImageStrategy provides
+      if (template) PictureImageStrategy.DefaultAppUrl else NO_PICTURES,
+  ) {
+    ProvideCardRegistry(registry) {
+      RemoteMaterialTheme(colorScheme = colors) {
+        val theme = RemoteMaterialTheme.colorScheme.asHaTheme()
+        // The user's card style brings its instruments, type and shapes; the watch keeps its own
+        // palette (the WearM3 colours the widget host updates).
+        ProvideHaUberStyle(cardStyle, darkTheme = true) {
+          ProvideCardSizeMode(CardSizeMode.Fixed) {
+            // The Glance Wear container already supplies its own shape + brush via
+            // WearWidgetBrush, so suppress the per-card rounded clip + divider border that would
+            // otherwise double up.
+            //
+            // Glance Wear's capture profile is fixed by AndroidX to a stable op set that rejects
+            // FlowLayout (op 240). Tell HA card components to use a non-wrapping row fallback so
+            // cards that lean on `RemoteFlowRow` (glance / grid / entity-filter) capture instead
+            // of throwing.
+            ProvideCardChrome(enabled = false) {
+              ProvideFixedCanvasAxis(BreakpointAxis.Height) {
+                ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
+                  if (card != null) {
+                    RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                  } else {
+                    EmptySlotPlaceholder(slotIndex, theme)
                   }
                 }
               }
@@ -348,8 +392,9 @@ internal fun slotDocument(
           }
         }
       }
-    },
-  )
+    }
+  }
+}
 
 /**
  * Tiny placeholder rendered when a slot has no assigned card or its `rawJson` failed to decode.

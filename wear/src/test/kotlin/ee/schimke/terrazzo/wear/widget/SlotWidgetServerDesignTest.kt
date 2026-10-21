@@ -13,6 +13,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignTemplates
+import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
@@ -154,8 +155,16 @@ class SlotWidgetServerDesignTest {
       assertEquals(listOf(container), asked)
       val own = capture(params)
       assertFalse(baked.contentEquals(own), "$container: the server's design, not the card's own")
-      // The same template the card's own capture would bake in that card style.
-      assertContentEquals(capture(params, cardStyle = lcd), baked)
+      // The server's design, baked with the card's values: nothing of the card's own capture.
+      val designCard = CardDesignTemplates.designCard(card, snapshot, registry)
+      assertContentEquals(
+        LauncherDesigns.bakeValues(
+          design,
+          CardDesignTemplates.playback(designCard, design, registry),
+          snapshot,
+        ),
+        baked,
+      )
       assertTrue("Kitchen" in String(baked, Charsets.ISO_8859_1), "the values are baked in")
       assertEquals(
         emptyList(),
