@@ -79,6 +79,22 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
       .getOrElse { ex -> (cached ?: throw ex).also { servedFromCache.add(urlPath.orEmpty()) } }
   }
 
+  /**
+   * The states alone, as the default dashboard's snapshot is cached (the same states): live, else
+   * the cached copy, which [snapshotFetchedAtMs] with a null url path then dates.
+   */
+  override suspend fun loadSnapshot(): HaSnapshot = runCatching {
+    delegate.loadSnapshot()
+  }
+    .onSuccess { snapshot ->
+      liveFetchedAtMs[""] = System.currentTimeMillis()
+      servedFromCache.remove("")
+      cache.putSnapshot(baseUrl, null, snapshot)
+    }
+    .getOrElse { ex ->
+      (cache.snapshot(baseUrl, null) ?: throw ex).also { servedFromCache.add("") }
+    }
+
   /** Per dashboard (`""` for the default): when this session last fetched its snapshot live. */
   private val liveFetchedAtMs = ConcurrentHashMap<String, Long>()
 

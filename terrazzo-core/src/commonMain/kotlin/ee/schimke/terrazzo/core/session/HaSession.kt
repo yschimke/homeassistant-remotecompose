@@ -112,6 +112,15 @@ interface HaSession {
   suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot>
 
   /**
+   * Every entity's current state, with the device registry, for a host that renders no one
+   * dashboard (the Wear sync). It reads no dashboard config, so it works whatever the default
+   * dashboard is: an auto-generated Overview or a strategy dashboard, which [loadDashboard]
+   * refuses. [snapshotFetchedAtMs] with a null url path says when it was fetched. Sessions without
+   * a dashboard-free read return the default dashboard's snapshot.
+   */
+  suspend fun loadSnapshot(): HaSnapshot = loadDashboard(null).second
+
+  /**
    * When the snapshot the last [loadDashboard] for [urlPath] returned was fetched from Home
    * Assistant, in epoch milliseconds — or null when it was fetched by that call. A session that
    * serves a cached snapshot (the app backgrounded, the network down) answers with the cache's
@@ -348,6 +357,11 @@ class LiveHaSession(
       val snapshot = client.snapshot().copy(devices = devices(), temperatureUnit = unit.await())
       dashboard to snapshot
     }
+
+  override suspend fun loadSnapshot(): HaSnapshot = coroutineScope {
+    val unit = async { temperatureUnit() }
+    client.snapshot().copy(devices = devices(), temperatureUnit = unit.await())
+  }
 
   // The instance's unit system: asked once a session. An instance that doesn't answer (or refuses
   // get_config) isn't asked again, so it never costs a reload or reconnect a wait; its cards use

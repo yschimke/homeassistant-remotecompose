@@ -179,6 +179,27 @@ class CachedHaSessionTest {
   }
 
   @Test
+  fun loadSnapshot_reads_no_dashboard_and_falls_back_to_the_cached_states() = runTest {
+    val cache = storage()
+    var failNext = false
+    val delegate =
+      FakeSession(
+        baseUrl = baseUrl,
+        // The default dashboard is a strategy (or never taken over): the app can't load it.
+        loadProvider = { error("unsupported dashboard") },
+        snapshotProvider = { if (failNext) error("ws closed") else sampleSnapshot },
+      )
+    val session = CachedHaSession(delegate, cache)
+
+    assertEquals(sampleSnapshot, session.loadSnapshot())
+    assertNull(session.snapshotFetchedAtMs(null), "fetched live")
+
+    failNext = true
+    assertEquals(sampleSnapshot, session.loadSnapshot())
+    assertTrue(session.snapshotFetchedAtMs(null) != null, "served from the cache, and dated")
+  }
+
+  @Test
   fun connect_marks_lastInstance_even_on_failure() = runTest {
     val cache = storage()
     val session =
@@ -198,6 +219,7 @@ private class FakeSession(
   private val loadProvider: suspend (String?) -> Pair<Dashboard, HaSnapshot> = { _ ->
     Dashboard() to HaSnapshot()
   },
+  private val snapshotProvider: (suspend () -> HaSnapshot)? = null,
 ) : HaSession {
   override val connectionStatus: StateFlow<SessionConnectionStatus> =
     MutableStateFlow(SessionConnectionStatus.Connected)
@@ -208,6 +230,9 @@ private class FakeSession(
   override suspend fun listDashboards(): List<DashboardSummary> = listProvider()
 
   override suspend fun loadDashboard(urlPath: String?) = loadProvider(urlPath)
+
+  override suspend fun loadSnapshot(): HaSnapshot =
+    snapshotProvider?.invoke() ?: super.loadSnapshot()
 
   override suspend fun close() = Unit
 }
