@@ -23,6 +23,7 @@ import coil3.request.SuccessResult
 import coil3.request.allowHardware
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import ee.schimke.ha.client.tls.ForbiddenCertificatesHostnameVerifier
 import ee.schimke.terrazzo.core.di.AppScope
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
 import ee.schimke.terrazzo.core.network.LanConnectionPolicyInterceptor
@@ -101,6 +102,7 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
       OkHttpClient.Builder()
         .addInterceptor(LanConnectionPolicyInterceptor(lanPolicy))
         .addInterceptor(HaBearerAuthInterceptor({ baseUrl }, { accessToken }))
+        .hostnameVerifier(ForbiddenCertificatesHostnameVerifier())
         .build()
     Log.d(
       TAG,
