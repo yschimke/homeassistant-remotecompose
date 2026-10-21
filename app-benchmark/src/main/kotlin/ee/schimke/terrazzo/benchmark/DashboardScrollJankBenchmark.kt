@@ -42,14 +42,11 @@ class DashboardScrollJankBenchmark {
   fun dragExpandedBoard() =
     rule.measureRepeated(
       packageName = TARGET_PACKAGE,
+      // Sum reports each section's count as well (`<name>Count`): a Count metric beside it would
+      // produce the same measurement name, which macrobenchmark rejects.
       metrics =
         listOf(FrameTimingMetric()) +
-          TRACE_SECTIONS.flatMap { name ->
-            listOf(
-              TraceSectionMetric(name, TraceSectionMetric.Mode.Sum),
-              TraceSectionMetric(name, TraceSectionMetric.Mode.Count),
-            )
-          },
+          TRACE_SECTIONS.map { TraceSectionMetric(it, TraceSectionMetric.Mode.Sum) },
       compilationMode = CompilationMode.Partial(baselineProfileMode = BaselineProfileMode.Require),
       startupMode = null,
       iterations = 5,
