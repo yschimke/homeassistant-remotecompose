@@ -73,6 +73,9 @@ private class AppConnection(
  * @param registerReturnHome hands the host a callback that goes back to the starting dashboard, its
  *   first view and the top of the page. The Home Assistant panel calls it on a wall panel left
  *   idle.
+ * @param signInWithHomeAssistant starts the host's own Home Assistant sign-in (browser OAuth) for
+ *   the entered server address. When null, only a long-lived access token is offered.
+ * @param onSignOut lets the host forget a sign-in it remembers.
  */
 @Composable
 fun TerrazzoMultiplatformApp(
@@ -81,6 +84,8 @@ fun TerrazzoMultiplatformApp(
   initialDashboardPath: String? = null,
   hostedAction: ((String) -> Boolean)? = null,
   registerReturnHome: ((() -> Unit) -> Unit)? = null,
+  signInWithHomeAssistant: ((String) -> Unit)? = null,
+  onSignOut: (() -> Unit)? = null,
 ) {
   val dark = isSystemInDarkTheme()
   MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
@@ -93,7 +98,7 @@ fun TerrazzoMultiplatformApp(
     val active = connection
     Surface(Modifier.fillMaxSize()) {
       if (active == null) {
-        ConnectionScreen(busy, error) { url, token ->
+        ConnectionScreen(busy, error, signInWithHomeAssistant) { url, token ->
           scope.launch {
             busy = true
             error = null
@@ -125,7 +130,11 @@ fun TerrazzoMultiplatformApp(
             active,
             initialDashboardPath,
             registerReturnHome,
-            onSignOut = { connection = null },
+            signInRemembered = active.hosted && onSignOut != null,
+            onSignOut = {
+              onSignOut?.invoke()
+              connection = null
+            },
           )
         }
       }
@@ -137,6 +146,7 @@ fun TerrazzoMultiplatformApp(
 private fun ConnectionScreen(
   busy: Boolean,
   error: String?,
+  signIn: ((String) -> Unit)?,
   connect: (String, String) -> Unit,
 ) {
   var url by rememberSaveable { mutableStateOf("") }
@@ -162,6 +172,15 @@ private fun ConnectionScreen(
         enabled = !busy,
         modifier = Modifier.fillMaxWidth(),
       )
+      if (signIn != null) {
+        Button(
+          onClick = { signIn(url.trim().trimEnd('/')) },
+          enabled = !busy && validServerUrl(url),
+        ) {
+          Text("Sign in with Home Assistant")
+        }
+        Text("Or connect with a token instead:", style = MaterialTheme.typography.bodySmall)
+      }
       OutlinedTextField(
         token,
         { token = it },
@@ -215,6 +234,7 @@ private fun DashboardShell(
   connection: AppConnection,
   initialDashboardPath: String?,
   registerReturnHome: ((() -> Unit) -> Unit)?,
+  signInRemembered: Boolean,
   onSignOut: () -> Unit,
 ) {
   var list by remember { mutableStateOf<DashboardListState>(DashboardListState.Loading) }
@@ -328,7 +348,11 @@ private fun DashboardShell(
                   verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                   Text(connection.config.baseUrl, style = MaterialTheme.typography.titleMedium)
-                  Text("Access tokens are kept only for this session.")
+                  Text(
+                    if (signInRemembered)
+                      "This browser remembers your Home Assistant sign-in until you sign out."
+                    else "Access tokens are kept only for this session."
+                  )
                   OutlinedTextField(
                     designServer,
                     { designServer = it },

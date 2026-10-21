@@ -10,6 +10,7 @@ import ee.schimke.terrazzo.shared.*
 import kotlin.js.JsString
 import kotlin.js.Promise
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.await
 import kotlinx.coroutines.launch
@@ -22,21 +23,60 @@ private external fun entryMode(): String
 
 @JsFun("() => location.origin + '/demo-ha'") private external fun demoBackendUrl(): String
 
-@OptIn(ExperimentalComposeUiApi::class)
 fun main() {
-  val hosted = isHomeAssistantPanel()
+  val panel = isHomeAssistantPanel()
+  if (panel || entryMode() == "demo") return show(panel, signedInServer = "")
+  // Outside the panel (GitHub Pages, a Wasmo app, any other origin) the page signs in itself;
+  // finish a sign-in redirect, or pick up a remembered one, before the first frame.
+  MainScope().launch {
+    val server =
+      try {
+        restoreSignIn().await().toString()
+      } catch (e: CancellationException) {
+        throw e
+      } catch (_: Throwable) {
+        ""
+      }
+    show(panel = false, signedInServer = server)
+  }
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+private fun show(panel: Boolean, signedInServer: String) {
+  val signedIn = signedInServer.isNotEmpty()
   ComposeViewport(viewportContainerId = "app", configure = { enableBrowserWindowInsets = true }) {
     if (entryMode() == "demo") PublicDemo()
+    else if (panel)
+      TerrazzoMultiplatformApp(
+        hostedConfig = HaConfig(homeAssistantOrigin(), ""),
+        hostedAccessToken = ::currentPanelAccessToken,
+        initialDashboardPath = panelDashboard().ifBlank { null },
+        hostedAction = ::panelAction,
+        registerReturnHome = ::panelReturnHome,
+      )
     else
       TerrazzoMultiplatformApp(
-        hostedConfig = if (hosted) HaConfig(homeAssistantOrigin(), "") else null,
-        hostedAccessToken = if (hosted) ::currentPanelAccessToken else null,
-        initialDashboardPath = if (hosted) panelDashboard().ifBlank { null } else null,
-        hostedAction = if (hosted) ::panelAction else null,
-        registerReturnHome = if (hosted) ::panelReturnHome else null,
+        hostedConfig = if (signedIn) HaConfig(signedInServer, "") else null,
+        hostedAccessToken = if (signedIn) ::currentSignInAccessToken else null,
+        signInWithHomeAssistant = ::signIn,
+        onSignOut = ::signOut,
       )
   }
 }
+
+// Browser OAuth from ha-oauth.js, loaded before this module by index.html.
+@JsFun("() => window.terrazzoOAuth.restore()")
+private external fun restoreSignIn(): Promise<JsString>
+
+@JsFun("(server) => window.terrazzoOAuth.signIn(server)")
+private external fun signIn(server: String)
+
+@JsFun("() => window.terrazzoOAuth.signOut()") private external fun signOut()
+
+@JsFun("() => window.terrazzoOAuth.accessToken()")
+private external fun signInAccessToken(): Promise<JsString>
+
+private suspend fun currentSignInAccessToken(): String = signInAccessToken().await().toString()
 
 // Only the locally served same-origin HA panel exposes this capability. Refresh tokens stay
 // inside the HA frontend; a fresh short-lived access token is requested on every reconnect.
