@@ -2,6 +2,7 @@
 
 package ee.schimke.terrazzo.wear.ui
 
+import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.wear.compose.material3.Text
+import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.*
@@ -54,28 +56,18 @@ internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValu
     return
   }
   val registry = remember { defaultRegistry().withEnhancedShutter() }
-  val snapshot =
-    remember(values) { HaSnapshot(states = values.mapValues { (id, v) -> v.toEntityState(id) }) }
+  val snapshot = remember(values) { wearSnapshot(values) }
   val look = LocalWearCardLook.current
   val style = wearWidgetCardStyle(summary.cardStyleOverride, look.style)
   val context = LocalContext.current
   val density = LocalDensity.current
   val design = CardDesignTemplates.designCard(card, snapshot, registry)
-  val designKey =
-    CardDesignTemplates.keyFor(design, snapshot, look.palette, true, registry, cardStyle = style)
+  val designKey = wearDesignKey(design, snapshot, look, style, registry)
   val template =
     remember(design, designKey, density) {
       designKey?.let {
-        val bytes = CardDesignLibrary.template(context, it, registry)
-        CardDesignTemplates.playback(
-          design,
-          CardDesignTemplates.forDisplay(
-            bytes,
-            density.density,
-            density.fontScale,
-          ),
-          registry,
-        )
+        val bytes = wearTemplateBytes(context, it, registry, density.density, density.fontScale)
+        CardDesignTemplates.playback(design, bytes, registry)
       }
     }
   // Binding cards seed current values before frame one; baked and structural changes recapture.
@@ -108,6 +100,39 @@ internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValu
     }
   }
 }
+
+/**
+ * The local library's design key [design] plays with on the watch, in [look]'s palette and [style];
+ * null when the card has no template shape. Shared with
+ * [ee.schimke.terrazzo.wear.sync.WearCardWarmup], so the cards it prepares are the ones the app
+ * shows.
+ */
+internal fun wearDesignKey(
+  design: CardConfig,
+  snapshot: HaSnapshot,
+  look: WearCardLook,
+  style: HaUberTheme,
+  registry: CardRegistry,
+): DesignKey? =
+  CardDesignTemplates.keyFor(design, snapshot, look.palette, true, registry, cardStyle = style)
+
+/** [key]'s template, folded for a display of [density] and [fontScale]: what the player plays. */
+internal fun wearTemplateBytes(
+  context: Context,
+  key: DesignKey,
+  registry: CardRegistry,
+  density: Float,
+  fontScale: Float,
+): ByteArray =
+  CardDesignTemplates.forDisplay(
+    CardDesignLibrary.template(context, key, registry),
+    density,
+    fontScale,
+  )
+
+/** The snapshot the watch's cards render from: its last synced entity values. */
+internal fun wearSnapshot(values: Map<String, EntityValue>): HaSnapshot =
+  HaSnapshot(states = values.mapValues { (id, v) -> v.toEntityState(id) })
 
 internal fun decodeWearCard(raw: String): CardConfig? = runCatching {
   Json.decodeFromString(CardConfig.serializer(), raw)

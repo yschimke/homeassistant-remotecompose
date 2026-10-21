@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -110,11 +111,16 @@ fun CachedCardPreview(
   val context = LocalContext.current
   val cache = LocalCardDocumentCache.current
   val debugBorders = LocalRcDebugBorders.current
+  // A capture bakes the display's density and font scale into its sizes, and the cache outlives
+  // them (a display-size or font-size change; a render run's previews of several devices), so
+  // they key the document too: otherwise a card replays bytes captured for another display.
+  val density = LocalDensity.current
   // Mix the debug-borders flag into the cache key so toggling it
   // re-encodes the document (the wrapper changes the captured bytes).
   val effectiveCacheKey =
-    remember(cacheKey, debugBorders) {
-      if (debugBorders) DebugBorderedCacheKey(cacheKey) else cacheKey
+    remember(cacheKey, debugBorders, density.density, density.fontScale) {
+      val displayed = DisplayKeyedCacheKey(cacheKey, density.density, density.fontScale)
+      if (debugBorders) DebugBorderedCacheKey(displayed) else displayed
     }
 
   val pictureSignature =
@@ -131,54 +137,58 @@ fun CachedCardPreview(
     remember(documentKey, template) {
       template?.let {
         // Template bytes never change; a copy is a new document to the player, which decodes it
-        // again and fetches its slot pictures from the current snapshot's URLs.
-        val bytes = if (pictureSignature.isEmpty()) it.bytes else it.bytes.copyOf()
+        // again and fetches its slot pictures from the current snapshot's URLs. The same pictures
+        // play the same copy, so a card scrolled back into view isn't decoded again.
+        val bytes =
+          if (pictureSignature.isEmpty()) it.bytes else pictureCopy(it.bytes, pictureSignature)
         CardDocument(bytes = bytes, widthPx = 0, heightPx = 0)
       }
         ?: cache.get(documentKey)
-        ?: runBlocking {
-          val captureContent: @RemoteComposable @Composable () -> Unit =
-            if (debugBorders) {
-              { DebugRcBorderWrapper { content() } }
-            } else {
-              content
+        ?: harcTrace(HarcTraceSections.CAPTURE_DOCUMENT) {
+            runBlocking {
+              val captureContent: @RemoteComposable @Composable () -> Unit =
+                if (debugBorders) {
+                  { DebugRcBorderWrapper { content() } }
+                } else {
+                  content
+                }
+              // A constrained capture [profile] (e.g. `widgetsProfile`,
+              // the launcher's stricter op set) can reject a card whose
+              // ops fall outside its vocabulary by throwing mid-capture.
+              // This capture runs synchronously inside composition via
+              // `runBlocking`, so an uncaught throw would take down the
+              // whole host screen (the card-history preview captures every
+              // card with the widgets profile — see CardHistoryScreen).
+              // Degrade to an empty document instead: the card renders
+              // blank, matching how the launcher shows a widget it can't
+              // paint, rather than crashing the screen hosting the preview.
+              val captured = runCatching {
+                captureSingleRemoteDocument(
+                  context = context,
+                  profile = profile,
+                  content = captureContent,
+                )
+              }
+                .recoverCatching {
+                  // First fall back to a blank document under the
+                  // requested profile — matches a launcher slot the
+                  // profile can't paint.
+                  captureSingleRemoteDocument(context = context, profile = profile) {}
+                }
+                .getOrElse {
+                  // The constrained profile rejected even an empty
+                  // capture (a blank document has no root ops to admit).
+                  // Capture the blank under the unconstrained AndroidX
+                  // profile, which never rejects, so the host screen
+                  // still composes instead of crashing a second time.
+                  captureSingleRemoteDocument(
+                    context = context,
+                    profile = RcPlatformProfiles.ANDROIDX,
+                  ) {}
+                }
+              CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
             }
-          // A constrained capture [profile] (e.g. `widgetsProfile`,
-          // the launcher's stricter op set) can reject a card whose
-          // ops fall outside its vocabulary by throwing mid-capture.
-          // This capture runs synchronously inside composition via
-          // `runBlocking`, so an uncaught throw would take down the
-          // whole host screen (the card-history preview captures every
-          // card with the widgets profile — see CardHistoryScreen).
-          // Degrade to an empty document instead: the card renders
-          // blank, matching how the launcher shows a widget it can't
-          // paint, rather than crashing the screen hosting the preview.
-          val captured = runCatching {
-            captureSingleRemoteDocument(
-              context = context,
-              profile = profile,
-              content = captureContent,
-            )
           }
-            .recoverCatching {
-              // First fall back to a blank document under the
-              // requested profile — matches a launcher slot the
-              // profile can't paint.
-              captureSingleRemoteDocument(context = context, profile = profile) {}
-            }
-            .getOrElse {
-              // The constrained profile rejected even an empty
-              // capture (a blank document has no root ops to admit).
-              // Capture the blank under the unconstrained AndroidX
-              // profile, which never rejects, so the host screen
-              // still composes instead of crashing a second time.
-              captureSingleRemoteDocument(
-                context = context,
-                profile = RcPlatformProfiles.ANDROIDX,
-              ) {}
-            }
-          CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
-        }
           .also { cache.put(documentKey, it) }
     }
   // A template's time-derived bindings (a clock card's date line) read the same clock the direct
@@ -356,6 +366,19 @@ fun CachedCardPreview(
 }
 
 /**
+ * Per template array, the copy last played for one set of slot pictures. A rotating picture (a
+ * camera's token) replaces it; keyed weakly by the template, so a dropped template takes it along.
+ */
+private val pictureCopies = java.util.WeakHashMap<ByteArray, Pair<String, ByteArray>>()
+
+/** [template]'s copy for [pictures]: the one played before when the pictures haven't changed. */
+private fun pictureCopy(template: ByteArray, pictures: String): ByteArray =
+  synchronized(pictureCopies) {
+    pictureCopies[template]?.takeIf { it.first == pictures }?.second
+      ?: template.copyOf().also { pictureCopies[template] = pictures to it }
+  }
+
+/**
  * Wrapper key that distinguishes a debug-bordered render of [inner] from the plain render — same
  * card YAML, different bytes (the wrapping `DebugRcBorderWrapper` is captured into the document).
  */
@@ -363,6 +386,9 @@ private data class DebugBorderedCacheKey(val inner: Any)
 
 /** [inner] with its picture-entity slots' current URLs ([cardPictureSignature]): a new picture. */
 private data class PictureKeyedCacheKey(val inner: Any, val pictures: String)
+
+/** [inner] as captured on a display of [density] and [fontScale]. */
+private data class DisplayKeyedCacheKey(val inner: Any, val density: Float, val fontScale: Float)
 
 /** Where [pushSnapshotBindings] writes: the Compose player's named values or the View player. */
 internal interface BindingWriter {

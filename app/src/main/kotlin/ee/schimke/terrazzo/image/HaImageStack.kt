@@ -23,11 +23,11 @@ import coil3.request.SuccessResult
 import coil3.request.allowHardware
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import ee.schimke.ha.client.SharedOkHttpClient
 import ee.schimke.terrazzo.core.di.AppScope
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
 import ee.schimke.terrazzo.core.network.LanConnectionPolicyInterceptor
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
-import okhttp3.OkHttpClient
 import okio.Path.Companion.toOkioPath
 
 /**
@@ -98,7 +98,10 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
    */
   val imageLoader: ImageLoader by lazy {
     val client =
-      OkHttpClient.Builder()
+      // A variant of the app's one client, sharing its connection pool, adding the image-only
+      // interceptors.
+      SharedOkHttpClient.client
+        .newBuilder()
         .addInterceptor(LanConnectionPolicyInterceptor(lanPolicy))
         .addInterceptor(HaBearerAuthInterceptor({ baseUrl }, { accessToken }))
         .build()

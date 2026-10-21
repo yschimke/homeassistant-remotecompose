@@ -53,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -64,12 +65,15 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.JinjaTemplate
+import ee.schimke.ha.model.SectionCardFlow
+import ee.schimke.ha.model.SectionCardGrid
 import ee.schimke.ha.model.SectionsGrid
 import ee.schimke.ha.model.SectionsGridLayout
 import ee.schimke.ha.model.TemplateBindings
 import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CardWidthClass
+import ee.schimke.ha.rc.HarcTraceSections
 import ee.schimke.ha.rc.LocalCardCaptureEpoch
 import ee.schimke.ha.rc.LocalHaActionDispatcher
 import ee.schimke.ha.rc.LocalRcDebugBorders
@@ -91,6 +95,7 @@ import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.cardPalette
 import ee.schimke.ha.rc.converterFor
 import ee.schimke.ha.rc.framedDesignProperties
+import ee.schimke.ha.rc.harcTrace
 import ee.schimke.ha.rc.image.CoilBitmapLoader
 import ee.schimke.ha.rc.sectionFlowItems
 import ee.schimke.terrazzo.LocalHaImageStack
@@ -459,6 +464,16 @@ private fun DashboardList(
         layout.views.map { it.sectionsGrid(viewWidthDp, viewWidthDp, readableCap?.value) }
       }
     val singleTrackViews = sectionGrids.map { it.singleTrack }
+    // The width each list item gets: the window less the list's gutters and content padding. A
+    // one-column section flows its cards into rows at this width before the list lays them out,
+    // so each row can be an item of its own (see [renderView]).
+    val layoutDirection = LocalLayoutDirection.current
+    val listWidth =
+      (maxWidth -
+          cfg.horizontalGutter * 2 -
+          contentPadding.calculateLeftPadding(layoutDirection) -
+          contentPadding.calculateRightPadding(layoutDirection))
+        .coerceAtLeast(0.dp)
 
     // Per-view "which section is expanded right now". null = none open
     // (user collapsed the open one). Seeded with index 0 for each view
@@ -507,6 +522,17 @@ private fun DashboardList(
               layout.views[i].itemCount(
                 sectionGrids[i],
                 compactPerRow = cfg.compactCardsPerRow,
+                stackedSections = { view ->
+                  view.stackedSections(
+                    sectionGrids[i],
+                    listWidth = listWidth,
+                    gutter = cfg.horizontalGutter,
+                    collapsedMode = collapsedMode,
+                    expandedSectionIndex = expandedSectionByView[i],
+                    snapshot = snapshot,
+                    registry = registry,
+                  )
+                },
               ) { card ->
                 registry.cardWidthClass(card, snapshot)
               }
@@ -527,7 +553,8 @@ private fun DashboardList(
             .consumeWindowInsets(contentPadding)
             .padding(horizontal = cfg.horizontalGutter),
         contentPadding = contentPadding,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        // Every item after the first opens with [ItemGap] itself, rather than the list spacing
+        // them: a one-column section's items join up with no gap between them.
         horizontalAlignment = Alignment.CenterHorizontally,
       ) {
         item(key = "local-card-briefs") {
@@ -544,6 +571,7 @@ private fun DashboardList(
             viewIndex = viewIndex,
             view = view,
             grid = grid,
+            listWidth = listWidth,
             snapshot = snapshot,
             registry = registry,
             cfg = cfg,
@@ -594,21 +622,83 @@ private fun DashboardList(
 private fun SectionGroupSurface(
   haTheme: HaTheme,
   modifier: Modifier = Modifier,
+  shape: RoundedCornerShape = SectionShape,
+  contentTop: Dp = 0.dp,
   content: @Composable () -> Unit,
 ) {
-  Surface(
-    color = haTheme.sectionBackground,
-    shape = RoundedCornerShape(20.dp),
-    modifier = modifier.fillMaxWidth(),
-  ) {
+  Surface(color = haTheme.sectionBackground, shape = shape, modifier = modifier.fillMaxWidth()) {
     Column(
-      modifier = Modifier.padding(horizontal = 8.dp),
-      verticalArrangement = Arrangement.spacedBy(12.dp),
+      modifier = Modifier.padding(start = 8.dp, top = contentTop, end = 8.dp),
+      verticalArrangement = Arrangement.spacedBy(SectionContentGap),
     ) {
       content()
     }
   }
 }
+
+private val SectionCorner = 20.dp
+private val SectionShape = RoundedCornerShape(SectionCorner)
+
+/** The surface's horizontal padding either side of a section's heading and cards. */
+private val SectionInset = 8.dp
+
+/** Between a section's heading and its cards. */
+private val SectionContentGap = 12.dp
+
+/** Between the dashboard list's blocks: the placeholder briefs, a header, a row, a section. */
+private val ItemGap = 12.dp
+
+/**
+ * A one-column section as list items: its heading (null when it shows none) and its cards' rows, as
+ * [SectionCardFlow] fills them at the section's width. Hidden cards are in no row.
+ */
+private class StackedSection(val heading: SectionHeadingModel?, val rows: List<List<CardConfig>>) {
+  val itemCount: Int
+    get() = (if (heading != null) 1 else 0) + rows.size
+}
+
+/**
+ * [ViewLayout.sections] of a [SectionsGridLayout.singleTrack] view as [renderView] stacks them in a
+ * list [listWidth] wide: collapsed ones show only their heading.
+ */
+private fun ViewLayout.stackedSections(
+  grid: SectionsGridLayout,
+  listWidth: Dp,
+  gutter: Dp,
+  collapsedMode: Boolean,
+  expandedSectionIndex: Int?,
+  snapshot: HaSnapshot,
+  registry: ee.schimke.ha.rc.CardRegistry,
+): List<StackedSection> {
+  val sectionsPadding = sectionsPadding(grid, gutter)
+  val sectionWidth = minOf(listWidth - sectionsPadding * 2, grid.maxWidthDp.dp)
+  val cardsWidth = (sectionWidth - SectionInset * 2).coerceAtLeast(0.dp)
+  return sections.mapIndexed { sectionIndex, section ->
+    // In collapsed mode every section must remain reachable, even when authored without an
+    // explicit title. Untitled sections get a fallback heading so users can re-expand them.
+    val expanded = !collapsedMode || expandedSectionIndex == sectionIndex
+    val headingModel = resolveSectionHeading(section, sectionIndex)
+    val heading = headingModel.takeIf { collapsedMode || section.title != null }
+    val cards =
+      when {
+        !expanded -> emptyList()
+        heading != null -> headingModel.visibleCards
+        else -> section.cards
+      }
+    val rows =
+      SectionCardFlow.rows(
+          sectionFlowItems(cards, snapshot, registry),
+          cardsWidth.value,
+          SectionCardGrid.COLUMN_GAP_DP,
+        )
+        .map { row -> row.indices.map(cards::get) }
+    StackedSection(heading, rows)
+  }
+}
+
+/** HA pads the sections wrapper by one column gap either side; the list already has [gutter]. */
+private fun sectionsPadding(grid: SectionsGridLayout, gutter: Dp): Dp =
+  (grid.horizontalPaddingDp.dp - gutter).coerceAtLeast(0.dp)
 
 /**
  * Emit one view's blocks into the parent [LazyListScope]: the view header's card, then orphan cards
@@ -622,6 +712,7 @@ private fun LazyListScope.renderView(
   viewIndex: Int,
   view: ViewLayout,
   grid: SectionsGridLayout,
+  listWidth: Dp,
   snapshot: HaSnapshot,
   registry: ee.schimke.ha.rc.CardRegistry,
   cfg: LayoutConfig,
@@ -638,11 +729,12 @@ private fun LazyListScope.renderView(
 ) {
   val viewKey = "v$viewIndex"
   val contentWidth = grid.maxWidthDp.dp
-  // HA pads the sections wrapper by one column gap either side; the list already has the app's
-  // gutter, so add only what is missing.
-  val sectionsPadding = (grid.horizontalPaddingDp.dp - cfg.horizontalGutter).coerceAtLeast(0.dp)
+  val sectionsPadding = sectionsPadding(grid, cfg.horizontalGutter)
   val contentModifier =
-    Modifier.padding(horizontal = sectionsPadding).widthIn(max = contentWidth).fillMaxWidth()
+    Modifier.padding(top = ItemGap)
+      .padding(horizontal = sectionsPadding)
+      .widthIn(max = contentWidth)
+      .fillMaxWidth()
 
   val header = view.header
   val headerCard = header?.card
@@ -671,48 +763,76 @@ private fun LazyListScope.renderView(
       baseUrl = baseUrl,
       imageLoader = imageLoader,
       onLongPress = onLongPress,
-      modifier = Modifier.widthIn(max = orphanMaxWidth).fillMaxWidth(),
+      modifier = Modifier.padding(top = ItemGap).widthIn(max = orphanMaxWidth).fillMaxWidth(),
     )
   }
 
   if (view.sections.isEmpty()) return
 
   if (grid.singleTrack) {
-    // One column: each section becomes a single LazyColumn item
-    // wrapped in [SectionGroupSurface] so the title + its cards
-    // render as one grouped material container. Cards inside are
-    // rendered eagerly (a section is a small handful of cards;
-    // laziness still applies across sections).
+    // One column: each section is its heading's item, then one item per row of its cards, drawn as
+    // pieces of one [SectionGroupSurface] (rounded only at the section's top and bottom). Not one
+    // item per section: every card in it would compose, subcompose its player and measure in the
+    // same frame — a dropped frame each time a section scrolled on screen, which prefetch can't
+    // spread out. Row by row, the list composes only what comes into view, and prefetches the next
+    // row ahead of it.
+    val stacked =
+      view.stackedSections(
+        grid,
+        listWidth = listWidth,
+        gutter = cfg.horizontalGutter,
+        collapsedMode = collapsedMode,
+        expandedSectionIndex = expandedSectionIndex,
+        snapshot = snapshot,
+        registry = registry,
+      )
+    val pieceModifier = Modifier.padding(horizontal = sectionsPadding).widthIn(max = contentWidth)
     view.sections.forEachIndexed { sectionIndex, section ->
       val sectionKey = "$viewKey-s$sectionIndex"
-      // In collapsed mode every section must remain reachable, even
-      // when authored without an explicit title. Untitled sections
-      // get a fallback heading so users can re-expand them.
-      val collapsible = collapsedMode
-      val expanded = !collapsible || expandedSectionIndex == sectionIndex
-      item(key = sectionKey) {
-        SectionGroupSurface(
-          haTheme,
-          modifier = Modifier.padding(horizontal = sectionsPadding).widthIn(max = contentWidth),
-        ) {
-          val headingModel = resolveSectionHeading(section, sectionIndex)
-          val headingTitle = headingModel.title
-          val showHeading = collapsible || section.title != null
-          if (showHeading) {
+      val pieces = stacked[sectionIndex]
+      val heading = pieces.heading
+      val lastPiece = pieces.itemCount - 1
+      fun shape(piece: Int) =
+        RoundedCornerShape(
+          topStart = if (piece == 0) SectionCorner else 0.dp,
+          topEnd = if (piece == 0) SectionCorner else 0.dp,
+          bottomStart = if (piece == lastPiece) SectionCorner else 0.dp,
+          bottomEnd = if (piece == lastPiece) SectionCorner else 0.dp,
+        )
+      fun Modifier.gapAbove(piece: Int) = if (piece == 0) padding(top = ItemGap) else this
+      if (heading != null) {
+        item(key = "$sectionKey-heading") {
+          SectionGroupSurface(haTheme, modifier = pieceModifier.gapAbove(0), shape = shape(0)) {
             PinnableSectionHeading(
-              title = headingTitle,
-              collapsible = collapsible,
-              expanded = expanded,
+              title = heading.title,
+              collapsible = collapsedMode,
+              expanded = !collapsedMode || expandedSectionIndex == sectionIndex,
               onClick = { onToggleSection(sectionIndex) },
               pinContext = pinContext,
               sectionIndex = sectionIndex,
               section = section,
             )
           }
-          if (expanded) {
-            val renderedCards = if (showHeading) headingModel.visibleCards else section.cards
+        }
+      }
+      val firstRowPiece = if (heading != null) 1 else 0
+      pieces.rows.forEachIndexed { rowIndex, row ->
+        val piece = firstRowPiece + rowIndex
+        item(key = "$sectionKey-r$rowIndex") {
+          SectionGroupSurface(
+            haTheme,
+            modifier = pieceModifier.gapAbove(piece),
+            shape = shape(piece),
+            // The heading's gap to the cards, or the section grid's between rows.
+            contentTop =
+              when {
+                rowIndex > 0 -> SectionCardGrid.ROW_GAP_DP.dp
+                heading != null -> SectionContentGap
+                else -> 0.dp
+              },
+          ) {
             SectionCards(
-              cards = renderedCards,
+              cards = row,
               snapshot = snapshot,
               registry = registry,
               baseUrl = baseUrl,
@@ -764,11 +884,13 @@ private fun LazyListScope.renderView(
 
 /**
  * How many [LazyListScope] items [renderView] emits for this view: its header, its orphan card
- * rows, then one item per section stacked in a single track, or one for the side-by-side grid.
+ * rows, then each stacked section's heading and card rows ([stackedSections]) in a single track, or
+ * one item for the side-by-side grid.
  */
 private fun ViewLayout.itemCount(
   grid: SectionsGridLayout,
   compactPerRow: Int,
+  stackedSections: (ViewLayout) -> List<StackedSection>,
   widthClassOf: (CardConfig) -> CardWidthClass,
 ): Int {
   val header = if (header?.card != null) 1 else 0
@@ -777,7 +899,7 @@ private fun ViewLayout.itemCount(
   val sections =
     when {
       sections.isEmpty() -> 0
-      grid.singleTrack -> sections.size
+      grid.singleTrack -> stackedSections(this).sumOf { it.itemCount }
       else -> 1
     }
   return header + orphans + sections
@@ -1306,17 +1428,19 @@ private fun CardSlot(
     registry.converterFor(designCard.type)?.framedDesignProperties(designCard, snapshot)
   val template =
     remember(designCard, designShape, cardDesigns, style, dark, cardStyle, override) {
-      cardTemplateFor(
-        context,
-        designCard,
-        snapshot,
-        cardDesigns,
-        style,
-        dark,
-        registry,
-        cardStyle,
-        variant = override?.variant,
-      )
+      harcTrace(HarcTraceSections.CARD_TEMPLATE) {
+        cardTemplateFor(
+          context,
+          designCard,
+          snapshot,
+          cardDesigns,
+          style,
+          dark,
+          registry,
+          cardStyle,
+          variant = override?.variant,
+        )
+      }
     }
   // A card with no template draws through its converter, or not at all: count which, once per card.
   LaunchedEffect(designCard, template == null, cardStyle) {

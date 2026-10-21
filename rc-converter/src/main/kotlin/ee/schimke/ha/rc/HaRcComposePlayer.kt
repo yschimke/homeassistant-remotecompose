@@ -102,7 +102,8 @@ fun HaRcComposePlayer(
           .onFailure { error.value = it.message ?: "Message was not sent" }
       },
     )
-  val document = remember(documentBytes) { decodeForComposePlayer(documentBytes) }
+  val decoded = remember(documentBytes) { decodedForComposePlayer(documentBytes) }
+  val document = decoded.document
   if (document == null) {
     fallback()
     return
@@ -115,7 +116,7 @@ fun HaRcComposePlayer(
   // rc-player rejects a write to a name the document doesn't declare (the View player's setters
   // dropped it), and the host pushes every binding of every entity the card references. So the
   // player gets only the values this document declares, with a matching type.
-  val declared = remember(document) { document.declaredNamedVariables() }
+  val declared = decoded.declared
   // Seeded before the player's first frame, so it starts settled on the live values: a value that
   // only arrives through the effect below lands a frame late and tweens in from the document's
   // baked one on every load (docs/architecture/live-card-updates.md § First frame).
@@ -170,6 +171,45 @@ private fun Modifier.wrapUnpinnedHeight(): Modifier = layout { measurable, const
     val height = placeable.height.coerceIn(constraints.minHeight, constraints.maxHeight)
     layout(placeable.width, height) { placeable.place(0, 0) }
   }
+}
+
+/** A document decoded for the Compose player, with the named variables it declares. */
+internal class DecodedForComposePlayer(val document: RcDocument?) {
+  val declared: Map<String, Int> = document?.declaredNamedVariables().orEmpty()
+}
+
+/**
+ * Decoded documents by their bytes' own array. A card that scrolls (back) into view plays the same
+ * array it played before: the document cache's, or a design template shared by every card of its
+ * key. Decoding one and checking it is renderable costs about a millisecond of main thread on a
+ * desktop JVM, several on a phone, and a section's cards all compose in the same frame, so without
+ * this a dashboard dropped frames each time a section came on screen. [RcDocument] is immutable, so
+ * players share one. Weak keys: a document goes with the last array that holds it.
+ */
+private val decodedDocuments = java.util.WeakHashMap<ByteArray, DecodedForComposePlayer>()
+
+/**
+ * Decodes [documentBytes] for the Compose player ahead of time, off the main thread, so the first
+ * frame that plays the same array finds it decoded. A host warming the cards it is about to show
+ * calls this with the bytes it will play.
+ */
+fun preloadForComposePlayer(documentBytes: ByteArray) {
+  decodedForComposePlayer(documentBytes)
+}
+
+/** [decodeForComposePlayer], decoded once per array ([decodedDocuments]). */
+internal fun decodedForComposePlayer(bytes: ByteArray): DecodedForComposePlayer {
+  synchronized(decodedDocuments) {
+    decodedDocuments[bytes]?.let {
+      return it
+    }
+  }
+  val decoded =
+    harcTrace(HarcTraceSections.DECODE_DOCUMENT) {
+      DecodedForComposePlayer(decodeForComposePlayer(bytes))
+    }
+  synchronized(decodedDocuments) { decodedDocuments[bytes] = decoded }
+  return decoded
 }
 
 /**

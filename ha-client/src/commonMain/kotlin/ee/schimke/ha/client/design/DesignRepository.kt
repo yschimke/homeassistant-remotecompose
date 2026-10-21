@@ -1,5 +1,6 @@
 package ee.schimke.ha.client.design
 
+import ee.schimke.ha.client.platformHttpClient
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
@@ -443,7 +444,13 @@ fun createDesignRepository(
   inbuilt: InbuiltDesigns = InbuiltDesigns.None,
   clock: () -> Long,
 ): DesignRepository =
-  DesignRepository(config, store, if (config.enabled) HttpClient() else null, inbuilt, clock)
+  DesignRepository(
+    config,
+    store,
+    if (config.enabled) platformHttpClient() else null,
+    inbuilt,
+    clock,
+  )
 
 /**
  * A [DesignRepository] that only reads [store]: no HTTP client, so [DesignRepository.refresh] is

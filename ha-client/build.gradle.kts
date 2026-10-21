@@ -45,7 +45,11 @@ kotlin {
       implementation(libs.kotlinx.coroutines.test)
       implementation(libs.ktor.client.mock)
     }
-    androidMain.dependencies { implementation(libs.ktor.client.okhttp) }
+    androidMain.dependencies {
+      implementation(libs.ktor.client.okhttp)
+      // `ForbiddenCertificatesHostnameVerifier` uses OkHttp's SPKI hashing.
+      implementation(libs.okhttp)
+    }
     jvmMain.dependencies { implementation(libs.ktor.client.cio) }
     jvmTest.dependencies {
       implementation(libs.ktor.server.test.host)
