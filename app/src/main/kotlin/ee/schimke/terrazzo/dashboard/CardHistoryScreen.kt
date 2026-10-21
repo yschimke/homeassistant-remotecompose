@@ -26,20 +26,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.AddToHomeScreen
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -83,7 +81,6 @@ import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.widget.LAUNCHER_CELL_HEIGHT_DP
 import ee.schimke.terrazzo.widget.LAUNCHER_CELL_WIDTH_DP
 import ee.schimke.terrazzo.widget.LauncherGridBounds
-import ee.schimke.terrazzo.widget.LauncherWidgetSpec
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
@@ -93,15 +90,17 @@ import kotlin.math.pow
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * Generic "more info" / history screen, opened by long-pressing any dashboard card. Three stacked
- * regions:
- * 1. A native launcher-widget preview at the top, sharing the installation and provider capture
- *    path so layout, theme, images and platform compatibility match the home screen.
+ * A card's history, opened from its long-press actions. Three stacked regions:
+ * 1. The card as the dashboard draws it, so the history below is read against what the user
+ *    pressed. Sizing it for the launcher is the install sheet's job, not this screen's.
  * 2. A historical chart per entity the card references. Numeric entities (sensors) draw a line
  *    chart; everything else (lights, switches, binary sensors) draws an on/off-style state
  *    timeline. A range selector re-fetches over 24 h / 3 d / 7 d.
- * 3. "Other relevant links" — add the card to the home screen (the existing widget-install flow)
- *    and, for live instances, open the entity in Home Assistant's own history view.
+ * 3. For live instances, a link to the entity in Home Assistant's own history view.
+ *
+ * Everything else a card offers (home screen, watch, style, Card Studio) lives in its actions
+ * sheet, which the top bar's [onShowActions] reopens, so the two surfaces never offer the same
+ * button.
  *
  * History is fetched on demand via [HaSession.fetchHistory]; the card preview renders against the
  * [snapshot] captured at long-press time, so it matches the dashboard frame even on a session that
@@ -114,14 +113,13 @@ fun CardHistoryScreen(
   card: CardConfig,
   snapshot: HaSnapshot,
   onBack: () -> Unit,
-  onAddToHomeScreen: () -> Unit,
   contentPadding: PaddingValues = PaddingValues(0.dp),
   // Pre-fetched history to seed the first composition. Production leaves this null and the section
   // fetches asynchronously (showing a spinner meanwhile); deterministic screenshot previews pass a
   // synchronously-computed series so the render shows the settled chart on the first frame rather
   // than racing the async fetch and capturing the spinner (the #409 flaky-render investigation).
   initialHistory: Map<String, List<HistoryPoint>>? = null,
-  onDesignCard: (() -> Unit)? = null,
+  onShowActions: (() -> Unit)? = null,
 ) {
   val entityIds = remember(card) { card.historyEntityIds() }
   var hours by remember { mutableIntStateOf(24) }
@@ -135,6 +133,13 @@ fun CardHistoryScreen(
         navigationIcon = {
           IconButton(onClick = onBack) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+          }
+        },
+        actions = {
+          onShowActions?.let { show ->
+            IconButton(onClick = show) {
+              Icon(Icons.Filled.MoreVert, contentDescription = "Card actions")
+            }
           }
         },
       )
@@ -151,17 +156,7 @@ fun CardHistoryScreen(
           .padding(horizontal = 16.dp, vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-      CardPreviewCard(session = session, card = card, snapshot = snapshot)
-      androidx.compose.material3.Button(
-        onClick = onAddToHomeScreen,
-        modifier = Modifier.fillMaxWidth(),
-      ) {
-        Text("Prepare a home screen widget")
-      }
-      onDesignCard?.let { action ->
-        androidx.compose.material3.Button(onClick = action) { Text("Design or fix this card") }
-      }
-      CardDesignOverrideSection(card)
+      DashboardCardPreview(session, card, snapshot)
 
       if (entityIds.isEmpty()) {
         Text(
@@ -180,41 +175,8 @@ fun CardHistoryScreen(
         )
       }
 
-      LinksSection(session = session, entityIds = entityIds, onAddToHomeScreen = onAddToHomeScreen)
+      OpenInHomeAssistant(session = session, entityIds = entityIds)
     }
-  }
-}
-
-/**
- * Top region: the card previewed as a launcher widget on a resizable slot.
- *
- * The shared [LauncherWidgetSpec] supplies the provider's 1x1 minimum/default and a 4x4 sample
- * extent. The launcher owns the actual upper resize limit. We draw that grid behind the card,
- * dash-outline the smallest and largest sizes, and let the user drag the corner handle to resize
- * the widget across the range a cell at a time. The card re-renders in launcher mode (fixed size,
- * full-bleed surface, no in-app chrome) at each slot, so it's a faithful preview of how the widget
- * reflows before committing to a home-screen position.
- */
-@Composable
-internal fun CardPreviewCard(session: HaSession, card: CardConfig, snapshot: HaSnapshot) {
-  OutlinedCard(modifier = Modifier.fillMaxWidth()) {
-    Box(modifier = Modifier.fillMaxWidth().padding(12.dp), contentAlignment = Alignment.Center) {
-      ResizableLauncherPreview(session = session, card = card, snapshot = snapshot)
-    }
-  }
-}
-
-@Composable
-private fun ResizableLauncherPreview(session: HaSession, card: CardConfig, snapshot: HaSnapshot) {
-  if (android.os.Build.VERSION.SDK_INT < ee.schimke.terrazzo.widget.WidgetInstaller.MIN_HOST_API) {
-    LegacyCardPreview(session, card, snapshot)
-    return
-  }
-  Column(
-    horizontalAlignment = Alignment.CenterHorizontally,
-    verticalArrangement = Arrangement.spacedBy(10.dp),
-  ) {
-    ee.schimke.terrazzo.widget.WidgetPreparationPreview(session.baseUrl, card, snapshot) {}
   }
 }
 
@@ -681,40 +643,27 @@ private fun StateTimeline(points: List<HistoryPoint>) {
   }
 }
 
-/** Bottom region: install + open-in-HA links. */
+/** Bottom region: the entity's history in Home Assistant's own view, for live instances. */
 @Composable
-private fun LinksSection(
-  session: HaSession,
-  entityIds: List<String>,
-  onAddToHomeScreen: () -> Unit,
-) {
+private fun OpenInHomeAssistant(session: HaSession, entityIds: List<String>) {
   val context = LocalContext.current
   val isDemo = remember(session) { DemoData.isDemo(session.baseUrl) }
-
-  Text("Other actions", style = MaterialTheme.typography.titleMedium)
-
-  FilledTonalButton(onClick = onAddToHomeScreen, modifier = Modifier.fillMaxWidth()) {
-    Icon(Icons.AutoMirrored.Filled.AddToHomeScreen, contentDescription = null)
-    Text("  Add to Home Screen")
-  }
-
   // The deep link only makes sense against a real instance; demo's
   // `demo://` base url has no web history view to open.
-  if (!isDemo && entityIds.isNotEmpty()) {
-    OutlinedButton(
-      onClick = {
-        val url = "${session.baseUrl.trimEnd('/')}/history?entity_id=${entityIds.first()}"
-        runCatching {
-          context.startActivity(
-            Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-          )
-        }
-      },
-      modifier = Modifier.fillMaxWidth(),
-    ) {
-      Icon(Icons.Filled.Link, contentDescription = null)
-      Text("  Open in Home Assistant")
-    }
+  if (isDemo || entityIds.isEmpty()) return
+  OutlinedButton(
+    onClick = {
+      val url = "${session.baseUrl.trimEnd('/')}/history?entity_id=${entityIds.first()}"
+      runCatching {
+        context.startActivity(
+          Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+      }
+    },
+    modifier = Modifier.fillMaxWidth(),
+  ) {
+    Icon(Icons.Filled.Link, contentDescription = null)
+    Text("  Open in Home Assistant")
   }
 }
 

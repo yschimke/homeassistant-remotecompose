@@ -73,7 +73,7 @@ import ee.schimke.terrazzo.ui.TerrazzoTheme
 import ee.schimke.terrazzo.wearsync.SyncDiagnosticsContent
 import ee.schimke.terrazzo.wearsync.WearWidgetsContent
 import ee.schimke.terrazzo.wearsync.proto.SyncStats
-import ee.schimke.terrazzo.widget.WidgetsScreen
+import ee.schimke.terrazzo.widget.WidgetsContent
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -229,12 +229,62 @@ fun Screen_Discovery_ThemeStyle(@PreviewParameter(ThemeStyleProvider::class) sty
 @Preview(name = "card actions", showBackground = false, widthDp = PHONE_WIDTH_DP)
 @Composable
 fun Screen_CardActions() = PhoneHost {
-  ee.schimke.terrazzo.dashboard.CardActions(
-    title = "Kitchen",
-    onFork = {},
-    onAddToHomeScreen = {},
-    onShowDetails = {},
+  CardActionsPreview(
+    ee.schimke.terrazzo.dashboard.CardActionsState(
+      title = "Kitchen",
+      stateLabel = "Kitchen lights · On",
+      widgetsInUse = 2,
+    )
   )
+}
+
+/** A card already on the home screen and the watch, in a style of its own. */
+@Preview(name = "card actions · placed", showBackground = false, widthDp = PHONE_WIDTH_DP)
+@Composable
+fun Screen_CardActions_Placed() = PhoneHost {
+  CardActionsPreview(
+    ee.schimke.terrazzo.dashboard.CardActionsState(
+      title = "Front door",
+      stateLabel = "Closed",
+      homeScreenCount = 1,
+      widgetsInUse = 5,
+      onWatch = true,
+      style = ee.schimke.terrazzo.dashboard.CardStyleLabel("Braun", custom = true),
+      homeAssistantUrl = "https://ha.example/history?entity_id=lock.front_door",
+      canMonitor = true,
+    )
+  )
+}
+
+@Composable
+private fun CardActionsPreview(state: ee.schimke.terrazzo.dashboard.CardActionsState) =
+  ee.schimke.terrazzo.dashboard.CardActions(
+    state = state,
+    onAddToHomeScreen = {},
+    onWatchChange = {},
+    onChangeStyle = {},
+    onShowHistory = {},
+    onOpenInHomeAssistant = {},
+    onOpenInStudio = {},
+    onMonitor = {},
+  )
+
+@Preview(name = "card style", showBackground = false, widthDp = PHONE_WIDTH_DP)
+@Composable
+fun Screen_CardStyle() = PhoneHost {
+  ee.schimke.terrazzo.dashboard.CardStylePicker(
+    card = HISTORY_SAMPLE_CARD,
+    overrides = ee.schimke.ha.client.design.CardDesignOverrides(),
+    dashboardStyle = ee.schimke.ha.rc.components.HaUberTheme.Classic,
+    onPick = { _, _ -> },
+    onDone = {},
+  ) {
+    ee.schimke.terrazzo.dashboard.StudioCardPreview(
+      demoSession(),
+      HISTORY_SAMPLE_CARD,
+      DemoData.snapshot(DEMO_CLOCK_MS),
+    )
+  }
 }
 
 @Preview(
@@ -244,7 +294,18 @@ fun Screen_CardActions() = PhoneHost {
   heightDp = PHONE_HEIGHT_DP,
 )
 @Composable
-fun Screen_Widgets() = PhoneHost { WidgetsScreen(onBack = {}) }
+fun Screen_Widgets() = PhoneHost { WidgetsContent(widgets = emptyList(), onBack = {}) }
+
+@Preview(
+  name = "widgets · installed",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_Widgets_Installed() = PhoneHost {
+  WidgetsContent(widgets = listOf("Front door", "Kitchen", "Living room climate"), onBack = {})
+}
 
 @Preview(
   name = "widgets · theme",
@@ -254,7 +315,7 @@ fun Screen_Widgets() = PhoneHost { WidgetsScreen(onBack = {}) }
 )
 @Composable
 fun Screen_Widgets_ThemeStyle(@PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle) =
-  PhoneHost(style = style) { WidgetsScreen(onBack = {}) }
+  PhoneHost(style = style) { WidgetsContent(widgets = emptyList(), onBack = {}) }
 
 @Preview(
   name = "dashboard picker",
@@ -475,7 +536,7 @@ fun Screen_CardHistory() = PhoneHost {
     card = HISTORY_SAMPLE_CARD,
     snapshot = DemoData.snapshot(DEMO_CLOCK_MS),
     onBack = {},
-    onAddToHomeScreen = {},
+    onShowActions = {},
     initialHistory = HISTORY_SAMPLE_SERIES,
   )
 }
@@ -494,7 +555,7 @@ fun Screen_CardHistory_ThemeStyle(@PreviewParameter(ThemeStyleProvider::class) s
       card = HISTORY_SAMPLE_CARD,
       snapshot = DemoData.snapshot(DEMO_CLOCK_MS),
       onBack = {},
-      onAddToHomeScreen = {},
+      onShowActions = {},
       initialHistory = HISTORY_SAMPLE_SERIES,
     )
   }

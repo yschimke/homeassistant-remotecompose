@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -16,8 +17,8 @@ import androidx.compose.runtime.setValue
 /**
  * Trailing overflow menu in the dashboard top-bar. Carries the destinations the [DashboardSwitcher]
  * dropdown deliberately doesn't: Settings, installed widgets, sign-out. Dashboard quick-switching
- * stays in the title-side dropdown so users don't have to scroll past "Manage widgets" / "Settings"
- * entries to reach the dashboards they actually want to switch between.
+ * stays in the title-side dropdown so users don't have to scroll past "Home screen widgets" /
+ * "Settings" entries to reach the dashboards they actually want to switch between.
  *
  * [onOpenAgent], when non-null, adds an "Edit with an agent" entry at the top. [onInstallOnWatch],
  * when non-null, adds "Install on watch" for a connected watch without the watch app.
@@ -38,73 +39,32 @@ fun TopBarOverflowMenu(
     Icon(Icons.Filled.MoreVert, contentDescription = "More options")
   }
   DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+    val close = { expanded = false }
     // Set only on narrow windows, where the top bar folds its agent icon in here to give the
     // dashboard title the width.
-    if (onOpenAgent != null) {
-      DropdownMenuItem(
-        text = { Text("Edit with an agent") },
-        onClick = {
-          expanded = false
-          onOpenAgent()
-        },
-      )
-    }
-    DropdownMenuItem(
-      text = { Text("Settings") },
-      onClick = {
-        expanded = false
-        onOpenSettings()
-      },
-    )
-    DropdownMenuItem(
-      text = { Text("Manage widgets") },
-      onClick = {
-        expanded = false
-        onOpenWidgets()
-      },
-    )
-    DropdownMenuItem(
-      text = { Text("Manage pinned") },
-      onClick = {
-        expanded = false
-        onOpenPinned()
-      },
-    )
+    onOpenAgent?.let { MenuEntry("Edit with an agent", close, it) }
+    // Where cards live outside the app: one entry per place, named for the place rather than the
+    // mechanism, so "pinned" and "widgets" no longer read as the same thing twice.
+    MenuEntry("Home screen widgets", close, onOpenWidgets)
+    MenuEntry("Cards on your watch", close, onOpenPinned)
     // Hidden unless a paired Wear node has reported widget support.
-    if (onOpenWearWidgets != null) {
-      DropdownMenuItem(
-        text = { Text("Wear widgets") },
-        onClick = {
-          expanded = false
-          onOpenWearWidgets()
-        },
-      )
-    }
-    if (onInstallOnWatch != null) {
-      DropdownMenuItem(
-        text = { Text("Install on watch") },
-        onClick = {
-          expanded = false
-          onInstallOnWatch()
-        },
-      )
-    }
+    onOpenWearWidgets?.let { MenuEntry("Watch widgets", close, it) }
+    onInstallOnWatch?.let { MenuEntry("Install on watch", close, it) }
+    HorizontalDivider()
+    MenuEntry("Settings", close, onOpenSettings)
     // Hidden unless the user enabled the logs view in Settings.
-    if (onOpenLogs != null) {
-      DropdownMenuItem(
-        text = { Text("Logs") },
-        onClick = {
-          expanded = false
-          onOpenLogs()
-        },
-      )
-    }
-    DropdownMenuItem(
-      text = { Text("Sign out") },
-      onClick = {
-        expanded = false
-        onSignOut()
-      },
-    )
+    onOpenLogs?.let { MenuEntry("Logs", close, it) }
+    MenuEntry("Sign out", close, onSignOut)
   }
+}
+
+@Composable
+private fun MenuEntry(label: String, close: () -> Unit, onClick: () -> Unit) {
+  DropdownMenuItem(
+    text = { Text(label) },
+    onClick = {
+      close()
+      onClick()
+    },
+  )
 }
