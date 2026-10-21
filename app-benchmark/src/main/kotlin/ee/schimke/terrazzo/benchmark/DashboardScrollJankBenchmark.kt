@@ -4,7 +4,6 @@ import androidx.benchmark.macro.BaselineProfileMode
 import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.ExperimentalMetricApi
 import androidx.benchmark.macro.FrameTimingMetric
-import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.TraceSectionMetric
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -18,9 +17,11 @@ import org.junit.runner.RunWith
  * [ScrollBenchmark] flings the same board with its sections collapsed, which brings few cards on
  * screen; this one is the dashboard as a user with collapsed mode off reads it.
  *
- * Each iteration starts a fresh process ([StartupMode.COLD]), so the way down meets every card for
- * the first time (no captured, decoded or template document cached yet) and the way back meets
- * cards the process has played before: the two costs a regression in either path shows up in.
+ * Each iteration starts a fresh process (the setup kills it before launching), so the way down
+ * meets every card for the first time (no captured, decoded or template document cached yet) and
+ * the way back meets cards the process has played before: the two costs a regression in either path
+ * shows up in. No [androidx.benchmark.macro.StartupMode]: a cold one expects the measured block
+ * itself to launch the app, and refuses to run when the setup already has.
  *
  * Besides frame timing it sums the app's own trace sections (`HarcTraceSections` in `rc-converter`)
  * over the scroll: the main-thread time spent resolving card templates, capturing documents and
@@ -41,21 +42,17 @@ class DashboardScrollJankBenchmark {
   fun dragExpandedBoard() =
     rule.measureRepeated(
       packageName = TARGET_PACKAGE,
+      // Sum reports each section's count as well (`<name>Count`): a Count metric beside it would
+      // produce the same measurement name, which macrobenchmark rejects.
       metrics =
         listOf(FrameTimingMetric()) +
-          TRACE_SECTIONS.flatMap { name ->
-            listOf(
-              TraceSectionMetric(name, TraceSectionMetric.Mode.Sum),
-              TraceSectionMetric(name, TraceSectionMetric.Mode.Count),
-            )
-          },
+          TRACE_SECTIONS.map { TraceSectionMetric(it, TraceSectionMetric.Mode.Sum) },
       compilationMode = CompilationMode.Partial(baselineProfileMode = BaselineProfileMode.Require),
-      startupMode = StartupMode.COLD,
+      startupMode = null,
       iterations = 5,
       setupBlock = {
         pressHome()
-        // Demo mode arms widget-refresh work that can bring the process back between
-        // macrobenchmark's own kill and its cold-start check; kill it again right before launch.
+        // A fresh process every iteration, so the way down meets every card for the first time.
         killProcess()
         startDemoDashboard(expandSections = true)
         switchDashboard(LONG_BOARD)
