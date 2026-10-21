@@ -49,11 +49,16 @@ class MainActivity : ComponentActivity() {
     // Also clears the offline-cache instance pointer and the
     // last-viewed-dashboard pref so the test starts on HA's
     // default demo dashboard every time, not auto-resumed onto
-    // a previous run's cached dashboard.
+    // a previous run's cached dashboard. [EXTRA_TEST_EXPAND_SECTIONS]
+    // opens every section (collapsed mode off); without it the
+    // default, collapsed mode, is restored, so one run's choice
+    // never leaks into the next.
     if (BuildConfig.TEST_HOOKS && intent?.getBooleanExtra(EXTRA_TEST_DEMO_MODE, false) == true) {
+      val expandSections = intent.getBooleanExtra(EXTRA_TEST_EXPAND_SECTIONS, false)
       runBlocking {
         graph.preferencesStore.setDemoMode(true)
         graph.preferencesStore.clearLastViewedDashboard()
+        graph.preferencesStore.setCollapsedMode(!expandSections)
       }
       graph.offlineCache.clearLastInstance()
     }
@@ -126,6 +131,9 @@ class MainActivity : ComponentActivity() {
 
   companion object {
     const val EXTRA_TEST_DEMO_MODE: String = "terrazzo.test.demo_mode"
+
+    /** With [EXTRA_TEST_DEMO_MODE]: every dashboard section open, not just the first. */
+    const val EXTRA_TEST_EXPAND_SECTIONS: String = "terrazzo.test.expand_sections"
   }
 }
 
