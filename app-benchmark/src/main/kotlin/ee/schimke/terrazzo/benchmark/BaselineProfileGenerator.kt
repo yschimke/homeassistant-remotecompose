@@ -8,7 +8,8 @@ import org.junit.runner.RunWith
 
 /**
  * Captures `:app`'s baseline profile: cold start into the demo dashboard, then open and scroll the
- * longer boards so the card converters and RemoteCompose player paths they hit are covered too.
+ * longer boards so the card converters and RemoteCompose player paths they hit are covered too, and
+ * drag [LONG_BOARD] with every section open, the journey [DashboardScrollJankBenchmark] times.
  *
  * Run with `./gradlew :app:generateBaselineProfile` against an emulator (API 33+, or rooted). The
  * plugin writes the result to `app/src/main/generated/baselineProfiles/`.
@@ -27,5 +28,8 @@ class BaselineProfileGenerator {
         switchDashboard(board)
         scrollDashboard()
       }
+      startDemoDashboard(expandSections = true)
+      switchDashboard(LONG_BOARD)
+      dragDashboard(drags = 4)
     }
 }

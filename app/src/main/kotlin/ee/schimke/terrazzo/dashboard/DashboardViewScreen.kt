@@ -73,6 +73,7 @@ import ee.schimke.ha.model.TemplateBindings
 import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CardWidthClass
+import ee.schimke.ha.rc.HarcTraceSections
 import ee.schimke.ha.rc.LocalCardCaptureEpoch
 import ee.schimke.ha.rc.LocalHaActionDispatcher
 import ee.schimke.ha.rc.LocalRcDebugBorders
@@ -94,6 +95,7 @@ import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.cardPalette
 import ee.schimke.ha.rc.converterFor
 import ee.schimke.ha.rc.framedDesignProperties
+import ee.schimke.ha.rc.harcTrace
 import ee.schimke.ha.rc.image.CoilBitmapLoader
 import ee.schimke.ha.rc.sectionFlowItems
 import ee.schimke.terrazzo.LocalHaImageStack
@@ -1426,17 +1428,19 @@ private fun CardSlot(
     registry.converterFor(designCard.type)?.framedDesignProperties(designCard, snapshot)
   val template =
     remember(designCard, designShape, cardDesigns, style, dark, cardStyle, override) {
-      cardTemplateFor(
-        context,
-        designCard,
-        snapshot,
-        cardDesigns,
-        style,
-        dark,
-        registry,
-        cardStyle,
-        variant = override?.variant,
-      )
+      harcTrace(HarcTraceSections.CARD_TEMPLATE) {
+        cardTemplateFor(
+          context,
+          designCard,
+          snapshot,
+          cardDesigns,
+          style,
+          dark,
+          registry,
+          cardStyle,
+          variant = override?.variant,
+        )
+      }
     }
   // A card with no template draws through its converter, or not at all: count which, once per card.
   LaunchedEffect(designCard, template == null, cardStyle) {

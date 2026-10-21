@@ -6,17 +6,28 @@ The profiles are produced, and the apps measured, by two `com.android.test` modu
 
 | Module | Target | Journeys |
 | --- | --- | --- |
-| `:app-benchmark` | `:app` | Cold start into demo mode, then switch to the 3D Printing, Meshcore and GitHub boards and fling each (the default Security board fits on one screen) |
+| `:app-benchmark` | `:app` | Cold start into demo mode, then switch to the 3D Printing, Meshcore and GitHub boards and fling each (the default Security board fits on one screen); then the 3D Printing board again with every section open, dragged |
 | `:wear-benchmark` | `:wear` | Cold start onto the top-level list, open Settings and fling it, open the dashboard library |
 
 Each module has a `BaselineProfileGenerator`, a `StartupBenchmark` (`StartupTimingMetric`, cold)
 and a `ScrollBenchmark` (`FrameTimingMetric`, i.e. jank), the latter two run with no compilation
 and with the baseline profile so the profile's effect shows as the gap.
 
+`:app-benchmark` also has `DashboardScrollJankBenchmark`, for the jank of cards coming on screen.
+`ScrollBenchmark` flings with sections collapsed (the default), so few cards enter view; this one
+opens every section (`terrazzo.test.expand_sections=true`) and drags the 3D Printing board down
+and back at a steady pace, from a cold process each iteration: the way down meets every card for
+the first time, the way back cards already played. Besides `FrameTimingMetric` it reports
+`TraceSectionMetric` sums and counts for the app's `harc:cardTemplate`, `harc:captureDocument`
+and `harc:decodeDocument` sections (`HarcTraceSections` in `rc-converter`), the main-thread work
+a card does as it appears. Run it alone with
+`-Pandroid.testInstrumentationRunnerArguments.class=ee.schimke.terrazzo.benchmark.DashboardScrollJankBenchmark`.
+
 ## Demo mode for the phone
 
 The benchmarks launch `MainActivity` with `terrazzo.test.demo_mode=true`, which skips sign-in and
-lands on the demo **Security** board. The extra is honoured only where `BuildConfig.TEST_HOOKS`
+lands on the demo **Security** board, sections collapsed unless the launch also carries
+`terrazzo.test.expand_sections=true`. The extras are honoured only where `BuildConfig.TEST_HOOKS`
 is set: debug, and the `nonMinifiedRelease` / `benchmarkRelease` variants the baseline profile
 plugin derives from `release`. Release and experimental builds ignore it.
 

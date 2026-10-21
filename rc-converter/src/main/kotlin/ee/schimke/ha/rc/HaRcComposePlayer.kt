@@ -195,7 +195,10 @@ internal fun decodedForComposePlayer(bytes: ByteArray): DecodedForComposePlayer 
       return it
     }
   }
-  val decoded = DecodedForComposePlayer(decodeForComposePlayer(bytes))
+  val decoded =
+    harcTrace(HarcTraceSections.DECODE_DOCUMENT) {
+      DecodedForComposePlayer(decodeForComposePlayer(bytes))
+    }
   synchronized(decodedDocuments) { decodedDocuments[bytes] = decoded }
   return decoded
 }
