@@ -21,12 +21,12 @@ compose-bom = "2026.09.00"
 # 1.0.0-alpha13 and `glance-wear` 1.0.0-alpha20 both declare
 # `androidx.compose.remote:remote-creation*:1.0.0-alpha21`, which is what keeps
 # this set consistent.
-remote-compose = "1.0.0-alpha21"
-remote-material3 = "1.0.0-alpha13"
+remote-compose = "1.0.0-alpha22"
+remote-material3 = "1.0.0-alpha14"
 
 # AndroidX Glance Wear (runtime feature gated on Wear OS 7+ / API 37 inside the
 # library; we use it for the per-slot wear widgets). Lockstep — see above.
-glance-wear = "1.0.0-alpha20"
+glance-wear = "1.0.0-alpha21"
 
 # Baseline profiles + macrobenchmarks (`:app-benchmark`, `:wear-benchmark`). The
 # Gradle plugin and the macrobenchmark runtime ship together; keep them on one version.
