@@ -215,13 +215,14 @@ dependencies {
 
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.serialization.json)
+  // Wear widget templates are made playable on the watch: container values, density, profile.
+  implementation(libs.rc.player.edit)
 
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation("org.robolectric:robolectric:4.17")
   testImplementation(libs.compose.ui.test.junit4)
-  testImplementation(libs.rc.player.edit)
   robolectricSdk(libs.robolectric.sdk35)
 
   androidTestImplementation(libs.androidx.test.ext.junit)
