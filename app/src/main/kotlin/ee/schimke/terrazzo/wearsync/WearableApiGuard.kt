@@ -26,9 +26,9 @@ object WearableApiGuard {
   /** Checked once per process: a package change mid-process is not worth re-reading for. */
   fun isUsable(context: Context): Boolean =
     usable
-      ?: isUsable(companionInfo(context.packageManager)).also {
+      ?: companionUsable(context.packageManager).also {
         usable = it
-        if (!it) Log.w(TAG, "$CN_COMPANION has no signatures; Wearable API disabled")
+        if (!it) Log.w(TAG, "$CN_COMPANION can't be verified; Wearable API disabled")
       }
 
   /**
@@ -37,16 +37,19 @@ object WearableApiGuard {
    */
   internal fun isUsable(info: PackageInfo?): Boolean = info == null || info.signatures != null
 
+  /**
+   * Play services' own lookup catches only [PackageManager.NameNotFoundException], so any other
+   * failure here would throw on its thread too: unusable, not absent.
+   */
   @Suppress("DEPRECATION") // GET_SIGNATURES is the flag Play services itself queries with.
-  private fun companionInfo(pm: PackageManager): PackageInfo? =
+  private fun companionUsable(pm: PackageManager): Boolean =
     try {
-      pm.getPackageInfo(CN_COMPANION, PackageManager.GET_SIGNATURES)
+      isUsable(pm.getPackageInfo(CN_COMPANION, PackageManager.GET_SIGNATURES))
     } catch (_: PackageManager.NameNotFoundException) {
-      null
+      true
     } catch (e: RuntimeException) {
-      // A package manager that can't answer: Play services' own check would fail the same way.
       Log.w(TAG, "can't read $CN_COMPANION", e)
-      null
+      false
     }
 
   private const val TAG = "WearableApiGuard"
