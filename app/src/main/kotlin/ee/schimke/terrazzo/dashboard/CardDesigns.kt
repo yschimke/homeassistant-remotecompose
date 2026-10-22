@@ -28,11 +28,13 @@ import ee.schimke.ha.rc.CardTemplatePlayback
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.ha.rc.preloadForComposePlayer
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -228,7 +230,8 @@ fun cardTemplateFor(
       source = if (server != null) UsageSource.Remote else UsageSource.Local,
     )
   }
-  val bytes = server ?: CardDesignLibrary.template(context, key, registry)
+  // A local capture that fails leaves the card to draw through its converter.
+  val bytes = server ?: CardDesignLibrary.templateOrNull(context, key, registry) ?: return null
   // Designs read the player's display (Host density); fold this phone's in once.
   val metrics = context.resources.displayMetrics
   val folded =
@@ -239,6 +242,53 @@ fun cardTemplateFor(
     )
   return CardDesignTemplates.playback(card, folded, registry)
 }
+
+/**
+ * Resolves [cards]' templates ahead of time, in order and off the main thread, exactly as each
+ * card's slot will ([cardTemplateFor]): the local library's capture (or its disk store's read), the
+ * fold for this display, and the decode for the player. A card then composes against warm caches
+ * instead of paying for all three on the frame it first scrolls on screen, which is what dropped
+ * frames on a cold start. A card the warm-up hasn't reached yet resolves as before; one it is busy
+ * with waits for it rather than doing the work twice ([CardDesignLibrary],
+ * [CardDesignTemplates.forDisplay]).
+ *
+ * Cancellation stops between cards. A card that can't be resolved is skipped: its slot reports it.
+ */
+suspend fun warmCardTemplates(
+  context: Context,
+  cards: List<CardConfig>,
+  snapshot: HaSnapshot,
+  designs: CardDesigns,
+  overrides: CardDesignOverrides,
+  style: ThemeStyle,
+  dark: Boolean,
+  registry: CardRegistry,
+  cardStyle: HaUberTheme,
+) =
+  withContext(Dispatchers.Default) {
+    for (card in cards) {
+      ensureActive()
+      runCatching {
+        val override = overrides.forCard(card)
+        cardTemplateFor(
+            context,
+            CardDesignTemplates.designCard(card, snapshot, registry),
+            snapshot,
+            designs,
+            style,
+            dark,
+            registry,
+            override?.cardStyle?.let(HaUberTheme::byId) ?: cardStyle,
+            variant = override?.variant,
+            recordUsage = false,
+          )
+          ?.let { preloadForComposePlayer(it.bytes) }
+      }
+        .onFailure {
+          android.util.Log.w("CardTemplateWarmup", "warm-up failed for ${card.type}", it)
+        }
+    }
+  }
 
 /**
  * The device behind [card]'s main entity (its `entity`, else its first listed one), as the

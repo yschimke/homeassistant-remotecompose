@@ -24,6 +24,12 @@ interface WearSyncManager {
    */
   fun clearWatchData() {}
 
+  /**
+   * Sign-out, before [session] closes: deletes the Home Assistant tokens the paired watches were
+   * given to read their cards' values themselves, so a watch that kept a copy can't use it.
+   */
+  suspend fun revokeWatchAccess(session: HaSession) {}
+
   val streamActive: StateFlow<Boolean>
 
   /**

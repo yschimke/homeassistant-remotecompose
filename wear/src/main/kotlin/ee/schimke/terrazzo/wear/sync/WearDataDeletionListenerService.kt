@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.wear.sync
 import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
+import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import ee.schimke.terrazzo.wear.widget.refreshAllSlotWidgets
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
@@ -29,6 +30,11 @@ import kotlinx.coroutines.runBlocking
  * cards ([WearCardWarmup]), so opening the app finds their templates ready.
  */
 class WearDataDeletionListenerService : WearableListenerService() {
+
+  /** The watch's own Home Assistant token, sent while the app may not be running. */
+  override fun onMessageReceived(event: MessageEvent) {
+    if (event.path == WearSyncPaths.ACCESS_MESSAGE) acceptAccess(applicationContext, event.data)
+  }
 
   override fun onDataChanged(events: DataEventBuffer) {
     val deleted =
@@ -60,6 +66,8 @@ class WearDataDeletionListenerService : WearableListenerService() {
       }
       return
     }
+    // Signed out: the watch's own Home Assistant token goes too.
+    if (signsOut(deleted)) WearAccessStore(applicationContext).clear()
     val store = WearOfflineStore(applicationContext)
     for (path in forgottenOnDeletion(deleted)) {
       if (path == WearSyncPaths.PICTURE_PREFIX) store.forgetAllPictures() else store.forget(path)
@@ -76,7 +84,7 @@ class WearDataDeletionListenerService : WearableListenerService() {
  * slot cards' Wear designs too, whose own deletions don't wake the listener service.
  */
 internal fun forgottenOnDeletion(deleted: Collection<String>): List<String> {
-  val signedOut = deleted.any { it in SIGN_OUT_MARKERS }
+  val signedOut = signsOut(deleted)
   val extra =
     if (signedOut) {
       listOf(WearSyncPaths.VALUES, WearSyncPaths.PICTURE_PREFIX, WearSyncPaths.SLOT_DESIGNS)
@@ -122,6 +130,12 @@ internal fun warmsOnChange(changed: Collection<String>): Boolean =
 /** Whether the items changed at [changed] paths need the placed widgets redrawn: a design index. */
 internal fun redrawsOnChange(changed: Collection<String>): Boolean =
   WearSyncPaths.SLOT_DESIGNS in changed
+
+/**
+ * Whether the phone deleting the items at [deleted] paths means it signed out: it deletes the
+ * account-wide items (pins, sections, slots) only then.
+ */
+internal fun signsOut(deleted: Collection<String>): Boolean = deleted.any { it in SIGN_OUT_MARKERS }
 
 private val SIGN_OUT_MARKERS =
   setOf(WearSyncPaths.PINNED, WearSyncPaths.SECTIONS, WearSyncPaths.SLOTS)
