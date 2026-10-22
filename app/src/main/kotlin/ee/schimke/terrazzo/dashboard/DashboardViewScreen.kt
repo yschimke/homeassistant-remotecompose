@@ -3,7 +3,6 @@
 package ee.schimke.terrazzo.dashboard
 
 import android.util.Log
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,7 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -408,16 +406,7 @@ private fun DashboardList(
   // Long-pressing a section heading plans a placeholder card for this dashboard. Its editor sits at
   // the top of the list, so scroll there: the section pressed may be far down.
   var planningCard by remember(baseUrl, dashboardUrlPath) { mutableStateOf(false) }
-  // A card's first layout is expensive: its player composes, settles the document's size-dependent
-  // values and measures the whole tree. Keep a screen of rows composed on each side of the
-  // viewport, so prefetch builds the rows about to scroll in during idle time, ahead of the frames
-  // that show them, and a row just scrolled past is still there when the board scrolls back
-  // rather than composed and settled again.
-  @OptIn(ExperimentalFoundationApi::class)
-  val listState =
-    rememberLazyListState(
-      cacheWindow = LazyLayoutCacheWindow(aheadFraction = 1f, behindFraction = 1f)
-    )
+  val listState = rememberLazyListState()
   LaunchedEffect(planningCard) { if (planningCard) listState.animateScrollToItem(0) }
   val preferencesStore = LocalTerrazzoGraph.current.preferencesStore
   val useGridLayout by preferencesStore.experimentalGridLayout.collectAsState(initial = false)
