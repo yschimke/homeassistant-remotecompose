@@ -106,8 +106,8 @@ cmp-navigation3-runtime = "1.2.0"
 cmp-icons = "1.7.3"
 cmp-adaptive = "1.3.0"
 # The BOM is the release coordinate; each module can retain an older version on a partial release.
-# 2.17.3 selects compose/runtime/protocol/edit 2.17.3, trace 2.17.2 and JS 2.17.0.
-rc-players = "2.17.3"
+# 2.17.4 selects compose/runtime/edit 2.17.4, protocol 2.17.3, trace 2.17.2 and JS 2.17.0.
+rc-players = "2.17.4"
 compose-webview = "2.0.3"
 # KCEF requests 2.5.0, which was not published to Central. Keep both halves on the
 # supported 2.6.0 release from Central, including the native libraries for desktop.

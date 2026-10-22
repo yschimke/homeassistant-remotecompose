@@ -89,8 +89,8 @@ This excludes widgets, not the foreground Wear app.
 
 ## Compatibility/release ordering
 
-The consumer imports **rc-players-bom 2.17.3** for every player configuration, including
-the standalone browser distribution. It selects compose/runtime/protocol/edit **2.17.3**, trace **2.17.2**,
+The consumer imports **rc-players-bom 2.17.4** for every player configuration, including
+the standalone browser distribution. It selects compose/runtime/edit **2.17.4**, protocol **2.17.3**, trace **2.17.2**,
 and the separately released JS bundle **2.17.0**. These versions share the input contract. The corrected browser distribution
 includes the input API; 2.16.0's JS archive contained an older bundle and cannot render the form. CI and release builds resolve the same Maven Central artifacts,
 without a player source checkout. Release/package the player before updating the consumer. The
