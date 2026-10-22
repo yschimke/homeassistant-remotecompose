@@ -54,13 +54,16 @@ import ee.schimke.ha.rc.framedDesignProperties
 import ee.schimke.ha.rc.framedDesignTemplate
 import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.data.toEntityState
+import ee.schimke.terrazzo.wear.sync.WearDirectAccess
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
 import ee.schimke.terrazzo.wear.sync.syncDesignsFromDataLayer
 import ee.schimke.terrazzo.wear.sync.syncPicturesFromDataLayer
 import ee.schimke.terrazzo.wear.sync.syncWidgetStateFromDataLayer
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -104,11 +107,40 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
     // Slots, pins and values from the Data Layer: the watch app may not have been running to store
     // them as they arrived.
     syncWidgetStateFromDataLayer(app, store)
+    // The card's values from Home Assistant itself when the phone has sent none lately.
+    refreshSlotValuesDirectly(app, store, slotIndex)
     // The slot cards' Wear widget designs from the design server, synced by the phone.
     syncDesignsFromDataLayer(app, store)
     return slotWidgetDataFromStore(app, store, slotIndex)
   }
 }
+
+/**
+ * Reads the values of the card in slot [slotIndex] from Home Assistant when the phone's are stale
+ * ([WearDirectAccess]); bounded, so a widget never waits long on the network.
+ */
+private suspend fun refreshSlotValuesDirectly(
+  app: Context,
+  store: WearOfflineStore,
+  slotIndex: Int,
+) {
+  val cardKey = store.readSlots()?.slots?.firstOrNull { it.slotIndex == slotIndex }?.cardKey
+  val raw =
+    cardKey
+      ?.takeIf { it.isNotEmpty() }
+      ?.let { key -> store.readPinned()?.cards?.firstOrNull { it.cardKey == key } }
+      ?.card
+      ?.rawJson
+      ?.takeIf { it.isNotEmpty() } ?: return
+  withTimeoutOrNull(DIRECT_VALUES_TIMEOUT_MS) {
+    runCatching {
+      WearDirectAccess(app, offline = store).refresh(listOf(raw), store.readSettings())
+    }
+      .onFailure { if (it is CancellationException) throw it }
+  }
+}
+
+private const val DIRECT_VALUES_TIMEOUT_MS = 20_000L
 
 /** The offline rendering path, also used after a best-effort Data Layer refresh. */
 internal suspend fun slotWidgetDataFromStore(

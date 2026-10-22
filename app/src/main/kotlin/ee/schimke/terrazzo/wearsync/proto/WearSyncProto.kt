@@ -26,6 +26,8 @@ import kotlinx.serialization.Serializable
  * - MessageClient (ephemeral):
  *     - `/wear/lease` — [WearLease] (wear → phone heartbeat)
  *     - `/wear/stream` — [StreamUpdate] (phone → wear delta push)
+ *     - `/wear/access/request` — [WearAccessRequest] (wear → phone: "I have no token")
+ *     - `/wear/access` — [WearAccess] (phone → wear: the watch's own token)
  */
 
 /** Wear-side settings written by the phone. Drives demo badge and routing. */
@@ -219,6 +221,27 @@ enum class SlotSizePref(val wireValue: Int) {
 @Serializable data class WearLease(val sentAtMs: Long = 0L, val foreground: Boolean = false)
 
 /**
+ * Wear → phone over MessageClient: the watch has no Home Assistant token of its own (or Home
+ * Assistant refused it) and asks the phone for one.
+ */
+@Serializable data class WearAccessRequest(val sentAtMs: Long = 0L)
+
+/**
+ * Phone → wear over MessageClient, never a DataItem, so it isn't kept in the Data Layer: a
+ * long-lived access token the phone made for this watch alone, named for it in the user's Home
+ * Assistant profile, so the watch can read its cards' values itself when the phone has none to
+ * send. [baseUrl] is the instance the phone is signed in to; [externalUrl] is Home Assistant's
+ * `external_url` (remote access), empty when it has none or it is [baseUrl].
+ */
+@Serializable
+class WearAccess(
+  val baseUrl: String = "",
+  val externalUrl: String = "",
+  val token: String = "",
+  val issuedAtMs: Long = 0L,
+)
+
+/**
  * Phone-local diagnostics. Stored at `terrazzo_sync_stats.pb` and surfaced in Settings →
  * Diagnostics.
  */
@@ -246,6 +269,8 @@ object WearSyncPaths {
   const val DESIGN_PREFIX: String = "/wear/design/"
   const val LEASE_MESSAGE: String = "/wear/lease"
   const val STREAM_MESSAGE: String = "/wear/stream"
+  const val ACCESS_REQUEST_MESSAGE: String = "/wear/access/request"
+  const val ACCESS_MESSAGE: String = "/wear/access"
 
   /** The DataItem path of [entityId]'s [WearPicture]. */
   fun picturePath(entityId: String): String = PICTURE_PREFIX + entityId

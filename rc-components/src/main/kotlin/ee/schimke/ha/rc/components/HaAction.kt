@@ -5,7 +5,6 @@ package ee.schimke.ha.rc.components
 import androidx.annotation.RestrictTo
 import androidx.compose.remote.core.RemoteContext
 import androidx.compose.remote.creation.compose.action.Action
-import androidx.compose.remote.creation.compose.action.HostAction as RemoteHostAction
 import androidx.compose.remote.creation.compose.action.hostAction
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteString
@@ -261,7 +260,7 @@ fun HaAction.toRemoteAction(): Action? {
   val registry = LocalWidgetActionRegistry.current ?: return toNamedRemoteAction()
   val payload = json.encodeToString(HaAction.serializer(), this)
   val actionId = registry.register(payload)
-  return RemoteHostAction(actionId, HA_ACTION_NAME.rs, registry.metadata(this, payload))
+  return hostAction(actionId, registry.metadata(this, payload))
 }
 
 /**
@@ -284,9 +283,8 @@ internal fun widgetAlarmPinAction(entityId: String, pin: RemoteString): Action? 
   val fallbackPayload = json.encodeToString(HaAction.serializer(), fallbackAction)
   val actionId = registry.register(fallbackPayload)
   val dynamicPayload = before.rs + pin + after
-  return RemoteHostAction(
+  return hostAction(
     actionId,
-    HA_ACTION_NAME.rs,
     registry.metadata(fallbackAction, dynamicPayload),
   )
 }
