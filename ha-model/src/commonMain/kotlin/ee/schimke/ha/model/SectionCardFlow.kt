@@ -86,7 +86,7 @@ object SectionCardFlow {
    */
   fun splits(items: List<SectionFlowItem>, gap: Float, maxWidth: Float): List<SectionFlowSplit> {
     val flowing = items.indices.filter { !items[it].hidden && !items[it].ownRow }
-    val candidates = sortedSetOf(0f)
+    val candidates = mutableSetOf(0f)
     // Runs never cross an own-row card or skip a hidden one's neighbour: a hidden card adds no
     // width, and an own-row card breaks the run, so contiguous runs of flowing cards suffice.
     for (start in flowing.indices) {
@@ -100,7 +100,7 @@ object SectionCardFlow {
       }
     }
     val splits = mutableListOf<SectionFlowSplit>()
-    for (width in candidates) {
+    for (width in candidates.sorted()) {
       val split = rows(items, width, gap).map { it.indices }
       if (splits.lastOrNull()?.rows != split) splits += SectionFlowSplit(width, split)
     }
