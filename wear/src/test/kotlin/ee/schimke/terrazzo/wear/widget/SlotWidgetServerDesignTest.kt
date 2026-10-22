@@ -1,5 +1,20 @@
 package ee.schimke.terrazzo.wear.widget
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.PixelMap
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.unit.dp
+import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WidgetInstanceId
@@ -13,6 +28,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignTemplates
+import ee.schimke.ha.rc.HaRcComposePlayer
 import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
@@ -32,6 +48,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -47,6 +64,8 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk = [35])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class SlotWidgetServerDesignTest {
+  @get:Rule val compose = createComposeRule()
+
   private val registry = defaultRegistry()
   private val style = ThemeStyle.entries.first()
   private val colors = RemoteColorScheme(terrazzoWearColorScheme(style))
@@ -171,6 +190,107 @@ class SlotWidgetServerDesignTest {
         RcDocumentCodec.decode(baked, RcWireLimits()).validateFor(RcTargetProfiles.WEAR_WIDGETS),
       )
     }
+  }
+
+  /** Samsung's round host's Large container: a stadium, narrower and taller than the squircle. */
+  private val roundLarge =
+    WearWidgetParams(
+      instanceId = WidgetInstanceId("widgets", 1),
+      containerType = ContainerInfo.CONTAINER_TYPE_LARGE,
+      widthDp = 160f,
+      heightDp = 136f,
+      verticalPaddingDp = 16f,
+      horizontalPaddingDp = 35f,
+      cornerRadiusDp = 999f,
+    )
+
+  /** [card]'s template exported with `hostFrame: device`: its container frame named, not baked. */
+  private fun hostFramedDesign(params: WearWidgetParams): ByteArray {
+    val design = CardDesignTemplates.designCard(card, snapshot, registry)
+    val converter = requireNotNull(registry.converterFor(design.type))
+    val input =
+      requireNotNull(
+        converter.framedDesignTemplate(
+          requireNotNull(converter.framedDesignProperties(design, snapshot))
+        )
+      )
+    return runBlocking {
+      HostFramedWearWidgetDocument(WearWidgetBrush) {
+          SlotContent(
+            registry,
+            colors,
+            input.card,
+            input.snapshot,
+            0,
+            template = true,
+            cardStyle = HaUberTheme.Classic,
+          )
+        }
+        .captureRawContent(RuntimeEnvironment.getApplication(), params, false)
+        .rcDocument
+    }
+  }
+
+  @Test
+  fun onlyADesignThatNamesItsFrameIsATemplate() {
+    assertTrue(WearWidgetTemplate.namesFrame(hostFramedDesign(large)))
+    assertFalse(WearWidgetTemplate.namesFrame(serverDesign(large, lcd)))
+    assertFalse(WearWidgetTemplate.namesFrame(byteArrayOf(1, 2, 3)))
+  }
+
+  @Test
+  fun aDesignThatNamesItsFrameTakesThisWidgetsContainer() {
+    // One design, captured for the Pixel Watch squircle (as an export is), served to Samsung's
+    // round host, against the same design captured for the round host itself.
+    val squircleCapture = hostFramedDesign(large)
+    val roundCapture = hostFramedDesign(roundLarge)
+    val onRound = capture(roundLarge) { squircleCapture.takeIf { _ -> it == DesignKey.WEAR_LARGE } }
+    val roundOwn = capture(roundLarge) { roundCapture.takeIf { _ -> it == DesignKey.WEAR_LARGE } }
+    // What it played as before: baked as it is, its squircle frame kept.
+    val asCaptured =
+      LauncherDesigns.bakeValues(
+        squircleCapture,
+        CardDesignTemplates.playback(
+          CardDesignTemplates.designCard(card, snapshot, registry),
+          squircleCapture,
+          registry,
+        ),
+        snapshot,
+      )!!
+    var shown by mutableStateOf(onRound)
+    compose.setContent {
+      val frame =
+        Modifier.size(
+          (roundLarge.widthDp + 2 * roundLarge.horizontalPaddingDp).dp,
+          (roundLarge.heightDp + 2 * roundLarge.verticalPaddingDp).dp,
+        )
+      Box(frame.testTag("widget")) {
+        key(shown) {
+          HaRcComposePlayer(
+            documentBytes = shown,
+            modifier = frame,
+            fallback = { error("a baked Wear design must play") },
+          )
+        }
+      }
+    }
+    fun pixels(bytes: ByteArray): PixelMap {
+      compose.runOnIdle { shown = bytes }
+      compose.waitForIdle()
+      return compose.onNodeWithTag("widget").captureToImage().toPixelMap()
+    }
+    fun differing(a: PixelMap, b: PixelMap): Int {
+      var count = 0
+      for (y in 0 until a.height) for (x in 0 until a.width) if (a[x, y] != b[x, y]) count++
+      return count
+    }
+    val expected = pixels(roundOwn)
+    val total = expected.width * expected.height
+    val framed = differing(expected, pixels(onRound))
+    // Text adapted from CORE_TEXT may antialias a few edge pixels differently.
+    assertTrue(framed * 100 < total, "takes the round host's frame: $framed of $total differ")
+    val kept = differing(expected, pixels(asCaptured))
+    assertTrue(kept > framed, "the squircle frame as captured differs more: $kept vs $framed")
   }
 
   @Test

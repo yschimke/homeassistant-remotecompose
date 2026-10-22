@@ -195,7 +195,11 @@ Deliberate spike limits, each owned by a milestone below:
   folds in its density and font scale, and `adaptTo`s the Wear widget profile (`CORE_TEXT` as text
   layout), then bakes the card's values; if that isn't playable, Glance Wear captures the
   container itself as before (`WearWidgetTemplateTest` checks the header, the profile and the
-  pixels against Glance Wear's own capture, Small, Large and other insets and corners).
+  pixels against Glance Wear's own capture, Small, Large and other insets and corners). A synced
+  server Wear design that declares the same names — one exported with the widget container's
+  `hostFrame: device`, through compose-ai-tools' `HostFramedWearWidgetDocument` — is such a
+  template too, and is instantiated the same way before it is baked; one that doesn't plays as it
+  was captured (`SlotWidgetServerDesignTest`).
 - **Wear widgets play the card's own design.** A Wear widget isn't a separate design: it is
   the card's design rooted on the Glance Wear container, Small or Large. Glance Wear draws the
   container's shape and background into the document, so the card's own surface (background,
