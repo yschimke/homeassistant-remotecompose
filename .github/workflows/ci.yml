@@ -37,7 +37,7 @@ jobs:
       - uses: actions/setup-java@v6.1.0
         with:
           distribution: temurin
-          java-version: 21.0.12+101.0.LTS
+          java-version: 21.0.13+9.0.LTS
       - uses: gradle/actions/setup-gradle@v6.4.0
       - name: Verify portable Apple checksums
         run: python3 scripts/test-apple-checksums.py
@@ -71,7 +71,7 @@ jobs:
       - uses: actions/setup-java@v6.1.0
         with:
           distribution: temurin
-          java-version: 21.0.12+101.0.LTS
+          java-version: 21.0.13+9.0.LTS
       - uses: gradle/actions/setup-gradle@v6.4.0
       - uses: ./.github/actions/android-sdk
       - run: ./gradlew assembleDebug --stacktrace
@@ -88,7 +88,7 @@ jobs:
       - uses: actions/setup-java@v6.1.0
         with:
           distribution: temurin
-          java-version: 21.0.12+101.0.LTS
+          java-version: 21.0.13+9.0.LTS
       - uses: gradle/actions/setup-gradle@v6.4.0
       - uses: ./.github/actions/android-sdk
       # `:integration:test`'s pixel-diff suites require rendered PNGs
@@ -136,7 +136,7 @@ jobs:
       - uses: actions/setup-java@v6.1.0
         with:
           distribution: temurin
-          java-version: 21.0.12+101.0.LTS
+          java-version: 21.0.13+9.0.LTS
       - uses: gradle/actions/setup-gradle@v6.4.0
       - uses: ./.github/actions/android-sdk
       # `lint` fans out across every Android module. Debug variant is
@@ -184,7 +184,7 @@ jobs:
         if: env.RUN_HEAVY == 'true'
         with:
           distribution: temurin
-          java-version: 21.0.12+101.0.LTS
+          java-version: 21.0.13+9.0.LTS
       - uses: gradle/actions/setup-gradle@v6.4.0
         if: env.RUN_HEAVY == 'true'
       - uses: ./.github/actions/android-sdk
