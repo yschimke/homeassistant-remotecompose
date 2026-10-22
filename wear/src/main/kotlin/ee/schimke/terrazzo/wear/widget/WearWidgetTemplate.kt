@@ -29,6 +29,7 @@ import ee.schimke.composeai.rcplayer.edit.RcTargetProfiles
 import ee.schimke.composeai.rcplayer.edit.adaptTo
 import ee.schimke.composeai.rcplayer.edit.hardcodeDensity
 import ee.schimke.composeai.rcplayer.edit.hardcodeNamedValues
+import ee.schimke.composeai.rcplayer.edit.namedVariables
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.rc.androidXExperimentalWrap
@@ -97,6 +98,22 @@ internal object WearWidgetTemplate {
       RemoteBox(modifier = RemoteModifier.fillMaxSize().padding(horizontal, vertical)) { content() }
     }
   }
+
+  /**
+   * Whether [document] leaves its container frame to the watch: it declares one of these named
+   * values, as a template [capture]s and a design exported with the widget container's `hostFrame:
+   * device` (compose-ai-tools' `HostFramedWearWidgetDocument`) do. False for one that can't be
+   * read.
+   */
+  fun namesFrame(document: ByteArray): Boolean = runCatching {
+    RcDocumentCodec.decode(document, RcWireLimits()).namedVariables.any {
+      it.name.removePrefix(USER_PREFIX) in FRAME_NAMES
+    }
+  }
+    .getOrDefault(false)
+
+  private const val USER_PREFIX = "USER:"
+  private val FRAME_NAMES = setOf(HORIZONTAL_PADDING, VERTICAL_PADDING, CORNER_RADIUS)
 
   private fun named(name: String, defaultDp: Float) =
     RemoteDp.createNamedRemoteDp(name, defaultDp, RemoteState.Domain.User)

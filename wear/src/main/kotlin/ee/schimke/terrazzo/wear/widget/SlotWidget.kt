@@ -232,11 +232,18 @@ internal fun slotWidgetData(
       params: WearWidgetParams,
       isPreview: Boolean,
     ): WearWidgetRawContent {
-      // The server's Wear design for this container: no chrome of its own, the container's.
+      // The server's Wear design for this container: no chrome of its own, the container's. One
+      // that leaves its container frame named is a container-neutral template like the card's own
+      // below, made into this widget's document first; one that bakes a frame plays as it is.
       containerOf(params.containerType)?.let(wearDesign)?.let { synced ->
-        val playback = CardDesignTemplates.playback(design, synced, registry)
-        LauncherDesigns.bakeValues(synced, playback, snapshot, fetchImage)?.let {
-          return WearWidgetRawContent(it, Bundle(), null)
+        val widget =
+          if (WearWidgetTemplate.namesFrame(synced))
+            WearWidgetTemplate.instantiate(context, synced, params, isPreview)
+          else null
+        val document = widget?.rcDocument ?: synced
+        val playback = CardDesignTemplates.playback(design, document, registry)
+        LauncherDesigns.bakeValues(document, playback, snapshot, fetchImage)?.let {
+          return WearWidgetRawContent(it, widget?.extras ?: Bundle(), widget?.widgetTitle)
         }
       }
       // The card's container-neutral template, made into this widget's document on the watch.
