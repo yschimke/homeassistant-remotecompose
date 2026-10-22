@@ -24,12 +24,66 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.wear-only }}
     uses: ./.github/workflows/wear-emulator.yml
 
+  # Whether a pull request can affect the macOS `ios` job. macOS runners are the scarce ones here:
+  # with the job on every PR, 6 of 15 runs were cancelled before getting a runner and queue waits
+  # reached 30-65 minutes, so the PRs that do touch iOS waited behind ones that cannot. The list is
+  # what the job reads: the Xcode project and Swift packages, the KMP client it links
+  # (`:ha-client`, which exports `:ha-model` and depends on no other project), the build, the two
+  # scripts it runs, the release workflow the checksum test reads, and this workflow. Pushes to
+  # main, dispatches, an unreadable base and an empty diff all run it.
+  ios-changes:
+    name: iOS changes
+    runs-on: ubuntu-latest
+    outputs:
+      ios: ${{ steps.filter.outputs.ios }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check whether the iOS job is required
+        id: filter
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          ios=true
+          if [ "$EVENT_NAME" = pull_request ] && \
+            git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null && \
+            [ -n "$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")" ] && \
+            git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
+              ios \
+              ha-client \
+              ha-model \
+              build-logic \
+              gradle \
+              ':(glob)*.gradle.kts' \
+              gradle.properties \
+              gradlew \
+              gradlew.bat \
+              scripts/test-apple-checksums.py \
+              scripts/test-ios-bindings.sh \
+              .github/workflows/ci.yml \
+              .github/workflows/release-build.yml \
+              .github/actions
+          then
+            ios=false
+          fi
+          echo "ios=$ios" | tee -a "$GITHUB_OUTPUT"
+
   ios:
     name: iOS app and shared framework
     # Skip on release-please PRs: they only bump the manifest, CHANGELOG and
     # version lines, all of which main's push CI already built. Matches the
     # bot-authored PR (or a bot dispatch); humans and main always run it.
-    if: ${{ inputs.wear-only != true && !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
+    #
+    # And skip a PR that `ios-changes` says cannot affect it. A skipped required check reports as
+    # passing, so a failed or cancelled gate must not skip this job: `!cancelled()` keeps it alive
+    # when the gate fails, and only a successful gate saying `false` skips it.
+    needs: ios-changes
+    if: ${{ !cancelled() && (needs.ios-changes.result != 'success' || needs.ios-changes.outputs.ios != 'false') && inputs.wear-only != true && !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
     runs-on: macos-26
     timeout-minutes: 45
     steps:
