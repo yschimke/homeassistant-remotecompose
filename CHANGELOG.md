@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.58](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.57...v0.1.58) (2026-10-22)
+
+
+### Features
+
+* add RemoteFlexBox, a Remote Compose port of androidx FlexBox ([#1061](https://github.com/yschimke/homeassistant-remotecompose/issues/1061)) ([f7a92b3](https://github.com/yschimke/homeassistant-remotecompose/commit/f7a92b3735c1733b119c10efd1aa4251c4ddc7db))
+* assistant access via Android AppFunctions and an opt-in MCP server ([#1062](https://github.com/yschimke/homeassistant-remotecompose/issues/1062)) ([1989810](https://github.com/yschimke/homeassistant-remotecompose/commit/1989810478071393fc551c9431d1215b19548156))
+
 ## [0.1.57](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.56...v0.1.57) (2026-10-22)
 
 
