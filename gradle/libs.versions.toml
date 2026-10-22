@@ -8,6 +8,10 @@ play-publisher = "4.1.1"
 
 # Metro (DI) — requires Kotlin 2.2.20+.
 metro = "1.4.5"
+# AppFunctions: the on-device agent surface (`app/.../assistant/`). Experimental upstream; the
+# compiler runs through KSP, which nothing else in the build uses.
+androidx-appfunctions = "1.0.0-beta01"
+ksp = "2.3.12"
 
 # Compose
 compose-bom = "2026.09.00"
@@ -200,6 +204,8 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 # Proto DataStore — used by the Wear sync layer (per-dashboard + cross-device
 # settings) and the phone-side mirror that publishes to the data layer.
 androidx-datastore = { module = "androidx.datastore:datastore", version = "1.2.1" }
+androidx-appfunctions = { module = "androidx.appfunctions:appfunctions", version.ref = "androidx-appfunctions" }
+androidx-appfunctions-compiler = { module = "androidx.appfunctions:appfunctions-compiler", version.ref = "androidx-appfunctions" }
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version = "2.12.0" }
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version = "1.2.0" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version = "1.2.0" }
@@ -313,6 +319,7 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 # proposing version bumps against the plugin marker.
 compose-preview = { id = "ee.schimke.composeai.preview", version.ref = "compose-preview-plugin" }
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 tapmoc = { id = "com.gradleup.tapmoc", version.ref = "tapmoc" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt-gradle" }
 play-publisher = { id = "com.github.triplet.play", version.ref = "play-publisher" }

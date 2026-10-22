@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.design.UsageSharing
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignTags
+import ee.schimke.terrazzo.assistant.AssistantAccess
 import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.LauncherColoursPref
@@ -219,6 +220,21 @@ internal fun SettingsScreen(
         )
       }
 
+      if (remember(context) { AssistantAccess.isSupported(context) }) {
+        SettingsGroup("Assistants") {
+          var assistantAccess by
+            remember(context) { mutableStateOf(AssistantAccess.isEnabled(context)) }
+          AssistantAccessSetting(
+            checked = assistantAccess,
+            onCheckedChange = { enabled ->
+              scope.launch {
+                if (AssistantAccess.setEnabled(context, enabled)) assistantAccess = enabled
+              }
+            },
+          )
+        }
+      }
+
       SettingsGroup("Dashboard") {
         SettingSwitch(
           title = "Permanent write mode",
@@ -353,6 +369,23 @@ internal fun UsageSharingSetting(checked: Boolean, onCheckedChange: (Boolean) ->
     )
     TextButton(onClick = { uriHandler.openUri(PRIVACY_POLICY_URL) }) { Text("Privacy policy") }
   }
+}
+
+/**
+ * Settings → Assistants: lets an on-device agent call Terrazzo's AppFunctions
+ * (`assistant/TerrazzoAppFunctions.kt`). Shown only where Android supports AppFunctions.
+ */
+@Composable
+internal fun AssistantAccessSetting(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+  SettingSwitch(
+    title = "Let on-device assistants use Home Assistant",
+    summary =
+      "An assistant Android allows (such as Gemini) can find your entities, read them and " +
+        "turn lights, switches, scenes and scripts on or off, signed in as you. Locks and " +
+        "alarm panels stay read-only.",
+    checked = checked,
+    onCheckedChange = onCheckedChange,
+  )
 }
 
 /** The published privacy policy (`docs/privacy.md`). */

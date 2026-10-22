@@ -24,6 +24,7 @@ import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.terrazzo.AssistantAccessSetting
 import ee.schimke.terrazzo.CardStyleSection
 import ee.schimke.terrazzo.ConnectionStatus
 import ee.schimke.terrazzo.DashboardTopBar
@@ -674,6 +675,16 @@ fun Screen_Settings_UsageSharing() = PhoneHost {
   Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
     UsageSharingSetting(checked = false, onCheckedChange = {})
     UsageSharingSetting(checked = true, onCheckedChange = {})
+  }
+}
+
+/** Settings → Assistants (AppFunctions), off (its default) and on. */
+@Preview(name = "settings · assistants", showBackground = false, widthDp = PHONE_WIDTH_DP)
+@Composable
+fun Screen_Settings_Assistants() = PhoneHost {
+  Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    AssistantAccessSetting(checked = false, onCheckedChange = {})
+    AssistantAccessSetting(checked = true, onCheckedChange = {})
   }
 }
 

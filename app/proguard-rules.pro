@@ -35,3 +35,8 @@
 -dontwarn androidx.window.sidecar.SidecarInterface
 -dontwarn androidx.window.sidecar.SidecarProvider
 -dontwarn androidx.window.sidecar.SidecarWindowLayoutInfo
+
+# AppFunctions (assistant/): androidx.appfunctions links against the AppFunctions extension
+# library that some devices provide at runtime (an optional <uses-library> in its own manifest),
+# so it is never on the build classpath.
+-dontwarn com.android.extensions.appfunctions.**

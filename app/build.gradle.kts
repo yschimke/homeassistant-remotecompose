@@ -21,6 +21,7 @@ plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.metro)
+  alias(libs.plugins.ksp)
   alias(libs.plugins.tapmoc)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.play.publisher)
@@ -259,6 +260,10 @@ dependencies {
   implementation(libs.androidx.lifecycle.process)
   implementation(libs.androidx.lifecycle.viewmodel)
   implementation(libs.androidx.work.runtime)
+  // AppFunctions (`assistant/`): the service a permitted on-device agent calls. The compiler
+  // generates the concrete service and its function XML asset.
+  implementation(libs.androidx.appfunctions)
+  ksp(libs.androidx.appfunctions.compiler)
   implementation(libs.androidx.navigation3.runtime)
   implementation(libs.androidx.navigation3.ui)
   implementation(libs.androidx.material3.adaptive.navigation.suite)
