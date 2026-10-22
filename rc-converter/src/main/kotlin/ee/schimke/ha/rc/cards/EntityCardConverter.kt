@@ -117,12 +117,19 @@ class EntityCardConverter : CardConverter {
   ) {
     val entityId = card.raw["entity"]?.jsonPrimitive?.content
     val entity = entityId?.let { snapshot.states[it] }
+    // The card's tap action (configured, or the entity's default), as the row's.
+    val data = iconChipData(card, snapshot)
     if (entity?.state?.toFloatOrNull() != null) {
       val reading =
         haReading(entityId, entity, nameFor(card, entity, entityId), snapshot = snapshot)
-      RemoteHaMeasurement(reading, HaPresentation.Expanded, modifier.fillMaxSize())
+      RemoteHaMeasurement(
+        reading,
+        HaPresentation.Expanded,
+        modifier.fillMaxSize(),
+        tapAction = data.tapAction,
+      )
     } else {
-      RemoteHaIconHero(iconChipData(card, snapshot), scale, modifier.fillMaxSize())
+      RemoteHaIconHero(data, scale, modifier.fillMaxSize())
     }
   }
 
