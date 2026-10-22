@@ -285,7 +285,9 @@ object LauncherDesigns {
    * and embedded, its now-constant state layouts collapsed and the document optimised; null when it
    * can't be (a picture that can't be resolved or fetched, a binding the document can't hold as a
    * constant). For any host that can't receive bindings: launcher widgets, Wear widgets. A
-   * time-derived binding is read from [clock].
+   * time-derived binding is read from [clock]. [hostValues] are named floats the host itself fixes
+   * (a Wear widget's host frame), written in beside the bindings; a name the document doesn't
+   * declare is ignored.
    */
   fun bakeValues(
     templateBytes: ByteArray,
@@ -293,9 +295,11 @@ object LauncherDesigns {
     snapshot: HaSnapshot,
     fetchImage: (url: String) -> ByteArray? = { null },
     clock: HaClock = SystemHaClock,
+    hostValues: Map<String, Float> = emptyMap(),
   ): ByteArray? {
     val bindings = playback.bindings(snapshot, clock)
     val values = buildMap {
+      for ((name, v) in hostValues) put(name, RcHardcodedValue.FloatValue(v))
       for ((name, v) in bindings.strings) put(name, RcHardcodedValue.Text(v))
       for ((name, v) in bindings.booleans) put(name, RcHardcodedValue.BooleanValue(v))
       for ((name, v) in bindings.ints) put(name, RcHardcodedValue.Integer(v))

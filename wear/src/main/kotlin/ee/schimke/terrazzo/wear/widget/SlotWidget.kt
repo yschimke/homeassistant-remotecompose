@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.compose.remote.creation.compose.layout.RemoteBox
+import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
@@ -200,12 +201,20 @@ internal fun slotWidgetData(
       params: WearWidgetParams,
       isPreview: Boolean,
     ): WearWidgetRawContent {
-      // The server's Wear design for this container: no chrome of its own, the container's.
+      // The server's Wear design for this container: no chrome of its own, the container's. It
+      // was captured once, for some host; one that names its host frame gets this host's.
       containerOf(params.containerType)?.let(wearDesign)?.let { synced ->
         val playback = CardDesignTemplates.playback(design, synced, registry)
-        LauncherDesigns.bakeValues(synced, playback, snapshot, fetchImage)?.let {
-          return WearWidgetRawContent(it, Bundle(), null)
-        }
+        LauncherDesigns.bakeValues(
+            synced,
+            playback,
+            snapshot,
+            fetchImage,
+            hostValues = WearHostFrame.valuesOf(params),
+          )
+          ?.let {
+            return WearWidgetRawContent(it, Bundle(), null)
+          }
       }
       val key =
         WearTemplateKey(
@@ -305,42 +314,52 @@ internal fun slotDocument(
 ): WearWidgetDocument =
   WearWidgetDocument(
     background = WearWidgetBrush.Companion,
-    content = {
-      // The watch's widget host has no image loader. A template names its slot pictures by URL,
-      // and baking embeds the phone-synced bytes; a direct capture can't, so it shows the card's
-      // icon.
-      CompositionLocalProvider(
-        LocalTemplateBindings provides if (template) TemplateBindings() else null,
-        LocalPictureImageStrategy provides
-          if (template) PictureImageStrategy.DefaultAppUrl else NO_PICTURES,
-      ) {
-        ProvideCardRegistry(registry) {
-          RemoteMaterialTheme(colorScheme = colors) {
-            val theme = RemoteMaterialTheme.colorScheme.asHaTheme()
-            // The user's card style brings its instruments, type and shapes; the watch keeps
-            // its own palette (the WearM3 colours the widget host updates).
-            ProvideHaUberStyle(cardStyle, darkTheme = true) {
-              ProvideCardSizeMode(CardSizeMode.Fixed) {
-                // The Glance Wear container already supplies its
-                // own shape + brush via WearWidgetBrush, so
-                // suppress the per-card rounded clip + divider
-                // border that would otherwise double up.
-                //
-                // Glance Wear's capture profile is fixed by
-                // AndroidX to a stable op set that rejects
-                // FlowLayout (op 240). Tell HA card components
-                // to use a non-wrapping row fallback so cards
-                // that lean on `RemoteFlowRow` (glance / grid /
-                // entity-filter) capture instead of throwing.
-                ProvideCardChrome(enabled = false) {
-                  ProvideFixedCanvasAxis(BreakpointAxis.Height) {
-                    ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
-                      if (card != null) {
-                        RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
-                      } else {
-                        EmptySlotPlaceholder(slotIndex, theme)
-                      }
-                    }
+    content = slotContent(registry, colors, card, snapshot, slotIndex, template, cardStyle),
+  )
+
+/** What [slotDocument] draws inside the Glance Wear container: [card], or a placeholder. */
+internal fun slotContent(
+  registry: CardRegistry,
+  colors: RemoteColorScheme,
+  card: CardConfig?,
+  snapshot: HaSnapshot,
+  slotIndex: Int,
+  template: Boolean = false,
+  cardStyle: HaUberTheme = HaUberTheme.Classic,
+): @RemoteComposable @Composable () -> Unit = {
+  // The watch's widget host has no image loader. A template names its slot pictures by URL,
+  // and baking embeds the phone-synced bytes; a direct capture can't, so it shows the card's
+  // icon.
+  CompositionLocalProvider(
+    LocalTemplateBindings provides if (template) TemplateBindings() else null,
+    LocalPictureImageStrategy provides
+      if (template) PictureImageStrategy.DefaultAppUrl else NO_PICTURES,
+  ) {
+    ProvideCardRegistry(registry) {
+      RemoteMaterialTheme(colorScheme = colors) {
+        val theme = RemoteMaterialTheme.colorScheme.asHaTheme()
+        // The user's card style brings its instruments, type and shapes; the watch keeps
+        // its own palette (the WearM3 colours the widget host updates).
+        ProvideHaUberStyle(cardStyle, darkTheme = true) {
+          ProvideCardSizeMode(CardSizeMode.Fixed) {
+            // The Glance Wear container already supplies its
+            // own shape + brush via WearWidgetBrush, so
+            // suppress the per-card rounded clip + divider
+            // border that would otherwise double up.
+            //
+            // Glance Wear's capture profile is fixed by
+            // AndroidX to a stable op set that rejects
+            // FlowLayout (op 240). Tell HA card components
+            // to use a non-wrapping row fallback so cards
+            // that lean on `RemoteFlowRow` (glance / grid /
+            // entity-filter) capture instead of throwing.
+            ProvideCardChrome(enabled = false) {
+              ProvideFixedCanvasAxis(BreakpointAxis.Height) {
+                ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
+                  if (card != null) {
+                    RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                  } else {
+                    EmptySlotPlaceholder(slotIndex, theme)
                   }
                 }
               }
@@ -348,8 +367,9 @@ internal fun slotDocument(
           }
         }
       }
-    },
-  )
+    }
+  }
+}
 
 /**
  * Tiny placeholder rendered when a slot has no assigned card or its `rawJson` failed to decode.
