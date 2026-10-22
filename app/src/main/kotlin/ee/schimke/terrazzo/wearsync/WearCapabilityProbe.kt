@@ -25,9 +25,9 @@ import kotlinx.coroutines.flow.stateIn
  * it whether or not the watch app is running. Phone uses [CapabilityClient.getCapability] + the
  * [CapabilityClient.OnCapabilityChangedListener] to track updates without polling.
  */
-class WearCapabilityProbe(context: Context) {
+class WearCapabilityProbe(private val context: Context) {
 
-  private val capabilityClient: CapabilityClient = Wearable.getCapabilityClient(context)
+  private val capabilityClient: CapabilityClient by lazy { Wearable.getCapabilityClient(context) }
 
   /**
    * Cold flow that emits the latest "any reachable node supports wear widgets" boolean.
@@ -35,6 +35,12 @@ class WearCapabilityProbe(context: Context) {
    * [stateIn] via [stateFlow].
    */
   val supportsWearWidgets: Flow<Boolean> = callbackFlow {
+    // No Wearable call at all where one would crash the app (see WearableApiGuard).
+    if (!WearableApiGuard.isUsable(context)) {
+      trySend(false)
+      awaitClose {}
+      return@callbackFlow
+    }
     val listener = CapabilityClient.OnCapabilityChangedListener { info ->
       trySend(info.nodes.isNotEmpty())
     }

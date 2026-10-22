@@ -240,7 +240,28 @@ class MobileWearSyncManager(
     }
   }
 
+  /** Gives each watch that asks its own Home Assistant token: see [WatchAccessIssuer]. */
+  private val accessIssuer =
+    WatchAccessIssuer(
+      send = { nodeId, access ->
+        messageClient.sendMessage(nodeId, WearSyncPaths.ACCESS_MESSAGE, encodeProto(access)).await()
+      },
+      nodeName = { nodeId ->
+        nodeClient.connectedNodes.await().firstOrNull { it.id == nodeId }?.displayName
+      },
+    )
+
   private val leaseListener = MessageClient.OnMessageReceivedListener { event ->
+    if (event.path == WearSyncPaths.ACCESS_REQUEST_MESSAGE) {
+      managerScope.launch {
+        runCatching { accessIssuer.request(event.sourceNodeId, sessionState.value) }
+          .onFailure {
+            if (it is CancellationException) throw it
+            handleFailure("accessRequest", it)
+          }
+      }
+      return@OnMessageReceivedListener
+    }
     if (event.path == "/wear/input/v1") {
       managerScope.launch {
         runCatching { handleInputRequest(event) }
@@ -263,6 +284,8 @@ class MobileWearSyncManager(
     inputCards.value = emptyMap()
     sessionState.value = session
   }
+
+  override suspend fun revokeWatchAccess(session: HaSession) = accessIssuer.revokeAll(session)
 
   override fun clearWatchData() {
     // First, so no account write is issued after the deletes below ([writeDataItem] checks it).
@@ -335,6 +358,12 @@ class MobileWearSyncManager(
   ) {
     managerScope = scope
     inputEditingMode = inputEditing
+    // A phone where any Wearable call would crash the app: stay unavailable for good, which every
+    // Data Layer path already checks, and start nothing (see WearableApiGuard).
+    if (!WearableApiGuard.isUsable(context)) {
+      wearableAvailableState.value = false
+      return
+    }
     // addListener returns a Task; observe it so an API_NOT_CONNECTED
     // failure (no Wearable component on this device) flips us into
     // the disabled state instead of silently never delivering leases.
@@ -471,6 +500,22 @@ class MobileWearSyncManager(
         }
     }
 
+    // A watch that asked for its own token while no session could issue one is answered once the
+    // session connects.
+    scope.launch {
+      sessionState.collectLatest { session ->
+        if (session == null) return@collectLatest
+        session.connectionStatus.collect { status ->
+          if (status != SessionConnectionStatus.Connected) return@collect
+          runCatching { accessIssuer.onConnected(session) }
+            .onFailure {
+              if (it is CancellationException) throw it
+              handleFailure("accessIssue", it)
+            }
+        }
+      }
+    }
+
     // Session snapshot pump. Re-driven on every session change so the
     // demo session and live session each get their own loop. The
     // streaming-vs-batched decision now keys off the unified pin set
@@ -490,7 +535,9 @@ class MobileWearSyncManager(
 
   /** Stops listening; safe to call from Application.onTerminate (rare). */
   fun stop() {
-    runCatching { messageClient.removeListener(leaseListener) }
+    if (WearableApiGuard.isUsable(context)) {
+      runCatching { messageClient.removeListener(leaseListener) }
+    }
     streamJob?.cancel()
     recoveryJob?.cancel()
   }

@@ -65,10 +65,9 @@ internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValu
   val designKey = wearDesignKey(design, snapshot, look, style, registry)
   val template =
     remember(design, designKey, density) {
-      designKey?.let {
-        val bytes = wearTemplateBytes(context, it, registry, density.density, density.fontScale)
-        CardDesignTemplates.playback(design, bytes, registry)
-      }
+      designKey
+        ?.let { wearTemplateBytes(context, it, registry, density.density, density.fontScale) }
+        ?.let { bytes -> CardDesignTemplates.playback(design, bytes, registry) }
     }
   // Binding cards seed current values before frame one; baked and structural changes recapture.
   val tick = relativeTimeTickFor(cardEntityIds(card), snapshot)
@@ -116,19 +115,20 @@ internal fun wearDesignKey(
 ): DesignKey? =
   CardDesignTemplates.keyFor(design, snapshot, look.palette, true, registry, cardStyle = style)
 
-/** [key]'s template, folded for a display of [density] and [fontScale]: what the player plays. */
+/**
+ * [key]'s template, folded for a display of [density] and [fontScale]: what the player plays. Null
+ * when the template can't be captured, and the card draws through its converter.
+ */
 internal fun wearTemplateBytes(
   context: Context,
   key: DesignKey,
   registry: CardRegistry,
   density: Float,
   fontScale: Float,
-): ByteArray =
-  CardDesignTemplates.forDisplay(
-    CardDesignLibrary.template(context, key, registry),
-    density,
-    fontScale,
-  )
+): ByteArray? =
+  CardDesignLibrary.templateOrNull(context, key, registry)?.let {
+    CardDesignTemplates.forDisplay(it, density, fontScale)
+  }
 
 /** The snapshot the watch's cards render from: its last synced entity values. */
 internal fun wearSnapshot(values: Map<String, EntityValue>): HaSnapshot =

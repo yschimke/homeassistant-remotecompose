@@ -8,6 +8,7 @@ import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
@@ -108,51 +109,58 @@ fun HaRcComposePlayer(
     fallback()
     return
   }
-  val clock = LocalHaClock.current
-  // A frozen clock means a preview or test: decode inline, so the image is in place by the frame a
-  // capture waits on rather than landing from a background thread after it.
-  val imageLoader =
-    remember(bitmapLoader, clock.isFrozen) { bitmapLoader.asRcImageLoader(inline = clock.isFrozen) }
-  // rc-player rejects a write to a name the document doesn't declare (the View player's setters
-  // dropped it), and the host pushes every binding of every entity the card references. So the
-  // player gets only the values this document declares, with a matching type.
-  val declared = decoded.declared
-  // Seeded before the player's first frame, so it starts settled on the live values: a value that
-  // only arrives through the effect below lands a frame late and tweens in from the document's
-  // baked one on every load (docs/architecture/live-card-updates.md § First frame).
-  val playerValues =
-    remember(document) {
-      mutableStateMapOf<String, RcNamedValue>().apply {
-        putAll(namedValues.filter { (name, value) -> declared.accepts(name, value) })
+  // A clone ([cloneForPlayer]) shares its source's document, so the decode is what tells them
+  // apart: a new one is a new document to play, with its own state and its own image fetches.
+  key(decoded) {
+    val clock = LocalHaClock.current
+    // A frozen clock means a preview or test: decode inline, so the image is in place by the frame
+    // a
+    // capture waits on rather than landing from a background thread after it.
+    val imageLoader =
+      remember(bitmapLoader, clock.isFrozen) {
+        bitmapLoader.asRcImageLoader(inline = clock.isFrozen)
       }
-    }
-  LaunchedEffect(playerValues, namedValues) {
-    snapshotFlow { namedValues.toMap() }
-      .collect { values ->
-        val accepted = values.filter { (name, value) -> declared.accepts(name, value) }
-        playerValues.keys.retainAll(accepted.keys)
-        playerValues.putAll(accepted)
-      }
-  }
-  val frozenTime = remember(clock) { if (clock.isFrozen) clock.asRcTimeSource() else null }
-  val player: @Composable () -> Unit = {
-    RcComposePlayer(
-      document,
-      imageLoader,
-      customComponents = inputs,
-      modifier = modifier.wrapUnpinnedHeight(),
-      namedValues = playerValues,
-      onEvent = { event ->
-        if (event is RcPlayerEvent.HostNamedAction) {
-          onNamedAction(event.name, event.value.toHostPayload())
+    // rc-player rejects a write to a name the document doesn't declare (the View player's setters
+    // dropped it), and the host pushes every binding of every entity the card references. So the
+    // player gets only the values this document declares, with a matching type.
+    val declared = decoded.declared
+    // Seeded before the player's first frame, so it starts settled on the live values: a value that
+    // only arrives through the effect below lands a frame late and tweens in from the document's
+    // baked one on every load (docs/architecture/live-card-updates.md § First frame).
+    val playerValues =
+      remember(document) {
+        mutableStateMapOf<String, RcNamedValue>().apply {
+          putAll(namedValues.filter { (name, value) -> declared.accepts(name, value) })
         }
-      },
-    )
-  }
-  if (frozenTime != null) {
-    CompositionLocalProvider(LocalRcTimeSource provides frozenTime, content = player)
-  } else {
-    player()
+      }
+    LaunchedEffect(playerValues, namedValues) {
+      snapshotFlow { namedValues.toMap() }
+        .collect { values ->
+          val accepted = values.filter { (name, value) -> declared.accepts(name, value) }
+          playerValues.keys.retainAll(accepted.keys)
+          playerValues.putAll(accepted)
+        }
+    }
+    val frozenTime = remember(clock) { if (clock.isFrozen) clock.asRcTimeSource() else null }
+    val player: @Composable () -> Unit = {
+      RcComposePlayer(
+        document,
+        imageLoader,
+        customComponents = inputs,
+        modifier = modifier.wrapUnpinnedHeight(),
+        namedValues = playerValues,
+        onEvent = { event ->
+          if (event is RcPlayerEvent.HostNamedAction) {
+            onNamedAction(event.name, event.value.toHostPayload())
+          }
+        },
+      )
+    }
+    if (frozenTime != null) {
+      CompositionLocalProvider(LocalRcTimeSource provides frozenTime, content = player)
+    } else {
+      player()
+    }
   }
   error.value?.let { androidx.compose.foundation.text.BasicText(it) }
 }
@@ -173,9 +181,16 @@ private fun Modifier.wrapUnpinnedHeight(): Modifier = layout { measurable, const
   }
 }
 
-/** A document decoded for the Compose player, with the named variables it declares. */
-internal class DecodedForComposePlayer(val document: RcDocument?) {
-  val declared: Map<String, Int> = document?.declaredNamedVariables().orEmpty()
+/**
+ * A document decoded for the Compose player, with the named variables it declares. Compared by
+ * identity: it is what the player keys its state on, so two decodes of one document play apart.
+ */
+internal class DecodedForComposePlayer
+private constructor(val document: RcDocument?, val declared: Map<String, Int>) {
+  constructor(document: RcDocument?) : this(document, document?.declaredNamedVariables().orEmpty())
+
+  /** Another play of the same document: shares the decode, nothing else. */
+  fun clone(): DecodedForComposePlayer = DecodedForComposePlayer(document, declared)
 }
 
 /**
@@ -197,17 +212,36 @@ fun preloadForComposePlayer(documentBytes: ByteArray) {
   decodedForComposePlayer(documentBytes)
 }
 
-/** [decodeForComposePlayer], decoded once per array ([decodedDocuments]). */
+/**
+ * Clones by their own array, each with the array it copies. Weak keys: a clone goes with the last
+ * player holding it, and keeps its source alive no longer than that.
+ */
+private val cloneSources = java.util.WeakHashMap<ByteArray, ByteArray>()
+
+/**
+ * A copy of [source] that plays as a new document (its own player state, its slot pictures fetched
+ * afresh) while sharing [source]'s decode: an array copy and a map entry, rather than a decode on
+ * the main thread. [RcDocument] is immutable, so every clone plays the one decoded document.
+ */
+fun cloneForPlayer(source: ByteArray): ByteArray =
+  source.copyOf().also { clone -> synchronized(cloneSources) { cloneSources[clone] = source } }
+
+/**
+ * [decodeForComposePlayer], decoded once per array ([decodedDocuments]), and once per source for a
+ * [cloneForPlayer] copy.
+ */
 internal fun decodedForComposePlayer(bytes: ByteArray): DecodedForComposePlayer {
   synchronized(decodedDocuments) {
     decodedDocuments[bytes]?.let {
       return it
     }
   }
+  val source = synchronized(cloneSources) { cloneSources[bytes] }
   val decoded =
-    harcTrace(HarcTraceSections.DECODE_DOCUMENT) {
-      DecodedForComposePlayer(decodeForComposePlayer(bytes))
-    }
+    source?.let { decodedForComposePlayer(it).clone() }
+      ?: harcTrace(HarcTraceSections.DECODE_DOCUMENT) {
+        DecodedForComposePlayer(decodeForComposePlayer(bytes))
+      }
   synchronized(decodedDocuments) { decodedDocuments[bytes] = decoded }
   return decoded
 }

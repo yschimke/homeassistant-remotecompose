@@ -258,8 +258,13 @@ object CardDesignTemplates {
    * phone pays for them once rather than on every frame. Folded once per template and display;
    * [template] itself when it can't be folded, which still plays correctly.
    */
-  fun forDisplay(template: ByteArray, density: Float, fontScale: Float): ByteArray {
-    val display = density to fontScale
+  fun forDisplay(template: ByteArray, density: Float, fontScale: Float): ByteArray =
+    // Per template, so a background warm-up and the first frame asking at once fold it once: the
+    // second waits for the first's result instead of folding it again.
+    synchronized(template) { foldOnce(template, density to fontScale) }
+
+  private fun foldOnce(template: ByteArray, display: Pair<Float, Float>): ByteArray {
+    val (density, fontScale) = display
     synchronized(folded) {
       folded[template]
         ?.takeIf { it.first == display }
@@ -343,8 +348,44 @@ object CardDesignTemplates {
 object CardDesignLibrary {
   private val templates = java.util.concurrent.ConcurrentHashMap<DesignKey, ByteArray>()
 
+  /** Keys whose capture failed this process: not retried, since a capture costs a frame loop. */
+  private val failed: MutableSet<DesignKey> = java.util.concurrent.ConcurrentHashMap.newKeySet()
+
   /** Where captured templates persist, or null to keep them for the process only. */
   @Volatile var store: LocalDesignStore? = null
+
+  /**
+   * Told about each template capture that fails ([templateOrNull]), so the host can report it: a
+   * failed capture no longer reaches the app's uncaught-exception handler.
+   */
+  @Volatile var onCaptureFailure: ((DesignKey, Throwable) -> Unit)? = null
+
+  /**
+   * [template], or null when its capture fails, for a card that can still draw through its
+   * converter. A capture can fail at runtime, for instance a composition that never settles
+   * ("captureSingleRemoteDocument did not reach a quiescent Idle state"), and the card is better
+   * drawn without its template than the app crashing over it. A failed key is not retried in this
+   * process.
+   */
+  fun templateOrNull(
+    context: Context,
+    key: DesignKey,
+    registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
+  ): ByteArray? {
+    if (key in failed) return null
+    return try {
+      template(context, key, registry)
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (failed.add(key)) {
+        android.util.Log.w("CardDesignLibrary", "template capture failed for $key", e)
+        val report = IllegalStateException("template capture failed for $key", e)
+        runCatching { onCaptureFailure?.invoke(key, report) }
+      }
+      null
+    }
+  }
 
   fun template(
     context: Context,

@@ -1,9 +1,7 @@
 package ee.schimke.terrazzo.wear.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,9 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
-import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
@@ -60,15 +56,9 @@ fun WearTopLevelScreen(
   modifier: Modifier = Modifier,
   onInputSend: (suspend (String, Map<String, String>) -> Unit)? = null,
 ) {
-  val listState = rememberScalingLazyListState()
   val items = remember(pinned, sections) { mergeOrdered(pinned.cards, sections.sections) }
 
-  ScalingLazyColumn(
-    state = listState,
-    modifier = modifier.fillMaxWidth(),
-    verticalArrangement = Arrangement.spacedBy(6.dp),
-    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-  ) {
+  WearListScreen(modifier = modifier, spacing = 6.dp) {
     item { ListHeader { Text(if (settings.demoMode) "Pinned · Demo" else "Pinned") } }
     if (settings.demoMode) {
       item { DemoBanner() }

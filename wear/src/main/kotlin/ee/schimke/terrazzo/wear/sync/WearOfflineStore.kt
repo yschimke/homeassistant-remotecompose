@@ -218,12 +218,12 @@ private fun sha256Hex(bytes: ByteArray): String =
     "%02x".format(it)
   }
 
-private fun File.readBytesOrNull(): ByteArray? = runCatching {
+internal fun File.readBytesOrNull(): ByteArray? = runCatching {
   if (exists()) readBytes() else null
 }
   .getOrNull()
 
-private fun File.atomicWriteBytes(bytes: ByteArray) {
+internal fun File.atomicWriteBytes(bytes: ByteArray) {
   runCatching {
     parentFile?.mkdirs()
     val tmp = File(parentFile, "$name.tmp")
