@@ -18,6 +18,7 @@ import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.StreamUpdate
+import ee.schimke.terrazzo.wearsync.proto.WearAccess
 import ee.schimke.terrazzo.wearsync.proto.WearDesignBlob
 import ee.schimke.terrazzo.wearsync.proto.WearLease
 import ee.schimke.terrazzo.wearsync.proto.WearPicture
@@ -69,6 +70,9 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
    * launch sees the latest values without waiting for a sync.
    */
   private val offline: WearOfflineStore = WearOfflineStore(context.applicationContext)
+
+  /** Reads the cards' values from Home Assistant itself when the phone has sent none lately. */
+  private val direct = WearDirectAccess(context.applicationContext, offline = offline)
 
   private val _settings: MutableStateFlow<WearSettings> =
     MutableStateFlow(offline.readSettings() ?: WearSettings())
@@ -169,6 +173,10 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
       result?.get("id")?.jsonPrimitive?.content?.let { inputRequests[it]?.complete(event.data) }
       return@OnMessageReceivedListener
     }
+    if (event.path == WearSyncPaths.ACCESS_MESSAGE) {
+      decodeProto<WearAccess>(event.data)?.let { direct.accept(it, _settings.value) }
+      return@OnMessageReceivedListener
+    }
     if (event.path != WearSyncPaths.STREAM_MESSAGE) return@OnMessageReceivedListener
     val frame: StreamUpdate = decodeProto(event.data) ?: return@OnMessageReceivedListener
     val merged = mergeStreamUpdate(offline.readValues(), frame) ?: return@OnMessageReceivedListener
@@ -195,7 +203,27 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
           }
           buffer.release()
         }
+      direct.requestIfMissing(_settings.value)
     }
+  }
+
+  /**
+   * Reads the values of the watch's cards (pinned, in pinned sections and on its dashboards) from
+   * Home Assistant when the phone's are stale: see [WearDirectAccess]. The app calls this while it
+   * is in the foreground.
+   */
+  suspend fun refreshDirect() {
+    val cards =
+      _pinned.value.cards.map { it.card.rawJson } +
+        _sections.value.sections.flatMap { section -> section.cards.map { it.rawJson } } +
+        _dashboards.value.flatMap { board -> board.cards.map { it.rawJson } }
+    runCatching { direct.refresh(cards.filter { it.isNotEmpty() }, _settings.value) }
+      .onFailure {
+        if (it is kotlinx.coroutines.CancellationException) throw it
+        Log.w(TAG, "refreshDirect failed", it)
+      }
+      .getOrNull()
+      ?.let { _values.value = it.values }
   }
 
   fun stop() {
@@ -226,6 +254,8 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
         decodeProto<WearSettings>(bytes)?.let {
           _settings.value = it
           offline.writeSettings(it)
+          // Signed in (or to another instance): the watch may need a token for it.
+          scope.launch { direct.requestIfMissing(it) }
         }
       path == WearSyncPaths.PINNED ->
         decodeProto<PinnedCardSet>(bytes)?.let {
@@ -276,6 +306,8 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
 
   /** The phone deleted the item at [path] (sign-out, a removed dashboard): drop our copy too. */
   private fun forget(path: String) {
+    // Signed out: the watch's own Home Assistant token goes too.
+    if (path == WearSyncPaths.SETTINGS || signsOut(listOf(path))) direct.forget()
     when (val item = offline.forget(path)) {
       ForgottenItem.Settings -> _settings.value = WearSettings()
       ForgottenItem.Pinned -> _pinned.value = PinnedCardSet()
@@ -297,13 +329,22 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
 }
 
 /**
- * Copies the widget slots, pinned cards and entity values from the Data Layer into [store], where
- * newer. The Wear widgets call this when they render: [WearSyncRepository] only listens while the
+ * Copies the settings, widget slots, pinned cards and entity values from the Data Layer into
+ * [store], where newer. The settings say which instance the watch may read itself, if any (a widget
+ * reading Home Assistant directly must see demo mode or another sign-in as soon as the phone writes
+ * it). The Wear widgets call this when they render: [WearSyncRepository] only listens while the
  * watch app runs, and a DataItem persists in the Data Layer whether or not anything was listening
  * when it arrived.
  */
 internal suspend fun syncWidgetStateFromDataLayer(context: Context, store: WearOfflineStore) {
   val client = Wearable.getDataClient(context)
+  val settingsTime = WearSettings::updatedAtMs
+  newerThan(
+      dataItem(client, WearSyncPaths.SETTINGS, settingsTime),
+      store.readSettings(),
+      settingsTime,
+    )
+    ?.let(store::writeSettings)
   val slotsTime = WearWidgetSlots::updatedAtMs
   newerThan(dataItem(client, WearSyncPaths.SLOTS, slotsTime), store.readSlots(), slotsTime)
     ?.let(store::writeSlots)

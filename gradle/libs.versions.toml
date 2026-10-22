@@ -3,7 +3,7 @@
 kotlin = "2.4.21"
 agp = "9.4.1"
 java = "21"
-okhttp = "5.5.0"
+okhttp = "5.5.1"
 play-publisher = "4.1.1"
 
 # Metro (DI) — requires Kotlin 2.2.20+.

@@ -49,9 +49,9 @@ jobs:
           cache-read-only: 'true'
       - name: Build production Wasm
         run: ./gradlew :app-ui:wasmJsBrowserDistribution :ha-client:jvmTest :app-ui:jvmTest :rc-player-ui:jvmTest --stacktrace
-      - uses: actions/setup-python@v7.0.0
+      - uses: actions/setup-python@v7.1.0
         with:
-          python-version: '3.15.0'
+          python-version: '3.15.1'
       - name: Install browser test tools
         run: |
           python -m pip install playwright==1.62.0 pillow==12.3.0

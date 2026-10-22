@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Cleartext policy for the watch, as the phone app's: Home Assistant on a LAN is routinely plain
+  HTTP at an RFC1918 address or an mDNS name, which network-security-config can't express. The
+  watch only ever connects to the addresses the phone signed in to (and Home Assistant's
+  external_url), and tries an https one before any plain http one (WearDirectAccess.candidateUrls).
+
+  User-installed CAs are trusted, as on the phone, for instances behind an internal CA.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

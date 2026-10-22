@@ -550,6 +550,38 @@ class HaClient(
    * fresh [connect] when the app returns to the foreground. Cancelling [receiveJob] also runs its
    * cleanup (failing in-flight commands, clearing subscriptions), same as a peer-side close.
    */
+  /**
+   * A new long-lived access token for the signed-in user, named [clientName] in their profile and
+   * valid for [lifespanDays] (`auth/long_lived_access_token`). Home Assistant refuses a second
+   * token with the same name, so delete it first ([deleteLongLivedAccessTokens]) to replace one.
+   */
+  suspend fun createLongLivedAccessToken(clientName: String, lifespanDays: Int): String {
+    val response =
+      awaitCommand("auth/long_lived_access_token") {
+        put("client_name", clientName)
+        put("lifespan", lifespanDays)
+      }
+    return response["result"]?.jsonPrimitive?.content?.takeIf { it.isNotEmpty() }
+      ?: error("Home Assistant returned no token")
+  }
+
+  /**
+   * Deletes the signed-in user's long-lived access tokens whose name [matches]
+   * (`auth/refresh_tokens` then `auth/delete_refresh_token` for each), and returns how many it
+   * deleted. Their bearers stop working at once.
+   */
+  suspend fun deleteLongLivedAccessTokens(matches: (clientName: String) -> Boolean): Int {
+    val ids =
+      runCommandArray("auth/refresh_tokens").mapNotNull { element ->
+        val token = element as? JsonObject ?: return@mapNotNull null
+        val type = token["type"]?.nullableString()
+        val name = token["client_name"]?.nullableString() ?: return@mapNotNull null
+        token["id"]?.nullableString()?.takeIf { type == LONG_LIVED_TOKEN_TYPE && matches(name) }
+      }
+    for (id in ids) awaitCommand("auth/delete_refresh_token") { put("refresh_token_id", id) }
+    return ids.size
+  }
+
   suspend fun disconnect() {
     val s = sessionMutex.withLock {
       val current = session
@@ -725,22 +757,25 @@ class HaClient(
   }
 
   private fun placeholder(): EntityState = EntityState(entityId = "", state = "")
+}
 
-  /**
-   * HA returns snake_case keys; our `EntityState` uses camelCase fields. We configure Json with
-   * `ignoreUnknownKeys`, so the simplest fix is to rewrite the two keys we care about.
-   */
-  private fun camelizeState(obj: JsonObject): JsonObject = buildJsonObject {
-    for ((k, v) in obj) {
-      when (k) {
-        "entity_id" -> put("entityId", v)
-        "last_changed" -> put("lastChanged", v)
-        "last_updated" -> put("lastUpdated", v)
-        else -> put(k, v)
-      }
+/**
+ * HA returns snake_case keys; our `EntityState` uses camelCase fields. We configure Json with
+ * `ignoreUnknownKeys`, so the simplest fix is to rewrite the two keys we care about.
+ */
+internal fun camelizeState(obj: JsonObject): JsonObject = buildJsonObject {
+  for ((k, v) in obj) {
+    when (k) {
+      "entity_id" -> put("entityId", v)
+      "last_changed" -> put("lastChanged", v)
+      "last_updated" -> put("lastUpdated", v)
+      else -> put(k, v)
     }
   }
 }
+
+/** The `type` Home Assistant gives a long-lived access token's refresh token. */
+private const val LONG_LIVED_TOKEN_TYPE = "long_lived_access_token"
 
 private fun String.intOrNullSafe(): Int? = this.toIntOrNull()
 

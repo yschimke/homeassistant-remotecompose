@@ -201,6 +201,21 @@ message WearLease {
     bool foreground = 2;
 }
 
+// Wear → phone over MessageClient at /wear/access/request: the watch has no Home Assistant token of
+// its own, or Home Assistant refused it.
+message WearAccessRequest {
+    int64 sent_at_ms = 1;
+}
+
+// Phone → wear over MessageClient at /wear/access (never a DataItem): a long-lived access token
+// made for this watch alone, so it can read its cards' values when the phone has none to send.
+message WearAccess {
+    string base_url = 1;
+    string external_url = 2;
+    string token = 3;
+    int64 issued_at_ms = 4;
+}
+
 // Phone-local diagnostics. Stored in a phone-only Proto DataStore at
 // `terrazzo_sync_stats.pb` and surfaced in Settings → Diagnostics so
 // users can sanity-check sync chatter.
