@@ -104,7 +104,7 @@ fun userTemplateProblem(
       .filter { '.' in it && it !in provided }
       .filterNot {
         profile == RcTargetProfiles.WEAR_WIDGETS &&
-          (it.startsWith(WEAR_HOST_COLOURS) || it.startsWith(WEAR_HOST_FRAME))
+          (it.startsWith(WEAR_HOST_COLOURS) || it in WEAR_HOST_FRAME)
       }
       .distinct()
       .sorted()
@@ -118,11 +118,16 @@ fun userTemplateProblem(
 private const val WEAR_HOST_COLOURS = "WearM3."
 
 /**
- * The container frame a Wear widget exported with `hostFrame: device` leaves to the watch
- * (`wear.container.horizontal_padding`, `…vertical_padding`, `…corner_radius`): the watch's
- * `WearWidgetTemplate` writes its own host's values into them.
+ * The container frame a Wear widget exported with `hostFrame: device` leaves to the watch: exactly
+ * the values the watch's `WearWidgetTemplate` writes its own host's into, and nothing else under
+ * their prefix.
  */
-private const val WEAR_HOST_FRAME = "wear.container."
+private val WEAR_HOST_FRAME =
+  setOf(
+    "wear.container.horizontal_padding",
+    "wear.container.vertical_padding",
+    "wear.container.corner_radius",
+  )
 
 private val VARIANT = Regex("[a-z0-9][a-z0-9-]{0,39}")
 

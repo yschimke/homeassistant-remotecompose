@@ -152,17 +152,22 @@ class UserDesignsTest {
             when (document["id"]!!.jsonPrimitive.content) {
               "wear-wear-small" -> call.respondBytes(wearSmall, ContentType.Application.OctetStream)
               // `framed`: its Wear widgets leave the container frame to the watch; `foreign`'s
-              // read a value nothing supplies.
+              // read values nothing supplies.
               "framed-wear-small",
               "framed-wear-large" ->
                 call.respondBytes(
                   wearSmallNaming("wear.container.horizontal_padding"),
                   ContentType.Application.OctetStream,
                 )
-              "foreign-wear-small",
-              "foreign-wear-large" ->
+              "foreign-wear-small" ->
                 call.respondBytes(
                   wearSmallNaming("somewhere.else"),
+                  ContentType.Application.OctetStream,
+                )
+              // A name under the frame's prefix the watch doesn't fill.
+              "foreign-wear-large" ->
+                call.respondBytes(
+                  wearSmallNaming("wear.container.opacity"),
                   ContentType.Application.OctetStream,
                 )
               // A mobile document: not a Wear widget.
