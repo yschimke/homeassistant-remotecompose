@@ -9,6 +9,8 @@ import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.state.RemoteFloat
@@ -105,6 +107,7 @@ fun RemoteHaGrid(
   perRow: Int,
   modifier: RemoteModifier = RemoteModifier,
   stretchLastRow: Boolean = true,
+  fillHeight: Boolean = false,
   cell: @Composable @RemoteComposable (index: Int) -> Unit,
 ) {
   val columns = perRow.coerceAtLeast(1)
@@ -115,12 +118,12 @@ fun RemoteHaGrid(
     }
   fun cellWidthPx(slots: Int) =
     (gridWidthPx - HaGridLayout.GAP_DP.rdp.toPx() * (slots - 1).toFloat()) / slots.toFloat()
-  RemoteBox(modifier = modifier.fillMaxWidth()) {
+  RemoteBox(modifier = if (fillHeight) modifier.fillMaxSize() else modifier.fillMaxWidth()) {
     // Writes the width expression while this box is the component being written, so it reads the
     // grid's width (the same forcing text `RemoteSizeBreakpoint` uses; it draws nothing).
     RemoteText(text = gridWidthPx.toRemoteString(WidthFormat), color = Color.Transparent.rc)
     RemoteColumn(
-      modifier = RemoteModifier.fillMaxWidth(),
+      modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
       verticalArrangement = RemoteArrangement.spacedBy(HaGridLayout.GAP_DP.rdp),
     ) {
       (0 until cellCount).chunked(columns).forEach { row ->
@@ -132,11 +135,21 @@ fun RemoteHaGrid(
         // columns, so an odd tile out doesn't sit beside a hole.
         val slots = if (stretchLastRow) row.size else columns
         val widthPx = cellWidthPx(slots)
-        RemoteRow(modifier = RemoteModifier.fillMaxWidth()) {
+        // Filling a fixed height, the rows share it: each cell is a row's height, so its card's
+        // own size gate sees the room it really has.
+        RemoteRow(
+          modifier =
+            if (fillHeight) RemoteModifier.fillMaxWidth().weight(1f)
+            else RemoteModifier.fillMaxWidth()
+        ) {
           for (slot in 0 until slots) {
             if (slot > 0) RemoteBox(modifier = RemoteModifier.width(HaGridLayout.GAP_DP.rdp))
             val index = row.getOrNull(slot)
-            RemoteBox(modifier = RemoteModifier.weight(1f)) {
+            RemoteBox(
+              modifier =
+                if (fillHeight) RemoteModifier.weight(1f).fillMaxHeight()
+                else RemoteModifier.weight(1f)
+            ) {
               if (index != null) {
                 CompositionLocalProvider(LocalGridCellWidthPx provides widthPx) { cell(index) }
               }
