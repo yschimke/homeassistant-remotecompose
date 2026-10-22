@@ -432,7 +432,10 @@ try:
                 # the first actual draw at the new size, not a blank compositor frame. We
                 # still compare that first rendered frame with the later one below.
                 page.evaluate('''(() => {
-                    const canvas = document.querySelector('canvas');
+                    // ComposeViewport mounts its canvas in the #app container's shadow root.
+                    const canvas = document.querySelector('#app')?.shadowRoot?.querySelector('canvas')
+                        ?? document.querySelector('canvas');
+                    if (!canvas) throw new Error('Expected the Compose canvas');
                     const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
                     if (!gl) throw new Error('Expected the Compose WebGL canvas');
                     window.resizedCanvasDrawn = false;
