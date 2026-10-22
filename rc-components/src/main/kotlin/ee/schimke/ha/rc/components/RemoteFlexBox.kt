@@ -108,9 +108,11 @@ import androidx.compose.ui.unit.dp
  * - `wrap(Wrap)` (rows): `RemoteFlowRow`, the experimental `FlowLayout` op, so the capture profile
  *   must admit it. Line breaking, `justifyContent`, `columnGap` and line alignment are exact.
  *   `rowGap` is dropped (`FlowLayout` has no line spacing); lines past the box's available height
- *   are hidden rather than overflowing; growing items do not reliably fill their line; and one
- *   vertical positioning serves both `alignItems` and `alignContent`, so `alignContent(Start /
- *   Center / End)` applies only while `alignItems` is `Start`.
+ *   are hidden rather than overflowing; growing items keep their basis rather than share out the
+ *   line, and one whose content fills its width takes a whole line (`RemoteSectionCardFlow` sizes
+ *   its items itself for that reason); and one vertical positioning serves both `alignItems` and
+ *   `alignContent`, so `alignContent(Start / Center / End)` applies only while `alignItems` is
+ *   `Start`.
  *
  * What cannot, and throws [UnsupportedOperationException] at capture rather than rendering
  * something else: `order` other than 0, `FlexDirection.ColumnReverse`, `FlexWrap.WrapReverse`,
