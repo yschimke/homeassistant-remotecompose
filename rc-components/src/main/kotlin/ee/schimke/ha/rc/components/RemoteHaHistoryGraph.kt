@@ -119,6 +119,75 @@ fun RemoteHaHistoryGraph(
 }
 
 /**
+ * The hero tier of a sensor card with a line to draw, for a launcher widget with room to spare: the
+ * name, the value at [HaHeroScale.state], the range, and the sparkline at [plotHeightDp] — the
+ * converter's share of the widget's height — so a taller widget gets a taller line, not more blank
+ * card under a small one.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaSensorHero(
+  data: HaSensorCardData,
+  scale: HaHeroScale,
+  plotHeightDp: Int,
+  modifier: RemoteModifier = RemoteModifier,
+) {
+  val theme = haTheme()
+  RemoteBox(
+    modifier =
+      modifier
+        .fillMaxSize()
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        .padding(horizontal = 14.rdp, vertical = 10.rdp),
+    contentAlignment = RemoteAlignment.Center,
+  ) {
+    RemoteColumn(
+      modifier = RemoteModifier.fillMaxWidth(),
+      verticalArrangement = RemoteArrangement.spacedBy(HaSpace.S.rdp),
+    ) {
+      RemoteText(
+        text = entityName(data.entityId, data.name),
+        color = theme.secondaryText,
+        fontSize = HaType.Body,
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+      RemoteText(
+        text = LiveValues.state(data.entityId, data.valueLabel),
+        color = theme.primaryText,
+        fontSize = scale.state,
+        fontWeight = haValueWeight(),
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+      if (data.rangeLabel != null) {
+        RemoteText(
+          text = cardText("range", data.rangeLabel),
+          color = theme.secondaryText,
+          fontSize = HaType.Caption,
+          style = haTextStyle(),
+          maxLines = 1,
+        )
+      }
+      if (data.points.size >= 2) {
+        Sparkline(
+          data.entityId,
+          data.points,
+          data.accent,
+          theme,
+          plotHeightDp.coerceAtLeast(SPARKLINE_HEIGHT_DP),
+        )
+      }
+    }
+  }
+}
+
+/** What [RemoteHaSensorHero] spends on everything but its line, for a converter sizing the line. */
+const val SensorHeroChromeDp = 116
+
+/**
  * Identity tier for the `history-graph` family — the smallest cell that still says "this is a
  * trend": the first series with a line, its sparkline + summary, name above. With no line at all it
  * shows the card's empty state message instead. Drops the per-row list and the range chrome (P4/P5)

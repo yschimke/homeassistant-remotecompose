@@ -187,16 +187,20 @@ private fun SideBySide(reading: HaReading, presentation: HaPresentation, modifie
   }
 }
 
-/** Chip: the visual taking the cell's height above the value — identity and value, no name. */
+/**
+ * Chip: the visual taking the cell's height above the value — identity and value, no name. The
+ * value is set at label size, as the icon chip's: a chip is for a cell one launcher column wide,
+ * and a value the cell cuts short (`21.…`) is no value at all.
+ */
 @Composable
 private fun Chip(reading: HaReading, modifier: RemoteModifier) {
   RemoteColumn(
-    modifier = modifier.fillMaxSize().padding(HaSpace.S.rdp),
+    modifier = modifier.fillMaxSize().padding(HaSpace.XS.rdp),
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
     verticalArrangement = RemoteArrangement.spacedBy(HaSpace.XS.rdp),
   ) {
     RemoteHaMeasurementGlyph(reading, RemoteModifier.fillMaxWidth().weight(1f))
-    ValueReadout(reading, HaType.ValueSmall)
+    ValueReadout(reading, HaType.Label)
   }
 }
 

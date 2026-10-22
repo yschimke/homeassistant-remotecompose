@@ -2,6 +2,8 @@ package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
+import androidx.compose.remote.creation.compose.modifier.padding
+import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
@@ -17,12 +19,18 @@ import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaEntityRowData
+import ee.schimke.ha.rc.components.HaHeroScale
+import ee.schimke.ha.rc.components.HaPresentation
+import ee.schimke.ha.rc.components.HaSpace
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaEntityRow
 import ee.schimke.ha.rc.components.RemoteHaIconChip
+import ee.schimke.ha.rc.components.RemoteHaIconHero
+import ee.schimke.ha.rc.components.RemoteHaMeasurement
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
+import ee.schimke.ha.rc.haReading
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.icons.withIcons
 import ee.schimke.ha.rc.parseHaAction
@@ -60,7 +68,12 @@ class EntityCardConverter : CardConverter {
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     when (LocalCardSizeMode.current) {
       CardSizeMode.Wrap -> FullRow(card, snapshot, modifier)
-      CardSizeMode.Fixed ->
+      CardSizeMode.Fixed -> {
+        val hero = captureHeroScale()
+        if (hero != null) {
+          Hero(card, snapshot, hero, modifier)
+          return
+        }
         RemoteSizeBreakpoint(thresholdsDp = intArrayOf(96), modifier = modifier.fillMaxSize()) {
           tier ->
           when (tier) {
@@ -76,9 +89,47 @@ class EntityCardConverter : CardConverter {
             // `fillMaxWidth` wrap-height row collapses to zero
             // height under a filled-height parent in alpha010,
             // so `fillMaxSize`, not `CenteredCell`.
-            else -> FullRow(card, snapshot, RemoteModifier.fillMaxSize())
+            // The cell is the card: inset the row as a card's padding would, or its value meets
+            // the widget's edge.
+            else ->
+              FullRow(
+                card,
+                snapshot,
+                RemoteModifier.fillMaxSize().padding(horizontal = HaSpace.L.rdp),
+              )
           }
         }
+      }
+    }
+  }
+
+  /**
+   * A roomy launcher widget: a numeric reading takes its measurement's expanded presentation (the
+   * thermometer or battery grows with the widget, the value is promoted and the range shown), any
+   * other entity the icon hero.
+   */
+  @Composable
+  private fun Hero(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    scale: HaHeroScale,
+    modifier: RemoteModifier,
+  ) {
+    val entityId = card.raw["entity"]?.jsonPrimitive?.content
+    val entity = entityId?.let { snapshot.states[it] }
+    // The card's tap action (configured, or the entity's default), as the row's.
+    val data = iconChipData(card, snapshot)
+    if (entity?.state?.toFloatOrNull() != null) {
+      val reading =
+        haReading(entityId, entity, nameFor(card, entity, entityId), snapshot = snapshot)
+      RemoteHaMeasurement(
+        reading,
+        HaPresentation.Expanded,
+        modifier.fillMaxSize(),
+        tapAction = data.tapAction,
+      )
+    } else {
+      RemoteHaIconHero(data, scale, modifier.fillMaxSize())
     }
   }
 

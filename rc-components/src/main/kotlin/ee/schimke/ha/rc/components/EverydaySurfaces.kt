@@ -89,6 +89,7 @@ internal fun EverydayHeading(
   when (family) {
     HaVisualFamily.Classic,
     HaVisualFamily.HomeAssistant ->
+      // One line, as HA's heading: a narrow card ellipsizes rather than breaking the word.
       RemoteText(
         text = text,
         modifier = modifier.padding(vertical = 8.rdp),
@@ -96,6 +97,8 @@ internal fun EverydayHeading(
         fontSize = size,
         fontWeight = weight,
         style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
       )
     // A vertical tonal capsule leading a heavy headline: M3 Expressive's section marker.
     HaVisualFamily.Expressive ->

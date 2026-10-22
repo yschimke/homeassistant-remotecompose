@@ -11,6 +11,7 @@ import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.components.HaGlanceCellData
 import ee.schimke.ha.rc.components.HaGlanceData
 import ee.schimke.ha.rc.components.LiveValues
@@ -81,15 +82,56 @@ class GlanceCardConverter : CardConverter {
     // half-cell. In Wrap mode (dashboard) the card flows to its
     // content height, matching the HA reference.
     val fillHeight = LocalCardSizeMode.current == CardSizeMode.Fixed
+    // A launcher widget knows its size: as many cells to a row as are wide enough for a name, and
+    // as many rows as its height holds, the rest left to a bigger widget.
+    val size = LocalWidgetCaptureSizeDp.current
+    // Density before identity: a title that leaves no room for a row of cells goes first.
+    val shownTitle = title?.takeIf { size == null || fitsTitle(size.heightDp) }
+    val grid = size?.let { gridFor(it.widthDp, it.heightDp, shownTitle) }
     RemoteHaGlance(
-      HaGlanceData(title = title, cells = cells),
+      HaGlanceData(
+        title = shownTitle,
+        cells = grid?.let { cells.take(it.first * it.second) } ?: cells,
+      ),
       modifier = modifier,
       fillHeight = fillHeight,
+      cellsPerRow = grid?.first ?: GLANCE_MAX_CELLS_PER_ROW,
     )
   }
 
   private companion object {
     val TEMPLATE_CONFIG_KEYS = setOf("type", "title", "entities")
+
+    /** The most cells a glance row holds, as on the dashboard. */
+    const val GLANCE_MAX_CELLS_PER_ROW = 3
+
+    /** The narrowest a cell can be and still show a short name: `Kitchen` at label size. */
+    const val GLANCE_MIN_CELL_WIDTH_DP = 60
+
+    /** A cell's height: name, icon, state and their spacing. */
+    const val GLANCE_CELL_HEIGHT_DP = 76
+
+    /** The card's padding either side, and a title's line under it. */
+    const val GLANCE_PADDING_DP = 24
+    const val GLANCE_TITLE_DP = 28
+
+    /** Whether a [heightDp] widget holds a title over one row of cells. */
+    fun fitsTitle(heightDp: Int): Boolean =
+      heightDp >= GLANCE_PADDING_DP + GLANCE_TITLE_DP + GLANCE_CELL_HEIGHT_DP
+
+    /**
+     * Cells per row, and rows, that a [widthDp] × [heightDp] widget holds: at least one of each.
+     */
+    fun gridFor(widthDp: Int, heightDp: Int, title: String?): Pair<Int, Int> {
+      val perRow =
+        ((widthDp - GLANCE_PADDING_DP) / GLANCE_MIN_CELL_WIDTH_DP).coerceIn(
+          1,
+          GLANCE_MAX_CELLS_PER_ROW,
+        )
+      val titleDp = if (title != null) GLANCE_TITLE_DP else 0
+      val rows = ((heightDp - GLANCE_PADDING_DP - titleDp) / GLANCE_CELL_HEIGHT_DP).coerceAtLeast(1)
+      return perRow to rows
+    }
   }
 
   private fun normalize(el: JsonElement): Pair<String?, JsonObject?> =

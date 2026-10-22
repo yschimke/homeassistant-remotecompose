@@ -38,6 +38,9 @@ private const val CompactRowMaxCells = 3
  * row centres, extra rows space out to fill — instead of gluing one row to the top over a blank
  * half-cell (Principle 8, "no dead space"). The title is retained in this tier (cheap P2) rather
  * than dropped.
+ *
+ * [cellsPerRow] is how many cells share a row where FlowLayout can't wrap them: a narrow widget
+ * gives each cell the width its name needs rather than crushing three into it.
  */
 @Composable
 @RemoteComposable
@@ -45,6 +48,7 @@ fun RemoteHaGlance(
   data: HaGlanceData,
   modifier: RemoteModifier = RemoteModifier,
   fillHeight: Boolean = false,
+  cellsPerRow: Int = CompactRowMaxCells,
 ) {
   val theme = haTheme()
   val supportsFlow = LocalSupportsFlowLayout.current
@@ -85,10 +89,10 @@ fun RemoteHaGlance(
           modifier = RemoteModifier.fillMaxWidth().weight(1f),
           verticalArrangement = RemoteArrangement.Center,
         ) {
-          CellGrid(supportsFlow, cells)
+          CellGrid(supportsFlow, cells, cellsPerRow)
         }
       } else {
-        CellGrid(supportsFlow, cells)
+        CellGrid(supportsFlow, cells, cellsPerRow)
       }
     }
   }
@@ -103,7 +107,7 @@ fun RemoteHaGlance(
  */
 @Composable
 @RemoteComposable
-private fun CellGrid(supportsFlow: Boolean, cells: List<HaGlanceCellData>) {
+private fun CellGrid(supportsFlow: Boolean, cells: List<HaGlanceCellData>, cellsPerRow: Int) {
   if (supportsFlow) {
     RemoteFlowRow(
       modifier = RemoteModifier.fillMaxWidth(),
@@ -117,7 +121,7 @@ private fun CellGrid(supportsFlow: Boolean, cells: List<HaGlanceCellData>) {
       modifier = RemoteModifier.fillMaxWidth(),
       verticalArrangement = RemoteArrangement.spacedBy(6.rdp),
     ) {
-      cells.chunked(CompactRowMaxCells).forEach { row ->
+      cells.chunked(cellsPerRow.coerceAtLeast(1)).forEach { row ->
         RemoteRow(
           modifier = RemoteModifier.fillMaxWidth(),
           horizontalArrangement = RemoteArrangement.SpaceEvenly,
@@ -146,11 +150,14 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
     modifier = modifier.then(clickable).padding(vertical = 4.rdp),
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
+    // One line each: a cell narrower than its name ellipsizes rather than stacking letters.
     RemoteText(
       text = entityName(data.entityId, data.name),
       color = look.dim(theme.primaryText),
       fontSize = HaType.Label,
       style = haTextStyle(),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
     )
     RemoteBox(
       modifier =
@@ -172,6 +179,8 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
       color = look.dim(theme.secondaryText),
       fontSize = HaType.Caption,
       style = haTextStyle(),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
     )
   }
 }
