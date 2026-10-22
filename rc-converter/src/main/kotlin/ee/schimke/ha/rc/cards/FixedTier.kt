@@ -8,6 +8,8 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
+import ee.schimke.ha.rc.components.HaHeroScale
 
 /**
  * Self-centre a **box/column-rooted** Fixed-mode `Full` tier (the tile, statistic and sensor cards)
@@ -38,3 +40,13 @@ internal fun CenteredCell(content: @Composable () -> Unit) {
     RemoteBox(modifier = RemoteModifier.fillMaxWidth().weight(1f))
   }
 }
+
+/**
+ * The hero scale for the launcher widget being captured: null off a launcher capture (whose tiers
+ * are picked at playback, where one gate is all a document can carry, #224) or for a widget too
+ * small for one. A launcher widget is re-captured on every resize, so a card can grow its content
+ * with the widget here without a gate.
+ */
+@Composable
+internal fun captureHeroScale(): HaHeroScale? =
+  LocalWidgetCaptureSizeDp.current?.let { HaHeroScale.forCell(it.widthDp, it.heightDp) }

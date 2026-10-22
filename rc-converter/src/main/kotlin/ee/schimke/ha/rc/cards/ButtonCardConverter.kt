@@ -4,6 +4,7 @@ package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
@@ -18,9 +19,11 @@ import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalGridSquareCells
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.components.HaButtonData
+import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaButton
 import ee.schimke.ha.rc.components.RemoteHaButtonIcon
+import ee.schimke.ha.rc.components.RemoteHaIconHero
 import ee.schimke.ha.rc.components.RemoteHaToggleButton
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
@@ -99,6 +102,24 @@ class ButtonCardConverter : CardConverter {
     // `show_icon: false` leaves no icon for the icon-only tier: the full button fills every cell.
     if (!data.showIcon) {
       RenderButton(data, modifier.fillMaxSize(), compact = true)
+      return
+    }
+    val hero = captureHeroScale()
+    if (hero != null && data.showName) {
+      // A roomy launcher widget: the button's icon, name and (when shown) state, grown with it.
+      RemoteHaIconHero(
+        HaTileData(
+          entityId = data.entityId,
+          name = data.name,
+          state = data.state ?: "".rs,
+          icon = data.icon,
+          accent = data.accent,
+          tapAction = data.tapAction,
+        ),
+        hero,
+        modifier.fillMaxSize(),
+        showState = data.state != null,
+      )
       return
     }
     RemoteMinSizeGate(

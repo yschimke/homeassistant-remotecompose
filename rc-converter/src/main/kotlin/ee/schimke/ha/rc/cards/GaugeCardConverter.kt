@@ -18,6 +18,7 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaGaugeBands
 import ee.schimke.ha.rc.components.HaGaugeData
@@ -115,6 +116,9 @@ class GaugeCardConverter : CardConverter {
   @Composable
   private fun AdaptiveGauge(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val data = gaugeData(card, snapshot)
+    // A launcher widget one column wide is too narrow for the value at its own size beside the
+    // name and range: known at capture, so decided there.
+    val narrow = (LocalWidgetCaptureSizeDp.current?.widthDp ?: Int.MAX_VALUE) < NarrowWidthDp
     // Single height gate — short cells (Wear S) get the side-by-side
     // Wide row, everything else gets the Stacked Box overlay. Routed
     // through the shared [RemoteSizeBreakpoint] so the gauge inherits
@@ -134,13 +138,22 @@ class GaugeCardConverter : CardConverter {
     ) { tier ->
       when (tier) {
         0 -> RemoteHaGaugeWide(data, RemoteModifier.fillMaxSize())
-        else -> RemoteHaGaugeStacked(data, RemoteModifier.fillMaxSize())
+        else ->
+          RemoteHaGaugeStacked(
+            data,
+            RemoteModifier.fillMaxSize(),
+            narrow = narrow,
+            hero = captureHeroScale(),
+          )
       }
     }
   }
 
   private companion object {
     const val MinStackedHeightDp = 70
+
+    /** Narrower than a two-column launcher widget: one column, `57 dp` on Android's grid. */
+    const val NarrowWidthDp = 100
 
     val TEMPLATE_CONFIG_KEYS = setOf("type", "entity", "name", "unit", "min", "max", "severity")
     val SEVERITY_KEYS = setOf("green", "yellow", "red")

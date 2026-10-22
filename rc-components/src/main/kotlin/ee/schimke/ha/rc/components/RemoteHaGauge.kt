@@ -181,7 +181,12 @@ private const val GaugeAnimationSeconds = 0.45f
  */
 @Composable
 @RemoteComposable
-fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaGaugeStacked(
+  data: HaGaugeData,
+  modifier: RemoteModifier = RemoteModifier,
+  narrow: Boolean = false,
+  hero: HaHeroScale? = null,
+) {
   val theme = haTheme()
   val fraction = animatedGaugeFraction(data)
   val severityColor = gaugeSeverityColor(data)
@@ -190,7 +195,10 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
 
   RemoteBox(
     modifier =
-      modifier.then(clickable).then(cardChrome(theme.cardBackground, theme.divider)).padding(8.rdp),
+      modifier
+        .then(clickable)
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        .padding((if (narrow) HaSpace.XS else HaSpace.M).rdp),
     contentAlignment = RemoteAlignment.BottomCenter,
   ) {
     // Arc fills the box, but the diameter is capped so the
@@ -213,16 +221,23 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
       RemoteText(
         text = data.valueText,
         color = theme.primaryText,
-        fontSize = HaType.ValueSmall,
+        fontSize =
+          when {
+            narrow -> HaType.Label
+            hero != null -> hero.state
+            else -> HaType.ValueSmall
+          },
         fontWeight = haValueWeight(),
         style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
+      // A narrow cell keeps the value whole and lets the name and range go (P2, P4 before P3).
+      if (narrow) return@RemoteColumn
       RemoteText(
         text = entityName(data.entityId, data.name),
         color = theme.secondaryText,
-        fontSize = HaType.Label,
+        fontSize = if (hero != null) HaType.Body else HaType.Label,
         style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,

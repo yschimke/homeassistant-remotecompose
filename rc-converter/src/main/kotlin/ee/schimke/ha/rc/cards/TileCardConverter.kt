@@ -35,6 +35,7 @@ import ee.schimke.ha.rc.components.HaTileBadge
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaIconChip
+import ee.schimke.ha.rc.components.RemoteHaIconHero
 import ee.schimke.ha.rc.components.RemoteHaTile
 import ee.schimke.ha.rc.components.RemoteHaTileCompact
 import ee.schimke.ha.rc.components.TileTwoLineMinHeightDp
@@ -189,8 +190,11 @@ class TileCardConverter : CardConverter {
                   }
               }
             }
-          BreakpointAxis.Width ->
-            if (features(card, snapshot).isNotEmpty())
+          BreakpointAxis.Width -> {
+            val hero = captureHeroScale()
+            if (hero != null && features(card, snapshot).isEmpty())
+              RemoteHaIconHero(tileData(card, snapshot), hero, modifier.fillMaxSize())
+            else if (features(card, snapshot).isNotEmpty())
               FeaturesGate(tileData(card, snapshot), modifier)
             else
               RemoteSizeBreakpoint(
@@ -207,6 +211,7 @@ class TileCardConverter : CardConverter {
                   else -> CenteredCell { FullTile(card, snapshot, RemoteModifier.fillMaxWidth()) }
                 }
               }
+          }
         }
     }
   }

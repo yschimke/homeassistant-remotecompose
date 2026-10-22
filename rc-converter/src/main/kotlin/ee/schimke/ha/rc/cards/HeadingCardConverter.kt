@@ -1,6 +1,10 @@
 package ee.schimke.ha.rc.cards
 
+import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.padding
+import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
@@ -8,9 +12,13 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.components.HaHeadingData
 import ee.schimke.ha.rc.components.HaHeadingStyle
+import ee.schimke.ha.rc.components.HaSpace
 import ee.schimke.ha.rc.components.RemoteHaHeading
 import ee.schimke.ha.rc.components.placeholderTitle
 import kotlinx.serialization.json.buildJsonObject
@@ -52,7 +60,22 @@ class HeadingCardConverter : CardConverter {
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val heading =
       card.raw["heading"]?.jsonPrimitive?.content ?: card.raw["title"]?.jsonPrimitive?.content ?: ""
-    RemoteHaHeading(HaHeadingData(title = heading, style = styleOf(card)), modifier = modifier)
+    val data = HaHeadingData(title = heading, style = styleOf(card))
+    // A widget or Wear slot pins a frame taller than the heading: centre it rather than glue it to
+    // the top (Principle 8).
+    if (LocalCardSizeMode.current == CardSizeMode.Fixed) {
+      // A one-column launcher widget steps the heading down to a subtitle before cutting it short.
+      val narrow = (LocalWidgetCaptureSizeDp.current?.widthDp ?: Int.MAX_VALUE) < NarrowWidthDp
+      CenteredCell {
+        RemoteBox(
+          modifier.fillMaxWidth().padding(horizontal = (if (narrow) HaSpace.XS else HaSpace.L).rdp)
+        ) {
+          RemoteHaHeading(if (narrow) data.copy(style = HaHeadingStyle.Subtitle) else data)
+        }
+      }
+    } else {
+      RemoteHaHeading(data, modifier = modifier)
+    }
   }
 
   private fun styleOf(card: CardConfig): HaHeadingStyle =
@@ -67,3 +90,6 @@ class HeadingCardConverter : CardConverter {
     const val HEADING_STYLE = "heading_style"
   }
 }
+
+/** Narrower than a two-column launcher widget. */
+private const val NarrowWidthDp = 100

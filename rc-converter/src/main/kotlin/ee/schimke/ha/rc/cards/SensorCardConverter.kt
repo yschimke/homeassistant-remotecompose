@@ -6,7 +6,9 @@ import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.state.rc
+import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
@@ -18,12 +20,15 @@ import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
+import ee.schimke.ha.rc.components.HaHeroScale
 import ee.schimke.ha.rc.components.HaMeasureVisual
 import ee.schimke.ha.rc.components.HaPresentation
 import ee.schimke.ha.rc.components.HaSensorCardData
+import ee.schimke.ha.rc.components.HaSpace
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.LiveValues
@@ -31,6 +36,8 @@ import ee.schimke.ha.rc.components.LocalCompactEntityLayout
 import ee.schimke.ha.rc.components.RemoteHaIconChip
 import ee.schimke.ha.rc.components.RemoteHaMeasurement
 import ee.schimke.ha.rc.components.RemoteHaSensorCard
+import ee.schimke.ha.rc.components.RemoteHaSensorHero
+import ee.schimke.ha.rc.components.SensorHeroChromeDp
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.haReading
 import ee.schimke.ha.rc.icons.HaIconMap
@@ -109,6 +116,51 @@ class SensorCardConverter : CardConverter {
               RemoteHaMeasurement(reading, HaPresentation.Compact, RemoteModifier.fillMaxWidth())
             }
           }
+        } else if (captureHeroScale() != null && hasHistory(card, snapshot)) {
+          // A roomy launcher widget with a line: the value promoted, the line given the height.
+          val size = LocalWidgetCaptureSizeDp.current!!
+          RemoteHaSensorHero(
+            sensorData(card, snapshot),
+            captureHeroScale()!!,
+            plotHeightDp = size.heightDp - SensorHeroChromeDp,
+            modifier = modifier.fillMaxSize(),
+          )
+        } else if (captureHeroScale() != null) {
+          // A roomy launcher widget with no line to draw: the reading grows with the widget.
+          val id = card.raw["entity"]?.jsonPrimitive?.content
+          val reading =
+            haReading(
+              id,
+              id?.let { snapshot.states[it] },
+              nameFor(card, snapshot),
+              snapshot = snapshot,
+            )
+          RemoteHaMeasurement(reading, HaPresentation.Expanded, modifier.fillMaxSize())
+        } else if (
+          (LocalWidgetCaptureSizeDp.current?.widthDp ?: 0) >= HaHeroScale.MinWidthDp &&
+            !hasHistory(card, snapshot)
+        ) {
+          // A wide, short launcher widget with no line to draw: the reading beside its name, not
+          // an empty history panel.
+          val id = card.raw["entity"]?.jsonPrimitive?.content
+          val reading =
+            haReading(
+              id,
+              id?.let { snapshot.states[it] },
+              nameFor(card, snapshot),
+              snapshot = snapshot,
+            )
+          RemoteBox(modifier.fillMaxSize()) {
+            CenteredCell {
+              RemoteHaMeasurement(
+                reading,
+                // Standard's card-sized value needs a three-column widget's width.
+                if ((LocalWidgetCaptureSizeDp.current?.widthDp ?: 0) >= 200) HaPresentation.Standard
+                else HaPresentation.Compact,
+                RemoteModifier.fillMaxWidth().padding(horizontal = HaSpace.L.rdp),
+              )
+            }
+          }
         } else
           RemoteSizeBreakpoint(thresholdsDp = intArrayOf(120), modifier = modifier.fillMaxSize()) {
             tier ->
@@ -148,21 +200,20 @@ class SensorCardConverter : CardConverter {
 
   @Composable
   private fun FullSensor(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+    RemoteHaSensorCard(sensorData(card, snapshot), modifier = modifier)
+  }
+
+  private fun sensorData(card: CardConfig, snapshot: HaSnapshot): HaSensorCardData {
     val entityId = card.raw["entity"]?.jsonPrimitive?.content
     val entity = entityId?.let { snapshot.states[it] }
     val history = entityId?.let { snapshot.history[it].orEmpty() } ?: emptyList()
-    val numeric = history.mapNotNull { it.state.toFloatOrNull() }
-
-    RemoteHaSensorCard(
-      HaSensorCardData(
-        entityId = entityId,
-        name = nameFor(card, snapshot),
-        valueLabel = formatState(entity, snapshot),
-        accent = HaStateColor.activeFor(entity),
-        points = numeric,
-        rangeLabel = historyRangeLabel(card),
-      ),
-      modifier = modifier,
+    return HaSensorCardData(
+      entityId = entityId,
+      name = nameFor(card, snapshot),
+      valueLabel = formatState(entity, snapshot),
+      accent = HaStateColor.activeFor(entity),
+      points = history.mapNotNull { it.state.toFloatOrNull() },
+      rangeLabel = historyRangeLabel(card),
     )
   }
 
@@ -182,6 +233,11 @@ class SensorCardConverter : CardConverter {
       icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
       accent = HaToggleAccent(activeAccent = accent, inactiveAccent = accent, toggleable = false),
     )
+  }
+
+  private fun hasHistory(card: CardConfig, snapshot: HaSnapshot): Boolean {
+    val id = card.raw["entity"]?.jsonPrimitive?.content ?: return false
+    return snapshot.history[id].orEmpty().count { it.state.toFloatOrNull() != null } >= 2
   }
 
   private fun nameFor(card: CardConfig, snapshot: HaSnapshot): String {

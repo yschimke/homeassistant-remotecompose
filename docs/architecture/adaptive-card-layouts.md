@@ -543,6 +543,42 @@ constants scattered across helper files.
 - Conservative — pick the dimension at which the variant still looks
   composed, not the one at which it stops crashing.
 
+### Launcher widgets: decide at capture, in both directions
+
+A launcher widget is re-captured on every resize at its exact size
+(`LocalWidgetCaptureSizeDp`), so a card there is not limited to one
+playback gate (#224): it can read the size and pick its layout at
+capture. Use that to scale **down** without cutting the value short and
+to scale **up** without floating small content in a big cell. The rules,
+as the cards apply them today:
+
+- **The value is never ellipsized.** Shrink type before cutting it
+  (`21.…` is no value at all). One launcher column (`57 dp`) sets the
+  value at label size and drops the name and range first: the
+  measurement `Chip`, the gauge's `narrow` stacked tier, the heading
+  stepping down to a subtitle.
+- **Density before identity in a short cell.** A glance drops its
+  title when the title would leave no room for a row of cells; cells per
+  row come from the width (`60 dp` a cell), rows from the height, the
+  rest left for a bigger widget.
+- **Short is not small.** A wide one-row widget is a row: the reading
+  beside its name (`Compact` / `Standard`), not an empty panel.
+- **A roomy cell gets a hero** (`HaHeroScale.forCell`, from two
+  columns × two rows, `120 × 150 dp`): the same identity, name and value,
+  set larger and centred — the icon hero for a tile, entity or button,
+  the `Expanded` measurement for a sensor reading, the value promoted and
+  the line given the height for a sensor with history, the gauge's value
+  at the hero size. The scale steps with the cell's **short** side
+  (`< 200`, `< 260`, above), so a tall narrow widget stays as modest as a
+  square one of its width.
+- **The cell is the card.** A row-rooted tier insets itself as a card's
+  padding would, or its value meets the widget's edge.
+
+Off a launcher (Wear, a sized dashboard slot) the hero is not captured:
+those keep their playback gate. `LauncherGridSweepTest` renders every
+card it covers on Android's grid from `1×1` to `4×3` into
+`rc-converter/build/launcher-sweep/` for review.
+
 ### Validation
 
 Every card with a ladder has a `CardPreviewMatrix_<Card>` preview
