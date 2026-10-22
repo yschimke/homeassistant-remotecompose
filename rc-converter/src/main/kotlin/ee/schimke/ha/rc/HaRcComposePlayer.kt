@@ -8,6 +8,7 @@ import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
@@ -93,16 +94,33 @@ fun HaRcComposePlayer(
   onInputSubmit: (String, Map<String, String>) -> Unit = { _, _ -> },
 ) {
   val error = remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+  // The player only skips a recomposition when every argument is equal to the last, and a host
+  // recomposes this on every data change (its caller's snapshot moved). So nothing handed to the
+  // player is rebuilt per composition: a new registry, event lambda or modifier would make the
+  // player recompose every component of the card, though the new values reach it through
+  // [namedValues] alone.
+  val submit by androidx.compose.runtime.rememberUpdatedState(onInputSubmit)
+  val editing = LocalHaInputEditing.current
   val inputs =
-    ee.schimke.composeai.rcplayer.compose.rcInputComponents(
-      inputDrafts,
-      LocalHaInputEditing.current,
-      onSubmit = { action, values ->
-        runCatching { onInputSubmit(action, values) }
-          .onSuccess { error.value = null }
-          .onFailure { error.value = it.message ?: "Message was not sent" }
-      },
-    )
+    remember(inputDrafts, editing) {
+      ee.schimke.composeai.rcplayer.compose.rcInputComponents(
+        inputDrafts,
+        editing,
+        onSubmit = { action, values ->
+          runCatching { submit(action, values) }
+            .onSuccess { error.value = null }
+            .onFailure { error.value = it.message ?: "Message was not sent" }
+        },
+      )
+    }
+  val namedAction by androidx.compose.runtime.rememberUpdatedState(onNamedAction)
+  val onEvent: (RcPlayerEvent) -> Unit = remember {
+    { event ->
+      if (event is RcPlayerEvent.HostNamedAction) {
+        namedAction(event.name, event.value.toHostPayload())
+      }
+    }
+  }
   val decoded = remember(documentBytes) { decodedForComposePlayer(documentBytes) }
   val document = decoded.document
   if (document == null) {
@@ -147,13 +165,9 @@ fun HaRcComposePlayer(
         document,
         imageLoader,
         customComponents = inputs,
-        modifier = modifier.wrapUnpinnedHeight(),
+        modifier = modifier.then(WrapUnpinnedHeight),
         namedValues = playerValues,
-        onEvent = { event ->
-          if (event is RcPlayerEvent.HostNamedAction) {
-            onNamedAction(event.name, event.value.toHostPayload())
-          }
-        },
+        onEvent = onEvent,
       )
     }
     if (frozenTime != null) {
@@ -170,7 +184,7 @@ fun HaRcComposePlayer(
  * unbounded height so the document reports its content height, then clamp to the slot's bounds. A
  * pinned (EXACTLY) height passes straight through.
  */
-private fun Modifier.wrapUnpinnedHeight(): Modifier = layout { measurable, constraints ->
+private val WrapUnpinnedHeight: Modifier = Modifier.layout { measurable, constraints ->
   if (constraints.hasFixedHeight) {
     val placeable = measurable.measure(constraints)
     layout(placeable.width, placeable.height) { placeable.place(0, 0) }
