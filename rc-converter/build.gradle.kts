@@ -61,6 +61,7 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
+  api(platform(libs.rc.players.bom))
   api(project(":rc-components"))
   implementation(project(":ha-model"))
   implementation(project(":ha-client"))
