@@ -101,6 +101,7 @@ jobs:
             exit 1
           fi
           node --test home-assistant/test/installed.test.mjs
+          node --test home-assistant/test/installed-mcp.test.mjs
       - name: Home Assistant diagnostics
         if: always()
         run: docker logs ha-plugin 2>&1 | tail -100

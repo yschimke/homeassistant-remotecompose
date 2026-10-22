@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- What an agent reads about Terrazzo's AppFunctions as a whole; see assistant/TerrazzoAppFunctions.kt. -->
+<AppFunctionAppMetadata xmlns:appfn="http://schemas.android.com/apk/androidx.appfunctions"
+    appfn:description="Reads and controls the user's Home Assistant smart home through the Terrazzo app's sign-in.
+Operational patterns:
+  - Call 'findEntities' first to turn a device or room the user names into an entityId.
+  - Use 'getEntityState' to answer questions such as whether a light is on or what a sensor reads.
+  - 'turnOn' also runs scenes and scripts.
+Constraints:
+  - Locks and alarm panels can be read but not switched; their canSwitch is false.
+  - Switching functions return the state from before the call; Home Assistant updates it shortly after."
+    appfn:displayDescription="Control your Home Assistant lights, switches and scenes" />

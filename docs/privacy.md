@@ -70,6 +70,12 @@ usage is never sent without an address set.
   in-app; tokens stay on your device.
 - **Card design server (developer-operated, optional).** Described
   above: design downloads and, if you opt in, anonymous card usage.
+- **On-device assistants (optional, off by default).** On Android 16
+  and newer, Settings → Assistants lets an assistant the system allows
+  (such as Gemini) find and read your Home Assistant entities and
+  switch lights, switches, scenes and scripts through the app. The
+  entity names and states it asks for go to that assistant, under its
+  own privacy terms; Terrazzo sends nothing to the developer.
 - **No third-party services.** The app does not contact analytics,
   advertising, or crash-reporting providers.
 

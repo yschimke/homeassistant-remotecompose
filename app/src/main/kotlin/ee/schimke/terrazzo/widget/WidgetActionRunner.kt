@@ -93,11 +93,14 @@ internal object WidgetActionRunner {
     appSession = session
   }
 
+  /** The app's own session for [baseUrl] while it is connected, else null. */
+  fun connectedAppSession(baseUrl: String): HaSession? = appSession?.takeIf {
+    it.baseUrl == baseUrl && it.connectionStatus.value == SessionConnectionStatus.Connected
+  }
+
   private suspend fun call(graph: TerrazzoGraph, baseUrl: String, action: HaAction) {
     val started = System.nanoTime()
-    val live = appSession?.takeIf {
-      it.baseUrl == baseUrl && it.connectionStatus.value == SessionConnectionStatus.Connected
-    }
+    val live = connectedAppSession(baseUrl)
     // The app's socket may be closing as it is picked (the app just went to the background). A call
     // it refused before sending goes on a new session; any other failure isn't retried, since Home
     // Assistant may have run it with only the reply lost, and a second toggle would undo the first.
@@ -138,7 +141,7 @@ internal object WidgetActionRunner {
       send(session, action)
     } catch (failure: Throwable) {
       // A refused token is dropped, so the next tap mints a fresh one.
-      tokensMutex.withLock { tokens.remove(baseUrl) }
+      forgetAccessToken(baseUrl)
       throw failure
     } finally {
       // A timed-out call is cancelled; the socket must still close, so close outside that.
@@ -157,28 +160,33 @@ internal object WidgetActionRunner {
   /**
    * An access token for [baseUrl]: the cached one until shortly before it expires, and only while
    * the vault still holds the refresh token it came from. Signing out clears the vault, and signing
-   * in again (another user too) stores a new one, so a widget never acts on an old login.
+   * in again (another user too) stores a new one, so a widget never acts on an old login. Shared
+   * with the AppFunctions service, which acts from the background the same way.
    */
-  private suspend fun accessToken(graph: TerrazzoGraph, baseUrl: String): String =
-    tokensMutex.withLock {
-      val refresh = graph.tokenVault.get(baseUrl)
-      if (refresh == null) {
-        tokens.remove(baseUrl)
-        error("Signed out of $baseUrl: no refresh token")
-      }
-      val now = System.currentTimeMillis()
-      tokens[baseUrl]
-        ?.takeIf { it.refreshToken == refresh && it.until > now }
-        ?.let {
-          return@withLock it.accessToken
-        }
-      val minted = graph.authService.refreshAccessToken(baseUrl, refresh)
-      val stored = minted.refreshToken?.also { graph.tokenVault.put(baseUrl, it) } ?: refresh
-      val token = minted.accessToken ?: error("Token refresh for $baseUrl returned no token")
-      val lifetimeMs = (minted.expiresInSeconds ?: DEFAULT_TOKEN_LIFETIME_S) * 1000
-      tokens[baseUrl] = CachedToken(stored, token, now + lifetimeMs - TOKEN_EXPIRY_MARGIN_MS)
-      token
+  suspend fun accessToken(graph: TerrazzoGraph, baseUrl: String): String = tokensMutex.withLock {
+    val refresh = graph.tokenVault.get(baseUrl)
+    if (refresh == null) {
+      tokens.remove(baseUrl)
+      error("Signed out of $baseUrl: no refresh token")
     }
+    val now = System.currentTimeMillis()
+    tokens[baseUrl]
+      ?.takeIf { it.refreshToken == refresh && it.until > now }
+      ?.let {
+        return@withLock it.accessToken
+      }
+    val minted = graph.authService.refreshAccessToken(baseUrl, refresh)
+    val stored = minted.refreshToken?.also { graph.tokenVault.put(baseUrl, it) } ?: refresh
+    val token = minted.accessToken ?: error("Token refresh for $baseUrl returned no token")
+    val lifetimeMs = (minted.expiresInSeconds ?: DEFAULT_TOKEN_LIFETIME_S) * 1000
+    tokens[baseUrl] = CachedToken(stored, token, now + lifetimeMs - TOKEN_EXPIRY_MARGIN_MS)
+    token
+  }
+
+  /** Drops [baseUrl]'s cached access token after a failed call, so the next one mints afresh. */
+  suspend fun forgetAccessToken(baseUrl: String) {
+    tokensMutex.withLock { tokens.remove(baseUrl) }
+  }
 
   private fun redraw(context: Context, widgetId: Int) {
     context.sendBroadcast(
