@@ -94,7 +94,7 @@ play-services-wearable = "20.0.1"
 
 # Firebase Crashlytics (opt-in — only resolved when a google-services.json
 # key is configured; see app/build.gradle.kts `crashlyticsEnabled`).
-firebase-bom = "35.0.0"
+firebase-bom = "35.1.0"
 
 
 cmp-navigation3 = "1.2.0-rc01"
