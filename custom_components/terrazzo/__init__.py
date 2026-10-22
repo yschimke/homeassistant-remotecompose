@@ -1,4 +1,8 @@
-"""Serve the local Terrazzo renderer; all data access stays with HA's user session."""
+"""Serve the local Terrazzo renderer; all data access stays with HA's user session.
+
+The optional MCP server (`mcp_view.py`) is the one exception: off by default, and when on it
+serves exactly one chosen HA user of this instance, with that user's own tokens and permissions.
+"""
 from pathlib import Path
 
 import voluptuous as vol
@@ -12,6 +16,7 @@ from homeassistant.helpers.collection import ItemNotFound
 from .const import (
     CARD_URL,
     CONF_DASHBOARD,
+    CONF_MCP_USER,
     CONF_TITLE,
     DATA_CARD_RESOURCE,
     DEFAULT_TITLE,
@@ -20,6 +25,7 @@ from .const import (
     STATIC_URL,
     clean_options,
 )
+from .mcp_view import TerrazzoMcpMetadataView, TerrazzoMcpView
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -39,6 +45,8 @@ async def async_setup(hass, config):
     if DOMAIN in config:
         options = clean_options(config[DOMAIN])
         if entries := hass.config_entries.async_entries(DOMAIN):
+            # The MCP server's user is chosen in the UI only; YAML leaves it as it was.
+            options[CONF_MCP_USER] = entries[0].options.get(CONF_MCP_USER, "")
             # HA refuses new flows once the single entry exists, so update it in place. This runs
             # before the entry is set up, which then reads these options.
             if dict(entries[0].options) != options:
@@ -72,6 +80,12 @@ async def async_setup_entry(hass, entry):
             [StaticPathConfig(STATIC_URL, str(Path(__file__).parent / "frontend"), False)]
         )
         state["static"] = True
+    # Likewise the MCP views; each request checks the loaded entry's options, so while no user is
+    # chosen (or the entry is unloaded) they answer 404.
+    if not state.get("mcp"):
+        hass.http.register_view(TerrazzoMcpView(hass))
+        hass.http.register_view(TerrazzoMcpMetadataView(hass))
+        state["mcp"] = True
     options = entry.options
     await panel_custom.async_register_panel(
         hass,

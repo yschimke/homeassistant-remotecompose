@@ -250,8 +250,9 @@ by the current RC templates; hold and double-tap are not implemented.
 
 ## Authorization and lifecycle
 
-The integration serves public **static code**, like HA's frontend. It exposes no
-new entity, dashboard or service API and holds no server-side admin credential.
+The integration serves public **static code**, like HA's frontend. It holds no
+server-side admin credential, and apart from the opt-in [MCP server](#mcp-server-for-ai-assistants),
+which is off until you choose its user, it exposes no new entity, dashboard or service API.
 The `/terrazzo` panel is a normal HA frontend route and uses the signed-in user's
 short-lived access token. The same-origin iframe gets a token through a function
 on its own frame element; refresh tokens remain inside HA's frontend. Each WASM
@@ -270,6 +271,50 @@ Lovelace cards do not become WASM components. In particular, the TS custom card
 runs inside native Lovelace; a WASM dashboard containing that custom type may
 show the existing unsupported-card message. More-info and navigation actions
 in the panel are forwarded to the parent HA frontend.
+
+## MCP server for AI assistants
+
+Terrazzo can also answer the [Model Context Protocol](https://modelcontextprotocol.io), so an AI
+assistant (Claude, ChatGPT, Gemini or a local agent) can find your entities, read them, switch
+lights, switches, scenes and scripts, and read your dashboards. It is **off** by default and is
+**pinned to this one Home Assistant and one of its users**:
+
+- Open the integration, choose **Configure**, and set **MCP server user** to the person the
+  assistant acts as. **Off** turns it off again at once; no restart is needed.
+- The endpoint is `https://YOUR-HA/api/terrazzo/mcp` (MCP's Streamable HTTP transport). It only
+  ever acts on the Home Assistant serving it; there is no setting that points it anywhere else.
+- It accepts Home Assistant access tokens of that user and nobody else: a long-lived access token
+  from the user's profile (**Security → Long-lived access tokens**), or a token from Home
+  Assistant's own sign-in. Tokens of any other user are refused, even an administrator's. Wrong
+  tokens count towards Home Assistant's login-attempt ban.
+- Everything runs with that user's Home Assistant permissions; a non-administrator only sees and
+  controls what HA allows them. Pick a dedicated, non-administrator user if you want to limit
+  what an assistant can reach. Locks and alarm panels can be read but never switched.
+- Browser pages from other origins are refused. Terrazzo stores nothing for it: no tokens, no
+  conversations.
+
+Tools: `find_entities`, `get_entity_state`, `turn_on`, `turn_off`, `toggle`, `list_dashboards`
+(with each dashboard's `/terrazzo` link) and `get_dashboard` (its Lovelace configuration).
+
+**Connecting a client.** A cloud assistant connects from its provider's servers, so Home
+Assistant must be reachable over HTTPS from the internet (Nabu Casa, or your own TLS and reverse
+proxy). Local agents can use the LAN address. For a client that lets you set headers, use the URL
+with `Authorization: Bearer <long-lived token>`; for example with Claude Code:
+
+```sh
+claude mcp add --transport http terrazzo https://YOUR-HA/api/terrazzo/mcp \
+  --header "Authorization: Bearer $HA_TOKEN"
+```
+
+Clients that sign in with OAuth (for example a custom connector in the Claude or ChatGPT apps)
+are pointed at Home Assistant's own sign-in: an unauthenticated request answers `401` with
+`WWW-Authenticate: Bearer resource_metadata=…` ([RFC 9728](https://www.rfc-editor.org/rfc/rfc9728)),
+whose authorization server is this Home Assistant (`/.well-known/oauth-authorization-server`,
+PKCE, client ID metadata documents). Sign in there as the MCP server's user. Whether a particular
+client completes that flow depends on its OAuth support; the long-lived token always works.
+
+The protocol layer is `custom_components/terrazzo/mcp.py`; `home-assistant/test/mcp_test.py`
+covers it and `home-assistant/test/installed-mcp.test.mjs` runs it inside a real Home Assistant.
 
 ## Build and verify
 

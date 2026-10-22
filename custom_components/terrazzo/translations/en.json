@@ -25,11 +25,13 @@
         "title": "Terrazzo",
         "data": {
           "title": "Sidebar title",
-          "dashboard": "Dashboard to open first"
+          "dashboard": "Dashboard to open first",
+          "mcp_user": "MCP server user"
         },
         "data_description": {
           "title": "The name of the panel in the sidebar.",
-          "dashboard": "Leave empty to start on the dashboard picker."
+          "dashboard": "Leave empty to start on the dashboard picker.",
+          "mcp_user": "Off, or the one Home Assistant user an AI assistant may act as through /api/terrazzo/mcp, with that user's permissions on this instance only. Only that user's access tokens are accepted. Locks and alarm panels stay read-only."
         }
       }
     }
