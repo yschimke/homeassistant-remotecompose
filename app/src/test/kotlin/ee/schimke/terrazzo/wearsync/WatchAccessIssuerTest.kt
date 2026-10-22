@@ -59,7 +59,9 @@ class WatchAccessIssuerTest {
   private val issuer =
     WatchAccessIssuer(
       send = { node, access -> sent += node to access },
-      nodeName = { node -> mapOf("w1" to "Pixel Watch 3", "w2" to "Galaxy Watch")[node] },
+      nodeName = { node ->
+        mapOf("w1" to "Pixel Watch 3", "w2" to "Galaxy Watch", "w3" to "Pixel Watch 3")[node]
+      },
       now = { clock },
     )
 
@@ -72,9 +74,9 @@ class WatchAccessIssuerTest {
     val access = sent.first().second
     assertEquals("http://homeassistant.local:8123", access.baseUrl)
     assertEquals("https://home.example.org", access.externalUrl)
-    assertEquals(session.tokens.getValue("Terrazzo Watch · Pixel Watch 3"), access.token)
+    assertEquals(session.tokens.getValue("Terrazzo Watch · Pixel Watch 3 · w1"), access.token)
     assertEquals(
-      setOf("Grafana", "Terrazzo Watch · Pixel Watch 3", "Terrazzo Watch · Galaxy Watch"),
+      setOf("Grafana", "Terrazzo Watch · Pixel Watch 3 · w1", "Terrazzo Watch · Galaxy Watch · w2"),
       session.tokens.keys,
     )
   }
@@ -88,7 +90,7 @@ class WatchAccessIssuerTest {
     clock += WatchAccessIssuer.REISSUE_AFTER_MS
     issuer.request("w1", session)
     assertEquals(listOf("token-1", "token-2"), sent.map { it.second.token })
-    assertEquals("token-2", session.tokens.getValue("Terrazzo Watch · Pixel Watch 3"))
+    assertEquals("token-2", session.tokens.getValue("Terrazzo Watch · Pixel Watch 3 · w1"))
   }
 
   @Test
@@ -123,9 +125,24 @@ class WatchAccessIssuerTest {
   }
 
   @Test
-  fun anUnnamedWatchGetsThePlainName() {
-    assertEquals("Terrazzo Watch", WatchAccessIssuer.tokenName(null))
-    assertEquals("Terrazzo Watch", WatchAccessIssuer.tokenName("  "))
-    assertTrue(WatchAccessIssuer.isWatchToken(WatchAccessIssuer.tokenName(null)))
+  fun twoWatchesOfTheSameModelKeepTheirOwnTokens() = runTest {
+    val session = FakeSession()
+    issuer.request("w1", session)
+    issuer.request("w3", session)
+    assertEquals(listOf("token-1", "token-2"), sent.map { it.second.token })
+    assertEquals("token-1", session.tokens.getValue("Terrazzo Watch · Pixel Watch 3 · w1"))
+    assertEquals("token-2", session.tokens.getValue("Terrazzo Watch · Pixel Watch 3 · w3"))
+  }
+
+  @Test
+  fun aWatchsTokenNameEndsWithItsNodeId() {
+    assertEquals("Terrazzo Watch · 4c3d", WatchAccessIssuer.tokenName(null, "9a1f-4c3d"))
+    assertEquals(
+      "Terrazzo Watch · Pixel · 4c3d",
+      WatchAccessIssuer.tokenName(" Pixel ", "9a1f4c3d"),
+    )
+    assertEquals("Terrazzo Watch", WatchAccessIssuer.tokenName("  ", ""))
+    assertTrue(WatchAccessIssuer.isWatchToken(WatchAccessIssuer.tokenName(null, "")))
+    assertTrue(WatchAccessIssuer.isWatchToken(WatchAccessIssuer.tokenName("Pixel", "ab12")))
   }
 }

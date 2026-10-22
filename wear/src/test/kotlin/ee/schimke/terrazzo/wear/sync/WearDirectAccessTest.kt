@@ -159,6 +159,29 @@ class WearDirectAccessTest {
   }
 
   @Test
+  fun anEntityHomeAssistantNoLongerHasIsDroppedNotKeptFresh() = runTest {
+    store.write(access)
+    offline.writeValues(
+      LiveValues(
+        values = mapOf("sensor.outside" to EntityValue("9"), "light.kitchen" to EntityValue("on")),
+        capturedAtMs = clock - WearDirectAccess.STALE_AFTER_MS,
+      )
+    )
+    // Home Assistant answers 404 for sensor.outside: HaEntityStates leaves it out.
+    answer = { emptyMap() }
+    val values = assertNotNull(direct.refresh(listOf(card), signedIn))
+    assertEquals(setOf("light.kitchen"), values.values.keys)
+  }
+
+  @Test
+  fun demoModeForgetsTheTokenAndReadsNothing() = runTest {
+    store.write(access)
+    assertNull(direct.refresh(listOf(card), signedIn.copy(demoMode = true)))
+    assertNull(store.read())
+    assertTrue(fetched.isEmpty())
+  }
+
+  @Test
   fun freshPhoneValuesAreNotReadAgain() = runTest {
     store.write(access)
     offline.writeValues(
@@ -201,13 +224,14 @@ class WearDirectAccessTest {
   }
 
   @Test
-  fun valuesAreStaleWhenOldOrMissingAnEntityButNotReadMoreThanOnceAMinute() {
+  fun valuesAreStaleWhenOldOrMissingButNotReadMoreThanOnceAMinute() {
     val now = 1_000_000L
     val ids = setOf("sensor.a")
     val fresh = LiveValues(mapOf("sensor.a" to EntityValue("1")), capturedAtMs = now - 1)
     assertFalse(needsDirectValues(fresh, ids, now, null))
     assertTrue(needsDirectValues(null, ids, now, null))
-    assertTrue(needsDirectValues(fresh, ids + "sensor.b", now, null))
+    // Fresh phone values lacking an entity: Home Assistant lacks it too, or it only looks like one.
+    assertFalse(needsDirectValues(fresh, ids + "sensor.b", now, null))
     assertTrue(
       needsDirectValues(
         fresh.copy(capturedAtMs = now - WearDirectAccess.STALE_AFTER_MS),

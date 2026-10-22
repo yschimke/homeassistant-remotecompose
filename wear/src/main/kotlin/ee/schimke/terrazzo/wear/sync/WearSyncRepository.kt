@@ -329,13 +329,22 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
 }
 
 /**
- * Copies the widget slots, pinned cards and entity values from the Data Layer into [store], where
- * newer. The Wear widgets call this when they render: [WearSyncRepository] only listens while the
+ * Copies the settings, widget slots, pinned cards and entity values from the Data Layer into
+ * [store], where newer. The settings say which instance the watch may read itself, if any (a widget
+ * reading Home Assistant directly must see demo mode or another sign-in as soon as the phone writes
+ * it). The Wear widgets call this when they render: [WearSyncRepository] only listens while the
  * watch app runs, and a DataItem persists in the Data Layer whether or not anything was listening
  * when it arrived.
  */
 internal suspend fun syncWidgetStateFromDataLayer(context: Context, store: WearOfflineStore) {
   val client = Wearable.getDataClient(context)
+  val settingsTime = WearSettings::updatedAtMs
+  newerThan(
+      dataItem(client, WearSyncPaths.SETTINGS, settingsTime),
+      store.readSettings(),
+      settingsTime,
+    )
+    ?.let(store::writeSettings)
   val slotsTime = WearWidgetSlots::updatedAtMs
   newerThan(dataItem(client, WearSyncPaths.SLOTS, slotsTime), store.readSlots(), slotsTime)
     ?.let(store::writeSlots)

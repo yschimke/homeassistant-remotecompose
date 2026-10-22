@@ -97,7 +97,11 @@ class WearDirectAccess(
    * values kept, or null when it read nothing.
    */
   suspend fun refresh(cardsRawJson: List<String>, settings: WearSettings?): LiveValues? {
-    if (settings == null || settings.demoMode || settings.baseUrl.isEmpty()) return null
+    if (settings == null || settings.demoMode || settings.baseUrl.isEmpty()) {
+      // Signed out or in demo mode: no token is kept, and nothing is read.
+      requestIfMissing(settings)
+      return null
+    }
     val stored = offline.readValues()
     val ids = watchEntityIds(cardsRawJson, stored?.values?.keys.orEmpty())
     if (!needsDirectValues(stored, ids, now(), lastDirectAtMs)) return null
@@ -110,8 +114,10 @@ class WearDirectAccess(
     val states = fetchFromAny(access, ids) ?: return null
     val snapshot = HaSnapshot(states = states)
     val fetched = states.mapValues { (_, state) -> state.toWearEntityValue(snapshot) }
-    // Newer than the phone's: a later phone capture still replaces these as it arrives.
-    val merged = LiveValues(values = stored?.values.orEmpty() + fetched, capturedAtMs = now())
+    // Every entity asked for takes what Home Assistant answered: one it no longer has (a 404) is
+    // dropped rather than kept at the phone's old value. Newer than the phone's: a later phone
+    // capture still replaces these as it arrives.
+    val merged = LiveValues(values = stored?.values.orEmpty() - ids + fetched, capturedAtMs = now())
     // A phone capture that landed while this one read wins.
     valuesNotOlder(merged, offline.readValues())?.let(offline::writeValues) ?: return null
     return merged
@@ -174,8 +180,13 @@ class WearDirectAccess(
 
 /**
  * Whether the watch should read its values from Home Assistant: the phone's ([stored]) are older
- * than [WearDirectAccess.STALE_AFTER_MS], or lack an entity the cards name ([ids]); but never more
- * often than [WearDirectAccess.MIN_INTERVAL_MS] after the last direct read ([lastDirectAtMs]).
+ * than [WearDirectAccess.STALE_AFTER_MS], or there are none; but never more often than
+ * [WearDirectAccess.MIN_INTERVAL_MS] after the last direct read ([lastDirectAtMs]), and only when
+ * the cards name entities ([ids]).
+ *
+ * An entity missing from fresh phone values isn't a reason: the phone sends every entity the cards
+ * name that Home Assistant has, so one it lacks is one Home Assistant lacks too (or a token in a
+ * card that only looks like an entity id).
  */
 internal fun needsDirectValues(
   stored: LiveValues?,
@@ -186,9 +197,7 @@ internal fun needsDirectValues(
   if (ids.isEmpty()) return false
   if (lastDirectAtMs != null && now - lastDirectAtMs < WearDirectAccess.MIN_INTERVAL_MS)
     return false
-  if (stored == null) return true
-  return now - stored.capturedAtMs >= WearDirectAccess.STALE_AFTER_MS ||
-    ids.any { it !in stored.values }
+  return stored == null || now - stored.capturedAtMs >= WearDirectAccess.STALE_AFTER_MS
 }
 
 /**

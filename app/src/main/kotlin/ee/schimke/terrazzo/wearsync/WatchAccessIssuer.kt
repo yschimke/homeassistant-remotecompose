@@ -74,7 +74,7 @@ internal class WatchAccessIssuer(
     val last = issuedAt[nodeId]
     if (last != null && now() - last < REISSUE_AFTER_MS) return true
     val outcome = runCatching {
-      val name = tokenName(nodeName(nodeId))
+      val name = tokenName(nodeName(nodeId), nodeId)
       session.deleteLongLivedTokens { it == name }
       val token = session.createLongLivedToken(name, TOKEN_LIFESPAN_DAYS) ?: return false
       val external = runCatching {
@@ -111,11 +111,16 @@ internal class WatchAccessIssuer(
     private const val MAX_WAITING = 8
 
     /**
-     * The token's name in Home Assistant: the watch's own name, so the user can tell them apart.
+     * The token's name in Home Assistant: the watch's own name, so the user can tell them apart,
+     * and the end of its node id, so two watches of the same model don't share one (issuing for one
+     * would delete the other's).
      */
-    fun tokenName(watchName: String?): String =
-      watchName?.trim()?.takeIf { it.isNotEmpty() }?.take(60)?.let { "$TOKEN_NAME_PREFIX · $it" }
-        ?: TOKEN_NAME_PREFIX
+    fun tokenName(watchName: String?, nodeId: String): String {
+      val name = watchName?.trim()?.takeIf { it.isNotEmpty() }?.take(60)
+      val id = nodeId.filter { it.isLetterOrDigit() }.takeLast(4)
+      return listOfNotNull(TOKEN_NAME_PREFIX, name, id.takeIf { it.isNotEmpty() })
+        .joinToString(" · ")
+    }
 
     fun isWatchToken(clientName: String): Boolean =
       clientName == TOKEN_NAME_PREFIX || clientName.startsWith("$TOKEN_NAME_PREFIX · ")
