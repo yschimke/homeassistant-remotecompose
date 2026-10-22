@@ -1,4 +1,4 @@
-val wearVersionName = "0.1.56" // x-release-please-version
+val wearVersionName = "0.1.57" // x-release-please-version
 
 // Keep Wear version tied to release-please while reserving a unique code
 // lane for the shared package id (`ee.schimke.harc`): same base as `:app`
@@ -148,6 +148,7 @@ play {
 }
 
 dependencies {
+  implementation(platform(libs.rc.players.bom))
   implementation(project(":app-ui"))
   implementation(project(":rc-components"))
   implementation(project(":rc-converter"))

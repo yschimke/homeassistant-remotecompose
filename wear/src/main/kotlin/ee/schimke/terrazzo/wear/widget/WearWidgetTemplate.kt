@@ -18,7 +18,6 @@ import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetDocument
 import androidx.glance.wear.core.WearWidgetParams
@@ -100,7 +99,7 @@ internal object WearWidgetTemplate {
   }
 
   private fun named(name: String, defaultDp: Float) =
-    RemoteDp.createNamedRemoteDp(name, defaultDp.dp, RemoteState.Domain.User)
+    RemoteDp.createNamedRemoteDp(name, defaultDp, RemoteState.Domain.User)
 
   /**
    * [template] as the document for a widget with [params] on this watch, or null when it can't be

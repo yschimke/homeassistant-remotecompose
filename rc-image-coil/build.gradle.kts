@@ -23,6 +23,7 @@ android {
 }
 
 dependencies {
+  api(platform(libs.rc.players.bom))
   // BitmapLoader interface lives in remote-player-core.
   api(libs.remote.player.core)
   // RcImageLoader (the Compose Multiplatform player's image API) lives in rc-player-compose.

@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.1.57](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.56...v0.1.57) (2026-10-22)
+
+
+### Features
+
+* **wear:** read card values from Home Assistant directly when the phone has none ([#1052](https://github.com/yschimke/homeassistant-remotecompose/issues/1052)) ([f7f6f3b](https://github.com/yschimke/homeassistant-remotecompose/commit/f7f6f3b954ba6d1be8f88d0491ba3e3c54fb8259))
+* **web:** package the Wasm web app as a Wasmo app with Home Assistant OAuth sign-in ([#1043](https://github.com/yschimke/homeassistant-remotecompose/issues/1043)) ([aa38120](https://github.com/yschimke/homeassistant-remotecompose/commit/aa38120495e8ea2bbb217839be464c820be88cfc))
+
+
+### Bug Fixes
+
+* **deps:** hold DataStore at 1.2.1 after a startup hang on 1.3.0 ([#1054](https://github.com/yschimke/homeassistant-remotecompose/issues/1054)) ([aca6b22](https://github.com/yschimke/homeassistant-remotecompose/commit/aca6b228374ea7094fe34258a0c20f5f48287696))
+* **deps:** update androidx to v1.3.0 ([#1037](https://github.com/yschimke/homeassistant-remotecompose/issues/1037)) ([08a048e](https://github.com/yschimke/homeassistant-remotecompose/commit/08a048eb75521f0cd369fb15397c7cfae05deb84))
+* **deps:** update compose-ai-tools ([#1034](https://github.com/yschimke/homeassistant-remotecompose/issues/1034)) ([e097c0c](https://github.com/yschimke/homeassistant-remotecompose/commit/e097c0c09e40023e9eaf994970964462fd7da8da))
+* **deps:** update dependency androidx.compose.material3:material3 to v1.5.0-beta02 ([#1035](https://github.com/yschimke/homeassistant-remotecompose/issues/1035)) ([7ed2deb](https://github.com/yschimke/homeassistant-remotecompose/commit/7ed2deb401f9917044647e55e603944be68a2f79))
+* **deps:** update dependency com.google.firebase:firebase-bom to v35 ([#1041](https://github.com/yschimke/homeassistant-remotecompose/issues/1041)) ([2273a4f](https://github.com/yschimke/homeassistant-remotecompose/commit/2273a4f8c1ce984eecec289d4aada57f21c3c26c))
+* **deps:** update dependency com.google.firebase:firebase-bom to v35.1.0 ([#1048](https://github.com/yschimke/homeassistant-remotecompose/issues/1048)) ([201f667](https://github.com/yschimke/homeassistant-remotecompose/commit/201f667c84ea38b85d04953846be464a05e096a1))
+* **deps:** update dependency ee.schimke.composeai:rc-player-protocol to v2.17.2 ([#1045](https://github.com/yschimke/homeassistant-remotecompose/issues/1045)) ([54235b6](https://github.com/yschimke/homeassistant-remotecompose/commit/54235b6c99b1c32e626006c22521a381e15f9fdf))
+* **deps:** update okhttp to v5.5.1 ([#1051](https://github.com/yschimke/homeassistant-remotecompose/issues/1051)) ([a840026](https://github.com/yschimke/homeassistant-remotecompose/commit/a8400265e63e55f740ed2dd6edac248c48c06242))
+* **deps:** update remote-compose ([#1036](https://github.com/yschimke/homeassistant-remotecompose/issues/1036)) ([0c42257](https://github.com/yschimke/homeassistant-remotecompose/commit/0c42257abbc5d202e6e6c89167d96557011d6c69))
+* stop three crashes reported by Crashlytics ([#1047](https://github.com/yschimke/homeassistant-remotecompose/issues/1047)) ([6fccdd1](https://github.com/yschimke/homeassistant-remotecompose/commit/6fccdd12aa66930afc7c8240f3b8a10accf6c6f2))
+* **wear:** give each screen a ScreenScaffold tied to its list ([#1046](https://github.com/yschimke/homeassistant-remotecompose/issues/1046)) ([53d7e76](https://github.com/yschimke/homeassistant-remotecompose/commit/53d7e763b20b4f91103b86667549a10892b6fc15))
+
+
+### Performance Improvements
+
+* resolve dashboard card templates off the main thread ([#1040](https://github.com/yschimke/homeassistant-remotecompose/issues/1040)) ([6735ba2](https://github.com/yschimke/homeassistant-remotecompose/commit/6735ba2657fae5942414bd946904a4772d508303))
+
 ## [0.1.56](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.55...v0.1.56) (2026-10-21)
 
 

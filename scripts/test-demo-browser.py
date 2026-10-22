@@ -428,8 +428,32 @@ try:
                 pause=datetime.datetime.fromtimestamp((page.evaluate('Date.now()')+1000)/1000,
                                                       tz=datetime.timezone.utc)
                 page.clock.pause_at(pause)
+                # Resizing clears the WebGL backing buffer before Compose paints it. Observe
+                # the first actual draw at the new size, not a blank compositor frame. We
+                # still compare that first rendered frame with the later one below.
+                page.evaluate('''(() => {
+                    const canvas = document.querySelector('canvas');
+                    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+                    if (!gl) throw new Error('Expected the Compose WebGL canvas');
+                    window.resizedCanvasDrawn = false;
+                    for (const name of ['drawArrays', 'drawElements',
+                                        'drawArraysInstanced', 'drawElementsInstanced']) {
+                        if (typeof gl[name] !== 'function') continue;
+                        const draw = gl[name].bind(gl);
+                        gl[name] = (...args) => {
+                            const result = draw(...args);
+                            if (canvas.width === 1280 && canvas.height === 900)
+                                window.resizedCanvasDrawn = true;
+                            return result;
+                        };
+                    }
+                })()''')
                 page.set_viewport_size({'width':1280,'height':900})
-                page.clock.run_for(100)
+                for _ in range(120):
+                    page.clock.run_for(16)
+                    if page.evaluate('window.resizedCanvasDrawn'):
+                        break
+                assert page.evaluate('window.resizedCanvasDrawn'), 'Resized canvas never painted'
                 first=page.screenshot(path='_wasm-test/demo-console-resize-first.png')
                 page.clock.run_for(500)
                 settled=page.screenshot(path='_wasm-test/demo-console-resize-settled.png')
