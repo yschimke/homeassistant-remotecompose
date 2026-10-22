@@ -1,5 +1,11 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
+import ee.schimke.composeai.rcplayer.protocol.RcFloatConstant
+import ee.schimke.composeai.rcplayer.protocol.RcFloatWord
+import ee.schimke.composeai.rcplayer.protocol.RcLayoutContent
+import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
+import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.client.design.DesignPublisher
 import ee.schimke.ha.design.DesignKey
@@ -36,6 +42,8 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -57,6 +65,26 @@ class UserDesignsTest {
 
   /** A Small Wear widget of [template]'s card, as Glance Wear captures it (`:wear`'s tests). */
   private val wearSmall = javaClass.getResource("/tile-light-wear-small.rc")!!.readBytes()
+
+  /**
+   * [wearSmall] with a named value added: the container frame a `hostFrame: device` export leaves
+   * to the watch, or (for [name] outside it) a value no card provides.
+   */
+  private fun wearSmallNaming(name: String): ByteArray {
+    val document = RcDocumentCodec.decode(wearSmall, RcWireLimits())
+    val at = document.operations.indexOfFirst { it is RcLayoutContent } + 1
+    val id = 4_000
+    val named =
+      listOf(
+        RcNamedVariable(id, RcNamedVariable.FLOAT_TYPE, "USER:$name"),
+        RcFloatConstant(id, RcFloatWord.literal(8f)),
+      )
+    return RcDocumentCodec.encode(
+      document.copy(
+        operations = document.operations.take(at) + named + document.operations.drop(at)
+      )
+    )
+  }
 
   /** The Wear container roots UI Builder was asked to export. */
   private val exportedWear = mutableListOf<String>()
@@ -108,10 +136,14 @@ class UserDesignsTest {
         routing {
           // `wear`: a card design whose Small Wear widget exports and whose Large one doesn't.
           get("/api/ui-builder/v1/designs/{id}") {
-            if (call.parameters["id"] != "wear") {
+            if (call.parameters["id"] !in setOf("wear", "framed", "foreign")) {
               return@get call.respondText("no such design", status = HttpStatusCode.NotFound)
             }
-            call.respondText(wearSource.toString(), ContentType.Application.Json)
+            val id = call.parameters["id"]!!
+            call.respondText(
+              JsonObject(wearSource + ("id" to JsonPrimitive(id))).toString(),
+              ContentType.Application.Json,
+            )
           }
           post("/api/ui-builder/v1/documents/export.rc") {
             val document = Json.parseToJsonElement(call.receiveText()).jsonObject
@@ -119,6 +151,25 @@ class UserDesignsTest {
             exportedWear += root["componentId"]!!.jsonPrimitive.content
             when (document["id"]!!.jsonPrimitive.content) {
               "wear-wear-small" -> call.respondBytes(wearSmall, ContentType.Application.OctetStream)
+              // `framed`: its Wear widgets leave the container frame to the watch; `foreign`'s
+              // read values nothing supplies.
+              "framed-wear-small",
+              "framed-wear-large" ->
+                call.respondBytes(
+                  wearSmallNaming("wear.container.horizontal_padding"),
+                  ContentType.Application.OctetStream,
+                )
+              "foreign-wear-small" ->
+                call.respondBytes(
+                  wearSmallNaming("somewhere.else"),
+                  ContentType.Application.OctetStream,
+                )
+              // A name under the frame's prefix the watch doesn't fill.
+              "foreign-wear-large" ->
+                call.respondBytes(
+                  wearSmallNaming("wear.container.opacity"),
+                  ContentType.Application.OctetStream,
+                )
               // A mobile document: not a Wear widget.
               else -> call.respondBytes(template, ContentType.Application.OctetStream)
             }
@@ -127,7 +178,9 @@ class UserDesignsTest {
             assertEquals("secret", call.request.queryParameters["token"])
             when (call.parameters["id"]) {
               "good",
-              "wear" -> {
+              "wear",
+              "framed",
+              "foreign" -> {
                 call.response.headers.append("X-UI-Builder-Revision", "3")
                 call.respondBytes(template, ContentType.Application.OctetStream)
               }
@@ -302,6 +355,24 @@ class UserDesignsTest {
       f.client.post("/api/my/device-token") { header(HttpHeaders.Authorization, "Bearer $token") }
     assertEquals(HttpStatusCode.Unauthorized, response.status)
     assertNull(f.github.deviceLogin(token + "x"))
+  }
+
+  @Test
+  fun aWearWidgetThatLeavesItsFrameToTheWatchIsKept() = testApplication {
+    val f = fixture()
+    assertEquals(HttpStatusCode.Created, f.publish("framed").status)
+    val wear =
+      UserDesignStore(f.storeDir).designs("octocat").mapNotNull { it.entry.key.container }.toSet()
+    assertEquals(setOf(DesignKey.WEAR_SMALL, DesignKey.WEAR_LARGE), wear)
+  }
+
+  @Test
+  fun aWearWidgetReadingAValueNothingSuppliesIsLeftOut() = testApplication {
+    val f = fixture()
+    assertEquals(HttpStatusCode.Created, f.publish("foreign").status)
+    assertTrue(
+      UserDesignStore(f.storeDir).designs("octocat").none { it.entry.key.container != null }
+    )
   }
 
   @Test
