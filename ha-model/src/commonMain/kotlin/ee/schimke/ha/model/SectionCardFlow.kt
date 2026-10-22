@@ -16,6 +16,13 @@ data class SectionFlowItem(
 data class SectionFlowRow(val indices: List<Int>, val widths: List<Float>)
 
 /**
+ * The rows [SectionCardFlow.rows] makes for every section width from [fromWidth] up to the next
+ * split's: each row's card indices, in authored order. Widths within a row follow from the section
+ * width (see [SectionCardFlow.rows]), so a split with its range is the whole layout.
+ */
+data class SectionFlowSplit(val fromWidth: Float, val rows: List<List<Int>>)
+
+/**
  * How harc lays out the cards inside one Lovelace `sections` section (design principle 9: the
  * dashboard's sections and order, the cards' own sizes).
  *
@@ -67,6 +74,42 @@ object SectionCardFlow {
     flush()
     return rows
   }
+
+  /**
+   * Every distinct way [rows] splits [items] into rows, for section widths from 0 to [maxWidth], in
+   * ascending order of [SectionFlowSplit.fromWidth] (the first is 0).
+   *
+   * [rows] only compares a run of neighbouring cards' minimums and gaps with the width, so the
+   * split can only change where the width equals such a run's total: those totals are the candidate
+   * breakpoints. A document played at an unknown width can carry every split and pick one at
+   * playback.
+   */
+  fun splits(items: List<SectionFlowItem>, gap: Float, maxWidth: Float): List<SectionFlowSplit> {
+    val flowing = items.indices.filter { !items[it].hidden && !items[it].ownRow }
+    val candidates = mutableSetOf(0f)
+    // Runs never cross an own-row card or skip a hidden one's neighbour: a hidden card adds no
+    // width, and an own-row card breaks the run, so contiguous runs of flowing cards suffice.
+    for (start in flowing.indices) {
+      var total = 0f
+      for (end in start until flowing.size) {
+        val i = flowing[end]
+        if (end > start && !contiguous(items, flowing[end - 1], i)) break
+        total += items[i].minWidth + if (end > start) gap else 0f
+        if (total > maxWidth) break
+        candidates += total
+      }
+    }
+    val splits = mutableListOf<SectionFlowSplit>()
+    for (width in candidates.sorted()) {
+      val split = rows(items, width, gap).map { it.indices }
+      if (splits.lastOrNull()?.rows != split) splits += SectionFlowSplit(width, split)
+    }
+    return splits
+  }
+
+  /** Whether cards [a] < [b] are neighbours in the flow: only hidden cards lie between them. */
+  private fun contiguous(items: List<SectionFlowItem>, a: Int, b: Int): Boolean =
+    (a + 1 until b).all { items[it].hidden }
 
   /** Whether [card] keeps a row to itself: a heading, which divides the section into groups. */
   fun ownRow(card: CardConfig): Boolean = card.type == CardTypes.HEADING

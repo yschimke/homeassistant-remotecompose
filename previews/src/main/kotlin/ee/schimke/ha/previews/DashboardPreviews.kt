@@ -327,7 +327,7 @@ fun DashboardSectionCardGridMobile() = DashboardPreview("climate", ::liftGridCar
 @Composable
 fun DashboardSectionCardGridTablet() = DashboardPreview("climate", ::liftGridCards)
 
-private fun liftGridCards(view: View): View =
+internal fun liftGridCards(view: View): View =
   view.copy(
     sections =
       view.sections.map { section ->
@@ -412,7 +412,7 @@ private fun FrozenDashboardClock(content: @Composable () -> Unit) {
 }
 
 /** The instant dashboard previews render at: the card previews' `PreviewNow`. */
-private val DashboardPreviewNow: ZonedDateTime =
+internal val DashboardPreviewNow: ZonedDateTime =
   ZonedDateTime.of(2026, 5, 5, 10, 8, 0, 0, ZoneOffset.UTC)
 
 @Composable
@@ -571,7 +571,7 @@ private fun CardSlot(
   }
 }
 
-private class DashboardPreviewBitmapLoader : BitmapLoader {
+internal class DashboardPreviewBitmapLoader : BitmapLoader {
   private val bytes: ByteArray =
     ByteArrayOutputStream().use { out ->
       val bitmap = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)
