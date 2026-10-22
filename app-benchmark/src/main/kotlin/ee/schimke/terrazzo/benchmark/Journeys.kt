@@ -1,7 +1,6 @@
 package ee.schimke.terrazzo.benchmark
 
 import android.content.Intent
-import android.util.Log
 import androidx.benchmark.macro.MacrobenchmarkScope
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
@@ -28,39 +27,34 @@ private const val UI_TIMEOUT_MS = 15_000L
  * Sections start collapsed (the app's default), so a phone shows one section's cards at a time;
  * [expandSections] opens them all, so scrolling brings card after card on screen.
  *
- * On the API 36 emulator macrobenchmark now and then cannot confirm a launch ("Unable to confirm
- * activity launch completion", with no frames to read): the app neither crashes nor hangs, its task
- * just closes. Over the generator's dozens of launches that failed nearly every run, before and
- * after any app change, so nothing was ever measured. Where a launch only gets the app on screen,
- * one such launch is retried from a fresh process. A launch that is itself measured passes
- * [retryUnconfirmedLaunch] false: a second launch is not the cold start being timed.
+ * Only a launch that is itself measured goes through macrobenchmark's `startActivityAndWait`
+ * ([measured]). On the API 36 emulator that call now and then cannot confirm a launch ("Unable to
+ * confirm activity launch completion", with no frames to read) even though the app comes up: the
+ * generator's dozens of launches failed on it in every run, before and after app changes, a retry
+ * from a fresh process failing the same way, so nothing was ever measured. Every other launch only
+ * has to get the board on screen, which [awaitDashboard] already checks, so it uses `am start -W`.
  */
 internal fun MacrobenchmarkScope.startDemoDashboard(
   expandSections: Boolean = false,
-  retryUnconfirmedLaunch: Boolean = true,
+  measured: Boolean = false,
 ) {
-  try {
-    launchDemo(expandSections)
-  } catch (e: IllegalStateException) {
-    if (!retryUnconfirmedLaunch || e.message?.startsWith(UNCONFIRMED_LAUNCH) != true) throw e
-    Log.w(TAG, "Launch not confirmed; retrying from a fresh process", e)
-    killProcess()
-    launchDemo(expandSections)
+  if (measured) {
+    startActivityAndWait { intent: Intent ->
+      intent.putExtra(EXTRA_TEST_DEMO_MODE, true)
+      intent.putExtra(EXTRA_TEST_EXPAND_SECTIONS, expandSections)
+    }
+  } else {
+    // New task, clearing any old one: the flags `startActivityAndWait` launches with.
+    device.executeShellCommand(
+      "am start -W -f 0x10008000 -n $TARGET_PACKAGE/$MAIN_ACTIVITY " +
+        "--ez $EXTRA_TEST_DEMO_MODE true --ez $EXTRA_TEST_EXPAND_SECTIONS $expandSections"
+    )
   }
   awaitDashboard(DEFAULT_BOARD)
 }
 
-private fun MacrobenchmarkScope.launchDemo(expandSections: Boolean) {
-  startActivityAndWait { intent: Intent ->
-    intent.putExtra(EXTRA_TEST_DEMO_MODE, true)
-    intent.putExtra(EXTRA_TEST_EXPAND_SECTIONS, expandSections)
-  }
-}
-
-/** How macrobenchmark's `startActivityAndWait` reports a launch it saw no frames for. */
-private const val UNCONFIRMED_LAUNCH = "Unable to confirm activity launch completion"
-
-private const val TAG = "TerrazzoBenchmark"
+/** `:app`'s launcher activity. */
+private const val MAIN_ACTIVITY = "ee.schimke.terrazzo.MainActivity"
 
 /** Waits until [board] is the open dashboard and its cards have rendered. */
 internal fun MacrobenchmarkScope.awaitDashboard(board: String) {

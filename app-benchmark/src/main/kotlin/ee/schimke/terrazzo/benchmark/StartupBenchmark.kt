@@ -42,7 +42,7 @@ class StartupBenchmark {
         killProcess()
       },
     ) {
-      // The launch being timed: a retried one would not be the cold start measured.
-      startDemoDashboard(retryUnconfirmedLaunch = false)
+      // The launch being timed.
+      startDemoDashboard(measured = true)
     }
 }
