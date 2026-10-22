@@ -58,6 +58,9 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           cache-read-only: 'true'
+      - uses: ./.github/actions/buildfetch-cache
+        with:
+          ro-token: ${{ secrets.BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN_RO }}
       - name: Build existing renderers and run shared checks
         run: ./gradlew :app-ui:wasmJsBrowserDistribution :design-server:embedResources :ha-client:jvmTest :app-ui:jvmTest ktfmtCheck --stacktrace
       - uses: actions/setup-python@v7.1.0
