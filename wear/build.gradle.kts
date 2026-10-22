@@ -153,6 +153,8 @@ dependencies {
   implementation(project(":rc-converter"))
   implementation(project(":rc-card-shutter"))
   implementation(project(":ha-model"))
+  // Reads the cards' values from Home Assistant when the phone has none to send.
+  implementation(project(":ha-client"))
 
   implementation(platform(libs.compose.bom))
   implementation(libs.compose.ui)

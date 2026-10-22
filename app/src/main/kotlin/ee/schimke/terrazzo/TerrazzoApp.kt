@@ -105,6 +105,10 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
       graph.preferencesStore.setDemoMode(false)
       graph.preferencesStore.clearLastViewedDashboard()
       graph.preferencesStore.clearSelectedDashboardUrls()
+      // While the session can still reach Home Assistant: the watches' own tokens.
+      if (signedOut != null && signedOut !is DemoHaSession) {
+        runCatching { wearSync.revokeWatchAccess(signedOut) }
+      }
       if (previousBaseUrl != null) {
         graph.offlineCache.clearInstance(previousBaseUrl)
         runCatching { graph.tokenVault.clear(previousBaseUrl) }

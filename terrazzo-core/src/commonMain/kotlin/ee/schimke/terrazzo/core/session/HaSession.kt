@@ -185,6 +185,20 @@ interface HaSession {
    */
   suspend fun dismissAllNotifications(): Unit = Unit
 
+  /**
+   * A new long-lived access token for the signed-in user, named [clientName] in their Home
+   * Assistant profile: for a device that reads Home Assistant itself (the watch). Null for sessions
+   * that have no user to make one for (demo, offline). Home Assistant refuses a second token with a
+   * name already in use, so delete it first ([deleteLongLivedTokens]) to replace one.
+   */
+  suspend fun createLongLivedToken(clientName: String, lifespanDays: Int): String? = null
+
+  /**
+   * Deletes the signed-in user's long-lived access tokens whose name [matches], returning how many
+   * went. Sessions with no user to delete them for delete nothing.
+   */
+  suspend fun deleteLongLivedTokens(matches: (clientName: String) -> Boolean): Int = 0
+
   suspend fun close()
 }
 
@@ -388,6 +402,12 @@ class LiveHaSession(
       ?: emptyMap()
 
   override suspend fun fetchInstanceConfig(): HaInstanceConfig = client.fetchConfig()
+
+  override suspend fun createLongLivedToken(clientName: String, lifespanDays: Int): String =
+    client.createLongLivedAccessToken(clientName, lifespanDays)
+
+  override suspend fun deleteLongLivedTokens(matches: (clientName: String) -> Boolean): Int =
+    client.deleteLongLivedAccessTokens(matches)
 
   override suspend fun fetchDashboardConfig(urlPath: String?): JsonObject =
     client.fetchDashboardConfig(urlPath)

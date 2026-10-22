@@ -114,6 +114,12 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
 
   override suspend fun fetchInstanceConfig(): HaInstanceConfig? = delegate.fetchInstanceConfig()
 
+  override suspend fun createLongLivedToken(clientName: String, lifespanDays: Int): String? =
+    delegate.createLongLivedToken(clientName, lifespanDays)
+
+  override suspend fun deleteLongLivedTokens(matches: (clientName: String) -> Boolean): Int =
+    delegate.deleteLongLivedTokens(matches)
+
   // History is a live-only, on-demand read (the card-history screen) — we
   // don't cache it, but we must forward so the wrapped live session
   // actually hits HA's recorder instead of the no-op interface default.
