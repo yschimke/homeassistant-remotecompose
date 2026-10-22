@@ -34,6 +34,7 @@ import kotlinx.coroutines.runBlocking
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    if (BuildConfig.TEST_HOOKS) StartupHangWatchdog.arm()
     enableEdgeToEdge()
     val graph = (application as TerrazzoApplication).graph
 
