@@ -3,7 +3,9 @@ package ee.schimke.terrazzo.core
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.stringPreferencesKey
 import java.io.File
+import java.util.concurrent.Executor
 import java.util.concurrent.Executors
+import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlinx.coroutines.CoroutineScope
@@ -37,7 +39,14 @@ class DataStoreMainThreadReadTest {
   @Test
   fun aBlockingMainThreadReadSurvivesAMainDispatchedCollector() {
     val main = Executors.newSingleThreadExecutor()
-    val mainDispatcher = main.asCoroutineDispatcher()
+    // Counts what is queued on "main" while it is busy, so the test waits for each collector's
+    // resume to be queued rather than guessing how long its IO hop takes.
+    val queued = Semaphore(0)
+    val mainDispatcher = Executor { task ->
+      queued.release()
+      main.execute(task)
+    }
+      .asCoroutineDispatcher()
     val store =
       PreferenceDataStoreFactory.create(scope = CoroutineScope(Dispatchers.IO + SupervisorJob())) {
         File(folder.root, "prefs.preferences_pb")
@@ -48,16 +57,15 @@ class DataStoreMainThreadReadTest {
           .submit<String> {
             // TerrazzoApplication.onCreate starts several collectors; Main.immediate runs each
             // until it suspends. The first suspends to read the coordinator's version on IO, which
-            // creates the coordinator; a later one then goes straight to the one-time
-            // initialisation, takes its lock and suspends to read the file on IO, holding it.
+            // creates the coordinator; once its resume is queued, the next goes straight to the
+            // one-time initialisation, takes its lock and suspends to read the file on IO, holding
+            // it until its own resume runs.
             repeat(2) {
               CoroutineScope(mainDispatcher).launch(start = CoroutineStart.UNDISPATCHED) {
                 store.data.first()
               }
-              Thread.sleep(100)
+              check(queued.tryAcquire(10, TimeUnit.SECONDS)) { "collector $it never resumed" }
             }
-            // Their reads finish on IO meanwhile, and queue their resumes behind this task.
-            Thread.sleep(500)
             // MainActivity.onCreate: a blocking read on the same thread.
             runBlocking {
               withTimeoutOrNull(5_000) {
