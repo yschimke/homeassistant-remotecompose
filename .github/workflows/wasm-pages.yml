@@ -47,6 +47,9 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           cache-read-only: 'true'
+      - uses: ./.github/actions/buildfetch-cache
+        with:
+          ro-token: ${{ secrets.BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN_RO }}
       - name: Build production Wasm
         run: ./gradlew :app-ui:wasmJsBrowserDistribution :ha-client:jvmTest :app-ui:jvmTest :rc-player-ui:jvmTest --stacktrace
       - uses: actions/setup-python@v7.1.0

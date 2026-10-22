@@ -77,6 +77,42 @@ dependencyResolutionManagement {
 
 rootProject.name = "homeassistant-remotecompose"
 
+// BuildFetch remote Gradle build cache, beside the local one (`org.gradle.caching=true`).
+// Off until `harc.buildFetchCacheUrl` in gradle.properties names this repository's BuildFetch
+// project AND a token resolves, so a checkout without either builds exactly as before.
+// Writes only from trusted CI (`ON_CI=true`, which `.github/actions/buildfetch-cache` sets on
+// pushes to main); PRs and developer machines read. The token is the first non-blank of the
+// project-specific `BUILDFETCH_HARC_GRADLE_REMOTE_CACHE_TOKEN` and the general
+// `BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN` (CI exports the general one), each as an env var first
+// and a Gradle property second, so one ~/.gradle/gradle.properties can hold a token per project.
+// Same scheme as compose-ai-tools: docs/build-scripts/SETTINGS.md#build-cache there.
+val nonBlank = { source: Provider<String> -> source.map { it.trim() }.filter { it.isNotEmpty() } }
+val buildFetchCacheUrl = nonBlank(providers.gradleProperty("harc.buildFetchCacheUrl")).orNull
+val buildFetchCacheToken =
+  nonBlank(providers.environmentVariable("BUILDFETCH_HARC_GRADLE_REMOTE_CACHE_TOKEN"))
+    .orElse(nonBlank(providers.gradleProperty("BUILDFETCH_HARC_GRADLE_REMOTE_CACHE_TOKEN")))
+    .orElse(nonBlank(providers.environmentVariable("BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN")))
+    .orElse(nonBlank(providers.gradleProperty("BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN")))
+    .orNull
+val onCi = providers.environmentVariable("ON_CI").orElse("false").get().toBoolean()
+
+buildCache {
+  // The local cache stays on everywhere, trusted pushes included: it suppresses only the
+  // redundant remote pushes, and setup-gradle's restored copy is a frozen snapshot on CI anyway.
+  local { isEnabled = true }
+  if (buildFetchCacheUrl != null) {
+    remote<HttpBuildCache> {
+      url = uri(buildFetchCacheUrl)
+      credentials {
+        username = "token-auth"
+        password = buildFetchCacheToken
+      }
+      isPush = onCi
+      isEnabled = buildFetchCacheToken != null
+    }
+  }
+}
+
 // `-PaddonServerOnly=true` includes just the Home Assistant add-on server and the two modules it
 // depends on. The add-on image (`addon-server/addon/Dockerfile`) copies only those directories, and
 // Gradle 9 refuses to configure an included project whose directory is missing. None of the three

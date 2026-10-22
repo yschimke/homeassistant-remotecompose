@@ -1,0 +1,55 @@
+name: 'BuildFetch remote cache'
+description: >
+  Select the BuildFetch remote-cache credential for the current event and export
+  it (plus ON_CI) to the job environment, where settings.gradle.kts reads it.
+  Opt-in and BuildFetch-specific — kept separate from the generic `setup` action
+  so projects that don't use BuildFetch never pull this in. Call it after `setup`
+  in a job that should participate in the remote cache.
+
+inputs:
+  rw-token:
+    description: >
+      BuildFetch cache:readwrite token. Enables cache writes (ON_CI=true). The
+      caller must gate this on a trusted push condition (resolve the secret only
+      when github.event_name is 'push', otherwise pass an empty string) so the
+      write token is never resolved into a pull_request job's environment.
+    default: ''
+  ro-token:
+    description: >
+      BuildFetch cache:readonly token for read-only access on PRs / other events.
+      Optional — when unset those builds fall back to the local cache.
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    # zizmor: ignore[github-env]
+    # Values are either fixed literals or masked repository secrets. Neither
+    # can contain an attacker-controlled newline from workflow input.
+    - name: Configure BuildFetch remote cache
+      shell: bash
+      env:
+        RW_TOKEN: ${{ inputs.rw-token }}
+        RO_TOKEN: ${{ inputs.ro-token }}
+        EVENT_NAME: ${{ github.event_name }}
+      run: | # zizmor: ignore[github-env]
+        # ON_CI=true (remote cache writes, see settings.gradle.kts) only when a
+        # write token is actually present, so a read-only run never tries to push. GitHub masks
+        # both secrets in logs; nothing here echoes the token value.
+        if [ -n "$RW_TOKEN" ]; then
+          printf 'BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN=%s\nON_CI=true\n' "$RW_TOKEN" >> "$GITHUB_ENV"
+          echo "BuildFetch remote cache: read/write (trusted build)."
+        elif [ -n "$RO_TOKEN" ]; then
+          printf 'BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN=%s\nON_CI=false\n' "$RO_TOKEN" >> "$GITHUB_ENV"
+          echo "BuildFetch remote cache: read-only."
+        else
+          echo "BuildFetch remote cache: disabled (no token provided; using local cache)."
+        fi
+        # A push to main is the run that fills the cache for every PR after it. Without the write
+        # token it fills nothing, whether or not the read-only one is set, and a green run does not
+        # show it (compose-preview-daemon ran that way unnoticed: 93 of 428 tasks from cache on a
+        # version-only commit). Say so where the run summary shows it. Fork PRs never get
+        # secrets, so only pushes warn.
+        if [ "$EVENT_NAME" = push ] && [ -z "$RW_TOKEN" ]; then
+          echo "::warning title=BuildFetch remote cache not written::This push has no BuildFetch read/write token, so main is not populating the remote build cache and PRs rebuild what it would have stored. Add BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN (read/write) and BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN_RO (read-only) as repository secrets, and set harc.buildFetchCacheUrl in gradle.properties."
+        fi
