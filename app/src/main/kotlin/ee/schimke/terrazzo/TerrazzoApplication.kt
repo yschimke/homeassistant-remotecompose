@@ -110,6 +110,11 @@ class TerrazzoApplication : Application() {
     )
     // Designs the server lacks are captured from the app's own converters once and kept on disk
     // (the library's store), instead of on every start; stale ones from an earlier build go.
+    // A template that fails to capture leaves its card on the converter path; report it as a
+    // non-fatal (in-app log, and the crash backend) instead of losing it.
+    CardDesignLibrary.onCaptureFailure = { _, error ->
+      graph.logStore.recordCrash(error, fatal = false)
+    }
     FileLocalDesignStore.of(applicationContext).also { store ->
       CardDesignLibrary.store = store
       (ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO).launch { store.prune() }

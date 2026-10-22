@@ -6,6 +6,14 @@
       "headers": {
         "X-Compose-Preview-Token": "${COMPOSE_PREVIEW_TOKEN:-}"
       }
+    },
+    "firebase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "firebase-tools@latest",
+        "mcp"
+      ]
     }
   }
 }

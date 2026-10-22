@@ -335,6 +335,12 @@ class MobileWearSyncManager(
   ) {
     managerScope = scope
     inputEditingMode = inputEditing
+    // A phone where any Wearable call would crash the app: stay unavailable for good, which every
+    // Data Layer path already checks, and start nothing (see WearableApiGuard).
+    if (!WearableApiGuard.isUsable(context)) {
+      wearableAvailableState.value = false
+      return
+    }
     // addListener returns a Task; observe it so an API_NOT_CONNECTED
     // failure (no Wearable component on this device) flips us into
     // the disabled state instead of silently never delivering leases.
@@ -490,7 +496,9 @@ class MobileWearSyncManager(
 
   /** Stops listening; safe to call from Application.onTerminate (rare). */
   fun stop() {
-    runCatching { messageClient.removeListener(leaseListener) }
+    if (WearableApiGuard.isUsable(context)) {
+      runCatching { messageClient.removeListener(leaseListener) }
+    }
     streamJob?.cancel()
     recoveryJob?.cancel()
   }
