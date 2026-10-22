@@ -14,7 +14,8 @@ application { mainClass.set("ee.schimke.ha.designserver.MainKt") }
 
 // The card embed (docs/architecture/card-embedding.md): `embed/ha-card.js` and the TypeScript
 // player it loads, served at `/embed/v1/` from the classpath.
-val embedPlayer = configurations.create("embedPlayer") { isTransitive = false }
+// Keep platform traversal enabled; only the ZIP dependency is non-transitive.
+val embedPlayer = configurations.create("embedPlayer")
 val embedPlayerArchive = embedPlayer.incoming.artifacts.resolvedArtifacts.map { it.single().file }
 
 val embedResources by
@@ -70,6 +71,7 @@ tasks.test {
 }
 
 dependencies {
+  implementation(platform(libs.rc.players.bom))
   implementation(project(":ha-model"))
   implementation(project(":ha-client"))
   // Decodes templates for the browser: their bindings, size and op-set validation.
@@ -92,11 +94,16 @@ dependencies {
 
   runtimeOnly(libs.logback.classic)
 
-  embedPlayer(
-    libs.rc.player.js.dist.get().let {
-      "${it.module}:${it.versionConstraint.requiredVersion}:dist@zip"
+  // This standalone configuration does not inherit implementation's platform.
+  embedPlayer(platform(libs.rc.players.bom))
+  embedPlayer(libs.rc.player.js.dist) {
+    isTransitive = false
+    artifact {
+      classifier = "dist"
+      extension = "zip"
+      type = "zip"
     }
-  )
+  }
 
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlin.test.junit)

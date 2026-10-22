@@ -20,6 +20,7 @@ android {
 }
 
 dependencies {
+  implementation(platform(libs.rc.players.bom))
   implementation(libs.rc.player.protocol)
   implementation(platform(libs.compose.bom))
   implementation(libs.compose.ui)
