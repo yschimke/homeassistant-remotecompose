@@ -175,7 +175,9 @@
   },
   {
     "name": "rc_players",
-    "modules": [],
+    "modules": [
+      "ee.schimke.composeai:common-io"
+    ],
     "platforms": [
       "ee.schimke.composeai:compose-preview-contracts-bom:3.37.0",
       "ee.schimke.composeai:compose-preview-daemon-bom:3.21.4"

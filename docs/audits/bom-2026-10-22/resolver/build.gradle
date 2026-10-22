@@ -9,6 +9,7 @@ repositories {
 }
 def specs = new JsonSlurper().parse(file('specs.json'))
 specs.each { spec ->
+ if (spec.modules.isEmpty()) throw new GradleException('Each audit graph must exercise a dependency: ' + spec.name)
  def c = configurations.create(spec.name) {
   canBeResolved = true; canBeConsumed = false
   attributes {
