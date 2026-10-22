@@ -1,0 +1,293 @@
+[
+  {
+    "name": "harc_pr1044_androidJvm",
+    "modules": [
+      "ee.schimke.composeai:rc-player-compose:2.17.2",
+      "ee.schimke.composeai:rc-player-edit:2.17.0",
+      "ee.schimke.composeai:rc-player-protocol:2.17.0"
+    ],
+    "platforms": [],
+    "target": "androidJvm"
+  },
+  {
+    "name": "harc_bom_androidJvm",
+    "modules": [
+      "ee.schimke.composeai:rc-player-compose",
+      "ee.schimke.composeai:rc-player-edit",
+      "ee.schimke.composeai:rc-player-protocol"
+    ],
+    "platforms": [
+      "ee.schimke.composeai:rc-players-bom:2.17.2"
+    ],
+    "target": "androidJvm"
+  },
+  {
+    "name": "harc_pr1044_jvm",
+    "modules": [
+      "ee.schimke.composeai:rc-player-compose:2.17.2"
+    ],
+    "platforms": [],
+    "target": "jvm"
+  },
+  {
+    "name": "harc_bom_jvm",
+    "modules": [
+      "ee.schimke.composeai:rc-player-compose"
+    ],
+    "platforms": [
+      "ee.schimke.composeai:rc-players-bom:2.17.2"
+    ],
+    "target": "jvm"
+  },
+  {
+    "name": "harc_pr1044_wasm",
+    "modules": [
+      "ee.schimke.composeai:rc-player-compose:2.17.2"
+    ],
+    "platforms": [],
+    "target": "wasm",
+    "usage": "kotlin-runtime"
+  },
+  {
+    "name": "harc_bom_wasm",
+    "modules": [
+      "ee.schimke.composeai:rc-player-compose"
+    ],
+    "platforms": [
+      "ee.schimke.composeai:rc-players-bom:2.17.2"
+    ],
+    "target": "wasm",
+    "usage": "kotlin-runtime"
+  },
+  {
+    "name": "harc_pr1044_native",
+    "modules": [
+      "ee.schimke.composeai:rc-player-compose:2.17.2"
+    ],
+    "platforms": [],
+    "target": "native",
+    "usage": "kotlin-api",
+    "nativeTarget": "ios_arm64"
+  },
+  {
+    "name": "harc_bom_native",
+    "modules": [
+      "ee.schimke.composeai:rc-player-compose"
+    ],
+    "platforms": [
+      "ee.schimke.composeai:rc-players-bom:2.17.2"
+    ],
+    "target": "native",
+    "usage": "kotlin-api",
+    "nativeTarget": "ios_arm64"
+  },
+  {
+    "name": "harc_main_android",
+    "modules": [
+      "ee.schimke.composeai:rc-player-compose:2.17.1",
+      "ee.schimke.composeai:rc-player-edit:2.17.2",
+      "ee.schimke.composeai:rc-player-protocol:2.17.2"
+    ],
+    "platforms": [],
+    "target": "androidJvm"
+  },
+  {
+    "name": "harc_preview",
+    "modules": [
+      "ee.schimke.composeai:data-render-core:3.37.0",
+      "ee.schimke.composeai:preview-annotations"
+    ],
+    "platforms": [
+      "ee.schimke.composeai:compose-preview-daemon-bom:3.21.4"
+    ],
+    "target": "jvm"
+  },
+  {
+    "name": "compose_preview_server",
+    "modules": [
+      "ee.schimke.composeai:bundle-format",
+      "ee.schimke.composeai:daemon-client",
+      "ee.schimke.composeai:render-host",
+      "ee.schimke.composeai:compose-preview-ui-builder-runtime"
+    ],
+    "platforms": [
+      "ee.schimke.composeai:compose-ai-tools-bom:2.70.7",
+      "ee.schimke.composeai:rc-players-bom:2.17.2",
+      "ee.schimke.composeai:compose-preview-contracts-bom:3.37.0",
+      "ee.schimke.composeai:compose-preview-daemon-bom:3.21.4",
+      "ee.schimke.composeai:compose-preview-ui-builder-bom:3.123.0"
+    ],
+    "target": "jvm"
+  },
+  {
+    "name": "compose_ui_builder",
+    "modules": [
+      "ee.schimke.composeai:ui-builder-protocol",
+      "ee.schimke.composeai:rc-player-compose"
+    ],
+    "platforms": [
+      "ee.schimke.composeai:compose-ai-tools-bom:2.70.7",
+      "ee.schimke.composeai:compose-preview-contracts-bom:3.37.0",
+      "ee.schimke.composeai:compose-preview-daemon-bom:3.21.4",
+      "ee.schimke.composeai:rc-players-bom:2.17.2"
+    ],
+    "target": "jvm"
+  },
+  {
+    "name": "compose_preview_mcp",
+    "modules": [
+      "ee.schimke.composeai:daemon-client"
+    ],
+    "platforms": [
+      "ee.schimke.composeai:compose-ai-tools-bom:2.70.7",
+      "ee.schimke.composeai:compose-preview-contracts-bom:3.37.0",
+      "ee.schimke.composeai:compose-preview-daemon-bom:3.21.4"
+    ],
+    "target": "jvm"
+  },
+  {
+    "name": "compose_ai_tools",
+    "modules": [
+      "ee.schimke.composeai:daemon-core",
+      "ee.schimke.composeai:daemon-client",
+      "ee.schimke.composeai:data-render-core",
+      "ee.schimke.composeai:renderer-desktop"
+    ],
+    "platforms": [
+      "ee.schimke.composeai:compose-preview-contracts-bom:3.37.0",
+      "ee.schimke.composeai:compose-preview-daemon-bom:3.21.4",
+      "ee.schimke.composeai:rc-players-bom:2.17.2"
+    ],
+    "target": "jvm"
+  },
+  {
+    "name": "compose_preview_daemon",
+    "modules": [
+      "ee.schimke.composeai:daemon-protocol",
+      "ee.schimke.composeai:data-render-core",
+      "ee.schimke.composeai:rc-player-compose"
+    ],
+    "platforms": [
+      "ee.schimke.composeai:compose-preview-contracts-bom:3.37.0",
+      "ee.schimke.composeai:rc-players-bom:2.17.2"
+    ],
+    "target": "jvm"
+  },
+  {
+    "name": "rc_players",
+    "modules": [],
+    "platforms": [
+      "ee.schimke.composeai:compose-preview-contracts-bom:3.37.0",
+      "ee.schimke.composeai:compose-preview-daemon-bom:3.21.4"
+    ],
+    "target": "jvm"
+  },
+  {
+    "name": "m3_catalog",
+    "modules": [
+      "ee.schimke.composeai:preview-annotations"
+    ],
+    "platforms": [
+      "ee.schimke.composeai:compose-ai-tools-bom:2.70.5",
+      "ee.schimke.composeai:compose-preview-contracts-bom:3.37.0",
+      "ee.schimke.composeai:compose-preview-daemon-bom:3.21.3"
+    ],
+    "target": "jvm"
+  },
+  {
+    "name": "wear_m3_catalog",
+    "modules": [
+      "ee.schimke.composeai:preview-annotations"
+    ],
+    "platforms": [
+      "ee.schimke.composeai:compose-ai-tools-bom:2.61.0",
+      "ee.schimke.composeai:compose-preview-contracts-bom:3.37.0",
+      "ee.schimke.composeai:compose-preview-daemon-bom:3.16.2",
+      "ee.schimke.composeai:compose-preview-ui-builder-bom:3.123.0"
+    ],
+    "target": "jvm"
+  },
+  {
+    "name": "remote_m3_catalog",
+    "modules": [
+      "ee.schimke.composeai:preview-annotations:3.21.1",
+      "ee.schimke.composeai:data-remotecompose-connector:3.21.2",
+      "ee.schimke.composeai:remotecompose-json:2.69.3"
+    ],
+    "platforms": [
+      "ee.schimke.composeai:compose-ai-tools-bom:2.70.7",
+      "ee.schimke.composeai:compose-preview-contracts-bom:3.37.0",
+      "ee.schimke.composeai:rc-players-bom:2.17.2"
+    ],
+    "target": "jvm"
+  },
+  {
+    "name": "compose_ai_contrib",
+    "modules": [
+      "ee.schimke.composeai:preview-discovery:2.66.0",
+      "ee.schimke.composeai:daemon-launch-builder:2.66.0",
+      "ee.schimke.composeai:render-session-api:2.61.2",
+      "ee.schimke.composeai:gradle-preview-driver:2.61.2",
+      "ee.schimke.composeai:preview-data-api"
+    ],
+    "platforms": [
+      "ee.schimke.composeai:compose-preview-daemon-bom:3.18.5",
+      "ee.schimke.composeai:compose-preview-contracts-bom:3.35.0"
+    ],
+    "target": "jvm"
+  },
+  {
+    "name": "meshcore_debug",
+    "modules": [
+      "ee.schimke.composeai:rc-player-compose:2.16.0",
+      "ee.schimke.composeai:preview-annotations:3.17.1",
+      "ee.schimke.composeai:data-remotecompose-connector:3.17.1",
+      "ee.schimke.composeai:third-party-rc-embedded-player:2.13.1"
+    ],
+    "platforms": [],
+    "target": "androidJvm"
+  },
+  {
+    "name": "meshcore_player_jvm",
+    "modules": [
+      "ee.schimke.composeai:rc-player-compose:2.16.0"
+    ],
+    "platforms": [],
+    "target": "jvm"
+  },
+  {
+    "name": "compose_android_harc",
+    "modules": [
+      "androidx.compose.ui:ui",
+      "androidx.compose.foundation:foundation",
+      "androidx.compose.material3:material3:1.5.0-beta01",
+      "com.materialkolor:material-kolor:5.0.1"
+    ],
+    "platforms": [
+      "androidx.compose:compose-bom:2026.09.00"
+    ],
+    "target": "androidJvm"
+  },
+  {
+    "name": "firebase_android",
+    "modules": [
+      "com.google.firebase:firebase-crashlytics",
+      "com.google.firebase:firebase-analytics"
+    ],
+    "platforms": [
+      "com.google.firebase:firebase-bom:35.1.0"
+    ],
+    "target": "androidJvm"
+  },
+  {
+    "name": "okhttp_bc",
+    "modules": [
+      "org.bouncycastle:bcprov-jdk15to18",
+      "org.bouncycastle:bctls-jdk15to18"
+    ],
+    "platforms": [
+      "org.bouncycastle:bc-jdk15to18-bom:1.86"
+    ],
+    "target": "jvm"
+  }
+]

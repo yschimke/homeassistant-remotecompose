@@ -1,0 +1,6 @@
+embedPlayer
++--- ee.schimke.composeai:rc-players-bom:2.17.2
+|    \--- ee.schimke.composeai:remote-compose-player-js-dist:2.17.0 (c)
+\--- ee.schimke.composeai:remote-compose-player-js-dist -> 2.17.0
+
+(c) - A dependency constraint, not a dependency. The dependency affected by the constraint occurs elsewhere in the tree.

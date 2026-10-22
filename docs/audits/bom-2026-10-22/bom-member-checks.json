@@ -1,0 +1,1434 @@
+[
+  {
+    "coordinate": "ee.schimke.composeai:agent-grant-protocol:3.31.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:agent-grant-protocol:3.32.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:agent-grant-protocol:3.34.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:agent-grant-protocol:3.37.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:appwidget-preview-runtime:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:appwidget-preview-runtime:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:build-artifacts-protocol:3.33.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:build-artifacts-protocol:3.35.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:build-artifacts-protocol:3.37.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:build-host-protocol:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:build-host-protocol:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:bundle-coordinates:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:bundle-coordinates:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:bundle-coordinates:2.70.7",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:bundle-format:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:bundle-format:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:bundle-producer:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:bundle-producer:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:color-preview-runtime:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:color-preview-runtime:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:common-image-crop:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:common-image-crop:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:common-io:3.31.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:common-io:3.32.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:common-io:3.37.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:common-web-escaping:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:common-web-escaping:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:component-catalog-protocol:3.31.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:component-catalog-protocol:3.32.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:component-catalog-protocol:3.37.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-config:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-config:2.70.5",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-config:2.70.7",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-contracts-bom:3.31.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-contracts-bom:3.33.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-contracts-bom:3.35.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-contracts-bom:3.37.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-daemon-bom:3.16.2",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-daemon-bom:3.21.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-daemon-bom:3.21.4",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-plugin:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-plugin:2.70.5",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-plugin:2.70.7",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-ui-builder-codegen-jvm:3.123.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-ui-builder-export:3.123.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-ui-builder-gradle-plugin:3.123.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-ui-builder-render-bundle:3.123.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:compose-preview-ui-builder-runtime:3.123.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-android:3.16.2",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-android:3.18.4",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-android:3.21.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-android:3.21.4",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-bta:3.31.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-bta:3.32.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-bta:3.37.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-client:3.16.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-client:3.18.5",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-client:3.21.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-client:3.21.4",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-connector-api:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-connector-api:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-connector-api:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-core:3.16.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-core:3.18.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-core:3.21.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-core:3.21.4",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-desktop:3.16.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-desktop:3.18.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-desktop:3.21.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-desktop:3.21.4",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-devices:3.31.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-devices:3.32.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-devices:3.37.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-launch-builder:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-launch-builder:2.70.5",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-launch-builder:2.70.7",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-protocol:3.31.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-protocol:3.32.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:daemon-protocol:3.37.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-a11y-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-a11y-connector:3.18.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-a11y-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-a11y-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-a11y-core:3.18.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-a11y-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-a11y-hierarchy-android:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-a11y-hierarchy-android:3.18.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-a11y-hierarchy-android:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-ambient-connector:3.16.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-ambient-connector:3.18.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-ambient-connector:3.21.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-ambient-connector:3.21.4",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-ambient-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-ambient-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-ambient-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-deviceframe-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-deviceframe-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-deviceframe-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-deviceframe-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-deviceframe-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-deviceframe-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-displayfilter-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-displayfilter-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-displayfilter-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-displayfilter-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-displayfilter-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-displayfilter-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-focus-connector-desktop:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-focus-connector-desktop:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-focus-connector-desktop:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-focus-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-focus-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-focus-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-focus-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-focus-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-focus-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-fonts-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-fonts-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-fonts-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-fonts-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-fonts-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-fonts-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-fonts-google:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-fonts-google:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-fonts-google:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-gestures-connector:3.16.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-gestures-connector:3.18.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-gestures-connector:3.21.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-gestures-connector:3.21.4",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-gestures-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-gestures-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-gestures-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-gestures-robolectric-stubs:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-gestures-robolectric-stubs:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-gestures-robolectric-stubs:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-glimmer-environment-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-glimmer-environment-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-glimmer-environment-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-history-connector:3.16.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-history-connector:3.18.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-history-connector:3.21.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-history-connector:3.21.4",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-history-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-history-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-history-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-keyboard-band:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-keyboard-band:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-keyboard-band:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-keyboard-connector-desktop:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-keyboard-connector-desktop:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-keyboard-connector-desktop:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-keyboard-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-keyboard-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-keyboard-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-keyboard-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-keyboard-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-keyboard-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-launcher-widget-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-launcher-widget-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-launcher-widget-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-layoutinspector-connector:3.16.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-layoutinspector-connector:3.18.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-layoutinspector-connector:3.21.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-layoutinspector-connector:3.21.4",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-layoutinspector-core:3.31.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-layoutinspector-core:3.32.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-layoutinspector-core:3.37.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-motion-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-motion-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-motion-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-navigation-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-navigation-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-navigation-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-navigation-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-navigation-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-navigation-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-permissions-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-permissions-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-permissions-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-permissions-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-permissions-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-permissions-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-preview-overrides-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-preview-overrides-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-preview-overrides-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-preview-overrides-core:3.31.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-preview-overrides-core:3.32.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-preview-overrides-core:3.37.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-preview-overrides-runtime:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-preview-overrides-runtime:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-preview-overrides-runtime:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-pseudolocale-connector-desktop:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-pseudolocale-connector-desktop:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-pseudolocale-connector-desktop:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-pseudolocale-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-pseudolocale-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-pseudolocale-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-pseudolocale-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-pseudolocale-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-pseudolocale-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-recomposition-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-recomposition-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-recomposition-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-recomposition-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-recomposition-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-recomposition-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-remotecompose-connector:3.16.2",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-remotecompose-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-remotecompose-connector:3.21.2",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-remotecompose-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-remotecompose-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-remotecompose-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-render-compose:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-render-compose:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-render-compose:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-render-connector:3.16.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-render-connector:3.18.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-render-connector:3.21.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-render-connector:3.21.4",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-render-core:3.31.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-render-core:3.32.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-render-core:3.37.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-resources-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-resources-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-resources-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-resources-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-resources-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-resources-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-scroll-android:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-scroll-android:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-scroll-android:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-scroll-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-scroll-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-scroll-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-scroll-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-scroll-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-scroll-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-shared-element-core:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-shared-element-core:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-strings-connector:3.16.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-strings-connector:3.18.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-strings-connector:3.21.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-strings-connector:3.21.4",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-strings-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-strings-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-strings-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-theme-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-theme-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-theme-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-theme-core:3.31.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-theme-core:3.32.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-theme-core:3.37.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-touch-overlay-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-touch-overlay-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-touch-overlay-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-uiautomator-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-uiautomator-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-uiautomator-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-uiautomator-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-uiautomator-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-uiautomator-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-uiautomator-hierarchy-android:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-uiautomator-hierarchy-android:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-uiautomator-hierarchy-android:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-wallpaper-connector:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-wallpaper-connector:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-wallpaper-connector:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-wallpaper-core:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-wallpaper-core:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:data-wallpaper-core:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:design-guidelines-protocol:3.31.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:design-guidelines-protocol:3.32.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:design-guidelines-protocol:3.37.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:design-guidelines:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:design-guidelines:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:design-guidelines:2.70.7",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:glance-preview-runtime:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:glance-preview-runtime:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:gradle-preview-driver:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:gradle-preview-driver:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:lottie-preview-runtime:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:lottie-preview-runtime:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:lottie-preview-runtime:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:notification-preview-runtime:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:notification-preview-runtime:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:parity-issues-protocol:3.31.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:parity-issues-protocol:3.32.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:parity-issues-protocol:3.37.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:preview-annotations:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:preview-annotations:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:preview-annotations:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:preview-data-api:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:preview-data-api:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:preview-data-api:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:preview-discovery:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:preview-discovery:2.70.5",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:preview-discovery:2.70.7",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:rc-creation-bridge:2.17.2",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:rc-player-compose:2.17.2",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:rc-player-edit:2.17.2",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:rc-player-embedded:2.17.2",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:rc-player-protocol:2.17.2",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:rc-player-runtime:2.17.2",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:rc-player-trace:2.17.2",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:rc-player-wasm-dist:2.17.2",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:remote-compose-player-js-dist:2.17.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:remotecompose-json:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:remotecompose-json:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:render-cli:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:render-cli:2.70.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:render-host:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:render-host:2.70.2",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:render-host:2.70.7",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:render-matrix:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:render-matrix:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:render-session-api:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:render-session-api:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:render-session-embedded-desktop:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:render-session-embedded-desktop:2.70.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:render-session-subprocess:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:render-session-subprocess:2.70.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:renderer-android:3.16.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:renderer-android:3.18.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:renderer-android:3.21.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:renderer-android:3.21.4",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:renderer-desktop:3.16.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:renderer-desktop:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:renderer-desktop:3.21.2",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:renderer-xr-client:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:renderer-xr-client:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:renderer-xr-client:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:screen-document:3.31.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:screen-document:3.32.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:screen-document:3.37.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:screen-model:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:screen-model:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:slot-preview-runtime:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:slot-preview-runtime:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:slot-preview-runtime:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:splash-preview-runtime:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:splash-preview-runtime:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:svg-preview-runtime:3.16.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:svg-preview-runtime:3.17.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:svg-preview-runtime:3.21.1",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:theme-pin-compiler-plugin:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:theme-pin-compiler-plugin:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:theme-pin-runtime:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:theme-pin-runtime:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:third-party-rc-embedded-player:2.17.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:third-party-remote-creation-compose:2.17.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:third-party-remote-creation-writer:2.17.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:typography-preview-runtime:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:typography-preview-runtime:2.69.3",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:ui-builder-protocol:3.31.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:ui-builder-protocol:3.32.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:ui-builder-protocol:3.37.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:wear-preview-runtime:2.61.0",
+    "status": 200
+  },
+  {
+    "coordinate": "ee.schimke.composeai:wear-preview-runtime:2.69.3",
+    "status": 200
+  }
+]

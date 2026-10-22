@@ -94,6 +94,7 @@ android {
       if (releaseKeystorePath != null) {
         signingConfig = signingConfigs.getByName("release")
       }
+      proguardFiles(file("proguard-rules.pro"))
       // FirebaseCrashReporter is loaded reflectively, so R8 would strip or
       // rename it in minified builds without an explicit keep rule. Only
       // needed (and the class only present) when firebase is selected; the

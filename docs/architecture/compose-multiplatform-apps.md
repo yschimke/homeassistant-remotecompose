@@ -21,7 +21,13 @@ The browser distribution is under `app-ui/build/dist/wasmJs/productionExecutable
 Desktop installers can be built with `:app-ui:packageDistributionForCurrentOS` on
 the corresponding operating system.
 
-Desktop and browser hosts currently use a long-lived Home Assistant token, kept only
+The browser host outside the HA panel also offers "Sign in with Home Assistant": browser OAuth
+with the page's origin as `client_id`, the same flow as the [card embed](card-embedding.md#a-signed-in-viewer-ha-oauth-the-default-implemented)
+(`app-ui/src/wasmJsMain/resources/ha-oauth.js`). That sign-in's refresh token is kept in the
+origin's `localStorage` until the viewer signs out. This is what the [Wasmo app](wasmo-app.md)
+uses.
+
+Desktop and the browser's token form use a long-lived Home Assistant token, kept only
 in memory. The sign-in form requires HTTPS, without credentials, query strings or fragments in the URL.
 The token is sent only through Home Assistant's WSS authentication message, and is never saved
 in browser storage or desktop preferences. Home Assistant must allow the browser hosting origin;

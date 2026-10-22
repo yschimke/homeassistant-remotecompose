@@ -29,6 +29,7 @@ val prepareRobolectricSdk by
   }
 
 dependencies {
+  implementation(platform(libs.rc.players.bom))
   // Matches Robolectric 4.17's SDK 35 provider; resolve with Gradle, not a hidden test download.
   robolectricSdk(libs.robolectric.sdk35)
   // SDK bytecode is portable Compose; use this app's Android Compose runtime, not Desktop jars.

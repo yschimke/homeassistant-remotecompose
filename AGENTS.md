@@ -72,4 +72,12 @@
   MCP host cannot inject a header its config never declared. A box older
   than that change answers `401` to every message, handshake included.
 
+- **Firebase is reachable over MCP too.** `.mcp.json` also registers the
+  local Firebase MCP server (`firebase`, `npx -y firebase-tools@latest mcp`,
+  [docs](https://firebase.google.com/docs/ai-assistance/mcp-server)). It
+  runs with the Firebase CLI's credentials — call `firebase_login` (or run
+  `npx firebase-tools login`) first. With no `firebase.json` in the repo it
+  auto-detects features from the Android app; expect the `crashlytics_*`
+  tools for triaging crash reports from `app/` (`FirebaseCrashReporter`).
+
 - Shared desktop and Wasm hosts live in `app-ui/`; the production website is built and browser-tested by `.github/workflows/wasm-pages.yml`. Preserve `docs/auth/` and `docs/terrazzo-auth/` when deploying Pages: Android OAuth discovery uses them.

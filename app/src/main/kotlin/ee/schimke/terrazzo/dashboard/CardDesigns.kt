@@ -230,7 +230,8 @@ fun cardTemplateFor(
       source = if (server != null) UsageSource.Remote else UsageSource.Local,
     )
   }
-  val bytes = server ?: CardDesignLibrary.template(context, key, registry)
+  // A local capture that fails leaves the card to draw through its converter.
+  val bytes = server ?: CardDesignLibrary.templateOrNull(context, key, registry) ?: return null
   // Designs read the player's display (Host density); fold this phone's in once.
   val metrics = context.resources.displayMetrics
   val folded =

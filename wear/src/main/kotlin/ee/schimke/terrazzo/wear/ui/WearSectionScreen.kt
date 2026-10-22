@@ -1,15 +1,11 @@
 package ee.schimke.terrazzo.wear.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
-import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
@@ -34,13 +30,7 @@ fun WearSectionScreen(
   modifier: Modifier = Modifier,
   onInputSend: (suspend (String, Map<String, String>) -> Unit)? = null,
 ) {
-  val listState = rememberScalingLazyListState()
-  ScalingLazyColumn(
-    state = listState,
-    modifier = modifier.fillMaxWidth(),
-    verticalArrangement = Arrangement.spacedBy(4.dp),
-    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-  ) {
+  WearListScreen(modifier = modifier) {
     item { ListHeader { Text(section?.title?.ifEmpty { "Section" } ?: "Section") } }
 
     val cards = section?.cards.orEmpty()

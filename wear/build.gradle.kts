@@ -148,6 +148,7 @@ play {
 }
 
 dependencies {
+  implementation(platform(libs.rc.players.bom))
   implementation(project(":app-ui"))
   implementation(project(":rc-components"))
   implementation(project(":rc-converter"))

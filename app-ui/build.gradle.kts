@@ -96,6 +96,39 @@ require(Regex("[0-9]+\\.[0-9]+\\.[0-9]+").matches(desktopVersion)) {
   "desktopVersion must be MAJOR.MINOR.PATCH"
 }
 
+// The Wasm web build as a Wasmo app (static resources only); see docs/architecture/wasmo-app.md.
+// The directory form installs in Wasmo's dev mode; the archive is the distributable .wasmo file.
+val wasmoVersion =
+  desktopVersion.split(".").map(String::toLong).let { (major, minor, patch) ->
+    major * 1_000_000 + minor * 1_000 + patch
+  }
+val wasmoAppDirectory =
+  tasks.register<Sync>("wasmoAppDirectory") {
+    val version = wasmoVersion
+    inputs.property("version", version)
+    into(layout.buildDirectory.dir("wasmo/dir/terrazzo.wasmo"))
+    from("wasmo/wasmo-manifest.toml") { expand("version" to version) }
+    into("www") {
+      from(tasks.named("wasmJsBrowserDistribution"))
+      from("wasmo/wasm-mime-fallback.js")
+      filesMatching("index.html") {
+        filter { line ->
+          line.replace(
+            "<script src=\"bootstrap.js\" defer></script>",
+            "<script src=\"wasm-mime-fallback.js\"></script>\n  <script src=\"bootstrap.js\" defer></script>",
+          )
+        }
+      }
+    }
+    into("www/assets") { from(rootProject.file("custom_components/terrazzo/brand/icon.png")) }
+  }
+
+tasks.register<Zip>("wasmoApp") {
+  from(wasmoAppDirectory)
+  archiveFileName = "terrazzo.wasmo"
+  destinationDirectory = layout.buildDirectory.dir("wasmo")
+}
+
 // jpackage requires a positive major on macOS. Offset the major on every OS
 // to keep installer upgrades monotonic, including the eventual 1.0 release.
 val installerVersion = desktopVersion.split(".").let { "${it[0].toInt() + 1}.${it[1]}.${it[2]}" }
