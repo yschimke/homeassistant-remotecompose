@@ -15,6 +15,7 @@ import androidx.appfunctions.AppFunctionServiceEntryPoint
 import ee.schimke.ha.model.EntityState
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.terrazzoGraph
 import ee.schimke.terrazzo.widget.WidgetActionRunner
 import kotlinx.coroutines.NonCancellable
@@ -154,6 +155,11 @@ abstract class TerrazzoAppFunctions : AppFunctionService() {
       graph.sessionFactory.create(baseUrl, WidgetActionRunner.accessToken(graph, baseUrl))
     try {
       session.connect()
+      // The cache wrapper swallows a failed connect and would answer from disk; an agent must
+      // never be told old states are current, so an unreachable Home Assistant is an error.
+      if (session.connectionStatus.value != SessionConnectionStatus.Connected) {
+        throw AppFunctionAppUnknownException("Can't reach Home Assistant at $baseUrl")
+      }
       return block(session)
     } catch (failure: Throwable) {
       // A refused token is dropped so the next call mints one; an agent's own mistake isn't that.

@@ -6,6 +6,9 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appfunctions.AppFunctionManager
 import androidx.core.content.edit
+import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 
 /**
  * The Settings switch behind [TerrazzoAppFunctions]: every function is declared disabled, and this
@@ -32,17 +35,33 @@ internal object AssistantAccess {
 
   fun isEnabled(context: Context): Boolean = prefs(context).getBoolean(KEY_ENABLED, false)
 
-  /** Enables or disables every function; returns false (and changes nothing) if that failed. */
+  /**
+   * Enables or disables every function; returns false if that failed. A failure part-way (or a
+   * cancelled call) disables them all again, so the functions are never on while the switch is off.
+   */
   suspend fun setEnabled(context: Context, enabled: Boolean): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) return false
     val manager = AppFunctionManager.getInstance(context) ?: return false
     val state =
       if (enabled) AppFunctionManager.APP_FUNCTION_STATE_ENABLED
       else AppFunctionManager.APP_FUNCTION_STATE_DISABLED
-    return runCatching { functionIds().forEach { manager.setAppFunctionEnabled(it, state) } }
-      .onFailure { Log.w(TAG, "Couldn't ${if (enabled) "enable" else "disable"} AppFunctions", it) }
-      .onSuccess { prefs(context).edit { putBoolean(KEY_ENABLED, enabled) } }
-      .isSuccess
+    try {
+      functionIds().forEach { manager.setAppFunctionEnabled(it, state) }
+    } catch (failure: Throwable) {
+      Log.w(TAG, "Couldn't ${if (enabled) "enable" else "disable"} AppFunctions", failure)
+      withContext(NonCancellable) {
+        functionIds().forEach {
+          runCatching {
+            manager.setAppFunctionEnabled(it, AppFunctionManager.APP_FUNCTION_STATE_DISABLED)
+          }
+        }
+        prefs(context).edit { putBoolean(KEY_ENABLED, false) }
+      }
+      if (failure is CancellationException) throw failure
+      return false
+    }
+    prefs(context).edit { putBoolean(KEY_ENABLED, enabled) }
+    return true
   }
 
   private fun prefs(context: Context) =

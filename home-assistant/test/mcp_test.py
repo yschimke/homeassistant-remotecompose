@@ -84,6 +84,8 @@ class McpProtocolTest(unittest.TestCase):
             self.assertEqual(tool['inputSchema']['type'], 'object')
             self.assertIn('readOnlyHint', tool['annotations'])
         self.assertEqual(rpc(FakeHome(), 'tools/call', {'name': 'nope'})['error']['code'], mcp.INVALID_PARAMS)
+        for name in (['find_entities'], {'tool': 1}, None, 3):
+            self.assertEqual(rpc(FakeHome(), 'tools/call', {'name': name})['error']['code'], mcp.INVALID_PARAMS)
 
     def test_find_entities_ranks_exact_then_prefix(self):
         result = call(FakeHome(), 'find_entities', {'query': 'kitchen'})

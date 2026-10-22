@@ -279,7 +279,7 @@ async def handle(message, home, server_version):
         arguments = params.get("arguments") or {}
         if not isinstance(arguments, dict):
             return _error(message_id, INVALID_PARAMS, "arguments must be an object")
-        if name not in TOOL_NAMES:
+        if not isinstance(name, str) or name not in TOOL_NAMES:
             return _error(message_id, INVALID_PARAMS, f"Unknown tool {name}")
         try:
             structured = await call_tool(home, name, arguments)
