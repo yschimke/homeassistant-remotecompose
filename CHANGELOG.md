@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.1.59](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.58...v0.1.59) (2026-10-22)
+
+
+### Features
+
+* prototype RemoteSectionCardFlow, a section flowed inside one document ([#1066](https://github.com/yschimke/homeassistant-remotecompose/issues/1066)) ([8beef92](https://github.com/yschimke/homeassistant-remotecompose/commit/8beef92e2af5ff97c65d0f9f9be6fbb9ca94ec3b))
+
+
+### Bug Fixes
+
+* **deps:** update compose-ai-tools ([#1073](https://github.com/yschimke/homeassistant-remotecompose/issues/1073)) ([fdbdf40](https://github.com/yschimke/homeassistant-remotecompose/commit/fdbdf409ab40174e8d46ca5958c1f0048675d0b5))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-daemon-bom to v3.22.0 ([#1068](https://github.com/yschimke/homeassistant-remotecompose/issues/1068)) ([34578b0](https://github.com/yschimke/homeassistant-remotecompose/commit/34578b0fd6f9f5f76148d0e7003b218785fa0614))
+* **deps:** update dependency ee.schimke.composeai:data-render-core to v3.38.0 ([#1071](https://github.com/yschimke/homeassistant-remotecompose/issues/1071)) ([c11fa38](https://github.com/yschimke/homeassistant-remotecompose/commit/c11fa380b98a8580823ecb9bca6c01690aecf8ad))
+
+
+### Performance Improvements
+
+* keep a screen of dashboard rows composed around the viewport ([#1065](https://github.com/yschimke/homeassistant-remotecompose/issues/1065)) ([1d0c740](https://github.com/yschimke/homeassistant-remotecompose/commit/1d0c74045d4401d62d42a70f1617b4f3115a99e2))
+* let a card's player skip recomposition on data changes ([#1072](https://github.com/yschimke/homeassistant-remotecompose/issues/1072)) ([5b872ec](https://github.com/yschimke/homeassistant-remotecompose/commit/5b872ec44e2eee386a9d9f41021b376a564fb4de))
+
+
+### Reverts
+
+* drop the dashboard list's cache window ([#1069](https://github.com/yschimke/homeassistant-remotecompose/issues/1069)) ([562f8d8](https://github.com/yschimke/homeassistant-remotecompose/commit/562f8d80e596508e817bebf2be656e206945d943))
+
 ## [0.1.58](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.57...v0.1.58) (2026-10-22)
 
 
