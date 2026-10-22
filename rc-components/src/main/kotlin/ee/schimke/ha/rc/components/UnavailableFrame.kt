@@ -88,7 +88,9 @@ private fun UnavailableLabel(style: HaUnavailableStyle, modifier: RemoteModifier
   val plate =
     RemoteModifier.clip(haControlShape(8))
       .background(theme.cardBackground.copy(alpha = style.plateAlpha.rf))
-      .padding(horizontal = 12.rdp, vertical = 4.rdp)
+      // Two text lines tall, the name-over-state block a tile or row draws under it: a thinner
+      // plate let the faded lines show above and below the label, which read as text overlap.
+      .padding(horizontal = 12.rdp, vertical = 12.rdp)
   RemoteBox(modifier = modifier.then(plate)) {
     RemoteText(
       text = style.label.rs,
