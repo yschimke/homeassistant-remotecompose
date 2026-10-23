@@ -19,7 +19,6 @@ import ee.schimke.composeai.rcplayer.edit.optimize
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.design.DesignKey
-import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -29,6 +28,7 @@ import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideCardStyle
+import ee.schimke.ha.rc.components.ProvideExpressionNames
 import ee.schimke.ha.rc.components.ProvideHaUberStyle
 import ee.schimke.ha.rc.components.ProvideSystemHaTheme
 import ee.schimke.ha.rc.components.ProvideWidgetActionRegistry
@@ -101,6 +101,7 @@ fun LauncherWidgetContent(
   snapshot: HaSnapshot,
   captureSizeDp: WidgetCaptureSizeDp? = null,
   look: LauncherLook = LauncherLook(),
+  content: @Composable (RemoteModifier) -> Unit = { RenderChild(card, snapshot, it) },
 ) {
   CompositionLocalProvider(
     LocalWidgetCaptureSizeDp provides captureSizeDp,
@@ -116,7 +117,7 @@ fun LauncherWidgetContent(
           ProvideCardSizeMode(CardSizeMode.Fixed) {
             ProvideCardChrome(enabled = false) {
               ProvideWidgetActionRegistry(widgetActions) {
-                RemoteHaWidgetSurface { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
+                RemoteHaWidgetSurface { content(RemoteModifier.fillMaxWidth()) }
               }
             }
           }
@@ -181,6 +182,24 @@ object LauncherDesigns {
     key: DesignKey,
     densityDpi: Int,
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
+  ): Template =
+    captureWith(context, key, densityDpi, registry) { card, snapshot, modifier ->
+      RenderChild(card, snapshot, modifier)
+    }
+
+  /**
+   * The launcher capture around any [content]: the key's design card and placeholder snapshot, the
+   * widget's profile, theme, look and cell size, card chrome off on the widget surface, and taps as
+   * numeric host actions. A card design authored in UI Builder is captured through this too
+   * (server-owned-card-designs.md, "One source, every surface"), so the launcher surface is a
+   * rewrite of the card's design, not a source of its own.
+   */
+  fun captureWith(
+    context: Context,
+    key: DesignKey,
+    densityDpi: Int,
+    registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
+    content: @Composable (card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) -> Unit,
   ): Template {
     require(key.surface == DesignSurface.Launcher) { "not a launcher key: $key" }
     val (widthDp, heightDp) = key.variant.split('x').map { it.toInt() }
@@ -188,16 +207,7 @@ object LauncherDesigns {
     val profile = if (parts.getOrNull(1) == "system") systemThemedWidgetsProfile else widgetsProfile
     val dark = parts.getOrNull(2) == "dark"
     val look = LauncherLook.parse(parts.drop(3))
-    val converter =
-      requireNotNull(registry.converterFor(key.cardType)) { "no converter: ${key.cardType}" }
-    val (card, snapshot) =
-      requireNotNull(converter.framedDesignTemplate(DesignProperties.parse(key.shape))) {
-          "${key.cardType} has no template for ${key.shape}"
-        }
-        // The placeholder converter templates its own type; the key names the card's.
-        .let {
-          if (it.card.type == key.cardType) it else it.copy(card = it.card.ofType(key.cardType))
-        }
+    val (card, snapshot) = CardDesignTemplates.designInput(key, registry)
     val actions = WidgetActionRegistry(emptyMap())
     val widthPx = dpToPx(widthDp, densityDpi)
     val heightPx = dpToPx(heightDp, densityDpi)
@@ -208,16 +218,20 @@ object LauncherDesigns {
           profile = profile,
         ) {
           CompositionLocalProvider(LocalTemplateBindings provides TemplateBindings()) {
-            LauncherWidgetContent(
-              registry,
-              profile,
-              dark,
-              actions,
-              card,
-              snapshot,
-              WidgetCaptureSizeDp(widthDp, heightDp),
-              look,
-            )
+            ProvideExpressionNames {
+              LauncherWidgetContent(
+                registry,
+                profile,
+                dark,
+                actions,
+                card,
+                snapshot,
+                WidgetCaptureSizeDp(widthDp, heightDp),
+                look,
+              ) {
+                content(card, snapshot, it)
+              }
+            }
           }
         }
         .bytes

@@ -385,6 +385,46 @@
         }
       ]
     },
+    "ha-cards/entity-tile": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardEntityTileKt.HaCardEntityTile",
+      "displayName": "Entity tile",
+      "group": "Home Assistant",
+      "insertContent": {
+        "properties": {}
+      },
+      "propertyCapabilities": [
+        {
+          "name": "domain",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The slot entity's domain (`light`, `switch`, `sensor`, `binary_sensor`). Unset, a captured card design takes it from the design key, so one design covers every tile key."
+        },
+        {
+          "name": "deviceClass",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The entity's `device_class`, which picks the icon, colour and meter glyph. Unset takes the key's."
+        },
+        {
+          "name": "iconAttribute",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The entity's own `icon` attribute (`mdi:…`). Unset takes the key's."
+        },
+        {
+          "name": "iconConfig",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The card's configured `icon:` (`mdi:…`). Unset takes the key's."
+        },
+        {
+          "name": "unit",
+          "jsonType": "string",
+          "required": false,
+          "notes": "A sensor's `unit_of_measurement`, which with `deviceClass` picks a meter glyph's kind and scale. Unset takes the key's."
+        }
+      ]
+    },
     "ha-cards/entity-row": {
       "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardEntityRow",
       "displayName": "Entity row",

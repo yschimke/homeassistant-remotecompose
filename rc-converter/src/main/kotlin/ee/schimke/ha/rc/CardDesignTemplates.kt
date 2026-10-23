@@ -12,6 +12,7 @@ import androidx.compose.remote.creation.compose.modifier.drawWithContent
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.RemoteString
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import ee.schimke.composeai.rcplayer.edit.hardcodeDensity
 import ee.schimke.composeai.rcplayer.edit.optimize
@@ -29,6 +30,7 @@ import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.ProvideCardStyle
+import ee.schimke.ha.rc.components.ProvideExpressionNames
 import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.cardPalette
@@ -204,18 +206,29 @@ object CardDesignTemplates {
     key: DesignKey,
     registry: CardRegistry = defaultTemplateRegistry,
   ): BuiltDesign {
+    return captureWith(context, key, registry) { card, snapshot, modifier ->
+      RenderChild(card, snapshot, modifier)
+    }
+  }
+
+  /**
+   * The capture harness [capture] runs a converter in, around any [content]: the key's design card
+   * and placeholder snapshot, its theme, the dashboard's profile at host density and
+   * [LocalTemplateBindings]. A card design authored in UI Builder is captured through this too, so
+   * it and the converter's template differ only in what [content] draws. [content] draws the card
+   * with the modifier it is given, which fills the width and declares the key's binding recipe.
+   */
+  fun captureWith(
+    context: Context,
+    key: DesignKey,
+    registry: CardRegistry = defaultTemplateRegistry,
+    content: @Composable (card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) -> Unit,
+  ): BuiltDesign {
     require(key.surface == DesignSurface.MobileApp) { "spike only builds mobile-app templates" }
     val (style, dark, cardStyle) = parseBakedTheme(key.theme)
-    val converter =
-      requireNotNull(registry.converterFor(key.cardType)) { "no converter: ${key.cardType}" }
-    val (card, snapshot) =
-      requireNotNull(converter.framedDesignTemplate(DesignProperties.parse(key.shape))) {
-          "${key.cardType} has no template for ${key.shape}"
-        }
-        // The placeholder converter templates its own type; the key names the card's.
-        .let {
-          if (it.card.type == key.cardType) it else it.copy(card = it.card.ofType(key.cardType))
-        }
+    val (card, snapshot) = designInput(key, registry)
+    val recipe =
+      registry.converterFor(key.cardType)?.designRecipe(DesignProperties.parse(key.shape))
     val palette = cardStyle.cardPalette(style, dark)
     val bytes = runBlocking {
       // Host density: every dp and sp reads the player's display, never the capture's, so a design
@@ -231,14 +244,11 @@ object CardDesignTemplates {
         ) {
           // Bound name / title text instead of literals: see LocalTemplateBindings.
           CompositionLocalProvider(LocalTemplateBindings provides TemplateBindings()) {
-            ProvideCardRegistry(registry) {
-              ProvideCardStyle(cardStyle, palette, dark) {
-                RenderChild(
-                  card,
-                  snapshot,
-                  RemoteModifier.fillMaxWidth()
-                    .declaringRecipe(converter.designRecipe(DesignProperties.parse(key.shape))),
-                )
+            ProvideExpressionNames {
+              ProvideCardRegistry(registry) {
+                ProvideCardStyle(cardStyle, palette, dark) {
+                  content(card, snapshot, RemoteModifier.fillMaxWidth().declaringRecipe(recipe))
+                }
               }
             }
           }
@@ -250,6 +260,25 @@ object CardDesignTemplates {
       slots = CardDesignSlots.slotEntities(card)?.size ?: 0,
       bytes = bytes,
     )
+  }
+
+  /**
+   * The design card and placeholder snapshot for [key]: the slot entity ids and the structural
+   * properties its shape names, with no Home Assistant values.
+   */
+  fun designInput(
+    key: DesignKey,
+    registry: CardRegistry = defaultTemplateRegistry,
+  ): DesignTemplateInput {
+    val converter =
+      requireNotNull(registry.converterFor(key.cardType)) { "no converter: ${key.cardType}" }
+    return requireNotNull(converter.framedDesignTemplate(DesignProperties.parse(key.shape))) {
+        "${key.cardType} has no template for ${key.shape}"
+      }
+      // The placeholder converter templates its own type; the key names the card's.
+      .let {
+        if (it.card.type == key.cardType) it else it.copy(card = it.card.ofType(key.cardType))
+      }
   }
 
   /**

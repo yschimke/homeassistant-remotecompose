@@ -440,6 +440,9 @@ internal fun SlotContent(
   slotIndex: Int,
   template: Boolean,
   cardStyle: HaUberTheme,
+  // What draws the card: its converter, or a card design authored in UI Builder captured for the
+  // card's key (server-owned-card-designs.md, "One source, every surface").
+  content: @Composable (RemoteModifier) -> Unit = { RenderChild(card!!, snapshot, it) },
 ) {
   // The watch's widget host has no image loader. A template names its slot pictures by URL, and
   // baking embeds the phone-synced bytes; a direct capture can't, so it shows the card's icon.
@@ -467,7 +470,7 @@ internal fun SlotContent(
               ProvideFixedCanvasAxis(BreakpointAxis.Height) {
                 ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
                   if (card != null) {
-                    RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                    content(RemoteModifier.fillMaxWidth())
                   } else {
                     EmptySlotPlaceholder(slotIndex, theme)
                   }

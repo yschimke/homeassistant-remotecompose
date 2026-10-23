@@ -96,6 +96,12 @@ class TileCardConverter : CardConverter {
 
     const val DOMAIN = EntityDesign.DOMAIN
 
+    /** The other structural properties of a tile key, for a card design's tile component. */
+    const val DEVICE_CLASS = EntityDesign.DEVICE_CLASS
+    const val ICON = EntityDesign.ICON
+    const val CARD_ICON = EntityDesign.CARD_ICON
+    const val UNIT = EntityDesign.UNIT
+
     /** The narrowest launcher cell that shows a tile's features (the full tile's own minimum). */
     private const val FeaturesMinWidthDp = 96
   }

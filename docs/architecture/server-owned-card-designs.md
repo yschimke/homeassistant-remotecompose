@@ -77,9 +77,18 @@ ha-cards .uid  ──(UI Builder, admin edit)──▶  revision
   the `ha-cards` catalog. Theme is not part of the source: the family comes from
   `ha-cards/uber-theme`, so the export step produces one `.rc` per family and mode from one
   `.uid`.
-- **Export.** UI Builder exports RemoteCompose with state variables marked
-  `"persistence": "host"` as named `User` values, which is what `LocalTemplateBindings` reads.
-  The deployed UI Builder must be built with `-PuiBuilderRemoteCompose=true`.
+- **Export.** Two implementations of the same transformation, kept equal by a test:
+  - **In this repository** (`CardDesignDocument` in `:ha-cards-catalog`): draws a `.uid` by
+    calling the `ha-cards` components with each node's properties, inside the same capture harness
+    as converter templates (`CardDesignTemplates.captureWith`). It needs no UI Builder release, so
+    the library and the scheduled import capture designs in a Robolectric test today.
+    Binding-shaped components (`ha-cards/entity-tile`) take their structural properties from the
+    design key being captured, so one `.uid` covers every key of its card type.
+  - **In UI Builder**, for live publishing from the design server: RemoteCompose export with state
+    variables marked `"persistence": "host"` as named `User` values, which is what
+    `LocalTemplateBindings` reads. Released UI Builder builds have it switched off
+    (`-PuiBuilderRemoteCompose`, compiled into `ui-builder-export`), so this half waits on a release
+    that enables it.
 - **Validation** is the existing `userTemplateProblem` (bindings against the base schema, op
   profile), plus the parity gate below while a card type migrates.
 - **Import.** A scheduled workflow fetches the server's library designs (`.uid` sources, `.rc`

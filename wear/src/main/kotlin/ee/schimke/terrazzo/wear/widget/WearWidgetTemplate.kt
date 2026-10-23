@@ -34,6 +34,7 @@ import ee.schimke.composeai.rcplayer.edit.namedVariables
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.rc.androidXExperimentalWrap
+import ee.schimke.ha.rc.components.ProvideExpressionNames
 
 /**
  * A Wear widget template that fits any Glance Wear container: the widget's content inside Glance
@@ -77,7 +78,9 @@ internal object WearWidgetTemplate {
         remoteDensity = RemoteDensity.Host,
         profile = androidXExperimentalWrap,
       ) {
-        NamedContainer(content)
+        // Expressions named in composition order, so a card drawn by its converter or by a card
+        // design wrapping it names them alike.
+        ProvideExpressionNames { NamedContainer(content) }
       }
       .bytes
 
