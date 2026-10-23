@@ -296,7 +296,7 @@ h1{font-size:36px;line-height:1.1;margin:0 0 12px}h2{font-size:26px;line-height:
 .secondary{border:1px solid var(--line);border-radius:24px;padding:20px;margin-top:32px}
 .secondary h2{font-size:22px}.secondary .lede{font-size:16px}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;align-items:start;margin:0 0 24px}
-.cards img{display:block;width:100%;height:auto;border-radius:12px;background:var(--card)}
+.cards img{display:block;width:100%;height:auto}
 .steps{margin:0 0 20px;padding-left:22px;display:grid;gap:14px;max-width:44em}.steps li{min-width:0}.steps p{margin:0;color:var(--muted)}
 code{overflow-wrap:anywhere}
 details{margin:0 0 16px;max-width:44em}summary{cursor:pointer;font-weight:600;padding:6px 0}
