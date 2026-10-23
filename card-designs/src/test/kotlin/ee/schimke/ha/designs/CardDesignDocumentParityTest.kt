@@ -1,13 +1,9 @@
 package ee.schimke.ha.designs
 
-import androidx.compose.runtime.CompositionLocalProvider
 import ee.schimke.ha.cards.CardDesignDocument
-import ee.schimke.ha.cards.LocalCardDesignInput
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.rc.CardDesignTemplates
-import ee.schimke.ha.rc.DesignTemplateInput
-import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -31,21 +27,14 @@ class CardDesignDocumentParityTest {
 
   @Test
   fun tileDesignDrawsEveryTileKeyAsTheConverterDoes() {
-    val design = designOf("tile")
+    val design = designOf(CardTypes.TILE)
     val keys = libraryKeys(CardTypes.TILE)
     assertTrue(keys.isNotEmpty(), "the library has tile keys")
     println("tile.uid: ${keys.size} library tile keys")
 
     val differing = keys.filterNot { key ->
       val converter = CardDesignTemplates.capture(context, key)
-      val fromDesign =
-        CardDesignTemplates.captureWith(context, key) { card, snapshot, modifier ->
-          CompositionLocalProvider(
-            LocalCardDesignInput provides DesignTemplateInput(card, snapshot)
-          ) {
-            design.Render(modifier)
-          }
-        }
+      val fromDesign = CheckedInCardDesigns.captureDesign(context, key, design)
       converter.bytes.contentEquals(fromDesign.bytes)
     }
     assertEquals(emptyList(), differing.map { "${it.shape} ${it.theme}" })
@@ -54,23 +43,18 @@ class CardDesignDocumentParityTest {
   @Test
   fun everyCheckedInDesignCanBeDrawnHere() {
     val problems =
-      DESIGNS.listFiles { file -> file.extension == "uid" }!!.flatMap { file ->
+      CheckedInCardDesigns.DIRECTORY.listFiles { file -> file.extension == "uid" }!!.flatMap { file ->
           CardDesignDocument.parse(file.readText()).validate().map { "${file.name}: $it" }
         }
     assertEquals(emptyList(), problems)
   }
 
-  private fun designOf(name: String) =
-    CardDesignDocument.parse(DESIGNS.resolve("$name.uid").readText())
+  private fun designOf(cardType: String) =
+    requireNotNull(CheckedInCardDesigns.designFor(cardType)) { "no $cardType.uid" }
 
   private fun libraryKeys(cardType: String): List<DesignKey> =
     GenerateCardDesignLibrary.librarySources()
       .flatMap { GenerateCardDesignLibrary.keysOf(it.card, it.snapshot) }
       .distinct()
       .filter { it.cardType == cardType }
-
-  private companion object {
-    /** The checked-in card designs, relative to the module (Gradle's test working directory). */
-    val DESIGNS = File("ui-builder/designs")
-  }
 }

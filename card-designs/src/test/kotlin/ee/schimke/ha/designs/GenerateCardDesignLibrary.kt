@@ -87,7 +87,9 @@ class GenerateCardDesignLibrary {
     }
     assertTrue(examples.isNotEmpty(), "the demo dashboards produce designs")
 
-    val built = examples.keys.map { CardDesignTemplates.capture(context, it) }
+    // A card type with a checked-in design (ui-builder/designs/<type>.uid) is captured from it, so
+    // editing the design is what changes the library; the rest still come from their converters.
+    val built = examples.keys.map { CheckedInCardDesigns.capture(context, it) }
     val now = System.currentTimeMillis()
     val output = DesignPublisher.publish(built, serial = now, nowEpochMs = now)
     // The manifest is written last, after its blobs, previews and catalog.
