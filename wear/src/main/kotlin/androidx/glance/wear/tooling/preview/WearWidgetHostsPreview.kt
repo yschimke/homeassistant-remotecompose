@@ -1,3 +1,5 @@
+@file:Suppress("RestrictedApi")
+
 // Preview helper that shows a Glance Wear widget the way each watch's widget host frames it: the
 // container's padding and corner radius come from the host (Pixel's squircle, Samsung's stadium),
 // so one widget is drawn once per host, centred on a round black screen with no tile chrome.
