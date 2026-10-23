@@ -114,10 +114,11 @@ internal fun List<WidgetCardOption>.forWidget(large: Boolean): List<WidgetCardOp
  * card's config: the same card in the same section keeps its key across syncs.
  */
 private fun sectionCardOption(section: PinnedSection, card: CardSummary): WidgetCardOption =
-  WidgetCardOption(
-    "section:${section.sectionKey.ifEmpty { section.title }}:${digest(card.rawJson)}",
-    card,
-  )
+  WidgetCardOption(sectionCardKey(section, card), card)
+
+/** The [WidgetCardOption.cardKey] of [card] in [section]: see [sectionCardOption]. */
+internal fun sectionCardKey(section: PinnedSection, card: CardSummary): String =
+  "section:${section.sectionKey.ifEmpty { section.title }}:${digest(card.rawJson)}"
 
 /**
  * What a widget that chose [choice] draws: the card the phone sends under its key now, or the copy
