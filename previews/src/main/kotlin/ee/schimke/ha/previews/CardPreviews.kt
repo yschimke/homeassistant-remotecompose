@@ -982,14 +982,14 @@ private fun bambuSpoolCard() =
 
 // ——— thermostat / humidifier / light arc dials ———
 
-@Preview(name = "thermostat (light)", showBackground = false, widthDp = 240, heightDp = 290)
+@Preview(name = "thermostat (light)", showBackground = false, widthDp = 381, heightDp = 238)
 @Composable
 fun Thermostat_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(thermostatCard(), Fixtures.thermostat, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "thermostat (dark)", showBackground = false, widthDp = 240, heightDp = 290)
+@Preview(name = "thermostat (dark)", showBackground = false, widthDp = 381, heightDp = 238)
 @Composable
 fun Thermostat_Dark() =
   CardHost(HaTheme.Dark) {
@@ -1014,14 +1014,14 @@ fun Humidifier_Dark() =
 
 private fun humidifierCard() = card("""{"type":"humidifier","entity":"humidifier.bedroom"}""")
 
-@Preview(name = "light card (light)", showBackground = false, widthDp = 240, heightDp = 250)
+@Preview(name = "light card (light)", showBackground = false, widthDp = 381, heightDp = 201)
 @Composable
 fun LightCard_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(lightCardConfig(), Fixtures.brightLight, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "light card (dark)", showBackground = false, widthDp = 240, heightDp = 250)
+@Preview(name = "light card (dark)", showBackground = false, widthDp = 381, heightDp = 201)
 @Composable
 fun LightCard_Dark() =
   CardHost(HaTheme.Dark) {
@@ -1100,14 +1100,14 @@ private fun statsGraphCard() =
 
 // ——— alarm-panel ———
 
-@Preview(name = "alarm-panel (light)", showBackground = false, widthDp = 320, heightDp = 380)
+@Preview(name = "alarm-panel (light)", showBackground = false, widthDp = 381, heightDp = 382)
 @Composable
 fun AlarmPanel_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(alarmPanelCard(), Fixtures.alarmDisarmed, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "alarm-panel (dark)", showBackground = false, widthDp = 320, heightDp = 380)
+@Preview(name = "alarm-panel (dark)", showBackground = false, widthDp = 381, heightDp = 382)
 @Composable
 fun AlarmPanel_Dark() =
   CardHost(HaTheme.Dark) {

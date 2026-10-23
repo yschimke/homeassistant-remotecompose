@@ -77,6 +77,26 @@ template:
           action: input_boolean.turn_off
           target: { entity_id: input_boolean.office_lamp_proxy }
 
+      # The light card preview's fixture (previews Fixtures.brightLight): on at 60%. A light of its
+      # own, so the tiles' plain on/off kitchen light keeps its references.
+      - name: Kitchen dimmer
+        unique_id: kitchen_dimmer
+        state: "{{ true }}"
+        level: "{{ 153 }}"
+        turn_on: [{ delay: 0 }]
+        turn_off: [{ delay: 0 }]
+        set_level: [{ delay: 0 }]
+
+  # The alarm-panel preview's fixture (previews Fixtures.alarmDisarmed).
+  - alarm_control_panel:
+      - name: House
+        unique_id: house_alarm
+        state: "disarmed"
+        code_arm_required: false
+        arm_away: [{ delay: 0 }]
+        arm_home: [{ delay: 0 }]
+        disarm: [{ delay: 0 }]
+
   - switch:
       - name: Coffee maker
         unique_id: coffee_maker
@@ -94,6 +114,22 @@ template:
         state: "on"
         device_class: motion
 
+# The thermostat preview's fixture (previews Fixtures.thermostat): heating to 22 °C from the living
+# room's 21.4 °C. Template entities can't be climate entities; a generic thermostat over a proxy
+# heater is the closest deterministic one.
+climate:
+  - platform: generic_thermostat
+    name: Living Room
+    unique_id: living_room_thermostat
+    heater: input_boolean.living_room_heater_proxy
+    target_sensor: sensor.living_room
+    min_temp: 7
+    max_temp: 35
+    target_temp: 22
+    target_temp_step: 0.5
+    precision: 0.1
+    initial_hvac_mode: heat
+
 # ——— input_booleans used as proxies by the `light:` + `switch:` platforms ———
 input_boolean:
   kitchen_light_proxy:
@@ -104,6 +140,9 @@ input_boolean:
     initial: off
   coffee_maker_proxy:
     name: Coffee maker
+    initial: on
+  living_room_heater_proxy:
+    name: Living room heater
     initial: on
 
 # ——— real light / switch entities ———

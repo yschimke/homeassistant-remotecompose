@@ -121,6 +121,35 @@ views:
             show_forecast: true
             forecast_type: daily
 
+  - title: light
+    path: light
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: light                             # 0 — the light card preview's card
+            entity: light.kitchen_dimmer
+            name: Kitchen
+
+  - title: thermostat
+    path: thermostat
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: thermostat                        # 0 — the thermostat preview's card
+            entity: climate.living_room
+
+  - title: alarm-panel
+    path: alarm-panel
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: alarm-panel                       # 0 — the alarm-panel preview's card
+            entity: alarm_control_panel.house
+            states: [arm_away, arm_home]
+
   - title: dashboard
     path: dashboard
     type: sections

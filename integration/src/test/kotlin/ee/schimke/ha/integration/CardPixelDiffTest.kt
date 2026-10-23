@@ -86,6 +86,14 @@ class CardPixelDiffTest(
           "weather-forecast/forecast_home_dark.png",
           35.0,
         ),
+        // light / thermostat / alarm-panel: each preview sized to its reference, a full
+        // section-row card (500 css px at the capture's 2x, 381 dp at the preview's 2.625x).
+        arrayOf("LightCard_Light_light_card_light", "light/kitchen_light.png", 20.0),
+        arrayOf("LightCard_Dark_light_card_dark", "light/kitchen_dark.png", 20.0),
+        arrayOf("Thermostat_Light_thermostat_light", "thermostat/living_room_light.png", 40.0),
+        arrayOf("Thermostat_Dark_thermostat_dark", "thermostat/living_room_dark.png", 40.0),
+        arrayOf("AlarmPanel_Light_alarm_panel_light", "alarm-panel/house_light.png", 40.0),
+        arrayOf("AlarmPanel_Dark_alarm_panel_dark", "alarm-panel/house_dark.png", 40.0),
       )
   }
 

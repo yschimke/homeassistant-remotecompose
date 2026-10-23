@@ -48,6 +48,10 @@ const MANIFEST = [
 
   { view: "weather", cardIndex: 0, file: "weather-forecast/forecast_home" },
 
+  { view: "light", cardIndex: 0, file: "light/kitchen" },
+  { view: "thermostat", cardIndex: 0, file: "thermostat/living_room" },
+  { view: "alarm-panel", cardIndex: 0, file: "alarm-panel/house" },
+
   // Pixel-parity reference — one `vertical-stack` card.
   { view: "dashboard", cardIndex: 0, file: "dashboard/home" },
 
