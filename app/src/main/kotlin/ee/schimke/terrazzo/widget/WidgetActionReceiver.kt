@@ -73,10 +73,12 @@ class WidgetActionReceiver : BroadcastReceiver() {
       Log.w(TAG, "Refusing a widget action the app didn't put on widget $widgetId")
       return
     }
+    // Paired here, in arrival order: the runs below may start in any order on their pool.
+    val call = WidgetActionRunner.prepare(widgetId, action) ?: return
     val pending = goAsync()
     runnerScope.launch {
       try {
-        WidgetActionRunner.run(context.applicationContext, widgetId, action)
+        WidgetActionRunner.run(context.applicationContext, widgetId, call)
       } finally {
         pending.finish()
       }

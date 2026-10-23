@@ -55,6 +55,7 @@ import ee.schimke.terrazzo.shared.CardStudioScreen
 import ee.schimke.terrazzo.shared.TerrazzoNavigation
 import ee.schimke.terrazzo.wearsync.wearInstallPrompts
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
+import ee.schimke.terrazzo.widget.WidgetOpenRequests
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import ee.schimke.terrazzo.widget.WidgetsScreen
 import kotlinx.coroutines.NonCancellable
@@ -270,6 +271,12 @@ private fun AuthenticatedShell(
 
   var screen by rememberSaveable { mutableStateOf(AppScreen.Dashboards) }
   var selectionEntry by rememberSaveable { mutableStateOf(SelectionEntry.Signin) }
+
+  // A widget's more-info or navigate tap opens on the dashboard, whichever screen was showing.
+  val widgetOpen by WidgetOpenRequests.requests.collectAsState()
+  LaunchedEffect(widgetOpen) {
+    if (widgetOpen != null && screen != AppScreen.ChooseDashboards) screen = AppScreen.Dashboards
+  }
 
   // Snapshot of the persisted selection at the moment the user
   // entered the ChooseDashboards screen. Captured here (rather than
@@ -491,6 +498,19 @@ private fun DashboardsRoot(
   }
 
   val readyDashboards = (dashboards as? DashboardListState.Ready)?.dashboards.orEmpty()
+
+  // A widget's more-info or navigate tap opens on a dashboard ([DashboardViewScreen] opens it):
+  // back out of the card screens over it, and off the picker onto the first dashboard.
+  val widgetOpen by WidgetOpenRequests.requests.collectAsState()
+  LaunchedEffect(widgetOpen, readyDashboards) {
+    if (widgetOpen == null) return@LaunchedEffect
+    historyTarget = null
+    actionsTarget = null
+    studioTarget = null
+    styleTarget = null
+    agentOpen = false
+    if (opened == DASHBOARD_UNSET) readyDashboards.firstOrNull()?.let { opened = it.urlPath }
+  }
   val sessionConnection by session.connectionStatus.collectAsState()
   val connectionStatus = sessionConnection.toUiConnectionStatus()
   val snackbars = remember { SnackbarHostState() }
