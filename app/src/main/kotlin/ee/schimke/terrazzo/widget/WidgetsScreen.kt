@@ -63,8 +63,9 @@ internal data class InstalledWidget(val title: String, val kind: String)
  * `custom:` card keeps its own name ("Bambu print status card").
  */
 internal fun cardTypeLabel(type: String): String {
-  val words = type.removePrefix("custom:").replace('-', ' ').replace('_', ' ').trim()
-  if (words.isEmpty()) return "Card"
+  val words =
+    type.removePrefix("custom:").replace('-', ' ').replace('_', ' ').trim().removeSuffix(" card")
+  if (words.isEmpty() || words == "card") return "Card"
   return words.replaceFirstChar { it.uppercaseChar() } + " card"
 }
 

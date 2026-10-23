@@ -18,6 +18,13 @@ class CardTypeLabelTest {
   }
 
   @Test
+  fun aTypeAlreadyNamedCardIsNotACardCard() {
+    assertEquals("Mushroom light card", cardTypeLabel("custom:mushroom-light-card"))
+    assertEquals("Button card", cardTypeLabel("custom:button_card"))
+    assertEquals("Card", cardTypeLabel("custom:card"))
+  }
+
+  @Test
   fun anEmptyTypeIsStillACard() {
     assertEquals("Card", cardTypeLabel(""))
     assertEquals("Card", cardTypeLabel("custom:"))
