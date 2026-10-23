@@ -1,7 +1,6 @@
 package ee.schimke.ha.designs
 
 import ee.schimke.ha.design.DesignKey
-import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.LauncherLook
 import ee.schimke.ha.rc.components.HaUberTheme
@@ -29,21 +28,29 @@ class CardDesignSurfaceParityTest {
   private val densityDpi = context.resources.configuration.densityDpi
 
   @Test
-  fun tileDesignIsTheLauncherTemplateForEveryCellAndTheme() {
-    val design = requireNotNull(CheckedInCardDesigns.designFor(CardTypes.TILE)) { "no tile.uid" }
-    val keys = launcherKeys(CardTypes.TILE)
-    assertTrue(keys.isNotEmpty(), "the library's tiles have launcher keys")
-    println("tile.uid: ${keys.size} launcher tile keys")
-
-    val differing = keys.filterNot { key ->
-      val converter = LauncherDesigns.capture(context, key, densityDpi)
-      val fromDesign =
-        LauncherDesigns.captureWith(context, key, densityDpi) { card, snapshot, modifier ->
-          design.RenderCard(card, snapshot, modifier)
+  fun everyDesignIsItsTypesLauncherTemplateForEveryCellAndTheme() {
+    val types =
+      CheckedInCardDesigns.DIRECTORY.listFiles { file -> file.extension == "uid" }!!.map {
+          it.nameWithoutExtension
         }
-      converter.bytes.contentEquals(fromDesign.bytes) && converter.actions == fromDesign.actions
+        .sorted()
+    val differing = types.flatMap { cardType ->
+      val design = requireNotNull(CheckedInCardDesigns.designFor(cardType)) { "no $cardType.uid" }
+      val keys = launcherKeys(cardType)
+      assertTrue(keys.isNotEmpty(), "the library's $cardType cards have launcher keys")
+      println("$cardType.uid: ${keys.size} launcher keys")
+      keys
+        .filterNot { key ->
+          val converter = LauncherDesigns.capture(context, key, densityDpi)
+          val fromDesign =
+            LauncherDesigns.captureWith(context, key, densityDpi) { card, snapshot, modifier ->
+              design.RenderCard(card, snapshot, modifier)
+            }
+          converter.bytes.contentEquals(fromDesign.bytes) && converter.actions == fromDesign.actions
+        }
+        .map { "$cardType ${it.variant} ${it.shape} ${it.theme}" }
     }
-    assertEquals(emptyList(), differing.map { "${it.variant} ${it.shape} ${it.theme}" })
+    assertEquals(emptyList(), differing)
   }
 
   /**

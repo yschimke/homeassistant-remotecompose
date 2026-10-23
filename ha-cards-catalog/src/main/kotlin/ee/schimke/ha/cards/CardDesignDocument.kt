@@ -59,6 +59,13 @@ class CardDesignDocument private constructor(private val design: CardDesign) {
         "ha-cards/card-size-mode",
       )
 
+    /**
+     * Whether this component draws a whole card, with its own chrome: one of [WHOLE_CARDS], or a
+     * card type's own layout (its structural switches and parts, [CardDesigns.components]).
+     */
+    private fun String?.drawsWholeCard(): Boolean =
+      this in WHOLE_CARDS || (this != "ha-cards/dashboard-card" && this in CardDesigns.components)
+
     private fun CardDesignNode.color(name: String): RemoteColor? = argb(name)?.let { Color(it).rc }
 
     /**
@@ -72,7 +79,7 @@ class CardDesignDocument private constructor(private val design: CardDesign) {
         "ha-cards/dashboard-card" to
           { node, modifier ->
             val only = node.children("content").singleOrNull()
-            if (only != null && node.componentOf(only) in WHOLE_CARDS) node.Child(only, modifier)
+            if (only != null && node.componentOf(only).drawsWholeCard()) node.Child(only, modifier)
             else HaCardSurface(modifier) { node.Children() }
           },
         "ha-cards/dashboard-section" to

@@ -6,15 +6,17 @@ import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.TileDesignParts
 import ee.schimke.ha.rc.design.CardDesigns
 
 /*
  * The parts a card design is arranged from, on UI Builder's shelf: the switches that pick what a
- * card draws for the surface and size it is drawn at, and the forms of a tile. Each calls what the
- * card design renderer calls for the same component id (CardDesigns, TileDesignParts), so a design
- * edited in UI Builder draws in the app as it does on the canvas. A slot wrapper draws the slot it
- * picks inside its own modifier; the renderer hands that modifier to the slot's node instead.
+ * card draws for the surface and size it is drawn at, and the forms of a tile and a button. Each
+ * calls what the card design renderer calls for the same component id (CardDesigns,
+ * TileDesignParts, ButtonDesignParts), so a design edited in UI Builder draws in the app as it does
+ * on the canvas. A slot wrapper draws the slot it picks inside its own modifier; the renderer hands
+ * that modifier to the slot's node instead.
  */
 
 /**
@@ -128,4 +130,81 @@ fun HaTileLauncherCell(
   other: @Composable @RemoteComposable () -> Unit = {},
 ) {
   RemoteBox(modifier) { TileDesignParts.LauncherCell(hero, row, features, other) }
+}
+
+/**
+ * `ha-cards/min-size-gate`: [roomy] where the canvas is at least [minWidthDp] × [minHeightDp],
+ * [small] where it isn't, picked where the document plays.
+ */
+@Composable
+@RemoteComposable
+fun HaMinSizeGate(
+  modifier: RemoteModifier = RemoteModifier,
+  minWidthDp: Int = 96,
+  minHeightDp: Int = 80,
+  roomy: @Composable @RemoteComposable () -> Unit = {},
+  small: @Composable @RemoteComposable () -> Unit = {},
+) {
+  CardDesigns.MinSizeGate(minWidthDp, minHeightDp, modifier) { if (it) roomy() else small() }
+}
+
+/**
+ * `ha-cards/button-full`: the button, its icon over its name (and state), a toggle when its entity
+ * is one. [compact] `grid` is the compact body in a square grid cell only, `true` always, `false`
+ * never.
+ */
+@Composable
+@RemoteComposable
+fun HaButtonFull(modifier: RemoteModifier = RemoteModifier, compact: String = "grid") {
+  ButtonDesignParts.Full(compact, modifier)
+}
+
+/** `ha-cards/button-icon`: the button's icon alone, for a cell too small for its name. */
+@Composable
+@RemoteComposable
+fun HaButtonIcon(modifier: RemoteModifier = RemoteModifier) {
+  ButtonDesignParts.Icon(modifier)
+}
+
+/**
+ * `ha-cards/button-name-row`: the icon beside the name, for a cell too short for the name under the
+ * icon; the icon alone when the card hides its name.
+ */
+@Composable
+@RemoteComposable
+fun HaButtonNameRow(modifier: RemoteModifier = RemoteModifier) {
+  ButtonDesignParts.NameRow(modifier)
+}
+
+/** `ha-cards/button-icon-hero`: a big icon over name and state, at the launcher cell's scale. */
+@Composable
+@RemoteComposable
+fun HaButtonIconHero(modifier: RemoteModifier = RemoteModifier) {
+  ButtonDesignParts.IconHero(modifier)
+}
+
+/** `ha-cards/button-wide-hero`: a big icon beside name and state, for a one-row launcher cell. */
+@Composable
+@RemoteComposable
+fun HaButtonWideHero(modifier: RemoteModifier = RemoteModifier) {
+  ButtonDesignParts.WideHero(modifier)
+}
+
+/**
+ * `ha-cards/button-cell`: which slot the button and its canvas call for: [wrap] on a dashboard; in
+ * a fixed canvas [fill] when the card hides its icon, [row] or [hero] for a launcher cell with a
+ * hero scale, [wear] in a Wear container, else [other].
+ */
+@Composable
+@RemoteComposable
+fun HaButtonCell(
+  modifier: RemoteModifier = RemoteModifier,
+  wrap: @Composable @RemoteComposable () -> Unit = {},
+  fill: @Composable @RemoteComposable () -> Unit = {},
+  row: @Composable @RemoteComposable () -> Unit = {},
+  hero: @Composable @RemoteComposable () -> Unit = {},
+  wear: @Composable @RemoteComposable () -> Unit = {},
+  other: @Composable @RemoteComposable () -> Unit = {},
+) {
+  RemoteBox(modifier) { ButtonDesignParts.Cell(wrap, fill, row, hero, wear, other) }
 }

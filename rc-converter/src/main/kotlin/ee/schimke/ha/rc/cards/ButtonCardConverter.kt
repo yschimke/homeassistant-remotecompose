@@ -212,7 +212,7 @@ class ButtonCardConverter : CardConverter {
 
 /** Build the [HaButtonData] payload from card config + live snapshot. */
 @Composable
-private fun buttonData(card: CardConfig, snapshot: HaSnapshot): HaButtonData {
+internal fun buttonData(card: CardConfig, snapshot: HaSnapshot): HaButtonData {
   val entityId = card.raw["entity"]?.jsonPrimitive?.content
   val entity = entityId?.let { snapshot.states[it] }
   val name =

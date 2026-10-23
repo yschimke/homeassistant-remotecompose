@@ -1993,6 +1993,221 @@
       "displayName": "Tile features gate",
       "group": "Card layout",
       "nativeOnly": true
+    },
+    "ha-cards/min-size-gate": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaMinSizeGate",
+      "displayName": "Min size gate",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "shelfRole": "Container",
+      "insertContent": {
+        "properties": {
+          "minWidthDp": {
+            "type": "int",
+            "value": 96
+          },
+          "minHeightDp": {
+            "type": "int",
+            "value": 80
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "minWidthDp",
+          "jsonType": "integer",
+          "required": true,
+          "notes": "The narrowest canvas, in dp, that takes `roomy`."
+        },
+        {
+          "name": "minHeightDp",
+          "jsonType": "integer",
+          "required": true,
+          "notes": "The shortest canvas, in dp, that takes `roomy`."
+        }
+      ],
+      "slotCapabilities": [
+        {
+          "name": "roomy",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "small",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        }
+      ]
+    },
+    "ha-cards/button-cell": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaButtonCell",
+      "displayName": "Button cell",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "shelfRole": "Container",
+      "slotCapabilities": [
+        {
+          "name": "wrap",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "fill",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "row",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "hero",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "wear",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "other",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        }
+      ]
+    },
+    "ha-cards/button-full": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaButtonFull",
+      "displayName": "Button (full)",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "compact": {
+            "type": "string",
+            "value": "grid"
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "compact",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "grid",
+            "true",
+            "false"
+          ],
+          "notes": "`grid` draws the compact body in a square grid cell only, `true` always, `false` never."
+        }
+      ]
+    },
+    "ha-cards/button-icon": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaButtonIcon",
+      "displayName": "Button icon",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/button-name-row": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaButtonNameRow",
+      "displayName": "Button name row",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/button-icon-hero": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaButtonIconHero",
+      "displayName": "Button icon hero",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/button-wide-hero": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaButtonWideHero",
+      "displayName": "Button wide hero",
+      "group": "Card layout",
+      "nativeOnly": true
     }
   },
   "$comment_templates": "Generated, not hand-written: :design-server's HaCardsTemplatesTest seeds each from a card schema (CardSchema.fromCard) with HaCardsSeed — the design server's UiBuilderSeed retargeted to this catalog — and fails when a committed template drifts. `-PhaCardsTemplates.update=true` rewrites them.",
