@@ -181,6 +181,13 @@ class EntitiesCardConverter : CardConverter {
           // rows can register `is_on` for the bake to fill. Recording both tiers (the matrix), the
           // dense list already registers them: these rows take the captured entities' state.
           looks = if (sizedAtCapture) entityLooks(rows) else null,
+          // Each row's share of a tall widget: past 64 dp a row draws a size up, so the readings
+          // grow with the widget instead of spreading thin.
+          bigRows =
+            captureSize?.let {
+              (it.heightDp - minHeightDp + rowCount * fit.rowMinHeightDp) /
+                rowCount.coerceAtLeast(1) >= BIG_ROW_SHARE_DP
+            } == true,
         )
       } else {
         FullList(
@@ -349,6 +356,10 @@ class EntitiesCardConverter : CardConverter {
      * Narrowest launcher widget that takes the expanded rows: a `4×N` cell (~288dp) and wider; a
      * `3×N` cell keeps the dense list.
      */
-    private const val LAUNCHER_EXPANDED_MIN_WIDTH_DP = 260
+    /** Three launcher columns: room for an icon, a name and a switch on each expanded row. */
+    private const val LAUNCHER_EXPANDED_MIN_WIDTH_DP = 200
+
+    /** The row share, in dp, past which an expanded row draws a size up. */
+    private const val BIG_ROW_SHARE_DP = 64
   }
 }

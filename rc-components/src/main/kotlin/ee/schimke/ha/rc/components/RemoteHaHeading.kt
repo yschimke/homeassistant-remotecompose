@@ -15,8 +15,12 @@ import androidx.compose.ui.text.font.FontWeight
  */
 @Composable
 @RemoteComposable
-fun RemoteHaHeading(data: HaHeadingData, modifier: RemoteModifier = RemoteModifier) {
-  EverydayHeading(cardTitle(data.title), data.style.textSize, data.style.weight, modifier)
+fun RemoteHaHeading(
+  data: HaHeadingData,
+  modifier: RemoteModifier = RemoteModifier,
+  textSize: RemoteTextUnit = data.style.textSize,
+) {
+  EverydayHeading(cardTitle(data.title), textSize, data.style.weight, modifier)
 }
 
 enum class HaHeadingStyle(val sizeSp: Int, val weight: FontWeight) {
