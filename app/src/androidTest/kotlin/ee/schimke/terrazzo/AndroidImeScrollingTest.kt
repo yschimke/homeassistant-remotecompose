@@ -125,8 +125,7 @@ class AndroidImeScrollingTest {
     captureWindowEvidence("discovery-focused-ime")
     assertAboveKeyboard(field)
     val connect = compose.onNodeWithText("Connect", useUnmergedTree = false)
-    connect.performScrollTo().assertIsDisplayed()
-    assertAboveKeyboard(connect)
+    scrollToAboveKeyboard(connect)
     connect.performClick()
     compose.runOnIdle { assertTrue(connected) }
     // Tapping Connect can take the keyboard down on some emulator images and not others, and a
@@ -259,6 +258,21 @@ class AndroidImeScrollingTest {
       "Entire control must be above the real IME: bottom $bottom, IME top $keyboardTop",
       bottom <= keyboardTop + 1,
     )
+  }
+
+  /**
+   * Scrolls [node] into view until it sits above the keyboard. One [performScrollTo] can land on a
+   * frame where the keyboard is still resizing the viewport (its suggestion strip after typing),
+   * and then leaves the control below the keyboard's settled top; each try settles the keyboard
+   * first.
+   */
+  private fun scrollToAboveKeyboard(node: SemanticsNodeInteraction) {
+    compose.waitUntil(10_000) {
+      awaitImeSettled()
+      node.performScrollTo()
+      runCatching { assertAboveKeyboard(node) }.isSuccess
+    }
+    assertAboveKeyboard(node)
   }
 
   /**
