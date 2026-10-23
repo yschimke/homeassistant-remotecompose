@@ -60,11 +60,16 @@ class DataStoreMainThreadReadTest {
             // creates the coordinator; once its resume is queued, the next goes straight to the
             // one-time initialisation, takes its lock and suspends to read the file on IO, holding
             // it until its own resume runs.
+            // A collector that starts after the first read has landed can finish without
+            // suspending at all; nothing is queued for it then, and there is no lock to hold.
             repeat(2) {
-              CoroutineScope(mainDispatcher).launch(start = CoroutineStart.UNDISPATCHED) {
-                store.data.first()
+              val collector =
+                CoroutineScope(mainDispatcher).launch(start = CoroutineStart.UNDISPATCHED) {
+                  store.data.first()
+                }
+              check(collector.isCompleted || queued.tryAcquire(10, TimeUnit.SECONDS)) {
+                "collector $it never resumed"
               }
-              check(queued.tryAcquire(10, TimeUnit.SECONDS)) { "collector $it never resumed" }
             }
             // MainActivity.onCreate: a blocking read on the same thread.
             runBlocking {

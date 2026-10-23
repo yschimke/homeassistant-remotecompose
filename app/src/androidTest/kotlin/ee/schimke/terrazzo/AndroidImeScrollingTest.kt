@@ -137,8 +137,8 @@ class AndroidImeScrollingTest {
     waitForIme(true)
     val demo = compose.onNodeWithText("Try demo mode (no login)")
     demo.performScrollTo().assertIsDisplayed()
-    scrollFormToBottom()
     captureWindowEvidence("discovery-bottom-ime")
+    scrollToBottomAboveKeyboard(demo)
     assertAboveKeyboard(demo)
     assertNoExtraBottomInset(demo)
     demo.performClick()
@@ -261,6 +261,20 @@ class AndroidImeScrollingTest {
       "Entire control must be above the real IME: bottom $bottom, IME top $keyboardTop",
       bottom <= keyboardTop + 1,
     )
+  }
+
+  /**
+   * Scrolls the form to its end until [node] sits above the keyboard. The keyboard can still change
+   * height after [waitForIme] (a suggestion strip, or a re-show after Connect), and a scroll offset
+   * kept from the taller viewport then leaves the last action below the shorter one. Retrying the
+   * scroll asserts the settled layout rather than the frame the scroll happened to land on.
+   */
+  private fun scrollToBottomAboveKeyboard(node: SemanticsNodeInteraction) {
+    compose.waitUntil(10_000) {
+      awaitImeSettled()
+      scrollFormToBottom()
+      runCatching { assertAboveKeyboard(node) }.isSuccess
+    }
   }
 
   private fun scrollFormToBottom() {
