@@ -15,6 +15,7 @@ import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.crash.CrashReporter
+import ee.schimke.terrazzo.crash.CrashedDocuments
 import ee.schimke.terrazzo.dashboard.CardDesignPreload
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardUsage
@@ -157,6 +158,7 @@ class TerrazzoApplication : Application() {
     crashReporter.install(applicationContext)
     val previous = Thread.getDefaultUncaughtExceptionHandler()
     Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+      CrashedDocuments.recordCrash(applicationContext)
       runCatching { graph.logStore.recordCrash(throwable, thread, fatal = true) }
       previous?.uncaughtException(thread, throwable)
     }
@@ -168,6 +170,9 @@ class TerrazzoApplication : Application() {
     // it *after* installing the handler so a failure during init is still
     // captured rather than escaping uncovered.
     graph.logStore.nonFatalSink = crashReporter::recordCrash
+    // A document a player gave up on is reported as a non-fatal; one that crashed the last run is
+    // disabled from the start.
+    CrashedDocuments.install(applicationContext, crashReporter::recordCrash)
   }
 
   /**

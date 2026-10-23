@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.viewinterop.AndroidView
 import ee.schimke.ha.rc.components.enableRemoteImageUrls
+import ee.schimke.terrazzo.shared.RcErrorBoundary
 import java.io.ByteArrayInputStream
 import kotlin.math.min
 
@@ -76,67 +77,83 @@ fun WrapAdaptiveRemoteDocumentPlayer(
   contentDescription: String? = null,
 ) {
   val context = LocalContext.current
-  BoxWithConstraints(modifier = modifier) {
-    val density = LocalDensity.current
-    val maxWPx = constraints.maxWidth
-    val maxHPx = constraints.maxHeight
+  // A document that throws while it decodes, warms up, measures or draws is disabled, and an
+  // atomic-symbol warning takes its place (RcErrorBoundary).
+  RcErrorBoundary(documentBytes, modifier) { fail ->
+    BoxWithConstraints {
+      val density = LocalDensity.current
+      val maxWPx = constraints.maxWidth
+      val maxHPx = constraints.maxHeight
 
-    if (constraints.hasFixedWidth && constraints.hasFixedHeight) {
-      // The parent pins the slot (EXACTLY on both axes) — the launcher
-      // widget and the long-press resize preview, whose size is forced
-      // from outside. Build the player for this exact size and rebuild
-      // it whenever the size changes (key on width/height too).
-      //
-      // We deliberately do NOT re-use one primed View across resizes: a
-      // `RemoteComposePlayer` that has been measured + drawn once paints
-      // blank — or only fills up to its first size — when it is later
-      // re-measured at a different size (its layout is cached at the
-      // first draw and never rebuilt; with `FEATURE_PAINT_MEASURE = 1`
-      // it doesn't even re-run the document measure). That is the
-      // "widget goes blank / doesn't fill once resized" bug. Re-keying
-      // on the size gives each slot a freshly primed View that fills it
-      // and reflows its size-breakpoints; the caller caches the decoded
-      // bytes, so only the View + prime is rebuilt per (discrete) size.
-      val view =
-        remember(documentBytes, maxWPx, maxHPx) {
-          RemoteComposePlayer(context).apply {
-            setBitmapLoader(bitmapLoader)
-            setDocument(RemoteDocument(decode(documentBytes)))
-            // One off-screen draw warms the paint context so the first
-            // on-screen frame isn't blank; EXACTLY constraints size the
-            // View directly, so no intrinsic re-measure is needed.
-            primeFixed(this, maxWPx, maxHPx)
-            init(this)
-            addIdActionListener { id, value -> onNamedAction(id.toString(), value) }
-          }
-        }
-      view.contentDescription = contentDescription
-      // Swap the embedded View when a resize produces a new instance.
-      key(view) { AndroidView(factory = { view }, modifier = Modifier.fillMaxSize()) }
-    } else {
-      val view =
-        remember(documentBytes, maxWPx, maxHPx) {
-          RemoteComposePlayer(context).apply {
-            setBitmapLoader(bitmapLoader)
-            setDocument(RemoteDocument(decode(documentBytes)))
-            primeAndMeasure(this, maxWPx, maxHPx)
-            init(this)
-            // The View only exposes id-keyed action callbacks.
-            // The dashboard's `decodeHaAction` is keyed on the
-            // payload value (it doesn't care about the name),
-            // so we surface the id as the synthetic name and
-            // pass the value through.
-            addIdActionListener { id, value -> onNamedAction(id.toString(), value) }
-          }
-        }
-      view.contentDescription = contentDescription
-      val widthDp = with(density) { clampWarmupDimension(view.measuredWidth, maxWPx).toDp() }
-      val heightDp = with(density) { clampWarmupDimension(view.measuredHeight, maxHPx).toDp() }
-      Box(modifier = Modifier.size(widthDp, heightDp)) {
-        // AndroidView's factory runs once per composition node. A new remembered player must
-        // replace that node too, otherwise changed bytes keep painting the previous document.
-        // Keep the same lifecycle as the fixed-slot path, including constraint-driven warmup.
+      if (constraints.hasFixedWidth && constraints.hasFixedHeight) {
+        // The parent pins the slot (EXACTLY on both axes) — the launcher
+        // widget and the long-press resize preview, whose size is forced
+        // from outside. Build the player for this exact size and rebuild
+        // it whenever the size changes (key on width/height too).
+        //
+        // We deliberately do NOT re-use one primed View across resizes: a
+        // `RemoteComposePlayer` that has been measured + drawn once paints
+        // blank — or only fills up to its first size — when it is later
+        // re-measured at a different size (its layout is cached at the
+        // first draw and never rebuilt; with `FEATURE_PAINT_MEASURE = 1`
+        // it doesn't even re-run the document measure). That is the
+        // "widget goes blank / doesn't fill once resized" bug. Re-keying
+        // on the size gives each slot a freshly primed View that fills it
+        // and reflows its size-breakpoints; the caller caches the decoded
+        // bytes, so only the View + prime is rebuilt per (discrete) size.
+        val view =
+          remember(documentBytes, maxWPx, maxHPx) {
+            runCatching {
+                RemoteComposePlayer(context).apply {
+                  setBitmapLoader(bitmapLoader)
+                  setDocument(RemoteDocument(decode(documentBytes)))
+                  // One off-screen draw warms the paint context so the first
+                  // on-screen frame isn't blank; EXACTLY constraints size the
+                  // View directly, so no intrinsic re-measure is needed.
+                  primeFixed(this, maxWPx, maxHPx)
+                  init(this)
+                  addIdActionListener { id, value ->
+                    runCatching { onNamedAction(id.toString(), value) }.onFailure(fail)
+                  }
+                }
+              }
+              .onFailure(fail)
+              .getOrNull()
+          } ?: return@BoxWithConstraints
+        view.contentDescription = contentDescription
+        // Swap the embedded View when a resize produces a new instance.
         key(view) { AndroidView(factory = { view }, modifier = Modifier.fillMaxSize()) }
+      } else {
+        val view =
+          remember(documentBytes, maxWPx, maxHPx) {
+            runCatching {
+                RemoteComposePlayer(context).apply {
+                  setBitmapLoader(bitmapLoader)
+                  setDocument(RemoteDocument(decode(documentBytes)))
+                  primeAndMeasure(this, maxWPx, maxHPx)
+                  init(this)
+                  // The View only exposes id-keyed action callbacks.
+                  // The dashboard's `decodeHaAction` is keyed on the
+                  // payload value (it doesn't care about the name),
+                  // so we surface the id as the synthetic name and
+                  // pass the value through.
+                  addIdActionListener { id, value ->
+                    runCatching { onNamedAction(id.toString(), value) }.onFailure(fail)
+                  }
+                }
+              }
+              .onFailure(fail)
+              .getOrNull()
+          } ?: return@BoxWithConstraints
+        view.contentDescription = contentDescription
+        val widthDp = with(density) { clampWarmupDimension(view.measuredWidth, maxWPx).toDp() }
+        val heightDp = with(density) { clampWarmupDimension(view.measuredHeight, maxHPx).toDp() }
+        Box(modifier = Modifier.size(widthDp, heightDp)) {
+          // AndroidView's factory runs once per composition node. A new remembered player must
+          // replace that node too, otherwise changed bytes keep painting the previous document.
+          // Keep the same lifecycle as the fixed-slot path, including constraint-driven warmup.
+          key(view) { AndroidView(factory = { view }, modifier = Modifier.fillMaxSize()) }
+        }
       }
     }
   }
