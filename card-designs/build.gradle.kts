@@ -24,7 +24,7 @@ android {
   testOptions { unitTests.isIncludeAndroidResources = true }
 }
 
-// Robolectric's SDK jar, resolved by Gradle (offline at test time) — same setup as `:rc-converter`.
+// Robolectric's SDK jar, resolved by Gradle (offline at test time) ? same setup as `:rc-converter`.
 val robolectricSdk by configurations.creating {
   isCanBeConsumed = false
   isTransitive = false
@@ -49,6 +49,10 @@ tasks
     inputs.dir(layout.projectDirectory.dir("ui-builder/designs"))
     dependsOn(prepareRobolectricSdk)
     systemProperty("robolectric.offline", "true")
+    systemProperty(
+      "tileBaselineOut",
+      providers.gradleProperty("tileBaselineOut").getOrElse("/tmp/tile-baseline.txt"),
+    )
     systemProperty(
       "robolectric.dependency.dir",
       layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
