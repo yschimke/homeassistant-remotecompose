@@ -80,7 +80,7 @@ composeai-contracts = "3.39.0"
 # pin at a release version 404s the first time a release skips a module (the
 # daemon BOM 3.15.0 carries preview-annotations 3.13.2). Resolve it versionless
 # through the BOM. It must not predate the daemon baked into the preview plugin.
-compose-preview-daemon = "3.24.0"
+compose-preview-daemon = "3.24.1"
 tapmoc = "0.5.0"
 
 # Image loading (BitmapLoader / RemoteCompose named-bitmap resolution)
@@ -107,7 +107,7 @@ cmp-icons = "1.7.3"
 cmp-adaptive = "1.3.0"
 # The BOM is the release coordinate; each module can retain an older version on a partial release.
 # 2.17.4 selects compose/runtime/edit 2.17.4, protocol 2.17.3, trace 2.17.2 and JS 2.17.0.
-rc-players = "2.17.4"
+rc-players = "2.17.5"
 compose-webview = "2.0.3"
 # KCEF requests 2.5.0, which was not published to Central. Keep both halves on the
 # supported 2.6.0 release from Central, including the native libraries for desktop.
