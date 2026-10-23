@@ -19,20 +19,222 @@
     "layoutDirection": "ltr"
   },
   "stateVariables": {},
-  "roots": ["root"],
+  "roots": [
+    "root"
+  ],
   "nodes": {
     "root": {
       "id": "root",
       "componentId": "ha-cards/dashboard-card",
       "properties": {},
       "modifiers": [],
-      "slots": { "content": ["tile"] }
+      "slots": {
+        "content": [
+          "size-mode"
+        ]
+      }
     },
-    "tile": {
-      "id": "tile",
-      "componentId": "ha-cards/entity-tile",
+    "size-mode": {
+      "id": "size-mode",
+      "componentId": "ha-cards/card-size-mode",
       "properties": {},
       "modifiers": [],
+      "slots": {
+        "wrap": [
+          "dashboard"
+        ],
+        "height": [
+          "wear-tiers"
+        ],
+        "width": [
+          "launcher"
+        ]
+      }
+    },
+    "dashboard": {
+      "id": "dashboard",
+      "componentId": "ha-cards/tile-full",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "wear-tiers": {
+      "id": "wear-tiers",
+      "componentId": "ha-cards/size-tiers",
+      "properties": {
+        "axis": {
+          "type": "string",
+          "value": "height"
+        },
+        "thresholdsDp": {
+          "type": "string",
+          "value": "56"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {
+        "tier0": [
+          "wear-compact-cell"
+        ],
+        "tier1": [
+          "wear-hero"
+        ]
+      }
+    },
+    "wear-compact-cell": {
+      "id": "wear-compact-cell",
+      "componentId": "ha-cards/centered-cell",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "wear-compact"
+        ]
+      }
+    },
+    "wear-compact": {
+      "id": "wear-compact",
+      "componentId": "ha-cards/tile-compact",
+      "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {}
+    },
+    "wear-hero": {
+      "id": "wear-hero",
+      "componentId": "ha-cards/tile-wide-hero",
+      "properties": {
+        "scale": {
+          "type": "string",
+          "value": "wear"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "launcher": {
+      "id": "launcher",
+      "componentId": "ha-cards/tile-launcher-cell",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "hero": [
+          "launcher-hero"
+        ],
+        "row": [
+          "launcher-row"
+        ],
+        "features": [
+          "launcher-features"
+        ],
+        "other": [
+          "launcher-tiers"
+        ]
+      }
+    },
+    "launcher-hero": {
+      "id": "launcher-hero",
+      "componentId": "ha-cards/tile-icon-hero",
+      "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "launcher-row": {
+      "id": "launcher-row",
+      "componentId": "ha-cards/tile-wide-hero",
+      "properties": {
+        "scale": {
+          "type": "string",
+          "value": "row"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "launcher-features": {
+      "id": "launcher-features",
+      "componentId": "ha-cards/tile-features-gate",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "launcher-tiers": {
+      "id": "launcher-tiers",
+      "componentId": "ha-cards/size-tiers",
+      "properties": {
+        "axis": {
+          "type": "string",
+          "value": "width"
+        },
+        "thresholdsDp": {
+          "type": "string",
+          "value": "96"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {
+        "tier0": [
+          "launcher-chip"
+        ],
+        "tier1": [
+          "launcher-full-cell"
+        ]
+      }
+    },
+    "launcher-chip": {
+      "id": "launcher-chip",
+      "componentId": "ha-cards/tile-icon-chip",
+      "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "launcher-full-cell": {
+      "id": "launcher-full-cell",
+      "componentId": "ha-cards/centered-cell",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "launcher-full"
+        ]
+      }
+    },
+    "launcher-full": {
+      "id": "launcher-full",
+      "componentId": "ha-cards/tile-full",
+      "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
       "slots": {}
     }
   }

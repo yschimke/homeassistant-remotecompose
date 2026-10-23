@@ -42,11 +42,7 @@ class CardDesignSurfaceParityTest {
       val converter = LauncherDesigns.capture(context, key, densityDpi)
       val fromDesign =
         LauncherDesigns.captureWith(context, key, densityDpi) { card, snapshot, modifier ->
-          CompositionLocalProvider(
-            LocalCardDesignInput provides DesignTemplateInput(card, snapshot)
-          ) {
-            design.Render(modifier)
-          }
+          design.RenderCard(card, snapshot, modifier)
         }
       converter.bytes.contentEquals(fromDesign.bytes) && converter.actions == fromDesign.actions
     }

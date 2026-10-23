@@ -17,6 +17,10 @@ android {
   }
   kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
   testOptions { unitTests.isIncludeAndroidResources = true }
+  // The checked-in card designs (card-designs/ui-builder/designs/<cardType>.uid) migrated card types
+  // draw their layout from (`CardDesigns`), packaged as `designs/<cardType>.uid`: one source for
+  // the app, the library, the design server and the scheduled import.
+  sourceSets["main"].resources.srcDir(rootProject.layout.projectDirectory.dir("card-designs/ui-builder"))
 }
 
 // Robolectric's SDK jar, resolved by Gradle (offline at test time) — same setup as

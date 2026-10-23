@@ -38,8 +38,6 @@ object CheckedInCardDesigns {
   /** [design] captured for [key], through the same harness as the converter's template. */
   fun captureDesign(context: Context, key: DesignKey, design: CardDesignDocument): BuiltDesign =
     CardDesignTemplates.captureWith(context, key) { card, snapshot, modifier ->
-      CompositionLocalProvider(LocalCardDesignInput provides DesignTemplateInput(card, snapshot)) {
-        design.Render(modifier)
-      }
+      design.RenderCard(card, snapshot, modifier)
     }
 }

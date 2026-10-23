@@ -70,7 +70,7 @@ class WearCardDesignParityTest {
         val fromDesign = runBlocking {
           WearWidgetTemplate.capture(context) {
             SlotContent(registry, colors, input.card, input.snapshot, 0, true, cardStyle) {
-              CompositionLocalProvider(LocalCardDesignInput provides input) { design.Render(it) }
+              design.RenderCard(input.card, input.snapshot, it)
             }
           }
         }
