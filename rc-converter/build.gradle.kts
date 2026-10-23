@@ -65,6 +65,8 @@ dependencies {
   api(project(":rc-components"))
   implementation(project(":ha-model"))
   implementation(project(":ha-client"))
+  // RcErrorBoundary: each player disables a document that throws, instead of the screen.
+  implementation(project(":rc-player-ui"))
 
   implementation(libs.kotlinx.coroutines.core)
 

@@ -265,6 +265,26 @@ private fun CardActionsPreview(state: ee.schimke.terrazzo.dashboard.CardActionsS
     onMonitor = {},
   )
 
+/**
+ * A card whose document threw while it played (RcErrorBoundary): the atomic-symbol warning takes
+ * its place, and the card beside it plays on.
+ */
+@Preview(name = "card disabled", showBackground = false, widthDp = PHONE_WIDTH_DP)
+@Composable
+fun Screen_CardDisabled() = PhoneHost {
+  androidx.compose.foundation.layout.Column(
+    androidx.compose.ui.Modifier.padding(16.dp),
+    verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+  ) {
+    ee.schimke.terrazzo.dashboard.StudioCardPreview(
+      demoSession(),
+      HISTORY_SAMPLE_CARD,
+      DemoData.snapshot(DEMO_CLOCK_MS),
+    )
+    ee.schimke.terrazzo.shared.RcDisabledWarning("IllegalStateException: measure failed")
+  }
+}
+
 @Preview(name = "card style", showBackground = false, widthDp = PHONE_WIDTH_DP)
 @Composable
 fun Screen_CardStyle() = PhoneHost {
