@@ -70,7 +70,9 @@ import ee.schimke.terrazzo.logs.LogsContent
 import ee.schimke.terrazzo.ui.TerrazzoTheme
 import ee.schimke.terrazzo.wearsync.SyncDiagnosticsContent
 import ee.schimke.terrazzo.wearsync.proto.SyncStats
+import ee.schimke.terrazzo.widget.InstalledWidget
 import ee.schimke.terrazzo.widget.WidgetsContent
+import ee.schimke.terrazzo.widget.cardTypeLabel
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -387,7 +389,15 @@ fun Screen_Widgets() = PhoneHost { WidgetsContent(widgets = emptyList(), onBack 
 )
 @Composable
 fun Screen_Widgets_Installed() = PhoneHost {
-  WidgetsContent(widgets = listOf("Front door", "Kitchen", "Living room climate"), onBack = {})
+  WidgetsContent(
+    widgets =
+      listOf(
+        InstalledWidget("Front door", cardTypeLabel("tile")),
+        InstalledWidget("Kitchen", cardTypeLabel("light")),
+        InstalledWidget("Living room climate", cardTypeLabel("thermostat")),
+      ),
+    onBack = {},
+  )
 }
 
 @Preview(
