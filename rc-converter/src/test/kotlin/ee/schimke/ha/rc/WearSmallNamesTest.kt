@@ -43,17 +43,45 @@ class WearSmallNamesTest {
               "light.kitchen",
               "on",
               JsonObject(mapOf("friendly_name" to JsonPrimitive("Kitchen light"))),
-            )
+            ),
+          "climate.hall" to
+            EntityState(
+              "climate.hall",
+              "heat",
+              JsonObject(
+                mapOf(
+                  "friendly_name" to JsonPrimitive("Hall"),
+                  "current_temperature" to JsonPrimitive(20.5),
+                  "temperature" to JsonPrimitive(21.5),
+                  "hvac_action" to JsonPrimitive("heating"),
+                )
+              ),
+            ),
+          "humidifier.bedroom" to
+            EntityState(
+              "humidifier.bedroom",
+              "on",
+              JsonObject(
+                mapOf(
+                  "friendly_name" to JsonPrimitive("Bedroom"),
+                  "current_humidity" to JsonPrimitive(38),
+                  "humidity" to JsonPrimitive(45),
+                )
+              ),
+            ),
         )
     )
 
   private fun card(type: String, vararg extra: Pair<String, Any>) =
+    entityCard(type, "light.kitchen", *extra)
+
+  private fun entityCard(type: String, entity: String, vararg extra: Pair<String, Any>) =
     CardConfig(
       type = type,
       raw =
         buildJsonObject {
           put("type", type)
-          put("entity", "light.kitchen")
+          put("entity", entity)
           extra.forEach { (key, value) ->
             when (value) {
               is Boolean -> put(key, value)
@@ -113,6 +141,37 @@ class WearSmallNamesTest {
   fun wearButtonStateIsTheLiveBinding() {
     val names = names(wearCapture(card("button", "show_state" to true)))
     assertTrue("light.kitchen.state" in names, "show_state binds the host's state: $names")
+  }
+
+  /**
+   * The thermostat's dial names its entity on a watch and keeps every reading live: the value, the
+   * target and (Wear Large keeps it under the name) the mode chip are still the host's bindings.
+   */
+  @Test
+  fun wearThermostatNamesItsEntity() {
+    val bytes = wearCapture(entityCard("thermostat", "climate.hall"))
+    assertTrue("Hall" in text(bytes), "the thermostat's name is drawn")
+    val names = names(bytes)
+    for (attribute in
+      listOf("current_temperature_label", "temperature_label", "hvac_action_label")) {
+      assertTrue("climate.hall.attributes.$attribute" in names, "$attribute stays live: $names")
+    }
+    assertTrue(
+      "Landing" in text(wearCapture(entityCard("thermostat", "climate.hall", "name" to "Landing")))
+    )
+  }
+
+  @Test
+  fun wearHumidifierNamesItsEntity() {
+    val bytes = wearCapture(entityCard("humidifier", "humidifier.bedroom"))
+    assertTrue("Bedroom" in text(bytes), "the humidifier's name is drawn")
+    val names = names(bytes)
+    for (attribute in listOf("current_humidity_label", "humidity_label", "action_label")) {
+      assertTrue(
+        "humidifier.bedroom.attributes.$attribute" in names,
+        "$attribute stays live: $names",
+      )
+    }
   }
 
   @Test

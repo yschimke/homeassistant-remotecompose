@@ -19,6 +19,7 @@ import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
+import ee.schimke.ha.rc.LocalInCardContainer
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
@@ -69,7 +70,16 @@ class ThermostatCardConverter : CardConverter {
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    RenderArcDial(thermostatDial(card, snapshot), modifier)
+    // On a watch the name tells two thermostats apart (card-information-hierarchy.md). The mode
+    // chip says more than the accent here (`Idle` in heat mode is still orange), so Wear Large,
+    // which has the room, keeps it under the name; Wear Small gives its line to the name.
+    RenderArcDial(
+      thermostatDial(card, snapshot),
+      modifier,
+      // In a stack or grid the container is the multi-entity card: its dials stay nameless.
+      wearShowsName = !LocalInCardContainer.current,
+      wearLargeKeepsMode = true,
+    )
   }
 
   private val dial =
@@ -170,6 +180,11 @@ internal fun RenderArcDial(
   modifier: RemoteModifier,
   /** Name the entity on a Wear slot (see [RemoteHaArcDialWide]'s `showName`). */
   wearShowsName: Boolean = false,
+  /**
+   * With [wearShowsName], keep the mode chip under the name in the Wear Large container (the Small
+   * one has two lines, name and value): for a dial whose chip says more than its value and accent.
+   */
+  wearLargeKeepsMode: Boolean = false,
 ) {
   when (LocalCardSizeMode.current) {
     CardSizeMode.Wrap -> RemoteHaArcDial(data, modifier)
@@ -187,6 +202,7 @@ internal fun RenderArcDial(
               compact = tier == 0,
               dialDp = if (tier == 0) 56 else WEAR_LARGE_DIAL_DP,
               showName = wearShowsName,
+              showMode = !wearShowsName || (wearLargeKeepsMode && tier != 0),
             )
           }
         BreakpointAxis.Width ->

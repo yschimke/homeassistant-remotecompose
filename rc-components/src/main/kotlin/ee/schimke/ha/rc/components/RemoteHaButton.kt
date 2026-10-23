@@ -39,9 +39,9 @@ import androidx.compose.ui.text.style.TextOverflow
  * * **icon beside name** — [RemoteHaButtonRow], for a canvas too short for the name under the icon
  *   but wide enough beside it (the Wear Small container): the name is what tells two buttons apart
  *   (card-information-hierarchy.md).
- * * **icon only** — [RemoteHaButtonIcon]. The tinted chip *is* the button, so the smallest cells
+ * * **icon chip** — [RemoteHaButtonIcon]. The tinted chip *is* the button, so the smallest cells
  *   (`1×1` launcher) keep the icon instead of dropping to a text label (Principle 1 — never hide
- *   the icon first).
+ *   the icon first), with the name under it unless the icon is evocative.
  */
 @Composable
 @RemoteComposable
@@ -154,24 +154,53 @@ fun RemoteHaButtonRow(data: HaButtonData, modifier: RemoteModifier = RemoteModif
 }
 
 /**
- * Icon-only identity tier — the tinted chip centred in the cell, no name. Used by
- * [ee.schimke.ha.rc.cards.ButtonCardConverter] on cells too small to fit the label without clipping
- * (`1×1` launcher, Wear S). Tinted by the live on/off state for toggleable entities so the chip
- * still reads which state the button is in.
+ * Identity tier — the tinted chip centred in the cell. Used by
+ * [ee.schimke.ha.rc.cards.ButtonCardConverter] on cells too small for the full button's name line
+ * (`1×1` launcher). Tinted by the live on/off state for toggleable entities so the chip still reads
+ * which state the button is in.
+ *
+ * [showName] keeps the name under the chip, at [HaType.Label] and ellipsised, for a generic icon (a
+ * bulb, a switch) that would leave two such widgets alike; the chip shrinks to the compact size to
+ * make room. Without it the chip stands alone, for an evocative icon or a configured `icon:`
+ * (card-information-hierarchy.md, the icon exception).
  */
 @Composable
 @RemoteComposable
-fun RemoteHaButtonIcon(data: HaButtonData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaButtonIcon(
+  data: HaButtonData,
+  modifier: RemoteModifier = RemoteModifier,
+  showName: Boolean = false,
+) {
   val theme = haTheme()
   val look = entityLook(data.entityId, data.accent)
   val accent = look.accent
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   RemoteBox(
-    modifier = modifier.then(clickable).then(cardChrome(theme.cardBackground, theme.divider)),
+    modifier =
+      modifier
+        .then(clickable)
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        .padding(horizontal = (if (showName) 6 else 0).rdp),
     contentAlignment = RemoteAlignment.Center,
   ) {
-    ButtonIconChip(data, look, accent, FullChipDp, FullIconDp, iconOnly = true)
+    if (!showName) ButtonIconChip(data, look, accent, FullChipDp, FullIconDp, iconOnly = true)
+    // 44dp chip + 4dp + a Label line (~17dp) is ~65dp: inside a 1×1 cell's 84dp.
+    else
+      RemoteColumn(horizontalAlignment = RemoteAlignment.CenterHorizontally) {
+        ButtonIconChip(data, look, accent, CompactChipDp, CompactIconDp)
+        RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp)) {
+          RemoteText(
+            text = entityName(data.entityId, data.name),
+            color = look.dim(theme.primaryText),
+            fontSize = HaType.Label,
+            fontWeight = FontWeight.Medium,
+            style = haTextStyle(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+        }
+      }
   }
 }
 

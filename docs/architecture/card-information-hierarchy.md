@@ -57,15 +57,25 @@ bulb, `On` and the brightness in it, the steppers below. Nothing drops.
 
 **Launcher widget: the button card** (its state line only with `show_state`). At 2×2 and up, the
 icon hero: icon, name and state, set large. At 2×1, a row: icon, then name, then state. At 1×1,
-the icon chip. For `lock.front_door` that is
-right: the padlock is evocative and the name drops. For `light.kitchen` the bulb is generic, so the
-name should stay under the chip at label size (not yet the case; see follow-ups).
+the icon chip. For `lock.front_door` the padlock is evocative and the name drops. For
+`light.kitchen` the bulb is generic, so the name stays under a slightly smaller chip at label size,
+ellipsised. The same rule holds for the icon chip that tile, entity, sensor and statistic share at
+1×1: icon, then the name a step below the state, then the state (`Living Roo…` over `21.4 °C`); a
+temperature sensor's thermometer is generic too, so it shrinks to fit the name. One helper,
+`HaIconIdentity` in `rc-converter`, decides evocative or generic from the domain, the device class
+and a configured `icon:`; every 1×1 chip asks it. Inside a stack or grid the cells are the
+multi-entity card's, and drop the per-entity name whatever the icon (`LocalInCardContainer`).
 
 **Wear Small (200 × 60 dp, about 44 dp of content).** A single-entity card keeps its name.
 `button` · `light.kitchen`: the tinted bulb chip, then `Kitchen`, then the state with `show_state`,
 on one line. `light`: the dial, then `Kitchen` over `100%`; the `On` chip drops (the value says
-it). `glance` over four entities: four icon-over-state cells, no names, no title.
+it). `thermostat` and `humidifier`: the dial, then `Living Room` over `20.5°C`; the mode chip
+(`Heating`) is secondary text and gives its line to the name, while the arc's accent still shows
+the mode. `glance` over four entities: four icon-over-state cells, no names, no title.
 
 **Wear Large (200 × 112 dp).** The name, a larger visual and the value at value size; secondary
 text where it fits (a thermostat's target), controls never. `light`: the 72 dp dial beside
-`Kitchen` over `100%`. `glance`: the cells with their names; the title drops.
+`Kitchen` over `100%`. `thermostat`: the dial beside `Living Room`, `Heating`, `20.5°C` and the
+target `↑ 21.5°C`; the mode chip fits here, and it says what the accent cannot (`Idle` in heat mode
+is still orange; a humidifier's fixed accent never says `Off`), so it stays. `glance`: the cells
+with their names; the title drops.

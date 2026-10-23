@@ -19,6 +19,7 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.HaIconIdentity
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
@@ -199,13 +200,25 @@ class SensorCardConverter : CardConverter {
         nameFor(card, snapshot),
         snapshot = snapshot,
       )
+    // A sensor's pictogram is the same in every room, so the name stays unless the card picks its
+    // own `icon:` (card-information-hierarchy.md, the icon exception).
+    val showName = HaIconIdentity.chipShowsName(card, entityId?.let { snapshot.states[it] })
     when (reading.kind.visual) {
       HaMeasureVisual.Thermometer,
       HaMeasureVisual.Battery ->
-        RemoteHaMeasurement(reading, HaPresentation.Chip, RemoteModifier.fillMaxSize())
+        RemoteHaMeasurement(
+          reading,
+          HaPresentation.Chip,
+          RemoteModifier.fillMaxSize(),
+          chipShowsName = showName,
+        )
       HaMeasureVisual.Arc,
       HaMeasureVisual.Bar ->
-        RemoteHaIconChip(iconChipData(card, snapshot), RemoteModifier.fillMaxSize())
+        RemoteHaIconChip(
+          iconChipData(card, snapshot),
+          RemoteModifier.fillMaxSize(),
+          showName = showName,
+        )
     }
   }
 

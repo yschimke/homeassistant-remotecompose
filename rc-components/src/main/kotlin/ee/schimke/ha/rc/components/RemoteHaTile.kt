@@ -308,6 +308,12 @@ const val TileTwoLineMinHeightDp: Int = 56
  *
  * Both are cosmetic — the icon, not its tint animation or halo, is what says what kind of card this
  * is. Revisit the circle / live colour once the alpha010 state-layout bugs (#224) lift.
+ *
+ * [showName] keeps the name between the icon and the state, a type step below the state
+ * ([HaType.Caption], ellipsised), for a generic icon (a thermometer, a bulb) that would leave two
+ * such widgets alike; the icon shrinks a little to make room. Without it the icon carries the
+ * identity alone, for an evocative icon or a configured `icon:` (card-information-hierarchy.md, the
+ * icon exception). The state is never dropped for the name.
  */
 @Composable
 @RemoteComposable
@@ -315,6 +321,7 @@ fun RemoteHaIconChip(
   data: HaTileData,
   modifier: RemoteModifier = RemoteModifier,
   bindState: Boolean = false,
+  showName: Boolean = false,
 ) {
   val theme = haTheme()
   val clickable =
@@ -327,10 +334,13 @@ fun RemoteHaIconChip(
     verticalArrangement = RemoteArrangement.Center,
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
+    // 4 + 28 + 4 + a Caption line (~16dp) + a Label line (~17dp) + 4 is ~73dp with the name: inside
+    // a 1×1 cell's 84dp. Without it the icon keeps its 32dp.
+    val iconDp = if (showName) 28 else 32
     // A capture-selected launcher tier can bind state without colliding with hidden siblings.
     RemoteBox(
       modifier =
-        RemoteModifier.size(32.rdp)
+        RemoteModifier.size(iconDp.rdp)
           .then(if (data.tapAction != HaAction.None) consoleKeyChrome(accent) else RemoteModifier),
       contentAlignment = RemoteAlignment.Center,
     ) {
@@ -339,11 +349,24 @@ fun RemoteHaIconChip(
         accent = data.accent,
         look = look,
         tint = accent,
-        contentDescription = entityName(data.entityId, data.name),
-        modifier = RemoteModifier.size(32.rdp),
+        // Decorative when the name is drawn under it.
+        contentDescription = if (showName) null else entityName(data.entityId, data.name),
+        modifier = RemoteModifier.size(iconDp.rdp),
       )
     }
-    RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
+    if (showName)
+      RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp)) {
+        RemoteText(
+          text = entityName(data.entityId, data.name),
+          color = look.dim(theme.secondaryText),
+          fontSize = HaType.Caption,
+          fontWeight = FontWeight.Medium,
+          style = haTextStyle(),
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+      }
+    RemoteBox(modifier = RemoteModifier.padding(top = (if (showName) 0 else 6).rdp)) {
       // The chip's only text, so it reads as the value: primary ink, a step above a caption.
       RemoteText(
         text = data.state,
