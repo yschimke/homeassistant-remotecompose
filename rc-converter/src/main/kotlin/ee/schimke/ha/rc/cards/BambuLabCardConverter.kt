@@ -13,6 +13,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.state.rc
@@ -33,6 +34,7 @@ import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
@@ -515,19 +517,37 @@ class BambuLabPrintStatusCardConverter :
     when (LocalCardSizeMode.current) {
       // Dashboard: the two-column layout, so the job's lines use the right half.
       CardSizeMode.Wrap -> ee.schimke.ha.rc.components.RemoteHaBambuPrintStatus(data, modifier)
-      // Launcher / Wear: a narrow cell stacks the same content in a column; a wide one lays it out
-      // in two. One width gate (#224).
       CardSizeMode.Fixed ->
-        RemoteSizeBreakpoint(
-          thresholdsDp = intArrayOf(PRINT_STATUS_WIDE_MIN_DP),
-          modifier = modifier,
-          axis = BreakpointAxis.Width,
-        ) { tier ->
-          ee.schimke.ha.rc.components.RemoteHaBambuPrintStatus(
-            data,
-            RemoteModifier.fillMaxWidth(),
-            wide = tier > 0,
-          )
+        if (LocalFixedCanvasAxis.current == BreakpointAxis.Height) {
+          // A Wear slot: one height gate between its Small and Large containers, neither tall
+          // enough for the launcher column (card-information-hierarchy.md).
+          RemoteSizeBreakpoint(
+            thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
+            modifier = modifier.fillMaxSize(),
+            axis = BreakpointAxis.Height,
+          ) { tier ->
+            CenteredCell {
+              ee.schimke.ha.rc.components.RemoteHaBambuPrintStatusWear(
+                data,
+                RemoteModifier.fillMaxWidth(),
+                large = tier > 0,
+              )
+            }
+          }
+        } else {
+          // Launcher: a narrow cell stacks the same content in a column; a wide one lays it out
+          // in two. One width gate (#224).
+          RemoteSizeBreakpoint(
+            thresholdsDp = intArrayOf(PRINT_STATUS_WIDE_MIN_DP),
+            modifier = modifier,
+            axis = BreakpointAxis.Width,
+          ) { tier ->
+            ee.schimke.ha.rc.components.RemoteHaBambuPrintStatus(
+              data,
+              RemoteModifier.fillMaxWidth(),
+              wide = tier > 0,
+            )
+          }
         }
     }
   }

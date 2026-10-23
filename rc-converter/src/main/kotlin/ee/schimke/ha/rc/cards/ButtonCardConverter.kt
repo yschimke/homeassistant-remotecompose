@@ -175,6 +175,22 @@ class ButtonCardConverter : CardConverter {
       }
       return
     }
+    if (data.state != null && data.showName) {
+      // With `show_state` the state line under the name needs a taller cell than the name alone
+      // (~96 dp). Below that (a `1×1` or `2×1` widget) the dense body keeps the icon, the name and
+      // the state, the button's value, a size smaller, rather than cutting the state off at the
+      // bottom or dropping it for the icon chip (card-information-hierarchy.md). One gate: a
+      // third tier here stops the AndroidX player drawing the widget (adaptive-card-layouts.md,
+      // Known gaps #10).
+      RemoteMinSizeGate(
+        minWidthDp = MinIconNameWidthDp,
+        minHeightDp = MinIconNameStateHeightDp,
+        modifier = modifier.fillMaxSize(),
+      ) { tall ->
+        RenderButton(data, RemoteModifier.fillMaxSize(), compact = true, dense = !tall)
+      }
+      return
+    }
     RemoteMinSizeGate(
       minWidthDp = MinIconNameWidthDp,
       minHeightDp = MinIconNameHeightDp,
@@ -189,11 +205,16 @@ class ButtonCardConverter : CardConverter {
   }
 
   @Composable
-  private fun RenderButton(data: HaButtonData, modifier: RemoteModifier, compact: Boolean = false) {
+  private fun RenderButton(
+    data: HaButtonData,
+    modifier: RemoteModifier,
+    compact: Boolean = false,
+    dense: Boolean = false,
+  ) {
     if (data.accent.toggleable) {
-      RemoteHaToggleButton(data, modifier, compact)
+      RemoteHaToggleButton(data, modifier, compact, dense)
     } else {
-      RemoteHaButton(data, modifier, compact)
+      RemoteHaButton(data, modifier, compact, dense)
     }
   }
 
@@ -211,6 +232,12 @@ class ButtonCardConverter : CardConverter {
      * short; a cell too short for the line now takes the icon-only tier rather than clipping it.
      */
     const val MinIconNameHeightDp = 80
+
+    /**
+     * The compact button with its `show_state` line: 80 + a ~17dp `Label` line. Shorter, the dense
+     * body.
+     */
+    const val MinIconNameStateHeightDp = 98
 
     /** Narrowest `grid` cell: the compact body (44 dp chip + 12 dp sides) plus a short name. */
     const val MinGridCellWidthDp = 80

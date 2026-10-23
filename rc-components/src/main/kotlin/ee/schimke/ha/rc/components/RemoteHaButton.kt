@@ -49,12 +49,13 @@ fun RemoteHaButton(
   data: HaButtonData,
   modifier: RemoteModifier = RemoteModifier,
   compact: Boolean = false,
+  dense: Boolean = false,
 ) {
   // Static accent: read-only buttons stay on the active accent; a
   // toggleable entity selects active/inactive off its live binding
   // with no crossfade (the animated variant is [RemoteHaToggleButton]).
   val look = entityLook(data.entityId, data.accent)
-  ButtonBody(data, look.accent, look, modifier, compact)
+  ButtonBody(data, look.accent, look, modifier, compact, dense)
 }
 
 /**
@@ -75,11 +76,12 @@ fun RemoteHaToggleButton(
   data: HaButtonData,
   modifier: RemoteModifier = RemoteModifier,
   compact: Boolean = false,
+  dense: Boolean = false,
 ) {
   // Live host binding for the entity's on/off state. Seeded from the
   // snapshot; the host pushes updates by name (`<entityId>.is_on`).
   val look = entityLook(data.entityId, data.accent)
-  ButtonBody(data, toggleAccent(data, look), look, modifier, compact)
+  ButtonBody(data, toggleAccent(data, look), look, modifier, compact, dense)
 }
 
 /**
@@ -213,6 +215,11 @@ fun RemoteHaButtonIcon(
  * [compact] shrinks the chip + paddings so the icon + reserved label line fit a short launcher /
  * Wear cell (down to `~84` dp tall) without the name clipping — the Fixed-mode `icon+name` tier
  * passes `true`. The default (`false`) keeps the roomier wrap-mode dashboard sizing.
+ *
+ * [dense] is the `show_state` form for a cell too short for the compact one with its state line (a
+ * `1×1` or `2×1` launcher widget, ~84 dp): the row-sized chip, the name and the state at label size
+ * and tighter gaps (4 + 36 + 2 + 17 + 17 + 4 ≈ 80 dp), so the state, which is the button's value,
+ * stays whole instead of being cut at the bottom (card-information-hierarchy.md).
  */
 @Composable
 @RemoteComposable
@@ -222,23 +229,49 @@ private fun ButtonBody(
   look: HaEntityLook,
   modifier: RemoteModifier,
   compact: Boolean,
+  dense: Boolean = false,
 ) {
   val theme = haTheme()
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val chipDp = if (compact) CompactChipDp else FullChipDp
-  val iconDp = if (compact) CompactIconDp else FullIconDp
+  val chipDp =
+    when {
+      dense -> RowChipDp
+      compact -> CompactChipDp
+      else -> FullChipDp
+    }
+  val iconDp =
+    when {
+      dense -> RowIconDp
+      compact -> CompactIconDp
+      else -> FullIconDp
+    }
   // The dashboard tier keeps HA's 187×91 reference canvas: 8dp + the 48dp chip + 6dp gap + a
   // Body (15sp, ~20dp) line + 8dp is ~90dp. HA web's 12dp padding fit its 13px name, not this one.
-  val verticalPadDp = if (compact) 6 else 8
-  val namePadDp = if (compact) 4 else 6
+  val verticalPadDp =
+    when {
+      dense -> 4
+      compact -> 6
+      else -> 8
+    }
+  val namePadDp =
+    when {
+      dense -> 2
+      compact -> 4
+      else -> 6
+    }
   // Widget (compact) tier gives the name a touch more presence than
   // the dashboard's Body — a single button has no extra data to fill a
   // big cell with, so a bolder label is the cheapest way to use the
   // space. BodyLarge (16sp, ~19dp line) + the 44dp chip + 4dp gap + 6dp
   // vertical padding is ~79dp, which clears the shortest icon+name cell
   // (`2×1`, 84dp) and the converter's 80dp icon+name gate.
-  val nameSize = if (compact) HaType.BodyLarge else HaType.Body
+  val nameSize =
+    when {
+      dense -> HaType.Label
+      compact -> HaType.BodyLarge
+      else -> HaType.Body
+    }
   // Not using `fillMaxWidth()` by default: buttons placed in a grid or
   // horizontal-stack should wrap-content so the flow layout can pack
   // multiple across the row. Standalone / Fixed-mode callers pass an
@@ -248,7 +281,7 @@ private fun ButtonBody(
       modifier
         .then(clickable)
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 12.rdp, vertical = verticalPadDp.rdp),
+        .padding(horizontal = (if (dense) 6 else 12).rdp, vertical = verticalPadDp.rdp),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteColumn(horizontalAlignment = RemoteAlignment.CenterHorizontally) {

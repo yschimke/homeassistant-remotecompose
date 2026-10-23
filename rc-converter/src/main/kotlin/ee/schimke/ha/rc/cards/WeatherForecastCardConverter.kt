@@ -11,11 +11,13 @@ import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
@@ -24,6 +26,7 @@ import ee.schimke.ha.rc.components.HaWeatherExtra
 import ee.schimke.ha.rc.components.HaWeatherForecastData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaWeatherForecast
+import ee.schimke.ha.rc.components.RemoteHaWeatherForecastWear
 import ee.schimke.ha.rc.components.RemoteHaWeatherForecastWide
 import ee.schimke.ha.rc.formatValueWithUnit
 import ee.schimke.ha.rc.icons.HaIconMap
@@ -168,21 +171,32 @@ class WeatherForecastCardConverter : CardConverter {
         // 5×2 from a roomy 6×3 to gate them. They live in the full app card
         // (Wrap mode) instead — Principle 4, "compact ≠ stripped": the
         // widget keeps the forecast rather than a half-rendered everything.
-        RemoteSizeBreakpoint(
-          thresholdsDp = intArrayOf(WeatherFullMinDp),
-          modifier = modifier.fillMaxSize(),
-        ) { tier ->
-          when (tier) {
-            0 -> RemoteHaWeatherForecastWide(data, RemoteModifier.fillMaxSize())
-            else ->
-              RemoteHaWeatherForecast(
-                data,
-                RemoteModifier.fillMaxSize(),
-                fillHeight = true,
-                showExtras = false,
-              )
+        if (LocalFixedCanvasAxis.current == BreakpointAxis.Height) {
+          // A Wear slot: one height gate between its Small and Large containers, each too narrow
+          // for the Wide row's three columns to leave the condition legible.
+          RemoteSizeBreakpoint(
+            thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
+            modifier = modifier.fillMaxSize(),
+            axis = BreakpointAxis.Height,
+          ) { tier ->
+            RemoteHaWeatherForecastWear(data, RemoteModifier.fillMaxSize(), large = tier > 0)
           }
-        }
+        } else
+          RemoteSizeBreakpoint(
+            thresholdsDp = intArrayOf(WeatherFullMinDp),
+            modifier = modifier.fillMaxSize(),
+          ) { tier ->
+            when (tier) {
+              0 -> RemoteHaWeatherForecastWide(data, RemoteModifier.fillMaxSize())
+              else ->
+                RemoteHaWeatherForecast(
+                  data,
+                  RemoteModifier.fillMaxSize(),
+                  fillHeight = true,
+                  showExtras = false,
+                )
+            }
+          }
     }
   }
 }

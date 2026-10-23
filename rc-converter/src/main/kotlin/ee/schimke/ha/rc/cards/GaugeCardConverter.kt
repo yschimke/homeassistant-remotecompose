@@ -18,6 +18,7 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaGaugeBands
@@ -139,12 +140,26 @@ class GaugeCardConverter : CardConverter {
       when (tier) {
         0 -> RemoteHaGaugeWide(data, RemoteModifier.fillMaxSize())
         else ->
-          RemoteHaGaugeStacked(
-            data,
-            RemoteModifier.fillMaxSize(),
-            narrow = narrow,
-            hero = captureHeroScale(),
-          )
+          if (
+            LocalWidgetCaptureSizeDp.current == null &&
+              LocalFixedCanvasAxis.current == BreakpointAxis.Width
+          ) {
+            // A launcher cell played without its capture size (a preview, the widget picker): the
+            // narrow decision moves to a width gate, so a one-column cell still sets its value
+            // whole rather than ellipsising it (card-information-hierarchy.md).
+            RemoteSizeBreakpoint(
+              thresholdsDp = intArrayOf(NarrowWidthDp),
+              modifier = RemoteModifier.fillMaxSize(),
+            ) { width ->
+              RemoteHaGaugeStacked(data, RemoteModifier.fillMaxSize(), narrow = width == 0)
+            }
+          } else
+            RemoteHaGaugeStacked(
+              data,
+              RemoteModifier.fillMaxSize(),
+              narrow = narrow,
+              hero = captureHeroScale(),
+            )
       }
     }
   }

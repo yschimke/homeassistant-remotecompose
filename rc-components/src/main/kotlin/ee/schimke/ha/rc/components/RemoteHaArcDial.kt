@@ -243,6 +243,108 @@ fun RemoteHaArcDialWide(
   }
 }
 
+/**
+ * The dial without its controls, grown to fill a launcher widget too small for the full card's
+ * steppers (a `2×2` or `3×3` cell): the name over the dial, the dial taking every spare dp of the
+ * cell (it is drawn from the live canvas, so it scales inside the tier with no breakpoint), and the
+ * centre readout inside it as on the full card.
+ *
+ * The parts follow card-information-hierarchy.md: the value and the dial never drop; the name stays
+ * unless [showName] is off (a dial inside a multi-entity container); the controls are the first
+ * thing given up, and a tap on the card still acts. [compactCenter] is the short form for a dial
+ * under about 140 dp: a smaller icon, and the mode chip and target give way before the value would
+ * have to shrink or ellipsise.
+ *
+ * Families with their own body (the console thermostat, Cupertino's bar, the IKEA light) keep the
+ * [RemoteHaArcDialWide] row here: their bodies are fixed-size drawings, not a canvas that scales.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaArcDialFill(
+  data: HaArcDialData,
+  modifier: RemoteModifier = RemoteModifier,
+  showName: Boolean = true,
+  compactCenter: Boolean = false,
+) {
+  if (
+    isIkeaLight(data) || isConsoleThermostat(data) || visualFamily() == HaVisualFamily.Cupertino
+  ) {
+    RemoteHaArcDialWide(data, modifier, showName = showName)
+    return
+  }
+  val theme = haTheme()
+  val click =
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  RemoteColumn(
+    modifier =
+      modifier
+        .then(click)
+        .fillMaxSize()
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        .padding(horizontal = 12.rdp, vertical = 10.rdp),
+    horizontalAlignment = RemoteAlignment.CenterHorizontally,
+    verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
+  ) {
+    if (showName)
+      RemoteText(
+        text = entityName(data.entityId, data.name),
+        color = theme.primaryText,
+        fontSize = HaType.BodyLarge,
+        fontWeight = FontWeight.Medium,
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+    RemoteBox(
+      modifier = RemoteModifier.fillMaxWidth().weight(1f),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      ArcCanvas(
+        data = data,
+        theme = theme,
+        trackStrokePx = 10f,
+        fillStrokePx = 10f,
+        markerStrokePx = 12f,
+        paddingPx = 4f,
+      )
+      RemoteColumn(
+        horizontalAlignment = RemoteAlignment.CenterHorizontally,
+        verticalArrangement = RemoteArrangement.spacedBy(if (compactCenter) 0.rdp else 2.rdp),
+      ) {
+        if (data.centerIcon != null) {
+          RemoteIcon(
+            imageVector = data.centerIcon.toRemoteImageVector(),
+            contentDescription = entityName(data.entityId, data.name),
+            modifier = RemoteModifier.size((if (compactCenter) 28 else 40).rdp),
+            tint = dialAccent(data),
+          )
+        }
+        // A light's chip repeats its value (`On` beside `78%`): in the short form it is the
+        // first text to go. A thermostat's mode says what its accent cannot, so it stays.
+        if (!compactCenter || data.centerIcon == null) ModeChip(data, dialAccent(data))
+        RemoteText(
+          text = centerText(data),
+          color = theme.primaryText,
+          fontSize = if (compactCenter) HaType.Value else HaType.ValueLarge,
+          fontWeight = haValueWeight(),
+          style = haTextStyle(),
+          maxLines = 1,
+        )
+        if (!compactCenter)
+          supportingText(data)?.let { supporting ->
+            RemoteText(
+              text = supporting,
+              color = dialAccent(data),
+              fontSize = HaType.Label,
+              style = haTextStyle(),
+              maxLines = 1,
+            )
+          }
+      }
+    }
+  }
+}
+
 @Composable
 private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
   if (isConsoleThermostat(data)) {

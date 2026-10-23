@@ -8,11 +8,13 @@ import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaAction
@@ -171,7 +173,19 @@ class TodoListCardConverter : CardConverter {
             )
           },
           identity = { RemoteHaTodoListIdentity(data, RemoteModifier.fillMaxWidth()) },
-          full = { RemoteHaTodoList(data, RemoteModifier.fillMaxWidth()) },
+          full = {
+            // BulkTiers plays `full` on a Wear slot only in the Large container, whose ~88 dp of
+            // content holds the title over two short rows, not the sections of 48 dp rows.
+            if (LocalFixedCanvasAxis.current == BreakpointAxis.Height)
+              CenteredCell {
+                RemoteHaTodoList(
+                  data,
+                  RemoteModifier.fillMaxWidth(),
+                  compactRows = WEAR_LARGE_TODO_ROWS,
+                )
+              }
+            else RemoteHaTodoList(data, RemoteModifier.fillMaxWidth())
+          },
         )
     }
   }
@@ -234,6 +248,9 @@ private fun todoData(card: CardConfig, snapshot: HaSnapshot): HaTodoListData {
 // RemoteHaTodoList's layout, for naturalHeightDp: vertical insets, the line heights of the 17sp
 // title (20dp), the 12sp section caption (14dp) and the 13sp "No items" label (16dp), each with 2dp
 // to spare for a taller theme typeface, and the column's gap.
+/** The items a Wear Large slot lists under the title. */
+private const val WEAR_LARGE_TODO_ROWS = 2
+
 private const val INSETS_DP = 24
 private const val TITLE_DP = 22
 private const val CAPTION_DP = 16
