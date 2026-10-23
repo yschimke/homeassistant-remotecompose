@@ -89,7 +89,7 @@ fun RemoteComposeCard(
     BasicText("This card needs playback capabilities unavailable on this platform.", modifier)
   } else {
     // A document that throws while it plays is disabled, not the screen it is on.
-    RcErrorBoundary(bytes, modifier) { fail ->
+    RcErrorBoundary(bytes, modifier, namedValues = { values.toMap() }) { fail ->
       CompositionLocalProvider(LocalRcLayoutAnimations provides animateLayoutChanges) {
         RcComposePlayer(
           document = document,

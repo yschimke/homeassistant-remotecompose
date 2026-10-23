@@ -5,6 +5,7 @@ import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcHeader
 import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
 import ee.schimke.composeai.rcplayer.protocol.RcVersion
+import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -20,6 +21,8 @@ class RcSafeModeTest {
         )
       )
     assertNull(RcSafeMode.check(bytes))
+    // Checked with the live values the host will play it with.
+    assertNull(RcSafeMode.check(bytes, mapOf("light.s0.state" to RcNamedValue.Text("On"))))
   }
 
   @Test
