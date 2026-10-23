@@ -579,6 +579,27 @@ those keep their playback gate. `LauncherGridSweepTest` renders every
 card it covers on Android's grid from `1×1` to `4×3` into
 `rc-converter/build/launcher-sweep/` for review.
 
+### Wear widgets: one capture, both hosts, both containers
+
+A Wear widget's template is captured once and played in every host's Small
+and Large container (Pixel's squircle, Galaxy's stadium), so a card can't
+choose its layout at capture: it gates on **height**, once (#224), at
+`WEAR_SMALL_MAX_HEIGHT_DP` (80 dp).
+
+- **Small** (about 44 dp of content) holds two short lines, never a title
+  over a list: `RemoteHaSummaryLine` (caption title over one value line) for
+  calendar, to-do and logbook; compact statistic and clock; glance cells as
+  icon over state.
+- **Large** draws the card bigger, not the phone card in the middle: the wide
+  hero (`RemoteHaWideHero`, icon beside name over a large value) for tile,
+  entity and button; the standard measurement for a sensor; a 72 dp arc dial.
+  Size it for the **narrowest** host: Galaxy's stadium leaves about 160 dp.
+- **The container says the state** (`ContainerTint`): warm heating, cool
+  cooling, amber light on, red triggered or problem, green armed — the accent
+  a quarter of the way into the dark surface, so text keeps its contrast.
+- Review Wear widgets in the host previews (`WearWidgetHostsPreview`), which
+  draw each widget on both hosts as the watch frames it.
+
 ### Validation
 
 Every card with a ladder has a `CardPreviewMatrix_<Card>` preview
