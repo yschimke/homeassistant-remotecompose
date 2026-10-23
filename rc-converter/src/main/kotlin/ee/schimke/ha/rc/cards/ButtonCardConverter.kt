@@ -2,14 +2,11 @@
 
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaIconIdentity
@@ -19,8 +16,7 @@ import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaButton
 import ee.schimke.ha.rc.components.RemoteHaToggleButton
 import ee.schimke.ha.rc.defaultTapActionFor
-import ee.schimke.ha.rc.design.CardDesigns
-import ee.schimke.ha.rc.design.LocalCardInput
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.icons.withIcons
@@ -43,7 +39,7 @@ import kotlinx.serialization.json.put
  * evocative, [HaIconIdentity]), a launcher cell with a hero scale its hero forms, and a Wear slot
  * the icon beside its name below [WEAR_SMALL_MAX_HEIGHT_DP], the full button above.
  */
-class ButtonCardConverter : CardConverter {
+class ButtonCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.BUTTON
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 84
@@ -70,19 +66,6 @@ class ButtonCardConverter : CardConverter {
     EntityDesign.singleTemplate(cardType, properties) {
       if (properties[SHOW_NAME] == "0") put("show_name", false)
     }
-
-  /**
-   * The button drawn from its card design, `card-designs/ui-builder/designs/button.uid`
-   * ([CardDesigns]): which form of the button shows at which size, on the dashboard, a launcher
-   * cell or a Wear container, is the design's; [ButtonDesignParts] draw the forms.
-   */
-  @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val design = requireNotNull(CardDesigns.design(cardType)) { "no button.uid packaged" }
-    CompositionLocalProvider(LocalCardInput provides DesignTemplateInput(card, snapshot)) {
-      design.Render(modifier)
-    }
-  }
 
   private companion object {
     val TEMPLATE_CONFIG_KEYS = setOf("type", "entity", "name", "icon", "show_name")
