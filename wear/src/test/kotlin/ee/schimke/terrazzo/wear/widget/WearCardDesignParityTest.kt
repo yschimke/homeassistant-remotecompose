@@ -4,6 +4,7 @@ import ee.schimke.ha.cards.CardDesignDocument
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.rc.UNAVAILABLE_DESIGN_PROPERTY
 import ee.schimke.ha.rc.cards.ButtonCardConverter
+import ee.schimke.ha.rc.cards.EntityCardConverter
 import ee.schimke.ha.rc.cards.TileCardConverter
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
@@ -129,6 +130,52 @@ class WearCardDesignParityTest {
     }
     println(
       "button.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
+    )
+    assertEquals(emptyList(), differing)
+  }
+
+  @Test
+  fun entityDesignIsTheWearTemplateForEveryShapeAndStyle() {
+    val entity = EntityCardConverter()
+    val entityDesign = designOf("entity")
+    // Every templated domain, available or not, off or on.
+    val inputs =
+      TileCardConverter.TEMPLATE_DOMAINS.flatMap { domain ->
+        listOf(false, true).flatMap { unavailable ->
+          listOf(false, true).mapNotNull { on ->
+            if (on && domain == "sensor") return@mapNotNull null
+            entity.wearDesignTemplate(
+              DesignProperties.build {
+                string(TileCardConverter.DOMAIN, domain)
+                if (unavailable) string(UNAVAILABLE_DESIGN_PROPERTY, "1")
+                if (on) string(WEAR_ON_PROPERTY, "1")
+              }
+            )
+          }
+        }
+      }
+    val differing = buildList {
+      for (input in inputs) for (style in ThemeStyle.entries) for (cardStyle in HaUberTheme.all) {
+        val colors = wearWidgetColors(style)
+        val fromConverter = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle)
+          }
+        }
+        val fromDesign = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle) {
+              entityDesign.RenderCard(input.card, input.snapshot, it)
+            }
+          }
+        }
+        if (!fromConverter.contentEquals(fromDesign)) {
+          add("${input.card.raw} ${input.snapshot.states.values} ${style.name} ${cardStyle.id}")
+        }
+      }
+    }
+    println(
+      "entity.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
     )
     assertEquals(emptyList(), differing)
   }
