@@ -27,4 +27,10 @@ object HarcTraceSections {
 
   /** Decoding and checking a document for the Compose player (a decoded-document cache miss). */
   const val DECODE_DOCUMENT = "harc:decodeDocument"
+
+  /**
+   * A card on screen rebuilt its document on live data ([CardRebuilds]): an empty marker section,
+   * so a benchmark can count them alongside what they cost.
+   */
+  const val REBUILD = "harc:rebuild"
 }

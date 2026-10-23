@@ -102,6 +102,7 @@ fun CachedCardPreview(
   onDocument: ((ByteArray) -> Unit)? = null,
   playback: CardPlayback = CardPlayback.Compose,
   template: CardTemplatePlayback? = null,
+  rebuildReason: ((previous: Any, next: Any) -> String)? = null,
   content: @RemoteComposable @Composable () -> Unit,
 ) {
   // AndroidX path only: flip the View player into wrap-content mode —
@@ -133,6 +134,8 @@ fun CachedCardPreview(
       else PictureKeyedCacheKey(effectiveCacheKey, pictureSignature)
     }
 
+  // What producing this document cost, for [CardRebuilds]: set by the block below.
+  val produced = remember(documentKey, template) { arrayOf(CardRebuilds.Cost.None) }
   val cardDocument =
     remember(documentKey, template) {
       template?.let {
@@ -142,10 +145,12 @@ fun CachedCardPreview(
         // document.
         val bytes =
           if (pictureSignature.isEmpty()) it.bytes else pictureCopy(it.bytes, pictureSignature)
+        if (bytes !== it.bytes) produced[0] = CardRebuilds.Cost.Decode
         CardDocument(bytes = bytes, widthPx = 0, heightPx = 0)
       }
-        ?: cache.get(documentKey)
+        ?: cache.get(documentKey)?.also { produced[0] = CardRebuilds.Cost.Decode }
         ?: harcTrace(HarcTraceSections.CAPTURE_DOCUMENT) {
+            produced[0] = CardRebuilds.Cost.Encode
             runBlocking {
               val captureContent: @RemoteComposable @Composable () -> Unit =
                 if (debugBorders) {
@@ -206,6 +211,27 @@ fun CachedCardPreview(
   // because an abandoned or retried composition would have published anyway. A render harness
   // collecting this still has its per-preview window open in the apply phase.
   SideEffect { onDocument?.invoke(cardDocument.bytes) }
+
+  // A second document for this slot while it stays composed is a rebuild: live data reached the
+  // card through its key rather than a binding. Counted once per document, by type, reason and
+  // cost (CardRebuilds). The first document (the card coming into view) is not one.
+  val rebuildTracker = remember { RebuildTracker() }
+  SideEffect {
+    val previous = rebuildTracker.documentKey
+    if (previous != null && previous != documentKey && card != null) {
+      val reason =
+        if (rebuildTracker.cacheKey == cacheKey && rebuildTracker.pictures != pictureSignature) {
+          CardRebuilds.REASON_PICTURE
+        } else {
+          rebuildTracker.cacheKey?.let { old -> rebuildReason?.invoke(old, cacheKey) }
+            ?: CardRebuilds.REASON_KEY
+        }
+      CardRebuilds.record(card.type, reason, produced[0])
+    }
+    rebuildTracker.documentKey = documentKey
+    rebuildTracker.cacheKey = cacheKey
+    rebuildTracker.pictures = pictureSignature
+  }
 
   val dispatcher = LocalHaActionDispatcher.current
   val inputDrafts = remember(card) { ee.schimke.composeai.rcplayer.runtime.RcInputDrafts() }
@@ -581,4 +607,11 @@ class CardTemplatePlayback(
       is HaAction.Url,
       HaAction.None -> null
     }
+}
+
+/** The document a [CachedCardPreview] slot last showed, to tell a rebuild from its first one. */
+private class RebuildTracker {
+  var documentKey: Any? = null
+  var cacheKey: Any? = null
+  var pictures: String? = null
 }

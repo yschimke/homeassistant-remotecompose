@@ -211,6 +211,31 @@ state-following glyph has its path:
 Card designs never see a state-following glyph in their properties: `valuesNeverChangeTheProperties`
 holds.
 
+## Measuring rebuilds
+
+Path 2, and every snapshot-derived part of the app's cache key (the icon and visibility signatures,
+Jinja `templateValues`, a picture's URL), rebuilds a card's document while it is on screen. In the
+app that is the cost to drive to zero: a launcher widget re-encodes by design, an in-app card
+should take live data as bindings. Three measures:
+
+- **`CardRebuildReplayTest`** (`app/src/test`): an hour of demo mode's values, every card slot on
+  every demo board, sampled every 10 s through the same key functions `CardSlot` and
+  `CachedCardPreview` use. It writes `app/build/reports/card-rebuilds.md`: rebuilds per slot per
+  hour by card type and reason, and whether each is an encode (converter cards) or a decode (a
+  template's new picture). Run it after changing a converter.
+- **`CardRebuilds`** (`rc-converter`): `CachedCardPreview` counts each second document a slot plays
+  while it stays composed, by card type, reason (`CardSlot`'s `cardSlotRebuildReason`: `data`,
+  `icon`, `visibility`, `template`; `picture`; or the user's own `config` / `theme` / `epoch`) and
+  cost (`encode`, `decode`, `none`). The phone sends the ten most frequent buckets as `card_rebuild`
+  Analytics events each time it goes to the background, with `fg_seconds` to make them rates.
+- **`harc:rebuild`** trace sections, one per rebuild: `DashboardScrollJankBenchmark` reports them,
+  and `LiveUpdateBenchmark` idles on the demo Security board for a minute, where every capture,
+  decode or rebuild is live data that missed the binding path.
+
+Pictures are the largest share today: a new `entity_picture` URL plays as a new document, because
+the player fetches a document's images once. Swapping a picture in place needs the player to keep
+the last image while it loads the next one.
+
 ## Known follow-ups
 
 - History sparkline points (`<id>.numeric.<index>`) are baked at capture
