@@ -74,6 +74,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
@@ -393,6 +395,10 @@ private val NO_PICTURES = PictureImageStrategy.Inline { null }
  * template input), in [colors] and [cardStyle]: captured once per shape and theme, and shared by
  * the widgets and the Wear app's own cards, so both draw the same layout. Null when the capture
  * fails.
+ *
+ * Captured once even when asked for at once (the warm-up and the app's first frame): a second
+ * caller waits for the first's capture. Kept on disk too ([WearNeutralTemplateStore]), so a new
+ * process reads it rather than capturing again; memory only keeps the ones this process used.
  */
 internal suspend fun neutralWidgetTemplate(
   context: Context,
@@ -408,22 +414,56 @@ internal suspend fun neutralWidgetTemplate(
   neutralTemplates[key]?.let {
     return it
   }
-  return runCatching {
-    neutralTemplateCaptures.incrementAndGet()
-    WearWidgetTemplate.capture(context) {
-      SlotContent(
-        registry,
-        colors,
-        input.card,
-        input.snapshot,
-        template = true,
-        cardStyle = cardStyle,
-      )
+  return neutralCaptureLocks
+    .computeIfAbsent(key) { Mutex() }
+    .withLock {
+      neutralTemplates[key]?.let {
+        return@withLock it
+      }
+      val store = WearNeutralTemplateStore.of(context)
+      val fileName = neutralTemplateFileName(cardType, shape, themeKey, cardStyle.id)
+      fileName?.let(store::read)?.let {
+        neutralTemplates[key] = it
+        return@withLock it
+      }
+      runCatching {
+        neutralTemplateCaptures.incrementAndGet()
+        WearWidgetTemplate.capture(context) {
+          SlotContent(
+            registry,
+            colors,
+            input.card,
+            input.snapshot,
+            template = true,
+            cardStyle = cardStyle,
+          )
+        }
+      }
+        .onFailure { Log.w("CardWidget", "neutral template capture failed", it) }
+        .getOrNull()
+        ?.also {
+          neutralTemplates[key] = it
+          fileName?.let { name -> store.write(name, it) }
+        }
     }
-  }
-    .onFailure { Log.w("CardWidget", "neutral template capture failed", it) }
-    .getOrNull()
-    ?.also { neutralTemplates[key] = it }
+}
+
+/**
+ * The disk name of a neutral template: everything [WearNeutralTemplateKey] holds, hashed. Null —
+ * kept in memory only — for a [themeKey] with no stable name across processes (not an enum, such as
+ * [ee.schimke.ha.rc.components.ThemeStyle]).
+ */
+internal fun neutralTemplateFileName(
+  cardType: String,
+  shape: String,
+  themeKey: Any,
+  cardStyleId: String,
+): String? {
+  val theme = (themeKey as? Enum<*>)?.let { "${it.javaClass.name}.${it.name}" } ?: return null
+  val stable = listOf(cardType, shape, theme, cardStyleId).joinToString("\u0000")
+  return java.security.MessageDigest.getInstance("SHA-256")
+    .digest(stable.encodeToByteArray())
+    .joinToString("") { "%02x".format(it) }
 }
 
 /** One container-neutral Wear template per card shape and theme: see [WearWidgetTemplate]. */
@@ -431,6 +471,10 @@ private data class WearNeutralTemplateKey(val cardType: String, val shape: Strin
 
 private val neutralTemplates =
   java.util.concurrent.ConcurrentHashMap<WearNeutralTemplateKey, ByteArray>()
+
+/** One lock per key, so a template is captured (or read from disk) by one caller at a time. */
+private val neutralCaptureLocks =
+  java.util.concurrent.ConcurrentHashMap<WearNeutralTemplateKey, Mutex>()
 
 /** How many neutral templates this process has captured: for tests of who captures them. */
 internal val neutralTemplateCaptures = java.util.concurrent.atomic.AtomicInteger()
@@ -440,7 +484,8 @@ private val wearTemplates =
 
 /**
  * Forgets the captured widget templates under memory pressure (`CardMemory`): the next widget
- * update captures them again.
+ * update reads the neutral ones back from disk ([WearNeutralTemplateStore], which this leaves) or
+ * captures them again.
  */
 internal fun releaseWidgetTemplates() {
   neutralTemplates.clear()

@@ -80,6 +80,27 @@ class WearOfflineStore(context: Context) {
   }
 
   /** Read every persisted dashboard. Order is filesystem order; callers re-sort. */
+  /**
+   * When the watch last started reading its values from Home Assistant itself ([WearDirectAccess]):
+   * on disk because a widget update often runs in a fresh process, which would otherwise read again
+   * on every render. One from the future (the clock was set back) reads as none.
+   */
+  fun readDirectReadAt(nowMs: Long): Long? =
+    File(root, "direct-read-at.txt")
+      .readBytesOrNull()
+      ?.decodeToString()
+      ?.trim()
+      ?.toLongOrNull()
+      ?.takeIf { it <= nowMs }
+
+  fun writeDirectReadAt(atMs: Long) {
+    File(root, "direct-read-at.txt").atomicWriteBytes(atMs.toString().encodeToByteArray())
+  }
+
+  fun forgetDirectReadAt() {
+    File(root, "direct-read-at.txt").delete()
+  }
+
   fun readAllDashboards(): List<DashboardData> =
     dashboardsDir
       .listFiles { f -> f.isFile && f.name.endsWith(".pb") }
