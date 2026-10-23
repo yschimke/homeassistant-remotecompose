@@ -22,9 +22,9 @@ object CardDesigns {
    * The structural components every card design can use: the card root, and the switches that pick
    * what a card draws for the surface and size it is drawn at.
    * - `ha-cards/dashboard-card`: the card itself; its `content` is drawn with the card's modifier.
-   * - `ha-cards/card-size-mode`: `wrap` on a dashboard (the card sizes itself), `height` in a
-   *   fixed canvas whose height decides (a Wear widget container), `width` in one whose width
-   *   decides (a launcher cell).
+   * - `ha-cards/card-size-mode`: `wrap` on a dashboard (the card sizes itself), `height` in a fixed
+   *   canvas whose height decides (a Wear widget container), `width` in one whose width decides (a
+   *   launcher cell).
    * - `ha-cards/size-tiers`: tier `tier<N>` for the canvas's size along `axis` (`width` or
    *   `height`) against the ascending `thresholdsDp` (comma-separated), picked where the document
    *   plays.
@@ -51,7 +51,8 @@ object CardDesigns {
           val axis =
             if (node.string("axis", "width") == "height") BreakpointAxis.Height
             else BreakpointAxis.Width
-          RemoteSizeBreakpoint(thresholdsDp = thresholds, modifier = modifier, axis = axis) { tier ->
+          RemoteSizeBreakpoint(thresholdsDp = thresholds, modifier = modifier, axis = axis) { tier
+            ->
             node.Slot("tier$tier")
           }
         },
@@ -68,10 +69,9 @@ object CardDesigns {
     loaded
       .getOrPut(cardType) {
         runCatching {
-          CardDesigns::class
-            .java
-            .getResourceAsStream("/$RESOURCE_DIR/$cardType.uid")
-            ?.use { CardDesign.parse(it.readBytes().decodeToString(), components) }
+          CardDesigns::class.java.getResourceAsStream("/$RESOURCE_DIR/$cardType.uid")?.use {
+            CardDesign.parse(it.readBytes().decodeToString(), components)
+          }
         }
       }
       .getOrThrow()
