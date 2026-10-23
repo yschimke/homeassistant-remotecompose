@@ -85,6 +85,27 @@ class WearTapsTest {
       onFailure = { recorder.failures += it },
     )
 
+  /** The phone not answering in time is an unconfirmed tap, not a silent "Sending…". */
+  @Test
+  fun anUnansweredTapIsReportedAsUnconfirmed() = runTest {
+    val recorder = Recorder()
+    val taps =
+      WearTapDispatcher(
+        card = card,
+        scope = this,
+        enabled = { true },
+        send = { _, _ ->
+          kotlinx.coroutines.withTimeout(10) { kotlinx.coroutines.awaitCancellation() }
+        },
+        onOutcome = { _, outcome -> recorder.outcomes += outcome },
+        onFailure = { recorder.failures += it },
+      )
+    taps.dispatch(HaAction.Toggle("light.kitchen"))
+    advanceUntilIdle()
+    assertEquals(listOf(WearTapOutcome.Sent, WearTapOutcome.Failed), recorder.outcomes)
+    assertEquals(listOf(WearTapDispatcher.NOT_CONFIRMED), recorder.failures)
+  }
+
   @Test
   fun toggleAndServiceCallTapsGoToThePhone() = runTest {
     val recorder = Recorder()

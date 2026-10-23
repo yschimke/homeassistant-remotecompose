@@ -122,6 +122,11 @@ internal class WearTapDispatcher(
       try {
         send(card, action)
         onOutcome(action, WearTapOutcome.Done)
+      } catch (unanswered: kotlinx.coroutines.TimeoutCancellationException) {
+        // The phone never answered: the call may still have run, so it is unconfirmed, not
+        // cancelled (the card leaving composition cancels the scope, which is rethrown below).
+        onOutcome(action, WearTapOutcome.Failed)
+        onFailure(NOT_CONFIRMED)
       } catch (cancelled: CancellationException) {
         throw cancelled
       } catch (failure: Exception) {
