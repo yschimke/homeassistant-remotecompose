@@ -8,14 +8,15 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.EntityDesignParts
+import ee.schimke.ha.rc.cards.HeadingDesignParts
 import ee.schimke.ha.rc.cards.SensorDesignParts
 import ee.schimke.ha.rc.cards.TileDesignParts
 import ee.schimke.ha.rc.design.CardDesigns
 
 /*
  * The parts a card design is arranged from, on UI Builder's shelf: the switches that pick what a
- * card draws for the surface and size it is drawn at, and the forms of a tile, a button, an entity
- * card and a sensor card. Each calls what the card design renderer calls for the same component id
+ * card draws for the surface and size it is drawn at, and the forms of the card types migrated to their
+ * designs. Each calls what the card design renderer calls for the same component id
  * (CardDesigns and the card types' `*DesignParts`), so a design edited in UI Builder draws in the app as it does
  * on the canvas. A slot wrapper draws the slot it picks inside its own modifier; the renderer hands
  * that modifier to the slot's node instead.
@@ -330,4 +331,32 @@ fun HaSensorCardCell(
   RemoteBox(modifier) {
     SensorDesignParts.Cell(wrap, wear, historyHero, readingHero, readingRow, other)
   }
+}
+
+/** `ha-cards/heading-card-title`: the heading in its style, as a dashboard draws it. */
+@Composable
+@RemoteComposable
+fun HaHeadingCardTitle(modifier: RemoteModifier = RemoteModifier) {
+  HeadingDesignParts.Title(modifier)
+}
+
+/**
+ * `ha-cards/heading-card-centred`: the heading centred in a fixed cell, a subtitle in a one-column
+ * launcher cell and at the hero's size in a roomy one.
+ */
+@Composable
+@RemoteComposable
+fun HaHeadingCardCentred(modifier: RemoteModifier = RemoteModifier) {
+  HeadingDesignParts.Centred(modifier)
+}
+
+/** `ha-cards/heading-card-cell`: [wrap] on a dashboard, [fixed] in a fixed canvas. */
+@Composable
+@RemoteComposable
+fun HaHeadingCardCell(
+  modifier: RemoteModifier = RemoteModifier,
+  wrap: @Composable @RemoteComposable () -> Unit = {},
+  fixed: @Composable @RemoteComposable () -> Unit = {},
+) {
+  RemoteBox(modifier) { HeadingDesignParts.Cell(wrap, fixed) }
 }
