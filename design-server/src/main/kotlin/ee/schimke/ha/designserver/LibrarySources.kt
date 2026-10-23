@@ -45,7 +45,9 @@ class LibrarySources(
    */
   suspend fun current(cardType: String): Source? {
     val checkedIn = holder.current().sources[cardType] ?: return null
-    val edited = uiBuilder?.client?.design(designId(cardType))?.getOrNull()
+    // Only a design UI Builder says it doesn't have (404) means "not edited": anything else
+    // throws, so an import never reads a refused token or an outage as "no edits".
+    val edited = uiBuilder?.client?.designOrNull(designId(cardType))
     return if (edited == null) Source(cardType, checkedIn, edited = false)
     else Source(cardType, normalized(edited, cardType), edited = true)
   }
@@ -97,7 +99,7 @@ class LibrarySources(
         source +
           mapOf(
             "id" to JsonPrimitive(designId(cardType)),
-            "title" to JsonPrimitive("Library ? $cardType"),
+            "title" to JsonPrimitive("Library · $cardType"),
             "revision" to JsonPrimitive(0),
           )
       )

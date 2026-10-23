@@ -81,17 +81,17 @@ class LibraryHolder(
 
 /**
  * Routes:
- * - `/designs/v1/manifest.json`, `/designs/v1/blobs/<sha256>.rc` ? the client protocol
+ * - `/designs/v1/manifest.json`, `/designs/v1/blobs/<sha256>.rc` — the client protocol
  *   (`DesignRepository`): point the app's design server URL at `<host>/designs/v1`. The manifest
  *   revalidates by ETag; blobs are content-addressed and immutable.
- * - `/designs/v1/designs?cardType=&style=&variant=&author=` (and `surface`, `shape`, `theme`) ? the
+ * - `/designs/v1/designs?cardType=&style=&variant=&author=` (and `surface`, `shape`, `theme`) — the
  *   designs matching those tags ([DesignQuery]) and every tag's values, so a client can fetch what
  *   it needs instead of the whole manifest.
- * - `/designs/v1/catalog.json`, `/designs/v1/previews/...` ? the browser's data.
- * - `/` ? the app's front page ([Landing]); `/site/<name>` ? its pictures.
- * - `/designs`, `/designs/<id>` ? the template browser; `/api/designs[/<id>]` ? the same as JSON.
- * - `/embed/v1/ha-card.js`, `/embed/v1/rc-player.js` ? the card embed and its player;
- *   `/embed/v1/demo.html` ? its demo page (docs/architecture/card-embedding.md). The embed reads
+ * - `/designs/v1/catalog.json`, `/designs/v1/previews/...` — the browser's data.
+ * - `/` — the app's front page ([Landing]); `/site/<name>` — its pictures.
+ * - `/designs`, `/designs/<id>` — the template browser; `/api/designs[/<id>]` — the same as JSON.
+ * - `/embed/v1/ha-card.js`, `/embed/v1/rc-player.js` — the card embed and its player;
+ *   `/embed/v1/demo.html` — its demo page (docs/architecture/card-embedding.md). The embed reads
  *   the manifest and blobs from other origins, so those, like the scripts, allow any origin: they
  *   hold no user data.
  * - `/healthz`.
@@ -231,7 +231,7 @@ fun Application.designServer(
 
     get("/") {
       // The browser lived here, and its filter links still arrive with its query keys; any other
-      // query (`?utm_source=?`) is the front page's.
+      // query (`?utm_source=…`) is the front page's.
       if (call.request.queryParameters.names().any { it in BrowserFilter.KEYS }) {
         return@get call.respondRedirect("/designs?${call.request.queryString()}", permanent = true)
       }

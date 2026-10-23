@@ -58,8 +58,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
           if [[ -z "$(git status --porcelain -- "$DESIGNS")" ]]; then
             echo "The library's designs match the repository." | tee -a "$GITHUB_STEP_SUMMARY"
+            # An import PR from earlier proposes designs the server no longer has (an edit
+            # reverted, or already merged another way): close it rather than leave it to merge.
+            if [[ -n "$existing" ]]; then
+              gh pr close "$existing" --delete-branch \
+                --comment "Closed by the ${GITHUB_WORKFLOW} workflow: the design server's library designs match \`main\` again (run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})."
+              echo "Closed stale import PR #${existing}." | tee -a "$GITHUB_STEP_SUMMARY"
+            fi
             exit 0
           fi
           git status --short -- "$DESIGNS" | tee -a "$GITHUB_STEP_SUMMARY"
@@ -72,7 +80,6 @@ jobs:
             -m "Imported from the design server's /api/library/sources by the ${GITHUB_WORKFLOW} workflow."
           git push --force origin "$BRANCH"
 
-          existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
           if [[ -n "$existing" ]]; then
             echo "Updated PR #${existing}." | tee -a "$GITHUB_STEP_SUMMARY"
           else

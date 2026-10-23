@@ -236,6 +236,24 @@ class LibrarySourcesTest {
   }
 
   @Test
+  fun aUiBuilderErrorOtherThanNotFoundFailsTheImport() = testApplication {
+    externalServices {
+      hosts("http://uib") {
+        routing {
+          get("/api/ui-builder/v1/designs/{id}") {
+            call.respondText("bad token", status = HttpStatusCode.Unauthorized)
+          }
+        }
+      }
+    }
+    val config =
+      UiBuilderConfig(apiUrl = "http://uib", browserUrl = "https://builder.example", "secret")
+    val integration = UiBuilderIntegration(config, UiBuilderClient(config, createClient {}))
+    application { designServer(LibraryHolder(library()), integration) }
+    assertEquals(HttpStatusCode.ServiceUnavailable, client.get("/api/library/sources").status)
+  }
+
+  @Test
   fun withGitHubSignInOnlyNamedLoginsAreLibraryEditors() {
     val sources = LibrarySources(LibraryHolder(library()), uiBuilder = null, setOf("Yuri"))
     assertTrue(sources.mayEdit(EditorState(enabled = true, authorized = true, login = "yuri")))
