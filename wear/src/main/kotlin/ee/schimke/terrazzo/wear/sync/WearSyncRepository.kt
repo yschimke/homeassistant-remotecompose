@@ -255,16 +255,29 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
           // Signed in (or to another instance): the watch may need a token for it.
           scope.launch { direct.requestIfMissing(it) }
         }
+      // Only a newer copy replaces the one kept, as in [persistChanged]: the cold read meets every
+      // node's copy (a replaced phone's too), in no particular order, and an older one must not
+      // become what the next offline start shows.
       path == WearSyncPaths.PINNED ->
-        decodeProto<PinnedCardSet>(bytes)?.let {
-          _pinned.value = it
-          offline.writePinned(it)
-        }
+        newerThan(
+            decodeProto<PinnedCardSet>(bytes),
+            offline.readPinned(),
+            PinnedCardSet::updatedAtMs,
+          )
+          ?.let {
+            _pinned.value = it
+            offline.writePinned(it)
+          }
       path == WearSyncPaths.SECTIONS ->
-        decodeProto<PinnedSectionSet>(bytes)?.let {
-          _sections.value = it
-          offline.writeSections(it)
-        }
+        newerThan(
+            decodeProto<PinnedSectionSet>(bytes),
+            offline.readSections(),
+            PinnedSectionSet::updatedAtMs,
+          )
+          ?.let {
+            _sections.value = it
+            offline.writeSections(it)
+          }
       // `/wear/slots` (an older phone's widget slot assignments) is ignored: the watch chooses
       // each widget's card itself.
       path == WearSyncPaths.VALUES ->
@@ -289,7 +302,9 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
       path.startsWith(WearSyncPaths.DESIGN_PREFIX) ->
         decodeProto<WearDesignBlob>(bytes)?.let { offline.writeDesign(it) }
       path.startsWith(WearSyncPaths.DASHBOARD_PREFIX) ->
-        decodeProto<DashboardData>(bytes)?.let { dashboard ->
+        decodeProto<DashboardData>(bytes)?.let { changed ->
+          val kept = _dashboards.value.firstOrNull { it.urlPath == changed.urlPath }
+          val dashboard = newerThan(changed, kept, DashboardData::updatedAtMs) ?: return
           val current = _dashboards.value.toMutableList()
           val idx = current.indexOfFirst { it.urlPath == dashboard.urlPath }
           if (idx >= 0) current[idx] = dashboard else current.add(dashboard)

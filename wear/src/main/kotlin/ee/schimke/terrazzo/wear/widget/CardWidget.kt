@@ -69,7 +69,11 @@ import ee.schimke.terrazzo.wear.sync.syncWidgetStateFromDataLayer
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
@@ -113,14 +117,23 @@ abstract class CardWidget : GlanceWearWidget() {
     WearWidgetFrame.remember(app, params)
     val store = WearOfflineStore(app)
     // Pins, sections and values from the Data Layer: the watch app may not have been running to
-    // store them as they arrived.
-    syncWidgetStateFromDataLayer(app, store)
+    // store them as they arrived. Bounded, like every read before the render: the widget draws
+    // from disk, so a slow Data Layer only costs freshness.
+    withTimeoutOrNull(DATA_LAYER_TIMEOUT_MS) { syncWidgetStateFromDataLayer(app, store) }
     val chosen = WearWidgetCardStore(app).read(params.instanceId.id)
-    // The card's values from Home Assistant itself when the phone has sent none lately.
-    chosen?.let { refreshCardValuesDirectly(app, store, it) }
     // The pinned cards' Wear widget designs from the design server, synced by the phone.
-    syncDesignsFromDataLayer(app, store)
-    return slotWidgetDataFromStore(app, store, chosen)
+    withTimeoutOrNull(DATA_LAYER_TIMEOUT_MS) { syncDesignsFromDataLayer(app, store) }
+    val data = slotWidgetDataFromStore(app, store, chosen)
+    // The card's values from Home Assistant itself when the phone has sent none lately: after the
+    // render, never before it. Values it reads render the widget again.
+    chosen?.let { card ->
+      widgetRefreshScope.launch {
+        if (refreshCardValuesDirectly(app, store, card)) {
+          runCatching { triggerUpdate(app, params.instanceId) }
+        }
+      }
+    }
+    return data
   }
 
   /** The widget was removed from the watch: forget the card chosen for it. */
@@ -131,28 +144,42 @@ abstract class CardWidget : GlanceWearWidget() {
 
 /**
  * Reads the values of [chosen]'s card from Home Assistant when the phone's are stale
- * ([WearDirectAccess]); bounded, so a widget never waits long on the network.
+ * ([WearDirectAccess]), bounded; true when it stored newer values. Runs after the widget rendered
+ * from disk, so the network never holds a frame.
  */
 private suspend fun refreshCardValuesDirectly(
   app: Context,
   store: WearOfflineStore,
   chosen: WearWidgetCard,
-) {
+): Boolean {
   val pinned = store.readPinned()
   val sections = store.readSections()
-  val raw = currentWidgetCard(chosen, pinned, sections).rawJson.takeIf { it.isNotEmpty() } ?: return
+  val raw =
+    currentWidgetCard(chosen, pinned, sections).rawJson.takeIf { it.isNotEmpty() } ?: return false
   // A card the phone stopped showing keeps drawing from its kept copy, but the phone sends none of
   // its values any more: their absence from fresh phone values is a reason to read them.
   val retained = widgetCardOptions(pinned, sections).none { it.cardKey == chosen.cardKey }
-  withTimeoutOrNull(DIRECT_VALUES_TIMEOUT_MS) {
-    runCatching {
-      WearDirectAccess(app, offline = store).refresh(listOf(raw), store.readSettings(), retained)
+  val read =
+    withTimeoutOrNull(DIRECT_VALUES_TIMEOUT_MS) {
+      runCatching {
+        WearDirectAccess(app, offline = store).refresh(listOf(raw), store.readSettings(), retained)
+      }
+        .onFailure { if (it is CancellationException) throw it }
+        .getOrNull()
     }
-      .onFailure { if (it is CancellationException) throw it }
-  }
+  return read != null
 }
 
 private const val DIRECT_VALUES_TIMEOUT_MS = 20_000L
+
+/**
+ * The longest a widget render waits on each Data Layer read. They are local IPC and normally take
+ * milliseconds; this only bounds a slow or wedged Play services.
+ */
+private const val DATA_LAYER_TIMEOUT_MS = 2_000L
+
+/** Where a widget's after-render refreshes run: they outlive the render that started them. */
+private val widgetRefreshScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
 /**
  * The offline rendering path for a widget showing [chosen] (null: no card chosen yet), also used
@@ -174,7 +201,7 @@ internal suspend fun slotWidgetDataFromStore(
       CardDesignSlots.slotEntities(c).orEmpty().filter {
         snapshot.states[it]?.attributes?.containsKey("entity_picture") == true
       }
-    syncPicturesFromDataLayer(app, store, pictured)
+    withTimeoutOrNull(DATA_LAYER_TIMEOUT_MS) { syncPicturesFromDataLayer(app, store, pictured) }
   }
 
   val style = WearPrefs(app).themeStyle.first()
@@ -337,7 +364,7 @@ internal fun slotDirectDocument(
  * The synced picture for [url] — an entity's `entity_picture` in [snapshot]. A camera's URL changes
  * with its token faster than pictures sync, so the entity's last synced picture stands in for it.
  */
-private fun syncedPicture(store: WearOfflineStore, snapshot: HaSnapshot, url: String): ByteArray? {
+internal fun syncedPicture(store: WearOfflineStore, snapshot: HaSnapshot, url: String): ByteArray? {
   val entity =
     snapshot.states.values.firstOrNull {
       (it.attributes["entity_picture"] as? JsonPrimitive)?.content == url
