@@ -1,26 +1,18 @@
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.BreakpointAxis
-import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaClock
-import ee.schimke.ha.rc.LocalCardSizeMode
-import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalHaClock
-import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.SystemHaClock
 import ee.schimke.ha.rc.components.HaClockData
-import ee.schimke.ha.rc.components.RemoteHaClock
 import ee.schimke.ha.rc.components.placeholderTitle
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -39,8 +31,12 @@ import kotlinx.serialization.json.put
  * [ee.schimke.ha.rc.SystemHaClock] and tick live, while previews / tests inject a
  * [ee.schimke.ha.rc.FixedHaClock] whose `isFrozen` flag flips the converter onto a static-label
  * path so the captured `.rc` bytes (and therefore the rendered PNG) stay byte-stable across runs.
+ *
+ * Its layout is its card design, `clock.uid` ([ClockDesignParts]): the face on a dashboard and in a
+ * launcher cell, and in a Wear slot the time alone below [WEAR_SMALL_MAX_HEIGHT_DP] and the full
+ * face above.
  */
-class ClockCardConverter : CardConverter {
+class ClockCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.CLOCK
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
@@ -94,7 +90,7 @@ class ClockCardConverter : CardConverter {
     designBindings(card, snapshot, SystemHaClock)
 
   /**
-   * The date line and another zone's offset, read from [clock]: the same clock [Render] reads
+   * The date line and another zone's offset, read from [clock]: the same clock [clockData] reads
    * through [LocalHaClock], so a template played under an injected clock shows what the direct
    * render under that clock shows.
    */
@@ -111,8 +107,12 @@ class ClockCardConverter : CardConverter {
     return CardSnapshotBindings(strings, emptyMap(), emptyMap(), floats)
   }
 
+  /**
+   * What [card] shows, read from [LocalHaClock]: a frozen clock (a preview or a test) encodes a
+   * static label so captured PNGs are stable; otherwise the time ticks in-document.
+   */
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  internal fun clockData(card: CardConfig): HaClockData {
     val title = card.raw["title"]?.jsonPrimitive?.content
     val tz = zoneOf(card)
     val showSeconds = showSeconds(card)
@@ -138,34 +138,18 @@ class ClockCardConverter : CardConverter {
     val zoneOffsetMinutes = if (tz != null) zoneOffsetMinutes(tz, clock) else 0
     val secondaryLabel = if (showsDate(card)) dateLabel(tz, clock) else null
 
-    val data =
-      HaClockData(
-        title = title,
-        staticTimeLabel = staticLabel,
-        secondaryLabel = secondaryLabel,
-        isLarge = isLarge(card),
-        use24Hour = use24Hour,
-        zoneOffsetMinutes = zoneOffsetMinutes,
-        showSeconds = showSeconds,
-        // Any configured zone shifts in-document, even one that matches the host today: its
-        // offset is a value (DST moves it), so it must never change the document's structure.
-        zoned = tz != null,
-      )
-    if (
-      LocalCardSizeMode.current == CardSizeMode.Fixed &&
-        LocalFixedCanvasAxis.current == BreakpointAxis.Height
-    ) {
-      // A Wear slot: the Small container holds the time alone, the Large one the full card.
-      RemoteSizeBreakpoint(
-        thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
-        modifier = modifier,
-        axis = BreakpointAxis.Height,
-      ) { tier ->
-        RemoteHaClock(data, RemoteModifier.fillMaxSize(), compact = tier == 0)
-      }
-      return
-    }
-    RemoteHaClock(data, modifier = modifier)
+    return HaClockData(
+      title = title,
+      staticTimeLabel = staticLabel,
+      secondaryLabel = secondaryLabel,
+      isLarge = isLarge(card),
+      use24Hour = use24Hour,
+      zoneOffsetMinutes = zoneOffsetMinutes,
+      showSeconds = showSeconds,
+      // Any configured zone shifts in-document, even one that matches the host today: its
+      // offset is a value (DST moves it), so it must never change the document's structure.
+      zoned = tz != null,
+    )
   }
 }
 

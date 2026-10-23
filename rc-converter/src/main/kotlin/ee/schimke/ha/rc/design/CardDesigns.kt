@@ -13,6 +13,7 @@ import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.CenteredCell
+import ee.schimke.ha.rc.cards.ClockDesignParts
 import ee.schimke.ha.rc.cards.EntityDesignParts
 import ee.schimke.ha.rc.cards.GlanceDesignParts
 import ee.schimke.ha.rc.cards.HeadingDesignParts
@@ -137,6 +138,7 @@ object CardDesigns {
       SensorDesignParts.components +
       HeadingDesignParts.components +
       GlanceDesignParts.components +
+      ClockDesignParts.components +
       PictureDesignParts.components
 
   private val loaded = ConcurrentHashMap<String, Result<CardDesign?>>()

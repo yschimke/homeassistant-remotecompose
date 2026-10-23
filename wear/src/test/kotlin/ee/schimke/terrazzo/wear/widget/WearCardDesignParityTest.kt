@@ -7,6 +7,7 @@ import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.UNAVAILABLE_DESIGN_PROPERTY
 import ee.schimke.ha.rc.cards.ButtonCardConverter
+import ee.schimke.ha.rc.cards.ClockCardConverter
 import ee.schimke.ha.rc.cards.EntityCardConverter
 import ee.schimke.ha.rc.cards.HeadingCardConverter
 import ee.schimke.ha.rc.cards.PictureCardConverter
@@ -265,6 +266,52 @@ class WearCardDesignParityTest {
     println(
       "heading.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
     )
+    assertEquals(emptyList(), differing)
+  }
+
+  @Test
+  fun clockDesignIsTheWearTemplateForEveryShapeAndStyle() {
+    val clock = ClockCardConverter()
+    val clockDesign = designOf("clock")
+    // Each line on and off against a plain 24-hour clock, and a 12-hour clock with every line.
+    val plain = mapOf("has_title" to 0, "seconds" to 0, "h24" to 1, "large" to 0, "zoned" to 0)
+    val inputs =
+      (listOf(plain + ("date" to 0)) +
+          listOf("has_title", "seconds", "large", "zoned", "date").map {
+            plain + ("date" to 0) + (it to 1)
+          } +
+          listOf(
+            mapOf("has_title" to 1, "seconds" to 1, "h24" to 0, "large" to 1) +
+              ("zoned" to 1) +
+              ("date" to 1)
+          ))
+        .mapNotNull { values ->
+          clock.wearDesignTemplate(
+            DesignProperties.build { values.forEach { (name, value) -> enum(name, value) } }
+          )
+        }
+    val differing = buildList {
+      for (input in inputs) for (style in ThemeStyle.entries) for (cardStyle in HaUberTheme.all) {
+        val colors = wearWidgetColors(style)
+        val fromConverter = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle)
+          }
+        }
+        val fromDesign = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle) {
+              clockDesign.RenderCard(input.card, input.snapshot, it)
+            }
+          }
+        }
+        if (!fromConverter.contentEquals(fromDesign)) {
+          add("${input.card.raw} ${style.name} ${cardStyle.id}")
+        }
+      }
+    }
+    println("clock.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases")
+    assertEquals(7, inputs.size)
     assertEquals(emptyList(), differing)
   }
 

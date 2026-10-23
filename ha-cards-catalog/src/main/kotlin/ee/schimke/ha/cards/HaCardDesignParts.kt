@@ -7,6 +7,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.rc.cards.ButtonDesignParts
+import ee.schimke.ha.rc.cards.ClockDesignParts
 import ee.schimke.ha.rc.cards.EntityDesignParts
 import ee.schimke.ha.rc.cards.GlanceDesignParts
 import ee.schimke.ha.rc.cards.HeadingDesignParts
@@ -400,6 +401,24 @@ fun HaGlanceCardCell(
   other: @Composable @RemoteComposable () -> Unit = {},
 ) {
   RemoteBox(modifier) { GlanceDesignParts.Cell(tile, wear, other) }
+}
+
+/** `ha-cards/clock-card-face`: the time, its title and date line; [compact] is the time alone. */
+@Composable
+@RemoteComposable
+fun HaClockCardFace(modifier: RemoteModifier = RemoteModifier, compact: Boolean = false) {
+  ClockDesignParts.Face(compact, modifier)
+}
+
+/** `ha-cards/clock-card-cell`: [wear] in a Wear container, [other] otherwise. */
+@Composable
+@RemoteComposable
+fun HaClockCardCell(
+  modifier: RemoteModifier = RemoteModifier,
+  wear: @Composable @RemoteComposable () -> Unit = {},
+  other: @Composable @RemoteComposable () -> Unit = {},
+) {
+  RemoteBox(modifier) { ClockDesignParts.Cell(wear, other) }
 }
 
 /**

@@ -2678,6 +2678,67 @@
       "group": "Card layout",
       "nativeOnly": true
     },
+    "ha-cards/clock-card-cell": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaClockCardCell",
+      "displayName": "Clock card cell",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "shelfRole": "Container",
+      "slotCapabilities": [
+        {
+          "name": "wear",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "other",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        }
+      ]
+    },
+    "ha-cards/clock-card-face": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaClockCardFace",
+      "displayName": "Clock card face",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "compact": {
+            "type": "bool",
+            "value": false
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "compact",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "The time alone, without the title or date line."
+        }
+      ]
+    },
     "ha-cards/picture-card-image": {
       "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaPictureCardImage",
       "displayName": "Picture card image",
