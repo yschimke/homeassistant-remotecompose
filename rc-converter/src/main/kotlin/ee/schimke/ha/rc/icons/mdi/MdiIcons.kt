@@ -26,6 +26,11 @@ object MdiIcons {
 
   private val built = ConcurrentHashMap<String, ImageVector>()
 
+  /** Forgets the built glyphs; each rebuilds from its path data on next use. */
+  fun releaseMemory() {
+    built.clear()
+  }
+
   /** Whether [name] (no `mdi:` prefix) is bundled. */
   operator fun contains(name: String): Boolean = MdiPaths.path(name) != null
 

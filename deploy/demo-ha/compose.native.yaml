@@ -22,7 +22,7 @@ services:
       driver: json-file
       options: {max-size: 5m, max-file: "2"}
   native-setup:
-    image: ghcr.io/home-assistant/home-assistant:2026.10.2
+    image: ghcr.io/home-assistant/home-assistant:2026.10.3
     profiles: [native-setup]
     network_mode: none
     volumes:

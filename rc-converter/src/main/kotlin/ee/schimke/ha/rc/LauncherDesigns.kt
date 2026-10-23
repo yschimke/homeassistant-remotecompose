@@ -334,6 +334,11 @@ object LauncherDesigns {
 
   private val library = ConcurrentHashMap<Pair<DesignKey, Int>, Template>()
 
+  /** Forgets the captured templates, for [CardMemory]: the next widget update captures again. */
+  fun releaseMemory() {
+    library.clear()
+  }
+
   private fun dpToPx(dp: Int, densityDpi: Int): Int = (dp * densityDpi / 160f).toInt()
 
   /** The widget profile's document API level: what a launcher template targets. */
