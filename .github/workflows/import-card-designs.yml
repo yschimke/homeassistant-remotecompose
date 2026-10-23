@@ -1,0 +1,89 @@
+name: Import card designs
+
+# Copies the library's card designs back from the design server
+# (docs/architecture/server-owned-card-designs.md, "The pipeline"): each migrated
+# card type's current UI Builder design, as `GET /api/library/sources` serves it,
+# into card-designs/ui-builder/designs/<cardType>.uid. When anything changed it
+# opens — or refreshes — one PR; that PR's CI rebuilds the library from the
+# imported designs, renders them in the catalog, and the preview diff on it is
+# the review of what changes in the app.
+#
+# The PR is opened with this workflow's GITHUB_TOKEN, like play-assets.yml, so
+# its pull_request checks don't start on their own: re-run them from the PR or
+# push to the branch if a required check needs to report.
+
+on:
+  schedule:
+    - cron: '41 5 * * *' # daily
+  workflow_dispatch:
+    inputs:
+      server:
+        description: Design server to import from
+        required: false
+        default: https://ha.coo.ee
+
+permissions:
+  contents: read
+
+concurrency:
+  group: import-card-designs
+  cancel-in-progress: false
+
+env:
+  BRANCH: card-designs/import
+  DESIGNS: card-designs/ui-builder/designs
+
+jobs:
+  import:
+    name: Import library card designs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Fetch the library's current designs
+        env:
+          SERVER: ${{ inputs.server || vars.DESIGN_SERVER_URL || 'https://ha.coo.ee' }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --retry 3 --max-time 60 \
+            "${SERVER%/}/api/library/sources" -o "$RUNNER_TEMP/sources.json"
+          python3 .github/scripts/import-card-designs.py "$RUNNER_TEMP/sources.json" "$DESIGNS"
+
+      - name: Open or update the import PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [[ -z "$(git status --porcelain -- "$DESIGNS")" ]]; then
+            echo "The library's designs match the repository." | tee -a "$GITHUB_STEP_SUMMARY"
+            # An import PR from earlier proposes designs the server no longer has (an edit
+            # reverted, or already merged another way): close it rather than leave it to merge.
+            if [[ -n "$existing" ]]; then
+              gh pr close "$existing" --delete-branch \
+                --comment "Closed by the ${GITHUB_WORKFLOW} workflow: the design server's library designs match \`main\` again (run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})."
+              echo "Closed stale import PR #${existing}." | tee -a "$GITHUB_STEP_SUMMARY"
+            fi
+            exit 0
+          fi
+          git status --short -- "$DESIGNS" | tee -a "$GITHUB_STEP_SUMMARY"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -C "$BRANCH"
+          git add -A -- "$DESIGNS"
+          git commit -m 'feat(card-designs): import library designs edited on the design server' \
+            -m "Imported from the design server's /api/library/sources by the ${GITHUB_WORKFLOW} workflow."
+          git push --force origin "$BRANCH"
+
+          if [[ -n "$existing" ]]; then
+            echo "Updated PR #${existing}." | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            gh pr create --base main --head "$BRANCH" \
+              --title 'feat(card-designs): import library designs edited on the design server' \
+              --body "The library's card designs as they are on the design server now (run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}). CI rebuilds the library from them; the preview diff below is what changes in the app. Merging ships them as the app's built-in designs and the design server's library."
+          fi

@@ -19,14 +19,20 @@
     "layoutDirection": "ltr"
   },
   "stateVariables": {},
-  "roots": ["root"],
+  "roots": [
+    "root"
+  ],
   "nodes": {
     "root": {
       "id": "root",
       "componentId": "ha-cards/dashboard-card",
       "properties": {},
       "modifiers": [],
-      "slots": { "content": ["tile"] }
+      "slots": {
+        "content": [
+          "tile"
+        ]
+      }
     },
     "tile": {
       "id": "tile",
