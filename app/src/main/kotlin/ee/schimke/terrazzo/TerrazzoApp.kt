@@ -591,6 +591,21 @@ private fun DashboardsRoot(
     }
   }
 
+  // Offline, the dashboard shows its cached snapshot (live pushes are saved to it as they come):
+  // the strip says how old that is. Demo boards are never cached.
+  val cachedDataAtMs =
+    remember(connectionStatus, openedValue, session) {
+      if (
+        connectionStatus != ConnectionStatus.Failed ||
+          openedValue == DASHBOARD_UNSET ||
+          session is DemoHaSession
+      ) {
+        null
+      } else {
+        graph.offlineCache.snapshotSavedAtMs(session.baseUrl, openedValue)
+      }
+    }
+
   val historyOverlay = historyTarget
   val studioOverlay = studioTarget
   if (agentOpen && openedValue != DASHBOARD_UNSET) {
@@ -658,6 +673,7 @@ private fun DashboardsRoot(
           },
           connectionStatus = connectionStatus,
           onRetryConnection = onRetryConnection,
+          cachedDataAtMs = cachedDataAtMs,
           writeMode = writeMode,
           onWriteModeChange = { graph.sessionWriteMode.set(it) },
           overflowMenu = { agentInOverflow ->

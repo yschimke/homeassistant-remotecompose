@@ -198,6 +198,7 @@ fun DashboardViewScreen(
   // started load may, so a slow poll landing after a tap's refetch can't bring stale values back.
   val loads = remember(session, urlPath) { LatestWins() }
   val logStore = LocalTerrazzoGraph.current.logStore
+  val imageStack = LocalHaImageStack.current
   LaunchedEffect(session, urlPath) {
     suspend fun loadOnce() {
       try {
@@ -257,6 +258,8 @@ fun DashboardViewScreen(
       if (!loadedLive) loadOnce()
       loadedLive = false
       val ready = state as? DashboardState.Ready ?: return@collectLatest
+      // Pictures of cards not yet on screen, onto disk for the next offline start.
+      imageStack?.prewarm(dashboardPictureUrls(ready.dashboard, ready.snapshot))
       session.liveDashboardSnapshots(ready.snapshot).collect { snapshot ->
         // A pushed state is the newest there is: it supersedes any load still in flight.
         loads.begin()
@@ -408,6 +411,14 @@ private fun openInBrowser(context: android.content.Context, url: String?) {
 }
 
 private const val TAG = "DashboardView"
+
+/** The `entity_picture` of each entity [dashboard]'s cards name, where [snapshot] has one. */
+private fun dashboardPictureUrls(dashboard: Dashboard, snapshot: HaSnapshot): List<String> =
+  referencedEntities(dashboard).mapNotNull { id ->
+    (snapshot.states[id]?.attributes?.get("entity_picture") as? JsonPrimitive)
+      ?.contentOrNull
+      ?.takeIf { it.isNotBlank() }
+  }
 
 /** How long pushed states settle before the dashboard's cached snapshot is rewritten. */
 private const val LIVE_SNAPSHOT_SAVE_DEBOUNCE_MS = 5_000L

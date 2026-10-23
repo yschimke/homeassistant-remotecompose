@@ -6,10 +6,13 @@ import dev.zacsweers.metro.SingleIn
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.terrazzo.core.di.AppScope
 import java.io.File
 import java.security.MessageDigest
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 
 /**
@@ -142,6 +145,35 @@ open class OfflineCacheStorage(rootDir: File) {
   }
 
   /**
+   * The last [hours] of history read live for [entityIds] (the card-history screen), so an offline
+   * open still draws a chart; null when it was never read. Order of [entityIds] doesn't matter.
+   */
+  fun history(
+    baseUrl: String,
+    entityIds: List<String>,
+    hours: Int,
+  ): Map<String, List<HistoryPoint>>? =
+    readJson(historyFile(baseUrl, entityIds, hours), historySerializer)
+
+  /** Keeps [history]; only the [MAX_HISTORY_FILES] most recently read stay, to bound the disk. */
+  @Synchronized
+  fun putHistory(
+    baseUrl: String,
+    entityIds: List<String>,
+    hours: Int,
+    history: Map<String, List<HistoryPoint>>,
+  ) {
+    val file = historyFile(baseUrl, entityIds, hours)
+    writeJson(file, historySerializer, history)
+    file.parentFile
+      ?.listFiles()
+      .orEmpty()
+      .sortedByDescending { it.lastModified() }
+      .drop(MAX_HISTORY_FILES)
+      .forEach { it.delete() }
+  }
+
+  /**
    * Wipe every cached payload for [baseUrl]. Called by sign-out so a subsequent user on the device
    * can't read the previous account's dashboard config off disk.
    */
@@ -176,6 +208,15 @@ open class OfflineCacheStorage(rootDir: File) {
   private fun snapshotFile(baseUrl: String, urlPath: String?): File =
     File(File(instanceDir(baseUrl), "snapshot"), "${urlPath.encodeUrlPath()}.json")
 
+  private fun historyFile(baseUrl: String, entityIds: List<String>, hours: Int): File =
+    File(
+      File(instanceDir(baseUrl), "history"),
+      "${sha1(entityIds.sorted().joinToString(",") + "@" + hours)}.json",
+    )
+
+  private val historySerializer =
+    MapSerializer(String.serializer(), ListSerializer(HistoryPoint.serializer()))
+
   private fun snapshotPointerFile(baseUrl: String): File =
     File(instanceDir(baseUrl), "latest-snapshot-pointer.json")
 
@@ -184,10 +225,15 @@ open class OfflineCacheStorage(rootDir: File) {
   @kotlinx.serialization.Serializable private data class InstancePointer(val baseUrl: String)
 
   companion object {
+    /** History reads kept per instance: a few cards' worth of charts. */
+    const val MAX_HISTORY_FILES: Int = 20
+
     /** SHA-1 of the baseUrl as the directory name — keeps any URL-shaped filesystem. */
-    fun instanceKey(baseUrl: String): String {
+    fun instanceKey(baseUrl: String): String = sha1(baseUrl.trim().removeSuffix("/"))
+
+    private fun sha1(text: String): String {
       val md = MessageDigest.getInstance("SHA-1")
-      val digest = md.digest(baseUrl.trim().removeSuffix("/").toByteArray(Charsets.UTF_8))
+      val digest = md.digest(text.toByteArray(Charsets.UTF_8))
       return digest.joinToString("") { "%02x".format(it) }
     }
   }
