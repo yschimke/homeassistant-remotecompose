@@ -16,9 +16,11 @@ import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.converterFor
 import ee.schimke.terrazzo.wear.ui.WearCardLook
 import ee.schimke.terrazzo.wear.ui.wearAppTemplate
+import ee.schimke.terrazzo.wear.ui.wearTemplateShape
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -89,6 +91,21 @@ class WearWidgetFrameTest {
       .converterFor("thermostat")
       ?.wearDesignProperties(card("""{"type":"thermostat","entity":"climate.hall"}"""), heating)
       ?.let { assertEquals(null, it[WEAR_ON_PROPERTY]) }
+  }
+
+  /** A switch turning on keys a new template for the app, though nothing else about it changes. */
+  @Test
+  fun aToggleTurningOnChangesTheAppsTemplateShape() {
+    val tile = card("""{"type":"tile","entity":"switch.pump"}""")
+    fun shape(state: String) =
+      wearTemplateShape(
+        tile,
+        HaSnapshot(states = mapOf("switch.pump" to EntityState("switch.pump", state))),
+        registry,
+      )
+    assertNotNull(shape("off"))
+    assertNotEquals(shape("off"), shape("on"))
+    assertEquals(shape("off"), shape("off"))
   }
 
   @Test
