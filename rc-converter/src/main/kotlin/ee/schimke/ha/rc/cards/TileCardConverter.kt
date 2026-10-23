@@ -237,15 +237,6 @@ class TileCardConverter : CardConverter {
   }
 
   /**
-   * The dashboard tile for [card] on [snapshot]: what [Render] draws in wrap mode, for the
-   * `ha-cards/entity-tile` component a UI Builder card design places.
-   */
-  @Composable
-  fun WrapTile(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier = RemoteModifier) {
-    FullTile(card, snapshot, modifier)
-  }
-
-  /**
    * A launcher cell for a tile with features: one 2-D gate (alpha010 plays a single gate, #224). A
    * cell with room for every feature row shows the full tile with its features; anything smaller
    * shows the compact tile — icon, name and state, no features. The compact branch is the

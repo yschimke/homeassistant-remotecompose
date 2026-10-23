@@ -22,8 +22,9 @@ import ee.schimke.ha.rc.framedDesignTemplate
 val LocalCardDesignInput = staticCompositionLocalOf<DesignTemplateInput?> { null }
 
 /**
- * HA `tile` card for one slot entity, drawn exactly as the tile converter draws it on a dashboard:
- * the icon, accent, meter glyph and unavailable look all come from the entity's structural
+ * HA `tile` card for one slot entity, drawn exactly as the tile converter draws it on the surface
+ * it is captured for (a dashboard's wrap layout; a launcher cell's or Wear container's fixed
+ * tiers): the icon, accent, meter glyph and unavailable look all come from the entity's structural
  * properties, and its name and state are the slot's named bindings (`<entityId>.name`,
  * `<entityId>.state`), so a card design that places it binds what the library's tile template does.
  *
@@ -57,6 +58,6 @@ fun HaCardEntityTile(
       )
       ?: return
   FramedCard(input.card, input.snapshot, modifier) {
-    converter.WrapTile(input.card, input.snapshot, it)
+    converter.Render(input.card, input.snapshot, it)
   }
 }
