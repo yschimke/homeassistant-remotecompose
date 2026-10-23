@@ -48,16 +48,30 @@ fun WidgetsScreen(onBack: () -> Unit) {
   val installed by store.installed.collectAsState(initial = emptyList())
   // Drop rows for widgets the user has since removed from the launcher before listing them.
   LaunchedEffect(Unit) { WidgetSync.reconcile(context.applicationContext) }
-  WidgetsContent(widgets = installed.map { it.card.historyTitle() }, onBack = onBack)
+  WidgetsContent(
+    widgets =
+      installed.map { InstalledWidget(it.card.historyTitle(), cardTypeLabel(it.card.type)) },
+    onBack = onBack,
+  )
 }
 
+/** One installed widget's row: the card's [title], and the [kind] of card it draws. */
+internal data class InstalledWidget(val title: String, val kind: String)
+
 /**
- * The screen's content for [widgets] (one title each), apart from the store so a preview can draw
- * it.
+ * A card type as a row's supporting text: `weather-forecast` reads "Weather forecast card", and a
+ * `custom:` card keeps its own name ("Bambu print status card").
  */
+internal fun cardTypeLabel(type: String): String {
+  val words = type.removePrefix("custom:").replace('-', ' ').replace('_', ' ').trim()
+  if (words.isEmpty()) return "Card"
+  return words.replaceFirstChar { it.uppercaseChar() } + " card"
+}
+
+/** The screen's content for [widgets], apart from the store so a preview can draw it. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun WidgetsContent(widgets: List<String>, onBack: () -> Unit) {
+internal fun WidgetsContent(widgets: List<InstalledWidget>, onBack: () -> Unit) {
   Scaffold(
     topBar = {
       TopAppBar(
@@ -116,9 +130,10 @@ internal fun WidgetsContent(widgets: List<String>, onBack: () -> Unit) {
           modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         )
       }
-      items(widgets) { title ->
+      items(widgets) { widget ->
         ListItem(
-          headlineContent = { Text(title) },
+          headlineContent = { Text(widget.title) },
+          supportingContent = { Text(widget.kind) },
           leadingContent = { Icon(Icons.Outlined.Widgets, contentDescription = null) },
         )
       }
