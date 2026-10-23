@@ -18,9 +18,12 @@ import androidx.compose.ui.unit.dp
 import ee.schimke.terrazzo.shared.RcDisabledDocuments
 import ee.schimke.terrazzo.shared.RcErrorBoundary
 import ee.schimke.terrazzo.shared.rcDocumentKey
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import org.junit.Rule
@@ -103,6 +106,28 @@ class RcErrorBoundaryTest {
     }
     compose.onNodeWithText("playing").assertDoesNotExist()
     compose.onNodeWithText("another document").assertExists()
+  }
+
+  @Test
+  fun aCancellationHandedToTheBoundaryIsRethrownNotSwallowed() {
+    var fail: ((Throwable) -> Unit)? = null
+    compose.setContent {
+      RcErrorBoundary(bytes) {
+        fail = it
+        Box(Modifier.size(20.dp))
+      }
+    }
+    compose.waitForIdle()
+    assertFailsWith<CancellationException> { fail!!(CancellationException("stopped")) }
+    assertNull(RcDisabledDocuments.reason(key))
+  }
+
+  @Test
+  fun documentsSharingALengthAndContentHashHaveDifferentKeys() {
+    val a = byteArrayOf(0, 31)
+    val b = byteArrayOf(1, 0)
+    assertEquals(a.contentHashCode(), b.contentHashCode())
+    assertNotEquals(rcDocumentKey(a), rcDocumentKey(b))
   }
 
   @Test

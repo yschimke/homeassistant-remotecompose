@@ -56,6 +56,10 @@ object RcDisabledDocuments {
    * The document whose player was composing when this was read, or null. An exception thrown while
    * a player composes can't be caught where it happens; a host that sees one escape (an uncaught
    * exception handler) records this key, and disables it on its next start.
+   *
+   * Only a player's own composition, as its boundary composes it, is marked. When live values
+   * recompose a scope inside the player, Compose restarts that scope alone, without running the
+   * boundary, and offers no hook to mark it: a crash there names no document.
    */
   fun inFlight(): String? = composing.lastOrNull()
 
@@ -78,9 +82,18 @@ object RcDisabledDocuments {
   private const val MAX_REASON = 200
 }
 
-/** A fingerprint of a document's bytes: its length and content hash. */
-fun rcDocumentKey(bytes: ByteArray): String =
-  "${bytes.size}:${bytes.contentHashCode().toUInt().toString(16)}"
+/**
+ * A fingerprint of a document's bytes: its length, a 64-bit FNV-1a hash and its 32-bit content
+ * hash, so two documents that merely share a length and content hash don't share a key.
+ */
+fun rcDocumentKey(bytes: ByteArray): String {
+  var fnv = FNV_OFFSET
+  for (b in bytes) fnv = (fnv xor (b.toLong() and 0xff)) * FNV_PRIME
+  return "${bytes.size}:${fnv.toULong().toString(16)}:${bytes.contentHashCode().toUInt().toString(16)}"
+}
+
+private const val FNV_OFFSET = -0x340d631b7bdddcdbL // 0xcbf29ce484222325
+private const val FNV_PRIME = 0x100000001b3L
 
 /**
  * An error boundary around one player of [bytes]. Exceptions the player throws while it measures,
@@ -114,7 +127,10 @@ fun RcErrorBoundary(
     RcDisabledWarning(reason, modifier)
     return
   }
-  val fail: (Throwable) -> Unit = remember(key) { { RcDisabledDocuments.disable(key, it) } }
+  // A cancellation or running out of memory is rethrown here too, for the callers that hand
+  // their own failures over.
+  val fail: (Throwable) -> Unit =
+    remember(key) { { RcDisabledDocuments.disable(key, it.recoverable()) } }
   Layout(
     content = {
       RcDisabledDocuments.enter(key)
@@ -126,7 +142,7 @@ fun RcErrorBoundary(
         try {
           drawContent()
         } catch (t: Throwable) {
-          fail(t.recoverable())
+          fail(t)
         }
       },
     measurePolicy = remember(fail) { boundaryLayout(fail) },
@@ -143,11 +159,11 @@ private fun boundaryLayout(fail: (Throwable) -> Unit) = MeasurePolicy { measurab
       try {
         placeables.forEach { it.place(0, 0) }
       } catch (t: Throwable) {
-        fail(t.recoverable())
+        fail(t)
       }
     }
   } catch (t: Throwable) {
-    fail(t.recoverable())
+    fail(t)
     layout(constraints.minWidth, constraints.minHeight) {}
   }
 }
