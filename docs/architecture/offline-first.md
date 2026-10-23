@@ -115,43 +115,66 @@ the same `CachedHaSession` wrapper used by mobile.
 `runBlocking` read of `TokenVault.lastInstance()` (already does
 this for `lastViewedDashboardNow()`). If an instance is present:
 
-1. Construct a `CachedHaSession` immediately so the first
+1. Construct a cache-only `CachedHaSession` immediately so the first
    composition has a session to render against — backed by the
    on-disk cache, so the UI can paint without a network call.
-2. Asynchronously refresh the access token (`TokenVault.get` →
-   AppAuth refresh exchange). On success, the session upgrades to
-   live; on failure, the session remains cache-only and the UI
-   shows a small "offline" badge.
+2. As soon as the vault holds a refresh token for it, swap in a live
+   `CachedHaSession(LiveHaSession)` **without waiting for a token**: the
+   session mints its access token from the refresh token when it
+   connects. Offline, that connect fails and the session reads Failed;
+   `TerrazzoApp`'s reconnect loop retries with backoff (2 s doubling to
+   5 min), and at once whenever `LanConnectionPolicy.networkChanges`
+   reports the network coming back. A cold start offline therefore goes
+   live the moment it can, instead of staying on the cache for the life
+   of the process.
+3. Only Home Assistant refusing the refresh token (an OAuth
+   `invalid_grant` / `invalid_request` / `access_denied` body) flips the
+   session's `needsReauth`, which signs out. A bare 401 / 403 / 400 —
+   a reverse proxy, access gateway or captive portal — is transient, so
+   it never signs the user out or deletes their cached dashboards.
 
-This eliminates the prior "always go through discovery + login on
-cold start" path. Sign-out clears both the vault entry and the
-cache directory for that instance.
+## Live refresh
 
-## Image cache (follow-up)
+The open dashboard loads again every time its session connects
+(`DashboardViewScreen`): the first load of an offline start only reached
+the cache, and a reconnect may have missed both config edits and state
+changes. Between connects, pushed `state_changed` events update it in
+place, and are written back to its cached snapshot debounced (5 s), so
+the next offline start shows the values last on screen.
 
-RemoteCompose documents fetch their own raster bytes when a card
-contains an `entity_picture` URL or addon-rendered prebaked PNG.
-There is no native image-loading library (no Coil/Glide) in the
-project today. A future change should:
+A live read that comes back without the best-effort per-instance facts
+(device registry, unit system) keeps the cached ones rather than
+overwriting them with nothing.
 
-1. Add a Coil 3 OkHttp loader to `app/` and `wear/`, with a disk
-   cache rooted at `filesDir/terrazzo/images/`.
-2. Provide a `DiskCachedImageLoader` to RemoteCompose so card
-   documents resolve image URLs through the disk-cached pipeline
-   instead of bypassing it.
-3. Pre-warm the cache when a dashboard is first cached, so first
-   offline paint includes images.
+## Images
 
-Tracked here so it's not lost; not implemented in the current
-offline-first PR.
+Mobile: one Coil 3 `ImageLoader` with a disk cache in
+`noBackupFilesDir/terrazzo/images` (10–100 MB), moved out of `cacheDir`
+so the system doesn't clear the pictures an offline dashboard draws.
+Coil serves disk hits without revalidating. Its OkHttp client attaches
+the session bearer by origin, then rewrites a LAN URL to the instance's
+`external_url` off the home network (`RemoteUrlInterceptor`); the cache
+keys on the original URL, so a cached picture hits on any network.
+
+Wear: no network image loader. The phone syncs each card entity's
+picture over the Data Layer into `pictures/`, and both the widgets and
+the in-app cards resolve an `entity_picture` URL to the entity's synced
+copy on disk.
+
+## Wear widgets
+
+A widget renders from `WearOfflineStore` before anything else: each
+Data Layer read ahead of the render is capped at 2 s, and the direct
+Home Assistant read (for values the phone hasn't sent lately) runs after
+the render, re-rendering the widget only when it stored newer values.
 
 ## Error and refresh signals
 
-The cache exposes a `lastFetchedAtMs(instanceId, scope)` helper.
-The "showing cached data" pill in the UI uses this to render a
-human-readable freshness ("3 min ago"). The pill appears only when
-the most recent live fetch failed — successful fetches reset the
-fail flag and hide the pill.
+`HaSession.snapshotFetchedAtMs(urlPath)` is null after a live fetch and,
+after a fallback, says when the cached snapshot was fetched (the Wear
+sync uses it to date what it sends). The phone shows the session's
+connection status in the top bar; a "showing cached data from <ts>"
+pill driven by `snapshotFetchedAtMs` is not built yet.
 
 ## Sign-out
 

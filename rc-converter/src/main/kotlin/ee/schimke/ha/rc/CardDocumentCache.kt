@@ -52,8 +52,12 @@ class InMemoryCardDocumentCache(maxEntries: Int = DEFAULT_MAX_ENTRIES) : CardDoc
         oldValue: CardDocument,
         newValue: CardDocument?,
       ) {
+        if (!evicted) return
         // A trim asked for its evictions; only a full cache's is a sizing signal.
-        if (evicted && !trimming) {
+        val dropping = dropping
+        if (dropping != null) {
+          dropping.add(key.hashCode())
+        } else {
           Log.w(
             TAG,
             "CardDocumentCache evicted entry; capacity=$maxEntries. " +
@@ -63,7 +67,30 @@ class InMemoryCardDocumentCache(maxEntries: Int = DEFAULT_MAX_ENTRIES) : CardDoc
       }
     }
 
-  override fun get(key: Any): CardDocument? = cache.get(key)
+  /** Key hashes the running [trim] drops; null outside one. Written under `this`. */
+  private var dropping: IntBuffer? = null
+
+  /**
+   * Sorted key hashes the last [trim] dropped, and which of them have been asked for since: the
+   * documents that trim cost a re-encode. Hashes rather than keys, so a trim frees the keys too; a
+   * collision only miscounts a report. Both guarded by [droppedLock].
+   */
+  private var dropped: IntArray = EMPTY
+  private val reRequested = java.util.BitSet()
+  private val droppedLock = Any()
+  @Volatile private var anyDropped = false
+
+  override fun get(key: Any): CardDocument? {
+    val document = cache.get(key)
+    if (document == null && anyDropped) {
+      val hash = key.hashCode()
+      synchronized(droppedLock) {
+        val i = dropped.binarySearch(hash)
+        if (i >= 0) reRequested.set(i)
+      }
+    }
+    return document
+  }
 
   override fun put(key: Any, document: CardDocument) {
     cache.put(key, document)
@@ -73,23 +100,73 @@ class InMemoryCardDocumentCache(maxEntries: Int = DEFAULT_MAX_ENTRIES) : CardDoc
     cache.evictAll()
   }
 
-  @Volatile private var trimming = false
-
   override fun trimToSize(maxEntries: Int) {
+    trim(maxEntries)
+  }
+
+  /**
+   * Drops the least recently used documents until at most [maxEntries] remain (none at 0), and
+   * reports how this trim and the one before it went: see [DocumentCacheTrim].
+   */
+  fun trim(maxEntries: Int): DocumentCacheTrim =
     synchronized(this) {
-      trimming = true
+      val sizeBefore = cache.size()
+      val hashes = IntBuffer()
+      dropping = hashes
       try {
-        cache.trimToSize(maxEntries.coerceAtLeast(0))
+        if (maxEntries <= 0) cache.evictAll() else cache.trimToSize(maxEntries)
       } finally {
-        trimming = false
+        dropping = null
+      }
+      val now = hashes.sorted()
+      synchronized(droppedLock) {
+        val report =
+          DocumentCacheTrim(
+            sizeBefore = sizeBefore,
+            kept = cache.size(),
+            previousDropped = dropped.size,
+            previousReRequested = reRequested.cardinality(),
+          )
+        dropped = now
+        reRequested.clear()
+        anyDropped = now.isNotEmpty()
+        report
       }
     }
-  }
 
   private companion object {
     const val TAG = "CardDocumentCache"
     const val DEFAULT_MAX_ENTRIES = 256
+    val EMPTY = IntArray(0)
   }
+}
+
+/**
+ * One [InMemoryCardDocumentCache.trim]: how full the cache was and what it kept, and how the
+ * previous trim went — how many documents it dropped and how many of those were asked for again
+ * before this one. A trim whose dropped documents keep coming back kept too few.
+ */
+data class DocumentCacheTrim(
+  val sizeBefore: Int,
+  val kept: Int,
+  val previousDropped: Int,
+  val previousReRequested: Int,
+) {
+  val dropped: Int
+    get() = sizeBefore - kept
+}
+
+/** A growable `IntArray`, so collecting a trim's hashes boxes nothing. */
+private class IntBuffer {
+  private var values = IntArray(16)
+  private var size = 0
+
+  fun add(value: Int) {
+    if (size == values.size) values = values.copyOf(size * 2)
+    values[size++] = value
+  }
+
+  fun sorted(): IntArray = values.copyOf(size).also { it.sort() }
 }
 
 /**

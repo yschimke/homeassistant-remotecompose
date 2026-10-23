@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.image
 import android.graphics.Bitmap
 import android.graphics.Color
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
+import ee.schimke.terrazzo.core.network.RemoteUrlStore
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.LinkedBlockingQueue
 import kotlinx.coroutines.runBlocking
@@ -65,7 +66,7 @@ class WidgetImageLoadingTest {
         }
       }
         .apply { start() }
-      val stack = HaImageStack(context, LanConnectionPolicy(context))
+      val stack = HaImageStack(context, LanConnectionPolicy(context), RemoteUrlStore(context))
       val base = "http://localhost:${server.localPort}"
       val signed = "/picture?token=private-picture-token"
       stack.setAuth(base, "private-bearer-token")
