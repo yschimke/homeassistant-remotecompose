@@ -29,9 +29,26 @@ The current prototype makes metadata forwarding directly observable by:
 
 `metadataForwarded=true` in logcat proves that the launcher supplied the dynamic metadata extra.
 The receiver prefers that value and only falls back to the mirrored payload when the platform omits
-it. It intentionally does not make Home Assistant writes yet: that needs a background-capable
-session and a product decision about whether widget actions obey the dashboard's current read-only
-default.
+it.
+
+## Which taps run
+
+`WidgetActionRunner` makes the write from the background, on the app's own session while it is
+connected or a short-lived one minted from the stored refresh token. A pinned widget is a
+deliberate control, so the dashboard's read-only default doesn't apply. What a tap does:
+
+| Action | On a launcher widget |
+| --- | --- |
+| `Toggle`, `CallService` | Calls Home Assistant. An on/off result shows at once and is put back if the call fails; a call that names no entity (a script, a scene) shows once a live session reports it. |
+| `AlarmIntent`, `AlarmPin`, `AlarmKey` | Paired per widget and entity by `WidgetAlarmPairing` into one `alarm_control_panel.alarm_<service>` call with the entered `code` (below). |
+| `MoreInfo`, `Navigate` | Open the app (an activity `PendingIntent`: a receiver can't start one from the background). |
+| `Url` | Opens the URL. |
+
+Every write must be the action the app itself put on the widget's `PendingIntent`
+(`trustedWidgetAction`). The one exception is a widget PIN: its digits are typed in the player
+after capture, so the app's own payload is the same entity's `AlarmPin` with no digits, and only the
+entity is held to it. Home Assistant checks the code; a wrong one fails the call, which is logged
+without the code.
 
 To observe a widget tap:
 
@@ -76,7 +93,13 @@ Formatting the integer to `code_length` digits preserves leading zeroes in the m
 The receiver decodes that payload without writing the PIN to logcat or the persistent Logs screen.
 
 Normal in-app playback and launcher widgets without a known length continue to emit individual
-`AlarmKey`s. `AlarmKeypadCoordinator` supplies the idle-timeout heuristic for that path.
+`AlarmKey`s. In the app, `AlarmKeypadCoordinator` supplies the idle-timeout heuristic for that path.
+
+A widget's taps each arrive as their own broadcast, so `WidgetAlarmPairing` keeps the pair for 30 s
+per widget and entity: an action that needs no code calls at once; a code entered first calls on
+the button's tap; a button tapped first calls once a code of known length completes; an unknown
+length calls on the button's tap after the keys (type the code, then press ARM). A code left longer
+than the window is forgotten rather than sent with a later tap.
 
 Other interactive controls dispatch immediately: tiles and toggles, thermostat/light/humidifier
 steppers, shutter controls, media controls, to-do rows, links, and picture elements. For these, the

@@ -3,13 +3,11 @@ package ee.schimke.ha.rc.cards
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
@@ -23,8 +21,7 @@ import ee.schimke.ha.rc.components.RemoteHaIconChip
 import ee.schimke.ha.rc.components.RemoteHaIconHero
 import ee.schimke.ha.rc.components.RemoteHaMeasurement
 import ee.schimke.ha.rc.defaultTapActionFor
-import ee.schimke.ha.rc.design.CardDesigns
-import ee.schimke.ha.rc.design.LocalCardInput
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.haReading
 import ee.schimke.ha.rc.icons.HaIconMap
@@ -45,7 +42,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * Matrix reference shape is `2×1` (see [CardPreviewMatrix_Entity]) — the old `3×1` left the matrix
  * `+1` neighbour ~70 % empty (Q5).
  */
-class EntityCardConverter : CardConverter {
+class EntityCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.ENTITY
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 48
@@ -59,19 +56,6 @@ class EntityCardConverter : CardConverter {
 
   override fun designTemplate(properties: DesignProperties): DesignTemplateInput? =
     EntityDesign.singleTemplate(cardType, properties)
-
-  /**
-   * The entity card drawn from its card design, `card-designs/ui-builder/designs/entity.uid`
-   * ([CardDesigns]): which form shows at which size, on the dashboard, a launcher cell or a Wear
-   * container, is the design's; [EntityDesignParts] draw the forms.
-   */
-  @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val design = requireNotNull(CardDesigns.design(cardType)) { "no entity.uid packaged" }
-    CompositionLocalProvider(LocalCardInput provides DesignTemplateInput(card, snapshot)) {
-      design.Render(modifier)
-    }
-  }
 
   /**
    * A roomy launcher widget: a numeric reading takes its measurement's expanded presentation (the

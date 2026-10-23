@@ -8,7 +8,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import ee.schimke.ha.design.CardBindingRecipe
 import ee.schimke.ha.design.CardBindingRecipes
 import ee.schimke.ha.design.DesignProperties
@@ -17,7 +16,6 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.BreakpointAxis
-import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.CardWidthClass
@@ -43,8 +41,7 @@ import ee.schimke.ha.rc.components.haNeutralAccent
 import ee.schimke.ha.rc.components.tileFeatureRows
 import ee.schimke.ha.rc.components.tileNaturalHeightDp
 import ee.schimke.ha.rc.defaultTapActionFor
-import ee.schimke.ha.rc.design.CardDesigns
-import ee.schimke.ha.rc.design.LocalCardInput
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.icons.withIcons
@@ -87,7 +84,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * Those are baked (formatted labels, the action payloads' stepped set points), so such a tile
  * re-encodes on data changes ([dataSignature]); a plain tile keeps the `<id>.state` binding.
  */
-class TileCardConverter : CardConverter {
+class TileCardConverter : DesignedCardConverter() {
   companion object {
     /** Domains whose plain tiles render from card designs. */
     val TEMPLATE_DOMAINS: List<String> = EntityDesign.DOMAINS
@@ -168,19 +165,6 @@ class TileCardConverter : CardConverter {
 
   override fun designTemplate(properties: DesignProperties): DesignTemplateInput? =
     EntityDesign.singleTemplate(cardType, properties)
-
-  /**
-   * The tile drawn from its card design, `card-designs/ui-builder/designs/tile.uid`
-   * ([CardDesigns]): which form of the tile shows at which size, on the dashboard, a launcher cell
-   * or a Wear container, is the design's; [TileDesignParts] draw the forms.
-   */
-  @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val design = requireNotNull(CardDesigns.design(cardType)) { "no tile.uid packaged" }
-    CompositionLocalProvider(LocalCardInput provides DesignTemplateInput(card, snapshot)) {
-      design.Render(modifier)
-    }
-  }
 
   /**
    * A launcher cell for a tile with features: one 2-D gate (alpha010 plays a single gate, #224). A

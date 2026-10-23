@@ -2372,6 +2372,172 @@
       "displayName": "Entity card icon chip",
       "group": "Card layout",
       "nativeOnly": true
+    },
+    "ha-cards/sensor-card-cell": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaSensorCardCell",
+      "displayName": "Sensor card cell",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "shelfRole": "Container",
+      "slotCapabilities": [
+        {
+          "name": "wrap",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "wear",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "historyHero",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "readingHero",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "readingRow",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "other",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        }
+      ]
+    },
+    "ha-cards/sensor-card-full": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaSensorCardFull",
+      "displayName": "Sensor card (full)",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/sensor-card-identity": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaSensorCardIdentity",
+      "displayName": "Sensor card identity",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/sensor-card-history-hero": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaSensorCardHistoryHero",
+      "displayName": "Sensor card history hero",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/sensor-card-reading": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaSensorCardReading",
+      "displayName": "Sensor card reading",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "form": {
+            "type": "string",
+            "value": "standard"
+          },
+          "inset": {
+            "type": "string",
+            "value": "none"
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "form",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "expanded",
+            "standard",
+            "compact",
+            "cell"
+          ],
+          "notes": "`cell` is standard in a launcher cell three columns wide, compact in a narrower one."
+        },
+        {
+          "name": "inset",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "none",
+            "m",
+            "l"
+          ],
+          "notes": "Horizontal padding: the M or L spacing step."
+        },
+        {
+          "name": "live",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "`false` reads the value without the snapshot's history, as a Wear container does."
+        }
+      ]
     }
   },
   "$comment_templates": "Generated, not hand-written: :design-server's HaCardsTemplatesTest seeds each from a card schema (CardSchema.fromCard) with HaCardsSeed — the design server's UiBuilderSeed retargeted to this catalog — and fails when a committed template drifts. `-PhaCardsTemplates.update=true` rewrites them.",

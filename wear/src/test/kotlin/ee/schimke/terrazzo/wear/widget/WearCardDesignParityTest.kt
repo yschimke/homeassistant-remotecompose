@@ -5,6 +5,7 @@ import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.rc.UNAVAILABLE_DESIGN_PROPERTY
 import ee.schimke.ha.rc.cards.ButtonCardConverter
 import ee.schimke.ha.rc.cards.EntityCardConverter
+import ee.schimke.ha.rc.cards.SensorCardConverter
 import ee.schimke.ha.rc.cards.TileCardConverter
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
@@ -176,6 +177,49 @@ class WearCardDesignParityTest {
     }
     println(
       "entity.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
+    )
+    assertEquals(emptyList(), differing)
+  }
+
+  @Test
+  fun sensorDesignIsTheWearTemplateForEveryShapeAndStyle() {
+    val sensor = SensorCardConverter()
+    val sensorDesign = designOf("sensor")
+    // A sensor with and without a history line, available or not.
+    val inputs =
+      listOf("0", "1").flatMap { hasData ->
+        listOf(false, true).mapNotNull { unavailable ->
+          sensor.wearDesignTemplate(
+            DesignProperties.build {
+              string(TileCardConverter.DOMAIN, "sensor")
+              string("has_data", hasData)
+              if (unavailable) string(UNAVAILABLE_DESIGN_PROPERTY, "1")
+            }
+          )
+        }
+      }
+    val differing = buildList {
+      for (input in inputs) for (style in ThemeStyle.entries) for (cardStyle in HaUberTheme.all) {
+        val colors = wearWidgetColors(style)
+        val fromConverter = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle)
+          }
+        }
+        val fromDesign = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle) {
+              sensorDesign.RenderCard(input.card, input.snapshot, it)
+            }
+          }
+        }
+        if (!fromConverter.contentEquals(fromDesign)) {
+          add("${input.card.raw} ${input.snapshot.states.values} ${style.name} ${cardStyle.id}")
+        }
+      }
+    }
+    println(
+      "sensor.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
     )
     assertEquals(emptyList(), differing)
   }
