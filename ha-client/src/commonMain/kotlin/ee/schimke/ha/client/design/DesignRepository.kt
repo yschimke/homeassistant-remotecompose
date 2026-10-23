@@ -286,6 +286,19 @@ class DesignRepository(
   }
 
   /**
+   * Whether design [designId] is wholly on disk: the cached manifest lists at least one live entry
+   * of it that [DesignServerConfig.choice] keeps, and every such entry's blob is cached and
+   * verifies. A refresh that downloaded only some of them leaves this false.
+   */
+  suspend fun isComplete(designId: String): Boolean {
+    val entries =
+      store.readManifest()?.manifest?.designs.orEmpty().filter {
+        it.stableDesignId == designId && wanted(it)
+      }
+    return entries.isNotEmpty() && entries.all { verifiedBlob(it) != null }
+  }
+
+  /**
    * The cached bytes design [designId] draws [key] with for a card on [device]: see
    * [DesignsById.find]. Null when the design has no live, cached entry for the key.
    */

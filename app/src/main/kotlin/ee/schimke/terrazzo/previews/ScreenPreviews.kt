@@ -306,12 +306,13 @@ fun Screen_CardStyle() = PhoneHost {
 }
 
 /**
- * The card style sheet with the server's designs for the card listed: the library's, a device
- * design for the card's boiler and a fork, the device design chosen for this card.
+ * The card style sheet with the server's skins for the card listed: the library's, an installed
+ * device skin for the card's boiler (chosen for this card), a fork that isn't installed and one
+ * downloading.
  */
-@Preview(name = "card style · designs", showBackground = false, widthDp = PHONE_WIDTH_DP)
+@Preview(name = "card style · skins", showBackground = false, widthDp = PHONE_WIDTH_DP)
 @Composable
-fun Screen_CardStyle_Designs() = PhoneHost {
+fun Screen_CardStyle_Skins() = PhoneHost {
   val boilerDial = "user:boiler-dial"
   ee.schimke.terrazzo.dashboard.CardStylePicker(
     card = HISTORY_SAMPLE_CARD,
@@ -346,7 +347,20 @@ fun Screen_CardStyle_Designs() = PhoneHost {
           author = "github:yschimke",
           device = null,
         ),
+        ee.schimke.ha.client.design.DesignOption(
+          designId = "user:arc-gauge",
+          title = "Arc gauge",
+          author = "github:octocat",
+          device = null,
+        ),
       ),
+    skinState = {
+      when (it) {
+        "user:big-number" -> ee.schimke.terrazzo.dashboard.SkinState.NotInstalled
+        "user:arc-gauge" -> ee.schimke.terrazzo.dashboard.SkinState.Installing
+        else -> ee.schimke.terrazzo.dashboard.SkinState.Installed
+      }
+    },
   ) {
     ee.schimke.terrazzo.dashboard.StudioCardPreview(
       demoSession(),

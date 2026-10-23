@@ -598,4 +598,38 @@ class DesignRepositoryTest {
     )
     assertContentEquals(fork, repo(null, store).byDesign("user:fork", key, null))
   }
+
+  @Test
+  fun aDesignIsCompleteOnlyOnceEveryEntryItNeedsIsCached() = runTest {
+    val light = "light".encodeToByteArray()
+    val dark = "dark".encodeToByteArray()
+    val darkKey = key.copy(theme = DesignKey.bakedTheme("TerrazzoHome", dark = true))
+    val darkEntry =
+      DesignEntry(
+        darkKey,
+        Sha256.hex(dark),
+        dark.size,
+        1,
+        author = "github:x",
+        designId = "user:fork",
+      )
+    val store = storeWith(entry(light, "user:fork", author = "github:x"))
+    store.readManifest()?.let { stored ->
+      store.writeManifest(
+        stored.copy(manifest = stored.manifest.copy(designs = stored.manifest.designs + darkEntry))
+      )
+    }
+    // The dark theme's blob is missing: only part of the design is on disk.
+    assertEquals(false, repo(null, store).isComplete("user:fork"))
+    // A choice that only draws the light theme needs nothing more.
+    val lightOnly = listOf(DesignQuery(designId = "user:fork", theme = key.theme))
+    assertEquals(
+      true,
+      DesignRepository(config.copy(choice = lightOnly), store, null) { now }
+        .isComplete("user:fork"),
+    )
+    store.writeBlob(Sha256.hex(dark), dark)
+    assertEquals(true, repo(null, store).isComplete("user:fork"))
+    assertEquals(false, repo(null, store).isComplete("user:other"))
+  }
 }

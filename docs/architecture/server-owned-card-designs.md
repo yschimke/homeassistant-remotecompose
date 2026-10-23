@@ -25,8 +25,7 @@ matters here:
 - **Kotlin is the only source of a layout.** Each `rc-converter/.../cards/*CardConverter.kt`
   draws its card. The design server's library is a build-time capture of those converters
   (`:card-designs:generateCardDesigns`), and the app captures any key the server lacks at runtime
-  (`CardDesignLibrary`). The tile is the exception: its layout is `tile.uid` (see
-  [The tile, migrated](#the-tile-migrated)).
+  (`CardDesignLibrary`). No card design exists as a `.uid`.
 - **Forking is approximate.** "Design in UI Builder" rebuilds a library design from `ha-cards`
   components (`HaCardsSeed`). Gauge, tile and button map across; every other card becomes entity
   rows, so a fork is a lookalike, not the card.
@@ -126,45 +125,6 @@ Card types whose look can't be expressed yet stay on their converter and are lis
 `card-designs/converter-only.md` with the reason. Likely: markdown, map, picture-elements,
 the history and statistics graphs, and the Bambu Lab cards.
 
-### The tile, migrated
-
-The tile is the first card type whose layout lives only in its design.
-`card-designs/ui-builder/designs/tile.uid` is packaged with `:rc-converter`, and
-`TileCardConverter.Render` draws the card by calling `CardDesigns.design("tile")`. The converter
-keeps its key, bindings, actions and data. What it no longer holds is where each form of the
-tile shows. That is the design's job, through two kinds of `Card layout` components:
-
-- **Switches** pick one of their slots for the surface and size being drawn:
-  - `ha-cards/card-size-mode` takes `wrap` on a dashboard, `height` in a Wear container and
-    `width` in a launcher cell.
-  - `ha-cards/size-tiers` picks `tier<N>` against its `thresholdsDp` along an `axis`, where the
-    document plays.
-  - `ha-cards/centered-cell` centres its content vertically.
-  - `ha-cards/tile-launcher-cell` takes `hero` or `row` for a featureless tile at a hero scale,
-    `features` for a tile with features, and `other` otherwise.
-- **Parts** draw one form of the tile for the card being drawn: `tile-full`, `tile-compact`,
-  `tile-icon-chip`, `tile-icon-hero`, `tile-wide-hero` (`scale` `row` or `wear`) and
-  `tile-features-gate`.
-
-Each id has one implementation (`CardDesigns`, `TileDesignParts`), shared by two callers. The
-`.uid` renderer calls it, and so does the `ha-cards-catalog` wrapper that UI Builder's shelf
-records (`HaCardDesignParts.kt`). So a tile design edited in UI Builder draws in the app the
-way it does on the canvas.
-
-Until the surface transformation (D2b) exists, the surface choice is written in the design as
-`card-size-mode`. When D2b lands, that choice moves into the transformation.
-
-The move was proven byte for byte, not pixel for pixel. Every tile document was hashed before
-and after the move:
-
-- On the dashboard and launcher: every library tile key in every family and mode, every
-  launcher cell of 1–4 × 1–3 in both widget themes and modes plus every look at 2 × 1, and a
-  direct capture of every library tile card on both surfaces. That is 26,857 documents.
-- On Wear: every input × style × uber-theme, plus the direct slot documents. That is 1,470
-  documents.
-
-Not one document changed.
-
 ## One source, every surface
 
 A person designs **the card**, once, on the `ha-cards/dashboard-card` root. Every other surface
@@ -239,15 +199,31 @@ Built (D5):
   `designsFor(key, device)` lists, from the manifest, every live design with an entry for the key
   (any variant or author) that is generic or made for a matching device.
 - `CardDesignOverrides.byCard` values gain a **`designId`**, persisted in `overrides.json` (old files
-  still load). `CardDesignChoice.queries` adds a `DesignQuery(designId = …)` per chosen design and
-  theme, so the sync fetches a chosen design's blobs whatever its author or variant.
+  still load).
+- **Skins are installed, not assumed.** In the app a design chosen by id is a *skin*. The
+  manifest lists every skin, but nothing of one is downloaded until it is **installed**, a
+  separate step (`Skins.install`):
+  - Installing runs the sync's refresh with the skin added, so its assets are downloaded for
+    every theme the dashboard draws in.
+  - The skin is recorded in `skins.json` (`SkinStore`) only once those assets are cached, so a
+    failed download installs nothing.
+  - `CardDesignChoice.queries` adds a `DesignQuery(designId = …)` per installed skin and theme,
+    so the sync keeps an installed skin current whatever its author or variant.
+  - The library's skins (`library:<cardType>`) come with every sync, so they are always installed.
+  - Removing a skin stops the sync fetching it. Its cached assets stay, because the cache is never
+    pruned.
+  - A card switched to a skin that isn't installed draws as if it weren't switched.
 - `cardTemplateFor` (`serverDesignFor`) checks that override first: the chosen design's entry for
   the card's device, else its generic one, in the preferred variant, then `default`, then any.
   Otherwise the order stays the same. A chosen design that is missing, revoked or not fetched yet
   falls through to that order, never to nothing. A Wear slot follows the same choice.
-- The card's style sheet has a **Design** section for "This card": "Automatic", then every design
-  `designsFor` lists for the card's key and device (`cardDevice`), with its title, author and the
-  device it is for. Choosing one stores its id; "Automatic" clears it.
+- The card's style sheet has a **Skin** section for "This card". It lists "Automatic", then every
+  skin `designsFor` lists for the card's key and device (`cardDevice`), with its title, author and
+  the device it is for.
+  - An installed skin is a choice: choosing it stores its id, and "Automatic" clears it. A skin
+    that isn't the library's can be removed.
+  - A skin that isn't installed offers **Install**, shows its download, and offers a retry if the
+    download fails.
 
 ## One design, every family
 
