@@ -10,12 +10,14 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaEntityRowData
@@ -28,6 +30,7 @@ import ee.schimke.ha.rc.components.RemoteHaEntityRow
 import ee.schimke.ha.rc.components.RemoteHaIconChip
 import ee.schimke.ha.rc.components.RemoteHaIconHero
 import ee.schimke.ha.rc.components.RemoteHaMeasurement
+import ee.schimke.ha.rc.components.RemoteHaWideHero
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.haReading
@@ -72,6 +75,35 @@ class EntityCardConverter : CardConverter {
         val hero = captureHeroScale()
         if (hero != null) {
           Hero(card, snapshot, hero, modifier)
+          return
+        }
+        val row = captureRowScale()
+        if (row != null) {
+          RemoteHaWideHero(iconChipData(card, snapshot), row, modifier.fillMaxSize())
+          return
+        }
+        if (LocalFixedCanvasAxis.current == BreakpointAxis.Height) {
+          // A Wear slot: the Small container holds the row, the Large one the icon big beside the
+          // name over a large state.
+          RemoteSizeBreakpoint(
+            thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
+            modifier = modifier.fillMaxSize(),
+            axis = BreakpointAxis.Height,
+          ) { tier ->
+            if (tier == 0)
+              FullRow(
+                card,
+                snapshot,
+                RemoteModifier.fillMaxSize().padding(horizontal = HaSpace.L.rdp),
+              )
+            else
+              RemoteHaWideHero(
+                iconChipData(card, snapshot),
+                WearHeroScale,
+                RemoteModifier.fillMaxSize(),
+                live = false,
+              )
+          }
           return
         }
         RemoteSizeBreakpoint(thresholdsDp = intArrayOf(96), modifier = modifier.fillMaxSize()) {

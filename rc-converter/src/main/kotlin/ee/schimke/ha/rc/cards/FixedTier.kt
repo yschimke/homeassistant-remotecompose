@@ -8,6 +8,7 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.rc.LocalGridSquareCells
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.components.HaHeroScale
 
@@ -50,3 +51,14 @@ internal fun CenteredCell(content: @Composable () -> Unit) {
 @Composable
 internal fun captureHeroScale(): HaHeroScale? =
   LocalWidgetCaptureSizeDp.current?.let { HaHeroScale.forCell(it.widthDp, it.heightDp) }
+
+/**
+ * The wide hero row's scale for the launcher widget being captured: one row tall and at least two
+ * columns wide (the short side of "short is not small"), null otherwise or off a launcher.
+ */
+@Composable
+internal fun captureRowScale(): HaHeroScale? =
+  LocalWidgetCaptureSizeDp.current
+    // A square grid cell is as tall as it is wide whatever share of the height it was given.
+    ?.takeIf { it.heightDp < HaHeroScale.MinHeightDp && !LocalGridSquareCells.current }
+    ?.let { HaHeroScale.forRow(it.widthDp) }

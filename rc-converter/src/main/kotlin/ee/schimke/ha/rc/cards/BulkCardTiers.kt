@@ -60,3 +60,15 @@ internal fun BulkTiers(
     }
   }
 }
+
+/**
+ * The wide hero's icon and value on a Wear Large slot. One capture plays on every host, so they are
+ * sized for the narrowest: Galaxy's stadium leaves about 160 dp across, room for a 40 dp icon
+ * beside "21.5 °C" at value size.
+ */
+internal val WearHeroScale =
+  ee.schimke.ha.rc.components.HaHeroScale(
+    iconDp = 40,
+    name = ee.schimke.ha.rc.components.HaType.Title,
+    state = ee.schimke.ha.rc.components.HaType.Value,
+  )
