@@ -319,6 +319,13 @@ class DesignServerTest {
       assertTrue("<h1>Terrazzo</h1>" in page)
       assertTrue("href=\"#home-assistant\"" in page)
       assertTrue("id=\"home-assistant\"" in page)
+      assertTrue(
+        page.indexOf("id=\"designer\"") < page.indexOf("id=\"home-assistant\""),
+        "the app and its cards come first; the integration is the last section",
+      )
+      assertTrue("Optional, for wall panels" in page, "the integration reads as optional")
+      assertTrue("The app needs none of this" in page, "the app stands alone")
+      assertTrue("href=\"/demo/\"" in page, "the demo is one tap from the hero")
       assertTrue("/blob/main/docs/HOME_ASSISTANT.md\">Installation and updates" in page)
       assertTrue("my.home-assistant.io/redirect/hacs_repository/" in page, "opens HACS")
       assertTrue("redirect/config_flow_start/?domain=terrazzo" in page, "starts the setup")
@@ -335,6 +342,11 @@ class DesignServerTest {
         "href=\"https://play.google.com/store/apps/details?id=ee.schimke.harc\">Get the app" in
           page,
         "sends Get the app to the Play listing",
+      )
+      assertEquals(
+        2,
+        page.split("https://play.google.com/store/apps/details?id=ee.schimke.harc").size - 1,
+        "the app is the call to action in the hero and again after the three steps",
       )
       assertTrue("href=\"/designs\"" in page, "links the template browser")
       assertTrue("$API_BASE/previews/" in page, "teases with the library's cards")
