@@ -12,7 +12,7 @@ class CardDesignTest {
 
   @Test
   fun theCheckedInDesignsValidate() {
-    for (cardType in listOf("tile", "button", "entity")) {
+    for (cardType in listOf("tile", "button", "entity", "sensor")) {
       val design = requireNotNull(CardDesigns.design(cardType)) { "no $cardType.uid packaged" }
       assertEquals(emptyList(), design.validate(), cardType)
     }

@@ -8,14 +8,15 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.EntityDesignParts
+import ee.schimke.ha.rc.cards.SensorDesignParts
 import ee.schimke.ha.rc.cards.TileDesignParts
 import ee.schimke.ha.rc.design.CardDesigns
 
 /*
  * The parts a card design is arranged from, on UI Builder's shelf: the switches that pick what a
- * card draws for the surface and size it is drawn at, and the forms of a tile, a button and an
- * entity card. Each calls what the card design renderer calls for the same component id
- * (CardDesigns, TileDesignParts, ButtonDesignParts, EntityDesignParts), so a design edited in UI Builder draws in the app as it does
+ * card draws for the surface and size it is drawn at, and the forms of a tile, a button, an entity
+ * card and a sensor card. Each calls what the card design renderer calls for the same component id
+ * (CardDesigns and the card types' `*DesignParts`), so a design edited in UI Builder draws in the app as it does
  * on the canvas. A slot wrapper draws the slot it picks inside its own modifier; the renderer hands
  * that modifier to the slot's node instead.
  */
@@ -266,4 +267,65 @@ fun HaEntityCardCell(
   other: @Composable @RemoteComposable () -> Unit = {},
 ) {
   RemoteBox(modifier) { EntityDesignParts.Cell(wrap, hero, row, wear, other) }
+}
+
+/** `ha-cards/sensor-card-full`: the sensor card, its value over its history line. */
+@Composable
+@RemoteComposable
+fun HaSensorCardFull(modifier: RemoteModifier = RemoteModifier) {
+  SensorDesignParts.Full(modifier)
+}
+
+/**
+ * `ha-cards/sensor-card-identity`: a narrow cell's identity, the reading's own visual over its
+ * value or the icon chip; it fills its cell itself.
+ */
+@Composable
+@RemoteComposable
+fun HaSensorCardIdentity() {
+  SensorDesignParts.Identity()
+}
+
+/** `ha-cards/sensor-card-history-hero`: a roomy launcher cell with a line, the value promoted. */
+@Composable
+@RemoteComposable
+fun HaSensorCardHistoryHero(modifier: RemoteModifier = RemoteModifier) {
+  SensorDesignParts.HistoryHero(modifier)
+}
+
+/**
+ * `ha-cards/sensor-card-reading`: the reading in a [presentation] (`expanded`, `standard`,
+ * `compact`, or `cell` for the launcher cell's width), inset by `m` or `l`; [live] `false` reads it
+ * without the snapshot's history, as a Wear container does.
+ */
+@Composable
+@RemoteComposable
+fun HaSensorCardReading(
+  modifier: RemoteModifier = RemoteModifier,
+  presentation: String = "standard",
+  inset: String = "none",
+  live: Boolean = true,
+) {
+  SensorDesignParts.Reading(presentation, inset, live, modifier)
+}
+
+/**
+ * `ha-cards/sensor-card-cell`: which slot the sensor and its canvas call for: [wrap] on a
+ * dashboard, [wear] in a Wear container, [historyHero] or [readingHero] for a launcher cell with a
+ * hero scale, [readingRow] for a wide, short one without a line, else [other].
+ */
+@Composable
+@RemoteComposable
+fun HaSensorCardCell(
+  modifier: RemoteModifier = RemoteModifier,
+  wrap: @Composable @RemoteComposable () -> Unit = {},
+  wear: @Composable @RemoteComposable () -> Unit = {},
+  historyHero: @Composable @RemoteComposable () -> Unit = {},
+  readingHero: @Composable @RemoteComposable () -> Unit = {},
+  readingRow: @Composable @RemoteComposable () -> Unit = {},
+  other: @Composable @RemoteComposable () -> Unit = {},
+) {
+  RemoteBox(modifier) {
+    SensorDesignParts.Cell(wrap, wear, historyHero, readingHero, readingRow, other)
+  }
 }
