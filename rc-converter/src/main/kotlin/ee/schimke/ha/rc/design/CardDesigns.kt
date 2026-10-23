@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.rc.design
 
+import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.rc.BreakpointAxis
@@ -49,7 +50,7 @@ object CardDesigns {
             node.Slot("tier$tier")
           }
         },
-      "ha-cards/centered-cell" to { node, _ -> Centered { node.Slot("content") } },
+      "ha-cards/centered-cell" to { node, modifier -> Centered(modifier) { node.Slot("content") } },
     )
 
   /** `ha-cards/card-size-mode`: [wrap], [height] or [width] for the surface being drawn. */
@@ -88,10 +89,14 @@ object CardDesigns {
     )
   }
 
-  /** `ha-cards/centered-cell`: [content] centred vertically in a fixed cell. */
+  /**
+   * `ha-cards/centered-cell`: [content] centred vertically in a fixed cell, the cell sized by
+   * [modifier] when the design gives it one.
+   */
   @Composable
-  fun Centered(content: @Composable () -> Unit) {
-    CenteredCell(content)
+  fun Centered(modifier: RemoteModifier, content: @Composable () -> Unit) {
+    if (modifier === RemoteModifier) CenteredCell(content)
+    else RemoteBox(modifier) { CenteredCell(content) }
   }
 
   /** Every component a card design drawn in this module can use. */

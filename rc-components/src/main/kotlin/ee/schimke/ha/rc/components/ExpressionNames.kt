@@ -13,9 +13,10 @@ import androidx.compose.runtime.staticCompositionLocalOf
  * the same, so a document's bytes are reproducible: a card design's hash changes only when the
  * design does.
  *
- * Inside [ProvideExpressionNames] (every card [ee.schimke.ha.rc] draws, through `RenderChild`) the
- * suffix is the call site's place in the order the document is composed. Outside it, the suffix is
- * the call site's place in the composition.
+ * Inside [ProvideExpressionNames] (the root of every single-card document: a template, a card or
+ * launcher capture, a Wear slot) the suffix is the call site's place in the order the document is
+ * composed. Outside it (a document of several cards), the suffix is the call site's place in the
+ * composition, which no sibling card shares.
  */
 @Composable
 fun rememberExpressionName(prefix: String): String {

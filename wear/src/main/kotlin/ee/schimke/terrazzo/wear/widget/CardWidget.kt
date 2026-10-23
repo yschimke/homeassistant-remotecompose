@@ -51,6 +51,7 @@ import ee.schimke.ha.rc.components.LocalPictureImageStrategy
 import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.PictureImageStrategy
 import ee.schimke.ha.rc.components.ProvideCardChrome
+import ee.schimke.ha.rc.components.ProvideExpressionNames
 import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
 import ee.schimke.ha.rc.components.ProvideHaUberStyle
 import ee.schimke.ha.rc.components.RemoteHaTheme
@@ -466,7 +467,9 @@ internal fun SlotContent(
               ProvideFixedCanvasAxis(BreakpointAxis.Height) {
                 ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
                   if (card != null) {
-                    content(RemoteModifier.fillMaxWidth())
+                    // One card per slot document: its expressions are named in composition
+                    // order, as its template's are.
+                    ProvideExpressionNames { content(RemoteModifier.fillMaxWidth()) }
                   } else {
                     ChooseCardPlaceholder(theme)
                   }

@@ -73,6 +73,7 @@ private constructor(
   fun validate(): List<String> = buildList {
     if (catalog != CATALOG) add("catalog `$catalog` is not `$CATALOG`")
     if (roots.size != 1) add("a card design has one root, not ${roots.size}")
+    roots.filter { it !in nodes }.forEach { add("root $it is not a node") }
     nodes.forEach { (id, node) ->
       val component = node["componentId"]?.jsonPrimitive?.contentOrNull
       if (component !in components) add("$id: `$component` is not a component this host draws")

@@ -11,7 +11,6 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.LocalEntityAvailability
 import ee.schimke.ha.rc.components.LocalRemoteAnimationsEnabled
-import ee.schimke.ha.rc.components.ProvideExpressionNames
 import ee.schimke.ha.rc.components.RemoteHaUnavailableFrame
 import ee.schimke.ha.rc.icons.HaIconMap
 
@@ -46,11 +45,6 @@ fun ProvideCardRegistry(registry: CardRegistry, content: @Composable () -> Unit)
  */
 @Composable
 fun RenderChild(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier = RemoteModifier) {
-  ProvideExpressionNames { RenderCard(card, snapshot, modifier) }
-}
-
-@Composable
-private fun RenderCard(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
   val registry = LocalCardRegistry.current
   val converter = registry.get(card.type) ?: registry.get(UNSUPPORTED_CARD_TYPE) ?: return
   // A conditional is only a wrapper: the card it shows gets the frame, as if it stood alone.

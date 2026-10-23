@@ -63,7 +63,7 @@ fun HaCenteredCell(
   modifier: RemoteModifier = RemoteModifier,
   content: @Composable @RemoteComposable () -> Unit,
 ) {
-  RemoteBox(modifier) { CardDesigns.Centered(content) }
+  CardDesigns.Centered(modifier, content)
 }
 
 /** `ha-cards/tile-full`: the dashboard tile, icon beside name over state, with its features. */
