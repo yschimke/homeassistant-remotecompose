@@ -38,6 +38,7 @@ import ee.schimke.ha.rc.components.RemoteHaIconChip
 import ee.schimke.ha.rc.components.RemoteHaIconHero
 import ee.schimke.ha.rc.components.RemoteHaTile
 import ee.schimke.ha.rc.components.RemoteHaTileCompact
+import ee.schimke.ha.rc.components.RemoteHaWideHero
 import ee.schimke.ha.rc.components.TileTwoLineMinHeightDp
 import ee.schimke.ha.rc.components.haNeutralAccent
 import ee.schimke.ha.rc.components.tileFeatureRows
@@ -180,20 +181,28 @@ class TileCardConverter : CardConverter {
                   CenteredCell {
                     RemoteHaTileCompact(tileData(card, snapshot), RemoteModifier.fillMaxWidth())
                   }
+                // The Large slot: the icon big beside the name over a large state, not a
+                // phone tile's row of text in the middle of the slot. Wear tiers drop the
+                // features first.
                 else ->
-                  CenteredCell {
-                    // Wear tiers drop the features first.
-                    RemoteHaTile(
-                      tileData(card, snapshot).copy(features = emptyList()),
-                      RemoteModifier.fillMaxWidth(),
-                    )
-                  }
+                  RemoteHaWideHero(
+                    tileData(card, snapshot).copy(features = emptyList()),
+                    WearHeroScale,
+                    RemoteModifier.fillMaxSize(),
+                    live = false,
+                  )
               }
             }
           BreakpointAxis.Width -> {
             val hero = captureHeroScale()
             if (hero != null && features(card, snapshot).isEmpty())
               RemoteHaIconHero(tileData(card, snapshot), hero, modifier.fillMaxSize())
+            else if (captureRowScale() != null && features(card, snapshot).isEmpty())
+              RemoteHaWideHero(
+                tileData(card, snapshot),
+                captureRowScale()!!,
+                modifier.fillMaxSize(),
+              )
             else if (features(card, snapshot).isNotEmpty())
               FeaturesGate(tileData(card, snapshot), modifier)
             else

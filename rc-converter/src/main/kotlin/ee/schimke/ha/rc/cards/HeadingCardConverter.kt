@@ -70,7 +70,12 @@ class HeadingCardConverter : CardConverter {
         RemoteBox(
           modifier.fillMaxWidth().padding(horizontal = (if (narrow) HaSpace.XS else HaSpace.L).rdp)
         ) {
-          RemoteHaHeading(if (narrow) data.copy(style = HaHeadingStyle.Subtitle) else data)
+          // A roomy widget sets the heading at the hero's value size: a section's name across a
+          // 4×3 widget, not a line at the top of a blank one.
+          val hero = captureHeroScale()
+          if (hero != null && data.style == HaHeadingStyle.Title)
+            RemoteHaHeading(data, textSize = hero.state)
+          else RemoteHaHeading(if (narrow) data.copy(style = HaHeadingStyle.Subtitle) else data)
         }
       }
     } else {

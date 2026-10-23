@@ -136,6 +136,30 @@ class WearWidgetTemplateTest {
   }
 
   @Test
+  fun aContainerTintIsWrittenIntoTheWidgetsDocument() {
+    val tint = 0xFF5A3A2E.toInt()
+    val (_, params) = containers.first()
+    val widget =
+      assertNotNull(
+        runBlocking { WearWidgetTemplate.instantiate(context, template, params, false, tint) }
+      )
+    val untinted =
+      assertNotNull(runBlocking { WearWidgetTemplate.instantiate(context, template, params) })
+    fun holds(bytes: ByteArray, argb: Int): Boolean {
+      val word =
+        byteArrayOf(
+          (argb ushr 24).toByte(),
+          (argb ushr 16).toByte(),
+          (argb ushr 8).toByte(),
+          argb.toByte(),
+        )
+      return (0..bytes.size - 4).any { i -> (0 until 4).all { bytes[i + it] == word[it] } }
+    }
+    assertTrue(holds(widget.rcDocument, tint), "the tint fills the container")
+    assertTrue(!holds(untinted.rcDocument, tint), "an untinted widget keeps the default surface")
+  }
+
+  @Test
   fun eachWidgetDrawsAsGlanceWearsOwnCaptureForItsParams() {
     var bytes by mutableStateOf(ByteArray(0))
     var size by mutableStateOf(200f to 60f)

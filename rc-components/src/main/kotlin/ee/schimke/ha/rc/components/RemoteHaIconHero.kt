@@ -7,6 +7,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
+import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.clickable
@@ -15,6 +16,7 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.RemoteTextUnit
 import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -30,6 +32,21 @@ import androidx.compose.ui.text.style.TextOverflow
  */
 data class HaHeroScale(val iconDp: Int, val name: RemoteTextUnit, val state: RemoteTextUnit) {
   companion object {
+    /** The value on the largest heroes: a size above [HaType.Display], for a cell 260 dp across. */
+    private val HeroDisplay = 44.rsp
+
+    /**
+     * The scale for a wide hero row [widthDp] across, null below two launcher columns: a 48 dp icon
+     * beside a display value from three columns, a 36 dp one beside a small value in two.
+     */
+    fun forRow(widthDp: Int): HaHeroScale? =
+      when {
+        widthDp >= 200 -> HaHeroScale(iconDp = 48, name = HaType.Title, state = HaType.Display)
+        widthDp >= MinWidthDp ->
+          HaHeroScale(iconDp = 36, name = HaType.Label, state = HaType.ValueSmall)
+        else -> null
+      }
+
     /** The narrowest and shortest cell a hero looks composed in: two launcher columns, two rows. */
     const val MinWidthDp = 120
     const val MinHeightDp = 150
@@ -42,9 +59,9 @@ data class HaHeroScale(val iconDp: Int, val name: RemoteTextUnit, val state: Rem
     fun forCell(widthDp: Int, heightDp: Int): HaHeroScale? {
       if (widthDp < MinWidthDp || heightDp < MinHeightDp) return null
       return when (minOf(widthDp, heightDp)) {
-        in 0 until 200 -> HaHeroScale(iconDp = 48, name = HaType.Title, state = HaType.Value)
-        in 200 until 260 -> HaHeroScale(iconDp = 72, name = HaType.Headline, state = HaType.Display)
-        else -> HaHeroScale(iconDp = 96, name = HaType.Headline, state = HaType.Display)
+        in 0 until 200 -> HaHeroScale(iconDp = 56, name = HaType.Title, state = HaType.Value)
+        in 200 until 260 -> HaHeroScale(iconDp = 80, name = HaType.Headline, state = HaType.Display)
+        else -> HaHeroScale(iconDp = 112, name = HaType.Headline, state = HeroDisplay)
       }
     }
   }
@@ -114,6 +131,78 @@ fun RemoteHaIconHero(
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
+    }
+  }
+}
+
+/**
+ * The hero tier for a wide, short cell — a Wear Large slot, a launcher widget one row tall and
+ * three or more columns wide: the tinted icon at [iconDp] beside the name over the state at
+ * [stateSize], the row centred in the cell it fills. A cell like that holds a big value beside its
+ * identity, not a stack of them.
+ *
+ * Bound like [RemoteHaIconHero]: use it only where this tier is the one captured, or inside a
+ * single size gate.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaWideHero(
+  data: HaTileData,
+  scale: HaHeroScale,
+  modifier: RemoteModifier = RemoteModifier,
+  showState: Boolean = true,
+  live: Boolean = true,
+) {
+  val iconDp = scale.iconDp
+  val nameSize = scale.name
+  val stateSize = scale.state
+  val theme = haTheme()
+  val clickable =
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  val look = entityLook(data.entityId, data.accent, live = live)
+  RemoteRow(
+    modifier = modifier.then(clickable).fillMaxSize().padding(horizontal = HaSpace.M.rdp),
+    verticalAlignment = RemoteAlignment.CenterVertically,
+  ) {
+    RemoteBox(
+      modifier =
+        RemoteModifier.size(iconDp.rdp)
+          .then(
+            if (data.tapAction != HaAction.None) consoleKeyChrome(look.accent) else RemoteModifier
+          ),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      HaStateIcon(
+        icon = data.icon,
+        accent = data.accent,
+        look = look,
+        tint = look.accent,
+        contentDescription = entityName(data.entityId, data.name),
+        modifier = RemoteModifier.size((iconDp * 2 / 3).rdp),
+      )
+    }
+    RemoteColumn(modifier = RemoteModifier.weight(1f).padding(start = HaSpace.M.rdp)) {
+      RemoteText(
+        text = entityName(data.entityId, data.name),
+        // With no state under it, the name is the row's main text.
+        color = look.dim(if (showState) theme.secondaryText else theme.primaryText),
+        fontSize = nameSize,
+        fontWeight = FontWeight.Medium,
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+      if (showState) {
+        RemoteText(
+          text = data.state,
+          color = look.dim(theme.primaryText),
+          fontSize = stateSize,
+          fontWeight = haValueWeight(),
+          style = haTextStyle(),
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+      }
     }
   }
 }

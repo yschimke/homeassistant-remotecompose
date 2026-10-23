@@ -14,6 +14,7 @@ import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
@@ -111,9 +112,19 @@ class SensorCardConverter : CardConverter {
           // theme's typed instrument, in both Wear containers.
           val id = card.raw["entity"]?.jsonPrimitive?.content
           val reading = haReading(id, id?.let { snapshot.states[it] }, nameFor(card, snapshot))
-          RemoteBox(modifier.fillMaxSize()) {
+          // The Small container takes the compact reading, the Large one the card-sized visual
+          // beside a larger value.
+          RemoteSizeBreakpoint(
+            thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
+            modifier = modifier.fillMaxSize(),
+            axis = BreakpointAxis.Height,
+          ) { tier ->
             CenteredCell {
-              RemoteHaMeasurement(reading, HaPresentation.Compact, RemoteModifier.fillMaxWidth())
+              RemoteHaMeasurement(
+                reading,
+                if (tier == 0) HaPresentation.Compact else HaPresentation.Standard,
+                RemoteModifier.fillMaxWidth().padding(horizontal = HaSpace.M.rdp),
+              )
             }
           }
         } else if (captureHeroScale() != null && hasHistory(card, snapshot)) {

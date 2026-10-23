@@ -135,6 +135,7 @@ fun RemoteHaEntitiesFitted(
   modifier: RemoteModifier = RemoteModifier,
   largeText: Boolean = false,
   looks: HaEntityLooks? = null,
+  bigRows: Boolean = false,
 ) {
   val theme = haTheme()
   RemoteBox(
@@ -167,6 +168,7 @@ fun RemoteHaEntitiesFitted(
           fit,
           largeText,
           RemoteModifier.fillMaxWidth().weight(1f),
+          bigRows,
         )
       }
     }
@@ -186,6 +188,7 @@ private fun FittedEntityRow(
   fit: HaEntitiesFit,
   largeText: Boolean,
   modifier: RemoteModifier,
+  big: Boolean = false,
 ) {
   val theme = haTheme()
   val clickable =
@@ -193,6 +196,7 @@ private fun FittedEntityRow(
   val expanded = fit == HaEntitiesFit.Expanded
   val nameSize =
     when {
+      expanded && big -> HaType.Title
       expanded -> HaType.BodyLarge
       largeText -> HaType.Body
       else -> HaType.Label
@@ -210,7 +214,7 @@ private fun FittedEntityRow(
       tint = look.accent,
       // Decorative: the name is drawn beside it.
       contentDescription = null,
-      modifier = RemoteModifier.size((if (expanded) 28 else 18).rdp),
+      modifier = RemoteModifier.size((if (expanded && big) 36 else if (expanded) 28 else 18).rdp),
     )
     RemoteBox(
       modifier =
@@ -230,7 +234,12 @@ private fun FittedEntityRow(
         text = data.state,
         modifier = stateModifier,
         color = look.dim(theme.primaryText),
-        fontSize = if (expanded) HaType.ValueSmall else nameSize,
+        fontSize =
+          when {
+            expanded && big -> HaType.Value
+            expanded -> HaType.ValueSmall
+            else -> nameSize
+          },
         style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,

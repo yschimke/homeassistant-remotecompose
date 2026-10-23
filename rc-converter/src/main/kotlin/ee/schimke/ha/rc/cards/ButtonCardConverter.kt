@@ -25,6 +25,7 @@ import ee.schimke.ha.rc.components.RemoteHaButton
 import ee.schimke.ha.rc.components.RemoteHaButtonIcon
 import ee.schimke.ha.rc.components.RemoteHaIconHero
 import ee.schimke.ha.rc.components.RemoteHaToggleButton
+import ee.schimke.ha.rc.components.RemoteHaWideHero
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
@@ -102,6 +103,24 @@ class ButtonCardConverter : CardConverter {
     // `show_icon: false` leaves no icon for the icon-only tier: the full button fills every cell.
     if (!data.showIcon) {
       RenderButton(data, modifier.fillMaxSize(), compact = true)
+      return
+    }
+    val row = captureRowScale()
+    if (row != null && data.showName) {
+      // A wide, short launcher widget: the button's icon beside its name and (when shown) state.
+      RemoteHaWideHero(
+        HaTileData(
+          entityId = data.entityId,
+          name = data.name,
+          state = data.state ?: "".rs,
+          icon = data.icon,
+          accent = data.accent,
+          tapAction = data.tapAction,
+        ),
+        row.copy(name = row.state),
+        modifier.fillMaxSize(),
+        showState = data.state != null,
+      )
       return
     }
     val hero = captureHeroScale()

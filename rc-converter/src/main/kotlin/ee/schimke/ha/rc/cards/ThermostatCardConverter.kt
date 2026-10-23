@@ -176,7 +176,12 @@ internal fun RenderArcDial(data: HaArcDialData, modifier: RemoteModifier) {
             axis = BreakpointAxis.Height,
             modifier = modifier.fillMaxSize(),
           ) { tier ->
-            RemoteHaArcDialWide(data, RemoteModifier.fillMaxSize(), compact = tier == 0)
+            RemoteHaArcDialWide(
+              data,
+              RemoteModifier.fillMaxSize(),
+              compact = tier == 0,
+              dialDp = if (tier == 0) 56 else WEAR_LARGE_DIAL_DP,
+            )
           }
         BreakpointAxis.Width ->
           RemoteMinSizeGate(
@@ -257,3 +262,6 @@ fun climateAccent(mode: String, hvacAction: String? = null): Color =
   }
 
 private fun formatTemp(v: Float): String = decimalText(v.toDouble(), 1)
+
+/** The arc dial's box on a Wear Large slot: as tall as its three lines, beside them. */
+private const val WEAR_LARGE_DIAL_DP = 72
