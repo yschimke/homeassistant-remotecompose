@@ -112,10 +112,7 @@ class AndroidImeScrollingTest {
     // Request real text-input focus even when the initial layout clips the bottom field.
     // Capture the keyboard-visible starting state before testing scrollability.
     field.performSemanticsAction(SemanticsActions.RequestFocus) { it() }
-    compose.runOnIdle {
-      WindowInsetsControllerCompat(compose.activity.window, compose.activity.window.decorView)
-        .show(WindowInsetsCompat.Type.ime())
-    }
+    showIme()
     waitForIme(true)
     captureWindowEvidence("discovery-open-ime")
     assertAboveKeyboard(field)
@@ -132,7 +129,12 @@ class AndroidImeScrollingTest {
     assertAboveKeyboard(connect)
     connect.performClick()
     compose.runOnIdle { assertTrue(connected) }
-    awaitImeSettled()
+    // Tapping Connect can take the keyboard down on some emulator images and not others, and a
+    // check made mid-animation sees either a stranded action or the closed form's resting gap.
+    // The bottom actions are asserted with the keyboard up, so bring it back explicitly.
+    field.performSemanticsAction(SemanticsActions.RequestFocus) { it() }
+    showIme()
+    waitForIme(true)
     val demo = compose.onNodeWithText("Try demo mode (no login)")
     demo.performScrollTo().assertIsDisplayed()
     scrollFormToBottom()
@@ -203,6 +205,14 @@ class AndroidImeScrollingTest {
 
   private fun windowInsets(): WindowInsetsCompat =
     checkNotNull(ViewCompat.getRootWindowInsets(compose.activity.window.decorView))
+
+  /** Shows the keyboard for the focused field; the window controller acts on the real IME. */
+  private fun showIme() {
+    compose.runOnIdle {
+      WindowInsetsControllerCompat(compose.activity.window, compose.activity.window.decorView)
+        .show(WindowInsetsCompat.Type.ime())
+    }
+  }
 
   private fun waitForIme(visible: Boolean) {
     compose.waitUntil(10_000) {
