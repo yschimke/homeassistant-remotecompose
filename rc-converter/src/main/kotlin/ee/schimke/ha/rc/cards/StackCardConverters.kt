@@ -9,6 +9,7 @@ import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardRegistry
 import ee.schimke.ha.rc.CardSizeMode
@@ -17,6 +18,7 @@ import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaClock
 import ee.schimke.ha.rc.LocalCardRegistry
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalGridSquareCells
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.ProvideChildCaptureShare
@@ -228,6 +230,24 @@ class GridCardConverter : CardConverter {
         ProvideChildCaptureShare(columns = perRow, rows = rows, gapDp = HaGridLayout.GAP_DP) {
           GridCells(children, bindingIndices, squareCells, keepColumns, snapshot, perRow, modifier)
         }
+      } else if (
+        LocalCardSizeMode.current == CardSizeMode.Fixed &&
+          LocalFixedCanvasAxis.current == BreakpointAxis.Height
+      ) {
+        // A Wear slot is wide and short (160 to 200 × 60 to 136 dp): one cell per row, each a
+        // square as wide as the slot, showed only the first cell (#624). Up to three cells share
+        // one row, as a horizontal stack's do; more take two rows, the most a Large slot holds.
+        // None is square, since a square cell is as tall as the slot is wide.
+        GridCells(
+          children,
+          bindingIndices,
+          List(children.size) { false },
+          keepColumns = false,
+          snapshot,
+          wearGridPerRow(children.size),
+          modifier.fillMaxSize(),
+          fillHeight = true,
+        )
       } else if (threshold == null) {
         GridCells(
           children,
@@ -281,12 +301,14 @@ private fun GridCells(
   snapshot: HaSnapshot,
   perRow: Int,
   modifier: RemoteModifier,
+  fillHeight: Boolean = false,
 ) {
   RemoteHaGrid(
     cellCount = children.size,
     perRow = perRow,
     modifier = modifier,
     stretchLastRow = !keepColumns,
+    fillHeight = fillHeight,
   ) { k ->
     ProvideChildCardBindings(bindingIndices[k]) {
       if (squareCells[k]) {
@@ -294,11 +316,19 @@ private fun GridCells(
           RenderChild(children[k], snapshot, RemoteModifier.fillMaxSize())
         }
       } else {
-        RenderChild(children[k], snapshot, RemoteModifier.fillMaxWidth())
+        RenderChild(
+          children[k],
+          snapshot,
+          if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
+        )
       }
     }
   }
 }
+
+/** Cells per row of a grid of [cellCount] cards in a Wear slot: one row up to three, else two. */
+internal fun wearGridPerRow(cellCount: Int): Int =
+  if (cellCount <= 3) cellCount.coerceAtLeast(1) else (cellCount + 1) / 2
 
 /** HA's `columns`: a positive integer, default [HaGridLayout.DEFAULT_COLUMNS]. */
 internal fun gridColumns(card: CardConfig): Int =

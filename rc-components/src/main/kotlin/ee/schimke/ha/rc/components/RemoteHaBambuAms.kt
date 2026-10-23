@@ -46,7 +46,10 @@ fun RemoteHaBambuAms(data: HaBambuAmsData, modifier: RemoteModifier = RemoteModi
         .then(cardChrome(theme.cardBackground, theme.divider))
         .padding(horizontal = 14.rdp, vertical = 12.rdp)
   ) {
-    RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
+    RemoteColumn(
+      modifier = RemoteModifier.fillMaxWidth(),
+      verticalArrangement = RemoteArrangement.spacedBy(8.rdp),
+    ) {
       RemoteText(
         text = data.title.rs,
         color = theme.primaryText,
@@ -59,14 +62,15 @@ fun RemoteHaBambuAms(data: HaBambuAmsData, modifier: RemoteModifier = RemoteModi
         horizontalArrangement = RemoteArrangement.SpaceBetween,
         verticalAlignment = RemoteAlignment.Top,
       ) {
+        // An equal share each, so a long material name ellipsizes within its slot instead of
+        // pushing the last slot out of the row (#1038). The gap is each slot's own padding: the
+        // player shares a row by weight before taking out `spacedBy` gaps, so those overflow it.
         data.slots.forEach { slot ->
           SpoolSlot(
             slot,
             theme,
             big = false,
-            modifier =
-              if (visualFamily() == HaVisualFamily.Console) RemoteModifier.weight(1f)
-              else RemoteModifier,
+            modifier = RemoteModifier.weight(1f).padding(horizontal = HaSpace.XS.rdp),
           )
         }
       }
@@ -155,6 +159,8 @@ private fun SpoolSlot(
       color = theme.secondaryText,
       fontSize = HaType.Caption,
       style = haTextStyle(),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
     )
   }
 }
