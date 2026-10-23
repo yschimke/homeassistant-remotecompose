@@ -15,6 +15,7 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.HaIconIdentity
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
@@ -52,8 +53,9 @@ import kotlinx.serialization.json.put
  *
  * * **icon + name** — the full button, self-centred via `fillMaxSize` so it fills / centres rather
  *   than pinning top-left on big cells.
- * * **icon only** — [RemoteHaButtonIcon], the tinted-chip identity tier for cells too small for the
- *   label (`1×1` launcher).
+ * * **icon chip** — [RemoteHaButtonIcon], the tinted-chip identity tier for cells too small for the
+ *   full button (`1×1` launcher): the name stays under the chip at label size unless the icon is
+ *   evocative ([HaIconIdentity]), as card-information-hierarchy.md has it.
  *
  * A Wear slot gates on height instead ([WEAR_SMALL_MAX_HEIGHT_DP]): the Small container takes
  * [RemoteHaButtonRow] (the icon beside the name, and the state with `show_state`), the Large one
@@ -103,12 +105,17 @@ class ButtonCardConverter : CardConverter {
       // In a square grid cell (as narrow as MinGridCellWidthDp, so as short) the compact body
       // keeps the icon and name inside the square.
       CardSizeMode.Wrap -> RenderButton(data, modifier, compact = LocalGridSquareCells.current)
-      CardSizeMode.Fixed -> AdaptiveButton(data, modifier)
+      CardSizeMode.Fixed -> {
+        val entity = data.entityId?.let { snapshot.states[it] }
+        // The 1×1 chip drops the name only for an evocative icon (card-information-hierarchy.md).
+        val chipName = data.showName && HaIconIdentity.chipShowsName(card, entity)
+        AdaptiveButton(data, modifier, chipName)
+      }
     }
   }
 
   @Composable
-  private fun AdaptiveButton(data: HaButtonData, modifier: RemoteModifier) {
+  private fun AdaptiveButton(data: HaButtonData, modifier: RemoteModifier, chipName: Boolean) {
     // `show_icon: false` leaves no icon for the icon-only tier: the full button fills every cell.
     if (!data.showIcon) {
       RenderButton(data, modifier.fillMaxSize(), compact = true)
@@ -176,7 +183,7 @@ class ButtonCardConverter : CardConverter {
       if (roomy) {
         RenderButton(data, RemoteModifier.fillMaxSize(), compact = true)
       } else {
-        RemoteHaButtonIcon(data, RemoteModifier.fillMaxSize())
+        RemoteHaButtonIcon(data, RemoteModifier.fillMaxSize(), showName = chipName)
       }
     }
   }

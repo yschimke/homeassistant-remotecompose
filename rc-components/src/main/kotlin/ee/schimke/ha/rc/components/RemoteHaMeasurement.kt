@@ -111,6 +111,11 @@ fun RemoteHaMeasurement(
   presentation: HaPresentation = HaPresentation.Standard,
   modifier: RemoteModifier = RemoteModifier,
   tapAction: HaAction = HaAction.None,
+  /**
+   * [HaPresentation.Chip] only: draw the name between the visual and the value, for a reading whose
+   * visual is the same in every room (card-information-hierarchy.md, the icon exception).
+   */
+  chipShowsName: Boolean = false,
 ) {
   val clickable = tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   when (presentation) {
@@ -118,7 +123,7 @@ fun RemoteHaMeasurement(
       RemoteBox(modifier = modifier.then(clickable)) {
         RemoteHaMeasurementGlyph(reading, RemoteModifier.fillMaxSize())
       }
-    HaPresentation.Chip -> Chip(reading, modifier.then(clickable))
+    HaPresentation.Chip -> Chip(reading, modifier.then(clickable), chipShowsName)
     HaPresentation.Compact,
     HaPresentation.Standard -> SideBySide(reading, presentation, modifier.then(clickable))
     HaPresentation.Expanded -> Expanded(reading, modifier.then(clickable))
@@ -193,13 +198,22 @@ private fun SideBySide(reading: HaReading, presentation: HaPresentation, modifie
  * and a value the cell cuts short (`21.…`) is no value at all.
  */
 @Composable
-private fun Chip(reading: HaReading, modifier: RemoteModifier) {
+private fun Chip(reading: HaReading, modifier: RemoteModifier, showName: Boolean) {
   RemoteColumn(
     modifier = modifier.fillMaxSize().padding(HaSpace.XS.rdp),
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
-    verticalArrangement = RemoteArrangement.spacedBy(HaSpace.XS.rdp),
+    verticalArrangement =
+      if (showName) RemoteArrangement.spacedBy(HaSpace.XXS.rdp, RemoteAlignment.CenterVertically)
+      else RemoteArrangement.spacedBy(HaSpace.XS.rdp),
   ) {
-    RemoteHaMeasurementGlyph(reading, RemoteModifier.fillMaxWidth().weight(1f))
+    if (showName) {
+      // Three parts in a 1×1 cell's ~76dp: the visual at a fixed 30dp, so the name and the value
+      // under it (~16 + ~17dp) are never pushed past the cell's edge.
+      RemoteHaMeasurementGlyph(reading, RemoteModifier.fillMaxWidth().height(30.rdp))
+      NameLabel(reading, HaType.Caption)
+    } else {
+      RemoteHaMeasurementGlyph(reading, RemoteModifier.fillMaxWidth().weight(1f))
+    }
     ValueReadout(reading, HaType.Label)
   }
 }

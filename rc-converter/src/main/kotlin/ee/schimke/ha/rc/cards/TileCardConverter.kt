@@ -22,6 +22,7 @@ import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.HaIconIdentity
 import ee.schimke.ha.rc.HaNamedColor
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
@@ -189,11 +190,11 @@ class TileCardConverter : CardConverter {
    * [RemoteHaTileCompact]).
    */
   @Composable
-  internal fun FeaturesGate(data: HaTileData, modifier: RemoteModifier) {
+  internal fun FeaturesGate(data: HaTileData, modifier: RemoteModifier, chipKeepsName: Boolean) {
     // Features do not make a one-cell widget wide enough for the name/state row.
     // This capture contains only the chip, so its on/off binding cannot collide with a sibling.
     if (LocalWidgetCaptureSizeDp.current?.widthDp?.let { it < 96 } == true) {
-      RemoteHaIconChip(data, modifier.fillMaxSize(), bindState = true)
+      RemoteHaIconChip(data, modifier.fillMaxSize(), bindState = true, showName = chipKeepsName)
       return
     }
     val rows = tileFeatureRows(data.features.size, data.featuresPosition)
@@ -208,6 +209,11 @@ class TileCardConverter : CardConverter {
   }
 
   private fun entityIdOf(card: CardConfig): String? = card.raw["entity"]?.jsonPrimitive?.content
+
+  /** Whether the 1×1 icon chip keeps the name: the icon is generic ([HaIconIdentity]). */
+  @Composable
+  internal fun chipKeepsName(card: CardConfig, snapshot: HaSnapshot): Boolean =
+    HaIconIdentity.chipShowsName(card, entityIdOf(card)?.let { snapshot.states[it] })
 
   internal fun features(card: CardConfig, snapshot: HaSnapshot) =
     TileContent.features(
