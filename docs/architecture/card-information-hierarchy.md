@@ -86,7 +86,10 @@ thermostat's mode and target, a light's bulb and `On`) inside it; no steppers, a
 still acts. From about 260 × 290 dp (`4×4`) the full card with its steppers. Smaller than two
 columns by two rows, the Wide row beside the dial, which names the entity in place of the mode chip
 from two columns up. A captured widget whose dial is under 120 dp sets the centre a step smaller
-and drops the light's `On` and the target first.
+and drops the light's `On` and the target first. A captured widget one column wide (`1×1`, 57 dp)
+has no room beside the dial: the dial over the value at label size, over the name under a generic
+icon (`light`, `humidifier`: `78%` over `Kitchen`); a `thermostat`'s climate dial is evocative, so
+it keeps the value alone.
 
 **Launcher widget: the value stays whole.** A one-column gauge sets its value at label size over the
 name and drops the range, instead of `21.4 …`. A `2×1` statistic keeps its period by trimming the

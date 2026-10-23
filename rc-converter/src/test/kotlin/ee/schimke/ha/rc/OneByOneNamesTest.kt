@@ -17,6 +17,7 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.WidgetActionRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -57,7 +58,7 @@ class OneByOneNamesTest {
     HaSnapshot(
       states =
         listOf(
-            entity("light.kitchen", "on", "Kitchen"),
+            entity("light.kitchen", "on", "Kitchen", "brightness" to "200"),
             entity("lock.front_door", "locked", "Front door"),
             entity(
               "sensor.outside",
@@ -67,6 +68,13 @@ class OneByOneNamesTest {
               "unit_of_measurement" to "°C",
             ),
             entity("sensor.power", "312", "Power", "unit_of_measurement" to "W"),
+            entity(
+              "climate.hall",
+              "heat",
+              "Hall",
+              "current_temperature" to "21.4",
+              "temperature" to "22",
+            ),
           )
           .associateBy { it.entityId }
     )
@@ -168,5 +176,23 @@ class OneByOneNamesTest {
   fun aStatisticKeepsTheNameUnderItsIcon() {
     render1x1(card("statistic", "sensor.power"))
     assertEquals(1, drawn("Power"), "the statistic chip draws the name")
+  }
+
+  /** A one-column dial has no room beside its dial: the value goes under it, then the name. */
+  @Test
+  fun aLightDialKeepsItsValueAndNameUnderTheDial() {
+    render1x1(card("light", "light.kitchen"))
+    assertEquals(1, drawn("Kitchen"), "the generic bulb's dial draws the name")
+    assertEquals(1, drawn("78%"), "the light's brightness is drawn under the dial")
+  }
+
+  @Test
+  fun aThermostatDialKeepsItsValueAndDropsTheName() {
+    render1x1(card("thermostat", "climate.hall"))
+    assertEquals(0, drawn("Hall"), "a climate dial stands for its entity on its own")
+    assertTrue(
+      compose.onAllNodesWithText("21.4", substring = true).fetchSemanticsNodes().isNotEmpty(),
+      "the temperature is drawn under the dial",
+    )
   }
 }

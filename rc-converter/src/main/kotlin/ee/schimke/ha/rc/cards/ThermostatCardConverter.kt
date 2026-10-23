@@ -18,6 +18,7 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.HaIconIdentity
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalInCardContainer
@@ -32,6 +33,7 @@ import ee.schimke.ha.rc.components.HaArcDialData
 import ee.schimke.ha.rc.components.HaModeChip
 import ee.schimke.ha.rc.components.RemoteHaArcDial
 import ee.schimke.ha.rc.components.RemoteHaArcDialFill
+import ee.schimke.ha.rc.components.RemoteHaArcDialNarrow
 import ee.schimke.ha.rc.components.RemoteHaArcDialWide
 import ee.schimke.ha.rc.components.immediateSwap
 import kotlinx.serialization.json.JsonObject
@@ -83,6 +85,8 @@ class ThermostatCardConverter : CardConverter {
       modifier,
       // In a stack or grid the container is the multi-entity card: its dials stay nameless.
       wearShowsName = !LocalInCardContainer.current,
+      // The dial domains carry no device class the icon rule reads.
+      oneColumnKeepsName = HaIconIdentity.chipKeepsName(card, entity = null),
       wearLargeKeepsMode = true,
     )
   }
@@ -190,6 +194,11 @@ internal fun RenderArcDial(
    * one has two lines, name and value): for a dial whose chip says more than its value and accent.
    */
   wearLargeKeepsMode: Boolean = false,
+  /**
+   * Name the entity under a one-column launcher widget's value: false for an evocative icon
+   * ([ee.schimke.ha.rc.HaIconIdentity]), whose dial reads as the entity on its own.
+   */
+  oneColumnKeepsName: Boolean = true,
 ) {
   when (LocalCardSizeMode.current) {
     CardSizeMode.Wrap -> RemoteHaArcDial(data, modifier)
@@ -237,6 +246,12 @@ internal fun RenderArcDial(
                         RemoteModifier.fillMaxSize(),
                         showName = named,
                         compactCenter = capture != null && fillDialDp(capture) < ArcDialFillRoomyDp,
+                      )
+                    else if (capture != null && capture.widthDp < ArcDialFillMinWidthDp)
+                      RemoteHaArcDialNarrow(
+                        data,
+                        RemoteModifier.fillMaxSize(),
+                        showName = named && oneColumnKeepsName,
                       )
                     else
                       RemoteHaArcDialWide(

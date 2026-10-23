@@ -345,6 +345,79 @@ fun RemoteHaArcDialFill(
   }
 }
 
+/**
+ * The dial in a launcher widget one column wide (`57 dp` on Android's grid), where the
+ * [RemoteHaArcDialWide] row leaves no room beside the dial for its value: the dial over the value,
+ * set whole at label size, over the name when [showName] (card-information-hierarchy.md: at 1×1 the
+ * name drops only for an evocative icon). The mode chip, target and controls give way first; a tap
+ * on the card still acts.
+ *
+ * Families with their own body (the console thermostat, Cupertino's bar, the IKEA light) draw a
+ * fixed-size face that does not shrink into the column: they keep the row.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaArcDialNarrow(
+  data: HaArcDialData,
+  modifier: RemoteModifier = RemoteModifier,
+  showName: Boolean = true,
+) {
+  if (
+    isIkeaLight(data) || isConsoleThermostat(data) || visualFamily() == HaVisualFamily.Cupertino
+  ) {
+    RemoteHaArcDialWide(data, modifier)
+    return
+  }
+  val theme = haTheme()
+  val click =
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  RemoteColumn(
+    modifier =
+      modifier
+        .then(click)
+        .fillMaxSize()
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        .padding(horizontal = 4.rdp, vertical = 6.rdp),
+    horizontalAlignment = RemoteAlignment.CenterHorizontally,
+    verticalArrangement = RemoteArrangement.Center,
+  ) {
+    // One column's width: a taller cell centres the group rather than spreading it.
+    RemoteBox(
+      modifier = RemoteModifier.size(NarrowDialDp.rdp),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      ArcCanvas(
+        data = data,
+        theme = theme,
+        trackStrokePx = 5f,
+        fillStrokePx = 5f,
+        markerStrokePx = 7f,
+        paddingPx = 3f,
+      )
+    }
+    RemoteText(
+      text = centerText(data),
+      color = theme.primaryText,
+      fontSize = HaType.Label,
+      fontWeight = haValueWeight(),
+      style = haTextStyle(),
+      maxLines = 1,
+    )
+    if (showName)
+      RemoteText(
+        text = entityName(data.entityId, data.name),
+        color = theme.secondaryText,
+        fontSize = HaType.Caption,
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+  }
+}
+
+/** The [RemoteHaArcDialNarrow] dial: a `57 dp` launcher column less its padding. */
+private const val NarrowDialDp = 48
+
 @Composable
 private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
   if (isConsoleThermostat(data)) {
