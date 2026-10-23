@@ -35,6 +35,7 @@ import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CardRegistry
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.ContainerTint
+import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
@@ -54,8 +55,6 @@ import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.asHaTheme
 import ee.schimke.ha.rc.converterFor
-import ee.schimke.ha.rc.framedDesignProperties
-import ee.schimke.ha.rc.framedDesignTemplate
 import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.data.toEntityState
 import ee.schimke.terrazzo.wear.sync.WearDirectAccess
@@ -107,6 +106,8 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
     params: WearWidgetParams,
   ): WearWidgetData {
     val app = context.applicationContext
+    // The host's frame for this container: the Wear app draws its cards in it.
+    WearWidgetFrame.remember(app, params)
     val store = WearOfflineStore(app)
     // Slots, pins and values from the Data Layer: the watch app may not have been running to store
     // them as they arrived.
@@ -175,11 +176,7 @@ internal suspend fun slotWidgetDataFromStore(
   val cardStyle =
     wearWidgetCardStyle(pinned?.card?.cardStyleOverride, WearPrefs(app).cardStyle.first())
   val registry = defaultRegistry().withEnhancedShutter()
-  val wearColors = RemoteColorScheme(terrazzoWearColorScheme(style))
-  // Keep Remote Material's WearM3.* named states, but define the two HA-specific semantic slots:
-  // tertiary is link text and secondary is the unknown-state accent.
-  val updatedColors =
-    wearColors.copy(tertiary = wearColors.primary, secondary = wearColors.onSurfaceVariant)
+  val updatedColors = wearWidgetColors(style)
 
   // The card's Wear widget designs, as synced from the phone.
   val designs = store.readSlotDesigns()?.designs.orEmpty().filter { it.cardKey == slot?.cardKey }
@@ -197,6 +194,16 @@ internal suspend fun slotWidgetDataFromStore(
       designs.firstOrNull { it.container == container }?.let { store.readDesign(it.sha256) }
     },
   )
+}
+
+/**
+ * A widget's colours in the watch's [style]: Remote Material's WearM3.* named states, with the two
+ * HA-specific semantic slots defined: tertiary is link text and secondary is the unknown-state
+ * accent.
+ */
+internal fun wearWidgetColors(style: ThemeStyle): RemoteColorScheme {
+  val wearColors = RemoteColorScheme(terrazzoWearColorScheme(style))
+  return wearColors.copy(tertiary = wearColors.primary, secondary = wearColors.onSurfaceVariant)
 }
 
 /** Unknown ids from a newer phone fall back to this watch's preference. */
@@ -231,8 +238,8 @@ internal fun slotWidgetData(
   if (card == null) return direct
   val design = CardDesignTemplates.designCard(card, snapshot, registry)
   val converter = registry.converterFor(design.type) ?: return direct
-  val properties = converter.framedDesignProperties(design, snapshot) ?: return direct
-  val input = converter.framedDesignTemplate(properties) ?: return direct
+  val properties = converter.wearDesignProperties(design, snapshot) ?: return direct
+  val input = converter.wearDesignTemplate(properties) ?: return direct
   return object : WearWidgetData {
     override suspend fun captureRawContent(
       context: Context,
@@ -254,27 +261,16 @@ internal fun slotWidgetData(
         }
       }
       // The card's container-neutral template, made into this widget's document on the watch.
-      val neutralKey =
-        WearNeutralTemplateKey(design.type, properties.shape, themeKey to cardStyle.id)
-      val neutral =
-        neutralTemplates[neutralKey]
-          ?: runCatching {
-            WearWidgetTemplate.capture(context) {
-              SlotContent(
-                registry,
-                colors,
-                input.card,
-                input.snapshot,
-                slotIndex,
-                template = true,
-                cardStyle = cardStyle,
-              )
-            }
-          }
-            .onFailure { Log.w("SlotWidget", "neutral template capture failed", it) }
-            .getOrNull()
-            ?.also { neutralTemplates[neutralKey] = it }
-      neutral
+      neutralWidgetTemplate(
+          context,
+          registry,
+          colors,
+          themeKey,
+          design.type,
+          properties.shape,
+          input,
+          cardStyle,
+        )
         ?.let { WearWidgetTemplate.instantiate(context, it, params, isPreview, tint) }
         ?.let { widget ->
           val playback = CardDesignTemplates.playback(design, widget.rcDocument, registry)
@@ -363,11 +359,53 @@ private data class WearTemplateKey(
 
 private val NO_PICTURES = PictureImageStrategy.Inline { null }
 
+/**
+ * The container-neutral Wear template for a card of [cardType] and [shape] ([input] is its design
+ * template input), in [colors] and [cardStyle]: captured once per shape and theme, and shared by
+ * the widgets and the Wear app's own cards, so both draw the same layout. Null when the capture
+ * fails.
+ */
+internal suspend fun neutralWidgetTemplate(
+  context: Context,
+  registry: CardRegistry,
+  colors: RemoteColorScheme,
+  themeKey: Any,
+  cardType: String,
+  shape: String,
+  input: DesignTemplateInput,
+  cardStyle: HaUberTheme,
+): ByteArray? {
+  val key = WearNeutralTemplateKey(cardType, shape, themeKey to cardStyle.id)
+  neutralTemplates[key]?.let {
+    return it
+  }
+  return runCatching {
+    neutralTemplateCaptures.incrementAndGet()
+    WearWidgetTemplate.capture(context) {
+      SlotContent(
+        registry,
+        colors,
+        input.card,
+        input.snapshot,
+        slotIndex = 0,
+        template = true,
+        cardStyle = cardStyle,
+      )
+    }
+  }
+    .onFailure { Log.w("SlotWidget", "neutral template capture failed", it) }
+    .getOrNull()
+    ?.also { neutralTemplates[key] = it }
+}
+
 /** One container-neutral Wear template per card shape and theme: see [WearWidgetTemplate]. */
 private data class WearNeutralTemplateKey(val cardType: String, val shape: String, val theme: Any)
 
 private val neutralTemplates =
   java.util.concurrent.ConcurrentHashMap<WearNeutralTemplateKey, ByteArray>()
+
+/** How many neutral templates this process has captured: for tests of who captures them. */
+internal val neutralTemplateCaptures = java.util.concurrent.atomic.AtomicInteger()
 
 private val wearTemplates =
   java.util.concurrent.ConcurrentHashMap<WearTemplateKey, WearWidgetRawContent>()
