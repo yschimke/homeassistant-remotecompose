@@ -25,6 +25,7 @@ import ee.schimke.terrazzo.wear.widget.PlacedWidget
 import ee.schimke.terrazzo.wear.widget.WearWidgetCardStore
 import ee.schimke.terrazzo.wear.widget.chooseWidgetCard
 import ee.schimke.terrazzo.wear.widget.currentWidgetCard
+import ee.schimke.terrazzo.wear.widget.forWidget
 import ee.schimke.terrazzo.wear.widget.placedCardWidgets
 import ee.schimke.terrazzo.wear.widget.widgetCardOptions
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
@@ -64,7 +65,7 @@ fun WearWidgetsScreen(
   if (current != null) {
     BackHandler { editing = null }
     WearWidgetCardPicker(
-      options = options,
+      options = remember(options, current) { options.forWidget(current.large) },
       values = values,
       chosenKey = remember(current, generation) { store.read(current.instanceId)?.cardKey },
       onChoose = { option ->

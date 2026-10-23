@@ -131,4 +131,15 @@ class WearWidgetCardStoreTest {
       currentWidgetCard(WearWidgetCard(boilerOption.cardKey, CardSummary()), null, sections),
     )
   }
+
+  @Test
+  fun aLargeWidgetDoesNotOfferACardThatOnlyFillsASmallOne() {
+    val clock = WidgetCardOption("pin-clock", summary("clock", "sensor.time", "Clock"))
+    val forecast =
+      WidgetCardOption("pin-weather", summary("weather-forecast", "weather.home", "Home"))
+    val tile = WidgetCardOption("pin-kitchen", kitchen)
+    val options = listOf(clock, tile, forecast)
+    assertEquals(options, options.forWidget(large = false))
+    assertEquals(listOf(tile), options.forWidget(large = true))
+  }
 }
