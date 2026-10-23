@@ -14,6 +14,7 @@ import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.CenteredCell
 import ee.schimke.ha.rc.cards.EntityDesignParts
+import ee.schimke.ha.rc.cards.HeadingDesignParts
 import ee.schimke.ha.rc.cards.SensorDesignParts
 import ee.schimke.ha.rc.cards.TileDesignParts
 import java.util.concurrent.ConcurrentHashMap
@@ -131,7 +132,8 @@ object CardDesigns {
       TileDesignParts.components +
       ButtonDesignParts.components +
       EntityDesignParts.components +
-      SensorDesignParts.components
+      SensorDesignParts.components +
+      HeadingDesignParts.components
 
   private val loaded = ConcurrentHashMap<String, Result<CardDesign?>>()
 

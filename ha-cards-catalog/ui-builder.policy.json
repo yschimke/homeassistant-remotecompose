@@ -2538,6 +2538,57 @@
           "notes": "`false` reads the value without the snapshot's history, as a Wear container does."
         }
       ]
+    },
+    "ha-cards/heading-card-cell": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaHeadingCardCell",
+      "displayName": "Heading card cell",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "shelfRole": "Container",
+      "slotCapabilities": [
+        {
+          "name": "wrap",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "fixed",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        }
+      ]
+    },
+    "ha-cards/heading-card-title": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaHeadingCardTitle",
+      "displayName": "Heading card title",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/heading-card-centred": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaHeadingCardCentred",
+      "displayName": "Heading card (centred)",
+      "group": "Card layout",
+      "nativeOnly": true
     }
   },
   "$comment_templates": "Generated, not hand-written: :design-server's HaCardsTemplatesTest seeds each from a card schema (CardSchema.fromCard) with HaCardsSeed — the design server's UiBuilderSeed retargeted to this catalog — and fails when a committed template drifts. `-PhaCardsTemplates.update=true` rewrites them.",
