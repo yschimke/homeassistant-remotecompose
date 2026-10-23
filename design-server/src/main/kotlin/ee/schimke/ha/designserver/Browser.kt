@@ -560,11 +560,11 @@ h1{margin:0 0 4px;font-size:26px}h2{margin:28px 0 10px;font-size:18px}h2 span{co
 button{background:var(--accent);border-color:var(--accent);color:#fff;cursor:pointer}
 button.link{background:none;border:none;color:var(--accent);padding:0;text-decoration:underline}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;align-items:start}.grid.small{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
-.tile{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit}.tile:hover{border-color:var(--accent);text-decoration:none}
-.tile img{display:block;width:100%;height:auto;background:repeating-conic-gradient(var(--chip) 0 25%,transparent 0 50%) 0 0/16px 16px}
+.tile{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;color:inherit}.tile:hover{border-color:var(--accent);text-decoration:none}
+.tile img{display:block;width:calc(100% - 16px);height:auto;margin:8px 8px 0;background:repeating-conic-gradient(var(--chip) 0 25%,transparent 0 50%) 0 0/16px 16px}
 .noimage{padding:30px;text-align:center;color:var(--muted)}.meta{padding:8px 10px;display:flex;flex-direction:column;gap:6px}.facts{font-size:12px;color:var(--muted)}
 .chips{display:flex;flex-wrap:wrap;gap:4px;margin:0}.chip{background:var(--chip);border-radius:999px;padding:1px 8px;font-size:12px;overflow-wrap:anywhere}.chip b{font-weight:600}
-.previews{display:flex;flex-wrap:wrap;gap:16px;margin:16px 0}figure{margin:0;max-width:380px;width:100%}figure img{width:100%;border:1px solid var(--line);border-radius:10px;background:repeating-conic-gradient(var(--chip) 0 25%,transparent 0 50%) 0 0/16px 16px}
+.previews{display:flex;flex-wrap:wrap;gap:16px;margin:16px 0}figure{margin:0;max-width:380px;width:100%}figure img{display:block;width:100%;padding:8px;border:1px solid var(--line);border-radius:10px;background:repeating-conic-gradient(var(--chip) 0 25%,transparent 0 50%) 0 0/16px 16px}
 figcaption{font-size:12px;color:var(--muted);margin-top:4px}table{border-collapse:collapse;width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{width:220px;color:var(--muted);font-weight:500}
 textarea{width:100%;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg)}.stack{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
