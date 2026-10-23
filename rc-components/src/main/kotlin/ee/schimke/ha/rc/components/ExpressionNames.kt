@@ -13,9 +13,10 @@ import androidx.compose.runtime.staticCompositionLocalOf
  * the same, so a document's bytes are reproducible: a card design's hash changes only when the
  * design does.
  *
- * Inside [ProvideExpressionNames] the suffix is the call site's place in the order the document is
- * composed, so a card drawn by its converter or by a card design wrapping that converter names its
- * expressions alike. Outside it, the suffix is the call site's place in the composition.
+ * Inside [ProvideExpressionNames] (the root of every single-card document: a template, a card or
+ * launcher capture, a Wear slot) the suffix is the call site's place in the order the document is
+ * composed. Outside it (a document of several cards), the suffix is the call site's place in the
+ * composition, which no sibling card shares.
  */
 @Composable
 fun rememberExpressionName(prefix: String): String {
@@ -36,10 +37,16 @@ class ExpressionNames {
 private val LocalExpressionNames = staticCompositionLocalOf<ExpressionNames?> { null }
 
 /**
- * [content] with its expressions named by composition order ([rememberExpressionName]): what a
- * template capture wraps its document in, so the names don't depend on how deep the card is drawn.
+ * [content] with its expressions named by composition order ([rememberExpressionName]), so the
+ * names don't depend on how deep a card is drawn: a card drawn by its converter or by a card design
+ * wrapping it names them alike. The outermost call counts for the whole document; a nested one (a
+ * card inside a stack) keeps counting, so two cards in one document never share a name.
  */
 @Composable
 fun ProvideExpressionNames(content: @Composable () -> Unit) {
+  if (LocalExpressionNames.current != null) {
+    content()
+    return
+  }
   CompositionLocalProvider(LocalExpressionNames provides remember { ExpressionNames() }, content)
 }

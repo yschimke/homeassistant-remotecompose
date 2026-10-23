@@ -19,6 +19,17 @@ android {
   testOptions { unitTests.isIncludeAndroidResources = true }
 }
 
+// The checked-in card designs (card-designs/ui-builder/designs/<cardType>.uid) migrated card types
+// draw their layout from (`CardDesigns`), packaged as `designs/<cardType>.uid`: one source for the
+// app, the library, the design server and the scheduled import.
+androidComponents {
+  onVariants { variant ->
+    variant.sources.resources?.addStaticSourceDirectory(
+      rootProject.layout.projectDirectory.dir("card-designs/ui-builder").asFile.absolutePath
+    )
+  }
+}
+
 // Robolectric's SDK jar, resolved by Gradle (offline at test time) — same setup as
 // `:ui-builder-catalog`. Used by the card design template end-to-end test, which captures a real
 // document.

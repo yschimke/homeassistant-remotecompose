@@ -70,6 +70,7 @@ import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.dashboard.CardDesignSources
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardStyleSample
+import ee.schimke.terrazzo.dashboard.CardStyleWearPanes
 import ee.schimke.terrazzo.shared.ReportFeedbackButton
 import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
@@ -509,15 +510,19 @@ private fun ThemeSection(
  * screens keep the palette above.
  *
  * Each style is shown with a sample card drawn in it ([CardStyleSample]). Collapsed (the default),
- * only the current style is listed; expanding lists them all.
+ * only the current style is listed; expanding lists them all. "Preview on a watch" draws the
+ * samples as Wear widgets instead, on approximate round and square watch screens
+ * ([CardStyleWearPanes]).
  */
 @Composable
 internal fun CardStyleSection(
   selected: CardStylePref,
   onSelect: (CardStylePref) -> Unit,
   initiallyExpanded: Boolean = false,
+  initiallyOnWatch: Boolean = false,
 ) {
   var expanded by rememberSaveable { mutableStateOf(initiallyExpanded) }
+  var onWatch by rememberSaveable { mutableStateOf(initiallyOnWatch) }
   Column(
     modifier = Modifier.animateContentSize(),
     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -529,11 +534,29 @@ internal fun CardStyleSection(
       style = MaterialTheme.typography.bodySmall,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
+    Row(
+      modifier =
+        Modifier.fillMaxWidth()
+          .toggleable(value = onWatch, role = Role.Switch, onValueChange = { onWatch = it }),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Text(
+        "Preview on a watch",
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.weight(1f),
+      )
+      Switch(checked = onWatch, onCheckedChange = null)
+    }
     val shown = if (expanded) CardStylePref.entries else listOf(selected)
     Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
       shown.forEach { pref ->
         key(pref) {
-          CardStyleOption(pref = pref, selected = pref == selected, onClick = { onSelect(pref) })
+          CardStyleOption(
+            pref = pref,
+            selected = pref == selected,
+            onWatch = onWatch,
+            onClick = { onSelect(pref) },
+          )
         }
       }
     }
@@ -557,7 +580,12 @@ internal fun CardStyleSection(
  * describing the style. The whole row selects it.
  */
 @Composable
-private fun CardStyleOption(pref: CardStylePref, selected: Boolean, onClick: () -> Unit) {
+private fun CardStyleOption(
+  pref: CardStylePref,
+  selected: Boolean,
+  onWatch: Boolean,
+  onClick: () -> Unit,
+) {
   val uber = pref.toUberTheme()
   val tagline = cardStyleTagline(pref)
   Row(
@@ -572,7 +600,8 @@ private fun CardStyleOption(pref: CardStylePref, selected: Boolean, onClick: () 
     // The sample is a picture of the style, not a control: a tap on it picks the style rather
     // than reaching the card, and screen readers hear the option, not the sample's contents.
     Box(Modifier.weight(1f).clearAndSetSemantics {}) {
-      CardStyleSample(uber, name = uber.displayName, description = tagline)
+      if (onWatch) CardStyleWearPanes(uber, name = uber.displayName, description = tagline)
+      else CardStyleSample(uber, name = uber.displayName, description = tagline)
       Box(
         Modifier.matchParentSize()
           .clickable(interactionSource = null, indication = null, onClick = onClick)

@@ -25,7 +25,8 @@ matters here:
 - **Kotlin is the only source of a layout.** Each `rc-converter/.../cards/*CardConverter.kt`
   draws its card. The design server's library is a build-time capture of those converters
   (`:card-designs:generateCardDesigns`), and the app captures any key the server lacks at runtime
-  (`CardDesignLibrary`). No card design exists as a `.uid`.
+  (`CardDesignLibrary`). The tile is the exception: its layout is `tile.uid` (see
+  [The tile, migrated](#the-tile-migrated)).
 - **Forking is approximate.** "Design in UI Builder" rebuilds a library design from `ha-cards`
   components (`HaCardsSeed`). Gauge, tile and button map across; every other card becomes entity
   rows, so a fork is a lookalike, not the card.
@@ -124,6 +125,45 @@ One card type at a time, each its own PR:
 Card types whose look can't be expressed yet stay on their converter and are listed in
 `card-designs/converter-only.md` with the reason. Likely: markdown, map, picture-elements,
 the history and statistics graphs, and the Bambu Lab cards.
+
+### The tile, migrated
+
+The tile is the first card type whose layout lives only in its design.
+`card-designs/ui-builder/designs/tile.uid` is packaged with `:rc-converter`, and
+`TileCardConverter.Render` draws the card by calling `CardDesigns.design("tile")`. The converter
+keeps its key, bindings, actions and data. What it no longer holds is where each form of the
+tile shows. That is the design's job, through two kinds of `Card layout` components:
+
+- **Switches** pick one of their slots for the surface and size being drawn:
+  - `ha-cards/card-size-mode` takes `wrap` on a dashboard, `height` in a Wear container and
+    `width` in a launcher cell.
+  - `ha-cards/size-tiers` picks `tier<N>` against its `thresholdsDp` along an `axis`, where the
+    document plays.
+  - `ha-cards/centered-cell` centres its content vertically.
+  - `ha-cards/tile-launcher-cell` takes `hero` or `row` for a featureless tile at a hero scale,
+    `features` for a tile with features, and `other` otherwise.
+- **Parts** draw one form of the tile for the card being drawn: `tile-full`, `tile-compact`,
+  `tile-icon-chip`, `tile-icon-hero`, `tile-wide-hero` (`scale` `row` or `wear`) and
+  `tile-features-gate`.
+
+Each id has one implementation (`CardDesigns`, `TileDesignParts`), shared by two callers. The
+`.uid` renderer calls it, and so does the `ha-cards-catalog` wrapper that UI Builder's shelf
+records (`HaCardDesignParts.kt`). So a tile design edited in UI Builder draws in the app the
+way it does on the canvas.
+
+Until the surface transformation (D2b) exists, the surface choice is written in the design as
+`card-size-mode`. When D2b lands, that choice moves into the transformation.
+
+The move was proven byte for byte, not pixel for pixel. Every tile document was hashed before
+and after the move:
+
+- On the dashboard and launcher: every library tile key in every family and mode, every
+  launcher cell of 1–4 × 1–3 in both widget themes and modes plus every look at 2 × 1, and a
+  direct capture of every library tile card on both surfaces. That is 26,857 documents.
+- On Wear: every input × style × uber-theme, plus the direct slot documents. That is 1,470
+  documents.
+
+Not one document changed.
 
 ## One source, every surface
 

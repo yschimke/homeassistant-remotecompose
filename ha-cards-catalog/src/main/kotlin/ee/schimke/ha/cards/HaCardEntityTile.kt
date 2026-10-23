@@ -6,20 +6,17 @@ import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.staticCompositionLocalOf
 import ee.schimke.ha.design.DesignProperties
-import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.FramedCard
 import ee.schimke.ha.rc.cards.TileCardConverter
+import ee.schimke.ha.rc.design.LocalCardInput
 import ee.schimke.ha.rc.framedDesignTemplate
 
 /**
- * The design key's card and placeholder snapshot while a card design is captured for that key
- * (server-owned-card-designs.md): what a binding-shaped component such as [HaCardEntityTile] draws
- * when its own structural properties are left unset. Null outside a capture, in UI Builder's canvas
- * and stickers, where the component's properties decide.
+ * The card being drawn while a card design draws it ([LocalCardInput]): what a binding-shaped
+ * component such as [HaCardEntityTile] draws when its own structural properties are left unset.
  */
-val LocalCardDesignInput = staticCompositionLocalOf<DesignTemplateInput?> { null }
+val LocalCardDesignInput = LocalCardInput
 
 /**
  * HA `tile` card for one slot entity, drawn exactly as the tile converter draws it on the surface
