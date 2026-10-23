@@ -37,6 +37,7 @@ import androidx.wear.compose.material3.Text
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.*
+import ee.schimke.ha.rc.StablePictures
 import ee.schimke.ha.rc.cards.cardVisibilitySignature
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
@@ -155,11 +156,21 @@ internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValu
           liveBindings = signature == null,
           bitmapLoader = pictures,
           template = template,
+          // A camera's new frame or rotated token loads in place: the capture names pictures by
+          // entity.
+          stablePictures = true,
         ) {
           // No template (a card with no template shape): the widget's direct document, framed
           // alike.
           WearAppFrame(frame, tint) {
-            SlotContent(registry, colors, card, snapshot, template = false, cardStyle = style)
+            SlotContent(
+              registry,
+              colors,
+              card,
+              StablePictures.snapshot(card, snapshot),
+              template = false,
+              cardStyle = style,
+            )
           }
         }
       }

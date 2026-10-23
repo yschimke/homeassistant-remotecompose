@@ -21,6 +21,7 @@ import androidx.compose.remote.player.view.platform.RemoteComposeView
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -108,6 +109,7 @@ fun CachedCardPreview(
   playback: CardPlayback = CardPlayback.Compose,
   template: CardTemplatePlayback? = null,
   rebuildReason: ((previous: Any, next: Any) -> String)? = null,
+  stablePictures: Boolean = false,
   content: @RemoteComposable @Composable () -> Unit,
 ) {
   // AndroidX path only: flip the View player into wrap-content mode —
@@ -133,10 +135,24 @@ fun CachedCardPreview(
     remember(card, snapshot) {
       if (card != null && snapshot != null) cardPictureSignature(card, snapshot) else ""
     }
+  // Pictures load in place on the Compose player: a new URL is a new image epoch for the same
+  // document (HaRcComposePlayer), the last picture drawn until the next lands. A template names its
+  // pictures by slot, and a [stablePictures] converter capture by entity (StablePictures), so only
+  // whether a slot has a picture shapes the document. A launcher widget's player loads a document's
+  // pictures once, so there a new URL is still a new document.
+  val picturesInPlace = playback == CardPlayback.Compose && (template != null || stablePictures)
+  val pictureKey =
+    remember(card, snapshot, picturesInPlace, template != null, pictureSignature) {
+      when {
+        !picturesInPlace -> pictureSignature
+        template != null || card == null || snapshot == null -> ""
+        else -> StablePictures.presence(card, snapshot)
+      }
+    }
   val documentKey =
-    remember(effectiveCacheKey, pictureSignature) {
-      if (pictureSignature.isEmpty()) effectiveCacheKey
-      else PictureKeyedCacheKey(effectiveCacheKey, pictureSignature)
+    remember(effectiveCacheKey, pictureKey) {
+      if (pictureKey.isEmpty()) effectiveCacheKey
+      else PictureKeyedCacheKey(effectiveCacheKey, pictureKey)
     }
 
   // What producing this document cost, for [CardRebuilds]: set by the block below.
@@ -163,7 +179,8 @@ fun CachedCardPreview(
         // same pictures play the same clone, so a card scrolled back into view is the same
         // document.
         val bytes =
-          if (pictureSignature.isEmpty()) it.bytes else pictureCopy(it.bytes, pictureSignature)
+          if (picturesInPlace || pictureSignature.isEmpty()) it.bytes
+          else pictureCopy(it.bytes, pictureSignature)
         // New bytes for the player either way: another template (an alarm panel's armed and
         // disarmed rows are two), or this one's clone for new pictures.
         if (bytes !== lastShown[0]?.bytes) produced[0] = CardRebuilds.Cost.Decode
@@ -293,13 +310,20 @@ fun CachedCardPreview(
   val latestSnapshot = rememberUpdatedState(snapshot)
   val latestTemplate = rememberUpdatedState(template)
   // A template's images resolve through the card's own entities; nothing else it names is fetched.
+  // A [stablePictures] capture names its pictures by entity; anything else it names loads as is.
   val playerBitmapLoader: BitmapLoader =
-    remember(bitmapLoader, template != null) {
-      if (template == null) bitmapLoader
-      else
-        SlotResolvingImageLoader(bitmapLoader) { url ->
-          latestTemplate.value?.bitmapUrl?.invoke(url, latestSnapshot.value)
-        }
+    remember(bitmapLoader, template != null, stablePictures) {
+      when {
+        template != null ->
+          SlotResolvingImageLoader(bitmapLoader) { url ->
+            latestTemplate.value?.bitmapUrl?.invoke(url, latestSnapshot.value)
+          }
+        stablePictures ->
+          SlotResolvingImageLoader(bitmapLoader) { url ->
+            StablePictures.resolve(url, latestSnapshot.value) ?: url
+          }
+        else -> bitmapLoader
+      }
     }
   val onNamedAction: (String, Any?) -> Unit = { name, value ->
     if (name == HA_ACTION_NAME) {
@@ -318,25 +342,29 @@ fun CachedCardPreview(
   // checkers see that View, not the document's semantics inside it, so it carries the card's name.
   val playerLabel = remember(card, snapshot) { playerLabel(card, snapshot) }
   val androidXPlayer: @Composable () -> Unit = {
-    WrapAdaptiveRemoteDocumentPlayer(
-      documentBytes = cardDocument.bytes,
-      modifier = modifier,
-      bitmapLoader = playerBitmapLoader,
-      init = { player -> playerHolder.value = player },
-      // Seeded like the Compose player's values: written before the View's first draw, and
-      // recorded as pushed so the effect below only writes what changes after.
-      seed = { player ->
-        val current = latestSnapshot.value
-        if (pushBindings && current != null) {
-          val seeded = HashMap<String, Any?>()
-          pushSnapshotBindings(ViewPlayerWriter(player), bindingsFor(current), seeded)
-          pushedView.clear()
-          pushedView.putAll(seeded)
-        }
-      },
-      onNamedAction = onNamedAction,
-      contentDescription = playerLabel,
-    )
+    // The View player fetches a document's pictures once: with pictures loading in place, a new one
+    // is a new View for the same bytes.
+    key(if (picturesInPlace) pictureSignature else Unit) {
+      WrapAdaptiveRemoteDocumentPlayer(
+        documentBytes = cardDocument.bytes,
+        modifier = modifier,
+        bitmapLoader = playerBitmapLoader,
+        init = { player -> playerHolder.value = player },
+        // Seeded like the Compose player's values: written before the View's first draw, and
+        // recorded as pushed so the effect below only writes what changes after.
+        seed = { player ->
+          val current = latestSnapshot.value
+          if (pushBindings && current != null) {
+            val seeded = HashMap<String, Any?>()
+            pushSnapshotBindings(ViewPlayerWriter(player), bindingsFor(current), seeded)
+            pushedView.clear()
+            pushedView.putAll(seeded)
+          }
+        },
+        onNamedAction = onNamedAction,
+        contentDescription = playerLabel,
+      )
+    }
   }
   when (playback) {
     CardPlayback.Compose ->
@@ -344,6 +372,7 @@ fun CachedCardPreview(
         documentBytes = cardDocument.bytes,
         modifier = modifier,
         bitmapLoader = playerBitmapLoader,
+        imageEpoch = pictureSignature,
         namedValues = namedValues,
         onNamedAction = onNamedAction,
         fallback = androidXPlayer,

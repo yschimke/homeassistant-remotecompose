@@ -108,6 +108,51 @@ class CardRebuildsTest {
   }
 
   @Test
+  fun withStablePicturesANewPictureIsNoRebuild() {
+    CardRebuilds.drain()
+    val card =
+      CardConfig(
+        "picture-entity",
+        buildJsonObject {
+          put("type", "picture-entity")
+          put("entity", "camera.yard")
+        },
+      )
+    val registry = defaultRegistry()
+    val theme = haThemeFor(ThemeStyle.TerrazzoHome, false)
+    var snapshot by mutableStateOf(camera("idle", "/api/camera_proxy/camera.yard?token=a"))
+    val documents = java.util.Collections.synchronizedList(mutableListOf<ByteArray>())
+
+    compose.setContent {
+      CachedCardPreview(
+        cacheKey = "v1",
+        card = card,
+        snapshot = snapshot,
+        stablePictures = true,
+        onDocument = { documents += it },
+      ) {
+        ProvideCardRegistry(registry) {
+          ProvideHaTheme(theme) {
+            RenderChild(
+              card,
+              StablePictures.snapshot(card, snapshot),
+              RemoteModifier.fillMaxWidth(),
+            )
+          }
+        }
+      }
+    }
+    compose.waitForIdle()
+    val first = documents.last()
+
+    // A rotated token loads in place: the same document, nothing rebuilt.
+    snapshot = camera("idle", "/api/camera_proxy/camera.yard?token=b")
+    compose.waitForIdle()
+    assertEquals(emptyList(), CardRebuilds.peek())
+    kotlin.test.assertSame(first, documents.last())
+  }
+
+  @Test
   fun anotherTemplatesBytesCostADecodeAndTheSameTemplateCostsNothing() {
     CardRebuilds.drain()
     val context =

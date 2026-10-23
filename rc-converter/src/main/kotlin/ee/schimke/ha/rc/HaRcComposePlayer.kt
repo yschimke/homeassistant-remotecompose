@@ -85,6 +85,7 @@ fun HaRcComposePlayer(
   documentBytes: ByteArray,
   modifier: Modifier = Modifier,
   bitmapLoader: BitmapLoader = BitmapLoader.UNSUPPORTED,
+  imageEpoch: Any? = null,
   namedValues: SnapshotStateMap<String, RcNamedValue> = rememberRcNamedValues(),
   onNamedAction: (name: String, value: Any?) -> Unit = { _, _ -> },
   fallback: @Composable () -> Unit,
@@ -147,11 +148,12 @@ fun HaRcComposePlayer(
         remember(bitmapLoader, clock.isFrozen) {
           bitmapLoader.asRcImageLoader(inline = clock.isFrozen)
         }
-      // The player fetches a document's images once per (document, loader). A picture clone
-      // (cloneForPlayer) shares its source's RcDocument, so it is its own decode, keyed here, that
-      // gives the player a new loader identity: it fetches the slot pictures again, drawing the
-      // last ones until they land.
-      val imageLoader = remember(baseImageLoader, decoded) { ReloadingImageLoader(baseImageLoader) }
+      // The player fetches a document's images once per (document, loader). A new loader identity
+      // fetches them again, drawing the last ones until they land: for a new [imageEpoch] (the
+      // host's picture URLs moved, the document didn't), and for a picture clone
+      // (cloneForPlayer), which shares its source's RcDocument but decodes apart.
+      val imageLoader =
+        remember(baseImageLoader, decoded, imageEpoch) { ReloadingImageLoader(baseImageLoader) }
       // rc-player rejects a write to a name the document doesn't declare (the View player's setters
       // dropped it), and the host pushes every binding of every entity the card references. So the
       // player gets only the values this document declares, with a matching type.

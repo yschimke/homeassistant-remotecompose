@@ -83,4 +83,38 @@ class PictureClonePlaybackTest {
     compose.waitForIdle()
     assertEquals(2, loader.loads.get())
   }
+
+  @Test
+  fun aNewImageEpochFetchesThePicturesAgainForTheSameDocument() {
+    enableRemoteImageUrls()
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    val document = runBlocking {
+      captureSingleRemoteDocument(context = context, profile = androidXExperimental) {
+          RemoteHaImageUrl(
+            url = "rc-entity-picture://camera.front",
+            contentDescription = "camera".rs,
+            modifier = RemoteModifier.size(64.rdp),
+          )
+        }
+        .bytes
+    }
+    val loader = CountingLoader()
+    var epoch by mutableStateOf("frame=1")
+
+    compose.setContent {
+      HaRcComposePlayer(
+        documentBytes = document,
+        bitmapLoader = loader,
+        imageEpoch = epoch,
+        fallback = { error("the document plays in the Compose player") },
+      )
+    }
+    compose.waitForIdle()
+    assertEquals(1, loader.loads.get())
+
+    // The camera's next frame: the same bytes, a new picture behind the same placeholder.
+    epoch = "frame=2"
+    compose.waitForIdle()
+    assertEquals(2, loader.loads.get())
+  }
 }

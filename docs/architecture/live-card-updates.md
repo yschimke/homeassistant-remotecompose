@@ -157,10 +157,11 @@ under a newer snapshot must never draw the stale bake, frame by frame.
   it is baked even while the sensor is unavailable, and on the design path the template's `tile`
   binding recipe rests a non-numeric slot at 0),
   area, entities,
-  button (its `show_state` line is `<id>.state`), picture-entity (its `entity_picture` URL is the exception: a
-  picture is fetched once per document, so `CachedCardPreview` folds
-  `cardPictureSignature` into the document key and a rotated camera token
-  or new frame plays as a new document), gauge
+  button (its `show_state` line is `<id>.state`), picture-entity (its `entity_picture` URL loads in place:
+  the in-app capture bakes a placeholder per entity (`StablePictures`), the
+  player's loader resolves it to the live URL, and a rotated camera token or
+  new frame is a new image epoch for the same document — see "Measuring
+  rebuilds" below), gauge
   (`numeric_state`; the severity band is picked in-document), markdown (`.state` tokens + Jinja `templateValues`).
   Every typed measurement (thermometer, battery, arc / bar meters) is path 1 by construction:
   `HaReading` binds `<id>.state` and `<id>.numeric_state`, and the fill fraction and band colour
@@ -214,26 +215,37 @@ holds.
 ## Measuring rebuilds
 
 Path 2, and every snapshot-derived part of the app's cache key (the icon and visibility signatures,
-Jinja `templateValues`, a picture's URL), rebuilds a card's document while it is on screen. In the
+Jinja `templateValues`), rebuilds a card's document while it is on screen. In the
 app that is the cost to drive to zero: a launcher widget re-encodes by design, an in-app card
 should take live data as bindings. Three measures:
 
 - **`CardRebuildReplayTest`** (`app/src/test`): an hour of demo mode's values, every card slot on
   every demo board, sampled every 10 s through the same key functions `CardSlot` and
   `CachedCardPreview` use. It writes `app/build/reports/card-rebuilds.md`: rebuilds per slot per
-  hour by card type and reason, and whether each is an encode (converter cards) or a decode (a
-  template's new picture). Run it after changing a converter.
+  hour by card type and reason, and whether each is an encode (converter cards). Run it after
+  changing a converter.
 - **`CardRebuilds`** (`rc-converter`): `CachedCardPreview` counts each second document a slot plays
   while it stays composed, by card type, reason (`CardSlot`'s `cardSlotRebuildReason`: `data`,
-  `icon`, `visibility`, `template`; `picture`; or the user's own `config` / `theme` / `epoch`) and
+  `icon`, `visibility`, `template`; `picture` when a slot gains or loses a picture; or the user's own `config` / `theme` / `epoch`) and
   cost (`encode`, `decode`, `none`). The phone sends the ten most frequent buckets as `card_rebuild`
   Analytics events each time it goes to the background, with `fg_seconds` to make them rates.
 - **`harc:rebuild`** trace sections, one per rebuild: `DashboardScrollJankBenchmark` reports them,
   and `LiveUpdateBenchmark` idles on the demo Security board for a minute, where every capture,
   decode or rebuild is live data that missed the binding path.
 
-Pictures are the largest share: a new `entity_picture` URL plays as a new document, because the
-player fetches a document's images once. A rebuild still has to look seamless, so:
+Pictures load in place. The player fetches a document's images once per (document, loader), so a
+new `entity_picture` URL used to be a new document: on the demo boards the largest share of
+rebuilds. Now the document doesn't name the URL. A template names its pictures by slot
+(`rc-slot://`), and an in-app converter capture by entity (`CachedCardPreview(stablePictures =
+true)` with content rendered from `StablePictures.snapshot`: `rc-entity-picture://<id>`); the
+player's `SlotResolvingImageLoader` resolves either to the live URL as it loads. A new URL is a
+new `imageEpoch` for `HaRcComposePlayer`, which fetches the same document's pictures again
+through a new loader identity, drawing the last ones until they land. Only whether a slot has a
+picture (an image or an icon) stays in the key (`StablePictures.presence`). The AndroidX View
+player (a launcher widget, or the fallback) has no epoch: a launcher widget keeps the real URLs in
+its key, and the in-app fallback replaces its View for a new picture.
+
+Any rebuild still has to look seamless, so:
 
 - **One player per card.** `HaRcComposePlayer` keeps the card's player across documents
   (rc-players 2.17.5): the new document draws the last one's pictures and size until its own load,
