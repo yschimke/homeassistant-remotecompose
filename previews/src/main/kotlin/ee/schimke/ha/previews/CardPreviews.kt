@@ -982,14 +982,16 @@ private fun bambuSpoolCard() =
 
 // ——— thermostat / humidifier / light arc dials ———
 
-@Preview(name = "thermostat (light)", showBackground = false, widthDp = 381, heightDp = 238)
+// The integration reference's width (references/thermostat), a full section-row card. Taller than
+// its 238 dp: the card wraps its dial and buttons in 274 dp, where HA's fits them in 238.
+@Preview(name = "thermostat (light)", showBackground = false, widthDp = 381, heightDp = 274)
 @Composable
 fun Thermostat_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(thermostatCard(), Fixtures.thermostat, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "thermostat (dark)", showBackground = false, widthDp = 381, heightDp = 238)
+@Preview(name = "thermostat (dark)", showBackground = false, widthDp = 381, heightDp = 274)
 @Composable
 fun Thermostat_Dark() =
   CardHost(HaTheme.Dark) {
@@ -1330,14 +1332,14 @@ private fun sensorCardConfig() =
 
 // ——— entity-filter ———
 
-@Preview(name = "entity-filter (light)", showBackground = false, widthDp = 381, heightDp = 149)
+@Preview(name = "entity-filter (light)", showBackground = false, widthDp = 381, heightDp = 120)
 @Composable
 fun EntityFilter_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(entityFilterCardConfig(), Fixtures.mixed, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "entity-filter (dark)", showBackground = false, widthDp = 381, heightDp = 149)
+@Preview(name = "entity-filter (dark)", showBackground = false, widthDp = 381, heightDp = 120)
 @Composable
 fun EntityFilter_Dark() =
   CardHost(HaTheme.Dark) {
