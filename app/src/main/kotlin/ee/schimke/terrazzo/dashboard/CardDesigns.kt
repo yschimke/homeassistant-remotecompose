@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo.dashboard
 
 import android.content.Context
+import android.os.Trace
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -121,13 +122,18 @@ val LocalCardDesigns = staticCompositionLocalOf { CardDesigns() }
  */
 suspend fun loadCardDesigns(context: Context, choice: CardDesignChoice): CardDesigns {
   if (!choice.enabled) return CardDesigns(variant = choice.variant)
-  val repository = CardDesignSync.cachedRepository(context, choice.serverUrl)
-  return CardDesigns(
-    repository.resolveAll(prefer = choice.prefer),
-    choice.variant,
-    choice,
-    repository.resolveDeviceDesigns(prefer = choice.prefer),
-  )
+  val resolved =
+    withContext(Dispatchers.IO) {
+      val dir = CardDesignSync.storeDir(context, choice.serverUrl)
+      CardDesignSnapshot.read(dir, choice.prefer)
+        ?: run {
+          val stamp = CardDesignSnapshot.manifestStamp(dir)
+          CardDesignSync.cachedRepository(context, choice.serverUrl)
+            .resolveAllWithDevices(prefer = choice.prefer)
+            .also { CardDesignSnapshot.write(dir, choice.prefer, stamp, it) }
+        }
+    }
+  return CardDesigns(resolved.byKey, choice.variant, choice, resolved.deviceByKey)
 }
 
 /**
@@ -142,6 +148,10 @@ suspend fun loadCardDesigns(context: Context, choice: CardDesignChoice): CardDes
 object CardDesignPreload {
   private val _designs = MutableStateFlow<CardDesigns?>(null)
 
+  /** Trace section around each read, so a startup trace shows when the cards stop waiting. */
+  private const val LOAD_SECTION = "harc:loadCardDesigns"
+  private var loadCookie = 0
+
   /** The designs for the current choice; null until the first read from disk completes. */
   val designs: StateFlow<CardDesigns?> = _designs.asStateFlow()
 
@@ -154,7 +164,17 @@ object CardDesignPreload {
           // Another choice's designs are the wrong ones (another variant, author or server):
           // drop them while this one reads. A sync for the same choice keeps them until then.
           if (_designs.value?.loadedFor != choice) _designs.value = null
-          _designs.value = loadCardDesigns(context, choice)
+          // Async: the read suspends, and may resume on another thread.
+          val cookie = loadCookie++
+          Trace.beginAsyncSection(LOAD_SECTION, cookie)
+          try {
+            // All of it on IO, so the store's own IO hops don't dispatch: run from the main
+            // dispatcher, every design read was a round trip through the main looper, and a cold
+            // start took about 2 s to finish.
+            _designs.value = withContext(Dispatchers.IO) { loadCardDesigns(context, choice) }
+          } finally {
+            Trace.endAsyncSection(LOAD_SECTION, cookie)
+          }
         }
     }
   }

@@ -112,6 +112,15 @@ interface HaSession {
   suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot>
 
   /**
+   * [listDashboards] when it needs no round trip (demo mode's built-in boards), so the first
+   * composition shows them; null for a session that must ask Home Assistant.
+   */
+  fun dashboardsNow(): List<DashboardSummary>? = null
+
+  /** [loadDashboard] when it needs no round trip, like [dashboardsNow]; null otherwise. */
+  fun dashboardNow(urlPath: String?): Pair<Dashboard, HaSnapshot>? = null
+
+  /**
    * Every entity's current state, with the device registry, for a host that renders no one
    * dashboard (the Wear sync). It reads no dashboard config, so it works whatever the default
    * dashboard is: an auto-generated Overview or a strategy dashboard, which [loadDashboard]

@@ -244,8 +244,22 @@ class DesignRepository(
    * earliest query matches wins, then manifest order. With no preference every cached entry
    * resolves and the first for a key wins.
    */
-  suspend fun resolveAll(prefer: List<DesignQuery> = emptyList()): Map<DesignKey, ByteArray> {
-    val stored = store.readManifest() ?: return emptyMap()
+  suspend fun resolveAll(prefer: List<DesignQuery> = emptyList()): Map<DesignKey, ByteArray> =
+    store.readManifest()?.let { resolveAll(it, prefer) } ?: emptyMap()
+
+  /**
+   * [resolveAll] and [resolveDeviceDesigns] from one read of the manifest: decoding it is most of
+   * what loading the cache costs, so a host that wants both shouldn't pay for it twice.
+   */
+  suspend fun resolveAllWithDevices(prefer: List<DesignQuery> = emptyList()): ResolvedDesigns {
+    val stored = store.readManifest() ?: return ResolvedDesigns(emptyMap(), emptyMap())
+    return ResolvedDesigns(resolveAll(stored, prefer), resolveDeviceDesigns(stored, prefer))
+  }
+
+  private suspend fun resolveAll(
+    stored: StoredManifest,
+    prefer: List<DesignQuery>,
+  ): Map<DesignKey, ByteArray> {
     fun rank(entry: DesignEntry): Int =
       if (prefer.isEmpty()) 0 else prefer.indexOfFirst { it.matches(entry) }
     val resolved = LinkedHashMap<DesignKey, Pair<Int, ByteArray>>()
@@ -270,8 +284,13 @@ class DesignRepository(
    */
   suspend fun resolveDeviceDesigns(
     prefer: List<DesignQuery> = emptyList()
+  ): Map<DesignKey, List<Pair<DeviceMatch, ByteArray>>> =
+    store.readManifest()?.let { resolveDeviceDesigns(it, prefer) } ?: emptyMap()
+
+  private suspend fun resolveDeviceDesigns(
+    stored: StoredManifest,
+    prefer: List<DesignQuery>,
   ): Map<DesignKey, List<Pair<DeviceMatch, ByteArray>>> {
-    val stored = store.readManifest() ?: return emptyMap()
     fun rank(entry: DesignEntry): Int =
       if (prefer.isEmpty()) 0 else prefer.indexOfFirst { it.matches(entry) }
     val resolved = LinkedHashMap<Pair<DesignKey, DeviceMatch>, Pair<Int, ByteArray>>()
@@ -457,6 +476,12 @@ fun createDesignRepository(
  * always [RefreshResult.Disabled]. For hosts that render designs while a background job owns the
  * network refresh.
  */
+/** What [DesignRepository.resolveAllWithDevices] returns: generic designs and device ones. */
+data class ResolvedDesigns(
+  val byKey: Map<DesignKey, ByteArray>,
+  val deviceByKey: Map<DesignKey, List<Pair<DeviceMatch, ByteArray>>>,
+)
+
 fun cachedDesignRepository(
   store: DesignStore,
   inbuilt: InbuiltDesigns = InbuiltDesigns.None,

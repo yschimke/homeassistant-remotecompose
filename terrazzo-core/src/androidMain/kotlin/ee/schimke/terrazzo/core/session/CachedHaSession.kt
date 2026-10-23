@@ -40,6 +40,14 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
   override val connectionStatus: StateFlow<SessionConnectionStatus>
     get() = delegate.connectionStatus
 
+  /**
+   * For a cache-only session (`TerrazzoGraph.createCachedOnly`): the cold-start resume couldn't
+   * replace it with a live one, so its status turns from connecting to failed.
+   */
+  fun markUnreachable() {
+    (delegate as? OfflineOnlySession)?.markUnreachable()
+  }
+
   override val notifications: StateFlow<List<HaNotification>>
     get() = delegate.notifications
 

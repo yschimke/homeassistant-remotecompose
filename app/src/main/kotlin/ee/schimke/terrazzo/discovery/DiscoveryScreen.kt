@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.discovery
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.ReportDrawn
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -68,6 +69,8 @@ fun DiscoveryScreen(
 ) {
   var host by rememberSaveable { mutableStateOf(DEFAULT_HOST) }
   val context = LocalContext.current
+  // Signed out, this screen is all a launch shows: fully drawn (`timeToFullDisplayMs`).
+  ReportDrawn()
 
   // ACCESS_LOCAL_NETWORK is a runtime permission on Android 16+. Surface
   // the system dialog before any LAN traffic — both the mDNS scan and

@@ -53,6 +53,11 @@ class DemoHaSession(
   override suspend fun listDashboards(): List<DashboardSummary> = DemoData.dashboards
 
   override suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot> =
+    dashboardNow(urlPath)
+
+  override fun dashboardsNow(): List<DashboardSummary> = DemoData.dashboards
+
+  override fun dashboardNow(urlPath: String?): Pair<Dashboard, HaSnapshot> =
     DemoData.dashboard(urlPath) to DemoData.snapshot(clock(), actionRouter)
 
   override suspend fun fetchHistory(
