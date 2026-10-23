@@ -75,4 +75,5 @@ Macrobenchmark refuses emulators; pass
 `-Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR` to run
 on one anyway. Emulator numbers only catch large regressions; compare timings on a physical
 device. Results (JSON and Perfetto traces) land in
-`*-benchmark/build/outputs/connected_android_test_additional_output/`.
+`*-benchmark/build/outputs/connected_android_test_additional_output/`. Past device numbers are in
+[scroll-benchmark-results.md](scroll-benchmark-results.md).

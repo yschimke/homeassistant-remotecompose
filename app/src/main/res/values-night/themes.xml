@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The dark dashboard's background, so the splash hands over to the first frame unseen. -->
+    <style name="Theme.Terrazzo" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#0F1317</item>
+        <item name="android:windowSplashScreenBackground">#0F1317</item>
+    </style>
+</resources>

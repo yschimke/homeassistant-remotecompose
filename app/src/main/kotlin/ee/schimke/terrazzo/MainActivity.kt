@@ -1,6 +1,9 @@
 package ee.schimke.terrazzo
 
 import android.os.Bundle
+import android.os.SystemClock
+import android.view.View
+import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -17,8 +20,12 @@ import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.ThemePref
+import ee.schimke.terrazzo.core.session.CachedHaSession
+import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaReauthRequiredException
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.dashboard.CardDesignPreload
+import ee.schimke.terrazzo.dashboard.DESIGN_PRELOAD_WAIT_MS
 import ee.schimke.terrazzo.di.AppGraph
 import ee.schimke.terrazzo.ui.AndroidImeHost
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
@@ -92,8 +99,13 @@ class MainActivity : ComponentActivity() {
             }
           },
         )[SessionHolder::class]
+    // Demo mode needs no network, so its session is ready for the first composition too; seeding
+    // null there painted the sign-in screen until the resume below swapped the demo session in.
     sessionHolder.start(
-      initial = { graph.offlineCache.lastInstance()?.let(graph.sessionFactory::createCachedOnly) },
+      initial = {
+        if (runBlocking { graph.preferencesStore.demoModeNow() }) graph.sessionFactory.createDemo()
+        else graph.offlineCache.lastInstance()?.let(graph.sessionFactory::createCachedOnly)
+      },
       resume = { initial -> resumeSession(graph, widgetScheduler, sessionHolder, initial) },
     )
 
@@ -103,6 +115,8 @@ class MainActivity : ComponentActivity() {
     // DiskCache instead of building per-screen instances pointing
     // at the same cache directory.
     val imageStack = (graph as AppGraph).haImageStack
+
+    holdFirstDrawForCardDesigns()
 
     setContent {
       CompositionLocalProvider(
@@ -130,6 +144,27 @@ class MainActivity : ComponentActivity() {
     }
   }
 
+  /**
+   * Keeps the system splash up until the cached card designs are in memory ([CardDesignPreload]),
+   * so the first frame drawn is the dashboard with its cards rather than the dashboard's hold
+   * spinner. Capped at [DESIGN_PRELOAD_WAIT_MS], after which the dashboard's own hold takes over.
+   */
+  private fun holdFirstDrawForCardDesigns() {
+    val content = findViewById<View>(android.R.id.content)
+    val since = SystemClock.uptimeMillis()
+    content.viewTreeObserver.addOnPreDrawListener(
+      object : ViewTreeObserver.OnPreDrawListener {
+        override fun onPreDraw(): Boolean {
+          val ready =
+            CardDesignPreload.designs.value != null ||
+              SystemClock.uptimeMillis() - since >= DESIGN_PRELOAD_WAIT_MS
+          if (ready) content.viewTreeObserver.removeOnPreDrawListener(this)
+          return ready
+        }
+      }
+    )
+  }
+
   companion object {
     const val EXTRA_TEST_DEMO_MODE: String = "terrazzo.test.demo_mode"
 
@@ -155,15 +190,23 @@ private suspend fun resumeSession(
   initial: HaSession?,
 ) {
   if (graph.preferencesStore.demoModeNow()) {
-    holder.session = graph.sessionFactory.createDemo()
-    initial?.close()
+    // Already seeded with a demo session: keep it, since a new one would restart the dashboard.
+    if (initial !is DemoHaSession) {
+      holder.session = graph.sessionFactory.createDemo()
+      initial?.close()
+    }
     widgetScheduler.scheduleDemo()
   } else if (initial != null) {
     val baseUrl = initial.baseUrl
-    val refreshToken = graph.tokenVault.get(baseUrl) ?: return
+    val refreshToken = graph.tokenVault.get(baseUrl)
+    if (refreshToken == null) {
+      (initial as? CachedHaSession)?.markUnreachable()
+      return
+    }
     runCatching { graph.authService.refreshAccessToken(baseUrl, refreshToken) }
       .onSuccess { tokens ->
         val access = tokens.accessToken
+        if (access == null) (initial as? CachedHaSession)?.markUnreachable()
         // The user may have signed out or toggled demo while the
         // refresh was in flight; only swap if we're still on the
         // cache-only stub.
@@ -177,6 +220,7 @@ private suspend fun resumeSession(
       .onFailure { error ->
         // HA refused the stored refresh token; TerrazzoApp signs out.
         if (error is HaReauthRequiredException) holder.refusedSession = initial
+        else (initial as? CachedHaSession)?.markUnreachable()
       }
   }
 }
