@@ -1,0 +1,209 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "entity",
+  "title": "Entity",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 56,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "cell"
+        ]
+      }
+    },
+    "cell": {
+      "id": "cell",
+      "componentId": "ha-cards/entity-card-cell",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "wrap": [
+          "dashboard"
+        ],
+        "hero": [
+          "launcher-hero"
+        ],
+        "row": [
+          "launcher-row"
+        ],
+        "wear": [
+          "wear-tiers"
+        ],
+        "other": [
+          "launcher-tiers"
+        ]
+      }
+    },
+    "dashboard": {
+      "id": "dashboard",
+      "componentId": "ha-cards/entity-card-row",
+      "properties": {
+        "inset": {
+          "type": "string",
+          "value": "none"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "launcher-hero": {
+      "id": "launcher-hero",
+      "componentId": "ha-cards/entity-card-hero",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "launcher-row": {
+      "id": "launcher-row",
+      "componentId": "ha-cards/entity-card-wide-hero",
+      "properties": {
+        "scale": {
+          "type": "string",
+          "value": "row"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "wear-tiers": {
+      "id": "wear-tiers",
+      "componentId": "ha-cards/size-tiers",
+      "properties": {
+        "axis": {
+          "type": "string",
+          "value": "height"
+        },
+        "thresholdsDp": {
+          "type": "string",
+          "value": "80"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {
+        "tier0": [
+          "wear-row"
+        ],
+        "tier1": [
+          "wear-hero"
+        ]
+      }
+    },
+    "wear-row": {
+      "id": "wear-row",
+      "componentId": "ha-cards/entity-card-row",
+      "properties": {
+        "inset": {
+          "type": "string",
+          "value": "card"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "wear-hero": {
+      "id": "wear-hero",
+      "componentId": "ha-cards/entity-card-wide-hero",
+      "properties": {
+        "scale": {
+          "type": "string",
+          "value": "wear"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "launcher-tiers": {
+      "id": "launcher-tiers",
+      "componentId": "ha-cards/size-tiers",
+      "properties": {
+        "axis": {
+          "type": "string",
+          "value": "width"
+        },
+        "thresholdsDp": {
+          "type": "string",
+          "value": "96"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {
+        "tier0": [
+          "launcher-chip"
+        ],
+        "tier1": [
+          "launcher-full"
+        ]
+      }
+    },
+    "launcher-chip": {
+      "id": "launcher-chip",
+      "componentId": "ha-cards/entity-card-icon-chip",
+      "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "launcher-full": {
+      "id": "launcher-full",
+      "componentId": "ha-cards/entity-card-row",
+      "properties": {
+        "inset": {
+          "type": "string",
+          "value": "card"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    }
+  }
+}
