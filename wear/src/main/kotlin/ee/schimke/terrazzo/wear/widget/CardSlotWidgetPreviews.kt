@@ -755,7 +755,16 @@ private fun weatherForecastFixture() =
       """{"type":"weather-forecast","entity":"weather.forecast_home","show_current":true,"show_forecast":false}""",
     snapshot =
       snapshotOf(
-        entityState(id = "weather.forecast_home", state = "partlycloudy", friendlyName = "Forecast")
+        entityState(
+          id = "weather.forecast_home",
+          state = "partlycloudy",
+          friendlyName = "Forecast",
+          extra =
+            mapOf(
+              "temperature" to JsonPrimitive(18.4),
+              "temperature_unit" to JsonPrimitive("°C"),
+            ),
+        )
       ),
   )
 
