@@ -22,7 +22,6 @@ import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.CachedHaSession
 import ee.schimke.terrazzo.core.session.DemoHaSession
-import ee.schimke.terrazzo.core.session.HaReauthRequiredException
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.dashboard.CardDesignPreload
 import ee.schimke.terrazzo.dashboard.DESIGN_PRELOAD_WAIT_MS
@@ -34,7 +33,6 @@ import ee.schimke.terrazzo.ui.toThemeStyle
 import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.ui.updateSystemBars
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.runBlocking
 
@@ -180,8 +178,8 @@ class MainActivity : ComponentActivity() {
  * The persisted demo-mode flag survives process restarts, so a user who opted into demo doesn't see
  * the login screen again on relaunch; it also re-arms the widget refresh chain in case the worker
  * queue was flushed (e.g. "Clear data" via system Settings). Otherwise a cache-only [initial]
- * session (from a prior login) is swapped for a live one, with an access token minted from the
- * vault's refresh token.
+ * session (from a prior login) is swapped for a live one that mints its access token from the
+ * vault's refresh token when it connects.
  */
 private suspend fun resumeSession(
   graph: TerrazzoGraph,
@@ -198,29 +196,17 @@ private suspend fun resumeSession(
     widgetScheduler.scheduleDemo()
   } else if (initial != null) {
     val baseUrl = initial.baseUrl
-    val refreshToken = graph.tokenVault.get(baseUrl)
-    if (refreshToken == null) {
+    if (graph.tokenVault.get(baseUrl) == null) {
       (initial as? CachedHaSession)?.markUnreachable()
       return
     }
-    runCatching { graph.authService.refreshAccessToken(baseUrl, refreshToken) }
-      .onSuccess { tokens ->
-        val access = tokens.accessToken
-        if (access == null) (initial as? CachedHaSession)?.markUnreachable()
-        // The user may have signed out or toggled demo while the
-        // refresh was in flight; only swap if we're still on the
-        // cache-only stub.
-        if (access != null && holder.session === initial) {
-          holder.session =
-            graph.sessionFactory.create(baseUrl, access, tokens.expiresInSeconds?.seconds)
-          initial.close()
-        }
-        tokens.refreshToken?.let { graph.tokenVault.put(baseUrl, it) }
-      }
-      .onFailure { error ->
-        // HA refused the stored refresh token; TerrazzoApp signs out.
-        if (error is HaReauthRequiredException) holder.refusedSession = initial
-        else (initial as? CachedHaSession)?.markUnreachable()
-      }
+    // Live at once, without waiting for a token: the session mints one from the stored refresh
+    // token when it connects, so an offline start reconnects (TerrazzoApp's retry loop) as soon as
+    // the network is back rather than staying on the cache for the life of the process. A refresh
+    // token Home Assistant refuses flips the session's needsReauth, which signs out.
+    if (holder.session === initial) {
+      holder.session = graph.sessionFactory.create(baseUrl, accessToken = null)
+      initial.close()
+    }
   }
 }

@@ -86,8 +86,10 @@ class HaSessionFactory(
 ) {
   /**
    * [lifetime] is how long [accessToken] lives, when the token response said; else HA's default.
+   * With no [accessToken] (a cold start, offline or not) the first connect mints one from the
+   * stored refresh token; until it does, the cache supplies what the UI draws.
    */
-  fun create(baseUrl: String, accessToken: String, lifetime: Duration? = null): HaSession =
+  fun create(baseUrl: String, accessToken: String?, lifetime: Duration? = null): HaSession =
     CachedHaSession(
       LiveHaSession(
         baseUrl = baseUrl,

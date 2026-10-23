@@ -27,6 +27,8 @@ import ee.schimke.ha.client.SharedOkHttpClient
 import ee.schimke.terrazzo.core.di.AppScope
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
 import ee.schimke.terrazzo.core.network.LanConnectionPolicyInterceptor
+import ee.schimke.terrazzo.core.network.RemoteUrlInterceptor
+import ee.schimke.terrazzo.core.network.RemoteUrlStore
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okio.Path.Companion.toOkioPath
 
@@ -37,7 +39,7 @@ import okio.Path.Companion.toOkioPath
  * that **only one instance per directory** is safe (otherwise the journals can interleave and
  * corrupt). Park the binding at [AppScope] so `DashboardViewScreen` and `WidgetInstallSheet` (and
  * anyone else who renders cards) reuse the same loader instead of constructing per-screen ones
- * pointing at the same `cacheDir/ha_image_cache` path.
+ * pointing at the same `noBackupFilesDir/terrazzo/images` path.
  *
  * The bearer-auth interceptor reads its token through a provider lambda that closes over [baseUrl]
  * / [accessToken], so the loader itself never has to be rebuilt when the session changes. Callers
@@ -53,7 +55,11 @@ import okio.Path.Companion.toOkioPath
  */
 @SingleIn(AppScope::class)
 @Inject
-class HaImageStack(private val context: Context, private val lanPolicy: LanConnectionPolicy) {
+class HaImageStack(
+  private val context: Context,
+  private val lanPolicy: LanConnectionPolicy,
+  private val remoteUrls: RemoteUrlStore,
+) {
 
   @Volatile private var baseUrl: String? = null
   @Volatile private var accessToken: String? = null
@@ -84,8 +90,19 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
     // token-rotating URLs can't blow up the cache directory. Coil's
     // default `maxSizePercent` (0.02) still gates between these
     // bounds.
+    // In app storage rather than cacheDir, which the system empties when storage runs low: the
+    // pictures are what an offline dashboard draws, and the bounds below already keep it small.
+    // Out of backups too; it is all refetchable.
+    val app = context.applicationContext
+    val directory = app.noBackupFilesDir.resolve(IMAGE_CACHE_DIR)
+    // Keep what an earlier build cached under cacheDir.
+    val legacy = app.cacheDir.resolve(LEGACY_IMAGE_CACHE_DIR)
+    if (legacy.isDirectory && !directory.exists()) {
+      directory.parentFile?.mkdirs()
+      if (!legacy.renameTo(directory)) legacy.deleteRecursively()
+    }
     DiskCache.Builder()
-      .directory(context.applicationContext.cacheDir.resolve(IMAGE_CACHE_DIR).toOkioPath())
+      .directory(directory.toOkioPath())
       .minimumMaxSizeBytes(MIN_DISK_CACHE_BYTES)
       .maximumMaxSizeBytes(MAX_DISK_CACHE_BYTES)
       .build()
@@ -102,8 +119,12 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
       // interceptors.
       SharedOkHttpClient.client
         .newBuilder()
-        .addInterceptor(LanConnectionPolicyInterceptor(lanPolicy))
+        // The bearer goes on by the session's own origin first; a LAN URL off the home network is
+        // then rewritten to the instance's external URL, which takes the same token, rather than
+        // refused. The disk cache keys on the original URL, so either way a cached picture hits.
         .addInterceptor(HaBearerAuthInterceptor({ baseUrl }, { accessToken }))
+        .addInterceptor(RemoteUrlInterceptor(lanPolicy, remoteUrls))
+        .addInterceptor(LanConnectionPolicyInterceptor(lanPolicy))
         .build()
     Log.d(
       TAG,
@@ -234,7 +255,10 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
   }
 
   private companion object {
-    private const val IMAGE_CACHE_DIR = "ha_image_cache"
+    private const val IMAGE_CACHE_DIR = "terrazzo/images"
+
+    /** Where builds before the move kept it, under cacheDir. */
+    private const val LEGACY_IMAGE_CACHE_DIR = "ha_image_cache"
     private const val TAG = "HaImageStack"
 
     // 10 MB floor — even tight-storage devices keep enough room to

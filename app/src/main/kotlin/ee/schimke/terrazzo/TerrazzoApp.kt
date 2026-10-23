@@ -59,10 +59,10 @@ import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import ee.schimke.terrazzo.widget.WidgetsScreen
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Root composable. Two phases:
@@ -118,16 +118,6 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
     widgetScheduler.cancelDemo()
     if (session === signedOut) session = null
     lastError = reason
-  }
-
-  // The cold-start resume found the stored refresh token refused: no
-  // retry can recover, so send the user back to sign in rather than
-  // leave them on a cached dashboard that never connects. Only if they
-  // are still on that cache-only stub.
-  LaunchedEffect(sessionHolder.refusedSession) {
-    val refused = sessionHolder.refusedSession ?: return@LaunchedEffect
-    sessionHolder.refusedSession = null
-    if (session === refused) signOut(refused, SignedOutException())
   }
 
   // A live session whose refresh token HA refuses mid-flight (revoked, user deactivated) can't
@@ -549,6 +539,7 @@ private fun DashboardsRoot(
   //    a neutral "Disconnected" instead. A configuration change
   //    (rotation) isn't leaving: the session outlives the Activity in
   //    [SessionHolder], so keep the socket for the recreated one.
+  val networkChanges = graph.lanConnectionPolicy.networkChanges
   LaunchedEffect(session, lifecycleOwner) {
     lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
       val backoff = ReconnectBackoff()
@@ -562,7 +553,9 @@ private fun DashboardsRoot(
         while (true) {
           session.connectionStatus.first { it == SessionConnectionStatus.Failed }
           if (session.needsReauth.value) awaitCancellation()
-          delay(backoff.next())
+          // Wait out the backoff, or less: the network coming back (or changing) retries at once.
+          val network = networkChanges.value
+          withTimeoutOrNull(backoff.next()) { networkChanges.first { it != network } }
           if (session.connectionStatus.value == SessionConnectionStatus.Failed) {
             runCatching { session.connect() }
           }
