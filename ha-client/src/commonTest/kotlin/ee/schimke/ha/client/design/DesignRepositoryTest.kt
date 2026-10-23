@@ -413,4 +413,189 @@ class DesignRepositoryTest {
     assertContentEquals(template, repo(host, store).resolve(key)?.bytes)
     assertEquals(emptyMap(), repo(host, store).resolveDeviceDesigns())
   }
+
+  /** A store holding [entries] (bytes by entry) as its last good manifest. */
+  private suspend fun storeWith(vararg entries: Pair<DesignEntry, ByteArray>): InMemoryDesignStore {
+    val store = InMemoryDesignStore()
+    entries.forEach { (_, bytes) -> store.writeBlob(Sha256.hex(bytes), bytes) }
+    store.writeManifest(
+      StoredManifest(
+        DesignManifest(
+          serial = 1,
+          generatedAtEpochMs = now,
+          expiresAtEpochMs = now + 1_000_000,
+          designs = entries.map { it.first },
+        ),
+        fetchedAtEpochMs = now,
+      )
+    )
+    return store
+  }
+
+  private fun entry(
+    bytes: ByteArray,
+    designId: String?,
+    author: String = DesignEntry.BUILTIN_AUTHOR,
+    device: DeviceMatch? = null,
+    variant: String = DesignKey.DEFAULT_VARIANT,
+    revoked: Boolean = false,
+    title: String? = null,
+  ) =
+    DesignEntry(
+      key.copy(variant = variant),
+      Sha256.hex(bytes),
+      bytes.size,
+      slots = 1,
+      author = author,
+      device = device,
+      designId = designId,
+      title = title,
+      revoked = revoked,
+    ) to bytes
+
+  private val printer = ee.schimke.ha.design.DeviceInfo(integration = "bambu_lab", model = "X1C")
+
+  @Test
+  fun theLibraryPublishesOneDesignIdPerCardType() {
+    val entry = published().manifest.designs.single()
+    assertEquals("library:tile", entry.designId)
+    assertEquals(DesignEntry.LIBRARY_TITLE, entry.title)
+  }
+
+  @Test
+  fun everyEntryOfAChosenDesignStaysAddressableBesideTheCollapsedOnes() = runTest {
+    val library = "library".encodeToByteArray()
+    val fork = "fork".encodeToByteArray()
+    val forkForX1 = "fork x1".encodeToByteArray()
+    val forkForBambu = "fork bambu".encodeToByteArray()
+    val store =
+      storeWith(
+        entry(library, "library:tile"),
+        entry(fork, "user:fork", author = "github:octocat", variant = "mine"),
+        entry(
+          forkForBambu,
+          "user:fork",
+          author = "github:octocat",
+          variant = "mine",
+          device = DeviceMatch(integration = "bambu_lab"),
+        ),
+        entry(
+          forkForX1,
+          "user:fork",
+          author = "github:octocat",
+          variant = "mine",
+          device = DeviceMatch(integration = "bambu_lab", model = "X1*"),
+        ),
+      )
+    val repository = repo(null, store)
+    val resolved =
+      repository.resolveAllWithDevices(
+        prefer = listOf(DesignQuery(author = "terrazzo")),
+        designIds = setOf("user:fork"),
+      )
+    // The collapsed resolution is as before: the preferred author's generic design.
+    assertContentEquals(library, resolved.byKey[key])
+    // The chosen design draws the key in its own variant, most specific device first.
+    assertContentEquals(forkForX1, resolved.byDesign.find("user:fork", key, printer)?.second)
+    assertContentEquals(
+      forkForBambu,
+      resolved.byDesign.find("user:fork", key, printer.copy(model = "P1S"))?.second,
+    )
+    assertContentEquals(fork, resolved.byDesign.find("user:fork", key, null)?.second)
+    assertEquals("mine", resolved.byDesign.find("user:fork", key, null)?.first?.variant)
+    // Only the ids asked for are held; another key isn't found.
+    assertEquals(setOf("user:fork"), resolved.byDesign.ids)
+    assertNull(resolved.byDesign.find("user:fork", key.copy(shape = "domain=switch"), null))
+    assertContentEquals(library, repository.byDesign("library:tile", key, printer))
+  }
+
+  @Test
+  fun aRevokedOrUncachedChosenDesignResolvesToNothing() = runTest {
+    val fork = "fork".encodeToByteArray()
+    val store = storeWith(entry(fork, "user:fork", author = "github:octocat", revoked = true))
+    assertNull(repo(null, store).byDesign("user:fork", key, null))
+    val uncached = InMemoryDesignStore()
+    storeWith(entry(fork, "user:fork")).readManifest()?.let { uncached.writeManifest(it) }
+    assertNull(repo(null, uncached).byDesign("user:fork", key, null))
+    // A library entry from before ids still answers to the library's id.
+    val old = storeWith(entry(template, designId = null))
+    assertContentEquals(template, repo(null, old).byDesign("library:tile", key, null))
+  }
+
+  @Test
+  fun designsForListsEveryDesignThatFitsTheCardsDevice() = runTest {
+    val store =
+      storeWith(
+        entry("library".encodeToByteArray(), "library:tile", title = "Built-in"),
+        entry(
+          "printer".encodeToByteArray(),
+          "user:printer",
+          author = "github:octocat",
+          variant = "printer",
+          device = DeviceMatch(integration = "bambu_lab"),
+          title = "Printer",
+        ),
+        entry(
+          "x1".encodeToByteArray(),
+          "user:printer",
+          author = "github:octocat",
+          variant = "printer",
+          device = DeviceMatch(integration = "bambu_lab", model = "X1*"),
+        ),
+        entry(
+          "boiler".encodeToByteArray(),
+          "user:boiler",
+          author = "github:octocat",
+          device = DeviceMatch(integration = "vaillant"),
+        ),
+        entry("gone".encodeToByteArray(), "user:gone", author = "github:x", revoked = true),
+        entry("anon".encodeToByteArray(), designId = null, author = "github:x"),
+      )
+    val repository = repo(null, store)
+    val options = repository.designsFor(key, printer)
+    assertEquals(listOf("library:tile", "user:printer"), options.map { it.designId })
+    val forPrinter = options[1]
+    assertEquals("Printer", forPrinter.title)
+    assertEquals("github:octocat", forPrinter.author)
+    assertEquals(DeviceMatch(integration = "bambu_lab", model = "X1*"), forPrinter.device)
+    // A card with no known device sees the generic designs only.
+    assertEquals(listOf("library:tile"), repository.designsFor(key, null).map { it.designId })
+    // Another key lists nothing.
+    assertEquals(emptyList(), repository.designsFor(key.copy(cardType = "gauge"), printer))
+  }
+
+  @Test
+  fun aChoiceNamingADesignFetchesItsBlobs() = runTest {
+    val fork = "fork".encodeToByteArray()
+    val out = published()
+    val forkEntry =
+      DesignEntry(
+        key,
+        Sha256.hex(fork),
+        fork.size,
+        1,
+        author = "github:octocat",
+        designId = "user:fork",
+      )
+    val files =
+      out.files +
+        ("blobs/${Sha256.hex(fork)}.rc" to fork) +
+        ("manifest.json" to
+          kotlinx.serialization.json.Json.encodeToString(
+              DesignManifest.serializer(),
+              out.manifest.copy(designs = out.manifest.designs + forkEntry),
+            )
+            .encodeToByteArray())
+    val host = FakeHost(files)
+    val builtinOnly = listOf(DesignQuery(author = DesignEntry.BUILTIN_AUTHOR))
+    val store = InMemoryDesignStore()
+    DesignRepository(config.copy(choice = builtinOnly), store, host.client) { now }.refresh()
+    assertNull(store.readBlob(Sha256.hex(fork)))
+    val chosen = builtinOnly + DesignQuery(designId = "user:fork", theme = key.theme)
+    assertEquals(
+      RefreshResult.Filled,
+      DesignRepository(config.copy(choice = chosen), store, host.client) { now }.refresh(),
+    )
+    assertContentEquals(fork, repo(null, store).byDesign("user:fork", key, null))
+  }
 }

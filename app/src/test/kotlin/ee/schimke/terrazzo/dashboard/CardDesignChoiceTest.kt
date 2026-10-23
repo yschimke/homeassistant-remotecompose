@@ -107,4 +107,96 @@ class CardDesignChoiceTest {
   fun anEmptyServerIsOff() {
     assertFalse(CardDesignChoice("", ThemeStyle.Material3, HaUberTheme.Classic).enabled)
   }
+
+  @Test
+  fun aCardSwitchedToADesignDownloadsThatDesignWholeInItsThemes() {
+    val card =
+      ee.schimke.ha.model.CardConfig(
+        type = "tile",
+        raw = kotlinx.serialization.json.buildJsonObject { put("type", JsonPrimitive("tile")) },
+      )
+    val choice =
+      CardDesignChoice(
+        "https://designs.test",
+        ThemeStyle.Material3,
+        HaUberTheme.Classic,
+        overrides =
+          CardDesignOverrides()
+            .with(CardDesignScope.Card, card, CardDesignOverride(designId = "user:printer")),
+      )
+    val theme = DesignKey.bakedTheme("Material3", dark = false)
+    // Any variant or author of the chosen design, though neither is in the choice.
+    assertTrue(
+      choice.wants(entry(theme, "printer", "github:octocat").copy(designId = "user:printer"))
+    )
+    assertFalse(choice.wants(entry(theme, "printer", "github:octocat").copy(designId = "user:x")))
+    // Only in the themes the dashboard draws.
+    assertFalse(
+      choice.wants(
+        entry(DesignKey.styledTheme("lcd", dark = false), "printer", "github:octocat")
+          .copy(designId = "user:printer")
+      )
+    )
+    assertEquals(setOf("user:printer"), choice.designIds)
+  }
+
+  private val key = entry(DesignKey.bakedTheme("Material3", dark = false)).key
+  private val printer = ee.schimke.ha.design.DeviceInfo(integration = "bambu_lab", model = "X1C")
+  private val generic = byteArrayOf(1)
+  private val forPrinter = byteArrayOf(2)
+  private val fork = byteArrayOf(3)
+  private val forkForPrinter = byteArrayOf(4)
+  private val designs =
+    CardDesigns(
+      byKey = mapOf(key to generic),
+      deviceByKey =
+        mapOf(
+          key to listOf(ee.schimke.ha.design.DeviceMatch(integration = "bambu_lab") to forPrinter)
+        ),
+      byDesign =
+        ee.schimke.ha.client.design.DesignsById(
+          mapOf(
+            "user:fork" to
+              listOf(
+                ee.schimke.ha.client.design.DesignedBlob(key.copy(variant = "mine"), null, fork),
+                ee.schimke.ha.client.design.DesignedBlob(
+                  key.copy(variant = "mine"),
+                  ee.schimke.ha.design.DeviceMatch(model = "X1*"),
+                  forkForPrinter,
+                ),
+              )
+          )
+        ),
+    )
+
+  @Test
+  fun aChosenDesignWinsOverTheDeviceAndGenericDesigns() {
+    val (bytes, used) = serverDesignFor(key, designs, "default", printer, designId = "user:fork")
+    assertEquals(forkForPrinter.toList(), bytes?.toList())
+    assertEquals("mine", used.variant)
+    // Its generic entry for a card on another device.
+    assertEquals(
+      fork.toList(),
+      serverDesignFor(key, designs, "default", null, designId = "user:fork").first?.toList(),
+    )
+  }
+
+  @Test
+  fun withoutAChoiceOrWithAMissingOneTheOrderIsUnchanged() {
+    assertEquals(
+      forPrinter.toList(),
+      serverDesignFor(key, designs, "default", printer).first?.toList(),
+    )
+    assertEquals(generic.toList(), serverDesignFor(key, designs, "default", null).first?.toList())
+    // A chosen design that is gone (revoked, not fetched) or lacks the key falls through.
+    assertEquals(
+      forPrinter.toList(),
+      serverDesignFor(key, designs, "default", printer, designId = "user:gone").first?.toList(),
+    )
+    val otherKey = key.copy(shape = "domain=switch")
+    assertEquals(
+      null to otherKey,
+      serverDesignFor(otherKey, designs, "default", printer, designId = "user:fork"),
+    )
+  }
 }

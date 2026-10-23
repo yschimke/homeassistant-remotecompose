@@ -5,6 +5,7 @@ import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignQuery
+import ee.schimke.ha.design.DeviceInfo
 import ee.schimke.ha.design.DeviceMatch
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -251,10 +252,56 @@ class DesignRepository(
    * [resolveAll] and [resolveDeviceDesigns] from one read of the manifest: decoding it is most of
    * what loading the cache costs, so a host that wants both shouldn't pay for it twice.
    */
-  suspend fun resolveAllWithDevices(prefer: List<DesignQuery> = emptyList()): ResolvedDesigns {
+  suspend fun resolveAllWithDevices(
+    prefer: List<DesignQuery> = emptyList(),
+    designIds: Set<String> = emptySet(),
+  ): ResolvedDesigns {
     val stored = store.readManifest() ?: return ResolvedDesigns(emptyMap(), emptyMap())
-    return ResolvedDesigns(resolveAll(stored, prefer), resolveDeviceDesigns(stored, prefer))
+    return ResolvedDesigns(
+      resolveAll(stored, prefer),
+      resolveDeviceDesigns(stored, prefer),
+      resolveByDesign(stored, designIds),
+    )
   }
+
+  /**
+   * Every cached entry of the designs [designIds] names, by design id, whatever its author or
+   * variant: what a card switched to one design ([CardDesignOverride.designId]) plays. Unlike
+   * [resolveAll] nothing competes, so no entry is collapsed away. Revoked entries and blobs that
+   * aren't cached (or don't verify) are left out.
+   */
+  suspend fun resolveByDesign(designIds: Set<String>): DesignsById =
+    store.readManifest()?.let { resolveByDesign(it, designIds) } ?: DesignsById()
+
+  private suspend fun resolveByDesign(stored: StoredManifest, designIds: Set<String>): DesignsById {
+    if (designIds.isEmpty()) return DesignsById()
+    val resolved = LinkedHashMap<String, MutableList<DesignedBlob>>()
+    for (entry in stored.manifest.designs) {
+      val id = entry.stableDesignId ?: continue
+      if (entry.revoked || id !in designIds) continue
+      val bytes = verifiedBlob(entry) ?: continue
+      resolved.getOrPut(id) { mutableListOf() } += DesignedBlob(entry.key, entry.device, bytes)
+    }
+    return DesignsById(resolved)
+  }
+
+  /**
+   * The cached bytes design [designId] draws [key] with for a card on [device]: see
+   * [DesignsById.find]. Null when the design has no live, cached entry for the key.
+   */
+  suspend fun byDesign(designId: String, key: DesignKey, device: DeviceInfo?): ByteArray? =
+    resolveByDesign(setOf(designId)).find(designId, key, device)?.second
+
+  /**
+   * Every design in the cached manifest that can draw [key] for a card on [device]: see
+   * [designOptions]. Read from the manifest, not the blobs, so a design whose blobs the sync hasn't
+   * fetched yet is listed too; choosing it makes the next sync fetch them.
+   */
+  suspend fun designsFor(key: DesignKey, device: DeviceInfo?): List<DesignOption> =
+    store.readManifest()?.manifest?.designs?.let { designOptions(it, key, device) }.orEmpty()
+
+  private suspend fun verifiedBlob(entry: DesignEntry): ByteArray? =
+    store.readBlob(entry.sha256)?.takeIf { Sha256.hex(it) == entry.sha256 }
 
   private suspend fun resolveAll(
     stored: StoredManifest,
@@ -421,7 +468,9 @@ class BuiltDesign(val key: DesignKey, val slots: Int, val bytes: ByteArray)
 
 /**
  * Produces the files a static design host serves: `manifest.json` and `blobs/<sha256>.rc`. Shared
- * by the template pipeline and tests, so both write exactly what the client reads.
+ * by the template pipeline and tests, so both write exactly what the client reads. Every entry is
+ * the library's: one design per card type ([DesignEntry.libraryDesignId], titled
+ * [DesignEntry.LIBRARY_TITLE]).
  */
 object DesignPublisher {
   private val json = Json { prettyPrint = true }
@@ -438,7 +487,14 @@ object DesignPublisher {
     val entries = designs.map { design ->
       val sha = Sha256.hex(design.bytes)
       files[DesignManifest.blobPath(sha)] = design.bytes
-      DesignEntry(key = design.key, sha256 = sha, bytes = design.bytes.size, slots = design.slots)
+      DesignEntry(
+        key = design.key,
+        sha256 = sha,
+        bytes = design.bytes.size,
+        slots = design.slots,
+        designId = DesignEntry.libraryDesignId(design.key.cardType),
+        title = DesignEntry.LIBRARY_TITLE,
+      )
     }
     val manifest =
       DesignManifest(
@@ -476,11 +532,87 @@ fun createDesignRepository(
  * always [RefreshResult.Disabled]. For hosts that render designs while a background job owns the
  * network refresh.
  */
-/** What [DesignRepository.resolveAllWithDevices] returns: generic designs and device ones. */
+/**
+ * What [DesignRepository.resolveAllWithDevices] returns: generic designs and device ones, collapsed
+ * per key, and the designs asked for by id, whole.
+ */
 data class ResolvedDesigns(
   val byKey: Map<DesignKey, ByteArray>,
   val deviceByKey: Map<DesignKey, List<Pair<DeviceMatch, ByteArray>>>,
+  val byDesign: DesignsById = DesignsById(),
 )
+
+/** One cached entry of a design: the key it draws, the devices it is for (null: any), its bytes. */
+class DesignedBlob(val key: DesignKey, val device: DeviceMatch?, val bytes: ByteArray)
+
+/** Cached designs by [DesignEntry.stableDesignId], each with every entry it has. */
+class DesignsById(val entries: Map<String, List<DesignedBlob>> = emptyMap()) {
+  /**
+   * The key and bytes design [designId] draws [key] with for a card on [device], or null when it
+   * has no entry for the key. Variants don't split a design: [key]'s own variant comes first, then
+   * `default`, then any other. Within one variant the most specific entry whose device matches
+   * wins, else the generic one ([DeviceMatch.pick]); an entry for another device never does.
+   */
+  fun find(designId: String, key: DesignKey, device: DeviceInfo?): Pair<DesignKey, ByteArray>? {
+    val candidates = entries[designId].orEmpty().filter { it.key.sameExceptVariant(key) }
+    if (candidates.isEmpty()) return null
+    val variants =
+      (listOf(key.variant, DesignKey.DEFAULT_VARIANT) + candidates.map { it.key.variant })
+        .distinct()
+    return variants.firstNotNullOfOrNull { variant ->
+      val inVariant = candidates.filter { it.key.variant == variant }
+      DeviceMatch.pick(inVariant.map { it.device to it }, device)?.let { it.key to it.bytes }
+    }
+  }
+
+  /** The design ids held. */
+  val ids: Set<String>
+    get() = entries.keys
+}
+
+/**
+ * A design a card can be switched to: [designId] with what a picker shows of it. [device] is the
+ * entry's device match that fits the card (null for the generic design).
+ */
+data class DesignOption(
+  val designId: String,
+  val title: String?,
+  val author: String,
+  val device: DeviceMatch?,
+)
+
+/**
+ * The designs among [designs] that can draw [key] for a card on [device]: distinct ids among the
+ * live entries for the key (any variant or author) that are generic or made for a device that
+ * matches. Manifest order, so the library's design comes first; a design listed by both a generic
+ * and a device entry shows the most specific matching device.
+ */
+fun designOptions(
+  designs: List<DesignEntry>,
+  key: DesignKey,
+  device: DeviceInfo?,
+): List<DesignOption> {
+  val fits = designs.filter { entry ->
+    !entry.revoked &&
+      entry.stableDesignId != null &&
+      entry.key.sameExceptVariant(key) &&
+      (entry.device == null || (device != null && entry.device?.matches(device) == true))
+  }
+  return fits
+    .groupBy { it.stableDesignId!! }
+    .map { (id, entries) ->
+      val best = entries.maxBy { it.device?.specificity ?: 0 }
+      DesignOption(
+        designId = id,
+        title = entries.firstNotNullOfOrNull { it.title },
+        author = best.author,
+        device = best.device,
+      )
+    }
+}
+
+private fun DesignKey.sameExceptVariant(other: DesignKey): Boolean =
+  copy(variant = DesignKey.DEFAULT_VARIANT) == other.copy(variant = DesignKey.DEFAULT_VARIANT)
 
 fun cachedDesignRepository(
   store: DesignStore,

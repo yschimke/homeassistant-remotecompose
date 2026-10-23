@@ -1,5 +1,7 @@
 package ee.schimke.terrazzo.dashboard
 
+import ee.schimke.ha.client.design.DesignedBlob
+import ee.schimke.ha.client.design.DesignsById
 import ee.schimke.ha.client.design.ResolvedDesigns
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.design.DesignKey
@@ -20,14 +22,16 @@ import kotlinx.serialization.protobuf.ProtoBuf
  * ms.
  *
  * Named for the preferences it was resolved with and the app version (protobuf encodes enums by
- * ordinal, so another version's file may not mean the same), and valid only while the manifest it
- * was resolved from is the one on disk: a sync or a revocation rewrites the manifest, which a stat
- * of its file notices. The blobs need no checking again; they were verified against the manifest
- * when stored.
+ * ordinal, so another version's file may not mean the same), and valid only while the cache it was
+ * resolved from is the one on disk: a sync or a revocation rewrites the manifest, which a stat of
+ * its file notices, and a sync that only fills in blobs (a design just chosen, whose blobs no
+ * earlier choice wanted) adds files to `blobs/`, which a stat of that directory notices. The blobs
+ * need no checking again; they were verified against the manifest when stored.
  */
 @OptIn(ExperimentalSerializationApi::class)
 internal object CardDesignSnapshot {
   private const val MANIFEST = "manifest.json"
+  private const val BLOBS = "blobs"
   private const val PREFIX = "startup-"
   private const val SUFFIX = ".pb"
 
@@ -37,49 +41,84 @@ internal object CardDesignSnapshot {
     val manifestModified: Long,
     val generic: List<Generic> = emptyList(),
     val device: List<Device> = emptyList(),
+    val designed: List<Designed> = emptyList(),
+    val blobsModified: Long = 0,
   )
+
+  /**
+   * The cache's identity: the manifest file's length and modification time, and the `blobs/`
+   * directory's modification time (a blob is renamed into it when stored).
+   */
+  data class Stamp(val manifestLength: Long, val manifestModified: Long, val blobsModified: Long)
 
   @Serializable private class Generic(val key: DesignKey, val bytes: ByteArray)
 
   @Serializable
   private class Device(val key: DesignKey, val match: DeviceMatch, val bytes: ByteArray)
 
-  /** The manifest's identity now: take it before resolving, so a sync mid-resolve invalidates. */
-  fun manifestStamp(dir: File): Pair<Long, Long> =
-    File(dir, MANIFEST).let { it.length() to it.lastModified() }
+  @Serializable
+  private class Designed(
+    val designId: String,
+    val key: DesignKey,
+    val match: DeviceMatch? = null,
+    val bytes: ByteArray,
+  )
 
-  /** The snapshot for [prefer], or null when there is none or the manifest has changed since. */
-  fun read(dir: File, prefer: List<DesignQuery>): ResolvedDesigns? {
-    val file = file(dir, prefer)
+  /** The cache's identity now: take it before resolving, so a sync mid-resolve invalidates. */
+  fun manifestStamp(dir: File): Stamp =
+    File(dir, MANIFEST).let {
+      Stamp(it.length(), it.lastModified(), File(dir, BLOBS).lastModified())
+    }
+
+  /**
+   * The snapshot for [prefer] and [designIds], or null when there is none or the cache (its
+   * manifest or blobs) has changed since.
+   */
+  fun read(dir: File, prefer: List<DesignQuery>, designIds: Set<String>): ResolvedDesigns? {
+    val file = file(dir, prefer, designIds)
     if (!file.isFile) return null
     val snapshot =
       runCatching { ProtoBuf.decodeFromByteArray(Snapshot.serializer(), file.readBytes()) }
         .getOrNull() ?: return null
-    if (snapshot.manifestLength to snapshot.manifestModified != manifestStamp(dir)) return null
+    val stamp = Stamp(snapshot.manifestLength, snapshot.manifestModified, snapshot.blobsModified)
+    if (stamp != manifestStamp(dir)) return null
     return ResolvedDesigns(
       byKey = snapshot.generic.associate { it.key to it.bytes },
       deviceByKey = snapshot.device.groupBy({ it.key }) { it.match to it.bytes },
+      byDesign =
+        DesignsById(
+          snapshot.designed.groupBy({ it.designId }) { DesignedBlob(it.key, it.match, it.bytes) }
+        ),
     )
   }
 
-  /** Stores [designs], resolved for [prefer] from the manifest [stamp] identified; drops others. */
+  /**
+   * Stores [designs], resolved for [prefer] and [designIds] from the manifest [stamp] identified;
+   * drops others.
+   */
   fun write(
     dir: File,
     prefer: List<DesignQuery>,
-    stamp: Pair<Long, Long>,
+    designIds: Set<String>,
+    stamp: Stamp,
     designs: ResolvedDesigns,
   ) {
     val snapshot =
       Snapshot(
-        manifestLength = stamp.first,
-        manifestModified = stamp.second,
+        manifestLength = stamp.manifestLength,
+        manifestModified = stamp.manifestModified,
         generic = designs.byKey.map { (key, bytes) -> Generic(key, bytes) },
         device =
           designs.deviceByKey.flatMap { (key, list) ->
             list.map { (match, bytes) -> Device(key, match, bytes) }
           },
+        designed =
+          designs.byDesign.entries.flatMap { (id, list) ->
+            list.map { Designed(id, it.key, it.device, it.bytes) }
+          },
+        blobsModified = stamp.blobsModified,
       )
-    val target = file(dir, prefer)
+    val target = file(dir, prefer, designIds)
     dir.mkdirs()
     // A unique temp file and a rename, as FileDesignStore writes, so a reader never sees half.
     val tmp = File.createTempFile("${target.name}.", ".tmp", dir)
@@ -100,9 +139,11 @@ internal object CardDesignSnapshot {
       ?.forEach(File::delete)
   }
 
-  private fun file(dir: File, prefer: List<DesignQuery>): File {
+  private fun file(dir: File, prefer: List<DesignQuery>, designIds: Set<String>): File {
     val queries = Json.encodeToString(ListSerializer(DesignQuery.serializer()), prefer)
-    val id = Sha256.hex("${BuildConfig.VERSION_CODE}:$queries".encodeToByteArray())
+    // Each id is a fork or device design name; sorted, so the set's order never splits a file.
+    val ids = designIds.sorted().joinToString("\n")
+    val id = Sha256.hex("${BuildConfig.VERSION_CODE}:$queries:$ids".encodeToByteArray())
     return File(dir, "$PREFIX$id$SUFFIX")
   }
 }

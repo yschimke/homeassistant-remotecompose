@@ -26,6 +26,9 @@ import io.ktor.server.routing.post
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * A manifest as one caller sees it: its bytes and their ETag. Clients revalidate by ETag, so a
@@ -48,7 +51,7 @@ fun DesignLibrary.manifestFor(store: UserDesignStore?, login: String?): ServedMa
   val merged: DesignManifest =
     manifest.copy(
       serial = manifest.serial + offset,
-      designs = manifest.designs + extra.map { it.entry },
+      designs = manifest.designs + extra.map { it.served },
       // The library's signature covers the library alone.
       signature = null,
     )
@@ -394,6 +397,9 @@ private suspend fun publish(
   val key = baseKey.copy(variant = request.variant)
   // Stored canonical, so a republish that only changes case replaces its earlier design.
   val device = request.device?.normalized()
+  // The UI Builder document, for its title (what the app's design picker shows) and the Wear
+  // widgets. Best effort: without it the design publishes untitled.
+  val source = client.design(request.designId, exported.revision).getOrNull()
   val design =
     store.publish(
       login = login,
@@ -403,28 +409,27 @@ private suspend fun publish(
       sourceDesignId = request.designId,
       revision = exported.revision,
       device = device,
+      title = source?.get("title")?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() },
     )
   // Its Wear widgets, from the same UI Builder revision. Best effort: a card that can't be a Wear
   // widget still publishes, and the watch draws the card's own design instead.
   val wear =
     if (key.surface != DesignSurface.MobileApp) emptyMap()
-    else wearWidgets(client, request.designId, exported.revision, library.decode(base))
+    else source?.let { wearWidgets(client, it, library.decode(base)) }.orEmpty()
   store.publishWear(login, design, wear)
   return Published.Done(design)
 }
 
 /**
- * The Wear widget designs of UI Builder design [designId] at [revision], by container: the design
- * rooted on each container ([WearWidgetDesigns]), exported, and kept when it plays as a Wear widget
- * and binds what [base] does. A container whose design fails is left out.
+ * The Wear widget designs of UI Builder design [source] (at the revision published), by container:
+ * the design rooted on each container ([WearWidgetDesigns]), exported, and kept when it plays as a
+ * Wear widget and binds what [base] does. A container whose design fails is left out.
  */
 private suspend fun wearWidgets(
   client: UiBuilderClient,
-  designId: String,
-  revision: Long?,
+  source: JsonObject,
   base: DecodedTemplate,
 ): Map<String, ByteArray> {
-  val source = client.design(designId, revision).getOrNull() ?: return emptyMap()
   return DesignKey.WEAR_CONTAINERS.mapNotNull { container ->
       val document = WearWidgetDesigns.document(source, container) ?: return@mapNotNull null
       val bytes = client.exportRc(document).getOrNull() ?: return@mapNotNull null

@@ -1496,6 +1496,7 @@ private fun CardSlot(
           registry,
           cardStyle,
           variant = override?.variant,
+          designId = override?.designId,
         )
       }
     }
