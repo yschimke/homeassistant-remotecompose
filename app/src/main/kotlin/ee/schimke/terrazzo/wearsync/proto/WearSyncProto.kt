@@ -281,6 +281,14 @@ object WearSyncPaths {
   const val ACCESS_REQUEST_MESSAGE: String = "/wear/access/request"
   const val ACCESS_MESSAGE: String = "/wear/access"
 
+  /**
+   * A tap on a watch card: `{id, card, action}`, the card's `rawJson` as the phone sent it and the
+   * action (an encoded `HaAction`) the tap resolved to. The phone runs it only when that card makes
+   * it, and answers `{id, ok, error?}` on [TAP_RESULT_MESSAGE].
+   */
+  const val TAP_MESSAGE: String = "/wear/tap/v1"
+  const val TAP_RESULT_MESSAGE: String = "/wear/tap-result/v1"
+
   /** The DataItem path of [entityId]'s [WearPicture]. */
   fun picturePath(entityId: String): String = PICTURE_PREFIX + entityId
 

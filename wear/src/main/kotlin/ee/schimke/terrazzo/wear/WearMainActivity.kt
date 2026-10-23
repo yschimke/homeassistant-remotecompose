@@ -27,7 +27,9 @@ import ee.schimke.terrazzo.wear.sync.WearCardWarmup
 import ee.schimke.terrazzo.wear.sync.WearLeaseController
 import ee.schimke.terrazzo.wear.sync.WearSyncRepository
 import ee.schimke.terrazzo.wear.sync.WearWidgetsController
+import ee.schimke.terrazzo.wear.sync.wearTapsEnabled
 import ee.schimke.terrazzo.wear.ui.LocalWearCardLook
+import ee.schimke.terrazzo.wear.ui.LocalWearTapSender
 import ee.schimke.terrazzo.wear.ui.WearCardLook
 import ee.schimke.terrazzo.wear.ui.WearDashboardScreen
 import ee.schimke.terrazzo.wear.ui.WearDashboardsScreen
@@ -155,6 +157,8 @@ private fun WearApp(repo: WearSyncRepository, prefs: WearPrefs, initialLook: Wea
     CompositionLocalProvider(
       LocalWearCardLook provides WearCardLook(selectedPalette, selectedCardStyle),
       LocalRelativeTimeTick provides rememberRelativeTimeTick(),
+      // A card's taps act through the phone while it allows input editing, outside demo mode.
+      LocalWearTapSender provides if (wearTapsEnabled(settings)) repo::sendTap else null,
     ) {
       AppScaffold(timeText = { TimeText() }) {
         when (screen) {
