@@ -189,6 +189,17 @@ class EntitiesCardConverter : CardConverter {
                 rowCount.coerceAtLeast(1) >= BIG_ROW_SHARE_DP
             } == true,
         )
+      } else if (captureSize != null && captureSize.heightDp >= NARROW_SPREAD_MIN_HEIGHT_DP) {
+        // A tall widget too narrow for the expanded rows (a `2×3`): the compact rows, spread over
+        // the height, rather than the dense list pinned to the top over an empty third.
+        val rows = rows(card, snapshot)
+        RemoteHaEntitiesFitted(
+          HaEntitiesData(title = title, rows = rows),
+          HaEntitiesFit.Compact,
+          RemoteModifier.fillMaxSize(),
+          largeText = true,
+          looks = entityLooks(rows),
+        )
       } else {
         FullList(
           card,
@@ -361,5 +372,8 @@ class EntitiesCardConverter : CardConverter {
 
     /** The row share, in dp, past which an expanded row draws a size up. */
     private const val BIG_ROW_SHARE_DP = 64
+
+    /** From this height a launcher widget too narrow for the expanded rows spreads compact ones. */
+    private const val NARROW_SPREAD_MIN_HEIGHT_DP = 200
   }
 }
