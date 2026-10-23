@@ -87,8 +87,11 @@ internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValu
   // The card's state tints its container, as on the widget: warm for heating, amber for a light.
   val tint = remember(card, snapshot) { ContainerTint.argbFor(card, snapshot) }
   val colors = remember(look.palette) { wearWidgetColors(look.palette) }
+  // The template's own shape: a toggle turning on or off changes it (a Wear tier resolves its icon
+  // at capture, see WEAR_ON_PROPERTY) without changing the design, frame or, untinted, the tint.
+  val shape = remember(design, snapshot) { wearTemplateShape(design, snapshot, registry) }
   val template =
-    remember(design, look, style, frame, tint) {
+    remember(design, shape, look, style, frame, tint) {
       runBlocking { wearAppTemplate(context, design, snapshot, look, style, frame, tint, registry) }
         ?.let { bytes -> CardDesignTemplates.playback(design, bytes, registry) }
     }
@@ -160,6 +163,16 @@ internal suspend fun wearAppTemplate(
     ) ?: return null
   return WearWidgetTemplate.forApp(neutral, frame, tint)
 }
+
+/**
+ * The generation shape of [design]'s Wear template in [snapshot] ([wearDesignProperties]): what
+ * [wearAppTemplate] captures from, so a change to it must capture again. Null without a template.
+ */
+internal fun wearTemplateShape(
+  design: CardConfig,
+  snapshot: HaSnapshot,
+  registry: CardRegistry,
+): String? = registry.converterFor(design.type)?.wearDesignProperties(design, snapshot)?.shape
 
 /** [content] in [frame]'s container, as a widget host draws one: rounded, filled and padded. */
 @Composable
