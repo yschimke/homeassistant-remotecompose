@@ -88,19 +88,24 @@ fun RemoteComposeCard(
   if (document == null) {
     BasicText("This card needs playback capabilities unavailable on this platform.", modifier)
   } else {
-    CompositionLocalProvider(LocalRcLayoutAnimations provides animateLayoutChanges) {
-      RcComposePlayer(
-        document = document,
-        modifier = modifier,
-        namedValues = values,
-        onEvent = onEvent,
-        customComponents =
-          ee.schimke.composeai.rcplayer.compose.rcInputComponents(
-            inputDrafts,
-            inputEditing,
-            onSubmit = onInputSubmit,
-          ),
-      )
+    // A document that throws while it plays is disabled, not the screen it is on.
+    RcErrorBoundary(bytes, modifier) { fail ->
+      CompositionLocalProvider(LocalRcLayoutAnimations provides animateLayoutChanges) {
+        RcComposePlayer(
+          document = document,
+          modifier = Modifier,
+          namedValues = values,
+          onEvent = { event -> runCatching { onEvent(event) }.onFailure(fail) },
+          customComponents =
+            ee.schimke.composeai.rcplayer.compose.rcInputComponents(
+              inputDrafts,
+              inputEditing,
+              onSubmit = { action, values ->
+                runCatching { onInputSubmit(action, values) }.onFailure(fail)
+              },
+            ),
+        )
+      }
     }
   }
 }

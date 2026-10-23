@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
+import ee.schimke.ha.rc.components.ProvideExpressionNames
 import ee.schimke.ha.rc.components.enableRemoteImageUrls
 import java.io.ByteArrayInputStream
 
@@ -88,7 +89,7 @@ suspend fun captureCardDocument(
       creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
       profile = profile,
     ) {
-      converter.Render(card, snapshot)
+      ProvideExpressionNames { converter.Render(card, snapshot) }
     }
   return CardDocument(captured.bytes, widthPx, heightPx).also { cache.put(cacheKey, it) }
 }

@@ -265,6 +265,26 @@ private fun CardActionsPreview(state: ee.schimke.terrazzo.dashboard.CardActionsS
     onMonitor = {},
   )
 
+/**
+ * A card whose document threw while it played (RcErrorBoundary): the atomic-symbol warning takes
+ * its place, and the card beside it plays on.
+ */
+@Preview(name = "card disabled", showBackground = false, widthDp = PHONE_WIDTH_DP)
+@Composable
+fun Screen_CardDisabled() = PhoneHost {
+  androidx.compose.foundation.layout.Column(
+    androidx.compose.ui.Modifier.padding(16.dp),
+    verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+  ) {
+    ee.schimke.terrazzo.dashboard.StudioCardPreview(
+      demoSession(),
+      HISTORY_SAMPLE_CARD,
+      DemoData.snapshot(DEMO_CLOCK_MS),
+    )
+    ee.schimke.terrazzo.shared.RcDisabledWarning("IllegalStateException: measure failed")
+  }
+}
+
 @Preview(name = "card style", showBackground = false, widthDp = PHONE_WIDTH_DP)
 @Composable
 fun Screen_CardStyle() = PhoneHost {
@@ -761,6 +781,23 @@ fun Screen_Settings_Assistants() = PhoneHost {
 fun Screen_Settings_CardStyles() = PhoneHost {
   Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
     CardStyleSection(selected = CardStylePref.Classic, onSelect = {}, initiallyExpanded = true)
+  }
+}
+
+/**
+ * The card style picker previewed on a watch: the current style's sample as Small and Large Wear
+ * widgets on round and square watch screens.
+ */
+@Preview(
+  name = "settings · card styles on a watch",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_Settings_CardStylesOnWatch() = PhoneHost {
+  Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
+    CardStyleSection(selected = CardStylePref.Lcd, onSelect = {}, initiallyOnWatch = true)
   }
 }
 

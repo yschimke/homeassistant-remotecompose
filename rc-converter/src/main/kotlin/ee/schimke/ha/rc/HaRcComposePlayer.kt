@@ -33,6 +33,7 @@ import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import ee.schimke.composeai.rcplayer.runtime.RcPlayerEvent
 import ee.schimke.composeai.rcplayer.runtime.RcTimeSnapshot
 import ee.schimke.composeai.rcplayer.runtime.RcTimeSource
+import ee.schimke.terrazzo.shared.RcErrorBoundary
 import java.time.Instant
 import java.time.ZonedDateTime
 import kotlin.coroutines.cancellation.CancellationException
@@ -129,51 +130,59 @@ fun HaRcComposePlayer(
   }
   // A clone ([cloneForPlayer]) shares its source's document, so the decode is what tells them
   // apart: a new one is a new document to play, with its own state and its own image fetches.
-  key(decoded) {
-    val clock = LocalHaClock.current
-    // A frozen clock means a preview or test: decode inline, so the image is in place by the frame
-    // a
-    // capture waits on rather than landing from a background thread after it.
-    val imageLoader =
-      remember(bitmapLoader, clock.isFrozen) {
-        bitmapLoader.asRcImageLoader(inline = clock.isFrozen)
-      }
-    // rc-player rejects a write to a name the document doesn't declare (the View player's setters
-    // dropped it), and the host pushes every binding of every entity the card references. So the
-    // player gets only the values this document declares, with a matching type.
-    val declared = decoded.declared
-    // Seeded before the player's first frame, so it starts settled on the live values: a value that
-    // only arrives through the effect below lands a frame late and tweens in from the document's
-    // baked one on every load (docs/architecture/live-card-updates.md § First frame).
-    val playerValues =
-      remember(document) {
-        mutableStateMapOf<String, RcNamedValue>().apply {
-          putAll(namedValues.filter { (name, value) -> declared.accepts(name, value) })
+  // A document that throws while it plays is disabled, and an atomic-symbol warning takes its place
+  // (RcErrorBoundary); the rest of the dashboard carries on.
+  RcErrorBoundary(documentBytes, modifier) { fail ->
+    key(decoded) {
+      val clock = LocalHaClock.current
+      // A frozen clock means a preview or test: decode inline, so the image is in place by the
+      // frame
+      // a
+      // capture waits on rather than landing from a background thread after it.
+      val imageLoader =
+        remember(bitmapLoader, clock.isFrozen) {
+          bitmapLoader.asRcImageLoader(inline = clock.isFrozen)
         }
-      }
-    LaunchedEffect(playerValues, namedValues) {
-      snapshotFlow { namedValues.toMap() }
-        .collect { values ->
-          val accepted = values.filter { (name, value) -> declared.accepts(name, value) }
-          playerValues.keys.retainAll(accepted.keys)
-          playerValues.putAll(accepted)
+      // rc-player rejects a write to a name the document doesn't declare (the View player's setters
+      // dropped it), and the host pushes every binding of every entity the card references. So the
+      // player gets only the values this document declares, with a matching type.
+      val declared = decoded.declared
+      // Seeded before the player's first frame, so it starts settled on the live values: a value
+      // that
+      // only arrives through the effect below lands a frame late and tweens in from the document's
+      // baked one on every load (docs/architecture/live-card-updates.md § First frame).
+      val playerValues =
+        remember(document) {
+          mutableStateMapOf<String, RcNamedValue>().apply {
+            putAll(namedValues.filter { (name, value) -> declared.accepts(name, value) })
+          }
         }
-    }
-    val frozenTime = remember(clock) { if (clock.isFrozen) clock.asRcTimeSource() else null }
-    val player: @Composable () -> Unit = {
-      RcComposePlayer(
-        document,
-        imageLoader,
-        customComponents = inputs,
-        modifier = modifier.then(WrapUnpinnedHeight),
-        namedValues = playerValues,
-        onEvent = onEvent,
-      )
-    }
-    if (frozenTime != null) {
-      CompositionLocalProvider(LocalRcTimeSource provides frozenTime, content = player)
-    } else {
-      player()
+      LaunchedEffect(playerValues, namedValues) {
+        snapshotFlow { namedValues.toMap() }
+          .collect { values ->
+            val accepted = values.filter { (name, value) -> declared.accepts(name, value) }
+            playerValues.keys.retainAll(accepted.keys)
+            playerValues.putAll(accepted)
+          }
+      }
+      val frozenTime = remember(clock) { if (clock.isFrozen) clock.asRcTimeSource() else null }
+      val guardedEvent: (RcPlayerEvent) -> Unit =
+        remember(fail) { { event -> runCatching { onEvent(event) }.onFailure(fail) } }
+      val player: @Composable () -> Unit = {
+        RcComposePlayer(
+          document,
+          imageLoader,
+          customComponents = inputs,
+          modifier = WrapUnpinnedHeight,
+          namedValues = playerValues,
+          onEvent = guardedEvent,
+        )
+      }
+      if (frozenTime != null) {
+        CompositionLocalProvider(LocalRcTimeSource provides frozenTime, content = player)
+      } else {
+        player()
+      }
     }
   }
   error.value?.let { androidx.compose.foundation.text.BasicText(it) }

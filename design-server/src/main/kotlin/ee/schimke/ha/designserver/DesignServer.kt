@@ -257,7 +257,13 @@ fun Application.designServer(
       val design = library.design(call.parameters["id"].orEmpty()) ?: return@get call.notFound()
       call.respondText(
         call.editor(uiBuilder, github).let { editor ->
-          Pages.detail(library, design, editor, librarySources.mayEdit(editor))
+          Pages.detail(
+            library,
+            design,
+            editor,
+            librarySources.mayEdit(editor),
+            wear = call.request.queryParameters["wear"] == "1",
+          )
         },
         ContentType.Text.Html,
       )

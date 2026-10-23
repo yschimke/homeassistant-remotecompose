@@ -122,9 +122,9 @@ private data class CardStyleSampleKey(
   val description: String,
 )
 
-private const val SAMPLE_ENTITY = "sensor.card_style"
+internal const val SAMPLE_ENTITY = "sensor.card_style"
 
-private val SAMPLE_CARD =
+internal val SAMPLE_CARD =
   CardConfig(
     type = "tile",
     raw =
@@ -141,7 +141,7 @@ private val SAMPLE_CARD =
  * style has one. Plain entity state rather than `state_content`, which would take the tile off the
  * template path and capture it on the UI thread.
  */
-private fun sampleSnapshot(name: String, description: String) =
+internal fun sampleSnapshot(name: String, description: String) =
   HaSnapshot(
     states =
       mapOf(

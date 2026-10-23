@@ -16,6 +16,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.LocalPictureImageStrategy
 import ee.schimke.ha.rc.components.PictureImageStrategy
+import ee.schimke.ha.rc.components.ProvideExpressionNames
 import ee.schimke.ha.rc.components.WidgetActionRegistry
 import kotlin.math.roundToInt
 import kotlinx.coroutines.runBlocking
@@ -48,20 +49,24 @@ fun captureLauncherWidgetDocument(
       creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
       profile = captureProfile,
     ) {
+      // One card per document, so its expressions are named in composition order, as its template's
+      // are (ProvideExpressionNames).
       CompositionLocalProvider(LocalPictureImageStrategy provides strategy) {
-        LauncherWidgetContent(
-          registry,
-          captureProfile,
-          dark,
-          widgetActions,
-          card,
-          snapshot,
-          WidgetCaptureSizeDp(
-            (widthPx * 160f / densityDpi).roundToInt(),
-            (heightPx * 160f / densityDpi).roundToInt(),
-          ),
-          look,
-        )
+        ProvideExpressionNames {
+          LauncherWidgetContent(
+            registry,
+            captureProfile,
+            dark,
+            widgetActions,
+            card,
+            snapshot,
+            WidgetCaptureSizeDp(
+              (widthPx * 160f / densityDpi).roundToInt(),
+              (heightPx * 160f / densityDpi).roundToInt(),
+            ),
+            look,
+          )
+        }
       }
     }
   }

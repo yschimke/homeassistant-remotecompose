@@ -210,6 +210,7 @@ play {
 
 dependencies {
   implementation(project(":app-ui"))
+  implementation(project(":rc-player-ui"))
   implementation(project(":ha-model"))
   implementation(project(":ha-client"))
   implementation(project(":rc-converter"))
