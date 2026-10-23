@@ -48,6 +48,10 @@ const MANIFEST = [
 
   { view: "weather", cardIndex: 0, file: "weather-forecast/forecast_home" },
 
+  { view: "light", cardIndex: 0, file: "light/kitchen" },
+  { view: "thermostat", cardIndex: 0, file: "thermostat/living_room" },
+  { view: "alarm-panel", cardIndex: 0, file: "alarm-panel/house" },
+
   // Pixel-parity reference — one `vertical-stack` card.
   { view: "dashboard", cardIndex: 0, file: "dashboard/home" },
 
@@ -84,7 +88,9 @@ try {
   await page.setViewport({ width: 800, height: 1600, deviceScaleFactor: 2 });
 
   // Seed the long-lived token so the frontend skips the login wall.
-  await page.goto(BASE, { waitUntil: "domcontentloaded" });
+  // networkidle2, not domcontentloaded: a just-started HA redirects its frontend once it loads,
+  // which destroys the context the token is seeded into.
+  await page.goto(BASE, { waitUntil: "networkidle2" });
   await page.evaluate((token) => {
     localStorage.setItem(
       "hassTokens",
