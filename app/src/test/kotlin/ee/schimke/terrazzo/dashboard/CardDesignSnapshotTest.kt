@@ -73,6 +73,19 @@ class CardDesignSnapshotTest {
   }
 
   @Test
+  fun aBlobStoredSinceInvalidatesIt() {
+    // A sync that only fills in blobs (a design just chosen) leaves the manifest as it was.
+    val blobs = File(dir, "blobs").apply { mkdirs() }
+    blobs.setLastModified(System.currentTimeMillis() - 60_000)
+    CardDesignSnapshot.write(dir, prefer, ids, CardDesignSnapshot.manifestStamp(dir), designs)
+    assertNotNull(CardDesignSnapshot.read(dir, prefer, ids))
+
+    File(blobs, "${"a".repeat(64)}.rc").writeBytes(byteArrayOf(9))
+
+    assertNull(CardDesignSnapshot.read(dir, prefer, ids))
+  }
+
+  @Test
   fun otherPreferencesHaveTheirOwn() {
     CardDesignSnapshot.write(dir, prefer, ids, CardDesignSnapshot.manifestStamp(dir), designs)
 
