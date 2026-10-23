@@ -105,6 +105,9 @@ views:
             max: 100
             needle: true
             severity: { green: 60, yellow: 30, red: 0 }
+            # Half a section row, as the tiles take by default: 246 px at the capture's 2x is
+            # the gauge preview's 187 dp at 2.625x, so the two compare like for like.
+            grid_options: { columns: 6 }
 
   - title: weather
     path: weather

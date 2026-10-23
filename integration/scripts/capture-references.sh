@@ -35,6 +35,16 @@ until [[ "$(docker inspect -f '{{.State.Health.Status}}' ha-remotecompose-ref 2>
   sleep 2
 done
 
+# onboard.sh's access token lasts about 30 minutes. A later capture reuses .env.local, so rotate it
+# from the stored refresh token now that HA is up; a hand-made long-lived token has none and stays.
+if grep -q '^HA_REFRESH_TOKEN=.' .env.local; then
+  ../scripts/refresh-ha-token.sh
+  set -a
+  # shellcheck disable=SC1091
+  source .env.local
+  set +a
+fi
+
 echo "==> running puppeteer capture"
 docker compose --profile capture run --rm puppeteer
 

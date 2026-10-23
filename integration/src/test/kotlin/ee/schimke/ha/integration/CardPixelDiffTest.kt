@@ -71,9 +71,11 @@ class CardPixelDiffTest(
         arrayOf("Markdown_Dark_markdown_dark", "markdown/notes_dark.png", 40.0),
 
         // gauge / weather-forecast — references captured from the seeded HA
-        // (integration/config), whose entities mirror the previews' fixtures.
-        arrayOf("Gauge_Light_gauge_light", "gauge/battery_light.png", 25.0),
-        arrayOf("Gauge_Dark_gauge_dark", "gauge/battery_dark.png", 25.0),
+        // (integration/config), whose entities mirror the previews' fixtures, at
+        // each preview's width: ImageDiff compares only the overlap, so a wider
+        // reference would leave most of the card unchecked.
+        arrayOf("Gauge_Light_gauge_light", "gauge/battery_light.png", 35.0),
+        arrayOf("Gauge_Dark_gauge_dark", "gauge/battery_dark.png", 35.0),
         arrayOf(
           "WeatherForecast_Light_weather_forecast_light",
           "weather-forecast/forecast_home_light.png",
