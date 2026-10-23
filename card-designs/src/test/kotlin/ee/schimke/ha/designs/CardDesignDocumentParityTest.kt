@@ -34,6 +34,7 @@ class CardDesignDocumentParityTest {
     val design = designOf("tile")
     val keys = libraryKeys(CardTypes.TILE)
     assertTrue(keys.isNotEmpty(), "the library has tile keys")
+    println("tile.uid: ${keys.size} library tile keys")
 
     val differing = keys.filterNot { key ->
       val converter = CardDesignTemplates.capture(context, key)
