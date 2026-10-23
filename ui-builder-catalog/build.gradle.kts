@@ -100,6 +100,19 @@ val stageAndroidCatalogBundle =
       }
       from(library.layout.buildDirectory.file("outputs/aar/$module-debug.aar")) { into("android") }
     }
+    // rc-converter's players are error boundaries from rc-player-ui (RcErrorBoundary), a
+    // multiplatform library whose Android variant is `androidMain`, not `debug`.
+    val playerUi = project(":rc-player-ui")
+    dependsOn(":rc-player-ui:bundleAndroidMainAar")
+    from(
+      playerUi.layout.buildDirectory.file(
+        "intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar"
+      )
+    ) {
+      into("lib")
+      rename { "rc-player-ui.jar" }
+    }
+    from(playerUi.layout.buildDirectory.file("outputs/aar/rc-player-ui.aar")) { into("android") }
   }
 val packageAndroidCatalogBundle =
   tasks.register<Zip>("packageAndroidCatalogBundle") {
