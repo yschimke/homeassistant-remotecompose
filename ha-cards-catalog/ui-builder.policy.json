@@ -2782,6 +2782,62 @@
       "displayName": "Arc dial card (launcher)",
       "group": "Card layout",
       "nativeOnly": true
+    },
+    "ha-cards/gauge-card-full": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaGaugeCardFull",
+      "displayName": "Gauge card (full)",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/gauge-card-wide": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaGaugeCardWide",
+      "displayName": "Gauge card (wide)",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/gauge-card-stacked": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaGaugeCardStacked",
+      "displayName": "Gauge card (stacked)",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/statistic-card-full": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaStatisticCardFull",
+      "displayName": "Statistic card",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "compact": {
+            "type": "bool",
+            "value": false
+          },
+          "tight": {
+            "type": "bool",
+            "value": false
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "compact",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "For a Wear Small container."
+        },
+        {
+          "name": "tight",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Padding trimmed for a one-row launcher widget."
+        }
+      ]
+    },
+    "ha-cards/statistic-card-icon-chip": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaStatisticCardIconChip",
+      "displayName": "Statistic card icon chip",
+      "group": "Card layout",
+      "nativeOnly": true
     }
   },
   "$comment_templates": "Generated, not hand-written: :design-server's HaCardsTemplatesTest seeds each from a card schema (CardSchema.fromCard) with HaCardsSeed — the design server's UiBuilderSeed retargeted to this catalog — and fails when a committed template drifts. `-PhaCardsTemplates.update=true` rewrites them.",

@@ -14,6 +14,7 @@ import ee.schimke.ha.rc.cards.GlanceDesignParts
 import ee.schimke.ha.rc.cards.HeadingDesignParts
 import ee.schimke.ha.rc.cards.SensorDesignParts
 import ee.schimke.ha.rc.cards.TileDesignParts
+import ee.schimke.ha.rc.cards.ValueDesignParts
 import ee.schimke.ha.rc.design.CardDesigns
 
 /*
@@ -447,4 +448,46 @@ fun HaArcDialCardWear(
 @RemoteComposable
 fun HaArcDialCardLauncher(modifier: RemoteModifier = RemoteModifier) {
   ArcDialDesignParts.Launcher(modifier)
+}
+
+/** `ha-cards/gauge-card-full`: the gauge's half-circle dial over its name. */
+@Composable
+@RemoteComposable
+fun HaGaugeCardFull(modifier: RemoteModifier = RemoteModifier) {
+  ValueDesignParts.GaugeFull(modifier)
+}
+
+/** `ha-cards/gauge-card-wide`: the gauge's arc on the left, value and name beside it. */
+@Composable
+@RemoteComposable
+fun HaGaugeCardWide(modifier: RemoteModifier = RemoteModifier) {
+  ValueDesignParts.GaugeWide(modifier)
+}
+
+/** `ha-cards/gauge-card-stacked`: the gauge's half-arc as a backdrop with the value over it. */
+@Composable
+@RemoteComposable
+fun HaGaugeCardStacked(modifier: RemoteModifier = RemoteModifier) {
+  ValueDesignParts.GaugeStacked(modifier)
+}
+
+/**
+ * `ha-cards/statistic-card-full`: the statistic, its name and period; [compact] for a Wear Small
+ * container, [tight] for a one-row launcher widget.
+ */
+@Composable
+@RemoteComposable
+fun HaStatisticCardFull(
+  modifier: RemoteModifier = RemoteModifier,
+  compact: Boolean = false,
+  tight: Boolean = false,
+) {
+  ValueDesignParts.StatisticFull(compact, tight, modifier)
+}
+
+/** `ha-cards/statistic-card-icon-chip`: the statistic's tinted icon and value. */
+@Composable
+@RemoteComposable
+fun HaStatisticCardIconChip(modifier: RemoteModifier = RemoteModifier) {
+  ValueDesignParts.StatisticIconChip(modifier)
 }

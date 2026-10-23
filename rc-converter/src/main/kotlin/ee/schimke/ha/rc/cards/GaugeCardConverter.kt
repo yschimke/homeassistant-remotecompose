@@ -14,10 +14,8 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.BreakpointAxis
-import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.DesignTemplateInput
-import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
@@ -28,6 +26,7 @@ import ee.schimke.ha.rc.components.RemoteHaGauge
 import ee.schimke.ha.rc.components.RemoteHaGaugeStacked
 import ee.schimke.ha.rc.components.RemoteHaGaugeWide
 import ee.schimke.ha.rc.defaultTapActionFor
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.parseHaAction
 import kotlinx.serialization.json.JsonObject
@@ -61,7 +60,7 @@ import kotlinx.serialization.json.put
  * (double arc + double value). A single threshold keeps it off the nested-state-layout collapse
  * path (#224).
  */
-class GaugeCardConverter : CardConverter {
+class GaugeCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.GAUGE
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 150
@@ -106,67 +105,36 @@ class GaugeCardConverter : CardConverter {
   /** Range, severity bands and range line, as data: [CardBindingRecipes.GAUGE]. */
   override fun designRecipe(): CardBindingRecipe = CardBindingRecipes.GAUGE
 
+  /** The side-by-side Wide row: arc on the left, value · name on the right, for a short cell. */
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    when (LocalCardSizeMode.current) {
-      CardSizeMode.Wrap -> FullGauge(card, snapshot, modifier)
-      CardSizeMode.Fixed -> AdaptiveGauge(card, snapshot, modifier)
-    }
+  internal fun Wide(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+    RemoteHaGaugeWide(gaugeData(card, snapshot), modifier)
   }
 
+  /**
+   * The stacked gauge in a fixed cell at least 70 dp tall (`gauge.uid`'s height gate; shorter, the
+   * [Wide] row).
+   */
   @Composable
-  private fun AdaptiveGauge(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  internal fun Stacked(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val data = gaugeData(card, snapshot)
     // A launcher widget one column wide is too narrow for the value at its own size beside the
     // name and range: known at capture, so decided there.
     val narrow = (LocalWidgetCaptureSizeDp.current?.widthDp ?: Int.MAX_VALUE) < NarrowWidthDp
-    // Single height gate — short cells (Wear S) get the side-by-side
-    // Wide row, everything else gets the Stacked Box overlay. Routed
-    // through the shared [RemoteSizeBreakpoint] so the gauge inherits
-    // the arc-dial family's `immediateSwap` workaround for the #309
-    // overlay artifact (without it the raw `RemoteStateLayout` paints
-    // both the Wide and Stacked tiers on top of each other — double
-    // arc + double value — making the family un-reviewable).
-    //
-    // Height is the right axis here: the discriminating cell is the
-    // 200×60 Wear S slot, which pins height, unlike the width-pinned
-    // launcher reflows. A single threshold avoids the nested
-    // state-layout collapse (#224).
-    RemoteSizeBreakpoint(
-      thresholdsDp = intArrayOf(MinStackedHeightDp),
-      axis = BreakpointAxis.Height,
-      modifier = modifier.fillMaxSize(),
-    ) { tier ->
-      when (tier) {
-        0 -> RemoteHaGaugeWide(data, RemoteModifier.fillMaxSize())
-        else ->
-          if (
-            LocalWidgetCaptureSizeDp.current == null &&
-              LocalFixedCanvasAxis.current == BreakpointAxis.Width
-          ) {
-            // A launcher cell played without its capture size (a preview, the widget picker): the
-            // narrow decision moves to a width gate, so a one-column cell still sets its value
-            // whole rather than ellipsising it (card-information-hierarchy.md).
-            RemoteSizeBreakpoint(
-              thresholdsDp = intArrayOf(NarrowWidthDp),
-              modifier = RemoteModifier.fillMaxSize(),
-            ) { width ->
-              RemoteHaGaugeStacked(data, RemoteModifier.fillMaxSize(), narrow = width == 0)
-            }
-          } else
-            RemoteHaGaugeStacked(
-              data,
-              RemoteModifier.fillMaxSize(),
-              narrow = narrow,
-              hero = captureHeroScale(),
-            )
+    if (
+      LocalWidgetCaptureSizeDp.current == null &&
+        LocalFixedCanvasAxis.current == BreakpointAxis.Width
+    ) {
+      // A launcher cell played without its capture size (a preview, the widget picker): the
+      // narrow decision moves to a width gate, so a one-column cell still sets its value
+      // whole rather than ellipsising it (card-information-hierarchy.md).
+      RemoteSizeBreakpoint(thresholdsDp = intArrayOf(NarrowWidthDp), modifier = modifier) { width ->
+        RemoteHaGaugeStacked(data, RemoteModifier.fillMaxSize(), narrow = width == 0)
       }
-    }
+    } else RemoteHaGaugeStacked(data, modifier, narrow = narrow, hero = captureHeroScale())
   }
 
   private companion object {
-    const val MinStackedHeightDp = 70
-
     /** Narrower than a two-column launcher widget: one column, `57 dp` on Android's grid. */
     const val NarrowWidthDp = 100
 
@@ -176,8 +144,9 @@ class GaugeCardConverter : CardConverter {
     const val DOMAIN = "domain"
   }
 
+  /** The full gauge, on a dashboard. */
   @Composable
-  private fun FullGauge(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  internal fun Full(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     RemoteHaGauge(gaugeData(card, snapshot), modifier = modifier)
   }
 }
