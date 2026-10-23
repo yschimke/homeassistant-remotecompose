@@ -68,11 +68,12 @@ internal fun UberShowcase(theme: HaUberTheme, darkTheme: Boolean) {
                 Fixtures.battery,
                 RemoteModifier.fillMaxWidth(),
               )
-              RemoteRow(
-                modifier = RemoteModifier.fillMaxWidth(),
-                horizontalArrangement = RemoteArrangement.spacedBy(HaSpace.M.rdp),
-              ) {
-                MeasurementCard(RemoteModifier.weight(1f).height(196.rdp)) {
+              // The gap is the left card's end padding, not `spacedBy`: the player shares a row's
+              // weights out of its full width, so a spaced row overflows by the gap.
+              RemoteRow(modifier = RemoteModifier.fillMaxWidth()) {
+                MeasurementCard(
+                  RemoteModifier.weight(1f).padding(end = HaSpace.M.rdp).height(196.rdp)
+                ) {
                   RemoteHaMeasurement(
                     HaReading.static("Living room", 21.5f, "°C", HaMeasureKind.Temperature),
                     HaPresentation.Expanded,

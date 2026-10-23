@@ -127,12 +127,13 @@ internal fun TileFeaturesBelow(data: HaTileData, accent: RemoteColor) {
   if (below.isEmpty()) return
   val perRow = if (data.featuresPosition == HaTileFeaturePosition.Inline) 2 else 1
   below.chunked(perRow).forEach { row ->
-    RemoteRow(
-      modifier = RemoteModifier.fillMaxWidth().padding(top = TileFeatureGapDp.rdp),
-      horizontalArrangement = RemoteArrangement.spacedBy(TileFeatureGapDp.rdp),
-    ) {
-      row.forEach { feature ->
-        RemoteBox(modifier = RemoteModifier.weight(1f)) {
+    // The gap is each but the last control's end padding, not `spacedBy`: the player shares a
+    // row's weights out of its full width, so a spaced row of weighted controls overflows by the
+    // gap.
+    RemoteRow(modifier = RemoteModifier.fillMaxWidth().padding(top = TileFeatureGapDp.rdp)) {
+      row.forEachIndexed { index, feature ->
+        val gap = if (index < row.lastIndex) TileFeatureGapDp else 0
+        RemoteBox(modifier = RemoteModifier.weight(1f).padding(end = gap.rdp)) {
           TileFeature(feature, accent, TileFeatureHeightDp, data.name)
         }
       }
