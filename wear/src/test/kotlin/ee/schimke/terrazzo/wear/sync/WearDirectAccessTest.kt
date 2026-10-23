@@ -79,6 +79,7 @@ class WearDirectAccessTest {
   @BeforeTest
   fun reset() {
     WearDirectAccess.resetThrottles()
+    offline.forgetDirectReadAt()
     store.clear()
   }
 
@@ -156,6 +157,32 @@ class WearDirectAccessTest {
     // Fresh now, and read at most once a minute.
     assertNull(direct.refresh(listOf(card, """{"entity":"sensor.new"}"""), signedIn))
     assertEquals(1, fetched.size)
+  }
+
+  @Test
+  fun aFailedReadStillWaitsItsTurnInAFreshProcess() = runTest {
+    store.write(access)
+    answer = { throw IOException("unreachable") }
+    assertNull(direct.refresh(listOf(card), signedIn))
+    assertEquals(2, fetched.size, "both addresses tried")
+
+    // A widget update in a new process: nothing in memory, the last attempt on disk.
+    WearDirectAccess.resetThrottles()
+    assertNull(direct.refresh(listOf(card), signedIn))
+    assertEquals(2, fetched.size, "not read again within a minute")
+
+    clock += WearDirectAccess.MIN_INTERVAL_MS
+    WearDirectAccess.resetThrottles()
+    answer = { mapOf("sensor.outside" to state("sensor.outside", "7")) }
+    assertEquals("7", direct.refresh(listOf(card), signedIn)?.values?.get("sensor.outside")?.state)
+  }
+
+  @Test
+  fun aLastReadFromTheFutureIsIgnored() = runTest {
+    store.write(access)
+    offline.writeDirectReadAt(clock + 3_600_000L)
+    answer = { mapOf("sensor.outside" to state("sensor.outside", "1")) }
+    assertNotNull(direct.refresh(listOf(card), signedIn), "the clock was set back: read")
   }
 
   @Test

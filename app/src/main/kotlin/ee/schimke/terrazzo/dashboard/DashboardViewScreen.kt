@@ -4,6 +4,11 @@ package ee.schimke.terrazzo.dashboard
 
 import android.util.Log
 import androidx.activity.compose.ReportDrawn
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,10 +24,12 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
@@ -52,6 +59,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -199,6 +207,7 @@ fun DashboardViewScreen(
   // started load may, so a slow poll landing after a tap's refetch can't bring stale values back.
   val loads = remember(session, urlPath) { LatestWins() }
   val logStore = LocalTerrazzoGraph.current.logStore
+  val imageStack = LocalHaImageStack.current
   LaunchedEffect(session, urlPath) {
     suspend fun loadOnce() {
       try {
@@ -258,6 +267,8 @@ fun DashboardViewScreen(
       if (!loadedLive) loadOnce()
       loadedLive = false
       val ready = state as? DashboardState.Ready ?: return@collectLatest
+      // Pictures of cards not yet on screen, onto disk for the next offline start.
+      imageStack?.prewarm(dashboardPictureUrls(ready.dashboard, ready.snapshot))
       session.liveDashboardSnapshots(ready.snapshot).collect { snapshot ->
         // A pushed state is the newest there is: it supersedes any load still in flight.
         loads.begin()
@@ -371,7 +382,8 @@ fun DashboardViewScreen(
         DashboardList(
           dashboard = s.dashboard,
           placeholderSession = session,
-          snapshot = s.snapshot,
+          // Live cameras (from a card's long-press sheet) move on a frame every couple of seconds.
+          snapshot = rememberLiveCameraFrames(s.snapshot),
           baseUrl = session.baseUrl,
           dashboardUrlPath = urlPath ?: "",
           onCardLongPress = onCardLongPress,
@@ -419,6 +431,14 @@ private fun openInBrowser(context: android.content.Context, url: String?) {
 }
 
 private const val TAG = "DashboardView"
+
+/** The `entity_picture` of each entity [dashboard]'s cards name, where [snapshot] has one. */
+private fun dashboardPictureUrls(dashboard: Dashboard, snapshot: HaSnapshot): List<String> =
+  referencedEntities(dashboard).mapNotNull { id ->
+    (snapshot.states[id]?.attributes?.get("entity_picture") as? JsonPrimitive)
+      ?.contentOrNull
+      ?.takeIf { it.isNotBlank() }
+  }
 
 /** How long pushed states settle before the dashboard's cached snapshot is rewritten. */
 private const val LIVE_SNAPSHOT_SAVE_DEBOUNCE_MS = 5_000L
@@ -1597,7 +1617,36 @@ private fun CardSlot(
     if (flashSignature != null) {
       CardChangeFlash(flashSignature)
     }
+    val cameras = remember(card) { cameraEntities(card) }
+    if (cameras.isNotEmpty()) {
+      val live by LiveCameras.live.collectAsState()
+      if (cameras.any { it in live }) LiveCameraDot(Modifier.align(Alignment.TopEnd))
+    }
   }
+}
+
+/**
+ * The mark of a card whose camera is live: a small dot in the corner, pulsing gently, so it reads
+ * as "updating" without drawing the eye away from the picture.
+ */
+@Composable
+private fun LiveCameraDot(modifier: Modifier = Modifier) {
+  val pulse = rememberInfiniteTransition(label = "live-camera")
+  val alpha by
+    pulse.animateFloat(
+      initialValue = 1f,
+      targetValue = 0.35f,
+      animationSpec = infiniteRepeatable(tween(durationMillis = 1_000), RepeatMode.Reverse),
+      label = "live-camera-alpha",
+    )
+  Box(
+    modifier
+      .padding(10.dp)
+      .size(8.dp)
+      .graphicsLayer { this.alpha = alpha }
+      .background(MaterialTheme.colorScheme.error, CircleShape)
+      .semantics { contentDescription = "Live camera" }
+  )
 }
 
 private data class CardSlotCacheKey(

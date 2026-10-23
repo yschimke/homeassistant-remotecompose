@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo
 
+import android.text.format.DateUtils
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -83,6 +84,7 @@ internal fun DashboardTopBar(
   onWriteModeChange: (Boolean) -> Unit,
   overflowMenu: @Composable (onOpenAgent: (() -> Unit)?) -> Unit,
   modifier: Modifier = Modifier,
+  cachedDataAtMs: Long? = null,
 ) {
   BoxWithConstraints(modifier = modifier) {
     val agentInline = showAgentButton && maxWidth >= AgentActionMinWidth
@@ -111,7 +113,11 @@ internal fun DashboardTopBar(
         // took its own height moved the whole dashboard down and back on every launch.
         ConnectingLine(connectionStatus, Modifier.align(Alignment.BottomCenter))
       }
-      ConnectionStatusStrip(status = connectionStatus, onRetry = onRetryConnection)
+      ConnectionStatusStrip(
+        status = connectionStatus,
+        onRetry = onRetryConnection,
+        cachedDataAtMs = cachedDataAtMs,
+      )
     }
   }
 }
@@ -163,7 +169,9 @@ private const val CONNECTING_LINE_DELAY_MS = 500L
 /**
  * The text (or progress) half of the connection state, shown full-width under the app bar so it
  * never competes with the title: an indeterminate progress line while connecting, and a one-line
- * tonal banner that retries on tap while paused or failed. Nothing while connected.
+ * tonal banner that retries on tap while paused or failed. Nothing while connected. When failed, it
+ * also says how old the cached data on screen is ([cachedDataAtMs]), so values from an offline
+ * start aren't taken for current ones.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -171,6 +179,7 @@ internal fun ConnectionStatusStrip(
   status: ConnectionStatus,
   onRetry: () -> Unit,
   modifier: Modifier = Modifier,
+  cachedDataAtMs: Long? = null,
 ) {
   when (status) {
     // Drawn over the app bar by [ConnectingLine], taking no space.
@@ -198,7 +207,12 @@ internal fun ConnectionStatusStrip(
               .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
           Text(
-            text = if (failed) "Can't reach Home Assistant" else "Paused — tap to reconnect",
+            text =
+              when {
+                !failed -> "Paused — tap to reconnect"
+                cachedDataAtMs == null -> "Can't reach Home Assistant"
+                else -> "Offline · data from ${cachedDataAge(cachedDataAtMs)}"
+              },
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -255,3 +269,13 @@ private fun ConnectionStatus.statusColor(): Color =
     ConnectionStatus.Disconnected -> statusColors.neutral
     ConnectionStatus.Failed -> statusColors.error
   }
+
+/** "5 min. ago" and the like: how old cached data is, to the minute. */
+private fun cachedDataAge(savedAtMs: Long): String =
+  DateUtils.getRelativeTimeSpanString(
+      savedAtMs,
+      System.currentTimeMillis(),
+      DateUtils.MINUTE_IN_MILLIS,
+      DateUtils.FORMAT_ABBREV_RELATIVE,
+    )
+    .toString()

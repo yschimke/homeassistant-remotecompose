@@ -11,6 +11,7 @@ import ee.schimke.terrazzo.wear.ui.wearAppTemplate
 import ee.schimke.terrazzo.wear.ui.wearSnapshot
 import ee.schimke.terrazzo.wear.widget.WearWidgetFrame
 import ee.schimke.terrazzo.wear.widget.neutralTemplateCaptures
+import ee.schimke.terrazzo.wear.widget.releaseWidgetTemplates
 import ee.schimke.terrazzo.wear.widget.wearAppContainer
 import ee.schimke.terrazzo.wear.widget.wearWidgetCardStyle
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
@@ -29,6 +30,9 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -144,5 +148,41 @@ class WearCardWarmupTest {
     assertNotNull(document)
     // The app plays what the warm-up captured, without capturing again.
     assertEquals(before + 1, neutralTemplateCaptures.get())
+  }
+
+  @Test
+  fun aNeutralTemplateIsCapturedOnceAtATimeAndReadBackFromDisk() {
+    // A palette and style no other test captures, so this process hasn't got its template.
+    val registry = defaultRegistry()
+    val card = assertNotNull(decodeWearCard("""{"type":"tile","entity":"light.disk_lamp"}"""))
+    val snapshot = wearSnapshot(mapOf("light.disk_lamp" to EntityValue(state = "on")))
+    val frame = WearWidgetFrame.forContainer(context, wearAppContainer(card, snapshot, registry))
+    val look = WearCardLook(ThemeStyle.TerrazzoMushroom, "nixie")
+    fun template() = runBlocking {
+      wearAppTemplate(
+        context,
+        CardDesignTemplates.designCard(card, snapshot, registry),
+        snapshot,
+        look,
+        wearWidgetCardStyle("nixie", "classic"),
+        frame,
+        ContainerTint.argbFor(card, snapshot),
+        registry,
+      )
+    }
+    val before = neutralTemplateCaptures.get()
+
+    // The warm-up and the app's first frame asking at once: one captures, the other waits for it.
+    val both = runBlocking { List(2) { async(Dispatchers.Default) { template() } }.awaitAll() }
+    assertNotNull(both[0])
+    assertEquals(before + 1, neutralTemplateCaptures.get())
+    val stored = File(context.filesDir, "terrazzo/wear/neutral-templates")
+    assertEquals(1, stored.walkTopDown().count { it.isFile && it.name.endsWith(".rc") })
+
+    // Memory trimmed (or a new process): read back from disk, not captured again.
+    releaseWidgetTemplates()
+    assertNotNull(template())
+    assertEquals(before + 1, neutralTemplateCaptures.get())
+    assertTrue(stored.exists(), "trimming memory leaves the disk")
   }
 }

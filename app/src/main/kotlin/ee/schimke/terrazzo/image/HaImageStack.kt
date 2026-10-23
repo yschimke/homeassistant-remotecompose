@@ -29,6 +29,8 @@ import ee.schimke.terrazzo.core.network.LanConnectionPolicy
 import ee.schimke.terrazzo.core.network.LanConnectionPolicyInterceptor
 import ee.schimke.terrazzo.core.network.RemoteUrlInterceptor
 import ee.schimke.terrazzo.core.network.RemoteUrlStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okio.Path.Companion.toOkioPath
 
@@ -132,6 +134,16 @@ class HaImageStack(
     )
     ImageLoader.Builder(context.applicationContext)
       .components {
+        // Camera and image-entity pictures: one disk entry per entity, network first, the last
+        // one on disk when offline. Other pictures that can change in place refresh once a day.
+        add(
+          LiveImageCacheInterceptor(
+            isOnline = { lanPolicy.isOnline },
+            savedAtMs = { key ->
+              diskCache.openSnapshot(key)?.use { it.data.toFile().lastModified() }
+            },
+          )
+        )
         // Demo mode's pictures are on a host nothing serves; draw stand-ins for them. Answers only
         // for `DemoData.BASE_URL` URLs, so real sessions' fetches are untouched.
         add(DemoImageFetcher.Factory())
@@ -141,6 +153,44 @@ class HaImageStack(
       .eventListener(LoggingEventListener)
       .build()
       .also { Log.d(TAG, "imageLoader built") }
+  }
+
+  /**
+   * Forgets every picture, in memory and on disk: sign-out calls it so the next account on the
+   * device can't see the last one's camera frames and people. The disk cache is in app storage that
+   * only this clears.
+   */
+  suspend fun clearCaches() {
+    imageLoader.memoryCache?.clear()
+    withContext(Dispatchers.IO) { diskCache.clear() }
+  }
+
+  /**
+   * Fetches into the disk cache whichever of [urls] it doesn't hold yet, so a card that hasn't been
+   * on screen still has its picture the next time the app starts offline. Memory stays out of it:
+   * no memory-cache entry, and a token-sized decode (Coil decodes what it fetches; the disk keeps
+   * the bytes as served). Checks the disk on [Dispatchers.IO]; the fetches themselves are enqueued.
+   */
+  suspend fun prewarm(urls: Collection<String>) {
+    if (urls.isEmpty() || !lanPolicy.isOnline) return
+    withContext(Dispatchers.IO) { enqueueMissing(urls) }
+  }
+
+  private fun enqueueMissing(urls: Collection<String>) {
+    for (url in urls) {
+      val resolved = resolveAgainstBase(url)
+      if (resolved.startsWith('/')) continue
+      val key = liveImageDiskKey(resolved) ?: resolved
+      if (diskCache.openSnapshot(key)?.use { true } == true) continue
+      imageLoader.enqueue(
+        ImageRequest.Builder(context)
+          .data(resolved)
+          .memoryCachePolicy(CachePolicy.DISABLED)
+          .size(1, 1)
+          .allowHardware(false)
+          .build()
+      )
+    }
   }
 
   /**

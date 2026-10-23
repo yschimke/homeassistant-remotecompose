@@ -22,7 +22,6 @@ import ee.schimke.terrazzo.core.session.HaReauthRequiredException
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.LiveHaSession
 import ee.schimke.terrazzo.core.session.MintedAccessToken
-import ee.schimke.terrazzo.core.session.OfflineOnlySession
 import ee.schimke.terrazzo.core.session.SessionWriteMode
 import ee.schimke.terrazzo.core.wearsync.WearSyncManager
 import ee.schimke.terrazzo.core.widget.WidgetStore
@@ -117,8 +116,7 @@ class HaSessionFactory(
     return MintedAccessToken(accessToken, tokens.expiresInSeconds?.seconds)
   }
 
-  fun createCachedOnly(baseUrl: String): HaSession =
-    CachedHaSession(OfflineOnlySession(baseUrl), cache)
+  fun createCachedOnly(baseUrl: String): HaSession = CachedHaSession.cacheOnly(baseUrl, cache)
 
   fun createDemo(): HaSession = DemoHaSession()
 }

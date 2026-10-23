@@ -151,15 +151,61 @@ overwriting them with nothing.
 Mobile: one Coil 3 `ImageLoader` with a disk cache in
 `noBackupFilesDir/terrazzo/images` (10–100 MB), moved out of `cacheDir`
 so the system doesn't clear the pictures an offline dashboard draws.
-Coil serves disk hits without revalidating. Its OkHttp client attaches
-the session bearer by origin, then rewrites a LAN URL to the instance's
-`external_url` off the home network (`RemoteUrlInterceptor`); the cache
-keys on the original URL, so a cached picture hits on any network.
+Its OkHttp client attaches the session bearer by origin, then rewrites a
+LAN URL to the instance's `external_url` off the home network
+(`RemoteUrlInterceptor`).
+
+Coil 3's default cache strategy serves any disk hit without
+revalidating and ignores `Cache-Control`. For most of what Home
+Assistant serves that is right, and Home Assistant's own headers agree:
+
+| Endpoint | HA's headers | URL changes when the picture does? |
+| --- | --- | --- |
+| `/api/image/serve/<id>/<size>` (person and uploaded pictures) | `public, max-age` 31 days | yes (new id) |
+| `/api/media_player_proxy/<entity>?token=&cache=<hash>` | `max-age=3600` | yes (`cache` is the art's hash) |
+| `/local/…` (the `www` folder) | `public, max-age` 31 days | no: edits show after eviction, as in a browser for a month |
+| `/api/camera_proxy/<entity>?token=` | none | no, and the token rotates every 5 min (two valid at once) |
+| `/api/image_proxy/<entity>?token=` | none | no, same rotating token |
+
+The last two change in place, so `LiveImageCacheInterceptor` keys them
+on the URL without `token` (one disk entry per entity rather than one
+per rotation) and fetches them network first, falling back to the last
+frame on disk when the fetch fails (offline, an expired token) — or
+straight to disk when the device has no network.
+
+Everything else that can change at one URL — `/local/` files, other
+sites' pictures — keeps Coil's disk-first rule until its copy is a day
+old, then goes network first the same way, the old copy standing in
+when the fetch fails. Content-addressed pictures (`/api/image/serve/…`,
+media artwork with `cache=`) are never refetched.
+
+A dashboard camera gets a new frame only when Home Assistant rotates its
+token, every five minutes. A card's long-press sheet has a **Live
+camera** switch: for ten minutes, while the dashboard is in the
+foreground, its cameras' URLs gain a `terrazzo_frame` counter every two
+seconds (`LiveCameras`), each a network-first fetch; the disk key leaves
+the counter out, so it still holds one frame per camera. A small pulsing
+dot in the card's corner marks a live camera.
+
+Sign-out clears the image caches, memory and disk, with the instance's
+other cached data.
+
+After each live dashboard load, `HaImageStack.prewarm` fetches the
+`entity_picture`s of the dashboard's entities that aren't on disk yet,
+without a memory-cache entry, so cards not yet scrolled into view still
+have pictures on the next offline start.
 
 Wear: no network image loader. The phone syncs each card entity's
 picture over the Data Layer into `pictures/`, and both the widgets and
 the in-app cards resolve an `entity_picture` URL to the entity's synced
 copy on disk.
+
+## History
+
+The card-history screen's recorder read is cached per entity set and
+window (`history/<sha1>.json`, the 20 most recent kept): offline it
+draws the last chart read. Statistics and forecasts are not fetched by
+any card yet, so there is nothing to cache.
 
 ## Wear widgets
 
@@ -172,9 +218,10 @@ the render, re-rendering the widget only when it stored newer values.
 
 `HaSession.snapshotFetchedAtMs(urlPath)` is null after a live fetch and,
 after a fallback, says when the cached snapshot was fetched (the Wear
-sync uses it to date what it sends). The phone shows the session's
-connection status in the top bar; a "showing cached data from <ts>"
-pill driven by `snapshotFetchedAtMs` is not built yet.
+sync uses it to date what it sends). When the session has failed, the
+phone's status strip reads "Offline · data from 5 min. ago", dated by
+the open dashboard's cached snapshot (live pushes are saved to it, so it
+is as old as the values on screen).
 
 ## Sign-out
 

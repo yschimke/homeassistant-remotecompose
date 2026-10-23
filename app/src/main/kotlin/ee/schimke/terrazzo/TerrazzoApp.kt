@@ -93,6 +93,7 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
   val context = LocalContext.current
   val widgetScheduler = remember(context) { WidgetRefreshScheduler(context.applicationContext) }
   val wearSync = graph.wearSyncManager
+  val imageStack = LocalHaImageStack.current
 
   // Sign out of [signedOut]'s instance: wipe its cached dashboards / snapshots and refresh-token
   // vault entry so the next user on this device can't read the previous account's data, and so
@@ -111,6 +112,8 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
       }
       if (previousBaseUrl != null) {
         graph.offlineCache.clearInstance(previousBaseUrl)
+        // Its pictures too: camera frames and people outlive the dashboards otherwise.
+        runCatching { imageStack?.clearCaches() }
         runCatching { graph.tokenVault.clear(previousBaseUrl) }
         graph.remoteUrlStore.clear(previousBaseUrl)
       }
@@ -153,7 +156,6 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
   // same-host fetches without rebuilding the loader. Demo / null
   // sessions clear the bearer (`accessToken=null`) — the
   // interceptor then passes requests through unmodified.
-  val imageStack = LocalHaImageStack.current
   // A live session re-mints its access token as connects need one, so re-read it on each
   // connection change rather than keeping the bearer it started with.
   LaunchedEffect(imageStack, session) {
@@ -611,6 +613,21 @@ private fun DashboardsRoot(
     }
   }
 
+  // Offline, the dashboard shows its cached snapshot (live pushes are saved to it as they come):
+  // the strip says how old that is. Demo boards are never cached.
+  val cachedDataAtMs =
+    remember(connectionStatus, openedValue, session) {
+      if (
+        connectionStatus != ConnectionStatus.Failed ||
+          openedValue == DASHBOARD_UNSET ||
+          session is DemoHaSession
+      ) {
+        null
+      } else {
+        graph.offlineCache.snapshotSavedAtMs(session.baseUrl, openedValue)
+      }
+    }
+
   val historyOverlay = historyTarget
   val studioOverlay = studioTarget
   if (agentOpen && openedValue != DASHBOARD_UNSET) {
@@ -678,6 +695,7 @@ private fun DashboardsRoot(
           },
           connectionStatus = connectionStatus,
           onRetryConnection = onRetryConnection,
+          cachedDataAtMs = cachedDataAtMs,
           writeMode = writeMode,
           onWriteModeChange = { graph.sessionWriteMode.set(it) },
           overflowMenu = { agentInOverflow ->
