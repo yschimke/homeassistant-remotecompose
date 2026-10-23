@@ -139,10 +139,8 @@ class AndroidImeScrollingTest {
     demo.performScrollTo().assertIsDisplayed()
     captureWindowEvidence("discovery-bottom-ime")
     scrollToBottomAboveKeyboard(demo)
-    assertAboveKeyboard(demo)
     assertNoExtraBottomInset(demo)
-    demo.performClick()
-    compose.runOnIdle { assertTrue(demoSelected) }
+    clickAboveKeyboard(demo) { demoSelected }
     waitForIme(true)
 
     device.pressBack()
@@ -274,6 +272,19 @@ class AndroidImeScrollingTest {
       awaitImeSettled()
       scrollFormToBottom()
       runCatching { assertAboveKeyboard(node) }.isSuccess
+    }
+  }
+
+  /**
+   * Taps [node] once it sits above the keyboard, until [done]. The keyboard can grow again between
+   * [scrollToBottomAboveKeyboard] and the tap (its suggestion strip); a tap made then lands on the
+   * keyboard instead, so each try settles, scrolls and checks the control is above it first.
+   */
+  private fun clickAboveKeyboard(node: SemanticsNodeInteraction, done: () -> Boolean) {
+    compose.waitUntil(10_000) {
+      scrollToBottomAboveKeyboard(node)
+      node.performClick()
+      compose.runOnIdle { done() }
     }
   }
 
