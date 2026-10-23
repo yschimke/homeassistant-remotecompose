@@ -2738,6 +2738,50 @@
           "notes": "The time alone, without the title or date line."
         }
       ]
+    },
+    "ha-cards/arc-dial-card-full": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaArcDialCardFull",
+      "displayName": "Arc dial card (full)",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/arc-dial-card-wear": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaArcDialCardWear",
+      "displayName": "Arc dial card (Wear)",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "compact": {
+            "type": "bool",
+            "value": false
+          },
+          "keepsMode": {
+            "type": "bool",
+            "value": false
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "compact",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "The Small container's two lines: name and value."
+        },
+        {
+          "name": "keepsMode",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Keeps the mode chip under the name in the Large container."
+        }
+      ]
+    },
+    "ha-cards/arc-dial-card-launcher": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaArcDialCardLauncher",
+      "displayName": "Arc dial card (launcher)",
+      "group": "Card layout",
+      "nativeOnly": true
     }
   },
   "$comment_templates": "Generated, not hand-written: :design-server's HaCardsTemplatesTest seeds each from a card schema (CardSchema.fromCard) with HaCardsSeed — the design server's UiBuilderSeed retargeted to this catalog — and fails when a committed template drifts. `-PhaCardsTemplates.update=true` rewrites them.",

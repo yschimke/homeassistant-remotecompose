@@ -2,12 +2,19 @@ package ee.schimke.terrazzo.wear.widget
 
 import ee.schimke.ha.cards.CardDesignDocument
 import ee.schimke.ha.design.DesignProperties
+import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.UNAVAILABLE_DESIGN_PROPERTY
 import ee.schimke.ha.rc.cards.ButtonCardConverter
 import ee.schimke.ha.rc.cards.ClockCardConverter
 import ee.schimke.ha.rc.cards.EntityCardConverter
 import ee.schimke.ha.rc.cards.HeadingCardConverter
+import ee.schimke.ha.rc.cards.HumidifierCardConverter
+import ee.schimke.ha.rc.cards.LightCardConverter
 import ee.schimke.ha.rc.cards.SensorCardConverter
+import ee.schimke.ha.rc.cards.ThermostatCardConverter
 import ee.schimke.ha.rc.cards.TileCardConverter
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
@@ -16,6 +23,8 @@ import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -304,6 +313,95 @@ class WearCardDesignParityTest {
     }
     println("clock.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases")
     assertEquals(7, inputs.size)
+    assertEquals(emptyList(), differing)
+  }
+
+  @Test
+  fun arcDialDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "climate.living_room" to
+              EntityState(
+                "climate.living_room",
+                "heat",
+                attributes(
+                  """{"current_temperature":20.5,"temperature":21,"hvac_action":"heating"}"""
+                ),
+              ),
+            "climate.office" to EntityState("climate.office", "off"),
+            "humidifier.bedroom" to
+              EntityState(
+                "humidifier.bedroom",
+                "on",
+                attributes("""{"current_humidity":45,"humidity":55,"action":"humidifying"}"""),
+              ),
+            "light.kitchen" to
+              EntityState("light.kitchen", "on", attributes("""{"brightness":200}""")),
+            "light.hall" to EntityState("light.hall", "off"),
+          )
+      )
+    assertWearParity(
+      "arc dial designs",
+      listOf(ThermostatCardConverter(), HumidifierCardConverter(), LightCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"thermostat","entity":"climate.living_room"}""",
+        """{"type":"thermostat","entity":"climate.office","name":"Office"}""",
+        """{"type":"humidifier","entity":"humidifier.bedroom"}""",
+        """{"type":"light","entity":"light.kitchen"}""",
+        """{"type":"light","entity":"light.hall"}""",
+      ),
+    )
+  }
+
+  private fun attributes(json: String): JsonObject = Json.parseToJsonElement(json) as JsonObject
+
+  /**
+   * Every one of [cards] (JSON configs) that has a Wear template captures the same template from
+   * its converter as from its card's `.uid`, in every watch palette and card style; and each of
+   * [converters] has at least one.
+   */
+  private fun assertWearParity(
+    label: String,
+    converters: List<CardConverter>,
+    snapshot: HaSnapshot,
+    cards: List<String>,
+  ) {
+    val byType = converters.associateBy { it.cardType }
+    val inputs = cards.mapNotNull { json ->
+      val raw = Json.parseToJsonElement(json) as JsonObject
+      val converter = byType.getValue(raw.getValue("type").toString().trim('"'))
+      val card = CardConfig(converter.cardType, raw)
+      // A card whose shape has no template draws direct on a watch, with nothing to compare.
+      val properties = converter.wearDesignProperties(card, snapshot) ?: return@mapNotNull null
+      converter.wearDesignTemplate(properties)?.let { converter.cardType to it }
+    }
+    assertEquals(byType.keys, inputs.map { it.first }.toSet())
+    val differing = buildList {
+      for ((cardType, input) in inputs) for (style in ThemeStyle.entries) {
+        for (cardStyle in HaUberTheme.all) {
+          val colors = wearWidgetColors(style)
+          val fromConverter = runBlocking {
+            WearWidgetTemplate.capture(context) {
+              SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle)
+            }
+          }
+          val fromDesign = runBlocking {
+            WearWidgetTemplate.capture(context) {
+              SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle) {
+                designOf(cardType).RenderCard(input.card, input.snapshot, it)
+              }
+            }
+          }
+          if (!fromConverter.contentEquals(fromDesign)) {
+            add("${input.card.raw} ${style.name} ${cardStyle.id}")
+          }
+        }
+      }
+    }
+    println("$label: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases")
     assertEquals(emptyList(), differing)
   }
 }
