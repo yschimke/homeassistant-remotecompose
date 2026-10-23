@@ -103,8 +103,14 @@ ha-cards .uid  ──(UI Builder, admin edit)──▶  revision
   diff on that PR is the review of what changes in the app. While a card type still has a
   converter, its parity gates fail an edit that changes its pixels; that is the migration gate
   doing its job, and the edit lands with the converter's layout deleted.
-- **Fallback.** The app ships the imported manifest and blobs as assets. Lookup becomes: synced
-  server design → shipped asset → nothing (an "unsupported" card), with no runtime capture.
+- **Fallback.** The app ships the library's default style as assets
+  (`app/src/main/assets/card-designs`): the app's default theme style (Terrazzo Home), light and
+  dark, with the classic card style, captured from the checked-in designs exactly as the library
+  is. `ShippedCardDesignsTest` (`:card-designs`) fails when they aren't what this build captures,
+  and `-PupdateShippedCardDesigns` rewrites them; the import PR does that itself. Lookup is: synced
+  server design → shipped asset (`ShippedDesignLibrary`) → a capture on the device. The capture
+  stays for the keys nothing ships (other theme and card styles, shapes the library's source cards
+  don't produce, converter-only types); dropping it is the end state.
 
 ## Migrating a card type
 
@@ -252,7 +258,7 @@ Built (D5):
 | D1 | This plan; `card-designs/ui-builder/designs/` and the parity harness, with the tile migrated |
 | D2 | Design server serves library designs from `.uid` (admin-editable, public-readable), exports per family. **Built:** editing as `library-<cardType>`, `/api/library/sources` |
 | D2b | The surface transformation: one card `.uid` → dashboard, Wear widget and launcher `.rc` designs, with the preview panes matching it |
-| D3 | Scheduled import workflow (**built:** `import-card-designs.yml`) and shipped assets; runtime capture removed for migrated types |
+| D3 | Scheduled import workflow (**built:** `import-card-designs.yml`) and shipped assets (**built** for the default style); runtime capture removed for migrated types |
 | D4 | Forks copy the real source (**built** for migrated types); fork lineage on the design server |
 | D5 | Design id in the manifest and cache; per-card design override and the chooser in the card's style sheet |
 | D6+ | Remaining card types, one PR each; `converter-only.md` for the rest |

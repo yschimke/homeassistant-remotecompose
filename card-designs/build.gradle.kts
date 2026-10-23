@@ -35,6 +35,11 @@ val prepareRobolectricSdk by
     into(layout.buildDirectory.dir("robolectric-sdk"))
   }
 
+// The default-style designs the app ships (ShippedCardDesignsTest checks them; with
+// -PupdateShippedCardDesigns it writes them).
+val shippedCardDesigns: File = rootProject.file("app/src/main/assets/card-designs")
+val updateShippedCardDesigns = providers.gradleProperty("updateShippedCardDesigns").isPresent
+
 val cardDesignsOut: File =
   providers.gradleProperty("cardDesignsOut").orNull?.let { file(it) }
     ?: layout.buildDirectory.dir("card-designs").get().asFile
@@ -54,6 +59,12 @@ tasks
       layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
     )
     systemProperty("cardDesignsOut", cardDesignsOut.absolutePath)
+    inputs.files(fileTree(shippedCardDesigns)).withPropertyName("shippedCardDesigns")
+    systemProperty("shippedCardDesignsDir", shippedCardDesigns.absolutePath)
+    if (updateShippedCardDesigns) {
+      systemProperty("updateShippedCardDesigns", "true")
+      outputs.upToDateWhen { false }
+    }
     outputs.dir(cardDesignsOut)
     maxHeapSize = "2g"
   }
