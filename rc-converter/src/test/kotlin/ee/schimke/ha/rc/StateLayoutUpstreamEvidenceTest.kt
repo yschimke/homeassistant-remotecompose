@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import java.text.DecimalFormat
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.runner.RunWith
@@ -50,7 +51,7 @@ import org.robolectric.annotation.GraphicsMode
  *
  * Each document paints red over its top half for the narrow branch and blue over its bottom half
  * for the wide one; a cell of 100 px is narrow and of 300 px wide (threshold 200 px, mdpi). The
- * tests pass either way: they print `STATE_LAYOUT <probe> <width> frame=<n> top=<red?>
+ * other tests pass either way: they print `STATE_LAYOUT <probe> <width> frame=<n> top=<red?>
  * bottom=<blue?>`, and correct output is top only when narrow, bottom only when wide.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -97,7 +98,9 @@ class StateLayoutUpstreamEvidenceTest {
     return width
   }
 
-  private fun observe(probe: String, bytes: ByteArray) {
+  /** Each width's last frame, as (top painted red, bottom painted blue). */
+  private fun observe(probe: String, bytes: ByteArray): Map<Int, Pair<Boolean, Boolean>> {
+    val settled = mutableMapOf<Int, Pair<Boolean, Boolean>>()
     compose.runOnIdle {
       for (w in listOf(100, 300)) {
         val player =
@@ -121,14 +124,16 @@ class StateLayoutUpstreamEvidenceTest {
           val top = image.getPixel(5, 5) == android.graphics.Color.rgb(183, 28, 28)
           val bottom = image.getPixel(5, 45) == android.graphics.Color.rgb(21, 101, 192)
           println("STATE_LAYOUT $probe $w frame=$frame top=$top bottom=$bottom")
+          settled[w] = top to bottom
           image.recycle()
         }
       }
     }
+    return settled
   }
 
   @Test
-  fun intOverload() =
+  fun intOverload() {
     observe(
       "intOverload",
       document {
@@ -136,9 +141,10 @@ class StateLayoutUpstreamEvidenceTest {
         RemoteStateLayout(wide.select(1.ri, 0.ri), 0, 1) { index: Int -> Branch(index == 1) }
       },
     )
+  }
 
   @Test
-  fun intOverloadBare() =
+  fun intOverloadBare() {
     observe(
       "intOverloadBare",
       document {
@@ -146,19 +152,30 @@ class StateLayoutUpstreamEvidenceTest {
         RemoteStateLayout(wide.select(1.ri, 0.ri), 0, 1) { index: Int -> Branch(index == 1) }
       },
     )
+  }
+
+  /**
+   * Asserted, unlike the other probes: `RemoteSizeBreakpoint` relies on it, having dropped its
+   * forcing text. If the predicate-only read stopped materializing the width, every breakpoint
+   * would fall back to tier 0.
+   */
+  @Test
+  fun transitive() {
+    val settled =
+      observe(
+        "transitive",
+        document {
+          val wide =
+            width("__probe_transitive", materialized = false).isGreaterThanOrEqualTo(200f.rf)
+          RemoteStateLayout(wide) { on -> Branch(on) }
+        },
+      )
+    assertEquals(true to false, settled[100], "narrow settles on the narrow branch alone")
+    assertEquals(false to true, settled[300], "wide settles on the wide branch alone")
+  }
 
   @Test
-  fun transitive() =
-    observe(
-      "transitive",
-      document {
-        val wide = width("__probe_transitive", materialized = false).isGreaterThanOrEqualTo(200f.rf)
-        RemoteStateLayout(wide) { on -> Branch(on) }
-      },
-    )
-
-  @Test
-  fun overlay() =
+  fun overlay() {
     observe(
       "overlay",
       document {
@@ -166,4 +183,5 @@ class StateLayoutUpstreamEvidenceTest {
         RemoteStateLayout(wide) { on -> Branch(on) }
       },
     )
+  }
 }

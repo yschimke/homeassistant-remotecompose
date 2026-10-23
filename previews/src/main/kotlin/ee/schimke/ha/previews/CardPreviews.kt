@@ -554,14 +554,14 @@ private fun unsupportedCard() = card("""{"type":"iframe","url":"https://example.
 
 // ——— gauge ———
 
-@Preview(name = "gauge (light)", showBackground = false, widthDp = 187, heightDp = 150)
+@Preview(name = "gauge (light)", showBackground = false, widthDp = 187, heightDp = 139)
 @Composable
 fun Gauge_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(gaugeCard(), Fixtures.battery, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "gauge (dark)", showBackground = false, widthDp = 187, heightDp = 150)
+@Preview(name = "gauge (dark)", showBackground = false, widthDp = 187, heightDp = 139)
 @Composable
 fun Gauge_Dark() =
   CardHost(HaTheme.Dark) {
