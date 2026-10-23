@@ -26,14 +26,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import ee.schimke.composeai.rcplayer.compose.RcImageLoader
+import ee.schimke.composeai.rcplayer.protocol.RcBitmapData
 import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
 import ee.schimke.ha.rc.components.HaAction
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 
@@ -136,7 +141,21 @@ fun CachedCardPreview(
 
   // What producing this document cost, for [CardRebuilds]: set by the block below.
   val produced = remember(documentKey, template) { arrayOf(CardRebuilds.Cost.None) }
-  val cardDocument =
+  val captureContent: @RemoteComposable @Composable () -> Unit =
+    if (debugBorders) {
+      { DebugRcBorderWrapper { content() } }
+    } else {
+      content
+    }
+  // The document this slot last drew. A rebuild that has to capture (a converter card whose key
+  // moved under it) keeps drawing it while the capture runs off the main thread, then swaps: a
+  // capture is a composition and a serialisation, a dropped frame or more on the main thread for
+  // every camera frame or re-encoded value. A slot's first document is still captured here, so a
+  // card arrives on screen already showing current data. A frozen clock (a preview, a test)
+  // captures in place too, so a frame waited on has its document.
+  val lastShown = remember { arrayOfNulls<CardDocument>(1) }
+  val captureAsync = !LocalHaClock.current.isFrozen
+  val planned =
     remember(documentKey, template) {
       template?.let {
         // Template bytes never change; a clone is a new document to the player, which fetches its
@@ -146,57 +165,35 @@ fun CachedCardPreview(
         val bytes =
           if (pictureSignature.isEmpty()) it.bytes else pictureCopy(it.bytes, pictureSignature)
         if (bytes !== it.bytes) produced[0] = CardRebuilds.Cost.Decode
-        CardDocument(bytes = bytes, widthPx = 0, heightPx = 0)
+        PlannedDocument(CardDocument(bytes = bytes, widthPx = 0, heightPx = 0), pending = false)
       }
-        ?: cache.get(documentKey)?.also { produced[0] = CardRebuilds.Cost.Decode }
-        ?: harcTrace(HarcTraceSections.CAPTURE_DOCUMENT) {
-            produced[0] = CardRebuilds.Cost.Encode
-            runBlocking {
-              val captureContent: @RemoteComposable @Composable () -> Unit =
-                if (debugBorders) {
-                  { DebugRcBorderWrapper { content() } }
-                } else {
-                  content
-                }
-              // A constrained capture [profile] (e.g. `widgetsProfile`,
-              // the launcher's stricter op set) can reject a card whose
-              // ops fall outside its vocabulary by throwing mid-capture.
-              // This capture runs synchronously inside composition via
-              // `runBlocking`, so an uncaught throw would take down the
-              // whole host screen (the card-history preview captures every
-              // card with the widgets profile — see CardHistoryScreen).
-              // Degrade to an empty document instead: the card renders
-              // blank, matching how the launcher shows a widget it can't
-              // paint, rather than crashing the screen hosting the preview.
-              val captured = runCatching {
-                captureSingleRemoteDocument(
-                  context = context,
-                  profile = profile,
-                  content = captureContent,
-                )
-              }
-                .recoverCatching {
-                  // First fall back to a blank document under the
-                  // requested profile — matches a launcher slot the
-                  // profile can't paint.
-                  captureSingleRemoteDocument(context = context, profile = profile) {}
-                }
-                .getOrElse {
-                  // The constrained profile rejected even an empty
-                  // capture (a blank document has no root ops to admit).
-                  // Capture the blank under the unconstrained AndroidX
-                  // profile, which never rejects, so the host screen
-                  // still composes instead of crashing a second time.
-                  captureSingleRemoteDocument(
-                    context = context,
-                    profile = RcPlatformProfiles.ANDROIDX,
-                  ) {}
-                }
-              CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
-            }
-          }
-          .also { cache.put(documentKey, it) }
+        ?: cache.get(documentKey)?.let {
+          produced[0] = CardRebuilds.Cost.Decode
+          PlannedDocument(it, pending = false)
+        }
+        ?: run {
+          produced[0] = CardRebuilds.Cost.Encode
+          val previous = lastShown[0]
+          if (captureAsync && previous != null) PlannedDocument(previous, pending = true)
+          else
+            PlannedDocument(
+              runBlocking { captureCardDocument(context, profile, captureContent) }
+                .also { cache.put(documentKey, it) },
+              pending = false,
+            )
+        }
     }
+  val captured = remember(documentKey, template) { mutableStateOf<CardDocument?>(null) }
+  if (planned.pending) {
+    LaunchedEffect(documentKey, template) {
+      captured.value =
+        withContext(Dispatchers.Default) {
+          captureCardDocument(context, profile, captureContent).also { cache.put(documentKey, it) }
+        }
+    }
+  }
+  val cardDocument = captured.value ?: planned.document
+  SideEffect { lastShown[0] = cardDocument }
   // A template's time-derived bindings (a clock card's date line) read the same clock the direct
   // render reads, so an injected clock reaches both paths.
   val clock = LocalHaClock.current
@@ -294,15 +291,12 @@ fun CachedCardPreview(
   val latestSnapshot = rememberUpdatedState(snapshot)
   val latestTemplate = rememberUpdatedState(template)
   // A template's images resolve through the card's own entities; nothing else it names is fetched.
-  val playerBitmapLoader =
+  val playerBitmapLoader: BitmapLoader =
     remember(bitmapLoader, template != null) {
       if (template == null) bitmapLoader
       else
-        BitmapLoader { url ->
-          val real =
-            latestTemplate.value?.bitmapUrl?.invoke(url, latestSnapshot.value)
-              ?: throw java.io.IOException("template image not resolvable: $url")
-          bitmapLoader.loadBitmap(real)
+        SlotResolvingImageLoader(bitmapLoader) { url ->
+          latestTemplate.value?.bitmapUrl?.invoke(url, latestSnapshot.value)
         }
     }
   val onNamedAction: (String, Any?) -> Unit = { name, value ->
@@ -327,6 +321,17 @@ fun CachedCardPreview(
       modifier = modifier,
       bitmapLoader = playerBitmapLoader,
       init = { player -> playerHolder.value = player },
+      // Seeded like the Compose player's values: written before the View's first draw, and
+      // recorded as pushed so the effect below only writes what changes after.
+      seed = { player ->
+        val current = latestSnapshot.value
+        if (pushBindings && current != null) {
+          val seeded = HashMap<String, Any?>()
+          pushSnapshotBindings(ViewPlayerWriter(player), bindingsFor(current), seeded)
+          pushedView.clear()
+          pushedView.putAll(seeded)
+        }
+      },
       onNamedAction = onNamedAction,
       contentDescription = playerLabel,
     )
@@ -614,4 +619,63 @@ private class RebuildTracker {
   var documentKey: Any? = null
   var cacheKey: Any? = null
   var pictures: String? = null
+}
+
+/** The document a slot draws for a key: ready, or the last one while [pending] capture runs. */
+private class PlannedDocument(val document: CardDocument, val pending: Boolean)
+
+/**
+ * Captures [content] under [profile]. A constrained profile (e.g. `widgetsProfile`, the launcher's
+ * stricter op set) can reject a card whose ops fall outside its vocabulary by throwing mid-capture;
+ * an uncaught throw would take down the whole host screen (the card-history preview captures every
+ * card with the widgets profile — see CardHistoryScreen). So it degrades to a blank document under
+ * the requested profile, matching how the launcher shows a widget it can't paint, and if the
+ * profile rejects even that (a blank document has no root ops to admit), to a blank under the
+ * unconstrained AndroidX profile, which never rejects.
+ */
+private suspend fun captureCardDocument(
+  context: android.content.Context,
+  profile: Profile,
+  content: @RemoteComposable @Composable () -> Unit,
+): CardDocument =
+  harcTraceSuspend(HarcTraceSections.CAPTURE_DOCUMENT) {
+    val captured = runCatching {
+      captureSingleRemoteDocument(context = context, profile = profile, content = content)
+    }
+      .recoverCatching { captureSingleRemoteDocument(context = context, profile = profile) {} }
+      .getOrElse {
+        captureSingleRemoteDocument(context = context, profile = RcPlatformProfiles.ANDROIDX) {}
+      }
+    CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
+  }
+
+/**
+ * A template's image loader: each slot picture (`rc-slot://…`) resolved through the card's current
+ * snapshot, then loaded by [delegate]. For both players: the AndroidX one's [loadBitmap], and the
+ * Compose one's [RcImageLoader], so a template picture takes [delegate]'s suspending load (memory,
+ * disk, network) and its memory hit on the first frame ([cached]) rather than the blocking adapter,
+ * whose miss is an empty image the Compose player never asks for again.
+ */
+internal class SlotResolvingImageLoader(
+  private val delegate: BitmapLoader,
+  private val resolve: (String) -> String?,
+) : BitmapLoader, RcImageLoader {
+  private val images = delegate.asRcImageLoader()
+
+  override fun loadBitmap(name: String): java.io.InputStream =
+    delegate.loadBitmap(
+      resolve(name) ?: throw java.io.IOException("template image not resolvable: $name")
+    )
+
+  override suspend fun load(bitmap: RcBitmapData): ImageBitmap? =
+    resolved(bitmap)?.let { images.load(it) }
+
+  override fun cached(bitmap: RcBitmapData): ImageBitmap? =
+    resolved(bitmap)?.let { images.cached(it) }
+
+  private fun resolved(bitmap: RcBitmapData): RcBitmapData? {
+    val name = bitmap.externalImageName() ?: return null
+    val real = resolve(name) ?: return null
+    return bitmap.copy(encoding = RcBitmapData.ENCODING_URL, data = real.encodeToByteArray())
+  }
 }

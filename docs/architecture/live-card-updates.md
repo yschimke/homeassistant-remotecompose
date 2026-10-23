@@ -232,17 +232,20 @@ should take live data as bindings. Three measures:
   and `LiveUpdateBenchmark` idles on the demo Security board for a minute, where every capture,
   decode or rebuild is live data that missed the binding path.
 
-Pictures are the largest share today: a new `entity_picture` URL plays as a new document, because
-the player fetches a document's images once. Swapping a picture in place needs the player to keep
-the last image while it loads the next one.
+Pictures are the largest share: a new `entity_picture` URL plays as a new document, because the
+player fetches a document's images once. A rebuild still has to look seamless, so:
+
+- **One player per card.** `HaRcComposePlayer` keeps the card's player across documents
+  (rc-players 2.17.5): the new document draws the last one's pictures and size until its own load,
+  and a picture already in Coil's memory is drawn on its first frame (`RcImageLoader.cached`, from
+  `CoilBitmapLoader` and a template's `SlotResolvingImageLoader`).
+- **Captures off the main thread.** A rebuild that has to capture (a converter card whose key
+  moved) runs on `Dispatchers.Default` while the slot keeps drawing its last document, then swaps.
+  Only a slot's first document is captured in place, so a card still arrives showing current
+  data. Previews and tests (a frozen clock) capture in place.
 
 ## Known follow-ups
 
 - History sparkline points (`<id>.numeric.<index>`) are baked at capture
   and refreshed by re-encode; a windowed live push would need history in
   the binding contract.
-- The AndroidX View player (launcher-widget previews and the per-document
-  fallback) still gets its first push from an effect, after the View's
-  priming draw, so a stale cached value there can tween in once on load.
-  Seeding it means writing `setUserLocal*` before `primeFixed` /
-  `primeAndMeasure` in `WrapAdaptiveRemoteDocumentPlayer`.

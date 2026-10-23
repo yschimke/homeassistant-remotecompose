@@ -17,6 +17,7 @@ import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import coil3.request.allowHardware
+import coil3.size.Precision
 import ee.schimke.composeai.rcplayer.compose.RcImageLoader
 import ee.schimke.composeai.rcplayer.protocol.RcBitmapData
 import java.io.ByteArrayInputStream
@@ -238,6 +239,29 @@ open class CoilBitmapLoader(
       imageLoader.memoryCache?.get(key)?.image
         ?: (imageLoader.execute(warmUpRequest(resolved, key)) as? SuccessResult)?.image
         ?: return null
+    return playerImage(image)
+  }
+
+  /**
+   * The Compose player's first-frame lookup: [data]'s image when Coil's memory cache holds it, the
+   * same pixels [load] would give, without suspending or touching disk. A picture already in memory
+   * (a card scrolled back, a document replaced by one naming the same picture) is then drawn on the
+   * new document's first frame instead of a frame later.
+   */
+  final override fun cached(data: RcBitmapData): ImageBitmap? {
+    if (data.encoding != RcBitmapData.ENCODING_URL && data.encoding != RcBitmapData.ENCODING_FILE) {
+      return null
+    }
+    val resolved = resolveName(data.data.decodeToString())
+    val image = imageLoader.memoryCache?.get(memoryCacheKeyFor(resolved))?.image ?: return null
+    // A hardware bitmap would be read back from the GPU here, during composition: leave it to
+    // [load]. Ours are software ([warmUpRequest]).
+    if ((image as? BitmapImage)?.bitmap?.config == Bitmap.Config.HARDWARE) return null
+    return playerImage(image)
+  }
+
+  /** [image] as the Compose player draws it: software, within [maxImageDimensionPx]. */
+  private fun playerImage(image: Image): ImageBitmap? {
     val source = (image as? BitmapImage)?.bitmap ?: return null
     val software =
       if (source.config == Bitmap.Config.HARDWARE) {
@@ -253,6 +277,15 @@ open class CoilBitmapLoader(
       .data(name)
       .memoryCacheKey(key)
       .allowHardware(false)
+      // Decoded near the slot's cap rather than at full size: a camera's 1080p frame is 8 MB of
+      // memory cache at full size and a main-thread downscale on every use; sampled, a fraction
+      // of both. Inexact, so a small picture is never scaled up.
+      .apply {
+        if (maxImageDimensionPx > 0) {
+          size(maxImageDimensionPx, maxImageDimensionPx)
+          precision(Precision.INEXACT)
+        }
+      }
       .listener(
         onSuccess = { _, result: SuccessResult ->
           val img = result.image

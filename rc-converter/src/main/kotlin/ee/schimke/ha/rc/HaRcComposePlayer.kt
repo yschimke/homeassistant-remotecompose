@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
@@ -128,8 +127,11 @@ fun HaRcComposePlayer(
     fallback()
     return
   }
-  // A clone ([cloneForPlayer]) shares its source's document, so the decode is what tells them
-  // apart: a new one is a new document to play, with its own state and its own image fetches.
+  // One player per card, across documents: a new document (a clone with a new picture, a
+  // re-encode) plays in the same player, which keeps drawing the last document's pictures and size
+  // until its own load, so a changed card swaps in place rather than blinking or collapsing. A
+  // clone ([cloneForPlayer]) shares its source's bytes but decodes apart, so the player still sees
+  // a new document with its own image fetches.
   // A document that throws while it plays is disabled, and an atomic-symbol warning takes its place
   // (RcErrorBoundary); the rest of the dashboard carries on.
   RcErrorBoundary(
@@ -137,7 +139,7 @@ fun HaRcComposePlayer(
     modifier,
     namedValues = { namedValues.filter { (name, value) -> decoded.declared.accepts(name, value) } },
   ) { fail ->
-    key(decoded) {
+    run {
       val clock = LocalHaClock.current
       // A frozen clock means a preview or test: decode inline, so the image is in place by the
       // frame
