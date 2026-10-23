@@ -34,9 +34,10 @@ data class ThemeParts(val style: String, val mode: String?) {
 
 /**
  * The browser's filter, from query parameters: card type, theme style, light/dark, a text search
- * over type and properties, and which preview to show. With [defaults], an unset style and mode
- * pick the library's first style and that style's first mode, so the first page shows each shape
- * once, including for styles that only have a dark palette.
+ * over type and properties, which preview to show, and whether to show it on approximate watch
+ * screens too ([wear]: [Pages.wearPanes]). With [defaults], an unset style and mode pick the
+ * library's first style and that style's first mode, so the first page shows each shape once,
+ * including for styles that only have a dark palette.
  */
 data class BrowserFilter(
   val cardType: String?,
@@ -44,6 +45,7 @@ data class BrowserFilter(
   val mode: String?,
   val query: String?,
   val preview: Preview,
+  val wear: Boolean = false,
 ) {
   enum class Preview {
     Example,
@@ -71,6 +73,7 @@ data class BrowserFilter(
         "mode" to (f.mode ?: ALL),
         f.query?.let { "q" to it },
         ("preview" to "template").takeIf { f.preview == Preview.Template },
+        ("wear" to "1").takeIf { f.wear },
       )
     return params.joinToString("&") { (k, v) -> "$k=${URLEncoder.encode(v, Charsets.UTF_8)}" }
   }
@@ -79,7 +82,7 @@ data class BrowserFilter(
     const val ALL = "all"
 
     /** The query keys the browser reads. */
-    val KEYS = setOf("type", "style", "mode", "q", "preview")
+    val KEYS = setOf("type", "style", "mode", "q", "preview", "wear")
 
     fun from(params: Parameters, library: DesignLibrary, defaults: Boolean): BrowserFilter {
       fun param(name: String, default: String?): String? =
@@ -102,6 +105,7 @@ data class BrowserFilter(
         mode = param("mode", firstMode.takeIf { defaults }),
         query = param("q", null),
         preview = if (params["preview"] == "template") Preview.Template else Preview.Example,
+        wear = params["wear"] == "1",
       )
     }
   }
@@ -202,7 +206,13 @@ object Pages {
       append("<label>Preview <select name=\"preview\">")
       option("example", "With example values", filter.preview == BrowserFilter.Preview.Example)
       option("template", "Template placeholders", filter.preview == BrowserFilter.Preview.Template)
-      append("</select></label><button type=\"submit\">Apply</button></form>")
+      append("</select></label>")
+      append(
+        "<label><input type=\"checkbox\" name=\"wear\" value=\"1\"" +
+          (if (filter.wear) " checked" else "") +
+          "> On a watch</label>"
+      )
+      append("<button type=\"submit\">Apply</button></form>")
 
       append("<p class=\"count\">${designs.size} shown</p>")
       if (designs.isEmpty()) {
@@ -233,7 +243,7 @@ object Pages {
         append(
           "<section><h2 id=\"${esc(type)}\">${esc(type)} <span>${group.size}</span></h2><div class=\"grid\">"
         )
-        for (design in group) tile(design, filter.preview)
+        for (design in group) tile(design, filter.preview, wear = filter.wear)
         append("</div></section>")
       }
     }
@@ -243,6 +253,7 @@ object Pages {
     library: DesignLibrary,
     design: LibraryDesign,
     editor: EditorState = EditorState.Off,
+    wear: Boolean = false,
   ): String {
     val decoded = library.decode(design)
     val key = design.key
@@ -264,6 +275,18 @@ object Pages {
       if (design.catalog == null)
         append("<p class=\"muted\">No previews: this library has no catalog.</p>")
       append("</div>")
+      design.catalog?.previews?.example?.let { example ->
+        if (wear) {
+          append("<h2>On a watch</h2>")
+          wearPanes("$API_BASE/$example", key.cardType)
+          append("<p class=\"muted\"><a href=\"/designs/${design.id}\">Hide the watch</a></p>")
+        } else {
+          append(
+            "<p class=\"muted\"><a href=\"/designs/${design.id}?wear=1\">On a watch</a>: " +
+              "this design as Small and Large Wear widgets, roughly</p>"
+          )
+        }
+      }
 
       append("<h2>Key</h2><table>")
       row("Card type", esc(key.cardType))
@@ -458,6 +481,7 @@ object Pages {
     design: LibraryDesign,
     preview: BrowserFilter.Preview,
     compact: Boolean = false,
+    wear: Boolean = false,
   ) {
     val theme = ThemeParts.of(design.key)
     val image =
@@ -471,6 +495,7 @@ object Pages {
         "<img loading=\"lazy\" src=\"$API_BASE/$image\" alt=\"${esc(design.key.cardType)} preview\">"
       )
     else append("<div class=\"noimage\">no preview</div>")
+    if (wear && image != null) wearPanes("$API_BASE/$image", design.key.cardType)
     append("<div class=\"meta\">")
     if (!compact) {
       append("<div class=\"chips\">")
@@ -501,6 +526,29 @@ object Pages {
     append(
       "<option value=\"${esc(value)}\"${if (selected) " selected" else ""}>${esc(label)}</option>"
     )
+  }
+
+  /**
+   * [src], a design's preview, as Wear widgets would show it, roughly: on a round and a square
+   * watch screen, in the Small (200×60 dp) and Large (200×112 dp) widget containers a watch's
+   * widget host draws (26 dp corners, 8 dp padding, its default surface), fitted. An approximation
+   * from the phone-sized preview, not a Wear render: the card's own Wear tiers can lay it out
+   * differently.
+   */
+  internal fun StringBuilder.wearPanes(src: String, cardType: String) {
+    append("<div class=\"wear\">")
+    for ((screen, screenLabel) in listOf("round" to "Round", "square" to "Square")) {
+      for ((pane, paneLabel) in listOf("small" to "Small", "large" to "Large")) {
+        val caption = "$screenLabel · $paneLabel"
+        append("<figure class=\"watch $screen\"><div class=\"screen\"><div class=\"pane $pane\">")
+        append(
+          "<img loading=\"lazy\" src=\"$src\" alt=\"${esc(cardType)} on a " +
+            "${screen} watch, ${pane} widget\">"
+        )
+        append("</div></div><figcaption>$caption</figcaption></figure>")
+      }
+    }
+    append("</div>")
   }
 
   private fun StringBuilder.figure(src: String, caption: String) {
@@ -569,6 +617,9 @@ figcaption{font-size:12px;color:var(--muted);margin-top:4px}table{border-collaps
 th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{width:220px;color:var(--muted);font-weight:500}
 textarea{width:100%;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg)}.stack{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;font-size:13px}.error{color:var(--err)}nav{margin-bottom:8px}details{margin-top:10px}
-@media (max-width:600px){th{width:auto}.grid{grid-template-columns:1fr}}
+.wear{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px;max-width:520px}.watch{margin:0;text-align:center}.watch figcaption{font-size:12px;color:var(--muted);margin-top:4px}
+.watch .screen{container-type:inline-size;aspect-ratio:1;background:#000;display:flex;align-items:center;justify-content:center}.round .screen{border-radius:50%}.square .screen{border-radius:20%}
+.pane{box-sizing:border-box;width:88cqi;padding:3.5cqi;border-radius:11.5cqi;background:rgb(39,36,48);display:flex}.square .pane{width:95cqi}.pane.small{height:26.5cqi}.pane.large{height:49.5cqi}.pane img{width:100%;height:100%;object-fit:contain;border:0;background:none}
+@media (max-width:600px){th{width:auto}.grid{grid-template-columns:1fr}.filters label{max-width:100%}select,input{max-width:100%}.stats,.hint{overflow-wrap:anywhere}}
 """
 }
