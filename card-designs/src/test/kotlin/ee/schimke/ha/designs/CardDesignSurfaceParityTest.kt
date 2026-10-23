@@ -1,10 +1,7 @@
 package ee.schimke.ha.designs
 
-import androidx.compose.runtime.CompositionLocalProvider
-import ee.schimke.ha.cards.LocalCardDesignInput
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardTypes
-import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.LauncherLook
 import ee.schimke.ha.rc.components.HaUberTheme

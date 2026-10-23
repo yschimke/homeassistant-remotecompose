@@ -7,9 +7,9 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import ee.schimke.ha.design.DesignProperties
-import ee.schimke.ha.rc.design.LocalCardInput
 import ee.schimke.ha.rc.FramedCard
 import ee.schimke.ha.rc.cards.TileCardConverter
+import ee.schimke.ha.rc.design.LocalCardInput
 import ee.schimke.ha.rc.framedDesignTemplate
 
 /**

@@ -72,39 +72,41 @@ class TileBaselineDump {
       }
     }
     // Direct captures of every source tile, templatable or not (features, colours, taps...).
-    tiles.filter { it.card.type == CardTypes.TILE }.forEachIndexed { i, source ->
-      val label = "${source.source}#$i ${source.card.raw}"
-      val dashboard = runBlocking {
-        captureCardDocument(
-          context,
-          720,
-          400,
-          densityDpi,
-          registry,
-          source.card,
-          source.snapshot,
-          forceRefresh = true,
-        )
-      }
-      put("direct dashboard $label", dashboard.bytes)
-      for ((w, h) in cells) {
-        val px = { dp: Int -> (dp * densityDpi / 160f).toInt() }
-        val launcher =
-          captureLauncherWidgetDocument(
+    tiles
+      .filter { it.card.type == CardTypes.TILE }
+      .forEachIndexed { i, source ->
+        val label = "${source.source}#$i ${source.card.raw}"
+        val dashboard = runBlocking {
+          captureCardDocument(
             context,
+            720,
+            400,
+            densityDpi,
+            registry,
             source.card,
             source.snapshot,
-            registry,
-            px(w),
-            px(h),
-            densityDpi,
-            widgetsProfile,
-            dark = false,
-            fetchImage = { null },
+            forceRefresh = true,
           )
-        put("direct launcher ${w}x$h $label", launcher.bytes)
+        }
+        put("direct dashboard $label", dashboard.bytes)
+        for ((w, h) in cells) {
+          val px = { dp: Int -> (dp * densityDpi / 160f).toInt() }
+          val launcher =
+            captureLauncherWidgetDocument(
+              context,
+              source.card,
+              source.snapshot,
+              registry,
+              px(w),
+              px(h),
+              densityDpi,
+              widgetsProfile,
+              dark = false,
+              fetchImage = { null },
+            )
+          put("direct launcher ${w}x$h $label", launcher.bytes)
+        }
       }
-    }
     out.parentFile.mkdirs()
     out.writeText(lines.entries.joinToString("\n") { "${it.value} ${it.key}" } + "\n")
     println("tile baseline: ${lines.size} documents -> $out")

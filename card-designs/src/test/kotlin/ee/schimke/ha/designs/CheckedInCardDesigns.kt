@@ -1,13 +1,10 @@
 package ee.schimke.ha.designs
 
 import android.content.Context
-import androidx.compose.runtime.CompositionLocalProvider
 import ee.schimke.ha.cards.CardDesignDocument
-import ee.schimke.ha.cards.LocalCardDesignInput
 import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.rc.CardDesignTemplates
-import ee.schimke.ha.rc.DesignTemplateInput
 import java.io.File
 
 /**

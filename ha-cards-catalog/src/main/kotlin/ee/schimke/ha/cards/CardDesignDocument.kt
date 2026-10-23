@@ -40,8 +40,11 @@ class CardDesignDocument private constructor(private val design: CardDesign) {
   /** [card] on [snapshot] drawn by this design, framed as `RenderChild` frames a card. */
   @Composable
   @RemoteComposable
-  fun RenderCard(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier = RemoteModifier) =
-    design.RenderCard(card, snapshot, modifier)
+  fun RenderCard(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    modifier: RemoteModifier = RemoteModifier,
+  ) = design.RenderCard(card, snapshot, modifier)
 
   companion object {
     const val CATALOG = CardDesign.CATALOG
@@ -73,9 +76,17 @@ class CardDesignDocument private constructor(private val design: CardDesign) {
             else HaCardSurface(modifier) { node.Children() }
           },
         "ha-cards/dashboard-section" to
-          { node, modifier -> HaDashboardSection(modifier) { node.Children() } },
-        "ha-cards/card-surface" to { node, modifier -> HaCardSurface(modifier) { node.Children() } },
-        "ha-cards/card-template" to { node, modifier -> HaCardTemplate(modifier) { node.Children() } },
+          { node, modifier ->
+            HaDashboardSection(modifier) { node.Children() }
+          },
+        "ha-cards/card-surface" to
+          { node, modifier ->
+            HaCardSurface(modifier) { node.Children() }
+          },
+        "ha-cards/card-template" to
+          { node, modifier ->
+            HaCardTemplate(modifier) { node.Children() }
+          },
         "ha-cards/uber-theme" to
           { node, modifier ->
             HaCardUberTheme(node.string("theme", "classic"), modifier, node.bool("dark")) {
@@ -134,7 +145,9 @@ class CardDesignDocument private constructor(private val design: CardDesign) {
             )
           },
         "ha-cards/heading" to
-          { node, modifier -> HaCardHeading(node.string("title"), modifier, node.bool("subtitle")) },
+          { node, modifier ->
+            HaCardHeading(node.string("title"), modifier, node.bool("subtitle"))
+          },
         "ha-cards/button" to
           { node, modifier ->
             HaCardButton(
