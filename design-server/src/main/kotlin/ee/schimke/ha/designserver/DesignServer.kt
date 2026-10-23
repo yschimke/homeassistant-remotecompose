@@ -81,17 +81,17 @@ class LibraryHolder(
 
 /**
  * Routes:
- * - `/designs/v1/manifest.json`, `/designs/v1/blobs/<sha256>.rc` — the client protocol
+ * - `/designs/v1/manifest.json`, `/designs/v1/blobs/<sha256>.rc` ? the client protocol
  *   (`DesignRepository`): point the app's design server URL at `<host>/designs/v1`. The manifest
  *   revalidates by ETag; blobs are content-addressed and immutable.
- * - `/designs/v1/designs?cardType=&style=&variant=&author=` (and `surface`, `shape`, `theme`) — the
+ * - `/designs/v1/designs?cardType=&style=&variant=&author=` (and `surface`, `shape`, `theme`) ? the
  *   designs matching those tags ([DesignQuery]) and every tag's values, so a client can fetch what
  *   it needs instead of the whole manifest.
- * - `/designs/v1/catalog.json`, `/designs/v1/previews/...` — the browser's data.
- * - `/` — the app's front page ([Landing]); `/site/<name>` — its pictures.
- * - `/designs`, `/designs/<id>` — the template browser; `/api/designs[/<id>]` — the same as JSON.
- * - `/embed/v1/ha-card.js`, `/embed/v1/rc-player.js` — the card embed and its player;
- *   `/embed/v1/demo.html` — its demo page (docs/architecture/card-embedding.md). The embed reads
+ * - `/designs/v1/catalog.json`, `/designs/v1/previews/...` ? the browser's data.
+ * - `/` ? the app's front page ([Landing]); `/site/<name>` ? its pictures.
+ * - `/designs`, `/designs/<id>` ? the template browser; `/api/designs[/<id>]` ? the same as JSON.
+ * - `/embed/v1/ha-card.js`, `/embed/v1/rc-player.js` ? the card embed and its player;
+ *   `/embed/v1/demo.html` ? its demo page (docs/architecture/card-embedding.md). The embed reads
  *   the manifest and blobs from other origins, so those, like the scripts, allow any origin: they
  *   hold no user data.
  * - `/healthz`.
@@ -107,6 +107,8 @@ fun Application.designServer(
   usage: UsageStats? = null,
   /** GitHub logins that may read `/stats/templates`; empty serves it to nobody. */
   statsUsers: Set<String> = emptySet(),
+  /** GitHub logins that may edit the library's card designs ([LibrarySources]). */
+  libraryEditors: Set<String> = emptySet(),
 ) {
   install(DefaultHeaders)
   install(AutoHeadResponse)
@@ -134,8 +136,10 @@ fun Application.designServer(
       runCatching { usage.flush() }
     }
   }
+  val librarySources = LibrarySources(holder, uiBuilder, libraryEditors)
   routing {
     if (usage != null) usageRoutes(usage, github, statsUsers)
+    librarySourceRoutes(librarySources, uiBuilder, github)
     dashboardStudioRoutes(uiBuilder, github)
     demoSite(File(System.getenv("WASM_SITE_DIR") ?: "/app/wasm"))
     cardStudioRoutes(holder, uiBuilder, github)
@@ -227,7 +231,7 @@ fun Application.designServer(
 
     get("/") {
       // The browser lived here, and its filter links still arrive with its query keys; any other
-      // query (`?utm_source=…`) is the front page's.
+      // query (`?utm_source=?`) is the front page's.
       if (call.request.queryParameters.names().any { it in BrowserFilter.KEYS }) {
         return@get call.respondRedirect("/designs?${call.request.queryString()}", permanent = true)
       }
@@ -252,7 +256,9 @@ fun Application.designServer(
       val library = holder.current()
       val design = library.design(call.parameters["id"].orEmpty()) ?: return@get call.notFound()
       call.respondText(
-        Pages.detail(library, design, call.editor(uiBuilder, github)),
+        call.editor(uiBuilder, github).let { editor ->
+          Pages.detail(library, design, editor, librarySources.mayEdit(editor))
+        },
         ContentType.Text.Html,
       )
     }
@@ -266,7 +272,8 @@ fun Application.designServer(
       )
     }
 
-    // A library design's editable source, to fork in UI Builder (HaCardsSeed.source).
+    // A library design's editable source, to fork in UI Builder: its card type's real design when
+    // it has one (LibrarySources), else HaCardsSeed's reconstruction.
     get("/api/designs/{id}/source.uid") {
       val library = holder.current()
       val design = library.design(call.parameters["id"].orEmpty()) ?: return@get call.notFound()
@@ -279,7 +286,11 @@ fun Application.designServer(
           .toString(),
       )
       call.respondText(
-        json.encodeToString(JsonObject.serializer(), HaCardsSeed.source(library, design)) + "\n",
+        json.encodeToString(
+          JsonObject.serializer(),
+          library.sources[design.key.cardType]?.let { LibrarySources.forkOf(it, design) }
+            ?: HaCardsSeed.source(library, design),
+        ) + "\n",
         ContentType.Application.Json,
       )
     }
@@ -399,7 +410,11 @@ fun Application.designServer(
       val (document, resolveCatalog) =
         params["design"]?.let { id ->
           val design = library.design(id) ?: return@post call.notFound()
-          val source = HaCardsSeed.source(library, design)
+          // A migrated card type forks its real design, the one the library is drawn from;
+          // the others still fork HaCardsSeed's reconstruction of the converter's card.
+          val source =
+            library.sources[design.key.cardType]?.let { LibrarySources.forkOf(it, design) }
+              ?: HaCardsSeed.source(library, design)
           JsonObject(source + ("id" to JsonPrimitive(HaCardsSeed.forkId(design)))) to true
         }
           ?: params["card"]?.let { text ->

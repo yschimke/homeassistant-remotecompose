@@ -93,6 +93,11 @@ class GenerateCardDesignLibrary {
     val now = System.currentTimeMillis()
     val output = DesignPublisher.publish(built, serial = now, nowEpochMs = now)
     // The manifest is written last, after its blobs, previews and catalog.
+    // The checked-in designs the migrated card types were drawn from, so the design server can
+    // offer them for editing and the scheduled import can copy edits back (LibrarySources).
+    CheckedInCardDesigns.DIRECTORY.listFiles { file -> file.extension == "uid" }
+      .orEmpty()
+      .forEach { it.copyTo(out.resolve("sources/${it.name}"), overwrite = true) }
     for ((path, bytes) in output.files) {
       if (path == MANIFEST_PATH) continue
       out.resolve(path).also { it.parentFile.mkdirs() }.writeBytes(bytes)
