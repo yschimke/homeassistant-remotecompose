@@ -28,6 +28,7 @@ import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideCardStyle
+import ee.schimke.ha.rc.components.ProvideExpressionNames
 import ee.schimke.ha.rc.components.ProvideHaUberStyle
 import ee.schimke.ha.rc.components.ProvideSystemHaTheme
 import ee.schimke.ha.rc.components.ProvideWidgetActionRegistry
@@ -217,17 +218,19 @@ object LauncherDesigns {
           profile = profile,
         ) {
           CompositionLocalProvider(LocalTemplateBindings provides TemplateBindings()) {
-            LauncherWidgetContent(
-              registry,
-              profile,
-              dark,
-              actions,
-              card,
-              snapshot,
-              WidgetCaptureSizeDp(widthDp, heightDp),
-              look,
-            ) {
-              content(card, snapshot, it)
+            ProvideExpressionNames {
+              LauncherWidgetContent(
+                registry,
+                profile,
+                dark,
+                actions,
+                card,
+                snapshot,
+                WidgetCaptureSizeDp(widthDp, heightDp),
+                look,
+              ) {
+                content(card, snapshot, it)
+              }
             }
           }
         }

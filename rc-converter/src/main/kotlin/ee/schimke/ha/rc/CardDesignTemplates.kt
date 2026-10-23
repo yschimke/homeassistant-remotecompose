@@ -30,6 +30,7 @@ import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.ProvideCardStyle
+import ee.schimke.ha.rc.components.ProvideExpressionNames
 import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.cardPalette
@@ -243,9 +244,11 @@ object CardDesignTemplates {
         ) {
           // Bound name / title text instead of literals: see LocalTemplateBindings.
           CompositionLocalProvider(LocalTemplateBindings provides TemplateBindings()) {
-            ProvideCardRegistry(registry) {
-              ProvideCardStyle(cardStyle, palette, dark) {
-                content(card, snapshot, RemoteModifier.fillMaxWidth().declaringRecipe(recipe))
+            ProvideExpressionNames {
+              ProvideCardRegistry(registry) {
+                ProvideCardStyle(cardStyle, palette, dark) {
+                  content(card, snapshot, RemoteModifier.fillMaxWidth().declaringRecipe(recipe))
+                }
               }
             }
           }
