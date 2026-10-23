@@ -128,6 +128,15 @@ tasks
   .matching { it.name.endsWith("UnitTest") }
   .configureEach {
     inputs.files(robolectricSdk)
+    // The checked-in card designs WearCardDesignParityTest draws.
+    inputs.dir(rootProject.layout.projectDirectory.dir("card-designs/ui-builder/designs"))
+    systemProperty(
+      "cardDesignsDir",
+      rootProject.layout.projectDirectory
+        .dir("card-designs/ui-builder/designs")
+        .asFile
+        .absolutePath,
+    )
     dependsOn(prepareRobolectricSdk)
     systemProperty("robolectric.offline", "true")
     systemProperty(
@@ -246,6 +255,9 @@ dependencies {
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation("org.robolectric:robolectric:4.17")
+  // Card designs authored in UI Builder, drawn by the catalog's components: the Wear surface is
+  // checked against them (WearCardDesignParityTest).
+  testImplementation(project(":ha-cards-catalog"))
   testImplementation(libs.compose.ui.test.junit4)
   robolectricSdk(libs.robolectric.sdk35)
 
