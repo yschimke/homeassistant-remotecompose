@@ -213,13 +213,13 @@ fun Tile_Color_Blue_Dark() =
 
 /**
  * `features_position: inline`: the first feature beside the name, the rest below two to a row (a
- * spaced row of weighted controls, whose gap must stay inside the tile).
+ * spaced row of weighted controls, whose gap must stay inside the tile), a stepper on its own.
  */
 @Preview(
   name = "tile — climate, inline features",
   showBackground = false,
   widthDp = TILE_WIDTH_DP,
-  heightDp = 140,
+  heightDp = 168,
 )
 @Composable
 fun Tile_Climate_Inline_Features() =
