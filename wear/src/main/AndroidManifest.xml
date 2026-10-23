@@ -43,7 +43,8 @@
         </receiver>
         <!--
           Forgets what the phone deletes from the Data Layer (sign-out, a removed dashboard)
-          while the app isn't running, and redraws the widgets for new slot Wear designs. Exported for Play services, which delivers Data Layer
+          while the app isn't running, and redraws the widgets for new pins, sections or Wear
+          designs. Exported for Play services, which delivers Data Layer
           events through this action; it wakes for the rarely written items only, never for
           /wear/values or pictures. Paths mirror WearSyncPaths.
         -->
@@ -55,7 +56,6 @@
                 <data android:scheme="wear" android:host="*" android:pathPrefix="/wear/dashboard/" />
                 <data android:scheme="wear" android:host="*" android:path="/wear/pinned" />
                 <data android:scheme="wear" android:host="*" android:path="/wear/sections" />
-                <data android:scheme="wear" android:host="*" android:path="/wear/slots" />
                 <data android:scheme="wear" android:host="*" android:path="/wear/slot-designs" />
             </intent-filter>
             <!-- The watch's own Home Assistant token, which the phone may send while the app is closed. -->
@@ -66,31 +66,49 @@
         </service>
 
         <!--
-          Ten wear-widget slot services — five slots, two container
-          sizes each. Splitting per (slot, size) is what lets the
-          phone-side size picker actually filter the watch's widget
-          picker: each service's wearwidget-provider XML declares one
-          container type, and WearSlotsController flips each component
-          on or off based on the slot's size choice (Small / Large /
-          Both).
-
-          All start `android:enabled="false"`. Each service binds via
-          the Glance Wear native action plus the tile-provider compat
-          action so older watch faces still see the same provider.
-
-          Exported for the system's widget / tile host only: each one
-          requires BIND_TILE_PROVIDER, the system permission Wear OS
-          holds when it binds a widget or tile provider, so no other app
-          can bind a slot and read the card it renders.
+          Picks the card a Terrazzo widget shows, from the cards the phone shows on the watch.
+          The Glance Wear provider-configuration contract: the PROVIDER_CONFIG category plus
+          DEFAULT, launched with the widget's instance id and provider component (see
+          GlanceWearWidget.EXTRA_CONFIG_WIDGET_ID / EXTRA_CONFIG_PROVIDER_COMPONENT). Whether a
+          widget host launches it when a widget is added is up to the host; the Terrazzo app's
+          Widgets screen opens the same picker. Exported so the host can start it.
         -->
+        <activity
+            android:name=".widget.WearWidgetConfigActivity"
+            android:exported="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+            <intent-filter>
+                <action android:name="ee.schimke.terrazzo.wear.ACTION_CONFIGURE_WIDGET" />
+                <category android:name="com.google.android.clockwork.tiles.category.PROVIDER_CONFIG" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
 
-        <!-- Slot 1 -->
+        <!--
+          The two Terrazzo widget providers, one per Glance Wear container size: each service's
+          wearwidget-provider XML declares one container type, so the system widget picker
+          offers both sizes. Every placed widget shows its own card, chosen on the watch.
+
+          Both start `android:enabled="false"`; WearWidgetsController enables them on API 37+
+          while the phone shows any card on the watch. Each service binds via the Glance Wear
+          native action plus the tile-provider compat action so older watch faces still see the
+          same provider.
+
+          Exported for the system's widget / tile host only: each one requires
+          BIND_TILE_PROVIDER, the system permission Wear OS holds when it binds a widget or tile
+          provider, so no other app can bind one and read the card it renders.
+
+          PROVIDER_CONFIG_ACTION names the configuration activity's action, as tile providers
+          do; best effort, since Glance Wear documents the activity contract but not how the
+          host finds it.
+        -->
         <service
-            android:name=".widget.Slot0SmallWidgetService"
+            android:name=".widget.CardSmallWidgetService"
             android:exported="true"
             android:enabled="false"
             android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER"
-            android:label="Terrazzo slot 1 (small)">
+            android:label="Home Assistant card (small)">
             <intent-filter>
                 <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
                 <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
@@ -98,13 +116,16 @@
             <meta-data
                 android:name="androidx.glance.wear.widget.provider"
                 android:resource="@xml/wear_slot_widget_provider_small" />
+            <meta-data
+                android:name="com.google.android.clockwork.tiles.PROVIDER_CONFIG_ACTION"
+                android:value="ee.schimke.terrazzo.wear.ACTION_CONFIGURE_WIDGET" />
         </service>
         <service
-            android:name=".widget.Slot0LargeWidgetService"
+            android:name=".widget.CardLargeWidgetService"
             android:exported="true"
             android:enabled="false"
             android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER"
-            android:label="Terrazzo slot 1 (large)">
+            android:label="Home Assistant card (large)">
             <intent-filter>
                 <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
                 <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
@@ -112,126 +133,9 @@
             <meta-data
                 android:name="androidx.glance.wear.widget.provider"
                 android:resource="@xml/wear_slot_widget_provider_large" />
-        </service>
-
-        <!-- Slot 2 -->
-        <service
-            android:name=".widget.Slot1SmallWidgetService"
-            android:exported="true"
-            android:enabled="false"
-            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER"
-            android:label="Terrazzo slot 2 (small)">
-            <intent-filter>
-                <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
-                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
-            </intent-filter>
             <meta-data
-                android:name="androidx.glance.wear.widget.provider"
-                android:resource="@xml/wear_slot_widget_provider_small" />
-        </service>
-        <service
-            android:name=".widget.Slot1LargeWidgetService"
-            android:exported="true"
-            android:enabled="false"
-            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER"
-            android:label="Terrazzo slot 2 (large)">
-            <intent-filter>
-                <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
-                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
-            </intent-filter>
-            <meta-data
-                android:name="androidx.glance.wear.widget.provider"
-                android:resource="@xml/wear_slot_widget_provider_large" />
-        </service>
-
-        <!-- Slot 3 -->
-        <service
-            android:name=".widget.Slot2SmallWidgetService"
-            android:exported="true"
-            android:enabled="false"
-            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER"
-            android:label="Terrazzo slot 3 (small)">
-            <intent-filter>
-                <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
-                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
-            </intent-filter>
-            <meta-data
-                android:name="androidx.glance.wear.widget.provider"
-                android:resource="@xml/wear_slot_widget_provider_small" />
-        </service>
-        <service
-            android:name=".widget.Slot2LargeWidgetService"
-            android:exported="true"
-            android:enabled="false"
-            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER"
-            android:label="Terrazzo slot 3 (large)">
-            <intent-filter>
-                <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
-                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
-            </intent-filter>
-            <meta-data
-                android:name="androidx.glance.wear.widget.provider"
-                android:resource="@xml/wear_slot_widget_provider_large" />
-        </service>
-
-        <!-- Slot 4 -->
-        <service
-            android:name=".widget.Slot3SmallWidgetService"
-            android:exported="true"
-            android:enabled="false"
-            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER"
-            android:label="Terrazzo slot 4 (small)">
-            <intent-filter>
-                <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
-                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
-            </intent-filter>
-            <meta-data
-                android:name="androidx.glance.wear.widget.provider"
-                android:resource="@xml/wear_slot_widget_provider_small" />
-        </service>
-        <service
-            android:name=".widget.Slot3LargeWidgetService"
-            android:exported="true"
-            android:enabled="false"
-            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER"
-            android:label="Terrazzo slot 4 (large)">
-            <intent-filter>
-                <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
-                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
-            </intent-filter>
-            <meta-data
-                android:name="androidx.glance.wear.widget.provider"
-                android:resource="@xml/wear_slot_widget_provider_large" />
-        </service>
-
-        <!-- Slot 5 -->
-        <service
-            android:name=".widget.Slot4SmallWidgetService"
-            android:exported="true"
-            android:enabled="false"
-            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER"
-            android:label="Terrazzo slot 5 (small)">
-            <intent-filter>
-                <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
-                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
-            </intent-filter>
-            <meta-data
-                android:name="androidx.glance.wear.widget.provider"
-                android:resource="@xml/wear_slot_widget_provider_small" />
-        </service>
-        <service
-            android:name=".widget.Slot4LargeWidgetService"
-            android:exported="true"
-            android:enabled="false"
-            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER"
-            android:label="Terrazzo slot 5 (large)">
-            <intent-filter>
-                <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
-                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
-            </intent-filter>
-            <meta-data
-                android:name="androidx.glance.wear.widget.provider"
-                android:resource="@xml/wear_slot_widget_provider_large" />
+                android:name="com.google.android.clockwork.tiles.PROVIDER_CONFIG_ACTION"
+                android:value="ee.schimke.terrazzo.wear.ACTION_CONFIGURE_WIDGET" />
         </service>
     </application>
 </manifest>

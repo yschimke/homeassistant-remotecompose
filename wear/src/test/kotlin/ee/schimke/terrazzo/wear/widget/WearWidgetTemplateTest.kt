@@ -108,7 +108,7 @@ class WearWidgetTemplateTest {
 
   private val template = runBlocking {
     WearWidgetTemplate.capture(context) {
-      SlotContent(registry, colors, card, snapshot, 0, template = false, HaUberTheme.Classic)
+      SlotContent(registry, colors, card, snapshot, template = false, HaUberTheme.Classic)
     }
   }
 
@@ -121,7 +121,7 @@ class WearWidgetTemplateTest {
           name,
         )
       val glance = runBlocking {
-        slotDirectDocument(registry, colors, card, snapshot, 0)
+        slotDirectDocument(registry, colors, card, snapshot)
           .captureRawContent(context, params, false)
           .rcDocument
       }
@@ -178,7 +178,7 @@ class WearWidgetTemplateTest {
     }
     for ((name, params) in containers) {
       val glance = runBlocking {
-        slotDirectDocument(registry, colors, card, snapshot, 0)
+        slotDirectDocument(registry, colors, card, snapshot)
           .captureRawContent(context, params, false)
           .rcDocument
       }

@@ -240,7 +240,7 @@ class CardDesignWearTemplateTest {
         }
         // The watch's own capture of the same card, for comparison.
         val own = runBlocking {
-          slotWidgetData(registry, colors, style, card, snapshot, 0, cardStyle)
+          slotWidgetData(registry, colors, style, card, snapshot, cardStyle)
             .captureRawContent(context, params, false)
             .rcDocument
         }

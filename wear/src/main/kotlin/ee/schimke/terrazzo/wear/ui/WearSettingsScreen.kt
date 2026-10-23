@@ -27,9 +27,9 @@ import ee.schimke.terrazzo.shared.feedbackIssueUrl
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 
 /**
- * Wear settings — theme and card style pickers plus a small "About" footer that shows what phone
- * the watch is paired with (and whether phone has demo mode enabled). Demo mode itself is
- * phone-driven; there's no toggle here.
+ * Wear settings — the Widgets screen ([onOpenWidgets], where widgets are shown), theme and card
+ * style pickers plus a small "About" footer that shows what phone the watch is paired with (and
+ * whether phone has demo mode enabled). Demo mode itself is phone-driven; there's no toggle here.
  */
 @Composable
 fun WearSettingsScreen(
@@ -40,6 +40,7 @@ fun WearSettingsScreen(
   modifier: Modifier = Modifier,
   cardStyle: String = HaUberTheme.Classic.id,
   onSelectCardStyle: (String) -> Unit = {},
+  onOpenWidgets: (() -> Unit)? = null,
 ) {
   var reporting by remember { mutableStateOf(false) }
   var failed by remember { mutableStateOf(false) }
@@ -93,6 +94,18 @@ fun WearSettingsScreen(
   WearListScreen(modifier = modifier) {
     // The screen's title first; reporting a bug is a secondary action, so it sits at the end.
     item { ListHeader { Text("Settings") } }
+    // Choosing each placed widget's card: on watches that show Glance Wear widgets.
+    onOpenWidgets?.let { open ->
+      item {
+        Button(
+          onClick = open,
+          modifier = Modifier.fillMaxWidth(),
+          colors = ButtonDefaults.filledTonalButtonColors(),
+        ) {
+          Text("Widgets")
+        }
+      }
+    }
     item { ListHeader { Text("Theme") } }
 
     item {

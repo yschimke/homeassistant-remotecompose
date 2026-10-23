@@ -23,8 +23,6 @@ import ee.schimke.terrazzo.core.pin.MobilePinnedCard
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.PinnedCardData
-import ee.schimke.terrazzo.core.pin.WearWidgetSlot
-import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
@@ -49,8 +47,6 @@ import ee.schimke.terrazzo.wearsync.proto.WearSettings
 import ee.schimke.terrazzo.wearsync.proto.WearSlotDesign
 import ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
-import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
-import ee.schimke.terrazzo.wearsync.proto.WidgetSlot
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
 import ee.schimke.terrazzo.widget.WidgetImages
@@ -138,17 +134,20 @@ class MobileWearSyncManager(
   private var lastValuesItem: Map<String, EntityValue>? = null
 
   /**
-   * The cards in assigned Wear widget slots, by their pin's `cardKey`: whose pictures and Wear
-   * designs the watch needs.
+   * The pinned cards, by their pin's `cardKey`: whose Wear widget designs the watch needs. The
+   * watch places any card it was sent as a widget, chosen there.
    */
-  private val wearSlotCards: MutableStateFlow<List<Pair<String, CardConfig>>> =
+  private val wearPinnedCards: MutableStateFlow<List<Pair<String, CardConfig>>> =
     MutableStateFlow(emptyList())
+
+  /** Every card sent to the watch, pinned or in a pinned section: whose pictures it needs. */
+  private val wearPictureCards: MutableStateFlow<List<CardConfig>> = MutableStateFlow(emptyList())
 
   /** The Wear design blobs written to the Data Layer by this process, by sha256. */
   private val pushedDesigns = HashSet<String>()
 
-  /** The slot designs last written to `/wear/slot-designs`, so an unchanged choice isn't resent. */
-  private var lastSlotDesigns: List<WearSlotDesign>? = null
+  /** The designs last written to `/wear/slot-designs`, so an unchanged choice isn't resent. */
+  private var lastCardDesigns: List<WearSlotDesign>? = null
 
   /**
    * The session's latest snapshot, device registry included. The watch's values carry entity states
@@ -327,7 +326,9 @@ class MobileWearSyncManager(
     }
   }
 
-  /** Account items (pins, slots) are held back while signed out and re-sent on the next session. */
+  /**
+   * Account items (pins, sections) are held back while signed out and re-sent on the next session.
+   */
   private fun <T : Any> Flow<T>.whileSignedIn(): Flow<T> =
     this.combine(sessionState.map { it != null }.distinctUntilChanged()) { value, signedIn ->
         value.takeIf { signedIn }
@@ -353,7 +354,6 @@ class MobileWearSyncManager(
     scope: CoroutineScope,
     prefs: PreferencesStore,
     pinStore: PinStore,
-    slotsStore: WearWidgetSlotsStore,
     inputEditing: StateFlow<Boolean>,
   ) {
     managerScope = scope
@@ -449,41 +449,30 @@ class MobileWearSyncManager(
         }
     }
 
-    // Wear-widget slots → /wear/slots. Empty assignments survive
-    // the wire so the watch can disable matching widget providers.
+    // The cards the watch can place as widgets → whose pictures [pushPictures] and Wear designs
+    // [pushDesigns] send. The watch chooses a widget's card itself, from those it was sent: the
+    // pinned cards get Wear widget designs; they and the pinned sections' cards get pictures.
+    // `/wear/slots` is no longer written: the phone assigns no widget slots.
     scope.launch {
-      slotsStore.slots
-        .map { it.toProto() }
+      combine(pinStore.cards, pinStore.sections, ::wearWidgetCards)
         .distinctUntilChanged()
-        .whileSignedIn()
-        .collect { writeDataItem(WearSyncPaths.SLOTS, encodeProto(it)) }
-    }
-
-    // Wear widget slot cards → whose pictures [pushPictures] and Wear designs [pushDesigns] send.
-    scope.launch {
-      combine(slotsStore.slots, pinStore.cards) { slots, cards ->
-          val byKey = cards.associateBy { it.key }
-          slots
-            .filter { it.isAssigned }
-            .mapNotNull { slot ->
-              byKey[slot.cardKey]?.card?.rawJson?.toCardConfigOrNull()?.let { slot.cardKey to it }
-            }
+        .collect { (pinned, all) ->
+          wearPinnedCards.value = pinned
+          wearPictureCards.value = all
         }
-        .distinctUntilChanged()
-        .collect { wearSlotCards.value = it }
     }
 
-    // Slot cards' Wear widget designs → /wear/slot-designs and /wear/design/<sha256>.
+    // Pinned cards' Wear widget designs → /wear/slot-designs and /wear/design/<sha256>.
     scope.launch {
-      combine(wearSlotCards, CardDesignPreload.designs.filterNotNull(), registrySnapshot) {
+      combine(wearPinnedCards, CardDesignPreload.designs.filterNotNull(), registrySnapshot) {
           cards,
           designs,
           snapshot ->
-          val picked = wearSlotDesigns(cards, snapshot, designs)
+          val picked = wearCardDesigns(cards, snapshot, designs)
           picked.map { it.first } to picked.associate { it.first.sha256 to it.second }
         }
         .whileSignedIn()
-        .collect { (slotDesigns, blobs) -> pushDesigns(slotDesigns, blobs) }
+        .collect { (cardDesigns, blobs) -> pushDesigns(cardDesigns, blobs) }
     }
 
     // Republish dashboard styles even when neither pins nor entity values change.
@@ -618,7 +607,7 @@ class MobileWearSyncManager(
     lastValuesItem = null
     pushedPictures.clear()
     pushedDesigns.clear()
-    lastSlotDesigns = null
+    lastCardDesigns = null
     session.connectionStatus.first { it == SessionConnectionStatus.Connected }
     while (true) {
       // Suspend (rather than exit) when the wear API isn't usable
@@ -684,14 +673,14 @@ class MobileWearSyncManager(
   }
 
   /**
-   * Wear widgets can't fetch pictures, so the phone sends one per pictured entity in a widget slot
-   * card ([WearPicture], `/wear/picture/<entityId>`): when its URL changes, at most every
-   * [PICTURE_REFRESH_MS], and only when the PNG differs from the one last sent.
+   * Wear widgets can't fetch pictures, so the phone sends one per pictured entity in a card the
+   * watch can place as a widget ([WearPicture], `/wear/picture/<entityId>`): when its URL changes,
+   * at most every [PICTURE_REFRESH_MS], and only when the PNG differs from the one last sent.
    */
   private suspend fun pushPictures(baseUrl: String, snapshot: HaSnapshot) {
     if (!wearableAvailableState.value) return
     val now = System.currentTimeMillis()
-    for ((entityId, url) in wearPictureUrls(wearSlotCards.value.map { it.second }, snapshot)) {
+    for ((entityId, url) in wearPictureUrls(wearPictureCards.value, snapshot)) {
       val last = pushedPictures[entityId]
       if (last != null && now - last.atMs < PICTURE_REFRESH_MS) continue
       val png =
@@ -709,14 +698,14 @@ class MobileWearSyncManager(
   }
 
   /**
-   * The slot cards' Wear widget designs: each blob once ([WearDesignBlob], content-addressed), then
-   * the index naming them ([WearSlotDesigns]), then the blobs no slot uses any more are deleted.
-   * The index is written only once every blob it names is, so the watch never looks one up before
-   * it can arrive. Recorded only once all of it is written, so a failed write is retried on the
-   * next snapshot.
+   * The pinned cards' Wear widget designs: each blob once ([WearDesignBlob], content-addressed),
+   * then the index naming them ([WearSlotDesigns]), then the blobs no card uses any more are
+   * deleted. The index is written only once every blob it names is, so the watch never looks one up
+   * before it can arrive. Recorded only once all of it is written, so a failed write is retried on
+   * the next snapshot.
    */
   private suspend fun pushDesigns(designs: List<WearSlotDesign>, blobs: Map<String, ByteArray>) {
-    if (!wearableAvailableState.value || designs == lastSlotDesigns) return
+    if (!wearableAvailableState.value || designs == lastCardDesigns) return
     for ((sha, rc) in blobs) {
       if (sha in pushedDesigns) continue
       if (!writeDataItem(WearSyncPaths.designPath(sha), encodeProto(WearDesignBlob(sha, rc)))) {
@@ -730,7 +719,7 @@ class MobileWearSyncManager(
     val stale = dataItemPaths(WearSyncPaths.DESIGN_PREFIX).filter { it !in current }
     deleteDataItems(stale.map { WearDataItems(it, prefix = false) })
     pushedDesigns.retainAll(blobs.keys)
-    lastSlotDesigns = designs
+    lastCardDesigns = designs
   }
 
   /** Writes [bytes] at [path]; false when the wearable API is unavailable or the write failed. */
@@ -837,8 +826,8 @@ internal fun EntityState.toEntityValue(snapshot: HaSnapshot): EntityValue {
 }
 
 /**
- * The pictures Wear widgets need: `entity_picture` by entity, for every entity the slot [cards]
- * bind (stacks and grids included) that has one in [snapshot].
+ * The pictures Wear widgets need: `entity_picture` by entity, for every entity the [cards] the
+ * watch can place bind (stacks and grids included) that has one in [snapshot].
  */
 internal fun wearPictureUrls(cards: List<CardConfig>, snapshot: HaSnapshot): Map<String, String> =
   cards
@@ -920,7 +909,8 @@ internal fun List<MobilePinnedSection>.resolvedFor(
 /** In every Bambu Lab card type (`custom:ha-bambulab-…`), stacked or not. */
 private const val BAMBU_CARD_MARKER = "ha-bambulab"
 
-private fun String.toCardConfigOrNull(): CardConfig? = runCatching {
+/** A card's `rawJson` as a [CardConfig], or null when it isn't a card. */
+internal fun String.toCardConfigOrNull(): CardConfig? = runCatching {
   val raw = json.parseToJsonElement(this) as JsonObject
   val type = raw["type"]?.jsonPrimitive?.contentOrNull ?: return@runCatching null
   CardConfig(type = type, raw = raw)
@@ -979,16 +969,6 @@ internal fun List<MobilePinnedCard>.toWearPinnedCards(
           )
         },
     updatedAtMs = updatedAtMs,
-  )
-
-@JvmName("slotsToProto")
-private fun List<WearWidgetSlot>.toProto(): WearWidgetSlots =
-  WearWidgetSlots(
-    slots =
-      this.map {
-        WidgetSlot(slotIndex = it.slotIndex, cardKey = it.cardKey, size = it.size.wireValue)
-      },
-    updatedAtMs = System.currentTimeMillis(),
   )
 
 internal fun List<MobilePinnedSection>.toWearPinnedSections(

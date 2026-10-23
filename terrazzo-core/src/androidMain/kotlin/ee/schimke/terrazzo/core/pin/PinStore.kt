@@ -17,8 +17,8 @@ import kotlinx.serialization.json.Json
 
 /**
  * Mobile-side pin store. Source of truth for the user's pinned dashboard items — both individual
- * cards and whole sections — that the watch surfaces as nav destinations and that drive the
- * wear-widget slot picker.
+ * cards and whole sections — that the watch surfaces as nav destinations, and that the watch's own
+ * Wear widget picker chooses from.
  *
  * Independent of [ee.schimke.terrazzo.core.widget.WidgetStore], which keeps tracking phone
  * home-screen widget installs separately. A user who installs a card as a phone widget does not
@@ -29,8 +29,8 @@ import kotlinx.serialization.json.Json
  * pins) and avoids adding a second DataStore proto.
  *
  * Each pin owns:
- * - a stable `key` (used by [WearWidgetSlots] slot references and as the de-dup token for is-pinned
- *   checks),
+ * - a stable `key` (the `cardKey` a watch widget remembers its card by, the key the Wear widget
+ *   designs are sent under, and the de-dup token for is-pinned checks),
  * - an `orderIndex` shared across cards and sections so the user controls the unified Wear
  *   top-level ordering as a single list,
  * - `baseUrl` and dashboard/section provenance so the manage-pinned UI can show "where did this
@@ -180,7 +180,7 @@ class PinStore(private val context: Context) {
     /**
      * Stable key for a pinned card. Derived from the source-of-truth fields (HA instance +
      * dashboard + raw card config) so that re-pinning the same card from the same dashboard yields
-     * the same key — slot assignments survive an unpin / re-pin cycle.
+     * the same key — a watch widget showing it survives an unpin / re-pin cycle.
      */
     fun cardKey(baseUrl: String, dashboardUrlPath: String, cardJson: String): String =
       sha16("c|$baseUrl|$dashboardUrlPath|$cardJson")
