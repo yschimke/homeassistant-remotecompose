@@ -2,6 +2,7 @@
 
 package ee.schimke.terrazzo.wear.widget
 
+import android.content.ComponentName
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -16,11 +17,13 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.glance.wear.AssociateWithGlanceWearWidget
 import androidx.glance.wear.GlanceWearWidget
+import androidx.glance.wear.GlanceWearWidgetManager
 import androidx.glance.wear.GlanceWearWidgetService
 import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetData
 import androidx.glance.wear.WearWidgetDocument
 import androidx.glance.wear.color
+import androidx.glance.wear.core.ActiveWearWidgetHandle
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WearWidgetRawContent
@@ -71,19 +74,18 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * Per-slot wear widget. Ten concrete subclasses ([Slot0SmallWidget] / [Slot0LargeWidget] …
- * [Slot4SmallWidget] / [Slot4LargeWidget]); each binds a fixed `slotIndex` and reads the matching
- * slot from disk at render time. Both small and large for the same slot share their `cardKey` and
- * therefore render the same card; the size split exists only at the manifest / service level so the
- * picker advertises both container types.
+ * A Terrazzo Wear widget: one card the phone sent to the watch, chosen on the watch for this widget
+ * instance. Two concrete subclasses, [CardSmallWidget] and [CardLargeWidget], one per Glance Wear
+ * container type: the split exists only at the manifest / service level so the system widget picker
+ * offers both sizes. Each placed widget reads its own card by its instance id.
  *
  * Render path mirrors the phone widget ([ee.schimke.terrazzo.widget.TerrazzoWidgetProvider]):
- * 1. [WearOfflineStore.readSlots] → find this slot's `cardKey`.
- * 2. [WearOfflineStore.readPinned] → resolve the [PinnedCard] and decode `rawJson` to a
- *    [CardConfig].
- * 3. [WearOfflineStore.readValues] → build an [HaSnapshot] from the pushed [LiveValues] (state +
+ * 1. [WearWidgetCardStore.read] → the card chosen for this instance ([WearWidgetConfigActivity] or
+ *    the Wear app's Widgets screen), resolved against what the phone sends now
+ *    ([currentWidgetCard]), and its `rawJson` decoded to a [CardConfig].
+ * 2. [WearOfflineStore.readValues] → build an [HaSnapshot] from the pushed [LiveValues] (state +
  *    friendly_name + unit + device_class).
- * 4. Render via the rc-converter registry inside the [WearWidgetDocument] content lambda; Glance
+ * 3. Render via the rc-converter registry inside the [WearWidgetDocument] content lambda; Glance
  *    Wear captures the composition to RemoteCompose bytes for the watch's RC runtime.
  *
  * Wear colors come from Remote Material 3's named `WearM3.*` state, so the widget host can update
@@ -95,11 +97,11 @@ import kotlinx.serialization.json.JsonPrimitive
  * Wear capture profile may fail to capture; the registry's [ee.schimke.ha.rc.UNSUPPORTED_CARD_TYPE]
  * fallback handles unknown types but not in-range ops mismatches.
  *
- * Empty slots / un-paired widgets short-circuit to a placeholder label; the matching service
- * component is normally disabled via [ee.schimke.terrazzo.wear.sync.WearSlotsController] before the
- * picker can surface them, but the fallback keeps a transient race from showing an empty card.
+ * A widget with no card chosen yet draws a short placeholder asking for one: a Wear widget has no
+ * tap action to open the picker, so the card is chosen in the Terrazzo app (or by the system's
+ * configuration step, where the host offers it).
  */
-abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
+abstract class CardWidget : GlanceWearWidget() {
 
   override suspend fun provideWidgetData(
     context: Context,
@@ -109,37 +111,41 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
     // The host's frame for this container: the Wear app draws its cards in it.
     WearWidgetFrame.remember(app, params)
     val store = WearOfflineStore(app)
-    // Slots, pins and values from the Data Layer: the watch app may not have been running to store
-    // them as they arrived.
+    // Pins, sections and values from the Data Layer: the watch app may not have been running to
+    // store them as they arrived.
     syncWidgetStateFromDataLayer(app, store)
+    val chosen = WearWidgetCardStore(app).read(params.instanceId.id)
     // The card's values from Home Assistant itself when the phone has sent none lately.
-    refreshSlotValuesDirectly(app, store, slotIndex)
-    // The slot cards' Wear widget designs from the design server, synced by the phone.
+    chosen?.let { refreshCardValuesDirectly(app, store, it) }
+    // The pinned cards' Wear widget designs from the design server, synced by the phone.
     syncDesignsFromDataLayer(app, store)
-    return slotWidgetDataFromStore(app, store, slotIndex)
+    return slotWidgetDataFromStore(app, store, chosen)
+  }
+
+  /** The widget was removed from the watch: forget the card chosen for it. */
+  override suspend fun onRemoved(context: Context, widgetHandle: ActiveWearWidgetHandle) {
+    WearWidgetCardStore(context.applicationContext).remove(widgetHandle.instanceId.id)
   }
 }
 
 /**
- * Reads the values of the card in slot [slotIndex] from Home Assistant when the phone's are stale
+ * Reads the values of [chosen]'s card from Home Assistant when the phone's are stale
  * ([WearDirectAccess]); bounded, so a widget never waits long on the network.
  */
-private suspend fun refreshSlotValuesDirectly(
+private suspend fun refreshCardValuesDirectly(
   app: Context,
   store: WearOfflineStore,
-  slotIndex: Int,
+  chosen: WearWidgetCard,
 ) {
-  val cardKey = store.readSlots()?.slots?.firstOrNull { it.slotIndex == slotIndex }?.cardKey
-  val raw =
-    cardKey
-      ?.takeIf { it.isNotEmpty() }
-      ?.let { key -> store.readPinned()?.cards?.firstOrNull { it.cardKey == key } }
-      ?.card
-      ?.rawJson
-      ?.takeIf { it.isNotEmpty() } ?: return
+  val pinned = store.readPinned()
+  val sections = store.readSections()
+  val raw = currentWidgetCard(chosen, pinned, sections).rawJson.takeIf { it.isNotEmpty() } ?: return
+  // A card the phone stopped showing keeps drawing from its kept copy, but the phone sends none of
+  // its values any more: their absence from fresh phone values is a reason to read them.
+  val retained = widgetCardOptions(pinned, sections).none { it.cardKey == chosen.cardKey }
   withTimeoutOrNull(DIRECT_VALUES_TIMEOUT_MS) {
     runCatching {
-      WearDirectAccess(app, offline = store).refresh(listOf(raw), store.readSettings())
+      WearDirectAccess(app, offline = store).refresh(listOf(raw), store.readSettings(), retained)
     }
       .onFailure { if (it is CancellationException) throw it }
   }
@@ -147,20 +153,18 @@ private suspend fun refreshSlotValuesDirectly(
 
 private const val DIRECT_VALUES_TIMEOUT_MS = 20_000L
 
-/** The offline rendering path, also used after a best-effort Data Layer refresh. */
+/**
+ * The offline rendering path for a widget showing [chosen] (null: no card chosen yet), also used
+ * after a best-effort Data Layer refresh.
+ */
 internal suspend fun slotWidgetDataFromStore(
   app: Context,
   store: WearOfflineStore,
-  slotIndex: Int,
+  chosen: WearWidgetCard?,
 ): WearWidgetData {
-  val slot = store.readSlots()?.slots?.firstOrNull { it.slotIndex == slotIndex }
-  val pinned =
-    slot
-      ?.cardKey
-      ?.takeIf { it.isNotEmpty() }
-      ?.let { key -> store.readPinned()?.cards?.firstOrNull { it.cardKey == key } }
+  val summary = chosen?.let { currentWidgetCard(it, store.readPinned(), store.readSections()) }
 
-  val card = pinned?.card?.rawJson?.takeIf { it.isNotEmpty() }?.toCardConfigOrNull()
+  val card = summary?.rawJson?.takeIf { it.isNotEmpty() }?.toCardConfigOrNull()
   val snapshot = store.readValues().toSnapshot()
   // The card's pictures, from the Data Layer: the watch app may not have been running to store
   // them as they arrived.
@@ -173,13 +177,15 @@ internal suspend fun slotWidgetDataFromStore(
   }
 
   val style = WearPrefs(app).themeStyle.first()
-  val cardStyle =
-    wearWidgetCardStyle(pinned?.card?.cardStyleOverride, WearPrefs(app).cardStyle.first())
+  val cardStyle = wearWidgetCardStyle(summary?.cardStyleOverride, WearPrefs(app).cardStyle.first())
   val registry = defaultRegistry().withEnhancedShutter()
   val updatedColors = wearWidgetColors(style)
 
-  // The card's Wear widget designs, as synced from the phone.
-  val designs = store.readSlotDesigns()?.designs.orEmpty().filter { it.cardKey == slot?.cardKey }
+  // The card's Wear widget designs, as synced from the phone (for pinned cards, by their key).
+  val designs =
+    store.readSlotDesigns()?.designs.orEmpty().filter {
+      chosen != null && it.cardKey == chosen.cardKey
+    }
 
   return slotWidgetData(
     registry,
@@ -187,7 +193,6 @@ internal suspend fun slotWidgetDataFromStore(
     style,
     card,
     snapshot,
-    slotIndex,
     cardStyle,
     fetchImage = { url -> syncedPicture(store, snapshot, url) },
     wearDesign = { container ->
@@ -211,14 +216,14 @@ internal fun wearWidgetCardStyle(override: String?, watchStyle: String): HaUberT
   HaUberTheme.all.firstOrNull { it.id == override } ?: HaUberTheme.byId(watchStyle)
 
 /**
- * The widget data for a slot showing [card]. Design first: the card's Wear template, baked with the
- * card's values — a Wear widget can't receive bindings. The template is the design server's Wear
- * widget design for the container ([wearDesign], by [DesignKey.WEAR_SMALL] /
- * [DesignKey.WEAR_LARGE]: the card's own design rooted on the Wear container, synced by the phone)
- * when there is one, else the card's design captured by Glance Wear itself (its profile and
- * canvas). A slot picture is embedded from [fetchImage] (the phone syncs them: the watch can't
- * fetch one). Cards with no design, or one that can't be baked (a picture not synced yet), keep the
- * direct document. [themeKey] names [colors] in the template cache.
+ * The widget data for a widget showing [card] (null: none chosen, the placeholder). Design first:
+ * the card's Wear template, baked with the card's values — a Wear widget can't receive bindings.
+ * The template is the design server's Wear widget design for the container ([wearDesign], by
+ * [DesignKey.WEAR_SMALL] / [DesignKey.WEAR_LARGE]: the card's own design rooted on the Wear
+ * container, synced by the phone) when there is one, else the card's design captured by Glance Wear
+ * itself (its profile and canvas). A card's picture is embedded from [fetchImage] (the phone syncs
+ * them: the watch can't fetch one). Cards with no design, or one that can't be baked (a picture not
+ * synced yet), keep the direct document. [themeKey] names [colors] in the template cache.
  */
 internal fun slotWidgetData(
   registry: CardRegistry,
@@ -226,15 +231,13 @@ internal fun slotWidgetData(
   themeKey: Any,
   card: CardConfig?,
   snapshot: HaSnapshot,
-  slotIndex: Int,
   cardStyle: HaUberTheme = HaUberTheme.Classic,
   fetchImage: (url: String) -> ByteArray? = { null },
   wearDesign: (container: String) -> ByteArray? = { null },
 ): WearWidgetData {
   // The card's state tints its container: warm for heating, amber for a light that is on.
   val tint = ContainerTint.argbFor(card, snapshot)
-  val direct =
-    slotDocument(registry, colors, card, snapshot, slotIndex, cardStyle = cardStyle, tint = tint)
+  val direct = slotDocument(registry, colors, card, snapshot, cardStyle = cardStyle, tint = tint)
   if (card == null) return direct
   val design = CardDesignTemplates.designCard(card, snapshot, registry)
   val converter = registry.converterFor(design.type) ?: return direct
@@ -299,7 +302,6 @@ internal fun slotWidgetData(
               colors,
               input.card,
               input.snapshot,
-              slotIndex,
               template = true,
               cardStyle = cardStyle,
             )
@@ -322,14 +324,13 @@ internal fun containerOf(containerType: Int): String? =
     else -> null
   }
 
-/** The direct (not design) document for a slot: what [slotWidgetData] falls back to. */
+/** The direct (not design) document for a widget: what [slotWidgetData] falls back to. */
 internal fun slotDirectDocument(
   registry: CardRegistry,
   colors: RemoteColorScheme,
   card: CardConfig?,
   snapshot: HaSnapshot,
-  slotIndex: Int,
-): WearWidgetData = slotDocument(registry, colors, card, snapshot, slotIndex)
+): WearWidgetData = slotDocument(registry, colors, card, snapshot)
 
 /**
  * The synced picture for [url] — an entity's `entity_picture` in [snapshot]. A camera's URL changes
@@ -343,7 +344,7 @@ private fun syncedPicture(store: WearOfflineStore, snapshot: HaSnapshot, url: St
   return store.readPicture(entity.entityId)?.png?.takeIf { it.isNotEmpty() }
 }
 
-/** One captured Wear template per card shape, theme and container: see [SlotWidget]. */
+/** One captured Wear template per card shape, theme and container: see [CardWidget]. */
 private data class WearTemplateKey(
   val cardType: String,
   val shape: String,
@@ -387,13 +388,12 @@ internal suspend fun neutralWidgetTemplate(
         colors,
         input.card,
         input.snapshot,
-        slotIndex = 0,
         template = true,
         cardStyle = cardStyle,
       )
     }
   }
-    .onFailure { Log.w("SlotWidget", "neutral template capture failed", it) }
+    .onFailure { Log.w("CardWidget", "neutral template capture failed", it) }
     .getOrNull()
     ?.also { neutralTemplates[key] = it }
 }
@@ -411,33 +411,31 @@ private val wearTemplates =
   java.util.concurrent.ConcurrentHashMap<WearTemplateKey, WearWidgetRawContent>()
 
 /**
- * A slot's widget document: [card] under the Wear theme, Fixed size mode, without the card's own
- * chrome, in Glance Wear's container for the widget's params. With [template] it is captured as a
- * design template: names and titles bound, not baked.
+ * A widget's document: [card] under the Wear theme, Fixed size mode, without the card's own chrome,
+ * in Glance Wear's container for the widget's params. With [template] it is captured as a design
+ * template: names and titles bound, not baked.
  */
 internal fun slotDocument(
   registry: CardRegistry,
   colors: RemoteColorScheme,
   card: CardConfig?,
   snapshot: HaSnapshot,
-  slotIndex: Int,
   template: Boolean = false,
   cardStyle: HaUberTheme = HaUberTheme.Classic,
   tint: Int? = null,
 ): WearWidgetDocument =
   WearWidgetDocument(
     background = tint?.let { WearWidgetBrush.color(Color(it).rc) } ?: WearWidgetBrush.Companion,
-    content = { SlotContent(registry, colors, card, snapshot, slotIndex, template, cardStyle) },
+    content = { SlotContent(registry, colors, card, snapshot, template, cardStyle) },
   )
 
-/** What a slot's widget shows inside its container: see [slotDocument]. */
+/** What a widget shows inside its container: see [slotDocument]. */
 @Composable
 internal fun SlotContent(
   registry: CardRegistry,
   colors: RemoteColorScheme,
   card: CardConfig?,
   snapshot: HaSnapshot,
-  slotIndex: Int,
   template: Boolean,
   cardStyle: HaUberTheme,
   // What draws the card: its converter, or a card design authored in UI Builder captured for the
@@ -472,7 +470,7 @@ internal fun SlotContent(
                   if (card != null) {
                     content(RemoteModifier.fillMaxWidth())
                   } else {
-                    EmptySlotPlaceholder(slotIndex, theme)
+                    ChooseCardPlaceholder(theme)
                   }
                 }
               }
@@ -485,23 +483,25 @@ internal fun SlotContent(
 }
 
 /**
- * Tiny placeholder rendered when a slot has no assigned card or its `rawJson` failed to decode.
- * Keeps the watch surface non-empty during the transient window where the slot is configured but
- * the matching `PinnedCard` hasn't synced yet.
+ * What a widget draws with no card chosen yet (or one whose `rawJson` failed to decode): where to
+ * choose one. A Wear widget can't open the picker on a tap, so it names the app.
  */
 @Composable
-private fun EmptySlotPlaceholder(slotIndex: Int, theme: RemoteHaTheme) {
+private fun ChooseCardPlaceholder(theme: RemoteHaTheme) {
   RemoteBox(modifier = RemoteModifier.fillMaxWidth()) {
-    RemoteText(text = "Slot ${slotIndex + 1}".rs, color = theme.primaryText)
+    RemoteText(text = CHOOSE_CARD_PLACEHOLDER.rs, color = theme.primaryText)
   }
 }
+
+/** The placeholder's text: see [ChooseCardPlaceholder]. */
+internal const val CHOOSE_CARD_PLACEHOLDER = "Choose a card in the Terrazzo app"
 
 private val cardJson = Json { ignoreUnknownKeys = true }
 
 private fun String.toCardConfigOrNull(): CardConfig? = runCatching {
   cardJson.decodeFromString(CardConfig.serializer(), this)
 }
-  .onFailure { Log.w("SlotWidget", "card decode failed", it) }
+  .onFailure { Log.w("CardWidget", "card decode failed", it) }
   .getOrNull()
 
 /**
@@ -516,110 +516,67 @@ private fun LiveValues?.toSnapshot(): HaSnapshot {
   return HaSnapshot(states = states)
 }
 
-// One concrete widget per (slot, size) pair. The widget classes
-// themselves don't read the size — both Small and Large for slot N
-// resolve the same row from the offline store. The split exists so
-// the manifest can advertise distinct container types per service,
-// which is what the system widget picker filters on.
+// One concrete widget per container size. The widget classes themselves don't read the size: each
+// instance draws the card chosen for it. The split exists so the manifest can advertise distinct
+// container types per service, which is what the system widget picker filters on.
 
-class Slot0SmallWidget : SlotWidget(slotIndex = 0)
+class CardSmallWidget : CardWidget()
 
-class Slot0LargeWidget : SlotWidget(slotIndex = 0)
-
-class Slot1SmallWidget : SlotWidget(slotIndex = 1)
-
-class Slot1LargeWidget : SlotWidget(slotIndex = 1)
-
-class Slot2SmallWidget : SlotWidget(slotIndex = 2)
-
-class Slot2LargeWidget : SlotWidget(slotIndex = 2)
-
-class Slot3SmallWidget : SlotWidget(slotIndex = 3)
-
-class Slot3LargeWidget : SlotWidget(slotIndex = 3)
-
-class Slot4SmallWidget : SlotWidget(slotIndex = 4)
-
-class Slot4LargeWidget : SlotWidget(slotIndex = 4)
+class CardLargeWidget : CardWidget()
 
 /**
- * Ask the host to re-render every placed slot widget, after a change that only the next render
- * reads — the watch theme or card style. Each render reads the preferences afresh, and the template
- * cache is keyed by both, so the widgets come back in the new look.
+ * Ask the host to re-render every placed Terrazzo widget, after a change that only the next render
+ * reads — the watch theme or card style, new pins or designs. Each render reads the preferences
+ * afresh, and the template cache is keyed by both, so the widgets come back in the new look.
  */
-suspend fun refreshAllSlotWidgets(context: Context) {
-  listOf(
-      Slot0SmallWidget(),
-      Slot0LargeWidget(),
-      Slot1SmallWidget(),
-      Slot1LargeWidget(),
-      Slot2SmallWidget(),
-      Slot2LargeWidget(),
-      Slot3SmallWidget(),
-      Slot3LargeWidget(),
-      Slot4SmallWidget(),
-      Slot4LargeWidget(),
-    )
-    .forEach { widget -> runCatching { widget.triggerUpdateAll(context) } }
+suspend fun refreshAllCardWidgets(context: Context) {
+  listOf(CardSmallWidget(), CardLargeWidget()).forEach { widget ->
+    runCatching { widget.triggerUpdateAll(context) }
+  }
+}
+
+/** Ask the host to re-render widget [instanceId] of [provider]: its card was just chosen. */
+suspend fun refreshCardWidget(context: Context, provider: ComponentName?, instanceId: Int) {
+  val widgets =
+    when (provider?.className) {
+      CardSmallWidgetService::class.java.name -> listOf(CardSmallWidget())
+      CardLargeWidgetService::class.java.name -> listOf(CardLargeWidget())
+      // Not one of ours or not known: whichever size the instance is.
+      else -> listOf(CardSmallWidget(), CardLargeWidget())
+    }
+  for (widget in widgets) {
+    val instance = runCatching {
+      GlanceWearWidgetManager(context).fetchActiveWidgets(widget::class)
+    }
+      .getOrNull()
+      ?.firstOrNull { it.instanceId.id == instanceId }
+      ?.instanceId
+    if (instance != null) {
+      runCatching { widget.triggerUpdate(context, instance) }
+      return
+    }
+  }
+  // Not listed (yet): update them all.
+  refreshAllCardWidgets(context)
 }
 
 /**
- * One [GlanceWearWidgetService] per (slot, size) pair. The system binds these via
+ * One [GlanceWearWidgetService] per container size. The system binds these via
  * `androidx.glance.wear.action.BIND_WIDGET_PROVIDER` (or the legacy
  * `androidx.wear.tiles.action.BIND_TILE_PROVIDER` for tile-compat surfaces). The `widget` property
  * exposed by [GlanceWearWidgetService] (synthesised from its Java `getWidget()` accessor) returns a
  * stable instance per service.
  *
- * Per-size manifest entries point at distinct `wearwidget-provider` XML descriptors
+ * Each manifest entry points at its own `wearwidget-provider` XML descriptor
  * (`@xml/wear_slot_widget_provider_small` vs `@xml/wear_slot_widget_provider_large`) so the picker
- * filters each service to one container type.
+ * filters each service to one container type. Every instance of either shows its own card.
  */
-@AssociateWithGlanceWearWidget(Slot0SmallWidget::class)
-class Slot0SmallWidgetService : GlanceWearWidgetService() {
-  override val widget: GlanceWearWidget = Slot0SmallWidget()
+@AssociateWithGlanceWearWidget(CardSmallWidget::class)
+class CardSmallWidgetService : GlanceWearWidgetService() {
+  override val widget: GlanceWearWidget = CardSmallWidget()
 }
 
-@AssociateWithGlanceWearWidget(Slot0LargeWidget::class)
-class Slot0LargeWidgetService : GlanceWearWidgetService() {
-  override val widget: GlanceWearWidget = Slot0LargeWidget()
-}
-
-@AssociateWithGlanceWearWidget(Slot1SmallWidget::class)
-class Slot1SmallWidgetService : GlanceWearWidgetService() {
-  override val widget: GlanceWearWidget = Slot1SmallWidget()
-}
-
-@AssociateWithGlanceWearWidget(Slot1LargeWidget::class)
-class Slot1LargeWidgetService : GlanceWearWidgetService() {
-  override val widget: GlanceWearWidget = Slot1LargeWidget()
-}
-
-@AssociateWithGlanceWearWidget(Slot2SmallWidget::class)
-class Slot2SmallWidgetService : GlanceWearWidgetService() {
-  override val widget: GlanceWearWidget = Slot2SmallWidget()
-}
-
-@AssociateWithGlanceWearWidget(Slot2LargeWidget::class)
-class Slot2LargeWidgetService : GlanceWearWidgetService() {
-  override val widget: GlanceWearWidget = Slot2LargeWidget()
-}
-
-@AssociateWithGlanceWearWidget(Slot3SmallWidget::class)
-class Slot3SmallWidgetService : GlanceWearWidgetService() {
-  override val widget: GlanceWearWidget = Slot3SmallWidget()
-}
-
-@AssociateWithGlanceWearWidget(Slot3LargeWidget::class)
-class Slot3LargeWidgetService : GlanceWearWidgetService() {
-  override val widget: GlanceWearWidget = Slot3LargeWidget()
-}
-
-@AssociateWithGlanceWearWidget(Slot4SmallWidget::class)
-class Slot4SmallWidgetService : GlanceWearWidgetService() {
-  override val widget: GlanceWearWidget = Slot4SmallWidget()
-}
-
-@AssociateWithGlanceWearWidget(Slot4LargeWidget::class)
-class Slot4LargeWidgetService : GlanceWearWidgetService() {
-  override val widget: GlanceWearWidget = Slot4LargeWidget()
+@AssociateWithGlanceWearWidget(CardLargeWidget::class)
+class CardLargeWidgetService : GlanceWearWidgetService() {
+  override val widget: GlanceWearWidget = CardLargeWidget()
 }

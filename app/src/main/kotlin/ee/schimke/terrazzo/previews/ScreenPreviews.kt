@@ -46,9 +46,6 @@ import ee.schimke.terrazzo.core.pin.MobilePinnedCard
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.PinnedCardData
-import ee.schimke.terrazzo.core.pin.SlotSize
-import ee.schimke.terrazzo.core.pin.WearWidgetSlot
-import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
@@ -72,7 +69,6 @@ import ee.schimke.terrazzo.image.HaImageStack
 import ee.schimke.terrazzo.logs.LogsContent
 import ee.schimke.terrazzo.ui.TerrazzoTheme
 import ee.schimke.terrazzo.wearsync.SyncDiagnosticsContent
-import ee.schimke.terrazzo.wearsync.WearWidgetsContent
 import ee.schimke.terrazzo.wearsync.proto.SyncStats
 import ee.schimke.terrazzo.widget.WidgetsContent
 import kotlinx.serialization.json.buildJsonObject
@@ -133,7 +129,6 @@ private fun rememberPreviewGraph(): TerrazzoGraph {
       override val offlineCache: OfflineCache = OfflineCache(context)
       override val preferencesStore: PreferencesStore = PreferencesStore(context)
       override val pinStore: PinStore = PinStore(context)
-      override val wearWidgetSlotsStore: WearWidgetSlotsStore = WearWidgetSlotsStore(context)
       override val widgetStore: WidgetStore
         get() = error("widgetStore not wired in previews")
 
@@ -504,7 +499,6 @@ private fun TopBarPreviewHost(
           onOpenSettings = {},
           onOpenWidgets = {},
           onOpenPinned = {},
-          onOpenWearWidgets = null,
           onOpenLogs = null,
           onSignOut = {},
           onOpenAgent = agentInOverflow,
@@ -927,51 +921,6 @@ fun Screen_ManagePinned_Empty() = PhoneHost {
   ManagePinnedContent(items = emptyList(), onReorder = {}, onUnpin = {}, onBack = {})
 }
 
-private val SAMPLE_WEAR_CARDS =
-  listOf(
-    MobilePinnedCard(
-      "card-living",
-      SAMPLE_BASE_URL,
-      "lovelace-mobile",
-      PinnedCardData(type = "tile", title = "Living Room"),
-      0,
-    ),
-    MobilePinnedCard(
-      "card-garage",
-      SAMPLE_BASE_URL,
-      "lovelace-garage",
-      PinnedCardData(type = "cover", title = "Garage Door"),
-      1,
-    ),
-  )
-
-private val SAMPLE_WEAR_SLOTS =
-  listOf(
-    WearWidgetSlot(slotIndex = 0, cardKey = "card-living", size = SlotSize.Both),
-    WearWidgetSlot(slotIndex = 1, cardKey = "card-garage", size = SlotSize.SmallOnly),
-    WearWidgetSlot(slotIndex = 2, cardKey = ""),
-    WearWidgetSlot(slotIndex = 3, cardKey = ""),
-    WearWidgetSlot(slotIndex = 4, cardKey = ""),
-  )
-
-@Preview(
-  name = "wear widgets",
-  showBackground = false,
-  widthDp = PHONE_WIDTH_DP,
-  heightDp = PHONE_HEIGHT_DP,
-)
-@Composable
-fun Screen_WearWidgets() = PhoneHost {
-  WearWidgetsContent(
-    slots = SAMPLE_WEAR_SLOTS,
-    pinnedCards = SAMPLE_WEAR_CARDS,
-    onAssign = { _, _ -> },
-    onClear = {},
-    onSizeChange = { _, _ -> },
-    onBack = {},
-  )
-}
-
 private val SAMPLE_SYNC_STATS =
   SyncStats(
     datastoreWrites = 128,
@@ -1058,19 +1007,12 @@ fun Play_Phone_04_Picker() =
     )
   }
 
-/** Phone slot 5 — the watch's widget slots, set up from the phone. */
-@Preview(name = "play · phone · wear widgets", showBackground = false, device = PIXEL_2_DEVICE)
+/** Phone slot 5 — the cards the phone shows on the watch ("Cards on your watch"). */
+@Preview(name = "play · phone · watch cards", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
-fun Play_Phone_05_WearWidgets() =
+fun Play_Phone_05_WatchCards() =
   PhoneHost(darkMode = DarkModePref.Light) {
-    WearWidgetsContent(
-      slots = SAMPLE_WEAR_SLOTS,
-      pinnedCards = SAMPLE_WEAR_CARDS,
-      onAssign = { _, _ -> },
-      onClear = {},
-      onSizeChange = { _, _ -> },
-      onBack = {},
-    )
+    ManagePinnedContent(items = SAMPLE_PIN_ITEMS, onReorder = {}, onUnpin = {}, onBack = {})
   }
 
 /** 7-inch tablet slot 1 — home (dashboard view). */

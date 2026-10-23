@@ -319,9 +319,9 @@ The activity plays dashboard, section and pinned cards through `WearRemoteCard`,
 container children, with the selected style and live bindings. Explicit phone card/type styles
 are synced for all three lists; clearing them restores the watch choice. The persisted watch
 selection is loaded before the first card capture.
-Slot widgets apply it with `ProvideHaUberStyle`, which brings the instruments, type, shapes and
+Wear widgets apply it with `ProvideHaUberStyle`, which brings the instruments, type, shapes and
 ink but keeps the watch's palette (the WearM3 colours its host updates); changing it (or the
-watch theme) re-renders placed widgets (`refreshAllSlotWidgets`). An explicit phone per-card or
+watch theme) re-renders placed widgets (`refreshAllCardWidgets`). An explicit phone per-card or
 per-card-type style override takes priority: the phone resolves `CardDesignOverrides.forCard` and
 syncs `CardSummary.cardStyleOverride` with the pin, including when only the override changes.
 Clearing it restores the watch-wide choice. An unknown style from a newer phone also follows the

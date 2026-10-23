@@ -28,7 +28,6 @@ fun TopBarOverflowMenu(
   onOpenSettings: () -> Unit,
   onOpenWidgets: () -> Unit,
   onOpenPinned: () -> Unit,
-  onOpenWearWidgets: (() -> Unit)?,
   onOpenLogs: (() -> Unit)?,
   onSignOut: () -> Unit,
   onOpenAgent: (() -> Unit)? = null,
@@ -47,8 +46,6 @@ fun TopBarOverflowMenu(
     // mechanism, so "pinned" and "widgets" no longer read as the same thing twice.
     MenuEntry("Home screen widgets", close, onOpenWidgets)
     MenuEntry("Cards on your watch", close, onOpenPinned)
-    // Hidden unless a paired Wear node has reported widget support.
-    onOpenWearWidgets?.let { MenuEntry("Watch widgets", close, it) }
     onInstallOnWatch?.let { MenuEntry("Install on watch", close, it) }
     HorizontalDivider()
     MenuEntry("Settings", close, onOpenSettings)

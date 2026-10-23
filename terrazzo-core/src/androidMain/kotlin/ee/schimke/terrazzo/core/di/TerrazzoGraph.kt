@@ -14,7 +14,6 @@ import ee.schimke.terrazzo.core.network.HttpEngineFactory
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
 import ee.schimke.terrazzo.core.network.RemoteUrlStore
 import ee.schimke.terrazzo.core.pin.PinStore
-import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.CachedHaSession
 import ee.schimke.terrazzo.core.session.DemoHaSession
@@ -44,7 +43,6 @@ interface TerrazzoGraph {
   val mobileAppRegistrar: MobileAppRegistrar
   val widgetStore: WidgetStore
   val pinStore: PinStore
-  val wearWidgetSlotsStore: WearWidgetSlotsStore
   val preferencesStore: PreferencesStore
   val offlineCache: OfflineCache
   val sessionFactory: HaSessionFactory

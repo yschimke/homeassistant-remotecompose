@@ -91,9 +91,18 @@ ha-cards .uid  ──(UI Builder, admin edit)──▶  revision
     that enables it.
 - **Validation** is the existing `userTemplateProblem` (bindings against the base schema, op
   profile), plus the parity gate below while a card type migrates.
-- **Import.** A scheduled workflow fetches the server's library designs (`.uid` sources, `.rc`
-  blobs, manifest) and opens a PR. CI renders the imported blobs in the catalog, so a design
-  change on the server shows up as a catalog diff before it lands.
+- **Editing.** Each migrated card type's library design is the UI Builder design
+  `library-<cardType>` on the design server, created from the checked-in `.uid` the first time
+  one of its `LIBRARY_EDITORS` opens it ("Edit the library design" on a design's page) and edited
+  in place after that (`LibrarySources`). Forking a library design of a migrated type copies that
+  real design, not a reconstruction.
+- **Import.** `GET /api/library/sources` serves each migrated card type's current design (the
+  edited one, else the checked-in one). The daily `import-card-designs` workflow writes them over
+  `card-designs/ui-builder/designs/` and opens one PR when anything changed. CI rebuilds the
+  library from the imported sources (the `.rc` is made here, not on the server), and the preview
+  diff on that PR is the review of what changes in the app. While a card type still has a
+  converter, its parity gates fail an edit that changes its pixels; that is the migration gate
+  doing its job, and the edit lands with the converter's layout deleted.
 - **Fallback.** The app ships the imported manifest and blobs as assets. Lookup becomes: synced
   server design → shipped asset → nothing (an "unsupported" card), with no runtime capture.
 
@@ -225,10 +234,10 @@ Built (D5):
 | | Deliverable |
 | --- | --- |
 | D1 | This plan; `card-designs/ui-builder/designs/` and the parity harness, with the tile migrated |
-| D2 | Design server serves library designs from `.uid` (admin-editable, public-readable), exports per family |
+| D2 | Design server serves library designs from `.uid` (admin-editable, public-readable), exports per family. **Built:** editing as `library-<cardType>`, `/api/library/sources` |
 | D2b | The surface transformation: one card `.uid` → dashboard, Wear widget and launcher `.rc` designs, with the preview panes matching it |
-| D3 | Scheduled import workflow and shipped assets; runtime capture removed for migrated types |
-| D4 | Forks copy the real source; fork lineage on the design server |
+| D3 | Scheduled import workflow (**built:** `import-card-designs.yml`) and shipped assets; runtime capture removed for migrated types |
+| D4 | Forks copy the real source (**built** for migrated types); fork lineage on the design server |
 | D5 | Design id in the manifest and cache; per-card design override and the chooser in the card's style sheet |
 | D6+ | Remaining card types, one PR each; `converter-only.md` for the rest |
 | D7+ | Device-specific transformations (Wear screen shape, launcher grids, TV/desktop, older RC levels), each when a host needs it |

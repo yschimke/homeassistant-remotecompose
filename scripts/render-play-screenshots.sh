@@ -90,7 +90,7 @@ stage Play_Phone_01_HomeLight_play_phone_home_light    "$PHONE/01-home-light.png
 stage Play_Phone_02_HomeDark_play_phone_home_dark      "$PHONE/02-home-dark.png"
 stage Play_Phone_03_Discovery_play_phone_discovery     "$PHONE/03-discovery.png"
 stage Play_Phone_04_Picker_play_phone_picker           "$PHONE/04-dashboard-picker.png"
-stage Play_Phone_05_WearWidgets_play_phone_wear_widgets "$PHONE/05-wear-widgets.png"
+stage Play_Phone_05_WatchCards_play_phone_watch_cards     "$PHONE/05-watch-cards.png"
 stage Play_Tablet7_01_Home_play_7_inch_home            "$T7/01-home.png"
 stage Play_Tablet10_01_Home_play_10_inch_home          "$T10/01-home.png"
 stage_wear Play_Wear_01_Home_play_wear_home            "$WEAR/01-home.png"

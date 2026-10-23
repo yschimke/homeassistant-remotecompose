@@ -71,12 +71,13 @@ decides the card; and one radio list led by *Same as your dashboard* (or *Same a
 cards*), naming the style that means.
 
 **The menu names places.** *Home screen widgets* (now listing what is installed, 2 of 5 in use, and
-how to remove one), *Cards on your watch*, *Watch widgets*, then a divider before Settings, Logs and
-Sign out.
+how to remove one), *Cards on your watch*, *Watch widgets* (since removed: a watch widget's card is
+chosen on the watch), then a divider before Settings, Logs and Sign out.
 
 ## Not changed
 
 - The section heading's pin icon stays: it is already in context, on the thing it pins.
 - The launcher preview and its sizing controls are unchanged in behaviour; only their copy is
   shorter and they moved from the details screen into the install sheet alone.
-- The Wear widget slots screen keeps its layout; only its title changed to match the menu.
+- (Since removed: the phone's Wear widget slots screen. A watch widget's card is now chosen on the
+  watch.)

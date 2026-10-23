@@ -30,9 +30,9 @@ data class PairedWatch(val nodeId: String, val displayName: String, val appInsta
  * without the watch capability is a watch that can take the app, and [installOnWatch] opens its
  * Play Store listing there — the phone and watch apps share the `ee.schimke.harc` listing.
  *
- * Watch builds from before the Horologist capability only advertise
- * [WearCapabilityProbe.CAPABILITY] (and only on Wear widget capable watches), so that counts as
- * installed too: a user on an older watch build isn't asked to install what they already have.
+ * Watch builds from before the Horologist capability only advertise [LEGACY_WIDGETS_CAPABILITY]
+ * (and only on Wear widget capable watches), so that counts as installed too: a user on an older
+ * watch build isn't asked to install what they already have.
  */
 @OptIn(ExperimentalHorologistApi::class)
 class WearAppInstallHelper(private val context: Context, scope: CoroutineScope) {
@@ -65,7 +65,7 @@ class WearAppInstallHelper(private val context: Context, scope: CoroutineScope) 
       .map { installed ->
         val legacy = runCatching {
           registry.capabilityClient
-            .getCapability(WearCapabilityProbe.CAPABILITY, CapabilityClient.FILTER_ALL)
+            .getCapability(LEGACY_WIDGETS_CAPABILITY, CapabilityClient.FILTER_ALL)
             .await()
             .nodes
         }
@@ -95,6 +95,13 @@ class WearAppInstallHelper(private val context: Context, scope: CoroutineScope) 
         .getOrNull() == AppHelperResultCode.APP_HELPER_RESULT_SUCCESS
 
   private companion object {
+    /**
+     * The watch app's Wear widgets capability, declared statically in its `values-v37/wear.xml`.
+     * Read here only to recognise watch builds older than the Horologist capability as installed:
+     * the phone no longer sets up Wear widgets, so nothing else reads it.
+     */
+    const val LEGACY_WIDGETS_CAPABILITY = "terrazzo_wear_widgets"
+
     const val TAG = "WearAppInstall"
     const val RECHECK_MS = 30_000L
 

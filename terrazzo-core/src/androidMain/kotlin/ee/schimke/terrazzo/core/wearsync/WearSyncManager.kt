@@ -1,7 +1,6 @@
 package ee.schimke.terrazzo.core.wearsync
 
 import ee.schimke.terrazzo.core.pin.PinStore
-import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.HaSession
 import kotlinx.coroutines.CoroutineScope
@@ -47,7 +46,6 @@ interface WearSyncManager {
     scope: CoroutineScope,
     prefs: PreferencesStore,
     pinStore: PinStore,
-    slotsStore: WearWidgetSlotsStore,
     inputEditing: StateFlow<Boolean> = MutableStateFlow(false),
   )
 }
@@ -67,7 +65,6 @@ class NoOpWearSyncManager : WearSyncManager {
     scope: CoroutineScope,
     prefs: PreferencesStore,
     pinStore: PinStore,
-    slotsStore: WearWidgetSlotsStore,
     inputEditing: StateFlow<Boolean>,
   ) {}
 }

@@ -177,19 +177,21 @@ Deliberate spike limits, each owned by a milestone below:
 - **The server and its library exist** ([below](#the-server-design-server)):
   `:card-designs:generateCardDesigns` builds the mobile-app library, and `:design-server` hosts it
   for the app with a browser of its templates.
-- **Wear widgets are baked too** (`SlotWidget`): Glance Wear captures the slot's template itself
+- **Wear widgets are baked too** (`CardWidget`): Glance Wear captures the card's template itself
   (its own op set and canvas, keyed by card shape, theme, container and size) and
   `LauncherDesigns.bakeValues` writes the card's values in. The Wear widget has no taps. The watch
-  can't fetch a picture, so the phone does: for every entity a widget slot card binds that has an
+  can't fetch a picture, so the phone does: for every entity a card it shows on the watch (pinned,
+  or in a pinned section: any of them can be placed as a widget) binds that has an
   `entity_picture`, `MobileWearSyncManager` sends a downscaled PNG (`WearPicture`,
   `/wear/picture/<entityId>`, at most every 5 min, skipping the image cache, and only when it
-  changed), and baking embeds it. The widget reads its slots, pinned cards, values and pictures
+  changed), and baking embeds it. The widget reads its pinned cards and sections, values and
+  pictures
   from the Data Layer when it renders, so they arrive whether or not the watch app was running;
   the phone writes the values DataItem whenever the app isn't open (its live stream only reaches a
   running app).
   Until one has synced, the card keeps the direct capture, which shows the card's icon
   (`SlotWidgetDesignTest`, `WearPictureSyncTest`).
-- **One Wear widget template fits every container** (`WearWidgetTemplate`): the slot's content
+- **One Wear widget template fits every container** (`WearWidgetTemplate`): the card's content
   in Glance Wear's container with the padding and corner radius left as named values
   (`wear.container.horizontal_padding`, `…vertical_padding`, `…corner_radius`, dp), captured once
   per card shape and theme with the app's profile (so `CORE_TEXT` is fine) at host density. Per
@@ -215,10 +217,21 @@ Deliberate spike limits, each owned by a milestone below:
   (`WearWidgetDesigns`), exports each, and keeps those that pass the Wear widget profile and bind
   what the card does, as `wear-widget` designs keyed like the card's with a `container`
   (`small` / `large`). They are shared, unshared and replaced with the card's design. The phone
-  sends each widget slot card's Wear designs (its dark design's, in the card's variant, then
-  `default`; `wearSlotDesigns`) as `/wear/design/<sha256>` blobs and a `/wear/slot-designs`
-  index, and the watch bakes the one for the widget's container, falling back to its own capture
-  (`SlotWidgetServerDesignTest`, `WearSlotDesignPickerTest`).
+  sends every pinned card's Wear designs (its dark design's, in the card's variant, then
+  `default`; `wearCardDesigns`, each under `WEAR_DESIGN_MAX_BYTES`) as `/wear/design/<sha256>`
+  blobs and a `/wear/slot-designs` index by the pin's `cardKey` (the path keeps its old name, so
+  older and newer apps interoperate), and a widget showing that card bakes the one for its
+  container, falling back to its own capture (`SlotWidgetServerDesignTest`,
+  `WearCardDesignPickerTest`). A pinned section's card has no designs sent: it draws its own.
+- **Which card a Wear widget shows is chosen on the watch.** The phone only chooses what the watch
+  shows ("Show on watch": `/wear/pinned`, `/wear/sections`); it assigns no widget slots any more
+  (`/wear/slots` is no longer written, and the watch ignores it). The watch has two providers,
+  `CardSmallWidgetService` and `CardLargeWidgetService`, enabled while any card is synced; each
+  placed widget keeps its card in `WearWidgetCardStore` by its widget instance id (its key and a
+  copy, so it keeps drawing when the phone unpins it) and draws "Choose a card in the Terrazzo
+  app" until one is chosen — in `WearWidgetConfigActivity` (the Glance Wear provider
+  configuration activity, where the host launches it) or the Wear app's Settings → Widgets
+  (`CardWidgetChoiceTest`, `WearWidgetCardStoreTest`).
 - **Launcher widgets are baked** (S1, `LauncherDesigns`): a launcher can't receive bindings, so
   the widget's launcher template — keyed by size (`variant = <w>x<h>`) and widget theme, captured
   from the same tree as a live widget (`LauncherWidgetContent`) — gets the card's values written
@@ -513,7 +526,7 @@ Each surface starts from today's profiles:
 | --- | --- | --- | --- | --- |
 | `mobile-app` | `androidXExperimentalWrap` (latest level) | Wrap | `theme.*` bindings | always |
 | `launcher` | `widgetsProfile` (level 7) / `systemThemedWidgetsProfile` (API 37+) | Fixed, tiered | `ColorTheme` on 37+, otherwise `theme.*` | `WidgetSync.liveWidgetIds()` not empty |
-| `wear-widget` | Glance Wear stable op set (no FlowLayout) | Fixed, one design per container (`small` / `large`) | the card's design's, dark | a widget slot card with a Wear design |
+| `wear-widget` | Glance Wear stable op set (no FlowLayout) | Fixed, one design per container (`small` / `large`) | the card's design's, dark | a pinned card with a Wear design, placed as a watch widget |
 | `wear-app` | the `wear-widget` template, played with its bindings | Fixed, in the card's widget container (`small` / `large`) | the widget's | watch paired with Terrazzo installed |
 | `desktop`, `tv` | to be decided with the CMP player | Wrap | `theme.*` | later |
 
