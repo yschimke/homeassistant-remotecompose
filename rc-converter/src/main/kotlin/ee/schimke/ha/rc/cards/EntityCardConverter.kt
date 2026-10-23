@@ -15,6 +15,7 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.HaIconIdentity
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
@@ -114,6 +115,12 @@ class EntityCardConverter : CardConverter {
                 iconChipData(card, snapshot),
                 RemoteModifier.fillMaxSize(),
                 bindState = LocalWidgetCaptureSizeDp.current != null,
+                // The name stays under a generic icon (card-information-hierarchy.md).
+                showName =
+                  HaIconIdentity.chipShowsName(
+                    card,
+                    card.raw["entity"]?.jsonPrimitive?.content?.let { snapshot.states[it] },
+                  ),
               )
             // The row fills the cell and self-centres via its
             // own `CenterVertically` (like RemoteHaGaugeWide),

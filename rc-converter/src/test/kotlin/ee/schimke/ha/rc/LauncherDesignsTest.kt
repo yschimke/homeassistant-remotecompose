@@ -111,7 +111,17 @@ class LauncherDesignsTest {
 
   @Test
   fun resizeSelectsTheFullLayoutRatherThanOnlyStretchingTheIcon() {
-    val card = card("tile", "light.kitchen")
+    // A configured `icon:` is evocative, so the 1×1 chip drops the name
+    // (card-information-hierarchy.md); aOneCellTileKeepsTheNameUnderAGenericIcon has the bulb.
+    val card =
+      CardConfig(
+        "tile",
+        buildJsonObject {
+          put("type", "tile")
+          put("entity", "light.kitchen")
+          put("icon", "mdi:ceiling-light")
+        },
+      )
     val snapshot = snapshotOf(entity("light.kitchen", "on"))
     fun textLayouts(width: Int, height: Int): Int {
       val document = bake(card, snapshot, width, height)
@@ -124,6 +134,21 @@ class LauncherDesignsTest {
     }
     assertEquals(1, textLayouts(72, 84), "Compact shows the state beneath the icon")
     assertEquals(2, textLayouts(144, 168), "Wide widgets show both the editable name and state")
+  }
+
+  /** A bulb is the same on every light: a 1×1 tile keeps the name under it, then the state. */
+  @Test
+  fun aOneCellTileKeepsTheNameUnderAGenericIcon() {
+    val document =
+      bake(card("tile", "light.kitchen"), snapshotOf(entity("light.kitchen", "on")), 72, 84)
+    val operations = arrayListOf<Operation>()
+    RemoteComposeBuffer.fromInputStream(platformWidgetDocument(document.bytes).inputStream())
+      .inflateFromBuffer(operations)
+    assertEquals(
+      2,
+      operations.count { it is androidx.compose.remote.core.operations.layout.managers.TextLayout },
+      "the name and the state beneath the icon",
+    )
   }
 
   @Test

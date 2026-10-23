@@ -10,6 +10,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.LocalInCardContainer
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaAction
@@ -53,7 +54,15 @@ class HumidifierCardConverter : CardConverter {
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    RenderArcDial(humidifierDial(card, snapshot), modifier)
+    // As the thermostat: the name on both Wear containers, and the mode chip (`Off`,
+    // `Humidifying`, which the fixed cyan accent never says) under it in Wear Large.
+    RenderArcDial(
+      humidifierDial(card, snapshot),
+      modifier,
+      // In a stack or grid the container is the multi-entity card: its dials stay nameless.
+      wearShowsName = !LocalInCardContainer.current,
+      wearLargeKeepsMode = true,
+    )
   }
 
   private val dial =

@@ -9,6 +9,7 @@ import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.HaIconIdentity
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalGridSquareCells
@@ -67,10 +68,21 @@ object ButtonDesignParts {
     else RemoteHaButton(data, modifier, isCompact)
   }
 
-  /** `ha-cards/button-icon`: the button's icon alone, for a cell too small for its name. */
+  /**
+   * `ha-cards/button-icon`: the button's icon chip, for a cell too small for the full button. The
+   * name stays under the chip at label size unless the card hides it or the icon is evocative
+   * ([HaIconIdentity], card-information-hierarchy.md).
+   */
   @Composable
   fun Icon(modifier: RemoteModifier) {
-    RemoteHaButtonIcon(data(), modifier)
+    val (card, snapshot) = input()
+    val data = buttonData(card, snapshot)
+    val entity = data.entityId?.let { snapshot.states[it] }
+    RemoteHaButtonIcon(
+      data,
+      modifier,
+      showName = data.showName && HaIconIdentity.chipShowsName(card, entity),
+    )
   }
 
   /**

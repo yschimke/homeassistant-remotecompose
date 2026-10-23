@@ -39,6 +39,11 @@ object TileDesignParts {
   @Composable
   private fun data() = input().let { (card, snapshot) -> converter.tileData(card, snapshot) }
 
+  /** The 1×1 chip keeps the name unless the tile's icon is evocative ([HaIconIdentity]). */
+  @Composable
+  private fun chipKeepsName() =
+    input().let { (card, snapshot) -> converter.chipKeepsName(card, snapshot) }
+
   /** `ha-cards/tile-full`: the dashboard tile, icon beside name over state, with its features. */
   @Composable
   fun Full(modifier: RemoteModifier) {
@@ -51,10 +56,18 @@ object TileDesignParts {
     RemoteHaTileCompact(data(), modifier)
   }
 
-  /** `ha-cards/tile-icon-chip`: the icon chip alone, for a cell too narrow for text. */
+  /**
+   * `ha-cards/tile-icon-chip`: the icon chip, for a cell too narrow for the name beside the icon:
+   * the name under it for a generic icon, the icon alone for an evocative one.
+   */
   @Composable
   fun IconChip(modifier: RemoteModifier) {
-    RemoteHaIconChip(data(), modifier, bindState = LocalWidgetCaptureSizeDp.current != null)
+    RemoteHaIconChip(
+      data(),
+      modifier,
+      bindState = LocalWidgetCaptureSizeDp.current != null,
+      showName = chipKeepsName(),
+    )
   }
 
   /**
@@ -84,7 +97,7 @@ object TileDesignParts {
    */
   @Composable
   fun FeaturesGate(modifier: RemoteModifier) {
-    converter.FeaturesGate(data(), modifier)
+    converter.FeaturesGate(data(), modifier, chipKeepsName())
   }
 
   /**

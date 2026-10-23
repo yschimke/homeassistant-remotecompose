@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import dev.zacsweers.metro.createGraphFactory
 import ee.schimke.ha.rc.CardDesignLibrary
 import ee.schimke.ha.rc.FileLocalDesignStore
+import ee.schimke.ha.rc.ShippedDesignLibrary
 import ee.schimke.ha.rc.components.enableRemoteImageUrls
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
@@ -112,6 +113,8 @@ class TerrazzoApplication : Application() {
     CardDesignLibrary.onCaptureFailure = { _, error ->
       graph.logStore.recordCrash(error, fatal = false)
     }
+    // The default style's designs ship in the app's assets: those keys are never captured.
+    CardDesignLibrary.shipped = ShippedDesignLibrary(assets)
     FileLocalDesignStore.of(applicationContext).also { store ->
       CardDesignLibrary.store = store
       (ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO).launch { store.prune() }

@@ -17,6 +17,7 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.HaIconIdentity
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
@@ -117,7 +118,17 @@ class StatisticCardConverter : CardConverter {
           RemoteSizeBreakpoint(thresholdsDp = intArrayOf(96), modifier = modifier.fillMaxSize()) {
             tier ->
             when (tier) {
-              0 -> RemoteHaIconChip(iconChipData(card, snapshot), RemoteModifier.fillMaxSize())
+              0 ->
+                RemoteHaIconChip(
+                  iconChipData(card, snapshot),
+                  RemoteModifier.fillMaxSize(),
+                  // The name stays under a generic icon (card-information-hierarchy.md).
+                  showName =
+                    HaIconIdentity.chipShowsName(
+                      card,
+                      card.raw["entity"]?.jsonPrimitive?.content?.let { snapshot.states[it] },
+                    ),
+                )
               else -> CenteredCell { FullStatistic(card, snapshot, RemoteModifier.fillMaxWidth()) }
             }
           }

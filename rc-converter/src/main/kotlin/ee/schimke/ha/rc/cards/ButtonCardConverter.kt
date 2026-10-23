@@ -12,6 +12,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.HaIconIdentity
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.components.HaButtonData
 import ee.schimke.ha.rc.components.LiveValues
@@ -37,9 +38,10 @@ import kotlinx.serialization.json.put
  *
  * Its layout is its card design, `button.uid` ([ButtonDesignParts] has the forms and what picks
  * between them): in a fixed canvas the full button where the cell fits its icon and name, the icon
- * alone where it doesn't (`ha-cards/min-size-gate`, a single 2-D test so the narrow-tall `1×1` cell
- * and a wide-short cell both fall to the icon), a launcher cell with a hero scale its hero forms,
- * and a Wear slot the icon beside its name below [WEAR_SMALL_MAX_HEIGHT_DP], the full button above.
+ * chip where it doesn't (`ha-cards/min-size-gate`, a single 2-D test so the narrow-tall `1×1` cell
+ * and a wide-short cell both fall to the chip; the name stays under the chip unless the icon is
+ * evocative, [HaIconIdentity]), a launcher cell with a hero scale its hero forms, and a Wear slot
+ * the icon beside its name below [WEAR_SMALL_MAX_HEIGHT_DP], the full button above.
  */
 class ButtonCardConverter : CardConverter {
   override val cardType: String = CardTypes.BUTTON

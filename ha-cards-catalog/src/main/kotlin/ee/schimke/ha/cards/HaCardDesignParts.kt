@@ -159,7 +159,10 @@ fun HaButtonFull(modifier: RemoteModifier = RemoteModifier, compact: String = "g
   ButtonDesignParts.Full(compact, modifier)
 }
 
-/** `ha-cards/button-icon`: the button's icon alone, for a cell too small for its name. */
+/**
+ * `ha-cards/button-icon`: the button's icon chip, for a cell too small for the full button; the
+ * name stays under it unless the icon is evocative.
+ */
 @Composable
 @RemoteComposable
 fun HaButtonIcon(modifier: RemoteModifier = RemoteModifier) {
