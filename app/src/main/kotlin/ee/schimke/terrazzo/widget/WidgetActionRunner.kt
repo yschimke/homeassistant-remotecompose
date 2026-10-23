@@ -25,7 +25,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  *
  * The write rule: only an action the app put on the widget's own `PendingIntent`
  * ([trustedWidgetAction]), only for a widget that is still installed, only on that widget's own
- * server, and only a toggle or a service call. A pinned widget is a deliberate control, so the
+ * server, and only a toggle, a service call or an alarm panel's arm, disarm and code taps (paired
+ * into one call by [WidgetAlarmPairing]). A pinned widget is a deliberate control, so the
  * dashboard's read-only lock (a guard against stray taps while scrolling) doesn't apply.
  *
  * The connection is the app's own login. While the app runs with a connected session for the
@@ -38,10 +39,20 @@ internal object WidgetActionRunner {
 
   /** Whether [action] is one this runner performs; the rest only open the app or are logged. */
   fun runs(action: HaAction): Boolean =
-    action is HaAction.Toggle || (action is HaAction.CallService && action.entityId != null)
+    action is HaAction.Toggle ||
+      action is HaAction.CallService ||
+      action is HaAction.AlarmIntent ||
+      action is HaAction.AlarmPin ||
+      action is HaAction.AlarmKey
 
-  suspend fun run(context: Context, widgetId: Int, action: HaAction) {
-    if (!runs(action)) return
+  private val alarmPairing = WidgetAlarmPairing()
+
+  suspend fun run(context: Context, widgetId: Int, tapped: HaAction) {
+    if (!runs(tapped)) return
+    // An alarm tap waits for its pair (the button and the code); the pair is one service call.
+    val action =
+      if (tapped is HaAction.CallService || tapped is HaAction.Toggle) tapped
+      else alarmPairing.accept(widgetId, tapped) ?: return
     val graph = context.terrazzoGraph()
     val entry = graph.widgetStore.get(widgetId)
     if (entry == null) {
@@ -52,17 +63,19 @@ internal object WidgetActionRunner {
       Log.i(TAG, "Demo widget $widgetId: no Home Assistant to call")
       return
     }
-    val entityId = actionEntityId(action) ?: return
+    // A call that names no entity (a script, a scene) has nothing to show until it runs.
+    val entityId = actionEntityId(action)
     // Only the tapped entity changes, atomically with any live refresh writing the same snapshot.
     var before: String? = null
     var expected: String? = null
     val shown =
-      graph.offlineCache.updateLatestState(entry.baseUrl, entityId) { current ->
-        optimisticState(action, current)?.also {
-          before = current
-          expected = it
+      entityId != null &&
+        graph.offlineCache.updateLatestState(entry.baseUrl, entityId) { current ->
+          optimisticState(action, current)?.also {
+            before = current
+            expected = it
+          }
         }
-      }
     if (shown) redraw(context, widgetId)
     val result = runCatching { withTimeout(CALL_TIMEOUT_MS) { call(graph, entry.baseUrl, action) } }
     result.exceptionOrNull()?.let { failure ->
@@ -73,6 +86,7 @@ internal object WidgetActionRunner {
       if (
         shown &&
           original != null &&
+          entityId != null &&
           graph.offlineCache.updateLatestState(entry.baseUrl, entityId) { current ->
             original.takeIf { current == expected }
           }
