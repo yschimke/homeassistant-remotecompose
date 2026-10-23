@@ -514,7 +514,7 @@ Each surface starts from today's profiles:
 | `mobile-app` | `androidXExperimentalWrap` (latest level) | Wrap | `theme.*` bindings | always |
 | `launcher` | `widgetsProfile` (level 7) / `systemThemedWidgetsProfile` (API 37+) | Fixed, tiered | `ColorTheme` on 37+, otherwise `theme.*` | `WidgetSync.liveWidgetIds()` not empty |
 | `wear-widget` | Glance Wear stable op set (no FlowLayout) | Fixed, one design per container (`small` / `large`) | the card's design's, dark | a widget slot card with a Wear design |
-| `wear-app` | AndroidX profile, round-safe | Wrap | `theme.*` / Wear M3 | watch paired with Terrazzo installed |
+| `wear-app` | the `wear-widget` template, played with its bindings | Fixed, in the card's widget container (`small` / `large`) | the widget's | watch paired with Terrazzo installed |
 | `desktop`, `tv` | to be decided with the CMP player | Wrap | `theme.*` | later |
 
 **Version negotiation.** The client sends the highest document API

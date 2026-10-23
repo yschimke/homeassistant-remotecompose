@@ -3,18 +3,27 @@
 package ee.schimke.terrazzo.wear.ui
 
 import android.content.Context
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.background
+import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
+import androidx.compose.remote.creation.compose.modifier.padding
+import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
+import androidx.compose.remote.creation.compose.state.rc
+import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material3.Text
-import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.*
@@ -22,13 +31,20 @@ import ee.schimke.ha.rc.cards.cardVisibilitySignature
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaUberTheme
-import ee.schimke.ha.rc.components.ProvideCardStyle
 import ee.schimke.ha.rc.components.ThemeStyle
-import ee.schimke.ha.rc.components.cardPalette
 import ee.schimke.terrazzo.wear.data.toEntityState
+import ee.schimke.terrazzo.wear.widget.SlotContent
+import ee.schimke.terrazzo.wear.widget.WearWidgetFrame
+import ee.schimke.terrazzo.wear.widget.WearWidgetTemplate
+import ee.schimke.terrazzo.wear.widget.neutralWidgetTemplate
+import ee.schimke.terrazzo.wear.widget.wearAppContainer
+import ee.schimke.terrazzo.wear.widget.wearDesignProperties
+import ee.schimke.terrazzo.wear.widget.wearDesignTemplate
 import ee.schimke.terrazzo.wear.widget.wearWidgetCardStyle
+import ee.schimke.terrazzo.wear.widget.wearWidgetColors
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 
 internal data class WearCardLook(
@@ -39,9 +55,12 @@ internal data class WearCardLook(
 internal val LocalWearCardLook = staticCompositionLocalOf { WearCardLook() }
 
 /**
- * The in-app Wear player has the same capabilities as the phone's Compose player. Do not use Glance
- * Wear's constrained capture profile here: its fixed canvas is only for system widgets. Raw configs
- * (including containers), styles and entity values all survive offline sync.
+ * A card in the Wear app, drawn exactly as its Wear widget draws it: in the widget container's
+ * frame (Small or Large, [wearAppContainer]; the sizes this watch's widget host uses, see
+ * [WearWidgetFrame]), from the same container-neutral template ([neutralWidgetTemplate]), under the
+ * widget's colours and size mode. A card added as a widget then looks the same on the watch face as
+ * it did in the app. Unlike the widget, which bakes its values, the app plays the template's
+ * bindings, so values update live.
  */
 @Composable
 internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValue>) {
@@ -60,13 +79,17 @@ internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValu
   val look = LocalWearCardLook.current
   val style = wearWidgetCardStyle(summary.cardStyleOverride, look.style)
   val context = LocalContext.current
-  val density = LocalDensity.current
   val design = CardDesignTemplates.designCard(card, snapshot, registry)
-  val designKey = wearDesignKey(design, snapshot, look, style, registry)
+  val frame =
+    remember(card, snapshot) {
+      WearWidgetFrame.forContainer(context, wearAppContainer(card, snapshot, registry))
+    }
+  // The card's state tints its container, as on the widget: warm for heating, amber for a light.
+  val tint = remember(card, snapshot) { ContainerTint.argbFor(card, snapshot) }
+  val colors = remember(look.palette) { wearWidgetColors(look.palette) }
   val template =
-    remember(design, designKey, density) {
-      designKey
-        ?.let { wearTemplateBytes(context, it, registry, density.density, density.fontScale) }
+    remember(design, look, style, frame, tint) {
+      runBlocking { wearAppTemplate(context, design, snapshot, look, style, frame, tint, registry) }
         ?.let { bytes -> CardDesignTemplates.playback(design, bytes, registry) }
     }
   // Binding cards seed current values before frame one; baked and structural changes recapture.
@@ -74,61 +97,86 @@ internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValu
   val signature = remember(card, snapshot, tick) { registry.cardDataSignature(card, snapshot) }
   val key =
     listOf(
-      "wear-app",
+      "wear-app-widget",
       card,
       look,
       style.id,
-      density,
+      frame,
+      tint,
       signature,
       cardIconSignature(card, snapshot),
       cardVisibilitySignature(card, snapshot),
     )
-  CachedCardPreview(
-    cacheKey = key,
-    profile = androidXExperimentalWrap,
-    modifier = Modifier.fillMaxWidth(),
-    card = card,
-    snapshot = snapshot,
-    liveBindings = signature == null,
-    template = template,
-  ) {
-    ProvideCardRegistry(registry) {
-      ProvideCardStyle(style, style.cardPalette(look.palette, darkTheme = true), darkTheme = true) {
-        RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+  BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+    // A watch narrower than the frame (before its host has reported one) keeps the frame's height.
+    val width = minOf(frame.widthDp.dp, maxWidth)
+    CachedCardPreview(
+      cacheKey = key,
+      profile = androidXExperimentalWrap,
+      modifier = Modifier.size(width, frame.heightDp.dp),
+      card = card,
+      snapshot = snapshot,
+      liveBindings = signature == null,
+      template = template,
+    ) {
+      // No template (a card with no template shape): the widget's direct document, framed alike.
+      WearAppFrame(frame, tint) {
+        SlotContent(registry, colors, card, snapshot, 0, template = false, cardStyle = style)
       }
     }
   }
 }
 
 /**
- * The local library's design key [design] plays with on the watch, in [look]'s palette and [style];
- * null when the card has no template shape. Shared with
- * [ee.schimke.terrazzo.wear.sync.WearCardWarmup], so the cards it prepares are the ones the app
- * shows.
+ * The document [design] plays in the Wear app in [frame]: its container-neutral widget template
+ * with the frame's values filled in ([WearWidgetTemplate.forApp]). Null when the card has no
+ * template shape or the template can't be captured; the card then draws its widget's direct
+ * document. Shared with [ee.schimke.terrazzo.wear.sync.WearCardWarmup], which captures the same
+ * templates ahead of the app.
  */
-internal fun wearDesignKey(
+internal suspend fun wearAppTemplate(
+  context: Context,
   design: CardConfig,
   snapshot: HaSnapshot,
   look: WearCardLook,
   style: HaUberTheme,
+  frame: WearWidgetFrame,
+  tint: Int?,
   registry: CardRegistry,
-): DesignKey? =
-  CardDesignTemplates.keyFor(design, snapshot, look.palette, true, registry, cardStyle = style)
+): ByteArray? {
+  val converter = registry.converterFor(design.type) ?: return null
+  val properties = converter.wearDesignProperties(design, snapshot) ?: return null
+  val input = converter.wearDesignTemplate(properties) ?: return null
+  val neutral =
+    neutralWidgetTemplate(
+      context,
+      registry,
+      wearWidgetColors(look.palette),
+      look.palette,
+      design.type,
+      properties.shape,
+      input,
+      style,
+    ) ?: return null
+  return WearWidgetTemplate.forApp(neutral, frame, tint)
+}
 
-/**
- * [key]'s template, folded for a display of [density] and [fontScale]: what the player plays. Null
- * when the template can't be captured, and the card draws through its converter.
- */
-internal fun wearTemplateBytes(
-  context: Context,
-  key: DesignKey,
-  registry: CardRegistry,
-  density: Float,
-  fontScale: Float,
-): ByteArray? =
-  CardDesignLibrary.templateOrNull(context, key, registry)?.let {
-    CardDesignTemplates.forDisplay(it, density, fontScale)
+/** [content] in [frame]'s container, as a widget host draws one: rounded, filled and padded. */
+@Composable
+private fun WearAppFrame(frame: WearWidgetFrame, tint: Int?, content: @Composable () -> Unit) {
+  RemoteBox(
+    modifier =
+      RemoteModifier.fillMaxSize()
+        .clip(RemoteRoundedCornerShape(frame.cornerRadiusDp.rdp))
+        .background((tint?.let { androidx.compose.ui.graphics.Color(it) } ?: WIDGET_SURFACE).rc)
+        .padding(frame.horizontalPaddingDp.rdp, frame.verticalPaddingDp.rdp)
+  ) {
+    content()
   }
+}
+
+/** The container colour a widget host fills for an untinted widget. */
+private val WIDGET_SURFACE = androidx.compose.ui.graphics.Color(39, 36, 48)
 
 /** The snapshot the watch's cards render from: its last synced entity values. */
 internal fun wearSnapshot(values: Map<String, EntityValue>): HaSnapshot =
