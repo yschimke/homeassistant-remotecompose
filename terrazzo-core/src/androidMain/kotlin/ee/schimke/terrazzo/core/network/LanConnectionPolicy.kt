@@ -12,6 +12,10 @@ import java.net.Inet6Address
 import java.net.InetAddress
 import java.net.URI
 import java.util.concurrent.atomic.AtomicReference
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 /**
  * Decides whether a base URL should be attempted from the device's current network.
@@ -41,6 +45,19 @@ class LanConnectionPolicy(context: Context) {
   private val connectivity =
     context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
   private val transport = AtomicReference(Transport.None)
+  private val _networkChanges = MutableStateFlow(0)
+
+  /**
+   * Counts the default network coming up or changing transport (Wi-Fi to cellular, say), so a
+   * reconnect waiting out its backoff can try at once: the moment the network returns is when a
+   * retry is most likely to work.
+   */
+  val networkChanges: StateFlow<Int> = _networkChanges.asStateFlow()
+
+  private fun setTransport(value: Transport, available: Boolean = false) {
+    val previous = transport.getAndSet(value)
+    if (available || previous != value) _networkChanges.update { it + 1 }
+  }
 
   init {
     // Seed before the first callback fires, so requests issued in the
@@ -50,11 +67,11 @@ class LanConnectionPolicy(context: Context) {
     connectivity.registerDefaultNetworkCallback(
       object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
-          transport.set(readTransport(network))
+          setTransport(readTransport(network), available = true)
         }
 
         override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
-          transport.set(transportFromCaps(caps))
+          setTransport(transportFromCaps(caps))
         }
 
         override fun onLost(network: Network) {

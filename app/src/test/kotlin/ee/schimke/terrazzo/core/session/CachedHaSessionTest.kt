@@ -56,6 +56,27 @@ class CachedHaSessionTest {
   }
 
   @Test
+  fun loadDashboard_keeps_cached_devices_and_unit_when_a_live_read_lacks_them() = runTest {
+    val cache = storage()
+    val devices = mapOf("sw.x" to ee.schimke.ha.design.DeviceInfo(manufacturer = "Acme"))
+    val full = sampleSnapshot.copy(devices = devices, temperatureUnit = "°F")
+    var live = full
+    val session =
+      CachedHaSession(
+        FakeSession(baseUrl = baseUrl, loadProvider = { sampleDashboard to live }),
+        cache,
+      )
+    session.loadDashboard(null)
+
+    // The registries and get_config are best effort: a read that missed them keeps the cached ones.
+    live = sampleSnapshot
+    val (_, merged) = session.loadDashboard(null)
+    assertEquals(devices, merged.devices)
+    assertEquals("°F", merged.temperatureUnit)
+    assertEquals(full, cache.snapshot(baseUrl, null))
+  }
+
+  @Test
   fun listDashboards_propagates_failure_when_cache_is_empty() = runTest {
     val cache = storage()
     val delegate = FakeSession(baseUrl = baseUrl, listProvider = { error("offline") })
