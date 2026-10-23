@@ -176,7 +176,7 @@ class CardDesignWearTemplateTest {
    * The rows above and below [image]'s icon — the lit bulb's amber, which nothing else in a tile
    * draws (the corners outside a round container are white) — as fractions of its height.
    */
-  private fun iconMargins(image: Bitmap): Pair<Float, Float> {
+  private fun iconMargins(image: Bitmap): Pair<Float, Float>? {
     fun amber(y: Int) =
       (0 until image.width).any { x ->
         val pixel = image.getPixel(x, y)
@@ -186,7 +186,8 @@ class CardDesignWearTemplateTest {
         r > 200 && g in 120..220 && b < 100
       }
     val rows = (0 until image.height).filter(::amber)
-    if (rows.isEmpty()) return 0f to 0f
+    // No icon at all is a failure, not centred content.
+    if (rows.isEmpty()) return null
     return rows.first().toFloat() / image.height to
       (image.height - 1 - rows.last()).toFloat() / image.height
   }
@@ -228,8 +229,11 @@ class CardDesignWearTemplateTest {
             cardStyle == HaUberTheme.Classic &&
             params.containerType == ContainerInfo.CONTAINER_TYPE_LARGE
         ) {
-          val (top, bottom) = iconMargins(reframed)
-          if (abs(top - bottom) > CENTRED_TOLERANCE) {
+          val margins = iconMargins(reframed)
+          if (margins == null) {
+            problems += "$tag: no icon drawn"
+          } else if (abs(margins.first - margins.second) > CENTRED_TOLERANCE) {
+            val (top, bottom) = margins
             problems +=
               "$tag: content not centred (top ${"%.2f".format(top)}, bottom ${"%.2f".format(bottom)})"
           }
