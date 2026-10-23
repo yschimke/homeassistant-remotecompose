@@ -90,7 +90,12 @@ object PictureDesignParts {
     val data = pictureGlance.pictureGlanceData(card, snapshot)
     if (fill) RemoteHaPictureGlance(data, modifier, fillHeight = true, showImage = showImage)
     else
-      RemoteHaPictureGlance(data, modifier = modifier, imageAspectRatio = pictureAspectRatio(card))
+      RemoteHaPictureGlance(
+        data,
+        modifier = modifier,
+        imageAspectRatio = pictureAspectRatio(card),
+        showImage = showImage,
+      )
   }
 
   internal val components: Map<String, CardDesignComponent> =
