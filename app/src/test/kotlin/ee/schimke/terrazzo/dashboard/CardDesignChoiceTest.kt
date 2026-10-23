@@ -109,7 +109,40 @@ class CardDesignChoiceTest {
   }
 
   @Test
-  fun aCardSwitchedToADesignDownloadsThatDesignWholeInItsThemes() {
+  fun anInstalledSkinDownloadsWholeInTheDashboardsThemes() {
+    val card =
+      ee.schimke.ha.model.CardConfig(
+        type = "tile",
+        raw = kotlinx.serialization.json.buildJsonObject { put("type", JsonPrimitive("tile")) },
+      )
+    val choice =
+      CardDesignChoice(
+        "https://designs.test",
+        ThemeStyle.Material3,
+        HaUberTheme.Classic,
+        overrides =
+          CardDesignOverrides()
+            .with(CardDesignScope.Card, card, CardDesignOverride(designId = "user:printer")),
+        skins = setOf("user:printer"),
+      )
+    val theme = DesignKey.bakedTheme("Material3", dark = false)
+    // Any variant or author of the installed skin, though neither is in the choice.
+    assertTrue(
+      choice.wants(entry(theme, "printer", "github:octocat").copy(designId = "user:printer"))
+    )
+    assertFalse(choice.wants(entry(theme, "printer", "github:octocat").copy(designId = "user:x")))
+    // Only in the themes the dashboard draws.
+    assertFalse(
+      choice.wants(
+        entry(DesignKey.styledTheme("lcd", dark = false), "printer", "github:octocat")
+          .copy(designId = "user:printer")
+      )
+    )
+    assertEquals(setOf("user:printer"), choice.designIds)
+  }
+
+  @Test
+  fun aSkinThatIsNotInstalledIsNeverDownloadedThoughACardChoseIt() {
     val card =
       ee.schimke.ha.model.CardConfig(
         type = "tile",
@@ -125,19 +158,32 @@ class CardDesignChoiceTest {
             .with(CardDesignScope.Card, card, CardDesignOverride(designId = "user:printer")),
       )
     val theme = DesignKey.bakedTheme("Material3", dark = false)
-    // Any variant or author of the chosen design, though neither is in the choice.
-    assertTrue(
+    assertFalse(
       choice.wants(entry(theme, "printer", "github:octocat").copy(designId = "user:printer"))
     )
-    assertFalse(choice.wants(entry(theme, "printer", "github:octocat").copy(designId = "user:x")))
-    // Only in the themes the dashboard draws.
-    assertFalse(
-      choice.wants(
-        entry(DesignKey.styledTheme("lcd", dark = false), "printer", "github:octocat")
-          .copy(designId = "user:printer")
+    assertEquals(emptySet(), choice.designIds)
+  }
+
+  @Test
+  fun aLibrarySkinIsAlwaysInstalled() {
+    val card =
+      ee.schimke.ha.model.CardConfig(
+        type = "tile",
+        raw = kotlinx.serialization.json.buildJsonObject { put("type", JsonPrimitive("tile")) },
       )
-    )
-    assertEquals(setOf("user:printer"), choice.designIds)
+    val choice =
+      CardDesignChoice(
+        "https://designs.test",
+        ThemeStyle.Material3,
+        HaUberTheme.Classic,
+        overrides =
+          CardDesignOverrides()
+            .with(CardDesignScope.Card, card, CardDesignOverride(designId = "library:tile")),
+      )
+    assertEquals(setOf("library:tile"), choice.designIds)
+    assertTrue(Skins.isInstalled("library:tile", emptySet()))
+    assertFalse(Skins.isInstalled("user:printer", emptySet()))
+    assertTrue(Skins.isInstalled("user:printer", setOf("user:printer")))
   }
 
   private val key = entry(DesignKey.bakedTheme("Material3", dark = false)).key

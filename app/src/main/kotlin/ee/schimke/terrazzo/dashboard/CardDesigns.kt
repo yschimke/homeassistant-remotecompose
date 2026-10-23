@@ -67,6 +67,8 @@ data class CardDesignChoice(
    * The server's device token, so the manifest lists the user's private designs; blank for none.
    */
   val token: String = "",
+  /** The skins installed on this device ([SkinStore]), library skins aside. */
+  val skins: Set<String> = emptySet(),
 ) {
   val enabled: Boolean
     get() = serverUrl.isNotBlank()
@@ -83,18 +85,22 @@ data class CardDesignChoice(
           .flatMap { s -> listOf(false, true).map { CardDesignTemplates.bakedTheme(style, it, s) } }
           .distinct()
       val variants = (listOf(variant) + overrides.variants + DesignKey.DEFAULT_VARIANT).distinct()
-      // A design a card was switched to comes whole for these themes: any variant or author.
-      val chosen = overrides.designIds.sorted()
+      // An installed skin comes whole for these themes: any variant or author.
+      val whole = designIds.sorted()
       return themes.flatMap { theme ->
         variants.flatMap { v ->
           authors.map { DesignQuery(variant = v, author = it, theme = theme) }
-        } + chosen.map { DesignQuery(designId = it, theme = theme) }
+        } + whole.map { DesignQuery(designId = it, theme = theme) }
       }
     }
 
-  /** The designs cards were switched to: kept whole beside [prefer]'s collapsed resolution. */
+  /**
+   * The skins kept whole beside [prefer]'s collapsed resolution: every installed skin, and the
+   * library skins cards were switched to. A card switched to a skin that isn't installed draws as
+   * if it weren't, and nothing of that skin is downloaded.
+   */
   val designIds: Set<String>
-    get() = overrides.designIds
+    get() = skins + overrides.designIds.filter(Skins::isLibrary)
 
   /** Between designs for one key, the preferred author's first. */
   val prefer: List<DesignQuery>

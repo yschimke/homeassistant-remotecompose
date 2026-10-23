@@ -199,15 +199,31 @@ Built (D5):
   `designsFor(key, device)` lists, from the manifest, every live design with an entry for the key
   (any variant or author) that is generic or made for a matching device.
 - `CardDesignOverrides.byCard` values gain a **`designId`**, persisted in `overrides.json` (old files
-  still load). `CardDesignChoice.queries` adds a `DesignQuery(designId = …)` per chosen design and
-  theme, so the sync fetches a chosen design's blobs whatever its author or variant.
+  still load).
+- **Skins are installed, not assumed.** In the app a design chosen by id is a *skin*. The
+  manifest lists every skin, but nothing of one is downloaded until it is **installed**, a
+  separate step (`Skins.install`):
+  - Installing runs the sync's refresh with the skin added, so its assets are downloaded for
+    every theme the dashboard draws in.
+  - The skin is recorded in `skins.json` (`SkinStore`) only once those assets are cached, so a
+    failed download installs nothing.
+  - `CardDesignChoice.queries` adds a `DesignQuery(designId = …)` per installed skin and theme,
+    so the sync keeps an installed skin current whatever its author or variant.
+  - The library's skins (`library:<cardType>`) come with every sync, so they are always installed.
+  - Removing a skin stops the sync fetching it. Its cached assets stay, because the cache is never
+    pruned.
+  - A card switched to a skin that isn't installed draws as if it weren't switched.
 - `cardTemplateFor` (`serverDesignFor`) checks that override first: the chosen design's entry for
   the card's device, else its generic one, in the preferred variant, then `default`, then any.
   Otherwise the order stays the same. A chosen design that is missing, revoked or not fetched yet
   falls through to that order, never to nothing. A Wear slot follows the same choice.
-- The card's style sheet has a **Design** section for "This card": "Automatic", then every design
-  `designsFor` lists for the card's key and device (`cardDevice`), with its title, author and the
-  device it is for. Choosing one stores its id; "Automatic" clears it.
+- The card's style sheet has a **Skin** section for "This card". It lists "Automatic", then every
+  skin `designsFor` lists for the card's key and device (`cardDevice`), with its title, author and
+  the device it is for.
+  - An installed skin is a choice: choosing it stores its id, and "Automatic" clears it. A skin
+    that isn't the library's can be removed.
+  - A skin that isn't installed offers **Install**, shows its download, and offers a retry if the
+    download fails.
 
 ## One design, every family
 
