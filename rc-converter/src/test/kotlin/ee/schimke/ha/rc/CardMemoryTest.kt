@@ -48,4 +48,57 @@ class CardMemoryTest {
     assertTrue(CardMemory.trim(ComponentCallbacks2.TRIM_MEMORY_BACKGROUND))
     assertTrue((0 until count).none { defaultCardDocumentCache.get("card-$it") != null })
   }
+
+  @Test
+  fun aTrimReportsHowManyOfThePreviousTrimsDocumentsCameBack() {
+    val cache = InMemoryCardDocumentCache(maxEntries = 16)
+    repeat(10) { cache.put(it, document(it)) }
+
+    val first = cache.trim(4)
+    assertEquals(
+      DocumentCacheTrim(sizeBefore = 10, kept = 4, previousDropped = 0, previousReRequested = 0),
+      first,
+    )
+    assertEquals(6, first.dropped)
+
+    // Back in view: two dropped documents asked for again (one twice), one never cached.
+    cache.get(0)
+    cache.get(0)
+    cache.get(1)
+    cache.get(99)
+    cache.get(9) // kept: a hit
+
+    val second = cache.trim(4)
+    assertEquals(6, second.previousDropped)
+    assertEquals(2, second.previousReRequested)
+  }
+
+  @Test
+  fun cardMemoryReportsDocumentTrims() {
+    defaultCardDocumentCache.clear()
+    val reports = mutableListOf<Triple<Int, Int, DocumentCacheTrim>>()
+    CardMemory.onDocumentTrim = { level, previous, trim ->
+      reports += Triple(level, previous, trim)
+    }
+    try {
+      CardMemory.trim(ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) // reset the previous trim
+      reports.clear()
+      repeat(CardMemory.HIDDEN_DOCUMENTS + 5) {
+        defaultCardDocumentCache.put("r-$it", document(it))
+      }
+
+      CardMemory.trim(ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN)
+      defaultCardDocumentCache.get("r-0")
+      CardMemory.trim(ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN)
+
+      val (level, previous, trim) = reports.last()
+      assertEquals(ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN, level)
+      assertEquals(ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN, previous)
+      assertEquals(5, trim.previousDropped)
+      assertEquals(1, trim.previousReRequested)
+      assertEquals(2, reports.size)
+    } finally {
+      CardMemory.onDocumentTrim = null
+    }
+  }
 }

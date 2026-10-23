@@ -77,7 +77,9 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
       cache.dashboard(baseUrl, urlPath)?.let { d ->
         d to (cache.snapshot(baseUrl, urlPath) ?: HaSnapshot())
       }
-    return runCatching { delegate.loadDashboard(urlPath) }
+    return runCatching {
+      delegate.loadDashboard(urlPath).let { (d, fresh) -> d to fresh.keeping(cached?.second) }
+    }
       .onSuccess { (dashboard, snapshot) ->
         liveFetchedAtMs[urlPath.orEmpty()] = System.currentTimeMillis()
         servedFromCache.remove(urlPath.orEmpty())
@@ -92,7 +94,7 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
    * the cached copy, which [snapshotFetchedAtMs] with a null url path then dates.
    */
   override suspend fun loadSnapshot(): HaSnapshot = runCatching {
-    delegate.loadSnapshot()
+    delegate.loadSnapshot().keeping(cache.snapshot(baseUrl, null))
   }
     .onSuccess { snapshot ->
       liveFetchedAtMs[""] = System.currentTimeMillis()
@@ -102,6 +104,19 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
     .getOrElse { ex ->
       (cache.snapshot(baseUrl, null) ?: throw ex).also { servedFromCache.add("") }
     }
+
+  /**
+   * Keeps the stored snapshot's per-instance facts where this live read came back without them: the
+   * device registry and unit system are read best effort, and a transient failure there must not
+   * overwrite good cached values, which later offline starts would then draw without.
+   */
+  private fun HaSnapshot.keeping(stored: HaSnapshot?): HaSnapshot {
+    if (stored == null) return this
+    return copy(
+      devices = devices.ifEmpty { stored.devices },
+      temperatureUnit = temperatureUnit ?: stored.temperatureUnit,
+    )
+  }
 
   /** Per dashboard (`""` for the default): when this session last fetched its snapshot live. */
   private val liveFetchedAtMs = ConcurrentHashMap<String, Long>()

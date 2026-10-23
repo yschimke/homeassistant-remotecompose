@@ -31,7 +31,12 @@ the same way in its setup, then goes home, sends `am send-trim-memory <package> 
 waits for ART's background collection: `CardMemory` (in `rc-converter`, installed by both
 `Application`s) drops every rebuildable card cache at that level, so `Last` there should sit
 well below the browse's. While the UI is only hidden the document cache keeps its 32 most recent
-documents; Coil trims its own memory cache.
+documents; Coil trims its own memory cache. Whether 32 is enough is measured in the field: on
+phone builds with the Firebase backend each document-cache trim logs a `card_cache_trim`
+Analytics event (`level`, `size_before`, `kept`, `keep_limit`, and for the trim before it
+`prev_level`, `prev_dropped` and `prev_rerequested`: how many of the documents it dropped were
+asked for again before this trim, each a re-encode). A high `prev_rerequested` after a
+`UI_HIDDEN` (20) trim means the app should keep more. The watch has no Analytics.
 
 ## Demo mode for the phone
 

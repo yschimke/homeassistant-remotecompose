@@ -78,7 +78,22 @@ class TerrazzoApplication : Application() {
     // (off by default → BitmapData.read throws at parse time). The app
     // renders entity pictures / media thumbnails everywhere, so opt in.
     enableRemoteImageUrls()
-    // Hand the card caches back when the system trims memory; Coil trims its own.
+    // Hand the card caches back when the system trims memory; Coil trims its own. Each document
+    // cache trim goes to analytics, to show whether the documents kept while hidden are enough.
+    CardMemory.onDocumentTrim = { level, previousLevel, trim ->
+      crashReporter.logEvent(
+        "card_cache_trim",
+        mapOf(
+          "level" to level.toLong(),
+          "size_before" to trim.sizeBefore.toLong(),
+          "kept" to trim.kept.toLong(),
+          "keep_limit" to CardMemory.HIDDEN_DOCUMENTS.toLong(),
+          "prev_level" to previousLevel.toLong(),
+          "prev_dropped" to trim.previousDropped.toLong(),
+          "prev_rerequested" to trim.previousReRequested.toLong(),
+        ),
+      )
+    }
     CardMemory.install(this)
     if (graph.cardMonitor.isEnabled) {
       registerNotificationChannels()
