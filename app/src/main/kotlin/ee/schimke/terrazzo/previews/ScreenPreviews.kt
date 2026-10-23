@@ -186,7 +186,8 @@ private fun PhoneHost(
   // The app's image stack, as MainActivity provides it: its loader draws demo mode's stand-in
   // pictures (camera frames, image entities) for `demo://` URLs, which Coil's default can't fetch.
   val context = LocalContext.current.applicationContext
-  val imageStack = remember(context) { HaImageStack(context, graph.lanConnectionPolicy) }
+  val imageStack =
+    remember(context) { HaImageStack(context, graph.lanConnectionPolicy, graph.remoteUrlStore) }
   TerrazzoTheme(style = style, darkMode = darkMode) {
     CompositionLocalProvider(
       LocalTerrazzoGraph provides graph,

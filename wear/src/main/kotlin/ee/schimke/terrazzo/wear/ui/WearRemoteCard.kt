@@ -16,8 +16,10 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,10 +35,12 @@ import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.wear.data.toEntityState
+import ee.schimke.terrazzo.wear.sync.WearOfflineStore
 import ee.schimke.terrazzo.wear.widget.SlotContent
 import ee.schimke.terrazzo.wear.widget.WearWidgetFrame
 import ee.schimke.terrazzo.wear.widget.WearWidgetTemplate
 import ee.schimke.terrazzo.wear.widget.neutralWidgetTemplate
+import ee.schimke.terrazzo.wear.widget.syncedPicture
 import ee.schimke.terrazzo.wear.widget.wearAppContainer
 import ee.schimke.terrazzo.wear.widget.wearDesignProperties
 import ee.schimke.terrazzo.wear.widget.wearDesignTemplate
@@ -44,6 +48,8 @@ import ee.schimke.terrazzo.wear.widget.wearWidgetCardStyle
 import ee.schimke.terrazzo.wear.widget.wearWidgetColors
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
+import java.io.ByteArrayInputStream
+import java.io.IOException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 
@@ -95,6 +101,17 @@ internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValu
       runBlocking { wearAppTemplate(context, design, snapshot, look, style, frame, tint, registry) }
         ?.let { bytes -> CardDesignTemplates.playback(design, bytes, registry) }
     }
+  // Pictures come from the ones the phone synced to disk, by entity, as on the widget: no network,
+  // and a camera's rotating token doesn't matter.
+  val latestSnapshot = rememberUpdatedState(snapshot)
+  val pictures =
+    remember(context) {
+      val store = WearOfflineStore(context.applicationContext)
+      BitmapLoader { url ->
+        syncedPicture(store, latestSnapshot.value, url)?.let(::ByteArrayInputStream)
+          ?: throw IOException("no synced picture for $url")
+      }
+    }
   // Binding cards seed current values before frame one; baked and structural changes recapture.
   val tick = relativeTimeTickFor(cardEntityIds(card), snapshot)
   val signature = remember(card, snapshot, tick) { registry.cardDataSignature(card, snapshot) }
@@ -120,6 +137,7 @@ internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValu
       card = card,
       snapshot = snapshot,
       liveBindings = signature == null,
+      bitmapLoader = pictures,
       template = template,
     ) {
       // No template (a card with no template shape): the widget's direct document, framed alike.
