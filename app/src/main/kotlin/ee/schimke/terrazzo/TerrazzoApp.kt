@@ -498,6 +498,19 @@ private fun DashboardsRoot(
   }
 
   val readyDashboards = (dashboards as? DashboardListState.Ready)?.dashboards.orEmpty()
+
+  // A widget's more-info or navigate tap opens on a dashboard ([DashboardViewScreen] opens it):
+  // back out of the card screens over it, and off the picker onto the first dashboard.
+  val widgetOpen by WidgetOpenRequests.requests.collectAsState()
+  LaunchedEffect(widgetOpen, readyDashboards) {
+    if (widgetOpen == null) return@LaunchedEffect
+    historyTarget = null
+    actionsTarget = null
+    studioTarget = null
+    styleTarget = null
+    agentOpen = false
+    if (opened == DASHBOARD_UNSET) readyDashboards.firstOrNull()?.let { opened = it.urlPath }
+  }
   val sessionConnection by session.connectionStatus.collectAsState()
   val connectionStatus = sessionConnection.toUiConnectionStatus()
   val snackbars = remember { SnackbarHostState() }

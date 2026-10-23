@@ -77,8 +77,10 @@ class MainActivity : ComponentActivity() {
     // file; the runBlocking cost is < 5 ms in practice — same
     // pattern as the test hatch above.
     val initialDashboard = runBlocking { graph.preferencesStore.lastViewedDashboardNow() }
-    // A launcher widget's more-info or navigate tap (a warm start arrives in onNewIntent).
-    WidgetOpenRequests.offer(intent)
+    // A launcher widget's more-info or navigate tap (a warm start arrives in onNewIntent). Only on
+    // a
+    // fresh start: a recreated activity keeps its launch intent, already opened.
+    if (savedInstanceState == null) WidgetOpenRequests.offer(intent)
 
     // The session lives in a ViewModel so rotation and other
     // configuration changes keep the live connection. `start` only
@@ -148,6 +150,7 @@ class MainActivity : ComponentActivity() {
 
   override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
+    setIntent(intent)
     WidgetOpenRequests.offer(intent)
   }
 
