@@ -18,8 +18,7 @@ import com.google.android.horologist.tiles.composable.ServiceComposableBitmapRen
 import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.data.displayState
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
-import ee.schimke.terrazzo.wearsync.proto.SlotSizePref
-import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
+import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import java.io.File
 import java.io.FileOutputStream
 import kotlinx.coroutines.CoroutineScope
@@ -29,7 +28,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 /**
- * Off-by-default capture path that exercises rendering a slot widget to a PNG file in the wear
+ * Off-by-default capture path that exercises rendering a card widget to a PNG file in the wear
  * app's internal storage. Driven by [WearPrefs.previewCaptureEnabled] — the flag stays off in
  * shipped builds until a Glance Wear API exposes a runtime hook for swapping the system
  * widget-picker preview image. While we can produce the bitmap, the manifest's
@@ -37,9 +36,10 @@ import kotlinx.coroutines.launch
  * anywhere yet.
  *
  * Wiring is here so the capture pipeline can be smoke-tested end-to-end on real Wear OS hardware:
- * flip the pref, assign a card to a slot on the phone, and confirm
- * `filesDir/terrazzo/wear/slot-previews/slot-<n>-<size>.png` shows up with sensible bytes. When the
- * lib gains the override hook, this controller becomes the real surfacing path with minimal change.
+ * flip the pref, pin a card on the phone, and confirm
+ * `filesDir/terrazzo/wear/widget-previews/card-<cardKey>-<size>.png` shows up with sensible bytes.
+ * When the lib gains the override hook, this controller becomes the real surfacing path with
+ * minimal change.
  *
  * Capture composable is a plain Compose surrogate (Text in a Column) matching what [SlotContent]
  * renders today. It deliberately doesn't route through the RemoteCompose player — that path needs
@@ -47,56 +47,45 @@ import kotlinx.coroutines.launch
  * separate (preview-only) artifact we'd want to validate independently before depending on at
  * runtime.
  */
-class WearSlotPreviewCapturer(
+class WearWidgetPreviewCapturer(
   private val application: Application,
   private val scope: CoroutineScope,
   private val prefs: WearPrefs,
-  private val slotsFlow: kotlinx.coroutines.flow.Flow<WearWidgetSlots>,
+  private val pinnedFlow: kotlinx.coroutines.flow.Flow<PinnedCardSet>,
 ) {
   private val renderer: ServiceComposableBitmapRenderer by lazy {
     ServiceComposableBitmapRenderer(application)
   }
 
   private val outputDir: File by lazy {
-    File(application.filesDir, "terrazzo/wear/slot-previews").apply { mkdirs() }
+    File(application.filesDir, "terrazzo/wear/widget-previews").apply { mkdirs() }
   }
 
   fun start() {
     scope.launch {
-      combine(prefs.previewCaptureEnabled, slotsFlow) { enabled, slots -> enabled to slots }
+      combine(prefs.previewCaptureEnabled, pinnedFlow) { enabled, pinned -> enabled to pinned }
         .distinctUntilChanged()
-        .collectLatest { (enabled, slots) ->
+        .collectLatest { (enabled, pinned) ->
           if (!enabled) return@collectLatest
-          runCaptureRound(slots)
+          runCaptureRound(pinned)
         }
     }
   }
 
-  private suspend fun runCaptureRound(slots: WearWidgetSlots) {
-    val store = WearOfflineStore(application)
-    val pinned = store.readPinned()?.cards.orEmpty()
-    val values = store.readValues()?.values.orEmpty()
-    for (slot in slots.slots) {
-      if (slot.cardKey.isEmpty()) continue
-      val card = pinned.firstOrNull { it.cardKey == slot.cardKey } ?: continue
-      val title =
-        card.card.title
-          .ifEmpty { card.card.primaryEntityId }
-          .ifEmpty { "Slot ${slot.slotIndex + 1}" }
+  private suspend fun runCaptureRound(pinned: PinnedCardSet) {
+    val values = WearOfflineStore(application).readValues()?.values.orEmpty()
+    for (card in pinned.cards) {
+      if (card.cardKey.isEmpty()) continue
+      val title = card.card.title.ifEmpty { card.card.primaryEntityId }.ifEmpty { "Card" }
       val state =
         values[card.card.primaryEntityId]?.displayState(card.card.primaryEntityId).orEmpty()
-      val sizePref = SlotSizePref.fromWire(slot.size)
-      if (sizePref == SlotSizePref.SmallOnly || sizePref == SlotSizePref.Both) {
-        captureAndSave(slot.slotIndex, "small", SMALL_SIZE, title, state)
-      }
-      if (sizePref == SlotSizePref.LargeOnly || sizePref == SlotSizePref.Both) {
-        captureAndSave(slot.slotIndex, "large", LARGE_SIZE, title, state)
-      }
+      captureAndSave(card.cardKey, "small", SMALL_SIZE, title, state)
+      captureAndSave(card.cardKey, "large", LARGE_SIZE, title, state)
     }
   }
 
   private suspend fun captureAndSave(
-    slotIndex: Int,
+    cardKey: String,
     sizeLabel: String,
     size: DpSize,
     title: String,
@@ -107,21 +96,22 @@ class WearSlotPreviewCapturer(
     }
       .getOrNull()
     if (bitmap == null) {
-      Log.w(TAG, "renderComposableToBitmap returned null for slot=$slotIndex size=$sizeLabel")
+      Log.w(TAG, "renderComposableToBitmap returned null for card=$cardKey size=$sizeLabel")
       return
     }
-    val file = File(outputDir, "slot-$slotIndex-$sizeLabel.png")
+    val safeKey = cardKey.replace(Regex("[^A-Za-z0-9._-]"), "_")
+    val file = File(outputDir, "card-$safeKey-$sizeLabel.png")
     runCatching {
       FileOutputStream(file).use { out ->
         bitmap.asAndroidBitmap().compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out)
       }
-      Log.i(TAG, "Captured slot $slotIndex ($sizeLabel) → ${file.absolutePath}")
+      Log.i(TAG, "Captured card $cardKey ($sizeLabel) → ${file.absolutePath}")
     }
       .onFailure { Log.w(TAG, "Failed to write $file", it) }
   }
 
   companion object {
-    private const val TAG = "WearSlotPreview"
+    private const val TAG = "WearWidgetPreview"
 
     // Dimensions match the Glance Wear container types declared in
     // wear_slot_widget_provider_{small,large}.xml.
@@ -131,7 +121,7 @@ class WearSlotPreviewCapturer(
 }
 
 /**
- * Plain-Compose stand-in for [SlotContent]. Mirrors the slot widget's visible content (title +
+ * Plain-Compose stand-in for [SlotContent]. Mirrors the card widget's visible content (title +
  * value). RemoteCompose primitives are authoring-only and don't render under the virtual display,
  * so we use Material3 Text instead. Tracking parity with [SlotContent] by eye for now.
  */

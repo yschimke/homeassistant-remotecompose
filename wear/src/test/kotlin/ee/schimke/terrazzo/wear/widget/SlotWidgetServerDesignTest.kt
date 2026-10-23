@@ -125,7 +125,6 @@ class SlotWidgetServerDesignTest {
           colors,
           input.card,
           input.snapshot,
-          0,
           template = true,
           cardStyle = cardStyle,
         )
@@ -145,7 +144,6 @@ class SlotWidgetServerDesignTest {
         style,
         card,
         snapshot,
-        0,
         cardStyle,
         wearDesign = wearDesign,
       )
@@ -221,7 +219,6 @@ class SlotWidgetServerDesignTest {
             colors,
             input.card,
             input.snapshot,
-            0,
             template = true,
             cardStyle = HaUberTheme.Classic,
           )

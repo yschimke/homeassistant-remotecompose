@@ -25,8 +25,8 @@ import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.sync.WearBenchmarkSeed
 import ee.schimke.terrazzo.wear.sync.WearCardWarmup
 import ee.schimke.terrazzo.wear.sync.WearLeaseController
-import ee.schimke.terrazzo.wear.sync.WearSlotsController
 import ee.schimke.terrazzo.wear.sync.WearSyncRepository
+import ee.schimke.terrazzo.wear.sync.WearWidgetsController
 import ee.schimke.terrazzo.wear.ui.LocalWearCardLook
 import ee.schimke.terrazzo.wear.ui.WearCardLook
 import ee.schimke.terrazzo.wear.ui.WearDashboardScreen
@@ -34,10 +34,11 @@ import ee.schimke.terrazzo.wear.ui.WearDashboardsScreen
 import ee.schimke.terrazzo.wear.ui.WearSectionScreen
 import ee.schimke.terrazzo.wear.ui.WearSettingsScreen
 import ee.schimke.terrazzo.wear.ui.WearTopLevelScreen
+import ee.schimke.terrazzo.wear.ui.WearWidgetsScreen
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
 import ee.schimke.terrazzo.wear.ui.wearTypographyFor
-import ee.schimke.terrazzo.wear.widget.WearSlotPreviewCapturer
-import ee.schimke.terrazzo.wear.widget.refreshAllSlotWidgets
+import ee.schimke.terrazzo.wear.widget.WearWidgetPreviewCapturer
+import ee.schimke.terrazzo.wear.widget.refreshAllCardWidgets
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
@@ -55,7 +56,7 @@ import kotlinx.coroutines.runBlocking
 class WearMainActivity : ComponentActivity() {
 
   private lateinit var repo: WearSyncRepository
-  private lateinit var slotsController: WearSlotsController
+  private lateinit var widgetsController: WearWidgetsController
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -72,22 +73,21 @@ class WearMainActivity : ComponentActivity() {
     // Lease tracker — heartbeats while activity is foreground, so
     // phone streams live deltas instead of batching to DataStore.
     lifecycle.addObserver(WearLeaseController(lifecycleScope, repo))
-    // Slot widget plumbing (the wear-widgets capability is declared
-    // statically in values-v37/wear.xml) — keeps each Slot{N}WidgetService
-    // component enabled-state in lockstep with the phone-side
-    // WearWidgetSlotsStore.
-    slotsController = WearSlotsController(applicationContext, lifecycleScope, repo)
-    slotsController.start()
+    // Widget plumbing: offers the two widget providers while the phone shows any card on the
+    // watch, and redraws the placed widgets when their cards change. Each widget's card is
+    // chosen on the watch.
+    widgetsController = WearWidgetsController(applicationContext, lifecycleScope, repo)
+    widgetsController.start()
     // Off-by-default preview capture exerciser. Reads
     // WearPrefs.previewCaptureEnabled; while off the controller
     // never touches the virtual-display path. Flip on locally to
     // smoke-test runtime PNG generation for the eventual picker
     // override hook.
-    WearSlotPreviewCapturer(
+    WearWidgetPreviewCapturer(
         application = application,
         scope = lifecycleScope,
         prefs = WearPrefs(applicationContext),
-        slotsFlow = repo.slots,
+        pinnedFlow = repo.pinned,
       )
       .start()
 
@@ -118,6 +118,7 @@ private enum class WearScreen {
   Dashboards,
   Dashboard,
   Settings,
+  Widgets,
 }
 
 @Composable
@@ -139,7 +140,12 @@ private fun WearApp(repo: WearSyncRepository, prefs: WearPrefs, initialLook: Wea
   // A system Back (including the watch's dismiss gesture) returns through the same hierarchy
   // as the on-screen buttons instead of closing the activity from a detail screen.
   BackHandler(enabled = screen != WearScreen.TopLevel) {
-    screen = if (screen == WearScreen.Dashboard) WearScreen.Dashboards else WearScreen.TopLevel
+    screen =
+      when (screen) {
+        WearScreen.Dashboard -> WearScreen.Dashboards
+        WearScreen.Widgets -> WearScreen.Settings
+        else -> WearScreen.TopLevel
+      }
   }
 
   MaterialTheme(
@@ -239,7 +245,7 @@ private fun WearApp(repo: WearSyncRepository, prefs: WearPrefs, initialLook: Wea
               onSelectTheme = { picked ->
                 scope.launch {
                   prefs.setThemeStyle(picked)
-                  refreshAllSlotWidgets(context.applicationContext)
+                  refreshAllCardWidgets(context.applicationContext)
                 }
               },
               onBack = { screen = WearScreen.TopLevel },
@@ -248,9 +254,22 @@ private fun WearApp(repo: WearSyncRepository, prefs: WearPrefs, initialLook: Wea
               onSelectCardStyle = { picked ->
                 scope.launch {
                   prefs.setCardStyle(picked)
-                  refreshAllSlotWidgets(context.applicationContext)
+                  refreshAllCardWidgets(context.applicationContext)
                 }
               },
+              // Glance Wear widgets render from API 37 only.
+              onOpenWidgets =
+                if (WearWidgetsController.supportsWearWidgets()) {
+                  { screen = WearScreen.Widgets }
+                } else null,
+            )
+          WearScreen.Widgets ->
+            WearWidgetsScreen(
+              pinned = pinned,
+              sections = sections,
+              values = values,
+              onBack = { screen = WearScreen.Settings },
+              modifier = Modifier.fillMaxSize(),
             )
         }
       }

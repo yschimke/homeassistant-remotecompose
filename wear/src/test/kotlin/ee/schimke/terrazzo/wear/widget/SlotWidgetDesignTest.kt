@@ -60,7 +60,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /**
- * Wear widgets from card designs: Glance Wear captures the slot's template, and the card's values
+ * Wear widgets from card designs: Glance Wear captures the card's template, and the card's values
  * are baked in. The baked widget must hold no slot bindings and draw what a direct capture draws.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -103,7 +103,7 @@ class SlotWidgetDesignTest {
     snapshot: HaSnapshot,
     fetchImage: (String) -> ByteArray? = { null },
   ): WearWidgetData =
-    slotWidgetData(registry, colors, style, card, snapshot, 0, fetchImage = fetchImage)
+    slotWidgetData(registry, colors, style, card, snapshot, fetchImage = fetchImage)
 
   private val cameraUrl = "/api/camera_proxy/camera.driveway?token=abc"
 
@@ -218,7 +218,7 @@ class SlotWidgetDesignTest {
           .rcDocument
       }
       val fresh = runBlocking {
-        slotWidgetData(registry, colors, Any(), card, snapshot, 0)
+        slotWidgetData(registry, colors, Any(), card, snapshot)
           .captureRawContent(RuntimeEnvironment.getApplication(), changedParams, false)
           .rcDocument
       }
@@ -274,7 +274,6 @@ class SlotWidgetDesignTest {
           style,
           card,
           snapshot,
-          0,
           wearWidgetCardStyle(override, "braun"),
         )
       )
@@ -326,7 +325,7 @@ class SlotWidgetDesignTest {
             cornerRadiusDp = params.cornerRadiusDp,
           )
         fun captureReading(value: String) = runBlocking {
-          slotWidgetData(registry, colors, style to uber.id, card, snapshot(value), 0, uber)
+          slotWidgetData(registry, colors, style to uber.id, card, snapshot(value), uber)
             .captureRawContent(RuntimeEnvironment.getApplication(), sized, false)
             .rcDocument
         }
@@ -418,11 +417,14 @@ class SlotWidgetDesignTest {
         )
       )
     }
-    store.writeSlots(
-      ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots(
-        slots =
-          listOf(ee.schimke.terrazzo.wearsync.proto.WidgetSlot(slotIndex = 0, cardKey = "grid"))
-      )
+    // The widget's card, chosen on the watch: a copy of the pin, which the pin's newer copy wins.
+    val widgets = WearWidgetCardStore(context)
+    widgets.write(
+      params.instanceId.id,
+      WearWidgetCard(
+        "grid",
+        ee.schimke.terrazzo.wearsync.proto.CardSummary(type = "grid", rawJson = raw),
+      ),
     )
     data class Frame(val name: String, val height: Float, val bytes: ByteArray)
     val frames = mutableListOf<Frame>()
@@ -445,7 +447,7 @@ class SlotWidgetDesignTest {
         slotWidgetDataFromStore(
             context,
             ee.schimke.terrazzo.wear.sync.WearOfflineStore(context),
-            0,
+            widgets.read(params.instanceId.id),
           )
           .captureRawContent(context, sized, false)
           .rcDocument
@@ -690,7 +692,7 @@ class SlotWidgetDesignTest {
   }
 
   private fun slotDocumentForTest(card: CardConfig, snapshot: HaSnapshot): WearWidgetData =
-    slotDirectDocument(registry, colors, card, snapshot, slotIndex = 0)
+    slotDirectDocument(registry, colors, card, snapshot)
 
   private fun pixels(name: String) =
     compose

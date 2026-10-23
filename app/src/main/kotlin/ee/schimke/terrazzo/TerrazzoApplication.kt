@@ -47,9 +47,6 @@ class TerrazzoApplication : Application() {
   val wearSync: MobileWearSyncManager by lazy {
     MobileWearSyncManager(applicationContext, syncStats)
   }
-  val wearCapabilityProbe: ee.schimke.terrazzo.wearsync.WearCapabilityProbe by lazy {
-    ee.schimke.terrazzo.wearsync.WearCapabilityProbe(applicationContext)
-  }
   val wearAppInstallHelper: ee.schimke.terrazzo.wearsync.WearAppInstallHelper by lazy {
     ee.schimke.terrazzo.wearsync.WearAppInstallHelper(
       applicationContext,
@@ -95,7 +92,6 @@ class TerrazzoApplication : Application() {
       scope = ProcessLifecycleOwner.get().lifecycleScope + graph.logStore.coroutineExceptionHandler,
       prefs = graph.preferencesStore,
       pinStore = graph.pinStore,
-      slotsStore = graph.wearWidgetSlotsStore,
       inputEditing =
         combine(graph.preferencesStore.permanentWriteMode, graph.sessionWriteMode.writeMode) {
             permanent,

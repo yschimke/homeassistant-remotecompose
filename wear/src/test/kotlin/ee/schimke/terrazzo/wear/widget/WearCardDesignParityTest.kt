@@ -62,12 +62,12 @@ class WearCardDesignParityTest {
         val colors = wearWidgetColors(style)
         val fromConverter = runBlocking {
           WearWidgetTemplate.capture(context) {
-            SlotContent(registry, colors, input.card, input.snapshot, 0, true, cardStyle)
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle)
           }
         }
         val fromDesign = runBlocking {
           WearWidgetTemplate.capture(context) {
-            SlotContent(registry, colors, input.card, input.snapshot, 0, true, cardStyle) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle) {
               design.RenderCard(input.card, input.snapshot, it)
             }
           }

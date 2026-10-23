@@ -64,7 +64,6 @@ import kotlinx.serialization.json.put
 internal class PreviewSlotWidget(
   private val card: CardConfig?,
   private val snapshot: HaSnapshot,
-  private val slotIndex: Int = 0,
 ) : GlanceWearWidget() {
   override suspend fun provideWidgetData(
     context: Context,
@@ -80,7 +79,7 @@ internal class PreviewSlotWidget(
           ProvideCardRegistry(registry) {
             ProvideHaTheme(theme) {
               ProvideCardSizeMode(CardSizeMode.Fixed) {
-                // Match the runtime SlotWidget: the wear
+                // Match the runtime CardWidget: the wear
                 // container already paints the shape + brush, so
                 // skip the per-card chrome to avoid doubling up;
                 // and tell HA card components to use the
@@ -93,7 +92,7 @@ internal class PreviewSlotWidget(
                       if (card != null) {
                         RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
                       } else {
-                        PreviewEmptyPlaceholder(slotIndex, theme)
+                        PreviewEmptyPlaceholder(theme)
                       }
                     }
                   }
@@ -110,9 +109,9 @@ internal class PreviewSlotWidget(
 private val WearWidgetPreviewClock = FixedHaClock(Instant.parse("2026-05-05T10:08:00Z"))
 
 @Composable
-private fun PreviewEmptyPlaceholder(slotIndex: Int, theme: HaTheme) {
+private fun PreviewEmptyPlaceholder(theme: HaTheme) {
   RemoteBox(modifier = RemoteModifier.fillMaxWidth()) {
-    RemoteText(text = "Slot ${slotIndex + 1}".rs, color = theme.primaryText.rc)
+    RemoteText(text = CHOOSE_CARD_PLACEHOLDER.rs, color = theme.primaryText.rc)
   }
 }
 
@@ -248,7 +247,7 @@ fun SlotWidgetPreview_EntitiesLarge() {
 @Preview(
   widthDp = WIDGET_HOSTS_WIDTH_DP,
   heightDp = WIDGET_HOSTS_HEIGHT_DP,
-  name = "Slot widget — empty placeholder",
+  name = "Card widget — no card chosen",
 )
 @Composable
 fun SlotWidgetPreview_Empty() {

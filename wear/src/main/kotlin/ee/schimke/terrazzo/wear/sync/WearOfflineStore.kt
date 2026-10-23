@@ -10,7 +10,6 @@ import ee.schimke.terrazzo.wearsync.proto.WearPicture
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 import ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
-import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
 import java.io.File
@@ -26,13 +25,16 @@ import java.io.File
  *   settings.pb        — WearSettings
  *   pinned.pb          — PinnedCardSet
  *   sections.pb        — PinnedSectionSet
- *   slots.pb           — WearWidgetSlots
  *   values.pb          — LiveValues  (last full snapshot or merged stream)
  *   dashboards/<file>  — DashboardData per `urlPath`
  *   pictures/<file>    — WearPicture per entity (Wear widget pictures)
- *   slot-designs.pb    — WearSlotDesigns (each widget slot card's Wear designs)
+ *   slot-designs.pb    — WearSlotDesigns (each pinned card's Wear widget designs)
  *   designs/<sha256>.rc — a Wear widget design's template, as sent (WearDesignBlob)
+ *   widgets/<id>.pb    — the card each placed widget shows (WearWidgetCardStore; watch-local)
  * ```
+ *
+ * `/wear/slots` (the phone's old widget slot assignments) is not mirrored: the watch chooses each
+ * widget's card itself. An older build's `slots.pb` is deleted ([forgetLegacySlots]).
  *
  * Files are proto wire bytes (the same encoding the wear data layer itself uses), written via
  * tmp+rename so a kill mid-write doesn't leave half-written cache files.
@@ -65,11 +67,9 @@ class WearOfflineStore(context: Context) {
     File(root, "sections.pb").atomicWriteBytes(encodeProto(value))
   }
 
-  fun readSlots(): WearWidgetSlots? =
-    File(root, "slots.pb").readBytesOrNull()?.let { decodeProto<WearWidgetSlots>(it) }
-
-  fun writeSlots(value: WearWidgetSlots) {
-    File(root, "slots.pb").atomicWriteBytes(encodeProto(value))
+  /** Deletes the widget slot assignments an older build kept: nothing reads them any more. */
+  fun forgetLegacySlots() {
+    File(root, "slots.pb").delete()
   }
 
   fun readValues(): LiveValues? =
@@ -137,7 +137,6 @@ class WearOfflineStore(context: Context) {
       ForgottenItem.Settings -> File(root, "settings.pb").delete()
       ForgottenItem.Pinned -> File(root, "pinned.pb").delete()
       ForgottenItem.Sections -> File(root, "sections.pb").delete()
-      ForgottenItem.Slots -> File(root, "slots.pb").delete()
       ForgottenItem.Values -> File(root, "values.pb").delete()
       is ForgottenItem.Picture -> pictureFile(item.entityId).delete()
       // The designs go with their index: nothing names them any more.
@@ -166,8 +165,6 @@ sealed interface ForgottenItem {
 
   data object Sections : ForgottenItem
 
-  data object Slots : ForgottenItem
-
   data object Values : ForgottenItem
 
   data class Picture(val entityId: String) : ForgottenItem
@@ -190,7 +187,6 @@ internal fun forgottenItemFor(path: String): ForgottenItem? =
     path == WearSyncPaths.SETTINGS -> ForgottenItem.Settings
     path == WearSyncPaths.PINNED -> ForgottenItem.Pinned
     path == WearSyncPaths.SECTIONS -> ForgottenItem.Sections
-    path == WearSyncPaths.SLOTS -> ForgottenItem.Slots
     path == WearSyncPaths.VALUES -> ForgottenItem.Values
     path == WearSyncPaths.SLOT_DESIGNS -> ForgottenItem.SlotDesigns
     path.startsWith(WearSyncPaths.DESIGN_PREFIX) ->
