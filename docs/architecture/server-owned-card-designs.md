@@ -107,16 +107,49 @@ Card types whose look can't be expressed yet stay on their converter and are lis
 `card-designs/converter-only.md` with the reason. Likely: markdown, map, picture-elements,
 the history and statistics graphs, and the Bambu Lab cards.
 
-**Wear widgets** follow the card: the design server already roots a published design on the
-Wear containers (`WearWidgetDesigns`), so they need no separate source.
+## One source, every surface
 
-**Launcher widgets don't yet.** `LauncherDesigns.capture` renders `LauncherWidgetContent`
-through the converter per size and widget theme, and `bakeValues` only writes values into that
-capture. Each migration therefore also needs a launcher export: the design server roots the same
-revision on the launcher widget root (`ha-cards-catalog`'s launcher root) for each size tier and
-widget theme, validated against the widget profile (level 7, `COLOR_THEME` only on API 37+), and
-publishes them as `launcher` designs keyed like today's (`variant = <w>x<h>`). The converter's
-launcher capture is deleted only when those exist.
+A person designs **the card**, once, on the `ha-cards/dashboard-card` root. Every other surface
+is derived from that `.uid` by the transformation that turns a revision into `.rc` designs, so
+no surface has a source of its own and no surface falls back to a converter.
+
+The transformation reads the card document and, per target surface, rewrites its root and
+environment before exporting:
+
+| Surface | Root | What the transformation applies | Keys |
+| --- | --- | --- | --- |
+| Dashboard (`mobile-app`) | `ha-cards/dashboard-card` (as authored) | wrap size mode, the app profile, card chrome on | today's, per family and mode |
+| Wear widget | `remote-m3/widget-container-small` / `-large` | card surface removed, the container's padding and corner radius as named values, Glance Wear op set | `wear-widget`, `container = small \| large` |
+| Launcher widget | `remote-widgets/launcher-widget` | the widget profile (level 7; `COLOR_THEME` only for the system-themed variant), fixed size mode at each tier's W×H, card chrome off and the widget surface painting the background, taps as numeric host actions, the `LauncherLook` and light/dark | `launcher`, `variant = <w>x<h>`, `theme = widget:<system\|fallback>:<mode><look>` |
+
+These are exactly what `LauncherWidgetContent` and `WearWidgetTemplate` add around a converter
+today, moved from Kotlin capture into the document transformation. The size tiers come from
+the policy's launcher grid, `(73n − 16) × (118m − 16)` dp, for the cells the app actually
+offers.
+
+Rules the transformation enforces, so an author never has to remember them:
+
+- **Every surface or none.** A revision publishes only if every target surface exports and
+  validates (op set, bindings ⊆ schema). A card that can't fit a surface says so in the design
+  (a surface opt-out the transformation reads), never by silently missing a key.
+- **Content follows area.** The derived launcher and Wear documents keep the card's adaptive
+  layout (collapsible rows, fit boxes); the transformation sets the size, it doesn't re-layout.
+  The builder's preview panes (round Wear at both sizes, the resizable launcher grid, phone and
+  tablet) show the same derivations the server publishes, so what an author sees is what ships.
+- **Taps stay slot-relative.** Launcher taps keep their slot or element ids, so
+  `LauncherDesigns.bakeValues` and the existing `resolved_action` PendingIntents work unchanged.
+
+**Device-specific transformations follow.** The surface rewrites are an open list, so later
+ones narrow a surface to a host device without a new source: a round or squircle Wear screen,
+a launcher with its own cell grid or corner radius, a TV or desktop player, an older RC level
+for a host that can't play the current one. Each is another rewrite and another key dimension,
+validated the same way, and added when a real host needs it.
+
+The transformation lives in one place, the design server's publish path (today
+`WearWidgetDesigns` for Wear), generalised to a list of surface rewrites, and the same code runs
+in the scheduled import's check so the shipped assets match what the server published. The
+converter's launcher and Wear captures are deleted for a card type when its migration lands, not
+in a separate step.
 
 ## Forks
 
@@ -172,10 +205,12 @@ branched, which doesn't fit a design someone keeps and republishes.
 | --- | --- |
 | D1 | This plan; `card-designs/ui-builder/designs/` and the parity harness, with the tile migrated |
 | D2 | Design server serves library designs from `.uid` (admin-editable, public-readable), exports per family |
-| D3 | Scheduled import workflow and shipped assets; launcher export per size and widget theme; runtime capture removed for migrated types |
+| D2b | The surface transformation: one card `.uid` → dashboard, Wear widget and launcher `.rc` designs, with the preview panes matching it |
+| D3 | Scheduled import workflow and shipped assets; runtime capture removed for migrated types |
 | D4 | Forks copy the real source; fork lineage on the design server |
 | D5 | Design id in the manifest and cache; per-card design override and the chooser in the card's style sheet |
 | D6+ | Remaining card types, one PR each; `converter-only.md` for the rest |
+| D7+ | Device-specific transformations (Wear screen shape, launcher grids, TV/desktop, older RC levels), each when a host needs it |
 
 ## Open questions
 
