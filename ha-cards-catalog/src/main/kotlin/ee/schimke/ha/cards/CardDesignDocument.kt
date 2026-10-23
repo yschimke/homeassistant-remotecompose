@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
@@ -187,7 +188,7 @@ class CardDesignDocument private constructor(val id: String, private val documen
   }
 
   /** A node's literal properties, read with the component's own defaults. */
-  private class Properties(private val values: JsonObject) {
+  private class Properties(private val values: Map<String, JsonElement>) {
     private fun literal(name: String): JsonPrimitive? =
       values[name]?.jsonObject?.get("value") as? JsonPrimitive
 
