@@ -12,12 +12,13 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.drawWithContent
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.padding
+import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteDp
 import androidx.compose.remote.creation.compose.state.RemotePaint
 import androidx.compose.remote.creation.compose.state.RemoteState
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetDocument
 import androidx.glance.wear.core.WearWidgetParams
@@ -53,6 +54,9 @@ internal object WearWidgetTemplate {
   const val VERTICAL_PADDING = "wear.container.vertical_padding"
   const val CORNER_RADIUS = "wear.container.corner_radius"
 
+  /** The container's fill, which the watch writes from the card's state ([ContainerTint]). */
+  const val CONTAINER_COLOR = "wear.container.color"
+
   /** The capture canvas, at mdpi: [instantiate] replaces it with the widget's. */
   private val CANVAS = RemoteCreationDisplayInfo(200, 112, 160)
 
@@ -85,11 +89,17 @@ internal object WearWidgetTemplate {
     val horizontal = named(HORIZONTAL_PADDING, DEFAULT_PADDING_DP)
     val vertical = named(VERTICAL_PADDING, DEFAULT_PADDING_DP)
     val corner = named(CORNER_RADIUS, DEFAULT_CORNER_DP)
+    val fill =
+      RemoteColor.createNamedRemoteColor(
+        CONTAINER_COLOR,
+        SURFACE_CONTAINER_LOW,
+        RemoteState.Domain.User,
+      )
     RemoteBox(
       modifier =
         RemoteModifier.fillMaxSize().drawWithContent {
           drawRoundRect(
-            RemotePaint { color = SURFACE_CONTAINER_LOW.rc },
+            RemotePaint { color = fill },
             cornerRadius = RemoteOffset(corner.toPx(), corner.toPx()),
           )
           drawContent()
@@ -121,12 +131,15 @@ internal object WearWidgetTemplate {
   /**
    * [template] as the document for a widget with [params] on this watch, or null when it can't be
    * made playable as a Wear widget (the caller then captures through Glance Wear itself).
+   * [containerArgb] fills the container, the card's state tint ([ContainerTint]); null keeps the
+   * default surface.
    */
   suspend fun instantiate(
     context: Context,
     template: ByteArray,
     params: WearWidgetParams,
     isPreview: Boolean = false,
+    containerArgb: Int? = null,
   ): WearWidgetRawContent? {
     // Glance Wear's own capture of an empty container: its header (canvas, density, profile) and
     // extras are exactly what this widget's document carries.
@@ -144,6 +157,8 @@ internal object WearWidgetTemplate {
                 HORIZONTAL_PADDING to RcHardcodedValue.FloatValue(params.horizontalPaddingDp),
                 VERTICAL_PADDING to RcHardcodedValue.FloatValue(params.verticalPaddingDp),
                 CORNER_RADIUS to RcHardcodedValue.FloatValue(params.cornerRadiusDp),
+                CONTAINER_COLOR to
+                  RcHardcodedValue.Color(containerArgb ?: SURFACE_CONTAINER_LOW.toArgb()),
               )
             )
             .hardcodeDensity(display.density, display.fontScale)

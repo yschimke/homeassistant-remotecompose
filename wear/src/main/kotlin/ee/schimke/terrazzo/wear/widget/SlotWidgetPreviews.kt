@@ -11,11 +11,13 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.glance.wear.GlanceWearWidget
 import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetData
 import androidx.glance.wear.WearWidgetDocument
+import androidx.glance.wear.color
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.tooling.preview.WearWidgetHostsPreview
@@ -25,6 +27,7 @@ import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.ContainerTint
 import ee.schimke.ha.rc.FixedHaClock
 import ee.schimke.ha.rc.LocalHaClock
 import ee.schimke.ha.rc.ProvideCardRegistry
@@ -69,8 +72,9 @@ internal class PreviewSlotWidget(
   ): WearWidgetData {
     val theme = haThemeFor(ThemeStyle.TerrazzoHome, darkTheme = true)
     val registry = defaultRegistry().withEnhancedShutter()
+    val tint = ContainerTint.argbFor(card, snapshot)
     return WearWidgetDocument(
-      background = WearWidgetBrush.Companion,
+      background = tint?.let { WearWidgetBrush.color(Color(it).rc) } ?: WearWidgetBrush.Companion,
       content = {
         CompositionLocalProvider(LocalHaClock provides WearWidgetPreviewClock) {
           ProvideCardRegistry(registry) {

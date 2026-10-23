@@ -9,15 +9,18 @@ import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Color
 import androidx.glance.wear.AssociateWithGlanceWearWidget
 import androidx.glance.wear.GlanceWearWidget
 import androidx.glance.wear.GlanceWearWidgetService
 import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetData
 import androidx.glance.wear.WearWidgetDocument
+import androidx.glance.wear.color
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WearWidgetRawContent
@@ -31,6 +34,7 @@ import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CardRegistry
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.ContainerTint
 import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
@@ -220,7 +224,10 @@ internal fun slotWidgetData(
   fetchImage: (url: String) -> ByteArray? = { null },
   wearDesign: (container: String) -> ByteArray? = { null },
 ): WearWidgetData {
-  val direct = slotDocument(registry, colors, card, snapshot, slotIndex, cardStyle = cardStyle)
+  // The card's state tints its container: warm for heating, amber for a light that is on.
+  val tint = ContainerTint.argbFor(card, snapshot)
+  val direct =
+    slotDocument(registry, colors, card, snapshot, slotIndex, cardStyle = cardStyle, tint = tint)
   if (card == null) return direct
   val design = CardDesignTemplates.designCard(card, snapshot, registry)
   val converter = registry.converterFor(design.type) ?: return direct
@@ -238,7 +245,7 @@ internal fun slotWidgetData(
       containerOf(params.containerType)?.let(wearDesign)?.let { synced ->
         val widget =
           if (WearWidgetTemplate.namesFrame(synced))
-            WearWidgetTemplate.instantiate(context, synced, params, isPreview)
+            WearWidgetTemplate.instantiate(context, synced, params, isPreview, tint)
           else null
         val document = widget?.rcDocument ?: synced
         val playback = CardDesignTemplates.playback(design, document, registry)
@@ -268,7 +275,7 @@ internal fun slotWidgetData(
             .getOrNull()
             ?.also { neutralTemplates[neutralKey] = it }
       neutral
-        ?.let { WearWidgetTemplate.instantiate(context, it, params, isPreview) }
+        ?.let { WearWidgetTemplate.instantiate(context, it, params, isPreview, tint) }
         ?.let { widget ->
           val playback = CardDesignTemplates.playback(design, widget.rcDocument, registry)
           LauncherDesigns.bakeValues(widget.rcDocument, playback, snapshot, fetchImage)?.let {
@@ -378,9 +385,10 @@ internal fun slotDocument(
   slotIndex: Int,
   template: Boolean = false,
   cardStyle: HaUberTheme = HaUberTheme.Classic,
+  tint: Int? = null,
 ): WearWidgetDocument =
   WearWidgetDocument(
-    background = WearWidgetBrush.Companion,
+    background = tint?.let { WearWidgetBrush.color(Color(it).rc) } ?: WearWidgetBrush.Companion,
     content = { SlotContent(registry, colors, card, snapshot, slotIndex, template, cardStyle) },
   )
 
