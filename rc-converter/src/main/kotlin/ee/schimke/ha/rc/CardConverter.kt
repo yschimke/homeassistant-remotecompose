@@ -248,3 +248,10 @@ data class DesignTemplateInput(val card: CardConfig, val snapshot: HaSnapshot)
  * grid of squares, as in HA; an explicit `aspect_ratio` still wins.
  */
 val LocalGridSquareCells = staticCompositionLocalOf { false }
+
+/**
+ * True while rendering the children of a stack or `grid` card. The container is a multi-entity
+ * card, so its children drop the per-entity name a single card would keep on a watch
+ * (card-information-hierarchy.md): a button or light in a stack stays its icon or dial.
+ */
+val LocalInCardContainer = staticCompositionLocalOf { false }

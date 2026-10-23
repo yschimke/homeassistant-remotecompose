@@ -12,6 +12,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.LocalInCardContainer
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaAction
@@ -79,7 +80,14 @@ class LightCardConverter : CardConverter {
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    RenderArcDial(lightDial(card, snapshot), modifier = modifier)
+    // The dial's value already says on/off (`100%` / `Off`), and every light's dial looks alike: on
+    // a watch the name is what tells two lights apart (card-information-hierarchy.md).
+    // In a stack or grid the container is the multi-entity card, and its lights stay a dial.
+    RenderArcDial(
+      lightDial(card, snapshot),
+      modifier = modifier,
+      wearShowsName = !LocalInCardContainer.current,
+    )
   }
 
   private val dial =

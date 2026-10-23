@@ -20,6 +20,7 @@ import ee.schimke.ha.rc.LocalCardRegistry
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalGridSquareCells
+import ee.schimke.ha.rc.LocalInCardContainer
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.ProvideChildCaptureShare
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
@@ -113,7 +114,10 @@ class HorizontalStackCardConverter : CardConverter {
     // HA splits a horizontal stack's width evenly; each child is captured for its own column.
     val children = childCards(card)
     ProvideChildCaptureShare(columns = children.size, gapDp = HORIZONTAL_STACK_GAP_DP) {
-      CompositionLocalProvider(LocalGridSquareCells provides false) {
+      CompositionLocalProvider(
+        LocalGridSquareCells provides false,
+        LocalInCardContainer provides true,
+      ) {
         RemoteHaHorizontalStack(cellCount = children.size, modifier = modifier) { k ->
           ProvideChildCardBindings(k) {
             RenderChild(children[k], snapshot, RemoteModifier.fillMaxWidth())
@@ -220,7 +224,10 @@ class GridCardConverter : CardConverter {
       }
     val plan = HaGridLayout.plan(planCount, columns, minCellDp, narrowReferenceDp)
 
-    CompositionLocalProvider(LocalGridSquareCells provides square) {
+    CompositionLocalProvider(
+      LocalGridSquareCells provides square,
+      LocalInCardContainer provides true,
+    ) {
       val threshold = plan.thresholdDp
       if (captureWidthDp != null) {
         val perRow = HaGridLayout.perRowAt(captureWidthDp.toFloat(), planCount, columns, minCellDp)
@@ -353,7 +360,10 @@ internal fun gridSquare(card: CardConfig): Boolean =
  */
 @Composable
 private fun RenderChildren(card: CardConfig, snapshot: HaSnapshot) {
-  CompositionLocalProvider(LocalGridSquareCells provides false) {
+  CompositionLocalProvider(
+    LocalGridSquareCells provides false,
+    LocalInCardContainer provides true,
+  ) {
     childCards(card).forEachIndexed { k, child ->
       ProvideChildCardBindings(k) { RenderChild(child, snapshot) }
     }

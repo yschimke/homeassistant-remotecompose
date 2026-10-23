@@ -6,11 +6,13 @@ import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
+import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.RemoteColor
@@ -34,10 +36,12 @@ import androidx.compose.ui.text.style.TextOverflow
  *   intrinsic content it sits centred rather than pinned to the top edge (Principle 8), and a
  *   compact chip + reserved label line keeps the name from clipping on short cells (the `2×1` /
  *   Wear L clip this issue fixes).
+ * * **icon beside name** — [RemoteHaButtonRow], for a canvas too short for the name under the icon
+ *   but wide enough beside it (the Wear Small container): the name is what tells two buttons apart
+ *   (card-information-hierarchy.md).
  * * **icon only** — [RemoteHaButtonIcon]. The tinted chip *is* the button, so the smallest cells
- *   (`1×1` launcher, Wear S) keep the icon instead of dropping to a text label (Principle 1 — never
- *   hide the icon first). The launcher already shows the name underneath the widget, so no in-cell
- *   text is needed.
+ *   (`1×1` launcher) keep the icon instead of dropping to a text label (Principle 1 — never hide
+ *   the icon first).
  */
 @Composable
 @RemoteComposable
@@ -75,29 +79,78 @@ fun RemoteHaToggleButton(
   // Live host binding for the entity's on/off state. Seeded from the
   // snapshot; the host pushes updates by name (`<entityId>.is_on`).
   val look = entityLook(data.entityId, data.accent)
-  val isOnBinding = look.isOn
+  ButtonBody(data, toggleAccent(data, look), look, modifier, compact)
+}
 
-  // Tween the accent between inactive ↔ active so a host writeback
-  // crossfades the icon halo and tint instead of snapping. Falls back
-  // to the active accent unconditionally when there's no live binding
-  // (preview / non-toggleable / null entityId). An unavailable entity
-  // takes the look's neutral accent instead.
-  val accent: RemoteColor =
-    if (isOnBinding != null) {
-      val accentProgress =
-        animateRemoteFloat(isOnBinding.select(1f.rf, 0f.rf), durationSeconds = 0.20f)
-      look.available(
-        tween(
-          data.accent.themed().inactiveAccent,
-          data.accent.themed().activeAccent,
-          accentProgress,
+/**
+ * The toggle button's accent: tweened between inactive ↔ active so a host writeback crossfades the
+ * icon halo and tint instead of snapping. Falls back to the active accent unconditionally when
+ * there's no live binding (preview / non-toggleable / null entityId). An unavailable entity takes
+ * the look's neutral accent instead.
+ */
+@Composable
+private fun toggleAccent(data: HaButtonData, look: HaEntityLook): RemoteColor {
+  val isOnBinding = look.isOn ?: return look.accent
+  val accentProgress = animateRemoteFloat(isOnBinding.select(1f.rf, 0f.rf), durationSeconds = 0.20f)
+  return look.available(
+    tween(data.accent.themed().inactiveAccent, data.accent.themed().activeAccent, accentProgress)
+  )
+}
+
+/**
+ * Icon-beside-name tier — the tinted chip, then the name and (with `show_state`) the state, on one
+ * line. For a canvas too short for the name under the icon but wide enough beside it: the Wear
+ * Small container (a ~44dp content box), where the icon alone would leave two buttons on one watch
+ * looking the same. The name ellipsises before the state does; the accent follows the live
+ * `<entityId>.is_on` binding (tweened for a toggleable entity, as [RemoteHaToggleButton]) and the
+ * state is the host's `<entityId>.state` binding, so the row keeps up without a re-encode.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaButtonRow(data: HaButtonData, modifier: RemoteModifier = RemoteModifier) {
+  val theme = haTheme()
+  val look = entityLook(data.entityId, data.accent)
+  val accent = if (data.accent.toggleable) toggleAccent(data, look) else look.accent
+  val clickable =
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  RemoteBox(
+    modifier =
+      modifier
+        .then(clickable)
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        .padding(horizontal = 12.rdp, vertical = 3.rdp),
+    contentAlignment = RemoteAlignment.CenterStart,
+  ) {
+    RemoteRow(
+      modifier = RemoteModifier.fillMaxWidth(),
+      verticalAlignment = RemoteAlignment.CenterVertically,
+    ) {
+      if (data.showIcon) ButtonIconChip(data, look, accent, RowChipDp, RowIconDp)
+      RemoteBox(
+        modifier =
+          RemoteModifier.weight(1f).padding(start = (if (data.showIcon) 10 else 0).rdp, end = 8.rdp)
+      ) {
+        RemoteText(
+          text = entityName(data.entityId, data.name),
+          color = look.dim(theme.primaryText),
+          fontSize = HaType.Body,
+          fontWeight = FontWeight.Medium,
+          style = haTextStyle(),
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
         )
-      )
-    } else {
-      look.accent
+      }
+      data.state?.let { state ->
+        RemoteText(
+          text = state,
+          color = look.dim(theme.primaryText),
+          fontSize = HaType.Body,
+          style = haTextStyle(),
+          maxLines = 1,
+        )
+      }
     }
-
-  ButtonBody(data, accent, look, modifier, compact)
+  }
 }
 
 /**
@@ -253,3 +306,5 @@ private const val FullChipDp = 48
 private const val FullIconDp = 28
 private const val CompactChipDp = 44
 private const val CompactIconDp = 26
+private const val RowChipDp = 36
+private const val RowIconDp = 22
