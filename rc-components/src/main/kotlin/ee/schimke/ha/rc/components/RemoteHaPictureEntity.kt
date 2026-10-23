@@ -206,6 +206,9 @@ fun RemoteHaPictureEntity(
         ) {
           RemoteText(
             text = if (data.showName) entityName(data.entityId, data.name) else "".rs,
+            // The name takes what the state leaves: unweighted, a narrow strip (a Wear Large
+            // slot on a Galaxy watch) dropped it whole.
+            modifier = RemoteModifier.weight(1f),
             color = theme.primaryText,
             fontSize = HaType.Body,
             fontWeight = FontWeight.Medium,
@@ -216,6 +219,7 @@ fun RemoteHaPictureEntity(
           if (data.showState) {
             RemoteText(
               text = data.state,
+              modifier = RemoteModifier.padding(start = 8.rdp),
               color = theme.secondaryText,
               fontSize = HaType.Label,
               style = haTextStyle(),

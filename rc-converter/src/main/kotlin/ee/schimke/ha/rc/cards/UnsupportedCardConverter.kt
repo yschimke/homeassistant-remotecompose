@@ -1,13 +1,16 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.UNSUPPORTED_CARD_TYPE
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaUnsupportedData
@@ -64,7 +67,13 @@ class UnsupportedCardConverter(private val declaredType: String? = null) : CardC
     if (generic != null) {
       ENTITIES.Render(generic, snapshot, modifier)
     } else {
-      RemoteHaUnsupported(HaUnsupportedData(cardType = card.type), modifier = modifier)
+      val fixed = LocalCardSizeMode.current == CardSizeMode.Fixed
+      RemoteHaUnsupported(
+        HaUnsupportedData(cardType = card.type),
+        // A fixed cell centres the placeholder rather than top-gluing it.
+        modifier = if (fixed) modifier.fillMaxSize() else modifier,
+        compact = fixed,
+      )
     }
   }
 
