@@ -38,7 +38,11 @@ class LibrarySources(
    */
   private val editors: Set<String> = emptySet(),
 ) {
-  /** A card type's current source: the edited design, when there is one, else the checked-in. */
+  /**
+   * A card type's current source: the edited design, when there is one, else the checked-in. Throws
+   * when UI Builder can't be reached, rather than answer with the checked-in source: an import that
+   * read that would quietly drop every edit.
+   */
   suspend fun current(cardType: String): Source? {
     val checkedIn = holder.current().sources[cardType] ?: return null
     val edited = uiBuilder?.client?.design(designId(cardType))?.getOrNull()
@@ -112,7 +116,15 @@ internal fun Route.librarySourceRoutes(
   github: GithubAuth?,
 ) {
   get("/api/library/sources") {
-    val all = sources.all()
+    val all = runCatching {
+      sources.all()
+    }
+      .getOrElse {
+        return@get call.respondText(
+          "UI Builder is unreachable: ${it.message}",
+          status = HttpStatusCode.ServiceUnavailable,
+        )
+      }
     call.respondText(
       sourceJson.encodeToString(
         JsonObject.serializer(),
@@ -142,8 +154,13 @@ internal fun Route.librarySourceRoutes(
     val name = call.parameters["name"].orEmpty()
     if (!name.endsWith(".uid")) return@get call.respondText("", status = HttpStatusCode.NotFound)
     val source =
-      sources.current(name.removeSuffix(".uid"))
-        ?: return@get call.respondText("", status = HttpStatusCode.NotFound)
+      runCatching { sources.current(name.removeSuffix(".uid")) }
+        .getOrElse {
+          return@get call.respondText(
+            "UI Builder is unreachable: ${it.message}",
+            status = HttpStatusCode.ServiceUnavailable,
+          )
+        } ?: return@get call.respondText("", status = HttpStatusCode.NotFound)
     call.response.header(
       HttpHeaders.ContentDisposition,
       ContentDisposition.Attachment.withParameter(ContentDisposition.Parameters.FileName, name)
@@ -167,8 +184,13 @@ internal fun Route.librarySourceRoutes(
     }
     val cardType = call.parameters["cardType"].orEmpty()
     val source =
-      sources.current(cardType)
-        ?: return@post call.respondText("", status = HttpStatusCode.NotFound)
+      runCatching { sources.current(cardType) }
+        .getOrElse {
+          return@post call.respondText(
+            "UI Builder: ${it.message}",
+            status = HttpStatusCode.BadGateway,
+          )
+        } ?: return@post call.respondText("", status = HttpStatusCode.NotFound)
     val designId = LibrarySources.designId(cardType)
     val location = runCatching {
       // The first edit creates the library design from the checked-in source; later ones open it.

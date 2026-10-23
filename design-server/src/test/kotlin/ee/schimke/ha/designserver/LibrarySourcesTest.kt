@@ -223,6 +223,19 @@ class LibrarySourcesTest {
   }
 
   @Test
+  fun anUnreachableUiBuilderFailsTheImportRatherThanDropEdits() = testApplication {
+    // Nothing listens on port 9: connections are refused.
+    val config = UiBuilderConfig(apiUrl = "http://127.0.0.1:9", browserUrl = "https://b", "secret")
+    val integration = UiBuilderIntegration(config, UiBuilderClient(config, createClient {}))
+    application { designServer(LibraryHolder(library()), integration) }
+    assertEquals(HttpStatusCode.ServiceUnavailable, client.get("/api/library/sources").status)
+    assertEquals(
+      HttpStatusCode.ServiceUnavailable,
+      client.get("/api/library/sources/tile.uid").status,
+    )
+  }
+
+  @Test
   fun withGitHubSignInOnlyNamedLoginsAreLibraryEditors() {
     val sources = LibrarySources(LibraryHolder(library()), uiBuilder = null, setOf("Yuri"))
     assertTrue(sources.mayEdit(EditorState(enabled = true, authorized = true, login = "yuri")))
