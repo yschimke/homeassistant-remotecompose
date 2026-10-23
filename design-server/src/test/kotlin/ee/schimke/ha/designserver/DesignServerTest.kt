@@ -224,6 +224,33 @@ class DesignServerTest {
       assertTrue("/designs/${DesignLibrary.idOf(dark)}" in detail, "links its other theme")
     }
 
+  /**
+   * "On a watch" is opt in: off, no watch panes; on, each design's preview shows on a round and a
+   * square watch, Small and Large, and the filter keeps it in its links.
+   */
+  @Test
+  fun onAWatchShowsEachPreviewInFourWearPanes() =
+    serve(library()) {
+      val off = client.get("/designs?style=all&mode=all").bodyAsText()
+      assertFalse("class=\"wear\"" in off, "off by default")
+      val on = client.get("/designs?style=all&mode=all&wear=1").bodyAsText()
+      for (caption in
+        listOf("Round · Small", "Round · Large", "Square · Small", "Square · Large")) assertEquals(
+        2,
+        Regex(Regex.escape(caption)).findAll(on).count(),
+        "$caption per design",
+      )
+      assertTrue("name=\"wear\" value=\"1\" checked" in on, "the checkbox stays on")
+      assertTrue("on a round watch, small widget" in on, "panes have alt text")
+
+      val id = DesignLibrary.idOf(light)
+      val detail = client.get("/designs/$id").bodyAsText()
+      assertFalse("class=\"wear\"" in detail)
+      assertTrue("/designs/$id?wear=1" in detail, "the detail page links to its watch view")
+      val detailOnWatch = client.get("/designs/$id?wear=1").bodyAsText()
+      assertEquals(4, Regex("class=\"watch ").findAll(detailOnWatch).count())
+    }
+
   @Test
   fun browserDefaultsToOneThemeAndFilters() =
     serve(library()) {
