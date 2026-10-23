@@ -162,8 +162,8 @@ fun UberCards_Ikea_Dark() = UberSheet(HaUberTheme.Ikea, Cards, dark = true)
 @Preview(
   name = "uber dials: Home Assistant (light)",
   widthDp = 360,
-  heightDp = 900,
-  device = "spec:width=360dp,height=900dp,dpi=160",
+  heightDp = HA_SHOWCASE_HEIGHT_DP,
+  device = "spec:width=360dp,height=${HA_SHOWCASE_HEIGHT_DP}dp,dpi=160",
 )
 @Composable
 fun UberDials_HomeAssistant_Light() = UberSheet(HaUberTheme.HomeAssistant, Dials)
@@ -171,8 +171,8 @@ fun UberDials_HomeAssistant_Light() = UberSheet(HaUberTheme.HomeAssistant, Dials
 @Preview(
   name = "uber dials: Home Assistant (dark)",
   widthDp = 360,
-  heightDp = 900,
-  device = "spec:width=360dp,height=900dp,dpi=160",
+  heightDp = HA_SHOWCASE_HEIGHT_DP,
+  device = "spec:width=360dp,height=${HA_SHOWCASE_HEIGHT_DP}dp,dpi=160",
 )
 @Composable
 fun UberDials_HomeAssistant_Dark() = UberSheet(HaUberTheme.HomeAssistant, Dials, dark = true)
