@@ -1,0 +1,61 @@
+name: Seed remote build cache
+
+# Fills the BuildFetch remote cache with every output of main's Linux build, for builds that start
+# without this repository's GitHub Actions cache: agent sessions and fresh developer clones, which
+# read the remote with a read-only token.
+#
+# CI alone leaves it sparse. Its jobs restore Gradle's local build cache through setup-gradle, and
+# Gradle uploads an output only when the task actually ran, so a task the local cache satisfied is
+# never pushed. A push to main stores just what that commit changed. This job runs with the
+# setup-gradle cache disabled, so every task either comes from the remote already or executes and
+# is stored there.
+#
+# The tasks are CI's `build`, `test` and `lint` jobs. `:integration:test` is left out: its
+# pixel-diff suites need the preview renders the `test` job makes with the compose-preview CLI
+# first, and without them it would only fail.
+
+on:
+  schedule:
+    - cron: "53 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cache-seed
+  cancel-in-progress: true
+
+jobs:
+  seed:
+    name: Seed the remote cache from main
+    # The write token is resolved only for main: a dispatch can name any branch.
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7.0.1
+      # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: 21.0.12+101.0.LTS
+      - uses: gradle/actions/setup-gradle@v6.4.0
+        with:
+          cache-disabled: true
+      # Without the write token the action falls back to no remote cache, and this would spend a
+      # full build seeding nothing while still going green.
+      - name: Require the BuildFetch write token
+        env:
+          RW_TOKEN: ${{ secrets.BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN }}
+        run: |
+          if [ -z "$RW_TOKEN" ]; then
+            echo "::error title=No BuildFetch write token::BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN is not set, so this job cannot seed the remote cache."
+            exit 1
+          fi
+      - uses: ./.github/actions/buildfetch-cache
+        with:
+          rw-token: ${{ secrets.BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN }}
+      - uses: ./.github/actions/android-sdk
+      # `--continue` so one failing task still leaves every other output stored.
+      - run: ./gradlew --continue assembleDebug test lintDebug -x :integration:test --stacktrace
