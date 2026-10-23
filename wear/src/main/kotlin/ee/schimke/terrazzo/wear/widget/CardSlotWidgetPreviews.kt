@@ -5,6 +5,7 @@ package ee.schimke.terrazzo.wear.widget
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import ee.schimke.ha.model.HaSnapshot
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * One @Preview entry per card template, grouped by data tier (see
@@ -657,7 +658,19 @@ private fun thermostatFixture() =
     json = """{"type":"thermostat","entity":"climate.living_room"}""",
     snapshot =
       snapshotOf(
-        entityState(id = "climate.living_room", state = "heat", friendlyName = "Living Room")
+        entityState(
+          id = "climate.living_room",
+          state = "heat",
+          friendlyName = "Living Room",
+          extra =
+            mapOf(
+              "current_temperature" to JsonPrimitive(20.5),
+              "temperature" to JsonPrimitive(21.5),
+              "min_temp" to JsonPrimitive(7),
+              "max_temp" to JsonPrimitive(30),
+              "hvac_action" to JsonPrimitive("heating"),
+            ),
+        )
       ),
   )
 
@@ -665,7 +678,20 @@ private fun humidifierFixture() =
   CardFixture(
     json = """{"type":"humidifier","entity":"humidifier.bedroom"}""",
     snapshot =
-      snapshotOf(entityState(id = "humidifier.bedroom", state = "on", friendlyName = "Bedroom")),
+      snapshotOf(
+        entityState(
+          id = "humidifier.bedroom",
+          state = "on",
+          friendlyName = "Bedroom",
+          extra =
+            mapOf(
+              "humidity" to JsonPrimitive(45),
+              "current_humidity" to JsonPrimitive(38),
+              "min_humidity" to JsonPrimitive(30),
+              "max_humidity" to JsonPrimitive(70),
+            ),
+        )
+      ),
   )
 
 private fun alarmPanelFixture() =

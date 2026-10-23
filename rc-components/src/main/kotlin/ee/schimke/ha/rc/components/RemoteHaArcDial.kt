@@ -140,7 +140,8 @@ fun RemoteHaArcDial(data: HaArcDialData, modifier: RemoteModifier = RemoteModifi
  * [compact] is the Wear small slot's form (a ~44dp content box, too short for three lines): the
  * mode over the value, set a step smaller, with tighter padding. The target line drops — the arc
  * still marks the target, so the reading keeps its intent (design principle 3: reflow, then drop
- * the least important part).
+ * the least important part). [dialDp] is the dial's box: a Wear Large slot grows it to fill its
+ * height.
  */
 @Composable
 @RemoteComposable
@@ -148,6 +149,7 @@ fun RemoteHaArcDialWide(
   data: HaArcDialData,
   modifier: RemoteModifier = RemoteModifier,
   compact: Boolean = false,
+  dialDp: Int = 56,
 ) {
   val theme = haTheme()
   val click =
@@ -172,8 +174,8 @@ fun RemoteHaArcDialWide(
     RemoteBox(
       modifier =
         if (isConsoleThermostat(data) || isIkeaLight(data))
-          RemoteModifier.size((if (compact) 32 else 56).rdp)
-        else RemoteModifier.fillMaxHeight().size(56.rdp),
+          RemoteModifier.size((if (compact) 32 else dialDp).rdp)
+        else RemoteModifier.fillMaxHeight().size(dialDp.rdp),
       contentAlignment = RemoteAlignment.Center,
     ) {
       if (isIkeaLight(data)) {

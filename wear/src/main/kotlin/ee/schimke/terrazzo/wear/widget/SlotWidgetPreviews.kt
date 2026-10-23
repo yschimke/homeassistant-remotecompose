@@ -152,12 +152,14 @@ internal fun entityState(
   friendlyName: String? = null,
   unit: String? = null,
   deviceClass: String? = null,
+  extra: Map<String, JsonPrimitive> = emptyMap(),
 ): EntityState {
   val attrs =
     buildMap<String, JsonPrimitive> {
       friendlyName?.let { put("friendly_name", JsonPrimitive(it)) }
       unit?.let { put("unit_of_measurement", JsonPrimitive(it)) }
       deviceClass?.let { put("device_class", JsonPrimitive(it)) }
+      putAll(extra)
     }
   return EntityState(entityId = id, state = state, attributes = JsonObject(attrs))
 }
