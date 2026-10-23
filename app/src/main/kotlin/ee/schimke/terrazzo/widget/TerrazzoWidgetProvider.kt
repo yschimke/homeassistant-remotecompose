@@ -403,9 +403,9 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     val intent =
       when (action) {
         is HaAction.Url -> Intent(Intent.ACTION_VIEW, Uri.parse(action.url))
+        // The app opens on the entity's details or the dashboard path, as the card's tap would.
         is HaAction.MoreInfo,
-        is HaAction.Navigate ->
-          context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return null
+        is HaAction.Navigate -> WidgetOpenRequests.launchIntent(context, action) ?: return null
         else -> return null
       }.apply {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

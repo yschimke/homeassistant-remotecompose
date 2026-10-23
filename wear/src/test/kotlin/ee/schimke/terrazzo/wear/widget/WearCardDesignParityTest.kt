@@ -5,6 +5,7 @@ import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.rc.UNAVAILABLE_DESIGN_PROPERTY
 import ee.schimke.ha.rc.cards.ButtonCardConverter
 import ee.schimke.ha.rc.cards.EntityCardConverter
+import ee.schimke.ha.rc.cards.HeadingCardConverter
 import ee.schimke.ha.rc.cards.SensorCardConverter
 import ee.schimke.ha.rc.cards.TileCardConverter
 import ee.schimke.ha.rc.cards.defaultRegistry
@@ -220,6 +221,41 @@ class WearCardDesignParityTest {
     }
     println(
       "sensor.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
+    )
+    assertEquals(emptyList(), differing)
+  }
+
+  @Test
+  fun headingDesignIsTheWearTemplateForEveryShapeAndStyle() {
+    val heading = HeadingCardConverter()
+    val headingDesign = designOf("heading")
+    // Both heading styles.
+    val inputs =
+      listOf("title", "subtitle").mapNotNull { style ->
+        heading.wearDesignTemplate(DesignProperties.build { string("heading_style", style) })
+      }
+    val differing = buildList {
+      for (input in inputs) for (style in ThemeStyle.entries) for (cardStyle in HaUberTheme.all) {
+        val colors = wearWidgetColors(style)
+        val fromConverter = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle)
+          }
+        }
+        val fromDesign = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle) {
+              headingDesign.RenderCard(input.card, input.snapshot, it)
+            }
+          }
+        }
+        if (!fromConverter.contentEquals(fromDesign)) {
+          add("${input.card.raw} ${input.snapshot.states.values} ${style.name} ${cardStyle.id}")
+        }
+      }
+    }
+    println(
+      "heading.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
     )
     assertEquals(emptyList(), differing)
   }

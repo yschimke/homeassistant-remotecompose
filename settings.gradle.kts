@@ -96,10 +96,19 @@ val buildFetchCacheToken =
     .orNull
 val onCi = providers.environmentVariable("ON_CI").orElse("false").get().toBoolean()
 
+// On GitHub Actions, BuildFetch is the cache of record whenever a token reaches the job. The local
+// cache there is setup-gradle's restored snapshot of an earlier main build: it answered the
+// cheap hits before the remote was asked, so a task it satisfied was never pushed (leaving the
+// remote sparse for every other machine) and the remote saw only the lookups most likely to
+// miss. With it off, every lookup and every push goes to the remote, as setup-gradle's own docs
+// recommend for a build with a remote cache. Off CI, the local cache stays on in front of it.
+val remoteIsCacheOfRecord =
+  buildFetchCacheUrl != null &&
+    buildFetchCacheToken != null &&
+    providers.environmentVariable("GITHUB_ACTIONS").orNull == "true"
+
 buildCache {
-  // The local cache stays on everywhere, trusted pushes included: it suppresses only the
-  // redundant remote pushes, and setup-gradle's restored copy is a frozen snapshot on CI anyway.
-  local { isEnabled = true }
+  local { isEnabled = !remoteIsCacheOfRecord }
   if (buildFetchCacheUrl != null) {
     remote<HttpBuildCache> {
       url = uri(buildFetchCacheUrl)

@@ -110,13 +110,17 @@ class WearDirectAccess(
     }
     val stored = offline.readValues()
     val ids = watchEntityIds(cardsRawJson, stored?.values?.keys.orEmpty())
-    if (!needsDirectValues(stored, ids, now(), lastDirectAtMs, retained)) return null
+    if (!needsDirectValues(stored, ids, now(), lastDirectAt(), retained)) return null
     val access = store.read()?.takeIf { signedInTo(settings, it.baseUrl) }
     if (access == null) {
       requestIfMissing(settings)
       return null
     }
-    lastDirectAtMs = now()
+    // Before the read, so one that fails also waits its turn.
+    now().let {
+      lastDirectAtMs = it
+      offline.writeDirectReadAt(it)
+    }
     val states = fetchFromAny(access, ids) ?: return null
     val snapshot = HaSnapshot(states = states)
     val fetched = states.mapValues { (_, state) -> state.toWearEntityValue(snapshot) }
@@ -155,6 +159,18 @@ class WearDirectAccess(
     return null
   }
 
+  /**
+   * When the watch last started a direct read, in any process: this process's own when it is recent
+   * enough to decide alone, else the later of it and the one on disk ([WearOfflineStore]).
+   */
+  private fun lastDirectAt(): Long? {
+    val now = now()
+    val memory = lastDirectAtMs
+    if (memory != null && now - memory < MIN_INTERVAL_MS) return memory
+    val persisted = offline.readDirectReadAt(now)
+    return listOfNotNull(memory, persisted).maxOrNull()?.also { lastDirectAtMs = it }
+  }
+
   private fun signedInTo(settings: WearSettings, baseUrl: String): Boolean =
     !settings.demoMode && settings.baseUrl.isNotEmpty() && sameUrl(settings.baseUrl, baseUrl)
 
@@ -172,11 +188,12 @@ class WearDirectAccess(
 
     private const val FETCH_TIMEOUT_MS = 15_000L
 
-    // Per process: the app, its widgets and the listener service share them.
+    // Per process: the app, its widgets and the listener service share them. The last direct read
+    // is also kept on disk (see lastDirectAt), as widget updates often start a fresh process.
     @Volatile private var lastRequestAtMs: Long? = null
     @Volatile private var lastDirectAtMs: Long? = null
 
-    /** Clears the per-process throttles, for tests. */
+    /** Clears the per-process throttles (not the one on disk), for tests. */
     internal fun resetThrottles() {
       lastRequestAtMs = null
       lastDirectAtMs = null

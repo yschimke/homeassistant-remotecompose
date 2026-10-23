@@ -223,6 +223,7 @@ class AlarmPanelCardConverter : CardConverter {
                 else
                   SwappingGate(AlarmNarrowMinWidthDp, AlarmButtonsMinHeightDp) { buttons ->
                     if (buttons) NarrowButtons(data)
+                    else if (stacksButtons(data)) NarrowButtons(data, actionsPerRow = 1)
                     else RemoteHaAlarmPanelWide(data, RemoteModifier.fillMaxSize())
                   }
               }
@@ -253,10 +254,30 @@ class AlarmPanelCardConverter : CardConverter {
 
   /** The narrow panel without its keypad, centred in the cell. */
   @Composable
-  private fun NarrowButtons(data: HaAlarmPanelData) {
+  private fun NarrowButtons(data: HaAlarmPanelData, actionsPerRow: Int = 2) {
     CenteredCell {
-      RemoteHaAlarmPanel(data, RemoteModifier.fillMaxWidth(), narrow = true, showKeypad = false)
+      RemoteHaAlarmPanel(
+        data,
+        RemoteModifier.fillMaxWidth(),
+        narrow = true,
+        showKeypad = false,
+        actionsPerRow = actionsPerRow,
+      )
     }
+  }
+
+  /**
+   * A captured launcher widget two columns wide (`2×2`, `2×3`): too narrow for the ARM buttons side
+   * by side, tall enough for them one over the other. Decided at capture: a further gate in the
+   * narrow ladder stops the AndroidX player drawing the widget (adaptive-card-layouts.md, Known
+   * gaps #10).
+   */
+  @Composable
+  private fun stacksButtons(data: HaAlarmPanelData): Boolean {
+    val capture = LocalWidgetCaptureSizeDp.current ?: return false
+    return data.actions.isNotEmpty() &&
+      capture.widthDp in AlarmStackedMinWidthDp until AlarmNarrowMinWidthDp &&
+      capture.heightDp >= AlarmStackedMinHeightDp + 30 * (data.actions.size - 2).coerceAtLeast(0)
   }
 
   /**
@@ -357,6 +378,15 @@ private const val AlarmNarrowMinWidthDp = 160
 
 /** The status row (40) over a row of ARM buttons (~34), with the card's padding and gaps. */
 private const val AlarmButtonsMinHeightDp = 130
+
+/**
+ * Two launcher columns (`130 dp`): a status row and one ARM button a row still fit inside the
+ * card's 14 dp sides. Narrower, the Wide chip.
+ */
+private const val AlarmStackedMinWidthDp = 120
+
+/** The status row over two stacked ARM buttons (~30 dp each with their gap) and the chrome. */
+private const val AlarmStackedMinHeightDp = 170
 
 /**
  * The narrow panel with its keypad: 24 + 40 + 6 + 34 + 6 + a keypad of 6 + 4 × 44 dp keys ≈ 292,

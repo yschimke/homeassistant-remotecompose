@@ -47,12 +47,21 @@ internal object WidgetActionRunner {
 
   private val alarmPairing = WidgetAlarmPairing()
 
-  suspend fun run(context: Context, widgetId: Int, tapped: HaAction) {
-    if (!runs(tapped)) return
-    // An alarm tap waits for its pair (the button and the code); the pair is one service call.
-    val action =
-      if (tapped is HaAction.CallService || tapped is HaAction.Toggle) tapped
-      else alarmPairing.accept(widgetId, tapped) ?: return
+  /**
+   * The call [tapped] makes for [widgetId], or null while an alarm tap waits for its pair (the
+   * button and the code are one service call). The receiver calls this as each broadcast arrives,
+   * before any work goes off its thread, so a code's keys pair in the order they were pressed.
+   */
+  fun prepare(widgetId: Int, tapped: HaAction): HaAction? =
+    when {
+      !runs(tapped) -> null
+      tapped is HaAction.CallService || tapped is HaAction.Toggle -> tapped
+      else -> alarmPairing.accept(widgetId, tapped)
+    }
+
+  /** Performs [action], a call [prepare] returned. */
+  suspend fun run(context: Context, widgetId: Int, action: HaAction) {
+    if (action !is HaAction.CallService && action !is HaAction.Toggle) return
     val graph = context.terrazzoGraph()
     val entry = graph.widgetStore.get(widgetId)
     if (entry == null) {

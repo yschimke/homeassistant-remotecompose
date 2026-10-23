@@ -54,6 +54,10 @@ class LanConnectionPolicy(context: Context) {
    */
   val networkChanges: StateFlow<Int> = _networkChanges.asStateFlow()
 
+  /** Whether the device has a default network at all; false in airplane mode, say. */
+  val isOnline: Boolean
+    get() = transport.get() != Transport.None
+
   private fun setTransport(value: Transport, available: Boolean = false) {
     val previous = transport.getAndSet(value)
     if (available || previous != value) _networkChanges.update { it + 1 }

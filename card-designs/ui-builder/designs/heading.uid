@@ -1,0 +1,66 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "heading",
+  "title": "Heading",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 48,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "cell"
+        ]
+      }
+    },
+    "cell": {
+      "id": "cell",
+      "componentId": "ha-cards/heading-card-cell",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "wrap": [
+          "title"
+        ],
+        "fixed": [
+          "centred"
+        ]
+      }
+    },
+    "title": {
+      "id": "title",
+      "componentId": "ha-cards/heading-card-title",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "centred": {
+      "id": "centred",
+      "componentId": "ha-cards/heading-card-centred",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

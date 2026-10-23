@@ -96,7 +96,8 @@ name and drops the range, instead of `21.4 …`. A `2×1` statistic keeps its pe
 card's padding. A `show_state` button too short for the state under the name (`1×1`, `2×1`) takes
 a dense body, a smaller chip over the name and the state, both whole. An alarm panel narrower than
 its full card but tall enough (`3×3`, `3×4`) keeps the ARM buttons, and the keypad where it fits;
-a full-width one too short for the keypad (`4×1`, `4×2`) keeps the buttons without it.
+a full-width one too short for the keypad (`4×1`, `4×2`) keeps the buttons without it; a
+captured one two columns wide (`2×2`, `2×3`) stacks them, one a row.
 
 **Wear: one line per container.** The weather card stacks the condition over the temperature
 beside its icon (the Large container adds the entity's name), rather than three columns that cut

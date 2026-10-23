@@ -143,13 +143,17 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
   override suspend fun deleteLongLivedTokens(matches: (clientName: String) -> Boolean): Int =
     delegate.deleteLongLivedTokens(matches)
 
-  // History is a live-only, on-demand read (the card-history screen) — we
-  // don't cache it, but we must forward so the wrapped live session
-  // actually hits HA's recorder instead of the no-op interface default.
+  // History is an on-demand read (the card-history screen): live from HA's recorder when it can,
+  // else the last chart read for the same entities and window, so it opens offline too. Forwarded
+  // explicitly; the interface default is a no-op.
   override suspend fun fetchHistory(
     entityIds: List<String>,
     hours: Int,
-  ): Map<String, List<ee.schimke.ha.model.HistoryPoint>> = delegate.fetchHistory(entityIds, hours)
+  ): Map<String, List<ee.schimke.ha.model.HistoryPoint>> = runCatching {
+    delegate.fetchHistory(entityIds, hours)
+  }
+    .onSuccess { if (it.isNotEmpty()) cache.putHistory(baseUrl, entityIds, hours, it) }
+    .getOrElse { ex -> cache.history(baseUrl, entityIds, hours) ?: throw ex }
 
   override suspend fun fetchDashboardConfig(urlPath: String?): JsonObject? =
     delegate.fetchDashboardConfig(urlPath)
@@ -179,5 +183,14 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
 
   override suspend fun close() {
     delegate.close()
+  }
+
+  companion object {
+    /**
+     * A session with no live connection behind it, only [cache]: what the UI draws until a live
+     * session replaces it. Every read is the cached copy; every live-only call fails.
+     */
+    fun cacheOnly(baseUrl: String, cache: OfflineCacheStorage): CachedHaSession =
+      CachedHaSession(OfflineOnlySession(baseUrl), cache)
   }
 }
