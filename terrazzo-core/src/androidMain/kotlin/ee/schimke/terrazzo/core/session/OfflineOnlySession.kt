@@ -14,8 +14,16 @@ import kotlinx.coroutines.flow.StateFlow
  */
 internal class OfflineOnlySession(override val baseUrl: String) : HaSession {
   override val refreshIntervalMillis: Long? = null
-  override val connectionStatus: StateFlow<SessionConnectionStatus> =
-    MutableStateFlow(SessionConnectionStatus.Failed)
+
+  // Connecting until the resume gives up: the stub stands in for a session being minted, so a cold
+  // start opened on "Can't reach Home Assistant" for the moment before the live one replaced it.
+  private val status = MutableStateFlow(SessionConnectionStatus.Connecting)
+  override val connectionStatus: StateFlow<SessionConnectionStatus> = status
+
+  /** The resume couldn't mint a live session: no stored token, or Home Assistant unreachable. */
+  fun markUnreachable() {
+    status.value = SessionConnectionStatus.Failed
+  }
 
   override suspend fun connect() = Unit
 

@@ -373,6 +373,11 @@ class DesignRepositoryTest {
     val forDevices = repository.resolveDeviceDesigns()[key].orEmpty()
     assertEquals(listOf(match), forDevices.map { it.first })
     assertContentEquals(boiler, forDevices.single().second)
+    // One manifest read resolves both the same way.
+    val both = repository.resolveAllWithDevices()
+    assertContentEquals(template, both.byKey[key])
+    assertEquals(listOf(match), both.deviceByKey[key].orEmpty().map { it.first })
+    assertContentEquals(boiler, both.deviceByKey[key].orEmpty().single().second)
   }
 
   @Test

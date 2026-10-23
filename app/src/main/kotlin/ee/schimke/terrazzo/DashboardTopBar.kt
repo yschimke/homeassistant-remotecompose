@@ -28,7 +28,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.HaNotification
 import ee.schimke.terrazzo.notifications.NotificationBell
 import ee.schimke.terrazzo.ui.statusColors
+import kotlinx.coroutines.delay
 
 /**
  * Below this window width the agent action moves from an icon into the overflow menu.
@@ -82,24 +88,29 @@ internal fun DashboardTopBar(
     val agentInline = showAgentButton && maxWidth >= AgentActionMinWidth
     val agentInOverflow = showAgentButton && !agentInline
     Column(Modifier.fillMaxWidth()) {
-      TopAppBar(
-        title = title,
-        actions = {
-          if (agentInline) {
-            IconButton(onClick = onOpenAgent) {
-              Icon(Icons.Filled.AutoAwesome, contentDescription = "Edit with an agent")
+      Box {
+        TopAppBar(
+          title = title,
+          actions = {
+            if (agentInline) {
+              IconButton(onClick = onOpenAgent) {
+                Icon(Icons.Filled.AutoAwesome, contentDescription = "Edit with an agent")
+              }
             }
-          }
-          NotificationBell(
-            notifications = notifications,
-            onDismiss = onDismissNotification,
-            onClearAll = onClearNotifications,
-          )
-          ConnectionStatusDot(status = connectionStatus, onClick = onRetryConnection)
-          WriteModeToggle(writeMode = writeMode, onWriteModeChange = onWriteModeChange)
-          overflowMenu(if (agentInOverflow) onOpenAgent else null)
-        },
-      )
+            NotificationBell(
+              notifications = notifications,
+              onDismiss = onDismissNotification,
+              onClearAll = onClearNotifications,
+            )
+            ConnectionStatusDot(status = connectionStatus, onClick = onRetryConnection)
+            WriteModeToggle(writeMode = writeMode, onWriteModeChange = onWriteModeChange)
+            overflowMenu(if (agentInOverflow) onOpenAgent else null)
+          },
+        )
+        // Over the bar's bottom edge rather than under it: connecting is momentary, and a line that
+        // took its own height moved the whole dashboard down and back on every launch.
+        ConnectingLine(connectionStatus, Modifier.align(Alignment.BottomCenter))
+      }
       ConnectionStatusStrip(status = connectionStatus, onRetry = onRetryConnection)
     }
   }
@@ -125,6 +136,31 @@ internal fun ConnectionStatusDot(
 }
 
 /**
+ * The progress line while connecting, once it has lasted [CONNECTING_LINE_DELAY_MS]: a launch's
+ * connect usually finishes sooner, and a line that flashed on and off for it was noise.
+ */
+@Composable
+private fun ConnectingLine(status: ConnectionStatus, modifier: Modifier = Modifier) {
+  var shown by remember { mutableStateOf(false) }
+  LaunchedEffect(status) {
+    shown = false
+    if (status == ConnectionStatus.Connecting) {
+      delay(CONNECTING_LINE_DELAY_MS)
+      shown = true
+    }
+  }
+  if (shown) {
+    LinearProgressIndicator(
+      color = status.statusColor(),
+      modifier =
+        modifier.fillMaxWidth().semantics { contentDescription = "Connecting to Home Assistant" },
+    )
+  }
+}
+
+private const val CONNECTING_LINE_DELAY_MS = 500L
+
+/**
  * The text (or progress) half of the connection state, shown full-width under the app bar so it
  * never competes with the title: an indeterminate progress line while connecting, and a one-line
  * tonal banner that retries on tap while paused or failed. Nothing while connected.
@@ -137,13 +173,9 @@ internal fun ConnectionStatusStrip(
   modifier: Modifier = Modifier,
 ) {
   when (status) {
-    ConnectionStatus.Connected -> Unit
-    ConnectionStatus.Connecting ->
-      LinearProgressIndicator(
-        color = status.statusColor(),
-        modifier =
-          modifier.fillMaxWidth().semantics { contentDescription = "Connecting to Home Assistant" },
-      )
+    // Drawn over the app bar by [ConnectingLine], taking no space.
+    ConnectionStatus.Connected,
+    ConnectionStatus.Connecting -> Unit
     ConnectionStatus.Disconnected,
     ConnectionStatus.Failed -> {
       val failed = status == ConnectionStatus.Failed

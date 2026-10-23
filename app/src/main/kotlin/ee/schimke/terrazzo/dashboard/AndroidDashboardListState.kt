@@ -40,7 +40,7 @@ fun rememberDashboardListState(session: HaSession): State<DashboardListState> {
   val state =
     remember(session) {
       val seed =
-        cache.dashboards(session.baseUrl)?.let {
+        (session.dashboardsNow() ?: cache.dashboards(session.baseUrl))?.let {
           DashboardListState.Ready(it.ifNotEmptyOrHomeFallback())
         } ?: DashboardListState.Loading
       mutableStateOf<DashboardListState>(seed)

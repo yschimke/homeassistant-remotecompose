@@ -518,20 +518,22 @@ private fun DashboardsRoot(
   val activity = LocalActivity.current
   val notifications by session.notifications.collectAsState()
 
-  // Snackbar pop on arrival: remember the ids we've already announced
-  // so the next composition (or a refetch that returns the same list)
-  // doesn't re-fire. The initial seed is what's already there when
-  // the user opens the app — we treat those as already-seen.
-  val seenIds = remember { mutableStateOf<Set<String>?>(null) }
-  LaunchedEffect(notifications) {
-    val previous = seenIds.value
+  // Snackbar pop on arrival: remember the ids we've already announced, per instance and across
+  // launches ([SeenNotifications]), so a refetch or the next cold start doesn't re-fire them. The
+  // first list an instance ever shows is taken as already there, as it was when the user opened the
+  // app; an empty one seeds nothing, since it is usually a list that hasn't been fetched yet.
+  val seenNotifications = remember(context) { SeenNotifications(context) }
+  LaunchedEffect(notifications, session.baseUrl) {
+    val current = notifications.map { it.notificationId }.toSet()
+    val previous = seenNotifications.seen(session.baseUrl)
     if (previous == null) {
-      seenIds.value = notifications.map { it.notificationId }.toSet()
+      if (current.isNotEmpty()) seenNotifications.record(session.baseUrl, current)
       return@LaunchedEffect
     }
-    val current = notifications.map { it.notificationId }.toSet()
     val fresh = notifications.filter { it.notificationId !in previous }
-    seenIds.value = current
+    if (current.isNotEmpty() || fresh.isNotEmpty()) {
+      seenNotifications.record(session.baseUrl, current)
+    }
     fresh.forEach { n ->
       val label = n.title?.takeIf { it.isNotBlank() } ?: n.notificationId
       snackbars.showSnackbar(label)

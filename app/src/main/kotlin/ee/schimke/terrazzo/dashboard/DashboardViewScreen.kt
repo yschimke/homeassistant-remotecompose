@@ -3,6 +3,7 @@
 package ee.schimke.terrazzo.dashboard
 
 import android.util.Log
+import androidx.activity.compose.ReportDrawn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -170,16 +171,21 @@ fun DashboardViewScreen(
   onInitialViewShown: () -> Unit = {},
 ) {
   val cache = LocalTerrazzoGraph.current.offlineCache
-  // Seed from disk so the first composition shows the last-known
+  // Seed from the session (demo mode's boards need no round trip) or
+  // from disk, so the first composition shows the last-known
   // dashboard + snapshot instead of a spinner. The polling loop
   // refreshes in place; transient failures don't blank the UI
   // because Ready isn't reset on failure.
   var state by
     remember(session, urlPath) {
-      val cachedDashboard = cache.dashboard(session.baseUrl, urlPath)
-      val cachedSnapshot = cache.snapshot(session.baseUrl, urlPath) ?: HaSnapshot()
       val seed: DashboardState =
-        cachedDashboard?.let { DashboardState.Ready(it, cachedSnapshot) } ?: DashboardState.Loading
+        session.dashboardNow(urlPath)?.let { (dashboard, snapshot) ->
+          DashboardState.Ready(dashboard, snapshot)
+        }
+          ?: cache.dashboard(session.baseUrl, urlPath)?.let {
+            DashboardState.Ready(it, cache.snapshot(session.baseUrl, urlPath) ?: HaSnapshot())
+          }
+          ?: DashboardState.Loading
       mutableStateOf(seed)
     }
 
@@ -319,6 +325,7 @@ fun DashboardViewScreen(
             .padding(24.dp)
         ) {
           Text("Failed: ${s.message}", style = MaterialTheme.typography.bodyMedium)
+          ReportDrawn()
         }
       is DashboardState.Ready ->
         DashboardList(
@@ -503,6 +510,8 @@ private fun DashboardList(
           }
           return@BoxWithConstraints
         }
+    // The cards compose from here on: the launch is fully drawn (`timeToFullDisplayMs`).
+    ReportDrawn()
     val cardDesignOverrides by
       remember(context) { CardDesignOverrideStore.of(context).overrides }.collectAsState()
     // Every card's template resolved in the background, top to bottom, so a card scrolling on
