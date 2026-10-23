@@ -32,9 +32,17 @@ internal class FirebaseCrashReporter : CrashReporter {
     crashlytics.recordException(throwable)
   }
 
-  override fun logEvent(name: String, params: Map<String, Long>) {
+  override fun logEvent(name: String, params: Map<String, Any>) {
     val bundle =
-      Bundle(params.size).apply { params.forEach { (key, value) -> putLong(key, value) } }
+      Bundle(params.size).apply {
+        params.forEach { (key, value) ->
+          when (value) {
+            is Number -> putLong(key, value.toLong())
+            // Firebase keeps the first 100 characters of a string parameter.
+            else -> putString(key, value.toString().take(100))
+          }
+        }
+      }
     analytics?.logEvent(name, bundle)
   }
 }

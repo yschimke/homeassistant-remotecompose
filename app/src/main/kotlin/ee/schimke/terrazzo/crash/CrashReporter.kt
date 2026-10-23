@@ -29,11 +29,11 @@ interface CrashReporter {
   fun recordCrash(throwable: Throwable)
 
   /**
-   * Logs an analytics event [name] with numeric [params], where the backend has analytics (Firebase
-   * does; the others drop it). Names and keys follow Firebase's rules: letters, digits and
-   * underscores, at most 40 characters.
+   * Logs an analytics event [name] with [params] (each a number or a string), where the backend has
+   * analytics (Firebase does; the others drop it). Names and keys follow Firebase's rules: letters,
+   * digits and underscores, at most 40 characters.
    */
-  fun logEvent(name: String, params: Map<String, Long>) = Unit
+  fun logEvent(name: String, params: Map<String, Any>) = Unit
 
   companion object {
     /**
