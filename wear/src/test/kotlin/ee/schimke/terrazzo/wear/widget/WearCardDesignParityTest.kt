@@ -1,7 +1,6 @@
 package ee.schimke.terrazzo.wear.widget
 
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.wear.compose.remote.material3.RemoteColorScheme
 import ee.schimke.ha.cards.CardDesignDocument
 import ee.schimke.ha.cards.LocalCardDesignInput
 import ee.schimke.ha.design.DesignProperties
@@ -10,8 +9,6 @@ import ee.schimke.ha.rc.cards.TileCardConverter
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
-import ee.schimke.ha.rc.framedDesignTemplate
-import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -26,7 +23,7 @@ import org.robolectric.annotation.GraphicsMode
  * The Wear widget is a rewrite of the card's design, not a source of its own
  * (server-owned-card-designs.md, "One source, every surface"): a slot card's container-neutral
  * template captured from the card's `.uid` is the one its converter gives, byte for byte, for every
- * templated tile shape, available or not, in every watch palette and card style.
+ * templated tile shape, available or not, off or on, in every watch palette and card style.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -44,20 +41,27 @@ class WearCardDesignParityTest {
 
   @Test
   fun tileDesignIsTheWearTemplateForEveryShapeAndStyle() {
+    // Built as SlotWidget builds a slot card's Wear template input: every templated tile domain,
+    // available or not, off or (for the domains whose templates have one) on.
     val inputs =
       TileCardConverter.TEMPLATE_DOMAINS.flatMap { domain ->
-        listOf(false, true).mapNotNull { unavailable ->
-          converter.framedDesignTemplate(
-            DesignProperties.build {
-              string(TileCardConverter.DOMAIN, domain)
-              if (unavailable) string(UNAVAILABLE_DESIGN_PROPERTY, "1")
-            }
-          )
+        listOf(false, true).flatMap { unavailable ->
+          listOf(false, true).mapNotNull { on ->
+            // Only a domain whose on state is literally `on` gets an on template (SlotWidget).
+            if (on && domain == "sensor") return@mapNotNull null
+            converter.wearDesignTemplate(
+              DesignProperties.build {
+                string(TileCardConverter.DOMAIN, domain)
+                if (unavailable) string(UNAVAILABLE_DESIGN_PROPERTY, "1")
+                if (on) string(WEAR_ON_PROPERTY, "1")
+              }
+            )
+          }
         }
       }
     val differing = buildList {
       for (input in inputs) for (style in ThemeStyle.entries) for (cardStyle in HaUberTheme.all) {
-        val colors = RemoteColorScheme(terrazzoWearColorScheme(style))
+        val colors = wearWidgetColors(style)
         val fromConverter = runBlocking {
           WearWidgetTemplate.capture(context) {
             SlotContent(registry, colors, input.card, input.snapshot, 0, true, cardStyle)
