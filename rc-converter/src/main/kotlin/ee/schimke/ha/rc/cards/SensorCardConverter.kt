@@ -6,12 +6,10 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaIconIdentity
@@ -27,8 +25,7 @@ import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaIconChip
 import ee.schimke.ha.rc.components.RemoteHaMeasurement
 import ee.schimke.ha.rc.components.RemoteHaSensorCard
-import ee.schimke.ha.rc.design.CardDesigns
-import ee.schimke.ha.rc.design.LocalCardInput
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.haReading
 import ee.schimke.ha.rc.icons.HaIconMap
@@ -50,7 +47,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * The range label is the history graph's [historyRangeLabel] over the same `hours_to_show` (24 by
  * default, as in Home Assistant): "Last 24 hours", "Last 7 days", "Last 2 weeks".
  */
-class SensorCardConverter : CardConverter {
+class SensorCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.SENSOR
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 120
@@ -90,19 +87,6 @@ class SensorCardConverter : CardConverter {
       emptyMap(),
       SeriesDesign.slotBindings(ids, snapshot),
     )
-  }
-
-  /**
-   * The sensor card drawn from its card design, `card-designs/ui-builder/designs/sensor.uid`
-   * ([CardDesigns]): which form shows at which size, on the dashboard, a launcher cell or a Wear
-   * container, is the design's; [SensorDesignParts] draw the forms.
-   */
-  @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val design = requireNotNull(CardDesigns.design(cardType)) { "no sensor.uid packaged" }
-    CompositionLocalProvider(LocalCardInput provides DesignTemplateInput(card, snapshot)) {
-      design.Render(modifier)
-    }
   }
 
   /**

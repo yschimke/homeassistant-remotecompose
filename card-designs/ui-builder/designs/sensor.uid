@@ -109,10 +109,6 @@
       "id": "wear-small",
       "componentId": "ha-cards/sensor-card-reading",
       "properties": {
-        "presentation": {
-          "type": "string",
-          "value": "compact"
-        },
         "inset": {
           "type": "string",
           "value": "m"
@@ -120,6 +116,10 @@
         "live": {
           "type": "bool",
           "value": false
+        },
+        "form": {
+          "type": "string",
+          "value": "compact"
         }
       },
       "modifiers": [
@@ -144,10 +144,6 @@
       "id": "wear-large",
       "componentId": "ha-cards/sensor-card-reading",
       "properties": {
-        "presentation": {
-          "type": "string",
-          "value": "standard"
-        },
         "inset": {
           "type": "string",
           "value": "m"
@@ -155,6 +151,10 @@
         "live": {
           "type": "bool",
           "value": false
+        },
+        "form": {
+          "type": "string",
+          "value": "standard"
         }
       },
       "modifiers": [
@@ -179,13 +179,13 @@
       "id": "reading-hero",
       "componentId": "ha-cards/sensor-card-reading",
       "properties": {
-        "presentation": {
-          "type": "string",
-          "value": "expanded"
-        },
         "inset": {
           "type": "string",
           "value": "none"
+        },
+        "form": {
+          "type": "string",
+          "value": "expanded"
         }
       },
       "modifiers": [
@@ -214,13 +214,13 @@
       "id": "reading-row-value",
       "componentId": "ha-cards/sensor-card-reading",
       "properties": {
-        "presentation": {
-          "type": "string",
-          "value": "cell"
-        },
         "inset": {
           "type": "string",
           "value": "l"
+        },
+        "form": {
+          "type": "string",
+          "value": "cell"
         }
       },
       "modifiers": [

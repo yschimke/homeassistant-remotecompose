@@ -2497,7 +2497,7 @@
       "nativeOnly": true,
       "insertContent": {
         "properties": {
-          "presentation": {
+          "form": {
             "type": "string",
             "value": "standard"
           },
@@ -2509,7 +2509,7 @@
       },
       "propertyCapabilities": [
         {
-          "name": "presentation",
+          "name": "form",
           "jsonType": "string",
           "required": false,
           "allowedValues": [

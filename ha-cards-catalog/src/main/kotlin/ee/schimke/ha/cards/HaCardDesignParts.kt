@@ -296,19 +296,19 @@ fun HaSensorCardHistoryHero(modifier: RemoteModifier = RemoteModifier) {
 }
 
 /**
- * `ha-cards/sensor-card-reading`: the reading in a [presentation] (`expanded`, `standard`,
- * `compact`, or `cell` for the launcher cell's width), inset by `m` or `l`; [live] `false` reads it
- * without the snapshot's history, as a Wear container does.
+ * `ha-cards/sensor-card-reading`: the reading in a [form] (`expanded`, `standard`, `compact`, or
+ * `cell` for the launcher cell's width), inset by `m` or `l`; [live] `false` reads it without the
+ * snapshot's history, as a Wear container does.
  */
 @Composable
 @RemoteComposable
 fun HaSensorCardReading(
   modifier: RemoteModifier = RemoteModifier,
-  presentation: String = "standard",
+  form: String = "standard",
   inset: String = "none",
   live: Boolean = true,
 ) {
-  SensorDesignParts.Reading(presentation, inset, live, modifier)
+  SensorDesignParts.Reading(form, inset, live, modifier)
 }
 
 /**

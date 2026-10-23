@@ -124,8 +124,20 @@ One card type at a time, each its own PR:
    `CardPreviewMatrix` sizes (`CardDesignParityTest` already compares template against
    converter; this compares design against template).
 3. **Switch.** The card type's library entries come from the exported design.
-4. **Delete** the converter's `Render` layout and its capture path. Its key, bindings and
-   actions stay.
+4. **Delete** the converter's `Render` layout and its capture path: the converter extends
+   `DesignedCardConverter`, whose final `Render` draws the packaged `.uid`. Its key, bindings and
+   actions stay, and so does whatever data its design's parts draw with.
+
+Three checks keep a migrated type migrated:
+- A branch that changes the converter's old layout code no longer compiles: `Render` is final.
+- `DesignedCardConvertersTest` (`:rc-converter`) holds the checked-in `.uid`s and the
+  `DesignedCardConverter`s to each other, one for one.
+- `CardLayoutPolicyTest` (`:ha-cards-catalog`) holds UI Builder's shelf to the designs: every
+  card-layout component has a policy record, and every slot, property and value a checked-in
+  design uses is declared there.
+
+A change to a migrated type's layout is a change to its `.uid` and the parts it arranges, proved
+by the parity tests.
 
 Card types whose look can't be expressed yet stay on their converter and are listed in
 `card-designs/converter-only.md` with the reason. Likely: markdown, map, picture-elements,

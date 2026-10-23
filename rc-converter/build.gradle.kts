@@ -45,6 +45,8 @@ val prepareRobolectricSdk by
 
 tasks.withType<Test>().configureEach {
   inputs.files(robolectricSdk)
+  // DesignedCardConvertersTest lists the checked-in card designs from disk.
+  inputs.dir(rootProject.file("card-designs/ui-builder/designs")).withPropertyName("cardDesigns")
   dependsOn(prepareRobolectricSdk)
   systemProperty("robolectric.offline", "true")
   systemProperty(

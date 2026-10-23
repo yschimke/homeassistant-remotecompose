@@ -80,13 +80,13 @@ object SensorDesignParts {
   }
 
   /**
-   * `ha-cards/sensor-card-reading`: the reading in a [presentation]: `expanded` (it grows with the
-   * cell), `standard`, `compact`, or `cell` (standard in a launcher cell three columns wide,
-   * compact in a narrower one). [inset] pads it horizontally by `m` or `l`, or `none`. [live]
-   * `false` reads it as a Wear container does, without the snapshot's history.
+   * `ha-cards/sensor-card-reading`: the reading in a [form]: `expanded` (it grows with the cell),
+   * `standard`, `compact`, or `cell` (standard in a launcher cell three columns wide, compact in a
+   * narrower one). [inset] pads it horizontally by `m` or `l`, or `none`. [live] `false` reads it
+   * as a Wear container does, without the snapshot's history.
    */
   @Composable
-  fun Reading(presentation: String, inset: String, live: Boolean, modifier: RemoteModifier) {
+  fun Reading(form: String, inset: String, live: Boolean, modifier: RemoteModifier) {
     val (card, snapshot) = input()
     val id = card.raw["entity"]?.jsonPrimitive?.content
     val entity = id?.let { snapshot.states[it] }
@@ -99,7 +99,7 @@ object SensorDesignParts {
         "l" -> modifier.padding(horizontal = HaSpace.L.rdp)
         else -> modifier
       }
-    RemoteHaMeasurement(reading, presentationOf(presentation), padded)
+    RemoteHaMeasurement(reading, presentationOf(form), padded)
   }
 
   @Composable
@@ -150,7 +150,7 @@ object SensorDesignParts {
       "ha-cards/sensor-card-reading" to
         { node, modifier ->
           Reading(
-            node.string("presentation", "standard"),
+            node.string("form", "standard"),
             node.string("inset", "none"),
             node.bool("live", true),
             modifier,
