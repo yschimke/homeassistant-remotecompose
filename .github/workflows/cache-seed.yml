@@ -4,9 +4,10 @@ name: Seed remote build cache
 # without this repository's GitHub Actions cache: agent sessions and fresh developer clones, which
 # read the remote with a read-only token.
 #
-# CI alone leaves it sparse. Its jobs restore Gradle's local build cache through setup-gradle, and
-# Gradle uploads an output only when the task actually ran, so a task the local cache satisfied is
-# never pushed. A push to main stores just what that commit changed. This job runs with the
+# CI pushes to main already read and write the remote directly (settings.gradle.kts turns the
+# local build cache off on GitHub Actions when a token is present), so every task they run is
+# either a remote hit or stored. This job is the backstop for what those pushes skip: lanes a path
+# filter left out, and a main that went quiet long enough for entries to age out. It runs with the
 # setup-gradle cache disabled, so every task either comes from the remote already or executes and
 # is stored there.
 #
