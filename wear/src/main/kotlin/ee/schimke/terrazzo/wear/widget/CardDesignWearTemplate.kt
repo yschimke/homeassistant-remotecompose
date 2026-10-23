@@ -63,6 +63,10 @@ internal object CardDesignWearTemplate {
 
     val heights =
       box.filling.flatMap { box.runOf(it) }.filter { operations[it] is RcHeightModifier }.toSet()
+    // The card's own padding, the innermost in the box's run, becomes the container's. A style that
+    // frames the card (LCARS, Catppuccin, Obsidian) adds a decorative inset before it, which stays:
+    // rewriting every padding applied the container's insets twice.
+    val cardPadding = box.run.lastOrNull { operations[it] is RcPaddingModifier }
     val rewritten = ArrayList<RcOperation>(operations.size + 12)
     operations.forEachIndexed { index, operation ->
       when {
@@ -71,7 +75,7 @@ internal object CardDesignWearTemplate {
           rewritten +=
             RcRoundedClipRectModifier(ref(cornerPx), ref(cornerPx), ref(cornerPx), ref(cornerPx))
         index in box.run && operation is RcBorderModifier -> Unit
-        index in box.run && operation is RcPaddingModifier ->
+        index == cardPadding ->
           rewritten +=
             RcPaddingModifier(
               ref(horizontalPx),
@@ -83,7 +87,7 @@ internal object CardDesignWearTemplate {
         else -> rewritten += operation
       }
       // The box's padding is the container's: added after its background when it has none.
-      if (index == box.background && box.run.none { operations[it] is RcPaddingModifier }) {
+      if (index == box.background && cardPadding == null) {
         rewritten +=
           RcPaddingModifier(ref(horizontalPx), ref(verticalPx), ref(horizontalPx), ref(verticalPx))
       }

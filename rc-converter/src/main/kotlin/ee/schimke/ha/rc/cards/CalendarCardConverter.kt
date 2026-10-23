@@ -2,7 +2,6 @@ package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.design.CardDesignSlots
@@ -22,6 +21,7 @@ import ee.schimke.ha.rc.components.HaCalendarEvent
 import ee.schimke.ha.rc.components.RemoteHaCalendar
 import ee.schimke.ha.rc.components.RemoteHaCalendarIdentity
 import ee.schimke.ha.rc.components.RemoteHaSummaryLine
+import ee.schimke.ha.rc.components.cardText
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -118,6 +118,7 @@ class CalendarCardConverter : CardConverter {
       buildMap {
         put("card.title", data.title)
         put("card.range", data.rangeLabel)
+        put("card.summary", calendarSummary(data))
         data.events.forEachIndexed { i, event ->
           put("card.row.$i.when", event.whenLabel)
           put("card.row.$i.summary", event.summary)
@@ -141,10 +142,9 @@ class CalendarCardConverter : CardConverter {
         BulkTiers(
           modifier,
           summary = {
-            val next = data.events.firstOrNull()
             RemoteHaSummaryLine(
-              data.title.rs,
-              (next?.let { "${it.whenLabel} · ${it.summary}" } ?: "No upcoming events").rs,
+              cardText("title", data.title),
+              cardText("summary", calendarSummary(data)),
             )
           },
           identity = { RemoteHaCalendarIdentity(data, RemoteModifier.fillMaxWidth()) },
@@ -153,6 +153,13 @@ class CalendarCardConverter : CardConverter {
     }
   }
 }
+
+/**
+ * The Wear Small summary line: the next event, or that there is none. A `card.summary` binding, so
+ * a design template shows the real card's line rather than the template's.
+ */
+private fun calendarSummary(data: HaCalendarData): String =
+  data.events.firstOrNull()?.let { "${it.whenLabel} · ${it.summary}" } ?: "No upcoming events"
 
 private fun entityIds(card: CardConfig): List<String> {
   val arr: JsonArray = card.raw["entities"]?.jsonArray ?: return emptyList()

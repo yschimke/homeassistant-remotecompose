@@ -178,10 +178,12 @@ private fun LcdTile(data: HaTileData, look: HaEntityLook, identity: @Composable 
       verticalAlignment = RemoteAlignment.CenterVertically,
     ) {
       identity()
+      // A size under the hero value: the segment face is tracked monospace, so "21.5 °C" at
+      // value size outran a tile half a phone (or one watch) wide.
       TileValue(
         data,
         look,
-        HaType.Value,
+        HaType.ValueSmall,
         modifier = RemoteModifier.weight(1f).padding(start = 10.rdp),
       )
     }
@@ -203,13 +205,19 @@ private fun BraunTile(data: HaTileData, look: HaEntityLook, identity: @Composabl
   RemoteRow(RemoteModifier.fillMaxWidth(), verticalAlignment = RemoteAlignment.CenterVertically) {
     identity()
     RemoteBox(
-      RemoteModifier.padding(start = 12.rdp, end = HaSpace.M.rdp)
+      RemoteModifier.padding(start = HaSpace.M.rdp, end = HaSpace.S.rdp)
         .size(7.rdp)
         .clip(RemoteRoundedCornerShape(4.rdp))
         .background(theme.linkText)
     )
     TileName(data, look, HaType.Label, FontWeight.Normal, modifier = RemoteModifier.weight(1f))
-    TileValue(data, look, HaType.Title, modifier = RemoteModifier.padding(start = HaSpace.M.rdp))
+    // The reading at body-large, a step under title, so a narrow tile keeps room for the name.
+    TileValue(
+      data,
+      look,
+      HaType.BodyLarge,
+      modifier = RemoteModifier.padding(start = HaSpace.S.rdp),
+    )
   }
 }
 

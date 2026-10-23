@@ -14,6 +14,7 @@ import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaPictureEntityData
 import ee.schimke.ha.rc.components.LiveValues
@@ -145,19 +146,24 @@ class PictureEntityCardConverter : CardConverter {
       // smallest cell so the state badge alone reads, and keeps the
       // full name+state scrim on wider cells. Single threshold —
       // alpha010 collapses nested ladders to tier 0 (#224).
+      // A Wear slot is gated on height, not width, and its strip shortens the name rather than
+      // dropping it: the narrowest (a Galaxy Large, 90 dp inside its padding) still names it.
       CardSizeMode.Fixed ->
-        RemoteSizeBreakpoint(
-          thresholdsDp = intArrayOf(PICTURE_IDENTITY_THRESHOLD_DP),
-          modifier = modifier,
-          axis = BreakpointAxis.Width,
-        ) { tier ->
-          val tierData = if (tier == 0) data.copy(showName = false) else data
-          RemoteHaPictureEntity(
-            tierData,
-            modifier = RemoteModifier.fillMaxSize(),
-            fillHeight = true,
-          )
-        }
+        if (LocalFixedCanvasAxis.current == BreakpointAxis.Height)
+          RemoteHaPictureEntity(data, modifier = modifier.fillMaxSize(), fillHeight = true)
+        else
+          RemoteSizeBreakpoint(
+            thresholdsDp = intArrayOf(PICTURE_IDENTITY_THRESHOLD_DP),
+            modifier = modifier,
+            axis = BreakpointAxis.Width,
+          ) { tier ->
+            val tierData = if (tier == 0) data.copy(showName = false) else data
+            RemoteHaPictureEntity(
+              tierData,
+              modifier = RemoteModifier.fillMaxSize(),
+              fillHeight = true,
+            )
+          }
     }
   }
 }

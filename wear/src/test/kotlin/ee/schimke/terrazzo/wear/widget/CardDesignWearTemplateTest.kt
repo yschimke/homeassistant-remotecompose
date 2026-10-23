@@ -20,6 +20,11 @@ import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WidgetInstanceId
 import androidx.wear.compose.remote.material3.RemoteColorScheme
+import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
+import ee.schimke.composeai.rcplayer.protocol.RcFloatExpression
+import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
+import ee.schimke.composeai.rcplayer.protocol.RcPaddingModifier
+import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -103,7 +108,8 @@ class CardDesignWearTemplateTest {
         ),
     )
 
-  private val cardStyles = listOf(HaUberTheme.Classic, HaUberTheme.byId("lcd"))
+  private val cardStyles =
+    listOf(HaUberTheme.Classic, HaUberTheme.byId("lcd"), HaUberTheme.byId("lcars"))
 
   private fun params(
     type: Int,
@@ -170,7 +176,7 @@ class CardDesignWearTemplateTest {
    * The rows above and below [image]'s icon — the lit bulb's amber, which nothing else in a tile
    * draws (the corners outside a round container are white) — as fractions of its height.
    */
-  private fun iconMargins(image: Bitmap): Pair<Float, Float> {
+  private fun iconMargins(image: Bitmap): Pair<Float, Float>? {
     fun amber(y: Int) =
       (0 until image.width).any { x ->
         val pixel = image.getPixel(x, y)
@@ -180,7 +186,8 @@ class CardDesignWearTemplateTest {
         r > 200 && g in 120..220 && b < 100
       }
     val rows = (0 until image.height).filter(::amber)
-    if (rows.isEmpty()) return 0f to 0f
+    // No icon at all is a failure, not centred content.
+    if (rows.isEmpty()) return null
     return rows.first().toFloat() / image.height to
       (image.height - 1 - rows.last()).toFloat() / image.height
   }
@@ -222,8 +229,11 @@ class CardDesignWearTemplateTest {
             cardStyle == HaUberTheme.Classic &&
             params.containerType == ContainerInfo.CONTAINER_TYPE_LARGE
         ) {
-          val (top, bottom) = iconMargins(reframed)
-          if (abs(top - bottom) > CENTRED_TOLERANCE) {
+          val margins = iconMargins(reframed)
+          if (margins == null) {
+            problems += "$tag: no icon drawn"
+          } else if (abs(margins.first - margins.second) > CENTRED_TOLERANCE) {
+            val (top, bottom) = margins
             problems +=
               "$tag: content not centred (top ${"%.2f".format(top)}, bottom ${"%.2f".format(bottom)})"
           }
@@ -238,6 +248,45 @@ class CardDesignWearTemplateTest {
       }
     }
     assertEquals(emptyList(), problems)
+  }
+
+  /**
+   * A style that frames its card (LCARS, Catppuccin, Obsidian) pads it twice: a decorative inset,
+   * then the card's own padding. Only the card's own becomes the container's, so the watch's insets
+   * apply once.
+   */
+  @Test
+  fun theContainerPaddingIsAppliedOnce() {
+    val tile = cards.getValue("tile")
+    for (id in listOf("classic", "lcars", "catppuccin", "obsidian")) {
+      val cardStyle = HaUberTheme.byId(id)
+      val key =
+        assertNotNull(
+          CardDesignTemplates.keyFor(tile, snapshot, style, dark = true, cardStyle = cardStyle),
+          "$id: no design key",
+        )
+      val template =
+        assertNotNull(
+          CardDesignWearTemplate.template(CardDesignTemplates.capture(context, key).bytes),
+          "$id: no card box to reframe",
+        )
+      val operations = RcDocumentCodec.decode(template, RcWireLimits()).operations
+      // The named horizontal padding, then the pixel expression the paddings read.
+      val named =
+        operations
+          .filterIsInstance<RcNamedVariable>()
+          .single { it.name.endsWith(WearWidgetTemplate.HORIZONTAL_PADDING) }
+          .id
+      val px =
+        operations
+          .filterIsInstance<RcFloatExpression>()
+          .single { it.expression.firstOrNull()?.referencedId == named }
+          .id
+      val containerPaddings = operations.count {
+        it is RcPaddingModifier && it.left.referencedId == px
+      }
+      assertEquals(1, containerPaddings, "$id: container paddings")
+    }
   }
 
   private companion object {

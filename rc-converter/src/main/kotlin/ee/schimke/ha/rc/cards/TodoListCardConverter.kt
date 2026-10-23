@@ -2,7 +2,6 @@ package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
@@ -23,6 +22,7 @@ import ee.schimke.ha.rc.components.MinTouchTargetDp
 import ee.schimke.ha.rc.components.RemoteHaSummaryLine
 import ee.schimke.ha.rc.components.RemoteHaTodoList
 import ee.schimke.ha.rc.components.RemoteHaTodoListIdentity
+import ee.schimke.ha.rc.components.cardText
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -118,6 +118,7 @@ class TodoListCardConverter : CardConverter {
     return CardSnapshotBindings(
       buildMap {
         put("card.title", data.title)
+        put("card.summary", todoSummary(data))
         data.activeItems.forEachIndexed { i, item -> put("card.active.$i.summary", item.summary) }
         data.completedItems.forEachIndexed { i, item -> put("card.done.$i.summary", item.summary) }
       },
@@ -164,14 +165,10 @@ class TodoListCardConverter : CardConverter {
         BulkTiers(
           modifier,
           summary = {
-            val next = data.activeItems.firstOrNull()
-            val line =
-              when {
-                next != null -> "${data.activeItems.size} left · ${next.summary}"
-                data.completedItems.isNotEmpty() -> "All done"
-                else -> "No items"
-              }
-            RemoteHaSummaryLine(data.title.rs, line.rs)
+            RemoteHaSummaryLine(
+              cardText("title", data.title),
+              cardText("summary", todoSummary(data)),
+            )
           },
           identity = { RemoteHaTodoListIdentity(data, RemoteModifier.fillMaxWidth()) },
           full = { RemoteHaTodoList(data, RemoteModifier.fillMaxWidth()) },
@@ -242,3 +239,17 @@ private const val TITLE_DP = 22
 private const val CAPTION_DP = 16
 private const val EMPTY_LABEL_DP = 18
 private const val GAP_DP = 8
+
+/**
+ * The Wear Small summary line: how many are left and the next, or that the list is done or empty. A
+ * `card.summary` binding, so a design template shows the real list's line rather than the
+ * template's.
+ */
+private fun todoSummary(data: HaTodoListData): String {
+  val next = data.activeItems.firstOrNull()
+  return when {
+    next != null -> "${data.activeItems.size} left · ${next.summary}"
+    data.completedItems.isNotEmpty() -> "All done"
+    else -> "No items"
+  }
+}

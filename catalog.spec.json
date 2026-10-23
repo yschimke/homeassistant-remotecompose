@@ -194,6 +194,12 @@
         { "componentId": "Card/Shutter-Dark", "preview": "Shutter_Dark", "caption": "Enhanced shutter card (dark)." },
         { "componentId": "Card/Garage-Light", "preview": "Garage_TwoEntities_Light", "caption": "Garage door card — cover + light (light)." },
         { "componentId": "Card/Garage-Dark", "preview": "Garage_TwoEntities_Dark", "caption": "Garage door card — cover + light (dark)." },
+        { "componentId": "Card/Garage-Opening-Light", "preview": "Garage_Opening_Light", "caption": "Garage door card — a door halfway up, opening (light)." },
+        { "componentId": "Card/Garage-Opening-Dark", "preview": "Garage_Opening_Dark", "caption": "Garage door card — opening (dark)." },
+        { "componentId": "Card/Garage-Closing-Light", "preview": "Garage_Closing_Light", "caption": "Garage door card — closing (light)." },
+        { "componentId": "Card/Garage-Closing-Dark", "preview": "Garage_Closing_Dark", "caption": "Garage door card — closing (dark)." },
+        { "componentId": "Card/Garage-Unavailable-Light", "preview": "Garage_Unavailable_Light", "caption": "Garage door card — the cover unavailable (light)." },
+        { "componentId": "Card/Garage-Unavailable-Dark", "preview": "Garage_Unavailable_Dark", "caption": "Garage door card — unavailable (dark)." },
         { "componentId": "Dashboard/Light", "preview": "Dashboard_Light", "caption": "A full mixed-card dashboard stack (light)." },
         { "componentId": "Dashboard/Dark", "preview": "Dashboard_Dark", "caption": "A full mixed-card dashboard stack (dark)." }
       ]

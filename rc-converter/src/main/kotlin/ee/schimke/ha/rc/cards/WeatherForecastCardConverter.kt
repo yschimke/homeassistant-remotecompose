@@ -27,6 +27,7 @@ import ee.schimke.ha.rc.components.RemoteHaWeatherForecast
 import ee.schimke.ha.rc.components.RemoteHaWeatherForecastWide
 import ee.schimke.ha.rc.formatValueWithUnit
 import ee.schimke.ha.rc.icons.HaIconMap
+import ee.schimke.ha.rc.weatherConditionLabel
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.addJsonObject
@@ -240,8 +241,10 @@ private fun weatherIcon(condition: String?): ImageVector = HaIconMap.weatherCond
 /** An attribute read-out's glyph, as HA's weather card draws it (`weatherAttrIcons`). */
 private fun weatherAttrIcon(name: String): ImageVector = HaIconMap.mdi(name) ?: HaIconMap.Fallback
 
-private fun formatCondition(state: String): String =
-  state.replace('-', ' ').replace('_', ' ').replaceFirstChar { it.uppercaseChar() }
+/** The condition as Home Assistant's frontend names it ([weatherConditionLabel]). */
+internal fun formatCondition(state: String): String =
+  weatherConditionLabel(state)
+    ?: state.replace('-', ' ').replace('_', ' ').replaceFirstChar { it.uppercaseChar() }
 
 /**
  * Best-effort short weekday label from an ISO-8601 datetime — we don't parse the zone, just take
