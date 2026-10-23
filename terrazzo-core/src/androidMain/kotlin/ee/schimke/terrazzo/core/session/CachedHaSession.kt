@@ -184,4 +184,13 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
   override suspend fun close() {
     delegate.close()
   }
+
+  companion object {
+    /**
+     * A session with no live connection behind it, only [cache]: what the UI draws until a live
+     * session replaces it. Every read is the cached copy; every live-only call fails.
+     */
+    fun cacheOnly(baseUrl: String, cache: OfflineCacheStorage): CachedHaSession =
+      CachedHaSession(OfflineOnlySession(baseUrl), cache)
+  }
 }

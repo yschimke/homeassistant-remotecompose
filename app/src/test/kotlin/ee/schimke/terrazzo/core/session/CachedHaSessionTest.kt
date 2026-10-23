@@ -102,6 +102,23 @@ class CachedHaSessionTest {
   }
 
   @Test
+  fun aCacheOnlySessionDrawsTheCachedHistory() = runTest {
+    val cache = storage()
+    val points =
+      mapOf(
+        "sensor.t" to
+          listOf(ee.schimke.ha.model.HistoryPoint(kotlin.time.Instant.fromEpochSeconds(0), "21"))
+      )
+    cache.putHistory(baseUrl, listOf("sensor.t"), 24, points)
+
+    // An offline cold start's session: its stub has no recorder, and must not answer "none".
+    assertEquals(
+      points,
+      CachedHaSession.cacheOnly(baseUrl, cache).fetchHistory(listOf("sensor.t"), 24),
+    )
+  }
+
+  @Test
   fun listDashboards_propagates_failure_when_cache_is_empty() = runTest {
     val cache = storage()
     val delegate = FakeSession(baseUrl = baseUrl, listProvider = { error("offline") })
