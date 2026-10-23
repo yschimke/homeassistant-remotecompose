@@ -7,7 +7,7 @@ The profiles are produced, and the apps measured, by two `com.android.test` modu
 | Module | Target | Journeys |
 | --- | --- | --- |
 | `:app-benchmark` | `:app` | Cold start into demo mode, then switch to the 3D Printing, Meshcore and GitHub boards and fling each (the default Security board fits on one screen); then the 3D Printing board again with every section open, dragged |
-| `:wear-benchmark` | `:wear` | Cold start onto the top-level list, open Settings and fling it, open the dashboard library |
+| `:wear-benchmark` | `:wear` | Cold start onto the top-level list, seeded with a demo phone's pins (`terrazzo.test.seed_pins=true`), fling the pinned cards, open the pinned section, open Settings and fling it, open the dashboard library |
 
 Each module has a `BaselineProfileGenerator`, a `StartupBenchmark` (`StartupTimingMetric`, cold)
 and a `ScrollBenchmark` (`FrameTimingMetric`, i.e. jank), the latter two run with no compilation
@@ -76,4 +76,5 @@ Macrobenchmark refuses emulators; pass
 on one anyway. Emulator numbers only catch large regressions; compare timings on a physical
 device. Results (JSON and Perfetto traces) land in
 `*-benchmark/build/outputs/connected_android_test_additional_output/`. Past device numbers are in
-[scroll-benchmark-results.md](scroll-benchmark-results.md).
+[scroll-benchmark-results.md](scroll-benchmark-results.md),
+[startup-results.md](startup-results.md) and [wear-results.md](wear-results.md).
