@@ -24,7 +24,7 @@ android {
   testOptions { unitTests.isIncludeAndroidResources = true }
 }
 
-// Robolectric's SDK jar, resolved by Gradle (offline at test time) ? same setup as `:rc-converter`.
+// Robolectric's SDK jar, resolved by Gradle (offline at test time) — same setup as `:rc-converter`.
 val robolectricSdk by configurations.creating {
   isCanBeConsumed = false
   isTransitive = false

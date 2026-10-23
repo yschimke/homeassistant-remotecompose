@@ -69,7 +69,7 @@ android {
     // `:wear-benchmark` drives (see `androidComponents` below), off for anything shipped.
     buildConfigField("boolean", "TEST_HOOKS", "false")
   }
-  // Same upload key as `:app` ? Wear ships inside the phone's Play listing
+  // Same upload key as `:app` — Wear ships inside the phone's Play listing
   // (`ee.schimke.harc`), so both must be signed by one key lineage.
   val releaseKeystorePath = System.getenv("HARC_KEYSTORE_PATH")
   signingConfigs {
@@ -109,7 +109,7 @@ android {
   }
 }
 
-// Robolectric's SDK jar, resolved by Gradle (offline at test time) ? same setup as
+// Robolectric's SDK jar, resolved by Gradle (offline at test time) — same setup as
 // `:rc-converter`. Used by the Wear widget design test, which captures real Glance Wear documents.
 val robolectricSdk by configurations.creating {
   isCanBeConsumed = false
@@ -209,17 +209,17 @@ dependencies {
   implementation(libs.wear.compose.foundation)
   implementation(libs.wear.tooling.preview)
 
-  // AndroidX Glance Wear ? runtime widget rendering. Pulls
+  // AndroidX Glance Wear — runtime widget rendering. Pulls
   // remote-creation-compose, lifecycle-service, etc. transitively.
   implementation(libs.glance.wear)
   implementation(libs.glance.wear.core)
 
   // Vendored AOSP preview utility for Glance Wear widgets needs
   // RemoteDocPreview from this artifact. Tracking removal via the
-  // TODOs on WearWidgetPreview.kt / WearWidgetParamsProvider.kt ? once
+  // TODOs on WearWidgetPreview.kt / WearWidgetParamsProvider.kt — once
   // androidx.glance.wear:wear-tooling-preview ships a non-empty
   // implementation, drop the vendored copies (and re-evaluate keeping
-  // this dep ? it only ships RemoteDocPreview today).
+  // this dep — it only ships RemoteDocPreview today).
   implementation(libs.remote.tooling.preview)
   // The AndroidX Compose player. WearWidgetPreviewSnapshot now plays through
   // the Compose Multiplatform `RcComposePlayer` (via rc-converter's
@@ -243,7 +243,7 @@ dependencies {
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.lifecycle.process)
 
-  // Firebase Crashlytics ? only when firebase is the selected crash reporter
+  // Firebase Crashlytics — only when firebase is the selected crash reporter
   // (see crashlyticsEnabled). No Analytics on the watch.
   if (crashlyticsEnabled) {
     implementation(platform(libs.firebase.bom))

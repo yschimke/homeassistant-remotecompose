@@ -23,7 +23,7 @@ import ee.schimke.ha.rc.icons.HaIconMap
  */
 val LocalCardRegistry =
   staticCompositionLocalOf<CardRegistry> {
-    error("No CardRegistry in scope ? wrap with ProvideCardRegistry { }.")
+    error("No CardRegistry in scope — wrap with ProvideCardRegistry { }.")
   }
 
 @Composable
@@ -32,7 +32,7 @@ fun ProvideCardRegistry(registry: CardRegistry, content: @Composable () -> Unit)
   // encoded document carries the settled value with no startup animation, so a screenshot capture
   // can't land mid-tween and drift the PNG between runs. Production's [SystemHaClock] leaves
   // `isFrozen == false`, so live host writebacks keep animating. Same contract the clock card uses
-  // for its static-label path ? see [LocalRemoteAnimationsEnabled].
+  // for its static-label path — see [LocalRemoteAnimationsEnabled].
   CompositionLocalProvider(
     LocalCardRegistry provides registry,
     LocalRemoteAnimationsEnabled provides !LocalHaClock.current.isFrozen,
@@ -109,7 +109,7 @@ internal fun unavailableFrameEntity(card: CardConfig): String? =
 
 /**
  * Host-side lookup of a card's preferred rendered height in dp. The dashboard does **not** call
- * this ? its slots size to the document's intrinsic content via `CachedCardPreview`'s player. The
+ * this — its slots size to the document's intrinsic content via `CachedCardPreview`'s player. The
  * hint is consumed by hosts that need a fixed pixel size up front: Glance widget bitmap captures
  * and the widget install preview. Unknown card types fall back to the unsupported-placeholder
  * converter's height; failing that, 160.
@@ -130,7 +130,7 @@ fun CardRegistry.cardWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWid
 }
 
 /**
- * Host-side lookup of a card's [CardConverter.dataSignature] ? the fingerprint of baked,
+ * Host-side lookup of a card's [CardConverter.dataSignature] — the fingerprint of baked,
  * non-bindable content used to invalidate the render cache key. Null when the card keeps up through
  * named bindings (the common case) or its type is unknown. The dashboard folds a non-null result
  * into the card's cache key and skips the live-binding push for that card.
@@ -140,7 +140,7 @@ fun CardRegistry.cardDataSignature(card: CardConfig, snapshot: HaSnapshot): Stri
 
 /**
  * The signature of a container's [children] (stack, grid): each child's [cardDataSignature], tagged
- * with its position, joined in order ? or null when every child keeps up through named bindings, so
+ * with its position, joined in order — or null when every child keeps up through named bindings, so
  * a container of binding cards stays on the binding path. One re-encode child makes the whole
  * container document re-encode, since its bytes bake that child.
  */
@@ -153,7 +153,7 @@ fun CardRegistry.childrenDataSignature(children: List<CardConfig>, snapshot: HaS
 
 /**
  * The state-following glyphs [card] draws ([HaIconMap.stateSignature] per entity: a sun's
- * `white-balance-sunny` / `weather-night`, an alarm panel's `shield-home` / `shield-off`, ?), or
+ * `white-balance-sunny` / `weather-night`, an alarm panel's `shield-home` / `shield-off`, …), or
  * null when none of its entities' glyphs follow their state. Unlike [cardDataSignature], values
  * still arrive as named bindings: a host folds this into the card's cache key only, so the document
  * re-encodes when a glyph changes and keeps taking binding pushes otherwise. On/off glyphs aren't
