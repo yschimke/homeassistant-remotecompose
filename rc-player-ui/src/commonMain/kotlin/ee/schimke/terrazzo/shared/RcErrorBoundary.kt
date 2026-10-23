@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -23,6 +24,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * The documents a player gave up on, keyed by [rcDocumentKey]. A document that throws while it
@@ -112,7 +115,18 @@ fun RcErrorBoundary(
   modifier: Modifier = Modifier,
   content: @Composable (fail: (Throwable) -> Unit) -> Unit,
 ) {
-  RcErrorBoundary(remember(bytes) { rcDocumentKey(bytes) }, modifier, content)
+  val key = remember(bytes) { rcDocumentKey(bytes) }
+  // In safe mode (the run after a crash) a document plays only once it has passed the player's
+  // runtime on a background thread; until then a placeholder holds its place.
+  if (RcSafeMode.active && !RcSafeMode.passed(key) && RcDisabledDocuments.reason(key) == null) {
+    LaunchedEffect(key) {
+      val error = withContext(Dispatchers.Default) { RcSafeMode.check(bytes) }
+      if (error != null) RcDisabledDocuments.disable(key, error) else RcSafeMode.pass(key)
+    }
+    RcCheckingPlaceholder(modifier)
+    return
+  }
+  RcErrorBoundary(key, modifier, content)
 }
 
 /** [RcErrorBoundary] for a document with no bytes of its own (built in-app), named by [key]. */
@@ -201,5 +215,26 @@ fun RcDisabledWarning(reason: String, modifier: Modifier = Modifier) {
   }
 }
 
+/** What a player shows in safe mode while its document is checked ([RcSafeMode]). */
+@Composable
+fun RcCheckingPlaceholder(modifier: Modifier = Modifier) {
+  Row(
+    modifier
+      .defaultMinSize(minHeight = 48.dp)
+      .fillMaxWidth()
+      .border(1.dp, CheckingColor, RoundedCornerShape(12.dp))
+      .padding(horizontal = 12.dp, vertical = 8.dp)
+      .semantics { contentDescription = "Checking card after a crash" },
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    BasicText(
+      "Checking card…",
+      style = TextStyle(color = CheckingColor, fontSize = 14.sp),
+      maxLines = 1,
+    )
+  }
+}
+
 private const val ATOM = "⚛️"
 private val WarningColor = Color(0xFFE0A100)
+private val CheckingColor = Color(0xFF8A8A8A)

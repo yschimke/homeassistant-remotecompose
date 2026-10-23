@@ -282,6 +282,8 @@ fun Screen_CardDisabled() = PhoneHost {
       DemoData.snapshot(DEMO_CLOCK_MS),
     )
     ee.schimke.terrazzo.shared.RcDisabledWarning("IllegalStateException: measure failed")
+    // Safe mode, after a crash: a card waiting for its background check.
+    ee.schimke.terrazzo.shared.RcCheckingPlaceholder()
   }
 }
 
