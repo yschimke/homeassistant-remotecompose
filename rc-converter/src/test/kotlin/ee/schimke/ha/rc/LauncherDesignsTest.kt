@@ -151,6 +151,28 @@ class LauncherDesignsTest {
     )
   }
 
+  /**
+   * Two launcher columns (`2×2`) are too narrow for the ARM buttons side by side, tall enough for
+   * them stacked: the widget keeps them rather than the Wide chip a `2×1` shows.
+   */
+  @Test
+  fun aTwoColumnAlarmPanelStacksItsArmButtons() {
+    val snapshot =
+      snapshotOf(entity("alarm_control_panel.house", "disarmed", "friendly_name" to "House"))
+    fun texts(widthDp: Int, heightDp: Int): Int {
+      val document =
+        bake(card("alarm-panel", "alarm_control_panel.house"), snapshot, widthDp, heightDp)
+      val operations = arrayListOf<Operation>()
+      RemoteComposeBuffer.fromInputStream(platformWidgetDocument(document.bytes).inputStream())
+        .inflateFromBuffer(operations)
+      return operations.count {
+        it is androidx.compose.remote.core.operations.layout.managers.TextLayout
+      }
+    }
+    val chip = texts(130, 100)
+    assertEquals(chip + 2, texts(130, 220), "the 2×2 adds ARM AWAY and ARM HOME to the chip's text")
+  }
+
   @Test
   fun oneCellListsBakeTheFirstEntityAndResizeRevealsMore() {
     val snapshot = snapshotOf(entity("light.kitchen", "on"), entity("sensor.hall", "23.5"))
