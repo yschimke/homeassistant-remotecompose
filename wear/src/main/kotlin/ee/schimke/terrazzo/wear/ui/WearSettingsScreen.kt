@@ -91,16 +91,8 @@ fun WearSettingsScreen(
     return
   }
   WearListScreen(modifier = modifier) {
-    item {
-      Button(
-        onClick = {
-          reporting = true
-          failed = false
-        }
-      ) {
-        Text("Report a bug")
-      }
-    }
+    // The screen's title first; reporting a bug is a secondary action, so it sits at the end.
+    item { ListHeader { Text("Settings") } }
     item { ListHeader { Text("Theme") } }
 
     item {
@@ -168,6 +160,18 @@ fun WearSettingsScreen(
       )
     }
 
+    item {
+      Button(
+        onClick = {
+          reporting = true
+          failed = false
+        },
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.filledTonalButtonColors(),
+      ) {
+        Text("Report a bug")
+      }
+    }
     item {
       Button(
         onClick = onBack,
