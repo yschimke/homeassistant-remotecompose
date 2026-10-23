@@ -9,6 +9,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import dev.zacsweers.metro.createGraphFactory
 import ee.schimke.ha.rc.CardDesignLibrary
+import ee.schimke.ha.rc.CardMemory
 import ee.schimke.ha.rc.FileLocalDesignStore
 import ee.schimke.ha.rc.ShippedDesignLibrary
 import ee.schimke.ha.rc.components.enableRemoteImageUrls
@@ -77,6 +78,8 @@ class TerrazzoApplication : Application() {
     // (off by default → BitmapData.read throws at parse time). The app
     // renders entity pictures / media thumbnails everywhere, so opt in.
     enableRemoteImageUrls()
+    // Hand the card caches back when the system trims memory; Coil trims its own.
+    CardMemory.install(this)
     if (graph.cardMonitor.isEnabled) {
       registerNotificationChannels()
     }

@@ -412,6 +412,15 @@ private val wearTemplates =
   java.util.concurrent.ConcurrentHashMap<WearTemplateKey, WearWidgetRawContent>()
 
 /**
+ * Forgets the captured widget templates under memory pressure (`CardMemory`): the next widget
+ * update captures them again.
+ */
+internal fun releaseWidgetTemplates() {
+  neutralTemplates.clear()
+  wearTemplates.clear()
+}
+
+/**
  * A widget's document: [card] under the Wear theme, Fixed size mode, without the card's own chrome,
  * in Glance Wear's container for the widget's params. With [template] it is captured as a design
  * template: names and titles bound, not baked.
