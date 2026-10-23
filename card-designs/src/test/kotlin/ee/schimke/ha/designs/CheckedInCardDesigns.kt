@@ -13,8 +13,8 @@ import java.io.File
 /**
  * The card designs checked in under `ui-builder/designs/`, one `<cardType>.uid` per migrated card
  * type (server-owned-card-designs.md, "Migrating a card type"). A migrated type's library entries
- * are captured from its design, so an edit to the `.uid` is what the library publishes; every
- * other type still comes from its converter.
+ * are captured from its design, so an edit to the `.uid` is what the library publishes; every other
+ * type still comes from its converter.
  */
 object CheckedInCardDesigns {
   /** The checked-in designs, relative to the module (Gradle's test working directory). */

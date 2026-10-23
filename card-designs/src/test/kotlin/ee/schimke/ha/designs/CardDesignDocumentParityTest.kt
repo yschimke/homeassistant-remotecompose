@@ -43,7 +43,8 @@ class CardDesignDocumentParityTest {
   @Test
   fun everyCheckedInDesignCanBeDrawnHere() {
     val problems =
-      CheckedInCardDesigns.DIRECTORY.listFiles { file -> file.extension == "uid" }!!.flatMap { file ->
+      CheckedInCardDesigns.DIRECTORY.listFiles { file -> file.extension == "uid" }!!.flatMap { file
+          ->
           CardDesignDocument.parse(file.readText()).validate().map { "${file.name}: $it" }
         }
     assertEquals(emptyList(), problems)

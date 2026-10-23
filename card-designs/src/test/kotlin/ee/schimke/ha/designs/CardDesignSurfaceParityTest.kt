@@ -1,7 +1,6 @@
 package ee.schimke.ha.designs
 
 import androidx.compose.runtime.CompositionLocalProvider
-import ee.schimke.ha.cards.CardDesignDocument
 import ee.schimke.ha.cards.LocalCardDesignInput
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardTypes
@@ -9,7 +8,6 @@ import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.LauncherLook
 import ee.schimke.ha.rc.components.HaUberTheme
-import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -35,7 +33,7 @@ class CardDesignSurfaceParityTest {
 
   @Test
   fun tileDesignIsTheLauncherTemplateForEveryCellAndTheme() {
-    val design = CardDesignDocument.parse(File("ui-builder/designs/tile.uid").readText())
+    val design = requireNotNull(CheckedInCardDesigns.designFor(CardTypes.TILE)) { "no tile.uid" }
     val keys = launcherKeys(CardTypes.TILE)
     assertTrue(keys.isNotEmpty(), "the library's tiles have launcher keys")
     println("tile.uid: ${keys.size} launcher tile keys")
