@@ -879,8 +879,8 @@
                 "shape": "has_target=1",
                 "theme": "baked:TerrazzoHome:light"
             },
-            "sha256": "a0f25fb310b374feca4d152295137813276518e186ee23576788a744b793fb51",
-            "bytes": 4536,
+            "sha256": "a8321dbf10725b94ab02085027b19c9e28170fe842273ec837d745ae20863082",
+            "bytes": 4605,
             "slots": 1,
             "designId": "library:thermostat",
             "title": "Built-in"
@@ -893,8 +893,8 @@
                 "shape": "has_target=1",
                 "theme": "baked:TerrazzoHome:dark"
             },
-            "sha256": "0a13d65ab4422d12a2630096374ada2dff7a4ff8afbc022606fd059f85dc8543",
-            "bytes": 4536,
+            "sha256": "3b16e7cc61d1dc2e61eded1387784ff12799313dce66ba968cf3fef40f20187d",
+            "bytes": 4605,
             "slots": 1,
             "designId": "library:thermostat",
             "title": "Built-in"
@@ -935,8 +935,8 @@
                 "shape": "has_target=1",
                 "theme": "baked:TerrazzoHome:light"
             },
-            "sha256": "a393713ab3aabc7de83a6a234af88ef788debe52e578386df7979f2328456e41",
-            "bytes": 4126,
+            "sha256": "b7135fcdaa310735d2152c7e578b0b1df829d08aaded7a6da6171ced525ee57a",
+            "bytes": 4195,
             "slots": 1,
             "designId": "library:humidifier",
             "title": "Built-in"
@@ -949,8 +949,8 @@
                 "shape": "has_target=1",
                 "theme": "baked:TerrazzoHome:dark"
             },
-            "sha256": "c6e65b158c653c8741fda98af48e4540b914e3af67a7236dbcf65e6ff6345c7f",
-            "bytes": 4126,
+            "sha256": "1db115442bedb670bba52f58a776d1741c0fd95cc0d9f9bca26574da0a1704ce",
+            "bytes": 4195,
             "slots": 1,
             "designId": "library:humidifier",
             "title": "Built-in"
@@ -1327,8 +1327,8 @@
                 "shape": "on=1",
                 "theme": "baked:TerrazzoHome:light"
             },
-            "sha256": "b2caad9072a77038c51ad04841d3c9afcf3895d6576c3d266415819540645cbf",
-            "bytes": 4666,
+            "sha256": "36f07498dfbed7a9bc786b229b168cadaf3b99c2386b0d5ff03915deb341d809",
+            "bytes": 4735,
             "slots": 1,
             "designId": "library:light",
             "title": "Built-in"
@@ -1341,8 +1341,8 @@
                 "shape": "on=1",
                 "theme": "baked:TerrazzoHome:dark"
             },
-            "sha256": "027a394e9987b15875cc253acab0c180610a55e9f604f95f24f6d196c1843b75",
-            "bytes": 4666,
+            "sha256": "403c4ffaabd8522c9facc1e03d79341b50efb158a2756189c9d9c5245a8a3305",
+            "bytes": 4735,
             "slots": 1,
             "designId": "library:light",
             "title": "Built-in"

@@ -794,41 +794,53 @@ private fun Steppers(
   decrementAction: HaAction,
   theme: RemoteHaTheme,
 ) {
+  // Each 48 dp target (Android's minimum) holds a 36 dp button: the 12 dp spacing keeps the
+  // buttons 24 dp apart, as they were drawn before their targets grew.
   RemoteRow(
-    modifier = RemoteModifier.fillMaxWidth().padding(top = 6.rdp),
-    horizontalArrangement = RemoteArrangement.spacedBy(24.rdp, RemoteAlignment.CenterHorizontally),
+    modifier = RemoteModifier.fillMaxWidth(),
+    horizontalArrangement = RemoteArrangement.spacedBy(12.rdp, RemoteAlignment.CenterHorizontally),
   ) {
-    StepperButton(Icons.Filled.Remove, decrementAction, accent, theme)
-    StepperButton(Icons.Filled.Add, incrementAction, accent, theme)
+    StepperButton(Icons.Filled.Remove, "Decrease", decrementAction, accent, theme)
+    StepperButton(Icons.Filled.Add, "Increase", incrementAction, accent, theme)
   }
 }
 
 @Composable
 private fun StepperButton(
   icon: androidx.compose.ui.graphics.vector.ImageVector,
+  label: String,
   action: HaAction,
   accent: RemoteColor,
   theme: RemoteHaTheme,
 ) {
   val click = action.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   RemoteBox(
-    modifier =
-      RemoteModifier.then(click)
-        .size(36.rdp)
-        .clip(haControlShape(18, round = true))
-        .border(1.rdp, theme.divider, haControlShape(18, round = true))
-        .then(consoleKeyChrome(accent))
-        .then(if (visualFamily() == HaVisualFamily.Ikea) ikeaKeyChrome(accent) else RemoteModifier),
+    modifier = RemoteModifier.then(click).size(StepperTargetDp.rdp),
     contentAlignment = RemoteAlignment.Center,
   ) {
-    RemoteIcon(
-      imageVector = icon.toRemoteImageVector(),
-      contentDescription = "stepper".rs,
-      modifier = RemoteModifier.size(20.rdp),
-      tint = accent,
-    )
+    RemoteBox(
+      modifier =
+        RemoteModifier.size(36.rdp)
+          .clip(haControlShape(18, round = true))
+          .border(1.rdp, theme.divider, haControlShape(18, round = true))
+          .then(consoleKeyChrome(accent))
+          .then(
+            if (visualFamily() == HaVisualFamily.Ikea) ikeaKeyChrome(accent) else RemoteModifier
+          ),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      RemoteIcon(
+        imageVector = icon.toRemoteImageVector(),
+        contentDescription = label.rs,
+        modifier = RemoteModifier.size(20.rdp),
+        tint = accent,
+      )
+    }
   }
 }
+
+/** A stepper's touch target: Android's 48 dp minimum, around its 36 dp button. */
+private const val StepperTargetDp = 48
 
 private fun Color.toArgb(): Int =
   android.graphics.Color.argb(
