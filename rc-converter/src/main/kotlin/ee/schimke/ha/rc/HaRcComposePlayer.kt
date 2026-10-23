@@ -132,7 +132,11 @@ fun HaRcComposePlayer(
   // apart: a new one is a new document to play, with its own state and its own image fetches.
   // A document that throws while it plays is disabled, and an atomic-symbol warning takes its place
   // (RcErrorBoundary); the rest of the dashboard carries on.
-  RcErrorBoundary(documentBytes, modifier) { fail ->
+  RcErrorBoundary(
+    documentBytes,
+    modifier,
+    namedValues = { namedValues.filter { (name, value) -> decoded.declared.accepts(name, value) } },
+  ) { fail ->
     key(decoded) {
       val clock = LocalHaClock.current
       // A frozen clock means a preview or test: decode inline, so the image is in place by the

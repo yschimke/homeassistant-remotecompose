@@ -68,6 +68,7 @@ dependencies {
   testImplementation(project(":ha-model"))
   testImplementation(project(":ha-client"))
   testImplementation(project(":rc-converter"))
+  testImplementation(project(":rc-player-ui"))
   testImplementation(project(":rc-components"))
   // Card designs authored in UI Builder (`ui-builder/designs/*.uid`), drawn by the catalog's own
   // components: CardDesignDocument.
