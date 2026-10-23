@@ -71,4 +71,13 @@ curl -fsS -X POST "${BASE}/api/onboarding/integration" \
   --data "{\"client_id\": \"${CLIENT_ID}\", \"redirect_uri\": \"${CLIENT_ID}\"}" \
   >/dev/null || echo "   (integration step skipped — HA still fully usable)"
 
+# The integration step adds met.no, whose weather entity would compete for weather.forecast_home
+# with the seeded template weather (config/configuration.yaml). The references need only the
+# seeded one, and met.no can't reach the network from the capture anyway.
+echo "==> removing the met.no entry onboarding added"
+for entry in $(curl -fsS "${BASE}/api/config/config_entries/entry" -H "$AUTH" \
+  | python3 -c 'import json,sys;[print(e["entry_id"]) for e in json.load(sys.stdin) if e["domain"] == "met"]'); do
+  curl -fsS -X DELETE "${BASE}/api/config/config_entries/entry/${entry}" -H "$AUTH" >/dev/null
+done
+
 echo "==> onboarding complete, token saved to integration/.env.local"

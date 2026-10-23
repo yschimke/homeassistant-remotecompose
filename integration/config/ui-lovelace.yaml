@@ -92,6 +92,32 @@ views:
   # mixed-content example. Keeps the same shape as the existing
   # `Dashboard_Light` preview so the side-by-side comparison stays
   # apples-to-apples.
+  - title: gauge
+    path: gauge
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: gauge                             # 0 — the gauge preview's card
+            entity: sensor.repeater_battery
+            name: Battery %
+            min: 0
+            max: 100
+            needle: true
+            severity: { green: 60, yellow: 30, red: 0 }
+
+  - title: weather
+    path: weather
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: weather-forecast                  # 0 — the weather-forecast preview's card
+            entity: weather.forecast_home
+            show_current: true
+            show_forecast: true
+            forecast_type: daily
+
   - title: dashboard
     path: dashboard
     type: sections

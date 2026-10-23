@@ -44,6 +44,10 @@ const MANIFEST = [
 
   { view: "markdown", cardIndex: 0, file: "markdown/notes" },
 
+  { view: "gauge", cardIndex: 0, file: "gauge/battery" },
+
+  { view: "weather", cardIndex: 0, file: "weather-forecast/forecast_home" },
+
   // Pixel-parity reference — one `vertical-stack` card.
   { view: "dashboard", cardIndex: 0, file: "dashboard/home" },
 
