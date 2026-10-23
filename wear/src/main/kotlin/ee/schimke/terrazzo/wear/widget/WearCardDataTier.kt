@@ -12,9 +12,8 @@ package ee.schimke.terrazzo.wear.widget
  * those, advertising the large slot service is just noise in the system widget picker.
  *
  * Drives the `@Preview` convention in [CardSlotWidgetPreviews][CardSlotWidgetPreviews_kt]:
- * small-only for [SmallOnly] types; small + large for [Both] types. (It used to hide the large
- * widget of a phone-assigned slot too; the watch now offers every card at both sizes, and the user
- * chooses.)
+ * small-only for [SmallOnly] types; small + large for [Both] types. The watch's widget picker
+ * follows it too: a Large widget doesn't offer [SmallOnly] cards ([forWidget]).
  *
  * Unknown / future card types default to [Both]: safer to advertise both and let the renderer's
  * ladder pick the right tier than to silently hide the large variant for a card that could fill it.

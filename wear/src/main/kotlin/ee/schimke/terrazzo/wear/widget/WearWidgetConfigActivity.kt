@@ -55,10 +55,12 @@ class WearWidgetConfigActivity : ComponentActivity() {
       return
     }
     val provider = intent?.providerComponent()
+    val large = provider?.className == CardLargeWidgetService::class.java.name
     val store = WearOfflineStore(applicationContext)
     val prefs = WearPrefs(applicationContext)
     val look = runBlocking { WearCardLook(prefs.themeStyle.first(), prefs.cardStyle.first()) }
-    var options by mutableStateOf(widgetCardOptions(store.readPinned(), store.readSections()))
+    var options by
+      mutableStateOf(widgetCardOptions(store.readPinned(), store.readSections()).forWidget(large))
     var values by mutableStateOf<Map<String, EntityValue>>(store.readValues()?.values.orEmpty())
     val chosenKey = WearWidgetCardStore(applicationContext).read(instanceId)?.cardKey
     // The watch app may not have been running to keep the phone's latest cards: read them from
@@ -69,7 +71,7 @@ class WearWidgetConfigActivity : ComponentActivity() {
           syncWidgetStateFromDataLayer(applicationContext, store)
         }
       }
-      options = widgetCardOptions(store.readPinned(), store.readSections())
+      options = widgetCardOptions(store.readPinned(), store.readSections()).forWidget(large)
       values = store.readValues()?.values.orEmpty()
     }
 

@@ -102,6 +102,14 @@ internal fun widgetCardOptions(
 }
 
 /**
+ * The [options] a widget of the given size offers. A Large widget leaves out the cards that only
+ * fill a Small one ([WearCardDataTier.SmallOnly]): at 200×112 dp they would draw their small tier
+ * in a lot of empty space, so they aren't presented as a Large choice at all.
+ */
+internal fun List<WidgetCardOption>.forWidget(large: Boolean): List<WidgetCardOption> =
+  if (large) filter { wearCardDataTier(it.card.type).supportsLarge } else this
+
+/**
  * A section card's option. Section cards have no key of their own, so it is the section's and the
  * card's config: the same card in the same section keeps its key across syncs.
  */
