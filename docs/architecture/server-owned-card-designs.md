@@ -47,7 +47,11 @@ Layout moves to designs; **data and behaviour stay in code**. Per card type, Kot
   so cards keep the [live-update contract](live-card-updates.md) and show current data on the
   first frame;
 - the **actions**: resolving a tap on a design to the card's own action (`designAction`,
-  `CardTemplatePlayback`).
+  `CardTemplatePlayback`);
+- the **invalidation**: `CardConverter.dataSignature`, the fingerprint of content a card bakes
+  rather than binds (tile extras, sensor history, forecasts, container children). A card type
+  migrates only once everything its signature covers is either a binding or part of its design
+  key; until then the signature keeps forcing a new document when that content changes.
 
 What goes is each converter's `Render` layout, and the runtime capture that turns it into a
 template. Moving values and actions into designs as well needs expression and action support in
@@ -103,8 +107,16 @@ Card types whose look can't be expressed yet stay on their converter and are lis
 `card-designs/converter-only.md` with the reason. Likely: markdown, map, picture-elements,
 the history and statistics graphs, and the Bambu Lab cards.
 
-Wear and launcher widgets follow the card: they already derive from the card's design
-(`WearWidgetDesigns`, `LauncherDesigns.bakeValues`), so they need no separate source.
+**Wear widgets** follow the card: the design server already roots a published design on the
+Wear containers (`WearWidgetDesigns`), so they need no separate source.
+
+**Launcher widgets don't yet.** `LauncherDesigns.capture` renders `LauncherWidgetContent`
+through the converter per size and widget theme, and `bakeValues` only writes values into that
+capture. Each migration therefore also needs a launcher export: the design server roots the same
+revision on the launcher widget root (`ha-cards-catalog`'s launcher root) for each size tier and
+widget theme, validated against the widget profile (level 7, `COLOR_THEME` only on API 37+), and
+publishes them as `launcher` designs keyed like today's (`variant = <w>x<h>`). The converter's
+launcher capture is deleted only when those exist.
 
 ## Forks
 
@@ -122,6 +134,10 @@ branched, which doesn't fit a design someone keeps and republishes.
 
 ## Switching a device's card
 
+- `DesignEntry` gains a stable **design id** (the design server's id for a published design, the
+  `.uid` file name for a library one), and `DesignRepository` keeps every entry's bytes by id
+  alongside today's resolution, which collapses competing entries per key by author and manifest
+  order. Without that, a stored id has nothing to resolve against.
 - `CardDesignOverrides` gains a **design id** per card (`byCard`, keyed by the card's config
   fingerprint), next to the existing style and variant.
 - `cardTemplateFor` checks that override first. Otherwise the order stays the same: the device
@@ -156,9 +172,9 @@ branched, which doesn't fit a design someone keeps and republishes.
 | --- | --- |
 | D1 | This plan; `card-designs/ui-builder/designs/` and the parity harness, with the tile migrated |
 | D2 | Design server serves library designs from `.uid` (admin-editable, public-readable), exports per family |
-| D3 | Scheduled import workflow and shipped assets; runtime capture removed for migrated types |
+| D3 | Scheduled import workflow and shipped assets; launcher export per size and widget theme; runtime capture removed for migrated types |
 | D4 | Forks copy the real source; fork lineage on the design server |
-| D5 | Per-card design override and the chooser in the card's style sheet |
+| D5 | Design id in the manifest and cache; per-card design override and the chooser in the card's style sheet |
 | D6+ | Remaining card types, one PR each; `converter-only.md` for the rest |
 
 ## Open questions
