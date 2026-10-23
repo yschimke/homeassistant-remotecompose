@@ -67,23 +67,30 @@ object Landing {
     append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">")
     append("<title>Terrazzo</title>")
     append(
-      "<meta name=\"description\" content=\"Native Home Assistant dashboards for Android, " +
-        "with widgets, Wear OS tiles and cards you can design yourself.\">"
+      "<meta name=\"description\" content=\"The Home Assistant app for Android: open it, " +
+        "sign in, and your dashboards are there, drawn natively. Nothing to install on your " +
+        "Home Assistant.\">"
     )
     append("<style>$CSS</style></head><body><main>")
 
     append("<section class=\"hero\"><div class=\"pitch\">")
-    append("<p class=\"eyebrow\">For Home Assistant</p>")
+    append("<p class=\"eyebrow\">Android app for Home Assistant</p>")
     append("<h1>Terrazzo</h1>")
     append(
       "<p class=\"lede\">Your Home Assistant dashboards, drawn natively on your phone. " +
-        "No web view, no setup: sign in and the dashboards you already have are there.</p>"
+        "Open the app, sign in, and the dashboards you already have are there. Nothing to " +
+        "install on your Home Assistant, no web view, no YAML.</p>"
     )
     append("<div class=\"actions\">")
-    append("<a class=\"button\" href=\"${esc(site.storeUrl)}\">Get the app</a>")
-    append("<a class=\"button quiet\" href=\"#designer\">Design your own cards</a>")
-    append("<a class=\"button quiet\" href=\"#home-assistant\">Install in Home Assistant</a>")
-    append("</div></div>")
+    append("<a class=\"button\" href=\"${esc(site.storeUrl)}\">Get the app on Google Play</a>")
+    append("<a class=\"button quiet\" href=\"/demo/\">See the demo</a>")
+    append("</div>")
+    append(
+      "<p class=\"aside\">Running a wall panel or a tablet? There is an " +
+        "<a href=\"#home-assistant\">optional Home Assistant integration</a> as well. " +
+        "The app does not need it.</p>"
+    )
+    append("</div>")
     append("<div class=\"phones\">")
     for (shot in SCREENSHOTS) {
       append(
@@ -91,14 +98,33 @@ object Landing {
           "width=\"822\" height=\"1462\">"
       )
     }
-    append("<a class=\"button quiet\" href=\"/studio/dashboard\">Edit a dashboard</a>")
+    append("</div></section>")
+
+    append("<section class=\"start\">")
+    append("<h2>Three steps, and you are done</h2>")
+    append("<ol class=\"steps\">")
+    append(
+      "<li><h3>Open</h3><p>Install from Google Play and open it. There is nothing to set up " +
+        "first, and nothing to add to Home Assistant.</p></li>"
+    )
+    append(
+      "<li><h3>Sign in</h3><p>Type your Home Assistant address and sign in the way you always " +
+        "do. The sign-in stays on your phone.</p></li>"
+    )
+    append(
+      "<li><h3>Enjoy</h3><p>Your dashboards are right there, live and tappable. Put the cards " +
+        "you use most on your home screen or your watch.</p></li>"
+    )
+    append("</ol>")
+    append("<div class=\"actions\">")
+    append("<a class=\"button\" href=\"${esc(site.storeUrl)}\">Get the app on Google Play</a>")
     append("</div></section>")
 
     append("<section class=\"features\">")
     feature(
       "The dashboards you have",
       "Terrazzo reads your Lovelace dashboards and draws each card natively, so they look " +
-        "like Home Assistant and feel like an app.",
+        "like Home Assistant and feel like an app. Nothing to install on your server.",
     )
     feature(
       "Live, and quick",
@@ -106,8 +132,8 @@ object Landing {
         "Home Assistant.",
     )
     feature(
-      "Beyond the app",
-      "Put a card on your home screen as a widget, or on your watch.",
+      "On your home screen and your watch",
+      "Put a card on your home screen as a widget, or on your Wear OS watch, from the app.",
     )
     feature(
       "Private",
@@ -115,8 +141,6 @@ object Landing {
         "stays on your phone.",
     )
     append("</section>")
-
-    homeAssistant()
 
     append("<section id=\"designer\" class=\"designer\">")
     append("<p class=\"eyebrow\">Card designer</p>")
@@ -143,7 +167,10 @@ object Landing {
     append(
       "<a class=\"button quiet\" href=\"${esc(site.catalogUrl)}\">Browse cards and components</a>"
     )
+    append("<a class=\"button quiet\" href=\"/studio/dashboard\">Edit a dashboard</a>")
     append("</div></section>")
+
+    homeAssistant()
 
     append("<footer>")
     append("<a href=\"$SOURCE_URL\">Source</a>")
@@ -172,20 +199,22 @@ object Landing {
   }
 
   /**
-   * How to install the Wasm dashboard in Home Assistant, in full: HACS first, then the manual ZIP.
-   * The long form, with updates and rollback, stays in `docs/HOME_ASSISTANT.md`.
+   * The optional extra, last on the page: the same renderer running inside Home Assistant, for wall
+   * panels and tablets. Nobody needs it to use the app, so it says so first and keeps its steps
+   * folded away. The long form, with updates and rollback, stays in `docs/HOME_ASSISTANT.md`.
    */
   private fun StringBuilder.homeAssistant() {
-    append("<section id=\"home-assistant\" class=\"designer\">")
-    append("<p class=\"eyebrow\">Home Assistant integration</p>")
-    append("<h2>Run the dashboard inside Home Assistant</h2>")
+    append("<section id=\"home-assistant\" class=\"secondary\">")
+    append("<p class=\"eyebrow\">Optional, for wall panels</p>")
+    append("<h2>You can also run it inside Home Assistant</h2>")
     append(
-      "<p class=\"lede\">Install Terrazzo in Home Assistant and your Lovelace dashboards open " +
-        "at <code>/terrazzo</code>, drawn by the same renderer as the app and behind Home " +
-        "Assistant's own sign-in. Made for wall panels and tablets. It is a custom " +
-        "integration, not an add-on, so it works on HA OS, Container and Core " +
-        "(Home Assistant $MIN_HA_VERSION or newer).</p>"
+      "<p class=\"lede\">The app needs none of this. If you also run a wall panel or a " +
+        "tablet, the same renderer can live inside Home Assistant: install Terrazzo there and " +
+        "your Lovelace dashboards open at <code>/terrazzo</code>, behind Home Assistant's own " +
+        "sign-in. It is a custom integration, not an add-on, so it works on HA OS, Container " +
+        "and Core (Home Assistant $MIN_HA_VERSION or newer).</p>"
     )
+    append("<details><summary>Install it in Home Assistant</summary>")
     append("<ol class=\"steps\">")
     append(
       "<li><h3>Add Terrazzo to HACS</h3><p>With <a href=\"https://www.hacs.xyz/docs/use/\">HACS</a> " +
@@ -229,11 +258,12 @@ object Landing {
         "refresh any wall-panel tabs. Setup also adds a <b>Remote Compose</b> card to the card " +
         "picker of your existing Lovelace dashboards.</p>"
     )
+    append("</details>")
     append("<div class=\"actions\">")
     append(
-      "<a class=\"button\" href=\"$SOURCE_URL/blob/main/docs/HOME_ASSISTANT.md\">Installation and updates</a>"
+      "<a class=\"button quiet\" href=\"$SOURCE_URL/blob/main/docs/HOME_ASSISTANT.md\">" +
+        "Installation and updates</a>"
     )
-    append("<a class=\"button quiet\" href=\"/demo/\">Try the demo first</a>")
     append("</div></section>")
   }
 
@@ -241,29 +271,43 @@ object Landing {
     append("<div><h3>${esc(title)}</h3><p>${esc(text)}</p></div>")
   }
 
+  /** Mobile first: one column by default, the wider layout only from 760px up. */
   private const val CSS =
     """
 :root{--bg:#f6f7f9;--fg:#1b1d21;--muted:#5f6670;--card:#fff;--line:#dfe2e7;--accent:#1f6feb;--on-accent:#fff;--tint:#e8effc}
 @media (prefers-color-scheme:dark){:root{--bg:#121417;--fg:#e8eaed;--muted:#9aa1ab;--card:#1c1f24;--line:#2c3138;--accent:#6ea8fe;--on-accent:#0b1b33;--tint:#1a2433}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-main{max-width:1080px;margin:0 auto;padding:32px 16px 48px}a{color:var(--accent)}
-h1{font-size:44px;line-height:1.1;margin:0 0 12px}h2{font-size:30px;line-height:1.2;margin:0 0 12px}h3{font-size:17px;margin:0 0 4px}
+main{max-width:1080px;margin:0 auto;padding:24px 16px 40px}a{color:var(--accent)}
+h1{font-size:36px;line-height:1.1;margin:0 0 12px}h2{font-size:26px;line-height:1.2;margin:0 0 12px}h3{font-size:17px;margin:0 0 4px}
 .eyebrow{margin:0 0 6px;color:var(--accent);font-weight:600;font-size:14px;letter-spacing:.04em;text-transform:uppercase}
 .lede{font-size:18px;color:var(--muted);max-width:36em;margin:0 0 20px}
-.hero{display:grid;grid-template-columns:1fr 400px;gap:40px;align-items:center;padding:16px 0 40px}
-.phones{display:grid;grid-template-columns:1fr 1fr;gap:16px}.phones img:last-child{margin-top:48px}
+.hero{display:grid;gap:28px;align-items:center;padding:8px 0 32px}
+.phones{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:360px}
 .phone{width:100%;height:auto;border-radius:24px;border:6px solid var(--fg);background:var(--card)}
 .actions{display:flex;flex-wrap:wrap;gap:12px}
-.button{display:inline-block;padding:11px 20px;border-radius:999px;background:var(--accent);color:var(--on-accent);font-weight:600;text-decoration:none}
+.button{display:inline-block;padding:13px 22px;border-radius:999px;background:var(--accent);color:var(--on-accent);font-weight:600;text-decoration:none}
 .button.quiet{background:none;color:var(--accent);border:1px solid var(--line)}
+.aside{margin:16px 0 0;color:var(--muted);font-size:15px;max-width:36em}
+.start{background:var(--tint);border-radius:24px;padding:20px}
+.start h2{margin-bottom:16px}
 .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;padding:32px 0;border-top:1px solid var(--line)}
 .features p{margin:0;color:var(--muted)}
-.designer{background:var(--tint);border-radius:24px;padding:32px;margin-top:8px}
+.designer{background:var(--tint);border-radius:24px;padding:20px;margin-top:8px}
+.secondary{border:1px solid var(--line);border-radius:24px;padding:20px;margin-top:32px}
+.secondary h2{font-size:22px}.secondary .lede{font-size:16px}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;align-items:start;margin:0 0 24px}
 .cards img{display:block;width:100%;height:auto;border-radius:12px;background:var(--card)}
-.steps{margin:0 0 20px;padding-left:22px;display:grid;gap:14px;max-width:44em}.steps li{min-width:0}.steps p{margin:0;color:var(--muted)}.designer p code{overflow-wrap:anywhere}
-details{margin:0 0 16px;max-width:44em}summary{cursor:pointer;font-weight:600}details p,.note{color:var(--muted);max-width:44em}
+.steps{margin:0 0 20px;padding-left:22px;display:grid;gap:14px;max-width:44em}.steps li{min-width:0}.steps p{margin:0;color:var(--muted)}
+code{overflow-wrap:anywhere}
+details{margin:0 0 16px;max-width:44em}summary{cursor:pointer;font-weight:600;padding:6px 0}
+details p,.note{color:var(--muted);max-width:44em}
 footer{display:flex;flex-wrap:wrap;gap:20px;padding:32px 0 0;font-size:14px}
-@media (max-width:760px){.hero{grid-template-columns:1fr}.phones{max-width:360px}h1{font-size:36px}.designer{padding:20px}}
+@media (min-width:760px){
+main{padding:32px 16px 48px}
+h1{font-size:44px}h2{font-size:30px}
+.hero{grid-template-columns:1fr 400px;gap:40px;padding:16px 0 40px}
+.phones img:last-child{margin-top:48px}
+.start,.designer,.secondary{padding:32px}
+}
 """
 }
