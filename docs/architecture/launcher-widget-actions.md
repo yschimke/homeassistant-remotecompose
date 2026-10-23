@@ -41,7 +41,7 @@ deliberate control, so the dashboard's read-only default doesn't apply. What a t
 | --- | --- |
 | `Toggle`, `CallService` | Calls Home Assistant. An on/off result shows at once and is put back if the call fails; a call that names no entity (a script, a scene) shows once a live session reports it. |
 | `AlarmIntent`, `AlarmPin`, `AlarmKey` | Paired per widget and entity by `WidgetAlarmPairing` into one `alarm_control_panel.alarm_<service>` call with the entered `code` (below). |
-| `MoreInfo`, `Navigate` | Open the app (an activity `PendingIntent`: a receiver can't start one from the background). |
+| `MoreInfo`, `Navigate` | Open the app on the entity's details or the dashboard path (`WidgetOpenRequests`, through an activity `PendingIntent`: a receiver can't start one from the background), as the card's own tap would. |
 | `Url` | Opens the URL. |
 
 Every write must be the action the app itself put on the widget's `PendingIntent`
