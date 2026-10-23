@@ -54,7 +54,16 @@ class LauncherGridSweepTest {
     HaSnapshot(
       states =
         mapOf(
-          entity("light.kitchen", "on", "friendly_name" to "Kitchen"),
+          entity("light.kitchen", "on", "friendly_name" to "Kitchen", "brightness" to "200"),
+          entity(
+            "climate.living_room",
+            "heat",
+            "friendly_name" to "Living Room",
+            "current_temperature" to "21.4",
+            "temperature" to "22",
+            "hvac_action" to "heating",
+          ),
+          entity("alarm_control_panel.house", "disarmed", "friendly_name" to "House"),
           entity(
             "sensor.living_temperature",
             "21.5",
@@ -106,6 +115,13 @@ class LauncherGridSweepTest {
           """{"type":"glance","title":"Glance","entities":["light.kitchen","sensor.living_temperature","switch.fan"]}"""
         ),
       "heading" to card("""{"type":"heading","heading":"Kitchen","heading_style":"title"}"""),
+      "statistic" to
+        card(
+          """{"type":"statistic","entity":"sensor.living_temperature","period":"day","stat_type":"mean"}"""
+        ),
+      "light" to card("""{"type":"light","entity":"light.kitchen"}"""),
+      "thermostat" to card("""{"type":"thermostat","entity":"climate.living_room"}"""),
+      "alarm-panel" to card("""{"type":"alarm-panel","entity":"alarm_control_panel.house"}"""),
     )
 
   /** Android's launcher grid: `n` columns × `m` rows. */

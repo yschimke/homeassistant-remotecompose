@@ -20,7 +20,11 @@ import androidx.compose.ui.text.style.TextOverflow
 /**
  * `statistic` card — single hero value (mean / min / max / sum) for one entity, with optional
  * period label + unit suffix. [compact] sets the name in caption type and the value a size down,
- * and leaves out the period: two lines that fit a Wear Small slot.
+ * and leaves out the period: two lines that fit a Wear Small slot. [tight] keeps every line at its
+ * size and trims the vertical padding and gaps instead (6 + 17 + 2 + 43 + 2 + 16 + 6 ≈ 84 dp), so
+ * the period still fits a one-row launcher widget rather than being cut off at its bottom. A
+ * launcher cell centres the card (parts draw no chrome there), so the trimmed padding does not show
+ * in a taller one.
  */
 @Composable
 @RemoteComposable
@@ -28,6 +32,7 @@ fun RemoteHaStatisticCard(
   data: HaStatisticCardData,
   modifier: RemoteModifier = RemoteModifier,
   compact: Boolean = false,
+  tight: Boolean = false,
 ) {
   val theme = haTheme()
   RemoteBox(
@@ -35,9 +40,28 @@ fun RemoteHaStatisticCard(
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 14.rdp, vertical = (if (compact) 4 else 12).rdp)
+        .padding(
+          horizontal = 14.rdp,
+          vertical =
+            (when {
+                compact -> 4
+                tight -> 6
+                else -> 12
+              })
+              .rdp,
+        )
   ) {
-    RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy((if (compact) 0 else 4).rdp)) {
+    RemoteColumn(
+      verticalArrangement =
+        RemoteArrangement.spacedBy(
+          (when {
+              compact -> 0
+              tight -> 2
+              else -> 4
+            })
+            .rdp
+        )
+    ) {
       RemoteText(
         text = entityName(data.entityId, data.name),
         color = theme.secondaryText,

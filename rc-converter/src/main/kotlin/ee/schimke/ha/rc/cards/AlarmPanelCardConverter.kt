@@ -5,8 +5,10 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -22,6 +24,8 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
+import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
@@ -31,6 +35,7 @@ import ee.schimke.ha.rc.components.HaAlarmPanelData
 import ee.schimke.ha.rc.components.HaAlarmStatus
 import ee.schimke.ha.rc.components.RemoteHaAlarmPanel
 import ee.schimke.ha.rc.components.RemoteHaAlarmPanelWide
+import ee.schimke.ha.rc.components.immediateSwap
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
@@ -192,11 +197,11 @@ class AlarmPanelCardConverter : CardConverter {
         codeLength = codeLength,
       )
 
-    // Single-gate Wide↔Full ladder, mirroring the arc-dial family
-    // (see RenderArcDial / #355): the shield + state hero (and its
-    // live state binding) is kept at every size; narrow cells drop
-    // the ARM buttons + keypad to the Wide chip, wide cells get the
-    // full keypad card.
+    // Wide↔Narrow↔Full ladder: the shield + state hero (and its live state binding) is kept at
+    // every size. A cell wide enough gets the full keypad card; a narrower one tall enough for the
+    // ARM buttons (a `3×3`, a `3×4`) keeps them, and the keypad where it also fits, rather than
+    // leaving the Wide chip floating in a tall cell; anything smaller (and both Wear containers)
+    // the Wide chip.
     when (LocalCardSizeMode.current) {
       CardSizeMode.Wrap -> RemoteHaAlarmPanel(data, modifier)
       CardSizeMode.Fixed ->
@@ -205,10 +210,73 @@ class AlarmPanelCardConverter : CardConverter {
           modifier = modifier.fillMaxSize(),
         ) { tier ->
           when (tier) {
-            0 -> RemoteHaAlarmPanelWide(data, RemoteModifier.fillMaxSize())
-            else -> RemoteHaAlarmPanel(data, RemoteModifier.fillMaxSize(), fillHeight = true)
+            0 ->
+              SwappingGate(AlarmNarrowMinWidthDp, AlarmKeypadMinHeightDp) { keypad ->
+                if (keypad && data.showKeypad)
+                  RemoteHaAlarmPanel(
+                    data,
+                    RemoteModifier.fillMaxSize(),
+                    fillHeight = true,
+                    narrow = true,
+                  )
+                else if (keypad) NarrowButtons(data)
+                else
+                  SwappingGate(AlarmNarrowMinWidthDp, AlarmButtonsMinHeightDp) { buttons ->
+                    if (buttons) NarrowButtons(data)
+                    else RemoteHaAlarmPanelWide(data, RemoteModifier.fillMaxSize())
+                  }
+              }
+            // As wide as the full card but too short for its keypad (a `4×1`, a `4×2`): the
+            // status and the ARM buttons, not a keypad cut off at the bottom. Decided only where
+            // the launcher captured its size: in a document that carries both, this second gate
+            // under the full card stops the AndroidX player drawing the widget at all.
+            else ->
+              if (!data.showKeypad || LocalWidgetCaptureSizeDp.current == null)
+                RemoteHaAlarmPanel(data, RemoteModifier.fillMaxSize(), fillHeight = true)
+              else
+                SwappingGate(AlarmFullMinDp, AlarmFullKeypadMinHeightDp) { keypad ->
+                  if (keypad)
+                    RemoteHaAlarmPanel(data, RemoteModifier.fillMaxSize(), fillHeight = true)
+                  else
+                    CenteredCell {
+                      RemoteHaAlarmPanel(
+                        data,
+                        RemoteModifier.fillMaxWidth(),
+                        showKeypad = false,
+                      )
+                    }
+                }
           }
         }
+    }
+  }
+
+  /** The narrow panel without its keypad, centred in the cell. */
+  @Composable
+  private fun NarrowButtons(data: HaAlarmPanelData) {
+    CenteredCell {
+      RemoteHaAlarmPanel(data, RemoteModifier.fillMaxWidth(), narrow = true, showKeypad = false)
+    }
+  }
+
+  /**
+   * A [RemoteMinSizeGate] for [minWidthDp] × [minHeightDp] whose branches swap at once. With the
+   * state layout's default 300 ms cross-fade the AndroidX player paints the other branch over the
+   * selected one (#309) or, nested, stops drawing the widget; the [RemoteSizeBreakpoint] branches
+   * swap the same way.
+   */
+  @Composable
+  private fun SwappingGate(
+    minWidthDp: Int,
+    minHeightDp: Int,
+    content: @Composable (Boolean) -> Unit,
+  ) {
+    RemoteMinSizeGate(
+      minWidthDp = minWidthDp,
+      minHeightDp = minHeightDp,
+      modifier = RemoteModifier.fillMaxSize(),
+    ) { roomy ->
+      RemoteBox(RemoteModifier.fillMaxSize().immediateSwap()) { content(roomy) }
     }
   }
 }
@@ -279,6 +347,25 @@ private fun codeLengthFor(card: CardConfig, entity: EntityState?, service: Strin
 // keypad card renders. Set above the 200 dp Wear width so both Wear
 // containers stay on the Wide chip.
 private const val AlarmFullMinDp = 250
+
+/**
+ * The narrow panel ([RemoteHaAlarmPanel] `narrow`): two ARM buttons side by side in tighter padding
+ * (~80 dp each, with a short label), inside the card's 14 dp sides. Narrower, and on both Wear
+ * containers, the Wide chip.
+ */
+private const val AlarmNarrowMinWidthDp = 160
+
+/** The status row (40) over a row of ARM buttons (~34), with the card's padding and gaps. */
+private const val AlarmButtonsMinHeightDp = 130
+
+/**
+ * The narrow panel with its keypad: 24 + 40 + 6 + 34 + 6 + a keypad of 6 + 4 × 44 dp keys ≈ 292,
+ * with some room for the rows to breathe.
+ */
+private const val AlarmKeypadMinHeightDp = 310
+
+/** The full card with its keypad: 24 + 40 + 10 + 34 + 10 + a keypad of 6 + 4 × 48 + 3 × 6 dp. */
+private const val AlarmFullKeypadMinHeightDp = 334
 
 private val AccentArmed = Color(0xFF43A047)
 private val AccentPending = Color(0xFFFFA000)

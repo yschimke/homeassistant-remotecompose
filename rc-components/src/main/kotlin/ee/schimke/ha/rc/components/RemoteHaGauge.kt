@@ -232,17 +232,23 @@ fun RemoteHaGaugeStacked(
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
-      // A narrow cell keeps the value whole and lets the name and range go (P2, P4 before P3).
-      if (narrow) return@RemoteColumn
+      // A narrow cell keeps the value whole at a smaller size, then the name a step below it
+      // (ellipsised: a gauge's arc is generic, so the name stays at 1×1), and lets the range go
+      // (card-information-hierarchy.md).
       RemoteText(
         text = entityName(data.entityId, data.name),
         color = theme.secondaryText,
-        fontSize = if (hero != null) HaType.Body else HaType.Label,
+        fontSize =
+          when {
+            narrow -> HaType.Caption
+            hero != null -> HaType.Body
+            else -> HaType.Label
+          },
         style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
-      if (data.unit != null) {
+      if (data.unit != null && !narrow) {
         RemoteText(
           text = cardText("range", gaugeRangeText(data.min, data.max, data.unit)),
           color = theme.secondaryText,

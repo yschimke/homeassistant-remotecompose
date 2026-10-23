@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.rc.cards
 
+import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -17,18 +18,24 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.HaIconIdentity
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalInCardContainer
+import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
+import ee.schimke.ha.rc.WidgetCaptureSizeDp
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaArcDialData
 import ee.schimke.ha.rc.components.HaModeChip
 import ee.schimke.ha.rc.components.RemoteHaArcDial
+import ee.schimke.ha.rc.components.RemoteHaArcDialFill
+import ee.schimke.ha.rc.components.RemoteHaArcDialNarrow
 import ee.schimke.ha.rc.components.RemoteHaArcDialWide
+import ee.schimke.ha.rc.components.immediateSwap
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -78,6 +85,8 @@ class ThermostatCardConverter : CardConverter {
       modifier,
       // In a stack or grid the container is the multi-entity card: its dials stay nameless.
       wearShowsName = !LocalInCardContainer.current,
+      // The dial domains carry no device class the icon rule reads.
+      oneColumnKeepsName = HaIconIdentity.chipKeepsName(card, entity = null),
       wearLargeKeepsMode = true,
     )
   }
@@ -185,6 +194,11 @@ internal fun RenderArcDial(
    * one has two lines, name and value): for a dial whose chip says more than its value and accent.
    */
   wearLargeKeepsMode: Boolean = false,
+  /**
+   * Name the entity under a one-column launcher widget's value: false for an evocative icon
+   * ([ee.schimke.ha.rc.HaIconIdentity]), whose dial reads as the entity on its own.
+   */
+  oneColumnKeepsName: Boolean = true,
 ) {
   when (LocalCardSizeMode.current) {
     CardSizeMode.Wrap -> RemoteHaArcDial(data, modifier)
@@ -205,20 +219,74 @@ internal fun RenderArcDial(
               showMode = !wearShowsName || (wearLargeKeepsMode && tier != 0),
             )
           }
-        BreakpointAxis.Width ->
+        BreakpointAxis.Width -> {
+          // The name stays at every launcher size but 1×1 (card-information-hierarchy.md); a dial
+          // inside a multi-entity container leaves naming to the container.
+          val named = !LocalInCardContainer.current
+          val capture = LocalWidgetCaptureSizeDp.current
           RemoteMinSizeGate(
             minWidthDp = ArcDialFullMinDp,
             minHeightDp = ArcDialFullMinHeightDp,
             modifier = modifier.fillMaxSize(),
           ) { roomy ->
-            if (roomy) RemoteHaArcDial(data, RemoteModifier.fillMaxSize())
-            else RemoteHaArcDialWide(data, RemoteModifier.fillMaxSize())
+            // Both gates swap at once: a state layout's default cross-fade leaves the AndroidX
+            // player painting the other branch over the selected one (#309).
+            RemoteBox(RemoteModifier.fillMaxSize().immediateSwap()) {
+              if (roomy) RemoteHaArcDial(data, RemoteModifier.fillMaxSize())
+              else
+                RemoteMinSizeGate(
+                  minWidthDp = ArcDialFillMinWidthDp,
+                  minHeightDp = ArcDialFillMinHeightDp,
+                  modifier = RemoteModifier.fillMaxSize(),
+                ) { fills ->
+                  RemoteBox(RemoteModifier.fillMaxSize().immediateSwap()) {
+                    if (fills)
+                      RemoteHaArcDialFill(
+                        data,
+                        RemoteModifier.fillMaxSize(),
+                        showName = named,
+                        compactCenter = capture != null && fillDialDp(capture) < ArcDialFillRoomyDp,
+                      )
+                    else if (capture != null && capture.widthDp < ArcDialFillMinWidthDp)
+                      RemoteHaArcDialNarrow(
+                        data,
+                        RemoteModifier.fillMaxSize(),
+                        showName = named && oneColumnKeepsName,
+                      )
+                    else
+                      RemoteHaArcDialWide(
+                        data,
+                        RemoteModifier.fillMaxSize(),
+                        // A one-column widget has no room beside the dial for the name; a wider row
+                        // gives the mode chip's line to it, as a Wear slot does.
+                        showName =
+                          named && (capture?.widthDp ?: Int.MAX_VALUE) >= ArcDialFillMinWidthDp,
+                      )
+                  }
+                }
+            }
           }
+        }
       }
   }
 }
 
 private const val ArcDialFullMinDp = 260
+
+/**
+ * The dial-filled tier ([RemoteHaArcDialFill]): two launcher columns (120 dp) and the name over a
+ * dial of at least ~110 dp, which holds the centre readout at value size. Smaller, the Wide row.
+ */
+private const val ArcDialFillMinWidthDp = 120
+private const val ArcDialFillMinHeightDp = 150
+
+/** A filled dial this size or more holds the full centre readout; smaller takes the short one. */
+private const val ArcDialFillRoomyDp = 120
+
+/** The filled dial's side in a [capture]d launcher widget: the cell less its padding and name. */
+private fun fillDialDp(capture: WidgetCaptureSizeDp): Int =
+  minOf(capture.widthDp - 24, capture.heightDp - 20 - 24)
+
 // Name, 180dp dial, 48dp stepper targets and chrome need the thermostat's natural height.
 private const val ArcDialFullMinHeightDp = 290
 

@@ -197,7 +197,8 @@ fun HaButtonWideHero(modifier: RemoteModifier = RemoteModifier) {
 /**
  * `ha-cards/button-cell`: which slot the button and its canvas call for: [wrap] on a dashboard; in
  * a fixed canvas [fill] when the card hides its icon, [row] or [hero] for a launcher cell with a
- * hero scale, [wear] in a Wear container, else [other].
+ * hero scale, [wear] in a Wear container, [stated] for a card showing its name and state, else
+ * [other].
  */
 @Composable
 @RemoteComposable
@@ -208,9 +209,10 @@ fun HaButtonCell(
   row: @Composable @RemoteComposable () -> Unit = {},
   hero: @Composable @RemoteComposable () -> Unit = {},
   wear: @Composable @RemoteComposable () -> Unit = {},
+  stated: @Composable @RemoteComposable () -> Unit = {},
   other: @Composable @RemoteComposable () -> Unit = {},
 ) {
-  RemoteBox(modifier) { ButtonDesignParts.Cell(wrap, fill, row, hero, wear, other) }
+  RemoteBox(modifier) { ButtonDesignParts.Cell(wrap, fill, row, hero, wear, stated, other) }
 }
 
 /**

@@ -69,6 +69,8 @@ import androidx.wear.compose.remote.material3.RemoteIcon
  * Which layout draws is structure, decided at capture from [HaBambuPrintStatusData.phase] (the card
  * re-encodes when it changes; a design template keys on it). Every text is a named binding, and the
  * ring's sweep is a named float in a design template.
+ *
+ * [RemoteHaBambuPrintStatusWear] is the Wear slot form, which neither layout fits.
  */
 @Composable
 @RemoteComposable
@@ -89,6 +91,78 @@ fun RemoteHaBambuPrintStatus(
       PrintingLayout(data, wide, theme)
     } else {
       StandbyLayout(data, wide, theme)
+    }
+  }
+}
+
+/**
+ * The print status in a Wear slot, the same parts set for its height
+ * (card-information-hierarchy.md): [large] false is the Small container (about 44 dp of content), a
+ * small ring beside the printer's name over the percentage (`P2S` over `34 %`), the stage and the
+ * job's lines dropped; [large] is the Large one, the printer's name over a bigger ring beside the
+ * percentage and the stage, with the job's lines (time left, layer, temperatures) dropped. Not
+ * printing, the state's glyph beside the printer over its state, and the temperatures under them in
+ * the Large container. Every text keeps its binding.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaBambuPrintStatusWear(
+  data: HaBambuPrintStatusData,
+  modifier: RemoteModifier = RemoteModifier,
+  large: Boolean = false,
+) {
+  val theme = haTheme()
+  RemoteBox(
+    modifier =
+      modifier
+        .fillMaxWidth()
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        .padding(horizontal = 12.rdp, vertical = (if (large) 8 else 3).rdp)
+  ) {
+    RemoteColumn(
+      modifier = RemoteModifier.fillMaxWidth(),
+      verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
+    ) {
+      val printing = data.phase == HaBambuPrintPhase.Printing
+      if (large && printing) PrinterName(data, theme, HaType.Caption)
+      RemoteRow(
+        modifier = RemoteModifier.fillMaxWidth(),
+        verticalAlignment = RemoteAlignment.CenterVertically,
+      ) {
+        if (printing)
+          ProgressRing(
+            data.progressEntityId,
+            data.progressFraction,
+            data.accent,
+            theme,
+            sizeDp = if (large) 52 else 36,
+            strokePx = if (large) 7f else 5f,
+          )
+        else PhaseGlyph(data, theme, sizeDp = if (large) 44 else 36)
+        RemoteColumn(
+          modifier = RemoteModifier.weight(1f).padding(start = 10.rdp),
+          verticalArrangement = RemoteArrangement.spacedBy(0.rdp),
+        ) {
+          if (printing) {
+            // Large: the printer's name sits above the row and the percentage leads it.
+            if (!large) PrinterName(data, theme, HaType.Label)
+            RemoteText(
+              text =
+                LiveValues.attribute(data.progressEntityId, "progress_label", data.progressLabel),
+              color = theme.primaryText,
+              fontSize = if (large) HaType.Value else HaType.Title,
+              fontWeight = haValueWeight(),
+              style = haTextStyle(),
+              maxLines = 1,
+            )
+            if (large) StageText(data, HaType.Label, theme.secondaryText)
+          } else {
+            PrinterName(data, theme, HaType.Label)
+            StageText(data, HaType.Title, theme.primaryText, haValueWeight())
+          }
+        }
+      }
+      if (large && !printing) TemperatureRow(data, theme)
     }
   }
 }
@@ -278,14 +352,17 @@ private fun TemperatureRow(data: HaBambuPrintStatusData, theme: RemoteHaTheme) {
  * failed or offline printer gets a tinted chip with its state's icon.
  */
 @Composable
-private fun PhaseGlyph(data: HaBambuPrintStatusData, theme: RemoteHaTheme) {
+private fun PhaseGlyph(data: HaBambuPrintStatusData, theme: RemoteHaTheme, sizeDp: Int = 44) {
   if (data.phase == HaBambuPrintPhase.Finished) {
-    RemoteBox(modifier = RemoteModifier.size(44.rdp), contentAlignment = RemoteAlignment.Center) {
-      ProgressRing(null, 1f, data.accent, theme, sizeDp = 44, strokePx = 6f)
+    RemoteBox(
+      modifier = RemoteModifier.size(sizeDp.rdp),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      ProgressRing(null, 1f, data.accent, theme, sizeDp = sizeDp, strokePx = 6f)
       RemoteIcon(
         imageVector = Icons.Filled.Check.toRemoteImageVector(),
         contentDescription = data.stage.rs,
-        modifier = RemoteModifier.size(22.rdp),
+        modifier = RemoteModifier.size((sizeDp / 2).rdp),
         tint = data.accent.rc,
       )
     }
@@ -305,15 +382,15 @@ private fun PhaseGlyph(data: HaBambuPrintStatusData, theme: RemoteHaTheme) {
     }
   RemoteBox(
     modifier =
-      RemoteModifier.size(44.rdp)
-        .clip(haControlShape(22, round = true))
+      RemoteModifier.size(sizeDp.rdp)
+        .clip(haControlShape(sizeDp / 2, round = true))
         .background(tint.copy(alpha = tint.alpha * 0.18f.rf)),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(
       imageVector = icon.toRemoteImageVector(),
       contentDescription = data.stage.rs,
-      modifier = RemoteModifier.size(24.rdp),
+      modifier = RemoteModifier.size((sizeDp * 6 / 11).rdp),
       tint = tint,
     )
   }
