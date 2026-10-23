@@ -28,9 +28,9 @@ val LocalCardDesignInput = staticCompositionLocalOf<DesignTemplateInput?> { null
  * `<entityId>.state`), so a card design that places it binds what the library's tile template does.
  *
  * The properties are the design key's (`TileCardConverter.DOMAIN` and its siblings): [domain],
- * [deviceClass], the entity's own `icon` attribute ([iconAttribute]), the card's configured `icon:` ([iconConfig]) and a sensor's [unit].
- * All unset, a captured design takes them from the key it is captured for ([LocalCardDesignInput]),
- * so one design covers every tile key.
+ * [deviceClass], the entity's own `icon` attribute ([iconAttribute]), the card's configured `icon:`
+ * ([iconConfig]) and a sensor's [unit]. All unset, a captured design takes them from the key it is
+ * captured for ([LocalCardDesignInput]), so one design covers every tile key.
  */
 @Composable
 @RemoteComposable
