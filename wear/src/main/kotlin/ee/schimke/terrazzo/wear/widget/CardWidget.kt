@@ -137,13 +137,15 @@ private suspend fun refreshCardValuesDirectly(
   store: WearOfflineStore,
   chosen: WearWidgetCard,
 ) {
-  val raw =
-    currentWidgetCard(chosen, store.readPinned(), store.readSections()).rawJson.takeIf {
-      it.isNotEmpty()
-    } ?: return
+  val pinned = store.readPinned()
+  val sections = store.readSections()
+  val raw = currentWidgetCard(chosen, pinned, sections).rawJson.takeIf { it.isNotEmpty() } ?: return
+  // A card the phone stopped showing keeps drawing from its kept copy, but the phone sends none of
+  // its values any more: their absence from fresh phone values is a reason to read them.
+  val retained = widgetCardOptions(pinned, sections).none { it.cardKey == chosen.cardKey }
   withTimeoutOrNull(DIRECT_VALUES_TIMEOUT_MS) {
     runCatching {
-      WearDirectAccess(app, offline = store).refresh(listOf(raw), store.readSettings())
+      WearDirectAccess(app, offline = store).refresh(listOf(raw), store.readSettings(), retained)
     }
       .onFailure { if (it is CancellationException) throw it }
   }
