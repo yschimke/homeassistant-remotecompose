@@ -1,4 +1,4 @@
-val wearVersionName = "0.1.60" // x-release-please-version
+val wearVersionName = "0.1.61" // x-release-please-version
 
 // Keep Wear version tied to release-please while reserving a unique code
 // lane for the shared package id (`ee.schimke.harc`): same base as `:app`
@@ -85,6 +85,11 @@ android {
   buildTypes {
     getByName("debug") { buildConfigField("boolean", "TEST_HOOKS", "true") }
     getByName("release") {
+      // Unshrunk, the APK carries ~83 MB of dex: on a Pixel Watch a cold start spent hundreds of
+      // milliseconds faulting it in (see docs/testing/wear-results.md).
+      isMinifyEnabled = true
+      isShrinkResources = true
+      proguardFiles(file("proguard-rules.pro"))
       if (releaseKeystorePath != null) {
         signingConfig = signingConfigs.getByName("release")
       }

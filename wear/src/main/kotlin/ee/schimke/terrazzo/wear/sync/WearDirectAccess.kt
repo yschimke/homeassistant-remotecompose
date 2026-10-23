@@ -94,9 +94,15 @@ class WearDirectAccess(
   /**
    * Reads the values of the entities the cards in [cardsRawJson] name from Home Assistant, when the
    * phone's are stale ([needsDirectValues]), and keeps them with what the phone sent; returns the
-   * values kept, or null when it read nothing.
+   * values kept, or null when it read nothing. [retained] says the phone no longer shows these
+   * cards (a widget kept one it unpinned), so it sends none of their values: a missing one is
+   * stale.
    */
-  suspend fun refresh(cardsRawJson: List<String>, settings: WearSettings?): LiveValues? {
+  suspend fun refresh(
+    cardsRawJson: List<String>,
+    settings: WearSettings?,
+    retained: Boolean = false,
+  ): LiveValues? {
     if (settings == null || settings.demoMode || settings.baseUrl.isEmpty()) {
       // Signed out or in demo mode: no token is kept, and nothing is read.
       requestIfMissing(settings)
@@ -104,7 +110,7 @@ class WearDirectAccess(
     }
     val stored = offline.readValues()
     val ids = watchEntityIds(cardsRawJson, stored?.values?.keys.orEmpty())
-    if (!needsDirectValues(stored, ids, now(), lastDirectAtMs)) return null
+    if (!needsDirectValues(stored, ids, now(), lastDirectAtMs, retained)) return null
     val access = store.read()?.takeIf { signedInTo(settings, it.baseUrl) }
     if (access == null) {
       requestIfMissing(settings)
@@ -186,18 +192,27 @@ class WearDirectAccess(
  *
  * An entity missing from fresh phone values isn't a reason: the phone sends every entity the cards
  * name that Home Assistant has, so one it lacks is one Home Assistant lacks too (or a token in a
- * card that only looks like an entity id).
+ * card that only looks like an entity id). Except for [retained] cards, which the phone no longer
+ * shows and so sends no values for: one of theirs missing is read, and theirs are read again once
+ * the last direct read is [WearDirectAccess.STALE_AFTER_MS] old.
  */
 internal fun needsDirectValues(
   stored: LiveValues?,
   ids: Set<String>,
   now: Long,
   lastDirectAtMs: Long?,
+  retained: Boolean = false,
 ): Boolean {
   if (ids.isEmpty()) return false
   if (lastDirectAtMs != null && now - lastDirectAtMs < WearDirectAccess.MIN_INTERVAL_MS)
     return false
-  return stored == null || now - stored.capturedAtMs >= WearDirectAccess.STALE_AFTER_MS
+  if (stored == null || now - stored.capturedAtMs >= WearDirectAccess.STALE_AFTER_MS) return true
+  if (!retained) return false
+  // The stream keeps advancing capturedAtMs and keeps a retained card's old keys, so its values are
+  // only as fresh as the last direct read.
+  return !stored.values.keys.containsAll(ids) ||
+    lastDirectAtMs == null ||
+    now - lastDirectAtMs >= WearDirectAccess.STALE_AFTER_MS
 }
 
 /**

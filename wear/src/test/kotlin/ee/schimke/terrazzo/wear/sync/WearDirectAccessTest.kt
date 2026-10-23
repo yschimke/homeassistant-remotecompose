@@ -232,6 +232,22 @@ class WearDirectAccessTest {
     assertTrue(needsDirectValues(null, ids, now, null))
     // Fresh phone values lacking an entity: Home Assistant lacks it too, or it only looks like one.
     assertFalse(needsDirectValues(fresh, ids + "sensor.b", now, null))
+    // Unless the card is one the phone stopped showing, so it sends none of its values.
+    assertTrue(needsDirectValues(fresh, ids + "sensor.b", now, null, retained = true))
+    assertFalse(
+      needsDirectValues(fresh, ids, now, now - WearDirectAccess.MIN_INTERVAL_MS, retained = true),
+      "all there, read recently",
+    )
+    // The stream keeps the snapshot fresh but never updates a retained card's values.
+    assertTrue(
+      needsDirectValues(fresh, ids, now, now - WearDirectAccess.STALE_AFTER_MS, retained = true),
+      "all there, but read long ago",
+    )
+    assertTrue(needsDirectValues(fresh, ids, now, null, retained = true), "never read directly")
+    assertFalse(
+      needsDirectValues(fresh, ids + "sensor.b", now, now - 1, retained = true),
+      "still at most once a minute",
+    )
     assertTrue(
       needsDirectValues(
         fresh.copy(capturedAtMs = now - WearDirectAccess.STALE_AFTER_MS),
