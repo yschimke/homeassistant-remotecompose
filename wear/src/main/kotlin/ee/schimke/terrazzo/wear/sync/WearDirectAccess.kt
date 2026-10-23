@@ -193,7 +193,8 @@ class WearDirectAccess(
  * An entity missing from fresh phone values isn't a reason: the phone sends every entity the cards
  * name that Home Assistant has, so one it lacks is one Home Assistant lacks too (or a token in a
  * card that only looks like an entity id). Except for [retained] cards, which the phone no longer
- * shows and so sends no values for: one of theirs missing is read.
+ * shows and so sends no values for: one of theirs missing is read, and theirs are read again once
+ * the last direct read is [WearDirectAccess.STALE_AFTER_MS] old.
  */
 internal fun needsDirectValues(
   stored: LiveValues?,
@@ -206,7 +207,12 @@ internal fun needsDirectValues(
   if (lastDirectAtMs != null && now - lastDirectAtMs < WearDirectAccess.MIN_INTERVAL_MS)
     return false
   if (stored == null || now - stored.capturedAtMs >= WearDirectAccess.STALE_AFTER_MS) return true
-  return retained && !stored.values.keys.containsAll(ids)
+  if (!retained) return false
+  // The stream keeps advancing capturedAtMs and keeps a retained card's old keys, so its values are
+  // only as fresh as the last direct read.
+  return !stored.values.keys.containsAll(ids) ||
+    lastDirectAtMs == null ||
+    now - lastDirectAtMs >= WearDirectAccess.STALE_AFTER_MS
 }
 
 /**
