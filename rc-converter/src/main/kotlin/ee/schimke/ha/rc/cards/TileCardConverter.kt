@@ -114,7 +114,7 @@ class TileCardConverter : DesignedCardConverter() {
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
     val features = features(card, snapshot)
     if (features.isEmpty()) return TileTwoLineMinHeightDp
-    return tileNaturalHeightDp(tileFeatureRows(features.size, TileContent.featuresPosition(card)))
+    return tileNaturalHeightDp(tileFeatureRows(features, TileContent.featuresPosition(card)).size)
   }
 
   /**
@@ -181,7 +181,7 @@ class TileCardConverter : DesignedCardConverter() {
       RemoteHaIconChip(data, modifier.fillMaxSize(), bindState = true, showName = chipKeepsName)
       return
     }
-    val rows = tileFeatureRows(data.features.size, data.featuresPosition)
+    val rows = tileFeatureRows(data.features, data.featuresPosition).size
     RemoteMinSizeGate(
       minWidthDp = FeaturesMinWidthDp,
       minHeightDp = tileNaturalHeightDp(rows),

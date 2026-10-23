@@ -60,12 +60,30 @@ fun tileNaturalHeightDp(featureRows: Int): Int =
 /**
  * Rows of features below the tile's name and state, after HA's `computeCardFeatureRows`: one per
  * feature at the bottom; with [HaTileFeaturePosition.Inline] the first feature sits beside the name
- * and the rest share rows two at a time.
+ * and the rest share rows two at a time. A stepper ([HaTileFeature.NumberButtons]) keeps a row to
+ * itself: at half a tile its two square buttons leave its value no room.
  */
-fun tileFeatureRows(featureCount: Int, position: HaTileFeaturePosition): Int =
+fun tileFeatureRows(
+  features: List<HaTileFeature>,
+  position: HaTileFeaturePosition,
+): List<List<HaTileFeature>> =
   when (position) {
-    HaTileFeaturePosition.Bottom -> featureCount
-    HaTileFeaturePosition.Inline -> ((featureCount - 1).coerceAtLeast(0) + 1) / 2
+    HaTileFeaturePosition.Bottom -> features.map { listOf(it) }
+    HaTileFeaturePosition.Inline ->
+      buildList {
+        var pair: HaTileFeature? = null
+        for (feature in features.drop(1)) {
+          when {
+            feature is HaTileFeature.NumberButtons -> add(listOf(feature))
+            pair == null -> pair = feature
+            else -> {
+              add(listOf(pair, feature))
+              pair = null
+            }
+          }
+        }
+        pair?.let { add(listOf(it)) }
+      }
   }
 
 /** Diameter of the badge disc over the tile icon's corner (HA `ha-tile-badge`, 16px). */
@@ -114,25 +132,20 @@ internal fun TileIconWithBadge(
 
 /**
  * The tile's features under its name and state. [inline] is the one beside the name (drawn by the
- * caller); this draws the rest, one per row at the bottom or two to a row when the first is inline.
+ * caller); this draws the rest in [tileFeatureRows]: one per row at the bottom, or two to a row (a
+ * stepper alone) when the first is inline.
  */
 @Composable
 @RemoteComposable
 internal fun TileFeaturesBelow(data: HaTileData, accent: RemoteColor) {
-  val below =
-    when (data.featuresPosition) {
-      HaTileFeaturePosition.Bottom -> data.features
-      HaTileFeaturePosition.Inline -> data.features.drop(1)
-    }
-  if (below.isEmpty()) return
-  val perRow = if (data.featuresPosition == HaTileFeaturePosition.Inline) 2 else 1
-  below.chunked(perRow).forEach { row ->
-    RemoteRow(
-      modifier = RemoteModifier.fillMaxWidth().padding(top = TileFeatureGapDp.rdp),
-      horizontalArrangement = RemoteArrangement.spacedBy(TileFeatureGapDp.rdp),
-    ) {
-      row.forEach { feature ->
-        RemoteBox(modifier = RemoteModifier.weight(1f)) {
+  tileFeatureRows(data.features, data.featuresPosition).forEach { row ->
+    // The gap is each but the last control's end padding, not `spacedBy`: the player shares a
+    // row's weights out of its full width, so a spaced row of weighted controls overflows by the
+    // gap.
+    RemoteRow(modifier = RemoteModifier.fillMaxWidth().padding(top = TileFeatureGapDp.rdp)) {
+      row.forEachIndexed { index, feature ->
+        val gap = if (index < row.lastIndex) TileFeatureGapDp else 0
+        RemoteBox(modifier = RemoteModifier.weight(1f).padding(end = gap.rdp)) {
           TileFeature(feature, accent, TileFeatureHeightDp, data.name)
         }
       }

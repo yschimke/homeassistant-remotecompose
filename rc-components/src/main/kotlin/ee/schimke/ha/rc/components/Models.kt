@@ -102,7 +102,9 @@ enum class HaTileFeaturePosition {
   /** Each feature on its own row under the icon, name and state (HA's default). */
   Bottom,
 
-  /** The first feature beside the name and state; any others below, two to a row. */
+  /**
+   * The first feature beside the name and state; any others below, two to a row (a stepper alone).
+   */
   Inline,
 }
 
