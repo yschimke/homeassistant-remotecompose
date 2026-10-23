@@ -26,6 +26,14 @@ template:
         state: "62"
         device_class: battery
 
+      # The humidifier preview's fixture (previews Fixtures.humidifier) reads 45 % against its
+      # 55 % target; the generic hygrostat below takes its current humidity from this sensor.
+      - name: "Bedroom humidity"
+        unique_id: bedroom_humidity
+        unit_of_measurement: "%"
+        state: "45"
+        device_class: humidity
+
       - name: "Phone battery"
         unique_id: phone_battery
         unit_of_measurement: "%"
@@ -130,6 +138,20 @@ climate:
     precision: 0.1
     initial_hvac_mode: heat
 
+# The humidifier preview's fixture (previews Fixtures.humidifier): humidifying to 55 % from 45 %,
+# within 20–80 %. Template entities can't be humidifiers either; a generic hygrostat over a proxy
+# switch is the humidifier counterpart of the thermostat above.
+generic_hygrostat:
+  - name: Bedroom
+    unique_id: bedroom_humidifier
+    humidifier: input_boolean.bedroom_humidifier_proxy
+    target_sensor: sensor.bedroom_humidity
+    device_class: humidifier
+    min_humidity: 20
+    max_humidity: 80
+    target_humidity: 55
+    initial_state: true
+
 # ——— input_booleans used as proxies by the `light:` + `switch:` platforms ———
 input_boolean:
   kitchen_light_proxy:
@@ -144,6 +166,11 @@ input_boolean:
   living_room_heater_proxy:
     name: Living room heater
     initial: on
+  # Off on purpose: the hygrostat reports `humidifying` only when it switches its humidifier on,
+  # and it does so at startup because 45 % is under the 55 % target.
+  bedroom_humidifier_proxy:
+    name: Bedroom humidifier
+    initial: off
 
 # ——— real light / switch entities ———
 # Current Home Assistant takes template lights and switches only under the `template:` key; the

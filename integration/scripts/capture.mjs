@@ -51,6 +51,9 @@ const MANIFEST = [
   { view: "light", cardIndex: 0, file: "light/kitchen" },
   { view: "thermostat", cardIndex: 0, file: "thermostat/living_room" },
   { view: "alarm-panel", cardIndex: 0, file: "alarm-panel/house" },
+  { view: "humidifier", cardIndex: 0, file: "humidifier/bedroom" },
+  { view: "entity-filter", cardIndex: 0, file: "entity-filter/on_now" },
+  { view: "todo-list", cardIndex: 0, file: "todo-list/shopping" },
 
   // Pixel-parity reference — one `vertical-stack` card.
   { view: "dashboard", cardIndex: 0, file: "dashboard/home" },
