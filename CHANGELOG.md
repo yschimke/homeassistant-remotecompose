@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.1.61](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.60...v0.1.61) (2026-10-23)
+
+
+### Features
+
+* **card-designs:** draw UI Builder card designs in-repo, starting with the tile ([#1106](https://github.com/yschimke/homeassistant-remotecompose/issues/1106)) ([a2d07ee](https://github.com/yschimke/homeassistant-remotecompose/commit/a2d07eec6cab06eaeba0553dc523634fe4bb0158))
+* **wear:** choose a Wear widget's card on the watch, not the phone ([#1113](https://github.com/yschimke/homeassistant-remotecompose/issues/1113)) ([1c6c31a](https://github.com/yschimke/homeassistant-remotecompose/commit/1c6c31af71366b1c5d55a634723e0b73a26511ad))
+* **wear:** draw the Wear app's cards in their widget's frame ([#1105](https://github.com/yschimke/homeassistant-remotecompose/issues/1105)) ([b70a81b](https://github.com/yschimke/homeassistant-remotecompose/commit/b70a81ba1f0b8513f514288be9ba91b515bc4347))
+
+
+### Bug Fixes
+
+* **deps:** update compose-multiplatform to v1.13.0-beta01 ([#1108](https://github.com/yschimke/homeassistant-remotecompose/issues/1108)) ([5c5420a](https://github.com/yschimke/homeassistant-remotecompose/commit/5c5420a7c4f1e2853ab49f540ae54f231d045d99))
+* **deps:** update dependency org.jetbrains.androidx.navigation3:navigation3-ui to v1.2.0 ([#1110](https://github.com/yschimke/homeassistant-remotecompose/issues/1110)) ([354db61](https://github.com/yschimke/homeassistant-remotecompose/commit/354db6159950d01eae5508f0ddcd25ddc8ece0f8))
+* **design-server:** don't clip card previews with rounded containers ([#1104](https://github.com/yschimke/homeassistant-remotecompose/issues/1104)) ([3eed586](https://github.com/yschimke/homeassistant-remotecompose/commit/3eed58626cfa4afe5e03df5519667ac5e7706ff5))
+* don't long-press a card during a slow drag ([#1096](https://github.com/yschimke/homeassistant-remotecompose/issues/1096)) ([a334776](https://github.com/yschimke/homeassistant-remotecompose/commit/a3347767c9e510d7f63f27e2370ab9cbd9cd0510))
+* **rc-converter:** drop RemoteSizeBreakpoint's transparent forcing text; capture the gauge at its preview width ([#1099](https://github.com/yschimke/homeassistant-remotecompose/issues/1099)) ([5f602c5](https://github.com/yschimke/homeassistant-remotecompose/commit/5f602c549d02736554a3bc2d513e832204ffc081))
+* **wear:** read a kept widget card's values when the phone stops sending them ([#1116](https://github.com/yschimke/homeassistant-remotecompose/issues/1116)) ([da81090](https://github.com/yschimke/homeassistant-remotecompose/commit/da810909dba820c5b60e3b59db7e81df6714257f))
+* **wear:** recapture a Wear app card's template when its toggle turns on or off ([#1109](https://github.com/yschimke/homeassistant-remotecompose/issues/1109)) ([8fe560f](https://github.com/yschimke/homeassistant-remotecompose/commit/8fe560f767ea4a550c57fb0eff8d9be2eeb1b038))
+
+
+### Performance Improvements
+
+* draw the dashboard, with its cards, as the first frame ([#1097](https://github.com/yschimke/homeassistant-remotecompose/issues/1097)) ([2f438f5](https://github.com/yschimke/homeassistant-remotecompose/commit/2f438f5bdda82daad50ebf8737e4119d2ccf1a37))
+* **wear:** first frame is the pinned list; benchmark real cards ([#1102](https://github.com/yschimke/homeassistant-remotecompose/issues/1102)) ([087eff8](https://github.com/yschimke/homeassistant-remotecompose/commit/087eff8aeb162aa14eab09030dc9906f51c9187c))
+* **wear:** minify the release build with R8 ([#1112](https://github.com/yschimke/homeassistant-remotecompose/issues/1112)) ([724b943](https://github.com/yschimke/homeassistant-remotecompose/commit/724b943ff876b848bdd1f8c0773e5a66468307f2))
+
 ## [0.1.60](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.59...v0.1.60) (2026-10-23)
 
 
