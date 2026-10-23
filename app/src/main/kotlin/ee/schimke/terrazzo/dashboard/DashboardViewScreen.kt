@@ -116,6 +116,7 @@ import ee.schimke.terrazzo.ui.LocalCardStyle
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.LocalThemeStyle
 import ee.schimke.terrazzo.ui.rememberLayoutConfig
+import ee.schimke.terrazzo.widget.WidgetOpenRequests
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -316,6 +317,16 @@ fun DashboardViewScreen(
       }
     }
     openInBrowser(context, resolveAgainstBase(session.baseUrl, path))
+  }
+  // A launcher widget's more-info or navigate tap, opened as the card's own tap would be.
+  val widgetOpen by WidgetOpenRequests.requests.collectAsState()
+  LaunchedEffect(widgetOpen) {
+    val target = widgetOpen ?: return@LaunchedEffect
+    when (target) {
+      is WidgetOpenRequests.Target.MoreInfo -> moreInfoEntity = target.entityId
+      is WidgetOpenRequests.Target.Navigate -> navigate(target.path)
+    }
+    WidgetOpenRequests.consume(target)
   }
   val actionDispatcher =
     rememberDashboardActionDispatcher(

@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo
 
+import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
@@ -32,6 +33,7 @@ import ee.schimke.terrazzo.ui.TerrazzoTheme
 import ee.schimke.terrazzo.ui.toThemeStyle
 import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.ui.updateSystemBars
+import ee.schimke.terrazzo.widget.WidgetOpenRequests
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.runBlocking
@@ -75,6 +77,8 @@ class MainActivity : ComponentActivity() {
     // file; the runBlocking cost is < 5 ms in practice — same
     // pattern as the test hatch above.
     val initialDashboard = runBlocking { graph.preferencesStore.lastViewedDashboardNow() }
+    // A launcher widget's more-info or navigate tap (a warm start arrives in onNewIntent).
+    WidgetOpenRequests.offer(intent)
 
     // The session lives in a ViewModel so rotation and other
     // configuration changes keep the live connection. `start` only
@@ -140,6 +144,11 @@ class MainActivity : ComponentActivity() {
         }
       }
     }
+  }
+
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    WidgetOpenRequests.offer(intent)
   }
 
   /**
