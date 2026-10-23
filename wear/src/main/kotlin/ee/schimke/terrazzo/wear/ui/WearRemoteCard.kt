@@ -124,7 +124,7 @@ internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValu
     ) {
       // No template (a card with no template shape): the widget's direct document, framed alike.
       WearAppFrame(frame, tint) {
-        SlotContent(registry, colors, card, snapshot, 0, template = false, cardStyle = style)
+        SlotContent(registry, colors, card, snapshot, template = false, cardStyle = style)
       }
     }
   }

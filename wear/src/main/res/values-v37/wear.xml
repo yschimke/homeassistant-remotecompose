@@ -4,10 +4,11 @@
       Capabilities this watch advertises on the Wearable Data Layer, declared statically as
       Google recommends so they hold whether or not the watch app is running.
 
-      `terrazzo_wear_widgets` is what the phone's WearCapabilityProbe looks up to show the
-      Wear widget slot UI. It lives in values-v37 because Glance Wear widgets only render from
-      API 37 (WearSlotsController.WEAR_WIDGETS_MIN_SDK): an older watch resolves
-      `values/wear.xml` instead, which leaves it out, so the phone keeps the slot UI hidden there.
+      `terrazzo_wear_widgets` says this watch shows Terrazzo's Glance Wear widgets. It lives in
+      values-v37 because they only render from API 37 (WearWidgetsController.WEAR_WIDGETS_MIN_SDK):
+      an older watch resolves `values/wear.xml` instead, which leaves it out. The phone no longer
+      sets up widgets (they are chosen on the watch); it reads this only to recognise watch builds
+      older than Horologist's install marker as having the app (WearAppInstallHelper).
 
       This array replaces `values/wear.xml`'s, so it repeats Horologist's
       `data_layer_app_helper_device_watch` installed marker.

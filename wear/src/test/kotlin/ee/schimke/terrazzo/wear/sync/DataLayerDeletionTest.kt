@@ -15,7 +15,6 @@ class DataLayerDeletionTest {
   fun eachMirroredPathIsRecognised() {
     assertEquals(ForgottenItem.Pinned, forgottenItemFor(WearSyncPaths.PINNED))
     assertEquals(ForgottenItem.Sections, forgottenItemFor(WearSyncPaths.SECTIONS))
-    assertEquals(ForgottenItem.Slots, forgottenItemFor(WearSyncPaths.SLOTS))
     assertEquals(ForgottenItem.Values, forgottenItemFor(WearSyncPaths.VALUES))
     assertEquals(ForgottenItem.Settings, forgottenItemFor(WearSyncPaths.SETTINGS))
     assertEquals(
@@ -33,6 +32,8 @@ class DataLayerDeletionTest {
   @Test
   fun unknownPathsAndBarePrefixesAreIgnored() {
     assertNull(forgottenItemFor("/somebody/else"))
+    // An older phone's widget slot assignments: the watch no longer mirrors them.
+    assertNull(forgottenItemFor(WearSyncPaths.SLOTS))
     assertNull(forgottenItemFor(WearSyncPaths.DASHBOARD_PREFIX))
     assertNull(forgottenItemFor(WearSyncPaths.PICTURE_PREFIX))
     assertNull(forgottenItemFor(WearSyncPaths.DESIGN_PREFIX))
@@ -51,6 +52,9 @@ class DataLayerDeletionTest {
   fun signOutForgetsValuesAndPicturesWithThePins() {
     // The listener service isn't woken for values or pictures, only for pins and the like.
     val forgotten = forgottenOnDeletion(listOf(WearSyncPaths.PINNED, WearSyncPaths.SLOTS))
+    assertTrue(signsOut(listOf(WearSyncPaths.SECTIONS)))
+    // An older phone deletes `/wear/slots` only with the pins: alone, it isn't a sign-out.
+    assertFalse(signsOut(listOf(WearSyncPaths.SLOTS)))
     assertTrue(WearSyncPaths.VALUES in forgotten)
     assertTrue(WearSyncPaths.PICTURE_PREFIX in forgotten)
     assertTrue(WearSyncPaths.SLOT_DESIGNS in forgotten)
@@ -58,9 +62,12 @@ class DataLayerDeletionTest {
   }
 
   @Test
-  fun aNewDesignIndexRedrawsTheWidgetsAndOtherChangesDoNot() {
+  fun newDesignsOrCardsRedrawTheWidgetsAndOtherChangesDoNot() {
     assertTrue(redrawsOnChange(listOf(WearSyncPaths.SLOT_DESIGNS)))
-    assertFalse(redrawsOnChange(listOf(WearSyncPaths.PINNED, WearSyncPaths.dashboardPath("x"))))
+    // A placed widget may show any pinned card or pinned section's card.
+    assertTrue(redrawsOnChange(listOf(WearSyncPaths.PINNED)))
+    assertTrue(redrawsOnChange(listOf(WearSyncPaths.SECTIONS)))
+    assertFalse(redrawsOnChange(listOf(WearSyncPaths.SLOTS, WearSyncPaths.dashboardPath("x"))))
   }
 
   @Test

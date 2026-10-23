@@ -6,7 +6,7 @@
 //   /wear/settings              — WearSettings (phone → wear; demo flag, baseUrl)
 //   /wear/pinned                — PinnedCardSet (phone → wear; user-pinned cards)
 //   /wear/sections              — PinnedSectionSet (phone → wear; user-pinned sections)
-//   /wear/slots                 — WearWidgetSlots (phone → wear; 5 widget slot assignments)
+//   /wear/slots                 — WearWidgetSlots (unused; kept for wire compatibility)
 //   /wear/values                — LiveValues (phone → wear; current entity values)
 //   /wear/dashboard/<urlPath>   — DashboardData (phone → wear; one entry per dashboard)
 //   /wear/lease   (MessageClient) — WearLease (wear → phone; foreground heartbeat)
@@ -87,8 +87,9 @@ message WearPicture {
 }
 
 // DataItem at `/wear/slot-designs`: the Wear widget design the phone chose for
-// each widget slot card, per container (`small` / `large`), by its blob's
-// sha256. A slot card or container without one draws the card's own design.
+// each pinned card, per container (`small` / `large`), by its blob's sha256.
+// A card or container without one draws the card's own design. (Older phones
+// sent designs for their widget slot cards only, hence the name.)
 message WearSlotDesigns {
     repeated WearSlotDesign designs = 1;
     int64 updated_at_ms = 2;
@@ -121,8 +122,8 @@ message EntityDelta {
 }
 
 // Pinned cards curated by the user on mobile. Surfaced as top-level
-// destinations on Wear's nav (alongside pinned sections), and the source
-// of truth for [WearWidgetSlots] assignments.
+// destinations on Wear's nav (alongside pinned sections), and what the
+// watch's widget picker offers (with the pinned sections' cards).
 message PinnedCardSet {
     repeated PinnedCard cards = 1;
     int64 updated_at_ms = 2;
@@ -132,7 +133,7 @@ message PinnedCard {
     string base_url = 1;
     CardSummary card = 2;
     // Stable identifier chosen at pin time. Survives re-pin / reorder
-    // and is the value referenced by [WidgetSlot.card_key]. Mobile is
+    // and is the key a watch widget remembers its card by. Mobile is
     // responsible for issuing keys (e.g. UUID or
     // baseUrl|dashboard|view|index).
     string card_key = 3;
@@ -168,7 +169,11 @@ message PinnedSection {
     int32 order_index = 8;
 }
 
-// 5 wear-widget slots assigned by the user on mobile. Each slot points
+// Unused: kept for wire compatibility with older builds. Phones no longer
+// write `/wear/slots` and watches ignore it; a watch widget's card is chosen
+// on the watch.
+//
+// Was: 5 wear-widget slots assigned by the user on mobile. Each slot points
 // at a [PinnedCard] by its [PinnedCard.card_key]; an empty card_key
 // means the slot is unconfigured and the corresponding wear-widget
 // provider should be disabled (so the system widget picker hides it).

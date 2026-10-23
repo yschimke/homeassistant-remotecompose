@@ -1,7 +1,7 @@
 # Adaptive Card Layouts
 
 > _Design philosophy for rendering Lovelace cards across the dashboard,
-> launcher widgets, and Wear slot widgets — preserving as much of the
+> launcher widgets, and Wear widgets — preserving as much of the
 > Home Assistant reference design as the canvas allows._
 
 ## The problem
@@ -33,7 +33,7 @@ A card is recorded in exactly one of two modes (`CardSizeMode`):
 
 - **`Fixed`** — the host fixes the canvas; the document adapts at
   playback by switching between recorded layout tiers. Used by the
-  launcher widget and the Wear slot widgets. Adaptation is encoded
+  launcher widget and the Wear widgets. Adaptation is encoded
   via `RemoteStateLayout` keyed off
   `RemoteFloatContext.componentWidth()` / `componentHeight()`, so the
   user resizing a widget swaps tiers without re-encoding the document.
@@ -471,22 +471,20 @@ else. Mapped onto the priority bands:
 - **P5** ✗ — no history, no forecast, no list payloads, no calendar
   events, no todo items.
 
-That's the only data a Wear slot widget sees today. Two consequences
+That's the only data a Wear widget sees today. Two consequences
 follow.
 
-**1. Cards whose identity needs P4 / P5 advertise the small container
-only on Wear.** Their P1 is bound to a payload the data layer can't
-carry, so at the large container they would render as their stripped
-tier with a lot of empty space. The set today is **`heading`,
-`markdown`, `clock`, `weather-forecast`, `logbook`, `history-graph`,
-`statistics-graph`, `todo-list`, `calendar`**. The list lives in
-[`WearCardDataTier`](../../wear/src/main/kotlin/ee/schimke/terrazzo/wear/widget/WearCardDataTier.kt);
-[`WearSlotsController`](../../wear/src/main/kotlin/ee/schimke/terrazzo/wear/sync/WearSlotsController.kt)
-gates the large slot service on this classifier so the system widget
-picker hides large for low-data cards regardless of the phone-side
-`SlotSizePref`. (If the user explicitly chose `LargeOnly`, the
-controller falls back to the small variant rather than hiding the slot
-entirely — they wanted _some_ surfacing.)
+**1. Cards whose identity needs P4 / P5 are small-container cards on
+Wear.** Their P1 is bound to a payload the data layer can't carry, so
+at the large container they would render as their stripped tier with a
+lot of empty space. The set today is **`heading`, `markdown`, `clock`,
+`weather-forecast`, `logbook`, `history-graph`, `statistics-graph`,
+`todo-list`, `calendar`**. The list lives in
+[`WearCardDataTier`](../../wear/src/main/kotlin/ee/schimke/terrazzo/wear/widget/WearCardDataTier.kt),
+which sets the preview convention below. It no longer hides a widget
+size: the phone assigns no widget slots, and the watch offers each
+synced card at both sizes, with the user choosing a widget's card on
+the watch.
 
 **2. Cards whose P5 is a list of additional _entities_ can fill the
 large container** by feeding more entities through the data-layer

@@ -16,7 +16,7 @@ preferences, remove real pins, clear logs, or update a watch.
 | Settings | [settings.uid](ui-builder/designs/settings.uid) | [SettingsScreen in TerrazzoApp](../app/src/main/kotlin/ee/schimke/terrazzo/TerrazzoApp.kt) |
 | Installed widgets | [widgets.uid](ui-builder/designs/widgets.uid) | [WidgetsScreen](../app/src/main/kotlin/ee/schimke/terrazzo/widget/WidgetsScreen.kt) |
 | Manage pinned | [pinned.uid](ui-builder/designs/pinned.uid) | [ManagePinnedScreen](../app/src/main/kotlin/ee/schimke/terrazzo/dashboard/ManagePinnedScreen.kt) |
-| Wear widget slots | [wear-widgets.uid](ui-builder/designs/wear-widgets.uid) | [WearWidgetsScreen](../app/src/main/kotlin/ee/schimke/terrazzo/wearsync/WearWidgetsScreen.kt) |
+| Wear widget slots | [wear-widgets.uid](ui-builder/designs/wear-widgets.uid) | Retired: the phone no longer assigns watch widgets; each widget's card is chosen on the watch ([WearWidgetsScreen](../wear/src/main/kotlin/ee/schimke/terrazzo/wear/ui/WearWidgetsScreen.kt)) |
 | Sync diagnostics | [sync-diagnostics.uid](ui-builder/designs/sync-diagnostics.uid) | [SyncDiagnosticsScreen](../app/src/main/kotlin/ee/schimke/terrazzo/wearsync/SyncDiagnosticsScreen.kt) |
 | Logs | [logs.uid](ui-builder/designs/logs.uid) | [LogsScreen](../app/src/main/kotlin/ee/schimke/terrazzo/logs/LogsScreen.kt) |
 | Card history | [card-history.uid](ui-builder/designs/card-history.uid) | [CardHistoryScreen](../app/src/main/kotlin/ee/schimke/terrazzo/dashboard/CardHistoryScreen.kt) |

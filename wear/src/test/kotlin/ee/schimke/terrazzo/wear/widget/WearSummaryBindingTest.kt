@@ -106,7 +106,6 @@ class WearSummaryBindingTest {
           colors,
           input.card,
           input.snapshot,
-          0,
           template = true,
           cardStyle = HaUberTheme.Classic,
         )

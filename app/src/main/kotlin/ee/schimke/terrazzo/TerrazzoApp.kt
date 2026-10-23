@@ -53,7 +53,6 @@ import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.shared.AppScreen
 import ee.schimke.terrazzo.shared.CardStudioScreen
 import ee.schimke.terrazzo.shared.TerrazzoNavigation
-import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
 import ee.schimke.terrazzo.wearsync.wearInstallPrompts
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
@@ -348,7 +347,6 @@ private fun AuthenticatedShell(
           onOpenSettings = { screen = AppScreen.Settings },
           onOpenWidgets = { screen = AppScreen.Widgets },
           onOpenPinned = { screen = AppScreen.Pinned },
-          onOpenWearWidgets = { screen = AppScreen.WearWidgets },
           onOpenLogs = { screen = AppScreen.Logs },
           onSignOut = onSignOut,
         )
@@ -376,7 +374,6 @@ private fun AuthenticatedShell(
       }
       AppScreen.Widgets -> WidgetsScreen(onBack = { screen = AppScreen.Dashboards })
       AppScreen.Pinned -> ManagePinnedScreen(onBack = { screen = AppScreen.Dashboards })
-      AppScreen.WearWidgets -> WearWidgetsScreen(onBack = { screen = AppScreen.Dashboards })
       AppScreen.SyncDiagnostics -> {
         val streaming by graph.wearSyncManager.streamActive.collectAsState()
         ee.schimke.terrazzo.wearsync.SyncDiagnosticsScreen(
@@ -455,7 +452,6 @@ private fun DashboardsRoot(
   onOpenSettings: () -> Unit,
   onOpenWidgets: () -> Unit,
   onOpenPinned: () -> Unit,
-  onOpenWearWidgets: () -> Unit,
   onOpenLogs: () -> Unit,
   onSignOut: () -> Unit,
 ) {
@@ -463,10 +459,6 @@ private fun DashboardsRoot(
   val scope = rememberCoroutineScope()
   val dashboards by rememberSelectedDashboardListState(session)
   val context = LocalContext.current
-  val app = remember(context) { context.applicationContext as TerrazzoApplication }
-  // One eager StateFlow (and capability listener) per screen, not one per recomposition.
-  val wearWidgetsFlow = remember(app, scope) { app.wearCapabilityProbe.stateFlow(scope) }
-  val wearWidgetsSupported by wearWidgetsFlow.collectAsState()
   val logsViewEnabled by graph.preferencesStore.logsViewEnabled.collectAsState(initial = false)
 
   var opened by rememberSaveable { mutableStateOf(initialDashboardToOpened(initialDashboard)) }
@@ -512,8 +504,8 @@ private fun DashboardsRoot(
   val sessionConnection by session.connectionStatus.collectAsState()
   val connectionStatus = sessionConnection.toUiConnectionStatus()
   val snackbars = remember { SnackbarHostState() }
-  // Offers the watch app on a connected watch without it, or a Wear widget once it's there.
-  val installOnWatch = wearInstallPrompts(snackbars, wearWidgetsSupported, onOpenWearWidgets)
+  // Offers the watch app on a connected watch without it.
+  val installOnWatch = wearInstallPrompts(snackbars)
   val lifecycleOwner = LocalLifecycleOwner.current
   val activity = LocalActivity.current
   val notifications by session.notifications.collectAsState()
@@ -680,7 +672,6 @@ private fun DashboardsRoot(
               onOpenSettings = onOpenSettings,
               onOpenWidgets = onOpenWidgets,
               onOpenPinned = onOpenPinned,
-              onOpenWearWidgets = if (wearWidgetsSupported) onOpenWearWidgets else null,
               onOpenLogs = if (logsViewEnabled) onOpenLogs else null,
               onSignOut = onSignOut,
               onOpenAgent = agentInOverflow,
