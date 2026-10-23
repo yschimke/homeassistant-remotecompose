@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import dev.zacsweers.metro.createGraphFactory
 import ee.schimke.ha.rc.CardDesignLibrary
 import ee.schimke.ha.rc.CardMemory
+import ee.schimke.ha.rc.CardRebuilds
 import ee.schimke.ha.rc.FileLocalDesignStore
 import ee.schimke.ha.rc.ShippedDesignLibrary
 import ee.schimke.ha.rc.components.enableRemoteImageUrls
@@ -95,6 +96,10 @@ class TerrazzoApplication : Application() {
       )
     }
     CardMemory.install(this)
+    // Cards that rebuilt their document on live data while on screen, to analytics each time the
+    // app
+    // leaves the foreground: the cost of values that didn't arrive as bindings.
+    reportCardRebuildsOnStop()
     if (graph.cardMonitor.isEnabled) {
       registerNotificationChannels()
     }
@@ -163,6 +168,42 @@ class TerrazzoApplication : Application() {
   }
 
   /**
+   * On each move to the background, sends the [CardRebuilds] since the last one as `card_rebuild`
+   * events, the [MAX_REBUILD_EVENTS] most frequent, each with how long the app was in the
+   * foreground so counts compare as rates. A card that rebuilds for a reason other than live data
+   * (the user's own config or theme change) is counted too, under that reason.
+   */
+  private fun reportCardRebuildsOnStop() {
+    ProcessLifecycleOwner.get()
+      .lifecycle
+      .addObserver(
+        object : androidx.lifecycle.DefaultLifecycleObserver {
+          private var startedAtMs = 0L
+
+          override fun onStart(owner: androidx.lifecycle.LifecycleOwner) {
+            startedAtMs = android.os.SystemClock.elapsedRealtime()
+          }
+
+          override fun onStop(owner: androidx.lifecycle.LifecycleOwner) {
+            val foregroundSeconds = (android.os.SystemClock.elapsedRealtime() - startedAtMs) / 1000
+            CardRebuilds.drain().take(MAX_REBUILD_EVENTS).forEach { count ->
+              crashReporter.logEvent(
+                "card_rebuild",
+                mapOf(
+                  "card_type" to count.cardType,
+                  "reason" to count.reason,
+                  "cost" to count.cost.name.lowercase(),
+                  "count" to count.count,
+                  "fg_seconds" to foregroundSeconds,
+                ),
+              )
+            }
+          }
+        }
+      )
+  }
+
+  /**
    * Route uncaught exceptions to the in-app [LogStore] (persisted synchronously so the trace
    * survives the imminent process kill) and, when configured, to Crashlytics — then chain to
    * whatever handler was already installed so the platform's default crash behaviour (dialog /
@@ -202,6 +243,11 @@ class TerrazzoApplication : Application() {
    * off the [LogStore] sink alone.
    */
   private val crashReporter: CrashReporter by lazy { CrashReporter.create() }
+
+  private companion object {
+    /** `card_rebuild` events per trip to the background: the most frequent buckets only. */
+    const val MAX_REBUILD_EVENTS = 10
+  }
 
   private fun registerNotificationChannels() {
     val nm = getSystemService(NotificationManager::class.java) ?: return

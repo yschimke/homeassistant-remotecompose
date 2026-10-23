@@ -81,6 +81,7 @@ import ee.schimke.ha.model.SectionsGridLayout
 import ee.schimke.ha.model.TemplateBindings
 import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.CardDesignTemplates
+import ee.schimke.ha.rc.CardRebuilds
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.HarcTraceSections
 import ee.schimke.ha.rc.LocalCardCaptureEpoch
@@ -1607,6 +1608,7 @@ private fun CardSlot(
       liveBindings = dataSignature == null,
       bitmapLoader = bitmapLoader,
       template = template,
+      rebuildReason = ::cardSlotRebuildReason,
     ) {
       ProvideCardRegistry(registry) {
         ProvideCardStyle(cardStyle, haTheme, dark) {
@@ -1649,7 +1651,26 @@ private fun LiveCameraDot(modifier: Modifier = Modifier) {
   )
 }
 
-private data class CardSlotCacheKey(
+/**
+ * Which part of a card slot's key moved, for `CardRebuilds`: the live-data parts by name (a
+ * re-encode signature, a state glyph, a conditional, a Jinja template), else the user's own change
+ * (config, theme, a demo tap's epoch).
+ */
+internal fun cardSlotRebuildReason(previous: Any, next: Any): String {
+  val a = previous as? CardSlotCacheKey ?: return CardRebuilds.REASON_KEY
+  val b = next as? CardSlotCacheKey ?: return CardRebuilds.REASON_KEY
+  return when {
+    a.dataSignature != b.dataSignature -> "data"
+    a.iconSignature != b.iconSignature -> "icon"
+    a.visibilitySignature != b.visibilitySignature -> "visibility"
+    a.templateValues != b.templateValues -> "template"
+    a.captureEpoch != b.captureEpoch -> "epoch"
+    a.card != b.card -> "config"
+    else -> "theme"
+  }
+}
+
+internal data class CardSlotCacheKey(
   val card: CardConfig,
   val style: ThemeStyle,
   val dark: Boolean,
