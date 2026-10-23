@@ -2782,6 +2782,40 @@
       "displayName": "Arc dial card (launcher)",
       "group": "Card layout",
       "nativeOnly": true
+    },
+    "ha-cards/bulk-card-full": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaBulkCardFull",
+      "displayName": "List card (full)",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "compactRows": {
+            "type": "bool",
+            "value": false
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "compactRows",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Keeps a to-do list to a title over two short rows (a Wear Large container)."
+        }
+      ]
+    },
+    "ha-cards/bulk-card-identity": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaBulkCardIdentity",
+      "displayName": "List card identity",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/bulk-card-summary": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaBulkCardSummary",
+      "displayName": "List card summary line",
+      "group": "Card layout",
+      "nativeOnly": true
     }
   },
   "$comment_templates": "Generated, not hand-written: :design-server's HaCardsTemplatesTest seeds each from a card schema (CardSchema.fromCard) with HaCardsSeed — the design server's UiBuilderSeed retargeted to this catalog — and fails when a committed template drifts. `-PhaCardsTemplates.update=true` rewrites them.",

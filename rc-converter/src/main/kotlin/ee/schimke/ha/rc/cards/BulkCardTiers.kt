@@ -1,10 +1,5 @@
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.runtime.Composable
-import ee.schimke.ha.rc.BreakpointAxis
-import ee.schimke.ha.rc.LocalFixedCanvasAxis
-import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.RemoteHaSummaryLine
 
 /**
@@ -28,38 +23,6 @@ internal const val BULK_IDENTITY_THRESHOLD_DP: Int = 180
  * [RemoteHaSummaryLine], not a title over a list.
  */
 internal const val WEAR_SMALL_MAX_HEIGHT_DP: Int = 80
-
-/**
- * A bulk card's Fixed-mode tiers, behind one gate (#224): on a Wear slot the gate is height, so the
- * Small container gets [summary] and the Large one [full] (Wear slots are all wide enough for the
- * full card); everywhere else it is width, [identity] below [BULK_IDENTITY_THRESHOLD_DP] and [full]
- * at or above it.
- */
-@Composable
-internal fun BulkTiers(
-  modifier: RemoteModifier,
-  summary: @Composable () -> Unit,
-  identity: @Composable () -> Unit,
-  full: @Composable () -> Unit,
-) {
-  if (LocalFixedCanvasAxis.current == BreakpointAxis.Height) {
-    RemoteSizeBreakpoint(
-      thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
-      modifier = modifier,
-      axis = BreakpointAxis.Height,
-    ) { tier ->
-      if (tier == 0) summary() else full()
-    }
-  } else {
-    RemoteSizeBreakpoint(
-      thresholdsDp = intArrayOf(BULK_IDENTITY_THRESHOLD_DP),
-      modifier = modifier,
-      axis = BreakpointAxis.Width,
-    ) { tier ->
-      if (tier == 0) identity() else full()
-    }
-  }
-}
 
 /**
  * The wide hero's icon and value on a Wear Large slot. One capture plays on every host, so they are

@@ -1,30 +1,19 @@
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.BreakpointAxis
-import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
-import ee.schimke.ha.rc.LocalCardSizeMode
-import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaTodoItem
 import ee.schimke.ha.rc.components.HaTodoListData
 import ee.schimke.ha.rc.components.MinTouchTargetDp
-import ee.schimke.ha.rc.components.RemoteHaSummaryLine
-import ee.schimke.ha.rc.components.RemoteHaTodoList
-import ee.schimke.ha.rc.components.RemoteHaTodoListIdentity
-import ee.schimke.ha.rc.components.cardText
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -39,8 +28,12 @@ import kotlinx.serialization.json.put
  * the item's summary as the lookup key, and the *flipped* status. Players without a service-call
  * channel will leave the row visually unchanged after a tap (no in-document optimistic flip yet —
  * would need a MutableRemoteString per item, follow-up).
+ *
+ * Its layout is its card design, `todo-list.uid` ([BulkDesignParts]): the full card on a dashboard;
+ * in a launcher cell its identity below 180 dp wide and the full card above; in a Wear slot its
+ * summary line in the Small container and the full card in the Large one.
  */
-class TodoListCardConverter : CardConverter {
+class TodoListCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.TODO_LIST
 
   // Baked, non-bindable content (see CardConverter.dataSignature):
@@ -154,41 +147,6 @@ class TodoListCardConverter : CardConverter {
       }
     return null
   }
-
-  @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val data = todoData(card, snapshot)
-
-    when (LocalCardSizeMode.current) {
-      CardSizeMode.Wrap -> RemoteHaTodoList(data, modifier = modifier)
-      // Narrow → "N left" identity counter; wider → the full
-      // active/completed list. Single width gate (#224).
-      CardSizeMode.Fixed ->
-        BulkTiers(
-          modifier,
-          summary = {
-            RemoteHaSummaryLine(
-              cardText("title", data.title),
-              cardText("summary", todoSummary(data)),
-            )
-          },
-          identity = { RemoteHaTodoListIdentity(data, RemoteModifier.fillMaxWidth()) },
-          full = {
-            // BulkTiers plays `full` on a Wear slot only in the Large container, whose ~88 dp of
-            // content holds the title over two short rows, not the sections of 48 dp rows.
-            if (LocalFixedCanvasAxis.current == BreakpointAxis.Height)
-              CenteredCell {
-                RemoteHaTodoList(
-                  data,
-                  RemoteModifier.fillMaxWidth(),
-                  compactRows = WEAR_LARGE_TODO_ROWS,
-                )
-              }
-            else RemoteHaTodoList(data, RemoteModifier.fillMaxWidth())
-          },
-        )
-    }
-  }
 }
 
 /**
@@ -221,7 +179,7 @@ private fun updateItemAction(
 }
 
 /** The list's data for [card] and [snapshot]: what it draws, and what a template binds. */
-private fun todoData(card: CardConfig, snapshot: HaSnapshot): HaTodoListData {
+internal fun todoData(card: CardConfig, snapshot: HaSnapshot): HaTodoListData {
   val entityId = card.raw["entity"]?.jsonPrimitive?.content
   val entity = entityId?.let { snapshot.states[it] }
   val title =
@@ -249,7 +207,7 @@ private fun todoData(card: CardConfig, snapshot: HaSnapshot): HaTodoListData {
 // title (20dp), the 12sp section caption (14dp) and the 13sp "No items" label (16dp), each with 2dp
 // to spare for a taller theme typeface, and the column's gap.
 /** The items a Wear Large slot lists under the title. */
-private const val WEAR_LARGE_TODO_ROWS = 2
+internal const val WEAR_LARGE_TODO_ROWS = 2
 
 private const val INSETS_DP = 24
 private const val TITLE_DP = 22
@@ -262,7 +220,7 @@ private const val GAP_DP = 8
  * `card.summary` binding, so a design template shows the real list's line rather than the
  * template's.
  */
-private fun todoSummary(data: HaTodoListData): String {
+internal fun todoSummary(data: HaTodoListData): String {
   val next = data.activeItems.firstOrNull()
   return when {
     next != null -> "${data.activeItems.size} left · ${next.summary}"
