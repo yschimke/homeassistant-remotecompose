@@ -8,6 +8,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import ee.schimke.ha.design.CardBindingRecipe
 import ee.schimke.ha.design.CardBindingRecipes
 import ee.schimke.ha.design.DesignProperties
@@ -23,7 +24,6 @@ import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaNamedColor
 import ee.schimke.ha.rc.HaStateColor
-import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteMinSizeGate
@@ -35,15 +35,15 @@ import ee.schimke.ha.rc.components.HaTileBadge
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaIconChip
-import ee.schimke.ha.rc.components.RemoteHaIconHero
 import ee.schimke.ha.rc.components.RemoteHaTile
 import ee.schimke.ha.rc.components.RemoteHaTileCompact
-import ee.schimke.ha.rc.components.RemoteHaWideHero
 import ee.schimke.ha.rc.components.TileTwoLineMinHeightDp
 import ee.schimke.ha.rc.components.haNeutralAccent
 import ee.schimke.ha.rc.components.tileFeatureRows
 import ee.schimke.ha.rc.components.tileNaturalHeightDp
 import ee.schimke.ha.rc.defaultTapActionFor
+import ee.schimke.ha.rc.design.CardDesigns
+import ee.schimke.ha.rc.design.LocalCardInput
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.icons.withIcons
@@ -168,72 +168,17 @@ class TileCardConverter : CardConverter {
   override fun designTemplate(properties: DesignProperties): DesignTemplateInput? =
     EntityDesign.singleTemplate(cardType, properties)
 
+  /**
+   * The tile drawn from its card design, `card-designs/ui-builder/designs/tile.uid`
+   * ([CardDesigns]): which form of the tile shows at which size, on the dashboard, a launcher cell
+   * or a Wear container, is the design's; [TileDesignParts] draw the forms.
+   */
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    when (LocalCardSizeMode.current) {
-      CardSizeMode.Wrap -> FullTile(card, snapshot, modifier)
-      CardSizeMode.Fixed ->
-        when (LocalFixedCanvasAxis.current) {
-          // A Wear slot: every container passes the width gate, and the small one is too short
-          // for the full name-over-state stack, so it takes the compact stack there.
-          BreakpointAxis.Height ->
-            RemoteSizeBreakpoint(
-              thresholdsDp = intArrayOf(TileTwoLineMinHeightDp),
-              axis = BreakpointAxis.Height,
-              modifier = modifier.fillMaxSize(),
-            ) { tier ->
-              when (tier) {
-                0 ->
-                  CenteredCell {
-                    RemoteHaTileCompact(tileData(card, snapshot), RemoteModifier.fillMaxWidth())
-                  }
-                // The Large slot: the icon big beside the name over a large state, not a
-                // phone tile's row of text in the middle of the slot. Wear tiers drop the
-                // features first.
-                else ->
-                  RemoteHaWideHero(
-                    tileData(card, snapshot).copy(features = emptyList()),
-                    WearHeroScale,
-                    RemoteModifier.fillMaxSize(),
-                    live = false,
-                  )
-              }
-            }
-          BreakpointAxis.Width -> {
-            val hero = captureHeroScale()
-            if (hero != null && features(card, snapshot).isEmpty())
-              RemoteHaIconHero(tileData(card, snapshot), hero, modifier.fillMaxSize())
-            else if (captureRowScale() != null && features(card, snapshot).isEmpty())
-              RemoteHaWideHero(
-                tileData(card, snapshot),
-                captureRowScale()!!,
-                modifier.fillMaxSize(),
-              )
-            else if (features(card, snapshot).isNotEmpty())
-              FeaturesGate(tileData(card, snapshot), modifier)
-            else
-              RemoteSizeBreakpoint(
-                thresholdsDp = intArrayOf(96),
-                modifier = modifier.fillMaxSize(),
-              ) { tier ->
-                when (tier) {
-                  0 ->
-                    RemoteHaIconChip(
-                      tileData(card, snapshot),
-                      RemoteModifier.fillMaxSize(),
-                      bindState = LocalWidgetCaptureSizeDp.current != null,
-                    )
-                  else -> CenteredCell { FullTile(card, snapshot, RemoteModifier.fillMaxWidth()) }
-                }
-              }
-          }
-        }
+    val design = requireNotNull(CardDesigns.design(cardType)) { "no tile.uid packaged" }
+    CompositionLocalProvider(LocalCardInput provides DesignTemplateInput(card, snapshot)) {
+      design.Render(modifier)
     }
-  }
-
-  @Composable
-  private fun FullTile(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    RemoteHaTile(tileData(card, snapshot), modifier = modifier)
   }
 
   /**
@@ -244,7 +189,7 @@ class TileCardConverter : CardConverter {
    * [RemoteHaTileCompact]).
    */
   @Composable
-  private fun FeaturesGate(data: HaTileData, modifier: RemoteModifier) {
+  internal fun FeaturesGate(data: HaTileData, modifier: RemoteModifier) {
     // Features do not make a one-cell widget wide enough for the name/state row.
     // This capture contains only the chip, so its on/off binding cannot collide with a sibling.
     if (LocalWidgetCaptureSizeDp.current?.widthDp?.let { it < 96 } == true) {
@@ -264,7 +209,7 @@ class TileCardConverter : CardConverter {
 
   private fun entityIdOf(card: CardConfig): String? = card.raw["entity"]?.jsonPrimitive?.content
 
-  private fun features(card: CardConfig, snapshot: HaSnapshot) =
+  internal fun features(card: CardConfig, snapshot: HaSnapshot) =
     TileContent.features(
       card,
       entityIdOf(card)?.let { snapshot.states[it] },
@@ -272,7 +217,7 @@ class TileCardConverter : CardConverter {
     )
 
   @Composable
-  private fun tileData(card: CardConfig, snapshot: HaSnapshot): HaTileData {
+  internal fun tileData(card: CardConfig, snapshot: HaSnapshot): HaTileData {
     val entityId = entityIdOf(card)
     val entity = entityId?.let { snapshot.states[it] }
     val name =

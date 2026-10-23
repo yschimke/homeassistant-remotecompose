@@ -1,8 +1,6 @@
 package ee.schimke.terrazzo.wear.widget
 
-import androidx.compose.runtime.CompositionLocalProvider
 import ee.schimke.ha.cards.CardDesignDocument
-import ee.schimke.ha.cards.LocalCardDesignInput
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.rc.UNAVAILABLE_DESIGN_PROPERTY
 import ee.schimke.ha.rc.cards.TileCardConverter
@@ -70,7 +68,7 @@ class WearCardDesignParityTest {
         val fromDesign = runBlocking {
           WearWidgetTemplate.capture(context) {
             SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle) {
-              CompositionLocalProvider(LocalCardDesignInput provides input) { design.Render(it) }
+              design.RenderCard(input.card, input.snapshot, it)
             }
           }
         }
