@@ -2,23 +2,19 @@ package ee.schimke.ha.rc.cards
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lightbulb
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
-import ee.schimke.ha.rc.HaIconIdentity
-import ee.schimke.ha.rc.LocalInCardContainer
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaArcDialData
 import ee.schimke.ha.rc.components.HaModeChip
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -29,12 +25,12 @@ import kotlinx.serialization.json.jsonPrimitive
  * is a bulb so the card reads visually as a light at a glance. Tap toggles the light; the +/-
  * steppers fire `light.turn_on` with `brightness_step` of 25 (~10%).
  *
- * Renders through the shared [RenderArcDial] ladder (same path as `thermostat` / `humidifier`) so
- * Fixed-mode launcher / Wear cells get the arc-left Wide row on narrow surfaces and the full
- * vertical card with steppers otherwise — the bulb-ring identity survives at every size instead of
- * stretching the full dial into short cells.
+ * Its layout is its card design, `light.uid` ([ArcDialDesignParts]), as the thermostat's and the
+ * humidifier's are: Fixed-mode launcher / Wear cells get the arc-left Wide row on narrow surfaces
+ * and the full vertical card with steppers otherwise — the bulb-ring identity survives at every
+ * size instead of stretching the full dial into short cells.
  */
-class LightCardConverter : CardConverter {
+class LightCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.LIGHT
 
   // Baked, non-bindable content (see CardConverter.dataSignature):
@@ -77,20 +73,6 @@ class LightCardConverter : CardConverter {
       return templateAction.copy(entityId = id)
     }
     return dial.action(card, snapshot, templateAction)
-  }
-
-  @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    // The dial's value already says on/off (`100%` / `Off`), and every light's dial looks alike: on
-    // a watch the name is what tells two lights apart (card-information-hierarchy.md).
-    // In a stack or grid the container is the multi-entity card, and its lights stay a dial.
-    RenderArcDial(
-      lightDial(card, snapshot),
-      modifier = modifier,
-      wearShowsName = !LocalInCardContainer.current,
-      // The dial domains carry no device class the icon rule reads.
-      oneColumnKeepsName = HaIconIdentity.chipKeepsName(card, entity = null),
-    )
   }
 
   private val dial =

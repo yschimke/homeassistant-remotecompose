@@ -273,7 +273,7 @@ Built (D5):
 | D3 | Scheduled import workflow (**built:** `import-card-designs.yml`) and shipped assets (**built** for the default style); runtime capture removed for migrated types |
 | D4 | Forks copy the real source (**built** for migrated types); fork lineage on the design server |
 | D5 | Design id in the manifest and cache; per-card design override and the chooser in the card's style sheet |
-| D6+ | Remaining card types, one PR each (**migrated:** `tile`, `button`, `entity`, `sensor`, `heading`, `glance`, `clock`); `converter-only.md` for the rest |
+| D6+ | Remaining card types, one PR each (**migrated:** `tile`, `button`, `entity`, `sensor`, `heading`, `glance`, `clock`, `thermostat`, `humidifier`, `light`); `converter-only.md` for the rest |
 | D7+ | Device-specific transformations (Wear screen shape, launcher grids, TV/desktop, older RC levels), each when a host needs it |
 
 ## Open questions

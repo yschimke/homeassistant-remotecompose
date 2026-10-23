@@ -6,6 +6,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.rc.cards.ArcDialDesignParts
 import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.ClockDesignParts
 import ee.schimke.ha.rc.cards.EntityDesignParts
@@ -418,4 +419,32 @@ fun HaClockCardCell(
   other: @Composable @RemoteComposable () -> Unit = {},
 ) {
   RemoteBox(modifier) { ClockDesignParts.Cell(wear, other) }
+}
+
+/** `ha-cards/arc-dial-card-full`: a thermostat, humidifier or light dial over its steppers. */
+@Composable
+@RemoteComposable
+fun HaArcDialCardFull(modifier: RemoteModifier = RemoteModifier) {
+  ArcDialDesignParts.Full(modifier)
+}
+
+/**
+ * `ha-cards/arc-dial-card-wear`: the dial's arc-left Wide row in a Wear container; [compact] is the
+ * Small container's two lines; [keepsMode] keeps the mode chip under the name in the Large one.
+ */
+@Composable
+@RemoteComposable
+fun HaArcDialCardWear(
+  modifier: RemoteModifier = RemoteModifier,
+  compact: Boolean = false,
+  keepsMode: Boolean = false,
+) {
+  ArcDialDesignParts.Wear(compact, keepsMode, modifier)
+}
+
+/** `ha-cards/arc-dial-card-launcher`: the dial's launcher ladder, fitted to the cell. */
+@Composable
+@RemoteComposable
+fun HaArcDialCardLauncher(modifier: RemoteModifier = RemoteModifier) {
+  ArcDialDesignParts.Launcher(modifier)
 }

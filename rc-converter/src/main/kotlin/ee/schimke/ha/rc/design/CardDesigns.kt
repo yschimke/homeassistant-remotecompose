@@ -11,6 +11,7 @@ import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
+import ee.schimke.ha.rc.cards.ArcDialDesignParts
 import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.CenteredCell
 import ee.schimke.ha.rc.cards.ClockDesignParts
@@ -137,7 +138,8 @@ object CardDesigns {
       SensorDesignParts.components +
       HeadingDesignParts.components +
       GlanceDesignParts.components +
-      ClockDesignParts.components
+      ClockDesignParts.components +
+      ArcDialDesignParts.components
 
   private val loaded = ConcurrentHashMap<String, Result<CardDesign?>>()
 
