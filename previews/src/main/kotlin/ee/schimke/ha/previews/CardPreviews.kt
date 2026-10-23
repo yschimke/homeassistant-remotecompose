@@ -1332,14 +1332,14 @@ private fun sensorCardConfig() =
 
 // ——— entity-filter ———
 
-@Preview(name = "entity-filter (light)", showBackground = false, widthDp = 381, heightDp = 149)
+@Preview(name = "entity-filter (light)", showBackground = false, widthDp = 381, heightDp = 120)
 @Composable
 fun EntityFilter_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(entityFilterCardConfig(), Fixtures.mixed, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "entity-filter (dark)", showBackground = false, widthDp = 381, heightDp = 149)
+@Preview(name = "entity-filter (dark)", showBackground = false, widthDp = 381, heightDp = 120)
 @Composable
 fun EntityFilter_Dark() =
   CardHost(HaTheme.Dark) {
