@@ -44,7 +44,8 @@ import java.text.DecimalFormat
  * enough to be more than the Wide chip (a `3×3` or `3×4` cell): the ARM buttons two to a row with
  * tighter padding, tighter gaps and 44 dp keys, and [showKeypad] (off where the cell is too short
  * for it) decides whether the keypad follows them. The buttons still act without it: an arm that
- * needs a code asks for one ([HaAction.AlarmIntent]).
+ * needs a code asks for one ([HaAction.AlarmIntent]). [actionsPerRow] `1` stacks them, for a cell
+ * two launcher columns wide, too narrow for two side by side.
  */
 @Composable
 @RemoteComposable
@@ -54,6 +55,7 @@ fun RemoteHaAlarmPanel(
   fillHeight: Boolean = false,
   narrow: Boolean = false,
   showKeypad: Boolean = data.showKeypad,
+  actionsPerRow: Int = 2,
 ) {
   val theme = haTheme()
   val statusByKey = data.statuses.associateBy { it.stateKey }
@@ -82,7 +84,7 @@ fun RemoteHaAlarmPanel(
 
       // ARM AWAY / ARM HOME / DISARM buttons.
       if (narrow && data.actions.isNotEmpty()) {
-        data.actions.chunked(2).forEach { row ->
+        data.actions.chunked(actionsPerRow).forEach { row ->
           RemoteRow(
             modifier = RemoteModifier.fillMaxWidth(),
             horizontalArrangement =
