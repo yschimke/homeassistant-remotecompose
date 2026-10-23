@@ -1,22 +1,18 @@
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
-import ee.schimke.ha.rc.HaIconIdentity
-import ee.schimke.ha.rc.LocalInCardContainer
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaArcDialData
 import ee.schimke.ha.rc.components.HaModeChip
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -25,8 +21,10 @@ import kotlinx.serialization.json.jsonPrimitive
  *
  * Same shape as the thermostat card but the arc fills with the current humidity %, the target
  * humidity is the supportingLabel, and the mode chip reads "Humidifying" / "Drying" / "Off".
+ *
+ * Its layout is its card design, `humidifier.uid` ([ArcDialDesignParts]), as the thermostat's is.
  */
-class HumidifierCardConverter : CardConverter {
+class HumidifierCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.HUMIDIFIER
 
   // Baked, non-bindable content (see CardConverter.dataSignature):
@@ -52,21 +50,6 @@ class HumidifierCardConverter : CardConverter {
     slot: Int,
     templateAction: HaAction,
   ): HaAction? = dial.action(card, snapshot, templateAction)
-
-  @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    // As the thermostat: the name on both Wear containers, and the mode chip (`Off`,
-    // `Humidifying`, which the fixed cyan accent never says) under it in Wear Large.
-    RenderArcDial(
-      humidifierDial(card, snapshot),
-      modifier,
-      // In a stack or grid the container is the multi-entity card: its dials stay nameless.
-      wearShowsName = !LocalInCardContainer.current,
-      // The dial domains carry no device class the icon rule reads.
-      oneColumnKeepsName = HaIconIdentity.chipKeepsName(card, entity = null),
-      wearLargeKeepsMode = true,
-    )
-  }
 
   private val dial =
     DialCard(
