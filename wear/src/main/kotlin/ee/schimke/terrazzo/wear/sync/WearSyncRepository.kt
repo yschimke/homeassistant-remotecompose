@@ -12,6 +12,7 @@ import com.google.android.gms.wearable.PutDataRequest
 import com.google.android.gms.wearable.Wearable
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.data.WearDataLayerRegistry
+import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.terrazzo.wear.widget.WearWidgetCardStore
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
@@ -162,8 +163,32 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
     }
   }
 
+  /**
+   * Asks the phone to run [action], the action a tap on [card] (its `rawJson`, as the phone sent
+   * it) resolved to, and waits for its answer: see [WearSyncPaths.TAP_MESSAGE]. Only while the
+   * phone allows input editing and isn't in demo mode; the phone checks both again, and runs the
+   * action only when its own copy of [card] makes it. Throws with the phone's reason when it didn't
+   * run. Like [sendInputs]: foreground only, no queue, no retry of a side-effecting send.
+   */
+  suspend fun sendTap(card: String, action: HaAction) {
+    check(wearTapsEnabled(_settings.value)) { "Turn on watch controls on the phone" }
+    val node = nodeClient.connectedNodes.await().firstOrNull() ?: error("Connect the phone to send")
+    val id = java.util.UUID.randomUUID().toString()
+    val response = kotlinx.coroutines.CompletableDeferred<ByteArray>()
+    inputRequests[id] = response
+    try {
+      val request = wearTapRequest(id, card, action)
+      require(request.size <= WEAR_TAP_MAX_BYTES) { "This card is too large to control" }
+      messageClient.sendMessage(node.id, WearSyncPaths.TAP_MESSAGE, request).await()
+      val result = kotlinx.coroutines.withTimeout(15000) { response.await() }
+      wearTapRefusal(result)?.let { error(it) }
+    } finally {
+      inputRequests.remove(id)
+    }
+  }
+
   private val messageListener = MessageClient.OnMessageReceivedListener { event ->
-    if (event.path == "/wear/input-result/v1") {
+    if (event.path == "/wear/input-result/v1" || event.path == WearSyncPaths.TAP_RESULT_MESSAGE) {
       val result = runCatching {
         kotlinx.serialization.json.Json.parseToJsonElement(event.data.decodeToString()).jsonObject
       }

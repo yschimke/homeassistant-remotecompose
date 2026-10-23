@@ -3,6 +3,7 @@
 package ee.schimke.terrazzo.wear.ui
 
 import android.content.Context
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,13 +19,20 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -32,10 +40,13 @@ import ee.schimke.ha.rc.*
 import ee.schimke.ha.rc.cards.cardVisibilitySignature
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
+import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.wear.data.toEntityState
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
+import ee.schimke.terrazzo.wear.sync.WearTapDispatcher
+import ee.schimke.terrazzo.wear.sync.WearTapOutcome
 import ee.schimke.terrazzo.wear.widget.SlotContent
 import ee.schimke.terrazzo.wear.widget.WearWidgetFrame
 import ee.schimke.terrazzo.wear.widget.WearWidgetTemplate
@@ -127,26 +138,92 @@ internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValu
       cardIconSignature(card, snapshot),
       cardVisibilitySignature(card, snapshot),
     )
-  BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-    // A watch narrower than the frame (before its host has reported one) keeps the frame's height.
-    val width = minOf(frame.widthDp.dp, maxWidth)
-    CachedCardPreview(
-      cacheKey = key,
-      profile = androidXExperimentalWrap,
-      modifier = Modifier.size(width, frame.heightDp.dp),
-      card = card,
-      snapshot = snapshot,
-      liveBindings = signature == null,
-      bitmapLoader = pictures,
-      template = template,
-    ) {
-      // No template (a card with no template shape): the widget's direct document, framed alike.
-      WearAppFrame(frame, tint) {
-        SlotContent(registry, colors, card, snapshot, template = false, cardStyle = style)
+  // Taps act on Home Assistant through the phone ([WearTapDispatcher]); the card says how one went.
+  val taps = rememberWearCardTaps(summary.rawJson)
+  Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+    BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+      // A watch narrower than the frame (before its host has reported one) keeps the frame's
+      // height.
+      val width = minOf(frame.widthDp.dp, maxWidth)
+      CompositionLocalProvider(LocalHaActionDispatcher provides taps.dispatcher) {
+        CachedCardPreview(
+          cacheKey = key,
+          profile = androidXExperimentalWrap,
+          modifier = Modifier.size(width, frame.heightDp.dp),
+          card = card,
+          snapshot = snapshot,
+          liveBindings = signature == null,
+          bitmapLoader = pictures,
+          template = template,
+        ) {
+          // No template (a card with no template shape): the widget's direct document, framed
+          // alike.
+          WearAppFrame(frame, tint) {
+            SlotContent(registry, colors, card, snapshot, template = false, cardStyle = style)
+          }
+        }
       }
     }
+    taps.status?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
   }
 }
+
+/**
+ * Sends a watch card's taps to the phone: a [LocalWearTapSender] while it allows them, else none
+ * (the card's taps then say how to turn them on). Kept while the card shows, so a keypad's code
+ * survives a value update.
+ */
+internal val LocalWearTapSender =
+  staticCompositionLocalOf<(suspend (card: String, action: HaAction) -> Unit)?> { null }
+
+/** A watch card's tap dispatcher and the line it shows under the card while one is in flight. */
+internal class WearCardTaps(val dispatcher: HaActionDispatcher) {
+  var status: String? by mutableStateOf(null)
+}
+
+/**
+ * The [WearTapDispatcher] for the card [rawJson], with the watch's feedback: a tick as the tap is
+ * sent (a key tap for a keypad key), a confirm when the phone ran it, a reject and the phone's
+ * reason under the card when it didn't — the message card's error style.
+ */
+@Composable
+private fun rememberWearCardTaps(rawJson: String): WearCardTaps {
+  val sender = rememberUpdatedState(LocalWearTapSender.current)
+  val view = LocalView.current
+  val scope = rememberCoroutineScope()
+  return remember(rawJson, scope, view) {
+    lateinit var taps: WearCardTaps
+    val dispatcher =
+      WearTapDispatcher(
+        card = rawJson,
+        scope = scope,
+        enabled = { sender.value != null },
+        send = { card, action ->
+          (sender.value ?: error(WearTapDispatcher.TAPS_OFF)).invoke(card, action)
+        },
+        onOutcome = { _, outcome ->
+          view.performHapticFeedback(wearTapHaptic(outcome))
+          when (outcome) {
+            WearTapOutcome.Sent -> taps.status = "Sending…"
+            WearTapOutcome.Done -> taps.status = null
+            WearTapOutcome.Key,
+            WearTapOutcome.Failed -> Unit
+          }
+        },
+        onFailure = { taps.status = it },
+      )
+    WearCardTaps(dispatcher).also { taps = it }
+  }
+}
+
+/** The haptic for a tap's [outcome]. */
+internal fun wearTapHaptic(outcome: WearTapOutcome): Int =
+  when (outcome) {
+    WearTapOutcome.Sent -> HapticFeedbackConstants.CLOCK_TICK
+    WearTapOutcome.Key -> HapticFeedbackConstants.KEYBOARD_TAP
+    WearTapOutcome.Done -> HapticFeedbackConstants.CONFIRM
+    WearTapOutcome.Failed -> HapticFeedbackConstants.REJECT
+  }
 
 /**
  * The document [design] plays in the Wear app in [frame]: its container-neutral widget template

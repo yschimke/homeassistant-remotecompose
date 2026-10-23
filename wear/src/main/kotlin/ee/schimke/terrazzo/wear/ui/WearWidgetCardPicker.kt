@@ -65,9 +65,11 @@ internal fun WearWidgetCardPicker(
             )
           }
           // The card plays its own document; a layer on top takes the tap, so choosing one never
-          // also presses a control inside it.
+          // also presses a control inside it — and its taps reach no phone even if one did.
           Box(Modifier.fillMaxWidth()) {
-            WearRemoteCard(option.card, values)
+            CompositionLocalProvider(LocalWearTapSender provides null) {
+              WearRemoteCard(option.card, values)
+            }
             Box(
               Modifier.matchParentSize()
                 .semantics { contentDescription = "Choose $label" }

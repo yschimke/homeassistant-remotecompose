@@ -179,7 +179,9 @@ Deliberate spike limits, each owned by a milestone below:
   for the app with a browser of its templates.
 - **Wear widgets are baked too** (`CardWidget`): Glance Wear captures the card's template itself
   (its own op set and canvas, keyed by card shape, theme, container and size) and
-  `LauncherDesigns.bakeValues` writes the card's values in. The Wear widget has no taps. The watch
+  `LauncherDesigns.bakeValues` writes the card's values in. A tap on a Wear widget opens the Wear
+  app on its card (`WearWidgetTaps`, see launcher-widget-actions.md, "Wear widgets"); the card's own
+  actions don't run from the widget. The watch
   can't fetch a picture, so the phone does: for every entity a card it shows on the watch (pinned,
   or in a pinned section: any of them can be placed as a widget) binds that has an
   `entity_picture`, `MobileWearSyncManager` sends a downscaled PNG (`WearPicture`,

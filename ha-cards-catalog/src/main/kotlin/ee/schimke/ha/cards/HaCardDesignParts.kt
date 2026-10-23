@@ -8,6 +8,7 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.EntityDesignParts
+import ee.schimke.ha.rc.cards.GlanceDesignParts
 import ee.schimke.ha.rc.cards.HeadingDesignParts
 import ee.schimke.ha.rc.cards.SensorDesignParts
 import ee.schimke.ha.rc.cards.TileDesignParts
@@ -359,4 +360,43 @@ fun HaHeadingCardCell(
   fixed: @Composable @RemoteComposable () -> Unit = {},
 ) {
   RemoteBox(modifier) { HeadingDesignParts.Cell(wrap, fixed) }
+}
+
+/** `ha-cards/glance-card-grid`: the title over the grid of cells, fitted to a launcher cell. */
+@Composable
+@RemoteComposable
+fun HaGlanceCardGrid(modifier: RemoteModifier = RemoteModifier) {
+  GlanceDesignParts.Grid(modifier)
+}
+
+/**
+ * `ha-cards/glance-card-cells`: the cells without the title, filling the canvas; [compact] drops
+ * each cell's name.
+ */
+@Composable
+@RemoteComposable
+fun HaGlanceCardCells(modifier: RemoteModifier = RemoteModifier, compact: Boolean = false) {
+  GlanceDesignParts.Cells(compact, modifier)
+}
+
+/** `ha-cards/glance-card-first-tile`: the first entity as a tile, for a one-cell launcher list. */
+@Composable
+@RemoteComposable
+fun HaGlanceCardFirstTile(modifier: RemoteModifier = RemoteModifier) {
+  GlanceDesignParts.FirstTile(modifier)
+}
+
+/**
+ * `ha-cards/glance-card-cell`: [tile] in a launcher cell too narrow for a list, [wear] in a Wear
+ * container, [other] otherwise.
+ */
+@Composable
+@RemoteComposable
+fun HaGlanceCardCell(
+  modifier: RemoteModifier = RemoteModifier,
+  tile: @Composable @RemoteComposable () -> Unit = {},
+  wear: @Composable @RemoteComposable () -> Unit = {},
+  other: @Composable @RemoteComposable () -> Unit = {},
+) {
+  RemoteBox(modifier) { GlanceDesignParts.Cell(tile, wear, other) }
 }

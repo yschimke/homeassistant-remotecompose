@@ -1,26 +1,22 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.BreakpointAxis
-import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
-import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
-import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaGlanceCellData
 import ee.schimke.ha.rc.components.HaGlanceData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaGlance
 import ee.schimke.ha.rc.defaultTapActionFor
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.icons.withIcons
@@ -35,8 +31,12 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * HA `glance` card — titled grid of compact entity cells. Each entry is either a bare `entity_id`
  * or `{ entity, name?, icon?, tap_action? }`.
+ *
+ * Its layout is its card design, `glance.uid` ([GlanceDesignParts]): the grid on a dashboard and in
+ * a launcher cell, the first entity as a tile in a one-cell launcher widget, and in a Wear slot the
+ * cells without the title (and, in the Small container, without their names).
  */
-class GlanceCardConverter : CardConverter {
+class GlanceCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.GLANCE
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
@@ -54,13 +54,11 @@ class GlanceCardConverter : CardConverter {
   override fun designTemplate(properties: DesignProperties): DesignTemplateInput? =
     EntityDesign.listTemplate(cardType, properties)
 
+  /** The cells [card] shows, one per entity it lists. */
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    if (CompactLauncherList(card, snapshot, modifier)) return
-    val title = card.raw["title"]?.jsonPrimitive?.content
+  internal fun cellsOf(card: CardConfig, snapshot: HaSnapshot): List<HaGlanceCellData> {
     val entries: List<JsonElement> = card.raw["entities"]?.jsonArray ?: emptyList()
-
-    val cells = entries.mapNotNull { el ->
+    return entries.mapNotNull { el ->
       val (eid, row) = normalize(el)
       val entity = eid?.let { snapshot.states[it] }
       val name =
@@ -80,35 +78,23 @@ class GlanceCardConverter : CardConverter {
         tapAction = tapAction,
       )
     }
-    // In Fixed mode (launcher widget / Wear slot) the host pins a
-    // canvas taller than one row of cells; fill it (grid grows / row
-    // centres) instead of gluing the cells to the top over a blank
-    // half-cell. In Wrap mode (dashboard) the card flows to its
-    // content height, matching the HA reference.
+  }
+
+  /**
+   * The glance grid: its title over its cells. In a fixed canvas (a launcher widget or a Wear slot)
+   * the host pins a canvas taller than one row of cells; the grid fills it rather than gluing the
+   * cells to the top over a blank half-cell, and a launcher widget, knowing its size, holds as many
+   * cells to a row as are wide enough for a name and as many rows as its height holds. Density
+   * before identity: a title that leaves no room for a row of cells goes first.
+   */
+  @Composable
+  internal fun Grid(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+    val title = card.raw["title"]?.jsonPrimitive?.content
+    val cells = cellsOf(card, snapshot)
     val fillHeight = LocalCardSizeMode.current == CardSizeMode.Fixed
-    // A launcher widget knows its size: as many cells to a row as are wide enough for a name, and
-    // as many rows as its height holds, the rest left to a bigger widget.
     val size = LocalWidgetCaptureSizeDp.current
-    // Density before identity: a title that leaves no room for a row of cells goes first.
     val shownTitle = title?.takeIf { size == null || fitsTitle(size.heightDp) }
     val grid = size?.let { gridFor(it.widthDp, it.heightDp, shownTitle) }
-    if (LocalFixedCanvasAxis.current == BreakpointAxis.Height) {
-      // A Wear slot: too short for a title over a row of cells. Large drops the title, Small also
-      // each cell's name, keeping its icon over its state.
-      RemoteSizeBreakpoint(
-        thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
-        modifier = modifier,
-        axis = BreakpointAxis.Height,
-      ) { tier ->
-        RemoteHaGlance(
-          HaGlanceData(title = null, cells = cells),
-          modifier = RemoteModifier.fillMaxSize(),
-          fillHeight = true,
-          compactCells = tier == 0,
-        )
-      }
-      return
-    }
     RemoteHaGlance(
       HaGlanceData(
         title = shownTitle,
