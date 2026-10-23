@@ -17,7 +17,9 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.cards.bambuEntityIds
+import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.resolveBambuDevices
+import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.displayPrecisionOf
 import ee.schimke.terrazzo.core.pin.MobilePinnedCard
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection
@@ -52,6 +54,7 @@ import ee.schimke.terrazzo.wearsync.proto.encodeProto
 import ee.schimke.terrazzo.widget.WidgetImages
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
@@ -67,6 +70,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -239,6 +243,113 @@ class MobileWearSyncManager(
     }
   }
 
+  /**
+   * Every card this phone published to the watch, by the `rawJson` the watch got it as, per source
+   * (a dashboard's DataItem path, [TAP_SOURCE_PINNED], [TAP_SOURCE_SECTIONS]): the only cards a
+   * watch tap may act on ([wearTapCall]). Written once the watch has been sent them, cleared with
+   * the session.
+   */
+  private val tapCards = MutableStateFlow<Map<String, Map<String, CardConfig>>>(emptyMap())
+
+  private fun publishTapCards(source: String, cards: List<CardSummary>) {
+    tapCards.value =
+      tapCards.value +
+        (source to
+          cards
+            .mapNotNull { summary ->
+              summary.rawJson.toCardConfigOrNull()?.let { summary.rawJson to it }
+            }
+            .toMap())
+  }
+
+  /** The card registry a watch card plays with, for [captureWearCardActions]. */
+  private val tapRegistry by lazy { defaultRegistry().withEnhancedShutter() }
+
+  /**
+   * A tap on a watch card: the watch sends the card it played and the action the tap resolved to,
+   * and the phone runs it on its session only when [wearTapCall] accepts it — never in demo or
+   * read-only mode, never twice for one request, and only an action the phone's own capture of a
+   * card it published produces. Answers on [WearSyncPaths.TAP_RESULT_MESSAGE].
+   */
+  private suspend fun handleTapRequest(event: com.google.android.gms.wearable.MessageEvent) {
+    if (event.data.size > 32768) return
+    val request =
+      runCatching { json.parseToJsonElement(event.data.decodeToString()).jsonObject }.getOrNull()
+        ?: return
+    val id = request["id"]?.jsonPrimitive?.contentOrNull ?: return
+    if (id.length > 100) return
+    inputMutex.lock()
+    try {
+      val outcome = runCatching {
+        val session = requireNotNull(sessionState.value) { "Sign in on the phone" }
+        require(session !is ee.schimke.terrazzo.core.session.DemoHaSession) {
+          "Demo mode is read-only"
+        }
+        require(handledInputRequests.add(event.sourceNodeId + id)) {
+          "This request was already submitted"
+        }
+        while (handledInputRequests.size > 100) handledInputRequests.remove(
+          handledInputRequests.first()
+        )
+        val raw = request["card"]?.jsonPrimitive?.contentOrNull
+        val tapped =
+          ee.schimke.ha.rc.decodeHaAction(request["action"]?.jsonPrimitive?.contentOrNull)
+        // The phone's freshest states: an action that depends on one (a setpoint step) is the one
+        // the card makes now.
+        val snapshot =
+          runCatching { session.loadSnapshot() }
+            .onFailure { if (it is CancellationException) throw it }
+            .getOrNull() ?: registrySnapshot.value
+        val published =
+          tapCards.value.values.fold(emptyMap<String, CardConfig>()) { all, cards -> all + cards }
+        // A capture composes the card: off the caller's thread.
+        val action =
+          withContext(Dispatchers.Default) {
+            wearTapCall(
+              raw,
+              tapped,
+              published,
+              readOnly =
+                !inputEditingMode.value ||
+                  session is ee.schimke.terrazzo.core.session.DemoHaSession,
+              cardActions = { card ->
+                captureWearCardActions(context, card, snapshot, tapRegistry)
+              },
+            )
+          }
+        check(session === sessionState.value) { "Session changed" }
+        when (action) {
+          is ee.schimke.ha.rc.components.HaAction.Toggle ->
+            session.callService("homeassistant", "toggle", entityId = action.entityId)
+          is ee.schimke.ha.rc.components.HaAction.CallService ->
+            session.callService(action.domain, action.service, action.entityId, action.serviceData)
+          else -> error("Not a call")
+        }
+      }
+      if (outcome.exceptionOrNull() is CancellationException) throw outcome.exceptionOrNull()!!
+      outcome.exceptionOrNull()?.let { Log.w(TAG, "Refused or failed a watch tap", it) }
+      val response =
+        kotlinx.serialization.json.buildJsonObject {
+          put("id", kotlinx.serialization.json.JsonPrimitive(id))
+          put("ok", kotlinx.serialization.json.JsonPrimitive(outcome.isSuccess))
+          if (outcome.isFailure)
+            put(
+              "error",
+              kotlinx.serialization.json.JsonPrimitive(wearTapError(outcome.exceptionOrNull())),
+            )
+        }
+      messageClient
+        .sendMessage(
+          event.sourceNodeId,
+          WearSyncPaths.TAP_RESULT_MESSAGE,
+          response.toString().encodeToByteArray(),
+        )
+        .await()
+    } finally {
+      inputMutex.unlock()
+    }
+  }
+
   /** Gives each watch that asks its own Home Assistant token: see [WatchAccessIssuer]. */
   private val accessIssuer =
     WatchAccessIssuer(
@@ -271,6 +382,16 @@ class MobileWearSyncManager(
       }
       return@OnMessageReceivedListener
     }
+    if (event.path == WearSyncPaths.TAP_MESSAGE) {
+      managerScope.launch {
+        runCatching { handleTapRequest(event) }
+          .onFailure {
+            if (it is CancellationException) throw it
+            handleFailure("tapRequest", it)
+          }
+      }
+      return@OnMessageReceivedListener
+    }
     if (event.path != WearSyncPaths.LEASE_MESSAGE) return@OnMessageReceivedListener
     val now = System.currentTimeMillis()
     val lease: WearLease = decodeProto<WearLease>(event.data) ?: WearLease(sentAtMs = now)
@@ -281,6 +402,7 @@ class MobileWearSyncManager(
   /** Update the active session whenever login/demo state changes. */
   override fun setSession(session: HaSession?) {
     inputCards.value = emptyMap()
+    tapCards.value = emptyMap()
     sessionState.value = session
   }
 
@@ -417,6 +539,7 @@ class MobileWearSyncManager(
             )
           ) {
             pinnedEntities.value = entities
+            publishTapCards(TAP_SOURCE_PINNED, cards.cards.map { it.card })
           }
         }
     }
@@ -445,6 +568,7 @@ class MobileWearSyncManager(
             )
           ) {
             sectionEntities.value = entities
+            publishTapCards(TAP_SOURCE_SECTIONS, sections.sections.flatMap { it.cards })
           }
         }
     }
@@ -576,6 +700,7 @@ class MobileWearSyncManager(
           )
         val path = WearSyncPaths.dashboardPath(summary.urlPath)
         if (writeDataItem(path, encodeProto(data))) {
+          publishTapCards(path, data.cards)
           dashboardEntities.value =
             dashboardEntities.value +
               (path to wearEntityIds(data.cards.map { it.rawJson }, snapshot))
@@ -584,6 +709,10 @@ class MobileWearSyncManager(
       // Every dashboard listed and written: drop the ones Home Assistant no longer has.
       val current = summaries.map { WearSyncPaths.dashboardPath(it.urlPath) }
       dashboardEntities.value = dashboardEntities.value.filterKeys { it in current }
+      tapCards.value =
+        tapCards.value.filterKeys {
+          !it.startsWith(WearSyncPaths.DASHBOARD_PREFIX) || it in current
+        }
       val stale = staleDashboardPaths(dataItemPaths(WearSyncPaths.DASHBOARD_PREFIX), current)
       deleteDataItems(stale.map { WearDataItems(it, prefix = false) })
     }
@@ -788,6 +917,8 @@ class MobileWearSyncManager(
 
   companion object {
     private const val TAG = "WearSync"
+    private const val TAP_SOURCE_PINNED = "pinned"
+    private const val TAP_SOURCE_SECTIONS = "sections"
     const val KEY_PROTO: String = "proto"
     const val KEY_TS: String = "ts"
     private const val RECOVERY_PROBE_INTERVAL_MS = 60_000L

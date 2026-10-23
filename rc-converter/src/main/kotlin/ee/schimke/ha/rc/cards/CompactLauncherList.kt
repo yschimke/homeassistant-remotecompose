@@ -24,25 +24,30 @@ internal fun CompactLauncherList(
   snapshot: HaSnapshot,
   modifier: RemoteModifier,
 ): Boolean {
-  val size = LocalWidgetCaptureSizeDp.current ?: return false
+  val tile = compactLauncherTile(card) ?: return false
+  TileCardConverter().Render(tile, snapshot, modifier)
+  return true
+}
+
+/**
+ * The tile a one-cell launcher list shows its first entity as ([CompactLauncherList]), or null when
+ * the canvas isn't a launcher cell that narrow or the card has no entity.
+ */
+@Composable
+internal fun compactLauncherTile(card: CardConfig): CardConfig? {
+  val size = LocalWidgetCaptureSizeDp.current ?: return null
   if (
     LocalCardSizeMode.current != CardSizeMode.Fixed ||
       LocalFixedCanvasAxis.current != BreakpointAxis.Width ||
       size.widthDp >= 120
   )
-    return false
-  val first = card.raw["entities"]?.jsonArray?.firstOrNull() ?: return false
+    return null
+  val first = card.raw["entities"]?.jsonArray?.firstOrNull() ?: return null
   val row =
     when (first) {
       is JsonPrimitive -> mapOf("entity" to first)
       is JsonObject -> first
-      else -> return false
+      else -> return null
     }
-  TileCardConverter()
-    .Render(
-      CardConfig("tile", JsonObject(row + ("type" to JsonPrimitive("tile")))),
-      snapshot,
-      modifier,
-    )
-  return true
+  return CardConfig("tile", JsonObject(row + ("type" to JsonPrimitive("tile"))))
 }

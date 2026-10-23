@@ -15,6 +15,7 @@ import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.CenteredCell
 import ee.schimke.ha.rc.cards.ClockDesignParts
 import ee.schimke.ha.rc.cards.EntityDesignParts
+import ee.schimke.ha.rc.cards.GlanceDesignParts
 import ee.schimke.ha.rc.cards.HeadingDesignParts
 import ee.schimke.ha.rc.cards.SensorDesignParts
 import ee.schimke.ha.rc.cards.TileDesignParts
@@ -135,6 +136,7 @@ object CardDesigns {
       EntityDesignParts.components +
       SensorDesignParts.components +
       HeadingDesignParts.components +
+      GlanceDesignParts.components +
       ClockDesignParts.components
 
   private val loaded = ConcurrentHashMap<String, Result<CardDesign?>>()

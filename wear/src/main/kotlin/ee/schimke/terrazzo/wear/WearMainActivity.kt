@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo.wear
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -7,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,7 +29,9 @@ import ee.schimke.terrazzo.wear.sync.WearCardWarmup
 import ee.schimke.terrazzo.wear.sync.WearLeaseController
 import ee.schimke.terrazzo.wear.sync.WearSyncRepository
 import ee.schimke.terrazzo.wear.sync.WearWidgetsController
+import ee.schimke.terrazzo.wear.sync.wearTapsEnabled
 import ee.schimke.terrazzo.wear.ui.LocalWearCardLook
+import ee.schimke.terrazzo.wear.ui.LocalWearTapSender
 import ee.schimke.terrazzo.wear.ui.WearCardLook
 import ee.schimke.terrazzo.wear.ui.WearDashboardScreen
 import ee.schimke.terrazzo.wear.ui.WearDashboardsScreen
@@ -38,11 +42,14 @@ import ee.schimke.terrazzo.wear.ui.WearWidgetsScreen
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
 import ee.schimke.terrazzo.wear.ui.wearTypographyFor
 import ee.schimke.terrazzo.wear.widget.WearWidgetPreviewCapturer
+import ee.schimke.terrazzo.wear.widget.WearWidgetTaps
 import ee.schimke.terrazzo.wear.widget.refreshAllCardWidgets
+import ee.schimke.terrazzo.wear.widget.widgetCardSection
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -99,8 +106,26 @@ class WearMainActivity : ComponentActivity() {
       WearCardLook(prefs.themeStyle.first(), prefs.cardStyle.first())
     }
 
-    setContent { WearApp(repo, prefs, initialLook) }
+    // Once per launch: a recreated activity keeps the screen it was on.
+    if (savedInstanceState == null) openWidgetCard.value = widgetCardKeyOf(intent)
+    setContent { WearApp(repo, prefs, initialLook, openWidgetCard) }
   }
+
+  /** A widget tapped while the app runs ([WearWidgetTaps.openCardIntent]): move to its card. */
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    widgetCardKeyOf(intent)?.let { openWidgetCard.value = it }
+  }
+
+  /** The card of the widget whose tap opened the app, until [WearApp] has moved to it. */
+  private val openWidgetCard = MutableStateFlow<String?>(null)
+
+  private fun widgetCardKeyOf(intent: Intent?): String? =
+    intent
+      ?.takeIf { it.action == ACTION_OPEN_WIDGET_CARD }
+      ?.getStringExtra(EXTRA_WIDGET_CARD_KEY)
+      // An empty key names no card.
+      ?.ifEmpty { null }
 
   override fun onDestroy() {
     super.onDestroy()
@@ -109,6 +134,12 @@ class WearMainActivity : ComponentActivity() {
 
   companion object {
     const val EXTRA_TEST_SEED_PINS: String = "terrazzo.test.seed_pins"
+
+    /** A Wear widget's tap: open the app on the widget's card. */
+    const val ACTION_OPEN_WIDGET_CARD: String = "ee.schimke.terrazzo.wear.OPEN_WIDGET_CARD"
+
+    /** The widget's card, by its `WidgetCardOption.cardKey`. */
+    const val EXTRA_WIDGET_CARD_KEY: String = "terrazzo.widget.card_key"
   }
 }
 
@@ -122,7 +153,12 @@ private enum class WearScreen {
 }
 
 @Composable
-private fun WearApp(repo: WearSyncRepository, prefs: WearPrefs, initialLook: WearCardLook) {
+private fun WearApp(
+  repo: WearSyncRepository,
+  prefs: WearPrefs,
+  initialLook: WearCardLook,
+  openWidgetCard: MutableStateFlow<String?>,
+) {
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
   val selectedPalette by prefs.themeStyle.collectAsState(initial = initialLook.palette)
@@ -136,6 +172,20 @@ private fun WearApp(repo: WearSyncRepository, prefs: WearPrefs, initialLook: Wea
   var screen by rememberSaveable { mutableStateOf(WearScreen.TopLevel) }
   var openedDashboard by rememberSaveable { mutableStateOf<String?>(null) }
   var openedSectionKey by rememberSaveable { mutableStateOf<String?>(null) }
+
+  // A Wear widget's tap: its card's pinned section, or the pinned list for a pinned card.
+  val widgetCard by openWidgetCard.collectAsState()
+  LaunchedEffect(widgetCard) {
+    val key = widgetCard ?: return@LaunchedEffect
+    val section = widgetCardSection(key, sections)
+    if (section != null) {
+      openedSectionKey = section.sectionKey
+      screen = WearScreen.Section
+    } else {
+      screen = WearScreen.TopLevel
+    }
+    openWidgetCard.value = null
+  }
 
   // A system Back (including the watch's dismiss gesture) returns through the same hierarchy
   // as the on-screen buttons instead of closing the activity from a detail screen.
@@ -155,6 +205,8 @@ private fun WearApp(repo: WearSyncRepository, prefs: WearPrefs, initialLook: Wea
     CompositionLocalProvider(
       LocalWearCardLook provides WearCardLook(selectedPalette, selectedCardStyle),
       LocalRelativeTimeTick provides rememberRelativeTimeTick(),
+      // A card's taps act through the phone while it allows input editing, outside demo mode.
+      LocalWearTapSender provides if (wearTapsEnabled(settings)) repo::sendTap else null,
     ) {
       AppScaffold(timeText = { TimeText() }) {
         when (screen) {
