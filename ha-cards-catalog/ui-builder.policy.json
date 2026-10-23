@@ -2142,6 +2142,21 @@
           ]
         },
         {
+          "name": "stated",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
           "name": "other",
           "cardinality": {
             "min": 0,
@@ -2179,7 +2194,8 @@
           "allowedValues": [
             "grid",
             "true",
-            "false"
+            "false",
+            "dense"
           ],
           "notes": "`grid` draws the compact body in a square grid cell only, `true` always, `false` never."
         }
