@@ -7,14 +7,15 @@ import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.rc.cards.ButtonDesignParts
+import ee.schimke.ha.rc.cards.EntityDesignParts
 import ee.schimke.ha.rc.cards.TileDesignParts
 import ee.schimke.ha.rc.design.CardDesigns
 
 /*
  * The parts a card design is arranged from, on UI Builder's shelf: the switches that pick what a
- * card draws for the surface and size it is drawn at, and the forms of a tile and a button. Each
- * calls what the card design renderer calls for the same component id (CardDesigns,
- * TileDesignParts, ButtonDesignParts), so a design edited in UI Builder draws in the app as it does
+ * card draws for the surface and size it is drawn at, and the forms of a tile, a button and an
+ * entity card. Each calls what the card design renderer calls for the same component id
+ * (CardDesigns, TileDesignParts, ButtonDesignParts, EntityDesignParts), so a design edited in UI Builder draws in the app as it does
  * on the canvas. A slot wrapper draws the slot it picks inside its own modifier; the renderer hands
  * that modifier to the slot's node instead.
  */
@@ -212,4 +213,59 @@ fun HaButtonCell(
   other: @Composable @RemoteComposable () -> Unit = {},
 ) {
   RemoteBox(modifier) { ButtonDesignParts.Cell(wrap, fill, row, hero, wear, stated, other) }
+}
+
+/**
+ * `ha-cards/entity-card-row`: the entity's icon, name and state in a row; [inset] `card` insets it
+ * by a card's horizontal padding, for a cell that is the card.
+ */
+@Composable
+@RemoteComposable
+fun HaEntityCardRow(modifier: RemoteModifier = RemoteModifier, inset: String = "none") {
+  EntityDesignParts.Row(inset, modifier)
+}
+
+/**
+ * `ha-cards/entity-card-hero`: a roomy launcher cell's form, a numeric reading's expanded
+ * measurement or the icon hero; it fills its cell itself.
+ */
+@Composable
+@RemoteComposable
+fun HaEntityCardHero(modifier: RemoteModifier = RemoteModifier) {
+  EntityDesignParts.Hero(modifier)
+}
+
+/**
+ * `ha-cards/entity-card-wide-hero`: a big icon beside name and state, [scale] `row` for a one-row
+ * launcher cell or `wear` for a Wear container (not live).
+ */
+@Composable
+@RemoteComposable
+fun HaEntityCardWideHero(modifier: RemoteModifier = RemoteModifier, scale: String = "row") {
+  EntityDesignParts.WideHero(scale, modifier)
+}
+
+/** `ha-cards/entity-card-icon-chip`: the icon chip and state, for a cell too narrow for the row. */
+@Composable
+@RemoteComposable
+fun HaEntityCardIconChip(modifier: RemoteModifier = RemoteModifier) {
+  EntityDesignParts.IconChip(modifier)
+}
+
+/**
+ * `ha-cards/entity-card-cell`: which slot the canvas calls for: [wrap] on a dashboard; in a fixed
+ * canvas [hero] or [row] for a launcher cell with a hero scale, [wear] in a Wear container, else
+ * [other].
+ */
+@Composable
+@RemoteComposable
+fun HaEntityCardCell(
+  modifier: RemoteModifier = RemoteModifier,
+  wrap: @Composable @RemoteComposable () -> Unit = {},
+  hero: @Composable @RemoteComposable () -> Unit = {},
+  row: @Composable @RemoteComposable () -> Unit = {},
+  wear: @Composable @RemoteComposable () -> Unit = {},
+  other: @Composable @RemoteComposable () -> Unit = {},
+) {
+  RemoteBox(modifier) { EntityDesignParts.Cell(wrap, hero, row, wear, other) }
 }

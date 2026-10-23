@@ -13,6 +13,7 @@ import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.CenteredCell
+import ee.schimke.ha.rc.cards.EntityDesignParts
 import ee.schimke.ha.rc.cards.TileDesignParts
 import java.util.concurrent.ConcurrentHashMap
 
@@ -125,7 +126,10 @@ object CardDesigns {
 
   /** Every component a card design drawn in this module can use. */
   val components: Map<String, CardDesignComponent> =
-    structure + TileDesignParts.components + ButtonDesignParts.components
+    structure +
+      TileDesignParts.components +
+      ButtonDesignParts.components +
+      EntityDesignParts.components
 
   private val loaded = ConcurrentHashMap<String, Result<CardDesign?>>()
 
