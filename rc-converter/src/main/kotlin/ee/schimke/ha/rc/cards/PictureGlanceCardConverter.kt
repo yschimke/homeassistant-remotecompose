@@ -3,6 +3,7 @@ package ee.schimke.ha.rc.cards
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
@@ -10,12 +11,15 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaPictureGlanceCell
 import ee.schimke.ha.rc.components.HaPictureGlanceData
 import ee.schimke.ha.rc.components.RemoteHaPictureGlance
@@ -132,17 +136,35 @@ class PictureGlanceCardConverter : CardConverter {
       )
     }
 
-    RemoteHaPictureGlance(
+    val data =
       HaPictureGlanceData(
         title = title,
         captionUrl = image,
         placeholderIcon = Icons.Filled.Image,
         cells = cells,
-      ),
-      modifier = modifier,
-      // Dashboard: the image keeps HA's `aspect_ratio`; a launcher / Wear cell keeps the band.
-      imageAspectRatio =
-        if (LocalCardSizeMode.current == CardSizeMode.Fixed) null else pictureAspectRatio(card),
-    )
+      )
+    if (LocalCardSizeMode.current == CardSizeMode.Wrap) {
+      // Dashboard: the image keeps HA's `aspect_ratio`.
+      RemoteHaPictureGlance(data, modifier = modifier, imageAspectRatio = pictureAspectRatio(card))
+      return
+    }
+    // A launcher or Wear cell: the card fills it, the image taking what the strip leaves. A Wear
+    // Small slot is too short for both, so it keeps the strip.
+    if (LocalFixedCanvasAxis.current == BreakpointAxis.Height) {
+      RemoteSizeBreakpoint(
+        thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
+        modifier = modifier.fillMaxSize(),
+        axis = BreakpointAxis.Height,
+      ) { tier ->
+        RemoteHaPictureGlance(
+          data,
+          RemoteModifier.fillMaxSize(),
+          fillHeight = true,
+          showImage = tier > 0,
+        )
+      }
+    } else {
+      RemoteHaPictureGlance(data, modifier = modifier.fillMaxSize(), fillHeight = true)
+    }
   }
 }

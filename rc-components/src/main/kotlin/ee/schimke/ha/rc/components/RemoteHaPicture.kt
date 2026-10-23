@@ -151,13 +151,26 @@ fun RemoteHaPictureGlance(
   data: HaPictureGlanceData,
   modifier: RemoteModifier = RemoteModifier,
   imageAspectRatio: Float? = null,
+  fillHeight: Boolean = false,
+  showImage: Boolean = true,
 ) {
   val theme = haTheme()
-  RemoteBox(modifier = modifier.fillMaxWidth().then(cardChrome(theme.divider, theme.divider))) {
-    RemoteColumn {
-      // The image area: its height follows the live width at [imageAspectRatio], or the legacy
-      // fixed 120 dp band when there is none.
-      if (imageAspectRatio != null) {
+  RemoteBox(
+    modifier =
+      (if (fillHeight) modifier.fillMaxSize() else modifier.fillMaxWidth()).then(
+        cardChrome(theme.divider, theme.divider)
+      )
+  ) {
+    RemoteColumn(modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier) {
+      // The image area: in a fixed cell ([fillHeight]) whatever the strip leaves, so the card
+      // stays inside the cell; else its height follows the live width at [imageAspectRatio], or
+      // the legacy fixed 120 dp band when there is none. [showImage] false leaves the strip alone,
+      // for a cell too short for both.
+      if (!showImage) {
+        // The strip only.
+      } else if (fillHeight) {
+        GlanceImage(data, theme, RemoteModifier.fillMaxWidth().weight(1f))
+      } else if (imageAspectRatio != null) {
         RemoteAspectRatioBox(imageAspectRatio) {
           GlanceImage(data, theme, RemoteModifier.fillMaxSize())
         }
@@ -177,6 +190,8 @@ fun RemoteHaPictureGlance(
         verticalAlignment = RemoteAlignment.CenterVertically,
       ) {
         if (data.title != null) {
+          // The title takes what the cells leave: the cells are the controls, so a narrow strip
+          // shortens the title rather than pushing a cell out.
           RemoteText(
             text = cardTitle(data.title),
             color = theme.primaryText,
@@ -185,6 +200,7 @@ fun RemoteHaPictureGlance(
             style = haTextStyle(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+            modifier = RemoteModifier.weight(1f),
           )
         }
         if (data.cells.isNotEmpty()) {
