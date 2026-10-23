@@ -9,7 +9,9 @@ import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
+import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
+import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.CenteredCell
 import ee.schimke.ha.rc.cards.TileDesignParts
 import java.util.concurrent.ConcurrentHashMap
@@ -32,6 +34,8 @@ object CardDesigns {
    *   `height`) against the ascending `thresholdsDp` (comma-separated), picked where the document
    *   plays.
    * - `ha-cards/centered-cell`: `content` centred vertically in a fixed cell.
+   * - `ha-cards/min-size-gate`: `roomy` where the canvas is at least `minWidthDp` × `minHeightDp`,
+   *   `small` where it isn't, picked where the document plays.
    */
   internal val structure: Map<String, CardDesignComponent> =
     mapOf(
@@ -51,6 +55,12 @@ object CardDesigns {
           }
         },
       "ha-cards/centered-cell" to { node, modifier -> Centered(modifier) { node.Slot("content") } },
+      "ha-cards/min-size-gate" to
+        { node, modifier ->
+          MinSizeGate(node.int("minWidthDp", 96), node.int("minHeightDp", 80), modifier) { roomy ->
+            node.Slot(if (roomy) "roomy" else "small")
+          }
+        },
     )
 
   /** `ha-cards/card-size-mode`: [wrap], [height] or [width] for the surface being drawn. */
@@ -90,6 +100,20 @@ object CardDesigns {
   }
 
   /**
+   * `ha-cards/min-size-gate`: [content] `roomy` where the canvas is at least [minWidthDp] ×
+   * [minHeightDp], picked where the document plays.
+   */
+  @Composable
+  fun MinSizeGate(
+    minWidthDp: Int,
+    minHeightDp: Int,
+    modifier: RemoteModifier,
+    content: @Composable (roomy: Boolean) -> Unit,
+  ) {
+    RemoteMinSizeGate(minWidthDp, minHeightDp, modifier, content)
+  }
+
+  /**
    * `ha-cards/centered-cell`: [content] centred vertically in a fixed cell, the cell sized by
    * [modifier] when the design gives it one.
    */
@@ -100,7 +124,8 @@ object CardDesigns {
   }
 
   /** Every component a card design drawn in this module can use. */
-  val components: Map<String, CardDesignComponent> = structure + TileDesignParts.components
+  val components: Map<String, CardDesignComponent> =
+    structure + TileDesignParts.components + ButtonDesignParts.components
 
   private val loaded = ConcurrentHashMap<String, Result<CardDesign?>>()
 

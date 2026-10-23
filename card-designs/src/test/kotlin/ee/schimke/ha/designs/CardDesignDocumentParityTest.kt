@@ -2,7 +2,6 @@ package ee.schimke.ha.designs
 
 import ee.schimke.ha.cards.CardDesignDocument
 import ee.schimke.ha.design.DesignKey
-import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.rc.CardDesignTemplates
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -26,18 +25,22 @@ class CardDesignDocumentParityTest {
   private val context = RuntimeEnvironment.getApplication()
 
   @Test
-  fun tileDesignDrawsEveryTileKeyAsTheConverterDoes() {
-    val design = designOf(CardTypes.TILE)
-    val keys = libraryKeys(CardTypes.TILE)
-    assertTrue(keys.isNotEmpty(), "the library has tile keys")
-    println("tile.uid: ${keys.size} library tile keys")
-
-    val differing = keys.filterNot { key ->
-      val converter = CardDesignTemplates.capture(context, key)
-      val fromDesign = CheckedInCardDesigns.captureDesign(context, key, design)
-      converter.bytes.contentEquals(fromDesign.bytes)
-    }
-    assertEquals(emptyList(), differing.map { "${it.shape} ${it.theme}" })
+  fun everyDesignDrawsEveryKeyOfItsTypeAsTheConverterDoes() {
+    val differing =
+      designedTypes().flatMap { cardType ->
+        val design = designOf(cardType)
+        val keys = libraryKeys(cardType)
+        assertTrue(keys.isNotEmpty(), "the library has $cardType keys")
+        println("$cardType.uid: ${keys.size} library keys")
+        keys
+          .filterNot { key ->
+            val converter = CardDesignTemplates.capture(context, key)
+            val fromDesign = CheckedInCardDesigns.captureDesign(context, key, design)
+            converter.bytes.contentEquals(fromDesign.bytes)
+          }
+          .map { "$cardType ${it.shape} ${it.theme}" }
+      }
+    assertEquals(emptyList(), differing)
   }
 
   @Test
@@ -49,6 +52,13 @@ class CardDesignDocumentParityTest {
         }
     assertEquals(emptyList(), problems)
   }
+
+  /** The card types with a checked-in design. */
+  private fun designedTypes(): List<String> =
+    CheckedInCardDesigns.DIRECTORY.listFiles { file -> file.extension == "uid" }!!.map {
+        it.nameWithoutExtension
+      }
+      .sorted()
 
   private fun designOf(cardType: String) =
     requireNotNull(CheckedInCardDesigns.designFor(cardType)) { "no $cardType.uid" }

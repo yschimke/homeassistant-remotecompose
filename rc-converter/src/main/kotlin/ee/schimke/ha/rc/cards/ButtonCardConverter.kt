@@ -3,36 +3,24 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaIconIdentity
 import ee.schimke.ha.rc.HaStateColor
-import ee.schimke.ha.rc.LocalCardSizeMode
-import ee.schimke.ha.rc.LocalFixedCanvasAxis
-import ee.schimke.ha.rc.LocalGridSquareCells
-import ee.schimke.ha.rc.LocalInCardContainer
-import ee.schimke.ha.rc.RemoteMinSizeGate
-import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaButtonData
-import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaButton
-import ee.schimke.ha.rc.components.RemoteHaButtonIcon
-import ee.schimke.ha.rc.components.RemoteHaButtonRow
-import ee.schimke.ha.rc.components.RemoteHaIconHero
 import ee.schimke.ha.rc.components.RemoteHaToggleButton
-import ee.schimke.ha.rc.components.RemoteHaWideHero
 import ee.schimke.ha.rc.defaultTapActionFor
+import ee.schimke.ha.rc.design.CardDesigns
+import ee.schimke.ha.rc.design.LocalCardInput
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.icons.withIcons
@@ -48,27 +36,12 @@ import kotlinx.serialization.json.put
  * through [RemoteHaToggleButton] so tap crossfades the accent when the host writes the new state
  * back; read-only entities go through the simpler [RemoteHaButton].
  *
- * In [CardSizeMode.Fixed] the converter encodes a 2-tier ladder driven by the runtime canvas
- * (mirrors the button ladder in `docs/architecture/adaptive-card-layouts.md` §button):
- *
- * * **icon + name** — the full button, self-centred via `fillMaxSize` so it fills / centres rather
- *   than pinning top-left on big cells.
- * * **icon chip** — [RemoteHaButtonIcon], the tinted-chip identity tier for cells too small for the
- *   full button (`1×1` launcher): the name stays under the chip at label size unless the icon is
- *   evocative ([HaIconIdentity]), as card-information-hierarchy.md has it.
- *
- * A Wear slot gates on height instead ([WEAR_SMALL_MAX_HEIGHT_DP]): the Small container takes
- * [RemoteHaButtonRow] (the icon beside the name, and the state with `show_state`), the Large one
- * the full button.
- *
- * The gate is a **single** boolean off a single float expression `min(w, h ·
- * minW/minH).isGreaterThanOrEqualTo(minW)`, which is true only when the cell is both wide enough
- * (`w ≥ minW`) and tall enough (`h ≥ minH`). Encoding the 2-D test as one `min` expression (rather
- * than `w.isGreaterThanOrEqualTo(..) .and(h.isGreaterThanOrEqualTo(..))`) sidesteps the alpha010
- * quirk where `RemoteBoolean .and()` and nested width/height state-layouts collapse to `false` at
- * playback (#224, see `GaugeCardConverter`). It lets the narrow-tall `1×1` cell and a wide-short
- * cell *both* fall to the icon-only tier while the wide-and-tall `2×1` / `3×2` cells keep the name
- * — something no single width-only or height-only gate can do.
+ * Its layout is its card design, `button.uid` ([ButtonDesignParts] has the forms and what picks
+ * between them): in a fixed canvas the full button where the cell fits its icon and name, the icon
+ * chip where it doesn't (`ha-cards/min-size-gate`, a single 2-D test so the narrow-tall `1×1` cell
+ * and a wide-short cell both fall to the chip; the name stays under the chip unless the icon is
+ * evocative, [HaIconIdentity]), a launcher cell with a hero scale its hero forms, and a Wear slot
+ * the icon beside its name below [WEAR_SMALL_MAX_HEIGHT_DP], the full button above.
  */
 class ButtonCardConverter : CardConverter {
   override val cardType: String = CardTypes.BUTTON
@@ -98,123 +71,16 @@ class ButtonCardConverter : CardConverter {
       if (properties[SHOW_NAME] == "0") put("show_name", false)
     }
 
+  /**
+   * The button drawn from its card design, `card-designs/ui-builder/designs/button.uid`
+   * ([CardDesigns]): which form of the button shows at which size, on the dashboard, a launcher
+   * cell or a Wear container, is the design's; [ButtonDesignParts] draw the forms.
+   */
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val data = buttonData(card, snapshot)
-    when (LocalCardSizeMode.current) {
-      // In a square grid cell (as narrow as MinGridCellWidthDp, so as short) the compact body
-      // keeps the icon and name inside the square.
-      CardSizeMode.Wrap -> RenderButton(data, modifier, compact = LocalGridSquareCells.current)
-      CardSizeMode.Fixed -> {
-        val entity = data.entityId?.let { snapshot.states[it] }
-        // The 1×1 chip drops the name only for an evocative icon (card-information-hierarchy.md).
-        val chipName = data.showName && HaIconIdentity.chipShowsName(card, entity)
-        AdaptiveButton(data, modifier, chipName)
-      }
-    }
-  }
-
-  @Composable
-  private fun AdaptiveButton(data: HaButtonData, modifier: RemoteModifier, chipName: Boolean) {
-    // `show_icon: false` leaves no icon for the icon-only tier: the full button fills every cell.
-    if (!data.showIcon) {
-      RenderButton(data, modifier.fillMaxSize(), compact = true)
-      return
-    }
-    val row = captureRowScale()
-    if (row != null && data.showName) {
-      // A wide, short launcher widget: the button's icon beside its name and (when shown) state.
-      RemoteHaWideHero(
-        HaTileData(
-          entityId = data.entityId,
-          name = data.name,
-          state = data.state ?: "".rs,
-          icon = data.icon,
-          accent = data.accent,
-          tapAction = data.tapAction,
-        ),
-        row.copy(name = row.state),
-        modifier.fillMaxSize(),
-        showState = data.state != null,
-      )
-      return
-    }
-    val hero = captureHeroScale()
-    if (hero != null && data.showName) {
-      // A roomy launcher widget: the button's icon, name and (when shown) state, grown with it.
-      RemoteHaIconHero(
-        HaTileData(
-          entityId = data.entityId,
-          name = data.name,
-          state = data.state ?: "".rs,
-          icon = data.icon,
-          accent = data.accent,
-          tapAction = data.tapAction,
-        ),
-        hero,
-        modifier.fillMaxSize(),
-        showState = data.state != null,
-      )
-      return
-    }
-    // In a stack or grid the container is the multi-entity card: its buttons take the size gate
-    // below, which keeps a narrow cell to the icon, rather than naming each one.
-    if (LocalFixedCanvasAxis.current == BreakpointAxis.Height && !LocalInCardContainer.current) {
-      // A Wear slot, wide at either size: the Small container (~44dp of content) is too short for
-      // the name under the icon, so it takes the name beside it; the Large one the full button.
-      // The name stays at both sizes: an icon alone leaves two buttons on one watch alike
-      // (card-information-hierarchy.md).
-      RemoteSizeBreakpoint(
-        thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
-        modifier = modifier.fillMaxSize(),
-        axis = BreakpointAxis.Height,
-      ) { tier ->
-        if (tier == 0 && data.showName) RemoteHaButtonRow(data, RemoteModifier.fillMaxSize())
-        else if (tier == 0) RemoteHaButtonIcon(data, RemoteModifier.fillMaxSize())
-        else RenderButton(data, RemoteModifier.fillMaxSize(), compact = true)
-      }
-      return
-    }
-    if (data.state != null && data.showName) {
-      // With `show_state` the state line under the name needs a taller cell than the name alone
-      // (~96 dp). Below that (a `1×1` or `2×1` widget) the dense body keeps the icon, the name and
-      // the state, the button's value, a size smaller, rather than cutting the state off at the
-      // bottom or dropping it for the icon chip (card-information-hierarchy.md). One gate: a
-      // third tier here stops the AndroidX player drawing the widget (adaptive-card-layouts.md,
-      // Known gaps #10).
-      RemoteMinSizeGate(
-        minWidthDp = MinIconNameWidthDp,
-        minHeightDp = MinIconNameStateHeightDp,
-        modifier = modifier.fillMaxSize(),
-      ) { tall ->
-        RenderButton(data, RemoteModifier.fillMaxSize(), compact = true, dense = !tall)
-      }
-      return
-    }
-    RemoteMinSizeGate(
-      minWidthDp = MinIconNameWidthDp,
-      minHeightDp = MinIconNameHeightDp,
-      modifier = modifier.fillMaxSize(),
-    ) { roomy ->
-      if (roomy) {
-        RenderButton(data, RemoteModifier.fillMaxSize(), compact = true)
-      } else {
-        RemoteHaButtonIcon(data, RemoteModifier.fillMaxSize(), showName = chipName)
-      }
-    }
-  }
-
-  @Composable
-  private fun RenderButton(
-    data: HaButtonData,
-    modifier: RemoteModifier,
-    compact: Boolean = false,
-    dense: Boolean = false,
-  ) {
-    if (data.accent.toggleable) {
-      RemoteHaToggleButton(data, modifier, compact, dense)
-    } else {
-      RemoteHaButton(data, modifier, compact, dense)
+    val design = requireNotNull(CardDesigns.design(cardType)) { "no button.uid packaged" }
+    CompositionLocalProvider(LocalCardInput provides DesignTemplateInput(card, snapshot)) {
+      design.Render(modifier)
     }
   }
 
@@ -223,22 +89,6 @@ class ButtonCardConverter : CardConverter {
 
     const val SHOW_NAME = "show_name"
 
-    /** Smallest cell width that fits the icon + name tier. */
-    const val MinIconNameWidthDp = 96
-
-    /**
-     * Smallest cell height that fits the icon + reserved label line: 6 + 44 (chip) + 4 + ~19 (a
-     * 16sp `BodyLarge` line) + 6 ≈ 79dp. It was 72, which already left the old 15sp label a few dp
-     * short; a cell too short for the line now takes the icon-only tier rather than clipping it.
-     */
-    const val MinIconNameHeightDp = 80
-
-    /**
-     * The compact button with its `show_state` line: 80 + a ~17dp `Label` line. Shorter, the dense
-     * body.
-     */
-    const val MinIconNameStateHeightDp = 98
-
     /** Narrowest `grid` cell: the compact body (44 dp chip + 12 dp sides) plus a short name. */
     const val MinGridCellWidthDp = 80
   }
@@ -246,7 +96,7 @@ class ButtonCardConverter : CardConverter {
 
 /** Build the [HaButtonData] payload from card config + live snapshot. */
 @Composable
-private fun buttonData(card: CardConfig, snapshot: HaSnapshot): HaButtonData {
+internal fun buttonData(card: CardConfig, snapshot: HaSnapshot): HaButtonData {
   val entityId = card.raw["entity"]?.jsonPrimitive?.content
   val entity = entityId?.let { snapshot.states[it] }
   val name =

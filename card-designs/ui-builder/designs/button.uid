@@ -1,0 +1,222 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "button",
+  "title": "Button",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 120,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "cell"
+        ]
+      }
+    },
+    "cell": {
+      "id": "cell",
+      "componentId": "ha-cards/button-cell",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "wrap": [
+          "dashboard"
+        ],
+        "fill": [
+          "fill"
+        ],
+        "row": [
+          "launcher-row"
+        ],
+        "hero": [
+          "launcher-hero"
+        ],
+        "wear": [
+          "wear-tiers"
+        ],
+        "other": [
+          "gate"
+        ]
+      }
+    },
+    "dashboard": {
+      "id": "dashboard",
+      "componentId": "ha-cards/button-full",
+      "properties": {
+        "compact": {
+          "type": "string",
+          "value": "grid"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "fill": {
+      "id": "fill",
+      "componentId": "ha-cards/button-full",
+      "properties": {
+        "compact": {
+          "type": "string",
+          "value": "true"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "launcher-row": {
+      "id": "launcher-row",
+      "componentId": "ha-cards/button-wide-hero",
+      "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "launcher-hero": {
+      "id": "launcher-hero",
+      "componentId": "ha-cards/button-icon-hero",
+      "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "wear-tiers": {
+      "id": "wear-tiers",
+      "componentId": "ha-cards/size-tiers",
+      "properties": {
+        "axis": {
+          "type": "string",
+          "value": "height"
+        },
+        "thresholdsDp": {
+          "type": "string",
+          "value": "80"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {
+        "tier0": [
+          "wear-row"
+        ],
+        "tier1": [
+          "wear-full"
+        ]
+      }
+    },
+    "wear-row": {
+      "id": "wear-row",
+      "componentId": "ha-cards/button-name-row",
+      "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "wear-full": {
+      "id": "wear-full",
+      "componentId": "ha-cards/button-full",
+      "properties": {
+        "compact": {
+          "type": "string",
+          "value": "true"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "gate": {
+      "id": "gate",
+      "componentId": "ha-cards/min-size-gate",
+      "properties": {
+        "minWidthDp": {
+          "type": "int",
+          "value": 96
+        },
+        "minHeightDp": {
+          "type": "int",
+          "value": 80
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {
+        "roomy": [
+          "roomy"
+        ],
+        "small": [
+          "small"
+        ]
+      }
+    },
+    "roomy": {
+      "id": "roomy",
+      "componentId": "ha-cards/button-full",
+      "properties": {
+        "compact": {
+          "type": "string",
+          "value": "true"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "small": {
+      "id": "small",
+      "componentId": "ha-cards/button-icon",
+      "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    }
+  }
+}
