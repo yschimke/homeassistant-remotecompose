@@ -11,8 +11,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalInspectionMode
+import ee.schimke.ha.client.design.CardDesignOverride
 import ee.schimke.ha.client.design.CardDesignOverrides
 import ee.schimke.ha.client.design.DesignStore
+import ee.schimke.ha.client.design.DesignsById
 import ee.schimke.ha.client.design.StoredManifest
 import ee.schimke.ha.client.design.UsageSource
 import ee.schimke.ha.design.DesignEntry
@@ -81,12 +83,18 @@ data class CardDesignChoice(
           .flatMap { s -> listOf(false, true).map { CardDesignTemplates.bakedTheme(style, it, s) } }
           .distinct()
       val variants = (listOf(variant) + overrides.variants + DesignKey.DEFAULT_VARIANT).distinct()
+      // A design a card was switched to comes whole for these themes: any variant or author.
+      val chosen = overrides.designIds.sorted()
       return themes.flatMap { theme ->
         variants.flatMap { v ->
           authors.map { DesignQuery(variant = v, author = it, theme = theme) }
-        }
+        } + chosen.map { DesignQuery(designId = it, theme = theme) }
       }
     }
+
+  /** The designs cards were switched to: kept whole beside [prefer]'s collapsed resolution. */
+  val designIds: Set<String>
+    get() = overrides.designIds
 
   /** Between designs for one key, the preferred author's first. */
   val prefer: List<DesignQuery>
@@ -112,6 +120,11 @@ data class CardDesigns(
    * instead of the generic design for the same key ([DeviceMatch.pick]).
    */
   val deviceByKey: Map<DesignKey, List<Pair<DeviceMatch, ByteArray>>> = emptyMap(),
+  /**
+   * The designs cards were switched to ([CardDesignOverride.designId]), whole: every cached entry
+   * of each, whatever its author or variant.
+   */
+  val byDesign: DesignsById = DesignsById(),
 )
 
 val LocalCardDesigns = staticCompositionLocalOf { CardDesigns() }
@@ -125,15 +138,21 @@ suspend fun loadCardDesigns(context: Context, choice: CardDesignChoice): CardDes
   val resolved =
     withContext(Dispatchers.IO) {
       val dir = CardDesignSync.storeDir(context, choice.serverUrl)
-      CardDesignSnapshot.read(dir, choice.prefer)
+      CardDesignSnapshot.read(dir, choice.prefer, choice.designIds)
         ?: run {
           val stamp = CardDesignSnapshot.manifestStamp(dir)
           CardDesignSync.cachedRepository(context, choice.serverUrl)
-            .resolveAllWithDevices(prefer = choice.prefer)
-            .also { CardDesignSnapshot.write(dir, choice.prefer, stamp, it) }
+            .resolveAllWithDevices(prefer = choice.prefer, designIds = choice.designIds)
+            .also { CardDesignSnapshot.write(dir, choice.prefer, choice.designIds, stamp, it) }
         }
     }
-  return CardDesigns(resolved.byKey, choice.variant, choice, resolved.deviceByKey)
+  return CardDesigns(
+    resolved.byKey,
+    choice.variant,
+    choice,
+    resolved.deviceByKey,
+    resolved.byDesign,
+  )
 }
 
 /**
@@ -207,10 +226,13 @@ fun rememberPreloadedCardDesigns(): CardDesigns? {
 val LocalCardDesignOverrides = staticCompositionLocalOf { CardDesignOverrides() }
 
 /**
- * The design [card] renders with: the server's design for its key in the preferred variant
- * ([variant] when the card overrides it, else the choice's), then in the `default` variant,
- * otherwise the local library's. Null only when the card has no template shape (an unsupported type
- * or config, or an entity not loaded yet); those cards capture through their converter.
+ * The design [card] renders with: the design the card was switched to ([designId]) when it has an
+ * entry for the card's key (one made for the card's device first, else its generic one); otherwise
+ * the server's design for its key in the preferred variant ([variant] when the card overrides it,
+ * else the choice's), then in the `default` variant, otherwise the local library's. A chosen design
+ * that is missing, revoked or not fetched yet falls through to that same order, never to nothing.
+ * Null only when the card has no template shape (an unsupported type or config, or an entity not
+ * loaded yet); those cards capture through their converter.
  *
  * A dashboard card counts towards template usage ([CardUsage]); [recordUsage] false is for samples
  * that aren't the user's cards (the card style picker).
@@ -226,20 +248,19 @@ fun cardTemplateFor(
   cardStyle: HaUberTheme = HaUberTheme.Classic,
   variant: String? = null,
   recordUsage: Boolean = true,
+  designId: String? = null,
 ): CardTemplatePlayback? {
   val key =
     CardDesignTemplates.keyFor(card, snapshot, style, dark, registry, cardStyle = cardStyle)
       ?: return null
-  val preferred = key.copy(variant = variant ?: designs.variant)
-  // A design made for this card's device wins over the generic one, in either variant. Each
-  // lookup keeps the key it matched under, so usage reports the variant whose bytes were used.
-  val device = cardDevice(card, snapshot)
   val (server, usedKey) =
-    listOf(preferred, key).firstNotNullOfOrNull { k ->
-      device?.let { DeviceMatch.pick(designs.deviceByKey[k].orEmpty(), it) }?.let { it to k }
-    }
-      ?: listOf(preferred, key).firstNotNullOfOrNull { k -> designs.byKey[k]?.let { it to k } }
-      ?: (null to key)
+    serverDesignFor(
+      key,
+      designs,
+      variant = variant ?: designs.variant,
+      device = cardDevice(card, snapshot),
+      designId = designId,
+    )
   designs.loadedFor?.let { CardDesignSources.record(it, key, fromServer = server != null) }
   if (recordUsage) {
     CardUsage.record(
@@ -261,6 +282,29 @@ fun cardTemplateFor(
       context.resources.configuration.fontScale,
     )
   return CardDesignTemplates.playback(card, folded, registry)
+}
+
+/**
+ * The server design for [key] among [designs], with the key it was found under (so usage reports
+ * the variant whose bytes were used), or null bytes and [key] when the server has none. In order:
+ * the design the card was switched to ([designId]) when it has an entry for the key, a design made
+ * for the card's [device], then the generic one; each in [variant] first, then `default`.
+ */
+internal fun serverDesignFor(
+  key: DesignKey,
+  designs: CardDesigns,
+  variant: String,
+  device: DeviceInfo?,
+  designId: String? = null,
+): Pair<ByteArray?, DesignKey> {
+  val preferred = key.copy(variant = variant)
+  val keys = listOf(preferred, key)
+  return designId?.let { designs.byDesign.find(it, preferred, device) }?.let { (k, b) -> b to k }
+    ?: keys.firstNotNullOfOrNull { k ->
+      device?.let { DeviceMatch.pick(designs.deviceByKey[k].orEmpty(), it) }?.let { it to k }
+    }
+    ?: keys.firstNotNullOfOrNull { k -> designs.byKey[k]?.let { it to k } }
+    ?: (null to key)
 }
 
 /**
@@ -301,6 +345,7 @@ suspend fun warmCardTemplates(
             override?.cardStyle?.let(HaUberTheme::byId) ?: cardStyle,
             variant = override?.variant,
             recordUsage = false,
+            designId = override?.designId,
           )
           ?.let { preloadForComposePlayer(it.bytes) }
       }

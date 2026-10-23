@@ -10,11 +10,19 @@ import kotlinx.serialization.json.JsonObject
 /**
  * How one card, or every card of one type, departs from the user's design choice: a different card
  * style (uber theme id) and/or a different design variant. A null field keeps the choice's value.
+ *
+ * [designId] switches a card to one design ([ee.schimke.ha.design.DesignEntry.stableDesignId]): a
+ * device design or a fork, which then draws the card whenever it has an entry for the card's key.
+ * The style sheet sets it on one card ([CardDesignOverrides.byCard]) only.
  */
 @Serializable
-data class CardDesignOverride(val cardStyle: String? = null, val variant: String? = null) {
+data class CardDesignOverride(
+  val cardStyle: String? = null,
+  val variant: String? = null,
+  val designId: String? = null,
+) {
   val isEmpty: Boolean
-    get() = cardStyle == null && variant == null
+    get() = cardStyle == null && variant == null && designId == null
 }
 
 /** Where an override applies: the one card it was made on, or every card of that card's type. */
@@ -44,6 +52,7 @@ data class CardDesignOverrides(
       CardDesignOverride(
         cardStyle = own?.cardStyle ?: type?.cardStyle,
         variant = own?.variant ?: type?.variant,
+        designId = own?.designId ?: type?.designId,
       )
     return merged.takeUnless { it.isEmpty }
   }
@@ -76,6 +85,10 @@ data class CardDesignOverrides(
   /** Every variant an override names: the sync downloads these too. */
   val variants: Set<String>
     get() = (byCard.values + byType.values).mapNotNull { it.variant }.toSet()
+
+  /** Every design an override names: the sync downloads its entries too. */
+  val designIds: Set<String>
+    get() = (byCard.values + byType.values).mapNotNull { it.designId }.toSet()
 
   fun encode(): String = json.encodeToString(serializer(), this)
 

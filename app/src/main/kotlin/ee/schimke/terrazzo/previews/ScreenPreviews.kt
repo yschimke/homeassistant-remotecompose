@@ -288,6 +288,57 @@ fun Screen_CardStyle() = PhoneHost {
   }
 }
 
+/**
+ * The card style sheet with the server's designs for the card listed: the library's, a device
+ * design for the card's boiler and a fork, the device design chosen for this card.
+ */
+@Preview(name = "card style · designs", showBackground = false, widthDp = PHONE_WIDTH_DP)
+@Composable
+fun Screen_CardStyle_Designs() = PhoneHost {
+  val boilerDial = "user:boiler-dial"
+  ee.schimke.terrazzo.dashboard.CardStylePicker(
+    card = HISTORY_SAMPLE_CARD,
+    overrides =
+      ee.schimke.ha.client.design
+        .CardDesignOverrides()
+        .with(
+          ee.schimke.ha.client.design.CardDesignScope.Card,
+          HISTORY_SAMPLE_CARD,
+          ee.schimke.ha.client.design.CardDesignOverride(designId = boilerDial),
+        ),
+    dashboardStyle = ee.schimke.ha.rc.components.HaUberTheme.Classic,
+    onPick = { _, _ -> },
+    onDone = {},
+    designs =
+      listOf(
+        ee.schimke.ha.client.design.DesignOption(
+          designId = "library:tile",
+          title = "Built-in",
+          author = ee.schimke.ha.design.DesignEntry.BUILTIN_AUTHOR,
+          device = null,
+        ),
+        ee.schimke.ha.client.design.DesignOption(
+          designId = boilerDial,
+          title = "Boiler dial",
+          author = "github:octocat",
+          device = ee.schimke.ha.design.DeviceMatch(manufacturer = "Vaillant", model = "ecoTEC*"),
+        ),
+        ee.schimke.ha.client.design.DesignOption(
+          designId = "user:big-number",
+          title = "Big number",
+          author = "github:yschimke",
+          device = null,
+        ),
+      ),
+  ) {
+    ee.schimke.terrazzo.dashboard.StudioCardPreview(
+      demoSession(),
+      HISTORY_SAMPLE_CARD,
+      DemoData.snapshot(DEMO_CLOCK_MS),
+    )
+  }
+}
+
 @Preview(
   name = "widgets",
   showBackground = false,

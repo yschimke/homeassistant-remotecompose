@@ -524,4 +524,33 @@ class UserDesignsTest {
       }
     assertEquals(HttpStatusCode.BadRequest, empty.status)
   }
+
+  @Test
+  fun aPublishedDesignIsOneDesignIdAcrossItsKeysWithItsUiBuilderTitle() = testApplication {
+    val f = fixture()
+    val published = f.publish("wear")
+    val design = json.decodeFromString(UserDesign.serializer(), published.bodyAsText())
+    assertEquals("user:wear", design.entry.designId)
+    assertEquals("Tile", design.entry.title)
+    // Its Wear widget designs are the same design on another surface.
+    val all = UserDesignStore(f.storeDir).designs("octocat")
+    assertTrue(all.size > 1)
+    assertTrue(all.all { it.entry.designId == "user:wear" })
+    // A design UI Builder can't describe still gets its id, untitled.
+    val untitled =
+      json.decodeFromString(UserDesign.serializer(), f.publish("good", variant = "g").bodyAsText())
+    assertEquals("user:good", untitled.entry.designId)
+    assertEquals(null, untitled.entry.title)
+  }
+
+  @Test
+  fun aDesignPublishedBeforeIdsIsServedWithOne() {
+    val store = UserDesignStore(Files.createTempDirectory("user-designs").toFile(), clock = { 7 })
+    val design = store.publish("octocat", key.copy(variant = "garage"), template, 1, "good", 3)
+    val old = design.copy(entry = design.entry.copy(designId = null))
+    assertEquals("user:good", old.served.designId)
+    assertEquals(design.entry, design.served)
+    // Nothing to name it by: served as stored.
+    assertEquals(null, old.copy(sourceDesignId = null).served.designId)
+  }
 }

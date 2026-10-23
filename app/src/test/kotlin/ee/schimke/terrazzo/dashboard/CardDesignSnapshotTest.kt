@@ -1,5 +1,7 @@
 package ee.schimke.terrazzo.dashboard
 
+import ee.schimke.ha.client.design.DesignedBlob
+import ee.schimke.ha.client.design.DesignsById
 import ee.schimke.ha.client.design.ResolvedDesigns
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignQuery
@@ -30,34 +32,52 @@ class CardDesignSnapshotTest {
     ResolvedDesigns(
       byKey = mapOf(key to byteArrayOf(1, 2, 3)),
       deviceByKey = mapOf(key to listOf(match to byteArrayOf(4, 5))),
+      byDesign =
+        DesignsById(
+          mapOf(
+            "user:fork" to
+              listOf(
+                DesignedBlob(key, null, byteArrayOf(6)),
+                DesignedBlob(key, match, byteArrayOf(7)),
+              )
+          )
+        ),
     )
   private val prefer = listOf(DesignQuery(author = "terrazzo"))
+  private val ids = setOf("user:fork")
 
   @AfterTest fun cleanUp() = dir.deleteRecursively().let {}
 
   @Test
   fun readsBackWhatItWrote() {
-    CardDesignSnapshot.write(dir, prefer, CardDesignSnapshot.manifestStamp(dir), designs)
+    CardDesignSnapshot.write(dir, prefer, ids, CardDesignSnapshot.manifestStamp(dir), designs)
 
-    val read = assertNotNull(CardDesignSnapshot.read(dir, prefer))
+    val read = assertNotNull(CardDesignSnapshot.read(dir, prefer, ids))
     assertContentEquals(byteArrayOf(1, 2, 3), read.byKey[key])
     val device = read.deviceByKey[key].orEmpty().single()
     assertEquals(match, device.first)
     assertContentEquals(byteArrayOf(4, 5), device.second)
+    assertContentEquals(byteArrayOf(6), read.byDesign.find("user:fork", key, null)?.second)
+    assertContentEquals(
+      byteArrayOf(7),
+      read.byDesign.find("user:fork", key, ee.schimke.ha.design.DeviceInfo("vaillant"))?.second,
+    )
   }
 
   @Test
   fun aNewManifestInvalidatesIt() {
-    CardDesignSnapshot.write(dir, prefer, CardDesignSnapshot.manifestStamp(dir), designs)
+    CardDesignSnapshot.write(dir, prefer, ids, CardDesignSnapshot.manifestStamp(dir), designs)
     manifest.writeText("{\"serial\":2, \"designs\":[]}")
 
-    assertNull(CardDesignSnapshot.read(dir, prefer))
+    assertNull(CardDesignSnapshot.read(dir, prefer, ids))
   }
 
   @Test
   fun otherPreferencesHaveTheirOwn() {
-    CardDesignSnapshot.write(dir, prefer, CardDesignSnapshot.manifestStamp(dir), designs)
+    CardDesignSnapshot.write(dir, prefer, ids, CardDesignSnapshot.manifestStamp(dir), designs)
 
-    assertNull(CardDesignSnapshot.read(dir, listOf(DesignQuery(author = "github:other"))))
+    assertNull(CardDesignSnapshot.read(dir, listOf(DesignQuery(author = "github:other")), ids))
+    // Switching another card to a design is another resolution too.
+    assertNull(CardDesignSnapshot.read(dir, prefer, ids + "user:other"))
   }
 }

@@ -1,5 +1,7 @@
 package ee.schimke.terrazzo.dashboard
 
+import ee.schimke.ha.client.design.DesignedBlob
+import ee.schimke.ha.client.design.DesignsById
 import ee.schimke.ha.client.design.ResolvedDesigns
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.design.DesignKey
@@ -37,6 +39,7 @@ internal object CardDesignSnapshot {
     val manifestModified: Long,
     val generic: List<Generic> = emptyList(),
     val device: List<Device> = emptyList(),
+    val designed: List<Designed> = emptyList(),
   )
 
   @Serializable private class Generic(val key: DesignKey, val bytes: ByteArray)
@@ -44,13 +47,24 @@ internal object CardDesignSnapshot {
   @Serializable
   private class Device(val key: DesignKey, val match: DeviceMatch, val bytes: ByteArray)
 
+  @Serializable
+  private class Designed(
+    val designId: String,
+    val key: DesignKey,
+    val match: DeviceMatch? = null,
+    val bytes: ByteArray,
+  )
+
   /** The manifest's identity now: take it before resolving, so a sync mid-resolve invalidates. */
   fun manifestStamp(dir: File): Pair<Long, Long> =
     File(dir, MANIFEST).let { it.length() to it.lastModified() }
 
-  /** The snapshot for [prefer], or null when there is none or the manifest has changed since. */
-  fun read(dir: File, prefer: List<DesignQuery>): ResolvedDesigns? {
-    val file = file(dir, prefer)
+  /**
+   * The snapshot for [prefer] and [designIds], or null when there is none or the manifest has
+   * changed since.
+   */
+  fun read(dir: File, prefer: List<DesignQuery>, designIds: Set<String>): ResolvedDesigns? {
+    val file = file(dir, prefer, designIds)
     if (!file.isFile) return null
     val snapshot =
       runCatching { ProtoBuf.decodeFromByteArray(Snapshot.serializer(), file.readBytes()) }
@@ -59,13 +73,21 @@ internal object CardDesignSnapshot {
     return ResolvedDesigns(
       byKey = snapshot.generic.associate { it.key to it.bytes },
       deviceByKey = snapshot.device.groupBy({ it.key }) { it.match to it.bytes },
+      byDesign =
+        DesignsById(
+          snapshot.designed.groupBy({ it.designId }) { DesignedBlob(it.key, it.match, it.bytes) }
+        ),
     )
   }
 
-  /** Stores [designs], resolved for [prefer] from the manifest [stamp] identified; drops others. */
+  /**
+   * Stores [designs], resolved for [prefer] and [designIds] from the manifest [stamp] identified;
+   * drops others.
+   */
   fun write(
     dir: File,
     prefer: List<DesignQuery>,
+    designIds: Set<String>,
     stamp: Pair<Long, Long>,
     designs: ResolvedDesigns,
   ) {
@@ -78,8 +100,12 @@ internal object CardDesignSnapshot {
           designs.deviceByKey.flatMap { (key, list) ->
             list.map { (match, bytes) -> Device(key, match, bytes) }
           },
+        designed =
+          designs.byDesign.entries.flatMap { (id, list) ->
+            list.map { Designed(id, it.key, it.device, it.bytes) }
+          },
       )
-    val target = file(dir, prefer)
+    val target = file(dir, prefer, designIds)
     dir.mkdirs()
     // A unique temp file and a rename, as FileDesignStore writes, so a reader never sees half.
     val tmp = File.createTempFile("${target.name}.", ".tmp", dir)
@@ -100,9 +126,11 @@ internal object CardDesignSnapshot {
       ?.forEach(File::delete)
   }
 
-  private fun file(dir: File, prefer: List<DesignQuery>): File {
+  private fun file(dir: File, prefer: List<DesignQuery>, designIds: Set<String>): File {
     val queries = Json.encodeToString(ListSerializer(DesignQuery.serializer()), prefer)
-    val id = Sha256.hex("${BuildConfig.VERSION_CODE}:$queries".encodeToByteArray())
+    // Each id is a fork or device design name; sorted, so the set's order never splits a file.
+    val ids = designIds.sorted().joinToString("\n")
+    val id = Sha256.hex("${BuildConfig.VERSION_CODE}:$queries:$ids".encodeToByteArray())
     return File(dir, "$PREFIX$id$SUFFIX")
   }
 }

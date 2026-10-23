@@ -29,10 +29,10 @@ matters here:
 - **Forking is approximate.** "Design in UI Builder" rebuilds a library design from `ha-cards`
   components (`HaCardsSeed`). Gauge, tile and button map across; every other card becomes entity
   rows, so a fork is a lookalike, not the card.
-- **Device designs are picked, never chosen.** `DeviceMatch` (integration, manufacturer, model
-  glob, translation key) picks the most specific device design automatically
-  (`CardDesigns.cardTemplateFor`). A user can only override a card's style and variant
-  (`CardDesignOverrides`), and no UI sets the variant.
+- **Device designs are picked, or chosen per card.** `DeviceMatch` (integration, manufacturer,
+  model glob, translation key) picks the most specific device design automatically
+  (`CardDesigns.cardTemplateFor`); since D5 a card can be switched to any design by its id (see
+  [Switching a device's card](#switching-a-devices-card)). No UI sets the variant.
 - **User designs live only on the server volume.** Nothing backs them up or imports them.
 - **Families already share components.** Meters, tile layouts and surfaces switch form per
   `HaVisualFamily`, and `ha-cards/uber-theme` re-themes a whole UI Builder design from one
@@ -176,17 +176,29 @@ branched, which doesn't fit a design someone keeps and republishes.
 
 ## Switching a device's card
 
-- `DesignEntry` gains a stable **design id** (the design server's id for a published design, the
-  `.uid` file name for a library one), and `DesignRepository` keeps every entry's bytes by id
-  alongside today's resolution, which collapses competing entries per key by author and manifest
-  order. Without that, a stored id has nothing to resolve against.
-- `CardDesignOverrides` gains a **design id** per card (`byCard`, keyed by the card's config
-  fingerprint), next to the existing style and variant.
-- `cardTemplateFor` checks that override first. Otherwise the order stays the same: the device
-  design for the variant, then the generic design, then the shipped asset.
-- The card's style sheet lists every design that fits the card: the generic one, the device
-  designs whose `DeviceMatch` matches the card's device, and the forks of either the person can
-  see. Choosing one stores its id; "Automatic" clears it.
+Built (D5):
+
+- `DesignEntry` carries a stable **`designId`** and an optional `title`, both left off the wire
+  when unset, so older manifests parse and older clients ignore them. One id names one design
+  across every key it covers: `library:<cardType>` (title "Built-in") from `DesignPublisher`, and
+  `user:<UI Builder design id>` (its UI Builder title) from `POST /api/my/designs`, which the
+  design server also fills in for designs published before ids. A library entry without an id
+  still answers to `library:<cardType>` (`stableDesignId`).
+- `DesignRepository` keeps today's resolution, which collapses competing entries per key by author
+  and manifest order, and resolves the chosen designs **whole** beside it
+  (`resolveAllWithDevices(designIds = …)` → `DesignsById`, also `byDesign(id, key, device)`).
+  `designsFor(key, device)` lists, from the manifest, every live design with an entry for the key
+  (any variant or author) that is generic or made for a matching device.
+- `CardDesignOverrides.byCard` values gain a **`designId`**, persisted in `overrides.json` (old files
+  still load). `CardDesignChoice.queries` adds a `DesignQuery(designId = …)` per chosen design and
+  theme, so the sync fetches a chosen design's blobs whatever its author or variant.
+- `cardTemplateFor` (`serverDesignFor`) checks that override first: the chosen design's entry for
+  the card's device, else its generic one, in the preferred variant, then `default`, then any.
+  Otherwise the order stays the same. A chosen design that is missing, revoked or not fetched yet
+  falls through to that order, never to nothing. A Wear slot follows the same choice.
+- The card's style sheet has a **Design** section for "This card": "Automatic", then every design
+  `designsFor` lists for the card's key and device (`cardDevice`), with its title, author and the
+  device it is for. Choosing one stores its id; "Automatic" clears it.
 
 ## One design, every family
 

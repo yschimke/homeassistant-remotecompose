@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -36,13 +37,23 @@ import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.design.CardDesignOverride
 import ee.schimke.ha.client.design.CardDesignOverrides
 import ee.schimke.ha.client.design.CardDesignScope
+import ee.schimke.ha.client.design.DesignOption
+import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.CardDesignTemplates
+import ee.schimke.ha.rc.cards.defaultRegistry
+import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.ui.LocalCardStyle
+import ee.schimke.terrazzo.ui.LocalIsDarkTheme
+import ee.schimke.terrazzo.ui.LocalThemeStyle
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Draws one card, or every card of its type, in a card style other than the dashboard's. The card
@@ -50,6 +61,10 @@ import kotlinx.coroutines.launch
  * rather than a style name. The choice is kept on this device ([CardDesignOverrideStore]); the
  * dashboard and launcher widgets pick it up at once, and the design sync fetches the style's
  * designs. Wear widgets keep the watch's own card style for now.
+ *
+ * With a design server, the sheet also lists every design that can draw the card (the library's,
+ * device designs for the card's device and forks), so the card can be switched to one by its id
+ * ([CardDesignOverride.designId]); "Automatic" clears it.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,20 +79,39 @@ fun CardStyleSheet(
   val overrides by store.overrides.collectAsState()
   val scope = rememberCoroutineScope()
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+  val dashboardStyle = LocalCardStyle.current
+  val cardStyle = overrides.forCard(card)?.cardStyle?.let(HaUberTheme::byId) ?: dashboardStyle
+  val designs =
+    rememberCardDesignOptions(
+      card,
+      snapshot,
+      cardStyle,
+      LocalThemeStyle.current,
+      LocalIsDarkTheme.current,
+    )
   ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
     CardStylePicker(
       card = card,
       overrides = overrides,
-      dashboardStyle = LocalCardStyle.current,
+      dashboardStyle = dashboardStyle,
       onPick = { at, cardStyle ->
         scope.launch {
-          val keep = overrides.at(at, card)
-          store.set(at, card, CardDesignOverride(cardStyle = cardStyle, variant = keep?.variant))
+          val keep = overrides.at(at, card) ?: CardDesignOverride()
+          store.set(at, card, keep.copy(cardStyle = cardStyle))
           // A launcher widget of this card draws in its style too.
           WidgetRefreshScheduler(context.applicationContext).refreshAllNow()
         }
       },
       onDone = onDismiss,
+      designs = designs,
+      onPickDesign = { designId ->
+        scope.launch {
+          // A design is chosen for this card alone; the design sync fetches it.
+          val keep = overrides.at(CardDesignScope.Card, card) ?: CardDesignOverride()
+          store.set(CardDesignScope.Card, card, keep.copy(designId = designId))
+          WidgetRefreshScheduler(context.applicationContext).refreshAllNow()
+        }
+      },
     ) {
       DashboardCardPreview(session, card, snapshot)
     }
@@ -85,9 +119,51 @@ fun CardStyleSheet(
 }
 
 /**
+ * Every design in the cached manifest that can draw [card] in [cardStyle]: the library's, the
+ * device designs that match the card's device ([cardDevice]) and the forks the person can see.
+ * Empty with no design server, before its first sync, or for a card with no design key.
+ */
+@Composable
+private fun rememberCardDesignOptions(
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  cardStyle: HaUberTheme,
+  style: ThemeStyle,
+  dark: Boolean,
+): List<DesignOption> {
+  val context = LocalContext.current
+  val serverUrl = CardDesignPreload.designs.collectAsState().value?.loadedFor?.serverUrl
+  val options by
+    produceState(emptyList<DesignOption>(), card, snapshot, cardStyle, style, dark, serverUrl) {
+      if (serverUrl.isNullOrBlank()) return@produceState
+      value =
+        withContext(Dispatchers.IO) {
+          runCatching {
+              val registry = defaultRegistry().withEnhancedShutter()
+              val design = CardDesignTemplates.designCard(card, snapshot, registry)
+              val key =
+                CardDesignTemplates.keyFor(
+                  design,
+                  snapshot,
+                  style,
+                  dark,
+                  registry,
+                  cardStyle = cardStyle,
+                ) ?: return@runCatching emptyList()
+              CardDesignSync.cachedRepository(context, serverUrl)
+                .designsFor(key, cardDevice(design, snapshot))
+            }
+            .getOrDefault(emptyList())
+        }
+    }
+  return options
+}
+
+/**
  * The picker: the card [preview], which of "this card" or "every card of its type" a pick applies
- * to, then one radio list of styles led by "follow the dashboard". Apart from the sheet so a
- * preview can draw it.
+ * to, then the card's [designs] (when the server has any; for this card alone) led by "Automatic",
+ * and one radio list of styles led by "follow the dashboard". Apart from the sheet so a preview can
+ * draw it.
  */
 @Composable
 internal fun CardStylePicker(
@@ -97,6 +173,8 @@ internal fun CardStylePicker(
   onPick: (CardDesignScope, String?) -> Unit,
   onDone: () -> Unit,
   modifier: Modifier = Modifier,
+  designs: List<DesignOption> = emptyList(),
+  onPickDesign: (String?) -> Unit = {},
   preview: @Composable () -> Unit,
 ) {
   // Open on the scope that already decides this card's style, so the selected row is the one in
@@ -148,14 +226,33 @@ internal fun CardStylePicker(
           }
       }
     }
-    Column(
-      Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).selectableGroup()
-    ) {
-      StyleOption(followLabel, followStyle, selected = current == null) { onPick(at, null) }
-      HaUberTheme.all.forEach { theme ->
-        StyleOption(theme.displayName, null, selected = current == theme.id) {
-          onPick(at, theme.id)
+    Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+      // A design is chosen per card: the section shows while "This card" is picked.
+      if (designs.isNotEmpty() && at == CardDesignScope.Card) {
+        val chosen = overrides.at(CardDesignScope.Card, card)?.designId
+        SectionHeader("Design")
+        Column(Modifier.selectableGroup()) {
+          StyleOption(
+            "Automatic",
+            "The design for this device, else the usual one",
+            selected = chosen == null || designs.none { it.designId == chosen },
+          ) {
+            onPickDesign(null)
+          }
+          designs.forEach { design ->
+            StyleOption(
+              design.title ?: design.designId,
+              designSupportingText(design),
+              selected = chosen == design.designId,
+            ) {
+              onPickDesign(design.designId)
+            }
+          }
         }
+        SectionHeader("Style")
+      }
+      Column(Modifier.selectableGroup()) {
+        StyleOptions(at, current, followLabel, followStyle, onPick)
       }
     }
     Text(
@@ -168,6 +265,48 @@ internal fun CardStylePicker(
       Text("Done")
     }
   }
+}
+
+@Composable
+private fun StyleOptions(
+  at: CardDesignScope,
+  current: String?,
+  followLabel: String,
+  followStyle: String,
+  onPick: (CardDesignScope, String?) -> Unit,
+) {
+  StyleOption(followLabel, followStyle, selected = current == null) { onPick(at, null) }
+  HaUberTheme.all.forEach { theme ->
+    StyleOption(theme.displayName, null, selected = current == theme.id) { onPick(at, theme.id) }
+  }
+}
+
+@Composable
+private fun SectionHeader(text: String) {
+  Text(
+    text,
+    style = MaterialTheme.typography.titleSmall,
+    color = MaterialTheme.colorScheme.primary,
+    modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 4.dp),
+  )
+}
+
+/** Who made [design] and, for a device design, which devices: "by octocat · Bambu Lab X1*". */
+internal fun designSupportingText(design: DesignOption): String {
+  val author =
+    when {
+      design.author == DesignEntry.BUILTIN_AUTHOR -> "Terrazzo"
+      design.author.startsWith("github:") -> "by ${design.author.removePrefix("github:")}"
+      else -> "by ${design.author}"
+    }
+  val device =
+    design.device?.let { match ->
+      listOfNotNull(match.manufacturer ?: match.integration, match.model, match.translationKey)
+        .joinToString(" ")
+        .takeIf { it.isNotBlank() }
+        ?.let { "for $it" }
+    }
+  return listOfNotNull(author, device).joinToString(" · ")
 }
 
 @Composable

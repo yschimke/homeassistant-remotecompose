@@ -39,10 +39,13 @@ internal fun wearSlotDesigns(
     val device = cardDevice(design, snapshot)
     DesignKey.WEAR_CONTAINERS.mapNotNull { container ->
       val keys = variants.map { it.forWearWidget(container) }
+      // The design the card was switched to, when it has a Wear widget design for the container.
       val bytes =
-        keys.firstNotNullOfOrNull { k ->
-          device?.let { DeviceMatch.pick(designs.deviceByKey[k].orEmpty(), it) }
-        } ?: keys.firstNotNullOfOrNull { designs.byKey[it] }
+        override?.designId?.let { designs.byDesign.find(it, keys.first(), device)?.second }
+          ?: keys.firstNotNullOfOrNull { k ->
+            device?.let { DeviceMatch.pick(designs.deviceByKey[k].orEmpty(), it) }
+          }
+          ?: keys.firstNotNullOfOrNull { designs.byKey[it] }
       bytes
         ?.takeIf { it.size <= WEAR_DESIGN_MAX_BYTES }
         ?.let {
