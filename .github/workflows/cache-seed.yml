@@ -43,6 +43,16 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6.4.0
         with:
           cache-disabled: true
+      # Without the write token the action falls back to no remote cache, and this would spend a
+      # full build seeding nothing while still going green.
+      - name: Require the BuildFetch write token
+        env:
+          RW_TOKEN: ${{ secrets.BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN }}
+        run: |
+          if [ -z "$RW_TOKEN" ]; then
+            echo "::error title=No BuildFetch write token::BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN is not set, so this job cannot seed the remote cache."
+            exit 1
+          fi
       - uses: ./.github/actions/buildfetch-cache
         with:
           rw-token: ${{ secrets.BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN }}
