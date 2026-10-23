@@ -1,0 +1,119 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "clock",
+  "title": "Clock",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 100,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "cell"
+        ]
+      }
+    },
+    "cell": {
+      "id": "cell",
+      "componentId": "ha-cards/clock-card-cell",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "wear": [
+          "wear-tiers"
+        ],
+        "other": [
+          "face"
+        ]
+      }
+    },
+    "wear-tiers": {
+      "id": "wear-tiers",
+      "componentId": "ha-cards/size-tiers",
+      "properties": {
+        "axis": {
+          "type": "string",
+          "value": "height"
+        },
+        "thresholdsDp": {
+          "type": "string",
+          "value": "80"
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "tier0": [
+          "wear-small"
+        ],
+        "tier1": [
+          "wear-large"
+        ]
+      }
+    },
+    "wear-small": {
+      "id": "wear-small",
+      "componentId": "ha-cards/clock-card-face",
+      "properties": {
+        "compact": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "wear-large": {
+      "id": "wear-large",
+      "componentId": "ha-cards/clock-card-face",
+      "properties": {
+        "compact": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "face": {
+      "id": "face",
+      "componentId": "ha-cards/clock-card-face",
+      "properties": {
+        "compact": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}
