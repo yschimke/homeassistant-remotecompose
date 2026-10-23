@@ -10,7 +10,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -23,6 +22,7 @@ import androidx.wear.compose.material3.TimeText
 import ee.schimke.ha.rc.LocalRelativeTimeTick
 import ee.schimke.ha.rc.rememberRelativeTimeTick
 import ee.schimke.terrazzo.wear.data.WearPrefs
+import ee.schimke.terrazzo.wear.sync.WearBenchmarkSeed
 import ee.schimke.terrazzo.wear.sync.WearCardWarmup
 import ee.schimke.terrazzo.wear.sync.WearLeaseController
 import ee.schimke.terrazzo.wear.sync.WearSlotsController
@@ -42,7 +42,9 @@ import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 /**
  * Wear companion. Top-level screen surfaces the user's pinned set (sections + cards interleaved by
@@ -57,6 +59,11 @@ class WearMainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    // `:wear-benchmark` launches onto the cards a demo-mode phone would have pinned; an unpaired
+    // emulator has none. Benchmark and profile variants only (BuildConfig.TEST_HOOKS).
+    if (BuildConfig.TEST_HOOKS && intent?.getBooleanExtra(EXTRA_TEST_SEED_PINS, false) == true) {
+      WearBenchmarkSeed.write(applicationContext)
+    }
     // Have the pinned cards' templates ready (from disk, captured in the background otherwise)
     // while the first frame composes; usually already done since the phone last sent pins.
     lifecycleScope.launch { WearCardWarmup.run(applicationContext) }
@@ -84,12 +91,24 @@ class WearMainActivity : ComponentActivity() {
       )
       .start()
 
-    setContent { WearApp(repo) }
+    // The theme and card style, read before the first composition so its first frame is the
+    // pinned list in the chosen look; collected from a flow, they cost the launch an empty frame.
+    // A tiny preferences file, like the phone's synchronous read of its last dashboard.
+    val prefs = WearPrefs(applicationContext)
+    val initialLook = runBlocking {
+      WearCardLook(prefs.themeStyle.first(), prefs.cardStyle.first())
+    }
+
+    setContent { WearApp(repo, prefs, initialLook) }
   }
 
   override fun onDestroy() {
     super.onDestroy()
     repo.stop()
+  }
+
+  companion object {
+    const val EXTRA_TEST_SEED_PINS: String = "terrazzo.test.seed_pins"
   }
 }
 
@@ -102,12 +121,11 @@ private enum class WearScreen {
 }
 
 @Composable
-private fun WearApp(repo: WearSyncRepository) {
+private fun WearApp(repo: WearSyncRepository, prefs: WearPrefs, initialLook: WearCardLook) {
   val context = LocalContext.current
-  val prefs = remember(context) { WearPrefs(context.applicationContext) }
   val scope = rememberCoroutineScope()
-  val style by prefs.themeStyle.collectAsState(initial = null)
-  val cardStyle by prefs.cardStyle.collectAsState(initial = null)
+  val selectedPalette by prefs.themeStyle.collectAsState(initial = initialLook.palette)
+  val selectedCardStyle by prefs.cardStyle.collectAsState(initial = initialLook.style)
   val settings: WearSettings by repo.settings.collectAsState()
   val pinned: PinnedCardSet by repo.pinned.collectAsState()
   val sections: PinnedSectionSet by repo.sections.collectAsState()
@@ -123,10 +141,6 @@ private fun WearApp(repo: WearSyncRepository) {
   BackHandler(enabled = screen != WearScreen.TopLevel) {
     screen = if (screen == WearScreen.Dashboard) WearScreen.Dashboards else WearScreen.TopLevel
   }
-
-  // Read the persisted selection before capturing the first card document.
-  val selectedCardStyle = cardStyle ?: return
-  val selectedPalette = style ?: return
 
   MaterialTheme(
     colorScheme = terrazzoWearColorScheme(selectedPalette),

@@ -65,6 +65,9 @@ android {
     versionCode = wearVersionCode
     versionName = wearVersionName
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    // Gates WearMainActivity's seeded-pins launch extra: on for debug and the variants
+    // `:wear-benchmark` drives (see `androidComponents` below), off for anything shipped.
+    buildConfigField("boolean", "TEST_HOOKS", "false")
   }
   // Same upload key as `:app` — Wear ships inside the phone's Play listing
   // (`ee.schimke.harc`), so both must be signed by one key lineage.
@@ -80,13 +83,17 @@ android {
     }
   }
   buildTypes {
+    getByName("debug") { buildConfigField("boolean", "TEST_HOOKS", "true") }
     getByName("release") {
       if (releaseKeystorePath != null) {
         signingConfig = signingConfigs.getByName("release")
       }
     }
   }
-  buildFeatures { compose = true }
+  buildFeatures {
+    compose = true
+    buildConfig = true
+  }
   compileOptions {
     sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
     targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
@@ -128,6 +135,20 @@ tasks
       layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
     )
   }
+
+// The baseline profile plugin derives `nonMinifiedRelease` and `benchmarkRelease` from `release`;
+// both are non-debuggable, so the seeded-pins hatch needs its own switch.
+androidComponents {
+  onVariants(selector().withBuildType("nonMinifiedRelease")) { it.enableTestHooks() }
+  onVariants(selector().withBuildType("benchmarkRelease")) { it.enableTestHooks() }
+}
+
+fun com.android.build.api.variant.ApplicationVariant.enableTestHooks() {
+  buildConfigFields?.put(
+    "TEST_HOOKS",
+    com.android.build.api.variant.BuildConfigField("boolean", "true", "baseline profile variant"),
+  )
+}
 
 baselineProfile {
   // Generated on a Wear emulator (`.github/workflows/baseline-profiles.yml`) and checked in

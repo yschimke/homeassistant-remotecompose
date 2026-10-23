@@ -11,14 +11,33 @@ internal const val TARGET_PACKAGE = "ee.schimke.harc"
 
 private const val UI_TIMEOUT_MS = 15_000L
 
+/** Enough slow drags to cross the seeded top-level list, a dozen cards long. */
+private const val MAX_DRAGS = 30
+
+/** `WearMainActivity.EXTRA_TEST_SEED_PINS`. */
+private const val EXTRA_TEST_SEED_PINS = "terrazzo.test.seed_pins"
+
 /**
- * Cold-starts the watch app onto its top-level list. With no paired phone the list holds only the
- * empty pinned state and the "Browse dashboards" / "Settings" entries, which is what an emulator
- * shows; a seeded data layer would widen the profile to the card screens.
+ * Cold-starts the watch app onto its top-level list, seeded with what a demo-mode phone would have
+ * pinned (a section and a dozen cards): an unpaired emulator otherwise has nothing pinned.
  */
 internal fun MacrobenchmarkScope.startTopLevel() {
-  startActivityAndWait()
-  awaitText("Browse dashboards")
+  startActivityAndWait { it.putExtra(EXTRA_TEST_SEED_PINS, true) }
+  awaitText("Pinned · Demo", "Living room")
+}
+
+/**
+ * Opens the pinned "Living room" section from the top of the top-level list. The section screen
+ * shares the title and keeps its Back button below its cards, so the landmark is the top-level
+ * row's card count going away.
+ */
+internal fun MacrobenchmarkScope.openSection() {
+  // A tap while the list settles from a fling can miss, as in [open]: one retry.
+  repeat(2) {
+    findScrollingTo("4 cards").click()
+    if (device.wait(Until.gone(By.text("4 cards")), UI_TIMEOUT_MS / 3)) return
+  }
+  error("the section didn't open; on screen: ${onScreen()}")
 }
 
 /** Opens Settings from the top-level list; the longest list the unpaired app has. */
@@ -35,7 +54,7 @@ internal fun MacrobenchmarkScope.openDashboards() {
 /** Returns to the top-level list with the system back gesture. */
 internal fun MacrobenchmarkScope.backToTopLevel() {
   device.pressBack()
-  awaitText("Pinned", "Browse dashboards", "Settings")
+  awaitText("Pinned · Demo", "Living room", "Browse dashboards", "Settings")
 }
 
 /**
@@ -65,7 +84,7 @@ private fun MacrobenchmarkScope.open(entry: String, vararg landmarks: String) {
  * the edge where uiautomator does not report them.
  */
 private fun MacrobenchmarkScope.findScrollingTo(text: String): UiObject2 {
-  repeat(8) {
+  repeat(MAX_DRAGS) {
     device.wait(Until.findObject(By.text(text)), 1_000)?.let {
       return it
     }
