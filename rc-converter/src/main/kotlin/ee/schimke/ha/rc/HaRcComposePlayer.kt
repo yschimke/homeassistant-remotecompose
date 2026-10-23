@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
@@ -127,54 +126,54 @@ fun HaRcComposePlayer(
     fallback()
     return
   }
+  val clock = LocalHaClock.current
+  // A frozen clock means a preview or test: decode inline, so the image is in place by the frame a
+  // capture waits on rather than landing from a background thread after it.
+  //
   // A clone ([cloneForPlayer]) shares its source's document, so the decode is what tells them
-  // apart: a new one is a new document to play, with its own state and its own image fetches.
-  key(decoded) {
-    val clock = LocalHaClock.current
-    // A frozen clock means a preview or test: decode inline, so the image is in place by the frame
-    // a
-    // capture waits on rather than landing from a background thread after it.
-    val imageLoader =
-      remember(bitmapLoader, clock.isFrozen) {
-        bitmapLoader.asRcImageLoader(inline = clock.isFrozen)
+  // apart: a new one gets a new loader, which has the player fetch the clone's own pictures. Not a
+  // new player: it keeps drawing the previous pictures until those arrive, where a fresh player
+  // blanked them for a few frames on every change (a camera's next frame).
+  val imageLoader =
+    remember(decoded, bitmapLoader, clock.isFrozen) {
+      PerDocumentImageLoader(bitmapLoader.asRcImageLoader(inline = clock.isFrozen))
+    }
+  // rc-player rejects a write to a name the document doesn't declare (the View player's setters
+  // dropped it), and the host pushes every binding of every entity the card references. So the
+  // player gets only the values this document declares, with a matching type.
+  val declared = decoded.declared
+  // Seeded before the player's first frame, so it starts settled on the live values: a value that
+  // only arrives through the effect below lands a frame late and tweens in from the document's
+  // baked one on every load (docs/architecture/live-card-updates.md § First frame).
+  val playerValues =
+    remember(document) {
+      mutableStateMapOf<String, RcNamedValue>().apply {
+        putAll(namedValues.filter { (name, value) -> declared.accepts(name, value) })
       }
-    // rc-player rejects a write to a name the document doesn't declare (the View player's setters
-    // dropped it), and the host pushes every binding of every entity the card references. So the
-    // player gets only the values this document declares, with a matching type.
-    val declared = decoded.declared
-    // Seeded before the player's first frame, so it starts settled on the live values: a value that
-    // only arrives through the effect below lands a frame late and tweens in from the document's
-    // baked one on every load (docs/architecture/live-card-updates.md § First frame).
-    val playerValues =
-      remember(document) {
-        mutableStateMapOf<String, RcNamedValue>().apply {
-          putAll(namedValues.filter { (name, value) -> declared.accepts(name, value) })
-        }
+    }
+  LaunchedEffect(playerValues, namedValues) {
+    snapshotFlow { namedValues.toMap() }
+      .collect { values ->
+        val accepted = values.filter { (name, value) -> declared.accepts(name, value) }
+        playerValues.keys.retainAll(accepted.keys)
+        playerValues.putAll(accepted)
       }
-    LaunchedEffect(playerValues, namedValues) {
-      snapshotFlow { namedValues.toMap() }
-        .collect { values ->
-          val accepted = values.filter { (name, value) -> declared.accepts(name, value) }
-          playerValues.keys.retainAll(accepted.keys)
-          playerValues.putAll(accepted)
-        }
-    }
-    val frozenTime = remember(clock) { if (clock.isFrozen) clock.asRcTimeSource() else null }
-    val player: @Composable () -> Unit = {
-      RcComposePlayer(
-        document,
-        imageLoader,
-        customComponents = inputs,
-        modifier = modifier.then(WrapUnpinnedHeight),
-        namedValues = playerValues,
-        onEvent = onEvent,
-      )
-    }
-    if (frozenTime != null) {
-      CompositionLocalProvider(LocalRcTimeSource provides frozenTime, content = player)
-    } else {
-      player()
-    }
+  }
+  val frozenTime = remember(clock) { if (clock.isFrozen) clock.asRcTimeSource() else null }
+  val player: @Composable () -> Unit = {
+    RcComposePlayer(
+      document,
+      imageLoader,
+      customComponents = inputs,
+      modifier = modifier.then(WrapUnpinnedHeight),
+      namedValues = playerValues,
+      onEvent = onEvent,
+    )
+  }
+  if (frozenTime != null) {
+    CompositionLocalProvider(LocalRcTimeSource provides frozenTime, content = player)
+  } else {
+    player()
   }
   error.value?.let { androidx.compose.foundation.text.BasicText(it) }
 }
@@ -323,6 +322,13 @@ internal fun RcHostActionValue.toHostPayload(): Any? =
  * the frame they capture. On `Dispatchers.IO` nothing they wait on waits for it, so a busy render
  * run captured the placeholder some of the time.
  */
+/** One document's view of [base]: a new instance per document, so the player fetches afresh. */
+private class PerDocumentImageLoader(private val base: RcImageLoader) : RcImageLoader {
+  override suspend fun load(bitmap: RcBitmapData): ImageBitmap? = base.load(bitmap)
+
+  override fun cached(bitmap: RcBitmapData): ImageBitmap? = base.cached(bitmap)
+}
+
 internal fun BitmapLoader.asRcImageLoader(inline: Boolean = false): RcImageLoader =
   this as? RcImageLoader ?: BlockingBitmapLoaderAdapter(this, inline)
 

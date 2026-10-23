@@ -84,6 +84,7 @@ import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cardDataSignature
+import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.cardIconSignature
 import ee.schimke.ha.rc.cardWidthClass
 import ee.schimke.ha.rc.cards.cardVisibilitySignature
@@ -116,8 +117,10 @@ import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.LocalThemeStyle
 import ee.schimke.terrazzo.ui.rememberLayoutConfig
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -380,6 +383,9 @@ private fun openInBrowser(context: android.content.Context, url: String?) {
 
 private const val TAG = "DashboardView"
 
+/** How many of a dashboard's pictures its first composition fetches ahead: a screen or two. */
+private const val PREFETCHED_PICTURES = 12
+
 private sealed interface DashboardState {
   data object Loading : DashboardState
 
@@ -439,6 +445,29 @@ private fun DashboardList(
   val imageLoader: ImageLoader =
     haImageStack?.imageLoader
       ?: remember(context) { SingletonImageLoader.get(context.applicationContext) }
+  // The pictures the first cards show (cameras, people, image entities), fetched from the first
+  // composition, which a cold start runs while the splash still holds the first draw: the players
+  // then find them in the memory cache rather than drawing their placeholder for a frame.
+  // Off the main thread: that frame is the one the splash is waiting on, and a Coil request runs
+  // its interceptors on the thread that starts it.
+  val pictureSnapshot by rememberUpdatedState(snapshot)
+  LaunchedEffect(layout, imageLoader, baseUrl) {
+    val states = pictureSnapshot.states
+    withContext(Dispatchers.Default) {
+      val loader =
+        CoilBitmapLoader(context.applicationContext, imageLoader = imageLoader, baseUrl = baseUrl)
+      layout
+        .cardsInOrder()
+        .asSequence()
+        .flatMap { cardEntityIds(it) }
+        .distinct()
+        .mapNotNull { id ->
+          (states[id]?.attributes?.get("entity_picture") as? JsonPrimitive)?.contentOrNull
+        }
+        .take(PREFETCHED_PICTURES)
+        .forEach { url -> launch { loader.prefetch(url) } }
+    }
+  }
 
   // The readable width for one-column content at this window size (none on a phone).
   val readableCap: Dp? = cfg.maxContentWidth.takeIf { it != Dp.Unspecified }

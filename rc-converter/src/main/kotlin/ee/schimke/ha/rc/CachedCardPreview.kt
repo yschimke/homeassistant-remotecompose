@@ -26,13 +26,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import ee.schimke.composeai.rcplayer.compose.RcImageLoader
+import ee.schimke.composeai.rcplayer.protocol.RcBitmapData
 import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
 import ee.schimke.ha.rc.components.HaAction
+import java.io.IOException
+import java.io.InputStream
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
@@ -104,10 +109,6 @@ fun CachedCardPreview(
   template: CardTemplatePlayback? = null,
   content: @RemoteComposable @Composable () -> Unit,
 ) {
-  // AndroidX path only: flip the View player into wrap-content mode —
-  // idempotent assignment. See KDoc above.
-  RemoteComposePlayerFlags.shouldPlayerWrapContentSize = true
-
   val context = LocalContext.current
   val cache = LocalCardDocumentCache.current
   val debugBorders = LocalRcDebugBorders.current
@@ -272,11 +273,8 @@ fun CachedCardPreview(
     remember(bitmapLoader, template != null) {
       if (template == null) bitmapLoader
       else
-        BitmapLoader { url ->
-          val real =
-            latestTemplate.value?.bitmapUrl?.invoke(url, latestSnapshot.value)
-              ?: throw java.io.IOException("template image not resolvable: $url")
-          bitmapLoader.loadBitmap(real)
+        TemplateImageLoader(bitmapLoader) { url ->
+          latestTemplate.value?.bitmapUrl?.invoke(url, latestSnapshot.value)
         }
     }
   val onNamedAction: (String, Any?) -> Unit = { name, value ->
@@ -296,6 +294,8 @@ fun CachedCardPreview(
   // checkers see that View, not the document's semantics inside it, so it carries the card's name.
   val playerLabel = remember(card, snapshot) { playerLabel(card, snapshot) }
   val androidXPlayer: @Composable () -> Unit = {
+    // The View player's wrap-content mode (a global flag; idempotent). See the KDoc above.
+    RemoteComposePlayerFlags.shouldPlayerWrapContentSize = true
     WrapAdaptiveRemoteDocumentPlayer(
       documentBytes = cardDocument.bytes,
       modifier = modifier,
@@ -581,4 +581,34 @@ class CardTemplatePlayback(
       is HaAction.Url,
       HaAction.None -> null
     }
+}
+
+/**
+ * A template's images, which it names by placeholder URL, fetched from the card's own ([resolve]).
+ * Both player interfaces: the AndroidX player reads [loadBitmap]; the Compose player [load] and
+ * [cached], through the delegate's own when it has them (a memory-cache hit drawn on the first
+ * frame, rather than a placeholder).
+ */
+private class TemplateImageLoader(
+  private val delegate: BitmapLoader,
+  private val resolve: (String) -> String?,
+) : BitmapLoader, RcImageLoader {
+  private val images = delegate as? RcImageLoader
+
+  override fun loadBitmap(url: String): InputStream =
+    delegate.loadBitmap(resolve(url) ?: throw IOException("template image not resolvable: $url"))
+
+  override suspend fun load(bitmap: RcBitmapData): ImageBitmap? {
+    val real = resolved(bitmap) ?: return null
+    return images?.load(real) ?: delegate.asRcImageLoader().load(real)
+  }
+
+  override fun cached(bitmap: RcBitmapData): ImageBitmap? =
+    resolved(bitmap)?.let { images?.cached(it) }
+
+  private fun resolved(bitmap: RcBitmapData): RcBitmapData? {
+    val name = bitmap.externalImageName() ?: return null
+    val real = resolve(name) ?: return null
+    return bitmap.copy(data = real.encodeToByteArray())
+  }
 }

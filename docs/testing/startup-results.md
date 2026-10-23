@@ -63,6 +63,27 @@ server's: the cached designs took 2 s to read.
 - **The splash waits for the designs** (`MainActivity.holdFirstDrawForCardDesigns`), capped at
   `DESIGN_PRELOAD_WAIT_MS`: the first frame drawn has the cards in their final design.
 
+### Pictures
+
+A camera card's picture was grey for a frame or two on every launch, and again on every new
+camera frame (each one a new URL, so a new document).
+
+- **The player asked for each picture once, from an effect**, so even a picture already in memory
+  was drawn after the first frame. `RcImageLoader.cached` (rc-players) lets a host hand over a
+  memory hit during composition; `CoilBitmapLoader` answers it from Coil's memory cache, and the
+  dashboard fetches its first pictures while the splash still holds the first draw.
+- **`HaRcComposePlayer` built a new player for every document** (`key(decoded)`), throwing away the
+  picture it was showing. The player now carries a picture over to the next document until that
+  document's own loads, and the app keeps one player per card.
+- **Reusing a player for a new document collapsed the card** (rc-players): the kept layout tree was
+  recomposed before the new document's settle, at sizes not yet published, and its lookahead stayed
+  at them; a 16:9 picture's height eased to zero. A settle that moves values now gets a layout tree
+  composed after it. A document that settles nothing keeps its tree, and a focused text field in it.
+
+Checked on the Pixel 9 by recording 12 s from launch, past at least one camera frame, three times:
+no frame with a blank or collapsed camera card. `PictureChangeStabilityTest` (rc-converter) and
+`RcDocumentSwapTest` (rc-players) hold it.
+
 ### Measuring it yourself
 
 `adb install` applies no baseline profile, so a sideloaded build runs interpreted until
@@ -82,7 +103,7 @@ adb shell cmd package compile -f -m speed-profile ee.schimke.harc
 Checked against a local Home Assistant (2026.10, the `integration/` config plus a camera card),
 the Pixel 9 signed in through the app's own OAuth flow, recorded from launch for 12 s:
 
-- The first frame is the cached dashboard and the swap to the live
+- The first frame is the cached dashboard, camera picture included, and the swap to the live
   session changes nothing on screen.
 - **It opened on "Can't reach Home Assistant".** The cache-only session reported `Failed` before
   anything had tried to connect, so a red banner showed until the live session replaced it about

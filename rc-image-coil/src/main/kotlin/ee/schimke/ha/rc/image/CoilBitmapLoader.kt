@@ -238,14 +238,60 @@ open class CoilBitmapLoader(
       imageLoader.memoryCache?.get(key)?.image
         ?: (imageLoader.execute(warmUpRequest(resolved, key)) as? SuccessResult)?.image
         ?: return null
+    return toPlayerImage(image)
+  }
+
+  /**
+   * The memory-cache hit [load] would return, without fetching: the player draws it on its first
+   * frame instead of a placeholder. A memory lookup only, as composition calls it.
+   */
+  final override fun cached(bitmap: RcBitmapData): ImageBitmap? {
+    if (
+      bitmap.encoding != RcBitmapData.ENCODING_URL && bitmap.encoding != RcBitmapData.ENCODING_FILE
+    ) {
+      return null
+    }
+    val resolved = resolveName(bitmap.data.decodeToString())
+    val image = imageLoader.memoryCache?.get(memoryCacheKeyFor(resolved))?.image ?: return null
+    return toPlayerImage(image)
+  }
+
+  /**
+   * Player images by the cached bitmap they came from: [cached] runs during composition, so a hit
+   * shouldn't copy and downscale again for every document that shows it. Weak keys: an entry goes
+   * when Coil's memory cache lets its bitmap go.
+   */
+  private val playerImages = java.util.WeakHashMap<Bitmap, ImageBitmap>()
+
+  private fun toPlayerImage(image: Image): ImageBitmap? {
     val source = (image as? BitmapImage)?.bitmap ?: return null
+    synchronized(playerImages) { playerImages[source] }
+      ?.let {
+        return it
+      }
     val software =
       if (source.config == Bitmap.Config.HARDWARE) {
         source.copy(Bitmap.Config.ARGB_8888, /* isMutable= */ false) ?: return null
       } else {
         source
       }
-    return downscaleToFit(software).asImageBitmap()
+    val converted = downscaleToFit(software)
+    // Only a copy is worth keeping, and a value holding its own key would never be collected.
+    if (converted === source) return converted.asImageBitmap()
+    return converted.asImageBitmap().also {
+      synchronized(playerImages) { playerImages[source] = it }
+    }
+  }
+
+  /**
+   * Fetches [name] into the memory cache, under the key [load] and [loadBitmap] read, and returns
+   * once it is there (or the fetch failed). A host that knows which pictures its first frame shows
+   * calls this before that frame, so the players find them instead of drawing placeholders.
+   */
+  suspend fun prefetch(name: String) {
+    val resolved = resolveName(name)
+    val key = memoryCacheKeyFor(resolved)
+    if (imageLoader.memoryCache?.get(key) == null) imageLoader.execute(warmUpRequest(resolved, key))
   }
 
   private fun warmUpRequest(name: String, key: MemoryCache.Key): ImageRequest =
