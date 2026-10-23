@@ -39,6 +39,12 @@ import java.text.DecimalFormat
  * HA's reference). Launcher widgets with a known code length accumulate digits in document-local
  * mutable state and emit one [HaAction.AlarmPin] at completion. Other players and unknown-length
  * codes retain the host-buffered [HaAction.AlarmKey] path.
+ *
+ * [narrow] is the form for a launcher widget narrower than the full card's button row but tall
+ * enough to be more than the Wide chip (a `3×3` or `3×4` cell): the ARM buttons two to a row with
+ * tighter padding, tighter gaps and 44 dp keys, and [showKeypad] (off where the cell is too short
+ * for it) decides whether the keypad follows them. The buttons still act without it: an arm that
+ * needs a code asks for one ([HaAction.AlarmIntent]).
  */
 @Composable
 @RemoteComposable
@@ -46,6 +52,8 @@ fun RemoteHaAlarmPanel(
   data: HaAlarmPanelData,
   modifier: RemoteModifier = RemoteModifier,
   fillHeight: Boolean = false,
+  narrow: Boolean = false,
+  showKeypad: Boolean = data.showKeypad,
 ) {
   val theme = haTheme()
   val statusByKey = data.statuses.associateBy { it.stateKey }
@@ -68,12 +76,22 @@ fun RemoteHaAlarmPanel(
     // half (Principle 7/8).
     RemoteColumn(
       modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
-      verticalArrangement = RemoteArrangement.spacedBy(10.rdp),
+      verticalArrangement = RemoteArrangement.spacedBy((if (narrow) 6 else 10).rdp),
     ) {
       StatusRow(data, statusByKey, initialStatus, theme)
 
       // ARM AWAY / ARM HOME / DISARM buttons.
-      if (data.actions.isNotEmpty()) {
+      if (narrow && data.actions.isNotEmpty()) {
+        data.actions.chunked(2).forEach { row ->
+          RemoteRow(
+            modifier = RemoteModifier.fillMaxWidth(),
+            horizontalArrangement =
+              RemoteArrangement.spacedBy(8.rdp, RemoteAlignment.CenterHorizontally),
+          ) {
+            row.forEach { action -> ActionPill(action, theme, horizontalPaddingDp = 6) }
+          }
+        }
+      } else if (data.actions.isNotEmpty()) {
         RemoteRow(
           modifier = RemoteModifier.fillMaxWidth(),
           horizontalArrangement =
@@ -83,7 +101,7 @@ fun RemoteHaAlarmPanel(
         }
       }
 
-      if (data.showKeypad) {
+      if (data.showKeypad && showKeypad) {
         Keypad(
           data.entityId,
           data.codeLength,
@@ -91,6 +109,7 @@ fun RemoteHaAlarmPanel(
           theme,
           modifier = if (fillHeight) RemoteModifier.weight(1f).fillMaxHeight() else RemoteModifier,
           fill = fillHeight,
+          keyDp = if (narrow) NarrowKeyDp else KeyDp,
         )
       }
     }
@@ -224,18 +243,24 @@ private fun StatusRow(
 }
 
 @Composable
-private fun ActionPill(action: HaAlarmAction, theme: RemoteHaTheme) {
+private fun ActionPill(
+  action: HaAlarmAction,
+  theme: RemoteHaTheme,
+  modifier: RemoteModifier = RemoteModifier,
+  horizontalPaddingDp: Int = 14,
+) {
   val click =
     action.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   val accent = haInk(action.accent)
   RemoteBox(
     modifier =
-      RemoteModifier.then(click)
+      modifier
+        .then(click)
         .clip(haControlShape(6))
         .background(accent.copy(alpha = accent.alpha * 0.0f.rf))
         .border(1.rdp, accent, haControlShape(6))
         .then(consoleKeyChrome(accent))
-        .padding(horizontal = 14.rdp, vertical = 8.rdp),
+        .padding(horizontal = horizontalPaddingDp.rdp, vertical = 8.rdp),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteText(
@@ -257,6 +282,7 @@ private fun Keypad(
   theme: RemoteHaTheme,
   modifier: RemoteModifier = RemoteModifier,
   fill: Boolean = false,
+  keyDp: Int = KeyDp,
 ) {
   // Int expressions are supported by AndroidX ValueChangeAction; dynamic string mutation is not.
   // Keep this bounded so decimal accumulation cannot overflow. Unknown/long codes use the existing
@@ -277,10 +303,11 @@ private fun Keypad(
         digitCount = digitCount,
         enteredDigits = count,
         codeLength = localLength,
+        keyDp = keyDp,
       )
     }
   } else {
-    KeypadContent(entityId, accent, theme, modifier, fill)
+    KeypadContent(entityId, accent, theme, modifier, fill, keyDp = keyDp)
   }
 }
 
@@ -296,6 +323,7 @@ private fun KeypadContent(
   digitCount: androidx.compose.remote.creation.compose.state.MutableRemoteInt? = null,
   enteredDigits: Int = 0,
   codeLength: Int? = null,
+  keyDp: Int = KeyDp,
 ) {
   RemoteColumn(
     modifier = modifier.fillMaxWidth().padding(top = 6.rdp),
@@ -306,13 +334,35 @@ private fun KeypadContent(
     listOf(listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9")).forEach { row ->
       RemoteRow(horizontalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
         row.forEach {
-          KeypadKey(entityId, it, it, accent, theme, pin, digitCount, enteredDigits, codeLength)
+          KeypadKey(
+            entityId,
+            it,
+            it,
+            accent,
+            theme,
+            pin,
+            digitCount,
+            enteredDigits,
+            codeLength,
+            keyDp,
+          )
         }
       }
     }
     RemoteRow(horizontalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
-      RemoteBox(modifier = RemoteModifier.size(48.rdp))
-      KeypadKey(entityId, "0", "0", accent, theme, pin, digitCount, enteredDigits, codeLength)
+      RemoteBox(modifier = RemoteModifier.size(keyDp.rdp))
+      KeypadKey(
+        entityId,
+        "0",
+        "0",
+        accent,
+        theme,
+        pin,
+        digitCount,
+        enteredDigits,
+        codeLength,
+        keyDp,
+      )
       KeypadKey(
         entityId,
         "⌫",
@@ -323,6 +373,7 @@ private fun KeypadContent(
         digitCount,
         enteredDigits,
         codeLength,
+        keyDp,
       )
     }
   }
@@ -339,6 +390,7 @@ private fun KeypadKey(
   digitCount: androidx.compose.remote.creation.compose.state.MutableRemoteInt? = null,
   enteredDigits: Int = 0,
   codeLength: Int? = null,
+  keyDp: Int = KeyDp,
 ) {
   val localAction =
     if (entityId != null && pin != null && digitCount != null && codeLength != null) {
@@ -377,7 +429,7 @@ private fun KeypadKey(
   RemoteBox(
     modifier =
       RemoteModifier.then(click)
-        .size(48.rdp)
+        .size(keyDp.rdp)
         .clip(haControlShape(6))
         .border(1.rdp, haInk(accent), haControlShape(6))
         .then(consoleKeyChrome(haInk(accent))),
@@ -393,3 +445,9 @@ private fun KeypadKey(
     )
   }
 }
+
+/** A keypad key: a 48 dp touch target. */
+private const val KeyDp = 48
+
+/** The narrow panel's key, a little smaller so the keypad fits under the buttons in a `3×4`. */
+private const val NarrowKeyDp = 44

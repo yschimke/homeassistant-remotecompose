@@ -814,3 +814,25 @@ The current state is the placeholder, not the philosophy:
      **non-clickable glyph** — the tap target lives only in the Full
      tier. When adding a ladder to an interactive card, keep each
      `RemoteAction` in a single tier.
+10. **Nested gates play, within limits (`AndroidX` player, alpha22).** A
+    second gate inside a first one's branch now selects correctly at
+    playback: the arc-dial family's launcher ladder is Wide ↔ dial-filled ↔
+    Full on two nested `RemoteMinSizeGate`s, the gauge's stacked tier nests
+    a width breakpoint for its one-column form, and the alarm panel's narrow
+    tier nests two (`card-information-hierarchy.md`, launcher examples).
+    Three rules came out of the matrix: wrap every nested gate's branch in
+    `RemoteModifier.immediateSwap()` (`RemoteMinSizeGate`, unlike
+    `RemoteSizeBreakpoint`, does not, and the default cross-fade paints the
+    outer branch's other content over the selected one, #309); a launcher
+    capture (`LocalWidgetCaptureSizeDp`) resolves every gate at capture, so
+    nesting costs nothing there; and some documents carrying several tiers
+    stop drawing altogether (the red warning triangle) — a
+    `ConcurrentModificationException` in remote-core's
+    `RootLayoutComponent.performPartialLayoutPass` during the first measure.
+    Seen with a third button tier (icon row beside the chip), a second
+    statistic tier and a gate under the alarm panel's full card; not with
+    the dial, gauge or the alarm's narrow tier. Render the matrix after
+    adding a tier; where a document breaks, decide the extra tier only on a
+    launcher capture (the alarm panel's keypad check under its full card)
+    or reflow inside the existing tier (the statistic's trimmed padding, the
+    button's dense body).

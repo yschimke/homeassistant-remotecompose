@@ -55,6 +55,9 @@
         "wear": [
           "wear-tiers"
         ],
+        "stated": [
+          "state-gate"
+        ],
         "other": [
           "gate"
         ]
@@ -211,6 +214,65 @@
       "id": "small",
       "componentId": "ha-cards/button-icon",
       "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "state-gate": {
+      "id": "state-gate",
+      "componentId": "ha-cards/min-size-gate",
+      "properties": {
+        "minWidthDp": {
+          "type": "int",
+          "value": 96
+        },
+        "minHeightDp": {
+          "type": "int",
+          "value": 98
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {
+        "roomy": [
+          "state-roomy"
+        ],
+        "small": [
+          "dense"
+        ]
+      }
+    },
+    "state-roomy": {
+      "id": "state-roomy",
+      "componentId": "ha-cards/button-full",
+      "properties": {
+        "compact": {
+          "type": "string",
+          "value": "true"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "dense": {
+      "id": "dense",
+      "componentId": "ha-cards/button-full",
+      "properties": {
+        "compact": {
+          "type": "string",
+          "value": "dense"
+        }
+      },
       "modifiers": [
         {
           "type": "fillMaxSize"

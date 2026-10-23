@@ -79,3 +79,29 @@ text where it fits (a thermostat's target), controls never. `light`: the 72 dp d
 target `↑ 21.5°C`; the mode chip fits here, and it says what the accent cannot (`Idle` in heat mode
 is still orange; a humidifier's fixed accent never says `Off`), so it stays. `glance`: the cells
 with their names; the title drops.
+
+**Launcher widget: the arc-dial cards** (light, thermostat, humidifier). At `2×2` and `3×3` the
+dial-filled tier: the name over a dial that takes the rest of the cell, the value (and a
+thermostat's mode and target, a light's bulb and `On`) inside it; no steppers, a tap on the card
+still acts. From about 260 × 290 dp (`4×4`) the full card with its steppers. Smaller than two
+columns by two rows, the Wide row beside the dial, which names the entity in place of the mode chip
+from two columns up. A captured widget whose dial is under 120 dp sets the centre a step smaller
+and drops the light's `On` and the target first. A captured widget one column wide (`1×1`, 57 dp)
+has no room beside the dial: the dial over the value at label size, over the name under a generic
+icon (`light`, `humidifier`: `78%` over `Kitchen`); a `thermostat`'s climate dial is evocative, so
+it keeps the value alone.
+
+**Launcher widget: the value stays whole.** A one-column gauge sets its value at label size over the
+name and drops the range, instead of `21.4 …`. A `2×1` statistic keeps its period by trimming the
+card's padding. A `show_state` button too short for the state under the name (`1×1`, `2×1`) takes
+a dense body, a smaller chip over the name and the state, both whole. An alarm panel narrower than
+its full card but tall enough (`3×3`, `3×4`) keeps the ARM buttons, and the keypad where it fits;
+a full-width one too short for the keypad (`4×1`, `4×2`) keeps the buttons without it.
+
+**Wear: one line per container.** The weather card stacks the condition over the temperature
+beside its icon (the Large container adds the entity's name), rather than three columns that cut
+the condition to `Par…`. The Bambu print status puts the printer's name over the percentage beside
+a small ring in the Small container, and the name over a bigger ring beside the percentage and the
+stage in the Large one. A to-do list in the Large container lists its first two items under the
+title, without the section captions.
+

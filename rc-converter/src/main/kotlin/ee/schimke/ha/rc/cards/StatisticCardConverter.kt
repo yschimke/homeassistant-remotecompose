@@ -129,7 +129,12 @@ class StatisticCardConverter : CardConverter {
                       card.raw["entity"]?.jsonPrimitive?.content?.let { snapshot.states[it] },
                     ),
                 )
-              else -> CenteredCell { FullStatistic(card, snapshot, RemoteModifier.fillMaxWidth()) }
+              // A one-row widget (`2×1`, 84 dp) is just tall enough for the name, the value and the
+              // period with the padding trimmed, so nothing is cut off at its bottom.
+              else ->
+                CenteredCell {
+                  FullStatistic(card, snapshot, RemoteModifier.fillMaxWidth(), tight = true)
+                }
             }
           }
         }
@@ -142,6 +147,7 @@ class StatisticCardConverter : CardConverter {
     snapshot: HaSnapshot,
     modifier: RemoteModifier,
     compact: Boolean = false,
+    tight: Boolean = false,
   ) {
     val entityId = card.raw["entity"]?.jsonPrimitive?.content
     val entity = entityId?.let { snapshot.states[it] }
@@ -160,6 +166,7 @@ class StatisticCardConverter : CardConverter {
       ),
       modifier = modifier,
       compact = compact,
+      tight = tight,
     )
   }
 

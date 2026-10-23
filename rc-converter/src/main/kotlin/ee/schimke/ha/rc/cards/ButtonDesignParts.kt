@@ -53,19 +53,22 @@ object ButtonDesignParts {
   /**
    * `ha-cards/button-full`: the button, its icon over its name (and state, when shown); a toggle
    * when its entity is one. [compact] `grid` is the compact body in a square grid cell only, `true`
-   * always, `false` never.
+   * always, `false` never; `dense` the `show_state` form for a cell too short for the compact body
+   * with its state line (a smaller chip over the name and state, both whole).
    */
   @Composable
   fun Full(compact: String, modifier: RemoteModifier) {
     val data = data()
     val isCompact =
       when (compact) {
-        "true" -> true
+        "true",
+        "dense" -> true
         "false" -> false
         else -> LocalGridSquareCells.current
       }
-    if (data.accent.toggleable) RemoteHaToggleButton(data, modifier, isCompact)
-    else RemoteHaButton(data, modifier, isCompact)
+    val dense = compact == "dense"
+    if (data.accent.toggleable) RemoteHaToggleButton(data, modifier, isCompact, dense)
+    else RemoteHaButton(data, modifier, isCompact, dense)
   }
 
   /**
@@ -124,7 +127,9 @@ object ButtonDesignParts {
    * `ha-cards/button-cell`: which slot the card and its canvas call for. On a dashboard, [wrap]. In
    * a fixed canvas: [fill] when the card hides its icon (nothing is left for a small form); [row]
    * or [hero] for a launcher cell with a hero scale when the card shows its name; [wear] in a Wear
-   * container (a canvas whose height decides, not inside a stack or grid); [other] otherwise.
+   * container (a canvas whose height decides, not inside a stack or grid); [stated] for a card that
+   * shows its name and state (its state line needs a taller cell than the name alone); [other]
+   * otherwise.
    */
   @Composable
   fun Cell(
@@ -133,6 +138,7 @@ object ButtonDesignParts {
     row: @Composable () -> Unit,
     hero: @Composable () -> Unit,
     wear: @Composable () -> Unit,
+    stated: @Composable () -> Unit,
     other: @Composable () -> Unit,
   ) {
     if (LocalCardSizeMode.current == CardSizeMode.Wrap) return wrap()
@@ -143,6 +149,7 @@ object ButtonDesignParts {
       captureHeroScale() != null && data.showName -> hero()
       LocalFixedCanvasAxis.current == BreakpointAxis.Height && !LocalInCardContainer.current ->
         wear()
+      data.state != null && data.showName -> stated()
       else -> other()
     }
   }
@@ -175,6 +182,10 @@ object ButtonDesignParts {
             row = { node.Slot("row", modifier) },
             hero = { node.Slot("hero", modifier) },
             wear = { node.Slot("wear", modifier) },
+            // A design from before the slot existed draws its `other` slot there.
+            stated = {
+              node.Slot(if (node.children("stated").isEmpty()) "other" else "stated", modifier)
+            },
             other = { node.Slot("other", modifier) },
           )
         },

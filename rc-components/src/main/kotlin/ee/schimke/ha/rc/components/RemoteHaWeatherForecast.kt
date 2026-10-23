@@ -294,6 +294,67 @@ fun RemoteHaWeatherForecastWide(
   }
 }
 
+/**
+ * The weather in a Wear slot. The Wide row's three columns leave the condition a few letters in a
+ * watch's width (`Par…`), so this one stacks its text beside the icon: the condition over the
+ * temperature, both whole. The Small container (about 44 dp of content) drops the entity's name
+ * (`Forecast Home`) to fit; [large] keeps it under them, with a bigger icon and value.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaWeatherForecastWear(
+  data: HaWeatherForecastData,
+  modifier: RemoteModifier = RemoteModifier,
+  large: Boolean = false,
+) {
+  val theme = haTheme()
+  RemoteRow(
+    modifier =
+      modifier
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        .padding(horizontal = 12.rdp, vertical = (if (large) 8 else 2).rdp),
+    verticalAlignment = RemoteAlignment.CenterVertically,
+  ) {
+    RemoteIcon(
+      imageVector = data.icon.toRemoteImageVector(),
+      contentDescription = data.condition,
+      modifier = RemoteModifier.size((if (large) 40 else 30).rdp),
+      tint = theme.primaryText,
+    )
+    RemoteColumn(
+      modifier = RemoteModifier.weight(1f).padding(start = 10.rdp),
+      verticalArrangement = RemoteArrangement.Center,
+    ) {
+      RemoteText(
+        text = data.condition,
+        color = theme.primaryText,
+        fontSize = if (large) HaType.Body else HaType.Label,
+        fontWeight = FontWeight.Medium,
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+      RemoteText(
+        text = LiveValues.attribute(data.entityId, "temperature_label", data.temperature),
+        color = theme.primaryText,
+        fontSize = if (large) HaType.Value else HaType.Title,
+        fontWeight = haValueWeight(),
+        style = haTextStyle(),
+        maxLines = 1,
+      )
+      if (large)
+        RemoteText(
+          text = data.supportingLine?.rs ?: entityName(data.entityId, data.name),
+          color = theme.secondaryText,
+          fontSize = HaType.Caption,
+          style = haTextStyle(),
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+    }
+  }
+}
+
 @Composable
 private fun ForecastStrip(
   days: List<HaWeatherDay>,
