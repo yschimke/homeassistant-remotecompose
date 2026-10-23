@@ -112,8 +112,8 @@ compose-webview = "2.0.3"
 # KCEF requests 2.5.0, which was not published to Central. Keep both halves on the
 # supported 2.6.0 release from Central, including the native libraries for desktop.
 jogamp = "2.6.0"
-compose-multiplatform = "1.13.0-alpha02"
-cmp-material3 = "1.13.0-alpha02"
+compose-multiplatform = "1.13.0-beta01"
+cmp-material3 = "1.13.0-beta01"
 
 [libraries]
 jogl-runtime = { module = "org.jogamp.jogl:jogl-all-main", version.ref = "jogamp" }
