@@ -108,6 +108,7 @@ import ee.schimke.terrazzo.core.pin.PinnedCardData
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.LatestWins
+import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.core.session.liveDashboardSnapshots
 import ee.schimke.terrazzo.feedback.rememberInteractionFeedback
 import ee.schimke.terrazzo.ui.LayoutConfig
@@ -116,7 +117,11 @@ import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.LocalThemeStyle
 import ee.schimke.terrazzo.ui.rememberLayoutConfig
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -194,9 +199,7 @@ fun DashboardViewScreen(
   val loads = remember(session, urlPath) { LatestWins() }
   val logStore = LocalTerrazzoGraph.current.logStore
   LaunchedEffect(session, urlPath) {
-    // Poll when the session opts in (demo mode does, at ~1s) so
-    // values visibly change; a one-shot fetch otherwise.
-    while (true) {
+    suspend fun loadOnce() {
       try {
         loads.load({ session.loadDashboard(urlPath) }) { (dashboard, snapshot) ->
           state = DashboardState.Ready(dashboard, snapshot)
@@ -221,20 +224,46 @@ fun DashboardViewScreen(
           state = DashboardState.Error(t.message ?: t::class.simpleName ?: "error")
         }
       }
-      val interval = session.refreshIntervalMillis
-      if (interval == null) {
-        // Live sessions push HA's `state_changed` events instead of being polled: follow them,
-        // re-armed by the session on every reconnect, so cards update in place.
-        val ready = state as? DashboardState.Ready ?: break
-        session.liveDashboardSnapshots(ready.snapshot).collect { snapshot ->
-          // A pushed state is the newest there is: it supersedes any load still in flight.
-          loads.begin()
-          state = DashboardState.Ready(ready.dashboard, snapshot)
-          logStore.recordDashboardSnapshot(ready.dashboard, snapshot)
-        }
-        break
+    }
+
+    // Poll when the session opts in (demo mode does, at ~1s) so
+    // values visibly change.
+    val interval = session.refreshIntervalMillis
+    if (interval != null) {
+      while (true) {
+        loadOnce()
+        delay(interval)
       }
-      delay(interval)
+    }
+
+    // Live sessions push HA's `state_changed` events instead of being polled. The first load may
+    // only have reached the cache (an offline start, or the socket not up yet), so the dashboard
+    // loads again each time the session connects: its config as HA has it now, and any states
+    // missed while disconnected. Then pushed states follow until the next disconnect.
+    val connectedAtStart = session.connectionStatus.value == SessionConnectionStatus.Connected
+    loadOnce()
+    var loadedLive = connectedAtStart
+    // Pushed states also go to disk, debounced, so the next offline start shows the values last
+    // on screen rather than those of the last full load.
+    val toSave = MutableStateFlow<HaSnapshot?>(null)
+    launch(Dispatchers.IO) {
+      toSave.filterNotNull().collectLatest { snapshot ->
+        delay(LIVE_SNAPSHOT_SAVE_DEBOUNCE_MS)
+        cache.putSnapshot(session.baseUrl, urlPath, snapshot)
+      }
+    }
+    session.connectionStatus.collectLatest { status ->
+      if (status != SessionConnectionStatus.Connected) return@collectLatest
+      if (!loadedLive) loadOnce()
+      loadedLive = false
+      val ready = state as? DashboardState.Ready ?: return@collectLatest
+      session.liveDashboardSnapshots(ready.snapshot).collect { snapshot ->
+        // A pushed state is the newest there is: it supersedes any load still in flight.
+        loads.begin()
+        state = DashboardState.Ready(ready.dashboard, snapshot)
+        logStore.recordDashboardSnapshot(ready.dashboard, snapshot)
+        toSave.value = snapshot
+      }
     }
   }
 
@@ -379,6 +408,9 @@ private fun openInBrowser(context: android.content.Context, url: String?) {
 }
 
 private const val TAG = "DashboardView"
+
+/** How long pushed states settle before the dashboard's cached snapshot is rewritten. */
+private const val LIVE_SNAPSHOT_SAVE_DEBOUNCE_MS = 5_000L
 
 private sealed interface DashboardState {
   data object Loading : DashboardState
