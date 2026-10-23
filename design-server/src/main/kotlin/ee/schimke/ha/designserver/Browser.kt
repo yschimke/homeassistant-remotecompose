@@ -253,6 +253,8 @@ object Pages {
     library: DesignLibrary,
     design: LibraryDesign,
     editor: EditorState = EditorState.Off,
+    /** Whether [editor] may edit the library's own designs ([LibrarySources.mayEdit]). */
+    libraryEditor: Boolean = false,
     wear: Boolean = false,
   ): String {
     val decoded = library.decode(design)
@@ -352,14 +354,28 @@ object Pages {
         )
       }
       append("<h2>Design it</h2>")
+      val drawnFromSource = key.cardType in library.sources
       append(
         "<p class=\"muted\">The card's data contract — its slots and every binding with an example " +
           "value — as <a href=\"/api/designs/${design.id}/schema\">JSON</a>. Its editable " +
           "source, to fork in UI Builder: <a href=\"/api/designs/${design.id}/source.uid\">" +
-          "<code>source.uid</code></a> (rebuilt from Home Assistant card components in this " +
-          "design's theme, so close to it rather than identical).</p>"
+          "<code>source.uid</code></a>" +
+          (if (drawnFromSource)
+            " (the UI Builder design this card type is drawn from: every theme of it).</p>"
+          else
+            " (rebuilt from Home Assistant card components in this design's theme, so close to " +
+              "it rather than identical).</p>")
       )
       designButton(editor, "design", design.id, CardSchema.fromDesign(library, design))
+      if (drawnFromSource && libraryEditor) {
+        append(
+          "<form method=\"post\" action=\"/library/${enc(key.cardType)}/edit\">" +
+            "<button type=\"submit\">Edit the library design</button> <span class=\"muted\">" +
+            "Changes every ${esc(key.cardType)} in the library once the next import lands " +
+            "(<a href=\"/api/library/sources/${enc(key.cardType)}.uid\">current source</a>)." +
+            "</span></form>"
+        )
+      }
       append("<p class=\"muted\"><a href=\"/api/designs/${design.id}\">JSON</a></p>")
     }
   }

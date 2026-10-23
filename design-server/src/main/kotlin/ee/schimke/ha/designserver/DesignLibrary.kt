@@ -17,10 +17,13 @@ import ee.schimke.ha.design.DesignProperties
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 
 /**
  * A card design library on disk, as `:card-designs:generateCardDesigns` writes it: `manifest.json`,
- * `blobs/<sha256>.rc`, and optionally `catalog.json` and `previews/`.
+ * `blobs/<sha256>.rc`, and optionally `catalog.json`, `previews/` and `sources/<cardType>.uid` (the
+ * checked-in UI Builder designs the migrated card types are drawn from).
  *
  * Loading checks every blob against the manifest (size and SHA-256), so the server never hands a
  * client a design it would reject. A library without a catalog still serves; its browser just has
@@ -39,6 +42,12 @@ private constructor(
    * one has since replaced on disk: it serves its own manifest's blobs until it is swapped out.
    */
   private val blobBytes: Map<String, ByteArray>,
+  /**
+   * The UI Builder card designs the library's migrated card types are drawn from, by card type
+   * (server-owned-card-designs.md): what the library was built from, and what editing a library
+   * design starts from.
+   */
+  val sources: Map<String, JsonObject>,
 ) {
   /** Every design, in manifest order, with its catalog entry when there is one. */
   val designs: List<LibraryDesign>
@@ -154,10 +163,21 @@ private constructor(
         File(dir, DesignCatalog.PATH)
           .takeIf { it.isFile }
           ?.let { json.decodeFromString(DesignCatalog.serializer(), it.readText()) }
-      return DesignLibrary(dir, manifest, manifestBytes, catalog, blobBytes)
+      val sources =
+        File(dir, SOURCES)
+          .listFiles { file -> file.extension == "uid" }
+          .orEmpty()
+          .sortedBy { it.name }
+          .associate {
+            it.nameWithoutExtension to json.parseToJsonElement(it.readText()).jsonObject
+          }
+      return DesignLibrary(dir, manifest, manifestBytes, catalog, blobBytes, sources)
     }
 
     const val MANIFEST = "manifest.json"
+
+    /** Where the library keeps the checked-in card designs it was built from. */
+    const val SOURCES = "sources"
 
     /** Id of a design with no catalog entry: the same short key hash the generator uses. */
     fun idOf(key: DesignKey): String =
