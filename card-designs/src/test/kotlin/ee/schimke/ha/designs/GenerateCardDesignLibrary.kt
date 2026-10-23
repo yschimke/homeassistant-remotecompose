@@ -69,8 +69,6 @@ class GenerateCardDesignLibrary {
 
   @get:Rule val compose = createComposeRule()
 
-  private class Example(val source: String, val card: CardConfig, val snapshot: HaSnapshot)
-
   @Test
   fun generate() {
     val target = File(requireNotNull(System.getProperty("cardDesignsOut")) { "no cardDesignsOut" })
@@ -83,33 +81,9 @@ class GenerateCardDesignLibrary {
     // Every key the source cards produce, with the first card that produced it as its example:
     // the curated fixtures (one per card type and shape the parity tests cover), then every card
     // in the demo dashboards and the cards nested in them.
-    val sources =
-      LibraryFixtures.all.map { Example("fixture:${it.name}", it.card, it.snapshot) } +
-        DASHBOARDS.flatMap { name ->
-          val loaded = requireNotNull(DashboardFixtures.load(name)) { "no bundled dashboard $name" }
-          loaded.dashboard.allCards().map { Example("dashboard:$name", it, loaded.snapshot) }
-        }
     val examples = LinkedHashMap<DesignKey, Example>()
-    for (source in sources) {
-      for (style in ThemeStyle.entries) for (dark in listOf(false, true)) {
-        val key = CardDesignTemplates.keyFor(source.card, source.snapshot, style, dark) ?: continue
-        examples.getOrPut(key) { source }
-      }
-      // Every other card style brings its own palette, so it is captured once per mode it has.
-      for (cardStyle in HaUberTheme.all) {
-        if (cardStyle.id == HaUberTheme.Classic.id) continue
-        for (dark in CardDesignTemplates.modesOf(cardStyle)) {
-          val key =
-            CardDesignTemplates.keyFor(
-              source.card,
-              source.snapshot,
-              ThemeStyle.entries.first(),
-              dark,
-              cardStyle = cardStyle,
-            ) ?: continue
-          examples.getOrPut(key) { source }
-        }
-      }
+    for (source in librarySources()) {
+      for (key in keysOf(source.card, source.snapshot)) examples.getOrPut(key) { source }
     }
     assertTrue(examples.isNotEmpty(), "the demo dashboards produce designs")
 
@@ -236,7 +210,45 @@ class GenerateCardDesignLibrary {
     file.outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
   }
 
+  /** A source card for the library: the first card that produced a key is its example. */
+  class Example(val source: String, val card: CardConfig, val snapshot: HaSnapshot)
+
   companion object {
+    /**
+     * Every source card, in order: the curated fixtures (one per card type and shape the parity
+     * tests cover), then every card in the demo dashboards and the cards nested in them.
+     */
+    fun librarySources(): List<Example> =
+      LibraryFixtures.all.map { Example("fixture:${it.name}", it.card, it.snapshot) } +
+        DASHBOARDS.flatMap { name ->
+          val loaded = requireNotNull(DashboardFixtures.load(name)) { "no bundled dashboard $name" }
+          loaded.dashboard.allCards().map { Example("dashboard:$name", it, loaded.snapshot) }
+        }
+
+    /**
+     * The library keys [card] produces: one per theme style, light and dark, and one per mode of
+     * every other card style (those bring their own palette, so the theme style doesn't change
+     * them).
+     */
+    fun keysOf(card: CardConfig, snapshot: HaSnapshot): List<DesignKey> = buildList {
+      for (style in ThemeStyle.entries) for (dark in listOf(false, true)) {
+        CardDesignTemplates.keyFor(card, snapshot, style, dark)?.let(::add)
+      }
+      for (cardStyle in HaUberTheme.all) {
+        if (cardStyle.id == HaUberTheme.Classic.id) continue
+        for (dark in CardDesignTemplates.modesOf(cardStyle)) {
+          CardDesignTemplates.keyFor(
+              card,
+              snapshot,
+              ThemeStyle.entries.first(),
+              dark,
+              cardStyle = cardStyle,
+            )
+            ?.let(::add)
+        }
+      }
+    }
+
     /** The demo dashboards bundled in `:previews` (the in-app demo's data). */
     val DASHBOARDS =
       listOf("3d_printing", "climate", "energy", "github", "meshcore", "networks", "security")

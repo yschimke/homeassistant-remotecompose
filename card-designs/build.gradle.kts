@@ -46,6 +46,7 @@ tasks
     inputs.files(robolectricSdk)
     // The published sticker-sheet selection is part of the preview discovery contract.
     inputs.file(rootProject.file("catalog.spec.json"))
+    inputs.dir(layout.projectDirectory.dir("ui-builder/designs"))
     dependsOn(prepareRobolectricSdk)
     systemProperty("robolectric.offline", "true")
     systemProperty(
@@ -68,6 +69,9 @@ dependencies {
   testImplementation(project(":ha-client"))
   testImplementation(project(":rc-converter"))
   testImplementation(project(":rc-components"))
+  // Card designs authored in UI Builder (`ui-builder/designs/*.uid`), drawn by the catalog's own
+  // components: CardDesignDocument.
+  testImplementation(project(":ha-cards-catalog"))
   // The bundled demo dashboards: the library's source cards.
   testImplementation(project(":previews"))
 

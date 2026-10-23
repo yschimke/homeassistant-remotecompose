@@ -74,6 +74,18 @@ fun HaCardTileSticker() = HaCardSticker {
 }
 
 @CatalogComponent(
+  id = "HaCard/EntityTile",
+  group = "Home Assistant",
+  noReference = NO_KIT,
+  caption =
+    "HA's tile card for one slot entity, drawn as the dashboard draws it: a light here. In a card " +
+      "design its properties come from the design key, so one design covers every tile.",
+)
+@Preview(widthDp = CARD_WIDTH_DP, heightDp = 72)
+@Composable
+fun HaCardEntityTileSticker() = HaCardSticker { HaCardEntityTile(domain = "light") }
+
+@CatalogComponent(
   id = "HaCard/EntityRow",
   group = "Home Assistant",
   noReference = NO_KIT,

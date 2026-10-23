@@ -96,6 +96,12 @@ class TileCardConverter : CardConverter {
 
     const val DOMAIN = EntityDesign.DOMAIN
 
+    /** The other structural properties of a tile key, for a card design's tile component. */
+    const val DEVICE_CLASS = EntityDesign.DEVICE_CLASS
+    const val ICON = EntityDesign.ICON
+    const val CARD_ICON = EntityDesign.CARD_ICON
+    const val UNIT = EntityDesign.UNIT
+
     /** The narrowest launcher cell that shows a tile's features (the full tile's own minimum). */
     private const val FeaturesMinWidthDp = 96
   }
@@ -228,6 +234,15 @@ class TileCardConverter : CardConverter {
   @Composable
   private fun FullTile(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     RemoteHaTile(tileData(card, snapshot), modifier = modifier)
+  }
+
+  /**
+   * The dashboard tile for [card] on [snapshot]: what [Render] draws in wrap mode, for the
+   * `ha-cards/entity-tile` component a UI Builder card design places.
+   */
+  @Composable
+  fun WrapTile(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier = RemoteModifier) {
+    FullTile(card, snapshot, modifier)
   }
 
   /**

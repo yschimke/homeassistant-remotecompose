@@ -73,6 +73,8 @@ dependencies {
   implementation(libs.composeai.preview.annotations)
   // The `.rc` sidecar seam, so the published catalog carries each sticker's RemoteDocument.
   implementation(libs.composeai.data.render.core)
+  // Card designs (`.uid`) are drawn in-process from their JSON: CardDesignDocument.
+  implementation(libs.kotlinx.serialization.json)
 
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlin.test.junit)

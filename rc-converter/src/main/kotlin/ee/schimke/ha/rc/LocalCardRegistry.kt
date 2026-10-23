@@ -52,10 +52,25 @@ fun RenderChild(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier
     converter.Render(card, snapshot, modifier)
     return
   }
+  FramedCard(card, snapshot, modifier) { converter.Render(card, snapshot, it) }
+}
+
+/**
+ * [content] for a top-level [card], inside the unavailable frame of the one entity it is about: the
+ * frame [RenderChild] gives every card type, for a card drawn by something other than its converter
+ * (a card design authored in UI Builder). [content] gets the modifier to draw with.
+ */
+@Composable
+fun FramedCard(
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  modifier: RemoteModifier = RemoteModifier,
+  content: @Composable (RemoteModifier) -> Unit,
+) {
   val entityId = if (LocalInsideCard.current) null else unavailableFrameEntity(card)
   if (entityId == null) {
     // No frame here: a stack or grid with no entity of its own leaves each child to frame itself.
-    converter.Render(card, snapshot, modifier)
+    content(modifier)
     return
   }
   // The card is about one entity: it shows that entity's unavailability as the uber theme does,
@@ -66,9 +81,7 @@ fun RenderChild(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier
     if (LocalEntityAvailability.current) LiveValues.isAvailable(entityId, initiallyAvailable)
     else null
   RemoteHaUnavailableFrame(isAvailable, initiallyAvailable, modifier) { contentModifier ->
-    CompositionLocalProvider(LocalInsideCard provides true) {
-      converter.Render(card, snapshot, contentModifier)
-    }
+    CompositionLocalProvider(LocalInsideCard provides true) { content(contentModifier) }
   }
 }
 

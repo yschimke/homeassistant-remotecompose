@@ -1,0 +1,39 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "tile",
+  "title": "Tile",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 72,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": ["root"],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": { "content": ["tile"] }
+    },
+    "tile": {
+      "id": "tile",
+      "componentId": "ha-cards/entity-tile",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}
