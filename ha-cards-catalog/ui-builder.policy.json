@@ -406,13 +406,13 @@
           "notes": "The entity's `device_class`, which picks the icon, colour and meter glyph. Unset takes the key's."
         },
         {
-          "name": "icon",
+          "name": "iconAttribute",
           "jsonType": "string",
           "required": false,
           "notes": "The entity's own `icon` attribute (`mdi:…`). Unset takes the key's."
         },
         {
-          "name": "cardIcon",
+          "name": "iconConfig",
           "jsonType": "string",
           "required": false,
           "notes": "The card's configured `icon:` (`mdi:…`). Unset takes the key's."

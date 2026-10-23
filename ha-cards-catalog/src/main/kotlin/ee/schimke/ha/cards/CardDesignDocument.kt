@@ -108,8 +108,8 @@ class CardDesignDocument private constructor(val id: String, private val documen
           modifier,
           domain = p.string("domain"),
           deviceClass = p.string("deviceClass"),
-          icon = p.string("icon"),
-          cardIcon = p.string("cardIcon"),
+          iconAttribute = p.string("iconAttribute"),
+          iconConfig = p.string("iconConfig"),
           unit = p.string("unit"),
         )
       "ha-cards/tile" ->
