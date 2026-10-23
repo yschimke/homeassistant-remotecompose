@@ -237,14 +237,16 @@ class GridCardConverter : CardConverter {
         // A Wear slot is wide and short (160 to 200 × 60 to 136 dp): one cell per row, each a
         // square as wide as the slot, showed only the first cell (#624). Up to three cells share
         // one row, as a horizontal stack's do; more take two rows, the most a Large slot holds.
-        // None is square, since a square cell is as tall as the slot is wide.
+        // None is square, since a square cell is as tall as the slot is wide. Past
+        // [WEAR_GRID_MAX_CELLS] the cells would be narrower than a 48 dp chip, so the rest drop.
+        val wearCells = children.take(WEAR_GRID_MAX_CELLS)
         GridCells(
-          children,
-          bindingIndices,
-          List(children.size) { false },
+          wearCells,
+          bindingIndices.take(wearCells.size),
+          List(wearCells.size) { false },
           keepColumns = false,
           snapshot,
-          wearGridPerRow(children.size),
+          wearGridPerRow(wearCells.size),
           modifier.fillMaxSize(),
           fillHeight = true,
         )
@@ -326,9 +328,15 @@ private fun GridCells(
   }
 }
 
-/** Cells per row of a grid of [cellCount] cards in a Wear slot: one row up to three, else two. */
+/**
+ * Cells per row of a grid of [cellCount] cards in a Wear slot: one row up to three, else two rows,
+ * never more than three to a row (a 160 dp slot fits three 48 dp chips).
+ */
 internal fun wearGridPerRow(cellCount: Int): Int =
-  if (cellCount <= 3) cellCount.coerceAtLeast(1) else (cellCount + 1) / 2
+  if (cellCount <= 3) cellCount.coerceAtLeast(1) else ((cellCount + 1) / 2).coerceAtMost(3)
+
+/** The most cells a Wear slot's grid shows: two rows of three, all a Large slot holds. */
+internal const val WEAR_GRID_MAX_CELLS = 6
 
 /** HA's `columns`: a positive integer, default [HaGridLayout.DEFAULT_COLUMNS]. */
 internal fun gridColumns(card: CardConfig): Int =
