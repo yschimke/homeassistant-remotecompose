@@ -16,6 +16,7 @@ import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -96,6 +97,8 @@ fun CardActionsSheet(
   val overrides by
     remember(context) { CardDesignOverrideStore.of(context).overrides }.collectAsState()
   val entityIds = remember(card) { card.historyEntityIds() }
+  val cameras = remember(card) { cameraEntities(card) }
+  val liveCameras by LiveCameras.live.collectAsState()
   val state =
     CardActionsState(
       title = card.historyTitle(),
@@ -112,6 +115,7 @@ fun CardActionsSheet(
           ?.takeUnless { DemoData.isDemo(baseUrl) }
           ?.let { "${baseUrl.trimEnd('/')}/history?entity_id=$it" },
       canMonitor = onMonitor != null,
+      liveCamera = cameras.takeIf { it.isNotEmpty() }?.let { ids -> ids.any { it in liveCameras } },
     )
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
   ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
@@ -152,6 +156,7 @@ fun CardActionsSheet(
         },
       onOpenInStudio = closeThen(onOpenInStudio),
       onMonitor = closeThen { onMonitor?.invoke() },
+      onLiveCameraChange = { on -> LiveCameras.setLive(cameras, on) },
     )
   }
 }
@@ -170,6 +175,8 @@ data class CardActionsState(
   val hasHistory: Boolean = true,
   val homeAssistantUrl: String? = null,
   val canMonitor: Boolean = false,
+  /** Whether the card's camera refreshes every couple of seconds; null for a card with none. */
+  val liveCamera: Boolean? = null,
 )
 
 data class CardStyleLabel(val name: String, val custom: Boolean)
@@ -186,6 +193,7 @@ fun CardActions(
   onOpenInStudio: () -> Unit,
   onMonitor: () -> Unit,
   modifier: Modifier = Modifier,
+  onLiveCameraChange: (Boolean) -> Unit = {},
 ) {
   // Scrolls so the last actions stay reachable in landscape, split screen or with large text.
   Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 16.dp)) {
@@ -234,6 +242,19 @@ fun CardActions(
         Modifier.fillMaxWidth()
           .toggleable(value = state.onWatch, role = Role.Switch, onValueChange = onWatchChange),
     )
+    state.liveCamera?.let { live ->
+      ListItem(
+        headlineContent = { Text("Live camera") },
+        supportingContent = {
+          Text("A new frame every ${LiveCameras.FRAME_INTERVAL_MS / 1000} s for 10 min, on screen")
+        },
+        leadingContent = { Icon(Icons.Outlined.Videocam, contentDescription = null) },
+        trailingContent = { Switch(checked = live, onCheckedChange = null) },
+        modifier =
+          Modifier.fillMaxWidth()
+            .toggleable(value = live, role = Role.Switch, onValueChange = onLiveCameraChange),
+      )
+    }
     Action(
       Icons.Outlined.Palette,
       "Card style",

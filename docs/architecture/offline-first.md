@@ -173,6 +173,23 @@ per rotation) and fetches them network first, falling back to the last
 frame on disk when the fetch fails (offline, an expired token) — or
 straight to disk when the device has no network.
 
+Everything else that can change at one URL — `/local/` files, other
+sites' pictures — keeps Coil's disk-first rule until its copy is a day
+old, then goes network first the same way, the old copy standing in
+when the fetch fails. Content-addressed pictures (`/api/image/serve/…`,
+media artwork with `cache=`) are never refetched.
+
+A dashboard camera gets a new frame only when Home Assistant rotates its
+token, every five minutes. A card's long-press sheet has a **Live
+camera** switch: for ten minutes, while the dashboard is in the
+foreground, its cameras' URLs gain a `terrazzo_frame` counter every two
+seconds (`LiveCameras`), each a network-first fetch; the disk key leaves
+the counter out, so it still holds one frame per camera. A small pulsing
+dot in the card's corner marks a live camera.
+
+Sign-out clears the image caches, memory and disk, with the instance's
+other cached data.
+
 After each live dashboard load, `HaImageStack.prewarm` fetches the
 `entity_picture`s of the dashboard's entities that aren't on disk yet,
 without a memory-cache entry, so cards not yet scrolled into view still

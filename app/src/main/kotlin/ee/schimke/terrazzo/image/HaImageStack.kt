@@ -135,8 +135,15 @@ class HaImageStack(
     ImageLoader.Builder(context.applicationContext)
       .components {
         // Camera and image-entity pictures: one disk entry per entity, network first, the last
-        // one on disk when offline.
-        add(LiveImageCacheInterceptor(isOnline = { lanPolicy.isOnline }))
+        // one on disk when offline. Other pictures that can change in place refresh once a day.
+        add(
+          LiveImageCacheInterceptor(
+            isOnline = { lanPolicy.isOnline },
+            savedAtMs = { key ->
+              diskCache.openSnapshot(key)?.use { it.data.toFile().lastModified() }
+            },
+          )
+        )
         // Demo mode's pictures are on a host nothing serves; draw stand-ins for them. Answers only
         // for `DemoData.BASE_URL` URLs, so real sessions' fetches are untouched.
         add(DemoImageFetcher.Factory())
@@ -146,6 +153,16 @@ class HaImageStack(
       .eventListener(LoggingEventListener)
       .build()
       .also { Log.d(TAG, "imageLoader built") }
+  }
+
+  /**
+   * Forgets every picture, in memory and on disk: sign-out calls it so the next account on the
+   * device can't see the last one's camera frames and people. The disk cache is in app storage that
+   * only this clears.
+   */
+  suspend fun clearCaches() {
+    imageLoader.memoryCache?.clear()
+    withContext(Dispatchers.IO) { diskCache.clear() }
   }
 
   /**

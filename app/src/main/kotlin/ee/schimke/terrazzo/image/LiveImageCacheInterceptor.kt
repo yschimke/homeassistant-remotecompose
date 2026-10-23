@@ -4,6 +4,9 @@ import coil3.intercept.Interceptor
 import coil3.request.CachePolicy
 import coil3.request.ImageResult
 import coil3.request.SuccessResult
+import ee.schimke.terrazzo.dashboard.LiveCameras
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
@@ -24,12 +27,36 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
  * a fresh frame replaces the entry, and when the fetch fails (offline, Home Assistant down, an
  * expired token) the last frame on disk stands in. With no network at all the disk is read straight
  * away rather than after a connect timeout.
+ *
+ * Everything else that can change at one URL ([refreshesDaily]) keeps Coil's disk-first rule until
+ * its copy is [REFRESH_AFTER_MS] old, then goes network first the same way. Coil itself never
+ * revalidates, so without this an edited `/local/` file would stay stale until evicted.
  */
-internal class LiveImageCacheInterceptor(private val isOnline: () -> Boolean) : Interceptor {
+internal class LiveImageCacheInterceptor(
+  private val isOnline: () -> Boolean,
+  private val savedAtMs: (diskKey: String) -> Long? = { null },
+  private val nowMs: () -> Long = System::currentTimeMillis,
+) : Interceptor {
 
   override suspend fun intercept(chain: Interceptor.Chain): ImageResult {
+    val url = chain.request.data.toString()
+    liveImageDiskKey(url)?.let {
+      return networkFirst(chain, it)
+    }
+    // Anything else that can change at the same URL (`/local/` files, other sites' pictures) is
+    // served from disk as Coil does, until its copy is a day old: then fetched again, the old copy
+    // standing in when that fails. Looked up off the main thread, and only when Coil's memory
+    // cache missed (the players read it themselves first).
+    if (!refreshesDaily(url) || !isOnline()) return chain.proceed()
+    val key = chain.request.diskCacheKey ?: url
+    val saved = withContext(Dispatchers.IO) { savedAtMs(key) } ?: return chain.proceed()
+    if (nowMs() - saved < REFRESH_AFTER_MS) return chain.proceed()
+    return networkFirst(chain, key)
+  }
+
+  /** A fresh copy into [key]'s disk entry, or the entry when the network fails or is down. */
+  private suspend fun networkFirst(chain: Interceptor.Chain, key: String): ImageResult {
     val request = chain.request
-    val key = liveImageDiskKey(request.data.toString()) ?: return chain.proceed()
     val fromDisk =
       request
         .newBuilder()
@@ -47,6 +74,30 @@ internal class LiveImageCacheInterceptor(private val isOnline: () -> Boolean) : 
     if (fresh is SuccessResult) return fresh
     return chain.withRequest(fromDisk).proceed().takeIf { it is SuccessResult } ?: fresh
   }
+
+  companion object {
+    /**
+     * How old a disk copy of a picture that can change in place gets before it is fetched again.
+     */
+    const val REFRESH_AFTER_MS: Long = 24 * 60 * 60_000L
+  }
+}
+
+/**
+ * Whether [url] is a picture that can change while its URL stays the same, so its disk copy is
+ * refreshed daily: any http(s) URL except Home Assistant's content-addressed ones (an uploaded
+ * picture's id, a media player artwork's hash) and its live ones, which have their own rule.
+ */
+internal fun refreshesDaily(url: String): Boolean {
+  val parsed = url.toHttpUrlOrNull() ?: return false
+  if (parsed.isLiveImage()) return false
+  val segments = parsed.pathSegments
+  val contentAddressed =
+    segments.size >= 2 &&
+      segments[0] == "api" &&
+      (segments[1] == "image" ||
+        (segments[1] == "media_player_proxy" && parsed.queryParameter("cache") != null))
+  return !contentAddressed
 }
 
 /**
@@ -56,7 +107,13 @@ internal class LiveImageCacheInterceptor(private val isOnline: () -> Boolean) : 
 internal fun liveImageDiskKey(url: String): String? {
   val parsed = url.toHttpUrlOrNull() ?: return null
   if (!parsed.isLiveImage()) return null
-  return parsed.newBuilder().removeAllQueryParameters("token").build().toString()
+  return parsed
+    .newBuilder()
+    .removeAllQueryParameters("token")
+    // A live camera's frame counter (LiveCameras): still one entry per camera.
+    .removeAllQueryParameters(LiveCameras.FRAME_PARAM)
+    .build()
+    .toString()
 }
 
 private fun HttpUrl.isLiveImage(): Boolean {
