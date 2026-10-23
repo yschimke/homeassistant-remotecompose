@@ -20,6 +20,11 @@ import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WidgetInstanceId
 import androidx.wear.compose.remote.material3.RemoteColorScheme
+import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
+import ee.schimke.composeai.rcplayer.protocol.RcFloatExpression
+import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
+import ee.schimke.composeai.rcplayer.protocol.RcPaddingModifier
+import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -103,7 +108,8 @@ class CardDesignWearTemplateTest {
         ),
     )
 
-  private val cardStyles = listOf(HaUberTheme.Classic, HaUberTheme.byId("lcd"))
+  private val cardStyles =
+    listOf(HaUberTheme.Classic, HaUberTheme.byId("lcd"), HaUberTheme.byId("lcars"))
 
   private fun params(
     type: Int,
@@ -238,6 +244,45 @@ class CardDesignWearTemplateTest {
       }
     }
     assertEquals(emptyList(), problems)
+  }
+
+  /**
+   * A style that frames its card (LCARS, Catppuccin, Obsidian) pads it twice: a decorative inset,
+   * then the card's own padding. Only the card's own becomes the container's, so the watch's insets
+   * apply once.
+   */
+  @Test
+  fun theContainerPaddingIsAppliedOnce() {
+    val tile = cards.getValue("tile")
+    for (id in listOf("classic", "lcars", "catppuccin", "obsidian")) {
+      val cardStyle = HaUberTheme.byId(id)
+      val key =
+        assertNotNull(
+          CardDesignTemplates.keyFor(tile, snapshot, style, dark = true, cardStyle = cardStyle),
+          "$id: no design key",
+        )
+      val template =
+        assertNotNull(
+          CardDesignWearTemplate.template(CardDesignTemplates.capture(context, key).bytes),
+          "$id: no card box to reframe",
+        )
+      val operations = RcDocumentCodec.decode(template, RcWireLimits()).operations
+      // The named horizontal padding, then the pixel expression the paddings read.
+      val named =
+        operations
+          .filterIsInstance<RcNamedVariable>()
+          .single { it.name.endsWith(WearWidgetTemplate.HORIZONTAL_PADDING) }
+          .id
+      val px =
+        operations
+          .filterIsInstance<RcFloatExpression>()
+          .single { it.expression.firstOrNull()?.referencedId == named }
+          .id
+      val containerPaddings = operations.count {
+        it is RcPaddingModifier && it.left.referencedId == px
+      }
+      assertEquals(1, containerPaddings, "$id: container paddings")
+    }
   }
 
   private companion object {
