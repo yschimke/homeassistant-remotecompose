@@ -3,6 +3,9 @@
 > Status: **plan**. Nothing here is implemented yet. This document says
 > what to build, in what order, and which questions need a spike first.
 
+> Next: [server-owned-card-designs.md](server-owned-card-designs.md) moves every card's layout
+> into UI Builder designs and removes the converters' built-in layouts.
+
 ## Goal
 
 Let card designs change without an app release. After a client loads a
