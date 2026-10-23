@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.wear.widget
 import ee.schimke.ha.cards.CardDesignDocument
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.rc.UNAVAILABLE_DESIGN_PROPERTY
+import ee.schimke.ha.rc.cards.ButtonCardConverter
 import ee.schimke.ha.rc.cards.TileCardConverter
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
@@ -32,10 +33,12 @@ class WearCardDesignParityTest {
   private val registry = defaultRegistry()
   private val converter = TileCardConverter()
 
-  private val design =
+  private fun designOf(cardType: String) =
     CardDesignDocument.parse(
-      File(requireNotNull(System.getProperty("cardDesignsDir")), "tile.uid").readText()
+      File(requireNotNull(System.getProperty("cardDesignsDir")), "$cardType.uid").readText()
     )
+
+  private val design = designOf("tile")
 
   @Test
   fun tileDesignIsTheWearTemplateForEveryShapeAndStyle() {
@@ -78,6 +81,55 @@ class WearCardDesignParityTest {
       }
     }
     println("tile.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases")
+    assertEquals(emptyList(), differing)
+  }
+
+  @Test
+  fun buttonDesignIsTheWearTemplateForEveryShapeAndStyle() {
+    val button = ButtonCardConverter()
+    val buttonDesign = designOf("button")
+    // Every templated domain, with and without its name, available or not, off or on.
+    val inputs =
+      TileCardConverter.TEMPLATE_DOMAINS.flatMap { domain ->
+        listOf("0", "1").flatMap { showName ->
+          listOf(false, true).flatMap { unavailable ->
+            listOf(false, true).mapNotNull { on ->
+              if (on && domain == "sensor") return@mapNotNull null
+              button.wearDesignTemplate(
+                DesignProperties.build {
+                  string(TileCardConverter.DOMAIN, domain)
+                  string("show_name", showName)
+                  if (unavailable) string(UNAVAILABLE_DESIGN_PROPERTY, "1")
+                  if (on) string(WEAR_ON_PROPERTY, "1")
+                }
+              )
+            }
+          }
+        }
+      }
+    val differing = buildList {
+      for (input in inputs) for (style in ThemeStyle.entries) for (cardStyle in HaUberTheme.all) {
+        val colors = wearWidgetColors(style)
+        val fromConverter = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle)
+          }
+        }
+        val fromDesign = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle) {
+              buttonDesign.RenderCard(input.card, input.snapshot, it)
+            }
+          }
+        }
+        if (!fromConverter.contentEquals(fromDesign)) {
+          add("${input.card.raw} ${input.snapshot.states.values} ${style.name} ${cardStyle.id}")
+        }
+      }
+    }
+    println(
+      "button.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
+    )
     assertEquals(emptyList(), differing)
   }
 }
