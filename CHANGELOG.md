@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.1.60](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.59...v0.1.60) (2026-10-23)
+
+
+### Features
+
+* **wear:** instantiate a server Wear design that names its container frame ([#1077](https://github.com/yschimke/homeassistant-remotecompose/issues/1077)) ([0492403](https://github.com/yschimke/homeassistant-remotecompose/commit/049240303b587a1f9a18c6f247e750ce57d999d6))
+* **wear:** reframe a phone card design into the Wear container, centred ([#1084](https://github.com/yschimke/homeassistant-remotecompose/issues/1084)) ([d155e18](https://github.com/yschimke/homeassistant-remotecompose/commit/d155e18d00b4810ea9d97d09ca52f205276e644b))
+* **widgets:** fit Wear and launcher widgets to their space, preview widgets per host ([#1090](https://github.com/yschimke/homeassistant-remotecompose/issues/1090)) ([86099d3](https://github.com/yschimke/homeassistant-remotecompose/commit/86099d3807770fcd4ca624d29402382f96550069))
+* **widgets:** scale launcher widget cards up and down with their size ([#1081](https://github.com/yschimke/homeassistant-remotecompose/issues/1081)) ([56bf761](https://github.com/yschimke/homeassistant-remotecompose/commit/56bf761f6cd55029f929abe9a67c95bd864a14f8))
+
+
+### Bug Fixes
+
+* AMS spools share their row; a Wear grid shows every cell ([#1087](https://github.com/yschimke/homeassistant-remotecompose/issues/1087)) ([e6ee940](https://github.com/yschimke/homeassistant-remotecompose/commit/e6ee940107c4539ba379447cd7546c0933003cba))
+* **cards:** fit narrow tiles, picture cards and placeholders in their widgets; name weather conditions ([#1092](https://github.com/yschimke/homeassistant-remotecompose/issues/1092)) ([5482b12](https://github.com/yschimke/homeassistant-remotecompose/commit/5482b1281f51bd502d13dd86ff0f510fb6ee7df2))
+* **deps:** update compose-ai-tools ([#1093](https://github.com/yschimke/homeassistant-remotecompose/issues/1093)) ([c1dd8c4](https://github.com/yschimke/homeassistant-remotecompose/commit/c1dd8c471e72ad54ad9e61e1731077d28f8d0c37))
+* **deps:** update dependency ee.schimke.composeai:data-render-core to v3.39.0 ([#1094](https://github.com/yschimke/homeassistant-remotecompose/issues/1094)) ([3e09164](https://github.com/yschimke/homeassistant-remotecompose/commit/3e091649aa97790cf3977f9bd1395fe5a7abada3))
+* **design-server:** keep Wear widgets that leave their container frame to the watch ([#1080](https://github.com/yschimke/homeassistant-remotecompose/issues/1080)) ([983c7f7](https://github.com/yschimke/homeassistant-remotecompose/commit/983c7f7b37ee0c46a931ef822643c6e6a6e7ef67))
+
 ## [0.1.59](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.58...v0.1.59) (2026-10-22)
 
 
