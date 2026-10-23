@@ -33,29 +33,26 @@ object Skins {
   /**
    * Downloads [designId]'s assets for every theme [choice] draws in, then records it installed
    * ([SkinStore]). It runs the design sync's own refresh with the skin added, one refresh at a time
-   * with the background sync, and installs the skin only once its assets are cached, so an install
-   * that fails half way leaves the skin uninstalled. A library skin is installed already.
+   * with the background sync, and installs the skin only once all of its assets are cached, so an
+   * install that fails half way leaves the skin uninstalled. A library skin is installed already.
    */
   suspend fun install(context: Context, choice: CardDesignChoice, designId: String): Installed {
     if (isLibrary(designId)) return Installed.Yes
     if (!choice.enabled) return Installed.Failed
     val withSkin = choice.copy(skins = choice.skins + designId)
-    val result =
+    val repository = CardDesignSync.networkRepository(context, withSkin)
+    val complete =
       withContext(Dispatchers.IO) {
         CardDesignSync.refreshLock.withLock {
-          CardDesignSync.networkRepository(context, withSkin).refresh()
+          val result = repository.refresh()
+          // Every asset the skin needs, not just some: a refresh that fetched only part of it
+          // still reports success.
+          result != RefreshResult.Rejected &&
+            result != RefreshResult.Failed &&
+            repository.isComplete(designId)
         }
       }
-    if (result == RefreshResult.Rejected || result == RefreshResult.Failed) return Installed.Failed
-    val cached =
-      withContext(Dispatchers.IO) {
-        CardDesignSync.cachedRepository(context, choice.serverUrl)
-          .resolveAllWithDevices(prefer = withSkin.prefer, designIds = setOf(designId))
-          .byDesign
-          .entries[designId]
-          .orEmpty()
-      }
-    if (cached.isEmpty()) return Installed.Failed
+    if (!complete) return Installed.Failed
     SkinStore.of(context).add(designId)
     CardDesignSync.stored()
     return Installed.Yes
