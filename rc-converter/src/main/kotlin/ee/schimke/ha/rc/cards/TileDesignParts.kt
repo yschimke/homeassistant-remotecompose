@@ -16,10 +16,10 @@ import ee.schimke.ha.rc.design.LocalCardInput
 import ee.schimke.ha.rc.framedDesignTemplate
 
 /**
- * The parts a tile's card design arranges (card-designs/ui-builder/designs/tile.uid): each draws one
- * form of the tile for the card being drawn ([LocalCardInput]), which the tile's data (name, state,
- * icon, accent, badge, features, meter glyph) comes from. Which form shows at which size, on which
- * surface, is the design's: these only draw.
+ * The parts a tile's card design arranges (card-designs/ui-builder/designs/tile.uid): each draws
+ * one form of the tile for the card being drawn ([LocalCardInput]), which the tile's data (name,
+ * state, icon, accent, badge, features, meter glyph) comes from. Which form shows at which size, on
+ * which surface, is the design's: these only draw.
  * - `ha-cards/tile-full`: the dashboard tile, icon beside name over state, with its features.
  * - `ha-cards/tile-compact`: icon, name and state, no features, colours resolved when captured.
  * - `ha-cards/tile-icon-chip`: the icon chip alone, for a cell too narrow for text.

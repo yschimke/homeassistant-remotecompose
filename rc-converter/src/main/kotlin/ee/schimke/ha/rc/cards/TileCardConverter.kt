@@ -2,15 +2,13 @@
 
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.runtime.CompositionLocalProvider
-import ee.schimke.ha.rc.design.CardDesigns
-import ee.schimke.ha.rc.design.LocalCardInput
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import ee.schimke.ha.design.CardBindingRecipe
 import ee.schimke.ha.design.CardBindingRecipes
 import ee.schimke.ha.design.DesignProperties
@@ -26,7 +24,6 @@ import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaNamedColor
 import ee.schimke.ha.rc.HaStateColor
-import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteMinSizeGate
@@ -38,15 +35,15 @@ import ee.schimke.ha.rc.components.HaTileBadge
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaIconChip
-import ee.schimke.ha.rc.components.RemoteHaIconHero
 import ee.schimke.ha.rc.components.RemoteHaTile
 import ee.schimke.ha.rc.components.RemoteHaTileCompact
-import ee.schimke.ha.rc.components.RemoteHaWideHero
 import ee.schimke.ha.rc.components.TileTwoLineMinHeightDp
 import ee.schimke.ha.rc.components.haNeutralAccent
 import ee.schimke.ha.rc.components.tileFeatureRows
 import ee.schimke.ha.rc.components.tileNaturalHeightDp
 import ee.schimke.ha.rc.defaultTapActionFor
+import ee.schimke.ha.rc.design.CardDesigns
+import ee.schimke.ha.rc.design.LocalCardInput
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.icons.withIcons

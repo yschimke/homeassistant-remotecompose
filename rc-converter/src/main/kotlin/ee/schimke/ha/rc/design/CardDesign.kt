@@ -103,7 +103,11 @@ private constructor(
    */
   @Composable
   @RemoteComposable
-  fun RenderCard(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier = RemoteModifier) {
+  fun RenderCard(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    modifier: RemoteModifier = RemoteModifier,
+  ) {
     CompositionLocalProvider(LocalCardInput provides DesignTemplateInput(card, snapshot)) {
       FramedCard(card, snapshot, modifier) { Render(it) }
     }
@@ -119,7 +123,9 @@ private constructor(
   internal fun childrenOf(id: String, slot: String? = null): List<String> {
     val slots = nodes[id]?.get("slots")?.jsonObject.orEmpty()
     val selected = if (slot == null) slots.values else listOfNotNull(slots[slot])
-    return selected.flatMap { (it as? JsonArray).orEmpty().map { child -> child.jsonPrimitive.content } }
+    return selected.flatMap {
+      (it as? JsonArray).orEmpty().map { child -> child.jsonPrimitive.content }
+    }
   }
 
   @Composable
@@ -190,7 +196,8 @@ internal constructor(
 
   fun string(name: String, default: String = ""): String = literal(name)?.contentOrNull ?: default
 
-  fun bool(name: String, default: Boolean = false): Boolean = literal(name)?.booleanOrNull ?: default
+  fun bool(name: String, default: Boolean = false): Boolean =
+    literal(name)?.booleanOrNull ?: default
 
   fun int(name: String, default: Int = 0): Int = literal(name)?.intOrNull ?: default
 
