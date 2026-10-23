@@ -102,9 +102,10 @@ import kotlinx.serialization.json.JsonPrimitive
  * Wear capture profile may fail to capture; the registry's [ee.schimke.ha.rc.UNSUPPORTED_CARD_TYPE]
  * fallback handles unknown types but not in-range ops mismatches.
  *
- * A widget with no card chosen yet draws a short placeholder asking for one: a Wear widget has no
- * tap action to open the picker, so the card is chosen in the Terrazzo app (or by the system's
- * configuration step, where the host offers it).
+ * A widget with no card chosen yet draws a short placeholder asking for one: the card is chosen in
+ * the Terrazzo app (or by the system's configuration step, where the host offers it). A tap on a
+ * widget opens the Wear app on its card ([WearWidgetTaps]); the card's own actions don't run from
+ * the widget.
  */
 abstract class CardWidget : GlanceWearWidget() {
 
@@ -123,7 +124,8 @@ abstract class CardWidget : GlanceWearWidget() {
     val chosen = WearWidgetCardStore(app).read(params.instanceId.id)
     // The pinned cards' Wear widget designs from the design server, synced by the phone.
     withTimeoutOrNull(DATA_LAYER_TIMEOUT_MS) { syncDesignsFromDataLayer(app, store) }
-    val data = slotWidgetDataFromStore(app, store, chosen)
+    // A tap opens the Wear app on the card (WearWidgetTaps): the widget can't run its actions.
+    val data = slotWidgetDataFromStore(app, store, chosen).openingApp(chosen?.cardKey)
     // The card's values from Home Assistant itself when the phone has sent none lately: after the
     // render, never before it. Values it reads render the widget again.
     chosen?.let { card ->

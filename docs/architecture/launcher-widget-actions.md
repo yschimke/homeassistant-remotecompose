@@ -37,12 +37,12 @@ it.
 connected or a short-lived one minted from the stored refresh token. A pinned widget is a
 deliberate control, so the dashboard's read-only default doesn't apply. What a tap does:
 
-| Action | On a launcher widget | On a watch card (Wear app) |
-| --- | --- | --- |
-| `Toggle`, `CallService` | Calls Home Assistant. An on/off result shows at once and is put back if the call fails; a call that names no entity (a script, a scene) shows once a live session reports it. | Relayed to the phone, which calls Home Assistant on its session when its own capture of that card makes the action (below). |
-| `AlarmIntent`, `AlarmPin`, `AlarmKey` | Paired per widget and entity by `WidgetAlarmPairing` into one `alarm_control_panel.alarm_<service>` call with the entered `code` (below). | Paired on the watch by `AlarmKeypadCoordinator` into one call; the phone rebuilds it from the card's own button with `WidgetAlarmPairing`. |
-| `MoreInfo`, `Navigate` | Open the app (an activity `PendingIntent`: a receiver can't start one from the background). | Nothing: the watch has no entity details or dashboard navigation to show. |
-| `Url` | Opens the URL. | Nothing: the watch has no browser. |
+| Action | On a launcher widget | On a watch card (Wear app) | On a Wear widget |
+| --- | --- | --- | --- |
+| `Toggle`, `CallService` | Calls Home Assistant. An on/off result shows at once and is put back if the call fails; a call that names no entity (a script, a scene) shows once a live session reports it. | Relayed to the phone, which calls Home Assistant on its session when its own capture of that card makes the action (below). | Opens the Wear app on the widget's card. |
+| `AlarmIntent`, `AlarmPin`, `AlarmKey` | Paired per widget and entity by `WidgetAlarmPairing` into one `alarm_control_panel.alarm_<service>` call with the entered `code` (below). | Paired on the watch by `AlarmKeypadCoordinator` into one call; the phone rebuilds it from the card's own button with `WidgetAlarmPairing`. | Opens the Wear app on the widget's card. |
+| `MoreInfo`, `Navigate` | Open the app (an activity `PendingIntent`: a receiver can't start one from the background). | Nothing: the watch has no entity details or dashboard navigation to show. | Opens the Wear app on the widget's card. |
+| `Url` | Opens the URL. | Nothing: the watch has no browser. | Opens the Wear app on the widget's card. |
 
 Every write must be the action the app itself put on the widget's `PendingIntent`
 (`trustedWidgetAction`). The one exception is a widget PIN: its digits are typed in the player
@@ -74,6 +74,18 @@ The watch feels each tap (a tick as it is sent, a key tap per keypad key, a conf
 ran it, a reject when it didn't) and shows the phone's reason under the card, as the message card
 does. A tap that depends on a state the phone has since seen change (a setpoint step from a stale
 value) is refused rather than guessed.
+
+### Wear widgets
+
+A Wear widget can't keep a session or a keypad buffer, so every tap on it opens the Wear app on the
+widget's card: its pinned section, or the pinned list for a pinned card (`WearWidgetTaps`). The
+widget's document has each of the card's `ha` host actions rewritten into Glance Wear's own
+`SendPendingIntent` action (what `pendingIntentAction` emits for a Wear widget host), naming one
+activity `PendingIntent` that the widget's extras carry under `pending_intents` — the bundle
+`WearWidgetCapture` fills for a captured document. The rewrite is on the widget's final bytes, so the
+templates the Wear app shares keep their `ha` taps. A part of a card with no tap of its own does
+nothing, nor does a widget with no card chosen. `WearWidgetTapsTest` checks the rewrite against
+Glance Wear's own capture of a `pendingIntentAction` tap; it has not been tried on a watch yet.
 
 To observe a widget tap:
 
