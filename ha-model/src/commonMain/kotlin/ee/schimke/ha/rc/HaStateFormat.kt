@@ -95,6 +95,11 @@ internal fun formatStateIn(
         return formatDate(it)
       }
   }
+  if (domain == "weather") {
+    weatherConditionLabel(raw)?.let {
+      return it
+    }
+  }
   if (domain == "binary_sensor") {
     binarySensorLabel(deviceClass, raw)?.let {
       return it
@@ -659,3 +664,29 @@ private fun JsonObject.string(key: String): String? =
 
 private fun JsonObject.int(key: String): Int? =
   (this[key] as? JsonPrimitive)?.intOrNull?.takeIf { it in 0..10 }
+
+/**
+ * A weather entity's condition as Home Assistant's frontend names it in English
+ * (`component.weather.entity_component._.state`): `partlycloudy` reads "Partly cloudy", not
+ * "Partlycloudy". Null for a condition HA doesn't list.
+ */
+fun weatherConditionLabel(condition: String): String? = WEATHER_CONDITION_LABELS[condition]
+
+private val WEATHER_CONDITION_LABELS =
+  mapOf(
+    "clear-night" to "Clear, night",
+    "cloudy" to "Cloudy",
+    "exceptional" to "Exceptional",
+    "fog" to "Fog",
+    "hail" to "Hail",
+    "lightning" to "Lightning",
+    "lightning-rainy" to "Lightning, rainy",
+    "partlycloudy" to "Partly cloudy",
+    "pouring" to "Pouring",
+    "rainy" to "Rainy",
+    "snowy" to "Snowy",
+    "snowy-rainy" to "Snowy, rainy",
+    "sunny" to "Sunny",
+    "windy" to "Windy",
+    "windy-variant" to "Windy",
+  )
