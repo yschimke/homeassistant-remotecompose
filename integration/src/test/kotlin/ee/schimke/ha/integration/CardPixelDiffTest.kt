@@ -94,6 +94,14 @@ class CardPixelDiffTest(
         arrayOf("Thermostat_Dark_thermostat_dark", "thermostat/living_room_dark.png", 40.0),
         arrayOf("AlarmPanel_Light_alarm_panel_light", "alarm-panel/house_light.png", 40.0),
         arrayOf("AlarmPanel_Dark_alarm_panel_dark", "alarm-panel/house_dark.png", 40.0),
+        // humidifier / entity-filter / todo-list: full section-row cards too. The humidifier is a
+        // generic hygrostat and the shopping list is seeded by capture-references.sh.
+        arrayOf("Humidifier_Light_humidifier_light", "humidifier/bedroom_light.png", 35.0),
+        arrayOf("Humidifier_Dark_humidifier_dark", "humidifier/bedroom_dark.png", 35.0),
+        arrayOf("EntityFilter_Light_entity_filter_light", "entity-filter/on_now_light.png", 25.0),
+        arrayOf("EntityFilter_Dark_entity_filter_dark", "entity-filter/on_now_dark.png", 25.0),
+        arrayOf("TodoList_Light_todo_list_light", "todo-list/shopping_light.png", 20.0),
+        arrayOf("TodoList_Dark_todo_list_dark", "todo-list/shopping_dark.png", 20.0),
       )
   }
 

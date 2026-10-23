@@ -998,14 +998,16 @@ fun Thermostat_Dark() =
 
 private fun thermostatCard() = card("""{"type":"thermostat","entity":"climate.living_room"}""")
 
-@Preview(name = "humidifier (light)", showBackground = false, widthDp = 240, heightDp = 290)
+// The integration reference's width (references/humidifier), a full section-row card. Taller than
+// its 238 dp: the card wraps its dial and buttons in 274 dp, where HA's fits them in 238.
+@Preview(name = "humidifier (light)", showBackground = false, widthDp = 381, heightDp = 274)
 @Composable
 fun Humidifier_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(humidifierCard(), Fixtures.humidifier, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "humidifier (dark)", showBackground = false, widthDp = 240, heightDp = 290)
+@Preview(name = "humidifier (dark)", showBackground = false, widthDp = 381, heightDp = 274)
 @Composable
 fun Humidifier_Dark() =
   CardHost(HaTheme.Dark) {
@@ -1140,15 +1142,17 @@ private fun mediaControlCard() =
   card("""{"type":"media-control","entity":"media_player.office_speaker"}""")
 
 // ——— todo-list ———
+// The integration reference's width (references/todo-list), a full section-row card, at the
+// 248 dp this card wraps in; HA's, with its add-item field, is 317.
 
-@Preview(name = "todo-list (light)", showBackground = false, widthDp = 320, heightDp = 250)
+@Preview(name = "todo-list (light)", showBackground = false, widthDp = 381, heightDp = 248)
 @Composable
 fun TodoList_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(todoListCard(), Fixtures.shoppingList, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "todo-list (dark)", showBackground = false, widthDp = 320, heightDp = 250)
+@Preview(name = "todo-list (dark)", showBackground = false, widthDp = 381, heightDp = 248)
 @Composable
 fun TodoList_Dark() =
   CardHost(HaTheme.Dark) {

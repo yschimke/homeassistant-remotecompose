@@ -150,6 +150,42 @@ views:
             entity: alarm_control_panel.house
             states: [arm_away, arm_home]
 
+  - title: humidifier
+    path: humidifier
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: humidifier                        # 0 — the humidifier preview's card
+            entity: humidifier.bedroom
+
+  - title: entity-filter
+    path: entity-filter
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: entity-filter                     # 0 — the entity-filter preview's card
+            state_filter: ["on"]
+            entities:
+              - light.kitchen
+              - light.office_lamp
+              - switch.coffee_maker
+              - lock.front_door
+            card:
+              type: glance
+              title: On now
+
+  - title: todo-list
+    path: todo-list
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: todo-list                         # 0 — the todo-list preview's card
+            entity: todo.shopping_list
+            title: Shopping list
+
   - title: dashboard
     path: dashboard
     type: sections
