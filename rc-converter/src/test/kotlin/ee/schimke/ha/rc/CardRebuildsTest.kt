@@ -2,6 +2,7 @@ package ee.schimke.ha.rc
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -104,5 +105,49 @@ class CardRebuildsTest {
     key = "v2"
     compose.waitForIdle()
     assertEquals("data", CardRebuilds.peek().single().reason)
+  }
+
+  @Test
+  fun anotherTemplatesBytesCostADecodeAndTheSameTemplateCostsNothing() {
+    CardRebuilds.drain()
+    val context =
+      androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+    fun template(text: String): CardTemplatePlayback {
+      val bytes =
+        kotlinx.coroutines
+          .runBlocking {
+            androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument(
+              context = context
+            ) {
+              androidx.compose.remote.creation.compose.layout.RemoteText(text = text.rs)
+            }
+          }
+          .bytes
+      return CardTemplatePlayback(
+        bytes,
+        { _, _ -> CardSnapshotBindings(emptyMap(), emptyMap(), emptyMap(), emptyMap()) },
+        ee.schimke.ha.rc.components.HaAction.None,
+      )
+    }
+    val disarmed = template("disarmed")
+    val armed = template("armed")
+    val card = CardConfig("alarm-panel", buildJsonObject { put("type", "alarm-panel") })
+    var current by mutableStateOf(disarmed)
+    var key by mutableStateOf<Any>("disarmed")
+
+    compose.setContent {
+      CachedCardPreview(cacheKey = key, card = card, snapshot = HaSnapshot(), template = current) {}
+    }
+    compose.waitForIdle()
+
+    current = armed
+    key = "armed"
+    compose.waitForIdle()
+    assertEquals(CardRebuilds.Cost.Decode, CardRebuilds.drain().single().cost)
+
+    // The same template under a new key: the same bytes, new bindings only.
+    key = "armed-again"
+    compose.waitForIdle()
+    assertEquals(CardRebuilds.Cost.None, CardRebuilds.drain().single().cost)
   }
 }

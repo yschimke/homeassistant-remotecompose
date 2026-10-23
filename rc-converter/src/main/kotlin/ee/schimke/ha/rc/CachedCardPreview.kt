@@ -164,7 +164,9 @@ fun CachedCardPreview(
         // document.
         val bytes =
           if (pictureSignature.isEmpty()) it.bytes else pictureCopy(it.bytes, pictureSignature)
-        if (bytes !== it.bytes) produced[0] = CardRebuilds.Cost.Decode
+        // New bytes for the player either way: another template (an alarm panel's armed and
+        // disarmed rows are two), or this one's clone for new pictures.
+        if (bytes !== lastShown[0]?.bytes) produced[0] = CardRebuilds.Cost.Decode
         PlannedDocument(CardDocument(bytes = bytes, widthPx = 0, heightPx = 0), pending = false)
       }
         ?: cache.get(documentKey)?.let {
