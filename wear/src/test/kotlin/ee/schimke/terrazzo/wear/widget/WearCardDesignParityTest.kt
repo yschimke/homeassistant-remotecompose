@@ -2,10 +2,16 @@ package ee.schimke.terrazzo.wear.widget
 
 import ee.schimke.ha.cards.CardDesignDocument
 import ee.schimke.ha.design.DesignProperties
+import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.UNAVAILABLE_DESIGN_PROPERTY
 import ee.schimke.ha.rc.cards.ButtonCardConverter
 import ee.schimke.ha.rc.cards.EntityCardConverter
 import ee.schimke.ha.rc.cards.HeadingCardConverter
+import ee.schimke.ha.rc.cards.PictureCardConverter
+import ee.schimke.ha.rc.cards.PictureEntityCardConverter
+import ee.schimke.ha.rc.cards.PictureGlanceCardConverter
 import ee.schimke.ha.rc.cards.SensorCardConverter
 import ee.schimke.ha.rc.cards.TileCardConverter
 import ee.schimke.ha.rc.cards.defaultRegistry
@@ -15,6 +21,8 @@ import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -256,6 +264,67 @@ class WearCardDesignParityTest {
     }
     println(
       "heading.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
+    )
+    assertEquals(emptyList(), differing)
+  }
+
+  @Test
+  fun pictureDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "camera.front_door" to EntityState("camera.front_door", "idle"),
+            "light.porch" to EntityState("light.porch", "on"),
+            "switch.fan" to EntityState("switch.fan", "off"),
+          )
+      )
+    // Each picture card with and without its optional lines, as SlotWidget keys them.
+    val cards =
+      listOf(
+        """{"type":"picture","image":"https://example.com/a.jpg","name":"Garden"}""",
+        """{"type":"picture","image":"https://example.com/a.jpg"}""",
+        """{"type":"picture-entity","entity":"camera.front_door"}""",
+        """{"type":"picture-entity","entity":"light.porch","show_state":false}""",
+        """{"type":"picture-glance","title":"Garden","entities":["light.porch","switch.fan"]}""",
+        """{"type":"picture-glance","image":"x","entities":["switch.fan"]}""",
+      )
+    val converters =
+      listOf(PictureCardConverter(), PictureEntityCardConverter(), PictureGlanceCardConverter())
+        .associateBy { it.cardType }
+    val inputs = cards.mapNotNull { json ->
+      val raw = Json.parseToJsonElement(json) as JsonObject
+      val converter = converters.getValue(raw.getValue("type").toString().trim('"'))
+      val card = CardConfig(converter.cardType, raw)
+      // A card whose shape has no template draws direct on a watch, with nothing to compare.
+      val properties = converter.wearDesignProperties(card, snapshot) ?: return@mapNotNull null
+      converter.wearDesignTemplate(properties)?.let { converter.cardType to it }
+    }
+    assertEquals(converters.keys, inputs.map { it.first }.toSet())
+    val differing = buildList {
+      for ((cardType, input) in inputs) for (style in ThemeStyle.entries) {
+        for (cardStyle in HaUberTheme.all) {
+          val colors = wearWidgetColors(style)
+          val fromConverter = runBlocking {
+            WearWidgetTemplate.capture(context) {
+              SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle)
+            }
+          }
+          val fromDesign = runBlocking {
+            WearWidgetTemplate.capture(context) {
+              SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle) {
+                designOf(cardType).RenderCard(input.card, input.snapshot, it)
+              }
+            }
+          }
+          if (!fromConverter.contentEquals(fromDesign)) {
+            add("${input.card.raw} ${style.name} ${cardStyle.id}")
+          }
+        }
+      }
+    }
+    println(
+      "picture designs: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
     )
     assertEquals(emptyList(), differing)
   }

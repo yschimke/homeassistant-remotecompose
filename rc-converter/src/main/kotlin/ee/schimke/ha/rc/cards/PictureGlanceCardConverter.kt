@@ -2,28 +2,19 @@ package ee.schimke.ha.rc.cards
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.BreakpointAxis
-import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
-import ee.schimke.ha.rc.LocalCardSizeMode
-import ee.schimke.ha.rc.LocalFixedCanvasAxis
-import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaPictureGlanceCell
 import ee.schimke.ha.rc.components.HaPictureGlanceData
-import ee.schimke.ha.rc.components.RemoteHaPictureGlance
 import ee.schimke.ha.rc.defaultTapActionFor
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.icons.HaIconMap
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -34,8 +25,14 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 
-/** `picture-glance` card — image with a row of clickable entity cells. */
-class PictureGlanceCardConverter : CardConverter {
+/**
+ * `picture-glance` card — image with a row of clickable entity cells.
+ *
+ * Its layout is its card design, `picture-glance.uid` ([PictureDesignParts]): on a dashboard the
+ * image keeps HA's `aspect_ratio`; in a launcher cell the card fills it, the image taking what the
+ * strip leaves; in a Wear slot the Small container keeps the strip alone.
+ */
+class PictureGlanceCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.PICTURE_GLANCE
 
   /** A picture's height follows its width: it keeps a grid column's width. */
@@ -102,8 +99,8 @@ class PictureGlanceCardConverter : CardConverter {
       emptyMap(),
     )
 
-  @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  /** What [card] shows: its title and image caption over a strip of entity cells. */
+  internal fun pictureGlanceData(card: CardConfig, snapshot: HaSnapshot): HaPictureGlanceData {
     val image = card.raw["image"]?.jsonPrimitive?.content
     val title = card.raw["title"]?.jsonPrimitive?.content
 
@@ -136,35 +133,11 @@ class PictureGlanceCardConverter : CardConverter {
       )
     }
 
-    val data =
-      HaPictureGlanceData(
-        title = title,
-        captionUrl = image,
-        placeholderIcon = Icons.Filled.Image,
-        cells = cells,
-      )
-    if (LocalCardSizeMode.current == CardSizeMode.Wrap) {
-      // Dashboard: the image keeps HA's `aspect_ratio`.
-      RemoteHaPictureGlance(data, modifier = modifier, imageAspectRatio = pictureAspectRatio(card))
-      return
-    }
-    // A launcher or Wear cell: the card fills it, the image taking what the strip leaves. A Wear
-    // Small slot is too short for both, so it keeps the strip.
-    if (LocalFixedCanvasAxis.current == BreakpointAxis.Height) {
-      RemoteSizeBreakpoint(
-        thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
-        modifier = modifier.fillMaxSize(),
-        axis = BreakpointAxis.Height,
-      ) { tier ->
-        RemoteHaPictureGlance(
-          data,
-          RemoteModifier.fillMaxSize(),
-          fillHeight = true,
-          showImage = tier > 0,
-        )
-      }
-    } else {
-      RemoteHaPictureGlance(data, modifier = modifier.fillMaxSize(), fillHeight = true)
-    }
+    return HaPictureGlanceData(
+      title = title,
+      captionUrl = image,
+      placeholderIcon = Icons.Filled.Image,
+      cells = cells,
+    )
   }
 }

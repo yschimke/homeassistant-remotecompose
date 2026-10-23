@@ -2,19 +2,14 @@ package ee.schimke.ha.rc.cards
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
-import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.components.HaPictureCardData
-import ee.schimke.ha.rc.components.RemoteHaPicture
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.parseHaAction
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
@@ -24,8 +19,11 @@ import kotlinx.serialization.json.put
 /**
  * `picture` card — static image URL. RC has no media-image channel yet; renderer paints a
  * placeholder + caption.
+ *
+ * Its layout is its card design, `picture.uid` ([PictureDesignParts]): on a dashboard the image
+ * keeps HA's `aspect_ratio`, and in a launcher or Wear cell it fills the cell edge to edge.
  */
-class PictureCardConverter : CardConverter {
+class PictureCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.PICTURE
 
   /** A picture's height follows its width: it keeps a grid column's width. */
@@ -96,29 +94,14 @@ class PictureCardConverter : CardConverter {
       emptyMap(),
     )
 
-  @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val image = card.raw["image"]?.jsonPrimitive?.content
-    val name = card.raw["name"]?.jsonPrimitive?.content
-    val tap = parseHaAction(card.raw["tap_action"]?.jsonObject, defaultEntityId = null)
-    // The image is the identity: the dashboard keeps HA's
-    // `aspect_ratio` (height follows the live width); launcher / Wear
-    // fill the whole cell so the picture (the placeholder until a host
-    // wires an image channel) is edge-to-edge with the name as a bottom
-    // scrim, never letterboxed.
-    val fixed = LocalCardSizeMode.current == CardSizeMode.Fixed
-    RemoteHaPicture(
-      HaPictureCardData(
-        name = name,
-        captionUrl = image,
-        placeholderIcon = Icons.Filled.Image,
-        tapAction = tap,
-      ),
-      modifier = modifier,
-      fillHeight = fixed,
-      aspectRatio = if (fixed) null else pictureAspectRatio(card),
+  /** What [card] shows: its image caption and name, with its own tap. */
+  internal fun pictureData(card: CardConfig): HaPictureCardData =
+    HaPictureCardData(
+      name = card.raw["name"]?.jsonPrimitive?.content,
+      captionUrl = card.raw["image"]?.jsonPrimitive?.content,
+      placeholderIcon = Icons.Filled.Image,
+      tapAction = parseHaAction(card.raw["tap_action"]?.jsonObject, defaultEntityId = null),
     )
-  }
 }
 
 private const val CARD_TAP = "#card"
