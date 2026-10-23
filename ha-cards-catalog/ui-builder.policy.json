@@ -121,6 +121,7 @@
       "Wear widget",
       "Launcher widget",
       "Home Assistant",
+      "Card layout",
       "Measurements",
       "Containment",
       "Buttons",
@@ -302,7 +303,7 @@
       "modifierCapabilities": []
     }
   },
-  "$comment_components": "Each `record` names the discovered call (module-relative FQN). The HA components draw as placeholders in the browser canvas (see $comment_previewSurfaces); `icon` keys are HaCardIcons' and HaCardIconsTest holds the two lists together. The Remote Material 3 entries are remote-m3's, minus what only remote-m3's id-keyed emitter can write: text is set by size (no `style` role) and the icon is HA's keyed one rather than RemoteIcon's ImageVector.",
+  "$comment_components": "Each `record` names the discovered call (module-relative FQN). The HA components draw as placeholders in the browser canvas (see $comment_previewSurfaces); `icon` keys are HaCardIcons' and HaCardIconsTest holds the two lists together. The Remote Material 3 entries are remote-m3's, minus what only remote-m3's id-keyed emitter can write: text is set by size (no `style` role) and the icon is HA's keyed one rather than RemoteIcon's ImageVector. The `Card layout` group is what a card type's own design (card-designs/ui-builder/designs/<cardType>.uid) is arranged from: switches that pick a slot for the surface and size the card is drawn at, and the forms of a card. Each record is a wrapper over what the card design renderer draws for the same id (HaCardDesignParts.kt), so they draw natively only.",
   "components": {
     "ha-cards/tile": {
       "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardTile",
@@ -1718,6 +1719,280 @@
           "notes": "The theme's dark mode. A theme with one mode (trinitron, nixie and console are dark only) uses it either way."
         }
       ]
+    },
+    "ha-cards/card-size-mode": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaCardSizeMode",
+      "displayName": "Size mode",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "shelfRole": "Container",
+      "slotCapabilities": [
+        {
+          "name": "wrap",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "height",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "width",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        }
+      ]
+    },
+    "ha-cards/size-tiers": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaSizeTiers",
+      "displayName": "Size tiers",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "shelfRole": "Container",
+      "insertContent": {
+        "properties": {
+          "thresholdsDp": {
+            "type": "string",
+            "value": "96"
+          },
+          "axis": {
+            "type": "string",
+            "value": "width"
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "thresholdsDp",
+          "jsonType": "string",
+          "required": true,
+          "notes": "Ascending breakpoints in dp, comma-separated (`56`, `96,180`): N thresholds pick between N+1 tiers, `tier0` below the first."
+        },
+        {
+          "name": "axis",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "width",
+            "height"
+          ],
+          "notes": "The canvas size the thresholds compare: `width` (a launcher cell) or `height` (a Wear container)."
+        }
+      ],
+      "slotCapabilities": [
+        {
+          "name": "tier0",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "tier1",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "tier2",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        }
+      ]
+    },
+    "ha-cards/centered-cell": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaCenteredCell",
+      "displayName": "Centred cell",
+      "group": "Card layout",
+      "canvas": "layout/box",
+      "canvasMapping": {
+        "slots": {
+          "children": "content"
+        }
+      }
+    },
+    "ha-cards/tile-launcher-cell": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaTileLauncherCell",
+      "displayName": "Tile launcher cell",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "shelfRole": "Container",
+      "slotCapabilities": [
+        {
+          "name": "hero",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "row",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "features",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "other",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        }
+      ]
+    },
+    "ha-cards/tile-full": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaTileFull",
+      "displayName": "Tile (full)",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/tile-compact": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaTileCompact",
+      "displayName": "Tile (compact)",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/tile-icon-chip": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaTileIconChip",
+      "displayName": "Tile icon chip",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/tile-icon-hero": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaTileIconHero",
+      "displayName": "Tile icon hero",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/tile-wide-hero": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaTileWideHero",
+      "displayName": "Tile wide hero",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "scale": {
+            "type": "string",
+            "value": "row"
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "scale",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "row",
+            "wear"
+          ],
+          "notes": "`row` sizes it for a one-row launcher cell; `wear` for a Wear container, without features and not live."
+        }
+      ]
+    },
+    "ha-cards/tile-features-gate": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaTileFeaturesGate",
+      "displayName": "Tile features gate",
+      "group": "Card layout",
+      "nativeOnly": true
     }
   },
   "$comment_templates": "Generated, not hand-written: :design-server's HaCardsTemplatesTest seeds each from a card schema (CardSchema.fromCard) with HaCardsSeed — the design server's UiBuilderSeed retargeted to this catalog — and fails when a committed template drifts. `-PhaCardsTemplates.update=true` rewrites them.",

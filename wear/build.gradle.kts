@@ -140,10 +140,6 @@ tasks
     dependsOn(prepareRobolectricSdk)
     systemProperty("robolectric.offline", "true")
     systemProperty(
-      "tileBaselineOut",
-      providers.gradleProperty("tileBaselineOut").getOrElse("/tmp/tile-baseline.txt"),
-    )
-    systemProperty(
       "robolectric.dependency.dir",
       layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
     )

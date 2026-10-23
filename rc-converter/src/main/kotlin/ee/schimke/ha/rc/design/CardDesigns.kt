@@ -2,6 +2,8 @@
 
 package ee.schimke.ha.rc.design
 
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.runtime.Composable
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.LocalCardSizeMode
@@ -30,34 +32,67 @@ object CardDesigns {
    *   plays.
    * - `ha-cards/centered-cell`: `content` centred vertically in a fixed cell.
    */
-  val structure: Map<String, CardDesignComponent> =
+  internal val structure: Map<String, CardDesignComponent> =
     mapOf(
       "ha-cards/dashboard-card" to { node, modifier -> node.Slot("content", modifier) },
       "ha-cards/card-size-mode" to
         { node, modifier ->
-          when (LocalCardSizeMode.current) {
-            CardSizeMode.Wrap -> node.Slot("wrap", modifier)
-            CardSizeMode.Fixed ->
-              when (LocalFixedCanvasAxis.current) {
-                BreakpointAxis.Height -> node.Slot("height", modifier)
-                BreakpointAxis.Width -> node.Slot("width", modifier)
-              }
-          }
+          SizeModeSwitch(
+            wrap = { node.Slot("wrap", modifier) },
+            height = { node.Slot("height", modifier) },
+            width = { node.Slot("width", modifier) },
+          )
         },
       "ha-cards/size-tiers" to
         { node, modifier ->
-          val thresholds =
-            node.string("thresholdsDp").split(',').map { it.trim().toInt() }.toIntArray()
-          val axis =
-            if (node.string("axis", "width") == "height") BreakpointAxis.Height
-            else BreakpointAxis.Width
-          RemoteSizeBreakpoint(thresholdsDp = thresholds, modifier = modifier, axis = axis) { tier
-            ->
+          SizeTiers(node.string("thresholdsDp"), node.string("axis", "width"), modifier) { tier ->
             node.Slot("tier$tier")
           }
         },
-      "ha-cards/centered-cell" to { node, _ -> CenteredCell { node.Slot("content") } },
+      "ha-cards/centered-cell" to { node, _ -> Centered { node.Slot("content") } },
     )
+
+  /** `ha-cards/card-size-mode`: [wrap], [height] or [width] for the surface being drawn. */
+  @Composable
+  fun SizeModeSwitch(
+    wrap: @Composable () -> Unit,
+    height: @Composable () -> Unit,
+    width: @Composable () -> Unit,
+  ) {
+    when (LocalCardSizeMode.current) {
+      CardSizeMode.Wrap -> wrap()
+      CardSizeMode.Fixed ->
+        when (LocalFixedCanvasAxis.current) {
+          BreakpointAxis.Height -> height()
+          BreakpointAxis.Width -> width()
+        }
+    }
+  }
+
+  /**
+   * `ha-cards/size-tiers`: [tier] for the canvas's size along [axis] (`width` or `height`) against
+   * the ascending, comma-separated [thresholdsDp].
+   */
+  @Composable
+  fun SizeTiers(
+    thresholdsDp: String,
+    axis: String,
+    modifier: RemoteModifier,
+    tier: @Composable (Int) -> Unit,
+  ) {
+    RemoteSizeBreakpoint(
+      thresholdsDp = thresholdsDp.split(',').map { it.trim().toInt() }.toIntArray(),
+      modifier = modifier,
+      axis = if (axis == "height") BreakpointAxis.Height else BreakpointAxis.Width,
+      content = tier,
+    )
+  }
+
+  /** `ha-cards/centered-cell`: [content] centred vertically in a fixed cell. */
+  @Composable
+  fun Centered(content: @Composable () -> Unit) {
+    CenteredCell(content)
+  }
 
   /** Every component a card design drawn in this module can use. */
   val components: Map<String, CardDesignComponent> = structure + TileDesignParts.components
