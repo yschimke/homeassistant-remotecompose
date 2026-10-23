@@ -4,19 +4,15 @@ package ee.schimke.ha.rc
 
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteStateLayout
-import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteState
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.rc.components.immediateSwap
 import ee.schimke.ha.rc.components.rememberExpressionName
-import java.text.DecimalFormat
 
 /**
  * Switch between layout variants based on the live component width at playback time. Used by
@@ -43,10 +39,11 @@ import java.text.DecimalFormat
  *   regardless of the live int value (#224). The `RemoteStateLayout(RemoteBoolean)` overload works,
  *   so we lower the ladder into a chain of nested booleans, one per threshold.
  *
- * * The named expression that backs `componentWidth()` only writes itself into the document when
- *   it's visibly referenced by a drawing node — reading it transitively via the state-layout's bool
- *   predicate isn't enough (#224). We work around it by emitting a transparent `RemoteText`
- *   alongside the inner state-layout.
+ * * The state layout's predicate is the only reference to the named expression that backs
+ *   `componentWidth()`. Under alpha010 that transitive read never wrote the expression into the
+ *   document, and a transparent `RemoteText` forced it in (#224). Since alpha22 the predicate alone
+ *   materializes it (`StateLayoutUpstreamEvidenceTest.transitive`), and the forcing text, which
+ *   also kept the AndroidX player's state-layout transition from settling, is gone.
  *
  * @param thresholdsDp ascending breakpoint widths in dp; produces `thresholdsDp.size + 1` tier
  *   variants.
@@ -101,23 +98,6 @@ fun RemoteSizeBreakpoint(
     }
 
   RemoteBox(modifier = modifier) {
-    // TODO(#224): drop this transparent forcing-function once the
-    // alpha010 named-expression bug is fixed upstream.
-    //
-    // The named expression that backs `componentWidth()` is only
-    // written into the captured document if it's referenced by a
-    // visible node. Reading it transitively via
-    // `width.isGreaterThanOrEqualTo(...)` → RemoteBoolean → state-layout predicate
-    // does NOT trigger materialization in alpha010 — the runtime
-    // resolves the unregistered name to 0, the predicate is false
-    // for every cell, and every breakpoint collapses to tier 0.
-    //
-    // Emitting a RemoteText with `Color.Transparent` alongside the
-    // inner state-layout is the simplest forcing function: the
-    // width string isn't visible, but it pulls the named float
-    // into the document so the runtime can evaluate the predicate
-    // correctly.
-    RemoteText(text = dimension.toRemoteString(InvisibleFormat), color = Color.Transparent.rc)
     BreakpointTier(
       dimension = dimension,
       thresholdsDp = thresholdsDp,
@@ -149,8 +129,6 @@ val LocalFixedCanvasAxis = staticCompositionLocalOf { BreakpointAxis.Width }
 fun ProvideFixedCanvasAxis(axis: BreakpointAxis, content: @Composable () -> Unit) {
   CompositionLocalProvider(LocalFixedCanvasAxis provides axis, content = content)
 }
-
-private val InvisibleFormat = DecimalFormat("0")
 
 /**
  * Recursive helper that walks the threshold list highest-first, picking the upper variant when
