@@ -8,15 +8,19 @@ import io.ktor.http.headersOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.jsonPrimitive
 
 /** Chosen entities' states over REST, with the token as a bearer, and nothing else asked for. */
 class HaEntityStatesTest {
+  // fetch asks for entities concurrently, so the engine records them from more than one thread.
   private val requested = mutableListOf<String>()
+  private val requestedLock = Mutex()
 
   private fun engine(status: HttpStatusCode = HttpStatusCode.OK) = MockEngine { request ->
-    requested += request.url.encodedPath
+    requestedLock.withLock { requested += request.url.encodedPath }
     assertEquals("Bearer llat", request.headers[HttpHeaders.Authorization])
     val id = request.url.encodedPath.removePrefix("/api/states/")
     when {
