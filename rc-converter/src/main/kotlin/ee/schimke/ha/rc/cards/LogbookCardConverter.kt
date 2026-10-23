@@ -2,7 +2,6 @@ package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
@@ -20,6 +19,7 @@ import ee.schimke.ha.rc.components.HaLogbookEntry
 import ee.schimke.ha.rc.components.RemoteHaLogbook
 import ee.schimke.ha.rc.components.RemoteHaLogbookIdentity
 import ee.schimke.ha.rc.components.RemoteHaSummaryLine
+import ee.schimke.ha.rc.components.cardText
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import kotlin.time.Instant
@@ -92,7 +92,10 @@ class LogbookCardConverter : CardConverter {
   override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings =
     CardSnapshotBindings(
       buildMap {
-        logbookData(card, snapshot).entries.forEachIndexed { i, entry ->
+        val data = logbookData(card, snapshot)
+        put("card.title", data.title ?: "Logbook")
+        put("card.summary", logbookSummary(data))
+        data.entries.forEachIndexed { i, entry ->
           put("card.row.$i.name", entry.name)
           put("card.row.$i.message", entry.message)
           put("card.row.$i.when", entry.whenText)
@@ -115,10 +118,9 @@ class LogbookCardConverter : CardConverter {
         BulkTiers(
           modifier,
           summary = {
-            val latest = data.entries.firstOrNull()
             RemoteHaSummaryLine(
-              (data.title ?: "Logbook").rs,
-              (latest?.let { "${it.name} ${it.message}" } ?: "No recent activity").rs,
+              cardText("title", data.title ?: "Logbook"),
+              cardText("summary", logbookSummary(data)),
             )
           },
           identity = { RemoteHaLogbookIdentity(data, RemoteModifier.fillMaxWidth()) },
@@ -158,3 +160,10 @@ private fun logbookData(card: CardConfig, snapshot: HaSnapshot): HaLogbookData {
     }
   return HaLogbookData(title = title, entries = entries)
 }
+
+/**
+ * The Wear Small summary line: the latest entry, or that there is none. A `card.summary` binding,
+ * so a design template shows the real card's line rather than the template's.
+ */
+private fun logbookSummary(data: HaLogbookData): String =
+  data.entries.firstOrNull()?.let { "${it.name} ${it.message}" } ?: "No recent activity"

@@ -34,6 +34,7 @@ import ee.schimke.ha.rc.components.HaAreaStat
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaArea
 import ee.schimke.ha.rc.components.RemoteHaSummaryLine
+import ee.schimke.ha.rc.components.cardText
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.formatValueWithUnit
 import kotlinx.serialization.json.JsonObject
@@ -195,8 +196,8 @@ class AreaCardConverter : CardConverter {
       ) { tier ->
         if (tier == 0) {
           RemoteHaSummaryLine(
-            if (stats.isEmpty()) "Area".rs else name.rs,
-            stats.firstOrNull()?.label ?: name.rs,
+            if (stats.isEmpty()) "Area".rs else cardText("name", name),
+            stats.firstOrNull()?.label ?: cardText("name", name),
           )
         } else {
           RemoteHaArea(data, modifier = RemoteModifier.fillMaxWidth())
