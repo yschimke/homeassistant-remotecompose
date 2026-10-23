@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
+import ee.schimke.ha.rc.components.ProvideExpressionNames
 import ee.schimke.ha.rc.components.enableRemoteImageUrls
 import java.io.ByteArrayInputStream
 
@@ -39,7 +40,7 @@ data class CardDocument(val bytes: ByteArray, val widthPx: Int, val heightPx: In
 
   /** Deserialize into a [CoreDocument] ready for playback. */
   fun decode(): CoreDocument {
-    // alpha14 rejects URL/file image ops at parse time unless opted in — see
+    // alpha14 rejects URL/file image ops at parse time unless opted in ? see
     // ee.schimke.ha.rc.components.enableRemoteImageUrls.
     enableRemoteImageUrls()
     return CoreDocument().apply {
@@ -49,7 +50,7 @@ data class CardDocument(val bytes: ByteArray, val widthPx: Int, val heightPx: In
 }
 
 /**
- * Headless capture path — produces a [CardDocument] without any visible surface. This is what a
+ * Headless capture path ? produces a [CardDocument] without any visible surface. This is what a
  * widget worker calls: the dashboard YAML changed (or the slot is freshly seeded), re-encode the
  * card's bytes and push to the app instance / Glance session.
  *
@@ -58,7 +59,7 @@ data class CardDocument(val bytes: ByteArray, val widthPx: Int, val heightPx: In
  * bypass the cache (e.g. when the YAML just changed but the cache key is hard to evict surgically).
  *
  * alpha09 collapses the public/V2 capture functions into a single `captureSingleRemoteDocument`
- * which is itself `@RestrictTo(LIBRARY_GROUP)` — suppressed here deliberately. It runs the
+ * which is itself `@RestrictTo(LIBRARY_GROUP)` ? suppressed here deliberately. It runs the
  * composition headlessly (no `VirtualDisplay`), so it's safe from a WorkManager worker.
  */
 @Suppress("RestrictedApi")
@@ -88,7 +89,7 @@ suspend fun captureCardDocument(
       creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
       profile = profile,
     ) {
-      converter.Render(card, snapshot)
+      ProvideExpressionNames { converter.Render(card, snapshot) }
     }
   return CardDocument(captured.bytes, widthPx, heightPx).also { cache.put(cacheKey, it) }
 }
@@ -109,7 +110,7 @@ private data class HeadlessCardCacheKey(
 )
 
 /**
- * In-composition capture — for previews and in-app playback. Encodes once per (card, snapshot)
+ * In-composition capture ? for previews and in-app playback. Encodes once per (card, snapshot)
  * change, then hands the document to [RemoteDocumentPlayer].
  *
  * [bitmapLoader] resolves the names referenced by named-bitmap documents (`RemoteHaImageNamed` /
@@ -128,7 +129,7 @@ fun CardPlayer(
   modifier: Modifier = Modifier,
   bitmapLoader: BitmapLoader = BitmapLoader.UNSUPPORTED,
 ) {
-  // alpha14 rejects URL/file image ops at parse time unless opted in — see
+  // alpha14 rejects URL/file image ops at parse time unless opted in ? see
   // ee.schimke.ha.rc.components.enableRemoteImageUrls.
   enableRemoteImageUrls()
   val converter = registry.get(card.type) ?: return
