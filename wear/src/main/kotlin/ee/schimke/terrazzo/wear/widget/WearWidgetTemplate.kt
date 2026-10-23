@@ -129,6 +129,29 @@ internal object WearWidgetTemplate {
     RemoteDp.createNamedRemoteDp(name, defaultDp, RemoteState.Domain.User)
 
   /**
+   * [template] in [frame], for the Wear app's own player: the container values [instantiate] fills
+   * for a widget, without the widget header or the Wear widget profile's rewrites, so the app's
+   * card is the widget's layout. Its bindings stay, for the app to push live values. Null when it
+   * can't be read.
+   */
+  fun forApp(template: ByteArray, frame: WearWidgetFrame, containerArgb: Int? = null): ByteArray? =
+    runCatching {
+      RcDocumentCodec.encode(
+        RcDocumentCodec.decode(template, RcWireLimits())
+          .hardcodeNamedValues(
+            mapOf(
+              HORIZONTAL_PADDING to RcHardcodedValue.FloatValue(frame.horizontalPaddingDp),
+              VERTICAL_PADDING to RcHardcodedValue.FloatValue(frame.verticalPaddingDp),
+              CORNER_RADIUS to RcHardcodedValue.FloatValue(frame.cornerRadiusDp),
+              CONTAINER_COLOR to
+                RcHardcodedValue.Color(containerArgb ?: SURFACE_CONTAINER_LOW.toArgb()),
+            )
+          )
+      )
+    }
+    .getOrNull()
+
+  /**
    * [template] as the document for a widget with [params] on this watch, or null when it can't be
    * made playable as a Wear widget (the caller then captures through Glance Wear itself).
    * [containerArgb] fills the container, the card's state tint ([ContainerTint]); null keeps the
