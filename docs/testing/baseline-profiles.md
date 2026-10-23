@@ -23,6 +23,16 @@ and `harc:decodeDocument` sections (`HarcTraceSections` in `rc-converter`), the 
 a card does as it appears. Run it alone with
 `-Pandroid.testInstrumentationRunnerArguments.class=ee.schimke.terrazzo.benchmark.DashboardScrollJankBenchmark`.
 
+Both modules have a `MemoryBenchmark` (`MemoryUsageMetric`: Java heap, anonymous and file-backed
+RSS), with the baseline profile and a fresh process each iteration. Its browse test (the phone's
+expanded 3D Printing board dragged down and back; the watch's pins and pinned section flung)
+reports the peak (`Max`) and where memory settles (`Last`). Its `trimInBackground` test browses
+the same way in its setup, then goes home, sends `am send-trim-memory <package> BACKGROUND` and
+waits for ART's background collection: `CardMemory` (in `rc-converter`, installed by both
+`Application`s) drops every rebuildable card cache at that level, so `Last` there should sit
+well below the browse's. While the UI is only hidden the document cache keeps its 32 most recent
+documents; Coil trims its own memory cache.
+
 ## Demo mode for the phone
 
 The benchmarks launch `MainActivity` with `terrazzo.test.demo_mode=true`, which skips sign-in and

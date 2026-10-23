@@ -26,6 +26,14 @@ interface CardDocumentCache {
   fun put(key: Any, document: CardDocument)
 
   fun clear()
+
+  /**
+   * Drops the least recently used documents until at most [maxEntries] remain, for [CardMemory]'s
+   * response to memory pressure. A cache with no recency order drops everything.
+   */
+  fun trimToSize(maxEntries: Int) {
+    clear()
+  }
 }
 
 /**
@@ -44,7 +52,8 @@ class InMemoryCardDocumentCache(maxEntries: Int = DEFAULT_MAX_ENTRIES) : CardDoc
         oldValue: CardDocument,
         newValue: CardDocument?,
       ) {
-        if (evicted) {
+        // A trim asked for its evictions; only a full cache's is a sizing signal.
+        if (evicted && !trimming) {
           Log.w(
             TAG,
             "CardDocumentCache evicted entry; capacity=$maxEntries. " +
@@ -62,6 +71,19 @@ class InMemoryCardDocumentCache(maxEntries: Int = DEFAULT_MAX_ENTRIES) : CardDoc
 
   override fun clear() {
     cache.evictAll()
+  }
+
+  @Volatile private var trimming = false
+
+  override fun trimToSize(maxEntries: Int) {
+    synchronized(this) {
+      trimming = true
+      try {
+        cache.trimToSize(maxEntries.coerceAtLeast(0))
+      } finally {
+        trimming = false
+      }
+    }
   }
 
   private companion object {

@@ -426,6 +426,14 @@ object CardDesignLibrary {
       store?.read(key)
         ?: CardDesignTemplates.capture(context, key, registry).bytes.also { store?.write(key, it) }
     }
+
+  /**
+   * Forgets the templates held in memory when a [store] can give them back: each is a disk read
+   * away rather than a capture. Without a store they stay, since a capture costs a frame loop.
+   */
+  fun releaseMemory() {
+    if (store != null) templates.clear()
+  }
 }
 
 /** Persisted [CardDesignLibrary] templates. Reads and writes must not throw. */
