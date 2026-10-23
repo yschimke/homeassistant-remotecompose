@@ -19,6 +19,7 @@ import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalGridSquareCells
+import ee.schimke.ha.rc.LocalInCardContainer
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaButtonData
@@ -149,7 +150,9 @@ class ButtonCardConverter : CardConverter {
       )
       return
     }
-    if (LocalFixedCanvasAxis.current == BreakpointAxis.Height) {
+    // In a stack or grid the container is the multi-entity card: its buttons take the size gate
+    // below, which keeps a narrow cell to the icon, rather than naming each one.
+    if (LocalFixedCanvasAxis.current == BreakpointAxis.Height && !LocalInCardContainer.current) {
       // A Wear slot, wide at either size: the Small container (~44dp of content) is too short for
       // the name under the icon, so it takes the name beside it; the Large one the full button.
       // The name stays at both sizes: an icon alone leaves two buttons on one watch alike
