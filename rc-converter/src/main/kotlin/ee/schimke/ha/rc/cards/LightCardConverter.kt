@@ -79,7 +79,9 @@ class LightCardConverter : CardConverter {
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    RenderArcDial(lightDial(card, snapshot), modifier = modifier)
+    // The dial's value already says on/off (`100%` / `Off`), and every light's dial looks alike: on
+    // a watch the name is what tells two lights apart (card-information-hierarchy.md).
+    RenderArcDial(lightDial(card, snapshot), modifier = modifier, wearShowsName = true)
   }
 
   private val dial =

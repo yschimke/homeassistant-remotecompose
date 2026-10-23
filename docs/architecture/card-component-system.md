@@ -15,6 +15,8 @@ It sits between three other documents and leans on them rather than repeating th
 - [`live-card-updates.md`](live-card-updates.md) — the binding contract every value must keep.
 - [`adaptive-card-layouts.md`](adaptive-card-layouts.md) — the ladder philosophy and alpha010's
   breakpoint limits.
+- [`card-information-hierarchy.md`](card-information-hierarchy.md) — what a card keeps and drops
+  as its space shrinks (value, icon, name, secondary text, controls), per surface.
 
 ## 1. Theming rules
 

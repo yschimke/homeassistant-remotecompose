@@ -418,6 +418,10 @@ The ladder rungs map onto these directly:
 shrinks. Never drop P1 — if the canvas can't carry the identity,
 switch to a smaller identity (icon-only chip) before stripping it.
 
+The order a converter drops parts in per surface — and when a name may
+go — is [card-information-hierarchy.md](card-information-hierarchy.md):
+a single-entity card keeps its name down to the Wear Small container.
+
 ### Per-card data inventory
 
 | Card | P1 (identity + key value) | P2 (name) | P3 (unit / secondary) | P4 (chrome) | P5 (bulk) |
@@ -587,7 +591,10 @@ choose its layout at capture: it gates on **height**, once (#224), at
 - **Small** (about 44 dp of content) holds two short lines, never a title
   over a list: `RemoteHaSummaryLine` (caption title over one value line) for
   calendar, to-do and logbook; compact statistic and clock; glance cells as
-  icon over state.
+  icon over state. A single-entity card keeps its name
+  ([card-information-hierarchy.md](card-information-hierarchy.md)): tile
+  and button take the icon beside the name, entity the row, light the dial
+  beside the name over the value.
 - **Large** draws the card bigger, not the phone card in the middle: the wide
   hero (`RemoteHaWideHero`, icon beside name over a large value) for tile,
   entity and button; the standard measurement for a sensor; a 72 dp arc dial.
@@ -705,9 +712,11 @@ The current state is the placeholder, not the philosophy:
    work, though: `min(w, h · minW/minH).ge(minW)` is one boolean off one
    float, true only when `w ≥ minW` **and** `h ≥ minH`, so it sidesteps
    the `.and()` / nested-state-layout collapse — `ButtonCardConverter`
-   (#352) uses it to send narrow-tall (`1×1`) and wide-short (Wear S)
+   (#352) uses it to send narrow-tall (`1×1`) and wide-short launcher
    cells to the icon-only tier while wide-and-tall cells keep the name,
-   something no single width- or height-only gate can do. Net:
+   something no single width- or height-only gate can do. (A Wear slot
+   takes a height gate instead: its Small container puts the name beside
+   the icon, card-information-hierarchy.md.) Net:
    `entities` uses the same `min` form on launchers (expanded rows only
    when every row fits) and a height gate on Wear; per-card ladders pick
    the one pinned axis (or the single-`min` 2-D form) that best

@@ -165,7 +165,12 @@ internal fun thermostatDial(card: CardConfig, snapshot: HaSnapshot): HaArcDialDa
  * three lines, takes its compact two-line form.
  */
 @Composable
-internal fun RenderArcDial(data: HaArcDialData, modifier: RemoteModifier) {
+internal fun RenderArcDial(
+  data: HaArcDialData,
+  modifier: RemoteModifier,
+  /** Name the entity on a Wear slot (see [RemoteHaArcDialWide]'s `showName`). */
+  wearShowsName: Boolean = false,
+) {
   when (LocalCardSizeMode.current) {
     CardSizeMode.Wrap -> RemoteHaArcDial(data, modifier)
     CardSizeMode.Fixed ->
@@ -181,6 +186,7 @@ internal fun RenderArcDial(data: HaArcDialData, modifier: RemoteModifier) {
               RemoteModifier.fillMaxSize(),
               compact = tier == 0,
               dialDp = if (tier == 0) 56 else WEAR_LARGE_DIAL_DP,
+              showName = wearShowsName,
             )
           }
         BreakpointAxis.Width ->

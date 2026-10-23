@@ -10,19 +10,23 @@ import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalGridSquareCells
 import ee.schimke.ha.rc.RemoteMinSizeGate
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaButtonData
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaButton
 import ee.schimke.ha.rc.components.RemoteHaButtonIcon
+import ee.schimke.ha.rc.components.RemoteHaButtonRow
 import ee.schimke.ha.rc.components.RemoteHaIconHero
 import ee.schimke.ha.rc.components.RemoteHaToggleButton
 import ee.schimke.ha.rc.components.RemoteHaWideHero
@@ -48,16 +52,20 @@ import kotlinx.serialization.json.put
  * * **icon + name** — the full button, self-centred via `fillMaxSize` so it fills / centres rather
  *   than pinning top-left on big cells.
  * * **icon only** — [RemoteHaButtonIcon], the tinted-chip identity tier for cells too small for the
- *   label (`1×1` launcher, Wear S).
+ *   label (`1×1` launcher).
+ *
+ * A Wear slot gates on height instead ([WEAR_SMALL_MAX_HEIGHT_DP]): the Small container takes
+ * [RemoteHaButtonRow] (the icon beside the name, and the state with `show_state`), the Large one
+ * the full button.
  *
  * The gate is a **single** boolean off a single float expression `min(w, h ·
  * minW/minH).isGreaterThanOrEqualTo(minW)`, which is true only when the cell is both wide enough
  * (`w ≥ minW`) and tall enough (`h ≥ minH`). Encoding the 2-D test as one `min` expression (rather
  * than `w.isGreaterThanOrEqualTo(..) .and(h.isGreaterThanOrEqualTo(..))`) sidesteps the alpha010
  * quirk where `RemoteBoolean .and()` and nested width/height state-layouts collapse to `false` at
- * playback (#224, see `GaugeCardConverter`). It lets the narrow-tall `1×1` cell and the wide-short
- * Wear S chip *both* fall to the icon-only tier while the wide-and-tall `2×1` / `3×2` / Wear L
- * cells keep the name — something no single width-only or height-only gate can do.
+ * playback (#224, see `GaugeCardConverter`). It lets the narrow-tall `1×1` cell and a wide-short
+ * cell *both* fall to the icon-only tier while the wide-and-tall `2×1` / `3×2` cells keep the name
+ * — something no single width-only or height-only gate can do.
  */
 class ButtonCardConverter : CardConverter {
   override val cardType: String = CardTypes.BUTTON
@@ -139,6 +147,22 @@ class ButtonCardConverter : CardConverter {
         modifier.fillMaxSize(),
         showState = data.state != null,
       )
+      return
+    }
+    if (LocalFixedCanvasAxis.current == BreakpointAxis.Height) {
+      // A Wear slot, wide at either size: the Small container (~44dp of content) is too short for
+      // the name under the icon, so it takes the name beside it; the Large one the full button.
+      // The name stays at both sizes: an icon alone leaves two buttons on one watch alike
+      // (card-information-hierarchy.md).
+      RemoteSizeBreakpoint(
+        thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
+        modifier = modifier.fillMaxSize(),
+        axis = BreakpointAxis.Height,
+      ) { tier ->
+        if (tier == 0 && data.showName) RemoteHaButtonRow(data, RemoteModifier.fillMaxSize())
+        else if (tier == 0) RemoteHaButtonIcon(data, RemoteModifier.fillMaxSize())
+        else RenderButton(data, RemoteModifier.fillMaxSize(), compact = true)
+      }
       return
     }
     RemoteMinSizeGate(

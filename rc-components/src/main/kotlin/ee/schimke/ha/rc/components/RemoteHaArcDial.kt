@@ -142,6 +142,10 @@ fun RemoteHaArcDial(data: HaArcDialData, modifier: RemoteModifier = RemoteModifi
  * still marks the target, so the reading keeps its intent (design principle 3: reflow, then drop
  * the least important part). [dialDp] is the dial's box: a Wear Large slot grows it to fill its
  * height.
+ *
+ * [showName] puts [HaArcDialData.name] on the mode chip's line, for a dial whose value already says
+ * the chip's state (a light's `100%` / `Off`): without it two such widgets on one watch read the
+ * same (card-information-hierarchy.md).
  */
 @Composable
 @RemoteComposable
@@ -150,6 +154,7 @@ fun RemoteHaArcDialWide(
   modifier: RemoteModifier = RemoteModifier,
   compact: Boolean = false,
   dialDp: Int = 56,
+  showName: Boolean = false,
 ) {
   val theme = haTheme()
   val click =
@@ -200,7 +205,17 @@ fun RemoteHaArcDialWide(
       verticalArrangement = RemoteArrangement.Center,
       horizontalAlignment = RemoteAlignment.Start,
     ) {
-      ModeChip(data, dialAccent(data))
+      if (showName)
+        RemoteText(
+          text = entityName(data.entityId, data.name),
+          color = theme.primaryText,
+          fontSize = if (compact) HaType.Label else HaType.Body,
+          fontWeight = FontWeight.Medium,
+          style = haTextStyle(),
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+      else ModeChip(data, dialAccent(data))
       RemoteText(
         text = centerText(data),
         color = theme.primaryText,
