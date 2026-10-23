@@ -68,28 +68,28 @@ class CardDesignSurfaceParityTest {
     val classicCells = (1..4).flatMap { columns -> (1..3).map { rows -> cell(columns, rows) } }
     val looks = HaUberTheme.all.map { LauncherLook(cardStyle = it) }
     return buildList {
-        for (source in cards) for (dark in listOf(false, true)) {
-          for (systemTheme in listOf(false, true)) {
-            for ((w, h) in classicCells) {
-              LauncherDesigns.keyFor(source.card, source.snapshot, w, h, dark, systemTheme)
-                ?.let(::add)
-            }
-            val (w, h) = cell(2, 1)
-            for (look in looks) {
-              LauncherDesigns.keyFor(
-                  source.card,
-                  source.snapshot,
-                  w,
-                  h,
-                  dark,
-                  systemTheme,
-                  look = look,
-                )
-                ?.let(::add)
-            }
+      for (source in cards) for (dark in listOf(false, true)) {
+        for (systemTheme in listOf(false, true)) {
+          for ((w, h) in classicCells) {
+            LauncherDesigns.keyFor(source.card, source.snapshot, w, h, dark, systemTheme)
+              ?.let(::add)
+          }
+          val (w, h) = cell(2, 1)
+          for (look in looks) {
+            LauncherDesigns.keyFor(
+                source.card,
+                source.snapshot,
+                w,
+                h,
+                dark,
+                systemTheme,
+                look = look,
+              )
+              ?.let(::add)
           }
         }
       }
+    }
       .distinct()
   }
 
