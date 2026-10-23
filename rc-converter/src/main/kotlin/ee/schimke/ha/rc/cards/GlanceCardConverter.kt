@@ -1,17 +1,21 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaGlanceCellData
 import ee.schimke.ha.rc.components.HaGlanceData
 import ee.schimke.ha.rc.components.LiveValues
@@ -88,6 +92,23 @@ class GlanceCardConverter : CardConverter {
     // Density before identity: a title that leaves no room for a row of cells goes first.
     val shownTitle = title?.takeIf { size == null || fitsTitle(size.heightDp) }
     val grid = size?.let { gridFor(it.widthDp, it.heightDp, shownTitle) }
+    if (LocalFixedCanvasAxis.current == BreakpointAxis.Height) {
+      // A Wear slot: too short for a title over a row of cells. Large drops the title, Small also
+      // each cell's name, keeping its icon over its state.
+      RemoteSizeBreakpoint(
+        thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
+        modifier = modifier,
+        axis = BreakpointAxis.Height,
+      ) { tier ->
+        RemoteHaGlance(
+          HaGlanceData(title = null, cells = cells),
+          modifier = RemoteModifier.fillMaxSize(),
+          fillHeight = true,
+          compactCells = tier == 0,
+        )
+      }
+      return
+    }
     RemoteHaGlance(
       HaGlanceData(
         title = shownTitle,

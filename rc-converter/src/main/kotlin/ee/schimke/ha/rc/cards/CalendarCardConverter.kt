@@ -2,6 +2,7 @@ package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.design.CardDesignSlots
@@ -9,19 +10,18 @@ import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
-import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaCalendarData
 import ee.schimke.ha.rc.components.HaCalendarEvent
 import ee.schimke.ha.rc.components.RemoteHaCalendar
 import ee.schimke.ha.rc.components.RemoteHaCalendarIdentity
+import ee.schimke.ha.rc.components.RemoteHaSummaryLine
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -138,17 +138,18 @@ class CalendarCardConverter : CardConverter {
       // Narrow → next-event identity; wider → the full agenda.
       // Single width gate (#224).
       CardSizeMode.Fixed ->
-        RemoteSizeBreakpoint(
-          thresholdsDp = intArrayOf(BULK_IDENTITY_THRESHOLD_DP),
-          modifier = modifier,
-          axis = BreakpointAxis.Width,
-        ) { tier ->
-          if (tier == 0) {
-            RemoteHaCalendarIdentity(data, RemoteModifier.fillMaxWidth())
-          } else {
-            RemoteHaCalendar(data, RemoteModifier.fillMaxWidth())
-          }
-        }
+        BulkTiers(
+          modifier,
+          summary = {
+            val next = data.events.firstOrNull()
+            RemoteHaSummaryLine(
+              data.title.rs,
+              (next?.let { "${it.whenLabel} · ${it.summary}" } ?: "No upcoming events").rs,
+            )
+          },
+          identity = { RemoteHaCalendarIdentity(data, RemoteModifier.fillMaxWidth()) },
+          full = { RemoteHaCalendar(data, RemoteModifier.fillMaxWidth()) },
+        )
     }
   }
 }

@@ -19,24 +19,29 @@ import androidx.compose.ui.text.style.TextOverflow
 
 /**
  * `statistic` card — single hero value (mean / min / max / sum) for one entity, with optional
- * period label + unit suffix.
+ * period label + unit suffix. [compact] sets the name in caption type and the value a size down,
+ * and leaves out the period: two lines that fit a Wear Small slot.
  */
 @Composable
 @RemoteComposable
-fun RemoteHaStatisticCard(data: HaStatisticCardData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaStatisticCard(
+  data: HaStatisticCardData,
+  modifier: RemoteModifier = RemoteModifier,
+  compact: Boolean = false,
+) {
   val theme = haTheme()
   RemoteBox(
     modifier =
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 14.rdp, vertical = 12.rdp)
+        .padding(horizontal = 14.rdp, vertical = (if (compact) 4 else 12).rdp)
   ) {
-    RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(4.rdp)) {
+    RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy((if (compact) 0 else 4).rdp)) {
       RemoteText(
         text = entityName(data.entityId, data.name),
         color = theme.secondaryText,
-        fontSize = HaType.Label,
+        fontSize = if (compact) HaType.Caption else HaType.Label,
         fontWeight = FontWeight.Medium,
         style = haTextStyle(),
         maxLines = 1,
@@ -46,24 +51,26 @@ fun RemoteHaStatisticCard(data: HaStatisticCardData, modifier: RemoteModifier = 
         RemoteText(
           text = data.valueLabel,
           color = theme.primaryText,
-          fontSize = HaType.Display,
+          fontSize = if (compact) HaType.ValueSmall else HaType.Display,
           fontWeight = haValueWeight(),
           style = haTextStyle(),
           maxLines = 1,
         )
         if (data.unit != null) {
-          RemoteBox(modifier = RemoteModifier.padding(start = 4.rdp, bottom = 4.rdp)) {
+          RemoteBox(
+            modifier = RemoteModifier.padding(start = 4.rdp, bottom = (if (compact) 2 else 4).rdp)
+          ) {
             RemoteText(
               text = entityText(data.entityId, "unit", data.unit),
               color = theme.secondaryText,
-              fontSize = HaType.BodyLarge,
+              fontSize = if (compact) HaType.Label else HaType.BodyLarge,
               style = haTextStyle(),
               maxLines = 1,
             )
           }
         }
       }
-      if (data.periodLabel != null) {
+      if (data.periodLabel != null && !compact) {
         RemoteText(
           text = cardText("period", data.periodLabel),
           color = haInk(data.accent),

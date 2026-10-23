@@ -36,26 +36,37 @@ import java.text.DecimalFormat
  * `RemoteString` from the player's hour/minute/second floats (`RemoteContext.FLOAT_TIME_IN_*`) —
  * same tick guarantee as the default, just with the offset and seconds baked into the formatting
  * expression.
+ *
+ * [compact] draws the time alone at a size a Wear Small slot holds, about 44 dp: no title or date.
  */
 @Composable
 @RemoteComposable
-fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaClock(
+  data: HaClockData,
+  modifier: RemoteModifier = RemoteModifier,
+  compact: Boolean = false,
+) {
   val theme = haTheme()
-  val timeSize = if (data.isLarge) 64 else 36
+  val timeSize =
+    when {
+      compact -> 30
+      data.isLarge -> 64
+      else -> 36
+    }
   val console = visualFamily() == HaVisualFamily.Console
   RemoteBox(
     modifier =
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 14.rdp, vertical = 12.rdp),
+        .padding(horizontal = 14.rdp, vertical = (if (compact) 2 else 12).rdp),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteColumn(
       horizontalAlignment = RemoteAlignment.CenterHorizontally,
       verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
     ) {
-      if (data.title != null) {
+      if (data.title != null && !compact) {
         RemoteText(
           text = cardTitle(data.title),
           color = theme.secondaryText,
@@ -92,7 +103,7 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
           style = haTextStyle(),
           maxLines = 1,
         )
-      if (data.secondaryLabel != null) {
+      if (data.secondaryLabel != null && !compact) {
         RemoteText(
           text = cardText("date", data.secondaryLabel),
           color = theme.secondaryText,

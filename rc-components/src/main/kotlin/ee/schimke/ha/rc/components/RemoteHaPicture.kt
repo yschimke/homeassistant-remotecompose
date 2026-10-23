@@ -78,48 +78,62 @@ fun RemoteHaPicture(
         data.captionUrl?.let { ConsoleTapeLabel(cardText("image", it), compact = true) }
       }
     } else {
-      if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel("Image unavailable".rs)
-      else
-        RemoteIcon(
-          imageVector = data.placeholderIcon.toRemoteImageVector(),
-          contentDescription = data.name?.let { cardText("name", it) } ?: "image".rs,
-          modifier = RemoteModifier.size(48.rdp),
-          tint = theme.placeholderAccent,
-        )
-      if (data.name != null) {
+      // The icon in the middle of what the name leaves, the name a strip along the bottom: stacked
+      // in the one box, the strip sat over the icon and the image path over the strip.
+      RemoteColumn(modifier = RemoteModifier.fillMaxSize()) {
         RemoteBox(
-          modifier =
-            RemoteModifier.fillMaxWidth()
-              .background(theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.85f.rf))
-              .padding(horizontal = 12.rdp, vertical = 6.rdp)
+          modifier = RemoteModifier.fillMaxWidth().weight(1f),
+          contentAlignment = RemoteAlignment.Center,
         ) {
-          RemoteText(
-            text = cardText("name", data.name),
-            color = theme.primaryText,
-            fontSize = HaType.Body,
-            fontWeight = FontWeight.Medium,
-            style = haTextStyle(),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-          )
+          RemoteColumn(horizontalAlignment = RemoteAlignment.CenterHorizontally) {
+            RemoteIcon(
+              imageVector = data.placeholderIcon.toRemoteImageVector(),
+              contentDescription = data.name?.let { cardText("name", it) } ?: "image".rs,
+              modifier = RemoteModifier.size(48.rdp),
+              tint = theme.placeholderAccent,
+            )
+            // The image's path, only where no name says what the picture is.
+            if (data.captionUrl != null && data.name == null) {
+              RemoteBox(
+                modifier =
+                  RemoteModifier.padding(8.rdp)
+                    .clip(RemoteRoundedCornerShape(4.rdp))
+                    .background(
+                      theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.7f.rf)
+                    )
+                    .padding(horizontal = 6.rdp, vertical = 2.rdp)
+              ) {
+                RemoteText(
+                  text = cardText("image", data.captionUrl),
+                  color = theme.secondaryText,
+                  fontSize = HaType.Micro,
+                  style = haTextStyle(),
+                  maxLines = 1,
+                  overflow = TextOverflow.Ellipsis,
+                )
+              }
+            }
+          }
         }
-      }
-      if (data.captionUrl != null) {
-        RemoteBox(
-          modifier =
-            RemoteModifier.padding(8.rdp)
-              .clip(RemoteRoundedCornerShape(4.rdp))
-              .background(theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.7f.rf))
-              .padding(horizontal = 6.rdp, vertical = 2.rdp)
-        ) {
-          RemoteText(
-            text = cardText("image", data.captionUrl),
-            color = theme.secondaryText,
-            fontSize = HaType.Micro,
-            style = haTextStyle(),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-          )
+        if (data.name != null) {
+          RemoteBox(
+            modifier =
+              RemoteModifier.fillMaxWidth()
+                .background(
+                  theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.85f.rf)
+                )
+                .padding(horizontal = 12.rdp, vertical = 6.rdp)
+          ) {
+            RemoteText(
+              text = cardText("name", data.name),
+              color = theme.primaryText,
+              fontSize = HaType.Body,
+              fontWeight = FontWeight.Medium,
+              style = haTextStyle(),
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+            )
+          }
         }
       }
     }

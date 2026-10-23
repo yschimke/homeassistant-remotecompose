@@ -8,6 +8,8 @@ import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.Window
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.design.CardDesignSlots
@@ -17,15 +19,21 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaAreaAction
 import ee.schimke.ha.rc.components.HaAreaCardData
 import ee.schimke.ha.rc.components.HaAreaStat
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaArea
+import ee.schimke.ha.rc.components.RemoteHaSummaryLine
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.formatValueWithUnit
 import kotlinx.serialization.json.JsonObject
@@ -173,7 +181,30 @@ class AreaCardConverter : CardConverter {
       )
     }
 
-    RemoteHaArea(HaAreaCardData(name = name, stats = stats, actions = actions), modifier = modifier)
+    val data = HaAreaCardData(name = name, stats = stats, actions = actions)
+    if (
+      LocalCardSizeMode.current == CardSizeMode.Fixed &&
+        LocalFixedCanvasAxis.current == BreakpointAxis.Height
+    ) {
+      // A Wear slot: the Small container holds the area's name over its first reading, the Large
+      // one the full card.
+      RemoteSizeBreakpoint(
+        thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
+        modifier = modifier,
+        axis = BreakpointAxis.Height,
+      ) { tier ->
+        if (tier == 0) {
+          RemoteHaSummaryLine(
+            if (stats.isEmpty()) "Area".rs else name.rs,
+            stats.firstOrNull()?.label ?: name.rs,
+          )
+        } else {
+          RemoteHaArea(data, modifier = RemoteModifier.fillMaxWidth())
+        }
+      }
+      return
+    }
+    RemoteHaArea(data, modifier = modifier)
   }
 }
 

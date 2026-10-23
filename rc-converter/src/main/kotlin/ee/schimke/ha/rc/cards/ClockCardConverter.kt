@@ -1,16 +1,22 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaClock
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalHaClock
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.SystemHaClock
 import ee.schimke.ha.rc.components.HaClockData
 import ee.schimke.ha.rc.components.RemoteHaClock
@@ -132,7 +138,7 @@ class ClockCardConverter : CardConverter {
     val zoneOffsetMinutes = if (tz != null) zoneOffsetMinutes(tz, clock) else 0
     val secondaryLabel = if (showsDate(card)) dateLabel(tz, clock) else null
 
-    RemoteHaClock(
+    val data =
       HaClockData(
         title = title,
         staticTimeLabel = staticLabel,
@@ -144,9 +150,22 @@ class ClockCardConverter : CardConverter {
         // Any configured zone shifts in-document, even one that matches the host today: its
         // offset is a value (DST moves it), so it must never change the document's structure.
         zoned = tz != null,
-      ),
-      modifier = modifier,
-    )
+      )
+    if (
+      LocalCardSizeMode.current == CardSizeMode.Fixed &&
+        LocalFixedCanvasAxis.current == BreakpointAxis.Height
+    ) {
+      // A Wear slot: the Small container holds the time alone, the Large one the full card.
+      RemoteSizeBreakpoint(
+        thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
+        modifier = modifier,
+        axis = BreakpointAxis.Height,
+      ) { tier ->
+        RemoteHaClock(data, RemoteModifier.fillMaxSize(), compact = tier == 0)
+      }
+      return
+    }
+    RemoteHaClock(data, modifier = modifier)
   }
 }
 

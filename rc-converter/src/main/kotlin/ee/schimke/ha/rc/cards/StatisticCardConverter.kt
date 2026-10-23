@@ -12,12 +12,14 @@ import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
@@ -99,18 +101,37 @@ class StatisticCardConverter : CardConverter {
     when (LocalCardSizeMode.current) {
       CardSizeMode.Wrap -> FullStatistic(card, snapshot, modifier)
       CardSizeMode.Fixed ->
-        RemoteSizeBreakpoint(thresholdsDp = intArrayOf(96), modifier = modifier.fillMaxSize()) {
-          tier ->
-          when (tier) {
-            0 -> RemoteHaIconChip(iconChipData(card, snapshot), RemoteModifier.fillMaxSize())
-            else -> CenteredCell { FullStatistic(card, snapshot, RemoteModifier.fillMaxWidth()) }
+        if (LocalFixedCanvasAxis.current == BreakpointAxis.Height) {
+          // A Wear slot: every container is wide enough for the card, and the Small one too
+          // short for its full height, so its gate is height.
+          RemoteSizeBreakpoint(
+            thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
+            modifier = modifier.fillMaxSize(),
+            axis = BreakpointAxis.Height,
+          ) { tier ->
+            CenteredCell {
+              FullStatistic(card, snapshot, RemoteModifier.fillMaxWidth(), compact = tier == 0)
+            }
+          }
+        } else {
+          RemoteSizeBreakpoint(thresholdsDp = intArrayOf(96), modifier = modifier.fillMaxSize()) {
+            tier ->
+            when (tier) {
+              0 -> RemoteHaIconChip(iconChipData(card, snapshot), RemoteModifier.fillMaxSize())
+              else -> CenteredCell { FullStatistic(card, snapshot, RemoteModifier.fillMaxWidth()) }
+            }
           }
         }
     }
   }
 
   @Composable
-  private fun FullStatistic(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  private fun FullStatistic(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    modifier: RemoteModifier,
+    compact: Boolean = false,
+  ) {
     val entityId = card.raw["entity"]?.jsonPrimitive?.content
     val entity = entityId?.let { snapshot.states[it] }
     val unit = unitOf(card, snapshot)
@@ -127,6 +148,7 @@ class StatisticCardConverter : CardConverter {
         accent = HaStateColor.activeFor(entity),
       ),
       modifier = modifier,
+      compact = compact,
     )
   }
 

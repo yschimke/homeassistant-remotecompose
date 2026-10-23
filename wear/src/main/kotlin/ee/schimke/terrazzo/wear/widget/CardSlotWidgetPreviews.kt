@@ -38,11 +38,19 @@ import ee.schimke.ha.model.HaSnapshot
 // ── Small-only previews ─────────────────────────────────────────────
 // Low-data card types. See WearCardDataTier.SmallOnly.
 
-@Preview(name = "wear · heading (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · heading (small)",
+)
 @Composable
 fun WearHeadingSmall() = wearCardPreview(headingFixture(), ContainerType.Small)
 
-@Preview(name = "wear · markdown (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · markdown (small)",
+)
 @Composable
 fun WearMarkdownSmall() = wearCardPreview(markdownFixture(), ContainerType.Small)
 
@@ -58,31 +66,59 @@ fun WearMarkdownSmall() = wearCardPreview(markdownFixture(), ContainerType.Small
  * no PNG at all. To preview a different clock, call [wearCardPreview] from your own composable
  * rather than adding a parameter here.
  */
-@Preview(name = "wear · clock (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · clock (small)",
+)
 @Composable
 fun WearClockSmall() = wearCardPreview(clockFixture(), ContainerType.Small)
 
-@Preview(name = "wear · weather-forecast (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · weather-forecast (small)",
+)
 @Composable
 fun WearWeatherForecastSmall() = wearCardPreview(weatherForecastFixture(), ContainerType.Small)
 
-@Preview(name = "wear · logbook (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · logbook (small)",
+)
 @Composable
 fun WearLogbookSmall() = wearCardPreview(logbookFixture(), ContainerType.Small)
 
-@Preview(name = "wear · history-graph (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · history-graph (small)",
+)
 @Composable
 fun WearHistoryGraphSmall() = wearCardPreview(historyGraphFixture(), ContainerType.Small)
 
-@Preview(name = "wear · statistics-graph (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · statistics-graph (small)",
+)
 @Composable
 fun WearStatisticsGraphSmall() = wearCardPreview(statisticsGraphFixture(), ContainerType.Small)
 
-@Preview(name = "wear · todo-list (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · todo-list (small)",
+)
 @Composable
 fun WearTodoListSmall() = wearCardPreview(todoListFixture(), ContainerType.Small)
 
-@Preview(name = "wear · calendar (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · calendar (small)",
+)
 @Composable
 fun WearCalendarSmall() = wearCardPreview(calendarFixture(), ContainerType.Small)
 
@@ -90,123 +126,243 @@ fun WearCalendarSmall() = wearCardPreview(calendarFixture(), ContainerType.Small
 // One entity's worth of P1 + P2 + P3 at any canvas size. The
 // renderer's per-card ladder picks the right tier.
 
-@Preview(name = "wear · tile (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · tile (small)",
+)
 @Composable
 fun WearTileSmall() = wearCardPreview(tileFixture(), ContainerType.Small)
 
-@Preview(name = "wear · tile (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · tile (large)",
+)
 @Composable
 fun WearTileLarge() = wearCardPreview(tileFixture(), ContainerType.Large)
 
-@Preview(name = "wear · button (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · button (small)",
+)
 @Composable
 fun WearButtonSmall() = wearCardPreview(buttonFixture(), ContainerType.Small)
 
-@Preview(name = "wear · button (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · button (large)",
+)
 @Composable
 fun WearButtonLarge() = wearCardPreview(buttonFixture(), ContainerType.Large)
 
-@Preview(name = "wear · entity (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · entity (small)",
+)
 @Composable
 fun WearEntitySmall() = wearCardPreview(entityFixture(), ContainerType.Small)
 
-@Preview(name = "wear · entity (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · entity (large)",
+)
 @Composable
 fun WearEntityLarge() = wearCardPreview(entityFixture(), ContainerType.Large)
 
-@Preview(name = "wear · gauge (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · gauge (small)",
+)
 @Composable
 fun WearGaugeSmall() = wearCardPreview(gaugeFixture(), ContainerType.Small)
 
-@Preview(name = "wear · gauge (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · gauge (large)",
+)
 @Composable
 fun WearGaugeLarge() = wearCardPreview(gaugeFixture(), ContainerType.Large)
 
-@Preview(name = "wear · light (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · light (small)",
+)
 @Composable
 fun WearLightSmall() = wearCardPreview(lightFixture(), ContainerType.Small)
 
-@Preview(name = "wear · light (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · light (large)",
+)
 @Composable
 fun WearLightLarge() = wearCardPreview(lightFixture(), ContainerType.Large)
 
-@Preview(name = "wear · picture-entity (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · picture-entity (small)",
+)
 @Composable
 fun WearPictureEntitySmall() = wearCardPreview(pictureEntityFixture(), ContainerType.Small)
 
-@Preview(name = "wear · picture-entity (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · picture-entity (large)",
+)
 @Composable
 fun WearPictureEntityLarge() = wearCardPreview(pictureEntityFixture(), ContainerType.Large)
 
-@Preview(name = "wear · picture (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · picture (small)",
+)
 @Composable
 fun WearPictureSmall() = wearCardPreview(pictureFixture(), ContainerType.Small)
 
-@Preview(name = "wear · picture (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · picture (large)",
+)
 @Composable
 fun WearPictureLarge() = wearCardPreview(pictureFixture(), ContainerType.Large)
 
-@Preview(name = "wear · sensor (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · sensor (small)",
+)
 @Composable
 fun WearSensorSmall() = wearCardPreview(sensorFixture(), ContainerType.Small)
 
-@Preview(name = "wear · sensor (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · sensor (large)",
+)
 @Composable
 fun WearSensorLarge() = wearCardPreview(sensorFixture(), ContainerType.Large)
 
-@Preview(name = "wear · statistic (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · statistic (small)",
+)
 @Composable
 fun WearStatisticSmall() = wearCardPreview(statisticFixture(), ContainerType.Small)
 
-@Preview(name = "wear · statistic (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · statistic (large)",
+)
 @Composable
 fun WearStatisticLarge() = wearCardPreview(statisticFixture(), ContainerType.Large)
 
-@Preview(name = "wear · thermostat (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · thermostat (small)",
+)
 @Composable
 fun WearThermostatSmall() = wearCardPreview(thermostatFixture(), ContainerType.Small)
 
-@Preview(name = "wear · thermostat (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · thermostat (large)",
+)
 @Composable
 fun WearThermostatLarge() = wearCardPreview(thermostatFixture(), ContainerType.Large)
 
-@Preview(name = "wear · humidifier (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · humidifier (small)",
+)
 @Composable
 fun WearHumidifierSmall() = wearCardPreview(humidifierFixture(), ContainerType.Small)
 
-@Preview(name = "wear · humidifier (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · humidifier (large)",
+)
 @Composable
 fun WearHumidifierLarge() = wearCardPreview(humidifierFixture(), ContainerType.Large)
 
-@Preview(name = "wear · alarm-panel (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · alarm-panel (small)",
+)
 @Composable
 fun WearAlarmPanelSmall() = wearCardPreview(alarmPanelFixture(), ContainerType.Small)
 
-@Preview(name = "wear · alarm-panel (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · alarm-panel (large)",
+)
 @Composable
 fun WearAlarmPanelLarge() = wearCardPreview(alarmPanelFixture(), ContainerType.Large)
 
-@Preview(name = "wear · media-control (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · media-control (small)",
+)
 @Composable
 fun WearMediaControlSmall() = wearCardPreview(mediaControlFixture(), ContainerType.Small)
 
-@Preview(name = "wear · media-control (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · media-control (large)",
+)
 @Composable
 fun WearMediaControlLarge() = wearCardPreview(mediaControlFixture(), ContainerType.Large)
 
-@Preview(name = "wear · bambu spool (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · bambu spool (small)",
+)
 @Composable
 fun WearBambuSpoolSmall() = wearCardPreview(bambuSpoolFixture(), ContainerType.Small)
 
-@Preview(name = "wear · bambu spool (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · bambu spool (large)",
+)
 @Composable
 fun WearBambuSpoolLarge() = wearCardPreview(bambuSpoolFixture(), ContainerType.Large)
 
-@Preview(name = "wear · unsupported (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · unsupported (small)",
+)
 @Composable
 fun WearUnsupportedSmall() = wearCardPreview(unsupportedFixture(), ContainerType.Small)
 
-@Preview(name = "wear · unsupported (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · unsupported (large)",
+)
 @Composable
 fun WearUnsupportedLarge() = wearCardPreview(unsupportedFixture(), ContainerType.Large)
 
@@ -216,99 +372,195 @@ fun WearUnsupportedLarge() = wearCardPreview(unsupportedFixture(), ContainerType
 // large fixture carries the full multi-entity payload so the preview
 // shows the filled tier.
 
-@Preview(name = "wear · entities (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · entities (small)",
+)
 @Composable
 fun WearEntitiesSmall() = wearCardPreview(entitiesSmallFixture(), ContainerType.Small)
 
-@Preview(name = "wear · entities (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · entities (large)",
+)
 @Composable
 fun WearEntitiesLarge() = wearCardPreview(entitiesLargeFixture(), ContainerType.Large)
 
-@Preview(name = "wear · glance (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · glance (small)",
+)
 @Composable
 fun WearGlanceSmall() = wearCardPreview(glanceSmallFixture(), ContainerType.Small)
 
-@Preview(name = "wear · glance (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · glance (large)",
+)
 @Composable
 fun WearGlanceLarge() = wearCardPreview(glanceLargeFixture(), ContainerType.Large)
 
-@Preview(name = "wear · area (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · area (small)",
+)
 @Composable
 fun WearAreaSmall() = wearCardPreview(areaSmallFixture(), ContainerType.Small)
 
-@Preview(name = "wear · area (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · area (large)",
+)
 @Composable
 fun WearAreaLarge() = wearCardPreview(areaLargeFixture(), ContainerType.Large)
 
-@Preview(name = "wear · picture-glance (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · picture-glance (small)",
+)
 @Composable
 fun WearPictureGlanceSmall() = wearCardPreview(pictureGlanceSmallFixture(), ContainerType.Small)
 
-@Preview(name = "wear · picture-glance (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · picture-glance (large)",
+)
 @Composable
 fun WearPictureGlanceLarge() = wearCardPreview(pictureGlanceLargeFixture(), ContainerType.Large)
 
-@Preview(name = "wear · picture-elements (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · picture-elements (small)",
+)
 @Composable
 fun WearPictureElementsSmall() = wearCardPreview(pictureElementsSmallFixture(), ContainerType.Small)
 
-@Preview(name = "wear · picture-elements (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · picture-elements (large)",
+)
 @Composable
 fun WearPictureElementsLarge() = wearCardPreview(pictureElementsLargeFixture(), ContainerType.Large)
 
-@Preview(name = "wear · entity-filter (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · entity-filter (small)",
+)
 @Composable
 fun WearEntityFilterSmall() = wearCardPreview(entityFilterSmallFixture(), ContainerType.Small)
 
-@Preview(name = "wear · entity-filter (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · entity-filter (large)",
+)
 @Composable
 fun WearEntityFilterLarge() = wearCardPreview(entityFilterLargeFixture(), ContainerType.Large)
 
-@Preview(name = "wear · vertical-stack (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · vertical-stack (small)",
+)
 @Composable
 fun WearVerticalStackSmall() = wearCardPreview(verticalStackSmallFixture(), ContainerType.Small)
 
-@Preview(name = "wear · vertical-stack (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · vertical-stack (large)",
+)
 @Composable
 fun WearVerticalStackLarge() = wearCardPreview(verticalStackLargeFixture(), ContainerType.Large)
 
-@Preview(name = "wear · horizontal-stack (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · horizontal-stack (small)",
+)
 @Composable
 fun WearHorizontalStackSmall() = wearCardPreview(horizontalStackSmallFixture(), ContainerType.Small)
 
-@Preview(name = "wear · horizontal-stack (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · horizontal-stack (large)",
+)
 @Composable
 fun WearHorizontalStackLarge() = wearCardPreview(horizontalStackLargeFixture(), ContainerType.Large)
 
-@Preview(name = "wear · grid (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · grid (small)",
+)
 @Composable
 fun WearGridSmall() = wearCardPreview(gridSmallFixture(), ContainerType.Small)
 
-@Preview(name = "wear · grid (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · grid (large)",
+)
 @Composable
 fun WearGridLarge() = wearCardPreview(gridLargeFixture(), ContainerType.Large)
 
-@Preview(name = "wear · bambu print-status (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · bambu print-status (small)",
+)
 @Composable
 fun WearBambuPrintStatusSmall() = wearCardPreview(bambuPrintStatusFixture(), ContainerType.Small)
 
-@Preview(name = "wear · bambu print-status (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · bambu print-status (large)",
+)
 @Composable
 fun WearBambuPrintStatusLarge() = wearCardPreview(bambuPrintStatusFixture(), ContainerType.Large)
 
-@Preview(name = "wear · bambu print-control (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · bambu print-control (small)",
+)
 @Composable
 fun WearBambuPrintControlSmall() = wearCardPreview(bambuPrintControlFixture(), ContainerType.Small)
 
-@Preview(name = "wear · bambu print-control (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · bambu print-control (large)",
+)
 @Composable
 fun WearBambuPrintControlLarge() = wearCardPreview(bambuPrintControlFixture(), ContainerType.Large)
 
-@Preview(name = "wear · bambu ams (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · bambu ams (small)",
+)
 @Composable
 fun WearBambuAmsSmall() = wearCardPreview(bambuAmsSmallFixture(), ContainerType.Small)
 
-@Preview(name = "wear · bambu ams (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "wear · bambu ams (large)",
+)
 @Composable
 fun WearBambuAmsLarge() = wearCardPreview(bambuAmsLargeFixture(), ContainerType.Large)
 

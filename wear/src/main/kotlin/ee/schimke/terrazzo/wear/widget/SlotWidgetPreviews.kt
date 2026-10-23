@@ -18,7 +18,7 @@ import androidx.glance.wear.WearWidgetData
 import androidx.glance.wear.WearWidgetDocument
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
-import androidx.glance.wear.core.WidgetInstanceId
+import androidx.glance.wear.tooling.preview.WearWidgetHostsPreview
 import androidx.glance.wear.tooling.preview.WearWidgetPreviewSnapshot
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
@@ -168,14 +168,20 @@ internal fun SlotWidgetPreviewFixture(
   snapshot: HaSnapshot,
   container: ContainerType,
 ) {
-  val params = if (container == ContainerType.Large) largePreviewParams else smallPreviewParams
-  WearWidgetPreviewSnapshot(
+  // As the watch's widget host draws it, once per host: Pixel's squircle and Samsung's stadium.
+  WearWidgetHostsPreview(
     widget = PreviewSlotWidget(card = card, snapshot = snapshot),
-    params = params,
+    containerType =
+      if (container == ContainerType.Large) ContainerInfo.CONTAINER_TYPE_LARGE
+      else ContainerInfo.CONTAINER_TYPE_SMALL,
   )
 }
 
-@Preview(name = "Slot widget — tile (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "Slot widget — tile (small)",
+)
 @Composable
 fun SlotWidgetPreview_TileSmall() {
   val card =
@@ -196,7 +202,11 @@ fun SlotWidgetPreview_TileSmall() {
   SlotWidgetPreviewFixture(card, snapshot, ContainerType.Small)
 }
 
-@Preview(name = "Slot widget — entities (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "Slot widget — entities (large)",
+)
 @Composable
 fun SlotWidgetPreview_EntitiesLarge() {
   val card =
@@ -229,30 +239,16 @@ fun SlotWidgetPreview_EntitiesLarge() {
   SlotWidgetPreviewFixture(card, snapshot, ContainerType.Large)
 }
 
-@Preview(name = "Slot widget — empty placeholder")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "Slot widget — empty placeholder",
+)
 @Composable
 fun SlotWidgetPreview_Empty() {
   SlotWidgetPreviewFixture(card = null, snapshot = HaSnapshot(), container = ContainerType.Small)
 }
 
-private val largePreviewParams =
-  WearWidgetParams(
-    instanceId = WidgetInstanceId("widgets", 1),
-    containerType = ContainerInfo.CONTAINER_TYPE_LARGE,
-    widthDp = 200f,
-    heightDp = 112f,
-    verticalPaddingDp = 8f,
-    horizontalPaddingDp = 8f,
-    cornerRadiusDp = 26f,
-  )
-
-private val smallPreviewParams =
-  WearWidgetParams(
-    instanceId = WidgetInstanceId("widgets", 2),
-    containerType = ContainerInfo.CONTAINER_TYPE_SMALL,
-    widthDp = 200f,
-    heightDp = 60f,
-    verticalPaddingDp = 8f,
-    horizontalPaddingDp = 8f,
-    cornerRadiusDp = 26f,
-  )
+/** A widget preview's size: [WearWidgetHostsPreview]'s two watch screens side by side, labelled. */
+internal const val WIDGET_HOSTS_WIDTH_DP = 478
+internal const val WIDGET_HOSTS_HEIGHT_DP = 262

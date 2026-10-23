@@ -40,7 +40,8 @@ private const val CompactRowMaxCells = 3
  * than dropped.
  *
  * [cellsPerRow] is how many cells share a row where FlowLayout can't wrap them: a narrow widget
- * gives each cell the width its name needs rather than crushing three into it.
+ * gives each cell the width its name needs rather than crushing three into it. [compactCells] draws
+ * each cell as its icon over its state, without the name: the two lines a Wear Small slot holds.
  */
 @Composable
 @RemoteComposable
@@ -49,6 +50,7 @@ fun RemoteHaGlance(
   modifier: RemoteModifier = RemoteModifier,
   fillHeight: Boolean = false,
   cellsPerRow: Int = CompactRowMaxCells,
+  compactCells: Boolean = false,
 ) {
   val theme = haTheme()
   val supportsFlow = LocalSupportsFlowLayout.current
@@ -60,7 +62,7 @@ fun RemoteHaGlance(
         .fillMaxWidth()
         .then(if (fillHeight) RemoteModifier.fillMaxHeight() else RemoteModifier)
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 12.rdp, vertical = 10.rdp)
+        .padding(horizontal = 12.rdp, vertical = (if (compactCells) 2 else 10).rdp)
   ) {
     RemoteColumn(modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier) {
       if (data.title != null) {
@@ -89,10 +91,10 @@ fun RemoteHaGlance(
           modifier = RemoteModifier.fillMaxWidth().weight(1f),
           verticalArrangement = RemoteArrangement.Center,
         ) {
-          CellGrid(supportsFlow, cells, cellsPerRow)
+          CellGrid(supportsFlow, cells, cellsPerRow, compactCells)
         }
       } else {
-        CellGrid(supportsFlow, cells, cellsPerRow)
+        CellGrid(supportsFlow, cells, cellsPerRow, compactCells)
       }
     }
   }
@@ -107,14 +109,19 @@ fun RemoteHaGlance(
  */
 @Composable
 @RemoteComposable
-private fun CellGrid(supportsFlow: Boolean, cells: List<HaGlanceCellData>, cellsPerRow: Int) {
+private fun CellGrid(
+  supportsFlow: Boolean,
+  cells: List<HaGlanceCellData>,
+  cellsPerRow: Int,
+  compact: Boolean,
+) {
   if (supportsFlow) {
     RemoteFlowRow(
       modifier = RemoteModifier.fillMaxWidth(),
       horizontalArrangement = RemoteArrangement.SpaceEvenly,
       verticalArrangement = RemoteArrangement.spacedBy(6.rdp),
     ) {
-      cells.forEach { cell -> RemoteHaGlanceCell(cell) }
+      cells.forEach { cell -> RemoteHaGlanceCell(cell, compact = compact) }
     }
   } else {
     RemoteColumn(
@@ -127,7 +134,11 @@ private fun CellGrid(supportsFlow: Boolean, cells: List<HaGlanceCellData>, cells
           horizontalArrangement = RemoteArrangement.SpaceEvenly,
           verticalAlignment = RemoteAlignment.CenterVertically,
         ) {
-          row.forEach { cell -> RemoteHaGlanceCell(cell) }
+          // An equal share each, so a long name ellipsizes within its cell instead of running
+          // into its neighbour's.
+          row.forEach { cell ->
+            RemoteHaGlanceCell(cell, RemoteModifier.weight(1f), compact = compact)
+          }
         }
       }
     }
@@ -140,28 +151,37 @@ private fun CellGrid(supportsFlow: Boolean, cells: List<HaGlanceCellData>, cells
  */
 @Composable
 @RemoteComposable
-fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaGlanceCell(
+  data: HaGlanceCellData,
+  modifier: RemoteModifier = RemoteModifier,
+  compact: Boolean = false,
+) {
   val theme = haTheme()
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   val look = entityLook(data.entityId, data.accent)
   val accent: RemoteColor = look.accent
   RemoteColumn(
-    modifier = modifier.then(clickable).padding(vertical = 4.rdp),
+    modifier =
+      modifier
+        .then(clickable)
+        .padding(horizontal = HaSpace.XXS.rdp, vertical = (if (compact) 0 else 4).rdp),
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
     // One line each: a cell narrower than its name ellipsizes rather than stacking letters.
-    RemoteText(
-      text = entityName(data.entityId, data.name),
-      color = look.dim(theme.primaryText),
-      fontSize = HaType.Label,
-      style = haTextStyle(),
-      maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
-    )
+    if (!compact) {
+      RemoteText(
+        text = entityName(data.entityId, data.name),
+        color = look.dim(theme.primaryText),
+        fontSize = HaType.Label,
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
     RemoteBox(
       modifier =
-        RemoteModifier.padding(vertical = 4.rdp)
+        RemoteModifier.padding(vertical = (if (compact) 0 else 4).rdp)
           .then(if (data.tapAction != HaAction.None) consoleKeyChrome(accent) else RemoteModifier)
     ) {
       HaStateIcon(
@@ -171,7 +191,7 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
         tint = accent,
         // Decorative: the name is drawn above it.
         contentDescription = null,
-        modifier = RemoteModifier.size(28.rdp),
+        modifier = RemoteModifier.size((if (compact) 22 else 28).rdp),
       )
     }
     RemoteText(
