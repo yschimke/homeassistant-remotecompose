@@ -699,6 +699,23 @@ fun Screen_Settings_CardStyles() = PhoneHost {
   }
 }
 
+/**
+ * The card style picker previewed on a watch: the current style's sample as Small and Large Wear
+ * widgets on round and square watch screens.
+ */
+@Preview(
+  name = "settings · card styles on a watch",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_Settings_CardStylesOnWatch() = PhoneHost {
+  Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
+    CardStyleSection(selected = CardStylePref.Lcd, onSelect = {}, initiallyOnWatch = true)
+  }
+}
+
 // --- Secondary / power-user screens -------------------------------------
 //
 // These read their data from runtime stores in production; each has a
