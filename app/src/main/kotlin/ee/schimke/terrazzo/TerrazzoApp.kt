@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import ee.schimke.ha.client.dashboard.DashboardDraft
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.auth.rememberLoginController
@@ -39,12 +40,14 @@ import ee.schimke.terrazzo.dashboard.CardActionsSheet
 import ee.schimke.terrazzo.dashboard.CardHistoryScreen
 import ee.schimke.terrazzo.dashboard.CardStyleSheet
 import ee.schimke.terrazzo.dashboard.DashboardAgentScreen
+import ee.schimke.terrazzo.dashboard.DashboardEditorScreen
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.dashboard.ManagePinnedScreen
+import ee.schimke.terrazzo.dashboard.NameDialog
 import ee.schimke.terrazzo.dashboard.StudioCardPreview
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
 import ee.schimke.terrazzo.dashboard.rememberDashboardListState
@@ -456,7 +459,9 @@ private fun DashboardsRoot(
 ) {
   val graph = LocalTerrazzoGraph.current
   val scope = rememberCoroutineScope()
-  val dashboards by rememberSelectedDashboardListState(session)
+  // Bumped when the app creates a dashboard, so the list reloads with it.
+  var dashboardListReloads by remember { mutableIntStateOf(0) }
+  val dashboards by rememberSelectedDashboardListState(session, dashboardListReloads)
   val context = LocalContext.current
   val logsViewEnabled by graph.preferencesStore.logsViewEnabled.collectAsState(initial = false)
 
@@ -485,6 +490,9 @@ private fun DashboardsRoot(
   var styleTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
   // "Edit with an agent" for the opened dashboard, and a count of saves that re-keys it to reload.
   var agentOpen by remember { mutableStateOf(false) }
+  // The dashboard editor for the opened dashboard, and the new-dashboard name prompt.
+  var editorOpen by remember { mutableStateOf(false) }
+  var newDashboardOpen by remember { mutableStateOf(false) }
   var dashboardSaves by remember { mutableIntStateOf(0) }
   val studioServer by
     graph.preferencesStore.designServerUrl.collectAsState(initial = "https://ha.coo.ee/designs/v1")
@@ -511,6 +519,7 @@ private fun DashboardsRoot(
     studioTarget = null
     styleTarget = null
     agentOpen = false
+    editorOpen = false
     if (opened == DASHBOARD_UNSET) readyDashboards.firstOrNull()?.let { opened = it.urlPath }
   }
   val sessionConnection by session.connectionStatus.collectAsState()
@@ -630,7 +639,21 @@ private fun DashboardsRoot(
 
   val historyOverlay = historyTarget
   val studioOverlay = studioTarget
-  if (agentOpen && openedValue != DASHBOARD_UNSET) {
+  if (editorOpen && openedValue != DASHBOARD_UNSET) {
+    DashboardEditorScreen(
+      session = session,
+      urlPath = openedValue,
+      title = readyDashboards.firstOrNull { it.urlPath == openedValue }?.title,
+      saveBlockedReason =
+        when {
+          session is DemoHaSession -> "Demo dashboards can't be saved."
+          readOnly -> "Turn on write mode to save."
+          else -> null
+        },
+      onBack = { editorOpen = false },
+      onSaved = { dashboardSaves++ },
+    )
+  } else if (agentOpen && openedValue != DASHBOARD_UNSET) {
     BackHandler { agentOpen = false }
     DashboardAgentScreen(
       session = session,
@@ -707,6 +730,10 @@ private fun DashboardsRoot(
               onSignOut = onSignOut,
               onOpenAgent = agentInOverflow,
               onInstallOnWatch = installOnWatch,
+              onEditDashboard =
+                if (openedValue != DASHBOARD_UNSET) ({ editorOpen = true }) else null,
+              onNewDashboard =
+                if (session !is DemoHaSession && !readOnly) ({ newDashboardOpen = true }) else null,
             )
           },
         )
@@ -766,6 +793,42 @@ private fun DashboardsRoot(
         }
       }
     }
+  }
+
+  if (newDashboardOpen) {
+    NameDialog(
+      title = "New dashboard",
+      label = "Title",
+      confirmLabel = "Create",
+      onDismiss = { newDashboardOpen = false },
+      onConfirm = { name ->
+        newDashboardOpen = false
+        val title = name.ifBlank { "New dashboard" }
+        scope.launch {
+          runCatching {
+            val urlPath =
+              DashboardDraft.urlPathFor(title, readyDashboards.map { it.urlPath }.toSet())
+            session.createDashboard(urlPath, title, DashboardDraft.newDashboard(title))
+          }
+            .onSuccess { created ->
+              // Opted in to a subset of dashboards: the one just made joins it.
+              graph.preferencesStore.selectedDashboardUrlsNow()?.let { selection ->
+                created.urlPath?.let {
+                  graph.preferencesStore.setSelectedDashboardUrls(selection + it)
+                }
+              }
+              dashboardListReloads++
+              opened = created.urlPath
+              openedView = null
+              graph.preferencesStore.setLastViewedDashboard(created.urlPath)
+              editorOpen = true
+            }
+            .onFailure {
+              snackbars.showSnackbar(it.message ?: "Home Assistant refused the new dashboard.")
+            }
+        }
+      },
+    )
   }
 
   val dashboardUrlPath = openedValue.takeIf { it != DASHBOARD_UNSET } ?: ""
