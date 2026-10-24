@@ -214,4 +214,70 @@ class DashboardDraftTest {
     )
     assertEquals(JsonPrimitive("T"), listChanged["title"])
   }
+
+  @Test
+  fun aOneEntityCardSwapsTemplateKeepingSharedSettings() {
+    val tile =
+      Json.parseToJsonElement(
+          """{"type":"tile","entity":"sensor.t","name":"Hall","grid_options":{"columns":6},
+            "tap_action":{"action":"more-info"},"features":[{"type":"trend-graph"}],"color":"red"}"""
+        )
+        .jsonObject
+    val choices = DashboardDraft.templateChoices(tile)
+    assertTrue("gauge" in choices && "history-graph" in choices)
+    assertFalse("tile" in choices)
+
+    val gauge = DashboardDraft.withType(tile, "gauge")
+    assertEquals(JsonPrimitive("gauge"), gauge["type"])
+    assertEquals(JsonPrimitive("sensor.t"), gauge["entity"])
+    assertEquals(JsonPrimitive("Hall"), gauge["name"])
+    assertEquals(tile["tap_action"], gauge["tap_action"])
+    // Tile-only settings mean nothing to a gauge.
+    assertNull(gauge["features"])
+    assertNull(gauge["color"])
+
+    // A graph takes its entity as a list, and swaps back from one.
+    val graph = DashboardDraft.withType(gauge, "history-graph")
+    assertEquals(JsonArray(listOf(JsonPrimitive("sensor.t"))), graph["entities"])
+    assertNull(graph["entity"])
+    assertEquals("sensor.t", DashboardDraft.primaryEntity(graph))
+    assertEquals(JsonPrimitive("sensor.t"), DashboardDraft.withType(graph, "tile")["entity"])
+  }
+
+  @Test
+  fun cardsWithSeveralEntitiesOrNoneHaveNoTemplates() {
+    val list =
+      Json.parseToJsonElement("""{"type":"entities","entities":["light.a","light.b"]}""").jsonObject
+    assertEquals(emptyList(), DashboardDraft.templateChoices(list))
+    assertEquals(emptyList(), DashboardDraft.templateChoices(DashboardDraft.heading("Hi")))
+    assertFailsWith<IllegalArgumentException> { DashboardDraft.withType(list, "tile") }
+  }
+
+  @Test
+  fun aCalendarSwappedAwayAndBackListsItsEntity() {
+    val calendar =
+      Json.parseToJsonElement("""{"type":"calendar","entities":["calendar.home"]}""").jsonObject
+    assertTrue("tile" in DashboardDraft.templateChoices(calendar))
+    val back = DashboardDraft.withType(DashboardDraft.withType(calendar, "tile"), "calendar")
+    // The calendar card reads only `entities`.
+    assertEquals(JsonArray(listOf(JsonPrimitive("calendar.home"))), back["entities"])
+    assertNull(back["entity"])
+  }
+
+  @Test
+  fun aLegacySizeMovesToGridOptionsOnASwap() {
+    val tile =
+      Json.parseToJsonElement(
+          """{"type":"tile","entity":"sensor.t","layout_options":{"grid_columns":2,"grid_rows":3}}"""
+        )
+        .jsonObject
+    val swapped = DashboardDraft.withType(tile, "sensor")
+    assertNull(swapped["layout_options"])
+    val size = DashboardDraft.size(swapped)
+    assertEquals(
+      DashboardDraft.size(tile).columns.coerceIn(size.minColumns, size.maxColumns),
+      size.columns,
+    )
+    assertEquals(3, size.rows)
+  }
 }

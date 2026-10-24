@@ -546,8 +546,6 @@ private fun TopBarPreviewHost(
       title = {
         DashboardSwitcher(dashboards = dashboards, currentUrlPath = currentUrlPath, onSwitch = {})
       },
-      showAgentButton = writeMode,
-      onOpenAgent = {},
       notifications = emptyList(),
       onDismissNotification = {},
       onClearNotifications = {},
@@ -555,14 +553,14 @@ private fun TopBarPreviewHost(
       onRetryConnection = {},
       writeMode = writeMode,
       onWriteModeChange = {},
-      overflowMenu = { agentInOverflow ->
+      overflowMenu = {
         TopBarOverflowMenu(
           onOpenSettings = {},
           onOpenWidgets = {},
           onOpenPinned = {},
           onOpenLogs = null,
           onSignOut = {},
-          onOpenAgent = agentInOverflow,
+          onEditDashboard = {},
         )
       },
     )
@@ -600,7 +598,7 @@ fun Screen_DashboardTopBar_Paused() =
 fun Screen_DashboardTopBar_Failed() =
   TopBarPreviewHost(currentUrlPath = "printing", connectionStatus = ConnectionStatus.Failed)
 
-@Preview(name = "top bar · 412dp · switcher, agent inline", widthDp = PHONE_WIDTH_DP)
+@Preview(name = "top bar · 412dp · switcher", widthDp = PHONE_WIDTH_DP)
 @Composable
 fun Screen_DashboardTopBar_Phone() = TopBarPreviewHost(currentUrlPath = "printing")
 

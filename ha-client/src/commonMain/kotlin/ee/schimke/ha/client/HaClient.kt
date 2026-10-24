@@ -50,6 +50,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -841,6 +842,11 @@ data class HaInstanceConfig(
   val externalUrl: String? = null,
   /** `unit_system.temperature`: `°C` or `°F`, the unit climate temperatures are reported in. */
   val temperatureUnit: String? = null,
+  /**
+   * `components`: the integrations Home Assistant has loaded, such as `terrazzo` once the Terrazzo
+   * integration is set up.
+   */
+  val components: Set<String> = emptySet(),
 )
 
 /** Read a `get_config` result (the same shape as REST `GET /api/config`). */
@@ -854,6 +860,11 @@ internal fun instanceConfigOf(result: JsonObject): HaInstanceConfig =
       ((result["unit_system"] as? JsonObject)?.get("temperature"))?.nullableString()?.takeIf {
         it.isNotBlank()
       },
+    components =
+      (result["components"] as? JsonArray)
+        ?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
+        ?.toSet()
+        .orEmpty(),
   )
 
 private fun kotlinx.serialization.json.JsonElement.nullableString(): String? =

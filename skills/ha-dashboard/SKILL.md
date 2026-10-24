@@ -1,6 +1,6 @@
 ---
 name: ha-dashboard
-description: Author or edit a Home Assistant Lovelace dashboard for harc, the dashboard viewer for phones, tablets, desktops, launcher widgets and watches. Use when asked to set up, reorganise or extend a dashboard (for example "a garden dashboard with soil moisture charts"), whether working from a harc "Edit with an agent" prompt or directly against a Home Assistant instance.
+description: Author or edit a Home Assistant Lovelace dashboard for harc, the dashboard viewer for phones, tablets, desktops, launcher widgets and watches. Use when asked to set up, reorganise or extend a dashboard (for example "a garden dashboard with soil moisture charts"), whether working from a harc prompt or directly against a Home Assistant instance.
 ---
 
 # Home Assistant dashboards for harc
@@ -50,20 +50,22 @@ short-lived grant: `request_access`, show the person the `approveUrl` and `userC
   and `catalog_render_matrix` with `axes: {"device": [...]}` compares several widths in one call.
 
 Use them to choose each card's type and size. These match `DashboardAgentPrompt.SIZING` and
-`DashboardAgentPrompt.DESIGN_TOOLS`, which the editor's **Populate with an agent** prompt carries.
+`DashboardAgentPrompt.DESIGN_TOOLS`.
 
 ## From a harc prompt
 
-harc's **Edit with an agent** screen, and the dashboard editor's **Populate with an agent**, copy a
-prompt holding these rules, the request, the
-dashboard's current config and a table of the home's entities (`entity_id | name | state | unit |
-device_class`). Answer with the JSON block. The user pastes the answer back into harc, which checks that it is an
-object with a `views` list. **Edit with an agent** asks before replacing the dashboard and offers one
-undo; the editor loads the answer as an unsaved draft the user arranges before saving.
+A harc prompt built by `DashboardAgentPrompt` holds these rules, the request, the dashboard's
+current config and a table of the home's entities (`entity_id | name | state | unit |
+device_class`). Answer with the JSON block; harc checks that it is an object with a `views` list.
+The phone app no longer offers a copy-and-paste agent flow: agent edits are moving to edit
+sessions over the Terrazzo integration's MCP server
+([`docs/architecture/dashboard-editing.md`](../../docs/architecture/dashboard-editing.md)).
 
 ## Directly against Home Assistant
 
-With a long-lived access token, use Home Assistant's WebSocket API (`/api/websocket`):
+With a long-lived access token, use Home Assistant's WebSocket API (`/api/websocket`). A token
+carries its user's full rights, not just dashboards; prefer a dedicated user, and expect this path to
+give way to the integration's MCP edit sessions:
 
 1. `{"type": "lovelace/dashboards/list"}` to find the dashboard's `url_path` (the default dashboard
    has none).

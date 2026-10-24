@@ -1,7 +1,5 @@
 package ee.schimke.terrazzo.dashboard
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.util.Log
@@ -11,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -22,47 +19,36 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.UnfoldLess
 import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -73,7 +59,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -94,14 +79,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.dashboard.CardAddress
-import ee.schimke.ha.client.dashboard.DashboardAgentPrompt
 import ee.schimke.ha.client.dashboard.DashboardConflictException
 import ee.schimke.ha.client.dashboard.DashboardDraft
 import ee.schimke.ha.client.dashboard.DashboardEditSession
@@ -123,20 +105,24 @@ import kotlinx.serialization.json.contentOrNull
 private const val TAG = "DashboardEditor"
 
 /**
- * The dashboard editor: the dashboard's Lovelace config as a draft, drawn with the same live card
- * previews the dashboard shows, laid out on Home Assistant's section grid ([SectionCardGrid]) so a
- * card's size here is the size it has in HA. Tap a card to select it, then move, resize (with the
- * toolbar or by dragging its corner — the cards after it re-flow as it grows), edit or delete it;
- * add cards, sections and views; hand the draft to an agent to populate. Nothing reaches Home
- * Assistant until **Save**, which is conditional ([DashboardEditSession]): another client's change
- * since the draft was loaded is refused rather than overwritten.
+ * The phone's light dashboard editor (docs/architecture/dashboard-editing.md): the dashboard's
+ * Lovelace config as a draft, drawn with the same live card previews the dashboard shows, laid out
+ * on Home Assistant's section grid ([SectionCardGrid]) so a card's size here is the size it has in
+ * HA. Tap a card to select it, then move it, resize it (with the toolbar or by dragging its corner
+ * — the cards after it re-flow as it grows), swap its template or delete it; sections move up and
+ * down. Nothing reaches Home Assistant until **Save**, which is conditional
+ * ([DashboardEditSession]): another client's change since the draft was loaded is refused rather
+ * than overwritten.
+ *
+ * Adding cards, sections, views and dashboards, editing a card's settings and agent edits belong to
+ * the Terrazzo panel with the Home Assistant integration; [IntegrationCard] points there.
  *
  * The dashboard view itself lays sections out by harc's own card designs ([SectionCardFlow]), so it
  * can place cards differently from HA's grid; the editor shows the grid because that is what a
  * card's `grid_options` mean.
  *
  * [saveBlockedReason] says why the draft can't be saved (read-only mode, a demo session); the
- * editor still edits, and the agent handoff still works, so a draft can be explored.
+ * editor still edits, so a draft can be explored.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -152,6 +138,16 @@ fun DashboardEditorScreen(
   val snackbars = remember { SnackbarHostState() }
   var load by remember(session, urlPath) { mutableStateOf<EditorLoad>(EditorLoad.Loading) }
   var snapshot by remember(session, urlPath) { mutableStateOf(HaSnapshot()) }
+  var integration by remember(session) { mutableStateOf(IntegrationStatus.Unknown) }
+  LaunchedEffect(session) {
+    val config = runCatching { session.fetchInstanceConfig() }.getOrNull()
+    integration =
+      when {
+        config == null -> IntegrationStatus.Unknown
+        INTEGRATION_DOMAIN in config.components -> IntegrationStatus.Installed
+        else -> IntegrationStatus.Missing
+      }
+  }
 
   LaunchedEffect(session, urlPath) {
     load =
@@ -209,9 +205,14 @@ fun DashboardEditorScreen(
         onBack = onBack,
         onSaved = onSaved,
         launch = { block -> scope.launch { block() } },
+        integration = integration,
+        urlPath = urlPath,
       )
   }
 }
+
+/** The Terrazzo integration's domain (`custom_components/terrazzo`). */
+private const val INTEGRATION_DOMAIN = "terrazzo"
 
 private sealed interface EditorLoad {
   data object Loading : EditorLoad
@@ -231,14 +232,6 @@ private val editorJson = Json {
 internal fun configOf(dashboard: Dashboard): JsonObject =
   editorJson.encodeToJsonElement(Dashboard.serializer(), dashboard) as JsonObject
 
-/** What the bottom sheet is showing, if anything. */
-private sealed interface EditorSheet {
-  /** Edit the card at [at], or add one to [view]/[section] when [at] is null. */
-  data class Card(val view: Int, val section: Int?, val at: CardAddress?) : EditorSheet
-
-  data object Agent : EditorSheet
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DashboardEditor(
@@ -251,14 +244,17 @@ internal fun DashboardEditor(
   onSaved: () -> Unit,
   launch: (suspend () -> Unit) -> Unit,
   initialSelection: CardAddress? = null,
+  integration: IntegrationStatus = IntegrationStatus.Unknown,
+  urlPath: String? = null,
 ) {
+  val context = LocalContext.current
+  val editInHomeAssistant =
+    homeAssistantEditUrl(session.baseUrl, urlPath)?.let { url -> { openUrl(context, url) } }
   var draft by remember(edits) { mutableStateOf(edits.draft) }
   var saved by remember(edits) { mutableStateOf(edits.draft) }
   val history = remember(edits) { mutableStateListOf<JsonObject>() }
   var viewIndex by remember(edits) { mutableIntStateOf(0) }
   var selected by remember(edits) { mutableStateOf(initialSelection) }
-  var sheet by remember(edits) { mutableStateOf<EditorSheet?>(null) }
-  var askSectionTitle by remember { mutableStateOf<((String) -> Unit)?>(null) }
   var confirmDiscard by remember { mutableStateOf(false) }
   var busy by remember { mutableStateOf(false) }
 
@@ -344,34 +340,12 @@ internal fun DashboardEditor(
           ) {
             Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Undo edit")
           }
-          IconButton(onClick = { sheet = EditorSheet.Agent }) {
-            Icon(Icons.Filled.AutoAwesome, contentDescription = "Populate with an agent")
-          }
           TextButton(
             enabled = dirty && !busy && edits.readOnlyReason == null,
             onClick = ::save,
           ) {
             Text("Save")
           }
-          EditorOverflow(
-            canRemoveView = views.size > 1,
-            onAddView = {
-              askSectionTitle = { name ->
-                attempt {
-                  apply(DashboardDraft.addView(draft, name.ifBlank { "View ${views.size + 1}" }))
-                  viewIndex = views.size
-                  selected = null
-                }
-              }
-            },
-            onRemoveView = {
-              attempt {
-                apply(DashboardDraft.removeView(draft, viewIndex))
-                viewIndex = (viewIndex - 1).coerceAtLeast(0)
-                selected = null
-              }
-            },
-          )
         },
       )
     },
@@ -400,7 +374,12 @@ internal fun DashboardEditor(
           onResize = { columns, rows ->
             attempt { apply(DashboardDraft.resizeCard(draft, at, columns, rows)) }
           },
-          onEdit = { sheet = EditorSheet.Card(at.view, at.section, at) },
+          templates = DashboardDraft.templateChoices(card),
+          onTemplate = { type ->
+            attempt {
+              apply(DashboardDraft.replaceCard(draft, at, DashboardDraft.withType(card, type)))
+            }
+          },
           onDelete = {
             attempt {
               apply(DashboardDraft.removeCard(draft, at))
@@ -417,7 +396,7 @@ internal fun DashboardEditor(
       edits.readOnlyReason?.let {
         Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh) {
           Text(
-            "$it You can still edit and hand the draft to an agent.",
+            "$it You can still try edits here.",
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
           )
@@ -454,73 +433,16 @@ internal fun DashboardEditor(
             edits.edit(next)
           },
           onResizeStart = { history += draft },
-          onAddCard = { section -> sheet = EditorSheet.Card(viewIndex, section, null) },
-          onAddSection = {
-            askSectionTitle = { name ->
-              attempt { apply(DashboardDraft.addSection(draft, viewIndex, name)) }
-            }
+          footer = {
+            IntegrationCard(integration, editInHomeAssistant) { openUrl(context, HACS_INSTALL_URL) }
           },
           onMoveSection = { section, by ->
             attempt { apply(DashboardDraft.moveSection(draft, viewIndex, section, by)) }
             selected = null
           },
-          onRemoveSection = { section ->
-            attempt { apply(DashboardDraft.removeSection(draft, viewIndex, section)) }
-            selected = null
-          },
         )
       }
     }
-  }
-
-  when (val s = sheet) {
-    is EditorSheet.Card ->
-      CardEditorSheet(
-        session = session,
-        initial = s.at?.let { DashboardDraft.card(draft, it) },
-        snapshot = snapshot,
-        onDismiss = { sheet = null },
-        onDone = { card ->
-          sheet = null
-          attempt {
-            if (s.at != null) {
-              apply(DashboardDraft.replaceCard(draft, s.at, card))
-            } else {
-              val (next, at) = DashboardDraft.addCard(draft, s.view, s.section, card)
-              apply(next)
-              selected = at
-            }
-          }
-        },
-      )
-    EditorSheet.Agent ->
-      AgentHandoffSheet(
-        draft = draft,
-        title = title,
-        snapshot = snapshot,
-        onDismiss = { sheet = null },
-        onAnswer = { config ->
-          sheet = null
-          apply(config)
-          selected = null
-          launch {
-            snackbars.showSnackbar("The agent's dashboard is in the editor. Save to keep it.")
-          }
-        },
-      )
-    null -> Unit
-  }
-
-  askSectionTitle?.let { onName ->
-    NameDialog(
-      title = "Name",
-      label = "Title",
-      onDismiss = { askSectionTitle = null },
-      onConfirm = {
-        askSectionTitle = null
-        onName(it)
-      },
-    )
   }
 
   if (confirmDiscard) {
@@ -539,35 +461,6 @@ internal fun DashboardEditor(
         }
       },
       dismissButton = { TextButton(onClick = { confirmDiscard = false }) { Text("Keep editing") } },
-    )
-  }
-}
-
-@Composable
-private fun EditorOverflow(
-  canRemoveView: Boolean,
-  onAddView: () -> Unit,
-  onRemoveView: () -> Unit,
-) {
-  var expanded by remember { mutableStateOf(false) }
-  IconButton(onClick = { expanded = true }) {
-    Icon(Icons.Filled.MoreVert, contentDescription = "More options")
-  }
-  DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-    DropdownMenuItem(
-      text = { Text("Add view") },
-      onClick = {
-        expanded = false
-        onAddView()
-      },
-    )
-    DropdownMenuItem(
-      text = { Text("Delete this view") },
-      enabled = canRemoveView,
-      onClick = {
-        expanded = false
-        onRemoveView()
-      },
     )
   }
 }
@@ -608,10 +501,8 @@ private fun EditorCanvas(
   onSelect: (CardAddress?) -> Unit,
   onResize: (CardAddress, Int, Int?) -> Unit,
   onResizeStart: () -> Unit,
-  onAddCard: (section: Int?) -> Unit,
-  onAddSection: () -> Unit,
   onMoveSection: (section: Int, by: Int) -> Unit,
-  onRemoveSection: (section: Int) -> Unit,
+  footer: @Composable () -> Unit,
 ) {
   val sectioned = DashboardDraft.isSections(draft, view)
   val sections: List<Int?> =
@@ -631,7 +522,6 @@ private fun EditorCanvas(
             index = section,
             count = sections.size,
             onMove = { by -> onMoveSection(section, by) },
-            onRemove = { onRemoveSection(section) },
           )
         }
         val cards = DashboardDraft.cards(draft, view, section)
@@ -653,29 +543,15 @@ private fun EditorCanvas(
         ) { card ->
           DashboardCardPreview(session, card.toCardConfig(), snapshot)
         }
-        OutlinedButton(onClick = { onAddCard(section) }) {
-          Icon(Icons.Filled.Add, contentDescription = null)
-          Spacer(Modifier.size(8.dp))
-          Text("Add card")
-        }
       }
       if (i < sections.lastIndex) HorizontalDivider(Modifier.padding(top = 8.dp))
     }
-    if (sectioned) {
-      item(key = "add-section") {
-        FilledTonalButton(onClick = onAddSection, modifier = Modifier.fillMaxWidth()) {
-          Icon(Icons.Filled.Add, contentDescription = null)
-          Spacer(Modifier.size(8.dp))
-          Text("Add section")
-        }
-      }
-    }
+    item(key = "integration") { footer() }
   }
 }
 
 @Composable
-private fun SectionHeader(index: Int, count: Int, onMove: (Int) -> Unit, onRemove: () -> Unit) {
-  var confirm by remember { mutableStateOf(false) }
+private fun SectionHeader(index: Int, count: Int, onMove: (Int) -> Unit) {
   Row(verticalAlignment = Alignment.CenterVertically) {
     Text(
       "Section ${index + 1}",
@@ -689,27 +565,6 @@ private fun SectionHeader(index: Int, count: Int, onMove: (Int) -> Unit, onRemov
     IconButton(enabled = index < count - 1, onClick = { onMove(1) }) {
       Icon(Icons.Filled.ArrowDownward, contentDescription = "Move section ${index + 1} down")
     }
-    IconButton(onClick = { confirm = true }) {
-      Icon(Icons.Filled.Delete, contentDescription = "Delete section ${index + 1}")
-    }
-  }
-  if (confirm) {
-    AlertDialog(
-      onDismissRequest = { confirm = false },
-      title = { Text("Delete section ${index + 1}?") },
-      text = { Text("Its cards are deleted with it. You can undo.") },
-      confirmButton = {
-        TextButton(
-          onClick = {
-            confirm = false
-            onRemove()
-          }
-        ) {
-          Text("Delete")
-        }
-      },
-      dismissButton = { TextButton(onClick = { confirm = false }) { Text("Cancel") } },
-    )
   }
 }
 
@@ -885,7 +740,7 @@ private fun ResizeHandle(
   }
 }
 
-/** The selected card's tools: order, width, height, edit, delete. */
+/** The selected card's tools: order, width, height, template, delete. */
 @Composable
 private fun SelectedCardBar(
   card: JsonObject,
@@ -894,12 +749,14 @@ private fun SelectedCardBar(
   onMove: (Int) -> Unit,
   onMoveToSection: (Int) -> Unit,
   onResize: (columns: Int, rows: Int?) -> Unit,
-  onEdit: () -> Unit,
+  templates: List<String>,
+  onTemplate: (String) -> Unit,
   onDelete: () -> Unit,
   onDone: () -> Unit,
 ) {
   val size = DashboardDraft.size(card)
   var sectionMenu by remember { mutableStateOf(false) }
+  var templateMenu by remember { mutableStateOf(false) }
   Surface(color = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 3.dp) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 4.dp)) {
       // Size: width in quarters of the section, height in fixed rows or the card's own.
@@ -971,7 +828,22 @@ private fun SelectedCardBar(
           }
         }
         Spacer(Modifier.weight(1f))
-        IconButton(onClick = onEdit) { Icon(Icons.Filled.Edit, contentDescription = "Edit card") }
+        if (templates.isNotEmpty()) {
+          Box {
+            TextButton(onClick = { templateMenu = true }) { Text("Template…") }
+            DropdownMenu(expanded = templateMenu, onDismissRequest = { templateMenu = false }) {
+              templates.forEach { type ->
+                DropdownMenuItem(
+                  text = { Text(templateLabel(type)) },
+                  onClick = {
+                    templateMenu = false
+                    onTemplate(type)
+                  },
+                )
+              }
+            }
+          }
+        }
         IconButton(onClick = onDelete) {
           Icon(Icons.Filled.Delete, contentDescription = "Delete card")
         }
@@ -980,338 +852,78 @@ private fun SelectedCardBar(
   }
 }
 
-/**
- * Add or edit one card: pick an entity from the home, a card type that suits it, a name — or edit
- * the card's JSON directly. A live preview shows the card as it will be drawn.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CardEditorSheet(
-  session: HaSession,
-  initial: JsonObject?,
-  snapshot: HaSnapshot,
-  onDismiss: () -> Unit,
-  onDone: (JsonObject) -> Unit,
-) {
-  var card by remember { mutableStateOf(initial) }
-  var query by remember { mutableStateOf("") }
-  var jsonText by remember { mutableStateOf(card?.let(::pretty).orEmpty()) }
-  var jsonError by remember { mutableStateOf<String?>(null) }
-  fun set(next: JsonObject) {
-    card = next
-    jsonText = pretty(next)
-    jsonError = null
-  }
-  val entity = card?.stringOf("entity") ?: card?.firstEntity()
-  ModalBottomSheet(
-    onDismissRequest = onDismiss,
-    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-  ) {
-    Column(
-      Modifier.fillMaxWidth()
-        .verticalScroll(rememberScrollState())
-        .padding(horizontal = 16.dp)
-        .navigationBarsPadding(),
-      verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-      Text(
-        if (initial == null) "Add card" else "Edit card",
-        style = MaterialTheme.typography.titleLarge,
-      )
-      card?.let { current ->
-        Box(Modifier.fillMaxWidth().heightIn(min = 56.dp)) {
-          key(current) { DashboardCardPreview(session, current.toCardConfig(), snapshot) }
-        }
-      }
-      OutlinedTextField(
-        value = query,
-        onValueChange = { query = it },
-        label = { Text(if (entity == null) "Find an entity" else "Entity: $entity") },
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth(),
-      )
-      val matches =
-        remember(query, snapshot) {
-          if (query.isBlank()) emptyList()
-          else
-            snapshot.states.values
-              .filter { s ->
-                s.entityId.contains(query, ignoreCase = true) ||
-                  s.friendlyName()?.contains(query, ignoreCase = true) == true
-              }
-              .sortedBy { it.entityId }
-              .take(20)
-        }
-      matches.forEach { s ->
-        Row(
-          Modifier.fillMaxWidth()
-            .clickable {
-              query = ""
-              val current = card
-              // A card whose type suits the entity keeps the rest of its config; otherwise a new
-              // card
-              // of a suitable type, keeping only its name.
-              set(
-                if (
-                  current != null &&
-                    current.stringOf("type") in DashboardDraft.suggestedTypes(s.entityId)
-                ) {
-                  DashboardDraft.withEntity(current, s.entityId)
-                } else {
-                  DashboardDraft.cardFor(s.entityId).withName(current?.stringOf("name"))
-                }
-              )
-            }
-            .padding(vertical = 8.dp)
-        ) {
-          Column {
-            Text(s.friendlyName() ?: s.entityId, style = MaterialTheme.typography.bodyLarge)
-            Text(
-              "${s.entityId} · ${s.state}",
-              style = MaterialTheme.typography.bodySmall,
-              color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-          }
-        }
-      }
-      val types =
-        (entity?.let(DashboardDraft::suggestedTypes).orEmpty() + DashboardDraft.ENTITYLESS_TYPES)
-          .distinct()
-      Text("Card type", style = MaterialTheme.typography.labelLarge)
-      Row(
-        Modifier.horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-      ) {
-        types.forEach { type ->
-          FilterChip(
-            selected = card?.stringOf("type") == type,
-            onClick = {
-              set(
-                when {
-                  type in DashboardDraft.ENTITYLESS_TYPES -> DashboardDraft.entitylessCard(type)
-                  entity != null ->
-                    DashboardDraft.cardFor(entity, type).withName(card?.stringOf("name"))
-                  else -> return@FilterChip
-                }
-              )
-            },
-            label = { Text(type) },
-          )
-        }
-      }
-      val textField =
-        when (card?.stringOf("type")) {
-          "heading" -> "heading"
-          "markdown" -> "content"
-          null,
-          "clock" -> null
-          else -> "name"
-        }
-      if (textField != null) {
-        OutlinedTextField(
-          value = card?.stringOf(textField).orEmpty(),
-          onValueChange = { text ->
-            card?.let { c ->
-              set(
-                if (text.isEmpty() && textField == "name") JsonObject(c - "name")
-                else JsonObject(c + (textField to JsonPrimitive(text)))
-              )
-            }
-          },
-          label = {
-            Text(
-              when (textField) {
-                "heading" -> "Heading"
-                "content" -> "Text"
-                else -> "Name (optional)"
-              }
-            )
-          },
-          modifier = Modifier.fillMaxWidth(),
-        )
-      }
-      OutlinedTextField(
-        value = jsonText,
-        onValueChange = {
-          jsonText = it
-          val parsed = runCatching { Json.parseToJsonElement(it) as JsonObject }.getOrNull()
-          if (parsed?.stringOf("type").isNullOrBlank()) {
-            jsonError = "A card is a JSON object with a \"type\"."
-          } else {
-            card = parsed
-            jsonError = null
-          }
-        },
-        label = { Text("Card JSON") },
-        isError = jsonError != null,
-        supportingText = jsonError?.let { { Text(it) } },
-        textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
-        modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
-      )
-      Row(
-        Modifier.fillMaxWidth().padding(bottom = 16.dp),
-        horizontalArrangement = Arrangement.End,
-      ) {
-        TextButton(onClick = onDismiss) { Text("Cancel") }
-        Button(enabled = card != null && jsonError == null, onClick = { card?.let(onDone) }) {
-          Text(if (initial == null) "Add" else "Done")
-        }
-      }
-    }
-  }
+private fun JsonObject.stringOf(key: String): String? = (this[key] as? JsonPrimitive)?.contentOrNull
+
+/** A card type as the template menu names it: "history-graph" reads "History graph". */
+private fun templateLabel(type: String): String =
+  type.replace('-', ' ').replaceFirstChar { it.uppercase() }
+
+/** Whether this Home Assistant has the Terrazzo integration loaded, as `get_config` reports it. */
+enum class IntegrationStatus {
+  Installed,
+  Missing,
+  /** No instance config to ask (demo mode, offline). */
+  Unknown,
 }
 
 /**
- * Hand the draft to the user's own agent: a prompt carrying the draft, the home's entities, HA's
- * card sizes and how to look at harc's card designs in the hosted preview catalog
- * ([DashboardAgentPrompt.DESIGN_TOOLS]). The agent's answer replaces the draft, unsaved, so the
- * user can arrange it before saving.
+ * Where the editing the phone doesn't do lives: Home Assistant's own dashboard editor for adding
+ * cards, sections and dashboards, and — when it isn't installed — the Terrazzo integration from
+ * HACS.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AgentHandoffSheet(
-  draft: JsonObject,
-  title: String?,
-  snapshot: HaSnapshot,
-  onDismiss: () -> Unit,
-  onAnswer: (JsonObject) -> Unit,
+internal fun IntegrationCard(
+  status: IntegrationStatus,
+  onOpenHomeAssistant: (() -> Unit)?,
+  onInstall: () -> Unit,
 ) {
-  val context = LocalContext.current
-  var request by remember { mutableStateOf("") }
-  var answer by remember { mutableStateOf("") }
-  var error by remember { mutableStateOf<String?>(null) }
-  var copied by remember { mutableStateOf(false) }
-  fun prompt() =
-    DashboardAgentPrompt.build(
-      request,
-      draft,
-      snapshot.states.values,
-      title,
-      withDesignTools = true,
-    )
-  ModalBottomSheet(
-    onDismissRequest = onDismiss,
-    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+  Surface(
+    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    shape = RoundedCornerShape(16.dp),
+    modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp),
   ) {
-    Column(
-      Modifier.fillMaxWidth()
-        .verticalScroll(rememberScrollState())
-        .padding(horizontal = 16.dp)
-        .navigationBarsPadding(),
-      verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-      Text("Populate with an agent", style = MaterialTheme.typography.titleLarge)
+    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      Text("Need more than moving and resizing?", style = MaterialTheme.typography.titleSmall)
       Text(
-        "Describe what this dashboard is for. The prompt carries this draft, your entity names " +
-          "and states, card sizes, and how to view harc's card designs and render them at other " +
-          "sizes. Paste the agent's answer back here to review it in the editor.",
+        "Add cards and sections, change a card's settings or create dashboards in Home " +
+          "Assistant's own editor.",
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
-      OutlinedTextField(
-        value = request,
-        onValueChange = { request = it },
-        label = { Text("What should it show?") },
-        placeholder = { Text("A garden dashboard: soil moisture gauges, watering valves, rain") },
-        minLines = 2,
-        modifier = Modifier.fillMaxWidth(),
-      )
-      Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilledTonalButton(
-          onClick = {
-            copyText(context, prompt())
-            copied = true
-          }
-        ) {
-          Text(if (copied) "Copied" else "Copy prompt")
-        }
-        OutlinedButton(onClick = { shareText(context, prompt()) }) { Text("Share prompt") }
+      onOpenHomeAssistant?.let { open ->
+        OutlinedButton(onClick = open) { Text("Open in Home Assistant") }
       }
-      OutlinedTextField(
-        value = answer,
-        onValueChange = {
-          answer = it
-          error = null
-        },
-        label = { Text("Agent's answer") },
-        isError = error != null,
-        supportingText = error?.let { { Text(it) } },
-        modifier = Modifier.fillMaxWidth().heightIn(min = 140.dp),
-      )
-      Row(
-        Modifier.fillMaxWidth().padding(bottom = 16.dp),
-        horizontalArrangement = Arrangement.End,
-      ) {
-        TextButton(onClick = onDismiss) { Text("Cancel") }
-        Button(
-          enabled = answer.isNotBlank(),
-          onClick = {
-            runCatching { DashboardAgentPrompt.parseAnswer(answer) }
-              .onSuccess(onAnswer)
-              .onFailure { error = it.message ?: "That answer isn't a dashboard." }
-          },
-        ) {
-          Text("Use answer")
-        }
+      if (status != IntegrationStatus.Installed) {
+        HorizontalDivider(Modifier.padding(vertical = 4.dp))
+        Text(
+          "The Terrazzo integration, from HACS, shows your dashboards in Home Assistant as harc " +
+            "draws them, and lets AI assistants read your home.",
+          style = MaterialTheme.typography.bodyMedium,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        FilledTonalButton(onClick = onInstall) { Text("Install with HACS") }
       }
     }
   }
 }
 
-@Composable
-internal fun NameDialog(
-  title: String,
-  label: String,
-  onDismiss: () -> Unit,
-  onConfirm: (String) -> Unit,
-  initial: String = "",
-  confirmLabel: String = "OK",
-) {
-  var text by remember { mutableStateOf(initial) }
-  AlertDialog(
-    onDismissRequest = onDismiss,
-    title = { Text(title) },
-    text = {
-      OutlinedTextField(
-        value = text,
-        onValueChange = { text = it },
-        label = { Text(label) },
-        singleLine = true,
-      )
-    },
-    confirmButton = { TextButton(onClick = { onConfirm(text.trim()) }) { Text(confirmLabel) } },
-    dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-  )
-}
+/** HACS's page for this repository, through My Home Assistant (docs/HOME_ASSISTANT.md). */
+internal const val HACS_INSTALL_URL =
+  "https://my.home-assistant.io/redirect/hacs_repository/" +
+    "?owner=yschimke&repository=homeassistant-remotecompose&category=integration"
 
-private fun pretty(card: JsonObject): String =
-  editorJson.encodeToString(JsonObject.serializer(), card)
+/** [urlPath]'s dashboard in Home Assistant's frontend, opened in edit mode. */
+internal fun homeAssistantEditUrl(baseUrl: String?, urlPath: String?): String? =
+  baseUrl
+    ?.trimEnd('/')
+    ?.takeIf { it.startsWith("http") }
+    ?.let { "$it/${urlPath ?: "lovelace"}/0?edit=1" }
 
-private fun JsonObject.stringOf(key: String): String? = (this[key] as? JsonPrimitive)?.contentOrNull
-
-private fun JsonObject.firstEntity(): String? =
-  (this["entities"] as? kotlinx.serialization.json.JsonArray)?.firstOrNull()?.let {
-    (it as? JsonPrimitive)?.contentOrNull ?: (it as? JsonObject)?.stringOf("entity")
+private fun openUrl(context: Context, url: String) {
+  runCatching {
+    context.startActivity(
+      Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    )
   }
-
-private fun JsonObject.withName(name: String?): JsonObject =
-  if (name.isNullOrEmpty() || "entity" !in this) this
-  else JsonObject(this + ("name" to JsonPrimitive(name)))
-
-private fun ee.schimke.ha.model.EntityState.friendlyName(): String? =
-  (attributes["friendly_name"] as? JsonPrimitive)?.contentOrNull
-
-private fun copyText(context: Context, text: String) {
-  val clipboard = context.getSystemService(ClipboardManager::class.java) ?: return
-  clipboard.setPrimaryClip(ClipData.newPlainText("Dashboard prompt", text))
-}
-
-private fun shareText(context: Context, text: String) {
-  val send =
-    Intent(Intent.ACTION_SEND).apply {
-      type = "text/plain"
-      putExtra(Intent.EXTRA_TEXT, text)
-    }
-  context.startActivity(Intent.createChooser(send, "Send the prompt to an agent"))
+    .onFailure { Log.w(TAG, "Nothing opens $url", it) }
 }

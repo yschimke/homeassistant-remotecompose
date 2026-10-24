@@ -253,7 +253,8 @@ object DashboardDraft {
       "entities",
       "glance",
       "logbook",
-      "map" -> put("entities", JsonArray(listOf(JsonPrimitive(entityId))))
+      "map",
+      "calendar" -> put("entities", JsonArray(listOf(JsonPrimitive(entityId))))
       else -> put("entity", entityId)
     }
   }
@@ -275,6 +276,64 @@ object DashboardDraft {
       }
     return JsonObject(card + ("entities" to JsonArray(listOf(first) + entities.drop(1))))
   }
+
+  /**
+   * The one entity [card] shows: its `entity`, or the single row of its `entities`. Null for a card
+   * showing several entities or none, which has no template to swap.
+   */
+  fun primaryEntity(card: JsonObject): String? {
+    (card["entity"] as? JsonPrimitive)?.contentOrNull?.let {
+      return it.takeIf { "entities" !in card }
+    }
+    val rows = card["entities"] as? JsonArray ?: return null
+    val row = rows.singleOrNull() ?: return null
+    return (row as? JsonPrimitive)?.contentOrNull
+      ?: ((row as? JsonObject)?.get("entity") as? JsonPrimitive)?.contentOrNull
+  }
+
+  /**
+   * The card types [card] can switch to: types harc draws for its one entity ([suggestedTypes]),
+   * other than its own. Empty for a card showing several entities or none.
+   */
+  fun templateChoices(card: JsonObject): List<String> {
+    val entity = primaryEntity(card) ?: return emptyList()
+    val current = (card["type"] as? JsonPrimitive)?.contentOrNull
+    return suggestedTypes(entity).filter { it != current && it != "entities" }
+  }
+
+  /**
+   * [card] drawn as [type] instead: its entity in the shape [type] takes, with [SHARED_KEYS] kept
+   * (name, icon, size, visibility, actions) and every key specific to the old type dropped, since
+   * it means nothing, or something else, to the new one. A kept size, legacy `layout_options`
+   * included, is clamped to the new type's limits.
+   */
+  fun withType(card: JsonObject, type: String): JsonObject {
+    val entity =
+      primaryEntity(card)
+        ?: throw IllegalArgumentException("Only a card showing one entity can change its template.")
+    val base = cardFor(entity, type)
+    val kept = card.filterKeys { it in SHARED_KEYS }
+    val swapped = JsonObject(base + kept)
+    return when {
+      "grid_options" in kept -> size(swapped).let { resized(swapped, it.columns, it.rows) }
+      // The older `layout_options` is specific to no type but isn't kept as is: its size moves to
+      // `grid_options`, as a resize would write it.
+      "layout_options" in card -> size(card).let { resized(swapped, it.columns, it.rows) }
+      else -> swapped
+    }
+  }
+
+  /** Card keys that mean the same on every card type, kept by [withType]. */
+  val SHARED_KEYS: Set<String> =
+    setOf(
+      "name",
+      "icon",
+      "grid_options",
+      "visibility",
+      "tap_action",
+      "hold_action",
+      "double_tap_action",
+    )
 
   /** Card types that suit [entityId]'s domain, best first; always ends with the generic ones. */
   fun suggestedTypes(entityId: String): List<String> {

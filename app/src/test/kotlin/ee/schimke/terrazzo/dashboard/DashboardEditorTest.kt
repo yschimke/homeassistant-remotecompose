@@ -23,6 +23,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -122,6 +123,21 @@ class DashboardEditorTest {
     compose.waitForIdle()
     assertEquals(1, DashboardDraft.cards(edits.draft, 0, 0).size)
     assertNull(DashboardDraft.card(edits.draft, second))
+    assertEquals(emptyList(), writes)
+  }
+
+  @Test
+  fun aCardSwapsItsTemplateKeepingItsEntityAndSize() {
+    val (edits, writes) = setUp()
+    compose.onNodeWithContentDescription("Card 2: tile").performClick()
+    compose.onNodeWithText("Template…").performClick()
+    compose.onNodeWithText("Gauge").performClick()
+    compose.waitForIdle()
+    val card = DashboardDraft.card(edits.draft, second)!!
+    assertEquals("gauge", card["type"]!!.jsonPrimitive.content)
+    assertEquals("sensor.upstairs_temperature", card["entity"]!!.jsonPrimitive.content)
+    assertEquals(original["custom"], edits.draft["custom"])
+    // A swap is a draft edit like any other: nothing is written until Save.
     assertEquals(emptyList(), writes)
   }
 }

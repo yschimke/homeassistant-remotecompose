@@ -164,17 +164,6 @@ interface HaSession {
     throw UnsupportedOperationException("This session can't save dashboards to Home Assistant.")
 
   /**
-   * Create a storage-mode dashboard titled [title] at [urlPath] holding [config]. Sessions that
-   * can't write to Home Assistant refuse.
-   */
-  suspend fun createDashboard(
-    urlPath: String,
-    title: String,
-    config: JsonObject,
-  ): DashboardSummary =
-    throw UnsupportedOperationException("This session can't create dashboards in Home Assistant.")
-
-  /**
    * Fetch HA's `get_config` payload — version + `internal_url` / `external_url`. Live sessions
    * round-trip the WebSocket; demo / offline sessions return null so callers can skip the
    * persist-public-URL side effect.
@@ -452,12 +441,6 @@ class LiveHaSession(
     expected: JsonObject,
     config: JsonObject,
   ) = client.compareAndReplaceDashboardConfig(expected, config, urlPath)
-
-  override suspend fun createDashboard(
-    urlPath: String,
-    title: String,
-    config: JsonObject,
-  ): DashboardSummary = client.createDashboard(urlPath, title, config)
 
   override suspend fun callService(
     domain: String,
