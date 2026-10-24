@@ -66,7 +66,8 @@ import kotlinx.serialization.json.JsonObject
  * config the session started from), answered with a note, or discarded. One undo is kept.
  *
  * The phone and the Terrazzo panel both show this; [onSharePrompt] is the platform's share sheet or
- * clipboard.
+ * clipboard. [writeBlockedReason] (the phone's read-only mode, say) withholds Apply and Undo: the
+ * session can still be started, drafted and reviewed.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,6 +79,7 @@ fun AgentEditScreen(
   onBack: () -> Unit,
   onSharePrompt: (String) -> Unit,
   onApplied: () -> Unit,
+  writeBlockedReason: String? = null,
   renderCard: @Composable (CardKey, CardConfig) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -176,6 +178,7 @@ fun AgentEditScreen(
             problem = problem,
             snapshot = snapshot,
             busy = busy,
+            writeBlockedReason = writeBlockedReason,
             onSharePrompt = onSharePrompt,
             onApply = { draft ->
               run {
@@ -284,6 +287,7 @@ private fun SessionReview(
   problem: String?,
   snapshot: HaSnapshot,
   busy: Boolean,
+  writeBlockedReason: String?,
   onSharePrompt: (String) -> Unit,
   onApply: (AgentEditSession.Draft) -> Unit,
   onUndo: () -> Unit,
@@ -317,6 +321,14 @@ private fun SessionReview(
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
       problem?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+      writeBlockedReason?.let {
+        Text(
+          "$it Drafts can be reviewed but not applied.",
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+      }
+      val canWrite = !busy && writeBlockedReason == null
       if (prompt != null && session.isOpen && session.drafts.isEmpty()) {
         PromptCard(prompt, onSharePrompt)
       }
@@ -333,10 +345,10 @@ private fun SessionReview(
       }
       Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         when {
-          session.isApplied -> OutlinedButton(enabled = !busy, onClick = onUndo) { Text("Undo") }
+          session.isApplied -> OutlinedButton(enabled = canWrite, onClick = onUndo) { Text("Undo") }
           session.isOpen -> {
             if (draft != null) {
-              Button(enabled = !busy, onClick = { onApply(draft) }) { Text("Apply") }
+              Button(enabled = canWrite, onClick = { onApply(draft) }) { Text("Apply") }
               OutlinedButton(enabled = !busy, onClick = { noting = true }) {
                 Text("Request changes")
               }

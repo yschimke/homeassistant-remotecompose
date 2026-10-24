@@ -207,6 +207,7 @@ fun DashboardEditorScreen(
         reloads++
         onSaved()
       },
+      writeBlockedReason = saveBlockedReason,
     ) { _, card ->
       DashboardCardPreview(session, card, snapshot)
     }
@@ -285,6 +286,9 @@ internal fun DashboardEditor(
   var viewIndex by remember(edits) { mutableIntStateOf(0) }
   var selected by remember(edits) { mutableStateOf(initialSelection) }
   var confirmDiscard by remember { mutableStateOf(false) }
+  // The agent works from the dashboard in Home Assistant, and leaving for it drops this draft.
+  var confirmAgent by remember { mutableStateOf(false) }
+  val askAgent = onAskAgent?.let { ask -> { if (draft != saved) confirmAgent = true else ask() } }
   var busy by remember { mutableStateOf(false) }
 
   /** Apply an edit to the draft, keeping the previous draft for Undo. */
@@ -466,7 +470,7 @@ internal fun DashboardEditor(
             IntegrationCard(
               integration,
               editInHomeAssistant,
-              onAskAgent = onAskAgent?.takeIf { integration == IntegrationStatus.Installed },
+              onAskAgent = askAgent?.takeIf { integration == IntegrationStatus.Installed },
             ) {
               openUrl(context, HACS_INSTALL_URL)
             }
@@ -478,6 +482,31 @@ internal fun DashboardEditor(
         )
       }
     }
+  }
+
+  if (confirmAgent && onAskAgent != null) {
+    AlertDialog(
+      onDismissRequest = { confirmAgent = false },
+      title = { Text("Discard your edits?") },
+      text = {
+        Text(
+          "The agent works from the dashboard saved in Home Assistant. Save your edits first to " +
+            "keep them."
+        )
+      },
+      confirmButton = {
+        TextButton(
+          onClick = {
+            confirmAgent = false
+            edits.edit(saved)
+            onAskAgent()
+          }
+        ) {
+          Text("Discard and ask")
+        }
+      },
+      dismissButton = { TextButton(onClick = { confirmAgent = false }) { Text("Keep editing") } },
+    )
   }
 
   if (confirmDiscard) {

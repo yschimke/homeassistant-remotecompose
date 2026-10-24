@@ -76,7 +76,11 @@ class AgentEditScreenTest {
     }
   }
 
-  private fun ComposeUiTest.show(edits: FakeEdits, shared: MutableList<String>) = setContent {
+  private fun ComposeUiTest.show(
+    edits: FakeEdits,
+    shared: MutableList<String>,
+    writeBlockedReason: String? = null,
+  ) = setContent {
     AgentEditScreen(
       edits = edits,
       urlPath = "garden",
@@ -85,6 +89,7 @@ class AgentEditScreenTest {
       onBack = {},
       onSharePrompt = { shared += it },
       onApplied = {},
+      writeBlockedReason = writeBlockedReason,
     ) { _, card ->
       Text("card:${card.type}:${card.raw["entity"]}")
     }
@@ -160,5 +165,21 @@ class AgentEditScreenTest {
   fun aDraftIsDrawnAsADashboard() {
     assertEquals(null, previewDashboard(null))
     assertEquals(1, previewDashboard(draftConfig)?.views?.size)
+  }
+
+  @Test
+  fun readOnlyModeReviewsButNeverApplies() = runComposeUiTest {
+    val edits = FakeEdits()
+    edits.current.value =
+      AgentEditSession(
+        id = "s1",
+        drafts = listOf(AgentEditSession.Draft("d1", "Pump tile", config = draftConfig)),
+      )
+    show(edits, mutableListOf(), writeBlockedReason = "Read-only mode is on.")
+    onNodeWithText("Start edit session").performClick()
+    waitUntil { onAllNodesWithText("Apply").fetchSemanticsNodes().isNotEmpty() }
+    onNodeWithText("Apply").assertIsNotEnabled()
+    onNodeWithText("Read-only mode is on. Drafts can be reviewed but not applied.").assertExists()
+    onNodeWithText("card:tile:\"switch.pump\"").assertExists()
   }
 }

@@ -521,6 +521,7 @@ private fun AgentEditEntry(
       onAction = {},
       onToggle = {},
       onService = { _, _, _ -> },
+      readOnly = true,
     )
   }
 }
