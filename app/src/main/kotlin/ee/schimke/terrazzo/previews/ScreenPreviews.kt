@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +31,7 @@ import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HistoryPoint
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.AssistantAccessSetting
 import ee.schimke.terrazzo.CardStyleSection
@@ -72,7 +72,9 @@ import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.dashboard.EntityMoreInfo
 import ee.schimke.terrazzo.dashboard.ManagePinnedContent
 import ee.schimke.terrazzo.dashboard.PinRowItem
+import ee.schimke.terrazzo.dashboard.ProvideScreenSkin
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
+import ee.schimke.terrazzo.dashboard.currentScreenSkin
 import ee.schimke.terrazzo.dashboard.historyEntityIds
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.image.HaImageStack
@@ -191,6 +193,7 @@ private fun rememberPreviewGraph(): TerrazzoGraph {
 private fun PhoneHost(
   style: ThemeStyle = ThemeStyle.TerrazzoHome,
   darkMode: DarkModePref = DarkModePref.Follow,
+  cardStyle: HaUberTheme = HaUberTheme.Classic,
   content: @Composable () -> Unit,
 ) {
   val graph = rememberPreviewGraph()
@@ -199,7 +202,7 @@ private fun PhoneHost(
   val context = LocalContext.current.applicationContext
   val imageStack =
     remember(context) { HaImageStack(context, graph.lanConnectionPolicy, graph.remoteUrlStore) }
-  TerrazzoTheme(style = style, darkMode = darkMode) {
+  TerrazzoTheme(style = style, darkMode = darkMode, cardStyle = cardStyle) {
     CompositionLocalProvider(
       LocalTerrazzoGraph provides graph,
       LocalHaImageStack provides imageStack,
@@ -723,27 +726,31 @@ private val MORE_INFO_SWITCH_HISTORY: List<HistoryPoint> =
     }
 
 /**
- * The more-info sheet as it sits over a dashboard: the lower part of the screen, rounded on top.
+ * The more-info sheet as it sits over a dashboard: the lower part of the screen, rounded on top,
+ * skinned in the host's card style.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MoreInfoSheetFrame(state: EntityState, history: List<HistoryPoint>) {
   Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.32f))) {
-    Surface(
-      shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-      color = BottomSheetDefaults.ContainerColor,
-      modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().heightIn(max = 760.dp),
-    ) {
-      Column {
-        BottomSheetDefaults.DragHandle(Modifier.align(Alignment.CenterHorizontally))
-        EntityMoreInfo(
-          entityId = state.entityId,
-          state = state,
-          loadHistory = { history },
-          onOpenHistory = {},
-          initialHistory = history,
-          nowMs = { MORE_INFO_NOW_MS },
-        )
+    ProvideScreenSkin {
+      val skin = currentScreenSkin()
+      Surface(
+        shape = skin.sheetShape,
+        color = skin.background,
+        modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().heightIn(max = 760.dp),
+      ) {
+        Column {
+          BottomSheetDefaults.DragHandle(Modifier.align(Alignment.CenterHorizontally))
+          EntityMoreInfo(
+            entityId = state.entityId,
+            state = state,
+            loadHistory = { history },
+            onOpenHistory = {},
+            initialHistory = history,
+            nowMs = { MORE_INFO_NOW_MS },
+          )
+        }
       }
     }
   }
@@ -781,6 +788,34 @@ fun Screen_MoreInfo_OnOff() = PhoneHost {
 fun Screen_MoreInfo_Numeric_ThemeStyle(
   @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle
 ) = PhoneHost(style = style) { MoreInfoSheetFrame(MORE_INFO_POWER_STATE, MORE_INFO_POWER_HISTORY) }
+
+@Preview(
+  name = "more info · numeric · card style",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_MoreInfo_Numeric_CardStyle(
+  @PreviewParameter(CardStyleProvider::class) cardStyle: HaUberTheme
+) =
+  PhoneHost(cardStyle = cardStyle) {
+    MoreInfoSheetFrame(MORE_INFO_POWER_STATE, MORE_INFO_POWER_HISTORY)
+  }
+
+@Preview(
+  name = "more info · on/off · card style",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_MoreInfo_OnOff_CardStyle(
+  @PreviewParameter(CardStyleProvider::class) cardStyle: HaUberTheme
+) =
+  PhoneHost(cardStyle = cardStyle) {
+    MoreInfoSheetFrame(MORE_INFO_SWITCH_STATE, MORE_INFO_SWITCH_HISTORY)
+  }
 
 @Preview(
   name = "more info · on/off · dark",
@@ -1146,6 +1181,13 @@ fun Screen_SyncDiagnostics() = PhoneHost {
 
 class ThemeStyleProvider : PreviewParameterProvider<ThemeStyle> {
   override val values: Sequence<ThemeStyle> = ThemeStyle.entries.asSequence()
+}
+
+/** Every card style ([HaUberTheme]), for the skinned secondary screens. */
+class CardStyleProvider : PreviewParameterProvider<HaUberTheme> {
+  override val values: Sequence<HaUberTheme> = HaUberTheme.all.asSequence()
+
+  override fun getDisplayName(index: Int): String = HaUberTheme.all[index].id
 }
 
 // --- Play Store listing graphics ----------------------------------------

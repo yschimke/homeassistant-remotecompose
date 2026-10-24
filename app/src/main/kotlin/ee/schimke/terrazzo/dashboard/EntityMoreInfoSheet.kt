@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo.dashboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
@@ -26,7 +29,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -39,13 +41,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.HaStateColor
+import ee.schimke.ha.rc.components.HaReadoutStyle
 import ee.schimke.ha.rc.icons.HaIconMap
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -80,13 +83,23 @@ fun EntityMoreInfoSheet(
   onDismiss: () -> Unit,
 ) {
   val sheetState = rememberModalBottomSheetState()
-  ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-    EntityMoreInfo(entityId, state, loadHistory, onOpenHistory)
+  ProvideScreenSkin {
+    val skin = currentScreenSkin()
+    ModalBottomSheet(
+      onDismissRequest = onDismiss,
+      sheetState = sheetState,
+      shape = skin.sheetShape,
+      containerColor = skin.background,
+      contentColor = MaterialTheme.colorScheme.onSurface,
+    ) {
+      EntityMoreInfo(entityId, state, loadHistory, onOpenHistory)
+    }
   }
 }
 
 /**
- * The sheet's content, apart from the sheet so a preview can draw it. [initialHistory] seeds the
+ * The sheet's content, apart from the sheet so a preview can draw it; it draws in the
+ * [currentScreenSkin], so the caller provides one ([ProvideScreenSkin]). [initialHistory] seeds the
  * default range's history so a screenshot shows the settled chart rather than the loading state;
  * [nowMs] is the end of the window, a frozen clock in previews.
  */
@@ -104,7 +117,10 @@ fun EntityMoreInfo(
   val attributes = state?.attributes.orEmpty()
   val name = attributes["friendly_name"]?.jsonPrimitive?.contentOrNull ?: entityId
   val unit = attributes["unit_of_measurement"]?.jsonPrimitive?.contentOrNull
-  val accent = remember(state) { state?.let { HaStateColor.activeFor(it) } ?: HaStateColor.Neutral }
+  val skin = currentScreenSkin()
+  val stateAccent =
+    remember(state) { state?.let { HaStateColor.activeFor(it) } ?: HaStateColor.Neutral }
+  val accent = skinnedAccent(stateAccent)
   var hours by rememberSaveable { mutableIntStateOf(DEFAULT_HOURS) }
 
   // Null while a range loads; seeded for the default range so a preview needs no fetch.
@@ -128,26 +144,27 @@ fun EntityMoreInfo(
     verticalArrangement = Arrangement.spacedBy(16.dp),
   ) {
     Header(name, entityId, state, accent)
-    Hero(state, unit, nowMs)
+    Hero(state, unit, accent, nowMs)
 
     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
       RANGES.forEachIndexed { index, (label, rangeHours) ->
         SegmentedButton(
           selected = hours == rangeHours,
           onClick = { hours = rangeHours },
-          shape = SegmentedButtonDefaults.itemShape(index, RANGES.size),
+          shape =
+            SegmentedButtonDefaults.itemShape(
+              index,
+              RANGES.size,
+              baseShape = RoundedCornerShape(skin.controlCorner),
+            ),
           icon = {},
         ) {
-          Text(label)
+          Text(skin.label(label))
         }
       }
     }
 
-    Surface(
-      shape = MaterialTheme.shapes.large,
-      color = MaterialTheme.colorScheme.surfaceContainerHigh,
-      modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-    ) {
+    SkinPanel(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
       Box(Modifier.padding(16.dp)) { HistoryPanel(history, unit, hours, accent, nowMs) }
     }
 
@@ -159,6 +176,7 @@ fun EntityMoreInfo(
       FilledTonalButton(
         onClick = onOpenHistory,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+        shape = skin.badgeShape,
       ) {
         Icon(
           Icons.AutoMirrored.Filled.OpenInNew,
@@ -166,7 +184,7 @@ fun EntityMoreInfo(
           modifier = Modifier.size(18.dp),
         )
         Spacer(Modifier.width(8.dp))
-        Text("Open history in Home Assistant")
+        Text(skin.label("Open history in Home Assistant"))
       }
     }
   }
@@ -182,7 +200,7 @@ private fun Header(name: String, entityId: String, state: EntityState?, accent: 
   ) {
     val icon = remember(state) { state?.let { HaIconMap.resolveForState(null, it) } }
     Box(
-      Modifier.size(48.dp).background(accent.copy(alpha = 0.18f), CircleShape),
+      Modifier.size(48.dp).background(accent.copy(alpha = 0.18f), currentScreenSkin().badgeShape),
       contentAlignment = Alignment.Center,
     ) {
       Icon(
@@ -210,28 +228,75 @@ private fun Header(name: String, entityId: String, state: EntityState?, accent: 
   }
 }
 
-/** The current value large, its unit beside it, and how long it has held. */
+/**
+ * The current value large, its unit beside it, and how long it has held. The value is set in the
+ * card style's readout: plain, on a tonal pill (Expressive), under a ruled caption plate
+ * (Trinitron, Console) or in a recessed screen (LCD); an inked style prints it in its ink.
+ */
 @Composable
-private fun Hero(state: EntityState?, unit: String?, nowMs: () -> Long) {
-  Column(Modifier.padding(horizontal = 24.dp)) {
+private fun Hero(state: EntityState?, unit: String?, accent: Color, nowMs: () -> Long) {
+  val skin = currentScreenSkin()
+  val valueColor = skin.ink ?: MaterialTheme.colorScheme.onSurface
+  val value: @Composable () -> Unit = {
     Row(verticalAlignment = Alignment.Bottom) {
       Text(
         state?.state?.let { displayState(it) } ?: "Unavailable",
         style = MaterialTheme.typography.displaySmall,
-        fontWeight = FontWeight.Medium,
+        fontWeight = skin.valueWeight,
+        color = valueColor,
       )
       if (unit != null && state?.state?.toFloatOrNull() != null) {
         Text(
           " $unit",
           style = MaterialTheme.typography.titleLarge,
-          color = MaterialTheme.colorScheme.onSurfaceVariant,
+          color = skin.ink?.copy(alpha = 0.75f) ?: MaterialTheme.colorScheme.onSurfaceVariant,
           modifier = Modifier.padding(bottom = 4.dp),
         )
       }
     }
+  }
+  Column(Modifier.padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    when (skin.readout) {
+      HaReadoutStyle.Plain -> value()
+      HaReadoutStyle.TonalPill ->
+        Box(
+          Modifier.background(accent.copy(alpha = 0.16f), skin.badgeShape)
+            .padding(horizontal = 18.dp, vertical = 6.dp)
+        ) {
+          value()
+        }
+      HaReadoutStyle.Plate ->
+        Column {
+          Text(
+            skin.label("Now"),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
+          HorizontalDivider(
+            Modifier.padding(vertical = 4.dp),
+            color = MaterialTheme.colorScheme.outlineVariant,
+          )
+          value()
+        }
+      HaReadoutStyle.Screen ->
+        Box(
+          Modifier.fillMaxWidth()
+            .background(skin.tile, RoundedCornerShape(skin.controlCorner))
+            .border(
+              2.dp,
+              MaterialTheme.colorScheme.outlineVariant,
+              RoundedCornerShape(skin.controlCorner),
+            )
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+          value()
+        }
+    }
     state?.lastChanged?.let { changed ->
       Text(
-        "Since ${clockLabel(changed)} · ${durationLabel(nowMs() - changed.toEpochMilliseconds())}",
+        skin.label(
+          "Since ${clockLabel(changed)} · ${durationLabel(nowMs() - changed.toEpochMilliseconds())}"
+        ),
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
@@ -308,31 +373,36 @@ private fun HistoryStats(
     Modifier.fillMaxWidth().padding(horizontal = 16.dp),
     horizontalArrangement = Arrangement.spacedBy(8.dp),
   ) {
+    val skin = currentScreenSkin()
     stats.forEach { stat ->
-      Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        modifier = Modifier.weight(1f),
-      ) {
+      SkinPanel(Modifier.weight(1f), tile = true) {
         Column(
-          Modifier.padding(vertical = 12.dp, horizontal = 8.dp),
+          Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 8.dp),
           horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-          Text(
+          // Shrinks to fit rather than truncating: a monospace, tracked style (Trinitron, LCD)
+          // sets "18 h 13 min" wider than a tile.
+          val valueStyle = MaterialTheme.typography.titleMedium
+          BasicText(
             stat.value,
-            style = MaterialTheme.typography.titleMedium,
+            style =
+              valueStyle.copy(
+                fontWeight = skin.valueWeight,
+                color = skin.ink ?: MaterialTheme.colorScheme.onSurface,
+              ),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            autoSize =
+              TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = valueStyle.fontSize),
           )
           Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
           ) {
             stat.keyState?.let { key ->
-              Box(Modifier.size(8.dp).background(timelineColor(key, accent), CircleShape))
+              Box(Modifier.size(8.dp).background(timelineColor(key, accent), skin.badgeShape))
             }
             Text(
-              stat.label,
+              skin.label(stat.label),
               style = MaterialTheme.typography.labelMedium,
               color = MaterialTheme.colorScheme.onSurfaceVariant,
               maxLines = 1,
@@ -364,18 +434,15 @@ private fun Attributes(state: EntityState?, attributes: Map<String, JsonElement>
       }
   }
   if (rows.isEmpty()) return
+  val skin = currentScreenSkin()
   Column(Modifier.padding(horizontal = 16.dp)) {
     Text(
-      "Details",
+      skin.label("Details"),
       style = MaterialTheme.typography.titleSmall,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
       modifier = Modifier.padding(start = 8.dp, bottom = 8.dp),
     )
-    Surface(
-      shape = MaterialTheme.shapes.large,
-      color = MaterialTheme.colorScheme.surfaceContainerHigh,
-      modifier = Modifier.fillMaxWidth(),
-    ) {
+    SkinPanel(Modifier.fillMaxWidth()) {
       Column {
         rows.forEachIndexed { index, (label, value) ->
           if (index > 0) {

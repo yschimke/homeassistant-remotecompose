@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo.dashboard
 
 import android.graphics.Paint
+import android.graphics.Typeface
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,17 +17,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,7 +47,8 @@ import kotlin.math.pow
  * the top-left, "nice"-rounded value gridlines run across with right-aligned labels, and the time
  * axis is labelled along the bottom. Points are plotted against their real timestamps, so a sparse
  * window reads as sparse rather than being stretched evenly across the width. The line is drawn in
- * [lineColor] over a fade of the same colour, ending in a dot at the latest value.
+ * [lineColor] the way the skin's [style] says: smooth or stepped, over a fade of the same colour or
+ * bare, with a glow beneath, ending in a dot at the latest value.
  */
 @Composable
 internal fun NumericHistoryChart(
@@ -53,10 +58,12 @@ internal fun NumericHistoryChart(
   modifier: Modifier = Modifier,
   lineColor: Color = MaterialTheme.colorScheme.primary,
   height: Dp = 180.dp,
+  style: HistoryChartStyle = currentScreenSkin().chart,
 ) {
   val gridColor = MaterialTheme.colorScheme.outlineVariant
   val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-  val dotRing = MaterialTheme.colorScheme.surface
+  val dotRing = currentScreenSkin().panel
+  val typeface = MaterialTheme.typography.labelSmall.fontFamily.toTypeface()
   val density = LocalDensity.current
 
   val values = remember(series) { series.map { it.second } }
@@ -66,9 +73,10 @@ internal fun NumericHistoryChart(
   val tSpan = (tMax - tMin).takeIf { it > 0L } ?: 1L
 
   val labelPaint =
-    remember(labelColor, density) {
+    remember(labelColor, density, typeface) {
       Paint().apply {
         isAntiAlias = true
+        this.typeface = typeface
         color = labelColor.toArgb()
         textSize = with(density) { 11.sp.toPx() }
       }
@@ -93,6 +101,9 @@ internal fun NumericHistoryChart(
 
     // Horizontal value gridlines + right-aligned labels in the left gutter.
     labelPaint.textAlign = Paint.Align.RIGHT
+    val gridDash =
+      if (style.dashedGrid) PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 3.dp.toPx()))
+      else null
     axis.ticks.forEach { tick ->
       val y = yOf(tick)
       drawLine(
@@ -100,6 +111,7 @@ internal fun NumericHistoryChart(
         start = Offset(left, y),
         end = Offset(right, y),
         strokeWidth = 1.dp.toPx(),
+        pathEffect = gridDash,
       )
       drawContext.canvas.nativeCanvas.drawText(
         axisLabel(tick),
@@ -130,10 +142,20 @@ internal fun NumericHistoryChart(
     }
 
     val line = Path()
+    var lastY = 0f
     series.forEachIndexed { i, (t, v) ->
       val x = xOf(t)
       val y = yOf(v)
-      if (i == 0) line.moveTo(x, y) else line.lineTo(x, y)
+      when {
+        i == 0 -> line.moveTo(x, y)
+        // A stepped trace holds each value until the next sample, as a meter reads.
+        style.stepped -> {
+          line.lineTo(x, lastY)
+          line.lineTo(x, y)
+        }
+        else -> line.lineTo(x, y)
+      }
+      lastY = y
     }
     val area =
       Path().apply {
@@ -142,23 +164,36 @@ internal fun NumericHistoryChart(
         lineTo(xOf(tMin), bottom)
         close()
       }
-    drawPath(
-      path = area,
-      brush =
-        Brush.verticalGradient(
-          listOf(lineColor.copy(alpha = 0.28f), lineColor.copy(alpha = 0f)),
-          startY = top,
-          endY = bottom,
-        ),
-    )
+    if (style.fill)
+      drawPath(
+        path = area,
+        brush =
+          Brush.verticalGradient(
+            listOf(lineColor.copy(alpha = 0.28f), lineColor.copy(alpha = 0f)),
+            startY = top,
+            endY = bottom,
+          ),
+      )
+    val lineWidth = style.lineWidth.toPx()
+    val join = if (style.stepped) StrokeJoin.Miter else StrokeJoin.Round
+    val cap = if (style.stepped) StrokeCap.Square else StrokeCap.Round
+    if (style.glow) {
+      drawPath(
+        path = line,
+        color = lineColor.copy(alpha = 0.22f),
+        style = Stroke(width = lineWidth * 4f, cap = StrokeCap.Round, join = StrokeJoin.Round),
+      )
+    }
     drawPath(
       path = line,
       color = lineColor,
-      style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+      style = Stroke(width = lineWidth, cap = cap, join = join),
     )
-    val end = Offset(xOf(tMax), yOf(series.last().second))
-    drawCircle(color = dotRing, radius = 5.dp.toPx(), center = end)
-    drawCircle(color = lineColor, radius = 3.5.dp.toPx(), center = end)
+    if (style.endDot) {
+      val end = Offset(xOf(tMax), yOf(series.last().second))
+      drawCircle(color = dotRing, radius = lineWidth + 3.dp.toPx(), center = end)
+      drawCircle(color = lineColor, radius = lineWidth + 1.5.dp.toPx(), center = end)
+    }
   }
 }
 
@@ -166,8 +201,9 @@ internal fun NumericHistoryChart(
  * On/off-style timeline for non-numeric entities: each state run is a coloured segment sized by its
  * share of the window, the last running on to [endMs]. "Active" states (`on`, `open`, `home`,
  * `playing`, …) read in [activeColor]; `unavailable` and `unknown` in a faint outline tone;
- * everything else in a muted surface tone. With [hours] set, the window's start, middle and end
- * times are labelled underneath.
+ * everything else in a muted surface tone. The skin's [style] draws it as one bar, as runs with
+ * gaps between them, or as a strip of lit cells (a segment LCD, an LED meter). With [hours] set,
+ * the window's start, middle and end times are labelled underneath.
  */
 @Composable
 internal fun StateTimeline(
@@ -177,6 +213,7 @@ internal fun StateTimeline(
   activeColor: Color = MaterialTheme.colorScheme.primary,
   hours: Int? = null,
   barHeight: Dp = 20.dp,
+  style: HistoryChartStyle = currentScreenSkin().chart,
 ) {
   val idleColor = timelineColor("off", activeColor)
   val missingColor = timelineColor("unavailable", activeColor)
@@ -184,28 +221,68 @@ internal fun StateTimeline(
   val tsEnd = maxOf(endMs, points.last().ts.toEpochMilliseconds())
   val span = (tsEnd - tsStart).takeIf { it > 0 } ?: 1L
   Column(modifier.fillMaxWidth()) {
+    // One continuous bar is rounded at its two ends; runs with gaps and cells round their own.
+    val clip =
+      if (style.cells || style.segmentGap > 0.dp) Modifier
+      else Modifier.clip(RoundedCornerShape(barHeight * style.cornerFraction))
     Canvas(
-      modifier =
-        Modifier.fillMaxWidth()
-          .padding(vertical = 4.dp)
-          .height(barHeight)
-          .clip(RoundedCornerShape(barHeight / 4))
+      modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).height(barHeight).then(clip)
     ) {
-      points.forEachIndexed { i, point ->
+      fun colorOf(state: String) =
+        when {
+          state.isActiveState() -> activeColor
+          state.isMissingState() -> missingColor
+          else -> idleColor
+        }
+      val radius = CornerRadius(size.height * style.cornerFraction)
+      if (style.cells) {
+        // Fixed cells, each lit in the state at its middle.
+        val gap = 2.dp.toPx()
+        val count = ((size.width + gap) / (6.dp.toPx() + gap)).toInt().coerceAtLeast(1)
+        val cellW = (size.width - gap * (count - 1)) / count
+        var run = 0
+        for (c in 0 until count) {
+          val t = tsStart + ((c + 0.5f) / count * span).toLong()
+          while (run + 1 < points.size && points[run + 1].ts.toEpochMilliseconds() <= t) run++
+          drawRoundRect(
+            color = colorOf(points[run].state),
+            topLeft = Offset(c * (cellW + gap), 0f),
+            size = Size(cellW, size.height),
+            cornerRadius = CornerRadius(minOf(radius.x, cellW / 2)),
+          )
+        }
+        return@Canvas
+      }
+      val gap = style.segmentGap.toPx()
+      // Join consecutive samples of one state into a single run.
+      val runs = buildList {
+        points.forEachIndexed { i, point ->
+          if (i > 0 && points[i - 1].state == point.state) return@forEachIndexed
+          add(point)
+        }
+      }
+      runs.forEachIndexed { i, point ->
         val segStart = point.ts.toEpochMilliseconds()
-        val segEnd = points.getOrNull(i + 1)?.ts?.toEpochMilliseconds() ?: tsEnd
-        val x0 = ((segStart - tsStart).toFloat() / span) * size.width
-        val x1 = ((segEnd - tsStart).toFloat() / span) * size.width
-        drawRect(
-          color =
-            when {
-              point.state.isActiveState() -> activeColor
-              point.state.isMissingState() -> missingColor
-              else -> idleColor
-            },
-          topLeft = Offset(x0, 0f),
-          size = Size((x1 - x0).coerceAtLeast(1f), size.height),
-        )
+        val segEnd = runs.getOrNull(i + 1)?.ts?.toEpochMilliseconds() ?: tsEnd
+        val x0 = ((segStart - tsStart).toFloat() / span) * size.width + if (i > 0) gap / 2 else 0f
+        val x1 =
+          ((segEnd - tsStart).toFloat() / span) * size.width -
+            if (i < runs.lastIndex) gap / 2 else 0f
+        val w = (x1 - x0).coerceAtLeast(1f)
+        if (gap > 0f) {
+          drawRoundRect(
+            color = colorOf(point.state),
+            topLeft = Offset(x0, 0f),
+            size = Size(w, size.height),
+            cornerRadius = CornerRadius(minOf(radius.x, w / 2)),
+          )
+        } else {
+          drawRect(
+            color = colorOf(point.state),
+            topLeft = Offset(x0, 0f),
+            size = Size(w, size.height),
+          )
+        }
       }
     }
     if (hours != null) {
@@ -242,6 +319,14 @@ internal fun timelineColor(state: String, activeColor: Color): Color =
     state.isActiveState() -> activeColor
     state.isMissingState() -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)
     else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+  }
+
+/** The platform typeface for a skin's font family, for text drawn on a canvas. */
+private fun FontFamily?.toTypeface(): Typeface =
+  when (this) {
+    FontFamily.Monospace -> Typeface.MONOSPACE
+    FontFamily.Serif -> Typeface.SERIF
+    else -> Typeface.DEFAULT
   }
 
 private val ACTIVE_STATES = setOf("on", "open", "home", "playing", "active", "unlocked", "detected")

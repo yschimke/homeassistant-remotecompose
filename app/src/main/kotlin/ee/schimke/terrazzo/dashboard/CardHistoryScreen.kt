@@ -113,58 +113,63 @@ fun CardHistoryScreen(
   val entityIds = remember(card) { card.historyEntityIds() }
   var hours by remember { mutableIntStateOf(24) }
 
-  Scaffold(
-    topBar = {
-      TopAppBar(
-        title = {
-          Text(text = card.historyTitle(), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        },
-        navigationIcon = {
-          IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-          }
-        },
-        actions = {
-          onShowActions?.let { show ->
-            IconButton(onClick = show) {
-              Icon(Icons.Filled.MoreVert, contentDescription = "Card actions")
+  // Skinned in the card style, as the more-info sheet is: the card above sits on its own dashboard
+  // background and the charts below draw in the style's grammar.
+  ProvideScreenSkin {
+    Scaffold(
+      topBar = {
+        TopAppBar(
+          title = {
+            Text(text = card.historyTitle(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+          },
+          navigationIcon = {
+            IconButton(onClick = onBack) {
+              Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
             }
-          }
-        },
-      )
-    }
-  ) { innerPadding ->
-    Column(
-      modifier =
-        Modifier.fillMaxSize()
-          .padding(innerPadding)
-          .consumeWindowInsets(innerPadding)
-          .padding(contentPadding)
-          .consumeWindowInsets(contentPadding)
-          .verticalScroll(rememberScrollState())
-          .padding(horizontal = 16.dp, vertical = 8.dp),
-      verticalArrangement = Arrangement.spacedBy(20.dp),
-    ) {
-      DashboardCardPreview(session, card, snapshot)
-
-      if (entityIds.isEmpty()) {
-        Text(
-          "This card isn't linked to a Home Assistant entity, so there's " + "no history to show.",
-          style = MaterialTheme.typography.bodyMedium,
-          color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-      } else {
-        HistorySection(
-          session = session,
-          entityIds = entityIds,
-          snapshot = snapshot,
-          hours = hours,
-          onHoursChange = { hours = it },
-          initialHistory = initialHistory,
+          },
+          actions = {
+            onShowActions?.let { show ->
+              IconButton(onClick = show) {
+                Icon(Icons.Filled.MoreVert, contentDescription = "Card actions")
+              }
+            }
+          },
         )
       }
+    ) { innerPadding ->
+      Column(
+        modifier =
+          Modifier.fillMaxSize()
+            .padding(innerPadding)
+            .consumeWindowInsets(innerPadding)
+            .padding(contentPadding)
+            .consumeWindowInsets(contentPadding)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+      ) {
+        DashboardCardPreview(session, card, snapshot)
 
-      OpenInHomeAssistant(session = session, entityIds = entityIds)
+        if (entityIds.isEmpty()) {
+          Text(
+            "This card isn't linked to a Home Assistant entity, so there's " +
+              "no history to show.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
+        } else {
+          HistorySection(
+            session = session,
+            entityIds = entityIds,
+            snapshot = snapshot,
+            hours = hours,
+            onHoursChange = { hours = it },
+            initialHistory = initialHistory,
+          )
+        }
+
+        OpenInHomeAssistant(session = session, entityIds = entityIds)
+      }
     }
   }
 }
