@@ -11,11 +11,13 @@ import ee.schimke.ha.rc.cards.ButtonCardConverter
 import ee.schimke.ha.rc.cards.CalendarCardConverter
 import ee.schimke.ha.rc.cards.ClockCardConverter
 import ee.schimke.ha.rc.cards.EntityCardConverter
+import ee.schimke.ha.rc.cards.GaugeCardConverter
 import ee.schimke.ha.rc.cards.HeadingCardConverter
 import ee.schimke.ha.rc.cards.HumidifierCardConverter
 import ee.schimke.ha.rc.cards.LightCardConverter
 import ee.schimke.ha.rc.cards.LogbookCardConverter
 import ee.schimke.ha.rc.cards.SensorCardConverter
+import ee.schimke.ha.rc.cards.StatisticCardConverter
 import ee.schimke.ha.rc.cards.ThermostatCardConverter
 import ee.schimke.ha.rc.cards.TileCardConverter
 import ee.schimke.ha.rc.cards.TodoListCardConverter
@@ -355,6 +357,35 @@ class WearCardDesignParityTest {
         """{"type":"humidifier","entity":"humidifier.bedroom"}""",
         """{"type":"light","entity":"light.kitchen"}""",
         """{"type":"light","entity":"light.hall"}""",
+      ),
+    )
+  }
+
+  @Test
+  fun valueDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "sensor.temperature" to
+              EntityState(
+                "sensor.temperature",
+                "21.5",
+                attributes("""{"unit_of_measurement":"°C","device_class":"temperature"}"""),
+              ),
+            "sensor.power" to
+              EntityState("sensor.power", "640", attributes("""{"unit_of_measurement":"W"}""")),
+          )
+      )
+    assertWearParity(
+      "value designs",
+      listOf(GaugeCardConverter(), StatisticCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"gauge","entity":"sensor.temperature"}""",
+        """{"type":"gauge","entity":"sensor.power","min":0,"max":3000,"severity":{"green":0,"yellow":1500,"red":2500}}""",
+        """{"type":"statistic","entity":"sensor.temperature","stat_type":"mean"}""",
+        """{"type":"statistic","entity":"sensor.power","name":"Power","stat_type":"max","period":"day"}""",
       ),
     )
   }
