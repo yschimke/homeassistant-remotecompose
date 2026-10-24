@@ -1,7 +1,5 @@
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
@@ -9,24 +7,17 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.HistoryPoint
-import ee.schimke.ha.rc.BreakpointAxis
-import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
-import ee.schimke.ha.rc.LocalCardSizeMode
-import ee.schimke.ha.rc.LocalFixedCanvasAxis
-import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HISTORY_PLOT_HEIGHT_DP
 import ee.schimke.ha.rc.components.HaHistoryGraphData
 import ee.schimke.ha.rc.components.HaHistoryGraphRow
 import ee.schimke.ha.rc.components.LiveValues
-import ee.schimke.ha.rc.components.RemoteHaHistoryGraph
-import ee.schimke.ha.rc.components.RemoteHaHistoryGraphIdentity
 import ee.schimke.ha.rc.components.placeholderTitle
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -45,7 +36,7 @@ import kotlinx.serialization.json.putJsonArray
  * document. The y-axis range is fixed at encode time from the captured samples — values that drift
  * well outside the initial range will clip to the canvas, in which case the host should re-encode.
  */
-class HistoryGraphCardConverter : CardConverter {
+class HistoryGraphCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.HISTORY_GRAPH
 
   // Baked, non-bindable content (see CardConverter.dataSignature):
@@ -134,8 +125,9 @@ class HistoryGraphCardConverter : CardConverter {
     )
   }
 
+  /** What [card] shows: its title, range and a row per entity with its history. */
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  internal fun historyData(card: CardConfig, snapshot: HaSnapshot): HaHistoryGraphData {
     val title = card.raw["title"]?.jsonPrimitive?.content
     val ids = entityIds(card)
 
@@ -155,52 +147,12 @@ class HistoryGraphCardConverter : CardConverter {
       )
     }
 
-    val data =
-      HaHistoryGraphData(
-        title = title,
-        rangeLabel = historyRangeLabel(card),
-        rows = rows,
-        emptyLabel = historyEmptyLabel(card),
-      )
-
-    when (LocalCardSizeMode.current) {
-      // Dashboard: the full per-row graph (HA reference), each trace at the family's framed
-      // height. Fixed cells keep the compact trace.
-      CardSizeMode.Wrap ->
-        RemoteHaHistoryGraph(
-          data,
-          modifier = modifier,
-          singleEmptyState = true,
-          plotHeightDp = HISTORY_PLOT_HEIGHT_DP,
-        )
-      // Launcher / Wear: a single width gate (alpha010 collapses
-      // multi-rung ladders to tier 0 — #224, see GaugeCardConverter).
-      // Narrow → identity tier (first spark + latest value); wider →
-      // the full graph, which fills the larger cell by drawing every
-      // series. Width, not height: every Fixed-mode surface pins
-      // width and lets height follow (see EntitiesCardConverter).
-      CardSizeMode.Fixed -> {
-        // Only a Wear slot's height is too small for the empty state's title over its sentence;
-        // a launcher widget's cell has room for it, and the one-line form would leave it blank.
-        val compactEmptyState = LocalFixedCanvasAxis.current == BreakpointAxis.Height
-        RemoteSizeBreakpoint(
-          thresholdsDp = intArrayOf(BULK_IDENTITY_THRESHOLD_DP),
-          modifier = modifier,
-          axis = BreakpointAxis.Width,
-        ) { tier ->
-          if (tier == 0) {
-            RemoteHaHistoryGraphIdentity(data, RemoteModifier.fillMaxWidth())
-          } else {
-            RemoteHaHistoryGraph(
-              data,
-              RemoteModifier.fillMaxWidth(),
-              singleEmptyState = true,
-              compactEmptyState = compactEmptyState,
-            )
-          }
-        }
-      }
-    }
+    return HaHistoryGraphData(
+      title = title,
+      rangeLabel = historyRangeLabel(card),
+      rows = rows,
+      emptyLabel = historyEmptyLabel(card),
+    )
   }
 }
 

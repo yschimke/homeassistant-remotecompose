@@ -13,11 +13,14 @@ import ee.schimke.ha.rc.cards.ClockCardConverter
 import ee.schimke.ha.rc.cards.EntityCardConverter
 import ee.schimke.ha.rc.cards.GaugeCardConverter
 import ee.schimke.ha.rc.cards.HeadingCardConverter
+import ee.schimke.ha.rc.cards.HistoryGraphCardConverter
 import ee.schimke.ha.rc.cards.HumidifierCardConverter
 import ee.schimke.ha.rc.cards.LightCardConverter
 import ee.schimke.ha.rc.cards.LogbookCardConverter
+import ee.schimke.ha.rc.cards.MarkdownCardConverter
 import ee.schimke.ha.rc.cards.SensorCardConverter
 import ee.schimke.ha.rc.cards.StatisticCardConverter
+import ee.schimke.ha.rc.cards.StatisticsGraphCardConverter
 import ee.schimke.ha.rc.cards.ThermostatCardConverter
 import ee.schimke.ha.rc.cards.TileCardConverter
 import ee.schimke.ha.rc.cards.TodoListCardConverter
@@ -428,6 +431,36 @@ class WearCardDesignParityTest {
         """{"type":"calendar","entities":["calendar.home"]}""",
         """{"type":"todo-list","entity":"todo.shopping"}""",
         """{"type":"todo-list","entity":"todo.shopping","title":"Shopping"}""",
+      ),
+    )
+  }
+
+  @Test
+  fun graphDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "sensor.temperature" to
+              EntityState(
+                "sensor.temperature",
+                "21.5",
+                attributes("""{"unit_of_measurement":"°C","device_class":"temperature"}"""),
+              ),
+            "sensor.energy" to
+              EntityState("sensor.energy", "12.5", attributes("""{"unit_of_measurement":"kWh"}""")),
+          )
+      )
+    assertWearParity(
+      "graph designs",
+      listOf(HistoryGraphCardConverter(), StatisticsGraphCardConverter(), MarkdownCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"history-graph","entities":["sensor.temperature"]}""",
+        """{"type":"history-graph","title":"Climate","entities":["sensor.temperature","sensor.energy"]}""",
+        """{"type":"statistics-graph","entities":["sensor.energy"]}""",
+        """{"type":"markdown","content":"**Hello** there"}""",
+        """{"type":"markdown","title":"Notes","content":"# Today\n- bins out"}""",
       ),
     )
   }
