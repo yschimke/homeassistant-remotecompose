@@ -62,8 +62,12 @@ takes an app address and a name of your choice. It is on every Wasmo distributio
 entry in the Wasmo repository is needed. (The hardcoded `AppCatalog.kt` list, which carries a
 placeholder **Smart Home** entry, is only the built-in catalog, not the only way in.)
 
-1. Publish `terrazzo.wasmo` at an HTTPS URL. A GitHub release asset is the simplest stable source,
-   e.g. `https://github.com/yschimke/homeassistant-remotecompose/releases/latest/download/terrazzo.wasmo`.
+1. Use the published `terrazzo.wasmo`. Each release attaches it (the
+   [`Home Assistant plugin`](../../.github/workflows/home-assistant-plugin.yml) workflow builds
+   `:app-ui:wasmoApp` and uploads it), so the latest build is always at the stable URL
+   `https://github.com/yschimke/homeassistant-remotecompose/releases/latest/download/terrazzo.wasmo`.
+   To host it yourself instead, build `./gradlew :app-ui:wasmoApp` and serve
+   `app-ui/build/wasmo/terrazzo.wasmo` from any HTTPS URL Wasmo can reach.
 2. In Wasmo, choose **Install App**, paste the URL, and name it (e.g. `terrazzo`).
 3. Open `https://terrazzo-<computer>.wasmo.com/`.
 

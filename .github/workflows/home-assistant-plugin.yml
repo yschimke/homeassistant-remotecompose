@@ -64,7 +64,7 @@ jobs:
         with:
           cache-read-only: 'true'
       - name: Build existing renderers and run shared checks
-        run: ./gradlew :app-ui:wasmJsBrowserDistribution :design-server:embedResources :ha-client:jvmTest :app-ui:jvmTest ktfmtCheck --stacktrace
+        run: ./gradlew :app-ui:wasmJsBrowserDistribution :app-ui:wasmoApp :design-server:embedResources :ha-client:jvmTest :app-ui:jvmTest ktfmtCheck --stacktrace
       - uses: actions/setup-python@v7.1.0
         with:
           python-version: '3.15.1'
@@ -79,6 +79,11 @@ jobs:
             python scripts/package-home-assistant.py
           fi
           (cd build/home-assistant && sha256sum -c SHA256SUMS-home-assistant.txt)
+      - name: Stage the Wasmo app package
+        # The same Wasm web build, packaged as an installable .wasmo (manifest + www/) for Wasmo's
+        # Install App dialog. Unversioned filename so releases/latest/download/terrazzo.wasmo is a
+        # stable URL. See docs/architecture/wasmo-app.md.
+        run: cp app-ui/build/wasmo/terrazzo.wasmo build/home-assistant/terrazzo.wasmo
       - name: Install browser tools
         run: |
           npm install --no-save --prefix embed playwright@1.56.1
@@ -118,6 +123,7 @@ jobs:
           path: |
             build/home-assistant/terrazzo-home-assistant.zip
             build/home-assistant/terrazzo.zip
+            build/home-assistant/terrazzo.wasmo
             build/home-assistant/SHA256SUMS-home-assistant.txt
       - uses: actions/upload-artifact@v7.0.2
         if: always()
@@ -150,7 +156,7 @@ jobs:
         run: |
           sha256sum -c SHA256SUMS-home-assistant.txt
           gh release view "$RELEASE_TAG" >/dev/null
-          gh release upload "$RELEASE_TAG" terrazzo.zip terrazzo-home-assistant.zip SHA256SUMS-home-assistant.txt
+          gh release upload "$RELEASE_TAG" terrazzo.zip terrazzo-home-assistant.zip terrazzo.wasmo SHA256SUMS-home-assistant.txt
       # HACS cannot download github.com release assets (hacs/integration#5643), so the same
       # tested zip is also committed, tagged and released on the -out repository's hacs/terrazzo
       # branch, which HACS fetches file by file from raw.githubusercontent.com.
