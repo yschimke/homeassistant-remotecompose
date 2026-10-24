@@ -6,15 +6,23 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -22,6 +30,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.AssistantAccessSetting
@@ -60,6 +69,7 @@ import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
+import ee.schimke.terrazzo.dashboard.EntityMoreInfo
 import ee.schimke.terrazzo.dashboard.ManagePinnedContent
 import ee.schimke.terrazzo.dashboard.PinRowItem
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
@@ -73,6 +83,7 @@ import ee.schimke.terrazzo.wearsync.proto.SyncStats
 import ee.schimke.terrazzo.widget.InstalledWidget
 import ee.schimke.terrazzo.widget.WidgetsContent
 import ee.schimke.terrazzo.widget.cardTypeLabel
+import kotlin.time.Instant
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -651,6 +662,136 @@ fun Screen_CardHistory_ThemeStyle(@PreviewParameter(ThemeStyleProvider::class) s
       onShowActions = {},
       initialHistory = HISTORY_SAMPLE_SERIES,
     )
+  }
+
+/** The frozen end of the more-info previews' history window: 2026-10-24 09:25 UTC. */
+private const val MORE_INFO_NOW_MS = 1_792_833_900_000L
+
+private val MORE_INFO_POWER_STATE =
+  EntityState(
+    entityId = "sensor.p110_p3_current_consumption",
+    state = "128.6",
+    attributes =
+      buildJsonObject {
+        put("friendly_name", "Boilerroom - P110 (P3) Current consumption")
+        put("unit_of_measurement", "W")
+        put("state_class", "measurement")
+        put("device_class", "power")
+      },
+    lastChanged = Instant.fromEpochMilliseconds(MORE_INFO_NOW_MS - 40_000L),
+    lastUpdated = Instant.fromEpochMilliseconds(MORE_INFO_NOW_MS - 40_000L),
+  )
+
+/** A boiler plug's draw: long idle stretches near 2 W, burns at 110–140 W. */
+private val MORE_INFO_POWER_HISTORY: List<HistoryPoint> =
+  (96 downTo 1).map { k ->
+    val t = MORE_INFO_NOW_MS - k * 15 * 60_000L
+    val burning = (k / 6) % 3 == 0 || k < 5
+    val watts = if (burning) 110 + (k * 37 % 30) else 2 + (k % 3)
+    HistoryPoint(ts = Instant.fromEpochMilliseconds(t), state = "$watts")
+  }
+
+private val MORE_INFO_SWITCH_STATE =
+  EntityState(
+    entityId = "switch.p110_p3",
+    state = "on",
+    attributes =
+      buildJsonObject {
+        put("friendly_name", "Boiler")
+        put("device_class", "outlet")
+      },
+    lastChanged = Instant.fromEpochMilliseconds(MORE_INFO_NOW_MS - 72 * 60_000L),
+    lastUpdated = Instant.fromEpochMilliseconds(MORE_INFO_NOW_MS - 72 * 60_000L),
+  )
+
+/** The boiler switching on and off through the day, with a short unavailable gap. */
+private val MORE_INFO_SWITCH_HISTORY: List<HistoryPoint> =
+  listOf(
+      24 * 60 to "off",
+      21 * 60 to "on",
+      19 * 60 + 30 to "off",
+      16 * 60 to "unavailable",
+      15 * 60 + 40 to "off",
+      12 * 60 to "on",
+      10 * 60 + 15 to "off",
+      6 * 60 to "on",
+      5 * 60 to "off",
+      72 to "on",
+    )
+    .map { (minutesAgo, state) ->
+      HistoryPoint(Instant.fromEpochMilliseconds(MORE_INFO_NOW_MS - minutesAgo * 60_000L), state)
+    }
+
+/**
+ * The more-info sheet as it sits over a dashboard: the lower part of the screen, rounded on top.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MoreInfoSheetFrame(state: EntityState, history: List<HistoryPoint>) {
+  Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.32f))) {
+    Surface(
+      shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+      color = BottomSheetDefaults.ContainerColor,
+      modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().heightIn(max = 760.dp),
+    ) {
+      Column {
+        BottomSheetDefaults.DragHandle(Modifier.align(Alignment.CenterHorizontally))
+        EntityMoreInfo(
+          entityId = state.entityId,
+          state = state,
+          loadHistory = { history },
+          onOpenHistory = {},
+          initialHistory = history,
+          nowMs = { MORE_INFO_NOW_MS },
+        )
+      }
+    }
+  }
+}
+
+@Preview(
+  name = "more info · numeric",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_MoreInfo_Numeric() = PhoneHost {
+  MoreInfoSheetFrame(MORE_INFO_POWER_STATE, MORE_INFO_POWER_HISTORY)
+}
+
+@Preview(
+  name = "more info · on/off",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_MoreInfo_OnOff() = PhoneHost {
+  MoreInfoSheetFrame(MORE_INFO_SWITCH_STATE, MORE_INFO_SWITCH_HISTORY)
+}
+
+@Preview(
+  name = "more info · numeric · theme",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_MoreInfo_Numeric_ThemeStyle(
+  @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle
+) = PhoneHost(style = style) { MoreInfoSheetFrame(MORE_INFO_POWER_STATE, MORE_INFO_POWER_HISTORY) }
+
+@Preview(
+  name = "more info · on/off · dark",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_MoreInfo_OnOff_Dark() =
+  PhoneHost(darkMode = DarkModePref.Dark) {
+    MoreInfoSheetFrame(MORE_INFO_SWITCH_STATE, MORE_INFO_SWITCH_HISTORY)
   }
 
 /**

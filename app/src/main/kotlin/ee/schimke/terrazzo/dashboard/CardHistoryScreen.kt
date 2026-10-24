@@ -3,7 +3,6 @@
 package ee.schimke.terrazzo.dashboard
 
 import android.content.Intent
-import android.graphics.Paint
 import android.net.Uri
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -56,11 +55,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -72,7 +68,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.HistoryPoint
@@ -81,12 +76,6 @@ import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.widget.LAUNCHER_CELL_HEIGHT_DP
 import ee.schimke.terrazzo.widget.LAUNCHER_CELL_WIDTH_DP
 import ee.schimke.terrazzo.widget.LauncherGridBounds
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import kotlin.math.ceil
-import kotlin.math.floor
-import kotlin.math.log10
-import kotlin.math.pow
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
@@ -515,134 +504,6 @@ private fun EntityHistoryBlock(
   }
 }
 
-/**
- * Line chart with axes, mirroring Home Assistant's own more-info history graph: the unit sits at
- * the top-left, "nice"-rounded value gridlines run across with right-aligned labels, and the time
- * axis is labelled along the bottom. Points are plotted against their real timestamps, so a sparse
- * window reads as sparse rather than being stretched evenly across the width.
- */
-@Composable
-private fun NumericHistoryChart(series: List<Pair<Long, Float>>, unit: String?, hours: Int) {
-  val lineColor = MaterialTheme.colorScheme.primary
-  val gridColor = MaterialTheme.colorScheme.outlineVariant
-  val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-  val density = LocalDensity.current
-
-  val values = remember(series) { series.map { it.second } }
-  val axis = remember(values) { niceAxis(values.min(), values.max()) }
-  val tMin = series.first().first
-  val tMax = series.last().first
-  val tSpan = (tMax - tMin).takeIf { it > 0L } ?: 1L
-
-  val labelPaint =
-    remember(labelColor, density) {
-      Paint().apply {
-        isAntiAlias = true
-        color = labelColor.toArgb()
-        textSize = with(density) { 11.sp.toPx() }
-      }
-    }
-
-  Canvas(modifier = Modifier.fillMaxWidth().height(180.dp).padding(top = 4.dp, bottom = 4.dp)) {
-    val labelGap = 4.dp.toPx()
-    // Widest y label decides how much room the axis gutter needs.
-    val yLabelWidth = axis.ticks.maxOf { labelPaint.measureText(axisLabel(it)) }
-    val left = yLabelWidth + labelGap
-    val right = size.width
-    // Top gutter clears the unit caption; bottom gutter clears the time row.
-    val top = labelPaint.textSize + labelGap
-    val bottom = size.height - labelPaint.textSize - labelGap
-    val plotH = (bottom - top).coerceAtLeast(1f)
-    val plotW = (right - left).coerceAtLeast(1f)
-    val axisSpan = (axis.max - axis.min).takeIf { it > 0f } ?: 1f
-
-    fun yOf(v: Float) = bottom - ((v - axis.min) / axisSpan) * plotH
-    fun xOf(t: Long) = left + ((t - tMin).toFloat() / tSpan) * plotW
-
-    // Horizontal value gridlines + right-aligned labels in the left gutter.
-    labelPaint.textAlign = Paint.Align.RIGHT
-    axis.ticks.forEach { tick ->
-      val y = yOf(tick)
-      drawLine(
-        color = gridColor,
-        start = Offset(left, y),
-        end = Offset(right, y),
-        strokeWidth = 1.dp.toPx(),
-      )
-      drawContext.canvas.nativeCanvas.drawText(
-        axisLabel(tick),
-        left - labelGap,
-        y + labelPaint.textSize / 3f,
-        labelPaint,
-      )
-    }
-
-    // Time axis: a handful of evenly spaced labels, centre-aligned, with a
-    // faint vertical gridline at each.
-    labelPaint.textAlign = Paint.Align.CENTER
-    val timeTicks = 4
-    for (i in 0..timeTicks) {
-      val t = tMin + tSpan * i / timeTicks
-      val x = xOf(t).coerceIn(left, right)
-      drawLine(
-        color = gridColor,
-        start = Offset(x, top),
-        end = Offset(x, bottom),
-        strokeWidth = 1.dp.toPx(),
-      )
-      // Keep the first/last labels inside the canvas rather than clipped.
-      val tx =
-        when (i) {
-          0 -> (x + labelPaint.measureText(timeLabel(t, hours)) / 2f)
-          timeTicks -> (x - labelPaint.measureText(timeLabel(t, hours)) / 2f)
-          else -> x
-        }
-      drawContext.canvas.nativeCanvas.drawText(timeLabel(t, hours), tx, size.height, labelPaint)
-    }
-
-    // Unit caption at the top-left, above the value gutter.
-    if (unit != null) {
-      labelPaint.textAlign = Paint.Align.LEFT
-      drawContext.canvas.nativeCanvas.drawText(unit, 0f, labelPaint.textSize, labelPaint)
-    }
-
-    val path = Path()
-    series.forEachIndexed { i, (t, v) ->
-      val x = xOf(t)
-      val y = yOf(v)
-      if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
-    }
-    drawPath(path = path, color = lineColor, style = Stroke(width = 2.dp.toPx()))
-  }
-}
-
-/**
- * On/off-style timeline for non-numeric entities: each state run is a coloured segment sized by its
- * share of the window. "Active" states (`on`, `open`, `home`, `playing`, …) read in the primary
- * colour; everything else in a muted surface tone.
- */
-@Composable
-private fun StateTimeline(points: List<HistoryPoint>) {
-  val activeColor = MaterialTheme.colorScheme.primary
-  val idleColor = MaterialTheme.colorScheme.surfaceVariant
-  val tsStart = points.first().ts.toEpochMilliseconds()
-  val tsEnd = points.last().ts.toEpochMilliseconds()
-  val span = (tsEnd - tsStart).takeIf { it > 0 } ?: 1L
-  Canvas(modifier = Modifier.fillMaxWidth().height(28.dp).padding(vertical = 4.dp)) {
-    points.forEachIndexed { i, point ->
-      val segStart = point.ts.toEpochMilliseconds()
-      val segEnd = points.getOrNull(i + 1)?.ts?.toEpochMilliseconds() ?: tsEnd
-      val x0 = ((segStart - tsStart).toFloat() / span) * size.width
-      val x1 = ((segEnd - tsStart).toFloat() / span) * size.width
-      drawRect(
-        color = if (point.state.isActiveState()) activeColor else idleColor,
-        topLeft = Offset(x0, 0f),
-        size = androidx.compose.ui.geometry.Size((x1 - x0).coerceAtLeast(1f), size.height),
-      )
-    }
-  }
-}
-
 /** Bottom region: the entity's history in Home Assistant's own view, for live instances. */
 @Composable
 private fun OpenInHomeAssistant(session: HaSession, entityIds: List<String>) {
@@ -684,71 +545,4 @@ private fun summariseNumeric(values: List<Float>, unit: String?): String {
     if (v == v.toLong().toFloat()) v.toLong().toString() else "%.1f".format(v)
   }
   return "now ${fmt(current)}$suffix · range ${fmt(min)}–${fmt(max)}$suffix · ${values.size} samples"
-}
-
-private val ACTIVE_STATES = setOf("on", "open", "home", "playing", "active", "unlocked", "detected")
-
-private fun String.isActiveState(): Boolean = lowercase() in ACTIVE_STATES
-
-/** Value axis: a "nice"-rounded min/max plus the gridline ticks in between. */
-private data class ValueAxis(val min: Float, val max: Float, val ticks: List<Float>)
-
-/**
- * Compute a human-friendly value axis (round min/max and ~5 evenly spaced ticks at 1/2/5·10ⁿ
- * intervals) for the data range, the way a charting library would, so the gridlines land on values
- * like 12, 14, 16 rather than the raw data extremes.
- */
-private fun niceAxis(dataMin: Float, dataMax: Float, targetTicks: Int = 5): ValueAxis {
-  if (!dataMin.isFinite() || !dataMax.isFinite() || dataMax <= dataMin) {
-    val v = if (dataMin.isFinite()) dataMin else 0f
-    return ValueAxis(v - 1f, v + 1f, listOf(v - 1f, v, v + 1f))
-  }
-  val step = niceNum((dataMax - dataMin) / (targetTicks - 1), round = true)
-  val niceMin = floor(dataMin / step) * step
-  val niceMax = ceil(dataMax / step) * step
-  val ticks = buildList {
-    var t = niceMin
-    // Guard against fp drift overshooting the loop bound.
-    while (t <= niceMax + step / 2f) {
-      add(t)
-      t += step
-    }
-  }
-  return ValueAxis(niceMin, niceMax, ticks)
-}
-
-/** Round a span to the nearest "nice" number (1, 2, 5 × 10ⁿ). */
-private fun niceNum(range: Float, round: Boolean): Float {
-  if (range <= 0f) return 1f
-  val exponent = floor(log10(range.toDouble()))
-  val fraction = range / 10.0.pow(exponent)
-  val niceFraction =
-    if (round) {
-      when {
-        fraction < 1.5 -> 1.0
-        fraction < 3.0 -> 2.0
-        fraction < 7.0 -> 5.0
-        else -> 10.0
-      }
-    } else {
-      when {
-        fraction <= 1.0 -> 1.0
-        fraction <= 2.0 -> 2.0
-        fraction <= 5.0 -> 5.0
-        else -> 10.0
-      }
-    }
-  return (niceFraction * 10.0.pow(exponent)).toFloat()
-}
-
-private fun axisLabel(v: Float): String =
-  if (v == v.toLong().toFloat()) v.toLong().toString() else "%.1f".format(v)
-
-private val HOUR_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-private val DAY_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMM")
-
-/** Time-axis label: clock time for a day-or-less window, calendar day for longer ranges. */
-private fun timeLabel(epochMillis: Long, hours: Int): String {
-  val zoned = java.time.Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault())
-  return (if (hours <= 24) HOUR_FORMAT else DAY_FORMAT).format(zoned)
 }
