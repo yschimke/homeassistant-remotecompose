@@ -14,7 +14,10 @@ class DashboardEditSession(
   private val replace: suspend (expected: JsonObject, replacement: JsonObject) -> Unit,
 ) {
   private val mutex = Mutex()
-  private var baseline = original
+  /** The config Home Assistant was last known to hold: the one loaded, or the last saved. */
+  var baseline: JsonObject = original
+    private set
+
   private var previous: JsonObject? = null
   var draft: JsonObject = original
     private set

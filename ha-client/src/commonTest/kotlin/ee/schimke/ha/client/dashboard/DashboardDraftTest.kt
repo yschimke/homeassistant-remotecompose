@@ -190,4 +190,28 @@ class DashboardDraftTest {
     }
     assertNull(DashboardDraft.card(config, CardAddress(0, 5, 0)))
   }
+
+  @Test
+  fun changingACardsEntityKeepsTheRestOfItsConfig() {
+    val tile =
+      Json.parseToJsonElement(
+          """{"type":"tile","entity":"light.a","name":"Desk","grid_options":{"columns":6},
+            "features":[{"type":"light-brightness"}],"tap_action":{"action":"toggle"}}"""
+        )
+        .jsonObject
+    val changed = DashboardDraft.withEntity(tile, "light.b")
+    assertEquals(JsonObject(tile + ("entity" to JsonPrimitive("light.b"))), changed)
+
+    val list =
+      Json.parseToJsonElement(
+          """{"type":"entities","title":"T","entities":[{"entity":"a.x","name":"X"},"a.y"]}"""
+        )
+        .jsonObject
+    val listChanged = DashboardDraft.withEntity(list, "a.z")
+    assertEquals(
+      Json.parseToJsonElement("""[{"entity":"a.z","name":"X"},"a.y"]"""),
+      listChanged["entities"],
+    )
+    assertEquals(JsonPrimitive("T"), listChanged["title"])
+  }
 }

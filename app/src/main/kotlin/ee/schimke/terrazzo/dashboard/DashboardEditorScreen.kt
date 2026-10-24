@@ -295,13 +295,14 @@ internal fun DashboardEditor(
       busy = false
       result
         .onSuccess {
-          saved = edits.draft
+          // What HA now holds; edits made while the save was in flight stay unsaved.
+          saved = edits.baseline
           onSaved()
           val undo = snackbars.showSnackbar("Saved to Home Assistant.", actionLabel = "Undo")
           if (undo == SnackbarResult.ActionPerformed) {
             runCatching { edits.undoSave() }
               .onSuccess {
-                saved = edits.draft
+                saved = edits.baseline
                 draft = edits.draft
                 onSaved()
               }
@@ -1042,9 +1043,20 @@ private fun CardEditorSheet(
           Modifier.fillMaxWidth()
             .clickable {
               query = ""
-              val type =
-                card?.stringOf("type")?.takeIf { it in DashboardDraft.suggestedTypes(s.entityId) }
-              set(DashboardDraft.cardFor(s.entityId, type).withName(card?.stringOf("name")))
+              val current = card
+              // A card whose type suits the entity keeps the rest of its config; otherwise a new
+              // card
+              // of a suitable type, keeping only its name.
+              set(
+                if (
+                  current != null &&
+                    current.stringOf("type") in DashboardDraft.suggestedTypes(s.entityId)
+                ) {
+                  DashboardDraft.withEntity(current, s.entityId)
+                } else {
+                  DashboardDraft.cardFor(s.entityId).withName(current?.stringOf("name"))
+                }
+              )
             }
             .padding(vertical = 8.dp)
         ) {

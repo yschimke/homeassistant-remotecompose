@@ -258,6 +258,24 @@ object DashboardDraft {
     }
   }
 
+  /**
+   * [card] showing [entityId] instead, with the rest of its config (size, features, actions, name,
+   * visibility) kept: its `entity`, or the first of its `entities` (a string or an `{entity}` row).
+   * A card with neither gets an `entity`.
+   */
+  fun withEntity(card: JsonObject, entityId: String): JsonObject {
+    val entities = card["entities"] as? JsonArray
+    if ("entity" in card || entities == null) {
+      return JsonObject(card + ("entity" to JsonPrimitive(entityId)))
+    }
+    val first: JsonElement =
+      when (val row = entities.firstOrNull()) {
+        is JsonObject -> JsonObject(row + ("entity" to JsonPrimitive(entityId)))
+        else -> JsonPrimitive(entityId)
+      }
+    return JsonObject(card + ("entities" to JsonArray(listOf(first) + entities.drop(1))))
+  }
+
   /** Card types that suit [entityId]'s domain, best first; always ends with the generic ones. */
   fun suggestedTypes(entityId: String): List<String> {
     val domain = entityId.substringBefore('.')
