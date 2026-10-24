@@ -49,6 +49,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
@@ -59,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.design.UsageSharing
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignTags
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.terrazzo.assistant.AssistantAccess
 import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
@@ -72,6 +74,7 @@ import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardStyleSample
 import ee.schimke.terrazzo.dashboard.CardStyleWearPanes
 import ee.schimke.terrazzo.shared.ReportFeedbackButton
+import ee.schimke.terrazzo.ui.appThemeOrNull
 import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import kotlinx.coroutines.launch
@@ -183,6 +186,7 @@ internal fun SettingsScreen(
         ThemeSection(
           selected = themePref,
           darkMode = darkPref,
+          appTheme = cardStylePref.toUberTheme().appThemeOrNull(),
           onSelectTheme = { pref ->
             scope.launch {
               graph.preferencesStore.setThemeStyle(pref)
@@ -455,18 +459,29 @@ private fun SettingSwitch(
   }
 }
 
+/**
+ * The app palette and light / dark choice. While the card style themes the whole app ([appTheme],
+ * an LCD or a Trinitron deck), its palette replaces the choice here, so the options are disabled
+ * and say why; a single-mode style (dark-only Trinitron) disables light / dark too. The choices are
+ * kept and come back when the card style changes.
+ */
 @Composable
-private fun ThemeSection(
+internal fun ThemeSection(
   selected: ThemePref,
   darkMode: DarkModePref,
+  appTheme: HaUberTheme?,
   onSelectTheme: (ThemePref) -> Unit,
   onSelectDark: (DarkModePref) -> Unit,
 ) {
   Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
     Text("Theme", style = MaterialTheme.typography.titleMedium)
     Text(
-      "Material 3 uses the system default palette (dynamic colour on Android 12+). " +
-        "The Terrazzo themes ship a curated Home-Assistant-flavoured palette plus a Google-Fonts pairing.",
+      if (appTheme != null)
+        "The ${appTheme.displayName} card style themes the whole app in its own colours and type. " +
+          "Pick a card style without its own app theme to choose a palette here."
+      else
+        "Material 3 uses the system default palette (dynamic colour on Android 12+). " +
+          "The Terrazzo themes ship a curated Home-Assistant-flavoured palette plus a Google-Fonts pairing.",
       style = MaterialTheme.typography.bodySmall,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -477,16 +492,26 @@ private fun ThemeSection(
           summary = themePrefTagline(pref),
           selected = pref == selected,
           onClick = { onSelectTheme(pref) },
+          enabled = appTheme == null,
         )
       }
     }
 
+    val modeFixed = appTheme?.singleMode == true
     Text("Dark mode", style = MaterialTheme.typography.titleMedium)
+    if (modeFixed) {
+      Text(
+        "${appTheme?.displayName} is ${if (appTheme?.dark == null) "light" else "dark"} only.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
+    }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       DarkModePref.entries.forEach { pref ->
         FilterChip(
           selected = pref == darkMode,
           onClick = { onSelectDark(pref) },
+          enabled = !modeFixed,
           label = {
             Text(
               when (pref) {
@@ -507,7 +532,8 @@ private fun ThemeSection(
  * palette; each uber theme brings its own palette, shapes, type and instrument designs (an LCD's
  * segment bars, a Trinitron VU needle). Dashboard cards and launcher widgets: widgets take the
  * style on the launcher's colours unless [LauncherColoursSection] says otherwise. The app's own
- * screens keep the palette above.
+ * screens keep the palette above, unless the style themes the whole app ([HaUberTheme.appTheme]),
+ * which its sample's description says.
  *
  * Each style is shown with a sample card drawn in it ([CardStyleSample]). Collapsed (the default),
  * only the current style is listed; expanding lists them all. "Preview on a watch" draws the
@@ -587,7 +613,8 @@ private fun CardStyleOption(
   onClick: () -> Unit,
 ) {
   val uber = pref.toUberTheme()
-  val tagline = cardStyleTagline(pref)
+  // A style that themes the whole app says so, so it is found before it is picked.
+  val tagline = cardStyleTagline(pref) + if (uber.appTheme) " · Themes the whole app" else ""
   Row(
     modifier =
       Modifier.fillMaxWidth()
@@ -643,17 +670,34 @@ private fun LauncherColoursSection(
   }
 }
 
-/** A radio option with a title and summary; the whole row selects it. */
+/** A radio option with a title and summary; the whole row selects it, unless not [enabled]. */
 @Composable
-private fun OptionRow(title: String, summary: String, selected: Boolean, onClick: () -> Unit) {
+private fun OptionRow(
+  title: String,
+  summary: String,
+  selected: Boolean,
+  onClick: () -> Unit,
+  enabled: Boolean = true,
+) {
   Row(
     modifier =
       Modifier.fillMaxWidth()
-        .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
+        .selectable(
+          selected = selected,
+          enabled = enabled,
+          role = Role.RadioButton,
+          onClick = onClick,
+        )
+        .alpha(if (enabled) 1f else 0.38f),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(4.dp),
   ) {
-    RadioButton(selected = selected, onClick = null, modifier = Modifier.padding(12.dp))
+    RadioButton(
+      selected = selected,
+      onClick = null,
+      enabled = enabled,
+      modifier = Modifier.padding(12.dp),
+    )
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       Text(title, style = MaterialTheme.typography.bodyLarge)
       Text(
