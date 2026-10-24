@@ -8,12 +8,14 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.UNAVAILABLE_DESIGN_PROPERTY
 import ee.schimke.ha.rc.cards.ButtonCardConverter
+import ee.schimke.ha.rc.cards.CalendarCardConverter
 import ee.schimke.ha.rc.cards.ClockCardConverter
 import ee.schimke.ha.rc.cards.EntityCardConverter
 import ee.schimke.ha.rc.cards.GaugeCardConverter
 import ee.schimke.ha.rc.cards.HeadingCardConverter
 import ee.schimke.ha.rc.cards.HumidifierCardConverter
 import ee.schimke.ha.rc.cards.LightCardConverter
+import ee.schimke.ha.rc.cards.LogbookCardConverter
 import ee.schimke.ha.rc.cards.PictureCardConverter
 import ee.schimke.ha.rc.cards.PictureEntityCardConverter
 import ee.schimke.ha.rc.cards.PictureGlanceCardConverter
@@ -21,6 +23,7 @@ import ee.schimke.ha.rc.cards.SensorCardConverter
 import ee.schimke.ha.rc.cards.StatisticCardConverter
 import ee.schimke.ha.rc.cards.ThermostatCardConverter
 import ee.schimke.ha.rc.cards.TileCardConverter
+import ee.schimke.ha.rc.cards.TodoListCardConverter
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
@@ -386,6 +389,48 @@ class WearCardDesignParityTest {
         """{"type":"gauge","entity":"sensor.power","min":0,"max":3000,"severity":{"green":0,"yellow":1500,"red":2500}}""",
         """{"type":"statistic","entity":"sensor.temperature","stat_type":"mean"}""",
         """{"type":"statistic","entity":"sensor.power","name":"Power","stat_type":"max","period":"day"}""",
+      ),
+    )
+  }
+
+  @Test
+  fun listDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "light.kitchen" to EntityState("light.kitchen", "on"),
+            "switch.fan" to EntityState("switch.fan", "off"),
+            "calendar.home" to
+              EntityState(
+                "calendar.home",
+                "on",
+                attributes(
+                  """{"message":"Bins out","start_time":"2026-10-24 07:00:00","friendly_name":"Home"}"""
+                ),
+              ),
+            "todo.shopping" to
+              EntityState(
+                "todo.shopping",
+                "2",
+                attributes(
+                  """{"items":[{"summary":"Milk","status":"needs_action"},""" +
+                    """{"summary":"Eggs","status":"needs_action"},""" +
+                    """{"summary":"Bread","status":"completed"}]}"""
+                ),
+              ),
+          )
+      )
+    assertWearParity(
+      "list designs",
+      listOf(LogbookCardConverter(), CalendarCardConverter(), TodoListCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"logbook","entities":["light.kitchen","switch.fan"]}""",
+        """{"type":"logbook","title":"Activity","entities":["light.kitchen"]}""",
+        """{"type":"calendar","entities":["calendar.home"]}""",
+        """{"type":"todo-list","entity":"todo.shopping"}""",
+        """{"type":"todo-list","entity":"todo.shopping","title":"Shopping"}""",
       ),
     )
   }
