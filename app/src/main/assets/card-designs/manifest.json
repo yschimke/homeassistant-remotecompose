@@ -515,8 +515,8 @@
                 "shape": "date=1;h24=1;has_title=1;large=0;seconds=0;zoned=0",
                 "theme": "baked:TerrazzoHome:light"
             },
-            "sha256": "54271069a54baf3422a38d51f2ecd5b24fcb3de41781342cb110eab403b1d81f",
-            "bytes": 938,
+            "sha256": "0c575d51e9d6bd1aae3b7b0c8bdd663df8cc0f9054613990eb21b7366822e7e6",
+            "bytes": 937,
             "slots": 0,
             "designId": "library:clock",
             "title": "Built-in"
@@ -529,8 +529,8 @@
                 "shape": "date=1;h24=1;has_title=1;large=0;seconds=0;zoned=0",
                 "theme": "baked:TerrazzoHome:dark"
             },
-            "sha256": "e42452bed30848a4177547335c0b2bd5955f583927efeb582530671d62a4db91",
-            "bytes": 938,
+            "sha256": "4ec93dda34b95255b52f94cfe28f6754f81f31dfcd9fdc02a6ef4e484274ccbc",
+            "bytes": 937,
             "slots": 0,
             "designId": "library:clock",
             "title": "Built-in"
