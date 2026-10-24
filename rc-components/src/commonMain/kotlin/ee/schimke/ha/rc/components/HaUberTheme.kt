@@ -129,6 +129,11 @@ enum class HaSurfaceMaterial {
  * @property letterSpacingSp extra tracking, in sp, for every card text.
  * @property valueWeight the weight of readings (`HaType.Value*`).
  * @property unavailable how every card in the theme shows that its entity is unavailable.
+ * @property appTheme whether the theme is a whole look, the host app's own screens included: a host
+ *   that discovers it themes its chrome in [palette] and [fontFamily] and sets its own palette
+ *   choice aside (and its light / dark choice too, for a [singleMode] theme). Only for themes whose
+ *   identity is the whole surface — an LCD, a Trinitron deck — where app chrome in another palette
+ *   around the cards would break the illusion.
  */
 data class HaUberTheme(
   val id: String,
@@ -147,10 +152,15 @@ data class HaUberTheme(
   val valueWeight: FontWeight = FontWeight.SemiBold,
   val unavailable: HaUnavailableStyle = HaUnavailableStyle(),
   val description: String = "",
+  val appTheme: Boolean = false,
 ) {
   init {
     require(light != null || dark != null) { "$id needs a light or a dark palette" }
   }
+
+  /** Whether the theme has one palette only: dark-only (Trinitron, Nixie) or light-only. */
+  val singleMode: Boolean
+    get() = light == null || dark == null
 
   /** The palette for [darkTheme], falling back to the one the theme has. */
   fun palette(darkTheme: Boolean): HaTheme = (if (darkTheme) dark ?: light else light ?: dark)!!
@@ -235,6 +245,7 @@ data class HaUberTheme(
         fontFamily = RemoteFontFamily.Monospace,
         letterSpacingSp = 1.2f,
         valueWeight = FontWeight.Normal,
+        appTheme = true,
       )
 
     /**
@@ -286,6 +297,7 @@ data class HaUberTheme(
         valueWeight = FontWeight.Bold,
         // An LCD with no reading shows dashes, in its own ink.
         unavailable = HaUnavailableStyle(label = "----", labelAlpha = 1f),
+        appTheme = true,
       )
 
     /**
@@ -366,6 +378,7 @@ data class HaUberTheme(
         fontFamily = RemoteFontFamily.SansSerif,
         letterSpacingSp = 0.4f,
         valueWeight = FontWeight.Light,
+        appTheme = true,
       )
 
     /**
@@ -406,6 +419,7 @@ data class HaUberTheme(
         fontFamily = RemoteFontFamily.SansSerif,
         letterSpacingSp = 0.6f,
         valueWeight = FontWeight.Medium,
+        appTheme = true,
       )
 
     /** IKEA-inspired furniture and Home smart controls. Original drawings; no brand assets. */

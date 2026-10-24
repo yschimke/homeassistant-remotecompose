@@ -71,6 +71,7 @@ internal object CommunityThemes {
       HaReadoutStyle.Screen,
       FontWeight.Medium,
       RemoteFontFamily.Monospace,
+      appTheme = true,
     )
   val Obsidian =
     family(
@@ -110,6 +111,7 @@ internal object CommunityThemes {
       FontWeight.Bold,
       RemoteFontFamily.SansSerif,
       0.6f,
+      appTheme = true,
     )
   val Arctic =
     family(
@@ -152,6 +154,7 @@ internal object CommunityThemes {
     weight: FontWeight,
     font: RemoteFontFamily = RemoteFontFamily.SansSerif,
     tracking: Float = 0f,
+    appTheme: Boolean = false,
   ) =
     HaUberTheme(
       id,
@@ -165,6 +168,7 @@ internal object CommunityThemes {
       valueWeight = weight,
       letterSpacingSp = tracking,
       description = description,
+      appTheme = appTheme,
     )
 
   private fun palette(

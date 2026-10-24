@@ -296,6 +296,13 @@ lights, switches, scenes and scripts, and read your dashboards. It is **off** by
 Tools: `find_entities`, `get_entity_state`, `turn_on`, `turn_off`, `toggle`, `list_dashboards`
 (with each dashboard's `/terrazzo` link) and `get_dashboard` (its Lovelace configuration).
 
+For editing a dashboard there are `start_edit_session`, `get_edit_session`, `get_card_guide` and
+`submit_draft`. The assistant never saves a dashboard: it submits drafts to an edit session, and a
+person previews one and applies it with their own Home Assistant administrator account, only while
+the dashboard is still as it was when the session started. Home Assistant lets only
+administrators save dashboards anyway, so an MCP server user who isn't one can draft but not
+apply. Sessions are kept for a day after their last change.
+
 **Connecting a client.** A cloud assistant connects from its provider's servers, so Home
 Assistant must be reachable over HTTPS from the internet (Nabu Casa, or your own TLS and reverse
 proxy). Local agents can use the LAN address. For a client that lets you set headers, use the URL

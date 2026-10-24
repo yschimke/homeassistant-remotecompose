@@ -61,6 +61,9 @@ User-facing setup is in [`docs/HOME_ASSISTANT.md`](../HOME_ASSISTANT.md#mcp-serv
   on every request: with no user chosen, or the entry unloaded, they answer `404`.
 - The MCP user is set in the options flow only. A `terrazzo:` YAML block, re-imported on every
   start, keeps whatever user the entry already has.
+- Dashboard edit sessions ([dashboard-editing.md](dashboard-editing.md)) add four tools:
+  `start_edit_session`, `get_edit_session`, `get_card_guide` and `submit_draft`. An agent only
+  submits drafts; a person applies one over the WebSocket with their own (administrator) session.
 - OAuth discovery hands clients to Home Assistant itself, which publishes RFC 8414 metadata with
   PKCE and client ID metadata documents. The installed test uses login-flow and long-lived
   tokens; a third-party client's OAuth flow is not exercised in CI.

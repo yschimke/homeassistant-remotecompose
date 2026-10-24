@@ -128,6 +128,121 @@ TOOLS = [
     },
 ]
 
+_SESSION_ID = {
+    "type": "string",
+    "description": "The edit session's id, from the person's prompt or start_edit_session.",
+}
+
+EDIT_TOOLS = [
+    {
+        "name": "start_edit_session",
+        "title": "Start a dashboard edit",
+        "description": (
+            "Opens an edit session on a dashboard for a change the user asked for. Drafts you "
+            "submit to it are previewed and applied by a person; nothing you do saves the "
+            "dashboard. Skip this when the user gave you a session id."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "url_path": {
+                    "type": "string",
+                    "description": "The dashboard's url_path from list_dashboards. Omit for the "
+                    "default Overview dashboard.",
+                },
+                "request": {"type": "string", "description": "What the user wants changed."},
+            },
+            "additionalProperties": False,
+        },
+        "annotations": {"readOnlyHint": False, "destructiveHint": False, "openWorldHint": False},
+    },
+    {
+        "name": "get_edit_session",
+        "title": "Get a dashboard edit",
+        "description": (
+            "Reads an edit session: the request, the dashboard's current config, your latest draft, "
+            "and the person's notes on it. Read the notes before submitting again."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {"session_id": _SESSION_ID},
+            "required": ["session_id"],
+            "additionalProperties": False,
+        },
+        "annotations": {"readOnlyHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "get_card_guide",
+        "title": "Get the card guide",
+        "description": (
+            "How to write a dashboard harc draws well: the card types it draws natively, how to "
+            "size cards, and where to see harc's card designs."
+        ),
+        "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
+        "annotations": {"readOnlyHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "submit_draft",
+        "title": "Submit a dashboard draft",
+        "description": (
+            "Submits the complete new dashboard config to an edit session, with a one-line summary "
+            "of the change. A person previews it with live cards and applies it; it isn't saved by "
+            "this call. Every entity it names must exist in this home."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "session_id": _SESSION_ID,
+                "config": {
+                    "type": "object",
+                    "description": "The whole dashboard config: an object with a views list, "
+                    "keeping every view, section and card the user didn't ask to change.",
+                },
+                "summary": {"type": "string", "description": "One line: what changed."},
+            },
+            "required": ["session_id", "config"],
+            "additionalProperties": False,
+        },
+        "annotations": {"readOnlyHint": False, "destructiveHint": False, "openWorldHint": False},
+    },
+]
+TOOLS += EDIT_TOOLS
+
+# Matches DashboardAgentPrompt's GUIDE, SIZING and DESIGN_TOOLS in ha-client; change them together.
+CARD_GUIDE = {
+    "native_card_types": [
+        "tile", "entities", "glance", "gauge", "sensor", "thermostat", "humidifier", "light",
+        "button", "entity", "history-graph", "statistics-graph", "statistic", "weather-forecast",
+        "media-control", "alarm-panel", "area", "picture-entity", "markdown", "heading",
+        "todo-list", "calendar", "logbook", "map", "clock", "vertical-stack", "horizontal-stack",
+        "grid", "conditional", "entity-filter",
+    ],
+    "rules": [
+        "Answer with the complete dashboard config; keep every view, section and card the user "
+        "didn't ask to change.",
+        "Use only entity ids from find_entities. Never invent entities.",
+        "Prefer the native card types; other (custom) cards show as a plain list of entities.",
+        'Lay views out with "type": "sections" and group related cards into sections that start '
+        "with a heading card. harc shows sections in one column on a phone, side by side wider.",
+        "Give a card a short name or title when the entity's own name is unclear.",
+        "Don't add automations, scripts, scenes or helpers: this only edits dashboards.",
+    ],
+    "sizing": [
+        'Each section is a 12-column grid. Size a card with "grid_options": {"columns": N, '
+        '"rows": R}: columns 3, 6, 9 or "full", rows a number of 56 dp rows or "auto".',
+        "On a phone a section is about 400 dp wide: two tiles share a row at 6 columns each; "
+        'gauges, graphs, forecasts and lists read best "full".',
+        "Cards fill a section's rows in order, so order them the way they should read.",
+    ],
+    "designs": (
+        "harc's card designs are published in the hosted Compose Preview catalog, an MCP server "
+        "at https://preview.coo.ee/mcp (catalog homeassistant-remotecompose; reading needs a "
+        "grant from request_access / poll_access). catalog_list_previews with query card-<type> "
+        "lists a type's designs; catalog_render_preview (observe png) shows one, and its device "
+        "override or catalog_render_matrix shows it at other widths."
+    ),
+}
+
 TOOL_NAMES = frozenset(tool["name"] for tool in TOOLS)
 _SWITCH_SERVICES = {"turn_on": "turn_on", "turn_off": "turn_off", "toggle": "toggle"}
 
@@ -199,6 +314,20 @@ def _entity_id(arguments):
     return entity_id
 
 
+def _optional_text(arguments, key):
+    value = arguments.get(key)
+    if value is not None and not isinstance(value, str):
+        raise ToolError(f"{key} must be a string")
+    return value or ""
+
+
+def _session_id(arguments):
+    session_id = arguments.get("session_id")
+    if not isinstance(session_id, str) or not session_id:
+        raise ToolError("session_id must be the edit session's id")
+    return session_id
+
+
 def _entity(home, arguments):
     entity_id = _entity_id(arguments)
     entity = home.state(entity_id)
@@ -223,6 +352,20 @@ async def call_tool(home, name, arguments):
         return summary(before)
     if name == "list_dashboards":
         return {"dashboards": home.dashboards()}
+    if name == "start_edit_session":
+        url_path = _optional_text(arguments, "url_path")
+        return await home.start_edit_session(url_path or None, _optional_text(arguments, "request"))
+    if name == "get_edit_session":
+        return await home.edit_session(_session_id(arguments))
+    if name == "get_card_guide":
+        return CARD_GUIDE
+    if name == "submit_draft":
+        config = arguments.get("config")
+        if not isinstance(config, dict):
+            raise ToolError("config must be the dashboard config object")
+        return await home.submit_draft(
+            _session_id(arguments), config, _optional_text(arguments, "summary")
+        )
     if name == "get_dashboard":
         url_path = arguments.get("url_path")
         if url_path is not None and not isinstance(url_path, str):
@@ -266,7 +409,9 @@ async def handle(message, home, server_version):
                 "instructions": (
                     f"Controls one private Home Assistant instance, '{home.name}', as the user "
                     "Terrazzo's MCP server is pinned to, with that user's permissions. Use "
-                    "find_entities to resolve names to entity ids before reading or switching."
+                    "find_entities to resolve names to entity ids before reading or switching. "
+                    "To change a dashboard, work in an edit session (get_edit_session, "
+                    "get_card_guide, submit_draft): you submit drafts and a person applies them."
                 ),
             },
         )
