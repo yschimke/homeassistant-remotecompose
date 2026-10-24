@@ -1,0 +1,91 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "picture",
+  "title": "Picture",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 140,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "mode"
+        ]
+      }
+    },
+    "mode": {
+      "id": "mode",
+      "componentId": "ha-cards/card-size-mode",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "wrap": [
+          "wrap"
+        ],
+        "height": [
+          "height"
+        ],
+        "width": [
+          "width"
+        ]
+      }
+    },
+    "wrap": {
+      "id": "wrap",
+      "componentId": "ha-cards/picture-card-image",
+      "properties": {
+        "fill": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "height": {
+      "id": "height",
+      "componentId": "ha-cards/picture-card-image",
+      "properties": {
+        "fill": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "width": {
+      "id": "width",
+      "componentId": "ha-cards/picture-card-image",
+      "properties": {
+        "fill": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}
