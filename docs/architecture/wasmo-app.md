@@ -55,6 +55,31 @@ Requirements:
   Assistant's `http: cors_allowed_origins`. Cards render without it; only those pictures are
   missing.
 
+## Installing
+
+Wasmo's computer menu has an **Install App** item (`InstallAppDialog` → `InstallAppRpc`) that
+takes an app address and a name of your choice. It is on every Wasmo distribution — no catalog
+entry in the Wasmo repository is needed. (The hardcoded `AppCatalog.kt` list, which carries a
+placeholder **Smart Home** entry, is only the built-in catalog, not the only way in.)
+
+1. Publish `terrazzo.wasmo` at an HTTPS URL. A GitHub release asset is the simplest stable source,
+   e.g. `https://github.com/yschimke/homeassistant-remotecompose/releases/latest/download/terrazzo.wasmo`.
+2. In Wasmo, choose **Install App**, paste the URL, and name it (e.g. `terrazzo`).
+3. Open `https://terrazzo-<computer>.wasmo.com/`.
+
+The **Wasmo server**, not your browser, fetches the URL (`ZipResourceInstaller`, OkHttp), so the
+address must be reachable from wherever Wasmo runs:
+
+- **Hosted wasmo.com** reaches public URLs only — a GitHub release asset works; a LAN-only
+  `homeassistant.local` URL does not.
+- **Homelab Wasmo** on your network can also install from an HA-hosted URL or any LAN host, and
+  from a local file path (`WasmoFileAddress.FileSystem`), which the developer distribution watches
+  for changes.
+
+Wasmo does not yet update an app installed from a URL when the file changes
+(`docs/platform/plans/app_updates.md` is a plan, and `InstallAppResponse.url` is still `"TODO"`),
+so updating today means reinstalling.
+
 ## Wasmo gaps worked around here
 
 - **`.wasm` content type.** Wasmo's `ContentTypeDatabase` has no `wasm` entry, so `.wasm` is served
@@ -62,10 +87,6 @@ Requirements:
   `app-ui/wasmo/wasm-mime-fallback.js` falls back to compiling from bytes for those responses.
   The upstream fix is one line in `os/framework/.../ContentTypeDatabase.kt`:
   `"wasm" to "application/wasm".toMediaType()`.
-- **Installing.** Wasmo's app catalog is a hardcoded list (`AppCatalog.kt`). It already has a
-  placeholder **Smart Home** (`smart`) entry with a label and an icon only, which is the natural
-  slot. Until Wasmo has an install flow or SDK, the app installs only into a local Wasmo,
-  pointing an entry at the built `.wasmo` (a `WasmoFileAddress` file-system path or an HTTP URL).
 
 ## Card fidelity
 
