@@ -1,6 +1,7 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.ha.design.DesignCatalog
+import ee.schimke.ha.design.DesignKey
 import io.ktor.http.ContentDisposition
 import io.ktor.http.ContentType
 import io.ktor.http.Cookie
@@ -87,6 +88,8 @@ class LibraryHolder(
  * - `/designs/v1/designs?cardType=&style=&variant=&author=` (and `surface`, `shape`, `theme`) — the
  *   designs matching those tags ([DesignQuery]) and every tag's values, so a client can fetch what
  *   it needs instead of the whole manifest.
+ * - `POST /designs/v1/generate` with a `DesignKey` — the design for that key: the library's, or
+ *   captured on the JVM now ([DesignGenerator]), its blob then served beside the library's.
  * - `/designs/v1/catalog.json`, `/designs/v1/previews/...` — the browser's data.
  * - `/` — the app's front page ([Landing]); `/site/<name>` — its pictures.
  * - `/designs`, `/designs/<id>` — the template browser; `/api/designs[/<id>]` — the same as JSON.
@@ -137,6 +140,7 @@ fun Application.designServer(
     }
   }
   val librarySources = LibrarySources(holder, uiBuilder, libraryEditors)
+  val generator = DesignGenerator(holder)
   routing {
     if (usage != null) usageRoutes(usage, github, statsUsers)
     librarySourceRoutes(librarySources, uiBuilder, github)
@@ -172,7 +176,7 @@ fun Application.designServer(
       val sha = BLOB_NAME.matchEntire(call.parameters["name"].orEmpty())?.groupValues?.get(1)
       // Blobs are content-addressed: a published design's hash is as good as a key to it.
       val bytes =
-        sha?.let { holder.current().blob(it) ?: userDesigns?.blob(it) }
+        sha?.let { holder.current().blob(it) ?: generator.blob(it) ?: userDesigns?.blob(it) }
           ?: return@get call.notFound()
       (holder.current().entry(sha!!) ?: userDesigns?.entry(sha))?.let {
         usage?.blobFetched(
@@ -187,6 +191,41 @@ fun Application.designServer(
       call.allowAnyOrigin()
       call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable")
       call.respondBytes(bytes, ContentType.Application.OctetStream)
+    }
+
+    // The design for a key (DesignGenerator): the library's, or captured now when the library has
+    // none. A client that computes its cards' keys itself asks by key, so no card's config or
+    // states leave it: a key holds generation properties, never values.
+    options("$API_BASE/generate") {
+      call.allowAnyOrigin()
+      call.response.header(HttpHeaders.AccessControlAllowMethods, "POST, OPTIONS")
+      call.response.header(HttpHeaders.AccessControlAllowHeaders, "Content-Type")
+      call.respondText("", status = HttpStatusCode.NoContent)
+    }
+    post("$API_BASE/generate") {
+      call.allowAnyOrigin()
+      val key = runCatching {
+        keyJson.decodeFromString(DesignKey.serializer(), call.receiveText())
+      }
+        .getOrElse {
+          return@post call.respondText(
+            "not a design key: ${it.message}",
+            status = HttpStatusCode.BadRequest,
+          )
+        }
+      val design =
+        try {
+          generator.design(key)
+        } catch (e: DesignGenerator.UnsupportedKey) {
+          return@post call.respondText(
+            "no design for this key: ${e.message}",
+            status = HttpStatusCode.NotFound,
+          )
+        }
+      call.respondText(
+        json.encodeToString(GeneratedDesign.serializer(), design),
+        ContentType.Application.Json,
+      )
     }
 
     get("$API_BASE/${DesignCatalog.PATH}") {
@@ -320,8 +359,10 @@ fun Application.designServer(
             status = HttpStatusCode.BadRequest,
           )
         }
+      // The card's exact design when its states say what it is; the closest library one if not.
       val match =
-        CardResolve.resolve(holder.current(), request)
+        runCatching { CardResolve.resolveExact(generator, request) }.getOrNull()
+          ?: CardResolve.resolve(holder.current(), request)
           ?: return@post call.respondText(
             "no library design draws this card in ${request.cardStyle}",
             status = HttpStatusCode.NotFound,
@@ -526,6 +567,9 @@ private const val USAGE_FLUSH_MS: Long = 60_000
 
 /** The client protocol's base path: the app's design server URL is `<host>$API_BASE`. */
 const val API_BASE = "/designs/v1"
+
+/** Design keys as clients write them: fields this server doesn't know yet are ignored. */
+private val keyJson = Json { ignoreUnknownKeys = true }
 
 /** The embed's files, served from the classpath (`:design-server:embedResources`). */
 private val EMBED_FILES =
