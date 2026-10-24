@@ -54,10 +54,10 @@ import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideExpressionNames
 import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
 import ee.schimke.ha.rc.components.ProvideHaUberStyle
+import ee.schimke.ha.rc.components.ProvideRemoteHaTheme
 import ee.schimke.ha.rc.components.RemoteHaTheme
 import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
-import ee.schimke.ha.rc.components.asHaTheme
 import ee.schimke.ha.rc.converterFor
 import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.data.toEntityState
@@ -536,27 +536,29 @@ internal fun SlotContent(
     ProvideCardRegistry(registry) {
       RemoteMaterialTheme(colorScheme = colors) {
         val theme = RemoteMaterialTheme.colorScheme.asHaTheme()
-        // The user's card style brings its instruments, type and shapes; the watch keeps its own
-        // palette (the WearM3 colours the widget host updates).
-        ProvideHaUberStyle(cardStyle, darkTheme = true) {
-          ProvideCardSizeMode(CardSizeMode.Fixed) {
-            // The Glance Wear container already supplies its own shape + brush via
-            // WearWidgetBrush, so suppress the per-card rounded clip + divider border that would
-            // otherwise double up.
-            //
-            // Glance Wear's capture profile is fixed by AndroidX to a stable op set that rejects
-            // FlowLayout (op 240). Tell HA card components to use a non-wrapping row fallback so
-            // cards that lean on `RemoteFlowRow` (glance / grid / entity-filter) capture instead
-            // of throwing.
-            ProvideCardChrome(enabled = false) {
-              ProvideFixedCanvasAxis(BreakpointAxis.Height) {
-                ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
-                  if (card != null) {
-                    // One card per slot document: its expressions are named in composition
-                    // order, as its template's are.
-                    ProvideExpressionNames { content(RemoteModifier.fillMaxWidth()) }
-                  } else {
-                    ChooseCardPlaceholder(theme)
+        ProvideRemoteHaTheme(theme) {
+          // The user's card style brings its instruments, type and shapes; the watch keeps its own
+          // palette (the WearM3 colours the widget host updates).
+          ProvideHaUberStyle(cardStyle, darkTheme = true) {
+            ProvideCardSizeMode(CardSizeMode.Fixed) {
+              // The Glance Wear container already supplies its own shape + brush via
+              // WearWidgetBrush, so suppress the per-card rounded clip + divider border that would
+              // otherwise double up.
+              //
+              // Glance Wear's capture profile is fixed by AndroidX to a stable op set that rejects
+              // FlowLayout (op 240). Tell HA card components to use a non-wrapping row fallback so
+              // cards that lean on `RemoteFlowRow` (glance / grid / entity-filter) capture instead
+              // of throwing.
+              ProvideCardChrome(enabled = false) {
+                ProvideFixedCanvasAxis(BreakpointAxis.Height) {
+                  ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
+                    if (card != null) {
+                      // One card per slot document: its expressions are named in composition
+                      // order, as its template's are.
+                      ProvideExpressionNames { content(RemoteModifier.fillMaxWidth()) }
+                    } else {
+                      ChooseCardPlaceholder(theme)
+                    }
                   }
                 }
               }
@@ -666,3 +668,22 @@ class CardSmallWidgetService : GlanceWearWidgetService() {
 class CardLargeWidgetService : GlanceWearWidgetService() {
   override val widget: GlanceWearWidget = CardLargeWidget()
 }
+
+/**
+ * Remote Material 3's colour roles as the smaller palette HA cards draw with: each HA role is read
+ * from the `WearM3.<role>` slot `HaTheme.asNamedRemote` writes it to, so the widget host's updates
+ * to those names re-colour the card.
+ */
+internal fun RemoteColorScheme.asHaTheme(): RemoteHaTheme =
+  RemoteHaTheme(
+    cardBackground = surfaceContainerHigh,
+    dashboardBackground = background,
+    sectionBackground = surfaceContainer,
+    primaryText = onSurface,
+    secondaryText = onSurfaceVariant,
+    linkText = tertiary,
+    divider = outlineVariant,
+    placeholderAccent = primary,
+    placeholderBackground = primaryContainer,
+    unknownAccent = secondary,
+  )

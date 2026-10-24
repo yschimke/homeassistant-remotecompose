@@ -33,11 +33,11 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
+import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * `custom:ha-bambulab-print_status-card` — printer hero tile. While printing: a progress ring with
@@ -359,7 +359,7 @@ private fun PhaseGlyph(data: HaBambuPrintStatusData, theme: RemoteHaTheme, sizeD
       contentAlignment = RemoteAlignment.Center,
     ) {
       ProgressRing(null, 1f, data.accent, theme, sizeDp = sizeDp, strokePx = 6f)
-      RemoteIcon(
+      RemoteBasicIcon(
         imageVector = Icons.Filled.Check.toRemoteImageVector(),
         contentDescription = data.stage.rs,
         modifier = RemoteModifier.size((sizeDp / 2).rdp),
@@ -387,7 +387,7 @@ private fun PhaseGlyph(data: HaBambuPrintStatusData, theme: RemoteHaTheme, sizeD
         .background(tint.copy(alpha = tint.alpha * 0.18f.rf)),
     contentAlignment = RemoteAlignment.Center,
   ) {
-    RemoteIcon(
+    RemoteBasicIcon(
       imageVector = icon.toRemoteImageVector(),
       contentDescription = data.stage.rs,
       modifier = RemoteModifier.size((sizeDp * 6 / 11).rdp),

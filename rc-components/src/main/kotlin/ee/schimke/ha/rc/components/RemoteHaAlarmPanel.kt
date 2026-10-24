@@ -28,10 +28,10 @@ import androidx.compose.remote.creation.compose.state.rememberMutableRemoteInt
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.remote.creation.compose.state.rs
+import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 import java.text.DecimalFormat
 
 /**
@@ -157,7 +157,7 @@ fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = Re
               .border(2.rdp, haInk(status.accent), haControlShape(20, round = true)),
           contentAlignment = RemoteAlignment.Center,
         ) {
-          RemoteIcon(
+          RemoteBasicIcon(
             imageVector = status.icon.toRemoteImageVector(),
             contentDescription = status.label.rs,
             modifier = RemoteModifier.size(22.rdp),
@@ -233,7 +233,7 @@ private fun StatusRow(
             .border(2.rdp, haInk(status.accent), haControlShape(20, round = true)),
         contentAlignment = RemoteAlignment.Center,
       ) {
-        RemoteIcon(
+        RemoteBasicIcon(
           imageVector = status.icon.toRemoteImageVector(),
           contentDescription = status.label.rs,
           modifier = RemoteModifier.size(22.rdp),

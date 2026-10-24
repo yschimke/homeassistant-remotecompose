@@ -23,10 +23,10 @@ import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
+import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * `todo-list` card — title + active items section + completed items section. Items are rendered as
@@ -226,7 +226,7 @@ private fun Row(
           .then(consoleKeyChrome()),
       contentAlignment = RemoteAlignment.Center,
     ) {
-      RemoteIcon(
+      RemoteBasicIcon(
         imageVector =
           (if (completed) Icons.Filled.CheckBox else Icons.Outlined.CheckBoxOutlineBlank)
             .toRemoteImageVector(),

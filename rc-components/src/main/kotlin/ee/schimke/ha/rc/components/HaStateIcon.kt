@@ -11,10 +11,10 @@ import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rc
+import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * An entity's icon that follows its on/off state: [icon] while off, [activeIcon] (usually
@@ -47,20 +47,20 @@ internal fun HaStateIcon(
   modifier: RemoteModifier,
 ) {
   if (activeIcon == null || activeIcon == icon) {
-    RemoteIcon(icon.toRemoteImageVector(), contentDescription, modifier, tint = tint)
+    RemoteBasicIcon(icon.toRemoteImageVector(), contentDescription, modifier, tint = tint)
     return
   }
   val unavailableShowsActive = activeWhenUnavailable && !initiallyAvailable
   if (isOn == null || (isAvailable == null && unavailableShowsActive)) {
     val glyph = if (initiallyOn || unavailableShowsActive) activeIcon else icon
-    RemoteIcon(glyph.toRemoteImageVector(), contentDescription, modifier, tint = tint)
+    RemoteBasicIcon(glyph.toRemoteImageVector(), contentDescription, modifier, tint = tint)
     return
   }
   val showActive =
     if (activeWhenUnavailable && isAvailable != null) isOn.or(isAvailable.not()) else isOn
   val hidden = Color.Transparent.rc
   RemoteBox(contentAlignment = RemoteAlignment.Center) {
-    RemoteIcon(
+    RemoteBasicIcon(
       icon.toRemoteImageVector(),
       contentDescription,
       modifier,
@@ -68,7 +68,7 @@ internal fun HaStateIcon(
     )
     // Described once: both glyphs are drawn, one transparent, so a description on each would be
     // read twice.
-    RemoteIcon(
+    RemoteBasicIcon(
       activeIcon.toRemoteImageVector(),
       null,
       modifier,

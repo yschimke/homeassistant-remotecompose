@@ -21,10 +21,10 @@ import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
+import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * HA `weather-forecast` card. Top row shows the current condition icon
@@ -100,7 +100,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme) {
     horizontalArrangement = RemoteArrangement.SpaceBetween,
   ) {
     RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
-      RemoteIcon(
+      RemoteBasicIcon(
         imageVector = data.icon.toRemoteImageVector(),
         contentDescription = data.condition,
         modifier = RemoteModifier.size(36.rdp),
@@ -206,7 +206,7 @@ private fun ExtraChip(
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
     verticalArrangement = RemoteArrangement.spacedBy(3.rdp),
   ) {
-    RemoteIcon(
+    RemoteBasicIcon(
       imageVector = extra.icon.toRemoteImageVector(),
       contentDescription = extra.label.rs,
       modifier = RemoteModifier.size(16.rdp),
@@ -251,7 +251,7 @@ fun RemoteHaWeatherForecastWide(
         .padding(horizontal = 10.rdp, vertical = 8.rdp),
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
-    RemoteIcon(
+    RemoteBasicIcon(
       imageVector = data.icon.toRemoteImageVector(),
       contentDescription = data.condition,
       modifier = RemoteModifier.size(28.rdp),
@@ -315,7 +315,7 @@ fun RemoteHaWeatherForecastWear(
         .padding(horizontal = 12.rdp, vertical = (if (large) 8 else 2).rdp),
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
-    RemoteIcon(
+    RemoteBasicIcon(
       imageVector = data.icon.toRemoteImageVector(),
       contentDescription = data.condition,
       modifier = RemoteModifier.size((if (large) 40 else 30).rdp),
@@ -383,7 +383,7 @@ private fun ForecastStrip(
           style = haTextStyle(),
           maxLines = 1,
         )
-        RemoteIcon(
+        RemoteBasicIcon(
           imageVector = day.icon.toRemoteImageVector(),
           contentDescription = label,
           modifier = RemoteModifier.size(if (fill) 32.rdp else 20.rdp),

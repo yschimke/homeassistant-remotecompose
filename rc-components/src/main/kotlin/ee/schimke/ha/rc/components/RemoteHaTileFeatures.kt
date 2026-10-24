@@ -29,12 +29,12 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
+import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * Height of one tile feature control: HA's `--feature-height` (42px, `hui-card-features`).
@@ -119,7 +119,7 @@ internal fun TileIconWithBadge(
             .background(badge.color?.let { haInk(it) } ?: theme.secondaryText),
         contentAlignment = RemoteAlignment.Center,
       ) {
-        RemoteIcon(
+        RemoteBasicIcon(
           imageVector = badge.icon.toRemoteImageVector(),
           contentDescription = badge.description.rs,
           modifier = RemoteModifier.size(11.rdp),
@@ -243,7 +243,7 @@ private fun StepButton(
         .then(consoleKeyChrome(if (click != null) theme.primaryText else theme.secondaryText)),
     contentAlignment = RemoteAlignment.Center,
   ) {
-    RemoteIcon(
+    RemoteBasicIcon(
       imageVector = icon.toRemoteImageVector(),
       contentDescription = description.rs,
       modifier = RemoteModifier.size(20.rdp),
@@ -291,7 +291,7 @@ private fun ModeSelect(
       ) {
         val icon = option.icon
         if (feature.showIcons && icon != null) {
-          RemoteIcon(
+          RemoteBasicIcon(
             imageVector = icon.toRemoteImageVector(),
             contentDescription = spoken(subject, option.label).rs,
             modifier = RemoteModifier.size(20.rdp),

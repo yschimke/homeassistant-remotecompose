@@ -27,6 +27,9 @@ compose-bom = "2026.09.00"
 # this set consistent.
 remote-compose = "1.0.0-alpha22"
 remote-material3 = "1.0.0-alpha14"
+# The version `remote-material3` 1.0.0-alpha14 declares: rc-components draws icons with its
+# `RemoteBasicIcon` directly, so it moves with the set above.
+remote-foundation = "1.0.0-alpha05"
 
 # AndroidX Glance Wear (runtime feature gated on Wear OS 7+ / API 37 inside the
 # library; we use it for the per-slot wear widgets). Lockstep — see above.
@@ -156,6 +159,7 @@ remote-player-compose = { module = "androidx.compose.remote:remote-player-compos
 remote-player-view = { module = "androidx.compose.remote:remote-player-view", version.ref = "remote-compose" }
 remote-tooling-preview = { module = "androidx.compose.remote:remote-tooling-preview", version.ref = "remote-compose" }
 remote-material3 = { module = "androidx.wear.compose.remote:remote-material3", version.ref = "remote-material3" }
+remote-foundation = { module = "androidx.compose.remote.foundation:foundation", version.ref = "remote-foundation" }
 
 # compose-preview render-harness seam. `IrSidecarChannel` is the process-static
 # hand-off the renderer drains after each preview composition into the

@@ -8,11 +8,10 @@ import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.profile.Profile
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.wear.compose.material3.ColorScheme as WearColorScheme
-import androidx.wear.compose.remote.material3.RemoteColorScheme
-import androidx.wear.compose.remote.material3.RemoteMaterialTheme
 
 /**
  * Concrete fallback palette for Home Assistant cards. Normal in-app rendering uses these colors
@@ -112,41 +111,6 @@ private fun HaTheme.asRemote(): RemoteHaTheme =
     placeholderBackground = placeholderBackground.rc,
     unknownAccent = unknownAccent.rc,
   )
-
-/**
- * Map Remote Material 3 roles onto the smaller palette used by HA cards.
- *
- * `tertiary` and `secondary` intentionally carry HA-specific roles that otherwise have no distinct
- * slot in the Wear scheme: link text and unknown-state accent respectively.
- */
-fun RemoteColorScheme.asHaTheme(): RemoteHaTheme =
-  RemoteHaTheme(
-    cardBackground = surfaceContainerHigh,
-    dashboardBackground = background,
-    sectionBackground = surfaceContainer,
-    primaryText = onSurface,
-    secondaryText = onSurfaceVariant,
-    linkText = tertiary,
-    divider = outlineVariant,
-    placeholderAccent = primary,
-    placeholderBackground = primaryContainer,
-    unknownAccent = secondary,
-  )
-
-internal fun RemoteHaTheme.asColorScheme(): RemoteColorScheme =
-  RemoteColorScheme()
-    .copy(
-      surfaceContainerHigh = cardBackground,
-      background = dashboardBackground,
-      surfaceContainer = sectionBackground,
-      onSurface = primaryText,
-      onSurfaceVariant = secondaryText,
-      tertiary = linkText,
-      outlineVariant = divider,
-      primary = placeholderAccent,
-      primaryContainer = placeholderBackground,
-      secondary = unknownAccent,
-    )
 
 /**
  * A colour the **host** resolves from Android's current system theme, written into the document as
@@ -335,22 +299,63 @@ fun ProvideHaTheme(theme: HaTheme, content: @Composable () -> Unit) {
 }
 
 /**
- * [this] palette as a Wear Material 3 colour scheme, each HA role in the slot [asHaTheme] reads it
- * from. Roles HA has no counterpart for keep Wear's defaults, as they do under [ProvideHaTheme].
+ * The Remote Material 3 colour role (`WearM3.<role>`) each HA role is carried in, as a named
+ * colour: the names a Wear widget host updates and the preview server re-themes a document by.
  */
-fun HaTheme.asWearColorScheme(): WearColorScheme =
-  WearColorScheme(
-    surfaceContainerHigh = cardBackground,
-    background = dashboardBackground,
-    surfaceContainer = sectionBackground,
-    onSurface = primaryText,
-    onSurfaceVariant = secondaryText,
-    tertiary = linkText,
-    outlineVariant = divider,
-    primary = placeholderAccent,
-    primaryContainer = placeholderBackground,
-    secondary = unknownAccent,
+private object WearM3Roles {
+  const val CARD_BACKGROUND = "WearM3.surfaceContainerHigh"
+  const val DASHBOARD_BACKGROUND = "WearM3.background"
+  const val SECTION_BACKGROUND = "WearM3.surfaceContainer"
+  const val PRIMARY_TEXT = "WearM3.onSurface"
+  const val SECONDARY_TEXT = "WearM3.onSurfaceVariant"
+  const val LINK_TEXT = "WearM3.tertiary"
+  const val DIVIDER = "WearM3.outlineVariant"
+  const val PLACEHOLDER_ACCENT = "WearM3.primary"
+  const val PLACEHOLDER_BACKGROUND = "WearM3.primaryContainer"
+  const val UNKNOWN_ACCENT = "WearM3.secondary"
+}
+
+/** [this] palette as each role's named `WearM3.<role>` colour, with its value as the default. */
+fun HaTheme.asNamedRemote(): RemoteHaTheme =
+  RemoteHaTheme(
+    cardBackground =
+      RemoteColor.createNamedRemoteColor(WearM3Roles.CARD_BACKGROUND, cardBackground),
+    dashboardBackground =
+      RemoteColor.createNamedRemoteColor(WearM3Roles.DASHBOARD_BACKGROUND, dashboardBackground),
+    sectionBackground =
+      RemoteColor.createNamedRemoteColor(WearM3Roles.SECTION_BACKGROUND, sectionBackground),
+    primaryText = RemoteColor.createNamedRemoteColor(WearM3Roles.PRIMARY_TEXT, primaryText),
+    secondaryText = RemoteColor.createNamedRemoteColor(WearM3Roles.SECONDARY_TEXT, secondaryText),
+    linkText = RemoteColor.createNamedRemoteColor(WearM3Roles.LINK_TEXT, linkText),
+    divider = RemoteColor.createNamedRemoteColor(WearM3Roles.DIVIDER, divider),
+    placeholderAccent =
+      RemoteColor.createNamedRemoteColor(WearM3Roles.PLACEHOLDER_ACCENT, placeholderAccent),
+    placeholderBackground =
+      RemoteColor.createNamedRemoteColor(WearM3Roles.PLACEHOLDER_BACKGROUND, placeholderBackground),
+    unknownAccent = RemoteColor.createNamedRemoteColor(WearM3Roles.UNKNOWN_ACCENT, unknownAccent),
   )
+
+/**
+ * The theme a card draws in when nothing provides one: Remote Material 3's default (dark) scheme,
+ * as the named colours it would carry.
+ */
+private val DefaultRemoteHaTheme: RemoteHaTheme =
+  HaTheme(
+      cardBackground = Color(0xFF494453),
+      dashboardBackground = Color(0xFF000000),
+      sectionBackground = Color(0xFF332E3C),
+      primaryText = Color(0xFFF6EDFF),
+      secondaryText = Color(0xFFCAC4D0),
+      linkText = Color(0xFFFFDCC2),
+      divider = Color(0xFF615D67),
+      placeholderAccent = Color(0xFFE9DDFF),
+      placeholderBackground = Color(0xFF4D3D76),
+      unknownAccent = Color(0xFFDEE0FF),
+      isDark = true,
+    )
+    .asNamedRemote()
+
+private val LocalRemoteHaTheme = compositionLocalOf { DefaultRemoteHaTheme }
 
 /**
  * [ProvideHaTheme], but with every role written into the document as Remote Material 3's **named**
@@ -364,12 +369,12 @@ fun HaTheme.asWearColorScheme(): WearColorScheme =
  */
 @Composable
 fun ProvideNamedHaTheme(theme: HaTheme, content: @Composable () -> Unit) {
-  RemoteMaterialTheme(colorScheme = RemoteColorScheme(theme.asWearColorScheme()), content = content)
+  ProvideRemoteHaTheme(theme.asNamedRemote(), content)
 }
 
 @Composable
 fun ProvideRemoteHaTheme(theme: RemoteHaTheme, content: @Composable () -> Unit) {
-  RemoteMaterialTheme(colorScheme = theme.asColorScheme(), content = content)
+  CompositionLocalProvider(LocalRemoteHaTheme provides theme, content = content)
 }
 
 @Composable
@@ -385,6 +390,6 @@ fun ProvideSystemHaTheme(
   }
 }
 
-@Composable fun currentRemoteHaTheme(): RemoteHaTheme = RemoteMaterialTheme.colorScheme.asHaTheme()
+@Composable fun currentRemoteHaTheme(): RemoteHaTheme = LocalRemoteHaTheme.current
 
 @Composable internal fun haTheme(): RemoteHaTheme = currentRemoteHaTheme()
