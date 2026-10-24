@@ -18,7 +18,7 @@ version of the ten new styles, which did not exist.
 Reproduction:
 
 ```sh
-./gradlew :card-designs:testDebugUnitTest --tests '*CommunityFamilyEvidenceTest' \
+./gradlew :card-designs:testAndroidHostTest --tests '*CommunityFamilyEvidenceTest' \
   -PcardDesignsOut=/tmp/community-designs
 PYTHONPATH=<Pillow installation> python3 scripts/community-contact-sheet.py \
   /tmp/community-designs/community-renders docs/design/evidence/community-families

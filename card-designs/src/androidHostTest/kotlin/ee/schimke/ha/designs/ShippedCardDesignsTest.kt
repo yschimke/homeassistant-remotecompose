@@ -70,7 +70,7 @@ class ShippedCardDesignsTest {
       }
 
     private const val UPDATE =
-      "./gradlew :card-designs:testDebugUnitTest --tests '*ShippedCardDesignsTest*' " +
+      "./gradlew :card-designs:testAndroidHostTest --tests '*ShippedCardDesignsTest*' " +
         "-PupdateShippedCardDesigns"
 
     private const val STALE = "The app's shipped card designs are out of date: run $UPDATE"

@@ -639,15 +639,23 @@ path from `addon-server/PLAN.md` (option A, `remote-creation-jvm`).
 The server stays static in what it serves — a library generated at build time, nothing captured
 per request — but adds what a static host can't: verification, a template browser and hot reload.
 
-- **Library** (`:card-designs:generateCardDesigns`, a Robolectric test; output in
-  `card-designs/build/card-designs/`). Its source cards are the curated `LibraryFixtures` (one per
-  card type and shape the parity tests cover) and every card in the bundled demo dashboards,
-  nested cards included. Each card's generation properties give a key; each key is captured for
+- **Library** (`CardDesignLibrary`; output in `card-designs/build/card-designs/`). Its source
+  cards are the curated `LibraryFixtures` (one per card type and shape the parity tests cover) and
+  every card in the bundled demo dashboards, nested cards included. Each card's generation properties give a key; each key is captured for
   every theme style, light and dark, and for every other card style in each mode it has
   (mobile-app surface, the one the client fetches). Output:
   `manifest.json` and `blobs/` (written by `DesignPublisher`, the client's format), plus
   `catalog.json` (`DesignCatalog`: an example card and preview paths per design) and `previews/`
   (each design rendered bound to its example's values, and as published with its placeholders).
+  It generates in either of two ways, which draw the same:
+  - `:card-designs:generateCardDesigns`, a Robolectric test: captured with AndroidX, as the app does;
+  - `:card-designs:generateCardDesignsJvm`, plain JVM with no Android: captured with rc-players'
+    Compose Multiplatform creation fork under the app's operations (`LibraryCaptureProfile`), the
+    previews drawn by the Compose Multiplatform player, into `card-designs/build/card-designs-jvm/`.
+
+  The two libraries' bytes differ (the two creation libraries number and order a document's parts
+  differently). `:card-designs:checkCardDesignParity` draws every key's template from both with the
+  one Compose Multiplatform player and compares the pixels.
 - **Client protocol.** `GET /designs/v1/manifest.json` (ETag = its SHA-256, `no-cache`, `304` on
   `If-None-Match`) and `GET /designs/v1/blobs/<sha256>.rc` (immutable). Only names the manifest
   lists are served. Loading verifies every blob's size and hash against the manifest and refuses a
