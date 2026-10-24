@@ -56,7 +56,7 @@ class CardDesignSurfaceParityTest {
    */
   private fun launcherKeys(cardType: String): List<DesignKey> {
     val cards =
-      GenerateCardDesignLibrary.librarySources().filter {
+      CardDesignLibrary.librarySources().filter {
         ee.schimke.ha.rc.CardDesignTemplates.designCard(it.card, it.snapshot).type == cardType
       }
     val classicCells = (1..4).flatMap { columns -> (1..3).map { rows -> cell(columns, rows) } }
