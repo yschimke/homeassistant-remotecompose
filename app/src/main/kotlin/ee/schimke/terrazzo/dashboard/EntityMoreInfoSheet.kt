@@ -32,8 +32,10 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -137,7 +139,10 @@ fun EntityMoreInfo(
       value = null
       value = runCatching { loadHistory(hours) }.getOrDefault(emptyList())
     }
-  val history = remember(fetched, state) { fetched?.let { withLiveTail(it, state) } }
+  // The fetched history with each pushed state appended as it arrives, so every change while the
+  // sheet is open stays on the chart, not only the latest. A new fetch starts it again.
+  var history by remember(fetched) { mutableStateOf(fetched?.let { withLiveTail(it, state) }) }
+  LaunchedEffect(state) { history = history?.let { withLiveTail(it, state) } }
 
   Column(
     modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp),
@@ -168,7 +173,7 @@ fun EntityMoreInfo(
       Box(Modifier.padding(16.dp)) { HistoryPanel(history, unit, hours, accent, nowMs) }
     }
 
-    if (history != null) HistoryStats(history, unit, accent, nowMs)
+    history?.let { HistoryStats(it, unit, accent, nowMs) }
 
     Attributes(state, attributes)
 
@@ -477,11 +482,13 @@ private fun Attributes(state: EntityState?, attributes: Map<String, JsonElement>
 }
 
 /**
- * [points] with [state] appended when it is newer than the last fetched point, so the chart ends on
- * the value the sheet shows and moves with each pushed state.
+ * [points] with [state] appended when it is newer than the last point, so the chart ends on the
+ * value the sheet shows; applied to its own result on each pushed state, it keeps every change. An
+ * empty history stays empty: the recorder kept nothing in the window (an excluded entity, a failed
+ * fetch), and a snapshot last updated long before it would stretch the chart past the chosen range.
  */
 internal fun withLiveTail(points: List<HistoryPoint>, state: EntityState?): List<HistoryPoint> {
-  if (state == null) return points
+  if (state == null || points.isEmpty()) return points
   val at = state.lastUpdated ?: state.lastChanged ?: return points
   val last = points.lastOrNull()
   if (last != null && last.ts >= at) return points
