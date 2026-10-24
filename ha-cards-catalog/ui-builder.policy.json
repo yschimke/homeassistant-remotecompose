@@ -3141,6 +3141,62 @@
           "notes": "Off keeps the strip of entity cells alone."
         }
       ]
+    },
+    "ha-cards/history-graph-card-full": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaHistoryGraphCardFull",
+      "displayName": "History graph card",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "framed": {
+            "type": "bool",
+            "value": false
+          },
+          "compactEmptyState": {
+            "type": "bool",
+            "value": false
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "framed",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Each trace at the family's framed height (a dashboard)."
+        },
+        {
+          "name": "compactEmptyState",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Keeps the empty state to one line (a Wear slot)."
+        }
+      ]
+    },
+    "ha-cards/history-graph-card-identity": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaHistoryGraphCardIdentity",
+      "displayName": "History graph card identity",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/statistics-graph-card-full": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaStatisticsGraphCardFull",
+      "displayName": "Statistics graph card",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/markdown-card-full": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaMarkdownCardFull",
+      "displayName": "Markdown card",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/markdown-card-identity": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaMarkdownCardIdentity",
+      "displayName": "Markdown card identity",
+      "group": "Card layout",
+      "nativeOnly": true
     }
   },
   "$comment_templates": "Generated, not hand-written: :design-server's HaCardsTemplatesTest seeds each from a card schema (CardSchema.fromCard) with HaCardsSeed — the design server's UiBuilderSeed retargeted to this catalog — and fails when a committed template drifts. `-PhaCardsTemplates.update=true` rewrites them.",

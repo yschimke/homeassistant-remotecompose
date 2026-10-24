@@ -2,8 +2,6 @@
 
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
@@ -13,29 +11,23 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.JinjaTemplate
 import ee.schimke.ha.model.TemplateBindings
-import ee.schimke.ha.rc.BreakpointAxis
-import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
-import ee.schimke.ha.rc.LocalCardSizeMode
-import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaMarkdownData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.Markdown
 import ee.schimke.ha.rc.components.MarkdownBlock
 import ee.schimke.ha.rc.components.MarkdownInline
-import ee.schimke.ha.rc.components.RemoteHaMarkdown
-import ee.schimke.ha.rc.components.RemoteHaMarkdownIdentity
 import ee.schimke.ha.rc.components.cardText
 import ee.schimke.ha.rc.components.placeholderTitle
 import ee.schimke.ha.rc.components.titleSizeBucket
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
-class MarkdownCardConverter : CardConverter {
+class MarkdownCardConverter : DesignedCardConverter() {
   private companion object {
     const val TITLE_SIZE = "title_size"
     const val BLOCKS = "blocks"
@@ -158,8 +150,12 @@ class MarkdownCardConverter : CardConverter {
     return if ('b' in flags) "**$inner**" else inner
   }
 
+  /**
+   * What [card] shows: its title and content parsed into blocks, each bound to its text in a design
+   * template (`card.md.<i>`).
+   */
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  internal fun markdownData(card: CardConfig, snapshot: HaSnapshot): HaMarkdownData {
     val title = card.raw["title"]?.jsonPrimitive?.content
     val content = card.raw["content"]?.jsonPrimitive?.content ?: ""
 
@@ -178,48 +174,26 @@ class MarkdownCardConverter : CardConverter {
         } else {
           listOf(MarkdownBlock(MarkdownBlock.Kind.Paragraph, "…"))
         }
-      RenderSized(HaMarkdownData(title = title, blocks = blocks), modifier)
-      return
+      return bound(HaMarkdownData(title = title, blocks = blocks))
     }
 
     val template = MarkdownTemplateBindings.from(content, snapshot)
     val blocks = Markdown.parse(template.rendered).bind(template)
-    RenderSized(HaMarkdownData(title = title, blocks = blocks), modifier)
+    return bound(HaMarkdownData(title = title, blocks = blocks))
   }
 
-  /**
-   * Shared sizing branch for both the template and simple-binding paths. Dashboard renders the full
-   * block list; launcher / Wear narrow cells drop to the identity tier (title + first line) and
-   * wider ones render the full body. Single width gate (#224).
-   */
+  /** [source], its blocks bound to their text when a design template is being captured. */
   @Composable
-  private fun RenderSized(source: HaMarkdownData, modifier: RemoteModifier) {
+  private fun bound(source: HaMarkdownData): HaMarkdownData =
     // A design template binds each block's text (`card.md.<i>`), which the client renders.
-    val data =
-      if (LocalTemplateBindings.current == null) source
-      else
-        source.copy(
-          blocks =
-            source.blocks.mapIndexed { i, block ->
-              block.copy(boundText = cardText("md.$i", block.text))
-            }
-        )
-    when (LocalCardSizeMode.current) {
-      CardSizeMode.Wrap -> RemoteHaMarkdown(data, modifier = modifier)
-      CardSizeMode.Fixed ->
-        RemoteSizeBreakpoint(
-          thresholdsDp = intArrayOf(BULK_IDENTITY_THRESHOLD_DP),
-          modifier = modifier,
-          axis = BreakpointAxis.Width,
-        ) { tier ->
-          if (tier == 0) {
-            RemoteHaMarkdownIdentity(data, RemoteModifier.fillMaxWidth())
-          } else {
-            RemoteHaMarkdown(data, RemoteModifier.fillMaxWidth())
+    if (LocalTemplateBindings.current == null) source
+    else
+      source.copy(
+        blocks =
+          source.blocks.mapIndexed { i, block ->
+            block.copy(boundText = cardText("md.$i", block.text))
           }
-        }
-    }
-  }
+      )
 
   private fun List<MarkdownBlock>.bind(template: MarkdownTemplateBindings): List<MarkdownBlock> =
     map { block ->
