@@ -46,8 +46,12 @@ trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
 git init -q
 git remote add origin "$URL"
+# A previous run pushed the tag but failed before its release: finish that one.
+if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null; then
+  echo "$REPO already has tag $TAG without a release; creating the release"
+  RESUME=1
 # Fetch only this branch: the -out repository's other branches are large.
-if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null; then
+elif git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null; then
   git fetch -q --depth 1 origin "$BRANCH"
   git switch -q -c "$BRANCH" FETCH_HEAD
   git rm -rq --ignore-unmatch .
@@ -55,6 +59,7 @@ else
   git switch -q --orphan "$BRANCH"
 fi
 
+if [[ -z "${RESUME:-}" ]]; then
 mkdir -p custom_components/terrazzo
 unzip -q "$ZIP" -d custom_components/terrazzo
 grep -q "\"version\": \"${TAG#v}\"" custom_components/terrazzo/manifest.json \
@@ -87,6 +92,7 @@ git -c user.name="${GIT_AUTHOR_NAME:-Yuri Schimke}" -c user.email="${GIT_AUTHOR_
   -m "Source: yschimke/homeassistant-remotecompose@${SOURCE}"
 git tag "$TAG"
 git push -q origin "HEAD:refs/heads/${BRANCH}" "refs/tags/${TAG}"
+fi
 
 gh release create "$TAG" -R "$REPO" --verify-tag --latest \
   --title "Terrazzo ${TAG#v}" \
