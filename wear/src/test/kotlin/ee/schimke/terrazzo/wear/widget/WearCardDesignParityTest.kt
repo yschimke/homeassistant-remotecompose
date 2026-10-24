@@ -7,6 +7,7 @@ import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.UNAVAILABLE_DESIGN_PROPERTY
+import ee.schimke.ha.rc.cards.AlarmPanelCardConverter
 import ee.schimke.ha.rc.cards.AreaCardConverter
 import ee.schimke.ha.rc.cards.ButtonCardConverter
 import ee.schimke.ha.rc.cards.CalendarCardConverter
@@ -17,7 +18,9 @@ import ee.schimke.ha.rc.cards.HeadingCardConverter
 import ee.schimke.ha.rc.cards.HumidifierCardConverter
 import ee.schimke.ha.rc.cards.LightCardConverter
 import ee.schimke.ha.rc.cards.LogbookCardConverter
+import ee.schimke.ha.rc.cards.MapCardConverter
 import ee.schimke.ha.rc.cards.MediaControlCardConverter
+import ee.schimke.ha.rc.cards.PictureElementsCardConverter
 import ee.schimke.ha.rc.cards.SensorCardConverter
 import ee.schimke.ha.rc.cards.StatisticCardConverter
 import ee.schimke.ha.rc.cards.ThermostatCardConverter
@@ -468,6 +471,41 @@ class WearCardDesignParityTest {
         """{"type":"area","area":"office"}""",
         """{"type":"media-control","entity":"media_player.living_room"}""",
         """{"type":"media-control","entity":"media_player.kitchen"}""",
+      ),
+    )
+  }
+
+  @Test
+  fun panelDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "alarm_control_panel.home" to
+              EntityState(
+                "alarm_control_panel.home",
+                "disarmed",
+                attributes("""{"friendly_name":"Home","code_format":"number"}"""),
+              ),
+            "device_tracker.phone" to
+              EntityState(
+                "device_tracker.phone",
+                "home",
+                attributes("""{"friendly_name":"Phone","latitude":51.5,"longitude":-0.1}"""),
+              ),
+            "light.porch" to EntityState("light.porch", "on"),
+          )
+      )
+    assertWearParity(
+      "panel designs",
+      listOf(AlarmPanelCardConverter(), MapCardConverter(), PictureElementsCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"alarm-panel","entity":"alarm_control_panel.home"}""",
+        """{"type":"alarm-panel","entity":"alarm_control_panel.home","states":["arm_home"]}""",
+        """{"type":"map","entities":["device_tracker.phone"]}""",
+        """{"type":"map","title":"Family","entities":["device_tracker.phone"]}""",
+        """{"type":"picture-elements","image":"https://example.com/a.jpg","elements":[{"type":"state-icon","entity":"light.porch","style":{"top":"50%","left":"50%"}}]}""",
       ),
     )
   }

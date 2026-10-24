@@ -2912,6 +2912,36 @@
       "displayName": "Media control card (wide)",
       "group": "Card layout",
       "nativeOnly": true
+    },
+    "ha-cards/alarm-panel-card-full": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaAlarmPanelCardFull",
+      "displayName": "Alarm panel card",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/alarm-panel-card-narrow": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaAlarmPanelCardNarrow",
+      "displayName": "Alarm panel card (narrow)",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/alarm-panel-card-wide": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaAlarmPanelCardWide",
+      "displayName": "Alarm panel card (wide)",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/map-card": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaMapCard",
+      "displayName": "Map card",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/picture-elements-card": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaPictureElementsCard",
+      "displayName": "Picture elements card",
+      "group": "Card layout",
+      "nativeOnly": true
     }
   },
   "$comment_templates": "Generated, not hand-written: :design-server's HaCardsTemplatesTest seeds each from a card schema (CardSchema.fromCard) with HaCardsSeed — the design server's UiBuilderSeed retargeted to this catalog — and fails when a committed template drifts. `-PhaCardsTemplates.update=true` rewrites them.",
