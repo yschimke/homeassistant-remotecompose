@@ -1,25 +1,16 @@
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
-import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaLogbookData
 import ee.schimke.ha.rc.components.HaLogbookEntry
-import ee.schimke.ha.rc.components.RemoteHaLogbook
-import ee.schimke.ha.rc.components.RemoteHaLogbookIdentity
-import ee.schimke.ha.rc.components.RemoteHaSummaryLine
-import ee.schimke.ha.rc.components.cardText
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import kotlin.time.Instant
@@ -38,8 +29,12 @@ import kotlinx.serialization.json.putJsonArray
  * entry per configured entity using its current state as the most-recent "message" line, with the
  * entity's last-changed timestamp where available. Hosts that hydrate logbook history at capture
  * time can extend [HaSnapshot] later; for now this gives a representative slot.
+ *
+ * Its layout is its card design, `logbook.uid` ([BulkDesignParts]): the full card on a dashboard;
+ * in a launcher cell its identity below 180 dp wide and the full card above; in a Wear slot its
+ * summary line in the Small container and the full card in the Large one.
  */
-class LogbookCardConverter : CardConverter {
+class LogbookCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.LOGBOOK
 
   // Baked, non-bindable content (see CardConverter.dataSignature):
@@ -105,29 +100,6 @@ class LogbookCardConverter : CardConverter {
       emptyMap(),
       emptyMap(),
     )
-
-  @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val data = logbookData(card, snapshot)
-
-    when (LocalCardSizeMode.current) {
-      CardSizeMode.Wrap -> RemoteHaLogbook(data, modifier = modifier)
-      // Narrow → latest-entry identity; wider → the full list.
-      // Single width gate (#224).
-      CardSizeMode.Fixed ->
-        BulkTiers(
-          modifier,
-          summary = {
-            RemoteHaSummaryLine(
-              cardText("title", data.title ?: "Logbook"),
-              cardText("summary", logbookSummary(data)),
-            )
-          },
-          identity = { RemoteHaLogbookIdentity(data, RemoteModifier.fillMaxWidth()) },
-          full = { RemoteHaLogbook(data, RemoteModifier.fillMaxWidth()) },
-        )
-    }
-  }
 }
 
 private fun entityIds(card: CardConfig): List<String> {
@@ -145,7 +117,7 @@ private fun formatRelative(instant: Instant?): String {
   return instant.toString().substringBefore('T')
 }
 
-private fun logbookData(card: CardConfig, snapshot: HaSnapshot): HaLogbookData {
+internal fun logbookData(card: CardConfig, snapshot: HaSnapshot): HaLogbookData {
   val title = card.raw["title"]?.jsonPrimitive?.content
   val entries =
     entityIds(card).map { entityId ->
@@ -165,5 +137,5 @@ private fun logbookData(card: CardConfig, snapshot: HaSnapshot): HaLogbookData {
  * The Wear Small summary line: the latest entry, or that there is none. A `card.summary` binding,
  * so a design template shows the real card's line rather than the template's.
  */
-private fun logbookSummary(data: HaLogbookData): String =
+internal fun logbookSummary(data: HaLogbookData): String =
   data.entries.firstOrNull()?.let { "${it.name} ${it.message}" } ?: "No recent activity"
