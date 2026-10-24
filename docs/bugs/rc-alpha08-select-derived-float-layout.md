@@ -101,7 +101,7 @@ everything else in the surrounding `RemoteBox`.
 
 ## Live code
 
-- Component: [rc-components/src/main/kotlin/ee/schimke/ha/rc/components/RemoteHaEntityRow.kt](../../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/RemoteHaEntityRow.kt) — see the `RemoteHaToggleSwitch` doc-comment.
+- Component: [rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/RemoteHaEntityRow.kt](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/RemoteHaEntityRow.kt) — see the `RemoteHaToggleSwitch` doc-comment.
 - Previews: [previews/src/main/kotlin/ee/schimke/ha/previews/ToggleSwitchPreviews.kt](../../previews/src/main/kotlin/ee/schimke/ha/previews/ToggleSwitchPreviews.kt) — `ToggleByProgress_*` (works) vs `ToggleInitial_*` (would have shown the bug; now uses Kotlin-side branch + literal RemoteFloat).
 - Reference: androidx-main `compose/remote/integration-tests/demos/.../ClickableDemo.kt` and `SwitchDemo.kt` use the same `rememberMutableRemoteBoolean` + `ValueChange` + `select` pattern; that pattern is what we hit the bug trying to apply.
 
@@ -139,4 +139,4 @@ val progress = animateRemoteFloat(rf = target, duration = 0.18f)
 …and add `toggle` to the `.clickable(...)` action list alongside the
 host action.
 
-[rc]: ../../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/RemoteHaEntityRow.kt
+[rc]: ../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/RemoteHaEntityRow.kt

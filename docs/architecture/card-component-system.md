@@ -21,7 +21,7 @@ It sits between three other documents and leans on them rather than repeating th
 ## 1. Theming rules
 
 The tokens live in
-[`HaTokens.kt`](../../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/HaTokens.kt).
+[`HaTokens.kt`](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/HaTokens.kt).
 A part is reusable across cards, a Wear widget and a launcher cell only if it follows all five.
 
 | # | Rule | Token | Why |
@@ -77,7 +77,7 @@ exception, because its numerals are sized to the card rather than to a role.
 
 ### Layer 1 — the reading
 
-[`HaReading`](../../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/HaReading.kt) is
+[`HaReading`](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/HaReading.kt) is
 what Home Assistant says about one numeric entity, independent of how it is drawn: the formatted
 text, the number, the unit, the scale, and the **kind** (`HaMeasureKind`: temperature, humidity,
 battery, power, illuminance, percentage, generic).
@@ -100,7 +100,7 @@ kind from `device_class`, falling back to `unit_of_measurement`. The card's own 
 
 ### Layer 2 — visual meters
 
-[`RemoteHaMeters.kt`](../../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/RemoteHaMeters.kt).
+[`RemoteHaMeters.kt`](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/RemoteHaMeters.kt).
 A meter draws a `0..1` fraction in a colour it is handed, and nothing else: no text, no chrome,
 no entity. Each one:
 
@@ -117,7 +117,7 @@ hand-copied canvases. Its severity bands moved to `HaStatusColors`.
 
 ### Layer 3 — typed measurements
 
-[`RemoteHaMeasurement.kt`](../../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/RemoteHaMeasurement.kt).
+[`RemoteHaMeasurement.kt`](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/RemoteHaMeasurement.kt).
 A measurement draws a reading the way its kind deserves. The kind picks the visual
 (`HaMeasureVisual`):
 
@@ -184,7 +184,7 @@ wants `adaptive`, so it plays expanded at 2×2 and compact when resized smaller.
 ## 5. Uber themes
 
 A palette (`ThemeStyle`, `HaTheme`) recolours the chrome. An **uber theme**
-([`HaUberTheme`](../../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/HaUberTheme.kt))
+([`HaUberTheme`](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/HaUberTheme.kt))
 is a whole design: palette, card and control shape, typeface, how a value is set, and its own
 **family of instruments** (`HaVisualFamily`). A family is a different *design* of each Layer 2
 visual, not a restyle of one drawing. An LCD thermometer has no bulb, a Trinitron gauge has a

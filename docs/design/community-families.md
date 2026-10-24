@@ -125,7 +125,7 @@ were copied. Names identify inspirations and do not imply endorsement.
 Catppuccin's Latte/Mocha palette values are reused under its MIT license; the
 copyright and permission notice are in
 [`THIRD_PARTY_NOTICES.md`](../../THIRD_PARTY_NOTICES.md) and packaged in
-`rc-components/src/main/resources/META-INF/NOTICE-catppuccin.txt`.
+`rc-components/src/commonMain/resources/META-INF/NOTICE-catppuccin.txt`.
 Mushroom is Apache-2.0; Bubble, UI Minimalist, iOS themes, Obsidian Minimal and
 HA LCARS report MIT. No material from those implementations is redistributed.
 Noctis does not declare a repository license, so its code/assets/palette are not

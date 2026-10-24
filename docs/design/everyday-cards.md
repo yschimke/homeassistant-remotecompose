@@ -5,7 +5,7 @@ history-graph 3%** of content cards, ~90% together. The `UberCommon` previews pu
 every uber theme, and before this brief most themes changed only their palette and typeface on
 them. The meters, dials and controls diverged; the cards people actually look at did not.
 
-This brief gives every visual family ([`HaVisualFamily`](../../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/HaUberTheme.kt))
+This brief gives every visual family ([`HaVisualFamily`](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/HaUberTheme.kt))
 its own design of each everyday card. A theme must be recognisable from a crop of its sensor
 tile or its heading alone, with the colour removed.
 

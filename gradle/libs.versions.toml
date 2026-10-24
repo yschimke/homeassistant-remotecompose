@@ -124,11 +124,15 @@ gluegen-runtime = { module = "org.jogamp.gluegen:gluegen-rt-main", version.ref =
 compose-webview = { module = "io.github.kevinnzou:compose-webview-multiplatform", version.ref = "compose-webview" }
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 cmp-material-icons-core = { module = "org.jetbrains.compose.material:material-icons-core", version.ref = "cmp-icons" }
+cmp-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "cmp-icons" }
 cmp-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "cmp-navigation3-runtime" }
 cmp-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "cmp-navigation3" }
 cmp-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "cmp-adaptive" }
 rc-players-bom = { module = "ee.schimke.composeai:rc-players-bom", version.ref = "rc-players" }
 rc-player-protocol = { module = "ee.schimke.composeai:rc-player-protocol" }
+# The Compose Multiplatform fork of AndroidX remote-creation-compose, in AndroidX's own package.
+# Android builds keep AndroidX's (see rc-components/build.gradle.kts); this is what JVM captures with.
+rc-creation-compose = { module = "ee.schimke.composeai:third-party-remote-creation-compose" }
 rc-player-compose = { module = "ee.schimke.composeai:rc-player-compose" }
 rc-player-edit = { module = "ee.schimke.composeai:rc-player-edit" }
 rc-player-js-dist = { module = "ee.schimke.composeai:remote-compose-player-js-dist" }
