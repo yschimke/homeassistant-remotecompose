@@ -244,6 +244,14 @@ How each part takes it:
   Nixie): readings, and entity icons and switches (`HaToggleAccent.themed()`). Such a theme keeps a
   second **hot ink** for its hot and low segments, the way real LCDs had coloured overlay segments.
 
+**App themes.** A theme whose identity is the whole surface can set `appTheme`. The phone app
+discovers it and draws every screen in the theme's palette and typeface, not only the cards: LCD,
+Trinitron, Nixie, Console, LCARS and Catppuccin do. While such a style is on, Settings disables the
+app palette choice and says why, and a single-mode theme (dark-only Trinitron) disables light /
+dark too. The card style list labels these styles "Themes the whole app". Secondary screens (the
+more-info and card actions sheets, card history) are skinned in the card style either way through
+`ProvideScreenSkin`: its corners, borders, readout and chart grammar.
+
 `classic` is exactly the look the cards had before uber themes (`HaUberThemeTest` pins it), so
 nothing changes until a host provides another.
 

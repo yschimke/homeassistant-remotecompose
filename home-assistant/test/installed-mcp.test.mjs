@@ -91,7 +91,8 @@ test('MCP server serves only its pinned user, on this instance', {timeout:120_00
     assert.equal(init.serverInfo.name, 'terrazzo');
     assert.equal((await mcp({jsonrpc:'2.0', method:'notifications/initialized'})).status(), 202);
     const tools = (await rpc('tools/list')).tools.map((t) => t.name);
-    assert.deepEqual(tools.sort(), ['find_entities', 'get_dashboard', 'get_entity_state', 'list_dashboards', 'toggle', 'turn_off', 'turn_on']);
+    assert.deepEqual(tools.sort(), ['find_entities', 'get_card_guide', 'get_dashboard', 'get_edit_session',
+      'get_entity_state', 'list_dashboards', 'start_edit_session', 'submit_draft', 'toggle', 'turn_off', 'turn_on']);
 
     const found = (await tool('find_entities', {query:'wall light'})).entities.map((e) => e.entity_id);
     assert.ok(found.includes('light.wall_light') && found.includes('input_boolean.wall_light'), found.join());

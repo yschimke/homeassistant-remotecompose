@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Typography
-import androidx.compose.remote.creation.compose.text.RemoteFontFamily
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -19,15 +17,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import ee.schimke.ha.rc.components.HaReadoutStyle
 import ee.schimke.ha.rc.components.HaSurfaceMaterial
 import ee.schimke.ha.rc.components.HaTheme
@@ -40,6 +33,9 @@ import ee.schimke.ha.rc.components.haLegible
 import ee.schimke.terrazzo.ui.LocalCardStyle
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.LocalThemeStyle
+import ee.schimke.terrazzo.ui.inCardStyle
+import ee.schimke.terrazzo.ui.tileColor
+import ee.schimke.terrazzo.ui.toColorScheme
 
 /**
  * How a secondary screen (the more-info sheet, a card's history) is skinned: the user's card style
@@ -159,32 +155,10 @@ fun ProvideScreenSkin(cardStyle: HaUberTheme? = null, content: @Composable () ->
     val active = currentHaUberTheme()
     val skin =
       remember(theme, palette, active) { skinFor(theme, palette, active.ink, active.hotInk) }
-    val base = MaterialTheme.colorScheme
-    val accent = active.ink ?: palette.linkText
-    val tonal = accent.copy(alpha = 0.22f).compositeOver(palette.cardBackground)
-    val colors =
-      base.copy(
-        primary = accent,
-        onPrimary = palette.cardBackground,
-        primaryContainer = tonal,
-        onPrimaryContainer = palette.primaryText,
-        secondaryContainer = tonal,
-        onSecondaryContainer = palette.primaryText,
-        background = palette.dashboardBackground,
-        onBackground = palette.primaryText,
-        surface = palette.dashboardBackground,
-        onSurface = palette.primaryText,
-        onSurfaceVariant = palette.secondaryText,
-        surfaceContainerLowest = palette.dashboardBackground,
-        surfaceContainerLow = palette.dashboardBackground,
-        surfaceContainer = palette.cardBackground,
-        surfaceContainerHigh = palette.cardBackground,
-        surfaceContainerHighest = skin.tile,
-        outline = lerp(palette.divider, palette.secondaryText, 0.5f),
-        outlineVariant = palette.divider,
-      )
-    val family = theme.fontFamily.toComposeFamily()
-    val typography = MaterialTheme.typography.skinned(family, theme.letterSpacingSp.sp)
+    // Already the app's scheme when the card style themes the app; built over it either way, so
+    // a role the palette has no word for keeps the app's.
+    val colors = palette.toColorScheme(active.ink, base = MaterialTheme.colorScheme)
+    val typography = MaterialTheme.typography.inCardStyle(theme)
     CompositionLocalProvider(LocalScreenSkin provides skin) {
       MaterialTheme(
         colorScheme = colors,
@@ -258,7 +232,7 @@ private fun skinFor(
     id = theme.id,
     background = palette.dashboardBackground,
     panel = palette.cardBackground,
-    tile = lerp(palette.cardBackground, palette.primaryText, if (palette.isDark) 0.08f else 0.05f),
+    tile = palette.tileColor(),
     panelCorner = corner,
     tileCorner = (corner * 0.75f).coerceAtLeast(if (shape.cornerDp == 0) 0.dp else 2.dp),
     controlCorner = shape.controlCornerDp.dp,
@@ -323,37 +297,3 @@ internal fun chartStyleFor(family: HaVisualFamily): HistoryChartStyle =
     HaVisualFamily.Arctic,
     HaVisualFamily.Aeon -> HistoryChartStyle.Default
   }
-
-private fun RemoteFontFamily.toComposeFamily(): FontFamily? =
-  when (this) {
-    RemoteFontFamily.Monospace -> FontFamily.Monospace
-    RemoteFontFamily.Serif -> FontFamily.Serif
-    RemoteFontFamily.SansSerif -> FontFamily.SansSerif
-    else -> null
-  }
-
-/** This type scale in [family] (unchanged when null) with [tracking] added to every style. */
-private fun Typography.skinned(family: FontFamily?, tracking: TextUnit): Typography {
-  fun TextStyle.s(): TextStyle =
-    copy(
-      fontFamily = family ?: fontFamily,
-      letterSpacing = if (tracking.value == 0f) letterSpacing else tracking,
-    )
-  return copy(
-    displayLarge = displayLarge.s(),
-    displayMedium = displayMedium.s(),
-    displaySmall = displaySmall.s(),
-    headlineLarge = headlineLarge.s(),
-    headlineMedium = headlineMedium.s(),
-    headlineSmall = headlineSmall.s(),
-    titleLarge = titleLarge.s(),
-    titleMedium = titleMedium.s(),
-    titleSmall = titleSmall.s(),
-    bodyLarge = bodyLarge.s(),
-    bodyMedium = bodyMedium.s(),
-    bodySmall = bodySmall.s(),
-    labelLarge = labelLarge.s(),
-    labelMedium = labelMedium.s(),
-    labelSmall = labelSmall.s(),
-  )
-}
