@@ -1657,6 +1657,34 @@
         },
         {
             "key": {
+                "cardType": "custom:ha-bambulab-skipobject-card",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "pause=1;resume=0;stop=1",
+                "theme": "baked:TerrazzoHome:light"
+            },
+            "sha256": "ea91ed6c960e716a59377a9699e0a9ddd61ae794d3f31fff921825f2ea3c47b1",
+            "bytes": 2577,
+            "slots": 0,
+            "designId": "library:custom:ha-bambulab-skipobject-card",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "custom:ha-bambulab-skipobject-card",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "pause=1;resume=0;stop=1",
+                "theme": "baked:TerrazzoHome:dark"
+            },
+            "sha256": "5760df5cc8789475b3a999bb50db89e4ecf415ebae0cb56de902b96ff9c31737",
+            "bytes": 2577,
+            "slots": 0,
+            "designId": "library:custom:ha-bambulab-skipobject-card",
+            "title": "Built-in"
+        },
+        {
+            "key": {
                 "cardType": "entities",
                 "surface": "mobile-app",
                 "rcApiLevel": 8,

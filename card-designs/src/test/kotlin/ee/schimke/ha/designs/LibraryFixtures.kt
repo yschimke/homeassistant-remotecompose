@@ -604,6 +604,11 @@ object LibraryFixtures {
         printer,
       ),
       fixture(
+        "bambu-skipobject",
+        card("custom:ha-bambulab-skipobject-card") { put("entity_prefix", "x1c") },
+        printer,
+      ),
+      fixture(
         "custom-card",
         card("custom:mushroom-light-card") { put("entity", "light.kitchen") },
         listStates,
