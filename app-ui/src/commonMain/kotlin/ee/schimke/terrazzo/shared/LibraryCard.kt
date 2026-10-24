@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.shared
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -25,6 +26,8 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.*
 
 /** Values stay in the host. Resolution sends only card type and anonymous domain slots. */
@@ -92,7 +95,12 @@ internal fun LibraryCard(
     if (current == null) {
       Column {
         DashboardCardTheme(style, dark) { key(tick) { fallback() } }
-        if (settled && showFallbackNotice) Text("Design unavailable · showing built-in card")
+        if (settled && showFallbackNotice)
+          Text(
+            "Design unavailable · showing built-in card",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
       }
     } else {
       Column(
@@ -324,10 +332,16 @@ internal suspend fun loadLibraryDesign(
             .toString()
         )
       }
-    if (response.status == HttpStatusCode.NotFound) return null
+    if (response.status == HttpStatusCode.NotFound) {
+      LibraryDesignMisses.record(key, null)
+      return null
+    }
     check(response.status.isSuccess())
     val resolved = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-    if (key.requireExact && !exactLibraryDesign(resolved)) return null
+    if (key.requireExact && !exactLibraryDesign(resolved)) {
+      LibraryDesignMisses.record(key, resolved)
+      return null
+    }
     val sha = resolved["sha256"]!!.jsonPrimitive.content
     check(Regex("[0-9a-f]{64}").matches(sha))
     val blob = http.get(cardDesignBlobUrl(server, sha, client))
@@ -335,5 +349,43 @@ internal suspend fun loadLibraryDesign(
     return blob.bodyAsBytes().also { check(Sha256.hex(it) == sha) }
   } finally {
     http.close()
+  }
+}
+
+/**
+ * Cards the design library couldn't draw exactly, so they fell back to the built-in card: the list
+ * the library's coverage work enumerates next. Each distinct miss is logged once (the browser
+ * console, or stdout on desktop) and counted for the session. Only what was already sent to the
+ * design server appears: the anonymous card (type and slot ids), the style and light or dark, and
+ * the shape the server answered with. Nothing leaves the device.
+ */
+internal object LibraryDesignMisses {
+  private val mutex = Mutex()
+  private val counts = linkedMapOf<String, Int>()
+
+  /** Each miss, as [describe] words it, with how often it happened this session. */
+  suspend fun snapshot(): Map<String, Int> = mutex.withLock { counts.toMap() }
+
+  suspend fun record(key: LibraryDesignKey, resolved: JsonObject?) {
+    val miss = describe(key, resolved)
+    val first = mutex.withLock {
+      val seen = counts[miss] ?: 0
+      counts[miss] = seen + 1
+      seen == 0
+    }
+    if (first) println("Terrazzo: no exact card design · $miss")
+  }
+
+  /** A [resolved] of null means the server has no design with these slots at all (404). */
+  internal fun describe(key: LibraryDesignKey, resolved: JsonObject?): String {
+    val mode = if (key.dark) "dark" else "light"
+    val answer =
+      if (resolved == null) "none"
+      else {
+        val shape =
+          ((resolved["key"] as? JsonObject)?.get("shape") as? JsonPrimitive)?.contentOrNull
+        "inexact" + (shape?.takeIf { it.isNotEmpty() }?.let { " (shape $it)" } ?: "")
+      }
+    return "${key.card} ${key.style}/$mode → $answer"
   }
 }

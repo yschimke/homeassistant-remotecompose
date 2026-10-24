@@ -38,7 +38,6 @@ kotlin {
       implementation(libs.cmp.navigation3.runtime)
       implementation(libs.cmp.navigation3.ui)
       implementation(libs.cmp.adaptive)
-      implementation(libs.cmp.navigation.suite)
       implementation(project(":rc-player-ui"))
       implementation(libs.kotlinx.coroutines.core)
       implementation(libs.ktor.client.core)

@@ -21,6 +21,29 @@ export function wallSettings(search) {
   };
 }
 
+/** Home Assistant's theme variables the dashboard draws its chrome in. */
+const THEME_VARIABLES = {
+  primary: '--primary-color',
+  background: '--primary-background-color',
+  card: '--card-background-color',
+  text: '--primary-text-color',
+  secondaryText: '--secondary-text-color',
+  divider: '--divider-color',
+};
+
+/** A CSS color as a canvas normalizes it (`#rrggbb` or `rgba(…)`), or '' when it isn't one. */
+function normalColor(value) {
+  const probe = value && document.createElement('canvas').getContext('2d');
+  if (!probe) return '';
+  // An invalid color leaves the previous fill in place, so two different starting fills disagree.
+  probe.fillStyle = '#000000';
+  probe.fillStyle = value;
+  const first = probe.fillStyle;
+  probe.fillStyle = '#ffffff';
+  probe.fillStyle = value;
+  return first === probe.fillStyle ? first : '';
+}
+
 // `click` too: accessibility activation (screen readers, keyboard) sends no pointerdown.
 const ACTIVITY = ['pointerdown', 'click', 'keydown', 'wheel'];
 
@@ -62,7 +85,10 @@ export class TerrazzoPanel extends HTMLElement {
         for (const type of ACTIVITY) view.addEventListener(type, this.activity, { capture: true, passive: true });
     });
     this.onVisibility = () => { if (document.visibilityState === 'visible') this.keepAwake(); };
-    this.onFullscreen = () => { if (!this.fullscreenElement()) this.showStart(); };
+    this.onFullscreen = () => {
+      this.fullscreenListener?.(!!this.fullscreenElement());
+      if (!this.fullscreenElement()) this.showStart();
+    };
     this.frame.terrazzoHost = {
       getAccessToken: async () => {
         const auth = this._hass?.auth;
@@ -77,6 +103,16 @@ export class TerrazzoPanel extends HTMLElement {
       },
       // The dashboard hands over how to go back to where it started, for `return_after`.
       setReturnHome: (returnHome) => { this.returnHome = returnHome; },
+      // HA's active theme, so the dashboard's chrome matches the rest of Home Assistant.
+      getTheme: () => this.theme(),
+      setThemeListener: (listener) => { this.themeListener = listener; },
+      // Full screen of the whole panel (HA's sidebar and header hidden), not just the frame.
+      toggleFullscreen: () => {
+        if (this.fullscreenElement()) (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
+        else this.enterFullscreen();
+      },
+      isFullscreen: () => !!this.fullscreenElement(),
+      setFullscreenListener: (listener) => { this.fullscreenListener = listener; },
       dispatchAction: (payload) => {
         const action = JSON.parse(payload);
         const kind = action.type?.split('.').pop();
@@ -96,7 +132,22 @@ export class TerrazzoPanel extends HTMLElement {
       },
     };
   }
-  set hass(hass) { this._hass = hass; }
+  set hass(hass) {
+    this._hass = hass;
+    // HA replaces `themes` when the theme or dark mode changes; its CSS variables follow a frame later.
+    if (hass?.themes !== this._themes) {
+      this._themes = hass?.themes;
+      requestAnimationFrame(() => { if (this.isConnected) this.themeListener?.(this.theme()); });
+    }
+  }
+  /** JSON: HA's dark mode and resolved theme colors; a color the theme doesn't set is ''. */
+  theme() {
+    const style = getComputedStyle(this);
+    const colors = Object.fromEntries(Object.entries(THEME_VARIABLES)
+      .map(([name, variable]) => [name, normalColor(style.getPropertyValue(variable).trim())]));
+    const dark = this._hass?.themes?.darkMode ?? matchMedia('(prefers-color-scheme: dark)').matches;
+    return JSON.stringify({ dark: !!dark, ...colors });
+  }
   set panel(panel) { this._panel = panel; }
   connectedCallback() {
     if (!this.frame.getAttribute('src') || this.frame.getAttribute('src') === 'about:blank') this.frame.src = '/terrazzo-static/wasm/index.html?ha-panel';
@@ -124,6 +175,8 @@ export class TerrazzoPanel extends HTMLElement {
     this.wakeLock?.release().catch(() => {});
     this.wakeLock = null;
     this.returnHome = null;
+    this.themeListener = null;
+    this.fullscreenListener = null;
     this.cover.hidden = true;
   }
   active() {

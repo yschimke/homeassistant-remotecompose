@@ -43,26 +43,73 @@ fun main() {
 
 @OptIn(ExperimentalComposeUiApi::class)
 private fun show(panel: Boolean, signedInServer: String) {
-  val signedIn = signedInServer.isNotEmpty()
   ComposeViewport(viewportContainerId = "app", configure = { enableBrowserWindowInsets = true }) {
-    if (entryMode() == "demo") PublicDemo()
-    else if (panel)
-      TerrazzoMultiplatformApp(
-        hostedConfig = HaConfig(homeAssistantOrigin(), ""),
-        hostedAccessToken = ::currentPanelAccessToken,
-        initialDashboardPath = panelDashboard().ifBlank { null },
-        hostedAction = ::panelAction,
-        registerReturnHome = ::panelReturnHome,
-      )
-    else
-      TerrazzoMultiplatformApp(
-        hostedConfig = if (signedIn) HaConfig(signedInServer, "") else null,
-        hostedAccessToken = if (signedIn) ::currentSignInAccessToken else null,
-        signInWithHomeAssistant = ::signIn,
-        onSignOut = ::signOut,
-      )
+    if (entryMode() == "demo") PublicDemo() else App(panel, signedInServer)
   }
 }
+
+@Composable
+private fun App(panel: Boolean, signedInServer: String) {
+  val signedIn = signedInServer.isNotEmpty()
+  // In the panel the app draws in Home Assistant's theme and follows it when it changes.
+  var hostTheme by remember { mutableStateOf(if (panel) HostTheme.parse(panelTheme()) else null) }
+  var fullScreen by remember { mutableStateOf(isFullScreen(panel)) }
+  DisposableEffect(Unit) {
+    if (panel) watchPanelTheme { hostTheme = HostTheme.parse(it) }
+    watchFullScreen(panel) { fullScreen = it }
+    onDispose {}
+  }
+  val fullScreenToggle: (() -> Unit)? =
+    if (canFullScreen(panel)) ({ toggleFullScreen(panel) }) else null
+  if (panel)
+    TerrazzoMultiplatformApp(
+      hostedConfig = HaConfig(homeAssistantOrigin(), ""),
+      hostedAccessToken = ::currentPanelAccessToken,
+      initialDashboardPath = panelDashboard().ifBlank { null },
+      hostedAction = ::panelAction,
+      registerReturnHome = ::panelReturnHome,
+      hostTheme = hostTheme,
+      isFullScreen = fullScreen,
+      onToggleFullScreen = fullScreenToggle,
+    )
+  else
+    TerrazzoMultiplatformApp(
+      hostedConfig = if (signedIn) HaConfig(signedInServer, "") else null,
+      hostedAccessToken = if (signedIn) ::currentSignInAccessToken else null,
+      signInWithHomeAssistant = ::signIn,
+      onSignOut = ::signOut,
+      isFullScreen = fullScreen,
+      onToggleFullScreen = fullScreenToggle,
+    )
+}
+
+// A panel older than this app has no getTheme; the app then follows the browser's light or dark.
+@JsFun("() => window.frameElement.terrazzoHost.getTheme?.() ?? ''")
+private external fun panelTheme(): String
+
+@JsFun("(listener) => window.frameElement.terrazzoHost.setThemeListener?.(listener)")
+private external fun watchPanelTheme(listener: (String) -> Unit)
+
+// The panel fullscreens itself, hiding HA's sidebar too; elsewhere (or in an older panel) the page.
+@JsFun(
+  "(panel) => panel && window.frameElement.terrazzoHost.toggleFullscreen ? !!(window.parent.document.fullscreenEnabled || window.parent.document.webkitFullscreenEnabled) : !!(document.fullscreenEnabled || document.webkitFullscreenEnabled)"
+)
+private external fun canFullScreen(panel: Boolean): Boolean
+
+@JsFun(
+  "(panel) => panel && window.frameElement.terrazzoHost.isFullscreen ? window.frameElement.terrazzoHost.isFullscreen() : !!(document.fullscreenElement || document.webkitFullscreenElement)"
+)
+private external fun isFullScreen(panel: Boolean): Boolean
+
+@JsFun(
+  "(panel) => { const host = panel ? window.frameElement.terrazzoHost : null; if (host?.toggleFullscreen) return host.toggleFullscreen(); if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document); else Promise.resolve((document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen)?.call(document.documentElement)).catch(() => {}); }"
+)
+private external fun toggleFullScreen(panel: Boolean)
+
+@JsFun(
+  "(panel, listener) => { const host = panel ? window.frameElement.terrazzoHost : null; if (host?.setFullscreenListener) return host.setFullscreenListener(listener); for (const type of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(type, () => listener(!!(document.fullscreenElement || document.webkitFullscreenElement))); }"
+)
+private external fun watchFullScreen(panel: Boolean, listener: (Boolean) -> Unit)
 
 // Browser OAuth from ha-oauth.js, loaded before this module by index.html.
 @JsFun("() => window.terrazzoOAuth.restore()")
