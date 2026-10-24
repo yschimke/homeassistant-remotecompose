@@ -184,6 +184,9 @@ try:
                 picture = Image.open(io.BytesIO(page.screenshot())).convert('RGB')
                 pixels = picture.get_flattened_data() if hasattr(picture, 'get_flattened_data') else picture.getdata()
                 return sum(1 for pixel in pixels if all(abs(a-b) < 4 for a, b in zip(pixel, rgb)))
+            # Park the pointer off the cards: a hovered card's state layer tints its picture.
+            page.mouse.move(1, 1)
+            page.wait_for_timeout(300)
             assert painted_color((36, 116, 164)) > 500, 'Cover must paint its fetched pixels'
             old_reads = len(image_reads)
             update('image.p2s_cover', '2026-10-18T17:30:00')
