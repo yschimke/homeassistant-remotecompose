@@ -2,15 +2,15 @@
 
 package ee.schimke.ha.rc.components
 
-import android.graphics.Paint as AndroidPaint
 import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
 import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.layout.RemoteSize
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.asRemotePaint
+import androidx.compose.remote.creation.compose.state.RemotePaint
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.ui.graphics.PaintingStyle
 
 // ---------------------------------------------------------------------------------------------
 // History traces: the history-graph row drawn in each visual family's own design
@@ -130,14 +130,11 @@ private fun Plot.area(
   }
 }
 
-private fun areaPaint(color: RemoteColor) =
-  AndroidPaint()
-    .apply {
-      isAntiAlias = false
-      style = AndroidPaint.Style.FILL
-    }
-    .asRemotePaint()
-    .apply { this.color = color }
+private fun areaPaint(color: RemoteColor) = RemotePaint {
+  isAntiAlias = false
+  style = PaintingStyle.Fill
+}
+  .apply { this.color = color }
 
 private fun Plot.baseline(scope: RemoteDrawScope, color: RemoteColor, widthPx: Float = 1f) =
   scope.drawLine(

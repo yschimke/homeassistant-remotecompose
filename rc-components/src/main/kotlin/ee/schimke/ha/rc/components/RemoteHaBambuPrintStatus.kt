@@ -2,7 +2,6 @@
 
 package ee.schimke.ha.rc.components
 
-import android.graphics.Paint as AndroidPaint
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudOff
@@ -26,9 +25,9 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.RemoteColor
+import androidx.compose.remote.creation.compose.state.RemotePaint
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.RemoteTextUnit
-import androidx.compose.remote.creation.compose.state.asRemotePaint
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
@@ -36,6 +35,8 @@ import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
@@ -420,40 +421,26 @@ private fun ProgressRing(
       val topLeft = RemoteOffset(pad, pad)
       val arcSize = RemoteSize(w - pad * 2f.rf, h - pad * 2f.rf)
 
-      val track =
-        AndroidPaint()
-          .apply {
-            isAntiAlias = true
-            style = AndroidPaint.Style.STROKE
-            strokeWidth = strokePx
-            strokeCap = AndroidPaint.Cap.ROUND
-          }
-          .asRemotePaint()
-          .apply { color = theme.divider }
+      val track = RemotePaint {
+        isAntiAlias = true
+        style = PaintingStyle.Stroke
+        strokeWidth = strokePx.rf
+        strokeCap = StrokeCap.Round
+      }
+        .apply { color = theme.divider }
       drawArc(track, 0f.rf, 360f.rf, false, topLeft, arcSize)
 
       if (sweep > 0.5f) {
-        val progress =
-          AndroidPaint()
-            .apply {
-              isAntiAlias = true
-              style = AndroidPaint.Style.STROKE
-              strokeWidth = strokePx
-              strokeCap = AndroidPaint.Cap.ROUND
-              color = accent.toArgb()
-            }
-            .asRemotePaint()
+        val progress = RemotePaint {
+          isAntiAlias = true
+          style = PaintingStyle.Stroke
+          strokeWidth = strokePx.rf
+          strokeCap = StrokeCap.Round
+          color = accent.rc
+        }
         // Start at 12 o'clock (Android draws 0° at 3 o'clock).
         drawArc(progress, (-90f).rf, sweepRf, false, topLeft, arcSize)
       }
     }
   }
 }
-
-private fun Color.toArgb(): Int =
-  android.graphics.Color.argb(
-    (alpha * 255f).toInt(),
-    (red * 255f).toInt(),
-    (green * 255f).toInt(),
-    (blue * 255f).toInt(),
-  )
