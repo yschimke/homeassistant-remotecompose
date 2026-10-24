@@ -11,6 +11,7 @@ import ee.schimke.ha.rc.cards.ArcDialDesignParts
 import ee.schimke.ha.rc.cards.BulkDesignParts
 import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.ClockDesignParts
+import ee.schimke.ha.rc.cards.ContainerDesignParts
 import ee.schimke.ha.rc.cards.EntityDesignParts
 import ee.schimke.ha.rc.cards.GlanceDesignParts
 import ee.schimke.ha.rc.cards.HeadingDesignParts
@@ -584,4 +585,25 @@ fun HaMapCard(modifier: RemoteModifier = RemoteModifier) {
 @RemoteComposable
 fun HaPictureElementsCard(modifier: RemoteModifier = RemoteModifier) {
   SingleFormDesignParts.PictureElements(modifier)
+}
+
+/** `ha-cards/vertical-stack-card`: a vertical stack's children, one under another. */
+@Composable
+@RemoteComposable
+fun HaVerticalStackCard(modifier: RemoteModifier = RemoteModifier) {
+  ContainerDesignParts.VerticalStack(modifier)
+}
+
+/** `ha-cards/horizontal-stack-card`: a horizontal stack's children, side by side. */
+@Composable
+@RemoteComposable
+fun HaHorizontalStackCard(modifier: RemoteModifier = RemoteModifier) {
+  ContainerDesignParts.HorizontalStack(modifier)
+}
+
+/** `ha-cards/grid-card`: a grid's children, in as many columns as its width holds. */
+@Composable
+@RemoteComposable
+fun HaGridCard(modifier: RemoteModifier = RemoteModifier) {
+  ContainerDesignParts.Grid(modifier)
 }
