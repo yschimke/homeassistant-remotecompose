@@ -29,7 +29,7 @@ import ee.schimke.ha.model.SectionFlowItem
 import ee.schimke.ha.model.SectionFlowSplit
 import ee.schimke.ha.rc.components.LocalGridCellWidthPx
 import ee.schimke.ha.rc.components.rememberExpressionName
-import java.text.DecimalFormat
+import ee.schimke.ha.rc.components.toPaddedRemoteString
 
 /**
  * One section's cards in a single document, flowed by the player rather than by the host: the
@@ -100,7 +100,7 @@ fun RemoteSectionCardFlow(
   RemoteBox(modifier = modifier.fillMaxWidth()) {
     // Writes the width expression while this box is the component being written, so it reads the
     // section's width (the forcing text `RemoteHaGrid` uses; it draws nothing).
-    RemoteText(text = sectionWidthPx.toRemoteString(WidthFormat), color = Color.Transparent.rc)
+    RemoteText(text = sectionWidthPx.toPaddedRemoteString(1), color = Color.Transparent.rc)
     RemoteFlowRow(
       modifier = RemoteModifier.fillMaxWidth(),
       horizontalArrangement = RemoteArrangement.spacedBy(gapDp.rdp),
@@ -140,5 +140,3 @@ private const val MaxSectionWidthDp = 2000f
 private const val SeamPx = 0.5f
 
 private const val SectionWidthExpressionPrefix = "__terrazzo_section_width_"
-
-private val WidthFormat = DecimalFormat("0")

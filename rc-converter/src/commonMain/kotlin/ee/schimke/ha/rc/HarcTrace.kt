@@ -1,7 +1,5 @@
 package ee.schimke.ha.rc
 
-import android.os.Trace
-
 /**
  * Runs [block] inside a system trace section named [name], so a Perfetto trace (and
  * `:app-benchmark`'s `TraceSectionMetric`s, which match these names) shows what a card's
@@ -9,11 +7,11 @@ import android.os.Trace
  * the benchmark's.
  */
 inline fun <T> harcTrace(name: String, block: () -> T): T {
-  Trace.beginSection(name)
+  traceBegin(name)
   try {
     return block()
   } finally {
-    Trace.endSection()
+    traceEnd()
   }
 }
 
@@ -22,16 +20,22 @@ inline fun <T> harcTrace(name: String, block: () -> T): T {
  * async section, which the same `TraceSectionMetric`s match by name.
  */
 suspend fun <T> harcTraceSuspend(name: String, block: suspend () -> T): T {
-  val cookie = asyncTraceCookies.incrementAndGet()
-  Trace.beginAsyncSection(name, cookie)
+  val cookie = asyncTraceBegin(name)
   try {
     return block()
   } finally {
-    Trace.endAsyncSection(name, cookie)
+    asyncTraceEnd(name, cookie)
   }
 }
 
-private val asyncTraceCookies = java.util.concurrent.atomic.AtomicInteger()
+/** The platform's trace sections: `android.os.Trace` on Android, none on the JVM. */
+@PublishedApi internal expect fun traceBegin(name: String)
+
+@PublishedApi internal expect fun traceEnd()
+
+internal expect fun asyncTraceBegin(name: String): Int
+
+internal expect fun asyncTraceEnd(name: String, cookie: Int)
 
 /** Trace section names `:app-benchmark` measures. */
 object HarcTraceSections {

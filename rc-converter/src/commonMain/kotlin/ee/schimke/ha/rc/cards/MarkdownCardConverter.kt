@@ -1,4 +1,4 @@
-@file:android.annotation.SuppressLint("RestrictedApi")
+@file:Suppress("RestrictedApi")
 
 package ee.schimke.ha.rc.cards
 

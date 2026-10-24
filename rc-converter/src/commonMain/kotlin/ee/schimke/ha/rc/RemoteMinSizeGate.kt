@@ -14,7 +14,7 @@ import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.rc.components.rememberExpressionName
-import java.text.DecimalFormat
+import ee.schimke.ha.rc.components.toPaddedRemoteString
 
 /**
  * A two-dimensional, single-gate breakpoint: [content] is captured twice, `roomy = true` for a cell
@@ -64,9 +64,7 @@ fun RemoteMinSizeGate(
   RemoteBox(modifier = modifier) {
     // Materialise the gate expression in the document — the state layout reads it via a derived
     // boolean, which alone doesn't pull the named float into the capture (#224).
-    RemoteText(text = gate.toRemoteString(GateFormat), color = Color.Transparent.rc)
+    RemoteText(text = gate.toPaddedRemoteString(1), color = Color.Transparent.rc)
     RemoteStateLayout(roomy) { isRoomy -> content(isRoomy) }
   }
 }
-
-private val GateFormat = DecimalFormat("0")

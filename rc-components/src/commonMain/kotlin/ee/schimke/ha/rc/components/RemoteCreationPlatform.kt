@@ -43,10 +43,10 @@ internal expect fun RemoteComposeCreationState.supportsOperation(operation: Int)
  * [this] as a whole number with at least [digits] digits, zero-padded (`DecimalFormat("00")` for
  * two). AndroidX formats with `java.text.DecimalFormat`, the fork with its own `DecimalFormat`.
  */
-internal expect fun RemoteFloat.toPaddedRemoteString(digits: Int): RemoteString
+expect fun RemoteFloat.toPaddedRemoteString(digits: Int): RemoteString
 
 /** [RemoteFloat.toPaddedRemoteString] for an integer. */
-internal expect fun RemoteInt.toPaddedRemoteString(digits: Int): RemoteString
+expect fun RemoteInt.toPaddedRemoteString(digits: Int): RemoteString
 
 /** Remote Compose protocol values the player defines, which neither creation library exports. */
 internal object RcProtocol {

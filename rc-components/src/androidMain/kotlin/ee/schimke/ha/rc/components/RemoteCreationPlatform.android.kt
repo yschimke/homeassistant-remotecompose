@@ -41,7 +41,7 @@ internal actual fun namedRemoteBitmapUrl(
 internal actual fun RemoteComposeCreationState.supportsOperation(operation: Int): Boolean =
   operation in profile.supportedOperations
 
-internal actual fun RemoteFloat.toPaddedRemoteString(digits: Int): RemoteString =
+actual fun RemoteFloat.toPaddedRemoteString(digits: Int): RemoteString =
   toRemoteString(DecimalFormat("0".repeat(digits)))
 
 /**
@@ -63,5 +63,5 @@ fun RemoteComposeWriter.addNamedBitmapUrlSized(
   return id
 }
 
-internal actual fun RemoteInt.toPaddedRemoteString(digits: Int): RemoteString =
+actual fun RemoteInt.toPaddedRemoteString(digits: Int): RemoteString =
   toRemoteString(DecimalFormat("0".repeat(digits)))

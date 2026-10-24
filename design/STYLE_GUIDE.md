@@ -191,7 +191,7 @@ changes card shape, typeface and how meters are drawn; see §5 of that document.
   extend `HaTheme` or the Material 3 `ColorScheme` — don't paint
   directly. This is what makes the theme switch actually change the
   pixels.
-- **State colours ([`HaStateColor`](../rc-converter/src/main/kotlin/ee/schimke/ha/rc/HaStateColor.kt))
+- **State colours ([`HaStateColor`](../rc-converter/src/commonMain/kotlin/ee/schimke/ha/rc/HaStateColor.kt))
   stay fixed across palettes.** A red warning is red in every palette.
   The palette colours describe the _chrome_, not the entity state.
 - **Dynamic colour only applies to the Material 3 style.** Terrazzo
