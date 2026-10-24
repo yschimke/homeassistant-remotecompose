@@ -11,6 +11,7 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -93,39 +94,43 @@ class CommunityFamilyLiveRenderTest {
       val currentTheme = theme
       val currentDark = dark
       val key = "community-live-${currentTheme.id}-$currentDark"
-      Box(Modifier.width(320.dp).testTag("meters")) {
-        CachedCardPreview(
-          cacheKey = key,
-          profile = androidXExperimentalWrap,
-          card = card,
-          snapshot = snapshot(),
-        ) {
-          captures++
-          ProvideHaUberTheme(currentTheme, currentDark) {
-            RemoteColumn {
-              RemoteRow {
-                kinds.forEachIndexed { index, kind ->
-                  RemoteHaMeasurement(
-                    HaReading.live(
-                      "sensor.value$index",
-                      "Reading",
-                      "10 %",
-                      10f,
-                      "%",
-                      kind,
-                      min = 0.0,
-                      max = 100.0,
-                    ),
-                    HaPresentation.Glyph,
-                    RemoteModifier.size(80.rdp, 100.rdp),
-                  )
+      // A frozen clock captures in place: a theme's new document is the frame waited on, not a
+      // background capture that could land after `captures` is read.
+      CompositionLocalProvider(LocalHaClock provides FixedHaClock(java.time.Instant.EPOCH)) {
+        Box(Modifier.width(320.dp).testTag("meters")) {
+          CachedCardPreview(
+            cacheKey = key,
+            profile = androidXExperimentalWrap,
+            card = card,
+            snapshot = snapshot(),
+          ) {
+            captures++
+            ProvideHaUberTheme(currentTheme, currentDark) {
+              RemoteColumn {
+                RemoteRow {
+                  kinds.forEachIndexed { index, kind ->
+                    RemoteHaMeasurement(
+                      HaReading.live(
+                        "sensor.value$index",
+                        "Reading",
+                        "10 %",
+                        10f,
+                        "%",
+                        kind,
+                        min = 0.0,
+                        max = 100.0,
+                      ),
+                      HaPresentation.Glyph,
+                      RemoteModifier.size(80.rdp, 100.rdp),
+                    )
+                  }
                 }
+                RemoteHaToggleSwitchByProgress(
+                  LiveValues.numericState("sensor.value3", 10f) / 100f.rf,
+                  currentRemoteHaTheme().linkText,
+                  currentRemoteHaTheme().divider,
+                )
               }
-              RemoteHaToggleSwitchByProgress(
-                LiveValues.numericState("sensor.value3", 10f) / 100f.rf,
-                currentRemoteHaTheme().linkText,
-                currentRemoteHaTheme().divider,
-              )
             }
           }
         }
