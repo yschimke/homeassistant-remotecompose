@@ -3,8 +3,6 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.CardDesignSlots
@@ -12,16 +10,10 @@ import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.BreakpointAxis
-import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
-import ee.schimke.ha.rc.HaIconIdentity
 import ee.schimke.ha.rc.HaStateColor
-import ee.schimke.ha.rc.LocalCardSizeMode
-import ee.schimke.ha.rc.LocalFixedCanvasAxis
-import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaStatisticCardData
@@ -30,6 +22,7 @@ import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaIconChip
 import ee.schimke.ha.rc.components.RemoteHaStatisticCard
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.icons.HaIconMap
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -46,9 +39,10 @@ import kotlinx.serialization.json.put
  * (adaptive-card-layouts.md §"Icon + state row/tile"): a narrow cell drops to the
  * [RemoteHaIconChip] identity tier (tinted icon + value, name + period dropped), while the full
  * [RemoteHaStatisticCard] keeps the trend + period and is [CenteredCell]-wrapped so a tall cell
- * fills rather than top-glues.
+ * fills rather than top-glues. That ladder is its card design, `statistic.uid`
+ * ([ValueDesignParts]).
  */
-class StatisticCardConverter : CardConverter {
+class StatisticCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.STATISTIC
 
   // Baked, non-bindable content (see CardConverter.dataSignature):
@@ -97,52 +91,13 @@ class StatisticCardConverter : CardConverter {
     return CardSnapshotBindings(strings, emptyMap(), emptyMap(), emptyMap())
   }
 
+  /**
+   * The statistic card: [compact] for a Wear Small container, [tight] for a one-row launcher widget
+   * (`2×1`, 84 dp), just tall enough for the name, the value and the period with the padding
+   * trimmed.
+   */
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    when (LocalCardSizeMode.current) {
-      CardSizeMode.Wrap -> FullStatistic(card, snapshot, modifier)
-      CardSizeMode.Fixed ->
-        if (LocalFixedCanvasAxis.current == BreakpointAxis.Height) {
-          // A Wear slot: every container is wide enough for the card, and the Small one too
-          // short for its full height, so its gate is height.
-          RemoteSizeBreakpoint(
-            thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
-            modifier = modifier.fillMaxSize(),
-            axis = BreakpointAxis.Height,
-          ) { tier ->
-            CenteredCell {
-              FullStatistic(card, snapshot, RemoteModifier.fillMaxWidth(), compact = tier == 0)
-            }
-          }
-        } else {
-          RemoteSizeBreakpoint(thresholdsDp = intArrayOf(96), modifier = modifier.fillMaxSize()) {
-            tier ->
-            when (tier) {
-              0 ->
-                RemoteHaIconChip(
-                  iconChipData(card, snapshot),
-                  RemoteModifier.fillMaxSize(),
-                  // The name stays under a generic icon (card-information-hierarchy.md).
-                  showName =
-                    HaIconIdentity.chipShowsName(
-                      card,
-                      card.raw["entity"]?.jsonPrimitive?.content?.let { snapshot.states[it] },
-                    ),
-                )
-              // A one-row widget (`2×1`, 84 dp) is just tall enough for the name, the value and the
-              // period with the padding trimmed, so nothing is cut off at its bottom.
-              else ->
-                CenteredCell {
-                  FullStatistic(card, snapshot, RemoteModifier.fillMaxWidth(), tight = true)
-                }
-            }
-          }
-        }
-    }
-  }
-
-  @Composable
-  private fun FullStatistic(
+  internal fun FullStatistic(
     card: CardConfig,
     snapshot: HaSnapshot,
     modifier: RemoteModifier,
@@ -175,7 +130,7 @@ class StatisticCardConverter : CardConverter {
    * icon + statistic value.
    */
   @Composable
-  private fun iconChipData(card: CardConfig, snapshot: HaSnapshot): HaTileData {
+  internal fun iconChipData(card: CardConfig, snapshot: HaSnapshot): HaTileData {
     val entityId = card.raw["entity"]?.jsonPrimitive?.content
     val entity = entityId?.let { snapshot.states[it] }
     val accent = HaStateColor.activeFor(entity).rc
