@@ -22,17 +22,24 @@
 The pieces are described in [card-design-server.md](card-design-server.md#spike-status). What
 matters here:
 
-- **Kotlin is the only source of a layout.** Each `rc-converter/.../cards/*CardConverter.kt`
-  draws its card. The design server's library is a build-time capture of those converters
-  (`:card-designs:generateCardDesigns`), and the app captures any key the server lacks at runtime
-  (`CardDesignLibrary`). No card design exists as a `.uid`.
-- **Forking is approximate.** "Design in UI Builder" rebuilds a library design from `ha-cards`
-  components (`HaCardsSeed`). Gauge, tile and button map across; every other card becomes entity
-  rows, so a fork is a lookalike, not the card.
+- **Most card types draw from their `.uid`.** Each migrated type's layout is
+  `card-designs/ui-builder/designs/<cardType>.uid` (the D6+ row below lists them); its converter
+  extends `DesignedCardConverter`, keeping its keys, bindings, actions and data. The rest still
+  draw from their converter's `Render` and are captured from it.
+- **The design server's library is a build-time capture**
+  (`:card-designs:generateCardDesigns`), baked into its image with the checked-in sources
+  (`sources/<cardType>.uid`). The app prefers a synced server design, then a shipped asset
+  (`ShippedDesignLibrary`), then a capture on the device (`CardDesignLibrary`).
+- **The three agree byte for byte.** Templates are captured under `TemplateHaClock`, so a capture
+  does not depend on the day it runs; `ShippedCardDesignsTest` holds the shipped assets to this
+  build's capture, and `scripts/check-design-server.py` holds a deployed server to it (see
+  [Cutover](#cutover)).
+- **Forking copies the real source** for migrated types; for the rest, "Design in UI Builder"
+  still rebuilds a lookalike from `ha-cards` components (`HaCardsSeed`).
 - **Device designs are picked, or chosen per card.** `DeviceMatch` (integration, manufacturer,
   model glob, translation key) picks the most specific device design automatically
   (`CardDesigns.cardTemplateFor`); since D5 a card can be switched to any design by its id (see
-  [Switching a device's card](#switching-a-devices-card)). No UI sets the variant.
+  [Switching a device's card](#switching-a-devices-card)).
 - **User designs live only on the server volume.** Nothing backs them up or imports them.
 - **Families already share components.** Meters, tile layouts and surfaces switch form per
   `HaVisualFamily`, and `ha-cards/uber-theme` re-themes a whole UI Builder design from one
@@ -262,6 +269,25 @@ Built (D5):
 | Retain callable component bytecode in IR bundles ([#6085](https://github.com/yschimke/compose-ai-tools/pull/6085)) | compose-ai-tools | server compiles designs against the catalog's own components |
 | Export supplied Compose source ([#957](https://github.com/yschimke/compose-ui-builder/pull/957)) | compose-ui-builder | only if export goes through compiled Compose rather than `.rc` |
 | UI Builder built with RemoteCompose export | compose-preview-server / deployment | `.rc` export of named host state |
+
+## Cutover
+
+Cutover is the point where the server's library, not the app's converters, is what the app draws:
+the server serves every card type's `.uid` for editing (`/api/library/sources`), edits come back
+through the scheduled import, and nothing the app shows differs from what this checkout captures.
+
+Before cutover, on a server deployed from `main`:
+
+1. Build the library: `./gradlew :card-designs:generateCardDesigns`.
+2. Run `scripts/check-design-server.py --server https://ha.coo.ee`. It fails unless:
+   - `/api/library/sources` serves every checked-in `.uid`, unedited ones exactly as checked in;
+   - every key the server's manifest publishes has the sha256 the local library captures, and the
+     two publish the same keys;
+   - a sample of the server's blobs are the bytes their sha256 names, and the local blobs.
+3. Run the import workflow (`import-card-designs.yml`) once by hand: with no edits it opens no PR.
+
+Deploying the design server is a manual step (compose-preview-server's deploy); nothing here
+deploys it.
 
 ## Milestones
 
