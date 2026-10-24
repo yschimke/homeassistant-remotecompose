@@ -152,6 +152,29 @@ interface HaSession {
     throw UnsupportedOperationException("This session can't save dashboards to Home Assistant.")
 
   /**
+   * Save [config] only if Home Assistant still holds [expected], the config the edit started from;
+   * otherwise throw [ee.schimke.ha.client.dashboard.DashboardConflictException] and write nothing.
+   * The dashboard editor saves and undoes through this so another client's change is never lost.
+   */
+  suspend fun compareAndReplaceDashboardConfig(
+    urlPath: String?,
+    expected: JsonObject,
+    config: JsonObject,
+  ): Unit =
+    throw UnsupportedOperationException("This session can't save dashboards to Home Assistant.")
+
+  /**
+   * Create a storage-mode dashboard titled [title] at [urlPath] holding [config]. Sessions that
+   * can't write to Home Assistant refuse.
+   */
+  suspend fun createDashboard(
+    urlPath: String,
+    title: String,
+    config: JsonObject,
+  ): DashboardSummary =
+    throw UnsupportedOperationException("This session can't create dashboards in Home Assistant.")
+
+  /**
    * Fetch HA's `get_config` payload — version + `internal_url` / `external_url`. Live sessions
    * round-trip the WebSocket; demo / offline sessions return null so callers can skip the
    * persist-public-URL side effect.
@@ -423,6 +446,18 @@ class LiveHaSession(
 
   override suspend fun replaceDashboardConfig(urlPath: String?, config: JsonObject): JsonObject =
     client.replaceDashboardConfig(config, urlPath)
+
+  override suspend fun compareAndReplaceDashboardConfig(
+    urlPath: String?,
+    expected: JsonObject,
+    config: JsonObject,
+  ) = client.compareAndReplaceDashboardConfig(expected, config, urlPath)
+
+  override suspend fun createDashboard(
+    urlPath: String,
+    title: String,
+    config: JsonObject,
+  ): DashboardSummary = client.createDashboard(urlPath, title, config)
 
   override suspend fun callService(
     domain: String,

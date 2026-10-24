@@ -1,24 +1,16 @@
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
-import ee.schimke.ha.rc.LocalCardSizeMode
-import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaMediaControlData
-import ee.schimke.ha.rc.components.RemoteHaMediaControl
-import ee.schimke.ha.rc.components.RemoteHaMediaControlWide
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import java.util.Locale
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -27,8 +19,12 @@ import kotlinx.serialization.json.jsonPrimitive
  * `media-control` card. Reads `media_title`, `media_artist`, position + duration from the entity.
  * Transport buttons fire `media_player.media_*`; Play/Pause auto-toggles based on the current play
  * state.
+ *
+ * Its layout is its card design, `media-control.uid` ([RoomDesignParts]): the full card on a
+ * dashboard; in a launcher or Wear cell the Wide chip below 260 dp wide and the full card, filling
+ * the cell, above.
  */
-class MediaControlCardConverter : CardConverter {
+class MediaControlCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.MEDIA_CONTROL
 
   // Title / artist / artwork / progress are baked from attributes, not bound
@@ -135,32 +131,7 @@ class MediaControlCardConverter : CardConverter {
       else -> null
     }
   }
-
-  @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val data = mediaData(card, snapshot)
-
-    // Single-gate Wide↔Full ladder, mirroring the arc-dial family
-    // (see RenderArcDial / #355): the art + play/pause hero is kept
-    // at every size; narrow cells drop the transport row + seek bar
-    // to the Wide chip, wide cells get the full card.
-    when (LocalCardSizeMode.current) {
-      CardSizeMode.Wrap -> RemoteHaMediaControl(data, modifier)
-      CardSizeMode.Fixed ->
-        RemoteSizeBreakpoint(
-          thresholdsDp = intArrayOf(MediaFullMinDp),
-          modifier = modifier.fillMaxSize(),
-        ) { tier ->
-          when (tier) {
-            0 -> RemoteHaMediaControlWide(data, RemoteModifier.fillMaxSize())
-            else -> RemoteHaMediaControl(data, RemoteModifier.fillMaxSize(), fillHeight = true)
-          }
-        }
-    }
-  }
 }
-
-private const val MediaFullMinDp = 260
 
 private fun formatHms(totalSeconds: Long): String {
   if (totalSeconds < 0) return "0:00"
@@ -172,7 +143,7 @@ private fun formatHms(totalSeconds: Long): String {
 }
 
 /** The player's data for [card] and [snapshot]: what it draws, and what a template binds. */
-private fun mediaData(card: CardConfig, snapshot: HaSnapshot): HaMediaControlData {
+internal fun mediaData(card: CardConfig, snapshot: HaSnapshot): HaMediaControlData {
   val entityId = card.raw["entity"]?.jsonPrimitive?.content
   val entity = entityId?.let { snapshot.states[it] }
   val attrs = entity?.attributes ?: JsonObject(emptyMap())

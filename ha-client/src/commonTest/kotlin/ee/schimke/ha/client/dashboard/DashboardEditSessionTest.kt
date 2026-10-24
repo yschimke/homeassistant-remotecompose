@@ -93,4 +93,18 @@ class DashboardEditSessionTest {
       assertFailsWith<IllegalStateException> { edits.undoSave() }
     }
   }
+
+  @Test
+  fun editsDuringASaveStayAheadOfTheBaseline() = runTest {
+    lateinit var edits: DashboardEditSession
+    edits =
+      DashboardEditSession(config("a")) { _, _ ->
+        // Another edit lands while the write is in flight.
+        edits.edit(config("c"))
+      }
+    edits.edit(config("b"))
+    edits.save()
+    assertEquals(config("b"), edits.baseline)
+    assertEquals(config("c"), edits.draft)
+  }
 }

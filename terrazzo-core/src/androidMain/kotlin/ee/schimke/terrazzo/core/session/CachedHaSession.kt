@@ -161,6 +161,18 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
   override suspend fun replaceDashboardConfig(urlPath: String?, config: JsonObject): JsonObject =
     delegate.replaceDashboardConfig(urlPath, config)
 
+  override suspend fun compareAndReplaceDashboardConfig(
+    urlPath: String?,
+    expected: JsonObject,
+    config: JsonObject,
+  ) = delegate.compareAndReplaceDashboardConfig(urlPath, expected, config)
+
+  override suspend fun createDashboard(
+    urlPath: String,
+    title: String,
+    config: JsonObject,
+  ): DashboardSummary = delegate.createDashboard(urlPath, title, config)
+
   // Writes aren't cached — forward straight to the delegate. Without this
   // the interface's no-op default would swallow every service call when a
   // live session is wrapped (the production path), so taps would silently

@@ -2873,6 +2873,46 @@
       "group": "Card layout",
       "nativeOnly": true
     },
+    "ha-cards/area-card-full": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaAreaCardFull",
+      "displayName": "Area card",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/area-card-summary": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaAreaCardSummary",
+      "displayName": "Area card summary line",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/media-control-card-full": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaMediaControlCardFull",
+      "displayName": "Media control card",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "fill": {
+            "type": "bool",
+            "value": false
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "fill",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Fills a fixed cell's height (a launcher or Wear cell)."
+        }
+      ]
+    },
+    "ha-cards/media-control-card-wide": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaMediaControlCardWide",
+      "displayName": "Media control card (wide)",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
     "ha-cards/history-graph-card-full": {
       "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaHistoryGraphCardFull",
       "displayName": "History graph card",

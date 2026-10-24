@@ -5,6 +5,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
+import kotlinx.serialization.json.JsonObject
 
 /**
  * The design property that marks a card whose entity is unavailable: its template is captured with
@@ -22,7 +23,7 @@ fun CardConverter.framedDesignProperties(
   card: CardConfig,
   snapshot: HaSnapshot,
 ): DesignProperties? {
-  val base = designProperties(card, snapshot) ?: return null
+  val base = designProperties(card.withoutLayoutKeys(), snapshot) ?: return null
   val entityId = unavailableFrameEntity(card) ?: return base
   val available = snapshot.states[entityId]?.let { HaLiveBindings.isAvailable(it.state) } ?: false
   if (available) return base
@@ -31,6 +32,17 @@ fun CardConverter.framedDesignProperties(
     string(UNAVAILABLE_DESIGN_PROPERTY, "1")
   }
 }
+
+/**
+ * The keys of a card's config that place it in its view (a section's `grid_options`, the legacy
+ * `layout_options`, a custom layout's `view_layout`): the host sizes the slot from them, no
+ * converter draws them, so they never keep a card off its design.
+ */
+private val LAYOUT_KEYS = setOf("grid_options", "layout_options", "view_layout")
+
+private fun CardConfig.withoutLayoutKeys(): CardConfig =
+  if (raw.keys.none { it in LAYOUT_KEYS }) this
+  else copy(raw = JsonObject(raw.filterKeys { it !in LAYOUT_KEYS }))
 
 /**
  * The template input for [properties] from [framedDesignProperties]: the converter's own

@@ -49,7 +49,7 @@ class CachedDocumentDisplayKeyTest {
     val snapshot = HaSnapshot(states = mapOf("sensor.temp" to EntityState("sensor.temp", "21")))
     val registry = defaultRegistry()
     val theme = haThemeFor(ThemeStyle.TerrazzoHome, false)
-    val keys = mutableListOf<Any>()
+    val keys = java.util.Collections.synchronizedList(mutableListOf<Any>())
     val cache =
       object : CardDocumentCache {
         val inner = InMemoryCardDocumentCache()
@@ -78,15 +78,23 @@ class CachedDocumentDisplayKeyTest {
       }
     }
     compose.waitForIdle()
+    // A rebuild on screen captures off the main thread, the last document drawn meanwhile: wait for
+    // each to land before the next change.
     density = Density(3f, 1f)
     compose.waitForIdle()
+    compose.waitUntil(CAPTURE_TIMEOUT_MS) { keys.size == 2 }
     density = Density(3f, 1.3f)
     compose.waitForIdle()
+    compose.waitUntil(CAPTURE_TIMEOUT_MS) { keys.size == 3 }
     density = Density(2f, 1f)
     compose.waitForIdle()
 
     // One capture per display; returning to the first replays its document.
     assertEquals(3, keys.size, "captures: $keys")
     assertEquals(3, keys.toSet().size)
+  }
+
+  private companion object {
+    const val CAPTURE_TIMEOUT_MS = 10_000L
   }
 }

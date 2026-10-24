@@ -64,6 +64,52 @@ Release order: builder release → preview-server pin/release → harc design-se
 catalog/preview publication and host image deployment. Verify with the fixture on
 `https://ha.coo.ee/studio/dashboard`; do not use a person's existing dashboard for test writes.
 
+## Edit dashboards on Android
+
+The dashboard overflow menu has **Edit dashboard** and **New dashboard**.
+
+**New dashboard** asks for a title, registers a storage-mode dashboard
+(`lovelace/dashboards/create`, with a `url_path` derived from the title; HA requires a hyphen in
+it) and saves a first config of one sections view holding one empty section, since a dashboard HA
+has just created has no config to read. The new dashboard joins the user's dashboard selection,
+opens, and opens in the editor. It needs write mode and an administrator; HA's refusal is shown.
+
+**Edit dashboard** loads the dashboard's stored Lovelace config as a draft
+(`DashboardEditorScreen`). Cards are the same live previews the dashboard draws, fed by the live
+state feed (or demo polling), so they keep updating while you edit. Each section is laid out on HA's
+12-column section grid (`SectionCardGrid`): a card's size in the editor is its `grid_options`, the
+size it has wherever HA shows the dashboard. The dashboard view itself flows cards by harc's own
+design sizes (`SectionCardFlow`), so it can place cards differently.
+
+- Tap a card to select it; taps never reach the card's own actions in the editor. The toolbar moves
+  it earlier or later or to another section, steps its width through 3/6/9/12 columns, sets fixed
+  rows or `auto` height, edits or deletes it. Dragging the corner handle resizes in whole columns
+  and rows, and the cards after it re-flow as it grows or shrinks. Resizing writes `grid_options`
+  (and drops a legacy `layout_options`), clamped to the card type's limits.
+- **Add card** picks an entity from the home, offers card types that suit its domain, and takes a
+  name; heading, markdown and clock cards need no entity. The card's JSON is editable directly.
+- **Add section** appends a section titled by a heading card; sections move up and down or are
+  deleted. The overflow menu adds or deletes views.
+- Every edit is local and undoable. **Save** is conditional (`DashboardEditSession` over
+  `compareAndReplaceDashboardConfig`): if HA's copy changed since the draft was loaded the save is
+  refused and the draft kept. A saved change can be undone once. Read-only mode and demo sessions
+  edit but don't save.
+
+Edits go through `DashboardDraft` (`ha-client`), pure JSON operations that keep unknown view,
+section and card fields, custom cards included.
+
+### Agent handoff
+
+**Populate with an agent** (the sparkle in the editor) copies or shares a prompt carrying the draft,
+the home's entities and states, the request, HA's card sizes (`DashboardAgentPrompt.SIZING`) and
+how to look at harc's card designs (`DashboardAgentPrompt.DESIGN_TOOLS`): the hosted Compose
+Preview catalog (`homeassistant-remotecompose` on `https://preview.coo.ee/mcp`), where
+`catalog_list_previews` with `card-<type>` finds a card's designs and `catalog_render_preview` /
+`catalog_render_matrix` with the `device` override shows them at other widths. The agent's answer
+replaces the draft, unsaved, so the user arranges and resizes it before saving. The prompt includes
+no credentials. `skills/ha-dashboard/SKILL.md` carries the same guidance for agents that load
+skills.
+
 ## Plan cards on Android
 
 The Android dashboard has **Add placeholder card** above its HA cards. Give a planned card a title
@@ -82,4 +128,5 @@ as unresolved rather than invented. The prompt does not include the session's cr
 
 This is a handoff to a coding agent, not an in-app code executor. Install the agent's implementation
 and place its supported card through the usual dashboard workflow; then remove the brief manually.
-The web visual editor and the mobile **Edit with an agent** JSON-import flow remain separate.
+The web visual editor, the mobile **Edit with an agent** JSON-import flow and the mobile dashboard
+editor above remain separate.
