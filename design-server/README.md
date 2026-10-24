@@ -23,10 +23,15 @@ unsupported combinations link to available modes while preserving the other filt
 
 - Card schema: a design's page, `/api/designs/<id>/schema`; any card's JSON at `/schema` or
   `POST /api/schema`
+- Designs by key: `POST /designs/v1/generate` with a `DesignKey` answers with that key's design:
+  the library's, or captured on request on the JVM (mobile-app surface, card types with a
+  converter) and served from `/designs/v1/blobs/` beside the library's. Any origin may call it
 - Card resolve: `POST /api/cards/resolve` with a card's config (optionally `states`, `cardStyle`
-  and `dark`) answers with the library design that draws it, its `.rc` and the values to push, for
-  players with no card converters (UI Builder's canvas, the embed). Any origin may call it. The
-  server can't run the converters, so when several shapes fit it picks the first (`exact: false`)
+  and `dark`) answers with the design that draws it, its `.rc` and the values to push, for
+  players with no card converters (UI Builder's canvas, the embed). Any origin may call it. With
+  the states of every entity the card shows, the server runs its converter: the exact design
+  (captured if the library lacks it) and the converter's own values (`exact: true`). Without
+  them, when several shapes fit it picks the first (`exact: false`)
 - Design source: `/api/designs/<id>/source.uid`, a UI Builder document to fork a library design
   from. For a card type drawn from a checked-in design (`card-designs/ui-builder/designs/`), it is
   that design, exactly what the library draws. For the others, it is the card rebuilt from

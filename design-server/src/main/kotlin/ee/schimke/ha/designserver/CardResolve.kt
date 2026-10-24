@@ -1,8 +1,16 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
+import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.CardDesignTemplates
+import ee.schimke.ha.rc.CardSnapshotBindings
+import ee.schimke.ha.rc.SystemHaClock
+import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.components.ThemeStyle
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -20,12 +28,17 @@ import kotlinx.serialization.json.jsonObject
  * has no card converters (UI Builder's canvas, the `<ha-card>` embed, a web page) can draw the card
  * as the app would.
  *
- * The server can't run the app's converters (they need Android), so it can't compute a card's
- * generation properties and with them its exact design key. It picks the closest library design
- * instead: same card type, same slots, the requested card style and mode, the default variant. When
- * several shapes fit, it takes the first and says so ([CardMatch.exact] false). The values are the
- * card's slot bindings computed from its states, plus the converter-only ones with the library
- * example's values ([CardSchema.fromCard]).
+ * With the states of every entity the card shows, the server runs the app's own converter for it
+ * (on the JVM, [resolveExact]): the card's exact design key, that design (the library's, or
+ * captured now by the [DesignGenerator]) and the values the converter pushes. That match is always
+ * [CardMatch.exact].
+ *
+ * Without them (an anonymous card: its type and slot ids, as the web app sends it) the card's
+ * generation properties can't be told, so it picks the closest library design instead: same card
+ * type, same slots, the requested card style and mode, the default variant. When several shapes
+ * fit, it takes the first and says so ([CardMatch.exact] false). The values are the card's slot
+ * bindings computed from its states, plus the converter-only ones with the library example's values
+ * ([CardSchema.fromCard]).
  */
 @Serializable
 data class CardMatch(
@@ -73,6 +86,50 @@ data class ResolveRequest(
 }
 
 object CardResolve {
+  /**
+   * [request]'s exact design, from the app's converter: null when the request lacks the state of an
+   * entity the card shows (its generation properties can't be told), or the card has no template
+   * shape. Throws [DesignGenerator.UnsupportedKey] when its design can't be captured here.
+   */
+  suspend fun resolveExact(generator: DesignGenerator, request: ResolveRequest): CardMatch? {
+    val type = (request.card["type"] as? JsonPrimitive)?.contentOrNull ?: return null
+    val card = CardConfig(type = type, raw = request.card)
+    val slots = CardDesignSlots.slotEntries(card) ?: return null
+    if (slots.isEmpty() || slots.any { it.entityId !in request.states }) return null
+    val snapshot = HaSnapshot(states = request.states)
+    val cardStyle = HaUberTheme.byId(request.cardStyle)
+    val palette =
+      request.palette?.let { name -> ThemeStyle.entries.firstOrNull { it.name == name } }
+        ?: ThemeStyle.entries.first()
+    val key =
+      CardDesignTemplates.keyFor(card, snapshot, palette, request.dark, cardStyle = cardStyle)
+        ?: return null
+    val design = generator.design(key)
+    val bytes = generator.bytes(design) ?: return null
+    val bindings =
+      CardDesignTemplates.playback(CardDesignTemplates.designCard(card, snapshot), bytes)
+        .bindings(snapshot, SystemHaClock)
+    return CardMatch(
+      design = DesignLibrary.idOf(key),
+      sha256 = design.sha256,
+      blob = design.blob,
+      key = key,
+      exact = true,
+      bindings = bindings.toJson(),
+      notes =
+        if (design.generated) listOf("Captured on request: the library has no such design.")
+        else emptyList(),
+    )
+  }
+
+  /** Every binding as JSON; a number with no JSON form (NaN, an unavailable reading) is null. */
+  private fun CardSnapshotBindings.toJson(): Map<String, JsonPrimitive> = buildMap {
+    strings.forEach { (k, v) -> put(k, JsonPrimitive(v)) }
+    booleans.forEach { (k, v) -> put(k, JsonPrimitive(v)) }
+    ints.forEach { (k, v) -> put(k, JsonPrimitive(v)) }
+    floats.forEach { (k, v) -> put(k, if (v.isFinite()) JsonPrimitive(v) else JsonNull) }
+  }
+
   /**
    * The value pushed for each of [names]: the card's [own] where it has the binding, even one with
    * no JSON form (an unavailable entity's `numeric_state` is NaN), which is null, never the
