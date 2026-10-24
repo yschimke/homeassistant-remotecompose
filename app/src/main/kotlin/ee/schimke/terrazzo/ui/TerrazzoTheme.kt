@@ -4,6 +4,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
@@ -44,6 +45,9 @@ val LocalCardStyle = staticCompositionLocalOf { HaUberTheme.Classic }
  * - **Material3 style + no wallpaper seed**: stock light/dark `colorScheme()`.
  * - **Any Terrazzo style**: that palette's seed run through materialkolor plus the Google Fonts
  *   pairing for the palette.
+ * - **A card style that themes the app** ([HaUberTheme.appTheme]: LCD, Trinitron, …): the card
+ *   style's own palette and typeface on every screen, in place of [style]; a single-mode card style
+ *   (dark-only Trinitron) also decides light or dark in place of [darkMode].
  */
 @Composable
 fun TerrazzoTheme(
@@ -59,6 +63,25 @@ fun TerrazzoTheme(
       DarkModePref.Light -> false
       DarkModePref.Dark -> true
     }
+
+  val appTheme = cardStyle.appThemeOrNull()
+  if (appTheme != null) {
+    val dark = appTheme.appDark(darkTheme)
+    val palette = appTheme.palette(dark)
+    val colors = remember(appTheme, dark) { palette.toColorScheme(appTheme.inkFor(dark)) }
+    CompositionLocalProvider(
+      LocalThemeStyle provides style,
+      LocalIsDarkTheme provides dark,
+      LocalCardStyle provides cardStyle,
+    ) {
+      MaterialTheme(
+        colorScheme = colors,
+        typography = terrazzoTypographyFor(style).inCardStyle(appTheme),
+        content = content,
+      )
+    }
+    return
+  }
 
   val wallpaperSeed = if (style == ThemeStyle.Material3) rememberWallpaperSeedColor() else null
   val colors = terrazzoColorScheme(style, darkTheme, seedOverride = wallpaperSeed)

@@ -269,18 +269,47 @@ fun Screen_CardActions_Placed() = PhoneHost {
   )
 }
 
+/** The card actions in every card style: the sheet skins itself in the card's style. */
+@Preview(name = "card actions · card style", showBackground = false, widthDp = PHONE_WIDTH_DP)
+@Composable
+fun Screen_CardActions_CardStyle(
+  @PreviewParameter(CardStyleProvider::class) cardStyle: HaUberTheme
+) =
+  PhoneHost(cardStyle = cardStyle) {
+    CardActionsPreview(
+      ee.schimke.terrazzo.dashboard.CardActionsState(
+        title = "Front door",
+        stateLabel = "Closed",
+        homeScreenCount = 1,
+        widgetsInUse = 5,
+        onWatch = true,
+        style = ee.schimke.terrazzo.dashboard.CardStyleLabel(cardStyle.displayName, custom = false),
+        homeAssistantUrl = "https://ha.example/history?entity_id=lock.front_door",
+        canMonitor = true,
+      )
+    )
+  }
+
+/** The card actions as the sheet draws them: skinned, on the skin's sheet colour. */
 @Composable
 private fun CardActionsPreview(state: ee.schimke.terrazzo.dashboard.CardActionsState) =
-  ee.schimke.terrazzo.dashboard.CardActions(
-    state = state,
-    onAddToHomeScreen = {},
-    onWatchChange = {},
-    onChangeStyle = {},
-    onShowHistory = {},
-    onOpenInHomeAssistant = {},
-    onOpenInStudio = {},
-    onMonitor = {},
-  )
+  ProvideScreenSkin {
+    val skin = currentScreenSkin()
+    Surface(shape = skin.sheetShape, color = skin.background) {
+      Column(Modifier.padding(top = 16.dp)) {
+        ee.schimke.terrazzo.dashboard.CardActions(
+          state = state,
+          onAddToHomeScreen = {},
+          onWatchChange = {},
+          onChangeStyle = {},
+          onShowHistory = {},
+          onOpenInHomeAssistant = {},
+          onOpenInStudio = {},
+          onMonitor = {},
+        )
+      }
+    }
+  }
 
 /**
  * A card whose document threw while it played (RcErrorBoundary): the atomic-symbol warning takes
@@ -957,6 +986,33 @@ fun Screen_Settings_Assistants() = PhoneHost {
 }
 
 /**
+ * The theme settings under a card style that themes the whole app: the app draws in the style's
+ * palette and type, the palette options are disabled and say why, and a dark-only style (Trinitron)
+ * disables light / dark too.
+ */
+@Preview(
+  name = "settings · app theme",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_Settings_AppTheme(
+  @PreviewParameter(AppThemeStyleProvider::class) cardStyle: HaUberTheme
+) =
+  PhoneHost(cardStyle = cardStyle) {
+    Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
+      ee.schimke.terrazzo.ThemeSection(
+        selected = ee.schimke.terrazzo.core.prefs.ThemePref.TerrazzoHome,
+        darkMode = DarkModePref.Follow,
+        appTheme = cardStyle,
+        onSelectTheme = {},
+        onSelectDark = {},
+      )
+    }
+  }
+
+/**
  * The card style picker expanded: every style over a sample tile drawn in it, so a regression in
  * any one style's sample shows here. Settings itself opens it collapsed to the current style.
  */
@@ -1181,6 +1237,14 @@ fun Screen_SyncDiagnostics() = PhoneHost {
 
 class ThemeStyleProvider : PreviewParameterProvider<ThemeStyle> {
   override val values: Sequence<ThemeStyle> = ThemeStyle.entries.asSequence()
+}
+
+/** The card styles that theme the whole app ([HaUberTheme.appTheme]). */
+class AppThemeStyleProvider : PreviewParameterProvider<HaUberTheme> {
+  private val styles = HaUberTheme.all.filter { it.appTheme }
+  override val values: Sequence<HaUberTheme> = styles.asSequence()
+
+  override fun getDisplayName(index: Int): String = styles[index].id
 }
 
 /** Every card style ([HaUberTheme]), for the skinned secondary screens. */

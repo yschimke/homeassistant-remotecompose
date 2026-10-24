@@ -21,7 +21,6 @@ import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -37,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
@@ -66,6 +66,9 @@ import kotlinx.serialization.json.jsonPrimitive
  * context: "Add to home screen" when it isn't there yet, a switch for the watch rather than a
  * button that may pin or unpin, the style it is drawn in now. Navigating actions close the sheet;
  * the watch switch flips in place.
+ *
+ * The sheet is skinned in the card's own style ([ProvideScreenSkin]): an LCD card's actions open on
+ * LCD glass, in its type, even on a dashboard of another style.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,46 +121,56 @@ fun CardActionsSheet(
       liveCamera = cameras.takeIf { it.isNotEmpty() }?.let { ids -> ids.any { it in liveCameras } },
     )
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-  ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-    fun closeThen(action: () -> Unit): () -> Unit = {
-      onDismiss()
-      action()
-    }
-    CardActions(
-      state = state,
-      onAddToHomeScreen = closeThen(onAddToHomeScreen),
-      onWatchChange = { show ->
-        scope.launch {
-          if (show)
-            pinStore.pinCard(
-              MobilePinnedCard(
-                key = pinKey,
-                baseUrl = baseUrl,
-                dashboardUrlPath = dashboardUrlPath,
-                card = cardData,
+  val cardTheme = cardStyleTheme(card, overrides, LocalCardStyle.current)
+  ProvideScreenSkin(cardTheme) {
+    val skin = currentScreenSkin()
+    ModalBottomSheet(
+      onDismissRequest = onDismiss,
+      sheetState = sheetState,
+      shape = skin.sheetShape,
+      containerColor = skin.background,
+      contentColor = MaterialTheme.colorScheme.onSurface,
+    ) {
+      fun closeThen(action: () -> Unit): () -> Unit = {
+        onDismiss()
+        action()
+      }
+      CardActions(
+        state = state,
+        onAddToHomeScreen = closeThen(onAddToHomeScreen),
+        onWatchChange = { show ->
+          scope.launch {
+            if (show)
+              pinStore.pinCard(
+                MobilePinnedCard(
+                  key = pinKey,
+                  baseUrl = baseUrl,
+                  dashboardUrlPath = dashboardUrlPath,
+                  card = cardData,
+                )
               )
-            )
-          else pinStore.unpinCard(pinKey)
-        }
-      },
-      onChangeStyle = closeThen(onChangeStyle),
-      onShowHistory = closeThen { onShowHistory?.invoke() },
-      onOpenInHomeAssistant =
-        closeThen {
-          state.homeAssistantUrl?.let { url ->
-            runCatching {
-              context.startActivity(
-                android.content
-                  .Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
-                  .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-              )
-            }
+            else pinStore.unpinCard(pinKey)
           }
         },
-      onOpenInStudio = closeThen(onOpenInStudio),
-      onMonitor = closeThen { onMonitor?.invoke() },
-      onLiveCameraChange = { on -> LiveCameras.setLive(cameras, on) },
-    )
+        onChangeStyle = closeThen(onChangeStyle),
+        onShowHistory = closeThen { onShowHistory?.invoke() },
+        onOpenInHomeAssistant =
+          closeThen {
+            state.homeAssistantUrl?.let { url ->
+              runCatching {
+                context.startActivity(
+                  android.content
+                    .Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+              }
+            }
+          },
+        onOpenInStudio = closeThen(onOpenInStudio),
+        onMonitor = closeThen { onMonitor?.invoke() },
+        onLiveCameraChange = { on -> LiveCameras.setLive(cameras, on) },
+      )
+    }
   }
 }
 
@@ -181,7 +194,10 @@ data class CardActionsState(
 
 data class CardStyleLabel(val name: String, val custom: Boolean)
 
-/** The sheet's content, apart from the sheet so a preview can draw it. */
+/**
+ * The sheet's content, apart from the sheet so a preview can draw it. It draws in the
+ * [currentScreenSkin]: the main actions in one panel, the occasional ones in a second.
+ */
 @Composable
 fun CardActions(
   state: CardActionsState,
@@ -195,8 +211,12 @@ fun CardActions(
   modifier: Modifier = Modifier,
   onLiveCameraChange: (Boolean) -> Unit = {},
 ) {
+  val skin = currentScreenSkin()
   // Scrolls so the last actions stay reachable in landscape, split screen or with large text.
-  Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 16.dp)) {
+  Column(
+    modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 16.dp),
+    verticalArrangement = Arrangement.spacedBy(12.dp),
+  ) {
     Column(
       Modifier.padding(horizontal = 24.dp).padding(bottom = 8.dp),
       verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -219,66 +239,97 @@ fun CardActions(
     }
     PlacementChips(state, onAddToHomeScreen, onWatchChange)
 
-    val widgetsFull = state.widgetsInUse >= WidgetStore.MAX_WIDGETS
-    Action(
-      Icons.Outlined.Widgets,
-      if (state.homeScreenCount > 0) "Add another to home screen" else "Add to home screen",
-      when {
-        widgetsFull ->
-          "All ${WidgetStore.MAX_WIDGETS} widgets in use · remove one from your launcher"
-        else ->
-          "A live widget · ${WidgetStore.MAX_WIDGETS - state.widgetsInUse} of " +
-            "${WidgetStore.MAX_WIDGETS} left"
-      },
-      onAddToHomeScreen,
-      enabled = !widgetsFull,
-    )
-    ListItem(
-      headlineContent = { Text("Show on watch") },
-      supportingContent = { Text("Pinned cards open from the watch app's home") },
-      leadingContent = { Icon(Icons.Outlined.PushPin, contentDescription = null) },
-      trailingContent = { Switch(checked = state.onWatch, onCheckedChange = null) },
-      modifier =
-        Modifier.fillMaxWidth()
-          .toggleable(value = state.onWatch, role = Role.Switch, onValueChange = onWatchChange),
-    )
-    state.liveCamera?.let { live ->
-      ListItem(
-        headlineContent = { Text("Live camera") },
-        supportingContent = {
-          Text("A new frame every ${LiveCameras.FRAME_INTERVAL_MS / 1000} s for 10 min, on screen")
-        },
-        leadingContent = { Icon(Icons.Outlined.Videocam, contentDescription = null) },
-        trailingContent = { Switch(checked = live, onCheckedChange = null) },
-        modifier =
-          Modifier.fillMaxWidth()
-            .toggleable(value = live, role = Role.Switch, onValueChange = onLiveCameraChange),
-      )
-    }
-    Action(
-      Icons.Outlined.Palette,
-      "Card style",
-      if (state.style.custom) state.style.name else "${state.style.name} · same as your dashboard",
-      onChangeStyle,
-    )
-    if (state.hasHistory) {
-      Action(Icons.Outlined.History, "History", "How this card's values changed", onShowHistory)
+    SkinPanel(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+      Column(Modifier.padding(vertical = 4.dp)) {
+        val widgetsFull = state.widgetsInUse >= WidgetStore.MAX_WIDGETS
+        Action(
+          Icons.Outlined.Widgets,
+          if (state.homeScreenCount > 0) "Add another to home screen" else "Add to home screen",
+          when {
+            widgetsFull ->
+              "All ${WidgetStore.MAX_WIDGETS} widgets in use · remove one from your launcher"
+            else ->
+              "A live widget · ${WidgetStore.MAX_WIDGETS - state.widgetsInUse} of " +
+                "${WidgetStore.MAX_WIDGETS} left"
+          },
+          onAddToHomeScreen,
+          enabled = !widgetsFull,
+        )
+        ListItem(
+          colors = actionColors(),
+          headlineContent = { Text("Show on watch") },
+          supportingContent = { Text("Pinned cards open from the watch app's home") },
+          leadingContent = { Icon(Icons.Outlined.PushPin, contentDescription = null) },
+          trailingContent = { Switch(checked = state.onWatch, onCheckedChange = null) },
+          modifier =
+            Modifier.fillMaxWidth()
+              .toggleable(value = state.onWatch, role = Role.Switch, onValueChange = onWatchChange),
+        )
+        state.liveCamera?.let { live ->
+          ListItem(
+            colors = actionColors(),
+            headlineContent = { Text("Live camera") },
+            supportingContent = {
+              Text(
+                "A new frame every ${LiveCameras.FRAME_INTERVAL_MS / 1000} s for 10 min, on screen"
+              )
+            },
+            leadingContent = { Icon(Icons.Outlined.Videocam, contentDescription = null) },
+            trailingContent = { Switch(checked = live, onCheckedChange = null) },
+            modifier =
+              Modifier.fillMaxWidth()
+                .toggleable(value = live, role = Role.Switch, onValueChange = onLiveCameraChange),
+          )
+        }
+        Action(
+          Icons.Outlined.Palette,
+          "Card style",
+          if (state.style.custom) state.style.name
+          else "${state.style.name} · same as your dashboard",
+          onChangeStyle,
+        )
+        if (state.hasHistory) {
+          Action(Icons.Outlined.History, "History", "How this card's values changed", onShowHistory)
+        }
+      }
     }
 
-    HorizontalDivider(Modifier.padding(horizontal = 24.dp, vertical = 8.dp))
-    if (state.homeAssistantUrl != null) {
-      SecondaryAction(
-        Icons.AutoMirrored.Outlined.OpenInNew,
-        "Open in Home Assistant",
-        onOpenInHomeAssistant,
-      )
+    SkinPanel(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+      Column(Modifier.padding(vertical = 4.dp)) {
+        Text(
+          skin.label("More"),
+          style = MaterialTheme.typography.labelMedium,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+          modifier = Modifier.padding(start = 16.dp, top = 8.dp),
+        )
+        if (state.homeAssistantUrl != null) {
+          SecondaryAction(
+            Icons.AutoMirrored.Outlined.OpenInNew,
+            "Open in Home Assistant",
+            onOpenInHomeAssistant,
+          )
+        }
+        if (state.canMonitor) {
+          SecondaryAction(Icons.Outlined.Timer, "Watch live for 15 minutes", onMonitor)
+        }
+        SecondaryAction(Icons.Outlined.Brush, "Redesign a copy in Card Studio", onOpenInStudio)
+      }
     }
-    if (state.canMonitor) {
-      SecondaryAction(Icons.Outlined.Timer, "Watch live for 15 minutes", onMonitor)
-    }
-    SecondaryAction(Icons.Outlined.Brush, "Redesign a copy in Card Studio", onOpenInStudio)
   }
 }
+
+/**
+ * List rows on a skin panel: transparent so the panel shows, icons in the skin's accent (the
+ * style's ink on an LCD).
+ */
+@Composable
+private fun actionColors(alpha: Float = 1f) =
+  ListItemDefaults.colors(
+    containerColor = Color.Transparent,
+    headlineColor = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+    supportingColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
+    leadingIconColor = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
+  )
 
 /**
  * Where the card already shows, as chips under the title; each opens the matching action. Only the
@@ -312,6 +363,7 @@ private fun PlacementChips(
     chips.forEach { (icon, label, onClick) ->
       AssistChip(
         onClick = onClick,
+        shape = currentScreenSkin().badgeShape,
         label = { Text(label, maxLines = 1) },
         leadingIcon = { Icon(icon, contentDescription = null) },
         colors =
@@ -339,11 +391,7 @@ private fun Action(
     headlineContent = { Text(label) },
     supportingContent = { Text(supporting) },
     leadingContent = { Icon(icon, contentDescription = null) },
-    colors =
-      ListItemDefaults.colors(
-        headlineColor = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
-        leadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
-      ),
+    colors = actionColors(alpha),
     modifier = Modifier.fillMaxWidth().clickable(enabled = enabled, onClick = onClick),
   )
 }
@@ -354,7 +402,12 @@ private fun SecondaryAction(icon: ImageVector, label: String, onClick: () -> Uni
   ListItem(
     headlineContent = { Text(label, style = MaterialTheme.typography.bodyLarge) },
     leadingContent = { Icon(icon, contentDescription = null) },
-    colors = ListItemDefaults.colors(headlineColor = MaterialTheme.colorScheme.onSurfaceVariant),
+    colors =
+      ListItemDefaults.colors(
+        containerColor = Color.Transparent,
+        headlineColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        leadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+      ),
     modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
   )
 }
@@ -373,6 +426,18 @@ private fun CardConfig.stateLabel(snapshot: HaSnapshot): String? {
   val state = formatState(entity, snapshot)
   return if (name == historyTitle()) state else "$name · $state"
 }
+
+/**
+ * The card style [card] draws in: its own override, its type's, or the user's [dashboard] style.
+ */
+internal fun cardStyleTheme(
+  card: CardConfig,
+  overrides: CardDesignOverrides,
+  dashboard: HaUberTheme,
+): HaUberTheme =
+  (overrides.at(CardDesignScope.Card, card)?.cardStyle
+      ?: overrides.at(CardDesignScope.CardType, card)?.cardStyle)
+    ?.let(HaUberTheme::byId) ?: dashboard
 
 /** The style [card] draws in: its own override, its type's, or the user's [dashboard] style. */
 internal fun cardStyleLabel(
