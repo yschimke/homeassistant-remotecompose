@@ -3,7 +3,6 @@ package ee.schimke.terrazzo
 import android.text.format.DateUtils
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,32 +47,22 @@ import ee.schimke.terrazzo.ui.statusColors
 import kotlinx.coroutines.delay
 
 /**
- * Below this window width the agent action moves from an icon into the overflow menu.
- *
- * The title is the most important thing in the bar, so the actions are budgeted against it. Every
- * action is a 48 dp touch target and the bar adds a 16 dp title inset and a 4 dp trailing pad, so
- * the title gets `width − 20 dp − 48 dp × actions`. With all five actions (agent, notifications,
- * connection, write mode, overflow) that is 150 dp at 410 dp; dropping the agent icon gives a 360
- * dp phone 148 dp — room for "3D Printing" in `titleLarge` (≈107 dp) plus its chevron.
- */
-private val AgentActionMinWidth = 410.dp
-
-/**
  * The dashboard view's top app bar: a [TopAppBar] plus, when the connection is not healthy, a slim
  * full-width status strip below it. The actions are icon-only so the dashboard title (the [title]
  * slot, usually a `DashboardSwitcher`) keeps the bar's width on a ~360 dp phone:
  * - the connection state is always a small coloured dot; the strip says the same thing in words (or
  *   shows progress) for every state but Connected, without taking width from the title;
- * - write mode is an [IconToggleButton] (pencil when writable, lock when read-only);
- * - the agent action folds into the overflow menu below [AgentActionMinWidth]. [overflowMenu]
- *   receives the agent callback to render as a menu item then, or `null` when the icon is shown.
+ * - write mode is an [IconToggleButton] (pencil when writable, lock when read-only).
+ *
+ * Every action is a 48 dp touch target and the bar adds a 16 dp title inset and a 4 dp trailing
+ * pad, so the title gets `width − 20 dp − 48 dp × actions`: 148 dp on a 360 dp phone with the four
+ * actions (notifications, connection, write mode, overflow) — room for "3D Printing" in
+ * `titleLarge` (≈107 dp) plus its chevron.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DashboardTopBar(
   title: @Composable () -> Unit,
-  showAgentButton: Boolean,
-  onOpenAgent: () -> Unit,
   notifications: List<HaNotification>,
   onDismissNotification: (HaNotification) -> Unit,
   onClearNotifications: () -> Unit,
@@ -82,23 +70,16 @@ internal fun DashboardTopBar(
   onRetryConnection: () -> Unit,
   writeMode: Boolean,
   onWriteModeChange: (Boolean) -> Unit,
-  overflowMenu: @Composable (onOpenAgent: (() -> Unit)?) -> Unit,
+  overflowMenu: @Composable () -> Unit,
   modifier: Modifier = Modifier,
   cachedDataAtMs: Long? = null,
 ) {
-  BoxWithConstraints(modifier = modifier) {
-    val agentInline = showAgentButton && maxWidth >= AgentActionMinWidth
-    val agentInOverflow = showAgentButton && !agentInline
+  Box(modifier = modifier) {
     Column(Modifier.fillMaxWidth()) {
       Box {
         TopAppBar(
           title = title,
           actions = {
-            if (agentInline) {
-              IconButton(onClick = onOpenAgent) {
-                Icon(Icons.Filled.AutoAwesome, contentDescription = "Edit with an agent")
-              }
-            }
             NotificationBell(
               notifications = notifications,
               onDismiss = onDismissNotification,
@@ -106,7 +87,7 @@ internal fun DashboardTopBar(
             )
             ConnectionStatusDot(status = connectionStatus, onClick = onRetryConnection)
             WriteModeToggle(writeMode = writeMode, onWriteModeChange = onWriteModeChange)
-            overflowMenu(if (agentInOverflow) onOpenAgent else null)
+            overflowMenu()
           },
         )
         // Over the bar's bottom edge rather than under it: connecting is momentary, and a line that
