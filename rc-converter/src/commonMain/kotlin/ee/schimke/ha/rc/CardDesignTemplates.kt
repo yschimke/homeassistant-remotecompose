@@ -30,7 +30,7 @@ import ee.schimke.ha.rc.components.ProvideExpressionNames
 import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.cardPalette
-import kotlinx.coroutines.runBlocking
+import kotlin.concurrent.Volatile
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -219,6 +219,24 @@ object CardDesignTemplates {
     key: DesignKey,
     registry: CardRegistry = defaultTemplateRegistry,
     content: @Composable (card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) -> Unit,
+  ): BuiltDesign = runCaptureBlocking { captureSuspending(context, key, registry, content) }
+
+  /** [capture], suspending: what a host that cannot block (wasmJs) calls. */
+  suspend fun captureSuspending(
+    context: CaptureHost,
+    key: DesignKey,
+    registry: CardRegistry = defaultTemplateRegistry,
+  ): BuiltDesign =
+    captureSuspending(context, key, registry) { card, snapshot, modifier ->
+      RenderChild(card, snapshot, modifier)
+    }
+
+  /** [captureWith], suspending: what a host that cannot block (wasmJs) calls. */
+  suspend fun captureSuspending(
+    context: CaptureHost,
+    key: DesignKey,
+    registry: CardRegistry = defaultTemplateRegistry,
+    content: @Composable (card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) -> Unit,
   ): BuiltDesign {
     require(key.surface == DesignSurface.MobileApp) { "spike only builds mobile-app templates" }
     val (style, dark, cardStyle) = parseBakedTheme(key.theme)
@@ -226,7 +244,7 @@ object CardDesignTemplates {
     val recipe =
       registry.converterFor(key.cardType)?.designRecipe(DesignProperties.parse(key.shape))
     val palette = cardStyle.cardPalette(style, dark)
-    val bytes = runBlocking {
+    val bytes = run {
       // Host density: every dp and sp reads the player's display, never the capture's, so a design
       // captured once (on the design server) plays at any phone's density and font scale. The
       // device folds its own display in once (forDisplay).
@@ -284,35 +302,34 @@ object CardDesignTemplates {
   fun forDisplay(template: ByteArray, density: Float, fontScale: Float): ByteArray =
     // Per template, so a background warm-up and the first frame asking at once fold it once: the
     // second waits for the first's result instead of folding it again.
-    synchronized(template) { foldOnce(template, density to fontScale) }
-
-  private fun foldOnce(template: ByteArray, display: Pair<Float, Float>): ByteArray {
-    val (density, fontScale) = display
-    synchronized(folded) {
-      folded[template]
-        ?.takeIf { it.first == display }
+    folded.locked(template) {
+      val display = density to fontScale
+      value
+        ?.takeIf { it.display == display }
         ?.let {
-          return it.second ?: template
+          return@locked it.bytes ?: template
         }
+      val bytes = runCatching {
+        RcDocumentCodec.encode(
+          RcDocumentCodec.decode(template, RcWireLimits())
+            .hardcodeDensity(density, fontScale)
+            .optimize()
+        )
+      }
+        .getOrNull()
+      value = Folded(display, bytes)
+      bytes ?: template
     }
-    val bytes = runCatching {
-      RcDocumentCodec.encode(
-        RcDocumentCodec.decode(template, RcWireLimits())
-          .hardcodeDensity(density, fontScale)
-          .optimize()
-      )
-    }
-      .getOrNull()
-    // Null for "can't be folded": the map must never hold its own key strongly.
-    synchronized(folded) { folded[template] = display to bytes }
-    return bytes ?: template
-  }
+
+  /** A template folded for [display]; null [bytes] when it can't be folded. */
+  private class Folded(val display: Pair<Float, Float>, val bytes: ByteArray?)
 
   /**
-   * Folded templates, by the template's own array: designs and library templates keep one array per
-   * key, so a key is folded once, and a template dropped from both goes from here too.
+   * Folded templates, by the template's own array (arrays compare by identity): designs and library
+   * templates keep one array per key, so a key is folded once. Bounded well above the keys a
+   * dashboard shows, so a template dropped from both is forgotten here in time too.
    */
-  private val folded = java.util.WeakHashMap<ByteArray, Pair<Pair<Float, Float>, ByteArray?>>()
+  private val folded = OncePerKey<ByteArray, Folded>(maxKeys = 256)
 
   /** Build every spike template. */
   fun buildAll(context: CaptureHost): List<BuiltDesign> = spikeKeys().map { capture(context, it) }
@@ -370,10 +387,11 @@ object CardDesignTemplates {
  * font scale).
  */
 object CardDesignLibrary {
-  private val templates = java.util.concurrent.ConcurrentHashMap<DesignKey, ByteArray>()
+  private val templates = OncePerKey<DesignKey, ByteArray>()
 
   /** Keys whose capture failed this process: not retried, since a capture costs a frame loop. */
-  private val failed: MutableSet<DesignKey> = java.util.concurrent.ConcurrentHashMap.newKeySet()
+  private val failedLock = PlatformLock()
+  private val failed = HashSet<DesignKey>()
 
   /** Where captured templates persist, or null to keep them for the process only. */
   @Volatile var store: LocalDesignStore? = null
@@ -402,13 +420,13 @@ object CardDesignLibrary {
     key: DesignKey,
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
   ): ByteArray? {
-    if (key in failed) return null
+    if (failedLock.withLock { key in failed }) return null
     return try {
       template(context, key, registry)
     } catch (e: kotlinx.coroutines.CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (failed.add(key)) {
+      if (failedLock.withLock { failed.add(key) }) {
         logWarning("CardDesignLibrary", "template capture failed for $key", e)
         val report = IllegalStateException("template capture failed for $key", e)
         runCatching { onCaptureFailure?.invoke(key, report) }
@@ -422,7 +440,7 @@ object CardDesignLibrary {
     key: DesignKey,
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
   ): ByteArray =
-    templates.computeIfAbsent(key) {
+    templates.getOrCompute(key) {
       val store = store
       shipped?.read(key)
         ?: store?.read(key)

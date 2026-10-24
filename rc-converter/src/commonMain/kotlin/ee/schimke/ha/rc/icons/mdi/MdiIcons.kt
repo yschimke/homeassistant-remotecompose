@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.unit.dp
-import java.util.concurrent.ConcurrentHashMap
+import ee.schimke.ha.rc.PlatformLock
 
 /**
  * The Material Design Icons (Pictogrammers, Apache-2.0) that harc bundles, as [ImageVector]s.
@@ -24,11 +24,12 @@ object MdiIcons {
   val names: List<String>
     get() = MdiPaths.names
 
-  private val built = ConcurrentHashMap<String, ImageVector>()
+  private val lock = PlatformLock()
+  private val built = HashMap<String, ImageVector>()
 
   /** Forgets the built glyphs; each rebuilds from its path data on next use. */
   fun releaseMemory() {
-    built.clear()
+    lock.withLock { built.clear() }
   }
 
   /** Whether [name] (no `mdi:` prefix) is bundled. */
@@ -37,7 +38,7 @@ object MdiIcons {
   /** The glyph for [name] (no `mdi:` prefix), or null when it isn't bundled. */
   operator fun get(name: String): ImageVector? {
     val path = MdiPaths.path(name) ?: return null
-    return built.computeIfAbsent(name) { build(it, path) }
+    return lock.withLock { built.getOrPut(name) { build(name, path) } }
   }
 
   private fun build(name: String, pathData: String): ImageVector =

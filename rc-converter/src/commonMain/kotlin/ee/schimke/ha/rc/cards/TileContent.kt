@@ -11,14 +11,16 @@ import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaTileFeature
 import ee.schimke.ha.rc.components.HaTileFeaturePosition
 import ee.schimke.ha.rc.components.HaTileModeOption
+import ee.schimke.ha.rc.decimalPlaces
+import ee.schimke.ha.rc.decimalSum
+import ee.schimke.ha.rc.formatDateTime
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.formatValueWithUnit
 import ee.schimke.ha.rc.icons.HaIconMap
-import java.math.BigDecimal
-import java.math.RoundingMode
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import ee.schimke.ha.rc.plainHalfUp
+import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -256,7 +258,7 @@ internal object TileContent {
     }
     val min = entity.number("min_temp") ?: 7.0
     val max = entity.number("max_temp") ?: 35.0
-    val digits = BigDecimal.valueOf(step).stripTrailingZeros().scale().coerceAtLeast(0)
+    val digits = decimalPlaces(step)
     fun setTo(value: Double): HaAction =
       HaAction.CallService(
         domain = domain,
@@ -264,21 +266,17 @@ internal object TileContent {
         entityId = entity.entityId,
         serviceData = JsonObject(mapOf("temperature" to JsonPrimitive(round(value, digits)))),
       )
-    val current = BigDecimal.valueOf(target)
-    val stepBd = BigDecimal.valueOf(step)
-    val down = current.subtract(stepBd).toDouble().coerceAtLeast(min)
-    val up = current.add(stepBd).toDouble().coerceAtMost(max)
+    val down = decimalSum(target, -step).coerceAtLeast(min)
+    val up = decimalSum(target, step).coerceAtMost(max)
     return HaTileFeature.NumberButtons(
-      valueLabel =
-        "${BigDecimal.valueOf(target).setScale(digits, RoundingMode.HALF_UP).toPlainString()} $unit",
+      valueLabel = "${plainHalfUp(target, digits)} $unit",
       decrement = if (target <= min) HaAction.None else setTo(down),
       increment = if (target >= max) HaAction.None else setTo(up),
       description = description,
     )
   }
 
-  private fun round(value: Double, digits: Int): Double =
-    BigDecimal.valueOf(value).setScale(digits, RoundingMode.HALF_UP).toDouble()
+  private fun round(value: Double, digits: Int): Double = plainHalfUp(value, digits).toDouble()
 
   // --- mode selects ---------------------------------------------------------------------------
 
@@ -445,15 +443,15 @@ internal object TileContent {
 
   private fun domainOf(entityId: String): String = entityId.substringBefore('.')
 
-  private val TimestampFormat = DateTimeFormatter.ofPattern("d MMM HH:mm", Locale.US)
-
   /**
    * An absolute timestamp. HA shows `last_changed` relative ("5 minutes ago"), which a baked
    * document re-encoded only on data changes would leave stale.
    */
   private fun formatTimestamp(epochMillis: Long): String =
-    TimestampFormat.format(
-      java.time.Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault())
+    formatDateTime(
+      Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(TimeZone.currentSystemDefault()),
+      "d MMM HH:mm",
+      english = true,
     )
 
   /** `fan_only` → `Fan only`: HA's untranslated fallback, as [formatState] does for states. */

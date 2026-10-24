@@ -13,9 +13,11 @@ import ee.schimke.ha.rc.SystemHaClock
 import ee.schimke.ha.rc.components.HaClockData
 import ee.schimke.ha.rc.components.placeholderTitle
 import ee.schimke.ha.rc.design.DesignedCardConverter
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
+import ee.schimke.ha.rc.formatDateTime
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.offsetAt
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -132,7 +134,7 @@ class ClockCardConverter : DesignedCardConverter() {
             timeFmt == "12" -> if (showSeconds) "h:mm:ss a" else "h:mm a"
             else -> if (showSeconds) "HH:mm:ss" else "HH:mm"
           }
-        clockNow(tz, clock).format(DateTimeFormatter.ofPattern(pattern))
+        formatDateTime(clockNow(tz, clock), pattern, english = false)
       } else null
 
     val zoneOffsetMinutes = if (tz != null) zoneOffsetMinutes(tz, clock) else 0
@@ -162,8 +164,8 @@ private const val LARGE = "large"
 private const val ZONED = "zoned"
 private const val DATE = "date"
 
-private fun zoneOf(card: CardConfig): ZoneId? =
-  card.raw["time_zone"]?.jsonPrimitive?.content?.let { runCatching { ZoneId.of(it) }.getOrNull() }
+private fun zoneOf(card: CardConfig): TimeZone? =
+  card.raw["time_zone"]?.jsonPrimitive?.content?.let { runCatching { TimeZone.of(it) }.getOrNull() }
 
 private fun showSeconds(card: CardConfig): Boolean =
   card.raw["show_seconds"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: false
@@ -174,17 +176,14 @@ private fun isLarge(card: CardConfig): Boolean =
 private fun showsDate(card: CardConfig): Boolean =
   (card.raw["display"]?.jsonPrimitive?.content ?: "primary") == "primary"
 
-private fun dateLabel(tz: ZoneId?, clock: HaClock): String =
-  clockNow(tz, clock).format(DateTimeFormatter.ofPattern("EEE d MMM"))
+private fun dateLabel(tz: TimeZone?, clock: HaClock): String =
+  formatDateTime(clockNow(tz, clock), "EEE d MMM", english = false)
 
 /** Target zone − host zone, now. */
-private fun zoneOffsetMinutes(tz: ZoneId, clock: HaClock): Int {
+private fun zoneOffsetMinutes(tz: TimeZone, clock: HaClock): Int {
   val now = clock.now()
-  return (tz.rules.getOffset(now).totalSeconds - clock.zone().rules.getOffset(now).totalSeconds) /
-    60
+  return (tz.offsetAt(now).totalSeconds - clock.zone().offsetAt(now).totalSeconds) / 60
 }
 
-private fun clockNow(tz: ZoneId?, clock: HaClock): ZonedDateTime {
-  val zone = tz ?: clock.zone()
-  return ZonedDateTime.ofInstant(clock.now(), zone)
-}
+private fun clockNow(tz: TimeZone?, clock: HaClock): LocalDateTime =
+  clock.now().toLocalDateTime(tz ?: clock.zone())

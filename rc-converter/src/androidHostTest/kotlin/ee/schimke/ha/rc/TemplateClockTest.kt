@@ -13,6 +13,7 @@ import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.junit.runner.RunWith
@@ -84,9 +85,9 @@ class TemplateClockTest {
     val text =
       String(CardDesignTemplates.capture(context, clockKey, registry).bytes, Charsets.UTF_8)
     val label = DateTimeFormatter.ofPattern("EEE d MMM")
-    val pinned = TemplateHaClock.zonedNow().format(label)
+    val pinned = label.format(TemplateHaClock.zonedNow().toJavaLocalDateTime())
     assertTrue(pinned in text, "the date line's default is the template clock's day, $pinned")
-    val today = SystemHaClock.zonedNow().format(label)
+    val today = label.format(SystemHaClock.zonedNow().toJavaLocalDateTime())
     if (today != pinned) assertFalse(today in text, "today's date, $today, leaked into a template")
   }
 }

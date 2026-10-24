@@ -1,6 +1,6 @@
 package ee.schimke.ha.rc.cards
 
-import java.util.Locale
+import ee.schimke.ha.rc.formatFixed
 
 /**
  * [value] as a whole number when it is one, otherwise with [decimals] places. Always a `.`
@@ -9,4 +9,4 @@ import java.util.Locale
  */
 internal fun decimalText(value: Double, decimals: Int): String =
   if (value == value.toLong().toDouble()) value.toLong().toString()
-  else "%.${decimals}f".format(Locale.ROOT, value)
+  else formatFixed(value, decimals)

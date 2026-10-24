@@ -14,8 +14,8 @@ actual abstract class CaptureHost {
   abstract val supportedOperations: Set<Int>
 }
 
-/** A JVM capture whose documents may use [supportedOperations]. */
-class JvmCaptureHost(override val supportedOperations: Set<Int>) : CaptureHost()
+/** A capture outside Android whose documents may use [supportedOperations]. */
+class CommonCaptureHost(override val supportedOperations: Set<Int>) : CaptureHost()
 
 internal actual val DOCUMENT_API_LEVEL: Int = CoreDocument.DOCUMENT_API_LEVEL
 
@@ -32,6 +32,5 @@ internal actual suspend fun captureTemplateDocument(
   )
 
 internal actual fun logWarning(tag: String, message: String, error: Throwable) {
-  System.err.println("W/$tag: $message")
-  error.printStackTrace()
+  println("W/$tag: $message\n${error.stackTraceToString()}")
 }

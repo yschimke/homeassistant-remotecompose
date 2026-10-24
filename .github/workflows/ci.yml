@@ -180,6 +180,15 @@ jobs:
       # their `testDebugUnitTest`, JVM modules (`:integration`, KMP common)
       # get plain `test`.
       - run: ./gradlew test --stacktrace
+      # The cards and their converters are multiplatform. Neither `assembleDebug` nor `test`
+      # compiles the wasmJs or iOS targets, so a JDK-only call in commonMain would otherwise land
+      # unnoticed.
+      - name: Compile the card stack for wasmJs and iOS
+        run: >-
+          ./gradlew --stacktrace
+          :rc-player-ui:compileKotlinWasmJs :rc-player-ui:compileKotlinIosSimulatorArm64
+          :rc-components:compileKotlinWasmJs :rc-components:compileKotlinIosSimulatorArm64
+          :rc-converter:compileKotlinWasmJs :rc-converter:compileKotlinIosSimulatorArm64
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v7.0.2

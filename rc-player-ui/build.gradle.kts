@@ -17,6 +17,8 @@ kotlin {
   }
   jvm()
   @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class) wasmJs { browser() }
+  iosArm64()
+  iosSimulatorArm64()
   sourceSets {
     commonMain.dependencies {
       api(project.dependencies.platform(libs.rc.players.bom))
