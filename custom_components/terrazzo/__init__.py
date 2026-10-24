@@ -2,6 +2,8 @@
 
 The optional MCP server (`mcp_view.py`) is the one exception: off by default, and when on it
 serves exactly one chosen HA user of this instance, with that user's own tokens and permissions.
+Dashboard edit sessions (`edits.py`) hold an agent's drafts until a person applies one with their
+own session.
 """
 from pathlib import Path
 
@@ -25,6 +27,7 @@ from .const import (
     STATIC_URL,
     clean_options,
 )
+from . import edits
 from .mcp_view import TerrazzoMcpMetadataView, TerrazzoMcpView
 
 CONFIG_SCHEMA = vol.Schema(
@@ -86,6 +89,10 @@ async def async_setup_entry(hass, entry):
         hass.http.register_view(TerrazzoMcpView(hass))
         hass.http.register_view(TerrazzoMcpMetadataView(hass))
         state["mcp"] = True
+    # Edit sessions outlive a reload of the entry; their commands are registered once, like the views.
+    if "edits" not in state:
+        state["edits"] = await edits.Edits.async_load(hass)
+        edits.async_register(hass)
     options = entry.options
     await panel_custom.async_register_panel(
         hass,
