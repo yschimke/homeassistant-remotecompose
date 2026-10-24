@@ -39,11 +39,11 @@ import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.remote.creation.compose.state.rs
+import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * 270° arc dial used by thermostat / humidifier / light cards.
@@ -312,7 +312,7 @@ fun RemoteHaArcDialFill(
         verticalArrangement = RemoteArrangement.spacedBy(if (compactCenter) 0.rdp else 2.rdp),
       ) {
         if (data.centerIcon != null) {
-          RemoteIcon(
+          RemoteBasicIcon(
             imageVector = data.centerIcon.toRemoteImageVector(),
             contentDescription = entityName(data.entityId, data.name),
             modifier = RemoteModifier.size((if (compactCenter) 28 else 40).rdp),
@@ -462,7 +462,7 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
           }
         if (data.centerIcon != null)
           RemoteBox(RemoteModifier.fillMaxSize(), contentAlignment = RemoteAlignment.BottomCenter) {
-            RemoteIcon(
+            RemoteBasicIcon(
               data.centerIcon.toRemoteImageVector(),
               contentDescription = null,
               modifier = RemoteModifier.size(30.rdp),
@@ -505,7 +505,7 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
       verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
     ) {
       if (data.centerIcon != null) {
-        RemoteIcon(
+        RemoteBasicIcon(
           imageVector = data.centerIcon.toRemoteImageVector(),
           contentDescription = entityName(data.entityId, data.name),
           modifier = RemoteModifier.size(40.rdp),
@@ -829,7 +829,7 @@ private fun StepperButton(
           ),
       contentAlignment = RemoteAlignment.Center,
     ) {
-      RemoteIcon(
+      RemoteBasicIcon(
         imageVector = icon.toRemoteImageVector(),
         contentDescription = label.rs,
         modifier = RemoteModifier.size(20.rdp),

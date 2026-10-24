@@ -34,7 +34,7 @@ dependencies {
   implementation(libs.remote.creation)
   implementation(libs.remote.creation.core)
   implementation(libs.remote.core)
-  implementation(libs.remote.material3)
+  implementation(libs.remote.foundation)
 
   implementation(libs.kotlinx.serialization.json)
   implementation(libs.jetbrains.markdown)

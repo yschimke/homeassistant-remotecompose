@@ -31,10 +31,10 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
+import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * `media-control` card — title/artist + transport buttons + a position bar. Album art renders as a
@@ -104,7 +104,7 @@ fun RemoteHaMediaControl(
           if (visualFamily() == HaVisualFamily.Console)
             ConsoleTapeLabel("No artwork".rs, RemoteModifier.padding(6.rdp))
           else
-            RemoteIcon(
+            RemoteBasicIcon(
               imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
               contentDescription = LiveValues.attribute(data.entityId, "media_title", data.title),
               modifier = RemoteModifier.size(40.rdp),
@@ -229,7 +229,7 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
     ) {
       if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel("No art".rs, compact = true)
       else
-        RemoteIcon(
+        RemoteBasicIcon(
           imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
           contentDescription = LiveValues.attribute(data.entityId, "media_title", data.title),
           modifier = RemoteModifier.size(22.rdp),
@@ -268,7 +268,7 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
       contentAlignment = RemoteAlignment.Center,
     ) {
       if (console) ConsoleControlFace(haInk(data.accent), RemoteModifier.size(32.rdp))
-      RemoteIcon(
+      RemoteBasicIcon(
         imageVector =
           (if (data.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow)
             .toRemoteImageVector(),
@@ -302,7 +302,7 @@ private fun TransportButton(
     if (visualFamily() == HaVisualFamily.Ikea) {
       RemoteBox(RemoteModifier.size(size.rdp).then(ikeaKeyChrome(haInk(accent))))
     }
-    RemoteIcon(
+    RemoteBasicIcon(
       imageVector = icon.toRemoteImageVector(),
       contentDescription = null,
       modifier =
@@ -350,7 +350,7 @@ private fun CommunityMediaPanel(
       artModifier.clip(haControlShape(16)).background(theme.placeholderBackground),
       contentAlignment = RemoteAlignment.Center,
     ) {
-      RemoteIcon(
+      RemoteBasicIcon(
         Icons.Filled.MusicNote.toRemoteImageVector(),
         contentDescription = "No artwork".rs,
         modifier = RemoteModifier.size(32.rdp),

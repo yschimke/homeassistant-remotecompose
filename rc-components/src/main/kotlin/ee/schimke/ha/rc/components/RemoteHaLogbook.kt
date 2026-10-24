@@ -17,10 +17,10 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
+import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * HA `logbook` card — list of recent state-change entries.
@@ -108,7 +108,7 @@ fun RemoteHaLogbookIdentity(data: HaLogbookData, modifier: RemoteModifier = Remo
         modifier = RemoteModifier.fillMaxWidth(),
         verticalAlignment = RemoteAlignment.CenterVertically,
       ) {
-        RemoteIcon(
+        RemoteBasicIcon(
           imageVector = latest.icon.toRemoteImageVector(),
           contentDescription = latest.name.rs,
           modifier = RemoteModifier.size(22.rdp),
@@ -148,7 +148,7 @@ private fun Entry(index: Int, entry: HaLogbookEntry, theme: RemoteHaTheme) {
     modifier = RemoteModifier.fillMaxWidth(),
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
-    RemoteIcon(
+    RemoteBasicIcon(
       imageVector = entry.icon.toRemoteImageVector(),
       // Decorative: the name is drawn beside it.
       contentDescription = null,

@@ -21,10 +21,10 @@ import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
+import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * `area` card — composite area tile with name, summary stat row, and action chips (toggleable
@@ -76,7 +76,7 @@ fun RemoteHaArea(data: HaAreaCardData, modifier: RemoteModifier = RemoteModifier
 @Composable
 private fun Stat(stat: HaAreaStat, theme: RemoteHaTheme) {
   RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
-    RemoteIcon(
+    RemoteBasicIcon(
       imageVector = stat.icon.toRemoteImageVector(),
       contentDescription = stat.label,
       modifier = RemoteModifier.size(16.rdp),
@@ -123,7 +123,7 @@ private fun ActionChip(action: HaAreaAction, theme: RemoteHaTheme) {
         .then(consoleKeyChrome(tint)),
     contentAlignment = RemoteAlignment.Center,
   ) {
-    RemoteIcon(
+    RemoteBasicIcon(
       imageVector = action.icon.toRemoteImageVector(),
       contentDescription = "action".rs,
       modifier = RemoteModifier.size(20.rdp),

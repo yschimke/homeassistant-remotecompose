@@ -21,9 +21,9 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
+import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * `custom:ha-bambulab-print_control-card` — the pad of the printer's pause / resume / stop button
@@ -104,7 +104,7 @@ private fun Button(button: HaBambuControlButton, theme: RemoteHaTheme) {
           if (button.enabled) accent else ConsoleSlot.rc,
           RemoteModifier.size(48.rdp),
         )
-      RemoteIcon(
+      RemoteBasicIcon(
         imageVector = button.icon.toRemoteImageVector(),
         contentDescription = button.label.rs,
         modifier =

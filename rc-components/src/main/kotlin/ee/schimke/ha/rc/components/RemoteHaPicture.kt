@@ -26,10 +26,10 @@ import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
+import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * `picture` card — a static image with optional name overlay. RC alpha08 has no channel for
@@ -86,7 +86,7 @@ fun RemoteHaPicture(
           contentAlignment = RemoteAlignment.Center,
         ) {
           RemoteColumn(horizontalAlignment = RemoteAlignment.CenterHorizontally) {
-            RemoteIcon(
+            RemoteBasicIcon(
               imageVector = data.placeholderIcon.toRemoteImageVector(),
               contentDescription = data.name?.let { cardText("name", it) } ?: "image".rs,
               modifier = RemoteModifier.size(48.rdp),
@@ -225,7 +225,7 @@ private fun GlanceImage(data: HaPictureGlanceData, theme: RemoteHaTheme, modifie
   ) {
     if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel("Image unavailable".rs)
     else
-      RemoteIcon(
+      RemoteBasicIcon(
         imageVector = data.placeholderIcon.toRemoteImageVector(),
         contentDescription = data.title?.let { cardTitle(it) } ?: "image".rs,
         modifier = RemoteModifier.size(40.rdp),
@@ -320,7 +320,7 @@ fun RemoteHaPictureElements(
     ) {
       if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel("Image unavailable".rs)
       else
-        RemoteIcon(
+        RemoteBasicIcon(
           imageVector = data.placeholderIcon.toRemoteImageVector(),
           contentDescription = "elements".rs,
           modifier = RemoteModifier.size(40.rdp),
