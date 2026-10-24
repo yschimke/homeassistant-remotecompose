@@ -684,13 +684,13 @@ private fun SectionHeader(index: Int, count: Int, onMove: (Int) -> Unit, onRemov
       modifier = Modifier.weight(1f),
     )
     IconButton(enabled = index > 0, onClick = { onMove(-1) }) {
-      Icon(Icons.Filled.ArrowUpward, contentDescription = "Move section up")
+      Icon(Icons.Filled.ArrowUpward, contentDescription = "Move section ${index + 1} up")
     }
     IconButton(enabled = index < count - 1, onClick = { onMove(1) }) {
-      Icon(Icons.Filled.ArrowDownward, contentDescription = "Move section down")
+      Icon(Icons.Filled.ArrowDownward, contentDescription = "Move section ${index + 1} down")
     }
     IconButton(onClick = { confirm = true }) {
-      Icon(Icons.Filled.Delete, contentDescription = "Delete section")
+      Icon(Icons.Filled.Delete, contentDescription = "Delete section ${index + 1}")
     }
   }
   if (confirm) {
@@ -743,22 +743,26 @@ private fun EditableCardGrid(
           key(i) {
             val isSelected = i == selectedIndex
             Box(
-              Modifier.semantics {
-                  contentDescription = "Card ${i + 1}: ${card.stringOf("type")}"
-                  selected = isSelected
-                }
-                .then(
-                  if (isSelected)
-                    Modifier.border(
-                      BorderStroke(3.dp, MaterialTheme.colorScheme.primary),
-                      RoundedCornerShape(14.dp),
-                    )
-                  else Modifier
-                )
+              Modifier.then(
+                if (isSelected)
+                  Modifier.border(
+                    BorderStroke(3.dp, MaterialTheme.colorScheme.primary),
+                    RoundedCornerShape(14.dp),
+                  )
+                else Modifier
+              )
             ) {
               key(card) { preview(card) }
               // Over the player, so a tap selects the card rather than toggling its entity.
-              Box(Modifier.matchParentSize().clickable { onSelect(i) })
+              // It carries the card's label, so a screen reader announces and selects the card.
+              Box(
+                Modifier.matchParentSize()
+                  .semantics {
+                    contentDescription = "Card ${i + 1}: ${card.stringOf("type")}"
+                    selected = isSelected
+                  }
+                  .clickable(onClickLabel = "Select") { onSelect(i) }
+              )
               if (isSelected) {
                 ResizeHandle(
                   columnStep = columnWidth + gap,
