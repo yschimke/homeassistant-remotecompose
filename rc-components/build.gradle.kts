@@ -9,9 +9,9 @@ plugins {
 
 // Cards are written once, in commonMain, against AndroidX's `remote-creation-compose` API. Android
 // builds with AndroidX's own library, which is what the app's players and widgets capture with.
-// The JVM builds with rc-players' Compose Multiplatform fork of it (same package, same API), so a
-// card can be captured without Android. The few writer calls that differ are in
-// RemoteCreationPlatform.
+// The JVM, wasmJs and iOS build with rc-players' Compose Multiplatform fork of it (same package,
+// same API), so a card can be captured without Android. The few writer calls that differ are in
+// RemoteCreationPlatform (`forkMain` for the fork).
 kotlin {
   jvmToolchain(libs.versions.java.get().toInt())
   android {
@@ -24,6 +24,21 @@ kotlin {
     withHostTest {}
   }
   jvm()
+  @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class) wasmJs { browser() }
+  iosArm64()
+  iosSimulatorArm64()
+  // Every target but Android captures with the fork: `forkMain` holds those actuals once.
+  @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
+  applyDefaultHierarchyTemplate {
+    common {
+      group("fork") {
+        withJvm()
+        withWasmJs()
+        withIosArm64()
+        withIosSimulatorArm64()
+      }
+    }
+  }
   sourceSets {
     commonMain.dependencies {
       implementation(project.dependencies.platform(libs.rc.players.bom))
@@ -48,7 +63,7 @@ kotlin {
       implementation(libs.remote.core)
       implementation(libs.remote.foundation)
     }
-    jvmMain.dependencies { implementation(libs.rc.creation.compose) }
+    getByName("forkMain").dependencies { implementation(libs.rc.creation.compose) }
     getByName("androidHostTest").dependencies {
       implementation(libs.kotlin.test)
       implementation(libs.kotlin.test.junit)

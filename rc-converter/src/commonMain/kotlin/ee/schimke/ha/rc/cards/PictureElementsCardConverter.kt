@@ -21,6 +21,7 @@ import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaPictureElements
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.design.DesignedCardConverter
+import ee.schimke.ha.rc.formatFixed
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.parseHaAction
@@ -252,7 +253,7 @@ private fun parsePositionDp(obj: JsonObject): Pair<Int, Int>? {
 
 /** A CSS percentage that lands on [dp] of [canvas] dp, mid-pixel so rounding can't move it. */
 private fun percentFor(dp: Int, canvas: Int): String =
-  "%.4f%%".format(java.util.Locale.ROOT, (dp + 0.5f) * 100f / canvas)
+  formatFixed(((dp + 0.5f) * 100f / canvas).toDouble(), 4) + "%"
 
 private const val ELEMENT_TAP = "#el-"
 private const val CANVAS_W_DP = 360

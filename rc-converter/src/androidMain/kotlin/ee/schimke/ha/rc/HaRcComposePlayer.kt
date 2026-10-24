@@ -38,6 +38,7 @@ import java.time.ZonedDateTime
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.toJavaZoneId
 
 /**
  * Which player draws a card's captured Remote Compose document.
@@ -380,10 +381,11 @@ internal fun RcBitmapData.externalImageName(): String? =
 internal fun HaClock.asRcTimeSource(): RcTimeSource {
   val clock = this
   return object : RcTimeSource {
-    override fun currentTimeMillis(): Long = clock.now().toEpochMilli()
+    override fun currentTimeMillis(): Long = clock.now().toEpochMilliseconds()
 
     override fun snapshot(epochMillis: Long): RcTimeSnapshot {
-      val t = ZonedDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), clock.zone())
+      val t =
+        ZonedDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), clock.zone().toJavaZoneId())
       return RcTimeSnapshot(
         epochMillis,
         t.year,

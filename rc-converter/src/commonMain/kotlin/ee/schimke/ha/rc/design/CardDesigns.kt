@@ -10,6 +10,7 @@ import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
+import ee.schimke.ha.rc.PlatformLock
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cards.AlarmDesignParts
@@ -32,7 +33,6 @@ import ee.schimke.ha.rc.cards.SingleFormDesignParts
 import ee.schimke.ha.rc.cards.TileDesignParts
 import ee.schimke.ha.rc.cards.ValueDesignParts
 import ee.schimke.ha.rc.cards.WeatherDesignParts
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * The card designs card types are drawn from (server-owned-card-designs.md): each migrated card
@@ -164,21 +164,20 @@ object CardDesigns {
       ContainerDesignParts.components +
       BambuDesignParts.components
 
-  private val loaded = ConcurrentHashMap<String, Result<CardDesign?>>()
+  private val lock = PlatformLock()
+  private val loaded = HashMap<String, Result<CardDesign?>>()
 
   /** [cardType]'s checked-in design, or null when its layout still lives in its converter. */
   fun design(cardType: String): CardDesign? =
-    loaded
-      .getOrPut(cardType) {
-        runCatching {
-          CardDesigns::class
-            .java
-            .getResourceAsStream("/$RESOURCE_DIR/${CardDesignFiles.fileName(cardType)}")
-            ?.use { CardDesign.parse(it.readBytes().decodeToString(), components) }
+    lock
+      .withLock {
+        loaded.getOrPut(cardType) {
+          runCatching {
+            BundledCardDesigns.file(CardDesignFiles.fileName(cardType))?.let {
+              CardDesign.parse(it, components)
+            }
+          }
         }
       }
       .getOrThrow()
-
-  /** Where the checked-in designs are packaged: `card-designs/ui-builder/designs`. */
-  const val RESOURCE_DIR = "designs"
 }

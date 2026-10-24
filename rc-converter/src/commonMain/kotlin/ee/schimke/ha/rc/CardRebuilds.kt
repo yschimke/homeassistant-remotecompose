@@ -1,8 +1,5 @@
 package ee.schimke.ha.rc
 
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
-
 /**
  * How often cards on screen rebuild their document while they stay on screen — the cost of live
  * data that didn't arrive as a named binding (docs/architecture/live-card-updates.md). Counted by
@@ -34,27 +31,24 @@ object CardRebuilds {
 
   private data class Bucket(val cardType: String, val reason: String, val cost: Cost)
 
-  private val counts = ConcurrentHashMap<Bucket, AtomicInteger>()
+  private val lock = PlatformLock()
+  private val counts = HashMap<Bucket, Int>()
 
   fun record(cardType: String, reason: String, cost: Cost) {
-    counts.getOrPut(Bucket(cardType, reason, cost)) { AtomicInteger() }.incrementAndGet()
+    val bucket = Bucket(cardType, reason, cost)
+    lock.withLock { counts[bucket] = (counts[bucket] ?: 0) + 1 }
     harcTrace(HarcTraceSections.REBUILD) {}
   }
 
   /** The counts so far, most frequent first, without clearing them. */
-  fun peek(): List<Count> =
-    counts.entries
-      .map { (b, n) -> Count(b.cardType, b.reason, b.cost, n.get()) }
-      .filter { it.count > 0 }
-      .sortedByDescending { it.count }
+  fun peek(): List<Count> = lock.withLock { counts.toCounts() }
 
   /** The counts since the last drain, most frequent first; clears them. */
-  fun drain(): List<Count> {
-    val out = mutableListOf<Count>()
-    for (bucket in counts.keys.toList()) {
-      val n = counts.remove(bucket)?.get() ?: continue
-      if (n > 0) out += Count(bucket.cardType, bucket.reason, bucket.cost, n)
-    }
-    return out.sortedByDescending { it.count }
+  fun drain(): List<Count> = lock.withLock { counts.toCounts().also { counts.clear() } }
+
+  private fun Map<Bucket, Int>.toCounts(): List<Count> = map { (b, n) ->
+    Count(b.cardType, b.reason, b.cost, n)
   }
+    .filter { it.count > 0 }
+    .sortedByDescending { it.count }
 }

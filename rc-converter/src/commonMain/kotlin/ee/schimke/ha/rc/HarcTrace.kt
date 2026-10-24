@@ -28,7 +28,7 @@ suspend fun <T> harcTraceSuspend(name: String, block: suspend () -> T): T {
   }
 }
 
-/** The platform's trace sections: `android.os.Trace` on Android, none on the JVM. */
+/** The platform's trace sections: `android.os.Trace` on Android, none elsewhere. */
 @PublishedApi internal expect fun traceBegin(name: String)
 
 @PublishedApi internal expect fun traceEnd()

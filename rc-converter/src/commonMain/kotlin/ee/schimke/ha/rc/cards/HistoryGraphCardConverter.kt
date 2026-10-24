@@ -18,6 +18,8 @@ import ee.schimke.ha.rc.components.HaHistoryGraphRow
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.placeholderTitle
 import ee.schimke.ha.rc.design.DesignedCardConverter
+import ee.schimke.ha.rc.formatFixed
+import kotlin.math.roundToLong
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -225,8 +227,8 @@ internal fun historyWindow(hours: Double): String {
   fun plural(n: Long, unit: String) = if (n == 1L) "last $unit" else "last $n ${unit}s"
   val wholeHours = hours.toLong()
   return when {
-    hours < 1 -> plural(Math.round(hours * 60).coerceAtLeast(1), "minute")
-    hours != wholeHours.toDouble() -> "last ${"%.1f".format(java.util.Locale.ROOT, hours)} hours"
+    hours < 1 -> plural((hours * 60).roundToLong().coerceAtLeast(1), "minute")
+    hours != wholeHours.toDouble() -> "last ${formatFixed(hours, 1)} hours"
     wholeHours < 48 || wholeHours % 24 != 0L -> plural(wholeHours, "hour")
     (wholeHours / 24) % 7 == 0L && wholeHours / 24 >= 14 -> plural(wholeHours / 168, "week")
     else -> plural(wholeHours / 24, "day")

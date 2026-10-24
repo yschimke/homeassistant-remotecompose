@@ -21,8 +21,6 @@ import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 
 // A..G (top, upper right, lower right, bottom, lower left, upper left, middle).
 internal val ConsoleDigitSegments =
@@ -32,16 +30,7 @@ internal val ConsoleDigitSegments =
 @Composable
 @RemoteComposable
 internal fun ConsoleClock(data: HaClockData, timeLabel: RemoteString) {
-  val frozen =
-    data.staticTimeLabel?.let { label ->
-      runCatching {
-        LocalTime.parse(
-          label,
-          DateTimeFormatter.ofPattern(if (data.use24Hour) "HH:mm[:ss]" else "h:mm[:ss] a"),
-        )
-      }
-        .getOrNull()
-    }
+  val frozen = data.staticTimeLabel?.let { parseClockLabel(it, data.use24Hour) }
   // Preserve the public static-label override even when it isn't a numeric time.
   if (data.staticTimeLabel != null && frozen == null) {
     RemoteText(
@@ -150,3 +139,31 @@ internal fun ConsoleClock(data: HaClockData, timeLabel: RemoteString) {
       )
   }
 }
+
+/** A time a static label names. */
+internal data class ClockLabelTime(val hour: Int, val minute: Int, val second: Int)
+
+/**
+ * [label] read as `HH:mm[:ss]` ([use24Hour]) or `h:mm[:ss] a` (`AM` / `PM`), as
+ * `java.time.LocalTime.parse` with those patterns reads it; null when it is not such a time.
+ */
+internal fun parseClockLabel(label: String, use24Hour: Boolean): ClockLabelTime? {
+  val match = (if (use24Hour) Clock24 else Clock12).matchEntire(label) ?: return null
+  val (h, m, s) = match.destructured
+  val minute = m.toInt().takeIf { it in 0..59 } ?: return null
+  val second = if (s.isEmpty()) 0 else s.toInt().takeIf { it in 0..59 } ?: return null
+  val hour =
+    if (use24Hour) {
+      // The smart resolver's end of day: 24:00 is midnight.
+      if (h == "24" && minute == 0 && second == 0) 0
+      else h.toInt().takeIf { it in 0..23 } ?: return null
+    } else {
+      // As the smart resolver reads it, 0 is 12.
+      val twelve = h.toInt().takeIf { it in 0..12 } ?: return null
+      twelve % 12 + if (match.groupValues[4] == "PM") 12 else 0
+    }
+  return ClockLabelTime(hour, minute, second)
+}
+
+private val Clock24 = Regex("""(\d{2}):(\d{2})(?::(\d{2}))?""")
+private val Clock12 = Regex("""(\d{1,2}):(\d{2})(?::(\d{2}))? (AM|PM)""")

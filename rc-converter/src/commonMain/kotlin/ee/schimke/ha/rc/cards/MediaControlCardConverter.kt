@@ -11,7 +11,6 @@ import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaMediaControlData
 import ee.schimke.ha.rc.design.DesignedCardConverter
-import java.util.Locale
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -138,8 +137,9 @@ private fun formatHms(totalSeconds: Long): String {
   val h = totalSeconds / 3600
   val m = (totalSeconds / 60) % 60
   val s = totalSeconds % 60
-  return if (h > 0) "$h:%02d:%02d".format(Locale.ROOT, m, s)
-  else "%d:%02d".format(Locale.ROOT, m, s)
+  val mm = m.toString().padStart(2, '0')
+  val ss = s.toString().padStart(2, '0')
+  return if (h > 0) "$h:$mm:$ss" else "$m:$ss"
 }
 
 /** The player's data for [card] and [snapshot]: what it draws, and what a template binds. */

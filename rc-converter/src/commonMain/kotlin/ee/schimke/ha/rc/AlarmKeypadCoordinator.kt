@@ -144,7 +144,7 @@ class AlarmKeypadCoordinator(
 
   private fun applyKey(buf: StringBuilder, key: String) {
     when (key) {
-      BACKSPACE -> if (buf.isNotEmpty()) buf.deleteCharAt(buf.length - 1)
+      BACKSPACE -> if (buf.isNotEmpty()) buf.deleteAt(buf.length - 1)
       CLEAR -> buf.clear()
       else -> if (key.length == 1 && key[0].isDigit()) buf.append(key)
     }

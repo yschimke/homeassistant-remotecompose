@@ -8,7 +8,8 @@ import androidx.compose.runtime.Composable
 
 /**
  * What a card design capture runs in: an Android `Context` on Android, where AndroidX's capture
- * needs one; on the JVM, a [JvmCaptureHost] naming the operations the documents may use.
+ * needs one; elsewhere (the fork), a [CommonCaptureHost] naming the operations the documents may
+ * use.
  */
 expect abstract class CaptureHost
 

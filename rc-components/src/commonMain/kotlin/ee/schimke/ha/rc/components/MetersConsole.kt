@@ -126,7 +126,7 @@ internal fun RemoteDrawScope.consoleArc(
   )
   // The pivot sits at the foot of the face; the scale is the largest arc of the sweep that fits.
   val pivotY = fy + fh * 0.96f.rf
-  val halfSpan = sin(Math.toRadians((VuSweep / 2f).toDouble())).toFloat()
+  val halfSpan = sin(toRadians((VuSweep / 2f).toDouble())).toFloat()
   val radius = (fw * (0.42f / halfSpan).rf).min(fh * 0.72f.rf)
   val oval = RemoteOffset(cx - radius, pivotY - radius)
   val ovalSize = RemoteSize(radius * 2f.rf, radius * 2f.rf)

@@ -139,15 +139,15 @@ internal class ArcBox(w: RemoteFloat, h: RemoteFloat, pad: Float, baseline: Floa
     RemoteOffset(x(degrees, r), y(degrees, r))
 
   fun x(degrees: Float, r: RemoteFloat): RemoteFloat =
-    cx + r * cos(Math.toRadians((180f + degrees).toDouble())).toFloat().rf
+    cx + r * cos(toRadians((180f + degrees).toDouble())).toFloat().rf
 
   fun y(degrees: Float, r: RemoteFloat): RemoteFloat =
-    baseY + r * sin(Math.toRadians((180f + degrees).toDouble())).toFloat().rf
+    baseY + r * sin(toRadians((180f + degrees).toDouble())).toFloat().rf
 }
 
 /** A point at canvas angle [degrees] (0 = +x, clockwise) at [r] from ([cx], [cy]). */
 internal fun polar(cx: RemoteFloat, cy: RemoteFloat, degrees: Float, r: RemoteFloat): RemoteOffset {
-  val rad = Math.toRadians(degrees.toDouble())
+  val rad = toRadians(degrees.toDouble())
   return RemoteOffset(cx + r * cos(rad).toFloat().rf, cy + r * sin(rad).toFloat().rf)
 }
 
@@ -228,3 +228,8 @@ internal fun fillPaint(color: RemoteColor) = RemotePaint {
   style = PaintingStyle.Fill
 }
   .apply { this.color = color }
+
+/** `Math.toRadians`, with its constant, so angles round as they did on the JVM. */
+internal fun toRadians(degrees: Double): Double = degrees * DEGREES_TO_RADIANS
+
+private const val DEGREES_TO_RADIANS = 0.017453292519943295

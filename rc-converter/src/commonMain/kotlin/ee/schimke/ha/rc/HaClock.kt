@@ -1,19 +1,20 @@
 package ee.schimke.ha.rc
 
 import androidx.compose.runtime.staticCompositionLocalOf
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
+import kotlin.time.Clock
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * Source of wall-clock "now" for HA card converters.
  *
  * Anything that needs to read time during the encode pass — formatting a label, picking the next
  * forecast bucket, computing a relative timestamp — MUST go through [LocalHaClock]. Reaching for
- * [Instant.now] / [ZonedDateTime.now] / [System.currentTimeMillis] directly bypasses the preview
- * override and reintroduces wall-clock drift into the captured `.rc` bytes (so the preview PNG
- * ticks each minute and screenshot diffs become useless).
+ * [Clock.System] (or `System.currentTimeMillis`) directly bypasses the preview override and
+ * reintroduces wall-clock drift into the captured `.rc` bytes (so the preview PNG ticks each minute
+ * and screenshot diffs become useless).
  *
  * Production binds [SystemHaClock] (the implicit default — callers don't need to provide anything).
  * Previews and unit tests provide a [FixedHaClock] so the encoded bytes are byte-stable across
@@ -31,7 +32,7 @@ interface HaClock {
    * Display zone — converters that render zoned timestamps (clock card, future calendar / logbook
    * labels) use this for formatting unless the card config pins its own `time_zone:`.
    */
-  fun zone(): ZoneId
+  fun zone(): TimeZone
 
   /**
    * Whether the clock is frozen for the lifetime of this composition. Converters that would
@@ -42,17 +43,17 @@ interface HaClock {
     get() = false
 }
 
-/** Convenience: zoned "now" in the clock's display [HaClock.zone]. */
-fun HaClock.zonedNow(): ZonedDateTime = ZonedDateTime.ofInstant(now(), zone())
+/** Convenience: "now" on the wall clock of the clock's display [HaClock.zone]. */
+fun HaClock.zonedNow(): LocalDateTime = now().toLocalDateTime(zone())
 
 /**
- * Real wall-clock backed by [Instant.now] + [ZoneId.systemDefault]. The implicit [LocalHaClock]
- * default — production callers don't need to provide anything.
+ * Real wall-clock backed by [Clock.System] + [TimeZone.currentSystemDefault]. The implicit
+ * [LocalHaClock] default — production callers don't need to provide anything.
  */
 object SystemHaClock : HaClock {
-  override fun now(): Instant = Instant.now()
+  override fun now(): Instant = Clock.System.now()
 
-  override fun zone(): ZoneId = ZoneId.systemDefault()
+  override fun zone(): TimeZone = TimeZone.currentSystemDefault()
 }
 
 /**
@@ -60,13 +61,11 @@ object SystemHaClock : HaClock {
  * the rendered PNG) are byte-stable across runs. Reports [isFrozen] = true so live-tick converters
  * know to fall back to a static-label encoding.
  */
-class FixedHaClock(private val instant: Instant, private val zone: ZoneId = ZoneOffset.UTC) :
+class FixedHaClock(private val instant: Instant, private val zone: TimeZone = TimeZone.UTC) :
   HaClock {
-  constructor(zoned: ZonedDateTime) : this(zoned.toInstant(), zoned.zone)
-
   override fun now(): Instant = instant
 
-  override fun zone(): ZoneId = zone
+  override fun zone(): TimeZone = zone
 
   override val isFrozen: Boolean = true
 }
@@ -83,7 +82,7 @@ object TemplateHaClock : HaClock {
 
   override fun now(): Instant = instant
 
-  override fun zone(): ZoneId = ZoneOffset.UTC
+  override fun zone(): TimeZone = TimeZone.UTC
 }
 
 /**

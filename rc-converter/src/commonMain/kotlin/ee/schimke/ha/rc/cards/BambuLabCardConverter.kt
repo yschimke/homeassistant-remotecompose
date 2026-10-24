@@ -753,7 +753,7 @@ private val BambuPrinter.spoolEntities: Set<String>
  * provides is not a Bambu printer's.
  */
 internal fun bambuPrinters(snapshot: HaSnapshot): List<String> {
-  val prefixes = sortedSetOf<String>()
+  val prefixes = mutableSetOf<String>()
   for (id in snapshot.states.keys) {
     val integration = snapshot.devices[id]?.integration
     if (integration != null && integration != BAMBU_INTEGRATION) continue
@@ -766,7 +766,7 @@ internal fun bambuPrinters(snapshot: HaSnapshot): List<String> {
       } ?: TrayEntity.matchEntire(id)?.groupValues?.get(1)
     if (!prefix.isNullOrEmpty()) prefixes += prefix
   }
-  return prefixes.toList()
+  return prefixes.sorted()
 }
 
 /** The ha-bambulab integration's domain. */
