@@ -89,7 +89,7 @@ tasks.named("check") {
       }
     val consumers =
       mapOf(
-        "rc-components" to "implementation(platform(libs.rc.players.bom))",
+        "rc-components" to "implementation(project.dependencies.platform(libs.rc.players.bom))",
         "rc-converter" to "api(platform(libs.rc.players.bom))",
         "rc-image-coil" to "api(platform(libs.rc.players.bom))",
         "rc-player-ui" to "api(project.dependencies.platform(libs.rc.players.bom))",

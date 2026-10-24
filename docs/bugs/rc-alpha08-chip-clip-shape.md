@@ -49,7 +49,7 @@ small square dimensions inside a row.
 
 ## Live code
 
-- `RemoteHaTile`: [rc-components/src/main/kotlin/ee/schimke/ha/rc/components/RemoteHaTile.kt](../../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/RemoteHaTile.kt)
+- `RemoteHaTile`: [rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/RemoteHaTile.kt](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/RemoteHaTile.kt)
 - Rendered output showing the issue: the `Front door` tile's padlock
   badge in
   https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_tile_lock_locked.png —

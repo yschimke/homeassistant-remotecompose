@@ -86,8 +86,7 @@ val stageAndroidCatalogBundle =
     into(layout.buildDirectory.dir("android-catalog-bundle"))
     from(layout.buildDirectory.dir("catalog/testDebugUnitTest"))
     from("fixtures") { into("designs") }
-    for (module in
-      listOf("ui-builder-catalog", "rc-components-ui", "rc-components", "rc-converter")) {
+    for (module in listOf("ui-builder-catalog", "rc-components-ui", "rc-converter")) {
       val library = project(":$module")
       dependsOn(":$module:bundleDebugAar")
       from(
@@ -100,19 +99,22 @@ val stageAndroidCatalogBundle =
       }
       from(library.layout.buildDirectory.file("outputs/aar/$module-debug.aar")) { into("android") }
     }
-    // rc-converter's players are error boundaries from rc-player-ui (RcErrorBoundary), a
-    // multiplatform library whose Android variant is `androidMain`, not `debug`.
-    val playerUi = project(":rc-player-ui")
-    dependsOn(":rc-player-ui:bundleAndroidMainAar")
-    from(
-      playerUi.layout.buildDirectory.file(
-        "intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar"
-      )
-    ) {
-      into("lib")
-      rename { "rc-player-ui.jar" }
+    // rc-converter's players are error boundaries from rc-player-ui (RcErrorBoundary), and the
+    // cards are rc-components'. Both are multiplatform libraries whose Android variant is
+    // `androidMain`, not `debug`.
+    for (module in listOf("rc-player-ui", "rc-components")) {
+      val library = project(":$module")
+      dependsOn(":$module:bundleAndroidMainAar")
+      from(
+        library.layout.buildDirectory.file(
+          "intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar"
+        )
+      ) {
+        into("lib")
+        rename { "$module.jar" }
+      }
+      from(library.layout.buildDirectory.file("outputs/aar/$module.aar")) { into("android") }
     }
-    from(playerUi.layout.buildDirectory.file("outputs/aar/rc-player-ui.aar")) { into("android") }
   }
 val packageAndroidCatalogBundle =
   tasks.register<Zip>("packageAndroidCatalogBundle") {

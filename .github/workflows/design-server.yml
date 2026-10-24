@@ -16,7 +16,7 @@ on:
       - app-ui/**
       - rc-player-ui/**
       - rc-converter/src/main/**
-      - rc-components/src/main/**
+      - rc-components/src/**
       - ha-model/src/**
       - ha-client/src/**
       - previews/src/main/**
