@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.shared
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -92,7 +93,12 @@ internal fun LibraryCard(
     if (current == null) {
       Column {
         DashboardCardTheme(style, dark) { key(tick) { fallback() } }
-        if (settled && showFallbackNotice) Text("Design unavailable · showing built-in card")
+        if (settled && showFallbackNotice)
+          Text(
+            "Design unavailable · showing built-in card",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
       }
     } else {
       Column(
