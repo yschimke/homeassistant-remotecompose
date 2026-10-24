@@ -100,6 +100,8 @@ test('Edit sessions: agents draft, administrators apply', {timeout:180_000}, asy
     assert.deepEqual(started.session.baseline, BASELINE);
     assert.ok(started.prompt.includes(sessionId) && started.prompt.includes('/api/terrazzo/mcp'), started.prompt);
     assert.ok(!started.prompt.includes(ownerTokens.access_token) && !started.prompt.includes('light.wall_light'));
+    assert.equal((await owner.ws({type:'terrazzo/edit/get', session_id:sessionId})).prompt, started.prompt,
+      'a resumed session hands out the same prompt');
     const listed = await owner.ws({type:'terrazzo/edit/list', url_path:'edit-fixture'});
     assert.deepEqual(listed.sessions.map((s) => s.session_id), [sessionId]);
 

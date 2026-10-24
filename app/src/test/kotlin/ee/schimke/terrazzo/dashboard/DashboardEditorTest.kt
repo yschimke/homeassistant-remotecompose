@@ -5,7 +5,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -139,5 +142,27 @@ class DashboardEditorTest {
     assertEquals(original["custom"], edits.draft["custom"])
     // A swap is a draft edit like any other: nothing is written until Save.
     assertEquals(emptyList(), writes)
+  }
+
+  @Test
+  fun theIntegrationCardOffersAnAgentOnlyWithTheIntegration() {
+    var asked = 0
+    val ask: () -> Unit = { asked += 1 }
+    var status by mutableStateOf(IntegrationStatus.Installed)
+    compose.setContent {
+      MaterialTheme {
+        IntegrationCard(
+          status,
+          onOpenHomeAssistant = {},
+          onAskAgent = ask.takeIf { status == IntegrationStatus.Installed },
+        ) {}
+      }
+    }
+    compose.onNodeWithText("Ask an agent").performClick()
+    assertEquals(1, asked)
+    compose.onNodeWithText("Install with HACS").assertDoesNotExist()
+    status = IntegrationStatus.Missing
+    compose.onNodeWithText("Ask an agent").assertDoesNotExist()
+    compose.onNodeWithText("Install with HACS").assertExists()
   }
 }

@@ -39,7 +39,7 @@ Assistant is the editor in practice.
 | | Without the integration | With the integration |
 | --- | --- | --- |
 | Phone | Light edits on the live dashboard; **Open in Home Assistant** for HA's own editor; an **Install with HACS** card | Light edits; **Ask an agent** (start an edit session, share its prompt); preview, apply or discard agent drafts |
-| Web panel | — | Full editor: add cards, sections, views and dashboards, card settings; start sessions; preview drafts side by side |
+| Web panel | — | **Ask an agent** and the same draft preview; later a full editor (add cards, sections, views and dashboards, card settings) |
 | Agent | — (no supported path) | MCP: read dashboards and entities, read the card guide, submit drafts to an edit session |
 
 ## Edit sessions
@@ -79,7 +79,7 @@ Assistant's storage:
      agent**).
    - The editor ends with a card pointing to Home Assistant's own editor and, when
      `get_config`'s `components` lacks `terrazzo`, to the integration's HACS page.
-2. **Integration, edit sessions** — done; the phone and panel screens for it come next.
+2. **Integration, edit sessions** — done.
    - `custom_components/terrazzo/edit_sessions.py` holds the rules with no Home Assistant
      imports: a session keeps its dashboard, request, starting config, drafts (the newest 10) and
      notes, and expires a day after its last change (50 at most). A draft must be a config with a
@@ -87,8 +87,8 @@ Assistant's storage:
      starting config; undo needs it to still hold the applied draft.
    - `edits.py` keeps the sessions in `.storage/terrazzo.edit_sessions`, reaches the dashboards
      (only those the caller may see; `require_admin` ones are hidden from other users) and serves
-     the WebSocket commands, each as the connection's user: `terrazzo/edit/start` (returns the
-     session and the prompt to hand an agent), `list`, `get`, `subscribe` (the session now and on
+     the WebSocket commands, each as the connection's user: `terrazzo/edit/start` and `get`
+     (the session and the prompt to hand an agent), `list`, `subscribe` (the session now and on
      every change), `note`, `discard`, and the administrator-only `apply` and `undo`. Apply and
      undo check and save with no await in between once Lovelace has the dashboard loaded, and
      refuse YAML dashboards.
@@ -101,12 +101,28 @@ Assistant's storage:
      server's non-admin user (a draft naming a missing entity is refused), the owner's
      subscription sees the draft, the agent can't apply, a dashboard changed meanwhile is not
      overwritten, and apply and undo round-trip.
-3. **Panel editor and draft preview.** The editor screens move to the shared UI module (`app-ui`)
-   so the panel, desktop and phone share one editor and one draft preview; the phone build shows
-   only the light edits. `DashboardDraft` (`ha-client`) already holds the add / remove / view
-   operations the panel needs.
-4. **Agent guidance.** `skills/ha-dashboard/SKILL.md` and `DashboardAgentPrompt` are rewritten
-   around MCP edit sessions; the long-lived-token WebSocket path is dropped.
+3. **Ask an agent and draft preview** — done.
+   - `HaClient.agentEdits` (`ha-client`, the `AgentEdits` interface) runs the session commands;
+     `watch` is the `subscribe` command, unsubscribed when collection stops and failing with its
+     connection so the screen re-subscribes after a reconnect. A `conflict` from apply or undo is
+     a `DashboardConflictException`. `HaSession.agentEdits` exposes it on the phone (null in demo
+     mode).
+   - `AgentEditScreen` (`app-ui`, shared by the phone, the desktop app and the panel): write a
+     request and start a session, share its prompt (the phone's share sheet, the panel's
+     clipboard), or pick an open session back up. It watches the session and draws each draft
+     with `DashboardContent` and the host's own card renderer and live states; **Apply** (Home
+     Assistant refuses non-administrators), **Request changes** (a note), **Discard**, and **Undo**
+     after applying. Older drafts stay selectable.
+   - The phone opens it from the editor's integration card when `get_config` lists `terrazzo`, and
+     reloads the editor after an apply; the panel and desktop app show **Ask an agent** in a
+     dashboard's top bar.
+4. **Agent guidance** — done. `skills/ha-dashboard/SKILL.md` describes the MCP edit session and no
+   longer the long-lived-token `lovelace/config/save` path. `DashboardAgentPrompt` keeps only the
+   dashboard-and-entities context the placeholder card's coding prompt carries; the card guide
+   lives in the integration (`CARD_GUIDE`, `get_card_guide`).
+5. **Next: a fuller editor in the panel.** The editor screens move to `app-ui` so the panel can add
+   cards, sections and views (`DashboardDraft` already holds those operations); the phone build
+   keeps only the light edits.
 
 Rendered previews of a draft *for the agent* wait for a server-side renderer (the add-on server's
 `.rc` endpoint is a placeholder): until then the agent gets the published catalog images, and the

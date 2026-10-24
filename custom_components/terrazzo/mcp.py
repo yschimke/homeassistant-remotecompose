@@ -208,7 +208,8 @@ EDIT_TOOLS = [
 ]
 TOOLS += EDIT_TOOLS
 
-# Matches DashboardAgentPrompt's GUIDE, SIZING and DESIGN_TOOLS in ha-client; change them together.
+# What an agent reads before drafting (get_card_guide). skills/ha-dashboard/SKILL.md says the same
+# for agents that load skills; change them together.
 CARD_GUIDE = {
     "native_card_types": [
         "tile", "entities", "glance", "gauge", "sensor", "thermostat", "humidifier", "light",
@@ -218,7 +219,7 @@ CARD_GUIDE = {
         "grid", "conditional", "entity-filter",
     ],
     "rules": [
-        "Answer with the complete dashboard config; keep every view, section and card the user "
+        "Submit the complete dashboard config; keep every view, section and card the user "
         "didn't ask to change.",
         "Use only entity ids from find_entities. Never invent entities.",
         "Prefer the native card types; other (custom) cards show as a plain list of entities.",

@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -35,6 +36,7 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
@@ -47,6 +49,7 @@ import ee.schimke.ha.client.listRenderableDashboards
 import ee.schimke.ha.client.stateSnapshots
 import ee.schimke.ha.model.*
 import ee.schimke.ha.rc.formatState
+import ee.schimke.terrazzo.dashboard.AgentEditScreen
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
@@ -65,6 +68,9 @@ private data object DashboardsDestination : NavKey
 private data object SettingsDestination : NavKey
 
 private data class DashboardDestination(val path: String?) : NavKey
+
+/** Asking an agent to change [path]'s dashboard, through the Terrazzo integration. */
+private data class AgentEditDestination(val path: String?) : NavKey
 
 private class AppConnection(
   val config: HaConfig,
@@ -332,6 +338,16 @@ private fun DashboardShell(
       }
     }
   }
+  // Edit sessions need the Terrazzo integration, which serves the panel itself.
+  var integrationInstalled by remember(connection) { mutableStateOf(false) }
+  LaunchedEffect(connection) {
+    connection.client.state.collectLatest { state ->
+      if (state != HaClient.ConnectionState.Ready) return@collectLatest
+      integrationInstalled =
+        runCatching { TERRAZZO_DOMAIN in connection.client.fetchConfig().components }
+          .getOrDefault(integrationInstalled)
+    }
+  }
   fun select(route: NavKey) {
     stack.clear()
     stack.add(route)
@@ -398,6 +414,11 @@ private fun DashboardShell(
                         )
                       },
                       actions = {
+                        if (integrationInstalled) {
+                          TextButton(onClick = { stack.add(AgentEditDestination(route.path)) }) {
+                            Text("Ask an agent")
+                          }
+                        }
                         TextButton(onClick = { customizing = !customizing }) {
                           Text(if (customizing) "Done customizing" else "Customize")
                         }
@@ -418,6 +439,22 @@ private fun DashboardShell(
                   )
                 }
               }
+              entry<AgentEditDestination> { route ->
+                AgentEditEntry(
+                  connection,
+                  route.path,
+                  title =
+                    (list as? DashboardListState.Ready)
+                      ?.dashboards
+                      ?.firstOrNull { it.urlPath == route.path }
+                      ?.title,
+                  snapshot = snapshot,
+                  designServer = designServer,
+                  cardStyle = cardStyle,
+                  dark = dark,
+                  onBack = { if (stack.size > 1) stack.removeLastOrNull() },
+                )
+              }
             },
         )
       }
@@ -430,6 +467,60 @@ private fun DashboardShell(
       onCardStyle = onCardStyle,
       isFullScreen = isFullScreen,
       onToggleFullScreen = onToggleFullScreen,
+    )
+  }
+}
+
+/** The Terrazzo integration's domain, in `get_config`'s `components` when it is installed. */
+private const val TERRAZZO_DOMAIN = "terrazzo"
+
+/** [AgentEditScreen] with drafts drawn as the dashboard draws its cards, read-only. */
+@Composable
+private fun AgentEditEntry(
+  connection: AppConnection,
+  path: String?,
+  title: String?,
+  snapshot: HaSnapshot,
+  designServer: String,
+  cardStyle: String,
+  dark: Boolean,
+  onBack: () -> Unit,
+) {
+  val scope = rememberCoroutineScope()
+  @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+  val designCache =
+    remember(connection, designServer) {
+      DashboardLoadCache(scope) { key: LibraryDesignKey ->
+        loadLibraryDesign(key, designServer, AppCardUsage.userAgent?.header)
+      }
+    }
+  val pictureCache =
+    remember(connection) {
+      DashboardLoadCache(scope, capacity = 12) { key: EntityPictureKey ->
+        decodeEntityPicture(connection.pictures.load(key))
+      }
+    }
+  AgentEditScreen(
+    edits = connection.client.agentEdits,
+    urlPath = path,
+    title = title,
+    snapshot = snapshot,
+    onBack = onBack,
+    onSharePrompt = { clipboard.setText(AnnotatedString(it)) },
+    onApplied = {},
+  ) { _, card ->
+    AuthenticatedCard(
+      card,
+      snapshot,
+      connection.client,
+      designCache,
+      pictureCache,
+      cardStyle,
+      dark,
+      onMoreInfo = {},
+      onAction = {},
+      onToggle = {},
+      onService = { _, _, _ -> },
     )
   }
 }

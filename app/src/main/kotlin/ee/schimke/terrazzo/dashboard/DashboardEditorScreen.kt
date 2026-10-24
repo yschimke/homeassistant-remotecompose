@@ -69,6 +69,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -114,8 +115,10 @@ private const val TAG = "DashboardEditor"
  * ([DashboardEditSession]): another client's change since the draft was loaded is refused rather
  * than overwritten.
  *
- * Adding cards, sections, views and dashboards, editing a card's settings and agent edits belong to
- * the Terrazzo panel with the Home Assistant integration; [IntegrationCard] points there.
+ * Adding cards, sections, views and dashboards and editing a card's settings belong to Home
+ * Assistant's editor or the Terrazzo panel; [IntegrationCard] points there. With the Terrazzo
+ * integration installed it also offers **Ask an agent** ([AgentEditScreen]): an edit session in
+ * Home Assistant whose drafts are previewed here and applied by an administrator.
  *
  * The dashboard view itself lays sections out by harc's own card designs ([SectionCardFlow]), so it
  * can place cards differently from HA's grid; the editor shows the grid because that is what a
@@ -139,6 +142,9 @@ fun DashboardEditorScreen(
   var load by remember(session, urlPath) { mutableStateOf<EditorLoad>(EditorLoad.Loading) }
   var snapshot by remember(session, urlPath) { mutableStateOf(HaSnapshot()) }
   var integration by remember(session) { mutableStateOf(IntegrationStatus.Unknown) }
+  var askingAgent by rememberSaveable(session, urlPath) { mutableStateOf(false) }
+  // Bumped when an agent's draft is applied, so the editor reloads what Home Assistant now holds.
+  var reloads by remember(session, urlPath) { mutableIntStateOf(0) }
   LaunchedEffect(session) {
     val config = runCatching { session.fetchInstanceConfig() }.getOrNull()
     integration =
@@ -149,7 +155,7 @@ fun DashboardEditorScreen(
       }
   }
 
-  LaunchedEffect(session, urlPath) {
+  LaunchedEffect(session, urlPath, reloads) {
     load =
       try {
         val stored = session.fetchDashboardConfig(urlPath)
@@ -186,6 +192,27 @@ fun DashboardEditorScreen(
     session.liveDashboardSnapshots(loaded).collect { snapshot = it }
   }
 
+  val agentEdits = session.agentEdits
+  if (askingAgent && agentEdits != null) {
+    val context = LocalContext.current
+    BackHandler { askingAgent = false }
+    AgentEditScreen(
+      edits = agentEdits,
+      urlPath = urlPath,
+      title = title,
+      snapshot = snapshot,
+      onBack = { askingAgent = false },
+      onSharePrompt = { sharePrompt(context, it) },
+      onApplied = {
+        reloads++
+        onSaved()
+      },
+    ) { _, card ->
+      DashboardCardPreview(session, card, snapshot)
+    }
+    return
+  }
+
   when (val l = load) {
     EditorLoad.Loading ->
       EditorFrame(title = "Edit dashboard", onBack = onBack, snackbars = snackbars) {
@@ -207,6 +234,7 @@ fun DashboardEditorScreen(
         launch = { block -> scope.launch { block() } },
         integration = integration,
         urlPath = urlPath,
+        onAskAgent = agentEdits?.let { { askingAgent = true } },
       )
   }
 }
@@ -246,6 +274,7 @@ internal fun DashboardEditor(
   initialSelection: CardAddress? = null,
   integration: IntegrationStatus = IntegrationStatus.Unknown,
   urlPath: String? = null,
+  onAskAgent: (() -> Unit)? = null,
 ) {
   val context = LocalContext.current
   val editInHomeAssistant =
@@ -434,7 +463,13 @@ internal fun DashboardEditor(
           },
           onResizeStart = { history += draft },
           footer = {
-            IntegrationCard(integration, editInHomeAssistant) { openUrl(context, HACS_INSTALL_URL) }
+            IntegrationCard(
+              integration,
+              editInHomeAssistant,
+              onAskAgent = onAskAgent?.takeIf { integration == IntegrationStatus.Installed },
+            ) {
+              openUrl(context, HACS_INSTALL_URL)
+            }
           },
           onMoveSection = { section, by ->
             attempt { apply(DashboardDraft.moveSection(draft, viewIndex, section, by)) }
@@ -868,13 +903,14 @@ enum class IntegrationStatus {
 
 /**
  * Where the editing the phone doesn't do lives: Home Assistant's own dashboard editor for adding
- * cards, sections and dashboards, and — when it isn't installed — the Terrazzo integration from
- * HACS.
+ * cards, sections and dashboards, an agent through the Terrazzo integration ([onAskAgent], when it
+ * is installed), and — when it isn't — the integration from HACS.
  */
 @Composable
 internal fun IntegrationCard(
   status: IntegrationStatus,
   onOpenHomeAssistant: (() -> Unit)?,
+  onAskAgent: (() -> Unit)? = null,
   onInstall: () -> Unit,
 ) {
   Surface(
@@ -892,6 +928,16 @@ internal fun IntegrationCard(
       )
       onOpenHomeAssistant?.let { open ->
         OutlinedButton(onClick = open) { Text("Open in Home Assistant") }
+      }
+      onAskAgent?.let { ask ->
+        HorizontalDivider(Modifier.padding(vertical = 4.dp))
+        Text(
+          "Or describe the change and let your AI assistant draft it. You preview each draft " +
+            "here before it reaches Home Assistant.",
+          style = MaterialTheme.typography.bodyMedium,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        FilledTonalButton(onClick = ask) { Text("Ask an agent") }
       }
       if (status != IntegrationStatus.Installed) {
         HorizontalDivider(Modifier.padding(vertical = 4.dp))
@@ -918,6 +964,17 @@ internal fun homeAssistantEditUrl(baseUrl: String?, urlPath: String?): String? =
     ?.trimEnd('/')
     ?.takeIf { it.startsWith("http") }
     ?.let { "$it/${urlPath ?: "lovelace"}/0?edit=1" }
+
+/** The share sheet for an edit session's prompt: it names the session, never a token. */
+private fun sharePrompt(context: Context, prompt: String) {
+  val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, prompt)
+  runCatching {
+    context.startActivity(
+      Intent.createChooser(send, "Share prompt").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    )
+  }
+    .onFailure { Log.w(TAG, "Nothing shares the prompt", it) }
+}
 
 private fun openUrl(context: Context, url: String) {
   runCatching {
