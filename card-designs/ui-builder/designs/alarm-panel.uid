@@ -1,0 +1,144 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "alarm-panel",
+  "title": "Alarm panel",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 300,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "mode"
+        ]
+      }
+    },
+    "mode": {
+      "id": "mode",
+      "componentId": "ha-cards/card-size-mode",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "wrap": [
+          "full"
+        ],
+        "height": [
+          "wear-tiers"
+        ],
+        "width": [
+          "launcher-tiers"
+        ]
+      }
+    },
+    "full": {
+      "id": "full",
+      "componentId": "ha-cards/alarm-panel-card-full",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "wear-tiers": {
+      "id": "wear-tiers",
+      "componentId": "ha-cards/size-tiers",
+      "properties": {
+        "axis": {
+          "type": "string",
+          "value": "width"
+        },
+        "thresholdsDp": {
+          "type": "string",
+          "value": "250"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {
+        "tier0": [
+          "wear-narrow"
+        ],
+        "tier1": [
+          "wear-wide"
+        ]
+      }
+    },
+    "wear-narrow": {
+      "id": "wear-narrow",
+      "componentId": "ha-cards/alarm-panel-card-narrow",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "wear-wide": {
+      "id": "wear-wide",
+      "componentId": "ha-cards/alarm-panel-card-wide",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "launcher-tiers": {
+      "id": "launcher-tiers",
+      "componentId": "ha-cards/size-tiers",
+      "properties": {
+        "axis": {
+          "type": "string",
+          "value": "width"
+        },
+        "thresholdsDp": {
+          "type": "string",
+          "value": "250"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {
+        "tier0": [
+          "launcher-narrow"
+        ],
+        "tier1": [
+          "launcher-wide"
+        ]
+      }
+    },
+    "launcher-narrow": {
+      "id": "launcher-narrow",
+      "componentId": "ha-cards/alarm-panel-card-narrow",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "launcher-wide": {
+      "id": "launcher-wide",
+      "componentId": "ha-cards/alarm-panel-card-wide",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

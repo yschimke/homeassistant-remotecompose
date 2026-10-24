@@ -2913,6 +2913,36 @@
       "group": "Card layout",
       "nativeOnly": true
     },
+    "ha-cards/alarm-panel-card-full": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaAlarmPanelCardFull",
+      "displayName": "Alarm panel card",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/alarm-panel-card-narrow": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaAlarmPanelCardNarrow",
+      "displayName": "Alarm panel card (narrow)",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/alarm-panel-card-wide": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaAlarmPanelCardWide",
+      "displayName": "Alarm panel card (wide)",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/map-card": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaMapCard",
+      "displayName": "Map card",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/picture-elements-card": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaPictureElementsCard",
+      "displayName": "Picture elements card",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
     "ha-cards/picture-card-image": {
       "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaPictureCardImage",
       "displayName": "Picture card image",

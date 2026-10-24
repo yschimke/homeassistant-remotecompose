@@ -20,10 +20,7 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.alarmStateIntFromRaw
-import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.DesignTemplateInput
-import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
@@ -36,6 +33,7 @@ import ee.schimke.ha.rc.components.HaAlarmStatus
 import ee.schimke.ha.rc.components.RemoteHaAlarmPanel
 import ee.schimke.ha.rc.components.RemoteHaAlarmPanelWide
 import ee.schimke.ha.rc.components.immediateSwap
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
@@ -62,8 +60,12 @@ import kotlinx.serialization.json.putJsonArray
  * pairs them with the most recent intent before firing `alarm_control_panel.alarm_*` with `code:`.
  * When the entity reports `code_arm_required: false` we forward `codeLength = 0` so the coordinator
  * skips buffering and dispatches immediately.
+ *
+ * Its layout is its card design, `alarm-panel.uid` ([AlarmDesignParts]): the full keypad card on a
+ * dashboard; in a launcher or Wear cell, [NarrowTier] below the full card's 250 dp and [FullTier]
+ * at or above it.
  */
-class AlarmPanelCardConverter : CardConverter {
+class AlarmPanelCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.ALARM_PANEL
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 380
@@ -156,8 +158,8 @@ class AlarmPanelCardConverter : CardConverter {
     }
   }
 
-  @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  /** What [card] shows: its status, its ARM buttons and whether it has a keypad. */
+  internal fun alarmData(card: CardConfig, snapshot: HaSnapshot): HaAlarmPanelData {
     val entityId = card.raw["entity"]?.jsonPrimitive?.content
     val entity = entityId?.let { snapshot.states[it] }
     val title =
@@ -186,70 +188,65 @@ class AlarmPanelCardConverter : CardConverter {
         }
         .orEmpty()
 
-    val data =
-      HaAlarmPanelData(
-        entityId = entityId,
-        title = title,
-        initialStateInt = alarmStateIntFromRaw(state),
-        statuses = AlarmStatuses,
-        actions = actions,
-        showKeypad = showKeypad(card),
-        codeLength = codeLength,
-      )
+    return HaAlarmPanelData(
+      entityId = entityId,
+      title = title,
+      initialStateInt = alarmStateIntFromRaw(state),
+      statuses = AlarmStatuses,
+      actions = actions,
+      showKeypad = showKeypad(card),
+      codeLength = codeLength,
+    )
+  }
 
-    // Wide↔Narrow↔Full ladder: the shield + state hero (and its live state binding) is kept at
-    // every size. A cell wide enough gets the full keypad card; a narrower one tall enough for the
-    // ARM buttons (a `3×3`, a `3×4`) keeps them, and the keypad where it also fits, rather than
-    // leaving the Wide chip floating in a tall cell; anything smaller (and both Wear containers)
-    // the Wide chip.
-    when (LocalCardSizeMode.current) {
-      CardSizeMode.Wrap -> RemoteHaAlarmPanel(data, modifier)
-      CardSizeMode.Fixed ->
-        RemoteSizeBreakpoint(
-          thresholdsDp = intArrayOf(AlarmFullMinDp),
-          modifier = modifier.fillMaxSize(),
-        ) { tier ->
-          when (tier) {
-            0 ->
-              SwappingGate(AlarmNarrowMinWidthDp, AlarmKeypadMinHeightDp) { keypad ->
-                if (keypad && data.showKeypad)
-                  RemoteHaAlarmPanel(
-                    data,
-                    RemoteModifier.fillMaxSize(),
-                    fillHeight = true,
-                    narrow = true,
-                  )
-                else if (keypad) NarrowButtons(data)
-                else
-                  SwappingGate(AlarmNarrowMinWidthDp, AlarmButtonsMinHeightDp) { buttons ->
-                    if (buttons) NarrowButtons(data)
-                    else if (stacksButtons(data)) NarrowButtons(data, actionsPerRow = 1)
-                    else RemoteHaAlarmPanelWide(data, RemoteModifier.fillMaxSize())
-                  }
-              }
-            // As wide as the full card but too short for its keypad (a `4×1`, a `4×2`): the
-            // status and the ARM buttons, not a keypad cut off at the bottom. Decided only where
-            // the launcher captured its size: in a document that carries both, this second gate
-            // under the full card stops the AndroidX player drawing the widget at all.
-            else ->
-              if (!data.showKeypad || LocalWidgetCaptureSizeDp.current == null)
-                RemoteHaAlarmPanel(data, RemoteModifier.fillMaxSize(), fillHeight = true)
-              else
-                SwappingGate(AlarmFullMinDp, AlarmFullKeypadMinHeightDp) { keypad ->
-                  if (keypad)
-                    RemoteHaAlarmPanel(data, RemoteModifier.fillMaxSize(), fillHeight = true)
-                  else
-                    CenteredCell {
-                      RemoteHaAlarmPanel(
-                        data,
-                        RemoteModifier.fillMaxWidth(),
-                        showKeypad = false,
-                      )
-                    }
-                }
-          }
+  /**
+   * A fixed cell narrower than the full card (`alarm-panel.uid`'s width gate): the shield and state
+   * hero at every size; a cell tall enough for the ARM buttons (a `3×3`, a `3×4`) keeps them, and
+   * the keypad where it also fits, rather than leaving the Wide chip floating in a tall cell;
+   * anything smaller (and both Wear containers) the Wide chip.
+   */
+  @Composable
+  internal fun NarrowTier(data: HaAlarmPanelData) {
+    SwappingGate(AlarmNarrowMinWidthDp, AlarmKeypadMinHeightDp) { keypad ->
+      if (keypad && data.showKeypad)
+        RemoteHaAlarmPanel(
+          data,
+          RemoteModifier.fillMaxSize(),
+          fillHeight = true,
+          narrow = true,
+        )
+      else if (keypad) NarrowButtons(data)
+      else
+        SwappingGate(AlarmNarrowMinWidthDp, AlarmButtonsMinHeightDp) { buttons ->
+          if (buttons) NarrowButtons(data)
+          else if (stacksButtons(data)) NarrowButtons(data, actionsPerRow = 1)
+          else RemoteHaAlarmPanelWide(data, RemoteModifier.fillMaxSize())
         }
     }
+  }
+
+  /**
+   * As wide as the full card but too short for its keypad (a `4×1`, a `4×2`): the status and the
+   * ARM buttons, not a keypad cut off at the bottom. Decided only where the launcher captured its
+   * size: in a document that carries both, this second gate under the full card stops the AndroidX
+   * player drawing the widget at all.
+   */
+  @Composable
+  internal fun FullTier(data: HaAlarmPanelData) {
+    if (!data.showKeypad || LocalWidgetCaptureSizeDp.current == null)
+      RemoteHaAlarmPanel(data, RemoteModifier.fillMaxSize(), fillHeight = true)
+    else
+      SwappingGate(AlarmFullMinDp, AlarmFullKeypadMinHeightDp) { keypad ->
+        if (keypad) RemoteHaAlarmPanel(data, RemoteModifier.fillMaxSize(), fillHeight = true)
+        else
+          CenteredCell {
+            RemoteHaAlarmPanel(
+              data,
+              RemoteModifier.fillMaxWidth(),
+              showKeypad = false,
+            )
+          }
+      }
   }
 
   /** The narrow panel without its keypad, centred in the cell. */
