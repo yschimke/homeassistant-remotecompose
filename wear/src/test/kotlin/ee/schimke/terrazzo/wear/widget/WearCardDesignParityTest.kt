@@ -11,6 +11,7 @@ import ee.schimke.ha.rc.cards.AreaCardConverter
 import ee.schimke.ha.rc.cards.ButtonCardConverter
 import ee.schimke.ha.rc.cards.CalendarCardConverter
 import ee.schimke.ha.rc.cards.ClockCardConverter
+import ee.schimke.ha.rc.cards.EntitiesCardConverter
 import ee.schimke.ha.rc.cards.EntityCardConverter
 import ee.schimke.ha.rc.cards.GaugeCardConverter
 import ee.schimke.ha.rc.cards.HeadingCardConverter
@@ -23,6 +24,7 @@ import ee.schimke.ha.rc.cards.StatisticCardConverter
 import ee.schimke.ha.rc.cards.ThermostatCardConverter
 import ee.schimke.ha.rc.cards.TileCardConverter
 import ee.schimke.ha.rc.cards.TodoListCardConverter
+import ee.schimke.ha.rc.cards.WeatherForecastCardConverter
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
@@ -468,6 +470,41 @@ class WearCardDesignParityTest {
         """{"type":"area","area":"office"}""",
         """{"type":"media-control","entity":"media_player.living_room"}""",
         """{"type":"media-control","entity":"media_player.kitchen"}""",
+      ),
+    )
+  }
+
+  @Test
+  fun entitiesAndWeatherDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "light.kitchen" to EntityState("light.kitchen", "on"),
+            "switch.fan" to EntityState("switch.fan", "off"),
+            "sensor.temperature" to
+              EntityState(
+                "sensor.temperature",
+                "21.5",
+                attributes("""{"unit_of_measurement":"°C","device_class":"temperature"}"""),
+              ),
+            "weather.home" to
+              EntityState(
+                "weather.home",
+                "sunny",
+                attributes("""{"temperature":18,"temperature_unit":"°C","humidity":40}"""),
+              ),
+          )
+      )
+    assertWearParity(
+      "entities and weather designs",
+      listOf(EntitiesCardConverter(), WeatherForecastCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"entities","entities":["light.kitchen","switch.fan"]}""",
+        """{"type":"entities","title":"Home","entities":["light.kitchen","switch.fan","sensor.temperature"]}""",
+        """{"type":"weather-forecast","entity":"weather.home"}""",
+        """{"type":"weather-forecast","entity":"weather.home","show_forecast":false}""",
       ),
     )
   }

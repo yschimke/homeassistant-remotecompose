@@ -10,6 +10,7 @@ import ee.schimke.ha.rc.cards.ArcDialDesignParts
 import ee.schimke.ha.rc.cards.BulkDesignParts
 import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.ClockDesignParts
+import ee.schimke.ha.rc.cards.EntitiesDesignParts
 import ee.schimke.ha.rc.cards.EntityDesignParts
 import ee.schimke.ha.rc.cards.GlanceDesignParts
 import ee.schimke.ha.rc.cards.HeadingDesignParts
@@ -17,6 +18,7 @@ import ee.schimke.ha.rc.cards.RoomDesignParts
 import ee.schimke.ha.rc.cards.SensorDesignParts
 import ee.schimke.ha.rc.cards.TileDesignParts
 import ee.schimke.ha.rc.cards.ValueDesignParts
+import ee.schimke.ha.rc.cards.WeatherDesignParts
 import ee.schimke.ha.rc.design.CardDesigns
 
 /*
@@ -547,4 +549,70 @@ fun HaMediaControlCardFull(modifier: RemoteModifier = RemoteModifier, fill: Bool
 @RemoteComposable
 fun HaMediaControlCardWide(modifier: RemoteModifier = RemoteModifier) {
   RoomDesignParts.MediaWide(modifier)
+}
+
+/**
+ * `ha-cards/weather-forecast-card-full`: the current conditions over the forecast strip; [fill]
+ * fills a launcher cell's height and leaves the conditions chips to the app card.
+ */
+@Composable
+@RemoteComposable
+fun HaWeatherForecastCardFull(modifier: RemoteModifier = RemoteModifier, fill: Boolean = false) {
+  WeatherDesignParts.Full(fill, modifier)
+}
+
+/** `ha-cards/weather-forecast-card-wide`: the current conditions row alone. */
+@Composable
+@RemoteComposable
+fun HaWeatherForecastCardWide(modifier: RemoteModifier = RemoteModifier) {
+  WeatherDesignParts.Wide(modifier)
+}
+
+/** `ha-cards/weather-forecast-card-wear`: the forecast's Wear form; [large] for the Large one. */
+@Composable
+@RemoteComposable
+fun HaWeatherForecastCardWear(modifier: RemoteModifier = RemoteModifier, large: Boolean = false) {
+  WeatherDesignParts.Wear(large, modifier)
+}
+
+/** `ha-cards/entities-card-full`: the entities card's title over every row. */
+@Composable
+@RemoteComposable
+fun HaEntitiesCardFull(modifier: RemoteModifier = RemoteModifier) {
+  EntitiesDesignParts.Full(modifier)
+}
+
+/** `ha-cards/entities-card-wear`: the rows a Wear container holds. */
+@Composable
+@RemoteComposable
+fun HaEntitiesCardWear(modifier: RemoteModifier = RemoteModifier) {
+  EntitiesDesignParts.Wear(modifier)
+}
+
+/** `ha-cards/entities-card-launcher`: the rows a launcher cell holds. */
+@Composable
+@RemoteComposable
+fun HaEntitiesCardLauncher(modifier: RemoteModifier = RemoteModifier) {
+  EntitiesDesignParts.Launcher(modifier)
+}
+
+/** `ha-cards/entities-card-first-tile`: the list's first entity as a tile. */
+@Composable
+@RemoteComposable
+fun HaEntitiesCardFirstTile(modifier: RemoteModifier = RemoteModifier) {
+  EntitiesDesignParts.FirstTile(modifier)
+}
+
+/**
+ * `ha-cards/entities-card-cell`: [tile] in a launcher cell too narrow for a list, [other]
+ * otherwise.
+ */
+@Composable
+@RemoteComposable
+fun HaEntitiesCardCell(
+  modifier: RemoteModifier = RemoteModifier,
+  tile: @Composable @RemoteComposable () -> Unit = {},
+  other: @Composable @RemoteComposable () -> Unit = {},
+) {
+  RemoteBox(modifier) { EntitiesDesignParts.Cell(tile, other) }
 }

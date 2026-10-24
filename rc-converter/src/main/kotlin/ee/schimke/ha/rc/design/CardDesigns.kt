@@ -16,6 +16,7 @@ import ee.schimke.ha.rc.cards.BulkDesignParts
 import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.CenteredCell
 import ee.schimke.ha.rc.cards.ClockDesignParts
+import ee.schimke.ha.rc.cards.EntitiesDesignParts
 import ee.schimke.ha.rc.cards.EntityDesignParts
 import ee.schimke.ha.rc.cards.GlanceDesignParts
 import ee.schimke.ha.rc.cards.HeadingDesignParts
@@ -23,6 +24,7 @@ import ee.schimke.ha.rc.cards.RoomDesignParts
 import ee.schimke.ha.rc.cards.SensorDesignParts
 import ee.schimke.ha.rc.cards.TileDesignParts
 import ee.schimke.ha.rc.cards.ValueDesignParts
+import ee.schimke.ha.rc.cards.WeatherDesignParts
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -145,7 +147,9 @@ object CardDesigns {
       ArcDialDesignParts.components +
       ValueDesignParts.components +
       BulkDesignParts.components +
-      RoomDesignParts.components
+      RoomDesignParts.components +
+      EntitiesDesignParts.components +
+      WeatherDesignParts.components
 
   private val loaded = ConcurrentHashMap<String, Result<CardDesign?>>()
 

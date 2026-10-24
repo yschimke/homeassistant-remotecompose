@@ -1,9 +1,7 @@
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
-import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.LocalCardSizeMode
@@ -14,24 +12,10 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
 
 /**
- * One-cell launcher lists show their first entity as an icon/state tile instead of clipping a full
- * list. Its standard named bindings, icon and tap action survive design-template baking. Launcher
- * resize recaptures at the new size; Wear and dashboard layouts keep their own tiers.
- */
-@Composable
-internal fun CompactLauncherList(
-  card: CardConfig,
-  snapshot: HaSnapshot,
-  modifier: RemoteModifier,
-): Boolean {
-  val tile = compactLauncherTile(card) ?: return false
-  TileCardConverter().Render(tile, snapshot, modifier)
-  return true
-}
-
-/**
- * The tile a one-cell launcher list shows its first entity as ([CompactLauncherList]), or null when
- * the canvas isn't a launcher cell that narrow or the card has no entity.
+ * The tile a one-cell launcher list shows its first entity as, instead of clipping a full list, or
+ * null when the canvas isn't a launcher cell that narrow or the card has no entity. Its standard
+ * named bindings, icon and tap action survive design-template baking; a launcher resize recaptures
+ * at the new size.
  */
 @Composable
 internal fun compactLauncherTile(card: CardConfig): CardConfig? {
