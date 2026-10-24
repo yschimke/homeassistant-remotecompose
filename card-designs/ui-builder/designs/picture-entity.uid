@@ -1,0 +1,154 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "picture-entity",
+  "title": "Picture entity",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 160,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "mode"
+        ]
+      }
+    },
+    "mode": {
+      "id": "mode",
+      "componentId": "ha-cards/card-size-mode",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "wrap": [
+          "wrap"
+        ],
+        "height": [
+          "height"
+        ],
+        "width": [
+          "width-tiers"
+        ]
+      }
+    },
+    "wrap": {
+      "id": "wrap",
+      "componentId": "ha-cards/picture-entity-card-image",
+      "properties": {
+        "fill": {
+          "type": "bool",
+          "value": false
+        },
+        "hideName": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "height": {
+      "id": "height",
+      "componentId": "ha-cards/picture-entity-card-image",
+      "properties": {
+        "fill": {
+          "type": "bool",
+          "value": true
+        },
+        "hideName": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "width-tiers": {
+      "id": "width-tiers",
+      "componentId": "ha-cards/size-tiers",
+      "properties": {
+        "axis": {
+          "type": "string",
+          "value": "width"
+        },
+        "thresholdsDp": {
+          "type": "string",
+          "value": "180"
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "tier0": [
+          "width-narrow"
+        ],
+        "tier1": [
+          "width-wide"
+        ]
+      }
+    },
+    "width-narrow": {
+      "id": "width-narrow",
+      "componentId": "ha-cards/picture-entity-card-image",
+      "properties": {
+        "fill": {
+          "type": "bool",
+          "value": true
+        },
+        "hideName": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "width-wide": {
+      "id": "width-wide",
+      "componentId": "ha-cards/picture-entity-card-image",
+      "properties": {
+        "fill": {
+          "type": "bool",
+          "value": true
+        },
+        "hideName": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    }
+  }
+}

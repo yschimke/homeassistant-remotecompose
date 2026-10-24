@@ -19,6 +19,8 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.wear.compose.remote.material3.RemoteColorScheme
+import androidx.wear.compose.remote.material3.RemoteMaterialTheme
 import ee.schimke.composeai.data.render.IrSidecarChannel
 import ee.schimke.ha.rc.HaRcComposePlayer
 import ee.schimke.ha.rc.WrapAdaptiveRemoteDocumentPlayer
@@ -52,18 +54,21 @@ fun HaCardSticker(content: @Composable @RemoteComposable () -> Unit) {
       runCatching {
         runBlocking {
           captureSingleRemoteDocument(context = context, profile = androidXExperimental) {
-              ProvideNamedHaTheme(theme) {
-                // The page backdrop is part of the document, as the named dashboard colour, so a
-                // replay is drawn on it and a theme recolours it: chrome-less stickers (heading,
-                // icon) otherwise replay over whatever the host draws.
-                RemoteBox(
-                  modifier =
-                    RemoteModifier.fillMaxSize()
-                      .background(currentRemoteHaTheme().dashboardBackground)
-                      .padding(8.rdp),
-                  contentAlignment = RemoteAlignment.Center,
-                  content = content,
-                )
+              // Remote Material 3 components in a sticker see the same named roles the HA ones do.
+              RemoteMaterialTheme(colorScheme = RemoteColorScheme(theme.asWearColorScheme())) {
+                ProvideNamedHaTheme(theme) {
+                  // The page backdrop is part of the document, as the named dashboard colour, so a
+                  // replay is drawn on it and a theme recolours it: chrome-less stickers (heading,
+                  // icon) otherwise replay over whatever the host draws.
+                  RemoteBox(
+                    modifier =
+                      RemoteModifier.fillMaxSize()
+                        .background(currentRemoteHaTheme().dashboardBackground)
+                        .padding(8.rdp),
+                    contentAlignment = RemoteAlignment.Center,
+                    content = content,
+                  )
+                }
               }
             }
             .bytes

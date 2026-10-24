@@ -40,6 +40,14 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
   override val connectionStatus: StateFlow<SessionConnectionStatus>
     get() = delegate.connectionStatus
 
+  /**
+   * For a cache-only session (`TerrazzoGraph.createCachedOnly`): the cold-start resume couldn't
+   * replace it with a live one, so its status turns from connecting to failed.
+   */
+  fun markUnreachable() {
+    (delegate as? OfflineOnlySession)?.markUnreachable()
+  }
+
   override val notifications: StateFlow<List<HaNotification>>
     get() = delegate.notifications
 
@@ -69,7 +77,9 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
       cache.dashboard(baseUrl, urlPath)?.let { d ->
         d to (cache.snapshot(baseUrl, urlPath) ?: HaSnapshot())
       }
-    return runCatching { delegate.loadDashboard(urlPath) }
+    return runCatching {
+      delegate.loadDashboard(urlPath).let { (d, fresh) -> d to fresh.keeping(cached?.second) }
+    }
       .onSuccess { (dashboard, snapshot) ->
         liveFetchedAtMs[urlPath.orEmpty()] = System.currentTimeMillis()
         servedFromCache.remove(urlPath.orEmpty())
@@ -84,7 +94,7 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
    * the cached copy, which [snapshotFetchedAtMs] with a null url path then dates.
    */
   override suspend fun loadSnapshot(): HaSnapshot = runCatching {
-    delegate.loadSnapshot()
+    delegate.loadSnapshot().keeping(cache.snapshot(baseUrl, null))
   }
     .onSuccess { snapshot ->
       liveFetchedAtMs[""] = System.currentTimeMillis()
@@ -94,6 +104,19 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
     .getOrElse { ex ->
       (cache.snapshot(baseUrl, null) ?: throw ex).also { servedFromCache.add("") }
     }
+
+  /**
+   * Keeps the stored snapshot's per-instance facts where this live read came back without them: the
+   * device registry and unit system are read best effort, and a transient failure there must not
+   * overwrite good cached values, which later offline starts would then draw without.
+   */
+  private fun HaSnapshot.keeping(stored: HaSnapshot?): HaSnapshot {
+    if (stored == null) return this
+    return copy(
+      devices = devices.ifEmpty { stored.devices },
+      temperatureUnit = temperatureUnit ?: stored.temperatureUnit,
+    )
+  }
 
   /** Per dashboard (`""` for the default): when this session last fetched its snapshot live. */
   private val liveFetchedAtMs = ConcurrentHashMap<String, Long>()
@@ -114,19 +137,35 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
 
   override suspend fun fetchInstanceConfig(): HaInstanceConfig? = delegate.fetchInstanceConfig()
 
-  // History is a live-only, on-demand read (the card-history screen) — we
-  // don't cache it, but we must forward so the wrapped live session
-  // actually hits HA's recorder instead of the no-op interface default.
+  override suspend fun createLongLivedToken(clientName: String, lifespanDays: Int): String? =
+    delegate.createLongLivedToken(clientName, lifespanDays)
+
+  override suspend fun deleteLongLivedTokens(matches: (clientName: String) -> Boolean): Int =
+    delegate.deleteLongLivedTokens(matches)
+
+  // History is an on-demand read (the card-history screen): live from HA's recorder when it can,
+  // else the last chart read for the same entities and window, so it opens offline too. Forwarded
+  // explicitly; the interface default is a no-op.
   override suspend fun fetchHistory(
     entityIds: List<String>,
     hours: Int,
-  ): Map<String, List<ee.schimke.ha.model.HistoryPoint>> = delegate.fetchHistory(entityIds, hours)
+  ): Map<String, List<ee.schimke.ha.model.HistoryPoint>> = runCatching {
+    delegate.fetchHistory(entityIds, hours)
+  }
+    .onSuccess { if (it.isNotEmpty()) cache.putHistory(baseUrl, entityIds, hours, it) }
+    .getOrElse { ex -> cache.history(baseUrl, entityIds, hours) ?: throw ex }
 
   override suspend fun fetchDashboardConfig(urlPath: String?): JsonObject? =
     delegate.fetchDashboardConfig(urlPath)
 
   override suspend fun replaceDashboardConfig(urlPath: String?, config: JsonObject): JsonObject =
     delegate.replaceDashboardConfig(urlPath, config)
+
+  override suspend fun compareAndReplaceDashboardConfig(
+    urlPath: String?,
+    expected: JsonObject,
+    config: JsonObject,
+  ) = delegate.compareAndReplaceDashboardConfig(urlPath, expected, config)
 
   // Writes aren't cached — forward straight to the delegate. Without this
   // the interface's no-op default would swallow every service call when a
@@ -150,5 +189,14 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
 
   override suspend fun close() {
     delegate.close()
+  }
+
+  companion object {
+    /**
+     * A session with no live connection behind it, only [cache]: what the UI draws until a live
+     * session replaces it. Every read is the cached copy; every live-only call fails.
+     */
+    fun cacheOnly(baseUrl: String, cache: OfflineCacheStorage): CachedHaSession =
+      CachedHaSession(OfflineOnlySession(baseUrl), cache)
   }
 }

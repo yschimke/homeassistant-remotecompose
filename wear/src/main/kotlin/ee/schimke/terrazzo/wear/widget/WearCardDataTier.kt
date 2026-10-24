@@ -11,12 +11,9 @@ package ee.schimke.terrazzo.wear.widget
  * container; at 200×112 dp they would render as their stripped tier with a lot of empty space. For
  * those, advertising the large slot service is just noise in the system widget picker.
  *
- * Drives two things:
- * - [WearSlotsController][ee.schimke.terrazzo.wear.sync.WearSlotsController.applySlots] gates
- *   `enableLarge` on this classifier so the picker hides the large variant for low-data card types
- *   regardless of the phone-side `SlotSizePref`.
- * - The `@Preview` convention in [CardSlotWidgetPreviews][CardSlotWidgetPreviews_kt]: small-only
- *   for [SmallOnly] types; small + large for [Both] types.
+ * Drives the `@Preview` convention in [CardSlotWidgetPreviews][CardSlotWidgetPreviews_kt]:
+ * small-only for [SmallOnly] types; small + large for [Both] types. The watch's widget picker
+ * follows it too: a Large widget doesn't offer [SmallOnly] cards ([forWidget]).
  *
  * Unknown / future card types default to [Both]: safer to advertise both and let the renderer's
  * ladder pick the right tier than to silently hide the large variant for a card that could fill it.

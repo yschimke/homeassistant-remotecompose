@@ -1,22 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Glance Wear widget provider descriptor — small container variant.
-  Shared across the 5 Slot{N}SmallWidgetService entries; per-slot
-  identity (which slot index, which pinned card) is resolved at render
-  time from the WearOfflineStore keyed off the service's component
-  name.
+  Glance Wear widget provider descriptor — small container variant, for
+  CardSmallWidgetService. Every placed widget shows its own card, chosen on
+  the watch (WearWidgetConfigActivity, or the Terrazzo app's Widgets screen)
+  from the cards the phone shows on the watch, and resolved at render time
+  from WearWidgetCardStore by the widget's instance id.
 
-  Schema is parsed by androidx.glance.wear.core.WearWidgetProviderInfoXmlParser
-  in alpha09; attribute / tag names match its TAG_PROVIDER and ATTR_*
-  constants.
+  Schema is parsed by androidx.glance.wear.core.WearWidgetProviderInfoXmlParser;
+  attribute / tag names match its TAG_PROVIDER and ATTR_* constants.
 
   previewImage is a placeholder vector for now — a follow-up renders
   the wear @Preview functions to PNG and wires the rendered drawables
   in here.
 -->
 <wearwidget-provider
-    label="Terrazzo slot"
-    description="Renders the card assigned to this Wear slot from the phone."
+    label="Home Assistant card"
+    description="Shows a card you show on your watch. Choose it in the Terrazzo app."
     preferredType="@integer/glance_wear_container_type_small"
     previewImage="@drawable/wear_slot_preview_small">
     <container

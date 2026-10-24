@@ -204,6 +204,19 @@ class HaStateFormatCasesTest {
     )
   }
 
+  @Test
+  fun weatherConditionsUseHomeAssistantsLabels() {
+    assertCases(
+      listOf(
+        entity("weather.home", "partlycloudy") to "Partly cloudy",
+        entity("weather.home", "clear-night") to "Clear, night",
+        entity("weather.home", "snowy-rainy") to "Snowy, rainy",
+        entity("weather.home", "windy-variant") to "Windy",
+        entity("weather.home", "sunny") to "Sunny",
+      )
+    )
+  }
+
   // C3 ----------------------------------------------------------------------------------------
 
   @Test

@@ -109,24 +109,24 @@ private val tokenErrorJson = Json { ignoreUnknownKeys = true }
  * Whether a failed `/auth/token` refresh means the refresh token itself was refused — sign in again
  * — rather than a transient failure worth retrying. Home Assistant answers a revoked or unknown
  * refresh token with `400 {"error":"invalid_grant"}`, a client mismatch with `invalid_request`, and
- * a deactivated user with `403 access_denied`. A `400` without one of those OAuth errors (a proxy
- * page, say) stays transient.
+ * a deactivated user with `403 access_denied`. Without one of those OAuth errors in the body the
+ * failure stays transient, whatever the status: a reverse proxy, an access gateway or a captive
+ * portal answers 401 / 403 / 400 pages of its own, and treating those as a refusal would sign the
+ * user out and delete their offline dashboards.
  */
-fun isRefreshTokenRejected(status: Int, body: String): Boolean =
-  when (status) {
-    401,
-    403 -> true
-    400 -> {
-      val error = runCatching {
-        tokenErrorJson.parseToJsonElement(body) as? JsonObject
-      }
-        .getOrNull()
-        ?.get("error")
-        .let { (it as? JsonPrimitive)?.content }
-      error == "invalid_grant" || error == "invalid_request"
-    }
-    else -> false
+fun isRefreshTokenRejected(status: Int, body: String): Boolean {
+  if (status != 400 && status != 401 && status != 403) return false
+  val error = runCatching {
+    tokenErrorJson.parseToJsonElement(body) as? JsonObject
   }
+    .getOrNull()
+    ?.get("error")
+    .let { (it as? JsonPrimitive)?.content }
+  return error in REFUSED_TOKEN_ERRORS
+}
+
+/** The OAuth `error` codes Home Assistant's token endpoint uses to refuse a refresh token. */
+private val REFUSED_TOKEN_ERRORS = setOf("invalid_grant", "invalid_request", "access_denied")
 
 /**
  * Exponential backoff between automatic reconnect attempts: [initial], doubling each failure up to

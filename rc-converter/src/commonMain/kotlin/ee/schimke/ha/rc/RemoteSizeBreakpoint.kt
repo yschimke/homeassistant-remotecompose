@@ -1,0 +1,211 @@
+@file:Suppress("RestrictedApi")
+
+package ee.schimke.ha.rc
+
+import androidx.compose.remote.creation.compose.layout.RemoteBox
+import androidx.compose.remote.creation.compose.layout.RemoteStateLayout
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.state.RemoteFloat
+import androidx.compose.remote.creation.compose.state.RemoteState
+import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
+import ee.schimke.ha.rc.components.immediateSwap
+import ee.schimke.ha.rc.components.rememberExpressionName
+
+/**
+ * Switch between layout variants based on the live component width at playback time. Used by
+ * Fixed-mode card converters (see [CardSizeMode.Fixed]) to adapt to the runtime widget size — the
+ * launcher / Glance Wear tile surface decides the canvas, this picks the variant that fits.
+ *
+ * Thresholds are an ascending list of widths in dp. For `thresholdsDp = intArrayOf(120, 200)`:
+ *
+ * width < 120 dp → tier 0 120 dp ≤ width < 200 dp → tier 1 width ≥ 200 dp → tier 2
+ *
+ * The lambda is invoked once per tier during capture so each variant is recorded into the document.
+ * At playback the active tier is computed from `RemoteFloatContext.componentWidth()` and the
+ * runtime swaps to the matching variant — no re-record needed.
+ *
+ * Implementation notes:
+ *
+ * * `componentWidth()` reports the runtime canvas width in pixels. We compare against
+ *   `<dp>.rdp.toPx()` so the dp→px conversion happens at playback against the host density — the
+ *   captured document plays correctly across phone, wear, and launcher densities without
+ *   re-encoding.
+ *
+ * * The `RemoteStateLayout(RemoteInt, IntArray)` overload is broken in
+ *   `androidx.compose.remote:remote-creation-compose:1.0.0-alpha010` — it always selects `keys[0]`
+ *   regardless of the live int value (#224). The `RemoteStateLayout(RemoteBoolean)` overload works,
+ *   so we lower the ladder into a chain of nested booleans, one per threshold.
+ *
+ * * The state layout's predicate is the only reference to the named expression that backs
+ *   `componentWidth()`. Under alpha010 that transitive read never wrote the expression into the
+ *   document, and a transparent `RemoteText` forced it in (#224). Since alpha22 the predicate alone
+ *   materializes it (`StateLayoutUpstreamEvidenceTest.transitive`), and the forcing text, which
+ *   also kept the AndroidX player's state-layout transition from settling, is gone.
+ *
+ * @param thresholdsDp ascending breakpoint widths in dp; produces `thresholdsDp.size + 1` tier
+ *   variants.
+ * @param modifier applied to the outermost state layout. Pass `RemoteModifier.fillMaxWidth()` (or
+ *   `fillMaxSize()`) so the playback width reflects the host's runtime canvas rather than the
+ *   captured intrinsic.
+ * @param axis which runtime dimension the thresholds gate on — [BreakpointAxis.Width] (default,
+ *   reads `componentWidth()`) or [BreakpointAxis.Height] (reads `componentHeight()`). Gate on the
+ *   axis the host *pins*: launcher and matrix cells pin width and let height wrap, so only a width
+ *   gate reads a stable value there; use [BreakpointAxis.Height] only where height is fixed (e.g. a
+ *   Wear slot). Keep it to a **single** threshold — alpha010 collapses multi-rung (nested) and 2-D
+ *   / cross-axis gates to tier 0 (#224, see `GaugeCardConverter`).
+ * @param content invoked per tier; index ranges `0..thresholdsDp.size`.
+ */
+@Composable
+fun RemoteSizeBreakpoint(
+  thresholdsDp: IntArray,
+  modifier: RemoteModifier = RemoteModifier,
+  axis: BreakpointAxis = BreakpointAxis.Width,
+  content: @Composable (tier: Int) -> Unit,
+) {
+  require(thresholdsDp.isNotEmpty()) { "RemoteSizeBreakpoint needs at least one threshold" }
+  val sortedAscending =
+    (0 until thresholdsDp.size - 1).all { thresholdsDp[it] < thresholdsDp[it + 1] }
+  require(sortedAscending) { "thresholdsDp must be strictly ascending: ${thresholdsDp.toList()}" }
+
+  // Launcher hosts recapture on every size-options change. Select the matching
+  // layout during capture: Android 16 does not reliably update state-layout
+  // predicates driven by component dimensions, so an encoded ladder stays narrow.
+  val widgetSize = LocalWidgetCaptureSizeDp.current
+  if (widgetSize != null) {
+    val dimension =
+      when (axis) {
+        BreakpointAxis.Width -> widgetSize.widthDp
+        BreakpointAxis.Height -> widgetSize.heightDp
+      }
+    RemoteBox(modifier = modifier) { content(thresholdsDp.count { dimension >= it }) }
+    return
+  }
+
+  // Each breakpoint registers its own expression (see rememberExpressionName).
+  val uniqueName = rememberExpressionName(BreakpointExpressionPrefix)
+  val dimension =
+    RemoteFloat.createNamedRemoteFloatExpression(
+      name = uniqueName,
+      domain = RemoteState.Domain.User,
+    ) {
+      when (axis) {
+        BreakpointAxis.Width -> componentWidth()
+        BreakpointAxis.Height -> componentHeight()
+      }
+    }
+
+  RemoteBox(modifier = modifier) {
+    BreakpointTier(
+      dimension = dimension,
+      thresholdsDp = thresholdsDp,
+      baseTier = 0,
+      modifier = RemoteModifier,
+      content = content,
+    )
+  }
+}
+
+/** Which runtime dimension a [RemoteSizeBreakpoint] ladder gates on. */
+enum class BreakpointAxis {
+  Width,
+  Height,
+}
+
+/**
+ * The dimension a Fixed-mode host's canvases differ along, so the one a card with a single runtime
+ * gate should read. Launcher widgets (and the matrix's launcher cells) pin width and let height
+ * wrap: [BreakpointAxis.Width], the default. A Wear slot pins both, and its small and large
+ * containers share a width and differ only in height, so Wear surfaces provide
+ * [BreakpointAxis.Height]: a card whose layouts differ by height there (the tile's compact or full
+ * name-over-state stack) gates on height instead of on a width every Wear slot passes.
+ */
+val LocalFixedCanvasAxis = staticCompositionLocalOf { BreakpointAxis.Width }
+
+/** Declare, for the cards in [content], the axis this Fixed-mode host's canvases differ along. */
+@Composable
+fun ProvideFixedCanvasAxis(axis: BreakpointAxis, content: @Composable () -> Unit) {
+  CompositionLocalProvider(LocalFixedCanvasAxis provides axis, content = content)
+}
+
+/**
+ * Recursive helper that walks the threshold list highest-first, picking the upper variant when
+ * `dimension >= thresholdsDp[hi]` and recursing on the remaining smaller thresholds otherwise.
+ * Lowers to `RemoteStateLayout(RemoteBoolean)`, which is the only state-layout overload that
+ * respects the live state in alpha010. [dimension] is the live width or height in px, per the
+ * ladder's [BreakpointAxis].
+ *
+ * Each branch is additionally [branchGate]d — its opacity is bound to the same live boolean so that
+ * a player which draws *every* recorded state-layout variant (the in-process AndroidX/Robolectric
+ * preview player does, leaving the unselected branch ghosting behind the selected one) keeps the
+ * inactive branch fully transparent. The gate also zeroes the swap animation so the transition is
+ * immediate rather than a 300 ms cross-fade that shows both branches mid-flight. The launcher's
+ * platform runtime already shows a single branch; the gate is belt-and-suspenders that costs
+ * nothing there.
+ */
+@Composable
+private fun BreakpointTier(
+  dimension: RemoteFloat,
+  thresholdsDp: IntArray,
+  baseTier: Int,
+  modifier: RemoteModifier,
+  content: @Composable (tier: Int) -> Unit,
+) {
+  if (thresholdsDp.isEmpty()) {
+    content(baseTier)
+    return
+  }
+  val highestIndex = thresholdsDp.size - 1
+  val highestThresholdPx = thresholdsDp[highestIndex].rdp.toPx()
+  val isAtOrAbove = dimension.isGreaterThanOrEqualTo(highestThresholdPx)
+  RemoteStateLayout(isAtOrAbove, modifier = modifier) { atOrAbove ->
+    if (atOrAbove) {
+      RemoteBox(modifier = RemoteModifier.immediateSwap()) { content(baseTier + thresholdsDp.size) }
+    } else {
+      RemoteBox(modifier = RemoteModifier.immediateSwap()) {
+        BreakpointTier(
+          dimension = dimension,
+          thresholdsDp = thresholdsDp.copyOfRange(0, highestIndex),
+          baseTier = baseTier,
+          modifier = RemoteModifier,
+          content = content,
+        )
+      }
+    }
+  }
+}
+
+private const val BreakpointExpressionPrefix = "__terrazzo_breakpoint_"
+
+/** The launcher's requested dimensions; selecting a layout is repeated on every resize. */
+data class WidgetCaptureSizeDp(val widthDp: Int, val heightDp: Int)
+
+internal val LocalWidgetCaptureSizeDp = staticCompositionLocalOf<WidgetCaptureSizeDp?> { null }
+
+/**
+ * Runs [content] with the launcher capture size narrowed to one child's share of it, for a
+ * container that splits its room into [columns] × [rows] equal parts with [gapDp] between them (a
+ * grid's cells, a horizontal stack's columns). A nested grid or size gate then picks its layout for
+ * the room it will actually be played in, not the whole widget's. No-op outside a launcher capture.
+ */
+@Composable
+internal fun ProvideChildCaptureShare(
+  columns: Int,
+  rows: Int = 1,
+  gapDp: Int,
+  content: @Composable () -> Unit,
+) {
+  val size = LocalWidgetCaptureSizeDp.current
+  if (size == null || columns < 1 || rows < 1) {
+    content()
+    return
+  }
+  fun share(total: Int, parts: Int): Int = ((total - gapDp * (parts - 1)) / parts).coerceAtLeast(0)
+  CompositionLocalProvider(
+    LocalWidgetCaptureSizeDp provides
+      WidgetCaptureSizeDp(share(size.widthDp, columns), share(size.heightDp, rows)),
+    content = content,
+  )
+}

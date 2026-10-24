@@ -1,0 +1,97 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "entities",
+  "title": "Entities",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 200,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "cell"
+        ]
+      }
+    },
+    "cell": {
+      "id": "cell",
+      "componentId": "ha-cards/entities-card-cell",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "tile": [
+          "first-tile"
+        ],
+        "other": [
+          "mode"
+        ]
+      }
+    },
+    "first-tile": {
+      "id": "first-tile",
+      "componentId": "ha-cards/entities-card-first-tile",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "mode": {
+      "id": "mode",
+      "componentId": "ha-cards/card-size-mode",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "wrap": [
+          "full"
+        ],
+        "height": [
+          "wear"
+        ],
+        "width": [
+          "launcher"
+        ]
+      }
+    },
+    "full": {
+      "id": "full",
+      "componentId": "ha-cards/entities-card-full",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "wear": {
+      "id": "wear",
+      "componentId": "ha-cards/entities-card-wear",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "launcher": {
+      "id": "launcher",
+      "componentId": "ha-cards/entities-card-launcher",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

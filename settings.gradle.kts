@@ -77,6 +77,51 @@ dependencyResolutionManagement {
 
 rootProject.name = "homeassistant-remotecompose"
 
+// BuildFetch remote Gradle build cache, beside the local one (`org.gradle.caching=true`).
+// Off until `harc.buildFetchCacheUrl` in gradle.properties names this repository's BuildFetch
+// project AND a token resolves, so a checkout without either builds exactly as before.
+// Writes only from trusted CI (`ON_CI=true`, which `.github/actions/buildfetch-cache` sets on
+// pushes to main); PRs and developer machines read. The token is the first non-blank of the
+// project-specific `BUILDFETCH_HARC_GRADLE_REMOTE_CACHE_TOKEN` and the general
+// `BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN` (CI exports the general one), each as an env var first
+// and a Gradle property second, so one ~/.gradle/gradle.properties can hold a token per project.
+// Same scheme as compose-ai-tools: docs/build-scripts/SETTINGS.md#build-cache there.
+val nonBlank = { source: Provider<String> -> source.map { it.trim() }.filter { it.isNotEmpty() } }
+val buildFetchCacheUrl = nonBlank(providers.gradleProperty("harc.buildFetchCacheUrl")).orNull
+val buildFetchCacheToken =
+  nonBlank(providers.environmentVariable("BUILDFETCH_HARC_GRADLE_REMOTE_CACHE_TOKEN"))
+    .orElse(nonBlank(providers.gradleProperty("BUILDFETCH_HARC_GRADLE_REMOTE_CACHE_TOKEN")))
+    .orElse(nonBlank(providers.environmentVariable("BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN")))
+    .orElse(nonBlank(providers.gradleProperty("BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN")))
+    .orNull
+val onCi = providers.environmentVariable("ON_CI").orElse("false").get().toBoolean()
+
+// On GitHub Actions, BuildFetch is the cache of record whenever a token reaches the job. The local
+// cache there is setup-gradle's restored snapshot of an earlier main build: it answered the
+// cheap hits before the remote was asked, so a task it satisfied was never pushed (leaving the
+// remote sparse for every other machine) and the remote saw only the lookups most likely to
+// miss. With it off, every lookup and every push goes to the remote, as setup-gradle's own docs
+// recommend for a build with a remote cache. Off CI, the local cache stays on in front of it.
+val remoteIsCacheOfRecord =
+  buildFetchCacheUrl != null &&
+    buildFetchCacheToken != null &&
+    providers.environmentVariable("GITHUB_ACTIONS").orNull == "true"
+
+buildCache {
+  local { isEnabled = !remoteIsCacheOfRecord }
+  if (buildFetchCacheUrl != null) {
+    remote<HttpBuildCache> {
+      url = uri(buildFetchCacheUrl)
+      credentials {
+        username = "token-auth"
+        password = buildFetchCacheToken
+      }
+      isPush = onCi
+      isEnabled = buildFetchCacheToken != null
+    }
+  }
+}
+
 // `-PaddonServerOnly=true` includes just the Home Assistant add-on server and the two modules it
 // depends on. The add-on image (`addon-server/addon/Dockerfile`) copies only those directories, and
 // Gradle 9 refuses to configure an included project whose directory is missing. None of the three

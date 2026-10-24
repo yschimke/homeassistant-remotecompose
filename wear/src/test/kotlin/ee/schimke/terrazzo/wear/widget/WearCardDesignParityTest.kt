@@ -1,0 +1,742 @@
+package ee.schimke.terrazzo.wear.widget
+
+import ee.schimke.ha.cards.CardDesignDocument
+import ee.schimke.ha.design.CardDesignFiles
+import ee.schimke.ha.design.DesignProperties
+import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.UNAVAILABLE_DESIGN_PROPERTY
+import ee.schimke.ha.rc.cards.AlarmPanelCardConverter
+import ee.schimke.ha.rc.cards.AreaCardConverter
+import ee.schimke.ha.rc.cards.BambuLabAmsCardConverter
+import ee.schimke.ha.rc.cards.BambuLabPrintControlCardConverter
+import ee.schimke.ha.rc.cards.BambuLabPrintStatusCardConverter
+import ee.schimke.ha.rc.cards.BambuLabSkipObjectCardConverter
+import ee.schimke.ha.rc.cards.BambuLabSpoolCardConverter
+import ee.schimke.ha.rc.cards.ButtonCardConverter
+import ee.schimke.ha.rc.cards.CalendarCardConverter
+import ee.schimke.ha.rc.cards.ClockCardConverter
+import ee.schimke.ha.rc.cards.EntitiesCardConverter
+import ee.schimke.ha.rc.cards.EntityCardConverter
+import ee.schimke.ha.rc.cards.GaugeCardConverter
+import ee.schimke.ha.rc.cards.GridCardConverter
+import ee.schimke.ha.rc.cards.HeadingCardConverter
+import ee.schimke.ha.rc.cards.HistoryGraphCardConverter
+import ee.schimke.ha.rc.cards.HorizontalStackCardConverter
+import ee.schimke.ha.rc.cards.HumidifierCardConverter
+import ee.schimke.ha.rc.cards.LightCardConverter
+import ee.schimke.ha.rc.cards.LogbookCardConverter
+import ee.schimke.ha.rc.cards.MapCardConverter
+import ee.schimke.ha.rc.cards.MarkdownCardConverter
+import ee.schimke.ha.rc.cards.MediaControlCardConverter
+import ee.schimke.ha.rc.cards.PictureCardConverter
+import ee.schimke.ha.rc.cards.PictureElementsCardConverter
+import ee.schimke.ha.rc.cards.PictureEntityCardConverter
+import ee.schimke.ha.rc.cards.PictureGlanceCardConverter
+import ee.schimke.ha.rc.cards.SensorCardConverter
+import ee.schimke.ha.rc.cards.StatisticCardConverter
+import ee.schimke.ha.rc.cards.StatisticsGraphCardConverter
+import ee.schimke.ha.rc.cards.ThermostatCardConverter
+import ee.schimke.ha.rc.cards.TileCardConverter
+import ee.schimke.ha.rc.cards.TodoListCardConverter
+import ee.schimke.ha.rc.cards.VerticalStackCardConverter
+import ee.schimke.ha.rc.cards.WeatherForecastCardConverter
+import ee.schimke.ha.rc.cards.defaultRegistry
+import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.components.ThemeStyle
+import java.io.File
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+
+/**
+ * The Wear widget is a rewrite of the card's design, not a source of its own
+ * (server-owned-card-designs.md, "One source, every surface"): a slot card's container-neutral
+ * template captured from the card's `.uid` is the one its converter gives, byte for byte, for every
+ * templated tile shape, available or not, off or on, in every watch palette and card style.
+ */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+class WearCardDesignParityTest {
+
+  private val context = RuntimeEnvironment.getApplication()
+  private val registry = defaultRegistry()
+  private val converter = TileCardConverter()
+
+  private fun designOf(cardType: String) =
+    CardDesignDocument.parse(
+      File(requireNotNull(System.getProperty("cardDesignsDir")), CardDesignFiles.fileName(cardType))
+        .readText()
+    )
+
+  private val design = designOf("tile")
+
+  @Test
+  fun tileDesignIsTheWearTemplateForEveryShapeAndStyle() {
+    // Built as SlotWidget builds a slot card's Wear template input: every templated tile domain,
+    // available or not, off or (for the domains whose templates have one) on.
+    val inputs =
+      TileCardConverter.TEMPLATE_DOMAINS.flatMap { domain ->
+        listOf(false, true).flatMap { unavailable ->
+          listOf(false, true).mapNotNull { on ->
+            // Only a domain whose on state is literally `on` gets an on template (SlotWidget).
+            if (on && domain == "sensor") return@mapNotNull null
+            converter.wearDesignTemplate(
+              DesignProperties.build {
+                string(TileCardConverter.DOMAIN, domain)
+                if (unavailable) string(UNAVAILABLE_DESIGN_PROPERTY, "1")
+                if (on) string(WEAR_ON_PROPERTY, "1")
+              }
+            )
+          }
+        }
+      }
+    val differing = buildList {
+      for (input in inputs) for (style in ThemeStyle.entries) for (cardStyle in HaUberTheme.all) {
+        val colors = wearWidgetColors(style)
+        val fromConverter = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle)
+          }
+        }
+        val fromDesign = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle) {
+              design.RenderCard(input.card, input.snapshot, it)
+            }
+          }
+        }
+        if (!fromConverter.contentEquals(fromDesign)) {
+          add("${input.card.raw} ${input.snapshot.states.values} ${style.name} ${cardStyle.id}")
+        }
+      }
+    }
+    println("tile.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases")
+    assertEquals(emptyList(), differing)
+  }
+
+  @Test
+  fun buttonDesignIsTheWearTemplateForEveryShapeAndStyle() {
+    val button = ButtonCardConverter()
+    val buttonDesign = designOf("button")
+    // Every templated domain, with and without its name, available or not, off or on.
+    val inputs =
+      TileCardConverter.TEMPLATE_DOMAINS.flatMap { domain ->
+        listOf("0", "1").flatMap { showName ->
+          listOf(false, true).flatMap { unavailable ->
+            listOf(false, true).mapNotNull { on ->
+              if (on && domain == "sensor") return@mapNotNull null
+              button.wearDesignTemplate(
+                DesignProperties.build {
+                  string(TileCardConverter.DOMAIN, domain)
+                  string("show_name", showName)
+                  if (unavailable) string(UNAVAILABLE_DESIGN_PROPERTY, "1")
+                  if (on) string(WEAR_ON_PROPERTY, "1")
+                }
+              )
+            }
+          }
+        }
+      }
+    val differing = buildList {
+      for (input in inputs) for (style in ThemeStyle.entries) for (cardStyle in HaUberTheme.all) {
+        val colors = wearWidgetColors(style)
+        val fromConverter = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle)
+          }
+        }
+        val fromDesign = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle) {
+              buttonDesign.RenderCard(input.card, input.snapshot, it)
+            }
+          }
+        }
+        if (!fromConverter.contentEquals(fromDesign)) {
+          add("${input.card.raw} ${input.snapshot.states.values} ${style.name} ${cardStyle.id}")
+        }
+      }
+    }
+    println(
+      "button.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
+    )
+    assertEquals(emptyList(), differing)
+  }
+
+  @Test
+  fun entityDesignIsTheWearTemplateForEveryShapeAndStyle() {
+    val entity = EntityCardConverter()
+    val entityDesign = designOf("entity")
+    // Every templated domain, available or not, off or on.
+    val inputs =
+      TileCardConverter.TEMPLATE_DOMAINS.flatMap { domain ->
+        listOf(false, true).flatMap { unavailable ->
+          listOf(false, true).mapNotNull { on ->
+            if (on && domain == "sensor") return@mapNotNull null
+            entity.wearDesignTemplate(
+              DesignProperties.build {
+                string(TileCardConverter.DOMAIN, domain)
+                if (unavailable) string(UNAVAILABLE_DESIGN_PROPERTY, "1")
+                if (on) string(WEAR_ON_PROPERTY, "1")
+              }
+            )
+          }
+        }
+      }
+    val differing = buildList {
+      for (input in inputs) for (style in ThemeStyle.entries) for (cardStyle in HaUberTheme.all) {
+        val colors = wearWidgetColors(style)
+        val fromConverter = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle)
+          }
+        }
+        val fromDesign = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle) {
+              entityDesign.RenderCard(input.card, input.snapshot, it)
+            }
+          }
+        }
+        if (!fromConverter.contentEquals(fromDesign)) {
+          add("${input.card.raw} ${input.snapshot.states.values} ${style.name} ${cardStyle.id}")
+        }
+      }
+    }
+    println(
+      "entity.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
+    )
+    assertEquals(emptyList(), differing)
+  }
+
+  @Test
+  fun sensorDesignIsTheWearTemplateForEveryShapeAndStyle() {
+    val sensor = SensorCardConverter()
+    val sensorDesign = designOf("sensor")
+    // A sensor with and without a history line, available or not.
+    val inputs =
+      listOf("0", "1").flatMap { hasData ->
+        listOf(false, true).mapNotNull { unavailable ->
+          sensor.wearDesignTemplate(
+            DesignProperties.build {
+              string(TileCardConverter.DOMAIN, "sensor")
+              string("has_data", hasData)
+              if (unavailable) string(UNAVAILABLE_DESIGN_PROPERTY, "1")
+            }
+          )
+        }
+      }
+    val differing = buildList {
+      for (input in inputs) for (style in ThemeStyle.entries) for (cardStyle in HaUberTheme.all) {
+        val colors = wearWidgetColors(style)
+        val fromConverter = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle)
+          }
+        }
+        val fromDesign = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle) {
+              sensorDesign.RenderCard(input.card, input.snapshot, it)
+            }
+          }
+        }
+        if (!fromConverter.contentEquals(fromDesign)) {
+          add("${input.card.raw} ${input.snapshot.states.values} ${style.name} ${cardStyle.id}")
+        }
+      }
+    }
+    println(
+      "sensor.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
+    )
+    assertEquals(emptyList(), differing)
+  }
+
+  @Test
+  fun headingDesignIsTheWearTemplateForEveryShapeAndStyle() {
+    val heading = HeadingCardConverter()
+    val headingDesign = designOf("heading")
+    // Both heading styles.
+    val inputs =
+      listOf("title", "subtitle").mapNotNull { style ->
+        heading.wearDesignTemplate(DesignProperties.build { string("heading_style", style) })
+      }
+    val differing = buildList {
+      for (input in inputs) for (style in ThemeStyle.entries) for (cardStyle in HaUberTheme.all) {
+        val colors = wearWidgetColors(style)
+        val fromConverter = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle)
+          }
+        }
+        val fromDesign = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle) {
+              headingDesign.RenderCard(input.card, input.snapshot, it)
+            }
+          }
+        }
+        if (!fromConverter.contentEquals(fromDesign)) {
+          add("${input.card.raw} ${input.snapshot.states.values} ${style.name} ${cardStyle.id}")
+        }
+      }
+    }
+    println(
+      "heading.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
+    )
+    assertEquals(emptyList(), differing)
+  }
+
+  @Test
+  fun clockDesignIsTheWearTemplateForEveryShapeAndStyle() {
+    val clock = ClockCardConverter()
+    val clockDesign = designOf("clock")
+    // Each line on and off against a plain 24-hour clock, and a 12-hour clock with every line.
+    val plain = mapOf("has_title" to 0, "seconds" to 0, "h24" to 1, "large" to 0, "zoned" to 0)
+    val inputs =
+      (listOf(plain + ("date" to 0)) +
+          listOf("has_title", "seconds", "large", "zoned", "date").map {
+            plain + ("date" to 0) + (it to 1)
+          } +
+          listOf(
+            mapOf("has_title" to 1, "seconds" to 1, "h24" to 0, "large" to 1) +
+              ("zoned" to 1) +
+              ("date" to 1)
+          ))
+        .mapNotNull { values ->
+          clock.wearDesignTemplate(
+            DesignProperties.build { values.forEach { (name, value) -> enum(name, value) } }
+          )
+        }
+    val differing = buildList {
+      for (input in inputs) for (style in ThemeStyle.entries) for (cardStyle in HaUberTheme.all) {
+        val colors = wearWidgetColors(style)
+        val fromConverter = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle)
+          }
+        }
+        val fromDesign = runBlocking {
+          WearWidgetTemplate.capture(context) {
+            SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle) {
+              clockDesign.RenderCard(input.card, input.snapshot, it)
+            }
+          }
+        }
+        if (!fromConverter.contentEquals(fromDesign)) {
+          add("${input.card.raw} ${style.name} ${cardStyle.id}")
+        }
+      }
+    }
+    println("clock.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases")
+    assertEquals(7, inputs.size)
+    assertEquals(emptyList(), differing)
+  }
+
+  @Test
+  fun arcDialDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "climate.living_room" to
+              EntityState(
+                "climate.living_room",
+                "heat",
+                attributes(
+                  """{"current_temperature":20.5,"temperature":21,"hvac_action":"heating"}"""
+                ),
+              ),
+            "climate.office" to EntityState("climate.office", "off"),
+            "humidifier.bedroom" to
+              EntityState(
+                "humidifier.bedroom",
+                "on",
+                attributes("""{"current_humidity":45,"humidity":55,"action":"humidifying"}"""),
+              ),
+            "light.kitchen" to
+              EntityState("light.kitchen", "on", attributes("""{"brightness":200}""")),
+            "light.hall" to EntityState("light.hall", "off"),
+          )
+      )
+    assertWearParity(
+      "arc dial designs",
+      listOf(ThermostatCardConverter(), HumidifierCardConverter(), LightCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"thermostat","entity":"climate.living_room"}""",
+        """{"type":"thermostat","entity":"climate.office","name":"Office"}""",
+        """{"type":"humidifier","entity":"humidifier.bedroom"}""",
+        """{"type":"light","entity":"light.kitchen"}""",
+        """{"type":"light","entity":"light.hall"}""",
+      ),
+    )
+  }
+
+  @Test
+  fun valueDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "sensor.temperature" to
+              EntityState(
+                "sensor.temperature",
+                "21.5",
+                attributes("""{"unit_of_measurement":"°C","device_class":"temperature"}"""),
+              ),
+            "sensor.power" to
+              EntityState("sensor.power", "640", attributes("""{"unit_of_measurement":"W"}""")),
+          )
+      )
+    assertWearParity(
+      "value designs",
+      listOf(GaugeCardConverter(), StatisticCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"gauge","entity":"sensor.temperature"}""",
+        """{"type":"gauge","entity":"sensor.power","min":0,"max":3000,"severity":{"green":0,"yellow":1500,"red":2500}}""",
+        """{"type":"statistic","entity":"sensor.temperature","stat_type":"mean"}""",
+        """{"type":"statistic","entity":"sensor.power","name":"Power","stat_type":"max","period":"day"}""",
+      ),
+    )
+  }
+
+  @Test
+  fun listDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "light.kitchen" to EntityState("light.kitchen", "on"),
+            "switch.fan" to EntityState("switch.fan", "off"),
+            "calendar.home" to
+              EntityState(
+                "calendar.home",
+                "on",
+                attributes(
+                  """{"message":"Bins out","start_time":"2026-10-24 07:00:00","friendly_name":"Home"}"""
+                ),
+              ),
+            "todo.shopping" to
+              EntityState(
+                "todo.shopping",
+                "2",
+                attributes(
+                  """{"items":[{"summary":"Milk","status":"needs_action"},""" +
+                    """{"summary":"Eggs","status":"needs_action"},""" +
+                    """{"summary":"Bread","status":"completed"}]}"""
+                ),
+              ),
+          )
+      )
+    assertWearParity(
+      "list designs",
+      listOf(LogbookCardConverter(), CalendarCardConverter(), TodoListCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"logbook","entities":["light.kitchen","switch.fan"]}""",
+        """{"type":"logbook","title":"Activity","entities":["light.kitchen"]}""",
+        """{"type":"calendar","entities":["calendar.home"]}""",
+        """{"type":"todo-list","entity":"todo.shopping"}""",
+        """{"type":"todo-list","entity":"todo.shopping","title":"Shopping"}""",
+      ),
+    )
+  }
+
+  @Test
+  fun roomDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "sensor.living_temperature" to
+              EntityState(
+                "sensor.living_temperature",
+                "21.5",
+                attributes("""{"device_class":"temperature","unit_of_measurement":"°C"}"""),
+              ),
+            "light.living" to EntityState("light.living", "on"),
+            "media_player.living_room" to
+              EntityState(
+                "media_player.living_room",
+                "playing",
+                attributes(
+                  """{"friendly_name":"Living room","media_title":"Song","media_artist":"Band",""" +
+                    """"media_duration":200,"media_position":40}"""
+                ),
+              ),
+            "media_player.kitchen" to EntityState("media_player.kitchen", "off"),
+          )
+      )
+    assertWearParity(
+      "room designs",
+      listOf(AreaCardConverter(), MediaControlCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"area","area":"living_room","entities":["sensor.living_temperature","light.living"]}""",
+        """{"type":"area","area":"office"}""",
+        """{"type":"media-control","entity":"media_player.living_room"}""",
+        """{"type":"media-control","entity":"media_player.kitchen"}""",
+      ),
+    )
+  }
+
+  @Test
+  fun panelDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "alarm_control_panel.home" to
+              EntityState(
+                "alarm_control_panel.home",
+                "disarmed",
+                attributes("""{"friendly_name":"Home","code_format":"number"}"""),
+              ),
+            "device_tracker.phone" to
+              EntityState(
+                "device_tracker.phone",
+                "home",
+                attributes("""{"friendly_name":"Phone","latitude":51.5,"longitude":-0.1}"""),
+              ),
+            "light.porch" to EntityState("light.porch", "on"),
+          )
+      )
+    assertWearParity(
+      "panel designs",
+      listOf(AlarmPanelCardConverter(), MapCardConverter(), PictureElementsCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"alarm-panel","entity":"alarm_control_panel.home"}""",
+        """{"type":"alarm-panel","entity":"alarm_control_panel.home","states":["arm_home"]}""",
+        """{"type":"map","entities":["device_tracker.phone"]}""",
+        """{"type":"map","title":"Family","entities":["device_tracker.phone"]}""",
+        """{"type":"picture-elements","image":"https://example.com/a.jpg","elements":[{"type":"state-icon","entity":"light.porch","style":{"top":"50%","left":"50%"}}]}""",
+      ),
+    )
+  }
+
+  @Test
+  fun entitiesAndWeatherDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "light.kitchen" to EntityState("light.kitchen", "on"),
+            "switch.fan" to EntityState("switch.fan", "off"),
+            "sensor.temperature" to
+              EntityState(
+                "sensor.temperature",
+                "21.5",
+                attributes("""{"unit_of_measurement":"°C","device_class":"temperature"}"""),
+              ),
+            "weather.home" to
+              EntityState(
+                "weather.home",
+                "sunny",
+                attributes("""{"temperature":18,"temperature_unit":"°C","humidity":40}"""),
+              ),
+          )
+      )
+    assertWearParity(
+      "entities and weather designs",
+      listOf(EntitiesCardConverter(), WeatherForecastCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"entities","entities":["light.kitchen","switch.fan"]}""",
+        """{"type":"entities","title":"Home","entities":["light.kitchen","switch.fan","sensor.temperature"]}""",
+        """{"type":"weather-forecast","entity":"weather.home"}""",
+        """{"type":"weather-forecast","entity":"weather.home","show_forecast":false}""",
+      ),
+    )
+  }
+
+  @Test
+  fun pictureDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "camera.front_door" to EntityState("camera.front_door", "idle"),
+            "light.porch" to EntityState("light.porch", "on"),
+            "switch.fan" to EntityState("switch.fan", "off"),
+          )
+      )
+    // Each picture card with and without its optional lines, as SlotWidget keys them.
+    assertWearParity(
+      "picture designs",
+      listOf(PictureCardConverter(), PictureEntityCardConverter(), PictureGlanceCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"picture","image":"https://example.com/a.jpg","name":"Garden"}""",
+        """{"type":"picture","image":"https://example.com/a.jpg"}""",
+        """{"type":"picture-entity","entity":"camera.front_door"}""",
+        """{"type":"picture-entity","entity":"light.porch","show_state":false}""",
+        """{"type":"picture-glance","title":"Garden","entities":["light.porch","switch.fan"]}""",
+        """{"type":"picture-glance","image":"x","entities":["switch.fan"]}""",
+      ),
+    )
+  }
+
+  @Test
+  fun graphDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "sensor.temperature" to
+              EntityState(
+                "sensor.temperature",
+                "21.5",
+                attributes("""{"unit_of_measurement":"°C","device_class":"temperature"}"""),
+              ),
+            "sensor.energy" to
+              EntityState("sensor.energy", "12.5", attributes("""{"unit_of_measurement":"kWh"}""")),
+          )
+      )
+    assertWearParity(
+      "graph designs",
+      listOf(HistoryGraphCardConverter(), StatisticsGraphCardConverter(), MarkdownCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"history-graph","entities":["sensor.temperature"]}""",
+        """{"type":"history-graph","title":"Climate","entities":["sensor.temperature","sensor.energy"]}""",
+        """{"type":"statistics-graph","entities":["sensor.energy"]}""",
+        """{"type":"markdown","content":"**Hello** there"}""",
+        """{"type":"markdown","title":"Notes","content":"# Today\n- bins out"}""",
+      ),
+    )
+  }
+
+  @Test
+  fun containerDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "light.kitchen" to
+              EntityState("light.kitchen", "on", attributes("""{"friendly_name":"Kitchen"}""")),
+            "switch.fan" to
+              EntityState("switch.fan", "off", attributes("""{"friendly_name":"Fan"}""")),
+          )
+      )
+    assertWearParity(
+      "container designs",
+      listOf(VerticalStackCardConverter(), HorizontalStackCardConverter(), GridCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"vertical-stack","cards":[{"type":"tile","entity":"light.kitchen"},{"type":"tile","entity":"switch.fan"}]}""",
+        """{"type":"horizontal-stack","cards":[{"type":"tile","entity":"light.kitchen"},{"type":"tile","entity":"switch.fan"}]}""",
+        """{"type":"grid","columns":2,"cards":[{"type":"button","entity":"light.kitchen"},{"type":"button","entity":"switch.fan"}]}""",
+      ),
+    )
+  }
+
+  @Test
+  fun bambuDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    fun state(id: String, value: String, attrs: String = "{}") =
+      id to EntityState(id, value, attributes(attrs))
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            state(
+              "sensor.x1c_ams_1_tray_1",
+              "Bambu PLA Basic",
+              """{"color":"#F2C200FF","remain":"80","active":"true"}""",
+            ),
+            state(
+              "sensor.x1c_ams_1_tray_2",
+              "Generic PETG",
+              """{"color":"#1E5AA8FF","remain":"35","active":"false"}""",
+            ),
+            state("sensor.x1c_print_progress", "42", """{"friendly_name":"X1C Print progress"}"""),
+            state("sensor.x1c_current_stage", "printing"),
+            state("sensor.x1c_current_layer", "120"),
+            state("sensor.x1c_total_layer_count", "300"),
+            state("sensor.x1c_remaining_time", "95"),
+            state("button.x1c_pause_printing", "unknown"),
+            state("button.x1c_stop_printing", "unknown"),
+          )
+      )
+    assertWearParity(
+      "bambu designs",
+      listOf(
+        BambuLabAmsCardConverter(),
+        BambuLabSpoolCardConverter(),
+        BambuLabPrintStatusCardConverter(),
+        BambuLabPrintControlCardConverter(),
+        BambuLabSkipObjectCardConverter(),
+      ),
+      snapshot,
+      listOf(
+        """{"type":"custom:ha-bambulab-ams-card","entity_prefix":"x1c"}""",
+        """{"type":"custom:ha-bambulab-spool-card","entity_prefix":"x1c","slot":2}""",
+        """{"type":"custom:ha-bambulab-print_status-card","entity_prefix":"x1c"}""",
+        """{"type":"custom:ha-bambulab-print_control-card","entity_prefix":"x1c"}""",
+        """{"type":"custom:ha-bambulab-skipobject-card","entity_prefix":"x1c"}""",
+      ),
+    )
+  }
+
+  private fun attributes(json: String): JsonObject = Json.parseToJsonElement(json) as JsonObject
+
+  /**
+   * Every one of [cards] (JSON configs) that has a Wear template captures the same template from
+   * its converter as from its card's `.uid`, in every watch palette and card style; and each of
+   * [converters] has at least one.
+   */
+  private fun assertWearParity(
+    label: String,
+    converters: List<CardConverter>,
+    snapshot: HaSnapshot,
+    cards: List<String>,
+  ) {
+    val byType = converters.associateBy { it.cardType }
+    val inputs = cards.mapNotNull { json ->
+      val raw = Json.parseToJsonElement(json) as JsonObject
+      val converter = byType.getValue(raw.getValue("type").toString().trim('"'))
+      val card = CardConfig(converter.cardType, raw)
+      // A card whose shape has no template draws direct on a watch, with nothing to compare.
+      val properties = converter.wearDesignProperties(card, snapshot) ?: return@mapNotNull null
+      converter.wearDesignTemplate(properties)?.let { converter.cardType to it }
+    }
+    assertEquals(byType.keys, inputs.map { it.first }.toSet())
+    val differing = buildList {
+      for ((cardType, input) in inputs) for (style in ThemeStyle.entries) {
+        for (cardStyle in HaUberTheme.all) {
+          val colors = wearWidgetColors(style)
+          val fromConverter = runBlocking {
+            WearWidgetTemplate.capture(context) {
+              SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle)
+            }
+          }
+          val fromDesign = runBlocking {
+            WearWidgetTemplate.capture(context) {
+              SlotContent(registry, colors, input.card, input.snapshot, true, cardStyle) {
+                designOf(cardType).RenderCard(input.card, input.snapshot, it)
+              }
+            }
+          }
+          if (!fromConverter.contentEquals(fromDesign)) {
+            add("${input.card.raw} ${style.name} ${cardStyle.id}")
+          }
+        }
+      }
+    }
+    println("$label: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases")
+    assertEquals(emptyList(), differing)
+  }
+}

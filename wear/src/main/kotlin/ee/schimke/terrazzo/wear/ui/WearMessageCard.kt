@@ -9,6 +9,7 @@ import ee.schimke.composeai.rcplayer.compose.rcInputComponents
 import ee.schimke.composeai.rcplayer.protocol.*
 import ee.schimke.composeai.rcplayer.runtime.RcInputDrafts
 import ee.schimke.ha.model.*
+import ee.schimke.terrazzo.shared.RcErrorBoundary
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.*
@@ -63,33 +64,39 @@ internal fun WearMessageCard(
           width = 180,
         )
       }
-    RcComposePlayer(
-      document,
+    // A message form that throws while it plays is disabled, not the watch's screen.
+    RcErrorBoundary(
+      "message:${rawJson.hashCode().toUInt().toString(16)}",
       Modifier.fillMaxWidth(),
-      customComponents =
-        rcInputComponents(
-          drafts,
-          editable = onSend != null,
-          onSubmit = { action, edited ->
-            if (action == MESSAGE_SUBMIT && !pending && onSend != null) {
-              pending = true
-              status = "Sending…"
-              scope.launch {
-                try {
-                  onSend(rawJson, edited)
-                  status = "Message sent"
-                } catch (cancelled: kotlinx.coroutines.CancellationException) {
-                  throw cancelled
-                } catch (_: Exception) {
-                  status = "Could not confirm sending. Check the phone before retrying."
-                } finally {
-                  pending = false
+    ) {
+      RcComposePlayer(
+        document,
+        Modifier,
+        customComponents =
+          rcInputComponents(
+            drafts,
+            editable = onSend != null,
+            onSubmit = { action, edited ->
+              if (action == MESSAGE_SUBMIT && !pending && onSend != null) {
+                pending = true
+                status = "Sending…"
+                scope.launch {
+                  try {
+                    onSend(rawJson, edited)
+                    status = "Message sent"
+                  } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    throw cancelled
+                  } catch (_: Exception) {
+                    status = "Could not confirm sending. Check the phone before retrying."
+                  } finally {
+                    pending = false
+                  }
                 }
               }
-            }
-          },
-        ),
-    )
+            },
+          ),
+      )
+    }
   } ?: Text("Open Home Assistant on the phone to configure this message card")
   status?.let { Text(it) }
 }

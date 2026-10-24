@@ -4,6 +4,7 @@ bin/
 # HA container runtime-generated state — only the hand-written config files
 # (configuration.yaml, ui-lovelace.yaml, themes/) should be committed.
 config/.storage/
+config/.shopping_list.json
 config/.cloud/
 config/.HA_VERSION
 config/.ha_run.lock

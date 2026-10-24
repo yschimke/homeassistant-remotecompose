@@ -27,6 +27,10 @@ import ee.schimke.ha.client.SharedOkHttpClient
 import ee.schimke.terrazzo.core.di.AppScope
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
 import ee.schimke.terrazzo.core.network.LanConnectionPolicyInterceptor
+import ee.schimke.terrazzo.core.network.RemoteUrlInterceptor
+import ee.schimke.terrazzo.core.network.RemoteUrlStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okio.Path.Companion.toOkioPath
 
@@ -37,7 +41,7 @@ import okio.Path.Companion.toOkioPath
  * that **only one instance per directory** is safe (otherwise the journals can interleave and
  * corrupt). Park the binding at [AppScope] so `DashboardViewScreen` and `WidgetInstallSheet` (and
  * anyone else who renders cards) reuse the same loader instead of constructing per-screen ones
- * pointing at the same `cacheDir/ha_image_cache` path.
+ * pointing at the same `noBackupFilesDir/terrazzo/images` path.
  *
  * The bearer-auth interceptor reads its token through a provider lambda that closes over [baseUrl]
  * / [accessToken], so the loader itself never has to be rebuilt when the session changes. Callers
@@ -53,7 +57,11 @@ import okio.Path.Companion.toOkioPath
  */
 @SingleIn(AppScope::class)
 @Inject
-class HaImageStack(private val context: Context, private val lanPolicy: LanConnectionPolicy) {
+class HaImageStack(
+  private val context: Context,
+  private val lanPolicy: LanConnectionPolicy,
+  private val remoteUrls: RemoteUrlStore,
+) {
 
   @Volatile private var baseUrl: String? = null
   @Volatile private var accessToken: String? = null
@@ -84,8 +92,19 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
     // token-rotating URLs can't blow up the cache directory. Coil's
     // default `maxSizePercent` (0.02) still gates between these
     // bounds.
+    // In app storage rather than cacheDir, which the system empties when storage runs low: the
+    // pictures are what an offline dashboard draws, and the bounds below already keep it small.
+    // Out of backups too; it is all refetchable.
+    val app = context.applicationContext
+    val directory = app.noBackupFilesDir.resolve(IMAGE_CACHE_DIR)
+    // Keep what an earlier build cached under cacheDir.
+    val legacy = app.cacheDir.resolve(LEGACY_IMAGE_CACHE_DIR)
+    if (legacy.isDirectory && !directory.exists()) {
+      directory.parentFile?.mkdirs()
+      if (!legacy.renameTo(directory)) legacy.deleteRecursively()
+    }
     DiskCache.Builder()
-      .directory(context.applicationContext.cacheDir.resolve(IMAGE_CACHE_DIR).toOkioPath())
+      .directory(directory.toOkioPath())
       .minimumMaxSizeBytes(MIN_DISK_CACHE_BYTES)
       .maximumMaxSizeBytes(MAX_DISK_CACHE_BYTES)
       .build()
@@ -102,8 +121,12 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
       // interceptors.
       SharedOkHttpClient.client
         .newBuilder()
-        .addInterceptor(LanConnectionPolicyInterceptor(lanPolicy))
+        // The bearer goes on by the session's own origin first; a LAN URL off the home network is
+        // then rewritten to the instance's external URL, which takes the same token, rather than
+        // refused. The disk cache keys on the original URL, so either way a cached picture hits.
         .addInterceptor(HaBearerAuthInterceptor({ baseUrl }, { accessToken }))
+        .addInterceptor(RemoteUrlInterceptor(lanPolicy, remoteUrls))
+        .addInterceptor(LanConnectionPolicyInterceptor(lanPolicy))
         .build()
     Log.d(
       TAG,
@@ -111,6 +134,16 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
     )
     ImageLoader.Builder(context.applicationContext)
       .components {
+        // Camera and image-entity pictures: one disk entry per entity, network first, the last
+        // one on disk when offline. Other pictures that can change in place refresh once a day.
+        add(
+          LiveImageCacheInterceptor(
+            isOnline = { lanPolicy.isOnline },
+            savedAtMs = { key ->
+              diskCache.openSnapshot(key)?.use { it.data.toFile().lastModified() }
+            },
+          )
+        )
         // Demo mode's pictures are on a host nothing serves; draw stand-ins for them. Answers only
         // for `DemoData.BASE_URL` URLs, so real sessions' fetches are untouched.
         add(DemoImageFetcher.Factory())
@@ -120,6 +153,44 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
       .eventListener(LoggingEventListener)
       .build()
       .also { Log.d(TAG, "imageLoader built") }
+  }
+
+  /**
+   * Forgets every picture, in memory and on disk: sign-out calls it so the next account on the
+   * device can't see the last one's camera frames and people. The disk cache is in app storage that
+   * only this clears.
+   */
+  suspend fun clearCaches() {
+    imageLoader.memoryCache?.clear()
+    withContext(Dispatchers.IO) { diskCache.clear() }
+  }
+
+  /**
+   * Fetches into the disk cache whichever of [urls] it doesn't hold yet, so a card that hasn't been
+   * on screen still has its picture the next time the app starts offline. Memory stays out of it:
+   * no memory-cache entry, and a token-sized decode (Coil decodes what it fetches; the disk keeps
+   * the bytes as served). Checks the disk on [Dispatchers.IO]; the fetches themselves are enqueued.
+   */
+  suspend fun prewarm(urls: Collection<String>) {
+    if (urls.isEmpty() || !lanPolicy.isOnline) return
+    withContext(Dispatchers.IO) { enqueueMissing(urls) }
+  }
+
+  private fun enqueueMissing(urls: Collection<String>) {
+    for (url in urls) {
+      val resolved = resolveAgainstBase(url)
+      if (resolved.startsWith('/')) continue
+      val key = liveImageDiskKey(resolved) ?: resolved
+      if (diskCache.openSnapshot(key)?.use { true } == true) continue
+      imageLoader.enqueue(
+        ImageRequest.Builder(context)
+          .data(resolved)
+          .memoryCachePolicy(CachePolicy.DISABLED)
+          .size(1, 1)
+          .allowHardware(false)
+          .build()
+      )
+    }
   }
 
   /**
@@ -234,7 +305,10 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
   }
 
   private companion object {
-    private const val IMAGE_CACHE_DIR = "ha_image_cache"
+    private const val IMAGE_CACHE_DIR = "terrazzo/images"
+
+    /** Where builds before the move kept it, under cacheDir. */
+    private const val LEGACY_IMAGE_CACHE_DIR = "ha_image_cache"
     private const val TAG = "HaImageStack"
 
     // 10 MB floor — even tight-storage devices keep enough room to

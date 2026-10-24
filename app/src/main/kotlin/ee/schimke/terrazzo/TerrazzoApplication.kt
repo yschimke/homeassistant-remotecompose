@@ -9,12 +9,16 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import dev.zacsweers.metro.createGraphFactory
 import ee.schimke.ha.rc.CardDesignLibrary
+import ee.schimke.ha.rc.CardMemory
+import ee.schimke.ha.rc.CardRebuilds
 import ee.schimke.ha.rc.FileLocalDesignStore
+import ee.schimke.ha.rc.ShippedDesignLibrary
 import ee.schimke.ha.rc.components.enableRemoteImageUrls
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.crash.CrashReporter
+import ee.schimke.terrazzo.crash.CrashedDocuments
 import ee.schimke.terrazzo.dashboard.CardDesignPreload
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardUsage
@@ -47,9 +51,6 @@ class TerrazzoApplication : Application() {
   val wearSync: MobileWearSyncManager by lazy {
     MobileWearSyncManager(applicationContext, syncStats)
   }
-  val wearCapabilityProbe: ee.schimke.terrazzo.wearsync.WearCapabilityProbe by lazy {
-    ee.schimke.terrazzo.wearsync.WearCapabilityProbe(applicationContext)
-  }
   val wearAppInstallHelper: ee.schimke.terrazzo.wearsync.WearAppInstallHelper by lazy {
     ee.schimke.terrazzo.wearsync.WearAppInstallHelper(
       applicationContext,
@@ -78,6 +79,27 @@ class TerrazzoApplication : Application() {
     // (off by default → BitmapData.read throws at parse time). The app
     // renders entity pictures / media thumbnails everywhere, so opt in.
     enableRemoteImageUrls()
+    // Hand the card caches back when the system trims memory; Coil trims its own. Each document
+    // cache trim goes to analytics, to show whether the documents kept while hidden are enough.
+    CardMemory.onDocumentTrim = { level, previousLevel, trim ->
+      crashReporter.logEvent(
+        "card_cache_trim",
+        mapOf(
+          "level" to level.toLong(),
+          "size_before" to trim.sizeBefore.toLong(),
+          "kept" to trim.kept.toLong(),
+          "keep_limit" to CardMemory.HIDDEN_DOCUMENTS.toLong(),
+          "prev_level" to previousLevel.toLong(),
+          "prev_dropped" to trim.previousDropped.toLong(),
+          "prev_rerequested" to trim.previousReRequested.toLong(),
+        ),
+      )
+    }
+    CardMemory.install(this)
+    // Cards that rebuilt their document on live data while on screen, to analytics each time the
+    // app
+    // leaves the foreground: the cost of values that didn't arrive as bindings.
+    reportCardRebuildsOnStop()
     if (graph.cardMonitor.isEnabled) {
       registerNotificationChannels()
     }
@@ -95,7 +117,6 @@ class TerrazzoApplication : Application() {
       scope = ProcessLifecycleOwner.get().lifecycleScope + graph.logStore.coroutineExceptionHandler,
       prefs = graph.preferencesStore,
       pinStore = graph.pinStore,
-      slotsStore = graph.wearWidgetSlotsStore,
       inputEditing =
         combine(graph.preferencesStore.permanentWriteMode, graph.sessionWriteMode.writeMode) {
             permanent,
@@ -115,6 +136,8 @@ class TerrazzoApplication : Application() {
     CardDesignLibrary.onCaptureFailure = { _, error ->
       graph.logStore.recordCrash(error, fatal = false)
     }
+    // The default style's designs ship in the app's assets: those keys are never captured.
+    CardDesignLibrary.shipped = ShippedDesignLibrary(assets)
     FileLocalDesignStore.of(applicationContext).also { store ->
       CardDesignLibrary.store = store
       (ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO).launch { store.prune() }
@@ -145,6 +168,42 @@ class TerrazzoApplication : Application() {
   }
 
   /**
+   * On each move to the background, sends the [CardRebuilds] since the last one as `card_rebuild`
+   * events, the [MAX_REBUILD_EVENTS] most frequent, each with how long the app was in the
+   * foreground so counts compare as rates. A card that rebuilds for a reason other than live data
+   * (the user's own config or theme change) is counted too, under that reason.
+   */
+  private fun reportCardRebuildsOnStop() {
+    ProcessLifecycleOwner.get()
+      .lifecycle
+      .addObserver(
+        object : androidx.lifecycle.DefaultLifecycleObserver {
+          private var startedAtMs = 0L
+
+          override fun onStart(owner: androidx.lifecycle.LifecycleOwner) {
+            startedAtMs = android.os.SystemClock.elapsedRealtime()
+          }
+
+          override fun onStop(owner: androidx.lifecycle.LifecycleOwner) {
+            val foregroundSeconds = (android.os.SystemClock.elapsedRealtime() - startedAtMs) / 1000
+            CardRebuilds.drain().take(MAX_REBUILD_EVENTS).forEach { count ->
+              crashReporter.logEvent(
+                "card_rebuild",
+                mapOf(
+                  "card_type" to count.cardType,
+                  "reason" to count.reason,
+                  "cost" to count.cost.name.lowercase(),
+                  "count" to count.count,
+                  "fg_seconds" to foregroundSeconds,
+                ),
+              )
+            }
+          }
+        }
+      )
+  }
+
+  /**
    * Route uncaught exceptions to the in-app [LogStore] (persisted synchronously so the trace
    * survives the imminent process kill) and, when configured, to Crashlytics — then chain to
    * whatever handler was already installed so the platform's default crash behaviour (dialog /
@@ -161,6 +220,7 @@ class TerrazzoApplication : Application() {
     crashReporter.install(applicationContext)
     val previous = Thread.getDefaultUncaughtExceptionHandler()
     Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+      CrashedDocuments.recordCrash(applicationContext)
       runCatching { graph.logStore.recordCrash(throwable, thread, fatal = true) }
       previous?.uncaughtException(thread, throwable)
     }
@@ -172,6 +232,9 @@ class TerrazzoApplication : Application() {
     // it *after* installing the handler so a failure during init is still
     // captured rather than escaping uncovered.
     graph.logStore.nonFatalSink = crashReporter::recordCrash
+    // A document a player gave up on is reported as a non-fatal; one that crashed the last run is
+    // disabled from the start.
+    CrashedDocuments.install(applicationContext, crashReporter::recordCrash)
   }
 
   /**
@@ -180,6 +243,11 @@ class TerrazzoApplication : Application() {
    * off the [LogStore] sink alone.
    */
   private val crashReporter: CrashReporter by lazy { CrashReporter.create() }
+
+  private companion object {
+    /** `card_rebuild` events per trip to the background: the most frequent buckets only. */
+    const val MAX_REBUILD_EVENTS = 10
+  }
 
   private fun registerNotificationChannels() {
     val nm = getSystemService(NotificationManager::class.java) ?: return

@@ -115,9 +115,36 @@ data class DesignEntry(
    * the generic one with the same [key]; see [DeviceMatch.pick].
    */
   val device: DeviceMatch? = null,
+  /**
+   * The design this entry is one key of: one id names one design across every key it covers (its
+   * themes, surfaces, shapes, variants and devices), so a client can store a choice of design and
+   * find it again in a later manifest. [libraryDesignId] for the library, [userDesignId] for a
+   * person's published UI Builder design. Null in a manifest written before ids existed; see
+   * [stableDesignId].
+   */
+  val designId: String? = null,
+  /** What a picker calls the design ([LIBRARY_TITLE], or its UI Builder title); null for none. */
+  val title: String? = null,
 ) {
+  /**
+   * [designId], or for a library entry from a manifest written before ids existed the id the
+   * library gives it now ([libraryDesignId]); null for any other entry without one, which can't be
+   * chosen by id.
+   */
+  val stableDesignId: String?
+    get() = designId ?: libraryDesignId(key.cardType).takeIf { author == BUILTIN_AUTHOR }
+
   companion object {
     const val BUILTIN_AUTHOR: String = "terrazzo"
+
+    /** What a picker calls the library's own design for a card type. */
+    const val LIBRARY_TITLE: String = "Built-in"
+
+    /** The id of the library's design for [cardType]: every key of that card type. */
+    fun libraryDesignId(cardType: String): String = "library:$cardType"
+
+    /** The id of a person's design published from UI Builder design [uiBuilderDesignId]. */
+    fun userDesignId(uiBuilderDesignId: String): String = "user:$uiBuilderDesignId"
   }
 }
 

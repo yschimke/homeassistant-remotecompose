@@ -6,15 +6,22 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -22,8 +29,11 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HistoryPoint
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.terrazzo.AssistantAccessSetting
 import ee.schimke.terrazzo.CardStyleSection
 import ee.schimke.terrazzo.ConnectionStatus
 import ee.schimke.terrazzo.DashboardTopBar
@@ -45,9 +55,6 @@ import ee.schimke.terrazzo.core.pin.MobilePinnedCard
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.PinnedCardData
-import ee.schimke.terrazzo.core.pin.SlotSize
-import ee.schimke.terrazzo.core.pin.WearWidgetSlot
-import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
@@ -62,18 +69,23 @@ import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
+import ee.schimke.terrazzo.dashboard.EntityMoreInfo
 import ee.schimke.terrazzo.dashboard.ManagePinnedContent
 import ee.schimke.terrazzo.dashboard.PinRowItem
+import ee.schimke.terrazzo.dashboard.ProvideScreenSkin
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
+import ee.schimke.terrazzo.dashboard.currentScreenSkin
 import ee.schimke.terrazzo.dashboard.historyEntityIds
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.image.HaImageStack
 import ee.schimke.terrazzo.logs.LogsContent
 import ee.schimke.terrazzo.ui.TerrazzoTheme
 import ee.schimke.terrazzo.wearsync.SyncDiagnosticsContent
-import ee.schimke.terrazzo.wearsync.WearWidgetsContent
 import ee.schimke.terrazzo.wearsync.proto.SyncStats
+import ee.schimke.terrazzo.widget.InstalledWidget
 import ee.schimke.terrazzo.widget.WidgetsContent
+import ee.schimke.terrazzo.widget.cardTypeLabel
+import kotlin.time.Instant
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -132,7 +144,6 @@ private fun rememberPreviewGraph(): TerrazzoGraph {
       override val offlineCache: OfflineCache = OfflineCache(context)
       override val preferencesStore: PreferencesStore = PreferencesStore(context)
       override val pinStore: PinStore = PinStore(context)
-      override val wearWidgetSlotsStore: WearWidgetSlotsStore = WearWidgetSlotsStore(context)
       override val widgetStore: WidgetStore
         get() = error("widgetStore not wired in previews")
 
@@ -182,14 +193,16 @@ private fun rememberPreviewGraph(): TerrazzoGraph {
 private fun PhoneHost(
   style: ThemeStyle = ThemeStyle.TerrazzoHome,
   darkMode: DarkModePref = DarkModePref.Follow,
+  cardStyle: HaUberTheme = HaUberTheme.Classic,
   content: @Composable () -> Unit,
 ) {
   val graph = rememberPreviewGraph()
   // The app's image stack, as MainActivity provides it: its loader draws demo mode's stand-in
   // pictures (camera frames, image entities) for `demo://` URLs, which Coil's default can't fetch.
   val context = LocalContext.current.applicationContext
-  val imageStack = remember(context) { HaImageStack(context, graph.lanConnectionPolicy) }
-  TerrazzoTheme(style = style, darkMode = darkMode) {
+  val imageStack =
+    remember(context) { HaImageStack(context, graph.lanConnectionPolicy, graph.remoteUrlStore) }
+  TerrazzoTheme(style = style, darkMode = darkMode, cardStyle = cardStyle) {
     CompositionLocalProvider(
       LocalTerrazzoGraph provides graph,
       LocalHaImageStack provides imageStack,
@@ -256,18 +269,69 @@ fun Screen_CardActions_Placed() = PhoneHost {
   )
 }
 
+/** The card actions in every card style: the sheet skins itself in the card's style. */
+@Preview(name = "card actions · card style", showBackground = false, widthDp = PHONE_WIDTH_DP)
+@Composable
+fun Screen_CardActions_CardStyle(
+  @PreviewParameter(CardStyleProvider::class) cardStyle: HaUberTheme
+) =
+  PhoneHost(cardStyle = cardStyle) {
+    CardActionsPreview(
+      ee.schimke.terrazzo.dashboard.CardActionsState(
+        title = "Front door",
+        stateLabel = "Closed",
+        homeScreenCount = 1,
+        widgetsInUse = 5,
+        onWatch = true,
+        style = ee.schimke.terrazzo.dashboard.CardStyleLabel(cardStyle.displayName, custom = false),
+        homeAssistantUrl = "https://ha.example/history?entity_id=lock.front_door",
+        canMonitor = true,
+      )
+    )
+  }
+
+/** The card actions as the sheet draws them: skinned, on the skin's sheet colour. */
 @Composable
 private fun CardActionsPreview(state: ee.schimke.terrazzo.dashboard.CardActionsState) =
-  ee.schimke.terrazzo.dashboard.CardActions(
-    state = state,
-    onAddToHomeScreen = {},
-    onWatchChange = {},
-    onChangeStyle = {},
-    onShowHistory = {},
-    onOpenInHomeAssistant = {},
-    onOpenInStudio = {},
-    onMonitor = {},
-  )
+  ProvideScreenSkin {
+    val skin = currentScreenSkin()
+    Surface(shape = skin.sheetShape, color = skin.background) {
+      Column(Modifier.padding(top = 16.dp)) {
+        ee.schimke.terrazzo.dashboard.CardActions(
+          state = state,
+          onAddToHomeScreen = {},
+          onWatchChange = {},
+          onChangeStyle = {},
+          onShowHistory = {},
+          onOpenInHomeAssistant = {},
+          onOpenInStudio = {},
+          onMonitor = {},
+        )
+      }
+    }
+  }
+
+/**
+ * A card whose document threw while it played (RcErrorBoundary): the atomic-symbol warning takes
+ * its place, and the card beside it plays on.
+ */
+@Preview(name = "card disabled", showBackground = false, widthDp = PHONE_WIDTH_DP)
+@Composable
+fun Screen_CardDisabled() = PhoneHost {
+  androidx.compose.foundation.layout.Column(
+    androidx.compose.ui.Modifier.padding(16.dp),
+    verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+  ) {
+    ee.schimke.terrazzo.dashboard.StudioCardPreview(
+      demoSession(),
+      HISTORY_SAMPLE_CARD,
+      DemoData.snapshot(DEMO_CLOCK_MS),
+    )
+    ee.schimke.terrazzo.shared.RcDisabledWarning("IllegalStateException: measure failed")
+    // Safe mode, after a crash: a card waiting for its background check.
+    ee.schimke.terrazzo.shared.RcCheckingPlaceholder()
+  }
+}
 
 @Preview(name = "card style", showBackground = false, widthDp = PHONE_WIDTH_DP)
 @Composable
@@ -278,6 +342,71 @@ fun Screen_CardStyle() = PhoneHost {
     dashboardStyle = ee.schimke.ha.rc.components.HaUberTheme.Classic,
     onPick = { _, _ -> },
     onDone = {},
+  ) {
+    ee.schimke.terrazzo.dashboard.StudioCardPreview(
+      demoSession(),
+      HISTORY_SAMPLE_CARD,
+      DemoData.snapshot(DEMO_CLOCK_MS),
+    )
+  }
+}
+
+/**
+ * The card style sheet with the server's skins for the card listed: the library's, an installed
+ * device skin for the card's boiler (chosen for this card), a fork that isn't installed and one
+ * downloading.
+ */
+@Preview(name = "card style · skins", showBackground = false, widthDp = PHONE_WIDTH_DP)
+@Composable
+fun Screen_CardStyle_Skins() = PhoneHost {
+  val boilerDial = "user:boiler-dial"
+  ee.schimke.terrazzo.dashboard.CardStylePicker(
+    card = HISTORY_SAMPLE_CARD,
+    overrides =
+      ee.schimke.ha.client.design
+        .CardDesignOverrides()
+        .with(
+          ee.schimke.ha.client.design.CardDesignScope.Card,
+          HISTORY_SAMPLE_CARD,
+          ee.schimke.ha.client.design.CardDesignOverride(designId = boilerDial),
+        ),
+    dashboardStyle = ee.schimke.ha.rc.components.HaUberTheme.Classic,
+    onPick = { _, _ -> },
+    onDone = {},
+    designs =
+      listOf(
+        ee.schimke.ha.client.design.DesignOption(
+          designId = "library:tile",
+          title = "Built-in",
+          author = ee.schimke.ha.design.DesignEntry.BUILTIN_AUTHOR,
+          device = null,
+        ),
+        ee.schimke.ha.client.design.DesignOption(
+          designId = boilerDial,
+          title = "Boiler dial",
+          author = "github:octocat",
+          device = ee.schimke.ha.design.DeviceMatch(manufacturer = "Vaillant", model = "ecoTEC*"),
+        ),
+        ee.schimke.ha.client.design.DesignOption(
+          designId = "user:big-number",
+          title = "Big number",
+          author = "github:yschimke",
+          device = null,
+        ),
+        ee.schimke.ha.client.design.DesignOption(
+          designId = "user:arc-gauge",
+          title = "Arc gauge",
+          author = "github:octocat",
+          device = null,
+        ),
+      ),
+    skinState = {
+      when (it) {
+        "user:big-number" -> ee.schimke.terrazzo.dashboard.SkinState.NotInstalled
+        "user:arc-gauge" -> ee.schimke.terrazzo.dashboard.SkinState.Installing
+        else -> ee.schimke.terrazzo.dashboard.SkinState.Installed
+      }
+    },
   ) {
     ee.schimke.terrazzo.dashboard.StudioCardPreview(
       demoSession(),
@@ -304,7 +433,15 @@ fun Screen_Widgets() = PhoneHost { WidgetsContent(widgets = emptyList(), onBack 
 )
 @Composable
 fun Screen_Widgets_Installed() = PhoneHost {
-  WidgetsContent(widgets = listOf("Front door", "Kitchen", "Living room climate"), onBack = {})
+  WidgetsContent(
+    widgets =
+      listOf(
+        InstalledWidget("Front door", cardTypeLabel("tile")),
+        InstalledWidget("Kitchen", cardTypeLabel("light")),
+        InstalledWidget("Living room climate", cardTypeLabel("thermostat")),
+      ),
+    onBack = {},
+  )
 }
 
 @Preview(
@@ -438,8 +575,6 @@ private fun TopBarPreviewHost(
       title = {
         DashboardSwitcher(dashboards = dashboards, currentUrlPath = currentUrlPath, onSwitch = {})
       },
-      showAgentButton = writeMode,
-      onOpenAgent = {},
       notifications = emptyList(),
       onDismissNotification = {},
       onClearNotifications = {},
@@ -447,15 +582,14 @@ private fun TopBarPreviewHost(
       onRetryConnection = {},
       writeMode = writeMode,
       onWriteModeChange = {},
-      overflowMenu = { agentInOverflow ->
+      overflowMenu = {
         TopBarOverflowMenu(
           onOpenSettings = {},
           onOpenWidgets = {},
           onOpenPinned = {},
-          onOpenWearWidgets = null,
           onOpenLogs = null,
           onSignOut = {},
-          onOpenAgent = agentInOverflow,
+          onEditDashboard = {},
         )
       },
     )
@@ -493,7 +627,7 @@ fun Screen_DashboardTopBar_Paused() =
 fun Screen_DashboardTopBar_Failed() =
   TopBarPreviewHost(currentUrlPath = "printing", connectionStatus = ConnectionStatus.Failed)
 
-@Preview(name = "top bar · 412dp · switcher, agent inline", widthDp = PHONE_WIDTH_DP)
+@Preview(name = "top bar · 412dp · switcher", widthDp = PHONE_WIDTH_DP)
 @Composable
 fun Screen_DashboardTopBar_Phone() = TopBarPreviewHost(currentUrlPath = "printing")
 
@@ -558,6 +692,168 @@ fun Screen_CardHistory_ThemeStyle(@PreviewParameter(ThemeStyleProvider::class) s
       onShowActions = {},
       initialHistory = HISTORY_SAMPLE_SERIES,
     )
+  }
+
+/** The frozen end of the more-info previews' history window: 2026-10-24 09:25 UTC. */
+private const val MORE_INFO_NOW_MS = 1_792_833_900_000L
+
+private val MORE_INFO_POWER_STATE =
+  EntityState(
+    entityId = "sensor.p110_p3_current_consumption",
+    state = "128.6",
+    attributes =
+      buildJsonObject {
+        put("friendly_name", "Boilerroom - P110 (P3) Current consumption")
+        put("unit_of_measurement", "W")
+        put("state_class", "measurement")
+        put("device_class", "power")
+      },
+    lastChanged = Instant.fromEpochMilliseconds(MORE_INFO_NOW_MS - 40_000L),
+    lastUpdated = Instant.fromEpochMilliseconds(MORE_INFO_NOW_MS - 40_000L),
+  )
+
+/** A boiler plug's draw: long idle stretches near 2 W, burns at 110–140 W. */
+private val MORE_INFO_POWER_HISTORY: List<HistoryPoint> =
+  (96 downTo 1).map { k ->
+    val t = MORE_INFO_NOW_MS - k * 15 * 60_000L
+    val burning = (k / 6) % 3 == 0 || k < 5
+    val watts = if (burning) 110 + (k * 37 % 30) else 2 + (k % 3)
+    HistoryPoint(ts = Instant.fromEpochMilliseconds(t), state = "$watts")
+  }
+
+private val MORE_INFO_SWITCH_STATE =
+  EntityState(
+    entityId = "switch.p110_p3",
+    state = "on",
+    attributes =
+      buildJsonObject {
+        put("friendly_name", "Boiler")
+        put("device_class", "outlet")
+      },
+    lastChanged = Instant.fromEpochMilliseconds(MORE_INFO_NOW_MS - 72 * 60_000L),
+    lastUpdated = Instant.fromEpochMilliseconds(MORE_INFO_NOW_MS - 72 * 60_000L),
+  )
+
+/** The boiler switching on and off through the day, with a short unavailable gap. */
+private val MORE_INFO_SWITCH_HISTORY: List<HistoryPoint> =
+  listOf(
+      24 * 60 to "off",
+      21 * 60 to "on",
+      19 * 60 + 30 to "off",
+      16 * 60 to "unavailable",
+      15 * 60 + 40 to "off",
+      12 * 60 to "on",
+      10 * 60 + 15 to "off",
+      6 * 60 to "on",
+      5 * 60 to "off",
+      72 to "on",
+    )
+    .map { (minutesAgo, state) ->
+      HistoryPoint(Instant.fromEpochMilliseconds(MORE_INFO_NOW_MS - minutesAgo * 60_000L), state)
+    }
+
+/**
+ * The more-info sheet as it sits over a dashboard: the lower part of the screen, rounded on top,
+ * skinned in the host's card style.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MoreInfoSheetFrame(state: EntityState, history: List<HistoryPoint>) {
+  Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.32f))) {
+    ProvideScreenSkin {
+      val skin = currentScreenSkin()
+      Surface(
+        shape = skin.sheetShape,
+        color = skin.background,
+        modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().heightIn(max = 760.dp),
+      ) {
+        Column {
+          BottomSheetDefaults.DragHandle(Modifier.align(Alignment.CenterHorizontally))
+          EntityMoreInfo(
+            entityId = state.entityId,
+            state = state,
+            loadHistory = { history },
+            onOpenHistory = {},
+            initialHistory = history,
+            nowMs = { MORE_INFO_NOW_MS },
+          )
+        }
+      }
+    }
+  }
+}
+
+@Preview(
+  name = "more info · numeric",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_MoreInfo_Numeric() = PhoneHost {
+  MoreInfoSheetFrame(MORE_INFO_POWER_STATE, MORE_INFO_POWER_HISTORY)
+}
+
+@Preview(
+  name = "more info · on/off",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_MoreInfo_OnOff() = PhoneHost {
+  MoreInfoSheetFrame(MORE_INFO_SWITCH_STATE, MORE_INFO_SWITCH_HISTORY)
+}
+
+@Preview(
+  name = "more info · numeric · theme",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_MoreInfo_Numeric_ThemeStyle(
+  @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle
+) = PhoneHost(style = style) { MoreInfoSheetFrame(MORE_INFO_POWER_STATE, MORE_INFO_POWER_HISTORY) }
+
+@Preview(
+  name = "more info · numeric · card style",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_MoreInfo_Numeric_CardStyle(
+  @PreviewParameter(CardStyleProvider::class) cardStyle: HaUberTheme
+) =
+  PhoneHost(cardStyle = cardStyle) {
+    MoreInfoSheetFrame(MORE_INFO_POWER_STATE, MORE_INFO_POWER_HISTORY)
+  }
+
+@Preview(
+  name = "more info · on/off · card style",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_MoreInfo_OnOff_CardStyle(
+  @PreviewParameter(CardStyleProvider::class) cardStyle: HaUberTheme
+) =
+  PhoneHost(cardStyle = cardStyle) {
+    MoreInfoSheetFrame(MORE_INFO_SWITCH_STATE, MORE_INFO_SWITCH_HISTORY)
+  }
+
+@Preview(
+  name = "more info · on/off · dark",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_MoreInfo_OnOff_Dark() =
+  PhoneHost(darkMode = DarkModePref.Dark) {
+    MoreInfoSheetFrame(MORE_INFO_SWITCH_STATE, MORE_INFO_SWITCH_HISTORY)
   }
 
 /**
@@ -677,6 +973,43 @@ fun Screen_Settings_UsageSharing() = PhoneHost {
   }
 }
 
+/** Settings → Assistants (AppFunctions), off (its default) and on. */
+@Preview(name = "settings · assistants", showBackground = false, widthDp = PHONE_WIDTH_DP)
+@Composable
+fun Screen_Settings_Assistants() = PhoneHost {
+  Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    AssistantAccessSetting(checked = false, onCheckedChange = {})
+    AssistantAccessSetting(checked = true, onCheckedChange = {})
+  }
+}
+
+/**
+ * The theme settings under a card style that themes the whole app: the app draws in the style's
+ * palette and type, the palette options are disabled and say why, and a dark-only style (Trinitron)
+ * disables light / dark too.
+ */
+@Preview(
+  name = "settings · app theme",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_Settings_AppTheme(
+  @PreviewParameter(AppThemeStyleProvider::class) cardStyle: HaUberTheme
+) =
+  PhoneHost(cardStyle = cardStyle) {
+    Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
+      ee.schimke.terrazzo.ThemeSection(
+        selected = ee.schimke.terrazzo.core.prefs.ThemePref.TerrazzoHome,
+        darkMode = DarkModePref.Follow,
+        appTheme = cardStyle,
+        onSelectTheme = {},
+        onSelectDark = {},
+      )
+    }
+  }
+
 /**
  * The card style picker expanded: every style over a sample tile drawn in it, so a regression in
  * any one style's sample shows here. Settings itself opens it collapsed to the current style.
@@ -691,6 +1024,23 @@ fun Screen_Settings_UsageSharing() = PhoneHost {
 fun Screen_Settings_CardStyles() = PhoneHost {
   Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
     CardStyleSection(selected = CardStylePref.Classic, onSelect = {}, initiallyExpanded = true)
+  }
+}
+
+/**
+ * The card style picker previewed on a watch: the current style's sample as Small and Large Wear
+ * widgets on round and square watch screens.
+ */
+@Preview(
+  name = "settings · card styles on a watch",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_Settings_CardStylesOnWatch() = PhoneHost {
+  Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
+    CardStyleSection(selected = CardStylePref.Lcd, onSelect = {}, initiallyOnWatch = true)
   }
 }
 
@@ -865,51 +1215,6 @@ fun Screen_ManagePinned_Empty() = PhoneHost {
   ManagePinnedContent(items = emptyList(), onReorder = {}, onUnpin = {}, onBack = {})
 }
 
-private val SAMPLE_WEAR_CARDS =
-  listOf(
-    MobilePinnedCard(
-      "card-living",
-      SAMPLE_BASE_URL,
-      "lovelace-mobile",
-      PinnedCardData(type = "tile", title = "Living Room"),
-      0,
-    ),
-    MobilePinnedCard(
-      "card-garage",
-      SAMPLE_BASE_URL,
-      "lovelace-garage",
-      PinnedCardData(type = "cover", title = "Garage Door"),
-      1,
-    ),
-  )
-
-private val SAMPLE_WEAR_SLOTS =
-  listOf(
-    WearWidgetSlot(slotIndex = 0, cardKey = "card-living", size = SlotSize.Both),
-    WearWidgetSlot(slotIndex = 1, cardKey = "card-garage", size = SlotSize.SmallOnly),
-    WearWidgetSlot(slotIndex = 2, cardKey = ""),
-    WearWidgetSlot(slotIndex = 3, cardKey = ""),
-    WearWidgetSlot(slotIndex = 4, cardKey = ""),
-  )
-
-@Preview(
-  name = "wear widgets",
-  showBackground = false,
-  widthDp = PHONE_WIDTH_DP,
-  heightDp = PHONE_HEIGHT_DP,
-)
-@Composable
-fun Screen_WearWidgets() = PhoneHost {
-  WearWidgetsContent(
-    slots = SAMPLE_WEAR_SLOTS,
-    pinnedCards = SAMPLE_WEAR_CARDS,
-    onAssign = { _, _ -> },
-    onClear = {},
-    onSizeChange = { _, _ -> },
-    onBack = {},
-  )
-}
-
 private val SAMPLE_SYNC_STATS =
   SyncStats(
     datastoreWrites = 128,
@@ -930,6 +1235,21 @@ fun Screen_SyncDiagnostics() = PhoneHost {
 
 class ThemeStyleProvider : PreviewParameterProvider<ThemeStyle> {
   override val values: Sequence<ThemeStyle> = ThemeStyle.entries.asSequence()
+}
+
+/** The card styles that theme the whole app ([HaUberTheme.appTheme]). */
+class AppThemeStyleProvider : PreviewParameterProvider<HaUberTheme> {
+  private val styles = HaUberTheme.all.filter { it.appTheme }
+  override val values: Sequence<HaUberTheme> = styles.asSequence()
+
+  override fun getDisplayName(index: Int): String = styles[index].id
+}
+
+/** Every card style ([HaUberTheme]), for the skinned secondary screens. */
+class CardStyleProvider : PreviewParameterProvider<HaUberTheme> {
+  override val values: Sequence<HaUberTheme> = HaUberTheme.all.asSequence()
+
+  override fun getDisplayName(index: Int): String = HaUberTheme.all[index].id
 }
 
 // --- Play Store listing graphics ----------------------------------------
@@ -996,19 +1316,12 @@ fun Play_Phone_04_Picker() =
     )
   }
 
-/** Phone slot 5 — the watch's widget slots, set up from the phone. */
-@Preview(name = "play · phone · wear widgets", showBackground = false, device = PIXEL_2_DEVICE)
+/** Phone slot 5 — the cards the phone shows on the watch ("Cards on your watch"). */
+@Preview(name = "play · phone · watch cards", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
-fun Play_Phone_05_WearWidgets() =
+fun Play_Phone_05_WatchCards() =
   PhoneHost(darkMode = DarkModePref.Light) {
-    WearWidgetsContent(
-      slots = SAMPLE_WEAR_SLOTS,
-      pinnedCards = SAMPLE_WEAR_CARDS,
-      onAssign = { _, _ -> },
-      onClear = {},
-      onSizeChange = { _, _ -> },
-      onBack = {},
-    )
+    ManagePinnedContent(items = SAMPLE_PIN_ITEMS, onReorder = {}, onUnpin = {}, onBack = {})
   }
 
 /** 7-inch tablet slot 1 — home (dashboard view). */
@@ -1034,3 +1347,68 @@ fun Play_Tablet10_01_Home() =
       onCardLongPress = { _, _ -> },
     )
   }
+
+/** A small sections dashboard over the demo climate entities, for the dashboard editor previews. */
+private val EDITOR_SAMPLE_CONFIG =
+  kotlinx.serialization.json.Json.parseToJsonElement(
+      """
+      {"title":"Climate","views":[{"title":"Home","type":"sections","sections":[
+        {"type":"grid","cards":[
+          {"type":"heading","heading":"Rooms"},
+          {"type":"tile","entity":"sensor.downstairs_temperature","name":"Downstairs"},
+          {"type":"tile","entity":"sensor.upstairs_temperature","name":"Upstairs"},
+          {"type":"tile","entity":"sensor.kids_room_temperature","name":"Kids room",
+            "grid_options":{"columns":"full"}},
+          {"type":"tile","entity":"sensor.downstairs_humidity","name":"Humidity",
+            "grid_options":{"columns":9}}
+        ]},
+        {"type":"grid","cards":[
+          {"type":"heading","heading":"Outside"},
+          {"type":"weather-forecast","entity":"weather.forecast_home"}
+        ]}
+      ]}]}
+      """
+    )
+    .let { it as kotlinx.serialization.json.JsonObject }
+
+@Composable
+private fun EditorPreviewHost(selection: ee.schimke.ha.client.dashboard.CardAddress?) = PhoneHost {
+  val session = remember { demoSession() }
+  val edits = remember {
+    ee.schimke.ha.client.dashboard.DashboardEditSession(
+      EDITOR_SAMPLE_CONFIG,
+      readOnlyReason = null,
+    ) { _, _ ->
+    }
+  }
+  ee.schimke.terrazzo.dashboard.DashboardEditor(
+    session = session,
+    edits = edits,
+    title = "Climate",
+    snapshot = remember { session.dashboardNow("climate").second },
+    snackbars = remember { androidx.compose.material3.SnackbarHostState() },
+    onBack = {},
+    onSaved = {},
+    launch = {},
+    initialSelection = selection,
+  )
+}
+
+@Preview(
+  name = "dashboard editor",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_DashboardEditor() = EditorPreviewHost(selection = null)
+
+@Preview(
+  name = "dashboard editor · card selected",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_DashboardEditor_Selected() =
+  EditorPreviewHost(selection = ee.schimke.ha.client.dashboard.CardAddress(0, 0, 4))

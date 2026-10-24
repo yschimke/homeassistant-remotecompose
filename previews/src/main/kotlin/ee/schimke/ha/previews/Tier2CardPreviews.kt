@@ -555,6 +555,32 @@ fun Tier2_BambuPrintControl() = Tier2Host {
 @Composable
 fun Tier2_BambuAms() = Tier2Host { HaBambuAms(HaBambuAmsUiData("AMS", amsSlots), it) }
 
+/**
+ * Four slots with long material names: each ellipsizes within its share, none is pushed out
+ * (#1038).
+ */
+@Preview(
+  name = "tier2 bambu ams (long names)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 130,
+)
+@Composable
+fun Tier2_BambuAmsLongNames() = Tier2Host {
+  HaBambuAms(
+    HaBambuAmsUiData(
+      "AMS",
+      listOf(
+        HaBambuSpoolSlotUiData("A1", "Bambu TPU for AMS", Color(0xFFE53935), 80, active = true),
+        HaBambuSpoolSlotUiData("A2", "Generic PLA", Color(0xFF1E88E5), 45, active = false),
+        HaBambuSpoolSlotUiData("A3", "Bambu PLA Glow", Color(0xFFFFFFFF), 61, active = false),
+        HaBambuSpoolSlotUiData("A4", "Bambu PETG HF", Color(0xFF212121), 32, active = false),
+      ),
+    ),
+    it,
+  )
+}
+
 @Preview(name = "tier2 bambu spool", showBackground = false, widthDp = 381, heightDp = 96)
 @Composable
 fun Tier2_BambuSpool() = Tier2Host { HaBambuSpool(HaBambuSpoolDetailUiData(amsSlots.first()), it) }

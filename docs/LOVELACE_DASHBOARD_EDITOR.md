@@ -64,6 +64,33 @@ Release order: builder release → preview-server pin/release → harc design-se
 catalog/preview publication and host image deployment. Verify with the fixture on
 `https://ha.coo.ee/studio/dashboard`; do not use a person's existing dashboard for test writes.
 
+## Edit dashboards on Android
+
+The dashboard overflow menu has **Edit dashboard**: light edits on the phone, as planned in
+[`architecture/dashboard-editing.md`](architecture/dashboard-editing.md). The editor
+(`DashboardEditorScreen`) loads the dashboard's stored Lovelace config as a draft and draws it with
+the same live card previews the dashboard shows, on HA's 12-column section grid
+(`SectionCardGrid`): a card's size in the editor is its `grid_options`, the size it has wherever HA
+shows the dashboard. The dashboard view itself flows cards by harc's own design sizes
+(`SectionCardFlow`), so it can place cards differently.
+
+- Tap a card to select it; taps never reach the card's own actions in the editor. The toolbar moves
+  it earlier or later or to another section, steps its width through 3/6/9/12 columns, sets fixed
+  rows or `auto` height, swaps its template, or deletes it. Dragging the corner handle resizes in
+  whole columns and rows, and the cards after it re-flow. Sections move up and down.
+- **Template** offers, for a card showing one entity, the other card types harc draws for that
+  entity's domain (a sensor: tile, sensor, gauge, history graph, statistic). The swap keeps the
+  entity, name, icon, size, visibility and actions and drops settings of the old type.
+- Every edit is local and undoable. **Save** is conditional (`DashboardEditSession` over
+  `compareAndReplaceDashboardConfig`): if HA's copy changed since the draft was loaded the save is
+  refused and the draft kept. A saved change can be undone once. Read-only mode and demo sessions
+  edit but don't save.
+
+Adding cards, sections, views or dashboards and changing a card's settings are not on the phone.
+The editor ends with **Open in Home Assistant**, which opens the dashboard in HA's own editor, and,
+when HA's `get_config` doesn't list the `terrazzo` component, **Install with HACS** for the Terrazzo
+integration, where the panel editor and agent edit sessions will live.
+
 ## Plan cards on Android
 
 The Android dashboard has **Add placeholder card** above its HA cards. Give a planned card a title
@@ -82,4 +109,4 @@ as unresolved rather than invented. The prompt does not include the session's cr
 
 This is a handoff to a coding agent, not an in-app code executor. Install the agent's implementation
 and place its supported card through the usual dashboard workflow; then remove the brief manually.
-The web visual editor and the mobile **Edit with an agent** JSON-import flow remain separate.
+The web visual editor and the mobile dashboard editor above remain separate.

@@ -1,7 +1,7 @@
 # Adaptive Card Layouts
 
 > _Design philosophy for rendering Lovelace cards across the dashboard,
-> launcher widgets, and Wear slot widgets — preserving as much of the
+> launcher widgets, and Wear widgets — preserving as much of the
 > Home Assistant reference design as the canvas allows._
 
 ## The problem
@@ -33,7 +33,7 @@ A card is recorded in exactly one of two modes (`CardSizeMode`):
 
 - **`Fixed`** — the host fixes the canvas; the document adapts at
   playback by switching between recorded layout tiers. Used by the
-  launcher widget and the Wear slot widgets. Adaptation is encoded
+  launcher widget and the Wear widgets. Adaptation is encoded
   via `RemoteStateLayout` keyed off
   `RemoteFloatContext.componentWidth()` / `componentHeight()`, so the
   user resizing a widget swaps tiers without re-encoding the document.
@@ -418,6 +418,10 @@ The ladder rungs map onto these directly:
 shrinks. Never drop P1 — if the canvas can't carry the identity,
 switch to a smaller identity (icon-only chip) before stripping it.
 
+The order a converter drops parts in per surface — and when a name may
+go — is [card-information-hierarchy.md](card-information-hierarchy.md):
+a single-entity card keeps its name down to the Wear Small container.
+
 ### Per-card data inventory
 
 | Card | P1 (identity + key value) | P2 (name) | P3 (unit / secondary) | P4 (chrome) | P5 (bulk) |
@@ -471,22 +475,20 @@ else. Mapped onto the priority bands:
 - **P5** ✗ — no history, no forecast, no list payloads, no calendar
   events, no todo items.
 
-That's the only data a Wear slot widget sees today. Two consequences
+That's the only data a Wear widget sees today. Two consequences
 follow.
 
-**1. Cards whose identity needs P4 / P5 advertise the small container
-only on Wear.** Their P1 is bound to a payload the data layer can't
-carry, so at the large container they would render as their stripped
-tier with a lot of empty space. The set today is **`heading`,
-`markdown`, `clock`, `weather-forecast`, `logbook`, `history-graph`,
-`statistics-graph`, `todo-list`, `calendar`**. The list lives in
-[`WearCardDataTier`](../../wear/src/main/kotlin/ee/schimke/terrazzo/wear/widget/WearCardDataTier.kt);
-[`WearSlotsController`](../../wear/src/main/kotlin/ee/schimke/terrazzo/wear/sync/WearSlotsController.kt)
-gates the large slot service on this classifier so the system widget
-picker hides large for low-data cards regardless of the phone-side
-`SlotSizePref`. (If the user explicitly chose `LargeOnly`, the
-controller falls back to the small variant rather than hiding the slot
-entirely — they wanted _some_ surfacing.)
+**1. Cards whose identity needs P4 / P5 are small-container cards on
+Wear.** Their P1 is bound to a payload the data layer can't carry, so
+at the large container they would render as their stripped tier with a
+lot of empty space. The set today is **`heading`, `markdown`, `clock`,
+`weather-forecast`, `logbook`, `history-graph`, `statistics-graph`,
+`todo-list`, `calendar`**. The list lives in
+[`WearCardDataTier`](../../wear/src/main/kotlin/ee/schimke/terrazzo/wear/widget/WearCardDataTier.kt),
+which sets the preview convention below. It no longer hides a widget
+size: the phone assigns no widget slots, and the watch offers each
+synced card at both sizes, with the user choosing a widget's card on
+the watch.
 
 **2. Cards whose P5 is a list of additional _entities_ can fill the
 large container** by feeding more entities through the data-layer
@@ -542,6 +544,66 @@ constants scattered across helper files.
   shorthand for "this card's layout doesn't reflow vertically".
 - Conservative — pick the dimension at which the variant still looks
   composed, not the one at which it stops crashing.
+
+### Launcher widgets: decide at capture, in both directions
+
+A launcher widget is re-captured on every resize at its exact size
+(`LocalWidgetCaptureSizeDp`), so a card there is not limited to one
+playback gate (#224): it can read the size and pick its layout at
+capture. Use that to scale **down** without cutting the value short and
+to scale **up** without floating small content in a big cell. The rules,
+as the cards apply them today:
+
+- **The value is never ellipsized.** Shrink type before cutting it
+  (`21.…` is no value at all). One launcher column (`57 dp`) sets the
+  value at label size and drops the name and range first: the
+  measurement `Chip`, the gauge's `narrow` stacked tier, the heading
+  stepping down to a subtitle.
+- **Density before identity in a short cell.** A glance drops its
+  title when the title would leave no room for a row of cells; cells per
+  row come from the width (`60 dp` a cell), rows from the height, the
+  rest left for a bigger widget.
+- **Short is not small.** A wide one-row widget is a row: the reading
+  beside its name (`Compact` / `Standard`), not an empty panel.
+- **A roomy cell gets a hero** (`HaHeroScale.forCell`, from two
+  columns × two rows, `120 × 150 dp`): the same identity, name and value,
+  set larger and centred — the icon hero for a tile, entity or button,
+  the `Expanded` measurement for a sensor reading, the value promoted and
+  the line given the height for a sensor with history, the gauge's value
+  at the hero size. The scale steps with the cell's **short** side
+  (`< 200`, `< 260`, above), so a tall narrow widget stays as modest as a
+  square one of its width.
+- **The cell is the card.** A row-rooted tier insets itself as a card's
+  padding would, or its value meets the widget's edge.
+
+Off a launcher (Wear, a sized dashboard slot) the hero is not captured:
+those keep their playback gate. `LauncherGridSweepTest` renders every
+card it covers on Android's grid from `1×1` to `4×3` into
+`rc-converter/build/launcher-sweep/` for review.
+
+### Wear widgets: one capture, both hosts, both containers
+
+A Wear widget's template is captured once and played in every host's Small
+and Large container (Pixel's squircle, Galaxy's stadium), so a card can't
+choose its layout at capture: it gates on **height**, once (#224), at
+`WEAR_SMALL_MAX_HEIGHT_DP` (80 dp).
+
+- **Small** (about 44 dp of content) holds two short lines, never a title
+  over a list: `RemoteHaSummaryLine` (caption title over one value line) for
+  calendar, to-do and logbook; compact statistic and clock; glance cells as
+  icon over state. A single-entity card keeps its name
+  ([card-information-hierarchy.md](card-information-hierarchy.md)): tile
+  and button take the icon beside the name, entity the row, light the dial
+  beside the name over the value.
+- **Large** draws the card bigger, not the phone card in the middle: the wide
+  hero (`RemoteHaWideHero`, icon beside name over a large value) for tile,
+  entity and button; the standard measurement for a sensor; a 72 dp arc dial.
+  Size it for the **narrowest** host: Galaxy's stadium leaves about 160 dp.
+- **The container says the state** (`ContainerTint`): warm heating, cool
+  cooling, amber light on, red triggered or problem, green armed — the accent
+  a quarter of the way into the dark surface, so text keeps its contrast.
+- Review Wear widgets in the host previews (`WearWidgetHostsPreview`), which
+  draw each widget on both hosts as the watch frames it.
 
 ### Validation
 
@@ -650,9 +712,11 @@ The current state is the placeholder, not the philosophy:
    work, though: `min(w, h · minW/minH).ge(minW)` is one boolean off one
    float, true only when `w ≥ minW` **and** `h ≥ minH`, so it sidesteps
    the `.and()` / nested-state-layout collapse — `ButtonCardConverter`
-   (#352) uses it to send narrow-tall (`1×1`) and wide-short (Wear S)
+   (#352) uses it to send narrow-tall (`1×1`) and wide-short launcher
    cells to the icon-only tier while wide-and-tall cells keep the name,
-   something no single width- or height-only gate can do. Net:
+   something no single width- or height-only gate can do. (A Wear slot
+   takes a height gate instead: its Small container puts the name beside
+   the icon, card-information-hierarchy.md.) Net:
    `entities` uses the same `min` form on launchers (expanded rows only
    when every row fits) and a height gate on Wear; per-card ladders pick
    the one pinned axis (or the single-`min` 2-D form) that best
@@ -750,3 +814,25 @@ The current state is the placeholder, not the philosophy:
      **non-clickable glyph** — the tap target lives only in the Full
      tier. When adding a ladder to an interactive card, keep each
      `RemoteAction` in a single tier.
+10. **Nested gates play, within limits (`AndroidX` player, alpha22).** A
+    second gate inside a first one's branch now selects correctly at
+    playback: the arc-dial family's launcher ladder is Wide ↔ dial-filled ↔
+    Full on two nested `RemoteMinSizeGate`s, the gauge's stacked tier nests
+    a width breakpoint for its one-column form, and the alarm panel's narrow
+    tier nests two (`card-information-hierarchy.md`, launcher examples).
+    Three rules came out of the matrix: wrap every nested gate's branch in
+    `RemoteModifier.immediateSwap()` (`RemoteMinSizeGate`, unlike
+    `RemoteSizeBreakpoint`, does not, and the default cross-fade paints the
+    outer branch's other content over the selected one, #309); a launcher
+    capture (`LocalWidgetCaptureSizeDp`) resolves every gate at capture, so
+    nesting costs nothing there; and some documents carrying several tiers
+    stop drawing altogether (the red warning triangle) — a
+    `ConcurrentModificationException` in remote-core's
+    `RootLayoutComponent.performPartialLayoutPass` during the first measure.
+    Seen with a third button tier (icon row beside the chip), a second
+    statistic tier and a gate under the alarm panel's full card; not with
+    the dial, gauge or the alarm's narrow tier. Render the matrix after
+    adding a tier; where a document breaks, decide the extra tier only on a
+    launcher capture (the alarm panel's keypad check under its full card)
+    or reflow inside the existing tier (the statistic's trimmed padding, the
+    button's dense body).

@@ -115,43 +115,113 @@ the same `CachedHaSession` wrapper used by mobile.
 `runBlocking` read of `TokenVault.lastInstance()` (already does
 this for `lastViewedDashboardNow()`). If an instance is present:
 
-1. Construct a `CachedHaSession` immediately so the first
+1. Construct a cache-only `CachedHaSession` immediately so the first
    composition has a session to render against — backed by the
    on-disk cache, so the UI can paint without a network call.
-2. Asynchronously refresh the access token (`TokenVault.get` →
-   AppAuth refresh exchange). On success, the session upgrades to
-   live; on failure, the session remains cache-only and the UI
-   shows a small "offline" badge.
+2. As soon as the vault holds a refresh token for it, swap in a live
+   `CachedHaSession(LiveHaSession)` **without waiting for a token**: the
+   session mints its access token from the refresh token when it
+   connects. Offline, that connect fails and the session reads Failed;
+   `TerrazzoApp`'s reconnect loop retries with backoff (2 s doubling to
+   5 min), and at once whenever `LanConnectionPolicy.networkChanges`
+   reports the network coming back. A cold start offline therefore goes
+   live the moment it can, instead of staying on the cache for the life
+   of the process.
+3. Only Home Assistant refusing the refresh token (an OAuth
+   `invalid_grant` / `invalid_request` / `access_denied` body) flips the
+   session's `needsReauth`, which signs out. A bare 401 / 403 / 400 —
+   a reverse proxy, access gateway or captive portal — is transient, so
+   it never signs the user out or deletes their cached dashboards.
 
-This eliminates the prior "always go through discovery + login on
-cold start" path. Sign-out clears both the vault entry and the
-cache directory for that instance.
+## Live refresh
 
-## Image cache (follow-up)
+The open dashboard loads again every time its session connects
+(`DashboardViewScreen`): the first load of an offline start only reached
+the cache, and a reconnect may have missed both config edits and state
+changes. Between connects, pushed `state_changed` events update it in
+place, and are written back to its cached snapshot debounced (5 s), so
+the next offline start shows the values last on screen.
 
-RemoteCompose documents fetch their own raster bytes when a card
-contains an `entity_picture` URL or addon-rendered prebaked PNG.
-There is no native image-loading library (no Coil/Glide) in the
-project today. A future change should:
+A live read that comes back without the best-effort per-instance facts
+(device registry, unit system) keeps the cached ones rather than
+overwriting them with nothing.
 
-1. Add a Coil 3 OkHttp loader to `app/` and `wear/`, with a disk
-   cache rooted at `filesDir/terrazzo/images/`.
-2. Provide a `DiskCachedImageLoader` to RemoteCompose so card
-   documents resolve image URLs through the disk-cached pipeline
-   instead of bypassing it.
-3. Pre-warm the cache when a dashboard is first cached, so first
-   offline paint includes images.
+## Images
 
-Tracked here so it's not lost; not implemented in the current
-offline-first PR.
+Mobile: one Coil 3 `ImageLoader` with a disk cache in
+`noBackupFilesDir/terrazzo/images` (10–100 MB), moved out of `cacheDir`
+so the system doesn't clear the pictures an offline dashboard draws.
+Its OkHttp client attaches the session bearer by origin, then rewrites a
+LAN URL to the instance's `external_url` off the home network
+(`RemoteUrlInterceptor`).
+
+Coil 3's default cache strategy serves any disk hit without
+revalidating and ignores `Cache-Control`. For most of what Home
+Assistant serves that is right, and Home Assistant's own headers agree:
+
+| Endpoint | HA's headers | URL changes when the picture does? |
+| --- | --- | --- |
+| `/api/image/serve/<id>/<size>` (person and uploaded pictures) | `public, max-age` 31 days | yes (new id) |
+| `/api/media_player_proxy/<entity>?token=&cache=<hash>` | `max-age=3600` | yes (`cache` is the art's hash) |
+| `/local/…` (the `www` folder) | `public, max-age` 31 days | no: edits show after eviction, as in a browser for a month |
+| `/api/camera_proxy/<entity>?token=` | none | no, and the token rotates every 5 min (two valid at once) |
+| `/api/image_proxy/<entity>?token=` | none | no, same rotating token |
+
+The last two change in place, so `LiveImageCacheInterceptor` keys them
+on the URL without `token` (one disk entry per entity rather than one
+per rotation) and fetches them network first, falling back to the last
+frame on disk when the fetch fails (offline, an expired token) — or
+straight to disk when the device has no network.
+
+Everything else that can change at one URL — `/local/` files, other
+sites' pictures — keeps Coil's disk-first rule until its copy is a day
+old, then goes network first the same way, the old copy standing in
+when the fetch fails. Content-addressed pictures (`/api/image/serve/…`,
+media artwork with `cache=`) are never refetched.
+
+A dashboard camera gets a new frame only when Home Assistant rotates its
+token, every five minutes. A card's long-press sheet has a **Live
+camera** switch: for ten minutes, while the dashboard is in the
+foreground, its cameras' URLs gain a `terrazzo_frame` counter every two
+seconds (`LiveCameras`), each a network-first fetch; the disk key leaves
+the counter out, so it still holds one frame per camera. A small pulsing
+dot in the card's corner marks a live camera.
+
+Sign-out clears the image caches, memory and disk, with the instance's
+other cached data.
+
+After each live dashboard load, `HaImageStack.prewarm` fetches the
+`entity_picture`s of the dashboard's entities that aren't on disk yet,
+without a memory-cache entry, so cards not yet scrolled into view still
+have pictures on the next offline start.
+
+Wear: no network image loader. The phone syncs each card entity's
+picture over the Data Layer into `pictures/`, and both the widgets and
+the in-app cards resolve an `entity_picture` URL to the entity's synced
+copy on disk.
+
+## History
+
+The card-history screen's recorder read is cached per entity set and
+window (`history/<sha1>.json`, the 20 most recent kept): offline it
+draws the last chart read. Statistics and forecasts are not fetched by
+any card yet, so there is nothing to cache.
+
+## Wear widgets
+
+A widget renders from `WearOfflineStore` before anything else: each
+Data Layer read ahead of the render is capped at 2 s, and the direct
+Home Assistant read (for values the phone hasn't sent lately) runs after
+the render, re-rendering the widget only when it stored newer values.
 
 ## Error and refresh signals
 
-The cache exposes a `lastFetchedAtMs(instanceId, scope)` helper.
-The "showing cached data" pill in the UI uses this to render a
-human-readable freshness ("3 min ago"). The pill appears only when
-the most recent live fetch failed — successful fetches reset the
-fail flag and hide the pill.
+`HaSession.snapshotFetchedAtMs(urlPath)` is null after a live fetch and,
+after a fallback, says when the cached snapshot was fetched (the Wear
+sync uses it to date what it sends). When the session has failed, the
+phone's status strip reads "Offline · data from 5 min. ago", dated by
+the open dashboard's cached snapshot (live pushes are saved to it, so it
+is as old as the values on screen).
 
 ## Sign-out
 

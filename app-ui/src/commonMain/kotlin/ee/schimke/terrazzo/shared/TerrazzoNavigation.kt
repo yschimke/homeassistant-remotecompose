@@ -14,7 +14,6 @@ enum class AppScreen : NavKey {
   Settings,
   Widgets,
   Pinned,
-  WearWidgets,
   SyncDiagnostics,
   Logs,
   ChooseDashboards,

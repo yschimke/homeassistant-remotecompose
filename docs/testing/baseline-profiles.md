@@ -7,7 +7,7 @@ The profiles are produced, and the apps measured, by two `com.android.test` modu
 | Module | Target | Journeys |
 | --- | --- | --- |
 | `:app-benchmark` | `:app` | Cold start into demo mode, then switch to the 3D Printing, Meshcore and GitHub boards and fling each (the default Security board fits on one screen); then the 3D Printing board again with every section open, dragged |
-| `:wear-benchmark` | `:wear` | Cold start onto the top-level list, open Settings and fling it, open the dashboard library |
+| `:wear-benchmark` | `:wear` | Cold start onto the top-level list, seeded with a demo phone's pins (`terrazzo.test.seed_pins=true`), fling the pinned cards, open the pinned section, open Settings and fling it, open the dashboard library |
 
 Each module has a `BaselineProfileGenerator`, a `StartupBenchmark` (`StartupTimingMetric`, cold)
 and a `ScrollBenchmark` (`FrameTimingMetric`, i.e. jank), the latter two run with no compilation
@@ -22,6 +22,21 @@ the first time, the way back cards already played. Besides `FrameTimingMetric` i
 and `harc:decodeDocument` sections (`HarcTraceSections` in `rc-converter`), the main-thread work
 a card does as it appears. Run it alone with
 `-Pandroid.testInstrumentationRunnerArguments.class=ee.schimke.terrazzo.benchmark.DashboardScrollJankBenchmark`.
+
+Both modules have a `MemoryBenchmark` (`MemoryUsageMetric`: Java heap, anonymous and file-backed
+RSS), with the baseline profile and a fresh process each iteration. Its browse test (the phone's
+expanded 3D Printing board dragged down and back; the watch's pins and pinned section flung)
+reports the peak (`Max`) and where memory settles (`Last`). Its `trimInBackground` test browses
+the same way in its setup, then goes home, sends `am send-trim-memory <package> BACKGROUND` and
+waits for ART's background collection: `CardMemory` (in `rc-converter`, installed by both
+`Application`s) drops every rebuildable card cache at that level, so `Last` there should sit
+well below the browse's. While the UI is only hidden the document cache keeps its 32 most recent
+documents; Coil trims its own memory cache. Whether 32 is enough is measured in the field: on
+phone builds with the Firebase backend each document-cache trim logs a `card_cache_trim`
+Analytics event (`level`, `size_before`, `kept`, `keep_limit`, and for the trim before it
+`prev_level`, `prev_dropped` and `prev_rerequested`: how many of the documents it dropped were
+asked for again before this trim, each a re-encode). A high `prev_rerequested` after a
+`UI_HIDDEN` (20) trim means the app should keep more. The watch has no Analytics.
 
 ## Demo mode for the phone
 
@@ -75,4 +90,6 @@ Macrobenchmark refuses emulators; pass
 `-Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR` to run
 on one anyway. Emulator numbers only catch large regressions; compare timings on a physical
 device. Results (JSON and Perfetto traces) land in
-`*-benchmark/build/outputs/connected_android_test_additional_output/`.
+`*-benchmark/build/outputs/connected_android_test_additional_output/`. Past device numbers are in
+[scroll-benchmark-results.md](scroll-benchmark-results.md),
+[startup-results.md](startup-results.md) and [wear-results.md](wear-results.md).

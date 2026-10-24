@@ -60,9 +60,9 @@ jobs:
           cache-read-only: 'true'
       - name: Build existing renderers and run shared checks
         run: ./gradlew :app-ui:wasmJsBrowserDistribution :design-server:embedResources :ha-client:jvmTest :app-ui:jvmTest ktfmtCheck --stacktrace
-      - uses: actions/setup-python@v7.0.0
+      - uses: actions/setup-python@v7.1.0
         with:
-          python-version: '3.15.0'
+          python-version: '3.15.1'
       - name: Package locally served integration
         env:
           RELEASE_TAG: ${{ inputs.tag }}
@@ -101,6 +101,8 @@ jobs:
             exit 1
           fi
           node --test home-assistant/test/installed.test.mjs
+          node --test home-assistant/test/installed-mcp.test.mjs
+          node --test home-assistant/test/installed-edits.test.mjs
       - name: Home Assistant diagnostics
         if: always()
         run: docker logs ha-plugin 2>&1 | tail -100

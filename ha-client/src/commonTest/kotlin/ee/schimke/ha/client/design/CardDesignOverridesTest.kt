@@ -72,4 +72,38 @@ class CardDesignOverridesTest {
     assertEquals(CardDesignOverrides(), CardDesignOverrides.decode("not json"))
     assertEquals(CardDesignOverrides(), CardDesignOverrides.decode(null))
   }
+
+  @Test
+  fun aChosenDesignRoundTripsAndOldFilesStillLoad() {
+    val overrides =
+      CardDesignOverrides()
+        .with(CardDesignScope.Card, kitchen, CardDesignOverride(designId = "user:boiler-dial"))
+    assertEquals("user:boiler-dial", overrides.forCard(kitchen)?.designId)
+    assertNull(overrides.forCard(hall))
+    assertEquals(setOf("user:boiler-dial"), overrides.designIds)
+    assertEquals(overrides, CardDesignOverrides.decode(overrides.encode()))
+    // A file written before design ids: style and variant only.
+    val fingerprint = cardFingerprint(kitchen)
+    val old = """{"byCard":{"$fingerprint":{"cardStyle":"lcd","variant":"v"}}}"""
+    assertEquals(
+      CardDesignOverride(cardStyle = "lcd", variant = "v"),
+      CardDesignOverrides.decode(old).forCard(kitchen),
+    )
+    // Choosing Automatic again clears the design but keeps the style.
+    val styled =
+      CardDesignOverrides()
+        .with(
+          CardDesignScope.Card,
+          kitchen,
+          CardDesignOverride(cardStyle = "lcd", designId = "user:boiler-dial"),
+        )
+    val automatic =
+      styled.with(
+        CardDesignScope.Card,
+        kitchen,
+        styled.at(CardDesignScope.Card, kitchen)?.copy(designId = null),
+      )
+    assertEquals(CardDesignOverride(cardStyle = "lcd"), automatic.forCard(kitchen))
+    assertEquals(emptySet(), automatic.designIds)
+  }
 }

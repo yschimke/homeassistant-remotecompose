@@ -19,17 +19,138 @@ template:
         state: "47"
         device_class: humidity
 
+      # The gauge preview's fixture (previews Fixtures.battery).
+      - name: "Repeater battery"
+        unique_id: repeater_battery
+        unit_of_measurement: "%"
+        state: "62"
+        device_class: battery
+
+      # The humidifier preview's fixture (previews Fixtures.humidifier) reads 45 % against its
+      # 55 % target; the generic hygrostat below takes its current humidity from this sensor.
+      - name: "Bedroom humidity"
+        unique_id: bedroom_humidity
+        unit_of_measurement: "%"
+        state: "45"
+        device_class: humidity
+
       - name: "Phone battery"
         unique_id: phone_battery
         unit_of_measurement: "%"
         state: "62"
         device_class: battery
 
+  # The weather-forecast preview's fixture (previews Fixtures.weather). Onboarding's met.no entry
+  # also claims weather.forecast_home; the capture removes it, so this entity keeps the id.
+  - weather:
+      - name: "Forecast Home"
+        unique_id: forecast_home
+        condition_template: "partlycloudy"
+        temperature_template: "{{ 11.2 }}"
+        apparent_temperature_template: "{{ 9.8 }}"
+        temperature_unit: "°C"
+        humidity_template: "{{ 72 }}"
+        pressure_template: "{{ 1014 }}"
+        pressure_unit: "hPa"
+        wind_speed_template: "{{ 14 }}"
+        wind_speed_unit: "km/h"
+        uv_index_template: "{{ 3 }}"
+        cloud_coverage_template: "{{ 40 }}"
+        forecast_daily_template: >-
+          {{ [
+            {"datetime": "2026-05-07T00:00:00+00:00", "condition": "partlycloudy", "temperature": 13.4, "templow": 7.5},
+            {"datetime": "2026-05-08T00:00:00+00:00", "condition": "rainy", "temperature": 11.9, "templow": 6.8},
+            {"datetime": "2026-05-09T00:00:00+00:00", "condition": "cloudy", "temperature": 12.2, "templow": 8.1},
+            {"datetime": "2026-05-10T00:00:00+00:00", "condition": "sunny", "temperature": 16.7, "templow": 9.0},
+            {"datetime": "2026-05-11T00:00:00+00:00", "condition": "lightning-rainy", "temperature": 14.0, "templow": 7.3}
+          ] }}
+
+  - light:
+      - name: Kitchen
+        unique_id: kitchen_light
+        state: "{{ is_state('input_boolean.kitchen_light_proxy', 'on') }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target: { entity_id: input_boolean.kitchen_light_proxy }
+        turn_off:
+          action: input_boolean.turn_off
+          target: { entity_id: input_boolean.kitchen_light_proxy }
+      - name: Office lamp
+        unique_id: office_lamp
+        state: "{{ is_state('input_boolean.office_lamp_proxy', 'on') }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target: { entity_id: input_boolean.office_lamp_proxy }
+        turn_off:
+          action: input_boolean.turn_off
+          target: { entity_id: input_boolean.office_lamp_proxy }
+
+      # The light card preview's fixture (previews Fixtures.brightLight): on at 60%. A light of its
+      # own, so the tiles' plain on/off kitchen light keeps its references.
+      - name: Kitchen dimmer
+        unique_id: kitchen_dimmer
+        state: "{{ true }}"
+        level: "{{ 153 }}"
+        turn_on: [{ delay: 0 }]
+        turn_off: [{ delay: 0 }]
+        set_level: [{ delay: 0 }]
+
+  # The alarm-panel preview's fixture (previews Fixtures.alarmDisarmed).
+  - alarm_control_panel:
+      - name: House
+        unique_id: house_alarm
+        state: "disarmed"
+        code_arm_required: false
+        arm_away: [{ delay: 0 }]
+        arm_home: [{ delay: 0 }]
+        disarm: [{ delay: 0 }]
+
+  - switch:
+      - name: Coffee maker
+        unique_id: coffee_maker
+        state: "{{ is_state('input_boolean.coffee_maker_proxy', 'on') }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target: { entity_id: input_boolean.coffee_maker_proxy }
+        turn_off:
+          action: input_boolean.turn_off
+          target: { entity_id: input_boolean.coffee_maker_proxy }
+
   - binary_sensor:
       - name: "Front door motion"
         unique_id: front_door_motion
         state: "on"
         device_class: motion
+
+# The thermostat preview's fixture (previews Fixtures.thermostat): heating to 22 °C from the living
+# room's 21.4 °C. Template entities can't be climate entities; a generic thermostat over a proxy
+# heater is the closest deterministic one.
+climate:
+  - platform: generic_thermostat
+    name: Living Room
+    unique_id: living_room_thermostat
+    heater: input_boolean.living_room_heater_proxy
+    target_sensor: sensor.living_room
+    min_temp: 7
+    max_temp: 35
+    target_temp: 22
+    target_temp_step: 0.5
+    precision: 0.1
+    initial_hvac_mode: heat
+
+# The humidifier preview's fixture (previews Fixtures.humidifier): humidifying to 55 % from 45 %,
+# within 20–80 %. Template entities can't be humidifiers either; a generic hygrostat over a proxy
+# switch is the humidifier counterpart of the thermostat above.
+generic_hygrostat:
+  - name: Bedroom
+    unique_id: bedroom_humidifier
+    humidifier: input_boolean.bedroom_humidifier_proxy
+    target_sensor: sensor.bedroom_humidity
+    device_class: humidifier
+    min_humidity: 20
+    max_humidity: 80
+    target_humidity: 55
+    initial_state: true
 
 # ——— input_booleans used as proxies by the `light:` + `switch:` platforms ———
 input_boolean:
@@ -42,42 +163,18 @@ input_boolean:
   coffee_maker_proxy:
     name: Coffee maker
     initial: on
+  living_room_heater_proxy:
+    name: Living room heater
+    initial: on
+  # Off on purpose: the hygrostat reports `humidifying` only when it switches its humidifier on,
+  # and it does so at startup because 45 % is under the 55 % target.
+  bedroom_humidifier_proxy:
+    name: Bedroom humidifier
+    initial: off
 
 # ——— real light / switch entities ———
-light:
-  - platform: template
-    lights:
-      kitchen:
-        friendly_name: Kitchen
-        value_template: "{{ states('input_boolean.kitchen_light_proxy') }}"
-        turn_on:
-          service: input_boolean.turn_on
-          target: { entity_id: input_boolean.kitchen_light_proxy }
-        turn_off:
-          service: input_boolean.turn_off
-          target: { entity_id: input_boolean.kitchen_light_proxy }
-      office_lamp:
-        friendly_name: Office lamp
-        value_template: "{{ states('input_boolean.office_lamp_proxy') }}"
-        turn_on:
-          service: input_boolean.turn_on
-          target: { entity_id: input_boolean.office_lamp_proxy }
-        turn_off:
-          service: input_boolean.turn_off
-          target: { entity_id: input_boolean.office_lamp_proxy }
-
-switch:
-  - platform: template
-    switches:
-      coffee_maker:
-        friendly_name: Coffee maker
-        value_template: "{{ states('input_boolean.coffee_maker_proxy') }}"
-        turn_on:
-          service: input_boolean.turn_on
-          target: { entity_id: input_boolean.coffee_maker_proxy }
-        turn_off:
-          service: input_boolean.turn_off
-          target: { entity_id: input_boolean.coffee_maker_proxy }
+# Current Home Assistant takes template lights and switches only under the `template:` key; the
+# old `light:` / `switch:` platform form is rejected and left these entities missing.
 
 # ——— Demo cover + lock via the `demo` platform entities ———
 # HA's `demo` integration exposes `cover.living_room_window`,

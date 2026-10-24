@@ -1,7 +1,6 @@
 package ee.schimke.terrazzo.core.wearsync
 
 import ee.schimke.terrazzo.core.pin.PinStore
-import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.HaSession
 import kotlinx.coroutines.CoroutineScope
@@ -24,6 +23,12 @@ interface WearSyncManager {
    */
   fun clearWatchData() {}
 
+  /**
+   * Sign-out, before [session] closes: deletes the Home Assistant tokens the paired watches were
+   * given to read their cards' values themselves, so a watch that kept a copy can't use it.
+   */
+  suspend fun revokeWatchAccess(session: HaSession) {}
+
   val streamActive: StateFlow<Boolean>
 
   /**
@@ -41,7 +46,6 @@ interface WearSyncManager {
     scope: CoroutineScope,
     prefs: PreferencesStore,
     pinStore: PinStore,
-    slotsStore: WearWidgetSlotsStore,
     inputEditing: StateFlow<Boolean> = MutableStateFlow(false),
   )
 }
@@ -61,7 +65,6 @@ class NoOpWearSyncManager : WearSyncManager {
     scope: CoroutineScope,
     prefs: PreferencesStore,
     pinStore: PinStore,
-    slotsStore: WearWidgetSlotsStore,
     inputEditing: StateFlow<Boolean>,
   ) {}
 }

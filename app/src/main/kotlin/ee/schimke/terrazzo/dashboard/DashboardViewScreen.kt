@@ -3,6 +3,12 @@
 package ee.schimke.terrazzo.dashboard
 
 import android.util.Log
+import androidx.activity.compose.ReportDrawn
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,10 +24,12 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
@@ -51,6 +59,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -72,6 +81,7 @@ import ee.schimke.ha.model.SectionsGridLayout
 import ee.schimke.ha.model.TemplateBindings
 import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.CardDesignTemplates
+import ee.schimke.ha.rc.CardRebuilds
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.HarcTraceSections
 import ee.schimke.ha.rc.LocalCardCaptureEpoch
@@ -81,6 +91,7 @@ import ee.schimke.ha.rc.LovelaceSectionCardFlow
 import ee.schimke.ha.rc.LovelaceSectionsGrid
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
+import ee.schimke.ha.rc.StablePictures
 import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardIconSignature
@@ -107,6 +118,7 @@ import ee.schimke.terrazzo.core.pin.PinnedCardData
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.LatestWins
+import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.core.session.liveDashboardSnapshots
 import ee.schimke.terrazzo.feedback.rememberInteractionFeedback
 import ee.schimke.terrazzo.ui.LayoutConfig
@@ -114,8 +126,13 @@ import ee.schimke.terrazzo.ui.LocalCardStyle
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.LocalThemeStyle
 import ee.schimke.terrazzo.ui.rememberLayoutConfig
+import ee.schimke.terrazzo.widget.WidgetOpenRequests
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -170,16 +187,21 @@ fun DashboardViewScreen(
   onInitialViewShown: () -> Unit = {},
 ) {
   val cache = LocalTerrazzoGraph.current.offlineCache
-  // Seed from disk so the first composition shows the last-known
+  // Seed from the session (demo mode's boards need no round trip) or
+  // from disk, so the first composition shows the last-known
   // dashboard + snapshot instead of a spinner. The polling loop
   // refreshes in place; transient failures don't blank the UI
   // because Ready isn't reset on failure.
   var state by
     remember(session, urlPath) {
-      val cachedDashboard = cache.dashboard(session.baseUrl, urlPath)
-      val cachedSnapshot = cache.snapshot(session.baseUrl, urlPath) ?: HaSnapshot()
       val seed: DashboardState =
-        cachedDashboard?.let { DashboardState.Ready(it, cachedSnapshot) } ?: DashboardState.Loading
+        session.dashboardNow(urlPath)?.let { (dashboard, snapshot) ->
+          DashboardState.Ready(dashboard, snapshot)
+        }
+          ?: cache.dashboard(session.baseUrl, urlPath)?.let {
+            DashboardState.Ready(it, cache.snapshot(session.baseUrl, urlPath) ?: HaSnapshot())
+          }
+          ?: DashboardState.Loading
       mutableStateOf(seed)
     }
 
@@ -187,10 +209,9 @@ fun DashboardViewScreen(
   // started load may, so a slow poll landing after a tap's refetch can't bring stale values back.
   val loads = remember(session, urlPath) { LatestWins() }
   val logStore = LocalTerrazzoGraph.current.logStore
+  val imageStack = LocalHaImageStack.current
   LaunchedEffect(session, urlPath) {
-    // Poll when the session opts in (demo mode does, at ~1s) so
-    // values visibly change; a one-shot fetch otherwise.
-    while (true) {
+    suspend fun loadOnce() {
       try {
         loads.load({ session.loadDashboard(urlPath) }) { (dashboard, snapshot) ->
           state = DashboardState.Ready(dashboard, snapshot)
@@ -215,20 +236,48 @@ fun DashboardViewScreen(
           state = DashboardState.Error(t.message ?: t::class.simpleName ?: "error")
         }
       }
-      val interval = session.refreshIntervalMillis
-      if (interval == null) {
-        // Live sessions push HA's `state_changed` events instead of being polled: follow them,
-        // re-armed by the session on every reconnect, so cards update in place.
-        val ready = state as? DashboardState.Ready ?: break
-        session.liveDashboardSnapshots(ready.snapshot).collect { snapshot ->
-          // A pushed state is the newest there is: it supersedes any load still in flight.
-          loads.begin()
-          state = DashboardState.Ready(ready.dashboard, snapshot)
-          logStore.recordDashboardSnapshot(ready.dashboard, snapshot)
-        }
-        break
+    }
+
+    // Poll when the session opts in (demo mode does, at ~1s) so
+    // values visibly change.
+    val interval = session.refreshIntervalMillis
+    if (interval != null) {
+      while (true) {
+        loadOnce()
+        delay(interval)
       }
-      delay(interval)
+    }
+
+    // Live sessions push HA's `state_changed` events instead of being polled. The first load may
+    // only have reached the cache (an offline start, or the socket not up yet), so the dashboard
+    // loads again each time the session connects: its config as HA has it now, and any states
+    // missed while disconnected. Then pushed states follow until the next disconnect.
+    val connectedAtStart = session.connectionStatus.value == SessionConnectionStatus.Connected
+    loadOnce()
+    var loadedLive = connectedAtStart
+    // Pushed states also go to disk, debounced, so the next offline start shows the values last
+    // on screen rather than those of the last full load.
+    val toSave = MutableStateFlow<HaSnapshot?>(null)
+    launch(Dispatchers.IO) {
+      toSave.filterNotNull().collectLatest { snapshot ->
+        delay(LIVE_SNAPSHOT_SAVE_DEBOUNCE_MS)
+        cache.putSnapshot(session.baseUrl, urlPath, snapshot)
+      }
+    }
+    session.connectionStatus.collectLatest { status ->
+      if (status != SessionConnectionStatus.Connected) return@collectLatest
+      if (!loadedLive) loadOnce()
+      loadedLive = false
+      val ready = state as? DashboardState.Ready ?: return@collectLatest
+      // Pictures of cards not yet on screen, onto disk for the next offline start.
+      imageStack?.prewarm(dashboardPictureUrls(ready.dashboard, ready.snapshot))
+      session.liveDashboardSnapshots(ready.snapshot).collect { snapshot ->
+        // A pushed state is the newest there is: it supersedes any load still in flight.
+        loads.begin()
+        state = DashboardState.Ready(ready.dashboard, snapshot)
+        logStore.recordDashboardSnapshot(ready.dashboard, snapshot)
+        toSave.value = snapshot
+      }
     }
   }
 
@@ -282,6 +331,16 @@ fun DashboardViewScreen(
     }
     openInBrowser(context, resolveAgainstBase(session.baseUrl, path))
   }
+  // A launcher widget's more-info or navigate tap, opened as the card's own tap would be.
+  val widgetOpen by WidgetOpenRequests.requests.collectAsState()
+  LaunchedEffect(widgetOpen) {
+    val target = widgetOpen ?: return@LaunchedEffect
+    when (target) {
+      is WidgetOpenRequests.Target.MoreInfo -> moreInfoEntity = target.entityId
+      is WidgetOpenRequests.Target.Navigate -> navigate(target.path)
+    }
+    WidgetOpenRequests.consume(target)
+  }
   val actionDispatcher =
     rememberDashboardActionDispatcher(
       session,
@@ -319,12 +378,14 @@ fun DashboardViewScreen(
             .padding(24.dp)
         ) {
           Text("Failed: ${s.message}", style = MaterialTheme.typography.bodyMedium)
+          ReportDrawn()
         }
       is DashboardState.Ready ->
         DashboardList(
           dashboard = s.dashboard,
           placeholderSession = session,
-          snapshot = s.snapshot,
+          // Live cameras (from a card's long-press sheet) move on a frame every couple of seconds.
+          snapshot = rememberLiveCameraFrames(s.snapshot),
           baseUrl = session.baseUrl,
           dashboardUrlPath = urlPath ?: "",
           onCardLongPress = onCardLongPress,
@@ -343,6 +404,7 @@ fun DashboardViewScreen(
     EntityMoreInfoSheet(
       entityId = entityId,
       state = (state as? DashboardState.Ready)?.snapshot?.states?.get(entityId),
+      loadHistory = { hours -> session.fetchHistory(listOf(entityId), hours)[entityId].orEmpty() },
       onOpenHistory = historyUrl?.let { url -> { openInBrowser(context, url) } },
       onDismiss = { moreInfoEntity = null },
     )
@@ -372,6 +434,17 @@ private fun openInBrowser(context: android.content.Context, url: String?) {
 }
 
 private const val TAG = "DashboardView"
+
+/** The `entity_picture` of each entity [dashboard]'s cards name, where [snapshot] has one. */
+private fun dashboardPictureUrls(dashboard: Dashboard, snapshot: HaSnapshot): List<String> =
+  referencedEntities(dashboard).mapNotNull { id ->
+    (snapshot.states[id]?.attributes?.get("entity_picture") as? JsonPrimitive)
+      ?.contentOrNull
+      ?.takeIf { it.isNotBlank() }
+  }
+
+/** How long pushed states settle before the dashboard's cached snapshot is rewritten. */
+private const val LIVE_SNAPSHOT_SAVE_DEBOUNCE_MS = 5_000L
 
 private sealed interface DashboardState {
   data object Loading : DashboardState
@@ -503,6 +576,8 @@ private fun DashboardList(
           }
           return@BoxWithConstraints
         }
+    // The cards compose from here on: the launch is fully drawn (`timeToFullDisplayMs`).
+    ReportDrawn()
     val cardDesignOverrides by
       remember(context) { CardDesignOverrideStore.of(context).overrides }.collectAsState()
     // Every card's template resolved in the background, top to bottom, so a card scrolling on
@@ -1487,6 +1562,7 @@ private fun CardSlot(
           registry,
           cardStyle,
           variant = override?.variant,
+          designId = override?.designId,
         )
       }
     }
@@ -1534,20 +1610,71 @@ private fun CardSlot(
       liveBindings = dataSignature == null,
       bitmapLoader = bitmapLoader,
       template = template,
+      rebuildReason = ::cardSlotRebuildReason,
+      // A camera's new frame or rotated token loads in place: the capture names pictures by entity.
+      stablePictures = true,
     ) {
       ProvideCardRegistry(registry) {
         ProvideCardStyle(cardStyle, haTheme, dark) {
-          RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+          RenderChild(card, StablePictures.snapshot(card, snapshot), RemoteModifier.fillMaxWidth())
         }
       }
     }
     if (flashSignature != null) {
       CardChangeFlash(flashSignature)
     }
+    val cameras = remember(card) { cameraEntities(card) }
+    if (cameras.isNotEmpty()) {
+      val live by LiveCameras.live.collectAsState()
+      if (cameras.any { it in live }) LiveCameraDot(Modifier.align(Alignment.TopEnd))
+    }
   }
 }
 
-private data class CardSlotCacheKey(
+/**
+ * The mark of a card whose camera is live: a small dot in the corner, pulsing gently, so it reads
+ * as "updating" without drawing the eye away from the picture.
+ */
+@Composable
+private fun LiveCameraDot(modifier: Modifier = Modifier) {
+  val pulse = rememberInfiniteTransition(label = "live-camera")
+  val alpha by
+    pulse.animateFloat(
+      initialValue = 1f,
+      targetValue = 0.35f,
+      animationSpec = infiniteRepeatable(tween(durationMillis = 1_000), RepeatMode.Reverse),
+      label = "live-camera-alpha",
+    )
+  Box(
+    modifier
+      .padding(10.dp)
+      .size(8.dp)
+      .graphicsLayer { this.alpha = alpha }
+      .background(MaterialTheme.colorScheme.error, CircleShape)
+      .semantics { contentDescription = "Live camera" }
+  )
+}
+
+/**
+ * Which part of a card slot's key moved, for `CardRebuilds`: the live-data parts by name (a
+ * re-encode signature, a state glyph, a conditional, a Jinja template), else the user's own change
+ * (config, theme, a demo tap's epoch).
+ */
+internal fun cardSlotRebuildReason(previous: Any, next: Any): String {
+  val a = previous as? CardSlotCacheKey ?: return CardRebuilds.REASON_KEY
+  val b = next as? CardSlotCacheKey ?: return CardRebuilds.REASON_KEY
+  return when {
+    a.dataSignature != b.dataSignature -> "data"
+    a.iconSignature != b.iconSignature -> "icon"
+    a.visibilitySignature != b.visibilitySignature -> "visibility"
+    a.templateValues != b.templateValues -> "template"
+    a.captureEpoch != b.captureEpoch -> "epoch"
+    a.card != b.card -> "config"
+    else -> "theme"
+  }
+}
+
+internal data class CardSlotCacheKey(
   val card: CardConfig,
   val style: ThemeStyle,
   val dark: Boolean,

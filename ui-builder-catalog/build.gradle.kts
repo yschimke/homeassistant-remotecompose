@@ -46,7 +46,7 @@ dependencies {
   // The catalog's closed icon set resolves keys to the Material glyphs the cards draw.
   implementation(libs.compose.material.icons.extended)
   implementation(libs.kotlinx.serialization.json)
-  testImplementation("ee.schimke.composeai:preview-discovery:2.70.7")
+  testImplementation("ee.schimke.composeai:preview-discovery:2.73.2")
   testImplementation(libs.kotlin.test.junit)
   testImplementation("org.robolectric:robolectric:4.17")
   testImplementation(libs.compose.ui.test.junit4)
@@ -86,8 +86,7 @@ val stageAndroidCatalogBundle =
     into(layout.buildDirectory.dir("android-catalog-bundle"))
     from(layout.buildDirectory.dir("catalog/testDebugUnitTest"))
     from("fixtures") { into("designs") }
-    for (module in
-      listOf("ui-builder-catalog", "rc-components-ui", "rc-components", "rc-converter")) {
+    for (module in listOf("ui-builder-catalog", "rc-components-ui")) {
       val library = project(":$module")
       dependsOn(":$module:bundleDebugAar")
       from(
@@ -99,6 +98,22 @@ val stageAndroidCatalogBundle =
         rename { "$module.jar" }
       }
       from(library.layout.buildDirectory.file("outputs/aar/$module-debug.aar")) { into("android") }
+    }
+    // The cards (rc-components), their converters (rc-converter) and the players' error boundaries
+    // (rc-player-ui, RcErrorBoundary) are multiplatform libraries whose Android variant is
+    // `androidMain`, not `debug`.
+    for (module in listOf("rc-player-ui", "rc-components", "rc-converter")) {
+      val library = project(":$module")
+      dependsOn(":$module:bundleAndroidMainAar")
+      from(
+        library.layout.buildDirectory.file(
+          "intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar"
+        )
+      ) {
+        into("lib")
+        rename { "$module.jar" }
+      }
+      from(library.layout.buildDirectory.file("outputs/aar/$module.aar")) { into("android") }
     }
   }
 val packageAndroidCatalogBundle =

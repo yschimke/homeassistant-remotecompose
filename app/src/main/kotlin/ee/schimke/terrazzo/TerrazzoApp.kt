@@ -38,7 +38,7 @@ import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.dashboard.CardActionsSheet
 import ee.schimke.terrazzo.dashboard.CardHistoryScreen
 import ee.schimke.terrazzo.dashboard.CardStyleSheet
-import ee.schimke.terrazzo.dashboard.DashboardAgentScreen
+import ee.schimke.terrazzo.dashboard.DashboardEditorScreen
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
@@ -53,17 +53,17 @@ import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.shared.AppScreen
 import ee.schimke.terrazzo.shared.CardStudioScreen
 import ee.schimke.terrazzo.shared.TerrazzoNavigation
-import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
 import ee.schimke.terrazzo.wearsync.wearInstallPrompts
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
+import ee.schimke.terrazzo.widget.WidgetOpenRequests
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import ee.schimke.terrazzo.widget.WidgetsScreen
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Root composable. Two phases:
@@ -93,6 +93,7 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
   val context = LocalContext.current
   val widgetScheduler = remember(context) { WidgetRefreshScheduler(context.applicationContext) }
   val wearSync = graph.wearSyncManager
+  val imageStack = LocalHaImageStack.current
 
   // Sign out of [signedOut]'s instance: wipe its cached dashboards / snapshots and refresh-token
   // vault entry so the next user on this device can't read the previous account's data, and so
@@ -105,8 +106,14 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
       graph.preferencesStore.setDemoMode(false)
       graph.preferencesStore.clearLastViewedDashboard()
       graph.preferencesStore.clearSelectedDashboardUrls()
+      // While the session can still reach Home Assistant: the watches' own tokens.
+      if (signedOut != null && signedOut !is DemoHaSession) {
+        runCatching { wearSync.revokeWatchAccess(signedOut) }
+      }
       if (previousBaseUrl != null) {
         graph.offlineCache.clearInstance(previousBaseUrl)
+        // Its pictures too: camera frames and people outlive the dashboards otherwise.
+        runCatching { imageStack?.clearCaches() }
         runCatching { graph.tokenVault.clear(previousBaseUrl) }
         graph.remoteUrlStore.clear(previousBaseUrl)
       }
@@ -115,16 +122,6 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
     widgetScheduler.cancelDemo()
     if (session === signedOut) session = null
     lastError = reason
-  }
-
-  // The cold-start resume found the stored refresh token refused: no
-  // retry can recover, so send the user back to sign in rather than
-  // leave them on a cached dashboard that never connects. Only if they
-  // are still on that cache-only stub.
-  LaunchedEffect(sessionHolder.refusedSession) {
-    val refused = sessionHolder.refusedSession ?: return@LaunchedEffect
-    sessionHolder.refusedSession = null
-    if (session === refused) signOut(refused, SignedOutException())
   }
 
   // A live session whose refresh token HA refuses mid-flight (revoked, user deactivated) can't
@@ -159,7 +156,6 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
   // same-host fetches without rebuilding the loader. Demo / null
   // sessions clear the bearer (`accessToken=null`) — the
   // interceptor then passes requests through unmodified.
-  val imageStack = LocalHaImageStack.current
   // A live session re-mints its access token as connects need one, so re-read it on each
   // connection change rather than keeping the bearer it started with.
   LaunchedEffect(imageStack, session) {
@@ -278,6 +274,12 @@ private fun AuthenticatedShell(
   var screen by rememberSaveable { mutableStateOf(AppScreen.Dashboards) }
   var selectionEntry by rememberSaveable { mutableStateOf(SelectionEntry.Signin) }
 
+  // A widget's more-info or navigate tap opens on the dashboard, whichever screen was showing.
+  val widgetOpen by WidgetOpenRequests.requests.collectAsState()
+  LaunchedEffect(widgetOpen) {
+    if (widgetOpen != null && screen != AppScreen.ChooseDashboards) screen = AppScreen.Dashboards
+  }
+
   // Snapshot of the persisted selection at the moment the user
   // entered the ChooseDashboards screen. Captured here (rather than
   // observed via `collectAsState` inside the screen) because
@@ -344,7 +346,6 @@ private fun AuthenticatedShell(
           onOpenSettings = { screen = AppScreen.Settings },
           onOpenWidgets = { screen = AppScreen.Widgets },
           onOpenPinned = { screen = AppScreen.Pinned },
-          onOpenWearWidgets = { screen = AppScreen.WearWidgets },
           onOpenLogs = { screen = AppScreen.Logs },
           onSignOut = onSignOut,
         )
@@ -372,7 +373,6 @@ private fun AuthenticatedShell(
       }
       AppScreen.Widgets -> WidgetsScreen(onBack = { screen = AppScreen.Dashboards })
       AppScreen.Pinned -> ManagePinnedScreen(onBack = { screen = AppScreen.Dashboards })
-      AppScreen.WearWidgets -> WearWidgetsScreen(onBack = { screen = AppScreen.Dashboards })
       AppScreen.SyncDiagnostics -> {
         val streaming by graph.wearSyncManager.streamActive.collectAsState()
         ee.schimke.terrazzo.wearsync.SyncDiagnosticsScreen(
@@ -451,7 +451,6 @@ private fun DashboardsRoot(
   onOpenSettings: () -> Unit,
   onOpenWidgets: () -> Unit,
   onOpenPinned: () -> Unit,
-  onOpenWearWidgets: () -> Unit,
   onOpenLogs: () -> Unit,
   onSignOut: () -> Unit,
 ) {
@@ -459,10 +458,6 @@ private fun DashboardsRoot(
   val scope = rememberCoroutineScope()
   val dashboards by rememberSelectedDashboardListState(session)
   val context = LocalContext.current
-  val app = remember(context) { context.applicationContext as TerrazzoApplication }
-  // One eager StateFlow (and capability listener) per screen, not one per recomposition.
-  val wearWidgetsFlow = remember(app, scope) { app.wearCapabilityProbe.stateFlow(scope) }
-  val wearWidgetsSupported by wearWidgetsFlow.collectAsState()
   val logsViewEnabled by graph.preferencesStore.logsViewEnabled.collectAsState(initial = false)
 
   var opened by rememberSaveable { mutableStateOf(initialDashboardToOpened(initialDashboard)) }
@@ -488,8 +483,8 @@ private fun DashboardsRoot(
   var actionsTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
   var studioTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
   var styleTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
-  // "Edit with an agent" for the opened dashboard, and a count of saves that re-keys it to reload.
-  var agentOpen by remember { mutableStateOf(false) }
+  // The dashboard editor for the opened dashboard, and a count of saves that re-keys it to reload.
+  var editorOpen by remember { mutableStateOf(false) }
   var dashboardSaves by remember { mutableIntStateOf(0) }
   val studioServer by
     graph.preferencesStore.designServerUrl.collectAsState(initial = "https://ha.coo.ee/designs/v1")
@@ -505,29 +500,44 @@ private fun DashboardsRoot(
   }
 
   val readyDashboards = (dashboards as? DashboardListState.Ready)?.dashboards.orEmpty()
+
+  // A widget's more-info or navigate tap opens on a dashboard ([DashboardViewScreen] opens it):
+  // back out of the card screens over it, and off the picker onto the first dashboard.
+  val widgetOpen by WidgetOpenRequests.requests.collectAsState()
+  LaunchedEffect(widgetOpen, readyDashboards) {
+    if (widgetOpen == null) return@LaunchedEffect
+    historyTarget = null
+    actionsTarget = null
+    studioTarget = null
+    styleTarget = null
+    editorOpen = false
+    if (opened == DASHBOARD_UNSET) readyDashboards.firstOrNull()?.let { opened = it.urlPath }
+  }
   val sessionConnection by session.connectionStatus.collectAsState()
   val connectionStatus = sessionConnection.toUiConnectionStatus()
   val snackbars = remember { SnackbarHostState() }
-  // Offers the watch app on a connected watch without it, or a Wear widget once it's there.
-  val installOnWatch = wearInstallPrompts(snackbars, wearWidgetsSupported, onOpenWearWidgets)
+  // Offers the watch app on a connected watch without it.
+  val installOnWatch = wearInstallPrompts(snackbars)
   val lifecycleOwner = LocalLifecycleOwner.current
   val activity = LocalActivity.current
   val notifications by session.notifications.collectAsState()
 
-  // Snackbar pop on arrival: remember the ids we've already announced
-  // so the next composition (or a refetch that returns the same list)
-  // doesn't re-fire. The initial seed is what's already there when
-  // the user opens the app — we treat those as already-seen.
-  val seenIds = remember { mutableStateOf<Set<String>?>(null) }
-  LaunchedEffect(notifications) {
-    val previous = seenIds.value
+  // Snackbar pop on arrival: remember the ids we've already announced, per instance and across
+  // launches ([SeenNotifications]), so a refetch or the next cold start doesn't re-fire them. The
+  // first list an instance ever shows is taken as already there, as it was when the user opened the
+  // app; an empty one seeds nothing, since it is usually a list that hasn't been fetched yet.
+  val seenNotifications = remember(context) { SeenNotifications(context) }
+  LaunchedEffect(notifications, session.baseUrl) {
+    val current = notifications.map { it.notificationId }.toSet()
+    val previous = seenNotifications.seen(session.baseUrl)
     if (previous == null) {
-      seenIds.value = notifications.map { it.notificationId }.toSet()
+      if (current.isNotEmpty()) seenNotifications.record(session.baseUrl, current)
       return@LaunchedEffect
     }
-    val current = notifications.map { it.notificationId }.toSet()
     val fresh = notifications.filter { it.notificationId !in previous }
-    seenIds.value = current
+    if (current.isNotEmpty() || fresh.isNotEmpty()) {
+      seenNotifications.record(session.baseUrl, current)
+    }
     fresh.forEach { n ->
       val label = n.title?.takeIf { it.isNotBlank() } ?: n.notificationId
       snackbars.showSnackbar(label)
@@ -551,6 +561,7 @@ private fun DashboardsRoot(
   //    a neutral "Disconnected" instead. A configuration change
   //    (rotation) isn't leaving: the session outlives the Activity in
   //    [SessionHolder], so keep the socket for the recreated one.
+  val networkChanges = graph.lanConnectionPolicy.networkChanges
   LaunchedEffect(session, lifecycleOwner) {
     lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
       val backoff = ReconnectBackoff()
@@ -564,7 +575,9 @@ private fun DashboardsRoot(
         while (true) {
           session.connectionStatus.first { it == SessionConnectionStatus.Failed }
           if (session.needsReauth.value) awaitCancellation()
-          delay(backoff.next())
+          // Wait out the backoff, or less: the network coming back (or changing) retries at once.
+          val network = networkChanges.value
+          withTimeoutOrNull(backoff.next()) { networkChanges.first { it != network } }
           if (session.connectionStatus.value == SessionConnectionStatus.Failed) {
             runCatching { session.connect() }
           }
@@ -600,15 +613,35 @@ private fun DashboardsRoot(
     }
   }
 
+  // Offline, the dashboard shows its cached snapshot (live pushes are saved to it as they come):
+  // the strip says how old that is. Demo boards are never cached.
+  val cachedDataAtMs =
+    remember(connectionStatus, openedValue, session) {
+      if (
+        connectionStatus != ConnectionStatus.Failed ||
+          openedValue == DASHBOARD_UNSET ||
+          session is DemoHaSession
+      ) {
+        null
+      } else {
+        graph.offlineCache.snapshotSavedAtMs(session.baseUrl, openedValue)
+      }
+    }
+
   val historyOverlay = historyTarget
   val studioOverlay = studioTarget
-  if (agentOpen && openedValue != DASHBOARD_UNSET) {
-    BackHandler { agentOpen = false }
-    DashboardAgentScreen(
+  if (editorOpen && openedValue != DASHBOARD_UNSET) {
+    DashboardEditorScreen(
       session = session,
       urlPath = openedValue,
       title = readyDashboards.firstOrNull { it.urlPath == openedValue }?.title,
-      onBack = { agentOpen = false },
+      saveBlockedReason =
+        when {
+          session is DemoHaSession -> "Demo dashboards can't be saved."
+          readOnly -> "Turn on write mode to save."
+          else -> null
+        },
+      onBack = { editorOpen = false },
       onSaved = { dashboardSaves++ },
     )
   } else if (studioOverlay != null) {
@@ -656,8 +689,6 @@ private fun DashboardsRoot(
               )
             }
           },
-          showAgentButton = openedValue != DASHBOARD_UNSET && !readOnly,
-          onOpenAgent = { agentOpen = true },
           notifications = notifications,
           onDismissNotification = { n ->
             scope.launch { runCatching { session.dismissNotification(n.notificationId) } }
@@ -667,18 +698,19 @@ private fun DashboardsRoot(
           },
           connectionStatus = connectionStatus,
           onRetryConnection = onRetryConnection,
+          cachedDataAtMs = cachedDataAtMs,
           writeMode = writeMode,
           onWriteModeChange = { graph.sessionWriteMode.set(it) },
-          overflowMenu = { agentInOverflow ->
+          overflowMenu = {
             TopBarOverflowMenu(
               onOpenSettings = onOpenSettings,
               onOpenWidgets = onOpenWidgets,
               onOpenPinned = onOpenPinned,
-              onOpenWearWidgets = if (wearWidgetsSupported) onOpenWearWidgets else null,
               onOpenLogs = if (logsViewEnabled) onOpenLogs else null,
               onSignOut = onSignOut,
-              onOpenAgent = agentInOverflow,
               onInstallOnWatch = installOnWatch,
+              onEditDashboard =
+                if (openedValue != DASHBOARD_UNSET) ({ editorOpen = true }) else null,
             )
           },
         )

@@ -1,4 +1,4 @@
-val wearVersionName = "0.1.56" // x-release-please-version
+val wearVersionName = "0.1.63" // x-release-please-version
 
 // Keep Wear version tied to release-please while reserving a unique code
 // lane for the shared package id (`ee.schimke.harc`): same base as `:app`
@@ -65,6 +65,9 @@ android {
     versionCode = wearVersionCode
     versionName = wearVersionName
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    // Gates WearMainActivity's seeded-pins launch extra: on for debug and the variants
+    // `:wear-benchmark` drives (see `androidComponents` below), off for anything shipped.
+    buildConfigField("boolean", "TEST_HOOKS", "false")
   }
   // Same upload key as `:app` — Wear ships inside the phone's Play listing
   // (`ee.schimke.harc`), so both must be signed by one key lineage.
@@ -80,13 +83,22 @@ android {
     }
   }
   buildTypes {
+    getByName("debug") { buildConfigField("boolean", "TEST_HOOKS", "true") }
     getByName("release") {
+      // Unshrunk, the APK carries ~83 MB of dex: on a Pixel Watch a cold start spent hundreds of
+      // milliseconds faulting it in (see docs/testing/wear-results.md).
+      isMinifyEnabled = true
+      isShrinkResources = true
+      proguardFiles(file("proguard-rules.pro"))
       if (releaseKeystorePath != null) {
         signingConfig = signingConfigs.getByName("release")
       }
     }
   }
-  buildFeatures { compose = true }
+  buildFeatures {
+    compose = true
+    buildConfig = true
+  }
   compileOptions {
     sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
     targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
@@ -121,6 +133,15 @@ tasks
   .matching { it.name.endsWith("UnitTest") }
   .configureEach {
     inputs.files(robolectricSdk)
+    // The checked-in card designs WearCardDesignParityTest draws.
+    inputs.dir(rootProject.layout.projectDirectory.dir("card-designs/ui-builder/designs"))
+    systemProperty(
+      "cardDesignsDir",
+      rootProject.layout.projectDirectory
+        .dir("card-designs/ui-builder/designs")
+        .asFile
+        .absolutePath,
+    )
     dependsOn(prepareRobolectricSdk)
     systemProperty("robolectric.offline", "true")
     systemProperty(
@@ -128,6 +149,20 @@ tasks
       layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
     )
   }
+
+// The baseline profile plugin derives `nonMinifiedRelease` and `benchmarkRelease` from `release`;
+// both are non-debuggable, so the seeded-pins hatch needs its own switch.
+androidComponents {
+  onVariants(selector().withBuildType("nonMinifiedRelease")) { it.enableTestHooks() }
+  onVariants(selector().withBuildType("benchmarkRelease")) { it.enableTestHooks() }
+}
+
+fun com.android.build.api.variant.ApplicationVariant.enableTestHooks() {
+  buildConfigFields?.put(
+    "TEST_HOOKS",
+    com.android.build.api.variant.BuildConfigField("boolean", "true", "baseline profile variant"),
+  )
+}
 
 baselineProfile {
   // Generated on a Wear emulator (`.github/workflows/baseline-profiles.yml`) and checked in
@@ -148,11 +183,15 @@ play {
 }
 
 dependencies {
+  implementation(platform(libs.rc.players.bom))
   implementation(project(":app-ui"))
   implementation(project(":rc-components"))
   implementation(project(":rc-converter"))
+  implementation(project(":rc-player-ui"))
   implementation(project(":rc-card-shutter"))
   implementation(project(":ha-model"))
+  // Reads the cards' values from Home Assistant when the phone has none to send.
+  implementation(project(":ha-client"))
 
   implementation(platform(libs.compose.bom))
   implementation(libs.compose.ui)
@@ -222,6 +261,9 @@ dependencies {
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation("org.robolectric:robolectric:4.17")
+  // Card designs authored in UI Builder, drawn by the catalog's components: the Wear surface is
+  // checked against them (WearCardDesignParityTest).
+  testImplementation(project(":ha-cards-catalog"))
   testImplementation(libs.compose.ui.test.junit4)
   robolectricSdk(libs.robolectric.sdk35)
 

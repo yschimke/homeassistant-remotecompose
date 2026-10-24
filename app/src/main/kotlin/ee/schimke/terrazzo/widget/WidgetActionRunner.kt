@@ -25,7 +25,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  *
  * The write rule: only an action the app put on the widget's own `PendingIntent`
  * ([trustedWidgetAction]), only for a widget that is still installed, only on that widget's own
- * server, and only a toggle or a service call. A pinned widget is a deliberate control, so the
+ * server, and only a toggle, a service call or an alarm panel's arm, disarm and code taps (paired
+ * into one call by [WidgetAlarmPairing]). A pinned widget is a deliberate control, so the
  * dashboard's read-only lock (a guard against stray taps while scrolling) doesn't apply.
  *
  * The connection is the app's own login. While the app runs with a connected session for the
@@ -38,10 +39,29 @@ internal object WidgetActionRunner {
 
   /** Whether [action] is one this runner performs; the rest only open the app or are logged. */
   fun runs(action: HaAction): Boolean =
-    action is HaAction.Toggle || (action is HaAction.CallService && action.entityId != null)
+    action is HaAction.Toggle ||
+      action is HaAction.CallService ||
+      action is HaAction.AlarmIntent ||
+      action is HaAction.AlarmPin ||
+      action is HaAction.AlarmKey
 
+  private val alarmPairing = WidgetAlarmPairing()
+
+  /**
+   * The call [tapped] makes for [widgetId], or null while an alarm tap waits for its pair (the
+   * button and the code are one service call). The receiver calls this as each broadcast arrives,
+   * before any work goes off its thread, so a code's keys pair in the order they were pressed.
+   */
+  fun prepare(widgetId: Int, tapped: HaAction): HaAction? =
+    when {
+      !runs(tapped) -> null
+      tapped is HaAction.CallService || tapped is HaAction.Toggle -> tapped
+      else -> alarmPairing.accept(widgetId, tapped)
+    }
+
+  /** Performs [action], a call [prepare] returned. */
   suspend fun run(context: Context, widgetId: Int, action: HaAction) {
-    if (!runs(action)) return
+    if (action !is HaAction.CallService && action !is HaAction.Toggle) return
     val graph = context.terrazzoGraph()
     val entry = graph.widgetStore.get(widgetId)
     if (entry == null) {
@@ -52,17 +72,19 @@ internal object WidgetActionRunner {
       Log.i(TAG, "Demo widget $widgetId: no Home Assistant to call")
       return
     }
-    val entityId = actionEntityId(action) ?: return
+    // A call that names no entity (a script, a scene) has nothing to show until it runs.
+    val entityId = actionEntityId(action)
     // Only the tapped entity changes, atomically with any live refresh writing the same snapshot.
     var before: String? = null
     var expected: String? = null
     val shown =
-      graph.offlineCache.updateLatestState(entry.baseUrl, entityId) { current ->
-        optimisticState(action, current)?.also {
-          before = current
-          expected = it
+      entityId != null &&
+        graph.offlineCache.updateLatestState(entry.baseUrl, entityId) { current ->
+          optimisticState(action, current)?.also {
+            before = current
+            expected = it
+          }
         }
-      }
     if (shown) redraw(context, widgetId)
     val result = runCatching { withTimeout(CALL_TIMEOUT_MS) { call(graph, entry.baseUrl, action) } }
     result.exceptionOrNull()?.let { failure ->
@@ -73,6 +95,7 @@ internal object WidgetActionRunner {
       if (
         shown &&
           original != null &&
+          entityId != null &&
           graph.offlineCache.updateLatestState(entry.baseUrl, entityId) { current ->
             original.takeIf { current == expected }
           }
@@ -93,11 +116,14 @@ internal object WidgetActionRunner {
     appSession = session
   }
 
+  /** The app's own session for [baseUrl] while it is connected, else null. */
+  fun connectedAppSession(baseUrl: String): HaSession? = appSession?.takeIf {
+    it.baseUrl == baseUrl && it.connectionStatus.value == SessionConnectionStatus.Connected
+  }
+
   private suspend fun call(graph: TerrazzoGraph, baseUrl: String, action: HaAction) {
     val started = System.nanoTime()
-    val live = appSession?.takeIf {
-      it.baseUrl == baseUrl && it.connectionStatus.value == SessionConnectionStatus.Connected
-    }
+    val live = connectedAppSession(baseUrl)
     // The app's socket may be closing as it is picked (the app just went to the background). A call
     // it refused before sending goes on a new session; any other failure isn't retried, since Home
     // Assistant may have run it with only the reply lost, and a second toggle would undo the first.
@@ -138,7 +164,7 @@ internal object WidgetActionRunner {
       send(session, action)
     } catch (failure: Throwable) {
       // A refused token is dropped, so the next tap mints a fresh one.
-      tokensMutex.withLock { tokens.remove(baseUrl) }
+      forgetAccessToken(baseUrl)
       throw failure
     } finally {
       // A timed-out call is cancelled; the socket must still close, so close outside that.
@@ -157,28 +183,33 @@ internal object WidgetActionRunner {
   /**
    * An access token for [baseUrl]: the cached one until shortly before it expires, and only while
    * the vault still holds the refresh token it came from. Signing out clears the vault, and signing
-   * in again (another user too) stores a new one, so a widget never acts on an old login.
+   * in again (another user too) stores a new one, so a widget never acts on an old login. Shared
+   * with the AppFunctions service, which acts from the background the same way.
    */
-  private suspend fun accessToken(graph: TerrazzoGraph, baseUrl: String): String =
-    tokensMutex.withLock {
-      val refresh = graph.tokenVault.get(baseUrl)
-      if (refresh == null) {
-        tokens.remove(baseUrl)
-        error("Signed out of $baseUrl: no refresh token")
-      }
-      val now = System.currentTimeMillis()
-      tokens[baseUrl]
-        ?.takeIf { it.refreshToken == refresh && it.until > now }
-        ?.let {
-          return@withLock it.accessToken
-        }
-      val minted = graph.authService.refreshAccessToken(baseUrl, refresh)
-      val stored = minted.refreshToken?.also { graph.tokenVault.put(baseUrl, it) } ?: refresh
-      val token = minted.accessToken ?: error("Token refresh for $baseUrl returned no token")
-      val lifetimeMs = (minted.expiresInSeconds ?: DEFAULT_TOKEN_LIFETIME_S) * 1000
-      tokens[baseUrl] = CachedToken(stored, token, now + lifetimeMs - TOKEN_EXPIRY_MARGIN_MS)
-      token
+  suspend fun accessToken(graph: TerrazzoGraph, baseUrl: String): String = tokensMutex.withLock {
+    val refresh = graph.tokenVault.get(baseUrl)
+    if (refresh == null) {
+      tokens.remove(baseUrl)
+      error("Signed out of $baseUrl: no refresh token")
     }
+    val now = System.currentTimeMillis()
+    tokens[baseUrl]
+      ?.takeIf { it.refreshToken == refresh && it.until > now }
+      ?.let {
+        return@withLock it.accessToken
+      }
+    val minted = graph.authService.refreshAccessToken(baseUrl, refresh)
+    val stored = minted.refreshToken?.also { graph.tokenVault.put(baseUrl, it) } ?: refresh
+    val token = minted.accessToken ?: error("Token refresh for $baseUrl returned no token")
+    val lifetimeMs = (minted.expiresInSeconds ?: DEFAULT_TOKEN_LIFETIME_S) * 1000
+    tokens[baseUrl] = CachedToken(stored, token, now + lifetimeMs - TOKEN_EXPIRY_MARGIN_MS)
+    token
+  }
+
+  /** Drops [baseUrl]'s cached access token after a failed call, so the next one mints afresh. */
+  suspend fun forgetAccessToken(baseUrl: String) {
+    tokensMutex.withLock { tokens.remove(baseUrl) }
+  }
 
   private fun redraw(context: Context, widgetId: Int) {
     context.sendBroadcast(

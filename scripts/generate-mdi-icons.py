@@ -4,9 +4,9 @@ Generate rc-converter's Material Design Icons subset and Home Assistant's icon t
 
 Writes two Kotlin files (checked in, so builds stay offline and reproducible):
 
-* rc-converter/src/main/kotlin/ee/schimke/ha/rc/icons/mdi/MdiPaths.kt
+* rc-converter/src/commonMain/kotlin/ee/schimke/ha/rc/icons/mdi/MdiPaths.kt
     SVG path data for the bundled MDI subset.
-* rc-converter/src/main/kotlin/ee/schimke/ha/rc/icons/HaIconTables.kt
+* rc-converter/src/commonMain/kotlin/ee/schimke/ha/rc/icons/HaIconTables.kt
     Home Assistant's default entity icons: core's `entity_component` icon tables (per domain
     and device class, with their state and range variants) and the frontend's domain
     fallbacks. `HaIconMap` resolves entities through them.
@@ -42,8 +42,8 @@ HA_FRONTEND_TAG = "20260930.4"
 ROOT = Path(__file__).resolve().parent.parent
 MODULE = ROOT / "rc-converter"
 CURATED = MODULE / "icons" / "mdi-curated.txt"
-PATHS_OUT = MODULE / "src/main/kotlin/ee/schimke/ha/rc/icons/mdi/MdiPaths.kt"
-TABLES_OUT = MODULE / "src/main/kotlin/ee/schimke/ha/rc/icons/HaIconTables.kt"
+PATHS_OUT = MODULE / "src/commonMain/kotlin/ee/schimke/ha/rc/icons/mdi/MdiPaths.kt"
+TABLES_OUT = MODULE / "src/commonMain/kotlin/ee/schimke/ha/rc/icons/HaIconTables.kt"
 
 # Files whose `mdi:` references must all resolve (the demo dashboards and the fixtures the
 # previews and tests render). HaIconMapTest checks the dashboards against the generated set.
@@ -51,7 +51,7 @@ FIXTURE_GLOBS = [
     "terrazzo-core/src/androidMain/resources/dashboards/**/*.json",
     "previews/src/main/kotlin/**/*.kt",
     "card-designs/src/**/*.kt",
-    "rc-converter/src/test/**/*.kt",
+    "rc-converter/src/androidHostTest/**/*.kt",
 ]
 
 # Domains with an icons.json that aren't entity platforms (helpers and integrations that own

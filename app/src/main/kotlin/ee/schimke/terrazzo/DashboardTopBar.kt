@@ -1,19 +1,19 @@
 package ee.schimke.terrazzo
 
+import android.text.format.DateUtils
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,7 +27,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,17 +44,7 @@ import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.HaNotification
 import ee.schimke.terrazzo.notifications.NotificationBell
 import ee.schimke.terrazzo.ui.statusColors
-
-/**
- * Below this window width the agent action moves from an icon into the overflow menu.
- *
- * The title is the most important thing in the bar, so the actions are budgeted against it. Every
- * action is a 48 dp touch target and the bar adds a 16 dp title inset and a 4 dp trailing pad, so
- * the title gets `width − 20 dp − 48 dp × actions`. With all five actions (agent, notifications,
- * connection, write mode, overflow) that is 150 dp at 410 dp; dropping the agent icon gives a 360
- * dp phone 148 dp — room for "3D Printing" in `titleLarge` (≈107 dp) plus its chevron.
- */
-private val AgentActionMinWidth = 410.dp
+import kotlinx.coroutines.delay
 
 /**
  * The dashboard view's top app bar: a [TopAppBar] plus, when the connection is not healthy, a slim
@@ -57,16 +52,17 @@ private val AgentActionMinWidth = 410.dp
  * slot, usually a `DashboardSwitcher`) keeps the bar's width on a ~360 dp phone:
  * - the connection state is always a small coloured dot; the strip says the same thing in words (or
  *   shows progress) for every state but Connected, without taking width from the title;
- * - write mode is an [IconToggleButton] (pencil when writable, lock when read-only);
- * - the agent action folds into the overflow menu below [AgentActionMinWidth]. [overflowMenu]
- *   receives the agent callback to render as a menu item then, or `null` when the icon is shown.
+ * - write mode is an [IconToggleButton] (pencil when writable, lock when read-only).
+ *
+ * Every action is a 48 dp touch target and the bar adds a 16 dp title inset and a 4 dp trailing
+ * pad, so the title gets `width − 20 dp − 48 dp × actions`: 148 dp on a 360 dp phone with the four
+ * actions (notifications, connection, write mode, overflow) — room for "3D Printing" in
+ * `titleLarge` (≈107 dp) plus its chevron.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DashboardTopBar(
   title: @Composable () -> Unit,
-  showAgentButton: Boolean,
-  onOpenAgent: () -> Unit,
   notifications: List<HaNotification>,
   onDismissNotification: (HaNotification) -> Unit,
   onClearNotifications: () -> Unit,
@@ -74,32 +70,35 @@ internal fun DashboardTopBar(
   onRetryConnection: () -> Unit,
   writeMode: Boolean,
   onWriteModeChange: (Boolean) -> Unit,
-  overflowMenu: @Composable (onOpenAgent: (() -> Unit)?) -> Unit,
+  overflowMenu: @Composable () -> Unit,
   modifier: Modifier = Modifier,
+  cachedDataAtMs: Long? = null,
 ) {
-  BoxWithConstraints(modifier = modifier) {
-    val agentInline = showAgentButton && maxWidth >= AgentActionMinWidth
-    val agentInOverflow = showAgentButton && !agentInline
+  Box(modifier = modifier) {
     Column(Modifier.fillMaxWidth()) {
-      TopAppBar(
-        title = title,
-        actions = {
-          if (agentInline) {
-            IconButton(onClick = onOpenAgent) {
-              Icon(Icons.Filled.AutoAwesome, contentDescription = "Edit with an agent")
-            }
-          }
-          NotificationBell(
-            notifications = notifications,
-            onDismiss = onDismissNotification,
-            onClearAll = onClearNotifications,
-          )
-          ConnectionStatusDot(status = connectionStatus, onClick = onRetryConnection)
-          WriteModeToggle(writeMode = writeMode, onWriteModeChange = onWriteModeChange)
-          overflowMenu(if (agentInOverflow) onOpenAgent else null)
-        },
+      Box {
+        TopAppBar(
+          title = title,
+          actions = {
+            NotificationBell(
+              notifications = notifications,
+              onDismiss = onDismissNotification,
+              onClearAll = onClearNotifications,
+            )
+            ConnectionStatusDot(status = connectionStatus, onClick = onRetryConnection)
+            WriteModeToggle(writeMode = writeMode, onWriteModeChange = onWriteModeChange)
+            overflowMenu()
+          },
+        )
+        // Over the bar's bottom edge rather than under it: connecting is momentary, and a line that
+        // took its own height moved the whole dashboard down and back on every launch.
+        ConnectingLine(connectionStatus, Modifier.align(Alignment.BottomCenter))
+      }
+      ConnectionStatusStrip(
+        status = connectionStatus,
+        onRetry = onRetryConnection,
+        cachedDataAtMs = cachedDataAtMs,
       )
-      ConnectionStatusStrip(status = connectionStatus, onRetry = onRetryConnection)
     }
   }
 }
@@ -124,9 +123,36 @@ internal fun ConnectionStatusDot(
 }
 
 /**
+ * The progress line while connecting, once it has lasted [CONNECTING_LINE_DELAY_MS]: a launch's
+ * connect usually finishes sooner, and a line that flashed on and off for it was noise.
+ */
+@Composable
+private fun ConnectingLine(status: ConnectionStatus, modifier: Modifier = Modifier) {
+  var shown by remember { mutableStateOf(false) }
+  LaunchedEffect(status) {
+    shown = false
+    if (status == ConnectionStatus.Connecting) {
+      delay(CONNECTING_LINE_DELAY_MS)
+      shown = true
+    }
+  }
+  if (shown) {
+    LinearProgressIndicator(
+      color = status.statusColor(),
+      modifier =
+        modifier.fillMaxWidth().semantics { contentDescription = "Connecting to Home Assistant" },
+    )
+  }
+}
+
+private const val CONNECTING_LINE_DELAY_MS = 500L
+
+/**
  * The text (or progress) half of the connection state, shown full-width under the app bar so it
  * never competes with the title: an indeterminate progress line while connecting, and a one-line
- * tonal banner that retries on tap while paused or failed. Nothing while connected.
+ * tonal banner that retries on tap while paused or failed. Nothing while connected. When failed, it
+ * also says how old the cached data on screen is ([cachedDataAtMs]), so values from an offline
+ * start aren't taken for current ones.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -134,15 +160,12 @@ internal fun ConnectionStatusStrip(
   status: ConnectionStatus,
   onRetry: () -> Unit,
   modifier: Modifier = Modifier,
+  cachedDataAtMs: Long? = null,
 ) {
   when (status) {
-    ConnectionStatus.Connected -> Unit
-    ConnectionStatus.Connecting ->
-      LinearProgressIndicator(
-        color = status.statusColor(),
-        modifier =
-          modifier.fillMaxWidth().semantics { contentDescription = "Connecting to Home Assistant" },
-      )
+    // Drawn over the app bar by [ConnectingLine], taking no space.
+    ConnectionStatus.Connected,
+    ConnectionStatus.Connecting -> Unit
     ConnectionStatus.Disconnected,
     ConnectionStatus.Failed -> {
       val failed = status == ConnectionStatus.Failed
@@ -153,16 +176,24 @@ internal fun ConnectionStatusStrip(
         contentColor = if (failed) colors.onErrorContainer else colors.onSurfaceVariant,
         modifier = modifier.fillMaxWidth(),
       ) {
+        // At least the touch target's height: a clickable Surface keeps 48 dp of touch target
+        // around a shorter banner as transparent space, a band above and below it.
         Row(
           verticalAlignment = Alignment.CenterVertically,
           modifier =
-            Modifier.windowInsetsPadding(
+            Modifier.heightIn(min = 48.dp)
+              .windowInsetsPadding(
                 TopAppBarDefaults.windowInsets.only(WindowInsetsSides.Horizontal)
               )
               .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
           Text(
-            text = if (failed) "Can't reach Home Assistant" else "Paused — tap to reconnect",
+            text =
+              when {
+                !failed -> "Paused — tap to reconnect"
+                cachedDataAtMs == null -> "Can't reach Home Assistant"
+                else -> "Offline · data from ${cachedDataAge(cachedDataAtMs)}"
+              },
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -219,3 +250,13 @@ private fun ConnectionStatus.statusColor(): Color =
     ConnectionStatus.Disconnected -> statusColors.neutral
     ConnectionStatus.Failed -> statusColors.error
   }
+
+/** "5 min. ago" and the like: how old cached data is, to the minute. */
+private fun cachedDataAge(savedAtMs: Long): String =
+  DateUtils.getRelativeTimeSpanString(
+      savedAtMs,
+      System.currentTimeMillis(),
+      DateUtils.MINUTE_IN_MILLIS,
+      DateUtils.FORMAT_ABBREV_RELATIVE,
+    )
+    .toString()

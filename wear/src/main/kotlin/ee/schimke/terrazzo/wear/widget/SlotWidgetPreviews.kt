@@ -11,20 +11,23 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.glance.wear.GlanceWearWidget
 import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetData
 import androidx.glance.wear.WearWidgetDocument
+import androidx.glance.wear.color
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
-import androidx.glance.wear.core.WidgetInstanceId
+import androidx.glance.wear.tooling.preview.WearWidgetHostsPreview
 import androidx.glance.wear.tooling.preview.WearWidgetPreviewSnapshot
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.ContainerTint
 import ee.schimke.ha.rc.FixedHaClock
 import ee.schimke.ha.rc.LocalHaClock
 import ee.schimke.ha.rc.ProvideCardRegistry
@@ -61,7 +64,6 @@ import kotlinx.serialization.json.put
 internal class PreviewSlotWidget(
   private val card: CardConfig?,
   private val snapshot: HaSnapshot,
-  private val slotIndex: Int = 0,
 ) : GlanceWearWidget() {
   override suspend fun provideWidgetData(
     context: Context,
@@ -69,14 +71,15 @@ internal class PreviewSlotWidget(
   ): WearWidgetData {
     val theme = haThemeFor(ThemeStyle.TerrazzoHome, darkTheme = true)
     val registry = defaultRegistry().withEnhancedShutter()
+    val tint = ContainerTint.argbFor(card, snapshot)
     return WearWidgetDocument(
-      background = WearWidgetBrush.Companion,
+      background = tint?.let { WearWidgetBrush.color(Color(it).rc) } ?: WearWidgetBrush.Companion,
       content = {
         CompositionLocalProvider(LocalHaClock provides WearWidgetPreviewClock) {
           ProvideCardRegistry(registry) {
             ProvideHaTheme(theme) {
               ProvideCardSizeMode(CardSizeMode.Fixed) {
-                // Match the runtime SlotWidget: the wear
+                // Match the runtime CardWidget: the wear
                 // container already paints the shape + brush, so
                 // skip the per-card chrome to avoid doubling up;
                 // and tell HA card components to use the
@@ -89,7 +92,7 @@ internal class PreviewSlotWidget(
                       if (card != null) {
                         RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
                       } else {
-                        PreviewEmptyPlaceholder(slotIndex, theme)
+                        PreviewEmptyPlaceholder(theme)
                       }
                     }
                   }
@@ -106,9 +109,9 @@ internal class PreviewSlotWidget(
 private val WearWidgetPreviewClock = FixedHaClock(Instant.parse("2026-05-05T10:08:00Z"))
 
 @Composable
-private fun PreviewEmptyPlaceholder(slotIndex: Int, theme: HaTheme) {
+private fun PreviewEmptyPlaceholder(theme: HaTheme) {
   RemoteBox(modifier = RemoteModifier.fillMaxWidth()) {
-    RemoteText(text = "Slot ${slotIndex + 1}".rs, color = theme.primaryText.rc)
+    RemoteText(text = CHOOSE_CARD_PLACEHOLDER.rs, color = theme.primaryText.rc)
   }
 }
 
@@ -152,12 +155,14 @@ internal fun entityState(
   friendlyName: String? = null,
   unit: String? = null,
   deviceClass: String? = null,
+  extra: Map<String, JsonPrimitive> = emptyMap(),
 ): EntityState {
   val attrs =
     buildMap<String, JsonPrimitive> {
       friendlyName?.let { put("friendly_name", JsonPrimitive(it)) }
       unit?.let { put("unit_of_measurement", JsonPrimitive(it)) }
       deviceClass?.let { put("device_class", JsonPrimitive(it)) }
+      putAll(extra)
     }
   return EntityState(entityId = id, state = state, attributes = JsonObject(attrs))
 }
@@ -168,14 +173,20 @@ internal fun SlotWidgetPreviewFixture(
   snapshot: HaSnapshot,
   container: ContainerType,
 ) {
-  val params = if (container == ContainerType.Large) largePreviewParams else smallPreviewParams
-  WearWidgetPreviewSnapshot(
+  // As the watch's widget host draws it, once per host: Pixel's squircle and Samsung's stadium.
+  WearWidgetHostsPreview(
     widget = PreviewSlotWidget(card = card, snapshot = snapshot),
-    params = params,
+    containerType =
+      if (container == ContainerType.Large) ContainerInfo.CONTAINER_TYPE_LARGE
+      else ContainerInfo.CONTAINER_TYPE_SMALL,
   )
 }
 
-@Preview(name = "Slot widget — tile (small)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "Slot widget — tile (small)",
+)
 @Composable
 fun SlotWidgetPreview_TileSmall() {
   val card =
@@ -196,7 +207,11 @@ fun SlotWidgetPreview_TileSmall() {
   SlotWidgetPreviewFixture(card, snapshot, ContainerType.Small)
 }
 
-@Preview(name = "Slot widget — entities (large)")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "Slot widget — entities (large)",
+)
 @Composable
 fun SlotWidgetPreview_EntitiesLarge() {
   val card =
@@ -229,30 +244,16 @@ fun SlotWidgetPreview_EntitiesLarge() {
   SlotWidgetPreviewFixture(card, snapshot, ContainerType.Large)
 }
 
-@Preview(name = "Slot widget — empty placeholder")
+@Preview(
+  widthDp = WIDGET_HOSTS_WIDTH_DP,
+  heightDp = WIDGET_HOSTS_HEIGHT_DP,
+  name = "Card widget — no card chosen",
+)
 @Composable
 fun SlotWidgetPreview_Empty() {
   SlotWidgetPreviewFixture(card = null, snapshot = HaSnapshot(), container = ContainerType.Small)
 }
 
-private val largePreviewParams =
-  WearWidgetParams(
-    instanceId = WidgetInstanceId("widgets", 1),
-    containerType = ContainerInfo.CONTAINER_TYPE_LARGE,
-    widthDp = 200f,
-    heightDp = 112f,
-    verticalPaddingDp = 8f,
-    horizontalPaddingDp = 8f,
-    cornerRadiusDp = 26f,
-  )
-
-private val smallPreviewParams =
-  WearWidgetParams(
-    instanceId = WidgetInstanceId("widgets", 2),
-    containerType = ContainerInfo.CONTAINER_TYPE_SMALL,
-    widthDp = 200f,
-    heightDp = 60f,
-    verticalPaddingDp = 8f,
-    horizontalPaddingDp = 8f,
-    cornerRadiusDp = 26f,
-  )
+/** A widget preview's size: [WearWidgetHostsPreview]'s two watch screens side by side, labelled. */
+internal const val WIDGET_HOSTS_WIDTH_DP = 478
+internal const val WIDGET_HOSTS_HEIGHT_DP = 262

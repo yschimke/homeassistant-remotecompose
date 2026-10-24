@@ -1,0 +1,350 @@
+@file:Suppress("RestrictedApi")
+
+package ee.schimke.ha.rc
+
+import android.content.Context
+import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
+import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.profile.Profile
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import ee.schimke.composeai.rcplayer.edit.RcHardcodedValue
+import ee.schimke.composeai.rcplayer.edit.bitmapUrls
+import ee.schimke.composeai.rcplayer.edit.collapseConstantStateLayouts
+import ee.schimke.composeai.rcplayer.edit.embedBitmapUrls
+import ee.schimke.composeai.rcplayer.edit.hardcodeNamedValues
+import ee.schimke.composeai.rcplayer.edit.optimize
+import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
+import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
+import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.DesignSurface
+import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.HaTheme
+import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.components.LocalTemplateBindings
+import ee.schimke.ha.rc.components.ProvideCardChrome
+import ee.schimke.ha.rc.components.ProvideCardStyle
+import ee.schimke.ha.rc.components.ProvideExpressionNames
+import ee.schimke.ha.rc.components.ProvideHaUberStyle
+import ee.schimke.ha.rc.components.ProvideSystemHaTheme
+import ee.schimke.ha.rc.components.ProvideWidgetActionRegistry
+import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
+import ee.schimke.ha.rc.components.TemplateBindings
+import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.ha.rc.components.WidgetActionRegistry
+import ee.schimke.ha.rc.components.WidgetOpenApp
+import ee.schimke.ha.rc.components.cardPalette
+import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.runBlocking
+
+/**
+ * How a launcher widget draws its card: in [cardStyle], on the launcher's own colours, or with
+ * [appPalette] on the app's.
+ * - **System colours** ([appPalette] null, the default): the style's instruments, type, shapes and
+ *   ink on the colours the launcher resolves ([ProvideHaUberStyle]). Classic is the cards' own look
+ *   on them, as widgets always were. An inked style (LCD, Nixie) still prints in its ink.
+ * - **App style**: the style with its palette, as on the dashboard. Classic draws in the app's
+ *   palette ([appPalette]); every other style brings its own.
+ */
+data class LauncherLook(
+  val cardStyle: HaUberTheme = HaUberTheme.Classic,
+  val appPalette: ThemeStyle? = null,
+) {
+  /** What this look adds to a launcher key's theme; empty for the classic system look. */
+  internal val keySuffix: String
+    get() =
+      if (cardStyle.id == HaUberTheme.Classic.id && appPalette == null) ""
+      else ":${cardStyle.id}" + (appPalette?.let { ":$APP_PREFIX${it.name}" } ?: "")
+
+  /** [content] in this look, inside the launcher's theme. */
+  @Composable
+  internal fun Provide(dark: Boolean, content: @Composable () -> Unit) {
+    when {
+      appPalette != null ->
+        ProvideCardStyle(cardStyle, cardStyle.cardPalette(appPalette, dark), dark, content)
+      cardStyle.id == HaUberTheme.Classic.id -> content()
+      else -> ProvideHaUberStyle(cardStyle, dark, content)
+    }
+  }
+
+  companion object {
+    private const val APP_PREFIX = "app-"
+
+    /** The look a launcher key's theme parts after the mode name ([keySuffix], split). */
+    internal fun parse(parts: List<String>): LauncherLook {
+      val style = parts.getOrNull(0)?.let(HaUberTheme::byId) ?: HaUberTheme.Classic
+      val palette =
+        parts.getOrNull(1)?.removePrefix(APP_PREFIX)?.let { name ->
+          ThemeStyle.entries.firstOrNull { it.name == name }
+        }
+      return LauncherLook(style, palette)
+    }
+  }
+}
+
+/**
+ * The launcher-widget content of [card]: the same tree for a live capture and a design template.
+ * The widget surface paints the themed card background across the whole canvas and suppresses the
+ * card's own chrome; taps are numeric host actions collected in [widgetActions].
+ */
+@Composable
+fun LauncherWidgetContent(
+  registry: CardRegistry,
+  profile: Profile,
+  dark: Boolean,
+  widgetActions: WidgetActionRegistry,
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  captureSizeDp: WidgetCaptureSizeDp? = null,
+  look: LauncherLook = LauncherLook(),
+  content: @Composable (RemoteModifier) -> Unit = { RenderChild(card, snapshot, it) },
+) {
+  CompositionLocalProvider(
+    LocalWidgetCaptureSizeDp provides captureSizeDp,
+    ee.schimke.ha.rc.components.LocalSupportsFlowLayout provides
+      (androidx.compose.remote.core.Operations.LAYOUT_FLOW in profile.supportedOperations),
+  ) {
+    ProvideCardRegistry(registry) {
+      ProvideSystemHaTheme(
+        profile = profile,
+        fallbackTheme = if (dark) HaTheme.Dark else HaTheme.Light,
+      ) {
+        look.Provide(dark) {
+          ProvideCardSizeMode(CardSizeMode.Fixed) {
+            ProvideCardChrome(enabled = false) {
+              ProvideWidgetActionRegistry(widgetActions) {
+                RemoteHaWidgetSurface { content(RemoteModifier.fillMaxWidth()) }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Card designs for launcher widgets. A launcher can't receive pushed bindings, so a widget is
+ * baked: its design template — captured once per key, from the same tree as a live widget — gets
+ * the card's values written in ([bake], with `rc-player-edit`'s `hardcodeNamedValues`), then its
+ * now-constant state layouts collapsed and the document optimised. The template stays values-free;
+ * only the baked copy, made on the device, holds values.
+ *
+ * Keys add the widget's size (the canvas the template is laid out on) and its theme (system colours
+ * on hosts that resolve them, else the light / dark fallback, then the [LauncherLook]) to the
+ * card's own shape.
+ */
+object LauncherDesigns {
+
+  /** A captured launcher template: its bytes and the host actions it registered, by id. */
+  class Template(val bytes: ByteArray, val actions: Map<Int, String>)
+
+  /** A widget ready for `RemoteViews`: baked bytes and each host action's card-local action. */
+  class Baked(val bytes: ByteArray, val actions: Map<Int, HaAction>)
+
+  /**
+   * The launcher [DesignKey] for [card] at [widthDp] × [heightDp], or null when it has no design
+   * (it then captures directly).
+   */
+  fun keyFor(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    widthDp: Int,
+    heightDp: Int,
+    dark: Boolean,
+    systemTheme: Boolean,
+    registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
+    look: LauncherLook = LauncherLook(),
+  ): DesignKey? {
+    val design = CardDesignTemplates.designCard(card, snapshot, registry)
+    val shape =
+      registry.converterFor(design.type)?.framedDesignProperties(design, snapshot)?.shape
+        ?: return null
+    return DesignKey(
+      cardType = design.type,
+      variant = "${widthDp}x$heightDp",
+      surface = DesignSurface.Launcher,
+      rcApiLevel = WIDGETS_DESIGN_API_LEVEL,
+      shape = shape,
+      theme =
+        "widget:${if (systemTheme) "system" else "fallback"}:${if (dark) "dark" else "light"}" +
+          look.keySuffix,
+    )
+  }
+
+  /** Capture the template for [key] at [densityDpi], from the card converter's own template. */
+  fun capture(
+    context: Context,
+    key: DesignKey,
+    densityDpi: Int,
+    registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
+  ): Template =
+    captureWith(context, key, densityDpi, registry) { card, snapshot, modifier ->
+      RenderChild(card, snapshot, modifier)
+    }
+
+  /**
+   * The launcher capture around any [content]: the key's design card and placeholder snapshot, the
+   * widget's profile, theme, look and cell size, card chrome off on the widget surface, and taps as
+   * numeric host actions. A card design authored in UI Builder is captured through this too
+   * (server-owned-card-designs.md, "One source, every surface"), so the launcher surface is a
+   * rewrite of the card's design, not a source of its own.
+   */
+  fun captureWith(
+    context: Context,
+    key: DesignKey,
+    densityDpi: Int,
+    registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
+    content: @Composable (card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) -> Unit,
+  ): Template {
+    require(key.surface == DesignSurface.Launcher) { "not a launcher key: $key" }
+    val (widthDp, heightDp) = key.variant.split('x').map { it.toInt() }
+    val parts = key.theme.split(':')
+    val profile = if (parts.getOrNull(1) == "system") systemThemedWidgetsProfile else widgetsProfile
+    val dark = parts.getOrNull(2) == "dark"
+    val look = LauncherLook.parse(parts.drop(3))
+    val (card, snapshot) = CardDesignTemplates.designInput(key, registry)
+    val actions = WidgetActionRegistry(emptyMap())
+    val widthPx = dpToPx(widthDp, densityDpi)
+    val heightPx = dpToPx(heightDp, densityDpi)
+    val bytes = runBlocking {
+      captureSingleRemoteDocument(
+          context = context,
+          creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
+          profile = profile,
+        ) {
+          CompositionLocalProvider(
+            LocalTemplateBindings provides TemplateBindings(),
+            // The same bytes whenever it is captured; the client binds the real time.
+            LocalHaClock provides TemplateHaClock,
+          ) {
+            ProvideExpressionNames {
+              LauncherWidgetContent(
+                registry,
+                profile,
+                dark,
+                actions,
+                card,
+                snapshot,
+                WidgetCaptureSizeDp(widthDp, heightDp),
+                look,
+              ) {
+                content(card, snapshot, it)
+              }
+            }
+          }
+        }
+        .bytes
+    }
+    return Template(bytes, actions.entries.toMap())
+  }
+
+  /**
+   * [template] with [card]'s values on [snapshot] written in, or null when it can't be baked (an
+   * image to fetch, or a binding the document can't hold as a constant) — the caller then captures
+   * directly. [card] is the design card ([CardDesignTemplates.designCard]).
+   */
+  fun bake(
+    template: Template,
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
+    fetchImage: (url: String) -> ByteArray? = { null },
+  ): Baked? {
+    val playback = CardDesignTemplates.playback(card, template.bytes, registry)
+    val bytes = bakeValues(template.bytes, playback, snapshot, fetchImage) ?: return null
+    val templateActions = template.actions.mapValues { (_, payload) -> decodeHaAction(payload) }
+    // Each host action the template registered runs the card's own action for it. A PIN typed into
+    // the widget resolves to an empty AlarmPin on the real entity; the receiver takes the digits
+    // from the tap's metadata.
+    // The surface's open-app tap is the host's own, not one of the card's.
+    val actions = templateActions.mapValues { (_, action) ->
+      if (action == WidgetOpenApp) action else playback.resolveTap(action, snapshot)
+    }
+    return Baked(bytes, actions)
+  }
+
+  /**
+   * The baked launcher document for [card], or null when it has no design or can't be baked. The
+   * template comes from the process-wide [library], captured on first use.
+   */
+  fun render(
+    context: Context,
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    widthDp: Int,
+    heightDp: Int,
+    densityDpi: Int,
+    dark: Boolean,
+    systemTheme: Boolean,
+    registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
+    fetchImage: (url: String) -> ByteArray? = { null },
+    look: LauncherLook = LauncherLook(),
+  ): Baked? {
+    val key =
+      keyFor(card, snapshot, widthDp, heightDp, dark, systemTheme, registry, look) ?: return null
+    val template =
+      library.getOrPut(key to densityDpi) { capture(context, key, densityDpi, registry) }
+    return bake(
+      template,
+      CardDesignTemplates.designCard(card, snapshot, registry),
+      snapshot,
+      registry,
+      fetchImage,
+    )
+  }
+
+  /**
+   * [templateBytes] with [playback]'s bindings for [snapshot] written in, its slot pictures fetched
+   * and embedded, its now-constant state layouts collapsed and the document optimised; null when it
+   * can't be (a picture that can't be resolved or fetched, a binding the document can't hold as a
+   * constant). For any host that can't receive bindings: launcher widgets, Wear widgets. A
+   * time-derived binding is read from [clock].
+   */
+  fun bakeValues(
+    templateBytes: ByteArray,
+    playback: CardTemplatePlayback,
+    snapshot: HaSnapshot,
+    fetchImage: (url: String) -> ByteArray? = { null },
+    clock: HaClock = SystemHaClock,
+  ): ByteArray? {
+    val bindings = playback.bindings(snapshot, clock)
+    val values = buildMap {
+      for ((name, v) in bindings.strings) put(name, RcHardcodedValue.Text(v))
+      for ((name, v) in bindings.booleans) put(name, RcHardcodedValue.BooleanValue(v))
+      for ((name, v) in bindings.ints) put(name, RcHardcodedValue.Integer(v))
+      for ((name, v) in bindings.floats) put(name, RcHardcodedValue.FloatValue(v))
+    }
+    return runCatching {
+      val document = RcDocumentCodec.decode(templateBytes, RcWireLimits())
+      // Such a host can't load an image URL, so each one is fetched and embedded. A template's
+      // URLs are slot pictures (`rc-slot://…`), resolved through the card's own entities.
+      val images =
+        document.bitmapUrls.associateWith { url ->
+          val real = playback.bitmapUrl(url, snapshot) ?: return null
+          fetchImage(real) ?: return null
+        }
+      val embedded = if (images.isEmpty()) document else document.embedBitmapUrls(images)
+      RcDocumentCodec.encode(
+        embedded.hardcodeNamedValues(values).collapseConstantStateLayouts().optimize()
+      )
+    }
+      .getOrNull()
+  }
+
+  private val library = ConcurrentHashMap<Pair<DesignKey, Int>, Template>()
+
+  /** Forgets the captured templates, for [CardMemory]: the next widget update captures again. */
+  fun releaseMemory() {
+    library.clear()
+  }
+
+  private fun dpToPx(dp: Int, densityDpi: Int): Int = (dp * densityDpi / 160f).toInt()
+
+  /** The widget profile's document API level: what a launcher template targets. */
+  const val WIDGETS_DESIGN_API_LEVEL: Int = 7
+}

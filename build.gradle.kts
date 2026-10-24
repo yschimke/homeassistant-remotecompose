@@ -47,6 +47,7 @@ plugins {
   alias(libs.plugins.compose.multiplatform) apply false
   alias(libs.plugins.play.publisher) apply false
   alias(libs.plugins.tapmoc) apply false
+  alias(libs.plugins.ksp) apply false
   // Shared ktfmt + dependency-hygiene conventions, also formatting this root
   // script's own `*.kts`. Every subproject applies the same convention plugin
   // (from the included `build-logic` build); it replaces the former root

@@ -18,6 +18,11 @@
       "automerge": false
     },
     {
+      "description": "DataStore stays below 1.3: with 1.3.0 a cold launch could hang in MainActivity.onCreate, its runBlocking read of the preferences store never returning (a thread dump from the phone benchmark showed the main thread parked there with nothing running), and every phone benchmark run from #1037 on failed on it. Lift this only with a phone benchmark run that passes on the new version.",
+      "matchPackageNames": ["/^androidx\\.datastore[.:]/"],
+      "allowedVersions": "<1.3.0"
+    },
+    {
       "description": "Stay on JUnit 4; don't auto-bump to 5.x/6.x (Jupiter is a different API).",
       "matchPackageNames": ["junit:junit"],
       "allowedVersions": "/^4\\./",

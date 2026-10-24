@@ -28,6 +28,13 @@ interface CrashReporter {
    */
   fun recordCrash(throwable: Throwable)
 
+  /**
+   * Logs an analytics event [name] with [params] (each a number or a string), where the backend has
+   * analytics (Firebase does; the others drop it). Names and keys follow Firebase's rules: letters,
+   * digits and underscores, at most 40 characters.
+   */
+  fun logEvent(name: String, params: Map<String, Any>) = Unit
+
   companion object {
     /**
      * The reporter for the backend this app was built with ([BuildConfig.CRASH_REPORTER]), or a

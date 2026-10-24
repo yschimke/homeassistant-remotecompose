@@ -15,7 +15,7 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * The slot cards' Wear designs on the watch: verified, and kept only while the index names them.
+ * The pinned cards' Wear designs on the watch: verified, and kept only while the index names them.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])

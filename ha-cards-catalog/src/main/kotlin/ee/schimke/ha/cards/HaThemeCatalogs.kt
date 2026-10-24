@@ -4,11 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.tooling.preview.PreviewWrapperProvider
+import androidx.wear.compose.material3.ColorScheme
 import androidx.wear.compose.material3.MaterialTheme
 import ee.schimke.composeai.preview.WearThemeCatalog
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
-import ee.schimke.ha.rc.components.asWearColorScheme
 import ee.schimke.ha.rc.components.haThemeFor
 
 /**
@@ -116,3 +116,22 @@ class TerrazzoKioskDarkThemeCatalog : PreviewWrapperProvider {
   override fun Wrap(content: @Composable () -> Unit) =
     HaThemeOverride(haThemeFor(ThemeStyle.TerrazzoKiosk, darkTheme = true), content)
 }
+
+/**
+ * [this] palette as a Wear Material 3 colour scheme, each HA role in the `WearM3.<role>` slot
+ * [ee.schimke.ha.rc.components.asNamedRemote] writes it to. Roles HA has no counterpart for keep
+ * Wear's defaults.
+ */
+internal fun HaTheme.asWearColorScheme(): ColorScheme =
+  ColorScheme(
+    surfaceContainerHigh = cardBackground,
+    background = dashboardBackground,
+    surfaceContainer = sectionBackground,
+    onSurface = primaryText,
+    onSurfaceVariant = secondaryText,
+    tertiary = linkText,
+    outlineVariant = divider,
+    primary = placeholderAccent,
+    primaryContainer = placeholderBackground,
+    secondary = unknownAccent,
+  )

@@ -14,7 +14,6 @@ import ee.schimke.terrazzo.core.network.HttpEngineFactory
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
 import ee.schimke.terrazzo.core.network.RemoteUrlStore
 import ee.schimke.terrazzo.core.pin.PinStore
-import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.CachedHaSession
 import ee.schimke.terrazzo.core.session.DemoHaSession
@@ -23,7 +22,6 @@ import ee.schimke.terrazzo.core.session.HaReauthRequiredException
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.LiveHaSession
 import ee.schimke.terrazzo.core.session.MintedAccessToken
-import ee.schimke.terrazzo.core.session.OfflineOnlySession
 import ee.schimke.terrazzo.core.session.SessionWriteMode
 import ee.schimke.terrazzo.core.wearsync.WearSyncManager
 import ee.schimke.terrazzo.core.widget.WidgetStore
@@ -44,7 +42,6 @@ interface TerrazzoGraph {
   val mobileAppRegistrar: MobileAppRegistrar
   val widgetStore: WidgetStore
   val pinStore: PinStore
-  val wearWidgetSlotsStore: WearWidgetSlotsStore
   val preferencesStore: PreferencesStore
   val offlineCache: OfflineCache
   val sessionFactory: HaSessionFactory
@@ -88,8 +85,10 @@ class HaSessionFactory(
 ) {
   /**
    * [lifetime] is how long [accessToken] lives, when the token response said; else HA's default.
+   * With no [accessToken] (a cold start, offline or not) the first connect mints one from the
+   * stored refresh token; until it does, the cache supplies what the UI draws.
    */
-  fun create(baseUrl: String, accessToken: String, lifetime: Duration? = null): HaSession =
+  fun create(baseUrl: String, accessToken: String?, lifetime: Duration? = null): HaSession =
     CachedHaSession(
       LiveHaSession(
         baseUrl = baseUrl,
@@ -117,8 +116,7 @@ class HaSessionFactory(
     return MintedAccessToken(accessToken, tokens.expiresInSeconds?.seconds)
   }
 
-  fun createCachedOnly(baseUrl: String): HaSession =
-    CachedHaSession(OfflineOnlySession(baseUrl), cache)
+  fun createCachedOnly(baseUrl: String): HaSession = CachedHaSession.cacheOnly(baseUrl, cache)
 
   fun createDemo(): HaSession = DemoHaSession()
 }

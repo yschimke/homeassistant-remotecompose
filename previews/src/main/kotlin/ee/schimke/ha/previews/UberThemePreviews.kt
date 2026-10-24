@@ -68,11 +68,12 @@ internal fun UberShowcase(theme: HaUberTheme, darkTheme: Boolean) {
                 Fixtures.battery,
                 RemoteModifier.fillMaxWidth(),
               )
-              RemoteRow(
-                modifier = RemoteModifier.fillMaxWidth(),
-                horizontalArrangement = RemoteArrangement.spacedBy(HaSpace.M.rdp),
-              ) {
-                MeasurementCard(RemoteModifier.weight(1f).height(196.rdp)) {
+              // The gap is the left card's end padding, not `spacedBy`: the player shares a row's
+              // weights out of its full width, so a spaced row overflows by the gap.
+              RemoteRow(modifier = RemoteModifier.fillMaxWidth()) {
+                MeasurementCard(
+                  RemoteModifier.weight(1f).padding(end = HaSpace.M.rdp).height(196.rdp)
+                ) {
                   RemoteHaMeasurement(
                     HaReading.static("Living room", 21.5f, "°C", HaMeasureKind.Temperature),
                     HaPresentation.Expanded,
@@ -217,11 +218,18 @@ fun Uber_Ikea_Light() = UberShowcase(HaUberTheme.Ikea, darkTheme = false)
 @Composable
 fun Uber_Ikea_Dark() = UberShowcase(HaUberTheme.Ikea, darkTheme = true)
 
+/**
+ * The Home Assistant showcase and dial sheet's height. The catalog's CMP/Wasm lane plays these at
+ * 2.625x, and 900 dp is 2362.5 px there: the player rounded it to 2363 where the bake floored it to
+ * 2362, failing its size check. A multiple of 8 dp is a whole number of pixels at that density.
+ */
+internal const val HA_SHOWCASE_HEIGHT_DP = 904
+
 @Preview(
   name = "uber: Home Assistant (light)",
   widthDp = 360,
-  heightDp = 900,
-  device = "spec:width=360dp,height=900dp,dpi=160",
+  heightDp = HA_SHOWCASE_HEIGHT_DP,
+  device = "spec:width=360dp,height=${HA_SHOWCASE_HEIGHT_DP}dp,dpi=160",
 )
 @Composable
 fun Uber_HomeAssistant_Light() = UberShowcase(HaUberTheme.HomeAssistant, darkTheme = false)
@@ -229,8 +237,8 @@ fun Uber_HomeAssistant_Light() = UberShowcase(HaUberTheme.HomeAssistant, darkThe
 @Preview(
   name = "uber: Home Assistant (dark)",
   widthDp = 360,
-  heightDp = 900,
-  device = "spec:width=360dp,height=900dp,dpi=160",
+  heightDp = HA_SHOWCASE_HEIGHT_DP,
+  device = "spec:width=360dp,height=${HA_SHOWCASE_HEIGHT_DP}dp,dpi=160",
 )
 @Composable
 fun Uber_HomeAssistant_Dark() = UberShowcase(HaUberTheme.HomeAssistant, darkTheme = true)

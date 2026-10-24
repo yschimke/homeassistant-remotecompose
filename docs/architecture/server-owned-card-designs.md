@@ -1,0 +1,347 @@
+# Server-owned card designs
+
+> Status: **plan**. This document replaces the staged approach of the closed
+> [#922](https://github.com/yschimke/homeassistant-remotecompose/pull/922). It says what changes,
+> in what order, and what stays in Kotlin.
+
+## Goals
+
+1. **No built-in card layouts in the app.** Every card's look is a design that can change on the
+   server without an app release.
+2. **Regular import into this repository.** Server designs are copied back on a schedule, as
+   reviewed PRs, and shipped in the app as the fallback and offline cache.
+3. **Every card design is in UI Builder and editable there.**
+4. **Every design is forkable.**
+5. **A device's card can be switched to a fork.** The generic design for a device type (a 3D
+   printer, a boiler, a Sony TV) can be replaced, per card, by a forked design.
+6. **One design, every family.** A design is written once against the `ha-cards` components and
+   re-themes into any card style (`HaUberTheme`: Braun, IKEA, Trinitron, …).
+
+## Where we are
+
+The pieces are described in [card-design-server.md](card-design-server.md#spike-status). What
+matters here:
+
+- **Most card types draw from their `.uid`.** Each migrated type's layout is
+  `card-designs/ui-builder/designs/<cardType>.uid` (the D6+ row below lists them); its converter
+  extends `DesignedCardConverter`, keeping its keys, bindings, actions and data. The rest still
+  draw from their converter's `Render` and are captured from it.
+- **The design server's library is a build-time capture**
+  (`:card-designs:generateCardDesigns`), baked into its image with the checked-in sources
+  (`sources/<cardType>.uid`). The app prefers a synced server design, then a shipped asset
+  (`ShippedDesignLibrary`), then a capture on the device (`CardDesignLibrary`).
+- **The three agree byte for byte.** Templates are captured under `TemplateHaClock`, so a capture
+  does not depend on the day it runs; `ShippedCardDesignsTest` holds the shipped assets to this
+  build's capture, and `scripts/check-design-server.py` holds a deployed server to it (see
+  [Cutover](#cutover)).
+- **Forking copies the real source** for migrated types; for the rest, "Design in UI Builder"
+  still rebuilds a lookalike from `ha-cards` components (`HaCardsSeed`).
+- **Device designs are picked, or chosen per card.** `DeviceMatch` (integration, manufacturer,
+  model glob, translation key) picks the most specific device design automatically
+  (`CardDesigns.cardTemplateFor`); since D5 a card can be switched to any design by its id (see
+  [Switching a device's card](#switching-a-devices-card)).
+- **User designs live only on the server volume.** Nothing backs them up or imports them.
+- **Families already share components.** Meters, tile layouts and surfaces switch form per
+  `HaVisualFamily`, and `ha-cards/uber-theme` re-themes a whole UI Builder design from one
+  property. The server still publishes one key per theme.
+
+## What stays in Kotlin
+
+Layout moves to designs; **data and behaviour stay in code**. Per card type, Kotlin keeps:
+
+- the **design key**: which shape a card config has (`designProperties`, `EntityDesign`);
+- the **bindings**: every named value the client pushes (`CardDesignSlots`, the binding recipes),
+  so cards keep the [live-update contract](live-card-updates.md) and show current data on the
+  first frame;
+- the **actions**: resolving a tap on a design to the card's own action (`designAction`,
+  `CardTemplatePlayback`);
+- the **invalidation**: `CardConverter.dataSignature`, the fingerprint of content a card bakes
+  rather than binds (tile extras, sensor history, forecasts, container children). A card type
+  migrates only once everything its signature covers is either a binding or part of its design
+  key; until then the signature keeps forcing a new document when that content changes.
+
+What goes is each converter's `Render` layout, and the runtime capture that turns it into a
+template. Moving values and actions into designs as well needs expression and action support in
+UI Builder; it is out of scope.
+
+## The pipeline
+
+```
+ha-cards .uid  ──(UI Builder, admin edit)──▶  revision
+      │                                         │ export .rc (named host state)
+      │                                         ▼
+      │                                 design server: validate bindings ⊆ schema,
+      │                                 op profile, snapshot invariance → manifest
+      │                                         │
+      └──◀── scheduled import PR ◀──────────────┘
+             card-designs/ui-builder/designs/*.uid
+             card-designs/library/{manifest.json, blobs/*.rc}
+                                                │
+                                   app assets: inbuilt fallback
+```
+
+- **Source.** `card-designs/ui-builder/designs/<cardType>[-<shape>].uid`, one per design, using
+  the `ha-cards` catalog. Theme is not part of the source: the family comes from
+  `ha-cards/uber-theme`, so the export step produces one `.rc` per family and mode from one
+  `.uid`.
+- **Export.** Two implementations of the same transformation, kept equal by a test:
+  - **In this repository** (`CardDesignDocument` in `:ha-cards-catalog`): draws a `.uid` by
+    calling the `ha-cards` components with each node's properties, inside the same capture harness
+    as converter templates (`CardDesignTemplates.captureWith`). It needs no UI Builder release, so
+    the library and the scheduled import capture designs in a Robolectric test today.
+    Binding-shaped components (`ha-cards/entity-tile`) take their structural properties from the
+    design key being captured, so one `.uid` covers every key of its card type.
+  - **In UI Builder**, for live publishing from the design server: RemoteCompose export with state
+    variables marked `"persistence": "host"` as named `User` values, which is what
+    `LocalTemplateBindings` reads. Released UI Builder builds have it switched off
+    (`-PuiBuilderRemoteCompose`, compiled into `ui-builder-export`), so this half waits on a release
+    that enables it.
+- **Validation** is the existing `userTemplateProblem` (bindings against the base schema, op
+  profile), plus the parity gate below while a card type migrates.
+- **Editing.** Each migrated card type's library design is the UI Builder design
+  `library-<cardType>` on the design server, created from the checked-in `.uid` the first time
+  one of its `LIBRARY_EDITORS` opens it ("Edit the library design" on a design's page) and edited
+  in place after that (`LibrarySources`). Forking a library design of a migrated type copies that
+  real design, not a reconstruction.
+- **Import.** `GET /api/library/sources` serves each migrated card type's current design (the
+  edited one, else the checked-in one). The daily `import-card-designs` workflow writes them over
+  `card-designs/ui-builder/designs/` and opens one PR when anything changed. CI rebuilds the
+  library from the imported sources (the `.rc` is made here, not on the server), and the preview
+  diff on that PR is the review of what changes in the app. While a card type still has a
+  converter, its parity gates fail an edit that changes its pixels; that is the migration gate
+  doing its job, and the edit lands with the converter's layout deleted.
+- **Fallback.** The app ships the library's default style as assets
+  (`app/src/main/assets/card-designs`): the app's default theme style (Terrazzo Home), light and
+  dark, with the classic card style, captured from the checked-in designs exactly as the library
+  is. `ShippedCardDesignsTest` (`:card-designs`) fails when they aren't what this build captures,
+  and `-PupdateShippedCardDesigns` rewrites them; the import PR does that itself. Lookup is: synced
+  server design → shipped asset (`ShippedDesignLibrary`) → a capture on the device. The capture
+  stays for the keys nothing ships (other theme and card styles, shapes the library's source cards
+  don't produce, converter-only types); dropping it is the end state.
+
+## Migrating a card type
+
+One card type at a time, each its own PR:
+
+1. **Author the `.uid`.** Generate it from the converter's shapes, then refine by hand in UI
+   Builder until it draws the same card. Missing `ha-cards` components are added to
+   `ha-cards-catalog`, built from the same `rc-components` the converter uses.
+2. **Parity.** For each of the card's library keys, the `.uid`'s exported `.rc` and the
+   converter's capture draw the same pixels across families, modes and the
+   `CardPreviewMatrix` sizes (`CardDesignParityTest` already compares template against
+   converter; this compares design against template).
+3. **Switch.** The card type's library entries come from the exported design.
+4. **Delete** the converter's `Render` layout and its capture path: the converter extends
+   `DesignedCardConverter`, whose final `Render` draws the packaged `.uid`. Its key, bindings and
+   actions stay, and so does whatever data its design's parts draw with.
+
+Three checks keep a migrated type migrated:
+- A branch that changes the converter's old layout code no longer compiles: `Render` is final.
+- `DesignedCardConvertersTest` (`:rc-converter`) holds the checked-in `.uid`s and the
+  `DesignedCardConverter`s to each other, one for one.
+- `CardLayoutPolicyTest` (`:ha-cards-catalog`) holds UI Builder's shelf to the designs: every
+  card-layout component has a policy record, and every slot, property and value a checked-in
+  design uses is declared there.
+
+A change to a migrated type's layout is a change to its `.uid` and the parts it arranges, proved
+by the parity tests.
+
+Card types whose look can't be expressed yet stay on their converter and are listed in
+`card-designs/converter-only.md` with the reason. Likely: markdown, map, picture-elements,
+the history and statistics graphs, and the Bambu Lab cards.
+
+## One source, every surface
+
+A person designs **the card**, once, on the `ha-cards/dashboard-card` root. Every other surface
+is derived from that `.uid` by the transformation that turns a revision into `.rc` designs, so
+no surface has a source of its own and no surface falls back to a converter.
+
+The transformation reads the card document and, per target surface, rewrites its root and
+environment before exporting:
+
+| Surface | Root | What the transformation applies | Keys |
+| --- | --- | --- | --- |
+| Dashboard (`mobile-app`) | `ha-cards/dashboard-card` (as authored) | wrap size mode, the app profile, card chrome on | today's, per family and mode |
+| Wear widget | `remote-m3/widget-container-small` / `-large` | card surface removed, the container's padding and corner radius as named values, Glance Wear op set | `wear-widget`, `container = small \| large` |
+| Launcher widget | `remote-widgets/launcher-widget` | the widget profile (level 7; `COLOR_THEME` only for the system-themed variant), fixed size mode at each tier's W×H, card chrome off and the widget surface painting the background, taps as numeric host actions, the `LauncherLook` and light/dark | `launcher`, `variant = <w>x<h>`, `theme = widget:<system\|fallback>:<mode><look>` |
+
+These are exactly what `LauncherWidgetContent` and `WearWidgetTemplate` add around a converter
+today, moved from Kotlin capture into the document transformation. The size tiers come from
+the policy's launcher grid, `(73n − 16) × (118m − 16)` dp, for the cells the app actually
+offers.
+
+Rules the transformation enforces, so an author never has to remember them:
+
+- **Every surface or none.** A revision publishes only if every target surface exports and
+  validates (op set, bindings ⊆ schema). A card that can't fit a surface says so in the design
+  (a surface opt-out the transformation reads), never by silently missing a key.
+- **Content follows area.** The derived launcher and Wear documents keep the card's adaptive
+  layout (collapsible rows, fit boxes); the transformation sets the size, it doesn't re-layout.
+  The builder's preview panes (round Wear at both sizes, the resizable launcher grid, phone and
+  tablet) show the same derivations the server publishes, so what an author sees is what ships.
+- **Taps stay slot-relative.** Launcher taps keep their slot or element ids, so
+  `LauncherDesigns.bakeValues` and the existing `resolved_action` PendingIntents work unchanged.
+
+**Device-specific transformations follow.** The surface rewrites are an open list, so later
+ones narrow a surface to a host device without a new source: a round or squircle Wear screen,
+a launcher with its own cell grid or corner radius, a TV or desktop player, an older RC level
+for a host that can't play the current one. Each is another rewrite and another key dimension,
+validated the same way, and added when a real host needs it.
+
+The transformation lives in one place, the design server's publish path (today
+`WearWidgetDesigns` for Wear), generalised to a list of surface rewrites, and the same code runs
+in the scheduled import's check so the shipped assets match what the server published. The
+converter's launcher and Wear captures are deleted for a card type when its migration lands, not
+in a separate step.
+
+## Forks
+
+A fork is an **independent copy** that records its origin, not a UI Builder branch. A branch can
+only merge back into its parent, can't pull the parent's later changes and can't itself be
+branched, which doesn't fit a design someone keeps and republishes.
+
+- Forking a library design copies its real `.uid` (replacing `HaCardsSeed`'s reconstruction) into
+  a new design owned by the person, with `sourceDesignId` and the source revision recorded and a
+  `previous` link set in UI Builder.
+- The design server shows each design's forks and a fork's origin, and whether the origin has
+  moved on since the fork.
+- Publishing a fork is the existing `POST /api/my/designs` flow: private by default, shared on
+  request, keyed like its base and optionally scoped to a device (`DeviceMatch`).
+
+## Switching a device's card
+
+Built (D5):
+
+- `DesignEntry` carries a stable **`designId`** and an optional `title`, both left off the wire
+  when unset, so older manifests parse and older clients ignore them. One id names one design
+  across every key it covers: `library:<cardType>` (title "Built-in") from `DesignPublisher`, and
+  `user:<UI Builder design id>` (its UI Builder title) from `POST /api/my/designs`, which the
+  design server also fills in for designs published before ids. A library entry without an id
+  still answers to `library:<cardType>` (`stableDesignId`).
+- `DesignRepository` keeps today's resolution, which collapses competing entries per key by author
+  and manifest order, and resolves the chosen designs **whole** beside it
+  (`resolveAllWithDevices(designIds = …)` → `DesignsById`, also `byDesign(id, key, device)`).
+  `designsFor(key, device)` lists, from the manifest, every live design with an entry for the key
+  (any variant or author) that is generic or made for a matching device.
+- `CardDesignOverrides.byCard` values gain a **`designId`**, persisted in `overrides.json` (old files
+  still load).
+- **Skins are installed, not assumed.** In the app a design chosen by id is a *skin*. The
+  manifest lists every skin, but nothing of one is downloaded until it is **installed**, a
+  separate step (`Skins.install`):
+  - Installing runs the sync's refresh with the skin added, so its assets are downloaded for
+    every theme the dashboard draws in.
+  - The skin is recorded in `skins.json` (`SkinStore`) only once those assets are cached, so a
+    failed download installs nothing.
+  - `CardDesignChoice.queries` adds a `DesignQuery(designId = …)` per installed skin and theme,
+    so the sync keeps an installed skin current whatever its author or variant.
+  - The library's skins (`library:<cardType>`) come with every sync, so they are always installed.
+  - Removing a skin stops the sync fetching it. Its cached assets stay, because the cache is never
+    pruned.
+  - A card switched to a skin that isn't installed draws as if it weren't switched.
+- `cardTemplateFor` (`serverDesignFor`) checks that override first: the chosen design's entry for
+  the card's device, else its generic one, in the preferred variant, then `default`, then any.
+  Otherwise the order stays the same. A chosen design that is missing, revoked or not fetched yet
+  falls through to that order, never to nothing. A Wear slot follows the same choice.
+- The card's style sheet has a **Skin** section for "This card". It lists "Automatic", then every
+  skin `designsFor` lists for the card's key and device (`cardDevice`), with its title, author and
+  the device it is for.
+  - An installed skin is a choice: choosing it stores its id, and "Automatic" clears it. A skin
+    that isn't the library's can be removed.
+  - A skin that isn't installed offers **Install**, shows its download, and offers a retry if the
+    download fails.
+
+## One design, every family
+
+- Designs are written against `ha-cards` components that already change form per
+  `HaVisualFamily` (meters, tile layouts, surfaces). A design never names a family's palette or
+  font directly.
+- The family is an input to export, not part of the source: the server exports one `.rc` per
+  family and mode from the same revision, keyed `style:<id>:<mode>` as today.
+- A fork can pin a family (setting `ha-cards/uber-theme` itself); its key then only covers that
+  family.
+- A component that doesn't yet adapt to every family is a gap in `ha-cards-catalog`, fixed
+  there rather than by forking per family.
+
+## Dependencies
+
+| Change | Repository | Needed for |
+| --- | --- | --- |
+| Retain callable component bytecode in IR bundles ([#6085](https://github.com/yschimke/compose-ai-tools/pull/6085)) | compose-ai-tools | server compiles designs against the catalog's own components |
+| Export supplied Compose source ([#957](https://github.com/yschimke/compose-ui-builder/pull/957)) | compose-ui-builder | only if export goes through compiled Compose rather than `.rc` |
+| UI Builder built with RemoteCompose export | compose-preview-server / deployment | `.rc` export of named host state |
+
+## Cutover
+
+Cutover is the point where the server's library, not the app's converters, is what the app draws:
+the server serves every card type's `.uid` for editing (`/api/library/sources`), edits come back
+through the scheduled import, and nothing the app shows differs from what this checkout captures.
+
+Before cutover, on a server deployed from `main`:
+
+1. Build the library: `./gradlew :card-designs:generateCardDesigns`.
+2. Run `scripts/check-design-server.py --server https://ha.coo.ee`. It fails unless:
+   - `/api/library/sources` serves every checked-in `.uid`, unedited ones exactly as checked in;
+   - every key the server's manifest publishes has the sha256 the local library captures, and the
+     two publish the same keys;
+   - a sample of the server's blobs are the bytes their sha256 names, and the local blobs.
+3. Run the import workflow (`import-card-designs.yml`) once by hand: with no edits it opens no PR.
+
+Deploying the design server is a manual step (compose-preview-server's deploy); nothing here
+deploys it.
+
+## Every card from the server
+
+Today the server's designs are used only for a card whose exact key the library holds, and a key
+holds the card's shape: its icons, device classes, units and, for a grid, every child's shape.
+The library is generated from the curated fixtures and the demo dashboards, so a user's tile with
+any other icon misses it and draws from the `.uid` packaged in the app. Cards with no template
+form (headings, entities, maps, weather, conditional cards, some grids and markdown) never ask the
+server at all. On the seven demo dashboards, 63 of 173 cards have a key; and 185 of the library's
+256 distinct shapes (every tile and grid) carry an icon or unit, which no build-time library can
+enumerate.
+
+The goal: every card a user sees is a template the server generated, at build time, for the app's
+own `rcApiLevel` and surface (mobile app, launcher widget, Wear widget and its container), so a
+design edit reaches every card, and an app never plays a document its player can't. The `.uid`
+packaged in the app stays as the offline fallback. Capture stays build-time; the server never sees
+a user's values, only shapes.
+
+That needs keys to be enumerable, in this order:
+
+1. **Measure.** A coverage report over held-out dashboards: how many cards have a key, and how many
+   keys are free of open-ended fields. Each step below must move it.
+2. **Icons as bindings.** A spike first: RemoteCompose can draw a path by id (`drawPath(int)`) and
+   bitmap-font text runs, but whether the host can choose the glyph at runtime is unproven. If it
+   can, `icon` and `card_icon` leave the shape and become slot bindings.
+3. **Units as bindings.** A unit is text; it leaves the shape when nothing in the layout depends on
+   its width.
+4. **Grids as layouts, not concatenations.** A grid's key names its layout (columns, square, child
+   count); each child is its own template, composed by the client.
+5. **A template form for every type.** heading, entities, weather-forecast, map, markdown and
+   conditional (its card's template) get `designProperties` whose values are bindings.
+6. **Enumerate.** With only closed fields left (domain, device class, features, counts), the
+   library generates every shape per surface and `rcApiLevel`; the coverage report reaches 100%.
+
+## Milestones
+
+| | Deliverable |
+| --- | --- |
+| D1 | This plan; `card-designs/ui-builder/designs/` and the parity harness, with the tile migrated |
+| D2 | Design server serves library designs from `.uid` (admin-editable, public-readable), exports per family. **Built:** editing as `library-<cardType>`, `/api/library/sources` |
+| D2b | The surface transformation: one card `.uid` → dashboard, Wear widget and launcher `.rc` designs, with the preview panes matching it |
+| D3 | Scheduled import workflow (**built:** `import-card-designs.yml`) and shipped assets (**built** for the default style); runtime capture removed for migrated types |
+| D4 | Forks copy the real source (**built** for migrated types); fork lineage on the design server |
+| D5 | Design id in the manifest and cache; per-card design override and the chooser in the card's style sheet |
+| D6+ | Remaining card types, one PR each (**migrated:** `tile`, `button`, `entity`, `sensor`, `heading`, `glance`, `clock`, `thermostat`, `humidifier`, `light`, `gauge`, `statistic`, `logbook`, `calendar`, `todo-list`, `area`, `media-control`, `alarm-panel`, `map`, `picture-elements`, `weather-forecast`, `entities`, `picture`, `picture-entity`, `picture-glance`, `history-graph`, `statistics-graph`, `markdown`, `vertical-stack`, `horizontal-stack`, `grid`, the Bambu Lab cards (`custom:ha-bambulab-*`, in `custom--ha-bambulab-*.uid`)); `converter-only.md` for the rest |
+| D8 | Every card from the server ([Every card from the server](#every-card-from-the-server)): coverage report, icon and unit bindings, grid layouts, a template form for every type, enumerated library |
+| D7+ | Device-specific transformations (Wear screen shape, launcher grids, TV/desktop, older RC levels), each when a host needs it |
+
+## Open questions
+
+1. **Who can edit library designs.** Proposal: admins listed in the deployment, matching the
+   design server's existing GitHub sign-in.
+2. **Asset size.** One `.rc` per key × family × mode is the existing library's size; check it
+   against the APK budget before D3, and ship only the default families if it is too large.
+3. **Unsupported fallback.** With no runtime capture, a card whose key has no design shows the
+   unsupported placeholder until a sync. Proposal: keep runtime capture for converter-only types
+   only.

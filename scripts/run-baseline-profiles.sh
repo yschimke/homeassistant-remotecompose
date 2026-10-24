@@ -71,5 +71,7 @@ fi
 if [[ "$status" -ne 0 ]]; then
   adb logcat -d > "$out/logcat.txt" || true
   grep -n -E "$target|AndroidRuntime|FATAL" "$out/logcat.txt" | tail -60 > "$out/device.txt" || true
+  # A launch that drew nothing in time logs every thread's stack (StartupHangWatchdog).
+  grep -n "HarcStartupHang" "$out/logcat.txt" | tail -400 >> "$out/device.txt" || true
 fi
 exit "$status"

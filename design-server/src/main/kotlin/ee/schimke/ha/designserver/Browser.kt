@@ -1,5 +1,6 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.ha.design.CardDesignFiles
 import ee.schimke.ha.design.DesignKey
 import io.ktor.http.Parameters
 import java.net.URLEncoder
@@ -34,9 +35,10 @@ data class ThemeParts(val style: String, val mode: String?) {
 
 /**
  * The browser's filter, from query parameters: card type, theme style, light/dark, a text search
- * over type and properties, and which preview to show. With [defaults], an unset style and mode
- * pick the library's first style and that style's first mode, so the first page shows each shape
- * once, including for styles that only have a dark palette.
+ * over type and properties, which preview to show, and whether to show it on approximate watch
+ * screens too ([wear]: [Pages.wearPanes]). With [defaults], an unset style and mode pick the
+ * library's first style and that style's first mode, so the first page shows each shape once,
+ * including for styles that only have a dark palette.
  */
 data class BrowserFilter(
   val cardType: String?,
@@ -44,6 +46,7 @@ data class BrowserFilter(
   val mode: String?,
   val query: String?,
   val preview: Preview,
+  val wear: Boolean = false,
 ) {
   enum class Preview {
     Example,
@@ -71,6 +74,7 @@ data class BrowserFilter(
         "mode" to (f.mode ?: ALL),
         f.query?.let { "q" to it },
         ("preview" to "template").takeIf { f.preview == Preview.Template },
+        ("wear" to "1").takeIf { f.wear },
       )
     return params.joinToString("&") { (k, v) -> "$k=${URLEncoder.encode(v, Charsets.UTF_8)}" }
   }
@@ -79,7 +83,7 @@ data class BrowserFilter(
     const val ALL = "all"
 
     /** The query keys the browser reads. */
-    val KEYS = setOf("type", "style", "mode", "q", "preview")
+    val KEYS = setOf("type", "style", "mode", "q", "preview", "wear")
 
     fun from(params: Parameters, library: DesignLibrary, defaults: Boolean): BrowserFilter {
       fun param(name: String, default: String?): String? =
@@ -102,6 +106,7 @@ data class BrowserFilter(
         mode = param("mode", firstMode.takeIf { defaults }),
         query = param("q", null),
         preview = if (params["preview"] == "template") Preview.Template else Preview.Example,
+        wear = params["wear"] == "1",
       )
     }
   }
@@ -202,7 +207,13 @@ object Pages {
       append("<label>Preview <select name=\"preview\">")
       option("example", "With example values", filter.preview == BrowserFilter.Preview.Example)
       option("template", "Template placeholders", filter.preview == BrowserFilter.Preview.Template)
-      append("</select></label><button type=\"submit\">Apply</button></form>")
+      append("</select></label>")
+      append(
+        "<label><input type=\"checkbox\" name=\"wear\" value=\"1\"" +
+          (if (filter.wear) " checked" else "") +
+          "> On a watch</label>"
+      )
+      append("<button type=\"submit\">Apply</button></form>")
 
       append("<p class=\"count\">${designs.size} shown</p>")
       if (designs.isEmpty()) {
@@ -233,7 +244,7 @@ object Pages {
         append(
           "<section><h2 id=\"${esc(type)}\">${esc(type)} <span>${group.size}</span></h2><div class=\"grid\">"
         )
-        for (design in group) tile(design, filter.preview)
+        for (design in group) tile(design, filter.preview, wear = filter.wear)
         append("</div></section>")
       }
     }
@@ -243,6 +254,9 @@ object Pages {
     library: DesignLibrary,
     design: LibraryDesign,
     editor: EditorState = EditorState.Off,
+    /** Whether [editor] may edit the library's own designs ([LibrarySources.mayEdit]). */
+    libraryEditor: Boolean = false,
+    wear: Boolean = false,
   ): String {
     val decoded = library.decode(design)
     val key = design.key
@@ -264,6 +278,18 @@ object Pages {
       if (design.catalog == null)
         append("<p class=\"muted\">No previews: this library has no catalog.</p>")
       append("</div>")
+      design.catalog?.previews?.example?.let { example ->
+        if (wear) {
+          append("<h2>On a watch</h2>")
+          wearPanes("$API_BASE/$example", key.cardType)
+          append("<p class=\"muted\"><a href=\"/designs/${design.id}\">Hide the watch</a></p>")
+        } else {
+          append(
+            "<p class=\"muted\"><a href=\"/designs/${design.id}?wear=1\">On a watch</a>: " +
+              "this design as Small and Large Wear widgets, roughly</p>"
+          )
+        }
+      }
 
       append("<h2>Key</h2><table>")
       row("Card type", esc(key.cardType))
@@ -329,14 +355,29 @@ object Pages {
         )
       }
       append("<h2>Design it</h2>")
+      val drawnFromSource = key.cardType in library.sources
       append(
         "<p class=\"muted\">The card's data contract — its slots and every binding with an example " +
           "value — as <a href=\"/api/designs/${design.id}/schema\">JSON</a>. Its editable " +
           "source, to fork in UI Builder: <a href=\"/api/designs/${design.id}/source.uid\">" +
-          "<code>source.uid</code></a> (rebuilt from Home Assistant card components in this " +
-          "design's theme, so close to it rather than identical).</p>"
+          "<code>source.uid</code></a>" +
+          (if (drawnFromSource)
+            " (the UI Builder design this card type is drawn from: every theme of it).</p>"
+          else
+            " (rebuilt from Home Assistant card components in this design's theme, so close to " +
+              "it rather than identical).</p>")
       )
       designButton(editor, "design", design.id, CardSchema.fromDesign(library, design))
+      if (drawnFromSource && libraryEditor) {
+        append(
+          "<form method=\"post\" action=\"/library/${enc(key.cardType)}/edit\">" +
+            "<button type=\"submit\">Edit the library design</button> <span class=\"muted\">" +
+            "Changes every ${esc(key.cardType)} in the library once the next import lands " +
+            "(<a href=\"/api/library/sources/${enc(CardDesignFiles.fileName(key.cardType))}\">" +
+            "current source</a>)." +
+            "</span></form>"
+        )
+      }
       append("<p class=\"muted\"><a href=\"/api/designs/${design.id}\">JSON</a></p>")
     }
   }
@@ -458,6 +499,7 @@ object Pages {
     design: LibraryDesign,
     preview: BrowserFilter.Preview,
     compact: Boolean = false,
+    wear: Boolean = false,
   ) {
     val theme = ThemeParts.of(design.key)
     val image =
@@ -471,6 +513,7 @@ object Pages {
         "<img loading=\"lazy\" src=\"$API_BASE/$image\" alt=\"${esc(design.key.cardType)} preview\">"
       )
     else append("<div class=\"noimage\">no preview</div>")
+    if (wear && image != null) wearPanes("$API_BASE/$image", design.key.cardType)
     append("<div class=\"meta\">")
     if (!compact) {
       append("<div class=\"chips\">")
@@ -501,6 +544,29 @@ object Pages {
     append(
       "<option value=\"${esc(value)}\"${if (selected) " selected" else ""}>${esc(label)}</option>"
     )
+  }
+
+  /**
+   * [src], a design's preview, as Wear widgets would show it, roughly: on a round and a square
+   * watch screen, in the Small (200×60 dp) and Large (200×112 dp) widget containers a watch's
+   * widget host draws (26 dp corners, 8 dp padding, its default surface), fitted. An approximation
+   * from the phone-sized preview, not a Wear render: the card's own Wear tiers can lay it out
+   * differently.
+   */
+  internal fun StringBuilder.wearPanes(src: String, cardType: String) {
+    append("<div class=\"wear\">")
+    for ((screen, screenLabel) in listOf("round" to "Round", "square" to "Square")) {
+      for ((pane, paneLabel) in listOf("small" to "Small", "large" to "Large")) {
+        val caption = "$screenLabel · $paneLabel"
+        append("<figure class=\"watch $screen\"><div class=\"screen\"><div class=\"pane $pane\">")
+        append(
+          "<img loading=\"lazy\" src=\"$src\" alt=\"${esc(cardType)} on a " +
+            "${screen} watch, ${pane} widget\">"
+        )
+        append("</div></div><figcaption>$caption</figcaption></figure>")
+      }
+    }
+    append("</div>")
   }
 
   private fun StringBuilder.figure(src: String, caption: String) {
@@ -560,15 +626,18 @@ h1{margin:0 0 4px;font-size:26px}h2{margin:28px 0 10px;font-size:18px}h2 span{co
 button{background:var(--accent);border-color:var(--accent);color:#fff;cursor:pointer}
 button.link{background:none;border:none;color:var(--accent);padding:0;text-decoration:underline}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;align-items:start}.grid.small{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
-.tile{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit}.tile:hover{border-color:var(--accent);text-decoration:none}
-.tile img{display:block;width:100%;height:auto;background:repeating-conic-gradient(var(--chip) 0 25%,transparent 0 50%) 0 0/16px 16px}
+.tile{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;color:inherit}.tile:hover{border-color:var(--accent);text-decoration:none}
+.tile img{display:block;width:calc(100% - 16px);height:auto;margin:8px 8px 0;background:repeating-conic-gradient(var(--chip) 0 25%,transparent 0 50%) 0 0/16px 16px}
 .noimage{padding:30px;text-align:center;color:var(--muted)}.meta{padding:8px 10px;display:flex;flex-direction:column;gap:6px}.facts{font-size:12px;color:var(--muted)}
 .chips{display:flex;flex-wrap:wrap;gap:4px;margin:0}.chip{background:var(--chip);border-radius:999px;padding:1px 8px;font-size:12px;overflow-wrap:anywhere}.chip b{font-weight:600}
-.previews{display:flex;flex-wrap:wrap;gap:16px;margin:16px 0}figure{margin:0;max-width:380px;width:100%}figure img{width:100%;border:1px solid var(--line);border-radius:10px;background:repeating-conic-gradient(var(--chip) 0 25%,transparent 0 50%) 0 0/16px 16px}
+.previews{display:flex;flex-wrap:wrap;gap:16px;margin:16px 0}figure{margin:0;max-width:380px;width:100%}figure img{display:block;width:100%;padding:8px;border:1px solid var(--line);border-radius:10px;background:repeating-conic-gradient(var(--chip) 0 25%,transparent 0 50%) 0 0/16px 16px}
 figcaption{font-size:12px;color:var(--muted);margin-top:4px}table{border-collapse:collapse;width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{width:220px;color:var(--muted);font-weight:500}
 textarea{width:100%;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg)}.stack{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;font-size:13px}.error{color:var(--err)}nav{margin-bottom:8px}details{margin-top:10px}
-@media (max-width:600px){th{width:auto}.grid{grid-template-columns:1fr}}
+.wear{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px;max-width:520px}.watch{margin:0;text-align:center}.watch figcaption{font-size:12px;color:var(--muted);margin-top:4px}
+.watch .screen{container-type:inline-size;aspect-ratio:1;background:#000;display:flex;align-items:center;justify-content:center}.round .screen{border-radius:50%}.square .screen{border-radius:20%}
+.pane{box-sizing:border-box;width:88cqi;padding:3.5cqi;border-radius:11.5cqi;background:rgb(39,36,48);display:flex}.square .pane{width:95cqi}.pane.small{height:26.5cqi}.pane.large{height:49.5cqi}.pane img{width:100%;height:100%;object-fit:contain;border:0;background:none}
+@media (max-width:600px){th{width:auto}.grid{grid-template-columns:1fr}.filters label{max-width:100%}select,input{max-width:100%}.stats,.hint{overflow-wrap:anywhere}}
 """
 }

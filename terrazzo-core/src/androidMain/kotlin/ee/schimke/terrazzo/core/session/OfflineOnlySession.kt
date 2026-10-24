@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.core.session
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.HistoryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -14,8 +15,16 @@ import kotlinx.coroutines.flow.StateFlow
  */
 internal class OfflineOnlySession(override val baseUrl: String) : HaSession {
   override val refreshIntervalMillis: Long? = null
-  override val connectionStatus: StateFlow<SessionConnectionStatus> =
-    MutableStateFlow(SessionConnectionStatus.Failed)
+
+  // Connecting until the resume gives up: the stub stands in for a session being minted, so a cold
+  // start opened on "Can't reach Home Assistant" for the moment before the live one replaced it.
+  private val status = MutableStateFlow(SessionConnectionStatus.Connecting)
+  override val connectionStatus: StateFlow<SessionConnectionStatus> = status
+
+  /** The resume couldn't mint a live session: no stored token, or Home Assistant unreachable. */
+  fun markUnreachable() {
+    status.value = SessionConnectionStatus.Failed
+  }
 
   override suspend fun connect() = Unit
 
@@ -23,6 +32,13 @@ internal class OfflineOnlySession(override val baseUrl: String) : HaSession {
 
   override suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot> =
     throw OfflineUnavailable
+
+  // Not the interface's empty default: an empty answer reads as "no history recorded", where
+  // failing lets [CachedHaSession] draw the chart it cached.
+  override suspend fun fetchHistory(
+    entityIds: List<String>,
+    hours: Int,
+  ): Map<String, List<HistoryPoint>> = throw OfflineUnavailable
 
   override suspend fun close() = Unit
 }

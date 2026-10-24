@@ -23,12 +23,15 @@ data class DesignQuery(
    * device-specific designs whose [DesignEntry.device] matches it are chosen.
    */
   val device: DeviceInfo? = null,
+  /** One design by id ([DesignEntry.stableDesignId]): the design a card was switched to. */
+  val designId: String? = null,
 ) {
   fun matches(entry: DesignEntry): Boolean {
     val key = entry.key
     val forDevice =
       device?.copy(displayPrecision = null, deviceId = null)?.takeIf { it != DeviceInfo() }
     return (forDevice == null || entry.device?.matches(forDevice) == true) &&
+      (designId == null || designId == entry.stableDesignId) &&
       tag(cardType, key.cardType) &&
       tag(style, key.cardStyle) &&
       tag(variant, key.variant) &&
@@ -54,6 +57,7 @@ data class DesignQuery(
       device?.manufacturer?.let { MANUFACTURER to it },
       device?.model?.let { MODEL to it },
       device?.translationKey?.let { TRANSLATION_KEY to it },
+      designId?.let { DESIGN_ID to it },
     )
 
   companion object {
@@ -68,6 +72,7 @@ data class DesignQuery(
     const val MANUFACTURER = "manufacturer"
     const val MODEL = "model"
     const val TRANSLATION_KEY = "translationKey"
+    const val DESIGN_ID = "designId"
 
     /**
      * The query [parameter] reads, or null when a value is unusable (an unknown surface): an
@@ -95,6 +100,7 @@ data class DesignQuery(
               translationKey = value(TRANSLATION_KEY),
             )
             .takeIf { it != DeviceInfo() },
+        designId = value(DESIGN_ID),
       )
     }
 

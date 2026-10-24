@@ -19,6 +19,7 @@ kotlin {
   @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class) wasmJs { browser() }
   sourceSets {
     commonMain.dependencies {
+      api(project.dependencies.platform(libs.rc.players.bom))
       api(libs.cmp.ui)
       api(libs.rc.player.compose)
       implementation(libs.cmp.runtime)

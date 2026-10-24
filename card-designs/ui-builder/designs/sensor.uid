@@ -1,0 +1,290 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "sensor",
+  "title": "Sensor",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 140,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "cell"
+        ]
+      }
+    },
+    "cell": {
+      "id": "cell",
+      "componentId": "ha-cards/sensor-card-cell",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "wrap": [
+          "dashboard"
+        ],
+        "wear": [
+          "wear-tiers"
+        ],
+        "historyHero": [
+          "history-hero"
+        ],
+        "readingHero": [
+          "reading-hero"
+        ],
+        "readingRow": [
+          "reading-row"
+        ],
+        "other": [
+          "launcher-tiers"
+        ]
+      }
+    },
+    "dashboard": {
+      "id": "dashboard",
+      "componentId": "ha-cards/sensor-card-full",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "wear-tiers": {
+      "id": "wear-tiers",
+      "componentId": "ha-cards/size-tiers",
+      "properties": {
+        "axis": {
+          "type": "string",
+          "value": "height"
+        },
+        "thresholdsDp": {
+          "type": "string",
+          "value": "80"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {
+        "tier0": [
+          "wear-small-cell"
+        ],
+        "tier1": [
+          "wear-large-cell"
+        ]
+      }
+    },
+    "wear-small-cell": {
+      "id": "wear-small-cell",
+      "componentId": "ha-cards/centered-cell",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "wear-small"
+        ]
+      }
+    },
+    "wear-small": {
+      "id": "wear-small",
+      "componentId": "ha-cards/sensor-card-reading",
+      "properties": {
+        "inset": {
+          "type": "string",
+          "value": "m"
+        },
+        "live": {
+          "type": "bool",
+          "value": false
+        },
+        "form": {
+          "type": "string",
+          "value": "compact"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {}
+    },
+    "wear-large-cell": {
+      "id": "wear-large-cell",
+      "componentId": "ha-cards/centered-cell",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "wear-large"
+        ]
+      }
+    },
+    "wear-large": {
+      "id": "wear-large",
+      "componentId": "ha-cards/sensor-card-reading",
+      "properties": {
+        "inset": {
+          "type": "string",
+          "value": "m"
+        },
+        "live": {
+          "type": "bool",
+          "value": false
+        },
+        "form": {
+          "type": "string",
+          "value": "standard"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {}
+    },
+    "history-hero": {
+      "id": "history-hero",
+      "componentId": "ha-cards/sensor-card-history-hero",
+      "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "reading-hero": {
+      "id": "reading-hero",
+      "componentId": "ha-cards/sensor-card-reading",
+      "properties": {
+        "inset": {
+          "type": "string",
+          "value": "none"
+        },
+        "form": {
+          "type": "string",
+          "value": "expanded"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "reading-row": {
+      "id": "reading-row",
+      "componentId": "ha-cards/centered-cell",
+      "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {
+        "content": [
+          "reading-row-value"
+        ]
+      }
+    },
+    "reading-row-value": {
+      "id": "reading-row-value",
+      "componentId": "ha-cards/sensor-card-reading",
+      "properties": {
+        "inset": {
+          "type": "string",
+          "value": "l"
+        },
+        "form": {
+          "type": "string",
+          "value": "cell"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {}
+    },
+    "launcher-tiers": {
+      "id": "launcher-tiers",
+      "componentId": "ha-cards/size-tiers",
+      "properties": {
+        "axis": {
+          "type": "string",
+          "value": "width"
+        },
+        "thresholdsDp": {
+          "type": "string",
+          "value": "120"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {
+        "tier0": [
+          "identity"
+        ],
+        "tier1": [
+          "full-cell"
+        ]
+      }
+    },
+    "identity": {
+      "id": "identity",
+      "componentId": "ha-cards/sensor-card-identity",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "full-cell": {
+      "id": "full-cell",
+      "componentId": "ha-cards/centered-cell",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "full"
+        ]
+      }
+    },
+    "full": {
+      "id": "full",
+      "componentId": "ha-cards/sensor-card-full",
+      "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {}
+    }
+  }
+}

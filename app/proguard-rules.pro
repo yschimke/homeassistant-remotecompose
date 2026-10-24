@@ -13,3 +13,30 @@
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
+
+# androidx.window references the OEM window-extension classes (androidx.window.extensions.** /
+# androidx.window.sidecar.**), which the system provides at runtime and no build bundles: an R8
+# "Missing classes" error wherever window is on the classpath. That used to be only the
+# Crashlytics build (firebase-sessions), so these lived in crashlytics-rules.pro; window now comes
+# in without it too, and the benchmark build failed R8 on exactly these classes.
+-dontwarn androidx.window.extensions.WindowExtensions
+-dontwarn androidx.window.extensions.WindowExtensionsProvider
+-dontwarn androidx.window.extensions.area.ExtensionWindowAreaPresentation
+-dontwarn androidx.window.extensions.core.util.function.Consumer
+-dontwarn androidx.window.extensions.core.util.function.Function
+-dontwarn androidx.window.extensions.core.util.function.Predicate
+-dontwarn androidx.window.extensions.layout.DisplayFeature
+-dontwarn androidx.window.extensions.layout.FoldingFeature
+-dontwarn androidx.window.extensions.layout.WindowLayoutComponent
+-dontwarn androidx.window.extensions.layout.WindowLayoutInfo
+-dontwarn androidx.window.sidecar.SidecarDeviceState
+-dontwarn androidx.window.sidecar.SidecarDisplayFeature
+-dontwarn androidx.window.sidecar.SidecarInterface$SidecarCallback
+-dontwarn androidx.window.sidecar.SidecarInterface
+-dontwarn androidx.window.sidecar.SidecarProvider
+-dontwarn androidx.window.sidecar.SidecarWindowLayoutInfo
+
+# AppFunctions (assistant/): androidx.appfunctions links against the AppFunctions extension
+# library that some devices provide at runtime (an optional <uses-library> in its own manifest),
+# so it is never on the build classpath.
+-dontwarn com.android.extensions.appfunctions.**

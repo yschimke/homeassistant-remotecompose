@@ -274,6 +274,24 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
   }
 
   /**
+   * [designId]'s latest UI Builder document, or null when UI Builder has no such design (404).
+   * Throws for anything else: a refused token, an outage or no answer is not "no design".
+   */
+  suspend fun designOrNull(designId: String): JsonObject? {
+    val id = designId.encodeURLPathPart()
+    val response =
+      http.get(
+        "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/designs/$id" +
+          "?token=${config.token.encodeURLParameter()}"
+      )
+    if (response.status == HttpStatusCode.NotFound) return null
+    check(response.status.isSuccess()) {
+      "UI Builder could not read $designId (${response.status})"
+    }
+    return Json.parseToJsonElement(response.bodyAsText()).jsonObject
+  }
+
+  /**
    * The Remote Compose document UI Builder compiles [document] to, without storing it (`POST
    * /api/ui-builder/v1/documents/export.rc`). A failure, saying why, when it refuses to compile it.
    */

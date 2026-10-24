@@ -1,0 +1,56 @@
+package ee.schimke.ha.rc
+
+/**
+ * Runs [block] inside a system trace section named [name], so a Perfetto trace (and
+ * `:app-benchmark`'s `TraceSectionMetric`s, which match these names) shows what a card's
+ * main-thread work cost. Section names are `harc:` plus what the block does; keep them in step with
+ * the benchmark's.
+ */
+inline fun <T> harcTrace(name: String, block: () -> T): T {
+  traceBegin(name)
+  try {
+    return block()
+  } finally {
+    traceEnd()
+  }
+}
+
+/**
+ * [harcTrace] for a suspending [block], which can resume on another thread than it started on: an
+ * async section, which the same `TraceSectionMetric`s match by name.
+ */
+suspend fun <T> harcTraceSuspend(name: String, block: suspend () -> T): T {
+  val cookie = asyncTraceBegin(name)
+  try {
+    return block()
+  } finally {
+    asyncTraceEnd(name, cookie)
+  }
+}
+
+/** The platform's trace sections: `android.os.Trace` on Android, none on the JVM. */
+@PublishedApi internal expect fun traceBegin(name: String)
+
+@PublishedApi internal expect fun traceEnd()
+
+internal expect fun asyncTraceBegin(name: String): Int
+
+internal expect fun asyncTraceEnd(name: String, cookie: Int)
+
+/** Trace section names `:app-benchmark` measures. */
+object HarcTraceSections {
+  /** Resolving a card's design template (the server's or the local library's) for its key. */
+  const val CARD_TEMPLATE = "harc:cardTemplate"
+
+  /** Capturing a card's Remote Compose document through its converter (a document cache miss). */
+  const val CAPTURE_DOCUMENT = "harc:captureDocument"
+
+  /** Decoding and checking a document for the Compose player (a decoded-document cache miss). */
+  const val DECODE_DOCUMENT = "harc:decodeDocument"
+
+  /**
+   * A card on screen rebuilt its document on live data ([CardRebuilds]): an empty marker section,
+   * so a benchmark can count them alongside what they cost.
+   */
+  const val REBUILD = "harc:rebuild"
+}

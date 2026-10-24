@@ -103,6 +103,79 @@ fun Garage_State_Dark(
   @PreviewParameter(GarageDoorStatesProvider::class) param: Pair<String, HaSnapshot>
 ) = GarageHost(HaTheme.Dark) { RenderChild(garageSingleCard(), param.second) }
 
+// ——— Single states for the PUBLISHED design catalog ———
+
+// The strips above fan out via @PreviewParameter, which renders one PNG per value but captures no
+// compose-semantics.json, and the fail-closed catalog exporter drops a component without one. These
+// render one fixed state each so the catalog still shows the door mid-travel, closing and
+// unavailable (homeassistant-remotecompose#463; the button card's #418 is the same fix).
+private fun garageState(provider: Sequence<Pair<String, HaSnapshot>>, key: String): HaSnapshot =
+  provider.first { it.first == key }.second
+
+private val GarageOpening = garageState(GarageDoorPositionsProvider().values, "opening_50")
+private val GarageClosing = garageState(GarageDoorStatesProvider().values, "closing")
+private val GarageUnavailable = garageState(GarageDoorStatesProvider().values, "unavailable")
+
+@Preview(
+  name = "garage opening (light)",
+  showBackground = false,
+  widthDp = SINGLE_WIDTH_DP,
+  heightDp = SINGLE_HEIGHT_DP,
+)
+@Composable
+fun Garage_Opening_Light() =
+  GarageHost(HaTheme.Light) { RenderChild(garageSingleCard(), GarageOpening) }
+
+@Preview(
+  name = "garage opening (dark)",
+  showBackground = false,
+  widthDp = SINGLE_WIDTH_DP,
+  heightDp = SINGLE_HEIGHT_DP,
+)
+@Composable
+fun Garage_Opening_Dark() =
+  GarageHost(HaTheme.Dark) { RenderChild(garageSingleCard(), GarageOpening) }
+
+@Preview(
+  name = "garage closing (light)",
+  showBackground = false,
+  widthDp = SINGLE_WIDTH_DP,
+  heightDp = SINGLE_HEIGHT_DP,
+)
+@Composable
+fun Garage_Closing_Light() =
+  GarageHost(HaTheme.Light) { RenderChild(garageSingleCard(), GarageClosing) }
+
+@Preview(
+  name = "garage closing (dark)",
+  showBackground = false,
+  widthDp = SINGLE_WIDTH_DP,
+  heightDp = SINGLE_HEIGHT_DP,
+)
+@Composable
+fun Garage_Closing_Dark() =
+  GarageHost(HaTheme.Dark) { RenderChild(garageSingleCard(), GarageClosing) }
+
+@Preview(
+  name = "garage unavailable (light)",
+  showBackground = false,
+  widthDp = SINGLE_WIDTH_DP,
+  heightDp = SINGLE_HEIGHT_DP,
+)
+@Composable
+fun Garage_Unavailable_Light() =
+  GarageHost(HaTheme.Light) { RenderChild(garageSingleCard(), GarageUnavailable) }
+
+@Preview(
+  name = "garage unavailable (dark)",
+  showBackground = false,
+  widthDp = SINGLE_WIDTH_DP,
+  heightDp = SINGLE_HEIGHT_DP,
+)
+@Composable
+fun Garage_Unavailable_Dark() =
+  GarageHost(HaTheme.Dark) { RenderChild(garageSingleCard(), GarageUnavailable) }
+
 // ——— Multi-entity card with title ———
 
 @Preview(

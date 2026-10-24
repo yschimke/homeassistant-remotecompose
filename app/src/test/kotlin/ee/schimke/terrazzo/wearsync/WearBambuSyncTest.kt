@@ -63,7 +63,7 @@ class WearBambuSyncTest {
       rawJson = controlJson,
     )
 
-  /** How the watch reads a synced card (`SlotWidget`'s decode). */
+  /** How the watch reads a synced card (`CardWidget`'s decode). */
   private fun onWatch(card: PinnedCardData): CardConfig =
     watchJson.decodeFromString(CardConfig.serializer(), card.rawJson)
 

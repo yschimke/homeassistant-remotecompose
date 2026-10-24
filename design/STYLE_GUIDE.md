@@ -29,13 +29,16 @@ system colors instead of the app palette.
 ## 2. Architecture
 
 ```
-rc-components (Android library, shared tokens)
+rc-components (Android + JVM library, shared tokens)
   ├── ThemeStyle.kt         — the enum: Material3 + 4 Terrazzo palettes
-  ├── TerrazzoFonts.kt      — GoogleFont provider + FontFamily per family
   ├── TerrazzoTheme.kt      — terrazzoColorScheme (seed → scheme via
-  │                            materialkolor) + terrazzoTypographyFor
-  └── HaTheme.kt            — HA roles projected through RemoteColorScheme
-                               ^ embedded, Wear, and launcher providers
+  │                            materialkolor)
+  ├── HaTheme.kt            — HA roles projected through RemoteColorScheme
+  │                            ^ embedded, Wear, and launcher providers
+  └── androidMain/
+      ├── TerrazzoFonts.kt      — GoogleFont provider + FontFamily per family
+      ├── TerrazzoTypography.kt — terrazzoTypographyFor
+      └── SystemHaTheme.kt      — the launcher's system-themed palette
 
 app (mobile)
   ├── ui/TerrazzoTheme.kt   — wires MaterialTheme + LocalThemeStyle/IsDark
@@ -64,9 +67,9 @@ latter two can change host theme without recapturing the document.
 
 Every Terrazzo palette is a **seed colour + a Google Font pairing**
 chosen for a specific HA user. They are cheap to add (one branch in
-[`ThemeStyle`](../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/ThemeStyle.kt)
+[`ThemeStyle`](../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/ThemeStyle.kt)
 and one pair of `lightColorScheme` / `darkColorScheme` entries in
-[`TerrazzoTheme.kt`](../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/TerrazzoTheme.kt))
+[`TerrazzoTheme.kt`](../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/TerrazzoTheme.kt))
 so the list is expected to grow over time.
 
 | Palette | Seed | `PaletteStyle` | Font pairing | The user |
@@ -128,11 +131,11 @@ you explicitly don't want an HA-branded look.
 ## 4. Typography
 
 Font sources live in
-[`TerrazzoFonts.kt`](../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/TerrazzoFonts.kt).
+[`TerrazzoFonts.kt`](../rc-components/src/androidMain/kotlin/ee/schimke/ha/rc/components/TerrazzoFonts.kt).
 Every family is served by the **downloadable-fonts provider**
 (`com.google.android.gms.fonts`) — no TTFs ship in the APK, certificate
 fingerprints live in
-[`res/values/font_certs.xml`](../rc-components/src/main/res/values/font_certs.xml).
+[`res/values/font_certs.xml`](../rc-components/src/androidMain/res/values/font_certs.xml).
 Debug builds could add bundled variable TTFs for deterministic preview
 rendering; we haven't felt the need yet.
 
@@ -159,7 +162,7 @@ explicitly covers embedded and kiosk use.
 ## 5. Colour roles (Material 3)
 
 Every palette is built from the same semantic roles. The HA-card palette
-([`HaTheme`](../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/HaTheme.kt))
+([`HaTheme`](../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/HaTheme.kt))
 is derived from these via `haThemeFor(style, dark)` — a renaming from
 M3 roles onto the HA vocabulary:
 
@@ -180,7 +183,7 @@ M3 roles onto the HA vocabulary:
 
 Card parts follow the five theming rules and the `HaType` / `HaSpace` / `HaShape` scales in
 [`card-component-system.md`](../docs/architecture/card-component-system.md) (tokens in
-[`HaTokens.kt`](../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/HaTokens.kt)). Beyond palettes, card parts also
+[`HaTokens.kt`](../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/HaTokens.kt)). Beyond palettes, card parts also
 take an **uber theme** (`HaUberTheme`: Material 3 Expressive, Trinitron, LCD, Braun, Nixie, Console) that
 changes card shape, typeface and how meters are drawn; see §5 of that document.
 
@@ -188,7 +191,7 @@ changes card shape, typeface and how meters are drawn; see §5 of that document.
   extend `HaTheme` or the Material 3 `ColorScheme` — don't paint
   directly. This is what makes the theme switch actually change the
   pixels.
-- **State colours ([`HaStateColor`](../rc-converter/src/main/kotlin/ee/schimke/ha/rc/HaStateColor.kt))
+- **State colours ([`HaStateColor`](../rc-converter/src/commonMain/kotlin/ee/schimke/ha/rc/HaStateColor.kt))
   stay fixed across palettes.** A red warning is red in every palette.
   The palette colours describe the _chrome_, not the entity state.
 - **Dynamic colour only applies to the Material 3 style.** Terrazzo
@@ -271,16 +274,16 @@ Two constraints to keep in mind:
 The checklist:
 
 1. Add an entry to
-   [`ThemeStyle`](../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/ThemeStyle.kt)
+   [`ThemeStyle`](../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/ThemeStyle.kt)
    with `displayName`, `tagline`, `isMaterial3Default = false`.
 2. Add a seed colour in the `seedColor` extension.
 3. Add `{Name}Light` + `{Name}Dark` `ColorScheme`s in
-   [`TerrazzoTheme.kt`](../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/TerrazzoTheme.kt),
+   [`TerrazzoTheme.kt`](../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/TerrazzoTheme.kt),
    handled by the `when` in `terrazzoColorScheme`.
 4. If the palette needs a new font family, declare it in
-   [`TerrazzoFonts.kt`](../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/TerrazzoFonts.kt)
+   [`TerrazzoFonts.kt`](../rc-components/src/androidMain/kotlin/ee/schimke/ha/rc/components/TerrazzoFonts.kt)
    (Google Fonts provider handles it automatically) and wire it into
-   `terrazzoTypographyFor`.
+   `terrazzoTypographyFor` (`TerrazzoTypography.kt`, beside it).
 5. Add a `ThemePref` entry to
    [`PreferencesStore`](../terrazzo-core/src/androidMain/kotlin/ee/schimke/terrazzo/core/prefs/PreferencesStore.kt)
    and the mapper in

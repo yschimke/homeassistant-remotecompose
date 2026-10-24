@@ -108,7 +108,7 @@ class WearWidgetTemplateTest {
 
   private val template = runBlocking {
     WearWidgetTemplate.capture(context) {
-      SlotContent(registry, colors, card, snapshot, 0, template = false, HaUberTheme.Classic)
+      SlotContent(registry, colors, card, snapshot, template = false, HaUberTheme.Classic)
     }
   }
 
@@ -121,7 +121,7 @@ class WearWidgetTemplateTest {
           name,
         )
       val glance = runBlocking {
-        slotDirectDocument(registry, colors, card, snapshot, 0)
+        slotDirectDocument(registry, colors, card, snapshot)
           .captureRawContent(context, params, false)
           .rcDocument
       }
@@ -133,6 +133,30 @@ class WearWidgetTemplateTest {
         "$name: the container's values are hardcoded",
       )
     }
+  }
+
+  @Test
+  fun aContainerTintIsWrittenIntoTheWidgetsDocument() {
+    val tint = 0xFF5A3A2E.toInt()
+    val (_, params) = containers.first()
+    val widget =
+      assertNotNull(
+        runBlocking { WearWidgetTemplate.instantiate(context, template, params, false, tint) }
+      )
+    val untinted =
+      assertNotNull(runBlocking { WearWidgetTemplate.instantiate(context, template, params) })
+    fun holds(bytes: ByteArray, argb: Int): Boolean {
+      val word =
+        byteArrayOf(
+          (argb ushr 24).toByte(),
+          (argb ushr 16).toByte(),
+          (argb ushr 8).toByte(),
+          argb.toByte(),
+        )
+      return (0..bytes.size - 4).any { i -> (0 until 4).all { bytes[i + it] == word[it] } }
+    }
+    assertTrue(holds(widget.rcDocument, tint), "the tint fills the container")
+    assertTrue(!holds(untinted.rcDocument, tint), "an untinted widget keeps the default surface")
   }
 
   @Test
@@ -154,7 +178,7 @@ class WearWidgetTemplateTest {
     }
     for ((name, params) in containers) {
       val glance = runBlocking {
-        slotDirectDocument(registry, colors, card, snapshot, 0)
+        slotDirectDocument(registry, colors, card, snapshot)
           .captureRawContent(context, params, false)
           .rcDocument
       }

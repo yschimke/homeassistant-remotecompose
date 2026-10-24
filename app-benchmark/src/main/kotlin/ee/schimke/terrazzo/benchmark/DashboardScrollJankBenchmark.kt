@@ -66,6 +66,7 @@ class DashboardScrollJankBenchmark {
     const val DRAGS = 12
 
     /** `HarcTraceSections`' names; `:app-benchmark` doesn't depend on `rc-converter`. */
-    val TRACE_SECTIONS = listOf("harc:cardTemplate", "harc:captureDocument", "harc:decodeDocument")
+    val TRACE_SECTIONS =
+      listOf("harc:cardTemplate", "harc:captureDocument", "harc:decodeDocument", "harc:rebuild")
   }
 }

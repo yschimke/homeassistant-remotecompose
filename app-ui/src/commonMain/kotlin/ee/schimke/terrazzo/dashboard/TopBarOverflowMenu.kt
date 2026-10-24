@@ -20,19 +20,18 @@ import androidx.compose.runtime.setValue
  * stays in the title-side dropdown so users don't have to scroll past "Home screen widgets" /
  * "Settings" entries to reach the dashboards they actually want to switch between.
  *
- * [onOpenAgent], when non-null, adds an "Edit with an agent" entry at the top. [onInstallOnWatch],
- * when non-null, adds "Install on watch" for a connected watch without the watch app.
+ * [onEditDashboard], when non-null, adds "Edit dashboard" at the top. [onInstallOnWatch], when
+ * non-null, adds "Install on watch" for a connected watch without the watch app.
  */
 @Composable
 fun TopBarOverflowMenu(
   onOpenSettings: () -> Unit,
   onOpenWidgets: () -> Unit,
   onOpenPinned: () -> Unit,
-  onOpenWearWidgets: (() -> Unit)?,
   onOpenLogs: (() -> Unit)?,
   onSignOut: () -> Unit,
-  onOpenAgent: (() -> Unit)? = null,
   onInstallOnWatch: (() -> Unit)? = null,
+  onEditDashboard: (() -> Unit)? = null,
 ) {
   var expanded by remember { mutableStateOf(false) }
   IconButton(onClick = { expanded = true }) {
@@ -40,15 +39,11 @@ fun TopBarOverflowMenu(
   }
   DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
     val close = { expanded = false }
-    // Set only on narrow windows, where the top bar folds its agent icon in here to give the
-    // dashboard title the width.
-    onOpenAgent?.let { MenuEntry("Edit with an agent", close, it) }
+    onEditDashboard?.let { MenuEntry("Edit dashboard", close, it) }
     // Where cards live outside the app: one entry per place, named for the place rather than the
     // mechanism, so "pinned" and "widgets" no longer read as the same thing twice.
     MenuEntry("Home screen widgets", close, onOpenWidgets)
     MenuEntry("Cards on your watch", close, onOpenPinned)
-    // Hidden unless a paired Wear node has reported widget support.
-    onOpenWearWidgets?.let { MenuEntry("Watch widgets", close, it) }
     onInstallOnWatch?.let { MenuEntry("Install on watch", close, it) }
     HorizontalDivider()
     MenuEntry("Settings", close, onOpenSettings)

@@ -13,8 +13,10 @@ import kotlinx.serialization.json.Json
 /**
  * A design a person published from UI Builder: a manifest [entry] by `github:<login>`, private to
  * them until they [shared] it. [sourceDesignId] and [revision] say which UI Builder design and
- * revision it was exported from. A Wear widget design made from a card design names that design's
- * blob in [wearOf], and is shared, unshared and replaced with it.
+ * revision it was exported from; its entry's [DesignEntry.designId] is `user:<sourceDesignId>`, so
+ * every key published from one UI Builder design is one design to a client. A Wear widget design
+ * made from a card design names that design's blob in [wearOf], and is shared, unshared and
+ * replaced with it.
  */
 @Serializable
 data class UserDesign(
@@ -24,7 +26,16 @@ data class UserDesign(
   val revision: Long? = null,
   val publishedAtEpochMs: Long = 0,
   val wearOf: String? = null,
-)
+) {
+  /**
+   * [entry] as the manifest serves it: with its design id, which an entry published before ids
+   * existed lacks, from the UI Builder design it was exported from.
+   */
+  val served: DesignEntry
+    get() =
+      if (entry.designId != null || sourceDesignId == null) entry
+      else entry.copy(designId = DesignEntry.userDesignId(sourceDesignId))
+}
 
 @Serializable
 private data class UserDesignIndex(
@@ -101,6 +112,7 @@ class UserDesignStore(
     sourceDesignId: String?,
     revision: Long?,
     device: DeviceMatch? = null,
+    title: String? = null,
   ): UserDesign {
     val sha = Sha256.hex(bytes)
     writeAtomically(File(dir, "blobs/$sha.rc"), bytes)
@@ -119,6 +131,9 @@ class UserDesignStore(
             slots = slots,
             author = author,
             device = device,
+            // One id for every key the UI Builder design is published under.
+            designId = sourceDesignId?.let(DesignEntry::userDesignId),
+            title = title,
           ),
         shared = replaced?.shared ?: false,
         sourceDesignId = sourceDesignId,

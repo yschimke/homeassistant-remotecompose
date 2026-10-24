@@ -12,19 +12,21 @@ import com.google.android.gms.wearable.PutDataRequest
 import com.google.android.gms.wearable.Wearable
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.data.WearDataLayerRegistry
+import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.terrazzo.wear.widget.WearWidgetCardStore
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.StreamUpdate
+import ee.schimke.terrazzo.wearsync.proto.WearAccess
 import ee.schimke.terrazzo.wearsync.proto.WearDesignBlob
 import ee.schimke.terrazzo.wearsync.proto.WearLease
 import ee.schimke.terrazzo.wearsync.proto.WearPicture
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 import ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
-import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
 import kotlinx.coroutines.CoroutineScope
@@ -42,7 +44,6 @@ import kotlinx.serialization.json.jsonPrimitive
  *   DataStore entry
  * - [pinned]: phone's pinned card set
  * - [sections]: phone's pinned section set (each becomes a Wear nav destination)
- * - [slots]: phone's widget-slot assignments (drives which wear-widget providers are enabled)
  * - [dashboards]: one entry per `/wear/dashboard/<urlPath>`
  * - [values]: latest entity values, merged from the `/wear/values` DataStore entry (cold reads) and
  *   `/wear/stream` MessageClient deltas (hot path)
@@ -70,6 +71,12 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
    */
   private val offline: WearOfflineStore = WearOfflineStore(context.applicationContext)
 
+  /** Reads the cards' values from Home Assistant itself when the phone has sent none lately. */
+  private val direct = WearDirectAccess(context.applicationContext, offline = offline)
+
+  /** The card each placed widget shows: forgotten with the account on sign-out. */
+  private val widgetCards = WearWidgetCardStore(context.applicationContext)
+
   private val _settings: MutableStateFlow<WearSettings> =
     MutableStateFlow(offline.readSettings() ?: WearSettings())
   val settings: StateFlow<WearSettings> = _settings.asStateFlow()
@@ -82,17 +89,13 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
     MutableStateFlow(offline.readSections() ?: PinnedSectionSet())
   val sections: StateFlow<PinnedSectionSet> = _sections.asStateFlow()
 
-  private val _slots: MutableStateFlow<WearWidgetSlots> =
-    MutableStateFlow(offline.readSlots() ?: WearWidgetSlots())
-  val slots: StateFlow<WearWidgetSlots> = _slots.asStateFlow()
-
   private val _dashboards: MutableStateFlow<List<DashboardData>> =
     MutableStateFlow(offline.readAllDashboards().sortedBy { it.title })
   val dashboards: StateFlow<List<DashboardData>> = _dashboards.asStateFlow()
 
   private val _slotDesigns: MutableStateFlow<WearSlotDesigns> =
     MutableStateFlow(offline.readSlotDesigns() ?: WearSlotDesigns())
-  /** The slot cards' Wear widget designs the phone chose: placed widgets redraw when it changes. */
+  /** The pinned cards' Wear widget designs the phone chose: placed widgets redraw on a change. */
   val slotDesigns: StateFlow<WearSlotDesigns> = _slotDesigns.asStateFlow()
 
   private val _values: MutableStateFlow<Map<String, EntityValue>> =
@@ -160,13 +163,41 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
     }
   }
 
+  /**
+   * Asks the phone to run [action], the action a tap on [card] (its `rawJson`, as the phone sent
+   * it) resolved to, and waits for its answer: see [WearSyncPaths.TAP_MESSAGE]. Only while the
+   * phone allows input editing and isn't in demo mode; the phone checks both again, and runs the
+   * action only when its own copy of [card] makes it. Throws with the phone's reason when it didn't
+   * run. Like [sendInputs]: foreground only, no queue, no retry of a side-effecting send.
+   */
+  suspend fun sendTap(card: String, action: HaAction) {
+    check(wearTapsEnabled(_settings.value)) { "Turn on watch controls on the phone" }
+    val node = nodeClient.connectedNodes.await().firstOrNull() ?: error("Connect the phone to send")
+    val id = java.util.UUID.randomUUID().toString()
+    val response = kotlinx.coroutines.CompletableDeferred<ByteArray>()
+    inputRequests[id] = response
+    try {
+      val request = wearTapRequest(id, card, action)
+      require(request.size <= WEAR_TAP_MAX_BYTES) { "This card is too large to control" }
+      messageClient.sendMessage(node.id, WearSyncPaths.TAP_MESSAGE, request).await()
+      val result = kotlinx.coroutines.withTimeout(15000) { response.await() }
+      wearTapRefusal(result)?.let { error(it) }
+    } finally {
+      inputRequests.remove(id)
+    }
+  }
+
   private val messageListener = MessageClient.OnMessageReceivedListener { event ->
-    if (event.path == "/wear/input-result/v1") {
+    if (event.path == "/wear/input-result/v1" || event.path == WearSyncPaths.TAP_RESULT_MESSAGE) {
       val result = runCatching {
         kotlinx.serialization.json.Json.parseToJsonElement(event.data.decodeToString()).jsonObject
       }
         .getOrNull()
       result?.get("id")?.jsonPrimitive?.content?.let { inputRequests[it]?.complete(event.data) }
+      return@OnMessageReceivedListener
+    }
+    if (event.path == WearSyncPaths.ACCESS_MESSAGE) {
+      decodeProto<WearAccess>(event.data)?.let { direct.accept(it, _settings.value) }
       return@OnMessageReceivedListener
     }
     if (event.path != WearSyncPaths.STREAM_MESSAGE) return@OnMessageReceivedListener
@@ -195,7 +226,27 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
           }
           buffer.release()
         }
+      direct.requestIfMissing(_settings.value)
     }
+  }
+
+  /**
+   * Reads the values of the watch's cards (pinned, in pinned sections and on its dashboards) from
+   * Home Assistant when the phone's are stale: see [WearDirectAccess]. The app calls this while it
+   * is in the foreground.
+   */
+  suspend fun refreshDirect() {
+    val cards =
+      _pinned.value.cards.map { it.card.rawJson } +
+        _sections.value.sections.flatMap { section -> section.cards.map { it.rawJson } } +
+        _dashboards.value.flatMap { board -> board.cards.map { it.rawJson } }
+    runCatching { direct.refresh(cards.filter { it.isNotEmpty() }, _settings.value) }
+      .onFailure {
+        if (it is kotlinx.coroutines.CancellationException) throw it
+        Log.w(TAG, "refreshDirect failed", it)
+      }
+      .getOrNull()
+      ?.let { _values.value = it.values }
   }
 
   fun stop() {
@@ -226,22 +277,34 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
         decodeProto<WearSettings>(bytes)?.let {
           _settings.value = it
           offline.writeSettings(it)
+          // Signed in (or to another instance): the watch may need a token for it.
+          scope.launch { direct.requestIfMissing(it) }
         }
+      // Only a newer copy replaces the one kept, as in [persistChanged]: the cold read meets every
+      // node's copy (a replaced phone's too), in no particular order, and an older one must not
+      // become what the next offline start shows.
       path == WearSyncPaths.PINNED ->
-        decodeProto<PinnedCardSet>(bytes)?.let {
-          _pinned.value = it
-          offline.writePinned(it)
-        }
+        newerThan(
+            decodeProto<PinnedCardSet>(bytes),
+            offline.readPinned(),
+            PinnedCardSet::updatedAtMs,
+          )
+          ?.let {
+            _pinned.value = it
+            offline.writePinned(it)
+          }
       path == WearSyncPaths.SECTIONS ->
-        decodeProto<PinnedSectionSet>(bytes)?.let {
-          _sections.value = it
-          offline.writeSections(it)
-        }
-      path == WearSyncPaths.SLOTS ->
-        decodeProto<WearWidgetSlots>(bytes)?.let {
-          _slots.value = it
-          offline.writeSlots(it)
-        }
+        newerThan(
+            decodeProto<PinnedSectionSet>(bytes),
+            offline.readSections(),
+            PinnedSectionSet::updatedAtMs,
+          )
+          ?.let {
+            _sections.value = it
+            offline.writeSections(it)
+          }
+      // `/wear/slots` (an older phone's widget slot assignments) is ignored: the watch chooses
+      // each widget's card itself.
       path == WearSyncPaths.VALUES ->
         decodeProto<LiveValues>(bytes)?.let { live ->
           // A cold DataItem may predate the last streamed delta persisted on disk. Keep the
@@ -264,7 +327,9 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
       path.startsWith(WearSyncPaths.DESIGN_PREFIX) ->
         decodeProto<WearDesignBlob>(bytes)?.let { offline.writeDesign(it) }
       path.startsWith(WearSyncPaths.DASHBOARD_PREFIX) ->
-        decodeProto<DashboardData>(bytes)?.let { dashboard ->
+        decodeProto<DashboardData>(bytes)?.let { changed ->
+          val kept = _dashboards.value.firstOrNull { it.urlPath == changed.urlPath }
+          val dashboard = newerThan(changed, kept, DashboardData::updatedAtMs) ?: return
           val current = _dashboards.value.toMutableList()
           val idx = current.indexOfFirst { it.urlPath == dashboard.urlPath }
           if (idx >= 0) current[idx] = dashboard else current.add(dashboard)
@@ -276,11 +341,14 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
 
   /** The phone deleted the item at [path] (sign-out, a removed dashboard): drop our copy too. */
   private fun forget(path: String) {
+    // Signed out: the watch's own Home Assistant token goes too.
+    if (path == WearSyncPaths.SETTINGS || signsOut(listOf(path))) direct.forget()
+    // Signed out: no widget may keep drawing the account's cards.
+    if (signsOut(listOf(path))) widgetCards.clear()
     when (val item = offline.forget(path)) {
       ForgottenItem.Settings -> _settings.value = WearSettings()
       ForgottenItem.Pinned -> _pinned.value = PinnedCardSet()
       ForgottenItem.Sections -> _sections.value = PinnedSectionSet()
-      ForgottenItem.Slots -> _slots.value = WearWidgetSlots()
       ForgottenItem.Values -> _values.value = emptyMap()
       is ForgottenItem.Dashboard -> _dashboards.value = _dashboards.value.filterNot(item::matches)
       ForgottenItem.SlotDesigns -> _slotDesigns.value = WearSlotDesigns()
@@ -297,19 +365,33 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
 }
 
 /**
- * Copies the widget slots, pinned cards and entity values from the Data Layer into [store], where
- * newer. The Wear widgets call this when they render: [WearSyncRepository] only listens while the
+ * Copies the settings, pinned cards and sections and entity values from the Data Layer into
+ * [store], where newer. The settings say which instance the watch may read itself, if any (a widget
+ * reading Home Assistant directly must see demo mode or another sign-in as soon as the phone writes
+ * it). The Wear widgets call this when they render: [WearSyncRepository] only listens while the
  * watch app runs, and a DataItem persists in the Data Layer whether or not anything was listening
  * when it arrived.
  */
 internal suspend fun syncWidgetStateFromDataLayer(context: Context, store: WearOfflineStore) {
   val client = Wearable.getDataClient(context)
-  val slotsTime = WearWidgetSlots::updatedAtMs
-  newerThan(dataItem(client, WearSyncPaths.SLOTS, slotsTime), store.readSlots(), slotsTime)
-    ?.let(store::writeSlots)
+  val settingsTime = WearSettings::updatedAtMs
+  newerThan(
+      dataItem(client, WearSyncPaths.SETTINGS, settingsTime),
+      store.readSettings(),
+      settingsTime,
+    )
+    ?.let(store::writeSettings)
   val pinnedTime = PinnedCardSet::updatedAtMs
   newerThan(dataItem(client, WearSyncPaths.PINNED, pinnedTime), store.readPinned(), pinnedTime)
     ?.let(store::writePinned)
+  // A widget may show a pinned section's card.
+  val sectionsTime = PinnedSectionSet::updatedAtMs
+  newerThan(
+      dataItem(client, WearSyncPaths.SECTIONS, sectionsTime),
+      store.readSections(),
+      sectionsTime,
+    )
+    ?.let(store::writeSections)
   // Stream deltas the running app merged carry their own capture time, so the newer one wins.
   val valuesTime = LiveValues::capturedAtMs
   valuesNotOlder(dataItem(client, WearSyncPaths.VALUES, valuesTime), store.readValues())
@@ -317,7 +399,7 @@ internal suspend fun syncWidgetStateFromDataLayer(context: Context, store: WearO
 }
 
 /**
- * Copies the slot cards' Wear widget designs from the Data Layer into [store]: the index where
+ * Copies the pinned cards' Wear widget designs from the Data Layer into [store]: the index where
  * newer, then the designs it names that [store] lacks. See [syncWidgetStateFromDataLayer].
  */
 internal suspend fun syncDesignsFromDataLayer(context: Context, store: WearOfflineStore) {

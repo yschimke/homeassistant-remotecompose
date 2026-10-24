@@ -1,5 +1,177 @@
 # Changelog
 
+## [0.1.63](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.62...v0.1.63) (2026-10-24)
+
+
+### Features
+
+* **app:** edit dashboards on the phone, with a live grid editor and agent handoff ([#1162](https://github.com/yschimke/homeassistant-remotecompose/issues/1162)) ([3199dad](https://github.com/yschimke/homeassistant-remotecompose/commit/3199dad57c3a4454b2da1d2b0885f752db161fe4))
+* close the offline-first gaps, image refresh rules and live camera mode ([#1145](https://github.com/yschimke/homeassistant-remotecompose/issues/1145)) ([7529ad0](https://github.com/yschimke/homeassistant-remotecompose/commit/7529ad03c3bb7412e86f04c21d3ff4749ddd6ad4))
+* measure in-app card rebuilds on live data ([#1155](https://github.com/yschimke/homeassistant-remotecompose/issues/1155)) ([111ed52](https://github.com/yschimke/homeassistant-remotecompose/commit/111ed52148cfafc71f3df95fa27fb11c91f362dd))
+* **rc-converter:** draw the alarm-panel, map and picture-elements cards from their designs ([#1166](https://github.com/yschimke/homeassistant-remotecompose/issues/1166)) ([6a37c28](https://github.com/yschimke/homeassistant-remotecompose/commit/6a37c28be19f6e71600510b3db6d1d06ee5ceea9))
+* **rc-converter:** draw the area and media-control cards from their designs ([#1164](https://github.com/yschimke/homeassistant-remotecompose/issues/1164)) ([be5895c](https://github.com/yschimke/homeassistant-remotecompose/commit/be5895c2a4aedd3cf24e707e76f91539937e68ff))
+* **rc-converter:** draw the clock card from clock.uid ([#1154](https://github.com/yschimke/homeassistant-remotecompose/issues/1154)) ([72977a9](https://github.com/yschimke/homeassistant-remotecompose/commit/72977a9c50a051686ac5efa8dd402fe03a7fd52a))
+* **rc-converter:** draw the entities and weather-forecast cards from their designs ([#1168](https://github.com/yschimke/homeassistant-remotecompose/issues/1168)) ([6c2c23d](https://github.com/yschimke/homeassistant-remotecompose/commit/6c2c23d57c950f753f568a947992c1e38e8a80a2))
+* **rc-converter:** draw the gauge and statistic cards from their designs ([#1160](https://github.com/yschimke/homeassistant-remotecompose/issues/1160)) ([7f6bb06](https://github.com/yschimke/homeassistant-remotecompose/commit/7f6bb06cf06f752c9921662ee3f99a2c79f60e67))
+* **rc-converter:** draw the glance card from glance.uid ([#1152](https://github.com/yschimke/homeassistant-remotecompose/issues/1152)) ([bcbaed6](https://github.com/yschimke/homeassistant-remotecompose/commit/bcbaed640ee9ea5af7d9d1a6d11cef168316f7fe))
+* **rc-converter:** draw the heading card from heading.uid ([#1150](https://github.com/yschimke/homeassistant-remotecompose/issues/1150)) ([50b34f2](https://github.com/yschimke/homeassistant-remotecompose/commit/50b34f2a26866f0763b2035ab9a1064e6c6eb647))
+* **rc-converter:** draw the history-graph, statistics-graph and markdown cards from their designs ([#1165](https://github.com/yschimke/homeassistant-remotecompose/issues/1165)) ([7047faa](https://github.com/yschimke/homeassistant-remotecompose/commit/7047faa4d92aadaa7809e623124747a3dde93795))
+* **rc-converter:** draw the logbook, calendar and to-do list cards from their designs ([#1163](https://github.com/yschimke/homeassistant-remotecompose/issues/1163)) ([bc2f839](https://github.com/yschimke/homeassistant-remotecompose/commit/bc2f839a45bd6e4449a45c5ea1caaccad51f428b))
+* **rc-converter:** draw the picture cards from their designs ([#1156](https://github.com/yschimke/homeassistant-remotecompose/issues/1156)) ([3fdd452](https://github.com/yschimke/homeassistant-remotecompose/commit/3fdd452405e486566d4c7b9ba3488161db1ab3c5))
+* **rc-converter:** draw the sensor card from sensor.uid, and keep migrated cards migrated ([#1144](https://github.com/yschimke/homeassistant-remotecompose/issues/1144)) ([ca297a7](https://github.com/yschimke/homeassistant-remotecompose/commit/ca297a73859b28646b242530b3649c3d99e16878))
+* **rc-converter:** draw the thermostat, humidifier and light cards from their designs ([#1158](https://github.com/yschimke/homeassistant-remotecompose/issues/1158)) ([a93d006](https://github.com/yschimke/homeassistant-remotecompose/commit/a93d0060fc9ad9b02e73ae8077707051f59110c5))
+* **rc-converter:** draw the vertical-stack, horizontal-stack and grid cards from their designs ([#1169](https://github.com/yschimke/homeassistant-remotecompose/issues/1169)) ([a926de7](https://github.com/yschimke/homeassistant-remotecompose/commit/a926de7546c892c97a2f8e469d163df6bba92e1a))
+* **wear:** run watch card taps through the phone, and open the app from a Wear widget tap ([#1151](https://github.com/yschimke/homeassistant-remotecompose/issues/1151)) ([6b3dffc](https://github.com/yschimke/homeassistant-remotecompose/commit/6b3dffcd2e8077183067059dc401b6328f4fe740))
+* **widget:** open a widget's more-info and navigate taps on their target ([#1148](https://github.com/yschimke/homeassistant-remotecompose/issues/1148)) ([7b3504e](https://github.com/yschimke/homeassistant-remotecompose/commit/7b3504e4756de4243ee5f543c6967188a7af104a))
+
+
+### Bug Fixes
+
+* **a11y:** give the dial steppers 48 dp touch targets and labels ([#1142](https://github.com/yschimke/homeassistant-remotecompose/issues/1142)) ([b221a6a](https://github.com/yschimke/homeassistant-remotecompose/commit/b221a6a1f25f08fe605dbdd00f2eb66c877a3b3d))
+* **deps:** update compose-ai-tools ([#1143](https://github.com/yschimke/homeassistant-remotecompose/issues/1143)) ([89b923d](https://github.com/yschimke/homeassistant-remotecompose/commit/89b923df6cfd1db5ae1c12e6d819a6eab91af5bc))
+* **deps:** update compose-ai-tools ([#1159](https://github.com/yschimke/homeassistant-remotecompose/issues/1159)) ([8e5f977](https://github.com/yschimke/homeassistant-remotecompose/commit/8e5f9770e31bf8266b0ab2b9f3a6bdcd7e491df8))
+* keep weighted rows inside their width, and an inline tile's stepper readable ([#1153](https://github.com/yschimke/homeassistant-remotecompose/issues/1153)) ([872f851](https://github.com/yschimke/homeassistant-remotecompose/commit/872f8515677d585d58c4775f586453042afd86f5))
+* no flicker or main-thread capture when a card on screen rebuilds ([#1157](https://github.com/yschimke/homeassistant-remotecompose/issues/1157)) ([9959731](https://github.com/yschimke/homeassistant-remotecompose/commit/99597312ef646d19e88cf39ea5d4921883448f14))
+* **rc-converter:** capture card design templates under a pinned clock ([#1161](https://github.com/yschimke/homeassistant-remotecompose/issues/1161)) ([985d1e3](https://github.com/yschimke/homeassistant-remotecompose/commit/985d1e385e81ef94a4cbdfb37a0a05f6bafd143b))
+* stack the ARM buttons on a two-column alarm panel widget ([#1141](https://github.com/yschimke/homeassistant-remotecompose/issues/1141)) ([c271bd6](https://github.com/yschimke/homeassistant-remotecompose/commit/c271bd6736e9f420b8b410ceb9ade4bf2af3f19b))
+
+## [0.1.62](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.61...v0.1.62) (2026-10-23)
+
+
+### Features
+
+* **app:** install skins before a card can use them ([#1125](https://github.com/yschimke/homeassistant-remotecompose/issues/1125)) ([8655ddc](https://github.com/yschimke/homeassistant-remotecompose/commit/8655ddcf7de830f33bb9a9309f904846540f9314))
+* apply the card information hierarchy to thermostat, humidifier and 1×1 widgets ([#1132](https://github.com/yschimke/homeassistant-remotecompose/issues/1132)) ([7c6f262](https://github.com/yschimke/homeassistant-remotecompose/commit/7c6f262ff1fe4535162f7f42d0fa885e2b6f1ec6))
+* **app:** say what kind of card each home screen widget draws ([#1128](https://github.com/yschimke/homeassistant-remotecompose/issues/1128)) ([771cbe2](https://github.com/yschimke/homeassistant-remotecompose/commit/771cbe207a08cf476f5725e2ad854202c20781b3))
+* **app:** ship the default style's card designs as a fallback under the server's ([#1133](https://github.com/yschimke/homeassistant-remotecompose/issues/1133)) ([148f74f](https://github.com/yschimke/homeassistant-remotecompose/commit/148f74f70faf39713b983a546229ada4e1192ccf))
+* choose a card's design per card, by stable design id ([#1115](https://github.com/yschimke/homeassistant-remotecompose/issues/1115)) ([a7c49b6](https://github.com/yschimke/homeassistant-remotecompose/commit/a7c49b6468902f7915b217a5fc05aabd1e7012e7))
+* **design-server:** edit library card designs in UI Builder and import them back ([#1114](https://github.com/yschimke/homeassistant-remotecompose/issues/1114)) ([0e75cd5](https://github.com/yschimke/homeassistant-remotecompose/commit/0e75cd53245cff080455d0066d5f18ce3cfc46fd))
+* make every card player an error boundary ([#1121](https://github.com/yschimke/homeassistant-remotecompose/issues/1121)) ([63924b1](https://github.com/yschimke/homeassistant-remotecompose/commit/63924b1fd272f34fd4aa755af2b40b2a55ceac81))
+* memory benchmarks for phone and watch, and trim-memory support ([#1136](https://github.com/yschimke/homeassistant-remotecompose/issues/1136)) ([ea3b040](https://github.com/yschimke/homeassistant-remotecompose/commit/ea3b0408555c00861f87ee83dfdacd342adaa5c2))
+* offline-first phone and watch, and cache-trim analytics ([#1140](https://github.com/yschimke/homeassistant-remotecompose/issues/1140)) ([3cebdc7](https://github.com/yschimke/homeassistant-remotecompose/commit/3cebdc77133789cd1748867f0aa4aaa9ba16641f))
+* preview card styles and library designs on approximate Wear watch screens ([#1119](https://github.com/yschimke/homeassistant-remotecompose/issues/1119)) ([beefb9f](https://github.com/yschimke/homeassistant-remotecompose/commit/beefb9f9ba8b9fc95804c9d9f009371678f95f88))
+* **rc-converter:** draw the button card from button.uid ([#1135](https://github.com/yschimke/homeassistant-remotecompose/issues/1135)) ([5eb432b](https://github.com/yschimke/homeassistant-remotecompose/commit/5eb432b8f83742f8cfb16a7ea4ab7cae103819c1))
+* **rc-converter:** draw the entity card from entity.uid ([#1139](https://github.com/yschimke/homeassistant-remotecompose/issues/1139)) ([9a88731](https://github.com/yschimke/homeassistant-remotecompose/commit/9a88731e32659d984d56a4d89fc523884786ce44))
+* **rc-converter:** draw the tile from tile.uid and put its parts on UI Builder's shelf ([#1117](https://github.com/yschimke/homeassistant-remotecompose/issues/1117)) ([32bba07](https://github.com/yschimke/homeassistant-remotecompose/commit/32bba074ad6299de70967808afb1fd5655596d07))
+* start in safe mode after a crash and check cards off-screen first ([#1124](https://github.com/yschimke/homeassistant-remotecompose/issues/1124)) ([f9256ee](https://github.com/yschimke/homeassistant-remotecompose/commit/f9256ee900bd0cb1f53eb34ca13878b325dc7f7f))
+* **wear:** don't offer a small-only card for a Large widget ([#1134](https://github.com/yschimke/homeassistant-remotecompose/issues/1134)) ([bbce321](https://github.com/yschimke/homeassistant-remotecompose/commit/bbce3210099289609ca54beb436e823cab33c14d))
+* **wear:** name the entity in Small Button and Light widgets ([#1130](https://github.com/yschimke/homeassistant-remotecompose/issues/1130)) ([3671214](https://github.com/yschimke/homeassistant-remotecompose/commit/36712140df1bfdf163e03dc40bbddad934d6fd16))
+* **widget:** run alarm panel taps and entity-less service calls from launcher widgets ([#1146](https://github.com/yschimke/homeassistant-remotecompose/issues/1146)) ([4fb883a](https://github.com/yschimke/homeassistant-remotecompose/commit/4fb883a28833e748da3c409259531bb6a055a3f8))
+
+
+### Bug Fixes
+
+* **app:** don't call a widget's -card type a "card card" ([#1129](https://github.com/yschimke/homeassistant-remotecompose/issues/1129)) ([f4dd8d2](https://github.com/yschimke/homeassistant-remotecompose/commit/f4dd8d20f7d0f31442de459397dc197a7591a60c))
+* polish launcher widget sizes for dials, gauge, statistic and alarm panel ([#1138](https://github.com/yschimke/homeassistant-remotecompose/issues/1138)) ([f6f976b](https://github.com/yschimke/homeassistant-remotecompose/commit/f6f976bc5b16ef986d6fd04f4d01c318c4be8328))
+* **previews:** size the thermostat and entity-filter previews to their cards ([#1126](https://github.com/yschimke/homeassistant-remotecompose/issues/1126)) ([f4f1159](https://github.com/yschimke/homeassistant-remotecompose/commit/f4f11590ca6a40a52c3b32f636035763588a2bdb))
+
+## [0.1.61](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.60...v0.1.61) (2026-10-23)
+
+
+### Features
+
+* **card-designs:** draw UI Builder card designs in-repo, starting with the tile ([#1106](https://github.com/yschimke/homeassistant-remotecompose/issues/1106)) ([a2d07ee](https://github.com/yschimke/homeassistant-remotecompose/commit/a2d07eec6cab06eaeba0553dc523634fe4bb0158))
+* **wear:** choose a Wear widget's card on the watch, not the phone ([#1113](https://github.com/yschimke/homeassistant-remotecompose/issues/1113)) ([1c6c31a](https://github.com/yschimke/homeassistant-remotecompose/commit/1c6c31af71366b1c5d55a634723e0b73a26511ad))
+* **wear:** draw the Wear app's cards in their widget's frame ([#1105](https://github.com/yschimke/homeassistant-remotecompose/issues/1105)) ([b70a81b](https://github.com/yschimke/homeassistant-remotecompose/commit/b70a81ba1f0b8513f514288be9ba91b515bc4347))
+
+
+### Bug Fixes
+
+* **deps:** update compose-multiplatform to v1.13.0-beta01 ([#1108](https://github.com/yschimke/homeassistant-remotecompose/issues/1108)) ([5c5420a](https://github.com/yschimke/homeassistant-remotecompose/commit/5c5420a7c4f1e2853ab49f540ae54f231d045d99))
+* **deps:** update dependency org.jetbrains.androidx.navigation3:navigation3-ui to v1.2.0 ([#1110](https://github.com/yschimke/homeassistant-remotecompose/issues/1110)) ([354db61](https://github.com/yschimke/homeassistant-remotecompose/commit/354db6159950d01eae5508f0ddcd25ddc8ece0f8))
+* **design-server:** don't clip card previews with rounded containers ([#1104](https://github.com/yschimke/homeassistant-remotecompose/issues/1104)) ([3eed586](https://github.com/yschimke/homeassistant-remotecompose/commit/3eed58626cfa4afe5e03df5519667ac5e7706ff5))
+* don't long-press a card during a slow drag ([#1096](https://github.com/yschimke/homeassistant-remotecompose/issues/1096)) ([a334776](https://github.com/yschimke/homeassistant-remotecompose/commit/a3347767c9e510d7f63f27e2370ab9cbd9cd0510))
+* **rc-converter:** drop RemoteSizeBreakpoint's transparent forcing text; capture the gauge at its preview width ([#1099](https://github.com/yschimke/homeassistant-remotecompose/issues/1099)) ([5f602c5](https://github.com/yschimke/homeassistant-remotecompose/commit/5f602c549d02736554a3bc2d513e832204ffc081))
+* **wear:** read a kept widget card's values when the phone stops sending them ([#1116](https://github.com/yschimke/homeassistant-remotecompose/issues/1116)) ([da81090](https://github.com/yschimke/homeassistant-remotecompose/commit/da810909dba820c5b60e3b59db7e81df6714257f))
+* **wear:** recapture a Wear app card's template when its toggle turns on or off ([#1109](https://github.com/yschimke/homeassistant-remotecompose/issues/1109)) ([8fe560f](https://github.com/yschimke/homeassistant-remotecompose/commit/8fe560f767ea4a550c57fb0eff8d9be2eeb1b038))
+
+
+### Performance Improvements
+
+* draw the dashboard, with its cards, as the first frame ([#1097](https://github.com/yschimke/homeassistant-remotecompose/issues/1097)) ([2f438f5](https://github.com/yschimke/homeassistant-remotecompose/commit/2f438f5bdda82daad50ebf8737e4119d2ccf1a37))
+* **wear:** first frame is the pinned list; benchmark real cards ([#1102](https://github.com/yschimke/homeassistant-remotecompose/issues/1102)) ([087eff8](https://github.com/yschimke/homeassistant-remotecompose/commit/087eff8aeb162aa14eab09030dc9906f51c9187c))
+* **wear:** minify the release build with R8 ([#1112](https://github.com/yschimke/homeassistant-remotecompose/issues/1112)) ([724b943](https://github.com/yschimke/homeassistant-remotecompose/commit/724b943ff876b848bdd1f8c0773e5a66468307f2))
+
+## [0.1.60](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.59...v0.1.60) (2026-10-23)
+
+
+### Features
+
+* **wear:** instantiate a server Wear design that names its container frame ([#1077](https://github.com/yschimke/homeassistant-remotecompose/issues/1077)) ([0492403](https://github.com/yschimke/homeassistant-remotecompose/commit/049240303b587a1f9a18c6f247e750ce57d999d6))
+* **wear:** reframe a phone card design into the Wear container, centred ([#1084](https://github.com/yschimke/homeassistant-remotecompose/issues/1084)) ([d155e18](https://github.com/yschimke/homeassistant-remotecompose/commit/d155e18d00b4810ea9d97d09ca52f205276e644b))
+* **widgets:** fit Wear and launcher widgets to their space, preview widgets per host ([#1090](https://github.com/yschimke/homeassistant-remotecompose/issues/1090)) ([86099d3](https://github.com/yschimke/homeassistant-remotecompose/commit/86099d3807770fcd4ca624d29402382f96550069))
+* **widgets:** scale launcher widget cards up and down with their size ([#1081](https://github.com/yschimke/homeassistant-remotecompose/issues/1081)) ([56bf761](https://github.com/yschimke/homeassistant-remotecompose/commit/56bf761f6cd55029f929abe9a67c95bd864a14f8))
+
+
+### Bug Fixes
+
+* AMS spools share their row; a Wear grid shows every cell ([#1087](https://github.com/yschimke/homeassistant-remotecompose/issues/1087)) ([e6ee940](https://github.com/yschimke/homeassistant-remotecompose/commit/e6ee940107c4539ba379447cd7546c0933003cba))
+* **cards:** fit narrow tiles, picture cards and placeholders in their widgets; name weather conditions ([#1092](https://github.com/yschimke/homeassistant-remotecompose/issues/1092)) ([5482b12](https://github.com/yschimke/homeassistant-remotecompose/commit/5482b1281f51bd502d13dd86ff0f510fb6ee7df2))
+* **deps:** update compose-ai-tools ([#1093](https://github.com/yschimke/homeassistant-remotecompose/issues/1093)) ([c1dd8c4](https://github.com/yschimke/homeassistant-remotecompose/commit/c1dd8c471e72ad54ad9e61e1731077d28f8d0c37))
+* **deps:** update dependency ee.schimke.composeai:data-render-core to v3.39.0 ([#1094](https://github.com/yschimke/homeassistant-remotecompose/issues/1094)) ([3e09164](https://github.com/yschimke/homeassistant-remotecompose/commit/3e091649aa97790cf3977f9bd1395fe5a7abada3))
+* **design-server:** keep Wear widgets that leave their container frame to the watch ([#1080](https://github.com/yschimke/homeassistant-remotecompose/issues/1080)) ([983c7f7](https://github.com/yschimke/homeassistant-remotecompose/commit/983c7f7b37ee0c46a931ef822643c6e6a6e7ef67))
+
+## [0.1.59](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.58...v0.1.59) (2026-10-22)
+
+
+### Features
+
+* prototype RemoteSectionCardFlow, a section flowed inside one document ([#1066](https://github.com/yschimke/homeassistant-remotecompose/issues/1066)) ([8beef92](https://github.com/yschimke/homeassistant-remotecompose/commit/8beef92e2af5ff97c65d0f9f9be6fbb9ca94ec3b))
+
+
+### Bug Fixes
+
+* **deps:** update compose-ai-tools ([#1073](https://github.com/yschimke/homeassistant-remotecompose/issues/1073)) ([fdbdf40](https://github.com/yschimke/homeassistant-remotecompose/commit/fdbdf409ab40174e8d46ca5958c1f0048675d0b5))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-daemon-bom to v3.22.0 ([#1068](https://github.com/yschimke/homeassistant-remotecompose/issues/1068)) ([34578b0](https://github.com/yschimke/homeassistant-remotecompose/commit/34578b0fd6f9f5f76148d0e7003b218785fa0614))
+* **deps:** update dependency ee.schimke.composeai:data-render-core to v3.38.0 ([#1071](https://github.com/yschimke/homeassistant-remotecompose/issues/1071)) ([c11fa38](https://github.com/yschimke/homeassistant-remotecompose/commit/c11fa380b98a8580823ecb9bca6c01690aecf8ad))
+
+
+### Performance Improvements
+
+* keep a screen of dashboard rows composed around the viewport ([#1065](https://github.com/yschimke/homeassistant-remotecompose/issues/1065)) ([1d0c740](https://github.com/yschimke/homeassistant-remotecompose/commit/1d0c74045d4401d62d42a70f1617b4f3115a99e2))
+* let a card's player skip recomposition on data changes ([#1072](https://github.com/yschimke/homeassistant-remotecompose/issues/1072)) ([5b872ec](https://github.com/yschimke/homeassistant-remotecompose/commit/5b872ec44e2eee386a9d9f41021b376a564fb4de))
+
+
+### Reverts
+
+* drop the dashboard list's cache window ([#1069](https://github.com/yschimke/homeassistant-remotecompose/issues/1069)) ([562f8d8](https://github.com/yschimke/homeassistant-remotecompose/commit/562f8d80e596508e817bebf2be656e206945d943))
+
+## [0.1.58](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.57...v0.1.58) (2026-10-22)
+
+
+### Features
+
+* add RemoteFlexBox, a Remote Compose port of androidx FlexBox ([#1061](https://github.com/yschimke/homeassistant-remotecompose/issues/1061)) ([f7a92b3](https://github.com/yschimke/homeassistant-remotecompose/commit/f7a92b3735c1733b119c10efd1aa4251c4ddc7db))
+* assistant access via Android AppFunctions and an opt-in MCP server ([#1062](https://github.com/yschimke/homeassistant-remotecompose/issues/1062)) ([1989810](https://github.com/yschimke/homeassistant-remotecompose/commit/1989810478071393fc551c9431d1215b19548156))
+
+## [0.1.57](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.56...v0.1.57) (2026-10-22)
+
+
+### Features
+
+* **wear:** read card values from Home Assistant directly when the phone has none ([#1052](https://github.com/yschimke/homeassistant-remotecompose/issues/1052)) ([f7f6f3b](https://github.com/yschimke/homeassistant-remotecompose/commit/f7f6f3b954ba6d1be8f88d0491ba3e3c54fb8259))
+* **web:** package the Wasm web app as a Wasmo app with Home Assistant OAuth sign-in ([#1043](https://github.com/yschimke/homeassistant-remotecompose/issues/1043)) ([aa38120](https://github.com/yschimke/homeassistant-remotecompose/commit/aa38120495e8ea2bbb217839be464c820be88cfc))
+
+
+### Bug Fixes
+
+* **deps:** hold DataStore at 1.2.1 after a startup hang on 1.3.0 ([#1054](https://github.com/yschimke/homeassistant-remotecompose/issues/1054)) ([aca6b22](https://github.com/yschimke/homeassistant-remotecompose/commit/aca6b228374ea7094fe34258a0c20f5f48287696))
+* **deps:** update androidx to v1.3.0 ([#1037](https://github.com/yschimke/homeassistant-remotecompose/issues/1037)) ([08a048e](https://github.com/yschimke/homeassistant-remotecompose/commit/08a048eb75521f0cd369fb15397c7cfae05deb84))
+* **deps:** update compose-ai-tools ([#1034](https://github.com/yschimke/homeassistant-remotecompose/issues/1034)) ([e097c0c](https://github.com/yschimke/homeassistant-remotecompose/commit/e097c0c09e40023e9eaf994970964462fd7da8da))
+* **deps:** update dependency androidx.compose.material3:material3 to v1.5.0-beta02 ([#1035](https://github.com/yschimke/homeassistant-remotecompose/issues/1035)) ([7ed2deb](https://github.com/yschimke/homeassistant-remotecompose/commit/7ed2deb401f9917044647e55e603944be68a2f79))
+* **deps:** update dependency com.google.firebase:firebase-bom to v35 ([#1041](https://github.com/yschimke/homeassistant-remotecompose/issues/1041)) ([2273a4f](https://github.com/yschimke/homeassistant-remotecompose/commit/2273a4f8c1ce984eecec289d4aada57f21c3c26c))
+* **deps:** update dependency com.google.firebase:firebase-bom to v35.1.0 ([#1048](https://github.com/yschimke/homeassistant-remotecompose/issues/1048)) ([201f667](https://github.com/yschimke/homeassistant-remotecompose/commit/201f667c84ea38b85d04953846be464a05e096a1))
+* **deps:** update dependency ee.schimke.composeai:rc-player-protocol to v2.17.2 ([#1045](https://github.com/yschimke/homeassistant-remotecompose/issues/1045)) ([54235b6](https://github.com/yschimke/homeassistant-remotecompose/commit/54235b6c99b1c32e626006c22521a381e15f9fdf))
+* **deps:** update okhttp to v5.5.1 ([#1051](https://github.com/yschimke/homeassistant-remotecompose/issues/1051)) ([a840026](https://github.com/yschimke/homeassistant-remotecompose/commit/a8400265e63e55f740ed2dd6edac248c48c06242))
+* **deps:** update remote-compose ([#1036](https://github.com/yschimke/homeassistant-remotecompose/issues/1036)) ([0c42257](https://github.com/yschimke/homeassistant-remotecompose/commit/0c42257abbc5d202e6e6c89167d96557011d6c69))
+* stop three crashes reported by Crashlytics ([#1047](https://github.com/yschimke/homeassistant-remotecompose/issues/1047)) ([6fccdd1](https://github.com/yschimke/homeassistant-remotecompose/commit/6fccdd12aa66930afc7c8240f3b8a10accf6c6f2))
+* **wear:** give each screen a ScreenScaffold tied to its list ([#1046](https://github.com/yschimke/homeassistant-remotecompose/issues/1046)) ([53d7e76](https://github.com/yschimke/homeassistant-remotecompose/commit/53d7e763b20b4f91103b86667549a10892b6fc15))
+
+
+### Performance Improvements
+
+* resolve dashboard card templates off the main thread ([#1040](https://github.com/yschimke/homeassistant-remotecompose/issues/1040)) ([6735ba2](https://github.com/yschimke/homeassistant-remotecompose/commit/6735ba2657fae5942414bd946904a4772d508303))
+
 ## [0.1.56](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.55...v0.1.56) (2026-10-21)
 
 

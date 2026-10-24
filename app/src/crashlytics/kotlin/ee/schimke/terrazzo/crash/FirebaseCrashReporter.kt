@@ -1,7 +1,9 @@
 package ee.schimke.terrazzo.crash
 
 import android.content.Context
+import android.os.Bundle
 import com.google.firebase.FirebaseApp
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 /**
@@ -18,13 +20,29 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
  */
 internal class FirebaseCrashReporter : CrashReporter {
   private val crashlytics: FirebaseCrashlytics by lazy { FirebaseCrashlytics.getInstance() }
+  @Volatile private var analytics: FirebaseAnalytics? = null
 
   override fun install(context: Context) {
     FirebaseApp.initializeApp(context)
+    analytics = FirebaseAnalytics.getInstance(context)
     crashlytics.isCrashlyticsCollectionEnabled = true
   }
 
   override fun recordCrash(throwable: Throwable) {
     crashlytics.recordException(throwable)
+  }
+
+  override fun logEvent(name: String, params: Map<String, Any>) {
+    val bundle =
+      Bundle(params.size).apply {
+        params.forEach { (key, value) ->
+          when (value) {
+            is Number -> putLong(key, value.toLong())
+            // Firebase keeps the first 100 characters of a string parameter.
+            else -> putString(key, value.toString().take(100))
+          }
+        }
+      }
+    analytics?.logEvent(name, bundle)
   }
 }

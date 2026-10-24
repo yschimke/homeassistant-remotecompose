@@ -1,0 +1,124 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "glance",
+  "title": "Glance",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 140,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "cell"
+        ]
+      }
+    },
+    "cell": {
+      "id": "cell",
+      "componentId": "ha-cards/glance-card-cell",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "tile": [
+          "first-tile"
+        ],
+        "wear": [
+          "wear-tiers"
+        ],
+        "other": [
+          "grid"
+        ]
+      }
+    },
+    "first-tile": {
+      "id": "first-tile",
+      "componentId": "ha-cards/glance-card-first-tile",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "wear-tiers": {
+      "id": "wear-tiers",
+      "componentId": "ha-cards/size-tiers",
+      "properties": {
+        "axis": {
+          "type": "string",
+          "value": "height"
+        },
+        "thresholdsDp": {
+          "type": "string",
+          "value": "80"
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "tier0": [
+          "wear-small"
+        ],
+        "tier1": [
+          "wear-large"
+        ]
+      }
+    },
+    "wear-small": {
+      "id": "wear-small",
+      "componentId": "ha-cards/glance-card-cells",
+      "properties": {
+        "compact": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "wear-large": {
+      "id": "wear-large",
+      "componentId": "ha-cards/glance-card-cells",
+      "properties": {
+        "compact": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "grid": {
+      "id": "grid",
+      "componentId": "ha-cards/glance-card-grid",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

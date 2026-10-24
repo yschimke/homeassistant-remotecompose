@@ -112,6 +112,15 @@ interface HaSession {
   suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot>
 
   /**
+   * [listDashboards] when it needs no round trip (demo mode's built-in boards), so the first
+   * composition shows them; null for a session that must ask Home Assistant.
+   */
+  fun dashboardsNow(): List<DashboardSummary>? = null
+
+  /** [loadDashboard] when it needs no round trip, like [dashboardsNow]; null otherwise. */
+  fun dashboardNow(urlPath: String?): Pair<Dashboard, HaSnapshot>? = null
+
+  /**
    * Every entity's current state, with the device registry, for a host that renders no one
    * dashboard (the Wear sync). It reads no dashboard config, so it works whatever the default
    * dashboard is: an auto-generated Overview or a strategy dashboard, which [loadDashboard]
@@ -140,6 +149,18 @@ interface HaSession {
    * replaced, for undo. Sessions that can't write to Home Assistant refuse.
    */
   suspend fun replaceDashboardConfig(urlPath: String?, config: JsonObject): JsonObject =
+    throw UnsupportedOperationException("This session can't save dashboards to Home Assistant.")
+
+  /**
+   * Save [config] only if Home Assistant still holds [expected], the config the edit started from;
+   * otherwise throw [ee.schimke.ha.client.dashboard.DashboardConflictException] and write nothing.
+   * The dashboard editor saves and undoes through this so another client's change is never lost.
+   */
+  suspend fun compareAndReplaceDashboardConfig(
+    urlPath: String?,
+    expected: JsonObject,
+    config: JsonObject,
+  ): Unit =
     throw UnsupportedOperationException("This session can't save dashboards to Home Assistant.")
 
   /**
@@ -184,6 +205,20 @@ interface HaSession {
    * no-op for sessions with nothing to clear.
    */
   suspend fun dismissAllNotifications(): Unit = Unit
+
+  /**
+   * A new long-lived access token for the signed-in user, named [clientName] in their Home
+   * Assistant profile: for a device that reads Home Assistant itself (the watch). Null for sessions
+   * that have no user to make one for (demo, offline). Home Assistant refuses a second token with a
+   * name already in use, so delete it first ([deleteLongLivedTokens]) to replace one.
+   */
+  suspend fun createLongLivedToken(clientName: String, lifespanDays: Int): String? = null
+
+  /**
+   * Deletes the signed-in user's long-lived access tokens whose name [matches], returning how many
+   * went. Sessions with no user to delete them for delete nothing.
+   */
+  suspend fun deleteLongLivedTokens(matches: (clientName: String) -> Boolean): Int = 0
 
   suspend fun close()
 }
@@ -389,11 +424,23 @@ class LiveHaSession(
 
   override suspend fun fetchInstanceConfig(): HaInstanceConfig = client.fetchConfig()
 
+  override suspend fun createLongLivedToken(clientName: String, lifespanDays: Int): String =
+    client.createLongLivedAccessToken(clientName, lifespanDays)
+
+  override suspend fun deleteLongLivedTokens(matches: (clientName: String) -> Boolean): Int =
+    client.deleteLongLivedAccessTokens(matches)
+
   override suspend fun fetchDashboardConfig(urlPath: String?): JsonObject =
     client.fetchDashboardConfig(urlPath)
 
   override suspend fun replaceDashboardConfig(urlPath: String?, config: JsonObject): JsonObject =
     client.replaceDashboardConfig(config, urlPath)
+
+  override suspend fun compareAndReplaceDashboardConfig(
+    urlPath: String?,
+    expected: JsonObject,
+    config: JsonObject,
+  ) = client.compareAndReplaceDashboardConfig(expected, config, urlPath)
 
   override suspend fun callService(
     domain: String,

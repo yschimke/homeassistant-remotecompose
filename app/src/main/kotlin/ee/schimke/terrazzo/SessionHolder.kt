@@ -22,12 +22,6 @@ import kotlinx.coroutines.launch
 class SessionHolder(private val closeScope: CoroutineScope) : ViewModel() {
   var session: HaSession? by mutableStateOf(null)
 
-  /**
-   * Set by the cold-start resume when Home Assistant refuses the stored refresh token for this
-   * cache-only session. The composition owns sign-out, so it signs out and clears this.
-   */
-  var refusedSession: HaSession? by mutableStateOf(null)
-
   private var started = false
 
   /**

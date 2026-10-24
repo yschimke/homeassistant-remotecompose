@@ -17,7 +17,7 @@ import kotlinx.serialization.Serializable
  *     - `/wear/settings` — [WearSettings]
  *     - `/wear/pinned` — [PinnedCardSet]
  *     - `/wear/sections` — [PinnedSectionSet]
- *     - `/wear/slots` — [WearWidgetSlots]
+ *     - `/wear/slots` — [WearWidgetSlots] (no longer written or read; kept for wire compatibility)
  *     - `/wear/values` — [LiveValues]
  *     - `/wear/dashboard/<urlPath>` — [DashboardData]
  *     - `/wear/picture/<entityId>` — [WearPicture]
@@ -26,6 +26,8 @@ import kotlinx.serialization.Serializable
  * - MessageClient (ephemeral):
  *     - `/wear/lease` — [WearLease] (wear → phone heartbeat)
  *     - `/wear/stream` — [StreamUpdate] (phone → wear delta push)
+ *     - `/wear/access/request` — [WearAccessRequest] (wear → phone: "I have no token")
+ *     - `/wear/access` — [WearAccess] (phone → wear: the watch's own token)
  */
 
 /** Wear-side settings written by the phone. Drives demo badge and routing. */
@@ -104,9 +106,10 @@ class WearPicture(
 )
 
 /**
- * The Wear widget design the phone chose for each widget slot card, per container: a design server
+ * The Wear widget design the phone chose for each pinned card, per container: a design server
  * design made from the card's own design for that container (`small` or `large`). The template
- * travels as a [WearDesignBlob]; a slot card or container without one draws the card's own design.
+ * travels as a [WearDesignBlob]; a card or container without one draws the card's own design. (The
+ * path and name still say "slot": older phones sent designs for their widget slot cards only.)
  */
 @Serializable
 data class WearSlotDesigns(
@@ -116,7 +119,7 @@ data class WearSlotDesigns(
 
 @Serializable
 data class WearSlotDesign(
-  /** The slot's card: a [PinnedCard.cardKey]. */
+  /** The card: a [PinnedCard.cardKey]. */
   val cardKey: String = "",
   /** `small` or `large`: the Glance Wear container the design fills. */
   val container: String = "",
@@ -135,8 +138,9 @@ data class StreamUpdate(val deltas: List<EntityDelta> = emptyList(), val capture
 data class EntityDelta(val entityId: String = "", val value: EntityValue = EntityValue())
 
 /**
- * User-curated pinned cards. Top-level destinations on Wear and the source of truth for
- * [WearWidgetSlots] assignments (slots reference cards by [PinnedCard.cardKey]).
+ * User-curated pinned cards. Top-level destinations on Wear, and (with the pinned sections' cards)
+ * what the watch's widget picker offers; a placed widget remembers its card by
+ * [PinnedCard.cardKey].
  */
 @Serializable
 data class PinnedCardSet(val cards: List<PinnedCard> = emptyList(), val updatedAtMs: Long = 0L)
@@ -145,7 +149,7 @@ data class PinnedCardSet(val cards: List<PinnedCard> = emptyList(), val updatedA
 data class PinnedCard(
   val baseUrl: String = "",
   val card: CardSummary = CardSummary(),
-  /** Stable id chosen at pin time; referenced by [WidgetSlot.cardKey]. */
+  /** Stable id chosen at pin time; what a watch widget and [WearSlotDesign.cardKey] name it by. */
   val cardKey: String = "",
   /** Position in the unified Wear top-level ordering. */
   val orderIndex: Int = 0,
@@ -174,7 +178,10 @@ data class PinnedSection(
 )
 
 /**
- * Mobile-assigned widget slot map. Wear declares 5 widget providers (Slot0 … Slot4); each
+ * Unused: kept for wire compatibility with older phone and watch builds. Phones no longer write
+ * `/wear/slots` and watches ignore it; a watch widget's card is chosen on the watch.
+ *
+ * Was: mobile-assigned widget slot map. Wear declared 5 widget providers (Slot0 … Slot4); each
  * [WidgetSlot] points its slot at a pinned card via [PinnedCard.cardKey]. An unassigned slot
  * (`cardKey == ""`) disables the corresponding provider on the wear side so it doesn't appear in
  * the system widget picker.
@@ -182,6 +189,7 @@ data class PinnedSection(
 @Serializable
 data class WearWidgetSlots(val slots: List<WidgetSlot> = emptyList(), val updatedAtMs: Long = 0L)
 
+/** Unused: kept for wire compatibility, like [WearWidgetSlots]. */
 @Serializable
 data class WidgetSlot(
   /** 0..4. */
@@ -198,6 +206,8 @@ data class WidgetSlot(
 )
 
 /**
+ * Unused: kept for wire compatibility, like [WearWidgetSlots].
+ *
  * Logical mirror of [WidgetSlot.size]. Lives next to the wire model so both modules can decode the
  * int without depending on the mobile pin store's enum.
  */
@@ -219,6 +229,27 @@ enum class SlotSizePref(val wireValue: Int) {
 @Serializable data class WearLease(val sentAtMs: Long = 0L, val foreground: Boolean = false)
 
 /**
+ * Wear → phone over MessageClient: the watch has no Home Assistant token of its own (or Home
+ * Assistant refused it) and asks the phone for one.
+ */
+@Serializable data class WearAccessRequest(val sentAtMs: Long = 0L)
+
+/**
+ * Phone → wear over MessageClient, never a DataItem, so it isn't kept in the Data Layer: a
+ * long-lived access token the phone made for this watch alone, named for it in the user's Home
+ * Assistant profile, so the watch can read its cards' values itself when the phone has none to
+ * send. [baseUrl] is the instance the phone is signed in to; [externalUrl] is Home Assistant's
+ * `external_url` (remote access), empty when it has none or it is [baseUrl].
+ */
+@Serializable
+class WearAccess(
+  val baseUrl: String = "",
+  val externalUrl: String = "",
+  val token: String = "",
+  val issuedAtMs: Long = 0L,
+)
+
+/**
  * Phone-local diagnostics. Stored at `terrazzo_sync_stats.pb` and surfaced in Settings →
  * Diagnostics.
  */
@@ -238,6 +269,7 @@ object WearSyncPaths {
   const val SETTINGS: String = "/wear/settings"
   const val PINNED: String = "/wear/pinned"
   const val SECTIONS: String = "/wear/sections"
+  /** [WearWidgetSlots]: no longer written or read, kept so both sides name the path alike. */
   const val SLOTS: String = "/wear/slots"
   const val VALUES: String = "/wear/values"
   const val DASHBOARD_PREFIX: String = "/wear/dashboard/"
@@ -246,6 +278,16 @@ object WearSyncPaths {
   const val DESIGN_PREFIX: String = "/wear/design/"
   const val LEASE_MESSAGE: String = "/wear/lease"
   const val STREAM_MESSAGE: String = "/wear/stream"
+  const val ACCESS_REQUEST_MESSAGE: String = "/wear/access/request"
+  const val ACCESS_MESSAGE: String = "/wear/access"
+
+  /**
+   * A tap on a watch card: `{id, card, action}`, the card's `rawJson` as the phone sent it and the
+   * action (an encoded `HaAction`) the tap resolved to. The phone runs it only when that card makes
+   * it, and answers `{id, ok, error?}` on [TAP_RESULT_MESSAGE].
+   */
+  const val TAP_MESSAGE: String = "/wear/tap/v1"
+  const val TAP_RESULT_MESSAGE: String = "/wear/tap-result/v1"
 
   /** The DataItem path of [entityId]'s [WearPicture]. */
   fun picturePath(entityId: String): String = PICTURE_PREFIX + entityId
@@ -253,7 +295,7 @@ object WearSyncPaths {
   /** The DataItem path of the [WearDesignBlob] whose template hashes to [sha256]. */
   fun designPath(sha256: String): String = DESIGN_PREFIX + sha256
 
-  /** Number of wear-widget slots. Mirrors [WearWidgetSlots] capacity. */
+  /** Number of wear-widget slots in [WearWidgetSlots]. Unused: kept for wire compatibility. */
   const val WIDGET_SLOT_COUNT: Int = 5
 
   /** Encode a urlPath (which may be null for HA's default dashboard) into a DataItem path. */

@@ -15,11 +15,13 @@ It sits between three other documents and leans on them rather than repeating th
 - [`live-card-updates.md`](live-card-updates.md) — the binding contract every value must keep.
 - [`adaptive-card-layouts.md`](adaptive-card-layouts.md) — the ladder philosophy and alpha010's
   breakpoint limits.
+- [`card-information-hierarchy.md`](card-information-hierarchy.md) — what a card keeps and drops
+  as its space shrinks (value, icon, name, secondary text, controls), per surface.
 
 ## 1. Theming rules
 
 The tokens live in
-[`HaTokens.kt`](../../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/HaTokens.kt).
+[`HaTokens.kt`](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/HaTokens.kt).
 A part is reusable across cards, a Wear widget and a launcher cell only if it follows all five.
 
 | # | Rule | Token | Why |
@@ -75,7 +77,7 @@ exception, because its numerals are sized to the card rather than to a role.
 
 ### Layer 1 — the reading
 
-[`HaReading`](../../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/HaReading.kt) is
+[`HaReading`](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/HaReading.kt) is
 what Home Assistant says about one numeric entity, independent of how it is drawn: the formatted
 text, the number, the unit, the scale, and the **kind** (`HaMeasureKind`: temperature, humidity,
 battery, power, illuminance, percentage, generic).
@@ -90,7 +92,7 @@ from those two bindings, so a new value tweens and recolours without a re-encode
   with the stops converted for °F) or `LowIsBad` (battery).
 
 A converter builds a reading with
-[`haReading(entityId, entity, …)`](../../rc-converter/src/main/kotlin/ee/schimke/ha/rc/HaMeasurements.kt),
+[`haReading(entityId, entity, …)`](../../rc-converter/src/commonMain/kotlin/ee/schimke/ha/rc/HaMeasurements.kt),
 which uses `formatState(entity)` for the text (exactly what the hosts push) and classifies the
 kind from `device_class`, falling back to `unit_of_measurement`. The card's own `name:`, `unit:`,
 `min:` and `max:` override the entity's. Without a range, the kind's typical scale applies:
@@ -98,7 +100,7 @@ kind from `device_class`, falling back to `unit_of_measurement`. The card's own 
 
 ### Layer 2 — visual meters
 
-[`RemoteHaMeters.kt`](../../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/RemoteHaMeters.kt).
+[`RemoteHaMeters.kt`](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/RemoteHaMeters.kt).
 A meter draws a `0..1` fraction in a colour it is handed, and nothing else: no text, no chrome,
 no entity. Each one:
 
@@ -115,7 +117,7 @@ hand-copied canvases. Its severity bands moved to `HaStatusColors`.
 
 ### Layer 3 — typed measurements
 
-[`RemoteHaMeasurement.kt`](../../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/RemoteHaMeasurement.kt).
+[`RemoteHaMeasurement.kt`](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/RemoteHaMeasurement.kt).
 A measurement draws a reading the way its kind deserves. The kind picks the visual
 (`HaMeasureVisual`):
 
@@ -150,9 +152,9 @@ Two mechanisms make a measurement adaptive, and they stack:
 1. **Continuous: the visual scales.** Inside any tier the glyph is drawn from the live canvas
    size, so a thermometer in a widget the user resizes grows and shrinks with no breakpoint.
 2. **Discrete: one gate picks the rung.**
-   [`RemoteHaAdaptiveMeasurement`](../../rc-converter/src/main/kotlin/ee/schimke/ha/rc/HaMeasurements.kt)
+   [`RemoteHaAdaptiveMeasurement`](../../rc-converter/src/commonMain/kotlin/ee/schimke/ha/rc/HaMeasurements.kt)
    plays `Expanded` in cells at least 120 × 132 dp and `Compact` (centred) in anything smaller.
-   It uses the shared 2-D [`RemoteMinSizeGate`](../../rc-converter/src/main/kotlin/ee/schimke/ha/rc/RemoteMinSizeGate.kt),
+   It uses the shared 2-D [`RemoteMinSizeGate`](../../rc-converter/src/commonMain/kotlin/ee/schimke/ha/rc/RemoteMinSizeGate.kt),
    the single-expression `min(w, h · minW/minH) ≥ minW` test that alpha010 evaluates correctly
    (#224). That is the same gate the button card uses, now shared. The tap target sits on the
    gate rather than in the tiers, because a `RemoteAction` captured in both branches blanks the
@@ -182,7 +184,7 @@ wants `adaptive`, so it plays expanded at 2×2 and compact when resized smaller.
 ## 5. Uber themes
 
 A palette (`ThemeStyle`, `HaTheme`) recolours the chrome. An **uber theme**
-([`HaUberTheme`](../../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/HaUberTheme.kt))
+([`HaUberTheme`](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/HaUberTheme.kt))
 is a whole design: palette, card and control shape, typeface, how a value is set, and its own
 **family of instruments** (`HaVisualFamily`). A family is a different *design* of each Layer 2
 visual, not a restyle of one drawing. An LCD thermometer has no bulb, a Trinitron gauge has a
@@ -241,6 +243,14 @@ How each part takes it:
 - **Ink** replaces rule 2's semantic data colours on themes that are monochrome by nature (LCD,
   Nixie): readings, and entity icons and switches (`HaToggleAccent.themed()`). Such a theme keeps a
   second **hot ink** for its hot and low segments, the way real LCDs had coloured overlay segments.
+
+**App themes.** A theme whose identity is the whole surface can set `appTheme`. The phone app
+discovers it and draws every screen in the theme's palette and typeface, not only the cards: LCD,
+Trinitron, Nixie, Console, LCARS and Catppuccin do. While such a style is on, Settings disables the
+app palette choice and says why, and a single-mode theme (dark-only Trinitron) disables light /
+dark too. The card style list labels these styles "Themes the whole app". Secondary screens (the
+more-info and card actions sheets, card history) are skinned in the card style either way through
+`ProvideScreenSkin`: its corners, borders, readout and chart grammar.
 
 `classic` is exactly the look the cards had before uber themes (`HaUberThemeTest` pins it), so
 nothing changes until a host provides another.
@@ -319,9 +329,9 @@ The activity plays dashboard, section and pinned cards through `WearRemoteCard`,
 container children, with the selected style and live bindings. Explicit phone card/type styles
 are synced for all three lists; clearing them restores the watch choice. The persisted watch
 selection is loaded before the first card capture.
-Slot widgets apply it with `ProvideHaUberStyle`, which brings the instruments, type, shapes and
+Wear widgets apply it with `ProvideHaUberStyle`, which brings the instruments, type, shapes and
 ink but keeps the watch's palette (the WearM3 colours its host updates); changing it (or the
-watch theme) re-renders placed widgets (`refreshAllSlotWidgets`). An explicit phone per-card or
+watch theme) re-renders placed widgets (`refreshAllCardWidgets`). An explicit phone per-card or
 per-card-type style override takes priority: the phone resolves `CardDesignOverrides.forCard` and
 syncs `CardSummary.cardStyleOverride` with the pin, including when only the override changes.
 Clearing it restores the watch-wide choice. An unknown style from a newer phone also follows the

@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo.wear.ui
 
+import androidx.activity.compose.ReportDrawn
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -57,6 +58,8 @@ fun WearTopLevelScreen(
   onInputSend: (suspend (String, Map<String, String>) -> Unit)? = null,
 ) {
   val items = remember(pinned, sections) { mergeOrdered(pinned.cards, sections.sections) }
+  // The pinned list composes here: the launch is fully drawn (`timeToFullDisplayMs`).
+  ReportDrawn()
 
   WearListScreen(modifier = modifier, spacing = 6.dp) {
     item { ListHeader { Text(if (settings.demoMode) "Pinned · Demo" else "Pinned") } }

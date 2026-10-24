@@ -28,7 +28,8 @@ class PackageTest(unittest.TestCase):
                 for name in ['manifest.json', '__init__.py', 'frontend/wasm/app.wasm',
                              'frontend/ha-card.js', 'frontend/rc-player.js',
                              'frontend/remote-compose-card.js', 'frontend/terrazzo-panel.js',
-                             'config_flow.py', 'const.py', 'strings.json', 'translations/en.json']:
+                             'config_flow.py', 'const.py', 'mcp.py', 'mcp_view.py',
+                             'strings.json', 'translations/en.json']:
                     self.assertIn('custom_components/terrazzo/' + name, names)
                 self.assertFalse(any('__pycache__' in name for name in names))
             # HACS unpacks directly into the integration directory. Installing

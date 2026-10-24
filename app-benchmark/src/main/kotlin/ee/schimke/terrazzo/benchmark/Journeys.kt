@@ -26,14 +26,35 @@ private const val UI_TIMEOUT_MS = 15_000L
  *
  * Sections start collapsed (the app's default), so a phone shows one section's cards at a time;
  * [expandSections] opens them all, so scrolling brings card after card on screen.
+ *
+ * Only a launch that is itself measured goes through macrobenchmark's `startActivityAndWait`
+ * ([measured]). On the API 36 emulator that call now and then cannot confirm a launch ("Unable to
+ * confirm activity launch completion", with no frames to read) even though the app comes up: the
+ * generator's dozens of launches failed on it in every run, before and after app changes, a retry
+ * from a fresh process failing the same way, so nothing was ever measured. Every other launch only
+ * has to get the board on screen, which [awaitDashboard] already checks, so it uses `am start -W`.
  */
-internal fun MacrobenchmarkScope.startDemoDashboard(expandSections: Boolean = false) {
-  startActivityAndWait { intent: Intent ->
-    intent.putExtra(EXTRA_TEST_DEMO_MODE, true)
-    intent.putExtra(EXTRA_TEST_EXPAND_SECTIONS, expandSections)
+internal fun MacrobenchmarkScope.startDemoDashboard(
+  expandSections: Boolean = false,
+  measured: Boolean = false,
+) {
+  if (measured) {
+    startActivityAndWait { intent: Intent ->
+      intent.putExtra(EXTRA_TEST_DEMO_MODE, true)
+      intent.putExtra(EXTRA_TEST_EXPAND_SECTIONS, expandSections)
+    }
+  } else {
+    // New task, clearing any old one: the flags `startActivityAndWait` launches with.
+    device.executeShellCommand(
+      "am start -W -f 0x10008000 -n $TARGET_PACKAGE/$MAIN_ACTIVITY " +
+        "--ez $EXTRA_TEST_DEMO_MODE true --ez $EXTRA_TEST_EXPAND_SECTIONS $expandSections"
+    )
   }
   awaitDashboard(DEFAULT_BOARD)
 }
+
+/** `:app`'s launcher activity. */
+private const val MAIN_ACTIVITY = "ee.schimke.terrazzo.MainActivity"
 
 /** Waits until [board] is the open dashboard and its cards have rendered. */
 internal fun MacrobenchmarkScope.awaitDashboard(board: String) {

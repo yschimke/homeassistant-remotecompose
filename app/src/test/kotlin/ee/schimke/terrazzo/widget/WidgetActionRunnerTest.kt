@@ -5,6 +5,7 @@ import ee.schimke.ha.rc.encodeHaAction
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -31,12 +32,56 @@ class WidgetActionRunnerTest {
   }
 
   @Test
-  fun onlyTogglesAndEntityServiceCallsRun() {
+  fun togglesServiceCallsAndAlarmTapsRun() {
     assertTrue(WidgetActionRunner.runs(toggle))
     assertTrue(WidgetActionRunner.runs(HaAction.CallService("cover", "open_cover", "cover.garage")))
-    assertFalse(WidgetActionRunner.runs(HaAction.CallService("script", "turn_on")))
+    // A script or scene names no entity of its own: it still runs, with nothing to show at once.
+    assertTrue(WidgetActionRunner.runs(HaAction.CallService("script", "turn_on")))
+    assertTrue(WidgetActionRunner.runs(HaAction.AlarmPin("alarm_control_panel.home", "1234")))
+    assertTrue(
+      WidgetActionRunner.runs(HaAction.AlarmIntent("alarm_control_panel.home", "arm_away"))
+    )
+    assertTrue(WidgetActionRunner.runs(HaAction.AlarmKey("alarm_control_panel.home", "1")))
+    // These open the app (or a browser) through their own activity intent instead.
     assertFalse(WidgetActionRunner.runs(HaAction.MoreInfo("light.kitchen")))
-    assertFalse(WidgetActionRunner.runs(HaAction.AlarmPin("alarm_control_panel.home", "1234")))
+    assertFalse(WidgetActionRunner.runs(HaAction.Url("https://example.com")))
+  }
+
+  /** The receiver pairs alarm taps as they arrive, before handing the call to its pool. */
+  @Test
+  fun alarmTapsPairInTheOrderTheyArrive() {
+    val house = "alarm_control_panel.prepare_test"
+    for (key in listOf("1", "2", "backspace", "3")) assertNull(
+      WidgetActionRunner.prepare(41, HaAction.AlarmKey(house, key))
+    )
+    val call =
+      assertIs<HaAction.CallService>(
+        WidgetActionRunner.prepare(41, HaAction.AlarmIntent(house, "arm_away", codeLength = null))
+      )
+    assertEquals("alarm_arm_away", call.service)
+    assertEquals("13", call.serviceData["code"]?.toString()?.trim('"'))
+    // A toggle needs no pair; a more-info isn't the runner's.
+    assertEquals(toggle, WidgetActionRunner.prepare(41, toggle))
+    assertNull(WidgetActionRunner.prepare(41, HaAction.MoreInfo("light.kitchen")))
+  }
+
+  @Test
+  fun aWidgetPinIsTrustedOnlyForTheEntityTheAppPutOnIt() {
+    val placeholder = encodeHaAction(HaAction.AlarmPin("alarm_control_panel.home", ""))
+    assertTrue(
+      trustedWidgetAction(HaAction.AlarmPin("alarm_control_panel.home", "1234"), placeholder, null)
+    )
+    assertFalse(
+      trustedWidgetAction(HaAction.AlarmPin("alarm_control_panel.shed", "1234"), placeholder, null)
+    )
+    // A PIN the app captured with digits is held to exactly those.
+    assertFalse(
+      trustedWidgetAction(
+        HaAction.AlarmPin("alarm_control_panel.home", "9999"),
+        encodeHaAction(HaAction.AlarmPin("alarm_control_panel.home", "1234")),
+        null,
+      )
+    )
   }
 
   @Test

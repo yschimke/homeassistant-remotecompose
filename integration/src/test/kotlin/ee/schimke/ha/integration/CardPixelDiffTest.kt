@@ -70,13 +70,38 @@ class CardPixelDiffTest(
         arrayOf("Markdown_Light_markdown_light", "markdown/notes_light.png", 40.0),
         arrayOf("Markdown_Dark_markdown_dark", "markdown/notes_dark.png", 40.0),
 
-        // NOTE: gauge / weather-forecast / picture-entity / logbook have
-        // converters and previews (see CardPreviews.kt) but no committed HA
-        // reference captures, so they are intentionally omitted here rather
-        // than wired as cases that only ever `assumeTrue`-skip (which read as
-        // coverage but assert nothing). Re-add an `arrayOf(...)` entry for
-        // each once `integration/scripts/capture-references.sh` lands its
-        // reference PNG under `references/`.
+        // gauge / weather-forecast — references captured from the seeded HA
+        // (integration/config), whose entities mirror the previews' fixtures, at
+        // each preview's width: ImageDiff compares only the overlap, so a wider
+        // reference would leave most of the card unchecked.
+        arrayOf("Gauge_Light_gauge_light", "gauge/battery_light.png", 30.0),
+        arrayOf("Gauge_Dark_gauge_dark", "gauge/battery_dark.png", 30.0),
+        arrayOf(
+          "WeatherForecast_Light_weather_forecast_light",
+          "weather-forecast/forecast_home_light.png",
+          35.0,
+        ),
+        arrayOf(
+          "WeatherForecast_Dark_weather_forecast_dark",
+          "weather-forecast/forecast_home_dark.png",
+          35.0,
+        ),
+        // light / thermostat / alarm-panel: each preview sized to its reference, a full
+        // section-row card (500 css px at the capture's 2x, 381 dp at the preview's 2.625x).
+        arrayOf("LightCard_Light_light_card_light", "light/kitchen_light.png", 20.0),
+        arrayOf("LightCard_Dark_light_card_dark", "light/kitchen_dark.png", 20.0),
+        arrayOf("Thermostat_Light_thermostat_light", "thermostat/living_room_light.png", 40.0),
+        arrayOf("Thermostat_Dark_thermostat_dark", "thermostat/living_room_dark.png", 40.0),
+        arrayOf("AlarmPanel_Light_alarm_panel_light", "alarm-panel/house_light.png", 40.0),
+        arrayOf("AlarmPanel_Dark_alarm_panel_dark", "alarm-panel/house_dark.png", 40.0),
+        // humidifier / entity-filter / todo-list: full section-row cards too. The humidifier is a
+        // generic hygrostat and the shopping list is seeded by capture-references.sh.
+        arrayOf("Humidifier_Light_humidifier_light", "humidifier/bedroom_light.png", 35.0),
+        arrayOf("Humidifier_Dark_humidifier_dark", "humidifier/bedroom_dark.png", 35.0),
+        arrayOf("EntityFilter_Light_entity_filter_light", "entity-filter/on_now_light.png", 25.0),
+        arrayOf("EntityFilter_Dark_entity_filter_dark", "entity-filter/on_now_dark.png", 25.0),
+        arrayOf("TodoList_Light_todo_list_light", "todo-list/shopping_light.png", 20.0),
+        arrayOf("TodoList_Dark_todo_list_dark", "todo-list/shopping_dark.png", 20.0),
       )
   }
 

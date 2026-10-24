@@ -49,6 +49,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
@@ -59,6 +60,8 @@ import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.design.UsageSharing
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignTags
+import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.terrazzo.assistant.AssistantAccess
 import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.LauncherColoursPref
@@ -69,7 +72,9 @@ import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.dashboard.CardDesignSources
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardStyleSample
+import ee.schimke.terrazzo.dashboard.CardStyleWearPanes
 import ee.schimke.terrazzo.shared.ReportFeedbackButton
+import ee.schimke.terrazzo.ui.appThemeOrNull
 import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import kotlinx.coroutines.launch
@@ -181,6 +186,7 @@ internal fun SettingsScreen(
         ThemeSection(
           selected = themePref,
           darkMode = darkPref,
+          appTheme = cardStylePref.toUberTheme().appThemeOrNull(),
           onSelectTheme = { pref ->
             scope.launch {
               graph.preferencesStore.setThemeStyle(pref)
@@ -217,6 +223,21 @@ internal fun SettingsScreen(
             }
           },
         )
+      }
+
+      if (remember(context) { AssistantAccess.isSupported(context) }) {
+        SettingsGroup("Assistants") {
+          var assistantAccess by
+            remember(context) { mutableStateOf(AssistantAccess.isEnabled(context)) }
+          AssistantAccessSetting(
+            checked = assistantAccess,
+            onCheckedChange = { enabled ->
+              scope.launch {
+                if (AssistantAccess.setEnabled(context, enabled)) assistantAccess = enabled
+              }
+            },
+          )
+        }
       }
 
       SettingsGroup("Dashboard") {
@@ -355,6 +376,23 @@ internal fun UsageSharingSetting(checked: Boolean, onCheckedChange: (Boolean) ->
   }
 }
 
+/**
+ * Settings → Assistants: lets an on-device agent call Terrazzo's AppFunctions
+ * (`assistant/TerrazzoAppFunctions.kt`). Shown only where Android supports AppFunctions.
+ */
+@Composable
+internal fun AssistantAccessSetting(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+  SettingSwitch(
+    title = "Let on-device assistants use Home Assistant",
+    summary =
+      "An assistant Android allows (such as Gemini) can find your entities, read them and " +
+        "turn lights, switches, scenes and scripts on or off, signed in as you. Locks and " +
+        "alarm panels stay read-only.",
+    checked = checked,
+    onCheckedChange = onCheckedChange,
+  )
+}
+
 /** The published privacy policy (`docs/privacy.md`). */
 internal const val PRIVACY_POLICY_URL: String =
   "https://yschimke.github.io/homeassistant-remotecompose/privacy/"
@@ -421,18 +459,29 @@ private fun SettingSwitch(
   }
 }
 
+/**
+ * The app palette and light / dark choice. While the card style themes the whole app ([appTheme],
+ * an LCD or a Trinitron deck), its palette replaces the choice here, so the options are disabled
+ * and say why; a single-mode style (dark-only Trinitron) disables light / dark too. The choices are
+ * kept and come back when the card style changes.
+ */
 @Composable
-private fun ThemeSection(
+internal fun ThemeSection(
   selected: ThemePref,
   darkMode: DarkModePref,
+  appTheme: HaUberTheme?,
   onSelectTheme: (ThemePref) -> Unit,
   onSelectDark: (DarkModePref) -> Unit,
 ) {
   Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
     Text("Theme", style = MaterialTheme.typography.titleMedium)
     Text(
-      "Material 3 uses the system default palette (dynamic colour on Android 12+). " +
-        "The Terrazzo themes ship a curated Home-Assistant-flavoured palette plus a Google-Fonts pairing.",
+      if (appTheme != null)
+        "The ${appTheme.displayName} card style themes the whole app in its own colours and type. " +
+          "Pick a card style without its own app theme to choose a palette here."
+      else
+        "Material 3 uses the system default palette (dynamic colour on Android 12+). " +
+          "The Terrazzo themes ship a curated Home-Assistant-flavoured palette plus a Google-Fonts pairing.",
       style = MaterialTheme.typography.bodySmall,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -443,16 +492,26 @@ private fun ThemeSection(
           summary = themePrefTagline(pref),
           selected = pref == selected,
           onClick = { onSelectTheme(pref) },
+          enabled = appTheme == null,
         )
       }
     }
 
+    val modeFixed = appTheme?.singleMode == true
     Text("Dark mode", style = MaterialTheme.typography.titleMedium)
+    if (modeFixed) {
+      Text(
+        "${appTheme?.displayName} is ${if (appTheme?.dark == null) "light" else "dark"} only.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
+    }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       DarkModePref.entries.forEach { pref ->
         FilterChip(
           selected = pref == darkMode,
           onClick = { onSelectDark(pref) },
+          enabled = !modeFixed,
           label = {
             Text(
               when (pref) {
@@ -473,18 +532,23 @@ private fun ThemeSection(
  * palette; each uber theme brings its own palette, shapes, type and instrument designs (an LCD's
  * segment bars, a Trinitron VU needle). Dashboard cards and launcher widgets: widgets take the
  * style on the launcher's colours unless [LauncherColoursSection] says otherwise. The app's own
- * screens keep the palette above.
+ * screens keep the palette above, unless the style themes the whole app ([HaUberTheme.appTheme]),
+ * which its sample's description says.
  *
  * Each style is shown with a sample card drawn in it ([CardStyleSample]). Collapsed (the default),
- * only the current style is listed; expanding lists them all.
+ * only the current style is listed; expanding lists them all. "Preview on a watch" draws the
+ * samples as Wear widgets instead, on approximate round and square watch screens
+ * ([CardStyleWearPanes]).
  */
 @Composable
 internal fun CardStyleSection(
   selected: CardStylePref,
   onSelect: (CardStylePref) -> Unit,
   initiallyExpanded: Boolean = false,
+  initiallyOnWatch: Boolean = false,
 ) {
   var expanded by rememberSaveable { mutableStateOf(initiallyExpanded) }
+  var onWatch by rememberSaveable { mutableStateOf(initiallyOnWatch) }
   Column(
     modifier = Modifier.animateContentSize(),
     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -496,11 +560,29 @@ internal fun CardStyleSection(
       style = MaterialTheme.typography.bodySmall,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
+    Row(
+      modifier =
+        Modifier.fillMaxWidth()
+          .toggleable(value = onWatch, role = Role.Switch, onValueChange = { onWatch = it }),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Text(
+        "Preview on a watch",
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.weight(1f),
+      )
+      Switch(checked = onWatch, onCheckedChange = null)
+    }
     val shown = if (expanded) CardStylePref.entries else listOf(selected)
     Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
       shown.forEach { pref ->
         key(pref) {
-          CardStyleOption(pref = pref, selected = pref == selected, onClick = { onSelect(pref) })
+          CardStyleOption(
+            pref = pref,
+            selected = pref == selected,
+            onWatch = onWatch,
+            onClick = { onSelect(pref) },
+          )
         }
       }
     }
@@ -524,9 +606,15 @@ internal fun CardStyleSection(
  * describing the style. The whole row selects it.
  */
 @Composable
-private fun CardStyleOption(pref: CardStylePref, selected: Boolean, onClick: () -> Unit) {
+private fun CardStyleOption(
+  pref: CardStylePref,
+  selected: Boolean,
+  onWatch: Boolean,
+  onClick: () -> Unit,
+) {
   val uber = pref.toUberTheme()
-  val tagline = cardStyleTagline(pref)
+  // A style that themes the whole app says so, so it is found before it is picked.
+  val tagline = cardStyleTagline(pref) + if (uber.appTheme) " · Themes the whole app" else ""
   Row(
     modifier =
       Modifier.fillMaxWidth()
@@ -539,7 +627,8 @@ private fun CardStyleOption(pref: CardStylePref, selected: Boolean, onClick: () 
     // The sample is a picture of the style, not a control: a tap on it picks the style rather
     // than reaching the card, and screen readers hear the option, not the sample's contents.
     Box(Modifier.weight(1f).clearAndSetSemantics {}) {
-      CardStyleSample(uber, name = uber.displayName, description = tagline)
+      if (onWatch) CardStyleWearPanes(uber, name = uber.displayName, description = tagline)
+      else CardStyleSample(uber, name = uber.displayName, description = tagline)
       Box(
         Modifier.matchParentSize()
           .clickable(interactionSource = null, indication = null, onClick = onClick)
@@ -581,17 +670,34 @@ private fun LauncherColoursSection(
   }
 }
 
-/** A radio option with a title and summary; the whole row selects it. */
+/** A radio option with a title and summary; the whole row selects it, unless not [enabled]. */
 @Composable
-private fun OptionRow(title: String, summary: String, selected: Boolean, onClick: () -> Unit) {
+private fun OptionRow(
+  title: String,
+  summary: String,
+  selected: Boolean,
+  onClick: () -> Unit,
+  enabled: Boolean = true,
+) {
   Row(
     modifier =
       Modifier.fillMaxWidth()
-        .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
+        .selectable(
+          selected = selected,
+          enabled = enabled,
+          role = Role.RadioButton,
+          onClick = onClick,
+        )
+        .alpha(if (enabled) 1f else 0.38f),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(4.dp),
   ) {
-    RadioButton(selected = selected, onClick = null, modifier = Modifier.padding(12.dp))
+    RadioButton(
+      selected = selected,
+      onClick = null,
+      enabled = enabled,
+      modifier = Modifier.padding(12.dp),
+    )
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       Text(title, style = MaterialTheme.typography.bodyLarge)
       Text(

@@ -112,10 +112,7 @@ class AndroidImeScrollingTest {
     // Request real text-input focus even when the initial layout clips the bottom field.
     // Capture the keyboard-visible starting state before testing scrollability.
     field.performSemanticsAction(SemanticsActions.RequestFocus) { it() }
-    compose.runOnIdle {
-      WindowInsetsControllerCompat(compose.activity.window, compose.activity.window.decorView)
-        .show(WindowInsetsCompat.Type.ime())
-    }
+    showIme()
     waitForIme(true)
     captureWindowEvidence("discovery-open-ime")
     assertAboveKeyboard(field)
@@ -128,19 +125,21 @@ class AndroidImeScrollingTest {
     captureWindowEvidence("discovery-focused-ime")
     assertAboveKeyboard(field)
     val connect = compose.onNodeWithText("Connect", useUnmergedTree = false)
-    connect.performScrollTo().assertIsDisplayed()
-    assertAboveKeyboard(connect)
+    scrollToAboveKeyboard(connect)
     connect.performClick()
     compose.runOnIdle { assertTrue(connected) }
-    awaitImeSettled()
+    // Tapping Connect can take the keyboard down on some emulator images and not others, and a
+    // check made mid-animation sees either a stranded action or the closed form's resting gap.
+    // The bottom actions are asserted with the keyboard up, so bring it back explicitly.
+    field.performSemanticsAction(SemanticsActions.RequestFocus) { it() }
+    showIme()
+    waitForIme(true)
     val demo = compose.onNodeWithText("Try demo mode (no login)")
     demo.performScrollTo().assertIsDisplayed()
-    scrollFormToBottom()
     captureWindowEvidence("discovery-bottom-ime")
-    assertAboveKeyboard(demo)
+    scrollToBottomAboveKeyboard(demo)
     assertNoExtraBottomInset(demo)
-    demo.performClick()
-    compose.runOnIdle { assertTrue(demoSelected) }
+    clickAboveKeyboard(demo) { demoSelected }
     waitForIme(true)
 
     device.pressBack()
@@ -204,6 +203,14 @@ class AndroidImeScrollingTest {
   private fun windowInsets(): WindowInsetsCompat =
     checkNotNull(ViewCompat.getRootWindowInsets(compose.activity.window.decorView))
 
+  /** Shows the keyboard for the focused field; the window controller acts on the real IME. */
+  private fun showIme() {
+    compose.runOnIdle {
+      WindowInsetsControllerCompat(compose.activity.window, compose.activity.window.decorView)
+        .show(WindowInsetsCompat.Type.ime())
+    }
+  }
+
   private fun waitForIme(visible: Boolean) {
     compose.waitUntil(10_000) {
       compose.runOnIdle { windowInsets().isVisible(WindowInsetsCompat.Type.ime()) == visible }
@@ -251,6 +258,48 @@ class AndroidImeScrollingTest {
       "Entire control must be above the real IME: bottom $bottom, IME top $keyboardTop",
       bottom <= keyboardTop + 1,
     )
+  }
+
+  /**
+   * Scrolls [node] into view until it sits above the keyboard. One [performScrollTo] can land on a
+   * frame where the keyboard is still resizing the viewport (its suggestion strip after typing),
+   * and then leaves the control below the keyboard's settled top; each try settles the keyboard
+   * first.
+   */
+  private fun scrollToAboveKeyboard(node: SemanticsNodeInteraction) {
+    compose.waitUntil(10_000) {
+      awaitImeSettled()
+      node.performScrollTo()
+      runCatching { assertAboveKeyboard(node) }.isSuccess
+    }
+    assertAboveKeyboard(node)
+  }
+
+  /**
+   * Scrolls the form to its end until [node] sits above the keyboard. The keyboard can still change
+   * height after [waitForIme] (a suggestion strip, or a re-show after Connect), and a scroll offset
+   * kept from the taller viewport then leaves the last action below the shorter one. Retrying the
+   * scroll asserts the settled layout rather than the frame the scroll happened to land on.
+   */
+  private fun scrollToBottomAboveKeyboard(node: SemanticsNodeInteraction) {
+    compose.waitUntil(10_000) {
+      awaitImeSettled()
+      scrollFormToBottom()
+      runCatching { assertAboveKeyboard(node) }.isSuccess
+    }
+  }
+
+  /**
+   * Taps [node] once it sits above the keyboard, until [done]. The keyboard can grow again between
+   * [scrollToBottomAboveKeyboard] and the tap (its suggestion strip); a tap made then lands on the
+   * keyboard instead, so each try settles, scrolls and checks the control is above it first.
+   */
+  private fun clickAboveKeyboard(node: SemanticsNodeInteraction, done: () -> Boolean) {
+    compose.waitUntil(10_000) {
+      scrollToBottomAboveKeyboard(node)
+      node.performClick()
+      compose.runOnIdle { done() }
+    }
   }
 
   private fun scrollFormToBottom() {

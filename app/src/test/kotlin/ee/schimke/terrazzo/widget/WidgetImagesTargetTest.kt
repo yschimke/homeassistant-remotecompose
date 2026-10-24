@@ -5,6 +5,7 @@ import coil3.ImageLoader
 import coil3.request.Options
 import coil3.toUri
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
+import ee.schimke.terrazzo.core.network.RemoteUrlStore
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.image.DemoImageFetcher
 import ee.schimke.terrazzo.image.DemoImages
@@ -25,7 +26,7 @@ import org.robolectric.annotation.Config
 class WidgetImagesTargetTest {
 
   private val context: Application = RuntimeEnvironment.getApplication()
-  private val stack = HaImageStack(context, LanConnectionPolicy(context))
+  private val stack = HaImageStack(context, LanConnectionPolicy(context), RemoteUrlStore(context))
   private val demoFetcher = DemoImageFetcher.Factory()
   private val options = Options(context)
   private val imageLoader = ImageLoader.Builder(context).build()

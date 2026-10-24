@@ -98,4 +98,34 @@ class SectionCardFlowTest {
     // A hidden item alone makes no row.
     assertEquals(emptyList(), SectionCardFlow.rows(listOf(hidden), 288f, gap))
   }
+
+  @Test
+  fun splitsMatchRowsAtEveryWidth() {
+    val hidden = SectionFlowItem(0f, hidden = true)
+    val items =
+      listOf(
+        item(140),
+        item(200),
+        hidden,
+        item(140),
+        item(288, ownRow = true),
+        item(96),
+        item(96),
+        item(180),
+        item(240),
+      )
+    val splits = SectionCardFlow.splits(items, gap, 1200f)
+    assertEquals(0f, splits.first().fromWidth)
+    // Each split differs from the one before it.
+    splits.zipWithNext { a, b -> assertTrue(a.rows != b.rows) }
+    for (tenths in 0..12000) {
+      val width = tenths / 10f
+      val split = splits.last { it.fromWidth <= width }
+      assertEquals(
+        SectionCardFlow.rows(items, width, gap).map { it.indices },
+        split.rows,
+        "width $width",
+      )
+    }
+  }
 }

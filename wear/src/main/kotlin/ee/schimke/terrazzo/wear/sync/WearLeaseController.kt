@@ -21,8 +21,20 @@ class WearLeaseController(private val scope: CoroutineScope, private val repo: W
   DefaultLifecycleObserver {
 
   private var job: Job? = null
+  private var directJob: Job? = null
 
   override fun onStart(owner: LifecycleOwner) {
+    // While the app is open, read the cards' values from Home Assistant whenever the phone's go
+    // stale (the repository decides; it reads at most once a minute). The first check waits one
+    // heartbeat: a phone in range starts streaming by then, so nothing is read twice.
+    directJob?.cancel()
+    directJob = scope.launch {
+      delay(HEARTBEAT_MS)
+      while (true) {
+        repo.refreshDirect()
+        delay(DIRECT_CHECK_MS)
+      }
+    }
     job?.cancel()
     job = scope.launch {
       // First lease right away so the phone starts streaming
@@ -38,6 +50,8 @@ class WearLeaseController(private val scope: CoroutineScope, private val repo: W
   override fun onStop(owner: LifecycleOwner) {
     job?.cancel()
     job = null
+    directJob?.cancel()
+    directJob = null
     scope.launch { repo.sendLease(foreground = false) }
   }
 
@@ -48,5 +62,8 @@ class WearLeaseController(private val scope: CoroutineScope, private val repo: W
      * screen. 10 s window matches the phone-side lease check.
      */
     const val HEARTBEAT_MS: Long = 10_000L
+
+    /** How often the open app checks whether the phone's values have gone stale. */
+    const val DIRECT_CHECK_MS: Long = 30_000L
   }
 }

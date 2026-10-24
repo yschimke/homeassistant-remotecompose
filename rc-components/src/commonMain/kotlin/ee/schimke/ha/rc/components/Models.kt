@@ -1,0 +1,787 @@
+package ee.schimke.ha.rc.components
+
+import androidx.compose.remote.creation.compose.state.RemoteBoolean
+import androidx.compose.remote.creation.compose.state.RemoteColor
+import androidx.compose.remote.creation.compose.state.RemoteFloat
+import androidx.compose.remote.creation.compose.state.RemoteString
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+
+/**
+ * Per-component data models. Each `RemoteHa*` composable takes a single data parameter instead of
+ * an expanding arg list — a replacement composable (custom themed tile, alternative entity row, …)
+ * can consume the same model.
+ *
+ * **Binding contract.** Fields hold plain Kotlin types — `String`, `Boolean`, `Float` — that
+ * represent the *initial* value at capture time. The wrapper turns each non-permanent field into a
+ * named `RemoteString` / `RemoteBoolean` keyed off the data class's `entityId` (e.g.
+ * `<entityId>.state`, `<entityId>.is_on`, `<entityId>.attributes.<attr>`), so a running player
+ * updates by pushing values by name without re-encoding the document. Permanent fields (titles,
+ * configured names, range labels) stay as constants in the captured bytes.
+ *
+ * Layout concerns (Modifier) stay on the composable signature.
+ */
+
+/**
+ * State-binding + colour pair for a toggleable entity. The component builds `<entityId>.is_on` and
+ * uses `isOn.select(activeAccent, inactiveAccent)` so a live player can flip the accent without
+ * re-encoding. Availability is a third, orthogonal state: `<entityId>.is_available` (seeded from
+ * [initiallyAvailable]) overrides either accent with a neutral one and dims the content. For
+ * non-toggleable entities (sensors, etc.) leave the parent's `entityId` null and the activeAccent
+ * is used unconditionally.
+ *
+ * [initiallyOn] is the boolean value at authoring time — named `RemoteBoolean`s don't carry a
+ * `constantValueOrNull`, so the composable needs this separately to seed an in-document
+ * `MutableRemoteBoolean` for the optimistic-click pattern.
+ */
+data class HaToggleAccent(
+  val activeAccent: RemoteColor,
+  val inactiveAccent: RemoteColor,
+  val initiallyOn: Boolean = false,
+  /**
+   * When true, no chip is drawn even if the accent flips — used by read-only displays where the
+   * toggle binding is informational.
+   */
+  val toggleable: Boolean = true,
+  /**
+   * Whether the entity had a real state at authoring time — false when it was `unavailable`,
+   * `unknown` or missing from the snapshot. Seeds the live `<entityId>.is_available` binding the
+   * component reads to dim the whole row / tile and swap the accent for a neutral one (see
+   * [entityLook]); the host flips it at runtime the same way it flips `is_on`.
+   */
+  val initiallyAvailable: Boolean = true,
+  /**
+   * The glyph drawn while the entity is on, when it differs from the data's `icon` (drawn while
+   * off): a light's `lightbulb` over `lightbulb-off`, a door sensor's `door-open` over
+   * `door-closed`. With the `is_on` binding the component bakes both and swaps them in-document, so
+   * a document captured in one state draws the other; without it, it draws the glyph for
+   * [initiallyOn]. Null when the glyph doesn't change with the state.
+   */
+  val activeIcon: ImageVector? = null,
+  /**
+   * Whether [activeIcon] is also the glyph while the entity is unavailable or unknown (Home
+   * Assistant's default for those states is the on glyph, as for a light), which `is_on` alone
+   * can't tell from off: the component then also follows `<entityId>.is_available`.
+   */
+  val activeIconWhenUnavailable: Boolean = false,
+)
+
+/**
+ * HA tile card model.
+ *
+ * [badge] and [features] are what HA's tile draws beyond icon, name and state (`hui-tile-card`'s
+ * `renderTileBadge` and `hui-card-features`). Both are baked at capture: a converter that sets them
+ * re-encodes the card on data changes (`CardConverter.dataSignature`).
+ */
+data class HaTileData(
+  val entityId: String?,
+  val name: String,
+  val state: RemoteString,
+  val icon: ImageVector,
+  val accent: HaToggleAccent,
+  val tapAction: HaAction = HaAction.None,
+  val badge: HaTileBadge? = null,
+  val features: List<HaTileFeature> = emptyList(),
+  val featuresPosition: HaTileFeaturePosition = HaTileFeaturePosition.Bottom,
+  /**
+   * A measurable sensor's reading (temperature, humidity, battery, …). Its text is [state] and its
+   * value the `<id>.numeric_state` binding, so the uber theme's meter glyph can stand in for the
+   * icon (docs/design/everyday-cards.md §1) and keep up through bindings alone.
+   */
+  val reading: HaReading? = null,
+)
+
+/**
+ * The small disc HA's tile lays over the corner of its icon, e.g. a climate entity's `hvac_action`
+ * (a flame while heating). [color] is the disc; null draws the neutral, inactive colour.
+ */
+data class HaTileBadge(val icon: ImageVector, val color: Color?, val description: String)
+
+/** Where a tile's features sit (HA `features_position`). */
+enum class HaTileFeaturePosition {
+  /** Each feature on its own row under the icon, name and state (HA's default). */
+  Bottom,
+
+  /**
+   * The first feature beside the name and state; any others below, two to a row (a stepper alone).
+   */
+  Inline,
+}
+
+/**
+ * One tile feature row (HA `features:`), resolved by the converter into what it draws and the
+ * actions its controls fire. Unsupported feature types never reach the component.
+ */
+sealed interface HaTileFeature {
+  /**
+   * HA's `target-temperature`: a − / value / + control. [decrement] / [increment] are the service
+   * calls one step either way, or [HaAction.None] where the step would leave the entity's range or
+   * the entity is unavailable (the button then draws disabled).
+   */
+  data class NumberButtons(
+    val valueLabel: String,
+    val decrement: HaAction,
+    val increment: HaAction,
+    val description: String,
+  ) : HaTileFeature
+
+  /**
+   * A mode selector (HA `climate-hvac-modes`, `climate-preset-modes`, …): one segment per option,
+   * the current one filled with the tile's accent. [showIcons] draws each option's icon in place of
+   * its label (HA's `icons` style).
+   */
+  data class ModeSelect(val options: List<HaTileModeOption>, val showIcons: Boolean) : HaTileFeature
+}
+
+/** One option of a [HaTileFeature.ModeSelect]. */
+data class HaTileModeOption(
+  val label: String,
+  val icon: ImageVector?,
+  val selected: Boolean,
+  val action: HaAction,
+)
+
+/**
+ * HA button card model. [showName] / [showIcon] are HA's `show_name` / `show_icon` (both default
+ * true); [state] is the state line HA draws under the name with `show_state: true` — null when the
+ * card doesn't show it. Pass the live `<id>.state` binding (`LiveValues.state`) so it updates.
+ */
+data class HaButtonData(
+  val entityId: String?,
+  val name: String,
+  val icon: ImageVector,
+  val accent: HaToggleAccent,
+  val showName: Boolean = true,
+  val tapAction: HaAction = HaAction.None,
+  val showIcon: Boolean = true,
+  val state: RemoteString? = null,
+)
+
+/** One row in an Entities card / the entire Entity card. */
+data class HaEntityRowData(
+  val entityId: String?,
+  val name: String,
+  val state: RemoteString,
+  val icon: ImageVector,
+  val accent: HaToggleAccent,
+  val tapAction: HaAction = HaAction.None,
+  /**
+   * Whether the row ends in a switch for an entity with an on/off state, as HA's toggle row does.
+   * False for an entity that can't be switched (a binary sensor), whose row shows its state text.
+   */
+  val toggle: Boolean = true,
+)
+
+/** Entities card (title + rows). The converter collects rows into this list. */
+data class HaEntitiesData(val title: String?, val rows: List<HaEntityRowData>)
+
+/** One cell in a Glance card. */
+data class HaGlanceCellData(
+  val entityId: String?,
+  val name: String,
+  val state: RemoteString,
+  val icon: ImageVector,
+  val accent: HaToggleAccent,
+  val tapAction: HaAction = HaAction.None,
+)
+
+/** Glance card (title + cells). */
+data class HaGlanceData(val title: String?, val cells: List<HaGlanceCellData>)
+
+/** Markdown card. */
+data class HaMarkdownData(val title: String?, val blocks: List<MarkdownBlock>)
+
+/** Heading card. */
+data class HaHeadingData(val title: String, val style: HaHeadingStyle = HaHeadingStyle.Title)
+
+/** Unsupported-card placeholder. */
+data class HaUnsupportedData(val cardType: String)
+
+/**
+ * `picture-entity` card model. We can't pull the live camera frame / image entity into a `.rc`
+ * document, so the renderer emits a tinted placeholder area with a domain-appropriate icon and the
+ * entity name
+ * + state at the bottom — matching the visual slot the dashboard expects.
+ */
+data class HaPictureEntityData(
+  val entityId: String?,
+  val name: String,
+  val state: RemoteString,
+  val icon: ImageVector,
+  val accent: HaToggleAccent,
+  val showName: Boolean = true,
+  val showState: Boolean = true,
+  val imageUrl: String? = null,
+  val frameStamp: String? = null,
+  val tapAction: HaAction = HaAction.None,
+)
+
+/** `gauge` card model. Half-circle dial with current value + name + range. */
+data class HaGaugeData(
+  val entityId: String?,
+  val name: String,
+  val valueText: RemoteString,
+  val unit: String?,
+  /** Current value in the gauge's `min..max` range; clamped at render time. */
+  val value: RemoteFloat,
+  val min: Double,
+  val max: Double,
+  /** HA `severity:` thresholds; the band is picked in-document from the live value. */
+  val severity: HaGaugeBands = HaGaugeBands(),
+  val tapAction: HaAction = HaAction.None,
+)
+
+/**
+ * A gauge's `severity:` thresholds (`green` / `yellow` / `red`), each optional. The active band is
+ * the one with the highest threshold the value reaches, whatever the order HA was given them in
+ * ("green=60, yellow=30, red=0" and "red=50, yellow=10, green=0" both occur). The document picks it
+ * from the live value at playback, so a reading crossing a band never needs a re-encode.
+ */
+data class HaGaugeBands(
+  val green: Double? = null,
+  val yellow: Double? = null,
+  val red: Double? = null,
+)
+
+/** `weather-forecast` card model. */
+data class HaWeatherForecastData(
+  val entityId: String?,
+  val name: String,
+  val condition: RemoteString,
+  /** Current temperature display, including unit. */
+  val temperature: String,
+  /** Optional secondary line — feels like, low/high, or extra detail. */
+  val supportingLine: String?,
+  /**
+   * Today's high / low summary shown under the headline temperature (e.g. `16.7 °C / 14.1 °C`).
+   * Null when no forecast day is available.
+   */
+  val highLow: String? = null,
+  val icon: ImageVector,
+  val days: List<HaWeatherDay> = emptyList(),
+  /**
+   * Extra current-conditions read-outs (feels-like, humidity, wind, pressure, …) sourced from the
+   * weather entity's attributes. Only surfaced in the roomy variants — the full app card and the
+   * expanded (tall) widget — where there's space below the forecast strip; the compact widget tiers
+   * drop them (Principle 2/4, "reflow before remove / compact ≠ stripped" — identity + forecast win
+   * the limited canvas first).
+   */
+  val extras: List<HaWeatherExtra> = emptyList(),
+)
+
+/** One supplementary current-conditions read-out in a weather card's extra-info row. */
+data class HaWeatherExtra(val icon: ImageVector, val label: String, val value: String)
+
+/**
+ * One column in a weather forecast strip. Permanent — forecast values are captured at encode time
+ * and don't update live in alpha010.
+ */
+data class HaWeatherDay(val label: String, val high: String, val low: String, val icon: ImageVector)
+
+/**
+ * `logbook` card model. Each entry is one row: name, what changed, and a short "when" suffix
+ * (relative time). Logbook content is permanent once captured — the host re-renders by re-fetching
+ * the dashboard if a new event is interesting enough to surface.
+ */
+data class HaLogbookData(val title: String?, val entries: List<HaLogbookEntry>)
+
+data class HaLogbookEntry(
+  val name: String,
+  val message: String,
+  val whenText: String,
+  val icon: ImageVector,
+)
+
+/**
+ * `history-graph` card model. Each row carries the numeric samples + a pre-formatted summary string
+ * ("21.4 °C", "min – max (N)") so the renderer doesn't need to know about units.
+ */
+data class HaHistoryGraphData(
+  val title: String?,
+  /** "Last 24 hours" / "Last 7 days" — whatever `hours_to_show` resolved to. */
+  val rangeLabel: String,
+  val rows: List<HaHistoryGraphRow>,
+  /**
+   * The one card-level message shown when no row has a line ("No history in the last 2 days"), in
+   * place of a stub per row.
+   */
+  val emptyLabel: String = "No history",
+)
+
+/** Whether [this] row draws a line: a sparkline needs at least two numeric samples. */
+val HaHistoryGraphRow.hasLine: Boolean
+  get() = points.size >= 2
+
+/**
+ * Whether the card shows its single empty state: it has rows and none of them draws a line. When
+ * only some rows are empty, those rows shrink to one line each and the others keep their graphs.
+ */
+val HaHistoryGraphData.allSeriesEmpty: Boolean
+  get() = rows.isNotEmpty() && rows.none { it.hasLine }
+
+/**
+ * Whether [RemoteHaHistoryGraph] replaces its rows with the single empty state: only when the
+ * caller opts in ([singleEmptyState], the `history-graph` card) and [allSeriesEmpty]. The sensor
+ * card and statistics-graph reuse the layout without it, so a row with no history still shows its
+ * name and current value.
+ */
+fun HaHistoryGraphData.showsSingleEmptyState(singleEmptyState: Boolean): Boolean =
+  singleEmptyState && allSeriesEmpty
+
+data class HaHistoryGraphRow(
+  val entityId: String?,
+  val name: String,
+  val summary: RemoteString,
+  val accent: Color,
+  /** Numeric samples in order. Fewer than two → the row is one line: its name and summary. */
+  val points: List<Float>,
+)
+
+/**
+ * `custom:ha-bambulab-print_status-card` model — current print job hero tile. The progress ring is
+ * keyed off [progressFraction] (0f…1f); ancillary fields can each be null when the snapshot doesn't
+ * have the corresponding entity (the row collapses).
+ *
+ * Each text line carries its own underlying source entity so the `RemoteHa*` wrapper can register a
+ * named binding keyed off that sensor under a synthetic attribute name
+ * (`<sensor>.attributes.<line>_label`) — not `<sensor>.state`, which the addon's stream
+ * auto-publishes with the raw HA value and would clobber our pre-formatted string. The host
+ * re-renders and pushes the formatted line under that attribute key when the source sensor (or
+ * either participating sensor for composite lines) changes. For composite lines (`Layer X / Y`,
+ * `Nozzle 220°C → 220°C`) we pick the sensor whose value drives the line — `_current_layer`,
+ * `_nozzle_temperature`, `_bed_temperature`.
+ *
+ * [phase] is structure: a printer that is not printing draws the idle layout (no ring, no `0 %`, no
+ * layer count) and a finished one a full ring with a check, so a change of phase re-encodes the
+ * card (it is a re-encode card) and a design template keys on it.
+ */
+data class HaBambuPrintStatusData(
+  val entityId: String?,
+  val printerName: String,
+  val stageEntityId: String?,
+  val stage: String,
+  val progressEntityId: String?,
+  val progressLabel: String,
+  val progressFraction: Float,
+  val accent: Color,
+  val layerEntityId: String?,
+  val layerLine: String?,
+  val remainingEntityId: String?,
+  val remainingLine: String?,
+  val nozzleEntityId: String?,
+  val nozzleLine: String?,
+  val bedEntityId: String?,
+  val bedLine: String?,
+  val phase: HaBambuPrintPhase = HaBambuPrintPhase.Printing,
+)
+
+/**
+ * What a Bambu printer is doing, as far as the print-status card's layout is concerned. Only
+ * [Printing] (which includes preparing and paused) shows the progress ring and the job's lines; the
+ * others show the printer and its state.
+ */
+enum class HaBambuPrintPhase {
+  Printing,
+  Idle,
+  Finished,
+  Failed,
+  Offline,
+}
+
+/**
+ * `custom:ha-bambulab-print_control-card` — pause / resume / stop pad. A null button is not shown:
+ * the converter passes only the actions that apply to the print's state. With none to show, the pad
+ * says why in [statusLine] ("Nothing printing").
+ */
+data class HaBambuPrintControlData(
+  val printerName: String,
+  val pause: HaBambuControlButton?,
+  val resume: HaBambuControlButton?,
+  val stop: HaBambuControlButton?,
+  val statusLine: String? = null,
+)
+
+/**
+ * One control. A button that is not [enabled] (its entity is `unavailable`) is drawn greyed out and
+ * does nothing when tapped.
+ */
+data class HaBambuControlButton(
+  val label: String,
+  val icon: ImageVector,
+  val accent: Color,
+  val tapAction: HaAction = HaAction.None,
+  val enabled: Boolean = true,
+)
+
+/** `custom:ha-bambulab-ams-card` — grid of up to four filament slots. */
+data class HaBambuAmsData(val title: String, val slots: List<HaBambuSpoolSlot>)
+
+/** `custom:ha-bambulab-spool-card` — single filament slot, larger. */
+data class HaBambuSpoolDetail(val slot: HaBambuSpoolSlot)
+
+/**
+ * One filament tray. [color] is the spool's swatch (state.attributes.color parsed from
+ * `#RRGGBBAA`); [remainPercent] is 0..100, or null when it isn't known (the integration reports
+ * `-1`, or the HA "remain_enabled" flag is off and the integration reports nothing).
+ */
+data class HaBambuSpoolSlot(
+  val entityId: String?,
+  val slotLabel: String,
+  val material: RemoteString,
+  val color: Color,
+  val remainPercent: Int?,
+  val active: Boolean,
+  /** What [material] shows, as text: the value a design template's binding is given. */
+  val materialText: String = "",
+)
+
+/**
+ * `calendar` card model — title + chronological list of upcoming events. Calendar content is
+ * permanent — the host re-renders the dashboard to surface new events.
+ */
+data class HaCalendarData(
+  val title: String,
+  val rangeLabel: String,
+  val events: List<HaCalendarEvent>,
+)
+
+data class HaCalendarEvent(val whenLabel: String, val summary: String, val accent: Color)
+
+/**
+ * `area` card model — area name + summary stats row + action chips (typically light/cover/fan
+ * toggles). Camera/picture attachments are the placeholder swatch (alpha08 has no area-image
+ * channel).
+ */
+data class HaAreaCardData(
+  val name: String,
+  val stats: List<HaAreaStat>,
+  val actions: List<HaAreaAction>,
+)
+
+data class HaAreaStat(val icon: ImageVector, val label: RemoteString)
+
+data class HaAreaAction(
+  val entityId: String?,
+  val icon: ImageVector,
+  val accent: Color,
+  val initiallyActive: Boolean,
+  val tapAction: HaAction,
+)
+
+/**
+ * Thermostat / humidifier / light arc-gauge model — 270° dial with a filled portion up to
+ * [valueFraction], an optional target marker at [targetFraction], a centred value label, and HA's
+ * mode chip.
+ *
+ * Per-field bindings live under `<entityId>.attributes.<attribute>`; see [centerLabelAttribute] /
+ * [supportingLabelAttribute] / [modeChip] for the suffix each field uses.
+ */
+data class HaArcDialData(
+  val entityId: String?,
+  val name: String,
+  val valueFraction: Float,
+  val targetFraction: Float?,
+  val centerLabel: String,
+  /**
+   * HA attribute key that drives [centerLabel] (e.g. `current_temperature_label`,
+   * `brightness_pct`). Wrapper binds `<entityId>.attributes.<this>`.
+   */
+  val centerLabelAttribute: String,
+  /** Smaller secondary readout under the centre label (e.g. "↑ 22 °C"). */
+  val supportingLabel: String?,
+  val supportingLabelAttribute: String?,
+  val modeChip: HaModeChip?,
+  val accent: Color,
+  val showSteppers: Boolean,
+  val centerIcon: ImageVector?,
+  val tapAction: HaAction = HaAction.None,
+  val incrementAction: HaAction = HaAction.None,
+  val decrementAction: HaAction = HaAction.None,
+  /**
+   * Every accent this card can pick from its entity's state, when it picks one ([accent] is among
+   * them). A design template selects in-document by `<entityId>.accent_index`; null means the
+   * accent never depends on the state.
+   */
+  val accentChoices: List<Color>? = null,
+  /**
+   * Live values computed in-document from host-pushed bindings, for a dial with no per-card
+   * template bindings (a UI-builder design). Set, they win over [valueFraction], [targetFraction],
+   * the label attributes and [modeChip].
+   */
+  val live: HaArcDialLive? = null,
+)
+
+/**
+ * An arc dial's live values as document expressions: the fill and target fractions, the centre and
+ * supporting labels, and the mode chip's text. See [HaArcDialData.live].
+ */
+data class HaArcDialLive(
+  val valueFraction: RemoteFloat,
+  val targetFraction: RemoteFloat?,
+  val centerLabel: RemoteString,
+  val supportingLabel: RemoteString?,
+  val modeLabel: RemoteString?,
+  /** Whether the target marker shows: false while the entity has no set point. Null, always. */
+  val targetVisible: RemoteBoolean? = null,
+)
+
+/**
+ * The small mode chip rendered above the centre label of an arc dial / tile. Routed through
+ * `RemoteStateLayout` for [Toggle] / [Indexed] so a host flipping the underlying state toggles the
+ * visible label without touching the document.
+ */
+sealed interface HaModeChip {
+  /**
+   * A pre-formatted label backed by `<entityId>.attributes.<attribute>` (or constant when
+   * [entityId] is null). The player can still update the text live; it can't switch between
+   * structurally different variants.
+   */
+  data class Static(val entityId: String?, val attribute: String, val initial: String) : HaModeChip
+
+  /**
+   * Two label variants picked at playback time by `<entityId>.is_on`. Routed through
+   * `RemoteStateLayout(RemoteBoolean)` so a host flipping the boolean toggles the visible label.
+   */
+  data class Toggle(
+    val entityId: String?,
+    val initiallyOn: Boolean,
+    val onLabel: String,
+    val offLabel: String,
+  ) : HaModeChip
+}
+
+/**
+ * `clock` card model. The default render uses `RemoteTimeDefaults.defaultTimeString` so the time
+ * text auto-ticks inside the playing document without re-encode. [staticTimeLabel] is an opt-in
+ * static override (kept for previews and for hosts that want a frozen capture).
+ *
+ * When [zoneOffsetMinutes] is non-zero or [showSeconds] is true the renderer composes a live
+ * RemoteString from `RemoteContext`'s hour/minute/second floats so the player still ticks (no
+ * re-encode). [zoneOffsetMinutes] is the static offset (target zone − host zone) captured at encode
+ * time; DST transitions during playback fall to the next host re-encode.
+ */
+data class HaClockData(
+  val title: String?,
+  val staticTimeLabel: String?,
+  val secondaryLabel: String?,
+  val isLarge: Boolean,
+  val use24Hour: Boolean,
+  val zoneOffsetMinutes: Int = 0,
+  val showSeconds: Boolean = false,
+  /**
+   * The card shows another time zone: the time is shifted in-document by `card.zone_offset_minutes`
+   * (constant [zoneOffsetMinutes] in a live capture, a binding in a design template).
+   */
+  val zoned: Boolean = zoneOffsetMinutes != 0,
+)
+
+/**
+ * `statistics-graph` card model — mirrors history-graph, just with pre-aggregated values from HA's
+ * `recorder.statistics_during_period`. [chartType] is "line" or "bar"; [stacked] only applies to
+ * bar mode and stacks the entity contributions per bucket (HA's `stack: true`).
+ */
+data class HaStatisticsGraphData(
+  val title: String?,
+  val rangeLabel: String,
+  val rows: List<HaHistoryGraphRow>,
+  val chartType: String = "line",
+  val stacked: Boolean = false,
+)
+
+/**
+ * `alarm-panel` card model — title, status chrome (label + icon + accent border), ARM AWAY/HOME
+ * buttons (variants depend on `states:` config), code-input field + numeric keypad.
+ *
+ * The status chrome is keyed by [initialStateInt] and rendered through
+ * `RemoteStateLayout(RemoteInt, …)` so the host can flip (icon, accent, label) by pushing a new
+ * `<entityId>.state_int` — no document re-encode. [statuses] enumerates one variant per known state
+ * key on the wire (`AlarmStateInt.*` in `ha-model`); the converter is responsible for supplying
+ * every key the host might ever push, including the catch-all `Unknown` index.
+ *
+ * [codeLength] enables launcher-widget documents to keep a PIN in Remote Compose mutable state and
+ * emit one [HaAction.AlarmPin] when that many digits have been entered. A null length retains the
+ * host-buffered [HaAction.AlarmKey] path so the dashboard can use its idle-timeout heuristic.
+ */
+data class HaAlarmPanelData(
+  val entityId: String?,
+  val title: String,
+  val initialStateInt: Int,
+  val statuses: List<HaAlarmStatus>,
+  val actions: List<HaAlarmAction>,
+  val showKeypad: Boolean,
+  val codeLength: Int? = null,
+) {
+  init {
+    require(statuses.isNotEmpty()) { "HaAlarmPanelData.statuses must not be empty" }
+    require(statuses.distinctBy { it.stateKey }.size == statuses.size) {
+      "HaAlarmPanelData.statuses must have distinct stateKey values"
+    }
+  }
+}
+
+/**
+ * One status variant rendered for a specific `state_int` key — the triplet (icon, accent, label)
+ * that the alarm panel chrome flips through at playback.
+ */
+data class HaAlarmStatus(
+  val stateKey: Int,
+  val label: String,
+  val accent: Color,
+  val icon: ImageVector,
+)
+
+/**
+ * One ARM button on the alarm panel — label + the action it fires. For panels behind a code,
+ * [tapAction] is typically [HaAction.AlarmIntent]; for code-free panels it can be a
+ * [HaAction.CallService] called directly.
+ */
+data class HaAlarmAction(val label: String, val accent: Color, val tapAction: HaAction)
+
+/**
+ * `media-control` card model — name + title/artist + transport buttons
+ * + position bar. Album-art is a placeholder swatch (alpha08 can't pull arbitrary HTTP images into
+ *   a .rc document).
+ */
+data class HaMediaControlData(
+  val entityId: String?,
+  val playerName: String,
+  val title: String,
+  val artist: String?,
+  val accent: Color,
+  val isPlaying: Boolean,
+  val positionFraction: Float,
+  val positionLabel: String?,
+  val durationLabel: String?,
+  val previousAction: HaAction,
+  val playPauseAction: HaAction,
+  val nextAction: HaAction,
+)
+
+/** `todo-list` card model — title + active/completed item rows. */
+data class HaTodoListData(
+  val title: String,
+  val activeItems: List<HaTodoItem>,
+  val completedItems: List<HaTodoItem>,
+)
+
+/**
+ * One row in a [HaTodoListData]. The [tapAction] flips the item's status via `todo.update_item`;
+ * players that don't carry a service channel back to HA will leave the row visually unchanged after
+ * a tap (no optimistic update).
+ */
+data class HaTodoItem(val summary: String, val tapAction: HaAction = HaAction.None)
+
+/**
+ * `picture` card model — a static `image:` URL with an optional name overlay and tap target. We
+ * can't pull arbitrary HTTP images into a .rc document, so the renderer paints a tinted placeholder
+ * and shows the configured image URL as a debug caption (so a host that wires in an image-channel
+ * later doesn't need to change converters).
+ */
+data class HaPictureCardData(
+  val name: String?,
+  val captionUrl: String?,
+  val placeholderIcon: ImageVector,
+  val tapAction: HaAction = HaAction.None,
+)
+
+/**
+ * `picture-glance` card model — image with a row of clickable entity cells overlaid (typically
+ * lights / covers / switches).
+ */
+data class HaPictureGlanceData(
+  val title: String?,
+  val captionUrl: String?,
+  val placeholderIcon: ImageVector,
+  val cells: List<HaPictureGlanceCell>,
+)
+
+data class HaPictureGlanceCell(
+  val entityId: String?,
+  val icon: ImageVector,
+  val accent: Color,
+  val initiallyActive: Boolean,
+  val label: String,
+  val tapAction: HaAction,
+  /** The glyph while on, when it differs from [icon]: see [HaToggleAccent.activeIcon]. */
+  val activeIcon: ImageVector? = null,
+  /** See [HaToggleAccent.activeIconWhenUnavailable]. */
+  val activeIconWhenUnavailable: Boolean = false,
+  /** See [HaToggleAccent.initiallyAvailable]. */
+  val initiallyAvailable: Boolean = true,
+)
+
+/**
+ * `picture-elements` card model — image with arbitrarily-positioned elements. Positioned children
+ * are overlaid on the placeholder at their `(top, left)` fractions; elements without position
+ * metadata fall back to a strip across the bottom of the canvas.
+ */
+data class HaPictureElementsData(
+  val captionUrl: String?,
+  val placeholderIcon: ImageVector,
+  val elements: List<HaPictureElement>,
+)
+
+/**
+ * Optional fractional placement of a [HaPictureElement] on the picture-elements canvas. Both axes
+ * are 0f..1f (HA's `style.top` / `style.left` percentages parsed into fractions). When null the
+ * element falls back to the strip-below layout.
+ */
+data class HaPictureElementPosition(val leftFraction: Float, val topFraction: Float)
+
+sealed interface HaPictureElement {
+  val position: HaPictureElementPosition?
+
+  data class StateIcon(
+    val entityId: String?,
+    val icon: ImageVector,
+    val accent: Color,
+    val initiallyActive: Boolean,
+    val tapAction: HaAction,
+    override val position: HaPictureElementPosition? = null,
+    /** The glyph while on, when it differs from [icon]: see [HaToggleAccent.activeIcon]. */
+    val activeIcon: ImageVector? = null,
+    /** See [HaToggleAccent.activeIconWhenUnavailable]. */
+    val activeIconWhenUnavailable: Boolean = false,
+    /** See [HaToggleAccent.initiallyAvailable]. */
+    val initiallyAvailable: Boolean = true,
+  ) : HaPictureElement
+
+  data class StateLabel(
+    val entityId: String?,
+    val text: RemoteString,
+    override val position: HaPictureElementPosition? = null,
+  ) : HaPictureElement
+
+  data class ServiceButton(
+    val label: String,
+    val accent: Color,
+    val tapAction: HaAction,
+    override val position: HaPictureElementPosition? = null,
+  ) : HaPictureElement
+}
+
+/**
+ * `statistic` card model — single hero value for one entity, with optional period label and unit.
+ * Used by HA's built-in `statistic` card which surfaces one mean/min/max/sum statistic value.
+ */
+data class HaStatisticCardData(
+  val entityId: String?,
+  val name: String,
+  val valueLabel: RemoteString,
+  val unit: String?,
+  val periodLabel: String?,
+  val accent: Color,
+)
+
+/**
+ * `sensor` card model — entity name + big value + a small inline sparkline of the recent history.
+ * Same shape as one history-graph row, hoisted into a hero tile.
+ */
+data class HaSensorCardData(
+  val entityId: String?,
+  val name: String,
+  val valueLabel: String,
+  val accent: Color,
+  val points: List<Float>,
+  val rangeLabel: String?,
+)

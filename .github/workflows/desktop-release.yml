@@ -47,7 +47,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-2022, macos-15-intel, macos-15]
+        # Pull requests skip the Intel Mac: it is the slowest runner here (~12 min a package, and
+        # ~20 min median waiting for one) and differs from `macos-15` only in architecture, which the
+        # packaging uses for nothing but the installer's file name. Releases and dispatches still
+        # build all four.
+        os: ${{ github.event_name == 'pull_request' && fromJSON('["ubuntu-latest", "windows-2022", "macos-15"]') || fromJSON('["ubuntu-latest", "windows-2022", "macos-15-intel", "macos-15"]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     defaults:
@@ -57,9 +61,9 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           ref: ${{ inputs.tag || github.sha }}
-      - uses: actions/setup-python@v7.0.0
+      - uses: actions/setup-python@v7.1.0
         with:
-          python-version: '3.15.0'
+          python-version: '3.15.1'
       - uses: ./.github/actions/setup
         with:
           cache-read-only: 'true'

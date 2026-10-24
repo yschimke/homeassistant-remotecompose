@@ -1,0 +1,110 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "area",
+  "title": "Area",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 140,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "mode"
+        ]
+      }
+    },
+    "mode": {
+      "id": "mode",
+      "componentId": "ha-cards/card-size-mode",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "wrap": [
+          "full"
+        ],
+        "height": [
+          "wear-tiers"
+        ],
+        "width": [
+          "launcher"
+        ]
+      }
+    },
+    "full": {
+      "id": "full",
+      "componentId": "ha-cards/area-card-full",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "launcher": {
+      "id": "launcher",
+      "componentId": "ha-cards/area-card-full",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "wear-tiers": {
+      "id": "wear-tiers",
+      "componentId": "ha-cards/size-tiers",
+      "properties": {
+        "axis": {
+          "type": "string",
+          "value": "height"
+        },
+        "thresholdsDp": {
+          "type": "string",
+          "value": "80"
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "tier0": [
+          "wear-small"
+        ],
+        "tier1": [
+          "wear-large"
+        ]
+      }
+    },
+    "wear-small": {
+      "id": "wear-small",
+      "componentId": "ha-cards/area-card-summary",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    },
+    "wear-large": {
+      "id": "wear-large",
+      "componentId": "ha-cards/area-card-full",
+      "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {}
+    }
+  }
+}

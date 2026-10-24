@@ -1,6 +1,6 @@
 ---
 name: ha-dashboard
-description: Author or edit a Home Assistant Lovelace dashboard for harc, the dashboard viewer for phones, tablets, desktops, launcher widgets and watches. Use when asked to set up, reorganise or extend a dashboard (for example "a garden dashboard with soil moisture charts"), whether working from a harc "Edit with an agent" prompt or directly against a Home Assistant instance.
+description: Author or edit a Home Assistant Lovelace dashboard for harc, the dashboard viewer for phones, tablets, desktops, launcher widgets and watches. Use when asked to set up, reorganise or extend a dashboard (for example "a garden dashboard with soil moisture charts"), whether working from a harc prompt or directly against a Home Assistant instance.
 ---
 
 # Home Assistant dashboards for harc
@@ -27,16 +27,45 @@ for one dashboard; Home Assistant stays the source of truth.
 These rules match `DashboardAgentPrompt.GUIDE` in `ha-client`, the prompt harc builds; change both
 together.
 
+## Card sizes
+
+In a sections view each section is a 12-column grid. Size a card with
+`"grid_options": {"columns": N, "rows": R}`: columns 3, 6, 9 or `"full"`, rows a number of 56 dp
+rows or `"auto"`. On a phone a section is about 400 dp wide, so two tiles share a row at 6 columns
+each; gauges, graphs, forecasts and lists read best full width. Cards fill a section's rows in
+order. harc's dashboard editor writes sizes the same way (`DashboardDraft` in `ha-client`).
+
+## Looking at harc's card designs
+
+harc's card designs are published as previews in the hosted Compose Preview catalog: the
+`compose-preview-catalog` MCP server in this repository's `.mcp.json`
+(`https://preview.coo.ee/mcp`, catalog `homeassistant-remotecompose`). Reading it needs a
+short-lived grant: `request_access`, show the person the `approveUrl` and `userCode`, then
+`poll_access` until approved.
+
+- `catalog_list_previews` with `query: "card-<type>"` (`card-gauge`, `card-tile`,
+  `card-thermostat`, `card-history`, …) lists a card type's designs, light and dark.
+- `catalog_render_preview` with `observe: "png"` shows one; the `device` override (ids from
+  `catalog_list_devices`, such as `id:small_phone` or `id:pixel_fold`) renders it at another width,
+  and `catalog_render_matrix` with `axes: {"device": [...]}` compares several widths in one call.
+
+Use them to choose each card's type and size. These match `DashboardAgentPrompt.SIZING` and
+`DashboardAgentPrompt.DESIGN_TOOLS`.
+
 ## From a harc prompt
 
-harc's **Edit with an agent** screen copies a prompt holding these rules, the request, the
-dashboard's current config and a table of the home's entities (`entity_id | name | state | unit |
-device_class`). Answer with the JSON block. The user pastes the answer back into harc, which checks
-that it is an object with a `views` list, asks before replacing the dashboard, and offers one undo.
+A harc prompt built by `DashboardAgentPrompt` holds these rules, the request, the dashboard's
+current config and a table of the home's entities (`entity_id | name | state | unit |
+device_class`). Answer with the JSON block; harc checks that it is an object with a `views` list.
+The phone app no longer offers a copy-and-paste agent flow: agent edits are moving to edit
+sessions over the Terrazzo integration's MCP server
+([`docs/architecture/dashboard-editing.md`](../../docs/architecture/dashboard-editing.md)).
 
 ## Directly against Home Assistant
 
-With a long-lived access token, use Home Assistant's WebSocket API (`/api/websocket`):
+With a long-lived access token, use Home Assistant's WebSocket API (`/api/websocket`). A token
+carries its user's full rights, not just dashboards; prefer a dedicated user, and expect this path to
+give way to the integration's MCP edit sessions:
 
 1. `{"type": "lovelace/dashboards/list"}` to find the dashboard's `url_path` (the default dashboard
    has none).

@@ -1,0 +1,650 @@
+@file:Suppress("RestrictedApi")
+
+package ee.schimke.ha.rc
+
+import android.view.View
+import android.view.ViewGroup
+import androidx.compose.remote.core.Operation
+import androidx.compose.remote.core.RemoteContext
+import androidx.compose.remote.core.VariableSupport
+import androidx.compose.remote.core.operations.layout.Container
+import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
+import androidx.compose.remote.creation.compose.layout.RemoteComposable
+import androidx.compose.remote.creation.profile.Profile
+import androidx.compose.remote.creation.profile.RcPlatformProfiles
+import androidx.compose.remote.player.compose.ExperimentalRemotePlayerApi
+import androidx.compose.remote.player.compose.RemoteComposePlayerFlags
+import androidx.compose.remote.player.core.platform.BitmapLoader
+import androidx.compose.remote.player.view.RemoteComposePlayer
+import androidx.compose.remote.player.view.platform.RemoteComposeView
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import ee.schimke.composeai.rcplayer.compose.RcImageLoader
+import ee.schimke.composeai.rcplayer.protocol.RcBitmapData
+import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
+import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.components.HA_ACTION_NAME
+import ee.schimke.ha.rc.components.HaAction
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+
+/**
+ * Cached counterpart to upstream `androidx.compose.remote.tooling.preview.RemotePreview`.
+ *
+ * The difference that matters: this version keys the captured `.rc` bytes on a caller-supplied
+ * [cacheKey] and stores hits in [LocalCardDocumentCache]. Two calls with the same key skip the
+ * encode entirely and play the cached bytes — even across Activity recreation, because the cache is
+ * process-scoped.
+ *
+ * Cache-key contract: include everything that bakes into the document (the card YAML, theme colours
+ * / dark flag, profile), and nothing that the host can update by named binding (entity state,
+ * attributes, `is_on`). Snapshot data is read by [content] on capture but must NOT be part of the
+ * key — `LiveValues.state` / `.attribute` / `.isOn` (in rc-components) are exactly the seam through
+ * which a running player gets fresh data without re-encoding.
+ *
+ * The one snapshot value folded in here rather than by the caller is a picture-entity slot's
+ * `entity_picture` ([cardPictureSignature]): the player fetches a picture by URL once per document,
+ * so a new URL (a camera's rotating token or next frame) plays as a new document — a re-encode on
+ * the converter path, a fresh decode of the same template bytes on the template path.
+ *
+ * **Live snapshot push.** When [card] and [snapshot] are supplied, the running player is fed
+ * named-binding writes for the entities the card references each time [snapshot] changes. This
+ * covers the regression introduced by document caching: without it, the document is encoded once
+ * per `(card, theme)` and no value updates ever reach the player. The push:
+ * 1. Walks `card.raw` once with [cardEntityIds] to enumerate the entities the card consumes
+ *    (`entity:` / `entities:`, including nested cards in stack / conditional / picture-elements).
+ * 2. On every [snapshot] change, computes the bindings via [cardSnapshotBindings] and writes only
+ *    those that actually changed since the last push (`<id>.state`, `<id>.is_on`) — into the
+ *    Compose player's named values, or through the AndroidX `RemoteComposePlayer`'s `setUserLocal*`
+ *    setters when that player is drawing.
+ *
+ * [onDocument] observes the encoded bytes once per document (on a cache hit too, since the caller
+ * cares about the document, not about who encoded it). It exists for the preview module, which
+ * hands them to the compose-preview render harness so the published catalog carries the Remote
+ * Compose data tier next to the baked PNG — see `:previews`' `RcDocumentCapture.kt`. Null (the
+ * default) for every in-app caller: no observer, no behaviour change.
+ *
+ * **Player.** [playback] picks who draws the bytes — see [CardPlayback]. The default,
+ * [CardPlayback.Compose], is the Compose Multiplatform `RcComposePlayer` (via [HaRcComposePlayer]):
+ * the document becomes real Compose layout nodes, so the slot sizes like any other composable —
+ * `fillMaxWidth()` gives an adaptive (wrap-content) height, `Modifier.height(...) / .size(...)`
+ * pins it — and animations run on the composition's frame clock rather than the View player's own,
+ * which is what makes preview stills deterministic. [CardPlayback.LauncherWidget] keeps the
+ * AndroidX View player for previews of the mobile launcher widget, which the platform draws with
+ * that player; it is also the per-document fallback when rc-player-compose reports a document it
+ * can't fully render.
+ *
+ * Sizing on the AndroidX path: the document is authored with the wrap-friendly measure path
+ * (FEATURE_PAINT_MEASURE = 0, baked by `androidXExperimentalWrap`) and played through
+ * [WrapAdaptiveRemoteDocumentPlayer], which primes the View's paint context before Compose measures
+ * it — the workaround for https://github.com/yschimke/homeassistant-remotecompose/issues/153.
+ */
+@OptIn(ExperimentalRemotePlayerApi::class)
+@Composable
+fun CachedCardPreview(
+  cacheKey: Any,
+  profile: Profile = RcPlatformProfiles.ANDROIDX,
+  modifier: Modifier = Modifier,
+  card: CardConfig? = null,
+  snapshot: HaSnapshot? = null,
+  liveBindings: Boolean = true,
+  bitmapLoader: BitmapLoader = BitmapLoader.UNSUPPORTED,
+  onDocument: ((ByteArray) -> Unit)? = null,
+  playback: CardPlayback = CardPlayback.Compose,
+  template: CardTemplatePlayback? = null,
+  rebuildReason: ((previous: Any, next: Any) -> String)? = null,
+  stablePictures: Boolean = false,
+  content: @RemoteComposable @Composable () -> Unit,
+) {
+  // AndroidX path only: flip the View player into wrap-content mode —
+  // idempotent assignment. See KDoc above.
+  RemoteComposePlayerFlags.shouldPlayerWrapContentSize = true
+
+  val context = LocalContext.current
+  val cache = LocalCardDocumentCache.current
+  val debugBorders = LocalRcDebugBorders.current
+  // A capture bakes the display's density and font scale into its sizes, and the cache outlives
+  // them (a display-size or font-size change; a render run's previews of several devices), so
+  // they key the document too: otherwise a card replays bytes captured for another display.
+  val density = LocalDensity.current
+  // Mix the debug-borders flag into the cache key so toggling it
+  // re-encodes the document (the wrapper changes the captured bytes).
+  val effectiveCacheKey =
+    remember(cacheKey, debugBorders, density.density, density.fontScale) {
+      val displayed = DisplayKeyedCacheKey(cacheKey, density.density, density.fontScale)
+      if (debugBorders) DebugBorderedCacheKey(displayed) else displayed
+    }
+
+  val pictureSignature =
+    remember(card, snapshot) {
+      if (card != null && snapshot != null) cardPictureSignature(card, snapshot) else ""
+    }
+  // Pictures load in place on the Compose player: a new URL is a new image epoch for the same
+  // document (HaRcComposePlayer), the last picture drawn until the next lands. A template names its
+  // pictures by slot, and a [stablePictures] converter capture by entity (StablePictures), so only
+  // whether a slot has a picture shapes the document. A launcher widget's player loads a document's
+  // pictures once, so there a new URL is still a new document.
+  val picturesInPlace = playback == CardPlayback.Compose && (template != null || stablePictures)
+  val pictureKey =
+    remember(card, snapshot, picturesInPlace, template != null, pictureSignature) {
+      when {
+        !picturesInPlace -> pictureSignature
+        template != null || card == null || snapshot == null -> ""
+        else -> StablePictures.presence(card, snapshot)
+      }
+    }
+  val documentKey =
+    remember(effectiveCacheKey, pictureKey) {
+      if (pictureKey.isEmpty()) effectiveCacheKey
+      else PictureKeyedCacheKey(effectiveCacheKey, pictureKey)
+    }
+
+  // What producing this document cost, for [CardRebuilds]: set by the block below.
+  val produced = remember(documentKey, template) { arrayOf(CardRebuilds.Cost.None) }
+  val captureContent: @RemoteComposable @Composable () -> Unit =
+    if (debugBorders) {
+      { DebugRcBorderWrapper { content() } }
+    } else {
+      content
+    }
+  // The document this slot last drew. A rebuild that has to capture (a converter card whose key
+  // moved under it) keeps drawing it while the capture runs off the main thread, then swaps: a
+  // capture is a composition and a serialisation, a dropped frame or more on the main thread for
+  // every camera frame or re-encoded value. A slot's first document is still captured here, so a
+  // card arrives on screen already showing current data. A frozen clock (a preview, a test)
+  // captures in place too, so a frame waited on has its document.
+  val lastShown = remember { arrayOfNulls<CardDocument>(1) }
+  val captureAsync = !LocalHaClock.current.isFrozen
+  val planned =
+    remember(documentKey, template) {
+      template?.let {
+        // Template bytes never change; a clone is a new document to the player, which fetches its
+        // slot pictures from the current snapshot's URLs, but shares the template's decode. The
+        // same pictures play the same clone, so a card scrolled back into view is the same
+        // document.
+        val bytes =
+          if (picturesInPlace || pictureSignature.isEmpty()) it.bytes
+          else pictureCopy(it.bytes, pictureSignature)
+        // New bytes for the player either way: another template (an alarm panel's armed and
+        // disarmed rows are two), or this one's clone for new pictures.
+        if (bytes !== lastShown[0]?.bytes) produced[0] = CardRebuilds.Cost.Decode
+        PlannedDocument(CardDocument(bytes = bytes, widthPx = 0, heightPx = 0), pending = false)
+      }
+        ?: cache.get(documentKey)?.let {
+          produced[0] = CardRebuilds.Cost.Decode
+          PlannedDocument(it, pending = false)
+        }
+        ?: run {
+          produced[0] = CardRebuilds.Cost.Encode
+          val previous = lastShown[0]
+          if (captureAsync && previous != null) PlannedDocument(previous, pending = true)
+          else
+            PlannedDocument(
+              runBlocking { captureCardDocument(context, profile, captureContent) }
+                .also { cache.put(documentKey, it) },
+              pending = false,
+            )
+        }
+    }
+  val captured = remember(documentKey, template) { mutableStateOf<CardDocument?>(null) }
+  if (planned.pending) {
+    LaunchedEffect(documentKey, template) {
+      captured.value =
+        withContext(Dispatchers.Default) {
+          captureCardDocument(context, profile, captureContent).also { cache.put(documentKey, it) }
+        }
+    }
+  }
+  val cardDocument = captured.value ?: planned.document
+  SideEffect { lastShown[0] = cardDocument }
+  // A template's time-derived bindings (a clock card's date line) read the same clock the direct
+  // render reads, so an injected clock reaches both paths.
+  val clock = LocalHaClock.current
+  val bindingsFor: (HaSnapshot) -> CardSnapshotBindings =
+    template?.let { t -> { snap -> t.bindings(snap, clock) } }
+      ?: { snap ->
+        cardSnapshotBindings(entityIds(card), snap)
+      }
+
+  // Hand the encoded document to an observer once the composition succeeds. `SideEffect` rather
+  // than `remember`: publishing from a `remember` block is the `RememberReturnType` lint error,
+  // because an abandoned or retried composition would have published anyway. A render harness
+  // collecting this still has its per-preview window open in the apply phase.
+  SideEffect { onDocument?.invoke(cardDocument.bytes) }
+
+  // A second document for this slot while it stays composed is a rebuild: live data reached the
+  // card through its key rather than a binding. Counted once per document, by type, reason and
+  // cost (CardRebuilds). The first document (the card coming into view) is not one.
+  val rebuildTracker = remember { RebuildTracker() }
+  SideEffect {
+    val previous = rebuildTracker.documentKey
+    if (previous != null && previous != documentKey && card != null) {
+      val reason =
+        if (rebuildTracker.cacheKey == cacheKey && rebuildTracker.pictures != pictureSignature) {
+          CardRebuilds.REASON_PICTURE
+        } else {
+          rebuildTracker.cacheKey?.let { old -> rebuildReason?.invoke(old, cacheKey) }
+            ?: CardRebuilds.REASON_KEY
+        }
+      CardRebuilds.record(card.type, reason, produced[0])
+    }
+    rebuildTracker.documentKey = documentKey
+    rebuildTracker.cacheKey = cacheKey
+    rebuildTracker.pictures = pictureSignature
+  }
+
+  val dispatcher = LocalHaActionDispatcher.current
+  val inputDrafts = remember(card) { ee.schimke.composeai.rcplayer.runtime.RcInputDrafts() }
+
+  val entityIds = remember(card) { entityIds(card) }
+  // [liveBindings] is off for cards that refresh by document re-encode (those that declare a
+  // `CardConverter.dataSignature`): their dynamic content is baked, not bound, so pushing the
+  // entity's raw named bindings would clobber a per-card-formatted `<id>.state` with the plain
+  // value. The re-encode (driven by the signature in the cache key) is authoritative for them.
+  // A design template carries no values at all, so it always takes the push — every slot binding
+  // the client can derive, on every snapshot.
+  val pushBindings =
+    (liveBindings || template != null) &&
+      card != null &&
+      snapshot != null &&
+      (entityIds.isNotEmpty() || template != null)
+  // Track the last value pushed to each player so a redundant snapshot recompose doesn't re-issue
+  // identical writes. Reset when [cacheKey] changes so the next push is unconditional.
+  // A template swapping in (or out) is a new document too, so it resets the push state as well.
+  val pushedNamed = remember(documentKey, template) { HashMap<String, Any?>() }
+  val pushedView = remember(documentKey, template) { HashMap<String, Any?>() }
+  // Compose player: live values the running document reads by name. Re-created with the document
+  // ([cacheKey]) — the new document carries its own initial bake.
+  //
+  // Seeded with the current snapshot's bindings before the player's first frame. The cached bytes
+  // carry the values of their first capture, so a card scrolled back into view would otherwise
+  // draw those, then tween every gauge, toggle and label to the live values a frame later — the
+  // first frame shows current data, and only a later change animates
+  // (docs/architecture/live-card-updates.md § First frame).
+  val namedValues =
+    remember(documentKey, template) {
+      mutableStateMapOf<String, RcNamedValue>().also { values ->
+        if (pushBindings) {
+          pushSnapshotBindings(NamedValueWriter(values), bindingsFor(snapshot!!), pushedNamed)
+        }
+      }
+    }
+  // AndroidX player (launcher-widget previews, per-document fallback): the View handle survives
+  // recomposition but is replaced if the player is torn down and rebuilt (cache invalidation,
+  // theme flip, resize).
+  val playerHolder = remember { mutableStateOf<RemoteComposePlayer?>(null) }
+
+  if (pushBindings && snapshot != null) {
+    // A relative time ("3 h ago", see `isRelativeTimeState`) moves with the clock, not the
+    // entity: while the card shows one, the host's tick (`LocalRelativeTimeTick`) re-runs the
+    // push. Only changed values are written, so a tick that rolls no label over writes nothing.
+    // Keyed on the injected clock too: a template's time-derived bindings change with it.
+    val tick = relativeTimeTickFor(entityIds, snapshot)
+    LaunchedEffect(namedValues, snapshot, tick, clock) {
+      pushSnapshotBindings(NamedValueWriter(namedValues), bindingsFor(snapshot), pushedNamed)
+    }
+    LaunchedEffect(playerHolder.value, snapshot, tick, clock) {
+      val updater = playerHolder.value ?: return@LaunchedEffect
+      pushSnapshotBindings(ViewPlayerWriter(updater), bindingsFor(snapshot), pushedView)
+    }
+  }
+
+  // The player may keep the first callback it was given (same bytes, new card or snapshot); read
+  // both at tap time.
+  val latestSnapshot = rememberUpdatedState(snapshot)
+  val latestTemplate = rememberUpdatedState(template)
+  // A template's images resolve through the card's own entities; nothing else it names is fetched.
+  // A [stablePictures] capture names its pictures by entity; anything else it names loads as is.
+  val playerBitmapLoader: BitmapLoader =
+    remember(bitmapLoader, template != null, stablePictures) {
+      when {
+        template != null ->
+          SlotResolvingImageLoader(bitmapLoader) { url ->
+            latestTemplate.value?.bitmapUrl?.invoke(url, latestSnapshot.value)
+          }
+        stablePictures ->
+          SlotResolvingImageLoader(bitmapLoader) { url ->
+            StablePictures.resolve(url, latestSnapshot.value) ?: url
+          }
+        else -> bitmapLoader
+      }
+    }
+  val onNamedAction: (String, Any?) -> Unit = { name, value ->
+    if (name == HA_ACTION_NAME) {
+      val current = latestTemplate.value
+      if (current != null) {
+        // A template is remote content: never dispatch an action it encodes. It only picks which
+        // of this card's own, locally resolved actions runs.
+        dispatcher.dispatch(current.resolveTap(decodeHaAction(value), latestSnapshot.value))
+      } else {
+        decodeHaAction(value)?.let(dispatcher::dispatch)
+      }
+    }
+  }
+  // The AndroidX View player, primed so `modifier` can be wrap-content on the height axis (#153)
+  // while pinned EXACTLY constraints still dominate the View's measure. Accessibility services and
+  // checkers see that View, not the document's semantics inside it, so it carries the card's name.
+  val playerLabel = remember(card, snapshot) { playerLabel(card, snapshot) }
+  val androidXPlayer: @Composable () -> Unit = {
+    // The View player fetches a document's pictures once: with pictures loading in place, a new one
+    // is a new View for the same bytes.
+    key(if (picturesInPlace) pictureSignature else Unit) {
+      WrapAdaptiveRemoteDocumentPlayer(
+        documentBytes = cardDocument.bytes,
+        modifier = modifier,
+        bitmapLoader = playerBitmapLoader,
+        init = { player -> playerHolder.value = player },
+        // Seeded like the Compose player's values: written before the View's first draw, and
+        // recorded as pushed so the effect below only writes what changes after.
+        seed = { player ->
+          val current = latestSnapshot.value
+          if (pushBindings && current != null) {
+            val seeded = HashMap<String, Any?>()
+            pushSnapshotBindings(ViewPlayerWriter(player), bindingsFor(current), seeded)
+            pushedView.clear()
+            pushedView.putAll(seeded)
+          }
+        },
+        onNamedAction = onNamedAction,
+        contentDescription = playerLabel,
+      )
+    }
+  }
+  when (playback) {
+    CardPlayback.Compose ->
+      HaRcComposePlayer(
+        documentBytes = cardDocument.bytes,
+        modifier = modifier,
+        bitmapLoader = playerBitmapLoader,
+        imageEpoch = pictureSignature,
+        namedValues = namedValues,
+        onNamedAction = onNamedAction,
+        fallback = androidXPlayer,
+        inputDrafts = inputDrafts,
+        onInputSubmit = { action, values ->
+          if (card != null && snapshot != null) {
+            if (
+              action.startsWith(ee.schimke.ha.model.MESSAGE_SUBMIT + ":") &&
+                card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE
+            ) {
+              decodeHaAction(ee.schimke.ha.model.messageAction(card, snapshot, values).toString())
+                ?.let(dispatcher::dispatch)
+            } else if (
+              card.type == "entities" && action.startsWith(ee.schimke.ha.model.MESSAGE_SUBMIT + ":")
+            ) {
+              val configured =
+                decodeHaAction(action.removePrefix(ee.schimke.ha.model.MESSAGE_SUBMIT + ":"))
+                  as? ee.schimke.ha.rc.components.HaAction.CallService
+              val id = configured?.entityId
+              val value = values[id]
+              if (id != null && value != null && id in cardEntityIds(card)) {
+                val domain = id.substringBefore('.')
+                val options =
+                  (snapshot.states[id]?.attributes?.get("options")
+                      as? kotlinx.serialization.json.JsonArray)
+                    ?.map { (it as kotlinx.serialization.json.JsonPrimitive).content }
+                    .orEmpty()
+                if (
+                  value.length <= 4096 &&
+                    (domain == "input_text" ||
+                      (domain in setOf("select", "input_select") && value in options))
+                ) {
+                  dispatcher.dispatch(
+                    ee.schimke.ha.rc.components.HaAction.CallService(
+                      domain,
+                      if (domain == "input_text") "set_value" else "select_option",
+                      id,
+                      kotlinx.serialization.json.buildJsonObject {
+                        put(
+                          if (domain == "input_text") "value" else "option",
+                          kotlinx.serialization.json.JsonPrimitive(value),
+                        )
+                      },
+                    )
+                  )
+                }
+              }
+            }
+          }
+        },
+      )
+    CardPlayback.LauncherWidget -> androidXPlayer()
+  }
+}
+
+/**
+ * Per template array, the copy last played for one set of slot pictures. A rotating picture (a
+ * camera's token) replaces it; keyed weakly by the template, so a dropped template takes it along.
+ */
+private val pictureCopies = java.util.WeakHashMap<ByteArray, Pair<String, ByteArray>>()
+
+/** [template]'s copy for [pictures]: the one played before when the pictures haven't changed. */
+private fun pictureCopy(template: ByteArray, pictures: String): ByteArray =
+  synchronized(pictureCopies) {
+    pictureCopies[template]?.takeIf { it.first == pictures }?.second
+      ?: cloneForPlayer(template).also { pictureCopies[template] = pictures to it }
+  }
+
+/**
+ * Wrapper key that distinguishes a debug-bordered render of [inner] from the plain render — same
+ * card YAML, different bytes (the wrapping `DebugRcBorderWrapper` is captured into the document).
+ */
+private data class DebugBorderedCacheKey(val inner: Any)
+
+/** [inner] with its picture-entity slots' current URLs ([cardPictureSignature]): a new picture. */
+private data class PictureKeyedCacheKey(val inner: Any, val pictures: String)
+
+/** [inner] as captured on a display of [density] and [fontScale]. */
+private data class DisplayKeyedCacheKey(val inner: Any, val density: Float, val fontScale: Float)
+
+/** Where [pushSnapshotBindings] writes: the Compose player's named values or the View player. */
+internal interface BindingWriter {
+  fun string(name: String, value: String)
+
+  fun int(name: String, value: Int)
+
+  fun float(name: String, value: Float)
+
+  /** Called once after a push that changed at least one binding. */
+  fun flush() {}
+}
+
+/**
+ * Compose player: plain names (`<id>.state`); rc-player resolves them against the document's
+ * `USER:` named variables, like the View player's `setUserLocal*` setters do.
+ */
+internal class NamedValueWriter(private val values: MutableMap<String, RcNamedValue>) :
+  BindingWriter {
+  override fun string(name: String, value: String) {
+    values[name] = RcNamedValue.Text(value)
+  }
+
+  override fun int(name: String, value: Int) {
+    values[name] = RcNamedValue.Integer(value)
+  }
+
+  override fun float(name: String, value: Float) {
+    values[name] = RcNamedValue.FloatValue(value)
+  }
+}
+
+private class ViewPlayerWriter(private val updater: RemoteComposePlayer) : BindingWriter {
+  override fun string(name: String, value: String) = updater.setUserLocalString(name, value)
+
+  override fun int(name: String, value: Int) = updater.setUserLocalInt(name, value)
+
+  override fun float(name: String, value: Float) = updater.setUserLocalFloat(name, value)
+
+  override fun flush() = refreshBoundPlayerViews(updater)
+}
+
+/**
+ * Push the diff between the previous push (tracked in [pushed]) and the current [snapshot] for the
+ * named bindings of [entityIds] into [writer]. Catches per-binding failures so a single unknown
+ * name doesn't take down the whole push (the View player rejects writes for names not declared in
+ * the document).
+ *
+ * Boolean bindings are pushed as ints — `LiveValues.isOn` creates a `RemoteBoolean` which Remote
+ * Compose stores internally as a `RemoteInt` (0/1), so both players see it on the int channel. Int
+ * (`<id>.state_int`) and float (`<id>.numeric_state`) bindings go through their own typed setters.
+ */
+internal fun pushSnapshotBindings(
+  writer: BindingWriter,
+  entityIds: Set<String>,
+  snapshot: HaSnapshot,
+  pushed: MutableMap<String, Any?>,
+) = pushSnapshotBindings(writer, cardSnapshotBindings(entityIds, snapshot), pushed)
+
+internal fun pushSnapshotBindings(
+  writer: BindingWriter,
+  bindings: CardSnapshotBindings,
+  pushed: MutableMap<String, Any?>,
+) {
+  var changed = false
+  fun write(name: String, value: Any?, block: () -> Unit) {
+    if (pushed[name] == value) return
+    runCatching(block).onSuccess {
+      pushed[name] = value
+      changed = true
+    }
+  }
+  for ((name, value) in bindings.strings) write(name, value) { writer.string(name, value) }
+  for ((name, value) in bindings.booleans) {
+    write(name, value) { writer.int(name, if (value) 1 else 0) }
+  }
+  for ((name, value) in bindings.ints) write(name, value) { writer.int(name, value) }
+  for ((name, value) in bindings.floats) write(name, value) { writer.float(name, value) }
+  if (changed) writer.flush()
+}
+
+private fun refreshBoundPlayerViews(view: View) {
+  if (view is RemoteComposeView) {
+    val context = view.remoteContext
+    val previousMode = context.mode
+    context.mode = RemoteContext.ContextMode.DATA
+    try {
+      // Alpha21 keeps expressions in the root container. Its paint pass skips those data ops,
+      // so evaluate dirty bindings before painting, without registering listeners again.
+      applyDirtyDataOperations(view.document.document.operations, context)
+    } finally {
+      context.mode = previousMode
+    }
+  }
+  view.invalidate()
+  if (view is ViewGroup) {
+    for (index in 0 until view.childCount) refreshBoundPlayerViews(view.getChildAt(index))
+  }
+}
+
+private fun applyDirtyDataOperations(operations: List<Operation>, context: RemoteContext) {
+  for (operation in operations) {
+    if (operation is Container) {
+      applyDirtyDataOperations(operation.list, context)
+    } else if (operation is VariableSupport && operation.isDirty) {
+      operation.markNotDirty()
+      operation.updateVariables(context)
+      operation.apply(context)
+    }
+  }
+}
+
+private fun entityIds(card: CardConfig?): Set<String> = card?.let { cardEntityIds(it) }.orEmpty()
+
+/**
+ * What a card is called, for the View player that hosts it: its `title` or `name`, else its first
+ * entity's friendly name, else its type.
+ */
+private fun playerLabel(card: CardConfig?, snapshot: HaSnapshot?): String? {
+  if (card == null) return null
+  fun text(key: String): String? =
+    (card.raw[key] as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
+  val entity = cardEntityIds(card).firstOrNull()
+  val friendlyName = entity?.let {
+    snapshot?.states?.get(it)?.attributes?.get("friendly_name") as? JsonPrimitive
+  }
+  return text("title")
+    ?: text("name")
+    ?: friendlyName?.contentOrNull?.takeIf { it.isNotBlank() }
+    ?: entity
+    ?: card.type
+}
+
+/** The document a [CachedCardPreview] slot last showed, to tell a rebuild from its first one. */
+private class RebuildTracker {
+  var documentKey: Any? = null
+  var cacheKey: Any? = null
+  var pictures: String? = null
+}
+
+/** The document a slot draws for a key: ready, or the last one while [pending] capture runs. */
+private class PlannedDocument(val document: CardDocument, val pending: Boolean)
+
+/**
+ * Captures [content] under [profile]. A constrained profile (e.g. `widgetsProfile`, the launcher's
+ * stricter op set) can reject a card whose ops fall outside its vocabulary by throwing mid-capture;
+ * an uncaught throw would take down the whole host screen (the card-history preview captures every
+ * card with the widgets profile — see CardHistoryScreen). So it degrades to a blank document under
+ * the requested profile, matching how the launcher shows a widget it can't paint, and if the
+ * profile rejects even that (a blank document has no root ops to admit), to a blank under the
+ * unconstrained AndroidX profile, which never rejects.
+ */
+private suspend fun captureCardDocument(
+  context: android.content.Context,
+  profile: Profile,
+  content: @RemoteComposable @Composable () -> Unit,
+): CardDocument =
+  harcTraceSuspend(HarcTraceSections.CAPTURE_DOCUMENT) {
+    val captured = runCatching {
+      captureSingleRemoteDocument(context = context, profile = profile, content = content)
+    }
+      .recoverCatching { captureSingleRemoteDocument(context = context, profile = profile) {} }
+      .getOrElse {
+        captureSingleRemoteDocument(context = context, profile = RcPlatformProfiles.ANDROIDX) {}
+      }
+    CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
+  }
+
+/**
+ * A template's image loader: each slot picture (`rc-slot://…`) resolved through the card's current
+ * snapshot, then loaded by [delegate]. For both players: the AndroidX one's [loadBitmap], and the
+ * Compose one's [RcImageLoader], so a template picture takes [delegate]'s suspending load (memory,
+ * disk, network) and its memory hit on the first frame ([cached]) rather than the blocking adapter,
+ * whose miss is an empty image the Compose player never asks for again.
+ */
+internal class SlotResolvingImageLoader(
+  private val delegate: BitmapLoader,
+  private val resolve: (String) -> String?,
+) : BitmapLoader, RcImageLoader {
+  private val images = delegate.asRcImageLoader()
+
+  override fun loadBitmap(name: String): java.io.InputStream =
+    delegate.loadBitmap(
+      resolve(name) ?: throw java.io.IOException("template image not resolvable: $name")
+    )
+
+  override suspend fun load(bitmap: RcBitmapData): ImageBitmap? =
+    resolved(bitmap)?.let { images.load(it) }
+
+  override fun cached(bitmap: RcBitmapData): ImageBitmap? =
+    resolved(bitmap)?.let { images.cached(it) }
+
+  private fun resolved(bitmap: RcBitmapData): RcBitmapData? {
+    val name = bitmap.externalImageName() ?: return null
+    val real = resolve(name) ?: return null
+    return bitmap.copy(encoding = RcBitmapData.ENCODING_URL, data = real.encodeToByteArray())
+  }
+}

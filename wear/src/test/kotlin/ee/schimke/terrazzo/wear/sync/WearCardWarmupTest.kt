@@ -1,15 +1,18 @@
 package ee.schimke.terrazzo.wear.sync
 
-import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.rc.CardDesignLibrary
 import ee.schimke.ha.rc.CardDesignTemplates
-import ee.schimke.ha.rc.LocalDesignStore
+import ee.schimke.ha.rc.ContainerTint
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.wear.ui.WearCardLook
 import ee.schimke.terrazzo.wear.ui.decodeWearCard
-import ee.schimke.terrazzo.wear.ui.wearDesignKey
+import ee.schimke.terrazzo.wear.ui.wearAppTemplate
 import ee.schimke.terrazzo.wear.ui.wearSnapshot
+import ee.schimke.terrazzo.wear.widget.WearWidgetFrame
+import ee.schimke.terrazzo.wear.widget.neutralTemplateCaptures
+import ee.schimke.terrazzo.wear.widget.releaseWidgetTemplates
+import ee.schimke.terrazzo.wear.widget.wearAppContainer
 import ee.schimke.terrazzo.wear.widget.wearWidgetCardStyle
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
@@ -22,12 +25,14 @@ import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
 import java.io.File
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -110,43 +115,74 @@ class WearCardWarmupTest {
   }
 
   @Test
-  fun warmingCapturesEachPinnedCardsTemplateIntoTheStore() {
-    // A card style and domain no other test captures, so the process-wide library hasn't got it.
+  fun warmingCapturesEachPinnedCardsWidgetTemplateBeforeTheAppAsks() {
+    // A card style and domain no other test captures, so this process hasn't got its template.
     val pinnedCard = summary("tile", "light.warmup_lamp", style = "console")
     val offline = WearOfflineStore(context)
     offline.writePinned(PinnedCardSet(listOf(PinnedCard(card = pinnedCard))))
     offline.writeValues(
       LiveValues(mapOf("light.warmup_lamp" to EntityValue(state = "on")), capturedAtMs = 1L)
     )
-    val written = HashMap<DesignKey, ByteArray>()
-    CardDesignLibrary.store =
-      object : LocalDesignStore {
-        override fun read(key: DesignKey): ByteArray? = written[key]
-
-        override fun write(key: DesignKey, bytes: ByteArray) {
-          written[key] = bytes
-        }
-      }
+    val before = neutralTemplateCaptures.get()
 
     runBlocking { WearCardWarmup.run(context, syncFirst = false) }
+    assertEquals(before + 1, neutralTemplateCaptures.get())
 
-    // The key the app's card will ask for: the watch's default look, the card's own style.
+    // The document the app's card will ask for: the watch's default look, the card's own style.
     val registry = defaultRegistry()
     val card = assertNotNull(decodeWearCard(pinnedCard.rawJson))
     val snapshot = wearSnapshot(offline.readValues()!!.values)
-    val key =
-      assertNotNull(
-        wearDesignKey(
-          CardDesignTemplates.designCard(card, snapshot, registry),
-          snapshot,
-          WearCardLook(ThemeStyle.TerrazzoHome, "classic"),
-          wearWidgetCardStyle(pinnedCard.cardStyleOverride, "classic"),
-          registry,
-        )
+    val frame = WearWidgetFrame.forContainer(context, wearAppContainer(card, snapshot, registry))
+    val document = runBlocking {
+      wearAppTemplate(
+        context,
+        CardDesignTemplates.designCard(card, snapshot, registry),
+        snapshot,
+        WearCardLook(ThemeStyle.TerrazzoHome, "classic"),
+        wearWidgetCardStyle(pinnedCard.cardStyleOverride, "classic"),
+        frame,
+        ContainerTint.argbFor(card, snapshot),
+        registry,
       )
-    val captured = assertNotNull(written[key], "warmed keys: ${written.keys}")
-    // The app then plays what the warm-up captured, without capturing again.
-    assertContentEquals(captured, CardDesignLibrary.template(context, key))
-    assertEquals(1, written.size)
+    }
+    assertNotNull(document)
+    // The app plays what the warm-up captured, without capturing again.
+    assertEquals(before + 1, neutralTemplateCaptures.get())
+  }
+
+  @Test
+  fun aNeutralTemplateIsCapturedOnceAtATimeAndReadBackFromDisk() {
+    // A palette and style no other test captures, so this process hasn't got its template.
+    val registry = defaultRegistry()
+    val card = assertNotNull(decodeWearCard("""{"type":"tile","entity":"light.disk_lamp"}"""))
+    val snapshot = wearSnapshot(mapOf("light.disk_lamp" to EntityValue(state = "on")))
+    val frame = WearWidgetFrame.forContainer(context, wearAppContainer(card, snapshot, registry))
+    val look = WearCardLook(ThemeStyle.TerrazzoMushroom, "nixie")
+    fun template() = runBlocking {
+      wearAppTemplate(
+        context,
+        CardDesignTemplates.designCard(card, snapshot, registry),
+        snapshot,
+        look,
+        wearWidgetCardStyle("nixie", "classic"),
+        frame,
+        ContainerTint.argbFor(card, snapshot),
+        registry,
+      )
+    }
+    val before = neutralTemplateCaptures.get()
+
+    // The warm-up and the app's first frame asking at once: one captures, the other waits for it.
+    val both = runBlocking { List(2) { async(Dispatchers.Default) { template() } }.awaitAll() }
+    assertNotNull(both[0])
+    assertEquals(before + 1, neutralTemplateCaptures.get())
+    val stored = File(context.filesDir, "terrazzo/wear/neutral-templates")
+    assertEquals(1, stored.walkTopDown().count { it.isFile && it.name.endsWith(".rc") })
+
+    // Memory trimmed (or a new process): read back from disk, not captured again.
+    releaseWidgetTemplates()
+    assertNotNull(template())
+    assertEquals(before + 1, neutralTemplateCaptures.get())
+    assertTrue(stored.exists(), "trimming memory leaves the disk")
   }
 }

@@ -1,6 +1,6 @@
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 
-val appVersionName = "0.1.56" // x-release-please-version
+val appVersionName = "0.1.63" // x-release-please-version
 
 // Pack MAJOR.MINOR.PATCH into a monotonic int, times ten for a form-factor
 // lane: phone ends in 0, `:wear` (same package) in 2. Both share the base so
@@ -21,6 +21,7 @@ plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.metro)
+  alias(libs.plugins.ksp)
   alias(libs.plugins.tapmoc)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.play.publisher)
@@ -209,6 +210,7 @@ play {
 
 dependencies {
   implementation(project(":app-ui"))
+  implementation(project(":rc-player-ui"))
   implementation(project(":ha-model"))
   implementation(project(":ha-client"))
   implementation(project(":rc-converter"))
@@ -259,6 +261,10 @@ dependencies {
   implementation(libs.androidx.lifecycle.process)
   implementation(libs.androidx.lifecycle.viewmodel)
   implementation(libs.androidx.work.runtime)
+  // AppFunctions (`assistant/`): the service a permitted on-device agent calls. The compiler
+  // generates the concrete service and its function XML asset.
+  implementation(libs.androidx.appfunctions)
+  ksp(libs.androidx.appfunctions.compiler)
   implementation(libs.androidx.navigation3.runtime)
   implementation(libs.androidx.navigation3.ui)
   implementation(libs.androidx.material3.adaptive.navigation.suite)

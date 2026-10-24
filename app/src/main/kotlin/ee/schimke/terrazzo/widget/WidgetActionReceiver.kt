@@ -73,10 +73,12 @@ class WidgetActionReceiver : BroadcastReceiver() {
       Log.w(TAG, "Refusing a widget action the app didn't put on widget $widgetId")
       return
     }
+    // Paired here, in arrival order: the runs below may start in any order on their pool.
+    val call = WidgetActionRunner.prepare(widgetId, action) ?: return
     val pending = goAsync()
     runnerScope.launch {
       try {
-        WidgetActionRunner.run(context.applicationContext, widgetId, action)
+        WidgetActionRunner.run(context.applicationContext, widgetId, call)
       } finally {
         pending.finish()
       }
@@ -132,7 +134,14 @@ internal fun trustedWidgetAction(
   action: HaAction,
   fallbackPayload: String?,
   resolvedAction: String?,
-): Boolean = decodeHaAction(resolvedAction ?: fallbackPayload)?.let { it == action } == true
+): Boolean {
+  val own = decodeHaAction(resolvedAction ?: fallbackPayload) ?: return false
+  // A widget PIN's digits are typed in the player, after the app captured the payload: the app's
+  // own is the same entity's PIN with none yet (decodeDeliveredWidgetAction fills them in).
+  if (action is HaAction.AlarmPin && own is HaAction.AlarmPin && own.pin.isEmpty())
+    return own.entityId == action.entityId
+  return own == action
+}
 
 /** Decode a delivered action, rejecting capture-time PIN placeholders that contain no digits. */
 internal fun decodeDeliveredWidgetAction(

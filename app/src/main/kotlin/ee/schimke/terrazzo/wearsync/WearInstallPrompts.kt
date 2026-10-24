@@ -26,36 +26,24 @@ private sealed interface WearPrompt {
     override val message: String = "Terrazzo is available for ${watch.displayName}"
     override val action: String = "Install"
   }
-
-  /** The watch app supports Wear widgets, but no slot has a card yet. */
-  data object AddWidget : WearPrompt {
-    override val key: String = "widget"
-    override val message: String = "Show a card as a widget on your watch"
-    override val action: String = "Set up"
-  }
 }
 
 /**
  * Offers the watch on the dashboard: a snackbar to install the watch app on a connected watch
- * without it ([WearAppInstallHelper]), or — once installed on a watch with Wear widget support and
- * no widget slot assigned — to set one up ([onOpenWearWidgets]). Each prompt shows once; dismissed
- * or acted on, it's recorded in [ee.schimke.terrazzo.core.prefs.PreferencesStore.wearPromptsShown].
+ * without it ([WearAppInstallHelper]). Each prompt shows once; dismissed or acted on, it's recorded
+ * in [ee.schimke.terrazzo.core.prefs.PreferencesStore.wearPromptsShown]. (Wear widgets are set up
+ * on the watch, from the cards shown there: the phone has no widget prompt.)
  *
  * Returns the install action for the overflow menu's "Install on watch" while a connected watch
  * lacks the app, so the offer stays reachable after its snackbar is gone; null otherwise.
  */
 @Composable
-fun wearInstallPrompts(
-  snackbars: SnackbarHostState,
-  wearWidgetsSupported: Boolean,
-  onOpenWearWidgets: () -> Unit,
-): (() -> Unit)? {
+fun wearInstallPrompts(snackbars: SnackbarHostState): (() -> Unit)? {
   val context = LocalContext.current
   val app = remember(context) { context.applicationContext as TerrazzoApplication }
   val graph = LocalTerrazzoGraph.current
   val scope = rememberCoroutineScope()
   val watches by app.wearAppInstallHelper.watches.collectAsState(initial = emptyList())
-  val slots by graph.wearWidgetSlotsStore.slots.collectAsState(initial = null)
   val shown by graph.preferencesStore.wearPromptsShown.collectAsState(initial = null)
   val missing = watches.firstOrNull { !it.appInstalled }
 
@@ -70,11 +58,7 @@ fun wearInstallPrompts(
   }
 
   val prompt: WearPrompt? = shown?.let { done ->
-    when {
-      missing != null -> WearPrompt.InstallApp(missing)
-      wearWidgetsSupported && slots?.none { it.isAssigned } == true -> WearPrompt.AddWidget
-      else -> null
-    }?.takeIf { it.key !in done }
+    missing?.let { WearPrompt.InstallApp(it) }?.takeIf { it.key !in done }
   }
   LaunchedEffect(prompt?.key) {
     val current = prompt ?: return@LaunchedEffect
@@ -89,7 +73,6 @@ fun wearInstallPrompts(
     if (result == SnackbarResult.ActionPerformed) {
       when (current) {
         is WearPrompt.InstallApp -> install(current.watch)
-        WearPrompt.AddWidget -> onOpenWearWidgets()
       }
     }
     graph.preferencesStore.markWearPromptShown(current.key)

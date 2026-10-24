@@ -11,8 +11,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Frame timing (jank) while flinging the Settings list, a `ScalingLazyColumn` of theme and card
- * style pickers.
+ * Frame timing (jank) while flinging the top-level list: the pinned cards, each a Remote Compose
+ * player, then the section, library and Settings entries.
  *
  * Run with `./gradlew :wear-benchmark:connectedBenchmarkReleaseAndroidTest`.
  */
@@ -37,7 +37,6 @@ class ScrollBenchmark {
       setupBlock = {
         pressHome()
         startTopLevel()
-        openSettings()
       },
     ) {
       scrollList()

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      The launch theme: the system splash and the window behind the first Compose frame. Night
+      mode gets its own (values-night), so a dark app doesn't open on a white splash.
+    -->
+    <style name="Theme.Terrazzo" parent="@android:style/Theme.Material.Light.NoActionBar" />
+</resources>

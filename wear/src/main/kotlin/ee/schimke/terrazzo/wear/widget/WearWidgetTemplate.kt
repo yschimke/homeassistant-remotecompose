@@ -12,13 +12,13 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.drawWithContent
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.padding
+import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteDp
 import androidx.compose.remote.creation.compose.state.RemotePaint
 import androidx.compose.remote.creation.compose.state.RemoteState
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.toArgb
 import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetDocument
 import androidx.glance.wear.core.WearWidgetParams
@@ -30,9 +30,11 @@ import ee.schimke.composeai.rcplayer.edit.RcTargetProfiles
 import ee.schimke.composeai.rcplayer.edit.adaptTo
 import ee.schimke.composeai.rcplayer.edit.hardcodeDensity
 import ee.schimke.composeai.rcplayer.edit.hardcodeNamedValues
+import ee.schimke.composeai.rcplayer.edit.namedVariables
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.rc.androidXExperimentalWrap
+import ee.schimke.ha.rc.components.ProvideExpressionNames
 
 /**
  * A Wear widget template that fits any Glance Wear container: the widget's content inside Glance
@@ -52,6 +54,9 @@ internal object WearWidgetTemplate {
   const val HORIZONTAL_PADDING = "wear.container.horizontal_padding"
   const val VERTICAL_PADDING = "wear.container.vertical_padding"
   const val CORNER_RADIUS = "wear.container.corner_radius"
+
+  /** The container's fill, which the watch writes from the card's state ([ContainerTint]). */
+  const val CONTAINER_COLOR = "wear.container.color"
 
   /** The capture canvas, at mdpi: [instantiate] replaces it with the widget's. */
   private val CANVAS = RemoteCreationDisplayInfo(200, 112, 160)
@@ -73,7 +78,9 @@ internal object WearWidgetTemplate {
         remoteDensity = RemoteDensity.Host,
         profile = androidXExperimentalWrap,
       ) {
-        NamedContainer(content)
+        // Expressions named in composition order, so a card drawn by its converter or by a card
+        // design wrapping it names them alike.
+        ProvideExpressionNames { NamedContainer(content) }
       }
       .bytes
 
@@ -85,11 +92,17 @@ internal object WearWidgetTemplate {
     val horizontal = named(HORIZONTAL_PADDING, DEFAULT_PADDING_DP)
     val vertical = named(VERTICAL_PADDING, DEFAULT_PADDING_DP)
     val corner = named(CORNER_RADIUS, DEFAULT_CORNER_DP)
+    val fill =
+      RemoteColor.createNamedRemoteColor(
+        CONTAINER_COLOR,
+        SURFACE_CONTAINER_LOW,
+        RemoteState.Domain.User,
+      )
     RemoteBox(
       modifier =
         RemoteModifier.fillMaxSize().drawWithContent {
           drawRoundRect(
-            RemotePaint { color = SURFACE_CONTAINER_LOW.rc },
+            RemotePaint { color = fill },
             cornerRadius = RemoteOffset(corner.toPx(), corner.toPx()),
           )
           drawContent()
@@ -99,18 +112,60 @@ internal object WearWidgetTemplate {
     }
   }
 
+  /**
+   * Whether [document] leaves its container frame to the watch: it declares one of these named
+   * values, as a template [capture]s and a design exported with the widget container's `hostFrame:
+   * device` (compose-ai-tools' `HostFramedWearWidgetDocument`) do. False for one that can't be
+   * read.
+   */
+  fun namesFrame(document: ByteArray): Boolean = runCatching {
+    RcDocumentCodec.decode(document, RcWireLimits()).namedVariables.any {
+      it.name.removePrefix(USER_PREFIX) in FRAME_NAMES
+    }
+  }
+    .getOrDefault(false)
+
+  private const val USER_PREFIX = "USER:"
+  private val FRAME_NAMES = setOf(HORIZONTAL_PADDING, VERTICAL_PADDING, CORNER_RADIUS)
+
   private fun named(name: String, defaultDp: Float) =
-    RemoteDp.createNamedRemoteDp(name, defaultDp.dp, RemoteState.Domain.User)
+    RemoteDp.createNamedRemoteDp(name, defaultDp, RemoteState.Domain.User)
+
+  /**
+   * [template] in [frame], for the Wear app's own player: the container values [instantiate] fills
+   * for a widget, without the widget header or the Wear widget profile's rewrites, so the app's
+   * card is the widget's layout. Its bindings stay, for the app to push live values. Null when it
+   * can't be read.
+   */
+  fun forApp(template: ByteArray, frame: WearWidgetFrame, containerArgb: Int? = null): ByteArray? =
+    runCatching {
+      RcDocumentCodec.encode(
+        RcDocumentCodec.decode(template, RcWireLimits())
+          .hardcodeNamedValues(
+            mapOf(
+              HORIZONTAL_PADDING to RcHardcodedValue.FloatValue(frame.horizontalPaddingDp),
+              VERTICAL_PADDING to RcHardcodedValue.FloatValue(frame.verticalPaddingDp),
+              CORNER_RADIUS to RcHardcodedValue.FloatValue(frame.cornerRadiusDp),
+              CONTAINER_COLOR to
+                RcHardcodedValue.Color(containerArgb ?: SURFACE_CONTAINER_LOW.toArgb()),
+            )
+          )
+      )
+    }
+    .getOrNull()
 
   /**
    * [template] as the document for a widget with [params] on this watch, or null when it can't be
    * made playable as a Wear widget (the caller then captures through Glance Wear itself).
+   * [containerArgb] fills the container, the card's state tint ([ContainerTint]); null keeps the
+   * default surface.
    */
   suspend fun instantiate(
     context: Context,
     template: ByteArray,
     params: WearWidgetParams,
     isPreview: Boolean = false,
+    containerArgb: Int? = null,
   ): WearWidgetRawContent? {
     // Glance Wear's own capture of an empty container: its header (canvas, density, profile) and
     // extras are exactly what this widget's document carries.
@@ -128,6 +183,8 @@ internal object WearWidgetTemplate {
                 HORIZONTAL_PADDING to RcHardcodedValue.FloatValue(params.horizontalPaddingDp),
                 VERTICAL_PADDING to RcHardcodedValue.FloatValue(params.verticalPaddingDp),
                 CORNER_RADIUS to RcHardcodedValue.FloatValue(params.cornerRadiusDp),
+                CONTAINER_COLOR to
+                  RcHardcodedValue.Color(containerArgb ?: SURFACE_CONTAINER_LOW.toArgb()),
               )
             )
             .hardcodeDensity(display.density, display.fontScale)

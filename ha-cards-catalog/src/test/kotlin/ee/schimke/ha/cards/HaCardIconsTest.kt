@@ -41,19 +41,18 @@ class HaCardIconsTest {
 
   @Test
   fun everyHaRecordIsDeclaredHere() {
-    val prefix = "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt."
     val records =
       (components.values + policy["builtins"]!!.jsonObject.values)
         .mapNotNull {
           (it.jsonObject["record"] ?: it.jsonObject["implementation"])?.jsonPrimitive?.content
         }
-        .filter { it.startsWith(prefix) }
-        .map { it.removePrefix(prefix) }
         .toSet()
-    val declared =
-      Class.forName("ee.schimke.ha.cards.HaCardComponentsKt").declaredMethods.map { it.name }
-    for (name in records) {
-      assertTrue(name in declared, "the policy names $name, which HaCardComponents.kt lacks")
+    for (file in listOf("HaCardComponentsKt", "HaCardDesignPartsKt")) {
+      val prefix = "ha-cards-catalog/ee.schimke.ha.cards.$file."
+      val declared = Class.forName("ee.schimke.ha.cards.$file").declaredMethods.map { it.name }
+      for (name in records.filter { it.startsWith(prefix) }.map { it.removePrefix(prefix) }) {
+        assertTrue(name in declared, "the policy names $name, which $file lacks")
+      }
     }
   }
 }

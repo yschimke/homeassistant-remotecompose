@@ -56,6 +56,69 @@ class CachedHaSessionTest {
   }
 
   @Test
+  fun loadDashboard_keeps_cached_devices_and_unit_when_a_live_read_lacks_them() = runTest {
+    val cache = storage()
+    val devices = mapOf("sw.x" to ee.schimke.ha.design.DeviceInfo(manufacturer = "Acme"))
+    val full = sampleSnapshot.copy(devices = devices, temperatureUnit = "°F")
+    var live = full
+    val session =
+      CachedHaSession(
+        FakeSession(baseUrl = baseUrl, loadProvider = { sampleDashboard to live }),
+        cache,
+      )
+    session.loadDashboard(null)
+
+    // The registries and get_config are best effort: a read that missed them keeps the cached ones.
+    live = sampleSnapshot
+    val (_, merged) = session.loadDashboard(null)
+    assertEquals(devices, merged.devices)
+    assertEquals("°F", merged.temperatureUnit)
+    assertEquals(full, cache.snapshot(baseUrl, null))
+  }
+
+  @Test
+  fun fetchHistory_persists_then_falls_back_on_failure() = runTest {
+    val cache = storage()
+    val points =
+      mapOf(
+        "sensor.t" to
+          listOf(ee.schimke.ha.model.HistoryPoint(kotlin.time.Instant.fromEpochSeconds(0), "21"))
+      )
+    var offline = false
+    val session =
+      CachedHaSession(
+        FakeSession(
+          baseUrl = baseUrl,
+          historyProvider = { _, _ -> if (offline) error("offline") else points },
+        ),
+        cache,
+      )
+    assertEquals(points, session.fetchHistory(listOf("sensor.t"), 24))
+
+    offline = true
+    assertEquals(points, session.fetchHistory(listOf("sensor.t"), 24))
+    // Another window was never read: nothing to fall back on.
+    assertFailsWith<IllegalStateException> { session.fetchHistory(listOf("sensor.t"), 48) }
+  }
+
+  @Test
+  fun aCacheOnlySessionDrawsTheCachedHistory() = runTest {
+    val cache = storage()
+    val points =
+      mapOf(
+        "sensor.t" to
+          listOf(ee.schimke.ha.model.HistoryPoint(kotlin.time.Instant.fromEpochSeconds(0), "21"))
+      )
+    cache.putHistory(baseUrl, listOf("sensor.t"), 24, points)
+
+    // An offline cold start's session: its stub has no recorder, and must not answer "none".
+    assertEquals(
+      points,
+      CachedHaSession.cacheOnly(baseUrl, cache).fetchHistory(listOf("sensor.t"), 24),
+    )
+  }
+
+  @Test
   fun listDashboards_propagates_failure_when_cache_is_empty() = runTest {
     val cache = storage()
     val delegate = FakeSession(baseUrl = baseUrl, listProvider = { error("offline") })
@@ -220,6 +283,11 @@ private class FakeSession(
     Dashboard() to HaSnapshot()
   },
   private val snapshotProvider: (suspend () -> HaSnapshot)? = null,
+  private val historyProvider:
+    suspend (List<String>, Int) -> Map<String, List<ee.schimke.ha.model.HistoryPoint>> =
+    { _, _ ->
+      emptyMap()
+    },
 ) : HaSession {
   override val connectionStatus: StateFlow<SessionConnectionStatus> =
     MutableStateFlow(SessionConnectionStatus.Connected)
@@ -233,6 +301,9 @@ private class FakeSession(
 
   override suspend fun loadSnapshot(): HaSnapshot =
     snapshotProvider?.invoke() ?: super.loadSnapshot()
+
+  override suspend fun fetchHistory(entityIds: List<String>, hours: Int) =
+    historyProvider(entityIds, hours)
 
   override suspend fun close() = Unit
 }

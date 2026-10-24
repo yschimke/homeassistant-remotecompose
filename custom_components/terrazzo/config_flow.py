@@ -10,7 +10,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from .const import CONF_DASHBOARD, CONF_TITLE, DEFAULT_TITLE, DOMAIN, clean_options
+from .const import CONF_DASHBOARD, CONF_MCP_USER, CONF_TITLE, DEFAULT_TITLE, DOMAIN, MCP_OFF, clean_options
 
 
 def _dashboard_options(hass):
@@ -29,23 +29,42 @@ def _dashboard_options(hass):
     return sorted(options, key=lambda option: option["label"].casefold())
 
 
-def _schema(hass, options):
-    """Title and an optional first dashboard; leaving it empty opens the dashboard picker."""
-    dashboard = options.get(CONF_DASHBOARD) or ""
-    return vol.Schema(
-        {
-            vol.Required(CONF_TITLE, default=options.get(CONF_TITLE) or DEFAULT_TITLE): TextSelector(),
-            vol.Optional(
-                CONF_DASHBOARD, description={"suggested_value": dashboard} if dashboard else None
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=_dashboard_options(hass),
-                    custom_value=True,
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
-            ),
-        }
+async def _mcp_user_options(hass):
+    """Off, then every person who can sign in: the one user the MCP server may serve."""
+    users = [user for user in await hass.auth.async_get_users() if user.is_active and not user.system_generated]
+    return [SelectOptionDict(value=MCP_OFF, label="Off")] + sorted(
+        (
+            SelectOptionDict(value=user.id, label=f"{user.name} (administrator)" if user.is_admin else user.name)
+            for user in users
+        ),
+        key=lambda option: option["label"].casefold(),
     )
+
+
+def _schema(hass, options, mcp_users=None):
+    """Title and an optional first dashboard; leaving it empty opens the dashboard picker. The
+    options form adds the MCP server's user ([mcp_users]); setup leaves the server off."""
+    dashboard = options.get(CONF_DASHBOARD) or ""
+    fields = {
+        vol.Required(CONF_TITLE, default=options.get(CONF_TITLE) or DEFAULT_TITLE): TextSelector(),
+        vol.Optional(
+            CONF_DASHBOARD, description={"suggested_value": dashboard} if dashboard else None
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=_dashboard_options(hass),
+                custom_value=True,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
+    }
+    if mcp_users is not None:
+        current = options.get(CONF_MCP_USER) or MCP_OFF
+        if current not in {option["value"] for option in mcp_users}:
+            current = MCP_OFF  # The chosen user was deleted or deactivated.
+        fields[vol.Required(CONF_MCP_USER, default=current)] = SelectSelector(
+            SelectSelectorConfig(options=mcp_users, mode=SelectSelectorMode.DROPDOWN)
+        )
+    return vol.Schema(fields)
 
 
 class TerrazzoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -73,7 +92,8 @@ class TerrazzoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class TerrazzoOptionsFlow(config_entries.OptionsFlow):
-    """Change the sidebar title and the first dashboard; the panel reloads in place."""
+    """Change the sidebar title, the first dashboard and the MCP server's user; the panel reloads
+    in place."""
 
     def __init__(self, config_entry):
         # Not `self.config_entry`: newer HA sets that itself and warns when a flow assigns it.
@@ -82,4 +102,7 @@ class TerrazzoOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         if user_input is not None:
             return self.async_create_entry(title="", data=clean_options(user_input))
-        return self.async_show_form(step_id="init", data_schema=_schema(self.hass, self._entry.options))
+        return self.async_show_form(
+            step_id="init",
+            data_schema=_schema(self.hass, self._entry.options, await _mcp_user_options(self.hass)),
+        )

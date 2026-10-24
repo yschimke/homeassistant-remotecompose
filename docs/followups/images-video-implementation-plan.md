@@ -17,7 +17,7 @@
 
 ### Existing code touchpoints
 
-- `rc-components/src/main/kotlin/ee/schimke/ha/rc/components/RemoteHaImage.kt`
+- `rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/RemoteHaImage.kt`
   - `RemoteHaImageInline`, `RemoteHaImageNamed`, `RemoteHaImageUrl`
 - `rc-components-ui/src/main/kotlin/ee/schimke/ha/rc/ui/HaEmbeddedPlayer.kt`
   - player host that accepts a `BitmapLoader`

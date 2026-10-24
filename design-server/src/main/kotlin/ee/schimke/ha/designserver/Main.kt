@@ -26,6 +26,8 @@ import java.io.File
  *   `user-designs` under `UI_BUILDER_STATE_DIR` when that is set. Publishing needs GitHub sign-in.
  * - `USAGE_DIR`: where anonymous template usage counts are kept by day ([UsageStats]); defaults to
  *   `usage` under `UI_BUILDER_STATE_DIR`. Without either, counts last until a restart.
+ * - `LIBRARY_EDITORS`: comma-separated GitHub logins that may edit the library's card designs in UI
+ *   Builder (`/library/<cardType>/edit`); with GitHub sign-in and none named, nobody may.
  * - `STATS_USERS`: comma-separated GitHub logins that may read `/stats/templates`; empty (the
  *   default) shows it to nobody.
  */
@@ -76,6 +78,13 @@ fun main(args: Array<String>) {
       .map { it.trim() }
       .filter { it.isNotEmpty() }
       .toSet()
+  val libraryEditors =
+    System.getenv("LIBRARY_EDITORS")
+      .orEmpty()
+      .split(',')
+      .map { it.trim() }
+      .filter { it.isNotEmpty() }
+      .toSet()
   embeddedServer(CIO, port = port, host = host) {
       install(CallLogging)
       designServer(
@@ -86,6 +95,7 @@ fun main(args: Array<String>) {
         userDesigns,
         usage,
         statsUsers,
+        libraryEditors,
       )
     }
     .start(wait = true)

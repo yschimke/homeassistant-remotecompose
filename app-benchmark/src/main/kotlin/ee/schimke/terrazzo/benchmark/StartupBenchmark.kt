@@ -42,6 +42,7 @@ class StartupBenchmark {
         killProcess()
       },
     ) {
-      startDemoDashboard()
+      // The launch being timed.
+      startDemoDashboard(measured = true)
     }
 }

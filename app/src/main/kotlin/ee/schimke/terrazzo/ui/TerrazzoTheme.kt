@@ -4,6 +4,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
@@ -44,6 +45,9 @@ val LocalCardStyle = staticCompositionLocalOf { HaUberTheme.Classic }
  * - **Material3 style + no wallpaper seed**: stock light/dark `colorScheme()`.
  * - **Any Terrazzo style**: that palette's seed run through materialkolor plus the Google Fonts
  *   pairing for the palette.
+ * - **A card style that themes the app** ([HaUberTheme.appTheme]: LCD, Trinitron, …): the card
+ *   style's own palette and typeface on every screen, in place of [style]; a single-mode card style
+ *   (dark-only Trinitron) also decides light or dark in place of [darkMode].
  */
 @Composable
 fun TerrazzoTheme(
@@ -60,19 +64,28 @@ fun TerrazzoTheme(
       DarkModePref.Dark -> true
     }
 
-  val wallpaperSeed = if (style == ThemeStyle.Material3) rememberWallpaperSeedColor() else null
-  val colors = terrazzoColorScheme(style, darkTheme, seedOverride = wallpaperSeed)
+  // Only the theme values branch: the content is composed at one call site, so switching between
+  // an app-theming card style and the palette choice keeps the app's remembered state (the open
+  // screen, navigation) rather than recomposing it from scratch.
+  val appTheme = cardStyle.appThemeOrNull()
+  val wallpaperSeed =
+    if (appTheme == null && style == ThemeStyle.Material3) rememberWallpaperSeedColor() else null
+  val dark = appTheme?.appDark(darkTheme) ?: darkTheme
+  val colors =
+    if (appTheme != null) {
+      remember(appTheme, dark) { appTheme.palette(dark).toColorScheme(appTheme.inkFor(dark)) }
+    } else {
+      terrazzoColorScheme(style, darkTheme, seedOverride = wallpaperSeed)
+    }
+  val typography =
+    terrazzoTypographyFor(style).let { base -> appTheme?.let(base::inCardStyle) ?: base }
 
   CompositionLocalProvider(
     LocalThemeStyle provides style,
-    LocalIsDarkTheme provides darkTheme,
+    LocalIsDarkTheme provides dark,
     LocalCardStyle provides cardStyle,
   ) {
-    MaterialTheme(
-      colorScheme = colors,
-      typography = terrazzoTypographyFor(style),
-      content = content,
-    )
+    MaterialTheme(colorScheme = colors, typography = typography, content = content)
   }
 }
 

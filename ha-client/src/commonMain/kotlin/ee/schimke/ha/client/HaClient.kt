@@ -50,6 +50,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -314,6 +315,32 @@ class HaClient(
       .toMap()
   }
 
+  /**
+   * Register a new storage-mode dashboard (`lovelace/dashboards/create`) at [urlPath], which HA
+   * requires to contain a hyphen, and save [config] as its first Lovelace config: a dashboard HA
+   * just created has none, and reading it would fail. Admin only; HA's refusal is the thrown error.
+   */
+  suspend fun createDashboard(
+    urlPath: String,
+    title: String,
+    config: JsonObject,
+    icon: String? = null,
+  ): DashboardSummary {
+    runCommand("lovelace/dashboards/create") {
+      put("url_path", urlPath)
+      put("title", title)
+      put("mode", "storage")
+      put("show_in_sidebar", true)
+      put("require_admin", false)
+      if (icon != null) put("icon", icon)
+    }
+    awaitCommand("lovelace/config/save") {
+      put("config", config)
+      put("url_path", urlPath)
+    }
+    return DashboardSummary(urlPath = urlPath, title = title, icon = icon)
+  }
+
   /** Top-level Lovelace dashboards registered in `lovelace/dashboards`. */
   suspend fun listDashboards(): List<DashboardSummary> {
     val result = runCommandArray("lovelace/dashboards/list")
@@ -550,6 +577,38 @@ class HaClient(
    * fresh [connect] when the app returns to the foreground. Cancelling [receiveJob] also runs its
    * cleanup (failing in-flight commands, clearing subscriptions), same as a peer-side close.
    */
+  /**
+   * A new long-lived access token for the signed-in user, named [clientName] in their profile and
+   * valid for [lifespanDays] (`auth/long_lived_access_token`). Home Assistant refuses a second
+   * token with the same name, so delete it first ([deleteLongLivedAccessTokens]) to replace one.
+   */
+  suspend fun createLongLivedAccessToken(clientName: String, lifespanDays: Int): String {
+    val response =
+      awaitCommand("auth/long_lived_access_token") {
+        put("client_name", clientName)
+        put("lifespan", lifespanDays)
+      }
+    return response["result"]?.jsonPrimitive?.content?.takeIf { it.isNotEmpty() }
+      ?: error("Home Assistant returned no token")
+  }
+
+  /**
+   * Deletes the signed-in user's long-lived access tokens whose name [matches]
+   * (`auth/refresh_tokens` then `auth/delete_refresh_token` for each), and returns how many it
+   * deleted. Their bearers stop working at once.
+   */
+  suspend fun deleteLongLivedAccessTokens(matches: (clientName: String) -> Boolean): Int {
+    val ids =
+      runCommandArray("auth/refresh_tokens").mapNotNull { element ->
+        val token = element as? JsonObject ?: return@mapNotNull null
+        val type = token["type"]?.nullableString()
+        val name = token["client_name"]?.nullableString() ?: return@mapNotNull null
+        token["id"]?.nullableString()?.takeIf { type == LONG_LIVED_TOKEN_TYPE && matches(name) }
+      }
+    for (id in ids) awaitCommand("auth/delete_refresh_token") { put("refresh_token_id", id) }
+    return ids.size
+  }
+
   suspend fun disconnect() {
     val s = sessionMutex.withLock {
       val current = session
@@ -725,22 +784,25 @@ class HaClient(
   }
 
   private fun placeholder(): EntityState = EntityState(entityId = "", state = "")
+}
 
-  /**
-   * HA returns snake_case keys; our `EntityState` uses camelCase fields. We configure Json with
-   * `ignoreUnknownKeys`, so the simplest fix is to rewrite the two keys we care about.
-   */
-  private fun camelizeState(obj: JsonObject): JsonObject = buildJsonObject {
-    for ((k, v) in obj) {
-      when (k) {
-        "entity_id" -> put("entityId", v)
-        "last_changed" -> put("lastChanged", v)
-        "last_updated" -> put("lastUpdated", v)
-        else -> put(k, v)
-      }
+/**
+ * HA returns snake_case keys; our `EntityState` uses camelCase fields. We configure Json with
+ * `ignoreUnknownKeys`, so the simplest fix is to rewrite the two keys we care about.
+ */
+internal fun camelizeState(obj: JsonObject): JsonObject = buildJsonObject {
+  for ((k, v) in obj) {
+    when (k) {
+      "entity_id" -> put("entityId", v)
+      "last_changed" -> put("lastChanged", v)
+      "last_updated" -> put("lastUpdated", v)
+      else -> put(k, v)
     }
   }
 }
+
+/** The `type` Home Assistant gives a long-lived access token's refresh token. */
+private const val LONG_LIVED_TOKEN_TYPE = "long_lived_access_token"
 
 private fun String.intOrNullSafe(): Int? = this.toIntOrNull()
 
@@ -780,6 +842,11 @@ data class HaInstanceConfig(
   val externalUrl: String? = null,
   /** `unit_system.temperature`: `°C` or `°F`, the unit climate temperatures are reported in. */
   val temperatureUnit: String? = null,
+  /**
+   * `components`: the integrations Home Assistant has loaded, such as `terrazzo` once the Terrazzo
+   * integration is set up.
+   */
+  val components: Set<String> = emptySet(),
 )
 
 /** Read a `get_config` result (the same shape as REST `GET /api/config`). */
@@ -793,6 +860,11 @@ internal fun instanceConfigOf(result: JsonObject): HaInstanceConfig =
       ((result["unit_system"] as? JsonObject)?.get("temperature"))?.nullableString()?.takeIf {
         it.isNotBlank()
       },
+    components =
+      (result["components"] as? JsonArray)
+        ?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
+        ?.toSet()
+        .orEmpty(),
   )
 
 private fun kotlinx.serialization.json.JsonElement.nullableString(): String? =

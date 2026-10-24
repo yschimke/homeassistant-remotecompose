@@ -34,4 +34,11 @@ class InstanceConfigTest {
   fun aConfigWithoutAUnitSystemHasNoTemperatureUnit() {
     assertNull(config("""{"version": "2026.10.2"}""").temperatureUnit)
   }
+
+  @Test
+  fun readsTheLoadedComponents() {
+    val config = config("""{"components": ["lovelace", "terrazzo", "sensor.template"]}""")
+    assertEquals(setOf("lovelace", "terrazzo", "sensor.template"), config.components)
+    assertEquals(emptySet(), config("""{"version": "2026.10.2"}""").components)
+  }
 }

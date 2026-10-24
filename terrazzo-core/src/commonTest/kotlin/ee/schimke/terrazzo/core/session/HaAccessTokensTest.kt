@@ -118,7 +118,10 @@ class HaAccessTokensTest {
   fun refusedRefreshResponsesAreToldApartFromTransientOnes() {
     assertTrue(isRefreshTokenRejected(400, """{"error":"invalid_grant"}"""))
     assertTrue(isRefreshTokenRejected(400, """{"error":"invalid_request"}"""))
-    assertTrue(isRefreshTokenRejected(401, ""))
+    assertTrue(isRefreshTokenRejected(401, """{"error":"invalid_grant"}"""))
+    // A proxy's or captive portal's own 401 / 403 is not Home Assistant refusing the token.
+    assertFalse(isRefreshTokenRejected(401, ""))
+    assertFalse(isRefreshTokenRejected(403, "<html>Access denied by gateway</html>"))
     assertTrue(isRefreshTokenRejected(403, """{"error":"access_denied"}"""))
     assertFalse(isRefreshTokenRejected(400, "<html>Bad gateway page</html>"))
     assertFalse(isRefreshTokenRejected(500, """{"error":"invalid_grant"}"""))

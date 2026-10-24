@@ -3,7 +3,10 @@ package ee.schimke.terrazzo.dashboard
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset
@@ -12,6 +15,8 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalHapticFeedback
 import kotlinx.coroutines.withTimeout
 
@@ -37,46 +42,55 @@ import kotlinx.coroutines.withTimeout
  * detected, so single-tap continues to route to the in-document handler.
  *
  * Touch slop and timeout values come from [androidx.compose.ui.platform.ViewConfiguration] via the
- * pointer-input scope, so they match platform conventions.
+ * pointer-input scope, so they match platform conventions. Slop is measured in window coordinates:
+ * a drag scrolls the card along with the finger, so a slow one never leaves the card-local slop.
  */
 fun Modifier.longPressBeforeChild(onLongPress: () -> Unit): Modifier = composed {
   val haptic = LocalHapticFeedback.current
   val callback by rememberUpdatedState(onLongPress)
-  pointerInput(Unit) {
-    awaitEachGesture {
-      val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-      val downId = down.id
-      val downPosition: Offset = down.position
-      var firedLongPress = false
-      try {
-        withTimeout(viewConfiguration.longPressTimeoutMillis) {
-          var pressed = true
-          while (pressed) {
-            val event = awaitPointerEvent(PointerEventPass.Initial)
-            val change: PointerInputChange =
-              event.changes.firstOrNull { it.id == downId } ?: return@withTimeout
-            if (!change.pressed) return@withTimeout
-            if ((change.position - downPosition).getDistance() > viewConfiguration.touchSlop) {
-              return@withTimeout
+  // The card scrolls with the finger during a drag, so the pointer barely moves in the card's own
+  // coordinates; slop is measured in the window's instead, or a slow drag would long-press.
+  var coordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+  fun PointerInputChange.windowPosition(): Offset =
+    coordinates?.takeIf { it.isAttached }?.localToWindow(position) ?: position
+  onPlaced { coordinates = it }
+    .pointerInput(Unit) {
+      awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        val downId = down.id
+        val downPosition: Offset = down.windowPosition()
+        var firedLongPress = false
+        try {
+          withTimeout(viewConfiguration.longPressTimeoutMillis) {
+            var pressed = true
+            while (pressed) {
+              val event = awaitPointerEvent(PointerEventPass.Initial)
+              val change: PointerInputChange =
+                event.changes.firstOrNull { it.id == downId } ?: return@withTimeout
+              if (!change.pressed) return@withTimeout
+              if (
+                (change.windowPosition() - downPosition).getDistance() > viewConfiguration.touchSlop
+              ) {
+                return@withTimeout
+              }
+              pressed = change.pressed
             }
-            pressed = change.pressed
           }
+        } catch (_: PointerEventTimeoutCancellationException) {
+          callback()
+          haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+          firedLongPress = true
         }
-      } catch (_: PointerEventTimeoutCancellationException) {
-        callback()
-        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        firedLongPress = true
-      }
-      if (firedLongPress) {
-        // Drain remaining changes for this gesture so a
-        // late release at the same position doesn't ALSO
-        // bubble through to the player as an unrelated tap.
-        while (true) {
-          val event = awaitPointerEvent(PointerEventPass.Initial)
-          event.changes.forEach { it.consume() }
-          if (event.changes.none { it.pressed }) break
+        if (firedLongPress) {
+          // Drain remaining changes for this gesture so a
+          // late release at the same position doesn't ALSO
+          // bubble through to the player as an unrelated tap.
+          while (true) {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+            event.changes.forEach { it.consume() }
+            if (event.changes.none { it.pressed }) break
+          }
         }
       }
     }
-  }
 }

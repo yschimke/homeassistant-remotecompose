@@ -66,6 +66,7 @@ object CardDesignSync {
         choice.copy(overrides = overrides)
       }
       .combine(prefs.designToken) { choice, token -> choice.copy(token = token) }
+      .combine(SkinStore.of(context).installed) { choice, skins -> choice.copy(skins = skins) }
 
   /** Serializes refreshes across worker instances (WorkManager runs workers in-process). */
   internal val refreshLock = Mutex()
