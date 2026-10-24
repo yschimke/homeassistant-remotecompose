@@ -2,32 +2,21 @@
 
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.BreakpointAxis
-import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
-import ee.schimke.ha.rc.LocalCardSizeMode
-import ee.schimke.ha.rc.LocalFixedCanvasAxis
-import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaWeatherDay
 import ee.schimke.ha.rc.components.HaWeatherExtra
 import ee.schimke.ha.rc.components.HaWeatherForecastData
 import ee.schimke.ha.rc.components.LiveValues
-import ee.schimke.ha.rc.components.RemoteHaWeatherForecast
-import ee.schimke.ha.rc.components.RemoteHaWeatherForecastWear
-import ee.schimke.ha.rc.components.RemoteHaWeatherForecastWide
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.formatValueWithUnit
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.weatherConditionLabel
@@ -43,8 +32,14 @@ import kotlinx.serialization.json.put
  * the snapshot, renders the current condition + an optional daily forecast strip. The forecast
  * array isn't part of the standard state attributes — we look for it under `forecast` (legacy) or
  * `forecast.daily` (post-2024 weather service); if neither is present we skip the strip.
+ *
+ * Its layout is its card design, `weather-forecast.uid` ([WeatherDesignParts]): the full card, with
+ * its conditions chips, on a dashboard. In a launcher cell, below 300 dp wide (the short `4×1`
+ * cell, #355) the Wide current row alone, and above it the current row over the forecast strip,
+ * filling a taller cell; the chips stay in the app card, since one width gate can't tell a cramped
+ * `5×2` from a roomy `6×3`. In a Wear slot, its Small or Large form either side of 80 dp tall.
  */
-class WeatherForecastCardConverter : CardConverter {
+class WeatherForecastCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.WEATHER_FORECAST
 
   // Baked, non-bindable content (see CardConverter.dataSignature):
@@ -149,65 +144,7 @@ class WeatherForecastCardConverter : CardConverter {
       emptyMap(),
     )
   }
-
-  @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val data = weatherData(card, snapshot)
-
-    when (LocalCardSizeMode.current) {
-      CardSizeMode.Wrap -> RemoteHaWeatherForecast(data, modifier)
-      CardSizeMode.Fixed ->
-        // Single width ladder — alpha010 collapses nested / multi-rung /
-        // cross-axis breakpoints to tier 0 (#224), so we get exactly two
-        // reliable tiers off the one dimension launcher cells actually pin
-        // (width; height wraps — see RemoteSizeBreakpoint's docs):
-        //   tier 0 (< 300 dp, e.g. 4×1) → current row only (Wide)
-        //   tier 1 (≥ 300 dp, 5×2 / 6×3) → current row + forecast strip,
-        //     which grows to fill a taller cell.
-        //
-        // The conditions chips are deliberately *not* in either widget tier:
-        // a mid 5×2 cell can't fit current + forecast + chips without the
-        // forecast temps dropping out, and one width threshold can't tell a
-        // 5×2 from a roomy 6×3 to gate them. They live in the full app card
-        // (Wrap mode) instead — Principle 4, "compact ≠ stripped": the
-        // widget keeps the forecast rather than a half-rendered everything.
-        if (LocalFixedCanvasAxis.current == BreakpointAxis.Height) {
-          // A Wear slot: one height gate between its Small and Large containers, each too narrow
-          // for the Wide row's three columns to leave the condition legible.
-          RemoteSizeBreakpoint(
-            thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
-            modifier = modifier.fillMaxSize(),
-            axis = BreakpointAxis.Height,
-          ) { tier ->
-            RemoteHaWeatherForecastWear(data, RemoteModifier.fillMaxSize(), large = tier > 0)
-          }
-        } else
-          RemoteSizeBreakpoint(
-            thresholdsDp = intArrayOf(WeatherFullMinDp),
-            modifier = modifier.fillMaxSize(),
-          ) { tier ->
-            when (tier) {
-              0 -> RemoteHaWeatherForecastWide(data, RemoteModifier.fillMaxSize())
-              else ->
-                RemoteHaWeatherForecast(
-                  data,
-                  RemoteModifier.fillMaxSize(),
-                  fillHeight = true,
-                  showExtras = false,
-                )
-            }
-          }
-    }
-  }
 }
-
-// Below this width the full card's forecast strip can't sit under the
-// current row without cramping (the short `4×1` launcher cell, ~288 dp
-// wide but only ~84 dp tall, is the motivating case — #355), so we drop
-// to the Wide current-row-only variant. Above it the full card renders
-// and `fillHeight` lets it claim a taller cell instead of leaving the
-// bottom half blank.
-private const val WeatherFullMinDp = 300
 
 /**
  * Supplementary current-conditions read-outs pulled from the weather entity's attributes — the same
@@ -293,7 +230,7 @@ private fun formatDayLabel(datetime: String?): String? {
 }
 
 /** The card's data for [card] and [snapshot]: what it draws, and what a template binds. */
-private fun weatherData(card: CardConfig, snapshot: HaSnapshot): HaWeatherForecastData {
+internal fun weatherData(card: CardConfig, snapshot: HaSnapshot): HaWeatherForecastData {
   val entityId = card.raw["entity"]?.jsonPrimitive?.content
   val entity = entityId?.let { snapshot.states[it] }
   val attrs = entity?.attributes ?: emptyMap<String, kotlinx.serialization.json.JsonElement>()
