@@ -8,6 +8,7 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.rc.cards.AlarmDesignParts
 import ee.schimke.ha.rc.cards.ArcDialDesignParts
+import ee.schimke.ha.rc.cards.BambuDesignParts
 import ee.schimke.ha.rc.cards.BulkDesignParts
 import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.ClockDesignParts
@@ -756,4 +757,39 @@ fun HaHorizontalStackCard(modifier: RemoteModifier = RemoteModifier) {
 @RemoteComposable
 fun HaGridCard(modifier: RemoteModifier = RemoteModifier) {
   ContainerDesignParts.Grid(modifier)
+}
+
+/** `ha-cards/bambulab-ams-card`: AMS spool grid. */
+@Composable
+@RemoteComposable
+fun HaBambuLabAmsCard(modifier: RemoteModifier = RemoteModifier) {
+  BambuDesignParts.Ams(modifier)
+}
+
+/** `ha-cards/bambulab-spool-card`: one spool's detail. */
+@Composable
+@RemoteComposable
+fun HaBambuLabSpoolCard(modifier: RemoteModifier = RemoteModifier) {
+  BambuDesignParts.Spool(modifier)
+}
+
+/** `ha-cards/bambulab-print-status-card`: the current print job and its progress. */
+@Composable
+@RemoteComposable
+fun HaBambuLabPrintStatusCard(modifier: RemoteModifier = RemoteModifier) {
+  BambuDesignParts.PrintStatus(modifier)
+}
+
+/** `ha-cards/bambulab-print-control-card`: the pause, resume and stop pad. */
+@Composable
+@RemoteComposable
+fun HaBambuLabPrintControlCard(modifier: RemoteModifier = RemoteModifier) {
+  BambuDesignParts.PrintControl(modifier)
+}
+
+/** `ha-cards/bambulab-skipobject-card`: the print control pad, by its legacy card type. */
+@Composable
+@RemoteComposable
+fun HaBambuLabSkipObjectCard(modifier: RemoteModifier = RemoteModifier) {
+  BambuDesignParts.SkipObject(modifier)
 }

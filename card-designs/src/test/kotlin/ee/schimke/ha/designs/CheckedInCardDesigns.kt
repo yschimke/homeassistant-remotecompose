@@ -3,6 +3,7 @@ package ee.schimke.ha.designs
 import android.content.Context
 import ee.schimke.ha.cards.CardDesignDocument
 import ee.schimke.ha.client.design.BuiltDesign
+import ee.schimke.ha.design.CardDesignFiles
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.rc.CardDesignTemplates
 import java.io.File
@@ -18,10 +19,16 @@ object CheckedInCardDesigns {
   val DIRECTORY = File("ui-builder/designs")
 
   private val designs: Map<String, CardDesignDocument> by lazy {
-    DIRECTORY.listFiles { file -> file.extension == "uid" }
+    DIRECTORY.listFiles { file -> file.extension == CardDesignFiles.EXTENSION }
       .orEmpty()
-      .associate { it.nameWithoutExtension to CardDesignDocument.parse(it.readText()) }
+      .associate {
+        CardDesignFiles.cardType(it.nameWithoutExtension) to CardDesignDocument.parse(it.readText())
+      }
   }
+
+  /** The card types with a checked-in design, sorted. */
+  val cardTypes: List<String>
+    get() = designs.keys.sorted()
 
   /** The design [cardType] is drawn from, or null while it is still drawn by its converter. */
   fun designFor(cardType: String): CardDesignDocument? = designs[cardType]

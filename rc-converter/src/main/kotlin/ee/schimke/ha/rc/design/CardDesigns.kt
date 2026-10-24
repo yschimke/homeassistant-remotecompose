@@ -5,6 +5,7 @@ package ee.schimke.ha.rc.design
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.design.CardDesignFiles
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.LocalCardSizeMode
@@ -13,6 +14,7 @@ import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cards.AlarmDesignParts
 import ee.schimke.ha.rc.cards.ArcDialDesignParts
+import ee.schimke.ha.rc.cards.BambuDesignParts
 import ee.schimke.ha.rc.cards.BulkDesignParts
 import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.CenteredCell
@@ -159,7 +161,8 @@ object CardDesigns {
       WeatherDesignParts.components +
       PictureDesignParts.components +
       GraphDesignParts.components +
-      ContainerDesignParts.components
+      ContainerDesignParts.components +
+      BambuDesignParts.components
 
   private val loaded = ConcurrentHashMap<String, Result<CardDesign?>>()
 
@@ -168,9 +171,10 @@ object CardDesigns {
     loaded
       .getOrPut(cardType) {
         runCatching {
-          CardDesigns::class.java.getResourceAsStream("/$RESOURCE_DIR/$cardType.uid")?.use {
-            CardDesign.parse(it.readBytes().decodeToString(), components)
-          }
+          CardDesigns::class
+            .java
+            .getResourceAsStream("/$RESOURCE_DIR/${CardDesignFiles.fileName(cardType)}")
+            ?.use { CardDesign.parse(it.readBytes().decodeToString(), components) }
         }
       }
       .getOrThrow()

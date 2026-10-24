@@ -82,6 +82,12 @@ class LibrarySourcesTest {
     return dir
   }
 
+  /** [library] with a custom card's source too, in the file its `:` can't name. */
+  private fun libraryWithCustomCard(): File =
+    library().also {
+      File(it, "${DesignLibrary.SOURCES}/custom--ha-bambulab-ams-card.uid").writeText(checkedIn)
+    }
+
   /** A UI Builder that holds [stored] designs by id and records what it is asked to create. */
   private class FakeUiBuilder(val stored: MutableMap<String, JsonObject> = mutableMapOf()) {
     val created = mutableListOf<JsonObject>()
@@ -112,6 +118,23 @@ class LibrarySourcesTest {
     val config =
       UiBuilderConfig(apiUrl = "http://uib", browserUrl = "https://builder.example", "secret")
     return UiBuilderIntegration(config, UiBuilderClient(config, createClient {}))
+  }
+
+  @Test
+  fun aCustomCardsSourceIsServedByItsCardTypeFromItsDashedFileName() = testApplication {
+    val integration = uiBuilder(FakeUiBuilder())
+    application { designServer(LibraryHolder(libraryWithCustomCard()), integration) }
+
+    val all = Json.parseToJsonElement(client.get("/api/library/sources").bodyAsText())
+    assertEquals(
+      listOf("custom:ha-bambulab-ams-card", "tile"),
+      all.jsonObject["sources"]!!.jsonArray.map {
+        it.jsonObject["cardType"]!!.jsonPrimitive.content
+      },
+    )
+    val one = client.get("/api/library/sources/custom--ha-bambulab-ams-card.uid")
+    assertEquals(HttpStatusCode.OK, one.status)
+    assertEquals(Json.parseToJsonElement(checkedIn), Json.parseToJsonElement(one.bodyAsText()))
   }
 
   @Test

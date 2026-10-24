@@ -8,6 +8,7 @@ import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.design.CardDesignFiles
 import ee.schimke.ha.design.DesignCatalog
 import ee.schimke.ha.design.DesignCatalogEntry
 import ee.schimke.ha.design.DesignEntry
@@ -165,11 +166,12 @@ private constructor(
           ?.let { json.decodeFromString(DesignCatalog.serializer(), it.readText()) }
       val sources =
         File(dir, SOURCES)
-          .listFiles { file -> file.extension == "uid" }
+          .listFiles { file -> file.extension == CardDesignFiles.EXTENSION }
           .orEmpty()
           .sortedBy { it.name }
           .associate {
-            it.nameWithoutExtension to json.parseToJsonElement(it.readText()).jsonObject
+            CardDesignFiles.cardType(it.nameWithoutExtension) to
+              json.parseToJsonElement(it.readText()).jsonObject
           }
       return DesignLibrary(dir, manifest, manifestBytes, catalog, blobBytes, sources)
     }

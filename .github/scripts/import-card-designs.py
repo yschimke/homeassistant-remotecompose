@@ -31,7 +31,8 @@ def main() -> int:
         if document.get("catalogPin", {}).get("systemId") != "ha-cards":
             raise SystemExit(f"{card_type}: not an ha-cards design")
         document["id"] = card_type
-        path = designs / f"{card_type}.uid"
+        # A custom card type's ":" is "--" in its file name (CardDesignFiles).
+        path = designs / (card_type.replace(":", "--") + ".uid")
         path.write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n")
         state = "edited" if source.get("edited") else "checked in"
         print(f"{path}: {state}, revision {source.get('revision', '-')}")

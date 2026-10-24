@@ -54,11 +54,7 @@ class CardDesignDocumentParityTest {
   }
 
   /** The card types with a checked-in design. */
-  private fun designedTypes(): List<String> =
-    CheckedInCardDesigns.DIRECTORY.listFiles { file -> file.extension == "uid" }!!.map {
-        it.nameWithoutExtension
-      }
-      .sorted()
+  private fun designedTypes(): List<String> = CheckedInCardDesigns.cardTypes
 
   private fun designOf(cardType: String) =
     requireNotNull(CheckedInCardDesigns.designFor(cardType)) { "no $cardType.uid" }

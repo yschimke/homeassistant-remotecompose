@@ -29,11 +29,7 @@ class CardDesignSurfaceParityTest {
 
   @Test
   fun everyDesignIsItsTypesLauncherTemplateForEveryCellAndTheme() {
-    val types =
-      CheckedInCardDesigns.DIRECTORY.listFiles { file -> file.extension == "uid" }!!.map {
-          it.nameWithoutExtension
-        }
-        .sorted()
+    val types = CheckedInCardDesigns.cardTypes
     val differing = types.flatMap { cardType ->
       val design = requireNotNull(CheckedInCardDesigns.designFor(cardType)) { "no $cardType.uid" }
       val keys = launcherKeys(cardType)
