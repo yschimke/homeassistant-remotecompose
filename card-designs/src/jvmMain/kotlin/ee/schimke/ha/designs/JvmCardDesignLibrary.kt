@@ -57,7 +57,8 @@ class JvmCardPreviewRenderer(private val density: Float = 2f) : CardPreviewRende
     val values =
       if (snapshot != null) namedValues(playback.bindings(snapshot, SystemHaClock)) else emptyMap()
     val width = (CardPreviewRenderer.CARD_WIDTH_DP * density).toInt()
-    // Laid out once at a generous height to learn the card's own, then drawn at exactly that.
+    // Laid out once at the tallest preview allowed to learn the card's own height, then drawn at
+    // exactly that.
     var height = 0
     scene(width, MAX_HEIGHT_PX) {
         Box(Modifier.onSizeChanged { height = it.height }) { Card(playback.bytes, values) }
@@ -94,7 +95,8 @@ class JvmCardPreviewRenderer(private val density: Float = 2f) : CardPreviewRende
   }
 
   private companion object {
-    const val MAX_HEIGHT_PX = 4000
+    /** No generated image exceeds 1800 px in either dimension (AGENTS.md); a taller card is cut. */
+    const val MAX_HEIGHT_PX = 1800
     const val SETTLED_NANOS = 2_000_000_000L
   }
 }
