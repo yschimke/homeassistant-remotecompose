@@ -64,38 +64,28 @@ fun TerrazzoTheme(
       DarkModePref.Dark -> true
     }
 
+  // Only the theme values branch: the content is composed at one call site, so switching between
+  // an app-theming card style and the palette choice keeps the app's remembered state (the open
+  // screen, navigation) rather than recomposing it from scratch.
   val appTheme = cardStyle.appThemeOrNull()
-  if (appTheme != null) {
-    val dark = appTheme.appDark(darkTheme)
-    val palette = appTheme.palette(dark)
-    val colors = remember(appTheme, dark) { palette.toColorScheme(appTheme.inkFor(dark)) }
-    CompositionLocalProvider(
-      LocalThemeStyle provides style,
-      LocalIsDarkTheme provides dark,
-      LocalCardStyle provides cardStyle,
-    ) {
-      MaterialTheme(
-        colorScheme = colors,
-        typography = terrazzoTypographyFor(style).inCardStyle(appTheme),
-        content = content,
-      )
+  val wallpaperSeed =
+    if (appTheme == null && style == ThemeStyle.Material3) rememberWallpaperSeedColor() else null
+  val dark = appTheme?.appDark(darkTheme) ?: darkTheme
+  val colors =
+    if (appTheme != null) {
+      remember(appTheme, dark) { appTheme.palette(dark).toColorScheme(appTheme.inkFor(dark)) }
+    } else {
+      terrazzoColorScheme(style, darkTheme, seedOverride = wallpaperSeed)
     }
-    return
-  }
-
-  val wallpaperSeed = if (style == ThemeStyle.Material3) rememberWallpaperSeedColor() else null
-  val colors = terrazzoColorScheme(style, darkTheme, seedOverride = wallpaperSeed)
+  val typography =
+    terrazzoTypographyFor(style).let { base -> appTheme?.let(base::inCardStyle) ?: base }
 
   CompositionLocalProvider(
     LocalThemeStyle provides style,
-    LocalIsDarkTheme provides darkTheme,
+    LocalIsDarkTheme provides dark,
     LocalCardStyle provides cardStyle,
   ) {
-    MaterialTheme(
-      colorScheme = colors,
-      typography = terrazzoTypographyFor(style),
-      content = content,
-    )
+    MaterialTheme(colorScheme = colors, typography = typography, content = content)
   }
 }
 
