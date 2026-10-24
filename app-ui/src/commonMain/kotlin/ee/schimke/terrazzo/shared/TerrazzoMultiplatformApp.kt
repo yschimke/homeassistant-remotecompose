@@ -359,10 +359,15 @@ private fun DashboardShell(
     stack.clear()
     stack.add(route)
   }
+  // The editor holds an unsaved draft: leaving it goes through its own Back, which asks first.
+  val editing = stack.lastOrNull() is DashboardEditDestination
   DisposableEffect(registerReturnHome) {
     registerReturnHome?.invoke {
-      select(home)
-      homeVisit++
+      // A wall panel returns home after a while unused, but never out of an edit.
+      if (stack.lastOrNull() !is DashboardEditDestination) {
+        select(home)
+        homeVisit++
+      }
     }
     onDispose { registerReturnHome?.invoke {} }
   }
@@ -485,15 +490,16 @@ private fun DashboardShell(
         )
       }
     }
-    AppFooter(
-      dashboardsSelected = stack.lastOrNull() != SettingsDestination,
-      onDashboards = { select(DashboardsDestination) },
-      onSettings = { select(SettingsDestination) },
-      cardStyle = cardStyle,
-      onCardStyle = onCardStyle,
-      isFullScreen = isFullScreen,
-      onToggleFullScreen = onToggleFullScreen,
-    )
+    if (!editing)
+      AppFooter(
+        dashboardsSelected = stack.lastOrNull() != SettingsDestination,
+        onDashboards = { select(DashboardsDestination) },
+        onSettings = { select(SettingsDestination) },
+        cardStyle = cardStyle,
+        onCardStyle = onCardStyle,
+        isFullScreen = isFullScreen,
+        onToggleFullScreen = onToggleFullScreen,
+      )
   }
 }
 
