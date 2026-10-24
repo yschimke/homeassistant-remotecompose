@@ -404,6 +404,7 @@ fun DashboardViewScreen(
     EntityMoreInfoSheet(
       entityId = entityId,
       state = (state as? DashboardState.Ready)?.snapshot?.states?.get(entityId),
+      loadHistory = { hours -> session.fetchHistory(listOf(entityId), hours)[entityId].orEmpty() },
       onOpenHistory = historyUrl?.let { url -> { openInBrowser(context, url) } },
       onDismiss = { moreInfoEntity = null },
     )
