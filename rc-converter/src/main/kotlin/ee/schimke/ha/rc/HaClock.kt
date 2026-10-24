@@ -72,6 +72,21 @@ class FixedHaClock(private val instant: Instant, private val zone: ZoneId = Zone
 }
 
 /**
+ * The clock a design template is captured under ([CardDesignTemplates], [LauncherDesigns]): one
+ * fixed instant in UTC, so a template's bytes are the same wherever and whenever it is captured
+ * (the design server's library, the app's shipped assets, a device), yet not [frozen][isFrozen], so
+ * the time still ticks in the player. What a card reads from it (the clock's date line, another
+ * zone's offset) is a binding the client pushes from its own clock when the template plays.
+ */
+object TemplateHaClock : HaClock {
+  private val instant: Instant = Instant.parse("2026-01-01T00:00:00Z")
+
+  override fun now(): Instant = instant
+
+  override fun zone(): ZoneId = ZoneOffset.UTC
+}
+
+/**
  * Composition local that supplies the current [HaClock] to card converters. Defaults to
  * [SystemHaClock] so production renders read real wall-clock time without any extra setup. Previews
  * and tests override with a [FixedHaClock].
