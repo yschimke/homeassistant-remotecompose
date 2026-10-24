@@ -289,6 +289,39 @@ Before cutover, on a server deployed from `main`:
 Deploying the design server is a manual step (compose-preview-server's deploy); nothing here
 deploys it.
 
+## Every card from the server
+
+Today the server's designs are used only for a card whose exact key the library holds, and a key
+holds the card's shape: its icons, device classes, units and, for a grid, every child's shape.
+The library is generated from the curated fixtures and the demo dashboards, so a user's tile with
+any other icon misses it and draws from the `.uid` packaged in the app. Cards with no template
+form (headings, entities, maps, weather, conditional cards, some grids and markdown) never ask the
+server at all. On the seven demo dashboards, 63 of 173 cards have a key; and 185 of the library's
+256 distinct shapes (every tile and grid) carry an icon or unit, which no build-time library can
+enumerate.
+
+The goal: every card a user sees is a template the server generated, at build time, for the app's
+own `rcApiLevel` and surface (mobile app, launcher widget, Wear widget and its container), so a
+design edit reaches every card, and an app never plays a document its player can't. The `.uid`
+packaged in the app stays as the offline fallback. Capture stays build-time; the server never sees
+a user's values, only shapes.
+
+That needs keys to be enumerable, in this order:
+
+1. **Measure.** A coverage report over held-out dashboards: how many cards have a key, and how many
+   keys are free of open-ended fields. Each step below must move it.
+2. **Icons as bindings.** A spike first: RemoteCompose can draw a path by id (`drawPath(int)`) and
+   bitmap-font text runs, but whether the host can choose the glyph at runtime is unproven. If it
+   can, `icon` and `card_icon` leave the shape and become slot bindings.
+3. **Units as bindings.** A unit is text; it leaves the shape when nothing in the layout depends on
+   its width.
+4. **Grids as layouts, not concatenations.** A grid's key names its layout (columns, square, child
+   count); each child is its own template, composed by the client.
+5. **A template form for every type.** heading, entities, weather-forecast, map, markdown and
+   conditional (its card's template) get `designProperties` whose values are bindings.
+6. **Enumerate.** With only closed fields left (domain, device class, features, counts), the
+   library generates every shape per surface and `rcApiLevel`; the coverage report reaches 100%.
+
 ## Milestones
 
 | | Deliverable |
@@ -300,6 +333,7 @@ deploys it.
 | D4 | Forks copy the real source (**built** for migrated types); fork lineage on the design server |
 | D5 | Design id in the manifest and cache; per-card design override and the chooser in the card's style sheet |
 | D6+ | Remaining card types, one PR each (**migrated:** `tile`, `button`, `entity`, `sensor`, `heading`, `glance`, `clock`, `thermostat`, `humidifier`, `light`, `gauge`, `statistic`, `logbook`, `calendar`, `todo-list`, `area`, `media-control`, `alarm-panel`, `map`, `picture-elements`, `weather-forecast`, `entities`, `picture`, `picture-entity`, `picture-glance`, `history-graph`, `statistics-graph`, `markdown`, `vertical-stack`, `horizontal-stack`, `grid`, the Bambu Lab cards (`custom:ha-bambulab-*`, in `custom--ha-bambulab-*.uid`)); `converter-only.md` for the rest |
+| D8 | Every card from the server ([Every card from the server](#every-card-from-the-server)): coverage report, icon and unit bindings, grid layouts, a template form for every type, enumerated library |
 | D7+ | Device-specific transformations (Wear screen shape, launcher grids, TV/desktop, older RC levels), each when a host needs it |
 
 ## Open questions
