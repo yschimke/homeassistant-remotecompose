@@ -23,7 +23,10 @@ import ee.schimke.ha.rc.cards.LightCardConverter
 import ee.schimke.ha.rc.cards.LogbookCardConverter
 import ee.schimke.ha.rc.cards.MapCardConverter
 import ee.schimke.ha.rc.cards.MediaControlCardConverter
+import ee.schimke.ha.rc.cards.PictureCardConverter
 import ee.schimke.ha.rc.cards.PictureElementsCardConverter
+import ee.schimke.ha.rc.cards.PictureEntityCardConverter
+import ee.schimke.ha.rc.cards.PictureGlanceCardConverter
 import ee.schimke.ha.rc.cards.SensorCardConverter
 import ee.schimke.ha.rc.cards.StatisticCardConverter
 import ee.schimke.ha.rc.cards.ThermostatCardConverter
@@ -546,6 +549,33 @@ class WearCardDesignParityTest {
         """{"type":"entities","title":"Home","entities":["light.kitchen","switch.fan","sensor.temperature"]}""",
         """{"type":"weather-forecast","entity":"weather.home"}""",
         """{"type":"weather-forecast","entity":"weather.home","show_forecast":false}""",
+      ),
+    )
+  }
+
+  @Test
+  fun pictureDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "camera.front_door" to EntityState("camera.front_door", "idle"),
+            "light.porch" to EntityState("light.porch", "on"),
+            "switch.fan" to EntityState("switch.fan", "off"),
+          )
+      )
+    // Each picture card with and without its optional lines, as SlotWidget keys them.
+    assertWearParity(
+      "picture designs",
+      listOf(PictureCardConverter(), PictureEntityCardConverter(), PictureGlanceCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"picture","image":"https://example.com/a.jpg","name":"Garden"}""",
+        """{"type":"picture","image":"https://example.com/a.jpg"}""",
+        """{"type":"picture-entity","entity":"camera.front_door"}""",
+        """{"type":"picture-entity","entity":"light.porch","show_state":false}""",
+        """{"type":"picture-glance","title":"Garden","entities":["light.porch","switch.fan"]}""",
+        """{"type":"picture-glance","image":"x","entities":["switch.fan"]}""",
       ),
     )
   }

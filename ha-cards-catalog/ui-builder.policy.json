@@ -3056,6 +3056,92 @@
         }
       ]
     },
+    "ha-cards/picture-card-image": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaPictureCardImage",
+      "displayName": "Picture card image",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "fill": {
+            "type": "bool",
+            "value": false
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "fill",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Fills the canvas edge to edge (a launcher or Wear cell); off, the image keeps the card's aspect_ratio."
+        }
+      ]
+    },
+    "ha-cards/picture-entity-card-image": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaPictureEntityCardImage",
+      "displayName": "Picture entity card image",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "fill": {
+            "type": "bool",
+            "value": false
+          },
+          "hideName": {
+            "type": "bool",
+            "value": false
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "fill",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Fills the canvas edge to edge (a launcher or Wear cell); off, the image keeps the card's aspect_ratio."
+        },
+        {
+          "name": "hideName",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Drops the name, so the state badge alone reads."
+        }
+      ]
+    },
+    "ha-cards/picture-glance-card-image": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaPictureGlanceCardImage",
+      "displayName": "Picture glance card image",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "fill": {
+            "type": "bool",
+            "value": false
+          },
+          "showImage": {
+            "type": "bool",
+            "value": true
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "fill",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Fills the canvas edge to edge (a launcher or Wear cell); off, the image keeps the card's aspect_ratio."
+        },
+        {
+          "name": "showImage",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Off keeps the strip of entity cells alone."
+        }
+      ]
+    },
     "ha-cards/vertical-stack-card": {
       "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaVerticalStackCard",
       "displayName": "Vertical stack card",
