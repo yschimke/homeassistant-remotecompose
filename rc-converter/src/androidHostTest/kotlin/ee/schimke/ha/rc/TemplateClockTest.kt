@@ -24,8 +24,8 @@ import org.robolectric.annotation.GraphicsMode
 
 /**
  * Design templates are captured under [TemplateHaClock], so a template that reads the time (the
- * clock's date line) has the same bytes on the design server, in the app's shipped assets and on a
- * device, whatever day each captured it.
+ * clock's date line) has the same bytes in the design server's library, in a capture it makes on
+ * request and on a device, whatever day each captured it.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])

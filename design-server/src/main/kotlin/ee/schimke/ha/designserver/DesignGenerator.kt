@@ -5,6 +5,7 @@ import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
+import ee.schimke.ha.design.GeneratedDesign
 import ee.schimke.ha.designs.CheckedInCardDesigns
 import ee.schimke.ha.designs.LibraryCaptureProfile
 import ee.schimke.ha.rc.CardDesignTemplates
@@ -13,7 +14,6 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import java.util.concurrent.Executors
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 
 /**
  * Card designs by key: the library's, or, for a key the library doesn't hold, captured here on
@@ -132,16 +132,3 @@ class DesignGenerator(
   /** A key this server can't capture a design for. */
   class UnsupportedKey(message: String) : Exception(message)
 }
-
-/** A design by key: `POST /designs/v1/generate`. */
-@Serializable
-data class GeneratedDesign(
-  val sha256: String,
-  /** Where its `.rc` is served. */
-  val blob: String,
-  val key: DesignKey,
-  /** Slot count the template binds (`<domain>.s0` … `<domain>.s<n-1>`). */
-  val slots: Int,
-  /** True when captured on request rather than taken from the library. */
-  val generated: Boolean,
-)

@@ -373,18 +373,16 @@ object CardDesignTemplates {
 }
 
 /**
- * The local design library: every template the app can build from its own converters. It is the
- * fallback under the design server: a card renders from the server's design when one is cached for
- * its key, and from this library otherwise. Both are the same kind of document played the same way,
- * so there is one rendering path.
+ * A local design library: every template a host can build from its own converters. The phone app no
+ * longer uses one (its designs come only from the design server); the watch still captures its
+ * cards' templates through it.
  *
- * A template the app ships ([shipped]) is read from its assets and never captured. Any other is
- * captured on first use, on the calling thread like any local card capture, and kept for the
- * process. A key is captured once even when two threads ask at once (a background warm-up and the
- * first frame): the second waits for the first's capture rather than repeating it. With a [store]
- * it is also kept on disk, so a key is captured once per store rather than on every start: the host
- * scopes the store to what a capture depends on (this build of the app, the display's density and
- * font scale).
+ * A template is captured on first use, on the calling thread like any local card capture, and kept
+ * for the process. A key is captured once even when two threads ask at once (a background warm-up
+ * and the first frame): the second waits for the first's capture rather than repeating it. With a
+ * [store] it is also kept on disk, so a key is captured once per store rather than on every start:
+ * the host scopes the store to what a capture depends on (this build of the app, the display's
+ * density and font scale).
  */
 object CardDesignLibrary {
   private val templates = OncePerKey<DesignKey, ByteArray>()
@@ -395,12 +393,6 @@ object CardDesignLibrary {
 
   /** Where captured templates persist, or null to keep them for the process only. */
   @Volatile var store: LocalDesignStore? = null
-
-  /**
-   * The designs the app ships ([ShippedDesignLibrary]), read before anything is captured: a key
-   * found there plays the checked-in design it was built from, not this build's converter.
-   */
-  @Volatile var shipped: LocalDesignStore? = null
 
   /**
    * Told about each template capture that fails ([templateOrNull]), so the host can report it: a
@@ -442,8 +434,7 @@ object CardDesignLibrary {
   ): ByteArray =
     templates.getOrCompute(key) {
       val store = store
-      shipped?.read(key)
-        ?: store?.read(key)
+      store?.read(key)
         ?: CardDesignTemplates.capture(context, key, registry).bytes.also { store?.write(key, it) }
     }
 

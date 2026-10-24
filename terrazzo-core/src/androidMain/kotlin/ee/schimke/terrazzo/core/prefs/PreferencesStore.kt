@@ -334,7 +334,7 @@ class PreferencesStore(private val context: Context) {
   /**
    * Card design server (`docs/architecture/card-design-server.md`): the base URL that serves
    * `manifest.json` and `blobs/`. [DEFAULT_DESIGN_SERVER_URL] until the user sets one; an empty
-   * value they saved switches the server off, and every card renders from the app's own designs.
+   * value they saved switches the server off, and every card draws through the app's converters.
    */
   val designServerUrl: Flow<String>
     get() = context.store.data.map { it[DESIGN_SERVER_URL_KEY] ?: DEFAULT_DESIGN_SERVER_URL }

@@ -778,8 +778,9 @@ private fun DesignServerSetting(
     Text("Card design server", style = MaterialTheme.typography.titleMedium)
     Text(
       "Card designs come from this server (manifest.json + blobs/), chosen by your palette, " +
-        "card style, variant and author; the app's own designs cover anything it lacks. The " +
-        "manifest is checked nightly while charging. Leave empty to use only the app's designs.",
+        "card style, variant and author; one it lacks is fetched by its key as a card needs it, " +
+        "and the card draws from the app's converter meanwhile. The manifest is checked nightly " +
+        "while charging. Leave empty to draw every card from the app's converters.",
       style = MaterialTheme.typography.bodySmall,
     )
     androidx.compose.material3.OutlinedTextField(
@@ -868,7 +869,7 @@ private fun DesignSourcesSummary() {
   if (summary.server == 0 && summary.local.isEmpty()) return
   Text(
     "This session: ${summary.server} card designs from the server, " +
-      "${summary.local.size} from the app.",
+      "${summary.local.size} drawn by the app while their design is fetched.",
     style = MaterialTheme.typography.bodySmall,
   )
   summary.local.take(MAX_LISTED_GAPS).forEach { key ->

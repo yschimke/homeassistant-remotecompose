@@ -59,6 +59,11 @@ class FileLocalDesignStore(
     root.listFiles()?.filter { it != current }?.forEach { it.deleteRecursively() }
   }
 
+  /** Deletes every template it holds: for an app that no longer captures its own. */
+  fun clear() {
+    root.deleteRecursively()
+  }
+
   companion object {
     /**
      * An app's store (the phone's and the watch's alike): under `files/terrazzo/designs/local`,

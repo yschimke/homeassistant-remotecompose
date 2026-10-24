@@ -95,6 +95,23 @@ data class DesignKey(
   }
 }
 
+/**
+ * A design by key, as the design server answers `POST <base>/generate` with a [DesignKey]: the
+ * library's design for the key, or one the server captured on request ([generated]). Its blob is
+ * served beside the library's ([DesignManifest.blobPath]).
+ */
+@Serializable
+data class GeneratedDesign(
+  val sha256: String,
+  /** Where its `.rc` is served, from the server's root. */
+  val blob: String,
+  val key: DesignKey,
+  /** Slot count the template binds (`<domain>.s0` … `<domain>.s<n-1>`). */
+  val slots: Int,
+  /** True when captured on request rather than taken from the library. */
+  val generated: Boolean,
+)
+
 /** One design in a [DesignManifest]: its key, and the content-addressed blob that holds it. */
 @Serializable
 data class DesignEntry(

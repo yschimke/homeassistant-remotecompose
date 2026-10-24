@@ -28,12 +28,12 @@ matters here:
   draw from their converter's `Render` and are captured from it.
 - **The design server's library is a build-time capture**
   (`:card-designs:generateCardDesigns`), baked into its image with the checked-in sources
-  (`sources/<cardType>.uid`). The app prefers a synced server design, then a shipped asset
-  (`ShippedDesignLibrary`), then a capture on the device (`CardDesignLibrary`).
-- **The three agree byte for byte.** Templates are captured under `TemplateHaClock`, so a capture
-  does not depend on the day it runs; `ShippedCardDesignsTest` holds the shipped assets to this
-  build's capture, and `scripts/check-design-server.py` holds a deployed server to it (see
-  [Cutover](#cutover)).
+  (`sources/<cardType>.uid`). A key the library lacks the server captures on request
+  (`POST /designs/v1/generate`, on the JVM). The app takes its designs only from the server: a
+  synced one, else one it fetches by key; it ships none and captures none of its own.
+- **Captures agree.** Templates are captured under `TemplateHaClock`, so a capture does not
+  depend on the day it runs, and `scripts/check-design-server.py` holds a deployed server to this
+  build's capture (see [Cutover](#cutover)).
 - **Forking copies the real source** for migrated types; for the rest, "Design in UI Builder"
   still rebuilds a lookalike from `ha-cards` components (`HaCardsSeed`).
 - **Device designs are picked, or chosen per card.** `DeviceMatch` (integration, manufacturer,
@@ -110,14 +110,10 @@ ha-cards .uid  ──(UI Builder, admin edit)──▶  revision
   diff on that PR is the review of what changes in the app. While a card type still has a
   converter, its parity gates fail an edit that changes its pixels; that is the migration gate
   doing its job, and the edit lands with the converter's layout deleted.
-- **Fallback.** The app ships the library's default style as assets
-  (`app/src/main/assets/card-designs`): the app's default theme style (Terrazzo Home), light and
-  dark, with the classic card style, captured from the checked-in designs exactly as the library
-  is. `ShippedCardDesignsTest` (`:card-designs`) fails when they aren't what this build captures,
-  and `-PupdateShippedCardDesigns` rewrites them; the import PR does that itself. Lookup is: synced
-  server design → shipped asset (`ShippedDesignLibrary`) → a capture on the device. The capture
-  stays for the keys nothing ships (other theme and card styles, shapes the library's source cards
-  don't produce, converter-only types); dropping it is the end state.
+- **Fallback.** None in designs: the app ships no designs and captures none. Lookup is a synced
+  server design, else the server's design fetched by key (`CardDesignGeneration`), which the
+  server captures if its library lacks it. Until one is cached (before the first sync, offline,
+  with no server) the card draws through its converter.
 
 ## Migrating a card type
 

@@ -7,14 +7,19 @@ import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignQuery
 import ee.schimke.ha.design.DeviceInfo
 import ee.schimke.ha.design.DeviceMatch
+import ee.schimke.ha.design.GeneratedDesign
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -86,7 +91,20 @@ interface DesignStore {
   suspend fun readBlob(sha256: String): ByteArray?
 
   suspend fun writeBlob(sha256: String, bytes: ByteArray)
+
+  /** The designs fetched by key ([DesignRepository.generate]), or null when none are stored. */
+  suspend fun readGenerated(): GeneratedDesigns?
+
+  suspend fun writeGenerated(designs: GeneratedDesigns)
 }
+
+/**
+ * Designs fetched by key ([DesignRepository.generate]) for keys the manifest doesn't list, under
+ * the manifest [serial] they were fetched beside: a new manifest (the server's library changed)
+ * drops them, and they are fetched again as cards need them.
+ */
+@kotlinx.serialization.Serializable
+data class GeneratedDesigns(val serial: Long, val designs: List<DesignEntry>)
 
 /** The manifest plus the client-side bookkeeping refresh rules need. */
 @kotlinx.serialization.Serializable
@@ -101,6 +119,13 @@ data class StoredManifest(
 class InMemoryDesignStore : DesignStore {
   private var manifest: StoredManifest? = null
   private val blobs = HashMap<String, ByteArray>()
+  private var generated: GeneratedDesigns? = null
+
+  override suspend fun readGenerated(): GeneratedDesigns? = generated
+
+  override suspend fun writeGenerated(designs: GeneratedDesigns) {
+    generated = designs
+  }
 
   override suspend fun readManifest(): StoredManifest? = manifest
 
@@ -153,6 +178,7 @@ class DesignRepository(
   private val clock: () -> Long,
 ) {
   private val refreshLock = Mutex()
+  private val generateLock = Mutex()
   private var lastFailureAtMs: Long? = null
   private var failures = 0
 
@@ -276,7 +302,7 @@ class DesignRepository(
   private suspend fun resolveByDesign(stored: StoredManifest, designIds: Set<String>): DesignsById {
     if (designIds.isEmpty()) return DesignsById()
     val resolved = LinkedHashMap<String, MutableList<DesignedBlob>>()
-    for (entry in stored.manifest.designs) {
+    for (entry in designsOf(stored)) {
       val id = entry.stableDesignId ?: continue
       if (entry.revoked || id !in designIds) continue
       val bytes = verifiedBlob(entry) ?: continue
@@ -323,7 +349,7 @@ class DesignRepository(
     fun rank(entry: DesignEntry): Int =
       if (prefer.isEmpty()) 0 else prefer.indexOfFirst { it.matches(entry) }
     val resolved = LinkedHashMap<DesignKey, Pair<Int, ByteArray>>()
-    for (entry in stored.manifest.designs) {
+    for (entry in designsOf(stored)) {
       // Device-specific designs share their generic sibling's key: see resolveDeviceDesigns.
       if (entry.revoked || entry.device != null) continue
       val rank = rank(entry)
@@ -384,13 +410,82 @@ class DesignRepository(
     return stored
   }
 
+  /**
+   * Fetches [key]'s design from the server by key (`POST <base>/generate`) for a key the cached
+   * manifest doesn't list, and keeps it beside the manifest's designs: [resolveAll] then serves it.
+   * The server answers with its library's design for the key, or captures one. Only the key is
+   * sent: generation properties, never a card's config or states. True when a design was stored;
+   * false when there is no server, no cached manifest to keep it beside, the manifest revokes the
+   * key, or the server has no design for it (or can't be reached).
+   */
+  suspend fun generate(key: DesignKey): Boolean = generateLock.withLock { generateLocked(key) }
+
+  private suspend fun generateLocked(key: DesignKey): Boolean {
+    val baseUrl = config.baseUrl?.trimEnd('/')
+    val client = httpClient
+    if (!config.enabled || baseUrl == null || client == null) return false
+    val stored = store.readManifest() ?: return false
+    val listed = stored.manifest.designs.filter { it.key == key && it.device == null }
+    // A revoked key stays off; a listed one is the manifest's to serve.
+    if (listed.isNotEmpty()) return false
+    val generated = store.readGenerated()?.takeIf { it.serial == stored.manifest.serial }
+    if (generated?.designs?.any { it.key == key } == true) return false
+    val design =
+      runCatching {
+        val response =
+          client.post("$baseUrl/generate") {
+            config.userAgent?.let { header(HttpHeaders.UserAgent, it.header) }
+            contentType(ContentType.Application.Json)
+            setBody(json.encodeToString(DesignKey.serializer(), key))
+          }
+        if (!response.status.isSuccess()) return false
+        json.decodeFromString(GeneratedDesign.serializer(), response.bodyAsText())
+      }
+        .getOrNull() ?: return false
+    if (design.key != key || !SHA256.matches(design.sha256)) return false
+    val bytes =
+      runCatching {
+        val response =
+          client.get("$baseUrl/${DesignManifest.blobPath(design.sha256)}") {
+            config.userAgent?.let { header(HttpHeaders.UserAgent, it.header) }
+          }
+        if (response.status.isSuccess()) response.bodyAsBytes() else null
+      }
+        .getOrNull()
+        // Content addressing: a blob that doesn't hash to its name is never stored.
+        ?.takeIf { Sha256.hex(it) == design.sha256 } ?: return false
+    val entry = DesignEntry(key, design.sha256, bytes.size, design.slots)
+    // The index first, then the blob: a reader that finds the entry before its blob skips it, and
+    // the blob's arrival is what tells a cache snapshot to read again.
+    store.writeGenerated(
+      GeneratedDesigns(
+        stored.manifest.serial,
+        generated?.designs.orEmpty().filter { it.key != key } + entry,
+      )
+    )
+    store.writeBlob(design.sha256, bytes)
+    return true
+  }
+
+  /**
+   * The manifest's designs, then those fetched by key ([generate]) beside it for keys it doesn't
+   * list. Fetched designs from under another manifest are left out.
+   */
+  private suspend fun designsOf(stored: StoredManifest): List<DesignEntry> {
+    val generated =
+      store.readGenerated()?.takeIf { it.serial == stored.manifest.serial }?.designs.orEmpty()
+    if (generated.isEmpty()) return stored.manifest.designs
+    val listed = stored.manifest.designs.map { it.key }.toSet()
+    return stored.manifest.designs + generated.filter { it.key !in listed }
+  }
+
   /** Best design for [key], or null to fall through to the local converter. */
   suspend fun resolve(key: DesignKey): DesignBlob? {
     val stored = store.readManifest()
     if (stored != null) {
       // The generic design for the key: device-specific ones resolve through resolveDeviceDesigns.
       val entry =
-        stored.manifest.designs.firstOrNull { it.key == key && it.device == null && !it.revoked }
+        designsOf(stored).firstOrNull { it.key == key && it.device == null && !it.revoked }
       if (entry != null) {
         val bytes = store.readBlob(entry.sha256)
         if (bytes != null && Sha256.hex(bytes) == entry.sha256) {
@@ -473,6 +568,7 @@ class DesignRepository(
 
   private companion object {
     const val HOUR_MS: Long = 60 * 60 * 1000
+    val SHA256 = Regex("[0-9a-f]{64}")
   }
 }
 
