@@ -9,7 +9,7 @@ Build the library first: ./gradlew :card-designs:generateCardDesigns
 It checks, and exits non-zero when any fails:
 1. Sources: GET /api/library/sources lists every card design checked in under
    card-designs/ui-builder/designs/, each the checked-in document unless edited in UI Builder.
-2. Manifest: every design key the server publishes has the sha256 the local library captures, and
+2. Manifest: every library design key the server publishes (shared user designs aside) has the sha256 the local library captures, and
    the two publish the same keys.
 3. Blobs: a sample of the server's blobs are the bytes their sha256 names, and the local blobs.
 """
@@ -21,9 +21,16 @@ def fetch(url):
         return r.read()
 
 
+BUILTIN_AUTHOR = "terrazzo"  # DesignEntry.BUILTIN_AUTHOR: the library, as opposed to a shared user design
+
+
 def keys(manifest):
+    """The library's entries by key. Shared user designs (another author) are left out: the server
+    adds them to its manifest, and no local build has them."""
     out = {}
     for e in manifest["designs"]:
+        if e.get("author", BUILTIN_AUTHOR) != BUILTIN_AUTHOR:
+            continue
         k = tuple(sorted((a, str(b)) for a, b in e["key"].items())) + (("designId", str(e.get("designId"))),)
         out[k] = e["sha256"]
     return out
@@ -59,7 +66,11 @@ def main():
                 failures.append(f"sources {label}: {ts}")
 
     # 2. Manifest.
-    live = keys(json.loads(fetch(server + "/designs/v1/manifest.json")))
+    served_manifest = json.loads(fetch(server + "/designs/v1/manifest.json"))
+    live = keys(served_manifest)
+    shared = len(served_manifest["designs"]) - len(live)
+    if shared:
+        print(f"manifest: {shared} shared user design(s) left out of the comparison")
     local = keys(json.load(open(os.path.join(a.library, "manifest.json"))))
     same = sum(1 for k in live if local.get(k) == live[k])
     diff = [k for k in live if k in local and local[k] != live[k]]
