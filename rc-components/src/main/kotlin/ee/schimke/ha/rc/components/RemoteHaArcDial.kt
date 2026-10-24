@@ -2,7 +2,6 @@
 
 package ee.schimke.ha.rc.components
 
-import android.graphics.Paint as AndroidPaint
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
@@ -32,8 +31,8 @@ import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
+import androidx.compose.remote.creation.compose.state.RemotePaint
 import androidx.compose.remote.creation.compose.state.RemoteString
-import androidx.compose.remote.creation.compose.state.asRemotePaint
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
@@ -42,6 +41,8 @@ import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
@@ -726,45 +727,36 @@ private fun ArcCanvas(
       return@RemoteCanvas
     }
 
-    val track =
-      AndroidPaint()
-        .apply {
-          isAntiAlias = true
-          style = AndroidPaint.Style.STROKE
-          strokeWidth = trackStrokePx
-          strokeCap = AndroidPaint.Cap.ROUND
-        }
-        .asRemotePaint()
-        .apply { color = theme.divider }
+    val track = RemotePaint {
+      isAntiAlias = true
+      style = PaintingStyle.Stroke
+      strokeWidth = trackStrokePx.rf
+      strokeCap = StrokeCap.Round
+    }
+      .apply { color = theme.divider }
     drawArc(track, 135f.rf, 270f.rf, false, topLeft, arcSize)
 
-    val fill =
-      AndroidPaint()
-        .apply {
-          isAntiAlias = true
-          style = AndroidPaint.Style.STROKE
-          strokeWidth = fillStrokePx
-          strokeCap = AndroidPaint.Cap.ROUND
-        }
-        .asRemotePaint()
-        .apply { color = accent }
+    val fill = RemotePaint {
+      isAntiAlias = true
+      style = PaintingStyle.Stroke
+      strokeWidth = fillStrokePx.rf
+      strokeCap = StrokeCap.Round
+    }
+      .apply { color = accent }
     drawArc(fill, 135f.rf, animatedSweep, false, topLeft, arcSize)
 
     if (animatedMarkerAngle != null) {
-      val marker =
-        AndroidPaint()
-          .apply {
-            isAntiAlias = true
-            style = AndroidPaint.Style.STROKE
-            strokeWidth = markerStrokePx
-            strokeCap = AndroidPaint.Cap.ROUND
-          }
-          .asRemotePaint()
-          .apply {
-            color =
-              data.live?.targetVisible?.select(theme.primaryText, Color.Transparent.rc)
-                ?: theme.primaryText
-          }
+      val marker = RemotePaint {
+        isAntiAlias = true
+        style = PaintingStyle.Stroke
+        strokeWidth = markerStrokePx.rf
+        strokeCap = StrokeCap.Round
+      }
+        .apply {
+          color =
+            data.live?.targetVisible?.select(theme.primaryText, Color.Transparent.rc)
+              ?: theme.primaryText
+        }
       drawArc(marker, animatedMarkerAngle, 0.1f.rf, false, topLeft, arcSize)
     }
   }
@@ -841,14 +833,6 @@ private fun StepperButton(
 
 /** A stepper's touch target: Android's 48 dp minimum, around its 36 dp button. */
 private const val StepperTargetDp = 48
-
-private fun Color.toArgb(): Int =
-  android.graphics.Color.argb(
-    (alpha * 255f).toInt(),
-    (red * 255f).toInt(),
-    (green * 255f).toInt(),
-    (blue * 255f).toInt(),
-  )
 
 /**
  * The dial's accent. A live capture paints [HaArcDialData.accent]. A design template whose card

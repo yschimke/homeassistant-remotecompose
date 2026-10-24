@@ -386,14 +386,6 @@ private fun Sparkline(
   }
 }
 
-private fun Color.toArgb(): Int =
-  android.graphics.Color.argb(
-    (alpha * 255f).toInt(),
-    (red * 255f).toInt(),
-    (green * 255f).toInt(),
-    (blue * 255f).toInt(),
-  )
-
 /** A sparkline row's compact trace height: the sensor card, statistics graph and identity tier. */
 const val SPARKLINE_HEIGHT_DP: Int = 28
 

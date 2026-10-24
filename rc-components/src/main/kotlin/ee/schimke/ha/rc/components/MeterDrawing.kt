@@ -2,17 +2,17 @@
 
 package ee.schimke.ha.rc.components
 
-import android.graphics.Paint as AndroidPaint
 import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
 import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.layout.RemoteSize
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemotePaint
-import androidx.compose.remote.creation.compose.state.asRemotePaint
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.graphics.StrokeCap
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -215,22 +215,16 @@ internal fun RemoteDrawScope.outlineRect(
   fillRect(color, x + w - stroke, y, stroke, h)
 }
 
-internal fun strokePaint(widthPx: Float, color: RemoteColor, round: Boolean = true) =
-  AndroidPaint()
-    .apply {
-      isAntiAlias = true
-      style = AndroidPaint.Style.STROKE
-      strokeWidth = widthPx
-      strokeCap = if (round) AndroidPaint.Cap.ROUND else AndroidPaint.Cap.BUTT
-    }
-    .asRemotePaint()
-    .apply { this.color = color }
+internal fun strokePaint(widthPx: Float, color: RemoteColor, round: Boolean = true) = RemotePaint {
+  isAntiAlias = true
+  style = PaintingStyle.Stroke
+  strokeWidth = widthPx.rf
+  strokeCap = if (round) StrokeCap.Round else StrokeCap.Butt
+}
+  .apply { this.color = color }
 
-internal fun fillPaint(color: RemoteColor) =
-  AndroidPaint()
-    .apply {
-      isAntiAlias = true
-      style = AndroidPaint.Style.FILL
-    }
-    .asRemotePaint()
-    .apply { this.color = color }
+internal fun fillPaint(color: RemoteColor) = RemotePaint {
+  isAntiAlias = true
+  style = PaintingStyle.Fill
+}
+  .apply { this.color = color }

@@ -2,7 +2,6 @@
 
 package ee.schimke.ha.rc.components
 
-import android.graphics.Paint as AndroidPaint
 import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
 import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.layout.RemoteSize
@@ -14,11 +13,11 @@ import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemotePaint
-import androidx.compose.remote.creation.compose.state.asRemotePaint
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.selectIfGe
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PaintingStyle
 import kotlin.math.sin
 
 // Console: a 1970s broadcast desk, drawn skeuomorphically — light, depth and material, not flat
@@ -60,14 +59,11 @@ private fun shaderPaint(
   scope: RemoteDrawScope,
   brush: RemoteShaderBrush,
   size: RemoteSize,
-): RemotePaint =
-  AndroidPaint()
-    .apply {
-      isAntiAlias = true
-      style = AndroidPaint.Style.FILL
-    }
-    .asRemotePaint()
-    .also { paint -> with(brush) { scope.applyTo(paint, size) } }
+): RemotePaint = RemotePaint {
+  isAntiAlias = true
+  style = PaintingStyle.Fill
+}
+  .also { paint -> with(brush) { scope.applyTo(paint, size) } }
 
 /** A vertical metal gradient over the box at [y] of height [h]: light at the top, dark below. */
 internal fun RemoteDrawScope.metalPaint(y: RemoteFloat, h: RemoteFloat): RemotePaint =

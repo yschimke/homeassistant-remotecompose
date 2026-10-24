@@ -2,7 +2,6 @@
 
 package ee.schimke.ha.rc.components
 
-import android.graphics.Paint as AndroidPaint
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -21,13 +20,14 @@ import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.asRemotePaint
+import androidx.compose.remote.creation.compose.state.RemotePaint
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
@@ -219,15 +219,12 @@ private fun StackedBars(rows: List<HaHistoryGraphRow>, theme: RemoteHaTheme) {
     val drawW = w - padX * 2f.rf
     val drawH = h - padY * 2f.rf
 
-    val baseline =
-      AndroidPaint()
-        .apply {
-          isAntiAlias = true
-          style = AndroidPaint.Style.STROKE
-          strokeWidth = 1f
-        }
-        .asRemotePaint()
-        .apply { color = theme.divider }
+    val baseline = RemotePaint {
+      isAntiAlias = true
+      style = PaintingStyle.Stroke
+      strokeWidth = 1f.rf
+    }
+      .apply { color = theme.divider }
     drawLine(baseline, RemoteOffset(padX, padY + drawH), RemoteOffset(padX + drawW, padY + drawH))
 
     val slot = drawW / n.toFloat().rf
@@ -241,14 +238,11 @@ private fun StackedBars(rows: List<HaHistoryGraphRow>, theme: RemoteHaTheme) {
         val v = segments[r][i]
         val segTop = padY + drawH * (1f.rf - (cumulative + v) / maxTotal)
         val segHeight = drawH * (v / maxTotal)
-        val fill =
-          AndroidPaint()
-            .apply {
-              isAntiAlias = true
-              style = AndroidPaint.Style.FILL
-              color = rowColors[r].toArgb()
-            }
-            .asRemotePaint()
+        val fill = RemotePaint {
+          isAntiAlias = true
+          style = PaintingStyle.Fill
+          color = rowColors[r].rc
+        }
         drawRect(fill, RemoteOffset(x0, segTop), RemoteSize(barWidth, segHeight))
         cumulative += v
       }
@@ -277,11 +271,3 @@ fun stackMax(rows: List<List<Float>>): Float {
     .maxOfOrNull { i -> rows.sumOf { stackValue(it, i).toDouble() }.toFloat() }
     ?.takeIf { it > 0f } ?: 1f
 }
-
-private fun Color.toArgb(): Int =
-  android.graphics.Color.argb(
-    (alpha * 255f).toInt(),
-    (red * 255f).toInt(),
-    (green * 255f).toInt(),
-    (blue * 255f).toInt(),
-  )
