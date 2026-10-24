@@ -253,7 +253,8 @@ object DashboardDraft {
       "entities",
       "glance",
       "logbook",
-      "map" -> put("entities", JsonArray(listOf(JsonPrimitive(entityId))))
+      "map",
+      "calendar" -> put("entities", JsonArray(listOf(JsonPrimitive(entityId))))
       else -> put("entity", entityId)
     }
   }
@@ -303,8 +304,8 @@ object DashboardDraft {
   /**
    * [card] drawn as [type] instead: its entity in the shape [type] takes, with [SHARED_KEYS] kept
    * (name, icon, size, visibility, actions) and every key specific to the old type dropped, since
-   * it means nothing, or something else, to the new one. A kept size is clamped to the new type's
-   * limits.
+   * it means nothing, or something else, to the new one. A kept size, legacy `layout_options`
+   * included, is clamped to the new type's limits.
    */
   fun withType(card: JsonObject, type: String): JsonObject {
     val entity =
@@ -313,9 +314,13 @@ object DashboardDraft {
     val base = cardFor(entity, type)
     val kept = card.filterKeys { it in SHARED_KEYS }
     val swapped = JsonObject(base + kept)
-    if ("grid_options" !in kept) return swapped
-    val size = size(swapped)
-    return resized(swapped, size.columns, size.rows)
+    return when {
+      "grid_options" in kept -> size(swapped).let { resized(swapped, it.columns, it.rows) }
+      // The older `layout_options` is specific to no type but isn't kept as is: its size moves to
+      // `grid_options`, as a resize would write it.
+      "layout_options" in card -> size(card).let { resized(swapped, it.columns, it.rows) }
+      else -> swapped
+    }
   }
 
   /** Card keys that mean the same on every card type, kept by [withType]. */
