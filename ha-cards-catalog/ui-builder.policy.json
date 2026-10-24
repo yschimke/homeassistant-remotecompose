@@ -3197,6 +3197,24 @@
       "displayName": "Markdown card identity",
       "group": "Card layout",
       "nativeOnly": true
+    },
+    "ha-cards/vertical-stack-card": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaVerticalStackCard",
+      "displayName": "Vertical stack card",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/horizontal-stack-card": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaHorizontalStackCard",
+      "displayName": "Horizontal stack card",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/grid-card": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaGridCard",
+      "displayName": "Grid card",
+      "group": "Card layout",
+      "nativeOnly": true
     }
   },
   "$comment_templates": "Generated, not hand-written: :design-server's HaCardsTemplatesTest seeds each from a card schema (CardSchema.fromCard) with HaCardsSeed — the design server's UiBuilderSeed retargeted to this catalog — and fails when a committed template drifts. `-PhaCardsTemplates.update=true` rewrites them.",

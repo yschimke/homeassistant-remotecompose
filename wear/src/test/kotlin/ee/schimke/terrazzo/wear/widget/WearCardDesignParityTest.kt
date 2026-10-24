@@ -15,8 +15,10 @@ import ee.schimke.ha.rc.cards.ClockCardConverter
 import ee.schimke.ha.rc.cards.EntitiesCardConverter
 import ee.schimke.ha.rc.cards.EntityCardConverter
 import ee.schimke.ha.rc.cards.GaugeCardConverter
+import ee.schimke.ha.rc.cards.GridCardConverter
 import ee.schimke.ha.rc.cards.HeadingCardConverter
 import ee.schimke.ha.rc.cards.HistoryGraphCardConverter
+import ee.schimke.ha.rc.cards.HorizontalStackCardConverter
 import ee.schimke.ha.rc.cards.HumidifierCardConverter
 import ee.schimke.ha.rc.cards.LightCardConverter
 import ee.schimke.ha.rc.cards.LogbookCardConverter
@@ -33,6 +35,7 @@ import ee.schimke.ha.rc.cards.StatisticsGraphCardConverter
 import ee.schimke.ha.rc.cards.ThermostatCardConverter
 import ee.schimke.ha.rc.cards.TileCardConverter
 import ee.schimke.ha.rc.cards.TodoListCardConverter
+import ee.schimke.ha.rc.cards.VerticalStackCardConverter
 import ee.schimke.ha.rc.cards.WeatherForecastCardConverter
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
@@ -606,6 +609,30 @@ class WearCardDesignParityTest {
         """{"type":"statistics-graph","entities":["sensor.energy"]}""",
         """{"type":"markdown","content":"**Hello** there"}""",
         """{"type":"markdown","title":"Notes","content":"# Today\n- bins out"}""",
+      ),
+    )
+  }
+
+  @Test
+  fun containerDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "light.kitchen" to
+              EntityState("light.kitchen", "on", attributes("""{"friendly_name":"Kitchen"}""")),
+            "switch.fan" to
+              EntityState("switch.fan", "off", attributes("""{"friendly_name":"Fan"}""")),
+          )
+      )
+    assertWearParity(
+      "container designs",
+      listOf(VerticalStackCardConverter(), HorizontalStackCardConverter(), GridCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"vertical-stack","cards":[{"type":"tile","entity":"light.kitchen"},{"type":"tile","entity":"switch.fan"}]}""",
+        """{"type":"horizontal-stack","cards":[{"type":"tile","entity":"light.kitchen"},{"type":"tile","entity":"switch.fan"}]}""",
+        """{"type":"grid","columns":2,"cards":[{"type":"button","entity":"light.kitchen"},{"type":"button","entity":"switch.fan"}]}""",
       ),
     )
   }

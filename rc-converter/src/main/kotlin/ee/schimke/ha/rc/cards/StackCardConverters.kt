@@ -36,6 +36,7 @@ import ee.schimke.ha.rc.components.RemoteAspectRatioBox
 import ee.schimke.ha.rc.components.RemoteHaGrid
 import ee.schimke.ha.rc.components.RemoteHaHorizontalStack
 import ee.schimke.ha.rc.components.RemoteHaVerticalStack
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
@@ -45,7 +46,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * Layout-only cards. Each unrolls its `cards:` array through `RenderChild`, which dispatches to the
  * registered converter per child.
  */
-class VerticalStackCardConverter : CardConverter {
+class VerticalStackCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.VERTICAL_STACK
 
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? =
@@ -74,13 +75,17 @@ class VerticalStackCardConverter : CardConverter {
   override fun dataSignature(card: CardConfig, snapshot: HaSnapshot, registry: CardRegistry) =
     registry.childrenDataSignature(childCards(card), snapshot)
 
+  /**
+   * The container and its children, as every surface draws it (`vertical-stack.uid`,
+   * [ContainerDesignParts]).
+   */
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  internal fun Draw(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     RemoteHaVerticalStack(modifier = modifier) { RenderChildren(card, snapshot) }
   }
 }
 
-class HorizontalStackCardConverter : CardConverter {
+class HorizontalStackCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.HORIZONTAL_STACK
 
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? =
@@ -109,8 +114,12 @@ class HorizontalStackCardConverter : CardConverter {
   override fun dataSignature(card: CardConfig, snapshot: HaSnapshot, registry: CardRegistry) =
     registry.childrenDataSignature(childCards(card), snapshot)
 
+  /**
+   * The container and its children, as every surface draws it (`horizontal-stack.uid`,
+   * [ContainerDesignParts]).
+   */
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  internal fun Draw(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     // HA splits a horizontal stack's width evenly; each child is captured for its own column.
     val children = childCards(card)
     ProvideChildCaptureShare(columns = children.size, gapDp = HORIZONTAL_STACK_GAP_DP) {
@@ -144,7 +153,7 @@ class HorizontalStackCardConverter : CardConverter {
  * ([CardConverter.gridSquareCell]) and gives picture-family children a 1:1 default
  * ([LocalGridSquareCells]); `square: false` lets every child keep its own height.
  */
-class GridCardConverter : CardConverter {
+class GridCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.GRID
 
   /** The grid's own structure, beside its children's: only the options the config sets. */
@@ -183,8 +192,11 @@ class GridCardConverter : CardConverter {
   override fun dataSignature(card: CardConfig, snapshot: HaSnapshot, registry: CardRegistry) =
     registry.childrenDataSignature(childCards(card), snapshot)
 
+  /**
+   * The container and its children, as every surface draws it (`grid.uid`, [ContainerDesignParts]).
+   */
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  internal fun Draw(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     // Cells for what the children draw now: a hidden conditional takes no cell, a shown one is
     // sized as the card it shows. Each keeps its authored index for its card-level template
     // bindings.
