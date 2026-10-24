@@ -189,6 +189,7 @@ jobs:
           :rc-player-ui:compileKotlinWasmJs :rc-player-ui:compileKotlinIosSimulatorArm64
           :rc-components:compileKotlinWasmJs :rc-components:compileKotlinIosSimulatorArm64
           :rc-converter:compileKotlinWasmJs :rc-converter:compileKotlinIosSimulatorArm64
+          :ha-cards-catalog:compileKotlinWasmJs :ha-cards-catalog:compileKotlinIosSimulatorArm64
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v7.0.2

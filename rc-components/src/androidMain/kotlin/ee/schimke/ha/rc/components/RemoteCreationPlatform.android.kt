@@ -65,3 +65,8 @@ fun RemoteComposeWriter.addNamedBitmapUrlSized(
 
 actual fun RemoteInt.toPaddedRemoteString(digits: Int): RemoteString =
   toRemoteString(DecimalFormat("0".repeat(digits)))
+
+actual fun RemoteFloat.toDecimalRemoteString(maxFractionDigits: Int): RemoteString =
+  toRemoteString(
+    DecimalFormat(if (maxFractionDigits > 0) "0." + "#".repeat(maxFractionDigits) else "0")
+  )

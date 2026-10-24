@@ -24,11 +24,11 @@ import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
+import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import androidx.wear.compose.remote.material3.RemoteIcon
 import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.rc.RemoteHaAdaptiveMeasurement
 import ee.schimke.ha.rc.cards.climateAccent
@@ -72,8 +72,8 @@ import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.cardChrome
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.ha.rc.components.fraction
+import ee.schimke.ha.rc.components.toDecimalRemoteString
 import ee.schimke.ha.rc.formatValueWithUnit
-import java.text.DecimalFormat
 
 // ---------------------------------------------------------------------------------------------
 // The `ha-cards` palette's Home Assistant components.
@@ -349,11 +349,10 @@ fun HaCardThermostat(
         HaArcDialLive(
           valueFraction = currentPresent.select(unitFraction(currentLive, min, span), 0f.rf),
           targetFraction = targetLive?.let { unitFraction(it, min, span) },
-          centerLabel =
-            currentPresent.select(currentLive.toRemoteString(TemperatureFormat) + unit, "—".rs),
+          centerLabel = currentPresent.select(currentLive.toDecimalRemoteString(1) + unit, "—".rs),
           supportingLabel =
             targetLive?.let {
-              targetPresent!!.select("↑ ".rs + it.toRemoteString(TemperatureFormat) + unit, "".rs)
+              targetPresent!!.select("↑ ".rs + it.toDecimalRemoteString(1) + unit, "".rs)
             },
           modeLabel = LiveValues.state(entity, modeLabel),
           targetVisible = targetPresent,
@@ -365,9 +364,6 @@ fun HaCardThermostat(
 
 /** A pushed temperature above this is real; [HaLiveBindings.ABSENT] is far below it. */
 private const val PresentAbove = -1000f
-
-/** One decimal at most, as HA shows a temperature: `21`, `21.5`. */
-private val TemperatureFormat = DecimalFormat("0.#")
 
 /** ([value] − [min]) ÷ [span], clamped to 0..1, in-document. */
 private fun unitFraction(value: RemoteFloat, min: Float, span: Float): RemoteFloat {
@@ -491,7 +487,7 @@ fun HaCardIcon(
   color: RemoteColor = HaCardColors.Active,
   sizeDp: Int = 24,
 ) {
-  RemoteIcon(
+  RemoteBasicIcon(
     imageVector = HaCardIcons.vector(icon).toRemoteImageVector(),
     contentDescription = icon.rs,
     modifier = modifier.size(sizeDp.rdp),
