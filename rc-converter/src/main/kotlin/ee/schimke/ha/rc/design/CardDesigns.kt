@@ -11,6 +11,7 @@ import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
+import ee.schimke.ha.rc.cards.AlarmDesignParts
 import ee.schimke.ha.rc.cards.ArcDialDesignParts
 import ee.schimke.ha.rc.cards.BulkDesignParts
 import ee.schimke.ha.rc.cards.ButtonDesignParts
@@ -22,6 +23,7 @@ import ee.schimke.ha.rc.cards.GraphDesignParts
 import ee.schimke.ha.rc.cards.HeadingDesignParts
 import ee.schimke.ha.rc.cards.RoomDesignParts
 import ee.schimke.ha.rc.cards.SensorDesignParts
+import ee.schimke.ha.rc.cards.SingleFormDesignParts
 import ee.schimke.ha.rc.cards.TileDesignParts
 import ee.schimke.ha.rc.cards.ValueDesignParts
 import java.util.concurrent.ConcurrentHashMap
@@ -147,6 +149,8 @@ object CardDesigns {
       ValueDesignParts.components +
       BulkDesignParts.components +
       RoomDesignParts.components +
+      AlarmDesignParts.components +
+      SingleFormDesignParts.components +
       GraphDesignParts.components
 
   private val loaded = ConcurrentHashMap<String, Result<CardDesign?>>()
