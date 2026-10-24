@@ -7,6 +7,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.rc.cards.ArcDialDesignParts
+import ee.schimke.ha.rc.cards.BulkDesignParts
 import ee.schimke.ha.rc.cards.ButtonDesignParts
 import ee.schimke.ha.rc.cards.ClockDesignParts
 import ee.schimke.ha.rc.cards.EntityDesignParts
@@ -491,6 +492,30 @@ fun HaStatisticCardFull(
 @RemoteComposable
 fun HaStatisticCardIconChip(modifier: RemoteModifier = RemoteModifier) {
   ValueDesignParts.StatisticIconChip(modifier)
+}
+
+/**
+ * `ha-cards/bulk-card-full`: a logbook, calendar or to-do list in full; [compactRows] keeps a to-do
+ * list to a title over two short rows.
+ */
+@Composable
+@RemoteComposable
+fun HaBulkCardFull(modifier: RemoteModifier = RemoteModifier, compactRows: Boolean = false) {
+  BulkDesignParts.Full(compactRows, modifier)
+}
+
+/** `ha-cards/bulk-card-identity`: the list card's identity for a narrow cell. */
+@Composable
+@RemoteComposable
+fun HaBulkCardIdentity(modifier: RemoteModifier = RemoteModifier) {
+  BulkDesignParts.Identity(modifier)
+}
+
+/** `ha-cards/bulk-card-summary`: the list card's title over its summary line. */
+@Composable
+@RemoteComposable
+fun HaBulkCardSummary(modifier: RemoteModifier = RemoteModifier) {
+  RemoteBox(modifier) { BulkDesignParts.Summary() }
 }
 
 /** `ha-cards/area-card-full`: the area's name, readings and action chips. */

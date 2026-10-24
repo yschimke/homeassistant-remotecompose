@@ -1,27 +1,18 @@
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
-import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaCalendarData
 import ee.schimke.ha.rc.components.HaCalendarEvent
-import ee.schimke.ha.rc.components.RemoteHaCalendar
-import ee.schimke.ha.rc.components.RemoteHaCalendarIdentity
-import ee.schimke.ha.rc.components.RemoteHaSummaryLine
-import ee.schimke.ha.rc.components.cardText
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -39,8 +30,12 @@ import kotlinx.serialization.json.putJsonArray
  * otherwise falls back to a "no upcoming events" stub. Hosts that hydrate events at capture time
  * can extend [HaSnapshot] later; the model accepts any pre-built event list so adapters can plug
  * in.
+ *
+ * Its layout is its card design, `calendar.uid` ([BulkDesignParts]): the full card on a dashboard;
+ * in a launcher cell its identity below 180 dp wide and the full card above; in a Wear slot its
+ * summary line in the Small container and the full card in the Large one.
  */
-class CalendarCardConverter : CardConverter {
+class CalendarCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.CALENDAR
 
   // Baked, non-bindable content (see CardConverter.dataSignature):
@@ -129,36 +124,13 @@ class CalendarCardConverter : CardConverter {
       emptyMap(),
     )
   }
-
-  @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val data = calendarData(card, snapshot)
-
-    when (LocalCardSizeMode.current) {
-      CardSizeMode.Wrap -> RemoteHaCalendar(data, modifier = modifier)
-      // Narrow → next-event identity; wider → the full agenda.
-      // Single width gate (#224).
-      CardSizeMode.Fixed ->
-        BulkTiers(
-          modifier,
-          summary = {
-            RemoteHaSummaryLine(
-              cardText("title", data.title),
-              cardText("summary", calendarSummary(data)),
-            )
-          },
-          identity = { RemoteHaCalendarIdentity(data, RemoteModifier.fillMaxWidth()) },
-          full = { RemoteHaCalendar(data, RemoteModifier.fillMaxWidth()) },
-        )
-    }
-  }
 }
 
 /**
  * The Wear Small summary line: the next event, or that there is none. A `card.summary` binding, so
  * a design template shows the real card's line rather than the template's.
  */
-private fun calendarSummary(data: HaCalendarData): String =
+internal fun calendarSummary(data: HaCalendarData): String =
   data.events.firstOrNull()?.let { "${it.whenLabel} · ${it.summary}" } ?: "No upcoming events"
 
 private fun entityIds(card: CardConfig): List<String> {
@@ -210,7 +182,7 @@ private fun calendarColor(entityId: String, entity: ee.schimke.ha.model.EntitySt
 }
 
 /** The calendar's data for [card] and [snapshot]: what it draws, and what a template binds. */
-private fun calendarData(card: CardConfig, snapshot: HaSnapshot): HaCalendarData {
+internal fun calendarData(card: CardConfig, snapshot: HaSnapshot): HaCalendarData {
   val ids = entityIds(card)
   val title =
     card.raw["title"]?.jsonPrimitive?.content
