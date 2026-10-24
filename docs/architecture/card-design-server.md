@@ -87,8 +87,8 @@ library's, never to nothing.
 | Template playback: slot-binding push; a tap runs the card's own action for the tapped slot | `CachedCardPreview(template = …)`, `CardTemplatePlayback.resolveTap` |
 | App: server, variant and author settings, `CardDesignChoice`, `FileDesignStore`, `LocalCardDesigns`, dashboard hook (reads the cache only) | `app/.../dashboard/CardDesigns.kt`, `PreferencesStore.designServerUrl` / `designVariant` / `designAuthor` |
 | App: nightly manifest sync while charging on an unmetered network, plus one sync whenever the choice changes (and on start) that fetches only the blobs it lacks | `app/.../dashboard/CardDesignSync.kt` |
-| End-to-end test: capture → publish → fetch from a fake host → resolve → bind | `rc-converter/src/test/.../CardDesignTemplatesEndToEndTest.kt` |
-| Pixel parity: each card through its template and through its converter draws identical pixels | `rc-converter/src/test/.../CardDesignParityTest.kt` |
+| End-to-end test: capture → publish → fetch from a fake host → resolve → bind | `rc-converter/src/androidHostTest/.../CardDesignTemplatesEndToEndTest.kt` |
+| Pixel parity: each card through its template and through its converter draws identical pixels | `rc-converter/src/androidHostTest/.../CardDesignParityTest.kt` |
 
 Deliberate spike limits, each owned by a milestone below:
 

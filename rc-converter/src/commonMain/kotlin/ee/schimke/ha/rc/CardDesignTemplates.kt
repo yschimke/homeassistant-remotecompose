@@ -2,11 +2,7 @@
 
 package ee.schimke.ha.rc
 
-import android.content.Context
-import androidx.compose.remote.core.CoreDocument
 import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.RemoteDensity
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.drawWithContent
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
@@ -45,7 +41,7 @@ import kotlinx.serialization.json.jsonPrimitive
 object CardDesignTemplates {
 
   /** RC document API level the mobile-app template targets — the capture profile's level. */
-  val MOBILE_APP_API_LEVEL: Int = CoreDocument.DOCUMENT_API_LEVEL
+  val MOBILE_APP_API_LEVEL: Int = DOCUMENT_API_LEVEL
 
   /**
    * The [DesignKey] a live [card] renders with on [surface], or null when the card has no template
@@ -202,7 +198,7 @@ object CardDesignTemplates {
    * profile, so the bytes play exactly where a live tile would.
    */
   fun capture(
-    context: Context,
+    context: CaptureHost,
     key: DesignKey,
     registry: CardRegistry = defaultTemplateRegistry,
   ): BuiltDesign {
@@ -219,7 +215,7 @@ object CardDesignTemplates {
    * with the modifier it is given, which fills the width and declares the key's binding recipe.
    */
   fun captureWith(
-    context: Context,
+    context: CaptureHost,
     key: DesignKey,
     registry: CardRegistry = defaultTemplateRegistry,
     content: @Composable (card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) -> Unit,
@@ -234,30 +230,24 @@ object CardDesignTemplates {
       // Host density: every dp and sp reads the player's display, never the capture's, so a design
       // captured once (on the design server) plays at any phone's density and font scale. The
       // device folds its own display in once (forDisplay).
-      captureSingleRemoteDocument(
-          context = context,
-          // The header records a canvas; a fixed one keeps the bytes the same on every machine
-          // (a wrap-mode card lays out for the width its host gives it, not this).
-          creationDisplayInfo = TEMPLATE_DISPLAY,
-          remoteDensity = RemoteDensity.Host,
-          profile = androidXExperimentalWrap,
+      // The header records a canvas; a fixed one keeps the bytes the same on every machine (a
+      // wrap-mode card lays out for the width its host gives it, not this).
+      captureTemplateDocument(context, TEMPLATE_DISPLAY) {
+        // Bound name / title text instead of literals: see LocalTemplateBindings.
+        CompositionLocalProvider(
+          LocalTemplateBindings provides TemplateBindings(),
+          // The same bytes whenever it is captured; the client binds the real time.
+          LocalHaClock provides TemplateHaClock,
         ) {
-          // Bound name / title text instead of literals: see LocalTemplateBindings.
-          CompositionLocalProvider(
-            LocalTemplateBindings provides TemplateBindings(),
-            // The same bytes whenever it is captured; the client binds the real time.
-            LocalHaClock provides TemplateHaClock,
-          ) {
-            ProvideExpressionNames {
-              ProvideCardRegistry(registry) {
-                ProvideCardStyle(cardStyle, palette, dark) {
-                  content(card, snapshot, RemoteModifier.fillMaxWidth().declaringRecipe(recipe))
-                }
+          ProvideExpressionNames {
+            ProvideCardRegistry(registry) {
+              ProvideCardStyle(cardStyle, palette, dark) {
+                content(card, snapshot, RemoteModifier.fillMaxWidth().declaringRecipe(recipe))
               }
             }
           }
         }
-        .bytes
+      }
     }
     return BuiltDesign(
       key = key,
@@ -325,7 +315,7 @@ object CardDesignTemplates {
   private val folded = java.util.WeakHashMap<ByteArray, Pair<Pair<Float, Float>, ByteArray?>>()
 
   /** Build every spike template. */
-  fun buildAll(context: Context): List<BuiltDesign> = spikeKeys().map { capture(context, it) }
+  fun buildAll(context: CaptureHost): List<BuiltDesign> = spikeKeys().map { capture(context, it) }
 
   /**
    * This modifier, also declaring [recipe] in the document being captured as the named string
@@ -408,7 +398,7 @@ object CardDesignLibrary {
    * process.
    */
   fun templateOrNull(
-    context: Context,
+    context: CaptureHost,
     key: DesignKey,
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
   ): ByteArray? {
@@ -419,7 +409,7 @@ object CardDesignLibrary {
       throw e
     } catch (e: Exception) {
       if (failed.add(key)) {
-        android.util.Log.w("CardDesignLibrary", "template capture failed for $key", e)
+        logWarning("CardDesignLibrary", "template capture failed for $key", e)
         val report = IllegalStateException("template capture failed for $key", e)
         runCatching { onCaptureFailure?.invoke(key, report) }
       }
@@ -428,7 +418,7 @@ object CardDesignLibrary {
   }
 
   fun template(
-    context: Context,
+    context: CaptureHost,
     key: DesignKey,
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
   ): ByteArray =

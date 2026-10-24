@@ -54,10 +54,10 @@ internal actual fun namedRemoteBitmapUrl(
 internal actual fun RemoteComposeCreationState.supportsOperation(operation: Int): Boolean =
   operation in supportedOperations
 
-internal actual fun RemoteFloat.toPaddedRemoteString(digits: Int): RemoteString =
+actual fun RemoteFloat.toPaddedRemoteString(digits: Int): RemoteString =
   toRemoteString(paddedFormat(digits))
 
-internal actual fun RemoteInt.toPaddedRemoteString(digits: Int): RemoteString =
+actual fun RemoteInt.toPaddedRemoteString(digits: Int): RemoteString =
   toRemoteString(paddedFormat(digits))
 
 /** `java.text.DecimalFormat("0".repeat(digits))`'s settings, in the fork's own format. */

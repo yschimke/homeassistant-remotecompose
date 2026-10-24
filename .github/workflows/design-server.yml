@@ -15,7 +15,7 @@ on:
       - lovelace-catalog/**
       - app-ui/**
       - rc-player-ui/**
-      - rc-converter/src/main/**
+      - rc-converter/src/**
       - rc-components/src/**
       - ha-model/src/**
       - ha-client/src/**

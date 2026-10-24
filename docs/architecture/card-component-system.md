@@ -92,7 +92,7 @@ from those two bindings, so a new value tweens and recolours without a re-encode
   with the stops converted for °F) or `LowIsBad` (battery).
 
 A converter builds a reading with
-[`haReading(entityId, entity, …)`](../../rc-converter/src/main/kotlin/ee/schimke/ha/rc/HaMeasurements.kt),
+[`haReading(entityId, entity, …)`](../../rc-converter/src/commonMain/kotlin/ee/schimke/ha/rc/HaMeasurements.kt),
 which uses `formatState(entity)` for the text (exactly what the hosts push) and classifies the
 kind from `device_class`, falling back to `unit_of_measurement`. The card's own `name:`, `unit:`,
 `min:` and `max:` override the entity's. Without a range, the kind's typical scale applies:
@@ -152,9 +152,9 @@ Two mechanisms make a measurement adaptive, and they stack:
 1. **Continuous: the visual scales.** Inside any tier the glyph is drawn from the live canvas
    size, so a thermometer in a widget the user resizes grows and shrinks with no breakpoint.
 2. **Discrete: one gate picks the rung.**
-   [`RemoteHaAdaptiveMeasurement`](../../rc-converter/src/main/kotlin/ee/schimke/ha/rc/HaMeasurements.kt)
+   [`RemoteHaAdaptiveMeasurement`](../../rc-converter/src/commonMain/kotlin/ee/schimke/ha/rc/HaMeasurements.kt)
    plays `Expanded` in cells at least 120 × 132 dp and `Compact` (centred) in anything smaller.
-   It uses the shared 2-D [`RemoteMinSizeGate`](../../rc-converter/src/main/kotlin/ee/schimke/ha/rc/RemoteMinSizeGate.kt),
+   It uses the shared 2-D [`RemoteMinSizeGate`](../../rc-converter/src/commonMain/kotlin/ee/schimke/ha/rc/RemoteMinSizeGate.kt),
    the single-expression `min(w, h · minW/minH) ≥ minW` test that alpha010 evaluates correctly
    (#224). That is the same gate the button card uses, now shared. The tap target sits on the
    gate rather than in the tiers, because a `RemoteAction` captured in both branches blanks the
