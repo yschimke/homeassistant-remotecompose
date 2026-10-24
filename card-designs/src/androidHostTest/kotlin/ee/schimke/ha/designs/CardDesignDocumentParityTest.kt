@@ -60,8 +60,8 @@ class CardDesignDocumentParityTest {
     requireNotNull(CheckedInCardDesigns.designFor(cardType)) { "no $cardType.uid" }
 
   private fun libraryKeys(cardType: String): List<DesignKey> =
-    GenerateCardDesignLibrary.librarySources()
-      .flatMap { GenerateCardDesignLibrary.keysOf(it.card, it.snapshot) }
+    CardDesignLibrary.librarySources()
+      .flatMap { CardDesignLibrary.keysOf(it.card, it.snapshot) }
       .distinct()
       .filter { it.cardType == cardType }
 }

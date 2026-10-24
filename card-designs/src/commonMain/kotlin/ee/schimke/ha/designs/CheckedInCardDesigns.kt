@@ -1,10 +1,10 @@
 package ee.schimke.ha.designs
 
-import android.content.Context
 import ee.schimke.ha.cards.CardDesignDocument
 import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.design.CardDesignFiles
 import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.rc.CaptureHost
 import ee.schimke.ha.rc.CardDesignTemplates
 import java.io.File
 
@@ -34,13 +34,13 @@ object CheckedInCardDesigns {
   fun designFor(cardType: String): CardDesignDocument? = designs[cardType]
 
   /** The library entry for [key]: from the card type's design when it has one. */
-  fun capture(context: Context, key: DesignKey): BuiltDesign {
+  fun capture(context: CaptureHost, key: DesignKey): BuiltDesign {
     val design = designFor(key.cardType) ?: return CardDesignTemplates.capture(context, key)
     return captureDesign(context, key, design)
   }
 
   /** [design] captured for [key], through the same harness as the converter's template. */
-  fun captureDesign(context: Context, key: DesignKey, design: CardDesignDocument): BuiltDesign =
+  fun captureDesign(context: CaptureHost, key: DesignKey, design: CardDesignDocument): BuiltDesign =
     CardDesignTemplates.captureWith(context, key) { card, snapshot, modifier ->
       design.RenderCard(card, snapshot, modifier)
     }

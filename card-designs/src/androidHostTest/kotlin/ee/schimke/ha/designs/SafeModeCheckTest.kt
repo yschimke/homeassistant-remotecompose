@@ -25,8 +25,8 @@ class SafeModeCheckTest {
   @Test
   fun everyLibraryDocumentPassesTheSafeModeCheck() {
     val keys =
-      GenerateCardDesignLibrary.librarySources()
-        .flatMap { GenerateCardDesignLibrary.keysOf(it.card, it.snapshot) }
+      CardDesignLibrary.librarySources()
+        .flatMap { CardDesignLibrary.keysOf(it.card, it.snapshot) }
         .distinct()
         .distinctBy { Triple(it.cardType, it.variant, it.shape) }
     assertTrue(keys.size > 10, "the library has card keys to check")

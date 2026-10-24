@@ -34,9 +34,7 @@ class ShippedCardDesignsTest {
   fun theAppShipsTheLibrarysDefaultStyle() {
     val context = RuntimeEnvironment.getApplication()
     val keys =
-      GenerateCardDesignLibrary.librarySources()
-        .flatMap { shippedKeysOf(it.card, it.snapshot) }
-        .distinct()
+      CardDesignLibrary.librarySources().flatMap { shippedKeysOf(it.card, it.snapshot) }.distinct()
     assertTrue(keys.isNotEmpty(), "the library's source cards produce designs")
     val built = keys.map { CheckedInCardDesigns.capture(context, it) }
     // Fixed serial and time, so the same designs always write the same manifest.

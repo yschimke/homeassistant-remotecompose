@@ -1,18 +1,9 @@
 package ee.schimke.ha.previews
 
-import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
-import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.model.Section
-import ee.schimke.ha.model.View
-import ee.schimke.ha.model.ViewHeader
+import ee.schimke.ha.model.LovelaceJson
 import java.io.File
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Loader for the per-dashboard JSON snapshots that live in the sibling
@@ -33,11 +24,6 @@ object DashboardFixtures {
         ?: "${System.getProperty("user.home")}/workspace/homeassistant-agents/dashboards"
     )
 
-  private val json = Json {
-    ignoreUnknownKeys = true
-    isLenient = true
-  }
-
   data class Loaded(val dashboard: Dashboard, val snapshot: HaSnapshot)
 
   fun load(name: String): Loaded? {
@@ -47,9 +33,9 @@ object DashboardFixtures {
     // `homeassistant-agents` checkout for local dev when the
     // resources haven't been re-scrubbed yet.
     val (cfgText, statesText) = readBundled(name) ?: readSibling(name) ?: return null
-    val dashboard = parseDashboard(cfgText)
-    val states = parseStates(statesText)
-    val devices = readDevices(name)?.let(::parseDevices).orEmpty()
+    val dashboard = LovelaceJson.dashboard(cfgText)
+    val states = LovelaceJson.states(statesText)
+    val devices = readDevices(name)?.let(LovelaceJson::devices).orEmpty()
     return Loaded(dashboard = dashboard, snapshot = HaSnapshot(states = states, devices = devices))
   }
 
@@ -81,75 +67,4 @@ object DashboardFixtures {
     if (!configFile.exists() || !statesFile.exists()) return null
     return configFile.readText() to statesFile.readText()
   }
-}
-
-/**
- * Parse a `lovelace/config` payload into [Dashboard]. The kotlinx `@Serializable` deserializer
- * doesn't populate [CardConfig.raw] from the flat HA shape, so we walk the tree manually and stash
- * the entire card object into `raw` for converters to read.
- */
-private fun parseDashboard(text: String): Dashboard {
-  val root = Json.parseToJsonElement(text).jsonObject
-  val title = root["title"]?.jsonPrimitive?.content
-  val views = (root["views"] as? JsonArray)?.map { parseView(it.jsonObject) } ?: emptyList()
-  return Dashboard(title = title, views = views)
-}
-
-private fun parseView(obj: JsonObject): View {
-  val title = obj["title"]?.jsonPrimitive?.content
-  val type = obj["type"]?.jsonPrimitive?.content
-  val maxColumns = obj["max_columns"]?.jsonPrimitive?.content?.toIntOrNull()
-  val cards = (obj["cards"] as? JsonArray)?.mapNotNull { it.toCardConfig() } ?: emptyList()
-  val sections =
-    (obj["sections"] as? JsonArray)?.mapNotNull { el ->
-      val s = el as? JsonObject ?: return@mapNotNull null
-      Section(
-        type = s["type"]?.jsonPrimitive?.content,
-        title = s["title"]?.jsonPrimitive?.content,
-        cards = (s["cards"] as? JsonArray)?.mapNotNull { e -> e.toCardConfig() } ?: emptyList(),
-        columnSpan = s["column_span"]?.jsonPrimitive?.content?.toIntOrNull(),
-        rowSpan = s["row_span"]?.jsonPrimitive?.content?.toIntOrNull(),
-      )
-    } ?: emptyList()
-  return View(
-    title = title,
-    type = type,
-    maxColumns = maxColumns,
-    denseSectionPlacement =
-      obj["dense_section_placement"]?.jsonPrimitive?.content?.toBooleanStrictOrNull(),
-    header = ViewHeader.fromJson(obj["header"]),
-    cards = cards,
-    sections = sections,
-  )
-}
-
-private fun kotlinx.serialization.json.JsonElement.toCardConfig(): CardConfig? {
-  val obj = this as? JsonObject ?: return null
-  val type = obj["type"]?.jsonPrimitive?.content ?: return null
-  return CardConfig(type = type, raw = obj)
-}
-
-/**
- * The demo's device registry, `devices.json` beside the states: entity id → [DeviceInfo] (which
- * device it belongs to), as `HaClient.fetchDevices` reports it from a live Home Assistant. Cards
- * configured by device (the Bambu Lab cards' `printer:`) find their entities through it.
- */
-private fun parseDevices(text: String): Map<String, ee.schimke.ha.design.DeviceInfo> = Json {
-  ignoreUnknownKeys = true
-}
-  .decodeFromString(
-    kotlinx.serialization.serializer<Map<String, ee.schimke.ha.design.DeviceInfo>>(),
-    text,
-  )
-
-private fun parseStates(text: String): Map<String, EntityState> {
-  val root = Json.parseToJsonElement(text).jsonObject
-  return root.entries
-    .mapNotNull { (id, el) ->
-      val obj = el as? JsonObject ?: return@mapNotNull null
-      val state = obj["state"]?.jsonPrimitive?.content ?: return@mapNotNull null
-      val attrs = (obj["attributes"] as? JsonObject) ?: JsonObject(emptyMap())
-      id to EntityState(entityId = id, state = state, attributes = attrs)
-    }
-    .toMap()
 }
