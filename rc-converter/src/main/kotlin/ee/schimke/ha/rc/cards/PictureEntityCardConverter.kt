@@ -1,25 +1,17 @@
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.BreakpointAxis
-import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
-import ee.schimke.ha.rc.LocalCardSizeMode
-import ee.schimke.ha.rc.LocalFixedCanvasAxis
-import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaPictureEntityData
 import ee.schimke.ha.rc.components.LiveValues
-import ee.schimke.ha.rc.components.RemoteHaPictureEntity
 import ee.schimke.ha.rc.defaultTapActionFor
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.icons.withIcons
@@ -34,8 +26,12 @@ import kotlinx.serialization.json.put
  * `picture-entity` card. RemoteCompose alpha08 can't pull a live camera stream into a `.rc`
  * document, so the renderer paints a tinted placeholder area + name/state bottom bar; tap forwards
  * to the entity's default action (more-info / toggle).
+ *
+ * Its layout is its card design, `picture-entity.uid` ([PictureDesignParts]): on a dashboard the
+ * image keeps HA's `aspect_ratio`; in a launcher cell it fills the cell, the name dropping below
+ * 180 dp wide so the state badge alone reads; in a Wear slot it fills the slot with its strip.
  */
-class PictureEntityCardConverter : CardConverter {
+class PictureEntityCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.PICTURE_ENTITY
 
   /** A picture's height follows its width: it keeps a grid column's width. */
@@ -106,8 +102,9 @@ class PictureEntityCardConverter : CardConverter {
     return DesignTemplateInput(card, HaSnapshot(states = mapOf(entity.entityId to entity)))
   }
 
+  /** What [card] shows: its entity's picture, icon, name and state, and which strip lines show. */
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  internal fun pictureEntityData(card: CardConfig, snapshot: HaSnapshot): HaPictureEntityData {
     val entityId = card.raw["entity"]?.jsonPrimitive?.content
     val entity = entityId?.let { snapshot.states[it] }
     val name =
@@ -123,57 +120,19 @@ class PictureEntityCardConverter : CardConverter {
 
     val icons = HaIconMap.entityIcons(card.raw["icon"]?.jsonPrimitive?.content, entity)
     val imageUrl = entity?.attributes?.get("entity_picture")?.jsonPrimitive?.content
-    val data =
-      HaPictureEntityData(
-        entityId = entityId,
-        name = name,
-        state = LiveValues.state(entityId, formatState(entity, snapshot)),
-        icon = icons.icon,
-        accent = HaStateColor.toggleAccentFor(entityId, entity).withIcons(icons),
-        showName = showName,
-        showState = showState,
-        imageUrl = imageUrl,
-        tapAction = tapAction,
-      )
-
-    when (LocalCardSizeMode.current) {
-      // Dashboard: HA's `aspect_ratio` — the height follows the live width.
-      CardSizeMode.Wrap ->
-        RemoteHaPictureEntity(data, modifier = modifier, aspectRatio = pictureAspectRatio(card))
-      // Launcher / Wear: the image is the identity edge-to-edge —
-      // it fills and crops the whole cell at every size (no
-      // letterbox). A single width gate drops the name at the
-      // smallest cell so the state badge alone reads, and keeps the
-      // full name+state scrim on wider cells. Single threshold —
-      // alpha010 collapses nested ladders to tier 0 (#224).
-      // A Wear slot is gated on height, not width, and its strip shortens the name rather than
-      // dropping it: the narrowest (a Galaxy Large, 90 dp inside its padding) still names it.
-      CardSizeMode.Fixed ->
-        if (LocalFixedCanvasAxis.current == BreakpointAxis.Height)
-          RemoteHaPictureEntity(data, modifier = modifier.fillMaxSize(), fillHeight = true)
-        else
-          RemoteSizeBreakpoint(
-            thresholdsDp = intArrayOf(PICTURE_IDENTITY_THRESHOLD_DP),
-            modifier = modifier,
-            axis = BreakpointAxis.Width,
-          ) { tier ->
-            val tierData = if (tier == 0) data.copy(showName = false) else data
-            RemoteHaPictureEntity(
-              tierData,
-              modifier = RemoteModifier.fillMaxSize(),
-              fillHeight = true,
-            )
-          }
-    }
+    return HaPictureEntityData(
+      entityId = entityId,
+      name = name,
+      state = LiveValues.state(entityId, formatState(entity, snapshot)),
+      icon = icons.icon,
+      accent = HaStateColor.toggleAccentFor(entityId, entity).withIcons(icons),
+      showName = showName,
+      showState = showState,
+      imageUrl = imageUrl,
+      tapAction = tapAction,
+    )
   }
 }
-
-/**
- * Width gate (dp) for the picture-entity identity tier. Below it (a `2×N` launcher cell) the name
- * strip drops so only the state badge sits over the image; at or above it the full name+state scrim
- * returns. Same ~72 dp cell maths as the bulk family ([BULK_IDENTITY_THRESHOLD_DP]).
- */
-private const val PICTURE_IDENTITY_THRESHOLD_DP: Int = 180
 
 private val TEMPLATE_CONFIG_KEYS =
   setOf("type", "entity", "name", "icon", "show_name", "show_state")

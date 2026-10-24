@@ -9,7 +9,6 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.BreakpointAxis
-import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
@@ -33,6 +32,7 @@ import ee.schimke.ha.rc.components.RemoteHaInput
 import ee.schimke.ha.rc.components.RemoteHaInputForm
 import ee.schimke.ha.rc.components.entityLooks
 import ee.schimke.ha.rc.defaultTapActionFor
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.encodeHaAction
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
@@ -53,8 +53,12 @@ import kotlinx.serialization.json.jsonPrimitive
  * HA's special rows — an entry with a `type` and no `entity` (`section`, `divider`, `weblink`,
  * `buttons`, `call-service` / `perform-action`, `cast`, `conditional`, `custom:*`) — are not drawn:
  * they are not entity rows, and drawing them as one gave a "—" row with a switch.
+ *
+ * Its layout is its card design, `entities.uid` ([EntitiesDesignParts]): the whole list on a
+ * dashboard, [LauncherList] in a launcher cell (the first entity as a tile in one too narrow for a
+ * list, [compactLauncherTile]) and [WearList] in a Wear slot.
  */
-class EntitiesCardConverter : CardConverter {
+class EntitiesCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.ENTITIES
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
@@ -79,19 +83,6 @@ class EntitiesCardConverter : CardConverter {
       cardDataSignature(cardEntityIds(card), snapshot)
     else null
 
-  @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    if (CompactLauncherList(card, snapshot, modifier)) return
-    when (LocalCardSizeMode.current) {
-      CardSizeMode.Wrap -> FullList(card, snapshot, modifier, maxRows = Int.MAX_VALUE)
-      CardSizeMode.Fixed ->
-        when (LocalFixedCanvasAxis.current) {
-          BreakpointAxis.Height -> WearList(card, snapshot, modifier)
-          BreakpointAxis.Width -> LauncherList(card, snapshot, modifier)
-        }
-    }
-  }
-
   /**
    * A Wear slot: every container is the same width and the small and large ones differ only in
    * height, so the single gate is on height ([LocalFixedCanvasAxis]). Both tiers are a list of
@@ -107,7 +98,7 @@ class EntitiesCardConverter : CardConverter {
    * twice.
    */
   @Composable
-  private fun WearList(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  internal fun WearList(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val title = card.raw["title"]?.jsonPrimitive?.content
     val largeRows = if (title != null) WEAR_LARGE_ROWS else WEAR_LARGE_ROWS + 1
     val rows = rows(card, snapshot).take(maxOf(WEAR_SMALL_ROWS, largeRows))
@@ -156,7 +147,7 @@ class EntitiesCardConverter : CardConverter {
    * at capture time), and the matrix's fixed cells pin both.
    */
   @Composable
-  private fun LauncherList(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  internal fun LauncherList(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val title = card.raw["title"]?.jsonPrimitive?.content
     val captureSize = LocalWidgetCaptureSizeDp.current
     val sizedAtCapture = captureSize != null
@@ -219,7 +210,7 @@ class EntitiesCardConverter : CardConverter {
   }
 
   @Composable
-  private fun FullList(
+  internal fun FullList(
     card: CardConfig,
     snapshot: HaSnapshot,
     modifier: RemoteModifier,

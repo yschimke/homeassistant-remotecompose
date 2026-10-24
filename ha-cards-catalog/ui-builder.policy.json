@@ -2942,6 +2942,205 @@
       "displayName": "Picture elements card",
       "group": "Card layout",
       "nativeOnly": true
+    },
+    "ha-cards/weather-forecast-card-full": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaWeatherForecastCardFull",
+      "displayName": "Weather forecast card",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "fill": {
+            "type": "bool",
+            "value": false
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "fill",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Fills a launcher cell's height, leaving the conditions chips to the app card."
+        }
+      ]
+    },
+    "ha-cards/weather-forecast-card-wide": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaWeatherForecastCardWide",
+      "displayName": "Weather forecast card (wide)",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/weather-forecast-card-wear": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaWeatherForecastCardWear",
+      "displayName": "Weather forecast card (Wear)",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "large": {
+            "type": "bool",
+            "value": false
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "large",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "The Wear Large container's form."
+        }
+      ]
+    },
+    "ha-cards/entities-card-full": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaEntitiesCardFull",
+      "displayName": "Entities card",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/entities-card-wear": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaEntitiesCardWear",
+      "displayName": "Entities card (Wear)",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/entities-card-launcher": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaEntitiesCardLauncher",
+      "displayName": "Entities card (launcher)",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/entities-card-first-tile": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaEntitiesCardFirstTile",
+      "displayName": "Entities card first tile",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/entities-card-cell": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaEntitiesCardCell",
+      "displayName": "Entities card cell",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "shelfRole": "Container",
+      "slotCapabilities": [
+        {
+          "name": "tile",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "other",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        }
+      ]
+    },
+    "ha-cards/picture-card-image": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaPictureCardImage",
+      "displayName": "Picture card image",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "fill": {
+            "type": "bool",
+            "value": false
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "fill",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Fills the canvas edge to edge (a launcher or Wear cell); off, the image keeps the card's aspect_ratio."
+        }
+      ]
+    },
+    "ha-cards/picture-entity-card-image": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaPictureEntityCardImage",
+      "displayName": "Picture entity card image",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "fill": {
+            "type": "bool",
+            "value": false
+          },
+          "hideName": {
+            "type": "bool",
+            "value": false
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "fill",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Fills the canvas edge to edge (a launcher or Wear cell); off, the image keeps the card's aspect_ratio."
+        },
+        {
+          "name": "hideName",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Drops the name, so the state badge alone reads."
+        }
+      ]
+    },
+    "ha-cards/picture-glance-card-image": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaPictureGlanceCardImage",
+      "displayName": "Picture glance card image",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "insertContent": {
+        "properties": {
+          "fill": {
+            "type": "bool",
+            "value": false
+          },
+          "showImage": {
+            "type": "bool",
+            "value": true
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "fill",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Fills the canvas edge to edge (a launcher or Wear cell); off, the image keeps the card's aspect_ratio."
+        },
+        {
+          "name": "showImage",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Off keeps the strip of entity cells alone."
+        }
+      ]
     }
   },
   "$comment_templates": "Generated, not hand-written: :design-server's HaCardsTemplatesTest seeds each from a card schema (CardSchema.fromCard) with HaCardsSeed — the design server's UiBuilderSeed retargeted to this catalog — and fails when a committed template drifts. `-PhaCardsTemplates.update=true` rewrites them.",

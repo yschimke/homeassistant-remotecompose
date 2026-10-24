@@ -12,6 +12,7 @@ import ee.schimke.ha.rc.cards.AreaCardConverter
 import ee.schimke.ha.rc.cards.ButtonCardConverter
 import ee.schimke.ha.rc.cards.CalendarCardConverter
 import ee.schimke.ha.rc.cards.ClockCardConverter
+import ee.schimke.ha.rc.cards.EntitiesCardConverter
 import ee.schimke.ha.rc.cards.EntityCardConverter
 import ee.schimke.ha.rc.cards.GaugeCardConverter
 import ee.schimke.ha.rc.cards.HeadingCardConverter
@@ -20,12 +21,16 @@ import ee.schimke.ha.rc.cards.LightCardConverter
 import ee.schimke.ha.rc.cards.LogbookCardConverter
 import ee.schimke.ha.rc.cards.MapCardConverter
 import ee.schimke.ha.rc.cards.MediaControlCardConverter
+import ee.schimke.ha.rc.cards.PictureCardConverter
 import ee.schimke.ha.rc.cards.PictureElementsCardConverter
+import ee.schimke.ha.rc.cards.PictureEntityCardConverter
+import ee.schimke.ha.rc.cards.PictureGlanceCardConverter
 import ee.schimke.ha.rc.cards.SensorCardConverter
 import ee.schimke.ha.rc.cards.StatisticCardConverter
 import ee.schimke.ha.rc.cards.ThermostatCardConverter
 import ee.schimke.ha.rc.cards.TileCardConverter
 import ee.schimke.ha.rc.cards.TodoListCardConverter
+import ee.schimke.ha.rc.cards.WeatherForecastCardConverter
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
@@ -506,6 +511,68 @@ class WearCardDesignParityTest {
         """{"type":"map","entities":["device_tracker.phone"]}""",
         """{"type":"map","title":"Family","entities":["device_tracker.phone"]}""",
         """{"type":"picture-elements","image":"https://example.com/a.jpg","elements":[{"type":"state-icon","entity":"light.porch","style":{"top":"50%","left":"50%"}}]}""",
+      ),
+    )
+  }
+
+  @Test
+  fun entitiesAndWeatherDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "light.kitchen" to EntityState("light.kitchen", "on"),
+            "switch.fan" to EntityState("switch.fan", "off"),
+            "sensor.temperature" to
+              EntityState(
+                "sensor.temperature",
+                "21.5",
+                attributes("""{"unit_of_measurement":"°C","device_class":"temperature"}"""),
+              ),
+            "weather.home" to
+              EntityState(
+                "weather.home",
+                "sunny",
+                attributes("""{"temperature":18,"temperature_unit":"°C","humidity":40}"""),
+              ),
+          )
+      )
+    assertWearParity(
+      "entities and weather designs",
+      listOf(EntitiesCardConverter(), WeatherForecastCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"entities","entities":["light.kitchen","switch.fan"]}""",
+        """{"type":"entities","title":"Home","entities":["light.kitchen","switch.fan","sensor.temperature"]}""",
+        """{"type":"weather-forecast","entity":"weather.home"}""",
+        """{"type":"weather-forecast","entity":"weather.home","show_forecast":false}""",
+      ),
+    )
+  }
+
+  @Test
+  fun pictureDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "camera.front_door" to EntityState("camera.front_door", "idle"),
+            "light.porch" to EntityState("light.porch", "on"),
+            "switch.fan" to EntityState("switch.fan", "off"),
+          )
+      )
+    // Each picture card with and without its optional lines, as SlotWidget keys them.
+    assertWearParity(
+      "picture designs",
+      listOf(PictureCardConverter(), PictureEntityCardConverter(), PictureGlanceCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"picture","image":"https://example.com/a.jpg","name":"Garden"}""",
+        """{"type":"picture","image":"https://example.com/a.jpg"}""",
+        """{"type":"picture-entity","entity":"camera.front_door"}""",
+        """{"type":"picture-entity","entity":"light.porch","show_state":false}""",
+        """{"type":"picture-glance","title":"Garden","entities":["light.porch","switch.fan"]}""",
+        """{"type":"picture-glance","image":"x","entities":["switch.fan"]}""",
       ),
     )
   }
