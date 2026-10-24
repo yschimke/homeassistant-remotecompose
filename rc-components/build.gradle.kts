@@ -76,3 +76,7 @@ configurations.configureEach {
       }
   }
 }
+
+// CI runs `./gradlew test` across modules; a multiplatform module has no `test` of its own, so
+// without this the card tests would silently stop running there.
+tasks.register("test") { dependsOn("testAndroidHostTest") }
