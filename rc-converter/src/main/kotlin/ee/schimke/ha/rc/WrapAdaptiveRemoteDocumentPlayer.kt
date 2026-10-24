@@ -52,8 +52,10 @@ import kotlin.math.min
  *    via [AndroidView] inside. The view runs at EXACTLY constraints from the pinned `Box`, so the
  *    cached intrinsic measurement carries through.
  *
- * Single-View, no throwaway measurer — the same view we warm up is the one Compose displays.
- * Re-warms only when [documentBytes] or the parent's constraints change.
+ * Single-View, no throwaway measurer — the same view we warm up is the one Compose displays. [seed]
+ * writes the host's live values into the View before that warm-up draw, so its first frame shows
+ * current data (docs/architecture/live-card-updates.md § First frame). Re-warms only when
+ * [documentBytes] or the parent's constraints change.
  *
  * **Pinned (EXACTLY) slots.** When the parent fixes *both* axes (`Modifier.size(...)`, or a
  * `fillMaxSize()` inside an already-sized box — the card-history resize preview), the intrinsic
@@ -73,6 +75,7 @@ fun WrapAdaptiveRemoteDocumentPlayer(
   modifier: Modifier = Modifier,
   bitmapLoader: BitmapLoader = BitmapLoader.UNSUPPORTED,
   init: (RemoteComposePlayer) -> Unit = {},
+  seed: (RemoteComposePlayer) -> Unit = {},
   onNamedAction: (name: String, value: Any?) -> Unit = { _, _ -> },
   contentDescription: String? = null,
 ) {
@@ -107,6 +110,9 @@ fun WrapAdaptiveRemoteDocumentPlayer(
                 RemoteComposePlayer(context).apply {
                   setBitmapLoader(bitmapLoader)
                   setDocument(RemoteDocument(decode(documentBytes)))
+                  // The live values before the first draw, so the View starts settled on them
+                  // rather than tweening in from the document's baked ones a frame later.
+                  seed(this)
                   // One off-screen draw warms the paint context so the first
                   // on-screen frame isn't blank; EXACTLY constraints size the
                   // View directly, so no intrinsic re-measure is needed.
@@ -130,6 +136,9 @@ fun WrapAdaptiveRemoteDocumentPlayer(
                 RemoteComposePlayer(context).apply {
                   setBitmapLoader(bitmapLoader)
                   setDocument(RemoteDocument(decode(documentBytes)))
+                  // The live values before the first draw, so the View starts settled on them
+                  // rather than tweening in from the document's baked ones a frame later.
+                  seed(this)
                   primeAndMeasure(this, maxWPx, maxHPx)
                   init(this)
                   // The View only exposes id-keyed action callbacks.

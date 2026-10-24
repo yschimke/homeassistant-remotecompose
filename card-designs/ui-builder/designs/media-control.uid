@@ -1,0 +1,175 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "media-control",
+  "title": "Media control",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 200,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "mode"
+        ]
+      }
+    },
+    "mode": {
+      "id": "mode",
+      "componentId": "ha-cards/card-size-mode",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "wrap": [
+          "full"
+        ],
+        "height": [
+          "wear-tiers"
+        ],
+        "width": [
+          "launcher-tiers"
+        ]
+      }
+    },
+    "full": {
+      "id": "full",
+      "componentId": "ha-cards/media-control-card-full",
+      "properties": {
+        "fill": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "wear-tiers": {
+      "id": "wear-tiers",
+      "componentId": "ha-cards/size-tiers",
+      "properties": {
+        "axis": {
+          "type": "string",
+          "value": "width"
+        },
+        "thresholdsDp": {
+          "type": "string",
+          "value": "260"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {
+        "tier0": [
+          "wear-wide"
+        ],
+        "tier1": [
+          "wear-full"
+        ]
+      }
+    },
+    "wear-wide": {
+      "id": "wear-wide",
+      "componentId": "ha-cards/media-control-card-wide",
+      "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "wear-full": {
+      "id": "wear-full",
+      "componentId": "ha-cards/media-control-card-full",
+      "properties": {
+        "fill": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "launcher-tiers": {
+      "id": "launcher-tiers",
+      "componentId": "ha-cards/size-tiers",
+      "properties": {
+        "axis": {
+          "type": "string",
+          "value": "width"
+        },
+        "thresholdsDp": {
+          "type": "string",
+          "value": "260"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {
+        "tier0": [
+          "launcher-wide"
+        ],
+        "tier1": [
+          "launcher-full"
+        ]
+      }
+    },
+    "launcher-wide": {
+      "id": "launcher-wide",
+      "componentId": "ha-cards/media-control-card-wide",
+      "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    },
+    "launcher-full": {
+      "id": "launcher-full",
+      "componentId": "ha-cards/media-control-card-full",
+      "properties": {
+        "fill": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "slots": {}
+    }
+  }
+}

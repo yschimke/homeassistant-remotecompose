@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
@@ -86,6 +85,7 @@ fun HaRcComposePlayer(
   documentBytes: ByteArray,
   modifier: Modifier = Modifier,
   bitmapLoader: BitmapLoader = BitmapLoader.UNSUPPORTED,
+  imageEpoch: Any? = null,
   namedValues: SnapshotStateMap<String, RcNamedValue> = rememberRcNamedValues(),
   onNamedAction: (name: String, value: Any?) -> Unit = { _, _ -> },
   fallback: @Composable () -> Unit,
@@ -128,8 +128,11 @@ fun HaRcComposePlayer(
     fallback()
     return
   }
-  // A clone ([cloneForPlayer]) shares its source's document, so the decode is what tells them
-  // apart: a new one is a new document to play, with its own state and its own image fetches.
+  // One player per card, across documents: a new document (a clone with a new picture, a
+  // re-encode) plays in the same player, which keeps drawing the last document's pictures and size
+  // until its own load, so a changed card swaps in place rather than blinking or collapsing. A
+  // clone ([cloneForPlayer]) shares its source's bytes but decodes apart, so the player still sees
+  // a new document with its own image fetches.
   // A document that throws while it plays is disabled, and an atomic-symbol warning takes its place
   // (RcErrorBoundary); the rest of the dashboard carries on.
   RcErrorBoundary(
@@ -137,16 +140,20 @@ fun HaRcComposePlayer(
     modifier,
     namedValues = { namedValues.filter { (name, value) -> decoded.declared.accepts(name, value) } },
   ) { fail ->
-    key(decoded) {
+    run {
       val clock = LocalHaClock.current
       // A frozen clock means a preview or test: decode inline, so the image is in place by the
-      // frame
-      // a
-      // capture waits on rather than landing from a background thread after it.
-      val imageLoader =
+      // frame a capture waits on rather than landing from a background thread after it.
+      val baseImageLoader =
         remember(bitmapLoader, clock.isFrozen) {
           bitmapLoader.asRcImageLoader(inline = clock.isFrozen)
         }
+      // The player fetches a document's images once per (document, loader). A new loader identity
+      // fetches them again, drawing the last ones until they land: for a new [imageEpoch] (the
+      // host's picture URLs moved, the document didn't), and for a picture clone
+      // (cloneForPlayer), which shares its source's RcDocument but decodes apart.
+      val imageLoader =
+        remember(baseImageLoader, decoded, imageEpoch) { ReloadingImageLoader(baseImageLoader) }
       // rc-player rejects a write to a name the document doesn't declare (the View player's setters
       // dropped it), and the host pushes every binding of every entity the card references. So the
       // player gets only the values this document declares, with a matching type.
@@ -394,3 +401,10 @@ internal fun HaClock.asRcTimeSource(): RcTimeSource {
 }
 
 private const val TAG = "HaRcComposePlayer"
+
+/** [delegate] under a new identity: a new image load for the player, same loading. */
+private class ReloadingImageLoader(private val delegate: RcImageLoader) : RcImageLoader {
+  override suspend fun load(bitmap: RcBitmapData): ImageBitmap? = delegate.load(bitmap)
+
+  override fun cached(bitmap: RcBitmapData): ImageBitmap? = delegate.cached(bitmap)
+}

@@ -20,6 +20,7 @@ import ee.schimke.ha.rc.cards.ClockDesignParts
 import ee.schimke.ha.rc.cards.EntityDesignParts
 import ee.schimke.ha.rc.cards.GlanceDesignParts
 import ee.schimke.ha.rc.cards.HeadingDesignParts
+import ee.schimke.ha.rc.cards.RoomDesignParts
 import ee.schimke.ha.rc.cards.SensorDesignParts
 import ee.schimke.ha.rc.cards.SingleFormDesignParts
 import ee.schimke.ha.rc.cards.TileDesignParts
@@ -146,6 +147,7 @@ object CardDesigns {
       ArcDialDesignParts.components +
       ValueDesignParts.components +
       BulkDesignParts.components +
+      RoomDesignParts.components +
       AlarmDesignParts.components +
       SingleFormDesignParts.components
 
