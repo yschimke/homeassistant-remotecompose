@@ -7,6 +7,7 @@ import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.UNAVAILABLE_DESIGN_PROPERTY
+import ee.schimke.ha.rc.cards.AreaCardConverter
 import ee.schimke.ha.rc.cards.ButtonCardConverter
 import ee.schimke.ha.rc.cards.CalendarCardConverter
 import ee.schimke.ha.rc.cards.ClockCardConverter
@@ -16,6 +17,7 @@ import ee.schimke.ha.rc.cards.HeadingCardConverter
 import ee.schimke.ha.rc.cards.HumidifierCardConverter
 import ee.schimke.ha.rc.cards.LightCardConverter
 import ee.schimke.ha.rc.cards.LogbookCardConverter
+import ee.schimke.ha.rc.cards.MediaControlCardConverter
 import ee.schimke.ha.rc.cards.SensorCardConverter
 import ee.schimke.ha.rc.cards.StatisticCardConverter
 import ee.schimke.ha.rc.cards.ThermostatCardConverter
@@ -428,6 +430,44 @@ class WearCardDesignParityTest {
         """{"type":"calendar","entities":["calendar.home"]}""",
         """{"type":"todo-list","entity":"todo.shopping"}""",
         """{"type":"todo-list","entity":"todo.shopping","title":"Shopping"}""",
+      ),
+    )
+  }
+
+  @Test
+  fun roomDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "sensor.living_temperature" to
+              EntityState(
+                "sensor.living_temperature",
+                "21.5",
+                attributes("""{"device_class":"temperature","unit_of_measurement":"°C"}"""),
+              ),
+            "light.living" to EntityState("light.living", "on"),
+            "media_player.living_room" to
+              EntityState(
+                "media_player.living_room",
+                "playing",
+                attributes(
+                  """{"friendly_name":"Living room","media_title":"Song","media_artist":"Band",""" +
+                    """"media_duration":200,"media_position":40}"""
+                ),
+              ),
+            "media_player.kitchen" to EntityState("media_player.kitchen", "off"),
+          )
+      )
+    assertWearParity(
+      "room designs",
+      listOf(AreaCardConverter(), MediaControlCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"area","area":"living_room","entities":["sensor.living_temperature","light.living"]}""",
+        """{"type":"area","area":"office"}""",
+        """{"type":"media-control","entity":"media_player.living_room"}""",
+        """{"type":"media-control","entity":"media_player.kitchen"}""",
       ),
     )
   }
