@@ -1,5 +1,6 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.ha.design.CardDesignFiles
 import ee.schimke.ha.design.DesignKey
 import io.ktor.http.Parameters
 import java.net.URLEncoder
@@ -372,7 +373,8 @@ object Pages {
           "<form method=\"post\" action=\"/library/${enc(key.cardType)}/edit\">" +
             "<button type=\"submit\">Edit the library design</button> <span class=\"muted\">" +
             "Changes every ${esc(key.cardType)} in the library once the next import lands " +
-            "(<a href=\"/api/library/sources/${enc(key.cardType)}.uid\">current source</a>)." +
+            "(<a href=\"/api/library/sources/${enc(CardDesignFiles.fileName(key.cardType))}\">" +
+            "current source</a>)." +
             "</span></form>"
         )
       }

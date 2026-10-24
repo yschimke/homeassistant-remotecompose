@@ -3215,6 +3215,36 @@
       "displayName": "Grid card",
       "group": "Card layout",
       "nativeOnly": true
+    },
+    "ha-cards/bambulab-ams-card": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaBambuLabAmsCard",
+      "displayName": "Bambu Lab AMS card",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/bambulab-spool-card": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaBambuLabSpoolCard",
+      "displayName": "Bambu Lab spool card",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/bambulab-print-status-card": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaBambuLabPrintStatusCard",
+      "displayName": "Bambu Lab print status card",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/bambulab-print-control-card": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaBambuLabPrintControlCard",
+      "displayName": "Bambu Lab print control card",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/bambulab-skipobject-card": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaBambuLabSkipObjectCard",
+      "displayName": "Bambu Lab print control (legacy) card",
+      "group": "Card layout",
+      "nativeOnly": true
     }
   },
   "$comment_templates": "Generated, not hand-written: :design-server's HaCardsTemplatesTest seeds each from a card schema (CardSchema.fromCard) with HaCardsSeed — the design server's UiBuilderSeed retargeted to this catalog — and fails when a committed template drifts. `-PhaCardsTemplates.update=true` rewrites them.",

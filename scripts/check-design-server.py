@@ -47,7 +47,8 @@ def main():
     failures = []
 
     # 1. Sources.
-    checked_in = {f[: -len(".uid")]: json.load(open(os.path.join(a.designs, f)))
+    # A custom card type's ":" is "--" in its file name (CardDesignFiles).
+    checked_in = {f[: -len(".uid")].replace("--", ":"): json.load(open(os.path.join(a.designs, f)))
                   for f in sorted(os.listdir(a.designs)) if f.endswith(".uid")}
     try:
         served = {s["cardType"]: s for s in json.loads(fetch(server + "/api/library/sources"))["sources"]}

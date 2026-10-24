@@ -1,5 +1,6 @@
 package ee.schimke.ha.rc.design
 
+import ee.schimke.ha.design.CardDesignFiles
 import ee.schimke.ha.rc.cards.defaultRegistry
 import java.io.File
 import kotlin.test.Test
@@ -21,9 +22,9 @@ class DesignedCardConvertersTest {
   /** The card types with a checked-in design, relative to this module (the test's directory). */
   private val checkedIn: Set<String> =
     File("../card-designs/ui-builder/designs")
-      .listFiles { file -> file.extension == "uid" }
+      .listFiles { file -> file.extension == CardDesignFiles.EXTENSION }
       .orEmpty()
-      .map { it.nameWithoutExtension }
+      .map { CardDesignFiles.cardType(it.nameWithoutExtension) }
       .toSet()
 
   @Test

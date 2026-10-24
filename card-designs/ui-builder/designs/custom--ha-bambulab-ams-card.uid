@@ -1,0 +1,45 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "custom:ha-bambulab-ams-card",
+  "title": "Bambu Lab AMS",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 200,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "card"
+        ]
+      }
+    },
+    "card": {
+      "id": "card",
+      "componentId": "ha-cards/bambulab-ams-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

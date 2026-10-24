@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo.wear.widget
 
 import ee.schimke.ha.cards.CardDesignDocument
+import ee.schimke.ha.design.CardDesignFiles
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
@@ -9,6 +10,11 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.UNAVAILABLE_DESIGN_PROPERTY
 import ee.schimke.ha.rc.cards.AlarmPanelCardConverter
 import ee.schimke.ha.rc.cards.AreaCardConverter
+import ee.schimke.ha.rc.cards.BambuLabAmsCardConverter
+import ee.schimke.ha.rc.cards.BambuLabPrintControlCardConverter
+import ee.schimke.ha.rc.cards.BambuLabPrintStatusCardConverter
+import ee.schimke.ha.rc.cards.BambuLabSkipObjectCardConverter
+import ee.schimke.ha.rc.cards.BambuLabSpoolCardConverter
 import ee.schimke.ha.rc.cards.ButtonCardConverter
 import ee.schimke.ha.rc.cards.CalendarCardConverter
 import ee.schimke.ha.rc.cards.ClockCardConverter
@@ -69,7 +75,8 @@ class WearCardDesignParityTest {
 
   private fun designOf(cardType: String) =
     CardDesignDocument.parse(
-      File(requireNotNull(System.getProperty("cardDesignsDir")), "$cardType.uid").readText()
+      File(requireNotNull(System.getProperty("cardDesignsDir")), CardDesignFiles.fileName(cardType))
+        .readText()
     )
 
   private val design = designOf("tile")
@@ -633,6 +640,53 @@ class WearCardDesignParityTest {
         """{"type":"vertical-stack","cards":[{"type":"tile","entity":"light.kitchen"},{"type":"tile","entity":"switch.fan"}]}""",
         """{"type":"horizontal-stack","cards":[{"type":"tile","entity":"light.kitchen"},{"type":"tile","entity":"switch.fan"}]}""",
         """{"type":"grid","columns":2,"cards":[{"type":"button","entity":"light.kitchen"},{"type":"button","entity":"switch.fan"}]}""",
+      ),
+    )
+  }
+
+  @Test
+  fun bambuDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    fun state(id: String, value: String, attrs: String = "{}") =
+      id to EntityState(id, value, attributes(attrs))
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            state(
+              "sensor.x1c_ams_1_tray_1",
+              "Bambu PLA Basic",
+              """{"color":"#F2C200FF","remain":"80","active":"true"}""",
+            ),
+            state(
+              "sensor.x1c_ams_1_tray_2",
+              "Generic PETG",
+              """{"color":"#1E5AA8FF","remain":"35","active":"false"}""",
+            ),
+            state("sensor.x1c_print_progress", "42", """{"friendly_name":"X1C Print progress"}"""),
+            state("sensor.x1c_current_stage", "printing"),
+            state("sensor.x1c_current_layer", "120"),
+            state("sensor.x1c_total_layer_count", "300"),
+            state("sensor.x1c_remaining_time", "95"),
+            state("button.x1c_pause_printing", "unknown"),
+            state("button.x1c_stop_printing", "unknown"),
+          )
+      )
+    assertWearParity(
+      "bambu designs",
+      listOf(
+        BambuLabAmsCardConverter(),
+        BambuLabSpoolCardConverter(),
+        BambuLabPrintStatusCardConverter(),
+        BambuLabPrintControlCardConverter(),
+        BambuLabSkipObjectCardConverter(),
+      ),
+      snapshot,
+      listOf(
+        """{"type":"custom:ha-bambulab-ams-card","entity_prefix":"x1c"}""",
+        """{"type":"custom:ha-bambulab-spool-card","entity_prefix":"x1c","slot":2}""",
+        """{"type":"custom:ha-bambulab-print_status-card","entity_prefix":"x1c"}""",
+        """{"type":"custom:ha-bambulab-print_control-card","entity_prefix":"x1c"}""",
+        """{"type":"custom:ha-bambulab-skipobject-card","entity_prefix":"x1c"}""",
       ),
     )
   }

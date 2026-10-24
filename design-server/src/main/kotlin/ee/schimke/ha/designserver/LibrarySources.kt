@@ -1,5 +1,6 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.ha.design.CardDesignFiles
 import io.ktor.http.ContentDisposition
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -156,7 +157,7 @@ internal fun Route.librarySourceRoutes(
     val name = call.parameters["name"].orEmpty()
     if (!name.endsWith(".uid")) return@get call.respondText("", status = HttpStatusCode.NotFound)
     val source =
-      runCatching { sources.current(name.removeSuffix(".uid")) }
+      runCatching { sources.current(CardDesignFiles.cardType(name.removeSuffix(".uid"))) }
         .getOrElse {
           return@get call.respondText(
             "UI Builder is unreachable: ${it.message}",

@@ -29,7 +29,6 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.BreakpointAxis
-import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
@@ -43,6 +42,7 @@ import ee.schimke.ha.rc.components.HaType
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.cardChrome
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.formatValueWithUnit
 import kotlinx.serialization.json.JsonArray
@@ -70,12 +70,14 @@ import kotlinx.serialization.json.jsonPrimitive
  * registry, else the only printer there is. With several printers and no way to tell which one a
  * card means, a card says so ("Choose a printer") and never shows, or acts on, a guessed printer.
  *
- * The base [Render] is the chrome-only fallback: variant label, printer, state.
+ * Each card type draws from its card design (`custom--ha-bambulab-<variant>-card.uid`, one part,
+ * [BambuDesignParts]), which draws [Draw]. The base [Draw] is the chrome-only fallback: variant
+ * label, printer, state.
  */
 open class BambuLabCardConverter(
   final override val cardType: String,
   private val variantLabel: String,
-) : CardConverter {
+) : DesignedCardConverter() {
 
   // Signature for the chrome-only fallback render (variant label + printer + state) — baked, not
   // bound (see CardConverter.dataSignature). Which printer was resolved is part of it, so a change
@@ -94,7 +96,7 @@ open class BambuLabCardConverter(
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 96
 
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  internal open fun Draw(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val theme = currentRemoteHaTheme()
     val printer = resolveBambuPrinter(card, snapshot)
     val prefix = printer.prefix
@@ -229,16 +231,16 @@ class BambuLabAmsCardConverter :
   }
 
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  override fun Draw(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val printer = resolveBambuPrinter(card, snapshot)
     val prefix = printer.prefix
     if (prefix == null) {
-      super.Render(card, snapshot, modifier)
+      super.Draw(card, snapshot, modifier)
       return
     }
     val slots = readSpoolSlots(prefix, snapshot, printer.amsIndex)
     if (slots.isEmpty()) {
-      super.Render(card, snapshot, modifier)
+      super.Draw(card, snapshot, modifier)
       return
     }
     ee.schimke.ha.rc.components.RemoteHaBambuAms(
@@ -306,10 +308,10 @@ class BambuLabSpoolCardConverter :
   }
 
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  override fun Draw(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val slot = chosenSlot(card, snapshot)
     if (slot == null) {
-      super.Render(card, snapshot, modifier)
+      super.Draw(card, snapshot, modifier)
       return
     }
     ee.schimke.ha.rc.components.RemoteHaBambuSpool(
@@ -507,10 +509,10 @@ class BambuLabPrintStatusCardConverter :
   }
 
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  override fun Draw(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val prefix = resolveBambuPrinter(card, snapshot).prefix
     if (prefix == null) {
-      super.Render(card, snapshot, modifier)
+      super.Draw(card, snapshot, modifier)
       return
     }
     val data = buildPrintStatusData(prefix, snapshot)
@@ -1094,10 +1096,10 @@ class BambuLabPrintControlCardConverter :
     printControlSignature(card, snapshot) ?: super.dataSignature(card, snapshot)
 
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  override fun Draw(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val data = buildPrintControlData(card, snapshot)
     if (data == null) {
-      super.Render(card, snapshot, modifier)
+      super.Draw(card, snapshot, modifier)
       return
     }
     ee.schimke.ha.rc.components.RemoteHaBambuPrintControl(data, modifier)
@@ -1133,10 +1135,10 @@ class BambuLabSkipObjectCardConverter :
     printControlSignature(card, snapshot) ?: super.dataSignature(card, snapshot)
 
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  override fun Draw(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val data = buildPrintControlData(card, snapshot)
     if (data == null) {
-      super.Render(card, snapshot, modifier)
+      super.Draw(card, snapshot, modifier)
       return
     }
     ee.schimke.ha.rc.components.RemoteHaBambuPrintControl(data, modifier)
