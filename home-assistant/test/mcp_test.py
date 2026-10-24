@@ -42,6 +42,19 @@ class FakeHome:
     def dashboards(self):
         return [{'url_path': None, 'title': 'Overview', 'terrazzo_url': 'http://ha/terrazzo?dashboard='}]
 
+    async def start_edit_session(self, url_path, request):
+        self.started = (url_path, request)
+        return {'session_id': 's1', 'url_path': url_path, 'request': request, 'status': 'open'}
+
+    async def edit_session(self, session_id):
+        if session_id != 's1':
+            raise mcp.ToolError(f'No edit session {session_id}')
+        return {'session_id': 's1', 'notes': [{'text': 'Bigger, please'}], 'dashboard': {'views': []}}
+
+    async def submit_draft(self, session_id, config, summary):
+        self.submitted = (session_id, config, summary)
+        return {'draft_id': 'd1', 'status': 'submitted'}
+
     async def dashboard(self, url_path):
         if url_path == 'missing':
             raise mcp.ToolError('No dashboard missing')
@@ -121,6 +134,37 @@ class McpProtocolTest(unittest.TestCase):
         self.assertIsNone(config['url_path'])
         self.assertEqual(config['config']['views'][0]['cards'][0]['entity'], 'light.kitchen')
         self.assertTrue(call(home, 'get_dashboard', {'url_path': 'missing'})['isError'])
+
+
+    def test_edit_session_tools_pass_through_and_check_their_arguments(self):
+        home = FakeHome()
+        started = call(home, 'start_edit_session', {'url_path': 'garden', 'request': 'Add soil'})
+        self.assertEqual(started['structuredContent']['session_id'], 's1')
+        self.assertEqual(home.started, ('garden', 'Add soil'))
+        self.assertEqual(call(home, 'start_edit_session')['structuredContent']['url_path'], None)
+
+        read = call(home, 'get_edit_session', {'session_id': 's1'})['structuredContent']
+        self.assertEqual(read['notes'][0]['text'], 'Bigger, please')
+        self.assertTrue(call(home, 'get_edit_session', {'session_id': 'nope'})['isError'])
+        self.assertTrue(call(home, 'get_edit_session', {})['isError'])
+
+        config = {'views': [{'cards': []}]}
+        submitted = call(home, 'submit_draft', {'session_id': 's1', 'config': config, 'summary': 'Garden'})
+        self.assertEqual(submitted['structuredContent']['draft_id'], 'd1')
+        self.assertEqual(home.submitted, ('s1', config, 'Garden'))
+        self.assertTrue(call(home, 'submit_draft', {'session_id': 's1', 'config': '{"views": []}'})['isError'])
+
+    def test_card_guide_names_the_native_types_and_sizes(self):
+        guide = call(FakeHome(), 'get_card_guide')['structuredContent']
+        self.assertIn('tile', guide['native_card_types'])
+        self.assertTrue(any('grid_options' in rule for rule in guide['sizing']))
+        self.assertIn('homeassistant-remotecompose', guide['designs'])
+
+    def test_edit_tools_never_claim_to_save(self):
+        # An agent submits drafts; only a person applies them.
+        names = {tool['name'] for tool in mcp.TOOLS}
+        self.assertFalse({'save_dashboard', 'apply_draft'} & names)
+        self.assertIn('submit_draft', names)
 
 
 if __name__ == '__main__':

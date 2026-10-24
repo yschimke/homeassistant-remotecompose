@@ -17,7 +17,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
-from . import mcp
+from . import edits, mcp
 from .const import CONF_MCP_USER, DOMAIN, MCP_METADATA_URL, MCP_URL, PANEL_URL_PATH
 
 SERVER_VERSION = json.loads((Path(__file__).parent / "manifest.json").read_text())["version"]
@@ -175,18 +175,7 @@ class HassHome:
             raise mcp.ToolError(f"Home Assistant refused {service} for {entity_id}: {failure}") from failure
 
     def _dashboards(self):
-        """Lovelace's dashboards by url_path (None for Overview); its data shape varies by release."""
-        data = self._hass.data.get("lovelace")
-        dashboards = getattr(data, "dashboards", None)
-        if dashboards is None and isinstance(data, dict):
-            dashboards = data.get("dashboards")
-        visible = {}
-        for url_path, dashboard in (dashboards or {}).items():
-            config = getattr(dashboard, "config", None) or {}
-            if isinstance(config, dict) and config.get("require_admin") and not self._user.is_admin:
-                continue
-            visible[None if url_path in (None, "lovelace") else url_path] = (dashboard, config)
-        return visible
+        return edits.visible_dashboards(self._hass, self._user)
 
     def dashboards(self):
         listed = []
@@ -212,6 +201,32 @@ class HassHome:
             raise mcp.ToolError(
                 f"Dashboard {url_path or 'Overview'} has no saved configuration: {failure}"
             ) from failure
+
+
+    async def start_edit_session(self, url_path, request):
+        try:
+            session = await edits.async_start(self._hass, self._user, url_path, request)
+        except edits.SessionError as failure:
+            raise mcp.ToolError(str(failure)) from failure
+        return edits.edit_sessions.summary(session)
+
+    async def edit_session(self, session_id):
+        try:
+            return await edits.async_session_for_agent(self._hass, self._user, session_id)
+        except edits.SessionError as failure:
+            raise mcp.ToolError(str(failure)) from failure
+
+    async def submit_draft(self, session_id, config, summary):
+        try:
+            draft = edits.submit(self._hass, self._user, session_id, config, summary)
+        except edits.SessionError as failure:
+            raise mcp.ToolError(str(failure)) from failure
+        return {
+            "draft_id": draft["id"],
+            "status": "submitted",
+            "next": "A person previews this draft and applies it. Call get_edit_session later to "
+            "read their notes if they ask for changes.",
+        }
 
 
 def _entity(state):

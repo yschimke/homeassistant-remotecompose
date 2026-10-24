@@ -79,11 +79,28 @@ Assistant's storage:
      agent**).
    - The editor ends with a card pointing to Home Assistant's own editor and, when
      `get_config`'s `components` lacks `terrazzo`, to the integration's HACS page.
-2. **Integration, edit sessions.** Session storage; WebSocket commands to create, watch, apply and
-   undo (apply admin-only, conditional and in-process); MCP tools to read a session, read the card
-   guide and submit a draft. Tests: `home-assistant/test/mcp_test.py` with the fake home, and the
-   installed-integration test against a real Home Assistant, including the admin refusal for a
-   non-admin save.
+2. **Integration, edit sessions** — done; the phone and panel screens for it come next.
+   - `custom_components/terrazzo/edit_sessions.py` holds the rules with no Home Assistant
+     imports: a session keeps its dashboard, request, starting config, drafts (the newest 10) and
+     notes, and expires a day after its last change (50 at most). A draft must be a config with a
+     `views` list naming only entities the home has. Apply needs the dashboard to still hold the
+     starting config; undo needs it to still hold the applied draft.
+   - `edits.py` keeps the sessions in `.storage/terrazzo.edit_sessions`, reaches the dashboards
+     (only those the caller may see; `require_admin` ones are hidden from other users) and serves
+     the WebSocket commands, each as the connection's user: `terrazzo/edit/start` (returns the
+     session and the prompt to hand an agent), `list`, `get`, `subscribe` (the session now and on
+     every change), `note`, `discard`, and the administrator-only `apply` and `undo`. Apply and
+     undo check and save with no await in between once Lovelace has the dashboard loaded, and
+     refuse YAML dashboards.
+   - The MCP server adds `start_edit_session`, `get_edit_session` (the request, the dashboard as
+     it is now, the latest draft and the notes), `get_card_guide` and `submit_draft`. No tool
+     saves.
+   - Tests: `home-assistant/test/edit_sessions_test.py` and `mcp_test.py` with plain data and a
+     fake home; `installed-edits.test.mjs` in a real Home Assistant: a non-admin's
+     `lovelace/config/save` is refused, a session started over the WebSocket is drafted by the MCP
+     server's non-admin user (a draft naming a missing entity is refused), the owner's
+     subscription sees the draft, the agent can't apply, a dashboard changed meanwhile is not
+     overwritten, and apply and undo round-trip.
 3. **Panel editor and draft preview.** The editor screens move to the shared UI module (`app-ui`)
    so the panel, desktop and phone share one editor and one draft preview; the phone build shows
    only the light edits. `DashboardDraft` (`ha-client`) already holds the add / remove / view
