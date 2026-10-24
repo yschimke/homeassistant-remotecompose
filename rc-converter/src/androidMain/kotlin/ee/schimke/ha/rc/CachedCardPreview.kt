@@ -4,7 +4,6 @@ package ee.schimke.ha.rc
 
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.RestrictTo
 import androidx.compose.remote.core.Operation
 import androidx.compose.remote.core.RemoteContext
 import androidx.compose.remote.core.VariableSupport
@@ -95,7 +94,6 @@ import kotlinx.serialization.json.contentOrNull
  * it — the workaround for https://github.com/yschimke/homeassistant-remotecompose/issues/153.
  */
 @OptIn(ExperimentalRemotePlayerApi::class)
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Composable
 fun CachedCardPreview(
   cacheKey: Any,
