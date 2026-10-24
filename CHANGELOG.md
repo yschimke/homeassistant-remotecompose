@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.64](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.63...v0.1.64) (2026-10-24)
+
+
+### Features
+
+* **app:** keep phone dashboard editing light, and point further editing at the integration ([#1175](https://github.com/yschimke/homeassistant-remotecompose/issues/1175)) ([9ce7dac](https://github.com/yschimke/homeassistant-remotecompose/commit/9ce7dacd7f89f66121d4840d8a1cd192185f2bea))
+* card styles that theme the whole app; skinned card actions sheet ([#1177](https://github.com/yschimke/homeassistant-remotecompose/issues/1177)) ([7beae9b](https://github.com/yschimke/homeassistant-remotecompose/commit/7beae9b0a35c9a1ea685a06e3749cc2252b083fd))
+* **integration:** dashboard edit sessions, where agents draft and people apply ([#1178](https://github.com/yschimke/homeassistant-remotecompose/issues/1178)) ([0760739](https://github.com/yschimke/homeassistant-remotecompose/commit/0760739e456f71d72ac4beaa0f066aa6ce4a3365))
+* **rc-converter:** draw the Bambu Lab cards from their designs ([#1171](https://github.com/yschimke/homeassistant-remotecompose/issues/1171)) ([b6f81aa](https://github.com/yschimke/homeassistant-remotecompose/commit/b6f81aa4cb1ae9f3cd723343b5c393192b3b3e74))
+* skinned more-info sheet with history chart ([#1172](https://github.com/yschimke/homeassistant-remotecompose/issues/1172)) ([8cc2138](https://github.com/yschimke/homeassistant-remotecompose/commit/8cc213855e0895dbe83ffdd8b7c859c3e8fe8708))
+
+
+### Bug Fixes
+
+* **deps:** update compose-ai-tools ([#1174](https://github.com/yschimke/homeassistant-remotecompose/issues/1174)) ([6db96b9](https://github.com/yschimke/homeassistant-remotecompose/commit/6db96b98c2bd9bc27838c7e3f37594f92a16e8c3))
+* **rc-components:** draw the IKEA key chrome once on arc dial steppers ([#1184](https://github.com/yschimke/homeassistant-remotecompose/issues/1184)) ([6fd494f](https://github.com/yschimke/homeassistant-remotecompose/commit/6fd494fb29ae170f0158217f86fcbd087807df3b))
+
 ## [0.1.63](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.62...v0.1.63) (2026-10-24)
 
 
