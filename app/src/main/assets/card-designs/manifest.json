@@ -515,7 +515,7 @@
                 "shape": "date=1;h24=1;has_title=1;large=0;seconds=0;zoned=0",
                 "theme": "baked:TerrazzoHome:light"
             },
-            "sha256": "54271069a54baf3422a38d51f2ecd5b24fcb3de41781342cb110eab403b1d81f",
+            "sha256": "93b36f6d7838755b82a798c15e0a7d2b1a58e4b3b464017d5401436520104b9c",
             "bytes": 938,
             "slots": 0,
             "designId": "library:clock",
@@ -529,7 +529,7 @@
                 "shape": "date=1;h24=1;has_title=1;large=0;seconds=0;zoned=0",
                 "theme": "baked:TerrazzoHome:dark"
             },
-            "sha256": "e42452bed30848a4177547335c0b2bd5955f583927efeb582530671d62a4db91",
+            "sha256": "9d07e6011241b2dbfa56b7db9db4d4341b0fffe7fedbeef1daeae92597449b71",
             "bytes": 938,
             "slots": 0,
             "designId": "library:clock",
@@ -2245,6 +2245,34 @@
         },
         {
             "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=3;e0.device_class=temperature;e0.domain=sensor;e0.has_data=0;e1.device_class=temperature;e1.domain=sensor;e1.has_data=0;e2.device_class=temperature;e2.domain=sensor;e2.has_data=0;has_title=1",
+                "theme": "baked:TerrazzoHome:light"
+            },
+            "sha256": "4e607039ba0f75eaf2dcf81f369fdeee048ee846434c5d644fb7c92a34ee30cd",
+            "bytes": 1342,
+            "slots": 3,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=3;e0.device_class=temperature;e0.domain=sensor;e0.has_data=0;e1.device_class=temperature;e1.domain=sensor;e1.has_data=0;e2.device_class=temperature;e2.domain=sensor;e2.has_data=0;has_title=1",
+                "theme": "baked:TerrazzoHome:dark"
+            },
+            "sha256": "52d9d474f57c542f5579173dfe500527df8ec23aa4e2326e3c7b7b1be13c5d35",
+            "bytes": 1342,
+            "slots": 3,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
                 "cardType": "grid",
                 "surface": "mobile-app",
                 "rcApiLevel": 8,
@@ -3197,6 +3225,34 @@
         },
         {
             "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=2;e0.device_class=temperature;e0.domain=sensor;e0.has_data=0;e1.device_class=temperature;e1.domain=sensor;e1.has_data=0;has_title=1",
+                "theme": "baked:TerrazzoHome:light"
+            },
+            "sha256": "7a178e2db46138693e228a3775b8130722cd6d4400a8c00cbb2594b26c8c5a14",
+            "bytes": 1271,
+            "slots": 2,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=2;e0.device_class=temperature;e0.domain=sensor;e0.has_data=0;e1.device_class=temperature;e1.domain=sensor;e1.has_data=0;has_title=1",
+                "theme": "baked:TerrazzoHome:dark"
+            },
+            "sha256": "4849bcdb75c4e8cf81055f1050813523c7233299e51f75c1e8598e8cba540a07",
+            "bytes": 1271,
+            "slots": 2,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
                 "cardType": "grid",
                 "surface": "mobile-app",
                 "rcApiLevel": 8,
@@ -3981,6 +4037,62 @@
         },
         {
             "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=4;e0.device_class=temperature;e0.domain=sensor;e0.has_data=0;e1.device_class=temperature;e1.domain=sensor;e1.has_data=0;e2.device_class=temperature;e2.domain=sensor;e2.has_data=0;e3.device_class=temperature;e3.domain=sensor;e3.has_data=0;has_title=1",
+                "theme": "baked:TerrazzoHome:light"
+            },
+            "sha256": "2eb292b58090013460824d84da7299eb3ca37d5e6d33c2be34d91d77d1737486",
+            "bytes": 1413,
+            "slots": 4,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=4;e0.device_class=temperature;e0.domain=sensor;e0.has_data=0;e1.device_class=temperature;e1.domain=sensor;e1.has_data=0;e2.device_class=temperature;e2.domain=sensor;e2.has_data=0;e3.device_class=temperature;e3.domain=sensor;e3.has_data=0;has_title=1",
+                "theme": "baked:TerrazzoHome:dark"
+            },
+            "sha256": "954401ffc988dc905178a3d4ad94bd3375a9d308610d9014ccb4823ee9b1fd0f",
+            "bytes": 1413,
+            "slots": 4,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=4;e0.device_class=humidity;e0.domain=sensor;e0.has_data=0;e1.device_class=humidity;e1.domain=sensor;e1.has_data=0;e2.device_class=humidity;e2.domain=sensor;e2.has_data=0;e3.device_class=humidity;e3.domain=sensor;e3.has_data=0;has_title=1",
+                "theme": "baked:TerrazzoHome:light"
+            },
+            "sha256": "2eb292b58090013460824d84da7299eb3ca37d5e6d33c2be34d91d77d1737486",
+            "bytes": 1413,
+            "slots": 4,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=4;e0.device_class=humidity;e0.domain=sensor;e0.has_data=0;e1.device_class=humidity;e1.domain=sensor;e1.has_data=0;e2.device_class=humidity;e2.domain=sensor;e2.has_data=0;e3.device_class=humidity;e3.domain=sensor;e3.has_data=0;has_title=1",
+                "theme": "baked:TerrazzoHome:dark"
+            },
+            "sha256": "954401ffc988dc905178a3d4ad94bd3375a9d308610d9014ccb4823ee9b1fd0f",
+            "bytes": 1413,
+            "slots": 4,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
                 "cardType": "tile",
                 "surface": "mobile-app",
                 "rcApiLevel": 8,
@@ -4625,6 +4737,62 @@
         },
         {
             "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=1;e0.device_class=power;e0.domain=sensor;e0.has_data=0;has_title=1",
+                "theme": "baked:TerrazzoHome:light"
+            },
+            "sha256": "9977de04737d7202625a785e31e7baf7dd03dc24297866514b6174efbd5bb1fc",
+            "bytes": 1185,
+            "slots": 1,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=1;e0.device_class=power;e0.domain=sensor;e0.has_data=0;has_title=1",
+                "theme": "baked:TerrazzoHome:dark"
+            },
+            "sha256": "d5068d10ddd687234ef6f99033097fd3a6e620c1605e2a388c989be113b6b27f",
+            "bytes": 1185,
+            "slots": 1,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=3;e0.device_class=monetary;e0.domain=sensor;e0.has_data=0;e0.icon=mdi:currency-gbp;e1.device_class=monetary;e1.domain=sensor;e1.has_data=0;e1.icon=mdi:currency-gbp;e2.device_class=monetary;e2.domain=sensor;e2.has_data=0;e2.icon=mdi:currency-gbp;has_title=1",
+                "theme": "baked:TerrazzoHome:light"
+            },
+            "sha256": "4e607039ba0f75eaf2dcf81f369fdeee048ee846434c5d644fb7c92a34ee30cd",
+            "bytes": 1342,
+            "slots": 3,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=3;e0.device_class=monetary;e0.domain=sensor;e0.has_data=0;e0.icon=mdi:currency-gbp;e1.device_class=monetary;e1.domain=sensor;e1.has_data=0;e1.icon=mdi:currency-gbp;e2.device_class=monetary;e2.domain=sensor;e2.has_data=0;e2.icon=mdi:currency-gbp;has_title=1",
+                "theme": "baked:TerrazzoHome:dark"
+            },
+            "sha256": "52d9d474f57c542f5579173dfe500527df8ec23aa4e2326e3c7b7b1be13c5d35",
+            "bytes": 1342,
+            "slots": 3,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
                 "cardType": "grid",
                 "surface": "mobile-app",
                 "rcApiLevel": 8,
@@ -4905,6 +5073,62 @@
         },
         {
             "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=3;e0.device_class=power;e0.domain=sensor;e0.has_data=0;e1.domain=sensor;e1.has_data=0;e2.domain=sensor;e2.has_data=0;has_title=1",
+                "theme": "baked:TerrazzoHome:light"
+            },
+            "sha256": "4e607039ba0f75eaf2dcf81f369fdeee048ee846434c5d644fb7c92a34ee30cd",
+            "bytes": 1342,
+            "slots": 3,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=3;e0.device_class=power;e0.domain=sensor;e0.has_data=0;e1.domain=sensor;e1.has_data=0;e2.domain=sensor;e2.has_data=0;has_title=1",
+                "theme": "baked:TerrazzoHome:dark"
+            },
+            "sha256": "52d9d474f57c542f5579173dfe500527df8ec23aa4e2326e3c7b7b1be13c5d35",
+            "bytes": 1342,
+            "slots": 3,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=4;e0.domain=sensor;e0.has_data=0;e1.domain=sensor;e1.has_data=0;e2.domain=sensor;e2.has_data=0;e3.domain=sensor;e3.has_data=0;has_title=1",
+                "theme": "baked:TerrazzoHome:light"
+            },
+            "sha256": "2eb292b58090013460824d84da7299eb3ca37d5e6d33c2be34d91d77d1737486",
+            "bytes": 1413,
+            "slots": 4,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=4;e0.domain=sensor;e0.has_data=0;e1.domain=sensor;e1.has_data=0;e2.domain=sensor;e2.has_data=0;e3.domain=sensor;e3.has_data=0;has_title=1",
+                "theme": "baked:TerrazzoHome:dark"
+            },
+            "sha256": "954401ffc988dc905178a3d4ad94bd3375a9d308610d9014ccb4823ee9b1fd0f",
+            "bytes": 1413,
+            "slots": 4,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
                 "cardType": "grid",
                 "surface": "mobile-app",
                 "rcApiLevel": 8,
@@ -5013,6 +5237,34 @@
             "bytes": 3811,
             "slots": 1,
             "designId": "library:tile",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "markdown",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "blocks=P",
+                "theme": "baked:TerrazzoHome:light"
+            },
+            "sha256": "2ec9fdaeaefd089d11b3b5a8858cef825c8a7266c109c98d8d3a824e924d92be",
+            "bytes": 636,
+            "slots": 0,
+            "designId": "library:markdown",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "markdown",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "blocks=P",
+                "theme": "baked:TerrazzoHome:dark"
+            },
+            "sha256": "880c823217ecd7c7838206cb2e472956936189329b7f15ee43ca7225d0bfdba9",
+            "bytes": 636,
+            "slots": 0,
+            "designId": "library:markdown",
             "title": "Built-in"
         },
         {
@@ -5661,6 +5913,34 @@
         },
         {
             "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=2;e0.device_class=battery;e0.domain=sensor;e0.has_data=0;e0.icon=mdi:battery;e1.device_class=voltage;e1.domain=sensor;e1.has_data=0;e1.icon=mdi:battery;has_title=1",
+                "theme": "baked:TerrazzoHome:light"
+            },
+            "sha256": "7a178e2db46138693e228a3775b8130722cd6d4400a8c00cbb2594b26c8c5a14",
+            "bytes": 1271,
+            "slots": 2,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=2;e0.device_class=battery;e0.domain=sensor;e0.has_data=0;e0.icon=mdi:battery;e1.device_class=voltage;e1.domain=sensor;e1.has_data=0;e1.icon=mdi:battery;has_title=1",
+                "theme": "baked:TerrazzoHome:dark"
+            },
+            "sha256": "4849bcdb75c4e8cf81055f1050813523c7233299e51f75c1e8598e8cba540a07",
+            "bytes": 1271,
+            "slots": 2,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
                 "cardType": "grid",
                 "surface": "mobile-app",
                 "rcApiLevel": 8,
@@ -5853,6 +6133,34 @@
             "bytes": 2666,
             "slots": 1,
             "designId": "library:tile",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=4;e0.device_class=battery;e0.domain=sensor;e0.has_data=0;e0.icon=mdi:battery;e1.device_class=voltage;e1.domain=sensor;e1.has_data=0;e1.icon=mdi:battery;e2.device_class=voltage;e2.domain=sensor;e2.has_data=0;e2.icon=mdi:flash;e3.device_class=temperature;e3.domain=sensor;e3.has_data=0;e3.icon=mdi:thermometer;has_title=1",
+                "theme": "baked:TerrazzoHome:light"
+            },
+            "sha256": "2eb292b58090013460824d84da7299eb3ca37d5e6d33c2be34d91d77d1737486",
+            "bytes": 1413,
+            "slots": 4,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=4;e0.device_class=battery;e0.domain=sensor;e0.has_data=0;e0.icon=mdi:battery;e1.device_class=voltage;e1.domain=sensor;e1.has_data=0;e1.icon=mdi:battery;e2.device_class=voltage;e2.domain=sensor;e2.has_data=0;e2.icon=mdi:flash;e3.device_class=temperature;e3.domain=sensor;e3.has_data=0;e3.icon=mdi:thermometer;has_title=1",
+                "theme": "baked:TerrazzoHome:dark"
+            },
+            "sha256": "954401ffc988dc905178a3d4ad94bd3375a9d308610d9014ccb4823ee9b1fd0f",
+            "bytes": 1413,
+            "slots": 4,
+            "designId": "library:history-graph",
             "title": "Built-in"
         },
         {
@@ -6165,6 +6473,34 @@
         },
         {
             "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=5;e0.domain=sensor;e0.has_data=0;e0.icon=mdi:message-arrow-left;e1.domain=sensor;e1.has_data=0;e1.icon=mdi:message-arrow-right;e2.domain=sensor;e2.has_data=0;e2.icon=mdi:content-duplicate;e3.domain=sensor;e3.has_data=0;e3.icon=mdi:signal;e4.domain=sensor;e4.has_data=0;e4.icon=mdi:signal;has_title=1",
+                "theme": "baked:TerrazzoHome:light"
+            },
+            "sha256": "ec6b6933d23629093149edbbd14e44a1bf6e603eba78bb06f0e86306e9342345",
+            "bytes": 1484,
+            "slots": 5,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=5;e0.domain=sensor;e0.has_data=0;e0.icon=mdi:message-arrow-left;e1.domain=sensor;e1.has_data=0;e1.icon=mdi:message-arrow-right;e2.domain=sensor;e2.has_data=0;e2.icon=mdi:content-duplicate;e3.domain=sensor;e3.has_data=0;e3.icon=mdi:signal;e4.domain=sensor;e4.has_data=0;e4.icon=mdi:signal;has_title=1",
+                "theme": "baked:TerrazzoHome:dark"
+            },
+            "sha256": "02cee5f9a5081d98020ee68b63954dba1198568349fbbc0a519680833e62de4a",
+            "bytes": 1484,
+            "slots": 5,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
                 "cardType": "grid",
                 "surface": "mobile-app",
                 "rcApiLevel": 8,
@@ -6305,6 +6641,34 @@
         },
         {
             "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=4;e0.domain=sensor;e0.has_data=0;e0.icon=mdi:message-arrow-left;e1.domain=sensor;e1.has_data=0;e1.icon=mdi:message-arrow-right;e2.domain=sensor;e2.has_data=0;e2.icon=mdi:message-arrow-left;e3.domain=sensor;e3.has_data=0;e3.icon=mdi:message-arrow-right;has_title=1",
+                "theme": "baked:TerrazzoHome:light"
+            },
+            "sha256": "2eb292b58090013460824d84da7299eb3ca37d5e6d33c2be34d91d77d1737486",
+            "bytes": 1413,
+            "slots": 4,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=4;e0.domain=sensor;e0.has_data=0;e0.icon=mdi:message-arrow-left;e1.domain=sensor;e1.has_data=0;e1.icon=mdi:message-arrow-right;e2.domain=sensor;e2.has_data=0;e2.icon=mdi:message-arrow-left;e3.domain=sensor;e3.has_data=0;e3.icon=mdi:message-arrow-right;has_title=1",
+                "theme": "baked:TerrazzoHome:dark"
+            },
+            "sha256": "954401ffc988dc905178a3d4ad94bd3375a9d308610d9014ccb4823ee9b1fd0f",
+            "bytes": 1413,
+            "slots": 4,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
                 "cardType": "grid",
                 "surface": "mobile-app",
                 "rcApiLevel": 8,
@@ -6329,6 +6693,34 @@
             "bytes": 14760,
             "slots": 4,
             "designId": "library:grid",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "logbook",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=2;e0.device_class=connectivity;e0.domain=binary_sensor;e0.icon=mdi:forum-outline;e1.device_class=connectivity;e1.domain=binary_sensor;e1.icon=mdi:message-bulleted;has_title=1",
+                "theme": "baked:TerrazzoHome:light"
+            },
+            "sha256": "3c0d69a8c36dd2a1f108ba2aab758d0212c32926457037a2fd82b267d002f296",
+            "bytes": 4127,
+            "slots": 2,
+            "designId": "library:logbook",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "logbook",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=2;e0.device_class=connectivity;e0.domain=binary_sensor;e0.icon=mdi:forum-outline;e1.device_class=connectivity;e1.domain=binary_sensor;e1.icon=mdi:message-bulleted;has_title=1",
+                "theme": "baked:TerrazzoHome:dark"
+            },
+            "sha256": "1e1d348097af3ce519e9ecbccf838f8f3513c511046d882a52fc9f8368f3dc61",
+            "bytes": 4127,
+            "slots": 2,
+            "designId": "library:logbook",
             "title": "Built-in"
         },
         {
@@ -6581,6 +6973,34 @@
             "bytes": 2471,
             "slots": 1,
             "designId": "library:tile",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=2;e0.device_class=data_rate;e0.domain=sensor;e0.has_data=0;e1.device_class=data_rate;e1.domain=sensor;e1.has_data=0;has_title=1",
+                "theme": "baked:TerrazzoHome:light"
+            },
+            "sha256": "7a178e2db46138693e228a3775b8130722cd6d4400a8c00cbb2594b26c8c5a14",
+            "bytes": 1271,
+            "slots": 2,
+            "designId": "library:history-graph",
+            "title": "Built-in"
+        },
+        {
+            "key": {
+                "cardType": "history-graph",
+                "surface": "mobile-app",
+                "rcApiLevel": 8,
+                "shape": "count=2;e0.device_class=data_rate;e0.domain=sensor;e0.has_data=0;e1.device_class=data_rate;e1.domain=sensor;e1.has_data=0;has_title=1",
+                "theme": "baked:TerrazzoHome:dark"
+            },
+            "sha256": "4849bcdb75c4e8cf81055f1050813523c7233299e51f75c1e8598e8cba540a07",
+            "bytes": 1271,
+            "slots": 2,
+            "designId": "library:history-graph",
             "title": "Built-in"
         },
         {

@@ -258,6 +258,9 @@ Any rebuild still has to look seamless, so:
 
 ## Known follow-ups
 
-- History sparkline points (`<id>.numeric.<index>`) are baked at capture
-  and refreshed by re-encode; a windowed live push would need history in
-  the binding contract.
+- History sparkline points are live only on the design path: a sensor or
+  history-graph card played from its design binds `<slot>.numeric.<i>`,
+  `<slot>.series_min` and `<slot>.series_span` (`SeriesDesign`). A card
+  outside its design's config keys (`TEMPLATE_CONFIG_KEYS`; layout keys such as
+  `grid_options` never count, `framedDesignProperties`) still bakes its points
+  and re-encodes on `dataSignature`.
