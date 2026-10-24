@@ -87,6 +87,8 @@ jobs:
     with:
       tag: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
       publish: ${{ github.event_name == 'push' || inputs.publish_home_assistant }}
+    secrets:
+      ARTIFACTS_TOKEN: ${{ secrets.ARTIFACTS_TOKEN }}
 
   desktop:
     name: Desktop release assets

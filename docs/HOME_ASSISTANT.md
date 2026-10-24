@@ -9,21 +9,35 @@ Use that URL as the start page in a wall-panel browser. Normal HA login runs fir
 ## Install and update with HACS
 
 The release pipeline publishes two ZIPs containing the same built renderers:
-`terrazzo.zip` for HACS and `terrazzo-home-assistant.zip` for manual installation.
-Releases before 0.1.44 and the source checkout do not include the built
-renderers. Do not select the default branch in HACS. Home Assistant 2024.7 or
-newer is required.
+`terrazzo.zip` and `terrazzo-home-assistant.zip` for manual installation. It
+also commits the contents of `terrazzo.zip` to the `hacs/terrazzo` branch of
+[yschimke/homeassistant-remotecompose-out](https://github.com/yschimke/homeassistant-remotecompose-out)
+and releases them there under the same `vX.Y.Z`. **Install from that repository
+in HACS.** The source checkout does not include the built renderers.
+Home Assistant 2024.7 or newer is required.
+
+HACS currently cannot download GitHub release assets: github.com answers with a
+response header larger than the HTTP client it uses accepts
+([hacs/integration#5643](https://github.com/hacs/integration/issues/5643)).
+Releases from the `-out` repository install file by file from
+`raw.githubusercontent.com` instead, which avoids that header. HACS still logs an
+error for its first attempt, the repository archive, before it falls back to
+the per-file download.
 
 1. Install [HACS](https://www.hacs.xyz/docs/use/) if you do not have it already.
 2. In HACS, open **Custom repositories**, add
-   `https://github.com/yschimke/homeassistant-remotecompose`, and select
+   `https://github.com/yschimke/homeassistant-remotecompose-out`, and select
    **Integration** (not Dashboard). Terrazzo is a custom repository; it does not
    need to be listed in the default HACS store.
-   With My Home Assistant set up, [open the repository in your HACS](https://my.home-assistant.io/redirect/hacs_repository/?owner=yschimke&repository=homeassistant-remotecompose&category=integration)
+   With My Home Assistant set up, [open the repository in your HACS](https://my.home-assistant.io/redirect/hacs_repository/?owner=yschimke&repository=homeassistant-remotecompose-out&category=integration)
    instead of adding it by hand.
-3. Find **Terrazzo Remote Compose** and download a published release containing
-   `terrazzo.zip`. HACS installs its complete contents into
-   `/config/custom_components/terrazzo/`.
+3. Find **Terrazzo Remote Compose** and download a published release. HACS
+   installs its complete contents into `/config/custom_components/terrazzo/`.
+   Do not select a branch.
+
+If you added `https://github.com/yschimke/homeassistant-remotecompose` itself
+before, remove that custom repository and add the `-out` one: both install the
+same `terrazzo` integration, and only one of them should track updates.
 4. Restart Home Assistant, then [set it up](#set-up) and open `/terrazzo`.
 
 If you installed manually before, back up the existing integration outside
@@ -160,7 +174,8 @@ signed-in user's permissions. A restart interrupts HA; arrange the restart with
 the instance owner when an agent installs or updates it.
 
 To roll back with HACS, use its redownload/version selector to choose a previous
-release that contains `terrazzo.zip`, restart HA and refresh tabs. For a manual
+release of the `-out` repository, restart HA and refresh tabs. Its releases start
+at 0.1.63. For a manual
 rollback, restore the backed-up integration directory (outside `custom_components`
 until replacement), or replace it with a checksum-verified older manual ZIP.
 Restore YAML only if it changed. Keep a backup of the last known working package;

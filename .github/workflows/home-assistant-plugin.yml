@@ -13,6 +13,7 @@ on:
       - 'app-ui/**'
       - 'ha-client/**'
       - 'scripts/package-home-assistant.py'
+      - 'scripts/publish-hacs-branch.sh'
       - '.github/workflows/home-assistant-plugin.yml'
   pull_request:
     paths: *paths
@@ -34,6 +35,10 @@ on:
       publish:
         type: boolean
         default: false
+    secrets:
+      # Contents write on yschimke/homeassistant-remotecompose-out only.
+      ARTIFACTS_TOKEN:
+        required: false
 permissions:
   contents: read
 concurrency:
@@ -128,6 +133,10 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ inputs.tag }}
+          path: source
       - uses: actions/download-artifact@v8.0.2
         with:
           name: home-assistant-plugin
@@ -142,3 +151,13 @@ jobs:
           sha256sum -c SHA256SUMS-home-assistant.txt
           gh release view "$RELEASE_TAG" >/dev/null
           gh release upload "$RELEASE_TAG" terrazzo.zip terrazzo-home-assistant.zip SHA256SUMS-home-assistant.txt
+      # HACS cannot download github.com release assets (hacs/integration#5643), so the same
+      # tested zip is also committed, tagged and released on the -out repository's hacs/terrazzo
+      # branch, which HACS fetches file by file from raw.githubusercontent.com.
+      - name: Publish the HACS distribution branch
+        env:
+          GH_TOKEN: ${{ secrets.ARTIFACTS_TOKEN }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          [ -n "$GH_TOKEN" ] || { echo '::error::ARTIFACTS_TOKEN is required to publish the HACS branch'; exit 1; }
+          source/scripts/publish-hacs-branch.sh "$RELEASE_TAG" package/terrazzo.zip
