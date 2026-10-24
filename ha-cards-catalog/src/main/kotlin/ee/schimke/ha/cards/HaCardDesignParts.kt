@@ -15,6 +15,7 @@ import ee.schimke.ha.rc.cards.ContainerDesignParts
 import ee.schimke.ha.rc.cards.EntitiesDesignParts
 import ee.schimke.ha.rc.cards.EntityDesignParts
 import ee.schimke.ha.rc.cards.GlanceDesignParts
+import ee.schimke.ha.rc.cards.GraphDesignParts
 import ee.schimke.ha.rc.cards.HeadingDesignParts
 import ee.schimke.ha.rc.cards.PictureDesignParts
 import ee.schimke.ha.rc.cards.RoomDesignParts
@@ -692,6 +693,48 @@ fun HaPictureGlanceCardImage(
   showImage: Boolean = true,
 ) {
   PictureDesignParts.PictureGlance(fill, showImage, modifier)
+}
+
+/**
+ * `ha-cards/history-graph-card-full`: every entity's trace; [framed] at the family's framed height,
+ * [compactEmptyState] keeps the empty state to one line.
+ */
+@Composable
+@RemoteComposable
+fun HaHistoryGraphCardFull(
+  modifier: RemoteModifier = RemoteModifier,
+  framed: Boolean = false,
+  compactEmptyState: Boolean = false,
+) {
+  GraphDesignParts.HistoryFull(framed, compactEmptyState, modifier)
+}
+
+/** `ha-cards/history-graph-card-identity`: the first trace's spark and latest value. */
+@Composable
+@RemoteComposable
+fun HaHistoryGraphCardIdentity(modifier: RemoteModifier = RemoteModifier) {
+  GraphDesignParts.HistoryIdentity(modifier)
+}
+
+/** `ha-cards/statistics-graph-card-full`: the statistics chart. */
+@Composable
+@RemoteComposable
+fun HaStatisticsGraphCardFull(modifier: RemoteModifier = RemoteModifier) {
+  GraphDesignParts.StatisticsFull(modifier)
+}
+
+/** `ha-cards/markdown-card-full`: the markdown card's title over every block. */
+@Composable
+@RemoteComposable
+fun HaMarkdownCardFull(modifier: RemoteModifier = RemoteModifier) {
+  GraphDesignParts.MarkdownFull(modifier)
+}
+
+/** `ha-cards/markdown-card-identity`: the markdown card's title and first line. */
+@Composable
+@RemoteComposable
+fun HaMarkdownCardIdentity(modifier: RemoteModifier = RemoteModifier) {
+  GraphDesignParts.MarkdownIdentity(modifier)
 }
 
 /** `ha-cards/vertical-stack-card`: a vertical stack's children, one under another. */

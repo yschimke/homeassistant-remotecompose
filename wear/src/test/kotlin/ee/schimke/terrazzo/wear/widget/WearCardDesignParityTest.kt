@@ -17,11 +17,13 @@ import ee.schimke.ha.rc.cards.EntityCardConverter
 import ee.schimke.ha.rc.cards.GaugeCardConverter
 import ee.schimke.ha.rc.cards.GridCardConverter
 import ee.schimke.ha.rc.cards.HeadingCardConverter
+import ee.schimke.ha.rc.cards.HistoryGraphCardConverter
 import ee.schimke.ha.rc.cards.HorizontalStackCardConverter
 import ee.schimke.ha.rc.cards.HumidifierCardConverter
 import ee.schimke.ha.rc.cards.LightCardConverter
 import ee.schimke.ha.rc.cards.LogbookCardConverter
 import ee.schimke.ha.rc.cards.MapCardConverter
+import ee.schimke.ha.rc.cards.MarkdownCardConverter
 import ee.schimke.ha.rc.cards.MediaControlCardConverter
 import ee.schimke.ha.rc.cards.PictureCardConverter
 import ee.schimke.ha.rc.cards.PictureElementsCardConverter
@@ -29,6 +31,7 @@ import ee.schimke.ha.rc.cards.PictureEntityCardConverter
 import ee.schimke.ha.rc.cards.PictureGlanceCardConverter
 import ee.schimke.ha.rc.cards.SensorCardConverter
 import ee.schimke.ha.rc.cards.StatisticCardConverter
+import ee.schimke.ha.rc.cards.StatisticsGraphCardConverter
 import ee.schimke.ha.rc.cards.ThermostatCardConverter
 import ee.schimke.ha.rc.cards.TileCardConverter
 import ee.schimke.ha.rc.cards.TodoListCardConverter
@@ -576,6 +579,36 @@ class WearCardDesignParityTest {
         """{"type":"picture-entity","entity":"light.porch","show_state":false}""",
         """{"type":"picture-glance","title":"Garden","entities":["light.porch","switch.fan"]}""",
         """{"type":"picture-glance","image":"x","entities":["switch.fan"]}""",
+      ),
+    )
+  }
+
+  @Test
+  fun graphDesignsAreTheWearTemplateForEveryShapeAndStyle() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "sensor.temperature" to
+              EntityState(
+                "sensor.temperature",
+                "21.5",
+                attributes("""{"unit_of_measurement":"°C","device_class":"temperature"}"""),
+              ),
+            "sensor.energy" to
+              EntityState("sensor.energy", "12.5", attributes("""{"unit_of_measurement":"kWh"}""")),
+          )
+      )
+    assertWearParity(
+      "graph designs",
+      listOf(HistoryGraphCardConverter(), StatisticsGraphCardConverter(), MarkdownCardConverter()),
+      snapshot,
+      listOf(
+        """{"type":"history-graph","entities":["sensor.temperature"]}""",
+        """{"type":"history-graph","title":"Climate","entities":["sensor.temperature","sensor.energy"]}""",
+        """{"type":"statistics-graph","entities":["sensor.energy"]}""",
+        """{"type":"markdown","content":"**Hello** there"}""",
+        """{"type":"markdown","title":"Notes","content":"# Today\n- bins out"}""",
       ),
     )
   }

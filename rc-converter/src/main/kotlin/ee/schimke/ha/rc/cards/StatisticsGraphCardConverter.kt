@@ -1,6 +1,5 @@
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
@@ -8,7 +7,6 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.StatisticPoint
-import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
@@ -17,11 +15,11 @@ import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaHistoryGraphRow
 import ee.schimke.ha.rc.components.HaStatisticsGraphData
 import ee.schimke.ha.rc.components.LiveValues
-import ee.schimke.ha.rc.components.RemoteHaStatisticsGraph
 import ee.schimke.ha.rc.components.barRange
 import ee.schimke.ha.rc.components.placeholderTitle
 import ee.schimke.ha.rc.components.stackMax
 import ee.schimke.ha.rc.components.stackValue
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -42,7 +40,7 @@ import kotlinx.serialization.json.putJsonArray
  * and the `stack: true` modifier are forwarded to the renderer; absent `stat_types` defaults to
  * `[mean]`.
  */
-class StatisticsGraphCardConverter : CardConverter {
+class StatisticsGraphCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.STATISTICS_GRAPH
 
   // Baked, non-bindable content (see CardConverter.dataSignature):
@@ -164,8 +162,9 @@ class StatisticsGraphCardConverter : CardConverter {
     return CardSnapshotBindings(strings, emptyMap(), emptyMap(), floats)
   }
 
+  /** What [card] shows: its title, period and a row per entity and statistic. */
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  internal fun statisticsGraphData(card: CardConfig, snapshot: HaSnapshot): HaStatisticsGraphData {
     val title = card.raw["title"]?.jsonPrimitive?.content
     val ids = entityIds(card)
     val stats = statTypes(card)
@@ -190,15 +189,12 @@ class StatisticsGraphCardConverter : CardConverter {
       }
     }
 
-    RemoteHaStatisticsGraph(
-      HaStatisticsGraphData(
-        title = title,
-        rangeLabel = periodLabel(card),
-        rows = rows,
-        chartType = chartType,
-        stacked = stacked,
-      ),
-      modifier = modifier,
+    return HaStatisticsGraphData(
+      title = title,
+      rangeLabel = periodLabel(card),
+      rows = rows,
+      chartType = chartType,
+      stacked = stacked,
     )
   }
 }
