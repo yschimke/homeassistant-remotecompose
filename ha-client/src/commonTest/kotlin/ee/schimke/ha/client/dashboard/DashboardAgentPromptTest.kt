@@ -5,6 +5,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -87,5 +88,18 @@ class DashboardAgentPromptTest {
     assertFailsWith<IllegalArgumentException> {
       DashboardAgentPrompt.parseAnswer("""{"views": [1]}""")
     }
+  }
+
+  @Test
+  fun theEditorsHandoffCarriesSizingAndTheCardDesignCatalog() {
+    val dashboard = buildJsonObject { put("views", JsonArray(emptyList())) }
+    val plain = DashboardAgentPrompt.build("Fill it", dashboard, emptyList())
+    val handoff =
+      DashboardAgentPrompt.build("Fill it", dashboard, emptyList(), withDesignTools = true)
+    assertTrue(DashboardAgentPrompt.DESIGN_TOOLS !in plain)
+    assertTrue(DashboardAgentPrompt.SIZING in handoff)
+    assertTrue("homeassistant-remotecompose" in handoff)
+    assertTrue("catalog_render_matrix" in handoff)
+    assertTrue(handoff.indexOf("## Request") > handoff.indexOf(DashboardAgentPrompt.DESIGN_TOOLS))
   }
 }

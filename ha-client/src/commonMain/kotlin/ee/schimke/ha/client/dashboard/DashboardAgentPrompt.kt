@@ -46,17 +46,67 @@ object DashboardAgentPrompt {
       .trimIndent()
 
   /**
+   * How a card's size is written, for an agent laying out the editor's draft. Matches
+   * [DashboardDraft]'s resize, and HA's section grid ([ee.schimke.ha.model.SectionCardGrid]).
+   */
+  val SIZING: String =
+    """
+    Card sizes (sections views):
+    - Each section is a 12-column grid. Size a card with `"grid_options": {"columns": N, "rows": R}`:
+      columns 3, 6, 9 or "full" (a quarter, half, three quarters or all of the section), rows a
+      number of 56 dp rows or "auto" for the card's natural height.
+    - On a phone a section is about 400 dp wide: 3 columns is about 95 dp, 6 about 195 dp.
+      Two tiles share a row at 6 columns each; gauges, graphs, forecasts and lists read best "full".
+    - Cards fill each section's rows in order, left to right, so order the cards the way they
+      should read and give neighbours widths that add up to 12.
+    """
+      .trimIndent()
+
+  /**
+   * How an agent can look at harc's card designs before choosing them: the hosted Compose Preview
+   * catalog (the `compose-preview-catalog` MCP server in this repository's `.mcp.json`), which
+   * publishes every card design as a preview it can render at other sizes.
+   */
+  val DESIGN_TOOLS: String =
+    """
+    Seeing harc's card designs:
+    - harc's card designs are published as previews in the hosted Compose Preview catalog, an MCP
+      server at https://preview.coo.ee/mcp (catalog id `homeassistant-remotecompose`). If you can
+      add MCP servers, add it; reading previews needs a short-lived grant: call `request_access`,
+      show the person its `approveUrl` and `userCode`, then poll `poll_access` until it is
+      approved and pass the token it returns as the `token` argument.
+    - `catalog_list_previews` with `query` `card-<type>` (for example `card-gauge`, `card-tile`,
+      `card-thermostat`, `card-history`) lists a card type's designs, light and dark.
+    - `catalog_render_preview` with `observe: "png"` shows one. To see how a card reads at another
+      width, render it with the `device` override (an id from `catalog_list_devices`, such as
+      `id:small_phone` at 360 dp or `id:pixel_fold` at 841 dp), or compare several widths at once
+      with `catalog_render_matrix` and `axes: {"device": [...]}`.
+    - Use what you see to pick each card's type and size. If you can't reach the catalog, go by
+      the card types and sizes above.
+    """
+      .trimIndent()
+
+  /**
    * The prompt for [request] against [dashboard] (its current Lovelace config), listing [states]'
-   * entities. [title] names the dashboard for the agent.
+   * entities. [title] names the dashboard for the agent. [withDesignTools] adds [SIZING] and
+   * [DESIGN_TOOLS], for the dashboard editor's handoff, where the agent populates a draft the user
+   * then arranges.
    */
   fun build(
     request: String,
     dashboard: JsonObject,
     states: Collection<EntityState>,
     title: String? = null,
+    withDesignTools: Boolean = false,
   ): String = buildString {
     appendLine(GUIDE)
     appendLine()
+    if (withDesignTools) {
+      appendLine(SIZING)
+      appendLine()
+      appendLine(DESIGN_TOOLS)
+      appendLine()
+    }
     appendLine("## Request")
     appendLine(request.trim().ifEmpty { "Improve this dashboard." })
     appendLine()

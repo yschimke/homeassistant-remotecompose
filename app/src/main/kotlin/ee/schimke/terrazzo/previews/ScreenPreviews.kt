@@ -1102,3 +1102,68 @@ fun Play_Tablet10_01_Home() =
       onCardLongPress = { _, _ -> },
     )
   }
+
+/** A small sections dashboard over the demo climate entities, for the dashboard editor previews. */
+private val EDITOR_SAMPLE_CONFIG =
+  kotlinx.serialization.json.Json.parseToJsonElement(
+      """
+      {"title":"Climate","views":[{"title":"Home","type":"sections","sections":[
+        {"type":"grid","cards":[
+          {"type":"heading","heading":"Rooms"},
+          {"type":"tile","entity":"sensor.downstairs_temperature","name":"Downstairs"},
+          {"type":"tile","entity":"sensor.upstairs_temperature","name":"Upstairs"},
+          {"type":"tile","entity":"sensor.kids_room_temperature","name":"Kids room",
+            "grid_options":{"columns":"full"}},
+          {"type":"tile","entity":"sensor.downstairs_humidity","name":"Humidity",
+            "grid_options":{"columns":9}}
+        ]},
+        {"type":"grid","cards":[
+          {"type":"heading","heading":"Outside"},
+          {"type":"weather-forecast","entity":"weather.forecast_home"}
+        ]}
+      ]}]}
+      """
+    )
+    .let { it as kotlinx.serialization.json.JsonObject }
+
+@Composable
+private fun EditorPreviewHost(selection: ee.schimke.ha.client.dashboard.CardAddress?) = PhoneHost {
+  val session = remember { demoSession() }
+  val edits = remember {
+    ee.schimke.ha.client.dashboard.DashboardEditSession(
+      EDITOR_SAMPLE_CONFIG,
+      readOnlyReason = null,
+    ) { _, _ ->
+    }
+  }
+  ee.schimke.terrazzo.dashboard.DashboardEditor(
+    session = session,
+    edits = edits,
+    title = "Climate",
+    snapshot = remember { session.dashboardNow("climate").second },
+    snackbars = remember { androidx.compose.material3.SnackbarHostState() },
+    onBack = {},
+    onSaved = {},
+    launch = {},
+    initialSelection = selection,
+  )
+}
+
+@Preview(
+  name = "dashboard editor",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_DashboardEditor() = EditorPreviewHost(selection = null)
+
+@Preview(
+  name = "dashboard editor · card selected",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_DashboardEditor_Selected() =
+  EditorPreviewHost(selection = ee.schimke.ha.client.dashboard.CardAddress(0, 0, 4))

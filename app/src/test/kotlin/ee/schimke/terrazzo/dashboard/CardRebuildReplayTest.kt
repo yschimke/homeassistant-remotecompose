@@ -5,9 +5,9 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.JinjaTemplate
 import ee.schimke.ha.model.TemplateBindings
 import ee.schimke.ha.rc.CardDesignTemplates
+import ee.schimke.ha.rc.StablePictures
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardIconSignature
-import ee.schimke.ha.rc.cardPictureSignature
 import ee.schimke.ha.rc.cards.cardVisibilitySignature
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
@@ -22,10 +22,10 @@ import org.robolectric.annotation.Config
 /**
  * How often each dashboard card rebuilds its document on live data, replayed over an hour of demo
  * mode's values (they move each minute, cameras every ten seconds): the parts of `CardSlot`'s cache
- * key that come from the snapshot, plus `CachedCardPreview`'s picture signature, sampled every ten
- * seconds. Any change is a rebuild the card's named bindings didn't carry. A card played from a
- * card design ("template") only re-decodes for a new picture and costs nothing for the rest; a
- * converter card re-captures its document for any of them.
+ * key that come from the snapshot, plus which picture slots have a picture (a new picture loads in
+ * place, `StablePictures`), sampled every ten seconds. Any change is a rebuild the card's named
+ * bindings didn't carry. A card played from a card design ("template") costs nothing for any of
+ * them; a converter card re-captures its document.
  *
  * Writes `build/reports/card-rebuilds.md`; prints the same table.
  */
@@ -52,7 +52,7 @@ class CardRebuildReplayTest {
         TemplateBindings.cardTemplates(card).associate {
           it.key to JinjaTemplate.render(it.template, snapshot)
         },
-      Reason.Picture to cardPictureSignature(card, snapshot),
+      Reason.Picture to StablePictures.presence(card, snapshot),
     )
 
   private class Tally(val type: String) {
@@ -90,11 +90,8 @@ class CardRebuildReplayTest {
           if (changed.isNotEmpty()) {
             tally.rebuilds++
             // What CachedCardPreview does for it: a converter card captures again; a templated one
-            // re-decodes for a new picture and only swaps bindings otherwise.
-            when {
-              !templated -> tally.encodes++
-              Reason.Picture in changed -> tally.decodes++
-            }
+            // only swaps bindings.
+            if (!templated) tally.encodes++
             changed.forEach { tally.byReason.merge(it, 1, Int::plus) }
           }
           previous = now

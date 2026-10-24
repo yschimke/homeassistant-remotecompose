@@ -91,6 +91,7 @@ import ee.schimke.ha.rc.LovelaceSectionCardFlow
 import ee.schimke.ha.rc.LovelaceSectionsGrid
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
+import ee.schimke.ha.rc.StablePictures
 import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardIconSignature
@@ -1609,10 +1610,12 @@ private fun CardSlot(
       bitmapLoader = bitmapLoader,
       template = template,
       rebuildReason = ::cardSlotRebuildReason,
+      // A camera's new frame or rotated token loads in place: the capture names pictures by entity.
+      stablePictures = true,
     ) {
       ProvideCardRegistry(registry) {
         ProvideCardStyle(cardStyle, haTheme, dark) {
-          RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+          RenderChild(card, StablePictures.snapshot(card, snapshot), RemoteModifier.fillMaxWidth())
         }
       }
     }

@@ -17,6 +17,22 @@ inline fun <T> harcTrace(name: String, block: () -> T): T {
   }
 }
 
+/**
+ * [harcTrace] for a suspending [block], which can resume on another thread than it started on: an
+ * async section, which the same `TraceSectionMetric`s match by name.
+ */
+suspend fun <T> harcTraceSuspend(name: String, block: suspend () -> T): T {
+  val cookie = asyncTraceCookies.incrementAndGet()
+  Trace.beginAsyncSection(name, cookie)
+  try {
+    return block()
+  } finally {
+    Trace.endAsyncSection(name, cookie)
+  }
+}
+
+private val asyncTraceCookies = java.util.concurrent.atomic.AtomicInteger()
+
 /** Trace section names `:app-benchmark` measures. */
 object HarcTraceSections {
   /** Resolving a card's design template (the server's or the local library's) for its key. */

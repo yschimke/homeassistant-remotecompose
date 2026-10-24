@@ -20,8 +20,10 @@ import androidx.compose.runtime.setValue
  * stays in the title-side dropdown so users don't have to scroll past "Home screen widgets" /
  * "Settings" entries to reach the dashboards they actually want to switch between.
  *
- * [onOpenAgent], when non-null, adds an "Edit with an agent" entry at the top. [onInstallOnWatch],
- * when non-null, adds "Install on watch" for a connected watch without the watch app.
+ * [onEditDashboard] and [onNewDashboard], when non-null, add "Edit dashboard" and "New dashboard"
+ * at the top. [onOpenAgent], when non-null, adds an "Edit with an agent" entry after them.
+ * [onInstallOnWatch], when non-null, adds "Install on watch" for a connected watch without the
+ * watch app.
  */
 @Composable
 fun TopBarOverflowMenu(
@@ -32,6 +34,8 @@ fun TopBarOverflowMenu(
   onSignOut: () -> Unit,
   onOpenAgent: (() -> Unit)? = null,
   onInstallOnWatch: (() -> Unit)? = null,
+  onEditDashboard: (() -> Unit)? = null,
+  onNewDashboard: (() -> Unit)? = null,
 ) {
   var expanded by remember { mutableStateOf(false) }
   IconButton(onClick = { expanded = true }) {
@@ -39,6 +43,8 @@ fun TopBarOverflowMenu(
   }
   DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
     val close = { expanded = false }
+    onEditDashboard?.let { MenuEntry("Edit dashboard", close, it) }
+    onNewDashboard?.let { MenuEntry("New dashboard", close, it) }
     // Set only on narrow windows, where the top bar folds its agent icon in here to give the
     // dashboard title the width.
     onOpenAgent?.let { MenuEntry("Edit with an agent", close, it) }
