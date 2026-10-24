@@ -217,7 +217,11 @@ object LauncherDesigns {
           creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
           profile = profile,
         ) {
-          CompositionLocalProvider(LocalTemplateBindings provides TemplateBindings()) {
+          CompositionLocalProvider(
+            LocalTemplateBindings provides TemplateBindings(),
+            // The same bytes whenever it is captured; the client binds the real time.
+            LocalHaClock provides TemplateHaClock,
+          ) {
             ProvideExpressionNames {
               LauncherWidgetContent(
                 registry,
