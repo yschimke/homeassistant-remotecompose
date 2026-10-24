@@ -314,6 +314,32 @@ class HaClient(
       .toMap()
   }
 
+  /**
+   * Register a new storage-mode dashboard (`lovelace/dashboards/create`) at [urlPath], which HA
+   * requires to contain a hyphen, and save [config] as its first Lovelace config: a dashboard HA
+   * just created has none, and reading it would fail. Admin only; HA's refusal is the thrown error.
+   */
+  suspend fun createDashboard(
+    urlPath: String,
+    title: String,
+    config: JsonObject,
+    icon: String? = null,
+  ): DashboardSummary {
+    runCommand("lovelace/dashboards/create") {
+      put("url_path", urlPath)
+      put("title", title)
+      put("mode", "storage")
+      put("show_in_sidebar", true)
+      put("require_admin", false)
+      if (icon != null) put("icon", icon)
+    }
+    awaitCommand("lovelace/config/save") {
+      put("config", config)
+      put("url_path", urlPath)
+    }
+    return DashboardSummary(urlPath = urlPath, title = title, icon = icon)
+  }
+
   /** Top-level Lovelace dashboards registered in `lovelace/dashboards`. */
   suspend fun listDashboards(): List<DashboardSummary> {
     val result = runCommandArray("lovelace/dashboards/list")
