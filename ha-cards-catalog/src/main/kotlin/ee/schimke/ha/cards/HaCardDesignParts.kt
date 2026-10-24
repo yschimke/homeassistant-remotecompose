@@ -12,6 +12,7 @@ import ee.schimke.ha.rc.cards.ClockDesignParts
 import ee.schimke.ha.rc.cards.EntityDesignParts
 import ee.schimke.ha.rc.cards.GlanceDesignParts
 import ee.schimke.ha.rc.cards.HeadingDesignParts
+import ee.schimke.ha.rc.cards.RoomDesignParts
 import ee.schimke.ha.rc.cards.SensorDesignParts
 import ee.schimke.ha.rc.cards.TileDesignParts
 import ee.schimke.ha.rc.cards.ValueDesignParts
@@ -490,4 +491,35 @@ fun HaStatisticCardFull(
 @RemoteComposable
 fun HaStatisticCardIconChip(modifier: RemoteModifier = RemoteModifier) {
   ValueDesignParts.StatisticIconChip(modifier)
+}
+
+/** `ha-cards/area-card-full`: the area's name, readings and action chips. */
+@Composable
+@RemoteComposable
+fun HaAreaCardFull(modifier: RemoteModifier = RemoteModifier) {
+  RoomDesignParts.AreaFull(modifier)
+}
+
+/** `ha-cards/area-card-summary`: the area's name over its first reading. */
+@Composable
+@RemoteComposable
+fun HaAreaCardSummary(modifier: RemoteModifier = RemoteModifier) {
+  RemoteBox(modifier) { RoomDesignParts.AreaSummary() }
+}
+
+/**
+ * `ha-cards/media-control-card-full`: the player's art, titles, transport row and seek bar; [fill]
+ * fills a fixed cell's height.
+ */
+@Composable
+@RemoteComposable
+fun HaMediaControlCardFull(modifier: RemoteModifier = RemoteModifier, fill: Boolean = false) {
+  RoomDesignParts.MediaFull(fill, modifier)
+}
+
+/** `ha-cards/media-control-card-wide`: the player's art and play/pause hero. */
+@Composable
+@RemoteComposable
+fun HaMediaControlCardWide(modifier: RemoteModifier = RemoteModifier) {
+  RoomDesignParts.MediaWide(modifier)
 }

@@ -7,9 +7,6 @@ import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.Window
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.design.CardDesignSlots
@@ -19,22 +16,14 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.BreakpointAxis
-import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
-import ee.schimke.ha.rc.LocalCardSizeMode
-import ee.schimke.ha.rc.LocalFixedCanvasAxis
-import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaAreaAction
 import ee.schimke.ha.rc.components.HaAreaCardData
 import ee.schimke.ha.rc.components.HaAreaStat
 import ee.schimke.ha.rc.components.LiveValues
-import ee.schimke.ha.rc.components.RemoteHaArea
-import ee.schimke.ha.rc.components.RemoteHaSummaryLine
-import ee.schimke.ha.rc.components.cardText
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.formatValueWithUnit
 import kotlinx.serialization.json.JsonObject
@@ -49,8 +38,12 @@ import kotlinx.serialization.json.putJsonArray
  * channel. We accept an optional `entities:` list (HA also accepts that as an override) —
  * temperature / humidity sensors light the stat row, light/cover/fan entities become action chips.
  * Tap fires the entity's domain toggle.
+ *
+ * Its layout is its card design, `area.uid` ([RoomDesignParts]): the full card on a dashboard and
+ * in a launcher cell; in a Wear slot the area's name over its first reading in the Small container
+ * and the full card in the Large one.
  */
-class AreaCardConverter : CardConverter {
+class AreaCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.AREA
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 140
@@ -127,8 +120,9 @@ class AreaCardConverter : CardConverter {
     return HaAction.Toggle(id)
   }
 
+  /** What [card] shows: the area's name, its readings and its action chips. */
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  internal fun areaData(card: CardConfig, snapshot: HaSnapshot): HaAreaCardData {
     val name = nameOf(card)
 
     val explicitEntities = card.raw["entities"] as? kotlinx.serialization.json.JsonArray
@@ -182,30 +176,7 @@ class AreaCardConverter : CardConverter {
       )
     }
 
-    val data = HaAreaCardData(name = name, stats = stats, actions = actions)
-    if (
-      LocalCardSizeMode.current == CardSizeMode.Fixed &&
-        LocalFixedCanvasAxis.current == BreakpointAxis.Height
-    ) {
-      // A Wear slot: the Small container holds the area's name over its first reading, the Large
-      // one the full card.
-      RemoteSizeBreakpoint(
-        thresholdsDp = intArrayOf(WEAR_SMALL_MAX_HEIGHT_DP),
-        modifier = modifier,
-        axis = BreakpointAxis.Height,
-      ) { tier ->
-        if (tier == 0) {
-          RemoteHaSummaryLine(
-            if (stats.isEmpty()) "Area".rs else cardText("name", name),
-            stats.firstOrNull()?.label ?: cardText("name", name),
-          )
-        } else {
-          RemoteHaArea(data, modifier = RemoteModifier.fillMaxWidth())
-        }
-      }
-      return
-    }
-    RemoteHaArea(data, modifier = modifier)
+    return HaAreaCardData(name = name, stats = stats, actions = actions)
   }
 }
 
