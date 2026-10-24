@@ -329,7 +329,9 @@ For editing a dashboard there are `start_edit_session`, `get_edit_session`, `get
 person previews one and applies it with their own Home Assistant administrator account, only while
 the dashboard is still as it was when the session started. Home Assistant lets only
 administrators save dashboards anyway, so an MCP server user who isn't one can draft but not
-apply. Sessions are kept for a day after their last change.
+apply. Sessions are kept for a day after their last change. **Ask an agent** in the phone app's
+dashboard editor, or in a dashboard's top bar in the panel, starts a session, hands out its prompt
+and previews each draft with the dashboard's own cards.
 
 **Connecting a client.** A cloud assistant connects from its provider's servers, so Home
 Assistant must be reachable over HTTPS from the internet (Nabu Casa, or your own TLS and reverse

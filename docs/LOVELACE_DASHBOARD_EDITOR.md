@@ -89,7 +89,10 @@ shows the dashboard. The dashboard view itself flows cards by harc's own design 
 Adding cards, sections, views or dashboards and changing a card's settings are not on the phone.
 The editor ends with **Open in Home Assistant**, which opens the dashboard in HA's own editor, and,
 when HA's `get_config` doesn't list the `terrazzo` component, **Install with HACS** for the Terrazzo
-integration, where the panel editor and agent edit sessions will live.
+integration. With it installed the card offers **Ask an agent** instead: an edit session in Home
+Assistant whose prompt the phone shares with the person's AI assistant, and whose drafts it draws
+with the dashboard's own cards for the person to apply, answer with a note, or discard
+([dashboard-editing.md](architecture/dashboard-editing.md)).
 
 ## Plan cards on Android
 

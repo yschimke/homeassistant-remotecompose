@@ -1,5 +1,9 @@
 package ee.schimke.ha.client
 
+import ee.schimke.ha.client.dashboard.AgentEditSession
+import ee.schimke.ha.client.dashboard.AgentEdits
+import ee.schimke.ha.client.dashboard.DashboardConflictException
+import ee.schimke.ha.client.dashboard.StartedAgentEdit
 import ee.schimke.ha.design.DeviceInfo
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.EntityState
@@ -34,12 +38,16 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -260,8 +268,7 @@ class HaClient(
     config: JsonObject,
     urlPath: String? = null,
   ) = dashboardWriteMutex.withLock {
-    if (fetchDashboardConfig(urlPath) != expected)
-      throw ee.schimke.ha.client.dashboard.DashboardConflictException()
+    if (fetchDashboardConfig(urlPath) != expected) throw DashboardConflictException()
     awaitCommand("lovelace/config/save") {
       put("config", config)
       if (urlPath != null) put("url_path", urlPath)
@@ -476,6 +483,155 @@ class HaClient(
       pendingMutex.withLock { pending.remove(id) }
     }
   }
+
+  /**
+   * A command that answers with events until it is unsubscribed (`terrazzo/edit/subscribe`): its
+   * events while collected, the latest kept for a collector that starts after the ack. Cancelling
+   * the collection unsubscribes; the flow fails when the socket goes, so a caller re-subscribes on
+   * the next connection.
+   */
+  private fun subscription(
+    type: String,
+    extra: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit,
+  ): Flow<JsonObject> = flow {
+    val s = session ?: throw CommandNotSentException("Not connected — call connect() first")
+    val id = idMutex.withLock { nextId++ }
+    val events =
+      MutableSharedFlow<JsonObject>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    subscriptionsMutex.withLock { subscriptions[id] = Subscription(s, events) }
+    val deferred = CompletableDeferred<JsonObject>()
+    pendingMutex.withLock { pending[id] = Pending(s, deferred) }
+    try {
+      sessionMutex.withLock {
+        val live = session ?: throw CommandNotSentException("Not connected (cmd=$type)")
+        if (live !== s) throw CommandNotSentException("Connection replaced before send (cmd=$type)")
+        live.send(
+          json.encodeToString(
+            JsonObject.serializer(),
+            buildJsonObject {
+              put("id", id)
+              put("type", type)
+              extra()
+            },
+          )
+        )
+      }
+      val ack = withTimeout(30_000) { deferred.await() }
+      if (ack["success"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() == false) {
+        val error = ack["error"] as? JsonObject
+        throw HaCommandException(
+          type,
+          error?.get("code")?.jsonPrimitive?.contentOrNull,
+          error?.get("message")?.jsonPrimitive?.contentOrNull ?: "unknown",
+        )
+      }
+      coroutineScope {
+        // The receive loop drops a dead socket's subscriptions without closing their flows.
+        val watchdog = launch {
+          _state.first { it != ConnectionState.Ready }
+          throw CommandNotSentException("Connection closed (subscription $type)")
+        }
+        events.collect { emit(it) }
+        watchdog.cancel()
+      }
+    } finally {
+      pendingMutex.withLock { pending.remove(id) }
+      val removed = subscriptionsMutex.withLock { subscriptions.remove(id) } != null
+      if (removed && session === s) {
+        withContext(NonCancellable) {
+          runCatching {
+            withTimeoutOrNull(5.seconds) {
+              awaitCommand("unsubscribe_events") { put("subscription", id) }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /** The Terrazzo integration's edit sessions on this Home Assistant, as this connection's user. */
+  val agentEdits: AgentEdits =
+    object : AgentEdits {
+      private fun sessionOf(result: JsonObject) =
+        json.decodeFromJsonElement(
+          AgentEditSession.serializer(),
+          result.getValue("session"),
+        )
+
+      private suspend fun edit(
+        type: String,
+        extra: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit,
+      ): JsonObject =
+        try {
+          runCommand(type, extra)
+        } catch (e: HaCommandException) {
+          if (e.code == "conflict") throw DashboardConflictException(e.reason)
+          throw e
+        }
+
+      override suspend fun start(
+        urlPath: String?,
+        request: String,
+      ): StartedAgentEdit {
+        val result =
+          edit("terrazzo/edit/start") {
+            if (urlPath != null) put("url_path", urlPath)
+            put("request", request)
+          }
+        return StartedAgentEdit(
+          sessionOf(result),
+          result["prompt"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+        )
+      }
+
+      override suspend fun open(urlPath: String?) =
+        (edit("terrazzo/edit/list") { if (urlPath != null) put("url_path", urlPath) }["sessions"]
+            as? JsonArray)
+          .orEmpty()
+          .map {
+            json.decodeFromJsonElement(
+              AgentEditSession.serializer(),
+              it,
+            )
+          }
+
+      override suspend fun get(sessionId: String) =
+        sessionOf(edit("terrazzo/edit/get") { put("session_id", sessionId) })
+
+      override suspend fun resume(sessionId: String): StartedAgentEdit {
+        val result = edit("terrazzo/edit/get") { put("session_id", sessionId) }
+        return StartedAgentEdit(
+          sessionOf(result),
+          result["prompt"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+        )
+      }
+
+      override fun watch(sessionId: String) =
+        subscription("terrazzo/edit/subscribe") { put("session_id", sessionId) }
+          .map { sessionOf(it) }
+
+      override suspend fun note(sessionId: String, text: String) =
+        sessionOf(
+          edit("terrazzo/edit/note") {
+            put("session_id", sessionId)
+            put("text", text)
+          }
+        )
+
+      override suspend fun discard(sessionId: String) =
+        sessionOf(edit("terrazzo/edit/discard") { put("session_id", sessionId) })
+
+      override suspend fun apply(sessionId: String, draftId: String) =
+        sessionOf(
+          edit("terrazzo/edit/apply") {
+            put("session_id", sessionId)
+            put("draft_id", draftId)
+          }
+        )
+
+      override suspend fun undo(sessionId: String) =
+        sessionOf(edit("terrazzo/edit/undo") { put("session_id", sessionId) })
+    }
 
   /**
    * Fetch the current set of HA persistent notifications — the things behind the frontend's bell
@@ -696,8 +852,12 @@ class HaClient(
         val resp = deferred.await()
         val success = resp["success"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
         if (!success) {
-          val err = resp["error"]?.jsonObject?.get("message")?.jsonPrimitive?.content ?: "unknown"
-          error("HA command $type failed: $err")
+          val error = resp["error"] as? JsonObject
+          throw HaCommandException(
+            type,
+            error?.get("code")?.jsonPrimitive?.contentOrNull,
+            error?.get("message")?.jsonPrimitive?.contentOrNull ?: "unknown",
+          )
         }
         resp
       }
@@ -880,3 +1040,10 @@ private fun kotlinx.serialization.json.JsonElement.nullableString(): String? =
  * failure may have reached Home Assistant.
  */
 class CommandNotSentException(message: String) : IllegalStateException(message)
+
+/**
+ * Home Assistant answered a command with an error: [code] is its error code (`unauthorized`,
+ * `not_found`, or a command's own), [reason] its message for the person.
+ */
+class HaCommandException(val command: String, val code: String?, val reason: String) :
+  IllegalStateException("HA command $command failed: $reason")

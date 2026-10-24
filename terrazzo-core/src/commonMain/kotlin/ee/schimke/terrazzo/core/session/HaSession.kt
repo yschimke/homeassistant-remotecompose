@@ -164,6 +164,14 @@ interface HaSession {
     throw UnsupportedOperationException("This session can't save dashboards to Home Assistant.")
 
   /**
+   * The Terrazzo integration's agent edit sessions on this Home Assistant
+   * (docs/architecture/dashboard-editing.md), or null for sessions with no Home Assistant behind
+   * them (demo, offline). Whether the integration is installed is `get_config`'s `components`.
+   */
+  val agentEdits: ee.schimke.ha.client.dashboard.AgentEdits?
+    get() = null
+
+  /**
    * Fetch HA's `get_config` payload — version + `internal_url` / `external_url`. Live sessions
    * round-trip the WebSocket; demo / offline sessions return null so callers can skip the
    * persist-public-URL side effect.
@@ -423,6 +431,9 @@ class LiveHaSession(
       ?: emptyMap()
 
   override suspend fun fetchInstanceConfig(): HaInstanceConfig = client.fetchConfig()
+
+  override val agentEdits: ee.schimke.ha.client.dashboard.AgentEdits
+    get() = client.agentEdits
 
   override suspend fun createLongLivedToken(clientName: String, lifespanDays: Int): String =
     client.createLongLivedAccessToken(clientName, lifespanDays)

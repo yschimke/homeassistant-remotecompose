@@ -28,8 +28,8 @@ class DashboardDraftTest {
     assertEquals("Garden", created["title"]!!.jsonPrimitive.content)
     assertTrue(DashboardDraft.isSections(created, 0))
     assertEquals(1, DashboardDraft.sections(created, 0).size)
-    // It is a dashboard the agent prompt parser accepts.
-    DashboardAgentPrompt.parseAnswer(created.toString())
+    // A dashboard as the integration checks a draft: a views list of objects.
+    assertTrue((created["views"] as JsonArray).all { it is JsonObject })
   }
 
   @Test

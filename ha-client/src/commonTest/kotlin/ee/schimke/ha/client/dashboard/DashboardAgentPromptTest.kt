@@ -2,14 +2,10 @@ package ee.schimke.ha.client.dashboard
 
 import ee.schimke.ha.model.EntityState
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 class DashboardAgentPromptTest {
@@ -26,10 +22,9 @@ class DashboardAgentPromptTest {
     )
 
   @Test
-  fun thePromptCarriesTheRequestDashboardAndEntities() {
-    val prompt =
-      DashboardAgentPrompt.build(
-        request = "Add soil moisture charts",
+  fun theContextCarriesTheDashboardAndEntities() {
+    val context =
+      DashboardAgentPrompt.context(
         dashboard = dashboard,
         states =
           listOf(
@@ -38,68 +33,16 @@ class DashboardAgentPromptTest {
           ),
         title = "Garden",
       )
-    assertTrue(prompt.startsWith(DashboardAgentPrompt.GUIDE))
-    assertTrue("Add soil moisture charts" in prompt)
-    assertTrue("## Current dashboard (Garden)" in prompt)
-    assertTrue("\"title\": \"Garden\"" in prompt)
-    assertTrue("sensor.soil | Soil | 41 | % | " in prompt)
+    assertTrue("## Current dashboard (Garden)" in context)
+    assertTrue("\"title\": \"Garden\"" in context)
+    assertTrue("sensor.soil | Soil | 41 | % | " in context)
     // Sorted by entity id.
-    assertTrue(prompt.indexOf("sensor.soil") < prompt.indexOf("valve.garden"))
+    assertTrue(context.indexOf("sensor.soil") < context.indexOf("valve.garden"))
   }
 
   @Test
   fun aLargeHomeIsCappedAndSaysSo() {
     val states = (0 until DashboardAgentPrompt.MAX_ENTITIES + 3).map { state("sensor.s$it", "1") }
-    val prompt = DashboardAgentPrompt.build("", dashboard, states)
-    assertTrue("(3 more entities not listed)" in prompt)
-    assertTrue("Improve this dashboard." in prompt)
-  }
-
-  @Test
-  fun theAnswerIsReadFromItsJsonFence() {
-    val answer =
-      """
-      Here is your dashboard:
-
-      ```json
-      {"title": "Garden v2", "views": [{"type": "sections", "sections": []}]}
-      ```
-
-      Enjoy.
-      """
-        .trimIndent()
-    val config = DashboardAgentPrompt.parseAnswer(answer)
-    assertEquals("Garden v2", config["title"]!!.jsonPrimitive.content)
-  }
-
-  @Test
-  fun aBareJsonAnswerIsAccepted() {
-    val config = DashboardAgentPrompt.parseAnswer("""{"views": []}""")
-    assertEquals(1, config.size)
-  }
-
-  @Test
-  fun answersThatAreNotADashboardAreRefused() {
-    assertFailsWith<IllegalArgumentException> { DashboardAgentPrompt.parseAnswer("no json") }
-    assertFailsWith<IllegalArgumentException> { DashboardAgentPrompt.parseAnswer("[1, 2]") }
-    assertFailsWith<IllegalArgumentException> {
-      DashboardAgentPrompt.parseAnswer("""{"title": "x"}""")
-    }
-    assertFailsWith<IllegalArgumentException> {
-      DashboardAgentPrompt.parseAnswer("""{"views": [1]}""")
-    }
-  }
-
-  @Test
-  fun theEditorsHandoffCarriesSizingAndTheCardDesignCatalog() {
-    val dashboard = buildJsonObject { put("views", JsonArray(emptyList())) }
-    val plain = DashboardAgentPrompt.build("Fill it", dashboard, emptyList())
-    val handoff =
-      DashboardAgentPrompt.build("Fill it", dashboard, emptyList(), withDesignTools = true)
-    assertTrue(DashboardAgentPrompt.DESIGN_TOOLS !in plain)
-    assertTrue(DashboardAgentPrompt.SIZING in handoff)
-    assertTrue("homeassistant-remotecompose" in handoff)
-    assertTrue("catalog_render_matrix" in handoff)
-    assertTrue(handoff.indexOf("## Request") > handoff.indexOf(DashboardAgentPrompt.DESIGN_TOOLS))
+    assertTrue("(3 more entities not listed)" in DashboardAgentPrompt.context(dashboard, states))
   }
 }

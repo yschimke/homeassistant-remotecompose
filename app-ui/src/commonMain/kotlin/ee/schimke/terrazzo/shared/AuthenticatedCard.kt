@@ -23,6 +23,9 @@ internal fun AuthenticatedCard(
   onAction: (String) -> Unit,
   onToggle: (String) -> Unit,
   onService: (String, String, JsonObject) -> Unit,
+  // A preview (an agent's draft): no control may reach Home Assistant, not even ones that call the
+  // client themselves.
+  readOnly: Boolean = false,
 ) {
   DashboardCardTheme(style, dark) {
     CardCluster(card, snapshot) { leaf ->
@@ -34,10 +37,10 @@ internal fun AuthenticatedCard(
       val conversation = conversationEntity(leaf)
       if (leaf.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
         drawnByApp()
-        MessageComposeCard(leaf, snapshot, editable = true, onAction = onAction)
+        MessageComposeCard(leaf, snapshot, editable = !readOnly, onAction = onAction)
       } else if (conversation != null) {
         drawnByApp()
-        ConversationCard(leaf, conversation, snapshot, client, onMoreInfo)
+        ConversationCard(leaf, conversation, snapshot, client, onMoreInfo, readOnly)
       } else if (isEntityPictureCard(leaf)) {
         drawnByApp()
         EntityPictureCard(

@@ -137,6 +137,10 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
 
   override suspend fun fetchInstanceConfig(): HaInstanceConfig? = delegate.fetchInstanceConfig()
 
+  // Edit sessions live in Home Assistant; there is nothing to cache.
+  override val agentEdits: ee.schimke.ha.client.dashboard.AgentEdits?
+    get() = delegate.agentEdits
+
   override suspend fun createLongLivedToken(clientName: String, lifespanDays: Int): String? =
     delegate.createLongLivedToken(clientName, lifespanDays)
 

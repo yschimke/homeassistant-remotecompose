@@ -5,13 +5,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import ee.schimke.ha.client.dashboard.CardAddress
 import ee.schimke.ha.client.dashboard.DashboardDraft
@@ -51,7 +55,9 @@ class DashboardEditorTest {
 
   private val second = CardAddress(0, 0, 1)
 
-  private fun setUp(): Pair<DashboardEditSession, MutableList<Pair<JsonObject, JsonObject>>> {
+  private fun setUp(
+    onAskAgent: (() -> Unit)? = null
+  ): Pair<DashboardEditSession, MutableList<Pair<JsonObject, JsonObject>>> {
     val writes = mutableListOf<Pair<JsonObject, JsonObject>>()
     val session = DemoHaSession(clock = { 0L })
     val edits =
@@ -69,6 +75,8 @@ class DashboardEditorTest {
             onBack = {},
             onSaved = {},
             launch = { block -> scope.launch { block() } },
+            integration = IntegrationStatus.Installed,
+            onAskAgent = onAskAgent,
           )
         }
       }
@@ -139,5 +147,44 @@ class DashboardEditorTest {
     assertEquals(original["custom"], edits.draft["custom"])
     // A swap is a draft edit like any other: nothing is written until Save.
     assertEquals(emptyList(), writes)
+  }
+
+  @Test
+  fun theIntegrationCardOffersAnAgentOnlyWithTheIntegration() {
+    var asked = 0
+    val ask: () -> Unit = { asked += 1 }
+    var status by mutableStateOf(IntegrationStatus.Installed)
+    compose.setContent {
+      MaterialTheme {
+        IntegrationCard(
+          status,
+          onOpenHomeAssistant = {},
+          onAskAgent = ask.takeIf { status == IntegrationStatus.Installed },
+        ) {}
+      }
+    }
+    compose.onNodeWithText("Ask an agent").performClick()
+    assertEquals(1, asked)
+    compose.onNodeWithText("Install with HACS").assertDoesNotExist()
+    status = IntegrationStatus.Missing
+    compose.onNodeWithText("Ask an agent").assertDoesNotExist()
+    compose.onNodeWithText("Install with HACS").assertExists()
+  }
+
+  @Test
+  fun unsavedEditsAreDiscardedOnlyWhenThePersonSaysSoBeforeAskingAnAgent() {
+    var asked = 0
+    val (edits, _) = setUp(onAskAgent = { asked += 1 })
+    compose.onNodeWithContentDescription("Card 1: tile").performClick()
+    compose.onNodeWithContentDescription("Delete card").performClick()
+    compose.onNodeWithText("Ask an agent").performScrollTo().performClick()
+    compose.onNodeWithText("Keep editing").performClick()
+    assertEquals(0, asked)
+    assertEquals(1, DashboardDraft.cards(edits.draft, 0, 0).size)
+
+    compose.onNodeWithText("Ask an agent").performScrollTo().performClick()
+    compose.onNodeWithText("Discard and ask").performClick()
+    assertEquals(1, asked)
+    assertEquals(original, edits.draft)
   }
 }

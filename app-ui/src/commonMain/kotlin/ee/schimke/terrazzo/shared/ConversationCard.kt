@@ -29,6 +29,7 @@ internal fun ConversationCard(
   snapshot: HaSnapshot,
   client: HaClient,
   onMoreInfo: (String) -> Unit,
+  readOnly: Boolean = false,
 ) {
   var messages by remember(client, entityId) { mutableStateOf(emptyList<ConversationMessage>()) }
   var status by remember(client, entityId) { mutableStateOf("Loading conversation…") }
@@ -120,7 +121,8 @@ internal fun ConversationCard(
           }
         }
       }
-      if (!recipientKnown)
+      if (readOnly) Unit
+      else if (!recipientKnown)
         Text(
           "Choose a companion with entry_id to enable replies.",
           style = MaterialTheme.typography.bodySmall,
