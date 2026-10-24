@@ -48,6 +48,12 @@ expect fun RemoteFloat.toPaddedRemoteString(digits: Int): RemoteString
 /** [RemoteFloat.toPaddedRemoteString] for an integer. */
 expect fun RemoteInt.toPaddedRemoteString(digits: Int): RemoteString
 
+/**
+ * [this] with up to [maxFractionDigits] decimals and no grouping (`DecimalFormat("0.#")` for one):
+ * `21`, `21.5`.
+ */
+expect fun RemoteFloat.toDecimalRemoteString(maxFractionDigits: Int): RemoteString
+
 /** Remote Compose protocol values the player defines, which neither creation library exports. */
 internal object RcProtocol {
   private fun asNan(id: Int): Float = Float.fromBits(id or -0x800000)

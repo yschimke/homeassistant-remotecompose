@@ -60,6 +60,15 @@ actual fun RemoteFloat.toPaddedRemoteString(digits: Int): RemoteString =
 actual fun RemoteInt.toPaddedRemoteString(digits: Int): RemoteString =
   toRemoteString(paddedFormat(digits))
 
+actual fun RemoteFloat.toDecimalRemoteString(maxFractionDigits: Int): RemoteString =
+  toRemoteString(
+    // `java.text.DecimalFormat("0.#…")`'s settings.
+    DecimalFormat().apply {
+      maximumFractionDigits = maxFractionDigits
+      isGroupingUsed = false
+    }
+  )
+
 /** `java.text.DecimalFormat("0".repeat(digits))`'s settings, in the fork's own format. */
 private fun paddedFormat(digits: Int): DecimalFormat =
   DecimalFormat().apply {

@@ -19,66 +19,113 @@
 
 plugins {
   id("harc.base-conventions")
-  alias(libs.plugins.android.library)
+  alias(libs.plugins.kotlin.multiplatform)
+  alias(libs.plugins.android.kmp.library)
+  alias(libs.plugins.compose.multiplatform)
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.compose.preview)
 }
 
 composePreview {
+  // The stickers render on Android, through Robolectric: they capture with AndroidX.
+  kmpAndroidRobolectric.set(true)
   // compileSdk 37 here; Robolectric ships SDK frameworks up to 36.
   sdkVersion.set(35)
 }
 
-android {
-  namespace = "ee.schimke.ha.cards"
-  compileSdk {
-    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+// The card design renderer (`.uid` → Remote Compose: CardDesignDocument and the HaCard* wrappers)
+// is written once, in commonMain, as `:rc-components` and `:rc-converter` are: Android builds with
+// AndroidX's creation library, every other target with rc-players' Compose Multiplatform fork
+// (`forkMain`). The builder palette itself, the stickers and their previews, stays Android-only.
+kotlin {
+  jvmToolchain(libs.versions.java.get().toInt())
+  android {
+    namespace = "ee.schimke.ha.cards"
+    compileSdk {
+      version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+    }
+    minSdk = libs.versions.android.minSdk.get().toInt()
+    androidResources { enable = true }
+    withHostTest { isIncludeAndroidResources = true }
+    // The Remote Compose creation APIs are `@RestrictTo(LIBRARY_GROUP)`, as in `:rc-components`.
+    lint { disable += "RestrictedApi" }
   }
-  defaultConfig { minSdk = libs.versions.android.minSdk.get().toInt() }
-  buildFeatures { compose = true }
-  compileOptions {
-    sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
-    targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
+  jvm()
+  @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class) wasmJs { browser() }
+  iosArm64()
+  iosSimulatorArm64()
+  @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
+  applyDefaultHierarchyTemplate {
+    common {
+      group("fork") {
+        withJvm()
+        withWasmJs()
+        withIosArm64()
+        withIosSimulatorArm64()
+      }
+    }
   }
-  kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
-  // The Remote Compose creation APIs are `@RestrictTo(LIBRARY_GROUP)`, as in `:rc-components`.
-  lint { disable += "RestrictedApi" }
-  testOptions { unitTests.isIncludeAndroidResources = true }
+  sourceSets {
+    commonMain.dependencies {
+      implementation(project.dependencies.platform(libs.rc.players.bom))
+      // The components an exported design calls: the wrappers sit on the Tier-1 RemoteHa*.
+      api(project(":rc-components"))
+      // The card designs, their parts and the capture profile.
+      implementation(project(":rc-converter"))
+      // `formatValueWithUnit`: the host's canonical state formatter, so a bound reading's seed is
+      // what the first live `<id>.state` push writes.
+      implementation(project(":ha-model"))
+      // Compile-only, so Android consumers never see the fork beside AndroidX's.
+      compileOnly(libs.rc.creation.compose)
+      implementation(libs.cmp.runtime)
+      implementation(libs.cmp.ui)
+      implementation(libs.cmp.foundation)
+      implementation(libs.cmp.material.icons.extended)
+      // Card designs (`.uid`) are drawn in-process from their JSON: CardDesignDocument.
+      implementation(libs.kotlinx.serialization.json)
+    }
+    androidMain.dependencies {
+      implementation(project.dependencies.platform(libs.compose.bom))
+      implementation(libs.compose.ui.tooling.preview)
+      api(libs.remote.creation.compose)
+      implementation(libs.remote.creation)
+      implementation(libs.remote.creation.core)
+      implementation(libs.remote.core)
+      api(libs.remote.material3)
+      // `@CatalogComponent`, the sticker annotation discovery reads.
+      implementation(project.dependencies.platform(libs.composeai.daemon.bom))
+      implementation(libs.composeai.preview.annotations)
+      // The `.rc` sidecar seam, so the published catalog carries each sticker's RemoteDocument.
+      implementation(libs.composeai.data.render.core)
+    }
+    getByName("forkMain").dependencies { implementation(libs.rc.creation.compose) }
+    jvmTest.dependencies {
+      implementation(libs.kotlin.test)
+      implementation(libs.kotlin.test.junit)
+      implementation(libs.kotlinx.serialization.json)
+    }
+  }
 }
 
-dependencies {
-  // The components an exported design calls: the wrappers below sit on the Tier-1 RemoteHa*.
-  api(project(":rc-components"))
-  // The sticker host: the capture profile and the Compose Multiplatform player `:previews` uses.
-  implementation(project(":rc-converter"))
-  // `formatValueWithUnit`: the host's canonical state formatter, so a bound reading's seed is what
-  // the first live `<id>.state` push writes.
-  implementation(project(":ha-model"))
-
-  implementation(platform(libs.compose.bom))
-  implementation(libs.compose.ui)
-  implementation(libs.compose.foundation)
-  implementation(libs.compose.material.icons.extended)
-  implementation(libs.compose.ui.tooling.preview)
-  debugImplementation(libs.compose.ui.tooling)
-
-  api(libs.remote.creation.compose)
-  implementation(libs.remote.creation)
-  implementation(libs.remote.creation.core)
-  implementation(libs.remote.core)
-  api(libs.remote.material3)
-
-  // `@CatalogComponent`, the sticker annotation discovery reads.
-  implementation(platform(libs.composeai.daemon.bom))
-  implementation(libs.composeai.preview.annotations)
-  // The `.rc` sidecar seam, so the published catalog carries each sticker's RemoteDocument.
-  implementation(libs.composeai.data.render.core)
-  // Card designs (`.uid`) are drawn in-process from their JSON: CardDesignDocument.
-  implementation(libs.kotlinx.serialization.json)
-
-  testImplementation(libs.kotlin.test)
-  testImplementation(libs.kotlin.test.junit)
-  testImplementation(libs.kotlinx.serialization.json)
+// The fork declares AndroidX's capabilities on Android, so the two can't both be on an Android
+// classpath. This module's own Android compilation sees both (the fork through commonMain); it
+// takes AndroidX's.
+configurations.configureEach {
+  resolutionStrategy.capabilitiesResolution {
+    listOf(
+        "androidx.compose.remote:remote-creation-compose",
+        "androidx.compose.remote.foundation:foundation",
+      )
+      .forEach { capability ->
+        withCapability(capability) {
+          candidates
+            .firstOrNull {
+              (it.id as? ModuleComponentIdentifier)?.group?.startsWith("androidx.") == true
+            }
+            ?.let { select(it) }
+        }
+      }
+  }
 }
 
 // CardLayoutPolicyTest and HaCard*Test read the policy and the checked-in card designs from disk:
@@ -87,3 +134,7 @@ tasks.withType<Test>().configureEach {
   inputs.file("ui-builder.policy.json").withPropertyName("uiBuilderPolicy")
   inputs.dir(rootProject.file("card-designs/ui-builder/designs")).withPropertyName("cardDesigns")
 }
+
+// CI runs `./gradlew test` across modules; a multiplatform module has no `test` of its own, so
+// without this the policy and design tests would silently stop running there.
+tasks.register("test") { dependsOn("jvmTest") }
