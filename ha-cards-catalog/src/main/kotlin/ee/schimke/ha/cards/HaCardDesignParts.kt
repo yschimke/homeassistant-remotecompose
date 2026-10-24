@@ -6,6 +6,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.rc.cards.AlarmDesignParts
 import ee.schimke.ha.rc.cards.ArcDialDesignParts
 import ee.schimke.ha.rc.cards.BulkDesignParts
 import ee.schimke.ha.rc.cards.ButtonDesignParts
@@ -16,6 +17,7 @@ import ee.schimke.ha.rc.cards.GlanceDesignParts
 import ee.schimke.ha.rc.cards.HeadingDesignParts
 import ee.schimke.ha.rc.cards.RoomDesignParts
 import ee.schimke.ha.rc.cards.SensorDesignParts
+import ee.schimke.ha.rc.cards.SingleFormDesignParts
 import ee.schimke.ha.rc.cards.TileDesignParts
 import ee.schimke.ha.rc.cards.ValueDesignParts
 import ee.schimke.ha.rc.cards.WeatherDesignParts
@@ -549,6 +551,41 @@ fun HaMediaControlCardFull(modifier: RemoteModifier = RemoteModifier, fill: Bool
 @RemoteComposable
 fun HaMediaControlCardWide(modifier: RemoteModifier = RemoteModifier) {
   RoomDesignParts.MediaWide(modifier)
+}
+
+/** `ha-cards/alarm-panel-card-full`: the alarm panel's status, ARM buttons and keypad. */
+@Composable
+@RemoteComposable
+fun HaAlarmPanelCardFull(modifier: RemoteModifier = RemoteModifier) {
+  AlarmDesignParts.Full(modifier)
+}
+
+/** `ha-cards/alarm-panel-card-narrow`: the alarm panel in a cell narrower than the full card. */
+@Composable
+@RemoteComposable
+fun HaAlarmPanelCardNarrow(modifier: RemoteModifier = RemoteModifier) {
+  RemoteBox(modifier) { AlarmDesignParts.Narrow() }
+}
+
+/** `ha-cards/alarm-panel-card-wide`: the alarm panel in a cell as wide as the full card. */
+@Composable
+@RemoteComposable
+fun HaAlarmPanelCardWide(modifier: RemoteModifier = RemoteModifier) {
+  RemoteBox(modifier) { AlarmDesignParts.Wide() }
+}
+
+/** `ha-cards/map-card`: the map card's title over its entity rows. */
+@Composable
+@RemoteComposable
+fun HaMapCard(modifier: RemoteModifier = RemoteModifier) {
+  SingleFormDesignParts.Map(modifier)
+}
+
+/** `ha-cards/picture-elements-card`: the picture with its elements over it. */
+@Composable
+@RemoteComposable
+fun HaPictureElementsCard(modifier: RemoteModifier = RemoteModifier) {
+  SingleFormDesignParts.PictureElements(modifier)
 }
 
 /**

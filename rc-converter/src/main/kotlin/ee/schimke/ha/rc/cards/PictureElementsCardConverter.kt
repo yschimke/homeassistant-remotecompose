@@ -10,7 +10,6 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
@@ -21,6 +20,7 @@ import ee.schimke.ha.rc.components.HaPictureElementsData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaPictureElements
 import ee.schimke.ha.rc.defaultTapActionFor
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.parseHaAction
@@ -38,7 +38,7 @@ import kotlinx.serialization.json.put
  * renderer can overlay each element at its configured spot on the placeholder; elements without
  * position metadata fall back to the strip across the bottom.
  */
-class PictureElementsCardConverter : CardConverter {
+class PictureElementsCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.PICTURE_ELEMENTS
 
   /** A picture's height follows its width: it keeps a grid column's width. */
@@ -174,8 +174,12 @@ class PictureElementsCardConverter : CardConverter {
     return parseTap(el, el["entity"]?.jsonPrimitive?.content)
   }
 
+  /**
+   * The card, as every surface draws it: it has one form (`picture-elements.uid`,
+   * [SingleFormDesignParts]).
+   */
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  internal fun Draw(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val image = card.raw["image"]?.jsonPrimitive?.content
     val arr = card.raw["elements"] as? JsonArray ?: JsonArray(emptyList())
     val elements = arr.mapNotNull { el ->

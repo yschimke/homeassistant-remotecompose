@@ -26,7 +26,6 @@ import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.cardDataSignature
@@ -36,6 +35,7 @@ import ee.schimke.ha.rc.components.cardChrome
 import ee.schimke.ha.rc.components.cardText
 import ee.schimke.ha.rc.components.cardTitle
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
+import ee.schimke.ha.rc.design.DesignedCardConverter
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -57,7 +57,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * HA's own map shows nothing for an entity it can't place, and a literal `<redacted>, <redacted>`
  * reads as a bug.
  */
-class MapCardConverter : CardConverter {
+class MapCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.MAP
 
   // Baked, non-bindable content (see CardConverter.dataSignature):
@@ -141,8 +141,9 @@ class MapCardConverter : CardConverter {
       emptyMap(),
     )
 
+  /** The card, as every surface draws it: it has one form (`map.uid`, [SingleFormDesignParts]). */
   @Composable
-  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  internal fun Draw(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val theme = currentRemoteHaTheme()
     val title = card.raw["title"]?.jsonPrimitive?.content
     val entities = entityIds(card)
