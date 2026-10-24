@@ -2,6 +2,7 @@
 
 package ee.schimke.terrazzo.shared
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -9,18 +10,31 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
@@ -76,6 +90,10 @@ private class AppConnection(
  * @param signInWithHomeAssistant starts the host's own Home Assistant sign-in (browser OAuth) for
  *   the entered server address. When null, only a long-lived access token is offered.
  * @param onSignOut lets the host forget a sign-in it remembers.
+ * @param hostTheme the host page's theme (Home Assistant's, in the panel): light or dark, and the
+ *   colors the `classic` card style draws the app in. Null follows the system's light or dark.
+ * @param isFullScreen whether the host currently shows the app full screen.
+ * @param onToggleFullScreen enters or leaves full screen; null hides the footer's button.
  */
 @Composable
 fun TerrazzoMultiplatformApp(
@@ -86,9 +104,14 @@ fun TerrazzoMultiplatformApp(
   registerReturnHome: ((() -> Unit) -> Unit)? = null,
   signInWithHomeAssistant: ((String) -> Unit)? = null,
   onSignOut: (() -> Unit)? = null,
+  hostTheme: HostTheme? = null,
+  isFullScreen: Boolean = false,
+  onToggleFullScreen: (() -> Unit)? = null,
 ) {
-  val dark = isSystemInDarkTheme()
-  MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
+  val dark = hostTheme?.dark ?: isSystemInDarkTheme()
+  // App-wide, so the chrome and every dashboard share one look.
+  var cardStyle by rememberSaveable { mutableStateOf("classic") }
+  AppChromeTheme(cardStyle, dark, hostTheme) {
     var connection by remember {
       mutableStateOf(hostedConfig?.let { AppConnection(it, hostedAccessToken, hostedAction) })
     }
@@ -135,6 +158,11 @@ fun TerrazzoMultiplatformApp(
               onSignOut?.invoke()
               connection = null
             },
+            cardStyle = cardStyle,
+            onCardStyle = { cardStyle = it },
+            dark = dark,
+            isFullScreen = isFullScreen,
+            onToggleFullScreen = onToggleFullScreen,
           )
         }
       }
@@ -236,6 +264,11 @@ private fun DashboardShell(
   registerReturnHome: ((() -> Unit) -> Unit)?,
   signInRemembered: Boolean,
   onSignOut: () -> Unit,
+  cardStyle: String,
+  onCardStyle: (String) -> Unit,
+  dark: Boolean,
+  isFullScreen: Boolean,
+  onToggleFullScreen: (() -> Unit)?,
 ) {
   var list by remember { mutableStateOf<DashboardListState>(DashboardListState.Loading) }
   val home: NavKey = remember {
@@ -310,87 +343,210 @@ private fun DashboardShell(
     }
     onDispose { registerReturnHome?.invoke {} }
   }
-  NavigationSuiteScaffold(
-    navigationSuiteItems = {
-      item(
-        selected = stack.lastOrNull() != SettingsDestination,
-        onClick = { select(DashboardsDestination) },
-        icon = { Icon(Icons.Default.Home, null) },
-        label = { Text("Dashboards") },
-      )
-      item(
-        selected = stack.lastOrNull() == SettingsDestination,
-        onClick = { select(SettingsDestination) },
-        icon = { Icon(Icons.Default.Settings, null) },
-        label = { Text("Settings") },
-      )
-    }
-  ) {
-    key(homeVisit) {
-      NavDisplay(
-        backStack = stack,
-        onBack = { if (stack.size > 1) stack.removeLastOrNull() },
-        entryProvider =
-          entryProvider {
-            entry<DashboardsDestination> {
-              DashboardPickerScreen(
-                list,
-                onDashboardPicked = { stack.add(DashboardDestination(it)) },
-              )
-            }
-            entry<SettingsDestination> {
-              Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) }) { padding ->
-                Column(
-                  Modifier.padding(padding)
-                    .consumeWindowInsets(padding)
-                    .padding(24.dp)
-                    .verticalScroll(rememberScrollState()),
-                  verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                  Text(connection.config.baseUrl, style = MaterialTheme.typography.titleMedium)
-                  Text(
-                    if (signInRemembered)
-                      "This browser remembers your Home Assistant sign-in until you sign out."
-                    else "Access tokens are kept only for this session."
-                  )
-                  OutlinedTextField(
-                    designServer,
-                    { designServer = it },
-                    label = { Text("Card design server") },
-                    singleLine = true,
-                  )
-                  CardUsageSetting(designServer)
-                  ReportFeedbackButton()
-                  Button(onClick = onSignOut) { Text("Sign out") }
-                }
-              }
-            }
-            entry<DashboardDestination> { route ->
-              Scaffold(
-                topBar = {
-                  TopAppBar(
-                    title = {
-                      DashboardSwitcher(
-                        (list as? DashboardListState.Ready)?.dashboards.orEmpty(),
-                        route.path,
-                        onSwitch = { select(DashboardDestination(it)) },
-                      )
-                    }
-                  )
-                }
-              ) { padding ->
-                LiveDashboard(
-                  connection,
-                  route.path,
-                  snapshot,
-                  connectionError,
-                  Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
-                  designServer,
+  // Navigation and the look live in one footer, so dashboards get the full width and height.
+  Column(Modifier.fillMaxSize()) {
+    Box(Modifier.weight(1f).consumeWindowInsets(WindowInsets.navigationBars)) {
+      key(homeVisit) {
+        NavDisplay(
+          backStack = stack,
+          onBack = { if (stack.size > 1) stack.removeLastOrNull() },
+          entryProvider =
+            entryProvider {
+              entry<DashboardsDestination> {
+                DashboardPickerScreen(
+                  list,
+                  onDashboardPicked = { stack.add(DashboardDestination(it)) },
                 )
               }
+              entry<SettingsDestination> {
+                Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) }) { padding ->
+                  Column(
+                    Modifier.padding(padding)
+                      .consumeWindowInsets(padding)
+                      .padding(24.dp)
+                      .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                  ) {
+                    Text(connection.config.baseUrl, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                      if (signInRemembered)
+                        "This browser remembers your Home Assistant sign-in until you sign out."
+                      else "Access tokens are kept only for this session."
+                    )
+                    OutlinedTextField(
+                      designServer,
+                      { designServer = it },
+                      label = { Text("Card design server") },
+                      singleLine = true,
+                    )
+                    CardUsageSetting(designServer)
+                    ReportFeedbackButton()
+                    Button(onClick = onSignOut) { Text("Sign out") }
+                  }
+                }
+              }
+              entry<DashboardDestination> { route ->
+                var customizing by rememberSaveable(route.path) { mutableStateOf(false) }
+                Scaffold(
+                  topBar = {
+                    TopAppBar(
+                      title = {
+                        DashboardSwitcher(
+                          (list as? DashboardListState.Ready)?.dashboards.orEmpty(),
+                          route.path,
+                          onSwitch = { select(DashboardDestination(it)) },
+                        )
+                      },
+                      actions = {
+                        TextButton(onClick = { customizing = !customizing }) {
+                          Text(if (customizing) "Done customizing" else "Customize")
+                        }
+                      },
+                    )
+                  }
+                ) { padding ->
+                  LiveDashboard(
+                    connection,
+                    route.path,
+                    snapshot,
+                    connectionError,
+                    Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
+                    designServer,
+                    cardStyle,
+                    dark,
+                    customizing,
+                  )
+                }
+              }
+            },
+        )
+      }
+    }
+    AppFooter(
+      dashboardsSelected = stack.lastOrNull() != SettingsDestination,
+      onDashboards = { select(DashboardsDestination) },
+      onSettings = { select(SettingsDestination) },
+      cardStyle = cardStyle,
+      onCardStyle = onCardStyle,
+      isFullScreen = isFullScreen,
+      onToggleFullScreen = onToggleFullScreen,
+    )
+  }
+}
+
+/** The app's footer: where to go, the card style, and full screen when the host offers it. */
+@Composable
+internal fun AppFooter(
+  dashboardsSelected: Boolean,
+  onDashboards: () -> Unit,
+  onSettings: () -> Unit,
+  cardStyle: String,
+  onCardStyle: (String) -> Unit,
+  isFullScreen: Boolean,
+  onToggleFullScreen: (() -> Unit)?,
+) {
+  Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
+    Column {
+      HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+      BoxWithConstraints(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars)) {
+        // A phone keeps the icons; the labels stay as the tabs' accessible names.
+        val labels = maxWidth >= 480.dp
+        Row(
+          Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+          FooterTab("Dashboards", Icons.Default.Home, dashboardsSelected, labels, onDashboards)
+          FooterTab("Settings", Icons.Default.Settings, !dashboardsSelected, labels, onSettings)
+          Spacer(Modifier.weight(1f))
+          CardStyleMenu(cardStyle, onCardStyle)
+          if (onToggleFullScreen != null)
+            IconButton(onClick = onToggleFullScreen) {
+              Icon(
+                if (isFullScreen) ExitFullScreenIcon else FullScreenIcon,
+                contentDescription = if (isFullScreen) "Exit full screen" else "Full screen",
+              )
             }
+        }
+      }
+    }
+  }
+}
+
+private fun footerIcon(name: String, path: String) =
+  ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f)
+    .addPath(addPathNodes(path), fill = SolidColor(Color.Black))
+    .build()
+
+// Material's fullscreen and fullscreen_exit, which the core icon set doesn't carry.
+private val FullScreenIcon =
+  footerIcon(
+    "FullScreen",
+    "M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z",
+  )
+
+private val ExitFullScreenIcon =
+  footerIcon(
+    "ExitFullScreen",
+    "M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z",
+  )
+
+@Composable
+private fun FooterTab(
+  label: String,
+  icon: ImageVector,
+  selected: Boolean,
+  showLabel: Boolean,
+  onClick: () -> Unit,
+) {
+  val colors = MaterialTheme.colorScheme
+  Row(
+    Modifier.heightIn(min = 48.dp)
+      .clip(CircleShape)
+      .background(if (selected) colors.secondaryContainer else Color.Transparent)
+      .selectable(selected = selected, role = Role.Tab, onClick = onClick)
+      .padding(horizontal = 12.dp),
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+  ) {
+    val tint = if (selected) colors.onSecondaryContainer else colors.onSurfaceVariant
+    Icon(icon, if (showLabel) null else label, tint = tint)
+    if (showLabel) Text(label, style = MaterialTheme.typography.labelLarge, color = tint)
+  }
+}
+
+@Composable
+private fun CardStyleMenu(cardStyle: String, onCardStyle: (String) -> Unit) {
+  var expanded by remember { mutableStateOf(false) }
+  val label = CARD_STYLES.firstOrNull { it.first == cardStyle }?.second ?: cardStyle
+  Box {
+    TextButton(
+      onClick = { expanded = true },
+      // One accessible name, not the visible label read after it.
+      modifier =
+        Modifier.heightIn(min = 48.dp).clearAndSetSemantics {
+          contentDescription = "Card style: $label"
+          role = Role.Button
+          onClick {
+            expanded = true
+            true
+          }
+        },
+    ) {
+      Text(label)
+      Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+    }
+    DropdownMenu(expanded, { expanded = false }) {
+      CARD_STYLES.forEach { (style, name) ->
+        DropdownMenuItem(
+          text = { Text(name) },
+          modifier = Modifier.semantics { selected = style == cardStyle },
+          onClick = {
+            onCardStyle(style)
+            expanded = false
           },
-      )
+        )
+      }
     }
   }
 }
@@ -403,6 +559,9 @@ private fun LiveDashboard(
   connectionError: String?,
   modifier: Modifier,
   designServer: String,
+  cardStyle: String,
+  dark: Boolean,
+  customizing: Boolean,
 ) {
   val uriHandler = LocalUriHandler.current
   var designCard by remember(connection, path) { mutableStateOf<CardConfig?>(null) }
@@ -452,10 +611,6 @@ private fun LiveDashboard(
       }
     }
   }
-  var cardStyle by rememberSaveable { mutableStateOf("classic") }
-  var styleMenu by remember { mutableStateOf(false) }
-  var customizing by rememberSaveable { mutableStateOf(false) }
-  val dark = isSystemInDarkTheme()
   fun moreInfo(entityId: String) {
     val payload = buildJsonObject {
       put("type", "ee.schimke.ha.rc.components.HaAction.MoreInfo")
@@ -494,30 +649,6 @@ private fun LiveDashboard(
       if (error == null) CircularProgressIndicator(Modifier.padding(24.dp))
     } else
       Column(Modifier.weight(1f)) {
-        Row(
-          Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-          horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-          Box {
-            TextButton(onClick = { styleMenu = true }) {
-              Text("Card style: ${cardStyle.replaceFirstChar { it.uppercaseChar() }}")
-            }
-            DropdownMenu(styleMenu, { styleMenu = false }) {
-              listOf("classic", "braun", "lcd", "console").forEach { style ->
-                DropdownMenuItem(
-                  text = { Text(style.replaceFirstChar { it.uppercaseChar() }) },
-                  onClick = {
-                    cardStyle = style
-                    styleMenu = false
-                  },
-                )
-              }
-            }
-          }
-          TextButton(onClick = { customizing = !customizing }) {
-            Text(if (customizing) "Done customizing" else "Customize")
-          }
-        }
         DashboardContent(current, path, snapshot, Modifier.weight(1f)) { _, card ->
           Column {
             AuthenticatedCard(
@@ -574,7 +705,7 @@ fun DashboardContent(
   Column(modifier) {
     if (dashboard.views.size > 1) {
       Row(
-        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
       ) {
         dashboard.views.forEachIndexed { i, v ->
@@ -706,6 +837,8 @@ internal fun NativeCard(
     )
       Modifier.clickable(role = Role.Button) { onMoreInfo(entityId) }
     else Modifier
+  // A single entity's state is the card's reading: it leads, and the name labels it, as HA's tile.
+  val reading = entities.isEmpty() && entity != null && card.type !in setOf("markdown", "heading")
   OutlinedCard(Modifier.fillMaxWidth().entityDetails(entityId, onMoreInfo).then(tapModifier)) {
     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
       Row(
@@ -720,7 +853,10 @@ internal fun NativeCard(
             ?: entityId
             ?: if (card.type == "entities") "Status"
             else card.type.replace('-', ' ').replaceFirstChar { it.uppercaseChar() },
-          style = MaterialTheme.typography.titleMedium,
+          style =
+            if (reading) MaterialTheme.typography.bodyMedium
+            else MaterialTheme.typography.titleMedium,
+          color = if (reading) MaterialTheme.colorScheme.onSurfaceVariant else Color.Unspecified,
           modifier = Modifier.weight(1f),
         )
       }
@@ -765,7 +901,7 @@ internal fun NativeCard(
           )
         }
       } else if (entity != null) {
-        Text(formatState(entity, snapshot), style = MaterialTheme.typography.bodyLarge)
+        Text(formatState(entity, snapshot), style = MaterialTheme.typography.titleLarge)
         if (inlineToggle) {
           Switch(
             checked = entity.state == "on",

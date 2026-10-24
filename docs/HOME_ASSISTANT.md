@@ -142,6 +142,19 @@ with normal Lovelace views works. Unsupported/unavailable bookmarked dashboards
 show an explanation; choose another through **Dashboards**. If none are supported,
 create a Lovelace dashboard with explicit views in HA first, then reconnect.
 
+## Look and layout
+
+The panel draws in Home Assistant's own theme: its light or dark mode, and with
+the **Classic** card style its primary, background, card and text colors, so it
+sits with the rest of Home Assistant and follows a theme change. The other card
+styles (Braun, LCD, Console) restyle the whole page, not just the cards.
+
+Navigation and the look sit in one footer, so dashboards get the full width:
+**Dashboards** and **Settings**, the card style, and a full-screen button that
+hides Home Assistant's sidebar and header (the browser's own bars too). Leave it
+with the same button or Escape. For a tablet that should always start full
+screen, use `kiosk` below.
+
 ## Wall panels
 
 A tablet on the wall wants a few things a phone doesn't. Turn them on in the URL
