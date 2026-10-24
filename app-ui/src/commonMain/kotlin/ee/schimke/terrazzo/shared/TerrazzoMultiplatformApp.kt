@@ -45,14 +45,18 @@ import androidx.navigation3.ui.NavDisplay
 import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.client.UnsupportedDashboardException
+import ee.schimke.ha.client.dashboard.DashboardEditSession
+import ee.schimke.ha.client.dashboard.toCardConfig
 import ee.schimke.ha.client.listRenderableDashboards
 import ee.schimke.ha.client.stateSnapshots
 import ee.schimke.ha.model.*
 import ee.schimke.ha.rc.formatState
 import ee.schimke.terrazzo.dashboard.AgentEditScreen
+import ee.schimke.terrazzo.dashboard.DashboardDraftEditor
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
+import ee.schimke.terrazzo.dashboard.EditorScope
 import io.ktor.http.encodeURLParameter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -71,6 +75,9 @@ private data class DashboardDestination(val path: String?) : NavKey
 
 /** Asking an agent to change [path]'s dashboard, through the Terrazzo integration. */
 private data class AgentEditDestination(val path: String?) : NavKey
+
+/** Editing [path]'s dashboard: cards, sections and views ([EditorScope.Full]). */
+private data class DashboardEditDestination(val path: String?) : NavKey
 
 private class AppConnection(
   val config: HaConfig,
@@ -414,6 +421,9 @@ private fun DashboardShell(
                         )
                       },
                       actions = {
+                        TextButton(onClick = { stack.add(DashboardEditDestination(route.path)) }) {
+                          Text("Edit")
+                        }
                         if (integrationInstalled) {
                           TextButton(onClick = { stack.add(AgentEditDestination(route.path)) }) {
                             Text("Ask an agent")
@@ -438,6 +448,22 @@ private fun DashboardShell(
                     customizing,
                   )
                 }
+              }
+              entry<DashboardEditDestination> { route ->
+                DashboardEditEntry(
+                  connection,
+                  route.path,
+                  title =
+                    (list as? DashboardListState.Ready)
+                      ?.dashboards
+                      ?.firstOrNull { it.urlPath == route.path }
+                      ?.title,
+                  snapshot = snapshot,
+                  designServer = designServer,
+                  cardStyle = cardStyle,
+                  dark = dark,
+                  onBack = { if (stack.size > 1) stack.removeLastOrNull() },
+                )
               }
               entry<AgentEditDestination> { route ->
                 AgentEditEntry(
@@ -486,8 +512,33 @@ private fun AgentEditEntry(
   dark: Boolean,
   onBack: () -> Unit,
 ) {
-  val scope = rememberCoroutineScope()
   @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+  val preview = rememberDraftPreview(connection, designServer, cardStyle, dark)
+  AgentEditScreen(
+    edits = connection.client.agentEdits,
+    urlPath = path,
+    title = title,
+    snapshot = snapshot,
+    onBack = onBack,
+    onSharePrompt = { clipboard.setText(AnnotatedString(it)) },
+    onApplied = {},
+  ) { _, card ->
+    preview(card, snapshot)
+  }
+}
+
+/**
+ * Cards drawn as the dashboard draws them (library designs, entity pictures), read-only: for drafts
+ * that aren't the dashboard yet, the editor's and an agent's.
+ */
+@Composable
+private fun rememberDraftPreview(
+  connection: AppConnection,
+  designServer: String,
+  cardStyle: String,
+  dark: Boolean,
+): @Composable (CardConfig, HaSnapshot) -> Unit {
+  val scope = rememberCoroutineScope()
   val designCache =
     remember(connection, designServer) {
       DashboardLoadCache(scope) { key: LibraryDesignKey ->
@@ -500,29 +551,83 @@ private fun AgentEditEntry(
         decodeEntityPicture(connection.pictures.load(key))
       }
     }
-  AgentEditScreen(
-    edits = connection.client.agentEdits,
-    urlPath = path,
+  return remember(designCache, pictureCache, cardStyle, dark) {
+    { card, snapshot ->
+      AuthenticatedCard(
+        card,
+        snapshot,
+        connection.client,
+        designCache,
+        pictureCache,
+        cardStyle,
+        dark,
+        onMoreInfo = {},
+        onAction = {},
+        onToggle = {},
+        onService = { _, _, _ -> },
+        readOnly = true,
+      )
+    }
+  }
+}
+
+/**
+ * The full editor ([EditorScope.Full]) on [path]'s stored config. Saves are conditional writes as
+ * this connection's user: Home Assistant refuses non-administrators and YAML dashboards, and says
+ * so.
+ */
+@Composable
+private fun DashboardEditEntry(
+  connection: AppConnection,
+  path: String?,
+  title: String?,
+  snapshot: HaSnapshot,
+  designServer: String,
+  cardStyle: String,
+  dark: Boolean,
+  onBack: () -> Unit,
+) {
+  val scope = rememberCoroutineScope()
+  val snackbars = remember { SnackbarHostState() }
+  var edits by remember(connection, path) { mutableStateOf<DashboardEditSession?>(null) }
+  var error by remember(connection, path) { mutableStateOf<String?>(null) }
+  val preview = rememberDraftPreview(connection, designServer, cardStyle, dark)
+  LaunchedEffect(connection, path) {
+    connection.client.state.first { it == HaClient.ConnectionState.Ready }
+    try {
+      val config = connection.client.fetchDashboardConfig(path)
+      edits =
+        DashboardEditSession(config) { expected, replacement ->
+          connection.client.compareAndReplaceDashboardConfig(expected, replacement, path)
+        }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      error =
+        "This dashboard has no saved configuration to edit. Take control of it in Home " +
+          "Assistant first."
+    }
+  }
+  val loaded = edits
+  if (loaded == null) {
+    Column(Modifier.fillMaxSize().padding(24.dp)) {
+      TextButton(onClick = onBack) { Text("Back") }
+      error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        ?: CircularProgressIndicator()
+    }
+    return
+  }
+  DashboardDraftEditor(
+    edits = loaded,
     title = title,
-    snapshot = snapshot,
+    snackbars = snackbars,
     onBack = onBack,
-    onSharePrompt = { clipboard.setText(AnnotatedString(it)) },
-    onApplied = {},
-  ) { _, card ->
-    AuthenticatedCard(
-      card,
-      snapshot,
-      connection.client,
-      designCache,
-      pictureCache,
-      cardStyle,
-      dark,
-      onMoreInfo = {},
-      onAction = {},
-      onToggle = {},
-      onService = { _, _, _ -> },
-      readOnly = true,
-    )
+    onSaved = {},
+    launch = { block -> scope.launch { block() } },
+    scope = EditorScope.Full,
+    entities = snapshot.states.values,
+  ) { card ->
+    preview(card.toCardConfig(), snapshot)
   }
 }
 

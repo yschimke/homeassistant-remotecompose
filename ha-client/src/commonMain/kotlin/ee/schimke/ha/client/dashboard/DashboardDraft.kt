@@ -96,6 +96,12 @@ object DashboardDraft {
     )
   }
 
+  /** View [view] titled [title]; its `path` stays, so links to the view keep working. */
+  fun renameView(config: JsonObject, view: Int, title: String): JsonObject {
+    require(title.isNotBlank()) { "A view needs a title." }
+    return updateView(config, view) { it.with("title", JsonPrimitive(title.trim())) }
+  }
+
   /** Remove view [view]; a dashboard always keeps at least one. */
   fun removeView(config: JsonObject, view: Int): JsonObject {
     val all = views(config)

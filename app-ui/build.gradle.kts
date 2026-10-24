@@ -42,6 +42,7 @@ kotlin {
       implementation(libs.kotlinx.coroutines.core)
       implementation(libs.ktor.client.core)
       implementation(libs.cmp.material.icons.core)
+      implementation(libs.cmp.material.icons.extended)
     }
     jvmMain.dependencies {
       implementation(compose.desktop.currentOs)
