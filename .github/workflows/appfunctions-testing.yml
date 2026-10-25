@@ -1,0 +1,23 @@
+name: AppFunctions setup
+
+on:
+  pull_request:
+    paths:
+      - scripts/appfunctions/**
+      - .github/workflows/appfunctions-testing.yml
+  push:
+    branches: [main]
+    paths:
+      - scripts/appfunctions/**
+      - .github/workflows/appfunctions-testing.yml
+
+permissions:
+  contents: read
+
+jobs:
+  host-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Verify setup guards and discovery parsing
+        run: python3 -m unittest discover -s scripts/appfunctions -p 'test_*.py'
