@@ -114,6 +114,7 @@ try:
             page = browser.new_page(viewport={'width': width, 'height': height}, device_scale_factor=1)
             page.on('pageerror', lambda e: errors.append(str(e)))
             page.route_web_socket('wss://ha.example.test/api/websocket', socket_route)
+            page_resolutions = len(resolutions)
             sensor = Path('scripts/fixtures/printing/ambiguous-sensor.rc').read_bytes()
             sha = hashlib.sha256(sensor).hexdigest()
             def resolve(route):
@@ -124,6 +125,13 @@ try:
                     'key': {'shape': 'device_class=temperature;domain=sensor'}},
                     headers={'Access-Control-Allow-Origin': '*'})
             page.route('https://ha.coo.ee/api/cards/resolve', resolve)
+            def generate(route):
+                # Asked for by key (generation properties only): no design, so the built-in card.
+                body = route.request.post_data
+                assert 'fixture-token' not in body and 'p2s' not in body and 'states' not in body, body
+                resolutions.append(json.loads(body))
+                route.fulfill(status=404, headers={'Access-Control-Allow-Origin': '*'})
+            page.route('https://ha.coo.ee/designs/v1/generate', generate)
             page.route(DESIGN_BLOB, lambda route: route.fulfill(body=sensor,
                 content_type='application/octet-stream', headers={'Access-Control-Allow-Origin': '*'}))
             from PIL import Image
@@ -199,7 +207,10 @@ try:
             page.mouse.move(width // 2, height - 160)
             page.mouse.wheel(0, 2500); page.wait_for_timeout(700)
             page.mouse.wheel(0, -3500); page.wait_for_timeout(700)
-            assert len(resolutions) == old_resolutions, (old_resolutions, len(resolutions))
+            # Each design is asked for by its own key: a card first scrolled into view may ask for
+            # a key not seen before, but none is asked for twice.
+            seen = [json.dumps(r, sort_keys=True) for r in resolutions[page_resolutions:]]
+            assert len(seen) == len(set(seen)), (old_resolutions, resolutions[page_resolutions:])
             if name == 'phone':
                 page.mouse.move(190, 650); page.mouse.wheel(0, 550); page.wait_for_timeout(300)
                 def light_states(style):

@@ -41,6 +41,9 @@ kotlin {
       implementation(libs.cmp.navigation3.ui)
       implementation(libs.cmp.adaptive)
       implementation(project(":rc-player-ui"))
+      // The cards' design keys and template bindings, computed here the way the phone app does, so
+      // the design server is asked by key (`/designs/v1/generate`) and no card config leaves.
+      implementation(project(":rc-converter"))
       implementation(libs.kotlinx.coroutines.core)
       implementation(libs.ktor.client.core)
       implementation(libs.cmp.material.icons.core)
@@ -53,7 +56,11 @@ kotlin {
       runtimeOnly(libs.jogl.runtime)
       runtimeOnly(libs.gluegen.runtime)
     }
-    jvmTest.dependencies { implementation(libs.compose.multiplatform.ui.test.junit4) }
+    jvmTest.dependencies {
+      implementation(libs.compose.multiplatform.ui.test.junit4)
+      // Captures designs by key as the design server does (ExactDesignKeyTest).
+      implementation(project(":card-designs"))
+    }
     commonTest.dependencies {
       implementation(libs.kotlin.test)
       implementation(libs.kotlinx.coroutines.test)

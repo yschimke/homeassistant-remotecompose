@@ -19,11 +19,17 @@ import ee.schimke.composeai.rcplayer.runtime.RcPlayerEvent
 /** External images need a host resolver; keep that capability check at the player boundary. */
 fun canPlayWithCmp(bytes: ByteArray): Boolean = decodePlayableDocument(bytes).isSuccess
 
-/** A values-free template is safe only when the host can populate every data declaration. */
+/**
+ * A values-free template is safe only when the host can populate every data declaration. `meta.*`
+ * names are the template's own metadata (a card design's binding recipe, `meta.binding_recipe`),
+ * carried in the document for hosts that read it, never bound.
+ */
 fun canBindWithCmp(bytes: ByteArray, bindings: Map<String, RcNamedValue>): Boolean =
   decodePlayableDocument(bytes).getOrNull()?.operations?.filterIsInstance<RcNamedVariable>()?.all {
+    val name = it.name.removePrefix("USER:")
     it.type == RcNamedVariable.COLOR_TYPE ||
-      acceptsBinding(it.type, bindings[it.name.removePrefix("USER:")])
+      name.startsWith("meta.") ||
+      acceptsBinding(it.type, bindings[name])
   } == true
 
 private fun acceptsBinding(type: Int?, value: RcNamedValue?): Boolean =
