@@ -150,7 +150,9 @@ export class TerrazzoPanel extends HTMLElement {
   }
   set panel(panel) { this._panel = panel; }
   connectedCallback() {
-    if (!this.frame.getAttribute('src') || this.frame.getAttribute('src') === 'about:blank') this.frame.src = '/terrazzo-static/wasm/index.html?ha-panel';
+    // The release in the URL keeps a browser from reusing an older release's cached renderer.
+    const version = this._panel?.config?.version;
+    if (!this.frame.getAttribute('src') || this.frame.getAttribute('src') === 'about:blank') this.frame.src = '/terrazzo-static/wasm/index.html?ha-panel' + (version ? `&v=${encodeURIComponent(version)}` : '');
     this.settings = wallSettings(location.search);
     this.lastActive = Date.now();
     this.used = false;
