@@ -325,6 +325,19 @@ class DesignRepository(
   }
 
   /**
+   * Whether every design drawn in [themes] (`DesignKey.theme`) is wholly on disk: the cached
+   * manifest lists at least one live entry in them that [DesignServerConfig.choice] keeps, and
+   * every such entry's blob is cached and verifies. What installing a card style waits for.
+   */
+  suspend fun isCompleteIn(themes: Set<String>): Boolean {
+    val entries =
+      store.readManifest()?.manifest?.designs.orEmpty().filter {
+        it.key.theme in themes && wanted(it)
+      }
+    return entries.isNotEmpty() && entries.all { verifiedBlob(it) != null }
+  }
+
+  /**
    * The cached bytes design [designId] draws [key] with for a card on [device]: see
    * [DesignsById.find]. Null when the design has no live, cached entry for the key.
    */

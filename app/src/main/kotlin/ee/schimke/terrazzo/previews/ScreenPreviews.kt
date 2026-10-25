@@ -35,6 +35,7 @@ import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.AssistantAccessSetting
 import ee.schimke.terrazzo.CardStyleSection
+import ee.schimke.terrazzo.CardStyleState
 import ee.schimke.terrazzo.ConnectionStatus
 import ee.schimke.terrazzo.DashboardTopBar
 import ee.schimke.terrazzo.LocalHaImageStack
@@ -1024,6 +1025,37 @@ fun Screen_Settings_AppTheme(
 fun Screen_Settings_CardStyles() = PhoneHost {
   Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
     CardStyleSection(selected = CardStylePref.Classic, onSelect = {}, initiallyExpanded = true)
+  }
+}
+
+/**
+ * The card style picker on a new install: Classic and Home Assistant come with the app, an
+ * installed style offers Remove, one is downloading, one failed, and the rest offer Install.
+ */
+@Preview(
+  name = "settings · card styles to install",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_Settings_CardStylesToInstall() = PhoneHost {
+  Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
+    CardStyleSection(
+      selected = CardStylePref.Classic,
+      onSelect = {},
+      initiallyExpanded = true,
+      state = { pref ->
+        when (pref) {
+          CardStylePref.Classic,
+          CardStylePref.HomeAssistant -> CardStyleState.BuiltIn
+          CardStylePref.Expressive -> CardStyleState.Installed
+          CardStylePref.Trinitron -> CardStyleState.Installing
+          CardStylePref.Lcd -> CardStyleState.Failed
+          else -> CardStyleState.NotInstalled
+        }
+      },
+    )
   }
 }
 
