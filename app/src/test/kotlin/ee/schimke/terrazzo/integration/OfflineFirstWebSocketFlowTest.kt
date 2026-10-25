@@ -15,7 +15,9 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.routing.routing
 import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.webSocket
+import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
+import io.ktor.websocket.close
 import io.ktor.websocket.readText
 import io.ktor.websocket.send
 import java.io.File
@@ -83,6 +85,16 @@ class OfflineFirstWebSocketFlowTest {
               for (frame in incoming) {
                 if (frame !is Frame.Text) continue
                 val msg = JSON.parseToJsonElement(frame.readText()).jsonObject
+                if (
+                  msg["type"]?.jsonPrimitive?.content == "lovelace/config" &&
+                    handler.disconnectOnConfigPath != null &&
+                    msg["url_path"]?.jsonPrimitive?.content == handler.disconnectOnConfigPath
+                ) {
+                  close(
+                    CloseReason(CloseReason.Codes.GOING_AWAY, "connection lost during config probe")
+                  )
+                  break
+                }
                 handler.handle(msg)?.let { reply ->
                   send(Frame.Text(JSON.encodeToString(JsonObject.serializer(), reply)))
                 }
@@ -97,6 +109,26 @@ class OfflineFirstWebSocketFlowTest {
   fun stop() {
     runCatching { server.stop(gracePeriodMillis = 100, timeoutMillis = 1_000) }
     cacheRoot.deleteRecursively()
+  }
+
+  @Test
+  fun disconnectDuringConfigProbingPreservesTheCompleteListForOfflineLaunches() = runBlocking {
+    val storage = OfflineCacheStorage(cacheRoot)
+    val session = CachedHaSession(LiveHaSession(baseUrl, "test-token"), storage)
+    try {
+      session.connect()
+      val complete = session.listDashboards()
+      assertEquals(2, complete.size)
+      assertTrue(complete.any { it.urlPath == "office" })
+
+      // The default probe succeeds; the socket drops while probing the named dashboard.
+      handler.disconnectOnConfigPath = "office"
+      assertEquals(complete, session.listDashboards())
+      assertEquals(complete, storage.dashboards(baseUrl))
+      assertEquals(complete, CachedHaSession.cacheOnly(baseUrl, storage).listDashboards())
+    } finally {
+      session.close()
+    }
   }
 
   @Test
@@ -189,6 +221,7 @@ class OfflineFirstWebSocketFlowTest {
    */
   private class HaProtocolHandler {
     @Volatile private var livingRoom = "21.4"
+    @Volatile var disconnectOnConfigPath: String? = null
 
     fun setLivingRoom(value: String) {
       livingRoom = value

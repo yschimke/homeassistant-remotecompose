@@ -11,7 +11,7 @@ const dist = process.env.WASM_DIST ?? `${root}app-ui/build/dist/wasmJs/productio
 const evidence = `${root}build/ha-plugin-evidence`;
 mkdirSync(evidence, {recursive:true});
 
-test('hosted WASM selects hidden dashboards, supports bookmarks and recovers from non-Lovelace Home', {timeout:180_000}, async () => {
+test('hosted WASM opens a supported dashboard directly, switches hidden dashboards and recovers from non-Lovelace Home', {timeout:180_000}, async () => {
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage({viewport:{width:1200,height:800}});
@@ -73,16 +73,20 @@ test('hosted WASM selects hidden dashboards, supports bookmarks and recovers fro
     });
     const frame = page.frameLocator('terrazzo-panel iframe');
     await page.goto('https://ha.test/terrazzo?dashboard=');
-    await frame.getByRole('button', {name:'Hidden panel hidden-panel',exact:true}).waitFor({timeout:60_000}).catch(async error => {
-      await page.screenshot({path:`${evidence}/dashboard-picker-failure.png`});
-      console.error('Picker document:', await frame.locator('body').ariaSnapshot());
+    await frame.getByText('Selected wall-panel', {exact:true}).waitFor({timeout:60_000}).catch(async error => {
+      await page.screenshot({path:`${evidence}/dashboard-start-failure.png`});
+      console.error('Startup document:', await frame.locator('body').ariaSnapshot());
       console.error('Requested configs:', requested, 'Page errors:', errors);
       throw error;
     });
-    assert.equal(await frame.getByRole('button', {name:/Generated home/}).count(), 0);
+    assert.equal(await frame.getByText('Choose a Lovelace dashboard.', {exact:true}).count(), 0);
+    await page.screenshot({path:`${evidence}/dashboard-start.png`});
+    await frame.getByRole('button', {name:/Switch dashboard/}).click({force:true});
+    await frame.getByText('Hidden panel', {exact:true}).waitFor();
+    assert.equal(await frame.getByText('Generated home', {exact:true}).count(), 0);
     assert.equal(await frame.getByRole('button', {name:/^Home(?: |$)/}).count(), 0);
-    await page.screenshot({path:`${evidence}/dashboard-picker.png`});
-    await frame.getByRole('button', {name:'Hidden panel hidden-panel',exact:true}).click({force:true});
+    await page.screenshot({path:`${evidence}/dashboard-switcher.png`});
+    await frame.getByText('Hidden panel', {exact:true}).click({force:true});
     await frame.getByText('Selected hidden-panel', {exact:true}).waitFor();
     await page.screenshot({path:`${evidence}/dashboard-hidden.png`});
     await page.goto('https://ha.test/terrazzo?dashboard=hidden-panel');
@@ -115,7 +119,8 @@ test('hosted WASM selects hidden dashboards, supports bookmarks and recovers fro
     await frame.getByText(/This dashboard needs Home Assistant's frontend/).waitFor({timeout:60_000});
     named = [];
     await page.goto('https://ha.test/terrazzo?dashboard=');
-    await frame.getByText(/No supported dashboards found/).waitFor({timeout:60_000});
+    await frame.getByText(/This dashboard is unavailable or is not a Lovelace dashboard/).waitFor({timeout:60_000});
+    assert.equal(await frame.getByRole('button', {name:/Switch dashboard/}).count(), 0);
     assert.ok(requested.includes(null) && requested.includes('hidden-panel'));
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }

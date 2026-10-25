@@ -54,6 +54,7 @@ import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.EditorScope
+import ee.schimke.terrazzo.dashboard.preferredDashboardPath
 import io.ktor.http.encodeURLParameter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -317,11 +318,21 @@ private fun DashboardShell(
   signInStorageLabel: String?,
 ) {
   var list by remember { mutableStateOf<DashboardListState>(DashboardListState.Loading) }
-  val home: NavKey = remember {
-    if (connection.hosted && initialDashboardPath == null) DashboardsDestination
-    else DashboardDestination(initialDashboardPath)
-  }
+  var home by remember { mutableStateOf<NavKey>(DashboardDestination(initialDashboardPath)) }
   val stack = remember { mutableStateListOf(home) }
+  var startupResolved by remember { mutableStateOf(initialDashboardPath != null) }
+  LaunchedEffect(list) {
+    val ready = list as? DashboardListState.Ready ?: return@LaunchedEffect
+    if (!startupResolved) {
+      val route = DashboardDestination(preferredDashboardPath(ready.dashboards, null))
+      home = route
+      if (stack.singleOrNull() == DashboardDestination(null)) {
+        stack.clear()
+        stack.add(route)
+      }
+      startupResolved = true
+    }
+  }
   // Bumped to drop every screen's saved state (selected view, scroll) when returning home.
   var homeVisit by remember { mutableIntStateOf(0) }
   var snapshot by remember(connection) { mutableStateOf(HaSnapshot()) }
@@ -888,6 +899,10 @@ private fun LiveDashboard(
       error = "Could not open Home Assistant entity details."
     }
   }
+  // History graphs draw from the recorder's history: the dashboard waits for its first answer, so
+  // each graph arrives with its line rather than an empty state that fills in.
+  val history = rememberDashboardHistory(connection.client, dashboard)
+  val shown = remember(snapshot, history) { withHistory(snapshot, history.orEmpty()) }
   val editing = designCard
   if (editing != null) {
     CardStudioScreen(
@@ -896,7 +911,7 @@ private fun LiveDashboard(
       onBack = { designCard = null },
       initialServerUrl = designServer,
     ) {
-      NativeCard(editing, snapshot) {}
+      NativeCard(editing, shown) {}
     }
     return
   }
@@ -905,15 +920,15 @@ private fun LiveDashboard(
     (error ?: connectionError)?.let {
       Text(it, Modifier.padding(16.dp), color = MaterialTheme.colorScheme.error)
     }
-    if (current == null) {
+    if (current == null || history == null) {
       if (error == null) CircularProgressIndicator(Modifier.padding(24.dp))
     } else
       Column(Modifier.weight(1f)) {
-        DashboardContent(current, path, snapshot, Modifier.weight(1f)) { _, card ->
+        DashboardContent(current, path, shown, Modifier.weight(1f)) { _, card ->
           Column {
             AuthenticatedCard(
               card,
-              snapshot,
+              shown,
               connection.client,
               designCache,
               pictureCache,

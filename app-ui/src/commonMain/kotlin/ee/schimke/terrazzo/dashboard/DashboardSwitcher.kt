@@ -44,9 +44,8 @@ fun DashboardSwitcher(
 ) {
   val current = dashboards.firstOrNull { it.urlPath == currentUrlPath }
   val title = current?.title ?: "Dashboard"
-  // Another dashboard to go to: any second one, or the only one while this one is gone (deleted,
-  // forbidden, unsupported), so there is always a way back to a dashboard that works.
-  val canSwitch = dashboards.size >= 2 || (current == null && dashboards.isNotEmpty())
+  // Keep an escape route when the current dashboard is missing and only one alternative remains.
+  val canSwitch = dashboards.any { it.urlPath != currentUrlPath }
 
   if (!canSwitch) {
     Text(

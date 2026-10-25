@@ -7,6 +7,7 @@ import ee.schimke.ha.client.HaCommandException
 import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.client.HaInstanceConfig
 import ee.schimke.ha.client.HaPushNotification
+import ee.schimke.ha.client.listRenderableDashboards
 import ee.schimke.ha.client.stateSnapshots
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaNotification
@@ -420,7 +421,7 @@ class LiveHaSession(
     _connectionStatus.value = SessionConnectionStatus.Disconnected
   }
 
-  override suspend fun listDashboards(): List<DashboardSummary> = client.listDashboards()
+  override suspend fun listDashboards(): List<DashboardSummary> = client.listRenderableDashboards()
 
   override suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot> =
     coroutineScope {

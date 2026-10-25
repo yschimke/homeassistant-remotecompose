@@ -9,7 +9,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -22,7 +21,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -31,7 +29,6 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.auth.rememberLoginController
 import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
-import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.ReconnectBackoff
@@ -41,13 +38,13 @@ import ee.schimke.terrazzo.dashboard.CardHistoryScreen
 import ee.schimke.terrazzo.dashboard.CardStyleSheet
 import ee.schimke.terrazzo.dashboard.DashboardEditorScreen
 import ee.schimke.terrazzo.dashboard.DashboardListState
-import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.dashboard.ManagePinnedScreen
 import ee.schimke.terrazzo.dashboard.StudioCardPreview
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
+import ee.schimke.terrazzo.dashboard.preferredDashboardPath
 import ee.schimke.terrazzo.dashboard.rememberDashboardListState
 import ee.schimke.terrazzo.dashboard.rememberSelectedDashboardListState
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
@@ -279,17 +276,6 @@ private fun UnauthenticatedScreen(
   )
 }
 
-/**
- * How the user arrived on [AppScreen.ChooseDashboards]: the sign-in gate, or "Manage dashboards" in
- * the dashboard's overflow menu. Both land on Dashboards once confirmed; the sign-in gate has no
- * back (the user MUST pick before getting to a dashboard), the menu entry's back arrow returns to
- * the dashboards.
- */
-private enum class SelectionEntry {
-  Signin,
-  Menu,
-}
-
 @Composable
 private fun AuthenticatedShell(
   session: HaSession,
@@ -302,7 +288,6 @@ private fun AuthenticatedShell(
   val scope = rememberCoroutineScope()
 
   var screen by rememberSaveable { mutableStateOf(AppScreen.Dashboards) }
-  var selectionEntry by rememberSaveable { mutableStateOf(SelectionEntry.Signin) }
 
   // A widget's more-info or navigate tap opens on the dashboard, whichever screen was showing.
   val widgetOpen by WidgetOpenRequests.requests.collectAsState()
@@ -320,46 +305,9 @@ private fun AuthenticatedShell(
   var selectionInitial by remember { mutableStateOf<Set<String>?>(null) }
   var selectionInitialResolved by remember { mutableStateOf(false) }
 
-  // First-run gate: if the user hasn't been through the selection
-  // screen for this session, force them onto it before opening any
-  // dashboard. We snapshot the pref once per session (rather than
-  // observing it as a Flow) so the screen doesn't auto-dismiss the
-  // moment the confirm callback writes the pref. Demo mode skips
-  // the gate entirely — `DemoData.BOARDS` is a curated showcase set
-  // and there's no per-user "which of MY dashboards" question to
-  // answer, so going straight to a dashboard matches both the
-  // try-the-app intent and the instrumented test's expectations.
-  var selectionResolved by remember(session) { mutableStateOf(false) }
-  var selectionMissingAtSignin by remember(session) { mutableStateOf(false) }
-  LaunchedEffect(session) {
-    val isDemo = session is DemoHaSession
-    selectionMissingAtSignin = !isDemo && graph.preferencesStore.selectedDashboardUrlsNow() == null
-    selectionResolved = true
-  }
-  LaunchedEffect(selectionResolved, selectionMissingAtSignin) {
-    if (selectionResolved && selectionMissingAtSignin && screen != AppScreen.ChooseDashboards) {
-      selectionEntry = SelectionEntry.Signin
-      // The gate fires precisely because no selection is
-      // persisted, so the snapshot for the screen is `null`
-      // (defaults to "all checked").
-      selectionInitial = null
-      selectionInitialResolved = true
-      screen = AppScreen.ChooseDashboards
-    }
-  }
-
-  // System-back routing. The signin-gate variant of ChooseDashboards
-  // *swallows* back — the user has to pick at least one dashboard
-  // before continuing — so the handler stays enabled and the
-  // callback no-ops (a disabled `BackHandler` lets Android's
-  // activity-level back through, which would exit the app). The
-  // settings re-edit variant routes back to Settings. Other
-  // non-Dashboards screens follow their existing rules. Inside
-  // DashboardsRoot another BackHandler routes view → picker; the
-  // platform handles back at the picker (exits app).
+  // Dashboard management is optional and always returns to the dashboard.
   val navigateBack: () -> Unit = {
     when {
-      screen == AppScreen.ChooseDashboards && selectionEntry == SelectionEntry.Signin -> Unit
       screen == AppScreen.SyncDiagnostics -> screen = AppScreen.Settings
       else -> screen = AppScreen.Dashboards
     }
@@ -382,7 +330,6 @@ private fun AuthenticatedShell(
             if (session is DemoHaSession) null
             else {
               {
-                selectionEntry = SelectionEntry.Menu
                 selectionInitialResolved = false
                 scope.launch {
                   selectionInitial = graph.preferencesStore.selectedDashboardUrlsNow()
@@ -429,12 +376,8 @@ private fun AuthenticatedShell(
             state = DashboardListState.Loading,
             initialSelection = null,
             onConfirm = {},
-            onBack = null,
-            title =
-              when (selectionEntry) {
-                SelectionEntry.Signin -> "Choose dashboards"
-                SelectionEntry.Menu -> "Manage dashboards"
-              },
+            onBack = { screen = AppScreen.Dashboards },
+            title = "Manage dashboards",
           )
         } else {
           DashboardSelectionScreen(
@@ -442,24 +385,10 @@ private fun AuthenticatedShell(
             initialSelection = selectionInitial,
             onConfirm = { urls ->
               scope.launch { graph.preferencesStore.setSelectedDashboardUrls(urls) }
-              // Avoid stranding the user on this screen
-              // between the pref write and the snapshot
-              // flag flipping.
-              selectionMissingAtSignin = false
               screen = AppScreen.Dashboards
             },
-            onBack =
-              when (selectionEntry) {
-                SelectionEntry.Signin -> null
-                SelectionEntry.Menu -> {
-                  { screen = AppScreen.Dashboards }
-                }
-              },
-            title =
-              when (selectionEntry) {
-                SelectionEntry.Signin -> "Choose dashboards"
-                SelectionEntry.Menu -> "Manage dashboards"
-              },
+            onBack = { screen = AppScreen.Dashboards },
+            title = "Manage dashboards",
           )
         }
       }
@@ -468,9 +397,8 @@ private fun AuthenticatedShell(
 }
 
 /**
- * The dashboard-first shell. Loads the dashboards list once for the session, hosts the picker →
- * view local nav, and renders the [DashboardTopBar] with the
- * [DashboardSwitcher] + [TopBarOverflowMenu].
+ * The dashboard-first shell. Loads the dashboards list once for the session and renders
+ * [DashboardTopBar] with the [DashboardSwitcher] + [TopBarOverflowMenu].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -490,8 +418,11 @@ private fun DashboardsRoot(
   val context = LocalContext.current
   val logsViewEnabled by graph.preferencesStore.logsViewEnabled.collectAsState(initial = false)
 
-  var opened by rememberSaveable { mutableStateOf(initialDashboardToOpened(initialDashboard)) }
-  // The view a card's navigation asked for in the opened dashboard; the picker and switcher clear
+  val readyDashboards = (dashboards as? DashboardListState.Ready)?.dashboards.orEmpty()
+  var opened by rememberSaveable {
+    mutableStateOf(preferredDashboardPath(readyDashboards, initialDashboard))
+  }
+  // The view a card's navigation asked for in the opened dashboard; the switcher clears
   // it.
   var openedView by rememberSaveable { mutableStateOf<String?>(null) }
   // Two-layer write-mode state:
@@ -523,19 +454,16 @@ private fun DashboardsRoot(
     graph.preferencesStore.designServerUrl.collectAsState(initial = "https://ha.coo.ee/designs/v1")
   val openedValue = opened
 
-  // System-back: history → dashboard, then view → picker; on the picker
-  // the platform handles it. The history overlay takes precedence, so
-  // the dashboard's view→picker handler stays disabled while it's up.
-  BackHandler(
-    enabled = historyTarget == null && studioTarget == null && openedValue != DASHBOARD_UNSET
-  ) {
-    opened = DASHBOARD_UNSET
+  var startupResolved by rememberSaveable { mutableStateOf(dashboards is DashboardListState.Ready) }
+  LaunchedEffect(dashboards) {
+    if (!startupResolved && dashboards is DashboardListState.Ready) {
+      opened = preferredDashboardPath(readyDashboards, opened)
+      startupResolved = true
+    }
   }
 
-  val readyDashboards = (dashboards as? DashboardListState.Ready)?.dashboards.orEmpty()
-
   // A widget's more-info or navigate tap opens on a dashboard ([DashboardViewScreen] opens it):
-  // back out of the card screens over it, and off the picker onto the first dashboard.
+  // back out of the card screens over it.
   val widgetOpen by WidgetOpenRequests.requests.collectAsState()
   LaunchedEffect(widgetOpen, readyDashboards) {
     if (widgetOpen == null) return@LaunchedEffect
@@ -544,7 +472,6 @@ private fun DashboardsRoot(
     studioTarget = null
     styleTarget = null
     editorOpen = false
-    if (opened == DASHBOARD_UNSET) readyDashboards.firstOrNull()?.let { opened = it.urlPath }
   }
   val connectionStatus = rememberMobileConnectionStatus(session)
   val snackbars = remember { SnackbarHostState() }
@@ -649,11 +576,7 @@ private fun DashboardsRoot(
   // the strip says how old that is. Demo boards are never cached.
   val cachedDataAtMs =
     remember(connectionStatus, openedValue, session) {
-      if (
-        connectionStatus != ConnectionStatus.Failed ||
-          openedValue == DASHBOARD_UNSET ||
-          session is DemoHaSession
-      ) {
+      if (connectionStatus != ConnectionStatus.Failed || session is DemoHaSession) {
         null
       } else {
         graph.offlineCache.snapshotSavedAtMs(session.baseUrl, openedValue)
@@ -662,7 +585,7 @@ private fun DashboardsRoot(
 
   val historyOverlay = historyTarget
   val studioOverlay = studioTarget
-  if (editorOpen && openedValue != DASHBOARD_UNSET) {
+  if (editorOpen) {
     DashboardEditorScreen(
       session = session,
       urlPath = openedValue,
@@ -685,7 +608,7 @@ private fun DashboardsRoot(
       onBack = { studioTarget = null },
       initialServerUrl = studioServer.ifBlank { "https://ha.coo.ee" },
       refreshSnapshot = {
-        val current = session.loadDashboard(openedValue.takeIf { it != DASHBOARD_UNSET }).second
+        val current = session.loadDashboard(openedValue).second
         studioTarget = card to current
         current
       },
@@ -707,19 +630,16 @@ private fun DashboardsRoot(
       topBar = {
         DashboardTopBar(
           title = {
-            if (openedValue == DASHBOARD_UNSET) {
-              Text("Pick a dashboard", maxLines = 1, overflow = TextOverflow.Ellipsis)
-            } else {
-              DashboardSwitcher(
-                dashboards = readyDashboards,
-                currentUrlPath = openedValue,
-                onSwitch = { newPath ->
-                  opened = newPath
-                  openedView = null
-                  scope.launch { graph.preferencesStore.setLastViewedDashboard(newPath) }
-                },
-              )
-            }
+            DashboardSwitcher(
+              dashboards = readyDashboards,
+              currentUrlPath = openedValue,
+              onSwitch = { newPath ->
+                startupResolved = true
+                opened = newPath
+                openedView = null
+                scope.launch { graph.preferencesStore.setLastViewedDashboard(newPath) }
+              },
+            )
           },
           notifications = notifications,
           onDismissNotification = { n ->
@@ -741,8 +661,7 @@ private fun DashboardsRoot(
               onOpenLogs = if (logsViewEnabled) onOpenLogs else null,
               onSignOut = onSignOut,
               onInstallOnWatch = installOnWatch,
-              onEditDashboard =
-                if (openedValue != DASHBOARD_UNSET) ({ editorOpen = true }) else null,
+              onEditDashboard = { editorOpen = true },
               onManageDashboards = onManageDashboards,
             )
           },
@@ -753,69 +672,48 @@ private fun DashboardsRoot(
       // bottom + sides to the content as the inner contentPadding.
       contentWindowInsets = WindowInsets.safeDrawing,
     ) { padding ->
-      if (openedValue == DASHBOARD_UNSET) {
-        DashboardPickerScreen(
-          state =
-            if (
-              connectionStatus == ConnectionStatus.Connecting &&
-                dashboards is DashboardListState.Error
-            )
-              DashboardListState.Loading
-            else dashboards,
-          onDashboardPicked = { urlPath ->
-            opened = urlPath
-            openedView = null
-            // Persist for the next cold start. The picker
-            // and the switcher are the only entry points
-            // that change which dashboard is "current".
-            scope.launch { graph.preferencesStore.setLastViewedDashboard(urlPath) }
+      // Key on the opened dashboard so switching dashboards
+      // disposes the previous one's whole render subtree —
+      // crucially the per-card `AndroidView` players — instead of
+      // reusing their composition slots. The players are hosted via
+      // `AndroidView(factory = { view })`, whose factory runs once
+      // per node; without a fresh node on switch, a reused slot
+      // keeps showing the previous dashboard's view until a
+      // collapse/expand forces recreation. Re-seeding from the
+      // offline cache makes the new dashboard paint immediately.
+      key(openedValue, dashboardSaves) {
+        DashboardViewScreen(
+          session = session,
+          urlPath = openedValue,
+          readOnly = readOnly,
+          connectionPending = connectionStatus == ConnectionStatus.Connecting,
+          // Long-press opens the card's actions, handed the live
+          // snapshot the card was pressed against so a fork or the
+          // history preview matches the dashboard frame.
+          onCardLongPress = { card, snapshot, section ->
+            actionsTarget = card to snapshot
+            actionsSection = section
           },
           contentPadding = padding,
+          initialViewPath = openedView,
+          // A card's navigation to another dashboard the user can open switches to it.
+          onOpenDashboard = { urlPath, viewPath ->
+            val known = readyDashboards.any { it.urlPath == urlPath }
+            if (known) {
+              opened = urlPath
+              openedView = viewPath
+              scope.launch { graph.preferencesStore.setLastViewedDashboard(urlPath) }
+            }
+            known
+          },
+          // Once shown, the view isn't asked for again when the screen is recreated.
+          onInitialViewShown = { openedView = null },
         )
-      } else {
-        // Key on the opened dashboard so switching dashboards
-        // disposes the previous one's whole render subtree —
-        // crucially the per-card `AndroidView` players — instead of
-        // reusing their composition slots. The players are hosted via
-        // `AndroidView(factory = { view })`, whose factory runs once
-        // per node; without a fresh node on switch, a reused slot
-        // keeps showing the previous dashboard's view until a
-        // collapse/expand forces recreation. Re-seeding from the
-        // offline cache makes the new dashboard paint immediately.
-        key(openedValue, dashboardSaves) {
-          DashboardViewScreen(
-            session = session,
-            urlPath = openedValue,
-            readOnly = readOnly,
-            connectionPending = connectionStatus == ConnectionStatus.Connecting,
-            // Long-press opens the card's actions, handed the live
-            // snapshot the card was pressed against so a fork or the
-            // history preview matches the dashboard frame.
-            onCardLongPress = { card, snapshot, section ->
-              actionsTarget = card to snapshot
-              actionsSection = section
-            },
-            contentPadding = padding,
-            initialViewPath = openedView,
-            // A card's navigation to another dashboard the user can open switches to it.
-            onOpenDashboard = { urlPath, viewPath ->
-              val known = readyDashboards.any { it.urlPath == urlPath }
-              if (known) {
-                opened = urlPath
-                openedView = viewPath
-                scope.launch { graph.preferencesStore.setLastViewedDashboard(urlPath) }
-              }
-              known
-            },
-            // Once shown, the view isn't asked for again when the screen is recreated.
-            onInitialViewShown = { openedView = null },
-          )
-        }
       }
     }
   }
 
-  val dashboardUrlPath = openedValue.takeIf { it != DASHBOARD_UNSET } ?: ""
+  val dashboardUrlPath = openedValue ?: ""
   actionsTarget?.let { target ->
     val (card, snapshot) = target
     CardActionsSheet(
@@ -856,15 +754,10 @@ private fun DashboardsRoot(
       snapshot = snapshot,
       sectionCards = actionsSection.takeIf { card in it }.orEmpty(),
       onDismiss = { installPending = null },
-      refreshSnapshot = {
-        session.loadDashboard(openedValue.takeIf { it != DASHBOARD_UNSET }).second
-      },
+      refreshSnapshot = { session.loadDashboard(openedValue).second },
     )
   }
 }
-
-/** Sentinel for "no dashboard opened yet". null is a valid urlPath (the default dashboard). */
-private const val DASHBOARD_UNSET = "__none__"
 
 /** Home Assistant refused the stored refresh token; shown on the sign-in screen. */
 private class SignedOutException :
@@ -879,20 +772,4 @@ private fun SessionConnectionStatus.toLogStatus():
     SessionConnectionStatus.Connected -> ee.schimke.terrazzo.core.logs.LogConnectionStatus.Connected
     SessionConnectionStatus.Disconnected ->
       ee.schimke.terrazzo.core.logs.LogConnectionStatus.Disconnected
-  }
-
-/**
- * Translate the persisted last-viewed-dashboard pref into the local `opened` sentinel/urlPath
- * encoding `DashboardsRoot` uses:
- * - `null` (pref absent) → `null` (HA's default dashboard). First launch lands on the default
- *   dashboard rather than the picker; the picker stays reachable via system-back from a view.
- * - [PreferencesStore.DEFAULT_DASHBOARD_SENTINEL] → `null` (HA's default dashboard, whose `urlPath`
- *   is null over the wire).
- * - any other string — that `urlPath`.
- */
-private fun initialDashboardToOpened(stored: String?): String? =
-  when (stored) {
-    null,
-    PreferencesStore.DEFAULT_DASHBOARD_SENTINEL -> null
-    else -> stored
   }

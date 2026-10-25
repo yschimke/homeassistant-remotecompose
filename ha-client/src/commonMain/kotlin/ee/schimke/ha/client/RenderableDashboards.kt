@@ -35,8 +35,9 @@ internal suspend fun resolveRenderableDashboards(
         fetch(dashboard.urlPath).hasRenderableViews()
       } catch (e: CancellationException) {
         throw e
-      } catch (_: Exception) {
-        // One missing/forbidden dashboard must not hide the user's other choices.
+      } catch (_: HaCommandException) {
+        // A server rejection concerns this dashboard alone. Transport failures must propagate:
+        // callers retain their last complete list instead of caching a partial resolution.
         false
       }
     }

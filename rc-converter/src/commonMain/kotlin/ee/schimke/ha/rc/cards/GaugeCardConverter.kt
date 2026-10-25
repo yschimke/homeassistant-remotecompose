@@ -138,7 +138,9 @@ class GaugeCardConverter : DesignedCardConverter() {
     /** Narrower than a two-column launcher widget: one column, `57 dp` on Android's grid. */
     const val NarrowWidthDp = 100
 
-    val TEMPLATE_CONFIG_KEYS = setOf("type", "entity", "name", "unit", "min", "max", "severity")
+    // `needle:` draws the same arc here, with or without a needle.
+    val TEMPLATE_CONFIG_KEYS =
+      setOf("type", "entity", "name", "unit", "min", "max", "severity", "needle")
     val SEVERITY_KEYS = setOf("green", "yellow", "red")
     const val HAS_UNIT = "has_unit"
     const val DOMAIN = "domain"
