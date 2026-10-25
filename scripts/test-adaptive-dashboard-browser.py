@@ -57,6 +57,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Handler)
 threading.Thread(target=server.serve_forever, daemon=True).start()
 
+def choose_card_style(page, current, style):
+    # The card style is a setting: open Settings from the header, choose, and go back.
+    page.get_by_role('button', name='Settings', exact=True).click(force=True, delay=100)
+    page.get_by_role('button', name='Card style: ' + current, exact=True).click(force=True, delay=100)
+    page.get_by_text(style, exact=True).click(force=True, delay=100)
+    # The closing menu's popup takes a click until it is gone.
+    expect(page.get_by_role('button', name='Card style: ' + style, exact=True)).to_be_visible()
+    expect(page.get_by_text(current, exact=True)).to_have_count(0)
+    page.evaluate('() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))')
+    page.get_by_role('button', name='Back', exact=True).click(force=True, delay=100)
+    expect(page.get_by_role('button', name='Back', exact=True)).to_have_count(0)
+
+
 def settled_capture(page, path):
     previous, stable = None, 0
     deadline = time.monotonic() + 5
@@ -150,8 +163,12 @@ try:
             expect(page.get_by_text('Hub: Connected', exact=True)).to_be_visible()
             expect(page.get_by_text(re.compile(r'\{\{|\{%'))).to_have_count(0)
             if name == 'wall':
-                page.get_by_role('button', name='Customize', exact=True).click(force=True, delay=100)
+                page.get_by_role('button', name='More options', exact=True).click(force=True, delay=100)
+                page.get_by_text('Customize', exact=True).click(force=True, delay=100)
                 expect(page.get_by_role('button', name='Design or fix this card').first).to_be_visible()
+                # The closing menu's popup takes a click until it is gone.
+                expect(page.get_by_text('Edit dashboard', exact=True)).to_have_count(0)
+                page.evaluate('() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))')
                 page.get_by_role('button', name='Done customizing', exact=True).click(force=True, delay=100)
                 expect(page.get_by_role('button', name='Design or fix this card')).to_have_count(0)
                 settled_capture(page, '_wasm-test/adaptive-instance-normal-mode-wall.png')
@@ -186,8 +203,7 @@ try:
                 reject_send = False
                 rows.append({'entity_id': conversation, 'when': 1792317720, 'message': '<public> Room node: Temperature is 22°C.'})
                 expect(page.get_by_text('Temperature is 22°C.', exact=True)).to_be_visible(timeout=20000)
-                page.get_by_role('button', name='Card style: Classic', exact=True).click(force=True, delay=100)
-                page.get_by_text('Console', exact=True).click(force=True, delay=100)
+                choose_card_style(page, 'Classic', 'Console')
                 expect(page.get_by_role('button', name='78 % Battery reserve 0 – 100 %', exact=True).filter(visible=True).first).to_be_visible(timeout=20000)
                 settled_capture(page, '_wasm-test/adaptive-instance-console-wall.png')
                 page.mouse.move(650, 700); page.mouse.wheel(0, 550)

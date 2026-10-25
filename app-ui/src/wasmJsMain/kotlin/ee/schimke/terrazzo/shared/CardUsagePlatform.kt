@@ -48,7 +48,7 @@ internal suspend fun initializeBrowserAppStorage() {
       BrowserStorageTransport,
       storageScope,
       browserAppStorage,
-      setOf(SHARING_KEY, LEDGER_KEY),
+      setOf(SHARING_KEY, LEDGER_KEY, CARD_STYLE_KEY),
     )
 }
 
