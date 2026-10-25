@@ -1,0 +1,15 @@
+{
+  "id": "/app.html",
+  "name": "Terrazzo for Home Assistant",
+  "short_name": "Terrazzo",
+  "description": "Home Assistant dashboards drawn with Terrazzo's cards.",
+  "start_url": "/app.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf6ec",
+  "theme_color": "#faf6ec",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

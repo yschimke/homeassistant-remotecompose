@@ -1,0 +1,127 @@
+<!doctype html>
+<!--
+  The public face of a Terrazzo Wasmo app. Wasmo serves www-public/ to everyone, ahead of the
+  owner-only www/, so this page answers "/" for every visitor. The owner is sent on to the app
+  (www/app.html); anyone else, or an owner who is signed out of Wasmo, gets install instructions
+  instead of a bare 404. See docs/architecture/wasmo-app.md.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Terrazzo</title>
+  <meta name="description" content="Home Assistant dashboards drawn with Terrazzo's cards.">
+  <meta name="theme-color" content="#faf6ec">
+  <link rel="icon" href="/icon-192.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <script>
+    // Only the owner can load www/app.html; Wasmo answers 404 to everyone else.
+    document.documentElement.classList.add('probing');
+    fetch('/app.html', { method: 'GET', cache: 'no-store', credentials: 'same-origin' })
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        location.replace(`/app.html${location.search}${location.hash}`);
+      })
+      .catch(() => document.documentElement.classList.remove('probing'));
+  </script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #faf6ec;
+      --fg: #2b1d14;
+      --muted: #6b5a4c;
+      --accent: #b5532c;
+      --card: #ffffff;
+      --border: #e7dccb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1612;
+        --fg: #f3ebe0;
+        --muted: #b8a897;
+        --accent: #e58a5f;
+        --card: #261e18;
+        --border: #3a2e25;
+      }
+    }
+    html.probing body { visibility: hidden; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font: 16px/1.5 system-ui, sans-serif;
+    }
+    main { max-width: 640px; margin: 0 auto; padding: 32px 16px 48px; }
+    header { display: flex; align-items: center; gap: 16px; }
+    header img { width: 72px; height: 72px; border-radius: 18px; }
+    h1 { margin: 0; font-size: 28px; }
+    header p { margin: 0; color: var(--muted); }
+    h2 { font-size: 18px; margin: 0 0 8px; }
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    ol { margin: 0; padding-left: 20px; }
+    p { margin: 0 0 8px; }
+    a { color: var(--accent); }
+    code { font-size: 14px; }
+    .address {
+      display: block;
+      overflow-wrap: anywhere;
+      padding: 8px;
+      margin: 8px 0;
+      border-radius: 8px;
+      background: var(--bg);
+    }
+    .note { color: var(--muted); font-size: 14px; }
+    ol + .note { margin-top: 8px; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="/icon-192.png" alt="">
+    <div>
+      <h1>Terrazzo</h1>
+      <p>Home Assistant dashboards, drawn with Terrazzo's cards.</p>
+    </div>
+  </header>
+
+  <section>
+    <h2>Is this your Wasmo?</h2>
+    <p>This app only opens for its owner. Sign in to your Wasmo, then open
+      <strong>Home Assistant</strong> from your launcher.</p>
+    <p class="note">Once it's open you can install it to your phone or desktop: use your
+      browser's <em>Install app</em> or <em>Add to Home Screen</em>.</p>
+  </section>
+
+  <section>
+    <h2>Install Terrazzo on your own Wasmo</h2>
+    <ol>
+      <li>In your Wasmo, open the computer menu and choose <strong>Install App</strong>.</li>
+      <li>Paste this address:
+        <code class="address">https://github.com/yschimke/homeassistant-remotecompose/releases/latest/download/terrazzo.wasmo</code>
+      </li>
+      <li>Name it (for example <code>terrazzo</code>), open it, and sign in with Home Assistant.</li>
+    </ol>
+    <p class="note">Home Assistant must be reachable over HTTPS from your browser (Nabu Casa or
+      your own TLS).</p>
+  </section>
+
+  <section>
+    <h2>Other ways to use Terrazzo</h2>
+    <ol>
+      <li><a href="https://yschimke.github.io/homeassistant-remotecompose/">In your browser</a>,
+        with nothing to install.</li>
+      <li>Inside Home Assistant, as a wall panel and Lovelace cards:
+        <a href="https://github.com/yschimke/homeassistant-remotecompose/blob/main/docs/HOME_ASSISTANT.md">integration guide</a>.</li>
+      <li>On the desktop:
+        <a href="https://github.com/yschimke/homeassistant-remotecompose/releases/latest">Linux, Windows and macOS installers</a>.</li>
+    </ol>
+  </section>
+</main>
+</body>
+</html>

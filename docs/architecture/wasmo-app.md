@@ -18,10 +18,32 @@ Wasmo launcher.
 terrazzo.wasmo/
   wasmo-manifest.toml      # app-ui/wasmo/wasmo-manifest.toml, version from the app version
   www/                     # the wasmJsBrowserDistribution output, served to the owner only
-    index.html             # + wasm-mime-fallback.js before the other scripts
+    app.html               # the dist's index.html, renamed; + wasm-mime-fallback.js and the
+                           #   manifest/icon links
     ha-oauth.js, terrazzo.js, *.wasm, composeResources/…
     assets/icon.png        # launcher icon
+  www-public/              # app-ui/wasmo/www-public/, served to everyone
+    index.html             # landing page: sends the owner to /app.html, explains installing
+    manifest.webmanifest   # web app manifest (start_url /app.html), so the app can be installed
+    icon-192.png, icon-512.png, apple-touch-icon.png
 ```
+
+## Public landing page and installing to a device
+
+Wasmo serves `www-public/` to everyone and checks it **before** the owner-only `www/`, and it has
+no sign-in redirect: anyone who isn't the signed-in owner gets a bare 404 for every `www/` path.
+So `/` is `www-public/index.html` for every visitor, and the app itself is `www/app.html` (the
+launcher's `home_path`). The landing page fetches `/app.html`; a 200 means the visitor is the
+owner, and it replaces itself with the app, keeping the query and hash. Anyone else, including the
+owner signed out of Wasmo, sees what Terrazzo is, how to install it on their own Wasmo, and the
+other ways to run it, instead of a 404.
+
+The app page links `manifest.webmanifest`, so once open the owner can **Install app** / **Add to
+Home Screen** from the browser and get a standalone window on the app's own origin. The manifest
+and its icons sit in `www-public/` because browsers fetch a manifest without credentials, which
+the owner-only `www/` would answer with 404. Neither holds anything private. There is no service
+worker: browsers no longer require one to install, and the app needs a live connection to Home
+Assistant anyway.
 
 There is no `app.wasm`. Everything runs in the browser, which connects to Home Assistant directly
 (WebSocket + `/auth/token`). Wasmo serves the files and handles the owner's sign-in to Wasmo. It
@@ -70,7 +92,7 @@ placeholder **Smart Home** entry, is only the built-in catalog, not the only way
    To host it yourself instead, build `./gradlew :app-ui:wasmoApp` and serve
    `app-ui/build/wasmo/terrazzo.wasmo` from any HTTPS URL Wasmo can reach.
 2. In Wasmo, choose **Install App**, paste the URL, and name it (e.g. `terrazzo`).
-3. Open `https://terrazzo-<computer>.wasmo.com/`.
+3. Open it from the launcher, or `https://terrazzo-<computer>.wasmo.com/`.
 
 The **Wasmo server**, not your browser, fetches the URL (`ZipResourceInstaller`, OkHttp), so the
 address must be reachable from wherever Wasmo runs:
