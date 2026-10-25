@@ -1,6 +1,9 @@
 package ee.schimke.terrazzo.wear
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -115,6 +118,16 @@ class WearMainActivity : ComponentActivity() {
 
     // Once per launch: a recreated activity keeps the screen it was on.
     if (savedInstanceState == null) openWidgetCard.value = widgetCardKeyOf(intent)
+    // The phone's Home Assistant notifications post here (Wear OS 4+ asks first). Asked once per
+    // launch until answered; the system stops asking after a refusal.
+    if (
+      savedInstanceState == null &&
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+        checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
+          PackageManager.PERMISSION_GRANTED
+    ) {
+      requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
+    }
     setContent { WearApp(repo, prefs, initialLook, openWidgetCard) }
   }
 

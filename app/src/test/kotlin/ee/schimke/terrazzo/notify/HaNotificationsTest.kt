@@ -4,6 +4,9 @@ import androidx.core.app.NotificationCompat
 import ee.schimke.ha.client.HaPushNotification
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -34,12 +37,18 @@ class HaNotificationsTest {
   }
 
   @Test
-  fun aWatchWithTheAppGetsOpenOnWatch() {
-    val wear =
-      NotificationCompat.WearableExtender(
-        HaNotifications.build(context, BASE_URL, message, watchHasApp = true)
-      )
-    assertEquals(listOf("Open on watch"), wear.actions.map { it.title.toString() })
+  fun aWatchWithTheAppGetsItsOwnCopyNotTheBridgedOne() {
+    val n = HaNotifications.build(context, BASE_URL, message, watchHasApp = true)
+    assertTrue(NotificationCompat.getLocalOnly(n), "the Wear app posts its own; nothing bridges")
+    assertNotNull(n.deleteIntent, "dismissing the phone's copy takes the watch's down")
+    assertTrue(NotificationCompat.WearableExtender(n).actions.isEmpty())
+  }
+
+  @Test
+  fun withoutTheWearAppItBridges() {
+    val n = HaNotifications.build(context, BASE_URL, message, watchHasApp = false)
+    assertFalse(NotificationCompat.getLocalOnly(n))
+    assertNull(n.deleteIntent)
   }
 
   @Test

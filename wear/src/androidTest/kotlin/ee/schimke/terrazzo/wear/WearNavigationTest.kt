@@ -8,18 +8,30 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.platform.app.InstrumentationRegistry
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.PinnedSection
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
 /** Real activity navigation with offline demo fixtures: no home or paired phone required. */
 class WearNavigationTest {
   @get:Rule val compose = createEmptyComposeRule()
+
+  /** The app asks for notifications on launch; granted up front, no dialog covers the screens. */
+  @Before
+  fun grantNotifications() {
+    val instrumentation = InstrumentationRegistry.getInstrumentation()
+    instrumentation.uiAutomation.grantRuntimePermission(
+      instrumentation.targetContext.packageName,
+      android.Manifest.permission.POST_NOTIFICATIONS,
+    )
+  }
 
   @Test
   fun systemBackReturnsThroughDashboardHierarchyAndSettings() {

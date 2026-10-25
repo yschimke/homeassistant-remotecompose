@@ -339,6 +339,24 @@
             android:exported="false" />
 
         <!--
+          The watch's copy of a Home Assistant notification (the Wear app posts its own): its
+          dismissal takes the phone's down, and its buttons run here. Exported for Play services;
+          paths mirror WearSyncPaths.
+        -->
+        <service
+            android:name=".notify.PhoneWearNotificationService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/wear/notification/" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:path="/wear/notification-tap/v1" />
+            </intent-filter>
+        </service>
+
+        <!--
           AppFunctions (Android 16+): the Home Assistant functions an on-device agent with
           EXECUTE_APP_FUNCTIONS may call. The compiler generates both the service class and the
           function XML asset from assistant/TerrazzoAppFunctions.kt; every function starts

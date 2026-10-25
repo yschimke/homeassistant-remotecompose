@@ -22,6 +22,7 @@ class WearDataCleanupTest {
         WearSyncPaths.SLOTS,
         WearSyncPaths.SLOT_DESIGNS,
         WearSyncPaths.designPath("ab12"),
+        WearSyncPaths.notificationPath(-42),
       )) {
       assertTrue(
         WATCH_ACCOUNT_DATA.any { if (it.prefix) path.startsWith(it.path) else path == it.path },

@@ -7,7 +7,6 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
-import androidx.wear.remote.interactions.RemoteActivityHelper
 import ee.schimke.ha.client.HaPushNotification
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.encodeHaAction
@@ -28,7 +27,7 @@ import kotlinx.serialization.json.put
  * - An HA action (`data.actions[].action`) fires `mobile_app_notification_action` with the action
  *   and the message's tag, as the companion apps do, so automations waiting on it run. It goes on
  *   the app's socket while connected, else a short-lived session ([WidgetActionRunner.fireEvent]).
- * - "Open on watch" (watch-only, see [HaNotifications]) starts the Wear app on the paired watch.
+ * - Dismissing the phone's copy, while the watch has its own, removes that ([WearNotifications]).
  *
  * An action with a `uri` never reaches here: it is an activity `PendingIntent` that opens it.
  */
@@ -36,7 +35,9 @@ class HaNotificationActionReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     when (intent.action) {
       ACTION_HA -> fireHaAction(context, intent)
-      ACTION_OPEN_ON_WATCH -> openOnWatch(context)
+      ACTION_DISMISSED ->
+        // Dismissed on the phone: take the watch's copy down too.
+        WearNotifications.remove(context, intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0))
       ACTION_CARD -> runCardAction(context, intent)
     }
   }
@@ -82,25 +83,16 @@ class HaNotificationActionReceiver : BroadcastReceiver() {
         else -> null
       }
     if (wanted == null || wanted != current) DemoData.actionRouter.applyToggle(entityId, current)
-    val message = TestNotification.message(entityId)
-    if (!HaNotifications.isShowing(context, message)) return
-    val card = NotificationCards.capture(context, baseUrl, entityId, DemoData.snapshot())
-    HaNotifications.handle(
-      context,
-      baseUrl,
-      message,
-      TestNotification.watchHasApp(context),
-      card,
-      refresh = true,
-    )
+    redrawDemo(context, baseUrl, entityId)
   }
 
   private fun fireHaAction(context: Context, intent: Intent) {
     val baseUrl = intent.getStringExtra(EXTRA_BASE_URL) ?: return
     val action = intent.getStringExtra(EXTRA_ACTION) ?: return
     val tag = intent.getStringExtra(EXTRA_TAG)
-    NotificationManagerCompat.from(context)
-      .cancel(NOTIFICATION_TAG, intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0))
+    val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0)
+    NotificationManagerCompat.from(context).cancel(NOTIFICATION_TAG, notificationId)
+    WearNotifications.remove(context, notificationId)
     // The offline demo has no Home Assistant to tell; the tap only dismisses.
     if (DemoData.isDemo(baseUrl)) return
     val data = buildJsonObject {
@@ -119,25 +111,14 @@ class HaNotificationActionReceiver : BroadcastReceiver() {
     }
   }
 
-  private fun openOnWatch(context: Context) {
-    val open =
-      Intent(Intent.ACTION_VIEW)
-        .addCategory(Intent.CATEGORY_BROWSABLE)
-        .setData(Uri.parse(WEAR_OPEN_URI))
-    runCatching { RemoteActivityHelper(context).startRemoteActivity(open, null) }
-      .onFailure { Log.w(TAG, "Couldn't open the Wear app", it) }
-  }
-
   companion object {
     private const val TAG = "HaNotificationAction"
     const val ACTION_HA = "ee.schimke.terrazzo.NOTIFICATION_ACTION"
-    const val ACTION_OPEN_ON_WATCH = "ee.schimke.terrazzo.NOTIFICATION_OPEN_ON_WATCH"
+    const val ACTION_DISMISSED = "ee.schimke.terrazzo.NOTIFICATION_DISMISSED"
     const val ACTION_CARD = "ee.schimke.terrazzo.NOTIFICATION_CARD_ACTION"
     private const val EXTRA_PAYLOAD = "payload"
     /** HA's event for a notification button, as the companion apps fire it. */
     const val EVENT_TYPE = "mobile_app_notification_action"
-    /** The Wear app's entry point for "Open on watch" (an intent filter on WearMainActivity). */
-    const val WEAR_OPEN_URI = "terrazzo-wear://open"
     private const val NOTIFICATION_TAG = "ha"
     private const val EXTRA_BASE_URL = "base_url"
     private const val EXTRA_ACTION = "action"
@@ -229,13 +210,32 @@ class HaNotificationActionReceiver : BroadcastReceiver() {
       )
     }
 
-    fun openOnWatch(context: Context, notificationId: Int): PendingIntent =
+    /** Redraws the demo's test notification for [entityId]'s new state, if it still shows. */
+    internal suspend fun redrawDemo(context: Context, baseUrl: String, entityId: String) {
+      val message = TestNotification.message(entityId)
+      if (!HaNotifications.isShowing(context, message)) return
+      val snapshot = DemoData.snapshot()
+      val card = NotificationCards.capture(context, baseUrl, entityId, snapshot)
+      HaNotifications.handle(
+        context,
+        baseUrl,
+        message,
+        TestNotification.watchHasApp(context),
+        card,
+        refresh = true,
+        entity = snapshot.states[entityId],
+      )
+    }
+
+    /** The phone notification's delete intent, while the watch has its own copy. */
+    fun dismissed(context: Context, notificationId: Int): PendingIntent =
       PendingIntent.getBroadcast(
         context,
         notificationId,
         Intent(context, HaNotificationActionReceiver::class.java)
-          .setAction(ACTION_OPEN_ON_WATCH)
-          .setData(Uri.parse("terrazzo://notification-watch/$notificationId")),
+          .setAction(ACTION_DISMISSED)
+          .setData(Uri.parse("terrazzo://notification-dismissed/$notificationId"))
+          .putExtra(EXTRA_NOTIFICATION_ID, notificationId),
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
       )
   }

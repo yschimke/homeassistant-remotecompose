@@ -10,6 +10,7 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import ee.schimke.ha.client.HaPushNotification
+import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.R as ComponentsR
 import ee.schimke.terrazzo.MainActivity
@@ -23,16 +24,15 @@ import ee.schimke.terrazzo.widget.WidgetOpenRequests
  * - Its id is [HaPushNotification.dedupeKey]: HA's `tag` when set, so a re-sent message replaces
  *   the first and `clear_notification` removes it; otherwise the content, so a reconnect that
  *   replays a message doesn't post it twice.
- * - It is bridged to a paired watch with [BRIDGE_TAG] and that key as its dismissal id, so
- *   dismissing it on either device dismisses both, and a Wear app that posts its own copy can
- *   suppress the bridged one by tag (`BridgingConfig`) instead of showing two.
+ * - Without the Wear app, it is bridged to a paired watch with [BRIDGE_TAG] and that key as its
+ *   dismissal id, so dismissing it on either device dismisses both.
  * - A message with an entity carries its live card ([NotificationCards]) as the phone's expanded
  *   body; [HaPushReceiver] redraws it as the entity changes ([refresh]), for as long as the
  *   notification shows. The watch never gets the RemoteViews: it shows the standard fields (title,
  *   the full message as BigTextStyle, actions), which every notification keeps, card or not.
- * - While the watch has the Wear app installed, it carries a watch-only "Open on watch" action.
- *   That stays harmless once the Wear app posts its own copy: the bridged notification, and its
- *   action, are suppressed there.
+ * - With the Wear app on a paired watch, the phone's copy is local-only and the Wear app posts its
+ *   own, richer one from a Data Layer item ([WearNotifications]); dismissing either dismisses both.
+ *   Without it, the notification is bridged as above.
  */
 object HaNotifications {
   const val CHANNEL_ID = "ha_notifications"
@@ -64,9 +64,10 @@ object HaNotifications {
   }
 
   /**
-   * Posts [notification], or removes the one it clears. [watchHasApp] adds the watch-only "Open on
-   * watch" action; [card] is a Remote Compose card for the notification's entity, when one could be
-   * drawn.
+   * Posts [notification], or removes the one it clears. With [watchHasApp] the phone's copy is
+   * local-only and the Wear app posts its own ([WearNotifications]); otherwise it is bridged.
+   * [card] is a Remote Compose card for the notification's [entity], when one could be drawn; a
+   * [refresh] redraws it for [entity]'s new state, without alerting, on the phone and the watch.
    */
   fun handle(
     context: Context,
@@ -75,23 +76,51 @@ object HaNotifications {
     watchHasApp: Boolean,
     card: RemoteViews? = null,
     refresh: Boolean = false,
+    entity: EntityState? = null,
   ) {
     val nm = NotificationManagerCompat.from(context)
+    val id = idOf(notification)
     if (notification.isClear) {
-      notification.tag?.let { nm.cancel(NOTIFICATION_TAG, idOf(notification)) }
+      if (notification.tag != null) {
+        nm.cancel(NOTIFICATION_TAG, id)
+        WearNotifications.remove(context, id)
+      }
       return
     }
     if (!allowed(context)) return
+    // A state change without a card to redraw: only the watch's copy shows the state.
+    if (refresh && card == null) {
+      if (watchHasApp && entity != null) {
+        WearNotifications.post(
+          context,
+          WearNotifications.payload(id, baseUrl, notification, entity, update = true),
+        )
+      }
+      return
+    }
     createChannel(context)
     try {
       nm.notify(
         NOTIFICATION_TAG,
-        idOf(notification),
+        id,
         build(context, baseUrl, notification, watchHasApp, card, refresh),
       )
     } catch (denied: SecurityException) {
       // Permission revoked between the check and the post.
+      return
     }
+    // A refresh reaches the watch only with the entity's new state to show.
+    if (watchHasApp && (!refresh || entity != null)) {
+      WearNotifications.post(
+        context,
+        WearNotifications.payload(id, baseUrl, notification, entity, update = refresh),
+      )
+    }
+  }
+
+  /** Cancels the phone's notification [id] (the watch dismissed its copy). */
+  fun cancel(context: Context, id: Int) {
+    NotificationManagerCompat.from(context).cancel(NOTIFICATION_TAG, id)
   }
 
   internal fun build(
@@ -103,20 +132,12 @@ object HaNotifications {
     refresh: Boolean = false,
   ): android.app.Notification {
     val id = idOf(notification)
+    // Bridged (no Wear app): one dismissal id on both devices, and a tag the Wear app could
+    // suppress.
     val wear =
       NotificationCompat.WearableExtender()
         .setBridgeTag(BRIDGE_TAG)
         .setDismissalId(notification.dedupeKey)
-    if (watchHasApp) {
-      wear.addAction(
-        NotificationCompat.Action.Builder(
-            ComponentsR.drawable.ic_launcher_monochrome,
-            "Open on watch",
-            HaNotificationActionReceiver.openOnWatch(context, id),
-          )
-          .build()
-      )
-    }
     val builder =
       NotificationCompat.Builder(context, CHANNEL_ID)
         .setSmallIcon(ComponentsR.drawable.ic_launcher_monochrome)
@@ -128,6 +149,12 @@ object HaNotifications {
         .setOnlyAlertOnce(refresh)
         .setContentIntent(contentIntent(context, id, notification))
         .extend(wear)
+    if (watchHasApp) {
+      // The Wear app posts its own copy; dismissing this one dismisses that too.
+      builder
+        .setLocalOnly(true)
+        .setDeleteIntent(HaNotificationActionReceiver.dismissed(context, id))
+    }
     notification.group?.let { builder.setGroup(it) }
     notification.actions.take(MAX_ACTIONS).forEachIndexed { index, action ->
       builder.addAction(

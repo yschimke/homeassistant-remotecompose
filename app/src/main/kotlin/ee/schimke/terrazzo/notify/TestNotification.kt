@@ -36,9 +36,18 @@ object TestNotification {
     val entityId = snapshot?.states?.keys?.sorted()?.firstOrNull { it.startsWith("light.") }
     val message = message(entityId)
     val card = entityId?.let { NotificationCards.render(context, session, it) }
-    HaNotifications.handle(context, session.baseUrl, message, watchHasApp(context), card)
-    // A live server's state changes redraw it; the offline demo's toggles redraw it themselves.
-    if (card != null && !DemoData.isDemo(session.baseUrl)) {
+    HaNotifications.handle(
+      context,
+      session.baseUrl,
+      message,
+      watchHasApp(context),
+      card,
+      entity = entityId?.let { snapshot.states[it] },
+    )
+    // A live server's state changes redraw it (card and watch copy); the offline demo's toggles
+    // redraw it themselves.
+    val follows = card != null || (entityId != null && watchHasApp(context))
+    if (follows && !DemoData.isDemo(session.baseUrl)) {
       HaPushReceiver.track(message, snapshot.states[entityId])
     }
     return true

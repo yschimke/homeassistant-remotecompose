@@ -5,6 +5,8 @@
 
     <!-- Reads the cards' values from Home Assistant itself when the phone has none to send. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Home Assistant's notifications, posted here from the phone's Data Layer tickle. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".TerrazzoWearApplication"
@@ -26,15 +28,7 @@
             android:name=".WearMainActivity"
             android:exported="true"
             android:taskAffinity=""
-            android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
-            <!-- "Open on watch" on a phone notification (RemoteActivityHelper). -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="terrazzo-wear" android:host="open" />
-            </intent-filter>
-        </activity>
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar" />
 
         <!--
           The launcher entry, one alias per icon, as on the phone: LauncherIcons (rc-components)
@@ -278,6 +272,23 @@
                 <data android:scheme="wear" android:host="*" android:path="/wear/access" />
             </intent-filter>
         </service>
+
+        <!--
+          Home Assistant notifications the phone hands over (its own copy is local-only): posts,
+          updates and cancels the watch's copy, while the app isn't running too. Exported for
+          Play services; the path mirrors WearSyncPaths.NOTIFICATION_PREFIX.
+        -->
+        <service
+            android:name=".notify.WearNotificationListenerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/wear/notification/" />
+            </intent-filter>
+        </service>
+        <receiver
+            android:name=".notify.WearNotificationActionReceiver"
+            android:exported="false" />
 
         <!--
           Picks the card a Terrazzo widget shows, from the cards the phone shows on the watch.
