@@ -18,6 +18,8 @@ test_status=$?
 smoke_status=0
 adb install -r wear/build/outputs/apk/debug/wear-debug.apk || smoke_status=$?
 if [[ "$smoke_status" -eq 0 ]]; then
+  # The app asks for notifications on launch: grant it so the screenshot shows the app.
+  adb shell pm grant ee.schimke.harc android.permission.POST_NOTIFICATIONS || true
   adb shell am start -W -n ee.schimke.harc/ee.schimke.terrazzo.wear.WearMainActivity \
     > build/wear-runtime/activity-start.txt || smoke_status=$?
   # Wait for the activity's first frame after am start has resumed it.
