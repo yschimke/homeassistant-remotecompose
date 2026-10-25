@@ -16,16 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.glance.wear.GlanceWearWidget
 import androidx.glance.wear.GlanceWearWidgetManager
 import androidx.lifecycle.lifecycleScope
-import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
 import ee.schimke.terrazzo.wear.sync.syncWidgetStateFromDataLayer
 import ee.schimke.terrazzo.wear.ui.WearAppSurface
-import ee.schimke.terrazzo.wear.ui.WearCardLook
 import ee.schimke.terrazzo.wear.ui.WearWidgetCardPicker
+import ee.schimke.terrazzo.wear.ui.wearCardLook
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
@@ -57,8 +54,7 @@ class WearWidgetConfigActivity : ComponentActivity() {
     val provider = intent?.providerComponent()
     val large = provider?.className == CardLargeWidgetService::class.java.name
     val store = WearOfflineStore(applicationContext)
-    val prefs = WearPrefs(applicationContext)
-    val look = runBlocking { WearCardLook(prefs.themeStyle.first(), prefs.cardStyle.first()) }
+    var look by mutableStateOf(store.readSettings().wearCardLook())
     var options by
       mutableStateOf(widgetCardOptions(store.readPinned(), store.readSections()).forWidget(large))
     var values by mutableStateOf<Map<String, EntityValue>>(store.readValues()?.values.orEmpty())
@@ -71,6 +67,7 @@ class WearWidgetConfigActivity : ComponentActivity() {
           syncWidgetStateFromDataLayer(applicationContext, store)
         }
       }
+      look = store.readSettings().wearCardLook()
       options = widgetCardOptions(store.readPinned(), store.readSections()).forWidget(large)
       values = store.readValues()?.values.orEmpty()
     }

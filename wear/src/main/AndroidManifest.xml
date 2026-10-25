@@ -265,6 +265,8 @@
                 <data android:scheme="wear" android:host="*" android:path="/wear/pinned" />
                 <data android:scheme="wear" android:host="*" android:path="/wear/sections" />
                 <data android:scheme="wear" android:host="*" android:path="/wear/slot-designs" />
+                <data android:scheme="wear" android:host="*" android:path="/wear/settings" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/wear/design/" />
             </intent-filter>
             <!-- The watch's own Home Assistant token, which the phone may send while the app is closed. -->
             <intent-filter>

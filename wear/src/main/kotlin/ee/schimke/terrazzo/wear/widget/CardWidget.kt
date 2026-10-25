@@ -59,20 +59,20 @@ import ee.schimke.ha.rc.components.RemoteHaTheme
 import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.converterFor
-import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.data.toEntityState
 import ee.schimke.terrazzo.wear.sync.WearDirectAccess
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
 import ee.schimke.terrazzo.wear.sync.syncDesignsFromDataLayer
 import ee.schimke.terrazzo.wear.sync.syncPicturesFromDataLayer
 import ee.schimke.terrazzo.wear.sync.syncWidgetStateFromDataLayer
+import ee.schimke.terrazzo.wear.ui.syncedCardDesign
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
+import ee.schimke.terrazzo.wear.ui.wearCardLook
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -96,8 +96,8 @@ import kotlinx.serialization.json.JsonPrimitive
  *    Wear captures the composition to RemoteCompose bytes for the watch's RC runtime.
  *
  * Wear colors come from Remote Material 3's named `WearM3.*` state, so the widget host can update
- * them without recapturing the document. The user's selected [ThemeStyle] (read from [WearPrefs])
- * supplies fallback colors for runtimes that do not inject those names.
+ * them without recapturing the document. The phone's selected [ThemeStyle] (read from synced
+ * settings) supplies fallback colors for runtimes that do not inject those names.
  *
  * Limitations: cards that need history / statistics / forecasts won't have that data — only the
  * latest entity state flows over the data layer today. Cards that lean on ops outside the Glance
@@ -208,8 +208,9 @@ internal suspend fun slotWidgetDataFromStore(
     withTimeoutOrNull(DATA_LAYER_TIMEOUT_MS) { syncPicturesFromDataLayer(app, store, pictured) }
   }
 
-  val style = WearPrefs(app).themeStyle.first()
-  val cardStyle = wearWidgetCardStyle(summary?.cardStyleOverride, WearPrefs(app).cardStyle.first())
+  val look = store.readSettings().wearCardLook()
+  val style = look.palette
+  val cardStyle = wearWidgetCardStyle(summary?.cardStyleOverride, look.style)
   val registry = defaultRegistry().withEnhancedShutter()
   val updatedColors = wearWidgetColors(style)
 
@@ -229,6 +230,7 @@ internal suspend fun slotWidgetDataFromStore(
     fetchImage = { url -> syncedPicture(store, snapshot, url) },
     wearDesign = { container ->
       designs.firstOrNull { it.container == container }?.let { store.readDesign(it.sha256) }
+        ?: card?.let { store.syncedCardDesign(it, container) }
     },
   )
 }
@@ -272,9 +274,9 @@ internal fun slotWidgetData(
   val direct = slotDocument(registry, colors, card, snapshot, cardStyle = cardStyle, tint = tint)
   if (card == null) return direct
   val design = CardDesignTemplates.designCard(card, snapshot, registry)
-  val converter = registry.converterFor(design.type) ?: return direct
-  val properties = converter.wearDesignProperties(design, snapshot) ?: return direct
-  val input = converter.wearDesignTemplate(properties) ?: return direct
+  val converter = registry.converterFor(design.type)
+  val properties = converter?.wearDesignProperties(design, snapshot)
+  val input = properties?.let { converter?.wearDesignTemplate(it) }
   return object : WearWidgetData {
     override suspend fun captureRawContent(
       context: Context,
@@ -284,7 +286,10 @@ internal fun slotWidgetData(
       // The server's Wear design for this container: no chrome of its own, the container's. One
       // that leaves its container frame named is a container-neutral template like the card's own
       // below, made into this widget's document first; one that bakes a frame plays as it is.
-      containerOf(params.containerType)?.let(wearDesign)?.let { synced ->
+      containerOf(params.containerType)?.let(wearDesign)?.let { bytes ->
+        val synced =
+          if (WearWidgetTemplate.namesFrame(bytes)) bytes
+          else CardDesignWearTemplate.template(bytes) ?: bytes
         val widget =
           if (WearWidgetTemplate.namesFrame(synced))
             WearWidgetTemplate.instantiate(context, synced, params, isPreview, tint)
@@ -295,6 +300,8 @@ internal fun slotWidgetData(
           return WearWidgetRawContent(it, widget?.extras ?: Bundle(), widget?.widgetTitle)
         }
       }
+      if (properties == null || input == null)
+        return direct.captureRawContent(context, params, isPreview)
       // The card's container-neutral template, made into this widget's document on the watch.
       neutralWidgetTemplate(
           context,

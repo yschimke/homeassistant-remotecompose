@@ -41,6 +41,9 @@ data class WearSettings(
   val updatedAtMs: Long = 0L,
   /** Explicit capability from the phone; absent on older phones means read-only. */
   val inputEditingEnabled: Boolean = false,
+  /** Mobile-owned appearance; appended fields preserve compatibility with older watches. */
+  val themeStyle: String = "Material3",
+  val cardStyle: String = "classic",
 )
 
 /** Card extract phone-side; wear renders a list row from this. */
@@ -50,7 +53,7 @@ data class CardSummary(
   val title: String = "",
   val primaryEntityId: String = "",
   val rawJson: String = "",
-  /** Explicit phone card/type style override; empty follows the watch style. */
+  /** Explicit phone card/type style override; empty follows the phone style. */
   val cardStyleOverride: String = "",
 )
 
@@ -109,10 +112,10 @@ class WearPicture(
 )
 
 /**
- * The Wear widget design the phone chose for each pinned card, per container: a design server
- * design made from the card's own design for that container (`small` or `large`). The template
- * travels as a [WearDesignBlob]; a card or container without one draws the card's own design. (The
- * path and name still say "slot": older phones sent designs for their widget slot cards only.)
+ * The design the phone chose for each Wear card, per container: a design server design made from
+ * the card's own design for that container (`small` or `large`). The template travels as a
+ * [WearDesignBlob]; a card or container without one draws the card's own design. (The path and name
+ * still say "slot": older phones sent designs for their widget slot cards only.)
  */
 @Serializable
 data class WearSlotDesigns(
@@ -124,7 +127,7 @@ data class WearSlotDesigns(
 data class WearSlotDesign(
   /** The card: a [PinnedCard.cardKey]. */
   val cardKey: String = "",
-  /** `small` or `large`: the Glance Wear container the design fills. */
+  /** `small` or `large`: the Wear container the design fills. */
   val container: String = "",
   /** The [WearDesignBlob] holding its template. */
   val sha256: String = "",

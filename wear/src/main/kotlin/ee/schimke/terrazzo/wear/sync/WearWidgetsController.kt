@@ -25,8 +25,8 @@ import kotlinx.coroutines.launch
  * - **Disabled** while there is none (never paired, or signed out). A host may drop the placed
  *   widgets of a disabled provider, so a widget showing a card the phone has since unpinned keeps
  *   drawing its kept copy only while some card is still synced.
- * - **Refreshed** when the pins, sections or the pinned cards' Wear designs change: a placed widget
- *   may show any of them.
+ * - **Refreshed** when the pins, sections, phone appearance or selected Wear designs change: a
+ *   placed widget may show any of them.
  *
  * Below [WEAR_WIDGETS_MIN_SDK] both components stay disabled; the alpha library short-circuits its
  * own bind path on older Wear OS versions, and an enabled-but-broken component would only confuse
@@ -59,7 +59,7 @@ class WearWidgetsController(
       // A changed card, or a newly synced design for one, must redraw the placed widgets showing
       // it, even when the providers' enabled state did not change. Skips the first, on-disk value:
       // the widgets already drew it.
-      combine(repo.pinned, repo.sections, repo.slotDesigns) { _, _, _ -> }
+      combine(repo.pinned, repo.sections, repo.designRevision, repo.settings) { _, _, _, _ -> }
         .drop(1)
         .collectLatest { refreshAllCardWidgets(context.applicationContext) }
     }

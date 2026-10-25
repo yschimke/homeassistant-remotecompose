@@ -346,9 +346,7 @@ private fun WearDashboardPreviewContent(style: String) {
 fun WearSettingsPreview() {
   WearPreviewFrame {
     WearSettingsScreen(
-      selected = ThemeStyle.TerrazzoHome,
       settings = WearSettings(demoMode = true, baseUrl = "demo://terrazzo"),
-      onSelectTheme = {},
       onBack = {},
       onOpenWidgets = {},
     )
