@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -69,14 +70,18 @@ import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.dashboard.CardDesignSources
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardStyleSample
+import ee.schimke.terrazzo.dashboard.CardStyleStore
 import ee.schimke.terrazzo.dashboard.CardStyleWearPanes
+import ee.schimke.terrazzo.dashboard.CardStyles
 import ee.schimke.terrazzo.shared.ReportFeedbackButton
 import ee.schimke.terrazzo.ui.appThemeOrNull
 import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -204,6 +209,12 @@ internal fun SettingsScreen(
           },
         )
 
+        val installedStyles by CardStyleStore.of(context).installed.collectAsState()
+        val styleOverrides by CardDesignOverrideStore.of(context).overrides.collectAsState()
+        // Installs in flight and installs that failed, while Settings is open.
+        var installingStyles by remember { mutableStateOf(emptySet<String>()) }
+        var failedStyles by remember { mutableStateOf(emptySet<String>()) }
+        val stylesInUse = CardStyles.inUse(cardStylePref.id, styleOverrides.cardStyles)
         CardStyleSection(
           selected = cardStylePref,
           onSelect = { pref ->
@@ -211,6 +222,31 @@ internal fun SettingsScreen(
               graph.preferencesStore.setCardStyle(pref)
               widgetRefresh.refreshAllNow()
             }
+          },
+          state = { pref ->
+            when {
+              pref.id in CardStyles.BUILT_IN -> CardStyleState.BuiltIn
+              CardStyles.isInstalled(pref.id, installedStyles) ->
+                if (pref.id in stylesInUse) CardStyleState.InUse else CardStyleState.Installed
+              pref.id in installingStyles -> CardStyleState.Installing
+              pref.id in failedStyles -> CardStyleState.Failed
+              else -> CardStyleState.NotInstalled
+            }
+          },
+          onInstall = { pref ->
+            if (pref.id !in installingStyles) {
+              installingStyles = installingStyles + pref.id
+              failedStyles = failedStyles - pref.id
+              scope.launch {
+                val choice = CardDesignSync.choice(context, graph.preferencesStore).first()
+                val result = CardStyles.install(context.applicationContext, choice, pref.id)
+                installingStyles = installingStyles - pref.id
+                if (result != CardStyles.Installed.Yes) failedStyles = failedStyles + pref.id
+              }
+            }
+          },
+          onUninstall = { pref ->
+            scope.launch { CardStyles.uninstall(context.applicationContext, pref.id) }
           },
         )
 
@@ -546,6 +582,9 @@ internal fun CardStyleSection(
   onSelect: (CardStylePref) -> Unit,
   initiallyExpanded: Boolean = false,
   initiallyOnWatch: Boolean = false,
+  state: (CardStylePref) -> CardStyleState = { CardStyleState.BuiltIn },
+  onInstall: (CardStylePref) -> Unit = {},
+  onUninstall: (CardStylePref) -> Unit = {},
 ) {
   var expanded by rememberSaveable { mutableStateOf(initiallyExpanded) }
   var onWatch by rememberSaveable { mutableStateOf(initiallyOnWatch) }
@@ -556,7 +595,8 @@ internal fun CardStyleSection(
     Text("Card style", style = MaterialTheme.typography.titleMedium)
     Text(
       "How dashboard cards are drawn. Classic follows the theme above; the others are complete " +
-        "looks with their own colours, shapes and gauges.",
+        "looks with their own colours, shapes and gauges. Classic and Home Assistant come with " +
+        "the app; install any other style to download its designs.",
       style = MaterialTheme.typography.bodySmall,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -581,7 +621,10 @@ internal fun CardStyleSection(
             pref = pref,
             selected = pref == selected,
             onWatch = onWatch,
+            state = state(pref),
             onClick = { onSelect(pref) },
+            onInstall = { onInstall(pref) },
+            onUninstall = { onUninstall(pref) },
           )
         }
       }
@@ -601,29 +644,78 @@ internal fun CardStyleSection(
   }
 }
 
+/** Whether a card style can be picked, and what its row offers: see [CardStyles]. */
+internal enum class CardStyleState {
+  /** Comes with the app: always installed, never removed. */
+  BuiltIn,
+  /** Installed and unused: it can be picked or removed. */
+  Installed,
+  /** Installed and drawn with (the dashboard's or a card's style): it can't be removed. */
+  InUse,
+  /** Listed with its sample; installing downloads its designs. */
+  NotInstalled,
+  Installing,
+  Failed,
+}
+
 /**
  * One card style: its radio button beside a sample card drawn in it, the card itself naming and
- * describing the style. The whole row selects it.
+ * describing the style. The whole row selects it once the style is installed; until then the row
+ * offers Install, and an installed style nothing uses offers Remove.
  */
 @Composable
 private fun CardStyleOption(
   pref: CardStylePref,
   selected: Boolean,
   onWatch: Boolean,
+  state: CardStyleState,
   onClick: () -> Unit,
+  onInstall: () -> Unit,
+  onUninstall: () -> Unit,
 ) {
   val uber = pref.toUberTheme()
   // A style that themes the whole app says so, so it is found before it is picked.
   val tagline = cardStyleTagline(pref) + if (uber.appTheme) " · Themes the whole app" else ""
+  val pickable =
+    selected ||
+      state == CardStyleState.BuiltIn ||
+      state == CardStyleState.Installed ||
+      state == CardStyleState.InUse
+  Column {
+    CardStyleOptionRow(pref, uber, tagline, selected, pickable, onWatch, onClick)
+    CardStyleInstallRow(uber.displayName, state, selected, onInstall, onUninstall)
+  }
+}
+
+@Composable
+private fun CardStyleOptionRow(
+  pref: CardStylePref,
+  uber: ee.schimke.ha.rc.components.HaUberTheme,
+  tagline: String,
+  selected: Boolean,
+  pickable: Boolean,
+  onWatch: Boolean,
+  onClick: () -> Unit,
+) {
   Row(
     modifier =
       Modifier.fillMaxWidth()
-        .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+        .selectable(
+          selected = selected,
+          enabled = pickable,
+          role = Role.RadioButton,
+          onClick = onClick,
+        )
         .semantics { contentDescription = "${uber.displayName}. $tagline" },
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(4.dp),
   ) {
-    RadioButton(selected = selected, onClick = null, modifier = Modifier.padding(12.dp))
+    RadioButton(
+      selected = selected,
+      onClick = null,
+      enabled = pickable,
+      modifier = Modifier.padding(12.dp),
+    )
     // The sample is a picture of the style, not a control: a tap on it picks the style rather
     // than reaching the card, and screen readers hear the option, not the sample's contents.
     Box(Modifier.weight(1f).clearAndSetSemantics {}) {
@@ -631,8 +723,69 @@ private fun CardStyleOption(
       else CardStyleSample(uber, name = uber.displayName, description = tagline)
       Box(
         Modifier.matchParentSize()
-          .clickable(interactionSource = null, indication = null, onClick = onClick)
+          .clickable(
+            enabled = pickable,
+            interactionSource = null,
+            indication = null,
+            onClick = onClick,
+          )
       )
+    }
+  }
+}
+
+/**
+ * Install (with its progress or failure) for a style that isn't installed; Remove for one unused.
+ */
+@Composable
+private fun CardStyleInstallRow(
+  name: String,
+  state: CardStyleState,
+  selected: Boolean,
+  onInstall: () -> Unit,
+  onUninstall: () -> Unit,
+) {
+  if (selected) return
+  Row(
+    modifier = Modifier.fillMaxWidth().padding(start = 52.dp),
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+  ) {
+    when (state) {
+      CardStyleState.BuiltIn,
+      CardStyleState.InUse -> Unit
+      CardStyleState.Installed ->
+        TextButton(
+          onClick = onUninstall,
+          modifier = Modifier.semantics { contentDescription = "Remove $name" },
+        ) {
+          Text("Remove")
+        }
+      CardStyleState.NotInstalled ->
+        TextButton(
+          onClick = onInstall,
+          modifier = Modifier.semantics { contentDescription = "Install $name" },
+        ) {
+          Text("Install")
+        }
+      CardStyleState.Installing -> {
+        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+        Text("Downloading designs…", style = MaterialTheme.typography.bodySmall)
+      }
+      CardStyleState.Failed -> {
+        Text(
+          "Couldn't download this style's designs",
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.error,
+          modifier = Modifier.weight(1f),
+        )
+        TextButton(
+          onClick = onInstall,
+          modifier = Modifier.semantics { contentDescription = "Retry installing $name" },
+        ) {
+          Text("Retry")
+        }
+      }
     }
   }
 }

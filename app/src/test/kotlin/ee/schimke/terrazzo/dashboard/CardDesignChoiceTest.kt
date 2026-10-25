@@ -56,6 +56,24 @@ class CardDesignChoiceTest {
   }
 
   @Test
+  fun anInstalledCardStyleIsKeptCurrentToo() {
+    val choice =
+      CardDesignChoice(
+        "https://designs.test",
+        ThemeStyle.Material3,
+        HaUberTheme.Classic,
+        cardStyles = setOf("lcd"),
+      )
+    assertTrue(choice.wants(entry(DesignKey.bakedTheme("Material3", dark = false))))
+    assertTrue(choice.wants(entry(DesignKey.styledTheme("lcd", dark = false))))
+    assertFalse(choice.wants(entry(DesignKey.styledTheme("console", dark = true))))
+    assertEquals(
+      listOf(DesignKey.styledTheme("lcd", dark = false), DesignKey.styledTheme("lcd", dark = true)),
+      choice.themesOf(HaUberTheme.Lcd),
+    )
+  }
+
+  @Test
   fun aVariantAndAuthorKeepTheDefaultsToFallBackOn() {
     val theme = DesignKey.bakedTheme("Material3", dark = false)
     val choice =

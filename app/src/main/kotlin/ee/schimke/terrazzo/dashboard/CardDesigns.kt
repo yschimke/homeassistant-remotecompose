@@ -69,6 +69,11 @@ data class CardDesignChoice(
   val token: String = "",
   /** The skins installed on this device ([SkinStore]), library skins aside. */
   val skins: Set<String> = emptySet(),
+  /**
+   * The card styles installed on this device ([CardStyleStore]), the built-in ones aside: the sync
+   * keeps their designs too, so switching to one draws at once, offline included.
+   */
+  val cardStyles: Set<String> = emptySet(),
 ) {
   val enabled: Boolean
     get() = serverUrl.isNotBlank()
@@ -79,11 +84,8 @@ data class CardDesignChoice(
   /** The designs to download: every theme this palette and style draw in, by variant and author. */
   val queries: List<DesignQuery>
     get() {
-      val cardStyles = listOf(cardStyle) + overrides.cardStyles.map(HaUberTheme::byId)
-      val themes =
-        cardStyles
-          .flatMap { s -> listOf(false, true).map { CardDesignTemplates.bakedTheme(style, it, s) } }
-          .distinct()
+      val styles = listOf(cardStyle) + (overrides.cardStyles + cardStyles).map(HaUberTheme::byId)
+      val themes = styles.flatMap(::themesOf).distinct()
       val variants = (listOf(variant) + overrides.variants + DesignKey.DEFAULT_VARIANT).distinct()
       // An installed skin comes whole for these themes: any variant or author.
       val whole = designIds.sorted()
@@ -101,6 +103,10 @@ data class CardDesignChoice(
    */
   val designIds: Set<String>
     get() = skins + overrides.designIds.filter(Skins::isLibrary)
+
+  /** The themes (`DesignKey.theme`) [cardStyle] draws in with this palette, light and dark. */
+  fun themesOf(cardStyle: HaUberTheme): List<String> =
+    listOf(false, true).map { CardDesignTemplates.bakedTheme(style, it, cardStyle) }.distinct()
 
   /** Between designs for one key, the preferred author's first. */
   val prefer: List<DesignQuery>

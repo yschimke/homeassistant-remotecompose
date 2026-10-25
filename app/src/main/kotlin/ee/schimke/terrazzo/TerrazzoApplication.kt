@@ -17,8 +17,10 @@ import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.crash.CrashReporter
 import ee.schimke.terrazzo.crash.CrashedDocuments
+import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.dashboard.CardDesignPreload
 import ee.schimke.terrazzo.dashboard.CardDesignSync
+import ee.schimke.terrazzo.dashboard.CardStyleStore
 import ee.schimke.terrazzo.dashboard.CardUsage
 import ee.schimke.terrazzo.di.AppGraph
 import ee.schimke.terrazzo.image.HaImageStack
@@ -28,6 +30,7 @@ import ee.schimke.terrazzo.wearsync.MobileWearSyncManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
@@ -132,6 +135,13 @@ class TerrazzoApplication : Application() {
     // goes, with what it held.
     (ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO).launch {
       FileLocalDesignStore.of(applicationContext).clear()
+    }
+    // Card styles beyond the built-in two are installed one by one (CardStyles). An install from
+    // before that keeps the styles it already draws with: the dashboard's and the cards' own.
+    (ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO).launch {
+      val overrides = CardDesignOverrideStore.of(applicationContext).overrides.value
+      CardStyleStore.of(applicationContext)
+        .seed(overrides.cardStyles + graph.preferencesStore.cardStyle.first().id)
     }
     // Anonymous card usage: counts nothing unless the user turned sharing on.
     CardUsage.start(

@@ -633,6 +633,18 @@ class DesignRepositoryTest {
     assertEquals(false, repo(null, store).isComplete("user:other"))
   }
 
+  @Test
+  fun aThemeIsCompleteOnlyOnceEveryDesignInItIsCached() = runTest {
+    val host = FakeHost(published().files)
+    val store = InMemoryDesignStore()
+    val repository = repo(host, store)
+    // Nothing cached yet, and a theme no design draws in is never complete.
+    assertEquals(false, repository.isCompleteIn(setOf(key.theme)))
+    repository.refresh()
+    assertEquals(true, repository.isCompleteIn(setOf(key.theme)))
+    assertEquals(false, repository.isCompleteIn(setOf("style:nowhere:dark")))
+  }
+
   /** A key the published manifest doesn't list, and the design the server generates for it. */
   private val unlisted = key.copy(shape = "domain=switch")
   private val generatedBytes = "generated rc document".encodeToByteArray()

@@ -691,12 +691,16 @@ per request — but adds what a static host can't: verification, a template brow
 - **Resolving a card.** `POST /api/cards/resolve` takes a card's config (with optional states,
   card style and mode). With the states of every entity the card shows, it runs the card's
   converter: the card's exact key, that design (by key, as above, so captured if the library
-  lacks it) and the values the converter pushes, `exact: true`. Without them (an anonymous card,
-  as the web app sends it) it returns the closest library design (same card type, slots, style,
+  lacks it) and the values the converter pushes, `exact: true`. Without them (an anonymous card:
+  type and slot ids) it returns the closest library design (same card type, slots, style,
   mode and the default variant), its blob and the values to push: the card's own slot values, and
   the converter-only ones from the library example. A card's shape can't be told without its
   states, so when several shapes fit it returns the first with `exact: false`. It serves players
-  that have no converters: UI Builder's Lovelace canvas and the embed.
+  that have no converters: UI Builder's Lovelace canvas and the embed. The web app (and the Wasmo
+  app built from it) runs the converters itself, on wasmJs: a card with a template shape is asked
+  for by its exact key (`LibraryCard.exactDesignKey`, `POST /designs/v1/generate`) and plays with
+  its converter's own bindings, as the phone app does; only a card with no template shape still
+  sends its anonymous card here.
 - **Designing in UI Builder.** A design's page and `/schema` (paste a card's JSON) show the
   card's schema — slots and bindings with example values (`/api/designs/<id>/schema`,
   `POST /api/schema`) — and, with UI Builder bundled (`UI_BUILDER_BINARY`) or configured
@@ -794,8 +798,9 @@ use it.
   (LTE) can be added later. Built for `wear-widget` (see
   [Spike status](#spike-status));
   `wear-app` not yet.
-- **Desktop, Wasm, TV.** Out of scope until those hosts play RC
-  documents. Wasm would also need CORS on the static host.
+- **Desktop, Wasm, TV.** The desktop and Wasm web apps (`app-ui`) play mobile-app designs,
+  asked for by key as above; the design server's routes answer cross-origin. TV is out of scope
+  until it plays RC documents.
 
 ## Build pipeline (one source for app, server and catalog)
 
