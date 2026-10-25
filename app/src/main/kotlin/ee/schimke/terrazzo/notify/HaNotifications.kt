@@ -26,6 +26,8 @@ import ee.schimke.terrazzo.widget.WidgetOpenRequests
  * - It is bridged to a paired watch with [BRIDGE_TAG] and that key as its dismissal id, so
  *   dismissing it on either device dismisses both, and a Wear app that posts its own copy can
  *   suppress the bridged one by tag (`BridgingConfig`) instead of showing two.
+ * - A message with an entity carries its live card ([NotificationCards]); [HaPushReceiver] redraws
+ *   it as the entity changes ([refresh]), for as long as the notification shows.
  * - While the watch has the Wear app installed, it carries a watch-only "Open on watch" action.
  *   That stays harmless once the Wear app posts its own copy: the bridged notification, and its
  *   action, are suppressed there.
@@ -52,6 +54,13 @@ object HaNotifications {
 
   fun idOf(notification: HaPushNotification): Int = notification.dedupeKey.hashCode()
 
+  /** Whether [notification] is still showing (not dismissed, tapped away or cleared). */
+  fun isShowing(context: Context, notification: HaPushNotification): Boolean {
+    val nm = context.getSystemService(NotificationManager::class.java) ?: return false
+    val id = idOf(notification)
+    return nm.activeNotifications.any { it.tag == NOTIFICATION_TAG && it.id == id }
+  }
+
   /**
    * Posts [notification], or removes the one it clears. [watchHasApp] adds the watch-only "Open on
    * watch" action; [card] is a Remote Compose card for the notification's entity, when one could be
@@ -63,6 +72,7 @@ object HaNotifications {
     notification: HaPushNotification,
     watchHasApp: Boolean,
     card: RemoteViews? = null,
+    refresh: Boolean = false,
   ) {
     val nm = NotificationManagerCompat.from(context)
     if (notification.isClear) {
@@ -75,7 +85,7 @@ object HaNotifications {
       nm.notify(
         NOTIFICATION_TAG,
         idOf(notification),
-        build(context, baseUrl, notification, watchHasApp, card),
+        build(context, baseUrl, notification, watchHasApp, card, refresh),
       )
     } catch (denied: SecurityException) {
       // Permission revoked between the check and the post.
@@ -88,6 +98,7 @@ object HaNotifications {
     notification: HaPushNotification,
     watchHasApp: Boolean,
     card: RemoteViews? = null,
+    refresh: Boolean = false,
   ): android.app.Notification {
     val id = idOf(notification)
     val wear =
@@ -111,6 +122,8 @@ object HaNotifications {
         .setContentText(notification.message)
         .setStyle(NotificationCompat.BigTextStyle().bigText(notification.message))
         .setAutoCancel(true)
+        // A card redrawn for a new state replaces the notification without alerting again.
+        .setOnlyAlertOnce(refresh)
         .setContentIntent(contentIntent(context, id, notification))
         .extend(wear)
     notification.group?.let { builder.setGroup(it) }

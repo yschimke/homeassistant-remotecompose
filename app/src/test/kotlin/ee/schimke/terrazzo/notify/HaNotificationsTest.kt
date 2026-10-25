@@ -57,6 +57,14 @@ class HaNotificationsTest {
     )
   }
 
+  @Test
+  fun aCardRefreshDoesNotAlertAgainButANewMessageDoes() {
+    val refresh = HaNotifications.build(context, BASE_URL, message, false, refresh = true)
+    val fresh = HaNotifications.build(context, BASE_URL, message, false)
+    assertTrue(refresh.flags and android.app.Notification.FLAG_ONLY_ALERT_ONCE != 0)
+    assertTrue(fresh.flags and android.app.Notification.FLAG_ONLY_ALERT_ONCE == 0)
+  }
+
   private companion object {
     const val BASE_URL = "http://homeassistant.test:8123"
   }
