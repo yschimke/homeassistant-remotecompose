@@ -73,6 +73,20 @@ writes screenshots under `_wasm-test/`. `WASMO_BEFORE_DIST` optionally points to
 for the before screenshot. These fixtures do not exercise the real Wasmo owner-cookie service or
 prove server-held HA sign-in; those remain separate validation/stages.
 
+### Public renderer security boundary
+
+A public card on the app origin shares an origin with the owner API. If its scripts run in the
+parent document while the owner views it, owner-only routing does not isolate those scripts from
+private endpoints. Treat remotely updated renderer code and card-provided markup as untrusted.
+The publication stage needs an isolated renderer (for example, a sandboxed iframe without
+`allow-same-origin`) or an equivalently reviewed trusted renderer. Use `srcdoc` or a separate
+renderer origin; a bare same-origin renderer URL would still be unsafe when opened outside the
+frame. A sandboxed renderer should
+receive only the approved public snapshot through a constrained bridge; it must never receive
+HA credentials or private API access. Validate this boundary before enabling publication.
+See the browser contracts for [same-origin access](https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Same-origin_policy)
+and [iframe sandboxing](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe#sandbox).
+
 ## Goal
 
 Today the Terrazzo Wasmo app is static files: everything it remembers lives in the browser's
