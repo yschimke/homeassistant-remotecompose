@@ -1,6 +1,7 @@
 # The card design server with its library baked in, and UI Builder bundled beside it. Build the
-# server and the library first — generating the library needs Android (Robolectric), so it doesn't
-# run in this image — then build from the repo root:
+# server and the library first (the library is generated on the JVM, as the server captures a key
+# its library lacks, but needs the whole Gradle build, so not in this image), then build from the
+# repo root:
 #
 #   ./gradlew :card-designs:generateCardDesigns :design-server:installDist :app-ui:wasmJsBrowserDistribution
 #   docker build -f design-server/Dockerfile -t card-design-server .

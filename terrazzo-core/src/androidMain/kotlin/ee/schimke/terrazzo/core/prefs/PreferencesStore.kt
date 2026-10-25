@@ -97,7 +97,7 @@ class PreferencesStore(private val context: Context) {
     get() =
       context.store.data.map { prefs ->
         prefs[THEME_KEY]?.let { runCatching { ThemePref.valueOf(it) }.getOrNull() }
-          ?: ThemePref.TerrazzoHome
+          ?: ThemePref.Material3
       }
 
   suspend fun themeStyleNow(): ThemePref = themeStyle.first()

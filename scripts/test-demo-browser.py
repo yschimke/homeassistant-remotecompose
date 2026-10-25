@@ -15,6 +15,35 @@ from playwright.sync_api import expect, sync_playwright
 
 # A design blob, with or without the app's `?client=` release tag (template usage, phase 1).
 DESIGN_BLOB = re.compile(r'^https://ha\.coo\.ee/designs/v1/blobs/[^/?]+\.rc(\?.*)?$')
+# Cards with a template shape are asked for by their exact design key (LibraryCard.exactDesignKey).
+GENERATE = 'https://ha.coo.ee/designs/v1/generate'
+
+
+def design_request(route):
+    """A design request, as the resolve mocks read it: by key for /generate, by card for resolve.
+
+    A request by key must carry only the key: generation properties, never an entity id or state.
+    """
+    body = route.request.post_data
+    if route.request.url != GENERATE:
+        return json.loads(body)
+    assert 'demo_' not in body and 'states' not in body, body
+    key = json.loads(body)
+    theme = key['theme']
+    return {'card': {'type': key['cardType'], 'shape': key['shape']},
+            'cardStyle': theme.split(':')[1] if theme.startswith('style:') else 'classic',
+            'key': key}
+
+
+def fulfill_design(route, request, data):
+    """Answers [request] with [data]'s design, in the endpoint's own response shape."""
+    sha = hashlib.sha256(data).hexdigest()
+    if 'key' in request:
+        route.fulfill(json={'sha256': sha, 'blob': f'/designs/v1/blobs/{sha}.rc', 'key': request['key'],
+                            'slots': 1, 'generated': True},
+                      headers={'Access-Control-Allow-Origin': '*'})
+    else:
+        route.fulfill(json={'sha256': sha}, headers={'Access-Control-Allow-Origin': '*'})
 
 root = Path(sys.argv[1]).resolve()
 templates = {style: Path(f'scripts/fixtures/demo/tile-{style}.rc').read_bytes() for style in ('classic', 'console')}
@@ -143,16 +172,18 @@ try:
             page.on('websocket', lambda socket: sockets.append(socket.url))
 
             def resolve(route):
-                request = json.loads(route.request.post_data)
+                request = design_request(route)
                 requests.append(request)
-                # A real template, with host bindings, for the fixture's light cards only.
-                if request['card'].get('entity', '').startswith('light.'):
-                    sha = hashlib.sha256(templates.get(request['cardStyle'], templates['classic'])).hexdigest()
-                    route.fulfill(json={'sha256': sha}, headers={'Access-Control-Allow-Origin': '*'})
+                # A real template, with host bindings, for the fixture's light tiles only.
+                light = (request['card'].get('shape') == 'domain=light' if 'key' in request
+                         else request['card'].get('entity', '').startswith('light.'))
+                if light and request['card']['type'] == 'tile':
+                    fulfill_design(route, request, templates.get(request['cardStyle'], templates['classic']))
                 else:
                     route.fulfill(status=404, headers={'Access-Control-Allow-Origin': '*'})
 
             page.route('https://ha.coo.ee/api/cards/resolve', resolve)
+            page.route(GENERATE, resolve)
             page.route(DESIGN_BLOB, lambda route: route.fulfill(
                 body=blobs[route.request.url.rsplit('/', 1)[-1].removesuffix('.rc')], content_type='application/octet-stream', headers={'Access-Control-Allow-Origin': '*'}))
             page.goto(f'http://127.0.0.1:{server.server_port}/demo/?data=fake', wait_until='networkidle')
@@ -248,6 +279,8 @@ try:
             expect(page.get_by_text('Use light theme', exact=True)).not_to_be_attached()
             capture(page, f'_wasm-test/demo-{name}-console.png')
             assert all('states' not in r for r in requests)
+            # The lamp's tile is asked for by its exact key, never as a card.
+            assert any('key' in r and r['card']['type'] == 'tile' for r in requests), requests
             assert not sockets, sockets
             assert not errors, errors
             page.close()
@@ -346,14 +379,14 @@ try:
             instrument_errors, instrument_requests = [], []
             page.on('pageerror',lambda error:instrument_errors.append(str(error)))
             def resolve_instrument(route):
-                request=json.loads(route.request.post_data)
+                request=design_request(route)
                 instrument_requests.append(request)
                 kind=request['card']['type']
                 if request['cardStyle'] == 'console' and kind in instruments:
-                    route.fulfill(json={'sha256':hashlib.sha256(instruments[kind]).hexdigest()},
-                                  headers={'Access-Control-Allow-Origin':'*'})
+                    fulfill_design(route, request, instruments[kind])
                 else: route.fulfill(status=404,headers={'Access-Control-Allow-Origin':'*'})
             page.route('https://ha.coo.ee/api/cards/resolve',resolve_instrument)
+            page.route(GENERATE,resolve_instrument)
             page.route(DESIGN_BLOB,lambda route:route.fulfill(
                 body=instrument_blobs[route.request.url.rsplit('/',1)[-1].removesuffix('.rc')],
                 content_type='application/octet-stream',headers={'Access-Control-Allow-Origin':'*'}))
@@ -408,6 +441,7 @@ try:
             Handler.power = '900'
             expect(page.get_by_role('button',name='900 W Power draw 0 – 3000 W',exact=True).filter(visible=True).first).to_be_visible(timeout=10000)
             assert {'thermostat','gauge'} <= {r['card']['type'] for r in instrument_requests if r['cardStyle']=='console'}
+            assert all('key' in r for r in instrument_requests if r['card']['type'] in ('thermostat','gauge')), instrument_requests
             capture(page,f'_wasm-test/demo-console-{name}-power.png')
             page.mouse.move(180, min(550,height-30))
             if name == 'phone': page.mouse.wheel(0,1000)

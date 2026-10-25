@@ -30,8 +30,10 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /**
- * Generates the card design library ([CardDesignLibrary]) into `cardDesignsOut` (see
- * build.gradle.kts) on Android: captured with AndroidX, its previews drawn by the app's player.
+ * Generates the card design library ([CardDesignLibrary]) into `cardDesignsAndroidOut` (see
+ * build.gradle.kts) on Android: captured with AndroidX, its previews drawn by the app's player. The
+ * published library is the JVM's (`generateCardDesigns`); this one is what it is checked against
+ * (`checkCardDesignParity`).
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "xhdpi")
@@ -42,7 +44,10 @@ class GenerateCardDesignLibrary {
 
   @Test
   fun generate() {
-    val target = File(requireNotNull(System.getProperty("cardDesignsOut")) { "no cardDesignsOut" })
+    val target =
+      File(
+        requireNotNull(System.getProperty("cardDesignsAndroidOut")) { "no cardDesignsAndroidOut" }
+      )
     val count = CardDesignLibrary.generate(target, RuntimeEnvironment.getApplication(), ::render)
     println("card designs: $count designs in $target")
   }

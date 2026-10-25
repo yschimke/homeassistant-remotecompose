@@ -17,8 +17,15 @@ import ee.schimke.composeai.rcplayer.runtime.RcPlayerEvent
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.client.design.UsageSource
 import ee.schimke.ha.design.CardDesignSlots
+import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.GeneratedDesign
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.CardDesignTemplates
+import ee.schimke.ha.rc.CardSnapshotBindings
+import ee.schimke.ha.rc.SystemHaClock
+import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.isRelativeTimeState
 import io.ktor.client.HttpClient
 import io.ktor.client.request.*
@@ -30,7 +37,11 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.*
 
-/** Values stay in the host. Resolution sends only card type and anonymous domain slots. */
+/**
+ * Values stay in the host. A card with a template shape is asked for by its exact [DesignKey]
+ * ([exactDesignKey], computed here as the phone app does), and draws with its converter's own
+ * bindings; any other sends only its card type and anonymous domain slots to `/api/cards/resolve`.
+ */
 @Composable
 internal fun LibraryCard(
   card: CardConfig,
@@ -53,16 +64,19 @@ internal fun LibraryCard(
       ?: remember(scope) {
         DashboardLoadCache(scope) { key: LibraryDesignKey -> loadLibraryDesign(key) }
       }
+  val exact = remember(card, snapshot, style, dark) { exactDesignKey(card, snapshot, style, dark) }
+  // The shape hint sharpens the anonymous /api/cards/resolve fallback (used when there is no exact
+  // key): it is unused when [exact] is set, since that asks the server by key.
   val hint = shapeHint(card, snapshot)
   val designKey =
-    remember(card, hint, style, dark, requireExactDesign) {
-      LibraryDesignKey(anonymousTemplateCard(card), style, dark, requireExactDesign, hint)
+    remember(card, hint, style, dark, requireExactDesign, exact) {
+      LibraryDesignKey(anonymousTemplateCard(card), style, dark, requireExactDesign, exact, hint)
     }
+  fun bindings() =
+    if (exact != null) exactTemplateBindings(card, snapshot) else templateBindings(card, snapshot)
   var bytes by
     remember(card, designKey, cache) {
-      mutableStateOf(
-        cache.peek(designKey)?.takeIf { canBindWithCmp(it, templateBindings(card, snapshot)) }
-      )
+      mutableStateOf(cache.peek(designKey)?.takeIf { canBindWithCmp(it, bindings()) })
     }
   var settled by remember(designKey, cache) { mutableStateOf(false) }
   val hasRelativeTime =
@@ -78,11 +92,11 @@ internal fun LibraryCard(
           value++
         }
     }
-  val values = remember(card, snapshot, tick) { templateBindings(card, snapshot) }
+  val values = remember(card, snapshot, tick, exact) { bindings() }
   LaunchedEffect(designKey, cache) {
     try {
       val loaded = cache.get(designKey)
-      if (loaded != null && canBindWithCmp(loaded, templateBindings(card, snapshot))) bytes = loaded
+      if (loaded != null && canBindWithCmp(loaded, bindings())) bytes = loaded
     } catch (e: CancellationException) {
       throw e
     } catch (_: Throwable) {
@@ -211,9 +225,10 @@ internal fun anonymousTemplateCard(card: CardConfig): JsonObject {
  * The observable shape discriminators of a single-slot card: `device_class`, `unit` and `icon` from
  * the slot entity's attributes (the ones a tile/entity converter keys its design on), plus the
  * card's own `icon`. It carries the card's *shape*, never an entity id, name or state value — the
- * same privacy contract as [anonymousTemplateCard] — so the design server can resolve the one
- * design the card's shape names instead of the first of the shapes its slots fit. Empty for a card
- * without exactly one slot (multi-slot shapes key on prefixed properties the server's match skips).
+ * same privacy contract as [anonymousTemplateCard] — so the anonymous `/api/cards/resolve` fallback
+ * (used only when there is no exact key) can resolve the one design the card's shape names instead
+ * of the first of the shapes its slots fit. Empty for a card without exactly one slot (multi-slot
+ * shapes key on prefixed properties the server's match skips).
  */
 internal fun shapeHint(card: CardConfig, snapshot: HaSnapshot): JsonObject {
   val entry = CardDesignSlots.slotEntries(card).orEmpty().singleOrNull() ?: return EMPTY_SHAPE_HINT
@@ -238,15 +253,48 @@ internal fun shapeHint(card: CardConfig, snapshot: HaSnapshot): JsonObject {
 
 private val EMPTY_SHAPE_HINT = JsonObject(emptyMap())
 
-internal fun templateBindings(card: CardConfig, snapshot: HaSnapshot): Map<String, RcNamedValue> {
-  val slots = CardDesignSlots.slotBindings(card, snapshot)
-  return buildMap {
-    slots.strings.forEach { (k, v) -> put(k, RcNamedValue.Text(v)) }
-    slots.booleans.forEach { (k, v) -> put(k, RcNamedValue.Integer(if (v) 1 else 0)) }
-    slots.ints.forEach { (k, v) -> put(k, RcNamedValue.Integer(v)) }
-    slots.floats.forEach { (k, v) -> put(k, RcNamedValue.FloatValue(v)) }
-    putAll(instrumentTemplateBindings(card, snapshot))
-  }
+internal fun templateBindings(card: CardConfig, snapshot: HaSnapshot): Map<String, RcNamedValue> =
+  CardDesignSlots.slotBindings(card, snapshot).toNamedValues() +
+    instrumentTemplateBindings(card, snapshot)
+
+/**
+ * [card]'s exact design key, as the phone app computes it (`CardDesignTemplates.keyFor`): its
+ * converter's generation properties for [snapshot], never values. Null when the card has no
+ * template shape. [style] is the card style's id; a classic card draws in the first app palette, as
+ * `/api/cards/resolve` assumes for a request without one.
+ */
+internal fun exactDesignKey(
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  style: String,
+  dark: Boolean,
+): DesignKey? = runCatching {
+  CardDesignTemplates.keyFor(
+    card,
+    snapshot,
+    ThemeStyle.entries.first(),
+    dark,
+    cardStyle = HaUberTheme.byId(style),
+  )
+}
+  .getOrNull()
+
+/** The values an exact design binds: its converter's own, as the phone app plays it. */
+internal fun exactTemplateBindings(
+  card: CardConfig,
+  snapshot: HaSnapshot,
+): Map<String, RcNamedValue> {
+  val design = CardDesignTemplates.designCard(card, snapshot)
+  return CardDesignTemplates.playback(design, ByteArray(0))
+    .bindings(snapshot, SystemHaClock)
+    .toNamedValues()
+}
+
+private fun CardSnapshotBindings.toNamedValues(): Map<String, RcNamedValue> = buildMap {
+  strings.forEach { (k, v) -> put(k, RcNamedValue.Text(v)) }
+  booleans.forEach { (k, v) -> put(k, RcNamedValue.Integer(if (v) 1 else 0)) }
+  ints.forEach { (k, v) -> put(k, RcNamedValue.Integer(v)) }
+  floats.forEach { (k, v) -> put(k, RcNamedValue.FloatValue(v)) }
 }
 
 internal fun demoMoreInfoEntity(card: CardConfig, payload: String?): String? {
@@ -318,6 +366,8 @@ internal data class LibraryDesignKey(
   val style: String,
   val dark: Boolean,
   val requireExact: Boolean = false,
+  /** The card's exact key ([exactDesignKey]): asked for by key when set, so always exact. */
+  val exact: DesignKey? = null,
   /** [shapeHint] for the card: the observable shape discriminators, empty when none apply. */
   val shapeHint: JsonObject = EMPTY_SHAPE_HINT,
 )
@@ -347,11 +397,19 @@ internal fun cardDesignBlobUrl(server: String, sha: String, client: String? = nu
   "${cardDesignApiBase(server)}/blobs/$sha.rc" +
     (client?.let { "?client=" + it.encodeURLParameter() } ?: "")
 
+/** The design server's design-by-key endpoint (`DesignGenerator`). */
+internal fun cardDesignGenerateUrl(server: String): String = "${cardDesignApiBase(server)}/generate"
+
+private val designJson = Json { ignoreUnknownKeys = true }
+
 internal suspend fun loadLibraryDesign(
   key: LibraryDesignKey,
   server: String = DEFAULT_CARD_DESIGN_SERVER,
   client: String? = null,
 ): ByteArray? {
+  key.exact?.let {
+    return loadDesignByKey(key, it, server, client)
+  }
   val http = HttpClient()
   try {
     val response =
@@ -388,6 +446,40 @@ internal suspend fun loadLibraryDesign(
 }
 
 /**
+ * [exact]'s design: the server's library design for the key, or one it captures now. Only the key
+ * is sent: generation properties, never a card's config or states. Null (the built-in card) when
+ * the server has no design for it.
+ */
+private suspend fun loadDesignByKey(
+  key: LibraryDesignKey,
+  exact: DesignKey,
+  server: String,
+  client: String?,
+): ByteArray? {
+  val http = HttpClient()
+  try {
+    val response =
+      http.post(cardDesignGenerateUrl(server)) {
+        // A simple request, as for resolve: no CORS preflight.
+        contentType(ContentType.Text.Plain)
+        setBody(designJson.encodeToString(DesignKey.serializer(), exact))
+      }
+    if (response.status == HttpStatusCode.NotFound) {
+      LibraryDesignMisses.record(key, null)
+      return null
+    }
+    check(response.status.isSuccess())
+    val design = designJson.decodeFromString(GeneratedDesign.serializer(), response.bodyAsText())
+    check(design.key == exact && Regex("[0-9a-f]{64}").matches(design.sha256))
+    val blob = http.get(cardDesignBlobUrl(server, design.sha256, client))
+    check(blob.status.isSuccess())
+    return blob.bodyAsBytes().also { check(Sha256.hex(it) == design.sha256) }
+  } finally {
+    http.close()
+  }
+}
+
+/**
  * Cards the design library couldn't draw exactly, so they fell back to the built-in card: the list
  * the library's coverage work enumerates next. Each distinct miss is logged once (the browser
  * console, or stdout on desktop) and counted for the session. Only what was already sent to the
@@ -416,7 +508,8 @@ internal object LibraryDesignMisses {
   internal fun describe(key: LibraryDesignKey, resolved: JsonObject?): String {
     val mode = if (key.dark) "dark" else "light"
     val answer =
-      if (resolved == null) "none"
+      if (resolved == null)
+        "none" + (key.exact?.shape?.takeIf { it.isNotEmpty() }?.let { " (key shape $it)" } ?: "")
       else {
         val shape =
           ((resolved["key"] as? JsonObject)?.get("shape") as? JsonPrimitive)?.contentOrNull
