@@ -67,9 +67,12 @@ test('installed HA /terrazzo and Lovelace custom card render and act as the sign
       return (await result.json()).state === 'on';
     });
     await page.screenshot({path:`${evidence}/dashboard-after.png`});
-    // Every dashboard is available, including ones hidden from HA's sidebar.
+    // With no explicit dashboard, start directly; the title menu still includes hidden dashboards.
     await page.goto(`${base}/terrazzo?dashboard=`);
-    await page.frameLocator('terrazzo-panel iframe').getByRole('button', {name:'Second panel second-panel',exact:true}).click({force:true});
+    await toggle.waitFor({timeout:60_000});
+    assert.equal(await panel.getByText('Choose a Lovelace dashboard.', {exact:true}).count(), 0);
+    await panel.getByRole('button', {name:/Switch dashboard/}).click({force:true});
+    await panel.getByText('Second panel', {exact:true}).click({force:true});
     await page.frameLocator('terrazzo-panel iframe').getByText('Second dashboard is selected', {exact:true}).waitFor();
     await page.screenshot({path:`${evidence}/dashboard-selected.png`});
     await page.goto(`${base}/terrazzo?dashboard=second-panel`);
