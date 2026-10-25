@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -75,7 +74,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -407,6 +405,7 @@ fun DashboardDraftEditor(
     else
       CardSettingsDialog(
         card = card,
+        entities = entities,
         onDismiss = { editingCard = null },
         onSave = { replacement ->
           editingCard = null
@@ -487,7 +486,6 @@ private fun AddCardDialog(
   onDismiss: () -> Unit,
   onAdd: (JsonObject) -> Unit,
 ) {
-  var query by remember { mutableStateOf("") }
   var entity by remember { mutableStateOf<EntityState?>(null) }
   AlertDialog(
     onDismissRequest = onDismiss,
@@ -495,37 +493,17 @@ private fun AddCardDialog(
     text = {
       val picked = entity
       if (picked == null) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-          OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            label = { Text("Search entities") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-          )
-          LazyColumn(Modifier.heightIn(max = 320.dp)) {
+        EntitySearchList(
+          entities,
+          header = {
             items(DashboardDraft.ENTITYLESS_TYPES) { type ->
               TextButton(onClick = { onAdd(DashboardDraft.entitylessCard(type)) }) {
                 Text(templateLabel(type))
               }
             }
-            items(entityMatches(entities, query), key = { it.entityId }) { state ->
-              TextButton(
-                onClick = { entity = state },
-                modifier = Modifier.fillMaxWidth(),
-              ) {
-                Text(
-                  ((state.attributes["friendly_name"] as? JsonPrimitive)
-                    ?.contentOrNull
-                    ?.let { "$it · " }
-                    .orEmpty()) + state.entityId,
-                  maxLines = 1,
-                  overflow = TextOverflow.Ellipsis,
-                  modifier = Modifier.fillMaxWidth(),
-                )
-              }
-            }
-          }
+          },
+        ) {
+          entity = it
         }
       } else {
         Column {
@@ -543,43 +521,6 @@ private fun AddCardDialog(
         Text(if (entity != null) "Back" else "Cancel")
       }
     },
-  )
-}
-
-private val settingsJson = Json { prettyPrint = true }
-
-/**
- * A card's settings as its Lovelace JSON: anything a card type takes, without a form per type. The
- * edit must stay one JSON object with a `type`.
- */
-@Composable
-private fun CardSettingsDialog(
-  card: JsonObject,
-  onDismiss: () -> Unit,
-  onSave: (JsonObject) -> Unit,
-) {
-  var text by
-    remember(card) { mutableStateOf(settingsJson.encodeToString(JsonObject.serializer(), card)) }
-  val parsed = remember(text) { parseCardSettings(text) }
-  AlertDialog(
-    onDismissRequest = onDismiss,
-    title = { Text("Card settings") },
-    text = {
-      OutlinedTextField(
-        value = text,
-        onValueChange = { text = it },
-        textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-        isError = parsed.isFailure,
-        supportingText = { parsed.exceptionOrNull()?.let { Text(it.message.orEmpty()) } },
-        modifier = Modifier.fillMaxWidth().heightIn(min = 200.dp, max = 420.dp),
-      )
-    },
-    confirmButton = {
-      TextButton(enabled = parsed.isSuccess, onClick = { parsed.onSuccess(onSave) }) {
-        Text("Apply")
-      }
-    },
-    dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
   )
 }
 

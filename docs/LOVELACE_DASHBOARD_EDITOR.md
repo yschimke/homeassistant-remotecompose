@@ -88,8 +88,9 @@ shows the dashboard. The dashboard view itself flows cards by harc's own design 
 
 Adding cards, sections, views or dashboards and changing a card's settings are not on the phone.
 The Terrazzo panel and the desktop app show the same editor with those added (**Edit dashboard** in a
-dashboard's top bar; `EditorScope.Full` in `app-ui`'s `DashboardDraftEditor`); creating dashboards
-is still Home Assistant's.
+dashboard's top bar; `EditorScope.Full` in `app-ui`'s `DashboardDraftEditor`), where a card's
+settings open on a form for its type with its JSON a tab away; creating dashboards is still Home
+Assistant's.
 The editor ends with **Open in Home Assistant**, which opens the dashboard in HA's own editor, and,
 when HA's `get_config` doesn't list the `terrazzo` component, **Install with HACS** for the Terrazzo
 integration. With it installed the card offers **Ask an agent** instead: an edit session in Home

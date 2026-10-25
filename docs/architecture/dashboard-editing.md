@@ -39,7 +39,7 @@ Assistant is the editor in practice.
 | | Without the integration | With the integration |
 | --- | --- | --- |
 | Phone | Light edits on the live dashboard; **Open in Home Assistant** for HA's own editor; an **Install with HACS** card | Light edits; **Ask an agent** (start an edit session, share its prompt); preview, apply or discard agent drafts |
-| Web panel | — | Full editor (add cards, sections and views, card settings as JSON); **Ask an agent** and the same draft preview |
+| Web panel | — | Full editor (add cards, sections and views, card settings); **Ask an agent** and the same draft preview |
 | Agent | — (no supported path) | MCP: read dashboards and entities, read the card guide, submit drafts to an edit session |
 
 ## Edit sessions
@@ -126,12 +126,19 @@ Assistant's storage:
      integration card.
    - `Full` (the panel and the desktop app, **Edit dashboard** in a dashboard's top bar): also add
      a card (search an entity, then pick from the types that suit it, or a heading, text or
-     clock), edit a card's settings as its Lovelace JSON, add and delete sections, and add, rename
+     clock), edit a card's settings, add and delete sections, and add, rename
      (`DashboardDraft.renameView`, keeping the view's path) and delete views.
    - Both draw cards with the host's own renderer, read-only, and save with the same conditional
      write as the signed-in user; Home Assistant refuses non-administrators and YAML dashboards.
+   - **Card settings** open on a form of the settings each type uses most (`CardSettings` in
+     `ha-client`: names, icons, the entity or the `entities` rows, toggles, numbers such as a
+     gauge's range or a graph's hours, the tap action), with the card's Lovelace JSON a tab away
+     for anything else. Both edit one copy of the card; a key the form doesn't know is kept, a
+     setting back at blank or Home Assistant's default is removed, a tap action set elsewhere
+     with more settings (a navigation path) stays while it stays the same action, and a type the
+     form doesn't know (custom cards) opens on JSON.
    - Next: creating dashboards from the panel (`DashboardDraft.newDashboard`,
-     `HaClient.createDashboard`), and forms for common card settings in place of JSON.
+     `HaClient.createDashboard`).
 
 Rendered previews of a draft *for the agent* wait for a server-side renderer (the add-on server's
 `.rc` endpoint is a placeholder): until then the agent gets the published catalog images, and the
