@@ -43,6 +43,11 @@ and the AppFunctions Testing Agent in [android/appfunctions](https://github.com/
 AppFunctions library is a beta (`androidx.appfunctions` 1.0.0-beta01) and its API is still
 moving. Wear OS is not wired: nothing confirms an on-watch agent can reach a watch-side service yet.
 
+The [local testing runbook](../testing/appfunctions.md) pins the testing agent, prepares a
+memory-only temporary Gemini key, and separates token-free discovery/manual invocation from
+conversational testing. [Machine readiness](../testing/appfunctions-readiness.md) records which
+stages have actually run and the remaining build/device blockers.
+
 ## MCP server (Home Assistant integration)
 
 User-facing setup is in [`docs/HOME_ASSISTANT.md`](../HOME_ASSISTANT.md#mcp-server-for-ai-assistants).
