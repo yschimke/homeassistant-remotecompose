@@ -68,7 +68,22 @@ full-screen card.
 from (`fullScreenDeck`): the pinned cards in order, or the cards of one section. Message cards are
 input forms and don't open. Each page draws its card through the same `WearRemoteCard` pipeline in
 the Large Wear widget frame (`wearFullScreenContainer`). A card that only fills the Small container
-keeps it. A details screen with a history graph, like the phone's `CardHistoryScreen`, is a follow-up:
+keeps it.
+
+From the full-screen card, the same gestures go one level deeper, to the card's **details**
+(`WearCardDetailsScreen`, `WearScreen.CardDetails`): a long press, a tap the card doesn't take, its
+more-info tap, or the visible **History** button above it. The details screen is the watch's version
+of the phone's `CardHistoryScreen`:
+
+- the card again;
+- the last 24 hours of its main entity (`WearHistoryChart`): a step line for a number, a timeline of
+  runs for anything else, with active states (on, open, unlocked) drawn in the primary colour;
+- the entity's state, type and synced attributes.
+
+The watch reads the history itself, with the token it already uses for values (`WearDirectAccess.history`,
+REST `GET /api/history/period/<start>` through `HaEntityStates.history`). It tries `https` first, and a
+refused token is forgotten, as for values. Without a token the chart says history needs Home Assistant
+access, and the rest of the screen still shows. Back returns to the card's page. What's still left is in
 [`wear-card-details-screen.md`](../followups/wear-card-details-screen.md).
 
 There are four ways in:

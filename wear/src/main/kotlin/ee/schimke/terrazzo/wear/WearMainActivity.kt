@@ -32,6 +32,7 @@ import ee.schimke.terrazzo.wear.sync.WearWidgetsController
 import ee.schimke.terrazzo.wear.sync.wearTapsEnabled
 import ee.schimke.terrazzo.wear.ui.LocalWearCardLook
 import ee.schimke.terrazzo.wear.ui.LocalWearTapSender
+import ee.schimke.terrazzo.wear.ui.WearCardDetailsScreen
 import ee.schimke.terrazzo.wear.ui.WearCardLook
 import ee.schimke.terrazzo.wear.ui.WearCardScreen
 import ee.schimke.terrazzo.wear.ui.WearDashboardScreen
@@ -157,6 +158,7 @@ private enum class WearScreen {
   Settings,
   Widgets,
   Card,
+  CardDetails,
 }
 
 @Composable
@@ -217,6 +219,7 @@ private fun WearApp(
         WearScreen.Dashboard -> WearScreen.Dashboards
         WearScreen.Widgets -> WearScreen.Settings
         WearScreen.Card -> if (cardDeck != null) WearScreen.Section else WearScreen.TopLevel
+        WearScreen.CardDetails -> WearScreen.Card
         else -> WearScreen.TopLevel
       }
   }
@@ -294,6 +297,27 @@ private fun WearApp(
                 cards = deck,
                 initialPage = page,
                 values = values,
+                modifier = Modifier.fillMaxSize(),
+                onOpenDetails = { card ->
+                  // Back from the details returns to this card's page.
+                  openedCard = fullScreenCardKey(card)
+                  screen = WearScreen.CardDetails
+                },
+              )
+            }
+          }
+          WearScreen.CardDetails -> {
+            val card =
+              fullScreenDeck(cardDeck, pinned, sections).firstOrNull {
+                fullScreenCardKey(it) == openedCard
+              }
+            if (card == null) {
+              screen = WearScreen.Card
+            } else {
+              WearCardDetailsScreen(
+                summary = card,
+                values = values,
+                loadHistory = repo::history,
                 modifier = Modifier.fillMaxSize(),
               )
             }
