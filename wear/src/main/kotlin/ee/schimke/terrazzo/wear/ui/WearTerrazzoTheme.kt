@@ -14,14 +14,13 @@ import ee.schimke.ha.rc.components.terrazzoColorScheme
 
 /**
  * Project the (mobile) Material 3 [ColorScheme] built by [terrazzoColorScheme] onto the Wear
- * Material 3 [ColorScheme] for the given [style]. Wear is dark-only on the watch surface, so this
- * always reads the dark variant.
+ * Material 3 [ColorScheme] for the given [style] and mobile-owned theme mode.
  *
  * Only the roles Wear Material 3 exposes are mapped; the rest come from the Wear `ColorScheme()`
  * defaults.
  */
-fun terrazzoWearColorScheme(style: ThemeStyle): ColorScheme {
-  val m3 = terrazzoColorScheme(style, darkTheme = true)
+fun terrazzoWearColorScheme(style: ThemeStyle, darkTheme: Boolean = true): ColorScheme {
+  val m3 = terrazzoColorScheme(style, darkTheme = darkTheme)
   val defaults = ColorScheme()
   return defaults.copy(
     primary = m3.primary,

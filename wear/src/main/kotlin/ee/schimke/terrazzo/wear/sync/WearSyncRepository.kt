@@ -30,10 +30,12 @@ import ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
+import ee.schimke.terrazzo.wearsync.proto.protoPayload
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -94,6 +96,9 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
     MutableStateFlow(offline.readAllDashboards().sortedBy { it.title })
   val dashboards: StateFlow<List<DashboardData>> = _dashboards.asStateFlow()
 
+  private val _designRevision = MutableStateFlow(0L)
+  val designRevision: StateFlow<Long> = _designRevision.asStateFlow()
+
   private val _slotDesigns: MutableStateFlow<WearSlotDesigns> =
     MutableStateFlow(offline.readSlotDesigns() ?: WearSlotDesigns())
   /** The pinned cards' Wear widget designs the phone chose: placed widgets redraw on a change. */
@@ -109,8 +114,11 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
       if (event.type != DataEvent.TYPE_CHANGED) continue
       val item = event.dataItem
       val mapItem = DataMapItem.fromDataItem(item)
-      val bytes = mapItem.dataMap.getByteArray(KEY_PROTO) ?: continue
-      handle(item.uri.path.orEmpty(), bytes)
+      val path = item.uri.path.orEmpty()
+      val payload = mapItem.dataMap.protoPayload()
+      val inline = payload.inlineBytes
+      if (inline != null) handle(path, inline)
+      else scope.launch { payload.read(dataClient)?.let { handle(path, it) } }
     }
     events.release()
   }
@@ -222,7 +230,7 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
           for (i in 0 until buffer.count) {
             val item = buffer[i]
             val mapItem = DataMapItem.fromDataItem(item)
-            val bytes = mapItem.dataMap.getByteArray(KEY_PROTO) ?: continue
+            val bytes = mapItem.dataMap.protoPayload().read(dataClient) ?: continue
             handle(item.uri.path.orEmpty(), bytes)
           }
           buffer.release()
@@ -302,12 +310,13 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
   private fun handle(path: String, bytes: ByteArray) {
     when {
       path == WearSyncPaths.SETTINGS ->
-        decodeProto<WearSettings>(bytes)?.let {
-          _settings.value = it
-          offline.writeSettings(it)
-          // Signed in (or to another instance): the watch may need a token for it.
-          scope.launch { direct.requestIfMissing(it) }
-        }
+        newerThan(decodeProto<WearSettings>(bytes), _settings.value, WearSettings::updatedAtMs)
+          ?.let {
+            _settings.value = it
+            offline.writeSettings(it)
+            // Signed in (or to another instance): the watch may need a token for it.
+            scope.launch { direct.requestIfMissing(it) }
+          }
       // Only a newer copy replaces the one kept, as in [persistChanged]: the cold read meets every
       // node's copy (a replaced phone's too), in no particular order, and an older one must not
       // become what the next offline start shows.
@@ -347,13 +356,17 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
         decodeProto<WearPicture>(bytes)?.let { offline.writePicture(it) }
       path == WearSyncPaths.SLOT_DESIGNS ->
         decodeProto<WearSlotDesigns>(bytes)?.let { designs ->
-          newerThan(designs, offline.readSlotDesigns(), WearSlotDesigns::updatedAtMs)?.let {
+          newerThan(designs, _slotDesigns.value, WearSlotDesigns::updatedAtMs)?.let {
             offline.writeSlotDesigns(it)
             _slotDesigns.value = it
+            _designRevision.update { it + 1 }
           }
         }
       path.startsWith(WearSyncPaths.DESIGN_PREFIX) ->
-        decodeProto<WearDesignBlob>(bytes)?.let { offline.writeDesign(it) }
+        decodeProto<WearDesignBlob>(bytes)?.let {
+          offline.writeDesign(it)
+          _designRevision.update { it + 1 }
+        }
       path.startsWith(WearSyncPaths.DASHBOARD_PREFIX) ->
         decodeProto<DashboardData>(bytes)?.let { changed ->
           val kept = _dashboards.value.firstOrNull { it.urlPath == changed.urlPath }
@@ -373,6 +386,9 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
     if (path == WearSyncPaths.SETTINGS || signsOut(listOf(path))) direct.forget()
     // Signed out: no widget may keep drawing the account's cards.
     if (signsOut(listOf(path))) widgetCards.clear()
+    if (path == WearSyncPaths.SLOT_DESIGNS || path.startsWith(WearSyncPaths.DESIGN_PREFIX)) {
+      _designRevision.update { it + 1 }
+    }
     when (val item = offline.forget(path)) {
       ForgottenItem.Settings -> _settings.value = WearSettings()
       ForgottenItem.Pinned -> _pinned.value = PinnedCardSet()
@@ -497,7 +513,7 @@ private suspend inline fun <reified T> dataItem(
   return try {
     buffer
       .mapNotNull { item ->
-        DataMapItem.fromDataItem(item).dataMap.getByteArray(WearSyncRepository.KEY_PROTO)?.let {
+        DataMapItem.fromDataItem(item).dataMap.protoPayload().read(client)?.let {
           decodeProto<T>(it)
         }
       }

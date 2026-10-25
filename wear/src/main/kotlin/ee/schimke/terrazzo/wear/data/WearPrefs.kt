@@ -3,40 +3,12 @@ package ee.schimke.terrazzo.wear.data
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import ee.schimke.ha.rc.components.ThemeStyle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-/**
- * Wear-local theme picker storage. The phone app keeps its own [ThemeStyle] in `terrazzo-core`'s
- * `PreferencesStore`, but that module targets API 35 and the Wear floor is API 30, so the Wear stub
- * keeps a tiny private DataStore. A future change can sync the two via Wear Data Layer
- * (DataClient).
- */
+/** Developer preview capture flag only. Appearance is owned by the phone's WearSettings. */
 class WearPrefs(private val context: Context) {
-
-  val themeStyle: Flow<ThemeStyle> =
-    context.store.data.map { prefs ->
-      prefs[THEME_KEY]?.let { runCatching { ThemeStyle.valueOf(it) }.getOrNull() }
-        ?: ThemeStyle.TerrazzoHome
-    }
-
-  suspend fun setThemeStyle(style: ThemeStyle) {
-    context.store.edit { it[THEME_KEY] = style.name }
-  }
-
-  /**
-   * The card style slot widgets are drawn in: an `HaUberTheme` id (`classic`, `console`, …). The
-   * watch keeps its own palette ([themeStyle]); the style brings the instruments, type and shapes.
-   */
-  val cardStyle: Flow<String> =
-    context.store.data.map { prefs -> prefs[CARD_STYLE_KEY] ?: "classic" }
-
-  suspend fun setCardStyle(id: String) {
-    context.store.edit { it[CARD_STYLE_KEY] = id }
-  }
 
   /**
    * Off-by-default developer flag that enables the slot-preview PNG capture path in
@@ -55,8 +27,6 @@ class WearPrefs(private val context: Context) {
 
   companion object {
     private val Context.store by preferencesDataStore(name = "terrazzo_wear_prefs")
-    private val THEME_KEY = stringPreferencesKey("theme_style")
-    private val CARD_STYLE_KEY = stringPreferencesKey("card_style")
     private val PREVIEW_CAPTURE_KEY = booleanPreferencesKey("preview_capture_enabled")
   }
 }

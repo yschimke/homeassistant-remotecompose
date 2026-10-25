@@ -7,13 +7,16 @@ import ee.schimke.ha.rc.ContainerTint
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.preloadForComposePlayer
-import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.ui.TopLevelEntry
-import ee.schimke.terrazzo.wear.ui.WearCardLook
 import ee.schimke.terrazzo.wear.ui.decodeWearCard
 import ee.schimke.terrazzo.wear.ui.mergeOrdered
+import ee.schimke.terrazzo.wear.ui.syncedCardDesign
+import ee.schimke.terrazzo.wear.ui.syncedWearAppTemplate
 import ee.schimke.terrazzo.wear.ui.wearAppTemplate
+import ee.schimke.terrazzo.wear.ui.wearCardLook
+import ee.schimke.terrazzo.wear.ui.wearContainerColor
 import ee.schimke.terrazzo.wear.ui.wearSnapshot
+import ee.schimke.terrazzo.wear.ui.wearSystemDark
 import ee.schimke.terrazzo.wear.widget.WearWidgetFrame
 import ee.schimke.terrazzo.wear.widget.wearAppContainer
 import ee.schimke.terrazzo.wear.widget.wearWidgetCardStyle
@@ -21,7 +24,6 @@ import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -61,8 +63,7 @@ internal object WearCardWarmup {
           }
             .onFailure { Log.w(TAG, "Data Layer sync before warm-up failed", it) }
         }
-        val prefs = WearPrefs(app)
-        val look = WearCardLook(prefs.themeStyle.first(), prefs.cardStyle.first())
+        val look = store.readSettings().wearCardLook(app.wearSystemDark())
         val snapshot = wearSnapshot(store.readValues()?.values.orEmpty())
         for (summary in warmupCards(store.readPinned(), store.readSections())) {
           val card = decodeWearCard(summary.rawJson) ?: continue
@@ -71,9 +72,10 @@ internal object WearCardWarmup {
           val frame = WearWidgetFrame.forContainer(app, wearAppContainer(card, snapshot, registry))
           val tint = ContainerTint.argbFor(card, snapshot)
           runCatching {
-            wearAppTemplate(app, design, snapshot, look, style, frame, tint, registry)?.let {
-              preloadForComposePlayer(it)
-            }
+            (store.syncedCardDesign(card, frame.container, look.dark)?.let {
+                syncedWearAppTemplate(it, frame, wearContainerColor(look, tint))
+              } ?: wearAppTemplate(app, design, snapshot, look, style, frame, tint, registry))
+              ?.let { preloadForComposePlayer(it) }
           }
             .onFailure { Log.w(TAG, "warm-up failed for ${summary.type}", it) }
         }

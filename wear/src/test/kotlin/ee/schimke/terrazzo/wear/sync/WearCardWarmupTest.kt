@@ -123,6 +123,12 @@ class WearCardWarmupTest {
     offline.writeValues(
       LiveValues(mapOf("light.warmup_lamp" to EntityValue(state = "on")), capturedAtMs = 1L)
     )
+    offline.writeSettings(
+      ee.schimke.terrazzo.wearsync.proto.WearSettings(
+        themeStyle = "TerrazzoMushroom",
+        darkMode = "Dark",
+      )
+    )
     val before = neutralTemplateCaptures.get()
 
     runBlocking { WearCardWarmup.run(context, syncFirst = false) }
@@ -138,7 +144,7 @@ class WearCardWarmupTest {
         context,
         CardDesignTemplates.designCard(card, snapshot, registry),
         snapshot,
-        WearCardLook(ThemeStyle.TerrazzoHome, "classic"),
+        WearCardLook(ThemeStyle.TerrazzoMushroom, "classic"),
         wearWidgetCardStyle(pinnedCard.cardStyleOverride, "classic"),
         frame,
         ContainerTint.argbFor(card, snapshot),
@@ -148,6 +154,49 @@ class WearCardWarmupTest {
     assertNotNull(document)
     // The app plays what the warm-up captured, without capturing again.
     assertEquals(before + 1, neutralTemplateCaptures.get())
+  }
+
+  @Test
+  fun warmingUsesTheSyncedSelectedDesignWithoutCapturingALocalFallback() {
+    val offline = WearOfflineStore(context)
+    offline.writeSettings(ee.schimke.terrazzo.wearsync.proto.WearSettings(darkMode = "Dark"))
+    val pinned = summary("tile", "light.synced_warmup")
+    val card = assertNotNull(decodeWearCard(pinned.rawJson))
+    val values = mapOf("light.synced_warmup" to EntityValue(state = "on"))
+    offline.writePinned(PinnedCardSet(listOf(PinnedCard(card = pinned))))
+    offline.writeValues(LiveValues(values, capturedAtMs = 1L))
+    val key =
+      assertNotNull(
+        CardDesignTemplates.keyFor(
+          card,
+          wearSnapshot(values),
+          ThemeStyle.Material3,
+          dark = true,
+          cardStyle = ee.schimke.ha.rc.components.HaUberTheme.byId("lcd"),
+        )
+      )
+    val bytes = CardDesignTemplates.capture(context, key).bytes
+    val sha = ee.schimke.ha.client.design.Sha256.hex(bytes)
+    offline.writeDesign(ee.schimke.terrazzo.wearsync.proto.WearDesignBlob(sha, bytes))
+    offline.writeSlotDesigns(
+      ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns(
+        ee.schimke.ha.design.DesignKey.WEAR_CONTAINERS.map {
+          ee.schimke.terrazzo.wearsync.proto.WearSlotDesign(
+            ee.schimke.ha.client.design.cardFingerprint(card),
+            it,
+            sha,
+          )
+        },
+        updatedAtMs = 1,
+      )
+    )
+    val before = neutralTemplateCaptures.get()
+    runBlocking { WearCardWarmup.run(context, syncFirst = false) }
+    assertEquals(
+      before,
+      neutralTemplateCaptures.get(),
+      "The selected synced design is the one to warm",
+    )
   }
 
   @Test

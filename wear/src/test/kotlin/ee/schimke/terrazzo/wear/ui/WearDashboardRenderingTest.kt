@@ -111,7 +111,9 @@ class WearDashboardRenderingTest {
   fun publishedPreviewFixturesRenderCardsAndSelectedDesigns() {
     var selected by mutableStateOf(0)
     compose.setContent {
-      Box(Modifier.size(240.dp).testTag("screen")) {
+      Box(
+        Modifier.size(240.dp).background(MaterialTheme.colorScheme.background).testTag("screen")
+      ) {
         key(selected) {
           when (selected) {
             0 -> WearDashboardPreview()
@@ -227,6 +229,140 @@ class WearDashboardRenderingTest {
     save("wear-grid-lcd", lcd)
     save("wear-grid-braun", overridden)
     save("wear-grid-braun-updated", updated)
+  }
+
+  @Test
+  fun syncedInstalledDesignChangesPixelsAndSurvivesOfflineRestart() {
+    val context = org.robolectric.RuntimeEnvironment.getApplication()
+    val store = ee.schimke.terrazzo.wear.sync.WearOfflineStore(context)
+    val raw = """{"type":"tile","entity":"light.kitchen"}"""
+    val card = requireNotNull(decodeWearCard(raw))
+    val summary = CardSummary(type = "tile", rawJson = raw)
+    val snapshot =
+      wearSnapshot(mapOf("light.kitchen" to EntityValue(state = "on", friendlyName = "Kitchen")))
+    var revision by mutableStateOf(0L)
+    var visible by mutableStateOf(true)
+    var state by mutableStateOf("on")
+    val settings =
+      ee.schimke.terrazzo.wearsync.proto.WearSettings(
+        themeStyle = "TerrazzoMushroom",
+        cardStyle = "classic",
+        updatedAtMs = 1,
+      )
+    store.writeSettings(settings)
+    fun receive(
+      style: String,
+      at: Long,
+      indexFirst: Boolean,
+      deferBlob: Boolean = false,
+    ): () -> Unit {
+      val key =
+        requireNotNull(
+          ee.schimke.ha.rc.CardDesignTemplates.keyFor(
+            card,
+            snapshot,
+            settings.wearCardLook().palette,
+            dark = true,
+            cardStyle = ee.schimke.ha.rc.components.HaUberTheme.byId(style),
+          )
+        )
+      val bytes =
+        kotlinx.coroutines.runBlocking {
+          ee.schimke.ha.rc.CardDesignTemplates.capture(context, key).bytes
+        }
+      val sha = ee.schimke.ha.client.design.Sha256.hex(bytes)
+      val index =
+        ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns(
+          ee.schimke.ha.design.DesignKey.WEAR_CONTAINERS.map { container ->
+            ee.schimke.terrazzo.wearsync.proto.WearSlotDesign(
+              ee.schimke.ha.client.design.cardFingerprint(card),
+              container,
+              sha,
+            )
+          },
+          at,
+        )
+      if (indexFirst) store.writeSlotDesigns(index)
+      val deliver = {
+        store.writeDesign(ee.schimke.terrazzo.wearsync.proto.WearDesignBlob(sha, bytes))
+      }
+      if (!deferBlob) deliver()
+      if (!indexFirst) store.writeSlotDesigns(index)
+      return deliver
+    }
+    receive("lcd", 1, indexFirst = false)
+    compose.setContent {
+      MaterialTheme {
+        CompositionLocalProvider(
+          LocalWearCardLook provides
+            ee.schimke.terrazzo.wear.sync.WearOfflineStore(context).readSettings().wearCardLook(),
+          LocalWearDesignRevision provides revision,
+        ) {
+          Box(
+            Modifier.size(240.dp).background(MaterialTheme.colorScheme.background).testTag("screen")
+          ) {
+            if (visible)
+              WearRemoteCard(
+                summary,
+                mapOf("light.kitchen" to EntityValue(state = state, friendlyName = "Kitchen")),
+              )
+          }
+        }
+      }
+    }
+    val lcd = screenshot()
+    lateinit var deliverBlob: () -> Unit
+    compose.runOnIdle {
+      deliverBlob = receive("braun", 2, indexFirst = true, deferBlob = true)
+      revision++
+    }
+    val waitingForBlob = screenshot()
+    compose.runOnIdle {
+      deliverBlob()
+      revision++
+    }
+    val braun = screenshot()
+    assertFalse(
+      waitingForBlob.sameAs(braun),
+      "Late blob arrival must replace the fallback without another index",
+    )
+    assertFalse(
+      lcd.sameAs(braun),
+      "The phone-selected installed template must replace the old artwork",
+    )
+    compose.runOnIdle { state = "off" }
+    val off = screenshot()
+    assertFalse(braun.sameAs(off), "A synced design must still update live entity bindings")
+    compose.runOnIdle { visible = false }
+    compose.waitForIdle()
+    compose.runOnIdle {
+      visible = true
+      revision++
+    }
+    assertTrue(
+      off.sameAs(screenshot()),
+      "Offline replay must restore the synced template and seed current bindings",
+    )
+    save("wear-synced-lcd", lcd)
+    save("wear-synced-braun", braun)
+    save("wear-synced-braun-offline", off)
+  }
+
+  @Test
+  fun settingsOnlyExplainsMobileAppearanceWithoutWatchSelection() {
+    compose.setContent {
+      MaterialTheme {
+        Box(
+          Modifier.size(240.dp).background(MaterialTheme.colorScheme.background).testTag("screen")
+        ) {
+          WearSettingsScreen(ee.schimke.terrazzo.wearsync.proto.WearSettings(), onBack = {})
+        }
+      }
+    }
+    compose.onNodeWithText("Theme").assertDoesNotExist()
+    compose.onNodeWithText("Card style").assertDoesNotExist()
+    compose.onNodeWithText("Theme and card designs follow your phone.").assertExists()
+    save("wear-settings-mobile-appearance", screenshot())
   }
 
   private fun screenshot(): Bitmap {

@@ -51,6 +51,7 @@ import ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
+import ee.schimke.terrazzo.wearsync.proto.putProtoPayload
 import ee.schimke.terrazzo.widget.WidgetImages
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -149,6 +150,13 @@ class MobileWearSyncManager(
 
   /** The Wear design blobs written to the Data Layer by this process, by sha256. */
   private val pushedDesigns = HashSet<String>()
+
+  // Avoid equal timestamps when multiple appearance changes are published in one millisecond.
+  private val appearanceClock = java.util.concurrent.atomic.AtomicLong()
+
+  private fun appearanceTimestamp(): Long = appearanceClock.updateAndGet {
+    maxOf(System.currentTimeMillis(), it + 1)
+  }
 
   /** The designs last written to `/wear/slot-designs`, so an unchanged choice isn't resent. */
   private var lastCardDesigns: List<WearSlotDesign>? = null
@@ -250,6 +258,9 @@ class MobileWearSyncManager(
    * the session.
    */
   private val tapCards = MutableStateFlow<Map<String, Map<String, CardConfig>>>(emptyMap())
+
+  /** Original mobile configs, retained for design override lookup before device resolution. */
+  private val dashboardDesignCards = MutableStateFlow<Map<String, List<CardConfig>>>(emptyMap())
 
   private fun publishTapCards(source: String, cards: List<CardSummary>) {
     tapCards.value =
@@ -403,6 +414,7 @@ class MobileWearSyncManager(
   override fun setSession(session: HaSession?) {
     inputCards.value = emptyMap()
     tapCards.value = emptyMap()
+    dashboardDesignCards.value = emptyMap()
     sessionState.value = session
   }
 
@@ -496,22 +508,37 @@ class MobileWearSyncManager(
     }
       .onFailure { handleFailure("addListener", it) }
 
-    // Demo-mode flag → /wear/settings (and base url annotation).
+    // Current mobile settings → /wear/settings, including every appearance change.
     scope.launch {
-      combine(prefs.demoMode, sessionState, inputEditing) { demo, session, editing ->
+      combine(prefs.demoMode, sessionState, inputEditing, prefs.themeStyle, prefs.cardStyle) {
+          demo,
+          session,
+          editing,
+          theme,
+          style ->
           WearSettings(
             demoMode = demo,
+            themeStyle = theme.name,
+            cardStyle = style.id,
             inputEditingEnabled =
               editing &&
                 !demo &&
                 session != null &&
                 session !is ee.schimke.terrazzo.core.session.DemoHaSession,
             baseUrl = session?.baseUrl.orEmpty(),
-            updatedAtMs = System.currentTimeMillis(),
+            updatedAtMs = 0L,
           )
         }
+        .combine(prefs.darkMode) { settings, mode -> settings.copy(darkMode = mode.name) }
         .distinctUntilChanged()
-        .collect { writeDataItem(WearSyncPaths.SETTINGS, encodeProto(it)) }
+        .combine(wearableAvailableState) { settings, available -> settings.takeIf { available } }
+        .filterNotNull()
+        .collect {
+          writeDataItem(
+            WearSyncPaths.SETTINGS,
+            encodeProto(it.copy(updatedAtMs = appearanceTimestamp())),
+          )
+        }
     }
 
     // Pinned cards → /wear/pinned. Source switched from
@@ -586,17 +613,36 @@ class MobileWearSyncManager(
         }
     }
 
-    // Pinned cards' Wear widget designs → /wear/slot-designs and /wear/design/<sha256>.
+    // Every Wear card's selected templates → /wear/slot-designs and /wear/design/<sha256>.
     scope.launch {
-      combine(wearPinnedCards, CardDesignPreload.designs.filterNotNull(), registrySnapshot) {
-          cards,
-          designs,
-          snapshot ->
-          val picked = wearCardDesigns(cards, snapshot, designs)
+      combine(
+          combine(wearPinnedCards, wearPictureCards, dashboardDesignCards) { pinned, all, dashboards
+            ->
+            pinned to (all + dashboards.values.flatten()).distinct()
+          },
+          CardDesignPreload.designs.filterNotNull(),
+          registrySnapshot,
+        ) { cards, designs, snapshot ->
+          val (pinned, all) = cards
+          val keyed =
+            pinned +
+              all.map {
+                ee.schimke.ha.client.design.cardFingerprint(resolveBambuDevices(it, snapshot)) to it
+              }
+          val picked =
+            wearCardDesigns(
+              keyed.distinctBy { it.first },
+              snapshot,
+              designs,
+              darkThemes = listOf(true, false),
+            )
           picked.map { it.first } to picked.associate { it.first.sha256 to it.second }
         }
+        .combine(wearableAvailableState) { designs, available -> designs to available }
         .whileSignedIn()
-        .collect { (cardDesigns, blobs) -> pushDesigns(cardDesigns, blobs) }
+        .collect { (payload, available) ->
+          if (available) pushDesigns(payload.first, payload.second)
+        }
     }
 
     // Republish dashboard styles even when neither pins nor entity values change.
@@ -701,6 +747,7 @@ class MobileWearSyncManager(
         val path = WearSyncPaths.dashboardPath(summary.urlPath)
         if (writeDataItem(path, encodeProto(data))) {
           publishTapCards(path, data.cards)
+          dashboardDesignCards.value = dashboardDesignCards.value + (path to cards)
           dashboardEntities.value =
             dashboardEntities.value +
               (path to wearEntityIds(data.cards.map { it.rawJson }, snapshot))
@@ -709,6 +756,7 @@ class MobileWearSyncManager(
       // Every dashboard listed and written: drop the ones Home Assistant no longer has.
       val current = summaries.map { WearSyncPaths.dashboardPath(it.urlPath) }
       dashboardEntities.value = dashboardEntities.value.filterKeys { it in current }
+      dashboardDesignCards.value = dashboardDesignCards.value.filterKeys { it in current }
       tapCards.value =
         tapCards.value.filterKeys {
           !it.startsWith(WearSyncPaths.DASHBOARD_PREFIX) || it in current
@@ -842,7 +890,7 @@ class MobileWearSyncManager(
       }
       pushedDesigns += sha
     }
-    val index = WearSlotDesigns(designs = designs, updatedAtMs = System.currentTimeMillis())
+    val index = WearSlotDesigns(designs = designs, updatedAtMs = appearanceTimestamp())
     if (!writeDataItem(WearSyncPaths.SLOT_DESIGNS, encodeProto(index))) return
     val current = blobs.keys.map(WearSyncPaths::designPath).toSet()
     val stale = dataItemPaths(WearSyncPaths.DESIGN_PREFIX).filter { it !in current }
@@ -859,7 +907,7 @@ class MobileWearSyncManager(
     return runCatching {
       val request =
         PutDataMapRequest.create(path).apply {
-          dataMap.putByteArray(KEY_PROTO, bytes)
+          dataMap.putProtoPayload(bytes)
           dataMap.putLong(KEY_TS, System.currentTimeMillis())
         }
       dataClient.putDataItem(request.asPutDataRequest().setUrgent()).await()

@@ -36,7 +36,6 @@ import ee.schimke.terrazzo.wear.sync.wearTapsEnabled
 import ee.schimke.terrazzo.wear.ui.LocalWearCardLook
 import ee.schimke.terrazzo.wear.ui.LocalWearTapSender
 import ee.schimke.terrazzo.wear.ui.WearCardDetailsScreen
-import ee.schimke.terrazzo.wear.ui.WearCardLook
 import ee.schimke.terrazzo.wear.ui.WearCardScreen
 import ee.schimke.terrazzo.wear.ui.WearDashboardScreen
 import ee.schimke.terrazzo.wear.ui.WearDashboardsScreen
@@ -48,10 +47,10 @@ import ee.schimke.terrazzo.wear.ui.fullScreenCardKey
 import ee.schimke.terrazzo.wear.ui.fullScreenDeck
 import ee.schimke.terrazzo.wear.ui.opensFullScreen
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
+import ee.schimke.terrazzo.wear.ui.wearCardLook
 import ee.schimke.terrazzo.wear.ui.wearTypographyFor
 import ee.schimke.terrazzo.wear.widget.WearWidgetPreviewCapturer
 import ee.schimke.terrazzo.wear.widget.WearWidgetTaps
-import ee.schimke.terrazzo.wear.widget.refreshAllCardWidgets
 import ee.schimke.terrazzo.wear.widget.widgetCardOptions
 import ee.schimke.terrazzo.wear.widget.widgetCardSection
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
@@ -60,9 +59,7 @@ import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 /**
  * Wear companion. Top-level screen surfaces the user's pinned set (sections + cards interleaved by
@@ -108,14 +105,6 @@ class WearMainActivity : ComponentActivity() {
       )
       .start()
 
-    // The theme and card style, read before the first composition so its first frame is the
-    // pinned list in the chosen look; collected from a flow, they cost the launch an empty frame.
-    // A tiny preferences file, like the phone's synchronous read of its last dashboard.
-    val prefs = WearPrefs(applicationContext)
-    val initialLook = runBlocking {
-      WearCardLook(prefs.themeStyle.first(), prefs.cardStyle.first())
-    }
-
     // Once per launch: a recreated activity keeps the screen it was on.
     if (savedInstanceState == null) openWidgetCard.value = widgetCardKeyOf(intent)
     // The phone's Home Assistant notifications post here (Wear OS 4+ asks first). Asked once per
@@ -128,7 +117,7 @@ class WearMainActivity : ComponentActivity() {
     ) {
       requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
     }
-    setContent { WearApp(repo, prefs, initialLook, openWidgetCard) }
+    setContent { WearApp(repo, openWidgetCard) }
   }
 
   /** A widget tapped while the app runs ([WearWidgetTaps.openCardIntent]): move to its card. */
@@ -177,15 +166,14 @@ private enum class WearScreen {
 @Composable
 private fun WearApp(
   repo: WearSyncRepository,
-  prefs: WearPrefs,
-  initialLook: WearCardLook,
   openWidgetCard: MutableStateFlow<String?>,
 ) {
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
-  val selectedPalette by prefs.themeStyle.collectAsState(initial = initialLook.palette)
-  val selectedCardStyle by prefs.cardStyle.collectAsState(initial = initialLook.style)
   val settings: WearSettings by repo.settings.collectAsState()
+  val designRevision by repo.designRevision.collectAsState()
+  val look = settings.wearCardLook(androidx.compose.foundation.isSystemInDarkTheme())
+  val selectedPalette = look.palette
   val pinned: PinnedCardSet by repo.pinned.collectAsState()
   val sections: PinnedSectionSet by repo.sections.collectAsState()
   val dashboards: List<DashboardData> by repo.dashboards.collectAsState()
@@ -238,11 +226,12 @@ private fun WearApp(
   }
 
   MaterialTheme(
-    colorScheme = terrazzoWearColorScheme(selectedPalette),
+    colorScheme = terrazzoWearColorScheme(selectedPalette, look.dark),
     typography = wearTypographyFor(selectedPalette),
   ) {
     CompositionLocalProvider(
-      LocalWearCardLook provides WearCardLook(selectedPalette, selectedCardStyle),
+      ee.schimke.terrazzo.wear.ui.LocalWearDesignRevision provides designRevision,
+      LocalWearCardLook provides look,
       LocalRelativeTimeTick provides rememberRelativeTimeTick(),
       // A card's taps act through the phone while it allows input editing, outside demo mode.
       LocalWearTapSender provides if (wearTapsEnabled(settings)) repo::sendTap else null,
@@ -371,23 +360,9 @@ private fun WearApp(
           }
           WearScreen.Settings ->
             WearSettingsScreen(
-              selected = selectedPalette,
               settings = settings,
-              onSelectTheme = { picked ->
-                scope.launch {
-                  prefs.setThemeStyle(picked)
-                  refreshAllCardWidgets(context.applicationContext)
-                }
-              },
               onBack = { screen = WearScreen.TopLevel },
               modifier = Modifier.fillMaxSize(),
-              cardStyle = selectedCardStyle,
-              onSelectCardStyle = { picked ->
-                scope.launch {
-                  prefs.setCardStyle(picked)
-                  refreshAllCardWidgets(context.applicationContext)
-                }
-              },
               // Glance Wear widgets render from API 37 only.
               onOpenWidgets =
                 if (WearWidgetsController.supportsWearWidgets()) {

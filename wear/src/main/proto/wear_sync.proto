@@ -31,6 +31,11 @@ message WearSettings {
     int64 updated_at_ms = 3;
     // Explicit foreground input capability; older phones default to read-only.
     bool input_editing_enabled = 4;
+    // Mobile-owned appearance. Wear keeps the last received values offline.
+    string theme_style = 5;
+    string card_style = 6;
+    // Follow (System), Light or Dark. Follow resolves on the receiving watch.
+    string dark_mode = 7;
 }
 
 // Card surfaces shown on Wear. Phone extracts the minimum each row
@@ -40,7 +45,7 @@ message CardSummary {
     string title = 2;
     string primary_entity_id = 3;
     string raw_json = 4;
-    // Explicit phone card/type style override. Empty follows the watch-wide style.
+    // Explicit phone card/type style override. Empty follows the mobile global style.
     string card_style_override = 5;
 }
 
@@ -99,6 +104,8 @@ message WearSlotDesign {
     string card_key = 1;
     string container = 2;
     string sha256 = 3;
+    // Absence means the legacy dark template. Both modes are synced for offline System changes.
+    optional bool dark_theme = 4;
 }
 
 // DataItem at `/wear/design/<sha256>`: a Wear widget design's Remote Compose

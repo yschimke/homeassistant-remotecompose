@@ -30,6 +30,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -75,7 +76,37 @@ import kotlinx.serialization.json.Json
 internal data class WearCardLook(
   val palette: ThemeStyle = ThemeStyle.TerrazzoHome,
   val style: String = HaUberTheme.Classic.id,
+  val dark: Boolean = true,
 )
+
+/** A missing/unknown value uses mobile's default, never an obsolete watch preference. */
+internal fun ee.schimke.terrazzo.wearsync.proto.WearSettings?.wearCardLook(
+  systemDark: Boolean = true
+): WearCardLook =
+  WearCardLook(
+    palette =
+      runCatching { ThemeStyle.valueOf(this?.themeStyle.orEmpty()) }
+        .getOrDefault(ThemeStyle.Material3),
+    style = HaUberTheme.byId(this?.cardStyle ?: "classic").id,
+    dark =
+      when (this?.darkMode) {
+        "Light" -> false
+        "Dark" -> true
+        else -> systemDark
+      },
+  )
+
+/** Invalidates disk-backed templates when either their index or bytes arrive, in either order. */
+internal fun Context.wearSystemDark(): Boolean =
+  resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
+    android.content.res.Configuration.UI_MODE_NIGHT_YES
+
+internal val LocalWearDesignRevision = staticCompositionLocalOf { 0L }
+
+internal fun wearContainerColor(look: WearCardLook, tint: Int?): Int? =
+  tint
+    ?: if (look.dark) null
+    else terrazzoWearColorScheme(look.palette, false).surfaceContainer.toArgb()
 
 internal val LocalWearCardLook = staticCompositionLocalOf { WearCardLook() }
 
@@ -117,8 +148,10 @@ internal fun WearRemoteCard(
   val style = wearWidgetCardStyle(summary.cardStyleOverride, look.style)
   val context = LocalContext.current
   val design = CardDesignTemplates.designCard(card, snapshot, registry)
+  val revision = LocalWearDesignRevision.current
+  val store = remember(context) { WearOfflineStore(context.applicationContext) }
   val frame =
-    remember(card, snapshot) {
+    remember(card, snapshot, fullScreen) {
       WearWidgetFrame.forContainer(
         context,
         if (fullScreen) wearFullScreenContainer(card)
@@ -127,13 +160,21 @@ internal fun WearRemoteCard(
     }
   // The card's state tints its container, as on the widget: warm for heating, amber for a light.
   val tint = remember(card, snapshot) { ContainerTint.argbFor(card, snapshot) }
-  val colors = remember(look.palette) { wearWidgetColors(look.palette) }
+  val colors = remember(look.palette, look.dark) { wearWidgetColors(look.palette, look.dark) }
   // The template's own shape: a toggle turning on or off changes it (a Wear tier resolves its icon
   // at capture, see WEAR_ON_PROPERTY) without changing the design, frame or, untinted, the tint.
   val shape = remember(design, snapshot) { wearTemplateShape(design, snapshot, registry) }
+  val synced =
+    remember(card, frame, revision, look.dark) {
+      store.syncedCardDesign(card, frame.container, look.dark)
+    }
+  val syncedSha = synced?.let { ee.schimke.ha.client.design.Sha256.hex(it) }
   val template =
-    remember(design, shape, look, style, frame, tint) {
-      runBlocking { wearAppTemplate(context, design, snapshot, look, style, frame, tint, registry) }
+    remember(design, shape, look, style, frame, tint, syncedSha) {
+      (synced?.let { syncedWearAppTemplate(it, frame, wearContainerColor(look, tint)) }
+          ?: runBlocking {
+            wearAppTemplate(context, design, snapshot, look, style, frame, tint, registry)
+          })
         ?.let { bytes -> CardDesignTemplates.playback(design, bytes, registry) }
     }
   // Pictures come from the ones the phone synced to disk, by entity, as on the widget: no network,
@@ -153,6 +194,7 @@ internal fun WearRemoteCard(
   val key =
     listOf(
       "wear-app-widget",
+      syncedSha,
       card,
       look,
       style.id,
@@ -214,7 +256,7 @@ internal fun WearRemoteCard(
         ) {
           // No template (a card with no template shape): the widget's direct document, framed
           // alike.
-          WearAppFrame(frame, tint) {
+          WearAppFrame(frame, tint, look) {
             SlotContent(
               registry,
               colors,
@@ -222,6 +264,7 @@ internal fun WearRemoteCard(
               StablePictures.snapshot(card, snapshot),
               template = false,
               cardStyle = style,
+              darkTheme = look.dark,
             )
           }
         }
@@ -229,6 +272,30 @@ internal fun WearRemoteCard(
     }
     taps.status?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
   }
+}
+
+/** The phone-selected template, shared by pinned, section and dashboard cards. */
+internal fun WearOfflineStore.syncedCardDesign(
+  card: CardConfig,
+  container: String,
+  darkTheme: Boolean = true,
+): ByteArray? {
+  val key = ee.schimke.ha.client.design.cardFingerprint(card)
+  return readSlotDesigns()
+    ?.designs
+    ?.firstOrNull { it.cardKey == key && it.container == container && it.darkTheme == darkTheme }
+    ?.let { readDesign(it.sha256) }
+}
+
+internal fun syncedWearAppTemplate(
+  bytes: ByteArray,
+  frame: WearWidgetFrame,
+  tint: Int?,
+): ByteArray? {
+  val neutral =
+    if (WearWidgetTemplate.namesFrame(bytes)) bytes
+    else ee.schimke.terrazzo.wear.widget.CardDesignWearTemplate.template(bytes) ?: bytes
+  return WearWidgetTemplate.forApp(neutral, frame, tint)
 }
 
 /**
@@ -317,14 +384,15 @@ internal suspend fun wearAppTemplate(
     neutralWidgetTemplate(
       context,
       registry,
-      wearWidgetColors(look.palette),
+      wearWidgetColors(look.palette, look.dark),
       look.palette,
       design.type,
       properties.shape,
       input,
       style,
+      darkTheme = look.dark,
     ) ?: return null
-  return WearWidgetTemplate.forApp(neutral, frame, tint)
+  return WearWidgetTemplate.forApp(neutral, frame, wearContainerColor(look, tint))
 }
 
 /**
@@ -339,12 +407,21 @@ internal fun wearTemplateShape(
 
 /** [content] in [frame]'s container, as a widget host draws one: rounded, filled and padded. */
 @Composable
-private fun WearAppFrame(frame: WearWidgetFrame, tint: Int?, content: @Composable () -> Unit) {
+private fun WearAppFrame(
+  frame: WearWidgetFrame,
+  tint: Int?,
+  look: WearCardLook,
+  content: @Composable () -> Unit,
+) {
   RemoteBox(
     modifier =
       RemoteModifier.fillMaxSize()
         .clip(RemoteRoundedCornerShape(frame.cornerRadiusDp.rdp))
-        .background((tint?.let { androidx.compose.ui.graphics.Color(it) } ?: WIDGET_SURFACE).rc)
+        .background(
+          (tint?.let { androidx.compose.ui.graphics.Color(it) }
+              ?: terrazzoWearColorScheme(look.palette, look.dark).surfaceContainer)
+            .rc
+        )
         .padding(frame.horizontalPaddingDp.rdp, frame.verticalPaddingDp.rdp)
   ) {
     content()
@@ -405,9 +482,6 @@ internal fun Modifier.scaledFrame(width: Dp, height: Dp, scale: Float): Modifier
       }
     }
   }
-
-/** The container colour a widget host fills for an untinted widget. */
-private val WIDGET_SURFACE = androidx.compose.ui.graphics.Color(39, 36, 48)
 
 /** The snapshot the watch's cards render from: its last synced entity values. */
 internal fun wearSnapshot(values: Map<String, EntityValue>): HaSnapshot =

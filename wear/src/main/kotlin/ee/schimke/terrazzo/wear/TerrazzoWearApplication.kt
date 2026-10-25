@@ -8,13 +8,12 @@ import ee.schimke.ha.rc.CardDesignLibrary
 import ee.schimke.ha.rc.CardMemory
 import ee.schimke.ha.rc.FileLocalDesignStore
 import ee.schimke.ha.rc.components.LauncherIcons
-import ee.schimke.terrazzo.wear.data.WearPrefs
+import ee.schimke.terrazzo.wear.ui.wearCardLook
 import ee.schimke.terrazzo.wear.widget.WearNeutralTemplateStore
 import ee.schimke.terrazzo.wear.widget.releaseWidgetTemplates
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -47,10 +46,14 @@ class TerrazzoWearApplication : Application() {
    */
   private fun followCardStyleWithLauncherIcon() {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    val prefs = WearPrefs(applicationContext)
+    val store = ee.schimke.terrazzo.wear.sync.WearOfflineStore(applicationContext)
     val apply = {
       scope.launch {
-        LauncherIcons.apply(applicationContext, prefs.cardStyle.first(), "ee.schimke.terrazzo.wear")
+        LauncherIcons.apply(
+          applicationContext,
+          store.readSettings().wearCardLook().style,
+          "ee.schimke.terrazzo.wear",
+        )
       }
     }
     apply()
