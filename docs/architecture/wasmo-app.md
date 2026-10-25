@@ -34,8 +34,9 @@ fits because of what Wasmo offers today:
   Home Assistant needs a persistent connection, which the browser has and a Wasmo app does not.
 - **Hosted Wasmo can't reach a home network**, so server-side calls to `homeassistant.local`
   would only ever work for a homelab Wasmo.
-- **The card converters are Android-only** (`rc-converter`). Nothing in either repository
-  targets `wasmWasi`, so there is no card generation to move server-side yet.
+- **Card generation runs in the browser or on the design server**, not on Wasmo: `rc-converter`
+  targets wasmJs (the browser) and the JVM (the design server), not `wasmWasi`, so there is
+  nothing to move into a Wasmo server-side component yet.
 
 ## Signing in to Home Assistant
 
@@ -95,6 +96,10 @@ so updating today means reinstalling.
 ## Card fidelity
 
 This is the same Wasm app as the public web build, so it has the same limits
-([compose-multiplatform-apps.md](compose-multiplatform-apps.md)). Cards come from the design
-library's templates and the native fallbacks, not from the Android converters. Full parity needs
-a KMP converter or the add-on's `/v1/cards/{id}.rc` route, which still returns 501.
+([compose-multiplatform-apps.md](compose-multiplatform-apps.md)). It runs the card converters
+(`rc-converter`, on wasmJs) to compute each card's exact design key, asks the design server for
+that key (`POST /designs/v1/generate`: generation properties only, never a card's config or
+states), and plays the design with the converter's own bindings, as the phone app does. The
+server answers with its library's design or captures one. A card with no template shape, or a key
+the server has no design for, draws with the native fallback. The converters add about 0.8 MB to
+the app's `.wasm` (0.25 MB to the compressed `.wasmo`).

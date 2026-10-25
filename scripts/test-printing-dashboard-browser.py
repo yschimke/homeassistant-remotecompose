@@ -124,6 +124,13 @@ try:
                     'key': {'shape': 'device_class=temperature;domain=sensor'}},
                     headers={'Access-Control-Allow-Origin': '*'})
             page.route('https://ha.coo.ee/api/cards/resolve', resolve)
+            def generate(route):
+                # Asked for by key (generation properties only): no design, so the built-in card.
+                body = route.request.post_data
+                assert 'fixture-token' not in body and 'p2s' not in body and 'states' not in body, body
+                resolutions.append(json.loads(body))
+                route.fulfill(status=404, headers={'Access-Control-Allow-Origin': '*'})
+            page.route('https://ha.coo.ee/designs/v1/generate', generate)
             page.route(DESIGN_BLOB, lambda route: route.fulfill(body=sensor,
                 content_type='application/octet-stream', headers={'Access-Control-Allow-Origin': '*'}))
             from PIL import Image

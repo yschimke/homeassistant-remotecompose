@@ -120,6 +120,17 @@ try:
                     route.fulfill(json={'sha256': sha, 'exact': True}, headers={'Access-Control-Allow-Origin': '*'})
                 else: route.fulfill(status=404, headers={'Access-Control-Allow-Origin': '*'})
             page.route('https://ha.coo.ee/api/cards/resolve', resolve)
+            def generate(route):
+                # A card with a template shape is asked for by its key: generation properties only.
+                body = route.request.post_data
+                assert 'fixture-token' not in body and 'sensor.' not in body and 'states' not in body, body
+                key = json.loads(body)
+                if key['cardType'] == 'gauge' and key['theme'].startswith('style:console:'):
+                    route.fulfill(json={'sha256': sha, 'blob': f'/designs/v1/blobs/{sha}.rc', 'key': key,
+                                        'slots': 1, 'generated': True},
+                                  headers={'Access-Control-Allow-Origin': '*'})
+                else: route.fulfill(status=404, headers={'Access-Control-Allow-Origin': '*'})
+            page.route('https://ha.coo.ee/designs/v1/generate', generate)
             page.route(DESIGN_BLOB, lambda route: route.fulfill(body=gauge, content_type='application/octet-stream', headers={'Access-Control-Allow-Origin': '*'}))
             page.goto(f'http://127.0.0.1:{server.server_port}/', wait_until='networkidle')
             for label, value in [('Home Assistant URL', 'https://ha.example.test'), ('Long-lived access token', 'fixture-token')]:
