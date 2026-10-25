@@ -23,8 +23,10 @@ initial values only into an empty install, avoiding partial uploads and first-de
 1. [Web detection/local storage PR #1225](https://github.com/yschimke/homeassistant-remotecompose/pull/1225)
    is the merged baseline. It retains static behaviour, including on hosted wasmo.com.
 2. Review [Wasmo shared services PR #1](https://github.com/yschimke/wasmo/pull/1) against `deploy`.
-   Its module tests pass; full wiring validation is blocked by the existing journal npm graph
-   ([SCH-50](https://linear.app/yschimke/issue/SCH-50/wasmo-wiring-build-fails-resolving-peculiarasn1-x509-2111)).
+   Its 11 module tests and full wiring compile pass. The earlier npm resolution failure
+   ([SCH-50](https://linear.app/yschimke/issue/SCH-50/wasmo-wiring-build-fails-resolving-peculiarasn1-x509-2111))
+   no longer reproduces; no dependency or registry change was needed. A live OS owner-cookie
+   flow remains unverified.
 3. Review the web cloud-settings stage after stage 1. It needs stage 2's capabilities, `kv` and
    `kvImport` contracts. Each load reads one snapshot before composition. Usage ledger and sharing
    values stay strings in the generic JSON KV service. Startup read/import failure shows a retry
