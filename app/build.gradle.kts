@@ -44,6 +44,21 @@ if (crashlyticsEnabled) {
   apply(plugin = "com.google.firebase.crashlytics")
 }
 
+// The Terrazzo push relay HA posts notifications to while the app holds no websocket
+// (`app_data.push_url`, see docs/architecture/notifications.md): the `haPush` Cloud Function in
+// this build's own Firebase project (google-services.json's project_id), or
+// `-Pharc.pushRelayUrl=<url>`. Empty, so no relay and websocket-only delivery, without Firebase.
+val pushRelayUrl: String =
+  providers.gradleProperty("harc.pushRelayUrl").orNull
+    ?: providers
+      .fileContents(layout.projectDirectory.file("google-services.json"))
+      .asText
+      .orNull
+      ?.takeIf { crashlyticsEnabled }
+      ?.let { Regex("\"project_id\"\\s*:\\s*\"([^\"]+)\"").find(it)?.groupValues?.get(1) }
+      ?.let { "https://us-central1-$it.cloudfunctions.net/haPush" }
+    ?: ""
+
 android {
   namespace = "ee.schimke.terrazzo"
   compileSdk {
@@ -69,6 +84,7 @@ android {
     // Read at runtime by CrashReporter.create() to pick the backend
     // compiled in above ("firebase" or "none").
     buildConfigField("String", "CRASH_REPORTER", "\"$crashReporter\"")
+    buildConfigField("String", "PUSH_RELAY_URL", "\"$pushRelayUrl\"")
 
     // Gates MainActivity's demo-mode launch extra. On for debug builds and the
     // `benchmarkRelease` / `nonMinifiedRelease` variants `:app-benchmark` drives (see
@@ -148,6 +164,12 @@ android {
 androidComponents {
   onVariants(selector().withBuildType("nonMinifiedRelease")) { it.enableTestHooks() }
   onVariants(selector().withBuildType("benchmarkRelease")) { it.enableTestHooks() }
+  // The Firebase source set's manifest (its FCM service) joins only builds that compile it.
+  if (crashlyticsEnabled) {
+    onVariants { variant ->
+      variant.sources.manifests.addStaticManifestFile("src/crashlytics/AndroidManifest.xml")
+    }
+  }
   // The built-in card styles' designs, in assets/card-designs/ (BuiltInCardDesigns).
   onVariants { variant ->
     variant.sources.assets?.addGeneratedSourceDirectory(
@@ -329,6 +351,8 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
+    // HA notifications through the Terrazzo push relay (FirebasePushTokens).
+    implementation(libs.firebase.messaging)
   }
 
   testImplementation(libs.kotlin.test.junit)

@@ -1,0 +1,28 @@
+name: Push relay
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - 'push-relay/**'
+      - '.github/workflows/push-relay.yml'
+  pull_request:
+    paths: *paths
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: push-relay/functions
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      # The handler's own tests, then that the Cloud Function module loads against the real SDKs.
+      - run: npm test
+      - run: node -e "require('./index.js')"

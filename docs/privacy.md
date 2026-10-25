@@ -5,7 +5,7 @@ permalink: /privacy/
 
 # Terrazzo — Privacy Policy
 
-_Last updated: 2026-10-20_
+_Last updated: 2026-10-25_
 
 Terrazzo (`ee.schimke.harc`) is built and maintained by Yuri Schimke
 (`yuri@schimke.ee`). Source code:
@@ -76,6 +76,16 @@ usage is never sent without an address set.
   switch lights, switches, scenes and scripts through the app. The
   entity names and states it asks for go to that assistant, under its
   own privacy terms; Terrazzo sends nothing to the developer.
+- **Notifications while the app is closed (Play builds).** Home Assistant
+  sends the messages you address to this device (`notify.mobile_app_…`)
+  straight to the app while it is connected. When it isn't, your Home
+  Assistant sends the message — its title, text and options — to the
+  developer's push relay (a Google Cloud Function), which hands it to
+  Google's Firebase Cloud Messaging to deliver to the app. The relay
+  keeps nothing beyond Google Cloud's standard request logs and a
+  per-device daily count held in memory to limit sending; it doesn't
+  store messages. Your Home Assistant gets the app's push token for this,
+  at sign-in.
 - **No third-party services.** The app does not contact analytics,
   advertising, or crash-reporting providers.
 

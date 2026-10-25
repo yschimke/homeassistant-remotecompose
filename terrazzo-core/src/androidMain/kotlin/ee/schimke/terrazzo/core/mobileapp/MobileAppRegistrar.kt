@@ -2,6 +2,7 @@ package ee.schimke.terrazzo.core.mobileapp
 
 import android.content.Context
 import android.os.Build
+import android.util.Base64
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import ee.schimke.terrazzo.core.di.AppScope
@@ -16,6 +17,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import java.security.SecureRandom
 import kotlinx.serialization.json.Json
 
 /**
@@ -30,9 +32,10 @@ import kotlinx.serialization.json.Json
  *
  * The handshake is HTTPS form-POST with the user's just-minted access token as bearer auth. We
  * request `supports_encryption: true` so HA hands us back a NaCl shared secret; we persist it for
- * future device→HA webhook traffic (sensor / location updates) even though this first pass doesn't
- * send any. Push notifications HA→device don't use this secret: the registration asks for HA's
- * websocket push channel (`app_data.push_websocket_channel`), which the live session subscribes to.
+ * device→HA webhook traffic: [updatePush] seals `update_registration` with it. Push notifications
+ * HA→device take HA's websocket push channel (`app_data.push_websocket_channel`) while the live
+ * session holds one, else the Terrazzo push relay (`push_url`, [PushTarget]) when the build has
+ * Firebase.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -50,13 +53,18 @@ class MobileAppRegistrar(
       }
     }
   private val json = Json { ignoreUnknownKeys = true }
+  private val random = SecureRandom()
 
   /**
    * Register this device with `baseUrl`'s mobile_app integration. Returns the persisted record on
    * success; throws on transport or HTTP failures so the caller can decide whether to surface or
    * swallow the error.
    */
-  suspend fun register(baseUrl: String, accessToken: String): MobileAppRegistration {
+  suspend fun register(
+    baseUrl: String,
+    accessToken: String,
+    push: PushTarget? = null,
+  ): MobileAppRegistration {
     val deviceId = store.getOrCreateDeviceId(baseUrl)
     val deviceName = deviceName()
     val request =
@@ -69,9 +77,9 @@ class MobileAppRegistrar(
         manufacturer = Build.MANUFACTURER ?: "",
         model = Build.MODEL ?: "",
         osName = "Android",
-        osVersion = Build.VERSION.RELEASE ?: Build.VERSION.SDK_INT.toString(),
+        osVersion = osVersion(),
         supportsEncryption = true,
-        appData = AppData(pushWebsocketChannel = true),
+        appData = AppData.of(push),
       )
 
     val resp =
@@ -93,10 +101,58 @@ class MobileAppRegistrar(
         cloudhookUrl = parsed.cloudhookUrl,
         remoteUiUrl = parsed.remoteUiUrl,
         pushChannel = true,
+        pushToken = push?.token,
       )
     store.put(baseUrl, record)
     return record
   }
+
+  /**
+   * Hands HA a new relay [push] target (a fresh FCM token) for [baseUrl]'s registration, with
+   * `update_registration` on its webhook: no new device, no login. HA requires the call sealed with
+   * the registration's secret ([SecretBox]). Returns the updated record, or null when there is no
+   * registration to update; throws on transport or HTTP failures.
+   */
+  suspend fun updatePush(baseUrl: String, push: PushTarget): MobileAppRegistration? {
+    val stored = store.get(baseUrl) ?: return null
+    val data =
+      UpdateRegistration(
+        appData = AppData.of(push),
+        appVersion = appVersion(),
+        deviceName = stored.deviceName,
+        manufacturer = Build.MANUFACTURER ?: "",
+        model = Build.MODEL ?: "",
+        osVersion = osVersion(),
+      )
+    val plain = json.encodeToString(UpdateRegistration.serializer(), data)
+    // A registration HA made without encryption (no secret) takes the call in the clear.
+    val secret = stored.secret
+    val body =
+      if (secret == null) {
+        """{"type":"update_registration","data":$plain}"""
+      } else {
+        val nonce = ByteArray(SecretBox.NONCE_SIZE).also { random.nextBytes(it) }
+        val sealed = SecretBox.seal(SecretBox.keyFromHex(secret), nonce, plain.encodeToByteArray())
+        json.encodeToString(
+          EncryptedWebhook.serializer(),
+          EncryptedWebhook(
+            type = "update_registration",
+            encryptedData = Base64.encodeToString(sealed, Base64.NO_WRAP),
+          ),
+        )
+      }
+    val resp =
+      http.post(baseUrl.trimEnd('/') + "/api/webhook/" + stored.webhookId) {
+        contentType(ContentType.Application.Json)
+        setBody(body)
+      }
+    if (!resp.status.isSuccess()) error("mobile_app update_registration failed: ${resp.status}")
+    val record = stored.copy(pushToken = push.token)
+    store.put(baseUrl, record)
+    return record
+  }
+
+  private fun osVersion(): String = Build.VERSION.RELEASE ?: Build.VERSION.SDK_INT.toString()
 
   private fun appVersion(): String =
     runCatching {
