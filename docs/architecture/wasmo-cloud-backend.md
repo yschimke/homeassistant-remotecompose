@@ -43,7 +43,7 @@ initial values only into an empty install, avoiding partial uploads and first-de
 ### HA session amendment (current implementation)
 
 The authoritative private session protocol and operator key lifecycle are in
-[Wasmo HA-SESSIONS.md](https://github.com/yschimke/wasmo/blob/agent/ha-session-custody/apps/services/HA-SESSIONS.md).
+[Wasmo HA-SESSIONS.md](https://github.com/yschimke/wasmo/blob/deploy/apps/services/HA-SESSIONS.md).
 They supersede the original HA endpoint shapes and secret-key proposal below. Services remain
 shared across supported apps; the initial operator list is `terrazzo`. `haSession` is enabled only
 when Wasmo has a configured key ring and a bounded public HTTPS service.
