@@ -23,6 +23,7 @@ import ee.schimke.ha.rc.components.HaAction
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import org.junit.Assume.assumeTrue
 import org.junit.Rule
@@ -70,7 +71,10 @@ class JvmLibraryAndroidPlaybackTest {
     val different = sample.filterNot { entry ->
       val jvm = dir.resolve(DesignManifest.blobPath(entry.sha256)).readBytes()
       val android = CheckedInCardDesigns.capture(context, entry.key).bytes
-      samePixels(render(jvm), render(android))
+      val drawn = render(jvm)
+      // Two blank drawings would match: the design must draw something.
+      assertTrue(drawn.pixels().distinct().size > 1, "${entry.key} draws nothing")
+      samePixels(drawn, render(android))
     }
     println(
       "JVM library on Android: ${sample.size - different.size} of ${sample.size} draw the same"
@@ -108,13 +112,12 @@ class JvmLibraryAndroidPlaybackTest {
     return compose.onNodeWithTag("card").captureToImage().asAndroidBitmap()
   }
 
+  private fun Bitmap.pixels(): IntArray =
+    IntArray(width * height).also { getPixels(it, 0, width, 0, 0, width, height) }
+
   private fun samePixels(a: Bitmap, b: Bitmap): Boolean {
     if (a.width != b.width || a.height != b.height) return false
-    val pa =
-      IntArray(a.width * a.height).also { a.getPixels(it, 0, a.width, 0, 0, a.width, a.height) }
-    val pb =
-      IntArray(b.width * b.height).also { b.getPixels(it, 0, b.width, 0, 0, b.width, b.height) }
-    return pa.contentEquals(pb)
+    return a.pixels().contentEquals(b.pixels())
   }
 
   private companion object {
