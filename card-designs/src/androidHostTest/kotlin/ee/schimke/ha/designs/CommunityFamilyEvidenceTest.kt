@@ -153,7 +153,8 @@ class CommunityFamilyEvidenceTest {
         }
       }
     }
-    val output = File(requireNotNull(System.getProperty("cardDesignsOut")), "community-renders")
+    val output =
+      File(requireNotNull(System.getProperty("cardDesignsAndroidOut")), "community-renders")
     output.mkdirs()
     for (next in pages) {
       compose.runOnIdle { page = next }
