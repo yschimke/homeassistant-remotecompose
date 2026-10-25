@@ -302,6 +302,17 @@ design edit reaches every card, and an app never plays a document its player can
 packaged in the app stays as the offline fallback. Capture stays build-time; the server never sees
 a user's values, only shapes.
 
+**The web path sends its shape, not just its slots.** The converter-less clients (the web app, the
+`<ha-card>` embed) can't compute a card's key, so they used to send only the anonymous card — its
+type and slot ids — and the server, unable to tell `device_class`/`unit`/`icon` apart, returned the
+first of the shapes those slots fit, marked inexact. A single-slot card now also sends a *shape
+hint* (`shapeHint`): the observable discriminators it can read — `device_class`, `unit`, `icon`,
+`card_icon` — and `CardResolve.narrowByShapeHint` picks the one design whose shape they name, so a
+`binary_sensor`/door or `sensor`/temperature tile resolves exactly without a converter. The hint is
+shape, not values: it never carries an entity id, name or state, so "the server sees only shapes"
+still holds. It closes most of the 185 icon/unit shapes for single-slot cards ahead of the
+enumeration work below; multi-slot shapes (grids, entities rows) still wait for it.
+
 That needs keys to be enumerable, in this order:
 
 1. **Measure.** A coverage report over held-out dashboards: how many cards have a key, and how many

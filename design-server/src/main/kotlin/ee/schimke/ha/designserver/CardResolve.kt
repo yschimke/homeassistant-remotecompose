@@ -2,6 +2,7 @@ package ee.schimke.ha.designserver
 
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
@@ -67,25 +68,71 @@ data class ResolveRequest(
   val dark: Boolean = false,
   /** For `classic`: the app palette (`baked:<palette>:<mode>`); null takes the library's first. */
   val palette: String? = null,
+  /**
+   * Observable shape discriminators a converter-less client (the web app) can read from a
+   * single-slot card and its entity's attributes — `device_class`, `unit`, `icon`, `card_icon` —
+   * never an entity id, name or value. They let [resolve] pick the one design the card's shape
+   * names, instead of the first of the shapes its slots fit. Empty when none was sent.
+   */
+  val shapeHint: Map<String, String> = emptyMap(),
 ) {
   companion object {
-    /** [CardSchema.parseRequest]'s body, plus optional `cardStyle`, `dark` and `palette`. */
+    /**
+     * [CardSchema.parseRequest]'s body, plus optional `cardStyle`, `dark`, `palette`, `shapeHint`.
+     */
     fun parse(body: JsonElement): ResolveRequest {
       val (card, states) = CardSchema.parseRequest(body)
       val obj = body.jsonObject
       fun text(name: String) = (obj[name] as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull
+      val shapeHint =
+        (obj["shapeHint"] as? JsonObject)
+          ?.mapNotNull { (k, v) ->
+            (v as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull?.let { k to it }
+          }
+          ?.toMap()
+          .orEmpty()
       return ResolveRequest(
         card = card,
         states = states,
         cardStyle = text("cardStyle") ?: DesignKey.CLASSIC_STYLE,
         dark = (obj["dark"] as? JsonPrimitive)?.booleanOrNull ?: false,
         palette = text("palette"),
+        shapeHint = shapeHint,
       )
     }
   }
 }
 
 object CardResolve {
+  /**
+   * Shape properties a converter-less client can observe from a single-slot card and its entity's
+   * attributes. [narrowByShapeHint] constrains on these; any other shape property (a slot's domain,
+   * a list card's `count`, a state enum) only a converter can tell, so a hint never speaks to it.
+   */
+  private val OBSERVABLE_SHAPE_KEYS = setOf("device_class", "unit", "icon", "card_icon")
+
+  /**
+   * Narrow [designs] to the shape [hint] names. A design agrees when every observable property its
+   * shape declares equals the hint's; among the agreeing designs the most specific win (the most
+   * observable properties), so a card that carries a unit beats one that doesn't. Returns [designs]
+   * unchanged when there is no hint or nothing agrees, so the shapeless web path (and any hint that
+   * fits no library shape) keeps the previous "first of the fitting shapes" behaviour.
+   */
+  internal fun narrowByShapeHint(
+    designs: List<LibraryDesign>,
+    hint: Map<String, String>,
+  ): List<LibraryDesign> {
+    if (hint.isEmpty()) return designs
+    fun observable(design: LibraryDesign): Map<String, String> {
+      val props = DesignProperties.parse(design.key.shape)
+      return OBSERVABLE_SHAPE_KEYS.mapNotNull { k -> props[k]?.let { k to it } }.toMap()
+    }
+    val agreeing = designs.filter { observable(it).all { (k, v) -> hint[k] == v } }
+    if (agreeing.isEmpty()) return designs
+    val bestCount = agreeing.maxOf { observable(it).size }
+    return agreeing.filter { observable(it).size == bestCount }
+  }
+
   /**
    * [request]'s exact design, from the app's converter: null when the request lacks the state of an
    * entity the card shows (its generation properties can't be told), or the card has no template
@@ -171,7 +218,9 @@ object CardResolve {
         styled.filter { it.key.theme.endsWith(":$mode") }.ifEmpty { styled }
       }
     if (inStyle.isEmpty()) return null
-    val variant = inStyle.filter { it.key.variant == DesignKey.DEFAULT_VARIANT }.ifEmpty { inStyle }
+    val inVariant =
+      inStyle.filter { it.key.variant == DesignKey.DEFAULT_VARIANT }.ifEmpty { inStyle }
+    val variant = narrowByShapeHint(inVariant, request.shapeHint)
     val shapes = variant.map { it.key.shape }.distinct()
     val chosen = variant.first()
 
