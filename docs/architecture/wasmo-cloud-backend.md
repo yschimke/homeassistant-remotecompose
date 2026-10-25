@@ -20,8 +20,8 @@ initial values only into an empty install, avoiding partial uploads and first-de
 
 ## Cross-repository dependencies and review order
 
-1. Review [web detection/local storage PR #1225](https://github.com/yschimke/homeassistant-remotecompose/pull/1225).
-   This stage retains static behaviour, including on hosted wasmo.com.
+1. [Web detection/local storage PR #1225](https://github.com/yschimke/homeassistant-remotecompose/pull/1225)
+   is the merged baseline. It retains static behaviour, including on hosted wasmo.com.
 2. Review [Wasmo shared services PR #1](https://github.com/yschimke/wasmo/pull/1) against `deploy`.
    Its module tests pass; full wiring validation is blocked by the existing journal npm graph
    ([SCH-50](https://linear.app/yschimke/issue/SCH-50/wasmo-wiring-build-fails-resolving-peculiarasn1-x509-2111)).
