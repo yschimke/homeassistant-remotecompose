@@ -1,0 +1,9 @@
+{
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "push-relay",
+      "runtime": "nodejs22"
+    }
+  ]
+}

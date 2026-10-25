@@ -72,6 +72,16 @@ class MobileAppStore(private val context: Context) {
     return json.decodeFromString(MobileAppRegistration.serializer(), bytes.toString(Charsets.UTF_8))
   }
 
+  /** Every instance with a stored registration, by its `instanceId` (base URL). */
+  suspend fun instances(): List<String> =
+    context.store.data.first().asMap().keys.mapNotNull { key ->
+      key.name.removePrefix("mobile.").removeSuffix(".blob").takeIf { key.name.endsWith(".blob") }
+    }
+
+  /** The instance whose registration has [webhookId]: where a relayed notification came from. */
+  suspend fun instanceForWebhook(webhookId: String): String? =
+    instances().firstOrNull { runCatching { get(it)?.webhookId }.getOrNull() == webhookId }
+
   suspend fun clear(instanceId: String) {
     context.store.edit { prefs ->
       prefs.remove(deviceIdKey(instanceId))

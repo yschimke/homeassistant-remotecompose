@@ -106,13 +106,19 @@ object HaPushReceiver {
 
   /**
    * This install's `mobile_app` webhook for [session]'s server. A registration made before the push
-   * channel existed is made again (the same device id), so HA has somewhere to send.
+   * channel existed is made again (the same device id), so HA has somewhere to send; a current one
+   * gets the push relay's token if HA holds another or none ([PushRelay.sync]).
    */
   private suspend fun webhookId(graph: TerrazzoGraph, session: HaSession): String? {
     val stored = graph.mobileAppStore.get(session.baseUrl)
-    if (stored?.pushChannel == true) return stored.webhookId
+    if (stored?.pushChannel == true) {
+      PushRelay.sync(graph, session.baseUrl)
+      return stored.webhookId
+    }
     val token = session.accessToken ?: return stored?.webhookId
-    return runCatching { graph.mobileAppRegistrar.register(session.baseUrl, token).webhookId }
+    return runCatching {
+      graph.mobileAppRegistrar.register(session.baseUrl, token, PushRelay.target()).webhookId
+    }
       .onFailure { Log.w(TAG, "mobile_app registration failed", it) }
       .getOrElse { stored?.webhookId }
   }

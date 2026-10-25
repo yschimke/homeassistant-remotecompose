@@ -9,3 +9,8 @@
 -keep class ee.schimke.terrazzo.crash.FirebaseCrashReporter {
     <init>();
 }
+
+# FirebasePushTokens is likewise found reflectively (PushRelay).
+-keep class ee.schimke.terrazzo.notify.FirebasePushTokens {
+    <init>();
+}
