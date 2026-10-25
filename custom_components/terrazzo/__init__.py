@@ -3,7 +3,8 @@
 The optional MCP server (`mcp_view.py`) is the one exception: off by default, and when on it
 serves exactly one chosen HA user of this instance, with that user's own tokens and permissions.
 Dashboard edit sessions (`edits.py`) hold an agent's drafts until a person applies one with their
-own session.
+own session. The app's notifications, while it holds no websocket, are held here too (`push.py`):
+the app is woken with a content-free FCM message and collects them with its own session.
 """
 from pathlib import Path
 
@@ -27,7 +28,7 @@ from .const import (
     STATIC_URL,
     clean_options,
 )
-from . import edits
+from . import edits, push
 from .mcp_view import TerrazzoMcpMetadataView, TerrazzoMcpView
 
 CONFIG_SCHEMA = vol.Schema(
@@ -93,6 +94,10 @@ async def async_setup_entry(hass, entry):
     if "edits" not in state:
         state["edits"] = await edits.Edits.async_load(hass)
         edits.async_register(hass)
+    # Held notifications for the app's silent push, likewise (push.py).
+    if "push" not in state:
+        state["push"] = await push.Push.async_load(hass)
+        push.async_register(hass)
     options = entry.options
     await panel_custom.async_register_panel(
         hass,

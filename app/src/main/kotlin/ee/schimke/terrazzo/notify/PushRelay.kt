@@ -1,24 +1,24 @@
 package ee.schimke.terrazzo.notify
 
+import android.content.Context
 import android.util.Log
-import ee.schimke.ha.client.HaPushNotification
 import ee.schimke.terrazzo.BuildConfig
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.mobileapp.PushTarget
+import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.widget.WidgetActionRunner
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
 
 /**
- * Notifications while the app holds no websocket: HA posts them to the Terrazzo push relay
- * (`app_data.push_url`, [BuildConfig.PUSH_RELAY_URL]), which forwards each to this install's FCM
- * token as a data message ([fromRelay]). See `docs/architecture/notifications.md`.
+ * Notifications while the app holds no websocket, without their content leaving Home Assistant
+ * (`docs/architecture/notifications.md`). The Terrazzo integration is the registration's
+ * `push_url`: it holds each message and asks the Terrazzo push relay ([BuildConfig.PUSH_RELAY_URL])
+ * for a silent FCM wake naming only the registration. The app wakes ([wake]), connects with its own
+ * login and takes the held messages.
  *
  * FCM lives in the Firebase source set, compiled in only with `google-services.json` (as
- * Crashlytics is), so it is found reflectively ([PushTokenSource]); a build without it has no relay
- * and notifications arrive over the websocket only.
+ * Crashlytics is), so it is found reflectively ([PushTokenSource]). Without it, or without the
+ * integration, notifications arrive over the websocket only.
  */
 object PushRelay {
   private const val TAG = "PushRelay"
@@ -34,47 +34,57 @@ object PushRelay {
       .getOrNull()
   }
 
-  /** The relay target to register with HA, or null (no Firebase, no relay, no token yet). */
-  suspend fun target(): PushTarget? {
-    val url = BuildConfig.PUSH_RELAY_URL.ifEmpty { null } ?: return null
+  private suspend fun fcmToken(): String? {
     val source = tokens ?: return null
-    val token =
-      withTimeoutOrNull(TOKEN_TIMEOUT_MS) { runCatching { source.token() }.getOrNull() }
-        ?: return null
-    return PushTarget(url, token)
+    return withTimeoutOrNull(TOKEN_TIMEOUT_MS) { runCatching { source.token() }.getOrNull() }
   }
 
   /**
-   * Hands HA [target] (the current token, by default) for [baseUrl]'s registration when HA holds
-   * another or none. Best effort: HA learns it at the next call otherwise.
+   * On [session] (connected, for registration [webhookId]): registers [fcmToken] with the
+   * integration, hands HA its push URL when HA holds another or none, then posts what the
+   * integration held. Best effort: without the integration only the websocket delivers.
    */
-  suspend fun sync(graph: TerrazzoGraph, baseUrl: String, target: PushTarget? = null) {
-    val push = target ?: target() ?: return
-    val stored = runCatching { graph.mobileAppStore.get(baseUrl) }.getOrNull() ?: return
-    if (stored.pushToken == push.token) return
-    runCatching { graph.mobileAppRegistrar.updatePush(baseUrl, push) }
-      .onFailure { Log.w(TAG, "Couldn't give HA the push relay token", it) }
-  }
-
-  /** [sync] for every registered server: FCM issued a new token. */
-  suspend fun syncAll(graph: TerrazzoGraph, token: String) {
-    val url = BuildConfig.PUSH_RELAY_URL.ifEmpty { null } ?: return
-    for (baseUrl in graph.mobileAppStore.instances()) sync(graph, baseUrl, PushTarget(url, token))
-  }
-
-  /**
-   * The HA message in a relayed FCM data payload: `message`, `title`, `data` (HA's `data`, as JSON)
-   * and `webhook_id`, which names the registration, so the server, it was sent to.
-   */
-  fun fromRelay(payload: Map<String, String>): HaPushNotification? {
-    val event = buildJsonObject {
-      payload["message"]?.let { put("message", JsonPrimitive(it)) }
-      payload["title"]?.let { put("title", JsonPrimitive(it)) }
-      payload["data"]
-        ?.let { runCatching { Json.parseToJsonElement(it) as? JsonObject }.getOrNull() }
-        ?.let { put("data", it) }
+  suspend fun sync(
+    context: Context,
+    graph: TerrazzoGraph,
+    session: HaSession,
+    webhookId: String,
+    watchHasApp: Boolean,
+    fcmToken: String? = null,
+  ) {
+    val relay = BuildConfig.PUSH_RELAY_URL.ifEmpty { null } ?: return
+    val token = fcmToken ?: fcmToken() ?: return
+    runCatching {
+      val (url, secret) = session.registerSilentPush(webhookId, token, relay) ?: return
+      val stored = graph.mobileAppStore.get(session.baseUrl)
+      if (stored != null && (stored.pushUrl != url || stored.pushToken != secret)) {
+        graph.mobileAppRegistrar.updatePush(session.baseUrl, PushTarget(url, secret))
+      }
+      for (held in session.takeHeldNotifications(webhookId)) {
+        HaPushReceiver.post(context, session, held, watchHasApp)
+      }
     }
-    return HaPushNotification.parse(event)
+      .onFailure { Log.w(TAG, "Silent push sync failed for ${session.baseUrl}", it) }
+  }
+
+  /**
+   * A silent wake for registration [webhookId] ([fcmToken] given when FCM issued a new one): the
+   * app's session if it is connected, else a short-lived one from the stored login.
+   */
+  suspend fun wake(context: Context, graph: TerrazzoGraph, webhookId: String?, fcmToken: String?) {
+    val servers =
+      if (webhookId != null) listOfNotNull(graph.mobileAppStore.instanceForWebhook(webhookId))
+      else graph.mobileAppStore.instances()
+    val watchHasApp = TestNotification.watchHasApp(context)
+    for (baseUrl in servers) {
+      val registration = graph.mobileAppStore.get(baseUrl) ?: continue
+      runCatching {
+        WidgetActionRunner.withSession(context, baseUrl) { session ->
+          sync(context, graph, session, registration.webhookId, watchHasApp, fcmToken)
+        }
+      }
+        .onFailure { Log.w(TAG, "Couldn't reach $baseUrl after a wake", it) }
+    }
   }
 }
 

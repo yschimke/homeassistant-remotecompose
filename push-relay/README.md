@@ -1,15 +1,16 @@
 # Terrazzo push relay
 
-Home Assistant's `mobile_app` integration delivers `notify.mobile_app_<device>` messages to the
-Terrazzo Android app over the app's websocket while it is connected. When it isn't (or doesn't
-confirm in time), HA POSTs the message to the registration's `app_data.push_url`. This Cloud
-Function, `haPush`, is that URL: it forwards the message to the app's FCM token as a data message.
-See [docs/architecture/notifications.md](../docs/architecture/notifications.md).
+Home Assistant's `mobile_app` delivers `notify.mobile_app_<device>` messages to the Terrazzo app
+over its websocket while it is connected. When it isn't, HA posts the message to the Terrazzo
+integration in that same Home Assistant, which holds it and calls this Cloud Function, `haPush`, to
+wake the app. The wake is a high-priority FCM data message with only `{type: "sync", webhook_id}`;
+the app connects and takes the held messages itself. No notification content reaches the relay or
+FCM. See [docs/architecture/notifications.md](../docs/architecture/notifications.md).
 
 It runs in the same Firebase project as the app's `google-services.json`, under its own service
-account, so no FCM credential is handed to Home Assistant or the HACS integration. It delivers only
-to the Terrazzo app (`registration_info.app_id`), limits each token to 300 notifications a day per
-instance, and refuses messages over FCM's 4 KB data limit.
+account, so no FCM credential is handed to Home Assistant or the integration. It wakes only the
+Terrazzo app (`app_id`), limits each token to 500 wakes a day per instance, and collapses repeated
+wakes for one registration.
 
 ## Deploy
 
@@ -20,9 +21,9 @@ cd push-relay
 npx firebase-tools@latest deploy --only functions:push-relay --project <project-id>
 ```
 
-The app derives the URL from its Firebase project:
-`https://us-central1-<project-id>.cloudfunctions.net/haPush`. Override it with
-`-Pharc.pushRelayUrl=<url>` when building the app.
+The app derives the URL from its Firebase project,
+`https://us-central1-<project-id>.cloudfunctions.net/haPush`, and hands it to the integration when
+it registers. Override it with `-Pharc.pushRelayUrl=<url>` when building the app.
 
 ## Test
 

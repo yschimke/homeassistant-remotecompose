@@ -185,6 +185,17 @@ internal object WidgetActionRunner {
     }
   }
 
+  /**
+   * Runs [block] on [baseUrl]'s HA from the background (a silent push wake): on the app's socket
+   * while connected, else a short-lived session from the stored login.
+   */
+  suspend fun withSession(context: Context, baseUrl: String, block: suspend (HaSession) -> Unit) {
+    withTimeout(SYNC_TIMEOUT_MS) {
+      val live = connectedAppSession(baseUrl)
+      if (live != null) block(live) else onNewSession(context.terrazzoGraph(), baseUrl, block)
+    }
+  }
+
   private suspend fun onNewSession(
     graph: TerrazzoGraph,
     baseUrl: String,
@@ -257,6 +268,8 @@ internal object WidgetActionRunner {
 
   /** Under a broadcast's 10 s budget, with room for the token refresh. */
   private const val CALL_TIMEOUT_MS = 8_000L
+  /** Connecting, taking held notifications and drawing their cards, within FCM's ~20 s. */
+  private const val SYNC_TIMEOUT_MS = 15_000L
   private const val CLOSE_TIMEOUT_MS = 2_000L
   private const val DEFAULT_TOKEN_LIFETIME_S = 1_800L
   private const val TOKEN_EXPIRY_MARGIN_MS = 60_000L

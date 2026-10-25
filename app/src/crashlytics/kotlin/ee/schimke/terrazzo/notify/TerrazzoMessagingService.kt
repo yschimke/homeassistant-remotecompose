@@ -5,44 +5,40 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import ee.schimke.terrazzo.terrazzoGraph
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Home Assistant notifications from the Terrazzo push relay: HA sent them to `push_url` because the
- * app held no websocket (or didn't confirm one in time). Each is a data message, posted here as the
- * websocket's would be ([HaNotifications]), the watch's copy included; a message delivered both
- * ways posts once, under one id. Without a live session it carries no card or entity state.
+ * Silent wakes from the Terrazzo push relay ([PushRelay]): the Terrazzo integration holds a Home
+ * Assistant notification for this device and asked for the app. The message carries no content,
+ * only `type: sync` and the registration's `webhook_id`; the app connects with its own login and
+ * takes what was held.
  */
 class TerrazzoMessagingService : FirebaseMessagingService() {
   override fun onMessageReceived(message: RemoteMessage) {
-    val notification = PushRelay.fromRelay(message.data) ?: return
-    val webhookId = message.data["webhook_id"] ?: return
+    if (message.data["type"] != "sync") return
     // Called on a background thread, with about 20 seconds to finish.
     runBlocking {
-      withTimeoutOrNull(HANDLE_TIMEOUT_MS) {
-        val graph = applicationContext.terrazzoGraph()
-        val baseUrl = graph.mobileAppStore.instanceForWebhook(webhookId) ?: return@withTimeoutOrNull
-        HaNotifications.handle(
+      runCatching {
+        PushRelay.wake(
           applicationContext,
-          baseUrl,
-          notification,
-          TestNotification.watchHasApp(applicationContext),
+          applicationContext.terrazzoGraph(),
+          message.data["webhook_id"],
+          null,
         )
-      } ?: Log.w(TAG, "Relayed notification not posted")
+      }
+        .onFailure { Log.w(TAG, "Silent push sync failed", it) }
     }
   }
 
-  /** FCM rotated the token: every registered server needs the new one. */
+  /** FCM rotated the token: each server's integration needs the new one to wake the app. */
   override fun onNewToken(token: String) {
     runBlocking {
-      withTimeoutOrNull(HANDLE_TIMEOUT_MS) {
-        PushRelay.syncAll(applicationContext.terrazzoGraph(), token)
+      runCatching {
+        PushRelay.wake(applicationContext, applicationContext.terrazzoGraph(), null, token)
       }
     }
   }
 
   private companion object {
     const val TAG = "TerrazzoMessaging"
-    const val HANDLE_TIMEOUT_MS = 15_000L
   }
 }

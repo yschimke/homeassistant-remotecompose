@@ -1,7 +1,7 @@
 {
   "name": "terrazzo-push-relay",
   "private": true,
-  "description": "Home Assistant mobile_app push_url relay for the Terrazzo app: forwards notifications to FCM.",
+  "description": "Silent FCM wakes for the Terrazzo app, asked for by its Home Assistant integration.",
   "main": "index.js",
   "engines": {
     "node": "22"

@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.core.session
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.client.HaAuthInvalidException
 import ee.schimke.ha.client.HaClient
+import ee.schimke.ha.client.HaCommandException
 import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.client.HaInstanceConfig
 import ee.schimke.ha.client.HaPushNotification
@@ -33,6 +34,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 /**
  * One HA session held for the app's lifetime. A facade over whatever produces dashboards and entity
@@ -214,6 +217,19 @@ interface HaSession {
 
   /** Fires [eventType] on HA's bus, as a notification's action button does. */
   suspend fun fireEvent(eventType: String, eventData: JsonObject): Unit = Unit
+
+  /**
+   * Registers this device's FCM token with the Terrazzo integration's silent push for [webhookId]:
+   * the `push_url` and `push_token` to give HA, or null without the integration (or a live HA).
+   */
+  suspend fun registerSilentPush(
+    webhookId: String,
+    fcmToken: String,
+    relayUrl: String,
+  ): Pair<String, String>? = null
+
+  /** The notifications the Terrazzo integration held for [webhookId]; each is answered once. */
+  suspend fun takeHeldNotifications(webhookId: String): List<HaPushNotification> = emptyList()
 
   /**
    * Dismiss a single persistent notification by id — removes it from HA's bell-icon list. Live
@@ -504,6 +520,26 @@ class LiveHaSession(
 
   override suspend fun fireEvent(eventType: String, eventData: JsonObject) =
     client.fireEvent(eventType, eventData)
+
+  override suspend fun registerSilentPush(
+    webhookId: String,
+    fcmToken: String,
+    relayUrl: String,
+  ): Pair<String, String>? {
+    val result =
+      try {
+        client.registerTerrazzoPush(webhookId, fcmToken, relayUrl)
+      } catch (refused: HaCommandException) {
+        // No Terrazzo integration (an unknown command), or not this user's registration.
+        return null
+      }
+    val url = (result["push_url"] as? JsonPrimitive)?.contentOrNull ?: return null
+    val token = (result["push_token"] as? JsonPrimitive)?.contentOrNull ?: return null
+    return url to token
+  }
+
+  override suspend fun takeHeldNotifications(webhookId: String): List<HaPushNotification> =
+    client.takeTerrazzoPushes(webhookId).mapNotNull { HaPushNotification.parse(it) }
 
   override suspend fun dismissNotification(notificationId: String) {
     // Optimistically drop it so the bell/sheet update on the tap

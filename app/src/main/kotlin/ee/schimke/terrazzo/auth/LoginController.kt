@@ -16,7 +16,6 @@ import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.auth.TokenVault
 import ee.schimke.terrazzo.core.mobileapp.MobileAppRegistrar
-import ee.schimke.terrazzo.notify.PushRelay
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import net.openid.appauth.AuthorizationException
@@ -101,7 +100,7 @@ internal class LoginResultHandler(
           // timeout window — the UI advances immediately and the device just
           // won't appear as a notifiable target until a later retry.
           onReady(baseUrl, access)
-          runCatching { mobileAppRegistrar.register(baseUrl, access, PushRelay.target()) }
+          runCatching { mobileAppRegistrar.register(baseUrl, access) }
             .onFailure { ex -> Log.w(TAG, "mobile_app registration failed", ex) }
         }
         .onFailure { ex ->
