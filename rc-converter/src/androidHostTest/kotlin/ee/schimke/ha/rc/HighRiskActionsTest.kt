@@ -56,6 +56,31 @@ class HighRiskActionsTest {
   }
 
   @Test
+  fun aServiceAimedAtSeveralEntitiesOrAnAreaChecksEveryTarget() {
+    fun call(domain: String, target: JsonObject) =
+      HaAction.CallService(domain, "toggle", null, target)
+    val several = buildJsonObject {
+      put(
+        "entity_id",
+        kotlinx.serialization.json.JsonArray(
+          listOf(JsonPrimitive("light.hall"), JsonPrimitive("lock.front_door"))
+        ),
+      )
+    }
+    assertTrue(risky(call("homeassistant", several)))
+    assertTrue(
+      risky(call("homeassistant", buildJsonObject { put("entity_id", "light.hall, cover.garage") }))
+    )
+    assertFalse(
+      risky(call("homeassistant", buildJsonObject { put("entity_id", "light.hall, cover.blinds") }))
+    )
+    // An area could hold a lock: a generic service aimed at one asks, a light service doesn't.
+    assertTrue(risky(call("homeassistant", buildJsonObject { put("area_id", "garage") })))
+    assertTrue(risky(call("cover", buildJsonObject { put("area_id", "garage") })))
+    assertFalse(risky(call("light", buildJsonObject { put("area_id", "garage") })))
+  }
+
+  @Test
   fun everythingElseRunsUnasked() {
     assertFalse(risky(HaAction.Toggle("light.kitchen")))
     assertFalse(risky(HaAction.CallService("script", "turn_on", "script.movie_night")))
