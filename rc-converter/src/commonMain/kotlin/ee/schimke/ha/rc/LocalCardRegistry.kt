@@ -8,6 +8,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.REMOTE_COMPOSE_CARD_TYPE
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.LocalEntityAvailability
 import ee.schimke.ha.rc.components.LocalRemoteAnimationsEnabled
@@ -47,13 +48,16 @@ fun ProvideCardRegistry(registry: CardRegistry, content: @Composable () -> Unit)
 fun RenderChild(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier = RemoteModifier) {
   val registry = LocalCardRegistry.current
   val converter = registry.get(card.type) ?: registry.get(UNSUPPORTED_CARD_TYPE) ?: return
-  // A conditional is only a wrapper: the card it shows gets the frame, as if it stood alone.
-  if (card.type == CardTypes.CONDITIONAL && !LocalInsideCard.current) {
+  // A conditional or a Remote Compose card is only a wrapper: the card it shows gets the frame, as
+  // if it stood alone.
+  if (card.type in WRAPPER_CARD_TYPES && !LocalInsideCard.current) {
     converter.Render(card, snapshot, modifier)
     return
   }
   FramedCard(card, snapshot, modifier) { converter.Render(card, snapshot, it) }
 }
+
+private val WRAPPER_CARD_TYPES = setOf(CardTypes.CONDITIONAL, REMOTE_COMPOSE_CARD_TYPE)
 
 /**
  * [content] for a top-level [card], inside the unavailable frame of the one entity it is about: the

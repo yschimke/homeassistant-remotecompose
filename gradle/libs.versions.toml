@@ -49,7 +49,7 @@ ktor = "3.6.0"
 kotlinx-serialization = "1.12.0"
 kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
-logback = "1.6.5"
+logback = "1.6.6"
 junit = "4.13.2"
 # Robolectric 4.17's exact API 35 provider jar. Android-all versions identify platform images,
 # not interchangeable library releases; change this together with the tests' @Config(sdk = [35]).

@@ -15,6 +15,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.collection import ItemNotFound
+from homeassistant.loader import async_get_integration
 
 from .const import (
     CARD_URL,
@@ -99,14 +100,17 @@ async def async_setup_entry(hass, entry):
         state["push"] = await push.Push.async_load(hass)
         push.async_register(hass)
     options = entry.options
+    # Static files are served without Cache-Control, so a browser may keep an old release's panel
+    # and renderer for hours after an update. Each release gets its own URLs instead.
+    version = (await async_get_integration(hass, DOMAIN)).version
     await panel_custom.async_register_panel(
         hass,
         frontend_url_path=PANEL_URL_PATH,
         webcomponent_name="terrazzo-panel",
         sidebar_title=options.get(CONF_TITLE) or DEFAULT_TITLE,
         sidebar_icon="mdi:view-dashboard",
-        module_url=f"{STATIC_URL}/terrazzo-panel.js",
-        config={"dashboard": options.get(CONF_DASHBOARD, "")},
+        module_url=f"{STATIC_URL}/terrazzo-panel.js?v={version}",
+        config={"dashboard": options.get(CONF_DASHBOARD, ""), "version": str(version)},
         require_admin=False,
     )
     # Before the update listener: recording the resource in the entry must not reload it.

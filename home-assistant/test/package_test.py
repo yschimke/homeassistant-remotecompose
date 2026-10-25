@@ -20,9 +20,17 @@ class PackageTest(unittest.TestCase):
             wasm.mkdir()
             for name in ['index.html', 'terrazzo.js', 'app.wasm']:
                 (wasm / name).write_text('fixture')
+            (wasm / 'index.html').write_text('<script src="bootstrap.js" defer></script>'
+                                             '<script src="terrazzo.js" defer></script>')
             player = root / 'player.js'
             player.write_text('fixture')
             archive = module.package(wasm, player, root / 'output')
+            # Each release's scripts get their own URLs, so no browser runs a cached older one.
+            version = json.loads((root / 'output/custom_components/terrazzo/manifest.json').read_text())['version']
+            self.assertEqual(
+                (root / 'output/custom_components/terrazzo/frontend/wasm/index.html').read_text(),
+                f'<script src="bootstrap.js?v={version}" defer></script>'
+                f'<script src="terrazzo.js?v={version}" defer></script>')
             with zipfile.ZipFile(archive) as bundle:
                 names = bundle.namelist()
                 for name in ['manifest.json', '__init__.py', 'frontend/wasm/app.wasm',

@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.remoteComposeInnerCard
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardRegistry
 import ee.schimke.ha.rc.RenderChild
@@ -83,6 +84,10 @@ fun cardVisibilitySignature(card: CardConfig, snapshot: HaSnapshot): String? {
       val met = conditionsMet(c, snapshot)
       flags.append(if (met) '1' else '0')
       if (met) innerCard(c)?.let(::walk)
+      return
+    }
+    remoteComposeInnerCard(c)?.let {
+      walk(it)
       return
     }
     (c.raw["cards"] as? JsonArray)?.forEach { el ->

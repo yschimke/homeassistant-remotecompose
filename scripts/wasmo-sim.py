@@ -13,6 +13,9 @@ KEY = re.compile(r'[a-z0-9][a-z0-9._-]{0,63}\Z')
 LOCK = threading.Lock()
 VALUES = {}
 FAILURE = 0
+AUTH_FAILURE = 0
+SESSION = None
+INITIALIZED = False
 
 # Seed a fake device-local HA sign-in. No real credentials or Home Assistant are used.
 FIXTURE_JS = r'''
@@ -28,6 +31,7 @@ def main():
     parser.add_argument('distribution', type=Path)
     parser.add_argument('--before', type=Path)
     parser.add_argument('--port', type=int, default=8765)
+    parser.add_argument('--cloud-session', action='store_true', help='Enable fake private HA custody; no real HA calls')
     parser.add_argument('--static', action='store_true', help='API 404s; serve static browser mode')
     args = parser.parse_args()
     root = args.distribution.resolve()
@@ -52,7 +56,7 @@ def main():
             return 'wasmo-fixture-owner=1' in self.headers.get('Cookie', '').split('; ')
 
         def dispatch(self):
-            global FAILURE
+            global FAILURE, AUTH_FAILURE, SESSION, INITIALIZED
             path = urlparse(self.path).path
             if path == '/__fixture__/owner' and self.command == 'GET':
                 return self.respond(302, headers={'Set-Cookie': 'wasmo-fixture-owner=1; HttpOnly; SameSite=Strict; Path=/', 'Location': '/'})
@@ -65,7 +69,32 @@ def main():
                 if FAILURE and route != 'capabilities':
                     return self.respond(FAILURE, {'error': 'fixture-failure'})
                 if route == 'capabilities' and self.command == 'GET':
-                    return self.respond(200, {'api': 1, 'backend': 'fixture', 'kv': True, 'kvImport': True, 'haSession': False, 'publish': False})
+                    return self.respond(200, {'api': 1, 'backend': 'fixture', 'kv': True, 'kvImport': True, 'haSession': args.cloud_session, 'publish': False})
+                if route.startswith('ha/') and args.cloud_session:
+                    if AUTH_FAILURE:
+                        return self.respond(AUTH_FAILURE, {'error': 'fixture-auth-failure'})
+                    if route == 'ha/session' and self.command == 'GET':
+                        return self.respond(200, SESSION or {'signedIn': False, 'sessionId': 'signed-out' if INITIALIZED else ''})
+                    value = json.loads(self.rfile.read(int(self.headers.get('Content-Length', 0))))
+                    with LOCK:
+                        if route == 'ha/session/import' or (route == 'ha/session' and self.command == 'PUT'):
+                            if route.endswith('/import') and INITIALIZED:
+                                return self.respond(409, {'error': 'already-initialized'})
+                            INITIALIZED = True
+                            SESSION = {'signedIn': True, 'sessionId': 'fixture-only-session', 'hassUrl': value['hassUrl']}
+                            return self.respond(200, SESSION)
+                        if not SESSION and route == 'ha/session' and self.command == 'DELETE':
+                            INITIALIZED = True
+                            return self.respond(200, {'signedIn': False})
+                        if not SESSION or SESSION['sessionId'] != value.get('sessionId'):
+                            return self.respond(401, {'error': 'session-changed'})
+                        if route == 'ha/token' and self.command == 'POST':
+                            return self.respond(200, dict(SESSION, access_token='fixture-only-cloud-access', expires=9999999999999))
+                        if route == 'ha/session' and self.command == 'DELETE':
+                            SESSION = None
+                            INITIALIZED = True
+                            return self.respond(200, {'signedIn': False})
+                    return self.respond(404, {'error': 'not-found'})
                 if route == 'kv' and self.command == 'GET':
                     with LOCK:
                         return self.respond(200, dict(VALUES))
@@ -104,6 +133,9 @@ def main():
                     VALUES.clear()
                     VALUES.update(candidate)
                     return self.respond(204)
+            if path == '/__fixture__/auth-failure' and self.owner() and self.command == 'PUT':
+                AUTH_FAILURE = int(self.rfile.read(int(self.headers.get('Content-Length', 0))))
+                return self.respond(204)
             if path == '/__fixture__/failure' and self.owner() and self.command == 'PUT':
                 FAILURE = int(self.rfile.read(int(self.headers.get('Content-Length', 0))))
                 return self.respond(204)
@@ -113,7 +145,7 @@ def main():
             if self.command != 'GET':
                 return self.respond(404, {'error': 'not-found'})
             if path == '/__fixture__/ha.js':
-                return self.respond(200, FIXTURE_JS, 'text/javascript')
+                return self.respond(200, 'window.__fixtureCommands = [];' if args.cloud_session else FIXTURE_JS, 'text/javascript')
             directory = before if path.startswith('/before/') else root
             relative = path.removeprefix('/before/') if path.startswith('/before/') else path.lstrip('/')
             file = (directory / (relative or 'index.html')).resolve() if directory else None

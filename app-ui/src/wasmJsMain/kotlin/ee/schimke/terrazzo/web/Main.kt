@@ -43,7 +43,8 @@ fun main() {
       } catch (e: CancellationException) {
         throw e
       } catch (_: Throwable) {
-        ""
+        showSignInLoadFailure()
+        return@launch
       }
     show(panel = false, signedInServer = server)
   }
@@ -88,7 +89,8 @@ private fun App(panel: Boolean, signedInServer: String) {
       hostedConfig = if (signedIn) HaConfig(signedInServer, "") else null,
       hostedAccessToken = if (signedIn) ::currentSignInAccessToken else null,
       signInWithHomeAssistant = ::signIn,
-      onSignOut = ::signOut,
+      onSignOut = { signOut().await() },
+      signInStorageLabel = signInStorageLabel().ifBlank { null },
       isFullScreen = fullScreen,
       onToggleFullScreen = fullScreenToggle,
     )
@@ -132,7 +134,13 @@ private external fun restoreSignIn(): Promise<JsString>
 @JsFun("(server) => window.terrazzoOAuth.signIn(server)")
 private external fun signIn(server: String)
 
-@JsFun("() => window.terrazzoOAuth.signOut()") private external fun signOut()
+@JsFun("() => window.terrazzoOAuth.signOut()") private external fun signOut(): Promise<JsAny?>
+
+@JsFun("() => window.terrazzoOAuth.sessionLabel()")
+private external fun signInStorageLabel(): String
+
+@JsFun("() => window.terrazzoBackend.showSignInError()")
+private external fun showSignInLoadFailure()
 
 @JsFun("() => window.terrazzoOAuth.accessToken()")
 private external fun signInAccessToken(): Promise<JsString>

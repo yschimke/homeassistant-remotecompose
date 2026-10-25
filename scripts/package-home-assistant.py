@@ -29,6 +29,10 @@ def package(wasm, player, output, version=None):
     shutil.copytree(ROOT / "custom_components/terrazzo", stage, dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns('__pycache__'))
     shutil.copytree(wasm, stage / "frontend/wasm", dirs_exist_ok=True)
+    # HA serves these without Cache-Control: name the release in each script URL so a browser
+    # never pairs a new index.html with an older release's cached scripts.
+    index = stage / "frontend/wasm/index.html"
+    index.write_text(re.sub(r'src="([\w.-]+\.js)"', rf'src="\1?v={manifest["version"]}"', index.read_text()))
     shutil.copyfile(ROOT / "embed/ha-card.js", stage / "frontend/ha-card.js")
     shutil.copyfile(player, stage / "frontend/rc-player.js")
     archive = output / "terrazzo-home-assistant.zip"

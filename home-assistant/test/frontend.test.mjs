@@ -146,7 +146,7 @@ test('panel passes only same-origin session capability, refreshes auth and clean
       await customElements.whenDefined('terrazzo-panel');
       const panel = document.createElement('terrazzo-panel');
       const auth = { expired: true, accessToken: 'expired-fixture', async refreshAccessToken() { this.accessToken = 'fresh-fixture'; this.expired = false; } };
-      panel.hass = { auth }; panel.panel = {config:{dashboard:'wall-panel'}};
+      panel.hass = { auth }; panel.panel = {config:{dashboard:'wall-panel', version:'1.2.3'}};
       document.body.append(panel);
       const token = await panel.frame.terrazzoHost.getAccessToken();
       const path = panel.frame.src;
@@ -161,7 +161,7 @@ test('panel passes only same-origin session capability, refreshes auth and clean
     });
     assert.equal(result.height, result.viewportHeight, 'panel must fill HA height without a percentage-height ancestor');
     assert.equal(result.fresh, true);
-    assert.equal(result.path, 'https://ha.test/terrazzo-static/wasm/index.html?ha-panel');
+    assert.equal(result.path, 'https://ha.test/terrazzo-static/wasm/index.html?ha-panel&v=1.2.3');
     assert.equal(result.dashboard, 'wall-panel');
     assert.deepEqual(await page.evaluate(() => {
       const panel = document.querySelector('terrazzo-panel');

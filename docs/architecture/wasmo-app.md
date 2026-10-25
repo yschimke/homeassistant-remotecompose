@@ -49,7 +49,8 @@ There is no `app.wasm`. The optional [shared cloud-settings backend](wasmo-cloud
 uses JVM code in a fork-based Wasmo, enabled for a supported list of app install names. The web
 build probes `/api/wasmo/v1/capabilities`: an enabled backend stores usage settings per install;
 static deployments retain their browser storage. This staged integration is under review, with
-no deployment or cutover performed. HA sign-in still lives in the browser in this stage.
+no deployment or cutover performed. The optional [private session stage](wasmo-cloud-backend.md#ha-session-amendment-current-implementation)
+adds encrypted HA custody on configured Wasmo hosts. Public cards remain disabled.
 
 The browser connects to Home Assistant directly
 (WebSocket + `/auth/token`). Wasmo serves the files and handles the owner's sign-in to Wasmo. It
@@ -75,8 +76,10 @@ settings on the server, publishing a card) is planned in
 The web app's connect screen offers **Sign in with Home Assistant**: browser OAuth with
 `client_id` set to the page's origin, the same flow as [the card embed](card-embedding.md).
 Home Assistant needs no registration for it, `/auth/token` allows cross-origin requests,
-and the WebSocket API doesn't check the origin. The refresh token stays in the Wasmo app
-origin's `localStorage` until **Sign out** in Settings. It can also be revoked from the HA
+and the WebSocket API doesn't check the origin. On static deployments the refresh token stays in the app
+origin's `localStorage` until **Sign out** in Settings. A Wasmo advertising `haSession` instead saves
+it encrypted per install; owner devices restore it through the private API, and **Sign out** revokes
+and removes that saved session for all devices. No refresh token is returned to those devices. It can also be revoked from the HA
 profile's refresh tokens.
 
 Requirements:
