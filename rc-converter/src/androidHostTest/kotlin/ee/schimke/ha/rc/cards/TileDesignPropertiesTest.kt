@@ -71,7 +71,7 @@ class TileDesignPropertiesTest {
   @Test
   fun unmodelledTilesHaveNoProperties() {
     val snapshot = snapshotOf(state("light.kitchen"), state("climate.living", "heat"))
-    assertNull(tile.designProperties(card("light.kitchen", "color" to "red"), snapshot))
+    assertNull(tile.designProperties(card("light.kitchen", "vertical" to "true"), snapshot))
     assertNull(tile.designProperties(card("climate.living"), snapshot))
     // Not loaded yet: the converter renders the missing entity.
     assertNull(tile.designProperties(card("light.unknown"), snapshot))
@@ -153,5 +153,63 @@ class TileDesignPropertiesTest {
         tile.designBindings(card("sensor.temp"), snapshot)?.floats?.get("sensor.s0.numeric_state")
       assertEquals(pushed, tile.meterSeed(sensor), "state $value")
     }
+  }
+
+  @Test
+  fun aConfiguredColourIsAProperty() {
+    val snapshot = snapshotOf(state("binary_sensor.boiler", "on", "device_class" to "running"))
+    val properties =
+      assertNotNull(tile.designProperties(card("binary_sensor.boiler", "color" to "red"), snapshot))
+    assertEquals("color=red;device_class=running;domain=binary_sensor", properties.shape)
+    val input = assertNotNull(tile.designTemplate(properties))
+    assertEquals("red", input.card.raw["color"]?.jsonPrimitive?.content)
+    assertEquals(properties, tile.designProperties(input.card, input.snapshot))
+  }
+
+  @Test
+  fun aStateGlyphKeysTheTileAndRoundTrips() {
+    val up = snapshotOf(state("sun.sun", "above_horizon"))
+    val down = snapshotOf(state("sun.sun", "below_horizon"))
+    val day = assertNotNull(tile.designProperties(card("sun.sun"), up))
+    val night = assertNotNull(tile.designProperties(card("sun.sun"), down))
+    assertEquals("domain=sun;state_icon=white-balance-sunny", day.shape)
+    // Sunset changes the glyph, so the key: the host fetches the night template.
+    assertEquals("domain=sun;state_icon=weather-night", night.shape)
+    for (properties in listOf(day, night)) {
+      val input = assertNotNull(tile.designTemplate(properties))
+      assertEquals(properties, tile.designProperties(input.card, input.snapshot))
+    }
+  }
+
+  @Test
+  fun aCardIconFixesTheStateGlyph() {
+    val snapshot = snapshotOf(state("sun.sun", "below_horizon"))
+    assertEquals(
+      "domain=sun;state_icon=white-balance-sunny",
+      tile.designProperties(card("sun.sun", "icon" to "mdi:white-balance-sunny"), snapshot)?.shape,
+    )
+  }
+
+  @Test
+  fun stateGlyphDomainsAreModelled() {
+    val snapshot =
+      snapshotOf(
+        state("person.yuri", "home"),
+        state("device_tracker.phone", "not_home"),
+        state("update.core", "on"),
+        state("cover.garage", "closed", "device_class" to "garage"),
+        state("alarm_control_panel.home", "disarmed"),
+        state("event.doorbell", "2026-10-25T10:00:00+00:00", "device_class" to "doorbell"),
+        state("button.restart", "unknown"),
+      )
+    for (id in snapshot.states.keys) {
+      val properties = assertNotNull(tile.designProperties(card(id), snapshot), id)
+      val input = assertNotNull(tile.designTemplate(properties), id)
+      assertEquals(properties, tile.designProperties(input.card, input.snapshot), id)
+    }
+    assertEquals(
+      "device_class=garage",
+      tile.designProperties(card("cover.garage"), snapshot)?.shape?.split(';')?.first(),
+    )
   }
 }
