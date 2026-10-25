@@ -8,6 +8,9 @@ import ee.schimke.ha.client.design.UsageSource
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.remoteComposeCardStyle
+import ee.schimke.ha.model.remoteComposeInnerCard
+import ee.schimke.ha.rc.CardDesignTemplates
 import kotlinx.serialization.json.*
 
 @Composable
@@ -28,11 +31,16 @@ internal fun AuthenticatedCard(
   readOnly: Boolean = false,
 ) {
   DashboardCardTheme(style, dark) {
-    CardCluster(card, snapshot) { leaf ->
+    CardCluster(card, snapshot) { outer ->
+      // A Remote Compose card is its inner card, drawn from a card design in the style it names.
+      val leaf = remoteComposeInnerCard(outer) ?: outer
+      val leafStyle = remoteComposeCardStyle(outer) ?: style
       // Template usage (opt-in, AppCardUsage): a design-backed card reports once its lookup
       // settles; everything else is drawn by the app's own code.
       val drawnByApp: @Composable () -> Unit = {
-        LaunchedEffect(leaf, style) { AppCardUsage.record(leaf, style, UsageSource.Converter) }
+        LaunchedEffect(leaf, leafStyle) {
+          AppCardUsage.record(leaf, leafStyle, UsageSource.Converter)
+        }
       }
       val conversation = conversationEntity(leaf)
       if (leaf.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
@@ -49,18 +57,17 @@ internal fun AuthenticatedCard(
           pictureCache,
           onMoreInfo,
         )
-      } else if (isBambuStatus(leaf)) {
-        drawnByApp()
-        BambuStatusFallback(leaf, snapshot, onMoreInfo)
       } else {
         val fallback: @Composable () -> Unit = {
-          NativeCard(
-            leaf,
-            snapshot,
-            onMoreInfo = onMoreInfo,
-            onService = onService,
-            toggle = onToggle,
-          )
+          if (isBambuStatus(leaf)) BambuStatusFallback(leaf, snapshot, onMoreInfo)
+          else
+            NativeCard(
+              leaf,
+              snapshot,
+              onMoreInfo = onMoreInfo,
+              onService = onService,
+              toggle = onToggle,
+            )
         }
         // Input helpers and declared actions keep their native controls instead of a generic
         // template.
@@ -82,7 +89,8 @@ internal fun AuthenticatedCard(
         val tap =
           ((leaf.raw["tap_action"] as? JsonObject)?.get("action") as? JsonPrimitive)?.contentOrNull
         if (
-          leaf.type in setOf("tile", "entity", "sensor", "gauge", "button", "entities") &&
+          (leaf.type in setOf("tile", "entity", "sensor", "gauge", "button", "entities") ||
+            hasCustomCardDesign(leaf)) &&
             !nativeControls &&
             cardServiceAction(leaf) == null &&
             tap in setOf(null, "toggle", "more-info", "none") &&
@@ -91,13 +99,13 @@ internal fun AuthenticatedCard(
           LibraryCard(
             leaf,
             snapshot,
-            style,
+            leafStyle,
             dark,
             onToggle,
             onMoreInfo,
             designCache = designCache,
             requireExactDesign = true,
-            onSource = { AppCardUsage.record(leaf, style, it) },
+            onSource = { AppCardUsage.record(leaf, leafStyle, it) },
             fallback = fallback,
           )
         else {
@@ -108,3 +116,11 @@ internal fun AuthenticatedCard(
     }
   }
 }
+
+/**
+ * A custom card the shared converters draw (the `custom:ha-bambulab-*` cards, for one): its design
+ * is fetched like a built-in card's, rather than showing this host's placeholder.
+ */
+internal fun hasCustomCardDesign(card: CardConfig): Boolean =
+  card.type.startsWith("custom:") &&
+    CardDesignTemplates.defaultTemplateRegistry.get(card.type) != null
