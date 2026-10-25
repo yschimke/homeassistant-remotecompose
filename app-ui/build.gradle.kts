@@ -130,17 +130,18 @@ val wasmoAppDirectory =
 // that blocks the files beneath it ("www/app.wasm" -> "Not a directory") and the install fails.
 // Write only file entries, as Wasmo's own packager does, so the archive installs on any Wasmo —
 // not just one carrying the server-side skip-directory-entries fix.
-val wasmoAppInputDir = layout.buildDirectory.dir("wasmo/dir/terrazzo.wasmo")
-val wasmoAppArchive = layout.buildDirectory.file("wasmo/terrazzo.wasmo")
-
 tasks.register("wasmoApp") {
   description = "Packages the Wasm web build as an installable .wasmo archive."
+  // Locals, not top-level script vals: a doLast action that captures a top-level `val` pulls in the
+  // build-script object, which the configuration cache cannot serialize.
+  val inputDir = layout.buildDirectory.dir("wasmo/dir/terrazzo.wasmo")
+  val archiveFile = layout.buildDirectory.file("wasmo/terrazzo.wasmo")
   dependsOn(wasmoAppDirectory)
-  inputs.dir(wasmoAppInputDir)
-  outputs.file(wasmoAppArchive)
+  inputs.dir(inputDir)
+  outputs.file(archiveFile)
   doLast {
-    val root = wasmoAppInputDir.get().asFile
-    val archive = wasmoAppArchive.get().asFile
+    val root = inputDir.get().asFile
+    val archive = archiveFile.get().asFile
     archive.parentFile.mkdirs()
     ZipOutputStream(archive.outputStream().buffered()).use { zip ->
       root
