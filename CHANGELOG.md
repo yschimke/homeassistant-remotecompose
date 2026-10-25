@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.1.67](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.66...v0.1.67) (2026-10-25)
+
+
+### Features
+
+* **app-ui:** drop the footer; Settings in the header, card style kept as a setting ([#1247](https://github.com/yschimke/homeassistant-remotecompose/issues/1247)) ([ee49be2](https://github.com/yschimke/homeassistant-remotecompose/commit/ee49be261029cabb4aee7ea9f124f22472c42bb4))
+* **designs:** key tiles by colour and state glyph, and gauges with a needle ([#1248](https://github.com/yschimke/homeassistant-remotecompose/issues/1248)) ([b85b99e](https://github.com/yschimke/homeassistant-remotecompose/commit/b85b99e112e728da5c52a33e544c434af8fa8a24))
+* draw Remote Compose and custom designed cards from templates on every host ([#1241](https://github.com/yschimke/homeassistant-remotecompose/issues/1241)) ([81346af](https://github.com/yschimke/homeassistant-remotecompose/commit/81346af0af116ecb6a5c7ea0e74f7b53408e7ddf))
+* **notifications:** deliver Home Assistant notifications through an FCM push relay ([#1242](https://github.com/yschimke/homeassistant-remotecompose/issues/1242)) ([64e6fe9](https://github.com/yschimke/homeassistant-remotecompose/commit/64e6fe9752b6b5c3854a5fba2fa942f616754504))
+* **notifications:** post Home Assistant notifications natively on the watch ([#1235](https://github.com/yschimke/homeassistant-remotecompose/issues/1235)) ([a15347e](https://github.com/yschimke/homeassistant-remotecompose/commit/a15347e0dedfc8e081d8e71f32973c9e5dcdcfef))
+* **notifications:** silent FCM wakes; notification content stays in Home Assistant ([#1251](https://github.com/yschimke/homeassistant-remotecompose/issues/1251)) ([e51743d](https://github.com/yschimke/homeassistant-remotecompose/commit/e51743dcc8466c6376536387efe61e8bdb660505))
+* **panel:** draw history graphs, maps, weather and logbooks from card designs ([#1254](https://github.com/yschimke/homeassistant-remotecompose/issues/1254)) ([50489f3](https://github.com/yschimke/homeassistant-remotecompose/commit/50489f3683250d65c215f26e1b82a41996a9573c))
+* post Home Assistant notifications, bridged to the watch with a live card ([#1224](https://github.com/yschimke/homeassistant-remotecompose/issues/1224)) ([a4fd8a9](https://github.com/yschimke/homeassistant-remotecompose/commit/a4fd8a96afe09032cea3fec31cbbc775e280cbaf))
+* restore private Home Assistant sessions from Wasmo ([#1240](https://github.com/yschimke/homeassistant-remotecompose/issues/1240)) ([cf36127](https://github.com/yschimke/homeassistant-remotecompose/commit/cf361279c33afe6a84e7754a1b3da8826d9db4ad))
+* sync Terrazzo usage settings with Wasmo app services ([#1228](https://github.com/yschimke/homeassistant-remotecompose/issues/1228)) ([d5095c8](https://github.com/yschimke/homeassistant-remotecompose/commit/d5095c8541bb1f0dea341ea39950e3ab6e7a97e3))
+* **wear:** card details screen with a 24-hour history chart ([#1226](https://github.com/yschimke/homeassistant-remotecompose/issues/1226)) ([f228a18](https://github.com/yschimke/homeassistant-remotecompose/commit/f228a18075110f4f6cc56d673224fbb77e79e717))
+* **wear:** full-size cards, every entity's chart and live attributes in details ([#1231](https://github.com/yschimke/homeassistant-remotecompose/issues/1231)) ([fe06e21](https://github.com/yschimke/homeassistant-remotecompose/commit/fe06e21c8c10b769c14f1934b94be08d64c7608d))
+
+
+### Bug Fixes
+
+* delay transient mobile connection errors ([#1237](https://github.com/yschimke/homeassistant-remotecompose/issues/1237)) ([26dcf7c](https://github.com/yschimke/homeassistant-remotecompose/commit/26dcf7c8a751897465283a133b3f3a2b58c1d95c))
+* **deps:** update dependency androidx.wear:wear-remote-interactions to v1.2.0 ([#1230](https://github.com/yschimke/homeassistant-remotecompose/issues/1230)) ([7163cd4](https://github.com/yschimke/homeassistant-remotecompose/commit/7163cd43a7c56802356758620ed889ed994507f2))
+* **deps:** update dependency ch.qos.logback:logback-classic to v1.6.6 ([#1238](https://github.com/yschimke/homeassistant-remotecompose/issues/1238)) ([c53e855](https://github.com/yschimke/homeassistant-remotecompose/commit/c53e85575a614c9e4213d4df83366388b10a57a9))
+* **home-assistant:** give each release its own panel and renderer URLs ([#1239](https://github.com/yschimke/homeassistant-remotecompose/issues/1239)) ([1199c23](https://github.com/yschimke/homeassistant-remotecompose/commit/1199c23b289d91e951c684539b86800e3d7e9134))
+* **notifications:** keep the watch's notification to standard fields ([#1232](https://github.com/yschimke/homeassistant-remotecompose/issues/1232)) ([76da42f](https://github.com/yschimke/homeassistant-remotecompose/commit/76da42fd35c350c146955e9535ff60576b10d8f5))
+* **panel:** render markdown links and images, and skip design lookups for missing entities ([#1249](https://github.com/yschimke/homeassistant-remotecompose/issues/1249)) ([81fe83d](https://github.com/yschimke/homeassistant-remotecompose/commit/81fe83d96cd3bacf60ba76ca754627faddaabfe8))
+* show installed designs first and install in background ([#1250](https://github.com/yschimke/homeassistant-remotecompose/issues/1250)) ([ae0b778](https://github.com/yschimke/homeassistant-remotecompose/commit/ae0b7789e84fe0665fba43904e2f5f4d453969cd))
+* **wear:** never scale a full-screen card below its layout ([#1234](https://github.com/yschimke/homeassistant-remotecompose/issues/1234)) ([03823b8](https://github.com/yschimke/homeassistant-remotecompose/commit/03823b863862c2cf8d492b6d7f80ba669f1ee7ed))
+
 ## [0.1.66](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.65...v0.1.66) (2026-10-25)
 
 
