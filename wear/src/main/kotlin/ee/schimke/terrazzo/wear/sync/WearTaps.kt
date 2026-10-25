@@ -67,8 +67,8 @@ internal enum class WearTapOutcome {
  * dashboard's own [AlarmKeypadCoordinator], into one `alarm_control_panel.alarm_<service>` call
  * with the typed code; the phone checks that call against the card's own buttons.
  *
- * More-info, navigate and URL taps do nothing on the watch: it has no entity details, no dashboard
- * navigation and no browser to show them in.
+ * A more-info tap opens the card full screen ([onMoreInfo]), the watch's own details for it.
+ * Navigate and URL taps do nothing: the watch has no dashboard navigation and no browser.
  *
  * Each tap reports to [onOutcome] at once (the watch's haptic / visual feedback belongs to the
  * touch), and again when the phone answers; a failure also reaches [onFailure] with what to show.
@@ -80,6 +80,7 @@ internal class WearTapDispatcher(
   private val send: suspend (card: String, action: HaAction) -> Unit,
   private val onOutcome: (HaAction, WearTapOutcome) -> Unit = { _, _ -> },
   private val onFailure: (String) -> Unit = {},
+  private val onMoreInfo: () -> Unit = {},
   alarmIdleTimeoutMs: Long = AlarmKeypadCoordinator.DEFAULT_IDLE_TIMEOUT_MS,
 ) : HaActionDispatcher {
 
@@ -108,8 +109,9 @@ internal class WearTapDispatcher(
         if (action is HaAction.AlarmKey) onOutcome(action, WearTapOutcome.Key)
         alarms.dispatch(action)
       }
+      // The watch's details for a card are the card itself, full screen.
+      is HaAction.MoreInfo -> onMoreInfo()
       // Only show something: nothing on the watch to show it in.
-      is HaAction.MoreInfo,
       is HaAction.Navigate,
       is HaAction.Url,
       HaAction.None -> Unit

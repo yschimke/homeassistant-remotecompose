@@ -162,6 +162,18 @@ object CardDesignTemplates {
     )
   }
 
+  /**
+   * The card's own whole-card action: its `tap_action`, else Home Assistant's default for its
+   * entity. The same action [playback] runs for a tap on no slot, from the card's local config
+   * only. Pass the [designCard], so a delegating card answers with its delegate's action.
+   */
+  fun primaryAction(card: CardConfig): HaAction =
+    tapActionOf(
+      card,
+      card.raw["tap_action"] as? JsonObject,
+      (card.raw["entity"] as? JsonPrimitive)?.contentOrNull,
+    )
+
   private fun tapActionOf(card: CardConfig, config: JsonObject?, entityId: String?) =
     if (config != null) parseHaAction(config, entityId) else defaultTapActionFor(card, entityId)
 
