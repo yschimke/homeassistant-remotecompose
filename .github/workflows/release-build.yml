@@ -78,6 +78,15 @@ concurrency:
 #                                 the graphics under app/src/main/play/listings)
 #                                 on every release, replacing what the Play
 #                                 Console shows
+# Push relay deploy (push-relay/, the `push-relay` job); skipped without
+# credentials. Keyless (preferred), as repository variables:
+#   FIREBASE_WORKLOAD_IDENTITY_PROVIDER  projects/<n>/locations/global/
+#                                 workloadIdentityPools/<pool>/providers/<p>
+#   FIREBASE_DEPLOY_SERVICE_ACCOUNT  the service account it impersonates
+# or a key, as a secret:
+#   FIREBASE_DEPLOY_SERVICE_ACCOUNT_JSON
+# The project is GOOGLE_SERVICES_JSON's project_id, the one the app's
+# PUSH_RELAY_URL names, unless the FIREBASE_PROJECT_ID variable says otherwise.
 jobs:
   home-assistant:
     name: Home Assistant release assets
@@ -98,6 +107,88 @@ jobs:
     with:
       tag: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
       publish: ${{ github.event_name == 'push' || inputs.publish_release == true }}
+
+  push-relay:
+    name: Deploy the push relay
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      # Keyless sign-in to Google Cloud (Workload Identity Federation).
+      id-token: write
+    env:
+      TAG_NAME: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+      WIF_PROVIDER: ${{ vars.FIREBASE_WORKLOAD_IDENTITY_PROVIDER }}
+      WIF_SERVICE_ACCOUNT: ${{ vars.FIREBASE_DEPLOY_SERVICE_ACCOUNT }}
+      HAS_KEY: ${{ secrets.FIREBASE_DEPLOY_SERVICE_ACCOUNT_JSON != '' }}
+    steps:
+      - name: Check for deploy credentials
+        id: creds
+        run: |
+          if [[ -n "$WIF_PROVIDER" && -n "$WIF_SERVICE_ACCOUNT" ]]; then
+            echo "mode=wif" >> "$GITHUB_OUTPUT"
+          elif [[ "$HAS_KEY" == "true" ]]; then
+            echo "mode=key" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=none" >> "$GITHUB_OUTPUT"
+            echo "No push relay deploy credentials; skipping (see the comment at the top of this workflow)." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/checkout@v7.0.1
+        if: steps.creds.outputs.mode != 'none'
+        with:
+          ref: ${{ env.TAG_NAME }}
+      - uses: actions/setup-node@v7.1.0
+        if: steps.creds.outputs.mode != 'none'
+        with:
+          node-version: 24.21.0
+      # Only tested code deploys: the function's own tests first.
+      - name: Test the function
+        if: steps.creds.outputs.mode != 'none'
+        working-directory: push-relay/functions
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm test
+      - name: Resolve the Firebase project
+        if: steps.creds.outputs.mode != 'none'
+        id: project
+        env:
+          PROJECT_OVERRIDE: ${{ vars.FIREBASE_PROJECT_ID }}
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          set -euo pipefail
+          project="$PROJECT_OVERRIDE"
+          if [[ -z "$project" && -n "$GOOGLE_SERVICES_JSON" ]]; then
+            # The app's PUSH_RELAY_URL is derived from this same project_id.
+            project="$(printf '%s' "$GOOGLE_SERVICES_JSON" | base64 -d | jq -r '.project_info.project_id')"
+          fi
+          if [[ -z "$project" || "$project" == "null" ]]; then
+            echo "::error::No Firebase project: set FIREBASE_PROJECT_ID or GOOGLE_SERVICES_JSON"
+            exit 1
+          fi
+          echo "id=$project" >> "$GITHUB_OUTPUT"
+      - uses: google-github-actions/auth@v3.0.0
+        if: steps.creds.outputs.mode == 'wif'
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.WIF_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/auth@v3.0.0
+        if: steps.creds.outputs.mode == 'key'
+        with:
+          credentials_json: ${{ secrets.FIREBASE_DEPLOY_SERVICE_ACCOUNT_JSON }}
+      - name: Deploy
+        if: steps.creds.outputs.mode != 'none'
+        working-directory: push-relay
+        env:
+          PROJECT: ${{ steps.project.outputs.id }}
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund
+          # --force accepts the artifact cleanup policy a first deploy would ask about.
+          npx firebase deploy --only functions:push-relay --project "$PROJECT" --non-interactive --force
+          {
+            echo "### Push relay"
+            echo "Deployed \`haPush\` to \`$PROJECT\` (us-central1) from $TAG_NAME."
+          } >> "$GITHUB_STEP_SUMMARY"
 
   ios-assets:
     name: Build Apple release assets
