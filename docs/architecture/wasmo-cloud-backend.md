@@ -1,7 +1,21 @@
 # Terrazzo on Wasmo as a cloud service (plan)
 
-> Status: **plan, ready to hand over.** Nothing here is built yet. It builds on the static Wasmo
-> app described in [wasmo-app.md](wasmo-app.md).
+> Status: **staged implementation.** Stage 1 adds capability detection and the local
+> `AppStorage` seam. Storage and HA sign-in still use the browser; cloud storage, session
+> custody and public publishing are subsequent stages. See [wasmo-app.md](wasmo-app.md).
+
+## Implementation amendment: shared services
+
+The server is also intended for other yschimke apps. Shared settings services live in
+`apps/services/wasmo-app` in the Wasmo fork, enabled by an explicit operator allowlist such as
+`WASMO_SERVICE_APPS=terrazzo,notes,photos,tasks`. Every listed install uses the same factory and
+its own per-install SQL database. The API is `/api/wasmo/v1/`, with `X-Wasmo-Api: 1`; the client
+keeps its Terrazzo-specific storage keys. An install name is not proof of a GitHub repository.
+The Terrazzo-specific module names and API paths below describe the original handover and are
+superseded by this amendment. The server never shares HA credentials between apps or owners.
+
+The settings stage adds `POST kv/import` (advertised as `kvImport: true`) to atomically import
+initial values only into an empty install, avoiding partial uploads and first-device races.
 
 ## Goal
 

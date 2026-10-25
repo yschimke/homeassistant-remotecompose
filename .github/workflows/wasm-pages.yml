@@ -50,6 +50,8 @@ jobs:
       - uses: ./.github/actions/buildfetch-cache
         with:
           ro-token: ${{ secrets.BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN_RO }}
+      - name: Test backend capability detection
+        run: node --test app-ui/test/*.test.mjs
       - name: Build production Wasm
         run: ./gradlew :app-ui:wasmJsBrowserDistribution :ha-client:jvmTest :app-ui:jvmTest :rc-player-ui:jvmTest --stacktrace
       - uses: actions/setup-python@v7.1.0
