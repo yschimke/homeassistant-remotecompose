@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo.notify
 
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import ee.schimke.ha.client.HaPushNotification
 import ee.schimke.ha.model.EntityState
@@ -8,6 +9,7 @@ import ee.schimke.terrazzo.TerrazzoApplication
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.widget.WidgetInstaller
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.SharingStarted
@@ -23,7 +25,8 @@ import kotlinx.coroutines.launch
  * official companion apps.
  *
  * A message's card keeps up with its entity: each live state change redraws the cards whose entity
- * changed and replaces their notifications silently, while they show.
+ * changed and replaces their notifications silently, while they show. So does the watch's copy
+ * ([WearNotifications]), card or not.
  */
 object HaPushReceiver {
   private const val TAG = "HaPushReceiver"
@@ -59,12 +62,15 @@ object HaPushReceiver {
               continue
             }
             cards[key] = notification to state
+            // No card where the platform can't play one: the watch's copy still follows the state.
             val card =
-              runCatching {
-                NotificationCards.capture(context, session.baseUrl, entityId, snapshot)
-              }
-                .onFailure { Log.w(TAG, "Couldn't redraw the card for $entityId", it) }
-                .getOrNull() ?: continue
+              if (Build.VERSION.SDK_INT < WidgetInstaller.MIN_HOST_API) null
+              else
+                runCatching {
+                  NotificationCards.capture(context, session.baseUrl, entityId, snapshot)
+                }
+                  .onFailure { Log.w(TAG, "Couldn't redraw the card for $entityId", it) }
+                  .getOrNull()
             HaNotifications.handle(
               context,
               session.baseUrl,
@@ -87,7 +93,9 @@ object HaPushReceiver {
           card,
           entity = notification.entityId?.let { session.liveStates.value?.states?.get(it) },
         )
-        if (card != null && !notification.isClear) {
+        // A card, or the watch's own copy (its entity's state and toggle), follows the entity.
+        val follows = card != null || (watchHasApp.value && notification.entityId != null)
+        if (follows && !notification.isClear) {
           track(notification, session.liveStates.value?.states?.get(notification.entityId))
         } else {
           cards.remove(notification.dedupeKey)

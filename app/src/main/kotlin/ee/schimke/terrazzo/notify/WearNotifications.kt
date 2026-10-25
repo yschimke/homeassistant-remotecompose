@@ -56,7 +56,11 @@ object WearNotifications {
           .orEmpty(),
       entityState = entity?.let { formatState(it) }.orEmpty(),
       toggleEntityId = entity?.entityId?.takeIf { it.substringBefore('.') in TOGGLES }.orEmpty(),
-      actions = notification.actions.map { WearNotificationAction(it.action, it.title) },
+      // A button that opens a URI stays on the phone: the watch has no browser or dashboard.
+      actions =
+        notification.actions
+          .filter { it.uri == null }
+          .map { WearNotificationAction(it.action, it.title) },
       postedAtMs = nowMs,
       update = update,
     )

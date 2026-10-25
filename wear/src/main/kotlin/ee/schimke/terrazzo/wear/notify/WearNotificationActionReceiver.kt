@@ -19,10 +19,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
 /**
- * A watch notification's buttons and its dismissal, each a [WearNotificationTap] to the phone
- * ([WearSyncPaths.NOTIFICATION_TAP_MESSAGE]): a toggle names the entity, an HA button its action,
- * and a dismissal neither. The phone runs it and, for a button or a dismissal, takes both copies
- * down; an HA button's copy goes here at once.
+ * A watch notification's buttons, each a [WearNotificationTap] to the phone
+ * ([WearSyncPaths.NOTIFICATION_TAP_MESSAGE]): a toggle names the entity, an HA button its action.
+ * The phone runs it and, for an HA button, takes both copies down (this one at once). A dismissal
+ * deletes the notification's Data Layer item instead, which the phone sees even after being away.
  */
 class WearNotificationActionReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
@@ -30,6 +30,20 @@ class WearNotificationActionReceiver : BroadcastReceiver() {
     val tap = intent.getByteArrayExtra(EXTRA_TAP)?.let { decodeProto<WearNotificationTap>(it) }
     if (tap == null) return
     if (tap.action.isNotEmpty()) WearHaNotifications.cancel(context, tap.id)
+    if (tap.action.isEmpty() && tap.toggleEntityId.isEmpty()) {
+      // Dismissed: deleting the phone's item reaches it whenever it next connects, and its
+      // listener cancels the phone's copy. A message would be lost while it is away.
+      val uri =
+        Uri.Builder()
+          .scheme("wear")
+          .authority("*")
+          .path(WearSyncPaths.notificationPath(tap.id))
+          .build()
+      Wearable.getDataClient(context).deleteDataItems(uri).addOnFailureListener {
+        Log.w(TAG, "Couldn't remove dismissed notification ${tap.id}", it)
+      }
+      return
+    }
     val pending = goAsync()
     scope.launch {
       try {

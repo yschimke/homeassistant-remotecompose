@@ -49,6 +49,18 @@ class WearNotificationsTest {
   }
 
   @Test
+  fun aButtonThatOpensAUriStaysOnThePhone() {
+    val withLink =
+      message.copy(
+        actions = message.actions + HaPushNotification.Action("URI", "Open", uri = "/lovelace/0")
+      )
+    assertEquals(
+      listOf(WearNotificationAction("ACK", "OK")),
+      WearNotifications.payload(1, BASE_URL, withLink, null).actions,
+    )
+  }
+
+  @Test
   fun notificationPathsRoundTripEveryId() {
     for (id in listOf(0, 1, -1, Int.MIN_VALUE, Int.MAX_VALUE, "tag:washer".hashCode())) {
       assertEquals(id, WearSyncPaths.notificationId(WearSyncPaths.notificationPath(id)))

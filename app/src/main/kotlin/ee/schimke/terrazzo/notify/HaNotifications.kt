@@ -88,6 +88,16 @@ object HaNotifications {
       return
     }
     if (!allowed(context)) return
+    // A state change without a card to redraw: only the watch's copy shows the state.
+    if (refresh && card == null) {
+      if (watchHasApp && entity != null) {
+        WearNotifications.post(
+          context,
+          WearNotifications.payload(id, baseUrl, notification, entity, update = true),
+        )
+      }
+      return
+    }
     createChannel(context)
     try {
       nm.notify(

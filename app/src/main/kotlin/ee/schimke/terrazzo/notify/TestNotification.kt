@@ -44,8 +44,10 @@ object TestNotification {
       card,
       entity = entityId?.let { snapshot.states[it] },
     )
-    // A live server's state changes redraw it; the offline demo's toggles redraw it themselves.
-    if (card != null && !DemoData.isDemo(session.baseUrl)) {
+    // A live server's state changes redraw it (card and watch copy); the offline demo's toggles
+    // redraw it themselves.
+    val follows = card != null || (entityId != null && watchHasApp(context))
+    if (follows && !DemoData.isDemo(session.baseUrl)) {
       HaPushReceiver.track(message, snapshot.states[entityId])
     }
     return true
