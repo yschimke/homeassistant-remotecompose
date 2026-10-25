@@ -117,19 +117,41 @@ val wasmoAppDirectory =
     inputs.property("version", version)
     into(layout.buildDirectory.dir("wasmo/dir/terrazzo.wasmo"))
     from("wasmo/wasmo-manifest.toml") { expand("version" to version) }
+    // The app page is www/app.html, not index.html: www-public/index.html answers "/" for every
+    // visitor (Wasmo serves www-public/ first) and sends the owner on to app.html.
     into("www") {
       from(tasks.named("wasmJsBrowserDistribution"))
       from("wasmo/wasm-mime-fallback.js")
       filesMatching("index.html") {
         filter { line ->
-          line.replace(
-            "<script src=\"bootstrap.js\" defer></script>",
-            "<script src=\"wasm-mime-fallback.js\"></script>\n  <script src=\"bootstrap.js\" defer></script>",
-          )
+          line
+            .replace(
+              "<script src=\"bootstrap.js\" defer></script>",
+              "<script src=\"wasm-mime-fallback.js\"></script>\n  <script src=\"bootstrap.js\" defer></script>",
+            )
+            .replace(
+              "<title>Terrazzo</title>",
+              "<title>Terrazzo</title>\n" +
+                "  <link rel=\"manifest\" href=\"/manifest.webmanifest\">\n" +
+                "  <link rel=\"icon\" href=\"/icon-192.png\">\n" +
+                "  <link rel=\"apple-touch-icon\" href=\"/apple-touch-icon.png\">\n" +
+                "  <meta name=\"theme-color\" content=\"#faf6ec\">\n" +
+                "  <meta name=\"mobile-web-app-capable\" content=\"yes\">\n" +
+                "  <meta name=\"apple-mobile-web-app-title\" content=\"Terrazzo\">",
+            )
         }
+        name = "app.html"
       }
     }
     into("www/assets") { from(rootProject.file("custom_components/terrazzo/brand/icon.png")) }
+    // Public: the landing page, the web app manifest and its icons. The browser fetches a manifest
+    // without credentials, so it must not sit behind the owner-only www/.
+    into("www-public") {
+      from("wasmo/www-public")
+      from(rootProject.file("custom_components/terrazzo/brand/icon.png")) {
+        rename { "icon-512.png" }
+      }
+    }
   }
 
 // A plain Zip task writes a directory entry for every folder ("www/", "www/assets/", …). Wasmo's

@@ -1,10 +1,11 @@
 # Terrazzo as a Wasmo app (https://github.com/wasmcomputercompany/wasmo): the Wasm web build served
-# as static owner-only resources from www/. There is no app.wasm; the browser talks to Home
-# Assistant directly. Built by `:app-ui:wasmoApp`; see docs/architecture/wasmo-app.md.
+# as static owner-only resources from www/, with a public landing page and the web app manifest in
+# www-public/. There is no app.wasm; the browser talks to Home Assistant directly. Built by
+# `:app-ui:wasmoApp`; see docs/architecture/wasmo-app.md.
 target = 'https://wasmo.com/sdk/1'
 version = ${version}
 
 [launcher]
 label = 'Home Assistant'
 maskable_icon_path = '/assets/icon.png'
-home_path = '/'
+home_path = '/app.html'
