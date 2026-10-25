@@ -188,8 +188,14 @@ def _send_failure(connection, msg, failure):
     connection.send_error(msg["id"], code, str(failure))
 
 
-def _session_reply(session):
-    return {"session": edit_sessions.summary(session, with_configs=True)}
+def _session_reply(session, hass=None):
+    """The session with its configs; with [hass], also the prompt to hand an agent again."""
+    reply = {"session": edit_sessions.summary(session, with_configs=True)}
+    if hass is not None:
+        reply["prompt"] = edit_sessions.agent_prompt(
+            session, mcp_url(hass), hass.config.location_name
+        )
+    return reply
 
 
 @websocket_api.websocket_command(
@@ -206,9 +212,7 @@ async def ws_start(hass, connection, msg):
     except SessionError as failure:
         _send_failure(connection, msg, failure)
         return
-    reply = _session_reply(session)
-    reply["prompt"] = edit_sessions.agent_prompt(session, mcp_url(hass), hass.config.location_name)
-    connection.send_result(msg["id"], reply)
+    connection.send_result(msg["id"], _session_reply(session, hass))
 
 
 @websocket_api.websocket_command(
@@ -236,7 +240,7 @@ def ws_get(hass, connection, msg):
     except SessionError as failure:
         _send_failure(connection, msg, failure)
         return
-    connection.send_result(msg["id"], _session_reply(session))
+    connection.send_result(msg["id"], _session_reply(session, hass))
 
 
 @websocket_api.websocket_command(
