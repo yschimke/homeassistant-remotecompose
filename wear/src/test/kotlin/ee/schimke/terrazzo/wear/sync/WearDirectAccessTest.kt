@@ -2,6 +2,7 @@ package ee.schimke.terrazzo.wear.sync
 
 import ee.schimke.ha.client.HaAuthInvalidException
 import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import ee.schimke.terrazzo.wearsync.proto.WearAccess
@@ -59,9 +60,16 @@ class WearDirectAccessTest {
         fetched += baseUrl to ids
         answer(baseUrl)
       },
+      fetchHistory = { baseUrl, token, entityId, start ->
+        assertEquals("llat", token)
+        historyAsked += Triple(baseUrl, entityId, start)
+        historyAnswer(baseUrl)
+      },
       sendRequest = { requests++ },
       now = { clock },
     )
+  private val historyAsked = mutableListOf<Triple<String, String, kotlin.time.Instant>>()
+  private var historyAnswer: (String) -> List<HistoryPoint> = { emptyList() }
 
   private val signedIn = WearSettings(baseUrl = "http://homeassistant.local:8123")
   private val access =
@@ -326,4 +334,32 @@ class WearDirectAccessTest {
 
   private fun WearAccess.copyWith(externalUrl: String) =
     WearAccess(baseUrl, externalUrl, token, issuedAtMs)
+
+  @Test
+  fun historyIsReadWithTheWatchsTokenOverTheLastDayHttpsFirst() = runTest {
+    assertTrue(direct.accept(access, signedIn))
+    val point = HistoryPoint(kotlin.time.Instant.fromEpochMilliseconds(clock - 1_000), "on")
+    historyAnswer = { baseUrl ->
+      if (baseUrl.startsWith("https://")) throw IOException("away") else listOf(point)
+    }
+    assertEquals(listOf(point), direct.history(signedIn, "light.hall"))
+    // https first, then the LAN address; both for the last 24 hours.
+    assertEquals(
+      listOf("https://home.example.org", "http://homeassistant.local:8123"),
+      historyAsked.map { it.first },
+    )
+    assertTrue(historyAsked.all { it.second == "light.hall" })
+    assertEquals(
+      kotlin.time.Instant.fromEpochMilliseconds(clock - 24 * 3_600_000L),
+      historyAsked.first().third,
+    )
+  }
+
+  @Test
+  fun withoutATokenHistoryIsNullAndThePhoneIsAsked() = runTest {
+    assertNull(direct.history(signedIn, "light.hall"))
+    assertEquals(1, requests)
+    assertNull(direct.history(signedIn.copy(demoMode = true), "light.hall"))
+    assertTrue(historyAsked.isEmpty())
+  }
 }

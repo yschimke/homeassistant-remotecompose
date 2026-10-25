@@ -12,6 +12,7 @@ import com.google.android.gms.wearable.PutDataRequest
 import com.google.android.gms.wearable.Wearable
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.data.WearDataLayerRegistry
+import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.terrazzo.wear.widget.WearWidgetCardStore
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
@@ -248,6 +249,19 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
       .getOrNull()
       ?.let { _values.value = it.values }
   }
+
+  /**
+   * [entityId]'s recent history from Home Assistant, for a card's details screen: see
+   * [WearDirectAccess.history]. Null when the watch can't read it.
+   */
+  suspend fun history(entityId: String): List<HistoryPoint>? = runCatching {
+    direct.history(_settings.value, entityId)
+  }
+    .onFailure {
+      if (it is kotlinx.coroutines.CancellationException) throw it
+      Log.w(TAG, "history failed", it)
+    }
+    .getOrNull()
 
   fun stop() {
     runCatching { dataClient.removeListener(dataListener) }

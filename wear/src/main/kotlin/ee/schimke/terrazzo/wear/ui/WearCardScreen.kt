@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.pager.VerticalPager
 import androidx.wear.compose.foundation.pager.rememberPagerState
 import androidx.wear.compose.material3.AnimatedPage
+import androidx.wear.compose.material3.ButtonDefaults
+import androidx.wear.compose.material3.CompactButton
 import androidx.wear.compose.material3.EdgeButton
 import androidx.wear.compose.material3.EdgeButtonSize
 import androidx.wear.compose.material3.Text
@@ -44,6 +46,9 @@ import kotlinx.coroutines.launch
  * A card full screen: [cards] as a vertical pager, opened on [initialPage]. Reached by a long press
  * on a card (or a tap it doesn't take, or its more-info tap), and by a tap on its Wear widget.
  *
+ * A long press on the card, a tap it doesn't take, its more-info tap, or the History button opens
+ * its details ([onOpenDetails], [WearCardDetailsScreen]).
+ *
  * Each page draws its card in the Large widget frame ([wearFullScreenContainer]) over an
  * [EdgeButton] for the card's own action ([wearCardPrimaryAction]): "Turn off" for a light. That
  * button is the page's one-handed gesture target, so a double pinch runs the action the button
@@ -56,6 +61,7 @@ internal fun WearCardScreen(
   initialPage: Int,
   values: Map<String, EntityValue>,
   modifier: Modifier = Modifier,
+  onOpenDetails: (CardSummary) -> Unit = {},
 ) {
   val pager =
     rememberPagerState(initialPage.coerceIn(0, (cards.size - 1).coerceAtLeast(0))) { cards.size }
@@ -86,17 +92,24 @@ internal fun WearCardScreen(
               )
           ),
     ) { page ->
-      AnimatedPage(page, pager) { WearCardPage(cards[page], values) }
+      AnimatedPage(page, pager) {
+        WearCardPage(cards[page], values, onOpenDetails = { onOpenDetails(cards[page]) })
+      }
     }
   }
 }
 
 @Composable
-private fun WearCardPage(summary: CardSummary, values: Map<String, EntityValue>) {
+private fun WearCardPage(
+  summary: CardSummary,
+  values: Map<String, EntityValue>,
+  onOpenDetails: () -> Unit,
+) {
   val registry = remember { defaultRegistry().withEnhancedShutter() }
   val card = remember(summary.rawJson) { decodeWearCard(summary.rawJson) }
   val snapshot = remember(values) { wearSnapshot(values) }
-  val taps = rememberWearCardTaps(summary.rawJson)
+  // The card's more-info tap opens its details, as a long press does.
+  val taps = rememberWearCardTaps(summary.rawJson, onMoreInfo = onOpenDetails)
   val action = card?.let { wearCardPrimaryAction(it, snapshot, registry) }
   Box(Modifier.fillMaxSize()) {
     Column(
@@ -104,7 +117,12 @@ private fun WearCardPage(summary: CardSummary, values: Map<String, EntityValue>)
       verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-      WearRemoteCard(summary, values, fullScreen = true, taps = taps)
+      CompactButton(
+        onClick = onOpenDetails,
+        label = { Text("History") },
+        colors = ButtonDefaults.filledTonalButtonColors(),
+      )
+      WearRemoteCard(summary, values, onOpen = onOpenDetails, fullScreen = true, taps = taps)
     }
     if (action != null) {
       CardActionButton(

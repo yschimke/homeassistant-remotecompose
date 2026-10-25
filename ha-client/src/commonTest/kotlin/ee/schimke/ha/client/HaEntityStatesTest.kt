@@ -72,4 +72,53 @@ class HaEntityStatesTest {
       assertFailsWith<IllegalStateException> { it.fetch(listOf("sensor.outside")) }
     }
   }
+
+  @Test
+  fun historyAsksForOneEntitysMinimalChangesAndReadsThemOldestFirst() = runTest {
+    var query: io.ktor.http.Parameters? = null
+    var path: String? = null
+    val engine = MockEngine { request ->
+      assertEquals("Bearer llat", request.headers[HttpHeaders.Authorization])
+      path = request.url.encodedPath
+      query = request.url.parameters
+      respond(
+        """[[{"entity_id":"light.hall","state":"off","last_changed":"2026-10-24T12:00:00+00:00",""" +
+          """"last_updated":"2026-10-24T12:00:00+00:00"},""" +
+          """{"state":"on","last_changed":"2026-10-24T18:30:00.5+00:00"},""" +
+          """{"state":"off"}]]""",
+        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+      )
+    }
+    val start = kotlin.time.Instant.parse("2026-10-24T12:00:00Z")
+    val points =
+      HaEntityStates("https://ha.example", "llat", engine).use { it.history("light.hall", start) }
+    assertEquals("/api/history/period/2026-10-24T12:00:00Z", path)
+    assertEquals("light.hall", query?.get("filter_entity_id"))
+    assertEquals(true, query?.contains("minimal_response"))
+    assertEquals(true, query?.contains("no_attributes"))
+    assertEquals("0", query?.get("significant_changes_only"))
+    // The point with no time is dropped.
+    assertEquals(listOf("off", "on"), points.map { it.state })
+    assertEquals(kotlin.time.Instant.parse("2026-10-24T18:30:00.5Z"), points[1].ts)
+  }
+
+  @Test
+  fun historyOfANonEntityIdAsksNothing() = runTest {
+    val engine = MockEngine { error("asked for ${it.url}") }
+    assertEquals(
+      emptyList(),
+      HaEntityStates("https://ha.example", "llat", engine).use {
+        it.history("../config", kotlin.time.Instant.parse("2026-10-24T12:00:00Z"))
+      },
+    )
+  }
+
+  @Test
+  fun aRefusedTokenFailsTheHistoryAsAuth() = runTest {
+    assertFailsWith<HaAuthInvalidException> {
+      HaEntityStates("https://ha.example", "llat", engine(HttpStatusCode.Unauthorized)).use {
+        it.history("light.hall", kotlin.time.Instant.parse("2026-10-24T12:00:00Z"))
+      }
+    }
+  }
 }
