@@ -427,7 +427,7 @@ private fun DashboardShell(
                       },
                       actions = {
                         TextButton(onClick = { stack.add(DashboardEditDestination(route.path)) }) {
-                          Text("Edit")
+                          Text("Edit dashboard")
                         }
                         if (integrationInstalled) {
                           TextButton(onClick = { stack.add(AgentEditDestination(route.path)) }) {

@@ -124,9 +124,9 @@ Assistant's storage:
    `EditorScope`:
    - `Light` (the phone, through `DashboardEditor` in `app`): the phase 1 edits, ending with the
      integration card.
-   - `Full` (the panel and the desktop app, **Edit** in a dashboard's top bar): also add a card
-     (search an entity, then pick from the types that suit it, or a heading, text or clock),
-     edit a card's settings as its Lovelace JSON, add and delete sections, and add, rename
+   - `Full` (the panel and the desktop app, **Edit dashboard** in a dashboard's top bar): also add
+     a card (search an entity, then pick from the types that suit it, or a heading, text or
+     clock), edit a card's settings as its Lovelace JSON, add and delete sections, and add, rename
      (`DashboardDraft.renameView`, keeping the view's path) and delete views.
    - Both draw cards with the host's own renderer, read-only, and save with the same conditional
      write as the signed-in user; Home Assistant refuses non-administrators and YAML dashboards.

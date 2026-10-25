@@ -87,7 +87,7 @@ shows the dashboard. The dashboard view itself flows cards by harc's own design 
   edit but don't save.
 
 Adding cards, sections, views or dashboards and changing a card's settings are not on the phone.
-The Terrazzo panel and the desktop app show the same editor with those added (**Edit** in a
+The Terrazzo panel and the desktop app show the same editor with those added (**Edit dashboard** in a
 dashboard's top bar; `EditorScope.Full` in `app-ui`'s `DashboardDraftEditor`); creating dashboards
 is still Home Assistant's.
 The editor ends with **Open in Home Assistant**, which opens the dashboard in HA's own editor, and,
