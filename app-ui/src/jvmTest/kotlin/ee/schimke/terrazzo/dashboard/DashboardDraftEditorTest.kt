@@ -99,6 +99,7 @@ class DashboardDraftEditorTest {
     val edits = show(EditorScope.Full)
     onNodeWithContentDescription("Card 1: tile").performClick()
     onNodeWithText("Settings…").performClick()
+    onNodeWithText("JSON").performClick()
     val field = onNode(hasSetTextAction() and hasText("sensor.soil", substring = true))
     field.performTextReplacement("""{"entity":"sensor.soil"}""")
     onNodeWithText("A card needs a \"type\".").assertExists()
