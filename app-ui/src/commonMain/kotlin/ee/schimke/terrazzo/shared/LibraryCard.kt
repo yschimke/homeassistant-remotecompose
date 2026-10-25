@@ -65,9 +65,7 @@ internal fun LibraryCard(
         DashboardLoadCache(scope) { key: LibraryDesignKey -> loadLibraryDesign(key) }
       }
   val exact = remember(card, snapshot, style, dark) { exactDesignKey(card, snapshot, style, dark) }
-  // The shape hint sharpens the anonymous /api/cards/resolve fallback (used when there is no exact
-  // key): it is unused when [exact] is set, since that asks the server by key.
-  val hint = shapeHint(card, snapshot)
+  val hint = remember(card, snapshot, exact) { cacheShapeHint(exact, card, snapshot) }
   val designKey =
     remember(card, hint, style, dark, requireExactDesign, exact) {
       LibraryDesignKey(anonymousTemplateCard(card), style, dark, requireExactDesign, exact, hint)
@@ -252,6 +250,16 @@ internal fun shapeHint(card: CardConfig, snapshot: HaSnapshot): JsonObject {
 }
 
 private val EMPTY_SHAPE_HINT = JsonObject(emptyMap())
+
+/**
+ * The hint to fold into the design cache key: the card's observable [shapeHint] only on the
+ * anonymous fallback (no [exact] key). With an exact key the server is asked by key, so the hint is
+ * unused and must stay out of the key — otherwise two cards that share one exact key but read
+ * different observable attributes would land in separate cache entries and resolve the same design
+ * twice.
+ */
+internal fun cacheShapeHint(exact: DesignKey?, card: CardConfig, snapshot: HaSnapshot): JsonObject =
+  if (exact == null) shapeHint(card, snapshot) else EMPTY_SHAPE_HINT
 
 internal fun templateBindings(card: CardConfig, snapshot: HaSnapshot): Map<String, RcNamedValue> =
   CardDesignSlots.slotBindings(card, snapshot).toNamedValues() +

@@ -1,10 +1,13 @@
 package ee.schimke.terrazzo.shared
 
+import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
@@ -79,6 +82,34 @@ class ShapeHintTest {
       JsonObject(emptyMap()),
       shapeHint(tile("switch.fan"), snapshot(state("switch.fan", "device_class" to "outlet"))),
     )
+  }
+
+  @Test
+  fun anExactKeyKeepsItsHintOutOfTheCacheKey() {
+    // The card reads observable attributes, so its shape hint is non-empty...
+    val card = tile("sensor.temp")
+    val snapshot =
+      snapshot(state("sensor.temp", "device_class" to "temperature", "unit_of_measurement" to "°C"))
+    assertTrue(shapeHint(card, snapshot).isNotEmpty())
+    // ...but with an exact key the server is asked by key, so the cache hint is empty: two such
+    // cards must share one cache entry instead of resolving the same design twice.
+    val exact =
+      DesignKey(
+        cardType = "tile",
+        surface = DesignSurface.MobileApp,
+        rcApiLevel = 8,
+        shape = "device_class=temperature;domain=sensor;unit=°C",
+        theme = "baked:Material3:light",
+      )
+    assertEquals(JsonObject(emptyMap()), cacheShapeHint(exact, card, snapshot))
+  }
+
+  @Test
+  fun withoutAnExactKeyTheCacheKeepsTheHint() {
+    val card = tile("sensor.temp")
+    val snapshot =
+      snapshot(state("sensor.temp", "device_class" to "temperature", "unit_of_measurement" to "°C"))
+    assertEquals(shapeHint(card, snapshot), cacheShapeHint(null, card, snapshot))
   }
 
   @Test
