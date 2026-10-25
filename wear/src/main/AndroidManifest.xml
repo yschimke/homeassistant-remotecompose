@@ -26,12 +26,218 @@
             android:name=".WearMainActivity"
             android:exported="true"
             android:taskAffinity=""
-            android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar" />
+
+        <!--
+          The launcher entry, one alias per icon, as on the phone: LauncherIcons (rc-components)
+          enables the one matching the watch's card style and disables the rest. `default` is the
+          themed-icon-capable adaptive icon and the one enabled on install. Widget taps target
+          WearMainActivity itself, so they survive a switch.
+        -->
+        <activity-alias
+            android:name=".launcher.default"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher"
+            android:targetActivity=".WearMainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+        <activity-alias
+            android:name=".launcher.trinitron"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_trinitron"
+            android:roundIcon="@mipmap/ic_launcher_trinitron"
+            android:targetActivity=".WearMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".launcher.lcd"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_lcd"
+            android:roundIcon="@mipmap/ic_launcher_lcd"
+            android:targetActivity=".WearMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".launcher.braun"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_braun"
+            android:roundIcon="@mipmap/ic_launcher_braun"
+            android:targetActivity=".WearMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".launcher.nixie"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_nixie"
+            android:roundIcon="@mipmap/ic_launcher_nixie"
+            android:targetActivity=".WearMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".launcher.console"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_console"
+            android:roundIcon="@mipmap/ic_launcher_console"
+            android:targetActivity=".WearMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".launcher.ikea"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_ikea"
+            android:roundIcon="@mipmap/ic_launcher_ikea"
+            android:targetActivity=".WearMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".launcher.mushroom"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_mushroom"
+            android:roundIcon="@mipmap/ic_launcher_mushroom"
+            android:targetActivity=".WearMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".launcher.bubble"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_bubble"
+            android:roundIcon="@mipmap/ic_launcher_bubble"
+            android:targetActivity=".WearMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".launcher.minimalist"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_minimalist"
+            android:roundIcon="@mipmap/ic_launcher_minimalist"
+            android:targetActivity=".WearMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".launcher.cupertino"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_cupertino"
+            android:roundIcon="@mipmap/ic_launcher_cupertino"
+            android:targetActivity=".WearMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".launcher.catppuccin"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_catppuccin"
+            android:roundIcon="@mipmap/ic_launcher_catppuccin"
+            android:targetActivity=".WearMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".launcher.obsidian"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_obsidian"
+            android:roundIcon="@mipmap/ic_launcher_obsidian"
+            android:targetActivity=".WearMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".launcher.noctis"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_noctis"
+            android:roundIcon="@mipmap/ic_launcher_noctis"
+            android:targetActivity=".WearMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".launcher.lcars"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_lcars"
+            android:roundIcon="@mipmap/ic_launcher_lcars"
+            android:targetActivity=".WearMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".launcher.arctic"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_arctic"
+            android:roundIcon="@mipmap/ic_launcher_arctic"
+            android:targetActivity=".WearMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".launcher.aeon"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_aeon"
+            android:roundIcon="@mipmap/ic_launcher_aeon"
+            android:targetActivity=".WearMainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- Warms the pinned cards' templates as soon as an update lands. -->
         <receiver
