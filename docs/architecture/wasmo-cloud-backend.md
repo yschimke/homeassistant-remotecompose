@@ -133,7 +133,7 @@ session cookie without depending on its SameSite setting.
 
 | Method and path | Request | Response | Storage |
 |---|---|---|---|
-| `GET capabilities` | | `{"api":1,"backend":"wasmo-simulated","kv":true,"haSession":<secrets configured>,"publish":true}` | |
+| `GET capabilities` | | `{"api":1,"backend":"wasmo-simulated","kv":true,"haSession":<secrets configured>,"publish":<secrets configured>}` | |
 | `GET kv` | | `{"<key>": <json>, …}` (all keys, one round trip for startup seeding) | SQL `kv` |
 | `PUT kv/{key}` | any JSON, ≤ 256 KiB | 204 | SQL `kv` |
 | `DELETE kv/{key}` | | 204 | SQL `kv` |
@@ -142,7 +142,7 @@ session cookie without depending on its SameSite setting.
 | `POST ha/token` | | `{"accessToken","expiresIn"}`; 401 when HA refuses the refresh (session deleted); 502 `{"error":"unreachable"}` when HA can't be reached from the server | outbound HTTP |
 | `DELETE ha/session` | | 204, after a best-effort `POST <hass>/auth/revoke` | vault |
 | `GET publish` | | `[{"slug","title","design","card","entities","refreshMinutes","updatedAt"}]` | SQL |
-| `PUT publish/{slug}` | `{"title","design","card","entities","refreshMinutes"}` | the stored record; writes `www-public/p/<slug>/index.html`, enqueues a refresh now | SQL + objects + job |
+| `PUT publish/{slug}` | `{"title","design","card","entities","refreshMinutes"}` | the stored record; writes `www-public/p/<slug>/index.html`, enqueues a refresh now. 409 `{"error":"no-session"}` when the server holds no HA session | SQL + objects + job |
 | `DELETE publish/{slug}` | | 204; deletes `www-public/p/<slug>/*` and cancels the job | |
 
 Rules:
@@ -171,8 +171,9 @@ the API shape that doc describes, so replacing it is a one-file change.
   Simulation: SQL table `secret(key, nonce, ciphertext)`, AES-256-GCM, with the key passed to
   `TerrazzoWasmoApp.Factory(secretsKey)` from `TERRAZZO_SECRETS_KEY` in the fork's wiring (a
   JVM-only shortcut; real apps won't see OS environment). With no key configured,
-  `capabilities.haSession` is `false` and the browser keeps the HA session local; settings and
-  publishing still work.
+  `capabilities.haSession` and `capabilities.publish` are both `false`: the browser keeps the HA
+  session local and settings still sync, but publishing is off, because the publish job can only
+  read states with the server-held session.
 - **App updates** (`app_updates.md`: `afterInstall(old, new)` on each update). Today it's called
   only on first install, and reinstalling an app from a URL keeps the install. Simulation: a
   `schema_version` single-row table and `ensureSchema()`, run from `afterInstall` **and** lazily
@@ -280,7 +281,8 @@ Keep the public `window.terrazzoOAuth` API (`restore`, `signIn`, `signOut`, `acc
 
 - Settings shows where data lives: "Stored on your Wasmo" or "Stored in this browser", and for
   the HA session "Signed in on all your devices" or "Signed in on this device".
-- On the Wasmo path only, a card's menu gets **Publish…**: title, refresh interval, a list of the
+- On the Wasmo path, when `caps.publish` is true **and** this device is signed in through the
+  server-held session (not the device-local fallback), a card's menu gets **Publish…**: title, refresh interval, a list of the
   exact entities that will become public, and after publishing the public URL with copy and
   unpublish. A Settings page lists published cards. Text follows the
   [component system](card-component-system.md) and needs the usual previews.
