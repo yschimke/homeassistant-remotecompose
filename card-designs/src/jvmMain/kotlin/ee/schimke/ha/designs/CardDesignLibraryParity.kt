@@ -12,12 +12,12 @@ import org.jetbrains.skia.Bitmap
 import org.jetbrains.skia.Image
 
 /**
- * Whether two card design libraries draw the same: the Android one (`generateCardDesigns`) and the
- * JVM one (`generateCardDesignsJvm`). Their bytes differ (the two creation libraries order and
- * number a document's parts differently), so each key's template is drawn by the one player, the
- * Compose Multiplatform one, and the pixels compared. Exits non-zero when any key is missing from
- * either library or draws differently; with a third argument, writes both drawings of each
- * difference there.
+ * Whether two card design libraries draw the same: the Android one (`generateCardDesignsAndroid`)
+ * and the JVM one (`generateCardDesigns`, the published one). Their bytes differ (the two creation
+ * libraries order and number a document's parts differently), so each key's template is drawn by
+ * the one player, the Compose Multiplatform one, and the pixels compared. Exits non-zero when any
+ * key is missing from either library or draws differently; with a third argument, writes both
+ * drawings of each difference there.
  *
  * `./gradlew :card-designs:checkCardDesignParity`.
  */

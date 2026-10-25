@@ -19,7 +19,7 @@ import kotlinx.coroutines.withContext
  * Card designs by key: the library's, or, for a key the library doesn't hold, captured here on
  * request. The server runs the app's own converters and card designs on the JVM, with rc-players'
  * Compose Multiplatform creation fork under the app's operations ([LibraryCaptureProfile]): what
- * `:card-designs:generateCardDesignsJvm` does for the whole library, one key at a time, and what
+ * `:card-designs:generateCardDesigns` does for the whole library, one key at a time, and what
  * `checkCardDesignParity` shows draws as the app's Android capture does.
  *
  * It captures the mobile-app surface at the capture profile's API level, as the library does; the

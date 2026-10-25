@@ -30,7 +30,9 @@ matters here:
   (`:card-designs:generateCardDesigns`), baked into its image with the checked-in sources
   (`sources/<cardType>.uid`). A key the library lacks the server captures on request
   (`POST /designs/v1/generate`, on the JVM). The app takes its designs only from the server: a
-  synced one, else one it fetches by key; it ships none and captures none of its own.
+  synced one, else one it fetches by key, and it captures none of its own. It ships its built-in
+  card styles' designs (Classic in Material 3, Home Assistant) to seed an empty cache, so a server
+  that is down never leaves it without designs.
 - **Captures agree.** Templates are captured under `TemplateHaClock`, so a capture does not
   depend on the day it runs, and `scripts/check-design-server.py` holds a deployed server to this
   build's capture (see [Cutover](#cutover)).
@@ -88,7 +90,8 @@ ha-cards .uid  ──(UI Builder, admin edit)──▶  revision
   - **In this repository** (`CardDesignDocument` in `:ha-cards-catalog`): draws a `.uid` by
     calling the `ha-cards` components with each node's properties, inside the same capture harness
     as converter templates (`CardDesignTemplates.captureWith`). It needs no UI Builder release, so
-    the library and the scheduled import capture designs in a Robolectric test today.
+    the library captures designs on the JVM today (`generateCardDesigns`), as the design server
+    does for a key its library lacks.
     Binding-shaped components (`ha-cards/entity-tile`) take their structural properties from the
     design key being captured, so one `.uid` covers every key of its card type.
   - **In UI Builder**, for live publishing from the design server: RemoteCompose export with state
@@ -110,10 +113,11 @@ ha-cards .uid  ──(UI Builder, admin edit)──▶  revision
   diff on that PR is the review of what changes in the app. While a card type still has a
   converter, its parity gates fail an edit that changes its pixels; that is the migration gate
   doing its job, and the edit lands with the converter's layout deleted.
-- **Fallback.** None in designs: the app ships no designs and captures none. Lookup is a synced
-  server design, else the server's design fetched by key (`CardDesignGeneration`), which the
-  server captures if its library lacks it. Until one is cached (before the first sync, offline,
-  with no server) the card draws through its converter.
+- **Fallback.** The app captures no designs. An empty cache is seeded with the built-in card
+  styles' designs the app ships (`BuiltInCardDesigns`). Lookup is a synced (or seeded) design,
+  else the server's design fetched by key (`CardDesignGeneration`), which the server captures if
+  its library lacks it. Until one is cached (a style that isn't built in, offline) the card draws
+  through its converter.
 
 ## Migrating a card type
 
@@ -301,6 +305,17 @@ own `rcApiLevel` and surface (mobile app, launcher widget, Wear widget and its c
 design edit reaches every card, and an app never plays a document its player can't. The `.uid`
 packaged in the app stays as the offline fallback. Capture stays build-time; the server never sees
 a user's values, only shapes.
+
+**The web path sends its shape, not just its slots.** The converter-less clients (the web app, the
+`<ha-card>` embed) can't compute a card's key, so they used to send only the anonymous card — its
+type and slot ids — and the server, unable to tell `device_class`/`unit`/`icon` apart, returned the
+first of the shapes those slots fit, marked inexact. A single-slot card now also sends a *shape
+hint* (`shapeHint`): the observable discriminators it can read — `device_class`, `unit`, `icon`,
+`card_icon` — and `CardResolve.narrowByShapeHint` picks the one design whose shape they name, so a
+`binary_sensor`/door or `sensor`/temperature tile resolves exactly without a converter. The hint is
+shape, not values: it never carries an entity id, name or state, so "the server sees only shapes"
+still holds. It closes most of the 185 icon/unit shapes for single-slot cards ahead of the
+enumeration work below; multi-slot shapes (grids, entities rows) still wait for it.
 
 That needs keys to be enumerable, in this order:
 

@@ -19,7 +19,7 @@ Reproduction:
 
 ```sh
 ./gradlew :card-designs:testAndroidHostTest --tests '*CommunityFamilyEvidenceTest' \
-  -PcardDesignsOut=/tmp/community-designs
+  -PcardDesignsAndroidOut=/tmp/community-designs
 PYTHONPATH=<Pillow installation> python3 scripts/community-contact-sheet.py \
   /tmp/community-designs/community-renders docs/design/evidence/community-families
 ./gradlew :rc-components:testDebugUnitTest :ha-cards-catalog:testDebugUnitTest

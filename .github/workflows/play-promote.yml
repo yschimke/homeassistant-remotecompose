@@ -1,0 +1,99 @@
+name: Play promote
+
+# Moves a release that's already on Play from one track to another — by
+# default the latest internal build up to closed testing (`alpha`) — without
+# rebuilding or re-uploading. The release notes travel with it. Run it from
+# the Actions tab once an internal build has been checked.
+#
+# Phone and Wear have separate tracks: Wear's are prefixed `wear:` (the
+# release job publishes Wear to `wear:internal`), so the same input names
+# both, e.g. `alpha` promotes phone to `alpha` and Wear to `wear:alpha`.
+#
+# Closed testing and production releases go through Play review before
+# testers see them; a `draft` status stops short of sending for review.
+
+on:
+  workflow_dispatch:
+    inputs:
+      from_track:
+        description: 'Track to promote from'
+        required: true
+        default: 'internal'
+        type: string
+      to_track:
+        description: 'Track to promote to (alpha = closed testing, beta = open testing)'
+        required: true
+        default: 'alpha'
+        type: choice
+        options: [alpha, beta, production]
+      release_status:
+        description: 'Release status on the new track'
+        required: true
+        default: 'completed'
+        type: choice
+        options: [completed, draft, inProgress]
+      user_fraction:
+        description: 'Staged rollout fraction for inProgress (e.g. 0.1); ignored otherwise'
+        required: false
+        default: ''
+        type: string
+      promote_app:
+        description: 'Promote the phone app'
+        required: false
+        default: true
+        type: boolean
+      promote_wear:
+        description: 'Promote the Wear app'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  # Two Play edits on one app at once fail; queue promotions behind each other.
+  group: play-promote
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Promote ${{ inputs.from_track }} → ${{ inputs.to_track }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ANDROID_PUBLISHER_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+      FROM_TRACK: ${{ inputs.from_track }}
+      TO_TRACK: ${{ inputs.to_track }}
+      RELEASE_STATUS: ${{ inputs.release_status }}
+      USER_FRACTION: ${{ inputs.user_fraction }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: ./.github/actions/setup
+        with:
+          cache-read-only: 'true'
+
+      - name: Check credentials
+        run: |
+          [ -n "$ANDROID_PUBLISHER_CREDENTIALS" ] || { echo '::error::PLAY_SERVICE_ACCOUNT_JSON is required'; exit 1; }
+          if [ "$RELEASE_STATUS" = inProgress ] && [ -z "$USER_FRACTION" ]; then
+            echo '::error::inProgress needs a user_fraction'; exit 1
+          fi
+
+      # Promote tasks name the `release` variant; the umbrella `promoteArtifact`
+      # would also walk the baseline-profile and experimental variants.
+      - name: Promote phone
+        if: inputs.promote_app
+        run: |
+          set -euo pipefail
+          args=(--from-track "$FROM_TRACK" --promote-track "$TO_TRACK" --release-status "$RELEASE_STATUS")
+          [ "$RELEASE_STATUS" = inProgress ] && args+=(--user-fraction "$USER_FRACTION")
+          ./gradlew :app:promoteReleaseArtifact "${args[@]}" --stacktrace
+
+      - name: Promote Wear
+        if: inputs.promote_wear
+        run: |
+          set -euo pipefail
+          args=(--from-track "wear:$FROM_TRACK" --promote-track "wear:$TO_TRACK" --release-status "$RELEASE_STATUS")
+          [ "$RELEASE_STATUS" = inProgress ] && args+=(--user-fraction "$USER_FRACTION")
+          ./gradlew :wear:promoteReleaseArtifact "${args[@]}" --stacktrace

@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.65](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.64...v0.1.65) (2026-10-25)
+
+
+### Features
+
+* ask an agent from the phone and panel through integration edit sessions ([#1196](https://github.com/yschimke/homeassistant-remotecompose/issues/1196)) ([9fa4470](https://github.com/yschimke/homeassistant-remotecompose/commit/9fa447075aa8a14a200375f9d1fe1cdd52beec36))
+* **card-designs:** generate the card design library on the JVM ([#1197](https://github.com/yschimke/homeassistant-remotecompose/issues/1197)) ([694fa7d](https://github.com/yschimke/homeassistant-remotecompose/commit/694fa7d26ae8dd514bb342fc1cb3fdf0e1c6a816))
+* **design-server:** capture designs by key, and resolve cards exactly from their states ([#1199](https://github.com/yschimke/homeassistant-remotecompose/issues/1199)) ([bace67f](https://github.com/yschimke/homeassistant-remotecompose/commit/bace67f3d41763bc4ddb09c7de5083f6171e3742))
+* full dashboard editor in the panel and desktop app ([#1201](https://github.com/yschimke/homeassistant-remotecompose/issues/1201)) ([15f5bc3](https://github.com/yschimke/homeassistant-remotecompose/commit/15f5bc300ac2992a81ae056bb58aab26fcaf11ef))
+* take card designs only from the design server ([#1203](https://github.com/yschimke/homeassistant-remotecompose/issues/1203)) ([521efbc](https://github.com/yschimke/homeassistant-remotecompose/commit/521efbc3eda63865f446fb59389d30b4bee7eff1))
+
+
+### Bug Fixes
+
+* **app-ui:** package terrazzo.wasmo without directory entries ([#1204](https://github.com/yschimke/homeassistant-remotecompose/issues/1204)) ([4076430](https://github.com/yschimke/homeassistant-remotecompose/commit/4076430deaf9c97e687ba749bbad638ab687ef71))
+* **design-server:** ship one runtime jar each, and keep blobs keys still share ([#1202](https://github.com/yschimke/homeassistant-remotecompose/issues/1202)) ([6b1313e](https://github.com/yschimke/homeassistant-remotecompose/commit/6b1313ef66917d14d538cb9e905e0aa3056dc1fe))
+
 ## [0.1.64](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.63...v0.1.64) (2026-10-24)
 
 

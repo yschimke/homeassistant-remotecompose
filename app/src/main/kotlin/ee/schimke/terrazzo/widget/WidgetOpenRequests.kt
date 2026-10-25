@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.widget
 import android.content.Context
 import android.content.Intent
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.terrazzo.MainActivity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,9 +35,13 @@ internal object WidgetOpenRequests {
         is HaAction.Navigate -> EXTRA_NAVIGATE to action.path
         else -> return null
       }
-    val launch =
-      context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return null
-    return launch.putExtra(key, value)
+    // MainActivity itself, not the package's launch intent: that resolves to whichever launcher
+    // alias is enabled now (LauncherIcons), and a widget's PendingIntent outlives an icon switch.
+    return Intent(context, MainActivity::class.java)
+      .setAction(Intent.ACTION_MAIN)
+      .addCategory(Intent.CATEGORY_LAUNCHER)
+      .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+      .putExtra(key, value)
   }
 
   /** Records [intent]'s target, if it carries one. */

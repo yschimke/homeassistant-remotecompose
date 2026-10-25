@@ -35,6 +35,7 @@ import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.AssistantAccessSetting
 import ee.schimke.terrazzo.CardStyleSection
+import ee.schimke.terrazzo.CardStyleState
 import ee.schimke.terrazzo.ConnectionStatus
 import ee.schimke.terrazzo.DashboardTopBar
 import ee.schimke.terrazzo.LocalHaImageStack
@@ -519,7 +520,7 @@ fun Screen_DashboardPicker_ThemeStyle(
 )
 @Composable
 fun Screen_DashboardView() = PhoneHost {
-  DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
+  DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _, _ -> })
 }
 
 @Preview(
@@ -530,7 +531,7 @@ fun Screen_DashboardView() = PhoneHost {
 )
 @Composable
 fun Screen_DashboardView_PhoneLandscapeMedium() = PhoneHost {
-  DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
+  DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _, _ -> })
 }
 
 /**
@@ -548,7 +549,7 @@ fun Screen_DashboardView_ThemeStyle(
   @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle
 ) =
   PhoneHost(style = style) {
-    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
+    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _, _ -> })
   }
 
 // --- Dashboard top bar ----------------------------------------------------
@@ -1028,6 +1029,37 @@ fun Screen_Settings_CardStyles() = PhoneHost {
 }
 
 /**
+ * The card style picker on a new install: Classic and Home Assistant come with the app, an
+ * installed style offers Remove, one is downloading, one failed, and the rest offer Install.
+ */
+@Preview(
+  name = "settings · card styles to install",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_Settings_CardStylesToInstall() = PhoneHost {
+  Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
+    CardStyleSection(
+      selected = CardStylePref.Classic,
+      onSelect = {},
+      initiallyExpanded = true,
+      state = { pref ->
+        when (pref) {
+          CardStylePref.Classic,
+          CardStylePref.HomeAssistant -> CardStyleState.BuiltIn
+          CardStylePref.Expressive -> CardStyleState.Installed
+          CardStylePref.Trinitron -> CardStyleState.Installing
+          CardStylePref.Lcd -> CardStyleState.Failed
+          else -> CardStyleState.NotInstalled
+        }
+      },
+    )
+  }
+}
+
+/**
  * The card style picker previewed on a watch: the current style's sample as Small and Large Wear
  * widgets on round and square watch screens.
  */
@@ -1275,7 +1307,7 @@ fun Play_Phone_01_HomeLight() =
     DashboardViewScreen(
       session = demoSession(),
       urlPath = PLAY_HOME_BOARD,
-      onCardLongPress = { _, _ -> },
+      onCardLongPress = { _, _, _ -> },
     )
   }
 
@@ -1287,7 +1319,7 @@ fun Play_Phone_02_HomeDark() =
     DashboardViewScreen(
       session = demoSession(),
       urlPath = PLAY_HOME_BOARD,
-      onCardLongPress = { _, _ -> },
+      onCardLongPress = { _, _, _ -> },
     )
   }
 
@@ -1332,7 +1364,7 @@ fun Play_Tablet7_01_Home() =
     DashboardViewScreen(
       session = demoSession(),
       urlPath = PLAY_HOME_BOARD,
-      onCardLongPress = { _, _ -> },
+      onCardLongPress = { _, _, _ -> },
     )
   }
 
@@ -1344,7 +1376,7 @@ fun Play_Tablet10_01_Home() =
     DashboardViewScreen(
       session = demoSession(),
       urlPath = PLAY_HOME_BOARD,
-      onCardLongPress = { _, _ -> },
+      onCardLongPress = { _, _, _ -> },
     )
   }
 

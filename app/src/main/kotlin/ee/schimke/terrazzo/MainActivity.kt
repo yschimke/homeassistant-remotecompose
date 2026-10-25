@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
@@ -42,7 +41,6 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     if (BuildConfig.TEST_HOOKS) StartupHangWatchdog.arm()
-    enableEdgeToEdge()
     val graph = (application as TerrazzoApplication).graph
 
     // Debug-only test hatch: when the launching Intent carries
@@ -128,7 +126,7 @@ class MainActivity : ComponentActivity() {
         LocalHaImageStack provides imageStack,
       ) {
         val themePref by
-          graph.preferencesStore.themeStyle.collectAsState(initial = ThemePref.TerrazzoHome)
+          graph.preferencesStore.themeStyle.collectAsState(initial = ThemePref.Material3)
         val darkPref by
           graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
         val cardStylePref by

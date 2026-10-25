@@ -55,7 +55,14 @@ sensor, history-graph, statistic, line statistics-graph, thermostat, humidifier,
 conditional and entity-filter cards, markdown, picture, picture-glance, logbook, calendar,
 to-do list, weather forecast, light, media control, map, picture-elements, bar statistics graphs, the Bambu Lab cards and the
 unsupported placeholder) — every built-in card type renders from a card design. The design comes from the server when one is
-cached for the card's key; the app ships no designs and captures none of its own. A key the
+cached for the card's key, and the app captures none of its own. It ships one set: Classic in
+the Material 3 palette and the Home Assistant card style, its built-in styles (`CardStyles`),
+generated at build time by `:card-designs:generateBuiltInCardDesigns` (the same JVM capture as the
+library, so each file is the one the server serves for its key). A cache with no manifest yet is
+seeded from them (`BuiltInCardDesigns`, `BundledDesigns.seed`), so the app draws those styles with
+the server down, unreachable or turned off; the sync on every start replaces them once a server
+answers (the bundle's serial is 0 and already expired). Other styles are installed in Settings,
+which downloads their designs. A key the
 synced manifest lacks is fetched from the server by key (`CardDesignGeneration`:
 `POST /designs/v1/generate`, which sends only the key) and kept beside the manifest's designs,
 until the next manifest replaces them; the server captures it if its library lacks it. Until a
@@ -648,14 +655,20 @@ per request — but adds what a static host can't: verification, a template brow
   `catalog.json` (`DesignCatalog`: an example card and preview paths per design) and `previews/`
   (each design rendered bound to its example's values, and as published with its placeholders).
   It generates in either of two ways, which draw the same:
-  - `:card-designs:generateCardDesigns`, a Robolectric test: captured with AndroidX, as the app does;
-  - `:card-designs:generateCardDesignsJvm`, plain JVM with no Android: captured with rc-players'
+  - `:card-designs:generateCardDesigns`, plain JVM with no Android: captured with rc-players'
     Compose Multiplatform creation fork under the app's operations (`LibraryCaptureProfile`), the
-    previews drawn by the Compose Multiplatform player, into `card-designs/build/card-designs-jvm/`.
+    previews drawn by the Compose Multiplatform player. This is the library the server publishes
+    (the CI build and the Docker image), and the same capture `DesignGenerator` runs for a key the
+    library lacks, so a key's bytes are the same whichever way the server came by them;
+  - `:card-designs:generateCardDesignsAndroid`, a Robolectric test: captured with AndroidX, as the
+    app does, into `card-designs/build/card-designs-android/`, to check the JVM's against.
 
   The two libraries' bytes differ (the two creation libraries number and order a document's parts
   differently). `:card-designs:checkCardDesignParity` draws every key's template from both with the
-  one Compose Multiplatform player and compares the pixels.
+  one Compose Multiplatform player and compares the pixels. `JvmLibraryAndroidPlaybackTest` covers
+  the other player: it plays a sample of the published library (one key per card type and shape,
+  across every theme) in the app's AndroidX player beside the same key captured on Android, and
+  compares those pixels; the design server workflow runs it on every build of the library.
 - **Client protocol.** `GET /designs/v1/manifest.json` (ETag = its SHA-256, `no-cache`, `304` on
   `If-None-Match`) and `GET /designs/v1/blobs/<sha256>.rc` (immutable). Only names the manifest
   lists are served. Loading verifies every blob's size and hash against the manifest and refuses a
@@ -673,7 +686,7 @@ per request — but adds what a static host can't: verification, a template brow
 - **Designs by key.** `POST /designs/v1/generate` with a `DesignKey` answers with that key's
   design (`sha256`, `blob`, `slots`, `generated`): the library's when it holds one, otherwise
   captured on request by `DesignGenerator`. The server runs the app's own converters and checked-in
-  card designs on the JVM, as `generateCardDesignsJvm` does: rc-players' Compose Multiplatform
+  card designs on the JVM, as `generateCardDesigns` does: rc-players' Compose Multiplatform
   creation fork under the app's operations (`LibraryCaptureProfile`), which
   `checkCardDesignParity` shows draws as the app's Android capture does. A captured blob is served
   from `/designs/v1/blobs/` beside the library's. It captures the mobile-app surface at the capture
@@ -685,12 +698,16 @@ per request — but adds what a static host can't: verification, a template brow
 - **Resolving a card.** `POST /api/cards/resolve` takes a card's config (with optional states,
   card style and mode). With the states of every entity the card shows, it runs the card's
   converter: the card's exact key, that design (by key, as above, so captured if the library
-  lacks it) and the values the converter pushes, `exact: true`. Without them (an anonymous card,
-  as the web app sends it) it returns the closest library design (same card type, slots, style,
+  lacks it) and the values the converter pushes, `exact: true`. Without them (an anonymous card:
+  type and slot ids) it returns the closest library design (same card type, slots, style,
   mode and the default variant), its blob and the values to push: the card's own slot values, and
   the converter-only ones from the library example. A card's shape can't be told without its
   states, so when several shapes fit it returns the first with `exact: false`. It serves players
-  that have no converters: UI Builder's Lovelace canvas and the embed.
+  that have no converters: UI Builder's Lovelace canvas and the embed. The web app (and the Wasmo
+  app built from it) runs the converters itself, on wasmJs: a card with a template shape is asked
+  for by its exact key (`LibraryCard.exactDesignKey`, `POST /designs/v1/generate`) and plays with
+  its converter's own bindings, as the phone app does; only a card with no template shape still
+  sends its anonymous card here.
 - **Designing in UI Builder.** A design's page and `/schema` (paste a card's JSON) show the
   card's schema — slots and bindings with example values (`/api/designs/<id>/schema`,
   `POST /api/schema`) — and, with UI Builder bundled (`UI_BUILDER_BINARY`) or configured
@@ -788,8 +805,9 @@ use it.
   (LTE) can be added later. Built for `wear-widget` (see
   [Spike status](#spike-status));
   `wear-app` not yet.
-- **Desktop, Wasm, TV.** Out of scope until those hosts play RC
-  documents. Wasm would also need CORS on the static host.
+- **Desktop, Wasm, TV.** The desktop and Wasm web apps (`app-ui`) play mobile-app designs,
+  asked for by key as above; the design server's routes answer cross-origin. TV is out of scope
+  until it plays RC documents.
 
 ## Build pipeline (one source for app, server and catalog)
 

@@ -17,8 +17,10 @@ import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.crash.CrashReporter
 import ee.schimke.terrazzo.crash.CrashedDocuments
+import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.dashboard.CardDesignPreload
 import ee.schimke.terrazzo.dashboard.CardDesignSync
+import ee.schimke.terrazzo.dashboard.CardStyleStore
 import ee.schimke.terrazzo.dashboard.CardUsage
 import ee.schimke.terrazzo.di.AppGraph
 import ee.schimke.terrazzo.image.HaImageStack
@@ -28,6 +30,7 @@ import ee.schimke.terrazzo.wearsync.MobileWearSyncManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
@@ -98,6 +101,7 @@ class TerrazzoApplication : Application() {
     // app
     // leaves the foreground: the cost of values that didn't arrive as bindings.
     reportCardRebuildsOnStop()
+    followCardStyleWithLauncherIcon()
     if (graph.cardMonitor.isEnabled) {
       registerNotificationChannels()
     }
@@ -127,11 +131,19 @@ class TerrazzoApplication : Application() {
             false,
           ),
     )
-    // Card designs come only from the design server (CardDesignSync, CardDesignGeneration): the app
-    // ships none and captures none of its own. The local store earlier builds kept captures in
-    // goes, with what it held.
+    // Card designs come from the design server (CardDesignSync, CardDesignGeneration), seeded with
+    // the built-in card styles' designs the app ships (BuiltInCardDesigns); the app captures none
+    // of
+    // its own. The local store earlier builds kept captures in goes, with what it held.
     (ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO).launch {
       FileLocalDesignStore.of(applicationContext).clear()
+    }
+    // Card styles beyond the built-in two are installed one by one (CardStyles). An install from
+    // before that keeps the styles it already draws with: the dashboard's and the cards' own.
+    (ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO).launch {
+      val overrides = CardDesignOverrideStore.of(applicationContext).overrides.value
+      CardStyleStore.of(applicationContext)
+        .seed(overrides.cardStyles + graph.preferencesStore.cardStyle.first().id)
     }
     // Anonymous card usage: counts nothing unless the user turned sharing on.
     CardUsage.start(
@@ -156,6 +168,30 @@ class TerrazzoApplication : Application() {
           CardDesignSync.apply(applicationContext, choice.serverUrl, syncNow = true)
         }
     }
+  }
+
+  /**
+   * Swaps the launcher icon to the card design's own ([LauncherIcons]) each time the app moves to
+   * the background — not while it's on screen, where the launcher would refresh the entry under a
+   * running task — and on start, to catch a change the last session didn't get to apply.
+   */
+  private fun followCardStyleWithLauncherIcon() {
+    val scope = ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO
+    val apply = {
+      scope.launch {
+        LauncherIcons.apply(applicationContext, graph.preferencesStore.cardStyle.first())
+      }
+    }
+    apply()
+    ProcessLifecycleOwner.get()
+      .lifecycle
+      .addObserver(
+        object : androidx.lifecycle.DefaultLifecycleObserver {
+          override fun onStop(owner: androidx.lifecycle.LifecycleOwner) {
+            apply()
+          }
+        }
+      )
   }
 
   /**

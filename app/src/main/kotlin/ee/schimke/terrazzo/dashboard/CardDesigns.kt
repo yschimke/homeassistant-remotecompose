@@ -69,6 +69,11 @@ data class CardDesignChoice(
   val token: String = "",
   /** The skins installed on this device ([SkinStore]), library skins aside. */
   val skins: Set<String> = emptySet(),
+  /**
+   * The card styles installed on this device ([CardStyleStore]), the built-in ones aside: the sync
+   * keeps their designs too, so switching to one draws at once, offline included.
+   */
+  val cardStyles: Set<String> = emptySet(),
 ) {
   val enabled: Boolean
     get() = serverUrl.isNotBlank()
@@ -79,11 +84,8 @@ data class CardDesignChoice(
   /** The designs to download: every theme this palette and style draw in, by variant and author. */
   val queries: List<DesignQuery>
     get() {
-      val cardStyles = listOf(cardStyle) + overrides.cardStyles.map(HaUberTheme::byId)
-      val themes =
-        cardStyles
-          .flatMap { s -> listOf(false, true).map { CardDesignTemplates.bakedTheme(style, it, s) } }
-          .distinct()
+      val styles = listOf(cardStyle) + (overrides.cardStyles + cardStyles).map(HaUberTheme::byId)
+      val themes = styles.flatMap(::themesOf).distinct()
       val variants = (listOf(variant) + overrides.variants + DesignKey.DEFAULT_VARIANT).distinct()
       // An installed skin comes whole for these themes: any variant or author.
       val whole = designIds.sorted()
@@ -102,6 +104,10 @@ data class CardDesignChoice(
   val designIds: Set<String>
     get() = skins + overrides.designIds.filter(Skins::isLibrary)
 
+  /** The themes (`DesignKey.theme`) [cardStyle] draws in with this palette, light and dark. */
+  fun themesOf(cardStyle: HaUberTheme): List<String> =
+    listOf(false, true).map { CardDesignTemplates.bakedTheme(style, it, cardStyle) }.distinct()
+
   /** Between designs for one key, the preferred author's first. */
   val prefer: List<DesignQuery>
     get() = authors.map { DesignQuery(author = it) }
@@ -109,9 +115,10 @@ data class CardDesignChoice(
 
 /**
  * Designs from the card design server, cached on disk by [CardDesignSync], keyed by [DesignKey],
- * and the variant to prefer. Empty while no server is configured. The app ships no designs of its
- * own: a key the cache lacks is fetched from the server by key ([CardDesignGeneration]), and its
- * card draws through its converter meanwhile. See [cardTemplateFor].
+ * and the variant to prefer. The cache starts with the designs the app ships for its built-in card
+ * styles ([BuiltInCardDesigns]) until a server's library replaces them; a key the cache lacks is
+ * fetched from the server by key ([CardDesignGeneration]), and its card draws through its converter
+ * meanwhile. See [cardTemplateFor].
  */
 data class CardDesigns(
   val byKey: Map<DesignKey, ByteArray> = emptyMap(),
@@ -136,14 +143,16 @@ data class CardDesigns(
 val LocalCardDesigns = staticCompositionLocalOf { CardDesigns() }
 
 /**
- * The server designs cached on disk for [choice]. With no server this is empty and does no work. It
- * never touches the network: [CardDesignSync] fills the cache.
+ * The designs cached on disk for [choice]. It never touches the network: [CardDesignSync] fills the
+ * cache from the server, and a cache with nothing in it yet (a new install, a server that has never
+ * answered, or none configured) is first seeded with the designs the app ships for its built-in
+ * card styles ([BuiltInCardDesigns]), so those draw whatever the server's state.
  */
 suspend fun loadCardDesigns(context: Context, choice: CardDesignChoice): CardDesigns {
-  if (!choice.enabled) return CardDesigns(variant = choice.variant)
   val resolved =
     withContext(Dispatchers.IO) {
       val dir = CardDesignSync.storeDir(context, choice.serverUrl)
+      BuiltInCardDesigns.seed(context, dir)
       CardDesignSnapshot.read(dir, choice.prefer, choice.designIds)
         ?: run {
           val stamp = CardDesignSnapshot.manifestStamp(dir)

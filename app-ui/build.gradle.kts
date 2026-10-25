@@ -1,3 +1,5 @@
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
@@ -39,6 +41,9 @@ kotlin {
       implementation(libs.cmp.navigation3.ui)
       implementation(libs.cmp.adaptive)
       implementation(project(":rc-player-ui"))
+      // The cards' design keys and template bindings, computed here the way the phone app does, so
+      // the design server is asked by key (`/designs/v1/generate`) and no card config leaves.
+      implementation(project(":rc-converter"))
       implementation(libs.kotlinx.coroutines.core)
       implementation(libs.ktor.client.core)
       implementation(libs.cmp.material.icons.core)
@@ -51,7 +56,11 @@ kotlin {
       runtimeOnly(libs.jogl.runtime)
       runtimeOnly(libs.gluegen.runtime)
     }
-    jvmTest.dependencies { implementation(libs.compose.multiplatform.ui.test.junit4) }
+    jvmTest.dependencies {
+      implementation(libs.compose.multiplatform.ui.test.junit4)
+      // Captures designs by key as the design server does (ExactDesignKeyTest).
+      implementation(project(":card-designs"))
+    }
     commonTest.dependencies {
       implementation(libs.kotlin.test)
       implementation(libs.kotlinx.coroutines.test)
@@ -108,25 +117,76 @@ val wasmoAppDirectory =
     inputs.property("version", version)
     into(layout.buildDirectory.dir("wasmo/dir/terrazzo.wasmo"))
     from("wasmo/wasmo-manifest.toml") { expand("version" to version) }
+    // The app page is www/app.html, not index.html: www-public/index.html answers "/" for every
+    // visitor (Wasmo serves www-public/ first) and sends the owner on to app.html.
     into("www") {
       from(tasks.named("wasmJsBrowserDistribution"))
       from("wasmo/wasm-mime-fallback.js")
       filesMatching("index.html") {
         filter { line ->
-          line.replace(
-            "<script src=\"bootstrap.js\" defer></script>",
-            "<script src=\"wasm-mime-fallback.js\"></script>\n  <script src=\"bootstrap.js\" defer></script>",
-          )
+          line
+            .replace(
+              "<script src=\"bootstrap.js\" defer></script>",
+              "<script src=\"wasm-mime-fallback.js\"></script>\n  <script src=\"bootstrap.js\" defer></script>",
+            )
+            .replace(
+              "<title>Terrazzo</title>",
+              "<title>Terrazzo</title>\n" +
+                "  <link rel=\"manifest\" href=\"/manifest.webmanifest\">\n" +
+                "  <link rel=\"icon\" href=\"/icon-192.png\">\n" +
+                "  <link rel=\"apple-touch-icon\" href=\"/apple-touch-icon.png\">\n" +
+                "  <meta name=\"theme-color\" content=\"#faf6ec\">\n" +
+                "  <meta name=\"mobile-web-app-capable\" content=\"yes\">\n" +
+                "  <meta name=\"apple-mobile-web-app-title\" content=\"Terrazzo\">",
+            )
         }
+        name = "app.html"
       }
     }
     into("www/assets") { from(rootProject.file("custom_components/terrazzo/brand/icon.png")) }
+    // Public: the landing page, the web app manifest and its icons. The browser fetches a manifest
+    // without credentials, so it must not sit behind the owner-only www/.
+    into("www-public") {
+      from("wasmo/www-public")
+      from(rootProject.file("custom_components/terrazzo/brand/icon.png")) {
+        rename { "icon-512.png" }
+      }
+    }
   }
 
-tasks.register<Zip>("wasmoApp") {
-  from(wasmoAppDirectory)
-  archiveFileName = "terrazzo.wasmo"
-  destinationDirectory = layout.buildDirectory.dir("wasmo")
+// A plain Zip task writes a directory entry for every folder ("www/", "www/assets/", …). Wasmo's
+// installer writes each zip entry to its object store as-is, so a directory entry lands as a file
+// that blocks the files beneath it ("www/app.wasm" -> "Not a directory") and the install fails.
+// Write only file entries, as Wasmo's own packager does, so the archive installs on any Wasmo —
+// not just one carrying the server-side skip-directory-entries fix.
+tasks.register("wasmoApp") {
+  description = "Packages the Wasm web build as an installable .wasmo archive."
+  // Locals, not top-level script vals: a doLast action that captures a top-level `val` pulls in the
+  // build-script object, which the configuration cache cannot serialize.
+  val inputDir = layout.buildDirectory.dir("wasmo/dir/terrazzo.wasmo")
+  val archiveFile = layout.buildDirectory.file("wasmo/terrazzo.wasmo")
+  dependsOn(wasmoAppDirectory)
+  inputs.dir(inputDir)
+  outputs.file(archiveFile)
+  doLast {
+    val root = inputDir.get().asFile
+    val archive = archiveFile.get().asFile
+    archive.parentFile.mkdirs()
+    ZipOutputStream(archive.outputStream().buffered()).use { zip ->
+      root
+        .walkTopDown()
+        .filter { it.isFile }
+        .sortedBy { it.relativeTo(root).invariantSeparatorsPath }
+        .forEach { file ->
+          // A fixed timestamp keeps the archive byte-for-byte reproducible across builds.
+          val entry = ZipEntry(file.relativeTo(root).invariantSeparatorsPath)
+          entry.time = 0L
+          zip.putNextEntry(entry)
+          file.inputStream().use { it.copyTo(zip) }
+          zip.closeEntry()
+        }
+    }
+  }
 }
 
 // jpackage requires a positive major on macOS. Offset the major on every OS

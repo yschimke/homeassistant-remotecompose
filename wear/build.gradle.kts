@@ -1,4 +1,4 @@
-val wearVersionName = "0.1.64" // x-release-please-version
+val wearVersionName = "0.1.65" // x-release-please-version
 
 // Keep Wear version tied to release-please while reserving a unique code
 // lane for the shared package id (`ee.schimke.harc`): same base as `:app`
@@ -90,6 +90,12 @@ android {
       isMinifyEnabled = true
       isShrinkResources = true
       proguardFiles(file("proguard-rules.pro"))
+      // Native debug symbols for Play Console (vitals symbolication of native crashes / ANRs).
+      // The .so files come from dependencies; AGP extracts their symbol tables into the
+      // bundle's BUNDLE-METADATA and Play picks them up with the upload. The R8 mapping file
+      // rides the same way (BUNDLE-METADATA/com.android.tools.build.obfuscation), so no
+      // separate deobfuscation upload is needed.
+      ndk { debugSymbolLevel = "SYMBOL_TABLE" }
       if (releaseKeystorePath != null) {
         signingConfig = signingConfigs.getByName("release")
       }
