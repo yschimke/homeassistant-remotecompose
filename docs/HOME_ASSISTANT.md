@@ -301,6 +301,15 @@ runs inside native Lovelace; a WASM dashboard containing that custom type may
 show the existing unsupported-card message. More-info and navigation actions
 in the panel are forwarded to the parent HA frontend.
 
+## Notifications on the phone while the app is closed
+
+With the integration installed, the Terrazzo Android app also receives `notify.mobile_app_<phone>`
+messages while it isn't open. There is nothing to set up: the app registers when it next connects.
+The message stays in Home Assistant; only a content-free wake goes through Firebase Cloud Messaging,
+and the app then fetches the message from this integration with its own login. Without the
+integration the app gets notifications only while it is connected. See
+[notifications.md](architecture/notifications.md).
+
 ## MCP server for AI assistants
 
 Terrazzo can also answer the [Model Context Protocol](https://modelcontextprotocol.io), so an AI

@@ -1,4 +1,4 @@
-// The Terrazzo push relay: Home Assistant's mobile_app `push_url` for the Terrazzo app.
+// The Terrazzo push relay: wakes the Terrazzo app for the notifications its Home Assistant holds.
 // See docs/architecture/notifications.md and relay.js.
 'use strict';
 

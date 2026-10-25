@@ -27,13 +27,16 @@ data class MobileAppRegistration(
    * from before it are re-made so `notify.mobile_app_<device>` has somewhere to send.
    */
   val pushChannel: Boolean = false,
-  /** The FCM token HA holds for this install's relay push ([PushTarget]); null when none. */
+  /** The push URL HA holds for this registration ([PushTarget]); null when none. */
+  val pushUrl: String? = null,
+  /** The push token HA presents with it; null when none. */
   val pushToken: String? = null,
 )
 
 /**
  * Where HA sends a notification while the app holds no websocket: `app_data.push_url`, the Terrazzo
- * push relay, which forwards it to [token] (this install's FCM token) as a data message.
+ * integration's endpoint on HA itself, with [token] (`push_token`) the secret it checks. The
+ * integration holds the message and wakes the app with a content-free FCM message.
  */
 data class PushTarget(val url: String, val token: String)
 
@@ -56,9 +59,10 @@ internal data class RegistrationRequest(
 /**
  * `app_data`: `push_websocket_channel` makes HA route `notify.mobile_app_<device>` over the
  * websocket's `mobile_app/push_notification_channel` while the app holds one open. With [pushUrl]
- * and [pushToken] (a [PushTarget]) HA falls back to POSTing the notification to the Terrazzo push
- * relay when no websocket is open, or the app doesn't confirm one in time; without them (a build
- * with no Firebase) the websocket is the only path. Both or neither: HA requires the pair.
+ * and [pushToken] (a [PushTarget]) HA falls back to POSTing the notification to the Terrazzo
+ * integration when no websocket is open, or the app doesn't confirm one in time; without them (no
+ * integration, or a build with no Firebase) the websocket is the only path. Both or neither: HA
+ * requires the pair.
  */
 @Serializable
 internal data class AppData(

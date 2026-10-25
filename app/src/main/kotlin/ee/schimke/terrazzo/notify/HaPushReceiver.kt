@@ -9,11 +9,16 @@ import ee.schimke.terrazzo.TerrazzoApplication
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.widget.WidgetInstaller
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -83,42 +88,71 @@ object HaPushReceiver {
           }
         }
       }
+      // On every connection, what the Terrazzo integration held while the app had none comes
+      // first (PushRelay.sync); the live channel's messages, all newer, wait until it has drained,
+      // so an older held message never replaces or resurrects a newer one with the same tag.
+      val drained = MutableStateFlow(false)
+      launch {
+        session.connectionStatus
+          .map { it == SessionConnectionStatus.Connected }
+          .distinctUntilChanged()
+          .collectLatest { connected ->
+            drained.value = false
+            if (!connected) return@collectLatest
+            try {
+              PushRelay.sync(context, graph, session, webhookId, watchHasApp.value)
+            } finally {
+              drained.value = true
+            }
+          }
+      }
       session.pushNotifications(webhookId).collect { notification ->
-        val card = notification.entityId?.let { NotificationCards.render(context, session, it) }
-        HaNotifications.handle(
-          context,
-          session.baseUrl,
-          notification,
-          watchHasApp.value,
-          card,
-          entity = notification.entityId?.let { session.liveStates.value?.states?.get(it) },
-        )
-        // A card, or the watch's own copy (its entity's state and toggle), follows the entity.
-        val follows = card != null || (watchHasApp.value && notification.entityId != null)
-        if (follows && !notification.isClear) {
-          track(notification, session.liveStates.value?.states?.get(notification.entityId))
-        } else {
-          cards.remove(notification.dedupeKey)
-        }
+        drained.first { it }
+        post(context, session, notification, watchHasApp.value)
       }
     }
   }
 
   /**
+   * Posts [notification] from [session]'s server: with its entity's live card where one can be
+   * drawn, followed as the entity changes while this session lives.
+   */
+  suspend fun post(
+    context: Context,
+    session: HaSession,
+    notification: HaPushNotification,
+    watchHasApp: Boolean,
+  ) {
+    val card = notification.entityId?.let { NotificationCards.render(context, session, it) }
+    val entity =
+      notification.entityId?.let {
+        (session.liveStates.value ?: runCatching { session.loadSnapshot() }.getOrNull())
+          ?.states
+          ?.get(it)
+      }
+    HaNotifications.handle(
+      context,
+      session.baseUrl,
+      notification,
+      watchHasApp,
+      card,
+      entity = entity,
+    )
+    // A card, or the watch's own copy (its entity's state and toggle), follows the entity.
+    val follows = card != null || (watchHasApp && notification.entityId != null)
+    if (follows && !notification.isClear) track(notification, entity)
+    else cards.remove(notification.dedupeKey)
+  }
+
+  /**
    * This install's `mobile_app` webhook for [session]'s server. A registration made before the push
-   * channel existed is made again (the same device id), so HA has somewhere to send; a current one
-   * gets the push relay's token if HA holds another or none ([PushRelay.sync]).
+   * channel existed is made again (the same device id), so HA has somewhere to send.
    */
   private suspend fun webhookId(graph: TerrazzoGraph, session: HaSession): String? {
     val stored = graph.mobileAppStore.get(session.baseUrl)
-    if (stored?.pushChannel == true) {
-      PushRelay.sync(graph, session.baseUrl)
-      return stored.webhookId
-    }
+    if (stored?.pushChannel == true) return stored.webhookId
     val token = session.accessToken ?: return stored?.webhookId
-    return runCatching {
-      graph.mobileAppRegistrar.register(session.baseUrl, token, PushRelay.target()).webhookId
-    }
+    return runCatching { graph.mobileAppRegistrar.register(session.baseUrl, token).webhookId }
       .onFailure { Log.w(TAG, "mobile_app registration failed", it) }
       .getOrElse { stored?.webhookId }
   }

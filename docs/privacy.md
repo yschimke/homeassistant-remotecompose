@@ -76,16 +76,18 @@ usage is never sent without an address set.
   switch lights, switches, scenes and scripts through the app. The
   entity names and states it asks for go to that assistant, under its
   own privacy terms; Terrazzo sends nothing to the developer.
-- **Notifications while the app is closed (Play builds).** Home Assistant
-  sends the messages you address to this device (`notify.mobile_app_…`)
-  straight to the app while it is connected. When it isn't, your Home
-  Assistant sends the message — its title, text and options — to the
-  developer's push relay (a Google Cloud Function), which hands it to
-  Google's Firebase Cloud Messaging to deliver to the app. The relay
-  keeps nothing beyond Google Cloud's standard request logs and a
-  per-device daily count held in memory to limit sending; it doesn't
-  store messages. Your Home Assistant gets the app's push token for this,
-  at sign-in.
+- **Notifications while the app is closed (Play builds, with the
+  Terrazzo Home Assistant integration).** Home Assistant sends the
+  messages you address to this device (`notify.mobile_app_…`) straight
+  to the app while it is connected. When it isn't, the Terrazzo
+  integration in your Home Assistant keeps the message there and asks the
+  developer's push relay (a Google Cloud Function) to wake the app through
+  Google's Firebase Cloud Messaging. The wake carries no part of the
+  message — only the app's push token and a random id naming the device's
+  Home Assistant registration; the app then fetches the message from your
+  Home Assistant itself. The relay keeps nothing beyond Google Cloud's
+  standard request logs and a per-device daily count held in memory to
+  limit sending.
 - **No third-party services.** The app does not contact analytics,
   advertising, or crash-reporting providers.
 

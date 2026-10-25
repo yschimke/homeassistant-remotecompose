@@ -34,8 +34,8 @@ import kotlinx.serialization.json.Json
  * request `supports_encryption: true` so HA hands us back a NaCl shared secret; we persist it for
  * device→HA webhook traffic: [updatePush] seals `update_registration` with it. Push notifications
  * HA→device take HA's websocket push channel (`app_data.push_websocket_channel`) while the live
- * session holds one, else the Terrazzo push relay (`push_url`, [PushTarget]) when the build has
- * Firebase.
+ * session holds one, else the Terrazzo integration's `push_url` ([PushTarget]), which holds them
+ * and wakes the app silently.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -60,11 +60,7 @@ class MobileAppRegistrar(
    * success; throws on transport or HTTP failures so the caller can decide whether to surface or
    * swallow the error.
    */
-  suspend fun register(
-    baseUrl: String,
-    accessToken: String,
-    push: PushTarget? = null,
-  ): MobileAppRegistration {
+  suspend fun register(baseUrl: String, accessToken: String): MobileAppRegistration {
     val deviceId = store.getOrCreateDeviceId(baseUrl)
     val deviceName = deviceName()
     val request =
@@ -79,7 +75,7 @@ class MobileAppRegistrar(
         osName = "Android",
         osVersion = osVersion(),
         supportsEncryption = true,
-        appData = AppData.of(push),
+        appData = AppData.of(null),
       )
 
     val resp =
@@ -101,17 +97,17 @@ class MobileAppRegistrar(
         cloudhookUrl = parsed.cloudhookUrl,
         remoteUiUrl = parsed.remoteUiUrl,
         pushChannel = true,
-        pushToken = push?.token,
       )
     store.put(baseUrl, record)
     return record
   }
 
   /**
-   * Hands HA a new relay [push] target (a fresh FCM token) for [baseUrl]'s registration, with
-   * `update_registration` on its webhook: no new device, no login. HA requires the call sealed with
-   * the registration's secret ([SecretBox]). Returns the updated record, or null when there is no
-   * registration to update; throws on transport or HTTP failures.
+   * Hands HA a new [push] target (the Terrazzo integration's push URL) for [baseUrl]'s
+   * registration, with `update_registration` on its webhook: no new device, no login. HA requires
+   * the call sealed with the registration's secret ([SecretBox]) when it has one. Returns the
+   * updated record, or null when there is no registration to update; throws on transport or HTTP
+   * failures.
    */
   suspend fun updatePush(baseUrl: String, push: PushTarget): MobileAppRegistration? {
     val stored = store.get(baseUrl) ?: return null
@@ -148,7 +144,7 @@ class MobileAppRegistrar(
         setBody(body)
       }
     if (!resp.status.isSuccess()) error("mobile_app update_registration failed: ${resp.status}")
-    val record = stored.copy(pushToken = push.token)
+    val record = stored.copy(pushUrl = push.url, pushToken = push.token)
     store.put(baseUrl, record)
     return record
   }

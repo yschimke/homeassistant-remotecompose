@@ -508,6 +508,33 @@ class HaClient(
     }
   }
 
+  /**
+   * The Terrazzo integration's silent push for this device's registration ([webhookId]): records
+   * the app's FCM [fcmToken] and the [relayUrl] that wakes it, and answers the `push_url` and
+   * `push_token` to give HA's registration. Fails with [HaCommandException] when the integration
+   * isn't installed (`unknown_command`) or the registration isn't this user's.
+   */
+  suspend fun registerTerrazzoPush(
+    webhookId: String,
+    fcmToken: String,
+    relayUrl: String,
+  ): JsonObject =
+    runCommand("terrazzo/push/register") {
+      put("webhook_id", webhookId)
+      put("fcm_token", fcmToken)
+      put("relay_url", relayUrl)
+    }
+
+  /**
+   * The messages the Terrazzo integration held for [webhookId] while the app had no websocket,
+   * oldest first, each as HA's push body (`message`, `title`, `data`); each is answered once.
+   */
+  suspend fun takeTerrazzoPushes(webhookId: String): List<JsonObject> =
+    runCommand("terrazzo/push/take") { put("webhook_id", webhookId) }["messages"]
+      ?.jsonArray
+      ?.mapNotNull { it as? JsonObject }
+      .orEmpty()
+
   /** Fires an event on HA's bus, as a notification action button does. Needs an admin user. */
   suspend fun fireEvent(eventType: String, eventData: JsonObject) {
     awaitCommand("fire_event") {
