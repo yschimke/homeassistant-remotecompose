@@ -1,7 +1,26 @@
 name: Android keyboard scrolling
 
+# Four emulators per run, so pull requests only pay for it when they touch what the inset
+# regression tests exercise: the IME host and system bars, the activity and its theme/manifest,
+# the screens the tests drive (Discovery form, Card Studio) and the tests themselves. CI's
+# `Instrumented tests (API 36)` job already runs the same @AndroidWindowInsetsRegression tests on
+# its default device for every PR, so other app changes get that one device before merge and the
+# full device matrix after it, on main.
 on:
   pull_request:
+    paths:
+      - 'app/src/main/AndroidManifest.xml'
+      - 'app/src/main/res/values*/**'
+      - 'app/src/main/kotlin/ee/schimke/terrazzo/MainActivity.kt'
+      - 'app/src/main/kotlin/ee/schimke/terrazzo/ui/AndroidImeHost.kt'
+      - 'app/src/main/kotlin/ee/schimke/terrazzo/ui/AndroidSystemBars.kt'
+      - 'app/src/main/kotlin/ee/schimke/terrazzo/discovery/**'
+      - 'app/src/androidTest/kotlin/ee/schimke/terrazzo/Android*.kt'
+      - 'app-ui/src/commonMain/kotlin/ee/schimke/terrazzo/shared/CardStudioScreen.kt'
+      - '.github/workflows/android-ime.yml'
+      - 'scripts/run-ime-tests.sh'
+  push:
+    branches: [main]
     paths:
       - 'app/**'
       - 'app-ui/**'
