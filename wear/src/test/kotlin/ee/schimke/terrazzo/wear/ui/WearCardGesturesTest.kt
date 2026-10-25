@@ -80,4 +80,22 @@ class WearCardGesturesTest {
     compose.waitForIdle()
     assertEquals(listOf(0, 1, 0), listOf(clicks, longPresses, unhandled))
   }
+
+  @Test
+  fun aScaledFrameTakesTapsWhereItDrawsThem() {
+    compose.setContent {
+      Box(Modifier.testTag("frame").scaledFrame(100.dp, 50.dp, 2f)) {
+        // The right half of the unscaled frame: drawn from x = 100 dp to 200 dp once scaled.
+        Box(Modifier.align(Alignment.CenterEnd).size(50.dp).clickable { clicks++ })
+      }
+    }
+    // A tap on the scaled frame's right half, beyond the unscaled frame's 100 dp width.
+    compose.onNodeWithTag("frame").performTouchInput { click(Offset(right - 20f, centerY)) }
+    compose.waitForIdle()
+    assertEquals(1, clicks)
+    // The left half, under no button.
+    compose.onNodeWithTag("frame").performTouchInput { click(Offset(left + 20f, centerY)) }
+    compose.waitForIdle()
+    assertEquals(1, clicks)
+  }
 }

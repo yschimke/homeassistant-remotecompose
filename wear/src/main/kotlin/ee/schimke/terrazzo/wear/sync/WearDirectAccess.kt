@@ -163,6 +163,23 @@ class WearDirectAccess(
     return firstAnswer(access) { baseUrl -> fetchHistory(baseUrl, access.token, entityId, start) }
   }
 
+  /**
+   * [ids]' full states (every attribute) from Home Assistant with the watch's own token, for a
+   * card's details screen; unlike [refresh], always read and never stored. Null when the watch has
+   * no token for the instance the phone is signed in to, in demo mode, or when no address answers.
+   */
+  suspend fun states(settings: WearSettings?, ids: Set<String>): Map<String, EntityState>? {
+    if (settings == null || settings.demoMode || settings.baseUrl.isEmpty() || ids.isEmpty()) {
+      return null
+    }
+    val access = store.read()?.takeIf { signedInTo(settings, it.baseUrl) }
+    if (access == null) {
+      requestIfMissing(settings)
+      return null
+    }
+    return fetchFromAny(access, ids)
+  }
+
   /** [ids]' states from the first of [access]'s addresses that answers, or null if none does. */
   private suspend fun fetchFromAny(
     access: WearAccess,

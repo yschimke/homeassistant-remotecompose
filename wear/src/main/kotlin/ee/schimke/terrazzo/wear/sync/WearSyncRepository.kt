@@ -263,6 +263,20 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
     }
     .getOrNull()
 
+  /**
+   * [ids]' live states, every attribute included, for a card's details screen: see
+   * [WearDirectAccess.states]. Null when the watch can't read them.
+   */
+  suspend fun liveStates(ids: Set<String>): Map<String, ee.schimke.ha.model.EntityState>? =
+    runCatching {
+      direct.states(_settings.value, ids)
+    }
+    .onFailure {
+      if (it is kotlinx.coroutines.CancellationException) throw it
+      Log.w(TAG, "liveStates failed", it)
+    }
+    .getOrNull()
+
   fun stop() {
     runCatching { dataClient.removeListener(dataListener) }
     runCatching { messageClient.removeListener(messageListener) }

@@ -19,6 +19,7 @@ import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSection
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
+import kotlin.time.Duration.Companion.hours
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -192,6 +193,102 @@ fun WearSectionPreview() {
     )
   }
 }
+
+@Preview(name = "Wear: card full screen", device = WearDevices.SMALL_ROUND, showSystemUi = true)
+@Composable
+fun WearCardScreenPreview() {
+  WearPreviewFrame {
+    WearCardScreen(
+      cards = PINNED_FIXTURE.cards.map { it.card },
+      initialPage = 1,
+      values = VALUES_FIXTURE,
+    )
+  }
+}
+
+@Preview(name = "Wear: card details", device = WearDevices.SMALL_ROUND, showSystemUi = true)
+@Composable
+fun WearCardDetailsPreview() {
+  WearPreviewFrame {
+    WearCardDetailsScreen(
+      summary = PINNED_FIXTURE.cards.first().card,
+      values = VALUES_FIXTURE,
+      loadHistory = { previewHistory(listOf("19.5", "20.1", "21.0", "21.5")) },
+      loadStates = { previewLiveStates },
+      now = { PREVIEW_NOW },
+    )
+  }
+}
+
+@Preview(
+  name = "Wear: card details (entities)",
+  device = WearDevices.SMALL_ROUND,
+  showSystemUi = true,
+)
+@Composable
+fun WearCardDetailsPreview_Entities() {
+  val entities =
+    CardSummary(
+      type = "entities",
+      title = "Downstairs",
+      primaryEntityId = "light.kitchen",
+      rawJson =
+        """{"type":"entities","title":"Downstairs","entities":["light.kitchen","lock.front_door"]}""",
+    )
+  WearPreviewFrame {
+    WearCardDetailsScreen(
+      summary = entities,
+      values = VALUES_FIXTURE,
+      loadHistory = { id ->
+        previewHistory(
+          if (id.startsWith("lock.")) listOf("locked", "unlocked", "locked")
+          else listOf("off", "on", "off", "on")
+        )
+      },
+      loadStates = { previewLiveStates },
+      now = { PREVIEW_NOW },
+    )
+  }
+}
+
+private val PREVIEW_NOW = kotlin.time.Instant.parse("2026-10-25T10:08:00Z")
+
+/** [states] spread over the last day, oldest first: a preview's history. */
+private fun previewHistory(states: List<String>): List<ee.schimke.ha.model.HistoryPoint> =
+  states.mapIndexed { i, state ->
+    ee.schimke.ha.model.HistoryPoint(
+      PREVIEW_NOW - (24.0 * (states.size - i) / (states.size + 1)).hours,
+      state,
+    )
+  }
+
+private val previewLiveStates: Map<String, ee.schimke.ha.model.EntityState> =
+  mapOf(
+    "sensor.living_room" to
+      ee.schimke.ha.model.EntityState(
+        "sensor.living_room",
+        "21.5",
+        buildJsonObject { put("state_class", "measurement") },
+        lastChanged = PREVIEW_NOW - 1.hours,
+      ),
+    "light.kitchen" to
+      ee.schimke.ha.model.EntityState(
+        "light.kitchen",
+        "on",
+        buildJsonObject {
+          put("brightness", 180)
+          put("color_temp_kelvin", 2700)
+        },
+        lastChanged = PREVIEW_NOW - 2.hours,
+      ),
+    "lock.front_door" to
+      ee.schimke.ha.model.EntityState(
+        "lock.front_door",
+        "locked",
+        buildJsonObject { put("changed_by", "Keypad") },
+        lastChanged = PREVIEW_NOW - 5.hours,
+      ),
+  )
 
 @Preview(name = "Wear: dashboards", device = WearDevices.SMALL_ROUND, showSystemUi = true)
 @Composable

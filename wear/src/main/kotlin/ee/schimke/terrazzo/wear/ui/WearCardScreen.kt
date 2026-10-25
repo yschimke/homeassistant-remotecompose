@@ -2,7 +2,6 @@ package ee.schimke.terrazzo.wear.ui
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,7 +16,6 @@ import androidx.wear.compose.foundation.pager.VerticalPager
 import androidx.wear.compose.foundation.pager.rememberPagerState
 import androidx.wear.compose.material3.AnimatedPage
 import androidx.wear.compose.material3.ButtonDefaults
-import androidx.wear.compose.material3.CompactButton
 import androidx.wear.compose.material3.EdgeButton
 import androidx.wear.compose.material3.EdgeButtonSize
 import androidx.wear.compose.material3.Text
@@ -46,8 +44,8 @@ import kotlinx.coroutines.launch
  * A card full screen: [cards] as a vertical pager, opened on [initialPage]. Reached by a long press
  * on a card (or a tap it doesn't take, or its more-info tap), and by a tap on its Wear widget.
  *
- * A long press on the card, a tap it doesn't take, its more-info tap, or the History button opens
- * its details ([onOpenDetails], [WearCardDetailsScreen]).
+ * A long press on the card, a tap it doesn't take, or its more-info tap opens its details
+ * ([onOpenDetails], [WearCardDetailsScreen]); so does the edge button of a card with no action.
  *
  * Each page draws its card in the Large widget frame ([wearFullScreenContainer]) over an
  * [EdgeButton] for the card's own action ([wearCardPrimaryAction]): "Turn off" for a light. That
@@ -112,16 +110,11 @@ private fun WearCardPage(
   val taps = rememberWearCardTaps(summary.rawJson, onMoreInfo = onOpenDetails)
   val action = card?.let { wearCardPrimaryAction(it, snapshot, registry) }
   Box(Modifier.fillMaxSize()) {
-    Column(
-      Modifier.fillMaxSize().padding(bottom = if (action != null) 48.dp else 0.dp),
-      verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
-      horizontalAlignment = Alignment.CenterHorizontally,
+    // The card takes everything between the time text and the edge button, scaled to fit.
+    Box(
+      Modifier.fillMaxSize().padding(top = TIME_TEXT_HEIGHT, bottom = EDGE_BUTTON_HEIGHT),
+      contentAlignment = Alignment.Center,
     ) {
-      CompactButton(
-        onClick = onOpenDetails,
-        label = { Text("History") },
-        colors = ButtonDefaults.filledTonalButtonColors(),
-      )
       WearRemoteCard(summary, values, onOpen = onOpenDetails, fullScreen = true, taps = taps)
     }
     if (action != null) {
@@ -131,9 +124,26 @@ private fun WearCardPage(
         onRun = { taps.dispatcher.dispatch(action) },
         modifier = Modifier.align(Alignment.BottomCenter),
       )
+    } else {
+      // No action to run: the edge button opens the history instead. A card with an action
+      // reaches it by a long press, a tap it doesn't take or its more-info tap.
+      EdgeButton(
+        onClick = onOpenDetails,
+        modifier = Modifier.align(Alignment.BottomCenter),
+        buttonSize = EdgeButtonSize.ExtraSmall,
+        colors = ButtonDefaults.filledTonalButtonColors(),
+      ) {
+        Text("History")
+      }
     }
   }
 }
+
+/** Room the app's time text takes at the top of a page. */
+private val TIME_TEXT_HEIGHT = 24.dp
+
+/** Room an extra-small edge button takes at the bottom of a page. */
+private val EDGE_BUTTON_HEIGHT = 50.dp
 
 /**
  * The card's action as a button, and the page's one-handed gesture target: a double pinch presses
@@ -169,7 +179,7 @@ private fun CardActionButton(
             onGesture = { onRun() },
           )
       ),
-    buttonSize = EdgeButtonSize.Small,
+    buttonSize = EdgeButtonSize.ExtraSmall,
     interactionSource = interactions,
   ) {
     OneHandedGestureClickIndicator(gesture, hint) {

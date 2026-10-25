@@ -67,21 +67,36 @@ full-screen card.
 `WearScreen.Card` shows `WearCardScreen`, a `VerticalPager` over the cards of the list it was opened
 from (`fullScreenDeck`): the pinned cards in order, or the cards of one section. Message cards are
 input forms and don't open. Each page draws its card through the same `WearRemoteCard` pipeline in
-the Large Wear widget frame (`wearFullScreenContainer`). A card that only fills the Small container
-keeps it.
+the Large Wear widget frame (`wearFullScreenContainer`); a card that only fills the Small container
+keeps it. The card fills the page between the time text and the edge button. Its layout is laid out
+at the frame's own size, then drawn bigger (`scaledFrame`, `fullScreenScale`): up to the width a round
+screen holds for a widget's shape (87 % of it, where the corners meet the circle) and the height it's
+given, from 0.75 to 1.6 times. The template stays the one the widget plays, so app and widget can't
+drift. Taps scale with the layer.
 
 From the full-screen card, the same gestures go one level deeper, to the card's **details**
-(`WearCardDetailsScreen`, `WearScreen.CardDetails`): a long press, a tap the card doesn't take, its
-more-info tap, or the visible **History** button above it. The details screen is the watch's version
-of the phone's `CardHistoryScreen`:
+(`WearCardDetailsScreen`, `WearScreen.CardDetails`): a long press, a tap the card doesn't take, or
+its more-info tap. A card with no action to run has a **History** edge button for it. A small round
+screen has no room for a second button beside the card and the action button, so a card with an
+action reaches History through those gestures only. The details screen is the watch's version of the
+phone's `CardHistoryScreen`:
 
-- the card again;
-- the last 24 hours of its main entity (`WearHistoryChart`): a step line for a number, a timeline of
-  runs for anything else, with active states (on, open, unlocked) drawn in the primary colour;
-- the entity's state, type and synced attributes.
+- the card again, at full width;
+- for each entity the card shows (`detailsEntityIds`: the main one first, then an `entities` card's
+  rows or a `glance` card's items, at most six), under its name:
+  - its last 24 hours (`WearHistoryChart`): a step line for a number, a timeline of runs for anything
+    else, with active states (on, open, unlocked) drawn in the primary colour;
+  - its facts (`entityFacts`): state, when it last changed, type, then its live attributes. The
+    well-known ones come first, labelled and formatted: brightness as a percentage, colour
+    temperature, a cover's position and tilt, a thermostat's current and target temperatures, hvac
+    action, preset and fan, a media player's title, artist, source and volume, a lock's `changed_by`,
+    battery. Any other plain value follows. Secrets (a camera's `access_token`) and what only a
+    control reads (option lists, colours, limits) are never listed.
 
-The watch reads the history itself, with the token it already uses for values (`WearDirectAccess.history`,
-REST `GET /api/history/period/<start>` through `HaEntityStates.history`). It tries `https` first, and a
+The watch reads the history and the live attributes itself, with the token it already uses for
+values: `WearDirectAccess.history` (REST `GET /api/history/period/<start>` through
+`HaEntityStates.history`) and `WearDirectAccess.states` (the entities' full states, never stored).
+Without them, the facts fall back to the few attributes the phone syncs. It tries `https` first, and a
 refused token is forgotten, as for values. Without a token the chart says history needs Home Assistant
 access, and the rest of the screen still shows. Back returns to the card's page. What's still left is in
 [`wear-card-details-screen.md`](../followups/wear-card-details-screen.md).
