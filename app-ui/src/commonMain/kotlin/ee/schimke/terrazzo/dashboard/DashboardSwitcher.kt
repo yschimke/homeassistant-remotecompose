@@ -44,7 +44,7 @@ fun DashboardSwitcher(
 ) {
   val current = dashboards.firstOrNull { it.urlPath == currentUrlPath }
   val title = current?.title ?: "Dashboard"
-  val canSwitch = dashboards.size >= 2
+  val canSwitch = dashboards.any { it.urlPath != currentUrlPath }
 
   if (!canSwitch) {
     Text(

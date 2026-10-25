@@ -57,6 +57,7 @@ import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.EditorScope
+import ee.schimke.terrazzo.dashboard.preferredDashboardPath
 import io.ktor.http.encodeURLParameter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -315,11 +316,21 @@ private fun DashboardShell(
   signInStorageLabel: String?,
 ) {
   var list by remember { mutableStateOf<DashboardListState>(DashboardListState.Loading) }
-  val home: NavKey = remember {
-    if (connection.hosted && initialDashboardPath == null) DashboardsDestination
-    else DashboardDestination(initialDashboardPath)
-  }
+  var home by remember { mutableStateOf<NavKey>(DashboardDestination(initialDashboardPath)) }
   val stack = remember { mutableStateListOf(home) }
+  var startupResolved by remember { mutableStateOf(initialDashboardPath != null) }
+  LaunchedEffect(list) {
+    val ready = list as? DashboardListState.Ready ?: return@LaunchedEffect
+    if (!startupResolved) {
+      val route = DashboardDestination(preferredDashboardPath(ready.dashboards, null))
+      home = route
+      if (stack.singleOrNull() == DashboardDestination(null)) {
+        stack.clear()
+        stack.add(route)
+      }
+      startupResolved = true
+    }
+  }
   // Bumped to drop every screen's saved state (selected view, scroll) when returning home.
   var homeVisit by remember { mutableIntStateOf(0) }
   var snapshot by remember(connection) { mutableStateOf(HaSnapshot()) }

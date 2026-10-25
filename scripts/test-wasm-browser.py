@@ -236,12 +236,10 @@ try:
             </script>"""))
         hosted.goto(f'http://127.0.0.1:{server.server_port}/hosted')
         hosted_frame = hosted.frame_locator('terrazzo-panel iframe')
-        # An unconfigured panel now starts at main's Lovelace dashboard picker.
-        dashboard_choice = hosted_frame.get_by_text('Overview (Lovelace)', exact=True)
-        expect(dashboard_choice).to_be_visible(timeout=30000)
-        dashboard_choice.click(force=True, delay=100)
+        # An unconfigured panel opens the default dashboard without a picker step.
         hosted_toggle = hosted_frame.get_by_role('switch')
         expect(hosted_toggle).to_be_visible(timeout=30000)
+        expect(hosted_frame.get_by_text('Choose a Lovelace dashboard.', exact=False)).to_have_count(0)
         count = len([command for command in commands if command['type'] == 'call_service'])
         hosted_toggle.scroll_into_view_if_needed()
         # Wait for the child canvas layout and pointer handlers, not just its semantics DOM.

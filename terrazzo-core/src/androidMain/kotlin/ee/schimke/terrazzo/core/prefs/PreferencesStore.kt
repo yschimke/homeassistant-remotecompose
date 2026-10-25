@@ -277,18 +277,16 @@ class PreferencesStore(private val context: Context) {
   /**
    * Forget the last dashboard. Called on sign-out / demo toggle so a fresh session doesn't
    * auto-jump into a dashboard from the previous instance — that dashboard might not exist on the
-   * new one, and even if it did the user just changed identity and deserves the picker.
+   * new one. The next session starts from its default dashboard.
    */
   suspend fun clearLastViewedDashboard() {
     context.store.edit { it.remove(LAST_VIEWED_KEY) }
   }
 
   /**
-   * The set of dashboards the user has chosen to surface in the picker and the top-bar switcher.
-   * Drives signin gating: a `null` value means the user hasn't been through the selection screen
-   * yet for this instance, so the auth flow stops on the selection step before opening any
-   * dashboard. A non-null set — even an empty one — counts as "user has decided"; the empty case is
-   * handled by the picker UI rather than re-triggering selection.
+   * The set of dashboards the user has chosen to surface in the picker and the top-bar switcher. A
+   * `null` value means no filter has been saved: offer every supported dashboard. Management is
+   * optional and available from the dashboard's overflow menu.
    *
    * Encoding mirrors [lastViewedDashboard]: HA's default dashboard (`urlPath = null` over the wire)
    * is stored as [DEFAULT_DASHBOARD_SENTINEL] so it round-trips through a `Set<String>` cleanly.

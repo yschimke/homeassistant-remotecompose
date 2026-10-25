@@ -23,9 +23,8 @@ import androidx.compose.ui.unit.dp
  * (`DashboardsRoot`) so the same data drives both this screen and the top-bar quick-switcher
  * dropdown without re-querying.
  *
- * Reachable via the system-back gesture from a dashboard view — the app's home is the last-viewed
- * (or HA-default) dashboard itself, so most users will use the top-bar dropdown to switch and won't
- * visit this screen often.
+ * Explicit dashboard browsing for hosts that offer it. Startup opens a dashboard directly; Android
+ * uses the top-bar dropdown to switch instead of navigating to this screen.
  */
 @Composable
 fun DashboardPickerScreen(

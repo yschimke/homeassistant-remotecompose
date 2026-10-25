@@ -40,12 +40,9 @@ import ee.schimke.ha.client.DashboardSummary
 
 /**
  * Multi-select screen for the dashboards the user wants surfaced in the picker and the top-bar
- * switcher. Shown once during the signin flow (gated by [the saved dashboard selection] being
- * `null`) and reachable from Settings → "Manage dashboards".
+ * switcher. Available from the dashboard's overflow menu → "Manage dashboards"; it is optional.
  *
- * Lists everything HA returned from `lovelace/dashboards/list` plus a synthetic entry for the
- * built-in default dashboard ([builtInDefaultDashboard]) — that one isn't in HA's response but is
- * always available at `urlPath = null`, and users invariably expect to be able to opt in to it.
+ * Lists the supported dashboards supplied by the host, including the default only when usable.
  *
  * Selection is encoded for [the host preferences]: the built-in default's `null` urlPath maps to
  * [DEFAULT_DASHBOARD_SENTINEL]; other entries store their `urlPath` verbatim.
@@ -89,23 +86,6 @@ fun DashboardSelectionScreen(
 }
 
 /**
- * Synthetic entry for HA's built-in (unnamed) dashboard. Stitched into the selection list so users
- * can opt the default dashboard in or out the same way they do the named ones.
- */
-val builtInDefaultDashboard: DashboardSummary =
-  DashboardSummary(urlPath = null, title = "Overview (built-in)")
-
-/**
- * Merge HA's named dashboards with [builtInDefaultDashboard] for the selection screen. The built-in
- * goes first so its semantics are clear even when the list is long; if HA somehow returned an entry
- * with a `null` url_path we leave that in place and don't double up.
- */
-fun List<DashboardSummary>.withBuiltInDefault(): List<DashboardSummary> {
-  if (any { it.urlPath == null }) return this
-  return listOf(builtInDefaultDashboard) + this
-}
-
-/**
  * Encode a [DashboardSummary]'s `urlPath` for storage in [the saved dashboard selection]. The
  * built-in default's `null` becomes [DEFAULT_DASHBOARD_SENTINEL]; every other dashboard stores its
  * `urlPath` verbatim.
@@ -138,11 +118,8 @@ private fun ReadyBody(
   onConfirm: (Set<String>) -> Unit,
   contentPadding: PaddingValues,
 ) {
-  val merged = remember(dashboards) { dashboards.withBuiltInDefault() }
-  // First-visit default: opt every dashboard in. Users who want a
-  // subset uncheck rather than re-checking everything, and the
-  // built-in default is always there if their only dashboard list
-  // is HA's hidden one.
+  val merged = dashboards
+  // No saved filter includes every supported dashboard.
   val seed =
     remember(merged, initialSelection) {
       initialSelection ?: merged.mapTo(mutableSetOf()) { it.selectionKey() }
