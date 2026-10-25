@@ -137,6 +137,7 @@ class MobileAppRegistrar(
           EncryptedWebhook.serializer(),
           EncryptedWebhook(
             type = "update_registration",
+            encrypted = true,
             encryptedData = Base64.encodeToString(sealed, Base64.NO_WRAP),
           ),
         )

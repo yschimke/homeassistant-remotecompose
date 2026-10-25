@@ -82,11 +82,14 @@ internal data class UpdateRegistration(
   @SerialName("os_version") val osVersion: String,
 )
 
-/** A `mobile_app` webhook call, its data sealed with the registration's secret ([SecretBox]). */
+/**
+ * A `mobile_app` webhook call, its data sealed with the registration's secret ([SecretBox]). HA
+ * requires `"encrypted": true`, so it has no default: a default value isn't encoded.
+ */
 @Serializable
 internal data class EncryptedWebhook(
   val type: String,
-  val encrypted: Boolean = true,
+  val encrypted: Boolean,
   @SerialName("encrypted_data") val encryptedData: String,
 )
 

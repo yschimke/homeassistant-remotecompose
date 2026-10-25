@@ -25,4 +25,16 @@ class AppDataTest {
       ),
     )
   }
+
+  /** The webhook envelope exactly as HA's `WEBHOOK_PAYLOAD_SCHEMA` takes an encrypted call. */
+  @Test
+  fun theEncryptedWebhookAlwaysSaysItIsEncrypted() {
+    assertEquals(
+      """{"type":"update_registration","encrypted":true,"encrypted_data":"c2VhbGVk"}""",
+      json.encodeToString(
+        EncryptedWebhook.serializer(),
+        EncryptedWebhook("update_registration", encrypted = true, encryptedData = "c2VhbGVk"),
+      ),
+    )
+  }
 }
