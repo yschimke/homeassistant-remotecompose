@@ -475,7 +475,10 @@ class DesignRepository(
     val generated =
       store.readGenerated()?.takeIf { it.serial == stored.manifest.serial }?.designs.orEmpty()
     if (generated.isEmpty()) return stored.manifest.designs
-    val listed = stored.manifest.designs.map { it.key }.toSet()
+    // Only a generic entry stands in for a fetched design: [generate] fetches the generic design
+    // for
+    // a key the manifest holds only device-specific designs for.
+    val listed = stored.manifest.designs.filter { it.device == null }.map { it.key }.toSet()
     return stored.manifest.designs + generated.filter { it.key !in listed }
   }
 

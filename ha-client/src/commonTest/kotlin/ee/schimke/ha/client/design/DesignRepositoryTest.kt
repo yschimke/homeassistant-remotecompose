@@ -685,6 +685,31 @@ class DesignRepositoryTest {
   }
 
   @Test
+  fun aKeyTheManifestHoldsOnlyForADeviceIsFetchedByKeyAndResolves() = runTest {
+    val host = FakeHost(withGenerated(published().files))
+    val store = InMemoryDesignStore()
+    val repository = repo(host, store)
+    repository.refresh()
+    // The manifest holds a design for the key only for one integration's devices.
+    val forDevice =
+      DesignEntry(
+        unlisted,
+        Sha256.hex(template),
+        template.size,
+        1,
+        device = DeviceMatch(integration = "bambu_lab"),
+      )
+    store.readManifest()?.let { stored ->
+      store.writeManifest(
+        stored.copy(manifest = stored.manifest.copy(designs = stored.manifest.designs + forDevice))
+      )
+    }
+    assertEquals(true, repository.generate(unlisted))
+    assertContentEquals(generatedBytes, repository.resolve(unlisted)?.bytes)
+    assertContentEquals(generatedBytes, repository.resolveAll()[unlisted])
+  }
+
+  @Test
   fun aDesignFetchedByKeyThatDoesntHashToItsNameIsNeverStored() = runTest {
     val host = FakeHost(withGenerated(published().files, bytes = "evil".encodeToByteArray()))
     val repository = repo(host)

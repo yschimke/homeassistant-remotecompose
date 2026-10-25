@@ -17,8 +17,10 @@ import kotlinx.coroutines.sync.withLock
  * its config or states. A stored design bumps [CardDesignSync.revision], so the dashboard reads the
  * cache again and the card switches from its converter's capture to the server's design.
  *
- * Each key is asked for once per process and server choice; one the server has no design for (or
- * that fails, offline) is asked for again after the app restarts or the choice changes.
+ * Each key is asked for once per cached manifest and server choice: fetched designs are kept beside
+ * the manifest they were fetched under, so a new one ([manifestStored]) makes every key eligible
+ * again, as does a restart or a change of choice. One the server has no design for (or that fails,
+ * offline) is asked for again then too.
  */
 object CardDesignGeneration {
   private const val TAG = "CardDesignGeneration"
@@ -29,6 +31,12 @@ object CardDesignGeneration {
 
   /** One repository (and HTTP client) for the choice's server, however many keys it fetches. */
   private var repository: DesignRepository? = null
+
+  /**
+   * A sync stored a new manifest: designs fetched beside the old one no longer resolve, and a key
+   * asked for before any manifest was cached was never fetched.
+   */
+  fun manifestStored() = synchronized(this) { requested.clear() }
 
   /** Asks [choice]'s server for [key]'s design, unless it was already asked for. */
   fun request(context: Context, choice: CardDesignChoice, key: DesignKey) {
