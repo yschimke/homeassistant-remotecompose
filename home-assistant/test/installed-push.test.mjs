@@ -65,13 +65,20 @@ test('a notification for a device with no websocket is held by the integration a
   const auth = {'Content-Type': 'application/json', Authorization: `Bearer ${tokens.access_token}`};
 
   // The app's mobile_app registration, as it makes it (without encryption, so the test can update it).
-  const registration = await (await fetch(`${base}/api/mobile_app/registrations`, {
-    method: 'POST', headers: auth, body: JSON.stringify({
-      device_id: 'terrazzo-push-test', app_id: 'ee.schimke.harc', app_name: 'Terrazzo', app_version: '1.0',
-      device_name: 'Push test', manufacturer: 'Test', model: 'Phone', os_name: 'Android', os_version: '16',
-      supports_encryption: false, app_data: {push_websocket_channel: true},
-    }),
-  })).json();
+  // mobile_app answers 404 until default_config has loaded it.
+  let registered;
+  for (let i = 0; i < 60 && registered?.status !== 201; i++) {
+    if (i) await new Promise((resolve) => setTimeout(resolve, 1000));
+    registered = await fetch(`${base}/api/mobile_app/registrations`, {
+      method: 'POST', headers: auth, body: JSON.stringify({
+        device_id: 'terrazzo-push-test', app_id: 'ee.schimke.harc', app_name: 'Terrazzo', app_version: '1.0',
+        device_name: 'Push test', manufacturer: 'Test', model: 'Phone', os_name: 'Android', os_version: '16',
+        supports_encryption: false, app_data: {push_websocket_channel: true},
+      }),
+    });
+  }
+  assert.equal(registered.status, 201, 'mobile_app takes the registration');
+  const registration = await registered.json();
   const webhookId = registration.webhook_id;
   assert.ok(webhookId, 'mobile_app registered the device');
 
