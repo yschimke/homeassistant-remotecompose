@@ -71,7 +71,8 @@ the Large Wear widget frame (`wearFullScreenContainer`); a card that only fills 
 keeps it. The card fills the page between the time text and the edge button. Its layout is laid out
 at the frame's own size, then drawn bigger (`scaledFrame`, `fullScreenScale`): up to the width a round
 screen holds for a widget's shape (87 % of it, where the corners meet the circle) and the height it's
-given, from 0.75 to 1.6 times. The template stays the one the widget plays, so app and widget can't
+given, at most 1.6 times. It is never drawn smaller than its layout, which would shrink its touch
+targets: where it doesn't fit (a small round watch), it is laid out narrower instead, as in a list. The template stays the one the widget plays, so app and widget can't
 drift. Taps scale with the layer.
 
 From the full-screen card, the same gestures go one level deeper, to the card's **details**
