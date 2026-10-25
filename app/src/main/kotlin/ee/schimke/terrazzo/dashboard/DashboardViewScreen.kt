@@ -185,6 +185,7 @@ fun DashboardViewScreen(
   initialViewPath: String? = null,
   onOpenDashboard: (urlPath: String?, viewPath: String?) -> Boolean = { _, _ -> false },
   onInitialViewShown: () -> Unit = {},
+  connectionPending: Boolean = false,
 ) {
   val cache = LocalTerrazzoGraph.current.offlineCache
   // Seed from the session (demo mode's boards need no round trip) or
@@ -360,7 +361,10 @@ fun DashboardViewScreen(
     // Cards showing a relative time ("3 h ago") refresh on this tick, not only on new data.
     ee.schimke.ha.rc.LocalRelativeTimeTick provides ee.schimke.ha.rc.rememberRelativeTimeTick(),
   ) {
-    when (val s = state) {
+    // Keep an uncached connection error behind the same grace period as the status strip.
+    val visibleState =
+      if (connectionPending && state is DashboardState.Error) DashboardState.Loading else state
+    when (val s = visibleState) {
       DashboardState.Loading ->
         Box(
           Modifier.fillMaxSize()
