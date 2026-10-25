@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.1.66](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.65...v0.1.66) (2026-10-25)
+
+
+### Features
+
+* **app-ui:** ask the design server for each card's design by its exact key ([#1205](https://github.com/yschimke/homeassistant-remotecompose/issues/1205)) ([4f029f2](https://github.com/yschimke/homeassistant-remotecompose/commit/4f029f24d8fb57c9cc8a5d60ee714e917811f420))
+* **app-ui:** public Wasmo landing page and installable web app manifest ([#1215](https://github.com/yschimke/homeassistant-remotecompose/issues/1215)) ([263430f](https://github.com/yschimke/homeassistant-remotecompose/commit/263430f6ef255e539f9a712b5d5900afcdc170ae))
+* **app-ui:** resolve the exact tile design on the web with a shape hint ([#1210](https://github.com/yschimke/homeassistant-remotecompose/issues/1210)) ([68994b0](https://github.com/yschimke/homeassistant-remotecompose/commit/68994b0cfaab08253ab072d44bf432c8a6a2e712))
+* **app:** demos on the connect screen, Designs before Theme, dashboards in the menu ([#1219](https://github.com/yschimke/homeassistant-remotecompose/issues/1219)) ([c38ef31](https://github.com/yschimke/homeassistant-remotecompose/commit/c38ef31a5395c9a3dd6518c282fdd3c7335c314f))
+* **app:** launcher icon follows the card design; clear Play pre-launch warnings ([#1216](https://github.com/yschimke/homeassistant-remotecompose/issues/1216)) ([8979062](https://github.com/yschimke/homeassistant-remotecompose/commit/8979062364e94294d1aedf5d69c10022d6c33b5e))
+* **app:** ship the built-in card styles' designs, so the app draws with the server down ([#1212](https://github.com/yschimke/homeassistant-remotecompose/issues/1212)) ([421346c](https://github.com/yschimke/homeassistant-remotecompose/commit/421346c8831d4ce5fcaa0dcf93eef6f7c221607c))
+* **app:** start with Classic and Home Assistant card styles, install the rest ([#1209](https://github.com/yschimke/homeassistant-remotecompose/issues/1209)) ([80c4c90](https://github.com/yschimke/homeassistant-remotecompose/commit/80c4c90979bc9e690f7218ec20eae93594e16d2b))
+* card settings forms in the dashboard editor ([#1206](https://github.com/yschimke/homeassistant-remotecompose/issues/1206)) ([caaa4a3](https://github.com/yschimke/homeassistant-remotecompose/commit/caaa4a3eab1170d96d517c2f29e3fd6ed4c52cb9))
+* one-handed gestures and full-screen cards on Wear, lock-mode confirm for risky widgets ([#1222](https://github.com/yschimke/homeassistant-remotecompose/issues/1222)) ([69c06eb](https://github.com/yschimke/homeassistant-remotecompose/commit/69c06ebda3e22bbabccb632af9bdda9552b4680a))
+* **wear:** launcher icon follows the watch's card style ([#1220](https://github.com/yschimke/homeassistant-remotecompose/issues/1220)) ([6160c35](https://github.com/yschimke/homeassistant-remotecompose/commit/6160c35f52ff5272a166c8a2614b3f5323fae7a2))
+
+
+### Bug Fixes
+
+* ship native debug symbols in Play bundles; turn off Analytics ad-id collection ([#1213](https://github.com/yschimke/homeassistant-remotecompose/issues/1213)) ([c2d3a4a](https://github.com/yschimke/homeassistant-remotecompose/commit/c2d3a4a81d4d6321e40feaca5f0f6012845736eb))
+* **widget:** install the whole section, a row/column, or one cell ([#1211](https://github.com/yschimke/homeassistant-remotecompose/issues/1211)) ([7c20243](https://github.com/yschimke/homeassistant-remotecompose/commit/7c202437f8abb04b4dc7b4dcb574227f6ace2713))
+
+
+### Performance Improvements
+
+* **card-designs:** draw the library's previews in one worker process per core ([#1223](https://github.com/yschimke/homeassistant-remotecompose/issues/1223)) ([0e0ee03](https://github.com/yschimke/homeassistant-remotecompose/commit/0e0ee03a61ad7864eaddca859c20396defc4f028))
+
 ## [0.1.65](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.64...v0.1.65) (2026-10-25)
 
 
