@@ -128,7 +128,7 @@ class MainActivity : ComponentActivity() {
         LocalHaImageStack provides imageStack,
       ) {
         val themePref by
-          graph.preferencesStore.themeStyle.collectAsState(initial = ThemePref.TerrazzoHome)
+          graph.preferencesStore.themeStyle.collectAsState(initial = ThemePref.Material3)
         val darkPref by
           graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
         val cardStylePref by

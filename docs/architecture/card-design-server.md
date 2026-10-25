@@ -55,7 +55,14 @@ sensor, history-graph, statistic, line statistics-graph, thermostat, humidifier,
 conditional and entity-filter cards, markdown, picture, picture-glance, logbook, calendar,
 to-do list, weather forecast, light, media control, map, picture-elements, bar statistics graphs, the Bambu Lab cards and the
 unsupported placeholder) — every built-in card type renders from a card design. The design comes from the server when one is
-cached for the card's key; the app ships no designs and captures none of its own. A key the
+cached for the card's key, and the app captures none of its own. It ships one set: Classic in
+the Material 3 palette and the Home Assistant card style, its built-in styles (`CardStyles`),
+generated at build time by `:card-designs:generateBuiltInCardDesigns` (the same JVM capture as the
+library, so each file is the one the server serves for its key). A cache with no manifest yet is
+seeded from them (`BuiltInCardDesigns`, `BundledDesigns.seed`), so the app draws those styles with
+the server down, unreachable or turned off; the sync on every start replaces them once a server
+answers (the bundle's serial is 0 and already expired). Other styles are installed in Settings,
+which downloads their designs. A key the
 synced manifest lacks is fetched from the server by key (`CardDesignGeneration`:
 `POST /designs/v1/generate`, which sends only the key) and kept beside the manifest's designs,
 until the next manifest replaces them; the server captures it if its library lacks it. Until a

@@ -115,9 +115,10 @@ data class CardDesignChoice(
 
 /**
  * Designs from the card design server, cached on disk by [CardDesignSync], keyed by [DesignKey],
- * and the variant to prefer. Empty while no server is configured. The app ships no designs of its
- * own: a key the cache lacks is fetched from the server by key ([CardDesignGeneration]), and its
- * card draws through its converter meanwhile. See [cardTemplateFor].
+ * and the variant to prefer. The cache starts with the designs the app ships for its built-in card
+ * styles ([BuiltInCardDesigns]) until a server's library replaces them; a key the cache lacks is
+ * fetched from the server by key ([CardDesignGeneration]), and its card draws through its converter
+ * meanwhile. See [cardTemplateFor].
  */
 data class CardDesigns(
   val byKey: Map<DesignKey, ByteArray> = emptyMap(),
@@ -142,14 +143,16 @@ data class CardDesigns(
 val LocalCardDesigns = staticCompositionLocalOf { CardDesigns() }
 
 /**
- * The server designs cached on disk for [choice]. With no server this is empty and does no work. It
- * never touches the network: [CardDesignSync] fills the cache.
+ * The designs cached on disk for [choice]. It never touches the network: [CardDesignSync] fills the
+ * cache from the server, and a cache with nothing in it yet (a new install, a server that has never
+ * answered, or none configured) is first seeded with the designs the app ships for its built-in
+ * card styles ([BuiltInCardDesigns]), so those draw whatever the server's state.
  */
 suspend fun loadCardDesigns(context: Context, choice: CardDesignChoice): CardDesigns {
-  if (!choice.enabled) return CardDesigns(variant = choice.variant)
   val resolved =
     withContext(Dispatchers.IO) {
       val dir = CardDesignSync.storeDir(context, choice.serverUrl)
+      BuiltInCardDesigns.seed(context, dir)
       CardDesignSnapshot.read(dir, choice.prefer, choice.designIds)
         ?: run {
           val stamp = CardDesignSnapshot.manifestStamp(dir)

@@ -130,9 +130,10 @@ class TerrazzoApplication : Application() {
             false,
           ),
     )
-    // Card designs come only from the design server (CardDesignSync, CardDesignGeneration): the app
-    // ships none and captures none of its own. The local store earlier builds kept captures in
-    // goes, with what it held.
+    // Card designs come from the design server (CardDesignSync, CardDesignGeneration), seeded with
+    // the built-in card styles' designs the app ships (BuiltInCardDesigns); the app captures none
+    // of
+    // its own. The local store earlier builds kept captures in goes, with what it held.
     (ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO).launch {
       FileLocalDesignStore.of(applicationContext).clear()
     }
