@@ -11,6 +11,7 @@ import androidx.wear.remote.interactions.RemoteActivityHelper
 import ee.schimke.ha.client.HaPushNotification
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.encodeHaAction
+import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.widget.WidgetActionReceiver
 import ee.schimke.terrazzo.widget.WidgetActionRunner
 import ee.schimke.terrazzo.widget.WidgetOpenRequests
@@ -52,7 +53,8 @@ class HaNotificationActionReceiver : BroadcastReceiver() {
     val pending = goAsync()
     scope.launch {
       try {
-        WidgetActionRunner.runFor(context, baseUrl, action)
+        if (DemoData.isDemo(baseUrl)) runDemoCardAction(context, baseUrl, action)
+        else WidgetActionRunner.runFor(context, baseUrl, action)
       } catch (failure: Exception) {
         Log.w(TAG, "Notification card action failed", failure)
       } finally {
@@ -61,12 +63,46 @@ class HaNotificationActionReceiver : BroadcastReceiver() {
     }
   }
 
+  /**
+   * The offline demo has no Home Assistant: an on/off tap flips the demo entity (the same router
+   * the demo dashboard uses) and the test notification's card is redrawn from the new state.
+   */
+  private suspend fun runDemoCardAction(context: Context, baseUrl: String, action: HaAction) {
+    val entityId =
+      when (action) {
+        is HaAction.Toggle -> action.entityId
+        is HaAction.CallService -> action.entityId
+        else -> null
+      } ?: return
+    val current = DemoData.snapshot().states[entityId]?.state ?: return
+    val wanted =
+      when ((action as? HaAction.CallService)?.service) {
+        "turn_on" -> "on"
+        "turn_off" -> "off"
+        else -> null
+      }
+    if (wanted == null || wanted != current) DemoData.actionRouter.applyToggle(entityId, current)
+    val message = TestNotification.message(entityId)
+    if (!HaNotifications.isShowing(context, message)) return
+    val card = NotificationCards.capture(context, baseUrl, entityId, DemoData.snapshot())
+    HaNotifications.handle(
+      context,
+      baseUrl,
+      message,
+      TestNotification.watchHasApp(context),
+      card,
+      refresh = true,
+    )
+  }
+
   private fun fireHaAction(context: Context, intent: Intent) {
     val baseUrl = intent.getStringExtra(EXTRA_BASE_URL) ?: return
     val action = intent.getStringExtra(EXTRA_ACTION) ?: return
     val tag = intent.getStringExtra(EXTRA_TAG)
     NotificationManagerCompat.from(context)
       .cancel(NOTIFICATION_TAG, intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0))
+    // The offline demo has no Home Assistant to tell; the tap only dismisses.
+    if (DemoData.isDemo(baseUrl)) return
     val data = buildJsonObject {
       put("action", action)
       tag?.let { put("tag", it) }

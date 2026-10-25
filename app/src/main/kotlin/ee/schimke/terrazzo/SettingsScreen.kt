@@ -85,6 +85,7 @@ import ee.schimke.terrazzo.dashboard.CardStyleStore
 import ee.schimke.terrazzo.dashboard.CardStyleWearPanes
 import ee.schimke.terrazzo.dashboard.CardStyles
 import ee.schimke.terrazzo.notify.HaNotifications
+import ee.schimke.terrazzo.notify.TestNotification
 import ee.schimke.terrazzo.shared.ReportFeedbackButton
 import ee.schimke.terrazzo.ui.appThemeOrNull
 import ee.schimke.terrazzo.ui.toUberTheme
@@ -175,7 +176,7 @@ internal fun SettingsScreen(
             }
           }
         }
-        if (!isDemo) HaNotificationsSetting()
+        HaNotificationsSetting(session)
         OutlinedButton(onClick = onSignOut) { Text(if (isDemo) "Exit demo" else "Sign out") }
       }
 
@@ -477,10 +478,13 @@ private fun SettingRow(
  * Whether Home Assistant's `notify.mobile_app_<device>` messages post as notifications: on is the
  * system's POST_NOTIFICATIONS grant, asked for here and nowhere else, so nothing posts before the
  * user allows it. Turning it off goes to the app's notification settings, where Android keeps it.
+ * Once allowed, a test notification shows what HA's look like ([TestNotification]); the public demo
+ * server is read-only and shared, so it can't send one.
  */
 @Composable
-private fun HaNotificationsSetting() {
+private fun HaNotificationsSetting(session: HaSession) {
   val context = LocalContext.current
+  val scope = rememberCoroutineScope()
   var allowed by remember { mutableStateOf(HaNotifications.allowed(context)) }
   // Back from the system settings, or the permission dialog: read the grant again.
   LifecycleResumeEffect(Unit) {
@@ -505,6 +509,11 @@ private fun HaNotificationsSetting() {
         Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
           .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
       )
+    }
+  }
+  if (allowed) {
+    TextButton(onClick = { scope.launch { TestNotification.send(context, session) } }) {
+      Text("Send a test notification")
     }
   }
 }

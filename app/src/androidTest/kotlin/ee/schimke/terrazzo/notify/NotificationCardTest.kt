@@ -14,6 +14,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import ee.schimke.ha.client.HaPushNotification
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.terrazzo.core.session.DemoData
+import ee.schimke.terrazzo.core.session.DemoHaSession
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -123,6 +124,25 @@ class NotificationCardTest {
         nm.activeNotifications.none { it.id == HaNotifications.idOf(message) }.takeIf { it }
       } == true,
     )
+  }
+
+  @Test
+  fun theDemoSendsATestNotificationWithALiveCard() {
+    instrumentation.uiAutomation.grantRuntimePermission(
+      context.packageName,
+      Manifest.permission.POST_NOTIFICATIONS,
+    )
+    assertTrue(runBlocking { TestNotification.send(context, DemoHaSession()) })
+    val nm = context.getSystemService(NotificationManager::class.java)
+    val posted = eventually {
+      nm.activeNotifications.firstOrNull {
+        it.id == HaNotifications.idOf(TestNotification.message(null))
+      }
+    }
+    assertNotNull("the test notification wasn't posted", posted)
+    assertNotNull("no card body", posted!!.notification.bigContentView)
+    assertEquals(listOf("Got it"), posted.notification.actions.map { it.title.toString() })
+    nm.cancelAll()
   }
 
   /** [check]'s first non-null result within five seconds, else null. */

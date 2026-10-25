@@ -28,6 +28,14 @@ import kotlinx.coroutines.launch
 object HaPushReceiver {
   private const val TAG = "HaPushReceiver"
 
+  /** Messages showing a card, by dedupe key, and the entity state each card was drawn from. */
+  private val cards = ConcurrentHashMap<String, Pair<HaPushNotification, EntityState?>>()
+
+  /** Keeps [notification]'s card (drawn from [drawn]) following its entity while it shows. */
+  fun track(notification: HaPushNotification, drawn: EntityState?) {
+    if (notification.entityId != null) cards[notification.dedupeKey] = notification to drawn
+  }
+
   /** Runs for [session]'s lifetime; returns at once for the demo or an unregistered server. */
   suspend fun run(context: Context, graph: TerrazzoGraph, session: HaSession) {
     if (DemoData.isDemo(session.baseUrl)) return
@@ -38,8 +46,6 @@ object HaPushReceiver {
         app.wearAppInstallHelper.watches
           .map { watches -> watches.any { it.appInstalled } }
           .stateIn(this, SharingStarted.Eagerly, false)
-      // Messages showing a card, by dedupe key, and the entity state each card was drawn from.
-      val cards = ConcurrentHashMap<String, Pair<HaPushNotification, EntityState?>>()
       launch {
         session.liveStates.filterNotNull().collect { snapshot ->
           for ((key, entry) in cards.entries.toList()) {
@@ -74,8 +80,7 @@ object HaPushReceiver {
         val card = notification.entityId?.let { NotificationCards.render(context, session, it) }
         HaNotifications.handle(context, session.baseUrl, notification, watchHasApp.value, card)
         if (card != null && !notification.isClear) {
-          cards[notification.dedupeKey] =
-            notification to session.liveStates.value?.states?.get(notification.entityId)
+          track(notification, session.liveStates.value?.states?.get(notification.entityId))
         } else {
           cards.remove(notification.dedupeKey)
         }
