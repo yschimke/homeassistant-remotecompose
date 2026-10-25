@@ -112,25 +112,26 @@ object CardResolve {
   private val OBSERVABLE_SHAPE_KEYS = setOf("device_class", "unit", "icon", "card_icon")
 
   /**
-   * Narrow [designs] to the shape [hint] names. A design agrees when every observable property its
-   * shape declares equals the hint's; among the agreeing designs the most specific win (the most
-   * observable properties), so a card that carries a unit beats one that doesn't. Returns [designs]
-   * unchanged when there is no hint or nothing agrees, so the shapeless web path (and any hint that
-   * fits no library shape) keeps the previous "first of the fitting shapes" behaviour.
+   * Narrow [designs] to the shape the [hint] names. The hint lists every observable property the
+   * card has, so a design matches only when its shape accounts for all of them: each observable
+   * property equals the hint's, and the design declares no observable property the hint lacks. A
+   * hint property no design carries — a custom icon the library was never built for — means the
+   * card's true shape isn't in the library, so it must stay inexact and fall back rather than
+   * borrow a design that drops the property and shows the wrong icon. Returns [designs] unchanged
+   * when there is no hint or nothing matches, keeping the previous "first of the fitting shapes"
+   * behaviour for the shapeless path.
    */
   internal fun narrowByShapeHint(
     designs: List<LibraryDesign>,
     hint: Map<String, String>,
   ): List<LibraryDesign> {
     if (hint.isEmpty()) return designs
-    fun observable(design: LibraryDesign): Map<String, String> {
+    val wanted = hint.filterKeys { it in OBSERVABLE_SHAPE_KEYS }
+    val matching = designs.filter { design ->
       val props = DesignProperties.parse(design.key.shape)
-      return OBSERVABLE_SHAPE_KEYS.mapNotNull { k -> props[k]?.let { k to it } }.toMap()
+      OBSERVABLE_SHAPE_KEYS.all { k -> props[k] == wanted[k] }
     }
-    val agreeing = designs.filter { observable(it).all { (k, v) -> hint[k] == v } }
-    if (agreeing.isEmpty()) return designs
-    val bestCount = agreeing.maxOf { observable(it).size }
-    return agreeing.filter { observable(it).size == bestCount }
+    return if (matching.isEmpty()) designs else matching
   }
 
   /**
