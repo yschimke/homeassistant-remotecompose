@@ -25,6 +25,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -94,6 +95,17 @@ class DesignGeneratorTest {
         setBody(json.encodeToString(DesignKey.serializer(), kitchenKey))
       }
     assertEquals(design, json.decodeFromString(GeneratedDesign.serializer(), again.bodyAsText()))
+  }
+
+  @Test
+  fun aBlobTwoKeysShareOutlivesEvictingOne(): Unit = runBlocking {
+    // Keys that differ only in a variant the template doesn't draw capture the same bytes; with
+    // room for one key, evicting the first must leave the blob the second still serves.
+    val generator = DesignGenerator(LibraryHolder(libraryDir()), maxGenerated = 1)
+    val first = generator.design(kitchenKey)
+    val second = generator.design(kitchenKey.copy(variant = "undrawn"))
+    assertEquals(first.sha256, second.sha256)
+    assertNotNull(generator.blob(second.sha256))
   }
 
   @Test
