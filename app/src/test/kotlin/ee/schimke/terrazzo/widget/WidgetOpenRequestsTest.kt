@@ -30,6 +30,14 @@ class WidgetOpenRequestsTest {
   }
 
   @Test
+  fun widgetTapsTargetMainActivityNotALauncherAlias() {
+    // A widget's PendingIntent outlives a launcher-icon switch, which disables the alias the
+    // package's launch intent would have named.
+    val intent = WidgetOpenRequests.launchIntent(context, HaAction.MoreInfo("light.kitchen"))
+    assertEquals("ee.schimke.terrazzo.MainActivity", intent?.component?.className)
+  }
+
+  @Test
   fun aMoreInfoTapOpensTheEntity() {
     val intent = launchIntentFor(HaAction.MoreInfo("light.kitchen"))
     assertEquals(
