@@ -89,4 +89,33 @@ class WeatherDesignPropertiesTest {
       )
     }
   }
+
+  @Test
+  fun showingTheCurrentWeatherKeysTheSameDesign_hidingItHasNone() {
+    val snapshot = snapshot("sunny", "rainy")
+    fun with(show: Boolean) =
+      CardConfig(card.type, JsonObject(card.raw + ("show_current" to JsonPrimitive(show))))
+    assertEquals(
+      converter.designProperties(card, snapshot),
+      converter.designProperties(with(true), snapshot),
+    )
+    kotlin.test.assertNull(converter.designProperties(with(false), snapshot))
+  }
+
+  @Test
+  fun aMapsAspectRatioKeysTheSameDesign() {
+    val map = MapCardConverter()
+    val people = HaSnapshot(states = mapOf("person.yuri" to EntityState("person.yuri", "home")))
+    fun config(vararg extra: Pair<String, String>) =
+      CardConfig(
+        "map",
+        buildJsonObject {
+          put("type", "map")
+          put("entities", buildJsonArray { add(JsonPrimitive("person.yuri")) })
+          for ((k, v) in extra) put(k, v)
+        },
+      )
+    val plain = assertNotNull(map.designProperties(config(), people))
+    assertEquals(plain, map.designProperties(config("aspect_ratio" to "16:9"), people))
+  }
 }

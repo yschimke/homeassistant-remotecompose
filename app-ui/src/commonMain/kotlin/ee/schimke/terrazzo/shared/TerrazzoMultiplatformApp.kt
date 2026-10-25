@@ -888,6 +888,10 @@ private fun LiveDashboard(
       error = "Could not open Home Assistant entity details."
     }
   }
+  // History graphs draw from the recorder's history: the dashboard waits for its first answer, so
+  // each graph arrives with its line rather than an empty state that fills in.
+  val history = rememberDashboardHistory(connection.client, dashboard)
+  val shown = remember(snapshot, history) { withHistory(snapshot, history.orEmpty()) }
   val editing = designCard
   if (editing != null) {
     CardStudioScreen(
@@ -896,7 +900,7 @@ private fun LiveDashboard(
       onBack = { designCard = null },
       initialServerUrl = designServer,
     ) {
-      NativeCard(editing, snapshot) {}
+      NativeCard(editing, shown) {}
     }
     return
   }
@@ -905,15 +909,15 @@ private fun LiveDashboard(
     (error ?: connectionError)?.let {
       Text(it, Modifier.padding(16.dp), color = MaterialTheme.colorScheme.error)
     }
-    if (current == null) {
+    if (current == null || history == null) {
       if (error == null) CircularProgressIndicator(Modifier.padding(24.dp))
     } else
       Column(Modifier.weight(1f)) {
-        DashboardContent(current, path, snapshot, Modifier.weight(1f)) { _, card ->
+        DashboardContent(current, path, shown, Modifier.weight(1f)) { _, card ->
           Column {
             AuthenticatedCard(
               card,
-              snapshot,
+              shown,
               connection.client,
               designCache,
               pictureCache,

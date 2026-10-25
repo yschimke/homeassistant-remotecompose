@@ -80,7 +80,8 @@ class MapCardConverter : DesignedCardConverter() {
    */
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
     if (
-      !setOf("type", "title", "entities", "default_zoom", "hours_to_show")
+      // `aspect_ratio` sizes HA's map tiles; this card draws a flat chrome either way.
+      !setOf("type", "title", "entities", "default_zoom", "hours_to_show", "aspect_ratio")
         .containsAll(card.raw.keys)
     )
       return null
