@@ -1,9 +1,10 @@
 # Terrazzo on Wasmo as a cloud service (plan)
 
-> Status: **staged implementation.** Web stages add detection, local/cloud `AppStorage`,
-> atomic usage-settings migration and sync status. The shared server settings stage is in review.
-> HA sign-in remains in the browser; server-held sessions and public publishing are later stages.
-> Nothing is deployed. See [wasmo-app.md](wasmo-app.md).
+> Status: **staged implementation.** Cloud usage settings are merged. This review stage adds
+> encrypted per-install HA sessions and browser integration for owner-supplied **public HTTPS** HA
+> origins. Public cards are explicitly deferred: `publish` stays false and no public HA data is
+> written. Wasmo is already running; this session has not deployed or activated these changes.
+> See [wasmo-app.md](wasmo-app.md).
 
 ## Implementation amendment: shared services
 
@@ -35,9 +36,43 @@ initial values only into an empty install, avoiding partial uploads and first-de
 4. Only after **separate deployment authorization**, release an opt-in server build and install a
    matching web archive. Enable the operator's supported install names with `WASMO_SERVICE_APPS`.
    The archive stays the same one used for static sites; an absent backend keeps browser storage.
-5. Review session custody, embed snapshots and explicit publishing independently. HA destination
-   policy, encrypted-key lifecycle and public fields are still decisions; no credential transfer
-   or publication is enabled by the settings stages.
+5. Review the optional session custody stage and matching browser integration. Enable it only after
+   separately authorized key provisioning and consistent backup/restore verification. Public
+   snapshots, publishing and background refresh are deferred; expose no public card data.
+
+### HA session amendment (current implementation)
+
+The authoritative private session protocol and operator key lifecycle are in
+[Wasmo HA-SESSIONS.md](https://github.com/yschimke/wasmo/blob/deploy/apps/services/HA-SESSIONS.md).
+They supersede the original HA endpoint shapes and secret-key proposal below. Services remain
+shared across supported apps; the initial operator list is `terrazzo`. `haSession` is enabled only
+when Wasmo has a configured key ring and a bounded public HTTPS service.
+
+Cloud startup loads metadata and validates the server session before composing the signed-in UI.
+Browser OAuth retains its pending nonce/callback guard, then transfers the refresh token through
+the same-origin owner API. The server verifies it with HA and stores encrypted credentials outside
+KV. It returns metadata and short-lived access tokens only. A second owner device needs its Wasmo
+session, but no separate HA sign-in. The browser still connects directly to HA for live WebSocket
+state; it needs network access to the public HA origin.
+
+Legacy browser tokens are imported once, only into a never-initialized session slot. After server
+acknowledgement, matching legacy storage is removed; an import conflict reads the authoritative
+server session instead. An invalid grant is discarded after a successful metadata read. Network
+errors preserve legacy data and show a startup retry screen, never a local-auth fallback after
+`haSession` was detected. An unsupported legacy origin can require reconnecting with a public HTTPS
+origin; the retry screen offers an explicit way to skip this tab’s legacy import without deleting
+a credential that was not saved. Concurrent browser writes are preserved until the next restore. Static deployments keep the
+existing OAuth/localStorage path; the HA panel and demo do not use these endpoints.
+
+Sign-out waits for server revocation and removal before disconnecting the UI. Failure keeps the
+session visible with an error dialog and lets the owner retry. Generation checks reject stale device
+refresh/sign-out requests, and a server tombstone prevents another device's legacy tokens from
+restoring a signed-out session. Already-issued access tokens are revoked by HA on successful
+sign-out. Replacing a sign-in forgets the previous grant; older grants can be revoked in HA's profile.
+
+The public HTTPS client rejects private/reserved addresses at connection-time DNS resolution,
+checks literals too, disables redirects/proxies, bounds response size and enforces call deadlines.
+No private/LAN HA destinations, public entity states, snapshots or publishing are enabled here.
 
 ### Remaining settings semantics
 
@@ -71,7 +106,10 @@ and stops its own fixture processes, checks anonymous rejection, migration, writ
 second-device preferences, failed-write recovery, fail-closed startup and static persistence, and
 writes screenshots under `_wasm-test/`. `WASMO_BEFORE_DIST` optionally points to a baseline build
 for the before screenshot. These fixtures do not exercise the real Wasmo owner-cookie service or
-prove server-held HA sign-in; those remain separate validation/stages.
+prove a real Wasmo/HA sign-in. `--cloud-session` adds fake private custody for the browser suite:
+it verifies legacy auth migration, a second device without browser tokens, failed/successful
+sign-out, startup retry UI and anonymous denial. The server tests independently verify encryption,
+refresh/revocation and SQL locking; a live owner-cookie/HA flow remains a deployment gate.
 
 ### Public renderer security boundary
 
