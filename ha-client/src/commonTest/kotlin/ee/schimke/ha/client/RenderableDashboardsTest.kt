@@ -27,7 +27,7 @@ class RenderableDashboardsTest {
         when (path) {
           null,
           "generated-home" -> config("""{"strategy":{"type":"home"}}""")
-          "admin-only" -> error("forbidden")
+          "admin-only" -> throw HaCommandException("lovelace/config", "unauthorized", "forbidden")
           else -> config("""{"views":[{"title":"Lights","cards":[]}]}""")
         }
       }
@@ -43,7 +43,38 @@ class RenderableDashboardsTest {
     )
     val named = listOf(DashboardSummary("lovelace", "Overview"))
     assertEquals(named, resolveRenderableDashboards(named) { explicit })
-    assertTrue(resolveRenderableDashboards(emptyList()) { error("config_not_found") }.isEmpty())
+    assertTrue(
+      resolveRenderableDashboards(emptyList()) {
+          throw HaCommandException("lovelace/config", "config_not_found", "missing")
+        }
+        .isEmpty()
+    )
+  }
+
+  @Test
+  fun transportFailureAbortsBothEmptyAndPartiallyResolvedLists() = runTest {
+    val named = listOf(DashboardSummary("climate", "Climate"), DashboardSummary("office", "Office"))
+    for (failedPath in listOf(null, "office")) {
+      val probed = mutableListOf<String?>()
+      val failure = CommandNotSentException("socket disconnected during config probing")
+      val thrown =
+        assertFailsWith<CommandNotSentException> {
+          resolveRenderableDashboards(named) { path ->
+            probed += path
+            if (path == failedPath) throw failure
+            config("""{"views":[]}""")
+          }
+        }
+      assertTrue(thrown === failure)
+      assertEquals(failedPath, probed.last())
+    }
+  }
+
+  @Test
+  fun unexpectedConfigReadFailuresAreNotSilentlyClassifiedAsUnsupported() = runTest {
+    assertFailsWith<IllegalStateException> {
+      resolveRenderableDashboards(emptyList()) { error("WebSocket read failed") }
+    }
   }
 
   @Test

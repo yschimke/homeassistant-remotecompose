@@ -52,8 +52,15 @@ async function settings(page, url) {
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   await until(async () => {
     if (await page.$('pierce/[role="switch"]')) return true;
-    // Cold Wasm composition may expose semantics before the canvas receives pointer handlers.
-    await page.mouse.click(210, 772);
+    // Settings is the header's gear button. Cold Wasm composition may expose semantics before the
+    // canvas receives pointer handlers, so keep clicking until the screen opens.
+    for (const element of await page.$$('pierce/[role="button"]')) {
+      const name = await element.evaluate(el => (el.getAttribute('aria-label') || el.textContent).trim());
+      if (name !== 'Settings') continue;
+      const box = await element.boundingBox();
+      if (box) await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+      break;
+    }
     return false;
   }, 'Settings screen did not open');
 }

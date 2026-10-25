@@ -25,8 +25,8 @@ import ee.schimke.ha.client.DashboardSummary
 
 /**
  * Top-app-bar title slot for the dashboard view. Renders the active dashboard's name and, when
- * there are 2+ dashboards, a chevron that opens a [DropdownMenu] with the other dashboards as 1-tap
- * switch targets.
+ * there are 2+ dashboards (or the open one is no longer among them), a chevron that opens a
+ * [DropdownMenu] with the other dashboards as 1-tap switch targets.
  *
  * This is the chrome the persona-2 (2–3 favourites) user pays per switch: 2 taps total — chevron +
  * favourite. Persona 1 (single dashboard) sees plain text, no chevron, no dropdown — chrome scales
@@ -44,6 +44,7 @@ fun DashboardSwitcher(
 ) {
   val current = dashboards.firstOrNull { it.urlPath == currentUrlPath }
   val title = current?.title ?: "Dashboard"
+  // Keep an escape route when the current dashboard is missing and only one alternative remains.
   val canSwitch = dashboards.any { it.urlPath != currentUrlPath }
 
   if (!canSwitch) {
