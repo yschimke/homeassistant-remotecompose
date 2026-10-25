@@ -546,8 +546,7 @@ private fun DashboardsRoot(
     editorOpen = false
     if (opened == DASHBOARD_UNSET) readyDashboards.firstOrNull()?.let { opened = it.urlPath }
   }
-  val sessionConnection by session.connectionStatus.collectAsState()
-  val connectionStatus = sessionConnection.toUiConnectionStatus()
+  val connectionStatus = rememberMobileConnectionStatus(session)
   val snackbars = remember { SnackbarHostState() }
   // Offers the watch app on a connected watch without it.
   val installOnWatch = wearInstallPrompts(snackbars)
@@ -756,7 +755,13 @@ private fun DashboardsRoot(
     ) { padding ->
       if (openedValue == DASHBOARD_UNSET) {
         DashboardPickerScreen(
-          state = dashboards,
+          state =
+            if (
+              connectionStatus == ConnectionStatus.Connecting &&
+                dashboards is DashboardListState.Error
+            )
+              DashboardListState.Loading
+            else dashboards,
           onDashboardPicked = { urlPath ->
             opened = urlPath
             openedView = null
@@ -782,6 +787,7 @@ private fun DashboardsRoot(
             session = session,
             urlPath = openedValue,
             readOnly = readOnly,
+            connectionPending = connectionStatus == ConnectionStatus.Connecting,
             // Long-press opens the card's actions, handed the live
             // snapshot the card was pressed against so a fork or the
             // history preview matches the dashboard frame.
@@ -863,21 +869,6 @@ private const val DASHBOARD_UNSET = "__none__"
 /** Home Assistant refused the stored refresh token; shown on the sign-in screen. */
 private class SignedOutException :
   IllegalStateException("Home Assistant signed this device out. Sign in again.")
-
-enum class ConnectionStatus(val label: String) {
-  Failed("Failed"),
-  Connecting("Connecting"),
-  Connected("Connected"),
-  Disconnected("Paused"),
-}
-
-private fun SessionConnectionStatus.toUiConnectionStatus(): ConnectionStatus =
-  when (this) {
-    SessionConnectionStatus.Failed -> ConnectionStatus.Failed
-    SessionConnectionStatus.Connecting -> ConnectionStatus.Connecting
-    SessionConnectionStatus.Connected -> ConnectionStatus.Connected
-    SessionConnectionStatus.Disconnected -> ConnectionStatus.Disconnected
-  }
 
 private fun SessionConnectionStatus.toLogStatus():
   ee.schimke.terrazzo.core.logs.LogConnectionStatus =
