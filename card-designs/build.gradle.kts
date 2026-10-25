@@ -9,10 +9,15 @@ plugins {
 // Generates the card design library the design server hosts: every template shape the bundled demo
 // dashboards produce, for each theme, with preview renders and a browsable catalog
 // (CardDesignLibrary), in either of two ways:
-// - `generateCardDesigns`, on Android: a Robolectric test capturing with AndroidX, as the app does,
-//   into `build/card-designs/` (`-PcardDesignsOut=<dir>`);
-// - `generateCardDesignsJvm`, on the JVM with no Android: the Compose Multiplatform creation fork
-//   and player, into `build/card-designs-jvm/` (`-PcardDesignsJvmOut=<dir>`).
+// - `generateCardDesigns`, on the JVM with no Android: the Compose Multiplatform creation fork and
+//   player, into `build/card-designs/` (`-PcardDesignsOut=<dir>`). This is the library the design
+//   server publishes, captured as it captures a key its library lacks (DesignGenerator);
+// - `generateCardDesignsAndroid`, on Android: a Robolectric test capturing with AndroidX, as the
+//   app does, into `build/card-designs-android/` (`-PcardDesignsAndroidOut=<dir>`), to check the
+//   JVM's against (`checkCardDesignParity`).
+// JvmLibraryAndroidPlaybackTest plays a sample of the published library in the app's own player:
+// `./gradlew :card-designs:generateCardDesigns` then
+// `./gradlew :card-designs:testAndroidHostTest --tests '*JvmLibraryAndroidPlaybackTest'`.
 // See docs/architecture/card-design-server.md.
 kotlin {
   jvmToolchain(libs.versions.java.get().toInt())
@@ -103,14 +108,15 @@ val prepareRobolectricSdk by
     into(layout.buildDirectory.dir("robolectric-sdk"))
   }
 
+// The published library, generated on the JVM.
 val cardDesignsOut: File =
   providers.gradleProperty("cardDesignsOut").orNull?.let { file(it) }
     ?: layout.buildDirectory.dir("card-designs").get().asFile
 
-// The JVM's library, apart from Android's so the two can be compared (CardDesignLibraryParity).
-val cardDesignsJvmOut: File =
-  providers.gradleProperty("cardDesignsJvmOut").orNull?.let { file(it) }
-    ?: layout.buildDirectory.dir("card-designs-jvm").get().asFile
+// Android's library, apart from the JVM's so the two can be compared (CardDesignLibraryParity).
+val cardDesignsAndroidOut: File =
+  providers.gradleProperty("cardDesignsAndroidOut").orNull?.let { file(it) }
+    ?: layout.buildDirectory.dir("card-designs-android").get().asFile
 
 tasks
   .withType<Test>()
@@ -126,28 +132,33 @@ tasks
       "robolectric.dependency.dir",
       layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
     )
-    systemProperty("cardDesignsOut", cardDesignsOut.absolutePath)
-    outputs.dir(cardDesignsOut)
+    systemProperty("cardDesignsAndroidOut", cardDesignsAndroidOut.absolutePath)
+    outputs.dir(cardDesignsAndroidOut)
+    // The published library JvmLibraryAndroidPlaybackTest plays, when it has been generated.
+    systemProperty("cardDesignsJvmDir", cardDesignsOut.absolutePath)
+    inputs.files(fileTree(cardDesignsOut) { include("manifest.json") }).optional()
+    mustRunAfter("generateCardDesigns")
     maxHeapSize = "2g"
   }
 
-tasks.register("generateCardDesigns") {
+tasks.register("generateCardDesignsAndroid") {
   group = "card designs"
-  description = "Generates the card design library into $cardDesignsOut, on Android (Robolectric)."
+  description =
+    "Generates the card design library into $cardDesignsAndroidOut, on Android (Robolectric)."
   dependsOn("testAndroidHostTest")
 }
 
-tasks.register<JavaExec>("generateCardDesignsJvm") {
+tasks.register<JavaExec>("generateCardDesigns") {
   group = "card designs"
-  description = "Generates the card design library into $cardDesignsJvmOut, on the JVM."
+  description = "Generates the card design library into $cardDesignsOut, on the JVM."
   val main = kotlin.jvm().compilations.getByName("main")
   classpath(main.output.allOutputs, main.runtimeDependencyFiles)
   mainClass.set("ee.schimke.ha.designs.JvmCardDesignLibraryKt")
   // CheckedInCardDesigns reads ui-builder/designs relative to the module.
   workingDir = layout.projectDirectory.asFile
   inputs.dir(layout.projectDirectory.dir("ui-builder/designs"))
-  outputs.dir(cardDesignsJvmOut)
-  args(cardDesignsJvmOut.absolutePath)
+  outputs.dir(cardDesignsOut)
+  args(cardDesignsOut.absolutePath)
   maxHeapSize = "2g"
 }
 
@@ -156,13 +167,13 @@ tasks.register<JavaExec>("generateCardDesignsJvm") {
 tasks.register<JavaExec>("checkCardDesignParity") {
   group = "card designs"
   description = "Checks the Android and JVM card design libraries draw the same."
-  dependsOn("generateCardDesigns", "generateCardDesignsJvm")
+  dependsOn("generateCardDesignsAndroid", "generateCardDesigns")
   val main = kotlin.jvm().compilations.getByName("main")
   classpath(main.output.allOutputs, main.runtimeDependencyFiles)
   mainClass.set("ee.schimke.ha.designs.CardDesignLibraryParityKt")
   args(
+    cardDesignsAndroidOut.absolutePath,
     cardDesignsOut.absolutePath,
-    cardDesignsJvmOut.absolutePath,
     layout.buildDirectory.dir("card-design-parity").get().asFile.absolutePath,
   )
   maxHeapSize = "2g"

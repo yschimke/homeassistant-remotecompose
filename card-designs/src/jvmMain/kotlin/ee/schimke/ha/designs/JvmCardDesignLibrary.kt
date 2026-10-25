@@ -25,7 +25,7 @@ import org.jetbrains.skia.EncodedImageFormat
 /**
  * Generates the card design library on the JVM, with no Android: captured with the Compose
  * Multiplatform creation fork under the app's operations ([LibraryCaptureProfile]), its previews
- * drawn by the Compose Multiplatform player. `./gradlew :card-designs:generateCardDesignsJvm`.
+ * drawn by the Compose Multiplatform player. `./gradlew :card-designs:generateCardDesigns`.
  */
 fun main(args: Array<String>) {
   val target =
