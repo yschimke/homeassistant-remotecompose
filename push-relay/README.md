@@ -14,11 +14,32 @@ wakes for one registration.
 
 ## Deploy
 
-Cloud Functions need the project on the Blaze plan.
+Each release deploys it: the `push-relay` job in `.github/workflows/release-build.yml` tests the
+function, signs in to Google Cloud and runs `firebase deploy --only functions:push-relay` with the
+Firebase CLI pinned in `package.json` here. The project is the one in `GOOGLE_SERVICES_JSON`, the same
+one the app derives its relay URL from, unless the `FIREBASE_PROJECT_ID` repository variable names
+another. Without credentials the job is skipped.
+
+Set it up once:
+
+1. Put the project on the Blaze plan (Cloud Functions needs it).
+2. Create a deploy service account with the roles `Cloud Functions Admin`, `Service Account User`
+   (on the App Engine default and Compute default service accounts), `Artifact Registry
+   Administrator`, `Cloud Build Editor` and `Firebase Admin`
+   ([Firebase's deploy permissions](https://firebase.google.com/docs/projects/iam/permissions)).
+3. Either let GitHub sign in keylessly (preferred): create a Workload Identity pool and an OIDC
+   provider for `token.actions.githubusercontent.com` limited to this repository, allow it to
+   impersonate the service account, and set the repository variables
+   `FIREBASE_WORKLOAD_IDENTITY_PROVIDER` (`projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>`)
+   and `FIREBASE_DEPLOY_SERVICE_ACCOUNT` (its email);
+   or store a key for it as the `FIREBASE_DEPLOY_SERVICE_ACCOUNT_JSON` secret.
+
+To deploy by hand:
 
 ```sh
 cd push-relay
-npx firebase-tools@latest deploy --only functions:push-relay --project <project-id>
+npm ci
+npx firebase deploy --only functions:push-relay --project <project-id>
 ```
 
 The app derives the URL from its Firebase project,

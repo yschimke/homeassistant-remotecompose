@@ -47,6 +47,8 @@ jobs:
     permissions:
       contents: write
       packages: write
+      # The push relay deploy signs in to Google Cloud keylessly.
+      id-token: write
 
   release-pr-policy:
     needs: release-please
