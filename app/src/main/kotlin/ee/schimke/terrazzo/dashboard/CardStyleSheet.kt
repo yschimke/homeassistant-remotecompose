@@ -84,6 +84,7 @@ fun CardStyleSheet(
   val scope = rememberCoroutineScope()
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
   val installed by SkinStore.of(context).installed.collectAsState()
+  val installedStyles by CardStyleStore.of(context).installed.collectAsState()
   // Installs in flight and installs that failed, while the sheet is open.
   var installing by remember { mutableStateOf(emptySet<String>()) }
   var failed by remember { mutableStateOf(emptySet<String>()) }
@@ -146,6 +147,7 @@ fun CardStyleSheet(
           WidgetRefreshScheduler(context.applicationContext).refreshAllNow()
         }
       },
+      styleInstalled = { CardStyles.isInstalled(it, installedStyles) },
     ) {
       DashboardCardPreview(session, card, snapshot)
     }
@@ -213,6 +215,8 @@ internal fun CardStylePicker(
   onPickDesign: (String?) -> Unit = {},
   onInstall: (String) -> Unit = {},
   onUninstall: (String) -> Unit = {},
+  /** Whether a card style is installed ([CardStyles]): only those can be picked here. */
+  styleInstalled: (String) -> Boolean = { true },
   preview: @Composable () -> Unit,
 ) {
   // Open on the scope that already decides this card's style, so the selected row is the one in
@@ -295,11 +299,12 @@ internal fun CardStylePicker(
         SectionHeader("Style")
       }
       Column(Modifier.selectableGroup()) {
-        StyleOptions(at, current, followLabel, followStyle, onPick)
+        StyleOptions(at, current, followLabel, followStyle, styleInstalled, onPick)
       }
     }
     Text(
-      "Kept on this phone. Home screen widgets follow it; your watch keeps its own style.",
+      "Kept on this phone. Home screen widgets follow it; your watch keeps its own style. " +
+        "Install more styles in Settings.",
       style = MaterialTheme.typography.bodySmall,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
       modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
@@ -316,12 +321,16 @@ private fun StyleOptions(
   current: String?,
   followLabel: String,
   followStyle: String,
+  styleInstalled: (String) -> Boolean,
   onPick: (CardDesignScope, String?) -> Unit,
 ) {
   StyleOption(followLabel, followStyle, selected = current == null) { onPick(at, null) }
-  HaUberTheme.all.forEach { theme ->
-    StyleOption(theme.displayName, null, selected = current == theme.id) { onPick(at, theme.id) }
-  }
+  // Installed styles only (Settings installs the others), and the one in use whatever it is.
+  HaUberTheme.all
+    .filter { styleInstalled(it.id) || it.id == current }
+    .forEach { theme ->
+      StyleOption(theme.displayName, null, selected = current == theme.id) { onPick(at, theme.id) }
+    }
 }
 
 @Composable
