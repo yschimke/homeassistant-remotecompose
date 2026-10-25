@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.work.WorkInfo
@@ -57,6 +58,7 @@ import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.LocalThemeStyle
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -87,9 +89,13 @@ fun CardStyleSheet(
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
   val installed by SkinStore.of(context).installed.collectAsState()
   val installedStyles by CardStyleStore.of(context).installed.collectAsState()
-  val workManager = remember(context) { WorkManager.getInstance(context) }
+  // No WorkManager in a preview (Robolectric doesn't initialise it): nothing is installing.
+  val inPreview = LocalInspectionMode.current
   val installs by
-    remember(workManager) { workManager.getWorkInfosByTagFlow(SkinInstallWorker.TAG) }
+    remember(context, inPreview) {
+        if (inPreview) flowOf(emptyList())
+        else WorkManager.getInstance(context).getWorkInfosByTagFlow(SkinInstallWorker.TAG)
+      }
       .collectAsState(initial = emptyList())
   val dashboardStyle = LocalCardStyle.current
   val cardStyle = overrides.forCard(card)?.cardStyle?.let(HaUberTheme::byId) ?: dashboardStyle

@@ -59,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -93,6 +94,7 @@ import ee.schimke.terrazzo.shared.ReportFeedbackButton
 import ee.schimke.terrazzo.ui.appThemeOrNull
 import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
 /**
@@ -186,9 +188,14 @@ internal fun SettingsScreen(
         val installedStyles by CardStyleStore.of(context).installed.collectAsState()
         val styleOverrides by CardDesignOverrideStore.of(context).overrides.collectAsState()
         // WorkManager owns installs, including when Settings is closed or the process restarts.
-        val workManager = remember(context) { WorkManager.getInstance(context) }
+        // No WorkManager in a preview (Robolectric doesn't initialise it): nothing is installing.
+        val inPreview = LocalInspectionMode.current
         val installs by
-          remember(workManager) { workManager.getWorkInfosByTagFlow(CardStyleInstallWorker.TAG) }
+          remember(context, inPreview) {
+              if (inPreview) flowOf(emptyList())
+              else
+                WorkManager.getInstance(context).getWorkInfosByTagFlow(CardStyleInstallWorker.TAG)
+            }
             .collectAsState(initial = emptyList())
         val stylesInUse = CardStyles.inUse(cardStylePref.id, styleOverrides.cardStyles)
         CardStyleSection(
