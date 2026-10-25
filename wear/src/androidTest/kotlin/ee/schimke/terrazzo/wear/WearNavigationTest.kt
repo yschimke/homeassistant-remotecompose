@@ -54,11 +54,13 @@ class WearNavigationTest {
       activity.onActivity { it.onBackPressedDispatcher.onBackPressed() }
       compose.onNodeWithText("Pinned · Demo").assertExists()
       click("Settings")
-      compose.onNodeWithText("Theme").assertExists()
+      compose.onNodeWithText("Theme and card designs follow your phone.").assertExists()
+      compose.onNodeWithText("Theme").assertDoesNotExist()
       click("Report a bug")
       compose.onNodeWithText("PUBLIC issue").assertExists()
       activity.onActivity { it.onBackPressedDispatcher.onBackPressed() }
-      compose.onNodeWithText("Theme").assertExists()
+      compose.onNodeWithText("Theme and card designs follow your phone.").assertExists()
+      compose.onNodeWithText("Theme").assertDoesNotExist()
       activity.onActivity { it.onBackPressedDispatcher.onBackPressed() }
       compose.onNodeWithText("Pinned · Demo").assertExists()
     }
@@ -91,8 +93,7 @@ class WearNavigationTest {
   }
 
   private fun click(text: String) {
-    // The activity waits for persisted palette/style before composing its first card.
-    // DataStore IO is outside Compose's idling resources, especially on a cold emulator.
+    // Wait for the list root after a cold activity launch before scrolling to its target.
     compose.waitUntil(timeoutMillis = 10_000) {
       compose
         .onAllNodes(hasScrollAction())

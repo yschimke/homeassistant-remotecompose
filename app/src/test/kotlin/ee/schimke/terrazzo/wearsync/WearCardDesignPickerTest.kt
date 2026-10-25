@@ -98,6 +98,38 @@ class WearCardDesignPickerTest {
   }
 
   @Test
+  fun bothLightAndDarkDesignsTravelForOfflineWatchSystemChanges() {
+    val lightKey =
+      requireNotNull(
+        CardDesignTemplates.keyFor(
+          card,
+          snapshot,
+          choice.style,
+          dark = false,
+          cardStyle = choice.cardStyle,
+        )
+      )
+    val light = byteArrayOf(1, 3)
+    val dark = byteArrayOf(2, 4)
+    val loaded =
+      designs(
+        mapOf(
+          lightKey to light,
+          lightKey.forWearWidget(DesignKey.WEAR_SMALL) to byteArrayOf(99),
+          key.forWearWidget(DesignKey.WEAR_SMALL) to dark,
+        )
+      )
+    val picked =
+      wearCardDesigns(listOf("pin1" to card), snapshot, loaded, darkThemes = listOf(true, false))
+    assertEquals(3, picked.size)
+    assertContentEquals(dark, picked.single { it.first.darkTheme }.second)
+    picked.filter { !it.first.darkTheme }.forEach { assertContentEquals(light, it.second) }
+    val roundTrip =
+      decodeProto<WearSlotDesigns>(encodeProto(WearSlotDesigns(picked.map { it.first })))!!
+    assertEquals(listOf(true, false, false), roundTrip.designs.map { it.darkTheme })
+  }
+
+  @Test
   fun anInstalledSelectedPhoneOnlyDesignWinsOverGenericWearDesigns() {
     val selected = byteArrayOf(42)
     val id = "installed-skin"

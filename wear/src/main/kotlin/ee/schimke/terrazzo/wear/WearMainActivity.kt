@@ -36,7 +36,6 @@ import ee.schimke.terrazzo.wear.sync.wearTapsEnabled
 import ee.schimke.terrazzo.wear.ui.LocalWearCardLook
 import ee.schimke.terrazzo.wear.ui.LocalWearTapSender
 import ee.schimke.terrazzo.wear.ui.WearCardDetailsScreen
-import ee.schimke.terrazzo.wear.ui.WearCardLook
 import ee.schimke.terrazzo.wear.ui.WearCardScreen
 import ee.schimke.terrazzo.wear.ui.WearDashboardScreen
 import ee.schimke.terrazzo.wear.ui.WearDashboardsScreen
@@ -173,8 +172,8 @@ private fun WearApp(
   val scope = rememberCoroutineScope()
   val settings: WearSettings by repo.settings.collectAsState()
   val designRevision by repo.designRevision.collectAsState()
-  val selectedPalette = settings.wearCardLook().palette
-  val selectedCardStyle = settings.wearCardLook().style
+  val look = settings.wearCardLook(androidx.compose.foundation.isSystemInDarkTheme())
+  val selectedPalette = look.palette
   val pinned: PinnedCardSet by repo.pinned.collectAsState()
   val sections: PinnedSectionSet by repo.sections.collectAsState()
   val dashboards: List<DashboardData> by repo.dashboards.collectAsState()
@@ -227,12 +226,12 @@ private fun WearApp(
   }
 
   MaterialTheme(
-    colorScheme = terrazzoWearColorScheme(selectedPalette),
+    colorScheme = terrazzoWearColorScheme(selectedPalette, look.dark),
     typography = wearTypographyFor(selectedPalette),
   ) {
     CompositionLocalProvider(
       ee.schimke.terrazzo.wear.ui.LocalWearDesignRevision provides designRevision,
-      LocalWearCardLook provides WearCardLook(selectedPalette, selectedCardStyle),
+      LocalWearCardLook provides look,
       LocalRelativeTimeTick provides rememberRelativeTimeTick(),
       // A card's taps act through the phone while it allows input editing, outside demo mode.
       LocalWearTapSender provides if (wearTapsEnabled(settings)) repo::sendTap else null,

@@ -529,6 +529,7 @@ class MobileWearSyncManager(
             updatedAtMs = 0L,
           )
         }
+        .combine(prefs.darkMode) { settings, mode -> settings.copy(darkMode = mode.name) }
         .distinctUntilChanged()
         .combine(wearableAvailableState) { settings, available -> settings.takeIf { available } }
         .filterNotNull()
@@ -628,7 +629,13 @@ class MobileWearSyncManager(
               all.map {
                 ee.schimke.ha.client.design.cardFingerprint(resolveBambuDevices(it, snapshot)) to it
               }
-          val picked = wearCardDesigns(keyed.distinctBy { it.first }, snapshot, designs)
+          val picked =
+            wearCardDesigns(
+              keyed.distinctBy { it.first },
+              snapshot,
+              designs,
+              darkThemes = listOf(true, false),
+            )
           picked.map { it.first } to picked.associate { it.first.sha256 to it.second }
         }
         .combine(wearableAvailableState) { designs, available -> designs to available }

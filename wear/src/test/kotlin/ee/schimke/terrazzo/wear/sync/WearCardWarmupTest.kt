@@ -124,7 +124,10 @@ class WearCardWarmupTest {
       LiveValues(mapOf("light.warmup_lamp" to EntityValue(state = "on")), capturedAtMs = 1L)
     )
     offline.writeSettings(
-      ee.schimke.terrazzo.wearsync.proto.WearSettings(themeStyle = "TerrazzoMushroom")
+      ee.schimke.terrazzo.wearsync.proto.WearSettings(
+        themeStyle = "TerrazzoMushroom",
+        darkMode = "Dark",
+      )
     )
     val before = neutralTemplateCaptures.get()
 
@@ -156,6 +159,7 @@ class WearCardWarmupTest {
   @Test
   fun warmingUsesTheSyncedSelectedDesignWithoutCapturingALocalFallback() {
     val offline = WearOfflineStore(context)
+    offline.writeSettings(ee.schimke.terrazzo.wearsync.proto.WearSettings(darkMode = "Dark"))
     val pinned = summary("tile", "light.synced_warmup")
     val card = assertNotNull(decodeWearCard(pinned.rawJson))
     val values = mapOf("light.synced_warmup" to EntityValue(state = "on"))

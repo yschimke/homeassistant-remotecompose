@@ -17,9 +17,10 @@ import ee.schimke.terrazzo.wearsync.proto.WearSlotDesign
  * the design the card draws with on the phone ([DesignKey.forWearWidget] of its key in the card's
  * variant, then `default`, its device's design first), so a watch widget showing the card draws the
  * same design as the dashboard, rooted on the Wear container. Every pinned card gets them: the
- * watch chooses which card a widget shows, from the cards it was sent. The watch is dark, so it is
- * the card's dark design. A card or container the server has no Wear design for is sent its phone
- * template, adapted to the Wear frame by the watch.
+ * watch chooses which card a widget shows, from the cards it was sent. Both appearance modes can
+ * travel so System follows the watch offline. Light uses the phone template because existing server
+ * Wear captures force a dark environment; the watch adapts its frame. Dark can use either a Wear
+ * template or a phone template.
  *
  * Empty while no design server is configured or its designs haven't loaded.
  *
@@ -29,39 +30,55 @@ internal fun wearCardDesigns(
   cards: List<Pair<String, CardConfig>>,
   snapshot: HaSnapshot,
   designs: CardDesigns,
+  darkThemes: List<Boolean> = listOf(true),
 ): List<Pair<WearSlotDesign, ByteArray>> {
   val choice = designs.loadedFor ?: return emptyList()
   return cards.flatMap { (cardKey, card) ->
     val override = choice.overrides.forCard(card)
     val cardStyle = override?.cardStyle?.let(HaUberTheme::byId) ?: choice.cardStyle
     val design = CardDesignTemplates.designCard(card, snapshot)
-    val key =
-      CardDesignTemplates.keyFor(design, snapshot, choice.style, dark = true, cardStyle = cardStyle)
-        ?: return@flatMap emptyList()
-    val variants = listOf(key.copy(variant = override?.variant ?: designs.variant), key).distinct()
-    val device = cardDevice(design, snapshot)
-    DesignKey.WEAR_CONTAINERS.mapNotNull { container ->
-      val keys = variants.map { it.forWearWidget(container) }
-      // A selected installed skin may only ship a phone template. Send that template rather than
-      // silently substituting a generic Wear design; the watch adapts its card box to its frame.
-      val selected =
-        override?.designId?.let { id ->
-          designs.byDesign.find(id, keys.first(), device)?.second
-            ?: designs.byDesign.find(id, variants.first(), device)?.second
+    darkThemes.distinct().flatMap modes@{ darkTheme ->
+      val key =
+        CardDesignTemplates.keyFor(
+          design,
+          snapshot,
+          choice.style,
+          dark = darkTheme,
+          cardStyle = cardStyle,
+        ) ?: return@modes emptyList()
+      val variants =
+        listOf(key.copy(variant = override?.variant ?: designs.variant), key).distinct()
+      val device = cardDevice(design, snapshot)
+      DesignKey.WEAR_CONTAINERS.mapNotNull { container ->
+        // Existing Wear exports bake a dark environment even for a light-looking key.
+        // The mobile light design is authoritative and can be reframed on the watch.
+        val keys = if (darkTheme) variants.map { it.forWearWidget(container) } else variants
+        // A selected installed skin may only ship a phone template. Send that template rather than
+        // silently substituting a generic Wear design; the watch adapts its card box to its frame.
+        val selected =
+          override?.designId?.let { id ->
+            designs.byDesign.find(id, keys.first(), device)?.second
+              ?: designs.byDesign.find(id, variants.first(), device)?.second
+          }
+        // The design the card was switched to, when it has a Wear widget design for the container.
+        val bytes =
+          selected
+            ?: keys.firstNotNullOfOrNull { k ->
+              device?.let { DeviceMatch.pick(designs.deviceByKey[k].orEmpty(), it) }
+            }
+            ?: keys.firstNotNullOfOrNull { designs.byKey[it] }
+            ?: variants.firstNotNullOfOrNull { k ->
+              device?.let { DeviceMatch.pick(designs.deviceByKey[k].orEmpty(), it) }
+            }
+            ?: variants.firstNotNullOfOrNull { designs.byKey[it] }
+        bytes?.let {
+          WearSlotDesign(
+            cardKey,
+            container,
+            ee.schimke.ha.client.design.Sha256.hex(it),
+            darkTheme,
+          ) to it
         }
-      // The design the card was switched to, when it has a Wear widget design for the container.
-      val bytes =
-        selected
-          ?: keys.firstNotNullOfOrNull { k ->
-            device?.let { DeviceMatch.pick(designs.deviceByKey[k].orEmpty(), it) }
-          }
-          ?: keys.firstNotNullOfOrNull { designs.byKey[it] }
-          ?: variants.firstNotNullOfOrNull { k ->
-            device?.let { DeviceMatch.pick(designs.deviceByKey[k].orEmpty(), it) }
-          }
-          ?: variants.firstNotNullOfOrNull { designs.byKey[it] }
-      bytes?.let {
-        WearSlotDesign(cardKey, container, ee.schimke.ha.client.design.Sha256.hex(it)) to it
       }
     }
   }

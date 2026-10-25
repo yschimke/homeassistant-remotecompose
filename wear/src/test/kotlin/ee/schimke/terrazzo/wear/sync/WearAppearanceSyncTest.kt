@@ -54,4 +54,24 @@ class WearAppearanceSyncTest {
     assertEquals("classic", legacy.wearCardLook().style)
     assertEquals(ThemeStyle.Material3, WearSettings(themeStyle = "future").wearCardLook().palette)
   }
+
+  @Test
+  fun systemResolvesOnTheWatchWhileExplicitModesOverrideItAndSurviveRestart() {
+    val system = WearSettings(darkMode = "Follow", updatedAtMs = 100)
+    receive(system)
+    val restarted = WearOfflineStore(context).readSettings()!!
+    assertEquals(false, restarted.wearCardLook(systemDark = false).dark)
+    assertEquals(true, restarted.wearCardLook(systemDark = true).dark)
+    // No new phone payload is needed when the watch's own system appearance changes offline.
+    assertEquals(false, WearOfflineStore(context).readSettings().wearCardLook(false).dark)
+    for (watchDark in listOf(false, true)) {
+      assertEquals(false, system.copy(darkMode = "Light").wearCardLook(watchDark).dark)
+      assertEquals(true, system.copy(darkMode = "Dark").wearCardLook(watchDark).dark)
+    }
+    receive(system.copy(darkMode = "Light", updatedAtMs = 200))
+    receive(system.copy(darkMode = "Dark", updatedAtMs = 300))
+    // Reconnecting to an older cached System item cannot undo the explicit current mode.
+    receive(system.copy(updatedAtMs = 250))
+    assertEquals(true, WearOfflineStore(context).readSettings().wearCardLook(false).dark)
+  }
 }

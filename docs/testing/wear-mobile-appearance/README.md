@@ -35,12 +35,24 @@ Run the affected suites and checks:
 ./gradlew :wear:lintDebug :app:lintDebug :wear:ktfmtCheck :app:ktfmtCheck
 ```
 
-The rendering test can save PNGs when its test JVM receives the `wearRenderEvidence` system
+`WearThemeModeRenderingTest` renders the same persisted System mode with the watch's own light
+and dark configurations, verifies explicit Light/Dark override an opposite watch mode, then
+recreates the card from disk and changes the watch mode offline without another phone payload.
+Both template modes are cached, selected by their synced mode tag, and rendered with matching
+app chrome. `WearAppearanceSyncTest` also verifies the mode survives delayed events and restart.
+
+| System: watch light | System: watch dark, without another phone payload |
+| --- | --- |
+| ![Watch light](system-watch-light.png) | ![Watch dark](system-watch-dark.png) |
+
+The rendering tests can save PNGs when its test JVM receives the `wearRenderEvidence` system
 property. These captures used a temporary Gradle init script that set that property on `Test`
 tasks to `/tmp/wear-render-evidence`.
 
 Physical transport remains a manual follow-up: pair updated phone/watch builds, change theme,
-global style and a card's installed skin on the phone, disconnect, restart both apps, change
+global style and a card's installed skin on the phone. Set System with opposite phone/watch
+appearances; verify Wear uses its own mode, then test explicit Light and Dark. Disconnect,
+restart both apps, change
 mobile appearance while disconnected, then reconnect. Confirm the app and placed widgets retain
 the last synced look offline and converge to the current phone choice after reconnect. This VM
 has no paired watch and no `/dev/kvm`; the automated checks exercise payloads, persistence and

@@ -108,7 +108,7 @@ internal const val PICKER_EMPTY = "Choose cards on your phone: Show on watch"
 @Composable
 internal fun WearAppSurface(look: WearCardLook, content: @Composable () -> Unit) {
   MaterialTheme(
-    colorScheme = terrazzoWearColorScheme(look.palette),
+    colorScheme = terrazzoWearColorScheme(look.palette, look.dark),
     typography = wearTypographyFor(look.palette),
   ) {
     CompositionLocalProvider(
