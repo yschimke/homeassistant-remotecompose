@@ -99,15 +99,17 @@ test('hosted WASM selects hidden dashboards, supports bookmarks and recovers fro
     await page.mouse.click(600, 400);
     await frame.getByText('Selected wall-panel', {exact:true}).waitFor({timeout:5_000});
     await page.screenshot({path:`${evidence}/dashboard-returned-home.png`});
-    await frame.getByRole('tab', {name:'Dashboards',exact:true}).dispatchEvent('click');
-    await frame.getByRole('button', {name:'Hidden panel hidden-panel',exact:true}).click({force:true});
+    // The dashboard title is the switcher; it lists hidden dashboards too.
+    await frame.getByRole('button', {name:/Switch dashboard/}).click({force:true});
+    await frame.getByText('Hidden panel', {exact:true}).click({force:true});
     await frame.getByText('Selected hidden-panel', {exact:true}).waitFor();
     await frame.getByText('Selected wall-panel', {exact:true}).waitFor({timeout:5_000});
     await page.goto('https://ha.test/terrazzo?dashboard=home');
     await frame.getByText(/This dashboard is unavailable or is not a Lovelace dashboard/).waitFor({timeout:60_000});
     await page.screenshot({path:`${evidence}/dashboard-unavailable.png`});
-    await frame.getByRole('tab', {name:'Dashboards',exact:true}).dispatchEvent('click');
-    await frame.getByRole('button', {name:'Hidden panel hidden-panel',exact:true}).click({force:true});
+    // The dashboard title is the switcher; it lists hidden dashboards too.
+    await frame.getByRole('button', {name:/Switch dashboard/}).click({force:true});
+    await frame.getByText('Hidden panel', {exact:true}).click({force:true});
     await frame.getByText('Selected hidden-panel', {exact:true}).waitFor();
     await page.goto('https://ha.test/terrazzo?dashboard=generated-home');
     await frame.getByText(/This dashboard needs Home Assistant's frontend/).waitFor({timeout:60_000});
