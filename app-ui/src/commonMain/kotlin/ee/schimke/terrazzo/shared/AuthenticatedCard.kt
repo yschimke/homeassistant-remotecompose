@@ -7,6 +7,7 @@ import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.design.UsageSource
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.remoteComposeCardStyle
 import ee.schimke.ha.model.remoteComposeInnerCard
@@ -91,8 +92,7 @@ internal fun AuthenticatedCard(
             ((leaf.raw["tap_action"] as? JsonObject)?.get("action") as? JsonPrimitive)
               ?.contentOrNull
           if (
-            (leaf.type in setOf("tile", "entity", "sensor", "gauge", "button", "entities") ||
-              hasCustomCardDesign(leaf)) &&
+            (leaf.type in DESIGNED_CARD_TYPES || hasCustomCardDesign(leaf)) &&
               !nativeControls &&
               // An entity Home Assistant no longer has: the built-in card says so, with no lookup.
               !namesMissingEntity(leaf, snapshot) &&
@@ -137,3 +137,22 @@ private val sharedConverters by lazy { defaultRegistry() }
 internal fun namesMissingEntity(card: CardConfig, snapshot: HaSnapshot): Boolean =
   snapshot.states.isNotEmpty() &&
     CardDesignSlots.slotEntries(card).orEmpty().any { it.entityId !in snapshot.states }
+
+/**
+ * Built-in card types the panel asks the design library for. The data cards (history graph, map,
+ * weather, logbook) bind what the dashboard's snapshot carries, history included
+ * ([rememberDashboardHistory]).
+ */
+private val DESIGNED_CARD_TYPES =
+  setOf(
+    "tile",
+    "entity",
+    "sensor",
+    "gauge",
+    "button",
+    "entities",
+    CardTypes.HISTORY_GRAPH,
+    CardTypes.MAP,
+    CardTypes.WEATHER_FORECAST,
+    CardTypes.LOGBOOK,
+  )

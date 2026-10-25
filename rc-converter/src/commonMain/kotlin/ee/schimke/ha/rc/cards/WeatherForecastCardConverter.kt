@@ -22,7 +22,9 @@ import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.weatherConditionLabel
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -65,9 +67,14 @@ class WeatherForecastCardConverter : DesignedCardConverter() {
    * every day's and read-out's text are bindings.
    */
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
-    if (
-      !setOf("type", "entity", "name", "show_forecast", "forecast_type").containsAll(card.raw.keys)
-    )
+    // `show_current: true` is the default this card always draws; `false` it can't, so no design.
+    val keys =
+      card.raw.keys -
+        setOfNotNull(
+          "show_current"
+            .takeIf { (card.raw["show_current"] as? JsonPrimitive)?.booleanOrNull == true }
+        )
+    if (!setOf("type", "entity", "name", "show_forecast", "forecast_type").containsAll(keys))
       return null
     val entityId = card.raw["entity"]?.jsonPrimitive?.content ?: return null
     val entity = snapshot.states[entityId] ?: return null
