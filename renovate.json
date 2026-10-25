@@ -3,6 +3,12 @@
   "extends": ["github>yschimke/renovate-config"],
   "packageRules": [
     {
+      "description": "Temurin JDK pins (setup-java `java-version`) are installed on Linux, macOS and Windows runners, and Adoptium publishes a release for Windows x64 last: 21.0.13+9 reached Linux and macOS days before Windows, and #1082 proposed it while the Windows desktop job could only fail with 'No matching version found'. Look versions up for Windows x64, so a pin is only proposed once every runner can install it.",
+      "matchDatasources": ["java-version"],
+      "matchPackageNames": ["java-jdk"],
+      "overridePackageName": "java-jdk?os=windows&architecture=x64"
+    },
+    {
       "description": "Offline Robolectric tests select API 35 with @Config. android-all-instrumented is an exact platform/provider image, not a library upgrade: replacing Android 15's jar with Android 17 removes the SDK Robolectric requests. Keep the catalog's SDK 35 pin until the test SDK and Robolectric provider change together.",
       "matchPackageNames": ["org.robolectric:android-all-instrumented"],
       "enabled": false
