@@ -17,6 +17,7 @@ import ee.schimke.ha.client.design.UsageSurfaces
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignTemplates
+import ee.schimke.ha.rc.HighRiskActions
 import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.LauncherLook
 import ee.schimke.ha.rc.captureLauncherWidgetDocument
@@ -291,7 +292,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
                 val payload = encodeHaAction(action)
                 views.setOnClickPendingIntent(
                   actionId,
-                  appPendingIntent(context, widgetId, actionId, action)
+                  appPendingIntent(context, widgetId, actionId, action, snapshot)
                     ?: widgetActionPendingIntent(
                       context,
                       widgetId,
@@ -380,7 +381,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         // platform forwarded metadata and remains a fallback on platform builds that omit it.
         remoteViews.setOnClickPendingIntent(
           actionId,
-          appPendingIntent(context, widgetId, actionId, decodeHaAction(payload))
+          appPendingIntent(context, widgetId, actionId, decodeHaAction(payload), snapshot)
             ?: widgetActionPendingIntent(context, widgetId, actionId, payload),
         )
       }
@@ -399,13 +400,20 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     widgetId: Int,
     actionId: Int,
     action: HaAction?,
+    snapshot: HaSnapshot,
   ): PendingIntent? {
     val intent =
-      when (action) {
-        is HaAction.Url -> Intent(Intent.ACTION_VIEW, Uri.parse(action.url))
+      when {
+        action is HaAction.Url -> Intent(Intent.ACTION_VIEW, Uri.parse(action.url))
         // The app opens on the entity's details or the dashboard path, as the card's tap would.
-        is HaAction.MoreInfo,
-        is HaAction.Navigate -> WidgetOpenRequests.launchIntent(context, action) ?: return null
+        action is HaAction.MoreInfo || action is HaAction.Navigate ->
+          WidgetOpenRequests.launchIntent(context, action) ?: return null
+        // A lock or a garage door reads the phone's lock mode when tapped, and asks while it is
+        // locked: an activity, since a receiver can't put a question in front.
+        action != null &&
+          WidgetConfirmActivity.confirms(action) &&
+          HighRiskActions.isHighRisk(action, snapshot) ->
+          WidgetConfirmActivity.intent(context, widgetId, action)
         else -> return null
       }.apply {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

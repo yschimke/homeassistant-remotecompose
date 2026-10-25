@@ -54,6 +54,7 @@ import ee.schimke.terrazzo.wear.widget.WearWidgetTemplate
 import ee.schimke.terrazzo.wear.widget.neutralWidgetTemplate
 import ee.schimke.terrazzo.wear.widget.syncedPicture
 import ee.schimke.terrazzo.wear.widget.wearAppContainer
+import ee.schimke.terrazzo.wear.widget.wearCardDataTier
 import ee.schimke.terrazzo.wear.widget.wearDesignProperties
 import ee.schimke.terrazzo.wear.widget.wearDesignTemplate
 import ee.schimke.terrazzo.wear.widget.wearWidgetCardStyle
@@ -79,9 +80,20 @@ internal val LocalWearCardLook = staticCompositionLocalOf { WearCardLook() }
  * widget's colours and size mode. A card added as a widget then looks the same on the watch face as
  * it did in the app. Unlike the widget, which bakes its values, the app plays the template's
  * bindings, so values update live.
+ *
+ * With [onOpen], a long press on the card, a tap the card doesn't take itself, or the card's own
+ * more-info tap opens it full screen ([WearCardScreen]). [fullScreen] draws it there: in the Large
+ * container for a card that has one ([wearFullScreenContainer]). [taps] shares a dispatcher with
+ * controls outside the card, such as the full-screen card's action button.
  */
 @Composable
-internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValue>) {
+internal fun WearRemoteCard(
+  summary: CardSummary,
+  values: Map<String, EntityValue>,
+  onOpen: (() -> Unit)? = null,
+  fullScreen: Boolean = false,
+  taps: WearCardTaps = rememberWearCardTaps(summary.rawJson, onOpen),
+) {
   val card = remember(summary.rawJson) { decodeWearCard(summary.rawJson) }
   if (card == null) {
     Column {
@@ -100,7 +112,11 @@ internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValu
   val design = CardDesignTemplates.designCard(card, snapshot, registry)
   val frame =
     remember(card, snapshot) {
-      WearWidgetFrame.forContainer(context, wearAppContainer(card, snapshot, registry))
+      WearWidgetFrame.forContainer(
+        context,
+        if (fullScreen) wearFullScreenContainer(card)
+        else wearAppContainer(card, snapshot, registry),
+      )
     }
   // The card's state tints its container, as on the widget: warm for heating, amber for a light.
   val tint = remember(card, snapshot) { ContainerTint.argbFor(card, snapshot) }
@@ -139,8 +155,17 @@ internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValu
       cardIconSignature(card, snapshot),
       cardVisibilitySignature(card, snapshot),
     )
-  // Taps act on Home Assistant through the phone ([WearTapDispatcher]); the card says how one went.
-  val taps = rememberWearCardTaps(summary.rawJson)
+  val view = LocalView.current
+  val gestures =
+    if (onOpen == null) Modifier
+    else
+      Modifier.wearCardGestures(
+        onLongPress = {
+          view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+          onOpen()
+        },
+        onUnhandledTap = onOpen,
+      )
   Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
     BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
       // A watch narrower than the frame (before its host has reported one) keeps the frame's
@@ -150,7 +175,7 @@ internal fun WearRemoteCard(summary: CardSummary, values: Map<String, EntityValu
         CachedCardPreview(
           cacheKey = key,
           profile = androidXExperimentalWrap,
-          modifier = Modifier.size(width, frame.heightDp.dp),
+          modifier = Modifier.size(width, frame.heightDp.dp).then(gestures),
           card = card,
           snapshot = snapshot,
           liveBindings = signature == null,
@@ -188,18 +213,22 @@ internal val LocalWearTapSender =
   staticCompositionLocalOf<(suspend (card: String, action: HaAction) -> Unit)?> { null }
 
 /** A watch card's tap dispatcher and the line it shows under the card while one is in flight. */
-internal class WearCardTaps(val dispatcher: HaActionDispatcher) {
+internal class WearCardTaps(val dispatcher: HaActionDispatcher, val enabled: () -> Boolean) {
   var status: String? by mutableStateOf(null)
 }
 
 /**
  * The [WearTapDispatcher] for the card [rawJson], with the watch's feedback: a tick as the tap is
  * sent (a key tap for a keypad key), a confirm when the phone ran it, a reject and the phone's
- * reason under the card when it didn't — the message card's error style.
+ * reason under the card when it didn't — the message card's error style. A more-info tap runs
+ * [onMoreInfo], when there is one.
+ *
+ * Taps act on Home Assistant through the phone; the card says how one went.
  */
 @Composable
-private fun rememberWearCardTaps(rawJson: String): WearCardTaps {
+internal fun rememberWearCardTaps(rawJson: String, onMoreInfo: (() -> Unit)? = null): WearCardTaps {
   val sender = rememberUpdatedState(LocalWearTapSender.current)
+  val moreInfo = rememberUpdatedState(onMoreInfo)
   val view = LocalView.current
   val scope = rememberCoroutineScope()
   return remember(rawJson, scope, view) {
@@ -222,8 +251,9 @@ private fun rememberWearCardTaps(rawJson: String): WearCardTaps {
           }
         },
         onFailure = { taps.status = it },
+        onMoreInfo = { moreInfo.value?.invoke() },
       )
-    WearCardTaps(dispatcher).also { taps = it }
+    WearCardTaps(dispatcher, enabled = { sender.value != null }).also { taps = it }
   }
 }
 
@@ -293,6 +323,14 @@ private fun WearAppFrame(frame: WearWidgetFrame, tint: Int?, content: @Composabl
     content()
   }
 }
+
+/**
+ * The container [card] takes full screen: Large, the biggest a Wear widget has, for a card with a
+ * Large tier; a card that only fills a Small one keeps it rather than floating in the Large frame.
+ */
+internal fun wearFullScreenContainer(card: CardConfig): String =
+  if (wearCardDataTier(card.type).supportsLarge) ee.schimke.ha.design.DesignKey.WEAR_LARGE
+  else ee.schimke.ha.design.DesignKey.WEAR_SMALL
 
 /** The container colour a widget host fills for an untinted widget. */
 private val WIDGET_SURFACE = androidx.compose.ui.graphics.Color(39, 36, 48)

@@ -5,4 +5,6 @@
       mode gets its own (values-night), so a dark app doesn't open on a white splash.
     -->
     <style name="Theme.Terrazzo" parent="@android:style/Theme.Material.Light.NoActionBar" />
+    <!-- WidgetConfirmActivity: no window of its own behind the dialog it may show. -->
+    <style name="Theme.Terrazzo.Translucent" parent="@android:style/Theme.Translucent.NoTitleBar" />
 </resources>

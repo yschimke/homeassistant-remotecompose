@@ -231,4 +231,23 @@ class WearTapsTest {
       recorder.sent,
     )
   }
+
+  @Test
+  fun aMoreInfoTapOpensTheCardFullScreenAndSendsNothing() = runTest {
+    val recorder = Recorder()
+    var opened = 0
+    val taps =
+      WearTapDispatcher(
+        card = card,
+        scope = this,
+        enabled = { true },
+        send = { c, a -> recorder.sent += c to a },
+        onMoreInfo = { opened++ },
+      )
+    taps.dispatch(HaAction.MoreInfo("sensor.temperature"))
+    taps.dispatch(HaAction.Navigate("/lovelace/kitchen"))
+    advanceUntilIdle()
+    assertEquals(1, opened)
+    assertTrue(recorder.sent.isEmpty())
+  }
 }

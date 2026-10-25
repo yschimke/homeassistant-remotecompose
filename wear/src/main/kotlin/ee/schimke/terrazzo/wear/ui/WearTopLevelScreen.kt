@@ -36,8 +36,11 @@ import ee.schimke.terrazzo.wearsync.proto.WearSettings
  *
  * - **Pinned sections** show as a tonal button with the section title + "N cards"; tap drills into
  *   [WearSectionScreen].
- * - **Pinned cards** play their Remote Compose content inline (no drill-in — the user pinned them
- *   precisely because they want top-level access).
+ * - **Pinned cards** play their Remote Compose content inline: the user pinned them precisely
+ *   because they want top-level access. A long press (or a tap the card doesn't take) opens one
+ *   full screen ([onOpenCard], [WearCardScreen]).
+ *
+ * A double pinch scrolls to the next entry ([WearListScreen]'s gesture scroll).
  *
  * Cards inside a section can also be pinned independently as top-level entries; in that case they
  * show twice (once at the top level, once inside the section). That's the v1 behaviour deliberately
@@ -56,12 +59,13 @@ fun WearTopLevelScreen(
   onOpenSettings: () -> Unit,
   modifier: Modifier = Modifier,
   onInputSend: (suspend (String, Map<String, String>) -> Unit)? = null,
+  onOpenCard: (PinnedCard) -> Unit = {},
 ) {
   val items = remember(pinned, sections) { mergeOrdered(pinned.cards, sections.sections) }
   // The pinned list composes here: the launch is fully drawn (`timeToFullDisplayMs`).
   ReportDrawn()
 
-  WearListScreen(modifier = modifier, spacing = 6.dp) {
+  WearListScreen(modifier = modifier, spacing = 6.dp, gestureScroll = true) {
     item { ListHeader { Text(if (settings.demoMode) "Pinned · Demo" else "Pinned") } }
     if (settings.demoMode) {
       item { DemoBanner() }
@@ -77,7 +81,7 @@ fun WearTopLevelScreen(
             if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
               WearMessageCard(card.rawJson, values, onInputSend)
             } else {
-              WearRemoteCard(card, values)
+              WearRemoteCard(card, values, onOpen = { onOpenCard(entry.card) })
             }
           }
           is TopLevelEntry.Section ->
