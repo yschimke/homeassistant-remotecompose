@@ -26,8 +26,10 @@ import ee.schimke.terrazzo.widget.WidgetOpenRequests
  * - It is bridged to a paired watch with [BRIDGE_TAG] and that key as its dismissal id, so
  *   dismissing it on either device dismisses both, and a Wear app that posts its own copy can
  *   suppress the bridged one by tag (`BridgingConfig`) instead of showing two.
- * - A message with an entity carries its live card ([NotificationCards]); [HaPushReceiver] redraws
- *   it as the entity changes ([refresh]), for as long as the notification shows.
+ * - A message with an entity carries its live card ([NotificationCards]) as the phone's expanded
+ *   body; [HaPushReceiver] redraws it as the entity changes ([refresh]), for as long as the
+ *   notification shows. The watch never gets the RemoteViews: it shows the standard fields (title,
+ *   the full message as BigTextStyle, actions), which every notification keeps, card or not.
  * - While the watch has the Wear app installed, it carries a watch-only "Open on watch" action.
  *   That stays harmless once the Wear app posts its own copy: the bridged notification, and its
  *   action, are suppressed there.
@@ -135,8 +137,11 @@ object HaNotifications {
       )
     }
     if (card != null) {
-      // The card replaces the expanded body; the collapsed row keeps the title and message.
-      builder.setStyle(NotificationCompat.DecoratedCustomViewStyle()).setCustomBigContentView(card)
+      // The card is the phone's expanded body only. The style stays BigTextStyle, so every other
+      // surface — the watch above all, which shows bridged notifications from their standard
+      // fields and never RemoteViews — gets the title, the full message and the actions. The
+      // platform decorates the custom view itself (API 31+), as DecoratedCustomViewStyle would.
+      builder.setCustomBigContentView(card)
     }
     return builder.build()
   }
