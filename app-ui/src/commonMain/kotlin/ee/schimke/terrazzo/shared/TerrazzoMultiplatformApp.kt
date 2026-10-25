@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -485,17 +486,18 @@ private fun DashboardShell(
                       )
                     },
                     actions = {
-                      TextButton(onClick = { stack.add(DashboardEditDestination(route.path)) }) {
-                        Text("Edit dashboard")
-                      }
-                      if (integrationInstalled) {
-                        TextButton(onClick = { stack.add(AgentEditDestination(route.path)) }) {
-                          Text("Ask an agent")
-                        }
-                      }
-                      TextButton(onClick = { customizing = !customizing }) {
-                        Text(if (customizing) "Done customizing" else "Customize")
-                      }
+                      // Icons only, so a phone-width header keeps room for the dashboard switcher.
+                      // Leaving customize mode stays one tap away.
+                      if (customizing)
+                        TextButton(onClick = { customizing = false }) { Text("Done customizing") }
+                      DashboardMoreMenu(
+                        onEdit = { stack.add(DashboardEditDestination(route.path)) },
+                        onAskAgent =
+                          if (integrationInstalled)
+                            ({ stack.add(AgentEditDestination(route.path)) })
+                          else null,
+                        onCustomize = if (customizing) null else ({ customizing = true }),
+                      )
                       headerActions()
                     },
                   )
@@ -701,6 +703,46 @@ internal fun HeaderActions(
         contentDescription = if (isFullScreen) "Exit full screen" else "Full screen",
       )
     }
+}
+
+/** A dashboard's less frequent actions, behind one "More options" button. */
+@Composable
+internal fun DashboardMoreMenu(
+  onEdit: () -> Unit,
+  onAskAgent: (() -> Unit)?,
+  onCustomize: (() -> Unit)?,
+) {
+  var expanded by remember { mutableStateOf(false) }
+  Box {
+    IconButton(onClick = { expanded = true }) {
+      Icon(Icons.Filled.MoreVert, contentDescription = "More options")
+    }
+    DropdownMenu(expanded, { expanded = false }) {
+      DropdownMenuItem(
+        text = { Text("Edit dashboard") },
+        onClick = {
+          expanded = false
+          onEdit()
+        },
+      )
+      if (onAskAgent != null)
+        DropdownMenuItem(
+          text = { Text("Ask an agent") },
+          onClick = {
+            expanded = false
+            onAskAgent()
+          },
+        )
+      if (onCustomize != null)
+        DropdownMenuItem(
+          text = { Text("Customize") },
+          onClick = {
+            expanded = false
+            onCustomize()
+          },
+        )
+    }
+  }
 }
 
 /** The card style every dashboard draws in: a setting, kept until it is changed again. */

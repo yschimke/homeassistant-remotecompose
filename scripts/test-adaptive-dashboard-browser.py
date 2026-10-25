@@ -158,7 +158,8 @@ try:
             expect(page.get_by_text('Hub: Connected', exact=True)).to_be_visible()
             expect(page.get_by_text(re.compile(r'\{\{|\{%'))).to_have_count(0)
             if name == 'wall':
-                page.get_by_role('button', name='Customize', exact=True).click(force=True, delay=100)
+                page.get_by_role('button', name='More options', exact=True).click(force=True, delay=100)
+                page.get_by_text('Customize', exact=True).click(force=True, delay=100)
                 expect(page.get_by_role('button', name='Design or fix this card').first).to_be_visible()
                 page.get_by_role('button', name='Done customizing', exact=True).click(force=True, delay=100)
                 expect(page.get_by_role('button', name='Design or fix this card')).to_have_count(0)

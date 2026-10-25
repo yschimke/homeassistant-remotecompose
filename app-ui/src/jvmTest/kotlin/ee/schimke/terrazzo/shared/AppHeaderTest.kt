@@ -6,6 +6,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.test.*
+import ee.schimke.ha.client.DashboardSummary
+import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -68,5 +70,39 @@ class AppHeaderTest {
     FileAppStorage(file).set(CARD_STYLE_KEY, "retired")
     assertEquals("classic", storedCardStyle(FileAppStorage(file)))
     assertEquals("classic", storedCardStyle(null))
+  }
+
+  @Test
+  fun lessFrequentDashboardActionsAreInMoreOptions() = runComposeUiTest {
+    var opened by mutableStateOf("")
+    setContent {
+      Row {
+        DashboardMoreMenu(
+          onEdit = { opened = "edit" },
+          onAskAgent = null,
+          onCustomize = { opened = "customize" },
+        )
+      }
+    }
+    onNodeWithText("Customize").assertDoesNotExist()
+    onNodeWithContentDescription("More options").performClick()
+    onNodeWithText("Ask an agent").assertDoesNotExist()
+    onNodeWithText("Customize").performClick()
+    assertEquals("customize", opened)
+  }
+
+  @Test
+  fun aMissingDashboardCanStillSwitchToTheOnlyOther() = runComposeUiTest {
+    var switched: String? = "unset"
+    setContent {
+      DashboardSwitcher(
+        listOf(DashboardSummary(urlPath = "wall-panel", title = "Wall panel")),
+        currentUrlPath = "deleted",
+        onSwitch = { switched = it },
+      )
+    }
+    onNodeWithContentDescription("Switch dashboard", useUnmergedTree = true).performClick()
+    onNodeWithText("Wall panel").performClick()
+    assertEquals("wall-panel", switched)
   }
 }
