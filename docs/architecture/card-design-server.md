@@ -648,14 +648,20 @@ per request — but adds what a static host can't: verification, a template brow
   `catalog.json` (`DesignCatalog`: an example card and preview paths per design) and `previews/`
   (each design rendered bound to its example's values, and as published with its placeholders).
   It generates in either of two ways, which draw the same:
-  - `:card-designs:generateCardDesigns`, a Robolectric test: captured with AndroidX, as the app does;
-  - `:card-designs:generateCardDesignsJvm`, plain JVM with no Android: captured with rc-players'
+  - `:card-designs:generateCardDesigns`, plain JVM with no Android: captured with rc-players'
     Compose Multiplatform creation fork under the app's operations (`LibraryCaptureProfile`), the
-    previews drawn by the Compose Multiplatform player, into `card-designs/build/card-designs-jvm/`.
+    previews drawn by the Compose Multiplatform player. This is the library the server publishes
+    (the CI build and the Docker image), and the same capture `DesignGenerator` runs for a key the
+    library lacks, so a key's bytes are the same whichever way the server came by them;
+  - `:card-designs:generateCardDesignsAndroid`, a Robolectric test: captured with AndroidX, as the
+    app does, into `card-designs/build/card-designs-android/`, to check the JVM's against.
 
   The two libraries' bytes differ (the two creation libraries number and order a document's parts
   differently). `:card-designs:checkCardDesignParity` draws every key's template from both with the
-  one Compose Multiplatform player and compares the pixels.
+  one Compose Multiplatform player and compares the pixels. `JvmLibraryAndroidPlaybackTest` covers
+  the other player: it plays a sample of the published library (one key per card type and shape,
+  across every theme) in the app's AndroidX player beside the same key captured on Android, and
+  compares those pixels; the design server workflow runs it on every build of the library.
 - **Client protocol.** `GET /designs/v1/manifest.json` (ETag = its SHA-256, `no-cache`, `304` on
   `If-None-Match`) and `GET /designs/v1/blobs/<sha256>.rc` (immutable). Only names the manifest
   lists are served. Loading verifies every blob's size and hash against the manifest and refuses a
@@ -673,7 +679,7 @@ per request — but adds what a static host can't: verification, a template brow
 - **Designs by key.** `POST /designs/v1/generate` with a `DesignKey` answers with that key's
   design (`sha256`, `blob`, `slots`, `generated`): the library's when it holds one, otherwise
   captured on request by `DesignGenerator`. The server runs the app's own converters and checked-in
-  card designs on the JVM, as `generateCardDesignsJvm` does: rc-players' Compose Multiplatform
+  card designs on the JVM, as `generateCardDesigns` does: rc-players' Compose Multiplatform
   creation fork under the app's operations (`LibraryCaptureProfile`), which
   `checkCardDesignParity` shows draws as the app's Android capture does. A captured blob is served
   from `/designs/v1/blobs/` beside the library's. It captures the mobile-app surface at the capture

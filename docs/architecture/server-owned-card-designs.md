@@ -88,7 +88,8 @@ ha-cards .uid  ──(UI Builder, admin edit)──▶  revision
   - **In this repository** (`CardDesignDocument` in `:ha-cards-catalog`): draws a `.uid` by
     calling the `ha-cards` components with each node's properties, inside the same capture harness
     as converter templates (`CardDesignTemplates.captureWith`). It needs no UI Builder release, so
-    the library and the scheduled import capture designs in a Robolectric test today.
+    the library captures designs on the JVM today (`generateCardDesigns`), as the design server
+    does for a key its library lacks.
     Binding-shaped components (`ha-cards/entity-tile`) take their structural properties from the
     design key being captured, so one `.uid` covers every key of its card type.
   - **In UI Builder**, for live publishing from the design server: RemoteCompose export with state

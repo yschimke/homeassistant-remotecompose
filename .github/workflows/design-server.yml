@@ -1,6 +1,8 @@
 name: Card design server
 
-# Generates the card design library (`:card-designs`), tests the design server on it, and builds
+# Generates the card design library (`:card-designs`, on the JVM: the capture the server runs for a
+# key its library lacks), checks a sample of it plays in the app's AndroidX player, tests the
+# design server on it, and builds
 # its container image. On `main` the image is published as ghcr.io/yschimke/ha-card-design-server
 # (`latest` and the commit SHA), which compose-preview-server's deploy runs as the ha.coo.ee
 # front page; pull requests only build it. The library is also uploaded as an artifact
@@ -56,6 +58,10 @@ jobs:
       - uses: ./.github/actions/android-sdk
       - name: Generate the library and test the server
         run: ./gradlew :card-designs:generateCardDesigns :design-server:test :design-server:installDist --stacktrace
+      - name: Play the library in the app's player
+        # One key per card type and shape, across every theme: the JVM's bytes and the same key
+        # captured on Android draw the same pixels in AndroidX's player (Robolectric).
+        run: ./gradlew :card-designs:testAndroidHostTest --tests '*JvmLibraryAndroidPlaybackTest' --stacktrace
       - name: Test the card embed
         # The binding port against the Kotlin golden, tap resolution, and a headless-Chromium run
         # of <ha-card> with the real player and a stubbed Home Assistant. The player comes from
