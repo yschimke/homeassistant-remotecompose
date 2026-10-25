@@ -22,6 +22,7 @@ import kotlin.time.Instant
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 
 /** How often history and forecasts are asked for again; live states move each line between. */
@@ -54,29 +55,34 @@ internal fun rememberDashboardData(client: HaClient, dashboard: Dashboard?): Das
         value = DashboardData()
         return@produceState
       }
-      suspend fun fetch(): DashboardData {
+      // Each history window and forecast type is its own request: one that fails keeps what it
+      // last fetched, and never holds back the others.
+      suspend fun fetch(previous: DashboardData?): DashboardData {
         val now = Clock.System.now()
         val history = buildMap {
           windows.entries.groupBy({ it.value }, { it.key }).forEach { (hours, ids) ->
-            putAll(client.fetchHistory(ids, now - hours.hours, now))
+            putAll(
+              attempt { client.fetchHistory(ids, now - hours.hours, now) }
+                ?: previous?.history?.filterKeys { it in ids }.orEmpty()
+            )
           }
         }
         val byType = forecasts.mapValues { (type, ids) ->
-          client.fetchForecasts(ids.toList(), type)
+          attempt { client.fetchForecasts(ids.toList(), type) }
+            ?: ids
+              .mapNotNull { id ->
+                (previous?.forecasts?.get(id)?.get(type) as? JsonArray)?.let { id to it }
+              }
+              .toMap()
         }
         return DashboardData(history, forecastsByEntity(byType))
       }
       var first = true
       while (true) {
-        try {
-          val fetched = if (first) withTimeoutOrNull(FIRST_DATA_WAIT) { fetch() } else fetch()
-          value = fetched ?: value ?: DashboardData()
-        } catch (e: CancellationException) {
-          throw e
-        } catch (_: Exception) {
-          // Keep what was shown; the next round asks again.
-          if (value == null) value = DashboardData()
-        }
+        val previous = value
+        val fetched =
+          if (first) withTimeoutOrNull(FIRST_DATA_WAIT) { fetch(previous) } else fetch(previous)
+        value = fetched ?: previous ?: DashboardData()
         first = false
         delay(DATA_REFRESH)
       }
@@ -101,3 +107,13 @@ internal fun withCardHistoryWindow(
   snapshot: HaSnapshot,
   now: Instant = Clock.System.now(),
 ): HaSnapshot = snapshot.forCardHistoryWindow(card, now)
+
+/** [block]'s result, or null when it fails; cancellation still cancels. */
+private suspend fun <T> attempt(block: suspend () -> T): T? =
+  try {
+    block()
+  } catch (e: CancellationException) {
+    throw e
+  } catch (_: Exception) {
+    null
+  }
