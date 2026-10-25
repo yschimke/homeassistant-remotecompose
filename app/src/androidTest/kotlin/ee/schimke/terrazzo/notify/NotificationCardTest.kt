@@ -98,7 +98,10 @@ class NotificationCardTest {
     HaNotifications.handle(context, BASE_URL, message, watchHasApp = true, card = views)
 
     val nm = context.getSystemService(NotificationManager::class.java)
-    val posted = nm.activeNotifications.firstOrNull { it.id == HaNotifications.idOf(message) }
+    // The system server posts and cancels asynchronously; wait for each to land.
+    val posted = eventually {
+      nm.activeNotifications.firstOrNull { it.id == HaNotifications.idOf(message) }
+    }
     assertNotNull("the notification wasn't posted", posted)
     val notification = posted!!.notification
     assertNotNull("no card body", notification.bigContentView)
@@ -114,7 +117,24 @@ class NotificationCardTest {
       HaPushNotification(message = HaPushNotification.CLEAR_MESSAGE, tag = "kitchen"),
       watchHasApp = true,
     )
-    assertTrue(nm.activeNotifications.none { it.id == HaNotifications.idOf(message) })
+    assertTrue(
+      "clear_notification didn't remove it",
+      eventually {
+        nm.activeNotifications.none { it.id == HaNotifications.idOf(message) }.takeIf { it }
+      } == true,
+    )
+  }
+
+  /** [check]'s first non-null result within five seconds, else null. */
+  private fun <T : Any> eventually(check: () -> T?): T? {
+    val deadline = System.currentTimeMillis() + 5_000
+    while (true) {
+      check()?.let {
+        return it
+      }
+      if (System.currentTimeMillis() > deadline) return null
+      Thread.sleep(50)
+    }
   }
 
   private companion object {
