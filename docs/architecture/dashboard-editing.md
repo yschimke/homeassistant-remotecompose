@@ -39,7 +39,7 @@ Assistant is the editor in practice.
 | | Without the integration | With the integration |
 | --- | --- | --- |
 | Phone | Light edits on the live dashboard; **Open in Home Assistant** for HA's own editor; an **Install with HACS** card | Light edits; **Ask an agent** (start an edit session, share its prompt); preview, apply or discard agent drafts |
-| Web panel | — | **Ask an agent** and the same draft preview; later a full editor (add cards, sections, views and dashboards, card settings) |
+| Web panel | — | Full editor (add cards, sections and views, card settings as JSON); **Ask an agent** and the same draft preview |
 | Agent | — (no supported path) | MCP: read dashboards and entities, read the card guide, submit drafts to an edit session |
 
 ## Edit sessions
@@ -120,9 +120,18 @@ Assistant's storage:
    longer the long-lived-token `lovelace/config/save` path. `DashboardAgentPrompt` keeps only the
    dashboard-and-entities context the placeholder card's coding prompt carries; the card guide
    lives in the integration (`CARD_GUIDE`, `get_card_guide`).
-5. **Next: a fuller editor in the panel.** The editor screens move to `app-ui` so the panel can add
-   cards, sections and views (`DashboardDraft` already holds those operations); the phone build
-   keeps only the light edits.
+5. **Panel editor** — done. The editor moved to `app-ui` as `DashboardDraftEditor`, with an
+   `EditorScope`:
+   - `Light` (the phone, through `DashboardEditor` in `app`): the phase 1 edits, ending with the
+     integration card.
+   - `Full` (the panel and the desktop app, **Edit dashboard** in a dashboard's top bar): also add
+     a card (search an entity, then pick from the types that suit it, or a heading, text or
+     clock), edit a card's settings as its Lovelace JSON, add and delete sections, and add, rename
+     (`DashboardDraft.renameView`, keeping the view's path) and delete views.
+   - Both draw cards with the host's own renderer, read-only, and save with the same conditional
+     write as the signed-in user; Home Assistant refuses non-administrators and YAML dashboards.
+   - Next: creating dashboards from the panel (`DashboardDraft.newDashboard`,
+     `HaClient.createDashboard`), and forms for common card settings in place of JSON.
 
 Rendered previews of a draft *for the agent* wait for a server-side renderer (the add-on server's
 `.rc` endpoint is a placeholder): until then the agent gets the published catalog images, and the
