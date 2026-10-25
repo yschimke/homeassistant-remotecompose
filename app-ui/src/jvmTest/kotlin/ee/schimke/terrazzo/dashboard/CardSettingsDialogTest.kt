@@ -105,4 +105,43 @@ class CardSettingsDialogTest {
     onNodeWithText("Apply").performClick()
     assertNull(saved.single()["name"])
   }
+
+  @Test
+  fun theFormFollowsATypeChangedInJson() = runComposeUiTest {
+    val saved = mutableListOf<JsonObject>()
+    show(card("""{"type":"tile","entity":"sensor.soil"}"""), saved)
+    onNodeWithText("JSON").performClick()
+    onNode(hasSetTextAction() and hasText("tile", substring = true))
+      .performTextReplacement("""{"type":"gauge","entity":"sensor.soil"}""")
+    onNodeWithText("Form").performClick()
+    onNodeWithContentDescription("Vertical").assertDoesNotExist()
+    onNode(hasSetTextAction() and hasText("Maximum")).performTextInput("50")
+    onNodeWithText("Apply").performClick()
+    assertEquals(card("""{"type":"gauge","entity":"sensor.soil","max":50}"""), saved.single())
+  }
+
+  @Test
+  fun aCustomTypeInJsonLeavesOnlyJson() = runComposeUiTest {
+    show(card("""{"type":"tile","entity":"sensor.soil"}"""), mutableListOf())
+    onNodeWithText("JSON").performClick()
+    onNode(hasSetTextAction() and hasText("tile", substring = true))
+      .performTextReplacement("""{"type":"custom:mushroom-card"}""")
+    onNodeWithText("Form").assertDoesNotExist()
+  }
+
+  @Test
+  fun formEditsAfterJsonSurviveTheFormTab() = runComposeUiTest {
+    val saved = mutableListOf<JsonObject>()
+    show(card("""{"type":"tile","entity":"sensor.soil"}"""), saved)
+    onNodeWithText("JSON").performClick()
+    onNodeWithText("Form").performClick()
+    onNode(hasSetTextAction() and hasText("Name")).performTextInput("Soil")
+    // Selecting the tab already shown changes nothing.
+    onNodeWithText("Form").performClick()
+    onNodeWithText("Apply").performClick()
+    assertEquals(
+      card("""{"type":"tile","entity":"sensor.soil","name":"Soil"}"""),
+      saved.single(),
+    )
+  }
 }

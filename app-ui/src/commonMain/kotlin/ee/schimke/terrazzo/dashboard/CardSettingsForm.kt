@@ -64,18 +64,18 @@ internal fun CardSettingsDialog(
   onDismiss: () -> Unit,
   onSave: (JsonObject) -> Unit,
 ) {
-  val fields = remember(card) { CardSettings.fields(card) }
   var working by remember(card) { mutableStateOf(card) }
-  var json by remember(card) { mutableStateOf(false) }
+  // A type the form doesn't know opens on its JSON.
+  var json by remember(card) { mutableStateOf(CardSettings.fields(card).isEmpty()) }
   var text by
     remember(card) {
-      mutableStateOf(
-        if (fields.isEmpty()) settingsJson.encodeToString(JsonObject.serializer(), card) else ""
-      )
+      mutableStateOf(if (json) settingsJson.encodeToString(JsonObject.serializer(), card) else "")
     }
   // Number fields keep their text while it isn't a number yet; the card keeps the last valid one.
   val numberText = remember(card) { mutableStateMapOf<String, String>() }
   val parsed = remember(text) { parseCardSettings(text) }
+  // The form follows the type being edited: while the JSON is shown, the JSON's.
+  val fields = CardSettings.fields(if (json) parsed.getOrNull() ?: working else working)
   val showJson = json || fields.isEmpty()
   val numbersValid = numberText.values.all(CardSettings::isNumber)
 
@@ -95,9 +95,12 @@ internal fun CardSettingsDialog(
               selected = !showJson,
               enabled = parsed.isSuccess || !json,
               onClick = {
-                parsed.onSuccess { working = it }
-                numberText.clear()
-                json = false
+                // Only coming back from JSON takes the JSON: the form's own edits are newer.
+                if (json) {
+                  parsed.onSuccess { working = it }
+                  numberText.clear()
+                  json = false
+                }
               },
               text = { Text("Form") },
             )
