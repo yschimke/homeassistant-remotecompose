@@ -4,7 +4,7 @@
   "description": "Silent FCM wakes for the Terrazzo app, asked for by its Home Assistant integration.",
   "main": "index.js",
   "engines": {
-    "node": "24"
+    "node": "v24.22.1"
   },
   "scripts": {
     "test": "node --test test/*.test.js"
