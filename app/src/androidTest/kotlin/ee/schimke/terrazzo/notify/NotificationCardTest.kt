@@ -109,7 +109,8 @@ class NotificationCardTest {
     val wear = NotificationCompat.WearableExtender(notification)
     assertEquals(HaNotifications.BRIDGE_TAG, wear.bridgeTag)
     assertEquals(message.dedupeKey, wear.dismissalId)
-    assertEquals(listOf("Open on watch"), wear.actions.map { it.title.toString() })
+    // The Wear app posts its own copy: the phone's isn't bridged.
+    assertTrue(NotificationCompat.getLocalOnly(notification))
 
     // HA's clear_notification with the same tag removes it.
     HaNotifications.handle(

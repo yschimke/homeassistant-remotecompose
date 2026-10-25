@@ -72,13 +72,21 @@ object HaPushReceiver {
               watchHasApp.value,
               card,
               refresh = true,
+              entity = state,
             )
           }
         }
       }
       session.pushNotifications(webhookId).collect { notification ->
         val card = notification.entityId?.let { NotificationCards.render(context, session, it) }
-        HaNotifications.handle(context, session.baseUrl, notification, watchHasApp.value, card)
+        HaNotifications.handle(
+          context,
+          session.baseUrl,
+          notification,
+          watchHasApp.value,
+          card,
+          entity = notification.entityId?.let { session.liveStates.value?.states?.get(it) },
+        )
         if (card != null && !notification.isClear) {
           track(notification, session.liveStates.value?.states?.get(notification.entityId))
         } else {

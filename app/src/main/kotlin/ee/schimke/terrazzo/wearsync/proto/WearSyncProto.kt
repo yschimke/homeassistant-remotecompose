@@ -23,11 +23,14 @@ import kotlinx.serialization.Serializable
  *     - `/wear/picture/<entityId>` — [WearPicture]
  *     - `/wear/slot-designs` — [WearSlotDesigns]
  *     - `/wear/design/<sha256>` — [WearDesignBlob]
+ *     - `/wear/notification/<id>` — [WearNotification] (phone → wear; either side deletes it to
+ *       dismiss on both)
  * - MessageClient (ephemeral):
  *     - `/wear/lease` — [WearLease] (wear → phone heartbeat)
  *     - `/wear/stream` — [StreamUpdate] (phone → wear delta push)
  *     - `/wear/access/request` — [WearAccessRequest] (wear → phone: "I have no token")
  *     - `/wear/access` — [WearAccess] (phone → wear: the watch's own token)
+ *     - `/wear/notification-tap/v1` — [WearNotificationTap] (wear → phone: a notification button)
  */
 
 /** Wear-side settings written by the phone. Drives demo badge and routing. */
@@ -264,6 +267,49 @@ data class SyncStats(
   val recentSendMs: List<Long> = emptyList(),
 )
 
+/**
+ * A Home Assistant notification for the watch to post itself, at [WearSyncPaths.notificationPath]:
+ * the phone's own copy is then local-only (not bridged), and the watch shows a native notification
+ * with the entity's state and buttons that run on the phone. Deleting the item, from either side,
+ * dismisses it on both.
+ *
+ * @property id the phone notification's id (the path's last segment).
+ * @property entityName the entity's friendly name, when the message names one; with [entityState]
+ *   (its formatted state when posted).
+ * @property toggleEntityId set when the entity switches on and off: the watch adds a toggle button.
+ */
+@Serializable
+data class WearNotification(
+  val id: Int = 0,
+  val baseUrl: String = "",
+  val title: String = "",
+  val message: String = "",
+  val tag: String = "",
+  val entityName: String = "",
+  val entityState: String = "",
+  val toggleEntityId: String = "",
+  val actions: List<WearNotificationAction> = emptyList(),
+  val postedAtMs: Long = 0L,
+  /** A redraw for a new entity state: the watch updates it without alerting again. */
+  val update: Boolean = false,
+)
+
+/** One of Home Assistant's `data.actions` buttons. */
+@Serializable data class WearNotificationAction(val action: String = "", val title: String = "")
+
+/**
+ * Wear → phone: a button on a [WearNotification]: an HA [action] (fires
+ * `mobile_app_notification_action`) or, with [toggleEntityId], the entity's toggle.
+ */
+@Serializable
+data class WearNotificationTap(
+  val id: Int = 0,
+  val baseUrl: String = "",
+  val tag: String = "",
+  val action: String = "",
+  val toggleEntityId: String = "",
+)
+
 /** Path constants — keep mirrored across modules. */
 object WearSyncPaths {
   const val SETTINGS: String = "/wear/settings"
@@ -288,6 +334,16 @@ object WearSyncPaths {
    */
   const val TAP_MESSAGE: String = "/wear/tap/v1"
   const val TAP_RESULT_MESSAGE: String = "/wear/tap-result/v1"
+
+  const val NOTIFICATION_PREFIX: String = "/wear/notification/"
+  const val NOTIFICATION_TAP_MESSAGE: String = "/wear/notification-tap/v1"
+
+  /** The DataItem path of the [WearNotification] posted on the phone as [id]. */
+  fun notificationPath(id: Int): String = NOTIFICATION_PREFIX + id.toUInt().toString(16)
+
+  /** The phone notification id a [notificationPath] names, or null for any other path. */
+  fun notificationId(path: String): Int? =
+    path.removePrefix(NOTIFICATION_PREFIX).takeIf { it != path }?.toUIntOrNull(16)?.toInt()
 
   /** The DataItem path of [entityId]'s [WearPicture]. */
   fun picturePath(entityId: String): String = PICTURE_PREFIX + entityId
