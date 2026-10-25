@@ -280,4 +280,16 @@ class DashboardDraftTest {
     )
     assertEquals(3, size.rows)
   }
+
+  @Test
+  fun renamingAViewKeepsItsPathAndCards() {
+    val withView = DashboardDraft.addView(config, "Garden")
+    val last = DashboardDraft.views(withView).lastIndex
+    val renamed = DashboardDraft.renameView(withView, last, "  Back garden ")
+    val view = DashboardDraft.views(renamed)[last]
+    assertEquals("Back garden", view["title"]!!.jsonPrimitive.content)
+    assertEquals(DashboardDraft.views(withView)[last]["path"], view["path"])
+    assertEquals(DashboardDraft.views(withView)[last]["sections"], view["sections"])
+    assertFailsWith<IllegalArgumentException> { DashboardDraft.renameView(renamed, last, " ") }
+  }
 }
