@@ -116,11 +116,12 @@ fun TerrazzoMultiplatformApp(
   hostedAction: ((String) -> Boolean)? = null,
   registerReturnHome: ((() -> Unit) -> Unit)? = null,
   signInWithHomeAssistant: ((String) -> Unit)? = null,
-  onSignOut: (() -> Unit)? = null,
+  onSignOut: (suspend () -> Unit)? = null,
   hostTheme: HostTheme? = null,
   isFullScreen: Boolean = false,
   onToggleFullScreen: (() -> Unit)? = null,
   settingsStorageLabel: String? = null,
+  signInStorageLabel: String? = null,
 ) {
   val dark = hostTheme?.dark ?: isSystemInDarkTheme()
   // App-wide, so the chrome and every dashboard share one look.
@@ -131,6 +132,8 @@ fun TerrazzoMultiplatformApp(
     }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
+    var signingOut by remember { mutableStateOf(false) }
+    var signOutFailed by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val active = connection
     Surface(Modifier.fillMaxSize()) {
@@ -169,8 +172,21 @@ fun TerrazzoMultiplatformApp(
             registerReturnHome,
             signInRemembered = active.hosted && onSignOut != null,
             onSignOut = {
-              onSignOut?.invoke()
-              connection = null
+              if (!signingOut) {
+                signingOut = true
+                scope.launch {
+                  try {
+                    onSignOut?.invoke()
+                    connection = null
+                  } catch (e: CancellationException) {
+                    throw e
+                  } catch (_: Exception) {
+                    signOutFailed = true
+                  } finally {
+                    signingOut = false
+                  }
+                }
+              }
             },
             cardStyle = cardStyle,
             onCardStyle = { cardStyle = it },
@@ -178,9 +194,20 @@ fun TerrazzoMultiplatformApp(
             isFullScreen = isFullScreen,
             onToggleFullScreen = onToggleFullScreen,
             settingsStorageLabel = settingsStorageLabel,
+            signInStorageLabel = signInStorageLabel,
           )
         }
       }
+    }
+    if (signOutFailed) {
+      AlertDialog(
+        onDismissRequest = { signOutFailed = false },
+        title = { Text("Could not sign out") },
+        text = {
+          Text("Your saved sign-in could not be removed. Check your connection and try again.")
+        },
+        confirmButton = { TextButton(onClick = { signOutFailed = false }) { Text("OK") } },
+      )
     }
   }
 }
@@ -285,6 +312,7 @@ private fun DashboardShell(
   isFullScreen: Boolean,
   onToggleFullScreen: (() -> Unit)?,
   settingsStorageLabel: String?,
+  signInStorageLabel: String?,
 ) {
   var list by remember { mutableStateOf<DashboardListState>(DashboardListState.Loading) }
   val home: NavKey = remember {
@@ -400,9 +428,10 @@ private fun DashboardShell(
                   ) {
                     Text(connection.config.baseUrl, style = MaterialTheme.typography.titleMedium)
                     Text(
-                      if (signInRemembered)
-                        "This browser remembers your Home Assistant sign-in until you sign out."
-                      else "Access tokens are kept only for this session."
+                      signInStorageLabel
+                        ?: if (signInRemembered)
+                          "This browser remembers your Home Assistant sign-in until you sign out."
+                        else "Access tokens are kept only for this session."
                     )
                     OutlinedTextField(
                       designServer,

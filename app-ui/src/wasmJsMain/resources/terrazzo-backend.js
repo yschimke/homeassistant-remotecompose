@@ -88,11 +88,20 @@
     },
   };
 
-  backend.showStorageError = () => {
+  backend.showSignInError = () => {
+    showStartupError('Your saved Home Assistant sign-in could not be loaded. Reload to try again.');
+    const button = document.createElement('button');
+    button.textContent = 'Use a different Home Assistant';
+    button.addEventListener('click', () => window.terrazzoOAuth.useDifferentSignIn());
+    document.querySelector('#app .loading')?.append(button);
+  };
+  backend.showStorageError = () => showStartupError('Settings on your Wasmo could not be loaded. Reload to try again.');
+
+  function showStartupError(text) {
     const app = document.getElementById('app');
     if (!app) return;
     const message = document.createElement('p');
-    message.textContent = 'Settings on your Wasmo could not be loaded. Reload to try again.';
+    message.textContent = text;
     const retry = document.createElement('button');
     retry.textContent = 'Reload';
     retry.addEventListener('click', () => location.reload());
@@ -100,5 +109,5 @@
     container.className = 'loading';
     container.append(message, retry);
     app.replaceChildren(container);
-  };
+  }
 })();
