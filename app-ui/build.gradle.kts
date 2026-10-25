@@ -1,3 +1,5 @@
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
@@ -123,10 +125,39 @@ val wasmoAppDirectory =
     into("www/assets") { from(rootProject.file("custom_components/terrazzo/brand/icon.png")) }
   }
 
-tasks.register<Zip>("wasmoApp") {
-  from(wasmoAppDirectory)
-  archiveFileName = "terrazzo.wasmo"
-  destinationDirectory = layout.buildDirectory.dir("wasmo")
+// A plain Zip task writes a directory entry for every folder ("www/", "www/assets/", …). Wasmo's
+// installer writes each zip entry to its object store as-is, so a directory entry lands as a file
+// that blocks the files beneath it ("www/app.wasm" -> "Not a directory") and the install fails.
+// Write only file entries, as Wasmo's own packager does, so the archive installs on any Wasmo —
+// not just one carrying the server-side skip-directory-entries fix.
+tasks.register("wasmoApp") {
+  description = "Packages the Wasm web build as an installable .wasmo archive."
+  // Locals, not top-level script vals: a doLast action that captures a top-level `val` pulls in the
+  // build-script object, which the configuration cache cannot serialize.
+  val inputDir = layout.buildDirectory.dir("wasmo/dir/terrazzo.wasmo")
+  val archiveFile = layout.buildDirectory.file("wasmo/terrazzo.wasmo")
+  dependsOn(wasmoAppDirectory)
+  inputs.dir(inputDir)
+  outputs.file(archiveFile)
+  doLast {
+    val root = inputDir.get().asFile
+    val archive = archiveFile.get().asFile
+    archive.parentFile.mkdirs()
+    ZipOutputStream(archive.outputStream().buffered()).use { zip ->
+      root
+        .walkTopDown()
+        .filter { it.isFile }
+        .sortedBy { it.relativeTo(root).invariantSeparatorsPath }
+        .forEach { file ->
+          // A fixed timestamp keeps the archive byte-for-byte reproducible across builds.
+          val entry = ZipEntry(file.relativeTo(root).invariantSeparatorsPath)
+          entry.time = 0L
+          zip.putNextEntry(entry)
+          file.inputStream().use { it.copyTo(zip) }
+          zip.closeEntry()
+        }
+    }
+  }
 }
 
 // jpackage requires a positive major on macOS. Offset the major on every OS
