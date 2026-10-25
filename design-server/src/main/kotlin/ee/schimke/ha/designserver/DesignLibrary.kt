@@ -76,6 +76,13 @@ private constructor(
 
   fun design(id: String): LibraryDesign? = byId[id]
 
+  /** The library's design for [key], or null when it holds none (or only a revoked one). */
+  fun designFor(key: DesignKey): LibraryDesign? = byKey[key]
+
+  private val byKey: Map<DesignKey, LibraryDesign> by lazy {
+    designs.filter { !it.entry.revoked }.associateBy { it.key }
+  }
+
   /** The manifest entry whose blob is [sha256], or null when it isn't one of this library's. */
   fun entry(sha256: String): DesignEntry? = blobs[sha256]
 

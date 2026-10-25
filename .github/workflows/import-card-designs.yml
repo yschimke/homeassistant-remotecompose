@@ -76,7 +76,7 @@ jobs:
       - name: Capture the app's shipped designs from the imported ones
         if: steps.changed.outputs.designs == 'true'
         run: >-
-          ./gradlew :card-designs:testDebugUnitTest --tests '*ShippedCardDesignsTest*'
+          ./gradlew :card-designs:testAndroidHostTest --tests '*ShippedCardDesignsTest*'
           -PupdateShippedCardDesigns --stacktrace
 
       - name: Open or update the import PR

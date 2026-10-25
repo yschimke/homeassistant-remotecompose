@@ -639,15 +639,23 @@ path from `addon-server/PLAN.md` (option A, `remote-creation-jvm`).
 The server stays static in what it serves — a library generated at build time, nothing captured
 per request — but adds what a static host can't: verification, a template browser and hot reload.
 
-- **Library** (`:card-designs:generateCardDesigns`, a Robolectric test; output in
-  `card-designs/build/card-designs/`). Its source cards are the curated `LibraryFixtures` (one per
-  card type and shape the parity tests cover) and every card in the bundled demo dashboards,
-  nested cards included. Each card's generation properties give a key; each key is captured for
+- **Library** (`CardDesignLibrary`; output in `card-designs/build/card-designs/`). Its source
+  cards are the curated `LibraryFixtures` (one per card type and shape the parity tests cover) and
+  every card in the bundled demo dashboards, nested cards included. Each card's generation properties give a key; each key is captured for
   every theme style, light and dark, and for every other card style in each mode it has
   (mobile-app surface, the one the client fetches). Output:
   `manifest.json` and `blobs/` (written by `DesignPublisher`, the client's format), plus
   `catalog.json` (`DesignCatalog`: an example card and preview paths per design) and `previews/`
   (each design rendered bound to its example's values, and as published with its placeholders).
+  It generates in either of two ways, which draw the same:
+  - `:card-designs:generateCardDesigns`, a Robolectric test: captured with AndroidX, as the app does;
+  - `:card-designs:generateCardDesignsJvm`, plain JVM with no Android: captured with rc-players'
+    Compose Multiplatform creation fork under the app's operations (`LibraryCaptureProfile`), the
+    previews drawn by the Compose Multiplatform player, into `card-designs/build/card-designs-jvm/`.
+
+  The two libraries' bytes differ (the two creation libraries number and order a document's parts
+  differently). `:card-designs:checkCardDesignParity` draws every key's template from both with the
+  one Compose Multiplatform player and compares the pixels.
 - **Client protocol.** `GET /designs/v1/manifest.json` (ETag = its SHA-256, `no-cache`, `304` on
   `If-None-Match`) and `GET /designs/v1/blobs/<sha256>.rc` (immutable). Only names the manifest
   lists are served. Loading verifies every blob's size and hash against the manifest and refuses a
@@ -662,13 +670,27 @@ per request — but adds what a static host can't: verification, a template brow
   JSON. Server-rendered HTML, no scripts.
 - **Hot reload.** A regenerated library goes live when `manifest.json` changes (checked at most
   every 5 s); one that fails to load keeps the previous one serving.
+- **Designs by key.** `POST /designs/v1/generate` with a `DesignKey` answers with that key's
+  design (`sha256`, `blob`, `slots`, `generated`): the library's when it holds one, otherwise
+  captured on request by `DesignGenerator`. The server runs the app's own converters and checked-in
+  card designs on the JVM, as `generateCardDesignsJvm` does: rc-players' Compose Multiplatform
+  creation fork under the app's operations (`LibraryCaptureProfile`), which
+  `checkCardDesignParity` shows draws as the app's Android capture does. A captured blob is served
+  from `/designs/v1/blobs/` beside the library's. It captures the mobile-app surface at the capture
+  profile's API level, for card types with a converter of their own (not the placeholder); any
+  other key is a 404 saying why. Captures run one at a time and are kept per library (a reload
+  can change the checked-in designs they draw from), at most 4096, the oldest dropped first. A
+  client that computes its cards' keys itself asks by key, so no card's config or states leave
+  it: a key holds generation properties, never values.
 - **Resolving a card.** `POST /api/cards/resolve` takes a card's config (with optional states,
-  card style and mode) and returns the closest library design (same card type, slots, style, mode
-  and the default variant), its blob and the values to push: the card's own slot values from its
-  states, and the converter-only ones from the library example. Without the converters the server
-  can't compute a card's shape, so when several shapes fit it returns the first with
-  `exact: false`. It serves players that have no converters: UI Builder's Lovelace canvas and the
-  embed.
+  card style and mode). With the states of every entity the card shows, it runs the card's
+  converter: the card's exact key, that design (by key, as above, so captured if the library
+  lacks it) and the values the converter pushes, `exact: true`. Without them (an anonymous card,
+  as the web app sends it) it returns the closest library design (same card type, slots, style,
+  mode and the default variant), its blob and the values to push: the card's own slot values, and
+  the converter-only ones from the library example. A card's shape can't be told without its
+  states, so when several shapes fit it returns the first with `exact: false`. It serves players
+  that have no converters: UI Builder's Lovelace canvas and the embed.
 - **Designing in UI Builder.** A design's page and `/schema` (paste a card's JSON) show the
   card's schema — slots and bindings with example values (`/api/designs/<id>/schema`,
   `POST /api/schema`) — and, with UI Builder bundled (`UI_BUILDER_BINARY`) or configured
