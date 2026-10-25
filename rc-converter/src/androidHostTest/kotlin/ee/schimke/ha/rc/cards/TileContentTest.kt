@@ -15,6 +15,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -223,13 +224,15 @@ class TileContentTest {
   }
 
   @Test
-  fun aColouredSensorTileKeepsTheBindingPath() {
+  fun aColouredSensorTileKeepsTheBindingPathAndKeysItsColour() {
     val snapshot = HaSnapshot(states = mapOf("sensor.req_ok" to EntityState("sensor.req_ok", "12")))
     assertNull(tile.dataSignature(card("sensor.req_ok") { put("color", "green") }, snapshot))
-    assertNull(
-      tile.designProperties(card("sensor.req_ok") { put("color", "green") }, snapshot),
-      "a configured colour renders through the converter",
-    )
+    // The colour is baked as the active accent, so it is a design property the template carries.
+    val properties =
+      assertNotNull(
+        tile.designProperties(card("sensor.req_ok") { put("color", "green") }, snapshot)
+      )
+    assertTrue("color=green" in properties.shape.split(';'), properties.shape)
   }
 
   // --- features --------------------------------------------------------------------------------
