@@ -15,6 +15,9 @@ on:
       - 'gradle.properties'
       - 'docs/**'
       - 'scripts/test-wasm-browser.py'
+      - 'scripts/test-wasmo-browser.cjs'
+      - 'scripts/wasmo-sim.py'
+      - 'scripts/browser-tests/**'
       - 'scripts/test-demo-browser.py'
       - 'scripts/test-adaptive-dashboard-browser.py'
       - 'scripts/test-printing-dashboard-browser.py'
@@ -63,6 +66,11 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Test browser flows at the GitHub Pages project path
         run: python scripts/test-wasm-browser.py app-ui/build/dist/wasmJs/productionExecutable
+      - name: Test Wasmo cloud settings and static storage
+        run: |
+          npm ci --prefix scripts/browser-tests --ignore-scripts
+          export CHROMIUM_PATH="$(python -c 'from playwright.sync_api import sync_playwright; p = sync_playwright().start(); print(p.chromium.executable_path); p.stop()')"
+          node scripts/test-wasmo-browser.cjs app-ui/build/dist/wasmJs/productionExecutable
       - name: Test adaptive sections and MeshCore conversation cards
         run: python scripts/test-adaptive-dashboard-browser.py app-ui/build/dist/wasmJs/productionExecutable
       - name: Test printing cards, live pictures and scroll reuse

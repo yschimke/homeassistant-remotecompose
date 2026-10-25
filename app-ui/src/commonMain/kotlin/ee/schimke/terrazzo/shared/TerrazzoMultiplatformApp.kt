@@ -120,6 +120,7 @@ fun TerrazzoMultiplatformApp(
   hostTheme: HostTheme? = null,
   isFullScreen: Boolean = false,
   onToggleFullScreen: (() -> Unit)? = null,
+  settingsStorageLabel: String? = null,
 ) {
   val dark = hostTheme?.dark ?: isSystemInDarkTheme()
   // App-wide, so the chrome and every dashboard share one look.
@@ -176,6 +177,7 @@ fun TerrazzoMultiplatformApp(
             dark = dark,
             isFullScreen = isFullScreen,
             onToggleFullScreen = onToggleFullScreen,
+            settingsStorageLabel = settingsStorageLabel,
           )
         }
       }
@@ -282,6 +284,7 @@ private fun DashboardShell(
   dark: Boolean,
   isFullScreen: Boolean,
   onToggleFullScreen: (() -> Unit)?,
+  settingsStorageLabel: String?,
 ) {
   var list by remember { mutableStateOf<DashboardListState>(DashboardListState.Loading) }
   val home: NavKey = remember {
@@ -407,6 +410,7 @@ private fun DashboardShell(
                       label = { Text("Card design server") },
                       singleLine = true,
                     )
+                    settingsStorageLabel?.let { Text(it) }
                     CardUsageSetting(designServer)
                     ReportFeedbackButton()
                     Button(onClick = onSignOut) { Text("Sign out") }

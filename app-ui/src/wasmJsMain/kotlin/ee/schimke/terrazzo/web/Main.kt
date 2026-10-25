@@ -29,6 +29,14 @@ fun main() {
   // Outside the panel (GitHub Pages, a Wasmo app, any other origin) the page signs in itself;
   // finish a sign-in redirect, or pick up a remembered one, before the first frame.
   MainScope().launch {
+    try {
+      initializeBrowserAppStorage()
+    } catch (e: CancellationException) {
+      throw e
+    } catch (_: Throwable) {
+      showStorageLoadFailure()
+      return@launch
+    }
     val server =
       try {
         restoreSignIn().await().toString()
@@ -51,6 +59,7 @@ private fun show(panel: Boolean, signedInServer: String) {
 @Composable
 private fun App(panel: Boolean, signedInServer: String) {
   val signedIn = signedInServer.isNotEmpty()
+  val storageLabel = browserAppStorageLabel()
   // In the panel the app draws in Home Assistant's theme and follows it when it changes.
   var hostTheme by remember { mutableStateOf(if (panel) HostTheme.parse(panelTheme()) else null) }
   var fullScreen by remember { mutableStateOf(isFullScreen(panel)) }
@@ -63,6 +72,7 @@ private fun App(panel: Boolean, signedInServer: String) {
     if (canFullScreen(panel)) ({ toggleFullScreen(panel) }) else null
   if (panel)
     TerrazzoMultiplatformApp(
+      settingsStorageLabel = storageLabel,
       hostedConfig = HaConfig(homeAssistantOrigin(), ""),
       hostedAccessToken = ::currentPanelAccessToken,
       initialDashboardPath = panelDashboard().ifBlank { null },
@@ -74,6 +84,7 @@ private fun App(panel: Boolean, signedInServer: String) {
     )
   else
     TerrazzoMultiplatformApp(
+      settingsStorageLabel = storageLabel,
       hostedConfig = if (signedIn) HaConfig(signedInServer, "") else null,
       hostedAccessToken = if (signedIn) ::currentSignInAccessToken else null,
       signInWithHomeAssistant = ::signIn,
@@ -110,6 +121,9 @@ private external fun toggleFullScreen(panel: Boolean)
   "(panel, listener) => { const host = panel ? window.frameElement.terrazzoHost : null; if (host?.setFullscreenListener) return host.setFullscreenListener(listener); for (const type of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(type, () => listener(!!(document.fullscreenElement || document.webkitFullscreenElement))); }"
 )
 private external fun watchFullScreen(panel: Boolean, listener: (Boolean) -> Unit)
+
+@JsFun("() => window.terrazzoBackend.showStorageError()")
+private external fun showStorageLoadFailure()
 
 // Browser OAuth from ha-oauth.js, loaded before this module by index.html.
 @JsFun("() => window.terrazzoOAuth.restore()")

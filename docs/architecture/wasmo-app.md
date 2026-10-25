@@ -45,7 +45,13 @@ the owner-only `www/` would answer with 404. Neither holds anything private. The
 worker: browsers no longer require one to install, and the app needs a live connection to Home
 Assistant anyway.
 
-There is no `app.wasm`. Everything runs in the browser, which connects to Home Assistant directly
+There is no `app.wasm`. The optional [shared cloud-settings backend](wasmo-cloud-backend.md)
+uses JVM code in a fork-based Wasmo, enabled for a supported list of app install names. The web
+build probes `/api/wasmo/v1/capabilities`: an enabled backend stores usage settings per install;
+static deployments retain their browser storage. This staged integration is under review, with
+no deployment or cutover performed. HA sign-in still lives in the browser in this stage.
+
+The browser connects to Home Assistant directly
 (WebSocket + `/auth/token`). Wasmo serves the files and handles the owner's sign-in to Wasmo. It
 fits because of what Wasmo offers today:
 
