@@ -519,7 +519,7 @@ fun Screen_DashboardPicker_ThemeStyle(
 )
 @Composable
 fun Screen_DashboardView() = PhoneHost {
-  DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
+  DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _, _ -> })
 }
 
 @Preview(
@@ -530,7 +530,7 @@ fun Screen_DashboardView() = PhoneHost {
 )
 @Composable
 fun Screen_DashboardView_PhoneLandscapeMedium() = PhoneHost {
-  DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
+  DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _, _ -> })
 }
 
 /**
@@ -548,7 +548,7 @@ fun Screen_DashboardView_ThemeStyle(
   @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle
 ) =
   PhoneHost(style = style) {
-    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
+    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _, _ -> })
   }
 
 // --- Dashboard top bar ----------------------------------------------------
@@ -1275,7 +1275,7 @@ fun Play_Phone_01_HomeLight() =
     DashboardViewScreen(
       session = demoSession(),
       urlPath = PLAY_HOME_BOARD,
-      onCardLongPress = { _, _ -> },
+      onCardLongPress = { _, _, _ -> },
     )
   }
 
@@ -1287,7 +1287,7 @@ fun Play_Phone_02_HomeDark() =
     DashboardViewScreen(
       session = demoSession(),
       urlPath = PLAY_HOME_BOARD,
-      onCardLongPress = { _, _ -> },
+      onCardLongPress = { _, _, _ -> },
     )
   }
 
@@ -1332,7 +1332,7 @@ fun Play_Tablet7_01_Home() =
     DashboardViewScreen(
       session = demoSession(),
       urlPath = PLAY_HOME_BOARD,
-      onCardLongPress = { _, _ -> },
+      onCardLongPress = { _, _, _ -> },
     )
   }
 
@@ -1344,7 +1344,7 @@ fun Play_Tablet10_01_Home() =
     DashboardViewScreen(
       session = demoSession(),
       urlPath = PLAY_HOME_BOARD,
-      onCardLongPress = { _, _ -> },
+      onCardLongPress = { _, _, _ -> },
     )
   }
 

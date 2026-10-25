@@ -58,15 +58,16 @@ fun WidgetInstallSheet(
   snapshot: HaSnapshot,
   onDismiss: () -> Unit,
   refreshSnapshot: (suspend () -> HaSnapshot)? = null,
+  sectionCards: List<CardConfig> = emptyList(),
 ) {
   val context = LocalContext.current
   val focusManager = LocalFocusManager.current
   val keyboard = LocalSoftwareKeyboardController.current
   val installer = remember { WidgetInstaller(context.applicationContext) }
   val store = LocalTerrazzoGraph.current.widgetStore
-  // A stack or grid long-pressed as a whole: offer each of its cards on its own, so the one the
-  // user meant can be installed rather than the container (whose 1x1 slot shows its first tile).
-  val parts = remember(card) { card.widgetParts() }
+  // The whole section, the pressed row / column / grid, or one cell of it ([widgetParts]). Labels
+  // come from the snapshot the card was pressed against; they don't follow live refreshes.
+  val parts = remember(card, sectionCards) { widgetParts(card, sectionCards, snapshot) }
   var chosen by remember(card) { mutableStateOf(card) }
   val originalName = remember(chosen) { chosen.raw["name"]?.jsonPrimitive?.content ?: "" }
   var name by remember(chosen) { mutableStateOf(originalName) }
@@ -128,19 +129,14 @@ fun WidgetInstallSheet(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.testTag("widget-part-picker"),
           ) {
-            FilterChip(
-              selected = chosen == card,
-              onClick = { chosen = card },
-              label = { Text("All ${parts.size}") },
-            )
             parts.forEach { part ->
               FilterChip(
-                selected = chosen == part,
+                selected = chosen == part.card,
                 onClick = {
-                  chosen = part
+                  chosen = part.card
                   installError = null
                 },
-                label = { Text(widgetPartLabel(part, liveSnapshot)) },
+                label = { Text(part.label) },
               )
             }
           }

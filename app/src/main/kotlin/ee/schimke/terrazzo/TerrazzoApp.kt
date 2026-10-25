@@ -481,6 +481,9 @@ private fun DashboardsRoot(
   // Long-press first offers the card's actions (CardActionsSheet): home screen, watch, style,
   // history, Card Studio. Each target below is one of those, opened from the sheet.
   var actionsTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
+  // The cards of the section the actions' card was pressed in (none outside a section), so its
+  // widget can be the whole section, the card, or one cell of it.
+  var actionsSection by remember { mutableStateOf<List<CardConfig>>(emptyList()) }
   var studioTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
   var styleTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
   // The dashboard editor for the opened dashboard, and a count of saves that re-keys it to reload.
@@ -751,7 +754,10 @@ private fun DashboardsRoot(
             // Long-press opens the card's actions, handed the live
             // snapshot the card was pressed against so a fork or the
             // history preview matches the dashboard frame.
-            onCardLongPress = { card, snapshot -> actionsTarget = card to snapshot },
+            onCardLongPress = { card, snapshot, section ->
+              actionsTarget = card to snapshot
+              actionsSection = section
+            },
             contentPadding = padding,
             initialViewPath = openedView,
             // A card's navigation to another dashboard the user can open switches to it.
@@ -811,6 +817,7 @@ private fun DashboardsRoot(
       dashboardUrlPath = dashboardUrlPath,
       card = card,
       snapshot = snapshot,
+      sectionCards = actionsSection.takeIf { card in it }.orEmpty(),
       onDismiss = { installPending = null },
       refreshSnapshot = {
         session.loadDashboard(openedValue.takeIf { it != DASHBOARD_UNSET }).second
