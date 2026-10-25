@@ -198,7 +198,8 @@ internal object WidgetActionRunner {
       ?.let {
         return@withLock it.accessToken
       }
-    val minted = graph.authService.refreshAccessToken(baseUrl, refresh)
+    val minted =
+      graph.authService.refreshAccessToken(baseUrl, refresh, graph.tokenVault.clientId(baseUrl))
     val stored = minted.refreshToken?.also { graph.tokenVault.put(baseUrl, it) } ?: refresh
     val token = minted.accessToken ?: error("Token refresh for $baseUrl returned no token")
     val lifetimeMs = (minted.expiresInSeconds ?: DEFAULT_TOKEN_LIFETIME_S) * 1000

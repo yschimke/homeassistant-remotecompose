@@ -135,7 +135,11 @@ class HaAuthService(context: Context, httpEngineFactory: HttpEngineFactory) {
    * `LanConnectionPolicyInterceptor` and rewritten to the public URL by `RemoteUrlInterceptor` when
    * the device can't reach the LAN base URL (e.g. cellular, away from home).
    */
-  suspend fun refreshAccessToken(baseUrl: String, refreshToken: String): RefreshedTokens {
+  suspend fun refreshAccessToken(
+    baseUrl: String,
+    refreshToken: String,
+    clientId: String = CLIENT_ID,
+  ): RefreshedTokens {
     val tokenUrl = "${baseUrl.trim().removeSuffix("/")}/auth/token"
     val response =
       httpClient.submitForm(
@@ -144,7 +148,7 @@ class HaAuthService(context: Context, httpEngineFactory: HttpEngineFactory) {
           Parameters.build {
             append("grant_type", "refresh_token")
             append("refresh_token", refreshToken)
-            append("client_id", CLIENT_ID)
+            append("client_id", clientId)
           },
       )
     val body = response.bodyAsText()
@@ -158,7 +162,25 @@ class HaAuthService(context: Context, httpEngineFactory: HttpEngineFactory) {
     return parseTokenResponse(body)
   }
 
+  /**
+   * Signs in to [baseUrl] with a Home Assistant username and password ([HaPasswordLogin]), with no
+   * browser: what the connect screen's live demo server ([DEMO_SERVER]) uses, whose gateway only
+   * lets its own frontend sign in. The tokens are issued to [passwordClientId], so they refresh
+   * only with that `client_id`: the caller records it ([TokenVault.putClientId]). Throws
+   * [InvalidCredentialsException] when HA refuses the username or password.
+   */
+  suspend fun passwordLogin(baseUrl: String, username: String, password: String): RefreshedTokens =
+    parseTokenResponse(HaPasswordLogin.login(httpClient, baseUrl, username, password))
+
   companion object {
+    /** The public demo Home Assistant: read-only, with a public guest login (`demo` / `demo`). */
+    const val DEMO_SERVER = "https://ha-demo.coo.ee"
+    const val DEMO_USERNAME = "demo"
+    const val DEMO_PASSWORD = "demo"
+
+    /** The `client_id` a [passwordLogin] to [baseUrl] signs in as: the server's own frontend. */
+    fun passwordClientId(baseUrl: String): String = HaPasswordLogin.clientId(baseUrl)
+
     const val CLIENT_ID =
       "https://yschimke.github.io/homeassistant-remotecompose/terrazzo-auth/index.html"
     const val REDIRECT_URI = "rcha://auth-callback"

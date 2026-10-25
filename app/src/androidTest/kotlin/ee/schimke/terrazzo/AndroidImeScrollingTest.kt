@@ -134,7 +134,7 @@ class AndroidImeScrollingTest {
     field.performSemanticsAction(SemanticsActions.RequestFocus) { it() }
     showIme()
     waitForIme(true)
-    val demo = compose.onNodeWithText("Try demo mode (no login)")
+    val demo = compose.onNodeWithText("Offline demo · sample data on this phone")
     demo.performScrollTo().assertIsDisplayed()
     captureWindowEvidence("discovery-bottom-ime")
     scrollToBottomAboveKeyboard(demo)

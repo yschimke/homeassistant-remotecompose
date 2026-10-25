@@ -92,11 +92,9 @@ import kotlinx.coroutines.launch
 @Composable
 internal fun SettingsScreen(
   session: HaSession,
-  onToggleDemo: (Boolean) -> Unit,
   onSignOut: () -> Unit,
   onBack: () -> Unit,
   onOpenSyncDiagnostics: (() -> Unit)?,
-  onManageDashboards: () -> Unit,
 ) {
   val isDemo = session is DemoHaSession
   val graph = LocalTerrazzoGraph.current
@@ -169,45 +167,10 @@ internal fun SettingsScreen(
             }
           }
         }
-        SettingSwitch(
-          title = "Demo mode",
-          summary = "Populate the app with an interesting set of fake widgets that animate.",
-          checked = isDemo,
-          onCheckedChange = onToggleDemo,
-        )
-        SettingRow(
-          title = "Manage dashboards",
-          summary =
-            "Pick which custom and built-in Home Assistant dashboards " +
-              "appear in the picker and the top-bar switcher.",
-        ) {
-          OutlinedButton(onClick = onManageDashboards) { Text("Choose") }
-        }
         OutlinedButton(onClick = onSignOut) { Text(if (isDemo) "Exit demo" else "Sign out") }
       }
 
-      SettingsGroup("Appearance") {
-        ThemeSection(
-          selected = themePref,
-          darkMode = darkPref,
-          appTheme = cardStylePref.toUberTheme().appThemeOrNull(),
-          onSelectTheme = { pref ->
-            scope.launch {
-              graph.preferencesStore.setThemeStyle(pref)
-              // Each pinned widget has a baked .rc doc using the
-              // old palette; broadcast a refresh so the provider
-              // re-captures under the new one.
-              widgetRefresh.refreshAllNow()
-            }
-          },
-          onSelectDark = { pref ->
-            scope.launch {
-              graph.preferencesStore.setDarkMode(pref)
-              widgetRefresh.refreshAllNow()
-            }
-          },
-        )
-
+      SettingsGroup("Designs") {
         val installedStyles by CardStyleStore.of(context).installed.collectAsState()
         val styleOverrides by CardDesignOverrideStore.of(context).overrides.collectAsState()
         // Installs in flight and installs that failed, while Settings is open.
@@ -254,6 +217,30 @@ internal fun SettingsScreen(
           onSelect = { pref ->
             scope.launch {
               graph.preferencesStore.setLauncherColours(pref)
+              widgetRefresh.refreshAllNow()
+            }
+          },
+        )
+      }
+
+      SettingsGroup("Theme") {
+        ThemeSection(
+          selected = themePref,
+          darkMode = darkPref,
+          appTheme = cardStylePref.toUberTheme().appThemeOrNull(),
+          design = cardStylePref.toUberTheme(),
+          onSelectTheme = { pref ->
+            scope.launch {
+              graph.preferencesStore.setThemeStyle(pref)
+              // Each pinned widget has a baked .rc doc using the
+              // old palette; broadcast a refresh so the provider
+              // re-captures under the new one.
+              widgetRefresh.refreshAllNow()
+            }
+          },
+          onSelectDark = { pref ->
+            scope.launch {
+              graph.preferencesStore.setDarkMode(pref)
               widgetRefresh.refreshAllNow()
             }
           },
@@ -495,10 +482,12 @@ private fun SettingSwitch(
 }
 
 /**
- * The app palette and light / dark choice. While the card style themes the whole app ([appTheme],
- * an LCD or a Trinitron deck), its palette replaces the choice here, so the options are disabled
- * and say why; a single-mode style (dark-only Trinitron) disables light / dark too. The choices are
- * kept and come back when the card style changes.
+ * The app palette and light / dark choice, after the design ([CardStyleSection]) it depends on. The
+ * palette is a choice only while the [design] draws in it: Classic, the cards' own look in the app
+ * palette. Any other design brings its own colours, and one that themes the whole app ([appTheme],
+ * an LCD or a Trinitron deck) replaces the app's palette too, so the options are disabled and say
+ * why; a single-mode style (dark-only Trinitron) disables light / dark too. The choices are kept
+ * and come back when the design changes.
  */
 @Composable
 internal fun ThemeSection(
@@ -507,16 +496,23 @@ internal fun ThemeSection(
   appTheme: HaUberTheme?,
   onSelectTheme: (ThemePref) -> Unit,
   onSelectDark: (DarkModePref) -> Unit,
+  design: HaUberTheme = HaUberTheme.Classic,
 ) {
+  val paletteEnabled = appTheme == null && design.id == HaUberTheme.Classic.id
   Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-    Text("Theme", style = MaterialTheme.typography.titleMedium)
+    Text("Palette", style = MaterialTheme.typography.titleMedium)
     Text(
-      if (appTheme != null)
-        "The ${appTheme.displayName} card style themes the whole app in its own colours and type. " +
-          "Pick a card style without its own app theme to choose a palette here."
-      else
-        "Material 3 uses the system default palette (dynamic colour on Android 12+). " +
-          "The Terrazzo themes ship a curated Home-Assistant-flavoured palette plus a Google-Fonts pairing.",
+      when {
+        appTheme != null ->
+          "The ${appTheme.displayName} design themes the whole app in its own colours and type. " +
+            "Pick Classic to choose a palette here."
+        !paletteEnabled ->
+          "The ${design.displayName} design brings its own colours. " +
+            "Pick Classic to draw cards in a palette chosen here."
+        else ->
+          "Material 3 uses the system default palette (dynamic colour on Android 12+). " +
+            "The Terrazzo themes ship a curated Home-Assistant-flavoured palette plus a Google-Fonts pairing."
+      },
       style = MaterialTheme.typography.bodySmall,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -527,7 +523,7 @@ internal fun ThemeSection(
           summary = themePrefTagline(pref),
           selected = pref == selected,
           onClick = { onSelectTheme(pref) },
-          enabled = appTheme == null,
+          enabled = paletteEnabled,
         )
       }
     }
@@ -591,9 +587,9 @@ internal fun CardStyleSection(
     modifier = Modifier.animateContentSize(),
     verticalArrangement = Arrangement.spacedBy(12.dp),
   ) {
-    Text("Card style", style = MaterialTheme.typography.titleMedium)
+    Text("Card design", style = MaterialTheme.typography.titleMedium)
     Text(
-      "How dashboard cards are drawn. Classic follows the theme above; the others are complete " +
+      "How dashboard cards are drawn. Classic follows the theme below; the others are complete " +
         "looks with their own colours, shapes and gauges. Classic and Home Assistant come with " +
         "the app; install any other style to download its designs.",
       style = MaterialTheme.typography.bodySmall,

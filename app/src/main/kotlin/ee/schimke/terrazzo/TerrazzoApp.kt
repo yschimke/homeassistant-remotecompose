@@ -29,6 +29,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.auth.rememberLoginController
+import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.DemoHaSession
@@ -58,6 +59,8 @@ import ee.schimke.terrazzo.widget.WidgetInstallSheet
 import ee.schimke.terrazzo.widget.WidgetOpenRequests
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import ee.schimke.terrazzo.widget.WidgetsScreen
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.first
@@ -175,52 +178,69 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
       onError = { lastError = it },
     )
   val connectionPolicy = graph.lanConnectionPolicy
+  var liveDemoSigningIn by remember { mutableStateOf(false) }
+  // A live-demo sign-in in flight: choosing another way in cancels it, so it can't replace that
+  // session when it finishes.
+  var liveDemoLogin by remember { mutableStateOf<Job?>(null) }
+  fun cancelLiveDemo() {
+    liveDemoLogin?.cancel()
+    liveDemoLogin = null
+    liveDemoSigningIn = false
+  }
 
   when (val s = session) {
     null ->
       UnauthenticatedScreen(
         onInstancePicked = { baseUrl ->
+          cancelLiveDemo()
           when (val verdict = connectionPolicy.check(baseUrl)) {
             LanConnectionPolicy.Verdict.Allow -> login.start(baseUrl)
             is LanConnectionPolicy.Verdict.Deny -> lastError = IllegalStateException(verdict.reason)
           }
         },
         onDemoSelected = {
+          cancelLiveDemo()
           scope.launch { graph.preferencesStore.setDemoMode(true) }
           session = graph.sessionFactory.createDemo()
           widgetScheduler.scheduleDemo()
         },
+        onLiveDemo = { username, password ->
+          val baseUrl = HaAuthService.DEMO_SERVER
+          cancelLiveDemo()
+          liveDemoSigningIn = true
+          liveDemoLogin = scope.launch {
+            // A password sign-in, with no browser: the demo's gateway only lets its own frontend
+            // sign in, so the tokens are issued to that client and refresh as it (TokenVault).
+            val tokens =
+              try {
+                graph.authService.passwordLogin(baseUrl, username, password)
+              } catch (e: CancellationException) {
+                throw e
+              } catch (e: Exception) {
+                lastError = e
+                null
+              }
+            liveDemoSigningIn = false
+            liveDemoLogin = null
+            if (tokens == null || session != null) return@launch
+            val refresh = tokens.refreshToken
+            val access = tokens.accessToken
+            if (refresh == null || access == null) {
+              lastError = IllegalStateException("The demo returned incomplete tokens")
+            } else {
+              graph.tokenVault.put(baseUrl, refresh)
+              graph.tokenVault.putClientId(baseUrl, HaAuthService.passwordClientId(baseUrl))
+              session = graph.sessionFactory.create(baseUrl, access)
+            }
+          }
+        },
+        liveDemoSigningIn = liveDemoSigningIn,
         error = lastError,
       )
     else ->
       AuthenticatedShell(
         session = s,
         initialDashboard = initialDashboard,
-        onToggleDemo = { enabled ->
-          val previous = session
-          scope.launch {
-            graph.preferencesStore.setDemoMode(enabled)
-            // The dashboard the user just looked at belongs
-            // to the previous identity — clear so the next
-            // launch goes through the picker rather than
-            // jumping into a dashboard that may not exist on
-            // the new instance.
-            graph.preferencesStore.clearLastViewedDashboard()
-            // Same reasoning for the dashboard selection set:
-            // the new identity may expose a different set of
-            // dashboards, so re-run selection rather than
-            // carry over the previous instance's choices.
-            graph.preferencesStore.clearSelectedDashboardUrls()
-            previous?.close()
-          }
-          if (enabled) {
-            session = graph.sessionFactory.createDemo()
-            widgetScheduler.scheduleDemo()
-          } else {
-            session = null
-            widgetScheduler.cancelDemo()
-          }
-        },
         onSignOut = { signOut(session) },
       )
   }
@@ -230,6 +250,8 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
 private fun UnauthenticatedScreen(
   onInstancePicked: (String) -> Unit,
   onDemoSelected: () -> Unit,
+  onLiveDemo: (username: String, password: String) -> Unit,
+  liveDemoSigningIn: Boolean,
   error: Throwable?,
 ) {
   val snackbars = remember { SnackbarHostState() }
@@ -243,27 +265,27 @@ private fun UnauthenticatedScreen(
   DiscoveryScreen(
     onInstancePicked = onInstancePicked,
     onDemoSelected = onDemoSelected,
+    onLiveDemo = onLiveDemo,
+    liveDemoSigningIn = liveDemoSigningIn,
     snackbarHost = { SnackbarHost(hostState = snackbars) },
   )
 }
 
 /**
- * How the user arrived on [AppScreen.ChooseDashboards]. The two paths differ in two ways:
- * - **Back / confirm destination** — signin-gate confirm lands on Dashboards; settings re-edit
- *   lands on Settings.
- * - **Back affordance** — signin gate has no back (the user MUST pick before getting to a
- *   dashboard); settings entry has a back arrow that returns to Settings.
+ * How the user arrived on [AppScreen.ChooseDashboards]: the sign-in gate, or "Manage dashboards" in
+ * the dashboard's overflow menu. Both land on Dashboards once confirmed; the sign-in gate has no
+ * back (the user MUST pick before getting to a dashboard), the menu entry's back arrow returns to
+ * the dashboards.
  */
 private enum class SelectionEntry {
   Signin,
-  Settings,
+  Menu,
 }
 
 @Composable
 private fun AuthenticatedShell(
   session: HaSession,
   initialDashboard: String?,
-  onToggleDemo: (Boolean) -> Unit,
   onSignOut: () -> Unit,
 ) {
   val context = LocalContext.current
@@ -330,8 +352,7 @@ private fun AuthenticatedShell(
   val navigateBack: () -> Unit = {
     when {
       screen == AppScreen.ChooseDashboards && selectionEntry == SelectionEntry.Signin -> Unit
-      screen == AppScreen.ChooseDashboards || screen == AppScreen.SyncDiagnostics ->
-        screen = AppScreen.Settings
+      screen == AppScreen.SyncDiagnostics -> screen = AppScreen.Settings
       else -> screen = AppScreen.Dashboards
     }
   }
@@ -348,27 +369,31 @@ private fun AuthenticatedShell(
           onOpenPinned = { screen = AppScreen.Pinned },
           onOpenLogs = { screen = AppScreen.Logs },
           onSignOut = onSignOut,
+          // Demo mode has a curated dashboard set: nothing to choose.
+          onManageDashboards =
+            if (session is DemoHaSession) null
+            else {
+              {
+                selectionEntry = SelectionEntry.Menu
+                selectionInitialResolved = false
+                scope.launch {
+                  selectionInitial = graph.preferencesStore.selectedDashboardUrlsNow()
+                  selectionInitialResolved = true
+                }
+                screen = AppScreen.ChooseDashboards
+              }
+            },
         )
       AppScreen.Settings -> {
         val wearReady by graph.wearSyncManager.wearableAvailable.collectAsState()
         SettingsScreen(
           session = session,
-          onToggleDemo = onToggleDemo,
           onSignOut = onSignOut,
           onBack = { screen = AppScreen.Dashboards },
           onOpenSyncDiagnostics =
             if (wearReady) {
               { screen = AppScreen.SyncDiagnostics }
             } else null,
-          onManageDashboards = {
-            selectionEntry = SelectionEntry.Settings
-            selectionInitialResolved = false
-            scope.launch {
-              selectionInitial = graph.preferencesStore.selectedDashboardUrlsNow()
-              selectionInitialResolved = true
-            }
-            screen = AppScreen.ChooseDashboards
-          },
         )
       }
       AppScreen.Widgets -> WidgetsScreen(onBack = { screen = AppScreen.Dashboards })
@@ -400,7 +425,7 @@ private fun AuthenticatedShell(
             title =
               when (selectionEntry) {
                 SelectionEntry.Signin -> "Choose dashboards"
-                SelectionEntry.Settings -> "Manage dashboards"
+                SelectionEntry.Menu -> "Manage dashboards"
               },
           )
         } else {
@@ -413,23 +438,19 @@ private fun AuthenticatedShell(
               // between the pref write and the snapshot
               // flag flipping.
               selectionMissingAtSignin = false
-              screen =
-                when (selectionEntry) {
-                  SelectionEntry.Signin -> AppScreen.Dashboards
-                  SelectionEntry.Settings -> AppScreen.Settings
-                }
+              screen = AppScreen.Dashboards
             },
             onBack =
               when (selectionEntry) {
                 SelectionEntry.Signin -> null
-                SelectionEntry.Settings -> {
-                  { screen = AppScreen.Settings }
+                SelectionEntry.Menu -> {
+                  { screen = AppScreen.Dashboards }
                 }
               },
             title =
               when (selectionEntry) {
                 SelectionEntry.Signin -> "Choose dashboards"
-                SelectionEntry.Settings -> "Manage dashboards"
+                SelectionEntry.Menu -> "Manage dashboards"
               },
           )
         }
@@ -453,6 +474,7 @@ private fun DashboardsRoot(
   onOpenPinned: () -> Unit,
   onOpenLogs: () -> Unit,
   onSignOut: () -> Unit,
+  onManageDashboards: (() -> Unit)?,
 ) {
   val graph = LocalTerrazzoGraph.current
   val scope = rememberCoroutineScope()
@@ -714,6 +736,7 @@ private fun DashboardsRoot(
               onInstallOnWatch = installOnWatch,
               onEditDashboard =
                 if (openedValue != DASHBOARD_UNSET) ({ editorOpen = true }) else null,
+              onManageDashboards = onManageDashboards,
             )
           },
         )
