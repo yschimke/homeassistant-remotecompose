@@ -81,6 +81,11 @@ private fun AdaptiveIcon(shape: Shape, label: String) {
       contentAlignment = Alignment.Center,
     ) {
       Image(
+        painter = painterResource(ComponentsR.drawable.ic_launcher_background),
+        contentDescription = null,
+        modifier = Modifier.size(72.dp),
+      )
+      Image(
         painter = painterResource(ComponentsR.drawable.ic_launcher_foreground),
         contentDescription = null,
         modifier = Modifier.size(72.dp),

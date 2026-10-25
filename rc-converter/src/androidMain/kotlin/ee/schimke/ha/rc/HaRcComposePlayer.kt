@@ -2,7 +2,6 @@
 
 package ee.schimke.ha.rc
 
-import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.runtime.Composable
@@ -355,7 +354,7 @@ private class BlockingBitmapLoaderAdapter(
     if (delegate === BitmapLoader.UNSUPPORTED) return null
     val name = data.externalImageName() ?: return null
     val decode = {
-      delegate.loadBitmap(name).use { BitmapFactory.decodeStream(it) }?.asImageBitmap()
+      delegate.loadBitmap(name).use { decodeBoundedBitmap(it.readBytes()) }?.asImageBitmap()
     }
     return try {
       if (inline) decode() else withContext(Dispatchers.IO) { decode() }

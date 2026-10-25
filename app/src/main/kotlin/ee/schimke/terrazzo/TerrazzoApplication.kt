@@ -101,6 +101,7 @@ class TerrazzoApplication : Application() {
     // app
     // leaves the foreground: the cost of values that didn't arrive as bindings.
     reportCardRebuildsOnStop()
+    followCardStyleWithLauncherIcon()
     if (graph.cardMonitor.isEnabled) {
       registerNotificationChannels()
     }
@@ -167,6 +168,30 @@ class TerrazzoApplication : Application() {
           CardDesignSync.apply(applicationContext, choice.serverUrl, syncNow = true)
         }
     }
+  }
+
+  /**
+   * Swaps the launcher icon to the card design's own ([LauncherIcons]) each time the app moves to
+   * the background — not while it's on screen, where the launcher would refresh the entry under a
+   * running task — and on start, to catch a change the last session didn't get to apply.
+   */
+  private fun followCardStyleWithLauncherIcon() {
+    val scope = ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO
+    val apply = {
+      scope.launch {
+        LauncherIcons.apply(applicationContext, graph.preferencesStore.cardStyle.first())
+      }
+    }
+    apply()
+    ProcessLifecycleOwner.get()
+      .lifecycle
+      .addObserver(
+        object : androidx.lifecycle.DefaultLifecycleObserver {
+          override fun onStop(owner: androidx.lifecycle.LifecycleOwner) {
+            apply()
+          }
+        }
+      )
   }
 
   /**

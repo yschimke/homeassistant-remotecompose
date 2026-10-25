@@ -56,6 +56,12 @@ fun Play_Icon_512() {
       Modifier.fillMaxSize().background(colorResource(ComponentsR.color.ic_launcher_background)),
     contentAlignment = Alignment.Center,
   ) {
+    // The terrazzo ground, full bleed.
+    Image(
+      painter = painterResource(ComponentsR.drawable.ic_launcher_background),
+      contentDescription = null,
+      modifier = Modifier.fillMaxSize(),
+    )
     // Foreground vector is sized for the 108dp adaptive canvas with
     // a 72dp safe zone; rendering at the full canvas size lets the
     // icon fill the square comfortably without the launcher's
