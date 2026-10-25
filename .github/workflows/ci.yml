@@ -91,7 +91,7 @@ jobs:
       - uses: actions/setup-java@v6.1.0
         with:
           distribution: temurin
-          java-version: 21.0.12+101.0.LTS
+          java-version: 21.0.13+9.0.LTS
       - uses: gradle/actions/setup-gradle@v6.4.0
       - uses: ./.github/actions/buildfetch-cache
         with:
@@ -129,7 +129,7 @@ jobs:
       - uses: actions/setup-java@v6.1.0
         with:
           distribution: temurin
-          java-version: 21.0.12+101.0.LTS
+          java-version: 21.0.13+9.0.LTS
       - uses: gradle/actions/setup-gradle@v6.4.0
       - uses: ./.github/actions/buildfetch-cache
         with:
@@ -150,7 +150,7 @@ jobs:
       - uses: actions/setup-java@v6.1.0
         with:
           distribution: temurin
-          java-version: 21.0.12+101.0.LTS
+          java-version: 21.0.13+9.0.LTS
       - uses: gradle/actions/setup-gradle@v6.4.0
       - uses: ./.github/actions/buildfetch-cache
         with:
@@ -212,7 +212,7 @@ jobs:
       - uses: actions/setup-java@v6.1.0
         with:
           distribution: temurin
-          java-version: 21.0.12+101.0.LTS
+          java-version: 21.0.13+9.0.LTS
       - uses: gradle/actions/setup-gradle@v6.4.0
       - uses: ./.github/actions/buildfetch-cache
         with:
@@ -264,7 +264,7 @@ jobs:
         if: env.RUN_HEAVY == 'true'
         with:
           distribution: temurin
-          java-version: 21.0.12+101.0.LTS
+          java-version: 21.0.13+9.0.LTS
       - uses: gradle/actions/setup-gradle@v6.4.0
         if: env.RUN_HEAVY == 'true'
       - uses: ./.github/actions/buildfetch-cache
