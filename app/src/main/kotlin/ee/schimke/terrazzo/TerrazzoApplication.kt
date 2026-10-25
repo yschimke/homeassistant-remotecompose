@@ -11,6 +11,7 @@ import dev.zacsweers.metro.createGraphFactory
 import ee.schimke.ha.rc.CardMemory
 import ee.schimke.ha.rc.CardRebuilds
 import ee.schimke.ha.rc.FileLocalDesignStore
+import ee.schimke.ha.rc.components.LauncherIcons
 import ee.schimke.ha.rc.components.enableRemoteImageUrls
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
@@ -179,7 +180,11 @@ class TerrazzoApplication : Application() {
     val scope = ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO
     val apply = {
       scope.launch {
-        LauncherIcons.apply(applicationContext, graph.preferencesStore.cardStyle.first())
+        LauncherIcons.apply(
+          applicationContext,
+          graph.preferencesStore.cardStyle.first().id,
+          "ee.schimke.terrazzo",
+        )
       }
     }
     apply()

@@ -1,14 +1,20 @@
 package ee.schimke.terrazzo.wear
 
 import android.app.Application
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import ee.schimke.ha.rc.CardDesignLibrary
 import ee.schimke.ha.rc.CardMemory
 import ee.schimke.ha.rc.FileLocalDesignStore
+import ee.schimke.ha.rc.components.LauncherIcons
+import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.widget.WearNeutralTemplateStore
 import ee.schimke.terrazzo.wear.widget.releaseWidgetTemplates
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -31,5 +37,31 @@ class TerrazzoWearApplication : Application() {
     CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
       WearNeutralTemplateStore.of(applicationContext).prune()
     }
+    followCardStyleWithLauncherIcon()
+  }
+
+  /**
+   * Swaps the launcher icon to the watch's card style ([LauncherIcons]) each time the app leaves
+   * the screen — not while it's showing, where the launcher would refresh the entry under a running
+   * task — and on start, to catch a change the last session didn't get to apply.
+   */
+  private fun followCardStyleWithLauncherIcon() {
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    val prefs = WearPrefs(applicationContext)
+    val apply = {
+      scope.launch {
+        LauncherIcons.apply(applicationContext, prefs.cardStyle.first(), "ee.schimke.terrazzo.wear")
+      }
+    }
+    apply()
+    ProcessLifecycleOwner.get()
+      .lifecycle
+      .addObserver(
+        object : DefaultLifecycleObserver {
+          override fun onStop(owner: LifecycleOwner) {
+            apply()
+          }
+        }
+      )
   }
 }
