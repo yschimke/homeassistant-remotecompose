@@ -3,7 +3,6 @@
 package ee.schimke.ha.rc
 
 import android.content.Context
-import android.graphics.BitmapFactory
 import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.profile.Profile
@@ -79,7 +78,7 @@ fun captureLauncherWidgetDocument(
     if (urls.isEmpty()) initial
     else {
       val bitmaps = urls.associateWith { url ->
-        fetchImage(url)?.let { BitmapFactory.decodeByteArray(it, 0, it.size)?.asImageBitmap() }
+        fetchImage(url)?.let { decodeBoundedBitmap(it)?.asImageBitmap() }
       }
       // A missing/invalid image uses the converter's supported icon/name/state fallback.
       capture(PictureImageStrategy.Inline { bitmaps[it] })

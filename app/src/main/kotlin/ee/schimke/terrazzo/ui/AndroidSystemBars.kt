@@ -1,22 +1,19 @@
 package ee.schimke.terrazzo.ui
 
-import android.graphics.Color
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
-import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowCompat
 
-/** Match both icons and legacy navigation scrims to the resolved app theme, including overrides. */
+/**
+ * Light or dark system-bar icons to match the resolved app theme, including overrides.
+ *
+ * No `enableEdgeToEdge()`: minSdk is 35, where the platform enforces edge-to-edge with transparent
+ * bars and its own contrast protection for three-button navigation. AndroidX's helper would only
+ * add its pre-35 code paths, whose deprecated `Window.setStatusBarColor` / `setNavigationBarColor`
+ * calls Play's pre-launch report flags.
+ */
 internal fun ComponentActivity.updateSystemBars(darkTheme: Boolean) {
-  enableEdgeToEdge(
-    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { darkTheme },
-    // AndroidX's default navigation scrims preserve contrast on API 26–28. On API 29+ the
-    // platform supplies contrast protection for three-button navigation instead.
-    navigationBarStyle =
-      SystemBarStyle.auto(
-        Color.argb(0xe6, 0xff, 0xff, 0xff),
-        Color.argb(0x80, 0x1b, 0x1b, 0x1b),
-      ) {
-        darkTheme
-      },
-  )
+  WindowCompat.getInsetsController(window, window.decorView).apply {
+    isAppearanceLightStatusBars = !darkTheme
+    isAppearanceLightNavigationBars = !darkTheme
+  }
 }
