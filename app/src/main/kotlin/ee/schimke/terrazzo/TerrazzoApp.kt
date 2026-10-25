@@ -59,6 +59,8 @@ import ee.schimke.terrazzo.widget.WidgetInstallSheet
 import ee.schimke.terrazzo.widget.WidgetOpenRequests
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import ee.schimke.terrazzo.widget.WidgetsScreen
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.first
@@ -177,41 +179,59 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
     )
   val connectionPolicy = graph.lanConnectionPolicy
   var liveDemoSigningIn by remember { mutableStateOf(false) }
+  // A live-demo sign-in in flight: choosing another way in cancels it, so it can't replace that
+  // session when it finishes.
+  var liveDemoLogin by remember { mutableStateOf<Job?>(null) }
+  fun cancelLiveDemo() {
+    liveDemoLogin?.cancel()
+    liveDemoLogin = null
+    liveDemoSigningIn = false
+  }
 
   when (val s = session) {
     null ->
       UnauthenticatedScreen(
         onInstancePicked = { baseUrl ->
+          cancelLiveDemo()
           when (val verdict = connectionPolicy.check(baseUrl)) {
             LanConnectionPolicy.Verdict.Allow -> login.start(baseUrl)
             is LanConnectionPolicy.Verdict.Deny -> lastError = IllegalStateException(verdict.reason)
           }
         },
         onDemoSelected = {
+          cancelLiveDemo()
           scope.launch { graph.preferencesStore.setDemoMode(true) }
           session = graph.sessionFactory.createDemo()
           widgetScheduler.scheduleDemo()
         },
         onLiveDemo = { username, password ->
           val baseUrl = HaAuthService.DEMO_SERVER
+          cancelLiveDemo()
           liveDemoSigningIn = true
-          scope.launch {
+          liveDemoLogin = scope.launch {
             // A password sign-in, with no browser: the demo's gateway only lets its own frontend
             // sign in, so the tokens are issued to that client and refresh as it (TokenVault).
-            runCatching { graph.authService.passwordLogin(baseUrl, username, password) }
-              .onSuccess { tokens ->
-                val refresh = tokens.refreshToken
-                val access = tokens.accessToken
-                if (refresh == null || access == null) {
-                  lastError = IllegalStateException("The demo returned incomplete tokens")
-                } else {
-                  graph.tokenVault.put(baseUrl, refresh)
-                  graph.tokenVault.putClientId(baseUrl, HaAuthService.passwordClientId(baseUrl))
-                  session = graph.sessionFactory.create(baseUrl, access)
-                }
+            val tokens =
+              try {
+                graph.authService.passwordLogin(baseUrl, username, password)
+              } catch (e: CancellationException) {
+                throw e
+              } catch (e: Exception) {
+                lastError = e
+                null
               }
-              .onFailure { lastError = it }
             liveDemoSigningIn = false
+            liveDemoLogin = null
+            if (tokens == null || session != null) return@launch
+            val refresh = tokens.refreshToken
+            val access = tokens.accessToken
+            if (refresh == null || access == null) {
+              lastError = IllegalStateException("The demo returned incomplete tokens")
+            } else {
+              graph.tokenVault.put(baseUrl, refresh)
+              graph.tokenVault.putClientId(baseUrl, HaAuthService.passwordClientId(baseUrl))
+              session = graph.sessionFactory.create(baseUrl, access)
+            }
           }
         },
         liveDemoSigningIn = liveDemoSigningIn,
