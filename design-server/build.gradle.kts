@@ -70,6 +70,13 @@ tasks.test {
   }
 }
 
+// Compose Multiplatform publishes its runtime as empty aliases of AndroidX's desktop jars, under
+// the same file names: the distribution's lib/ holds one of each, so it takes AndroidX's.
+configurations.runtimeClasspath {
+  exclude(group = "org.jetbrains.compose.runtime", module = "runtime-desktop")
+  exclude(group = "org.jetbrains.compose.runtime", module = "runtime-saveable-desktop")
+}
+
 dependencies {
   implementation(platform(libs.rc.players.bom))
   implementation(project(":ha-model"))
