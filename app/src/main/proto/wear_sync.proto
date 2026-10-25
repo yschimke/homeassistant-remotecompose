@@ -34,8 +34,6 @@ message WearSettings {
     // Mobile-owned appearance. Wear keeps the last received values offline.
     string theme_style = 5;
     string card_style = 6;
-    // Follow (System), Light or Dark. Follow resolves on the receiving watch.
-    string dark_mode = 7;
 }
 
 // Card surfaces shown on Wear. Phone extracts the minimum each row
@@ -104,8 +102,6 @@ message WearSlotDesign {
     string card_key = 1;
     string container = 2;
     string sha256 = 3;
-    // Absence means the legacy dark template. Both modes are synced for offline System changes.
-    optional bool dark_theme = 4;
 }
 
 // DataItem at `/wear/design/<sha256>`: a Wear widget design's Remote Compose

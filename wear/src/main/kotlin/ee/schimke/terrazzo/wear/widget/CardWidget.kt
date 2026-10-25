@@ -15,7 +15,6 @@ import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.glance.wear.AssociateWithGlanceWearWidget
 import androidx.glance.wear.GlanceWearWidget
 import androidx.glance.wear.GlanceWearWidgetManager
@@ -69,7 +68,7 @@ import ee.schimke.terrazzo.wear.sync.syncWidgetStateFromDataLayer
 import ee.schimke.terrazzo.wear.ui.syncedCardDesign
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
 import ee.schimke.terrazzo.wear.ui.wearCardLook
-import ee.schimke.terrazzo.wear.ui.wearSystemDark
+import ee.schimke.terrazzo.wear.ui.wearPaletteKey
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -210,30 +209,30 @@ internal suspend fun slotWidgetDataFromStore(
     withTimeoutOrNull(DATA_LAYER_TIMEOUT_MS) { syncPicturesFromDataLayer(app, store, pictured) }
   }
 
-  val look = store.readSettings().wearCardLook(app.wearSystemDark())
+  val look = store.readSettings().wearCardLook()
   val style = look.palette
   val cardStyle = wearWidgetCardStyle(summary?.cardStyleOverride, look.style)
   val registry = defaultRegistry().withEnhancedShutter()
-  val updatedColors = wearWidgetColors(style, look.dark)
+  val scheme = terrazzoWearColorScheme(style, app)
+  val updatedColors = wearWidgetColors(scheme)
 
   // The card's Wear widget designs, as synced from the phone (for pinned cards, by their key).
   val designs =
     store.readSlotDesigns()?.designs.orEmpty().filter {
-      chosen != null && it.cardKey == chosen.cardKey && it.darkTheme == look.dark
+      chosen != null && it.cardKey == chosen.cardKey
     }
 
   return slotWidgetData(
     registry,
     updatedColors,
-    style,
+    wearPaletteKey(style, scheme),
     card,
     snapshot,
     cardStyle,
     fetchImage = { url -> syncedPicture(store, snapshot, url) },
-    darkTheme = look.dark,
     wearDesign = { container ->
       designs.firstOrNull { it.container == container }?.let { store.readDesign(it.sha256) }
-        ?: card?.let { store.syncedCardDesign(it, container, look.dark) }
+        ?: card?.let { store.syncedCardDesign(it, container) }
     },
   )
 }
@@ -243,8 +242,14 @@ internal suspend fun slotWidgetDataFromStore(
  * HA-specific semantic slots defined: tertiary is link text and secondary is the unknown-state
  * accent.
  */
-internal fun wearWidgetColors(style: ThemeStyle, darkTheme: Boolean = true): RemoteColorScheme {
-  val wearColors = RemoteColorScheme(terrazzoWearColorScheme(style, darkTheme))
+internal fun wearWidgetColors(style: ThemeStyle): RemoteColorScheme {
+  return wearWidgetColors(terrazzoWearColorScheme(style))
+}
+
+internal fun wearWidgetColors(
+  scheme: androidx.wear.compose.material3.ColorScheme
+): RemoteColorScheme {
+  val wearColors = RemoteColorScheme(scheme)
   return wearColors.copy(tertiary = wearColors.primary, secondary = wearColors.onSurfaceVariant)
 }
 
@@ -271,26 +276,10 @@ internal fun slotWidgetData(
   cardStyle: HaUberTheme = HaUberTheme.Classic,
   fetchImage: (url: String) -> ByteArray? = { null },
   wearDesign: (container: String) -> ByteArray? = { null },
-  darkTheme: Boolean = true,
 ): WearWidgetData {
   // The card's state tints its container: warm for heating, amber for a light that is on.
-  val tint =
-    ContainerTint.argbFor(card, snapshot)
-      ?: if (!darkTheme)
-        terrazzoWearColorScheme(themeKey as? ThemeStyle ?: ThemeStyle.Material3, false)
-          .surfaceContainer
-          .toArgb()
-      else null
-  val direct =
-    slotDocument(
-      registry,
-      colors,
-      card,
-      snapshot,
-      cardStyle = cardStyle,
-      tint = tint,
-      darkTheme = darkTheme,
-    )
+  val tint = ContainerTint.argbFor(card, snapshot)
+  val direct = slotDocument(registry, colors, card, snapshot, cardStyle = cardStyle, tint = tint)
   if (card == null) return direct
   val design = CardDesignTemplates.designCard(card, snapshot, registry)
   val converter = registry.converterFor(design.type)
@@ -331,7 +320,6 @@ internal fun slotWidgetData(
           properties.shape,
           input,
           cardStyle,
-          darkTheme = darkTheme,
         )
         ?.let { WearWidgetTemplate.instantiate(context, it, params, isPreview, tint) }
         ?.let { widget ->
@@ -345,7 +333,7 @@ internal fun slotWidgetData(
         WearTemplateKey(
           cardType = design.type,
           shape = properties.shape,
-          theme = Triple(themeKey, cardStyle.id, darkTheme),
+          theme = themeKey to cardStyle.id,
           containerType = params.containerType,
           widthDp = params.widthDp,
           heightDp = params.heightDp,
@@ -363,7 +351,6 @@ internal fun slotWidgetData(
               input.snapshot,
               template = true,
               cardStyle = cardStyle,
-              darkTheme = darkTheme,
             )
             .captureRawContent(context, params, isPreview)
             .also { wearTemplates[key] = it }
@@ -439,9 +426,8 @@ internal suspend fun neutralWidgetTemplate(
   shape: String,
   input: DesignTemplateInput,
   cardStyle: HaUberTheme,
-  darkTheme: Boolean = true,
 ): ByteArray? {
-  val key = WearNeutralTemplateKey(cardType, shape, Triple(themeKey, cardStyle.id, darkTheme))
+  val key = WearNeutralTemplateKey(cardType, shape, themeKey to cardStyle.id)
   neutralTemplates[key]?.let {
     return it
   }
@@ -452,7 +438,7 @@ internal suspend fun neutralWidgetTemplate(
         return@withLock it
       }
       val store = WearNeutralTemplateStore.of(context)
-      val fileName = neutralTemplateFileName(cardType, shape, themeKey, cardStyle.id, darkTheme)
+      val fileName = neutralTemplateFileName(cardType, shape, themeKey, cardStyle.id)
       fileName?.let(store::read)?.let {
         neutralTemplates[key] = it
         return@withLock it
@@ -467,7 +453,6 @@ internal suspend fun neutralWidgetTemplate(
             input.snapshot,
             template = true,
             cardStyle = cardStyle,
-            darkTheme = darkTheme,
           )
         }
       }
@@ -482,19 +467,22 @@ internal suspend fun neutralWidgetTemplate(
 
 /**
  * The disk name of a neutral template: everything [WearNeutralTemplateKey] holds, hashed. Null —
- * kept in memory only — for a [themeKey] with no stable name across processes (not an enum, such as
- * [ee.schimke.ha.rc.components.ThemeStyle]).
+ * kept in memory only — for a [themeKey] without a stable name across processes. Palette keys
+ * include all resolved system colors; enum keys remain supported for previews and older callers.
  */
 internal fun neutralTemplateFileName(
   cardType: String,
   shape: String,
   themeKey: Any,
   cardStyleId: String,
-  darkTheme: Boolean = true,
 ): String? {
-  val theme = (themeKey as? Enum<*>)?.let { "${it.javaClass.name}.${it.name}" } ?: return null
-  val stable =
-    listOf(cardType, shape, theme, cardStyleId, darkTheme.toString()).joinToString("\u0000")
+  val theme =
+    when (themeKey) {
+      is Enum<*> -> "${themeKey.javaClass.name}.${themeKey.name}"
+      is String -> themeKey.takeIf { it.startsWith("wear-palette-v1:") } ?: return null
+      else -> return null
+    }
+  val stable = listOf(cardType, shape, theme, cardStyleId).joinToString("\u0000")
   return java.security.MessageDigest.getInstance("SHA-256")
     .digest(stable.encodeToByteArray())
     .joinToString("") { "%02x".format(it) }
@@ -539,13 +527,10 @@ internal fun slotDocument(
   template: Boolean = false,
   cardStyle: HaUberTheme = HaUberTheme.Classic,
   tint: Int? = null,
-  darkTheme: Boolean = true,
 ): WearWidgetDocument =
   WearWidgetDocument(
     background = tint?.let { WearWidgetBrush.color(Color(it).rc) } ?: WearWidgetBrush.Companion,
-    content = {
-      SlotContent(registry, colors, card, snapshot, template, cardStyle, darkTheme = darkTheme)
-    },
+    content = { SlotContent(registry, colors, card, snapshot, template, cardStyle) },
   )
 
 /** What a widget shows inside its container: see [slotDocument]. */
@@ -559,7 +544,6 @@ internal fun SlotContent(
   cardStyle: HaUberTheme,
   // What draws the card: its converter, or a card design authored in UI Builder captured for the
   // card's key (server-owned-card-designs.md, "One source, every surface").
-  darkTheme: Boolean = true,
   content: @Composable (RemoteModifier) -> Unit = { RenderChild(card!!, snapshot, it) },
 ) {
   // The watch's widget host has no image loader. A template names its slot pictures by URL, and
@@ -575,7 +559,7 @@ internal fun SlotContent(
         ProvideRemoteHaTheme(theme) {
           // The user's card style brings its instruments, type and shapes; the watch keeps its own
           // palette (the WearM3 colours the widget host updates).
-          ProvideHaUberStyle(cardStyle, darkTheme = darkTheme) {
+          ProvideHaUberStyle(cardStyle, darkTheme = true) {
             ProvideCardSizeMode(CardSizeMode.Fixed) {
               // The Glance Wear container already supplies its own shape + brush via
               // WearWidgetBrush, so suppress the per-card rounded clip + divider border that would
