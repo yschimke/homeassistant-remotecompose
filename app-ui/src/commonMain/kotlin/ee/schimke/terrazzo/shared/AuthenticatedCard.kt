@@ -94,6 +94,8 @@ internal fun AuthenticatedCard(
             (leaf.type in setOf("tile", "entity", "sensor", "gauge", "button", "entities") ||
               hasCustomCardDesign(leaf)) &&
               !nativeControls &&
+              // An entity Home Assistant no longer has: the built-in card says so, with no lookup.
+              !namesMissingEntity(leaf, snapshot) &&
               cardServiceAction(leaf) == null &&
               tap in setOf(null, "toggle", "more-info", "none") &&
               (leaf.raw["features"] as? JsonArray).orEmpty().isEmpty()
@@ -130,3 +132,8 @@ internal fun hasCustomCardDesign(card: CardConfig): Boolean =
   card.type.startsWith("custom:") && sharedConverters.get(card.type) != null
 
 private val sharedConverters by lazy { defaultRegistry() }
+
+/** Whether [card] names an entity [snapshot]'s states lack, once states have arrived. */
+internal fun namesMissingEntity(card: CardConfig, snapshot: HaSnapshot): Boolean =
+  snapshot.states.isNotEmpty() &&
+    CardDesignSlots.slotEntries(card).orEmpty().any { it.entityId !in snapshot.states }
