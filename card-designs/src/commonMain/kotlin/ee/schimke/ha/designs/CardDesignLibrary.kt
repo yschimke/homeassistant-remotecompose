@@ -6,6 +6,7 @@ import ee.schimke.ha.design.DesignCatalog
 import ee.schimke.ha.design.DesignCatalogEntry
 import ee.schimke.ha.design.DesignExample
 import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignPreviews
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
@@ -48,17 +49,21 @@ object CardDesignLibrary {
   /**
    * Writes the library into [target]. It is built beside it and swapped in whole once every file is
    * written, so a design server serving [target] never sees a half-written library.
+   *
+   * The previews are most of the work, and [drawPreviews] draws them into the staging directory
+   * once its blobs are written: by default [previews] draws all of them here, as [drawPreviews]
+   * does; the JVM shares them out among worker processes instead ([drawPreviews] with a shard).
    */
-  fun generate(target: File, host: CaptureHost, previews: CardPreviewRenderer): Int {
+  fun generate(
+    target: File,
+    host: CaptureHost,
+    previews: CardPreviewRenderer,
+    drawPreviews: (staging: File) -> Unit = { drawPreviews(it, previews) },
+  ): Int {
     val out = File(target.parentFile, ".${target.name}.staging")
     out.deleteRecursively()
 
-    // Every key the source cards produce, with the first card that produced it as its example.
-    val examples = LinkedHashMap<DesignKey, Example>()
-    for (source in librarySources()) {
-      for (key in keysOf(source.card, source.snapshot)) examples.getOrPut(key) { source }
-    }
-    check(examples.isNotEmpty()) { "the demo dashboards produce no designs" }
+    val examples = examples()
 
     // A card type with a checked-in design (ui-builder/designs/<type>.uid) is captured from it, so
     // editing the design is what changes the library; the rest still come from their converters.
@@ -75,38 +80,24 @@ object CardDesignLibrary {
       if (path == MANIFEST_PATH) continue
       out.resolve(path).also { it.parentFile.mkdirs() }.writeBytes(bytes)
     }
+    // Each design's blob, in key order, for whoever draws the previews.
+    out.resolve(DESIGNS_PATH).writeText(output.manifest.designs.joinToString("\n") { it.sha256 })
+    drawPreviews(out)
+    out.resolve(DESIGNS_PATH).delete()
 
     val entries = built.mapIndexed { i, design ->
       val example = examples.getValue(design.key)
-      val id = idOf(design.key)
-      val paths =
-        DesignPreviews(
-          example = DesignCatalog.previewPath(id, "example"),
-          template = DesignCatalog.previewPath(id, "template"),
-        )
-      val playback =
-        CardDesignTemplates.playback(
-          CardDesignTemplates.designCard(example.card, example.snapshot),
-          design.bytes,
-        )
-      // Bound to the example card's values, as the app plays it.
-      out.write(paths.example!!, previews.render(playback, example.card, example.snapshot))
-      // As published: nothing pushed, so the template's own placeholders show.
-      out.write(
-        paths.template!!,
-        previews.render(
-          CardTemplatePlayback(design.bytes, { _, _ -> NO_BINDINGS }, HaAction.None),
-          card = null,
-          snapshot = null,
-        ),
-      )
       DesignCatalogEntry(
-        id = id,
+        id = idOf(design.key),
         sha256 = output.manifest.designs[i].sha256,
         key = design.key,
         example =
-          DesignExample(example.source, example.card.raw, exampleBindings(playback, example)),
-        previews = paths,
+          DesignExample(
+            example.source,
+            example.card.raw,
+            exampleBindings(playback(example, design.bytes), example),
+          ),
+        previews = previewPaths(design.key),
       )
     }
     val catalog =
@@ -150,6 +141,62 @@ object CardDesignLibrary {
     for ((path, bytes) in output.files) target.write(path, bytes)
     return built.size
   }
+
+  /**
+   * Draws the previews of the library [generate] is writing into [staging]: every design's, or with
+   * [shards], only those of designs whose index in the library is [shard] modulo [shards]. Compose
+   * scenes can't draw on two threads of one process, so the JVM draws its shards in separate ones.
+   */
+  fun drawPreviews(staging: File, previews: CardPreviewRenderer, shard: Int = 0, shards: Int = 1) {
+    val examples = examples()
+    val keys = examples.keys.toList()
+    staging.resolve(DESIGNS_PATH).readLines().forEachIndexed { i, sha256 ->
+      if (i % shards != shard) return@forEachIndexed
+      val key = keys[i]
+      val example = examples.getValue(key)
+      val bytes = staging.resolve(DesignManifest.blobPath(sha256)).readBytes()
+      val paths = previewPaths(key)
+      // Bound to the example card's values, as the app plays it.
+      staging.write(
+        paths.example!!,
+        previews.render(playback(example, bytes), example.card, example.snapshot),
+      )
+      // As published: nothing pushed, so the template's own placeholders show.
+      staging.write(
+        paths.template!!,
+        previews.render(
+          CardTemplatePlayback(bytes, { _, _ -> NO_BINDINGS }, HaAction.None),
+          card = null,
+          snapshot = null,
+        ),
+      )
+    }
+  }
+
+  /** Every key the source cards produce, with the first card that produced it as its example. */
+  private fun examples(): LinkedHashMap<DesignKey, Example> {
+    val examples = LinkedHashMap<DesignKey, Example>()
+    for (source in librarySources()) {
+      for (key in keysOf(source.card, source.snapshot)) examples.getOrPut(key) { source }
+    }
+    check(examples.isNotEmpty()) { "the demo dashboards produce no designs" }
+    return examples
+  }
+
+  private fun previewPaths(key: DesignKey): DesignPreviews {
+    val id = idOf(key)
+    return DesignPreviews(
+      example = DesignCatalog.previewPath(id, "example"),
+      template = DesignCatalog.previewPath(id, "template"),
+    )
+  }
+
+  /** [bytes] played as the app plays them for [example]'s card. */
+  private fun playback(example: Example, bytes: ByteArray) =
+    CardDesignTemplates.playback(
+      CardDesignTemplates.designCard(example.card, example.snapshot),
+      bytes,
+    )
 
   private fun File.write(path: String, bytes: ByteArray) {
     resolve(path).also { it.parentFile.mkdirs() }.writeBytes(bytes)
@@ -268,6 +315,8 @@ object CardDesignLibrary {
    * `DesignPublisher`'s manifest, which a client reads first: written after everything it names.
    */
   private const val MANIFEST_PATH = "manifest.json"
+  /** The staging library's blobs in key order, while its previews are drawn. */
+  private const val DESIGNS_PATH = ".designs"
 }
 
 /** Draws a design's preview PNG: the card at the library's card width. */
