@@ -8,8 +8,10 @@ import ee.schimke.terrazzo.core.prefs.CardStylePref
 /**
  * The launcher icon follows the card design. Each icon is an `<activity-alias>` of [MainActivity]
  * named `.launcher.<key>` in the manifest; exactly one is enabled at a time. Classic, Home
- * Assistant and Material 3 Expressive share [DEFAULT], the adaptive icon with a monochrome layer
- * for themed icons; every other design has its own icon (`scripts/generate-launcher-icons.py`).
+ * Assistant and Material 3 Expressive share [DEFAULT]; every other design has its own icon
+ * (`scripts/generate-launcher-icons.py`). Most of those are bold marks with a monochrome layer, so
+ * themed icons keep the design's silhouette; the most pictorial (LCD, Nixie, Console, LCARS) stay
+ * in full colour.
  */
 object LauncherIcons {
   const val DEFAULT = "default"

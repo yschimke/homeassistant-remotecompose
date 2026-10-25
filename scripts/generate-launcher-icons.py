@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Generates the launcher icons: the default adaptive icon and one per card design.
 
-Each design's icon is that design's signature instrument — the LCD's segment readout, a lit
-Nixie tube, the Console's VU meter behind glass, Braun's grille and dial — drawn in its own
-palette, so the icon on the home screen says which look the dashboard is wearing. The default icon
-(Classic, Home Assistant, Material 3 Expressive) is a gauge on a terrazzo ground and keeps a
-monochrome layer, so Android's themed icons recolour it; the design icons leave that layer out,
-because their colours are the point.
+Each design's icon evokes that design in its own palette. Where the design is a style — Braun's
+grille and dial, the Catppuccin lozenge, Trinitron's level meter — it is one bold mark with
+cut-outs, which is also its monochrome layer, so Android's themed icons keep the silhouette.
+Where the design is a picture (the LCD readout, a lit Nixie tube, the Console VU meter, the LCARS
+panel) the icon is that illustration in full colour, with no monochrome layer. The default icon
+(Classic, Home Assistant, Material 3 Expressive) is a gauge on a terrazzo ground.
 
 Writes Android vector drawables and, with --svg DIR, SVG previews plus a contact sheet of every
 icon under each launcher mask. Re-run after editing a design here; never hand-edit the output.
@@ -55,6 +55,7 @@ class P:
   alpha: float = 1.0
   evenodd: bool = False
   cap: str = "round"
+  mono: float | None = None  # alpha in the themed (monochrome) layer; 0 leaves it out
 
 
 @dataclass
@@ -230,25 +231,6 @@ def default_icon(dark):
 # --- designs -------------------------------------------------------------------------------------
 
 
-def trinitron():
-  """A stereo peak meter on a graphite deck, behind an aperture grille."""
-  bg = [full(lin(0, 0, 0, 108, (0, "#1C1D21", 1), (1, "#0B0C0E", 1)))]
-  bg += [P(rect(x, 0, 0.35, 108), fill="#FFFFFF", alpha=0.035) for x in range(1, 108, 2)]
-  fg = [
-    P(rect(24, 33, 60, 42, 2), fill=lin(0, 33, 0, 75, (0, "#141518", 1), (1, "#0E0F11", 1)),
-      stroke="#3A3E45", sw=0.6),
-  ]
-  for y, level in ((43, 20), (57, 16)):
-    for i in range(24):
-      on = i < level
-      color = "#EDEEF0" if on and i >= 19 else "#4FC3F7" if on else "#2A2E35"
-      fg.append(P(rect(29 + i * 2.1, y, 1.15, 9), fill=color))
-    fg.append(P(rect(29, y + 10.6, 50, 0.4), fill="#8A8F98"))
-  for i in range(0, 25, 4):
-    fg.append(P(rect(29.4 + i * 2.1, 69.6, 0.4, 2), fill="#8A8F98"))
-  fg.append(P(circle(80.5, 37.2, 0.9), fill="#4FC3F7"))
-  return Icon("trinitron", bg, fg, scale=0.9)
-
 
 def lcd():
   """A reflective segment display: 21°C with the unlit segments ghosting, and a bar graph."""
@@ -274,31 +256,6 @@ def lcd():
   fg.append(P(poly((20, 28), (60, 28), (40, 80), (20, 80)), fill="#FFFFFF", alpha=0.06))
   return Icon("lcd", bg, fg, scale=0.8)
 
-
-def braun():
-  """Rams' radio face: a perforated round grille and a dial with the orange pointer."""
-  bg = [full(lin(0, 0, 108, 108, (0, "#F8F6F0", 1), (1, "#E6E1D5", 1)))]
-  fg = []
-  gx, gy, gr, step = 46, 54, 21, 3.1
-  for row in range(-8, 9):
-    for col in range(-8, 9):
-      x = gx + col * step + (step / 2 if row % 2 else 0)
-      y = gy + row * step * 0.866
-      if math.hypot(x - gx, y - gy) < gr:
-        fg.append(P(circle(x, y, 0.95), fill="#262624"))
-  dx, dy = 76, 66
-  fg += [
-    P(circle(dx, dy + 0.8, 8.5), fill="#000000", alpha=0.10),
-    P(circle(dx, dy, 8.5), fill=lin(dx, dy - 8, dx, dy + 8, (0, "#FFFFFF", 1), (1, "#E2DDD2", 1))),
-    P(circle(dx, dy, 8.5), stroke="#C9C3B6", sw=0.5),
-    P(line(dx, dy, *polar(dx, dy, 6.5, 35)), stroke="#D9541E", sw=1.8),
-  ]
-  for i in range(7):
-    a = -60 + i * 20
-    fg.append(P(line(*polar(dx, dy, 10.2, a), *polar(dx, dy, 11.8, a)), stroke="#7A766E", sw=0.6))
-  fg.append(P(rect(70, 38, 12, 2.4, 1.2), fill="#262624"))
-  fg.append(P(rect(70, 43, 8, 2.4, 1.2), fill="#7A766E"))
-  return Icon("braun", bg, fg, scale=0.95)
 
 
 def nixie():
@@ -363,163 +320,12 @@ def console():
   return Icon("console", bg, fg, scale=0.88)
 
 
-def ikea():
-  """A birch-ply framed control plate: square-knobbed dimmer and a stepped level."""
-  bg = [full(lin(0, 0, 108, 108, (0, "#E9D9BB", 1), (1, "#D8C29A", 1)))]
-  for i in range(-12, 14):  # birch grain
-    x = i * 9
-    bg.append(P(f"M{f(x - 10)},0 C{f(x + 10)},40 {f(x - 6)},70 {f(x + 14)},108",
-                stroke="#B99E72", sw=0.5, alpha=0.35))
-  fg = [P(rect(26, 27, 56, 56, 3), fill="#8B6F47", alpha=0.25)]
-  for i, c in enumerate(("#F3E6CC", "#C9A978", "#F3E6CC", "#C9A978")):  # ply laminations
-    fg.append(P(rect(24 + i * 0.9, 24 + i * 0.9, 60 - i * 1.8, 60 - i * 1.8, 3), fill=c))
-  fg += [
-    P(rect(28.5, 28.5, 51, 51, 2), fill="#FFFDF8"),
-    P(circle(54, 50, 13), fill="#ECE8DF"),
-    P(circle(54, 50, 13), stroke="#B5A58A", sw=0.6),
-    P(rect(47, 43, 14, 14, 2.5), fill="#172A35"),
-    P(rect(53.2, 44.5, 1.6, 5), fill="#FBD75B"),
-  ]
-  for i in range(5):
-    fg.append(P(rect(37 + i * 7.2, 70, 5.6, 3.2, 0.8), fill="#00589D" if i < 3 else "#D9D2C2"))
-  return Icon("ikea", bg, fg, scale=0.92)
 
 
-def mushroom():
-  """A petal scale opening round its seed, two thirds lit."""
-  bg = [full(rad(54, 54, 70, (0, "#F7F8F1", 1), (1, "#E3E8DA", 1)))]
-  fg = []
-  for i in range(12):
-    a = i * 30
-    lit = i < 8
-    tip = polar(54, 54, 30, a)
-    l, r = polar(54, 54, 14, a - 11), polar(54, 54, 14, a + 11)
-    cl, cr = polar(54, 54, 28, a - 9), polar(54, 54, 28, a + 9)
-    d = (f"M{f(l[0])},{f(l[1])} C{f(cl[0])},{f(cl[1])} {f(tip[0])},{f(tip[1])} {f(tip[0])},{f(tip[1])}"
-         f" C{f(tip[0])},{f(tip[1])} {f(cr[0])},{f(cr[1])} {f(r[0])},{f(r[1])} Z")
-    fg.append(P(d, fill="#356541" if lit else "#D5DFD1", alpha=0.55 + 0.45 * i / 7 if lit else 1))
-  fg += [
-    P(circle(54, 54, 11), fill="#FFFEFA"),
-    P(circle(54, 54, 11), stroke="#D5DFD1", sw=0.8),
-    P(circle(54, 54, 5.5), fill=rad(52.5, 52.5, 6, (0, "#6E9A70", 1), (1, "#356541", 1))),
-  ]
-  return Icon("mushroom", bg, fg)
 
 
-def bubble():
-  """A floating capsule with a bead meter, satellite buttons drifting off it."""
-  bg = [full(lin(0, 0, 108, 108, (0, "#F1ECFA", 1), (1, "#DCD3EC", 1)))]
-  fg = [
-    P(rect(19, 45, 70, 26, 13), fill="#705090", alpha=0.18),
-    P(rect(18, 42, 70, 26, 13), fill=lin(0, 42, 0, 68, (0, "#8463A6", 1), (1, "#5F427D", 1))),
-    P(rect(22, 44, 62, 8, 4), fill="#FFFFFF", alpha=0.12),
-  ]
-  for i in range(7):
-    fg.append(P(circle(30 + i * 7.6, 55, 2.9), fill="#F8F5FF" if i < 5 else "#4C3466"))
-  for x, y, r, c in ((72, 30, 7.5, "#D1B3F3"), (85, 36, 3.6, "#BFA0E4"), (34, 80, 5, "#D1B3F3"),
-                     (24, 32, 2.6, "#BFA0E4")):
-    fg += [P(circle(x, y, r), fill=c),
-           P(circle(x - r * 0.3, y - r * 0.35, r * 0.35), fill="#FFFFFF", alpha=0.5)]
-  return Icon("bubble", bg, fg, scale=0.84)
 
 
-def minimalist():
-  """A compact module: offset index tab, icon pill, and a row of discrete pips."""
-  bg = [full("#E7EBF2")]
-  fg = [
-    P(rect(24, 29, 18, 8, 3), fill="#315AA4"),
-    P(rect(22, 34, 64, 44, 8), fill="#000000", alpha=0.06),
-    P(rect(22, 33, 64, 44, 8), fill="#FFFFFF"),
-    P(rect(29, 41, 14, 14, 7), fill="#E3EAF7"),
-    P(circle(36, 48, 3.4), fill="#315AA4"),
-    P(rect(48, 42, 26, 4, 2), fill="#222937"),
-    P(rect(48, 50, 16, 3, 1.5), fill="#566176", alpha=0.6),
-  ]
-  for i in range(8):
-    fg.append(P(rect(29 + i * 6.6, 64, 4.4, 4.4, 2.2), fill="#315AA4" if i < 5 else "#D8DFEB"))
-  return Icon("minimalist", bg, fg, scale=0.86)
-
-
-def cupertino():
-  """Concentric rings on frosted glass beside a filled slider."""
-  bg = [full(lin(0, 0, 108, 108, (0, "#EAF0FA", 1), (1, "#C9D6EA", 1)))]
-  fg = [P(rect(18, 26, 72, 56, 14), fill="#FFFFFF", alpha=0.55)]
-  cx, cy = 44, 54
-  for r, end, color in ((18, 290, "#145BBD"), (12.5, 200, "#3B86E0"), (7, 120, "#7DB3F5")):
-    fg += [P(circle(cx, cy, r), stroke=color, sw=4.6, alpha=0.18),
-           P(arc(cx, cy, r, 0, end), stroke=color, sw=4.6)]
-  fg += [
-    P(rect(70, 32, 12, 44, 6), fill="#C7D4E5"),
-    P(rect(70, 52, 12, 24, 6), fill="#145BBD"),
-    P(rect(73, 69, 6, 3, 1.5), fill="#FFFFFF", alpha=0.8),
-  ]
-  return Icon("cupertino", bg, fg, scale=0.86)
-
-
-def catppuccin():
-  """A stitched lozenge in mauve over a row of soft pastel tabs."""
-  bg = [full("#1E1E2E")]
-  bg += [P(circle(x, y, 0.5), fill="#45475A") for x in range(6, 108, 8) for y in range(6, 108, 8)]
-  lozenge = ("M54,22 C56,22 57,23 58,24 L80,46 C82,48 82,50 80,52 L58,74 C56,76 52,76 50,74"
-             " L28,52 C26,50 26,48 28,46 L50,24 C51,23 52,22 54,22 Z")
-  fg = [
-    P(lozenge, fill=lin(30, 22, 80, 76, (0, "#CBA6F7", 1), (1, "#B48EF0", 1))),
-  ]
-  # The stitch: short dashes round the inner edge.
-  pts = [(54, 28), (74, 49), (54, 70), (34, 49), (54, 28)]
-  for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
-    n = 9
-    for k in range(n):
-      t0, t1 = (k + 0.2) / n, (k + 0.7) / n
-      fg.append(P(line(x0 + (x1 - x0) * t0, y0 + (y1 - y0) * t0, x0 + (x1 - x0) * t1,
-                       y0 + (y1 - y0) * t1), stroke="#F5E0DC", sw=0.9))
-  fg += [P(circle(54, 49, 6), fill="#1E1E2E"), P(circle(54, 49, 3), fill="#F5C2E7")]
-  for i, c in enumerate(("#F5C2E7", "#FAB387", "#A6E3A1", "#89B4FA")):
-    fg.append(P(rect(29 + i * 13, 80, 11, 6, 3), fill=c))
-  return Icon("catppuccin", bg, fg, scale=0.84)
-
-
-def obsidian():
-  """A notebook page: ruled lines, a measured scale, and the violet ribbon marker."""
-  bg = [full("#F3EFE6"), P(rect(14, 10, 80, 98, 2), fill="#FFFDF7")]
-  bg += [P(rect(14, y, 80, 0.45), fill="#D7D2C7") for y in range(24, 104, 7)]
-  bg.append(P(rect(30, 10, 0.5, 98), fill="#C98C8C", alpha=0.6))
-  fg = [P(rect(38, 55.6, 44, 0.9), fill="#292822")]
-  for i in range(23):
-    h = 6 if i % 5 == 0 else 3
-    fg.append(P(rect(38 + i * 2, 55.6 - h, 0.5, h), fill="#292822"))
-  fg += [
-    P(poly((63, 61), (66.5, 66), (59.5, 66)), fill="#725690"),
-    P(rect(38, 38, 22, 2.2, 1.1), fill="#292822"),
-    P(rect(38, 72, 30, 1.2, 0.6), fill="#625F54", alpha=0.7),
-    P(rect(38, 77, 20, 1.2, 0.6), fill="#625F54", alpha=0.7),
-    P("M70,10 V40 L74,36 L78,40 V10 Z", fill="#725690"),
-  ]
-  return Icon("obsidian", bg, fg)
-
-
-def noctis():
-  """Night navigation: tilted orbital scales round a lit body, twin rails beneath."""
-  bg = [full(rad(54, 40, 80, (0, "#16304D", 1), (1, "#070F1A", 1)))]
-  rnd = random.Random(5)
-  for _ in range(40):
-    bg.append(P(circle(rnd.uniform(0, 108), rnd.uniform(0, 108), rnd.uniform(0.25, 0.7)),
-                fill="#E4EFFA", alpha=rnd.uniform(0.3, 0.9)))
-  fg = [P(ellipse(54, 50, rx, ry), stroke="#76BBF3", sw=0.8, alpha=a)
-        for rx, ry, a in ((32, 11, 0.55), (24, 8, 0.75))]
-  for i in range(24):  # orbital scale ticks on the outer ring
-    t = math.radians(i * 15)
-    fg.append(P(circle(54 + 32 * math.cos(t), 50 + 11 * math.sin(t), 0.55 if i % 3 else 0.95),
-                fill="#A9C1D9"))
-  fg += [
-    P(circle(54, 50, 14), fill="#76BBF3", alpha=0.1),
-    P(circle(54, 50, 10), fill=rad(50, 46, 13, (0, "#9FD3FF", 1), (0.6, "#3E7FB8", 1), (1, "#16304D", 1))),
-    P(circle(78, 58.4, 2.2), fill="#E4EFFA"),
-    P(rect(26, 74, 56, 1.4, 0.7), fill="#76BBF3"),
-    P(rect(26, 79, 56, 1.4, 0.7), fill="#365572"),
-    P(rect(26, 73.2, 34, 3, 1.5), fill="#76BBF3", alpha=0.35),
-  ]
-  return Icon("noctis", bg, fg, scale=0.92)
 
 
 def lcars():
@@ -540,52 +346,222 @@ def lcars():
   return Icon("lcars", bg, fg, scale=0.8)
 
 
-def arctic():
-  """An open horizon over ice: a suspended needle above clear rails."""
-  bg = [
-    full(lin(0, 0, 0, 108, (0, "#F8FCFD", 1), (0.62, "#DCEDF2", 1), (0.62, "#C6E0E8", 1),
-             (1, "#EEF7F9", 1))),
-    P(ellipse(54, 30, 50, 9), fill="#8BD8EA", alpha=0.18),
-  ]
+
+
+# --- adaptive designs ----------------------------------------------------------------------------
+#
+# The designs whose identity is a style rather than a picture are drawn as one bold mark with
+# cut-outs, in the design's own ink on its ground. The same mark is the monochrome layer, so with
+# themed icons on, the icon keeps its silhouette — the dial, the grille, the lozenge — in the
+# wallpaper's colours. [P.mono] sets each part's weight there (unlit parts dimmer).
+
+
+def mono_of(fg):
+  return [P(p.d, fill="#000000" if p.fill else None, stroke="#000000" if p.stroke else None,
+            sw=p.sw, alpha=p.alpha if p.mono is None else p.mono, evenodd=p.evenodd, cap=p.cap)
+          for p in fg if p.mono != 0]
+
+
+def adaptive(key, bg, fg, scale=1.0):
+  return Icon(key, bg, fg, mono_of(fg), scale)
+
+
+def cut(base, *holes):
+  """[base] with [holes] cut out (even-odd); holes must sit inside it and not overlap."""
+  return base + "".join(holes)
+
+
+def diamond(cx, cy, r):
+  return poly((cx, cy - r), (cx + r, cy), (cx, cy + r), (cx - r, cy))
+
+
+def trinitron():
+  """Twin peak-meter rows, the Trinitron card's level scale."""
+  bg = [full(lin(0, 0, 0, 108, (0, "#1C1D21", 1), (1, "#0B0C0E", 1)))]
+  bg += [P(rect(x, 0, 0.35, 108), fill="#FFFFFF", alpha=0.035) for x in range(1, 108, 2)]
+  fg = []
+  for y, level in ((38, 7), (55, 5)):
+    for i in range(8):
+      on = i < level
+      color = "#EDEEF0" if on and i == level - 1 and level == 7 else "#4FC3F7" if on else "#3A3E45"
+      fg.append(P(rect(32.6 + i * 5.4, y, 3.6, 12, 0.6), fill=color, mono=1 if on else 0.3))
+  fg.append(P(rect(32.6, 71, 41.4, 1.8, 0.9), fill="#8A8F98", mono=0.6))
+  return adaptive("trinitron", bg, fg)
+
+
+def braun():
+  """The perforated speaker disc and the orange-pointed dial."""
+  bg = [full(lin(0, 0, 108, 108, (0, "#F8F6F0", 1), (1, "#E6E1D5", 1)))]
+  gx, gy = 48, 51
+  holes = []
+  for row in range(-4, 5):
+    for col in range(-4, 5):
+      x = gx + col * 4.6 + (2.3 if row % 2 else 0)
+      y = gy + row * 4.6 * 0.866
+      if math.hypot(x - gx, y - gy) < 14.5:
+        holes.append(circle(x, y, 1.5))
+  dial = (74, 70, 7.5)
+  slot = poly(*(polar(dial[0], dial[1], r, a) for r, a in ((1.2, -55), (6, 25), (6, 45), (1.2, 125))))
   fg = [
-    P(rect(18, 66.6, 72, 0.6), fill="#206479", alpha=0.6),
-    P(line(54, 18, 54, 34), stroke="#1A353E", sw=0.5),
-    P("M54,34 L56.5,56 L54,61 L51.5,56 Z",
-      fill=lin(51, 34, 57, 61, (0, "#1A353E", 1), (1, "#206479", 1))),
-    P(circle(54, 34, 1.6), fill="#1A353E"),
+    P(cut(circle(gx, gy, 18), *holes), fill="#262624", evenodd=True),
+    P(cut(circle(*dial), slot), fill="#D9541E", evenodd=True),
   ]
-  for i, (y, w) in enumerate(((73, 58), (80, 44))):
-    fg += [
-      P(rect(54 - w / 2, y, w, 3.4, 1.7), fill="#FFFFFF", alpha=0.65),
-      P(rect(54 - w / 2, y, w * (0.62 if i == 0 else 0.4), 3.4, 1.7), fill="#206479", alpha=0.75),
-    ]
+  return adaptive("braun", bg, fg)
+
+
+def ikea():
+  """A plate in a ply frame: square knob and a stepped level."""
+  bg = [full(lin(0, 0, 108, 108, (0, "#EBDDC2", 1), (1, "#D8C29A", 1)))]
+  for i in range(-12, 14):  # birch grain
+    x = i * 9
+    bg.append(P(f"M{f(x - 10)},0 C{f(x + 10)},40 {f(x - 6)},70 {f(x + 14)},108",
+                stroke="#B99E72", sw=0.5, alpha=0.3))
+  fg = [
+    P(cut(rect(26, 26, 56, 56, 6), rect(31, 31, 46, 46, 3)), fill="#8B6F47", evenodd=True),
+    P(cut(rect(45, 37, 18, 18, 3.5), rect(53, 39.5, 2, 7, 1)), fill="#172A35", evenodd=True),
+  ]
+  for i in range(5):
+    on = i < 3
+    fg.append(P(rect(37.5 + i * 6.8, 63, 5, 5, 1.2), fill="#00589D", alpha=1 if on else 0.3,
+                mono=1 if on else 0.3))
+  return adaptive("ikea", bg, fg, scale=0.84)
+
+
+def mushroom():
+  """The petal scale round its seed, two thirds lit."""
+  bg = [full(rad(54, 54, 70, (0, "#F7F8F1", 1), (1, "#E3E8DA", 1)))]
+  fg = []
+  for i in range(10):
+    a = i * 36
+    lit = i < 7
+    tip = polar(54, 54, 28, a)
+    l, r = polar(54, 54, 11, a - 15), polar(54, 54, 11, a + 15)
+    cl, cr = polar(54, 54, 27, a - 13), polar(54, 54, 27, a + 13)
+    d = (f"M{f(l[0])},{f(l[1])} C{f(cl[0])},{f(cl[1])} {f(tip[0])},{f(tip[1])} {f(tip[0])},{f(tip[1])}"
+         f" C{f(tip[0])},{f(tip[1])} {f(cr[0])},{f(cr[1])} {f(r[0])},{f(r[1])} Z")
+    fg.append(P(d, fill="#356541" if lit else "#B9C9B5", mono=1 if lit else 0.3))
+  fg.append(P(cut(circle(54, 54, 8), circle(54, 54, 4)), fill="#356541", evenodd=True))
+  return adaptive("mushroom", bg, fg)
+
+
+def bubble():
+  """A capsule of beads with satellite bubbles drifting off it."""
+  bg = [full(lin(0, 0, 108, 108, (0, "#F1ECFA", 1), (1, "#DCD3EC", 1)))]
+  beads = [circle(31 + i * 7.6, 57, 3.1 if i < 5 else 1.5) for i in range(7)]
+  fg = [
+    P(cut(rect(21, 46, 66, 22, 11), *beads), fill="#705090", evenodd=True),
+    P(circle(70, 33, 6.5), fill="#BFA0E4", mono=0.6),
+    P(circle(81, 40, 3), fill="#BFA0E4", mono=0.6),
+    P(circle(33, 79, 4.2), fill="#BFA0E4", mono=0.6),
+  ]
+  return adaptive("bubble", bg, fg, scale=0.88)
+
+
+def minimalist():
+  """A compact module: offset index tab, icon well and discrete pips."""
+  bg = [full("#E7EBF2")]
+  pips = [circle(35 + i * 6.4, 64, 2.2) for i in range(7)]
+  fg = [
+    P(rect(28, 28, 16, 10, 3), fill="#315AA4"),
+    P(cut(rect(24, 34, 60, 40, 9), circle(38, 48, 6), rect(50, 43.5, 24, 4, 2),
+          rect(50, 51, 14, 3, 1.5), *pips), fill="#222937", evenodd=True),
+  ]
+  return adaptive("minimalist", bg, fg, scale=0.86)
+
+
+def cupertino():
+  """Concentric progress rings."""
+  bg = [full(lin(0, 0, 108, 108, (0, "#EAF0FA", 1), (1, "#C9D6EA", 1)))]
+  fg = []
+  for r, end, color in ((22, 290, "#145BBD"), (15, 205, "#3B86E0"), (8, 125, "#7DB3F5")):
+    fg += [P(circle(54, 54, r), stroke=color, sw=5.4, alpha=0.2, mono=0.25),
+           P(arc(54, 54, r, 0, end), stroke=color, sw=5.4)]
+  return adaptive("cupertino", bg, fg)
+
+
+def catppuccin():
+  """The stitched lozenge, a pastel seed at its heart."""
+  bg = [full("#1E1E2E")]
+  bg += [P(circle(x, y, 0.5), fill="#45475A") for x in range(6, 108, 8) for y in range(6, 108, 8)]
+  lozenge = ("M54,27 C56,27 57,28 58,29 L79,50 C81,52 81,56 79,58 L58,79 C56,81 52,81 50,79"
+             " L29,58 C27,56 27,52 29,50 L50,29 C51,28 52,27 54,27 Z")
+  fg = [
+    P(cut(lozenge, diamond(54, 54, 19), diamond(54, 54, 16), circle(54, 54, 5)),
+      fill=lin(30, 27, 80, 80, (0, "#CBA6F7", 1), (1, "#B48EF0", 1)), evenodd=True),
+    P(circle(54, 54, 2.6), fill="#F5C2E7", mono=0),
+  ]
+  return adaptive("catppuccin", bg, fg)
+
+
+def obsidian():
+  """A measured rule under the violet bookmark ribbon."""
+  bg = [full("#FFFDF7")]
+  bg += [P(rect(0, y, 108, 0.45), fill="#D7D2C7") for y in range(22, 104, 7)]
+  ticks = [rect(31.5 + i * 4.5, 52, 1.3, 5 if i % 2 == 0 else 3) for i in range(10)]
+  fg = [
+    P(cut(rect(28, 52, 50, 10, 1.6), *ticks), fill="#292822", evenodd=True),
+    P(rect(28, 68, 30, 2.6, 1.3), fill="#625F54", mono=0.5),
+    P(rect(28, 74, 20, 2.6, 1.3), fill="#625F54", mono=0.5),
+    P("M64,26 V48 L69.5,43 L75,48 V26 Z", fill="#725690"),
+  ]
+  return adaptive("obsidian", bg, fg)
+
+
+def noctis():
+  """A lit body inside a tilted orbit."""
+  bg = [full(rad(54, 40, 80, (0, "#16304D", 1), (1, "#070F1A", 1)))]
+  rnd = random.Random(5)
+  for _ in range(36):
+    bg.append(P(circle(rnd.uniform(0, 108), rnd.uniform(0, 108), rnd.uniform(0.25, 0.7)),
+                fill="#E4EFFA", alpha=rnd.uniform(0.3, 0.9)))
+  tilt = math.radians(-18)
+
+  def orbit(t0, t1):
+    pts = []
+    for k in range(41):
+      t = math.radians(t0 + (t1 - t0) * k / 40)
+      x, y = 28 * math.cos(t), 9 * math.sin(t)
+      pts.append((54 + x * math.cos(tilt) - y * math.sin(tilt), 54 + x * math.sin(tilt) + y * math.cos(tilt)))
+    return poly(*pts, close=False)
+
+  fg = [
+    P(orbit(180, 360), stroke="#76BBF3", sw=3.2, alpha=0.6, mono=0.45),
+    P(circle(54, 54, 12), fill=rad(50, 50, 15, (0, "#B5DDFF", 1), (1, "#4E8FC8", 1))),
+    P(orbit(0, 180), stroke="#76BBF3", sw=3.2),
+    P(circle(79, 46, 3), fill="#E4EFFA"),
+  ]
+  return adaptive("noctis", bg, fg)
+
+
+def arctic():
+  """A suspended needle over a clear horizon."""
+  bg = [full(lin(0, 0, 0, 108, (0, "#F8FCFD", 1), (0.66, "#DCEDF2", 1), (0.66, "#C6E0E8", 1),
+                 (1, "#EEF7F9", 1)))]
+  fg = [
+    P(line(54, 24, 54, 36), stroke="#1A353E", sw=1.6),
+    P(cut(poly((54, 33), (60, 52), (54, 63), (48, 52)), circle(54, 44, 2.2)), fill="#206479",
+      evenodd=True),
+    P(rect(26, 68, 56, 3.4, 1.7), fill="#206479"),
+  ]
   for i in range(9):
-    fg.append(P(rect(30 + i * 6, 63, 0.5, 3.6 if i % 2 == 0 else 2), fill="#1A353E"))
-  return Icon("arctic", bg, fg)
+    fg.append(P(rect(29.2 + i * 6.2, 74, 1.6, 4.5 if i % 2 == 0 else 2.5, 0.8), fill="#1A353E",
+                mono=0.7))
+  return adaptive("arctic", bg, fg)
 
 
 def aeon():
-  """A cinema marquee: a bulb-lit art-deco frame round a diamond index."""
+  """An art-deco diamond index between marquee bulbs."""
   bg = [full(rad(54, 54, 70, (0, "#2A231B", 1), (1, "#0B0907", 1)))]
+  gold = lin(32, 32, 76, 76, (0, "#F3D58E", 1), (1, "#B8892F", 1))
   fg = [
-    P(rect(22, 22, 64, 64, 1), stroke="#E4BE71", sw=1.4),
-    P(rect(27, 27, 54, 54), stroke="#795623", sw=0.7),
+    P(cut(diamond(54, 54, 23), diamond(54, 54, 17), diamond(54, 54, 13.5), diamond(54, 54, 5)),
+      fill=gold, evenodd=True),
   ]
-  for i in range(9):  # marquee bulbs
-    t = 22 + i * 8
-    for x, y in ((t, 22), (t, 86), (22, t), (86, t)):
-      fg += [P(circle(x, y, 2.6), fill="#FFD98A", alpha=0.18), P(circle(x, y, 1.2), fill="#FFF1C9")]
-  fg += [
-    P(poly((54, 36), (70, 54), (54, 72), (38, 54)),
-      fill=lin(38, 36, 70, 72, (0, "#F3D58E", 1), (1, "#B8892F", 1))),
-    P(poly((54, 42), (64.5, 54), (54, 66), (43.5, 54)), stroke="#3A2C15", sw=0.7),
-    P(line(54, 42, 54, 66), stroke="#3A2C15", sw=0.5),
-    P(line(43.5, 54, 64.5, 54), stroke="#3A2C15", sw=0.5),
-  ]
-  for k in range(3):  # deco fans either side
-    fg.append(P(arc(76, 54, 4 + k * 2.4, 40, 140), stroke="#E4BE71", sw=0.6))
-    fg.append(P(arc(32, 54, 4 + k * 2.4, 220, 320), stroke="#E4BE71", sw=0.6))
-  return Icon("aeon", bg, fg, scale=0.7)
+  for a in (0, 90, 180, 270):
+    fg.append(P(circle(*polar(54, 54, 28.5, a), 2.2), fill="#FFF1C9"))
+  for a in (45, 135, 225, 315):
+    fg.append(P(circle(*polar(54, 54, 22, a), 1.4), fill="#E4BE71", mono=0.7))
+  return adaptive("aeon", bg, fg)
 
 
 DESIGNS = [trinitron, lcd, braun, nixie, console, ikea, mushroom, bubble, minimalist, cupertino,
@@ -751,21 +727,31 @@ def main():
     write(f"{DESIGN_RES}/drawable/ic_launcher_{k}_background.xml", vector_xml(icon.background))
     write(f"{DESIGN_RES}/drawable/ic_launcher_{k}_foreground.xml",
           vector_xml(icon.foreground, icon.scale))
+    mono = None
+    if icon.monochrome:
+      mono = f"ic_launcher_{k}_monochrome"
+      write(f"{DESIGN_RES}/drawable/{mono}.xml", vector_xml(icon.monochrome, icon.scale))
     write(f"{DESIGN_RES}/mipmap-anydpi-v26/ic_launcher_{k}.xml",
-          adaptive_xml(f"ic_launcher_{k}_background", f"ic_launcher_{k}_foreground"))
+          adaptive_xml(f"ic_launcher_{k}_background", f"ic_launcher_{k}_foreground", mono))
 
   if args.svg:
     os.makedirs(args.svg, exist_ok=True)
-    mono = Icon("themed", [full("#D9E2FF")],
-                [P(p.d, fill="#1B2A55" if p.fill else None, stroke="#1B2A55" if p.stroke else None,
-                   sw=p.sw, alpha=p.alpha) for p in light.monochrome])
+    def themed(icon):
+      if not icon.monochrome:
+        return "<td style='opacity:.6'>full colour</td>"
+      t = Icon(icon.key, [full("#D9E2FF")],
+               [P(p.d, fill="#1B2A55" if p.fill else None, stroke="#1B2A55" if p.stroke else None,
+                  sw=p.sw, alpha=p.alpha, evenodd=p.evenodd, cap=p.cap) for p in icon.monochrome],
+               scale=icon.scale)
+      return f"<td>{svg(t, 'circle', 96)}</td>"
+
     cols = list(MASKS) + ["full"]
-    head = "".join(f"<th>{c}</th>" for c in ["", *cols[:-1], "full layer + safe zone"])
+    head = "".join(f"<th>{c}</th>" for c in ["", *cols[:-1], "full layer + safe zone", "themed"])
     rows = []
-    for icon in icons + [mono]:
+    for icon in icons:
       write(f"{args.svg}/{icon.key}.svg", svg(icon))
       cells = "".join(f"<td>{svg(icon, m, 96)}</td>" for m in cols)
-      rows.append(f"<tr><th>{icon.key}</th>{cells}</tr>")
+      rows.append(f"<tr><th>{icon.key}</th>{cells}{themed(icon)}</tr>")
     write(f"{args.svg}/sheet.html",
           '<html><body style="margin:0;padding:12px;background:#6b6b6b;font:13px sans-serif;color:#fff">'
           '<table style="border-spacing:14px 8px"><tr>' + head + "</tr>" + "".join(rows)

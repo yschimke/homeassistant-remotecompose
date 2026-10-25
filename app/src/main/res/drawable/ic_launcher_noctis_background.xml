@@ -159,20 +159,4 @@
         android:pathData="M9.02,29.41a0.6,0.6 0 1,0 1.2,0a0.6,0.6 0 1,0 -1.2,0Z"
         android:fillColor="#E4EFFA"
         android:fillAlpha="0.82" />
-    <path
-        android:pathData="M38.42,84.89a0.6,0.6 0 1,0 1.2,0a0.6,0.6 0 1,0 -1.2,0Z"
-        android:fillColor="#E4EFFA"
-        android:fillAlpha="0.72" />
-    <path
-        android:pathData="M71.3,82.04a0.41,0.41 0 1,0 0.83,0a0.41,0.41 0 1,0 -0.83,0Z"
-        android:fillColor="#E4EFFA"
-        android:fillAlpha="0.72" />
-    <path
-        android:pathData="M29.74,52.45a0.6,0.6 0 1,0 1.19,0a0.6,0.6 0 1,0 -1.19,0Z"
-        android:fillColor="#E4EFFA"
-        android:fillAlpha="0.71" />
-    <path
-        android:pathData="M31.19,102.12a0.54,0.54 0 1,0 1.08,0a0.54,0.54 0 1,0 -1.08,0Z"
-        android:fillColor="#E4EFFA"
-        android:fillAlpha="0.65" />
 </vector>
