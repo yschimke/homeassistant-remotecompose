@@ -36,6 +36,21 @@ class CardDesignOverrideStoreTest {
   }
 
   @Test
+  fun aBackgroundSkinInstallPreservesTheLatestStyleAndVariant() = runBlocking {
+    val store = CardDesignOverrideStore(file)
+    store.set(
+      CardDesignScope.Card,
+      card,
+      CardDesignOverride(cardStyle = "lcd", variant = "compact"),
+    )
+    store.setDesign(cardFingerprint(card), "user:installed")
+    assertEquals(
+      CardDesignOverride(cardStyle = "lcd", variant = "compact", designId = "user:installed"),
+      CardDesignOverrideStore(file).overrides.value.forCard(card),
+    )
+  }
+
+  @Test
   fun aFileFromBeforeDesignIdsStillLoads() {
     file.writeText("""{"byCard":{"${cardFingerprint(card)}":{"cardStyle":"lcd"}}}""")
     assertEquals(

@@ -38,6 +38,18 @@ class CardDesignOverrideStore internal constructor(private val file: File) {
     }
   }
 
+  /** Applies a completed background skin install, preserving the card's latest style/variant. */
+  suspend fun setDesign(cardKey: String, designId: String) {
+    writes.withLock {
+      _overrides.update { current ->
+        val keep = current.byCard[cardKey] ?: CardDesignOverride()
+        current.copy(byCard = current.byCard + (cardKey to keep.copy(designId = designId)))
+      }
+      val text = _overrides.value.encode()
+      withContext(Dispatchers.IO) { write(text) }
+    }
+  }
+
   private fun read(): CardDesignOverrides =
     CardDesignOverrides.decode(runCatching { file.takeIf { it.isFile }?.readText() }.getOrNull())
 

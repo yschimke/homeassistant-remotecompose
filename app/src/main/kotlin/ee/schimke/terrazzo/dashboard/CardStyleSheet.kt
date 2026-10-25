@@ -37,6 +37,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import ee.schimke.ha.client.design.CardDesignOverride
 import ee.schimke.ha.client.design.CardDesignOverrides
 import ee.schimke.ha.client.design.CardDesignScope
@@ -85,9 +87,10 @@ fun CardStyleSheet(
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
   val installed by SkinStore.of(context).installed.collectAsState()
   val installedStyles by CardStyleStore.of(context).installed.collectAsState()
-  // Installs in flight and installs that failed, while the sheet is open.
-  var installing by remember { mutableStateOf(emptySet<String>()) }
-  var failed by remember { mutableStateOf(emptySet<String>()) }
+  val workManager = remember(context) { WorkManager.getInstance(context) }
+  val installs by
+    remember(workManager) { workManager.getWorkInfosByTagFlow(SkinInstallWorker.TAG) }
+      .collectAsState(initial = emptyList())
   val dashboardStyle = LocalCardStyle.current
   val cardStyle = overrides.forCard(card)?.cardStyle?.let(HaUberTheme::byId) ?: dashboardStyle
   val designs =
@@ -116,8 +119,13 @@ fun CardStyleSheet(
       skinState = { id ->
         when {
           Skins.isInstalled(id, installed) -> SkinState.Installed
-          id in installing -> SkinState.Installing
-          id in failed -> SkinState.Failed
+          installs.any {
+            SkinInstallWorker.installTag(card, id) in it.tags && !it.state.isFinished
+          } -> SkinState.Installing
+          installs.any {
+            SkinInstallWorker.installTag(card, id) in it.tags &&
+              (it.state == WorkInfo.State.FAILED || it.state == WorkInfo.State.CANCELLED)
+          } -> SkinState.Failed
           else -> SkinState.NotInstalled
         }
       },
@@ -129,18 +137,7 @@ fun CardStyleSheet(
           WidgetRefreshScheduler(context.applicationContext).refreshAllNow()
         }
       },
-      onInstall = { designId ->
-        val choice = CardDesignPreload.designs.value?.loadedFor
-        if (choice != null && designId !in installing) {
-          installing = installing + designId
-          failed = failed - designId
-          scope.launch {
-            val result = Skins.install(context.applicationContext, choice, designId)
-            installing = installing - designId
-            if (result != Skins.Installed.Yes) failed = failed + designId
-          }
-        }
-      },
+      onInstall = { designId -> SkinInstallWorker.enqueue(context, card, designId) },
       onUninstall = { designId ->
         scope.launch {
           Skins.uninstall(context.applicationContext, designId)
@@ -199,8 +196,8 @@ private fun rememberCardDesignOptions(
  * The picker: the card [preview], which of "this card" or "every card of its type" a pick applies
  * to, then the card's skins ([designs], when the server has any; for this card alone) led by
  * "Automatic", and one radio list of styles led by "follow the dashboard". An installed skin is a
- * radio choice; one that isn't offers to install it ([skinState]). Apart from the sheet so a
- * preview can draw it.
+ * radio choice; Browse all skins includes those available to install ([skinState]). Apart from the
+ * sheet so a preview can draw it.
  */
 @Composable
 internal fun CardStylePicker(
@@ -232,6 +229,7 @@ internal fun CardStylePicker(
         else CardDesignScope.Card
       )
     }
+  var browseSkins by remember(card) { mutableStateOf(false) }
   val typeLabel = card.type.removePrefix("custom:").replace('-', ' ')
   val current = overrides.at(at, card)?.cardStyle
   // With no style of its own, a card follows its type's override when there is one.
@@ -285,7 +283,19 @@ internal fun CardStylePicker(
           ) {
             onPickDesign(null)
           }
-          designs.forEach { design ->
+          val visible = designs.filter {
+            browseSkins ||
+              skinState(it.designId) == SkinState.Installed ||
+              it.designId == overrides.at(CardDesignScope.Card, card)?.designId
+          }
+          if (visible.isEmpty()) {
+            Text(
+              "No skins installed for this card. Browse all skins to install one.",
+              modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+              style = MaterialTheme.typography.bodyMedium,
+            )
+          }
+          visible.forEach { design ->
             SkinOption(
               design,
               skinState(design.designId),
@@ -295,6 +305,12 @@ internal fun CardStylePicker(
               onUninstall = { onUninstall(design.designId) },
             )
           }
+        }
+        TextButton(
+          onClick = { browseSkins = !browseSkins },
+          modifier = Modifier.padding(horizontal = 12.dp),
+        ) {
+          Text(if (browseSkins) "Show installed skins" else "Browse all skins")
         }
         SectionHeader("Style")
       }
@@ -387,7 +403,7 @@ private fun SkinOption(
     when (state) {
       SkinState.Installed -> about
       SkinState.NotInstalled -> "$about · Not installed"
-      SkinState.Installing -> "$about · Downloading…"
+      SkinState.Installing -> "$about · Installing…"
       SkinState.Failed -> "$about · Couldn't download"
     }
   val installed = state == SkinState.Installed

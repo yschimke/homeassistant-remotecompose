@@ -65,6 +65,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import ee.schimke.ha.client.design.UsageSharing
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignTags
@@ -80,6 +82,7 @@ import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.dashboard.CardDesignSources
 import ee.schimke.terrazzo.dashboard.CardDesignSync
+import ee.schimke.terrazzo.dashboard.CardStyleInstallWorker
 import ee.schimke.terrazzo.dashboard.CardStyleSample
 import ee.schimke.terrazzo.dashboard.CardStyleStore
 import ee.schimke.terrazzo.dashboard.CardStyleWearPanes
@@ -90,7 +93,6 @@ import ee.schimke.terrazzo.shared.ReportFeedbackButton
 import ee.schimke.terrazzo.ui.appThemeOrNull
 import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -183,9 +185,11 @@ internal fun SettingsScreen(
       SettingsGroup("Designs") {
         val installedStyles by CardStyleStore.of(context).installed.collectAsState()
         val styleOverrides by CardDesignOverrideStore.of(context).overrides.collectAsState()
-        // Installs in flight and installs that failed, while Settings is open.
-        var installingStyles by remember { mutableStateOf(emptySet<String>()) }
-        var failedStyles by remember { mutableStateOf(emptySet<String>()) }
+        // WorkManager owns installs, including when Settings is closed or the process restarts.
+        val workManager = remember(context) { WorkManager.getInstance(context) }
+        val installs by
+          remember(workManager) { workManager.getWorkInfosByTagFlow(CardStyleInstallWorker.TAG) }
+            .collectAsState(initial = emptyList())
         val stylesInUse = CardStyles.inUse(cardStylePref.id, styleOverrides.cardStyles)
         CardStyleSection(
           selected = cardStylePref,
@@ -200,23 +204,17 @@ internal fun SettingsScreen(
               pref.id in CardStyles.BUILT_IN -> CardStyleState.BuiltIn
               CardStyles.isInstalled(pref.id, installedStyles) ->
                 if (pref.id in stylesInUse) CardStyleState.InUse else CardStyleState.Installed
-              pref.id in installingStyles -> CardStyleState.Installing
-              pref.id in failedStyles -> CardStyleState.Failed
+              installs.any {
+                CardStyleInstallWorker.styleTag(pref.id) in it.tags && !it.state.isFinished
+              } -> CardStyleState.Installing
+              installs.any {
+                CardStyleInstallWorker.styleTag(pref.id) in it.tags &&
+                  (it.state == WorkInfo.State.FAILED || it.state == WorkInfo.State.CANCELLED)
+              } -> CardStyleState.Failed
               else -> CardStyleState.NotInstalled
             }
           },
-          onInstall = { pref ->
-            if (pref.id !in installingStyles) {
-              installingStyles = installingStyles + pref.id
-              failedStyles = failedStyles - pref.id
-              scope.launch {
-                val choice = CardDesignSync.choice(context, graph.preferencesStore).first()
-                val result = CardStyles.install(context.applicationContext, choice, pref.id)
-                installingStyles = installingStyles - pref.id
-                if (result != CardStyles.Installed.Yes) failedStyles = failedStyles + pref.id
-              }
-            }
-          },
+          onInstall = { pref -> CardStyleInstallWorker.enqueue(context, pref) },
           onUninstall = { pref ->
             scope.launch { CardStyles.uninstall(context.applicationContext, pref.id) }
           },
@@ -621,8 +619,8 @@ internal fun ThemeSection(
  * which its sample's description says.
  *
  * Each style is shown with a sample card drawn in it ([CardStyleSample]). Collapsed (the default),
- * only the current style is listed; expanding lists them all. "Preview on a watch" draws the
- * samples as Wear widgets instead, on approximate round and square watch screens
+ * installed styles and the current style are listed; expanding lists them all. "Preview on a watch"
+ * draws the samples as Wear widgets instead, on approximate round and square watch screens
  * ([CardStyleWearPanes]).
  */
 @Composable
@@ -631,7 +629,9 @@ internal fun CardStyleSection(
   onSelect: (CardStylePref) -> Unit,
   initiallyExpanded: Boolean = false,
   initiallyOnWatch: Boolean = false,
-  state: (CardStylePref) -> CardStyleState = { CardStyleState.BuiltIn },
+  state: (CardStylePref) -> CardStyleState = {
+    if (it.id in CardStyles.BUILT_IN) CardStyleState.BuiltIn else CardStyleState.NotInstalled
+  },
   onInstall: (CardStylePref) -> Unit = {},
   onUninstall: (CardStylePref) -> Unit = {},
 ) {
@@ -645,7 +645,8 @@ internal fun CardStyleSection(
     Text(
       "How dashboard cards are drawn. Classic follows the theme below; the others are complete " +
         "looks with their own colours, shapes and gauges. Classic and Home Assistant come with " +
-        "the app; install any other style to download its designs.",
+        "the app. Browse all designs to install more; a new design is selected when its " +
+        "background download finishes.",
       style = MaterialTheme.typography.bodySmall,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -662,7 +663,17 @@ internal fun CardStyleSection(
       )
       Switch(checked = onWatch, onCheckedChange = null)
     }
-    val shown = if (expanded) CardStylePref.entries else listOf(selected)
+    val shown =
+      CardStylePref.entries.filter {
+        expanded ||
+          it == selected ||
+          state(it) in
+            setOf(
+              CardStyleState.BuiltIn,
+              CardStyleState.Installed,
+              CardStyleState.InUse,
+            )
+      }
     Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
       shown.forEach { pref ->
         key(pref) {
@@ -685,10 +696,7 @@ internal fun CardStyleSection(
         modifier = Modifier.size(18.dp),
       )
       Spacer(Modifier.width(8.dp))
-      Text(
-        if (expanded) "Show only the current style"
-        else "Show all ${CardStylePref.entries.size} styles"
-      )
+      Text(if (expanded) "Show installed designs" else "Browse all designs")
     }
   }
 }
@@ -819,7 +827,7 @@ private fun CardStyleInstallRow(
         }
       CardStyleState.Installing -> {
         CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-        Text("Downloading designs…", style = MaterialTheme.typography.bodySmall)
+        Text("Installing designs…", style = MaterialTheme.typography.bodySmall)
       }
       CardStyleState.Failed -> {
         Text(
