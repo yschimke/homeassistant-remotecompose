@@ -42,6 +42,9 @@ class DesignGenerator(
   private var generatedFor: DesignLibrary? = null
   private val generated = LinkedHashMap<DesignKey, BuiltDesign>()
   private val blobs = HashMap<String, ByteArray>()
+  // How many cached keys serve each blob: keys can capture the same bytes (a variant the template
+  // doesn't draw), so a blob stays until the last of them is evicted.
+  private val blobKeys = HashMap<String, Int>()
 
   /**
    * The design for [key]: the library's when it holds one, otherwise captured now. Throws
@@ -94,6 +97,7 @@ class DesignGenerator(
         generatedFor = library
         generated.clear()
         blobs.clear()
+        blobKeys.clear()
       }
       generated[key]
     }
@@ -112,10 +116,16 @@ class DesignGenerator(
     synchronized(this) {
       if (generatedFor === library) {
         generated[key] = built
-        blobs[Sha256.hex(built.bytes)] = built.bytes
+        val sha = Sha256.hex(built.bytes)
+        blobs[sha] = built.bytes
+        blobKeys.merge(sha, 1, Int::plus)
         while (generated.size > maxGenerated) {
           val oldest = generated.keys.first()
-          generated.remove(oldest)?.let { blobs.remove(Sha256.hex(it.bytes)) }
+          val evicted = Sha256.hex(generated.remove(oldest)!!.bytes)
+          if (blobKeys.merge(evicted, -1, Int::plus) == 0) {
+            blobKeys.remove(evicted)
+            blobs.remove(evicted)
+          }
         }
       }
     }
