@@ -235,6 +235,23 @@ jobs:
           HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
         run: ./gradlew :app:bundleRelease :wear:bundleRelease --stacktrace
 
+      # Play reads the R8 mapping and native symbol tables out of the bundle's
+      # BUNDLE-METADATA; without them the Console warns about a missing
+      # deobfuscation file / native debug symbols. AGP only writes the symbols
+      # when its default NDK is installed on the runner (otherwise it skips
+      # with an info-level log line), so check the bundle rather than trust it.
+      - name: Check bundles carry deobfuscation + native symbols
+        if: env.HAS_SIGNING_KEYSTORE == 'true'
+        run: |
+          set -euo pipefail
+          for aab in app/build/outputs/bundle/release/app-release.aab wear/build/outputs/bundle/release/wear-release.aab; do
+            listing=$(unzip -l "$aab")
+            grep -q 'BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map' <<<"$listing" \
+              || echo "::warning::$aab has no R8 mapping file"
+            grep -q 'BUNDLE-METADATA/com.android.tools.build.debugsymbols/' <<<"$listing" \
+              || echo "::warning::$aab has no native debug symbols (is AGP's default NDK installed?)"
+          done
+
       - name: Publish to Play (internal track)
         id: play_publish
         if: env.PUBLISH_APP == 'true' && env.HAS_PLAY_CREDENTIALS == 'true' && env.HAS_SIGNING_KEYSTORE == 'true'

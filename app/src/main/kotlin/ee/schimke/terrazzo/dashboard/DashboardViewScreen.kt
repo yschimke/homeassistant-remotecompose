@@ -179,7 +179,7 @@ import kotlinx.serialization.json.jsonPrimitive
 fun DashboardViewScreen(
   session: HaSession,
   urlPath: String?,
-  onCardLongPress: (CardConfig, HaSnapshot) -> Unit,
+  onCardLongPress: (card: CardConfig, snapshot: HaSnapshot, section: List<CardConfig>) -> Unit,
   contentPadding: PaddingValues = PaddingValues(0.dp),
   readOnly: Boolean = true,
   initialViewPath: String? = null,
@@ -461,7 +461,7 @@ private fun DashboardList(
   snapshot: HaSnapshot,
   baseUrl: String,
   dashboardUrlPath: String,
-  onCardLongPress: (CardConfig, HaSnapshot) -> Unit,
+  onCardLongPress: (card: CardConfig, snapshot: HaSnapshot, section: List<CardConfig>) -> Unit,
   contentPadding: PaddingValues,
   pendingView: ViewTarget? = null,
   onViewShown: () -> Unit = {},
@@ -469,8 +469,11 @@ private fun DashboardList(
   // The inner card renderers only carry a `(CardConfig) -> Unit`
   // long-press lambda; bind the current snapshot here (DashboardList is
   // the lowest point that holds both) so callers upstairs get the exact
-  // frame the user pressed.
-  val onLongPress: (CardConfig) -> Unit = { card -> onCardLongPress(card, snapshot) }
+  // frame the user pressed. [renderView] adds the cards of the section pressed in (none outside
+  // one), so a widget can be made of the whole section rather than only the card.
+  val onLongPress: (CardConfig, List<CardConfig>) -> Unit = { card, section ->
+    onCardLongPress(card, snapshot, section)
+  }
   val registry = remember { defaultRegistry().withEnhancedShutter() }
   val layout = remember(dashboard) { buildDashboardLayout(dashboard) }
   val cfg = rememberLayoutConfig()
@@ -827,10 +830,12 @@ private fun LazyListScope.renderView(
   onToggleSection: (Int) -> Unit,
   baseUrl: String?,
   imageLoader: ImageLoader,
-  onLongPress: (CardConfig) -> Unit,
+  onLongPress: (card: CardConfig, section: List<CardConfig>) -> Unit,
   pinContext: SectionPinContext,
 ) {
   val viewKey = "v$viewIndex"
+  // The header and loose cards sit in no section.
+  val onLooseLongPress: (CardConfig) -> Unit = { onLongPress(it, emptyList()) }
   val contentWidth = grid.maxWidthDp.dp
   val sectionsPadding = sectionsPadding(grid, cfg.horizontalGutter)
   val contentModifier =
@@ -850,7 +855,7 @@ private fun LazyListScope.renderView(
         registry = registry,
         baseUrl = baseUrl,
         imageLoader = imageLoader,
-        onLongPress = onLongPress,
+        onLongPress = onLooseLongPress,
         modifier = contentModifier,
       )
     }
@@ -865,7 +870,7 @@ private fun LazyListScope.renderView(
       compactPerRow = cfg.compactCardsPerRow,
       baseUrl = baseUrl,
       imageLoader = imageLoader,
-      onLongPress = onLongPress,
+      onLongPress = onLooseLongPress,
       modifier = Modifier.padding(top = ItemGap).widthIn(max = orphanMaxWidth).fillMaxWidth(),
     )
   }
@@ -940,7 +945,7 @@ private fun LazyListScope.renderView(
               registry = registry,
               baseUrl = baseUrl,
               imageLoader = imageLoader,
-              onLongPress = onLongPress,
+              onLongPress = { card -> onLongPress(card, section.cards) },
             )
           }
         }
@@ -976,7 +981,7 @@ private fun LazyListScope.renderView(
             haTheme = haTheme,
             baseUrl = baseUrl,
             imageLoader = imageLoader,
-            onLongPress = onLongPress,
+            onLongPress = { card -> onLongPress(card, section.cards) },
             pinContext = pinContext,
           )
         }
@@ -1246,7 +1251,7 @@ private fun SectionGrid(
   haTheme: HaTheme,
   baseUrl: String?,
   imageLoader: ImageLoader,
-  onLongPress: (CardConfig) -> Unit,
+  onLongPress: (card: CardConfig, section: List<CardConfig>) -> Unit,
   pinContext: SectionPinContext,
   modifier: Modifier = Modifier,
 ) {
@@ -1267,7 +1272,7 @@ private fun SectionGrid(
         haTheme = haTheme,
         baseUrl = baseUrl,
         imageLoader = imageLoader,
-        onLongPress = onLongPress,
+        onLongPress = { card -> onLongPress(card, section.cards) },
         pinContext = pinContext,
         modifier =
           Modifier.gridItem(rowSpan = placement.rowSpan, columnSpan = placement.columnSpan),
