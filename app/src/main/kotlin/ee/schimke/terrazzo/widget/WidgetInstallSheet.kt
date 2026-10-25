@@ -4,6 +4,7 @@ package ee.schimke.terrazzo.widget
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,6 +14,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -30,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.CardConfig
@@ -61,14 +64,18 @@ fun WidgetInstallSheet(
   val keyboard = LocalSoftwareKeyboardController.current
   val installer = remember { WidgetInstaller(context.applicationContext) }
   val store = LocalTerrazzoGraph.current.widgetStore
-  val originalName = remember(card) { card.raw["name"]?.jsonPrimitive?.content ?: "" }
-  var name by remember(card) { mutableStateOf(originalName) }
+  // A stack or grid long-pressed as a whole: offer each of its cards on its own, so the one the
+  // user meant can be installed rather than the container (whose 1x1 slot shows its first tile).
+  val parts = remember(card) { card.widgetParts() }
+  var chosen by remember(card) { mutableStateOf(card) }
+  val originalName = remember(chosen) { chosen.raw["name"]?.jsonPrimitive?.content ?: "" }
+  var name by remember(chosen) { mutableStateOf(originalName) }
   val editedCard =
-    remember(card, name) {
-      if (name.isBlank() || name == (card.raw["name"]?.jsonPrimitive?.content ?: "")) card
+    remember(chosen, name) {
+      if (name.isBlank() || name == (chosen.raw["name"]?.jsonPrimitive?.content ?: "")) chosen
       else
-        card.copy(
-          raw = kotlinx.serialization.json.JsonObject(card.raw + ("name" to JsonPrimitive(name)))
+        chosen.copy(
+          raw = kotlinx.serialization.json.JsonObject(chosen.raw + ("name" to JsonPrimitive(name)))
         )
     }
   var renderedPreview by
@@ -116,6 +123,28 @@ fun WidgetInstallSheet(
         verticalArrangement = Arrangement.spacedBy(16.dp),
       ) {
         Text("Home screen widget", style = MaterialTheme.typography.headlineSmall)
+        if (parts.isNotEmpty()) {
+          FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.testTag("widget-part-picker"),
+          ) {
+            FilterChip(
+              selected = chosen == card,
+              onClick = { chosen = card },
+              label = { Text("All ${parts.size}") },
+            )
+            parts.forEach { part ->
+              FilterChip(
+                selected = chosen == part,
+                onClick = {
+                  chosen = part
+                  installError = null
+                },
+                label = { Text(widgetPartLabel(part, liveSnapshot)) },
+              )
+            }
+          }
+        }
         WidgetPreparationPreview(baseUrl, editedCard, liveSnapshot) { renderedPreview = it }
 
         OutlinedTextField(
