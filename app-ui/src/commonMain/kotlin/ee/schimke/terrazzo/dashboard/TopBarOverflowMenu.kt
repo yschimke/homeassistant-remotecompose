@@ -20,8 +20,10 @@ import androidx.compose.runtime.setValue
  * stays in the title-side dropdown so users don't have to scroll past "Home screen widgets" /
  * "Settings" entries to reach the dashboards they actually want to switch between.
  *
- * [onEditDashboard], when non-null, adds "Edit dashboard" at the top. [onInstallOnWatch], when
- * non-null, adds "Install on watch" for a connected watch without the watch app.
+ * [onEditDashboard], when non-null, adds "Edit dashboard" at the top, and [onManageDashboards]
+ * "Manage dashboards" (which of Home Assistant's dashboards the switcher lists) after it.
+ * [onInstallOnWatch], when non-null, adds "Install on watch" for a connected watch without the
+ * watch app.
  */
 @Composable
 fun TopBarOverflowMenu(
@@ -32,6 +34,7 @@ fun TopBarOverflowMenu(
   onSignOut: () -> Unit,
   onInstallOnWatch: (() -> Unit)? = null,
   onEditDashboard: (() -> Unit)? = null,
+  onManageDashboards: (() -> Unit)? = null,
 ) {
   var expanded by remember { mutableStateOf(false) }
   IconButton(onClick = { expanded = true }) {
@@ -40,6 +43,7 @@ fun TopBarOverflowMenu(
   DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
     val close = { expanded = false }
     onEditDashboard?.let { MenuEntry("Edit dashboard", close, it) }
+    onManageDashboards?.let { MenuEntry("Manage dashboards", close, it) }
     // Where cards live outside the app: one entry per place, named for the place rather than the
     // mechanism, so "pinned" and "widgets" no longer read as the same thing twice.
     MenuEntry("Home screen widgets", close, onOpenWidgets)

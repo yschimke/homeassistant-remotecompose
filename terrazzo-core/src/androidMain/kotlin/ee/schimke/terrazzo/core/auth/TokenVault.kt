@@ -52,8 +52,23 @@ class TokenVault(private val context: Context) {
     context.store.edit { prefs ->
       prefs.remove(cipherKey(instanceId))
       prefs.remove(ivKey(instanceId))
+      prefs.remove(clientIdKey(instanceId))
     }
   }
+
+  /**
+   * Records the OAuth `client_id` [instanceId]'s refresh token was issued to, when it isn't the
+   * app's own ([HaAuthService.CLIENT_ID]): a password sign-in ([HaAuthService.passwordLogin]) signs
+   * in as the server's own frontend. Home Assistant only refreshes a token for the client it was
+   * issued to. Not a secret, so kept in the clear.
+   */
+  suspend fun putClientId(instanceId: String, clientId: String) {
+    context.store.edit { it[clientIdKey(instanceId)] = clientId }
+  }
+
+  /** The `client_id` to refresh [instanceId]'s token with: [putClientId]'s, else the app's own. */
+  suspend fun clientId(instanceId: String): String =
+    context.store.data.first()[clientIdKey(instanceId)] ?: HaAuthService.CLIENT_ID
 
   private fun encrypt(plaintext: ByteArray): Pair<ByteArray, ByteArray> {
     val cipher = Cipher.getInstance(TRANSFORMATION)
@@ -95,6 +110,8 @@ class TokenVault(private val context: Context) {
     fun cipherKey(instanceId: String) = stringPreferencesKey("refresh.$instanceId")
 
     fun ivKey(instanceId: String) = stringPreferencesKey("refresh.$instanceId.iv")
+
+    fun clientIdKey(instanceId: String) = stringPreferencesKey("client.$instanceId")
 
     fun ByteArray.base64(): String = Base64.encodeToString(this, Base64.NO_WRAP)
 

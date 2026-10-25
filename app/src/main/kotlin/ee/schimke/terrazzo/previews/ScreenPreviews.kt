@@ -230,6 +230,26 @@ private fun PhoneHost(
 @Composable
 fun Screen_Discovery() = PhoneHost { DiscoveryScreen(onInstancePicked = {}, onDemoSelected = {}) }
 
+/** The connect screen with the live demo server's sign-in open, its guest account filled in. */
+@Preview(
+  name = "discovery · live demo",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_Discovery_LiveDemo() = PhoneHost {
+  ee.schimke.terrazzo.discovery.DiscoveryForm(
+    instances = emptyList(),
+    host = "http://homeassistant:8123",
+    onHostChange = {},
+    onConnect = {},
+    onInstancePicked = {},
+    onDemoSelected = {},
+    initiallyShowLiveDemo = true,
+  )
+}
+
 @Preview(
   name = "discovery · theme",
   showBackground = false,
@@ -937,11 +957,9 @@ fun Screen_DashboardSelection_ThemeStyle(
 fun Screen_Settings() = PhoneHost {
   SettingsScreen(
     session = demoSession(),
-    onToggleDemo = {},
     onSignOut = {},
     onBack = {},
     onOpenSyncDiagnostics = {},
-    onManageDashboards = {},
   )
 }
 
@@ -956,11 +974,9 @@ fun Screen_Settings_ThemeStyle(@PreviewParameter(ThemeStyleProvider::class) styl
   PhoneHost(style = style) {
     SettingsScreen(
       session = demoSession(),
-      onToggleDemo = {},
       onSignOut = {},
       onBack = {},
       onOpenSyncDiagnostics = {},
-      onManageDashboards = {},
     )
   }
 

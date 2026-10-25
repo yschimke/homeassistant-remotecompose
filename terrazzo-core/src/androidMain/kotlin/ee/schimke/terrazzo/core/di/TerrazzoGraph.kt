@@ -110,7 +110,7 @@ class HaSessionFactory(
   private suspend fun mintAccessToken(baseUrl: String): MintedAccessToken {
     val refreshToken =
       tokenVault.get(baseUrl) ?: throw HaReauthRequiredException("No refresh token for $baseUrl")
-    val tokens = authService.refreshAccessToken(baseUrl, refreshToken)
+    val tokens = authService.refreshAccessToken(baseUrl, refreshToken, tokenVault.clientId(baseUrl))
     tokens.refreshToken?.let { tokenVault.put(baseUrl, it) }
     val accessToken = tokens.accessToken ?: error("HA token refresh returned no access token")
     return MintedAccessToken(accessToken, tokens.expiresInSeconds?.seconds)

@@ -9,17 +9,21 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -38,8 +42,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
 import java.net.URI
 
@@ -65,6 +72,8 @@ import java.net.URI
 fun DiscoveryScreen(
   onInstancePicked: (baseUrl: String) -> Unit,
   onDemoSelected: () -> Unit = {},
+  onLiveDemo: (username: String, password: String) -> Unit = { _, _ -> },
+  liveDemoSigningIn: Boolean = false,
   snackbarHost: @Composable () -> Unit = {},
 ) {
   var host by rememberSaveable { mutableStateOf(DEFAULT_HOST) }
@@ -114,6 +123,8 @@ fun DiscoveryScreen(
     },
     onInstancePicked = onInstancePicked,
     onDemoSelected = onDemoSelected,
+    onLiveDemo = onLiveDemo,
+    liveDemoSigningIn = liveDemoSigningIn,
     snackbarHost = snackbarHost,
   )
 }
@@ -127,6 +138,9 @@ internal fun DiscoveryForm(
   onConnect: () -> Unit,
   onInstancePicked: (String) -> Unit,
   onDemoSelected: () -> Unit,
+  onLiveDemo: (username: String, password: String) -> Unit = { _, _ -> },
+  liveDemoSigningIn: Boolean = false,
+  initiallyShowLiveDemo: Boolean = false,
   snackbarHost: @Composable () -> Unit = {},
 ) {
   val urlIntoView = remember { BringIntoViewRequester() }
@@ -193,8 +207,70 @@ internal fun DiscoveryForm(
       ) {
         Text("Connect")
       }
-      TextButton(onClick = onDemoSelected) { Text("Try demo mode (no login)") }
+      Spacer(Modifier.height(24.dp))
+      DemoOptions(onDemoSelected, onLiveDemo, liveDemoSigningIn, initiallyShowLiveDemo)
     }
+  }
+}
+
+/**
+ * The two ways to look around without a Home Assistant of your own, kept below the sign-in and
+ * quiet: the public demo Home Assistant ([HaAuthService.DEMO_SERVER], read-only, its guest login
+ * filled in), signed in to with a username and password ([HaAuthService.passwordLogin]), and the
+ * offline demo, sample data on the device.
+ */
+@Composable
+private fun DemoOptions(
+  onDemoSelected: () -> Unit,
+  onLiveDemo: (username: String, password: String) -> Unit,
+  signingIn: Boolean,
+  initiallyShowLiveDemo: Boolean,
+) {
+  var showLiveDemo by rememberSaveable { mutableStateOf(initiallyShowLiveDemo) }
+  var username by rememberSaveable { mutableStateOf(HaAuthService.DEMO_USERNAME) }
+  var password by rememberSaveable { mutableStateOf(HaAuthService.DEMO_PASSWORD) }
+  val muted = MaterialTheme.colorScheme.onSurfaceVariant
+  Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Text("Just looking?", style = MaterialTheme.typography.labelLarge, color = muted)
+    TextButton(onClick = { showLiveDemo = !showLiveDemo }) {
+      Text("Live demo server · ${HaAuthService.DEMO_SERVER.removePrefix("https://")}")
+    }
+    if (showLiveDemo) {
+      Column(
+        modifier = Modifier.padding(start = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+      ) {
+        Text(
+          "A shared, read-only Home Assistant with simulated devices. Its guest account is " +
+            "filled in.",
+          style = MaterialTheme.typography.bodySmall,
+          color = muted,
+        )
+        OutlinedTextField(
+          value = username,
+          onValueChange = { username = it },
+          label = { Text("Username") },
+          singleLine = true,
+          modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+          value = password,
+          onValueChange = { password = it },
+          label = { Text("Password") },
+          singleLine = true,
+          visualTransformation = PasswordVisualTransformation(),
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+          modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedButton(
+          onClick = { onLiveDemo(username.trim(), password) },
+          enabled = !signingIn && username.isNotBlank() && password.isNotEmpty(),
+        ) {
+          Text(if (signingIn) "Signing in…" else "Sign in to the demo")
+        }
+      }
+    }
+    TextButton(onClick = onDemoSelected) { Text("Offline demo · sample data on this phone") }
   }
 }
 
