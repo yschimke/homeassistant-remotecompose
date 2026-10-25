@@ -2,15 +2,25 @@
 
 package ee.schimke.terrazzo.shared
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import ee.schimke.ha.client.design.UsageLedger
 import ee.schimke.ha.client.design.UsageStore
 import ee.schimke.ha.client.design.UsageSurfaces
+import kotlin.js.JsString
+import kotlin.js.Promise
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.await
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * The web app keeps its usage ledger and setting in the page origin's `localStorage` (the Home
- * Assistant panel's, or the hosted site's). A browser won't send a page's own User-Agent, so the
- * app's release tag travels in the report body and the blob URL instead.
+ * The web app selects per-install Wasmo settings or the existing localStorage path at startup. A
+ * browser won't send a page's own User-Agent, so the app's release tag travels in the report body
+ * and the blob URL instead.
  */
 internal actual fun platformCardUsage(): PlatformCardUsage? =
   PlatformCardUsage(
@@ -25,8 +35,64 @@ internal actual fun platformCardUsage(): PlatformCardUsage? =
 private const val SHARING_KEY = "terrazzo.usage.sharing"
 private const val LEDGER_KEY = "terrazzo.usage.ledger"
 
-private val browserAppStorage: AppStorage =
+internal var browserAppStorage: AppStorage =
   LocalAppStorage(::storageGet, ::storageSet, ::storageRemove)
+  private set
+
+private val storageScope = MainScope()
+
+internal suspend fun initializeBrowserAppStorage() {
+  if (backendStorageKind().await().toString() != "wasmo") return
+  browserAppStorage =
+    WasmoAppStorage.create(
+      BrowserStorageTransport,
+      storageScope,
+      browserAppStorage,
+      setOf(SHARING_KEY, LEDGER_KEY),
+    )
+}
+
+@Composable
+internal fun browserAppStorageLabel(): String {
+  val storage =
+    browserAppStorage as? WasmoAppStorage ?: return "Usage settings stored in this browser."
+  return when (storage.syncState.collectAsState().value) {
+    StorageSyncState.SAVED -> "Usage settings stored on your Wasmo."
+    StorageSyncState.SAVING -> "Saving usage settings to your Wasmo…"
+    StorageSyncState.FAILED ->
+      "Could not save usage settings. Kept in this tab; change the sharing choice to retry."
+  }
+}
+
+private object BrowserStorageTransport : AppStorageTransport {
+  private fun decode(value: String): Map<String, String> =
+    Json.parseToJsonElement(value).jsonObject.mapValues { it.value.jsonPrimitive.content }
+
+  override suspend fun read(): Map<String, String> = decode(readSettings().await().toString())
+
+  override suspend fun importIfEmpty(values: Map<String, String>): Map<String, String> {
+    val json = JsonObject(values.mapValues { JsonPrimitive(it.value) }).toString()
+    return decode(importSettings(json).await().toString())
+  }
+
+  override suspend fun write(key: String, value: String?) {
+    writeSettings(key, value).await()
+  }
+}
+
+@JsFun(
+  "() => window.terrazzoBackend.ready.then(b => b.kind === 'wasmo' && b.caps.kv === true ? 'wasmo' : 'local')"
+)
+private external fun backendStorageKind(): Promise<JsString>
+
+@JsFun("() => window.terrazzoBackend.settings.read()")
+private external fun readSettings(): Promise<JsString>
+
+@JsFun("(values) => window.terrazzoBackend.settings.importIfEmpty(values)")
+private external fun importSettings(values: String): Promise<JsString>
+
+@JsFun("(key, value) => window.terrazzoBackend.settings.write(key, value).then(() => '')")
+private external fun writeSettings(key: String, value: String?): Promise<JsString>
 
 private object AppStorageUsageStore : UsageStore {
   private val json = Json { ignoreUnknownKeys = true }

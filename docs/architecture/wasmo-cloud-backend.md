@@ -1,8 +1,9 @@
 # Terrazzo on Wasmo as a cloud service (plan)
 
-> Status: **staged implementation.** Stage 1 adds capability detection and the local
-> `AppStorage` seam. Storage and HA sign-in still use the browser; cloud storage, session
-> custody and public publishing are subsequent stages. See [wasmo-app.md](wasmo-app.md).
+> Status: **staged implementation.** Web stages add detection, local/cloud `AppStorage`,
+> atomic usage-settings migration and sync status. The shared server settings stage is in review.
+> HA sign-in remains in the browser; server-held sessions and public publishing are later stages.
+> Nothing is deployed. See [wasmo-app.md](wasmo-app.md).
 
 ## Implementation amendment: shared services
 
@@ -16,6 +17,49 @@ superseded by this amendment. The server never shares HA credentials between app
 
 The settings stage adds `POST kv/import` (advertised as `kvImport: true`) to atomically import
 initial values only into an empty install, avoiding partial uploads and first-device races.
+
+## Cross-repository dependencies and review order
+
+1. Review [web detection/local storage PR #1225](https://github.com/yschimke/homeassistant-remotecompose/pull/1225).
+   This stage retains static behaviour, including on hosted wasmo.com.
+2. Review [Wasmo shared services PR #1](https://github.com/yschimke/wasmo/pull/1) against `deploy`.
+   Its module tests pass; full wiring validation is blocked by the existing journal npm graph
+   ([SCH-50](https://linear.app/yschimke/issue/SCH-50/wasmo-wiring-build-fails-resolving-peculiarasn1-x509-2111)).
+3. Review the web cloud-settings stage after stage 1. It needs stage 2's capabilities, `kv` and
+   `kvImport` contracts. Each load reads one snapshot before composition. Usage ledger and sharing
+   values stay strings in the generic JSON KV service. Startup read/import failure shows a retry
+   screen instead of silently switching to empty browser settings. Failed writes stay in memory,
+   are labelled unsaved, and retry on the next storage write.
+4. Only after **separate deployment authorization**, release an opt-in server build and install a
+   matching web archive. Enable the operator's supported install names with `WASMO_SERVICE_APPS`.
+   The archive stays the same one used for static sites; an absent backend keeps browser storage.
+5. Review session custody, embed snapshots and explicit publishing independently. HA destination
+   policy, encrypted-key lifecycle and public fields are still decisions; no credential transfer
+   or publication is enabled by the settings stages.
+
+Migration uses `POST kv/import` only when the remote snapshot is empty. After an acknowledged
+import, only matching known usage/sharing keys are removed from browser storage. On conflict,
+remote values win and conflicting browser values are retained. OAuth and unrelated browser keys
+are never imported. The Settings label applies to usage settings; the design-server field retains
+its existing session-only behaviour.
+
+Local browser fixture: `python scripts/wasmo-sim.py app-ui/build/dist/wasmJs/productionExecutable`.
+It binds to loopback, has test-only owner cookies and fake HA token values, and must never be
+published as a real backend. `--static` makes the API unavailable for the browser-storage path.
+
+Browser verification uses the actual Wasm UI (including a second independent browser context):
+
+```sh
+npm ci --prefix scripts/browser-tests --ignore-scripts
+CHROMIUM_PATH=/path/to/chrome node scripts/test-wasmo-browser.cjs app-ui/build/dist/wasmJs/productionExecutable
+```
+
+The existing Wasm website CI supplies Chrome from its Playwright installation. The script starts
+and stops its own fixture processes, checks anonymous rejection, migration, write-through,
+second-device preferences, failed-write recovery, fail-closed startup and static persistence, and
+writes screenshots under `_wasm-test/`. `WASMO_BEFORE_DIST` optionally points to a baseline build
+for the before screenshot. These fixtures do not exercise the real Wasmo owner-cookie service or
+prove server-held HA sign-in; those remain separate validation/stages.
 
 ## Goal
 
