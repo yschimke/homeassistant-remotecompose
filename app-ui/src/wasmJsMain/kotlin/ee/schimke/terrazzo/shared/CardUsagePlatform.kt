@@ -14,31 +14,34 @@ import kotlinx.serialization.json.Json
  */
 internal actual fun platformCardUsage(): PlatformCardUsage? =
   PlatformCardUsage(
-    store = LocalStorageUsageStore,
+    store = AppStorageUsageStore,
     surface = UsageSurfaces.WEB,
     platform = "web",
     sendUserAgentHeader = false,
-    readSharing = { storageGet(SHARING_KEY) },
-    writeSharing = { storageSet(SHARING_KEY, it) },
+    readSharing = { browserAppStorage.get(SHARING_KEY) },
+    writeSharing = { browserAppStorage.set(SHARING_KEY, it) },
   )
 
 private const val SHARING_KEY = "terrazzo.usage.sharing"
 private const val LEDGER_KEY = "terrazzo.usage.ledger"
 
-private object LocalStorageUsageStore : UsageStore {
+private val browserAppStorage: AppStorage =
+  LocalAppStorage(::storageGet, ::storageSet, ::storageRemove)
+
+private object AppStorageUsageStore : UsageStore {
   private val json = Json { ignoreUnknownKeys = true }
 
   override suspend fun read(): UsageLedger? =
-    storageGet(LEDGER_KEY)?.let {
+    browserAppStorage.get(LEDGER_KEY)?.let {
       runCatching { json.decodeFromString(UsageLedger.serializer(), it) }.getOrNull()
     }
 
   override suspend fun write(ledger: UsageLedger) {
-    storageSet(LEDGER_KEY, json.encodeToString(UsageLedger.serializer(), ledger))
+    browserAppStorage.set(LEDGER_KEY, json.encodeToString(UsageLedger.serializer(), ledger))
   }
 
   override suspend fun delete() {
-    storageRemove(LEDGER_KEY)
+    browserAppStorage.set(LEDGER_KEY, null)
   }
 }
 
