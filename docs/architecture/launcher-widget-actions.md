@@ -39,10 +39,10 @@ deliberate control, so the dashboard's read-only default doesn't apply. What a t
 
 | Action | On a launcher widget | On a watch card (Wear app) | On a Wear widget |
 | --- | --- | --- | --- |
-| `Toggle`, `CallService` | Calls Home Assistant. An on/off result shows at once and is put back if the call fails; a call that names no entity (a script, a scene) shows once a live session reports it. | Relayed to the phone, which calls Home Assistant on its session when its own capture of that card makes the action (below). | Opens the Wear app on the widget's card. |
-| `AlarmIntent`, `AlarmPin`, `AlarmKey` | Paired per widget and entity by `WidgetAlarmPairing` into one `alarm_control_panel.alarm_<service>` call with the entered `code` (below). | Paired on the watch by `AlarmKeypadCoordinator` into one call; the phone rebuilds it from the card's own button with `WidgetAlarmPairing`. | Opens the Wear app on the widget's card. |
-| `MoreInfo`, `Navigate` | Open the app on the entity's details or the dashboard path (`WidgetOpenRequests`, through an activity `PendingIntent`: a receiver can't start one from the background), as the card's own tap would. | Nothing: the watch has no entity details or dashboard navigation to show. | Opens the Wear app on the widget's card. |
-| `Url` | Opens the URL. | Nothing: the watch has no browser. | Opens the Wear app on the widget's card. |
+| `Toggle`, `CallService` | Calls Home Assistant. An on/off result shows at once and is put back if the call fails; a call that names no entity (a script, a scene) shows once a live session reports it. A high-risk one (a lock, a garage door: `HighRiskActions`) opens `WidgetConfirmActivity` instead, which runs it while the phone's controls are unlocked and asks first while they are locked (see [wear-one-handed-gestures.md](wear-one-handed-gestures.md#high-risk-actions-and-lock-mode)). | Relayed to the phone, which calls Home Assistant on its session when its own capture of that card makes the action (below). | Opens the Wear app on the widget's card, full screen. |
+| `AlarmIntent`, `AlarmPin`, `AlarmKey` | Paired per widget and entity by `WidgetAlarmPairing` into one `alarm_control_panel.alarm_<service>` call with the entered `code` (below). | Paired on the watch by `AlarmKeypadCoordinator` into one call; the phone rebuilds it from the card's own button with `WidgetAlarmPairing`. | Opens the Wear app on the widget's card, full screen. |
+| `MoreInfo`, `Navigate` | Open the app on the entity's details or the dashboard path (`WidgetOpenRequests`, through an activity `PendingIntent`: a receiver can't start one from the background), as the card's own tap would. | More-info opens the card full screen (`WearCardScreen`); navigate does nothing, since the watch has no dashboard navigation. | Opens the Wear app on the widget's card, full screen. |
+| `Url` | Opens the URL. | Nothing: the watch has no browser. | Opens the Wear app on the widget's card, full screen. |
 
 Every write must be the action the app itself put on the widget's `PendingIntent`
 (`trustedWidgetAction`). The one exception is a widget PIN: its digits are typed in the player
@@ -78,7 +78,8 @@ value) is refused rather than guessed.
 ### Wear widgets
 
 A Wear widget can't keep a session or a keypad buffer, so every tap on it opens the Wear app on the
-widget's card: its pinned section, or the pinned list for a pinned card (`WearWidgetTaps`). The
+widget's card, full screen (`WearCardScreen`), paging through its pinned section or the pinned list
+(`WearWidgetTaps`). The
 widget's document has each of the card's `ha` host actions rewritten into Glance Wear's own
 `SendPendingIntent` action (what `pendingIntentAction` emits for a Wear widget host), naming one
 activity `PendingIntent` that the widget's extras carry under `pending_intents` — the bundle

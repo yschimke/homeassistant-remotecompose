@@ -27,7 +27,9 @@ import kotlinx.coroutines.withTimeoutOrNull
  * ([trustedWidgetAction]), only for a widget that is still installed, only on that widget's own
  * server, and only a toggle, a service call or an alarm panel's arm, disarm and code taps (paired
  * into one call by [WidgetAlarmPairing]). A pinned widget is a deliberate control, so the
- * dashboard's read-only lock (a guard against stray taps while scrolling) doesn't apply.
+ * dashboard's read-only lock (a guard against stray taps while scrolling) doesn't apply, except to
+ * a high-risk toggle or service call ([ee.schimke.ha.rc.HighRiskActions]): that tap opens
+ * [WidgetConfirmActivity], which asks first while the lock is on.
  *
  * The connection is the app's own login. While the app runs with a connected session for the
  * widget's server, the call goes on that socket ([setAppSession]). Otherwise the stored refresh

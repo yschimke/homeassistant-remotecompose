@@ -8,6 +8,7 @@ import ee.schimke.ha.client.HaEntityStates
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.cards.bambuEntityIds
 import ee.schimke.ha.rc.displayPrecisionOf
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
@@ -20,6 +21,7 @@ import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Instant
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -49,6 +51,13 @@ class WearDirectAccess(
       > =
     { baseUrl, token, ids ->
       HaEntityStates(baseUrl, token).use { it.fetch(ids) }
+    },
+  private val fetchHistory:
+    suspend (baseUrl: String, token: String, entityId: String, start: Instant) -> List<
+        HistoryPoint
+      > =
+    { baseUrl, token, entityId, start ->
+      HaEntityStates(baseUrl, token).use { it.history(entityId, start) }
     },
   private val sendRequest: suspend () -> Unit = { sendAccessRequest(context) },
   private val now: () -> Long = System::currentTimeMillis,
@@ -133,14 +142,45 @@ class WearDirectAccess(
     return merged
   }
 
+  /**
+   * [entityId]'s history over the last [hours], oldest first, from Home Assistant with the watch's
+   * own token: the card details screen's chart. Null when the watch has no token for the instance
+   * the phone is signed in to (it asks the phone for one), in demo mode, or when no address
+   * answers; an empty list when the recorder has nothing for it.
+   */
+  suspend fun history(
+    settings: WearSettings?,
+    entityId: String,
+    hours: Int = HISTORY_HOURS,
+  ): List<HistoryPoint>? {
+    if (settings == null || settings.demoMode || settings.baseUrl.isEmpty()) return null
+    val access = store.read()?.takeIf { signedInTo(settings, it.baseUrl) }
+    if (access == null) {
+      requestIfMissing(settings)
+      return null
+    }
+    val start = Instant.fromEpochMilliseconds(now() - hours * 3_600_000L)
+    return firstAnswer(access) { baseUrl -> fetchHistory(baseUrl, access.token, entityId, start) }
+  }
+
   /** [ids]' states from the first of [access]'s addresses that answers, or null if none does. */
   private suspend fun fetchFromAny(
     access: WearAccess,
     ids: Set<String>,
-  ): Map<String, EntityState>? {
+  ): Map<String, EntityState>? =
+    firstAnswer(access) { baseUrl -> fetch(baseUrl, access.token, ids) }
+
+  /**
+   * [read]'s answer from the first of [access]'s addresses that gives one in time, or null if none
+   * does. A refused token is forgotten, and the phone asked for a new one.
+   */
+  private suspend fun <T : Any> firstAnswer(
+    access: WearAccess,
+    read: suspend (baseUrl: String) -> T,
+  ): T? {
     for (baseUrl in candidateUrls(access)) {
       try {
-        withTimeoutOrNull(FETCH_TIMEOUT_MS) { fetch(baseUrl, access.token, ids) }
+        withTimeoutOrNull(FETCH_TIMEOUT_MS) { read(baseUrl) }
           ?.let {
             return it
           }
@@ -187,6 +227,9 @@ class WearDirectAccess(
     const val REQUEST_EVERY_MS = 10 * 60_000L
 
     private const val FETCH_TIMEOUT_MS = 15_000L
+
+    /** How far back the details screen's chart reaches. */
+    const val HISTORY_HOURS = 24
 
     // Per process: the app, its widgets and the listener service share them. The last direct read
     // is also kept on disk (see lastDirectAt), as widget updates often start a fresh process.

@@ -1,7 +1,5 @@
 # One-handed gestures in the Wear app
 
-Status: proposal. Nothing here is implemented yet.
-
 Wear OS 7 (API 37) adds a system gesture framework. On a Pixel Watch 3 or later the wearer's hand
 on the watch arm can drive the watch:
 
@@ -10,15 +8,15 @@ on the watch arm can drive the watch:
 | **Primary** | Double pinch (thumb and index finger, twice) | Nothing. An app opts in per element. |
 | **Dismiss** | Wrist turn | System Back. |
 
-This doc covers how the Terrazzo Wear app (`:wear`) can use them for the three things a wearer does
-most: **scroll** the pinned list, **expand** a card (or the Wear widget that shows it) to full
-screen, and **run the card's action** (toggle a light, run a script).
+The Terrazzo Wear app (`:wear`) uses them for the three things a wearer does most: **scroll** the
+pinned list, **open** a card full screen, and **run the card's action** (toggle a light, run a
+script). High-risk actions (a lock, a garage door) follow the phone's lock mode, on the watch and on
+the phone's launcher widgets.
 
-## The API we already have
+## The API
 
 `:wear` is on `androidx.wear.compose:compose-material3:1.7.1`, which ships the API in
-`androidx.wear.compose.material3.onehandedgesture`. No new dependency is needed. Checked against
-the 1.7.1 jar:
+`androidx.wear.compose.material3.onehandedgesture`:
 
 ```kotlin
 // One per gesture target; `gestureId` ties the target to the system's per-experience hint muting.
@@ -29,7 +27,7 @@ val config = rememberOneHandedGestureConfiguration(
 
 Modifier.oneHandedGesture(
   gestureConfiguration = config,
-  onGestureLabel = "Turn off Kitchen",           // read out by TalkBack
+  onGestureLabel = "Turn off",                   // read out by TalkBack
   enabled = true,
   interactionSource = interactionSource,         // shared with the button: gesture shows as a press
   onGestureAvailable = { /* show the hint indicator */ },
@@ -37,172 +35,136 @@ Modifier.oneHandedGesture(
 )
 ```
 
-Also in the package:
-
-- **`OneHandedGestureDefaults`** has `scrollDown(…)` and `scrollDownToNextItem(…)` for both
-  `ScalingLazyListState` (what `WearListScreen` uses) and `TransformingLazyColumnState`, plus
-  `scrollToNextPage(PagerState)`. So there's no need to move to `TransformingLazyColumn`.
-- **Hints:** `OneHandedGestureClickIndicator` wraps a button's content,
-  `OneHandedGestureScrollIndicator` goes in `ScreenScaffold`'s `scrollIndicator` slot (it has a
-  `ScalingLazyListState` overload), and there are horizontal and vertical page indicators. The system
-  decides how often hints show (Always / Daily), so the app never builds its own tutorial.
-- **`LocalOneHandedGestureEnabled`** is a composition local. It can turn gestures off for a subtree,
-  for example in demo mode or in previews.
-- Below API 37, or on a watch without the gestures, the modifier does nothing. `:wear`'s `minSdk = 30`
-  needs no gating.
-
-### Rules from the platform guidance
+`OneHandedGestureDefaults` scrolls a `ScalingLazyListState` (`scrollDownToNextItem`) and pages a
+`PagerState` (`scrollToNextPage`). The hint indicators (`OneHandedGestureClickIndicator`,
+`OneHandedGestureScrollIndicator`, `OneHandedGestureVerticalPageIndicator`) are drawn by the system
+on its own schedule (Always / Daily), so the app never builds a tutorial. Below API 37, or on a watch
+without the gestures, the modifier does nothing, so `minSdk = 30` needs no checks.
 
 The [design guidance](https://developer.android.com/design/ui/wear/guides/patterns/gestures) sets
-constraints that decide most of the design:
+the rules the design follows:
 
-1. **One primary-action target at a time.** A visible `Clickable` target beats a `Scrollable` one. A
-   scrollable container first scrolls until the clickable child is on screen, then the next pinch
-   clicks it.
-2. **Every gesture action needs a visible, tappable equivalent.** A gesture-only action is not
-   allowed.
-3. **Gesture scrolling is not for every list.** It suits screens the wearer reaches hands-free (a
-   widget, a notification, a screen that opens on its own) and glanceable content.
-4. **Dismiss stays Back.** Override it only to dismiss, silence or minimise, never for an app action.
-   An empty subscription disables wrist turn on that screen.
-5. **The gesture gets the same feedback as touch:** press ripple, haptic and sound.
+1. **One primary-action target at a time.** A visible `Clickable` target beats a `Scrollable` one.
+2. **Every gesture action has a visible, tappable equivalent.**
+3. **Gesture scrolling is for glanceable lists**, not every list.
+4. **Dismiss stays Back.**
+5. **A gesture gets the same feedback as a tap.**
 
-## Proposed design
+## Scrolling: pinned list and section screens
 
-### 1. Scrolling: pinned list and section screens
+`WearListScreen(gestureScroll = true)` puts a `Scrollable` gesture target on the `ScalingLazyColumn`
+and swaps the scroll indicator for `OneHandedGestureScrollIndicator`. Each double pinch brings the
+next card into view (`scrollDownToNextItem`). It's on for `WearTopLevelScreen` (the pinned list) and
+`WearSectionScreen`, and off for Dashboards, Settings and Widgets, which are setup screens reached
+by touch.
 
-`WearListScreen` gets an opt-in `gestureScroll` flag:
+In a list, a pinch only ever scrolls. A card in a list registers no gesture target: with one on every
+card, whichever card happened to be visible would take the pinch. Running an action belongs on the
+full-screen card.
 
-```kotlin
-val config = rememberOneHandedGestureConfiguration(
-  action = OneHandedGestureAction.Primary,
-  priority = OneHandedGesturePriority.Scrollable,
-)
-val hint = remember(config) { OneHandedGestureScrollIndicatorState() }
-ScreenScaffold(
-  scrollState = state,
-  scrollIndicator = {
-    OneHandedGestureScrollIndicator(config, hint, state, Modifier.align(Alignment.CenterEnd))
-  },
-) { padding ->
-  ScalingLazyColumn(
-    state = state,
-    modifier = modifier.oneHandedGesture(
-      gestureConfiguration = config,
-      onGestureLabel = "Next card",
-      onGestureAvailable = { scope.launch { hint.showIndicator() } },
-      onGesture = { OneHandedGestureDefaults.scrollDownToNextItem(state) },
-    ),
-    …
-  )
-}
-```
+## Opening a card full screen
 
-Turn it on for `WearTopLevelScreen` (the pinned list) and `WearSectionScreen`. Leave it off for
-Dashboards, Settings and Widgets. Those are setup screens, reached by touch.
+`WearScreen.Card` shows `WearCardScreen`, a `VerticalPager` over the cards of the list it was opened
+from (`fullScreenDeck`): the pinned cards in order, or the cards of one section. Message cards are
+input forms and don't open. Each page draws its card through the same `WearRemoteCard` pipeline in
+the Large Wear widget frame (`wearFullScreenContainer`). A card that only fills the Small container
+keeps it.
 
-`scrollDownToNextItem` beats `scrollDown` here: every list item is one card, so each pinch lands one
-whole card in view. At the end of the list a pinch does nothing, and a wrist turn leaves, so there is
-no dead end.
+From the full-screen card, the same gestures go one level deeper, to the card's **details**
+(`WearCardDetailsScreen`, `WearScreen.CardDetails`): a long press, a tap the card doesn't take, its
+more-info tap, or the visible **History** button above it. The details screen is the watch's version
+of the phone's `CardHistoryScreen`:
 
-**No per-card clickable targets in the list.** Rule 1 allows one target per screen. With a toggle
-target on every card, whichever card is visible would capture the pinch, and the wearer couldn't
-predict which one. In the list, a pinch only ever scrolls. Running an action belongs on the
-full-screen card (3).
+- the card again;
+- the last 24 hours of its main entity (`WearHistoryChart`): a step line for a number, a timeline of
+  runs for anything else, with active states (on, open, unlocked) drawn in the primary colour;
+- the entity's state, type and synced attributes.
 
-### 2. Expanding a card to full screen
+The watch reads the history itself, with the token it already uses for values (`WearDirectAccess.history`,
+REST `GET /api/history/period/<start>` through `HaEntityStates.history`). It tries `https` first, and a
+refused token is forgotten, as for values. Without a token the chart says history needs Home Assistant
+access, and the rest of the screen still shows. Back returns to the card's page. What's still left is in
+[`wear-card-details-screen.md`](../followups/wear-card-details-screen.md).
 
-Add a `WearScreen.Card` destination: **`WearCardScreen`**, a `VerticalPager` over the cards of the
-list it was opened from (the pinned cards, or the cards in a section). The opened card is the initial
-page, drawn as large as the round screen allows. It is the same `WearRemoteCard` pipeline in a larger
-`WearWidgetFrame` (the Large container, or a new full-screen frame), so it still plays live bindings.
+There are four ways in:
 
-Two ways in:
+- **Long press** anywhere on a card in the pinned list or a section.
+- **A tap the card doesn't take** (`wearCardGestures`): outside its buttons, or on a card with no tap
+  of its own. The player's clickables consume a tap's release (`clickable` in `RcComposePlayer`), so
+  a parent watching the `Final` pass sees an unconsumed release only when nothing in the card handled
+  the tap. The modifier never consumes a normal tap, so the card's own clicks run as before. A press
+  that moves past the touch slop, or that a scroll consumed, counts as neither. A long press consumes
+  the rest of its gesture in the `Initial` pass, so the click under the finger doesn't also run.
+- **The card's own more-info tap.** It used to do nothing on the watch, which has no entity details.
+  `WearTapDispatcher` now calls `onMoreInfo`, and the full-screen card stands in for details.
+- **A Wear widget tap.** `EXTRA_WIDGET_CARD_KEY` now opens the widget's card full screen, paging
+  through its pinned section or the pinned list. Back returns through that section.
 
-- **From a Wear widget.** Tapping a widget already opens the app with `EXTRA_WIDGET_CARD_KEY`
-  (`WearWidgetTaps`). Today that lands on the card's section or on the pinned list. It should land on
-  `WearCardScreen` at that card instead. This is the hands-free-style entry the guidance wants: the
-  wearer looked at the card on the watch face, tapped once, and can now pinch.
-- **From the list.** Touch needs an expand affordance that doesn't fight the card's own taps. The
-  `CachedCardPreview` player consumes taps on the card body for its actions. See the open question
-  below.
+The Dismiss gesture is left as system Back (rule 4), so a wrist turn returns to the list. `WearApp`'s
+`BackHandler` routes `Card` back to its section or to the pinned list.
 
-On the full-screen card, the Dismiss gesture is left as Back (rule 4), so a wrist turn returns to the
-list. `BackHandler` in `WearApp` gets the new screen in its `when`. Nothing gesture-specific is needed.
+## Running the card's action
 
-### 3. Running the card's action on the full-screen card
+Each page with an action shows an `EdgeButton` under the card, labelled for the live state ("Turn
+off" for a light that is on, "Unlock"). The button is the page's `Clickable` gesture target, so a
+double pinch presses it. The press shows on the button through the shared `MutableInteractionSource`,
+and its hint is `OneHandedGestureClickIndicator`.
 
-`WearCardScreen` shows an **`EdgeButton`** for the card's primary action under the card, for
-example "Turn off". That button is the gesture target:
+- **The action comes from the card's local config, never from the document:**
+  `CardDesignTemplates.primaryAction(designCard(card))`. That's the card's `tap_action`, else Home
+  Assistant's default for its entity, the same action a tap on the card runs (`playback`'s
+  `tapAction`).
+- **Only `Toggle` and `CallService` get a button** (`wearCardPrimaryAction`). More-info, navigate and
+  URL only show something. An alarm panel's arm and disarm need the code typed on the card.
+- **It goes through the card's own `WearTapDispatcher`** (`rememberWearCardTaps`, shared with the
+  card through `WearRemoteCard(taps = …)`). A pinch then gets the same haptics (tick on send, confirm
+  or reject on the phone's answer), the same status line, and the same phone-side checks (`wearTapCall`
+  only runs an action the phone's own capture of the card makes). There is no new write path.
+- **The gesture target is disabled while watch controls are off** (`WearCardTaps.enabled`). The
+  button stays, and a tap on it says how to turn controls on.
+- **A page with no action** takes the gesture on the pager instead (`Scrollable`,
+  `scrollToNextPage`), so a pinch pages past a sensor and toggles a light.
 
-```kotlin
-val action = cardPrimaryAction(card, snapshot, registry)   // null → no button, no target
-val config = rememberOneHandedGestureConfiguration(
-  action = OneHandedGestureAction.Primary,
-  priority = OneHandedGesturePriority.Clickable,
-)
-val interactions = remember { MutableInteractionSource() }
-val hint = remember { OneHandedGestureClickIndicatorState() }
-val run = { taps.dispatcher.dispatch(action) }
-EdgeButton(
-  onClick = run,
-  interactionSource = interactions,
-  modifier = Modifier.oneHandedGesture(
-    gestureConfiguration = config,
-    onGestureLabel = label,                     // "Turn off Kitchen"
-    enabled = taps.enabled,                     // LocalWearTapSender != null
-    interactionSource = interactions,
-    onGestureAvailable = { scope.launch { hint.showIndicator() } },
-    onGesture = { run() },
-  ),
-) {
-  OneHandedGestureClickIndicator(config, hint) { Text(label) }
-}
-```
+## High-risk actions and lock mode
 
-- **The action comes from the card's local config, never from the document.** For a template card
-  that's `CardTemplatePlayback.tapAction`, which already exists and is already resolved from the
-  card's own config. For a direct-document card, it's `defaultTapActionFor(card, entityId)`.
-  `defaultTapActionFor` is `internal` in `:rc-converter`, so the plan adds one public
-  `CardRegistry.primaryAction(card, snapshot): HaAction` beside `cardDataSignature` and uses it for
-  both kinds of card.
-- **It goes through the existing `WearTapDispatcher`** (`rememberWearCardTaps`). The pinch then gets
-  the same haptics (tick on send, confirm or reject on the phone's answer), the same "Sending…" and
-  error line, and the same phone-side checks (`wearTapCall` checks the action against the phone's own
-  capture of the card). Rule 5 is met by reuse, and there is no new write path.
-- **Only `Toggle` and `CallService` get a button.** `MoreInfo`, `Navigate` and `Url` do nothing on
-  the watch. Alarm panels need a typed code, so they get no button, and their page's pinch falls back
-  to the next page (below).
-- **Domains where an accidental pinch costs too much stay touch-only:** `lock`,
-  `alarm_control_panel`, and `cover` with device class `garage`, `gate` or `door`. These get no
-  gesture target, or at most a target that opens a confirmation whose own button takes the next
-  pinch. A double pinch can fire by accident (washing hands, gripping a bar), and unlocking the front
-  door shouldn't take only that. This deny list is the main product decision in this doc.
-- The label follows live state ("Turn on" / "Turn off"), so TalkBack and the hint describe what the
-  pinch will do now.
+`HighRiskActions` (in `:rc-converter`) names the actions that open the house to someone:
 
-**With no actionable button,** the pager registers a `Scrollable` target that moves to the next card
-(`OneHandedGestureDefaults.scrollToNextPage`, with `OneHandedGestureVerticalPageIndicator`). Because
-`Clickable` outranks `Scrollable`, one registration on the pager and one on the button produce the
-right behaviour: a pinch toggles a light's page and pages past a sensor's page. Paging past an
-actionable card is a swipe or the crown, which is touch-free enough.
+- any write to a `lock` or `alarm_control_panel` entity;
+- any write to a `cover` whose device class is `garage`, `gate` or `door`;
+- any write to a cover whose device class isn't known.
 
-### Demo mode, previews and screenshots
+The phone's **lock mode** is its write-mode toggle: the dashboard top bar's lock chip
+(`SessionWriteMode`, process-scoped) over the persisted Settings opt-in (`permanentWriteMode`).
 
-- When `wearTapsEnabled(settings)` is false (demo mode, input editing off), the button stays but the
-  gesture target is disabled. The tap still shows the dispatcher's existing "turn on taps" reason.
-- `CompositionLocalProvider(LocalOneHandedGestureEnabled provides false)` in previews keeps
-  screenshot renders free of hint animations. Add one preview per indicator with the hint shown, for
-  the catalog.
+**On the watch,** that toggle already reaches the watch as `WearSettings.inputEditingEnabled`. The
+phone refuses every watch tap while it is locked (`wearTapCall`'s `readOnly`). So a high-risk card's
+button and pinch only run while the phone is unlocked, and no watch-side deny list is needed.
+
+**On a phone launcher widget,** taps used to ignore lock mode ("a pinned widget is a deliberate
+control"). A high-risk toggle or service call now opens `WidgetConfirmActivity` instead of the
+background receiver: an activity `PendingIntent`, because a receiver can't put a question on screen.
+The activity reads lock mode when the tap lands. Unlocked, it runs the call (`WidgetActionRunner`)
+and closes without drawing. Locked, it asks first ("Unlock Front door?"). Every other widget tap runs
+directly as before: locked is the default on a cold start, so holding every widget tap to it would
+make widgets ask every time.
+
+- The activity isn't exported and is reached only through the widget's immutable `PendingIntent`,
+  whose extras the launcher can't replace. So the action is the one the app put on the widget, the
+  same guarantee `trustedWidgetAction` gives the receiver.
+- Alarm panels on a widget still go through the receiver: their keypad is paired there
+  (`WidgetAlarmPairing`), and the panel's own code is its check.
+- Wear widgets need no change. Every Wear widget tap already opens the Wear app, now on the card full
+  screen.
 
 ## Testing
 
-- **Unit (Robolectric):** test `cardPrimaryAction` / `CardRegistry.primaryAction` per card type:
-  the deny list, the alarm exclusion, and template versus direct cards giving the same action.
-- **Compose UI test:** test that a `WearCardScreen` page with a toggle card has exactly one
-  `Clickable` target, labelled for the current state, and a sensor page none. Add a check that the
-  pinned list registers no clickable targets.
-- **Emulator / device (API 37):** the framework has a shell hook:
+- `HighRiskActionsTest` (`:rc-converter`): which actions are high risk, and `primaryAction` against a
+  card's `tap_action` and defaults.
+- `WearCardScreenTest`: the button's action and label, no button for a more-info card, and the deck
+  per list.
+- `WearTapsTest`: a more-info tap opens the card and sends nothing.
+- `WidgetConfirmTest` (`:app`): which actions the confirmation runs, and its prompt.
+- On an API 37 emulator or a Pixel Watch, the framework has a shell hook:
 
   ```shell
   adb shell cmd IWearGestureService override-constraints offbody-state
@@ -212,29 +174,7 @@ actionable card is a swipe or the crown, which is touch-free enough.
   adb shell cmd IWearGestureService override-constraints reset
   ```
 
-  A `:wear-benchmark`-style instrumented test can drive this, as the keyboard-scrolling emulator
-  matrix does for insets. The test opens the app on a seeded card (`EXTRA_TEST_SEED_PINS` plus
-  `EXTRA_WIDGET_CARD_KEY`), sends `DoublePinch`, and asserts that a `/wear/tap/v1` request went out.
-  Whether the API 37 Wear emulator image accepts these commands still needs checking.
-
-## Phasing
-
-1. **Scroll** (small): `WearListScreen(gestureScroll = true)` on the pinned list and section screens,
-   plus the scroll indicator.
-2. **Full-screen card**: `WearScreen.Card`, `WearCardScreen` pager, widget taps landing on it, and
-   the list's expand affordance. Useful without gestures.
-3. **Primary action**: `CardRegistry.primaryAction`, the `EdgeButton` target with the deny list,
-   pager next-page fallback, and tests.
-
-## Open questions
-
-- **The expand affordance in the list.** The card body's taps belong to the card. Options:
-  (a) a small expand icon button under each card, next to the status line, which is discoverable but
-  adds a row per card; (b) long-press on the card, if `CachedCardPreview` lets a long press through,
-  which is clean but hidden; (c) tapping the card's title or header strip, which needs the converters
-  to leave that region free of actions. The recommendation is (a), starting from the widget entry,
-  which needs none of these.
-- **The deny list.** Should a high-risk domain be touch-only, or pinch to a confirm screen?
-  Should the wearer be able to opt a card in from the phone?
-- **Full-screen frame.** Reuse the Large container (it already has templates and parity tests), or
-  add a full-round frame. The latter needs a new `wearDesignTemplate` size.
+  A `:wear-benchmark`-style instrumented test could drive it: open the app on a seeded card
+  (`EXTRA_TEST_SEED_PINS` plus `EXTRA_WIDGET_CARD_KEY`), send `DoublePinch`, and assert a
+  `/wear/tap/v1` request. Whether the API 37 Wear emulator image accepts these commands hasn't been
+  checked yet.

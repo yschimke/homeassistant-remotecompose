@@ -11,12 +11,14 @@ import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
+import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.PinnedSection
 
 /**
  * Drill-in destination for a pinned section. Renders the synced card configs as Remote Compose
- * documents with current values and the selected card style.
+ * documents with current values and the selected card style. A long press (or a tap the card
+ * doesn't take) opens a card full screen ([onOpenCard]); a double pinch scrolls to the next card.
  *
  * If the section was unpinned mid-flight (e.g. the user toggled it off on the phone), [section] is
  * null and we fall back to the empty state — the caller is expected to navigate back; rendering
@@ -29,8 +31,9 @@ fun WearSectionScreen(
   onBack: () -> Unit,
   modifier: Modifier = Modifier,
   onInputSend: (suspend (String, Map<String, String>) -> Unit)? = null,
+  onOpenCard: (CardSummary) -> Unit = {},
 ) {
-  WearListScreen(modifier = modifier) {
+  WearListScreen(modifier = modifier, gestureScroll = true) {
     item { ListHeader { Text(section?.title?.ifEmpty { "Section" } ?: "Section") } }
 
     val cards = section?.cards.orEmpty()
@@ -48,7 +51,7 @@ fun WearSectionScreen(
         if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
           WearMessageCard(card.rawJson, values, onInputSend)
         } else {
-          WearRemoteCard(card, values)
+          WearRemoteCard(card, values, onOpen = { onOpenCard(card) })
         }
       }
     }

@@ -32,19 +32,26 @@ import ee.schimke.terrazzo.wear.sync.WearWidgetsController
 import ee.schimke.terrazzo.wear.sync.wearTapsEnabled
 import ee.schimke.terrazzo.wear.ui.LocalWearCardLook
 import ee.schimke.terrazzo.wear.ui.LocalWearTapSender
+import ee.schimke.terrazzo.wear.ui.WearCardDetailsScreen
 import ee.schimke.terrazzo.wear.ui.WearCardLook
+import ee.schimke.terrazzo.wear.ui.WearCardScreen
 import ee.schimke.terrazzo.wear.ui.WearDashboardScreen
 import ee.schimke.terrazzo.wear.ui.WearDashboardsScreen
 import ee.schimke.terrazzo.wear.ui.WearSectionScreen
 import ee.schimke.terrazzo.wear.ui.WearSettingsScreen
 import ee.schimke.terrazzo.wear.ui.WearTopLevelScreen
 import ee.schimke.terrazzo.wear.ui.WearWidgetsScreen
+import ee.schimke.terrazzo.wear.ui.fullScreenCardKey
+import ee.schimke.terrazzo.wear.ui.fullScreenDeck
+import ee.schimke.terrazzo.wear.ui.opensFullScreen
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
 import ee.schimke.terrazzo.wear.ui.wearTypographyFor
 import ee.schimke.terrazzo.wear.widget.WearWidgetPreviewCapturer
 import ee.schimke.terrazzo.wear.widget.WearWidgetTaps
 import ee.schimke.terrazzo.wear.widget.refreshAllCardWidgets
+import ee.schimke.terrazzo.wear.widget.widgetCardOptions
 import ee.schimke.terrazzo.wear.widget.widgetCardSection
+import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
@@ -150,6 +157,8 @@ private enum class WearScreen {
   Dashboard,
   Settings,
   Widgets,
+  Card,
+  CardDetails,
 }
 
 @Composable
@@ -172,13 +181,28 @@ private fun WearApp(
   var screen by rememberSaveable { mutableStateOf(WearScreen.TopLevel) }
   var openedDashboard by rememberSaveable { mutableStateOf<String?>(null) }
   var openedSectionKey by rememberSaveable { mutableStateOf<String?>(null) }
+  // The full-screen card: its deck (a pinned section's key, or null for the pinned list) and the
+  // card it opened on (fullScreenCardKey).
+  var cardDeck by rememberSaveable { mutableStateOf<String?>(null) }
+  var openedCard by rememberSaveable { mutableStateOf<String?>(null) }
+  fun openCard(sectionKey: String?, card: CardSummary) {
+    cardDeck = sectionKey
+    openedCard = fullScreenCardKey(card)
+    screen = WearScreen.Card
+  }
 
-  // A Wear widget's tap: its card's pinned section, or the pinned list for a pinned card.
+  // A Wear widget's tap: its card full screen, paging through its pinned section or the pinned
+  // list; its section, or the pinned list, for a card that doesn't open full screen.
   val widgetCard by openWidgetCard.collectAsState()
   LaunchedEffect(widgetCard) {
     val key = widgetCard ?: return@LaunchedEffect
     val section = widgetCardSection(key, sections)
-    if (section != null) {
+    val card = widgetCardOptions(pinned, sections).firstOrNull { it.cardKey == key }?.card
+    if (card != null && opensFullScreen(card)) {
+      // Back from the card returns through its section, as if it had been opened from there.
+      section?.let { openedSectionKey = it.sectionKey }
+      openCard(section?.sectionKey, card)
+    } else if (section != null) {
       openedSectionKey = section.sectionKey
       screen = WearScreen.Section
     } else {
@@ -194,6 +218,8 @@ private fun WearApp(
       when (screen) {
         WearScreen.Dashboard -> WearScreen.Dashboards
         WearScreen.Widgets -> WearScreen.Settings
+        WearScreen.Card -> if (cardDeck != null) WearScreen.Section else WearScreen.TopLevel
+        WearScreen.CardDetails -> WearScreen.Card
         else -> WearScreen.TopLevel
       }
   }
@@ -222,6 +248,7 @@ private fun WearApp(
               },
               onBrowseDashboards = { screen = WearScreen.Dashboards },
               onOpenSettings = { screen = WearScreen.Settings },
+              onOpenCard = { openCard(null, it.card) },
               onInputSend =
                 if (
                   settings.inputEditingEnabled &&
@@ -253,6 +280,44 @@ private fun WearApp(
                   else null,
                 values = values,
                 onBack = { screen = WearScreen.TopLevel },
+                modifier = Modifier.fillMaxSize(),
+                onOpenCard = { card -> openCard(resolved?.sectionKey, card) },
+              )
+            }
+          }
+          WearScreen.Card -> {
+            val deck = fullScreenDeck(cardDeck, pinned, sections)
+            val page = deck.indexOfFirst { fullScreenCardKey(it) == openedCard }
+            if (page < 0) {
+              // The card left its deck mid-flight (unpinned, or its config changed): back to the
+              // list it was opened from.
+              screen = if (cardDeck != null) WearScreen.Section else WearScreen.TopLevel
+            } else {
+              WearCardScreen(
+                cards = deck,
+                initialPage = page,
+                values = values,
+                modifier = Modifier.fillMaxSize(),
+                onOpenDetails = { card ->
+                  // Back from the details returns to this card's page.
+                  openedCard = fullScreenCardKey(card)
+                  screen = WearScreen.CardDetails
+                },
+              )
+            }
+          }
+          WearScreen.CardDetails -> {
+            val card =
+              fullScreenDeck(cardDeck, pinned, sections).firstOrNull {
+                fullScreenCardKey(it) == openedCard
+              }
+            if (card == null) {
+              screen = WearScreen.Card
+            } else {
+              WearCardDetailsScreen(
+                summary = card,
+                values = values,
+                loadHistory = repo::history,
                 modifier = Modifier.fillMaxSize(),
               )
             }

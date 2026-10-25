@@ -271,6 +271,19 @@
         </activity-alias>
 
         <!--
+          A launcher widget's lock or garage-door tap: runs it while the phone's controls are
+          unlocked, asks first while they are locked (WidgetConfirmActivity). Reached only through
+          the widget's own PendingIntent, so not exported.
+        -->
+        <activity
+            android:name=".widget.WidgetConfirmActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Terrazzo.Translucent" />
+
+        <!--
           AppAuth redirect receiver. Catches the `rcha://auth-callback`
           return after the HA sign-in web flow and hands the code to
           AppAuth for token exchange.
