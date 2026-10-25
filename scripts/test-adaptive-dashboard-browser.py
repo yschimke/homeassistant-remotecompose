@@ -161,6 +161,9 @@ try:
                 page.get_by_role('button', name='More options', exact=True).click(force=True, delay=100)
                 page.get_by_text('Customize', exact=True).click(force=True, delay=100)
                 expect(page.get_by_role('button', name='Design or fix this card').first).to_be_visible()
+                # The closing menu's popup takes a click until it is gone.
+                expect(page.get_by_text('Edit dashboard', exact=True)).to_have_count(0)
+                page.evaluate('() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))')
                 page.get_by_role('button', name='Done customizing', exact=True).click(force=True, delay=100)
                 expect(page.get_by_role('button', name='Design or fix this card')).to_have_count(0)
                 settled_capture(page, '_wasm-test/adaptive-instance-normal-mode-wall.png')
