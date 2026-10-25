@@ -37,6 +37,16 @@ initial values only into an empty install, avoiding partial uploads and first-de
    policy, encrypted-key lifecycle and public fields are still decisions; no credential transfer
    or publication is enabled by the settings stages.
 
+### Remaining settings semantics
+
+A page seeds settings once at startup; it does not subscribe to changes made by another open page.
+KV writes use last-writer-wins semantics. Atomic initial import protects migration, but it does not
+merge concurrently edited usage ledgers or coordinate exactly-once usage reports across devices.
+Those need a domain merge/report-idempotency design before claiming a combined usage record from
+several active devices. The browser tests prove persistence and startup seeding on another device,
+not concurrent telemetry aggregation. If discovery cannot find the backend, the specified static
+fallback uses that browser's retained preferences; it is not an offline cache of cloud preferences.
+
 Migration uses `POST kv/import` only when the remote snapshot is empty. After an acknowledged
 import, only matching known usage/sharing keys are removed from browser storage. On conflict,
 remote values win and conflicting browser values are retained. OAuth and unrelated browser keys
