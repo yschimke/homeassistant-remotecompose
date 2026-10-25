@@ -3,7 +3,7 @@
     {
       "source": "functions",
       "codebase": "push-relay",
-      "runtime": "nodejs22"
+      "runtime": "nodejs24"
     }
   ]
 }
