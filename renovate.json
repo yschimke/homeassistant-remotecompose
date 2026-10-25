@@ -3,6 +3,12 @@
   "extends": ["github>yschimke/renovate-config"],
   "packageRules": [
     {
+      "description": "The push relay's `engines.node` names a Cloud Functions runtime major (\"24\"), which is all Firebase accepts there: pinning it to an exact release (v24.22.1, #1244) would be refused at deploy. Keep it a bare major and only move it when a new major comes.",
+      "matchFileNames": ["push-relay/**"],
+      "matchDepTypes": ["engines"],
+      "rangeStrategy": "replace"
+    },
+    {
       "description": "Temurin JDK pins (setup-java `java-version`) are installed on Linux, macOS and Windows runners, and Adoptium publishes a release for Windows x64 last: 21.0.13+9 reached Linux and macOS days before Windows, and #1082 proposed it while the Windows desktop job could only fail with 'No matching version found'. Look versions up for Windows x64, so a pin is only proposed once every runner can install it.",
       "matchDatasources": ["java-version"],
       "matchPackageNames": ["java-jdk"],
