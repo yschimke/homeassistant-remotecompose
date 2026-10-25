@@ -72,7 +72,12 @@ def choose_card_style(page, current, style):
     page.get_by_role('button', name='Settings', exact=True).click(force=True, delay=100)
     page.get_by_role('button', name='Card style: ' + current, exact=True).click(force=True, delay=100)
     page.get_by_text(style, exact=True).click(force=True, delay=100)
+    # The closing menu's popup takes a click until it is gone.
+    expect(page.get_by_role('button', name='Card style: ' + style, exact=True)).to_be_visible()
+    expect(page.get_by_text(current, exact=True)).to_have_count(0)
+    page.evaluate('() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))')
     page.get_by_role('button', name='Back', exact=True).click(force=True, delay=100)
+    expect(page.get_by_role('button', name='Back', exact=True)).to_have_count(0)
 
 
 def settled_capture(page, path):
