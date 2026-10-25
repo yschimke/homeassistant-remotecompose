@@ -65,6 +65,23 @@ class HaNotificationsTest {
     assertTrue(fresh.flags and android.app.Notification.FLAG_ONLY_ALERT_ONCE == 0)
   }
 
+  @Test
+  fun aCardIsThePhonesExpandedBodyOnlyTheWatchKeepsTheStandardFields() {
+    val card = android.widget.RemoteViews(context.packageName, android.R.layout.simple_list_item_1)
+    val n = HaNotifications.build(context, BASE_URL, message, watchHasApp = true, card = card)
+    assertTrue(n.bigContentView != null, "the phone's expanded body is the card")
+    // Big text style, not a custom-view style: what a watch (or any non-RemoteViews surface) shows.
+    assertEquals(
+      NotificationCompat.BigTextStyle::class.java.name,
+      NotificationCompat.Style.extractStyleFromNotification(n)?.javaClass?.name,
+    )
+    assertEquals(
+      "Washer done",
+      n.extras.getCharSequence(NotificationCompat.EXTRA_BIG_TEXT).toString(),
+    )
+    assertEquals(listOf("OK"), n.actions.map { it.title.toString() })
+  }
+
   private companion object {
     const val BASE_URL = "http://homeassistant.test:8123"
   }
