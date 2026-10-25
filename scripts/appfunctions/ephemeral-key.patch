@@ -10,7 +10,7 @@
 +import kotlinx.coroutines.flow.MutableStateFlow
  import kotlinx.coroutines.flow.map
  import javax.inject.Inject
- 
+
 @@ -32,21 +31,16 @@
      constructor(
          private val dataStore: DataStore<Preferences>,
@@ -23,7 +23,7 @@
              val PINNED_APPS = stringSetPreferencesKey("pinned_apps")
              val DISCONNECTED_APPS = stringSetPreferencesKey("disconnected_apps")
          }
- 
+
 -        override val geminiApiKey: Flow<String?> =
 -            if (BuildConfig.IS_RETAIL) {
 -                flowOf(BuildConfig.GEMINI_API_KEY)
@@ -33,17 +33,17 @@
 +        // Local testing: never persist a temporary Gemini key or bake it into an APK.
 +        private val temporaryGeminiApiKey = MutableStateFlow<String?>(null)
 +        override val geminiApiKey: Flow<String?> = temporaryGeminiApiKey
- 
+
          override val selectedProvider: Flow<LlmProviderName> =
              dataStore.data.map { preferences ->
 @@ -74,7 +68,7 @@
              }
- 
+
          override suspend fun setGeminiApiKey(apiKey: String) {
 -            dataStore.edit { preferences -> preferences[PreferencesKeys.GEMINI_API_KEY] = apiKey }
 +            temporaryGeminiApiKey.value = apiKey
          }
- 
+
          override suspend fun setSelectedProvider(provider: LlmProviderName) {
 --- a/agent/app/src/test/java/com/example/appfunctions/agent/data/SettingsRepositoryTest.kt
 +++ b/agent/app/src/test/java/com/example/appfunctions/agent/data/SettingsRepositoryTest.kt
@@ -57,7 +57,7 @@
  import org.junit.Rule
 @@ -56,6 +57,14 @@
          }
- 
+
      @Test
 +    fun temporaryKeyIsNotSharedWithANewRepository() =
 +        runTest {
