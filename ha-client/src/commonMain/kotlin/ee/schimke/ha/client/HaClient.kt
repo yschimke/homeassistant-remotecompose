@@ -485,6 +485,35 @@ class HaClient(
   }
 
   /**
+   * HA's local push channel for this device's `mobile_app` registration ([webhookId]): every
+   * `notify.mobile_app_<device>` message while collected. HA only routes notifications here while
+   * the socket is open, and the registration must have asked for it
+   * (`app_data.push_websocket_channel`). With confirmation on, HA waits for
+   * [confirmPushNotification] and otherwise falls back to the registration's push URL, if any.
+   */
+  fun pushNotificationChannel(webhookId: String): Flow<JsonObject> =
+    subscription("mobile_app/push_notification_channel") {
+      put("webhook_id", webhookId)
+      put("support_confirm", true)
+    }
+
+  /** Tells HA a [pushNotificationChannel] message arrived (its `hass_confirm_id`). */
+  suspend fun confirmPushNotification(webhookId: String, confirmId: String) {
+    awaitCommand("mobile_app/push_notification_confirm") {
+      put("webhook_id", webhookId)
+      put("confirm_id", confirmId)
+    }
+  }
+
+  /** Fires an event on HA's bus, as a notification action button does. Needs an admin user. */
+  suspend fun fireEvent(eventType: String, eventData: JsonObject) {
+    awaitCommand("fire_event") {
+      put("event_type", eventType)
+      put("event_data", eventData)
+    }
+  }
+
+  /**
    * A command that answers with events until it is unsubscribed (`terrazzo/edit/subscribe`): its
    * events while collected, the latest kept for a collector that starts after the ack. Cancelling
    * the collection unsubscribes; the flow fails when the socket goes, so a caller re-subscribes on

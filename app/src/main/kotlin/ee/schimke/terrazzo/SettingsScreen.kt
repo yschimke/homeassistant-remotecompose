@@ -1,5 +1,11 @@
 package ee.schimke.terrazzo
 
+import android.Manifest
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -58,6 +64,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import ee.schimke.ha.client.design.UsageSharing
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignTags
@@ -77,6 +84,7 @@ import ee.schimke.terrazzo.dashboard.CardStyleSample
 import ee.schimke.terrazzo.dashboard.CardStyleStore
 import ee.schimke.terrazzo.dashboard.CardStyleWearPanes
 import ee.schimke.terrazzo.dashboard.CardStyles
+import ee.schimke.terrazzo.notify.HaNotifications
 import ee.schimke.terrazzo.shared.ReportFeedbackButton
 import ee.schimke.terrazzo.ui.appThemeOrNull
 import ee.schimke.terrazzo.ui.toUberTheme
@@ -167,6 +175,7 @@ internal fun SettingsScreen(
             }
           }
         }
+        if (!isDemo) HaNotificationsSetting()
         OutlinedButton(onClick = onSignOut) { Text(if (isDemo) "Exit demo" else "Sign out") }
       }
 
@@ -464,6 +473,42 @@ private fun SettingRow(
 }
 
 /** An on / off setting; the whole row toggles it. */
+/**
+ * Whether Home Assistant's `notify.mobile_app_<device>` messages post as notifications: on is the
+ * system's POST_NOTIFICATIONS grant, asked for here and nowhere else, so nothing posts before the
+ * user allows it. Turning it off goes to the app's notification settings, where Android keeps it.
+ */
+@Composable
+private fun HaNotificationsSetting() {
+  val context = LocalContext.current
+  var allowed by remember { mutableStateOf(HaNotifications.allowed(context)) }
+  // Back from the system settings, or the permission dialog: read the grant again.
+  LifecycleResumeEffect(Unit) {
+    allowed = HaNotifications.allowed(context)
+    onPauseOrDispose {}
+  }
+  val request =
+    rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+      allowed = granted
+    }
+  SettingSwitch(
+    title = "Home Assistant notifications",
+    summary =
+      "Messages sent to this device with notify.mobile_app, while the app is connected. " +
+        "They show on a paired watch too.",
+    checked = allowed,
+  ) { on ->
+    if (on && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      request.launch(Manifest.permission.POST_NOTIFICATIONS)
+    } else {
+      context.startActivity(
+        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+          .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+      )
+    }
+  }
+}
+
 @Composable
 private fun SettingSwitch(
   title: String,

@@ -18,6 +18,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Runs a launcher widget's toggle or service call against Home Assistant from the background: the
@@ -157,11 +158,40 @@ internal object WidgetActionRunner {
     }
   }
 
-  private suspend fun callOnNewSession(graph: TerrazzoGraph, baseUrl: String, action: HaAction) {
+  private suspend fun callOnNewSession(graph: TerrazzoGraph, baseUrl: String, action: HaAction) =
+    onNewSession(graph, baseUrl) { send(it, action) }
+
+  /**
+   * Runs a toggle or service call on [baseUrl]'s HA outside any widget (a notification card's
+   * button): on the app's socket while connected, else a short-lived session.
+   */
+  suspend fun runFor(context: Context, baseUrl: String, action: HaAction) {
+    if (action !is HaAction.CallService && action !is HaAction.Toggle) return
+    withTimeout(CALL_TIMEOUT_MS) { call(context.terrazzoGraph(), baseUrl, action) }
+  }
+
+  /**
+   * Fires [eventType] on [baseUrl]'s HA, as a notification's action button does: on the app's
+   * socket while it is connected, else on a short-lived session from the stored login.
+   */
+  suspend fun fireEvent(context: Context, baseUrl: String, eventType: String, data: JsonObject) {
+    val graph = context.terrazzoGraph()
+    withTimeout(CALL_TIMEOUT_MS) {
+      val live = connectedAppSession(baseUrl)
+      if (live != null) live.fireEvent(eventType, data)
+      else onNewSession(graph, baseUrl) { it.fireEvent(eventType, data) }
+    }
+  }
+
+  private suspend fun onNewSession(
+    graph: TerrazzoGraph,
+    baseUrl: String,
+    block: suspend (HaSession) -> Unit,
+  ) {
     val session = graph.sessionFactory.create(baseUrl, accessToken(graph, baseUrl))
     try {
       session.connect()
-      send(session, action)
+      block(session)
     } catch (failure: Throwable) {
       // A refused token is dropped, so the next tap mints a fresh one.
       forgetAccessToken(baseUrl)

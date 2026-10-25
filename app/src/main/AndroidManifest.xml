@@ -320,6 +320,11 @@
             android:name=".widget.WidgetActionReceiver"
             android:exported="false" />
 
+        <!-- Home Assistant notification buttons, card taps and "Open on watch" (notify/). -->
+        <receiver
+            android:name=".notify.HaNotificationActionReceiver"
+            android:exported="false" />
+
         <!--
           AppFunctions (Android 16+): the Home Assistant functions an on-device agent with
           EXECUTE_APP_FUNCTIONS may call. The compiler generates both the service class and the

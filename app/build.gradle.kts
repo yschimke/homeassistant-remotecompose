@@ -302,6 +302,8 @@ dependencies {
   implementation(libs.play.services.wearable)
   implementation(libs.horologist.datalayer)
   implementation(libs.horologist.datalayer.phone)
+  // RemoteActivityHelper: a notification's "Open on watch" starts the Wear app on the watch.
+  implementation(libs.wear.remote.interactions)
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.process)

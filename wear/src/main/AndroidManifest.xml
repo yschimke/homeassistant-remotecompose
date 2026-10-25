@@ -26,7 +26,15 @@
             android:name=".WearMainActivity"
             android:exported="true"
             android:taskAffinity=""
-            android:theme="@android:style/Theme.DeviceDefault.NoActionBar" />
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+            <!-- "Open on watch" on a phone notification (RemoteActivityHelper). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="terrazzo-wear" android:host="open" />
+            </intent-filter>
+        </activity>
 
         <!--
           The launcher entry, one alias per icon, as on the phone: LauncherIcons (rc-components)

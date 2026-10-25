@@ -31,7 +31,8 @@ import kotlinx.serialization.json.Json
  * The handshake is HTTPS form-POST with the user's just-minted access token as bearer auth. We
  * request `supports_encryption: true` so HA hands us back a NaCl shared secret; we persist it for
  * future device→HA webhook traffic (sensor / location updates) even though this first pass doesn't
- * send any. Push notifications HA→device don't use this secret — they ride FCM / APNS.
+ * send any. Push notifications HA→device don't use this secret: the registration asks for HA's
+ * websocket push channel (`app_data.push_websocket_channel`), which the live session subscribes to.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -70,6 +71,7 @@ class MobileAppRegistrar(
         osName = "Android",
         osVersion = Build.VERSION.RELEASE ?: Build.VERSION.SDK_INT.toString(),
         supportsEncryption = true,
+        appData = AppData(pushWebsocketChannel = true),
       )
 
     val resp =
@@ -90,6 +92,7 @@ class MobileAppRegistrar(
         secret = parsed.secret,
         cloudhookUrl = parsed.cloudhookUrl,
         remoteUiUrl = parsed.remoteUiUrl,
+        pushChannel = true,
       )
     store.put(baseUrl, record)
     return record
