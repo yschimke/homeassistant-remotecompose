@@ -60,6 +60,10 @@ fits because of what Wasmo offers today:
   targets wasmJs (the browser) and the JVM (the design server), not `wasmWasi`, so there is
   nothing to move into a Wasmo server-side component yet.
 
+Using Wasmo's per-app database, object store, jobs and public routes (sign in once across devices,
+settings on the server, publishing a card) is planned in
+[wasmo-cloud-backend.md](wasmo-cloud-backend.md).
+
 ## Signing in to Home Assistant
 
 The web app's connect screen offers **Sign in with Home Assistant**: browser OAuth with
