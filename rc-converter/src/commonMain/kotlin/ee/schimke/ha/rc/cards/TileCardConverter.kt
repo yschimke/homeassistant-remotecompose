@@ -46,9 +46,11 @@ import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.icons.withIcons
 import ee.schimke.ha.rc.parseHaAction
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 /**
  * `tile` card — builds [HaTileData] from config + snapshot.
@@ -90,13 +92,14 @@ class TileCardConverter : DesignedCardConverter() {
     val TEMPLATE_DOMAINS: List<String> = EntityDesign.DOMAINS
 
     /** Config keys a templated tile may carry; anything else renders through the converter. */
-    private val TEMPLATE_CONFIG_KEYS = setOf("type", "entity", "name", "icon")
+    private val TEMPLATE_CONFIG_KEYS = setOf("type", "entity", "name", "icon", "color")
 
     const val DOMAIN = EntityDesign.DOMAIN
 
     /** The other structural properties of a tile key, for a card design's tile component. */
     const val DEVICE_CLASS = EntityDesign.DEVICE_CLASS
     const val ICON = EntityDesign.ICON
+    const val COLOR = "color"
     const val CARD_ICON = EntityDesign.CARD_ICON
     const val UNIT = EntityDesign.UNIT
 
@@ -142,7 +145,14 @@ class TileCardConverter : DesignedCardConverter() {
    * would. Both are attributes, never the state, so a value never changes the template.
    */
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? =
-    EntityDesign.single(card, snapshot, TEMPLATE_CONFIG_KEYS) {
+    EntityDesign.single(card, snapshot, TEMPLATE_CONFIG_KEYS, EntityDesign.TILE_DOMAINS) {
+      // A configured colour is baked as the active accent, so it is part of the shape.
+      string(
+        COLOR,
+        (card.raw["color"] as? JsonPrimitive)?.contentOrNull?.trim()?.takeIf {
+          it.isNotEmpty() && ';' !in it
+        },
+      )
       val entityId = entityIdOf(card)
       val entity = entityId?.let { snapshot.states[it] }
       if (entityId != null && entity != null && measureKind(entityId, entity) != null) {
@@ -164,7 +174,9 @@ class TileCardConverter : DesignedCardConverter() {
     designProperties(card, snapshot)?.let { designRecipe(it) }?.evaluate(card, snapshot)
 
   override fun designTemplate(properties: DesignProperties): DesignTemplateInput? =
-    EntityDesign.singleTemplate(cardType, properties)
+    EntityDesign.singleTemplate(cardType, properties) {
+      properties[COLOR]?.let { put("color", it) }
+    }
 
   /**
    * A launcher cell for a tile with features: one 2-D gate (alpha010 plays a single gate, #224). A

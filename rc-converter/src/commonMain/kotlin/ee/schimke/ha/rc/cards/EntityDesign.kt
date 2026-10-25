@@ -8,6 +8,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.components.placeholderTitle
 import ee.schimke.ha.rc.components.titleSizeBucket
+import ee.schimke.ha.rc.icons.HaIconMap
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
@@ -33,19 +34,44 @@ import kotlinx.serialization.json.putJsonArray
  * renders every other state through its bindings. A lock's icon or a climate entity's colour
  * follows the state itself, which a template can't, so those cards keep the converter.
  *
+ * A tile also takes [TILE_DOMAINS]: one active colour, on/off through `is_on`, and a glyph that may
+ * follow the state (a sun above or below the horizon, an armed alarm). That glyph is the
+ * `state_icon` property, so a state that changes it changes the key and the host fetches that
+ * state's template, as a converter-drawn card re-encodes on `HaIconMap.stateSignature`. Their
+ * colour is one active accent switched by `is_on`, like the on/off domains.
+ *
  * Multi-entity cards prefix each entity's properties with `e<N>.`, its slot index.
  */
 internal object EntityDesign {
   /** Domains whose cards render from card designs. */
   val DOMAINS: List<String> = listOf("light", "switch", "sensor", "binary_sensor")
 
+  /** A tile's domains: [DOMAINS], and the ones whose glyph a [STATE_ICON] property keys. */
+  val TILE_DOMAINS: List<String> =
+    DOMAINS +
+      listOf(
+        "cover",
+        "alarm_control_panel",
+        "person",
+        "device_tracker",
+        "update",
+        "sun",
+        "event",
+        "button",
+      )
+
   /** Domains whose `device_class` changes the icon or colour. */
-  private val DEVICE_CLASS_DOMAINS = setOf("sensor", "binary_sensor")
+  private val DEVICE_CLASS_DOMAINS = setOf("sensor", "binary_sensor", "cover", "event", "button")
 
   const val DOMAIN = "domain"
   const val DEVICE_CLASS = "device_class"
   const val ICON = "icon"
   const val CARD_ICON = "card_icon"
+  /**
+   * The glyph an entity outside [DOMAINS] draws now (`HaIconMap.resolveName`): it stands in for
+   * [ICON] and [CARD_ICON], and changes with a state that changes the glyph.
+   */
+  const val STATE_ICON = "state_icon"
   /** A sensor tile's `unit_of_measurement`, when its reading draws a meter glyph (tile only). */
   const val UNIT = "unit"
   const val COUNT = "count"
@@ -79,8 +105,13 @@ internal object EntityDesign {
     if (domain in DEVICE_CLASS_DOMAINS) {
       string(prefix + DEVICE_CLASS, state.attr(DEVICE_CLASS))
     }
-    string(prefix + ICON, state.attr(ICON)?.trim()?.lowercase())
-    string(prefix + CARD_ICON, cardIcon?.trim())
+    if (domain in DOMAINS) {
+      string(prefix + ICON, state.attr(ICON)?.trim()?.lowercase())
+      string(prefix + CARD_ICON, cardIcon?.trim())
+    } else {
+      // The one glyph it draws now, whatever decides it: the card's icon, the entity's, the state.
+      string(prefix + STATE_ICON, HaIconMap.resolveName(cardIcon?.trim(), state))
+    }
     return true
   }
 
@@ -108,12 +139,13 @@ internal object EntityDesign {
     card: CardConfig,
     snapshot: HaSnapshot,
     configKeys: Set<String>,
+    domains: List<String> = DOMAINS,
     extra: DesignProperties.Builder.() -> Unit = {},
   ): DesignProperties? {
     if (!configKeys.containsAll(card.raw.keys)) return null
     var ok = false
     val properties = DesignProperties.build {
-      ok = entity("", card.raw.string("entity"), card.raw.string("icon"), snapshot)
+      ok = entity("", card.raw.string("entity"), card.raw.string("icon"), snapshot, domains)
       extra()
     }
     return properties.takeIf { ok }
@@ -133,7 +165,10 @@ internal object EntityDesign {
           buildJsonObject {
             put("type", cardType)
             put("entity", entity.entityId)
-            properties[CARD_ICON]?.let { put("icon", it) }
+            // A state's glyph is drawn as the template's own icon, so it plays in any state.
+            (properties[CARD_ICON] ?: properties[STATE_ICON]?.let { "mdi:$it" })?.let {
+              put("icon", it)
+            }
             config()
           },
       )
