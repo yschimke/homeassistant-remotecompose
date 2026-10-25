@@ -2,6 +2,6 @@
   "name": "terrazzo-browser-tests",
   "private": true,
   "devDependencies": {
-    "puppeteer-core": "24.43.1"
+    "puppeteer-core": "25.13.0"
   }
 }
