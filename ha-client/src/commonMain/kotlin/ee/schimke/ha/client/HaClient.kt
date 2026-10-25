@@ -35,6 +35,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -48,6 +49,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -130,9 +132,10 @@ class HaClient(
   // here forever (well, until [close]). Separate from [pending] so a
   // subscription's lifecycle isn't tied to the one-shot deferred, and
   // tagged with its owning socket for the same scoped-teardown reason.
+  /** A live subscription: its socket, and where the receive loop hands each `event` frame. */
   private class Subscription(
     val owner: DefaultWebSocketSession,
-    val flow: MutableSharedFlow<JsonObject>,
+    val deliver: (JsonObject) -> Unit,
   )
 
   private val subscriptions = mutableMapOf<Int, Subscription>()
@@ -454,7 +457,7 @@ class HaClient(
         extraBufferCapacity = 64,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
       )
-    subscriptionsMutex.withLock { subscriptions[id] = Subscription(s, flow) }
+    subscriptionsMutex.withLock { subscriptions[id] = Subscription(s) { flow.tryEmit(it) } }
     val deferred = CompletableDeferred<JsonObject>()
     pendingMutex.withLock { pending[id] = Pending(s, deferred) }
     val msg = buildJsonObject {
@@ -485,6 +488,35 @@ class HaClient(
   }
 
   /**
+   * HA's local push channel for this device's `mobile_app` registration ([webhookId]): every
+   * `notify.mobile_app_<device>` message while collected. HA only routes notifications here while
+   * the socket is open, and the registration must have asked for it
+   * (`app_data.push_websocket_channel`). With confirmation on, HA waits for
+   * [confirmPushNotification] and otherwise falls back to the registration's push URL, if any.
+   */
+  fun pushNotificationChannel(webhookId: String): Flow<JsonObject> =
+    subscription("mobile_app/push_notification_channel", lossless = true) {
+      put("webhook_id", webhookId)
+      put("support_confirm", true)
+    }
+
+  /** Tells HA a [pushNotificationChannel] message arrived (its `hass_confirm_id`). */
+  suspend fun confirmPushNotification(webhookId: String, confirmId: String) {
+    awaitCommand("mobile_app/push_notification_confirm") {
+      put("webhook_id", webhookId)
+      put("confirm_id", confirmId)
+    }
+  }
+
+  /** Fires an event on HA's bus, as a notification action button does. Needs an admin user. */
+  suspend fun fireEvent(eventType: String, eventData: JsonObject) {
+    awaitCommand("fire_event") {
+      put("event_type", eventType)
+      put("event_data", eventData)
+    }
+  }
+
+  /**
    * A command that answers with events until it is unsubscribed (`terrazzo/edit/subscribe`): its
    * events while collected, the latest kept for a collector that starts after the ack. Cancelling
    * the collection unsubscribes; the flow fails when the socket goes, so a caller re-subscribes on
@@ -492,13 +524,22 @@ class HaClient(
    */
   private fun subscription(
     type: String,
+    lossless: Boolean = false,
     extra: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit,
   ): Flow<JsonObject> = flow {
     val s = session ?: throw CommandNotSentException("Not connected — call connect() first")
     val id = idMutex.withLock { nextId++ }
-    val events =
+    // State snapshots (an edit session) only need the latest; a stream of distinct messages (push
+    // notifications, where a clear must follow its post) needs every one, in order, however slowly
+    // it is collected.
+    val latest =
       MutableSharedFlow<JsonObject>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    subscriptionsMutex.withLock { subscriptions[id] = Subscription(s, events) }
+    val queue = Channel<JsonObject>(Channel.UNLIMITED)
+    val events: Flow<JsonObject> = if (lossless) queue.receiveAsFlow() else latest
+    subscriptionsMutex.withLock {
+      subscriptions[id] =
+        Subscription(s) { event -> if (lossless) queue.trySend(event) else latest.tryEmit(event) }
+    }
     val deferred = CompletableDeferred<JsonObject>()
     pendingMutex.withLock { pending[id] = Pending(s, deferred) }
     try {
@@ -881,8 +922,8 @@ class HaClient(
           // subscription's request id. Route them to the live flow; do
           // NOT touch [pending] (the ack already consumed that slot).
           "event" -> {
-            val flow = subscriptionsMutex.withLock { subscriptions[id]?.flow }
-            flow?.tryEmit(obj["event"]?.jsonObject ?: continue)
+            val deliver = subscriptionsMutex.withLock { subscriptions[id]?.deliver }
+            deliver?.invoke(obj["event"]?.jsonObject ?: continue)
           }
           // Everything else (result, pong, …) is a one-shot response.
           else -> pendingMutex.withLock { pending.remove(id) }?.deferred?.complete(obj)

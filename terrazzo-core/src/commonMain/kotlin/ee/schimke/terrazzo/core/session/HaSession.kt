@@ -5,6 +5,7 @@ import ee.schimke.ha.client.HaAuthInvalidException
 import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.client.HaInstanceConfig
+import ee.schimke.ha.client.HaPushNotification
 import ee.schimke.ha.client.stateSnapshots
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaNotification
@@ -21,10 +22,13 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -200,6 +204,16 @@ interface HaSession {
     entityIds: List<String>,
     hours: Int = 24,
   ): Map<String, List<HistoryPoint>> = emptyMap()
+
+  /**
+   * HA's `notify.mobile_app_<device>` messages for the `mobile_app` registration [webhookId], while
+   * collected: subscribed on every connection (HA only pushes over an open socket) and confirmed to
+   * HA as each lands. Empty for sessions with no live HA behind them.
+   */
+  fun pushNotifications(webhookId: String): Flow<HaPushNotification> = emptyFlow()
+
+  /** Fires [eventType] on HA's bus, as a notification's action button does. */
+  suspend fun fireEvent(eventType: String, eventData: JsonObject): Unit = Unit
 
   /**
    * Dismiss a single persistent notification by id — removes it from HA's bell-icon list. Live
@@ -467,6 +481,29 @@ class LiveHaSession(
     val end = Clock.System.now()
     return client.fetchHistory(entityIds, end - hours.hours, end)
   }
+
+  override fun pushNotifications(webhookId: String): Flow<HaPushNotification> = channelFlow {
+    client.state.collectLatest { state ->
+      if (state != HaClient.ConnectionState.Ready) return@collectLatest
+      try {
+        client.pushNotificationChannel(webhookId).collect { event ->
+          val notification = HaPushNotification.parse(event) ?: return@collect
+          notification.confirmId?.let { id ->
+            runCatching { client.confirmPushNotification(webhookId, id) }
+          }
+          send(notification)
+        }
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        // The channel goes with its socket (or HA refused it: no such registration, or one made
+        // by another user). The next Ready re-arms it.
+      }
+    }
+  }
+
+  override suspend fun fireEvent(eventType: String, eventData: JsonObject) =
+    client.fireEvent(eventType, eventData)
 
   override suspend fun dismissNotification(notificationId: String) {
     // Optimistically drop it so the bell/sheet update on the tap

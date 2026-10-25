@@ -22,6 +22,11 @@ data class MobileAppRegistration(
   val secret: String? = null,
   val cloudhookUrl: String? = null,
   val remoteUiUrl: String? = null,
+  /**
+   * Whether HA was asked to deliver notifications over the websocket push channel. Registrations
+   * from before it are re-made so `notify.mobile_app_<device>` has somewhere to send.
+   */
+  val pushChannel: Boolean = false,
 )
 
 /** Wire-format request body for `POST /api/mobile_app/registrations`. */
@@ -37,7 +42,16 @@ internal data class RegistrationRequest(
   @SerialName("os_name") val osName: String,
   @SerialName("os_version") val osVersion: String,
   @SerialName("supports_encryption") val supportsEncryption: Boolean,
+  @SerialName("app_data") val appData: AppData,
 )
+
+/**
+ * `app_data`: `push_websocket_channel` makes HA route `notify.mobile_app_<device>` over the
+ * websocket's `mobile_app/push_notification_channel` while the app holds one open. HA's FCM relay
+ * serves only the official companion apps, so this is the app's only push path.
+ */
+@Serializable
+internal data class AppData(@SerialName("push_websocket_channel") val pushWebsocketChannel: Boolean)
 
 /** Wire-format response body. */
 @Serializable

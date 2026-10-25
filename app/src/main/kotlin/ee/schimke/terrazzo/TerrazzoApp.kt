@@ -142,6 +142,14 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
   // Widget taps send their calls on this session while it is connected, instead of opening one.
   LaunchedEffect(session) { ee.schimke.terrazzo.widget.WidgetActionRunner.setAppSession(session) }
 
+  // Home Assistant's notify.mobile_app_<device> messages arrive on this session's socket; post them
+  // once the user allows notifications.
+  val appContext = LocalContext.current.applicationContext
+  LaunchedEffect(session) {
+    val s = session ?: return@LaunchedEffect
+    ee.schimke.terrazzo.notify.HaPushReceiver.run(appContext, graph, s)
+  }
+
   // Once a live session has finished connecting, ask HA for its
   // config and stash the `external_url` so the OkHttp interceptor
   // can swap in the public host when LAN isn't reachable
