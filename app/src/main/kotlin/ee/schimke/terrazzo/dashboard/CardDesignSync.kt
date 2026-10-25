@@ -166,6 +166,7 @@ class CardDesignSyncWorker(context: Context, params: WorkerParameters) :
       CardDesignSync.refreshLock.withLock {
         CardDesignSync.networkRepository(applicationContext, choice).refresh()
       }
+    if (result == RefreshResult.Updated) CardDesignGeneration.manifestStored()
     if (result == RefreshResult.Updated || result == RefreshResult.Filled) CardDesignSync.stored()
     // Yesterday's card usage goes up with the nightly refresh, only if the user shares it.
     val sent = runCatching {

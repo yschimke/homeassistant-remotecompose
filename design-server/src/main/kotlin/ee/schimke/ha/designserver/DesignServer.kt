@@ -2,6 +2,7 @@ package ee.schimke.ha.designserver
 
 import ee.schimke.ha.design.DesignCatalog
 import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.GeneratedDesign
 import io.ktor.http.ContentDisposition
 import io.ktor.http.ContentType
 import io.ktor.http.Cookie

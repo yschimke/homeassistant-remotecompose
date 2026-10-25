@@ -55,14 +55,14 @@ sensor, history-graph, statistic, line statistics-graph, thermostat, humidifier,
 conditional and entity-filter cards, markdown, picture, picture-glance, logbook, calendar,
 to-do list, weather forecast, light, media control, map, picture-elements, bar statistics graphs, the Bambu Lab cards and the
 unsupported placeholder) — every built-in card type renders from a card design. The design comes from the server when one is
-cached for the card's key, and from the **local design library** otherwise: the fallback for a
-key the server lacks, or before the first sync. The library captures the same template from the
-app's own converters on first use and keeps it on disk (`FileLocalDesignStore`, scoped to the
-installed build and the display's density and font scale), so a key is captured once per build
-rather than on every start, and never once the server covers it. With no server cards still take
-the design path, just with built-in designs. Settings lists how many of a session's designs came
-from the server and the card types and shapes the server lacked (`CardDesignSources`, never sent
-anywhere): the shapes the library should cover next.
+cached for the card's key; the app ships no designs and captures none of its own. A key the
+synced manifest lacks is fetched from the server by key (`CardDesignGeneration`:
+`POST /designs/v1/generate`, which sends only the key) and kept beside the manifest's designs,
+until the next manifest replaces them; the server captures it if its library lacks it. Until a
+design is cached (before the first sync, offline, or with no server) the card draws through its
+converter. Settings lists how many of a session's designs came from the server and the card types
+and shapes it had to fetch by key (`CardDesignSources`, never sent anywhere): the shapes the
+library should cover next.
 Cards that have no template shape render through their converter as before.
 
 The server overrides the library, and it is on by default: the "Card design server" setting

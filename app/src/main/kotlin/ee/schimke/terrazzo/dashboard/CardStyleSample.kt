@@ -54,8 +54,9 @@ internal fun CardStyleSample(
   val dark = LocalIsDarkTheme.current
   val haTheme = remember(style, dark, cardStyle) { cardStyle.cardPalette(style, dark) }
   val snapshot = remember(name, description) { sampleSnapshot(name, description) }
-  // Plain CardDesigns: the local library only. The server's designs are fetched for the chosen
-  // style alone, and reading them here would log the other styles as the server's gaps.
+  // Plain CardDesigns: no server designs, so the sample draws through its converter. The server's
+  // designs are fetched for the chosen style alone, and asking for the others here would fetch
+  // them all.
   val loadTemplate = {
     cardTemplateFor(
       context,

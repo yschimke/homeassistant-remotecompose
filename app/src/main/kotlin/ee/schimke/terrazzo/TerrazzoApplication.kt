@@ -8,11 +8,9 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import dev.zacsweers.metro.createGraphFactory
-import ee.schimke.ha.rc.CardDesignLibrary
 import ee.schimke.ha.rc.CardMemory
 import ee.schimke.ha.rc.CardRebuilds
 import ee.schimke.ha.rc.FileLocalDesignStore
-import ee.schimke.ha.rc.ShippedDesignLibrary
 import ee.schimke.ha.rc.components.enableRemoteImageUrls
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
@@ -129,18 +127,11 @@ class TerrazzoApplication : Application() {
             false,
           ),
     )
-    // Designs the server lacks are captured from the app's own converters once and kept on disk
-    // (the library's store), instead of on every start; stale ones from an earlier build go.
-    // A template that fails to capture leaves its card on the converter path; report it as a
-    // non-fatal (in-app log, and the crash backend) instead of losing it.
-    CardDesignLibrary.onCaptureFailure = { _, error ->
-      graph.logStore.recordCrash(error, fatal = false)
-    }
-    // The default style's designs ship in the app's assets: those keys are never captured.
-    CardDesignLibrary.shipped = ShippedDesignLibrary(assets)
-    FileLocalDesignStore.of(applicationContext).also { store ->
-      CardDesignLibrary.store = store
-      (ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO).launch { store.prune() }
+    // Card designs come only from the design server (CardDesignSync, CardDesignGeneration): the app
+    // ships none and captures none of its own. The local store earlier builds kept captures in
+    // goes, with what it held.
+    (ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO).launch {
+      FileLocalDesignStore.of(applicationContext).clear()
     }
     // Anonymous card usage: counts nothing unless the user turned sharing on.
     CardUsage.start(

@@ -632,4 +632,109 @@ class DesignRepositoryTest {
     assertEquals(true, repo(null, store).isComplete("user:fork"))
     assertEquals(false, repo(null, store).isComplete("user:other"))
   }
+
+  /** A key the published manifest doesn't list, and the design the server generates for it. */
+  private val unlisted = key.copy(shape = "domain=switch")
+  private val generatedBytes = "generated rc document".encodeToByteArray()
+
+  private fun withGenerated(
+    files: Map<String, ByteArray>,
+    bytes: ByteArray = generatedBytes,
+    sha: String = Sha256.hex(generatedBytes),
+  ): Map<String, ByteArray> =
+    files +
+      mapOf(
+        "generate" to
+          kotlinx.serialization.json.Json.encodeToString(
+              ee.schimke.ha.design.GeneratedDesign.serializer(),
+              ee.schimke.ha.design.GeneratedDesign(
+                sha,
+                "/v1/${DesignManifest.blobPath(sha)}",
+                unlisted,
+                slots = 1,
+                generated = true,
+              ),
+            )
+            .encodeToByteArray(),
+        DesignManifest.blobPath(sha) to bytes,
+      )
+
+  @Test
+  fun aKeyTheManifestLacksIsFetchedByKeyAndResolves() = runTest {
+    val host = FakeHost(withGenerated(published().files))
+    val repository = repo(host)
+    repository.refresh()
+    assertNull(repository.resolveAll()[unlisted])
+
+    assertEquals(true, repository.generate(unlisted))
+    assertContentEquals(generatedBytes, repository.resolveAll()[unlisted])
+    assertContentEquals(generatedBytes, repository.resolve(unlisted)?.bytes)
+    // The manifest's own designs are unchanged, and a key already fetched isn't fetched again.
+    assertContentEquals(template, repository.resolveAll()[key])
+    assertEquals(false, repository.generate(unlisted))
+    assertEquals(1, host.hits["generate"])
+  }
+
+  @Test
+  fun aKeyTheManifestListsIsNeverFetchedByKey() = runTest {
+    val host = FakeHost(withGenerated(published().files))
+    val repository = repo(host)
+    repository.refresh()
+    assertEquals(false, repository.generate(key))
+    assertNull(host.hits["generate"])
+  }
+
+  @Test
+  fun aKeyTheManifestHoldsOnlyForADeviceIsFetchedByKeyAndResolves() = runTest {
+    val host = FakeHost(withGenerated(published().files))
+    val store = InMemoryDesignStore()
+    val repository = repo(host, store)
+    repository.refresh()
+    // The manifest holds a design for the key only for one integration's devices.
+    val forDevice =
+      DesignEntry(
+        unlisted,
+        Sha256.hex(template),
+        template.size,
+        1,
+        device = DeviceMatch(integration = "bambu_lab"),
+      )
+    store.readManifest()?.let { stored ->
+      store.writeManifest(
+        stored.copy(manifest = stored.manifest.copy(designs = stored.manifest.designs + forDevice))
+      )
+    }
+    assertEquals(true, repository.generate(unlisted))
+    assertContentEquals(generatedBytes, repository.resolve(unlisted)?.bytes)
+    assertContentEquals(generatedBytes, repository.resolveAll()[unlisted])
+  }
+
+  @Test
+  fun aDesignFetchedByKeyThatDoesntHashToItsNameIsNeverStored() = runTest {
+    val host = FakeHost(withGenerated(published().files, bytes = "evil".encodeToByteArray()))
+    val repository = repo(host)
+    repository.refresh()
+    assertEquals(false, repository.generate(unlisted))
+    assertNull(repository.resolveAll()[unlisted])
+  }
+
+  @Test
+  fun aNewManifestDropsTheDesignsFetchedByKey() = runTest {
+    val host = FakeHost(withGenerated(published(serial = 1).files))
+    val repository = repo(host)
+    repository.refresh()
+    repository.generate(unlisted)
+    assertNotNull(repository.resolveAll()[unlisted])
+
+    host.files = withGenerated(published(serial = 2).files)
+    assertEquals(RefreshResult.Updated, repository.refresh(force = true))
+    // The server's library changed: its design for the key may have too.
+    assertNull(repository.resolveAll()[unlisted])
+  }
+
+  @Test
+  fun withNoServerNothingIsFetchedByKey() = runTest {
+    val repository = DesignRepository(DesignServerConfig.Off, InMemoryDesignStore(), null) { now }
+    assertEquals(false, repository.generate(unlisted))
+  }
 }

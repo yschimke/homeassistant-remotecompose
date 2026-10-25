@@ -15,6 +15,7 @@ import ee.schimke.ha.client.design.CardDesignOverride
 import ee.schimke.ha.client.design.CardDesignOverrides
 import ee.schimke.ha.client.design.DesignStore
 import ee.schimke.ha.client.design.DesignsById
+import ee.schimke.ha.client.design.GeneratedDesigns
 import ee.schimke.ha.client.design.StoredManifest
 import ee.schimke.ha.client.design.UsageSource
 import ee.schimke.ha.design.DesignEntry
@@ -24,7 +25,6 @@ import ee.schimke.ha.design.DeviceInfo
 import ee.schimke.ha.design.DeviceMatch
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.CardDesignLibrary
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CardRegistry
 import ee.schimke.ha.rc.CardTemplatePlayback
@@ -109,9 +109,9 @@ data class CardDesignChoice(
 
 /**
  * Designs from the card design server, cached on disk by [CardDesignSync], keyed by [DesignKey],
- * and the variant to prefer. Empty while no server is configured. Server designs override: every
- * templatable card renders from a design either way, falling back to the local [CardDesignLibrary]
- * for keys the server doesn't cover. See [cardTemplateFor].
+ * and the variant to prefer. Empty while no server is configured. The app ships no designs of its
+ * own: a key the cache lacks is fetched from the server by key ([CardDesignGeneration]), and its
+ * card draws through its converter meanwhile. See [cardTemplateFor].
  */
 data class CardDesigns(
   val byKey: Map<DesignKey, ByteArray> = emptyMap(),
@@ -164,7 +164,7 @@ suspend fun loadCardDesigns(context: Context, choice: CardDesignChoice): CardDes
 /**
  * The user's server designs, read from disk once per process and kept in memory, so a dashboard's
  * first frame already plays them. Reading them on the dashboard's own composition left every card
- * on the local library's design for its first frames, then swapped to the server's: a different
+ * on its converter's capture for its first frames, then swapped to the server's design: a different
  * document, which can lay out differently (a grid's per-row count, its cells' sizes).
  *
  * [start] runs from the application's start, well before a dashboard composes; it reads again when
@@ -211,10 +211,10 @@ internal const val DESIGN_PRELOAD_WAIT_MS = 1_500L
 /**
  * The preloaded designs ([CardDesignPreload]), or null while the first read is still running. It
  * waits at most [DESIGN_PRELOAD_WAIT_MS]: after that a slow or broken cache never holds the
- * dashboard back, and the cards render from the local library until the read lands.
+ * dashboard back, and the cards draw through their converters until the read lands.
  *
  * Previews (inspection mode) never start the preload and don't advance the clock through the wait,
- * so they render from the local library straight away instead of capturing the hold's spinner.
+ * so they draw through their converters straight away instead of capturing the hold's spinner.
  */
 @Composable
 fun rememberPreloadedCardDesigns(): CardDesigns? {
@@ -235,10 +235,11 @@ val LocalCardDesignOverrides = staticCompositionLocalOf { CardDesignOverrides() 
  * The design [card] renders with: the design the card was switched to ([designId]) when it has an
  * entry for the card's key (one made for the card's device first, else its generic one); otherwise
  * the server's design for its key in the preferred variant ([variant] when the card overrides it,
- * else the choice's), then in the `default` variant, otherwise the local library's. A chosen design
- * that is missing, revoked or not fetched yet falls through to that same order, never to nothing.
- * Null only when the card has no template shape (an unsupported type or config, or an entity not
- * loaded yet); those cards capture through their converter.
+ * else the choice's), then in the `default` variant. A chosen design that is missing, revoked or
+ * not fetched yet falls through to that same order. Null when the card has no template shape (an
+ * unsupported type or config, or an entity not loaded yet), or when the server's design for its key
+ * isn't cached yet (it is then fetched by key: [CardDesignGeneration]); those cards capture through
+ * their converter.
  *
  * A dashboard card counts towards template usage ([CardUsage]); [recordUsage] false is for samples
  * that aren't the user's cards (the card style picker).
@@ -277,8 +278,14 @@ fun cardTemplateFor(
       source = if (server != null) UsageSource.Remote else UsageSource.Local,
     )
   }
-  // A local capture that fails leaves the card to draw through its converter.
-  val bytes = server ?: CardDesignLibrary.templateOrNull(context, key, registry) ?: return null
+  // Designs come only from the server. A key its cached designs lack is fetched by key, and the
+  // card draws through its converter until it lands (or with no server, or none for the key).
+  val bytes =
+    server
+      ?: run {
+        designs.loadedFor?.let { CardDesignGeneration.request(context, it, key) }
+        return null
+      }
   // Designs read the player's display (Host density); fold this phone's in once.
   val metrics = context.resources.displayMetrics
   val folded =
@@ -315,12 +322,11 @@ internal fun serverDesignFor(
 
 /**
  * Resolves [cards]' templates ahead of time, in order and off the main thread, exactly as each
- * card's slot will ([cardTemplateFor]): the local library's capture (or its disk store's read), the
- * fold for this display, and the decode for the player. A card then composes against warm caches
- * instead of paying for all three on the frame it first scrolls on screen, which is what dropped
- * frames on a cold start. A card the warm-up hasn't reached yet resolves as before; one it is busy
- * with waits for it rather than doing the work twice ([CardDesignLibrary],
- * [CardDesignTemplates.forDisplay]).
+ * card's slot will ([cardTemplateFor]): the server design's fold for this display, and the decode
+ * for the player. A card then composes against warm caches instead of paying for both on the frame
+ * it first scrolls on screen, which is what dropped frames on a cold start. A card the warm-up
+ * hasn't reached yet resolves as before; one it is busy with waits for it rather than doing the
+ * work twice ([CardDesignTemplates.forDisplay]).
  *
  * Cancellation stops between cards. A card that can't be resolved is skipped: its slot reports it.
  */
@@ -435,6 +441,27 @@ class FileDesignStore(private val dir: File) : DesignStore {
 
   override suspend fun writeBlob(sha256: String, bytes: ByteArray) =
     withContext(Dispatchers.IO) { write(blob(sha256), bytes) }
+
+  override suspend fun readGenerated(): GeneratedDesigns? =
+    withContext(Dispatchers.IO) {
+      val file = File(dir, GENERATED)
+      if (!file.isFile) return@withContext null
+      runCatching { json.decodeFromString(GeneratedDesigns.serializer(), file.readText()) }
+        .getOrNull()
+    }
+
+  override suspend fun writeGenerated(designs: GeneratedDesigns) =
+    withContext(Dispatchers.IO) {
+      write(
+        File(dir, GENERATED),
+        json.encodeToString(GeneratedDesigns.serializer(), designs).encodeToByteArray(),
+      )
+    }
+
+  private companion object {
+    /** The designs fetched by key beside the manifest ([CardDesignGeneration]). */
+    const val GENERATED = "generated.json"
+  }
 
   private fun blob(sha256: String): File {
     require(sha256.all { it in '0'..'9' || it in 'a'..'f' }) { "not a sha256: $sha256" }

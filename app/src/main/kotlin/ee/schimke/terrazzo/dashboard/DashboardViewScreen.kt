@@ -566,8 +566,8 @@ private fun DashboardList(
         }
       }
 
-    // Hold the cards (briefly, see rememberPreloadedCardDesigns) rather than paint them with the
-    // local library's designs and swap to the server's a moment later.
+    // Hold the cards (briefly, see rememberPreloadedCardDesigns) rather than paint them through
+    // their converters and swap to the server's designs a moment later.
     val cardDesigns =
       preloadedDesigns
         ?: run {
@@ -1541,9 +1541,10 @@ private fun CardSlot(
       )
     }
   val context = androidx.compose.ui.platform.LocalContext.current
-  // Templatable cards always render from a card design: the design server's when one is cached for
-  // this card's key, the local library's otherwise. The card's generation properties key the
-  // template, so value-only snapshot changes keep the same document and arrive as bindings.
+  // Templatable cards render from the design server's design for this card's key once it is cached
+  // (fetched by key if the manifest lacks it), and through their converter until then. The card's
+  // generation properties key the template, so value-only snapshot changes keep the same document
+  // and arrive as bindings.
   val cardDesigns = LocalCardDesigns.current
   // A conditional or entity-filter card renders as the card it currently shows.
   val designCard = CardDesignTemplates.designCard(card, snapshot, registry)

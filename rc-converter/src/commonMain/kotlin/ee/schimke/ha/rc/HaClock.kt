@@ -73,7 +73,7 @@ class FixedHaClock(private val instant: Instant, private val zone: TimeZone = Ti
 /**
  * The clock a design template is captured under ([CardDesignTemplates], [LauncherDesigns]): one
  * fixed instant in UTC, so a template's bytes are the same wherever and whenever it is captured
- * (the design server's library, the app's shipped assets, a device), yet not [frozen][isFrozen], so
+ * (the design server's library or its capture on request, a device), yet not [frozen][isFrozen], so
  * the time still ticks in the player. What a card reads from it (the clock's date line, another
  * zone's offset) is a binding the client pushes from its own clock when the template plays.
  */

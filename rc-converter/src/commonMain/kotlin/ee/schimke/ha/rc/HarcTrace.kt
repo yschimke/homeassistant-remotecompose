@@ -39,7 +39,7 @@ internal expect fun asyncTraceEnd(name: String, cookie: Int)
 
 /** Trace section names `:app-benchmark` measures. */
 object HarcTraceSections {
-  /** Resolving a card's design template (the server's or the local library's) for its key. */
+  /** Resolving a card's design template (the design server's) for its key. */
   const val CARD_TEMPLATE = "harc:cardTemplate"
 
   /** Capturing a card's Remote Compose document through its converter (a document cache miss). */
