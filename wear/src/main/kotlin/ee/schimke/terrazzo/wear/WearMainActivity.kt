@@ -318,6 +318,7 @@ private fun WearApp(
                 summary = card,
                 values = values,
                 loadHistory = repo::history,
+                loadStates = repo::liveStates,
                 modifier = Modifier.fillMaxSize(),
               )
             }

@@ -362,4 +362,14 @@ class WearDirectAccessTest {
     assertNull(direct.history(signedIn.copy(demoMode = true), "light.hall"))
     assertTrue(historyAsked.isEmpty())
   }
+
+  @Test
+  fun liveStatesAreReadWithTheTokenAndNeverStored() = runTest {
+    assertTrue(direct.accept(access, signedIn))
+    answer = { mapOf("light.hall" to state("light.hall", "on")) }
+    val states = direct.states(signedIn, setOf("light.hall"))
+    assertEquals("on", states?.get("light.hall")?.state)
+    assertNull(offline.readValues(), "a details read keeps nothing")
+    assertNull(direct.states(signedIn.copy(demoMode = true), setOf("light.hall")))
+  }
 }

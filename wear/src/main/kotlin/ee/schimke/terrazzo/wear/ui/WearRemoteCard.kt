@@ -29,8 +29,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
@@ -63,6 +68,7 @@ import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import java.io.ByteArrayInputStream
 import java.io.IOException
+import kotlin.math.roundToInt
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 
@@ -83,8 +89,9 @@ internal val LocalWearCardLook = staticCompositionLocalOf { WearCardLook() }
  *
  * With [onOpen], a long press on the card, a tap the card doesn't take itself, or the card's own
  * more-info tap opens it full screen ([WearCardScreen]). [fullScreen] draws it there: in the Large
- * container for a card that has one ([wearFullScreenContainer]). [taps] shares a dispatcher with
- * controls outside the card, such as the full-screen card's action button.
+ * container for a card that has one ([wearFullScreenContainer]), scaled up to fill the round screen
+ * ([fullScreenScale], [scaledFrame]). [taps] shares a dispatcher with controls outside the card,
+ * such as the full-screen card's action button.
  */
 @Composable
 internal fun WearRemoteCard(
@@ -156,6 +163,7 @@ internal fun WearRemoteCard(
       cardVisibilitySignature(card, snapshot),
     )
   val view = LocalView.current
+  val configuration = LocalConfiguration.current
   val gestures =
     if (onOpen == null) Modifier
     else
@@ -168,14 +176,32 @@ internal fun WearRemoteCard(
       )
   Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
     BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-      // A watch narrower than the frame (before its host has reported one) keeps the frame's
-      // height.
-      val width = minOf(frame.widthDp.dp, maxWidth)
+      val sizing =
+        if (fullScreen) {
+          // Full screen: the widget's layout at its own size, scaled up to what the round screen
+          // holds (taps scale with it), rather than a frame the template was never laid out for.
+          Modifier.scaledFrame(
+            frame.widthDp.dp,
+            frame.heightDp.dp,
+            fullScreenScale(
+              frame.widthDp,
+              frame.heightDp,
+              maxWidth.value,
+              maxHeight.value,
+              configuration.screenWidthDp.toFloat(),
+              configuration.isScreenRound,
+            ),
+          )
+        } else {
+          // A watch narrower than the frame (before its host has reported one) keeps the frame's
+          // height.
+          Modifier.size(minOf(frame.widthDp.dp, maxWidth), frame.heightDp.dp)
+        }
       CompositionLocalProvider(LocalHaActionDispatcher provides taps.dispatcher) {
         CachedCardPreview(
           cacheKey = key,
           profile = androidXExperimentalWrap,
-          modifier = Modifier.size(width, frame.heightDp.dp).then(gestures),
+          modifier = sizing.then(gestures),
           card = card,
           snapshot = snapshot,
           liveBindings = signature == null,
@@ -331,6 +357,53 @@ private fun WearAppFrame(frame: WearWidgetFrame, tint: Int?, content: @Composabl
 internal fun wearFullScreenContainer(card: CardConfig): String =
   if (wearCardDataTier(card.type).supportsLarge) ee.schimke.ha.design.DesignKey.WEAR_LARGE
   else ee.schimke.ha.design.DesignKey.WEAR_SMALL
+
+/**
+ * How much a full-screen card's [frameWidth] × [frameHeight] frame (dp) is scaled: as large as fits
+ * [maxWidth] × [maxHeight] (the space it's given; the height unbounded in a list) and, on a round
+ * screen of [screenWidth], the circle's inscribed width for a widget's shape, from 0.75 to 1.6
+ * times.
+ */
+internal fun fullScreenScale(
+  frameWidth: Float,
+  frameHeight: Float,
+  maxWidth: Float,
+  maxHeight: Float,
+  screenWidth: Float,
+  round: Boolean,
+): Float {
+  val widthLimit = minOf(maxWidth, if (round) screenWidth * ROUND_INSCRIBED_WIDTH else screenWidth)
+  val byWidth = widthLimit / frameWidth
+  val byHeight = if (maxHeight.isFinite()) maxHeight / frameHeight else Float.MAX_VALUE
+  return minOf(byWidth, byHeight).coerceIn(MIN_FULL_SCREEN_SCALE, MAX_FULL_SCREEN_SCALE)
+}
+
+/**
+ * The share of a round screen's width a 200 × 112 widget fits at its widest, centred: its corners
+ * then touch the circle (cos of atan(112 / 200)).
+ */
+private const val ROUND_INSCRIBED_WIDTH = 0.87f
+private const val MIN_FULL_SCREEN_SCALE = 0.75f
+private const val MAX_FULL_SCREEN_SCALE = 1.6f
+
+/**
+ * Lays its content out at [width] × [height] and draws it [scale] times larger, taking the scaled
+ * size: the card keeps the layout its template was captured for, only bigger. Pointer input is
+ * transformed with the layer, so taps land where they're drawn.
+ */
+internal fun Modifier.scaledFrame(width: Dp, height: Dp, scale: Float): Modifier =
+  layout { measurable, _ ->
+    val w = width.roundToPx()
+    val h = height.roundToPx()
+    val placeable = measurable.measure(Constraints.fixed(w, h))
+    layout((w * scale).roundToInt(), (h * scale).roundToInt()) {
+      placeable.placeWithLayer(0, 0) {
+        scaleX = scale
+        scaleY = scale
+        transformOrigin = TransformOrigin(0f, 0f)
+      }
+    }
+  }
 
 /** The container colour a widget host fills for an untinted widget. */
 private val WIDGET_SURFACE = androidx.compose.ui.graphics.Color(39, 36, 48)
