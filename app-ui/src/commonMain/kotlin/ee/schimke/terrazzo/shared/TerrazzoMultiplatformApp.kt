@@ -2,7 +2,6 @@
 
 package ee.schimke.terrazzo.shared
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -10,19 +9,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -106,7 +102,7 @@ private class AppConnection(
  * @param hostTheme the host page's theme (Home Assistant's, in the panel): light or dark, and the
  *   colors the `classic` card style draws the app in. Null follows the system's light or dark.
  * @param isFullScreen whether the host currently shows the app full screen.
- * @param onToggleFullScreen enters or leaves full screen; null hides the footer's button.
+ * @param onToggleFullScreen enters or leaves full screen; null hides the header's button.
  */
 @Composable
 fun TerrazzoMultiplatformApp(
@@ -124,8 +120,10 @@ fun TerrazzoMultiplatformApp(
   signInStorageLabel: String? = null,
 ) {
   val dark = hostTheme?.dark ?: isSystemInDarkTheme()
-  // App-wide, so the chrome and every dashboard share one look.
-  var cardStyle by rememberSaveable { mutableStateOf("classic") }
+  // App-wide, so the chrome and every dashboard share one look. Chosen in Settings and kept across
+  // launches, so a wall panel comes back in the style it was set to.
+  val settings = remember { appSettings() }
+  var cardStyle by remember { mutableStateOf(storedCardStyle(settings)) }
   AppChromeTheme(cardStyle, dark, hostTheme) {
     var connection by remember {
       mutableStateOf(hostedConfig?.let { AppConnection(it, hostedAccessToken, hostedAction) })
@@ -189,7 +187,10 @@ fun TerrazzoMultiplatformApp(
               }
             },
             cardStyle = cardStyle,
-            onCardStyle = { cardStyle = it },
+            onCardStyle = {
+              cardStyle = it
+              settings?.set(CARD_STYLE_KEY, it)
+            },
             dark = dark,
             isFullScreen = isFullScreen,
             onToggleFullScreen = onToggleFullScreen,
@@ -390,8 +391,6 @@ private fun DashboardShell(
     stack.clear()
     stack.add(route)
   }
-  // The editor holds an unsaved draft: leaving it goes through its own Back, which asks first.
-  val editing = stack.lastOrNull() is DashboardEditDestination
   DisposableEffect(registerReturnHome) {
     registerReturnHome?.invoke {
       // A wall panel returns home after a while unused, but never out of an edit.
@@ -402,137 +401,154 @@ private fun DashboardShell(
     }
     onDispose { registerReturnHome?.invoke {} }
   }
-  // Navigation and the look live in one footer, so dashboards get the full width and height.
-  Column(Modifier.fillMaxSize()) {
-    Box(Modifier.weight(1f).consumeWindowInsets(WindowInsets.navigationBars)) {
-      key(homeVisit) {
-        NavDisplay(
-          backStack = stack,
-          onBack = { if (stack.size > 1) stack.removeLastOrNull() },
-          entryProvider =
-            entryProvider {
-              entry<DashboardsDestination> {
-                DashboardPickerScreen(
-                  list,
-                  onDashboardPicked = { stack.add(DashboardDestination(it)) },
-                )
-              }
-              entry<SettingsDestination> {
-                Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) }) { padding ->
-                  Column(
-                    Modifier.padding(padding)
-                      .consumeWindowInsets(padding)
-                      .padding(24.dp)
-                      .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                  ) {
-                    Text(connection.config.baseUrl, style = MaterialTheme.typography.titleMedium)
-                    Text(
-                      signInStorageLabel
-                        ?: if (signInRemembered)
-                          "This browser remembers your Home Assistant sign-in until you sign out."
-                        else "Access tokens are kept only for this session."
-                    )
-                    OutlinedTextField(
-                      designServer,
-                      { designServer = it },
-                      label = { Text("Card design server") },
-                      singleLine = true,
-                    )
-                    settingsStorageLabel?.let { Text(it) }
-                    CardUsageSetting(designServer)
-                    ReportFeedbackButton()
-                    Button(onClick = onSignOut) { Text("Sign out") }
-                  }
-                }
-              }
-              entry<DashboardDestination> { route ->
-                var customizing by rememberSaveable(route.path) { mutableStateOf(false) }
-                Scaffold(
-                  topBar = {
-                    TopAppBar(
-                      title = {
-                        DashboardSwitcher(
-                          (list as? DashboardListState.Ready)?.dashboards.orEmpty(),
-                          route.path,
-                          onSwitch = { select(DashboardDestination(it)) },
-                        )
-                      },
-                      actions = {
-                        TextButton(onClick = { stack.add(DashboardEditDestination(route.path)) }) {
-                          Text("Edit dashboard")
-                        }
-                        if (integrationInstalled) {
-                          TextButton(onClick = { stack.add(AgentEditDestination(route.path)) }) {
-                            Text("Ask an agent")
-                          }
-                        }
-                        TextButton(onClick = { customizing = !customizing }) {
-                          Text(if (customizing) "Done customizing" else "Customize")
-                        }
-                      },
-                    )
-                  }
-                ) { padding ->
-                  LiveDashboard(
-                    connection,
-                    route.path,
-                    snapshot,
-                    connectionError,
-                    Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
-                    designServer,
-                    cardStyle,
-                    dark,
-                    customizing,
+  // Settings and full screen sit in each screen's header; the dashboard title switches dashboards.
+  val headerActions: @Composable RowScope.() -> Unit = {
+    HeaderActions(
+      onSettings = {
+        if (stack.lastOrNull() != SettingsDestination) stack.add(SettingsDestination)
+      },
+      isFullScreen = isFullScreen,
+      onToggleFullScreen = onToggleFullScreen,
+    )
+  }
+  Box(Modifier.fillMaxSize()) {
+    key(homeVisit) {
+      NavDisplay(
+        backStack = stack,
+        onBack = { if (stack.size > 1) stack.removeLastOrNull() },
+        entryProvider =
+          entryProvider {
+            entry<DashboardsDestination> {
+              Scaffold(
+                topBar = { TopAppBar(title = { Text("Dashboards") }, actions = headerActions) }
+              ) { padding ->
+                Box(Modifier.padding(padding).consumeWindowInsets(padding)) {
+                  DashboardPickerScreen(
+                    list,
+                    onDashboardPicked = { stack.add(DashboardDestination(it)) },
                   )
                 }
               }
-              entry<DashboardEditDestination> { route ->
-                DashboardEditEntry(
+            }
+            entry<SettingsDestination> {
+              Scaffold(
+                topBar = {
+                  TopAppBar(
+                    title = { Text("Settings") },
+                    navigationIcon = {
+                      if (stack.size > 1)
+                        IconButton(onClick = { stack.removeLastOrNull() }) {
+                          Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                  )
+                }
+              ) { padding ->
+                Column(
+                  Modifier.padding(padding)
+                    .consumeWindowInsets(padding)
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState()),
+                  verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                  Text(connection.config.baseUrl, style = MaterialTheme.typography.titleMedium)
+                  CardStyleSetting(cardStyle, onCardStyle)
+                  Text(
+                    signInStorageLabel
+                      ?: if (signInRemembered)
+                        "This browser remembers your Home Assistant sign-in until you sign out."
+                      else "Access tokens are kept only for this session."
+                  )
+                  OutlinedTextField(
+                    designServer,
+                    { designServer = it },
+                    label = { Text("Card design server") },
+                    singleLine = true,
+                  )
+                  settingsStorageLabel?.let { Text(it) }
+                  CardUsageSetting(designServer)
+                  ReportFeedbackButton()
+                  Button(onClick = onSignOut) { Text("Sign out") }
+                }
+              }
+            }
+            entry<DashboardDestination> { route ->
+              var customizing by rememberSaveable(route.path) { mutableStateOf(false) }
+              Scaffold(
+                topBar = {
+                  TopAppBar(
+                    title = {
+                      DashboardSwitcher(
+                        (list as? DashboardListState.Ready)?.dashboards.orEmpty(),
+                        route.path,
+                        onSwitch = { select(DashboardDestination(it)) },
+                      )
+                    },
+                    actions = {
+                      TextButton(onClick = { stack.add(DashboardEditDestination(route.path)) }) {
+                        Text("Edit dashboard")
+                      }
+                      if (integrationInstalled) {
+                        TextButton(onClick = { stack.add(AgentEditDestination(route.path)) }) {
+                          Text("Ask an agent")
+                        }
+                      }
+                      TextButton(onClick = { customizing = !customizing }) {
+                        Text(if (customizing) "Done customizing" else "Customize")
+                      }
+                      headerActions()
+                    },
+                  )
+                }
+              ) { padding ->
+                LiveDashboard(
                   connection,
                   route.path,
-                  title =
-                    (list as? DashboardListState.Ready)
-                      ?.dashboards
-                      ?.firstOrNull { it.urlPath == route.path }
-                      ?.title,
-                  snapshot = snapshot,
-                  designServer = designServer,
-                  cardStyle = cardStyle,
-                  dark = dark,
-                  onBack = { if (stack.size > 1) stack.removeLastOrNull() },
+                  snapshot,
+                  connectionError,
+                  Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
+                  designServer,
+                  cardStyle,
+                  dark,
+                  customizing,
                 )
               }
-              entry<AgentEditDestination> { route ->
-                AgentEditEntry(
-                  connection,
-                  route.path,
-                  title =
-                    (list as? DashboardListState.Ready)
-                      ?.dashboards
-                      ?.firstOrNull { it.urlPath == route.path }
-                      ?.title,
-                  snapshot = snapshot,
-                  designServer = designServer,
-                  cardStyle = cardStyle,
-                  dark = dark,
-                  onBack = { if (stack.size > 1) stack.removeLastOrNull() },
-                )
-              }
-            },
-        )
-      }
-    }
-    if (!editing)
-      AppFooter(
-        dashboardsSelected = stack.lastOrNull() != SettingsDestination,
-        onDashboards = { select(DashboardsDestination) },
-        onSettings = { select(SettingsDestination) },
-        cardStyle = cardStyle,
-        onCardStyle = onCardStyle,
-        isFullScreen = isFullScreen,
-        onToggleFullScreen = onToggleFullScreen,
+            }
+            entry<DashboardEditDestination> { route ->
+              DashboardEditEntry(
+                connection,
+                route.path,
+                title =
+                  (list as? DashboardListState.Ready)
+                    ?.dashboards
+                    ?.firstOrNull { it.urlPath == route.path }
+                    ?.title,
+                snapshot = snapshot,
+                designServer = designServer,
+                cardStyle = cardStyle,
+                dark = dark,
+                onBack = { if (stack.size > 1) stack.removeLastOrNull() },
+              )
+            }
+            entry<AgentEditDestination> { route ->
+              AgentEditEntry(
+                connection,
+                route.path,
+                title =
+                  (list as? DashboardListState.Ready)
+                    ?.dashboards
+                    ?.firstOrNull { it.urlPath == route.path }
+                    ?.title,
+                snapshot = snapshot,
+                designServer = designServer,
+                cardStyle = cardStyle,
+                dark = dark,
+                onBack = { if (stack.size > 1) stack.removeLastOrNull() },
+              )
+            }
+          },
       )
+    }
   }
 }
 
@@ -670,86 +686,52 @@ private fun DashboardEditEntry(
   }
 }
 
-/** The app's footer: where to go, the card style, and full screen when the host offers it. */
+/** The header's Settings button, and full screen when the host offers it. */
 @Composable
-internal fun AppFooter(
-  dashboardsSelected: Boolean,
-  onDashboards: () -> Unit,
+internal fun HeaderActions(
   onSettings: () -> Unit,
-  cardStyle: String,
-  onCardStyle: (String) -> Unit,
   isFullScreen: Boolean,
   onToggleFullScreen: (() -> Unit)?,
 ) {
-  Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
-    Column {
-      HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-      BoxWithConstraints(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars)) {
-        // A phone keeps the icons; the labels stay as the tabs' accessible names.
-        val labels = maxWidth >= 480.dp
-        Row(
-          Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp),
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-          FooterTab("Dashboards", Icons.Default.Home, dashboardsSelected, labels, onDashboards)
-          FooterTab("Settings", Icons.Default.Settings, !dashboardsSelected, labels, onSettings)
-          Spacer(Modifier.weight(1f))
-          CardStyleMenu(cardStyle, onCardStyle)
-          if (onToggleFullScreen != null)
-            IconButton(onClick = onToggleFullScreen) {
-              Icon(
-                if (isFullScreen) ExitFullScreenIcon else FullScreenIcon,
-                contentDescription = if (isFullScreen) "Exit full screen" else "Full screen",
-              )
-            }
-        }
-      }
+  IconButton(onClick = onSettings) { Icon(Icons.Default.Settings, contentDescription = "Settings") }
+  if (onToggleFullScreen != null)
+    IconButton(onClick = onToggleFullScreen) {
+      Icon(
+        if (isFullScreen) ExitFullScreenIcon else FullScreenIcon,
+        contentDescription = if (isFullScreen) "Exit full screen" else "Full screen",
+      )
     }
+}
+
+/** The card style every dashboard draws in: a setting, kept until it is changed again. */
+@Composable
+internal fun CardStyleSetting(cardStyle: String, onCardStyle: (String) -> Unit) {
+  Row(
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+  ) {
+    Text("Card style", style = MaterialTheme.typography.bodyLarge)
+    CardStyleMenu(cardStyle, onCardStyle)
   }
 }
 
-private fun footerIcon(name: String, path: String) =
+private fun headerIcon(name: String, path: String) =
   ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f)
     .addPath(addPathNodes(path), fill = SolidColor(Color.Black))
     .build()
 
 // Material's fullscreen and fullscreen_exit, which the core icon set doesn't carry.
 private val FullScreenIcon =
-  footerIcon(
+  headerIcon(
     "FullScreen",
     "M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z",
   )
 
 private val ExitFullScreenIcon =
-  footerIcon(
+  headerIcon(
     "ExitFullScreen",
     "M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z",
   )
-
-@Composable
-private fun FooterTab(
-  label: String,
-  icon: ImageVector,
-  selected: Boolean,
-  showLabel: Boolean,
-  onClick: () -> Unit,
-) {
-  val colors = MaterialTheme.colorScheme
-  Row(
-    Modifier.heightIn(min = 48.dp)
-      .clip(CircleShape)
-      .background(if (selected) colors.secondaryContainer else Color.Transparent)
-      .selectable(selected = selected, role = Role.Tab, onClick = onClick)
-      .padding(horizontal = 12.dp),
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(8.dp),
-  ) {
-    val tint = if (selected) colors.onSecondaryContainer else colors.onSurfaceVariant
-    Icon(icon, if (showLabel) null else label, tint = tint)
-    if (showLabel) Text(label, style = MaterialTheme.typography.labelLarge, color = tint)
-  }
-}
 
 @Composable
 private fun CardStyleMenu(cardStyle: String, onCardStyle: (String) -> Unit) {

@@ -142,7 +142,7 @@ try:
         expect(toggle).to_be_checked()
         Path('_wasm-test').mkdir(exist_ok=True)
         page.screenshot(path='_wasm-test/homeassistant-live.png')
-        page.get_by_role('tab', name='Settings').dispatch_event('click')
+        page.get_by_role('button', name='Settings', exact=True).dispatch_event('click')
         # Bug reports open a reviewable public draft, never an API submission.
         expect(page.get_by_role('button', name='Report a bug', exact=True)).to_be_visible()
         page.screenshot(path='_wasm-test/feedback-settings.png')

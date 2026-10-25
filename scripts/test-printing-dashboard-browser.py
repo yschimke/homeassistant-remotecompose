@@ -67,6 +67,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Handler)
 threading.Thread(target=server.serve_forever, daemon=True).start()
 
+def choose_card_style(page, current, style):
+    # The card style is a setting: open Settings from the header, choose, and go back.
+    page.get_by_role('button', name='Settings', exact=True).click(force=True, delay=100)
+    page.get_by_role('button', name='Card style: ' + current, exact=True).click(force=True, delay=100)
+    page.get_by_text(style, exact=True).click(force=True, delay=100)
+    page.get_by_role('button', name='Back', exact=True).click(force=True, delay=100)
+
+
 def settled_capture(page, path):
     previous, stable = None, 0
     deadline = time.monotonic() + 5
@@ -237,8 +245,7 @@ try:
 
                 light_states('classic')
                 page.screenshot(path='_wasm-test/printing-after-readings-phone.png')
-                page.get_by_role('button', name='Card style: Classic', exact=True).click(force=True, delay=100)
-                page.get_by_text('Lcd', exact=True).click(force=True, delay=100)
+                choose_card_style(page, 'Classic', 'Lcd')
                 page.wait_for_timeout(700)
                 page.screenshot(path='_wasm-test/printing-after-lcd-phone.png')
                 assert painted_color((185, 195, 162)) > 1000, 'LCD fallback cards must use LCD chrome'
@@ -253,8 +260,7 @@ try:
                     assert ink > 20, label + ' must paint full-contrast value text rather than a faded overlay'
                 light_states('lcd')
                 for previous, style, rgb in [('Lcd', 'Console', (47, 74, 87)), ('Console', 'Braun', (248, 246, 240))]:
-                    page.get_by_role('button', name='Card style: ' + previous, exact=True).click(force=True, delay=100)
-                    page.get_by_text(style, exact=True).click(force=True, delay=100)
+                    choose_card_style(page, previous, style)
                     page.wait_for_timeout(500)
                     assert painted_color(rgb) > 1000, style + ' fallback cards must use their selected palette'
                     light_states(style.lower())

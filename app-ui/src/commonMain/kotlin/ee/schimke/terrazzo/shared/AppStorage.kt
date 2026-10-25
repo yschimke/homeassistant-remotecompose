@@ -12,6 +12,8 @@ internal interface AppStorage {
 internal enum class StorageLocation {
   BROWSER,
   WASMO,
+  /** A file on this computer: the desktop app. */
+  DEVICE,
 }
 
 /** Browser operations are injected so the contract is testable without a browser. */
