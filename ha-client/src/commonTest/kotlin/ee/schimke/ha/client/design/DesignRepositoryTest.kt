@@ -645,6 +645,60 @@ class DesignRepositoryTest {
     assertEquals(false, repository.isCompleteIn(setOf("style:nowhere:dark")))
   }
 
+  /** The files of a bundle an app ships: [bytes] for [key], serial 0, already expired. */
+  private fun bundle(bytes: ByteArray = template): Map<String, ByteArray> =
+    DesignPublisher.publish(listOf(design(bytes)), serial = 0, nowEpochMs = 0).files
+
+  @Test
+  fun aBundleSeedsAnEmptyCacheSoItDrawsWithNoServer() = runTest {
+    val store = InMemoryDesignStore()
+    assertEquals(true, BundledDesigns.seed(store, bundle()::get))
+    assertContentEquals(template, repo(null, store).resolveAll()[key])
+    // Once seeded, it isn't seeded again.
+    assertEquals(false, BundledDesigns.seed(store, bundle()::get))
+  }
+
+  @Test
+  fun aCacheASyncFilledIsNeverSeeded() = runTest {
+    val store = InMemoryDesignStore()
+    repo(FakeHost(published().files), store).refresh()
+    assertEquals(false, BundledDesigns.seed(store, bundle("bundled".encodeToByteArray())::get))
+    assertContentEquals(template, repo(null, store).resolveAll()[key])
+  }
+
+  @Test
+  fun theServersManifestReplacesTheBundleWhenItCanBeReached() = runTest {
+    val store = InMemoryDesignStore()
+    BundledDesigns.seed(store, bundle("bundled".encodeToByteArray())::get)
+    // Unreachable: the bundle keeps drawing.
+    val down = FakeHost(emptyMap())
+    repo(down, store).refresh()
+    assertContentEquals("bundled".encodeToByteArray(), repo(null, store).resolveAll()[key])
+    // Reached (after the failed attempt's backoff): whatever its serial, the server's library
+    // replaces the bundle.
+    now += 24 * 60 * 60 * 1000L
+    assertEquals(
+      RefreshResult.Updated,
+      repo(FakeHost(published(serial = 1).files), store).refresh(),
+    )
+    assertContentEquals(template, repo(null, store).resolveAll()[key])
+  }
+
+  @Test
+  fun aMissingOrBrokenBundleSeedsNothing() = runTest {
+    val store = InMemoryDesignStore()
+    assertEquals(false, BundledDesigns.seed(store) { null })
+    assertEquals(false, BundledDesigns.seed(store) { "not json".encodeToByteArray() })
+    assertNull(store.readManifest())
+    // A blob that doesn't hash to its name is left out; the rest of the bundle still seeds.
+    val tampered =
+      bundle().mapValues { (path, bytes) ->
+        if (path.startsWith("blobs/")) "evil".encodeToByteArray() else bytes
+      }
+    assertEquals(true, BundledDesigns.seed(store, tampered::get))
+    assertNull(repo(null, store).resolveAll()[key])
+  }
+
   /** A key the published manifest doesn't list, and the design the server generates for it. */
   private val unlisted = key.copy(shape = "domain=switch")
   private val generatedBytes = "generated rc document".encodeToByteArray()

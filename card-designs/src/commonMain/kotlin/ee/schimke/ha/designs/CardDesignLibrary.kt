@@ -119,6 +119,38 @@ object CardDesignLibrary {
     return built.size
   }
 
+  /**
+   * The themes the phone app ships designs for: Classic in the Material 3 palette and the Home
+   * Assistant card style, in each mode they draw in. The app starts with those two card styles
+   * (`CardStyles.BUILT_IN`) and the Material 3 palette, so it draws them with no design server.
+   */
+  val BUILT_IN_THEMES: Set<String> =
+    (CardDesignTemplates.modesOf(HaUberTheme.Classic).map {
+        CardDesignTemplates.bakedTheme(ThemeStyle.Material3, it, HaUberTheme.Classic)
+      } +
+        CardDesignTemplates.modesOf(HaUberTheme.HomeAssistant).map {
+          CardDesignTemplates.bakedTheme(ThemeStyle.Material3, it, HaUberTheme.HomeAssistant)
+        })
+      .toSet()
+
+  /**
+   * Writes the designs the phone app ships ([BUILT_IN_THEMES]) into [target], in a design server's
+   * layout (`manifest.json`, `blobs/`) with no previews or catalog. Serial 0 and a fixed clock: the
+   * same sources always give the same files, and any manifest a server publishes replaces it.
+   */
+  fun generateBuiltIn(target: File, host: CaptureHost): Int {
+    val keys = LinkedHashSet<DesignKey>()
+    for (source in librarySources()) {
+      keysOf(source.card, source.snapshot).filterTo(keys) { it.theme in BUILT_IN_THEMES }
+    }
+    check(keys.isNotEmpty()) { "the demo dashboards produce no built-in designs" }
+    val built = keys.map { CheckedInCardDesigns.capture(host, it) }
+    val output = DesignPublisher.publish(built, serial = 0, nowEpochMs = 0)
+    target.deleteRecursively()
+    for ((path, bytes) in output.files) target.write(path, bytes)
+    return built.size
+  }
+
   private fun File.write(path: String, bytes: ByteArray) {
     resolve(path).also { it.parentFile.mkdirs() }.writeBytes(bytes)
   }

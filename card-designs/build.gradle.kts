@@ -162,6 +162,31 @@ tasks.register<JavaExec>("generateCardDesigns") {
   maxHeapSize = "2g"
 }
 
+// The designs the phone app ships (CardDesignLibrary.BUILT_IN_THEMES): Classic in Material 3 and
+// the Home Assistant card style, so the app draws them with no design server. Captured on the JVM
+// as the published library is, so each is the same file the server serves for its key. The app
+// bundles them as assets (`builtInCardDesigns`) and seeds its design cache from them.
+val builtInCardDesignsOut = layout.buildDirectory.dir("built-in-card-designs")
+val generateBuiltInCardDesigns by
+  tasks.registering(JavaExec::class) {
+    group = "card designs"
+    description = "Generates the card designs the phone app ships, on the JVM."
+    val main = kotlin.jvm().compilations.getByName("main")
+    classpath(main.output.allOutputs, main.runtimeDependencyFiles)
+    mainClass.set("ee.schimke.ha.designs.BuiltInCardDesignLibraryKt")
+    workingDir = layout.projectDirectory.asFile
+    inputs.dir(layout.projectDirectory.dir("ui-builder/designs"))
+    outputs.dir(builtInCardDesignsOut)
+    // Serial 0 and a fixed clock: the same inputs write the same files, so a cached run serves.
+    outputs.cacheIf { true }
+    args(builtInCardDesignsOut.get().asFile.absolutePath)
+    maxHeapSize = "2g"
+  }
+
+configurations.consumable("builtInCardDesigns") {
+  outgoing.artifact(builtInCardDesignsOut) { builtBy(generateBuiltInCardDesigns) }
+}
+
 // Whether the two libraries draw the same, key by key (CardDesignLibraryParity): both drawings of
 // any difference land in build/card-design-parity/.
 tasks.register<JavaExec>("checkCardDesignParity") {

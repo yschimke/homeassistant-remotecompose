@@ -103,8 +103,7 @@ internal fun SettingsScreen(
   val scope = rememberCoroutineScope()
   val context = LocalContext.current
   val widgetRefresh = remember(context) { WidgetRefreshScheduler(context.applicationContext) }
-  val themePref by
-    graph.preferencesStore.themeStyle.collectAsState(initial = ThemePref.TerrazzoHome)
+  val themePref by graph.preferencesStore.themeStyle.collectAsState(initial = ThemePref.Material3)
   val darkPref by graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
   val cardStylePref by
     graph.preferencesStore.cardStyle.collectAsState(initial = CardStylePref.Classic)
