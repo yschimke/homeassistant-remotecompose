@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import ee.schimke.ha.client.HaClient
+import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
@@ -13,6 +14,7 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
@@ -42,9 +44,7 @@ internal fun historyWindows(dashboard: Dashboard): Map<String, Int> {
   val windows = mutableMapOf<String, Int>()
   fun walk(raw: JsonObject) {
     if ((raw["type"] as? JsonPrimitive)?.contentOrNull == CardTypes.HISTORY_GRAPH) {
-      val hours =
-        (raw["hours_to_show"] as? JsonPrimitive)?.intOrNull?.coerceIn(1, MAX_HISTORY_HOURS)
-          ?: DEFAULT_HISTORY_HOURS
+      val hours = historyHours(raw)
       (raw["entities"] as? JsonArray).orEmpty().forEach { row ->
         val id =
           when (row) {
@@ -130,5 +130,33 @@ internal fun withHistory(
           if (points.isNotEmpty() && points.last().ts >= at) points
           else points + HistoryPoint(at, state.state)
         }
+  )
+}
+
+/** The hours a history-graph config shows: its `hours_to_show`, within a week; HA's 24 without. */
+private fun historyHours(raw: JsonObject): Int =
+  (raw["hours_to_show"] as? JsonPrimitive)?.intOrNull?.coerceIn(1, MAX_HISTORY_HOURS)
+    ?: DEFAULT_HISTORY_HOURS
+
+/**
+ * [snapshot] for [card]: a history graph's series cut to its own `hours_to_show` before [now], as
+ * the dashboard fetches each entity's longest window once for every graph that shows it. The last
+ * point before the window stays, moved to its start, so a value that held through it still draws.
+ * Any other card gets [snapshot] as it is.
+ */
+internal fun withCardHistoryWindow(
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  now: Instant = Clock.System.now(),
+): HaSnapshot {
+  if (card.type != CardTypes.HISTORY_GRAPH || snapshot.history.isEmpty()) return snapshot
+  val start = now - historyHours(card.raw).hours
+  return snapshot.copy(
+    history =
+      snapshot.history.mapValues { (_, points) ->
+        val before = points.lastOrNull { it.ts < start }
+        val inside = points.filter { it.ts >= start }
+        if (before == null) inside else listOf(before.copy(ts = start)) + inside
+      }
   )
 }

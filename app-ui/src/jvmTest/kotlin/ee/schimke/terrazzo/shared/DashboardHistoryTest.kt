@@ -1,11 +1,13 @@
 package ee.schimke.terrazzo.shared
 
+import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.HistoryPoint
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
 import kotlinx.serialization.json.Json
 
@@ -58,5 +60,24 @@ class DashboardHistoryTest {
       current,
       withHistory(snapshot, mapOf("sensor.temp" to current)).history["sensor.temp"],
     )
+  }
+
+  @Test
+  fun eachGraphPlotsOnlyItsOwnWindow() {
+    val now = Instant.fromEpochSeconds(100 * 3600)
+    fun at(hoursAgo: Int, value: String) = HistoryPoint(now - hoursAgo.hours, value)
+    val snapshot =
+      HaSnapshot(history = mapOf("sensor.temp" to listOf(at(40, "10"), at(5, "11"), at(1, "12"))))
+    val twoHours =
+      json.decodeFromString<CardConfig>(
+        """{"type":"history-graph","hours_to_show":2,"entities":["sensor.temp"]}"""
+      )
+    assertEquals(
+      listOf(at(2, "11"), at(1, "12")),
+      withCardHistoryWindow(twoHours, snapshot, now).history["sensor.temp"],
+    )
+    // Not a history graph: untouched.
+    val tile = json.decodeFromString<CardConfig>("""{"type":"tile","entity":"sensor.temp"}""")
+    assertEquals(snapshot, withCardHistoryWindow(tile, snapshot, now))
   }
 }

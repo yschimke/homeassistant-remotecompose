@@ -2,6 +2,7 @@ package ee.schimke.terrazzo.shared
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.ImageBitmap
 import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.design.UsageSource
@@ -36,6 +37,8 @@ internal fun AuthenticatedCard(
       // A Remote Compose card is its inner card, drawn from a card design in the style it names.
       val leaf = remoteComposeInnerCard(outer) ?: outer
       val leafStyle = remoteComposeCardStyle(outer) ?: style
+      // A history graph plots only its own window of the dashboard's shared history.
+      val leafSnapshot = remember(leaf, snapshot) { withCardHistoryWindow(leaf, snapshot) }
       val drawLeaf: @Composable () -> Unit = {
         // Template usage (opt-in, AppCardUsage): a design-backed card reports once its lookup
         // settles; everything else is drawn by the app's own code.
@@ -47,25 +50,25 @@ internal fun AuthenticatedCard(
         val conversation = conversationEntity(leaf)
         if (leaf.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
           drawnByApp()
-          MessageComposeCard(leaf, snapshot, editable = !readOnly, onAction = onAction)
+          MessageComposeCard(leaf, leafSnapshot, editable = !readOnly, onAction = onAction)
         } else if (conversation != null) {
           drawnByApp()
-          ConversationCard(leaf, conversation, snapshot, client, onMoreInfo, readOnly)
+          ConversationCard(leaf, conversation, leafSnapshot, client, onMoreInfo, readOnly)
         } else if (isEntityPictureCard(leaf)) {
           drawnByApp()
           EntityPictureCard(
             leaf,
-            snapshot.states[(leaf.raw["entity"] as? JsonPrimitive)?.contentOrNull],
+            leafSnapshot.states[(leaf.raw["entity"] as? JsonPrimitive)?.contentOrNull],
             pictureCache,
             onMoreInfo,
           )
         } else {
           val fallback: @Composable () -> Unit = {
-            if (isBambuStatus(leaf)) BambuStatusFallback(leaf, snapshot, onMoreInfo)
+            if (isBambuStatus(leaf)) BambuStatusFallback(leaf, leafSnapshot, onMoreInfo)
             else
               NativeCard(
                 leaf,
-                snapshot,
+                leafSnapshot,
                 onMoreInfo = onMoreInfo,
                 onService = onService,
                 toggle = onToggle,
@@ -95,14 +98,14 @@ internal fun AuthenticatedCard(
             (leaf.type in DESIGNED_CARD_TYPES || hasCustomCardDesign(leaf)) &&
               !nativeControls &&
               // An entity Home Assistant no longer has: the built-in card says so, with no lookup.
-              !namesMissingEntity(leaf, snapshot) &&
+              !namesMissingEntity(leaf, leafSnapshot) &&
               cardServiceAction(leaf) == null &&
               tap in setOf(null, "toggle", "more-info", "none") &&
               (leaf.raw["features"] as? JsonArray).orEmpty().isEmpty()
           )
             LibraryCard(
               leaf,
-              snapshot,
+              leafSnapshot,
               leafStyle,
               dark,
               onToggle,
