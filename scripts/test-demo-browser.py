@@ -279,6 +279,8 @@ try:
             expect(page.get_by_text('Use light theme', exact=True)).not_to_be_attached()
             capture(page, f'_wasm-test/demo-{name}-console.png')
             assert all('states' not in r for r in requests)
+            # The lamp's tile is asked for by its exact key, never as a card.
+            assert any('key' in r and r['card']['type'] == 'tile' for r in requests), requests
             assert not sockets, sockets
             assert not errors, errors
             page.close()
@@ -439,6 +441,7 @@ try:
             Handler.power = '900'
             expect(page.get_by_role('button',name='900 W Power draw 0 – 3000 W',exact=True).filter(visible=True).first).to_be_visible(timeout=10000)
             assert {'thermostat','gauge'} <= {r['card']['type'] for r in instrument_requests if r['cardStyle']=='console'}
+            assert all('key' in r for r in instrument_requests if r['card']['type'] in ('thermostat','gauge')), instrument_requests
             capture(page,f'_wasm-test/demo-console-{name}-power.png')
             page.mouse.move(180, min(550,height-30))
             if name == 'phone': page.mouse.wheel(0,1000)
