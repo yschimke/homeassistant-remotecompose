@@ -13,11 +13,15 @@ import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.HistoryPoint
+import ee.schimke.ha.model.forecastRequests
+import ee.schimke.ha.model.forecastsByEntity
+import ee.schimke.ha.model.historyWindows
 import io.ktor.client.engine.HttpClientEngine
 import kotlin.concurrent.Volatile
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -34,6 +38,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
@@ -429,8 +434,40 @@ class LiveHaSession(
       val unit = async { temperatureUnit() }
       val dashboard = client.fetchDashboard(urlPath)
       val snapshot = client.snapshot().copy(devices = devices(), temperatureUnit = unit.await())
-      dashboard to snapshot
+      dashboard to withDataCardData(dashboard, snapshot)
     }
+
+  /**
+   * [snapshot] with the history [dashboard]'s history graphs plot and the forecasts its weather
+   * cards show. Bounded and best effort: without them those cards draw their empty states, and the
+   * next load asks again.
+   */
+  private suspend fun withDataCardData(dashboard: Dashboard, snapshot: HaSnapshot): HaSnapshot {
+    val windows = historyWindows(dashboard)
+    val forecasts = forecastRequests(dashboard)
+    if (windows.isEmpty() && forecasts.isEmpty()) return snapshot
+    val loaded =
+      withTimeoutOrNull(DATA_CARD_WAIT) {
+        val now = Clock.System.now()
+        val history = buildMap {
+          windows.entries.groupBy({ it.value }, { it.key }).forEach { (hours, ids) ->
+            runCatching { client.fetchHistory(ids, now - hours.hours, now) }
+              .onSuccess(::putAll)
+              .onFailure { if (it is CancellationException) throw it }
+          }
+        }
+        val byType = forecasts.mapValues { (type, ids) ->
+          runCatching { client.fetchForecasts(ids.toList(), type) }
+            .onFailure { if (it is CancellationException) throw it }
+            .getOrDefault(emptyMap())
+        }
+        snapshot.copy(
+          history = snapshot.history + history,
+          forecasts = snapshot.forecasts + forecastsByEntity(byType),
+        )
+      }
+    return loaded ?: snapshot
+  }
 
   override suspend fun loadSnapshot(): HaSnapshot = coroutineScope {
     val unit = async { temperatureUnit() }
@@ -562,3 +599,6 @@ class LiveHaSession(
     _connectionStatus.value = SessionConnectionStatus.Failed
   }
 }
+
+/** How long a dashboard load waits for its data cards' history and forecasts. */
+private val DATA_CARD_WAIT = 5.seconds

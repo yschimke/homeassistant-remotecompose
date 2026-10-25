@@ -758,6 +758,32 @@ class HaClient(
   }
 
   /**
+   * The [type] forecast (`daily`, `hourly`, `twice_daily`) of each of [entityIds], from the
+   * `weather.get_forecasts` service with `return_response`: keyed by entity id, each its `forecast`
+   * list. An entity that doesn't offer [type] is left out.
+   */
+  suspend fun fetchForecasts(entityIds: List<String>, type: String): Map<String, JsonArray> {
+    if (entityIds.isEmpty()) return emptyMap()
+    val result =
+      runCommand("call_service") {
+        put("domain", "weather")
+        put("service", "get_forecasts")
+        put("service_data", buildJsonObject { put("type", type) })
+        put(
+          "target",
+          buildJsonObject { put("entity_id", buildJsonArray { entityIds.forEach { add(it) } }) },
+        )
+        put("return_response", true)
+      }
+    val response = result["response"] as? JsonObject ?: return emptyMap()
+    return buildMap {
+      for ((id, value) in response) {
+        ((value as? JsonObject)?.get("forecast") as? JsonArray)?.let { put(id, it) }
+      }
+    }
+  }
+
+  /**
    * Decode one compressed history entry. HA emits `s` for the state and a float epoch-seconds
    * timestamp under `lu` (last updated), falling back to `lc` (last changed) on the first sample of
    * a run. Anything missing a state or timestamp is dropped rather than guessed.
