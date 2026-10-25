@@ -4,7 +4,7 @@
   "description": "Home Assistant mobile_app push_url relay for the Terrazzo app: forwards notifications to FCM.",
   "main": "index.js",
   "engines": {
-    "node": "22"
+    "node": "24"
   },
   "scripts": {
     "test": "node --test test/*.test.js"
