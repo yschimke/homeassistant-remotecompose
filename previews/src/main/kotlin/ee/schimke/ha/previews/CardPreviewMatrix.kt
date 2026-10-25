@@ -421,7 +421,7 @@ private fun WatchFaceCell(
             contentAlignment = Alignment.Center,
           ) {
             Image(
-              painter = painterResource(id = ComponentsR.drawable.ic_launcher_foreground),
+              painter = painterResource(id = ComponentsR.drawable.ic_launcher_monochrome),
               contentDescription = null,
               modifier = Modifier.size(38.dp),
               colorFilter = ColorFilter.tint(Color(0xFF424242)),
