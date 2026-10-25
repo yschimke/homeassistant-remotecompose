@@ -65,9 +65,10 @@ internal fun LibraryCard(
         DashboardLoadCache(scope) { key: LibraryDesignKey -> loadLibraryDesign(key) }
       }
   val exact = remember(card, snapshot, style, dark) { exactDesignKey(card, snapshot, style, dark) }
+  val hint = remember(card, snapshot, exact) { cacheShapeHint(exact, card, snapshot) }
   val designKey =
-    remember(card, style, dark, requireExactDesign, exact) {
-      LibraryDesignKey(anonymousTemplateCard(card), style, dark, requireExactDesign, exact)
+    remember(card, hint, style, dark, requireExactDesign, exact) {
+      LibraryDesignKey(anonymousTemplateCard(card), style, dark, requireExactDesign, exact, hint)
     }
   fun bindings() =
     if (exact != null) exactTemplateBindings(card, snapshot) else templateBindings(card, snapshot)
@@ -218,6 +219,48 @@ internal fun anonymousTemplateCard(card: CardConfig): JsonObject {
   }
 }
 
+/**
+ * The observable shape discriminators of a single-slot card: `device_class`, `unit` and `icon` from
+ * the slot entity's attributes (the ones a tile/entity converter keys its design on), plus the
+ * card's own `icon`. It carries the card's *shape*, never an entity id, name or state value — the
+ * same privacy contract as [anonymousTemplateCard] — so the anonymous `/api/cards/resolve` fallback
+ * (used only when there is no exact key) can resolve the one design the card's shape names instead
+ * of the first of the shapes its slots fit. Empty for a card without exactly one slot (multi-slot
+ * shapes key on prefixed properties the server's match skips).
+ */
+internal fun shapeHint(card: CardConfig, snapshot: HaSnapshot): JsonObject {
+  val entry = CardDesignSlots.slotEntries(card).orEmpty().singleOrNull() ?: return EMPTY_SHAPE_HINT
+  val state = snapshot.states[entry.entityId] ?: return EMPTY_SHAPE_HINT
+  val domain = CardDesignSlots.domainOf(entry.entityId)
+  fun attr(name: String) =
+    state.attributes[name]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+  return buildJsonObject {
+    // device_class only changes a sensor's / binary_sensor's icon and colour; other domains ignore
+    // it, so the converter leaves it out of their shape (see EntityDesign.DEVICE_CLASS_DOMAINS).
+    if (domain == "sensor" || domain == "binary_sensor")
+      attr("device_class")?.let { put("device_class", it) }
+    attr("unit_of_measurement")?.let { put("unit", it) }
+    attr("icon")?.trim()?.lowercase()?.takeIf { it.isNotEmpty() }?.let { put("icon", it) }
+    (card.raw["icon"] as? JsonPrimitive)
+      ?.contentOrNull
+      ?.trim()
+      ?.takeIf { it.isNotEmpty() }
+      ?.let { put("card_icon", it) }
+  }
+}
+
+private val EMPTY_SHAPE_HINT = JsonObject(emptyMap())
+
+/**
+ * The hint to fold into the design cache key: the card's observable [shapeHint] only on the
+ * anonymous fallback (no [exact] key). With an exact key the server is asked by key, so the hint is
+ * unused and must stay out of the key — otherwise two cards that share one exact key but read
+ * different observable attributes would land in separate cache entries and resolve the same design
+ * twice.
+ */
+internal fun cacheShapeHint(exact: DesignKey?, card: CardConfig, snapshot: HaSnapshot): JsonObject =
+  if (exact == null) shapeHint(card, snapshot) else EMPTY_SHAPE_HINT
+
 internal fun templateBindings(card: CardConfig, snapshot: HaSnapshot): Map<String, RcNamedValue> =
   CardDesignSlots.slotBindings(card, snapshot).toNamedValues() +
     instrumentTemplateBindings(card, snapshot)
@@ -333,6 +376,8 @@ internal data class LibraryDesignKey(
   val requireExact: Boolean = false,
   /** The card's exact key ([exactDesignKey]): asked for by key when set, so always exact. */
   val exact: DesignKey? = null,
+  /** [shapeHint] for the card: the observable shape discriminators, empty when none apply. */
+  val shapeHint: JsonObject = EMPTY_SHAPE_HINT,
 )
 
 internal fun exactLibraryDesign(response: JsonObject): Boolean =
@@ -383,6 +428,7 @@ internal suspend fun loadLibraryDesign(
             put("card", key.card)
             put("cardStyle", key.style)
             put("dark", key.dark)
+            if (key.shapeHint.isNotEmpty()) put("shapeHint", key.shapeHint)
           }
             .toString()
         )
@@ -445,8 +491,9 @@ private suspend fun loadDesignByKey(
  * Cards the design library couldn't draw exactly, so they fell back to the built-in card: the list
  * the library's coverage work enumerates next. Each distinct miss is logged once (the browser
  * console, or stdout on desktop) and counted for the session. Only what was already sent to the
- * design server appears: the anonymous card (type and slot ids), the style and light or dark, and
- * the shape the server answered with. Nothing leaves the device.
+ * design server appears: the anonymous card (type and slot ids), its [shapeHint] (device_class,
+ * unit, icon — the card's shape, never an id, name or value), the style and light or dark, and the
+ * shape the server answered with. No entity id, name or state value leaves the device.
  */
 internal object LibraryDesignMisses {
   private val mutex = Mutex()
