@@ -14,9 +14,7 @@ import ee.schimke.terrazzo.wear.ui.syncedCardDesign
 import ee.schimke.terrazzo.wear.ui.syncedWearAppTemplate
 import ee.schimke.terrazzo.wear.ui.wearAppTemplate
 import ee.schimke.terrazzo.wear.ui.wearCardLook
-import ee.schimke.terrazzo.wear.ui.wearContainerColor
 import ee.schimke.terrazzo.wear.ui.wearSnapshot
-import ee.schimke.terrazzo.wear.ui.wearSystemDark
 import ee.schimke.terrazzo.wear.widget.WearWidgetFrame
 import ee.schimke.terrazzo.wear.widget.wearAppContainer
 import ee.schimke.terrazzo.wear.widget.wearWidgetCardStyle
@@ -63,7 +61,7 @@ internal object WearCardWarmup {
           }
             .onFailure { Log.w(TAG, "Data Layer sync before warm-up failed", it) }
         }
-        val look = store.readSettings().wearCardLook(app.wearSystemDark())
+        val look = store.readSettings().wearCardLook()
         val snapshot = wearSnapshot(store.readValues()?.values.orEmpty())
         for (summary in warmupCards(store.readPinned(), store.readSections())) {
           val card = decodeWearCard(summary.rawJson) ?: continue
@@ -72,8 +70,8 @@ internal object WearCardWarmup {
           val frame = WearWidgetFrame.forContainer(app, wearAppContainer(card, snapshot, registry))
           val tint = ContainerTint.argbFor(card, snapshot)
           runCatching {
-            (store.syncedCardDesign(card, frame.container, look.dark)?.let {
-                syncedWearAppTemplate(it, frame, wearContainerColor(look, tint))
+            (store.syncedCardDesign(card, frame.container)?.let {
+                syncedWearAppTemplate(it, frame, tint)
               } ?: wearAppTemplate(app, design, snapshot, look, style, frame, tint, registry))
               ?.let { preloadForComposePlayer(it) }
           }

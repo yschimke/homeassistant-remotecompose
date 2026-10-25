@@ -28,6 +28,18 @@ reconnect-style updates, old/future field defaults, installed phone-only designs
 generic Wear templates, large payloads using assets, out-of-order index/blob persistence,
 phone-driven widget styling and warming the synced template rather than a local fallback.
 
+Wear remains dark-only, including when the device test configuration is `notnight`.
+`WearDynamicThemeRenderingTest` exercises the real Wear dynamic color API on API 35, renders
+system colors, toggles them without a phone packet, recreates from persisted mobile settings,
+and applies a subsequent fixed mobile palette. Pixel assertions prove the dynamic/fallback
+change appears and fixed palettes ignore the system toggle. Palette keys are stable across recreation and differ with resolved system colors, avoiding
+stale local card captures. The API 35 disabled-system case exercises the API's null fallback;
+older-device fallback follows the same path but was not run on a separate pre-35 SDK.
+
+| Watch system dynamic | System colors unavailable/disabled | Fixed palette selected on mobile |
+| --- | --- | --- |
+| ![Dynamic](watch-system-dynamic.png) | ![Fallback](watch-system-fallback.png) | ![Fixed](watch-mobile-fixed.png) |
+
 Run the affected suites and checks:
 
 ```sh
@@ -35,24 +47,14 @@ Run the affected suites and checks:
 ./gradlew :wear:lintDebug :app:lintDebug :wear:ktfmtCheck :app:ktfmtCheck
 ```
 
-`WearThemeModeRenderingTest` renders the same persisted System mode with the watch's own light
-and dark configurations, verifies explicit Light/Dark override an opposite watch mode, then
-recreates the card from disk and changes the watch mode offline without another phone payload.
-Both template modes are cached, selected by their synced mode tag, and rendered with matching
-app chrome. `WearAppearanceSyncTest` also verifies the mode survives delayed events and restart.
-
-| System: watch light | System: watch dark, without another phone payload |
-| --- | --- |
-| ![Watch light](system-watch-light.png) | ![Watch dark](system-watch-dark.png) |
-
-The rendering tests can save PNGs when its test JVM receives the `wearRenderEvidence` system
+The rendering test can save PNGs when its test JVM receives the `wearRenderEvidence` system
 property. These captures used a temporary Gradle init script that set that property on `Test`
 tasks to `/tmp/wear-render-evidence`.
 
 Physical transport remains a manual follow-up: pair updated phone/watch builds, change theme,
-global style and a card's installed skin on the phone. Set System with opposite phone/watch
-appearances; verify Wear uses its own mode, then test explicit Light and Dark. Disconnect,
-restart both apps, change
+global style and a card's installed skin on the phone; with Material 3 selected, change the
+watch-face colors and toggle system dynamic colors. Confirm Wear stays dark. Disconnect, restart
+both apps, change
 mobile appearance while disconnected, then reconnect. Confirm the app and placed widgets retain
 the last synced look offline and converge to the current phone choice after reconnect. This VM
 has no paired watch and no `/dev/kvm`; the automated checks exercise payloads, persistence and

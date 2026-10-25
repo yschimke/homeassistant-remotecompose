@@ -44,8 +44,6 @@ data class WearSettings(
   /** Mobile-owned appearance; appended fields preserve compatibility with older watches. */
   val themeStyle: String = "Material3",
   val cardStyle: String = "classic",
-  /** Follow resolves against the watch, never the phone's current configuration. */
-  val darkMode: String = "Follow",
 )
 
 /** Card extract phone-side; wear renders a list row from this. */
@@ -133,8 +131,6 @@ data class WearSlotDesign(
   val container: String = "",
   /** The [WearDesignBlob] holding its template. */
   val sha256: String = "",
-  /** Absent on older phones means the legacy dark template. */
-  val darkTheme: Boolean = true,
 )
 
 /** A Wear widget design's Remote Compose template, content-addressed by [sha256]. */

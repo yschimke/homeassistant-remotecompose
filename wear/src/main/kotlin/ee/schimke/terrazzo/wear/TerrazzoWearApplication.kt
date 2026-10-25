@@ -8,8 +8,12 @@ import ee.schimke.ha.rc.CardDesignLibrary
 import ee.schimke.ha.rc.CardMemory
 import ee.schimke.ha.rc.FileLocalDesignStore
 import ee.schimke.ha.rc.components.LauncherIcons
+import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.terrazzo.wear.sync.WearOfflineStore
+import ee.schimke.terrazzo.wear.ui.observeWearSystemColors
 import ee.schimke.terrazzo.wear.ui.wearCardLook
 import ee.schimke.terrazzo.wear.widget.WearNeutralTemplateStore
+import ee.schimke.terrazzo.wear.widget.refreshAllCardWidgets
 import ee.schimke.terrazzo.wear.widget.releaseWidgetTemplates
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,6 +41,17 @@ class TerrazzoWearApplication : Application() {
       WearNeutralTemplateStore.of(applicationContext).prune()
     }
     followCardStyleWithLauncherIcon()
+    val colorScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    observeWearSystemColors(this) {
+      colorScope.launch {
+        if (
+          WearOfflineStore(this@TerrazzoWearApplication).readSettings().wearCardLook().palette ==
+            ThemeStyle.Material3
+        ) {
+          runCatching { refreshAllCardWidgets(this@TerrazzoWearApplication) }
+        }
+      }
+    }
   }
 
   /**
