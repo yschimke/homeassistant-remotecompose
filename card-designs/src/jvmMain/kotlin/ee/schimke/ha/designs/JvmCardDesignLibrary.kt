@@ -26,8 +26,21 @@ import org.jetbrains.skia.EncodedImageFormat
  * Generates the card design library on the JVM, with no Android: captured with the Compose
  * Multiplatform creation fork under the app's operations ([LibraryCaptureProfile]), its previews
  * drawn by the Compose Multiplatform player. `./gradlew :card-designs:generateCardDesigns`.
+ *
+ * The previews are shared out among one worker process per processor (`--previews <staging> <shard>
+ * <shards>`, this same main), as Compose scenes can only draw on one thread of a process.
  */
 fun main(args: Array<String>) {
+  if (args.size == 4 && args[0] == PREVIEWS_ARG) {
+    CardDesignLibrary.drawPreviews(
+      File(args[1]),
+      JvmCardPreviewRenderer(),
+      shard = args[2].toInt(),
+      shards = args[3].toInt(),
+    )
+    // The Compose scenes leave non-daemon threads behind.
+    exitProcess(0)
+  }
   val target =
     File(
       args.singleOrNull()
@@ -36,16 +49,50 @@ fun main(args: Array<String>) {
           exitProcess(2)
         }
     )
+  val previews = JvmCardPreviewRenderer()
+  val shards = Runtime.getRuntime().availableProcessors()
   val count =
     CardDesignLibrary.generate(
       target,
       CommonCaptureHost(LibraryCaptureProfile.OPERATIONS),
-      JvmCardPreviewRenderer(),
-    )
+      previews,
+    ) { staging ->
+      if (shards == 1) CardDesignLibrary.drawPreviews(staging, previews)
+      else drawPreviewsInWorkers(staging, shards)
+    }
   println("card designs: $count designs in $target")
   // The Compose scenes leave non-daemon threads behind.
   exitProcess(0)
 }
+
+/** Draws [staging]'s previews in [shards] processes running this main, one shard each. */
+private fun drawPreviewsInWorkers(staging: File, shards: Int) {
+  val java = File(System.getProperty("java.home"), "bin/java").path
+  val workers =
+    (0 until shards).map { shard ->
+      ProcessBuilder(
+          java,
+          "-Xmx$WORKER_HEAP",
+          "-Dfile.encoding=UTF-8",
+          "-cp",
+          System.getProperty("java.class.path"),
+          "ee.schimke.ha.designs.JvmCardDesignLibraryKt",
+          PREVIEWS_ARG,
+          staging.absolutePath,
+          "$shard",
+          "$shards",
+        )
+        .inheritIO()
+        .start()
+    }
+  val failed = workers.withIndex().filter { (_, worker) -> worker.waitFor() != 0 }
+  check(failed.isEmpty()) {
+    "preview workers ${failed.map { it.index }} of $shards failed (exit ${failed.map { it.value.exitValue() }})"
+  }
+}
+
+private const val PREVIEWS_ARG = "--previews"
+private const val WORKER_HEAP = "1g"
 
 /** Previews drawn by the Compose Multiplatform player, as the web app plays a design. */
 class JvmCardPreviewRenderer(private val density: Float = 2f) : CardPreviewRenderer {
