@@ -9,11 +9,16 @@ import ee.schimke.terrazzo.TerrazzoApplication
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.widget.WidgetInstaller
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -83,9 +88,26 @@ object HaPushReceiver {
           }
         }
       }
-      // What the Terrazzo integration held while the app had no websocket, then the live channel.
-      launch { PushRelay.sync(context, graph, session, webhookId, watchHasApp.value) }
+      // On every connection, what the Terrazzo integration held while the app had none comes
+      // first (PushRelay.sync); the live channel's messages, all newer, wait until it has drained,
+      // so an older held message never replaces or resurrects a newer one with the same tag.
+      val drained = MutableStateFlow(false)
+      launch {
+        session.connectionStatus
+          .map { it == SessionConnectionStatus.Connected }
+          .distinctUntilChanged()
+          .collectLatest { connected ->
+            drained.value = false
+            if (!connected) return@collectLatest
+            try {
+              PushRelay.sync(context, graph, session, webhookId, watchHasApp.value)
+            } finally {
+              drained.value = true
+            }
+          }
+      }
       session.pushNotifications(webhookId).collect { notification ->
+        drained.first { it }
         post(context, session, notification, watchHasApp.value)
       }
     }

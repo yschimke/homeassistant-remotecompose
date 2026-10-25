@@ -7,6 +7,9 @@ import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.mobileapp.PushTarget
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.widget.WidgetActionRunner
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
@@ -54,17 +57,22 @@ object PushRelay {
   ) {
     val relay = BuildConfig.PUSH_RELAY_URL.ifEmpty { null } ?: return
     val token = fcmToken ?: fcmToken() ?: return
-    runCatching {
+    try {
       val (url, secret) = session.registerSilentPush(webhookId, token, relay) ?: return
       val stored = graph.mobileAppStore.get(session.baseUrl)
       if (stored != null && (stored.pushUrl != url || stored.pushToken != secret)) {
         graph.mobileAppRegistrar.updatePush(session.baseUrl, PushTarget(url, secret))
       }
-      for (held in session.takeHeldNotifications(webhookId)) {
-        HaPushReceiver.post(context, session, held, watchHasApp)
+      val held = session.takeHeldNotifications(webhookId)
+      // Taken is gone from the integration: post every one, even if the connection drops now.
+      withContext(NonCancellable) {
+        for (notification in held) HaPushReceiver.post(context, session, notification, watchHasApp)
       }
+    } catch (cancelled: CancellationException) {
+      throw cancelled
+    } catch (failure: Exception) {
+      Log.w(TAG, "Silent push sync failed for ${session.baseUrl}", failure)
     }
-      .onFailure { Log.w(TAG, "Silent push sync failed for ${session.baseUrl}", it) }
   }
 
   /**
