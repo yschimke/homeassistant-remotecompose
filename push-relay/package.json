@@ -3,6 +3,6 @@
   "private": true,
   "description": "Deploy tooling for the push relay (release-build.yml): the Firebase CLI, pinned so Renovate keeps it current. The function itself is in functions/.",
   "devDependencies": {
-    "firebase-tools": "15.32.1"
+    "firebase-tools": "15.34.1"
   }
 }
