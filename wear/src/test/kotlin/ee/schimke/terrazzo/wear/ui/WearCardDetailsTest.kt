@@ -6,6 +6,7 @@ import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -140,5 +141,8 @@ class WearCardDetailsTest {
     assertEquals(100f / 112, fullScreenScale(200f, 112f, 227f, 100f, 227f, true), 0.001f)
     // In a list (unbounded height) on a square screen: the full width.
     assertEquals(1.2f, fullScreenScale(200f, 112f, 240f, Float.POSITIVE_INFINITY, 240f, false))
+    // Never past 1.6 times; below 1 (a small round watch) the card is laid out narrower instead.
+    assertEquals(1.6f, fullScreenScale(200f, 112f, 600f, 600f, 600f, false))
+    assertTrue(fullScreenScale(200f, 112f, 192f, Float.POSITIVE_INFINITY, 192f, true) < 1f)
   }
 }

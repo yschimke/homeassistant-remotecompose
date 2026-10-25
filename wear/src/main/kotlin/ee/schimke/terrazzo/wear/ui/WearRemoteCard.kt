@@ -176,22 +176,23 @@ internal fun WearRemoteCard(
       )
   Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
     BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+      val scale =
+        if (!fullScreen) 1f
+        else
+          fullScreenScale(
+            frame.widthDp,
+            frame.heightDp,
+            maxWidth.value,
+            maxHeight.value,
+            configuration.screenWidthDp.toFloat(),
+            configuration.isScreenRound,
+          )
       val sizing =
-        if (fullScreen) {
+        if (scale > 1f) {
           // Full screen: the widget's layout at its own size, scaled up to what the round screen
           // holds (taps scale with it), rather than a frame the template was never laid out for.
-          Modifier.scaledFrame(
-            frame.widthDp.dp,
-            frame.heightDp.dp,
-            fullScreenScale(
-              frame.widthDp,
-              frame.heightDp,
-              maxWidth.value,
-              maxHeight.value,
-              configuration.screenWidthDp.toFloat(),
-              configuration.isScreenRound,
-            ),
-          )
+          // Never scaled down: that would shrink its touch targets below their minimum.
+          Modifier.scaledFrame(frame.widthDp.dp, frame.heightDp.dp, scale)
         } else {
           // A watch narrower than the frame (before its host has reported one) keeps the frame's
           // height.
@@ -361,8 +362,9 @@ internal fun wearFullScreenContainer(card: CardConfig): String =
 /**
  * How much a full-screen card's [frameWidth] × [frameHeight] frame (dp) is scaled: as large as fits
  * [maxWidth] × [maxHeight] (the space it's given; the height unbounded in a list) and, on a round
- * screen of [screenWidth], the circle's inscribed width for a widget's shape, from 0.75 to 1.6
- * times.
+ * screen of [screenWidth], the circle's inscribed width for a widget's shape, at most 1.6 times.
+ * Below 1 the card isn't scaled at all (a smaller copy would shrink its touch targets): it is laid
+ * out narrower, as in a list.
  */
 internal fun fullScreenScale(
   frameWidth: Float,
@@ -375,7 +377,7 @@ internal fun fullScreenScale(
   val widthLimit = minOf(maxWidth, if (round) screenWidth * ROUND_INSCRIBED_WIDTH else screenWidth)
   val byWidth = widthLimit / frameWidth
   val byHeight = if (maxHeight.isFinite()) maxHeight / frameHeight else Float.MAX_VALUE
-  return minOf(byWidth, byHeight).coerceIn(MIN_FULL_SCREEN_SCALE, MAX_FULL_SCREEN_SCALE)
+  return minOf(byWidth, byHeight).coerceAtMost(MAX_FULL_SCREEN_SCALE)
 }
 
 /**
@@ -383,7 +385,6 @@ internal fun fullScreenScale(
  * then touch the circle (cos of atan(112 / 200)).
  */
 private const val ROUND_INSCRIBED_WIDTH = 0.87f
-private const val MIN_FULL_SCREEN_SCALE = 0.75f
 private const val MAX_FULL_SCREEN_SCALE = 1.6f
 
 /**
