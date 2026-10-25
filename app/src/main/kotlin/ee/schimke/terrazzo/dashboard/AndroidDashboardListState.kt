@@ -13,21 +13,21 @@ import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.HaSession
 
 /**
- * Cached dashboards-list state shared between [DashboardPickerScreen] (the first-launch experience)
- * and the top-bar `DashboardSwitcher` (the in-flight quick-switcher). Both surfaces want the same
- * list — without hoisting we'd re-fetch from HA each time the user opens the dropdown vs. visits
- * the picker, which on a cold network is visible.
+ * Cached dashboards-list state shared between dashboard management and the top-bar
+ * `DashboardSwitcher`. Both surfaces want the same list — without hoisting we'd re-fetch from HA
+ * each time the user opens the dropdown vs. visits the picker, which on a cold network is visible.
  */
 
 /**
  * Load + cache the **unfiltered** dashboards list for the lifetime of [session]. A new [HaSession]
- * (sign-in / demo toggle / sign-out → sign-in) keys a fresh load. Within one session this is one
- * HTTP-equivalent call, and dashboards are stable enough on the HA side that we don't poll.
+ * (sign-in / demo toggle / sign-out → sign-in) keys a fresh load. One resolution pass loads the
+ * choices while this state is mounted; the list is not polled.
  *
- * The result is exactly what HA returned (plus a single "Home" fallback when HA returned nothing —
- * see below). The dashboard **selection** (`PreferencesStore.selectedDashboardUrls`) is applied on
- * top via [rememberSelectedDashboardListState]; this raw version is what the selection screen
- * renders so the user can opt into / out of every dashboard the instance actually exposes.
+ * Live sessions return supported Lovelace dashboards, including HA's default when renderable. An
+ * empty list gets a single "Home" fallback (see below). The dashboard **selection**
+ * (`PreferencesStore.selectedDashboardUrls`) is applied on top via
+ * [rememberSelectedDashboardListState]; this raw version is what the selection screen renders so
+ * the user can opt into / out of every dashboard the instance actually exposes.
  */
 @Composable
 fun rememberDashboardListState(session: HaSession): State<DashboardListState> {
@@ -36,7 +36,7 @@ fun rememberDashboardListState(session: HaSession): State<DashboardListState> {
   // already-known dashboards instead of the loading spinner. The
   // background fetch then upgrades the value to live data; failures
   // leave the cached list in place so an offline relaunch still
-  // shows the picker.
+  // offers dashboard switching.
   val state =
     remember(session) {
       val seed =
@@ -64,13 +64,10 @@ fun rememberDashboardListState(session: HaSession): State<DashboardListState> {
 
 /**
  * Same as [rememberDashboardListState] but with the user's `selectedDashboardUrls` filter applied.
- * The picker and the top-bar switcher both consume this so the user only ever sees the dashboards
- * they opted into during the signin flow / Settings.
+ * The top-bar switcher consumes this so optional dashboard management can limit its choices.
  *
  * Filtering rules:
- * - selection `null` — user hasn't been through the selection screen yet (sign-in flow gates on
- *   this). Show the raw list unfiltered so the brief window before the selection screen mounts
- *   doesn't blank.
+ * - selection `null` — no saved filter: offer every supported dashboard.
  * - selection non-empty — keep only entries whose [DashboardSummary.selectionKey] is in the set. If
  *   everything got filtered out (the user removed a dashboard from HA since choosing), fall back to
  *   the raw list so they at least see *something* and can re-pick from Settings.
@@ -83,35 +80,25 @@ fun rememberSelectedDashboardListState(session: HaSession): State<DashboardListS
   val selectionState =
     LocalTerrazzoGraph.current.preferencesStore.selectedDashboardUrls.collectAsState(initial = null)
   return remember(rawState, selectionState) {
-    derivedStateOf { applySelection(rawState.value, selectionState.value) }
+    derivedStateOf { applyDashboardSelection(rawState.value, selectionState.value) }
   }
 }
 
-private fun applySelection(raw: DashboardListState, selection: Set<String>?): DashboardListState {
+internal fun applyDashboardSelection(
+  raw: DashboardListState,
+  selection: Set<String>?,
+): DashboardListState {
   if (raw !is DashboardListState.Ready || selection.isNullOrEmpty()) return raw
   val filtered =
     raw.dashboards.filter { d ->
       val key = d.urlPath ?: PreferencesStore.DEFAULT_DASHBOARD_SENTINEL
       key in selection
     }
-  // If selection includes the built-in default but HA's response
-  // didn't (it never does — HA hides the unnamed dashboard from
-  // `lovelace/dashboards/list`), stitch it in so the user can open
-  // what they picked.
-  val withDefault =
-    if (
-      PreferencesStore.DEFAULT_DASHBOARD_SENTINEL in selection &&
-        filtered.none { it.urlPath == null }
-    ) {
-      listOf(builtInDefaultDashboard) + filtered
-    } else {
-      filtered
-    }
   // Empty filter result: user's selection no longer matches anything
   // the instance exposes (dashboards renamed / removed). Show the
   // raw list so they're not stuck staring at a blank picker — they
   // can re-run selection from Settings.
-  return if (withDefault.isEmpty()) raw else DashboardListState.Ready(withDefault)
+  return if (filtered.isEmpty()) raw else DashboardListState.Ready(filtered)
 }
 
 private fun List<DashboardSummary>.ifNotEmptyOrHomeFallback(): List<DashboardSummary> = ifEmpty {

@@ -32,6 +32,7 @@ import kotlinx.serialization.json.put
 class LiveHaSessionTest {
   /** A minimal HA: accepts [acceptedToken], answers `get_states` from [states], acks subscribes. */
   private class FakeHa(private val acceptedToken: String) {
+    var defaultRenderable = true
     val offeredTokens = CopyOnWriteArrayList<String>()
     val states = mutableMapOf("light.kitchen" to "off")
     val stateSubscriptions = CopyOnWriteArrayList<Pair<DefaultWebSocketServerSession, Int>>()
@@ -56,6 +57,20 @@ class LiveHaSessionTest {
                 stateSubscriptions += this to id
               }
               send(Frame.Text("""{"id":$id,"type":"result","success":true,"result":null}"""))
+            }
+            "lovelace/dashboards/list" ->
+              send(
+                Frame.Text(
+                  """{"id":$id,"type":"result","success":true,"result":[{"url_path":"climate","title":"Climate"},{"url_path":"generated","title":"Generated"}]}"""
+                )
+              )
+            "lovelace/config" -> {
+              val path = command["url_path"]?.jsonPrimitive?.content
+              val config =
+                if (path == "generated" || (path == null && !defaultRenderable))
+                  """{"strategy":{"type":"home"}}"""
+                else """{"views":[{"title":"Home","cards":[]}]}"""
+              send(Frame.Text("""{"id":$id,"type":"result","success":true,"result":$config}"""))
             }
             "get_states" -> {
               val result = buildJsonArray {
@@ -110,6 +125,22 @@ class LiveHaSessionTest {
 
   private suspend fun HaSession.awaitLiveState(entityId: String, state: String) =
     withTimeout(10_000) { liveStates.first { it?.states?.get(entityId)?.state == state } }
+
+  @Test
+  fun dashboardChoicesIncludeTheUsableDefaultAndSkipGeneratedPages() = testApplication {
+    val ha = FakeHa(acceptedToken = "token")
+    install(WebSockets)
+    routing { webSocket("/api/websocket") { ha.serve(this) } }
+    val session = LiveHaSession("http://localhost", "token", createClient {}.engine)
+    try {
+      session.connect()
+      assertEquals(listOf(null, "climate"), session.listDashboards().map { it.urlPath })
+      ha.defaultRenderable = false
+      assertEquals(listOf("climate"), session.listDashboards().map { it.urlPath })
+    } finally {
+      session.close()
+    }
+  }
 
   @Test
   fun stateChangedEventsReachLiveStatesAndResubscribeAfterAReconnect() = testApplication {
