@@ -304,30 +304,41 @@ private fun ColourRow(
       style = MaterialTheme.typography.labelLarge,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-      PRESET_HUES.forEach { hue ->
-        val selected = hue == control.hue
-        Box(
-          Modifier.size(36.dp)
-            .then(
-              if (selected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
-              else Modifier
+    // Two rows of four: eight 48 dp touch targets don't fit across a phone's panel.
+    PRESET_HUES.chunked(SWATCHES_PER_ROW).forEach { row ->
+      Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+        row.forEach { hue ->
+          val selected = hue == control.hue
+          Box(
+            Modifier.size(48.dp)
+              .selectable(
+                selected = selected,
+                enabled = enabled,
+                role = Role.RadioButton,
+                onClick = { onAction(control.set(hue)) },
+              )
+              .semantics { contentDescription = "Colour ${hueName(hue)}" },
+            contentAlignment = Alignment.Center,
+          ) {
+            Box(
+              Modifier.size(36.dp)
+                .then(
+                  if (selected) {
+                    Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                  } else Modifier
+                )
+                .padding(if (selected) 5.dp else 2.dp)
+                .clip(CircleShape)
+                .background(Color.hsv(hue, 1f, 1f).copy(alpha = if (enabled) 1f else 0.38f))
             )
-            .padding(if (selected) 5.dp else 2.dp)
-            .clip(CircleShape)
-            .background(Color.hsv(hue, 1f, 1f).copy(alpha = if (enabled) 1f else 0.38f))
-            .selectable(
-              selected = selected,
-              enabled = enabled,
-              role = Role.RadioButton,
-              onClick = { onAction(control.set(hue)) },
-            )
-            .semantics { contentDescription = "Colour ${hueName(hue)}" }
-        )
+          }
+        }
       }
     }
   }
 }
+
+private const val SWATCHES_PER_ROW = 4
 
 private fun hueName(hue: Float): String =
   when (hue) {
