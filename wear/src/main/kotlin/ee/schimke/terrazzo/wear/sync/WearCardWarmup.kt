@@ -68,7 +68,7 @@ internal object WearCardWarmup {
           val style = wearWidgetCardStyle(summary.cardStyleOverride, look.style)
           val design = CardDesignTemplates.designCard(card, snapshot, registry)
           val frame = WearWidgetFrame.forContainer(app, wearAppContainer(card, snapshot, registry))
-          val tint = ContainerTint.argbFor(card, snapshot)
+          val tint = ContainerTint.argbFor(card, snapshot, style)
           runCatching {
             (store.syncedCardDesign(card, frame.container)?.let {
                 syncedWearAppTemplate(it, frame, tint)

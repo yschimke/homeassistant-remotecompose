@@ -5,6 +5,8 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.toArgb
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.components.wearBackground
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -14,8 +16,9 @@ import kotlinx.serialization.json.jsonPrimitive
  * The container behind the card is the widget's largest surface, so a tint there says the state
  * before a word is read.
  *
- * Each tint is the state's accent mixed into the container's own dark surface ([base]), a quarter
- * of the way, so light text keeps its contrast on it. Null leaves the container its default.
+ * Each tint is the state's accent mixed into the container's own surface ([base], or a card style's
+ * [wearBackground]), a quarter of the way, so its text keeps its contrast on it. Null leaves the
+ * container its default.
  */
 object ContainerTint {
   /** The container colour Glance Wear fills by default (`surfaceContainerLow`). */
@@ -33,7 +36,16 @@ object ContainerTint {
   /** [card]'s container tint, as ARGB, or null for the default container. */
   fun argbFor(card: CardConfig?, snapshot: HaSnapshot): Int? = colorFor(card, snapshot)?.toArgb()
 
-  fun colorFor(card: CardConfig?, snapshot: HaSnapshot): Color? {
+  /**
+   * [card]'s container fill in [cardStyle], as ARGB: its tint mixed onto the style's surface, the
+   * style's surface untinted, or null for the default container (Classic, untinted).
+   */
+  fun argbFor(card: CardConfig?, snapshot: HaSnapshot, cardStyle: HaUberTheme): Int? {
+    val surface = cardStyle.wearBackground()?.base
+    return (colorFor(card, snapshot, surface ?: base) ?: surface)?.toArgb()
+  }
+
+  fun colorFor(card: CardConfig?, snapshot: HaSnapshot, surface: Color = base): Color? {
     val id = card?.raw?.get("entity")?.jsonPrimitive?.contentOrNull ?: return null
     val entity = snapshot.states[id] ?: return null
     fun attr(key: String) = entity.attributes[key]?.jsonPrimitive?.contentOrNull
@@ -62,6 +74,6 @@ object ContainerTint {
           else null
         else -> null
       } ?: return null
-    return lerp(base, accent, MIX)
+    return lerp(surface, accent, MIX)
   }
 }
