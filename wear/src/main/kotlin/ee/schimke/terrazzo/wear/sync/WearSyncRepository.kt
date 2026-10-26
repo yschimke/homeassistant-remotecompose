@@ -15,6 +15,8 @@ import com.google.android.horologist.data.WearDataLayerRegistry
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.terrazzo.wear.widget.WearWidgetCardStore
+import ee.schimke.terrazzo.wear.widget.applyWidgetCards
+import ee.schimke.terrazzo.wear.widget.refreshAllCardWidgets
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
@@ -28,6 +30,7 @@ import ee.schimke.terrazzo.wearsync.proto.WearPicture
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 import ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
+import ee.schimke.terrazzo.wearsync.proto.WearWidgetCards
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
 import ee.schimke.terrazzo.wearsync.proto.protoPayload
@@ -56,6 +59,7 @@ import kotlinx.serialization.json.jsonPrimitive
  */
 @OptIn(ExperimentalHorologistApi::class)
 class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
+  private val appContext: Context = context.applicationContext
   private val dataClient: DataClient = Wearable.getDataClient(context)
   private val messageClient: MessageClient = Wearable.getMessageClient(context)
   private val nodeClient: NodeClient = Wearable.getNodeClient(context)
@@ -103,6 +107,10 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
     MutableStateFlow(offline.readSlotDesigns() ?: WearSlotDesigns())
   /** The pinned cards' Wear widget designs the phone chose: placed widgets redraw on a change. */
   val slotDesigns: StateFlow<WearSlotDesigns> = _slotDesigns.asStateFlow()
+
+  private val _widgetCardsRevision = MutableStateFlow(0L)
+  /** Changes when the phone's widget card choices arrive and change a placed widget's card. */
+  val widgetCardsRevision: StateFlow<Long> = _widgetCardsRevision.asStateFlow()
 
   private val _values: MutableStateFlow<Map<String, EntityValue>> =
     MutableStateFlow(offline.readValues()?.values ?: emptyMap())
@@ -340,8 +348,18 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
             _sections.value = it
             offline.writeSections(it)
           }
-      // `/wear/slots` (an older phone's widget slot assignments) is ignored: the watch chooses
-      // each widget's card itself.
+      // `/wear/slots` (an older phone's widget slot assignments) is ignored.
+      path == WearSyncPaths.WIDGET_CARDS ->
+        decodeProto<WearWidgetCards>(bytes)?.let { cards ->
+          scope.launch {
+            val nodeId =
+              runCatching { nodeClient.localNode.await().id }.getOrNull() ?: return@launch
+            val changed = applyWidgetCards(widgetCards, nodeId, cards)
+            // Even unchanged here: the listener service may have applied them to the store first.
+            _widgetCardsRevision.update { it + 1 }
+            if (changed) refreshAllCardWidgets(appContext)
+          }
+        }
       path == WearSyncPaths.VALUES ->
         decodeProto<LiveValues>(bytes)?.let { live ->
           // A cold DataItem may predate the last streamed delta persisted on disk. Keep the

@@ -7,6 +7,7 @@ import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import ee.schimke.terrazzo.wear.widget.WearWidgetCardStore
 import ee.schimke.terrazzo.wear.widget.refreshAllCardWidgets
+import ee.schimke.terrazzo.wear.widget.syncWidgetCardsFromDataLayer
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
@@ -22,10 +23,10 @@ import kotlinx.coroutines.runBlocking
  * the app runs.)
  *
  * The manifest filter wakes this only for the rarely written items — dashboards, pins, sections,
- * settings and card designs — never for `/wear/values` or pictures, which change on every refresh:
- * see [forgottenOnDeletion]. A changed design index redraws the widgets ([redrawsOnChange]), which
- * read their new designs from the Data Layer; so do new pins or sections, which a placed widget may
- * show.
+ * settings, card designs and the phone's widget card choices — never for `/wear/values` or
+ * pictures, which change on every refresh: see [forgottenOnDeletion]. A changed design index
+ * redraws the widgets ([redrawsOnChange]), which read their new designs from the Data Layer; so do
+ * new pins or sections, which a placed widget may show.
  *
  * Changed items are kept too ([persistChanged]), so the app opens on what the phone last sent
  * rather than on an older copy it replaces a moment later; and new pins or sections warm their
@@ -55,6 +56,16 @@ class WearDataDeletionListenerService : WearableListenerService() {
         val client = com.google.android.gms.wearable.Wearable.getDataClient(applicationContext)
         for ((path, payload) in changedItems) payload.read(client)?.let {
           store.persistChanged(path, it)
+        }
+      }
+      // The phone chose a widget's card: take its choices and redraw.
+      if (WearSyncPaths.WIDGET_CARDS in changed) {
+        runBlocking {
+          runCatching {
+            if (syncWidgetCardsFromDataLayer(applicationContext)) {
+              refreshAllCardWidgets(applicationContext)
+            }
+          }
         }
       }
       // Called on a background thread: capturing here costs the user nothing.
@@ -159,9 +170,10 @@ internal fun redrawsOnChange(changed: Collection<String>): Boolean =
 
 /**
  * Whether the phone deleting the items at [deleted] paths means it signed out: it deletes the
- * account-wide items (pins, sections) only then. (It deletes an older build's `/wear/slots` then
- * too, but never alone.)
+ * account-wide items (pins, sections, widget card choices) only then. (It deletes an older build's
+ * `/wear/slots` then too, but never alone.)
  */
 internal fun signsOut(deleted: Collection<String>): Boolean = deleted.any { it in SIGN_OUT_MARKERS }
 
-private val SIGN_OUT_MARKERS = setOf(WearSyncPaths.PINNED, WearSyncPaths.SECTIONS)
+private val SIGN_OUT_MARKERS =
+  setOf(WearSyncPaths.PINNED, WearSyncPaths.SECTIONS, WearSyncPaths.WIDGET_CARDS)

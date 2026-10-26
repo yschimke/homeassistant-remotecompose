@@ -53,6 +53,8 @@ class DataLayerDeletionTest {
     // The listener service isn't woken for values or pictures, only for pins and the like.
     val forgotten = forgottenOnDeletion(listOf(WearSyncPaths.PINNED, WearSyncPaths.SLOTS))
     assertTrue(signsOut(listOf(WearSyncPaths.SECTIONS)))
+    // The phone deletes its widget card choices first, and only on sign-out.
+    assertTrue(signsOut(listOf(WearSyncPaths.WIDGET_CARDS)))
     // An older phone deletes `/wear/slots` only with the pins: alone, it isn't a sign-out.
     assertFalse(signsOut(listOf(WearSyncPaths.SLOTS)))
     assertTrue(WearSyncPaths.VALUES in forgotten)

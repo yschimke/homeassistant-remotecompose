@@ -267,6 +267,7 @@
                 <data android:scheme="wear" android:host="*" android:path="/wear/slot-designs" />
                 <data android:scheme="wear" android:host="*" android:path="/wear/settings" />
                 <data android:scheme="wear" android:host="*" android:pathPrefix="/wear/design/" />
+                <data android:scheme="wear" android:host="*" android:path="/wear/widget-cards" />
             </intent-filter>
             <!-- The watch's own Home Assistant token, which the phone may send while the app is closed. -->
             <intent-filter>
@@ -293,29 +294,9 @@
             android:exported="false" />
 
         <!--
-          Picks the card a Terrazzo widget shows, from the cards the phone shows on the watch.
-          The Glance Wear provider-configuration contract: the PROVIDER_CONFIG category plus
-          DEFAULT, launched with the widget's instance id and provider component (see
-          GlanceWearWidget.EXTRA_CONFIG_WIDGET_ID / EXTRA_CONFIG_PROVIDER_COMPONENT). Whether a
-          widget host launches it when a widget is added is up to the host; the Terrazzo app's
-          Widgets screen opens the same picker. Exported so the host can start it.
-        -->
-        <activity
-            android:name=".widget.WearWidgetConfigActivity"
-            android:exported="true"
-            android:taskAffinity=""
-            android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
-            <intent-filter>
-                <action android:name="ee.schimke.terrazzo.wear.ACTION_CONFIGURE_WIDGET" />
-                <category android:name="com.google.android.clockwork.tiles.category.PROVIDER_CONFIG" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
-        <!--
           The two Terrazzo widget providers, one per Glance Wear container size: each service's
           wearwidget-provider XML declares one container type, so the system widget picker
-          offers both sizes. Every placed widget shows its own card, chosen on the watch.
+          offers both sizes. Every placed widget shows its own card, chosen on the phone.
 
           Both start `android:enabled="false"`; WearWidgetsController enables them on API 37+
           while the phone shows any card on the watch. Each service binds via the Glance Wear
@@ -326,9 +307,6 @@
           BIND_TILE_PROVIDER, the system permission Wear OS holds when it binds a widget or tile
           provider, so no other app can bind one and read the card it renders.
 
-          PROVIDER_CONFIG_ACTION names the configuration activity's action, as tile providers
-          do; best effort, since Glance Wear documents the activity contract but not how the
-          host finds it.
         -->
         <service
             android:name=".widget.CardSmallWidgetService"
@@ -343,9 +321,6 @@
             <meta-data
                 android:name="androidx.glance.wear.widget.provider"
                 android:resource="@xml/wear_slot_widget_provider_small" />
-            <meta-data
-                android:name="com.google.android.clockwork.tiles.PROVIDER_CONFIG_ACTION"
-                android:value="ee.schimke.terrazzo.wear.ACTION_CONFIGURE_WIDGET" />
         </service>
         <service
             android:name=".widget.CardLargeWidgetService"
@@ -360,9 +335,6 @@
             <meta-data
                 android:name="androidx.glance.wear.widget.provider"
                 android:resource="@xml/wear_slot_widget_provider_large" />
-            <meta-data
-                android:name="com.google.android.clockwork.tiles.PROVIDER_CONFIG_ACTION"
-                android:value="ee.schimke.terrazzo.wear.ACTION_CONFIGURE_WIDGET" />
         </service>
     </application>
 </manifest>

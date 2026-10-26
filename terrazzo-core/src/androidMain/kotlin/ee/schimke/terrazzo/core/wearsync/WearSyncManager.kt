@@ -32,6 +32,16 @@ interface WearSyncManager {
   val streamActive: StateFlow<Boolean>
 
   /**
+   * The Terrazzo widgets placed on the paired watches, each with the card the phone chose: what is
+   * really placed, as each watch reports it.
+   */
+  val watchWidgets: StateFlow<List<WatchWidget>>
+    get() = NO_WATCH_WIDGETS
+
+  /** Shows the card [cardKey] on [instanceId], a widget on watch [nodeId]. */
+  fun chooseWatchWidgetCard(nodeId: String, instanceId: Int, cardKey: String) {}
+
+  /**
    * Whether the wear data-layer API is usable on this device. Stays `true` on unknown /
    * not-yet-probed (optimistic) and flips to `false` once a Google Play Services call comes back
    * with `API_NOT_CONNECTED` — typically a phone without a paired Wear device or without the
@@ -49,6 +59,8 @@ interface WearSyncManager {
     inputEditing: StateFlow<Boolean> = MutableStateFlow(false),
   )
 }
+
+private val NO_WATCH_WIDGETS: StateFlow<List<WatchWidget>> = MutableStateFlow(emptyList())
 
 /**
  * Inert [WearSyncManager] for environments without a paired wear device (previews, Robolectric,

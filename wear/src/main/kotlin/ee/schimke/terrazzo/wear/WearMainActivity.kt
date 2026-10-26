@@ -177,6 +177,7 @@ private fun WearApp(
   val selectedCardStyle = settings.wearCardLook().style
   val pinned: PinnedCardSet by repo.pinned.collectAsState()
   val sections: PinnedSectionSet by repo.sections.collectAsState()
+  val widgetCardsRevision by repo.widgetCardsRevision.collectAsState()
   val dashboards: List<DashboardData> by repo.dashboards.collectAsState()
   val values by repo.values.collectAsState()
 
@@ -374,7 +375,7 @@ private fun WearApp(
             WearWidgetsScreen(
               pinned = pinned,
               sections = sections,
-              values = values,
+              widgetCardsRevision = widgetCardsRevision,
               onBack = { screen = WearScreen.Settings },
               modifier = Modifier.fillMaxSize(),
             )

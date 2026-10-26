@@ -6,8 +6,11 @@ import ee.schimke.terrazzo.wearsync.proto.PinnedCard
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSection
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
+import ee.schimke.terrazzo.wearsync.proto.WearWidgetCardChoice
+import ee.schimke.terrazzo.wearsync.proto.WearWidgetCards
 import java.io.File
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.After
@@ -162,5 +165,30 @@ class WearWidgetCardStoreTest {
     val options = listOf(clock, tile, forecast)
     assertEquals(options, options.forWidget(large = false))
     assertEquals(listOf(tile), options.forWidget(large = true))
+  }
+
+  @Test
+  fun thePhonesChoicesForThisWatchAreKept() {
+    val store = WearWidgetCardStore(context)
+    store.write(7, WearWidgetCard("pin-kitchen", kitchen, chosenAtMs = 1))
+    store.write(8, WearWidgetCard("pin-door", door, chosenAtMs = 1))
+    val cards =
+      WearWidgetCards(
+        cards =
+          listOf(
+            WearWidgetCardChoice("this-watch", 7, "pin-office", office),
+            WearWidgetCardChoice("this-watch", 9, "pin-boiler", boiler),
+            // Another watch's widget 8: not this one's.
+            WearWidgetCardChoice("other-watch", 8, "pin-office", office),
+          ),
+        updatedAtMs = 50,
+      )
+    assertTrue(applyWidgetCards(store, "this-watch", cards))
+    assertEquals(WearWidgetCard("pin-office", office, chosenAtMs = 50), store.read(7))
+    assertEquals("pin-boiler", store.read(9)?.cardKey)
+    // Not named for this watch: keeps what it has.
+    assertEquals("pin-door", store.read(8)?.cardKey)
+    // The same choices again change nothing.
+    assertFalse(applyWidgetCards(store, "this-watch", cards.copy(updatedAtMs = 60)))
   }
 }

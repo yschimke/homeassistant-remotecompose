@@ -23,6 +23,8 @@ import kotlinx.serialization.Serializable
  *     - `/wear/picture/<entityId>` — [WearPicture]
  *     - `/wear/slot-designs` — [WearSlotDesigns]
  *     - `/wear/design/<sha256>` — [WearDesignBlob]
+ *     - `/wear/placed-widgets` — [WearPlacedWidgets] (wear → phone, one per watch node)
+ *     - `/wear/widget-cards` — [WearWidgetCards] (phone → wear)
  *     - `/wear/notification/<id>` — [WearNotification] (phone → wear; either side deletes it to
  *       dismiss on both)
  * - MessageClient (ephemeral):
@@ -136,6 +138,47 @@ data class WearSlotDesign(
 /** A Wear widget design's Remote Compose template, content-addressed by [sha256]. */
 @Serializable class WearDesignBlob(val sha256: String = "", val rc: ByteArray = ByteArray(0))
 
+/**
+ * Wear → phone: the Terrazzo widgets placed on this watch, as its widget host lists them. Each
+ * watch writes its own item; the phone answers with [WearWidgetCards].
+ */
+@Serializable
+data class WearPlacedWidgets(
+  val widgets: List<WearPlacedWidget> = emptyList(),
+  /** The watch's display name, for the phone's list when more than one watch is paired. */
+  val nodeName: String = "",
+  val updatedAtMs: Long = 0L,
+)
+
+@Serializable
+data class WearPlacedWidget(
+  /** The Glance Wear widget instance id. */
+  val instanceId: Int = 0,
+  val large: Boolean = false,
+  /** The card the widget shows now, empty for none: carries a watch-made choice over. */
+  val cardKey: String = "",
+)
+
+/**
+ * Phone → wear: the card each placed widget shows. The phone chooses; a watch takes the entries
+ * naming its own node and keeps a copy of each card.
+ */
+@Serializable
+data class WearWidgetCards(
+  val cards: List<WearWidgetCardChoice> = emptyList(),
+  val updatedAtMs: Long = 0L,
+)
+
+@Serializable
+data class WearWidgetCardChoice(
+  /** The watch's Data Layer node id. */
+  val nodeId: String = "",
+  val instanceId: Int = 0,
+  /** A [WearWidgetCardOption.cardKey]. */
+  val cardKey: String = "",
+  val card: CardSummary = CardSummary(),
+)
+
 /** MessageClient stream frame — only entities that changed. */
 @Serializable
 data class StreamUpdate(val deltas: List<EntityDelta> = emptyList(), val capturedAtMs: Long = 0L)
@@ -145,8 +188,8 @@ data class EntityDelta(val entityId: String = "", val value: EntityValue = Entit
 
 /**
  * User-curated pinned cards. Top-level destinations on Wear, and (with the pinned sections' cards)
- * what the watch's widget picker offers; a placed widget remembers its card by
- * [PinnedCard.cardKey].
+ * what the phone offers for a watch widget ([wearWidgetCardOptions]); a placed widget names its
+ * card by [PinnedCard.cardKey].
  */
 @Serializable
 data class PinnedCardSet(val cards: List<PinnedCard> = emptyList(), val updatedAtMs: Long = 0L)
@@ -185,7 +228,7 @@ data class PinnedSection(
 
 /**
  * Unused: kept for wire compatibility with older phone and watch builds. Phones no longer write
- * `/wear/slots` and watches ignore it; a watch widget's card is chosen on the watch.
+ * `/wear/slots` and watches ignore it; a watch widget's card comes from [WearWidgetCards].
  *
  * Was: mobile-assigned widget slot map. Wear declared 5 widget providers (Slot0 … Slot4); each
  * [WidgetSlot] points its slot at a pinned card via [PinnedCard.cardKey]. An unassigned slot
@@ -325,6 +368,10 @@ object WearSyncPaths {
   const val PICTURE_PREFIX: String = "/wear/picture/"
   const val SLOT_DESIGNS: String = "/wear/slot-designs"
   const val DESIGN_PREFIX: String = "/wear/design/"
+  /** [WearPlacedWidgets], written by each watch. */
+  const val PLACED_WIDGETS: String = "/wear/placed-widgets"
+  /** [WearWidgetCards], written by the phone. */
+  const val WIDGET_CARDS: String = "/wear/widget-cards"
   const val LEASE_MESSAGE: String = "/wear/lease"
   const val STREAM_MESSAGE: String = "/wear/stream"
   const val ACCESS_REQUEST_MESSAGE: String = "/wear/access/request"

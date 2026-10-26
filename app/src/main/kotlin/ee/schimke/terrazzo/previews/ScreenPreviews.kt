@@ -468,6 +468,44 @@ fun Screen_Widgets_Installed() = PhoneHost {
 }
 
 @Preview(
+  name = "widgets · watch",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_Widgets_Watch() = PhoneHost {
+  val options =
+    listOf(
+      ee.schimke.terrazzo.core.wearsync.WatchWidgetCardOption("front", "Front door"),
+      ee.schimke.terrazzo.core.wearsync.WatchWidgetCardOption("kitchen", "Kitchen"),
+    )
+  WidgetsContent(
+    widgets = listOf(InstalledWidget("Front door", cardTypeLabel("tile"))),
+    watchWidgets =
+      listOf(
+        ee.schimke.terrazzo.core.wearsync.WatchWidget(
+          "w",
+          "Pixel Watch",
+          1,
+          false,
+          "front",
+          options,
+        ),
+        ee.schimke.terrazzo.core.wearsync.WatchWidget(
+          "w",
+          "Pixel Watch",
+          2,
+          true,
+          "kitchen",
+          options,
+        ),
+      ),
+    onBack = {},
+  )
+}
+
+@Preview(
   name = "widgets · theme",
   showBackground = false,
   widthDp = PHONE_WIDTH_DP,
