@@ -54,6 +54,7 @@ import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
+import ee.schimke.ha.design.HaSharedValues
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CommonCaptureHost
 import ee.schimke.ha.rc.FramedCard
@@ -144,6 +145,12 @@ class UiBuilderDesignCompiler(
       if (catalog != CATALOG) add("its catalog is `$catalog`, not `$CATALOG`")
       if (roots.size != 1) add("a card design has one root, not ${roots.size}")
       roots.filter { it !in nodes }.forEach { add("root $it is not a node") }
+      // A card's own values are bare (USER); the only other domain a host pushes is the shared one.
+      variables.keys
+        .filter { ':' in it && !HaSharedValues.isShared(it) }
+        .forEach {
+          add("state `$it`: `${it.substringBefore(':')}:` isn't a domain a card is pushed")
+        }
       nodes.forEach { (id, node) ->
         val component = node.string("componentId")
         if (component !in COMPONENTS) add("$id: `$component` isn't drawn here yet")
@@ -471,7 +478,7 @@ class UiBuilderDesignCompiler(
         "state" -> {
           val name = obj.string("variable")!!
           val initial = variables[name]?.get("initialValue")?.jsonPrimitive?.booleanOrNull ?: false
-          RemoteBoolean.createNamedRemoteBoolean(name, initial, RemoteState.Domain.User)
+          RemoteBoolean.createNamedRemoteBoolean(bare(name), initial, domainOf(name))
         }
         "expr" -> {
           val args = obj.getValue("args").jsonArray
@@ -497,16 +504,16 @@ class UiBuilderDesignCompiler(
       return when (declaration["valueType"]?.jsonPrimitive?.contentOrNull) {
         "bool" ->
           RemoteBoolean.createNamedRemoteBoolean(
-              name,
+              bare(name),
               initial?.booleanOrNull ?: false,
-              RemoteState.Domain.User,
+              domainOf(name),
             )
             .select(1f.rf, 0f.rf)
         else ->
           RemoteFloat.createNamedRemoteFloat(
-            name,
+            bare(name),
             initial?.floatOrNull ?: 0f,
-            RemoteState.Domain.User,
+            domainOf(name),
           )
       }
     }
@@ -516,8 +523,19 @@ class UiBuilderDesignCompiler(
       if (obj.string("type") != "state") return literal(obj)?.contentOrNull?.rs
       val name = obj.string("variable")!!
       val initial = variables[name]?.get("initialValue")?.jsonPrimitive?.contentOrNull.orEmpty()
-      return RemoteString.createNamedRemoteString(name, initial, RemoteState.Domain.User)
+      return RemoteString.createNamedRemoteString(bare(name), initial, domainOf(name))
     }
+
+    /**
+     * A state variable's named-value domain: a shared value's own (`HA:sun.sun.elevation`, pushed
+     * by every host as [HaSharedValues]), else `USER`, where a card's own values are pushed.
+     */
+    private fun domainOf(name: String): RemoteState.Domain =
+      if (HaSharedValues.isShared(name)) SHARED_DOMAIN else RemoteState.Domain.User
+
+    /** [name] without its domain: the domain prefixes it again in the document. */
+    private fun bare(name: String): String =
+      if (HaSharedValues.isShared(name)) name.removePrefix(HaSharedValues.PREFIX) else name
 
     /**
      * A colour value: a literal (`#RRGGBB`, `#AARRGGBB`), or a theme role (`colorToken`) resolved
@@ -556,6 +574,7 @@ class UiBuilderDesignCompiler(
 
   companion object {
     const val CATALOG = "ha-cards"
+    private val SHARED_DOMAIN = RemoteState.Domain(HaSharedValues.DOMAIN)
     private const val BOX = "layout/box"
     private const val COLUMN = "layout/column"
     private const val ROW = "layout/row"

@@ -5,12 +5,14 @@ import ee.schimke.composeai.rcplayer.edit.RcTargetProfiles
 import ee.schimke.composeai.rcplayer.edit.namedVariables
 import ee.schimke.composeai.rcplayer.edit.validateFor
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
+import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.design.DeviceMatch
+import ee.schimke.ha.design.HaSharedValues
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -88,9 +90,9 @@ data class PublishRequest(
 /**
  * Why [bytes] can't stand in for [base], or null when they can: they must decode, play on [profile]
  * (the app's Remote Compose profile, or a Wear widget's), and bind only values the card provides
- * (what [base] binds). Named values without a dot are the design's own state, which a card never
- * pushes, so they are allowed; so are the colours a Wear widget host supplies (`WearM3.*`) when
- * [profile] is the Wear widgets'.
+ * (what [base] binds, or a value every home shares: [HaSharedValues]). Named values without a dot
+ * are the design's own state, which a card never pushes, so they are allowed; so are the colours a
+ * Wear widget host supplies (`WearM3.*`) when [profile] is the Wear widgets'.
  *
  * With [likeBase], ops outside [profile] that [base] uses too are allowed: for a template this
  * server captured as it captures the library, which the app already plays with them.
@@ -115,10 +117,27 @@ fun userTemplateProblem(
       return "it uses something the app can't play: ${it.message}"
     }
   val provided = base.bindings.map { it.name }.toSet()
+  val read = document.namedVariables.map { it.name.removePrefix(DesignLibrary.USER_PREFIX) }
+  val unshared =
+    read.filter { HaSharedValues.isShared(it) && HaSharedValues.valueOf(it) == null }.distinct()
+  if (unshared.isNotEmpty()) {
+    return "it reads ${unshared.sorted().joinToString()}, which no home shares. The shared " +
+      "values are ${HaSharedValues.values.joinToString { it.name }}"
+  }
+  // The player drops a pushed value whose type the document declares differently.
+  document.namedVariables
+    .firstOrNull { variable ->
+      HaSharedValues.valueOf(variable.name)?.let { variable.type != playerType(it.kind) } == true
+    }
+    ?.let {
+      val value = HaSharedValues.valueOf(it.name)!!
+      return "it reads ${value.name} as the wrong type: it's a ${value.kind.name.lowercase()}"
+    }
   val unknown =
-    document.namedVariables
-      .map { it.name.removePrefix(DesignLibrary.USER_PREFIX) }
+    read
       .filter { '.' in it && it !in provided }
+      // A watch doesn't push shared values yet: a Wear widget reading one would never update.
+      .filterNot { profile != RcTargetProfiles.WEAR_WIDGETS && HaSharedValues.valueOf(it) != null }
       .filterNot {
         profile == RcTargetProfiles.WEAR_WIDGETS &&
           (it.startsWith(WEAR_HOST_COLOURS) || it in WEAR_HOST_FRAME)
@@ -130,6 +149,14 @@ fun userTemplateProblem(
   }
   return null
 }
+
+/** The named variable type a host pushes a shared value of [kind] as: a flag is an int. */
+private fun playerType(kind: HaSharedValues.Kind): Int =
+  when (kind) {
+    HaSharedValues.Kind.Text -> RcNamedVariable.STRING_TYPE
+    HaSharedValues.Kind.Bool -> RcNamedVariable.INT_TYPE
+    HaSharedValues.Kind.Float -> RcNamedVariable.FLOAT_TYPE
+  }
 
 /** The named colours a Glance Wear widget host supplies (Remote Material 3's). */
 private const val WEAR_HOST_COLOURS = "WearM3."

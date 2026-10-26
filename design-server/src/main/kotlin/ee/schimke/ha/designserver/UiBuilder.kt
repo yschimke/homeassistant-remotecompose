@@ -767,11 +767,15 @@ object UiBuilderSeed {
   fun unsupported(schema: CardSchema): List<BindingSchema> =
     schema.bindings.filterNot { supports(it.type) }
 
-  /** A binding as a UI Builder state variable; null for kinds it has no state type for. */
-  /** [schema]'s bindings as UI Builder state variables, those UI Builder has a type for. */
+  /**
+   * [schema]'s bindings as UI Builder state variables, those UI Builder has a type for, then the
+   * values every home shares ([CardSchema.shared]), so a designer finds `HA:sun.sun.elevation`
+   * beside the card's own.
+   */
   fun stateVariables(schema: CardSchema): List<Pair<String, JsonObject>> =
-    schema.bindings.mapNotNull { b -> stateVariable(b)?.let { b.name to it } }
+    (schema.bindings + schema.shared).mapNotNull { b -> stateVariable(b)?.let { b.name to it } }
 
+  /** A binding as a UI Builder state variable; null for kinds it has no state type for. */
   private fun stateVariable(binding: BindingSchema): JsonObject? {
     val (type, valueType, default) =
       when (binding.type) {

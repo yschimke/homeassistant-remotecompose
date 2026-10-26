@@ -198,6 +198,39 @@ class UserDesignsTest {
       .jsonObject
 
   /**
+   * [handmade], its inside dimmed by [variable], a value its card doesn't push, declared as
+   * [valueType]. The app pushes the `HA:` values every home shares to every design.
+   */
+  private fun dimmedBy(variable: String, valueType: String = "float"): JsonObject {
+    val read =
+      if (valueType == "bool")
+        """{"type": "expr", "op": "select", "args": [{"type": "state", "variable": "$variable"},""" +
+          """ {"type": "float", "value": 1}, {"type": "float", "value": 0}]}"""
+      else """{"type": "state", "variable": "$variable"}"""
+    val initial = if (valueType == "bool") "false" else "0"
+    val document = handmade.toString()
+    val dimmed =
+      document
+        .replace(
+          """"stateVariables":{""",
+          """"stateVariables":{"$variable":{"type":"value","valueType":"$valueType",""" +
+            """"nullable":false,"initialValue":$initial,"persistence":"design"},""",
+        )
+        .replace(
+          """"modifiers":[{"type":"fillMaxSize"}]}""",
+          """"modifiers":[{"type":"fillMaxSize"},{"type":"alpha","alpha":""" +
+            """{"type":"expr","op":"smoothstep","args":[{"type":"float","value":-6},""" +
+            """{"type":"float","value":6},$read]}}]}""",
+        )
+    check(dimmed.length > document.length + 200) { "the fixture changed shape" }
+    return Json.parseToJsonElement(dimmed).jsonObject
+  }
+
+  private val sunlit = dimmedBy("HA:sun.sun.elevation")
+  private val peeking = dimmedBy("HA:lock.front_door.numeric_state")
+  private val mistyped = dimmedBy("HA:sun.sun.elevation", valueType = "bool")
+
+  /**
    * Who UI Builder says may edit each design: octocat owns the test designs, mallory owns
    * `mallorys` (which exports fine) and only lets octocat view `viewed`.
    */
@@ -212,7 +245,10 @@ class UserDesignsTest {
       "wear",
       "framed",
       "foreign",
-      "handmade" -> """{"ownerActorId":"github:octocat","actorGrants":[]}"""
+      "handmade",
+      "sunlit",
+      "peeking",
+      "mistyped" -> """{"ownerActorId":"github:octocat","actorGrants":[]}"""
       else -> null
     }
 
@@ -253,10 +289,18 @@ class UserDesignsTest {
             call.respondText("created", status = HttpStatusCode.Created)
           }
           post("/ui-builder/{id}/access") { call.respondText("", status = HttpStatusCode.SeeOther) }
-          get("/api/ui-builder/v1/designs/handmade") {
-            call.respondText(handmade.toString(), ContentType.Application.Json)
+          for ((id, document) in
+            listOf(
+              "handmade" to handmade,
+              "sunlit" to sunlit,
+              "peeking" to peeking,
+              "mistyped" to mistyped,
+            )) {
+            get("/api/ui-builder/v1/designs/$id") {
+              call.respondText(document.toString(), ContentType.Application.Json)
+            }
           }
-          get("/api/ui-builder/v1/designs/handmade/assets/{key}") {
+          get("/api/ui-builder/v1/designs/{id}/assets/{key}") {
             val color =
               if (call.parameters["key"] == "door") java.awt.Color.RED else java.awt.Color.GREEN
             call.respondBytes(picture(color), ContentType.Image.PNG)
@@ -720,20 +764,7 @@ class UserDesignsTest {
 
   @Test
   fun aDesignUiBuilderCannotExportIsBuiltHereAndBindsTheCard() = testApplication {
-    // The library as this server captures it on the JVM, which the compiled design is held to.
-    val f =
-      fixture(
-        library(
-          base =
-            ee.schimke.ha.rc.CardDesignTemplates.capture(
-                ee.schimke.ha.rc.CommonCaptureHost(
-                  ee.schimke.ha.designs.LibraryCaptureProfile.OPERATIONS
-                ),
-                key,
-              )
-              .bytes
-        )
-      )
+    val f = compilingFixture()
     val published = f.publish("handmade")
     assertEquals(HttpStatusCode.Created, published.status, published.bodyAsText())
     val design = json.decodeFromString(UserDesign.serializer(), published.bodyAsText())
@@ -746,6 +777,57 @@ class UserDesignsTest {
         .filterIsInstance<RcNamedVariable>()
         .map { it.name }
     assertTrue("USER:light.s0.is_on" in names, "named: $names")
+  }
+
+  /** The library as this server captures it on the JVM, which a compiled design is held to. */
+  private fun ApplicationTestBuilder.compilingFixture() =
+    fixture(
+      library(
+        base =
+          ee.schimke.ha.rc.CardDesignTemplates.capture(
+              ee.schimke.ha.rc.CommonCaptureHost(
+                ee.schimke.ha.designs.LibraryCaptureProfile.OPERATIONS
+              ),
+              key,
+            )
+            .bytes
+      )
+    )
+
+  @Test
+  fun aDesignMayReadTheValuesEveryHomeShares() = testApplication {
+    val f = compilingFixture()
+    val published = f.publish("sunlit")
+    assertEquals(HttpStatusCode.Created, published.status, published.bodyAsText())
+    val design = json.decodeFromString(UserDesign.serializer(), published.bodyAsText())
+    val bytes = assertNotNull(UserDesignStore(f.storeDir).blob(design.entry.sha256))
+    val named =
+      RcDocumentCodec.decode(bytes, RcWireLimits())
+        .operations
+        .filterIsInstance<RcNamedVariable>()
+        .associate { it.name to it.type }
+    // In the shared domain, not the card's own, as a float: the type the app pushes it as.
+    assertEquals(RcNamedVariable.FLOAT_TYPE, named["HA:sun.sun.elevation"], "named: $named")
+    assertTrue(named.keys.none { it.startsWith("USER:HA") }, "named: $named")
+  }
+
+  @Test
+  fun aDesignCannotReadAnEntityOfTheHomeItPlaysIn() = testApplication {
+    val f = compilingFixture()
+    val refused = f.publish("peeking")
+    assertEquals(HttpStatusCode.UnprocessableEntity, refused.status)
+    val message = refused.bodyAsText()
+    assertTrue("HA:lock.front_door.numeric_state" in message, message)
+    // It says what a design may read instead.
+    assertTrue("HA:sun.sun.elevation" in message, message)
+  }
+
+  @Test
+  fun aSharedValueReadAsTheWrongTypeIsRefused() = testApplication {
+    val f = compilingFixture()
+    val refused = f.publish("mistyped")
+    assertEquals(HttpStatusCode.UnprocessableEntity, refused.status)
+    assertTrue("wrong type" in refused.bodyAsText(), refused.bodyAsText())
   }
 
   @Test

@@ -145,11 +145,15 @@ class UiBuilderTest {
       document["catalogPin"]!!.jsonObject["systemId"]!!.jsonPrimitive.content,
     )
     val state = document["stateVariables"]!!.jsonObject
-    assertEquals(schema.bindings.map { it.name }.toSet(), state.keys)
+    assertEquals((schema.bindings + schema.shared).map { it.name }.toSet(), state.keys)
     assertEquals(
       "bool",
       state.getValue("light.s0.is_on").jsonObject["valueType"]!!.jsonPrimitive.content,
     )
+    // The values every home shares are there to find, on a sunny afternoon.
+    val elevation = state.getValue("HA:sun.sun.elevation").jsonObject
+    assertEquals("float", elevation["valueType"]!!.jsonPrimitive.content)
+    assertEquals(25.0, elevation["initialValue"]!!.jsonPrimitive.content.toDouble())
 
     val nodes = document["nodes"]!!.jsonObject
     // Every state reference names a declared variable.
@@ -402,7 +406,10 @@ class UiBuilderTest {
       )
     assertEquals(listOf("camera.s0.image"), UiBuilderSeed.unsupported(schema).map { it.name })
     val state = UiBuilderSeed.document(schema, "d", "t")["stateVariables"]!!.jsonObject
-    assertEquals(setOf("camera.s0.name"), state.keys)
+    assertEquals(
+      setOf("camera.s0.name"),
+      state.keys.filterNot { ee.schimke.ha.design.HaSharedValues.isShared(it) }.toSet(),
+    )
   }
 
   @Test

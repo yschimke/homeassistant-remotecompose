@@ -432,6 +432,73 @@ class UiBuilderDesignCompilerTest {
   }
 
   @Test
+  fun aSharedValueFromHomeAssistantDrivesADesignLive() {
+    // Night by the sun Home Assistant reports for the home, not by a sum in the design.
+    val elevation = "HA:sun.sun.elevation"
+    val night =
+      withScrim(
+        """{"type": "expr", "op": "mul", "args": [{"type": "float", "value": 0.8},
+             {"type": "expr", "op": "sub", "args": [{"type": "float", "value": 1},
+               {"type": "expr", "op": "smoothstep", "args": [{"type": "float", "value": -6},
+                 {"type": "float", "value": 6}, {"type": "state", "variable": "$elevation"}]}]}]}"""
+      )
+    val design =
+      JsonObject(
+        night +
+          ("stateVariables" to
+            JsonObject(
+              night.getValue("stateVariables").jsonObject +
+                (elevation to
+                  Json.parseToJsonElement(
+                    """{"type": "value", "valueType": "float", "nullable": false,
+                        "initialValue": 25, "persistence": "design"}"""
+                  ))
+            ))
+      )
+    assertEquals(emptyList(), compiler.problems(design, assets.keys))
+    val bytes = compiler.compile(design, assets, key)
+    // Declared in the shared domain, beside the card's own in USER.
+    val declared =
+      RcDocumentCodec.decode(bytes, RcWireLimits())
+        .operations
+        .filterIsInstance<RcNamedVariable>()
+        .map { it.name }
+    assertTrue(elevation in declared && "USER:cover.s0.is_on" in declared, "declared: $declared")
+    // A domain no host pushes is refused.
+    val foreign =
+      JsonObject(
+        design +
+          ("stateVariables" to
+            JsonObject(
+              design.getValue("stateVariables").jsonObject +
+                ("SYSTEM:clock" to design.getValue("stateVariables").jsonObject.getValue(elevation))
+            ))
+      )
+    assertTrue(compiler.problems(foreign, assets.keys).any { "SYSTEM:clock" in it })
+    // Pushed the way the app pushes them: every shared value, from the snapshot's sun.sun.
+    fun at(elevationDegrees: Double): Bitmap {
+      val sun =
+        ee.schimke.ha.model.EntityState(
+          "sun.sun",
+          if (elevationDegrees > 0) "above_horizon" else "below_horizon",
+          kotlinx.serialization.json.buildJsonObject {
+            put("elevation", JsonPrimitive(elevationDegrees))
+          },
+        )
+      val shared =
+        ee.schimke.ha.design.HaSharedValues.bindings(
+          ee.schimke.ha.model.HaSnapshot(states = mapOf("sun.sun" to sun))
+        )
+      val values =
+        shared.floats.mapValues { RcNamedValue.FloatValue(it.value) } +
+          ("cover.s0.is_on" to RcNamedValue.Integer(1))
+      return play(bytes, values)
+    }
+    assertEquals(Triple(0, 255, 0), at(30.0).rgb(10, 10))
+    assertTrue(at(-12.0).rgb(10, 10).second < 100, "night: ${at(-12.0).rgb(10, 10)}")
+  }
+
+  @Test
   fun theSunsElevationIsDrawnInUiBuildersExpressions() {
     // A night scrim by the sun: declination from the day of the year, hour angle from local
     // time, the UTC offset and the longitude, faded through civil twilight.

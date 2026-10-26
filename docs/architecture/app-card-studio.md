@@ -167,15 +167,55 @@ own ops, with its arities: arithmetic, `min`/`max`/`clamp`, trigonometry,
 numbers by a boolean. They become Remote Compose's own operations, so the player
 evaluates them live: the card follows state and the clock with no re-encode.
 
-Day and night, for one: a scrim's alpha can be the sun's elevation at the design's
-location, faded through civil twilight. The declination comes from `time.dayOfYear`,
-the hour angle from `time.minuteOfDay`, `time.utcOffset` and the longitude, and the
-elevation is `degrees(asin(sin φ·sin δ + cos φ·cos δ·cos H))`; night is
-`1 - smoothstep(-6, 6, elevation)`. It needs no host: a widget dims at dusk with
-nothing pushed to it. State
-variables become named values in the `USER` domain, so one named for a card binding
-(`cover.s0.is_on`) is the value the app pushes: the card follows Home Assistant
-without a re-encode.
+State variables become named values in the `USER` domain, so one named for a card
+binding (`cover.s0.is_on`) is the value the app pushes: the card follows Home
+Assistant without a re-encode.
+
+#### Shared values: `HA:<entity_id>.<value>`
+
+A design names its card's own entities by slot (`cover.s0.is_on`), so it fits every
+card of its shape and carries nobody's entity ids. Some entities need no slot,
+because every Home Assistant has them under the same id. They have a named-value
+domain of their own, `HA:`, beside the card's own `USER:`: a design reads one as a
+state variable named `HA:<entity_id>.<value>`, which becomes the document's
+`HA:sun.sun.elevation`, and the app pushes them, under those full names, to every
+design beside the card's own values (`HaSharedValues`, `:ha-model`). A player takes
+a pushed name with a domain as it is and puts a bare one in `USER:`; the AndroidX
+View player, whose setters only write `USER:`, gets the full name on its document
+view. No other domain is drawn: a state variable in one is refused.
+
+| Name | Type | Value |
+| --- | --- | --- |
+| `HA:sun.sun.state` | text | `above_horizon` or `below_horizon` |
+| `HA:sun.sun.is_available` | bool | false when the sun integration is off: guard the rest with it |
+| `HA:sun.sun.above_horizon` | bool | the sun is up |
+| `HA:sun.sun.elevation` | float | degrees above the horizon; negative at night, below −6 after civil dusk |
+| `HA:sun.sun.azimuth` | float | compass bearing in degrees |
+| `HA:sun.sun.rising` | bool | true before solar noon |
+| `HA:sun.sun.next_dawn.minute_of_day`, `next_rising`, `next_noon`, `next_setting`, `next_dusk`, `next_midnight` (each `.minute_of_day`) | float | the next one as the minute of the local day (0–1440), the scale of `time.minuteOfDay` |
+
+Only the entities in that list are shared, so a design can't read an arbitrary
+entity of the home it plays in. Publishing refuses a design that reads an `HA:` value
+outside the list, naming the ones it may read, or that declares a shared value with a
+type other than the one the app pushes (the player would drop it). A missing entity
+reads `is_available` false, an empty state, NaN numbers and false flags.
+
+Designers find them in three places: a seeded UI Builder design declares every shared
+value as a state variable, with a sunny afternoon's values to design against; the
+server's schema (`/api/schema`, and the `/schema` page) lists them under `shared`, with
+what each means; and this table. The app pushes them; a Wear widget doesn't yet, so
+publishing for the Wear widget profile still refuses them.
+
+Day and night, for one: a scrim's alpha is `1 - smoothstep(-6, 6,
+HA:sun.sun.elevation)`, faded through civil twilight, so a card darkens at the home's
+real dusk. Home Assistant computes the elevation for the home's own location, and the
+app pushes each new value as Home Assistant updates it.
+
+A design that must work with nothing pushed (a widget) can compute the elevation
+from the clock instead: the declination comes from `time.dayOfYear`, the hour angle
+from `time.minuteOfDay`, `time.utcOffset` and the longitude, and the elevation is
+`degrees(asin(sin φ·sin δ + cos φ·cos δ·cos H))`. That needs a latitude and longitude
+in the design, and it ignores the equation of time (up to about 15 minutes out).
 
 Move things with transforms, not sizes. A state-driven `offset`, `scale` or
 `rotate` is drawn as one `graphicsLayer` per element (a player takes only one), so it
