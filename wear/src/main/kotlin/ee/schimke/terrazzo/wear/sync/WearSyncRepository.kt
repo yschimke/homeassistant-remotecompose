@@ -354,10 +354,10 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
           scope.launch {
             val nodeId =
               runCatching { nodeClient.localNode.await().id }.getOrNull() ?: return@launch
-            if (applyWidgetCards(widgetCards, nodeId, cards)) {
-              _widgetCardsRevision.update { it + 1 }
-              refreshAllCardWidgets(appContext)
-            }
+            val changed = applyWidgetCards(widgetCards, nodeId, cards)
+            // Even unchanged here: the listener service may have applied them to the store first.
+            _widgetCardsRevision.update { it + 1 }
+            if (changed) refreshAllCardWidgets(appContext)
           }
         }
       path == WearSyncPaths.VALUES ->

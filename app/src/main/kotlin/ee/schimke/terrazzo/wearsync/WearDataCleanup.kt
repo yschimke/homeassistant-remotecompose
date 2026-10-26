@@ -23,10 +23,11 @@ internal val WATCH_ACCOUNT_DATA: List<WearDataItems> =
     WearDataItems(WearSyncPaths.VALUES, prefix = false),
     WearDataItems(WearSyncPaths.PICTURE_PREFIX, prefix = true),
     WearDataItems(WearSyncPaths.DASHBOARD_PREFIX, prefix = true),
+    // Which card each watch widget shows: before the pins, so a widget redrawn as they go can't
+    // read the account's cards back from it. Its deletion also signs the watch out.
+    WearDataItems(WearSyncPaths.WIDGET_CARDS, prefix = false),
     WearDataItems(WearSyncPaths.PINNED, prefix = false),
     WearDataItems(WearSyncPaths.SECTIONS, prefix = false),
-    // Which card each watch widget shows: the watch forgets its copies when the pins go.
-    WearDataItems(WearSyncPaths.WIDGET_CARDS, prefix = false),
     WearDataItems(WearSyncPaths.SLOTS, prefix = false),
     // A slot's Wear design may be the person's private one.
     WearDataItems(WearSyncPaths.SLOT_DESIGNS, prefix = false),

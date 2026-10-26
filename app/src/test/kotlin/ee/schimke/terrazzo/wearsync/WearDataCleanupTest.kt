@@ -31,6 +31,8 @@ class WearDataCleanupTest {
       )
     }
     assertTrue(WearSyncPaths.SETTINGS !in paths)
+    // A widget redrawn as the pins go must not read the account's cards back from its choices.
+    assertTrue(paths.indexOf(WearSyncPaths.WIDGET_CARDS) < paths.indexOf(WearSyncPaths.PINNED))
     // The watches' own widget lists are theirs, not the account's.
     assertTrue(WearSyncPaths.PLACED_WIDGETS !in paths)
     // Literal paths are deleted as literals: `/wear/values` must not take `/wear/values2` along.

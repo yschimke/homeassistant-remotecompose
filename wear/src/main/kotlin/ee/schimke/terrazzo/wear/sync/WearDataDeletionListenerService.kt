@@ -170,9 +170,10 @@ internal fun redrawsOnChange(changed: Collection<String>): Boolean =
 
 /**
  * Whether the phone deleting the items at [deleted] paths means it signed out: it deletes the
- * account-wide items (pins, sections) only then. (It deletes an older build's `/wear/slots` then
- * too, but never alone.)
+ * account-wide items (pins, sections, widget card choices) only then. (It deletes an older build's
+ * `/wear/slots` then too, but never alone.)
  */
 internal fun signsOut(deleted: Collection<String>): Boolean = deleted.any { it in SIGN_OUT_MARKERS }
 
-private val SIGN_OUT_MARKERS = setOf(WearSyncPaths.PINNED, WearSyncPaths.SECTIONS)
+private val SIGN_OUT_MARKERS =
+  setOf(WearSyncPaths.PINNED, WearSyncPaths.SECTIONS, WearSyncPaths.WIDGET_CARDS)
