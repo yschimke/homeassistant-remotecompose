@@ -3,6 +3,9 @@
   One provider for every card. Start at 1x1 and allow resizing in both axes.
   No maximum resize dimensions: the launcher owns the available grid extent.
   Updates are driven by Home Assistant state changes, not framework polling.
+  Reconfigurable from the widget's long-press; placing one needs no configuration, as the app
+  pins it with its card chosen. `configure` names the class in full: the application id differs
+  from the code's package.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="50dp"
@@ -14,4 +17,6 @@
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen"
-    android:initialLayout="@layout/terrazzo_widget_initial" />
+    android:initialLayout="@layout/terrazzo_widget_initial"
+    android:configure="ee.schimke.terrazzo.widget.WidgetConfigureActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional" />

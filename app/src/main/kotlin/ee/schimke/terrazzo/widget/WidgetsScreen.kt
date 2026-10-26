@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo.widget
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -38,8 +39,8 @@ import ee.schimke.terrazzo.dashboard.historyTitle
 
 /**
  * Home screen widgets, reached via the dashboard top-bar's overflow menu: the cards this app has on
- * the launcher, against the [WidgetStore.MAX_WIDGETS] cap, and how to add or remove one. The
- * launcher owns placement and removal, so the list is read-only.
+ * the launcher, against the [WidgetStore.MAX_WIDGETS] cap, and how to add or remove one. A row
+ * opens the widget's editor ([WidgetConfigureActivity]); the launcher owns placement and removal.
  */
 @Composable
 fun WidgetsScreen(onBack: () -> Unit) {
@@ -50,13 +51,16 @@ fun WidgetsScreen(onBack: () -> Unit) {
   LaunchedEffect(Unit) { WidgetSync.reconcile(context.applicationContext) }
   WidgetsContent(
     widgets =
-      installed.map { InstalledWidget(it.card.historyTitle(), cardTypeLabel(it.card.type)) },
+      installed.map {
+        InstalledWidget(it.card.historyTitle(), cardTypeLabel(it.card.type), it.widgetId)
+      },
     onBack = onBack,
+    onEdit = { context.startActivity(WidgetConfigureActivity.intent(context, it.widgetId)) },
   )
 }
 
 /** One installed widget's row: the card's [title], and the [kind] of card it draws. */
-internal data class InstalledWidget(val title: String, val kind: String)
+internal data class InstalledWidget(val title: String, val kind: String, val widgetId: Int = 0)
 
 /**
  * A card type as a row's supporting text: `weather-forecast` reads "Weather forecast card", and a
@@ -72,7 +76,11 @@ internal fun cardTypeLabel(type: String): String {
 /** The screen's content for [widgets], apart from the store so a preview can draw it. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun WidgetsContent(widgets: List<InstalledWidget>, onBack: () -> Unit) {
+internal fun WidgetsContent(
+  widgets: List<InstalledWidget>,
+  onBack: () -> Unit,
+  onEdit: (InstalledWidget) -> Unit = {},
+) {
   Scaffold(
     topBar = {
       TopAppBar(
@@ -124,8 +132,8 @@ internal fun WidgetsContent(widgets: List<InstalledWidget>, onBack: () -> Unit) 
     ) {
       item {
         Text(
-          "${widgets.size} of ${WidgetStore.MAX_WIDGETS} in use. To remove one, long-press it " +
-            "on your home screen.",
+          "${widgets.size} of ${WidgetStore.MAX_WIDGETS} in use. Tap one to edit it. To remove " +
+            "one, long-press it on your home screen.",
           style = MaterialTheme.typography.bodyMedium,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
           modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -136,6 +144,7 @@ internal fun WidgetsContent(widgets: List<InstalledWidget>, onBack: () -> Unit) 
           headlineContent = { Text(widget.title) },
           supportingContent = { Text(widget.kind) },
           leadingContent = { Icon(Icons.Outlined.Widgets, contentDescription = null) },
+          modifier = Modifier.clickable(onClickLabel = "Edit widget") { onEdit(widget) },
         )
       }
     }
