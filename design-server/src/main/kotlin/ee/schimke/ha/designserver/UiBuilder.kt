@@ -274,6 +274,68 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
   }
 
   /**
+   * The picture [designId] pins under [assetKey] (`GET …/designs/<id>/assets/<key>`): what its
+   * `asset/image` nodes draw. A failure, saying why, when UI Builder has no such picture.
+   */
+  suspend fun asset(designId: String, assetKey: String): Result<ByteArray> {
+    val response =
+      http.get(
+        "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/designs/${designId.encodeURLPathPart()}" +
+          "/assets/${assetKey.encodeURLPathPart()}?token=${config.token.encodeURLParameter()}"
+      )
+    if (!response.status.isSuccess()) {
+      return Result.failure(
+        IllegalStateException(
+          "UI Builder has no picture $assetKey in $designId (${response.status})"
+        )
+      )
+    }
+    return Result.success(response.bodyAsBytes())
+  }
+
+  /**
+   * Who may edit [designId] (`getDesignAccess`): its owner, then every actor it is shared with as
+   * an editor, as actor ids (`github:<login>`). A failure when UI Builder won't say.
+   */
+  suspend fun editors(designId: String): Result<List<String>> = runCatching {
+    val response =
+      http.post(
+        "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/requests" +
+          "?token=${config.token.encodeURLParameter()}"
+      ) {
+        contentType(ContentType.Application.Json)
+        setBody(
+          buildJsonObject {
+            put("schemaVersion", 1)
+            put("requestId", UiBuilderConfig.randomToken())
+            put("actorId", "operator")
+            putJsonObject("request") {
+              put("type", "getDesignAccess")
+              put("designId", designId)
+            }
+          }
+            .toString()
+        )
+      }
+    check(response.status.isSuccess()) { "UI Builder access lookup failed (${response.status})" }
+    val payload =
+      Json.parseToJsonElement(response.bodyAsText()).jsonObject.getValue("response").jsonObject
+    check(payload["type"] == JsonPrimitive("designAccess")) {
+      "UI Builder did not answer with the design's access"
+    }
+    val access = payload["access"]?.jsonObject ?: payload
+    buildList {
+      access["ownerActorId"]?.jsonPrimitive?.content?.let(::add)
+      (access["actorGrants"] as? JsonArray).orEmpty().forEach {
+        val grant = it.jsonObject
+        if (grant["role"]?.jsonPrimitive?.content.equals("editor", ignoreCase = true)) {
+          grant["actorId"]?.jsonPrimitive?.content?.let(::add)
+        }
+      }
+    }
+  }
+
+  /**
    * [designId]'s latest UI Builder document, or null when UI Builder has no such design (404).
    * Throws for anything else: a refused token, an outage or no answer is not "no design".
    */
@@ -705,11 +767,15 @@ object UiBuilderSeed {
   fun unsupported(schema: CardSchema): List<BindingSchema> =
     schema.bindings.filterNot { supports(it.type) }
 
-  /** A binding as a UI Builder state variable; null for kinds it has no state type for. */
-  /** [schema]'s bindings as UI Builder state variables, those UI Builder has a type for. */
+  /**
+   * [schema]'s bindings as UI Builder state variables, those UI Builder has a type for, then the
+   * values every home shares ([CardSchema.shared]), so a designer finds `HA:sun.sun.elevation`
+   * beside the card's own.
+   */
   fun stateVariables(schema: CardSchema): List<Pair<String, JsonObject>> =
-    schema.bindings.mapNotNull { b -> stateVariable(b)?.let { b.name to it } }
+    (schema.bindings + schema.shared).mapNotNull { b -> stateVariable(b)?.let { b.name to it } }
 
+  /** A binding as a UI Builder state variable; null for kinds it has no state type for. */
   private fun stateVariable(binding: BindingSchema): JsonObject? {
     val (type, valueType, default) =
       when (binding.type) {

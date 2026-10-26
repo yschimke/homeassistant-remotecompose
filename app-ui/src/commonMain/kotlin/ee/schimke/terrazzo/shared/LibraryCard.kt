@@ -19,6 +19,7 @@ import ee.schimke.ha.client.design.UsageSource
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.GeneratedDesign
+import ee.schimke.ha.design.HaSharedValues
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignTemplates
@@ -262,8 +263,8 @@ internal fun cacheShapeHint(exact: DesignKey?, card: CardConfig, snapshot: HaSna
   if (exact == null) shapeHint(card, snapshot) else EMPTY_SHAPE_HINT
 
 internal fun templateBindings(card: CardConfig, snapshot: HaSnapshot): Map<String, RcNamedValue> =
-  CardDesignSlots.slotBindings(card, snapshot).toNamedValues() +
-    instrumentTemplateBindings(card, snapshot)
+  (HaSharedValues.bindings(snapshot) + CardDesignSlots.slotBindings(card, snapshot))
+    .toNamedValues() + instrumentTemplateBindings(card, snapshot)
 
 /**
  * [card]'s exact design key, as the phone app computes it (`CardDesignTemplates.keyFor`): its

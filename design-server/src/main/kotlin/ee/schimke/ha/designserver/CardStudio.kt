@@ -23,17 +23,19 @@ class CardStudioDrafts(private val clock: () -> Long = System::currentTimeMillis
   private data class Entry(
     val document: JsonObject,
     val expiresAt: Long,
+    /** The card type the draft was seeded for: its seed's title, which the draft may rename. */
+    val cardType: String? = null,
     var claimed: Boolean = false,
   )
 
   private val entries = LinkedHashMap<String, Entry>()
 
   @Synchronized
-  fun put(document: JsonObject): String {
+  fun put(document: JsonObject, cardType: String? = null): String {
     expire()
     check(entries.size < 128) { "Too many pending card previews. Try again later." }
     val token = UiBuilderConfig.randomToken()
-    entries[token] = Entry(document, clock() + 10 * 60_000)
+    entries[token] = Entry(document, clock() + 10 * 60_000, cardType)
     return token
   }
 
@@ -44,7 +46,7 @@ class CardStudioDrafts(private val clock: () -> Long = System::currentTimeMillis
   }
 
   sealed interface Claim {
-    data class Ready(val document: JsonObject) : Claim
+    data class Ready(val document: JsonObject, val cardType: String? = null) : Claim
 
     data object Busy : Claim
 
@@ -57,7 +59,7 @@ class CardStudioDrafts(private val clock: () -> Long = System::currentTimeMillis
     val entry = entries[token] ?: return Claim.Missing
     if (entry.claimed) return Claim.Busy
     entry.claimed = true
-    return Claim.Ready(entry.document)
+    return Claim.Ready(entry.document, entry.cardType)
   }
 
   @Synchronized
@@ -79,6 +81,8 @@ fun Route.cardStudioRoutes(
   holder: LibraryHolder,
   integration: UiBuilderIntegration?,
   github: GithubAuth?,
+  /** Where a design opened for a signed-in person is recorded as theirs to publish. */
+  made: UserDesignStore? = null,
   seeds: CardStudioDrafts = CardStudioDrafts(),
   handoffs: CardStudioDrafts = CardStudioDrafts(),
 ) {
@@ -139,6 +143,7 @@ fun Route.cardStudioRoutes(
         "UI Builder is not configured",
         status = HttpStatusCode.ServiceUnavailable,
       )
+    var cardType: String? = null
     val document =
       try {
         val text = call.receiveText()
@@ -152,6 +157,7 @@ fun Route.cardStudioRoutes(
               status = HttpStatusCode.Gone,
             )
         validateCardDraft(JsonObject(original + ("id" to JsonPrimitive(id))), document)
+        cardType = original["title"]?.jsonPrimitive?.contentOrNull
         document
       } catch (e: Exception) {
         if (e is CancellationException) throw e
@@ -159,7 +165,7 @@ fun Route.cardStudioRoutes(
       }
     val token =
       try {
-        handoffs.put(document)
+        handoffs.put(document, cardType)
       } catch (e: IllegalStateException) {
         return@post call.respondText(
           "Preview capacity reached",
@@ -231,8 +237,9 @@ fun Route.cardStudioRoutes(
     if (!editor.authorized)
       return@post call.respondText("Sign in to design this card", status = HttpStatusCode.Forbidden)
     val token = call.parameters["token"].orEmpty()
+    val claim = handoffs.claim(token)
     val document =
-      when (val claim = handoffs.claim(token)) {
+      when (claim) {
         is CardStudioDrafts.Claim.Ready -> claim.document
         CardStudioDrafts.Claim.Busy ->
           return@post call.respondText(
@@ -254,6 +261,14 @@ fun Route.cardStudioRoutes(
           if (editor.login == null) builder.config.editorUrl(id)
           else {
             builder.client.share(id, "github:${editor.login}", editor = true)
+            // Theirs to publish from the app (`/api/my/studio`), though UI Builder records the
+            // server as its owner.
+            made?.recordMade(
+              editor.login,
+              id,
+              cardType = (claim as CardStudioDrafts.Claim.Ready).cardType,
+              handoff = token,
+            )
             builder.config.designUrl(id)
           }
         handoffs.remove(token)

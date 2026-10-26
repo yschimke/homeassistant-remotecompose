@@ -8,6 +8,7 @@ import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.client.design.DesignPublisher
+import ee.schimke.ha.client.design.handoffToken
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignSurface
@@ -29,6 +30,7 @@ import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
@@ -41,6 +43,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -86,6 +89,9 @@ class UserDesignsTest {
     )
   }
 
+  /** The designs the card studio opened in UI Builder. */
+  private val opened = mutableListOf<String>()
+
   /** The Wear container roots UI Builder was asked to export. */
   private val exportedWear = mutableListOf<String>()
 
@@ -115,25 +121,190 @@ class UserDesignsTest {
         ),
     )
 
-  private fun library(): File {
+  /** The library: [key]'s design, and the same card in each of [themes] too. */
+  private fun library(themes: List<String> = emptyList(), base: ByteArray = template): File {
     val dir = Files.createTempDirectory("designs").toFile()
-    val output =
-      DesignPublisher.publish(listOf(BuiltDesign(key, 1, template)), serial = 5, nowEpochMs = 1_000)
+    val designs =
+      (listOf(key) + themes.map { key.copy(theme = it) }).map { BuiltDesign(it, 1, base) }
+    val output = DesignPublisher.publish(designs, serial = 5, nowEpochMs = 1_000)
     for ((path, bytes) in output.files) File(dir, path)
       .also { it.parentFile.mkdirs() }
       .writeBytes(bytes)
     return dir
   }
 
-  private class Fixture(val client: HttpClient, val github: GithubAuth, val storeDir: File) {
+  private class Fixture(
+    val client: HttpClient,
+    val github: GithubAuth,
+    val storeDir: File,
+    /** The server's own store. */
+    val store: UserDesignStore,
+  ) {
     val cookie = "design-server-session=" + github.sign("octocat|${Long.MAX_VALUE}")
   }
 
+  /** A picture of one [color], as UI Builder serves an uploaded asset. */
+  private fun picture(color: java.awt.Color): ByteArray {
+    val image = java.awt.image.BufferedImage(32, 24, java.awt.image.BufferedImage.TYPE_INT_RGB)
+    image.createGraphics().apply {
+      this.color = color
+      fillRect(0, 0, 32, 24)
+      dispose()
+    }
+    return java.io
+      .ByteArrayOutputStream()
+      .also { javax.imageio.ImageIO.write(image, "png", it) }
+      .toByteArray()
+  }
+
+  /**
+   * `handmade`: a card drawn from two pictures, the door's height following `light.s0.is_on`. UI
+   * Builder can't export it, so the server builds it.
+   */
+  private val handmade =
+    Json.parseToJsonElement(
+        """
+        {"schema": "compose-ui-builder-document/v1-candidate", "id": "handmade",
+         "title": "Garage", "revision": 7,
+         "catalogPin": {"systemId": "ha-cards", "catalogRevision": "candidate",
+           "capabilityDigest": "candidate", "nativeRuntimeId": "candidate"},
+         "environment": {"widthDp": 360, "heightDp": 200, "density": 2, "theme": "light",
+           "locale": "en-GB", "fontScale": 1, "layoutDirection": "ltr"},
+         "stateVariables": {"light.s0.is_on": {"type": "value", "valueType": "bool",
+           "nullable": false, "initialValue": false, "persistence": "preview"}},
+         "roots": ["stage"],
+         "nodes": {
+           "stage": {"id": "stage", "componentId": "layout/box",
+             "modifiers": [{"type": "size", "widthDp": 360, "heightDp": 200}],
+             "slots": {"children": ["inside", "door"]}},
+           "inside": {"id": "inside", "componentId": "asset/image",
+             "properties": {"assetKey": {"type": "string", "value": "inside"}},
+             "modifiers": [{"type": "fillMaxSize"}]},
+           "door": {"id": "door", "componentId": "asset/image",
+             "properties": {"assetKey": {"type": "string", "value": "door"}},
+             "modifiers": [{"type": "fillMaxWidth"}, {"type": "height", "heightDp":
+               {"type": "expr", "op": "select", "args": [
+                 {"type": "state", "variable": "light.s0.is_on"},
+                 {"type": "float", "value": 4}, {"type": "float", "value": 200}]}}]}
+         },
+         "assets": {
+           "inside": {"mediaType": "image/png", "contentDigest": "sha256:1",
+             "source": {"type": "uploaded", "storageKey": "sha256:1"}},
+           "door": {"mediaType": "image/png", "contentDigest": "sha256:2",
+             "source": {"type": "uploaded", "storageKey": "sha256:2"}}
+         }}
+        """
+      )
+      .jsonObject
+
+  /**
+   * [handmade], its inside dimmed by [variable], a value its card doesn't push, declared as
+   * [valueType]. The app pushes the `HA:` values every home shares to every design.
+   */
+  private fun dimmedBy(variable: String, valueType: String = "float"): JsonObject {
+    val read =
+      if (valueType == "bool")
+        """{"type": "expr", "op": "select", "args": [{"type": "state", "variable": "$variable"},""" +
+          """ {"type": "float", "value": 1}, {"type": "float", "value": 0}]}"""
+      else """{"type": "state", "variable": "$variable"}"""
+    val initial = if (valueType == "bool") "false" else "0"
+    val document = handmade.toString()
+    val dimmed =
+      document
+        .replace(
+          """"stateVariables":{""",
+          """"stateVariables":{"$variable":{"type":"value","valueType":"$valueType",""" +
+            """"nullable":false,"initialValue":$initial,"persistence":"design"},""",
+        )
+        .replace(
+          """"modifiers":[{"type":"fillMaxSize"}]}""",
+          """"modifiers":[{"type":"fillMaxSize"},{"type":"alpha","alpha":""" +
+            """{"type":"expr","op":"smoothstep","args":[{"type":"float","value":-6},""" +
+            """{"type":"float","value":6},$read]}}]}""",
+        )
+    check(dimmed.length > document.length + 200) { "the fixture changed shape" }
+    return Json.parseToJsonElement(dimmed).jsonObject
+  }
+
+  private val sunlit = dimmedBy("HA:sun.sun.elevation")
+  private val peeking = dimmedBy("HA:lock.front_door.numeric_state")
+  private val mistyped = dimmedBy("HA:sun.sun.elevation", valueType = "bool")
+
+  /**
+   * Who UI Builder says may edit each design: octocat owns the test designs, mallory owns
+   * `mallorys` (which exports fine) and only lets octocat view `viewed`.
+   */
+  private fun accessOf(designId: String): String? =
+    when (designId) {
+      "mallorys" -> """{"ownerActorId":"github:mallory","actorGrants":[]}"""
+      "viewed" ->
+        """{"ownerActorId":"github:mallory","actorGrants":[{"actorId":"github:octocat","role":"VIEWER"}]}"""
+      "made" -> """{"ownerActorId":"operator","actorGrants":[]}"""
+      "good",
+      "bad",
+      "wear",
+      "framed",
+      "foreign",
+      "handmade",
+      "sunlit",
+      "peeking",
+      "mistyped" -> """{"ownerActorId":"github:octocat","actorGrants":[]}"""
+      else -> null
+    }
+
   /** The server with a fake UI Builder whose design `good` exports the template, `bad` junk. */
-  private fun ApplicationTestBuilder.fixture(): Fixture {
+  private fun ApplicationTestBuilder.fixture(libraryDir: File = library()): Fixture {
     externalServices {
       hosts("http://uib") {
         routing {
+          post("/api/ui-builder/v1/requests") {
+            assertEquals("secret", call.request.queryParameters["token"])
+            val request =
+              Json.parseToJsonElement(call.receiveText()).jsonObject["request"]!!.jsonObject
+            if (request["type"]!!.jsonPrimitive.content == "listCatalogs") {
+              return@post call.respondText(
+                """{"response":{"type":"catalogs","catalogs":[{"benchmark":""" +
+                  """{"catalogSystemId":"ha-cards","catalogRevision":"sha256:published",""" +
+                  """"nativeRuntimeId":"published-runtime"}}]}}"""
+              )
+            }
+            assertEquals("getDesignAccess", request["type"]!!.jsonPrimitive.content)
+            val id = request["designId"]!!.jsonPrimitive.content
+            val access =
+              accessOf(id)
+                ?: return@post call.respondText(
+                  """{"schemaVersion":1,"requestId":"r","response":{"type":"error",""" +
+                    """"error":{"code":"notFound","message":"no such design"}}}""",
+                  ContentType.Application.Json,
+                )
+            call.respondText(
+              """{"schemaVersion":1,"requestId":"r","response":{"type":"designAccess",""" +
+                """"designId":"$id","access":$access}}""",
+              ContentType.Application.Json,
+            )
+          }
+          // The card studio: a draft opened in UI Builder, and shared with its designer.
+          put("/api/ui-builder/v1/designs/{id}") {
+            opened += call.parameters["id"]!!
+            call.respondText("created", status = HttpStatusCode.Created)
+          }
+          post("/ui-builder/{id}/access") { call.respondText("", status = HttpStatusCode.SeeOther) }
+          for ((id, document) in
+            listOf(
+              "handmade" to handmade,
+              "sunlit" to sunlit,
+              "peeking" to peeking,
+              "mistyped" to mistyped,
+            )) {
+            get("/api/ui-builder/v1/designs/$id") {
+              call.respondText(document.toString(), ContentType.Application.Json)
+            }
+          }
+          get("/api/ui-builder/v1/designs/{id}/assets/{key}") {
+            val color =
+              if (call.parameters["key"] == "door") java.awt.Color.RED else java.awt.Color.GREEN
+            call.respondBytes(picture(color), ContentType.Image.PNG)
+          }
           // `wear`: a card design whose Small Wear widget exports and whose Large one doesn't.
           get("/api/ui-builder/v1/designs/{id}") {
             if (call.parameters["id"] !in setOf("wear", "framed", "foreign")) {
@@ -178,6 +349,9 @@ class UserDesignsTest {
             assertEquals("secret", call.request.queryParameters["token"])
             when (call.parameters["id"]) {
               "good",
+              "mallorys",
+              "viewed",
+              "made",
               "wear",
               "framed",
               "foreign" -> {
@@ -202,15 +376,16 @@ class UserDesignsTest {
         http = http,
       )
     val storeDir = Files.createTempDirectory("user-designs").toFile()
+    val store = UserDesignStore(storeDir, clock = { 42 })
     application {
       designServer(
-        LibraryHolder(library()),
+        LibraryHolder(libraryDir),
         UiBuilderIntegration(config, UiBuilderClient(config, http)),
         github,
-        userDesigns = UserDesignStore(storeDir, clock = { 42 }),
+        userDesigns = store,
       )
     }
-    return Fixture(createClient { followRedirects = false }, github, storeDir)
+    return Fixture(createClient { followRedirects = false }, github, storeDir, store)
   }
 
   private fun publishBody(designId: String, variant: String = "garage", key: DesignKey = this.key) =
@@ -419,7 +594,8 @@ class UserDesignsTest {
     val f = fixture()
     assertEquals(HttpStatusCode.UnprocessableEntity, f.publish("bad").status)
     assertTrue("can't be published" in f.publish("bad").bodyAsText())
-    assertEquals(HttpStatusCode.BadGateway, f.publish("missing").status)
+    // Nobody can say who edits it, so it isn't published.
+    assertEquals(HttpStatusCode.Forbidden, f.publish("missing").status)
     assertEquals(HttpStatusCode.BadRequest, f.publish("good", variant = "default").status)
     assertEquals(HttpStatusCode.BadRequest, f.publish("good", variant = "Not OK").status)
     assertEquals(
@@ -552,5 +728,154 @@ class UserDesignsTest {
     assertEquals(design.entry, design.served)
     // Nothing to name it by: served as stored.
     assertEquals(null, old.copy(sourceDesignId = null).served.designId)
+  }
+
+  @Test
+  fun onlyADesignTheyOwnOrEditPublishes() = testApplication {
+    val f = fixture()
+    // Someone else's private design: the operator token could read it, but it isn't theirs.
+    val foreign = f.publish("mallorys")
+    assertEquals(HttpStatusCode.Forbidden, foreign.status)
+    assertTrue("own or edit" in foreign.bodyAsText())
+    // Shared with them to view is still not theirs to publish.
+    assertEquals(HttpStatusCode.Forbidden, f.publish("viewed").status)
+    assertTrue(UserDesignStore(f.storeDir).designs("octocat").isEmpty())
+  }
+
+  @Test
+  fun aDesignTheServerMadeForThemPublishesAndIsListedForTheApp() = testApplication {
+    val f = fixture()
+    val token = f.github.deviceToken("octocat")
+    // UI Builder records the server as its owner and shares it with nobody it can name here.
+    assertEquals(HttpStatusCode.Forbidden, f.publish("made").status)
+    // The server recorded who it made it for (the card studio does, on opening a draft).
+    f.store.recordMade("octocat", "made", cardType = "tile")
+    assertEquals(HttpStatusCode.Created, f.publish("made").status)
+    // The app lists what it can publish with its device token; nobody else sees it.
+    val listed =
+      f.client.get("/api/my/studio") { header(HttpHeaders.Authorization, "Bearer $token") }
+    assertEquals(HttpStatusCode.OK, listed.status)
+    val made = json.decodeFromString(ListSerializer(MadeDesign.serializer()), listed.bodyAsText())
+    assertEquals(listOf(MadeDesign("made", "octocat", "tile", 42)), made)
+    assertEquals(HttpStatusCode.Unauthorized, f.client.get("/api/my/studio").status)
+    // Recording it doesn't move anyone's manifest.
+    assertEquals(5, f.client.manifest().serial)
+  }
+
+  @Test
+  fun aDesignUiBuilderCannotExportIsBuiltHereAndBindsTheCard() = testApplication {
+    val f = compilingFixture()
+    val published = f.publish("handmade")
+    assertEquals(HttpStatusCode.Created, published.status, published.bodyAsText())
+    val design = json.decodeFromString(UserDesign.serializer(), published.bodyAsText())
+    assertEquals("Garage", design.entry.title)
+    assertEquals(7, design.revision)
+    val bytes = assertNotNull(UserDesignStore(f.storeDir).blob(design.entry.sha256))
+    val names =
+      RcDocumentCodec.decode(bytes, RcWireLimits())
+        .operations
+        .filterIsInstance<RcNamedVariable>()
+        .map { it.name }
+    assertTrue("USER:light.s0.is_on" in names, "named: $names")
+  }
+
+  /** The library as this server captures it on the JVM, which a compiled design is held to. */
+  private fun ApplicationTestBuilder.compilingFixture() =
+    fixture(
+      library(
+        base =
+          ee.schimke.ha.rc.CardDesignTemplates.capture(
+              ee.schimke.ha.rc.CommonCaptureHost(
+                ee.schimke.ha.designs.LibraryCaptureProfile.OPERATIONS
+              ),
+              key,
+            )
+            .bytes
+      )
+    )
+
+  @Test
+  fun aDesignMayReadTheValuesEveryHomeShares() = testApplication {
+    val f = compilingFixture()
+    val published = f.publish("sunlit")
+    assertEquals(HttpStatusCode.Created, published.status, published.bodyAsText())
+    val design = json.decodeFromString(UserDesign.serializer(), published.bodyAsText())
+    val bytes = assertNotNull(UserDesignStore(f.storeDir).blob(design.entry.sha256))
+    val named =
+      RcDocumentCodec.decode(bytes, RcWireLimits())
+        .operations
+        .filterIsInstance<RcNamedVariable>()
+        .associate { it.name to it.type }
+    // In the shared domain, not the card's own, as a float: the type the app pushes it as.
+    assertEquals(RcNamedVariable.FLOAT_TYPE, named["HA:sun.sun.elevation"], "named: $named")
+    assertTrue(named.keys.none { it.startsWith("USER:HA") }, "named: $named")
+  }
+
+  @Test
+  fun aDesignCannotReadAnEntityOfTheHomeItPlaysIn() = testApplication {
+    val f = compilingFixture()
+    val refused = f.publish("peeking")
+    assertEquals(HttpStatusCode.UnprocessableEntity, refused.status)
+    val message = refused.bodyAsText()
+    assertTrue("HA:lock.front_door.numeric_state" in message, message)
+    // It says what a design may read instead.
+    assertTrue("HA:sun.sun.elevation" in message, message)
+  }
+
+  @Test
+  fun aSharedValueReadAsTheWrongTypeIsRefused() = testApplication {
+    val f = compilingFixture()
+    val refused = f.publish("mistyped")
+    assertEquals(HttpStatusCode.UnprocessableEntity, refused.status)
+    assertTrue("wrong type" in refused.bodyAsText(), refused.bodyAsText())
+  }
+
+  @Test
+  fun aDesignPublishesForItsCardInEachThemeOfItsStyle() = testApplication {
+    val dark = "baked:Material3:dark"
+    val f = fixture(library(themes = listOf(dark, "style:braun:light")))
+    val published = f.publish("good")
+    assertEquals(HttpStatusCode.Created, published.status)
+    // Classic in light and dark; another card style is another choice, published on its own.
+    val keys = UserDesignStore(f.storeDir).designs("octocat").map { it.entry.key }.toSet()
+    assertEquals(
+      setOf(key.copy(variant = "garage"), key.copy(variant = "garage", theme = dark)),
+      keys,
+    )
+    // One design to the app, whichever of them it draws in.
+    assertEquals(
+      setOf("user:good"),
+      UserDesignStore(f.storeDir).designs("octocat").map { it.entry.designId }.toSet(),
+    )
+  }
+
+  @Test
+  fun aDraftOpenedFromTheAppsCardStudioIsTheirsToPublish() = testApplication {
+    val f = fixture()
+    val studio = ee.schimke.ha.client.design.CardStudioClient("https://localhost", f.client.engine)
+    val card =
+      ee.schimke.ha.model.CardConfig(
+        "tile",
+        Json.parseToJsonElement("""{"type":"tile","entity":"light.kitchen"}""").jsonObject,
+      )
+    val snapshot =
+      ee.schimke.ha.model.HaSnapshot(
+        states = mapOf("light.kitchen" to ee.schimke.ha.model.EntityState("light.kitchen", "on"))
+      )
+    // The app may rename its draft; the card type comes from the seed.
+    val draft = JsonObject(studio.seed(card, snapshot) + ("title" to JsonPrimitive("Mine")))
+    val handoff = studio.handoff(draft)
+    studio.close()
+    val opening =
+      f.client.post(handoff.removePrefix("https://localhost")) {
+        header(HttpHeaders.Cookie, f.cookie)
+      }
+    assertEquals(HttpStatusCode.Found, opening.status)
+    val designId = opened.single()
+    // Recorded with the handoff the app holds for this card, so it publishes this card's design.
+    assertEquals(
+      listOf(MadeDesign(designId, "octocat", "tile", 42, handoff = handoffToken(handoff))),
+      f.store.made("octocat"),
+    )
   }
 }
