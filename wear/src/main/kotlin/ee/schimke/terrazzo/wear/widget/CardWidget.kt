@@ -15,6 +15,7 @@ import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.glance.wear.AssociateWithGlanceWearWidget
 import androidx.glance.wear.GlanceWearWidget
 import androidx.glance.wear.GlanceWearWidgetManager
@@ -27,6 +28,8 @@ import androidx.glance.wear.core.ActiveWearWidgetHandle
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WearWidgetRawContent
+import androidx.glance.wear.horizontalGradient
+import androidx.glance.wear.verticalGradient
 import androidx.wear.compose.remote.material3.RemoteColorScheme
 import androidx.wear.compose.remote.material3.RemoteMaterialTheme
 import ee.schimke.ha.design.CardDesignSlots
@@ -47,6 +50,7 @@ import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.components.HaWearBackground
 import ee.schimke.ha.rc.components.LocalPictureImageStrategy
 import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.PictureImageStrategy
@@ -54,10 +58,12 @@ import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideExpressionNames
 import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
 import ee.schimke.ha.rc.components.ProvideHaUberStyle
+import ee.schimke.ha.rc.components.ProvideHaUberTheme
 import ee.schimke.ha.rc.components.ProvideRemoteHaTheme
 import ee.schimke.ha.rc.components.RemoteHaTheme
 import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.ha.rc.components.wearBackground
 import ee.schimke.ha.rc.converterFor
 import ee.schimke.terrazzo.wear.data.toEntityState
 import ee.schimke.terrazzo.wear.sync.WearDirectAccess
@@ -277,8 +283,9 @@ internal fun slotWidgetData(
   fetchImage: (url: String) -> ByteArray? = { null },
   wearDesign: (container: String) -> ByteArray? = { null },
 ): WearWidgetData {
-  // The card's state tints its container: warm for heating, amber for a light that is on.
-  val tint = ContainerTint.argbFor(card, snapshot)
+  // The card's state tints its container: warm for heating, amber for a light that is on. A card
+  // style with a surface of its own fills the container with it, tinted or not.
+  val tint = ContainerTint.argbFor(card, snapshot, cardStyle)
   val direct = slotDocument(registry, colors, card, snapshot, cardStyle = cardStyle, tint = tint)
   if (card == null) return direct
   val design = CardDesignTemplates.designCard(card, snapshot, registry)
@@ -445,7 +452,7 @@ internal suspend fun neutralWidgetTemplate(
       }
       runCatching {
         neutralTemplateCaptures.incrementAndGet()
-        WearWidgetTemplate.capture(context) {
+        WearWidgetTemplate.capture(context, cardStyle.wearBackground()) {
           SlotContent(
             registry,
             colors,
@@ -482,11 +489,18 @@ internal fun neutralTemplateFileName(
       is String -> themeKey.takeIf { it.startsWith("wear-palette-v1:") } ?: return null
       else -> return null
     }
-  val stable = listOf(cardType, shape, theme, cardStyleId).joinToString("\u0000")
+  val stable =
+    listOf(cardType, shape, theme, cardStyleId, NEUTRAL_TEMPLATE_VERSION).joinToString("\u0000")
   return java.security.MessageDigest.getInstance("SHA-256")
     .digest(stable.encodeToByteArray())
     .joinToString("") { "%02x".format(it) }
 }
+
+/**
+ * Bumped when what a neutral template draws changes for the same key, so a template kept on disk
+ * from an older app is captured again. 2: card styles draw their own container background.
+ */
+private const val NEUTRAL_TEMPLATE_VERSION = "2"
 
 /** One container-neutral Wear template per card shape and theme: see [WearWidgetTemplate]. */
 private data class WearNeutralTemplateKey(val cardType: String, val shape: String, val theme: Any)
@@ -529,9 +543,24 @@ internal fun slotDocument(
   tint: Int? = null,
 ): WearWidgetDocument =
   WearWidgetDocument(
-    background = tint?.let { WearWidgetBrush.color(Color(it).rc) } ?: WearWidgetBrush.Companion,
+    background = wearWidgetBrush(tint, cardStyle.wearBackground()),
     content = { SlotContent(registry, colors, card, snapshot, template, cardStyle) },
   )
+
+/**
+ * The container brush for a widget filled with [fill] (ARGB, or null for Glance Wear's default
+ * surface) under [background]'s layers. The host draws each at its own corner radius.
+ */
+internal fun wearWidgetBrush(fill: Int?, background: HaWearBackground?): WearWidgetBrush {
+  var brush =
+    (fill ?: background?.base?.toArgb())?.let { WearWidgetBrush.color(Color(it).rc) }
+      ?: WearWidgetBrush.Companion
+  for (layer in background?.layers.orEmpty()) {
+    val stops = layer.colors.map { it.rc }
+    brush = if (layer.vertical) brush.verticalGradient(stops) else brush.horizontalGradient(stops)
+  }
+  return brush
+}
 
 /** What a widget shows inside its container: see [slotDocument]. */
 @Composable
@@ -557,9 +586,11 @@ internal fun SlotContent(
       RemoteMaterialTheme(colorScheme = colors) {
         val theme = RemoteMaterialTheme.colorScheme.asHaTheme()
         ProvideRemoteHaTheme(theme) {
-          // The user's card style brings its instruments, type and shapes; the watch keeps its own
-          // palette (the WearM3 colours the widget host updates).
-          ProvideHaUberStyle(cardStyle, darkTheme = true) {
+          // The user's card style brings its instruments, type and shapes. Classic keeps the
+          // watch's own palette (the WearM3 colours the widget host updates); a style with a
+          // surface of its own ([wearBackground]) fills the container with it, so it brings the
+          // palette its text reads on, too.
+          WearCardStyle(cardStyle) {
             ProvideCardSizeMode(CardSizeMode.Fixed) {
               // The Glance Wear container already supplies its own shape + brush via
               // WearWidgetBrush, so suppress the per-card rounded clip + divider border that would
@@ -588,6 +619,13 @@ internal fun SlotContent(
       }
     }
   }
+}
+
+/** [cardStyle] for a widget's card: see [SlotContent]. */
+@Composable
+private fun WearCardStyle(cardStyle: HaUberTheme, content: @Composable () -> Unit) {
+  if (cardStyle.wearBackground() == null) ProvideHaUberStyle(cardStyle, darkTheme = true, content)
+  else ProvideHaUberTheme(cardStyle, darkTheme = true, content)
 }
 
 /**

@@ -48,7 +48,9 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.components.HaWearBackground
 import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.ha.rc.components.wearBackground
 import ee.schimke.terrazzo.wear.data.toEntityState
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
 import ee.schimke.terrazzo.wear.sync.WearTapDispatcher
@@ -57,6 +59,7 @@ import ee.schimke.terrazzo.wear.widget.SlotContent
 import ee.schimke.terrazzo.wear.widget.WearWidgetFrame
 import ee.schimke.terrazzo.wear.widget.WearWidgetTemplate
 import ee.schimke.terrazzo.wear.widget.neutralWidgetTemplate
+import ee.schimke.terrazzo.wear.widget.remoteBrush
 import ee.schimke.terrazzo.wear.widget.syncedPicture
 import ee.schimke.terrazzo.wear.widget.wearAppContainer
 import ee.schimke.terrazzo.wear.widget.wearCardDataTier
@@ -140,7 +143,7 @@ internal fun WearRemoteCard(
       )
     }
   // The card's state tints its container, as on the widget: warm for heating, amber for a light.
-  val tint = remember(card, snapshot) { ContainerTint.argbFor(card, snapshot) }
+  val tint = remember(card, snapshot, style) { ContainerTint.argbFor(card, snapshot, style) }
   val scheme = MaterialTheme.colorScheme
   val paletteKey = wearPaletteKey(look.palette, scheme)
   val colors = remember(scheme) { wearWidgetColors(scheme) }
@@ -237,7 +240,7 @@ internal fun WearRemoteCard(
         ) {
           // No template (a card with no template shape): the widget's direct document, framed
           // alike.
-          WearAppFrame(frame, tint) {
+          WearAppFrame(frame, tint, style.wearBackground()) {
             SlotContent(
               registry,
               colors,
@@ -383,13 +386,23 @@ internal fun wearTemplateShape(
 
 /** [content] in [frame]'s container, as a widget host draws one: rounded, filled and padded. */
 @Composable
-private fun WearAppFrame(frame: WearWidgetFrame, tint: Int?, content: @Composable () -> Unit) {
+private fun WearAppFrame(
+  frame: WearWidgetFrame,
+  tint: Int?,
+  background: HaWearBackground?,
+  content: @Composable () -> Unit,
+) {
+  val filled =
+    RemoteModifier.fillMaxSize()
+      .clip(RemoteRoundedCornerShape(frame.cornerRadiusDp.rdp))
+      .background((tint?.let { androidx.compose.ui.graphics.Color(it) } ?: WIDGET_SURFACE).rc)
+  // The card style's layers over the fill, inside the same clip: the frame's corner radius.
+  val layered =
+    background?.layers.orEmpty().fold(filled) { modifier, layer ->
+      modifier.background(layer.remoteBrush())
+    }
   RemoteBox(
-    modifier =
-      RemoteModifier.fillMaxSize()
-        .clip(RemoteRoundedCornerShape(frame.cornerRadiusDp.rdp))
-        .background((tint?.let { androidx.compose.ui.graphics.Color(it) } ?: WIDGET_SURFACE).rc)
-        .padding(frame.horizontalPaddingDp.rdp, frame.verticalPaddingDp.rdp)
+    modifier = layered.padding(frame.horizontalPaddingDp.rdp, frame.verticalPaddingDp.rdp)
   ) {
     content()
   }

@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
@@ -27,10 +28,12 @@ import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.ContainerTint
 import ee.schimke.ha.rc.HaRcComposePlayer
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.ha.rc.components.wearBackground
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
 import java.io.File
 import kotlin.test.Test
@@ -200,6 +203,83 @@ class WearWidgetTemplateTest {
       val total = expected.width * expected.height
       assertTrue(differing * 100 < total, "$name: $differing of $total pixels differ")
     }
+  }
+
+  @Test
+  fun aCardStylesBackgroundFillsTheContainerAtTheHostsCornerRadiusOnBothPaths() {
+    var bytes by mutableStateOf(ByteArray(0))
+    var size by mutableStateOf(200f to 112f)
+    compose.setContent {
+      Box(Modifier.size(size.first.dp, size.second.dp).testTag("widget")) {
+        key(bytes) {
+          if (bytes.isNotEmpty()) {
+            HaRcComposePlayer(
+              documentBytes = bytes,
+              modifier = Modifier.size(size.first.dp, size.second.dp),
+              fallback = { error("a Wear widget document must play") },
+            )
+          }
+        }
+      }
+    }
+    val styles =
+      listOf(
+        HaUberTheme.Classic,
+        HaUberTheme.HomeAssistant,
+        HaUberTheme.Expressive,
+        HaUberTheme.Console,
+      )
+    val surfaces = mutableMapOf<String, Int>()
+    for (style in styles) {
+      val styled = runBlocking {
+        WearWidgetTemplate.capture(context, style.wearBackground()) {
+          SlotContent(registry, colors, card, snapshot, template = false, style)
+        }
+      }
+      val fill = ContainerTint.argbFor(card, snapshot, style)
+      for ((name, params) in containers.filter { it.first == "large" || it.first == "square" }) {
+        val widget =
+          assertNotNull(
+            runBlocking { WearWidgetTemplate.instantiate(context, styled, params, false, fill) },
+            "${style.id} $name",
+          )
+        assertEquals(
+          emptyList(),
+          RcDocumentCodec.decode(widget.rcDocument, RcWireLimits())
+            .validateFor(RcTargetProfiles.WEAR_WIDGETS),
+          "${style.id} $name",
+        )
+        val glance = runBlocking {
+          slotDocument(registry, colors, card, snapshot, cardStyle = style, tint = fill)
+            .captureRawContent(context, params, false)
+            .rcDocument
+        }
+        compose.runOnIdle {
+          size = params.widthDp to params.heightDp
+          bytes = glance
+        }
+        compose.waitForIdle()
+        val expected = pixels("styled-${style.id}-$name-glance")
+        compose.runOnIdle { bytes = widget.rcDocument }
+        compose.waitForIdle()
+        val actual = pixels("styled-${style.id}-$name-neutral")
+        var differing = 0
+        for (y in 0 until expected.height) for (x in 0 until expected.width) {
+          if (expected[x, y] != actual[x, y]) differing++
+        }
+        val total = expected.width * expected.height
+        assertTrue(differing * 100 < total, "${style.id} $name: $differing of $total pixels differ")
+        // The container's corner is the host's: outside it, the backdrop shows, not the style.
+        val surface = actual[actual.width / 2, 2].toArgb()
+        assertTrue(actual[0, 0].toArgb() != surface, "${style.id} $name: the corner is clipped")
+        if (name == "large") surfaces[style.id] = surface
+      }
+    }
+    assertEquals(
+      styles.size,
+      surfaces.values.toSet().size,
+      "each style has its own surface: $surfaces",
+    )
   }
 
   private fun pixels(name: String) =

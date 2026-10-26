@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
@@ -33,11 +34,13 @@ import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.components.HaWearBackground
 import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideCardStyle
 import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.cardPalette
+import ee.schimke.ha.rc.components.wearBackground
 import ee.schimke.terrazzo.ui.LocalThemeStyle
 
 /**
@@ -46,8 +49,8 @@ import ee.schimke.terrazzo.ui.LocalThemeStyle
  * card is drawn as the watch draws a widget (Fixed size, no card chrome of its own, tiers chosen by
  * the container's height, dark), inside the container a watch's widget host draws: Glance Wear's
  * preview sizes for a round watch (200×60 and 200×112 dp, 8 dp padding, 26 dp corners), on its
- * default surface. An approximation: the watch keeps its own palette and card style, and each
- * watch's host has its own container sizes.
+ * default surface, or the card style's own ([wearBackground]) as the watch fills it. An
+ * approximation: each watch's host has its own container sizes and corner radius.
  */
 @Composable
 internal fun CardStyleWearPanes(
@@ -110,10 +113,12 @@ private fun WearPaneCard(
   val style = LocalThemeStyle.current
   val snapshot = remember(name, description) { sampleSnapshot(name, description) }
   val haTheme = remember(style, cardStyle) { cardStyle.cardPalette(style, darkTheme = true) }
+  val background = remember(cardStyle) { cardStyle.wearBackground() }
   Box(
     Modifier.size(pane.widthDp, pane.heightDp)
       .clip(RoundedCornerShape(CONTAINER_CORNER))
-      .background(WEAR_SURFACE)
+      .background(background?.base ?: WEAR_SURFACE)
+      .wearLayers(background)
       .padding(CONTAINER_PADDING)
   ) {
     CachedCardPreview(
@@ -143,6 +148,15 @@ private fun WearPaneCard(
     }
   }
 }
+
+/** [background]'s layers over the container's fill, inside its clip. */
+private fun Modifier.wearLayers(background: HaWearBackground?): Modifier =
+  background?.layers.orEmpty().fold(this) { modifier, layer ->
+    modifier.background(
+      if (layer.vertical) Brush.verticalGradient(layer.colors)
+      else Brush.horizontalGradient(layer.colors)
+    )
+  }
 
 private data class WearPaneKey(
   val style: ThemeStyle,
