@@ -651,6 +651,16 @@ class WidgetPreparationTest {
       val hostBounds = host.visibleBounds
       host.longClick()
       device.waitForIdle()
+      // A reconfigurable widget's first resize frame shows the launcher's one-time "Tap to change
+      // widget settings" tip, which takes the next touch to dismiss it; tap it away so the drag
+      // below reaches the resize handle.
+      device
+        .wait(
+          Until.findObject(By.text(java.util.regex.Pattern.compile("(?i).*widget settings.*"))),
+          3_000,
+        )
+        ?.click()
+      device.waitForIdle()
       screenshot("launcher-resize-handles")
       assertTrue(
         device.drag(
