@@ -10,14 +10,18 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth as rcFillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.padding
+import androidx.compose.remote.creation.compose.state.rc
+import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
@@ -33,14 +37,17 @@ import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
+import ee.schimke.ha.rc.components.HaMeasureKind
 import ee.schimke.ha.rc.components.HaUberTheme
-import ee.schimke.ha.rc.components.HaWearBackground
+import ee.schimke.ha.rc.components.HaWearLevel
 import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideCardStyle
 import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
+import ee.schimke.ha.rc.components.RemoteWearContainer
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.cardPalette
 import ee.schimke.ha.rc.components.wearBackground
+import ee.schimke.ha.rc.components.wearLevelLook
 import ee.schimke.terrazzo.ui.LocalThemeStyle
 
 /**
@@ -114,31 +121,33 @@ private fun WearPaneCard(
   val snapshot = remember(name, description) { sampleSnapshot(name, description) }
   val haTheme = remember(style, cardStyle) { cardStyle.cardPalette(style, darkTheme = true) }
   val background = remember(cardStyle) { cardStyle.wearBackground() }
-  Box(
-    Modifier.size(pane.widthDp, pane.heightDp)
-      .clip(RoundedCornerShape(CONTAINER_CORNER))
-      .background(background?.base ?: WEAR_SURFACE)
-      .wearLayers(background)
-      .padding(CONTAINER_PADDING)
+  val look = remember(cardStyle) { cardStyle.wearLevelLook() }
+  // The Large pane shows the style's level too, at a sample reading: what a battery, humidity or
+  // percentage card's container fills with on the watch.
+  val level = if (pane == WearPane.Large) SAMPLE_LEVEL else null
+  CachedCardPreview(
+    cacheKey = WearPaneKey(style, cardStyle.id, name, description, pane),
+    profile = androidXExperimentalWrap,
+    modifier = Modifier.size(pane.widthDp, pane.heightDp),
+    card = SAMPLE_CARD,
+    snapshot = snapshot,
   ) {
-    CachedCardPreview(
-      cacheKey = WearPaneKey(style, cardStyle.id, name, description, pane),
-      profile = androidXExperimentalWrap,
-      modifier =
-        Modifier.size(
-          pane.widthDp - CONTAINER_PADDING * 2,
-          pane.heightDp - CONTAINER_PADDING * 2,
-        ),
-      card = SAMPLE_CARD,
-      snapshot = snapshot,
+    RemoteWearContainer(
+      background,
+      (background?.base ?: WEAR_SURFACE).rc,
+      CONTAINER_CORNER.value.rdp,
+      level,
+      look,
     ) {
-      ProvideCardRegistry(registry) {
-        ProvideCardStyle(cardStyle, haTheme, darkTheme = true) {
-          ProvideCardSizeMode(CardSizeMode.Fixed) {
-            ProvideCardChrome(enabled = false) {
-              ProvideFixedCanvasAxis(BreakpointAxis.Height) {
-                ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
-                  RenderChild(SAMPLE_CARD, snapshot, RemoteModifier.rcFillMaxWidth())
+      RemoteBox(RemoteModifier.fillMaxSize().padding(CONTAINER_PADDING.value.rdp)) {
+        ProvideCardRegistry(registry) {
+          ProvideCardStyle(cardStyle, haTheme, darkTheme = true) {
+            ProvideCardSizeMode(CardSizeMode.Fixed) {
+              ProvideCardChrome(enabled = false) {
+                ProvideFixedCanvasAxis(BreakpointAxis.Height) {
+                  ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
+                    RenderChild(SAMPLE_CARD, snapshot, RemoteModifier.rcFillMaxWidth())
+                  }
                 }
               }
             }
@@ -149,14 +158,8 @@ private fun WearPaneCard(
   }
 }
 
-/** [background]'s layers over the container's fill, inside its clip. */
-private fun Modifier.wearLayers(background: HaWearBackground?): Modifier =
-  background?.layers.orEmpty().fold(this) { modifier, layer ->
-    modifier.background(
-      if (layer.vertical) Brush.verticalGradient(layer.colors)
-      else Brush.horizontalGradient(layer.colors)
-    )
-  }
+/** The sample reading a Large pane's level shows: a battery at 62 %. */
+private val SAMPLE_LEVEL = HaWearLevel(null, HaMeasureKind.Battery, 0f, 100f, 62f)
 
 private data class WearPaneKey(
   val style: ThemeStyle,

@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.toArgb
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.components.CLASSIC_WEAR_SURFACE
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.wearBackground
 import kotlinx.serialization.json.contentOrNull
@@ -22,7 +23,7 @@ import kotlinx.serialization.json.jsonPrimitive
  */
 object ContainerTint {
   /** The container colour Glance Wear fills by default (`surfaceContainerLow`). */
-  val base: Color = Color(39, 36, 48)
+  val base: Color = CLASSIC_WEAR_SURFACE
 
   private val Heat = Color(0xFFF4511E)
   private val Cool = Color(0xFF039BE5)

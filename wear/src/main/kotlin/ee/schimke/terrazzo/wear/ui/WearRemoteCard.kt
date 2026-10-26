@@ -11,10 +11,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.player.core.platform.BitmapLoader
@@ -46,11 +44,14 @@ import ee.schimke.ha.rc.StablePictures
 import ee.schimke.ha.rc.cards.cardVisibilitySignature
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
+import ee.schimke.ha.rc.components.CLASSIC_WEAR_SURFACE
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaUberTheme
-import ee.schimke.ha.rc.components.HaWearBackground
+import ee.schimke.ha.rc.components.HaWearLevel
+import ee.schimke.ha.rc.components.RemoteWearContainer
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.wearBackground
+import ee.schimke.ha.rc.components.wearLevelLook
 import ee.schimke.terrazzo.wear.data.toEntityState
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
 import ee.schimke.terrazzo.wear.sync.WearTapDispatcher
@@ -59,12 +60,12 @@ import ee.schimke.terrazzo.wear.widget.SlotContent
 import ee.schimke.terrazzo.wear.widget.WearWidgetFrame
 import ee.schimke.terrazzo.wear.widget.WearWidgetTemplate
 import ee.schimke.terrazzo.wear.widget.neutralWidgetTemplate
-import ee.schimke.terrazzo.wear.widget.remoteBrush
 import ee.schimke.terrazzo.wear.widget.syncedPicture
 import ee.schimke.terrazzo.wear.widget.wearAppContainer
 import ee.schimke.terrazzo.wear.widget.wearCardDataTier
 import ee.schimke.terrazzo.wear.widget.wearDesignProperties
 import ee.schimke.terrazzo.wear.widget.wearDesignTemplate
+import ee.schimke.terrazzo.wear.widget.wearLevel
 import ee.schimke.terrazzo.wear.widget.wearWidgetCardStyle
 import ee.schimke.terrazzo.wear.widget.wearWidgetColors
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
@@ -187,6 +188,9 @@ internal fun WearRemoteCard(
       signature,
       cardIconSignature(card, snapshot),
       cardVisibilitySignature(card, snapshot),
+      // Whether its container's level has a reading: a card drawn without a template keeps the
+      // last pushed one, since a host pushes no number for an unavailable state.
+      wearLevel(card, snapshot)?.value?.isFinite(),
     )
   val view = LocalView.current
   val configuration = LocalConfiguration.current
@@ -240,7 +244,7 @@ internal fun WearRemoteCard(
         ) {
           // No template (a card with no template shape): the widget's direct document, framed
           // alike.
-          WearAppFrame(frame, tint, style.wearBackground()) {
+          WearAppFrame(frame, tint, style, wearLevel(card, snapshot)) {
             SlotContent(
               registry,
               colors,
@@ -384,27 +388,36 @@ internal fun wearTemplateShape(
   registry: CardRegistry,
 ): String? = registry.converterFor(design.type)?.wearDesignProperties(design, snapshot)?.shape
 
-/** [content] in [frame]'s container, as a widget host draws one: rounded, filled and padded. */
+/**
+ * [content] in [frame]'s container, as a widget host draws one: rounded, filled and padded, in
+ * [cardStyle]'s Wear background, with [level]'s reading filling it (the template's own container,
+ * [RemoteWearContainer], with the frame's values).
+ */
 @Composable
 private fun WearAppFrame(
   frame: WearWidgetFrame,
   tint: Int?,
-  background: HaWearBackground?,
+  cardStyle: HaUberTheme,
+  level: HaWearLevel?,
   content: @Composable () -> Unit,
 ) {
-  val filled =
-    RemoteModifier.fillMaxSize()
-      .clip(RemoteRoundedCornerShape(frame.cornerRadiusDp.rdp))
-      .background((tint?.let { androidx.compose.ui.graphics.Color(it) } ?: WIDGET_SURFACE).rc)
-  // The card style's layers over the fill, inside the same clip: the frame's corner radius.
-  val layered =
-    background?.layers.orEmpty().fold(filled) { modifier, layer ->
-      modifier.background(layer.remoteBrush())
-    }
-  RemoteBox(
-    modifier = layered.padding(frame.horizontalPaddingDp.rdp, frame.verticalPaddingDp.rdp)
+  val background = cardStyle.wearBackground()
+  val fill =
+    tint?.let { androidx.compose.ui.graphics.Color(it) } ?: background?.base ?: WIDGET_SURFACE
+  RemoteWearContainer(
+    background,
+    fill.rc,
+    frame.cornerRadiusDp.rdp,
+    level,
+    cardStyle.wearLevelLook(),
   ) {
-    content()
+    RemoteBox(
+      modifier =
+        RemoteModifier.fillMaxSize()
+          .padding(frame.horizontalPaddingDp.rdp, frame.verticalPaddingDp.rdp)
+    ) {
+      content()
+    }
   }
 }
 
@@ -464,7 +477,7 @@ internal fun Modifier.scaledFrame(width: Dp, height: Dp, scale: Float): Modifier
   }
 
 /** The container colour a widget host fills for an untinted widget. */
-private val WIDGET_SURFACE = androidx.compose.ui.graphics.Color(39, 36, 48)
+private val WIDGET_SURFACE = CLASSIC_WEAR_SURFACE
 
 /** The snapshot the watch's cards render from: its last synced entity values. */
 internal fun wearSnapshot(values: Map<String, EntityValue>): HaSnapshot =
