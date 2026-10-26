@@ -140,14 +140,22 @@ JVM exactly as the library is captured. It draws:
 - `asset/image`, with the design's uploaded pictures baked in (as PNG) under names
   of the design's own (`asset_<key>`);
 - `ha-cards/remote-text`;
-- the `size`, `width`, `height`, `offset`, `padding`, `alpha` and `fillMax*`
-  modifiers.
+- the `size`, `width`, `height`, `offset`, `padding`, `alpha`, `scale`, `rotate`
+  and `fillMax*` modifiers.
 
 Any property or modifier value may be a literal, a state variable (`{"type":
 "state"}`) or a `select` between two numbers by a boolean state variable. State
 variables become named values in the `USER` domain, so one named for a card binding
 (`cover.s0.is_on`) is the value the app pushes: the card follows Home Assistant
-without a re-encode, and a number that reads state tweens on change only. Anything
+without a re-encode.
+
+Move things with transforms, not sizes. A state-driven `offset`, `scale` or
+`rotate` is drawn as one `graphicsLayer` per element (a player takes only one), so it
+tweens on change (never on the first frame). A `size`, `width` or `height` that reads
+state snaps instead: the player measures when a value changes, so a tweened size
+would be measured at its old value and land one change late. A door that folds up is
+one picture, scaled from 1 to almost 0 by `select(is_on, …)` with an offset of half
+the height it loses, so it shrinks towards its top edge. Anything
 else (events, predicates, other components) is refused naming the node, rather than
 drawn approximately. A template built here may use only operations the library
 design it varies already uses; a UI Builder export is held to the app's profile.

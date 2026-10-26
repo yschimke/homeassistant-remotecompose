@@ -2,7 +2,13 @@ package ee.schimke.ha.designs
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Density
@@ -29,9 +35,9 @@ import org.jetbrains.skia.EncodedImageFormat
 import org.jetbrains.skia.Surface
 
 /**
- * A hand-made card from UI Builder: a picture of the open garage, and the door's picture over the
- * doorway, its height following the cover's `is_on` (open hides it up under the lintel). Compiled
- * here, it binds the card's own value by name, and the door moves when the host pushes it.
+ * A hand-made card from UI Builder: a picture of the open garage, and one picture of the door over
+ * the doorway, scaled from its top edge by the cover's `is_on` (open folds it up under the lintel).
+ * Compiled here, it binds the card's own value by name, and the door moves when the host pushes it.
  */
 class UiBuilderDesignCompilerTest {
   private val compiler = UiBuilderDesignCompiler()
@@ -89,10 +95,13 @@ class UiBuilderDesignCompilerTest {
               "properties": {
                 "assetKey": {"type": "string", "value": "garage-door"},
                 "contentScale": {"type": "string", "value": "fillBounds"}},
-              "modifiers": [{"type": "fillMaxWidth"},
-                {"type": "height", "heightDp": {"type": "expr", "op": "select", "args": [
+              "modifiers": [{"type": "fillMaxSize"},
+                {"type": "offset", "xDp": 0, "yDp": {"type": "expr", "op": "select", "args": [
                   {"type": "state", "variable": "cover.s0.is_on"},
-                  {"type": "float", "value": 3}, {"type": "float", "value": 200}]}}],
+                  {"type": "float", "value": -98.5}, {"type": "float", "value": 0}]}},
+                {"type": "scale", "scaleX": 1, "scaleY": {"type": "expr", "op": "select",
+                  "args": [{"type": "state", "variable": "cover.s0.is_on"},
+                  {"type": "float", "value": 0.015}, {"type": "float", "value": 1}]}}],
               "slots": {}}
           }
         }
@@ -143,6 +152,42 @@ class UiBuilderDesignCompilerTest {
     val open = play(bytes, mapOf("cover.s0.is_on" to RcNamedValue.Integer(1)))
     assertTrue(closed.isRed(180, 200), "closed: the door covers the doorway")
     assertTrue(!open.isRed(180, 200), "open: the doorway shows the garage")
+  }
+
+  @Test
+  fun theDoorMovesOnTheFirstChangeTheHostPushes() {
+    val bytes = compiler.compile(document, assets, key)
+    var open by mutableStateOf(0)
+    // As RemoteComposeCard pushes values: into its own map, as it composes.
+    val scene =
+      ImageComposeScene(360, 300, Density(1f)) {
+        val values = remember {
+          mutableStateMapOf<String, RcNamedValue>("cover.s0.is_on" to RcNamedValue.Integer(0))
+        }
+        val current = open
+        SideEffect { values["cover.s0.is_on"] = RcNamedValue.Integer(current) }
+        Box(Modifier.width(360.dp)) { RcComposePlayer(bytes, namedValues = values) }
+      }
+    scene.use { player ->
+      var frameNanos = 0L
+      fun settle(): Bitmap {
+        // Frames a second apart on the frame clock; the player tweens on the wall clock.
+        var image = player.render(frameNanos)
+        repeat(40) {
+          Thread.sleep(20)
+          frameNanos += 20_000_000L
+          image = player.render(frameNanos)
+        }
+        return Bitmap.makeFromImage(image)
+      }
+      assertTrue(settle().isRed(180, 200), "closed")
+      open = 1
+      Snapshot.sendApplyNotifications()
+      assertTrue(!settle().isRed(180, 200), "open on the first change, not the next")
+      open = 0
+      Snapshot.sendApplyNotifications()
+      assertTrue(settle().isRed(180, 200), "closed again")
+    }
   }
 
   @Test

@@ -14,6 +14,7 @@ import androidx.compose.remote.creation.compose.modifier.alpha
 import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.graphicsLayer
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.offset
 import androidx.compose.remote.creation.compose.modifier.padding
@@ -61,13 +62,15 @@ import org.jetbrains.skia.Image
  * Compiles a person's UI Builder design (`ha-cards`) to a Remote Compose template here, for when UI
  * Builder can't export one (`export.rc` is a build feature of the builder, and the hosted one
  * doesn't serve it). It covers what a hand-made card is drawn with: boxes, columns and rows, the
- * design's own pictures (`asset/image`) and text, with size, offset, padding and alpha.
+ * design's own pictures (`asset/image`) and text, with size, offset, padding, alpha, scale and
+ * rotation.
  *
  * A property or modifier value may read a state variable (`{"type": "state"}`), or pick between two
  * numbers by a boolean one (`{"type": "expr", "op": "select"}`). State variables become named
  * values in the `USER` domain, so a variable named for a card binding (`cover.s0.is_on`) is the
- * value the app pushes, and the card follows Home Assistant without a re-encode. A number that
- * reads state tweens when it changes, never on the first frame (the host seeds it first).
+ * value the app pushes, and the card follows Home Assistant without a re-encode. A transform that
+ * reads state (an offset, a scale, a rotation, alpha) tweens when it changes, never on the first
+ * frame (the host seeds it first); a size that reads state snaps.
  *
  * Anything else is refused by [problems], naming the node, rather than drawn approximately.
  */
@@ -217,40 +220,80 @@ class UiBuilderDesignCompiler(
       }
     }
 
+    /**
+     * [modifiers] after [start]. A size reading state snaps to its new value: the player measures
+     * when a value changes, so a tween there would be measured at its old value. A state-driven
+     * offset, a scale and a rotation are drawn transforms instead, which tween: together one
+     * `graphicsLayer` after the layout modifiers (a player takes one per element), translations
+     * added, scales multiplied and rotations added. A layer draws its translation unscaled, as an
+     * offset before a scale does.
+     */
     @Composable
     private fun applyModifiers(start: RemoteModifier, modifiers: JsonArray?): RemoteModifier {
       var applied = start
+      var translationX: RemoteFloat? = null
+      var translationY: RemoteFloat? = null
+      var scaleX: RemoteFloat? = null
+      var scaleY: RemoteFloat? = null
+      var rotation: RemoteFloat? = null
+      fun RemoteFloat?.plus(other: RemoteFloat) = this?.let { it + other } ?: other
+      fun RemoteFloat?.times(other: RemoteFloat) = this?.let { it * other } ?: other
       modifiers.orEmpty().forEach {
         val m = it.jsonObject
-        applied =
-          when (m.string("type")) {
-            "fillMaxWidth" -> applied.fillMaxWidth()
-            "fillMaxHeight" -> applied.fillMaxHeight()
-            "fillMaxSize" -> applied.fillMaxSize()
-            "size" -> applied.size(dp(m["widthDp"]).asRemoteDp(), dp(m["heightDp"]).asRemoteDp())
-            "width" -> applied.width(dp(m["widthDp"]).asRemoteDp())
-            "height" -> applied.height(dp(m["heightDp"]).asRemoteDp())
-            "offset" -> applied.offset(dp(m["xDp"]).asRemoteDp(), dp(m["yDp"]).asRemoteDp())
-            "padding" ->
-              applied.padding(
-                start = dp(m["startDp"]).asRemoteDp(),
-                top = dp(m["topDp"]).asRemoteDp(),
-                end = dp(m["endDp"]).asRemoteDp(),
-                bottom = dp(m["bottomDp"]).asRemoteDp(),
-              )
-            "alpha" -> applied.alpha(dp(m["alpha"], default = 1f))
-            else -> applied
+        when (m.string("type")) {
+          "fillMaxWidth" -> applied = applied.fillMaxWidth()
+          "fillMaxHeight" -> applied = applied.fillMaxHeight()
+          "fillMaxSize" -> applied = applied.fillMaxSize()
+          "size" ->
+            applied =
+              applied.size(size(m["widthDp"]).asRemoteDp(), size(m["heightDp"]).asRemoteDp())
+          "width" -> applied = applied.width(size(m["widthDp"]).asRemoteDp())
+          "height" -> applied = applied.height(size(m["heightDp"]).asRemoteDp())
+          "offset" -> {
+            val x = number(m["xDp"]) ?: 0f.rf
+            val y = number(m["yDp"]) ?: 0f.rf
+            if (x.constantValueOrNull != null && y.constantValueOrNull != null) {
+              applied = applied.offset(x.asRemoteDp(), y.asRemoteDp())
+            } else {
+              translationX = translationX.plus(animated(x).asRemoteDp().toPx())
+              translationY = translationY.plus(animated(y).asRemoteDp().toPx())
+            }
           }
+          "scale" -> {
+            scaleX = scaleX.times(animated(number(m["scaleX"]) ?: 1f.rf))
+            scaleY = scaleY.times(animated(number(m["scaleY"]) ?: 1f.rf))
+          }
+          "rotate" -> rotation = rotation.plus(animated(number(m["degrees"]) ?: 0f.rf))
+          "padding" ->
+            applied =
+              applied.padding(
+                start = size(m["startDp"]).asRemoteDp(),
+                top = size(m["topDp"]).asRemoteDp(),
+                end = size(m["endDp"]).asRemoteDp(),
+                bottom = size(m["bottomDp"]).asRemoteDp(),
+              )
+          "alpha" -> applied = applied.alpha(animated(number(m["alpha"]) ?: 1f.rf))
+        }
+      }
+      if (listOf(translationX, translationY, scaleX, scaleY, rotation).any { it != null }) {
+        applied = applied.graphicsLayer {
+          translationX?.let { this.translationX = it }
+          translationY?.let { this.translationY = it }
+          scaleX?.let { this.scaleX = it }
+          scaleY?.let { this.scaleY = it }
+          rotation?.let { rotationZ = it }
+        }
       }
       return applied
     }
 
-    /** A number: a literal, a state variable, or a select; tweened on change when it can change. */
+    /** A layout number: a literal, a state variable or a select, applied as it changes. */
+    private fun size(value: JsonElement?): RemoteFloat = number(value) ?: 0f.rf
+
+    /** [number], tweened when it changes; a constant as it is. */
     @Composable
-    private fun dp(value: JsonElement?, default: Float = 0f): RemoteFloat {
-      val number = number(value) ?: return default.rf
-      return if (number.constantValueOrNull != null) number else animateRemoteFloat(number)
-    }
+    private fun animated(number: RemoteFloat): RemoteFloat =
+      if (number.constantValueOrNull != null) number else animateRemoteFloat(number)
 
     private fun number(value: JsonElement?): RemoteFloat? {
       if (value == null || value is kotlinx.serialization.json.JsonNull) return null
@@ -344,6 +387,8 @@ class UiBuilderDesignCompiler(
         "offset",
         "padding",
         "alpha",
+        "scale",
+        "rotate",
       )
 
     private val LITERALS = setOf("string", "bool", "int", "float", "dimension", "color", "null")
