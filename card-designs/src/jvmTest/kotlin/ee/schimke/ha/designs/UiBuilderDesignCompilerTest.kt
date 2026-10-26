@@ -27,7 +27,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import org.jetbrains.skia.Bitmap
 import org.jetbrains.skia.Color
@@ -188,6 +191,95 @@ class UiBuilderDesignCompilerTest {
       Snapshot.sendApplyNotifications()
       assertTrue(settle().isRed(180, 200), "closed again")
     }
+  }
+
+  /**
+   * [document] with a tint over the door in the palette's accent, moving with it, and a night scrim
+   * over everything.
+   */
+  private val adaptive: JsonObject by lazy {
+    val nodes = document.getValue("nodes").jsonObject
+    val door = nodes.getValue("door").jsonObject
+    val well = nodes.getValue("door-well").jsonObject
+    val stage = nodes.getValue("stage").jsonObject
+    fun withChildren(node: JsonObject, children: List<String>) =
+      JsonObject(
+        node +
+          ("slots" to
+            JsonObject(mapOf("children" to JsonArray(children.map { JsonPrimitive(it) }))))
+      )
+    val tint =
+      Json.parseToJsonElement(
+          """
+          {"id": "tint", "componentId": "layout/box", "modifiers": ${
+            JsonArray(
+              door.getValue("modifiers").jsonArray +
+                Json.parseToJsonElement(
+                    """[{"type": "alpha", "alpha": 0.5},
+                    {"type": "background", "color": {"type": "colorToken", "value": "accent"}}]"""
+                  )
+                  .jsonArray
+            )
+          }}
+          """
+        )
+        .jsonObject
+    val night =
+      Json.parseToJsonElement(
+          """
+          {"id": "night", "componentId": "layout/box", "modifiers": [{"type": "fillMaxSize"},
+            {"type": "alpha", "alpha": 0.5},
+            {"type": "background", "color": {"type": "colorToken", "value": "night"}}]}
+          """
+        )
+        .jsonObject
+    JsonObject(
+      document +
+        ("nodes" to
+          JsonObject(
+            nodes +
+              mapOf(
+                "door-well" to withChildren(well, listOf("door", "tint")),
+                "stage" to withChildren(stage, listOf("inside", "door-well", "night")),
+                "tint" to tint,
+                "night" to night,
+              )
+          ))
+    )
+  }
+
+  private fun Bitmap.rgb(x: Int, y: Int): Triple<Int, Int, Int> =
+    getColor(x, y).let { Triple(Color.getR(it), Color.getG(it), Color.getB(it)) }
+
+  @Test
+  fun coloursFollowTheThemeItIsPublishedIn() {
+    val closed = mapOf("cover.s0.is_on" to RcNamedValue.Integer(0))
+    val light = play(compiler.compile(adaptive, assets, key), closed)
+    val dark =
+      play(compiler.compile(adaptive, assets, key.copy(theme = "baked:Material3:dark")), closed)
+    // Outside the door: the garage as it is by day, darker at night.
+    assertEquals(Triple(0, 255, 0), light.rgb(10, 10))
+    assertTrue(dark.rgb(10, 10).second < 160, "night scrim: ${dark.rgb(10, 10)}")
+    // The door is tinted, no longer its picture's own red, and differently in each theme.
+    assertTrue(light.rgb(180, 200) != Triple(255, 0, 0), "tinted: ${light.rgb(180, 200)}")
+    assertTrue(light.rgb(180, 200) != dark.rgb(180, 200))
+    // Open, the tint folds away with the door: the doorway shows the garage.
+    val open =
+      play(
+        compiler.compile(adaptive, assets, key),
+        mapOf("cover.s0.is_on" to RcNamedValue.Integer(1)),
+      )
+    assertEquals(Triple(0, 255, 0), open.rgb(180, 200))
+  }
+
+  @Test
+  fun anUnknownColourTokenIsRefused() {
+    val unknown =
+      Json.parseToJsonElement(
+          adaptive.toString().replace("\"value\":\"accent\"", "\"value\":\"brandPink\"")
+        )
+        .jsonObject
+    assertTrue(compiler.problems(unknown, assets.keys).any { "brandPink" in it })
   }
 
   @Test

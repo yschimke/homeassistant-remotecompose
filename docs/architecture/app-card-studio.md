@@ -140,8 +140,8 @@ JVM exactly as the library is captured. It draws:
 - `asset/image`, with the design's uploaded pictures baked in (as PNG) under names
   of the design's own (`asset_<key>`);
 - `ha-cards/remote-text`;
-- the `size`, `width`, `height`, `offset`, `padding`, `alpha`, `scale`, `rotate`
-  and `fillMax*` modifiers.
+- the `size`, `width`, `height`, `offset`, `padding`, `alpha`, `scale`, `rotate`,
+  `background` and `fillMax*` modifiers.
 
 Any property or modifier value may be a literal, a state variable (`{"type":
 "state"}`) or a `select` between two numbers by a boolean state variable. State
@@ -155,7 +155,16 @@ tweens on change (never on the first frame). A `size`, `width` or `height` that 
 state snaps instead: the player measures when a value changes, so a tweened size
 would be measured at its old value and land one change late. A door that folds up is
 one picture, scaled from 1 to almost 0 by `select(is_on, …)` with an offset of half
-the height it loses, so it shrinks towards its top edge. Anything
+the height it loses, so it shrinks towards its top edge.
+
+Colours adapt to the theme. A colour is a literal (`#RRGGBB`) or a `colorToken`
+naming a card theme role (`cardBackground`, `primaryText`, `secondaryText`,
+`divider`, …), `accent` (the palette's hero colour, `placeholderAccent`) or
+`night` (black in a dark theme, clear in a light one). A design is captured once per
+theme it publishes for, so each token resolves in that theme: light and dark, and
+every palette of the card style. A photo card can tint a picture with a translucent
+`accent` box drawn over it (with the same transforms, so it moves with it) and dim
+itself at night with a `night` box at partial alpha over everything. Anything
 else (events, predicates, other components) is refused naming the node, rather than
 drawn approximately. A template built here may use only operations the library
 design it varies already uses; a UI Builder export is held to the app's profile.

@@ -10,7 +10,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteImage
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.alpha
+import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
@@ -91,7 +91,8 @@ class UiBuilderDesignCompiler(
     assets: Map<String, ByteArray>,
     key: DesignKey,
   ): ByteArray {
-    val design = Design(document, assets.mapValues { (_, bytes) -> decode(bytes) })
+    val design =
+      Design(document, assets.mapValues { (_, bytes) -> decode(bytes) }, dark = isDark(key))
     val problems = design.problems(assets.keys)
     require(problems.isEmpty()) { problems.joinToString("; ") }
     return CardDesignTemplates.captureWith(host, key) { card, snapshot, modifier ->
@@ -103,7 +104,12 @@ class UiBuilderDesignCompiler(
   private fun decode(bytes: ByteArray): ImageBitmap =
     Image.makeFromEncoded(bytes).toComposeImageBitmap()
 
-  private class Design(document: JsonObject, private val images: Map<String, ImageBitmap>) {
+  private class Design(
+    document: JsonObject,
+    private val images: Map<String, ImageBitmap>,
+    /** Whether the theme it is captured for is dark: what [NIGHT] resolves by. */
+    private val dark: Boolean = false,
+  ) {
     private val nodes: Map<String, JsonObject> =
       document["nodes"]?.jsonObject.orEmpty().mapValues { it.value.jsonObject }
     private val roots: List<String> =
@@ -157,6 +163,11 @@ class UiBuilderDesignCompiler(
             else -> args.firstNotNullOfOrNull(::valueProblem)
           }
         }
+        "colorToken" ->
+          obj
+            .string("value")
+            .takeIf { it !in COLOR_TOKENS }
+            ?.let { "colour token `$it` isn't one of ${COLOR_TOKENS.joinToString()}" }
         in LITERALS -> null
         else -> "a `$type` value isn't drawn here yet"
       }
@@ -209,7 +220,7 @@ class UiBuilderDesignCompiler(
           RemoteText(
             text = string(properties["text"]) ?: "".rs,
             modifier = modifier,
-            color = literal(properties["color"])?.contentOrNull?.let(::color) ?: theme.primaryText,
+            color = color(properties["color"]) ?: theme.primaryText,
             fontSize =
               literal(properties["fontSize"])?.floatOrNull?.roundToInt()?.rsp ?: HaType.Body,
             maxLines = literal(properties["maxLines"])?.intOrNull ?: Int.MAX_VALUE,
@@ -223,66 +234,86 @@ class UiBuilderDesignCompiler(
     /**
      * [modifiers] after [start]. A size reading state snaps to its new value: the player measures
      * when a value changes, so a tween there would be measured at its old value. A state-driven
-     * offset, a scale and a rotation are drawn transforms instead, which tween: together one
-     * `graphicsLayer` after the layout modifiers (a player takes one per element), translations
-     * added, scales multiplied and rotations added. A layer draws its translation unscaled, as an
-     * offset before a scale does.
+     * offset, a scale, a rotation and alpha are drawn instead, which tween: together one
+     * `graphicsLayer` (a player takes one per element) where the first of them is, so what follows
+     * it (a background, the content) is drawn moved, scaled and faded. Translations add, scales and
+     * alphas multiply, rotations add. A layer draws its translation unscaled, as an offset before a
+     * scale does.
      */
     @Composable
     private fun applyModifiers(start: RemoteModifier, modifiers: JsonArray?): RemoteModifier {
-      var applied = start
+      val all = modifiers.orEmpty().map { it.jsonObject }
       var translationX: RemoteFloat? = null
       var translationY: RemoteFloat? = null
       var scaleX: RemoteFloat? = null
       var scaleY: RemoteFloat? = null
       var rotation: RemoteFloat? = null
+      var alpha: RemoteFloat? = null
       fun RemoteFloat?.plus(other: RemoteFloat) = this?.let { it + other } ?: other
       fun RemoteFloat?.times(other: RemoteFloat) = this?.let { it * other } ?: other
-      modifiers.orEmpty().forEach {
-        val m = it.jsonObject
+      fun isLayer(m: JsonObject): Boolean =
         when (m.string("type")) {
-          "fillMaxWidth" -> applied = applied.fillMaxWidth()
-          "fillMaxHeight" -> applied = applied.fillMaxHeight()
-          "fillMaxSize" -> applied = applied.fillMaxSize()
-          "size" ->
-            applied =
-              applied.size(size(m["widthDp"]).asRemoteDp(), size(m["heightDp"]).asRemoteDp())
-          "width" -> applied = applied.width(size(m["widthDp"]).asRemoteDp())
-          "height" -> applied = applied.height(size(m["heightDp"]).asRemoteDp())
+          "scale",
+          "rotate",
+          "alpha" -> true
+          "offset" ->
+            number(m["xDp"])?.constantValueOrNull == null ||
+              number(m["yDp"])?.constantValueOrNull == null
+          else -> false
+        }
+      all.filter(::isLayer).forEach { m ->
+        when (m.string("type")) {
           "offset" -> {
-            val x = number(m["xDp"]) ?: 0f.rf
-            val y = number(m["yDp"]) ?: 0f.rf
-            if (x.constantValueOrNull != null && y.constantValueOrNull != null) {
-              applied = applied.offset(x.asRemoteDp(), y.asRemoteDp())
-            } else {
-              translationX = translationX.plus(animated(x).asRemoteDp().toPx())
-              translationY = translationY.plus(animated(y).asRemoteDp().toPx())
-            }
+            translationX =
+              translationX.plus(animated(number(m["xDp"]) ?: 0f.rf).asRemoteDp().toPx())
+            translationY =
+              translationY.plus(animated(number(m["yDp"]) ?: 0f.rf).asRemoteDp().toPx())
           }
           "scale" -> {
             scaleX = scaleX.times(animated(number(m["scaleX"]) ?: 1f.rf))
             scaleY = scaleY.times(animated(number(m["scaleY"]) ?: 1f.rf))
           }
           "rotate" -> rotation = rotation.plus(animated(number(m["degrees"]) ?: 0f.rf))
-          "padding" ->
-            applied =
+          "alpha" -> alpha = alpha.times(animated(number(m["alpha"]) ?: 1f.rf))
+        }
+      }
+      var applied = start
+      var layered = false
+      all.forEach { m ->
+        if (isLayer(m)) {
+          if (!layered) {
+            layered = true
+            applied = applied.graphicsLayer {
+              translationX?.let { this.translationX = it }
+              translationY?.let { this.translationY = it }
+              scaleX?.let { this.scaleX = it }
+              scaleY?.let { this.scaleY = it }
+              rotation?.let { rotationZ = it }
+              alpha?.let { this.alpha = it }
+            }
+          }
+          return@forEach
+        }
+        applied =
+          when (m.string("type")) {
+            "fillMaxWidth" -> applied.fillMaxWidth()
+            "fillMaxHeight" -> applied.fillMaxHeight()
+            "fillMaxSize" -> applied.fillMaxSize()
+            "size" ->
+              applied.size(size(m["widthDp"]).asRemoteDp(), size(m["heightDp"]).asRemoteDp())
+            "width" -> applied.width(size(m["widthDp"]).asRemoteDp())
+            "height" -> applied.height(size(m["heightDp"]).asRemoteDp())
+            "offset" -> applied.offset(size(m["xDp"]).asRemoteDp(), size(m["yDp"]).asRemoteDp())
+            "padding" ->
               applied.padding(
                 start = size(m["startDp"]).asRemoteDp(),
                 top = size(m["topDp"]).asRemoteDp(),
                 end = size(m["endDp"]).asRemoteDp(),
                 bottom = size(m["bottomDp"]).asRemoteDp(),
               )
-          "alpha" -> applied = applied.alpha(animated(number(m["alpha"]) ?: 1f.rf))
-        }
-      }
-      if (listOf(translationX, translationY, scaleX, scaleY, rotation).any { it != null }) {
-        applied = applied.graphicsLayer {
-          translationX?.let { this.translationX = it }
-          translationY?.let { this.translationY = it }
-          scaleX?.let { this.scaleX = it }
-          scaleY?.let { this.scaleY = it }
-          rotation?.let { rotationZ = it }
-        }
+            "background" -> color(m["color"])?.let { applied.background(it) } ?: applied
+            else -> applied
+          }
       }
       return applied
     }
@@ -350,6 +381,35 @@ class UiBuilderDesignCompiler(
       return RemoteString.createNamedRemoteString(name, initial, RemoteState.Domain.User)
     }
 
+    /**
+     * A colour value: a literal (`#RRGGBB`, `#AARRGGBB`), or a theme role (`colorToken`) resolved
+     * in the theme the design is captured for, so each published theme draws its own: light, dark
+     * and every palette. [NIGHT] is black in a dark theme and clear in a light one, for a scrim
+     * that only darkens at night.
+     */
+    @Composable
+    private fun color(value: JsonElement?): RemoteColor? {
+      val obj = value as? JsonObject
+      val name = (obj?.get("value") as? JsonPrimitive)?.contentOrNull ?: return null
+      if (obj.string("type") != "colorToken") return hexColor(name)
+      val theme = currentRemoteHaTheme()
+      return when (name) {
+        NIGHT -> Color(if (dark) 0xFF000000.toInt() else 0x00000000).rc
+        ACCENT,
+        "placeholderAccent" -> theme.placeholderAccent
+        "cardBackground" -> theme.cardBackground
+        "dashboardBackground" -> theme.dashboardBackground
+        "sectionBackground" -> theme.sectionBackground
+        "primaryText" -> theme.primaryText
+        "secondaryText" -> theme.secondaryText
+        "linkText" -> theme.linkText
+        "divider" -> theme.divider
+        "placeholderBackground" -> theme.placeholderBackground
+        "unknownAccent" -> theme.unknownAccent
+        else -> null
+      }
+    }
+
     private fun children(id: String): List<String> =
       nodes[id]?.get("slots")?.jsonObject.orEmpty().values.flatMap { slot ->
         (slot as? JsonArray).orEmpty().map { it.jsonPrimitive.content }
@@ -389,9 +449,36 @@ class UiBuilderDesignCompiler(
         "alpha",
         "scale",
         "rotate",
+        "background",
       )
 
     private val LITERALS = setOf("string", "bool", "int", "float", "dimension", "color", "null")
+
+    /** Black in a dark theme, clear in a light one: a scrim for night. */
+    const val NIGHT = "night"
+
+    /** The palette's hero colour (`placeholderAccent`). */
+    const val ACCENT = "accent"
+
+    /** The colour tokens a design may name: the card theme's roles, [ACCENT] and [NIGHT]. */
+    val COLOR_TOKENS =
+      setOf(
+        NIGHT,
+        ACCENT,
+        "cardBackground",
+        "dashboardBackground",
+        "sectionBackground",
+        "primaryText",
+        "secondaryText",
+        "linkText",
+        "divider",
+        "placeholderAccent",
+        "placeholderBackground",
+        "unknownAccent",
+      )
+
+    /** Whether [key]'s theme is a dark one: `baked:<palette>:dark` or `style:<id>:dark`. */
+    fun isDark(key: DesignKey): Boolean = key.theme.split(':').getOrNull(2) == "dark"
 
     /** The named bitmap an asset is baked in as: `asset_<key>`, dots and dashes as underscores. */
     fun assetName(key: String): String = "asset_" + key.replace(Regex("[^A-Za-z0-9_]"), "_")
@@ -467,7 +554,7 @@ class UiBuilderDesignCompiler(
       }
 
     /** `#RRGGBB` or `#AARRGGBB`. */
-    private fun color(hex: String): RemoteColor? {
+    private fun hexColor(hex: String): RemoteColor? {
       val digits = hex.removePrefix("#")
       val value = digits.toLongOrNull(16) ?: return null
       val argb = if (digits.length <= 6) value or 0xFF000000 else value
