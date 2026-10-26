@@ -422,6 +422,7 @@ fun DashboardViewScreen(
       onDismiss = { moreInfoEntity = null },
       readOnly = readOnly,
       onAction = actionDispatcher::dispatch,
+      temperatureUnit = (state as? DashboardState.Ready)?.snapshot?.temperatureUnit,
     )
   }
 }

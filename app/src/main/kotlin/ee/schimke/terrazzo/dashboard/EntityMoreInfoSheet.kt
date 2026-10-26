@@ -88,6 +88,7 @@ fun EntityMoreInfoSheet(
   onDismiss: () -> Unit,
   readOnly: Boolean = false,
   onAction: ((HaAction) -> Unit)? = null,
+  temperatureUnit: String? = null,
 ) {
   val sheetState = rememberModalBottomSheetState()
   ProvideScreenSkin {
@@ -106,6 +107,7 @@ fun EntityMoreInfoSheet(
         onOpenHistory,
         readOnly = readOnly,
         onAction = onAction,
+        temperatureUnit = temperatureUnit,
       )
     }
   }
@@ -129,6 +131,7 @@ fun EntityMoreInfo(
   nowMs: () -> Long = System::currentTimeMillis,
   readOnly: Boolean = false,
   onAction: ((HaAction) -> Unit)? = null,
+  temperatureUnit: String? = null,
 ) {
   val attributes = state?.attributes.orEmpty()
   val name = attributes["friendly_name"]?.jsonPrimitive?.contentOrNull ?: entityId
@@ -169,7 +172,10 @@ fun EntityMoreInfo(
     }
     Hero(state, unit, accent, nowMs)
     if (onAction != null) {
-      val controls = remember(entityId, state) { entityControls(entityId, state) }
+      val controls =
+        remember(entityId, state, temperatureUnit) {
+          entityControls(entityId, state, temperatureUnit)
+        }
       EntityControlsPanel(
         controls,
         accent,

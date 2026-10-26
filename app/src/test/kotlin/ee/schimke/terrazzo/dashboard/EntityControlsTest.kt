@@ -106,6 +106,45 @@ class EntityControlsTest {
   }
 
   @Test
+  fun aFahrenheitInstanceStepsWholeDegrees() {
+    // No unit or step on the entity: the instance's unit decides.
+    val climate =
+      entity(
+        "climate.den",
+        "heat",
+        "supported_features" to JsonPrimitive(1),
+        "temperature" to JsonPrimitive(68),
+        "min_temp" to JsonPrimitive(45),
+        "max_temp" to JsonPrimitive(95),
+      )
+    val target = assertIs<EntityControl.Stepper>(entityControls("climate.den", climate, "°F")[0])
+    assertEquals(1f, target.step)
+    assertEquals("°F", target.unit)
+  }
+
+  @Test
+  fun aMediaPlayerOnlyTurnsTheWaysItSupports() {
+    // Turn on only.
+    val player = entity("media_player.tv", "on", "supported_features" to JsonPrimitive(128))
+    val power = assertIs<EntityControl.Power>(entityControls("media_player.tv", player)[0])
+    assertEquals(null, power.turnOff)
+    assertEquals(HaAction.CallService("media_player", "turn_on", "media_player.tv"), power.turnOn)
+  }
+
+  @Test
+  fun aLargeNumberIsSentWhole() {
+    val number =
+      entity(
+        "number.budget",
+        "1000",
+        "min" to JsonPrimitive(0),
+        "max" to JsonPrimitive(10_000_000),
+      )
+    val level = assertIs<EntityControl.Level>(entityControls("number.budget", number)[0])
+    assertEquals(JsonPrimitive(5_000_000.0), level.set(5_000_000f).data("value"))
+  }
+
+  @Test
   fun aPlayingMediaPlayerOffersPauseAndVolume() {
     // Pause, volume set, previous, next, play.
     val features = 1 or 4 or 16 or 32 or 16384

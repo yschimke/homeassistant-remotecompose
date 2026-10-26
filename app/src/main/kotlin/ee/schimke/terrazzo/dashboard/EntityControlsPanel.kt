@@ -104,10 +104,12 @@ private fun PowerRow(
       style = MaterialTheme.typography.titleMedium,
       modifier = Modifier.weight(1f),
     )
+    // The switch's next move: off when on, on when off; disabled if the entity can't make it.
+    val next = if (control.on) control.turnOff else control.turnOn
     Switch(
       checked = control.on,
-      onCheckedChange = { onAction(if (it) control.turnOn else control.turnOff) },
-      enabled = enabled,
+      onCheckedChange = { next?.let(onAction) },
+      enabled = enabled && next != null,
       colors = SwitchDefaults.colors(checkedTrackColor = accent),
       modifier = Modifier.semantics { contentDescription = "Power" },
     )

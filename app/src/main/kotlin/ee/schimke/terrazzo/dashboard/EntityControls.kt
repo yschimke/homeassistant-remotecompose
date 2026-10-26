@@ -1,7 +1,9 @@
 package ee.schimke.terrazzo.dashboard
 
 import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.model.temperatureUnitFor
 import ee.schimke.ha.rc.components.HaAction
+import kotlin.math.round
 import kotlin.math.roundToInt
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -18,8 +20,10 @@ import kotlinx.serialization.json.longOrNull
  * brightness slider and a plain switch doesn't.
  */
 sealed interface EntityControl {
-  /** An on/off switch. */
-  data class Power(val on: Boolean, val turnOn: HaAction, val turnOff: HaAction) : EntityControl
+  /**
+   * An on/off switch; a direction the entity can't take ([turnOn] or [turnOff] null) is disabled.
+   */
+  data class Power(val on: Boolean, val turnOn: HaAction?, val turnOff: HaAction?) : EntityControl
 
   /**
    * A slider over [range], in [step]s, set when released: brightness, a cover's position, a fan's
@@ -78,8 +82,16 @@ sealed interface EntityControl {
   }
 }
 
-/** [entityId]'s controls, in the order the sheet shows them; empty for a read-only entity. */
-fun entityControls(entityId: String, state: EntityState?): List<EntityControl> {
+/**
+ * [entityId]'s controls, in the order the sheet shows them; empty for a read-only entity.
+ * [temperatureUnit] is the instance's (`HaSnapshot.temperatureUnit`), for a thermostat that doesn't
+ * name its own.
+ */
+fun entityControls(
+  entityId: String,
+  state: EntityState?,
+  temperatureUnit: String? = null,
+): List<EntityControl> {
   if (state == null || state.state == "unavailable") return emptyList()
   val domain = entityId.substringBefore('.')
   val attrs = state.attributes
@@ -217,7 +229,7 @@ fun entityControls(entityId: String, state: EntityState?): List<EntityControl> {
     "climate" ->
       buildList {
         if (supports(CLIMATE_TARGET_TEMPERATURE) && attrs["temperature"] != null) {
-          val unit = attrs.string("temperature_unit") ?: "°"
+          val unit = temperatureUnitFor(state, temperatureUnit)
           val step =
             attrs.double("target_temp_step")?.toFloat()?.takeIf { it > 0f }
               ?: if (unit == "°F") 1f else 0.5f
@@ -291,8 +303,15 @@ fun entityControls(entityId: String, state: EntityState?): List<EntityControl> {
       )
     "media_player" ->
       buildList {
-        if (supports(MEDIA_TURN_ON) || supports(MEDIA_TURN_OFF))
-          add(power().copy(on = state.state != "off"))
+        if (supports(MEDIA_TURN_ON) || supports(MEDIA_TURN_OFF)) {
+          add(
+            EntityControl.Power(
+              on = state.state != "off",
+              turnOn = call("turn_on").takeIf { supports(MEDIA_TURN_ON) },
+              turnOff = call("turn_off").takeIf { supports(MEDIA_TURN_OFF) },
+            )
+          )
+        }
         val transport = buildList {
           if (supports(MEDIA_PREVIOUS)) {
             add(Button("Previous", EntityControl.ButtonKind.Previous, call("media_previous_track")))
@@ -416,7 +435,7 @@ fun snapToStep(value: Float, range: ClosedFloatingPointRange<Float>, step: Float
 }
 
 /** [value] to three decimals: a stepped float sent as `21.5`, not `21.500002`. */
-private fun decimal(value: Float): Double = (value * 1000.0).roundToInt() / 1000.0
+private fun decimal(value: Float): Double = round(value * 1000.0) / 1000.0
 
 private typealias Button = EntityControl.Button
 
