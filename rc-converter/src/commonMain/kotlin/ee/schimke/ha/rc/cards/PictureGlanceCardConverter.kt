@@ -48,7 +48,9 @@ class PictureGlanceCardConverter : DesignedCardConverter() {
    * (icon, accent); the title and the cells' names are bindings and each cell's on/off is `is_on`.
    */
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
-    if (!setOf("type", "title", "image", "entities").containsAll(card.raw.keys)) return null
+    // A card with a picture (`image`, `camera_image`) draws it on the direct path: the design
+    // template has no picture slot.
+    if (!setOf("type", "title", "entities").containsAll(card.raw.keys)) return null
     val rows = card.raw["entities"] as? JsonArray ?: return null
     if (rows.isEmpty() || rows.any { it is JsonObject && !setOf("entity").containsAll(it.keys) })
       return null
@@ -99,7 +101,7 @@ class PictureGlanceCardConverter : DesignedCardConverter() {
       emptyMap(),
     )
 
-  /** What [card] shows: its title and image caption over a strip of entity cells. */
+  /** What [card] shows: its picture (`camera_image`, else `image`) over a strip of entity cells. */
   internal fun pictureGlanceData(card: CardConfig, snapshot: HaSnapshot): HaPictureGlanceData {
     val image = card.raw["image"]?.jsonPrimitive?.content
     val title = card.raw["title"]?.jsonPrimitive?.content
@@ -133,11 +135,22 @@ class PictureGlanceCardConverter : DesignedCardConverter() {
       )
     }
 
+    // HA draws `camera_image`'s picture when the card names one, else the static `image`.
+    val cameraId = card.raw["camera_image"]?.jsonPrimitive?.content?.takeIf { '.' in it }
+    val cameraPicture =
+      cameraId
+        ?.let { snapshot.states[it] }
+        ?.attributes
+        ?.get("entity_picture")
+        ?.jsonPrimitive
+        ?.content
     return HaPictureGlanceData(
       title = title,
       captionUrl = image,
       placeholderIcon = Icons.Filled.Image,
       cells = cells,
+      imageUrl = cameraPicture ?: image,
+      pictureEntityId = cameraId.takeIf { cameraPicture != null },
     )
   }
 }

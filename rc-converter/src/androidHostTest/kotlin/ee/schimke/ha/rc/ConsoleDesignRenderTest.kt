@@ -454,7 +454,7 @@ class ConsoleDesignRenderTest {
         "picture-keys" to
           jsonCard(
             "picture-glance",
-            """{"type":"picture-glance","title":"Studio","image":"/local/studio.jpg","entities":["switch.fan","light.kitchen"]}""",
+            """{"type":"picture-glance","title":"Studio","entities":["switch.fan","light.kitchen"]}""",
           ),
         "service-keys" to
           jsonCard(

@@ -998,8 +998,8 @@ class CardDesignParityTest {
     assertParity(
       "picture-glance-dark",
       card("picture-glance") {
+        // No `image`: a glance with a picture draws it on the direct path, not from the design.
         put("title", "Living room")
-        put("image", "/local/living.jpg")
         putJsonArray("entities") {
           add("light.kitchen")
           add("switch.fan")
