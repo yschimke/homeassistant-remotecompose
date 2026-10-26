@@ -1,7 +1,10 @@
 package ee.schimke.terrazzo.dashboard
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -24,6 +29,7 @@ import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
@@ -34,6 +40,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,8 +48,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -84,6 +93,7 @@ internal fun EntityControlsPanel(
           is EntityControl.Stepper -> StepperRow(control, accent, !readOnly, onAction)
           is EntityControl.Buttons -> ButtonsRow(control, !readOnly, onAction)
           is EntityControl.Choice -> ChoiceRow(control, !readOnly, onAction)
+          is EntityControl.Colour -> ColourRow(control, !readOnly, onAction)
         }
       }
     }
@@ -100,7 +110,8 @@ private fun PowerRow(
   val skin = currentScreenSkin()
   Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
     Text(
-      skin.label(if (control.on) "On" else "Off"),
+      // The state itself is the sheet's headline; this row names what the switch does.
+      skin.label("Power"),
       style = MaterialTheme.typography.titleMedium,
       modifier = Modifier.weight(1f),
     )
@@ -209,10 +220,29 @@ private fun ButtonsRow(
   onAction: (HaAction) -> Unit,
 ) {
   val skin = currentScreenSkin()
+  // A command waiting on its confirmation.
+  var confirming by remember { mutableStateOf<EntityControl.Button?>(null) }
+  confirming?.let { button ->
+    AlertDialog(
+      onDismissRequest = { confirming = null },
+      title = { Text(button.confirm.orEmpty()) },
+      confirmButton = {
+        TextButton(
+          onClick = {
+            confirming = null
+            onAction(button.action)
+          }
+        ) {
+          Text(button.label)
+        }
+      },
+      dismissButton = { TextButton(onClick = { confirming = null }) { Text("Cancel") } },
+    )
+  }
   Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
     control.buttons.forEach { button ->
       FilledTonalButton(
-        onClick = { onAction(button.action) },
+        onClick = { if (button.confirm != null) confirming = button else onAction(button.action) },
         enabled = enabled,
         shape = RoundedCornerShape(skin.controlCorner),
         modifier = Modifier.weight(1f),
@@ -259,6 +289,68 @@ private fun ChoiceRow(
     }
   }
 }
+
+/** The colour swatches, the light's own colour ringed. */
+@Composable
+private fun ColourRow(
+  control: EntityControl.Colour,
+  enabled: Boolean,
+  onAction: (HaAction) -> Unit,
+) {
+  val skin = currentScreenSkin()
+  Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Text(
+      skin.label("Colour"),
+      style = MaterialTheme.typography.labelLarge,
+      color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    // Two rows of four: eight 48 dp touch targets don't fit across a phone's panel.
+    PRESET_HUES.chunked(SWATCHES_PER_ROW).forEach { row ->
+      Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+        row.forEach { hue ->
+          val selected = hue == control.hue
+          Box(
+            Modifier.size(48.dp)
+              .selectable(
+                selected = selected,
+                enabled = enabled,
+                role = Role.RadioButton,
+                onClick = { onAction(control.set(hue)) },
+              )
+              .semantics { contentDescription = "Colour ${hueName(hue)}" },
+            contentAlignment = Alignment.Center,
+          ) {
+            Box(
+              Modifier.size(36.dp)
+                .then(
+                  if (selected) {
+                    Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                  } else Modifier
+                )
+                .padding(if (selected) 5.dp else 2.dp)
+                .clip(CircleShape)
+                .background(Color.hsv(hue, 1f, 1f).copy(alpha = if (enabled) 1f else 0.38f))
+            )
+          }
+        }
+      }
+    }
+  }
+}
+
+private const val SWATCHES_PER_ROW = 4
+
+private fun hueName(hue: Float): String =
+  when (hue) {
+    0f -> "red"
+    30f -> "orange"
+    55f -> "yellow"
+    120f -> "green"
+    180f -> "cyan"
+    220f -> "blue"
+    275f -> "purple"
+    else -> "pink"
+  }
 
 @Composable private fun Spacer8() = androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp))
 

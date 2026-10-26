@@ -844,8 +844,12 @@ private val MORE_INFO_LIGHT_STATE =
         put("color_temp_kelvin", 3200)
         put("min_color_temp_kelvin", 2200)
         put("max_color_temp_kelvin", 6500)
-        put("supported_color_modes", buildJsonArray { add("color_temp") })
-        put("color_mode", "color_temp")
+        put(
+          "supported_color_modes",
+          buildJsonArray { listOf("color_temp", "hs").forEach { add(it) } },
+        )
+        put("color_mode", "hs")
+        put("hs_color", buildJsonArray { listOf(215.0, 80.0).forEach { add(it) } })
       },
     lastChanged = Instant.fromEpochMilliseconds(MORE_INFO_NOW_MS - 72 * 60_000L),
     lastUpdated = Instant.fromEpochMilliseconds(MORE_INFO_NOW_MS - 72 * 60_000L),
