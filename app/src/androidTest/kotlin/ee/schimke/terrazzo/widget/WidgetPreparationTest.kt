@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -105,6 +106,45 @@ class WidgetPreparationTest {
             EntityState("light.garage_door_garage_door_light", state)
         )
     )
+
+  @Test
+  fun anInstalledWidgetPreviewsAtItsLauncherSizeWithoutAPicker() {
+    val requests = java.util.concurrent.ConcurrentLinkedQueue<WidgetSizeDp>()
+    val capture: WidgetPreviewCapture = { ctx, url, cfg, state, size ->
+      requests.add(size)
+      TerrazzoWidgetProvider().renderPreview(ctx, url, cfg, state, size)
+    }
+    val saved = mutableStateOf<CardConfig?>(null)
+    compose.setContent {
+      MaterialTheme {
+        CompositionLocalProvider(LocalWidgetPreviewCapture provides capture) {
+          WidgetConfigureScreen(
+            entry = ee.schimke.terrazzo.core.widget.WidgetStore.Entry(7, DemoData.BASE_URL, card),
+            snapshot = snapshot("on"),
+            size = WidgetSizeDp(203, 110),
+            onClose = {},
+            onSave = { saved.value = it },
+          )
+        }
+      }
+    }
+    compose.waitUntil(60_000) {
+      compose.onAllNodesWithTag("widget-render").fetchSemanticsNodes().isNotEmpty()
+    }
+    // The launcher's own size, not a grid cell multiple, and no size picker.
+    assertEquals(WidgetSizeDp(203, 110), requests.last())
+    compose
+      .onNodeWithTag("widget-fixed-size")
+      .assertWidthIsEqualTo(203.dp)
+      .assertHeightIsEqualTo(110.dp)
+    compose.onNodeWithTag("widget-grid-viewport").assertDoesNotExist()
+    compose.onNodeWithText("Compact").assertDoesNotExist()
+
+    compose.onNodeWithText("Save").assertIsNotEnabled()
+    compose.onNodeWithText("Studio light").performTextReplacement("Desk")
+    compose.onNodeWithText("Save").assertIsEnabled().performClick()
+    assertEquals("Desk", saved.value?.raw?.get("name")?.jsonPrimitive?.content)
+  }
 
   @Test
   fun failedPreviewHasRecoveryActionsWithoutAResizeGrid() {
