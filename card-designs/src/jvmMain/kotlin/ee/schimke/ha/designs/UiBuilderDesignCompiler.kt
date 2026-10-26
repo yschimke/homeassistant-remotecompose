@@ -134,6 +134,18 @@ class UiBuilderDesignCompiler(
         (node["modifiers"] as? JsonArray).orEmpty().forEach { modifier ->
           val type = (modifier as? JsonObject)?.string("type")
           if (type !in MODIFIERS) add("$id: modifier `$type` isn't drawn here yet")
+          if (type == "remoteCall") {
+            val call = modifier as JsonObject
+            val name = call.string("name")
+            if (name != GRAPHICS_LAYER) add("$id: remote call `$name` isn't drawn here yet")
+            call["args"]?.jsonObject?.forEach { (arg, value) ->
+              if (arg !in GRAPHICS_LAYER_ARGS) {
+                add("$id.$GRAPHICS_LAYER: `$arg` isn't drawn here yet")
+              }
+              valueProblem(value)?.let { add("$id.$GRAPHICS_LAYER.$arg: $it") }
+            }
+            return@forEach
+          }
           (modifier as? JsonObject)?.forEach { (field, value) ->
             if (field != "type") valueProblem(value)?.let { add("$id.$type.$field: $it") }
           }
@@ -261,6 +273,11 @@ class UiBuilderDesignCompiler(
       var scaleX: RemoteFloat? = null
       var scaleY: RemoteFloat? = null
       var rotation: RemoteFloat? = null
+      var rotationXAxis: RemoteFloat? = null
+      var rotationYAxis: RemoteFloat? = null
+      var originX: RemoteFloat? = null
+      var originY: RemoteFloat? = null
+      var cameraDistance: RemoteFloat? = null
       var alpha: RemoteFloat? = null
       fun RemoteFloat?.plus(other: RemoteFloat) = this?.let { it + other } ?: other
       fun RemoteFloat?.times(other: RemoteFloat) = this?.let { it * other } ?: other
@@ -269,6 +286,7 @@ class UiBuilderDesignCompiler(
           "scale",
           "rotate",
           "alpha" -> true
+          "remoteCall" -> m.string("name") == GRAPHICS_LAYER
           "offset" ->
             number(m["xDp"])?.constantValueOrNull == null ||
               number(m["yDp"])?.constantValueOrNull == null
@@ -287,6 +305,18 @@ class UiBuilderDesignCompiler(
             scaleY = scaleY.times(animated(number(m["scaleY"]) ?: 1f.rf))
           }
           "rotate" -> rotation = rotation.plus(animated(number(m["degrees"]) ?: 0f.rf))
+          "remoteCall" -> {
+            val args = m["args"]?.jsonObject.orEmpty()
+            number(args["rotationX"])?.let { rotationXAxis = rotationXAxis.plus(animated(it)) }
+            number(args["rotationY"])?.let { rotationYAxis = rotationYAxis.plus(animated(it)) }
+            number(args["rotationZ"])?.let { rotation = rotation.plus(animated(it)) }
+            number(args["scaleX"])?.let { scaleX = scaleX.times(animated(it)) }
+            number(args["scaleY"])?.let { scaleY = scaleY.times(animated(it)) }
+            number(args["alpha"])?.let { alpha = alpha.times(animated(it)) }
+            originX = number(args["transformOriginX"]) ?: originX
+            originY = number(args["transformOriginY"]) ?: originY
+            cameraDistance = number(args["cameraDistance"]) ?: cameraDistance
+          }
           "alpha" -> alpha = alpha.times(animated(number(m["alpha"]) ?: 1f.rf))
         }
       }
@@ -302,6 +332,11 @@ class UiBuilderDesignCompiler(
               scaleX?.let { this.scaleX = it }
               scaleY?.let { this.scaleY = it }
               rotation?.let { rotationZ = it }
+              rotationXAxis?.let { rotationX = it }
+              rotationYAxis?.let { rotationY = it }
+              originX?.let { transformOriginX = it }
+              originY?.let { transformOriginY = it }
+              cameraDistance?.let { this.cameraDistance = it }
               alpha?.let { this.alpha = it }
             }
           }
@@ -463,12 +498,36 @@ class UiBuilderDesignCompiler(
         "scale",
         "rotate",
         "background",
+        "remoteCall",
       )
 
     private val LITERALS = setOf("string", "bool", "int", "float", "dimension", "color", "null")
 
     /** Values that read state: drawn live in modifiers and a text's text, refused elsewhere. */
     private val DYNAMIC = setOf("state", "expr")
+
+    /**
+     * The `remoteCall` drawn here: RemoteModifier's `graphicsLayer`, for what the catalog's own
+     * modifiers can't say, a turn in perspective above all. `rotationX` tilts an element about a
+     * horizontal axis (0 flat to 90 edge-on; it may read state, and tweens), at `transformOriginY`
+     * (0 the top edge, 1 the bottom; the middle by default), with `cameraDistance` setting how
+     * strong the perspective is. An up-and-over door is its picture tilted about its top edge, its
+     * bottom swinging out and up and growing nearer. Joined into the element's one layer.
+     */
+    const val GRAPHICS_LAYER = "graphicsLayer"
+
+    private val GRAPHICS_LAYER_ARGS =
+      setOf(
+        "rotationX",
+        "rotationY",
+        "rotationZ",
+        "scaleX",
+        "scaleY",
+        "alpha",
+        "transformOriginX",
+        "transformOriginY",
+        "cameraDistance",
+      )
 
     /** Black in a dark theme, clear in a light one: a scrim for night. */
     const val NIGHT = "night"

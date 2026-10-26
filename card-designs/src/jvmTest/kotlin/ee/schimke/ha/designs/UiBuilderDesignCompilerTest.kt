@@ -341,6 +341,50 @@ class UiBuilderDesignCompilerTest {
     assertEquals(50 * 1024, UiBuilderDesignCompiler.imageBudget(DesignSurface.Launcher))
   }
 
+  /** [document] with the door tilted up and over by [layer]'s `graphicsLayer` arguments. */
+  private fun tilted(layer: String): JsonObject {
+    val nodes = document.getValue("nodes").jsonObject
+    val door = nodes.getValue("door").jsonObject
+    val modifiers =
+      Json.parseToJsonElement(
+        """[{"type": "fillMaxSize"},
+            {"type": "remoteCall", "name": "graphicsLayer", "args": $layer}]"""
+      )
+    return JsonObject(
+      document +
+        ("nodes" to JsonObject(nodes + ("door" to JsonObject(door + ("modifiers" to modifiers)))))
+    )
+  }
+
+  @Test
+  fun aDoorTiltsUpAndOverInPerspective() {
+    val door =
+      tilted(
+        """{"rotationX": {"type": "expr", "op": "select", "args": [
+              {"type": "state", "variable": "cover.s0.is_on"},
+              {"type": "float", "value": 86}, {"type": "float", "value": 0}]},
+            "transformOriginY": {"type": "float", "value": 0},
+            "cameraDistance": {"type": "float", "value": 32}}"""
+      )
+    assertEquals(emptyList(), compiler.problems(door, assets.keys))
+    val bytes = compiler.compile(door, assets, key)
+    // Flat, the door covers the doorway; tilted almost edge-on about its top, the doorway shows.
+    assertTrue(play(bytes, mapOf("cover.s0.is_on" to RcNamedValue.Integer(0))).isRed(180, 200))
+    assertTrue(!play(bytes, mapOf("cover.s0.is_on" to RcNamedValue.Integer(1))).isRed(180, 200))
+  }
+
+  @Test
+  fun onlyTheGraphicsLayerItDrawsIsCalled() {
+    val unknownArgument = tilted("""{"renderEffect": {"type": "string", "value": "blur"}}""")
+    assertTrue(compiler.problems(unknownArgument, assets.keys).any { "renderEffect" in it })
+    val otherCall =
+      Json.parseToJsonElement(
+          tilted("{}").toString().replace("\"graphicsLayer\"", "\"drawWithContent\"")
+        )
+        .jsonObject
+    assertTrue(compiler.problems(otherCall, assets.keys).any { "drawWithContent" in it })
+  }
+
   @Test
   fun anUnknownColourTokenIsRefused() {
     val unknown =

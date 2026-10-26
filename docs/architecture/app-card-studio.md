@@ -152,7 +152,12 @@ JVM exactly as the library is captured. It draws:
   UI Builder's export);
 - `ha-cards/remote-text`;
 - the `size`, `width`, `height`, `offset`, `padding`, `alpha`, `scale`, `rotate`,
-  `background` and `fillMax*` modifiers.
+  `background` and `fillMax*` modifiers, and the `remoteCall` of RemoteModifier's
+  `graphicsLayer` (`rotationX`, `rotationY`, `rotationZ`, `scaleX`, `scaleY`, `alpha`,
+  `transformOriginX`, `transformOriginY`, `cameraDistance`) for what the catalog's
+  modifiers can't say: a turn in perspective above all. UI Builder checks a
+  `remoteCall` against RemoteModifier's real functions, so it is the one extension
+  point a design can carry.
 
 Any property or modifier value may be a literal, a state variable (`{"type":
 "state"}`) or a `select` between two numbers by a boolean state variable. State
@@ -165,8 +170,13 @@ Move things with transforms, not sizes. A state-driven `offset`, `scale` or
 tweens on change (never on the first frame). A `size`, `width` or `height` that reads
 state snaps instead: the player measures when a value changes, so a tweened size
 would be measured at its old value and land one change late. A door that folds up is
-one picture, scaled from 1 to almost 0 by `select(is_on, …)` with an offset of half
-the height it loses, so it shrinks towards its top edge.
+one picture tilted about its top edge in perspective: a `graphicsLayer` call with
+`rotationX` = `select(is_on, 86, 0)`, `transformOriginY` 0 and `cameraDistance` 32,
+so its bottom swings out and up, widening as it nears, and is almost edge-on under
+the lintel when open. A black box with the same layer and an `alpha` that rises as it
+opens shades it as its face turns down. (Without perspective, a picture scaled from
+1 to almost 0 with an offset of half the height it loses shrinks towards its top
+edge the same way, flat.)
 
 Colours adapt to the theme. A colour is a literal (`#RRGGBB`) or a `colorToken`
 naming a card theme role (`cardBackground`, `primaryText`, `secondaryText`,
