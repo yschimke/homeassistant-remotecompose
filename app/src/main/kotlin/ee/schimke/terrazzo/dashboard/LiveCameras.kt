@@ -89,9 +89,19 @@ fun pairedCamera(dashboard: Dashboard, entityId: String): String? {
   fun find(element: JsonElement): String? =
     when (element) {
       is JsonObject -> {
-        val camera = (element["camera_image"] as? JsonPrimitive)?.contentOrNull
-        val entity = (element["entity"] as? JsonPrimitive)?.contentOrNull
-        if (entity == entityId && camera != null && camera.startsWith("camera.")) camera
+        val camera =
+          (element["camera_image"] as? JsonPrimitive)?.contentOrNull?.takeIf {
+            it.startsWith("camera.")
+          }
+        // The card's own entity, and a picture-glance's entities (bare ids or `{entity: …}`).
+        val entities =
+          listOfNotNull((element["entity"] as? JsonPrimitive)?.contentOrNull) +
+            (element["entities"] as? JsonArray).orEmpty().mapNotNull { entry ->
+              ((entry as? JsonObject)?.get("entity") ?: entry).let {
+                (it as? JsonPrimitive)?.contentOrNull
+              }
+            }
+        if (camera != null && entityId in entities) camera
         else element.values.firstNotNullOfOrNull(::find)
       }
       is JsonArray -> element.firstNotNullOfOrNull(::find)

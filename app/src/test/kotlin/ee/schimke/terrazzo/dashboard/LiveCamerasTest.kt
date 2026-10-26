@@ -102,6 +102,24 @@ class LiveCamerasTest {
       )
 
     assertEquals("camera.door", pairedCamera(dashboard, "binary_sensor.door"))
+    // A picture-glance's cells, bare or as objects.
+    val glance =
+      Dashboard(
+        views =
+          listOf(
+            View(
+              cards =
+                listOf(
+                  card(
+                    """{"type":"picture-glance","camera_image":"camera.yard",""" +
+                      """"entities":["light.yard",{"entity":"lock.gate"}]}"""
+                  )
+                )
+            )
+          )
+      )
+    assertEquals("camera.yard", pairedCamera(glance, "light.yard"))
+    assertEquals("camera.yard", pairedCamera(glance, "lock.gate"))
     assertNull(pairedCamera(dashboard, "light.porch"))
     // A camera shows its own view.
     assertNull(pairedCamera(dashboard, "camera.door"))
