@@ -104,6 +104,35 @@ message WearSlotDesign {
     string sha256 = 3;
 }
 
+// DataItem at `/wear/placed-widgets`, written by each watch: the Terrazzo
+// widgets placed on it, so the phone can choose each one's card.
+message WearPlacedWidgets {
+    repeated WearPlacedWidget widgets = 1;
+    string node_name = 2;
+    int64 updated_at_ms = 3;
+}
+
+message WearPlacedWidget {
+    int32 instance_id = 1;
+    bool large = 2;
+    // The card the watch shows now, so a choice made on an older watch build carries over.
+    string card_key = 3;
+}
+
+// DataItem at `/wear/widget-cards`, written by the phone: the card each placed
+// widget shows, per watch node. The phone owns the choice.
+message WearWidgetCards {
+    repeated WearWidgetCardChoice cards = 1;
+    int64 updated_at_ms = 2;
+}
+
+message WearWidgetCardChoice {
+    string node_id = 1;
+    int32 instance_id = 2;
+    string card_key = 3;
+    CardSummary card = 4;
+}
+
 // DataItem at `/wear/design/<sha256>`: a Wear widget design's Remote Compose
 // template, content-addressed.
 message WearDesignBlob {

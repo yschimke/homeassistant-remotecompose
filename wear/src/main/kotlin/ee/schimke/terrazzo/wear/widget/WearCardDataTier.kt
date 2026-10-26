@@ -1,5 +1,7 @@
 package ee.schimke.terrazzo.wear.widget
 
+import ee.schimke.terrazzo.wearsync.proto.WEAR_SMALL_ONLY_CARD_TYPES
+
 /**
  * Per-card-type classification of how much of a card's data hierarchy can survive the wear sync
  * proto and the slot widget canvas.
@@ -13,7 +15,7 @@ package ee.schimke.terrazzo.wear.widget
  *
  * Drives the `@Preview` convention in [CardSlotWidgetPreviews][CardSlotWidgetPreviews_kt]:
  * small-only for [SmallOnly] types; small + large for [Both] types. The watch's widget picker
- * follows it too: a Large widget doesn't offer [SmallOnly] cards ([forWidget]).
+ * follows it too: the phone doesn't offer [SmallOnly] cards for a Large widget ([forWidget]).
  *
  * Unknown / future card types default to [Both]: safer to advertise both and let the renderer's
  * ladder pick the right tier than to silently hide the large variant for a card that could fill it.
@@ -40,29 +42,11 @@ internal enum class WearCardDataTier {
 }
 
 /**
- * Classify a card-config `type` string. Type strings come straight from the lovelace card config
+ * Classify a card-config `type` string; the small-only list is shared with the phone
+ * ([WEAR_SMALL_ONLY_CARD_TYPES]). Type strings come straight from the lovelace card config
  * (`"tile"`, `"weather-forecast"`, `"custom:ha-bambulab-print_status-card"`, …); this function
  * returns [WearCardDataTier.Both] for any type not explicitly listed so a new card never silently
  * loses its large slot.
  */
 internal fun wearCardDataTier(cardType: String): WearCardDataTier =
-  when (cardType) {
-    // Static / config-only content — nothing for the large canvas
-    // to fill with.
-    "heading",
-    "markdown",
-    "clock",
-    // Identity depends on P4 / P5 payloads the wear sync proto
-    // doesn't carry (forecast array, history points, statistics
-    // series, log entries, todo items, calendar events). At the
-    // large container these render as their stripped tier with a
-    // lot of empty space.
-    "weather-forecast",
-    "logbook",
-    "history-graph",
-    "statistics-graph",
-    "todo-list",
-    "calendar" -> WearCardDataTier.SmallOnly
-
-    else -> WearCardDataTier.Both
-  }
+  if (cardType in WEAR_SMALL_ONLY_CARD_TYPES) WearCardDataTier.SmallOnly else WearCardDataTier.Both

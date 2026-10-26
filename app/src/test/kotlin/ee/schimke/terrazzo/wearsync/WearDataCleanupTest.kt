@@ -19,6 +19,7 @@ class WearDataCleanupTest {
         WearSyncPaths.picturePath("camera.door"),
         WearSyncPaths.PINNED,
         WearSyncPaths.SECTIONS,
+        WearSyncPaths.WIDGET_CARDS,
         WearSyncPaths.SLOTS,
         WearSyncPaths.SLOT_DESIGNS,
         WearSyncPaths.designPath("ab12"),
@@ -30,6 +31,8 @@ class WearDataCleanupTest {
       )
     }
     assertTrue(WearSyncPaths.SETTINGS !in paths)
+    // The watches' own widget lists are theirs, not the account's.
+    assertTrue(WearSyncPaths.PLACED_WIDGETS !in paths)
     // Literal paths are deleted as literals: `/wear/values` must not take `/wear/values2` along.
     assertTrue(WATCH_ACCOUNT_DATA.filter { !it.prefix }.none { it.path.endsWith("/") })
   }

@@ -25,6 +25,8 @@ internal val WATCH_ACCOUNT_DATA: List<WearDataItems> =
     WearDataItems(WearSyncPaths.DASHBOARD_PREFIX, prefix = true),
     WearDataItems(WearSyncPaths.PINNED, prefix = false),
     WearDataItems(WearSyncPaths.SECTIONS, prefix = false),
+    // Which card each watch widget shows: the watch forgets its copies when the pins go.
+    WearDataItems(WearSyncPaths.WIDGET_CARDS, prefix = false),
     WearDataItems(WearSyncPaths.SLOTS, prefix = false),
     // A slot's Wear design may be the person's private one.
     WearDataItems(WearSyncPaths.SLOT_DESIGNS, prefix = false),

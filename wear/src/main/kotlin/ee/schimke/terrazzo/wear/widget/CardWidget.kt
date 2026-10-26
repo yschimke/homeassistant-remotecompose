@@ -2,7 +2,6 @@
 
 package ee.schimke.terrazzo.wear.widget
 
-import android.content.ComponentName
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -18,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.glance.wear.AssociateWithGlanceWearWidget
 import androidx.glance.wear.GlanceWearWidget
-import androidx.glance.wear.GlanceWearWidgetManager
 import androidx.glance.wear.GlanceWearWidgetService
 import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetData
@@ -89,14 +87,15 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * A Terrazzo Wear widget: one card the phone sent to the watch, chosen on the watch for this widget
- * instance. Two concrete subclasses, [CardSmallWidget] and [CardLargeWidget], one per Glance Wear
- * container type: the split exists only at the manifest / service level so the system widget picker
- * offers both sizes. Each placed widget reads its own card by its instance id.
+ * A Terrazzo Wear widget: one card the phone sent to the watch, chosen on the phone for this widget
+ * instance ([WearPlacedWidgets.kt][publishPlacedWidgets]). Two concrete subclasses,
+ * [CardSmallWidget] and [CardLargeWidget], one per Glance Wear container type: the split exists
+ * only at the manifest / service level so the system widget picker offers both sizes. Each placed
+ * widget reads its own card by its instance id.
  *
  * Render path mirrors the phone widget ([ee.schimke.terrazzo.widget.TerrazzoWidgetProvider]):
- * 1. [WearWidgetCardStore.read] → the card chosen for this instance ([WearWidgetConfigActivity] or
- *    the Wear app's Widgets screen), resolved against what the phone sends now
+ * 1. [WearWidgetCardStore.read] → the card the phone chose for this instance
+ *    ([syncWidgetCardsFromDataLayer]), resolved against what the phone sends now
  *    ([currentWidgetCard]), and its `rawJson` decoded to a [CardConfig].
  * 2. [WearOfflineStore.readValues] → build an [HaSnapshot] from the pushed [LiveValues] (state +
  *    friendly_name + unit + device_class).
@@ -112,10 +111,9 @@ import kotlinx.serialization.json.JsonPrimitive
  * Wear capture profile may fail to capture; the registry's [ee.schimke.ha.rc.UNSUPPORTED_CARD_TYPE]
  * fallback handles unknown types but not in-range ops mismatches.
  *
- * A widget with no card chosen yet draws a short placeholder asking for one: the card is chosen in
- * the Terrazzo app (or by the system's configuration step, where the host offers it). A tap on a
- * widget opens the Wear app on its card ([WearWidgetTaps]); the card's own actions don't run from
- * the widget.
+ * A widget with no card yet draws a short placeholder: the phone gives a new widget a card as soon
+ * as it hears of it ([onAdded]), and the user changes it in the phone app. A tap on a widget opens
+ * the Wear app on its card ([WearWidgetTaps]); the card's own actions don't run from the widget.
  */
 abstract class CardWidget : GlanceWearWidget() {
 
@@ -131,7 +129,15 @@ abstract class CardWidget : GlanceWearWidget() {
     // store them as they arrived. Bounded, like every read before the render: the widget draws
     // from disk, so a slow Data Layer only costs freshness.
     withTimeoutOrNull(DATA_LAYER_TIMEOUT_MS) { syncWidgetStateFromDataLayer(app, store) }
-    val chosen = WearWidgetCardStore(app).read(params.instanceId.id)
+    // The phone's choice for this widget: it may have changed while the app wasn't running.
+    withTimeoutOrNull(DATA_LAYER_TIMEOUT_MS) { syncWidgetCardsFromDataLayer(app) }
+    val chosen =
+      defaultWidgetCard(
+        app,
+        WearWidgetCardStore(app),
+        params.instanceId.id,
+        this is CardLargeWidget,
+      )
     // The pinned cards' Wear widget designs from the design server, synced by the phone.
     withTimeoutOrNull(DATA_LAYER_TIMEOUT_MS) { syncDesignsFromDataLayer(app, store) }
     // A tap opens the Wear app on the card (WearWidgetTaps): the widget can't run its actions.
@@ -148,9 +154,15 @@ abstract class CardWidget : GlanceWearWidget() {
     return data
   }
 
-  /** The widget was removed from the watch: forget the card chosen for it. */
+  /** A widget was placed: tell the phone, which chooses its card. */
+  override suspend fun onAdded(context: Context, widgetHandle: ActiveWearWidgetHandle) {
+    publishPlacedWidgets(context)
+  }
+
+  /** The widget was removed from the watch: forget its card, and tell the phone. */
   override suspend fun onRemoved(context: Context, widgetHandle: ActiveWearWidgetHandle) {
     WearWidgetCardStore(context.applicationContext).remove(widgetHandle.instanceId.id)
+    publishPlacedWidgets(context)
   }
 }
 
@@ -632,8 +644,8 @@ private fun WearCardStyle(cardStyle: HaUberTheme, content: @Composable () -> Uni
 }
 
 /**
- * What a widget draws with no card chosen yet (or one whose `rawJson` failed to decode): where to
- * choose one. A Wear widget can't open the picker on a tap, so it names the app.
+ * What a widget draws with no card chosen yet (or one whose `rawJson` failed to decode): where the
+ * card is chosen, on the phone.
  */
 @Composable
 private fun ChooseCardPlaceholder(theme: RemoteHaTheme) {
@@ -643,7 +655,7 @@ private fun ChooseCardPlaceholder(theme: RemoteHaTheme) {
 }
 
 /** The placeholder's text: see [ChooseCardPlaceholder]. */
-internal const val CHOOSE_CARD_PLACEHOLDER = "Choose a card in the Terrazzo app"
+internal const val CHOOSE_CARD_PLACEHOLDER = "Choose a card in Terrazzo on your phone"
 
 private val cardJson = Json { ignoreUnknownKeys = true }
 
@@ -682,31 +694,6 @@ suspend fun refreshAllCardWidgets(context: Context) {
   listOf(CardSmallWidget(), CardLargeWidget()).forEach { widget ->
     runCatching { widget.triggerUpdateAll(context) }
   }
-}
-
-/** Ask the host to re-render widget [instanceId] of [provider]: its card was just chosen. */
-suspend fun refreshCardWidget(context: Context, provider: ComponentName?, instanceId: Int) {
-  val widgets =
-    when (provider?.className) {
-      CardSmallWidgetService::class.java.name -> listOf(CardSmallWidget())
-      CardLargeWidgetService::class.java.name -> listOf(CardLargeWidget())
-      // Not one of ours or not known: whichever size the instance is.
-      else -> listOf(CardSmallWidget(), CardLargeWidget())
-    }
-  for (widget in widgets) {
-    val instance = runCatching {
-      GlanceWearWidgetManager(context).fetchActiveWidgets(widget::class)
-    }
-      .getOrNull()
-      ?.firstOrNull { it.instanceId.id == instanceId }
-      ?.instanceId
-    if (instance != null) {
-      runCatching { widget.triggerUpdate(context, instance) }
-      return
-    }
-  }
-  // Not listed (yet): update them all.
-  refreshAllCardWidgets(context)
 }
 
 /**
