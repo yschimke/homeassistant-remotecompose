@@ -271,7 +271,8 @@ fun CardActions(
             headlineContent = { Text("Live camera") },
             supportingContent = {
               Text(
-                "A new frame every ${LiveCameras.FRAME_INTERVAL_MS / 1000} s for 10 min, on screen"
+                "A new frame every ${LiveCameras.FRAME_INTERVAL_MS / 1000} s, not " +
+                  "${LiveCameras.DASHBOARD_FRAME_INTERVAL_MS / 1000} s, for 10 min"
               )
             },
             leadingContent = { Icon(Icons.Outlined.Videocam, contentDescription = null) },

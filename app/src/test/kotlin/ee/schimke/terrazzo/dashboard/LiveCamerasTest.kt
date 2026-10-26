@@ -28,7 +28,7 @@ class LiveCamerasTest {
           )
       )
 
-    val framed = snapshot.withLiveFrames(setOf("camera.yard"), frame = 3)
+    val framed = snapshot.withLiveFrames(mapOf("camera.yard" to "3"))
 
     assertEquals(
       "/api/camera_proxy/camera.yard?token=t&terrazzo_frame=3",
@@ -36,7 +36,23 @@ class LiveCamerasTest {
     )
     assertEquals(snapshot.states["camera.door"], framed.states["camera.door"])
     // No live camera on this dashboard: the same snapshot, so nothing recomposes for it.
-    assertSame(snapshot, snapshot.withLiveFrames(setOf("camera.other"), frame = 3))
+    assertSame(snapshot, snapshot.withLiveFrames(mapOf("camera.other" to "3")))
+  }
+
+  @Test
+  fun dashboardCamerasTickSlowerThanLiveOnes() {
+    val cameras = setOf("camera.yard", "camera.door")
+    // Before the first tick every camera keeps the snapshot's own picture.
+    assertEquals(emptyMap(), cameraFrames(cameras, setOf("camera.yard"), 0, 0))
+    assertEquals(
+      mapOf("camera.yard" to "l4", "camera.door" to "d1"),
+      cameraFrames(cameras, setOf("camera.yard"), dashboardFrame = 1, liveFrame = 4),
+    )
+    // A camera just turned live keeps the dashboard's frame until its own first tick.
+    assertEquals(
+      mapOf("camera.door" to "d2"),
+      cameraFrames(setOf("camera.door"), setOf("camera.door"), dashboardFrame = 2, liveFrame = 0),
+    )
   }
 
   @Test

@@ -388,8 +388,17 @@ fun DashboardViewScreen(
         DashboardList(
           dashboard = s.dashboard,
           placeholderSession = session,
-          // Live cameras (from a card's long-press sheet) move on a frame every couple of seconds.
-          snapshot = rememberLiveCameraFrames(s.snapshot),
+          // The dashboard's cameras move on a frame every few seconds; live ones (from a card's
+          // long-press sheet) every couple.
+          snapshot =
+            rememberLiveCameraFrames(
+              s.snapshot,
+              remember(s.dashboard) {
+                referencedEntities(s.dashboard).filterTo(mutableSetOf()) {
+                  it.startsWith("camera.")
+                }
+              },
+            ),
           baseUrl = session.baseUrl,
           dashboardUrlPath = urlPath ?: "",
           onCardLongPress = onCardLongPress,
