@@ -37,6 +37,19 @@ data class UserDesign(
       else entry.copy(designId = DesignEntry.userDesignId(sourceDesignId))
 }
 
+/**
+ * A UI Builder design this server created for [login] (from the app's card studio, a seeded schema
+ * or a fork) and shared with them: theirs to publish, though UI Builder records the server as its
+ * owner. [cardType] is the card it was seeded for, when it was seeded for one.
+ */
+@Serializable
+data class MadeDesign(
+  val designId: String,
+  val login: String,
+  val cardType: String? = null,
+  val createdAtEpochMs: Long = 0,
+)
+
 @Serializable
 private data class UserDesignIndex(
   /** Bumped on every change, so a manifest that folds these in can raise its serial. */
@@ -48,6 +61,8 @@ private data class UserDesignIndex(
    * [revision], which every earlier anonymous serial was built from, so it never steps back.
    */
   val sharedRevision: Long? = null,
+  /** The UI Builder designs this server made for people, newest last. */
+  val made: List<MadeDesign> = emptyList(),
 )
 
 /**
@@ -85,6 +100,29 @@ class UserDesignStore(
     index.designs
       .filter { it.entry.author == authorOf(login) }
       .sortedByDescending { it.publishedAtEpochMs }
+
+  /** The person this server made UI Builder design [designId] for, or null. */
+  fun madeFor(designId: String): String? = index.made.firstOrNull { it.designId == designId }?.login
+
+  /** The UI Builder designs this server made for [login], newest first. */
+  fun made(login: String): List<MadeDesign> =
+    index.made.filter { it.login == login }.sortedByDescending { it.createdAtEpochMs }
+
+  /**
+   * Record that UI Builder design [designId] was made for [login] (and shared with them). It
+   * changes no manifest, so neither revision moves. At most [MAX_MADE] are kept per person, the
+   * oldest dropped first.
+   */
+  @Synchronized
+  fun recordMade(login: String, designId: String, cardType: String? = null) {
+    val mine = index.made.filter { it.login == login && it.designId != designId }
+    val others = index.made.filter { it.login != login }
+    val next =
+      index.copy(
+        made = others + (mine + MadeDesign(designId, login, cardType, clock())).takeLast(MAX_MADE)
+      )
+    write(next)
+  }
 
   /** Every design its author shared. */
   fun shared(): List<UserDesign> = index.designs.filter { it.shared }
@@ -199,12 +237,16 @@ class UserDesignStore(
   }
 
   private fun save(designs: List<UserDesign>, sharedChanged: Boolean) {
-    val next =
-      UserDesignIndex(
+    write(
+      index.copy(
         revision = index.revision + 1,
         designs = designs,
         sharedRevision = sharedRevision + if (sharedChanged) 1 else 0,
       )
+    )
+  }
+
+  private fun write(next: UserDesignIndex) {
     writeAtomically(
       indexFile,
       json.encodeToString(UserDesignIndex.serializer(), next).encodeToByteArray(),
@@ -230,6 +272,7 @@ class UserDesignStore(
 
   companion object {
     private val SHA = Regex("[0-9a-f]{64}")
+    private const val MAX_MADE = 200
 
     fun authorOf(login: String): String = "github:$login"
   }

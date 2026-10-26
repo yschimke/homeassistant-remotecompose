@@ -42,11 +42,13 @@ import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.dashboard.ManagePinnedScreen
+import ee.schimke.terrazzo.dashboard.SkinInstallWorker
 import ee.schimke.terrazzo.dashboard.StudioCardPreview
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
 import ee.schimke.terrazzo.dashboard.preferredDashboardPath
 import ee.schimke.terrazzo.dashboard.rememberDashboardListState
 import ee.schimke.terrazzo.dashboard.rememberSelectedDashboardListState
+import ee.schimke.terrazzo.dashboard.rememberStudioDesignKey
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.shared.AppScreen
 import ee.schimke.terrazzo.shared.CardStudioScreen
@@ -452,6 +454,7 @@ private fun DashboardsRoot(
   var dashboardSaves by remember { mutableIntStateOf(0) }
   val studioServer by
     graph.preferencesStore.designServerUrl.collectAsState(initial = "https://ha.coo.ee/designs/v1")
+  val designToken by graph.preferencesStore.designToken.collectAsState(initial = "")
   val openedValue = opened
 
   var startupResolved by rememberSaveable { mutableStateOf(dashboards is DashboardListState.Ready) }
@@ -607,6 +610,11 @@ private fun DashboardsRoot(
       snapshot,
       onBack = { studioTarget = null },
       initialServerUrl = studioServer.ifBlank { "https://ha.coo.ee" },
+      designToken = designToken,
+      designKey = rememberStudioDesignKey(card, snapshot),
+      // Downloads the published design and switches this card to it, as the card's skin picker
+      // does, even once the studio has closed.
+      onPublished = { designId -> SkinInstallWorker.enqueue(context, card, designId) },
       refreshSnapshot = {
         val current = session.loadDashboard(openedValue).second
         studioTarget = card to current

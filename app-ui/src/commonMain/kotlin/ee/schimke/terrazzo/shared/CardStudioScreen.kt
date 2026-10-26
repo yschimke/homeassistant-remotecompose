@@ -13,6 +13,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.design.*
+import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import kotlinx.coroutines.CancellationException
@@ -28,6 +29,18 @@ fun CardStudioScreen(
   onBack: () -> Unit,
   initialServerUrl: String = "https://ha.coo.ee",
   refreshSnapshot: (suspend () -> HaSnapshot)? = null,
+  /** The design server's device token (Settings): with it, a design opened here can be used. */
+  designToken: String = "",
+  /**
+   * The card's design key as the host draws it (its theme, mode and card style): a design published
+   * here is published for this card in each theme of that style.
+   */
+  designKey: DesignKey? = null,
+  /**
+   * Called with a design published privately for this card (its skin id): the host downloads it and
+   * switches this card to it. Null where the host can't, which hides publishing.
+   */
+  onPublished: ((designId: String) -> Unit)? = null,
   preview: @Composable () -> Unit,
 ) {
   var server by remember { mutableStateOf(initialServerUrl) }
@@ -42,14 +55,51 @@ fun CardStudioScreen(
   var message by remember { mutableStateOf<String?>(null) }
   var busy by remember { mutableStateOf(false) }
   var agentRequest by remember { mutableStateOf(false) }
+  var publishRequest by remember { mutableStateOf(false) }
   var requestFailed by remember { mutableStateOf(false) }
   var job by remember { mutableStateOf<Job?>(null) }
   val scope = rememberCoroutineScope()
   val uriHandler = LocalUriHandler.current
   val latestSnapshot by rememberUpdatedState(snapshot)
+  fun publish() {
+    val key = designKey ?: return
+    if (busy) return
+    agentRequest = false
+    publishRequest = true
+    requestFailed = false
+    busy = true
+    job = scope.launch {
+      message = null
+      var studio: CardStudioClient? = null
+      try {
+        studio = CardStudioClient(server)
+        val design = studio.studioDesigns(designToken, key.cardType).firstOrNull()
+        if (design == null) {
+          requestFailed = true
+          message = "Open this card in UI Builder first and save your design there."
+        } else {
+          val skin = studio.publishPrivately(designToken, design.designId, key)
+          onPublished?.invoke(skin)
+          message =
+            "Published privately: only you see it. This card switches to it once it downloads."
+        }
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        requestFailed = true
+        message =
+          if (e is CardPublishException) e.message
+          else "Could not publish. Check the design server and network, then try again."
+      } finally {
+        studio?.close()
+        busy = false
+      }
+    }
+  }
   fun run(generate: Boolean, refresh: Boolean = false) {
     if (busy) return
     agentRequest = generate
+    publishRequest = false
     requestFailed = false
     busy = true
     job = scope.launch {
@@ -168,7 +218,29 @@ fun CardStudioScreen(
             }
             if (busy && !agentRequest) TextButton(onClick = { job?.cancel() }) { Text("Cancel") }
           }
-          if (!agentRequest) StudioRequestFeedback(busy, message, requestFailed)
+          if (!agentRequest && !publishRequest) StudioRequestFeedback(busy, message, requestFailed)
+          if (onPublished != null) {
+            HorizontalDivider()
+            Text("Use your design on this card", style = MaterialTheme.typography.titleMedium)
+            Text(
+              if (designToken.isBlank())
+                "Add the design server's device token in Settings to use designs you save in UI Builder."
+              else
+                "Publishes the design you last opened for this card, for your devices only, and switches this card to it.",
+              style = MaterialTheme.typography.bodySmall,
+            )
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+              Button(
+                onClick = { publish() },
+                enabled =
+                  !busy && designToken.isNotBlank() && designKey != null && server.isNotBlank(),
+              ) {
+                Text("Publish privately and use it")
+              }
+              if (busy && publishRequest) TextButton(onClick = { job?.cancel() }) { Text("Cancel") }
+            }
+            if (publishRequest) StudioRequestFeedback(busy, message, requestFailed)
+          }
           HorizontalDivider()
           Text("Connect an agent", style = MaterialTheme.typography.titleMedium)
           FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

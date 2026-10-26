@@ -23,12 +23,18 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import java.util.concurrent.Executors
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 
 /**
  * A manifest as one caller sees it: its bytes and their ETag. Clients revalidate by ETag, so a
@@ -85,11 +91,15 @@ data class PublishRequest(
  * (what [base] binds). Named values without a dot are the design's own state, which a card never
  * pushes, so they are allowed; so are the colours a Wear widget host supplies (`WearM3.*`) when
  * [profile] is the Wear widgets'.
+ *
+ * With [likeBase], ops outside [profile] that [base] uses too are allowed: for a template this
+ * server captured as it captures the library, which the app already plays with them.
  */
 fun userTemplateProblem(
   bytes: ByteArray,
   base: DecodedTemplate,
   profile: RcTargetProfile = RcTargetProfiles.ANDROIDX_EXPERIMENTAL,
+  likeBase: Boolean = false,
 ): String? {
   val document = runCatching {
     RcDocumentCodec.decode(bytes, RcWireLimits())
@@ -97,9 +107,13 @@ fun userTemplateProblem(
     .getOrElse {
       return "it isn't a Remote Compose document (${it.message ?: it.javaClass.simpleName})"
     }
-  document.validateFor(profile).firstOrNull()?.let {
-    return "it uses something the app can't play: ${it.message}"
-  }
+  val tolerated = if (likeBase) base.violations.toSet() else emptySet()
+  document
+    .validateFor(profile)
+    .firstOrNull { it.message !in tolerated }
+    ?.let {
+      return "it uses something the app can't play: ${it.message}"
+    }
   val provided = base.bindings.map { it.name }.toSet()
   val unknown =
     document.namedVariables
@@ -138,7 +152,10 @@ private val VARIANT = Regex("[a-z0-9][a-z0-9-]{0,39}")
  * A person's own designs, signed in with GitHub (a browser session, or the app's device token):
  * - `GET /api/my/designs` lists them; `POST /api/my/designs` publishes a UI Builder design as a
  *   private variant of a library design; `POST /api/my/designs/<sha>/share` shares or unshares one
- *   (`{"shared": true}`).
+ *   (`{"shared": true}`). Only a design they own or edit in UI Builder, or one this server made for
+ *   them, publishes; it publishes for its card in each theme of its card style.
+ * - `GET /api/my/studio` lists the UI Builder designs this server made for them: what the app's
+ *   card studio publishes.
  * - `POST /api/my/device-token` mints the token the app sends as `Authorization: Bearer`.
  * - `/my` is the same for a browser: the designs, share buttons and a device token to copy.
  *
@@ -161,6 +178,15 @@ fun Route.userDesignRoutes(
     val login = call.requireUser() ?: return@get
     call.respondJson(
       apiJson.encodeToString(ListSerializer(UserDesign.serializer()), store.designs(login))
+    )
+  }
+
+  // The UI Builder designs this server opened for them (the app's card studio, a seeded schema or
+  // fork), newest first: what the app offers to publish for a card.
+  get("/api/my/studio") {
+    val login = call.requireUser() ?: return@get
+    call.respondJson(
+      apiJson.encodeToString(ListSerializer(MadeDesign.serializer()), store.made(login))
     )
   }
 
@@ -349,8 +375,11 @@ private sealed interface Published {
 }
 
 /**
- * Publish [request] as [login]'s design: export it from UI Builder, check it can stand in for the
- * library design it varies ([userTemplateProblem]) and store it, private.
+ * Publish [request] as [login]'s design, private: check they may edit the UI Builder design
+ * ([mayPublish]), turn it into a template ([templates]) for the library design it varies and for
+ * that design in the other themes of its card style (light and dark; Classic in every app palette),
+ * check each can stand in for its base ([userTemplateProblem]) and store them. One design id covers
+ * them all, so a card switched to it keeps it when the dashboard changes mode or palette.
  */
 private suspend fun publish(
   library: DesignLibrary,
@@ -359,12 +388,13 @@ private suspend fun publish(
   login: String,
   request: PublishRequest,
 ): Published {
-  val client =
-    uiBuilder?.client
+  val integration =
+    uiBuilder
       ?: return Published.Refused(
         HttpStatusCode.ServiceUnavailable,
         "This server has no UI Builder.",
       )
+  val client = integration.client
   if (!VARIANT.matches(request.variant) || request.variant == DesignKey.DEFAULT_VARIANT) {
     return Published.Refused(
       HttpStatusCode.BadRequest,
@@ -384,40 +414,162 @@ private suspend fun publish(
         HttpStatusCode.UnprocessableEntity,
         "No library design for that key to vary.",
       )
-  val exported =
-    client.exportRc(request.designId, request.revision).getOrElse {
-      return Published.Refused(HttpStatusCode.BadGateway, it.message ?: "Export failed.")
-    }
-  userTemplateProblem(exported.bytes, library.decode(base))?.let {
-    return Published.Refused(
-      HttpStatusCode.UnprocessableEntity,
-      "That design can't be published: $it",
-    )
+  mayPublish(client, store, login, request.designId)?.let {
+    return Published.Refused(HttpStatusCode.Forbidden, it)
   }
-  val key = baseKey.copy(variant = request.variant)
+  // The same card in each theme of its card style (light and dark; Classic in every app palette),
+  // the requested one first: what a dashboard switches between without picking another style.
+  val bases =
+    listOf(base) +
+      library.designs.filter {
+        it !== base &&
+          !it.entry.revoked &&
+          it.key.cardStyle == baseKey.cardStyle &&
+          it.key.copy(theme = baseKey.theme) == baseKey
+      }
+  val templates =
+    templates(integration, request.designId, request.revision, bases.map { it.key }).getOrElse {
+      return Published.Refused(HttpStatusCode.UnprocessableEntity, it.message ?: "Export failed.")
+    }
+  userTemplateProblem(
+      templates.bytes.getValue(baseKey),
+      library.decode(base),
+      likeBase = templates.compiled,
+    )
+    ?.let {
+      return Published.Refused(
+        HttpStatusCode.UnprocessableEntity,
+        "That design can't be published: $it",
+      )
+    }
   // Stored canonical, so a republish that only changes case replaces its earlier design.
   val device = request.device?.normalized()
-  // The UI Builder document, for its title (what the app's design picker shows) and the Wear
-  // widgets. Best effort: without it the design publishes untitled.
-  val source = client.design(request.designId, exported.revision).getOrNull()
-  val design =
+  val title =
+    templates.source?.get("title")?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+  val published = bases.mapNotNull { theme ->
+    val bytes = templates.bytes[theme.key] ?: return@mapNotNull null
+    // Another theme's base binds what the requested one does; one that doesn't is left out.
+    if (
+      theme !== base &&
+        userTemplateProblem(bytes, library.decode(theme), likeBase = templates.compiled) != null
+    ) {
+      return@mapNotNull null
+    }
     store.publish(
       login = login,
-      key = key,
-      bytes = exported.bytes,
-      slots = base.entry.slots,
+      key = theme.key.copy(variant = request.variant),
+      bytes = bytes,
+      slots = theme.entry.slots,
       sourceDesignId = request.designId,
-      revision = exported.revision,
+      revision = templates.revision,
       device = device,
-      title = source?.get("title")?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() },
+      title = title,
     )
+  }
+  val design = published.first()
   // Its Wear widgets, from the same UI Builder revision. Best effort: a card that can't be a Wear
   // widget still publishes, and the watch draws the card's own design instead.
   val wear =
-    if (key.surface != DesignSurface.MobileApp) emptyMap()
-    else source?.let { wearWidgets(client, it, library.decode(base)) }.orEmpty()
+    if (design.entry.key.surface != DesignSurface.MobileApp) emptyMap()
+    else templates.source?.let { wearWidgets(client, it, library.decode(base)) }.orEmpty()
   store.publishWear(login, design, wear)
   return Published.Done(design)
+}
+
+/**
+ * Why [login] may not publish UI Builder design [designId], or null when they may: this server made
+ * it for them (the app's card studio, a seeded schema or fork), or UI Builder says they own it or
+ * edit it. The design server reads designs with UI Builder's operator token, which opens every
+ * design, so this is what keeps one person's private design (their photos, say) out of another's
+ * manifest.
+ */
+private suspend fun mayPublish(
+  client: UiBuilderClient,
+  store: UserDesignStore,
+  login: String,
+  designId: String,
+): String? {
+  if (store.madeFor(designId).equals(login, ignoreCase = true)) return null
+  val actor = UserDesignStore.authorOf(login)
+  val editors =
+    client.editors(designId).getOrElse {
+      return "UI Builder couldn't say who edits that design, so it can't be published."
+    }
+  if (editors.any { it.equals(actor, ignoreCase = true) }) return null
+  return "Only a design you own or edit in UI Builder can be published."
+}
+
+/** One compile at a time: each is a composition, and a burst shouldn't starve requests. */
+private val compiles = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+
+/** A UI Builder design as templates by key, from one revision of it ([source]). */
+private class Templates(
+  val bytes: Map<DesignKey, ByteArray>,
+  val revision: Long?,
+  val source: JsonObject?,
+  /** Captured here, as the library is, rather than exported by UI Builder. */
+  val compiled: Boolean = false,
+)
+
+/**
+ * [designId] as templates for [keys] (one card in each of its themes): UI Builder's own Remote
+ * Compose export when it serves one (the same bytes for every key), otherwise compiled here
+ * ([UiBuilderDesignCompiler]) from the design and its pictures, once per key so each theme's
+ * colours are its own. A failure says why, from UI Builder and from the compiler.
+ */
+private suspend fun templates(
+  integration: UiBuilderIntegration,
+  designId: String,
+  revision: Long?,
+  keys: List<DesignKey>,
+): Result<Templates> {
+  val client = integration.client
+  val exported = client.exportRc(designId, revision)
+  exported.getOrNull()?.let { document ->
+    // The document, for its title (what the app's design picker shows) and the Wear widgets. Best
+    // effort: without it the design publishes untitled.
+    val source = client.design(designId, document.revision).getOrNull()
+    return Result.success(
+      Templates(keys.associateWith { document.bytes }, document.revision, source)
+    )
+  }
+  val source =
+    client.design(designId, revision).getOrElse {
+      return Result.failure(it)
+    }
+  val assets =
+    source["assets"]?.jsonObject.orEmpty().keys.associateWith { key ->
+      client.asset(designId, key).getOrElse {
+        return Result.failure(it)
+      }
+    }
+  val compiler = integration.compiler
+  val problems = compiler.problems(source, assets.keys)
+  if (problems.isNotEmpty()) {
+    return Result.failure(
+      IllegalStateException(
+        "UI Builder couldn't export it (${exported.exceptionOrNull()?.message}), and it can't be " +
+          "built here: ${problems.joinToString("; ")}"
+      )
+    )
+  }
+  val bytes =
+    try {
+      withContext(compiles) { keys.associateWith { compiler.compile(source, assets, it) } }
+    } catch (e: Exception) {
+      if (e is CancellationException) throw e
+      return Result.failure(
+        IllegalStateException("it couldn't be built here: ${e.message ?: e.javaClass.simpleName}")
+      )
+    }
+  return Result.success(
+    Templates(
+      bytes,
+      source["revision"]?.jsonPrimitive?.longOrNull ?: revision,
+      source,
+      compiled = true,
+    )
+  )
 }
 
 /**

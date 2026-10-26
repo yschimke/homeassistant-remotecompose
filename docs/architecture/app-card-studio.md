@@ -98,9 +98,59 @@ nodes. The agent can rearrange the existing components and add text, rows and co
 the full builder palette remains available to the person reviewing the draft.
 
 Generated drafts do not modify the HA dashboard or install a new Remote Compose
-template automatically. Export, runtime/profile validation and publishing into the
-card library remain separate from creating a design. In particular, a provider must
-not generate Kotlin that the mobile app compiles or executes.
+template automatically. In particular, a provider must not generate Kotlin that the
+mobile app compiles or executes.
+
+## Using your design on the card
+
+Once a design opened from the studio is saved in UI Builder, **Publish privately and
+use it** (Android) puts it on the card, for that person alone:
+
+1. The app reads the design server's device token from Settings (minted on the
+   server's `/my` page). Without one the action explains where to get it.
+2. `GET /api/my/studio` lists the UI Builder designs the server opened for that
+   person, newest first, each with the card type it was seeded for. The server
+   records a design when the signed-in browser opens a studio handoff (or seeds a
+   schema or fork); UI Builder itself records the server as the owner.
+3. `POST /api/my/designs` publishes the newest one for this card under the variant
+   `mine`, keyed by the card's design key as the dashboard draws it (keyed as the
+   skin picker keys it). The server publishes it for that card in **each theme of its
+   card style** (light and dark; Classic in every app palette), under one design id
+   (`user:<UI Builder id>`), so the card keeps it when the dashboard changes mode or
+   palette. Picking another card style needs another publish. Republishing replaces it.
+4. The app hands that id to `SkinInstallWorker`, which downloads the private
+   manifest's assets with the device token and switches this card to the skin, as
+   the card's style sheet does. It finishes even if the studio closes.
+
+Publishing is refused unless the person may edit the design: the server made it for
+them, or UI Builder lists them as its owner or an editor (`getDesignAccess`). The
+server reads designs with UI Builder's operator token, which opens every design, so
+without this check one person could publish another's private design, photos and
+all, into their own manifest.
+
+### Building the template
+
+UI Builder's `export.rc` is a build feature of compose-preview-server, and the hosted
+builder doesn't serve it. When the export isn't available the design server builds
+the template itself (`UiBuilderDesignCompiler`, `:card-designs`), capturing it on the
+JVM exactly as the library is captured. It draws:
+
+- `layout/box`, `layout/column`, `layout/row`, and the card containers
+  (`ha-cards/dashboard-card`, `ha-cards/remote-card`, `ha-cards/dashboard-section`);
+- `asset/image`, with the design's uploaded pictures baked in (as PNG) under names
+  of the design's own (`asset_<key>`);
+- `ha-cards/remote-text`;
+- the `size`, `width`, `height`, `offset`, `padding`, `alpha` and `fillMax*`
+  modifiers.
+
+Any property or modifier value may be a literal, a state variable (`{"type":
+"state"}`) or a `select` between two numbers by a boolean state variable. State
+variables become named values in the `USER` domain, so one named for a card binding
+(`cover.s0.is_on`) is the value the app pushes: the card follows Home Assistant
+without a re-encode, and a number that reads state tweens on change only. Anything
+else (events, predicates, other components) is refused naming the node, rather than
+drawn approximately. A template built here may use only operations the library
+design it varies already uses; a UI Builder export is held to the app's profile.
 
 ## Native CMP and agent sessions
 
