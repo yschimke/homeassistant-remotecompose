@@ -72,4 +72,32 @@ class StablePicturesTest {
       StablePictures.presence(card, snapshot("/a")),
     )
   }
+
+  @Test
+  fun aCameraImageIsTheSlotsPicture() {
+    // A door sensor drawn over the camera watching the door: the camera's frames are the
+    // picture, so they load in place like the camera's own card.
+    val door =
+      CardConfig(
+        "picture-entity",
+        buildJsonObject {
+          put("type", "picture-entity")
+          put("entity", "binary_sensor.door")
+          put("camera_image", "camera.front")
+        },
+      )
+    fun withDoor(picture: String) =
+      snapshot(picture).let {
+        it.copy(
+          states = it.states + ("binary_sensor.door" to EntityState("binary_sensor.door", "off"))
+        )
+      }
+    val first = withDoor("/api/camera_proxy/camera.front?token=a")
+    val next = withDoor("/api/camera_proxy/camera.front?token=b")
+
+    assertEquals(setOf("binary_sensor.door", "camera.front"), cardPictureEntityIds(door))
+    assertEquals(StablePictures.snapshot(door, first), StablePictures.snapshot(door, next))
+    assertEquals(StablePictures.presence(door, first), StablePictures.presence(door, next))
+    assertNotEquals(cardPictureSignature(door, first), cardPictureSignature(door, next))
+  }
 }

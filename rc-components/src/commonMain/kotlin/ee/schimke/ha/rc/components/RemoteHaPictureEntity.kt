@@ -120,7 +120,7 @@ fun RemoteHaPictureEntity(
           // work around the alpha010 1×1 default in upstream
           // `addNamedBitmapUrl(name, url)`. See
           // [LocalNamedRemoteBitmap.kt] and #277.
-          val bindingName = data.entityId?.let(::pictureBindingName) ?: data.imageUrl
+          val bindingName = data.pictureEntityId?.let(::pictureBindingName) ?: data.imageUrl
           val rb =
             when (val strategy = LocalPictureImageStrategy.current) {
               is PictureImageStrategy.Url ->

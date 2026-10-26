@@ -214,6 +214,8 @@ data class HaPictureEntityData(
   val imageUrl: String? = null,
   val frameStamp: String? = null,
   val tapAction: HaAction = HaAction.None,
+  /** The entity [imageUrl] is the picture of: the card's `camera_image` camera, else [entityId]. */
+  val pictureEntityId: String? = entityId,
 )
 
 /** `gauge` card model. Half-circle dial with current value + name + range. */
