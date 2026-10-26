@@ -159,8 +159,20 @@ JVM exactly as the library is captured. It draws:
   `remoteCall` against RemoteModifier's real functions, so it is the one extension
   point a design can carry.
 
-Any property or modifier value may be a literal, a state variable (`{"type":
-"state"}`) or a `select` between two numbers by a boolean state variable. State
+Any modifier value (and a text's `text`) may be a literal, a state variable
+(`{"type": "state"}`), a clock value (`{"type": "system"}`: `time.minuteOfDay`,
+`time.dayOfYear`, `time.utcOffset`, `time.hour`, …) or an expression in UI Builder's
+own ops, with its arities: arithmetic, `min`/`max`/`clamp`, trigonometry,
+`radians`/`degrees`, `smoothstep`, `lerp`, comparisons, and `select` between two
+numbers by a boolean. They become Remote Compose's own operations, so the player
+evaluates them live: the card follows state and the clock with no re-encode.
+
+Day and night, for one: a scrim's alpha can be the sun's elevation at the design's
+location, faded through civil twilight. The declination comes from `time.dayOfYear`,
+the hour angle from `time.minuteOfDay`, `time.utcOffset` and the longitude, and the
+elevation is `degrees(asin(sin φ·sin δ + cos φ·cos δ·cos H))`; night is
+`1 - smoothstep(-6, 6, elevation)`. It needs no host: a widget dims at dusk with
+nothing pushed to it. State
 variables become named values in the `USER` domain, so one named for a card binding
 (`cover.s0.is_on`) is the value the app pushes: the card follows Home Assistant
 without a re-encode.

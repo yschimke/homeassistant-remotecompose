@@ -25,12 +25,28 @@ import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.RemoteString
+import androidx.compose.remote.creation.compose.state.RemoteTimeVariables
+import androidx.compose.remote.creation.compose.state.abs as rAbs
+import androidx.compose.remote.creation.compose.state.acos as rAcos
 import androidx.compose.remote.creation.compose.state.asRemoteDp
+import androidx.compose.remote.creation.compose.state.asin as rAsin
+import androidx.compose.remote.creation.compose.state.atan as rAtan
+import androidx.compose.remote.creation.compose.state.ceil as rCeil
+import androidx.compose.remote.creation.compose.state.cos as rCos
+import androidx.compose.remote.creation.compose.state.floor as rFloor
+import androidx.compose.remote.creation.compose.state.max as rMax
+import androidx.compose.remote.creation.compose.state.min as rMin
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.remote.creation.compose.state.round as rRound
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
+import androidx.compose.remote.creation.compose.state.sin as rSin
+import androidx.compose.remote.creation.compose.state.sqrt as rSqrt
+import androidx.compose.remote.creation.compose.state.tan as rTan
+import androidx.compose.remote.creation.compose.state.toDeg
+import androidx.compose.remote.creation.compose.state.toRad
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -182,12 +198,19 @@ class UiBuilderDesignCompiler(
         "state" -> obj.string("variable").takeIf { it !in variables }?.let { "no state `$it`" }
         "expr" -> {
           val args = obj["args"]?.jsonArray.orEmpty()
+          val op = obj.string("op")
+          val arity = EXPRESSIONS[op]
           when {
-            obj.string("op") != "select" -> "expression `${obj.string("op")}` isn't drawn here yet"
-            args.size != 3 -> "select takes a condition and two values"
+            arity == null -> "expression `$op` isn't drawn here yet"
+            args.size != arity -> "`$op` takes $arity values, not ${args.size}"
             else -> args.firstNotNullOfOrNull(::valueProblem)
           }
         }
+        "system" ->
+          obj
+            .string("value")
+            .takeIf { it !in SYSTEM_VALUES }
+            ?.let { "system value `$it` isn't drawn here yet" }
         "colorToken" ->
           obj
             .string("value")
@@ -380,13 +403,66 @@ class UiBuilderDesignCompiler(
       val obj = value.jsonObject
       return when (obj.string("type")) {
         "state" -> namedFloat(obj.string("variable")!!)
-        "expr" -> {
-          val (condition, ifTrue, ifFalse) = obj.getValue("args").jsonArray
-          boolean(condition)?.select(number(ifTrue) ?: 0f.rf, number(ifFalse) ?: 0f.rf)
-        }
+        "system" -> system(obj.string("value"))
+        "expr" -> expression(obj.string("op"), obj.getValue("args").jsonArray)
         else -> literal(obj)?.floatOrNull?.rf
       }
     }
+
+    /**
+     * A number expression, in Remote Compose's own operations so the player evaluates it live: a
+     * state change, or the clock (`time.*`), moves it with no re-encode.
+     */
+    private fun expression(op: String?, args: JsonArray): RemoteFloat? {
+      fun at(i: Int): RemoteFloat = number(args.getOrNull(i)) ?: 0f.rf
+      return when (op) {
+        "select" -> boolean(args[0])?.select(at(1), at(2))
+        "add" -> at(0) + at(1)
+        "mul" -> at(0) * at(1)
+        "sub" -> at(0) - at(1)
+        "div" -> at(0) / at(1)
+        "mod" -> at(0).rem(at(1))
+        "neg" -> -at(0)
+        "min" -> rMin(at(0), at(1))
+        "max" -> rMax(at(0), at(1))
+        "clamp" -> rMin(rMax(at(0), at(1)), at(2))
+        "abs" -> rAbs(at(0))
+        "floor" -> rFloor(at(0))
+        "ceil" -> rCeil(at(0))
+        "round" -> rRound(at(0))
+        "sqrt" -> rSqrt(at(0))
+        "sin" -> rSin(at(0))
+        "cos" -> rCos(at(0))
+        "tan" -> rTan(at(0))
+        "asin" -> rAsin(at(0))
+        "acos" -> rAcos(at(0))
+        "atan" -> rAtan(at(0))
+        "radians" -> toRad(at(0))
+        "degrees" -> toDeg(at(0))
+        "lerp" -> at(0) + (at(1) - at(0)) * at(2)
+        // GLSL's: 0 at or below edge0, 1 at or above edge1, smooth between.
+        "smoothstep" -> {
+          val t = rMin(rMax((at(2) - at(0)) / (at(1) - at(0)), 0f.rf), 1f.rf)
+          t * t * (3f.rf - t * 2f)
+        }
+        else -> null
+      }
+    }
+
+    /** A clock value the player keeps current: local time, the date and the UTC offset. */
+    private fun system(name: String?): RemoteFloat? =
+      when (name) {
+        "time.hour" -> RemoteTimeVariables.hourOfDay.toRemoteFloat()
+        "time.minuteOfDay" -> RemoteTimeVariables.minuteOfDay.toRemoteFloat()
+        "time.secondOfHour" -> RemoteTimeVariables.secondOfHour.toRemoteFloat()
+        "time.dayOfWeek" -> RemoteTimeVariables.dayOfWeek.toRemoteFloat()
+        "time.dayOfMonth" -> RemoteTimeVariables.dayOfMonth.toRemoteFloat()
+        "time.month" -> RemoteTimeVariables.month.toRemoteFloat()
+        "time.dayOfYear" -> RemoteTimeVariables.dayOfYear.toRemoteFloat()
+        "time.year" -> RemoteTimeVariables.year.toRemoteFloat()
+        "time.utcOffset" -> RemoteTimeVariables.utcOffsetSeconds.toRemoteFloat()
+        else -> null
+      }
 
     private fun boolean(value: JsonElement): RemoteBoolean? {
       if (value is JsonPrimitive) return value.booleanOrNull?.let { RemoteBoolean(it) }
@@ -396,6 +472,20 @@ class UiBuilderDesignCompiler(
           val name = obj.string("variable")!!
           val initial = variables[name]?.get("initialValue")?.jsonPrimitive?.booleanOrNull ?: false
           RemoteBoolean.createNamedRemoteBoolean(name, initial, RemoteState.Domain.User)
+        }
+        "expr" -> {
+          val args = obj.getValue("args").jsonArray
+          val a = number(args.getOrNull(0)) ?: return null
+          val b = number(args.getOrNull(1)) ?: return null
+          when (obj.string("op")) {
+            "lt" -> a.isLessThan(b)
+            "le" -> a.isLessThanOrEqualTo(b)
+            "gt" -> a.isGreaterThan(b)
+            "ge" -> a.isGreaterThanOrEqualTo(b)
+            "eq" -> a.isEqualTo(b)
+            "ne" -> a.isNotEqualTo(b)
+            else -> null
+          }
         }
         else -> literal(obj)?.booleanOrNull?.let { RemoteBoolean(it) }
       }
@@ -504,7 +594,44 @@ class UiBuilderDesignCompiler(
     private val LITERALS = setOf("string", "bool", "int", "float", "dimension", "color", "null")
 
     /** Values that read state: drawn live in modifiers and a text's text, refused elsewhere. */
-    private val DYNAMIC = setOf("state", "expr")
+    private val DYNAMIC = setOf("state", "expr", "system")
+
+    /** The expressions drawn here, by how many values each takes: UI Builder's arities. */
+    private val EXPRESSIONS: Map<String, Int> =
+      mapOf("select" to 3, "clamp" to 3, "smoothstep" to 3, "lerp" to 3) +
+        listOf("add", "mul", "sub", "div", "mod", "min", "max", "lt", "le", "gt", "ge", "eq", "ne")
+          .associateWith { 2 } +
+        listOf(
+            "neg",
+            "abs",
+            "floor",
+            "ceil",
+            "round",
+            "sqrt",
+            "sin",
+            "cos",
+            "tan",
+            "asin",
+            "acos",
+            "atan",
+            "radians",
+            "degrees",
+          )
+          .associateWith { 1 }
+
+    /** The clock values drawn here, which the player keeps current. */
+    private val SYSTEM_VALUES =
+      setOf(
+        "time.hour",
+        "time.minuteOfDay",
+        "time.secondOfHour",
+        "time.dayOfWeek",
+        "time.dayOfMonth",
+        "time.month",
+        "time.dayOfYear",
+        "time.year",
+        "time.utcOffset",
+      )
 
     /**
      * The `remoteCall` drawn here: RemoteModifier's `graphicsLayer`, for what the catalog's own

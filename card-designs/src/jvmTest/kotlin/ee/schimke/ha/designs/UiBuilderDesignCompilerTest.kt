@@ -385,6 +385,103 @@ class UiBuilderDesignCompilerTest {
     assertTrue(compiler.problems(otherCall, assets.keys).any { "drawWithContent" in it })
   }
 
+  /** [document] with a black scrim over everything whose alpha is [alpha]. */
+  private fun withScrim(alpha: String): JsonObject {
+    val nodes = document.getValue("nodes").jsonObject
+    val stage = nodes.getValue("stage").jsonObject
+    val scrim =
+      Json.parseToJsonElement(
+          """{"id": "scrim", "componentId": "layout/box", "modifiers": [{"type": "fillMaxSize"},
+              {"type": "alpha", "alpha": $alpha},
+              {"type": "background", "color": {"type": "color", "value": "#FF000000"}}]}"""
+        )
+        .jsonObject
+    val children =
+      JsonArray(
+        stage.getValue("slots").jsonObject.getValue("children").jsonArray + JsonPrimitive("scrim")
+      )
+    return JsonObject(
+      document +
+        ("nodes" to
+          JsonObject(
+            nodes +
+              mapOf(
+                "stage" to
+                  JsonObject(stage + ("slots" to JsonObject(mapOf("children" to children)))),
+                "scrim" to scrim,
+              )
+          ))
+    )
+  }
+
+  /** `select(time.year <op> 2000, 0.8, 0)`: the clock decides, whenever the test runs. */
+  private fun byYear(op: String) =
+    """{"type": "expr", "op": "select", "args": [
+         {"type": "expr", "op": "$op", "args": [
+           {"type": "system", "value": "time.year"}, {"type": "float", "value": 2000}]},
+         {"type": "float", "value": 0.8}, {"type": "float", "value": 0}]}"""
+
+  @Test
+  fun theClockDrivesADesignLive() {
+    val closed = mapOf("cover.s0.is_on" to RcNamedValue.Integer(1))
+    // The player's clock is read as it plays, not when the design was built.
+    val dimmed = play(compiler.compile(withScrim(byYear("gt")), assets, key), closed)
+    val clear = play(compiler.compile(withScrim(byYear("lt")), assets, key), closed)
+    assertEquals(Triple(0, 255, 0), clear.rgb(10, 10))
+    assertTrue(dimmed.rgb(10, 10).second < 100, "dimmed: ${dimmed.rgb(10, 10)}")
+  }
+
+  @Test
+  fun theSunsElevationIsDrawnInUiBuildersExpressions() {
+    // A night scrim by the sun: declination from the day of the year, hour angle from local
+    // time, the UTC offset and the longitude, faded through civil twilight.
+    fun f(v: Double) = """{"type": "float", "value": $v}"""
+    fun sys(n: String) = """{"type": "system", "value": "time.$n"}"""
+    fun e(op: String, vararg args: String) =
+      """{"type": "expr", "op": "$op", "args": [${args.joinToString()}]}"""
+    val declination =
+      e(
+        "mul",
+        f(-23.44),
+        e("cos", e("radians", e("mul", f(0.9863), e("add", sys("dayOfYear"), f(10.0))))),
+      )
+    val solarHours =
+      e(
+        "add",
+        e("add", e("div", sys("minuteOfDay"), f(60.0)), e("div", sys("utcOffset"), f(-3600.0))),
+        f(0.0),
+      )
+    val hourAngle = e("mul", f(15.0), e("sub", solarHours, f(12.0)))
+    val sinElevation =
+      e(
+        "add",
+        e("mul", f(0.7826), e("sin", e("radians", declination))),
+        e(
+          "mul",
+          e("mul", f(0.6225), e("cos", e("radians", declination))),
+          e("cos", e("radians", hourAngle)),
+        ),
+      )
+    val night =
+      e(
+        "mul",
+        f(0.55),
+        e("sub", f(1.0), e("smoothstep", f(-6.0), f(6.0), e("degrees", e("asin", sinElevation)))),
+      )
+    val design = withScrim(night)
+    assertEquals(emptyList(), compiler.problems(design, assets.keys))
+    compiler.compile(design, assets, key)
+    // UI Builder's arities, and only the clock values the player keeps.
+    assertTrue(
+      compiler.problems(withScrim(e("add", f(1.0), f(2.0), f(3.0))), assets.keys).any {
+        "takes 2" in it
+      }
+    )
+    assertTrue(
+      compiler.problems(withScrim(sys("lunarPhase")), assets.keys).any { "lunarPhase" in it }
+    )
+  }
+
   @Test
   fun anUnknownColourTokenIsRefused() {
     val unknown =
