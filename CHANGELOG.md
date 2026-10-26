@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.68](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.67...v0.1.68) (2026-10-26)
+
+
+### Features
+
+* **cameras:** refresh dashboard cameras every 5 s, live view in more-info ([#1266](https://github.com/yschimke/homeassistant-remotecompose/issues/1266)) ([e287cd7](https://github.com/yschimke/homeassistant-remotecompose/commit/e287cd7e68c20d14f4721bbdb338b61a8f161969))
+* load weather forecasts, and history on Android, for data cards ([#1257](https://github.com/yschimke/homeassistant-remotecompose/issues/1257)) ([826e0f7](https://github.com/yschimke/homeassistant-remotecompose/commit/826e0f78ffb7793a26846847604a058650126fd5))
+* **wear:** give each card style its own Wear container background ([#1267](https://github.com/yschimke/homeassistant-remotecompose/issues/1267)) ([6cb9d77](https://github.com/yschimke/homeassistant-remotecompose/commit/6cb9d7721c25fc81ed50a152029868d683a8c066))
+
+
+### Bug Fixes
+
+* keep Wear dark and follow system dynamic colors ([#1262](https://github.com/yschimke/homeassistant-remotecompose/issues/1262)) ([7c394bd](https://github.com/yschimke/homeassistant-remotecompose/commit/7c394bd61010547122fb535dd43a8f06443e9b8a))
+* make Wear follow mobile theme and card designs ([#1260](https://github.com/yschimke/homeassistant-remotecompose/issues/1260)) ([ee93eaa](https://github.com/yschimke/homeassistant-remotecompose/commit/ee93eaab718e203232e14b0fc08ed763e6d29b47))
+* reconcile phone and Wear widgets with what the system has placed ([#1265](https://github.com/yschimke/homeassistant-remotecompose/issues/1265)) ([d201ef6](https://github.com/yschimke/homeassistant-remotecompose/commit/d201ef6b7b7e28fd39a8e4f28ee7549461685b49))
+
 ## [0.1.67](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.66...v0.1.67) (2026-10-25)
 
 
