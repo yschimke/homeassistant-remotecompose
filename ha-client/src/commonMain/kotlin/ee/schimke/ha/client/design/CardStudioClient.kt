@@ -68,21 +68,23 @@ class CardStudioClient(serverUrl: String, engine: HttpClientEngine? = null) {
       StudioDesign(
           designId = item["designId"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null,
           cardType = item["cardType"]?.jsonPrimitive?.contentOrNull,
+          handoff = item["handoff"]?.jsonPrimitive?.contentOrNull,
         )
         .takeIf { cardType == null || it.cardType == null || it.cardType == cardType }
     }
   }
 
   /**
-   * Publish UI Builder design [designId] privately for [key]'s card, in every theme the library
-   * draws it in, under [variant]: only the person [token] belongs to sees it. Returns its stable
-   * design id (`user:<designId>`), the skin a card is switched to.
+   * Publish UI Builder design [designId] privately for [key]'s card, in each theme of its card
+   * style, under [variant] (one of its own by default, so another card's design for the same key
+   * stays): only the person [token] belongs to sees it. Returns its stable design id
+   * (`user:<designId>`), the skin a card is switched to.
    */
   suspend fun publishPrivately(
     token: String,
     designId: String,
     key: DesignKey,
-    variant: String = PRIVATE_VARIANT,
+    variant: String = privateVariant(designId),
   ): String {
     val response =
       http.post(base + "/api/my/designs") {
@@ -130,11 +132,30 @@ class CardStudioClient(serverUrl: String, engine: HttpClientEngine? = null) {
 
 data class CardStudioHandoff(val document: JsonObject, val url: String)
 
-/** A UI Builder design the design server opened for this person, for [cardType]'s card. */
-data class StudioDesign(val designId: String, val cardType: String?)
+/**
+ * A UI Builder design the design server opened for this person, for [cardType]'s card, from card
+ * studio handoff [handoff] (the token at the end of [CardStudioClient.handoff]'s link).
+ */
+data class StudioDesign(val designId: String, val cardType: String?, val handoff: String? = null)
 
-/** The variant a card studio design publishes under: one per card, replaced on republish. */
-const val PRIVATE_VARIANT: String = "mine"
+/**
+ * Which of [designs] (newest first) to publish for a card whose studio opened [opened] handoffs:
+ * the newest opened from this card, else the only one there is. Null when it isn't clear, rather
+ * than another card's design.
+ */
+fun designForCard(designs: List<StudioDesign>, opened: Collection<String>): StudioDesign? =
+  designs.firstOrNull { it.handoff != null && it.handoff in opened } ?: designs.singleOrNull()
+
+/** The handoff token in a link [CardStudioClient.handoff] returned. */
+fun handoffToken(url: String): String = url.substringAfterLast('/')
+
+/**
+ * The variant a card studio design publishes under: its own (`mine-` and a hash of its UI Builder
+ * id), so designs for two cards of the same key sit side by side, and republishing one replaces
+ * only it.
+ */
+fun privateVariant(designId: String): String =
+  "mine-" + Sha256.hex(designId.encodeToByteArray()).take(12)
 
 /** Why a private publish failed, in words for the person; never echoes preview data. */
 class CardPublishException(val status: Int, reason: String? = null) :

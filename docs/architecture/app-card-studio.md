@@ -112,9 +112,12 @@ use it** (Android) puts it on the card, for that person alone:
    person, newest first, each with the card type it was seeded for. The server
    records a design when the signed-in browser opens a studio handoff (or seeds a
    schema or fork); UI Builder itself records the server as the owner.
-3. `POST /api/my/designs` publishes the newest one for this card under the variant
-   `mine`, keyed by the card's design key as the dashboard draws it (keyed as the
-   skin picker keys it). The server publishes it for that card in **each theme of its
+3. `POST /api/my/designs` publishes this card's design: the newest one opened from a
+   handoff this card's studio opened (the server records each design with its handoff
+   token), else the only one of its card type, never a guess between several. It
+   publishes under a variant of its own (`mine-` and a hash of its UI Builder id), so
+   designs for two cards with the same key both stay, keyed by the card's design key
+   as the dashboard draws it (keyed as the skin picker keys it). The server publishes it for that card in **each theme of its
    card style** (light and dark; Classic in every app palette), under one design id
    (`user:<UI Builder id>`), so the card keeps it when the dashboard changes mode or
    palette. Picking another card style needs another publish. Republishing replaces it.
@@ -165,8 +168,8 @@ theme it publishes for, so each token resolves in that theme: light and dark, an
 every palette of the card style. A photo card can tint a picture with a translucent
 `accent` box drawn over it (with the same transforms, so it moves with it) and dim
 itself at night with a `night` box at partial alpha over everything. Anything
-else (events, predicates, other components) is refused naming the node, rather than
-drawn approximately. A template built here may use only operations the library
+else (events, predicates, other components, and any property other than a text's
+`text` that reads state) is refused naming the node, rather than drawn approximately. A template built here may use only operations the library
 design it varies already uses; a UI Builder export is held to the app's profile.
 
 ## Native CMP and agent sessions

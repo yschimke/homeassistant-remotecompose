@@ -8,6 +8,7 @@ import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.client.design.DesignPublisher
+import ee.schimke.ha.client.design.handoffToken
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignSurface
@@ -789,6 +790,10 @@ class UserDesignsTest {
       }
     assertEquals(HttpStatusCode.Found, opening.status)
     val designId = opened.single()
-    assertEquals(listOf(MadeDesign(designId, "octocat", "tile", 42)), f.store.made("octocat"))
+    // Recorded with the handoff the app holds for this card, so it publishes this card's design.
+    assertEquals(
+      listOf(MadeDesign(designId, "octocat", "tile", 42, handoff = handoffToken(handoff))),
+      f.store.made("octocat"),
+    )
   }
 }

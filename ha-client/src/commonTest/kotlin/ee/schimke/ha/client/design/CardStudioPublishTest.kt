@@ -34,14 +34,14 @@ class CardStudioPublishTest {
       respond(
         """[{"designId":"card-new","login":"octocat","cardType":"tile"},
            {"designId":"card-gauge","login":"octocat","cardType":"gauge"},
-           {"designId":"card-old","login":"octocat"}]""",
+           {"designId":"card-old","login":"octocat","handoff":"h1"}]""",
         HttpStatusCode.OK,
         json,
       )
     }
     val client = CardStudioClient("https://ha.example/designs/v1", engine)
     assertEquals(
-      listOf(StudioDesign("card-new", "tile"), StudioDesign("card-old", null)),
+      listOf(StudioDesign("card-new", "tile"), StudioDesign("card-old", null, handoff = "h1")),
       client.studioDesigns(" device-token\n", cardType = "tile"),
     )
   }
@@ -53,7 +53,7 @@ class CardStudioPublishTest {
       assertEquals("Bearer device-token", request.headers[HttpHeaders.Authorization])
       val sent = Json.parseToJsonElement((request.body as TextContent).text).jsonObject
       assertEquals("card-new", sent["designId"]!!.jsonPrimitive.content)
-      assertEquals(PRIVATE_VARIANT, sent["variant"]!!.jsonPrimitive.content)
+      assertEquals(privateVariant("card-new"), sent["variant"]!!.jsonPrimitive.content)
       assertEquals(key, Json.decodeFromJsonElement(DesignKey.serializer(), sent["key"]!!))
       respond(
         """{"entry":{"designId":"user:card-new"},"shared":false}""",
@@ -63,6 +63,26 @@ class CardStudioPublishTest {
     }
     val client = CardStudioClient("https://ha.example", engine)
     assertEquals("user:card-new", client.publishPrivately("device-token", "card-new", key))
+  }
+
+  @Test
+  fun eachDesignPublishesUnderItsOwnValidVariant() {
+    val a = privateVariant("card-AbC_123")
+    assertNotEquals(a, privateVariant("card-other"))
+    assertEquals(a, privateVariant("card-AbC_123"))
+    assertTrue(Regex("[a-z0-9][a-z0-9-]{0,39}").matches(a), a)
+    assertEquals("tok", handoffToken("https://ha.example/studio/tok"))
+  }
+
+  @Test
+  fun publishesTheDesignOpenedFromThisCardNeverAnothers() {
+    val mine = StudioDesign("a", "tile", handoff = "h-a")
+    val other = StudioDesign("b", "tile", handoff = "h-b")
+    // Newest first: another tile's design was opened since.
+    assertEquals(mine, designForCard(listOf(other, mine), opened = listOf("h-a")))
+    // Nothing opened from this card: only an unambiguous one.
+    assertNull(designForCard(listOf(other, mine), opened = emptyList()))
+    assertEquals(mine, designForCard(listOf(mine), opened = emptyList()))
   }
 
   @Test

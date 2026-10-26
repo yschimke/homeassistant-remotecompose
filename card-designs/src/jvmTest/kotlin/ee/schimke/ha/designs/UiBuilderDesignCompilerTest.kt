@@ -273,6 +273,36 @@ class UiBuilderDesignCompilerTest {
   }
 
   @Test
+  fun aPropertyReadingStateIsRefusedUnlessItIsDrawnLive() {
+    val text =
+      Json.parseToJsonElement(
+          """
+          {"schema": "compose-ui-builder-document/v1-candidate", "id": "t", "title": "t",
+           "revision": 1, "catalogPin": {"systemId": "ha-cards", "catalogRevision": "c",
+             "capabilityDigest": "c", "nativeRuntimeId": "c"},
+           "stateVariables": {
+             "cover.s0.state": {"type": "text", "valueType": "string", "initialValue": "Closed",
+               "persistence": "preview"},
+             "cover.s0.is_on": {"type": "value", "valueType": "bool", "initialValue": false,
+               "persistence": "preview"}},
+           "roots": ["text"],
+           "nodes": {"text": {"id": "text", "componentId": "ha-cards/remote-text",
+             "properties": {
+               "text": {"type": "state", "variable": "cover.s0.state"},
+               "fontSize": {"type": "expr", "op": "select", "args": [
+                 {"type": "state", "variable": "cover.s0.is_on"},
+                 {"type": "float", "value": 20}, {"type": "float", "value": 14}]}}}}}
+          """
+        )
+        .jsonObject
+    // The text is live; its size would be captured as one value, so it is refused.
+    assertEquals(
+      listOf("text.fontSize: a property reading state isn't drawn live here yet"),
+      compiler.problems(text, emptySet()),
+    )
+  }
+
+  @Test
   fun anUnknownColourTokenIsRefused() {
     val unknown =
       Json.parseToJsonElement(

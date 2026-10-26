@@ -267,6 +267,7 @@ fun Route.cardStudioRoutes(
               editor.login,
               id,
               cardType = (claim as CardStudioDrafts.Claim.Ready).cardType,
+              handoff = token,
             )
             builder.config.designUrl(id)
           }

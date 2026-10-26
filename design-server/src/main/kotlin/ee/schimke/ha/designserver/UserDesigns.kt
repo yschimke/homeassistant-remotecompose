@@ -40,7 +40,8 @@ data class UserDesign(
 /**
  * A UI Builder design this server created for [login] (from the app's card studio, a seeded schema
  * or a fork) and shared with them: theirs to publish, though UI Builder records the server as its
- * owner. [cardType] is the card it was seeded for, when it was seeded for one.
+ * owner. [cardType] is the card it was seeded for, when it was seeded for one; [handoff] the card
+ * studio handoff that opened it, which the app holds for the card it opened it from.
  */
 @Serializable
 data class MadeDesign(
@@ -48,6 +49,7 @@ data class MadeDesign(
   val login: String,
   val cardType: String? = null,
   val createdAtEpochMs: Long = 0,
+  val handoff: String? = null,
 )
 
 @Serializable
@@ -114,12 +116,19 @@ class UserDesignStore(
    * oldest dropped first.
    */
   @Synchronized
-  fun recordMade(login: String, designId: String, cardType: String? = null) {
+  fun recordMade(
+    login: String,
+    designId: String,
+    cardType: String? = null,
+    handoff: String? = null,
+  ) {
     val mine = index.made.filter { it.login == login && it.designId != designId }
     val others = index.made.filter { it.login != login }
     val next =
       index.copy(
-        made = others + (mine + MadeDesign(designId, login, cardType, clock())).takeLast(MAX_MADE)
+        made =
+          others +
+            (mine + MadeDesign(designId, login, cardType, clock(), handoff)).takeLast(MAX_MADE)
       )
     write(next)
   }

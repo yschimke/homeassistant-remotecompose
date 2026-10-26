@@ -56,6 +56,8 @@ fun CardStudioScreen(
   var busy by remember { mutableStateOf(false) }
   var agentRequest by remember { mutableStateOf(false) }
   var publishRequest by remember { mutableStateOf(false) }
+  // The handoffs opened for this card: its designs, among any opened for other cards of its type.
+  val openedHandoffs = remember(card) { mutableStateListOf<String>() }
   var requestFailed by remember { mutableStateOf(false) }
   var job by remember { mutableStateOf<Job?>(null) }
   val scope = rememberCoroutineScope()
@@ -73,10 +75,14 @@ fun CardStudioScreen(
       var studio: CardStudioClient? = null
       try {
         studio = CardStudioClient(server)
-        val design = studio.studioDesigns(designToken, key.cardType).firstOrNull()
+        val designs = studio.studioDesigns(designToken, key.cardType)
+        val design = designForCard(designs, openedHandoffs)
         if (design == null) {
           requestFailed = true
-          message = "Open this card in UI Builder first and save your design there."
+          message =
+            if (designs.isEmpty()) "Open this card in UI Builder first and save your design there."
+            else
+              "You have designs for more than one card like this. Open this card in UI Builder from here, save, then publish."
         } else {
           val skin = studio.publishPrivately(designToken, design.designId, key)
           onPublished?.invoke(skin)
@@ -128,6 +134,7 @@ fun CardStudioScreen(
           val handoff = studio.openDraft(seed, card, currentSnapshot)
           draft = handoff.document
           editorUrl = handoff.url
+          openedHandoffs += handoffToken(handoff.url)
         }
       } catch (e: CancellationException) {
         throw e

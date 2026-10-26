@@ -134,7 +134,15 @@ class UiBuilderDesignCompiler(
           }
         }
         node["properties"]?.jsonObject?.forEach { (name, value) ->
-          valueProblem(value)?.let { add("$id.$name: $it") }
+          val type = (value as? JsonObject)?.string("type")
+          when {
+            // Only a text's text is drawn live; any other property is captured as it is.
+            type in DYNAMIC && !(component == TEXT && name == "text") ->
+              add("$id.$name: a property reading state isn't drawn live here yet")
+            type == "colorToken" && name != "color" ->
+              add("$id.$name: a colour token is only drawn for a colour")
+            else -> valueProblem(value)?.let { add("$id.$name: $it") }
+          }
         }
         if (component == IMAGE) {
           val key = literal(node.properties()["assetKey"])?.contentOrNull
@@ -453,6 +461,9 @@ class UiBuilderDesignCompiler(
       )
 
     private val LITERALS = setOf("string", "bool", "int", "float", "dimension", "color", "null")
+
+    /** Values that read state: drawn live in modifiers and a text's text, refused elsewhere. */
+    private val DYNAMIC = setOf("state", "expr")
 
     /** Black in a dark theme, clear in a light one: a scrim for night. */
     const val NIGHT = "night"
