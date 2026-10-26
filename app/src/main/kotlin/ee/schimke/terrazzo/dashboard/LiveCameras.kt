@@ -85,6 +85,8 @@ fun cameraEntities(card: CardConfig): Set<String> =
 internal fun rememberLiveCameraFrames(snapshot: HaSnapshot, cameras: Set<String>): HaSnapshot {
   val live by LiveCameras.live.collectAsState()
   if (cameras.isEmpty() && live.isEmpty()) return snapshot
+  // Each tick's wall-clock time, 0 before the first: a frame URL is never one an earlier visit to
+  // the dashboard used, which the shared memory cache would answer with that visit's picture.
   var dashboardFrame by remember { mutableLongStateOf(0L) }
   var liveFrame by remember { mutableLongStateOf(0L) }
   val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -93,7 +95,7 @@ internal fun rememberLiveCameraFrames(snapshot: HaSnapshot, cameras: Set<String>
     lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
       while (true) {
         delay(LiveCameras.DASHBOARD_FRAME_INTERVAL_MS)
-        dashboardFrame++
+        dashboardFrame = System.currentTimeMillis()
       }
     }
   }
@@ -103,7 +105,7 @@ internal fun rememberLiveCameraFrames(snapshot: HaSnapshot, cameras: Set<String>
       while (true) {
         delay(LiveCameras.FRAME_INTERVAL_MS)
         LiveCameras.expire()
-        liveFrame++
+        liveFrame = System.currentTimeMillis()
       }
     }
   }

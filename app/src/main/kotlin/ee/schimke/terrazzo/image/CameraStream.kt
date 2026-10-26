@@ -98,13 +98,16 @@ internal fun readMjpegFrames(source: BufferedSource, onFrame: (ByteArray) -> Uni
   }
 }
 
-/** [jpeg] decoded, sampled down to no more than [maxDimensionPx] a side; null when it won't. */
+/**
+ * [jpeg] decoded, sampled down by powers of two to no more than [maxDimensionPx] a side; null when
+ * it won't decode.
+ */
 private fun decodeFrame(jpeg: ByteArray, maxDimensionPx: Int): Bitmap? {
   val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
   BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size, bounds)
   if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
   var sample = 1
-  while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= maxDimensionPx) sample *= 2
+  while (maxOf(bounds.outWidth, bounds.outHeight) / sample > maxDimensionPx) sample *= 2
   val options = BitmapFactory.Options().apply { inSampleSize = sample }
   return BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size, options)
 }
