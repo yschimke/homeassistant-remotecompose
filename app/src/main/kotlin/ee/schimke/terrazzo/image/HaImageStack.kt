@@ -32,6 +32,7 @@ import ee.schimke.terrazzo.core.network.RemoteUrlStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import okhttp3.OkHttpClient
 import okio.Path.Companion.toOkioPath
 
 /**
@@ -112,22 +113,28 @@ class HaImageStack(
   }
 
   /**
+   * The HTTP client pictures load through: a variant of the app's one client, sharing its
+   * connection pool, adding the image-only interceptors. A camera's live stream ([cameraStream])
+   * uses it too.
+   */
+  internal val httpClient: OkHttpClient by lazy {
+    SharedOkHttpClient.client
+      .newBuilder()
+      // The bearer goes on by the session's own origin first; a LAN URL off the home network is
+      // then rewritten to the instance's external URL, which takes the same token, rather than
+      // refused. The disk cache keys on the original URL, so either way a cached picture hits.
+      .addInterceptor(HaBearerAuthInterceptor({ baseUrl }, { accessToken }))
+      .addInterceptor(RemoteUrlInterceptor(lanPolicy, remoteUrls))
+      .addInterceptor(LanConnectionPolicyInterceptor(lanPolicy))
+      .build()
+  }
+
+  /**
    * The shared Coil loader. Lazy so a process that never renders an image (background services,
    * tests) doesn't pay the OkHttp / disk cache construction cost.
    */
   val imageLoader: ImageLoader by lazy {
-    val client =
-      // A variant of the app's one client, sharing its connection pool, adding the image-only
-      // interceptors.
-      SharedOkHttpClient.client
-        .newBuilder()
-        // The bearer goes on by the session's own origin first; a LAN URL off the home network is
-        // then rewritten to the instance's external URL, which takes the same token, rather than
-        // refused. The disk cache keys on the original URL, so either way a cached picture hits.
-        .addInterceptor(HaBearerAuthInterceptor({ baseUrl }, { accessToken }))
-        .addInterceptor(RemoteUrlInterceptor(lanPolicy, remoteUrls))
-        .addInterceptor(LanConnectionPolicyInterceptor(lanPolicy))
-        .build()
+    val client = httpClient
     Log.d(
       TAG,
       "imageLoader building (host=${baseUrl?.toHttpUrlOrNull()?.host} hasToken=${accessToken != null})",

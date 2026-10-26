@@ -62,9 +62,9 @@ import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * What a `more-info` tap opens on the dashboard: a half-height sheet led by the entity's icon, name
- * and live value, then its history over a chosen range — a line chart for a numeric entity
- * (sensors), an on/off timeline for anything else (switches, binary sensors, lights) — with a
- * summary under it, then the entity's attributes.
+ * and live value (a camera's live view first, [LiveCameraFeed]), then its history over a chosen
+ * range — a line chart for a numeric entity (sensors), an on/off timeline for anything else
+ * (switches, binary sensors, lights) — with a summary under it, then the entity's attributes.
  *
  * Everything is drawn from the app theme's roles, so the sheet re-skins with the chosen palette;
  * the entity's accent (the icon badge, the chart line, the timeline's active runs) is its fixed
@@ -149,6 +149,10 @@ fun EntityMoreInfo(
     verticalArrangement = Arrangement.spacedBy(16.dp),
   ) {
     Header(name, entityId, state, accent)
+    // A camera leads with what it sees, live.
+    if (entityId.startsWith("camera.")) {
+      LiveCameraFeed(entityId, state, Modifier.padding(horizontal = 16.dp))
+    }
     Hero(state, unit, accent, nowMs)
 
     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
