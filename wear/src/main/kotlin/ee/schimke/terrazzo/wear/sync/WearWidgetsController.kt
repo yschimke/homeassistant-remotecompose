@@ -7,9 +7,11 @@ import android.os.Build
 import android.util.Log
 import ee.schimke.terrazzo.wear.widget.CardLargeWidgetService
 import ee.schimke.terrazzo.wear.widget.CardSmallWidgetService
+import ee.schimke.terrazzo.wear.widget.reconcileWidgetCards
 import ee.schimke.terrazzo.wear.widget.refreshAllCardWidgets
 import ee.schimke.terrazzo.wear.widget.widgetCardOptions
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
@@ -25,6 +27,9 @@ import kotlinx.coroutines.launch
  * - **Disabled** while there is none (never paired, or signed out). A host may drop the placed
  *   widgets of a disabled provider, so a widget showing a card the phone has since unpinned keeps
  *   drawing its kept copy only while some card is still synced.
+ * - **Reconciled** on start: a widget removed while the app wasn't running never reached
+ *   `onRemoved`, so its saved card is dropped against what the system lists as placed
+ *   ([reconcileWidgetCards]).
  * - **Refreshed** when the pins, sections, phone appearance or selected Wear designs change: a
  *   placed widget may show any of them.
  *
@@ -49,6 +54,7 @@ class WearWidgetsController(
       disableAll()
       return
     }
+    scope.launch(Dispatchers.IO) { reconcileWidgetCards(context.applicationContext) }
     scope.launch {
       combine(repo.pinned, repo.sections) { pinned, sections ->
           widgetCardOptions(pinned, sections).isNotEmpty()
