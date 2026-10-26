@@ -30,15 +30,18 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import ee.schimke.ha.client.design.CardDesignScope
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.core.prefs.CardStylePref
@@ -46,6 +49,7 @@ import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.widget.WidgetStore
+import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.terrazzoGraph
 import ee.schimke.terrazzo.ui.TerrazzoTheme
 import ee.schimke.terrazzo.ui.toThemeStyle
@@ -100,22 +104,37 @@ class WidgetConfigureActivity : ComponentActivity() {
         val cardStylePref by
           graph.preferencesStore.cardStyle.collectAsState(initial = CardStylePref.Classic)
         TerrazzoTheme(themePref.toThemeStyle(), darkPref, cardStylePref.toUberTheme()) {
-          WidgetConfigureScreen(
-            entry = entry,
-            snapshot = snapshot,
-            size = size,
-            onClose = ::finish,
-            onSave = { card ->
-              lifecycleScope.launch {
-                graph.widgetStore.put(widgetId, entry!!.baseUrl, card)
-                refresh(applicationContext, widgetId)
-                setResult(Activity.RESULT_OK, resultIntent(widgetId))
-                finish()
-              }
-            },
-          )
+          // Previews an edit in the widget's own style: a card's style override is keyed by its
+          // whole config, so a renamed card would otherwise lose it until saved.
+          val capture: WidgetPreviewCapture = { ctx, url, card, state, previewSize ->
+            TerrazzoWidgetProvider()
+              .renderPreview(ctx, url, card, state, previewSize, styleCard = entry?.card ?: card)
+          }
+          CompositionLocalProvider(LocalWidgetPreviewCapture provides capture) {
+            WidgetConfigureScreen(
+              entry = entry,
+              snapshot = snapshot,
+              size = size,
+              onClose = ::finish,
+              onSave = { card -> save(widgetId, entry!!, card) },
+            )
+          }
         }
       }
+    }
+  }
+
+  private fun save(widgetId: Int, entry: WidgetStore.Entry, card: CardConfig) {
+    lifecycleScope.launch {
+      // The renamed card keeps the style the user picked for it.
+      val overrides = CardDesignOverrideStore.of(applicationContext)
+      overrides.overrides.value.at(CardDesignScope.Card, entry.card)?.let {
+        overrides.set(CardDesignScope.Card, card, it)
+      }
+      terrazzoGraph().widgetStore.put(widgetId, entry.baseUrl, card)
+      refresh(applicationContext, widgetId)
+      setResult(Activity.RESULT_OK, resultIntent(widgetId))
+      finish()
     }
   }
 
@@ -181,7 +200,8 @@ internal fun WidgetConfigureScreen(
         return@Column
       }
       val savedName = remember(entry) { entry.card.raw.string("name").orEmpty() }
-      var name by remember(entry) { mutableStateOf(savedName) }
+      // Kept across rotation: the activity reloads the saved entry, not the draft.
+      var name by rememberSaveable(entry) { mutableStateOf(savedName) }
       val edited = remember(entry, name) { entry.card.withLabel(name) }
       WidgetPreparationPreview(entry.baseUrl, edited, snapshot, fixedSize = size) {}
       OutlinedTextField(
