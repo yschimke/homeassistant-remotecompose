@@ -87,8 +87,8 @@ From a card's schema to a published, adaptive template, in order:
 | 1 | Schema from a design or a card's JSON | design server | done |
 | 2 | Seed a design whose state variables are the bindings | design server | done (`remote-m3`) |
 | 3 | A phone card catalog: HA primitives with bindable properties, themed by the card's theme roles | `ui-builder-catalog` (here), published | to do |
-| 4 | Export keeps state names: named RemoteCompose values (`USER:<binding>`) | compose-preview-server | to request |
-| 5 | Export a RemoteCompose document (`.rc`), or compile the exported Kotlin in `:card-designs` and capture it | compose-preview-server / `:card-designs` | to request / to build |
+| 4 | Export keeps state names: named RemoteCompose values (`USER:<binding>`) | compose-preview-server / `:card-designs` | to request / done for the subset built here |
+| 5 | Export a RemoteCompose document (`.rc`), or build one in `:card-designs` and capture it | compose-preview-server / `:card-designs` | to request / done for boxes, rows, columns, pictures and text ([app-card-studio.md](app-card-studio.md#building-the-template)) |
 | 6 | Event bindings that name template actions (toggle, more-info, per slot) | catalog + exporter | to request |
 | 7 | Validate: op set of the target profile, bindings ⊆ schema, the same document for every value (snapshot invariance) | `:card-designs` validator | partly (op set) |
 | 8 | Publish approved revisions into the library as a variant (`DesignKey.variant = "ui-builder"`), linked to the design (`ui_builder_set_links`) and gated on a person's approval (`ui_builder_await_decision`) | `:card-designs`, design server | to build |

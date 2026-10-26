@@ -20,6 +20,7 @@ import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.design.DesignSurface
+import ee.schimke.ha.design.HaSharedValues
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HaAction
@@ -150,7 +151,8 @@ object CardDesignTemplates {
     return CardTemplatePlayback(
       bytes = bytes,
       bindings = { snapshot, clock ->
-        val slots = CardDesignSlots.slotBindings(card, snapshot)
+        // A design may also read the values every home shares (`HA:sun.sun.elevation`).
+        val slots = HaSharedValues.bindings(snapshot) + CardDesignSlots.slotBindings(card, snapshot)
         converter?.designBindings(card, snapshot, clock)?.let { slots + it } ?: slots
       },
       tapAction = tapActionOf(card, card.raw["tap_action"] as? JsonObject, entityId),

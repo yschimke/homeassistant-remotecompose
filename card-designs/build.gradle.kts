@@ -58,6 +58,10 @@ kotlin {
       implementation(libs.cmp.foundation)
       implementation(compose.desktop.currentOs)
     }
+    jvmTest.dependencies {
+      implementation(libs.kotlin.test)
+      implementation(libs.kotlin.test.junit)
+    }
     getByName("androidHostTest").dependencies {
       implementation(project(":rc-player-ui"))
       // CommunityFamilyEvidenceTest renders the sticker sheet's community previews.

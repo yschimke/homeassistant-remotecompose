@@ -433,6 +433,13 @@ object Pages {
       )
     }
     append("</table>")
+    append(
+      "<h2>Shared values <span>${schema.shared.size}</span></h2><p class=\"muted\">Any design may also read these: entities every Home Assistant has under the same id.</p><table><tr><th>Name</th><th>Type</th><th>Meaning</th></tr>"
+    )
+    for (b in schema.shared) append(
+      "<tr><td><code>${esc(b.name)}</code></td><td>${b.type.name.lowercase()}</td><td>${esc(b.description ?: "")}</td></tr>"
+    )
+    append("</table>")
   }
 
   /** "Design in UI Builder" for a library design or a card: a form that seeds and opens one. */

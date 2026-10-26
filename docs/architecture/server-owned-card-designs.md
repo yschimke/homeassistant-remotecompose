@@ -206,7 +206,10 @@ branched, which doesn't fit a design someone keeps and republishes.
 - The design server shows each design's forks and a fork's origin, and whether the origin has
   moved on since the fork.
 - Publishing a fork is the existing `POST /api/my/designs` flow: private by default, shared on
-  request, keyed like its base and optionally scoped to a device (`DeviceMatch`).
+  request, keyed like its base (in each theme of its card style) and optionally
+  scoped to a device (`DeviceMatch`). Only a design the person owns or edits in UI Builder, or one
+  the server made for them, publishes; the app's card studio publishes and applies one directly
+  ([app-card-studio.md](app-card-studio.md#using-your-design-on-the-card)).
 
 ## Switching a device's card
 

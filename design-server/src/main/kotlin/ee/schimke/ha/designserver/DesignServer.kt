@@ -3,6 +3,7 @@ package ee.schimke.ha.designserver
 import ee.schimke.ha.design.DesignCatalog
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.GeneratedDesign
+import ee.schimke.ha.designs.UiBuilderDesignCompiler
 import io.ktor.http.ContentDisposition
 import io.ktor.http.ContentType
 import io.ktor.http.Cookie
@@ -147,7 +148,7 @@ fun Application.designServer(
     librarySourceRoutes(librarySources, uiBuilder, github)
     dashboardStudioRoutes(uiBuilder, github)
     demoSite(File(System.getenv("WASM_SITE_DIR") ?: "/app/wasm"))
-    cardStudioRoutes(holder, uiBuilder, github)
+    cardStudioRoutes(holder, uiBuilder, github, made = userDesigns)
     if (userDesigns != null && github != null) {
       userDesignRoutes(holder, userDesigns, uiBuilder, github)
     }
@@ -455,9 +456,11 @@ fun Application.designServer(
       val library = holder.current()
       // A library design forks from its source (HaCardsSeed.source), in the served `ha-cards`
       // catalog; a pasted card gets the bound starting layout.
+      var cardType: String? = null
       val (document, resolveCatalog) =
         params["design"]?.let { id ->
           val design = library.design(id) ?: return@post call.notFound()
+          cardType = design.key.cardType
           // A migrated card type forks its real design, the one the library is drawn from;
           // the others still fork HaCardsSeed's reconstruction of the converter's card.
           val source =
@@ -475,6 +478,7 @@ fun Application.designServer(
                   )
                 }
             val schema = CardSchema.fromCard(card, states, holder.current())
+            cardType = schema.cardType
             UiBuilderSeed.document(schema, UiBuilderSeed.designId(schema), schema.cardType) to false
           }
           ?: return@post call.respondText(
@@ -489,6 +493,8 @@ fun Application.designServer(
           // Created by the server, then handed to the person who asked: they edit it signed in to
           // UI Builder as themselves, and nobody else sees it.
           integration.client.share(designId, "github:$login", editor = true)
+          // Theirs to publish: UI Builder records the server as its owner.
+          userDesigns?.recordMade(login, designId, cardType)
           integration.config.designUrl(designId)
         }
       }
@@ -504,7 +510,12 @@ fun Application.designServer(
 }
 
 /** UI Builder for the server: where it is, and the client that creates designs there. */
-class UiBuilderIntegration(val config: UiBuilderConfig, val client: UiBuilderClient)
+class UiBuilderIntegration(
+  val config: UiBuilderConfig,
+  val client: UiBuilderClient,
+  /** Builds a person's design into a template when UI Builder can't export one. */
+  val compiler: UiBuilderDesignCompiler = UiBuilderDesignCompiler(),
+)
 
 /**
  * Whether pages offer editing, and whether this browser may use it.

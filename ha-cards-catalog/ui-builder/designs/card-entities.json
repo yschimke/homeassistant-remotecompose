@@ -151,6 +151,78 @@
       "valueType": "int",
       "initialValue": 0,
       "persistence": "design"
+    },
+    "HA:sun.sun.state": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "above_horizon",
+      "persistence": "design"
+    },
+    "HA:sun.sun.is_available": {
+      "type": "value",
+      "valueType": "bool",
+      "initialValue": false,
+      "persistence": "design"
+    },
+    "HA:sun.sun.above_horizon": {
+      "type": "value",
+      "valueType": "bool",
+      "initialValue": true,
+      "persistence": "design"
+    },
+    "HA:sun.sun.elevation": {
+      "type": "value",
+      "valueType": "float",
+      "initialValue": 45.0,
+      "persistence": "design"
+    },
+    "HA:sun.sun.azimuth": {
+      "type": "value",
+      "valueType": "float",
+      "initialValue": 180.0,
+      "persistence": "design"
+    },
+    "HA:sun.sun.rising": {
+      "type": "value",
+      "valueType": "bool",
+      "initialValue": false,
+      "persistence": "design"
+    },
+    "HA:sun.sun.next_dawn.minute_of_day": {
+      "type": "value",
+      "valueType": "float",
+      "initialValue": 0.0,
+      "persistence": "design"
+    },
+    "HA:sun.sun.next_rising.minute_of_day": {
+      "type": "value",
+      "valueType": "float",
+      "initialValue": 0.0,
+      "persistence": "design"
+    },
+    "HA:sun.sun.next_noon.minute_of_day": {
+      "type": "value",
+      "valueType": "float",
+      "initialValue": 720.0,
+      "persistence": "design"
+    },
+    "HA:sun.sun.next_setting.minute_of_day": {
+      "type": "value",
+      "valueType": "float",
+      "initialValue": 1440.0,
+      "persistence": "design"
+    },
+    "HA:sun.sun.next_dusk.minute_of_day": {
+      "type": "value",
+      "valueType": "float",
+      "initialValue": 1440.0,
+      "persistence": "design"
+    },
+    "HA:sun.sun.next_midnight.minute_of_day": {
+      "type": "value",
+      "valueType": "float",
+      "initialValue": 0.0,
+      "persistence": "design"
     }
   },
   "roots": [
