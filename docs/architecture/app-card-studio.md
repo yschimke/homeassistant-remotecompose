@@ -141,7 +141,15 @@ JVM exactly as the library is captured. It draws:
 - `layout/box`, `layout/column`, `layout/row`, and the card containers
   (`ha-cards/dashboard-card`, `ha-cards/remote-card`, `ha-cards/dashboard-section`);
 - `asset/image`, with the design's uploaded pictures baked in (as PNG) under names
-  of the design's own (`asset_<key>`);
+  of the design's own (`asset_<key>`), within a byte budget for the target
+  (`imageBudget`): 512 KB for a phone card, 128 KB for the Wear app, about 50 KB for a
+  launcher or Wear widget. The first fit wins, best first: full size in full colour,
+  then 5 and 4 bits a channel (a photo's PNG roughly halves each step, with little to
+  see), then smaller sizes, all pictures scaled alike. A photo card of two pictures
+  is about 400 KB on a phone, down from 770 KB, and under 50 KB for a widget;
+  launcher and Wear widgets take designs built here once they publish for those
+  surfaces (today launcher widgets capture on the phone, and Wear widgets need
+  UI Builder's export);
 - `ha-cards/remote-text`;
 - the `size`, `width`, `height`, `offset`, `padding`, `alpha`, `scale`, `rotate`,
   `background` and `fillMax*` modifiers.

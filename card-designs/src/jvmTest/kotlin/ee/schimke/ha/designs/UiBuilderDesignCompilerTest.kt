@@ -302,6 +302,45 @@ class UiBuilderDesignCompilerTest {
     )
   }
 
+  /** A noisy [width] × [height] picture, as hard to compress as a photo. */
+  private fun noise(width: Int, height: Int): ByteArray {
+    val bitmap = Bitmap().apply { allocN32Pixels(width, height) }
+    val random = java.util.Random(7)
+    bitmap.installPixels(
+      ByteArray(width * height * 4) { i -> if (i % 4 == 3) -1 else random.nextInt(256).toByte() }
+    )
+    return requireNotNull(
+        org.jetbrains.skia.Image.makeFromBitmap(bitmap).encodeToData(EncodedImageFormat.PNG)
+      )
+      .bytes
+  }
+
+  @Test
+  fun picturesFitTheirTargetsBudget() {
+    val photos = mapOf("garage-open" to noise(400, 300), "garage-door" to noise(300, 200))
+    // A phone card keeps them as they are when they fit.
+    val roomy = UiBuilderDesignCompiler.fitPictures(photos, budgetBytes = 10 * 1024 * 1024)
+    assertEquals(400, roomy.getValue("garage-open").width)
+    // A widget's 50 KB: smaller, and fewer colours, until they fit.
+    val widget =
+      UiBuilderDesignCompiler.fitPictures(
+        photos,
+        UiBuilderDesignCompiler.imageBudget(DesignSurface.WearWidget),
+      )
+    assertTrue(widget.getValue("garage-open").width < 400)
+    // Scaled alike: the two pictures keep their proportions to each other.
+    assertEquals(
+      400f / 300f,
+      widget.getValue("garage-open").width.toFloat() / widget.getValue("garage-door").width,
+      0.02f,
+    )
+    val big = compiler.compile(document, photos, key, imageBudgetBytes = Int.MAX_VALUE)
+    val small = compiler.compile(document, photos, key, imageBudgetBytes = 50 * 1024)
+    assertTrue(small.size <= 60 * 1024, "${small.size} bytes")
+    assertTrue(big.size > small.size * 4, "${big.size} vs ${small.size}")
+    assertEquals(50 * 1024, UiBuilderDesignCompiler.imageBudget(DesignSurface.Launcher))
+  }
+
   @Test
   fun anUnknownColourTokenIsRefused() {
     val unknown =

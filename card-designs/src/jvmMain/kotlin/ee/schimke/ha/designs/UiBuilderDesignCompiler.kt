@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CommonCaptureHost
 import ee.schimke.ha.rc.FramedCard
@@ -44,6 +45,7 @@ import ee.schimke.ha.rc.components.HaType
 import ee.schimke.ha.rc.components.animateRemoteFloat
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.ha.rc.components.rememberLocalNamedRemoteBitmap
+import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -56,7 +58,12 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.jetbrains.skia.Bitmap
+import org.jetbrains.skia.Canvas
+import org.jetbrains.skia.EncodedImageFormat
 import org.jetbrains.skia.Image
+import org.jetbrains.skia.Rect
+import org.jetbrains.skia.SamplingMode
 
 /**
  * Compiles a person's UI Builder design (`ha-cards`) to a Remote Compose template here, for when UI
@@ -83,16 +90,17 @@ class UiBuilderDesignCompiler(
 
   /**
    * [document] as a template for [key] (the library design it varies), drawing [assets] (an asset
-   * key's image bytes). Throws [IllegalArgumentException] naming each problem when it can't. It
+   * key's image bytes) within [imageBudgetBytes] ([fitPictures]): by default its surface's
+   * ([imageBudget]). Throws [IllegalArgumentException] naming each problem when it can't. It
    * composes and captures on the calling thread: a server runs one at a time.
    */
   fun compile(
     document: JsonObject,
     assets: Map<String, ByteArray>,
     key: DesignKey,
+    imageBudgetBytes: Int = imageBudget(key.surface),
   ): ByteArray {
-    val design =
-      Design(document, assets.mapValues { (_, bytes) -> decode(bytes) }, dark = isDark(key))
+    val design = Design(document, fitPictures(assets, imageBudgetBytes), dark = isDark(key))
     val problems = design.problems(assets.keys)
     require(problems.isEmpty()) { problems.joinToString("; ") }
     return CardDesignTemplates.captureWith(host, key) { card, snapshot, modifier ->
@@ -100,9 +108,6 @@ class UiBuilderDesignCompiler(
       }
       .bytes
   }
-
-  private fun decode(bytes: ByteArray): ImageBitmap =
-    Image.makeFromEncoded(bytes).toComposeImageBitmap()
 
   private class Design(
     document: JsonObject,
@@ -487,6 +492,72 @@ class UiBuilderDesignCompiler(
         "placeholderBackground",
         "unknownAccent",
       )
+
+    /**
+     * The bytes a template's pictures may take on [surface], all of them together, as PNG: what its
+     * host can hold. A phone card stays well inside a widget's Binder transaction; a launcher or
+     * Wear widget, which the phone hands over in a transaction or a Bluetooth message with
+     * everything else it shows, gets about 50 KB.
+     */
+    fun imageBudget(surface: DesignSurface): Int =
+      when (surface) {
+        DesignSurface.MobileApp -> 512 * 1024
+        DesignSurface.WearApp -> 128 * 1024
+        DesignSurface.Launcher,
+        DesignSurface.WearWidget -> 50 * 1024
+      }
+
+    /**
+     * [assets] as pictures whose PNGs (as a template bakes them) take at most [budgetBytes]
+     * together. The first that fits, best first: full size in full colour, then fewer colours (5
+     * bits a channel, then 4: a photo's PNG roughly halves, with little to see), then each a
+     * smaller size, all pictures scaled alike. Past the smallest it tries, the smallest.
+     */
+    fun fitPictures(assets: Map<String, ByteArray>, budgetBytes: Int): Map<String, ImageBitmap> {
+      val images = assets.mapValues { (_, bytes) -> Image.makeFromEncoded(bytes) }
+      var smallest: Map<String, Image> = images
+      for (scale in SCALES) {
+        for (bits in listOf(8, 5, 4)) {
+          val candidate = images.mapValues { (_, image) -> reduced(image, scale, bits) }
+          smallest = candidate
+          val size = candidate.values.sumOf { pngBytes(it) }
+          if (size <= budgetBytes) return candidate.mapValues { it.value.toComposeImageBitmap() }
+        }
+      }
+      return smallest.mapValues { it.value.toComposeImageBitmap() }
+    }
+
+    private val SCALES = listOf(1f, 0.85f, 0.7f, 0.6f, 0.5f, 0.42f, 0.35f, 0.3f, 0.25f, 0.2f, 0.15f)
+
+    /** [image] at [scale] of its size, each channel kept to its top [bits] bits. */
+    private fun reduced(image: Image, scale: Float, bits: Int): Image {
+      if (scale == 1f && bits == 8) return image
+      val width = max(1, (image.width * scale).roundToInt())
+      val height = max(1, (image.height * scale).roundToInt())
+      val bitmap = Bitmap().apply { allocN32Pixels(width, height) }
+      Canvas(bitmap)
+        .drawImageRect(
+          image,
+          Rect.makeWH(image.width.toFloat(), image.height.toFloat()),
+          Rect.makeWH(width.toFloat(), height.toFloat()),
+          SamplingMode.CATMULL_ROM,
+          null,
+          true,
+        )
+      if (bits < 8) {
+        val keep = (0xFF shl (8 - bits)) and 0xFF
+        val pixels = requireNotNull(bitmap.readPixels())
+        // N32 is four bytes a pixel; alpha stays exact.
+        for (i in pixels.indices) {
+          if (i % 4 != 3) pixels[i] = (pixels[i].toInt() and keep).toByte()
+        }
+        bitmap.installPixels(pixels)
+      }
+      return Image.makeFromBitmap(bitmap)
+    }
+
+    private fun pngBytes(image: Image): Int =
+      requireNotNull(image.encodeToData(EncodedImageFormat.PNG)).size
 
     /** Whether [key]'s theme is a dark one: `baked:<palette>:dark` or `style:<id>:dark`. */
     fun isDark(key: DesignKey): Boolean = key.theme.split(':').getOrNull(2) == "dark"
