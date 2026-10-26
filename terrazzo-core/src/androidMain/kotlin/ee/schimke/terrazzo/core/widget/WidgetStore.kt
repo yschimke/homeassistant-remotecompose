@@ -84,6 +84,28 @@ class WidgetStore(private val context: Context) {
     return pruned
   }
 
+  /**
+   * Moves each row from `oldIds[i]` to `newIds[i]`: a backup restored onto a new device or launcher
+   * gives the same widgets new ids (`AppWidgetProvider.onRestored`), and without this every
+   * restored widget would render blank while its old row leaked.
+   */
+  suspend fun remap(oldIds: IntArray, newIds: IntArray) {
+    context.store.edit { prefs ->
+      val moved =
+        oldIds.zip(newIds).mapNotNull { (old, new) -> prefs.readEntry(old)?.let { new to it } }
+      for (old in oldIds) {
+        prefs.remove(baseUrlKey(old))
+        prefs.remove(cardTypeKey(old))
+        prefs.remove(cardJsonKey(old))
+      }
+      for ((new, entry) in moved) {
+        prefs[baseUrlKey(new)] = entry.baseUrl
+        prefs[cardTypeKey(new)] = entry.card.type
+        prefs[cardJsonKey(new)] = json.encodeToString(JsonObject.serializer(), entry.card.raw)
+      }
+    }
+  }
+
   private fun Preferences.allEntries(): List<Entry> =
     asMap()
       .keys

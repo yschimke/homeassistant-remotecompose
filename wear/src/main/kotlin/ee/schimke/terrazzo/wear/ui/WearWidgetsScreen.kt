@@ -26,7 +26,7 @@ import ee.schimke.terrazzo.wear.widget.WearWidgetCardStore
 import ee.schimke.terrazzo.wear.widget.chooseWidgetCard
 import ee.schimke.terrazzo.wear.widget.currentWidgetCard
 import ee.schimke.terrazzo.wear.widget.forWidget
-import ee.schimke.terrazzo.wear.widget.placedCardWidgets
+import ee.schimke.terrazzo.wear.widget.reconcileWidgetCards
 import ee.schimke.terrazzo.wear.widget.widgetCardOptions
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
@@ -58,7 +58,8 @@ fun WearWidgetsScreen(
   var generation by remember { mutableIntStateOf(0) }
   var placed by remember { mutableStateOf<List<PlacedWidget>?>(null) }
   var editing by remember { mutableStateOf<PlacedWidget?>(null) }
-  LaunchedEffect(generation) { placed = placedCardWidgets(context) }
+  // Listing the placed widgets also forgets the cards of any removed behind the app's back.
+  LaunchedEffect(generation) { placed = reconcileWidgetCards(context).orEmpty() }
 
   val options = remember(pinned, sections) { widgetCardOptions(pinned, sections) }
   val current = editing

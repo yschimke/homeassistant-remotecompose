@@ -136,6 +136,28 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     }
   }
 
+  /**
+   * The last Terrazzo widget left the home screen. Any row still in the store is an orphan whose
+   * `onDeleted` was missed, so reconcile against the launcher (which now lists none) to free them.
+   */
+  override fun onDisabled(context: Context) {
+    super.onDisabled(context)
+    runBlocking { WidgetSync.reconcile(context) }
+  }
+
+  /**
+   * A backup was restored and the launcher gave the restored widgets new ids. Carry each row over
+   * to its new id, then drop anything the launcher still doesn't list; [onUpdate] follows and
+   * renders them.
+   */
+  override fun onRestored(context: Context, oldWidgetIds: IntArray, newWidgetIds: IntArray) {
+    super.onRestored(context, oldWidgetIds, newWidgetIds)
+    runBlocking {
+      context.terrazzoGraph().widgetStore.remap(oldWidgetIds, newWidgetIds)
+      WidgetSync.reconcile(context)
+    }
+  }
+
   @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
   private fun renderAndPublish(
     context: Context,

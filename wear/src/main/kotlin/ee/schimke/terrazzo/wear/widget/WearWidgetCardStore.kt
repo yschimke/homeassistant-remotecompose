@@ -65,12 +65,48 @@ class WearWidgetCardStore(context: Context) {
     file(instanceId).delete()
   }
 
+  /**
+   * Forgets the card of every widget not in [placedIds], returning how many were dropped.
+   *
+   * [placedIds] is what the system says is placed ([placedCardWidgetsOrNull]). A widget removed
+   * while the app wasn't running, or dropped with the host's data, never reaches
+   * [CardWidget.onRemoved]; without this its file stays forever. A card chosen within [graceMs] of
+   * [nowMs] is kept even when not yet listed: the host may report a widget a moment after its
+   * config activity saved the choice.
+   */
+  fun retainOnly(
+    placedIds: Set<Int>,
+    nowMs: Long = System.currentTimeMillis(),
+    graceMs: Long = RECENT_CHOICE_GRACE_MS,
+  ): Int {
+    var dropped = 0
+    dir
+      .listFiles { f -> f.isFile && f.name.endsWith(".pb") }
+      .orEmpty()
+      .forEach { f ->
+        val id = f.nameWithoutExtension.toIntOrNull()
+        if (id != null && id in placedIds) return@forEach
+        val chosenAt =
+          f.readBytesOrNull()
+            ?.let { runCatching { decodeProto<WearWidgetCard>(it) }.getOrNull() }
+            ?.chosenAtMs ?: 0L
+        if (id != null && nowMs - chosenAt in 0 until graceMs) return@forEach
+        if (f.delete()) dropped++
+      }
+    return dropped
+  }
+
   /** Forgets every widget's card: the phone signed out, so none of its cards may stay. */
   fun clear() {
     dir.listFiles().orEmpty().forEach { it.delete() }
   }
 
   private fun file(instanceId: Int): File = File(dir, "$instanceId.pb")
+
+  companion object {
+    /** How long a just-chosen card survives [retainOnly] before the host lists its widget. */
+    const val RECENT_CHOICE_GRACE_MS: Long = 60_000L
+  }
 }
 
 /** A card a widget can show: one the phone sent to the watch, by a key that names it. */

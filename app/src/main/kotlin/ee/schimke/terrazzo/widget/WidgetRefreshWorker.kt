@@ -24,6 +24,8 @@ class WidgetRefreshWorker(context: Context, params: WorkerParameters) :
 
   override suspend fun doWork(): Result {
     val graph = applicationContext.terrazzoGraph()
+    // Refresh only widgets the launcher still hosts; prunes rows for ones removed behind our back.
+    WidgetSync.reconcile(applicationContext)
     val ids = graph.widgetStore.installed.first().map { it.widgetId }.toIntArray()
 
     if (ids.isNotEmpty()) {

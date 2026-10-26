@@ -70,6 +70,27 @@ class WearWidgetCardStoreTest {
     assertTrue(store.readAll().isEmpty())
   }
 
+  @Test
+  fun reconcileForgetsWidgetsNoLongerPlaced() {
+    val store = WearWidgetCardStore(context)
+    val now = 10_000_000L
+    store.write(7, WearWidgetCard("pin-kitchen", kitchen, chosenAtMs = 1))
+    store.write(9, WearWidgetCard("pin-office", office, chosenAtMs = 2))
+    // Chosen a moment ago, before the host lists its widget: kept for the grace period.
+    store.write(11, WearWidgetCard("pin-office", office, chosenAtMs = now - 1_000))
+
+    // Widget 7 was removed while the app wasn't running, so onRemoved never ran.
+    assertEquals(1, store.retainOnly(setOf(9), nowMs = now))
+    assertEquals(setOf(9, 11), store.readAll().keys)
+
+    // Once the grace period has passed, an unlisted choice goes too.
+    assertEquals(
+      1,
+      store.retainOnly(setOf(9), nowMs = now + WearWidgetCardStore.RECENT_CHOICE_GRACE_MS),
+    )
+    assertEquals(setOf(9), store.readAll().keys)
+  }
+
   private val pinned =
     PinnedCardSet(
       cards =

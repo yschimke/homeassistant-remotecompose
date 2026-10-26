@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -17,6 +18,7 @@ import androidx.glance.wear.GlanceWearWidget
 import androidx.glance.wear.GlanceWearWidgetManager
 import androidx.lifecycle.lifecycleScope
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
+import ee.schimke.terrazzo.wear.sync.WearWidgetsController
 import ee.schimke.terrazzo.wear.sync.syncWidgetStateFromDataLayer
 import ee.schimke.terrazzo.wear.ui.WearAppSurface
 import ee.schimke.terrazzo.wear.ui.WearWidgetCardPicker
@@ -133,11 +135,23 @@ data class PlacedWidget(val instanceId: Int, val provider: ComponentName, val la
  * The Terrazzo widgets placed on the watch, as the system lists them; empty when it can't (an older
  * Wear OS, or no widget host).
  */
-suspend fun placedCardWidgets(context: Context): List<PlacedWidget> {
+suspend fun placedCardWidgets(context: Context): List<PlacedWidget> =
+  placedCardWidgetsOrNull(context).orEmpty()
+
+/**
+ * The Terrazzo widgets placed on the watch, or null when the system can't say (an older Wear OS, no
+ * widget host, or the query failed). Unlike [placedCardWidgets], an unknown answer is not an empty
+ * one, so [reconcileWidgetCards] never forgets every card on a failed query.
+ */
+suspend fun placedCardWidgetsOrNull(context: Context): List<PlacedWidget>? {
+  if (!WearWidgetsController.supportsWearWidgets()) return null
   val small = CardSmallWidgetService::class.java.name
   val large = CardLargeWidgetService::class.java.name
-  return runCatching { GlanceWearWidgetManager(context.applicationContext).fetchActiveWidgets() }
-    .getOrDefault(emptyList())
+  val active =
+    runCatching { GlanceWearWidgetManager(context.applicationContext).fetchActiveWidgets() }
+      .onFailure { Log.w(TAG, "fetchActiveWidgets failed", it) }
+      .getOrNull() ?: return null
+  return active
     .filter {
       it.provider.packageName == context.packageName && it.provider.className in setOf(small, large)
     }
@@ -145,3 +159,19 @@ suspend fun placedCardWidgets(context: Context): List<PlacedWidget> {
     .distinctBy { it.instanceId }
     .sortedBy { it.instanceId }
 }
+
+/**
+ * Brings [WearWidgetCardStore] in line with the widgets actually placed: a widget removed from the
+ * watch without [CardWidget.onRemoved] running (the app wasn't alive, the host's data was cleared)
+ * loses its saved card. Returns the placed widgets, or null when the system couldn't list them, in
+ * which case nothing is forgotten.
+ */
+suspend fun reconcileWidgetCards(context: Context): List<PlacedWidget>? {
+  val placed = placedCardWidgetsOrNull(context) ?: return null
+  val dropped =
+    WearWidgetCardStore(context.applicationContext).retainOnly(placed.map { it.instanceId }.toSet())
+  if (dropped > 0) Log.i(TAG, "forgot $dropped removed widget card(s)")
+  return placed
+}
+
+private const val TAG = "WearWidgets"
