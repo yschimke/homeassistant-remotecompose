@@ -90,6 +90,8 @@ data class HaWearEdge(val colors: List<Color>, val widthDp: Float, val insetDp: 
  *   continuous fill.
  * @property ghosts whether a fill's unlit cells show faintly, as an LCD's unlit segments do.
  * @property marker whether a fill's leading edge is ruled with a line in [color].
+ * @property markerAlpha the marker's alpha over the fill: as strong as the style's text allows
+ *   where the marker crosses it, the two together kept within [readableAlpha].
  * @property fades whether a fill rises from transparent to [color] towards its leading edge, a glow
  *   rather than a block.
  */
@@ -103,6 +105,7 @@ data class HaWearLevelLook(
   val segments: Int = 0,
   val ghosts: Boolean = false,
   val marker: Boolean = false,
+  val markerAlpha: Float = 0f,
   val fades: Boolean = false,
 )
 
@@ -269,6 +272,11 @@ fun HaUberTheme.wearLevelLook(): HaWearLevelLook {
       else -> inkFor(darkTheme = true) ?: p.linkText
     }
   fun fill(max: Float) = readableAlpha(base, color, p.primaryText, p.secondaryText, max)
+  // A marker over a fill of [alpha]: the most it can add before the two pass what text allows.
+  fun marker(alpha: Float): Float {
+    val readable = fill(MARKER_MAX)
+    return (1f - (1f - readable) / (1f - alpha)).coerceAtLeast(0f)
+  }
   return when (visuals) {
     HaVisualFamily.Classic -> HaWearLevelLook(color, 0.85f, ringDp = 3f)
     HaVisualFamily.HomeAssistant -> HaWearLevelLook(color, 1f, ringDp = 4f)
@@ -289,12 +297,16 @@ fun HaUberTheme.wearLevelLook(): HaWearLevelLook {
     HaVisualFamily.Lcd -> HaWearLevelLook(color, fill(0.40f), segments = 10, ghosts = true)
     HaVisualFamily.Trinitron -> HaWearLevelLook(color, fill(0.40f), segments = 20)
     HaVisualFamily.Minimalist -> HaWearLevelLook(color, fill(0.40f), segments = 5, ghosts = true)
-    HaVisualFamily.Nixie -> HaWearLevelLook(color, fill(0.45f), fades = true, marker = true)
+    HaVisualFamily.Nixie ->
+      fill(0.45f).let {
+        HaWearLevelLook(color, it, fades = true, marker = true, markerAlpha = marker(it))
+      }
     HaVisualFamily.Console,
     HaVisualFamily.Ikea,
     HaVisualFamily.Obsidian,
     HaVisualFamily.Lcars,
-    HaVisualFamily.Aeon -> HaWearLevelLook(color, fill(0.30f), marker = true)
+    HaVisualFamily.Aeon ->
+      fill(0.30f).let { HaWearLevelLook(color, it, marker = true, markerAlpha = marker(it)) }
   }
 }
 
@@ -316,6 +328,9 @@ fun readableAlpha(base: Color, color: Color, primary: Color, secondary: Color, m
   }
   return 0f
 }
+
+/** The most a fill's marker is drawn at, before its contrast cap. */
+private const val MARKER_MAX = 0.9f
 
 private const val PRIMARY_CONTRAST = 4.5f + 0.5f
 private const val SECONDARY_CONTRAST = 3f + 0.3f

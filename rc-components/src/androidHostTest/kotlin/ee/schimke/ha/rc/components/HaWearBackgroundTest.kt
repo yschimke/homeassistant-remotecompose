@@ -33,6 +33,11 @@ class HaWearBackgroundTest {
       assertTrue(contrast(palette.primaryText, filled) >= 4.5f, "${style.id} primary text")
       assertTrue(contrast(palette.secondaryText, filled) >= 3f, "${style.id} secondary text")
       assertTrue(look.alpha > 0f, "${style.id} fill shows")
+      // Where the marker crosses text, over the fill.
+      val marked = 1f - (1f - look.alpha) * (1f - look.markerAlpha)
+      val ruled = lerp(style.wearBackground()!!.base, look.color, marked)
+      assertTrue(contrast(palette.primaryText, ruled) >= 4.5f, "${style.id} text across the marker")
+      assertTrue(contrast(palette.secondaryText, ruled) >= 3f, "${style.id} secondary across it")
     }
   }
 

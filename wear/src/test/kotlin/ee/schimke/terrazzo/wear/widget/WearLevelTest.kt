@@ -187,6 +187,44 @@ class WearLevelTest {
   }
 
   @Test
+  fun aCardWhoseShapeLacksTheUnitIsStillALevel() {
+    // A percentage sensor with no device_class: the unit alone makes it a level, and neither an
+    // entity card's nor a gauge's design properties keep the unit.
+    val cpu =
+      HaSnapshot(
+        states =
+          mapOf(
+            "sensor.cpu" to
+              EntityState(
+                "sensor.cpu",
+                "37",
+                buildJsonObject {
+                  put("friendly_name", "CPU")
+                  put("unit_of_measurement", "%")
+                },
+              )
+          )
+      )
+    for (type in listOf("entity", "gauge", "tile")) {
+      val config =
+        CardConfig(
+          type = type,
+          raw =
+            buildJsonObject {
+              put("type", type)
+              put("entity", "sensor.cpu")
+            },
+        )
+      assertNotNull(wearLevel(config, cpu), "$type: the card is a level")
+      val shown = CardDesignTemplates.designCard(config, cpu, registry)
+      val converter = registry.converterFor(shown.type)!!
+      val properties = assertNotNull(converter.wearDesignProperties(shown, cpu), "$type properties")
+      val template = assertNotNull(converter.wearDesignTemplate(properties), type)
+      assertNotNull(wearLevel(template.card, template.snapshot), "$type: so is its template")
+    }
+  }
+
+  @Test
   fun theWearAppMovesTheLevelOnAPushedReading() {
     val app =
       assertNotNull(WearWidgetTemplate.forApp(template(ring), WearWidgetFrame.DEFAULT_LARGE))

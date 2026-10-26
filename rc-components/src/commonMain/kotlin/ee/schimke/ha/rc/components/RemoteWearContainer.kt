@@ -388,7 +388,7 @@ private fun RemoteDrawScope.drawFill(
   cut(paint, 0f.rf, reach)
   if (look.marker) {
     // The fill's leading edge, a line across the container that stops where its outline does.
-    val line = RemotePaint { color = look.color.copy(alpha = MARKER_ALPHA).rc }
+    val line = RemotePaint { color = look.color.copy(alpha = look.markerAlpha).rc }
     cut(line, reach - marker, reach)
   }
 }
@@ -397,7 +397,6 @@ private fun RemoteDrawScope.drawFill(
 private const val LEVEL_SECONDS = 0.6f
 private const val SEGMENT_GAP_DP = 2f
 private const val MARKER_DP = 2f
-private const val MARKER_ALPHA = 0.9f
 
 /** A ring's distance from the container's outline. */
 private const val RING_INSET_DP = 4f

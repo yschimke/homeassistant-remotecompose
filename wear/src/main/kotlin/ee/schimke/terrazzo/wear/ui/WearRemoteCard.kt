@@ -188,6 +188,9 @@ internal fun WearRemoteCard(
       signature,
       cardIconSignature(card, snapshot),
       cardVisibilitySignature(card, snapshot),
+      // Whether its container's level has a reading: a card drawn without a template keeps the
+      // last pushed one, since a host pushes no number for an unavailable state.
+      wearLevel(card, snapshot)?.value?.isFinite(),
     )
   val view = LocalView.current
   val configuration = LocalConfiguration.current
