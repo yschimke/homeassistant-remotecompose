@@ -1,7 +1,7 @@
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 import javax.inject.Inject
 
-val appVersionName = "0.1.67" // x-release-please-version
+val appVersionName = "0.1.68" // x-release-please-version
 
 // Pack MAJOR.MINOR.PATCH into a monotonic int, times ten for a form-factor
 // lane: phone ends in 0, `:wear` (same package) in 2. Both share the base so
