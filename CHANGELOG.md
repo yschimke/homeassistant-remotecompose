@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.69](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.68...v0.1.69) (2026-10-26)
+
+
+### Features
+
+* **cards:** draw a picture-entity card's camera_image ([#1276](https://github.com/yschimke/homeassistant-remotecompose/issues/1276)) ([9445863](https://github.com/yschimke/homeassistant-remotecompose/commit/9445863d485ca00201e44246cf2fd162aee477b7))
+* **cards:** draw a picture-glance card's picture ([#1281](https://github.com/yschimke/homeassistant-remotecompose/issues/1281)) ([5d530bd](https://github.com/yschimke/homeassistant-remotecompose/commit/5d530bd2dc7c5351668705d1c7e4560bb70abb07))
+* choose Wear widget cards on the phone ([#1273](https://github.com/yschimke/homeassistant-remotecompose/issues/1273)) ([411a1a9](https://github.com/yschimke/homeassistant-remotecompose/commit/411a1a9550d4c74d4615576b57ed4e4f08571af3))
+* **designs:** publish a private card design from the app, end to end ([#1274](https://github.com/yschimke/homeassistant-remotecompose/issues/1274)) ([ac1f369](https://github.com/yschimke/homeassistant-remotecompose/commit/ac1f369cf3b23c31355d894741481bc660cc0a5e))
+* **more-info:** colour swatches, unlock confirmation, paired cameras ([#1271](https://github.com/yschimke/homeassistant-remotecompose/issues/1271)) ([c60bbb2](https://github.com/yschimke/homeassistant-remotecompose/commit/c60bbb2cc3fe95a6022a9ae23b0a3b59e4c25155))
+* **more-info:** control devices from the more-info sheet ([#1268](https://github.com/yschimke/homeassistant-remotecompose/issues/1268)) ([1932c54](https://github.com/yschimke/homeassistant-remotecompose/commit/1932c54f1e2677ce8d2a1c13d446410933431e9e))
+* **wear:** every card style designs its container, and readings fill it ([#1269](https://github.com/yschimke/homeassistant-remotecompose/issues/1269)) ([9d4afa5](https://github.com/yschimke/homeassistant-remotecompose/commit/9d4afa5dc48e423513c85dcc29d332f41fb597ee))
+* **widget:** edit a placed widget from its launcher long-press ([#1272](https://github.com/yschimke/homeassistant-remotecompose/issues/1272)) ([e8e361e](https://github.com/yschimke/homeassistant-remotecompose/commit/e8e361ea6a009988b9fc3612da5eca68896ed484))
+
 ## [0.1.68](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.67...v0.1.68) (2026-10-26)
 
 
