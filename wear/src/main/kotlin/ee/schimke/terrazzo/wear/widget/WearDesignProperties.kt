@@ -7,6 +7,7 @@ import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.components.HaWearLevel
 import ee.schimke.ha.rc.framedDesignProperties
 import ee.schimke.ha.rc.framedDesignTemplate
 import kotlinx.serialization.json.JsonPrimitive
@@ -60,3 +61,20 @@ private const val ON = "on"
 
 /** Domains whose on state is literally [ON], so a template captured in it is the real one. */
 private val ON_DOMAINS = setOf("light", "switch", "binary_sensor", "input_boolean", "fan")
+
+/**
+ * The level [card]'s Wear container shows ([HaWearLevel]): its entity's reading, when the entity is
+ * a battery, humidity or percentage sensor in [snapshot]. Decided from the entity's `device_class`
+ * and unit, which a template's shape carries, so a template input and the card it stands for agree.
+ */
+internal fun wearLevel(card: CardConfig?, snapshot: HaSnapshot): HaWearLevel? {
+  val entityId = (card?.raw?.get("entity") as? JsonPrimitive)?.content ?: return null
+  val state = snapshot.states[entityId] ?: return null
+  fun attribute(name: String) = (state.attributes[name] as? JsonPrimitive)?.content
+  return HaWearLevel.of(
+    entityId,
+    attribute("device_class"),
+    attribute("unit_of_measurement"),
+    HaLiveBindings.numericState(state.state) ?: Float.NaN,
+  )
+}

@@ -51,6 +51,7 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.HaWearBackground
+import ee.schimke.ha.rc.components.HaWearGradient
 import ee.schimke.ha.rc.components.LocalPictureImageStrategy
 import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.PictureImageStrategy
@@ -452,7 +453,7 @@ internal suspend fun neutralWidgetTemplate(
       }
       runCatching {
         neutralTemplateCaptures.incrementAndGet()
-        WearWidgetTemplate.capture(context, cardStyle.wearBackground()) {
+        WearWidgetTemplate.capture(context, cardStyle, wearLevel(input.card, input.snapshot)) {
           SlotContent(
             registry,
             colors,
@@ -498,9 +499,10 @@ internal fun neutralTemplateFileName(
 
 /**
  * Bumped when what a neutral template draws changes for the same key, so a template kept on disk
- * from an older app is captured again. 2: card styles draw their own container background.
+ * from an older app is captured again. 2: card styles draw their own container background. 3: the
+ * container's glows, bands and edge, and a reading's level.
  */
-private const val NEUTRAL_TEMPLATE_VERSION = "2"
+private const val NEUTRAL_TEMPLATE_VERSION = "3"
 
 /** One container-neutral Wear template per card shape and theme: see [WearWidgetTemplate]. */
 private data class WearNeutralTemplateKey(val cardType: String, val shape: String, val theme: Any)
@@ -549,13 +551,14 @@ internal fun slotDocument(
 
 /**
  * The container brush for a widget filled with [fill] (ARGB, or null for Glance Wear's default
- * surface) under [background]'s layers. The host draws each at its own corner radius.
+ * surface) under [background]'s straight gradients. The host draws each at its own corner radius.
+ * Glance Wear's brush paints nothing else, so a glow, a band or an edge is the template's only.
  */
 internal fun wearWidgetBrush(fill: Int?, background: HaWearBackground?): WearWidgetBrush {
   var brush =
     (fill ?: background?.base?.toArgb())?.let { WearWidgetBrush.color(Color(it).rc) }
       ?: WearWidgetBrush.Companion
-  for (layer in background?.layers.orEmpty()) {
+  for (layer in background?.layers.orEmpty().filterIsInstance<HaWearGradient>()) {
     val stops = layer.colors.map { it.rc }
     brush = if (layer.vertical) brush.verticalGradient(stops) else brush.horizontalGradient(stops)
   }

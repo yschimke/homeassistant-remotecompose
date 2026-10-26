@@ -185,6 +185,10 @@ under a newer snapshot must never draw the stale bake, frame by frame.
   `templateValues`.
 - **Static / self-driven:** heading, clock (RemoteCompose time ops),
   unsupported.
+- **Wear container level** (not a card, the container around one on the watch): path 1. A battery,
+  humidity or percentage sensor's container fills or rings with its reading from
+  `<id>.numeric_state`, computed in-document; see
+  [wear-container-design.md](wear-container-design.md).
 
 ## Entity icons
 

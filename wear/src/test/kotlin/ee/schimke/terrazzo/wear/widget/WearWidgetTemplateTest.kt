@@ -32,6 +32,7 @@ import ee.schimke.ha.rc.ContainerTint
 import ee.schimke.ha.rc.HaRcComposePlayer
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.components.HaWearGradient
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.wearBackground
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
@@ -206,7 +207,7 @@ class WearWidgetTemplateTest {
   }
 
   @Test
-  fun aCardStylesBackgroundFillsTheContainerAtTheHostsCornerRadiusOnBothPaths() {
+  fun aCardStylesBackgroundFillsTheContainerAtTheHostsCornerRadius() {
     var bytes by mutableStateOf(ByteArray(0))
     var size by mutableStateOf(200f to 112f)
     compose.setContent {
@@ -232,7 +233,7 @@ class WearWidgetTemplateTest {
     val surfaces = mutableMapOf<String, Int>()
     for (style in styles) {
       val styled = runBlocking {
-        WearWidgetTemplate.capture(context, style.wearBackground()) {
+        WearWidgetTemplate.capture(context, style) {
           SlotContent(registry, colors, card, snapshot, template = false, style)
         }
       }
@@ -263,12 +264,23 @@ class WearWidgetTemplateTest {
         compose.runOnIdle { bytes = widget.rcDocument }
         compose.waitForIdle()
         val actual = pixels("styled-${style.id}-$name-neutral")
-        var differing = 0
-        for (y in 0 until expected.height) for (x in 0 until expected.width) {
-          if (expected[x, y] != actual[x, y]) differing++
+        // Glance Wear's brush paints colours and straight gradients only: a style made of nothing
+        // else draws the same on both paths, and one with a glow or an edge keeps its base there.
+        val background = style.wearBackground()
+        if (
+          background == null ||
+            (background.edge == null && background.layers.all { it is HaWearGradient })
+        ) {
+          var differing = 0
+          for (y in 0 until expected.height) for (x in 0 until expected.width) {
+            if (expected[x, y] != actual[x, y]) differing++
+          }
+          val total = expected.width * expected.height
+          assertTrue(
+            differing * 100 < total,
+            "${style.id} $name: $differing of $total pixels differ",
+          )
         }
-        val total = expected.width * expected.height
-        assertTrue(differing * 100 < total, "${style.id} $name: $differing of $total pixels differ")
         // The container's corner is the host's: outside it, the backdrop shows, not the style.
         val surface = actual[actual.width / 2, 2].toArgb()
         assertTrue(actual[0, 0].toArgb() != surface, "${style.id} $name: the corner is clipped")

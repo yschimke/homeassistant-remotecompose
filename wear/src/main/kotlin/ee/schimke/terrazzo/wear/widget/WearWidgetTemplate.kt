@@ -7,21 +7,13 @@ import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInf
 import androidx.compose.remote.creation.compose.capture.RemoteDensity
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.drawWithContent
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.shaders.RemoteBrush
-import androidx.compose.remote.creation.compose.shaders.horizontalGradient
-import androidx.compose.remote.creation.compose.shaders.verticalGradient
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteDp
-import androidx.compose.remote.creation.compose.state.RemotePaint
 import androidx.compose.remote.creation.compose.state.RemoteState
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetDocument
@@ -38,9 +30,13 @@ import ee.schimke.composeai.rcplayer.edit.namedVariables
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.rc.androidXExperimentalWrap
-import ee.schimke.ha.rc.components.HaWearBackground
-import ee.schimke.ha.rc.components.HaWearGradient
+import ee.schimke.ha.rc.components.CLASSIC_WEAR_SURFACE
+import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.components.HaWearLevel
 import ee.schimke.ha.rc.components.ProvideExpressionNames
+import ee.schimke.ha.rc.components.RemoteWearContainer
+import ee.schimke.ha.rc.components.wearBackground
+import ee.schimke.ha.rc.components.wearLevelLook
 
 /**
  * A Wear widget template that fits any Glance Wear container: the widget's content inside Glance
@@ -77,13 +73,15 @@ internal object WearWidgetTemplate {
    * rect in [SURFACE_CONTAINER_LOW] with the corner radius, under the content padded by the
    * horizontal and vertical padding.
    *
-   * A card style's [background] ([ee.schimke.ha.rc.components.wearBackground]) is drawn in the
-   * container: its base as the named fill's default, then each of its layers over it, every one
-   * clipped to the named corner radius, so the host's own radius shapes the style's surface.
+   * A [cardStyle] with a Wear background of its own ([wearBackground]) draws it instead: its base
+   * as the named fill's default, its layers and edge over it, all clipped to the named corner
+   * radius, so the host's own radius shapes the style's surface. A [level] fills the container with
+   * its reading, in the style's [wearLevelLook] ([RemoteWearContainer]).
    */
   suspend fun capture(
     context: Context,
-    background: HaWearBackground? = null,
+    cardStyle: HaUberTheme = HaUberTheme.Classic,
+    level: HaWearLevel? = null,
     content: @Composable () -> Unit,
   ): ByteArray =
     captureSingleRemoteDocument(
@@ -94,38 +92,30 @@ internal object WearWidgetTemplate {
       ) {
         // Expressions named in composition order, so a card drawn by its converter or by a card
         // design wrapping it names them alike.
-        ProvideExpressionNames { NamedContainer(background, content) }
+        ProvideExpressionNames { NamedContainer(cardStyle, level, content) }
       }
       .bytes
 
   /** The container colour androidx's `WearWidgetContainer` fills for an empty brush. */
-  private val SURFACE_CONTAINER_LOW = Color(39, 36, 48)
+  private val SURFACE_CONTAINER_LOW = CLASSIC_WEAR_SURFACE
 
   @Composable
-  private fun NamedContainer(background: HaWearBackground?, content: @Composable () -> Unit) {
+  private fun NamedContainer(
+    cardStyle: HaUberTheme,
+    level: HaWearLevel?,
+    content: @Composable () -> Unit,
+  ) {
     val horizontal = named(HORIZONTAL_PADDING, DEFAULT_PADDING_DP)
     val vertical = named(VERTICAL_PADDING, DEFAULT_PADDING_DP)
     val corner = named(CORNER_RADIUS, DEFAULT_CORNER_DP)
+    val background = cardStyle.wearBackground()
     val fill =
       RemoteColor.createNamedRemoteColor(
         CONTAINER_COLOR,
         background?.base ?: SURFACE_CONTAINER_LOW,
         RemoteState.Domain.User,
       )
-    val layers = background?.layers.orEmpty().map { it.remoteBrush() }
-    RemoteBox(
-      modifier =
-        RemoteModifier.fillMaxSize().drawWithContent {
-          val cornerRadius = RemoteOffset(corner.toPx(), corner.toPx())
-          drawRoundRect(RemotePaint { color = fill }, cornerRadius = cornerRadius)
-          for (layer in layers) {
-            val paint = RemotePaint()
-            with(layer) { applyTo(paint, size) }
-            drawRoundRect(paint, cornerRadius = cornerRadius)
-          }
-          drawContent()
-        }
-    ) {
+    RemoteWearContainer(background, fill, corner, level, cardStyle.wearLevelLook()) {
       RemoteBox(modifier = RemoteModifier.fillMaxSize().padding(horizontal, vertical)) { content() }
     }
   }
@@ -218,11 +208,4 @@ internal object WearWidgetTemplate {
         .getOrNull() ?: return null
     return WearWidgetRawContent(bytes, frame.extras, frame.widgetTitle)
   }
-}
-
-/** This gradient as a Remote Compose brush across whatever it fills. */
-internal fun HaWearGradient.remoteBrush(): RemoteBrush {
-  val stops = colors.map { it.rc }
-  return if (vertical) RemoteBrush.verticalGradient(stops)
-  else RemoteBrush.horizontalGradient(stops)
 }
