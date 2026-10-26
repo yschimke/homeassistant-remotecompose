@@ -150,10 +150,14 @@ class UiBuilderTest {
       "bool",
       state.getValue("light.s0.is_on").jsonObject["valueType"]!!.jsonPrimitive.content,
     )
-    // The values every home shares are there to find, on a sunny afternoon.
+    // The values every home shares are there to find, as they read without the data: daytime.
     val elevation = state.getValue("HA:sun.sun.elevation").jsonObject
     assertEquals("float", elevation["valueType"]!!.jsonPrimitive.content)
-    assertEquals(25.0, elevation["initialValue"]!!.jsonPrimitive.content.toDouble())
+    assertEquals(45.0, elevation["initialValue"]!!.jsonPrimitive.content.toDouble())
+    assertEquals(
+      "true",
+      state.getValue("HA:sun.sun.above_horizon").jsonObject["initialValue"]!!.jsonPrimitive.content,
+    )
 
     val nodes = document["nodes"]!!.jsonObject
     // Every state reference names a declared variable.

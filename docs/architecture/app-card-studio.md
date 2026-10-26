@@ -187,7 +187,7 @@ view. No other domain is drawn: a state variable in one is refused.
 | Name | Type | Value |
 | --- | --- | --- |
 | `HA:sun.sun.state` | text | `above_horizon` or `below_horizon` |
-| `HA:sun.sun.is_available` | bool | false when the sun integration is off: guard the rest with it |
+| `HA:sun.sun.is_available` | bool | false when the sun integration is off or `sun.sun` is unavailable |
 | `HA:sun.sun.above_horizon` | bool | the sun is up |
 | `HA:sun.sun.elevation` | float | degrees above the horizon; negative at night, below −6 after civil dusk |
 | `HA:sun.sun.azimuth` | float | compass bearing in degrees |
@@ -197,11 +197,18 @@ view. No other domain is drawn: a state variable in one is refused.
 Only the entities in that list are shared, so a design can't read an arbitrary
 entity of the home it plays in. Publishing refuses a design that reads an `HA:` value
 outside the list, naming the ones it may read, or that declares a shared value with a
-type other than the one the app pushes (the player would drop it). A missing entity
-reads `is_available` false, an empty state, NaN numbers and false flags.
+type other than the one the app pushes (the player would drop it).
+
+Without the data (the sun integration off, `sun.sun` unavailable, or an attribute
+missing) every value reads **daytime**, so a design shows its day look rather than
+going dark or computing with NaN, and needs no guard: `above_horizon` true, the
+elevation 45°, the azimuth 180°, and a day that never ends (sunrise and dawn at
+minute 0, sunset and dusk at 1440, noon at 720), so asking whether the clock is
+between sunrise and sunset gets day too. Only `is_available` says the data is
+missing.
 
 Designers find them in three places: a seeded UI Builder design declares every shared
-value as a state variable, with a sunny afternoon's values to design against; the
+value as a state variable, with its daytime value to design against; the
 server's schema (`/api/schema`, and the `/schema` page) lists them under `shared`, with
 what each means; and this table. The app pushes them; a Wear widget doesn't yet, so
 publishing for the Wear widget profile still refuses them.

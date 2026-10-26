@@ -254,7 +254,11 @@ data class BindingSchema(
   val description: String? = null,
 )
 
-/** [HaSharedValues] as bindings: what a host pushes to every design, with an example each. */
+/**
+ * [HaSharedValues] as bindings: what a host pushes to every design, each with what it reads without
+ * the data ([HaSharedValues.Value.daytime]) as its example, so a design opens in UI Builder in its
+ * day look.
+ */
 fun sharedBindings(): List<BindingSchema> =
   HaSharedValues.values.map { value ->
     BindingSchema(
@@ -265,27 +269,16 @@ fun sharedBindings(): List<BindingSchema> =
           HaSharedValues.Kind.Bool -> BindingType.Bool
           HaSharedValues.Kind.Float -> BindingType.Float
         },
-      example = SHARED_EXAMPLES[value.name],
+      example =
+        when (val daytime = value.daytime) {
+          is String -> JsonPrimitive(daytime)
+          is Boolean -> JsonPrimitive(daytime)
+          is Float -> JsonPrimitive(daytime)
+          else -> null
+        },
       description = value.description,
     )
   }
-
-/** A sunny afternoon, so a design opened in UI Builder shows its daytime look. */
-private val SHARED_EXAMPLES: Map<String, JsonPrimitive> =
-  mapOf(
-    "HA:sun.sun.state" to JsonPrimitive("above_horizon"),
-    "HA:sun.sun.is_available" to JsonPrimitive(true),
-    "HA:sun.sun.above_horizon" to JsonPrimitive(true),
-    "HA:sun.sun.elevation" to JsonPrimitive(25.0),
-    "HA:sun.sun.azimuth" to JsonPrimitive(200.0),
-    "HA:sun.sun.rising" to JsonPrimitive(false),
-    "HA:sun.sun.next_dawn.minute_of_day" to JsonPrimitive(390.0),
-    "HA:sun.sun.next_rising.minute_of_day" to JsonPrimitive(420.0),
-    "HA:sun.sun.next_noon.minute_of_day" to JsonPrimitive(720.0),
-    "HA:sun.sun.next_setting.minute_of_day" to JsonPrimitive(1020.0),
-    "HA:sun.sun.next_dusk.minute_of_day" to JsonPrimitive(1050.0),
-    "HA:sun.sun.next_midnight.minute_of_day" to JsonPrimitive(0.0),
-  )
 
 @Serializable
 enum class BindingType {

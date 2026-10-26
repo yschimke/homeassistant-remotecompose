@@ -24,9 +24,12 @@ import kotlinx.serialization.json.floatOrNull
  *
  * Every host that plays a design pushes [bindings] beside the card's own, under their full names: a
  * player takes a pushed name with a domain as it is, and puts a bare one in `USER:`. It keeps only
- * the names a document declares, so a design that reads none costs nothing. Every value is always
- * pushed: an entity Home Assistant doesn't have reads `is_available` false, an empty `state`, NaN
- * numbers and false flags.
+ * the names a document declares, so a design that reads none costs nothing.
+ *
+ * Every value is always pushed. Without the data (the sun integration off, `sun.sun` unavailable,
+ * or one attribute missing) a value reads its [Value.daytime]: a design shows its day look rather
+ * than going dark or computing with NaN, and needs no guard. Only `is_available` says the data is
+ * missing.
  *
  * Times are pushed as the minute of the local day (0–1440), the scale of the clock's
  * `time.minuteOfDay`, so a design compares them with the clock without parsing a timestamp.
@@ -43,30 +46,47 @@ object HaSharedValues {
     Float,
   }
 
-  /** One shared value: its full [name], type and what it means, for a designer. */
-  data class Value(val name: String, val kind: Kind, val description: String)
+  /**
+   * One shared value: its full [name], type and what it means, for a designer, and what it reads
+   * without the data: [daytime], a `String`, `Boolean` or `Float` as [kind] says.
+   */
+  data class Value(val name: String, val kind: Kind, val description: String, val daytime: Any)
 
   /** The sun integration's entity: on by default in every Home Assistant. */
   const val SUN: String = "sun.sun"
 
+  /**
+   * The sun's times, with their names and their daytime: a day that never ends, so a design that
+   * asks whether the clock is between sunrise and sunset gets day too.
+   */
   private val SUN_TIMES =
     listOf(
-      "next_dawn" to "dawn",
-      "next_rising" to "sunrise",
-      "next_noon" to "solar noon",
-      "next_setting" to "sunset",
-      "next_dusk" to "dusk",
-      "next_midnight" to "solar midnight",
+      Triple("next_dawn", "dawn", 0f),
+      Triple("next_rising", "sunrise", 0f),
+      Triple("next_noon", "solar noon", 720f),
+      Triple("next_setting", "sunset", 1440f),
+      Triple("next_dusk", "dusk", 1440f),
+      Triple("next_midnight", "solar midnight", 0f),
     )
 
   /** Every shared value, by entity. */
   val values: List<Value> = buildList {
-    addAll(entityValues(SUN))
+    add(Value(name(SUN, "state"), Kind.Text, "The sun's state.", ABOVE_HORIZON))
+    add(
+      Value(
+        name(SUN, "is_available"),
+        Kind.Bool,
+        "Whether Home Assistant has the sun and it isn't unavailable or unknown. Without it, " +
+          "every other value reads daytime.",
+        false,
+      )
+    )
     add(
       Value(
         name(SUN, "above_horizon"),
         Kind.Bool,
         "Whether the sun is above the horizon (its state is above_horizon).",
+        true,
       )
     )
     add(
@@ -75,16 +95,25 @@ object HaSharedValues {
         Kind.Float,
         "The sun's elevation above the horizon, in degrees: negative at night, below -6 after " +
           "civil dusk.",
+        45f,
       )
     )
-    add(Value(name(SUN, "azimuth"), Kind.Float, "The sun's compass bearing, in degrees."))
-    add(Value(name(SUN, "rising"), Kind.Bool, "Whether the sun is rising: true before solar noon."))
-    for ((attribute, label) in SUN_TIMES) {
+    add(Value(name(SUN, "azimuth"), Kind.Float, "The sun's compass bearing, in degrees.", 180f))
+    add(
+      Value(
+        name(SUN, "rising"),
+        Kind.Bool,
+        "Whether the sun is rising: true before solar noon.",
+        false,
+      )
+    )
+    for ((attribute, label, daytime) in SUN_TIMES) {
       add(
         Value(
           name(SUN, "$attribute.$MINUTE_OF_DAY"),
           Kind.Float,
           "The next $label, as the minute of the local day (0-1440), like time.minuteOfDay.",
+          daytime,
         )
       )
     }
@@ -112,43 +141,50 @@ object HaSharedValues {
     val strings = LinkedHashMap<String, String>()
     val booleans = LinkedHashMap<String, Boolean>()
     val floats = LinkedHashMap<String, Float>()
-    val sun = snapshot.states[SUN]
-    strings[name(SUN, "state")] = sun?.state.orEmpty()
-    booleans[name(SUN, "is_available")] = sun?.let { HaLiveBindings.isAvailable(it.state) } ?: false
-    booleans[name(SUN, "above_horizon")] = sun?.state == "above_horizon"
-    floats[name(SUN, "elevation")] = sun.float("elevation")
-    floats[name(SUN, "azimuth")] = sun.float("azimuth")
-    booleans[name(SUN, "rising")] = sun.attribute("rising")?.booleanOrNull ?: false
-    for ((attribute, _) in SUN_TIMES) {
-      floats[name(SUN, "$attribute.$MINUTE_OF_DAY")] = sun.minuteOfDay(attribute, timeZone)
+    // Values read daytime ([Value.daytime]) wherever the data is missing.
+    for (value in values) {
+      when (val daytime = value.daytime) {
+        is String -> strings[value.name] = daytime
+        is Boolean -> booleans[value.name] = daytime
+        is Float -> floats[value.name] = daytime
+      }
     }
-    return CardSnapshotBindings(strings, booleans, emptyMap(), floats)
+    val sun =
+      snapshot.states[SUN]?.takeIf { HaLiveBindings.isAvailable(it.state) }
+        ?: return bindings(strings, booleans, floats)
+    strings[name(SUN, "state")] = sun.state
+    booleans[name(SUN, "is_available")] = true
+    booleans[name(SUN, "above_horizon")] = sun.state == ABOVE_HORIZON
+    sun.float("elevation")?.let { floats[name(SUN, "elevation")] = it }
+    sun.float("azimuth")?.let { floats[name(SUN, "azimuth")] = it }
+    sun.attribute("rising")?.booleanOrNull?.let { booleans[name(SUN, "rising")] = it }
+    for ((attribute, _, _) in SUN_TIMES) {
+      sun.minuteOfDay(attribute, timeZone)?.let {
+        floats[name(SUN, "$attribute.$MINUTE_OF_DAY")] = it
+      }
+    }
+    return bindings(strings, booleans, floats)
   }
 
-  private fun entityValues(entityId: String) =
-    listOf(
-      Value(name(entityId, "state"), Kind.Text, "The entity's raw state."),
-      Value(
-        name(entityId, "is_available"),
-        Kind.Bool,
-        "Whether Home Assistant has the entity and it isn't unavailable or unknown: guard the " +
-          "other values with it.",
-      ),
-    )
+  private fun bindings(
+    strings: Map<String, String>,
+    booleans: Map<String, Boolean>,
+    floats: Map<String, Float>,
+  ) = CardSnapshotBindings(strings, booleans, emptyMap(), floats)
 
   private fun name(entityId: String, value: String) = "$PREFIX$entityId.$value"
 
-  private fun EntityState?.attribute(key: String): JsonPrimitive? =
-    this?.attributes?.get(key) as? JsonPrimitive
+  private fun EntityState.attribute(key: String): JsonPrimitive? = attributes[key] as? JsonPrimitive
 
-  private fun EntityState?.float(key: String): Float = attribute(key)?.floatOrNull ?: Float.NaN
+  private fun EntityState.float(key: String): Float? = attribute(key)?.floatOrNull
 
-  private fun EntityState?.minuteOfDay(key: String, timeZone: TimeZone): Float {
-    val text = attribute(key)?.takeIf { it.isString }?.contentOrNull ?: return Float.NaN
-    val instant = runCatching { Instant.parse(text) }.getOrNull() ?: return Float.NaN
+  private fun EntityState.minuteOfDay(key: String, timeZone: TimeZone): Float? {
+    val text = attribute(key)?.takeIf { it.isString }?.contentOrNull ?: return null
+    val instant = runCatching { Instant.parse(text) }.getOrNull() ?: return null
     val time = instant.toLocalDateTime(timeZone).time
     return time.hour * 60 + time.minute + time.second / 60f
   }
 
   private const val MINUTE_OF_DAY = "minute_of_day"
+  private const val ABOVE_HORIZON = "above_horizon"
 }

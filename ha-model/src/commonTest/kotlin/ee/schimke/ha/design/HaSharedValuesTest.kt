@@ -37,7 +37,8 @@ class HaSharedValuesTest {
     assertEquals(290.1f, values.floats["HA:sun.sun.azimuth"])
     assertEquals(6 * 60 + 45.5f, values.floats["HA:sun.sun.next_rising.minute_of_day"])
     assertEquals(16 * 60 + 36f, values.floats["HA:sun.sun.next_setting.minute_of_day"])
-    assertTrue(values.floats["HA:sun.sun.next_dusk.minute_of_day"]!!.isNaN())
+    // An attribute Home Assistant leaves out reads its daytime: a day that never ends.
+    assertEquals(1440f, values.floats["HA:sun.sun.next_dusk.minute_of_day"])
   }
 
   @Test
@@ -52,13 +53,37 @@ class HaSharedValuesTest {
   }
 
   @Test
-  fun everyDeclaredValueIsAlwaysPushed() {
-    val values = HaSharedValues.bindings(HaSnapshot(), TimeZone.UTC)
-    val pushed = values.strings.keys + values.booleans.keys + values.floats.keys
-    assertEquals(HaSharedValues.values.map { it.name }.toSet(), pushed)
-    assertEquals(false, values.booleans["HA:sun.sun.is_available"])
-    assertEquals("", values.strings["HA:sun.sun.state"])
-    assertTrue(values.floats["HA:sun.sun.elevation"]!!.isNaN())
+  fun withoutTheSunADesignSeesDaytime() {
+    for (snapshot in
+      listOf(
+        HaSnapshot(),
+        HaSnapshot(states = mapOf("sun.sun" to EntityState("sun.sun", "unavailable"))),
+      )) {
+      val values = HaSharedValues.bindings(snapshot, TimeZone.UTC)
+      val pushed = values.strings.keys + values.booleans.keys + values.floats.keys
+      assertEquals(HaSharedValues.values.map { it.name }.toSet(), pushed)
+      // Only availability tells the truth; everything else is a sunny day with no end.
+      assertEquals(false, values.booleans["HA:sun.sun.is_available"])
+      assertEquals("above_horizon", values.strings["HA:sun.sun.state"])
+      assertEquals(true, values.booleans["HA:sun.sun.above_horizon"])
+      assertEquals(45f, values.floats["HA:sun.sun.elevation"])
+      assertEquals(0f, values.floats["HA:sun.sun.next_rising.minute_of_day"])
+      assertEquals(1440f, values.floats["HA:sun.sun.next_setting.minute_of_day"])
+      assertTrue(values.floats.values.none { it.isNaN() })
+    }
+  }
+
+  @Test
+  fun eachValuesDaytimeIsOfItsKind() {
+    for (value in HaSharedValues.values) {
+      val ok =
+        when (value.kind) {
+          HaSharedValues.Kind.Text -> value.daytime is String
+          HaSharedValues.Kind.Bool -> value.daytime is Boolean
+          HaSharedValues.Kind.Float -> value.daytime is Float
+        }
+      assertTrue(ok, value.name)
+    }
   }
 
   @Test

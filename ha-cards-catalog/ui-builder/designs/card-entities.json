@@ -161,7 +161,7 @@
     "HA:sun.sun.is_available": {
       "type": "value",
       "valueType": "bool",
-      "initialValue": true,
+      "initialValue": false,
       "persistence": "design"
     },
     "HA:sun.sun.above_horizon": {
@@ -173,13 +173,13 @@
     "HA:sun.sun.elevation": {
       "type": "value",
       "valueType": "float",
-      "initialValue": 25.0,
+      "initialValue": 45.0,
       "persistence": "design"
     },
     "HA:sun.sun.azimuth": {
       "type": "value",
       "valueType": "float",
-      "initialValue": 200.0,
+      "initialValue": 180.0,
       "persistence": "design"
     },
     "HA:sun.sun.rising": {
@@ -191,13 +191,13 @@
     "HA:sun.sun.next_dawn.minute_of_day": {
       "type": "value",
       "valueType": "float",
-      "initialValue": 390.0,
+      "initialValue": 0.0,
       "persistence": "design"
     },
     "HA:sun.sun.next_rising.minute_of_day": {
       "type": "value",
       "valueType": "float",
-      "initialValue": 420.0,
+      "initialValue": 0.0,
       "persistence": "design"
     },
     "HA:sun.sun.next_noon.minute_of_day": {
@@ -209,13 +209,13 @@
     "HA:sun.sun.next_setting.minute_of_day": {
       "type": "value",
       "valueType": "float",
-      "initialValue": 1020.0,
+      "initialValue": 1440.0,
       "persistence": "design"
     },
     "HA:sun.sun.next_dusk.minute_of_day": {
       "type": "value",
       "valueType": "float",
-      "initialValue": 1050.0,
+      "initialValue": 1440.0,
       "persistence": "design"
     },
     "HA:sun.sun.next_midnight.minute_of_day": {
