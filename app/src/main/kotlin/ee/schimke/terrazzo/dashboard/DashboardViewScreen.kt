@@ -420,6 +420,9 @@ fun DashboardViewScreen(
       loadHistory = { hours -> session.fetchHistory(listOf(entityId), hours)[entityId].orEmpty() },
       onOpenHistory = historyUrl?.let { url -> { openInBrowser(context, url) } },
       onDismiss = { moreInfoEntity = null },
+      readOnly = readOnly,
+      onAction = actionDispatcher::dispatch,
+      temperatureUnit = (state as? DashboardState.Ready)?.snapshot?.temperatureUnit,
     )
   }
 }

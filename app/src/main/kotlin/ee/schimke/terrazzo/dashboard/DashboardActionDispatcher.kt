@@ -241,6 +241,14 @@ private class DashboardActionDispatcher(
         if (action.service in TOGGLE_LIKE_SERVICES) {
           val current =
             DemoData.snapshot(router = demo.actionRouter).states[entityId]?.state ?: return
+          // `turn_on` with a brightness (the more-info slider) leaves an on light on.
+          val flips =
+            when (action.service) {
+              "turn_on" -> current == "off"
+              "turn_off" -> current == "on"
+              else -> true
+            }
+          if (!flips) return
           demo.actionRouter.applyToggle(entityId, current)
           cache.clear()
         }
