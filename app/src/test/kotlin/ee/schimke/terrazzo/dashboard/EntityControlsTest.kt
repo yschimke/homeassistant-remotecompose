@@ -196,4 +196,46 @@ class EntityControlsTest {
     assertEquals("3000 K", formatLevel(3000f, 100f, "K"))
     assertEquals("1.25", formatLevel(1.25f, 0.05f, null))
   }
+
+  @Test
+  fun aColourLightOffersSwatchesAndRingsItsOwnColour() {
+    val light =
+      entity(
+        "light.strip",
+        "on",
+        "supported_color_modes" to strings("hs"),
+        "color_mode" to JsonPrimitive("hs"),
+        "hs_color" to JsonArray(listOf(JsonPrimitive(215.0), JsonPrimitive(80.0))),
+      )
+    val colour =
+      entityControls("light.strip", light).filterIsInstance<EntityControl.Colour>().single()
+    assertEquals(220f, colour.hue)
+    assertEquals(
+      JsonArray(listOf(JsonPrimitive(0f), JsonPrimitive(100))),
+      colour.set(0f).data("hs_color"),
+    )
+    // White, or a colour temperature, rings no swatch.
+    val warm =
+      entity(
+        "light.strip",
+        "on",
+        "supported_color_modes" to strings("hs", "color_temp"),
+        "color_mode" to JsonPrimitive("color_temp"),
+        "hs_color" to JsonArray(listOf(JsonPrimitive(30.0), JsonPrimitive(60.0))),
+      )
+    assertEquals(
+      null,
+      entityControls("light.strip", warm).filterIsInstance<EntityControl.Colour>().single().hue,
+    )
+    // Hues wrap around the wheel: 350 is nearest red.
+    assertEquals(0f, nearestPresetHue(350f))
+  }
+
+  @Test
+  fun unlockingAsksFirst() {
+    val lock = entity("lock.front", "locked", "friendly_name" to JsonPrimitive("Front door"))
+    val buttons = assertIs<EntityControl.Buttons>(entityControls("lock.front", lock)[0]).buttons
+    assertEquals(null, buttons[0].confirm)
+    assertEquals("Unlock Front door?", buttons[1].confirm)
+  }
 }

@@ -59,12 +59,20 @@ sealed interface EntityControl {
     val choose: (String) -> HaAction,
   ) : EntityControl
 
+  /**
+   * A light's colour, picked from [PRESET_HUES] swatches: [hue] is the swatch nearest the light's
+   * own colour, null while it shows white or a colour temperature.
+   */
+  data class Colour(val hue: Float?, val set: (Float) -> HaAction) : EntityControl
+
   data class Button(
     val label: String,
     val kind: ButtonKind,
     val action: HaAction,
     /** Shown as the current one: the state the command leads to is the state now. */
     val active: Boolean = false,
+    /** Asked before sending, for a command worth a second thought (unlocking a door). */
+    val confirm: String? = null,
   )
 
   enum class ButtonKind {
@@ -136,6 +144,24 @@ fun entityControls(
               unit = "K",
             ) {
               call("turn_on", mapOf("color_temp_kelvin" to JsonPrimitive(it.roundToInt())))
+            }
+          )
+        }
+        if (modes.any { it in COLOUR_MODES }) {
+          val hs =
+            (attrs["hs_color"] as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.doubleOrNull }
+          // A colour only while the light shows one, not white or a colour temperature.
+          val showsColour = attrs.string("color_mode") in COLOUR_MODES
+          val hue =
+            hs
+              ?.takeIf { showsColour && it.size == 2 && it[1] >= MIN_COLOUR_SATURATION }
+              ?.let { nearestPresetHue(it[0].toFloat()) }
+          add(
+            EntityControl.Colour(hue) {
+              call(
+                "turn_on",
+                mapOf("hs_color" to JsonArray(listOf(JsonPrimitive(it), JsonPrimitive(100)))),
+              )
             }
           )
         }
@@ -297,6 +323,7 @@ fun entityControls(
               EntityControl.ButtonKind.Unlock,
               call("unlock"),
               state.state == "unlocked",
+              confirm = "Unlock ${attrs.string("friendly_name") ?: entityId}?",
             ),
           )
         )
@@ -427,6 +454,17 @@ fun entityControls(
   }
 }
 
+/**
+ * The hues a light's colour swatches offer: red, orange, yellow, green, cyan, blue, purple, pink.
+ */
+val PRESET_HUES: List<Float> = listOf(0f, 30f, 55f, 120f, 180f, 220f, 275f, 320f)
+
+/** The [PRESET_HUES] swatch nearest [hue], around the colour wheel. */
+fun nearestPresetHue(hue: Float): Float = PRESET_HUES.minBy { preset ->
+  val d = kotlin.math.abs(((hue - preset) % 360f + 360f) % 360f)
+  minOf(d, 360f - d)
+}
+
 /** [value] snapped to [step]s from the start of [range], within it. */
 fun snapToStep(value: Float, range: ClosedFloatingPointRange<Float>, step: Float): Float {
   if (step <= 0f) return value.coerceIn(range)
@@ -448,6 +486,11 @@ private fun JsonObject.long(key: String): Long? =
 
 private fun JsonObject.strings(key: String): List<String> =
   (this[key] as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }.orEmpty()
+
+private val COLOUR_MODES = setOf("hs", "xy", "rgb", "rgbw", "rgbww")
+
+/** Below this saturation (of 100) a light reads as white, not as a swatch's colour. */
+private const val MIN_COLOUR_SATURATION = 20.0
 
 private val DIMMABLE_COLOR_MODES =
   setOf("brightness", "color_temp", "hs", "xy", "rgb", "rgbw", "rgbww", "white")

@@ -11,6 +11,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.Dashboard
+import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.core.logs.referencedEntities
 import kotlinx.coroutines.delay
@@ -18,6 +20,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 
@@ -67,6 +72,34 @@ object LiveCameras {
   /** Ends the cameras live for longer than [MAX_LIVE_MS]. */
   fun expire(nowMs: Long = System.currentTimeMillis()) {
     since.update { current -> current.filterValues { nowMs - it < MAX_LIVE_MS } }
+  }
+}
+
+/** A camera whose live view a more-info sheet shows, with its current state. */
+data class CameraView(val entityId: String, val state: EntityState?)
+
+/**
+ * The camera a picture card on [dashboard] pairs with [entityId]: the `camera_image` of a card
+ * (picture-entity, picture-glance, or one nested in a stack) whose `entity` is [entityId], so a
+ * door sensor's more-info shows the camera watching the door. Null for a camera itself, which shows
+ * its own view, or when no card pairs one.
+ */
+fun pairedCamera(dashboard: Dashboard, entityId: String): String? {
+  if (entityId.startsWith("camera.")) return null
+  fun find(element: JsonElement): String? =
+    when (element) {
+      is JsonObject -> {
+        val camera = (element["camera_image"] as? JsonPrimitive)?.contentOrNull
+        val entity = (element["entity"] as? JsonPrimitive)?.contentOrNull
+        if (entity == entityId && camera != null && camera.startsWith("camera.")) camera
+        else element.values.firstNotNullOfOrNull(::find)
+      }
+      is JsonArray -> element.firstNotNullOfOrNull(::find)
+      else -> null
+    }
+  return dashboard.views.firstNotNullOfOrNull { view ->
+    (listOfNotNull(view.header?.card) + view.cards + view.sections.flatMap { it.cards })
+      .firstNotNullOfOrNull { find(it.raw) }
   }
 }
 

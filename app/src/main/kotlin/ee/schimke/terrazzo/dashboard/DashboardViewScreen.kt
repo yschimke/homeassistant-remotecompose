@@ -414,6 +414,9 @@ fun DashboardViewScreen(
 
   moreInfoEntity?.let { entityId ->
     val historyUrl = resolveAgainstBase(session.baseUrl, "/history?entity_id=$entityId")
+    val ready = state as? DashboardState.Ready
+    val pairedCamera =
+      remember(ready?.dashboard, entityId) { ready?.dashboard?.let { pairedCamera(it, entityId) } }
     EntityMoreInfoSheet(
       entityId = entityId,
       state = (state as? DashboardState.Ready)?.snapshot?.states?.get(entityId),
@@ -423,6 +426,7 @@ fun DashboardViewScreen(
       readOnly = readOnly,
       onAction = actionDispatcher::dispatch,
       temperatureUnit = (state as? DashboardState.Ready)?.snapshot?.temperatureUnit,
+      camera = pairedCamera?.let { CameraView(it, ready?.snapshot?.states?.get(it)) },
     )
   }
 }
