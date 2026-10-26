@@ -48,8 +48,8 @@ import ee.schimke.terrazzo.dashboard.historyTitle
 /**
  * Widgets, reached via the dashboard top-bar's overflow menu: the cards this app has on the
  * launcher, against the [WidgetStore.MAX_WIDGETS] cap, and the Terrazzo widgets placed on paired
- * watches. The launcher and the watch own placement and removal; the phone chooses the card each
- * watch widget shows, here.
+ * watches. A home screen row opens the widget's editor ([WidgetConfigureActivity]); a watch row
+ * chooses the card that widget shows. The launcher and the watch own placement and removal.
  */
 @Composable
 fun WidgetsScreen(onBack: () -> Unit) {
@@ -61,17 +61,20 @@ fun WidgetsScreen(onBack: () -> Unit) {
   LaunchedEffect(Unit) { WidgetSync.reconcile(context.applicationContext) }
   WidgetsContent(
     widgets =
-      installed.map { InstalledWidget(it.card.historyTitle(), cardTypeLabel(it.card.type)) },
+      installed.map {
+        InstalledWidget(it.card.historyTitle(), cardTypeLabel(it.card.type), it.widgetId)
+      },
     watchWidgets = watchWidgets,
     onChooseWatchCard = { widget, cardKey ->
       graph.wearSyncManager.chooseWatchWidgetCard(widget.nodeId, widget.instanceId, cardKey)
     },
     onBack = onBack,
+    onEdit = { context.startActivity(WidgetConfigureActivity.intent(context, it.widgetId)) },
   )
 }
 
 /** One installed widget's row: the card's [title], and the [kind] of card it draws. */
-internal data class InstalledWidget(val title: String, val kind: String)
+internal data class InstalledWidget(val title: String, val kind: String, val widgetId: Int = 0)
 
 /**
  * A card type as a row's supporting text: `weather-forecast` reads "Weather forecast card", and a
@@ -102,6 +105,7 @@ internal fun watchWidgetLabel(widget: WatchWidget, named: Boolean): String {
 internal fun WidgetsContent(
   widgets: List<InstalledWidget>,
   onBack: () -> Unit,
+  onEdit: (InstalledWidget) -> Unit = {},
   watchWidgets: List<WatchWidget> = emptyList(),
   onChooseWatchCard: (WatchWidget, String) -> Unit = { _, _ -> },
 ) {
@@ -173,8 +177,8 @@ internal fun WidgetsContent(
             "Long-press a card on a dashboard and choose Add to home screen. You can have up " +
               "to ${WidgetStore.MAX_WIDGETS}."
           } else {
-            "${widgets.size} of ${WidgetStore.MAX_WIDGETS} in use. To remove one, long-press it " +
-              "on your home screen."
+            "${widgets.size} of ${WidgetStore.MAX_WIDGETS} in use. Tap one to edit it. To remove " +
+              "one, long-press it on your home screen."
           },
           style = MaterialTheme.typography.bodyMedium,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -186,6 +190,7 @@ internal fun WidgetsContent(
           headlineContent = { Text(widget.title) },
           supportingContent = { Text(widget.kind) },
           leadingContent = { Icon(Icons.Outlined.Widgets, contentDescription = null) },
+          modifier = Modifier.clickable(onClickLabel = "Edit widget") { onEdit(widget) },
         )
       }
       if (watchWidgets.isNotEmpty()) {
