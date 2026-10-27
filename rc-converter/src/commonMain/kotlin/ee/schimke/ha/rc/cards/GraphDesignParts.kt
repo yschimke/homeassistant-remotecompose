@@ -131,7 +131,11 @@ object GraphDesignParts {
       )
       return
     }
-    val plot = launcherPlot(if (data.stacked) 1 else data.rows.size, data.title != null)
+    // A stacked chart is one plot with a legend line per series under it.
+    val plot =
+      if (data.stacked)
+        launcherPlot(1, data.title != null, extraDp = data.rows.size * STACKED_LEGEND_LINE_DP)
+      else launcherPlot(data.rows.size, data.title != null)
     if (plot == null) RemoteHaStatisticsGraph(data, modifier = modifier)
     else
       RemoteHaStatisticsGraph(
@@ -181,16 +185,20 @@ object GraphDesignParts {
 
   /**
    * A launcher widget's share of its height for each of [rowCount] plots, after the card's padding,
-   * title ([hasTitle]) and range line: as many rows as fit at the compact height, each then given
-   * an equal share of the rest, so a taller widget draws taller lines rather than more blank card
-   * (docs/architecture/adaptive-card-layouts.md, "Earn the canvas"). Null off a launcher capture.
+   * title ([hasTitle]), range line and [extraDp] more (a stacked chart's legend): as many rows as
+   * fit at the compact height, each then given an equal share of the rest, so a taller widget draws
+   * taller lines rather than more blank card (docs/architecture/adaptive-card-layouts.md, "Earn the
+   * canvas"). Null off a launcher capture.
    */
   @Composable
-  private fun launcherPlot(rowCount: Int, hasTitle: Boolean): LauncherPlot? {
+  private fun launcherPlot(rowCount: Int, hasTitle: Boolean, extraDp: Int = 0): LauncherPlot? {
     val cell = LocalWidgetCaptureSizeDp.current ?: return null
     if (rowCount == 0) return null
     val chrome =
-      GRAPH_PADDING_DP + RANGE_LINE_DP + (if (hasTitle) TITLE_LINE_DP + GRAPH_GAP_DP else 0)
+      GRAPH_PADDING_DP +
+        RANGE_LINE_DP +
+        extraDp +
+        (if (hasTitle) TITLE_LINE_DP + GRAPH_GAP_DP else 0)
     val perRow = GRAPH_GAP_DP + ROW_LABEL_DP + GRAPH_GAP_DP
     val room = cell.heightDp - chrome
     val rows = (room / (perRow + SPARKLINE_HEIGHT_DP)).coerceIn(1, rowCount)
@@ -206,6 +214,7 @@ object GraphDesignParts {
   private const val RANGE_LINE_DP = 16
   private const val ROW_LABEL_DP = 18
   private const val GRAPH_GAP_DP = 6
+  private const val STACKED_LEGEND_LINE_DP = 22
   private const val MAX_PLOT_HEIGHT_DP = 220
 
   /** From two launcher columns and two rows a markdown note shows whole. */

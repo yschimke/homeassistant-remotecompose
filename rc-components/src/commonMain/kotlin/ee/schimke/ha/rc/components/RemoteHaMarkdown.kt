@@ -266,15 +266,25 @@ private fun MarkdownLine(
       )
     }
   }
-  // Without FlowLayout (launchers) a row of inline runs can't wrap, so a line of words and links
-  // is drawn as one wrapping text instead: the emphasis goes, the words stay in the cell.
+  // Without FlowLayout (launchers) a row of inline runs can't wrap, so a line of words and at most
+  // one link is drawn as one wrapping text instead: the emphasis goes, the words stay in the cell,
+  // and the line taps through to its link. Two links on a line keep their own tap targets.
+  val links = block.inlines.filterIsInstance<MarkdownInline.Link>()
   val wrapsAsOneText =
-    !LocalSupportsFlowLayout.current && block.inlines.none { it is MarkdownInline.Image }
+    !LocalSupportsFlowLayout.current &&
+      links.size <= 1 &&
+      block.inlines.none { it is MarkdownInline.Image }
   if (!block.hasInlineMarkup || wrapsAsOneText) {
     val text = block.boundText ?: block.text.rs
+    val linkClick =
+      links
+        .singleOrNull()
+        ?.let { markdownLinkAction(it.url).toRemoteAction() }
+        ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
     val emphasis = block.drawnStyle
     val line: @Composable () -> Unit = {
       RemoteText(
+        modifier = linkClick,
         text = if (marker != null && !material.showsMarkers) marker.rs + text else text,
         color = primary,
         fontSize = fontSize,

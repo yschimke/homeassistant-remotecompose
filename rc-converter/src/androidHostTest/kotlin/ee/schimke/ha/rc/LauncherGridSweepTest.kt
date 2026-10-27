@@ -273,15 +273,17 @@ class LauncherGridSweepTest {
             listOf(HistoryPoint(base.plus(kotlin.time.Duration.parse("5h")), "on")),
         ),
       statistics =
-        mapOf(
-          "sensor.power" to
-            (0 until 24).map {
-              StatisticPoint(
-                start = base.plus(kotlin.time.Duration.parse("${it}h")),
-                mean = 500 + 400 * kotlin.math.sin(it / 3.0),
-              )
-            }
-        ),
+        listOf("sensor.power", "sensor.living_temperature", "sensor.humidity")
+          .withIndex()
+          .associate { (k, id) ->
+            id to
+              (0 until 24).map {
+                StatisticPoint(
+                  start = base.plus(kotlin.time.Duration.parse("${it}h")),
+                  mean = 500 + 400 * kotlin.math.sin((it + 4 * k) / 3.0),
+                )
+              }
+          },
     )
 
   private fun card(json: String): CardConfig {
@@ -328,6 +330,11 @@ class LauncherGridSweepTest {
         card(
           """{"type":"markdown","title":"Networks","content":"**Download:** {{ states('sensor.download') }} Mbit/s · **Garage:** {{ states('sensor.garage') }} Mbit/s"}"""
         ),
+      // One link on a line: drawn as one wrapping text that still taps through.
+      "markdown-link" to
+        card(
+          """{"type":"markdown","content":"Open the [energy dashboard](/energy) to see **today's** use."}"""
+        ),
       "history-graph" to
         card(
           """{"type":"history-graph","title":"Power","hours_to_show":24,"entities":["sensor.power","sensor.living_temperature"]}"""
@@ -335,6 +342,11 @@ class LauncherGridSweepTest {
       "statistics-graph" to
         card(
           """{"type":"statistics-graph","title":"Power","period":"hour","stat_types":["mean"],"entities":["sensor.power"]}"""
+        ),
+      // A stacked chart is one plot with a legend line per series below it.
+      "statistics-graph-stacked" to
+        card(
+          """{"type":"statistics-graph","title":"Power","period":"hour","stat_types":["mean"],"chart_type":"bar","stack":true,"entities":["sensor.power","sensor.living_temperature","sensor.humidity"]}"""
         ),
       "logbook" to
         card(

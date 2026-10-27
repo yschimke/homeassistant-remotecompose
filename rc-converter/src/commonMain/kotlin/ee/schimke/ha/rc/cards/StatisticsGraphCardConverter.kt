@@ -137,27 +137,31 @@ class StatisticsGraphCardConverter : DesignedCardConverter() {
       }
     }
     val series = ids.map { statisticPoints(snapshot, it, statType) }
+    // The line samples, which a narrow launcher widget's trend identity draws whatever the chart
+    // type, and a bar chart's bars besides.
+    val lines = SeriesDesign.slotBindings(ids, snapshot) { statisticPoints(snapshot, it, statType) }
     val floats =
       if ((card.raw["chart_type"]?.jsonPrimitive?.content ?: "line") != "bar") {
-        SeriesDesign.slotBindings(ids, snapshot) { statisticPoints(snapshot, it, statType) }
+        lines
       } else {
-        buildMap {
-          val stacked = isStacked(card)
-          if (stacked) put("card.stack_max", stackMax(series))
-          val buckets = series.maxOfOrNull { it.size } ?: 0
-          ids.forEachIndexed { i, id ->
-            val slot = CardDesignSlots.slotId(CardDesignSlots.domainOf(id), i)
-            val points = series[i]
-            if (stacked) {
-              repeat(buckets) { k -> put("$slot.stack.$k", stackValue(points, k)) }
-            } else {
-              val range = barRange(points)
-              put("$slot.bar_base", range.min)
-              put("$slot.bar_span", range.span)
-              points.forEachIndexed { k, v -> put("$slot.bar.$k", v) }
+        lines +
+          buildMap {
+            val stacked = isStacked(card)
+            if (stacked) put("card.stack_max", stackMax(series))
+            val buckets = series.maxOfOrNull { it.size } ?: 0
+            ids.forEachIndexed { i, id ->
+              val slot = CardDesignSlots.slotId(CardDesignSlots.domainOf(id), i)
+              val points = series[i]
+              if (stacked) {
+                repeat(buckets) { k -> put("$slot.stack.$k", stackValue(points, k)) }
+              } else {
+                val range = barRange(points)
+                put("$slot.bar_base", range.min)
+                put("$slot.bar_span", range.span)
+                points.forEachIndexed { k, v -> put("$slot.bar.$k", v) }
+              }
             }
           }
-        }
       }
     return CardSnapshotBindings(strings, emptyMap(), emptyMap(), floats)
   }
