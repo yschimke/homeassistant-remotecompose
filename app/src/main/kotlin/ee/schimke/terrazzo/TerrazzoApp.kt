@@ -62,6 +62,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -147,6 +148,16 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
   LaunchedEffect(session) {
     val s = session ?: return@LaunchedEffect
     ee.schimke.terrazzo.notify.HaPushReceiver.run(appContext, graph, s)
+  }
+
+  // The routine refresh runs while there is a widget, on the launcher or a watch, to refresh.
+  LaunchedEffect(Unit) {
+    kotlinx.coroutines.flow
+      .combine(graph.widgetStore.installed, graph.wearSyncManager.watchWidgets) { home, watch ->
+        home.isNotEmpty() to watch.isNotEmpty()
+      }
+      .distinctUntilChanged()
+      .collect { ee.schimke.terrazzo.widget.WidgetRoutineRefreshWorker.sync(appContext) }
   }
 
   // The launcher and watch widgets follow this session's states, holding the Terrazzo

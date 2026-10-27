@@ -68,11 +68,27 @@ object LiveWidgetUpdates {
   }
 
   /**
-   * Follows [session]'s states for registration [webhookId] and redraws the widgets as they change,
-   * holding the integration's lease, until [stop] answers true for the entities followed (as last
-   * drawn) and the time since they last changed, or the caller is cancelled. Returns whether the
-   * integration took the lease: without it (no integration, or one older than state wakes) only an
-   * open app keeps widgets current.
+   * The entities read by every launcher widget on [baseUrl], live updates on or off, and by the
+   * live watch widgets: what a connected session redraws as they change. A widget without live
+   * updates still keeps up while the app happens to be running.
+   */
+  suspend fun shownEntities(context: Context, baseUrl: String): Set<String> {
+    val graph = context.terrazzoGraph()
+    val launcher =
+      graph.widgetStore.installed
+        .first()
+        .filter { it.baseUrl == baseUrl }
+        .flatMapTo(mutableSetOf()) { referencedEntities(it.card) }
+    return launcher + graph.wearSyncManager.watchedEntities()
+  }
+
+  /**
+   * Follows [session]'s states for registration [webhookId] and redraws the widgets as they change
+   * (every one: [shownEntities]), holding the integration's lease for the live ones
+   * ([watchedEntities]), until [stop] answers true for the entities followed (as last drawn) and
+   * the time since they last changed, or the caller is cancelled. Returns whether the integration
+   * took the lease: without it (no integration, or one older than state wakes) only an open app
+   * keeps widgets current.
    */
   suspend fun follow(
     context: Context,
@@ -85,10 +101,12 @@ object LiveWidgetUpdates {
     if (DemoData.isDemo(session.baseUrl)) return@coroutineScope false
     session.connectionStatus.first { it == SessionConnectionStatus.Connected }
     var ids = watchedEntities(context, session.baseUrl)
+    var followed = shownEntities(context, session.baseUrl)
     var leased = false
     // Best effort: a dropped socket fails one renewal, and the next reconnected one takes it again.
     suspend fun lease() {
       ids = watchedEntities(context, session.baseUrl)
+      followed = shownEntities(context, session.baseUrl)
       try {
         leased = session.watchStates(webhookId, ids, LEASE_SECONDS) != null
       } catch (cancelled: CancellationException) {
@@ -118,7 +136,7 @@ object LiveWidgetUpdates {
     val follower = launch {
       session.liveStates
         .filterNotNull()
-        .map { snapshot -> snapshot to ids.associateWith { snapshot.states[it] } }
+        .map { snapshot -> snapshot to followed.associateWith { snapshot.states[it] } }
         .distinctUntilChanged { a, b -> a.second == b.second }
         .collectLatest { (snapshot, watched) ->
           latest = snapshot to watched

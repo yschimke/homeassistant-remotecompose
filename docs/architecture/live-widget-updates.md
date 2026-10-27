@@ -5,10 +5,21 @@ While the app holds a session that is enough; once it doesn't, the Terrazzo inte
 when an entity a widget shows visibly changes, with the same content-free FCM wake as
 [notifications](notifications.md).
 
+## Every widget: while the app runs, and routinely
+
+Every widget, live updates on or off, keeps up in two ways that need no wake:
+
+- **While the app runs.** Its session follows every launcher widget's entities and redraws them as
+  they change (`LiveWidgetUpdates.follow`), whether or not the app is on screen.
+- **Routinely.** `WidgetRoutineRefreshWorker`, a WorkManager periodic job every 30 minutes with a
+  network, reads each Home Assistant with widgets on it once, redraws them and sends the watch its
+  values. It is scheduled while there is a launcher widget, or a watch with Terrazzo widgets placed,
+  and cancels itself once there is none.
+
 ## Opting in, per widget
 
-Live updates are a setting of each widget, off by default: an off widget shows what the app last
-saw, as before. The launcher widget's editor (long-press it, or tap it on the app's Widgets screen)
+Live updates are a setting of each widget, off by default: an off widget keeps up only in the ways
+above. The launcher widget's editor (long-press it, or tap it on the app's Widgets screen)
 has a **Live updates** switch, and each watch widget's row on the Widgets screen has one too.
 With every switch off the integration is told no entities, and nothing wakes the app.
 

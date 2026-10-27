@@ -233,8 +233,9 @@ internal fun WidgetConfigureScreen(
 }
 
 /**
- * A widget's live updates switch: off, it shows what the app last saw; on, a visible change in Home
- * Assistant wakes the app to redraw it (`docs/architecture/live-widget-updates.md`).
+ * A widget's live updates switch: off, it updates while the app is running and from the routine
+ * refresh ([WidgetRoutineRefreshWorker]); on, a visible change in Home Assistant also wakes the app
+ * to redraw it (`docs/architecture/live-widget-updates.md`).
  */
 @Composable
 internal fun LiveUpdatesRow(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
@@ -242,8 +243,8 @@ internal fun LiveUpdatesRow(checked: Boolean, onCheckedChange: (Boolean) -> Unit
     headlineContent = { Text("Live updates") },
     supportingContent = {
       Text(
-        "Keep this widget current while the app is closed. Home Assistant wakes the app when " +
-          "it visibly changes, which uses some battery."
+        "Off, it updates while the app is running and about every 30 minutes. On, Home " +
+          "Assistant wakes the app as soon as it visibly changes, which uses some battery."
       )
     },
     trailingContent = { Switch(checked = checked, onCheckedChange = null) },

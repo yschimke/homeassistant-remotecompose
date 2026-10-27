@@ -54,6 +54,9 @@ interface WearSyncManager {
   /** Shows the card [cardKey] on [instanceId], a widget on watch [nodeId]. */
   fun chooseWatchWidgetCard(nodeId: String, instanceId: Int, cardKey: String) {}
 
+  /** Whether a paired watch has Terrazzo widgets placed, as the watches last reported. */
+  suspend fun hasPlacedWidgets(): Boolean = false
+
   /** Turns live updates for [instanceId], a widget on watch [nodeId], [on] or off. */
   fun setWatchWidgetLive(nodeId: String, instanceId: Int, on: Boolean) {}
 

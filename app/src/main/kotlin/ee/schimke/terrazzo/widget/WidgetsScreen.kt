@@ -220,8 +220,8 @@ internal fun WidgetsContent(
         item { SectionHeader("Watch") }
         item {
           Text(
-            "Tap a widget to choose its card. Turn on Live to keep it current while the app is " +
-              "closed. To add or remove one, use your watch's widget list.",
+            "Tap a widget to choose its card. Turn on its switch for live updates while the app " +
+              "is closed. To add or remove one, use your watch's widget list.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),

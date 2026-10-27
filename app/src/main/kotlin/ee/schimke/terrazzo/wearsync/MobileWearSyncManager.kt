@@ -1037,6 +1037,12 @@ class MobileWearSyncManager(
     managerScope.launch { watchWidgetChoices.choose(nodeId, instanceId, cardKey) }
   }
 
+  override suspend fun hasPlacedWidgets(): Boolean {
+    // A process started for the refresh hasn't read them yet.
+    if (placedWidgets.value == null) readPlacedWidgets()
+    return placedWidgets.value.orEmpty().values.any { it.widgets.isNotEmpty() }
+  }
+
   override fun setWatchWidgetLive(nodeId: String, instanceId: Int, on: Boolean) {
     if (!::managerScope.isInitialized) return
     managerScope.launch { watchWidgetLive.set(nodeId, instanceId, on) }
