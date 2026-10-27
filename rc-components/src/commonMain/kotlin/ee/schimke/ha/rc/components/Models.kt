@@ -214,6 +214,8 @@ data class HaPictureEntityData(
   val imageUrl: String? = null,
   val frameStamp: String? = null,
   val tapAction: HaAction = HaAction.None,
+  /** The entity [imageUrl] is the picture of: the card's `camera_image` camera, else [entityId]. */
+  val pictureEntityId: String? = entityId,
 )
 
 /** `gauge` card model. Half-circle dial with current value + name + range. */
@@ -685,14 +687,20 @@ data class HaPictureCardData(
 )
 
 /**
- * `picture-glance` card model — image with a row of clickable entity cells overlaid (typically
- * lights / covers / switches).
+ * `picture-glance` card model — its picture ([imageUrl]) with a row of clickable entity cells
+ * (typically lights / covers / switches) under it.
  */
 data class HaPictureGlanceData(
   val title: String?,
   val captionUrl: String?,
   val placeholderIcon: ImageVector,
   val cells: List<HaPictureGlanceCell>,
+  /** The picture drawn behind the cells: `camera_image`'s, else the static `image`. */
+  val imageUrl: String? = null,
+  /**
+   * The entity [imageUrl] is the picture of (the `camera_image` camera); null for a static image.
+   */
+  val pictureEntityId: String? = null,
 )
 
 data class HaPictureGlanceCell(

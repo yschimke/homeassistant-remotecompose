@@ -212,6 +212,12 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
   override suspend fun takeHeldNotifications(webhookId: String) =
     delegate.takeHeldNotifications(webhookId)
 
+  override suspend fun watchStates(
+    webhookId: String,
+    entityIds: Collection<String>,
+    leaseSeconds: Int,
+  ) = delegate.watchStates(webhookId, entityIds, leaseSeconds)
+
   override suspend fun fireEvent(eventType: String, eventData: JsonObject) =
     delegate.fireEvent(eventType, eventData)
 }

@@ -2,15 +2,20 @@ package ee.schimke.ha.client.design
 
 import ee.schimke.ha.client.platformHttpClient
 import ee.schimke.ha.design.CardDesignSlots
+import ee.schimke.ha.design.DesignEntry
+import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLProtocol
 import io.ktor.http.Url
@@ -50,6 +55,68 @@ class CardStudioClient(serverUrl: String, engine: HttpClientEngine? = null) {
     return CardStudioHandoff(refreshed, handoff(refreshed))
   }
 
+  /**
+   * The UI Builder designs the design server opened for the person [token] (the design server's
+   * device token) belongs to, newest first: what they can publish. Those seeded for another card
+   * type are left out when [cardType] is given.
+   */
+  suspend fun studioDesigns(token: String, cardType: String? = null): List<StudioDesign> {
+    val response = http.get(base + "/api/my/studio") { bearer(token) }
+    if (!response.status.isSuccess()) throw CardPublishException(response.status.value)
+    return Json.parseToJsonElement(response.bodyAsText()).jsonArray.mapNotNull { element ->
+      val item = element.jsonObject
+      StudioDesign(
+          designId = item["designId"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null,
+          cardType = item["cardType"]?.jsonPrimitive?.contentOrNull,
+          handoff = item["handoff"]?.jsonPrimitive?.contentOrNull,
+        )
+        .takeIf { cardType == null || it.cardType == null || it.cardType == cardType }
+    }
+  }
+
+  /**
+   * Publish UI Builder design [designId] privately for [key]'s card, in each theme of its card
+   * style, under [variant] (one of its own by default, so another card's design for the same key
+   * stays): only the person [token] belongs to sees it. Returns its stable design id
+   * (`user:<designId>`), the skin a card is switched to.
+   */
+  suspend fun publishPrivately(
+    token: String,
+    designId: String,
+    key: DesignKey,
+    variant: String = privateVariant(designId),
+  ): String {
+    val response =
+      http.post(base + "/api/my/designs") {
+        bearer(token)
+        contentType(ContentType.Application.Json)
+        setBody(
+          buildJsonObject {
+            put("designId", designId)
+            put("key", Json.encodeToJsonElement(DesignKey.serializer(), key))
+            put("variant", variant)
+          }
+            .toString()
+        )
+      }
+    if (!response.status.isSuccess()) {
+      // A refusal for the design itself names what in it the app can't play: the design
+      // server's own words about its structure, never preview values.
+      val reason =
+        response.bodyAsText().take(300).takeIf {
+          response.status == HttpStatusCode.UnprocessableEntity
+        }
+      throw CardPublishException(response.status.value, reason)
+    }
+    val entry = Json.parseToJsonElement(response.bodyAsText()).jsonObject["entry"]?.jsonObject
+    return entry?.get("designId")?.jsonPrimitive?.contentOrNull
+      ?: DesignEntry.userDesignId(designId)
+  }
+
+  private fun io.ktor.client.request.HttpRequestBuilder.bearer(token: String) {
+    header(HttpHeaders.Authorization, "Bearer ${token.trim()}")
+  }
+
   private suspend fun request(path: String, body: JsonObject): JsonObject {
     val response =
       http.post(base + path) {
@@ -64,6 +131,45 @@ class CardStudioClient(serverUrl: String, engine: HttpClientEngine? = null) {
 }
 
 data class CardStudioHandoff(val document: JsonObject, val url: String)
+
+/**
+ * A UI Builder design the design server opened for this person, for [cardType]'s card, from card
+ * studio handoff [handoff] (the token at the end of [CardStudioClient.handoff]'s link).
+ */
+data class StudioDesign(val designId: String, val cardType: String?, val handoff: String? = null)
+
+/**
+ * Which of [designs] (newest first) to publish for a card whose studio opened [opened] handoffs:
+ * the newest opened from this card, else the only one there is. Null when it isn't clear, rather
+ * than another card's design.
+ */
+fun designForCard(designs: List<StudioDesign>, opened: Collection<String>): StudioDesign? =
+  designs.firstOrNull { it.handoff != null && it.handoff in opened } ?: designs.singleOrNull()
+
+/** The handoff token in a link [CardStudioClient.handoff] returned. */
+fun handoffToken(url: String): String = url.substringAfterLast('/')
+
+/**
+ * The variant a card studio design publishes under: its own (`mine-` and a hash of its UI Builder
+ * id), so designs for two cards of the same key sit side by side, and republishing one replaces
+ * only it.
+ */
+fun privateVariant(designId: String): String =
+  "mine-" + Sha256.hex(designId.encodeToByteArray()).take(12)
+
+/** Why a private publish failed, in words for the person; never echoes preview data. */
+class CardPublishException(val status: Int, reason: String? = null) :
+  IllegalStateException(
+    when (status) {
+      401 ->
+        "The design server didn't accept this device's token. Create a new one on its /my page."
+      403 -> "Only a design you made or edit in UI Builder can be published."
+      404 -> "This design server can't publish designs. Update it or choose another server."
+      422 -> reason ?: "That design can't be used for this card."
+      503 -> "UI Builder is not configured on this design server."
+      else -> "Publishing failed ($status). Check the design server and try again."
+    }
+  )
 
 /** Safe, actionable errors; server response bodies may contain private preview text. */
 class CardStudioException(val status: Int) :

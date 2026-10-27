@@ -119,7 +119,17 @@ class PictureEntityCardConverter : DesignedCardConverter() {
       if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
 
     val icons = HaIconMap.entityIcons(card.raw["icon"]?.jsonPrimitive?.content, entity)
-    val imageUrl = entity?.attributes?.get("entity_picture")?.jsonPrimitive?.content
+    // HA draws `camera_image`'s picture when the card names one (a door sensor over the camera
+    // watching the door), else the entity's own.
+    val cameraId = card.raw["camera_image"]?.jsonPrimitive?.contentOrNull?.takeIf { '.' in it }
+    val pictureEntityId = cameraId ?: entityId
+    val imageUrl =
+      pictureEntityId
+        ?.let { snapshot.states[it] }
+        ?.attributes
+        ?.get("entity_picture")
+        ?.jsonPrimitive
+        ?.content
     return HaPictureEntityData(
       entityId = entityId,
       name = name,
@@ -129,6 +139,7 @@ class PictureEntityCardConverter : DesignedCardConverter() {
       showName = showName,
       showState = showState,
       imageUrl = imageUrl,
+      pictureEntityId = pictureEntityId,
       tapAction = tapAction,
     )
   }

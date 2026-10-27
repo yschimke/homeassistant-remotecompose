@@ -98,6 +98,30 @@ class WearCardDesignPickerTest {
   }
 
   @Test
+  fun anInstalledSelectedPhoneOnlyDesignWinsOverGenericWearDesigns() {
+    val selected = byteArrayOf(42)
+    val id = "installed-skin"
+    val overrides =
+      CardDesignOverrides(
+        byCard = mapOf(cardFingerprint(card) to CardDesignOverride(designId = id))
+      )
+    val loaded =
+      designs(
+          mapOf(key.forWearWidget(DesignKey.WEAR_SMALL) to byteArrayOf(99)),
+          choice.copy(overrides = overrides, skins = setOf(id)),
+        )
+        .copy(
+          byDesign =
+            ee.schimke.ha.client.design.DesignsById(
+              mapOf(id to listOf(ee.schimke.ha.client.design.DesignedBlob(key, null, selected)))
+            )
+        )
+    val picked = wearCardDesigns(listOf("pin1" to card), snapshot, loaded)
+    assertEquals(2, picked.size)
+    picked.forEach { assertContentEquals(selected, it.second) }
+  }
+
+  @Test
   fun aCardsOwnVariantOverrideWins() {
     val garage = byteArrayOf(5)
     val overrides =
@@ -120,17 +144,17 @@ class WearCardDesignPickerTest {
   }
 
   @Test
-  fun nothingIsSentWithoutServerDesignsOrForTooBigAOne() {
+  fun noDesignsAreSentBeforeLoadingButLargeInstalledDesignsAreNotDropped() {
     assertTrue(wearCardDesigns(listOf("pin1" to card), snapshot, CardDesigns()).isEmpty())
-    val huge = ByteArray(WEAR_DESIGN_MAX_BYTES + 1)
-    assertTrue(
+    val huge = ByteArray(ee.schimke.terrazzo.wearsync.proto.INLINE_PROTO_LIMIT + 1)
+    val picked =
       wearCardDesigns(
-          listOf("pin1" to card),
-          snapshot,
-          designs(mapOf(key.forWearWidget(DesignKey.WEAR_SMALL) to huge)),
-        )
-        .isEmpty()
-    )
+        listOf("pin1" to card),
+        snapshot,
+        designs(mapOf(key.forWearWidget(DesignKey.WEAR_SMALL) to huge)),
+      )
+    assertEquals(1, picked.size)
+    assertContentEquals(huge, picked.single().second)
   }
 
   @Test

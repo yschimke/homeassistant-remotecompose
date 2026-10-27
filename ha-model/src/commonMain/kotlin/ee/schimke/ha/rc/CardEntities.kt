@@ -157,8 +157,9 @@ fun cardDataSignature(entityIds: Set<String>, snapshot: HaSnapshot): String {
 /**
  * Recursively walks [card] for `type: picture-entity` nodes (including picture-entity cards nested
  * in stack / grid / conditional / horizontal / vertical layouts) and returns the `entity:`
- * referenced by each. Used by `CachedCardPreview` to discover which slots need a live bitmap
- * override when `entity_picture` rotates, and by [cardPictureSignature].
+ * referenced by each, and its `camera_image:` when it names one (the picture it draws); a
+ * `picture-glance`'s `camera_image:` too. Used by `CachedCardPreview` to discover which slots need
+ * a live bitmap override when `entity_picture` rotates, and by [cardPictureSignature].
  *
  * The set is ordered by first appearance for stable iteration. Entries without a `domain.id`-shaped
  * value are skipped (mirrors [cardEntityIds]).
@@ -194,6 +195,11 @@ private fun collectPictureEntities(element: JsonElement, out: MutableSet<String>
       if (type == "picture-entity") {
         val entity = element["entity"]?.let { it as? JsonPrimitive }?.contentOrNull
         if (entity != null && entity.contains('.')) out.add(entity)
+      }
+      if (type == "picture-entity" || type == "picture-glance") {
+        // The camera whose picture the card draws instead of the entity's own.
+        val camera = element["camera_image"]?.let { it as? JsonPrimitive }?.contentOrNull
+        if (camera != null && camera.contains('.')) out.add(camera)
       }
       for ((_, value) in element) collectPictureEntities(value, out)
     }

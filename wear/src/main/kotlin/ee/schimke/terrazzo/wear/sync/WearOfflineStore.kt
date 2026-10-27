@@ -122,11 +122,9 @@ class WearOfflineStore(context: Context) {
   fun readSlotDesigns(): WearSlotDesigns? =
     File(root, "slot-designs.pb").readBytesOrNull()?.let { decodeProto<WearSlotDesigns>(it) }
 
-  /** Stores [value], and forgets the designs it no longer names. */
+  /** Stores the index. Blobs can arrive before it; only explicit deletions remove them. */
   fun writeSlotDesigns(value: WearSlotDesigns) {
     File(root, "slot-designs.pb").atomicWriteBytes(encodeProto(value))
-    val named = value.designs.map { it.sha256 }.toSet()
-    designsDir.listFiles().orEmpty().forEach { if (it.nameWithoutExtension !in named) it.delete() }
   }
 
   /** The template of the design [sha256] names, or null when it isn't here or doesn't verify. */

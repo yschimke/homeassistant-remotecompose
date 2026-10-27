@@ -136,6 +136,28 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     }
   }
 
+  /**
+   * The last Terrazzo widget left the home screen. Any row still in the store is an orphan whose
+   * `onDeleted` was missed, so reconcile against the launcher (which now lists none) to free them.
+   */
+  override fun onDisabled(context: Context) {
+    super.onDisabled(context)
+    runBlocking { WidgetSync.reconcile(context) }
+  }
+
+  /**
+   * A backup was restored and the launcher gave the restored widgets new ids. Carry each row over
+   * to its new id, then drop anything the launcher still doesn't list; [onUpdate] follows and
+   * renders them.
+   */
+  override fun onRestored(context: Context, oldWidgetIds: IntArray, newWidgetIds: IntArray) {
+    super.onRestored(context, oldWidgetIds, newWidgetIds)
+    runBlocking {
+      context.terrazzoGraph().widgetStore.remap(oldWidgetIds, newWidgetIds)
+      WidgetSync.reconcile(context)
+    }
+  }
+
   @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
   private fun renderAndPublish(
     context: Context,
@@ -209,7 +231,9 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
    * [onRendered] hears how the card was drawn (its launcher design, else its converter), in which
    * card style, and the card type whose design drew it (a wrapper such as `conditional` draws its
    * shown card's), for template usage; install previews pass none. Launcher designs have no style
-   * variant — their key's variant is the cell size, which usage never records.
+   * variant — their key's variant is the cell size, which usage never records. [styleCard] is the
+   * card whose style override applies: [card] itself, except in the widget editor, where an unsaved
+   * label edit mustn't detach the widget from its own style.
    */
   internal fun renderPreview(
     context: Context,
@@ -219,6 +243,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     targetSizeDp: WidgetSizeDp,
     widgetId: Int = AppWidgetManager.INVALID_APPWIDGET_ID,
     onRendered: ((source: UsageSource, cardStyle: String, cardType: String) -> Unit)? = null,
+    styleCard: ee.schimke.ha.model.CardConfig = card,
   ): RemoteViews? {
     val registry = defaultRegistry().withEnhancedShutter()
     val widthPx = WidgetSizing.dpToPx(context, targetSizeDp.widthDp)
@@ -236,7 +261,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
         android.content.res.Configuration.UI_MODE_NIGHT_YES
 
-    val look = launcherLook(context, card)
+    val look = launcherLook(context, styleCard)
 
     // Share fetches (including failures) between the template and direct paths. Keep image bytes
     // comfortably below Binder's transaction limit even for cards containing several pictures.

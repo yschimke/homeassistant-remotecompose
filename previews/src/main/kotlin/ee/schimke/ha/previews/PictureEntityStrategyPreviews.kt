@@ -182,6 +182,65 @@ fun PictureEntity_WidgetMode_Light() {
   }
 }
 
+/** A door sensor drawn over the camera watching the door (`camera_image`). */
+private val pictureCameraImageCard: CardConfig =
+  card(
+    """{"type":"picture-entity","entity":"binary_sensor.front_door","camera_image":"camera.preview_cam","show_name":true,"show_state":true}"""
+  )
+
+private val pictureCameraImageSnapshot: HaSnapshot =
+  pictureSampleSnapshotWithImage.copy(
+    states =
+      pictureSampleSnapshotWithImage.states +
+        ("binary_sensor.front_door" to
+          EntityState(
+            entityId = "binary_sensor.front_door",
+            state = "off",
+            attributes =
+              JsonObject(
+                mapOf(
+                  "friendly_name" to JsonPrimitive("Front door"),
+                  "device_class" to JsonPrimitive("door"),
+                )
+              ),
+          ))
+  )
+
+@Preview(
+  name = "picture-entity camera-image (light)",
+  showBackground = false,
+  widthDp = PICTURE_TILE_WIDTH_DP,
+  heightDp = PICTURE_TILE_HEIGHT_DP,
+)
+@Composable
+fun PictureEntity_CameraImage_Light() {
+  // The sensor has no picture of its own: the disc is the camera's, from `camera_image`.
+  val prefetched = remember { sampleBitmap(SAMPLE_PICTURE_BITMAP_PX).asImageBitmap() }
+  val strategy = remember(prefetched) { PictureImageStrategy.Inline { prefetched } }
+  Box(modifier = Modifier.uiFillMaxWidth().uiHeight(PICTURE_TILE_HEIGHT_DP.dp)) {
+    CachedCardPreview(
+      cacheKey = PicturePreviewKey(pictureCameraImageCard, HaTheme.Light, widget = true),
+      profile = androidXExperimentalWrap,
+      modifier = Modifier.uiFillMaxWidth(),
+      card = pictureCameraImageCard,
+      snapshot = pictureCameraImageSnapshot,
+      onDocument = rememberRemoteDocumentSink(),
+    ) {
+      CompositionLocalProvider(LocalPictureImageStrategy provides strategy) {
+        ProvideCardRegistry(defaultRegistry()) {
+          ProvideHaTheme(HaTheme.Light) {
+            RenderChild(
+              pictureCameraImageCard,
+              pictureCameraImageSnapshot,
+              RemoteModifier.rcFillMaxWidth(),
+            )
+          }
+        }
+      }
+    }
+  }
+}
+
 @Preview(
   name = "picture-entity icon-fallback (light)",
   showBackground = false,

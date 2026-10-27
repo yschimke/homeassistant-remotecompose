@@ -1,16 +1,18 @@
 package ee.schimke.terrazzo.core.session
 
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.withLiveHistoryTail
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 /**
  * [this] — the snapshot a dashboard was loaded with — moved onto the entity states of [live]. Keeps
  * what a `state_changed` feed doesn't carry (history, statistics, forecasts, themes, locale), and
- * the device registry when [live] has none.
+ * the device registry when [live] has none; each history series ends at its entity's live state, so
+ * a history graph's line keeps moving between loads.
  */
 fun HaSnapshot.withLiveStates(live: HaSnapshot): HaSnapshot =
-  copy(states = live.states, devices = live.devices.ifEmpty { devices })
+  copy(states = live.states, devices = live.devices.ifEmpty { devices }).withLiveHistoryTail()
 
 /**
  * The snapshot a dashboard loaded with [loaded] should show as [HaSession.liveStates] changes:

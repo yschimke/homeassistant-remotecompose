@@ -13,17 +13,17 @@ import ee.schimke.terrazzo.dashboard.cardDevice
 import ee.schimke.terrazzo.wearsync.proto.WearSlotDesign
 
 /**
- * The Wear widget design each pinned card gets, per container: the design server's Wear widget
- * design made from the design the card draws with on the phone ([DesignKey.forWearWidget] of its
- * key in the card's variant, then `default`, its device's design first), so a watch widget showing
- * the card draws the same design as the dashboard, rooted on the Wear container. Every pinned card
- * gets them: the watch chooses which card a widget shows, from the cards it was sent. The watch is
- * dark, so it is the card's dark design. A card or container the server has no Wear design for is
- * left out: the watch draws the card's own design there, as it always has.
+ * The template each Wear card gets, per container: the design server's Wear widget design made from
+ * the design the card draws with on the phone ([DesignKey.forWearWidget] of its key in the card's
+ * variant, then `default`, its device's design first), so a watch widget showing the card draws the
+ * same design as the dashboard, rooted on the Wear container. Every pinned card gets them: the
+ * watch chooses which card a widget shows, from the cards it was sent. The watch is dark, so it is
+ * the card's dark design. A card or container the server has no Wear design for is sent its phone
+ * template, adapted to the Wear frame by the watch.
  *
  * Empty while no design server is configured or its designs haven't loaded.
  *
- * @param cards each pinned card, by its pin's `cardKey`.
+ * @param cards by pin key (older widgets) or received config fingerprint (every Wear surface).
  */
 internal fun wearCardDesigns(
   cards: List<Pair<String, CardConfig>>,
@@ -42,24 +42,30 @@ internal fun wearCardDesigns(
     val device = cardDevice(design, snapshot)
     DesignKey.WEAR_CONTAINERS.mapNotNull { container ->
       val keys = variants.map { it.forWearWidget(container) }
+      // A selected installed skin may only ship a phone template. Send that template rather than
+      // silently substituting a generic Wear design; the watch adapts its card box to its frame.
+      val selected =
+        override?.designId?.let { id ->
+          designs.byDesign.find(id, keys.first(), device)?.second
+            ?: designs.byDesign.find(id, variants.first(), device)?.second
+        }
       // The design the card was switched to, when it has a Wear widget design for the container.
       val bytes =
-        override?.designId?.let { designs.byDesign.find(it, keys.first(), device)?.second }
+        selected
           ?: keys.firstNotNullOfOrNull { k ->
             device?.let { DeviceMatch.pick(designs.deviceByKey[k].orEmpty(), it) }
           }
           ?: keys.firstNotNullOfOrNull { designs.byKey[it] }
-      bytes
-        ?.takeIf { it.size <= WEAR_DESIGN_MAX_BYTES }
-        ?.let {
-          WearSlotDesign(cardKey, container, ee.schimke.ha.client.design.Sha256.hex(it)) to it
-        }
+          ?: variants.firstNotNullOfOrNull { k ->
+            device?.let { DeviceMatch.pick(designs.deviceByKey[k].orEmpty(), it) }
+          }
+          ?: variants.firstNotNullOfOrNull { designs.byKey[it] }
+      bytes?.let {
+        WearSlotDesign(cardKey, container, ee.schimke.ha.client.design.Sha256.hex(it)) to it
+      }
     }
   }
 }
-
-/** One DataItem's size limit, with headroom: a bigger design stays on the phone. */
-internal const val WEAR_DESIGN_MAX_BYTES = 90_000
 
 /**
  * The cards the watch can place as Wear widgets, from what the phone shows on it: [pinned], each

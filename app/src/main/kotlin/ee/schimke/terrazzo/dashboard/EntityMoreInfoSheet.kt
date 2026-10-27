@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.HaStateColor
+import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaReadoutStyle
 import ee.schimke.ha.rc.icons.HaIconMap
 import java.time.ZoneId
@@ -62,9 +63,11 @@ import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * What a `more-info` tap opens on the dashboard: a half-height sheet led by the entity's icon, name
- * and live value, then its history over a chosen range — a line chart for a numeric entity
- * (sensors), an on/off timeline for anything else (switches, binary sensors, lights) — with a
- * summary under it, then the entity's attributes.
+ * and live value (a camera's live view first, [LiveCameraFeed], or [camera]'s for an entity a
+ * picture card pairs with one), the controls its domain and features call for ([entityControls];
+ * only with [onAction], the dashboard's dispatcher), then its history over a chosen range — a line
+ * chart for a numeric entity (sensors), an on/off timeline for anything else (switches, binary
+ * sensors, lights) — with a summary under it, then the entity's attributes.
  *
  * Everything is drawn from the app theme's roles, so the sheet re-skins with the chosen palette;
  * the entity's accent (the icon badge, the chart line, the timeline's active runs) is its fixed
@@ -83,6 +86,10 @@ fun EntityMoreInfoSheet(
   loadHistory: suspend (hours: Int) -> List<HistoryPoint>,
   onOpenHistory: (() -> Unit)?,
   onDismiss: () -> Unit,
+  readOnly: Boolean = false,
+  onAction: ((HaAction) -> Unit)? = null,
+  temperatureUnit: String? = null,
+  camera: CameraView? = null,
 ) {
   val sheetState = rememberModalBottomSheetState()
   ProvideScreenSkin {
@@ -94,7 +101,16 @@ fun EntityMoreInfoSheet(
       containerColor = skin.background,
       contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
-      EntityMoreInfo(entityId, state, loadHistory, onOpenHistory)
+      EntityMoreInfo(
+        entityId,
+        state,
+        loadHistory,
+        onOpenHistory,
+        readOnly = readOnly,
+        onAction = onAction,
+        temperatureUnit = temperatureUnit,
+        camera = camera,
+      )
     }
   }
 }
@@ -115,6 +131,10 @@ fun EntityMoreInfo(
   modifier: Modifier = Modifier,
   initialHistory: List<HistoryPoint>? = null,
   nowMs: () -> Long = System::currentTimeMillis,
+  readOnly: Boolean = false,
+  onAction: ((HaAction) -> Unit)? = null,
+  temperatureUnit: String? = null,
+  camera: CameraView? = null,
 ) {
   val attributes = state?.attributes.orEmpty()
   val name = attributes["friendly_name"]?.jsonPrimitive?.contentOrNull ?: entityId
@@ -149,7 +169,25 @@ fun EntityMoreInfo(
     verticalArrangement = Arrangement.spacedBy(16.dp),
   ) {
     Header(name, entityId, state, accent)
+    // A camera, or the camera a picture card pairs with this entity, leads with what it sees.
+    val view = camera ?: CameraView(entityId, state).takeIf { entityId.startsWith("camera.") }
+    if (view != null) {
+      LiveCameraFeed(view.entityId, view.state, Modifier.padding(horizontal = 16.dp))
+    }
     Hero(state, unit, accent, nowMs)
+    if (onAction != null) {
+      val controls =
+        remember(entityId, state, temperatureUnit) {
+          entityControls(entityId, state, temperatureUnit)
+        }
+      EntityControlsPanel(
+        controls,
+        accent,
+        readOnly,
+        onAction,
+        Modifier.padding(horizontal = 16.dp),
+      )
+    }
 
     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
       RANGES.forEachIndexed { index, (label, rangeHours) ->
@@ -521,7 +559,7 @@ internal fun changeCount(points: List<HistoryPoint>): Int =
   points.zipWithNext().count { (a, b) -> a.state != b.state }
 
 /** `on` → `On`, `heat_cool` → `Heat cool`; numbers and mixed-case text stay as they are. */
-private fun displayState(state: String): String =
+internal fun displayState(state: String): String =
   if (state.any { it.isUpperCase() } || state.toFloatOrNull() != null) state
   else state.replace('_', ' ').replaceFirstChar { it.uppercase() }
 

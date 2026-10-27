@@ -28,6 +28,7 @@ import ee.schimke.terrazzo.core.pin.PinnedCardData
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
+import ee.schimke.terrazzo.core.wearsync.WatchWidget
 import ee.schimke.terrazzo.core.wearsync.WearSyncManager
 import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.dashboard.CardDesignPreload
@@ -45,12 +46,18 @@ import ee.schimke.terrazzo.wearsync.proto.WEAR_EXTRA_ATTRIBUTES
 import ee.schimke.terrazzo.wearsync.proto.WearDesignBlob
 import ee.schimke.terrazzo.wearsync.proto.WearLease
 import ee.schimke.terrazzo.wearsync.proto.WearPicture
+import ee.schimke.terrazzo.wearsync.proto.WearPlacedWidgets
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 import ee.schimke.terrazzo.wearsync.proto.WearSlotDesign
 import ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
+import ee.schimke.terrazzo.wearsync.proto.WearWidgetCardChoice
+import ee.schimke.terrazzo.wearsync.proto.WearWidgetCards
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
+import ee.schimke.terrazzo.wearsync.proto.protoPayload
+import ee.schimke.terrazzo.wearsync.proto.putProtoPayload
+import ee.schimke.terrazzo.wearsync.proto.wearWidgetCardOptions
 import ee.schimke.terrazzo.widget.WidgetImages
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -89,6 +96,8 @@ import kotlinx.serialization.json.jsonPrimitive
  *   `/wear/stream` (MessageClient ephemeral deltas) when wear holds an active lease
  * - [PinStore.cards] → `/wear/pinned`
  * - [PinStore.sections] → `/wear/sections`
+ * - each watch's `/wear/placed-widgets` → [watchWidgets], and the card the phone chose for each of
+ *   those widgets → `/wear/widget-cards`
  *
  * Lease is tracked via MessageClient frames at `/wear/lease`: as long as a recent lease arrived (or
  * pinned cards exist) the manager streams deltas at the live cadence; otherwise it batches into the
@@ -144,11 +153,45 @@ class MobileWearSyncManager(
   private val wearPinnedCards: MutableStateFlow<List<Pair<String, CardConfig>>> =
     MutableStateFlow(emptyList())
 
+  /** The pinned cards and sections as last written to the watch: what its widgets can show. */
+  private val sentPinned = MutableStateFlow<PinnedCardSet?>(null)
+  private val sentSections = MutableStateFlow<PinnedSectionSet?>(null)
+
+  /**
+   * Each watch's placed Terrazzo widgets ([WearSyncPaths.PLACED_WIDGETS]), by node id; null until
+   * first read, so no choice is forgotten before the watches have been heard from.
+   */
+  private val placedWidgets = MutableStateFlow<Map<String, WearPlacedWidgets>?>(null)
+
+  /** The card the user chose for each watch widget. */
+  private val watchWidgetChoices by lazy { WatchWidgetChoiceStore(context) }
+  private val watchWidgetLive by lazy { WatchWidgetLiveStore(context) }
+
+  private val watchWidgetsState = MutableStateFlow<List<WatchWidget>>(emptyList())
+  override val watchWidgets: StateFlow<List<WatchWidget>> = watchWidgetsState
+
+  /** The choices last written to `/wear/widget-cards`, so an unchanged set isn't resent. */
+  private var lastWidgetCards: List<WearWidgetCardChoice>? = null
+
+  /** A watch placed or removed a widget: read every watch's list again. */
+  private val placedWidgetsListener = DataClient.OnDataChangedListener { events ->
+    val placedChanged = events.any { it.dataItem.uri.path == WearSyncPaths.PLACED_WIDGETS }
+    events.release()
+    if (placedChanged) managerScope.launch { readPlacedWidgets() }
+  }
+
   /** Every card sent to the watch, pinned or in a pinned section: whose pictures it needs. */
   private val wearPictureCards: MutableStateFlow<List<CardConfig>> = MutableStateFlow(emptyList())
 
   /** The Wear design blobs written to the Data Layer by this process, by sha256. */
   private val pushedDesigns = HashSet<String>()
+
+  // Avoid equal timestamps when multiple appearance changes are published in one millisecond.
+  private val appearanceClock = java.util.concurrent.atomic.AtomicLong()
+
+  private fun appearanceTimestamp(): Long = appearanceClock.updateAndGet {
+    maxOf(System.currentTimeMillis(), it + 1)
+  }
 
   /** The designs last written to `/wear/slot-designs`, so an unchanged choice isn't resent. */
   private var lastCardDesigns: List<WearSlotDesign>? = null
@@ -250,6 +293,9 @@ class MobileWearSyncManager(
    * the session.
    */
   private val tapCards = MutableStateFlow<Map<String, Map<String, CardConfig>>>(emptyMap())
+
+  /** Original mobile configs, retained for design override lookup before device resolution. */
+  private val dashboardDesignCards = MutableStateFlow<Map<String, List<CardConfig>>>(emptyMap())
 
   private fun publishTapCards(source: String, cards: List<CardSummary>) {
     tapCards.value =
@@ -401,8 +447,14 @@ class MobileWearSyncManager(
 
   /** Update the active session whenever login/demo state changes. */
   override fun setSession(session: HaSession?) {
+    if (session == null) {
+      sentPinned.value = null
+      sentSections.value = null
+      lastWidgetCards = null
+    }
     inputCards.value = emptyMap()
     tapCards.value = emptyMap()
+    dashboardDesignCards.value = emptyMap()
     sessionState.value = session
   }
 
@@ -496,22 +548,36 @@ class MobileWearSyncManager(
     }
       .onFailure { handleFailure("addListener", it) }
 
-    // Demo-mode flag → /wear/settings (and base url annotation).
+    // Current mobile settings → /wear/settings, including every appearance change.
     scope.launch {
-      combine(prefs.demoMode, sessionState, inputEditing) { demo, session, editing ->
+      combine(prefs.demoMode, sessionState, inputEditing, prefs.themeStyle, prefs.cardStyle) {
+          demo,
+          session,
+          editing,
+          theme,
+          style ->
           WearSettings(
             demoMode = demo,
+            themeStyle = theme.name,
+            cardStyle = style.id,
             inputEditingEnabled =
               editing &&
                 !demo &&
                 session != null &&
                 session !is ee.schimke.terrazzo.core.session.DemoHaSession,
             baseUrl = session?.baseUrl.orEmpty(),
-            updatedAtMs = System.currentTimeMillis(),
+            updatedAtMs = 0L,
           )
         }
         .distinctUntilChanged()
-        .collect { writeDataItem(WearSyncPaths.SETTINGS, encodeProto(it)) }
+        .combine(wearableAvailableState) { settings, available -> settings.takeIf { available } }
+        .filterNotNull()
+        .collect {
+          writeDataItem(
+            WearSyncPaths.SETTINGS,
+            encodeProto(it.copy(updatedAtMs = appearanceTimestamp())),
+          )
+        }
     }
 
     // Pinned cards → /wear/pinned. Source switched from
@@ -540,7 +606,62 @@ class MobileWearSyncManager(
           ) {
             pinnedEntities.value = entities
             publishTapCards(TAP_SOURCE_PINNED, cards.cards.map { it.card })
+            sentPinned.value = cards
           }
+        }
+    }
+
+    // The watches' placed widgets → the phone's list, and each one's card → /wear/widget-cards.
+    runCatching {
+      dataClient
+        .addListener(
+          placedWidgetsListener,
+          wearUri(WearSyncPaths.PLACED_WIDGETS),
+          DataClient.FILTER_LITERAL,
+        )
+        .addOnFailureListener { handleFailure("addListener placed widgets", it) }
+    }
+      .onFailure { handleFailure("addListener placed widgets", it) }
+    scope.launch { readPlacedWidgets() }
+    scope.launch {
+      combine(
+          placedWidgets.filterNotNull(),
+          watchWidgetChoices.choices,
+          sentPinned,
+          sentSections,
+          watchWidgetLive.live,
+        ) { placed, chosen, pinned, sections, liveUpdates ->
+          WidgetCardsInput(placed, chosen, pinned, sections, liveUpdates)
+        }
+        .collectLatest { (placed, chosen, pinned, sections, liveUpdates) ->
+          val options = wearWidgetCardOptions(pinned, sections)
+          // A removed widget, or an unpaired watch: its choice goes too.
+          val live = placed.flatMap { (node, widgets) ->
+            widgets.widgets.map { watchWidgetKey(node, it.instanceId) }
+          }
+          if (chosen.keys.any { it !in live }) watchWidgetChoices.retainOnly(live.toSet())
+          if (liveUpdates.any { it !in live }) watchWidgetLive.retainOnly(live.toSet())
+          // Only with every card known, pins and sections both written (empty ones are too): a
+          // partial list would stop waking for the rest.
+          if (pinned != null && sections != null) {
+            val cards = liveWatchWidgetCards(placed, chosen, options, liveUpdates)
+            watchWidgetLive.setEntities(
+              wearEntityIds(cards.map { it.rawJson }, registrySnapshot.value) +
+                cards.map { it.primaryEntityId }.filter { it.isNotEmpty() }
+            )
+          }
+          // After the entities, so whoever follows this list reads the new ones.
+          watchWidgetsState.value = watchWidgets(placed, chosen, options, liveUpdates)
+          // Nothing sent yet (signed out, or still starting): the watch keeps what it has.
+          if (pinned == null && sections == null) return@collectLatest
+          val cards = watchWidgetCardChoices(placed, chosen, options)
+          if (cards == lastWidgetCards) return@collectLatest
+          val written =
+            writeDataItem(
+              WearSyncPaths.WIDGET_CARDS,
+              encodeProto(WearWidgetCards(cards, updatedAtMs = System.currentTimeMillis())),
+            )
+          if (written) lastWidgetCards = cards
         }
     }
 
@@ -569,12 +690,13 @@ class MobileWearSyncManager(
           ) {
             sectionEntities.value = entities
             publishTapCards(TAP_SOURCE_SECTIONS, sections.sections.flatMap { it.cards })
+            sentSections.value = sections
           }
         }
     }
 
     // The cards the watch can place as widgets → whose pictures [pushPictures] and Wear designs
-    // [pushDesigns] send. The watch chooses a widget's card itself, from those it was sent: the
+    // [pushDesigns] send. The phone chooses each widget's card from those it sent (above): the
     // pinned cards get Wear widget designs; they and the pinned sections' cards get pictures.
     // `/wear/slots` is no longer written: the phone assigns no widget slots.
     scope.launch {
@@ -586,17 +708,30 @@ class MobileWearSyncManager(
         }
     }
 
-    // Pinned cards' Wear widget designs → /wear/slot-designs and /wear/design/<sha256>.
+    // Every Wear card's selected templates → /wear/slot-designs and /wear/design/<sha256>.
     scope.launch {
-      combine(wearPinnedCards, CardDesignPreload.designs.filterNotNull(), registrySnapshot) {
-          cards,
-          designs,
-          snapshot ->
-          val picked = wearCardDesigns(cards, snapshot, designs)
+      combine(
+          combine(wearPinnedCards, wearPictureCards, dashboardDesignCards) { pinned, all, dashboards
+            ->
+            pinned to (all + dashboards.values.flatten()).distinct()
+          },
+          CardDesignPreload.designs.filterNotNull(),
+          registrySnapshot,
+        ) { cards, designs, snapshot ->
+          val (pinned, all) = cards
+          val keyed =
+            pinned +
+              all.map {
+                ee.schimke.ha.client.design.cardFingerprint(resolveBambuDevices(it, snapshot)) to it
+              }
+          val picked = wearCardDesigns(keyed.distinctBy { it.first }, snapshot, designs)
           picked.map { it.first } to picked.associate { it.first.sha256 to it.second }
         }
+        .combine(wearableAvailableState) { designs, available -> designs to available }
         .whileSignedIn()
-        .collect { (cardDesigns, blobs) -> pushDesigns(cardDesigns, blobs) }
+        .collect { (payload, available) ->
+          if (available) pushDesigns(payload.first, payload.second)
+        }
     }
 
     // Republish dashboard styles even when neither pins nor entity values change.
@@ -701,6 +836,7 @@ class MobileWearSyncManager(
         val path = WearSyncPaths.dashboardPath(summary.urlPath)
         if (writeDataItem(path, encodeProto(data))) {
           publishTapCards(path, data.cards)
+          dashboardDesignCards.value = dashboardDesignCards.value + (path to cards)
           dashboardEntities.value =
             dashboardEntities.value +
               (path to wearEntityIds(data.cards.map { it.rawJson }, snapshot))
@@ -709,6 +845,7 @@ class MobileWearSyncManager(
       // Every dashboard listed and written: drop the ones Home Assistant no longer has.
       val current = summaries.map { WearSyncPaths.dashboardPath(it.urlPath) }
       dashboardEntities.value = dashboardEntities.value.filterKeys { it in current }
+      dashboardDesignCards.value = dashboardDesignCards.value.filterKeys { it in current }
       tapCards.value =
         tapCards.value.filterKeys {
           !it.startsWith(WearSyncPaths.DASHBOARD_PREFIX) || it in current
@@ -766,6 +903,51 @@ class MobileWearSyncManager(
       }
       delay(cadence)
     }
+  }
+
+  override suspend fun watchedEntities(): Set<String> = watchWidgetLive.entities()
+
+  /**
+   * Writes [snapshot]'s values for the watch's cards now, for a wake with no app session: its
+   * widgets read `/wear/values` while the watch app is closed.
+   */
+  override suspend fun pushValues(snapshot: HaSnapshot) {
+    // A process started for a wake hasn't published the dashboards yet: the entities in the
+    // `/wear/values` item last written stand in for the watch's cards.
+    val ids = watchEntityIds.ifEmpty { lastValuesKeys() }
+    if (ids.isEmpty()) return
+    val values = wearValues(snapshot, ids)
+    if (values == lastValuesItem) return
+    val payload = LiveValues(values = values, capturedAtMs = System.currentTimeMillis())
+    // A wake's session is signed in, though none was handed to [setSession].
+    if (writeDataItem(WearSyncPaths.VALUES, encodeProto(payload), signedIn = true)) {
+      lastValuesItem = values
+    }
+  }
+
+  private suspend fun lastValuesKeys(): Set<String> {
+    if (!wearableAvailableState.value) return emptySet()
+    val buffer =
+      runCatching {
+        dataClient.getDataItems(wearUri(WearSyncPaths.VALUES), DataClient.FILTER_LITERAL).await()
+      }
+        .onFailure {
+          if (it is CancellationException) throw it
+          handleFailure("getDataItems values", it)
+        }
+        .getOrNull() ?: return emptySet()
+    val payloads =
+      try {
+        buffer.map {
+          com.google.android.gms.wearable.DataMapItem.fromDataItem(it).dataMap.protoPayload()
+        }
+      } finally {
+        buffer.release()
+      }
+    return payloads
+      .mapNotNull { payload -> payload.read(dataClient)?.let { decodeProto<LiveValues>(it) } }
+      .flatMap { it.values.keys }
+      .toSet()
   }
 
   /** The `/wear/values` DataItem, when [values] changed since the last one written. */
@@ -842,7 +1024,7 @@ class MobileWearSyncManager(
       }
       pushedDesigns += sha
     }
-    val index = WearSlotDesigns(designs = designs, updatedAtMs = System.currentTimeMillis())
+    val index = WearSlotDesigns(designs = designs, updatedAtMs = appearanceTimestamp())
     if (!writeDataItem(WearSyncPaths.SLOT_DESIGNS, encodeProto(index))) return
     val current = blobs.keys.map(WearSyncPaths::designPath).toSet()
     val stale = dataItemPaths(WearSyncPaths.DESIGN_PREFIX).filter { it !in current }
@@ -851,15 +1033,70 @@ class MobileWearSyncManager(
     lastCardDesigns = designs
   }
 
+  override fun chooseWatchWidgetCard(nodeId: String, instanceId: Int, cardKey: String) {
+    if (!::managerScope.isInitialized) return
+    managerScope.launch { watchWidgetChoices.choose(nodeId, instanceId, cardKey) }
+  }
+
+  override suspend fun hasPlacedWidgets(): Boolean {
+    // A process started for the refresh hasn't read them yet.
+    if (placedWidgets.value == null) readPlacedWidgets()
+    return placedWidgets.value.orEmpty().values.any { it.widgets.isNotEmpty() }
+  }
+
+  override fun setWatchWidgetLive(nodeId: String, instanceId: Int, on: Boolean) {
+    if (!::managerScope.isInitialized) return
+    managerScope.launch { watchWidgetLive.set(nodeId, instanceId, on) }
+  }
+
+  /**
+   * Reads every watch's [WearPlacedWidgets] into [placedWidgets], by the node that wrote it. A
+   * failed read keeps the last list: an unknown answer must not forget the choices.
+   */
+  private suspend fun readPlacedWidgets() {
+    if (!wearableAvailableState.value) return
+    val buffer =
+      runCatching {
+        dataClient
+          .getDataItems(wearUri(WearSyncPaths.PLACED_WIDGETS), DataClient.FILTER_LITERAL)
+          .await()
+      }
+        .onFailure {
+          if (it is CancellationException) throw it
+          handleFailure("getDataItems placed widgets", it)
+        }
+        .getOrNull() ?: return
+    val items =
+      try {
+        buffer.mapNotNull { item ->
+          val node = item.uri.host ?: return@mapNotNull null
+          node to
+            com.google.android.gms.wearable.DataMapItem.fromDataItem(item).dataMap.protoPayload()
+        }
+      } finally {
+        buffer.release()
+      }
+    placedWidgets.value =
+      items
+        .mapNotNull { (node, payload) ->
+          payload.read(dataClient)?.let { decodeProto<WearPlacedWidgets>(it) }?.let { node to it }
+        }
+        .toMap()
+  }
+
   /** Writes [bytes] at [path]; false when the wearable API is unavailable or the write failed. */
-  private suspend fun writeDataItem(path: String, bytes: ByteArray): Boolean {
+  private suspend fun writeDataItem(
+    path: String,
+    bytes: ByteArray,
+    signedIn: Boolean = sessionState.value != null,
+  ): Boolean {
     if (!wearableAvailableState.value) return false
     // Signed out: nothing of the account may land after [clearWatchData]'s deletes.
-    if (path != WearSyncPaths.SETTINGS && sessionState.value == null) return false
+    if (path != WearSyncPaths.SETTINGS && !signedIn) return false
     return runCatching {
       val request =
         PutDataMapRequest.create(path).apply {
-          dataMap.putByteArray(KEY_PROTO, bytes)
+          dataMap.putProtoPayload(bytes)
           dataMap.putLong(KEY_TS, System.currentTimeMillis())
         }
       dataClient.putDataItem(request.asPutDataRequest().setUrgent()).await()
@@ -1166,3 +1403,12 @@ internal suspend fun <T> com.google.android.gms.tasks.Task<T>.await(): T =
     addOnSuccessListener { value -> cont.resumeWith(Result.success(value)) }
     addOnFailureListener { error -> cont.resumeWith(Result.failure(error)) }
   }
+
+/** What `/wear/widget-cards` and the phone's watch widget list are worked out from. */
+private data class WidgetCardsInput(
+  val placed: Map<String, WearPlacedWidgets>,
+  val chosen: Map<String, String>,
+  val pinned: PinnedCardSet?,
+  val sections: PinnedSectionSet?,
+  val liveUpdates: Set<String>,
+)

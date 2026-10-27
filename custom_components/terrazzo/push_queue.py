@@ -29,6 +29,7 @@ class PushQueue:
                 "relay_url": device["relay_url"],
                 "secret": device["secret"],
                 "held": list(device.get("held") or []),
+                "watched": list(device.get("watched") or []),
             }
 
     def to_data(self):
@@ -39,7 +40,12 @@ class PushQueue:
         stays the same across new tokens, so HA's registration only changes when it must."""
         device = self.devices.get(webhook_id)
         if device is None or device["user_id"] != user_id:
-            device = {"user_id": user_id, "secret": secrets.token_urlsafe(32), "held": []}
+            device = {
+                "user_id": user_id,
+                "secret": secrets.token_urlsafe(32),
+                "held": [],
+                "watched": [],
+            }
             self.devices[webhook_id] = device
         device["fcm_token"] = fcm_token
         device["relay_url"] = relay_url
@@ -71,6 +77,30 @@ class PushQueue:
         held = [m["message"] for m in device["held"] if now - m["at"] < HOLD_SECONDS]
         device["held"] = []
         return held
+
+    def owns(self, webhook_id, user_id):
+        """Whether [user_id] registered [webhook_id] for silent push."""
+        device = self.devices.get(webhook_id)
+        return device is not None and device["user_id"] == user_id
+
+    def wake_target(self, webhook_id):
+        """The device's FCM token and relay URL, or None for a device that never registered."""
+        device = self.devices.get(webhook_id)
+        return None if device is None else (device["fcm_token"], device["relay_url"])
+
+    def set_watched(self, webhook_id, entity_ids):
+        """Keeps the entities the device's widgets read, so their changes wake it after a restart
+        too (state_wakes.py). Returns whether that changed anything."""
+        device = self.devices[webhook_id]
+        watched = sorted(set(entity_ids))
+        if device.get("watched") == watched:
+            return False
+        device["watched"] = watched
+        return True
+
+    def watched(self):
+        """Per device, the entities its widgets read."""
+        return {w: d["watched"] for w, d in self.devices.items() if d.get("watched")}
 
     def forget(self, webhook_id):
         self.devices.pop(webhook_id, None)

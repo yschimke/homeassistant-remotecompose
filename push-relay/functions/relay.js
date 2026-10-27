@@ -7,6 +7,12 @@
 // (the app's FCM token, which registration has something waiting, and the app). The relay sends
 // FCM a data message with just { type: "sync", webhook_id }; the app wakes, connects to Home
 // Assistant and takes the held messages over its own authenticated websocket.
+//
+// The integration also wakes the app when an entity its widgets read changes, with
+//   { token, webhook_id, app_id, type: "state", urgent }
+// and the relay sends { type: "state", webhook_id }: the app reads the states itself. A routine
+// change isn't urgent and goes at normal priority, so FCM may hold it while the phone dozes; a
+// garage door starting to open goes at high priority.
 'use strict';
 
 /** Package names this relay wakes: the Terrazzo Android app. */
@@ -23,10 +29,14 @@ class RelayError extends Error {
   }
 }
 
+/** The wakes the relay sends: held messages to take, or widget states to read. */
+const WAKE_TYPES = new Set(['sync', 'state']);
+
 /**
- * Checks the integration's request [body] and returns the FCM wake for it: a high-priority data
- * message carrying only `type` and `webhook_id`, collapsing with earlier wakes still undelivered.
- * Throws a RelayError otherwise.
+ * Checks the integration's request [body] and returns the FCM wake for it: a data message carrying
+ * only `type` and `webhook_id`, collapsing with earlier wakes of that type still undelivered. A
+ * `sync` wake is always high priority; a `state` wake only when it is `urgent`. Throws a RelayError
+ * otherwise.
  */
 function buildWake(body) {
   if (!body || typeof body !== 'object') throw new RelayError(400, 'Expected a JSON body.');
@@ -41,10 +51,13 @@ function buildWake(body) {
   if (typeof webhookId !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(webhookId)) {
     throw new RelayError(400, 'Missing or invalid webhook_id.');
   }
+  const type = body.type === undefined ? 'sync' : body.type;
+  if (!WAKE_TYPES.has(type)) throw new RelayError(400, 'Unknown wake type.');
+  const high = type === 'sync' || body.urgent === true;
   return {
     token,
-    data: { type: 'sync', webhook_id: webhookId },
-    android: { priority: 'high', collapseKey: `sync-${webhookId}` },
+    data: { type, webhook_id: webhookId },
+    android: { priority: high ? 'high' : 'normal', collapseKey: `${type}-${webhookId}` },
   };
 }
 

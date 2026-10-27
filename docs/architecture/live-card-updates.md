@@ -43,6 +43,15 @@ Hosts: in-process (`CachedCardPreview.pushSnapshotBindings`) and the
 add-on stream (`addon-server` `StreamRoute`). Both read `HaLiveBindings`
 so they stay in lockstep.
 
+A card design template (library or someone's own) may also read the
+**shared values** every home has under a fixed entity id, in a
+named-value domain of their own beside `USER:`,
+`HA:<entity_id>.<value>` (`HA:sun.sun.elevation`): `HaSharedValues`
+derives them from the snapshot, and `CardDesignTemplates.playback` and
+the shared `templateBindings` push them beside the slot bindings. They
+follow the same rule: host-reproducible from the snapshot alone. See
+[Shared values](app-card-studio.md#shared-values-haentity_idvalue).
+
 ### 2. Document re-encode — for baked content
 
 Some content can't be a host-reproducible binding: a forecast strip, a
@@ -185,6 +194,10 @@ under a newer snapshot must never draw the stale bake, frame by frame.
   `templateValues`.
 - **Static / self-driven:** heading, clock (RemoteCompose time ops),
   unsupported.
+- **Wear container level** (not a card, the container around one on the watch): path 1. A battery,
+  humidity or percentage sensor's container fills or rings with its reading from
+  `<id>.numeric_state`, computed in-document; see
+  [wear-container-design.md](wear-container-design.md).
 
 ## Entity icons
 

@@ -6,8 +6,11 @@ import ee.schimke.terrazzo.wearsync.proto.PinnedCard
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSection
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
+import ee.schimke.terrazzo.wearsync.proto.WearWidgetCardChoice
+import ee.schimke.terrazzo.wearsync.proto.WearWidgetCards
 import java.io.File
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.After
@@ -68,6 +71,27 @@ class WearWidgetCardStoreTest {
     // Signed out: none of the account's cards stay.
     store.clear()
     assertTrue(store.readAll().isEmpty())
+  }
+
+  @Test
+  fun reconcileForgetsWidgetsNoLongerPlaced() {
+    val store = WearWidgetCardStore(context)
+    val now = 10_000_000L
+    store.write(7, WearWidgetCard("pin-kitchen", kitchen, chosenAtMs = 1))
+    store.write(9, WearWidgetCard("pin-office", office, chosenAtMs = 2))
+    // Chosen a moment ago, before the host lists its widget: kept for the grace period.
+    store.write(11, WearWidgetCard("pin-office", office, chosenAtMs = now - 1_000))
+
+    // Widget 7 was removed while the app wasn't running, so onRemoved never ran.
+    assertEquals(1, store.retainOnly(setOf(9), nowMs = now))
+    assertEquals(setOf(9, 11), store.readAll().keys)
+
+    // Once the grace period has passed, an unlisted choice goes too.
+    assertEquals(
+      1,
+      store.retainOnly(setOf(9), nowMs = now + WearWidgetCardStore.RECENT_CHOICE_GRACE_MS),
+    )
+    assertEquals(setOf(9), store.readAll().keys)
   }
 
   private val pinned =
@@ -141,5 +165,30 @@ class WearWidgetCardStoreTest {
     val options = listOf(clock, tile, forecast)
     assertEquals(options, options.forWidget(large = false))
     assertEquals(listOf(tile), options.forWidget(large = true))
+  }
+
+  @Test
+  fun thePhonesChoicesForThisWatchAreKept() {
+    val store = WearWidgetCardStore(context)
+    store.write(7, WearWidgetCard("pin-kitchen", kitchen, chosenAtMs = 1))
+    store.write(8, WearWidgetCard("pin-door", door, chosenAtMs = 1))
+    val cards =
+      WearWidgetCards(
+        cards =
+          listOf(
+            WearWidgetCardChoice("this-watch", 7, "pin-office", office),
+            WearWidgetCardChoice("this-watch", 9, "pin-boiler", boiler),
+            // Another watch's widget 8: not this one's.
+            WearWidgetCardChoice("other-watch", 8, "pin-office", office),
+          ),
+        updatedAtMs = 50,
+      )
+    assertTrue(applyWidgetCards(store, "this-watch", cards))
+    assertEquals(WearWidgetCard("pin-office", office, chosenAtMs = 50), store.read(7))
+    assertEquals("pin-boiler", store.read(9)?.cardKey)
+    // Not named for this watch: keeps what it has.
+    assertEquals("pin-door", store.read(8)?.cardKey)
+    // The same choices again change nothing.
+    assertFalse(applyWidgetCards(store, "this-watch", cards.copy(updatedAtMs = 60)))
   }
 }

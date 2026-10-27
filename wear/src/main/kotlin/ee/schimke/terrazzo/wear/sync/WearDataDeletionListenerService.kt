@@ -7,11 +7,13 @@ import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import ee.schimke.terrazzo.wear.widget.WearWidgetCardStore
 import ee.schimke.terrazzo.wear.widget.refreshAllCardWidgets
+import ee.schimke.terrazzo.wear.widget.syncWidgetCardsFromDataLayer
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
+import ee.schimke.terrazzo.wearsync.proto.protoPayload
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -21,10 +23,10 @@ import kotlinx.coroutines.runBlocking
  * the app runs.)
  *
  * The manifest filter wakes this only for the rarely written items — dashboards, pins, sections,
- * the pinned cards' Wear design index — never for `/wear/values` or pictures, which change on every
- * refresh: see [forgottenOnDeletion]. A changed design index redraws the widgets
- * ([redrawsOnChange]), which read their new designs from the Data Layer; so do new pins or
- * sections, which a placed widget may show.
+ * settings, card designs and the phone's widget card choices — never for `/wear/values` or
+ * pictures, which change on every refresh: see [forgottenOnDeletion]. A changed design index
+ * redraws the widgets ([redrawsOnChange]), which read their new designs from the Data Layer; so do
+ * new pins or sections, which a placed widget may show.
  *
  * Changed items are kept too ([persistChanged]), so the app opens on what the phone last sent
  * rather than on an older copy it replaces a moment later; and new pins or sections warm their
@@ -45,15 +47,27 @@ class WearDataDeletionListenerService : WearableListenerService() {
         .filter { it.type == DataEvent.TYPE_CHANGED }
         .mapNotNull { event ->
           val path = event.dataItem.uri.path ?: return@mapNotNull null
-          path to
-            DataMapItem.fromDataItem(event.dataItem)
-              .dataMap
-              .getByteArray(WearSyncRepository.KEY_PROTO)
+          path to DataMapItem.fromDataItem(event.dataItem).dataMap.protoPayload()
         }
     val changed = changedItems.map { it.first }
     if (changedItems.isNotEmpty()) {
       val store = WearOfflineStore(applicationContext)
-      for ((path, bytes) in changedItems) if (bytes != null) store.persistChanged(path, bytes)
+      runBlocking {
+        val client = com.google.android.gms.wearable.Wearable.getDataClient(applicationContext)
+        for ((path, payload) in changedItems) payload.read(client)?.let {
+          store.persistChanged(path, it)
+        }
+      }
+      // The phone chose a widget's card: take its choices and redraw.
+      if (WearSyncPaths.WIDGET_CARDS in changed) {
+        runBlocking {
+          runCatching {
+            if (syncWidgetCardsFromDataLayer(applicationContext)) {
+              refreshAllCardWidgets(applicationContext)
+            }
+          }
+        }
+      }
       // Called on a background thread: capturing here costs the user nothing.
       if (warmsOnChange(changed)) {
         runBlocking { runCatching { WearCardWarmup.run(applicationContext) } }
@@ -97,15 +111,30 @@ internal fun forgottenOnDeletion(deleted: Collection<String>): List<String> {
 
 /**
  * Keeps the item the phone changed at [path] when it is one the app opens on and this service is
- * woken for: pins, sections, dashboards. (The pinned cards' design index is the widgets' to read
- * from the Data Layer; an older phone's `/wear/slots` is ignored.) [WearSyncRepository] does the
- * same while the app runs.
+ * woken for: settings, designs, pins, sections and dashboards. An older phone's `/wear/slots` is
+ * ignored. [WearSyncRepository] does the same while the app runs.
  *
  * Only a newer copy than the one kept replaces it ([newerThan]): each node that ever wrote a path
  * (a replaced phone, say) keeps its own item, and their events can arrive in any order.
  */
 internal fun WearOfflineStore.persistChanged(path: String, bytes: ByteArray) {
   when {
+    path == WearSyncPaths.SETTINGS ->
+      newerThan(
+          decodeProto<ee.schimke.terrazzo.wearsync.proto.WearSettings>(bytes),
+          readSettings(),
+          ee.schimke.terrazzo.wearsync.proto.WearSettings::updatedAtMs,
+        )
+        ?.let(::writeSettings)
+    path == WearSyncPaths.SLOT_DESIGNS ->
+      newerThan(
+          decodeProto<ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns>(bytes),
+          readSlotDesigns(),
+          ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns::updatedAtMs,
+        )
+        ?.let(::writeSlotDesigns)
+    path.startsWith(WearSyncPaths.DESIGN_PREFIX) ->
+      decodeProto<ee.schimke.terrazzo.wearsync.proto.WearDesignBlob>(bytes)?.let(::writeDesign)
     path == WearSyncPaths.PINNED ->
       newerThan(decodeProto<PinnedCardSet>(bytes), readPinned(), PinnedCardSet::updatedAtMs)
         ?.let(::writePinned)
@@ -133,15 +162,18 @@ internal fun warmsOnChange(changed: Collection<String>): Boolean =
  * the pins or sections, whose cards a widget shows.
  */
 internal fun redrawsOnChange(changed: Collection<String>): Boolean =
-  WearSyncPaths.SLOT_DESIGNS in changed ||
+  WearSyncPaths.SETTINGS in changed ||
+    changed.any { it.startsWith(WearSyncPaths.DESIGN_PREFIX) } ||
+    WearSyncPaths.SLOT_DESIGNS in changed ||
     WearSyncPaths.PINNED in changed ||
     WearSyncPaths.SECTIONS in changed
 
 /**
  * Whether the phone deleting the items at [deleted] paths means it signed out: it deletes the
- * account-wide items (pins, sections) only then. (It deletes an older build's `/wear/slots` then
- * too, but never alone.)
+ * account-wide items (pins, sections, widget card choices) only then. (It deletes an older build's
+ * `/wear/slots` then too, but never alone.)
  */
 internal fun signsOut(deleted: Collection<String>): Boolean = deleted.any { it in SIGN_OUT_MARKERS }
 
-private val SIGN_OUT_MARKERS = setOf(WearSyncPaths.PINNED, WearSyncPaths.SECTIONS)
+private val SIGN_OUT_MARKERS =
+  setOf(WearSyncPaths.PINNED, WearSyncPaths.SECTIONS, WearSyncPaths.WIDGET_CARDS)

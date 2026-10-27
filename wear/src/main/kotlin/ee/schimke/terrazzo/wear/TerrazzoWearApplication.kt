@@ -8,13 +8,16 @@ import ee.schimke.ha.rc.CardDesignLibrary
 import ee.schimke.ha.rc.CardMemory
 import ee.schimke.ha.rc.FileLocalDesignStore
 import ee.schimke.ha.rc.components.LauncherIcons
-import ee.schimke.terrazzo.wear.data.WearPrefs
+import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.terrazzo.wear.sync.WearOfflineStore
+import ee.schimke.terrazzo.wear.ui.observeWearSystemColors
+import ee.schimke.terrazzo.wear.ui.wearCardLook
 import ee.schimke.terrazzo.wear.widget.WearNeutralTemplateStore
+import ee.schimke.terrazzo.wear.widget.refreshAllCardWidgets
 import ee.schimke.terrazzo.wear.widget.releaseWidgetTemplates
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -38,6 +41,17 @@ class TerrazzoWearApplication : Application() {
       WearNeutralTemplateStore.of(applicationContext).prune()
     }
     followCardStyleWithLauncherIcon()
+    val colorScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    observeWearSystemColors(this) {
+      colorScope.launch {
+        if (
+          WearOfflineStore(this@TerrazzoWearApplication).readSettings().wearCardLook().palette ==
+            ThemeStyle.Material3
+        ) {
+          runCatching { refreshAllCardWidgets(this@TerrazzoWearApplication) }
+        }
+      }
+    }
   }
 
   /**
@@ -47,10 +61,14 @@ class TerrazzoWearApplication : Application() {
    */
   private fun followCardStyleWithLauncherIcon() {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    val prefs = WearPrefs(applicationContext)
+    val store = ee.schimke.terrazzo.wear.sync.WearOfflineStore(applicationContext)
     val apply = {
       scope.launch {
-        LauncherIcons.apply(applicationContext, prefs.cardStyle.first(), "ee.schimke.terrazzo.wear")
+        LauncherIcons.apply(
+          applicationContext,
+          store.readSettings().wearCardLook().style,
+          "ee.schimke.terrazzo.wear",
+        )
       }
     }
     apply()

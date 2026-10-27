@@ -26,6 +26,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
@@ -80,7 +81,7 @@ class WeatherForecastCardConverter : DesignedCardConverter() {
     val entity = snapshot.states[entityId] ?: return null
     if (CardDesignSlots.domainOf(entityId) != "weather") return null
     val attrs = entity.attributes
-    val days = forecastDays(card, attrs)
+    val days = forecastDays(card, entityId, snapshot, attrs)
     return DesignProperties.build {
       string("icon", iconKey(entity.state))
       enum("days", days.size)
@@ -253,10 +254,7 @@ internal fun weatherData(card: CardConfig, snapshot: HaSnapshot): HaWeatherForec
   val showForecast =
     card.raw["show_forecast"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
 
-  val forecast =
-    (attrs["forecast"] as? JsonArray)
-      ?: ((attrs["forecast"] as? JsonObject)?.get("daily") as? JsonArray)
-      ?: JsonArray(emptyList())
+  val forecast = forecastList(card, entityId, snapshot, attrs)
   val days =
     if (showForecast)
       forecast.take(5).mapNotNull { day ->
@@ -294,16 +292,32 @@ internal fun weatherData(card: CardConfig, snapshot: HaSnapshot): HaWeatherForec
 /** The forecast days the card shows: up to five, none when `show_forecast` is off. */
 private fun forecastDays(
   card: CardConfig,
+  entityId: String,
+  snapshot: HaSnapshot,
   attrs: Map<String, kotlinx.serialization.json.JsonElement>,
 ): List<kotlinx.serialization.json.JsonElement> {
   val showForecast =
     card.raw["show_forecast"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
   if (!showForecast) return emptyList()
-  val forecast =
-    (attrs["forecast"] as? JsonArray)
-      ?: ((attrs["forecast"] as? JsonObject)?.get("daily") as? JsonArray)
-      ?: JsonArray(emptyList())
-  return forecast.take(5).filter { it is JsonObject }
+  return forecastList(card, entityId, snapshot, attrs).take(5).filter { it is JsonObject }
+}
+
+/**
+ * The card's forecast: the one the host loaded for its `forecast_type` (`daily` by default) into
+ * [HaSnapshot.forecasts], else the `forecast` attribute weather entities carried before Home
+ * Assistant 2024.3 (and a template's placeholder still does).
+ */
+private fun forecastList(
+  card: CardConfig,
+  entityId: String?,
+  snapshot: HaSnapshot,
+  attrs: Map<String, kotlinx.serialization.json.JsonElement>,
+): JsonArray {
+  val type = (card.raw["forecast_type"] as? JsonPrimitive)?.contentOrNull ?: "daily"
+  return (entityId?.let { snapshot.forecasts[it] }?.get(type) as? JsonArray)
+    ?: (attrs["forecast"] as? JsonArray)
+    ?: ((attrs["forecast"] as? JsonObject)?.get("daily") as? JsonArray)
+    ?: JsonArray(emptyList())
 }
 
 /** Which read-outs [weatherExtras] shows, by attribute. */

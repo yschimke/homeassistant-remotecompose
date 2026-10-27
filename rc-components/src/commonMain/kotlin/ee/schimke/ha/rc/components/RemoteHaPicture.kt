@@ -8,6 +8,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
+import androidx.compose.remote.creation.compose.layout.RemoteImage
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
@@ -28,6 +29,7 @@ import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
@@ -223,6 +225,8 @@ private fun GlanceImage(data: HaPictureGlanceData, theme: RemoteHaTheme, modifie
     modifier = modifier.background(theme.divider),
     contentAlignment = RemoteAlignment.Center,
   ) {
+    // The placeholder first, the picture over it: a picture that can't load (no loader, offline)
+    // leaves the placeholder showing rather than an empty band.
     if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel("Image unavailable".rs)
     else
       RemoteBasicIcon(
@@ -231,6 +235,17 @@ private fun GlanceImage(data: HaPictureGlanceData, theme: RemoteHaTheme, modifie
         modifier = RemoteModifier.size(40.rdp),
         tint = theme.placeholderAccent,
       )
+    data.imageUrl
+      ?.let { rememberPictureBitmap(it, data.pictureEntityId) }
+      ?.let { picture ->
+        RemoteImage(
+          remoteBitmap = picture,
+          contentDescription = data.title?.let { cardTitle(it) } ?: "image".rs,
+          modifier = RemoteModifier.fillMaxSize(),
+          // Fill-crop, as HA's picture cards cover their area.
+          contentScale = ContentScale.Crop,
+        )
+      }
   }
 }
 

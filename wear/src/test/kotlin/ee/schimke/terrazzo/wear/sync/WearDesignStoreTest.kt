@@ -14,9 +14,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
-/**
- * The pinned cards' Wear designs on the watch: verified, and kept only while the index names them.
- */
+/** Phone-selected designs survive out-of-order delivery and are removed on explicit deletion. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class WearDesignStoreTest {
@@ -40,7 +38,7 @@ class WearDesignStoreTest {
   }
 
   @Test
-  fun anIndexForgetsTheDesignsItNoLongerNamesAndSignOutForgetsThemAll() {
+  fun anOlderIndexCannotDeleteANewerBlobAndSignOutForgetsThemAll() {
     val small = blob(1)
     val large = blob(2)
     store.writeDesign(small)
@@ -49,9 +47,19 @@ class WearDesignStoreTest {
       WearSlotDesigns(listOf(WearSlotDesign("pin", "small", small.sha256)), updatedAtMs = 1)
     )
     assertContentEquals(small.rc, store.readDesign(small.sha256))
-    assertNull(store.readDesign(large.sha256))
+    // Data Layer items arrive independently: this blob may belong to the NEXT index.
+    assertContentEquals(large.rc, store.readDesign(large.sha256))
     assertEquals(small.sha256, store.readSlotDesigns()?.designs?.single()?.sha256)
 
+    store.writeSlotDesigns(
+      WearSlotDesigns(listOf(WearSlotDesign("pin", "large", large.sha256)), updatedAtMs = 2)
+    )
+    assertContentEquals(
+      large.rc,
+      WearOfflineStore(RuntimeEnvironment.getApplication()).readDesign(large.sha256),
+    )
+    store.forget(WearSyncPaths.designPath(small.sha256))
+    assertNull(store.readDesign(small.sha256))
     store.forget(WearSyncPaths.SLOT_DESIGNS)
     assertNull(store.readSlotDesigns())
     assertNull(store.readDesign(small.sha256))

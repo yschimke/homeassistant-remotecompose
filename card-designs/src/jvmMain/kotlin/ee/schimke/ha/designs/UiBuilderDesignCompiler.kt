@@ -1,0 +1,851 @@
+@file:Suppress("RestrictedApi")
+
+package ee.schimke.ha.designs
+
+import androidx.compose.remote.creation.compose.layout.RemoteAlignment
+import androidx.compose.remote.creation.compose.layout.RemoteArrangement
+import androidx.compose.remote.creation.compose.layout.RemoteBox
+import androidx.compose.remote.creation.compose.layout.RemoteColumn
+import androidx.compose.remote.creation.compose.layout.RemoteImage
+import androidx.compose.remote.creation.compose.layout.RemoteRow
+import androidx.compose.remote.creation.compose.layout.RemoteText
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.background
+import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.graphicsLayer
+import androidx.compose.remote.creation.compose.modifier.height
+import androidx.compose.remote.creation.compose.modifier.offset
+import androidx.compose.remote.creation.compose.modifier.padding
+import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.modifier.width
+import androidx.compose.remote.creation.compose.state.RemoteBoolean
+import androidx.compose.remote.creation.compose.state.RemoteColor
+import androidx.compose.remote.creation.compose.state.RemoteFloat
+import androidx.compose.remote.creation.compose.state.RemoteState
+import androidx.compose.remote.creation.compose.state.RemoteString
+import androidx.compose.remote.creation.compose.state.RemoteTimeVariables
+import androidx.compose.remote.creation.compose.state.abs as rAbs
+import androidx.compose.remote.creation.compose.state.acos as rAcos
+import androidx.compose.remote.creation.compose.state.asRemoteDp
+import androidx.compose.remote.creation.compose.state.asin as rAsin
+import androidx.compose.remote.creation.compose.state.atan as rAtan
+import androidx.compose.remote.creation.compose.state.ceil as rCeil
+import androidx.compose.remote.creation.compose.state.cos as rCos
+import androidx.compose.remote.creation.compose.state.floor as rFloor
+import androidx.compose.remote.creation.compose.state.max as rMax
+import androidx.compose.remote.creation.compose.state.min as rMin
+import androidx.compose.remote.creation.compose.state.rc
+import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.remote.creation.compose.state.round as rRound
+import androidx.compose.remote.creation.compose.state.rs
+import androidx.compose.remote.creation.compose.state.rsp
+import androidx.compose.remote.creation.compose.state.sin as rSin
+import androidx.compose.remote.creation.compose.state.sqrt as rSqrt
+import androidx.compose.remote.creation.compose.state.tan as rTan
+import androidx.compose.remote.creation.compose.state.toDeg
+import androidx.compose.remote.creation.compose.state.toRad
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.toComposeImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.DesignSurface
+import ee.schimke.ha.design.HaSharedValues
+import ee.schimke.ha.rc.CardDesignTemplates
+import ee.schimke.ha.rc.CommonCaptureHost
+import ee.schimke.ha.rc.FramedCard
+import ee.schimke.ha.rc.components.HaType
+import ee.schimke.ha.rc.components.animateRemoteFloat
+import ee.schimke.ha.rc.components.currentRemoteHaTheme
+import ee.schimke.ha.rc.components.rememberLocalNamedRemoteBitmap
+import kotlin.math.max
+import kotlin.math.roundToInt
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.floatOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import org.jetbrains.skia.Bitmap
+import org.jetbrains.skia.Canvas
+import org.jetbrains.skia.EncodedImageFormat
+import org.jetbrains.skia.Image
+import org.jetbrains.skia.Rect
+import org.jetbrains.skia.SamplingMode
+
+/**
+ * Compiles a person's UI Builder design (`ha-cards`) to a Remote Compose template here, for when UI
+ * Builder can't export one (`export.rc` is a build feature of the builder, and the hosted one
+ * doesn't serve it). It covers what a hand-made card is drawn with: boxes, columns and rows, the
+ * design's own pictures (`asset/image`) and text, with size, offset, padding, alpha, scale and
+ * rotation.
+ *
+ * A property or modifier value may read a state variable (`{"type": "state"}`), or pick between two
+ * numbers by a boolean one (`{"type": "expr", "op": "select"}`). State variables become named
+ * values in the `USER` domain, so a variable named for a card binding (`cover.s0.is_on`) is the
+ * value the app pushes, and the card follows Home Assistant without a re-encode. A transform that
+ * reads state (an offset, a scale, a rotation, alpha) tweens when it changes, never on the first
+ * frame (the host seeds it first); a size that reads state snaps.
+ *
+ * Anything else is refused by [problems], naming the node, rather than drawn approximately.
+ */
+class UiBuilderDesignCompiler(
+  private val host: CommonCaptureHost = CommonCaptureHost(LibraryCaptureProfile.OPERATIONS)
+) {
+  /** Every reason [document] can't be compiled here, by node; empty when it can. */
+  fun problems(document: JsonObject, assets: Set<String>): List<String> =
+    Design(document, emptyMap()).problems(assets)
+
+  /**
+   * [document] as a template for [key] (the library design it varies), drawing [assets] (an asset
+   * key's image bytes) within [imageBudgetBytes] ([fitPictures]): by default its surface's
+   * ([imageBudget]). Throws [IllegalArgumentException] naming each problem when it can't. It
+   * composes and captures on the calling thread: a server runs one at a time.
+   */
+  fun compile(
+    document: JsonObject,
+    assets: Map<String, ByteArray>,
+    key: DesignKey,
+    imageBudgetBytes: Int = imageBudget(key.surface),
+  ): ByteArray {
+    val design = Design(document, fitPictures(assets, imageBudgetBytes), dark = isDark(key))
+    val problems = design.problems(assets.keys)
+    require(problems.isEmpty()) { problems.joinToString("; ") }
+    return CardDesignTemplates.captureWith(host, key) { card, snapshot, modifier ->
+        FramedCard(card, snapshot, modifier) { design.Render(it) }
+      }
+      .bytes
+  }
+
+  private class Design(
+    document: JsonObject,
+    private val images: Map<String, ImageBitmap>,
+    /** Whether the theme it is captured for is dark: what [NIGHT] resolves by. */
+    private val dark: Boolean = false,
+  ) {
+    private val nodes: Map<String, JsonObject> =
+      document["nodes"]?.jsonObject.orEmpty().mapValues { it.value.jsonObject }
+    private val roots: List<String> =
+      document["roots"]?.jsonArray.orEmpty().map { it.jsonPrimitive.content }
+    private val variables: Map<String, JsonObject> =
+      document["stateVariables"]?.jsonObject.orEmpty().mapValues { it.value.jsonObject }
+    private val catalog: String? =
+      document["catalogPin"]?.jsonObject?.get("systemId")?.jsonPrimitive?.contentOrNull
+
+    fun problems(assets: Set<String>): List<String> = buildList {
+      if (catalog != CATALOG) add("its catalog is `$catalog`, not `$CATALOG`")
+      if (roots.size != 1) add("a card design has one root, not ${roots.size}")
+      roots.filter { it !in nodes }.forEach { add("root $it is not a node") }
+      // A card's own values are bare (USER); the only other domain a host pushes is the shared one.
+      variables.keys
+        .filter { ':' in it && !HaSharedValues.isShared(it) }
+        .forEach {
+          add("state `$it`: `${it.substringBefore(':')}:` isn't a domain a card is pushed")
+        }
+      nodes.forEach { (id, node) ->
+        val component = node.string("componentId")
+        if (component !in COMPONENTS) add("$id: `$component` isn't drawn here yet")
+        (node["modifiers"] as? JsonArray).orEmpty().forEach { modifier ->
+          val type = (modifier as? JsonObject)?.string("type")
+          if (type !in MODIFIERS) add("$id: modifier `$type` isn't drawn here yet")
+          if (type == "remoteCall") {
+            val call = modifier as JsonObject
+            val name = call.string("name")
+            if (name != GRAPHICS_LAYER) add("$id: remote call `$name` isn't drawn here yet")
+            call["args"]?.jsonObject?.forEach { (arg, value) ->
+              if (arg !in GRAPHICS_LAYER_ARGS) {
+                add("$id.$GRAPHICS_LAYER: `$arg` isn't drawn here yet")
+              }
+              valueProblem(value)?.let { add("$id.$GRAPHICS_LAYER.$arg: $it") }
+            }
+            return@forEach
+          }
+          (modifier as? JsonObject)?.forEach { (field, value) ->
+            if (field != "type") valueProblem(value)?.let { add("$id.$type.$field: $it") }
+          }
+        }
+        node["properties"]?.jsonObject?.forEach { (name, value) ->
+          val type = (value as? JsonObject)?.string("type")
+          when {
+            // Only a text's text is drawn live; any other property is captured as it is.
+            type in DYNAMIC && !(component == TEXT && name == "text") ->
+              add("$id.$name: a property reading state isn't drawn live here yet")
+            type == "colorToken" && name != "color" ->
+              add("$id.$name: a colour token is only drawn for a colour")
+            else -> valueProblem(value)?.let { add("$id.$name: $it") }
+          }
+        }
+        if (component == IMAGE) {
+          val key = literal(node.properties()["assetKey"])?.contentOrNull
+          if (key == null || key !in assets) add("$id: no picture for asset `$key`")
+        }
+        node["eventBindings"]
+          ?.jsonObject
+          ?.takeIf { it.isNotEmpty() }
+          ?.let { add("$id: events (${it.keys.joinToString()}) aren't drawn here yet") }
+        node["predicate"]
+          ?.takeIf { it !is kotlinx.serialization.json.JsonNull }
+          ?.let { add("$id: a predicate isn't drawn here yet") }
+        children(id).filter { it !in nodes }.forEach { add("$id: missing child $it") }
+      }
+    }
+
+    private fun valueProblem(value: JsonElement): String? {
+      val obj = value as? JsonObject ?: return null
+      return when (val type = obj.string("type")) {
+        "state" -> obj.string("variable").takeIf { it !in variables }?.let { "no state `$it`" }
+        "expr" -> {
+          val args = obj["args"]?.jsonArray.orEmpty()
+          val op = obj.string("op")
+          val arity = EXPRESSIONS[op]
+          when {
+            arity == null -> "expression `$op` isn't drawn here yet"
+            args.size != arity -> "`$op` takes $arity values, not ${args.size}"
+            else -> args.firstNotNullOfOrNull(::valueProblem)
+          }
+        }
+        "system" ->
+          obj
+            .string("value")
+            .takeIf { it !in SYSTEM_VALUES }
+            ?.let { "system value `$it` isn't drawn here yet" }
+        "colorToken" ->
+          obj
+            .string("value")
+            .takeIf { it !in COLOR_TOKENS }
+            ?.let { "colour token `$it` isn't one of ${COLOR_TOKENS.joinToString()}" }
+        in LITERALS -> null
+        else -> "a `$type` value isn't drawn here yet"
+      }
+    }
+
+    @Composable
+    fun Render(modifier: RemoteModifier) {
+      Node(roots.single(), modifier)
+    }
+
+    @Composable
+    private fun Node(id: String, outer: RemoteModifier) {
+      val node = nodes.getValue(id)
+      val modifier = applyModifiers(outer, node["modifiers"] as? JsonArray)
+      val properties = node.properties()
+      when (node.string("componentId")) {
+        BOX ->
+          RemoteBox(modifier = modifier, contentAlignment = alignment(properties)) {
+            children(id).forEach { Node(it, RemoteModifier) }
+          }
+        COLUMN ->
+          RemoteColumn(
+            modifier = modifier,
+            verticalArrangement = verticalArrangement(properties),
+            horizontalAlignment = horizontalAlignment(properties),
+          ) {
+            children(id).forEach { Node(it, RemoteModifier) }
+          }
+        ROW ->
+          RemoteRow(
+            modifier = modifier,
+            horizontalArrangement = horizontalArrangement(properties),
+            verticalAlignment = verticalAlignment(properties),
+          ) {
+            children(id).forEach { Node(it, RemoteModifier) }
+          }
+        IMAGE -> {
+          val key = literal(properties["assetKey"])!!.content
+          // Baked in, under a name of the design's own (no dot): no card binding reads it.
+          val bitmap = rememberLocalNamedRemoteBitmap(assetName(key)) { images.getValue(key) }
+          RemoteImage(
+            remoteBitmap = bitmap,
+            contentDescription = literal(properties["contentDescription"])?.contentOrNull?.rs,
+            modifier = modifier,
+            contentScale = contentScale(literal(properties["contentScale"])?.contentOrNull),
+          )
+        }
+        TEXT -> {
+          val theme = currentRemoteHaTheme()
+          RemoteText(
+            text = string(properties["text"]) ?: "".rs,
+            modifier = modifier,
+            color = color(properties["color"]) ?: theme.primaryText,
+            fontSize =
+              literal(properties["fontSize"])?.floatOrNull?.roundToInt()?.rsp ?: HaType.Body,
+            maxLines = literal(properties["maxLines"])?.intOrNull ?: Int.MAX_VALUE,
+          )
+        }
+        // A card's own surface: the app draws the card's frame, so it is only its content.
+        else -> children(id).forEach { Node(it, modifier) }
+      }
+    }
+
+    /**
+     * [modifiers] after [start]. A size reading state snaps to its new value: the player measures
+     * when a value changes, so a tween there would be measured at its old value. A state-driven
+     * offset, a scale, a rotation and alpha are drawn instead, which tween: together one
+     * `graphicsLayer` (a player takes one per element) where the first of them is, so what follows
+     * it (a background, the content) is drawn moved, scaled and faded. Translations add, scales and
+     * alphas multiply, rotations add. A layer draws its translation unscaled, as an offset before a
+     * scale does.
+     */
+    @Composable
+    private fun applyModifiers(start: RemoteModifier, modifiers: JsonArray?): RemoteModifier {
+      val all = modifiers.orEmpty().map { it.jsonObject }
+      var translationX: RemoteFloat? = null
+      var translationY: RemoteFloat? = null
+      var scaleX: RemoteFloat? = null
+      var scaleY: RemoteFloat? = null
+      var rotation: RemoteFloat? = null
+      var rotationXAxis: RemoteFloat? = null
+      var rotationYAxis: RemoteFloat? = null
+      var originX: RemoteFloat? = null
+      var originY: RemoteFloat? = null
+      var cameraDistance: RemoteFloat? = null
+      var alpha: RemoteFloat? = null
+      fun RemoteFloat?.plus(other: RemoteFloat) = this?.let { it + other } ?: other
+      fun RemoteFloat?.times(other: RemoteFloat) = this?.let { it * other } ?: other
+      fun isLayer(m: JsonObject): Boolean =
+        when (m.string("type")) {
+          "scale",
+          "rotate",
+          "alpha" -> true
+          "remoteCall" -> m.string("name") == GRAPHICS_LAYER
+          "offset" ->
+            number(m["xDp"])?.constantValueOrNull == null ||
+              number(m["yDp"])?.constantValueOrNull == null
+          else -> false
+        }
+      all.filter(::isLayer).forEach { m ->
+        when (m.string("type")) {
+          "offset" -> {
+            translationX =
+              translationX.plus(animated(number(m["xDp"]) ?: 0f.rf).asRemoteDp().toPx())
+            translationY =
+              translationY.plus(animated(number(m["yDp"]) ?: 0f.rf).asRemoteDp().toPx())
+          }
+          "scale" -> {
+            scaleX = scaleX.times(animated(number(m["scaleX"]) ?: 1f.rf))
+            scaleY = scaleY.times(animated(number(m["scaleY"]) ?: 1f.rf))
+          }
+          "rotate" -> rotation = rotation.plus(animated(number(m["degrees"]) ?: 0f.rf))
+          "remoteCall" -> {
+            val args = m["args"]?.jsonObject.orEmpty()
+            number(args["rotationX"])?.let { rotationXAxis = rotationXAxis.plus(animated(it)) }
+            number(args["rotationY"])?.let { rotationYAxis = rotationYAxis.plus(animated(it)) }
+            number(args["rotationZ"])?.let { rotation = rotation.plus(animated(it)) }
+            number(args["scaleX"])?.let { scaleX = scaleX.times(animated(it)) }
+            number(args["scaleY"])?.let { scaleY = scaleY.times(animated(it)) }
+            number(args["alpha"])?.let { alpha = alpha.times(animated(it)) }
+            originX = number(args["transformOriginX"]) ?: originX
+            originY = number(args["transformOriginY"]) ?: originY
+            cameraDistance = number(args["cameraDistance"]) ?: cameraDistance
+          }
+          "alpha" -> alpha = alpha.times(animated(number(m["alpha"]) ?: 1f.rf))
+        }
+      }
+      var applied = start
+      var layered = false
+      all.forEach { m ->
+        if (isLayer(m)) {
+          if (!layered) {
+            layered = true
+            applied = applied.graphicsLayer {
+              translationX?.let { this.translationX = it }
+              translationY?.let { this.translationY = it }
+              scaleX?.let { this.scaleX = it }
+              scaleY?.let { this.scaleY = it }
+              rotation?.let { rotationZ = it }
+              rotationXAxis?.let { rotationX = it }
+              rotationYAxis?.let { rotationY = it }
+              originX?.let { transformOriginX = it }
+              originY?.let { transformOriginY = it }
+              cameraDistance?.let { this.cameraDistance = it }
+              alpha?.let { this.alpha = it }
+            }
+          }
+          return@forEach
+        }
+        applied =
+          when (m.string("type")) {
+            "fillMaxWidth" -> applied.fillMaxWidth()
+            "fillMaxHeight" -> applied.fillMaxHeight()
+            "fillMaxSize" -> applied.fillMaxSize()
+            "size" ->
+              applied.size(size(m["widthDp"]).asRemoteDp(), size(m["heightDp"]).asRemoteDp())
+            "width" -> applied.width(size(m["widthDp"]).asRemoteDp())
+            "height" -> applied.height(size(m["heightDp"]).asRemoteDp())
+            "offset" -> applied.offset(size(m["xDp"]).asRemoteDp(), size(m["yDp"]).asRemoteDp())
+            "padding" ->
+              applied.padding(
+                start = size(m["startDp"]).asRemoteDp(),
+                top = size(m["topDp"]).asRemoteDp(),
+                end = size(m["endDp"]).asRemoteDp(),
+                bottom = size(m["bottomDp"]).asRemoteDp(),
+              )
+            "background" -> color(m["color"])?.let { applied.background(it) } ?: applied
+            else -> applied
+          }
+      }
+      return applied
+    }
+
+    /** A layout number: a literal, a state variable or a select, applied as it changes. */
+    private fun size(value: JsonElement?): RemoteFloat = number(value) ?: 0f.rf
+
+    /** [number], tweened when it changes; a constant as it is. */
+    @Composable
+    private fun animated(number: RemoteFloat): RemoteFloat =
+      if (number.constantValueOrNull != null) number else animateRemoteFloat(number)
+
+    private fun number(value: JsonElement?): RemoteFloat? {
+      if (value == null || value is kotlinx.serialization.json.JsonNull) return null
+      if (value is JsonPrimitive) return value.floatOrNull?.rf
+      val obj = value.jsonObject
+      return when (obj.string("type")) {
+        "state" -> namedFloat(obj.string("variable")!!)
+        "system" -> system(obj.string("value"))
+        "expr" -> expression(obj.string("op"), obj.getValue("args").jsonArray)
+        else -> literal(obj)?.floatOrNull?.rf
+      }
+    }
+
+    /**
+     * A number expression, in Remote Compose's own operations so the player evaluates it live: a
+     * state change, or the clock (`time.*`), moves it with no re-encode.
+     */
+    private fun expression(op: String?, args: JsonArray): RemoteFloat? {
+      fun at(i: Int): RemoteFloat = number(args.getOrNull(i)) ?: 0f.rf
+      return when (op) {
+        "select" -> boolean(args[0])?.select(at(1), at(2))
+        "add" -> at(0) + at(1)
+        "mul" -> at(0) * at(1)
+        "sub" -> at(0) - at(1)
+        "div" -> at(0) / at(1)
+        "mod" -> at(0).rem(at(1))
+        "neg" -> -at(0)
+        "min" -> rMin(at(0), at(1))
+        "max" -> rMax(at(0), at(1))
+        "clamp" -> rMin(rMax(at(0), at(1)), at(2))
+        "abs" -> rAbs(at(0))
+        "floor" -> rFloor(at(0))
+        "ceil" -> rCeil(at(0))
+        "round" -> rRound(at(0))
+        "sqrt" -> rSqrt(at(0))
+        "sin" -> rSin(at(0))
+        "cos" -> rCos(at(0))
+        "tan" -> rTan(at(0))
+        "asin" -> rAsin(at(0))
+        "acos" -> rAcos(at(0))
+        "atan" -> rAtan(at(0))
+        "radians" -> toRad(at(0))
+        "degrees" -> toDeg(at(0))
+        "lerp" -> at(0) + (at(1) - at(0)) * at(2)
+        // GLSL's: 0 at or below edge0, 1 at or above edge1, smooth between.
+        "smoothstep" -> {
+          val t = rMin(rMax((at(2) - at(0)) / (at(1) - at(0)), 0f.rf), 1f.rf)
+          t * t * (3f.rf - t * 2f)
+        }
+        else -> null
+      }
+    }
+
+    /** A clock value the player keeps current: local time, the date and the UTC offset. */
+    private fun system(name: String?): RemoteFloat? =
+      when (name) {
+        "time.hour" -> RemoteTimeVariables.hourOfDay.toRemoteFloat()
+        "time.minuteOfDay" -> RemoteTimeVariables.minuteOfDay.toRemoteFloat()
+        "time.secondOfHour" -> RemoteTimeVariables.secondOfHour.toRemoteFloat()
+        "time.dayOfWeek" -> RemoteTimeVariables.dayOfWeek.toRemoteFloat()
+        "time.dayOfMonth" -> RemoteTimeVariables.dayOfMonth.toRemoteFloat()
+        "time.month" -> RemoteTimeVariables.month.toRemoteFloat()
+        "time.dayOfYear" -> RemoteTimeVariables.dayOfYear.toRemoteFloat()
+        "time.year" -> RemoteTimeVariables.year.toRemoteFloat()
+        "time.utcOffset" -> RemoteTimeVariables.utcOffsetSeconds.toRemoteFloat()
+        else -> null
+      }
+
+    private fun boolean(value: JsonElement): RemoteBoolean? {
+      if (value is JsonPrimitive) return value.booleanOrNull?.let { RemoteBoolean(it) }
+      val obj = value.jsonObject
+      return when (obj.string("type")) {
+        "state" -> {
+          val name = obj.string("variable")!!
+          val initial = variables[name]?.get("initialValue")?.jsonPrimitive?.booleanOrNull ?: false
+          RemoteBoolean.createNamedRemoteBoolean(bare(name), initial, domainOf(name))
+        }
+        "expr" -> {
+          val args = obj.getValue("args").jsonArray
+          val a = number(args.getOrNull(0)) ?: return null
+          val b = number(args.getOrNull(1)) ?: return null
+          when (obj.string("op")) {
+            "lt" -> a.isLessThan(b)
+            "le" -> a.isLessThanOrEqualTo(b)
+            "gt" -> a.isGreaterThan(b)
+            "ge" -> a.isGreaterThanOrEqualTo(b)
+            "eq" -> a.isEqualTo(b)
+            "ne" -> a.isNotEqualTo(b)
+            else -> null
+          }
+        }
+        else -> literal(obj)?.booleanOrNull?.let { RemoteBoolean(it) }
+      }
+    }
+
+    private fun namedFloat(name: String): RemoteFloat {
+      val declaration = variables.getValue(name)
+      val initial = declaration["initialValue"]?.jsonPrimitive
+      return when (declaration["valueType"]?.jsonPrimitive?.contentOrNull) {
+        "bool" ->
+          RemoteBoolean.createNamedRemoteBoolean(
+              bare(name),
+              initial?.booleanOrNull ?: false,
+              domainOf(name),
+            )
+            .select(1f.rf, 0f.rf)
+        else ->
+          RemoteFloat.createNamedRemoteFloat(
+            bare(name),
+            initial?.floatOrNull ?: 0f,
+            domainOf(name),
+          )
+      }
+    }
+
+    private fun string(value: JsonElement?): RemoteString? {
+      val obj = value as? JsonObject ?: return null
+      if (obj.string("type") != "state") return literal(obj)?.contentOrNull?.rs
+      val name = obj.string("variable")!!
+      val initial = variables[name]?.get("initialValue")?.jsonPrimitive?.contentOrNull.orEmpty()
+      return RemoteString.createNamedRemoteString(bare(name), initial, domainOf(name))
+    }
+
+    /**
+     * A state variable's named-value domain: a shared value's own (`HA:sun.sun.elevation`, pushed
+     * by every host as [HaSharedValues]), else `USER`, where a card's own values are pushed.
+     */
+    private fun domainOf(name: String): RemoteState.Domain =
+      if (HaSharedValues.isShared(name)) SHARED_DOMAIN else RemoteState.Domain.User
+
+    /** [name] without its domain: the domain prefixes it again in the document. */
+    private fun bare(name: String): String =
+      if (HaSharedValues.isShared(name)) name.removePrefix(HaSharedValues.PREFIX) else name
+
+    /**
+     * A colour value: a literal (`#RRGGBB`, `#AARRGGBB`), or a theme role (`colorToken`) resolved
+     * in the theme the design is captured for, so each published theme draws its own: light, dark
+     * and every palette. [NIGHT] is black in a dark theme and clear in a light one, for a scrim
+     * that only darkens at night.
+     */
+    @Composable
+    private fun color(value: JsonElement?): RemoteColor? {
+      val obj = value as? JsonObject
+      val name = (obj?.get("value") as? JsonPrimitive)?.contentOrNull ?: return null
+      if (obj.string("type") != "colorToken") return hexColor(name)
+      val theme = currentRemoteHaTheme()
+      return when (name) {
+        NIGHT -> Color(if (dark) 0xFF000000.toInt() else 0x00000000).rc
+        ACCENT,
+        "placeholderAccent" -> theme.placeholderAccent
+        "cardBackground" -> theme.cardBackground
+        "dashboardBackground" -> theme.dashboardBackground
+        "sectionBackground" -> theme.sectionBackground
+        "primaryText" -> theme.primaryText
+        "secondaryText" -> theme.secondaryText
+        "linkText" -> theme.linkText
+        "divider" -> theme.divider
+        "placeholderBackground" -> theme.placeholderBackground
+        "unknownAccent" -> theme.unknownAccent
+        else -> null
+      }
+    }
+
+    private fun children(id: String): List<String> =
+      nodes[id]?.get("slots")?.jsonObject.orEmpty().values.flatMap { slot ->
+        (slot as? JsonArray).orEmpty().map { it.jsonPrimitive.content }
+      }
+  }
+
+  companion object {
+    const val CATALOG = "ha-cards"
+    private val SHARED_DOMAIN = RemoteState.Domain(HaSharedValues.DOMAIN)
+    private const val BOX = "layout/box"
+    private const val COLUMN = "layout/column"
+    private const val ROW = "layout/row"
+    private const val IMAGE = "asset/image"
+    private const val TEXT = "ha-cards/remote-text"
+
+    private val COMPONENTS =
+      setOf(
+        BOX,
+        COLUMN,
+        ROW,
+        IMAGE,
+        TEXT,
+        "ha-cards/dashboard-card",
+        "ha-cards/dashboard-section",
+        "ha-cards/remote-card",
+      )
+
+    private val MODIFIERS =
+      setOf(
+        "fillMaxWidth",
+        "fillMaxHeight",
+        "fillMaxSize",
+        "size",
+        "width",
+        "height",
+        "offset",
+        "padding",
+        "alpha",
+        "scale",
+        "rotate",
+        "background",
+        "remoteCall",
+      )
+
+    private val LITERALS = setOf("string", "bool", "int", "float", "dimension", "color", "null")
+
+    /** Values that read state: drawn live in modifiers and a text's text, refused elsewhere. */
+    private val DYNAMIC = setOf("state", "expr", "system")
+
+    /** The expressions drawn here, by how many values each takes: UI Builder's arities. */
+    private val EXPRESSIONS: Map<String, Int> =
+      mapOf("select" to 3, "clamp" to 3, "smoothstep" to 3, "lerp" to 3) +
+        listOf("add", "mul", "sub", "div", "mod", "min", "max", "lt", "le", "gt", "ge", "eq", "ne")
+          .associateWith { 2 } +
+        listOf(
+            "neg",
+            "abs",
+            "floor",
+            "ceil",
+            "round",
+            "sqrt",
+            "sin",
+            "cos",
+            "tan",
+            "asin",
+            "acos",
+            "atan",
+            "radians",
+            "degrees",
+          )
+          .associateWith { 1 }
+
+    /** The clock values drawn here, which the player keeps current. */
+    private val SYSTEM_VALUES =
+      setOf(
+        "time.hour",
+        "time.minuteOfDay",
+        "time.secondOfHour",
+        "time.dayOfWeek",
+        "time.dayOfMonth",
+        "time.month",
+        "time.dayOfYear",
+        "time.year",
+        "time.utcOffset",
+      )
+
+    /**
+     * The `remoteCall` drawn here: RemoteModifier's `graphicsLayer`, for what the catalog's own
+     * modifiers can't say, a turn in perspective above all. `rotationX` tilts an element about a
+     * horizontal axis (0 flat to 90 edge-on; it may read state, and tweens), at `transformOriginY`
+     * (0 the top edge, 1 the bottom; the middle by default), with `cameraDistance` setting how
+     * strong the perspective is. An up-and-over door is its picture tilted about its top edge, its
+     * bottom swinging out and up and growing nearer. Joined into the element's one layer.
+     */
+    const val GRAPHICS_LAYER = "graphicsLayer"
+
+    private val GRAPHICS_LAYER_ARGS =
+      setOf(
+        "rotationX",
+        "rotationY",
+        "rotationZ",
+        "scaleX",
+        "scaleY",
+        "alpha",
+        "transformOriginX",
+        "transformOriginY",
+        "cameraDistance",
+      )
+
+    /** Black in a dark theme, clear in a light one: a scrim for night. */
+    const val NIGHT = "night"
+
+    /** The palette's hero colour (`placeholderAccent`). */
+    const val ACCENT = "accent"
+
+    /** The colour tokens a design may name: the card theme's roles, [ACCENT] and [NIGHT]. */
+    val COLOR_TOKENS =
+      setOf(
+        NIGHT,
+        ACCENT,
+        "cardBackground",
+        "dashboardBackground",
+        "sectionBackground",
+        "primaryText",
+        "secondaryText",
+        "linkText",
+        "divider",
+        "placeholderAccent",
+        "placeholderBackground",
+        "unknownAccent",
+      )
+
+    /**
+     * The bytes a template's pictures may take on [surface], all of them together, as PNG: what its
+     * host can hold. A phone card stays well inside a widget's Binder transaction; a launcher or
+     * Wear widget, which the phone hands over in a transaction or a Bluetooth message with
+     * everything else it shows, gets about 50 KB.
+     */
+    fun imageBudget(surface: DesignSurface): Int =
+      when (surface) {
+        DesignSurface.MobileApp -> 512 * 1024
+        DesignSurface.WearApp -> 128 * 1024
+        DesignSurface.Launcher,
+        DesignSurface.WearWidget -> 50 * 1024
+      }
+
+    /**
+     * [assets] as pictures whose PNGs (as a template bakes them) take at most [budgetBytes]
+     * together. The first that fits, best first: full size in full colour, then fewer colours (5
+     * bits a channel, then 4: a photo's PNG roughly halves, with little to see), then each a
+     * smaller size, all pictures scaled alike. Past the smallest it tries, the smallest.
+     */
+    fun fitPictures(assets: Map<String, ByteArray>, budgetBytes: Int): Map<String, ImageBitmap> {
+      val images = assets.mapValues { (_, bytes) -> Image.makeFromEncoded(bytes) }
+      var smallest: Map<String, Image> = images
+      for (scale in SCALES) {
+        for (bits in listOf(8, 5, 4)) {
+          val candidate = images.mapValues { (_, image) -> reduced(image, scale, bits) }
+          smallest = candidate
+          val size = candidate.values.sumOf { pngBytes(it) }
+          if (size <= budgetBytes) return candidate.mapValues { it.value.toComposeImageBitmap() }
+        }
+      }
+      return smallest.mapValues { it.value.toComposeImageBitmap() }
+    }
+
+    private val SCALES = listOf(1f, 0.85f, 0.7f, 0.6f, 0.5f, 0.42f, 0.35f, 0.3f, 0.25f, 0.2f, 0.15f)
+
+    /** [image] at [scale] of its size, each channel kept to its top [bits] bits. */
+    private fun reduced(image: Image, scale: Float, bits: Int): Image {
+      if (scale == 1f && bits == 8) return image
+      val width = max(1, (image.width * scale).roundToInt())
+      val height = max(1, (image.height * scale).roundToInt())
+      val bitmap = Bitmap().apply { allocN32Pixels(width, height) }
+      Canvas(bitmap)
+        .drawImageRect(
+          image,
+          Rect.makeWH(image.width.toFloat(), image.height.toFloat()),
+          Rect.makeWH(width.toFloat(), height.toFloat()),
+          SamplingMode.CATMULL_ROM,
+          null,
+          true,
+        )
+      if (bits < 8) {
+        val keep = (0xFF shl (8 - bits)) and 0xFF
+        val pixels = requireNotNull(bitmap.readPixels())
+        // N32 is four bytes a pixel; alpha stays exact.
+        for (i in pixels.indices) {
+          if (i % 4 != 3) pixels[i] = (pixels[i].toInt() and keep).toByte()
+        }
+        bitmap.installPixels(pixels)
+      }
+      return Image.makeFromBitmap(bitmap)
+    }
+
+    private fun pngBytes(image: Image): Int =
+      requireNotNull(image.encodeToData(EncodedImageFormat.PNG)).size
+
+    /** Whether [key]'s theme is a dark one: `baked:<palette>:dark` or `style:<id>:dark`. */
+    fun isDark(key: DesignKey): Boolean = key.theme.split(':').getOrNull(2) == "dark"
+
+    /** The named bitmap an asset is baked in as: `asset_<key>`, dots and dashes as underscores. */
+    fun assetName(key: String): String = "asset_" + key.replace(Regex("[^A-Za-z0-9_]"), "_")
+
+    private fun JsonObject.string(name: String): String? =
+      (this[name] as? JsonPrimitive)?.contentOrNull
+
+    private fun JsonObject.properties(): Map<String, JsonElement> =
+      this["properties"]?.jsonObject.orEmpty()
+
+    private fun literal(value: JsonElement?): JsonPrimitive? =
+      (value as? JsonObject)?.get("value") as? JsonPrimitive
+
+    private fun alignment(properties: Map<String, JsonElement>): RemoteAlignment =
+      when (literal(properties["contentAlignment"])?.contentOrNull) {
+        "topCenter" -> RemoteAlignment.TopCenter
+        "topEnd" -> RemoteAlignment.TopEnd
+        "centerStart" -> RemoteAlignment.CenterStart
+        "center" -> RemoteAlignment.Center
+        "centerEnd" -> RemoteAlignment.CenterEnd
+        "bottomStart" -> RemoteAlignment.BottomStart
+        "bottomCenter" -> RemoteAlignment.BottomCenter
+        "bottomEnd" -> RemoteAlignment.BottomEnd
+        else -> RemoteAlignment.TopStart
+      }
+
+    private fun verticalArrangement(properties: Map<String, JsonElement>) =
+      when (literal(properties["verticalArrangement"])?.contentOrNull) {
+        "center" -> RemoteArrangement.Center
+        "bottom" -> RemoteArrangement.Bottom
+        "spaceBetween" -> RemoteArrangement.SpaceBetween
+        "spaceAround" -> RemoteArrangement.SpaceAround
+        "spaceEvenly" -> RemoteArrangement.SpaceEvenly
+        else ->
+          literal(properties["verticalSpacingDp"])?.floatOrNull?.let {
+            RemoteArrangement.spacedBy(it.rdp)
+          } ?: RemoteArrangement.Top
+      }
+
+    private fun horizontalArrangement(properties: Map<String, JsonElement>) =
+      when (literal(properties["horizontalArrangement"])?.contentOrNull) {
+        "center" -> RemoteArrangement.Center
+        "end" -> RemoteArrangement.End
+        "spaceBetween" -> RemoteArrangement.SpaceBetween
+        "spaceAround" -> RemoteArrangement.SpaceAround
+        "spaceEvenly" -> RemoteArrangement.SpaceEvenly
+        else ->
+          literal(properties["horizontalSpacingDp"])?.floatOrNull?.let {
+            RemoteArrangement.spacedBy(it.rdp)
+          } ?: RemoteArrangement.Start
+      }
+
+    private fun horizontalAlignment(properties: Map<String, JsonElement>) =
+      when (literal(properties["horizontalAlignment"])?.contentOrNull) {
+        "center" -> RemoteAlignment.CenterHorizontally
+        "end" -> RemoteAlignment.End
+        else -> RemoteAlignment.Start
+      }
+
+    private fun verticalAlignment(properties: Map<String, JsonElement>) =
+      when (literal(properties["verticalAlignment"])?.contentOrNull) {
+        "center" -> RemoteAlignment.CenterVertically
+        "bottom" -> RemoteAlignment.Bottom
+        else -> RemoteAlignment.Top
+      }
+
+    private fun contentScale(name: String?): ContentScale =
+      when (name) {
+        "crop" -> ContentScale.Crop
+        "fillBounds" -> ContentScale.FillBounds
+        "inside" -> ContentScale.Inside
+        else -> ContentScale.Fit
+      }
+
+    /** `#RRGGBB` or `#AARRGGBB`. */
+    private fun hexColor(hex: String): RemoteColor? {
+      val digits = hex.removePrefix("#")
+      val value = digits.toLongOrNull(16) ?: return null
+      val argb = if (digits.length <= 6) value or 0xFF000000 else value
+      return Color(argb.toInt()).rc
+    }
+  }
+}

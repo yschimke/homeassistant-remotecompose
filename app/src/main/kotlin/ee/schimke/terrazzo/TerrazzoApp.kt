@@ -42,11 +42,13 @@ import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.dashboard.ManagePinnedScreen
+import ee.schimke.terrazzo.dashboard.SkinInstallWorker
 import ee.schimke.terrazzo.dashboard.StudioCardPreview
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
 import ee.schimke.terrazzo.dashboard.preferredDashboardPath
 import ee.schimke.terrazzo.dashboard.rememberDashboardListState
 import ee.schimke.terrazzo.dashboard.rememberSelectedDashboardListState
+import ee.schimke.terrazzo.dashboard.rememberStudioDesignKey
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.shared.AppScreen
 import ee.schimke.terrazzo.shared.CardStudioScreen
@@ -60,6 +62,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -145,6 +148,29 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
   LaunchedEffect(session) {
     val s = session ?: return@LaunchedEffect
     ee.schimke.terrazzo.notify.HaPushReceiver.run(appContext, graph, s)
+  }
+
+  // The routine refresh runs while there is a widget, on the launcher or a watch, to refresh.
+  LaunchedEffect(Unit) {
+    kotlinx.coroutines.flow
+      .combine(graph.widgetStore.installed, graph.wearSyncManager.watchWidgets) { home, watch ->
+        home.isNotEmpty() to watch.isNotEmpty()
+      }
+      .distinctUntilChanged()
+      .collect { ee.schimke.terrazzo.widget.WidgetRoutineRefreshWorker.sync(appContext) }
+  }
+
+  // The launcher and watch widgets follow this session's states, holding the Terrazzo
+  // integration's lease so it sends no state wakes meanwhile.
+  LaunchedEffect(session) {
+    val s = session ?: return@LaunchedEffect
+    // A fresh sign-in registers with mobile_app after handing the session over: wait for it.
+    var webhookId = graph.mobileAppStore.get(s.baseUrl)?.webhookId
+    while (webhookId == null) {
+      kotlinx.coroutines.delay(5_000)
+      webhookId = graph.mobileAppStore.get(s.baseUrl)?.webhookId
+    }
+    ee.schimke.terrazzo.widget.LiveWidgetUpdates.follow(appContext, s, webhookId)
   }
 
   // Once a live session has finished connecting, ask HA for its
@@ -452,6 +478,7 @@ private fun DashboardsRoot(
   var dashboardSaves by remember { mutableIntStateOf(0) }
   val studioServer by
     graph.preferencesStore.designServerUrl.collectAsState(initial = "https://ha.coo.ee/designs/v1")
+  val designToken by graph.preferencesStore.designToken.collectAsState(initial = "")
   val openedValue = opened
 
   var startupResolved by rememberSaveable { mutableStateOf(dashboards is DashboardListState.Ready) }
@@ -607,6 +634,11 @@ private fun DashboardsRoot(
       snapshot,
       onBack = { studioTarget = null },
       initialServerUrl = studioServer.ifBlank { "https://ha.coo.ee" },
+      designToken = designToken,
+      designKey = rememberStudioDesignKey(card, snapshot),
+      // Downloads the published design and switches this card to it, as the card's skin picker
+      // does, even once the studio has closed.
+      onPublished = { designId -> SkinInstallWorker.enqueue(context, card, designId) },
       refreshSnapshot = {
         val current = session.loadDashboard(openedValue).second
         studioTarget = card to current

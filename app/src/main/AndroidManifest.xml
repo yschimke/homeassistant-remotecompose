@@ -284,6 +284,21 @@
             android:theme="@style/Theme.Terrazzo.Translucent" />
 
         <!--
+          Edits a placed launcher widget (WidgetConfigureActivity): the provider metadata's
+          `configure` activity, which the launcher opens from the widget's long-press. Exported
+          because the launcher starts it; it closes for a widget id that isn't one of this app's.
+        -->
+        <activity
+            android:name=".widget.WidgetConfigureActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity="">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <!--
           AppAuth redirect receiver. Catches the `rcha://auth-callback`
           return after the HA sign-in web flow and hands the code to
           AppAuth for token exchange.

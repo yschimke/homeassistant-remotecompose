@@ -465,7 +465,8 @@ internal interface BindingWriter {
 
 /**
  * Compose player: plain names (`<id>.state`); rc-player resolves them against the document's
- * `USER:` named variables, like the View player's `setUserLocal*` setters do.
+ * `USER:` named variables, like the View player's `setUserLocal*` setters do. A name with a domain
+ * of its own (`HA:sun.sun.elevation`) it takes as it is.
  */
 internal class NamedValueWriter(private val values: MutableMap<String, RcNamedValue>) :
   BindingWriter {
@@ -482,15 +483,34 @@ internal class NamedValueWriter(private val values: MutableMap<String, RcNamedVa
   }
 }
 
+/**
+ * View player: a plain name through its `setUserLocal*` setters, which put it in `USER:`. They have
+ * no other domain, so a name with one of its own (`HA:sun.sun.elevation`) is written by its full
+ * name to the document's view, where those setters write too.
+ */
 private class ViewPlayerWriter(private val updater: RemoteComposePlayer) : BindingWriter {
-  override fun string(name: String, value: String) = updater.setUserLocalString(name, value)
+  private val document by lazy { documentView(updater) }
 
-  override fun int(name: String, value: Int) = updater.setUserLocalInt(name, value)
+  override fun string(name: String, value: String) =
+    if (':' in name) checkNotNull(document).setLocalString(name, value)
+    else updater.setUserLocalString(name, value)
 
-  override fun float(name: String, value: Float) = updater.setUserLocalFloat(name, value)
+  override fun int(name: String, value: Int) =
+    if (':' in name) checkNotNull(document).setLocalInt(name, value)
+    else updater.setUserLocalInt(name, value)
+
+  override fun float(name: String, value: Float) =
+    if (':' in name) checkNotNull(document).setLocalFloat(name, value)
+    else updater.setUserLocalFloat(name, value)
 
   override fun flush() = refreshBoundPlayerViews(updater)
 }
+
+private fun documentView(view: View): RemoteComposeView? =
+  view as? RemoteComposeView
+    ?: (view as? ViewGroup)?.let { group ->
+      (0 until group.childCount).firstNotNullOfOrNull { documentView(group.getChildAt(it)) }
+    }
 
 /**
  * Push the diff between the previous push (tracked in [pushed]) and the current [snapshot] for the

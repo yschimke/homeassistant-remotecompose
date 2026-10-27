@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo.core.wearsync
 
+import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.HaSession
@@ -32,6 +33,34 @@ interface WearSyncManager {
   val streamActive: StateFlow<Boolean>
 
   /**
+   * The entities the cards on watch widgets with live updates on read: whose visible changes wake
+   * the phone app to send them on. Kept on disk, so a process started for a wake knows them.
+   */
+  suspend fun watchedEntities(): Set<String> = emptySet()
+
+  /**
+   * Sends [snapshot]'s values for the watch's cards now, from a wake that has a session of its own
+   * rather than the app's ([setSession]).
+   */
+  suspend fun pushValues(snapshot: HaSnapshot) {}
+
+  /**
+   * The Terrazzo widgets placed on the paired watches, each with the card the phone chose: what is
+   * really placed, as each watch reports it.
+   */
+  val watchWidgets: StateFlow<List<WatchWidget>>
+    get() = NO_WATCH_WIDGETS
+
+  /** Shows the card [cardKey] on [instanceId], a widget on watch [nodeId]. */
+  fun chooseWatchWidgetCard(nodeId: String, instanceId: Int, cardKey: String) {}
+
+  /** Whether a paired watch has Terrazzo widgets placed, as the watches last reported. */
+  suspend fun hasPlacedWidgets(): Boolean = false
+
+  /** Turns live updates for [instanceId], a widget on watch [nodeId], [on] or off. */
+  fun setWatchWidgetLive(nodeId: String, instanceId: Int, on: Boolean) {}
+
+  /**
    * Whether the wear data-layer API is usable on this device. Stays `true` on unknown /
    * not-yet-probed (optimistic) and flips to `false` once a Google Play Services call comes back
    * with `API_NOT_CONNECTED` — typically a phone without a paired Wear device or without the
@@ -49,6 +78,8 @@ interface WearSyncManager {
     inputEditing: StateFlow<Boolean> = MutableStateFlow(false),
   )
 }
+
+private val NO_WATCH_WIDGETS: StateFlow<List<WatchWidget>> = MutableStateFlow(emptyList())
 
 /**
  * Inert [WearSyncManager] for environments without a paired wear device (previews, Robolectric,

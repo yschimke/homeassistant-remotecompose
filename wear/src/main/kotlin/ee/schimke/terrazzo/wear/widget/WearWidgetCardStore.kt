@@ -3,20 +3,23 @@ package ee.schimke.terrazzo.wear.widget
 import android.content.Context
 import ee.schimke.terrazzo.wear.sync.atomicWriteBytes
 import ee.schimke.terrazzo.wear.sync.readBytesOrNull
-import ee.schimke.terrazzo.wear.ui.TopLevelEntry
-import ee.schimke.terrazzo.wear.ui.mergeOrdered
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSection
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
+import ee.schimke.terrazzo.wearsync.proto.WearWidgetCardOption
+import ee.schimke.terrazzo.wearsync.proto.WearWidgetCards
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
+import ee.schimke.terrazzo.wearsync.proto.forWearWidget
+import ee.schimke.terrazzo.wearsync.proto.wearSectionCardKey
+import ee.schimke.terrazzo.wearsync.proto.wearWidgetCardOptions
 import java.io.File
 import kotlinx.serialization.Serializable
 
 /**
- * The card a placed Wear widget shows, chosen on the watch ([WearWidgetConfigActivity], or the Wear
- * app's Widgets screen). Watch-local: never sent over the Data Layer.
+ * The card a placed Wear widget shows, chosen on the phone and taken from its [WearWidgetCards]
+ * ([applyWidgetCards]). The watch keeps its own copy so a widget renders without the phone.
  *
  * [card] is a copy of the card as it was chosen, so the widget keeps drawing it when the phone
  * later unpins it; while the phone still sends a card under [cardKey], that newer copy wins
@@ -65,60 +68,66 @@ class WearWidgetCardStore(context: Context) {
     file(instanceId).delete()
   }
 
+  /**
+   * Forgets the card of every widget not in [placedIds], returning how many were dropped.
+   *
+   * [placedIds] is what the system says is placed ([placedCardWidgetsOrNull]). A widget removed
+   * while the app wasn't running, or dropped with the host's data, never reaches
+   * [CardWidget.onRemoved]; without this its file stays forever. A card chosen within [graceMs] of
+   * [nowMs] is kept even when not yet listed: the host may list a widget a moment after the phone's
+   * choice for it arrived.
+   */
+  fun retainOnly(
+    placedIds: Set<Int>,
+    nowMs: Long = System.currentTimeMillis(),
+    graceMs: Long = RECENT_CHOICE_GRACE_MS,
+  ): Int {
+    var dropped = 0
+    dir
+      .listFiles { f -> f.isFile && f.name.endsWith(".pb") }
+      .orEmpty()
+      .forEach { f ->
+        val id = f.nameWithoutExtension.toIntOrNull()
+        if (id != null && id in placedIds) return@forEach
+        val chosenAt =
+          f.readBytesOrNull()
+            ?.let { runCatching { decodeProto<WearWidgetCard>(it) }.getOrNull() }
+            ?.chosenAtMs ?: 0L
+        if (id != null && nowMs - chosenAt in 0 until graceMs) return@forEach
+        if (f.delete()) dropped++
+      }
+    return dropped
+  }
+
   /** Forgets every widget's card: the phone signed out, so none of its cards may stay. */
   fun clear() {
     dir.listFiles().orEmpty().forEach { it.delete() }
   }
 
   private fun file(instanceId: Int): File = File(dir, "$instanceId.pb")
+
+  companion object {
+    /** How long a just-chosen card survives [retainOnly] before the host lists its widget. */
+    const val RECENT_CHOICE_GRACE_MS: Long = 60_000L
+  }
 }
 
-/** A card a widget can show: one the phone sent to the watch, by a key that names it. */
-data class WidgetCardOption(val cardKey: String, val card: CardSummary)
+/** A card a widget can show: see [WearWidgetCardOption]. */
+typealias WidgetCardOption = WearWidgetCardOption
 
-/**
- * The cards a widget can show, as the picker lists them: the pinned cards in the top-level list's
- * order, then the cards of the pinned sections, without repeats (a card pinned on its own and in a
- * section is listed once, under its pin's key). The same cards, in the same order, as
- * [ee.schimke.terrazzo.wear.sync.warmupCards].
- */
+/** The cards a widget can show, as the phone offers them: see [wearWidgetCardOptions]. */
 internal fun widgetCardOptions(
   pinned: PinnedCardSet?,
   sections: PinnedSectionSet?,
-): List<WidgetCardOption> {
-  val entries = mergeOrdered(pinned?.cards.orEmpty(), sections?.sections.orEmpty())
-  val topLevel =
-    entries.filterIsInstance<TopLevelEntry.Card>().map {
-      WidgetCardOption(
-        it.card.cardKey.ifEmpty { "card:${digest(it.card.card.rawJson)}" },
-        it.card.card,
-      )
-    }
-  val inSections =
-    entries.filterIsInstance<TopLevelEntry.Section>().flatMap { entry ->
-      entry.section.cards.map { sectionCardOption(entry.section, it) }
-    }
-  return (topLevel + inSections).distinctBy { it.card }
-}
+): List<WidgetCardOption> = wearWidgetCardOptions(pinned, sections)
 
-/**
- * The [options] a widget of the given size offers. A Large widget leaves out the cards that only
- * fill a Small one ([WearCardDataTier.SmallOnly]): at 200×112 dp they would draw their small tier
- * in a lot of empty space, so they aren't presented as a Large choice at all.
- */
+/** The [options] a widget of the given size offers: see [forWearWidget]. */
 internal fun List<WidgetCardOption>.forWidget(large: Boolean): List<WidgetCardOption> =
-  if (large) filter { wearCardDataTier(it.card.type).supportsLarge } else this
+  forWearWidget(large)
 
-/**
- * A section card's option. Section cards have no key of their own, so it is the section's and the
- * card's config: the same card in the same section keeps its key across syncs.
- */
-private fun sectionCardOption(section: PinnedSection, card: CardSummary): WidgetCardOption =
-  WidgetCardOption(sectionCardKey(section, card), card)
-
-/** The [WidgetCardOption.cardKey] of [card] in [section]: see [sectionCardOption]. */
+/** The [WidgetCardOption.cardKey] of [card] in [section]: see [wearSectionCardKey]. */
 internal fun sectionCardKey(section: PinnedSection, card: CardSummary): String =
-  "section:${section.sectionKey.ifEmpty { section.title }}:${digest(card.rawJson)}"
+  wearSectionCardKey(section, card)
 
 /**
  * What a widget that chose [choice] draws: the card the phone sends under its key now, or the copy
@@ -131,9 +140,3 @@ internal fun currentWidgetCard(
 ): CardSummary =
   widgetCardOptions(pinned, sections).firstOrNull { it.cardKey == choice.cardKey }?.card
     ?: choice.card
-
-private fun digest(text: String): String =
-  java.security.MessageDigest.getInstance("SHA-256")
-    .digest(text.toByteArray())
-    .take(8)
-    .joinToString("") { "%02x".format(it) }

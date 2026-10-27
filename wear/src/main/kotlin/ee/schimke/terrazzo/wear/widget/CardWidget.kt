@@ -2,7 +2,6 @@
 
 package ee.schimke.terrazzo.wear.widget
 
-import android.content.ComponentName
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -15,9 +14,9 @@ import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.glance.wear.AssociateWithGlanceWearWidget
 import androidx.glance.wear.GlanceWearWidget
-import androidx.glance.wear.GlanceWearWidgetManager
 import androidx.glance.wear.GlanceWearWidgetService
 import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetData
@@ -27,6 +26,8 @@ import androidx.glance.wear.core.ActiveWearWidgetHandle
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WearWidgetRawContent
+import androidx.glance.wear.horizontalGradient
+import androidx.glance.wear.verticalGradient
 import androidx.wear.compose.remote.material3.RemoteColorScheme
 import androidx.wear.compose.remote.material3.RemoteMaterialTheme
 import ee.schimke.ha.design.CardDesignSlots
@@ -47,6 +48,8 @@ import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.components.HaWearBackground
+import ee.schimke.ha.rc.components.HaWearGradient
 import ee.schimke.ha.rc.components.LocalPictureImageStrategy
 import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.PictureImageStrategy
@@ -54,25 +57,28 @@ import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideExpressionNames
 import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
 import ee.schimke.ha.rc.components.ProvideHaUberStyle
+import ee.schimke.ha.rc.components.ProvideHaUberTheme
 import ee.schimke.ha.rc.components.ProvideRemoteHaTheme
 import ee.schimke.ha.rc.components.RemoteHaTheme
 import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.ha.rc.components.wearBackground
 import ee.schimke.ha.rc.converterFor
-import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.data.toEntityState
 import ee.schimke.terrazzo.wear.sync.WearDirectAccess
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
 import ee.schimke.terrazzo.wear.sync.syncDesignsFromDataLayer
 import ee.schimke.terrazzo.wear.sync.syncPicturesFromDataLayer
 import ee.schimke.terrazzo.wear.sync.syncWidgetStateFromDataLayer
+import ee.schimke.terrazzo.wear.ui.syncedCardDesign
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
+import ee.schimke.terrazzo.wear.ui.wearCardLook
+import ee.schimke.terrazzo.wear.ui.wearPaletteKey
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -81,14 +87,15 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * A Terrazzo Wear widget: one card the phone sent to the watch, chosen on the watch for this widget
- * instance. Two concrete subclasses, [CardSmallWidget] and [CardLargeWidget], one per Glance Wear
- * container type: the split exists only at the manifest / service level so the system widget picker
- * offers both sizes. Each placed widget reads its own card by its instance id.
+ * A Terrazzo Wear widget: one card the phone sent to the watch, chosen on the phone for this widget
+ * instance ([WearPlacedWidgets.kt][publishPlacedWidgets]). Two concrete subclasses,
+ * [CardSmallWidget] and [CardLargeWidget], one per Glance Wear container type: the split exists
+ * only at the manifest / service level so the system widget picker offers both sizes. Each placed
+ * widget reads its own card by its instance id.
  *
  * Render path mirrors the phone widget ([ee.schimke.terrazzo.widget.TerrazzoWidgetProvider]):
- * 1. [WearWidgetCardStore.read] → the card chosen for this instance ([WearWidgetConfigActivity] or
- *    the Wear app's Widgets screen), resolved against what the phone sends now
+ * 1. [WearWidgetCardStore.read] → the card the phone chose for this instance
+ *    ([syncWidgetCardsFromDataLayer]), resolved against what the phone sends now
  *    ([currentWidgetCard]), and its `rawJson` decoded to a [CardConfig].
  * 2. [WearOfflineStore.readValues] → build an [HaSnapshot] from the pushed [LiveValues] (state +
  *    friendly_name + unit + device_class).
@@ -96,18 +103,17 @@ import kotlinx.serialization.json.JsonPrimitive
  *    Wear captures the composition to RemoteCompose bytes for the watch's RC runtime.
  *
  * Wear colors come from Remote Material 3's named `WearM3.*` state, so the widget host can update
- * them without recapturing the document. The user's selected [ThemeStyle] (read from [WearPrefs])
- * supplies fallback colors for runtimes that do not inject those names.
+ * them without recapturing the document. The phone's selected [ThemeStyle] (read from synced
+ * settings) supplies fallback colors for runtimes that do not inject those names.
  *
  * Limitations: cards that need history / statistics / forecasts won't have that data — only the
  * latest entity state flows over the data layer today. Cards that lean on ops outside the Glance
  * Wear capture profile may fail to capture; the registry's [ee.schimke.ha.rc.UNSUPPORTED_CARD_TYPE]
  * fallback handles unknown types but not in-range ops mismatches.
  *
- * A widget with no card chosen yet draws a short placeholder asking for one: the card is chosen in
- * the Terrazzo app (or by the system's configuration step, where the host offers it). A tap on a
- * widget opens the Wear app on its card ([WearWidgetTaps]); the card's own actions don't run from
- * the widget.
+ * A widget with no card yet draws a short placeholder: the phone gives a new widget a card as soon
+ * as it hears of it ([onAdded]), and the user changes it in the phone app. A tap on a widget opens
+ * the Wear app on its card ([WearWidgetTaps]); the card's own actions don't run from the widget.
  */
 abstract class CardWidget : GlanceWearWidget() {
 
@@ -123,7 +129,15 @@ abstract class CardWidget : GlanceWearWidget() {
     // store them as they arrived. Bounded, like every read before the render: the widget draws
     // from disk, so a slow Data Layer only costs freshness.
     withTimeoutOrNull(DATA_LAYER_TIMEOUT_MS) { syncWidgetStateFromDataLayer(app, store) }
-    val chosen = WearWidgetCardStore(app).read(params.instanceId.id)
+    // The phone's choice for this widget: it may have changed while the app wasn't running.
+    withTimeoutOrNull(DATA_LAYER_TIMEOUT_MS) { syncWidgetCardsFromDataLayer(app) }
+    val chosen =
+      defaultWidgetCard(
+        app,
+        WearWidgetCardStore(app),
+        params.instanceId.id,
+        this is CardLargeWidget,
+      )
     // The pinned cards' Wear widget designs from the design server, synced by the phone.
     withTimeoutOrNull(DATA_LAYER_TIMEOUT_MS) { syncDesignsFromDataLayer(app, store) }
     // A tap opens the Wear app on the card (WearWidgetTaps): the widget can't run its actions.
@@ -140,9 +154,15 @@ abstract class CardWidget : GlanceWearWidget() {
     return data
   }
 
-  /** The widget was removed from the watch: forget the card chosen for it. */
+  /** A widget was placed: tell the phone, which chooses its card. */
+  override suspend fun onAdded(context: Context, widgetHandle: ActiveWearWidgetHandle) {
+    publishPlacedWidgets(context)
+  }
+
+  /** The widget was removed from the watch: forget its card, and tell the phone. */
   override suspend fun onRemoved(context: Context, widgetHandle: ActiveWearWidgetHandle) {
     WearWidgetCardStore(context.applicationContext).remove(widgetHandle.instanceId.id)
+    publishPlacedWidgets(context)
   }
 }
 
@@ -208,10 +228,12 @@ internal suspend fun slotWidgetDataFromStore(
     withTimeoutOrNull(DATA_LAYER_TIMEOUT_MS) { syncPicturesFromDataLayer(app, store, pictured) }
   }
 
-  val style = WearPrefs(app).themeStyle.first()
-  val cardStyle = wearWidgetCardStyle(summary?.cardStyleOverride, WearPrefs(app).cardStyle.first())
+  val look = store.readSettings().wearCardLook()
+  val style = look.palette
+  val cardStyle = wearWidgetCardStyle(summary?.cardStyleOverride, look.style)
   val registry = defaultRegistry().withEnhancedShutter()
-  val updatedColors = wearWidgetColors(style)
+  val scheme = terrazzoWearColorScheme(style, app)
+  val updatedColors = wearWidgetColors(scheme)
 
   // The card's Wear widget designs, as synced from the phone (for pinned cards, by their key).
   val designs =
@@ -222,13 +244,14 @@ internal suspend fun slotWidgetDataFromStore(
   return slotWidgetData(
     registry,
     updatedColors,
-    style,
+    wearPaletteKey(style, scheme),
     card,
     snapshot,
     cardStyle,
     fetchImage = { url -> syncedPicture(store, snapshot, url) },
     wearDesign = { container ->
       designs.firstOrNull { it.container == container }?.let { store.readDesign(it.sha256) }
+        ?: card?.let { store.syncedCardDesign(it, container) }
     },
   )
 }
@@ -239,7 +262,13 @@ internal suspend fun slotWidgetDataFromStore(
  * accent.
  */
 internal fun wearWidgetColors(style: ThemeStyle): RemoteColorScheme {
-  val wearColors = RemoteColorScheme(terrazzoWearColorScheme(style))
+  return wearWidgetColors(terrazzoWearColorScheme(style))
+}
+
+internal fun wearWidgetColors(
+  scheme: androidx.wear.compose.material3.ColorScheme
+): RemoteColorScheme {
+  val wearColors = RemoteColorScheme(scheme)
   return wearColors.copy(tertiary = wearColors.primary, secondary = wearColors.onSurfaceVariant)
 }
 
@@ -267,14 +296,15 @@ internal fun slotWidgetData(
   fetchImage: (url: String) -> ByteArray? = { null },
   wearDesign: (container: String) -> ByteArray? = { null },
 ): WearWidgetData {
-  // The card's state tints its container: warm for heating, amber for a light that is on.
-  val tint = ContainerTint.argbFor(card, snapshot)
+  // The card's state tints its container: warm for heating, amber for a light that is on. A card
+  // style with a surface of its own fills the container with it, tinted or not.
+  val tint = ContainerTint.argbFor(card, snapshot, cardStyle)
   val direct = slotDocument(registry, colors, card, snapshot, cardStyle = cardStyle, tint = tint)
   if (card == null) return direct
   val design = CardDesignTemplates.designCard(card, snapshot, registry)
-  val converter = registry.converterFor(design.type) ?: return direct
-  val properties = converter.wearDesignProperties(design, snapshot) ?: return direct
-  val input = converter.wearDesignTemplate(properties) ?: return direct
+  val converter = registry.converterFor(design.type)
+  val properties = converter?.wearDesignProperties(design, snapshot)
+  val input = properties?.let { converter?.wearDesignTemplate(it) }
   return object : WearWidgetData {
     override suspend fun captureRawContent(
       context: Context,
@@ -284,7 +314,10 @@ internal fun slotWidgetData(
       // The server's Wear design for this container: no chrome of its own, the container's. One
       // that leaves its container frame named is a container-neutral template like the card's own
       // below, made into this widget's document first; one that bakes a frame plays as it is.
-      containerOf(params.containerType)?.let(wearDesign)?.let { synced ->
+      containerOf(params.containerType)?.let(wearDesign)?.let { bytes ->
+        val synced =
+          if (WearWidgetTemplate.namesFrame(bytes)) bytes
+          else CardDesignWearTemplate.template(bytes) ?: bytes
         val widget =
           if (WearWidgetTemplate.namesFrame(synced))
             WearWidgetTemplate.instantiate(context, synced, params, isPreview, tint)
@@ -295,6 +328,8 @@ internal fun slotWidgetData(
           return WearWidgetRawContent(it, widget?.extras ?: Bundle(), widget?.widgetTitle)
         }
       }
+      if (properties == null || input == null)
+        return direct.captureRawContent(context, params, isPreview)
       // The card's container-neutral template, made into this widget's document on the watch.
       neutralWidgetTemplate(
           context,
@@ -430,7 +465,7 @@ internal suspend fun neutralWidgetTemplate(
       }
       runCatching {
         neutralTemplateCaptures.incrementAndGet()
-        WearWidgetTemplate.capture(context) {
+        WearWidgetTemplate.capture(context, cardStyle, wearLevel(input.card, input.snapshot)) {
           SlotContent(
             registry,
             colors,
@@ -452,8 +487,8 @@ internal suspend fun neutralWidgetTemplate(
 
 /**
  * The disk name of a neutral template: everything [WearNeutralTemplateKey] holds, hashed. Null —
- * kept in memory only — for a [themeKey] with no stable name across processes (not an enum, such as
- * [ee.schimke.ha.rc.components.ThemeStyle]).
+ * kept in memory only — for a [themeKey] without a stable name across processes. Palette keys
+ * include all resolved system colors; enum keys remain supported for previews and older callers.
  */
 internal fun neutralTemplateFileName(
   cardType: String,
@@ -461,12 +496,25 @@ internal fun neutralTemplateFileName(
   themeKey: Any,
   cardStyleId: String,
 ): String? {
-  val theme = (themeKey as? Enum<*>)?.let { "${it.javaClass.name}.${it.name}" } ?: return null
-  val stable = listOf(cardType, shape, theme, cardStyleId).joinToString("\u0000")
+  val theme =
+    when (themeKey) {
+      is Enum<*> -> "${themeKey.javaClass.name}.${themeKey.name}"
+      is String -> themeKey.takeIf { it.startsWith("wear-palette-v1:") } ?: return null
+      else -> return null
+    }
+  val stable =
+    listOf(cardType, shape, theme, cardStyleId, NEUTRAL_TEMPLATE_VERSION).joinToString("\u0000")
   return java.security.MessageDigest.getInstance("SHA-256")
     .digest(stable.encodeToByteArray())
     .joinToString("") { "%02x".format(it) }
 }
+
+/**
+ * Bumped when what a neutral template draws changes for the same key, so a template kept on disk
+ * from an older app is captured again. 2: card styles draw their own container background. 3: the
+ * container's glows, bands and edge, and a reading's level.
+ */
+private const val NEUTRAL_TEMPLATE_VERSION = "3"
 
 /** One container-neutral Wear template per card shape and theme: see [WearWidgetTemplate]. */
 private data class WearNeutralTemplateKey(val cardType: String, val shape: String, val theme: Any)
@@ -509,9 +557,25 @@ internal fun slotDocument(
   tint: Int? = null,
 ): WearWidgetDocument =
   WearWidgetDocument(
-    background = tint?.let { WearWidgetBrush.color(Color(it).rc) } ?: WearWidgetBrush.Companion,
+    background = wearWidgetBrush(tint, cardStyle.wearBackground()),
     content = { SlotContent(registry, colors, card, snapshot, template, cardStyle) },
   )
+
+/**
+ * The container brush for a widget filled with [fill] (ARGB, or null for Glance Wear's default
+ * surface) under [background]'s straight gradients. The host draws each at its own corner radius.
+ * Glance Wear's brush paints nothing else, so a glow, a band or an edge is the template's only.
+ */
+internal fun wearWidgetBrush(fill: Int?, background: HaWearBackground?): WearWidgetBrush {
+  var brush =
+    (fill ?: background?.base?.toArgb())?.let { WearWidgetBrush.color(Color(it).rc) }
+      ?: WearWidgetBrush.Companion
+  for (layer in background?.layers.orEmpty().filterIsInstance<HaWearGradient>()) {
+    val stops = layer.colors.map { it.rc }
+    brush = if (layer.vertical) brush.verticalGradient(stops) else brush.horizontalGradient(stops)
+  }
+  return brush
+}
 
 /** What a widget shows inside its container: see [slotDocument]. */
 @Composable
@@ -537,9 +601,11 @@ internal fun SlotContent(
       RemoteMaterialTheme(colorScheme = colors) {
         val theme = RemoteMaterialTheme.colorScheme.asHaTheme()
         ProvideRemoteHaTheme(theme) {
-          // The user's card style brings its instruments, type and shapes; the watch keeps its own
-          // palette (the WearM3 colours the widget host updates).
-          ProvideHaUberStyle(cardStyle, darkTheme = true) {
+          // The user's card style brings its instruments, type and shapes. Classic keeps the
+          // watch's own palette (the WearM3 colours the widget host updates); a style with a
+          // surface of its own ([wearBackground]) fills the container with it, so it brings the
+          // palette its text reads on, too.
+          WearCardStyle(cardStyle) {
             ProvideCardSizeMode(CardSizeMode.Fixed) {
               // The Glance Wear container already supplies its own shape + brush via
               // WearWidgetBrush, so suppress the per-card rounded clip + divider border that would
@@ -570,9 +636,16 @@ internal fun SlotContent(
   }
 }
 
+/** [cardStyle] for a widget's card: see [SlotContent]. */
+@Composable
+private fun WearCardStyle(cardStyle: HaUberTheme, content: @Composable () -> Unit) {
+  if (cardStyle.wearBackground() == null) ProvideHaUberStyle(cardStyle, darkTheme = true, content)
+  else ProvideHaUberTheme(cardStyle, darkTheme = true, content)
+}
+
 /**
- * What a widget draws with no card chosen yet (or one whose `rawJson` failed to decode): where to
- * choose one. A Wear widget can't open the picker on a tap, so it names the app.
+ * What a widget draws with no card chosen yet (or one whose `rawJson` failed to decode): where the
+ * card is chosen, on the phone.
  */
 @Composable
 private fun ChooseCardPlaceholder(theme: RemoteHaTheme) {
@@ -582,7 +655,7 @@ private fun ChooseCardPlaceholder(theme: RemoteHaTheme) {
 }
 
 /** The placeholder's text: see [ChooseCardPlaceholder]. */
-internal const val CHOOSE_CARD_PLACEHOLDER = "Choose a card in the Terrazzo app"
+internal const val CHOOSE_CARD_PLACEHOLDER = "Choose a card in Terrazzo on your phone"
 
 private val cardJson = Json { ignoreUnknownKeys = true }
 
@@ -621,31 +694,6 @@ suspend fun refreshAllCardWidgets(context: Context) {
   listOf(CardSmallWidget(), CardLargeWidget()).forEach { widget ->
     runCatching { widget.triggerUpdateAll(context) }
   }
-}
-
-/** Ask the host to re-render widget [instanceId] of [provider]: its card was just chosen. */
-suspend fun refreshCardWidget(context: Context, provider: ComponentName?, instanceId: Int) {
-  val widgets =
-    when (provider?.className) {
-      CardSmallWidgetService::class.java.name -> listOf(CardSmallWidget())
-      CardLargeWidgetService::class.java.name -> listOf(CardLargeWidget())
-      // Not one of ours or not known: whichever size the instance is.
-      else -> listOf(CardSmallWidget(), CardLargeWidget())
-    }
-  for (widget in widgets) {
-    val instance = runCatching {
-      GlanceWearWidgetManager(context).fetchActiveWidgets(widget::class)
-    }
-      .getOrNull()
-      ?.firstOrNull { it.instanceId.id == instanceId }
-      ?.instanceId
-    if (instance != null) {
-      runCatching { widget.triggerUpdate(context, instance) }
-      return
-    }
-  }
-  // Not listed (yet): update them all.
-  refreshAllCardWidgets(context)
 }
 
 /**

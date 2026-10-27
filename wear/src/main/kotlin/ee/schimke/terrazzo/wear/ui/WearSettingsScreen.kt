@@ -1,45 +1,30 @@
 package ee.schimke.terrazzo.wear.ui
 
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
-import androidx.wear.compose.material3.RadioButton
 import androidx.wear.compose.material3.Text
-import ee.schimke.ha.rc.components.HaUberTheme
-import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.shared.PUBLIC_FEEDBACK_WARNING
 import ee.schimke.terrazzo.shared.PUBLIC_ISSUE_TRACKER
 import ee.schimke.terrazzo.shared.feedbackIssueUrl
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 
-/**
- * Wear settings — the Widgets screen ([onOpenWidgets], where widgets are shown), theme and card
- * style pickers plus a small "About" footer that shows what phone the watch is paired with (and
- * whether phone has demo mode enabled). Demo mode itself is phone-driven; there's no toggle here.
- */
+/** Wear settings: widget cards and phone connection details. Appearance follows mobile. */
 @Composable
 fun WearSettingsScreen(
-  selected: ThemeStyle,
   settings: WearSettings,
-  onSelectTheme: (ThemeStyle) -> Unit,
   onBack: () -> Unit,
   modifier: Modifier = Modifier,
-  cardStyle: String = HaUberTheme.Classic.id,
-  onSelectCardStyle: (String) -> Unit = {},
   onOpenWidgets: (() -> Unit)? = null,
 ) {
   var reporting by remember { mutableStateOf(false) }
@@ -106,56 +91,10 @@ fun WearSettingsScreen(
         }
       }
     }
-    item { ListHeader { Text("Theme") } }
-
     item {
-      Text(
-        text = selected.tagline,
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-      )
+      Text("Theme and card designs follow your phone.", style = MaterialTheme.typography.bodySmall)
     }
 
-    items(ThemeStyle.entries) { style ->
-      RadioButton(
-        selected = style == selected,
-        onSelect = { onSelectTheme(style) },
-        label = {
-          Text(
-            text = style.displayName,
-            fontWeight = if (style == selected) FontWeight.SemiBold else FontWeight.Normal,
-          )
-        },
-        modifier = Modifier.fillMaxWidth(),
-      )
-    }
-
-    item { Spacer(Modifier.height(8.dp)) }
-    item { ListHeader { Text("Card style") } }
-    item {
-      Text(
-        text = "Widget style. A card's own style from your phone takes priority.",
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-      )
-    }
-    items(HaUberTheme.all) { uber ->
-      RadioButton(
-        selected = uber.id == cardStyle,
-        onSelect = { onSelectCardStyle(uber.id) },
-        label = {
-          Text(
-            text = uber.displayName,
-            fontWeight = if (uber.id == cardStyle) FontWeight.SemiBold else FontWeight.Normal,
-          )
-        },
-        modifier = Modifier.fillMaxWidth(),
-      )
-    }
-
-    item { Spacer(Modifier.height(8.dp)) }
     item { ListHeader { Text("Phone") } }
     item {
       Text(

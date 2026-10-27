@@ -48,6 +48,7 @@ class WidgetInstallReceiver : BroadcastReceiver() {
         return@runBlocking
       }
       store.put(widgetId, baseUrl, card)
+      WidgetRoutineRefreshWorker.sync(context)
     }
 
     // Kick the provider so the first frame ships now instead of

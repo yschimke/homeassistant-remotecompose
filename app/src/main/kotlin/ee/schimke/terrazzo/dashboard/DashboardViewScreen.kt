@@ -388,8 +388,17 @@ fun DashboardViewScreen(
         DashboardList(
           dashboard = s.dashboard,
           placeholderSession = session,
-          // Live cameras (from a card's long-press sheet) move on a frame every couple of seconds.
-          snapshot = rememberLiveCameraFrames(s.snapshot),
+          // The dashboard's cameras move on a frame every few seconds; live ones (from a card's
+          // long-press sheet) every couple.
+          snapshot =
+            rememberLiveCameraFrames(
+              s.snapshot,
+              remember(s.dashboard) {
+                referencedEntities(s.dashboard).filterTo(mutableSetOf()) {
+                  it.startsWith("camera.")
+                }
+              },
+            ),
           baseUrl = session.baseUrl,
           dashboardUrlPath = urlPath ?: "",
           onCardLongPress = onCardLongPress,
@@ -405,12 +414,19 @@ fun DashboardViewScreen(
 
   moreInfoEntity?.let { entityId ->
     val historyUrl = resolveAgainstBase(session.baseUrl, "/history?entity_id=$entityId")
+    val ready = state as? DashboardState.Ready
+    val pairedCamera =
+      remember(ready?.dashboard, entityId) { ready?.dashboard?.let { pairedCamera(it, entityId) } }
     EntityMoreInfoSheet(
       entityId = entityId,
       state = (state as? DashboardState.Ready)?.snapshot?.states?.get(entityId),
       loadHistory = { hours -> session.fetchHistory(listOf(entityId), hours)[entityId].orEmpty() },
       onOpenHistory = historyUrl?.let { url -> { openInBrowser(context, url) } },
       onDismiss = { moreInfoEntity = null },
+      readOnly = readOnly,
+      onAction = actionDispatcher::dispatch,
+      temperatureUnit = (state as? DashboardState.Ready)?.snapshot?.temperatureUnit,
+      camera = pairedCamera?.let { CameraView(it, ready?.snapshot?.states?.get(it)) },
     )
   }
 }

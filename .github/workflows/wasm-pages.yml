@@ -43,7 +43,7 @@ concurrency:
 jobs:
   build:
     name: Build and test Wasm website
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Playwright has no Chromium for ubuntu-26.04 (ubuntu-latest)
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7.0.1
@@ -59,7 +59,7 @@ jobs:
         run: ./gradlew :app-ui:wasmJsBrowserDistribution :ha-client:jvmTest :app-ui:jvmTest :rc-player-ui:jvmTest --stacktrace
       - uses: actions/setup-python@v7.1.0
         with:
-          python-version: '3.15.1'
+          python-version: '3.15.2'
       - name: Install browser test tools
         run: |
           python -m pip install playwright==1.62.0 pillow==12.3.0

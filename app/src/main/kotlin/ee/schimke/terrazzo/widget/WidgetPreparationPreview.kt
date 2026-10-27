@@ -5,7 +5,9 @@ package ee.schimke.terrazzo.widget
 import android.os.Looper
 import android.widget.FrameLayout
 import android.widget.RemoteViews
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -43,12 +45,17 @@ internal val LocalWidgetPreviewCapture =
     }
   }
 
-/** Renders the actual launcher document, recaptured at each selected size. */
+/**
+ * Renders the actual launcher document, recaptured at each selected size. With [fixedSize] (an
+ * installed widget's slot, from the launcher's own options) it renders at exactly that size, with
+ * no size picker: the launcher, not this screen, owns a placed widget's size.
+ */
 @Composable
 internal fun WidgetPreparationPreview(
   baseUrl: String,
   card: CardConfig,
   snapshot: HaSnapshot,
+  fixedSize: WidgetSizeDp? = null,
   onPreview: (RemoteViews?) -> Unit,
 ) {
   val context = LocalContext.current
@@ -79,7 +86,7 @@ internal fun WidgetPreparationPreview(
   var attempt by remember { mutableIntStateOf(0) }
   // Keep the last inflated view on screen during refresh/resize, but never install an older edit.
   val latestOnPreview by rememberUpdatedState(onPreview)
-  LaunchedEffect(baseUrl, card, snapshot, width, height, attempt, capture) {
+  LaunchedEffect(baseUrl, card, snapshot, width, height, attempt, capture, fixedSize) {
     if (prepared?.baseUrl != baseUrl || prepared?.card != card) latestOnPreview(null)
     failed = false
     // Coalesce typing/drag steps and keep capture/image loading off the UI thread.
@@ -92,7 +99,8 @@ internal fun WidgetPreparationPreview(
             baseUrl,
             card,
             snapshot,
-            WidgetSizeDp(width * LAUNCHER_CELL_WIDTH_DP, height * LAUNCHER_CELL_HEIGHT_DP),
+            fixedSize
+              ?: WidgetSizeDp(width * LAUNCHER_CELL_WIDTH_DP, height * LAUNCHER_CELL_HEIGHT_DP),
           )
         }
       } catch (cancelled: CancellationException) {
@@ -123,7 +131,9 @@ internal fun WidgetPreparationPreview(
               card,
               it,
               inflateWidgetPreview(context, it),
-              "$label preview, $stateLabel, $width by $height cells",
+              if (fixedSize != null) {
+                "$label preview, $stateLabel, at its home screen size"
+              } else "$label preview, $stateLabel, $width by $height cells",
             )
           }
         } catch (cancelled: CancellationException) {
@@ -148,7 +158,7 @@ internal fun WidgetPreparationPreview(
         Text("Try again or use a smaller size. You can still design this card in Card Studio.")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
           Button(onClick = { attempt++ }) { Text("Retry preview") }
-          if (width != bounds.minCellsW || height != bounds.minCellsH) {
+          if (fixedSize == null && (width != bounds.minCellsW || height != bounds.minCellsH)) {
             OutlinedButton(
               onClick = {
                 width = bounds.minCellsW
@@ -162,6 +172,24 @@ internal fun WidgetPreparationPreview(
       }
     }
     if (prepared == null) return
+  }
+  if (fixedSize != null) {
+    Text(
+      "As it is on your home screen: ${fixedSize.widthDp} × ${fixedSize.heightDp} dp. Resize it " +
+        "there and it adapts.",
+      style = MaterialTheme.typography.bodySmall,
+      color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    // At the slot's own size; a slot wider than this screen scrolls rather than shrinks.
+    Box(Modifier.horizontalScroll(rememberScrollState())) {
+      Box(
+        Modifier.size(fixedSize.widthDp.dp, fixedSize.heightDp.dp).testTag("widget-fixed-size"),
+        contentAlignment = androidx.compose.ui.Alignment.Center,
+      ) {
+        PreparedPreview(prepared, cornerRadius)
+      }
+    }
+    return
   }
   // One line of guidance: the widget adapts, so sizing here is a look, not a setting.
   Text(
@@ -206,34 +234,45 @@ internal fun WidgetPreparationPreview(
     MaterialTheme.colorScheme.secondary,
     MaterialTheme.colorScheme.primary,
   ) {
-    val current = prepared
-    if (current != null) {
-      Box(
-        modifier =
-          Modifier.fillMaxSize()
-            .clip(RoundedCornerShape(cornerRadius))
-            .testTag("widget-render")
-            .semantics { contentDescription = current.description }
-      ) {
-        AndroidView(
-          factory = { ctx ->
-            FrameLayout(ctx).apply {
-              importantForAccessibility =
-                android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
-            }
-          },
-          update = { host ->
-            if (host.getChildAt(0) !== current.frame) {
-              // Both operations happen before the next draw; the host itself stays attached.
-              host.removeAllViews()
-              host.addView(current.frame, FrameLayout.LayoutParams(-1, -1))
-            }
-          },
-          modifier = Modifier.fillMaxSize(),
-        )
-      }
-    } else CircularProgressIndicator(modifier = Modifier.padding(12.dp))
+    PreparedPreview(prepared, cornerRadius)
   }
+}
+
+/**
+ * The inflated launcher document, clipped to the launcher's widget corner; a spinner until then.
+ */
+@Composable
+private fun PreparedPreview(
+  prepared: PreparedWidgetPreview?,
+  cornerRadius: androidx.compose.ui.unit.Dp,
+) {
+  val current = prepared
+  if (current != null) {
+    Box(
+      modifier =
+        Modifier.fillMaxSize()
+          .clip(RoundedCornerShape(cornerRadius))
+          .testTag("widget-render")
+          .semantics { contentDescription = current.description }
+    ) {
+      AndroidView(
+        factory = { ctx ->
+          FrameLayout(ctx).apply {
+            importantForAccessibility =
+              android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+          }
+        },
+        update = { host ->
+          if (host.getChildAt(0) !== current.frame) {
+            // Both operations happen before the next draw; the host itself stays attached.
+            host.removeAllViews()
+            host.addView(current.frame, FrameLayout.LayoutParams(-1, -1))
+          }
+        },
+        modifier = Modifier.fillMaxSize(),
+      )
+    }
+  } else CircularProgressIndicator(modifier = Modifier.padding(12.dp))
 }
 
 private data class PreparedWidgetPreview(

@@ -232,15 +232,19 @@ Deliberate spike limits, each owned by a milestone below:
   older and newer apps interoperate), and a widget showing that card bakes the one for its
   container, falling back to its own capture (`SlotWidgetServerDesignTest`,
   `WearCardDesignPickerTest`). A pinned section's card has no designs sent: it draws its own.
-- **Which card a Wear widget shows is chosen on the watch.** The phone only chooses what the watch
-  shows ("Show on watch": `/wear/pinned`, `/wear/sections`); it assigns no widget slots any more
-  (`/wear/slots` is no longer written, and the watch ignores it). The watch has two providers,
-  `CardSmallWidgetService` and `CardLargeWidgetService`, enabled while any card is synced; each
-  placed widget keeps its card in `WearWidgetCardStore` by its widget instance id (its key and a
-  copy, so it keeps drawing when the phone unpins it) and draws "Choose a card in the Terrazzo
-  app" until one is chosen — in `WearWidgetConfigActivity` (the Glance Wear provider
-  configuration activity, where the host launches it) or the Wear app's Settings → Widgets
-  (`CardWidgetChoiceTest`, `WearWidgetCardStoreTest`).
+- **Which card a Wear widget shows is chosen on the phone.** The phone chooses what the watch
+  shows ("Show on watch": `/wear/pinned`, `/wear/sections`) and, for each placed widget, which of
+  those cards it shows (`/wear/slots` is no longer written, and the watch ignores it). The watch
+  has two providers, `CardSmallWidgetService` and `CardLargeWidgetService`, enabled while any card
+  is synced, and no configuration of its own. Each watch reports its placed widgets
+  (`/wear/placed-widgets`, `publishPlacedWidgets`) when one is added or removed, on start and
+  when its Widgets screen opens; the phone lists them under Widgets → Watch and writes each one's
+  card to `/wear/widget-cards` (`watchWidgetCardChoices`): the user's choice, else the card the
+  watch reports, else the first card that fits its size (`wearWidgetCardOptions`, shared by both
+  apps). The watch keeps each widget's card in `WearWidgetCardStore` by its instance id (its key
+  and a copy, so it keeps drawing when the phone unpins it); a new widget takes that same first
+  card at once, so it never waits on the phone (`WatchWidgetCardsTest`,
+  `WearWidgetCardStoreTest`).
 - **Launcher widgets are baked** (S1, `LauncherDesigns`): a launcher can't receive bindings, so
   the widget's launcher template — keyed by size (`variant = <w>x<h>`) and widget theme, captured
   from the same tree as a live widget (`LauncherWidgetContent`) — gets the card's values written

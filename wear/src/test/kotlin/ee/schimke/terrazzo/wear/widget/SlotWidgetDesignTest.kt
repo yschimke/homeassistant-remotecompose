@@ -376,7 +376,7 @@ class SlotWidgetDesignTest {
   @Test
   fun offlineGridWidgetsFollowPersistedSelectionAndFreshValuesAtBothSizes() = runBlocking {
     val context = RuntimeEnvironment.getApplication()
-    val prefs = ee.schimke.terrazzo.wear.data.WearPrefs(context)
+    val appearance = ee.schimke.terrazzo.wear.sync.WearOfflineStore(context)
     val store = ee.schimke.terrazzo.wear.sync.WearOfflineStore(context)
     val raw =
       """{"type":"grid","columns":2,"square":false,"cards":[{"type":"button","entity":"light.kitchen","name":"Kitchen"},{"type":"button","entity":"light.office","name":"Office"}]}"""
@@ -451,7 +451,7 @@ class SlotWidgetDesignTest {
           )
           .captureRawContent(context, sized, false)
           .rcDocument
-      prefs.setCardStyle("braun")
+      appearance.writeSettings(ee.schimke.terrazzo.wearsync.proto.WearSettings(cardStyle = "braun"))
       pin("")
       live("on")
       val inherited = render()
@@ -459,7 +459,7 @@ class SlotWidgetDesignTest {
       val overridden = render()
       assertFalse(
         inherited.contentEquals(overridden),
-        "offline pin style overrides the watch style",
+        "offline pin style overrides the phone style",
       )
       live("off")
       val updated = render()
@@ -468,13 +468,15 @@ class SlotWidgetDesignTest {
       val cleared = render()
       assertFalse(
         updated.contentEquals(cleared),
-        "clearing the persisted override restores the watch style",
+        "clearing the persisted override restores the phone style",
       )
-      prefs.setCardStyle("console")
+      appearance.writeSettings(
+        ee.schimke.terrazzo.wearsync.proto.WearSettings(cardStyle = "console")
+      )
       val changedWatch = render()
       assertFalse(
         cleared.contentEquals(changedWatch),
-        "watch setting changes invalidate the cached widget design",
+        "synced phone settings invalidate the cached widget design",
       )
       for ((name, bytes) in
         listOf(

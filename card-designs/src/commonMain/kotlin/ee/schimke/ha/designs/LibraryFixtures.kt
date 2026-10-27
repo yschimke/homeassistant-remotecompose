@@ -355,9 +355,9 @@ object LibraryFixtures {
       ),
       fixture(
         "picture-glance",
+        // No `image`: a glance with a picture draws on the direct path, not from a design.
         card("picture-glance") {
           put("title", "Living room")
-          put("image", "/local/living.jpg")
           putJsonArray("entities") {
             add("light.kitchen")
             add("switch.fan")

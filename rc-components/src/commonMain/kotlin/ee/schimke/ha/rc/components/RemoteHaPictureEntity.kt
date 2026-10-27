@@ -18,6 +18,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.state.RemoteImageBitmap
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
@@ -120,21 +121,7 @@ fun RemoteHaPictureEntity(
           // work around the alpha010 1×1 default in upstream
           // `addNamedBitmapUrl(name, url)`. See
           // [LocalNamedRemoteBitmap.kt] and #277.
-          val bindingName = data.entityId?.let(::pictureBindingName) ?: data.imageUrl
-          val rb =
-            when (val strategy = LocalPictureImageStrategy.current) {
-              is PictureImageStrategy.Url ->
-                rememberLocalNamedRemoteBitmap(
-                  name = bindingName,
-                  url = data.imageUrl,
-                  width = strategy.widthPx,
-                  height = strategy.heightPx,
-                )
-              is PictureImageStrategy.Inline ->
-                strategy.bitmapFor(data.imageUrl)?.let { bytes ->
-                  rememberLocalNamedRemoteBitmap(name = bindingName) { bytes }
-                }
-            }
+          val rb = rememberPictureBitmap(data.imageUrl, data.pictureEntityId)
           if (rb != null) {
             RemoteImage(
               remoteBitmap = rb,
@@ -230,5 +217,29 @@ fun RemoteHaPictureEntity(
         }
       }
     }
+  }
+}
+
+/**
+ * The picture at [url] as the embedding surface encodes it ([LocalPictureImageStrategy]): a named
+ * URL the player fetches, or bytes a widget prefetched; null when an inline surface has none. Named
+ * by [pictureEntityId] when the picture is an entity's (`entity_picture`), so the name survives a
+ * rotated token, else by the URL itself.
+ */
+@Composable
+internal fun rememberPictureBitmap(url: String, pictureEntityId: String?): RemoteImageBitmap? {
+  val bindingName = pictureEntityId?.let(::pictureBindingName) ?: url
+  return when (val strategy = LocalPictureImageStrategy.current) {
+    is PictureImageStrategy.Url ->
+      rememberLocalNamedRemoteBitmap(
+        name = bindingName,
+        url = url,
+        width = strategy.widthPx,
+        height = strategy.heightPx,
+      )
+    is PictureImageStrategy.Inline ->
+      strategy.bitmapFor(url)?.let { bytes ->
+        rememberLocalNamedRemoteBitmap(name = bindingName) { bytes }
+      }
   }
 }

@@ -346,38 +346,10 @@ private fun WearDashboardPreviewContent(style: String) {
 fun WearSettingsPreview() {
   WearPreviewFrame {
     WearSettingsScreen(
-      selected = ThemeStyle.TerrazzoHome,
       settings = WearSettings(demoMode = true, baseUrl = "demo://terrazzo"),
-      onSelectTheme = {},
       onBack = {},
       onOpenWidgets = {},
     )
-  }
-}
-
-@Preview(name = "Wear: widget card picker", device = WearDevices.SMALL_ROUND, showSystemUi = true)
-@Composable
-fun WearWidgetCardPickerPreview() {
-  WearPreviewFrame {
-    WearWidgetCardPicker(
-      options = ee.schimke.terrazzo.wear.widget.widgetCardOptions(PINNED_FIXTURE, SECTIONS_FIXTURE),
-      values = VALUES_FIXTURE,
-      chosenKey = "k1",
-      onChoose = {},
-      onCancel = {},
-    )
-  }
-}
-
-@Preview(
-  name = "Wear: widget card picker (empty)",
-  device = WearDevices.SMALL_ROUND,
-  showSystemUi = true,
-)
-@Composable
-fun WearWidgetCardPickerPreview_Empty() {
-  WearPreviewFrame {
-    WearWidgetCardPicker(options = emptyList(), values = emptyMap(), onChoose = {})
   }
 }
 
@@ -392,7 +364,6 @@ fun WearWidgetsPreview() {
           WidgetRow(ee.schimke.terrazzo.wear.widget.PlacedWidget(1, provider, false), "Kitchen"),
           WidgetRow(ee.schimke.terrazzo.wear.widget.PlacedWidget(2, provider, true), null),
         ),
-      onOpen = {},
       onBack = {},
     )
   }
@@ -401,7 +372,7 @@ fun WearWidgetsPreview() {
 @Preview(name = "Wear: widgets (empty)", device = WearDevices.SMALL_ROUND, showSystemUi = true)
 @Composable
 fun WearWidgetsPreview_Empty() {
-  WearPreviewFrame { WearWidgetsContent(rows = emptyList(), onOpen = {}, onBack = {}) }
+  WearPreviewFrame { WearWidgetsContent(rows = emptyList(), onBack = {}) }
 }
 
 // --- Play Store listing graphics ----------------------------------------

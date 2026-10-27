@@ -7,9 +7,11 @@ import android.os.Build
 import android.util.Log
 import ee.schimke.terrazzo.wear.widget.CardLargeWidgetService
 import ee.schimke.terrazzo.wear.widget.CardSmallWidgetService
+import ee.schimke.terrazzo.wear.widget.publishPlacedWidgets
 import ee.schimke.terrazzo.wear.widget.refreshAllCardWidgets
 import ee.schimke.terrazzo.wear.widget.widgetCardOptions
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
@@ -20,13 +22,15 @@ import kotlinx.coroutines.launch
  * step with what the phone sends, and the placed widgets up to date:
  *
  * - **Enabled** while the watch has any card to show (a pinned card, or a pinned section's), so the
- *   system widget picker offers Terrazzo only when there is something to choose. Each placed widget
- *   chooses its own card on the watch ([ee.schimke.terrazzo.wear.widget.WearWidgetCardStore]).
+ *   system widget picker offers Terrazzo only when there is something to choose. The phone chooses
+ *   each placed widget's card ([ee.schimke.terrazzo.wear.widget.WearWidgetCardStore]).
  * - **Disabled** while there is none (never paired, or signed out). A host may drop the placed
  *   widgets of a disabled provider, so a widget showing a card the phone has since unpinned keeps
  *   drawing its kept copy only while some card is still synced.
- * - **Refreshed** when the pins, sections or the pinned cards' Wear designs change: a placed widget
- *   may show any of them.
+ * - **Reported** on start: the phone hears what is placed ([publishPlacedWidgets]), and a widget
+ *   removed while the app wasn't running (so never reaching `onRemoved`) loses its saved card.
+ * - **Refreshed** when the pins, sections, phone appearance or selected Wear designs change: a
+ *   placed widget may show any of them.
  *
  * Below [WEAR_WIDGETS_MIN_SDK] both components stay disabled; the alpha library short-circuits its
  * own bind path on older Wear OS versions, and an enabled-but-broken component would only confuse
@@ -49,6 +53,7 @@ class WearWidgetsController(
       disableAll()
       return
     }
+    scope.launch(Dispatchers.IO) { publishPlacedWidgets(context.applicationContext) }
     scope.launch {
       combine(repo.pinned, repo.sections) { pinned, sections ->
           widgetCardOptions(pinned, sections).isNotEmpty()
@@ -59,7 +64,7 @@ class WearWidgetsController(
       // A changed card, or a newly synced design for one, must redraw the placed widgets showing
       // it, even when the providers' enabled state did not change. Skips the first, on-disk value:
       // the widgets already drew it.
-      combine(repo.pinned, repo.sections, repo.slotDesigns) { _, _, _ -> }
+      combine(repo.pinned, repo.sections, repo.designRevision, repo.settings) { _, _, _, _ -> }
         .drop(1)
         .collectLatest { refreshAllCardWidgets(context.applicationContext) }
     }

@@ -118,4 +118,41 @@ class WeatherDesignPropertiesTest {
     val plain = assertNotNull(map.designProperties(config(), people))
     assertEquals(plain, map.designProperties(config("aspect_ratio" to "16:9"), people))
   }
+
+  @Test
+  fun forecastsTheHostLoadedAreTheDays() {
+    val day = buildJsonObject {
+      put("condition", "rainy")
+      put("temperature", 12)
+      put("templow", 4)
+      put("datetime", "2026-10-26T00:00:00")
+    }
+    // A current entity carries no `forecast` attribute; the host loads it into the snapshot.
+    val entity =
+      EntityState("weather.home", "cloudy", JsonObject(mapOf("temperature" to JsonPrimitive(13))))
+    val loaded =
+      HaSnapshot(
+        states = mapOf("weather.home" to entity),
+        forecasts =
+          mapOf(
+            "weather.home" to
+              JsonObject(
+                mapOf(
+                  "daily" to
+                    buildJsonArray {
+                      add(day)
+                      add(day)
+                    }
+                )
+              )
+          ),
+      )
+    val properties = assertNotNull(converter.designProperties(card, loaded))
+    assertEquals("2", properties["days"])
+    assertEquals(2, weatherData(card, loaded).days.size)
+    // Asked for hourly, the daily list isn't used.
+    val hourly =
+      CardConfig(card.type, JsonObject(card.raw + ("forecast_type" to JsonPrimitive("hourly"))))
+    assertEquals("0", converter.designProperties(hourly, loaded)?.get("days"))
+  }
 }

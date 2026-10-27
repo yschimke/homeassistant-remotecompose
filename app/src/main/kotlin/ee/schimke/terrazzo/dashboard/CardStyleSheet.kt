@@ -45,6 +45,7 @@ import ee.schimke.ha.client.design.CardDesignOverrides
 import ee.schimke.ha.client.design.CardDesignScope
 import ee.schimke.ha.client.design.DesignOption
 import ee.schimke.ha.design.DesignEntry
+import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignTemplates
@@ -162,6 +163,28 @@ fun CardStyleSheet(
  * device designs that match the card's device ([cardDevice]) and the forks the person can see.
  * Empty with no design server, before its first sync, or for a card with no design key.
  */
+/**
+ * [card]'s design key as the dashboard draws it: its theme, mode and card style (its own, else the
+ * dashboard's), keyed as the skin picker keys it. The card studio publishes a design for it.
+ */
+@Composable
+fun rememberStudioDesignKey(card: CardConfig, snapshot: HaSnapshot): DesignKey? {
+  val context = LocalContext.current
+  val overrides by CardDesignOverrideStore.of(context).overrides.collectAsState()
+  val cardStyle =
+    overrides.forCard(card)?.cardStyle?.let(HaUberTheme::byId) ?: LocalCardStyle.current
+  val style = LocalThemeStyle.current
+  val dark = LocalIsDarkTheme.current
+  return remember(card, snapshot, cardStyle, style, dark) {
+    runCatching {
+      val registry = defaultRegistry().withEnhancedShutter()
+      val design = CardDesignTemplates.designCard(card, snapshot, registry)
+      CardDesignTemplates.keyFor(design, snapshot, style, dark, registry, cardStyle = cardStyle)
+    }
+      .getOrNull()
+  }
+}
+
 @Composable
 private fun rememberCardDesignOptions(
   card: CardConfig,

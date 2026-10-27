@@ -87,6 +87,8 @@ import ee.schimke.terrazzo.widget.InstalledWidget
 import ee.schimke.terrazzo.widget.WidgetsContent
 import ee.schimke.terrazzo.widget.cardTypeLabel
 import kotlin.time.Instant
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -457,9 +459,48 @@ fun Screen_Widgets_Installed() = PhoneHost {
   WidgetsContent(
     widgets =
       listOf(
-        InstalledWidget("Front door", cardTypeLabel("tile")),
+        InstalledWidget("Front door", cardTypeLabel("tile"), liveUpdates = true),
         InstalledWidget("Kitchen", cardTypeLabel("light")),
         InstalledWidget("Living room climate", cardTypeLabel("thermostat")),
+      ),
+    onBack = {},
+  )
+}
+
+@Preview(
+  name = "widgets · watch",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_Widgets_Watch() = PhoneHost {
+  val options =
+    listOf(
+      ee.schimke.terrazzo.core.wearsync.WatchWidgetCardOption("front", "Front door"),
+      ee.schimke.terrazzo.core.wearsync.WatchWidgetCardOption("kitchen", "Kitchen"),
+    )
+  WidgetsContent(
+    widgets = listOf(InstalledWidget("Front door", cardTypeLabel("tile"))),
+    watchWidgets =
+      listOf(
+        ee.schimke.terrazzo.core.wearsync.WatchWidget(
+          "w",
+          "Pixel Watch",
+          1,
+          false,
+          "front",
+          options,
+          liveUpdates = true,
+        ),
+        ee.schimke.terrazzo.core.wearsync.WatchWidget(
+          "w",
+          "Pixel Watch",
+          2,
+          true,
+          "kitchen",
+          options,
+        ),
       ),
     onBack = {},
   )
@@ -779,7 +820,11 @@ private val MORE_INFO_SWITCH_HISTORY: List<HistoryPoint> =
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MoreInfoSheetFrame(state: EntityState, history: List<HistoryPoint>) {
+private fun MoreInfoSheetFrame(
+  state: EntityState,
+  history: List<HistoryPoint>,
+  withControls: Boolean = false,
+) {
   Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.32f))) {
     ProvideScreenSkin {
       val skin = currentScreenSkin()
@@ -797,6 +842,7 @@ private fun MoreInfoSheetFrame(state: EntityState, history: List<HistoryPoint>) 
             onOpenHistory = {},
             initialHistory = history,
             nowMs = { MORE_INFO_NOW_MS },
+            onAction = if (withControls) ({}) else null,
           )
         }
       }
@@ -824,6 +870,71 @@ fun Screen_MoreInfo_Numeric() = PhoneHost {
 @Composable
 fun Screen_MoreInfo_OnOff() = PhoneHost {
   MoreInfoSheetFrame(MORE_INFO_SWITCH_STATE, MORE_INFO_SWITCH_HISTORY)
+}
+
+private val MORE_INFO_LIGHT_STATE =
+  EntityState(
+    entityId = "light.desk",
+    state = "on",
+    attributes =
+      buildJsonObject {
+        put("friendly_name", "Desk lamp")
+        put("brightness", 166)
+        put("color_temp_kelvin", 3200)
+        put("min_color_temp_kelvin", 2200)
+        put("max_color_temp_kelvin", 6500)
+        put(
+          "supported_color_modes",
+          buildJsonArray { listOf("color_temp", "hs").forEach { add(it) } },
+        )
+        put("color_mode", "hs")
+        put("hs_color", buildJsonArray { listOf(215.0, 80.0).forEach { add(it) } })
+      },
+    lastChanged = Instant.fromEpochMilliseconds(MORE_INFO_NOW_MS - 72 * 60_000L),
+    lastUpdated = Instant.fromEpochMilliseconds(MORE_INFO_NOW_MS - 72 * 60_000L),
+  )
+
+private val MORE_INFO_CLIMATE_STATE =
+  EntityState(
+    entityId = "climate.hallway",
+    state = "heat",
+    attributes =
+      buildJsonObject {
+        put("friendly_name", "Hallway")
+        put("supported_features", 17)
+        put("temperature", 20.5)
+        put("current_temperature", 19.8)
+        put("target_temp_step", 0.5)
+        put("min_temp", 7)
+        put("max_temp", 30)
+        put("hvac_modes", buildJsonArray { listOf("off", "heat", "auto").forEach { add(it) } })
+        put("preset_modes", buildJsonArray { listOf("home", "away", "eco").forEach { add(it) } })
+        put("preset_mode", "home")
+      },
+    lastChanged = Instant.fromEpochMilliseconds(MORE_INFO_NOW_MS - 72 * 60_000L),
+    lastUpdated = Instant.fromEpochMilliseconds(MORE_INFO_NOW_MS - 72 * 60_000L),
+  )
+
+@Preview(
+  name = "more info · light controls",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_MoreInfo_LightControls() = PhoneHost {
+  MoreInfoSheetFrame(MORE_INFO_LIGHT_STATE, MORE_INFO_SWITCH_HISTORY, withControls = true)
+}
+
+@Preview(
+  name = "more info · thermostat controls",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_MoreInfo_ThermostatControls() = PhoneHost {
+  MoreInfoSheetFrame(MORE_INFO_CLIMATE_STATE, emptyList(), withControls = true)
 }
 
 @Preview(

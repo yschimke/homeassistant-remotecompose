@@ -1,9 +1,22 @@
 package ee.schimke.terrazzo.wear.ui
 
+import android.content.Context
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.wear.compose.material3.ColorScheme
 import androidx.wear.compose.material3.Typography
+import androidx.wear.compose.material3.dynamicColorScheme
 import ee.schimke.ha.rc.components.AtkinsonHyperlegibleFamily
 import ee.schimke.ha.rc.components.FigtreeFamily
 import ee.schimke.ha.rc.components.IbmPlexSansFamily
@@ -20,7 +33,14 @@ import ee.schimke.ha.rc.components.terrazzoColorScheme
  * Only the roles Wear Material 3 exposes are mapped; the rest come from the Wear `ColorScheme()`
  * defaults.
  */
-fun terrazzoWearColorScheme(style: ThemeStyle): ColorScheme {
+fun terrazzoWearColorScheme(style: ThemeStyle, context: Context? = null): ColorScheme {
+  // Mobile chooses system colors (Material3) or a Terrazzo palette. Wear always stays dark;
+  // system colors come from this watch, never the phone's wallpaper or night configuration.
+  if (style == ThemeStyle.Material3 && context != null) {
+    dynamicColorScheme(context)?.let {
+      return it
+    }
+  }
   val m3 = terrazzoColorScheme(style, darkTheme = true)
   val defaults = ColorScheme()
   return defaults.copy(
@@ -87,3 +107,34 @@ fun wearTypographyFor(style: ThemeStyle): Typography {
     labelSmall = d.labelSmall.withFamily(body),
   )
 }
+
+/**
+ * Refresh on watch-face palette/configuration changes, the system toggle, and returning to the app.
+ */
+@Composable
+internal fun rememberWearColorScheme(style: ThemeStyle): ColorScheme {
+  val context = LocalContext.current
+  val configuration = LocalConfiguration.current
+  val lifecycle = LocalLifecycleOwner.current.lifecycle
+  var revision by remember { mutableIntStateOf(0) }
+  DisposableEffect(context, lifecycle) {
+    val stop = observeWearSystemColors(context) { revision++ }
+    val observer = LifecycleEventObserver { _, event ->
+      if (event == Lifecycle.Event.ON_RESUME) revision++
+    }
+    lifecycle.addObserver(observer)
+    onDispose {
+      stop()
+      lifecycle.removeObserver(observer)
+    }
+  }
+  return remember(style, context, configuration, revision) {
+    terrazzoWearColorScheme(style, context)
+  }
+}
+
+/**
+ * A stable cache key includes all resolved colors, so a watch-face change cannot replay old colors.
+ */
+internal fun wearPaletteKey(style: ThemeStyle, colors: ColorScheme): String =
+  "wear-palette-v1:$style:$colors"

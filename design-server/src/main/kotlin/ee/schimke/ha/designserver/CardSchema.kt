@@ -1,6 +1,7 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.ha.design.CardDesignSlots
+import ee.schimke.ha.design.HaSharedValues
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -21,6 +22,8 @@ import kotlinx.serialization.json.jsonPrimitive
  * - [bindings]: every named value a client pushes, with its type and an example value: per slot
  *   `name`, `state`, `is_on`, `state_int`, `status`, `numeric_state`, plus card-level values
  *   (`card.title`, …). This is the binding schema in docs/architecture/card-design-server.md.
+ * - [shared]: the values every home shares, which any design may read besides its card's
+ *   (`HA:sun.sun.elevation`, [HaSharedValues]), each with what it means.
  * - [properties]: the generation properties that pick the design's structure, when it comes from a
  *   library design. They aren't bindable: a design has one structure per shape.
  *
@@ -43,6 +46,7 @@ data class CardSchema(
   val template: String? = null,
   /** What this schema can't vouch for, in words: missing bindings, approximations. */
   val notes: List<String> = emptyList(),
+  val shared: List<BindingSchema> = sharedBindings(),
 ) {
   companion object {
     /** The schema of a library [design]. */
@@ -246,7 +250,35 @@ data class BindingSchema(
   val name: String,
   val type: BindingType,
   val example: JsonPrimitive? = null,
+  /** What the value means, where it isn't plain from its name. */
+  val description: String? = null,
 )
+
+/**
+ * [HaSharedValues] as bindings: what a host pushes to every design, each with what it reads without
+ * the data ([HaSharedValues.Value.daytime]) as its example, so a design opens in UI Builder in its
+ * day look.
+ */
+fun sharedBindings(): List<BindingSchema> =
+  HaSharedValues.values.map { value ->
+    BindingSchema(
+      name = value.name,
+      type =
+        when (value.kind) {
+          HaSharedValues.Kind.Text -> BindingType.Text
+          HaSharedValues.Kind.Bool -> BindingType.Bool
+          HaSharedValues.Kind.Float -> BindingType.Float
+        },
+      example =
+        when (val daytime = value.daytime) {
+          is String -> JsonPrimitive(daytime)
+          is Boolean -> JsonPrimitive(daytime)
+          is Float -> JsonPrimitive(daytime)
+          else -> null
+        },
+      description = value.description,
+    )
+  }
 
 @Serializable
 enum class BindingType {

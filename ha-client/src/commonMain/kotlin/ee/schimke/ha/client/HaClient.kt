@@ -535,6 +535,25 @@ class HaClient(
       ?.mapNotNull { it as? JsonObject }
       .orEmpty()
 
+  /**
+   * The entities this device's widgets read ([entityIds]), for the Terrazzo integration to wake the
+   * app when one changes, with a lease of [leaseSeconds] (0 for none) while the app follows them
+   * itself. Answers the lease granted, in seconds. Fails with [HaCommandException] without the
+   * integration, or before [registerTerrazzoPush].
+   */
+  suspend fun watchTerrazzoStates(
+    webhookId: String,
+    entityIds: Collection<String>,
+    leaseSeconds: Int,
+  ): Int =
+    runCommand("terrazzo/push/watch") {
+        put("webhook_id", webhookId)
+        put("entity_ids", JsonArray(entityIds.map { JsonPrimitive(it) }))
+        put("lease_seconds", leaseSeconds)
+      }["lease_seconds"]
+      ?.jsonPrimitive
+      ?.intOrNull ?: 0
+
   /** Fires an event on HA's bus, as a notification action button does. Needs an admin user. */
   suspend fun fireEvent(eventType: String, eventData: JsonObject) {
     awaitCommand("fire_event") {
@@ -754,6 +773,32 @@ class HaClient(
       }
     return result.mapValues { (_, points) ->
       (points as? JsonArray ?: JsonArray(emptyList())).mapNotNull { parseHistoryPoint(it) }
+    }
+  }
+
+  /**
+   * The [type] forecast (`daily`, `hourly`, `twice_daily`) of each of [entityIds], from the
+   * `weather.get_forecasts` service with `return_response`: keyed by entity id, each its `forecast`
+   * list. An entity that doesn't offer [type] is left out.
+   */
+  suspend fun fetchForecasts(entityIds: List<String>, type: String): Map<String, JsonArray> {
+    if (entityIds.isEmpty()) return emptyMap()
+    val result =
+      runCommand("call_service") {
+        put("domain", "weather")
+        put("service", "get_forecasts")
+        put("service_data", buildJsonObject { put("type", type) })
+        put(
+          "target",
+          buildJsonObject { put("entity_id", buildJsonArray { entityIds.forEach { add(it) } }) },
+        )
+        put("return_response", true)
+      }
+    val response = result["response"] as? JsonObject ?: return emptyMap()
+    return buildMap {
+      for ((id, value) in response) {
+        ((value as? JsonObject)?.get("forecast") as? JsonArray)?.let { put(id, it) }
+      }
     }
   }
 
