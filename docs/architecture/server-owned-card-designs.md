@@ -289,8 +289,10 @@ Before cutover, on a server deployed from `main`:
    - a sample of the server's blobs are the bytes their sha256 names, and the local blobs.
 3. Run the import workflow (`import-card-designs.yml`) once by hand: with no edits it opens no PR.
 
-Deploying the design server is a manual step (compose-preview-server's deploy); nothing here
-deploys it.
+Deploying the design server needs nothing from here beyond a merge to `main`. The design-server
+workflow publishes `ghcr.io/yschimke/ha-card-design-server:latest`, and the ha.coo.ee box rolls it
+out. Its deployment, routing and settings live in the private `yschimke/preview-coo-ee`; see
+[`design-server/README.md`](../../design-server/README.md#deploying-at-hacooee).
 
 ## Every card from the server
 

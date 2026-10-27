@@ -217,7 +217,15 @@ class UiBuilderTest {
 
     val card = client.post("/api/schema") { setBody(entitiesCard.toString()) }
     assertEquals(HttpStatusCode.OK, card.status)
-    assertEquals(2, Json.parseToJsonElement(card.bodyAsText()).jsonObject["slots"]!!.jsonArray.size)
+    val cardSchema = Json.parseToJsonElement(card.bodyAsText()).jsonObject
+    assertEquals(2, cardSchema["slots"]!!.jsonArray.size)
+    // The values every home shares are part of the contract a client reads, default or not.
+    assertTrue(
+      cardSchema["shared"]!!.jsonArray.any {
+        it.jsonObject["name"]!!.jsonPrimitive.content == "HA:sun.sun.elevation"
+      }
+    )
+    assertTrue("shared" in design)
     assertEquals(
       HttpStatusCode.BadRequest,
       client.post("/api/schema") { setBody("""{"no":"type"}""") }.status,

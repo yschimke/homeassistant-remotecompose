@@ -66,7 +66,7 @@ the checked-in helper (Python 3 and Docker Compose v2 required):
 
 ```sh
 # Example host layout: HA bundle and preview/Caddy stack are separate directories.
-python3 /root/public-demo-ha/enable-native-route.py /root/compose-preview-server/deploy/image
+python3 /root/public-demo-ha/enable-native-route.py <deployment checkout>/deploy/image
 ```
 
 The argument is the existing stack that owns Caddy, not the HA bundle. The helper derives the
@@ -230,7 +230,7 @@ from shared server state; it does not auto-retry a toggle that might invert anot
 The service definitions, pinned images, generic data and routing overlay are committed config;
 there is no manual HA setup, public token to create, or secret to commit. The host still needs
 an operator to apply that config. Required access is a shell on `preview.coo.ee` with permission
-to use Docker, Docker Compose v2, and checkouts of this repository and `compose-preview-server`.
+to use Docker, Docker Compose v2, and checkouts of this repository and the deployment (`yschimke/preview-coo-ee`).
 Docker must be able to pull the pinned images and build the gateway. Python is only needed
 outside containers for the final public verifier, which can also run from your laptop.
 
@@ -272,9 +272,10 @@ are fixed reviewed projections. The native HA state API and unrestricted service
 
 ### Enable the committed public route
 
-After provisioning passes, use the `compose-preview-server` checkout on the same Docker host.
-Its committed [`deploy/image/docker-compose.demo-ha.yml`](https://github.com/yschimke/compose-preview-server/blob/main/deploy/image/docker-compose.demo-ha.yml)
-mounts the route and connects Caddy to `public-demo-ha_edge`. The host's existing HA domain must
+After provisioning passes, use the deployment checkout on the same Docker host. The box is
+deployed from the private operator repository `yschimke/preview-coo-ee`, which deploys itself on
+merge. Its committed `deploy/image/docker-compose.demo-ha.yml` mounts the route and connects Caddy
+to `public-demo-ha_edge`. The host's existing HA domain must
 be `ha.coo.ee`, with DNS/TLS already working. Keep the existing deployment's project name,
 environment file, working directory and **every existing Compose overlay**. Add
 `docker-compose.demo-ha.yml` to its persistent `COMPOSE_FILE` setting, so future deployments

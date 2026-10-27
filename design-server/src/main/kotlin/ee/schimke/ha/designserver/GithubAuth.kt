@@ -33,8 +33,8 @@ import kotlinx.serialization.json.jsonPrimitive
  * seed are shared with them (`github:<login>`, as editor) and nobody else.
  *
  * Plain OAuth web flow against a GitHub OAuth App whose callback is
- * `<publicUrl>/auth/github/callback`. No scope is requested: the login is all the server needs. The
- * session is a signed cookie (`login|expiry|HMAC`), so the server keeps no session state.
+ * `<publicUrl>/my/auth/github/callback`. No scope is requested: the login is all the server needs.
+ * The session is a signed cookie (`login|expiry|HMAC`), so the server keeps no session state.
  *
  * - [clientId], [clientSecret]: the OAuth App's.
  * - [publicUrl]: where browsers reach this server (`https://ha.coo.ee`).
@@ -222,9 +222,14 @@ class GithubAuth(
   private fun enc(value: String) = URLEncoder.encode(value, Charsets.UTF_8)
 
   companion object {
-    const val START_PATH = "/auth/github"
-    const val CALLBACK_PATH = "/auth/github/callback"
-    const val SIGN_OUT_PATH = "/auth/sign-out"
+    /**
+     * Under `/my`, the person's own pages, never `/auth`: where the design server shares a hostname
+     * with UI Builder (ha.coo.ee), the builder's sign-in owns `/auth`, and the edge routes `/my`
+     * here.
+     */
+    const val START_PATH = "/my/auth/github"
+    const val CALLBACK_PATH = "/my/auth/github/callback"
+    const val SIGN_OUT_PATH = "/my/auth/sign-out"
     private const val SESSION_COOKIE = "design-server-session"
     private const val STATE_COOKIE = "design-server-oauth-state"
     private const val SESSION_TTL_MS = 30L * 24 * 60 * 60 * 1000
