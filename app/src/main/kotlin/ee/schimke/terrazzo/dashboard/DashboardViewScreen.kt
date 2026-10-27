@@ -56,6 +56,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -133,7 +134,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -310,6 +313,8 @@ fun DashboardViewScreen(
   val context = androidx.compose.ui.platform.LocalContext.current
   // The view a navigation asked for, until the list has scrolled to it; and the open more-info.
   var pendingView by remember(urlPath) { mutableStateOf(initialViewPath?.let(::ViewTarget)) }
+  // The card a widget tap asked to show, until the list has opened its section and scrolled to it.
+  var pendingCard by remember(urlPath) { mutableStateOf<CardTarget?>(null) }
   var moreInfoEntity by remember(urlPath) { mutableStateOf<String?>(null) }
   val navigate: (String) -> Unit = navigate@{ path ->
     val dashboard = (latestState.value as? DashboardState.Ready)?.dashboard
@@ -332,14 +337,22 @@ fun DashboardViewScreen(
     }
     openInBrowser(context, resolveAgainstBase(session.baseUrl, path))
   }
-  // A launcher widget's more-info or navigate tap, opened as the card's own tap would be.
+  // A launcher widget's tap, opened as the card's own tap would be, over the widget's card.
   val widgetOpen by WidgetOpenRequests.requests.collectAsState()
   LaunchedEffect(widgetOpen) {
     val target = widgetOpen ?: return@LaunchedEffect
+    val card = target.card
+    // The widget's card is on another dashboard: the shell opens that one (and this screen with
+    // it), or drops the card when it can't.
+    if (card != null && (card.baseUrl != session.baseUrl || card.dashboardUrlPath != urlPath)) {
+      return@LaunchedEffect
+    }
     when (target) {
       is WidgetOpenRequests.Target.MoreInfo -> moreInfoEntity = target.entityId
       is WidgetOpenRequests.Target.Navigate -> navigate(target.path)
+      is WidgetOpenRequests.Target.ShowCard -> Unit
     }
+    card?.let { pendingCard = CardTarget(it.card) }
     WidgetOpenRequests.consume(target)
   }
   val actionDispatcher =
@@ -408,6 +421,8 @@ fun DashboardViewScreen(
             pendingView = null
             onInitialViewShown()
           },
+          pendingCard = pendingCard,
+          onCardShown = { pendingCard = null },
         )
     }
   }
@@ -436,6 +451,12 @@ fun DashboardViewScreen(
  * view again scrolls again.
  */
 private class ViewTarget(val segment: String?)
+
+/**
+ * A card a widget tap asked the list to show, as the dashboard has it; a fresh instance per
+ * request, so tapping the same widget again shows it again.
+ */
+private class CardTarget(val card: CardConfig)
 
 private fun openInBrowser(context: android.content.Context, url: String?) {
   if (url == null) {
@@ -485,6 +506,8 @@ private fun DashboardList(
   contentPadding: PaddingValues,
   pendingView: ViewTarget? = null,
   onViewShown: () -> Unit = {},
+  pendingCard: CardTarget? = null,
+  onCardShown: () -> Unit = {},
 ) {
   // The inner card renderers only carry a `(CardConfig) -> Unit`
   // long-press lambda; bind the current snapshot here (DashboardList is
@@ -623,6 +646,30 @@ private fun DashboardList(
         cardStyle,
       )
     }
+    // One view's sections as the list stacks them, with the section [renderView] shows open.
+    fun stackedOf(viewIndex: Int, view: ViewLayout = layout.views[viewIndex]) =
+      view.stackedSections(
+        sectionGrids[viewIndex],
+        listWidth = listWidth,
+        gutter = cfg.horizontalGutter,
+        collapsedMode = collapsedMode && singleTrackViews[viewIndex],
+        expandedSectionIndex = expandedSectionByView[viewIndex],
+        snapshot = snapshot,
+        registry = registry,
+      )
+    fun widthClassOf(card: CardConfig) = registry.cardWidthClass(card, snapshot)
+    // The list index of view [viewIndex]'s first item: the placeholder briefs are item 0, and each
+    // view before this one adds its own items.
+    fun firstItemOf(viewIndex: Int): Int =
+      1 +
+        (0 until viewIndex).sumOf { i ->
+          layout.views[i].itemCount(
+            sectionGrids[i],
+            compactPerRow = cfg.compactCardsPerRow,
+            stackedSections = { view -> stackedOf(i, view) },
+            widthClassOf = ::widthClassOf,
+          )
+        }
     // A navigation to one of this dashboard's views: open its first section if collapsed mode
     // closed it, and scroll to the view's first item.
     LaunchedEffect(pendingView, layout) {
@@ -633,31 +680,61 @@ private fun DashboardList(
           collapsedMode && singleTrackViews[viewIndex] && expandedSectionByView[viewIndex] == null
         )
           expandedSectionByView[viewIndex] = 0
-        // The placeholder briefs are item 0; each view before this one adds its own items.
-        val firstItem =
-          1 +
-            (0 until viewIndex).sumOf { i ->
-              layout.views[i].itemCount(
-                sectionGrids[i],
-                compactPerRow = cfg.compactCardsPerRow,
-                stackedSections = { view ->
-                  view.stackedSections(
-                    sectionGrids[i],
-                    listWidth = listWidth,
-                    gutter = cfg.horizontalGutter,
-                    collapsedMode = collapsedMode,
-                    expandedSectionIndex = expandedSectionByView[i],
-                    snapshot = snapshot,
-                    registry = registry,
-                  )
-                },
-              ) { card ->
-                registry.cardWidthClass(card, snapshot)
-              }
-            }
-        listState.animateScrollToItem(firstItem)
+        listState.animateScrollToItem(firstItemOf(viewIndex))
       }
       onViewShown()
+    }
+    // A widget tap on a card of this dashboard: open the card's section if collapsed mode closed
+    // it, and scroll to the card's row only when it isn't already on screen. A card no longer on
+    // the dashboard (edited since the widget was made) leaves the list where it is.
+    LaunchedEffect(pendingCard, layout) {
+      val target = pendingCard ?: return@LaunchedEffect
+      val place = layout.placeOf(target.card)
+      if (place != null) {
+        val (viewIndex, sectionIndex) = place
+        val view = layout.views[viewIndex]
+        val stacks = singleTrackViews[viewIndex]
+        if (
+          sectionIndex != null &&
+            stacks &&
+            collapsedMode &&
+            expandedSectionByView[viewIndex] != sectionIndex
+        )
+          expandedSectionByView[viewIndex] = sectionIndex
+        val orphanRows = packAndChunk(view.orphanCards, cfg.compactCardsPerRow, ::widthClassOf)
+        val headerItems = if (view.header?.card != null) 1 else 0
+        val inView =
+          when {
+            sectionIndex == null && view.header?.card == target.card -> 0
+            sectionIndex == null ->
+              headerItems + orphanRows.indexOfFirst { target.card in it.cards }.coerceAtLeast(0)
+            // Side by side, the view's sections are one item.
+            !stacks -> headerItems + orphanRows.size
+            else -> {
+              val stacked = stackedOf(viewIndex)
+              val section = stacked[sectionIndex]
+              val headingItems = if (section.heading != null) 1 else 0
+              // A card that is the section's heading, or hidden, is in no row: its heading.
+              val row = section.rows.indexOfFirst { target.card in it }
+              headerItems +
+                orphanRows.size +
+                stacked.take(sectionIndex).sumOf { it.itemCount } +
+                if (row >= 0) headingItems + row else 0
+            }
+          }
+        val item = firstItemOf(viewIndex) + inView
+        // An opened section's rows join the list on the next composition: wait until the list
+        // has laid them out, so the visibility check and the scroll see the items counted here.
+        val items = firstItemOf(layout.views.size)
+        withTimeoutOrNull(CARD_LAYOUT_WAIT_MS) {
+          snapshotFlow { listState.layoutInfo.totalItemsCount }.first { it == items }
+        }
+        // Side by side, the sections are one tall item: on screen at all is enough.
+        if (!listState.shows(item, whole = stacks || sectionIndex == null)) {
+          listState.animateScrollToItem(item)
+        }
+      }
+      onCardShown()
     }
     CompositionLocalProvider(
       LocalFlashOnDataChange provides flashOnDataChange,
@@ -821,6 +898,39 @@ private fun ViewLayout.stackedSections(
 private fun DashboardLayout.cardsInOrder(): List<CardConfig> = views.flatMap { view ->
   listOfNotNull(view.header?.card) + view.orphanCards + view.sections.flatMap { it.cards }
 }
+
+/**
+ * Where [card] sits in the dashboard: its view's index, and its section's (null for the view's
+ * header and loose cards). The first match, by config: a widget keeps a copy of the card it was
+ * made from.
+ */
+private fun DashboardLayout.placeOf(card: CardConfig): Pair<Int, Int?>? {
+  views.forEachIndexed { viewIndex, view ->
+    if (view.header?.card == card || card in view.orphanCards) return viewIndex to null
+    val sectionIndex = view.sections.indexOfFirst { card in it.cards }
+    if (sectionIndex >= 0) return viewIndex to sectionIndex
+  }
+  return null
+}
+
+/**
+ * Whether item [index] is on screen, clear of the content padding under the bars: [whole] when all
+ * of it must be, else any of it.
+ */
+private fun androidx.compose.foundation.lazy.LazyListState.shows(
+  index: Int,
+  whole: Boolean,
+): Boolean {
+  val info = layoutInfo
+  val item = info.visibleItemsInfo.firstOrNull { it.index == index } ?: return false
+  // Offsets count from the end of the top padding; the bottom padding ends the clear area.
+  val end = info.viewportEndOffset - info.afterContentPadding
+  return if (whole) item.offset >= 0 && item.offset + item.size <= end
+  else item.offset < end && item.offset + item.size > 0
+}
+
+/** How long a widget tap waits for an opened section's rows to be laid out before scrolling. */
+private const val CARD_LAYOUT_WAIT_MS = 1_000L
 
 /** HA pads the sections wrapper by one column gap either side; the list already has [gutter]. */
 private fun sectionsPadding(grid: SectionsGridLayout, gutter: Dp): Dp =

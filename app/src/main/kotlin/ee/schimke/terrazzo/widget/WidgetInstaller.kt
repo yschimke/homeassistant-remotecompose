@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.terrazzo.core.widget.WidgetStore
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
@@ -37,6 +38,7 @@ class WidgetInstaller(private val context: Context) {
     baseUrl: String,
     card: CardConfig,
     preview: android.widget.RemoteViews? = null,
+    origin: WidgetStore.Origin? = null,
   ): Boolean {
     val appWidgetManager = AppWidgetManager.getInstance(context)
     if (!isSupported()) return false
@@ -56,6 +58,7 @@ class WidgetInstaller(private val context: Context) {
           WidgetInstallReceiver.EXTRA_CARD_JSON,
           json.encodeToString(JsonObject.serializer(), card.raw),
         )
+        origin?.let { WidgetInstallReceiver.putOrigin(this, it) }
       }
     val pendingIntent =
       PendingIntent.getBroadcast(

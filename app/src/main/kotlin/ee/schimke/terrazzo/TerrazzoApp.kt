@@ -489,16 +489,30 @@ private fun DashboardsRoot(
     }
   }
 
-  // A widget's more-info or navigate tap opens on a dashboard ([DashboardViewScreen] opens it):
-  // back out of the card screens over it.
+  // A widget's tap opens on a dashboard ([DashboardViewScreen] opens it): back out of the card
+  // screens over it. A widget made from a dashboard's card opens that dashboard, where the card is;
+  // one this instance doesn't show (another instance's, or no longer listed) opens where it is.
   val widgetOpen by WidgetOpenRequests.requests.collectAsState()
-  LaunchedEffect(widgetOpen, readyDashboards) {
-    if (widgetOpen == null) return@LaunchedEffect
+  LaunchedEffect(widgetOpen, dashboards) {
+    val target = widgetOpen ?: return@LaunchedEffect
     historyTarget = null
     actionsTarget = null
     studioTarget = null
     styleTarget = null
     editorOpen = false
+    val card = target.card ?: return@LaunchedEffect
+    when {
+      card.baseUrl != session.baseUrl -> WidgetOpenRequests.dropCard(target)
+      dashboards is DashboardListState.Loading -> Unit
+      readyDashboards.none { it.urlPath == card.dashboardUrlPath } ->
+        WidgetOpenRequests.dropCard(target)
+      opened != card.dashboardUrlPath -> {
+        startupResolved = true
+        opened = card.dashboardUrlPath
+        openedView = null
+        graph.preferencesStore.setLastViewedDashboard(card.dashboardUrlPath)
+      }
+    }
   }
   val connectionStatus = rememberMobileConnectionStatus(session)
   val snackbars = remember { SnackbarHostState() }
@@ -781,7 +795,7 @@ private fun DashboardsRoot(
   installPending?.let { (card, snapshot) ->
     WidgetInstallSheet(
       baseUrl = session.baseUrl,
-      dashboardUrlPath = dashboardUrlPath,
+      dashboardUrlPath = openedValue,
       card = card,
       snapshot = snapshot,
       sectionCards = actionsSection.takeIf { card in it }.orEmpty(),

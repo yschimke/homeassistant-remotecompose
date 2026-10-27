@@ -23,6 +23,7 @@ import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.CachedHaSession
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.core.widget.WidgetStore
 import ee.schimke.terrazzo.dashboard.CardDesignPreload
 import ee.schimke.terrazzo.dashboard.DESIGN_PRELOAD_WAIT_MS
 import ee.schimke.terrazzo.di.AppGraph
@@ -78,7 +79,7 @@ class MainActivity : ComponentActivity() {
     // A launcher widget's more-info or navigate tap (a warm start arrives in onNewIntent). Only on
     // a
     // fresh start: a recreated activity keeps its launch intent, already opened.
-    if (savedInstanceState == null) WidgetOpenRequests.offer(intent)
+    if (savedInstanceState == null) WidgetOpenRequests.offer(intent, ::widgetEntry)
 
     // The session lives in a ViewModel so rotation and other
     // configuration changes keep the live connection. `start` only
@@ -149,7 +150,15 @@ class MainActivity : ComponentActivity() {
   override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
     setIntent(intent)
-    WidgetOpenRequests.offer(intent)
+    WidgetOpenRequests.offer(intent, ::widgetEntry)
+  }
+
+  /**
+   * The tapped widget's row, for the card it was made from. Read synchronously, as the last-viewed
+   * dashboard is: a tiny preferences file, and the dashboard opens on the card in its first frame.
+   */
+  private fun widgetEntry(widgetId: Int): WidgetStore.Entry? = runBlocking {
+    (application as TerrazzoApplication).graph.widgetStore.get(widgetId)
   }
 
   /**
