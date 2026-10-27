@@ -10,9 +10,10 @@ on:
     types: [closed]
 
 # The same group as the pull request's design-server.yml run, so closing cancels a build that would
-# otherwise publish pr-<n> again after it is dropped.
+# otherwise publish pr-<n> again after it is dropped. By number, not github.ref: a merged pull
+# request's `closed` event carries main's ref, and that group is main's image build.
 concurrency:
-  group: design-server-${{ github.ref }}
+  group: design-server-pr-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:

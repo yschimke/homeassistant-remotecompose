@@ -40,8 +40,11 @@ on:
     paths: *paths
   workflow_dispatch:
 
+# A pull request's runs group by its number, which design-library-channels.yml shares; everything
+# else by ref. Not github.ref for both: a merged pull request's `closed` event carries the base
+# branch's ref, so it would land in main's group and cancel the push build that publishes the image.
 concurrency:
-  group: design-server-${{ github.ref }}
+  group: design-server-${{ github.event.pull_request.number && format('pr-{0}', github.event.pull_request.number) || github.ref }}
   cancel-in-progress: true
 
 jobs:
