@@ -158,23 +158,29 @@ object Api {
   private fun summary(design: LibraryDesign): JsonObject = buildJsonObject {
     put("id", design.id)
     put("sha256", design.entry.sha256)
-    put("blob", "$API_BASE/blobs/${design.entry.sha256}.rc")
-    put("source", "/api/designs/${design.id}/source.uid")
+    put("blob", "${design.paths.api}/blobs/${design.entry.sha256}.rc")
+    put("source", design.paths.page("/api/designs/${design.id}/source.uid"))
     put("key", Json.encodeToJsonElement(DesignKey.serializer(), design.key))
     putJsonObject("properties") { design.properties.forEach { (k, v) -> put(k, v) } }
     put("slots", design.entry.slots)
     put("bytes", design.entry.bytes)
     put("revoked", design.entry.revoked)
     putJsonObject("previews") {
-      design.catalog?.previews?.example?.let { put("example", "$API_BASE/$it") }
-      design.catalog?.previews?.template?.let { put("template", "$API_BASE/$it") }
+      design.catalog?.previews?.example?.let { put("example", "${design.paths.api}/$it") }
+      design.catalog?.previews?.template?.let { put("template", "${design.paths.api}/$it") }
     }
   }
 }
 
 /** The template browser's HTML. Server-rendered, no scripts: it works from a phone too. */
 object Pages {
-  fun browser(library: DesignLibrary, filter: BrowserFilter): String {
+  fun browser(
+    library: DesignLibrary,
+    filter: BrowserFilter,
+    /** Every channel the server serves ([LibraryChannels]): the in-flight pull requests to pick. */
+    channels: List<LibraryChannels.ChannelInfo> = emptyList(),
+  ): String {
+    val paths = library.paths
     val designs = filter.apply(library)
     val all = library.designs
     val types = all.map { it.key.cardType }.distinct().sorted()
@@ -193,11 +199,16 @@ object Pages {
         "serial ${library.manifest.serial} · generated ${date(library.manifest.generatedAtEpochMs)}"
       )
       append(
-        "</p><p class=\"hint\">App design server URL: <code>&lt;this host&gt;$API_BASE</code> · " +
-          "<a href=\"/schema\">Schema from a card's JSON</a></p></header>"
+        "</p><p class=\"hint\">App design server URL: <code>&lt;this host&gt;${esc(paths.api)}</code> · " +
+          "<a href=\"/schema\">Schema from a card's JSON</a></p>"
       )
+      channelBanner(library)
+      channelPicker(channels, paths.channel)
+      append("</header>")
 
       append("<form class=\"filters\" method=\"get\" action=\"/designs\">")
+      if (!paths.isMain)
+        append("<input type=\"hidden\" name=\"channel\" value=\"${esc(paths.channel)}\">")
       select("type", "Card", types, filter.cardType)
       select("style", "Theme", styles, filter.style)
       select("mode", "Mode", modes, filter.mode)
@@ -231,13 +242,13 @@ object Pages {
           )
           append(
             styleModes.joinToString(", ") { mode ->
-              "<a href=\"/designs?${esc(filter.query { copy(mode = mode) })}\">${esc(mode)}</a>"
+              "<a href=\"${esc(paths.page("/designs", filter.query { copy(mode = mode) }))}\">${esc(mode)}</a>"
             }
           )
           append(".</p>")
         }
         append(
-          "<p><a href=\"/designs?type=all&amp;style=all&amp;mode=all\">Clear all filters</a></p>"
+          "<p><a href=\"${esc(paths.page("/designs", "type=all&style=all&mode=all"))}\">Clear all filters</a></p>"
         )
       }
       for ((type, group) in designs.groupBy { it.key.cardType }.toSortedMap()) {
@@ -261,10 +272,12 @@ object Pages {
     val decoded = library.decode(design)
     val key = design.key
     val theme = ThemeParts.of(key)
+    val paths = library.paths
     return page("${key.cardType} · card design") {
       append(
-        "<nav><a href=\"/designs?type=${enc(key.cardType)}&style=all&mode=all\">← ${esc(key.cardType)} designs</a></nav>"
+        "<nav><a href=\"${esc(paths.page("/designs", "type=${enc(key.cardType)}&style=all&mode=all"))}\">← ${esc(key.cardType)} designs</a></nav>"
       )
+      channelBanner(library)
       append("<h1>${esc(key.cardType)}</h1>")
       append("<p class=\"chips\">")
       design.properties.forEach { (k, v) -> append(chip(k, v)) }
@@ -273,19 +286,23 @@ object Pages {
       append("</p>")
 
       append("<div class=\"previews\">")
-      design.catalog?.previews?.example?.let { figure("$API_BASE/$it", "With example values") }
-      design.catalog?.previews?.template?.let { figure("$API_BASE/$it", "Template placeholders") }
+      design.catalog?.previews?.example?.let { figure("${paths.api}/$it", "With example values") }
+      design.catalog?.previews?.template?.let {
+        figure("${paths.api}/$it", "Template placeholders")
+      }
       if (design.catalog == null)
         append("<p class=\"muted\">No previews: this library has no catalog.</p>")
       append("</div>")
       design.catalog?.previews?.example?.let { example ->
         if (wear) {
           append("<h2>On a watch</h2>")
-          wearPanes("$API_BASE/$example", key.cardType)
-          append("<p class=\"muted\"><a href=\"/designs/${design.id}\">Hide the watch</a></p>")
+          wearPanes("${paths.api}/$example", key.cardType)
+          append(
+            "<p class=\"muted\"><a href=\"${esc(paths.design(design.id))}\">Hide the watch</a></p>"
+          )
         } else {
           append(
-            "<p class=\"muted\"><a href=\"/designs/${design.id}?wear=1\">On a watch</a>: " +
+            "<p class=\"muted\"><a href=\"${esc(paths.design(design.id, "wear=1"))}\">On a watch</a>: " +
               "this design as Small and Large Wear widgets, roughly</p>"
           )
         }
@@ -301,7 +318,7 @@ object Pages {
       row("Slots", design.entry.slots.toString())
       row(
         "Blob",
-        "<a href=\"$API_BASE/blobs/${design.entry.sha256}.rc\"><code>${design.entry.sha256}</code></a> · ${kib(design.entry.bytes.toLong())}",
+        "<a href=\"${paths.api}/blobs/${design.entry.sha256}.rc\"><code>${design.entry.sha256}</code></a> · ${kib(design.entry.bytes.toLong())}",
       )
       if (design.entry.revoked) row("Status", "<strong>revoked</strong>")
       append("</table>")
@@ -358,8 +375,9 @@ object Pages {
       val drawnFromSource = key.cardType in library.sources
       append(
         "<p class=\"muted\">The card's data contract — its slots and every binding with an example " +
-          "value — as <a href=\"/api/designs/${design.id}/schema\">JSON</a>. Its editable " +
-          "source, to fork in UI Builder: <a href=\"/api/designs/${design.id}/source.uid\">" +
+          "value — as <a href=\"${esc(paths.page("/api/designs/${design.id}/schema"))}\">JSON</a>. " +
+          "Its editable source, to fork in UI Builder: " +
+          "<a href=\"${esc(paths.page("/api/designs/${design.id}/source.uid"))}\">" +
           "<code>source.uid</code></a>" +
           (if (drawnFromSource)
             " (the UI Builder design this card type is drawn from: every theme of it).</p>"
@@ -367,18 +385,23 @@ object Pages {
             " (rebuilt from Home Assistant card components in this design's theme, so close to " +
               "it rather than identical).</p>")
       )
-      designButton(editor, "design", design.id, CardSchema.fromDesign(library, design))
-      if (drawnFromSource && libraryEditor) {
+      // A pull request's designs are a preview: forking and editing start from main's.
+      if (paths.isMain)
+        designButton(editor, "design", design.id, CardSchema.fromDesign(library, design))
+      if (paths.isMain && drawnFromSource && libraryEditor) {
         append(
           "<form method=\"post\" action=\"/library/${enc(key.cardType)}/edit\">" +
             "<button type=\"submit\">Edit the library design</button> <span class=\"muted\">" +
-            "Changes every ${esc(key.cardType)} in the library once the next import lands " +
+            "Each save is published to every ${esc(key.cardType)} in the library within a minute, " +
+            "and imported into the repository as a pull request " +
             "(<a href=\"/api/library/sources/${enc(CardDesignFiles.fileName(key.cardType))}\">" +
             "current source</a>)." +
             "</span></form>"
         )
       }
-      append("<p class=\"muted\"><a href=\"/api/designs/${design.id}\">JSON</a></p>")
+      append(
+        "<p class=\"muted\"><a href=\"${esc(paths.page("/api/designs/${design.id}"))}\">JSON</a></p>"
+      )
     }
   }
 
@@ -504,6 +527,55 @@ object Pages {
     }
   }
 
+  /**
+   * On a channel other than `main`: which pull request it previews, what it was built from, and the
+   * app URL that plays it.
+   */
+  private fun StringBuilder.channelBanner(library: DesignLibrary) {
+    val paths = library.paths
+    if (paths.isMain) return
+    val published = LibraryChannels.readPublished(library.dir)
+    val pr = published?.pullRequest
+    append("<div class=\"channel\"><p><b>Preview: ")
+    if (pr != null) {
+      val title = "#${pr.number}" + (pr.title?.let { " ${esc(it)}" } ?: "")
+      append(pr.url?.let { "<a href=\"${esc(it)}\">$title</a>" } ?: title)
+      pr.branch?.let { append(" <span class=\"muted\">(${esc(it)})</span>") }
+    } else append(esc(paths.channel))
+    append("</b>, not yet merged.")
+    published?.commit?.let { append(" Built from <code>${esc(it.take(12))}</code>") }
+    published?.let { append(" · published ${date(it.publishedAtEpochMs)}") }
+    append(
+      "</p><p class=\"muted\">To try it in the app, set the card design server to " +
+        "<code>&lt;this host&gt;${esc(paths.api)}</code>. " +
+        "<a href=\"/designs\">Back to the published library</a></p></div>"
+    )
+  }
+
+  /** Links to every channel, the current one marked: the published library and each open PR. */
+  private fun StringBuilder.channelPicker(
+    channels: List<LibraryChannels.ChannelInfo>,
+    current: String,
+  ) {
+    val previews = channels.filter { it.channel != LibraryPaths.MAIN }
+    if (previews.isEmpty()) return
+    append("<p class=\"channels\">In-flight pull requests: ")
+    append(
+      (listOf(LibraryPaths.Main to "published") +
+          previews.map { info ->
+            LibraryPaths(info.channel) to
+              (info.published?.pullRequest?.let { pr ->
+                "#${pr.number}" + (pr.title?.let { " ${it.take(60)}" } ?: "")
+              } ?: info.channel)
+          })
+        .joinToString(" · ") { (paths, label) ->
+          if (paths.channel == current) "<b>${esc(label)}</b>"
+          else "<a href=\"${esc(paths.page("/designs"))}\">${esc(label)}</a>"
+        }
+    )
+    append("</p>")
+  }
+
   private fun StringBuilder.tile(
     design: LibraryDesign,
     preview: BrowserFilter.Preview,
@@ -516,13 +588,13 @@ object Pages {
         BrowserFilter.Preview.Example -> design.catalog?.previews?.example
         BrowserFilter.Preview.Template -> design.catalog?.previews?.template
       }
-    append("<a class=\"tile\" href=\"/designs/${design.id}\">")
+    append("<a class=\"tile\" href=\"${esc(design.paths.design(design.id))}\">")
     if (image != null)
       append(
-        "<img loading=\"lazy\" src=\"$API_BASE/$image\" alt=\"${esc(design.key.cardType)} preview\">"
+        "<img loading=\"lazy\" src=\"${design.paths.api}/$image\" alt=\"${esc(design.key.cardType)} preview\">"
       )
     else append("<div class=\"noimage\">no preview</div>")
-    if (wear && image != null) wearPanes("$API_BASE/$image", design.key.cardType)
+    if (wear && image != null) wearPanes("${design.paths.api}/$image", design.key.cardType)
     append("<div class=\"meta\">")
     if (!compact) {
       append("<div class=\"chips\">")
@@ -629,7 +701,7 @@ object Pages {
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 main{max-width:1200px;margin:0 auto;padding:20px 16px 48px}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 h1{margin:0 0 4px;font-size:26px}h2{margin:28px 0 10px;font-size:18px}h2 span{color:var(--muted);font-weight:normal;font-size:14px}
-.stats,.hint,.count,.muted{color:var(--muted)}.stats{margin:0}.hint{margin:4px 0 0;font-size:13px}code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}
+.channel{border:2px solid #e6a700;border-radius:8px;padding:8px 12px;margin:8px 0}.channel p{margin:4px 0}.channels{font-size:13px;margin:6px 0 0}.stats,.hint,.count,.muted{color:var(--muted)}.stats{margin:0}.hint{margin:4px 0 0;font-size:13px}code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}
 .filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:end;margin:18px 0 6px;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:10px}
 .filters label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}select,input,button{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
 button{background:var(--accent);border-color:var(--accent);color:#fff;cursor:pointer}

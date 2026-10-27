@@ -137,7 +137,7 @@ class DesignGenerator(
     return GeneratedDesign(sha, blobPath(sha), key, slots, generated)
   }
 
-  private fun blobPath(sha256: String) = "$API_BASE/blobs/$sha256.rc"
+  private fun blobPath(sha256: String) = "${holder.paths.api}/blobs/$sha256.rc"
 
   /** A key this server can't capture a design for. */
   class UnsupportedKey(message: String) : Exception(message)

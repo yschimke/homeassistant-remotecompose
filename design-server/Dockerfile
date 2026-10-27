@@ -15,6 +15,9 @@
 # - A public server: sign people in with GitHub (GITHUB_CLIENT_ID, …, UI_BUILDER_GITHUB_CLIENT_ID,
 #   …); see design-server/README.md, which also covers deploying at ha.coo.ee.
 # - Another library: mount it and set DESIGN_LIBRARY.
+# - The baked library only seeds the server: what it serves lives in LIBRARY_STORE (/data/library)
+#   and is replaced by publishing, with no new image (LIBRARY_PUBLISH_TOKEN; card-design-server.md,
+#   "Publishing"). A newer image's library replaces an older publish, never a newer one.
 ARG UI_BUILDER_VERSION=3.142.0
 
 FROM eclipse-temurin:21-jre AS ui-builder
@@ -36,6 +39,7 @@ COPY card-designs/build/card-designs /library
 COPY design-server/catalogs.json /app/catalogs.json
 COPY app-ui/build/dist/wasmJs/productionExecutable /app/wasm
 ENV DESIGN_LIBRARY=/library \
+    LIBRARY_STORE=/data/library \
     PORT=8080 \
     UI_BUILDER_BINARY=/opt/compose-preview-server/bin/compose-preview-server \
     UI_BUILDER_WEB_DIR=/opt/compose-preview-server/ui-builder \

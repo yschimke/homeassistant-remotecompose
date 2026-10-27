@@ -686,7 +686,9 @@ per request — but adds what a static host can't: verification, a template brow
   mobile-app op-set validation, and its example card. `/api/designs[/<id>]` serves the same as
   JSON. Server-rendered HTML, no scripts.
 - **Hot reload.** A regenerated library goes live when `manifest.json` changes (checked at most
-  every 5 s); one that fails to load keeps the previous one serving.
+  every 5 s, and at once after a publish); one that fails to load keeps the previous one serving.
+- **Publishing.** See [Publishing](#publishing-designs-without-a-deployment): libraries are
+  published to the running server, `main` and one channel per open pull request.
 - **Designs by key.** `POST /designs/v1/generate` with a `DesignKey` answers with that key's
   design (`sha256`, `blob`, `slots`, `generated`): the library's when it holds one, otherwise
   captured on request by `DesignGenerator`. The server runs the app's own converters and checked-in
@@ -721,10 +723,66 @@ per request — but adds what a static host can't: verification, a template brow
   titles as a template capture does), entities named by slot (`light.s0`), so the export binds the
   template's `<domain>.s<N>.*` and `card.*` values; every binding is declared as a state variable. What that does, what the spike found and
   what a full pipeline still needs: [card-design-ui-builder.md](card-design-ui-builder.md).
-- **Running.** `DESIGN_LIBRARY` (or the first argument), `PORT` (8080), `HOST`.
-  `design-server/Dockerfile` bakes a library into a JRE image with UI Builder bundled.
-  `.github/workflows/design-server.yml` generates the library, tests and smoke-tests the server,
-  builds the image and uploads the library as an artifact; it deploys nothing yet (M4).
+- **Running.** `DESIGN_LIBRARY` (or the first argument), `PORT` (8080), `HOST`, and for
+  publishing `LIBRARY_STORE`, `LIBRARY_PUBLISH_TOKEN`, `LIBRARY_TTL_SECONDS` and
+  `LIBRARY_EDIT_POLL_SECONDS`. `design-server/Dockerfile` bakes a library into a JRE image with UI
+  Builder bundled, as the seed of its store. `.github/workflows/design-server.yml` generates the
+  library, tests and smoke-tests the server, publishes the library, builds the image and uploads
+  the library as an artifact.
+
+### Publishing designs without a deployment
+
+The design server is server-driven UI first: what it serves is whatever was last published to it,
+not what its image was built with. A design change reaches apps without a new image, from three
+places:
+
+- **A merge to main.** `design-server.yml` generates the library and, once it passes its checks,
+  publishes it to the `main` channel (`.github/scripts/publish-design-library.py`). The image is
+  still built and rolled out for server code, but designs don't wait for it.
+- **An open pull request.** The same workflow publishes the pull request's library to its own
+  channel, `pr-<n>`, before it merges, and comments on the pull request with its links. The
+  template browser lists every in-flight pull request (`/designs` links each, `/designs?channel=pr-<n>`
+  shows its designs with a banner naming the pull request, its branch and commit), and an app
+  plays it when its card design server is set to `<server>/designs/v1/channels/pr-<n>` (the app
+  caches each server URL apart, so switching back to `main` is clean). `design-library-channels.yml`
+  drops the channel when the pull request closes.
+- **An edit in UI Builder.** A library editor's save to a card type's library design
+  (`library-<cardType>`, [server-owned-card-designs.md](server-owned-card-designs.md)) is published to
+  `main` by the server itself (`LibraryEditPublisher`, every `LIBRARY_EDIT_POLL_SECONDS`, default
+  60): it captures that card type's designs again on its JVM (`CardDesignLibrary.rebuildCardType`)
+  and installs them in seconds, then installs them again with the card type's previews redrawn
+  (minutes for the most used types; the browser shows the old previews until then). The scheduled
+  import still copies the edit into the repository as a pull request; once that merges, CI
+  publishes the same source and the server has nothing left to do. A design the deployed server's
+  components can't draw fails to capture and is logged, and nothing is published.
+
+How it works on the server (`LibraryChannels`):
+
+- **Store.** `LIBRARY_STORE` (`/data/library` in the image) holds a directory per channel. `main`
+  is seeded from the image's library (`DESIGN_LIBRARY`) when it has none, or when the image's
+  library was generated after the one installed; never over a newer publish. Without a store the
+  server serves `DESIGN_LIBRARY` read-only, as before.
+- **Uploads send only what changed.** The store keeps every installed file once by content
+  (`.objects/`, hard links). A publisher sends the SHA-256 of every file
+  (`POST /api/library/channels/missing`), then `PUT /api/library/channels/<channel>` with a zip of
+  just the files the server lacks plus `files.json`, the whole library's index; the server takes
+  the rest from its store, checks every file against its hash, verifies the library
+  (`DesignLibrary.load`) and swaps it in whole. A pull request that changes one card type uploads
+  that type's blobs and previews, the manifest and the catalog: a few MB of a 530 MB library.
+  Files no channel uses are dropped from the store.
+- **The server stamps every install.** Its serial is the time or one past the channel's last,
+  whichever is greater, so a late CI run or an older seed can never hand an app a serial below one
+  it accepted (the client's rollback check). Its `ttlSeconds` is `LIBRARY_TTL_SECONDS` (an hour by
+  default, revalidated by ETag), so apps pick up a publish at their next start or nightly sync
+  after that; its expiry is two weeks out. `published.json` beside it says where it came from
+  (`image`, `ci`, `edit:<cardType>`), the commit, and for a pull request its number, title, branch
+  and link.
+- **A derived library never wins a race.** A live edit installs only over the `main` it was
+  derived from; if CI published meanwhile, the edit is captured again over the new `main` at the
+  next check.
+- **Auth.** Publishing and deleting need `Authorization: Bearer <LIBRARY_PUBLISH_TOKEN>` (the
+  repository's `LIBRARY_PUBLISH_TOKEN` secret; a fork's pull request has none and publishes
+  nothing). `GET /api/library/channels` and the channels' libraries are public, like `main`.
 
 ## Client
 

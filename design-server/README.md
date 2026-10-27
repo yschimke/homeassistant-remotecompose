@@ -50,6 +50,33 @@ unsupported combinations link to available modes while preserving the other filt
   Builder" on a design (it starts from the design's source) or "Design in UI Builder" on a pasted
   card — see [`card-design-ui-builder.md`](../docs/architecture/card-design-ui-builder.md)
 
+## Publishing designs
+
+Designs reach the server without a new image ([`card-design-server.md`, "Publishing"](../docs/architecture/card-design-server.md#publishing-designs-without-a-deployment)):
+
+- **Channels.** `main` is the library apps sync; each open pull request gets `pr-<n>`, at
+  `/designs/v1/channels/pr-<n>` (an app's card design server URL) and `/designs?channel=pr-<n>`
+  (the browser, which lists every in-flight pull request). `GET /api/library/channels` lists them.
+- **CI publishes.** `design-server.yml` runs `.github/scripts/publish-design-library.py` after the
+  library passes its checks: `main` on a push to main, `pr-<n>` on a pull request, which it links
+  in a comment. `design-library-channels.yml` deletes `pr-<n>` when the pull request closes. Each
+  publish uploads only the files the server lacks (`POST /api/library/channels/missing`, then
+  `PUT /api/library/channels/<channel>` with a zip and `files.json`).
+- **Library edits publish themselves.** A save to a library design in UI Builder is captured on
+  this server and installed on `main` within `LIBRARY_EDIT_POLL_SECONDS`; previews follow.
+
+```sh
+DESIGN_SERVER_URL=http://localhost:8080 LIBRARY_PUBLISH_TOKEN=… \
+  .github/scripts/publish-design-library.py publish card-designs/build/card-designs pr-123 --title "My change"
+```
+
+| Variable | For |
+|---|---|
+| `LIBRARY_STORE` | A writable directory for the published libraries (the image: `/data/library`). Without it, `DESIGN_LIBRARY` is served read-only |
+| `LIBRARY_PUBLISH_TOKEN` | The bearer token CI publishes and deletes channels with; without it nobody can |
+| `LIBRARY_TTL_SECONDS` | How long an app keeps a manifest before asking again (default 3600, revalidated by ETag) |
+| `LIBRARY_EDIT_POLL_SECONDS` | How often library edits in UI Builder are checked and published to `main` (default 60; 0 off) |
+
 Environment: `DESIGN_LIBRARY` (or the first argument), `PORT` (default 8080), `HOST`,
 `LIBRARY_EDITORS` (comma-separated GitHub logins that may edit the library's designs) and the
 `UI_BUILDER_*` settings above. A container image with the library baked in and UI Builder bundled:
@@ -86,7 +113,10 @@ operator repository `yschimke/preview-coo-ee`:
 - `deploy/image/docker-compose.yml` holds the `ha-designs` service.
 - `deploy/image/ha.caddy` holds the `{$HA_DOMAIN}` block.
 
-A merge there deploys itself (its `deploy/sync`). Releases of this server need nothing there:
+A merge there deploys itself (its `deploy/sync`). For publishing, the `ha-designs` service needs
+`LIBRARY_PUBLISH_TOKEN` set to the same value as this repository's `LIBRARY_PUBLISH_TOKEN` Actions
+secret; `LIBRARY_STORE` defaults to `/data/library` on its volume. Designs then reach the server on
+publish; releases of the server code still go through the image and need nothing there:
 
 - `.github/workflows/design-server.yml` publishes this image as
   `ghcr.io/yschimke/ha-card-design-server` (`latest` and the commit SHA) on every push to `main`.
