@@ -153,7 +153,12 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
   // integration's lease so it sends no state wakes meanwhile.
   LaunchedEffect(session) {
     val s = session ?: return@LaunchedEffect
-    val webhookId = graph.mobileAppStore.get(s.baseUrl)?.webhookId ?: return@LaunchedEffect
+    // A fresh sign-in registers with mobile_app after handing the session over: wait for it.
+    var webhookId = graph.mobileAppStore.get(s.baseUrl)?.webhookId
+    while (webhookId == null) {
+      kotlinx.coroutines.delay(5_000)
+      webhookId = graph.mobileAppStore.get(s.baseUrl)?.webhookId
+    }
     ee.schimke.terrazzo.widget.LiveWidgetUpdates.follow(appContext, s, webhookId)
   }
 

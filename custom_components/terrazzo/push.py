@@ -17,7 +17,7 @@ from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 from .push_queue import PushQueue
-from .state_wakes import MAX_ENTITIES, MAX_LEASE, StateWakes
+from .state_wakes import MAX_ENTITIES, StateWakes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -231,7 +231,8 @@ def ws_take(hass, connection, msg):
         vol.Required("type"): "terrazzo/push/watch",
         vol.Required("webhook_id"): str,
         vol.Required("entity_ids"): vol.All([cv_entity_id], vol.Length(max=MAX_ENTITIES)),
-        vol.Optional("lease_seconds", default=0): vol.All(int, vol.Range(min=0, max=MAX_LEASE)),
+        # Capped at MAX_LEASE by StateWakes.watch, which answers the lease granted.
+        vol.Optional("lease_seconds", default=0): vol.All(int, vol.Range(min=0)),
     }
 )
 @callback

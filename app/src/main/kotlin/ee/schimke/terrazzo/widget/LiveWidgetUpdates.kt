@@ -14,10 +14,12 @@ import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.terrazzoGraph
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -97,7 +99,13 @@ object LiveWidgetUpdates {
         lease()
       }
     }
+    // A widget pinned meanwhile is watched now, not at the next renewal: the app may be gone by
+    // then.
+    val pinned = launch {
+      context.terrazzoGraph().widgetStore.installed.drop(1).collect { lease() }
+    }
     var drawn: Map<String, EntityState?>? = null
+    var latest: Pair<HaSnapshot, Map<String, EntityState?>>? = null
     var drawnAt = 0L
     var changedAt = System.currentTimeMillis()
     val follower = launch {
@@ -106,6 +114,7 @@ object LiveWidgetUpdates {
         .map { snapshot -> snapshot to ids.associateWith { snapshot.states[it] } }
         .distinctUntilChanged { a, b -> a.second == b.second }
         .collectLatest { (snapshot, watched) ->
+          latest = snapshot to watched
           val before = drawn
           changedAt = System.currentTimeMillis()
           if (before != null) {
@@ -123,9 +132,18 @@ object LiveWidgetUpdates {
     }
     try {
       while (!stop(drawn.orEmpty(), System.currentTimeMillis() - changedAt)) delay(CHECK_MS)
-      follower.cancel()
+      follower.cancelAndJoin()
+      // A quiet change still waiting for its redraw: draw it now, as no wake will come for it.
+      latest
+        ?.takeIf { (_, watched) -> watched != drawn }
+        ?.let { (snapshot, watched) ->
+          val before = drawn
+          val changed = watched.keys.filter { before?.get(it) != watched[it] }.toSet()
+          redraw(context, session.baseUrl, snapshot, changed.takeIf { before != null })
+        }
     } finally {
       renew.cancel()
+      pinned.cancel()
       // Released, so the next visible change wakes the app at once rather than after the lease.
       withContext(NonCancellable) {
         withTimeoutOrNull(2_000L) { runCatching { session.watchStates(webhookId, ids, 0) } }
