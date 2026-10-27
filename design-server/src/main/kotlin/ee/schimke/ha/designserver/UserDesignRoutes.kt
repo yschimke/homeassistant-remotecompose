@@ -184,7 +184,8 @@ private val VARIANT = Regex("[a-z0-9][a-z0-9-]{0,39}")
  * - `GET /api/my/studio` lists the UI Builder designs this server made for them and the ones they
  *   own or edit in UI Builder: what the app's card studio publishes.
  * - `POST /api/my/device-token` mints the token the app sends as `Authorization: Bearer`.
- * - `/my` is the same for a browser: the designs, share buttons and a device token to copy.
+ * - `/my` is the same for a browser: the designs, share buttons and a device token to copy. The app
+ *   signs itself in instead ([AppSignIn]).
  *
  * Shared designs join everyone's manifest; private ones only their author's.
  */
@@ -367,7 +368,10 @@ object MyPage {
     append("<h1>My designs</h1><p>Signed in as ${esc(login)}.</p>")
     append("<h2>The app</h2>")
     if (token == null) {
-      append("<p>Your private designs show in harc once it has a device token.</p>")
+      append(
+        "<p>Your private designs show in harc once it is signed in: in harc's settings, " +
+          "under the design server, sign in with GitHub. Or make a device token to paste there.</p>"
+      )
       append(
         "<form method=\"post\" action=\"/my/device-token\"><button>Create a device token</button></form>"
       )

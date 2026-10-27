@@ -336,7 +336,8 @@ class GithubAuth(
     private const val STATE_COOKIE = "design-server-oauth-state"
     private const val SESSION_TTL_MS = 30L * 24 * 60 * 60 * 1000
     private const val DEVICE = "device"
-    private const val DEVICE_TTL_MS = 365L * 24 * 60 * 60 * 1000
+    /** How long a device token is good for. */
+    const val DEVICE_TTL_MS = 365L * 24 * 60 * 60 * 1000
 
     /** The Compose Preview server's sign-in, on the host this server shares ([SignIn.Host]). */
     const val HOST_START_PATH = "/auth/github/start"

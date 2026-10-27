@@ -184,6 +184,7 @@ fun Application.designServer(
     cardStudioRoutes(holder, uiBuilder, github, made = userDesigns)
     if (userDesigns != null && github != null) {
       userDesignRoutes(holder, userDesigns, uiBuilder, github)
+      AppSignIn(github).routes(this)
     }
     get("/healthz") { call.respondText("ok") }
 

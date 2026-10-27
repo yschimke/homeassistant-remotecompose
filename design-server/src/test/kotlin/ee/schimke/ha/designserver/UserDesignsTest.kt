@@ -24,6 +24,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.formUrlEncode
 import io.ktor.http.parameters
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respondBytes
@@ -637,6 +638,114 @@ class UserDesignsTest {
       browser
         .post("/api/my/device-token") { header(HttpHeaders.Cookie, "cp_gh_auth=ended") }
         .status,
+    )
+  }
+
+  @Test
+  fun theAppSignsInWithPkceAndGetsADeviceToken() = testApplication {
+    externalServices {
+      hosts("http://preview") {
+        routing {
+          get(GithubAuth.HOST_WHOAMI_PATH) {
+            if (call.request.headers[HttpHeaders.Cookie] == "__Host-cp_gh_auth=live")
+              call.respondText(
+                """{"login":"octocat","guest":false}""",
+                ContentType.Application.Json,
+              )
+            else call.respondText("Not signed in.", status = HttpStatusCode.Unauthorized)
+          }
+        }
+      }
+    }
+    val github =
+      GithubAuth(
+        GithubAuth.SignIn.Host("http://preview"),
+        sessionSecret = "session-secret",
+        http = createClient { followRedirects = false },
+      )
+    val store = UserDesignStore(Files.createTempDirectory("user-designs").toFile())
+    application { designServer(LibraryHolder(library()), github = github, userDesigns = store) }
+    val browser = createClient { followRedirects = false }
+    val verifier = "v".repeat(20) + "erifier-of-forty-three-chars"
+    val request = parameters {
+      append("response_type", "code")
+      append("client_id", "harc")
+      append("redirect_uri", "rcha://auth-callback")
+      append("state", "the-state")
+      append("code_challenge", AppSignIn.challengeOf(verifier))
+      append("code_challenge_method", "S256")
+    }
+    val query = request.formUrlEncode()
+
+    // Signed out, it signs in first and comes back to the same request.
+    val signIn = browser.get("${AppSignIn.AUTHORIZE_PATH}?$query")
+    assertEquals(HttpStatusCode.Found, signIn.status)
+    assertTrue(
+      signIn.headers[HttpHeaders.Location]!!.startsWith("/auth/github/start?return=%2Fmy%2Foauth")
+    )
+    // A redirect elsewhere, or no PKCE, is refused outright.
+    val elsewhere = query.replace("rcha%3A%2F%2Fauth-callback", "https%3A%2F%2Fevil.example")
+    assertEquals(
+      HttpStatusCode.BadRequest,
+      browser.get("${AppSignIn.AUTHORIZE_PATH}?$elsewhere").status,
+    )
+
+    val session = "__Host-cp_gh_auth=live"
+    val consent =
+      browser.get("${AppSignIn.AUTHORIZE_PATH}?$query") { header(HttpHeaders.Cookie, session) }
+    assertEquals(HttpStatusCode.OK, consent.status)
+    assertTrue("octocat" in consent.bodyAsText())
+
+    val sibling =
+      browser.submitForm(AppSignIn.AUTHORIZE_PATH, request) {
+        header(HttpHeaders.Cookie, session)
+        header(HttpHeaders.Host, "ha.coo.ee")
+        header(HttpHeaders.Origin, "https://preview.coo.ee")
+      }
+    assertEquals(HttpStatusCode.Forbidden, sibling.status)
+    val approved =
+      browser.submitForm(AppSignIn.AUTHORIZE_PATH, request) {
+        header(HttpHeaders.Cookie, session)
+        header(HttpHeaders.Host, "ha.coo.ee")
+        header(HttpHeaders.Origin, "https://ha.coo.ee")
+      }
+    assertEquals(HttpStatusCode.Found, approved.status)
+    val callback = approved.headers[HttpHeaders.Location]!!
+    assertTrue(callback.startsWith("rcha://auth-callback?code="), callback)
+    assertTrue(callback.endsWith("&state=the-state"), callback)
+    val code = callback.substringAfter("code=").substringBefore('&')
+
+    fun exchange(code: String, verifier: String) = parameters {
+      append("grant_type", "authorization_code")
+      append("code", code)
+      append("redirect_uri", "rcha://auth-callback")
+      append("client_id", "harc")
+      append("code_verifier", verifier)
+    }
+    // The wrong verifier spends the code too.
+    val stolen = browser.submitForm(AppSignIn.TOKEN_PATH, exchange(code, "x".repeat(43)))
+    assertEquals(HttpStatusCode.BadRequest, stolen.status)
+    assertEquals(
+      HttpStatusCode.BadRequest,
+      browser.submitForm(AppSignIn.TOKEN_PATH, exchange(code, verifier)).status,
+    )
+
+    val again =
+      browser.submitForm(AppSignIn.AUTHORIZE_PATH, request) {
+        header(HttpHeaders.Cookie, session)
+        header(HttpHeaders.Host, "ha.coo.ee")
+        header(HttpHeaders.Origin, "https://ha.coo.ee")
+      }
+    val fresh = again.headers[HttpHeaders.Location]!!.substringAfter("code=").substringBefore('&')
+    val tokens = browser.submitForm(AppSignIn.TOKEN_PATH, exchange(fresh, verifier))
+    assertEquals(HttpStatusCode.OK, tokens.status)
+    val body = json.parseToJsonElement(tokens.bodyAsText()).jsonObject
+    assertEquals("Bearer", body["token_type"]!!.jsonPrimitive.content)
+    assertEquals("octocat", github.deviceLogin(body["access_token"]!!.jsonPrimitive.content))
+    assertEquals(
+      HttpStatusCode.BadRequest,
+      browser.submitForm(AppSignIn.TOKEN_PATH, exchange(fresh, verifier)).status,
+      "a code is single-use",
     )
   }
 
