@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.components.RemoteHaArea
 import ee.schimke.ha.rc.components.RemoteHaMediaControl
 import ee.schimke.ha.rc.components.RemoteHaMediaControlWide
@@ -47,7 +48,11 @@ object RoomDesignParts {
   @Composable
   fun AreaFull(modifier: RemoteModifier) {
     val (card, snapshot) = input("area", "area" to "living_room", "name" to "Living room")
-    RemoteHaArea(area.areaData(card, snapshot), modifier = modifier)
+    RemoteHaArea(
+      area.areaData(card, snapshot),
+      modifier = modifier,
+      widthDp = LocalWidgetCaptureSizeDp.current?.widthDp,
+    )
   }
 
   /**

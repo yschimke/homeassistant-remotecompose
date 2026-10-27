@@ -64,7 +64,13 @@ fun RemoteHaGlance(
         .then(cardChrome(theme.cardBackground, theme.divider))
         .padding(horizontal = 12.rdp, vertical = (if (compactCells) 2 else 10).rdp)
   ) {
-    RemoteColumn(modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier) {
+    // When the host pins extra height (fillHeight) the title and grid centre together in it, so a
+    // short grid isn't left under a title on the top edge (Principle 8). Centring lives in this
+    // column's own arrangement: a wrapper alignment is a no-op for a wrap-height child (#224).
+    RemoteColumn(
+      modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier,
+      verticalArrangement = if (fillHeight) RemoteArrangement.Center else RemoteArrangement.Top,
+    ) {
       if (data.title != null) {
         RemoteText(
           text = cardTitle(data.title),
@@ -77,25 +83,7 @@ fun RemoteHaGlance(
         )
         RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp))
       }
-      // The cell grid occupies the rest of the cell. When the host
-      // pins extra height (fillHeight) wrap the grid in a weighted
-      // column that claims the leftover space and centres its
-      // content — so a short grid sits in the middle of the cell
-      // rather than glued under the title (Principle 8). Centring
-      // has to live inside this weighted filler that arranges its
-      // own child; a wrapper alignment is a no-op for a wrap-height
-      // child in alpha010 (#224, Known gap 6 — same reason the
-      // arc-dial Wide row fills and self-centres internally).
-      if (fillHeight) {
-        RemoteColumn(
-          modifier = RemoteModifier.fillMaxWidth().weight(1f),
-          verticalArrangement = RemoteArrangement.Center,
-        ) {
-          CellGrid(supportsFlow, cells, cellsPerRow, compactCells)
-        }
-      } else {
-        CellGrid(supportsFlow, cells, cellsPerRow, compactCells)
-      }
+      CellGrid(supportsFlow, cells, cellsPerRow, compactCells)
     }
   }
 }

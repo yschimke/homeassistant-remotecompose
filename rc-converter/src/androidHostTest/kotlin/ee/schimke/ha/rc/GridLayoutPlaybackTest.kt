@@ -24,6 +24,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.cards.defaultRegistry
+import ee.schimke.ha.rc.components.HaGridLayout
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
@@ -347,7 +348,9 @@ class GridLayoutPlaybackTest {
 
   @Test
   fun aLauncherGridOfButtonsFitsItsCaptureWidth() {
-    // The launcher re-captures for every size: two 80 dp buttons fit 200 dp, one fits 160 dp.
+    // The launcher re-captures for every size: two 80 dp buttons fit 200 dp. At 160 dp one would
+    // fit across, but four 160 dp squares one per row overrun the widget's 400 dp height, so two
+    // 76 dp squares share each row (HaGridLayout.fit) and all four cards still show.
     val (w200, w160) =
       heightsAt(
         "four-buttons-launcher",
@@ -359,11 +362,12 @@ class GridLayoutPlaybackTest {
       )
     val cell200 = (200f - 8f) / 2f
     assertNear(cell200 * 2 + 8f, w200, "200 dp, two rows of two")
-    assertNear(4 * 160f + 3 * 8f, w160, "160 dp, one per row")
+    val cell160 = (160f - 8f) / 2f
+    assertNear(cell160 * 2 + 8f, w160, "160 dp, two rows of two that fit its height")
     assertCellsAtLeast(80, 200, perRow = 2, "buttons at 200 dp")
-    assertCellsAtLeast(80, 160, perRow = 1, "buttons at 160 dp")
+    assertCellsAtLeast(HaGridLayout.MIN_FIXED_CELL_DP, 160, perRow = 2, "buttons at 160 dp")
     assertCellsFit(200, perRow = 2, yDp = cell200 / 2f, "buttons at 200 dp")
-    assertCellsFit(160, perRow = 1, yDp = 80f, "buttons at 160 dp")
+    assertCellsFit(160, perRow = 2, yDp = cell160 / 2f, "buttons at 160 dp")
   }
 
   /**

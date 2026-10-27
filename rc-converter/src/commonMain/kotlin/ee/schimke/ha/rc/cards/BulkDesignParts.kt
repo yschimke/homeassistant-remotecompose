@@ -8,6 +8,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.components.RemoteHaCalendar
 import ee.schimke.ha.rc.components.RemoteHaCalendarIdentity
 import ee.schimke.ha.rc.components.RemoteHaLogbook
@@ -55,8 +56,17 @@ object BulkDesignParts {
   fun Full(compactRows: Boolean, modifier: RemoteModifier) {
     val (card, snapshot) = input()
     when (card.type) {
-      CardTypes.LOGBOOK -> RemoteHaLogbook(logbookData(card, snapshot), modifier)
-      CardTypes.CALENDAR -> RemoteHaCalendar(calendarData(card, snapshot), modifier)
+      CardTypes.LOGBOOK -> {
+        val data = logbookData(card, snapshot)
+        val header = if (data.title != null) LIST_TITLED_DP else LIST_PADDING_DP
+        val rows = launcherRows(header, LOGBOOK_ROW_DP) ?: data.entries.size
+        RemoteHaLogbook(data.copy(entries = data.entries.take(rows)), modifier)
+      }
+      CardTypes.CALENDAR -> {
+        val data = calendarData(card, snapshot)
+        val rows = launcherRows(LIST_TITLED_DP, CALENDAR_ROW_DP) ?: data.events.size
+        RemoteHaCalendar(data.copy(events = data.events.take(rows)), modifier)
+      }
       else ->
         RemoteHaTodoList(
           todoData(card, snapshot),
@@ -73,10 +83,12 @@ object BulkDesignParts {
   @Composable
   fun Identity(modifier: RemoteModifier) {
     val (card, snapshot) = input()
+    // One launcher column takes each identity's narrow form.
+    val narrow = (LocalWidgetCaptureSizeDp.current?.widthDp ?: Int.MAX_VALUE) < NARROW_IDENTITY_DP
     when (card.type) {
-      CardTypes.LOGBOOK -> RemoteHaLogbookIdentity(logbookData(card, snapshot), modifier)
-      CardTypes.CALENDAR -> RemoteHaCalendarIdentity(calendarData(card, snapshot), modifier)
-      else -> RemoteHaTodoListIdentity(todoData(card, snapshot), modifier)
+      CardTypes.LOGBOOK -> RemoteHaLogbookIdentity(logbookData(card, snapshot), modifier, narrow)
+      CardTypes.CALENDAR -> RemoteHaCalendarIdentity(calendarData(card, snapshot), modifier, narrow)
+      else -> RemoteHaTodoListIdentity(todoData(card, snapshot), modifier, narrow)
     }
   }
 
@@ -95,6 +107,26 @@ object BulkDesignParts {
       }
     RemoteHaSummaryLine(cardText("title", title), cardText("summary", summary))
   }
+
+  /**
+   * How many [rowDp] rows a launcher widget holds under a [headerDp] header (at least one), so a
+   * list shows the entries that fit rather than cutting the last in half at the widget's bottom
+   * edge. Null off a launcher capture.
+   */
+  @Composable
+  private fun launcherRows(headerDp: Int, rowDp: Int): Int? =
+    LocalWidgetCaptureSizeDp.current?.let { ((it.heightDp - headerDp) / rowDp).coerceAtLeast(1) }
+
+  // A list card's vertical padding (12 dp each side), and that with its Title line and the 8 dp
+  // gap under it; a logbook entry (a Body name over a Label message) and a calendar event (a
+  // Caption date over a Body summary), each with the gap after it.
+  private const val LIST_PADDING_DP = 24
+  private const val LIST_TITLED_DP = 56
+  private const val LOGBOOK_ROW_DP = 45
+  private const val CALENDAR_ROW_DP = 48
+
+  /** Below this width (one launcher column) an identity takes its narrow form. */
+  private const val NARROW_IDENTITY_DP = 100
 
   internal val components: Map<String, CardDesignComponent> =
     mapOf(

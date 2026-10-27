@@ -120,8 +120,17 @@ class HorizontalStackCardConverter : DesignedCardConverter() {
    */
   @Composable
   internal fun Draw(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    // HA splits a horizontal stack's width evenly; each child is captured for its own column.
-    val children = childCards(card)
+    // HA splits a horizontal stack's width evenly; each child is captured for its own column. A
+    // launcher widget keeps the children whose column is still a 48 dp target, rather than
+    // squeezing every child into a sliver.
+    val all = childCards(card)
+    val children =
+      LocalWidgetCaptureSizeDp.current?.let { cell ->
+        val fits =
+          (cell.widthDp + HORIZONTAL_STACK_GAP_DP) /
+            (HaGridLayout.MIN_FIXED_CELL_DP + HORIZONTAL_STACK_GAP_DP)
+        all.take(fits.coerceAtLeast(1))
+      } ?: all
     ProvideChildCaptureShare(columns = children.size, gapDp = HORIZONTAL_STACK_GAP_DP) {
       CompositionLocalProvider(
         LocalGridSquareCells provides false,
@@ -241,13 +250,32 @@ class GridCardConverter : DesignedCardConverter() {
       LocalInCardContainer provides true,
     ) {
       val threshold = plan.thresholdDp
-      if (captureWidthDp != null) {
-        val perRow = HaGridLayout.perRowAt(captureWidthDp.toFloat(), planCount, columns, minCellDp)
-        val rows = (children.size + perRow - 1) / perRow
+      val capture = LocalWidgetCaptureSizeDp.current
+      if (captureWidthDp != null && capture != null) {
+        // The widget's height decides too: a short widget puts more, smaller cells in a row and
+        // shows only the cards that fit, rather than stacking rows past its bottom edge.
+        val fit =
+          HaGridLayout.fit(
+            widthDp = captureWidthDp,
+            heightDp = capture.heightDp,
+            cellCount = children.size,
+            perRow = HaGridLayout.perRowAt(captureWidthDp.toFloat(), planCount, columns, minCellDp),
+            square = squareCells.any { it },
+          )
+        val perRow = fit.perRow
+        val rows = (fit.shown + perRow - 1) / perRow
         // Each cell is captured for its own share of the widget, so a nested grid or size gate
         // lays out for its cell rather than the whole widget.
         ProvideChildCaptureShare(columns = perRow, rows = rows, gapDp = HaGridLayout.GAP_DP) {
-          GridCells(children, bindingIndices, squareCells, keepColumns, snapshot, perRow, modifier)
+          GridCells(
+            children.take(fit.shown),
+            bindingIndices.take(fit.shown),
+            squareCells.take(fit.shown),
+            keepColumns,
+            snapshot,
+            perRow,
+            modifier,
+          )
         }
       } else if (
         LocalCardSizeMode.current == CardSizeMode.Fixed &&

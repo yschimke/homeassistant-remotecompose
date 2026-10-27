@@ -7,7 +7,9 @@ import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.components.RemoteHaWeatherForecast
+import ee.schimke.ha.rc.components.RemoteHaWeatherForecastNarrow
 import ee.schimke.ha.rc.components.RemoteHaWeatherForecastWear
 import ee.schimke.ha.rc.components.RemoteHaWeatherForecastWide
 import ee.schimke.ha.rc.design.CardDesignComponent
@@ -52,12 +54,43 @@ object WeatherDesignParts {
     else RemoteHaWeatherForecast(data, modifier)
   }
 
-  /** `ha-cards/weather-forecast-card-wide`: the current row alone, for a short launcher cell. */
+  /**
+   * `ha-cards/weather-forecast-card-wide`: the current row alone, for a short launcher cell. A
+   * launcher widget knows its size at capture and goes further: the icon over the temperature in
+   * one column, the condition over the temperature in two, and from three columns and two rows the
+   * current conditions over as many forecast days as its width holds, so a big widget shows the
+   * forecast rather than one row in a blank cell.
+   */
   @Composable
   fun Wide(modifier: RemoteModifier) {
     val (card, snapshot) = input()
-    RemoteHaWeatherForecastWide(weatherData(card, snapshot), modifier)
+    val data = weatherData(card, snapshot)
+    val cell = LocalWidgetCaptureSizeDp.current
+    when {
+      cell == null -> RemoteHaWeatherForecastWide(data, modifier)
+      cell.widthDp < WEATHER_ROW_MIN_WIDTH_DP -> RemoteHaWeatherForecastNarrow(data, modifier)
+      cell.widthDp < WEATHER_FORECAST_MIN_WIDTH_DP -> RemoteHaWeatherForecastWear(data, modifier)
+      cell.heightDp >= WEATHER_FORECAST_MIN_HEIGHT_DP && data.days.isNotEmpty() ->
+        RemoteHaWeatherForecast(
+          data.copy(days = data.days.take((cell.widthDp - 28) / WEATHER_DAY_MIN_DP)),
+          modifier,
+          fillHeight = true,
+          showExtras = false,
+          showCondition = cell.widthDp >= WEATHER_CONDITION_MIN_WIDTH_DP,
+        )
+      else -> RemoteHaWeatherForecastWide(data, modifier)
+    }
   }
+
+  // One launcher column is too narrow for a row; three hold a forecast day per 48 dp; two rows
+  // hold the current row over the strip.
+  private const val WEATHER_ROW_MIN_WIDTH_DP = 100
+  private const val WEATHER_FORECAST_MIN_WIDTH_DP = 180
+  private const val WEATHER_FORECAST_MIN_HEIGHT_DP = 150
+  private const val WEATHER_DAY_MIN_DP = 48
+
+  /** Below this width the forecast's current row leaves the condition to its icon. */
+  private const val WEATHER_CONDITION_MIN_WIDTH_DP = 260
 
   /** `ha-cards/weather-forecast-card-wear`: the Wear form; [large] for the Large container. */
   @Composable

@@ -69,6 +69,46 @@ object HaGridLayout {
       gapDp = gapDp,
     )
 
+  /** How a launcher widget's grid lays out: [perRow] cells to a row, the first [shown] cards. */
+  data class Fit(val perRow: Int, val shown: Int)
+
+  /**
+   * A grid in a launcher widget [widthDp] × [heightDp], which knows both at capture: [perRow] cells
+   * to a row as the width allows, more to a row (down to [MIN_FIXED_CELL_DP] wide) when the height
+   * can't hold the rows that leaves, and only as many cards as then fit, so no row runs past the
+   * bottom of the widget and no cell past its edge. Of the counts that fit every card, the one
+   * leaving the fewest empty slots in the last row wins, then the one with bigger cells. A [square]
+   * cell is as tall as it is wide.
+   */
+  fun fit(
+    widthDp: Int,
+    heightDp: Int,
+    cellCount: Int,
+    perRow: Int,
+    square: Boolean = false,
+    gapDp: Int = GAP_DP,
+  ): Fit {
+    if (cellCount <= 0) return Fit(perRow.coerceAtLeast(1), 0)
+    val widest = ((widthDp + gapDp) / (MIN_FIXED_CELL_DP + gapDp)).coerceAtLeast(1)
+    fun cellHeight(across: Int) =
+      if (square) (widthDp - gapDp * (across - 1)) / across else MIN_FIXED_CELL_DP
+    fun rowsFit(across: Int) = ((heightDp + gapDp) / (cellHeight(across) + gapDp)).coerceAtLeast(1)
+    val first = perRow.coerceIn(1, cellCount)
+    val candidates = (first..maxOf(first, minOf(widest, cellCount))).toList()
+    val across =
+      candidates
+        .filter { it * rowsFit(it) >= cellCount }
+        .minWithOrNull(compareBy<Int> { (cellCount + it - 1) / it * it - cellCount }.thenBy { it })
+        ?: candidates.last()
+    return Fit(across, minOf(cellCount, across * rowsFit(across)))
+  }
+
+  /**
+   * The narrowest and shortest a launcher widget's grid cell is drawn: a 48 dp touch target, the
+   * size an icon-only button or tile keeps its identity at.
+   */
+  const val MIN_FIXED_CELL_DP: Int = 48
+
   /**
    * The two layouts a captured grid carries, and the playback width that picks between them.
    *

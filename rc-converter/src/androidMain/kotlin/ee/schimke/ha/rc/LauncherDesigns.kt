@@ -117,7 +117,12 @@ fun LauncherWidgetContent(
           ProvideCardSizeMode(CardSizeMode.Fixed) {
             ProvideCardChrome(enabled = false) {
               ProvideWidgetActionRegistry(widgetActions) {
-                RemoteHaWidgetSurface { content(RemoteModifier.fillMaxWidth()) }
+                // A card that doesn't fill the cell is centred in it rather than left against
+                // the top edge (docs/architecture/adaptive-card-layouts.md, "No dead space"); one
+                // that fills it measures first and leaves the spacers nothing.
+                RemoteHaWidgetSurface {
+                  ee.schimke.ha.rc.cards.CenteredCell { content(RemoteModifier.fillMaxWidth()) }
+                }
               }
             }
           }

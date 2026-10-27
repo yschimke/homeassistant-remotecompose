@@ -198,6 +198,10 @@ internal fun ArcDialLauncher(
                 RemoteModifier.fillMaxSize(),
                 showName = named,
                 compactCenter = capture != null && fillDialDp(capture) < ArcDialFillRoomyDp,
+                dialHeightDp =
+                  capture
+                    ?.let { fillDialDp(it) }
+                    ?.takeIf { it + ArcDialFillSlackDp < capture.heightDp - 20 - 24 },
               )
             else if (capture != null && capture.widthDp < ArcDialFillMinWidthDp)
               RemoteHaArcDialNarrow(
@@ -212,6 +216,8 @@ internal fun ArcDialLauncher(
                 // A one-column widget has no room beside the dial for the name; a wider row
                 // gives the mode chip's line to it, as a Wear slot does.
                 showName = named && (capture?.widthDp ?: Int.MAX_VALUE) >= ArcDialFillMinWidthDp,
+                // A two-column row is too narrow for the 56 dp dial and a whole value beside it.
+                dialDp = if ((capture?.widthDp ?: Int.MAX_VALUE) < ArcDialWideRoomyDp) 40 else 56,
               )
           }
         }
@@ -220,6 +226,12 @@ internal fun ArcDialLauncher(
 }
 
 private const val ArcDialFullMinDp = 260
+
+/** A Wide row at least this wide keeps the 56 dp dial; narrower, a 40 dp one. */
+private const val ArcDialWideRoomyDp = 160
+
+/** A filled dial's cell this much taller than the dial needs centres name and dial together. */
+private const val ArcDialFillSlackDp = 16
 
 /**
  * The dial-filled tier ([RemoteHaArcDialFill]): two launcher columns (120 dp) and the name over a

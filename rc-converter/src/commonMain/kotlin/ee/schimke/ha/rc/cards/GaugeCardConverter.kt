@@ -131,12 +131,28 @@ class GaugeCardConverter : DesignedCardConverter() {
       RemoteSizeBreakpoint(thresholdsDp = intArrayOf(NarrowWidthDp), modifier = modifier) { width ->
         RemoteHaGaugeStacked(data, RemoteModifier.fillMaxSize(), narrow = width == 0)
       }
-    } else RemoteHaGaugeStacked(data, modifier, narrow = narrow, hero = captureHeroScale())
+    } else {
+      // A one-column widget stacks a cell-wide arc over its text, centred together.
+      val cell = LocalWidgetCaptureSizeDp.current
+      RemoteHaGaugeStacked(
+        data,
+        modifier,
+        narrow = narrow,
+        hero = captureHeroScale(),
+        arcHeightDp =
+          cell
+            ?.takeIf { narrow && it.heightDp >= TallNarrowMinHeightDp }
+            ?.let { (it.widthDp - 8) / 2 + 4 },
+      )
+    }
   }
 
   private companion object {
     /** Narrower than a two-column launcher widget: one column, `57 dp` on Android's grid. */
     const val NarrowWidthDp = 100
+
+    /** A one-column widget this tall (a launcher row) stacks its arc over its text. */
+    const val TallNarrowMinHeightDp = 90
 
     // `needle:` draws the same arc here, with or without a needle.
     val TEMPLATE_CONFIG_KEYS =

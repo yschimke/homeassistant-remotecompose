@@ -179,4 +179,46 @@ class HaGridLayoutTest {
     assertNull(parseHaAspectRatio("0%"))
     assertNull(parseHaAspectRatio("1:2:3"))
   }
+
+  @Test
+  fun launcherFitKeepsTheWidthCountWhenTheRowsFit() {
+    // A 2 × 2 launcher widget (130 × 220): two 48 dp rows of two hold all four cards.
+    assertEquals(
+      HaGridLayout.Fit(perRow = 2, shown = 4),
+      HaGridLayout.fit(widthDp = 130, heightDp = 220, cellCount = 4, perRow = 2),
+    )
+  }
+
+  @Test
+  fun launcherFitPutsMoreToARowWhenTheHeightIsShort() {
+    // One row tall (276 × 102): four cards go in one row rather than stacking off the bottom.
+    assertEquals(
+      HaGridLayout.Fit(perRow = 4, shown = 4),
+      HaGridLayout.fit(widthDp = 276, heightDp = 102, cellCount = 4, perRow = 1),
+    )
+  }
+
+  @Test
+  fun launcherFitShowsOnlyTheCardsThatFit() {
+    // A 1 × 1 widget (57 × 102) holds one 48 dp cell.
+    assertEquals(
+      HaGridLayout.Fit(perRow = 1, shown = 1),
+      HaGridLayout.fit(widthDp = 57, heightDp = 102, cellCount = 4, perRow = 1),
+    )
+    // Two rows of two in a 2 × 1 widget's 130 dp don't fit its 102 dp height: one row of two.
+    assertEquals(
+      HaGridLayout.Fit(perRow = 2, shown = 2),
+      HaGridLayout.fit(widthDp = 130, heightDp = 102, cellCount = 4, perRow = 1),
+    )
+  }
+
+  @Test
+  fun launcherFitPrefersFullRows() {
+    // Square cells in a 4 × 2 widget (276 × 220): three to a row would fit (3 + 1), four to a row
+    // fits as well and leaves no hole.
+    assertEquals(
+      HaGridLayout.Fit(perRow = 4, shown = 4),
+      HaGridLayout.fit(widthDp = 276, heightDp = 220, cellCount = 4, perRow = 2, square = true),
+    )
+  }
 }

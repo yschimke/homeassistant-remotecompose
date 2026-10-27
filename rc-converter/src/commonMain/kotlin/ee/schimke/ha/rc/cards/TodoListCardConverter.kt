@@ -13,6 +13,9 @@ import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaTodoItem
 import ee.schimke.ha.rc.components.HaTodoListData
 import ee.schimke.ha.rc.components.MinTouchTargetDp
+import ee.schimke.ha.rc.components.todoRemainingCaption
+import ee.schimke.ha.rc.components.todoRemainingCount
+import ee.schimke.ha.rc.components.todoRemainingLabel
 import ee.schimke.ha.rc.design.DesignedCardConverter
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -114,6 +117,9 @@ class TodoListCardConverter : DesignedCardConverter() {
       buildMap {
         put("card.title", data.title)
         put("card.summary", todoSummary(data))
+        put("card.remaining", todoRemainingLabel(data.activeItems.size))
+        put("card.remaining_count", todoRemainingCount(data.activeItems.size))
+        put("card.remaining_caption", todoRemainingCaption(data.activeItems.size))
         data.activeItems.forEachIndexed { i, item -> put("card.active.$i.summary", item.summary) }
         data.completedItems.forEachIndexed { i, item -> put("card.done.$i.summary", item.summary) }
       },

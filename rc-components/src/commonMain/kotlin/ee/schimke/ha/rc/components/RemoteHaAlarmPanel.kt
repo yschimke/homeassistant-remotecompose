@@ -147,8 +147,8 @@ fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = Re
       RemoteRow(
         modifier = RemoteModifier.fillMaxSize(),
         verticalAlignment = RemoteAlignment.CenterVertically,
-        horizontalArrangement = RemoteArrangement.spacedBy(10.rdp),
       ) {
+        // The gap is the text column's padding: spacedBy isn't taken out of a weighted share.
         RemoteBox(
           modifier =
             RemoteModifier.size(40.rdp)
@@ -164,7 +164,7 @@ fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = Re
           )
         }
         RemoteColumn(
-          modifier = RemoteModifier.weight(1f),
+          modifier = RemoteModifier.weight(1f).padding(start = 10.rdp),
           verticalArrangement = RemoteArrangement.Center,
         ) {
           RemoteText(

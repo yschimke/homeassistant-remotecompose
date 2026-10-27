@@ -48,6 +48,7 @@ fun RemoteHaWeatherForecast(
   modifier: RemoteModifier = RemoteModifier,
   fillHeight: Boolean = false,
   showExtras: Boolean = true,
+  showCondition: Boolean = true,
 ) {
   val theme = haTheme()
   RemoteBox(
@@ -61,7 +62,7 @@ fun RemoteHaWeatherForecast(
       modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
       verticalArrangement = RemoteArrangement.spacedBy(10.rdp),
     ) {
-      CurrentRow(data, theme)
+      CurrentRow(data, theme, showCondition)
       if (data.days.isNotEmpty()) {
         if (fillHeight) {
           // Expanded (Fixed mode): the forecast strip claims the
@@ -93,49 +94,57 @@ fun RemoteHaWeatherForecast(
 }
 
 @Composable
-private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme) {
+private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme, showCondition: Boolean) {
   RemoteRow(
     modifier = RemoteModifier.fillMaxWidth(),
     verticalAlignment = RemoteAlignment.CenterVertically,
     horizontalArrangement = RemoteArrangement.SpaceBetween,
   ) {
-    RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
+    // The condition takes what the temperature leaves: in a narrow card it is the words that
+    // shorten, never the reading.
+    RemoteRow(
+      modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
+      verticalAlignment = RemoteAlignment.CenterVertically,
+    ) {
       RemoteBasicIcon(
         imageVector = data.icon.toRemoteImageVector(),
         contentDescription = data.condition,
         modifier = RemoteModifier.size(36.rdp),
         tint = theme.primaryText,
       )
-      RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
-        RemoteText(
-          text = data.condition,
-          color = theme.primaryText,
-          fontSize = HaType.Title,
-          fontWeight = FontWeight.Medium,
-          style = haTextStyle(),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
-        if (data.supportingLine != null) {
+      // Without [showCondition] (a card too narrow for the words beside the temperature) the icon
+      // says the condition.
+      if (showCondition)
+        RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
           RemoteText(
-            text = data.supportingLine.rs,
-            color = theme.secondaryText,
-            fontSize = HaType.Label,
+            text = data.condition,
+            color = theme.primaryText,
+            fontSize = HaType.Title,
+            fontWeight = FontWeight.Medium,
             style = haTextStyle(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
-        } else {
-          RemoteText(
-            text = entityName(data.entityId, data.name),
-            color = theme.secondaryText,
-            fontSize = HaType.Label,
-            style = haTextStyle(),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-          )
+          if (data.supportingLine != null) {
+            RemoteText(
+              text = data.supportingLine.rs,
+              color = theme.secondaryText,
+              fontSize = HaType.Label,
+              style = haTextStyle(),
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+            )
+          } else {
+            RemoteText(
+              text = entityName(data.entityId, data.name),
+              color = theme.secondaryText,
+              fontSize = HaType.Label,
+              style = haTextStyle(),
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+            )
+          }
         }
-      }
     }
     RemoteColumn(horizontalAlignment = RemoteAlignment.End) {
       RemoteText(
@@ -290,6 +299,40 @@ fun RemoteHaWeatherForecastWide(
       style = haTextStyle(),
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,
+    )
+  }
+}
+
+/**
+ * The weather in a launcher widget one column wide (`57 dp`): the condition's icon over the
+ * temperature, centred. No row fits that width beside the icon, and the condition's words would be
+ * cut to a letter; the icon says it.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaWeatherForecastNarrow(
+  data: HaWeatherForecastData,
+  modifier: RemoteModifier = RemoteModifier,
+) {
+  val theme = haTheme()
+  RemoteColumn(
+    modifier = modifier.fillMaxSize().then(cardChrome(theme.cardBackground, theme.divider)),
+    horizontalAlignment = RemoteAlignment.CenterHorizontally,
+    verticalArrangement = RemoteArrangement.spacedBy(4.rdp, RemoteAlignment.CenterVertically),
+  ) {
+    RemoteBasicIcon(
+      imageVector = data.icon.toRemoteImageVector(),
+      contentDescription = data.condition,
+      modifier = RemoteModifier.size(28.rdp),
+      tint = theme.primaryText,
+    )
+    RemoteText(
+      text = LiveValues.attribute(data.entityId, "temperature_label", data.temperature),
+      color = theme.primaryText,
+      fontSize = HaType.Label,
+      fontWeight = haValueWeight(),
+      style = haTextStyle(),
+      maxLines = 1,
     )
   }
 }

@@ -575,11 +575,38 @@ as the cards apply them today:
   square one of its width.
 - **The cell is the card.** A row-rooted tier insets itself as a card's
   padding would, or its value meets the widget's edge.
+- **Centred by default.** `LauncherWidgetContent` wraps every card in
+  `CenteredCell`, so a card that doesn't fill its widget sits in the middle
+  rather than against the top edge. A card that fills the cell measures
+  first and leaves the spacers nothing, so this costs the cards that already
+  fill (or self-centre) nothing.
+- **Show what fits, whole.** A list or graph shows the rows its height holds
+  (logbook, calendar, map, history and statistics graphs), a grid or
+  horizontal stack the cells its width and height hold at 48 dp
+  (`HaGridLayout.fit`, more to a row when the widget is short), a picture
+  glance or area the chips its width holds. The last row is never cut in
+  half at the bottom edge, and no chip is pushed past the right one.
+- **Grow the key element.** A graph gives its plots the spare height, a
+  clock sizes its time to the cell, weather adds the forecast days from
+  three columns and two rows, markdown steps its type up when the widget
+  has twice the note's height.
+- **One column is its own form.** `57 dp` holds no row beside an icon:
+  weather is its icon over the temperature, the gauge its arc over its
+  text, to-do its count over "left", calendar and logbook their next or
+  latest entry, markdown its title and first line a step smaller.
+- **No `spacedBy` beside a weighted child.** The RemoteCompose row shares
+  out a `weight(1f)` child's width before taking the `spacedBy` gaps, so
+  the row runs one gap per child past its end (the media player's play
+  glyph, the arc dial's value, the picture glance's last chip). Put the gap
+  on the weighted child as padding.
 
 Off a launcher (Wear, a sized dashboard slot) the hero is not captured:
 those keep their playback gate. `LauncherGridSweepTest` renders every
-card it covers on Android's grid from `1×1` to `4×3` into
-`rc-converter/build/launcher-sweep/` for review.
+built-in card type on Android's grid from `1×1` to `4×3` into
+`rc-converter/build/launcher-sweep/` (with `report.tsv`) and fails on any
+render whose pixels show content cut by the right or bottom edge, or a cell
+of two rows or more with its content pinned to the top. A card with no
+launcher design is captured directly, as `TerrazzoWidgetProvider` does.
 
 ### Wear widgets: one capture, both hosts, both containers
 
