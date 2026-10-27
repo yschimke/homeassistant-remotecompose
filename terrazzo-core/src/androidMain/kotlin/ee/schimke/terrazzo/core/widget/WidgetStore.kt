@@ -24,7 +24,9 @@ import kotlinx.serialization.json.JsonObject
  * - `baseUrl`: which HA instance to pull state from,
  * - `cardType` + `cardJson`: the Lovelace card config,
  * - `live`: whether it keeps up with Home Assistant while the app is closed (live updates, off
- *   until the user turns it on; `docs/architecture/live-widget-updates.md`).
+ *   until the user turns it on; `docs/architecture/live-widget-updates.md`),
+ * - `origin*`: the dashboard the widget was made on and the card pressed there ([Origin]), so a tap
+ *   on the widget can open the app on that card. Widgets installed before it was kept have none.
  *
  * Capped at 5 installs (product requirement). The cap is enforced on write; the widget provider
  * itself doesn't care.
@@ -38,7 +40,15 @@ class WidgetStore(private val context: Context) {
     val baseUrl: String,
     val card: CardConfig,
     val liveUpdates: Boolean = false,
+    val origin: Origin? = null,
   )
+
+  /**
+   * Where a widget came from: the dashboard ([dashboardUrlPath], null for Home Assistant's default
+   * one) and the card long-pressed on it. That card is the dashboard's own, so the app can find it
+   * again; the widget's [Entry.card] may be a part of it, or renamed.
+   */
+  data class Origin(val dashboardUrlPath: String?, val card: CardConfig)
 
   val installed: Flow<List<Entry>>
     get() = context.store.data.map { prefs -> prefs.allEntries() }
@@ -47,24 +57,22 @@ class WidgetStore(private val context: Context) {
 
   suspend fun isFull(): Boolean = count() >= MAX_WIDGETS
 
-  suspend fun put(widgetId: Int, baseUrl: String, card: CardConfig, liveUpdates: Boolean = false) {
+  suspend fun put(
+    widgetId: Int,
+    baseUrl: String,
+    card: CardConfig,
+    liveUpdates: Boolean = false,
+    origin: Origin? = null,
+  ) {
     context.store.edit { prefs ->
-      prefs[baseUrlKey(widgetId)] = baseUrl
-      prefs[cardTypeKey(widgetId)] = card.type
-      prefs[cardJsonKey(widgetId)] = json.encodeToString(JsonObject.serializer(), card.raw)
-      prefs.putLive(widgetId, liveUpdates)
+      prefs.putEntry(Entry(widgetId, baseUrl, card, liveUpdates, origin))
     }
   }
 
   suspend fun get(widgetId: Int): Entry? = context.store.data.first().readEntry(widgetId)
 
   suspend fun remove(widgetId: Int) {
-    context.store.edit { prefs ->
-      prefs.remove(baseUrlKey(widgetId))
-      prefs.remove(cardTypeKey(widgetId))
-      prefs.remove(cardJsonKey(widgetId))
-      prefs.remove(liveKey(widgetId))
-    }
+    context.store.edit { prefs -> prefs.removeEntry(widgetId) }
   }
 
   /**
@@ -85,10 +93,7 @@ class WidgetStore(private val context: Context) {
       val storedIds = prefs.asMap().keys.mapNotNull { widgetIdFromKey(it.name) }.distinct()
       for (id in storedIds) {
         if (id !in liveIds) {
-          prefs.remove(baseUrlKey(id))
-          prefs.remove(cardTypeKey(id))
-          prefs.remove(cardJsonKey(id))
-          prefs.remove(liveKey(id))
+          prefs.removeEntry(id)
           pruned++
         }
       }
@@ -105,18 +110,8 @@ class WidgetStore(private val context: Context) {
     context.store.edit { prefs ->
       val moved =
         oldIds.zip(newIds).mapNotNull { (old, new) -> prefs.readEntry(old)?.let { new to it } }
-      for (old in oldIds) {
-        prefs.remove(baseUrlKey(old))
-        prefs.remove(cardTypeKey(old))
-        prefs.remove(cardJsonKey(old))
-        prefs.remove(liveKey(old))
-      }
-      for ((new, entry) in moved) {
-        prefs[baseUrlKey(new)] = entry.baseUrl
-        prefs[cardTypeKey(new)] = entry.card.type
-        prefs[cardJsonKey(new)] = json.encodeToString(JsonObject.serializer(), entry.card.raw)
-        prefs.putLive(new, entry.liveUpdates)
-      }
+      for (old in oldIds) prefs.removeEntry(old)
+      for ((new, entry) in moved) prefs.putEntry(entry.copy(widgetId = new))
     }
   }
 
@@ -134,14 +129,50 @@ class WidgetStore(private val context: Context) {
     return Entry(
       widgetId = widgetId,
       baseUrl = baseUrl,
-      card = CardConfig(type = cardType, raw = json.parseToJsonElement(cardJson) as JsonObject),
+      card = cardOf(cardType, cardJson),
       liveUpdates = this[liveKey(widgetId)] == true,
+      origin = readOrigin(widgetId),
     )
   }
 
-  /** Off is the default, so it is stored only when on. */
-  private fun MutablePreferences.putLive(widgetId: Int, liveUpdates: Boolean) {
-    if (liveUpdates) this[liveKey(widgetId)] = true else remove(liveKey(widgetId))
+  private fun Preferences.readOrigin(widgetId: Int): Origin? {
+    val cardType = this[originCardTypeKey(widgetId)] ?: return null
+    val cardJson = this[originCardJsonKey(widgetId)] ?: return null
+    return runCatching { Origin(this[originDashboardKey(widgetId)], cardOf(cardType, cardJson)) }
+      .getOrNull()
+  }
+
+  private fun MutablePreferences.putEntry(entry: Entry) {
+    val id = entry.widgetId
+    this[baseUrlKey(id)] = entry.baseUrl
+    this[cardTypeKey(id)] = entry.card.type
+    this[cardJsonKey(id)] = json.encodeToString(JsonObject.serializer(), entry.card.raw)
+    // Off is the default, so it is stored only when on.
+    if (entry.liveUpdates) this[liveKey(id)] = true else remove(liveKey(id))
+    val origin = entry.origin
+    if (origin == null) {
+      removeOrigin(id)
+    } else {
+      // The default dashboard has no url path: no key.
+      origin.dashboardUrlPath?.let { this[originDashboardKey(id)] = it }
+        ?: remove(originDashboardKey(id))
+      this[originCardTypeKey(id)] = origin.card.type
+      this[originCardJsonKey(id)] = json.encodeToString(JsonObject.serializer(), origin.card.raw)
+    }
+  }
+
+  private fun MutablePreferences.removeEntry(widgetId: Int) {
+    remove(baseUrlKey(widgetId))
+    remove(cardTypeKey(widgetId))
+    remove(cardJsonKey(widgetId))
+    remove(liveKey(widgetId))
+    removeOrigin(widgetId)
+  }
+
+  private fun MutablePreferences.removeOrigin(widgetId: Int) {
+    remove(originDashboardKey(widgetId))
+    remove(originCardTypeKey(widgetId))
+    remove(originCardJsonKey(widgetId))
   }
 
   companion object {
@@ -157,6 +188,15 @@ class WidgetStore(private val context: Context) {
     private fun cardJsonKey(id: Int) = stringPreferencesKey("widget.$id.cardJson")
 
     private fun liveKey(id: Int) = booleanPreferencesKey("widget.$id.live")
+
+    private fun originDashboardKey(id: Int) = stringPreferencesKey("widget.$id.originDashboard")
+
+    private fun originCardTypeKey(id: Int) = stringPreferencesKey("widget.$id.originCardType")
+
+    private fun originCardJsonKey(id: Int) = stringPreferencesKey("widget.$id.originCardJson")
+
+    private fun cardOf(type: String, cardJson: String) =
+      CardConfig(type = type, raw = json.parseToJsonElement(cardJson) as JsonObject)
 
     private val keyPattern = Regex("""widget\.(\d+)\.""")
 

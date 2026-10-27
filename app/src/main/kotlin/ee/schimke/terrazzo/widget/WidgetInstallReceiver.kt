@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.terrazzo.core.widget.WidgetStore
 import ee.schimke.terrazzo.terrazzoGraph
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -47,7 +48,7 @@ class WidgetInstallReceiver : BroadcastReceiver() {
         Log.w(TAG, "widget cap hit; keeping existing installs and skipping new id=$widgetId")
         return@runBlocking
       }
-      store.put(widgetId, baseUrl, card)
+      store.put(widgetId, baseUrl, card, origin = originOf(intent))
       WidgetRoutineRefreshWorker.sync(context)
     }
 
@@ -66,6 +67,32 @@ class WidgetInstallReceiver : BroadcastReceiver() {
     const val EXTRA_BASE_URL = "terrazzo.baseUrl"
     const val EXTRA_CARD_TYPE = "terrazzo.cardType"
     const val EXTRA_CARD_JSON = "terrazzo.cardJson"
+    private const val EXTRA_ORIGIN_DASHBOARD = "terrazzo.originDashboard"
+    private const val EXTRA_ORIGIN_CARD_TYPE = "terrazzo.originCardType"
+    private const val EXTRA_ORIGIN_CARD_JSON = "terrazzo.originCardJson"
+
+    /** Adds the dashboard and card the widget is made from ([WidgetStore.Origin]) to [intent]. */
+    fun putOrigin(intent: Intent, origin: WidgetStore.Origin) {
+      // The default dashboard has no url path: no extra.
+      origin.dashboardUrlPath?.let { intent.putExtra(EXTRA_ORIGIN_DASHBOARD, it) }
+      intent.putExtra(EXTRA_ORIGIN_CARD_TYPE, origin.card.type)
+      intent.putExtra(
+        EXTRA_ORIGIN_CARD_JSON,
+        json.encodeToString(JsonObject.serializer(), origin.card.raw),
+      )
+    }
+
+    private fun originOf(intent: Intent): WidgetStore.Origin? {
+      val type = intent.getStringExtra(EXTRA_ORIGIN_CARD_TYPE) ?: return null
+      val cardJson = intent.getStringExtra(EXTRA_ORIGIN_CARD_JSON) ?: return null
+      return runCatching {
+        WidgetStore.Origin(
+          dashboardUrlPath = intent.getStringExtra(EXTRA_ORIGIN_DASHBOARD),
+          card = CardConfig(type = type, raw = json.parseToJsonElement(cardJson) as JsonObject),
+        )
+      }
+        .getOrNull()
+    }
 
     private const val TAG = "WidgetInstallReceiver"
     private val json = Json { ignoreUnknownKeys = true }

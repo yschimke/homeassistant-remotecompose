@@ -430,9 +430,10 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     val intent =
       when {
         action is HaAction.Url -> Intent(Intent.ACTION_VIEW, Uri.parse(action.url))
-        // The app opens on the entity's details or the dashboard path, as the card's tap would.
+        // The app opens on the entity's details or the dashboard path, as the card's tap would; the
+        // surface's open-app tap and more-info also open on the widget's card in its dashboard.
         action is HaAction.MoreInfo || action is HaAction.Navigate ->
-          WidgetOpenRequests.launchIntent(context, action) ?: return null
+          WidgetOpenRequests.launchIntent(context, action, widgetId) ?: return null
         // A lock or a garage door reads the phone's lock mode when tapped, and asks while it is
         // locked: an activity, since a receiver can't put a question in front.
         action != null &&

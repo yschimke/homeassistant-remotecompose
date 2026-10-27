@@ -135,7 +135,7 @@ class WidgetConfigureActivity : ComponentActivity() {
       overrides.overrides.value.at(CardDesignScope.Card, entry.card)?.let {
         overrides.set(CardDesignScope.Card, card, it)
       }
-      terrazzoGraph().widgetStore.put(widgetId, entry.baseUrl, card, live)
+      terrazzoGraph().widgetStore.put(widgetId, entry.baseUrl, card, live, entry.origin)
       refresh(applicationContext, widgetId)
       setResult(Activity.RESULT_OK, resultIntent(widgetId))
       finish()

@@ -53,7 +53,7 @@ import kotlinx.serialization.json.jsonPrimitive
 @Composable
 fun WidgetInstallSheet(
   baseUrl: String,
-  dashboardUrlPath: String,
+  dashboardUrlPath: String?,
   card: CardConfig,
   snapshot: HaSnapshot,
   onDismiss: () -> Unit,
@@ -193,7 +193,15 @@ fun WidgetInstallSheet(
           onClick = {
             focusManager.clearFocus()
             keyboard?.hide()
-            if (installer.requestPin(baseUrl, editedCard, renderedPreview)) {
+            if (
+              installer.requestPin(
+                baseUrl,
+                editedCard,
+                renderedPreview,
+                // The card pressed, on its dashboard: a tap on the widget opens the app on it.
+                origin = WidgetStore.Origin(dashboardUrlPath, card),
+              )
+            ) {
               requestedIds = installed.map { it.widgetId }.toSet()
             } else installError = "Your launcher could not start installation. Try again."
           },
