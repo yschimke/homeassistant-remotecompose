@@ -16,6 +16,11 @@ data class WatchWidget(
   val cardKey: String?,
   /** The cards this widget can show, in the watch's order: [cardKey] is one of them. */
   val options: List<WatchWidgetCardOption>,
+  /**
+   * Whether it keeps up with Home Assistant while the phone app is closed: off until the user turns
+   * it on ([WearSyncManager.setWatchWidgetLive]).
+   */
+  val liveUpdates: Boolean = false,
 )
 
 /** A card a watch widget can show: one the phone shows on the watch. */

@@ -165,6 +165,7 @@ class MobileWearSyncManager(
 
   /** The card the user chose for each watch widget. */
   private val watchWidgetChoices by lazy { WatchWidgetChoiceStore(context) }
+  private val watchWidgetLive by lazy { WatchWidgetLiveStore(context) }
 
   private val watchWidgetsState = MutableStateFlow<List<WatchWidget>>(emptyList())
   override val watchWidgets: StateFlow<List<WatchWidget>> = watchWidgetsState
@@ -628,18 +629,29 @@ class MobileWearSyncManager(
           watchWidgetChoices.choices,
           sentPinned,
           sentSections,
-        ) { placed, chosen, pinned, sections ->
-          Triple(placed, chosen, (pinned to sections))
+          watchWidgetLive.live,
+        ) { placed, chosen, pinned, sections, liveUpdates ->
+          WidgetCardsInput(placed, chosen, pinned, sections, liveUpdates)
         }
-        .collectLatest { (placed, chosen, sent) ->
-          val (pinned, sections) = sent
+        .collectLatest { (placed, chosen, pinned, sections, liveUpdates) ->
           val options = wearWidgetCardOptions(pinned, sections)
-          watchWidgetsState.value = watchWidgets(placed, chosen, options)
           // A removed widget, or an unpaired watch: its choice goes too.
           val live = placed.flatMap { (node, widgets) ->
             widgets.widgets.map { watchWidgetKey(node, it.instanceId) }
           }
           if (chosen.keys.any { it !in live }) watchWidgetChoices.retainOnly(live.toSet())
+          if (liveUpdates.any { it !in live }) watchWidgetLive.retainOnly(live.toSet())
+          // Only with every card known, pins and sections both written (empty ones are too): a
+          // partial list would stop waking for the rest.
+          if (pinned != null && sections != null) {
+            val cards = liveWatchWidgetCards(placed, chosen, options, liveUpdates)
+            watchWidgetLive.setEntities(
+              wearEntityIds(cards.map { it.rawJson }, registrySnapshot.value) +
+                cards.map { it.primaryEntityId }.filter { it.isNotEmpty() }
+            )
+          }
+          // After the entities, so whoever follows this list reads the new ones.
+          watchWidgetsState.value = watchWidgets(placed, chosen, options, liveUpdates)
           // Nothing sent yet (signed out, or still starting): the watch keeps what it has.
           if (pinned == null && sections == null) return@collectLatest
           val cards = watchWidgetCardChoices(placed, chosen, options)
@@ -893,18 +905,16 @@ class MobileWearSyncManager(
     }
   }
 
-  /**
-   * The entities the watch's cards read. A process started for a wake hasn't published the
-   * dashboards yet, so it falls back to the entities in the `/wear/values` item last written.
-   */
-  override suspend fun watchedEntities(): Set<String> = watchEntityIds.ifEmpty { lastValuesKeys() }
+  override suspend fun watchedEntities(): Set<String> = watchWidgetLive.entities()
 
   /**
    * Writes [snapshot]'s values for the watch's cards now, for a wake with no app session: its
    * widgets read `/wear/values` while the watch app is closed.
    */
   override suspend fun pushValues(snapshot: HaSnapshot) {
-    val ids = watchedEntities()
+    // A process started for a wake hasn't published the dashboards yet: the entities in the
+    // `/wear/values` item last written stand in for the watch's cards.
+    val ids = watchEntityIds.ifEmpty { lastValuesKeys() }
     if (ids.isEmpty()) return
     val values = wearValues(snapshot, ids)
     if (values == lastValuesItem) return
@@ -1026,6 +1036,17 @@ class MobileWearSyncManager(
   override fun chooseWatchWidgetCard(nodeId: String, instanceId: Int, cardKey: String) {
     if (!::managerScope.isInitialized) return
     managerScope.launch { watchWidgetChoices.choose(nodeId, instanceId, cardKey) }
+  }
+
+  override suspend fun hasPlacedWidgets(): Boolean {
+    // A process started for the refresh hasn't read them yet.
+    if (placedWidgets.value == null) readPlacedWidgets()
+    return placedWidgets.value.orEmpty().values.any { it.widgets.isNotEmpty() }
+  }
+
+  override fun setWatchWidgetLive(nodeId: String, instanceId: Int, on: Boolean) {
+    if (!::managerScope.isInitialized) return
+    managerScope.launch { watchWidgetLive.set(nodeId, instanceId, on) }
   }
 
   /**
@@ -1382,3 +1403,12 @@ internal suspend fun <T> com.google.android.gms.tasks.Task<T>.await(): T =
     addOnSuccessListener { value -> cont.resumeWith(Result.success(value)) }
     addOnFailureListener { error -> cont.resumeWith(Result.failure(error)) }
   }
+
+/** What `/wear/widget-cards` and the phone's watch widget list are worked out from. */
+private data class WidgetCardsInput(
+  val placed: Map<String, WearPlacedWidgets>,
+  val chosen: Map<String, String>,
+  val pinned: PinnedCardSet?,
+  val sections: PinnedSectionSet?,
+  val liveUpdates: Set<String>,
+)

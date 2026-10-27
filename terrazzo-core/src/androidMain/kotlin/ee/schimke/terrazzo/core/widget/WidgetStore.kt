@@ -1,7 +1,9 @@
 package ee.schimke.terrazzo.core.widget
 
 import android.content.Context
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -20,7 +22,9 @@ import kotlinx.serialization.json.JsonObject
  *
  * Each installed widget keeps enough data to re-render its `.rc`:
  * - `baseUrl`: which HA instance to pull state from,
- * - `cardType` + `cardJson`: the Lovelace card config.
+ * - `cardType` + `cardJson`: the Lovelace card config,
+ * - `live`: whether it keeps up with Home Assistant while the app is closed (live updates, off
+ *   until the user turns it on; `docs/architecture/live-widget-updates.md`).
  *
  * Capped at 5 installs (product requirement). The cap is enforced on write; the widget provider
  * itself doesn't care.
@@ -29,7 +33,12 @@ import kotlinx.serialization.json.JsonObject
 @Inject
 class WidgetStore(private val context: Context) {
 
-  data class Entry(val widgetId: Int, val baseUrl: String, val card: CardConfig)
+  data class Entry(
+    val widgetId: Int,
+    val baseUrl: String,
+    val card: CardConfig,
+    val liveUpdates: Boolean = false,
+  )
 
   val installed: Flow<List<Entry>>
     get() = context.store.data.map { prefs -> prefs.allEntries() }
@@ -38,11 +47,12 @@ class WidgetStore(private val context: Context) {
 
   suspend fun isFull(): Boolean = count() >= MAX_WIDGETS
 
-  suspend fun put(widgetId: Int, baseUrl: String, card: CardConfig) {
+  suspend fun put(widgetId: Int, baseUrl: String, card: CardConfig, liveUpdates: Boolean = false) {
     context.store.edit { prefs ->
       prefs[baseUrlKey(widgetId)] = baseUrl
       prefs[cardTypeKey(widgetId)] = card.type
       prefs[cardJsonKey(widgetId)] = json.encodeToString(JsonObject.serializer(), card.raw)
+      prefs.putLive(widgetId, liveUpdates)
     }
   }
 
@@ -53,6 +63,7 @@ class WidgetStore(private val context: Context) {
       prefs.remove(baseUrlKey(widgetId))
       prefs.remove(cardTypeKey(widgetId))
       prefs.remove(cardJsonKey(widgetId))
+      prefs.remove(liveKey(widgetId))
     }
   }
 
@@ -77,6 +88,7 @@ class WidgetStore(private val context: Context) {
           prefs.remove(baseUrlKey(id))
           prefs.remove(cardTypeKey(id))
           prefs.remove(cardJsonKey(id))
+          prefs.remove(liveKey(id))
           pruned++
         }
       }
@@ -97,11 +109,13 @@ class WidgetStore(private val context: Context) {
         prefs.remove(baseUrlKey(old))
         prefs.remove(cardTypeKey(old))
         prefs.remove(cardJsonKey(old))
+        prefs.remove(liveKey(old))
       }
       for ((new, entry) in moved) {
         prefs[baseUrlKey(new)] = entry.baseUrl
         prefs[cardTypeKey(new)] = entry.card.type
         prefs[cardJsonKey(new)] = json.encodeToString(JsonObject.serializer(), entry.card.raw)
+        prefs.putLive(new, entry.liveUpdates)
       }
     }
   }
@@ -121,7 +135,13 @@ class WidgetStore(private val context: Context) {
       widgetId = widgetId,
       baseUrl = baseUrl,
       card = CardConfig(type = cardType, raw = json.parseToJsonElement(cardJson) as JsonObject),
+      liveUpdates = this[liveKey(widgetId)] == true,
     )
+  }
+
+  /** Off is the default, so it is stored only when on. */
+  private fun MutablePreferences.putLive(widgetId: Int, liveUpdates: Boolean) {
+    if (liveUpdates) this[liveKey(widgetId)] = true else remove(liveKey(widgetId))
   }
 
   companion object {
@@ -135,6 +155,8 @@ class WidgetStore(private val context: Context) {
     private fun cardTypeKey(id: Int) = stringPreferencesKey("widget.$id.cardType")
 
     private fun cardJsonKey(id: Int) = stringPreferencesKey("widget.$id.cardJson")
+
+    private fun liveKey(id: Int) = booleanPreferencesKey("widget.$id.live")
 
     private val keyPattern = Regex("""widget\.(\d+)\.""")
 

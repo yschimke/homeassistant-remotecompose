@@ -18,8 +18,8 @@ import kotlinx.coroutines.flow.first
  * Two cadences today:
  * - [scheduleDemo] — chained `OneTimeWorkRequest`s at minute-scale intervals so demo widgets tick.
  *   Each worker re-enqueues itself while demo mode stays on, surviving process death.
- * - TODO `scheduleLive` — a `PeriodicWorkRequest` at the WorkManager 15-min floor to refresh cached
- *   HA state for live widgets.
+ * - live data — [WidgetRoutineRefreshWorker], a `PeriodicWorkRequest` every 30 minutes, refreshes
+ *   every widget, with [LiveWidgetUpdates] keeping them current between runs.
  *
  * Unique work names keep the two cadences independent; toggling demo on/off never collides with the
  * live refresh.

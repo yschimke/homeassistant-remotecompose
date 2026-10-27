@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -24,9 +25,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -38,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
@@ -116,7 +120,7 @@ class WidgetConfigureActivity : ComponentActivity() {
               snapshot = snapshot,
               size = size,
               onClose = ::finish,
-              onSave = { card -> save(widgetId, entry!!, card) },
+              onSave = { card, live -> save(widgetId, entry!!, card, live) },
             )
           }
         }
@@ -124,14 +128,14 @@ class WidgetConfigureActivity : ComponentActivity() {
     }
   }
 
-  private fun save(widgetId: Int, entry: WidgetStore.Entry, card: CardConfig) {
+  private fun save(widgetId: Int, entry: WidgetStore.Entry, card: CardConfig, live: Boolean) {
     lifecycleScope.launch {
       // The renamed card keeps the style the user picked for it.
       val overrides = CardDesignOverrideStore.of(applicationContext)
       overrides.overrides.value.at(CardDesignScope.Card, entry.card)?.let {
         overrides.set(CardDesignScope.Card, card, it)
       }
-      terrazzoGraph().widgetStore.put(widgetId, entry.baseUrl, card)
+      terrazzoGraph().widgetStore.put(widgetId, entry.baseUrl, card, live)
       refresh(applicationContext, widgetId)
       setResult(Activity.RESULT_OK, resultIntent(widgetId))
       finish()
@@ -160,7 +164,8 @@ class WidgetConfigureActivity : ComponentActivity() {
 }
 
 /**
- * The editor's content: the widget at its home screen [size], and its label. With no [entry] (a
+ * The editor's content: the widget at its home screen [size], its label, and whether it keeps up
+ * with Home Assistant while the app is closed (live updates, off by default). With no [entry] (a
  * widget added from the system picker, which no card was chosen for) it says how to add one.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -170,7 +175,7 @@ internal fun WidgetConfigureScreen(
   snapshot: HaSnapshot,
   size: WidgetSizeDp,
   onClose: () -> Unit,
-  onSave: (CardConfig) -> Unit,
+  onSave: (card: CardConfig, liveUpdates: Boolean) -> Unit,
 ) {
   Scaffold(
     topBar = {
@@ -214,15 +219,38 @@ internal fun WidgetConfigureScreen(
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         modifier = Modifier.fillMaxWidth(),
       )
+      var live by rememberSaveable(entry) { mutableStateOf(entry.liveUpdates) }
+      LiveUpdatesRow(checked = live, onCheckedChange = { live = it })
       Button(
-        onClick = { onSave(edited) },
-        enabled = edited != entry.card,
+        onClick = { onSave(edited, live) },
+        enabled = edited != entry.card || live != entry.liveUpdates,
         modifier = Modifier.fillMaxWidth(),
       ) {
         Text("Save")
       }
     }
   }
+}
+
+/**
+ * A widget's live updates switch: off, it updates while the app is running and from the routine
+ * refresh ([WidgetRoutineRefreshWorker]); on, a visible change in Home Assistant also wakes the app
+ * to redraw it (`docs/architecture/live-widget-updates.md`).
+ */
+@Composable
+internal fun LiveUpdatesRow(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+  ListItem(
+    headlineContent = { Text("Live updates") },
+    supportingContent = {
+      Text(
+        "Off, it updates while the app is running and about every 30 minutes. On, Home " +
+          "Assistant wakes the app as soon as it visibly changes, which uses some battery."
+      )
+    },
+    trailingContent = { Switch(checked = checked, onCheckedChange = null) },
+    modifier =
+      Modifier.toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
+  )
 }
 
 /**

@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.wearsync
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import ee.schimke.terrazzo.core.wearsync.WatchWidget
 import ee.schimke.terrazzo.core.wearsync.WatchWidgetCardOption
@@ -13,6 +14,7 @@ import ee.schimke.terrazzo.wearsync.proto.WearWidgetCardChoice
 import ee.schimke.terrazzo.wearsync.proto.WearWidgetCardOption
 import ee.schimke.terrazzo.wearsync.proto.forWearWidget
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 /**
@@ -45,6 +47,55 @@ internal class WatchWidgetChoiceStore(private val context: Context) {
   }
 }
 
+/**
+ * Which watch widgets keep up with Home Assistant while the phone app is closed, by
+ * [watchWidgetKey] (off unless listed), and the entities their cards read, which the Terrazzo
+ * integration is told to wake the app for (`docs/architecture/live-widget-updates.md`).
+ */
+internal class WatchWidgetLiveStore(private val context: Context) {
+
+  /** The [watchWidgetKey]s with live updates on. */
+  val live: Flow<Set<String>>
+    get() = context.store.data.map { it[LIVE].orEmpty() }
+
+  suspend fun set(nodeId: String, instanceId: Int, on: Boolean) {
+    val key = watchWidgetKey(nodeId, instanceId)
+    context.store.edit { prefs ->
+      val live = prefs[LIVE].orEmpty()
+      prefs[LIVE] = if (on) live + key else live - key
+    }
+  }
+
+  /** Forgets every widget not in [liveKeys]: it was removed, or its watch unpaired. */
+  suspend fun retainOnly(liveKeys: Set<String>) {
+    context.store.edit { prefs -> prefs[LIVE] = prefs[LIVE].orEmpty() intersect liveKeys }
+  }
+
+  /** The entities the live widgets' cards read, as last worked out with every card known. */
+  suspend fun entities(): Set<String> = context.store.data.first()[ENTITIES].orEmpty()
+
+  suspend fun setEntities(entities: Set<String>) {
+    context.store.edit { prefs -> if (prefs[ENTITIES] != entities) prefs[ENTITIES] = entities }
+  }
+
+  private companion object {
+    val Context.store by preferencesDataStore(name = "terrazzo_watch_widgets_live")
+    val LIVE = stringSetPreferencesKey("live")
+    val ENTITIES = stringSetPreferencesKey("entities")
+  }
+}
+
+/** The cards the watch widgets in [live] show ([watchWidgetCardChoices]). */
+internal fun liveWatchWidgetCards(
+  placed: Map<String, WearPlacedWidgets>,
+  chosen: Map<String, String>,
+  options: List<WearWidgetCardOption>,
+  live: Set<String>,
+): List<CardSummary> =
+  watchWidgetCardChoices(placed, chosen, options)
+    .filter { watchWidgetKey(it.nodeId, it.instanceId) in live }
+    .map { it.card }
+
 /** A watch widget's key in [WatchWidgetChoiceStore]: instance ids are only unique per watch. */
 internal fun watchWidgetKey(nodeId: String, instanceId: Int): String = "$nodeId/$instanceId"
 
@@ -76,6 +127,7 @@ internal fun watchWidgets(
   placed: Map<String, WearPlacedWidgets>,
   chosen: Map<String, String>,
   options: List<WearWidgetCardOption>,
+  live: Set<String> = emptySet(),
 ): List<WatchWidget> =
   placed.entries
     .sortedBy { it.key }
@@ -91,6 +143,7 @@ internal fun watchWidgets(
             options.forWearWidget(widget.large).map {
               WatchWidgetCardOption(it.cardKey, it.card.label())
             },
+          liveUpdates = watchWidgetKey(nodeId, widget.instanceId) in live,
         )
       }
     }

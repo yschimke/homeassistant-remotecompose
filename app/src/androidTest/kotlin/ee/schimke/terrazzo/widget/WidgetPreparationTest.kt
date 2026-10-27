@@ -123,7 +123,7 @@ class WidgetPreparationTest {
             snapshot = snapshot("on"),
             size = WidgetSizeDp(203, 110),
             onClose = {},
-            onSave = { saved.value = it },
+            onSave = { card, _ -> saved.value = card },
           )
         }
       }
@@ -142,7 +142,7 @@ class WidgetPreparationTest {
 
     compose.onNodeWithText("Save").assertIsNotEnabled()
     compose.onNodeWithText("Studio light").performTextReplacement("Desk")
-    compose.onNodeWithText("Save").assertIsEnabled().performClick()
+    compose.onNodeWithText("Save").assertIsEnabled().performScrollTo().performClick()
     assertEquals("Desk", saved.value?.raw?.get("name")?.jsonPrimitive?.content)
   }
 

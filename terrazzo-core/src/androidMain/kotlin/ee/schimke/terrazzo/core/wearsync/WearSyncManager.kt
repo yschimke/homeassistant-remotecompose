@@ -32,7 +32,10 @@ interface WearSyncManager {
 
   val streamActive: StateFlow<Boolean>
 
-  /** Every entity a card on the paired watches reads: whose changes should reach them. */
+  /**
+   * The entities the cards on watch widgets with live updates on read: whose visible changes wake
+   * the phone app to send them on. Kept on disk, so a process started for a wake knows them.
+   */
   suspend fun watchedEntities(): Set<String> = emptySet()
 
   /**
@@ -50,6 +53,12 @@ interface WearSyncManager {
 
   /** Shows the card [cardKey] on [instanceId], a widget on watch [nodeId]. */
   fun chooseWatchWidgetCard(nodeId: String, instanceId: Int, cardKey: String) {}
+
+  /** Whether a paired watch has Terrazzo widgets placed, as the watches last reported. */
+  suspend fun hasPlacedWidgets(): Boolean = false
+
+  /** Turns live updates for [instanceId], a widget on watch [nodeId], [on] or off. */
+  fun setWatchWidgetLive(nodeId: String, instanceId: Int, on: Boolean) {}
 
   /**
    * Whether the wear data-layer API is usable on this device. Stays `true` on unknown /
