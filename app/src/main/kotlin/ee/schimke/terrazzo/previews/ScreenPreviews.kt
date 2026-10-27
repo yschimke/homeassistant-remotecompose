@@ -459,7 +459,7 @@ fun Screen_Widgets_Installed() = PhoneHost {
   WidgetsContent(
     widgets =
       listOf(
-        InstalledWidget("Front door", cardTypeLabel("tile")),
+        InstalledWidget("Front door", cardTypeLabel("tile"), liveUpdates = true),
         InstalledWidget("Kitchen", cardTypeLabel("light")),
         InstalledWidget("Living room climate", cardTypeLabel("thermostat")),
       ),
@@ -491,6 +491,7 @@ fun Screen_Widgets_Watch() = PhoneHost {
           false,
           "front",
           options,
+          liveUpdates = true,
         ),
         ee.schimke.terrazzo.core.wearsync.WatchWidget(
           "w",

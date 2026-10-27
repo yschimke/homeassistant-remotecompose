@@ -25,6 +25,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -38,6 +39,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ee.schimke.terrazzo.LocalTerrazzoGraph
@@ -62,19 +65,35 @@ fun WidgetsScreen(onBack: () -> Unit) {
   WidgetsContent(
     widgets =
       installed.map {
-        InstalledWidget(it.card.historyTitle(), cardTypeLabel(it.card.type), it.widgetId)
+        InstalledWidget(
+          it.card.historyTitle(),
+          cardTypeLabel(it.card.type),
+          it.widgetId,
+          liveUpdates = it.liveUpdates,
+        )
       },
     watchWidgets = watchWidgets,
     onChooseWatchCard = { widget, cardKey ->
       graph.wearSyncManager.chooseWatchWidgetCard(widget.nodeId, widget.instanceId, cardKey)
+    },
+    onWatchLiveUpdates = { widget, on ->
+      graph.wearSyncManager.setWatchWidgetLive(widget.nodeId, widget.instanceId, on)
     },
     onBack = onBack,
     onEdit = { context.startActivity(WidgetConfigureActivity.intent(context, it.widgetId)) },
   )
 }
 
-/** One installed widget's row: the card's [title], and the [kind] of card it draws. */
-internal data class InstalledWidget(val title: String, val kind: String, val widgetId: Int = 0)
+/**
+ * One installed widget's row: the card's [title], the [kind] of card it draws, and whether it has
+ * live updates on.
+ */
+internal data class InstalledWidget(
+  val title: String,
+  val kind: String,
+  val widgetId: Int = 0,
+  val liveUpdates: Boolean = false,
+)
 
 /**
  * A card type as a row's supporting text: `weather-forecast` reads "Weather forecast card", and a
@@ -98,7 +117,8 @@ internal fun watchWidgetLabel(widget: WatchWidget, named: Boolean): String {
 
 /**
  * The screen's content for [widgets] and [watchWidgets], apart from the stores so a preview can
- * draw it. Tapping a watch widget offers its cards; [onChooseWatchCard] takes the choice.
+ * draw it. Tapping a watch widget offers its cards; [onChooseWatchCard] takes the choice. Each
+ * watch widget's switch turns its live updates on or off ([onWatchLiveUpdates]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,6 +128,7 @@ internal fun WidgetsContent(
   onEdit: (InstalledWidget) -> Unit = {},
   watchWidgets: List<WatchWidget> = emptyList(),
   onChooseWatchCard: (WatchWidget, String) -> Unit = { _, _ -> },
+  onWatchLiveUpdates: (WatchWidget, Boolean) -> Unit = { _, _ -> },
 ) {
   var choosing by remember { mutableStateOf<WatchWidget?>(null) }
   choosing?.let { widget ->
@@ -188,7 +209,9 @@ internal fun WidgetsContent(
       items(widgets) { widget ->
         ListItem(
           headlineContent = { Text(widget.title) },
-          supportingContent = { Text(widget.kind) },
+          supportingContent = {
+            Text(if (widget.liveUpdates) "${widget.kind} · Live updates" else widget.kind)
+          },
           leadingContent = { Icon(Icons.Outlined.Widgets, contentDescription = null) },
           modifier = Modifier.clickable(onClickLabel = "Edit widget") { onEdit(widget) },
         )
@@ -197,7 +220,8 @@ internal fun WidgetsContent(
         item { SectionHeader("Watch") }
         item {
           Text(
-            "Tap a widget to choose its card. To add or remove one, use your watch's widget list.",
+            "Tap a widget to choose its card. Turn on Live to keep it current while the app is " +
+              "closed. To add or remove one, use your watch's widget list.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -210,6 +234,14 @@ internal fun WidgetsContent(
             headlineContent = { Text(title ?: "No card yet") },
             supportingContent = { Text(watchWidgetLabel(widget, named)) },
             leadingContent = { Icon(Icons.Outlined.Watch, contentDescription = null) },
+            trailingContent = {
+              Switch(
+                checked = widget.liveUpdates,
+                onCheckedChange = { onWatchLiveUpdates(widget, it) },
+                enabled = widget.cardKey != null,
+                modifier = Modifier.semantics { contentDescription = "Live updates" },
+              )
+            },
             modifier =
               Modifier.clickable(enabled = widget.options.isNotEmpty()) { choosing = widget },
           )

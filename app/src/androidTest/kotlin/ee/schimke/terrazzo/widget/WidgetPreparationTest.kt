@@ -123,7 +123,7 @@ class WidgetPreparationTest {
             snapshot = snapshot("on"),
             size = WidgetSizeDp(203, 110),
             onClose = {},
-            onSave = { saved.value = it },
+            onSave = { card, _ -> saved.value = card },
           )
         }
       }

@@ -5,11 +5,19 @@ While the app holds a session that is enough; once it doesn't, the Terrazzo inte
 when an entity a widget shows visibly changes, with the same content-free FCM wake as
 [notifications](notifications.md).
 
+## Opting in, per widget
+
+Live updates are a setting of each widget, off by default: an off widget shows what the app last
+saw, as before. The launcher widget's editor (long-press it, or tap it on the app's Widgets screen)
+has a **Live updates** switch, and each watch widget's row on the Widgets screen has one too.
+With every switch off the integration is told no entities, and nothing wakes the app.
+
 ## What wakes the app
 
-The app tells the integration which entities its widgets read: every entity in a launcher widget's
-card on that Home Assistant, plus every entity a card on the paired watches reads
-(`terrazzo/push/watch`). The integration follows only those (`state_wakes.py`) and judges each
+The app tells the integration which entities its live widgets read: every entity in the card of a
+launcher widget with live updates on, on that Home Assistant, plus every entity in the card of a
+watch widget with live updates on (`terrazzo/push/watch`). The watch widgets' entities are kept on
+the phone, so a process started for a wake reports the same set. The integration follows only those (`state_wakes.py`) and judges each
 change by what a person would notice:
 
 | Change | Example | Wake |

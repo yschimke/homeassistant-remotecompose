@@ -12,6 +12,7 @@ import ee.schimke.terrazzo.wearsync.proto.wearSectionCardKey
 import ee.schimke.terrazzo.wearsync.proto.wearWidgetCardOptions
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -107,5 +108,19 @@ class WatchWidgetCardsTest {
     assertEquals("pin-kitchen", widget.cardKey)
     assertEquals(listOf("Kitchen", "Boiler"), widget.options.map { it.title })
     assertNull(watchWidgets(placed(WearPlacedWidget(5)), emptyMap(), emptyList()).single().cardKey)
+  }
+
+  @Test
+  fun liveUpdatesAreOffUntilChosenAndOnlyLiveWidgetsCardsAreWatched() {
+    val both = placed(WearPlacedWidget(1, large = false), WearPlacedWidget(2, large = true))
+    assertFalse(watchWidgets(both, emptyMap(), options).any { it.liveUpdates })
+    assertTrue(liveWatchWidgetCards(both, emptyMap(), options, live = emptySet()).isEmpty())
+
+    val live = setOf(watchWidgetKey("watch", 2))
+    assertEquals(
+      listOf(false, true),
+      watchWidgets(both, emptyMap(), options, live).map { it.liveUpdates },
+    )
+    assertEquals(listOf(kitchen), liveWatchWidgetCards(both, emptyMap(), options, live))
   }
 }

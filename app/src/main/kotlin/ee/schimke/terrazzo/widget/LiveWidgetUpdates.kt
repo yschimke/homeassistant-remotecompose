@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -31,11 +32,11 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Keeps the launcher and Wear widgets showing Home Assistant's current states
  * (`docs/architecture/live-widget-updates.md`).
  *
- * The Terrazzo integration is told which entities the widgets read and wakes the app when one of
- * them visibly changes ([WidgetStateWorker]). While a session follows them here ([follow]), it
- * holds a lease there, so nothing wakes the app meanwhile, and redraws the widgets itself: at once
- * for a visible edge ([WidgetEdges]), at most once a [QUIET_REDRAW_MS] for a number ticking or an
- * attribute.
+ * The Terrazzo integration is told which entities the widgets with live updates on read
+ * ([watchedEntities]) and wakes the app when one of them visibly changes ([WidgetStateWorker]).
+ * While a session follows them here ([follow]), it holds a lease there, so nothing wakes the app
+ * meanwhile, and redraws the widgets itself: at once for a visible edge ([WidgetEdges]), at most
+ * once a [QUIET_REDRAW_MS] for a number ticking or an attribute.
  */
 object LiveWidgetUpdates {
   private const val TAG = "LiveWidgetUpdates"
@@ -51,13 +52,17 @@ object LiveWidgetUpdates {
   /** How often [follow] asks its `stop` whether the widgets have settled. */
   private const val CHECK_MS = 1_000L
 
-  /** The entities the launcher widgets on [baseUrl] and the watch's cards read. */
+  /**
+   * The entities read by the widgets with live updates on: the launcher widgets on [baseUrl] and
+   * the watch widgets. Live updates are per widget and off until the user turns them on, so with
+   * none on this is empty and nothing wakes the app.
+   */
   suspend fun watchedEntities(context: Context, baseUrl: String): Set<String> {
     val graph = context.terrazzoGraph()
     val launcher =
       graph.widgetStore.installed
         .first()
-        .filter { it.baseUrl == baseUrl }
+        .filter { it.baseUrl == baseUrl && it.liveUpdates }
         .flatMapTo(mutableSetOf()) { referencedEntities(it.card) }
     return launcher + graph.wearSyncManager.watchedEntities()
   }
@@ -99,10 +104,12 @@ object LiveWidgetUpdates {
         lease()
       }
     }
-    // A widget pinned meanwhile is watched now, not at the next renewal: the app may be gone by
-    // then.
+    // A widget pinned, or live updates turned on or off, meanwhile is watched (or not) now, not at
+    // the next renewal: the app may be gone by then.
+    val graph = context.terrazzoGraph()
     val pinned = launch {
-      context.terrazzoGraph().widgetStore.installed.drop(1).collect { lease() }
+      merge(graph.widgetStore.installed.drop(1), graph.wearSyncManager.watchWidgets.drop(1))
+        .collect { lease() }
     }
     var drawn: Map<String, EntityState?>? = null
     var latest: Pair<HaSnapshot, Map<String, EntityState?>>? = null
