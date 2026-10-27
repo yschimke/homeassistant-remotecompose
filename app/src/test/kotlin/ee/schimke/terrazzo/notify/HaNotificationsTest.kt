@@ -75,11 +75,28 @@ class HaNotificationsTest {
   }
 
   @Test
-  fun aCardIsThePhonesExpandedBodyOnlyTheWatchKeepsTheStandardFields() {
+  fun aCardIsThePhonesExpandedBodyWithNoStyleToAvoidTheDpTemplateWrap() {
     val card = android.widget.RemoteViews(context.packageName, android.R.layout.simple_list_item_1)
     val n = HaNotifications.build(context, BASE_URL, message, watchHasApp = true, card = card)
     assertTrue(n.bigContentView != null, "the phone's expanded body is the card")
-    // Big text style, not a custom-view style: what a watch (or any non-RemoteViews surface) shows.
+    // No Notification.Style when a card is attached: on Android 17 DP, combining BigTextStyle (or
+    // DecoratedCustomViewStyle) with a DrawInstructions custom view routes inflation through
+    // `Notification$Builder.minimallyDecoratedExpandedContentView` →
+    // `buildCustomContentIntoTemplate`
+    // → `RemoteViews.addView`, which hits a new `validateNestedViews` and throws
+    // "Cannot add a nested view that has DrawInstructions." SystemUI then drops the notification
+    // with REASON_ERROR. Omitting the style keeps the default notification chrome around the custom
+    // view and avoids the template-wrap path. Bridged watches (no Wear app) see this card
+    // notification without the BigText expansion as a trade-off — card messages are short in
+    // practice; watches with the Wear app receive WearNotifications' richer copy, unchanged.
+    assertNull(NotificationCompat.Style.extractStyleFromNotification(n))
+    assertNull(n.extras.getCharSequence(NotificationCompat.EXTRA_BIG_TEXT))
+    assertEquals(listOf("OK"), n.actions.map { it.title.toString() })
+  }
+
+  @Test
+  fun aCardlessNotificationKeepsBigTextStyleForTheBridgedWatch() {
+    val n = HaNotifications.build(context, BASE_URL, message, watchHasApp = false)
     assertEquals(
       NotificationCompat.BigTextStyle::class.java.name,
       NotificationCompat.Style.extractStyleFromNotification(n)?.javaClass?.name,
@@ -88,7 +105,6 @@ class HaNotificationsTest {
       "Washer done",
       n.extras.getCharSequence(NotificationCompat.EXTRA_BIG_TEXT).toString(),
     )
-    assertEquals(listOf("OK"), n.actions.map { it.title.toString() })
   }
 
   private companion object {

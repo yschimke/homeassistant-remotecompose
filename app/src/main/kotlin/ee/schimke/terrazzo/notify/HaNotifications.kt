@@ -143,7 +143,6 @@ object HaNotifications {
         .setSmallIcon(ComponentsR.drawable.ic_launcher_monochrome)
         .setContentTitle(notification.title ?: "Home Assistant")
         .setContentText(notification.message)
-        .setStyle(NotificationCompat.BigTextStyle().bigText(notification.message))
         .setAutoCancel(true)
         // A card redrawn for a new state replaces the notification without alerting again.
         .setOnlyAlertOnce(refresh)
@@ -164,11 +163,20 @@ object HaNotifications {
       )
     }
     if (card != null) {
-      // The card is the phone's expanded body only. The style stays BigTextStyle, so every other
-      // surface — the watch above all, which shows bridged notifications from their standard
-      // fields and never RemoteViews — gets the title, the full message and the actions. The
-      // platform decorates the custom view itself (API 31+), as DecoratedCustomViewStyle would.
+      // The card is the phone's expanded body only. No `setStyle(...)`: on Android 17 DP, pairing
+      // BigTextStyle (or DecoratedCustomViewStyle) with a DrawInstructions-bearing custom view
+      // routes inflation through `Notification$Builder.minimallyDecoratedExpandedContentView` →
+      // `buildCustomContentIntoTemplate` → `RemoteViews.addView`, where the new
+      // `validateNestedViews` refuses with "Cannot add a nested view that has DrawInstructions."
+      // and SystemUI drops the notification with REASON_ERROR before the user sees it. Omitting
+      // the style keeps the standard notification chrome around the custom view — same visual
+      // decoration the earlier BigTextStyle comment described — and sidesteps the template-wrap
+      // path entirely. The watch, which never gets RemoteViews, keeps title + contentText; a card
+      // notification's text is short by nature, so losing the BigText expansion on the bridged
+      // watch copy is acceptable.
       builder.setCustomBigContentView(card)
+    } else {
+      builder.setStyle(NotificationCompat.BigTextStyle().bigText(notification.message))
     }
     return builder.build()
   }
