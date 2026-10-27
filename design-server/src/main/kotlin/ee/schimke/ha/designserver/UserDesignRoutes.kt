@@ -194,6 +194,12 @@ fun Route.userDesignRoutes(
   uiBuilder: UiBuilderIntegration?,
   github: GithubAuth,
 ) {
+  /** Answers 403 to a POST another host's page sent ([isCrossOrigin]); true when it did. */
+  suspend fun ApplicationCall.refusedCrossOrigin(): Boolean =
+    isCrossOrigin().also {
+      if (it) respondText("same-origin request required", status = HttpStatusCode.Forbidden)
+    }
+
   suspend fun ApplicationCall.requireUser(): String? =
     github.user(this)
       ?: run {
@@ -218,6 +224,7 @@ fun Route.userDesignRoutes(
   }
 
   post("/api/my/designs") {
+    if (call.refusedCrossOrigin()) return@post
     val login = call.requireUser() ?: return@post
     val request = runCatching {
       apiJson.decodeFromString(PublishRequest.serializer(), call.receiveText())
@@ -239,6 +246,7 @@ fun Route.userDesignRoutes(
   }
 
   post("/my/designs") {
+    if (call.refusedCrossOrigin()) return@post
     val login = github.login(call) ?: return@post call.respondRedirect(github.signInPath("/my"))
     val form = call.receiveParameters()
     val library = holder.current()
@@ -273,6 +281,7 @@ fun Route.userDesignRoutes(
   }
 
   post("/api/my/designs/{sha}/share") {
+    if (call.refusedCrossOrigin()) return@post
     val login = call.requireUser() ?: return@post
     val shared = runCatching {
       apiJson.decodeFromString(ShareRequest.serializer(), call.receiveText()).shared
@@ -286,6 +295,7 @@ fun Route.userDesignRoutes(
   }
 
   post("/api/my/device-token") {
+    if (call.refusedCrossOrigin()) return@post
     // Only a browser session mints one: a device token can't mint its successor.
     val login =
       github.login(call)
@@ -303,6 +313,7 @@ fun Route.userDesignRoutes(
   }
 
   post("/my/device-token") {
+    if (call.refusedCrossOrigin()) return@post
     val login = github.login(call) ?: return@post call.respondRedirect(github.signInPath("/my"))
     call.response.header(HttpHeaders.CacheControl, "no-store")
     call.respondText(
@@ -312,6 +323,7 @@ fun Route.userDesignRoutes(
   }
 
   post("/my/designs/{sha}/share") {
+    if (call.refusedCrossOrigin()) return@post
     val login = github.login(call) ?: return@post call.respondRedirect(github.signInPath("/my"))
     val shared = call.receiveParameters()["shared"] == "true"
     store.share(login, call.parameters["sha"].orEmpty(), shared) ?: return@post call.notFound()

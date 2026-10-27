@@ -21,6 +21,7 @@ import io.ktor.server.routing.post
 import java.io.File
 import java.net.URLEncoder
 import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.nio.file.attribute.PosixFilePermissions
 import java.security.MessageDigest
 import java.util.Base64
@@ -416,15 +417,15 @@ class GithubAuth(
       val file = File(dir, KEY_FILE)
       if (!file.isFile) {
         dir.mkdirs()
-        val fresh = File(dir, "$KEY_FILE.tmp")
-        fresh.writeText(UiBuilderConfig.randomToken() + UiBuilderConfig.randomToken())
-        runCatching {
-          Files.setPosixFilePermissions(
-            fresh.toPath(),
-            PosixFilePermissions.fromString("rw-------"),
-          )
-        }
-        check(fresh.renameTo(file)) { "could not write $file" }
+        // Created owner-only, never readable for a moment before a chmod.
+        val fresh = File(dir, "$KEY_FILE.tmp").toPath()
+        Files.deleteIfExists(fresh)
+        Files.createFile(
+          fresh,
+          PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")),
+        )
+        Files.writeString(fresh, UiBuilderConfig.randomToken() + UiBuilderConfig.randomToken())
+        Files.move(fresh, file.toPath(), StandardCopyOption.ATOMIC_MOVE)
       }
       return file.readText().trim().also { check(it.length >= 32) { "$file is too short" } }
     }

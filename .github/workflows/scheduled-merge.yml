@@ -15,7 +15,9 @@ name: Scheduled Merge
 # the merged batch included a dependency bump, it also dispatches
 # design-artifacts.yml so the published catalog delivery branches are
 # regenerated: a compose-ai-tools release moves the renderer itself, and any
-# other dependency moves what that renderer draws.
+# other dependency moves what that renderer draws. When the batch touched the
+# card design server's paths, it dispatches design-server.yml too, which
+# publishes the image ha.coo.ee's Watchtower rolls out.
 #
 # This dispatch only covers the merges made HERE. Renovate automerges its own
 # compose-ai-tools PRs, and those never reach this job — they're handled by
@@ -55,6 +57,15 @@ jobs:
             });
             let merged = 0;
             let bumpedDependency = false;
+            let touchedDesignServer = false;
+            // design-server.yml's `paths`; keep the two lists in sync.
+            const designServerPaths = [
+              'card-designs/', 'design-server/', 'embed/', 'lovelace-catalog/', 'app-ui/',
+              'rc-player-ui/', 'rc-converter/src/', 'rc-components/src/', 'ha-model/src/',
+              'ha-client/src/', 'previews/src/main/',
+              'app/src/main/play/listings/en-GB/graphics/phone-screenshots/',
+              'gradle/libs.versions.toml', '.github/workflows/design-server.yml',
+            ];
             for (const stub of prs) {
               if (stub.draft) continue;
               if (stub.labels.some((l) => skipLabels.has(l.name))) {
@@ -89,6 +100,19 @@ jobs:
                   (pr.labels || []).some((l) => l.name === 'dependencies') ||
                   /\(deps[^)]*\)/i.test(pr.title) ||
                   `${pr.head.ref} ${pr.title}`.toLowerCase().includes('compose-ai-tools');
+                if (!touchedDesignServer) {
+                  try {
+                    const files = await github.paginate(github.rest.pulls.listFiles, {
+                      owner, repo, pull_number: pr.number, per_page: 100,
+                    });
+                    touchedDesignServer = files.some((f) => designServerPaths.some((path) =>
+                      path.endsWith('/') ? f.filename.startsWith(path) : f.filename === path));
+                  } catch (e) {
+                    // Unknown is a reason to publish, not to skip it.
+                    core.warning(`#${pr.number}: listing files failed — ${e.message}`);
+                    touchedDesignServer = true;
+                  }
+                }
                 if (isDependencyBump) {
                   core.info(`#${pr.number}: dependency bump — will regenerate design artifacts`);
                   bumpedDependency = true;
@@ -101,9 +125,11 @@ jobs:
               // GITHUB_TOKEN merges don't trigger push workflows; explicitly
               // refresh the render baselines and the release-please PR. When a
               // dependency bump landed, also regenerate the design catalog
-              // delivery branches against the new versions.
+              // delivery branches against the new versions; when the card design
+              // server changed, publish its image.
               const workflows = ['compose-preview.yml', 'release-please.yml'];
               if (bumpedDependency) workflows.push('design-artifacts.yml');
+              if (touchedDesignServer) workflows.push('design-server.yml');
               for (const wf of workflows) {
                 try {
                   await github.rest.actions.createWorkflowDispatch({

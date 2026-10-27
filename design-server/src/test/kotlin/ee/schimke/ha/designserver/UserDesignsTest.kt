@@ -568,7 +568,23 @@ class UserDesignsTest {
     assertTrue("octocat" in page.bodyAsText())
     assertEquals("__Host-cp_gh_auth=live", forwarded.last(), "only the host's session cookie")
 
-    val minted = browser.post("/api/my/device-token") { header(HttpHeaders.Cookie, session) }
+    // A sibling host's page (same site, so the cookie goes along) is refused; this host's isn't.
+    for (path in listOf("/api/my/device-token", "/my/device-token", "/my/designs/abc/share")) {
+      val sibling =
+        browser.post(path) {
+          header(HttpHeaders.Cookie, session)
+          header(HttpHeaders.Host, "ha.coo.ee")
+          header(HttpHeaders.Origin, "https://preview.coo.ee")
+        }
+      assertEquals(HttpStatusCode.Forbidden, sibling.status, path)
+    }
+    val minted =
+      browser.post("/api/my/device-token") {
+        header(HttpHeaders.Cookie, session)
+        // As Caddy forwards it: the browser's host, and its page's origin.
+        header(HttpHeaders.Host, "ha.coo.ee")
+        header(HttpHeaders.Origin, "https://ha.coo.ee")
+      }
     assertEquals(HttpStatusCode.OK, minted.status)
     val token = json.parseToJsonElement(minted.bodyAsText()).jsonObject["token"]!!.jsonPrimitive
     assertEquals("octocat", github.deviceLogin(token.content))
