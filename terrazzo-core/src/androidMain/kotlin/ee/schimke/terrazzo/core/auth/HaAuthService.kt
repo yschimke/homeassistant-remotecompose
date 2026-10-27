@@ -110,6 +110,30 @@ class HaAuthService(context: Context, httpEngineFactory: HttpEngineFactory) {
   }
 
   /**
+   * The same Custom Tab sign-in for a card design server ([designServerUrl], e.g.
+   * `https://ha.coo.ee/designs/v1`): its `/my/oauth/authorize` signs the browser in with GitHub and
+   * redirects to [REDIRECT_URI] with a code, which [exchangeCode] turns into the server's device
+   * token (the access token). AppAuth adds PKCE (S256) and `state`, which the server requires.
+   */
+  fun prepareDesignSignInIntent(designServerUrl: String): Intent {
+    val origin = designServerUrl.trim().trimEnd('/').removeSuffix("/designs/v1")
+    val config =
+      AuthorizationServiceConfiguration(
+        Uri.parse("$origin/my/oauth/authorize"),
+        Uri.parse("$origin/my/oauth/token"),
+      )
+    val request =
+      AuthorizationRequest.Builder(
+          config,
+          DESIGN_CLIENT_ID,
+          ResponseTypeValues.CODE,
+          Uri.parse(REDIRECT_URI),
+        )
+        .build()
+    return appAuth.getAuthorizationRequestIntent(request)
+  }
+
+  /**
    * Exchange the authorization code for an access + refresh token. Call after the redirect intent
    * lands in the Activity.
    */
@@ -184,6 +208,9 @@ class HaAuthService(context: Context, httpEngineFactory: HttpEngineFactory) {
     const val CLIENT_ID =
       "https://yschimke.github.io/homeassistant-remotecompose/terrazzo-auth/index.html"
     const val REDIRECT_URI = "rcha://auth-callback"
+
+    /** Who the app is to a card design server's `/my/oauth` sign-in. */
+    const val DESIGN_CLIENT_ID = "harc"
 
     private val tokenJson = Json {
       ignoreUnknownKeys = true

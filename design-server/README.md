@@ -150,6 +150,9 @@ server's sign-in rather than an OAuth App of this server's own:
   that cookie, and only for requests that carry it.
 - Device tokens are signed with `SESSION_SECRET` when set, or else a key made once and kept in
   `USER_DESIGNS_DIR` (`device-token-key`).
+- The app gets its device token with "Sign in with GitHub" in Settings: an OAuth 2.0 code flow
+  for native apps with PKCE (`/my/oauth/authorize`, `/my/oauth/token`), redirecting only to
+  `rcha://auth-callback`, after a "Connect harc" confirmation. `/my` can still make one to paste.
 
 The other way, its own OAuth App, takes the `GITHUB_*`, `SESSION_SECRET` and `PUBLIC_URL` settings
 above with the callback at `https://<host>/my/auth/github/callback`.

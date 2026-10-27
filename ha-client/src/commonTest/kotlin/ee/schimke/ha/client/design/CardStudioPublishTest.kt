@@ -89,7 +89,7 @@ class CardStudioPublishTest {
   fun refusalsSayWhatToDoWithoutEchoingTheServer() = runTest {
     for ((status, expected) in
       listOf(
-        HttpStatusCode.Unauthorized to "token",
+        HttpStatusCode.Unauthorized to "Sign in again in Settings",
         HttpStatusCode.Forbidden to "made or edit",
         HttpStatusCode.UnprocessableEntity to "it reads values this card doesn't provide",
       )) {

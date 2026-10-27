@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -73,6 +74,8 @@ import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignTags
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.terrazzo.assistant.AssistantAccess
+import ee.schimke.terrazzo.auth.designTokenLogin
+import ee.schimke.terrazzo.auth.rememberDesignSignIn
 import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.LauncherColoursPref
@@ -1045,31 +1048,72 @@ private fun DesignServerSetting(
 }
 
 /**
- * The design server's device token: with it, the manifest also lists the designs this person
- * published privately. Made on the server's `/my` page while signed in with GitHub.
+ * Signing in to the design server: with its device token the manifest also lists the designs this
+ * person published privately, and the card studio can publish. "Sign in with GitHub" gets one in a
+ * Custom Tab ([rememberDesignSignIn]); a token made on the server's `/my` page can still be pasted.
  */
 @Composable
 private fun DesignTokenField(url: String, token: String, onTokenChange: (String) -> Unit) {
-  var draft by remember(token) { mutableStateOf(token) }
-  val myPage = url.trimEnd('/').removeSuffix("/designs/v1") + "/my"
-  androidx.compose.material3.OutlinedTextField(
-    value = draft,
-    onValueChange = { draft = it },
-    singleLine = true,
-    label = { Text("Device token") },
-    supportingText = { Text("Shows your private designs. Create one at $myPage") },
-    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-    keyboardOptions =
-      androidx.compose.foundation.text.KeyboardOptions(
-        imeAction = androidx.compose.ui.text.input.ImeAction.Done
-      ),
-    keyboardActions =
-      androidx.compose.foundation.text.KeyboardActions(onDone = { onTokenChange(draft) }),
-    modifier =
-      Modifier.fillMaxWidth().onFocusChanged {
-        if (!it.isFocused && draft != token) onTokenChange(draft)
-      },
+  var problem by remember { mutableStateOf<String?>(null) }
+  var pasting by rememberSaveable { mutableStateOf(false) }
+  val signIn = rememberDesignSignIn(onError = { problem = it.message ?: "Sign-in failed" })
+  if (token.isNotBlank()) {
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+      Text(
+        designTokenLogin(token)?.let { "Signed in as $it" } ?: "Signed in with a device token",
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.weight(1f),
+      )
+      TextButton(onClick = { onTokenChange("") }) { Text("Sign out") }
+    }
+    return
+  }
+  Text(
+    "Sign in to see your private designs and publish from the card studio.",
+    style = MaterialTheme.typography.bodySmall,
   )
+  Row(
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+  ) {
+    Button(
+      onClick = {
+        problem = null
+        signIn(url)
+      }
+    ) {
+      Text("Sign in with GitHub")
+    }
+    if (!pasting) TextButton(onClick = { pasting = true }) { Text("Paste a token") }
+  }
+  problem?.let {
+    Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+  }
+  if (pasting) {
+    var draft by remember { mutableStateOf("") }
+    val myPage = url.trimEnd('/').removeSuffix("/designs/v1") + "/my"
+    androidx.compose.material3.OutlinedTextField(
+      value = draft,
+      onValueChange = { draft = it },
+      singleLine = true,
+      label = { Text("Device token") },
+      supportingText = { Text("From $myPage") },
+      visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+      keyboardOptions =
+        androidx.compose.foundation.text.KeyboardOptions(
+          imeAction = androidx.compose.ui.text.input.ImeAction.Done
+        ),
+      keyboardActions =
+        androidx.compose.foundation.text.KeyboardActions(
+          onDone = { if (draft.isNotBlank()) onTokenChange(draft) }
+        ),
+      modifier = Modifier.fillMaxWidth(),
+    )
+  }
 }
 
 /**

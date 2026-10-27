@@ -363,8 +363,8 @@ class PreferencesStore(private val context: Context) {
   }
 
   /**
-   * The design server's device token (from its `/my` page): the manifest then also lists the
-   * person's own private designs. Blank for none.
+   * The design server's device token (signed in from Settings, or pasted from its `/my` page): the
+   * manifest then also lists the person's own private designs. Blank for none.
    */
   val designToken: Flow<String>
     get() = context.store.data.map { it[DESIGN_TOKEN_KEY] ?: "" }

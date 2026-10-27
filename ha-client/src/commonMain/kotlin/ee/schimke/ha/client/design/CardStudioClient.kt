@@ -161,8 +161,7 @@ fun privateVariant(designId: String): String =
 class CardPublishException(val status: Int, reason: String? = null) :
   IllegalStateException(
     when (status) {
-      401 ->
-        "The design server didn't accept this device's token. Create a new one on its /my page."
+      401 -> "The design server didn't accept this device's sign-in. Sign in again in Settings."
       403 -> "Only a design you made or edit in UI Builder can be published."
       404 -> "This design server can't publish designs. Update it or choose another server."
       422 -> reason ?: "That design can't be used for this card."

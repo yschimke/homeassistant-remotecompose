@@ -44,8 +44,9 @@ data class DesignServerConfig(
   val clientVersion: Int = 0,
   val choice: List<DesignQuery> = emptyList(),
   /**
-   * A device token from the server's `/my` page, sent as `Authorization: Bearer` with the manifest
-   * request so it lists the signed-in person's private designs too. Blank for none.
+   * A device token (signed in from Settings, or copied from the server's `/my` page), sent as
+   * `Authorization: Bearer` with the manifest request so it lists the signed-in person's private
+   * designs too. Blank for none.
    */
   val token: String = "",
   /**

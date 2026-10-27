@@ -231,7 +231,7 @@ fun CardStudioScreen(
             Text("Use your design on this card", style = MaterialTheme.typography.titleMedium)
             Text(
               if (designToken.isBlank())
-                "Add the design server's device token in Settings to use designs you save in UI Builder."
+                "Sign in to the design server in Settings to use designs you save in UI Builder."
               else
                 "Publishes the design you last opened for this card, for your devices only, and switches this card to it.",
               style = MaterialTheme.typography.bodySmall,
