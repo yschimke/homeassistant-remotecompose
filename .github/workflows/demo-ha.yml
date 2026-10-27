@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-python@v7.1.0
         with:
-          python-version: '3.15.1'
+          python-version: '3.15.2'
       - run: pip install -r requirements-test.txt
       - name: Gateway deny-by-default and live update tests
         run: python -m unittest discover -v
