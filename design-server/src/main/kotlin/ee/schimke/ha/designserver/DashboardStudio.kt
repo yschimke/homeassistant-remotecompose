@@ -6,7 +6,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.io.File
-import java.net.URI
 import java.util.Base64
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.*
@@ -100,12 +99,7 @@ fun Route.dashboardStudioRoutes(
         "Sign in to render card previews",
         status = HttpStatusCode.Forbidden,
       )
-    val origin = call.request.header(HttpHeaders.Origin)
-    if (
-      origin != null &&
-        runCatching { URI(origin).rawAuthority != call.request.header(HttpHeaders.Host) }
-          .getOrDefault(true)
-    )
+    if (call.isCrossOrigin())
       return@post call.respondText(
         "Same-origin preview required",
         status = HttpStatusCode.Forbidden,
