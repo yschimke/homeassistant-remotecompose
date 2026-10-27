@@ -66,6 +66,21 @@ class PushQueueTest(unittest.TestCase):
         self.assertTrue(restored.accepts('hook', self.secret))
         self.assertEqual('Washer done', restored.take('hook', 'person', 1)[0]['message'])
 
+    def test_watched_entities_are_kept_and_survive_a_restart(self):
+        self.assertTrue(self.queue.set_watched('hook', ['sensor.b', 'sensor.a', 'sensor.a']))
+        self.assertFalse(self.queue.set_watched('hook', ['sensor.a', 'sensor.b']))
+        self.assertEqual({'hook': ['sensor.a', 'sensor.b']}, self.queue.watched())
+        restored = pq.PushQueue(self.queue.to_data())
+        self.assertEqual({'hook': ['sensor.a', 'sensor.b']}, restored.watched())
+        self.assertEqual((TOKEN, RELAY), restored.wake_target('hook'))
+
+    def test_another_user_registering_the_webhook_watches_nothing(self):
+        self.queue.set_watched('hook', ['sensor.a'])
+        self.assertTrue(self.queue.owns('hook', 'person'))
+        self.assertFalse(self.queue.owns('hook', 'intruder'))
+        self.queue.register('hook', 'intruder', TOKEN, RELAY)
+        self.assertEqual({}, self.queue.watched())
+
 
 if __name__ == '__main__':
     unittest.main()

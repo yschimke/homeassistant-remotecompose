@@ -893,6 +893,53 @@ class MobileWearSyncManager(
     }
   }
 
+  /**
+   * The entities the watch's cards read. A process started for a wake hasn't published the
+   * dashboards yet, so it falls back to the entities in the `/wear/values` item last written.
+   */
+  override suspend fun watchedEntities(): Set<String> = watchEntityIds.ifEmpty { lastValuesKeys() }
+
+  /**
+   * Writes [snapshot]'s values for the watch's cards now, for a wake with no app session: its
+   * widgets read `/wear/values` while the watch app is closed.
+   */
+  override suspend fun pushValues(snapshot: HaSnapshot) {
+    val ids = watchedEntities()
+    if (ids.isEmpty()) return
+    val values = wearValues(snapshot, ids)
+    if (values == lastValuesItem) return
+    val payload = LiveValues(values = values, capturedAtMs = System.currentTimeMillis())
+    // A wake's session is signed in, though none was handed to [setSession].
+    if (writeDataItem(WearSyncPaths.VALUES, encodeProto(payload), signedIn = true)) {
+      lastValuesItem = values
+    }
+  }
+
+  private suspend fun lastValuesKeys(): Set<String> {
+    if (!wearableAvailableState.value) return emptySet()
+    val buffer =
+      runCatching {
+        dataClient.getDataItems(wearUri(WearSyncPaths.VALUES), DataClient.FILTER_LITERAL).await()
+      }
+        .onFailure {
+          if (it is CancellationException) throw it
+          handleFailure("getDataItems values", it)
+        }
+        .getOrNull() ?: return emptySet()
+    val payloads =
+      try {
+        buffer.map {
+          com.google.android.gms.wearable.DataMapItem.fromDataItem(it).dataMap.protoPayload()
+        }
+      } finally {
+        buffer.release()
+      }
+    return payloads
+      .mapNotNull { payload -> payload.read(dataClient)?.let { decodeProto<LiveValues>(it) } }
+      .flatMap { it.values.keys }
+      .toSet()
+  }
+
   /** The `/wear/values` DataItem, when [values] changed since the last one written. */
   private suspend fun pushValuesItem(values: Map<String, EntityValue>, capturedAtMs: Long) {
     if (values == lastValuesItem) return
@@ -1017,10 +1064,14 @@ class MobileWearSyncManager(
   }
 
   /** Writes [bytes] at [path]; false when the wearable API is unavailable or the write failed. */
-  private suspend fun writeDataItem(path: String, bytes: ByteArray): Boolean {
+  private suspend fun writeDataItem(
+    path: String,
+    bytes: ByteArray,
+    signedIn: Boolean = sessionState.value != null,
+  ): Boolean {
     if (!wearableAvailableState.value) return false
     // Signed out: nothing of the account may land after [clearWatchData]'s deletes.
-    if (path != WearSyncPaths.SETTINGS && sessionState.value == null) return false
+    if (path != WearSyncPaths.SETTINGS && !signedIn) return false
     return runCatching {
       val request =
         PutDataMapRequest.create(path).apply {

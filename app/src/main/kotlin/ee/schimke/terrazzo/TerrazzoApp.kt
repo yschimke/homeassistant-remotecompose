@@ -149,6 +149,19 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
     ee.schimke.terrazzo.notify.HaPushReceiver.run(appContext, graph, s)
   }
 
+  // The launcher and watch widgets follow this session's states, holding the Terrazzo
+  // integration's lease so it sends no state wakes meanwhile.
+  LaunchedEffect(session) {
+    val s = session ?: return@LaunchedEffect
+    // A fresh sign-in registers with mobile_app after handing the session over: wait for it.
+    var webhookId = graph.mobileAppStore.get(s.baseUrl)?.webhookId
+    while (webhookId == null) {
+      kotlinx.coroutines.delay(5_000)
+      webhookId = graph.mobileAppStore.get(s.baseUrl)?.webhookId
+    }
+    ee.schimke.terrazzo.widget.LiveWidgetUpdates.follow(appContext, s, webhookId)
+  }
+
   // Once a live session has finished connecting, ask HA for its
   // config and stash the `external_url` so the OkHttp interceptor
   // can swap in the public host when LAN isn't reachable

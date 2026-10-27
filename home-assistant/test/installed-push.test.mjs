@@ -131,6 +131,18 @@ test('a notification for a device with no websocket is held by the integration a
     assert.deepEqual(taken.result.messages, [{message: 'Washer done', title: 'Laundry', data: {tag: 'washer'}}]);
     const again = await ws.call({type: 'terrazzo/push/take', webhook_id: webhookId});
     assert.deepEqual(again.result.messages, [], 'each message is taken once');
+
+    // The entities the app's widgets read: their changes wake it, except during a lease.
+    const watched = await ws.call({type: 'terrazzo/push/watch', webhook_id: webhookId,
+      entity_ids: ['sun.sun'], lease_seconds: 9999});
+    assert.equal(watched.success, true, JSON.stringify(watched));
+    assert.equal(watched.result.lease_seconds, 180, 'the lease is capped');
+    const notAnEntity = await ws.call({type: 'terrazzo/push/watch', webhook_id: webhookId,
+      entity_ids: ['not an entity']});
+    assert.equal(notAnEntity.success, false);
+    const notMine = await ws.call({type: 'terrazzo/push/watch', webhook_id: 'not-mine',
+      entity_ids: ['sun.sun']});
+    assert.equal(notMine.success, false, 'only the caller\'s own registration');
   } finally {
     ws.close();
   }

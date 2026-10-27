@@ -535,6 +535,25 @@ class HaClient(
       ?.mapNotNull { it as? JsonObject }
       .orEmpty()
 
+  /**
+   * The entities this device's widgets read ([entityIds]), for the Terrazzo integration to wake the
+   * app when one changes, with a lease of [leaseSeconds] (0 for none) while the app follows them
+   * itself. Answers the lease granted, in seconds. Fails with [HaCommandException] without the
+   * integration, or before [registerTerrazzoPush].
+   */
+  suspend fun watchTerrazzoStates(
+    webhookId: String,
+    entityIds: Collection<String>,
+    leaseSeconds: Int,
+  ): Int =
+    runCommand("terrazzo/push/watch") {
+        put("webhook_id", webhookId)
+        put("entity_ids", JsonArray(entityIds.map { JsonPrimitive(it) }))
+        put("lease_seconds", leaseSeconds)
+      }["lease_seconds"]
+      ?.jsonPrimitive
+      ?.intOrNull ?: 0
+
   /** Fires an event on HA's bus, as a notification action button does. Needs an admin user. */
   suspend fun fireEvent(eventType: String, eventData: JsonObject) {
     awaitCommand("fire_event") {
