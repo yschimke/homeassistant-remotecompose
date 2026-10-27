@@ -5,6 +5,8 @@ import ee.schimke.ha.design.HaSharedValues
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -46,6 +48,9 @@ data class CardSchema(
   val template: String? = null,
   /** What this schema can't vouch for, in words: missing bindings, approximations. */
   val notes: List<String> = emptyList(),
+  // Always encoded: the server's JSON leaves defaults out, and a client reads this list.
+  @OptIn(ExperimentalSerializationApi::class)
+  @EncodeDefault(EncodeDefault.Mode.ALWAYS)
   val shared: List<BindingSchema> = sharedBindings(),
 ) {
   companion object {

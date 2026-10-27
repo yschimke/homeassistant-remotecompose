@@ -64,7 +64,7 @@ in the builder.
 
 | Variable | For |
 |---|---|
-| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | The design server's GitHub OAuth App. Callback: `<PUBLIC_URL>/auth/github/callback` |
+| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | The design server's GitHub OAuth App. Callback: `<PUBLIC_URL>/my/auth/github/callback` |
 | `PUBLIC_URL` | Where browsers reach the design server, e.g. `https://ha.coo.ee` |
 | `SESSION_SECRET` | Signs the session cookie: a long random string |
 | `GITHUB_USERS` | Optional: comma-separated logins allowed to design (default: anyone) |
@@ -79,20 +79,40 @@ callback URLs also works.
 
 ### Deploying at `ha.coo.ee`
 
-`ha.coo.ee` is served from the same box as `preview.coo.ee`, by compose-preview-server's
-deploy (`deploy/image/docker-compose.yml`, the `ha-designs` service, and the `{$HA_DOMAIN}` block
-of its `Caddyfile`). `.github/workflows/design-server.yml` publishes this image as
-`ghcr.io/yschimke/ha-card-design-server` on every push to `main`. One hostname, split by path:
+`ha.coo.ee` is served from the same box as `preview.coo.ee`. Its deployment lives in the private
+operator repository `yschimke/preview-coo-ee`:
 
-- `/`, `/designs*`, `/site/*`, `/schema`, `/embed/*`, `/studio/*`, `/api/designs*`, `/api/schema`,
-  `/api/studio*` and the library at `/designs/v1` (the app's card design server setting) go to
-  this server.
-- The card designer (`/ui-builder/*`, `/api/ui-builder/*`, `/auth/*`, `/mcp`) and the catalog
-  (`/homeassistant-remotecompose/*` and the routes its pages load) go to the preview server, whose
+- `deploy/image/docker-compose.yml` holds the `ha-designs` service.
+- `deploy/image/ha.caddy` holds the `{$HA_DOMAIN}` block.
+
+A merge there deploys itself (its `deploy/sync`). Releases of this server need nothing there:
+
+- `.github/workflows/design-server.yml` publishes this image as
+  `ghcr.io/yschimke/ha-card-design-server` (`latest` and the commit SHA) on every push to `main`.
+- The box's Watchtower rolls `latest` within about 20 minutes.
+- `/designs/v1/manifest.json`'s `generatedAtEpochMs` says which build is live.
+
+One hostname, split by path:
+
+- **This server:** `/`, `/designs*`, `/site/*`, `/schema`, `/embed/*`, `/studio/*`, `/api/designs*`,
+  `/api/schema`, `/api/studio*`, `/my`, `/my/*` (the person's page and its GitHub sign-in,
+  `/my/auth/github`) and `/api/my/*` (the app's device-token API). Also the library at
+  `/designs/v1`, which is the app's card design server setting.
+- **The preview server:** the card designer (`/ui-builder/*`, `/api/ui-builder/*`, `/auth/*`,
+  `/mcp`) and the catalog (`/homeassistant-remotecompose/*` and the routes its pages load). Its
   builder profile white-labels them as the Home Assistant card designer.
+  - Its sign-in owns `/auth/*`, which is why this server's sign-in lives under `/my/auth/`.
 
-There it runs without its bundled UI Builder (`UI_BUILDER_BINARY` empty): `UI_BUILDER_URL` and
+There it runs without its bundled UI Builder (`UI_BUILDER_BINARY` empty). `UI_BUILDER_URL` and
 `UI_BUILDER_TOKEN` point it at the preview box's builder instead.
+
+Publishing private designs from the app needs this server's own GitHub sign-in on top: the
+`GITHUB_*`, `SESSION_SECRET` and `PUBLIC_URL` settings above, its OAuth App's callback at
+`https://ha.coo.ee/my/auth/github/callback`, and `USER_DESIGNS_DIR` on the `/data` volume.
+
+- Without them, `/my` and `/api/my/*` answer 404.
+- With them, editing the library in UI Builder needs `LIBRARY_EDITORS`: GitHub sign-in replaces
+  the shared edit link.
 
 Run on its own, with the builder bundled:
 

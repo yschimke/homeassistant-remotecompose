@@ -4,8 +4,8 @@ name: Card design server
 # key its library lacks), checks a sample of it plays in the app's AndroidX player, tests the
 # design server on it, and builds
 # its container image. On `main` the image is published as ghcr.io/yschimke/ha-card-design-server
-# (`latest` and the commit SHA), which compose-preview-server's deploy runs as the ha.coo.ee
-# front page; pull requests only build it. The library is also uploaded as an artifact
+# (`latest` and the commit SHA), which the box behind ha.coo.ee (deployed from yschimke/preview-coo-ee)
+# rolls out with Watchtower; pull requests only build it. The library is also uploaded as an artifact
 # (`card-design-library`) for anyone to serve with `design-server`.
 on:
   push:
