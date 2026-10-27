@@ -41,8 +41,8 @@ object Landing {
 
   val SCREENSHOTS =
     listOf(
-      Screenshot("01-home-light.png", "A Home Assistant dashboard in Terrazzo"),
-      Screenshot("02-home-dark.png", "The same dashboard in dark mode"),
+      Screenshot("01-trinitron-meters.png", "Trinitron instruments in Terrazzo’s offline demo"),
+      Screenshot("02-nixie-weather.png", "The Climate dashboard with Nixie card designs"),
     )
 
   /** The card types the teaser shows first, when the library has them. */

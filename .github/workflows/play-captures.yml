@@ -1,0 +1,31 @@
+name: Verify Play app captures
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '**/src/main/play/listings/**'
+      - 'docs/play-captures.json'
+      - 'scripts/play-capture*'
+      - 'scripts/*play*screenshots.sh'
+      - '.github/workflows/play-captures.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python3 -m pip install Pillow==11.3.0
+      - name: Verify real captures without regenerating previews
+        run: python3 scripts/play-captures.py check

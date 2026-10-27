@@ -1,0 +1,130 @@
+{
+  "captures": {
+    "phone-screenshots/01-trinitron-meters.png": {
+      "capturedAt": "2026-10-27T21:15:59.875033+00:00",
+      "device": "sdk_gphone64_x86_64",
+      "dimensions": [
+        1008,
+        1792
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Running Solar Repeater view in built-in offline demo, using Trinitron card designs installed through Settings; sample gauge and instrument meters.",
+      "sdk": "35",
+      "sha256": "ef04389c8d7be5ebb3d9c4ca6459a4b0fd6d0c10b6fb3a0cf687425d4a872451",
+      "source": "adb-screencap",
+      "sourceRevision": "af2064ea22234d7eb75c13e02505f649a88df949"
+    },
+    "phone-screenshots/02-nixie-weather.png": {
+      "capturedAt": "2026-10-27T21:22:50.900451+00:00",
+      "device": "sdk_gphone64_x86_64",
+      "dimensions": [
+        1008,
+        1792
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Running Climate demo with Nixie glowing tube card designs installed through Settings; synthetic sample weather, actual phone app display.",
+      "sdk": "35",
+      "sha256": "32fe8057d7bf2019359c2c8a35a648b96bee31e0561ea02cd5010cef68d84030",
+      "source": "adb-screencap",
+      "sourceRevision": "af2064ea22234d7eb75c13e02505f649a88df949"
+    },
+    "phone-screenshots/03-choose-card-designs.png": {
+      "capturedAt": "2026-10-27T21:24:55.103548+00:00",
+      "device": "sdk_gphone64_x86_64",
+      "dimensions": [
+        1008,
+        1792
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Running Settings installed card-design chooser with Classic, Home Assistant, Trinitron, LCD and Nixie; real in-app design selection UI on the disposable demo phone.",
+      "sdk": "35",
+      "sha256": "b194f8e66dc9eff3b8b0aeb632b40eac1028f63b5994d55862976e24c77b8d4d",
+      "source": "adb-screencap",
+      "sourceRevision": "af2064ea22234d7eb75c13e02505f649a88df949"
+    },
+    "seven-inch-screenshots/01-trinitron-instruments.png": {
+      "capturedAt": "2026-10-27T21:16:39.875780+00:00",
+      "device": "sdk_gphone64_x86_64",
+      "dimensions": [
+        1000,
+        1600
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Running offline Solar Repeater dashboard with installed Trinitron card designs; native seven-inch viewport, sample gauges and signal meters.",
+      "sdk": "35",
+      "sha256": "20238c917e81111fbef057914678202114a227d8b3c9897ef4347d0e4c036f97",
+      "source": "adb-screencap",
+      "sourceRevision": "af2064ea22234d7eb75c13e02505f649a88df949"
+    },
+    "seven-inch-screenshots/02-lcd-weather.png": {
+      "capturedAt": "2026-10-27T21:18:55.514767+00:00",
+      "device": "sdk_gphone64_x86_64",
+      "dimensions": [
+        1000,
+        1600
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Running Climate demo dashboard with installed LCD card designs and segment displays; native seven-inch tablet viewport, synthetic sample weather.",
+      "sdk": "35",
+      "sha256": "d72f97f76c14eddcc55cbb0a71598652b1276ddfca4774875c09a9235b92fd02",
+      "source": "adb-screencap",
+      "sourceRevision": "af2064ea22234d7eb75c13e02505f649a88df949"
+    },
+    "ten-inch-screenshots/01-lcd-weather-landscape.png": {
+      "capturedAt": "2026-10-27T21:20:20.386035+00:00",
+      "device": "sdk_gphone64_x86_64",
+      "dimensions": [
+        1792,
+        1120
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Running Climate demo dashboard with installed LCD designs in native ten-inch landscape layout; sample segment displays and meters.",
+      "sdk": "35",
+      "sha256": "0b3458404e2ae1cc51f166a967f229fae424e45197b6df5ba306768f73371d0d",
+      "source": "adb-screencap",
+      "sourceRevision": "af2064ea22234d7eb75c13e02505f649a88df949"
+    },
+    "ten-inch-screenshots/02-nixie-instruments-landscape.png": {
+      "capturedAt": "2026-10-27T21:22:17.001453+00:00",
+      "device": "sdk_gphone64_x86_64",
+      "dimensions": [
+        1792,
+        1120
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Running Solar Repeater demo with Nixie glowing tube card designs installed through Settings; native ten-inch landscape layout, sample instruments.",
+      "sdk": "35",
+      "sha256": "5e73c48a73585fea878dd4364df3f3b8fb521b6c0984141a7566ac77c3a08651",
+      "source": "adb-screencap",
+      "sourceRevision": "af2064ea22234d7eb75c13e02505f649a88df949"
+    },
+    "wear-screenshots/01-living-room.png": {
+      "capturedAt": "2026-10-27T20:47:08.553559+00:00",
+      "device": "sdk_gwear_x86_64",
+      "dimensions": [
+        480,
+        480
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Running Wear pinned Living room section using the existing debug offline demo seed; no Home Assistant account or paired phone.",
+      "sdk": "36",
+      "sha256": "f7f0830d404244bdceea7c78fd8f5e58c7ac25df173485b58df8d52e8b0d2682",
+      "source": "adb-screencap",
+      "sourceRevision": "79c462ed9498dd489b67a1212a4b0d4d964813df"
+    },
+    "wear-screenshots/02-pinned-cards.png": {
+      "capturedAt": "2026-10-27T20:47:38.364740+00:00",
+      "device": "sdk_gwear_x86_64",
+      "dimensions": [
+        480,
+        480
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Running Wear pinned Home cards with Kitchen and Outside readings from the existing offline demo seed; no live Home Assistant account.",
+      "sdk": "36",
+      "sha256": "355c1542a44df27ed82f1e50350286f513c3023eedb8f27e5b3e2cca4f1df406",
+      "source": "adb-screencap",
+      "sourceRevision": "79c462ed9498dd489b67a1212a4b0d4d964813df"
+    }
+  }
+}

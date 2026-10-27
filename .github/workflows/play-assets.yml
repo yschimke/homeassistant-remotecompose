@@ -1,7 +1,7 @@
 name: Play Store graphics
 
-# Re-renders the Play listing images from their @Preview sources
-# (scripts/render-play-screenshots.sh, scripts/render-play-assets.sh) and
+# Refreshes branding from previews and validates immutable real app captures;
+# phone, tablet and Wear screenshots are never generated from @Preview. This
 # opens — or refreshes — one PR when the committed PNGs drift. Uploading them
 # to Play is a separate, opt-in release step (`PLAY_PUBLISH_LISTING`, see
 # release-build.yml), so a merged refresh reaches the store on the next release.
@@ -27,7 +27,7 @@ env:
 
 jobs:
   render:
-    name: Render and propose Play graphics
+    name: Verify screenshots and refresh branding
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
@@ -43,17 +43,25 @@ jobs:
           version: catalog
           catalog-key: compose-preview-plugin
 
-      # `convert` flattens the round Wear shots; `compare` drops renders whose
-      # pixels didn't change. Usually preinstalled on ubuntu-latest.
+      # ImageMagick handles branding conversion and unchanged-pixel comparisons.
       - name: Ensure ImageMagick
         run: command -v convert >/dev/null || { sudo apt-get update -q && sudo apt-get install -yq imagemagick; }
 
-      - name: Render phone, tablet and Wear screenshots
-        run: scripts/render-play-screenshots.sh
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Verify real app screenshots (never regenerate previews)
+        run: |
+          python3 -m pip install Pillow==11.3.0
+          python3 scripts/play-captures.py check
       - name: Render icon and feature graphic
         run: scripts/render-play-assets.sh
       - name: Keep committed PNGs whose pixels didn't change
         run: scripts/restore-unchanged-play-graphics.sh
+
+      - name: Verify captures were preserved
+        run: python3 scripts/play-captures.py check
 
       - name: Open or update the refresh PR
         env:
@@ -72,7 +80,7 @@ jobs:
           git switch -C "$BRANCH"
           git add -A -- "$listing"
           git commit -m 'chore(play): refresh Play Store graphics' \
-            -m "Re-rendered from the Play_* @Preview sources by the ${GITHUB_WORKFLOW} workflow."
+            -m "Branding refreshed from previews; verified app screenshots preserved by the ${GITHUB_WORKFLOW} workflow."
           git push --force origin "$BRANCH"
 
           existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
@@ -81,5 +89,5 @@ jobs:
           else
             gh pr create --base main --head "$BRANCH" \
               --title 'chore(play): refresh Play Store graphics' \
-              --body "Re-rendered Play listing images from the \`Play_*\` @Preview composables (run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}). Merging lands them in \`${listing}/\`; a release with \`PLAY_PUBLISH_LISTING=true\` uploads them to Play."
+              --body "Refreshed Play branding (real app screenshots preserved) from the \`Play_*\` @Preview composables (run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}). Merging lands them in \`${listing}/\`; a release with \`PLAY_PUBLISH_LISTING=true\` uploads them to Play."
           fi
