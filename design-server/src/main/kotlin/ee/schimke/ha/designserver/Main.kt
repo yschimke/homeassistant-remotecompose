@@ -12,7 +12,17 @@ import java.io.File
  * Runs the card design server.
  *
  * - `DESIGN_LIBRARY` (or the first argument): the library directory, as
- *   `:card-designs:generateCardDesigns` writes it. Default `card-designs`.
+ *   `:card-designs:generateCardDesigns` writes it. Default `card-designs`. With `LIBRARY_STORE` it
+ *   is only the seed of `main` ([LibraryChannels]).
+ * - `LIBRARY_STORE`: a writable directory the server keeps its published libraries in, one per
+ *   channel (`main`, `pr-<n>`), so a library is published without redeploying the server. Without
+ *   it the server serves `DESIGN_LIBRARY` read-only.
+ * - `LIBRARY_PUBLISH_TOKEN`: the bearer token CI publishes libraries with (`PUT
+ *   /api/library/channels/<channel>`); without it nobody can.
+ * - `LIBRARY_TTL_SECONDS`: how long an app keeps a published manifest before asking again (default
+ *   an hour; it revalidates by ETag).
+ * - `LIBRARY_EDIT_POLL_SECONDS`: how often edits to the library's designs in UI Builder are checked
+ *   for and published to `main` ([LibraryEditPublisher]); 0 turns that off. Default 60.
  * - `PORT`: default 8080. `HOST`: default `0.0.0.0`.
  * - UI Builder, optional: `UI_BUILDER_BINARY` runs the bundled one, `UI_BUILDER_URL` +
  *   `UI_BUILDER_TOKEN` use another (see [UiBuilderConfig.fromEnvironment]). With it, a browser can
@@ -37,11 +47,26 @@ fun main(args: Array<String>) {
   val dir = File(args.firstOrNull() ?: System.getenv("DESIGN_LIBRARY") ?: "card-designs")
   val port = System.getenv("PORT")?.toIntOrNull() ?: 8080
   val host = System.getenv("HOST") ?: "0.0.0.0"
-  val holder = LibraryHolder(dir)
+  val store = System.getenv("LIBRARY_STORE")?.takeIf { it.isNotBlank() }?.let(::File)
+  val channels =
+    LibraryChannels(
+      store,
+      dir,
+      ttlSeconds =
+        System.getenv("LIBRARY_TTL_SECONDS")?.toLongOrNull() ?: LibraryChannels.DEFAULT_TTL_SECONDS,
+    )
+  val holder = channels.main
   val library = holder.current()
+  val publishToken = System.getenv("LIBRARY_PUBLISH_TOKEN")?.takeIf { it.isNotBlank() }
+  println(
+    if (store == null) "library store: none, serving ${dir.absolutePath} read-only"
+    else
+      "library store: ${store.absolutePath}, channels ${channels.list().map { it.channel }}" +
+        if (publishToken == null) " (publishing off: no LIBRARY_PUBLISH_TOKEN)" else ""
+  )
   println(
     "card design server: ${library.designs.size} designs (serial ${library.manifest.serial}) " +
-      "from ${dir.absolutePath} on http://$host:$port - app URL: <host>$API_BASE"
+      "from ${holder.dir.absolutePath} on http://$host:$port - app URL: <host>$API_BASE"
   )
   // Redirects are answers here (UI Builder's share route, GitHub's), never something to follow.
   val http = HttpClient(io.ktor.client.engine.cio.CIO) { followRedirects = false }
@@ -98,6 +123,9 @@ fun main(args: Array<String>) {
         usage,
         statsUsers,
         libraryEditors,
+        channels,
+        publishToken,
+        editPollMs = (System.getenv("LIBRARY_EDIT_POLL_SECONDS")?.toLongOrNull() ?: 60L) * 1_000,
       )
     }
     .start(wait = true)

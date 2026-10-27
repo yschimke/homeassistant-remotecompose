@@ -1,7 +1,10 @@
 package ee.schimke.ha.designs
 
+import ee.schimke.ha.cards.CardDesignDocument
+import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.client.design.DesignPublisher
 import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.design.CardDesignFiles
 import ee.schimke.ha.design.DesignCatalog
 import ee.schimke.ha.design.DesignCatalogEntry
 import ee.schimke.ha.design.DesignExample
@@ -111,6 +114,115 @@ object CardDesignLibrary {
   }
 
   /**
+   * Writes into [target] the library in [source] with [cardType]'s designs captured again from
+   * [design], a library design edited in UI Builder ([documentJson] is its text): what the design
+   * server publishes when a library design changes, without a build. Every other design, preview
+   * and source is copied as it is; the card type's previews are drawn again by [previews] (with
+   * none, they keep the previous designs' pictures: capturing takes seconds, drawing minutes) and
+   * its source replaced, so the library says what it was drawn from. [target] must not exist.
+   * Returns how many designs were captured.
+   */
+  fun rebuildCardType(
+    source: File,
+    target: File,
+    cardType: String,
+    design: CardDesignDocument,
+    documentJson: String,
+    host: CaptureHost,
+    previews: CardPreviewRenderer?,
+  ): Int {
+    val manifest =
+      readJson.decodeFromString(
+        DesignManifest.serializer(),
+        source.resolve(MANIFEST_PATH).readText(),
+      )
+    var captured = 0
+    val built =
+      manifest.designs
+        .filterNot { it.revoked }
+        .map { entry ->
+          if (entry.key.cardType == cardType) {
+            captured++
+            CheckedInCardDesigns.captureDesign(host, entry.key, design)
+          } else {
+            BuiltDesign(
+              entry.key,
+              entry.slots,
+              source.resolve(DesignManifest.blobPath(entry.sha256)).readBytes(),
+            )
+          }
+        }
+    require(captured > 0) { "the library has no $cardType designs" }
+    // Generated when the library it was derived from was: the server stamps its own serial.
+    val output =
+      DesignPublisher.publish(
+        built,
+        serial = manifest.serial,
+        nowEpochMs = manifest.generatedAtEpochMs,
+      )
+    check(target.mkdirs()) { "couldn't create $target" }
+    // Linked, not copied: the previews are most of a library. Anything redrawn below replaces its
+    // link ([write]), so the library this was derived from never changes.
+    for (dir in listOf("previews", "sources")) {
+      source.resolve(dir).takeIf { it.isDirectory }?.let { linkTree(it, target.resolve(dir)) }
+    }
+    target.write("sources/${CardDesignFiles.fileName(cardType)}", documentJson.encodeToByteArray())
+    for ((path, bytes) in output.files) {
+      if (path == MANIFEST_PATH) continue
+      // Blobs are named by content: one the source already holds is the same file.
+      val existing = source.resolve(path)
+      if (existing.isFile) link(existing, target.resolve(path)) else target.write(path, bytes)
+    }
+
+    val catalog =
+      source
+        .resolve(DesignCatalog.PATH)
+        .takeIf { it.isFile }
+        ?.let { readJson.decodeFromString(DesignCatalog.serializer(), it.readText()) }
+    if (catalog != null) {
+      val shaByKey = output.manifest.designs.associate { it.key to it.sha256 }
+      val examples = examples()
+      val entries =
+        catalog.entries.map { entry ->
+          val sha = shaByKey[entry.key]
+          if (entry.key.cardType != cardType || sha == null) return@map entry
+          if (previews == null) return@map entry.copy(sha256 = sha)
+          val bytes = output.files.getValue(DesignManifest.blobPath(sha))
+          // The example the library was built with, when its source cards still produce the key.
+          val example = examples[entry.key] ?: return@map entry.copy(sha256 = sha)
+          val paths = previewPaths(entry.key)
+          val playback = playback(example, bytes)
+          target.write(paths.example!!, previews.render(playback, example.card, example.snapshot))
+          target.write(
+            paths.template!!,
+            previews.render(
+              CardTemplatePlayback(bytes, { _, _ -> NO_BINDINGS }, HaAction.None),
+              card = null,
+              snapshot = null,
+            ),
+          )
+          entry.copy(
+            sha256 = sha,
+            example =
+              DesignExample(example.source, example.card.raw, exampleBindings(playback, example)),
+            previews = paths,
+          )
+        }
+      target
+        .resolve(DesignCatalog.PATH)
+        .writeText(
+          json.encodeToString(
+            DesignCatalog.serializer(),
+            catalog.copy(serial = output.manifest.serial, entries = entries),
+          )
+        )
+    }
+    // Last, after everything it names.
+    target.resolve(MANIFEST_PATH).writeBytes(output.files.getValue(MANIFEST_PATH))
+    return captured
+  }
+
+  /**
    * The themes the phone app ships designs for: Classic in the Material 3 palette and the Home
    * Assistant card style, in each mode they draw in. The app starts with those two card styles
    * (`CardStyles.BUILT_IN`) and the Material 3 palette, so it draws them with no design server.
@@ -198,8 +310,28 @@ object CardDesignLibrary {
       bytes,
     )
 
+  /** Writes [path] as a new file: never through a link another library shares ([linkTree]). */
   private fun File.write(path: String, bytes: ByteArray) {
-    resolve(path).also { it.parentFile.mkdirs() }.writeBytes(bytes)
+    resolve(path)
+      .also {
+        it.parentFile.mkdirs()
+        it.delete()
+      }
+      .writeBytes(bytes)
+  }
+
+  /** Every file under [from] at the same place under [to], as hard links where it can. */
+  private fun linkTree(from: File, to: File) {
+    from
+      .walkTopDown()
+      .filter { it.isFile }
+      .forEach { file -> link(file, to.resolve(file.relativeTo(from).path)) }
+  }
+
+  private fun link(from: File, to: File) {
+    to.parentFile.mkdirs()
+    runCatching { java.nio.file.Files.createLink(to.toPath(), from.toPath()) }
+      .getOrElse { from.copyTo(to, overwrite = true) }
   }
 
   /**
@@ -310,6 +442,8 @@ object CardDesignLibrary {
     prettyPrint = true
     encodeDefaults = true
   }
+
+  private val readJson = Json { ignoreUnknownKeys = true }
 
   /**
    * `DesignPublisher`'s manifest, which a client reads first: written after everything it names.

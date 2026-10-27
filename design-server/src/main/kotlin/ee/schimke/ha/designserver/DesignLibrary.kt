@@ -49,6 +49,8 @@ private constructor(
    * design starts from.
    */
   val sources: Map<String, JsonObject>,
+  /** Where this library is served: its channel's client and browser paths. */
+  val paths: LibraryPaths = LibraryPaths.Main,
 ) {
   /** Every design, in manifest order, with its catalog entry when there is one. */
   val designs: List<LibraryDesign>
@@ -69,6 +71,7 @@ private constructor(
           id = catalogEntry?.id ?: idOf(entry.key),
           entry = entry,
           catalog = catalogEntry,
+          paths = paths,
         )
       }
     byId = designs.associateBy { it.id }
@@ -149,7 +152,7 @@ private constructor(
      * Loads and verifies the library in [dir]; throws [IllegalStateException] naming the first
      * problem (a missing or mismatched blob, an unreadable manifest).
      */
-    fun load(dir: File): DesignLibrary {
+    fun load(dir: File, paths: LibraryPaths = LibraryPaths.Main): DesignLibrary {
       val manifestFile = File(dir, MANIFEST)
       check(manifestFile.isFile) { "no $MANIFEST in $dir" }
       val manifestBytes = manifestFile.readBytes()
@@ -180,7 +183,7 @@ private constructor(
             CardDesignFiles.cardType(it.nameWithoutExtension) to
               json.parseToJsonElement(it.readText()).jsonObject
           }
-      return DesignLibrary(dir, manifest, manifestBytes, catalog, blobBytes, sources)
+      return DesignLibrary(dir, manifest, manifestBytes, catalog, blobBytes, sources, paths)
     }
 
     const val MANIFEST = "manifest.json"
@@ -207,7 +210,13 @@ private constructor(
 }
 
 /** One design in a library. */
-class LibraryDesign(val id: String, val entry: DesignEntry, val catalog: DesignCatalogEntry?) {
+class LibraryDesign(
+  val id: String,
+  val entry: DesignEntry,
+  val catalog: DesignCatalogEntry?,
+  /** Where its library is served: its pages and blob links stay on that channel. */
+  val paths: LibraryPaths = LibraryPaths.Main,
+) {
   val key: DesignKey
     get() = entry.key
 

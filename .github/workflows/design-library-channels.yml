@@ -1,0 +1,42 @@
+name: Card design preview channels
+
+# A pull request's card designs are published to the design server as channel `pr-<n>`
+# (design-server.yml, docs/architecture/card-design-server.md "Publishing"), which the server lists
+# as in flight. When the pull request closes, merged or not, its channel goes: a merged change
+# reaches `main` through the push to main.
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+# The same group as the pull request's design-server.yml run, so closing cancels a build that would
+# otherwise publish pr-<n> again after it is dropped.
+concurrency:
+  group: design-server-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  drop:
+    name: Drop the preview channel
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          sparse-checkout: .github/scripts
+      - name: Delete pr-${{ github.event.pull_request.number }}
+        env:
+          DESIGN_SERVER_URL: ${{ vars.DESIGN_SERVER_URL || 'https://ha.coo.ee' }}
+          LIBRARY_PUBLISH_TOKEN: ${{ secrets.LIBRARY_PUBLISH_TOKEN }}
+        run: |
+          if [ -z "$LIBRARY_PUBLISH_TOKEN" ]; then
+            echo "No LIBRARY_PUBLISH_TOKEN: nothing was published."
+            exit 0
+          fi
+          channel="pr-${{ github.event.pull_request.number }}"
+          python3 .github/scripts/publish-design-library.py delete "$channel"
+          # A cancelled run's upload may already be in flight and land after the first delete.
+          sleep 180
+          python3 .github/scripts/publish-design-library.py delete "$channel"

@@ -1,8 +1,6 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.ha.design.DesignCatalog
-import ee.schimke.ha.design.DesignKey
-import ee.schimke.ha.design.GeneratedDesign
 import ee.schimke.ha.designs.UiBuilderDesignCompiler
 import io.ktor.http.ContentDisposition
 import io.ktor.http.ContentType
@@ -19,6 +17,7 @@ import io.ktor.server.plugins.bodylimit.RequestBodyLimit
 import io.ktor.server.plugins.defaultheaders.DefaultHeaders
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.header
+import io.ktor.server.request.path
 import io.ktor.server.request.queryString
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.request.receiveText
@@ -45,11 +44,13 @@ import kotlinx.serialization.json.JsonPrimitive
  * that fails to load keeps the previous one serving.
  */
 class LibraryHolder(
-  private val dir: File,
+  val dir: File,
   private val checkIntervalMs: Long = 5_000,
   private val clock: () -> Long = System::currentTimeMillis,
+  /** The channel this library is served on ([LibraryChannels]). */
+  val paths: LibraryPaths = LibraryPaths.Main,
 ) {
-  @Volatile private var library: DesignLibrary = DesignLibrary.load(dir)
+  @Volatile private var library: DesignLibrary = DesignLibrary.load(dir, paths)
   @Volatile private var loadedModified = manifestModified()
   @Volatile private var checkedAt = clock()
 
@@ -57,19 +58,27 @@ class LibraryHolder(
     val now = clock()
     if (now - checkedAt >= checkIntervalMs) {
       checkedAt = now
-      val modified = manifestModified()
-      if (modified != loadedModified) {
-        runCatching { DesignLibrary.load(dir) }
-          .onSuccess {
-            library = it
-            loadedModified = modified
-          }
-          .onFailure {
-            System.err.println("design library reload failed, keeping the old one: ${it.message}")
-          }
-      }
+      reloadIfChanged()
     }
     return library
+  }
+
+  /**
+   * Loads the library on disk now if it changed, rather than at the next check: a publish
+   * ([LibraryChannels.install]) answers with what it serves.
+   */
+  @Synchronized
+  fun reloadIfChanged() {
+    val modified = manifestModified()
+    if (modified == loadedModified) return
+    runCatching { DesignLibrary.load(dir, paths) }
+      .onSuccess {
+        library = it
+        loadedModified = modified
+      }
+      .onFailure {
+        System.err.println("design library reload failed, keeping the old one: ${it.message}")
+      }
   }
 
   /**
@@ -96,6 +105,9 @@ class LibraryHolder(
  * - `/designs/v1/catalog.json`, `/designs/v1/previews/...` — the browser's data.
  * - `/` — the app's front page ([Landing]); `/site/<name>` — its pictures.
  * - `/designs`, `/designs/<id>` — the template browser; `/api/designs[/<id>]` — the same as JSON.
+ * - `/designs/v1/channels/<channel>/...` — the same protocol for a pull request's preview, and
+ *   `/api/library/channels[/<channel>]` to list, publish and drop channels ([LibraryChannels]);
+ *   `/designs?channel=<channel>` browses one.
  * - `/embed/v1/ha-card.js`, `/embed/v1/rc-player.js` — the card embed and its player;
  *   `/embed/v1/demo.html` — its demo page (docs/architecture/card-embedding.md). The embed reads
  *   the manifest and blobs from other origins, so those, like the scripts, allow any origin: they
@@ -115,12 +127,27 @@ fun Application.designServer(
   statsUsers: Set<String> = emptySet(),
   /** GitHub logins that may edit the library's card designs ([LibrarySources]). */
   libraryEditors: Set<String> = emptySet(),
+  /** Every channel's library ([LibraryChannels]); by default only [holder], read-only. */
+  channels: LibraryChannels = LibraryChannels(null, holder.dir, readOnlyMain = holder),
+  /** The bearer token that may publish libraries to [channels]; null turns publishing off. */
+  publishToken: String? = null,
+  /**
+   * How often edits to the library's designs in UI Builder are published to `main`
+   * ([LibraryEditPublisher]); 0 never. Needs UI Builder and a library store.
+   */
+  editPollMs: Long = 0,
 ) {
   install(DefaultHeaders)
   install(AutoHeadResponse)
   // Refuses a body over the cap before it is buffered: by its Content-Length up front, or while it
   // streams in. Routes still apply their own, smaller caps.
-  install(RequestBodyLimit) { bodyLimit { MAX_REQUEST_BODY_BYTES } }
+  install(RequestBodyLimit) {
+    bodyLimit { call ->
+      // A published library bundle (LibraryChannels) is the one large upload.
+      if (call.request.path().startsWith(LIBRARY_CHANNELS_PATH)) LibraryChannels.MAX_LIBRARY_BYTES
+      else MAX_REQUEST_BODY_BYTES
+    }
+  }
   install(StatusPages) {
     exception<PayloadTooLargeException> { call, _ ->
       call.respondText("request body too large", status = HttpStatusCode.PayloadTooLarge)
@@ -143,7 +170,12 @@ fun Application.designServer(
     }
   }
   val librarySources = LibrarySources(holder, uiBuilder, libraryEditors)
-  val generator = DesignGenerator(holder)
+  val generators = DesignGenerators()
+  val generator = generators.of(holder)
+  if (uiBuilder != null && channels.publishable && editPollMs > 0) {
+    val edits = LibraryEditPublisher(channels, librarySources).start(this, editPollMs)
+    monitor.subscribe(ApplicationStopping) { edits.cancel() }
+  }
   routing {
     if (usage != null) usageRoutes(usage, github, statsUsers)
     librarySourceRoutes(librarySources, uiBuilder, github)
@@ -155,99 +187,13 @@ fun Application.designServer(
     }
     get("/healthz") { call.respondText("ok") }
 
-    get("$API_BASE/manifest.json") {
-      // A device token adds its owner's private designs; everyone gets the shared ones.
-      val login = github?.user(call)
-      val served = holder.current().manifestFor(userDesigns, login)
-      usage?.manifestFetched(call.request.header(HttpHeaders.UserAgent))
-      call.response.header(HttpHeaders.ETag, served.etag)
-      call.allowAnyOrigin()
-      call.response.header(HttpHeaders.Vary, HttpHeaders.Authorization)
-      // Clients revalidate on every refresh; a 304 costs nothing.
-      call.response.header(
-        HttpHeaders.CacheControl,
-        if (login != null) "private, no-cache" else "no-cache",
-      )
-      if (call.request.header(HttpHeaders.IfNoneMatch)?.let { served.etag in it } == true) {
-        call.respondBytes(ByteArray(0), status = HttpStatusCode.NotModified)
-      } else {
-        call.respondBytes(served.bytes, ContentType.Application.Json)
-      }
+    // The client protocol, for the library every app syncs and for each channel's
+    // (LibraryChannels): a pull request's preview is the same protocol under its own base.
+    libraryProtocolRoutes(API_BASE, generators, userDesigns, github, usage) { channels.main }
+    libraryProtocolRoutes("$API_BASE/channels/{channel}", generators, null, null, null) { call ->
+      call.parameters["channel"]?.takeIf { it != LibraryPaths.MAIN }?.let(channels::holder)
     }
-
-    get("$API_BASE/blobs/{name}") {
-      val sha = BLOB_NAME.matchEntire(call.parameters["name"].orEmpty())?.groupValues?.get(1)
-      // Blobs are content-addressed: a published design's hash is as good as a key to it.
-      val bytes =
-        sha?.let { holder.current().blob(it) ?: generator.blob(it) ?: userDesigns?.blob(it) }
-          ?: return@get call.notFound()
-      (holder.current().entry(sha!!) ?: userDesigns?.entry(sha))?.let {
-        usage?.blobFetched(
-          it,
-          ClientAgent.of(
-            call.request.header(HttpHeaders.UserAgent),
-            call.request.queryParameters["client"],
-          ),
-        )
-      }
-      call.response.header(HttpHeaders.ETag, "\"$sha\"")
-      call.allowAnyOrigin()
-      call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable")
-      call.respondBytes(bytes, ContentType.Application.OctetStream)
-    }
-
-    // The design for a key (DesignGenerator): the library's, or captured now when the library has
-    // none. A client that computes its cards' keys itself asks by key, so no card's config or
-    // states leave it: a key holds generation properties, never values.
-    options("$API_BASE/generate") {
-      call.allowAnyOrigin()
-      call.response.header(HttpHeaders.AccessControlAllowMethods, "POST, OPTIONS")
-      call.response.header(HttpHeaders.AccessControlAllowHeaders, "Content-Type")
-      call.respondText("", status = HttpStatusCode.NoContent)
-    }
-    post("$API_BASE/generate") {
-      call.allowAnyOrigin()
-      val key = runCatching {
-        keyJson.decodeFromString(DesignKey.serializer(), call.receiveText())
-      }
-        .getOrElse {
-          return@post call.respondText(
-            "not a design key: ${it.message}",
-            status = HttpStatusCode.BadRequest,
-          )
-        }
-      val design =
-        try {
-          generator.design(key)
-        } catch (e: DesignGenerator.UnsupportedKey) {
-          return@post call.respondText(
-            "no design for this key: ${e.message}",
-            status = HttpStatusCode.NotFound,
-          )
-        }
-      call.respondText(
-        json.encodeToString(GeneratedDesign.serializer(), design),
-        ContentType.Application.Json,
-      )
-    }
-
-    get("$API_BASE/${DesignCatalog.PATH}") {
-      val catalog = holder.current().catalog ?: return@get call.notFound()
-      call.response.header(HttpHeaders.CacheControl, "no-cache")
-      call.respondText(
-        json.encodeToString(DesignCatalog.serializer(), catalog),
-        ContentType.Application.Json,
-      )
-    }
-
-    get("$API_BASE/previews/{name}") {
-      val name = call.parameters["name"].orEmpty()
-      if (!PREVIEW_NAME.matches(name)) return@get call.notFound()
-      val bytes = holder.current().preview("previews/$name") ?: return@get call.notFound()
-      // Named by design, not content: a regenerated library may redraw them.
-      call.response.header(HttpHeaders.CacheControl, "public, max-age=3600")
-      call.respondBytes(bytes, ContentType.Image.PNG)
-    }
+    libraryChannelRoutes(channels, generators, publishToken)
 
     get("/embed/v1/{name}") {
       val name = call.parameters["name"].orEmpty()
@@ -260,13 +206,13 @@ fun Application.designServer(
     }
 
     get("/api/designs") {
-      val library = holder.current()
+      val library = call.libraryOf(channels)?.current() ?: return@get call.notFound()
       val filter = BrowserFilter.from(call.request.queryParameters, library, defaults = false)
       call.respondText(Api.list(library, filter.apply(library)), ContentType.Application.Json)
     }
 
     get("/api/designs/{id}") {
-      val library = holder.current()
+      val library = call.libraryOf(channels)?.current() ?: return@get call.notFound()
       val design = library.design(call.parameters["id"].orEmpty()) ?: return@get call.notFound()
       call.respondText(Api.detail(library, design), ContentType.Application.Json)
     }
@@ -289,13 +235,13 @@ fun Application.designServer(
     }
 
     get("/designs") {
-      val library = holder.current()
+      val library = call.libraryOf(channels)?.current() ?: return@get call.notFound()
       val filter = BrowserFilter.from(call.request.queryParameters, library, defaults = true)
-      call.respondText(Pages.browser(library, filter), ContentType.Text.Html)
+      call.respondText(Pages.browser(library, filter, channels.list()), ContentType.Text.Html)
     }
 
     get("/designs/{id}") {
-      val library = holder.current()
+      val library = call.libraryOf(channels)?.current() ?: return@get call.notFound()
       val design = library.design(call.parameters["id"].orEmpty()) ?: return@get call.notFound()
       call.respondText(
         call.editor(uiBuilder, github).let { editor ->
@@ -312,7 +258,7 @@ fun Application.designServer(
     }
 
     get("/api/designs/{id}/schema") {
-      val library = holder.current()
+      val library = call.libraryOf(channels)?.current() ?: return@get call.notFound()
       val design = library.design(call.parameters["id"].orEmpty()) ?: return@get call.notFound()
       call.respondText(
         json.encodeToString(CardSchema.serializer(), CardSchema.fromDesign(library, design)),
@@ -323,7 +269,7 @@ fun Application.designServer(
     // A library design's editable source, to fork in UI Builder: its card type's real design when
     // it has one (LibrarySources), else HaCardsSeed's reconstruction.
     get("/api/designs/{id}/source.uid") {
-      val library = holder.current()
+      val library = call.libraryOf(channels)?.current() ?: return@get call.notFound()
       val design = library.design(call.parameters["id"].orEmpty()) ?: return@get call.notFound()
       call.response.header(
         HttpHeaders.ContentDisposition,
@@ -509,6 +455,15 @@ fun Application.designServer(
     }
   }
 }
+
+/**
+ * The library a browser page or API call asks for: `?channel=` names a pull request's preview
+ * ([LibraryChannels]); without it, `main`. Null for a channel nothing was published to.
+ */
+internal fun ApplicationCall.libraryOf(channels: LibraryChannels): LibraryHolder? =
+  channels.holder(
+    request.queryParameters["channel"]?.takeIf { it.isNotBlank() } ?: LibraryPaths.MAIN
+  )
 
 /** UI Builder for the server: where it is, and the client that creates designs there. */
 class UiBuilderIntegration(
