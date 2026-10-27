@@ -63,7 +63,7 @@ jobs:
           ref: ${{ inputs.tag || github.sha }}
       - uses: actions/setup-python@v7.1.0
         with:
-          python-version: '3.15.1'
+          python-version: '3.15.2'
       - uses: ./.github/actions/setup
         with:
           cache-read-only: 'true'
