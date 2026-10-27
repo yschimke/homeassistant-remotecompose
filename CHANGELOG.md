@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.1.71](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.70...v0.1.71) (2026-10-27)
+
+
+### Features
+
+* **app:** sign in to the card design server with GitHub, not a pasted token ([#1297](https://github.com/yschimke/homeassistant-remotecompose/issues/1297)) ([9f175f3](https://github.com/yschimke/homeassistant-remotecompose/commit/9f175f3e03c3cbc6eb61309f872d95e7529f42cc))
+* **design-server:** list designs people made in UI Builder in /api/my/studio ([#1294](https://github.com/yschimke/homeassistant-remotecompose/issues/1294)) ([14a2fbb](https://github.com/yschimke/homeassistant-remotecompose/commit/14a2fbbfda81dda08d32fe75450e64c6ab7c34e0))
+* **design-server:** publish designs without a deployment, with a preview channel per PR ([#1292](https://github.com/yschimke/homeassistant-remotecompose/issues/1292)) ([faf605d](https://github.com/yschimke/homeassistant-remotecompose/commit/faf605decf6fbf691e81fc3ae9bce63beff49dda))
+* **design-server:** reuse the preview server's sign-in on a shared host ([#1288](https://github.com/yschimke/homeassistant-remotecompose/issues/1288)) ([07a17ba](https://github.com/yschimke/homeassistant-remotecompose/commit/07a17ba854b5e48be497c7d22b8646b12ddd607f))
+* **widget:** open the app on the widget's card, scrolled into view ([#1298](https://github.com/yschimke/homeassistant-remotecompose/issues/1298)) ([a5ae3f2](https://github.com/yschimke/homeassistant-remotecompose/commit/a5ae3f2d1166e6c6a76a577b3eba9e8f59c12515))
+
+
+### Bug Fixes
+
+* **deps:** update dependency ee.schimke.composeai:rc-players-bom to v2.20.1 ([#1293](https://github.com/yschimke/homeassistant-remotecompose/issues/1293)) ([14a1345](https://github.com/yschimke/homeassistant-remotecompose/commit/14a1345a30f3b5714d4f7e092fc609852912f4d4))
+* **design-server:** refuse cross-origin POSTs to /my and /api/my, and publish after scheduled merges ([#1290](https://github.com/yschimke/homeassistant-remotecompose/issues/1290)) ([57bcdf6](https://github.com/yschimke/homeassistant-remotecompose/commit/57bcdf6d310ac14c12bf7282185b0757dc57bb1b))
+* **play:** replace preview screenshots with real app captures ([#1295](https://github.com/yschimke/homeassistant-remotecompose/issues/1295)) ([25a3cf0](https://github.com/yschimke/homeassistant-remotecompose/commit/25a3cf07151a673caa33ad0876d52b717d78f6f0))
+* **widgets:** fit every card to its launcher widget ([#1291](https://github.com/yschimke/homeassistant-remotecompose/issues/1291)) ([22a7003](https://github.com/yschimke/homeassistant-remotecompose/commit/22a70036562fbb2272830ecb9741ec0e9d9e15c4))
+
 ## [0.1.70](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.69...v0.1.70) (2026-10-27)
 
 
