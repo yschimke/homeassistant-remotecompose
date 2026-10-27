@@ -264,8 +264,8 @@ class UserDesignsTest {
       hosts("http://uib") {
         routing {
           // Every design on the builder, whoever owns it: octocat made `garage-door-octocat` there
-          // and edits mallory's `garage-door-mallory`; `viewed` they only view, and `broken` won't
-          // serve.
+          // and edits mallory's `garage-door-mallory`; `viewed` they only view, `broken` won't
+          // serve, and `golden-tile` is a design of another catalog, not a card.
           get("/admin/ui-builder/designs") {
             assertEquals(adminReadToken, call.request.headers["X-Compose-Preview-Admin-Token"])
             fun row(
@@ -274,8 +274,9 @@ class UserDesignsTest {
               collaborators: Int,
               created: Long,
               unusable: String? = null,
+              catalog: String = "ha-cards",
             ) =
-              """{"designId":"$id","title":"$id","revision":1,"catalogSystemId":"ha-cards",""" +
+              """{"designId":"$id","title":"$id","revision":1,"catalogSystemId":"$catalog",""" +
                 """"ownerActorId":"$owner","collaborators":$collaborators,""" +
                 """"createdAtEpochMillis":$created,"updatedAtEpochMillis":$created,""" +
                 """"activeSubscribers":0,"unusableReason":${unusable?.let { "\"$it\"" } ?: "null"}}"""
@@ -287,6 +288,7 @@ class UserDesignsTest {
                 row("mallorys", "github:mallory", 0, 300),
                 row("good", "github:octocat", 0, 7),
                 row("broken", "github:octocat", 0, 400, unusable = "catalog gone"),
+                row("golden-tile", "github:octocat", 0, 500, catalog = "remote-m3"),
               )
             call.respondText(
               """{"designs":[${designs.joinToString(",")}],"trash":[]}""",
