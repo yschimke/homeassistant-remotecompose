@@ -383,9 +383,11 @@ class DesignServerTest {
         "one design per card type, in light",
       )
 
-      val shot = client.get("/site/${Landing.SCREENSHOTS.first().file}")
-      assertEquals(HttpStatusCode.OK, shot.status)
-      assertContentEquals(png, shot.bodyAsBytes().copyOf(png.size), "a bundled PNG")
+      for (screenshot in Landing.SCREENSHOTS) {
+        val shot = client.get("/site/${screenshot.file}")
+        assertEquals(HttpStatusCode.OK, shot.status, screenshot.file)
+        assertContentEquals(png, shot.bodyAsBytes().copyOf(png.size), "a bundled PNG")
+      }
       assertEquals(HttpStatusCode.NotFound, client.get("/site/feature.png").status)
     }
 

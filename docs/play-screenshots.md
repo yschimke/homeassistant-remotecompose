@@ -14,7 +14,7 @@ Use a display at or below 1800 pixels in either direction **before** capturing:
 
 - Phone: `adb -s emulator-5580 shell wm size 1008x1792`, density 420.
 - 7-inch tablet: `wm size 1000x1600`, density 240.
-- 10-inch tablet: `wm size 1120x1792`, density 224.
+- 10-inch tablet: `wm size 1792x1120` (landscape), density 224.
 - Wear (when supported): 480×480 round display, density 320.
 
 These tablet overrides exercise actual responsive layouts; they are not resized
@@ -58,9 +58,24 @@ listing publication uses these checked-in files.
 
 ## Current scenes
 
-Phone and both tablet classes show the Climate dashboard in light and dark
-mode, using Terrazzo’s built-in offline demo session. Start the debug phone
-activity with `--ez terrazzo.test.demo_mode true` to enter that session.
+Phone shows Trinitron needle gauges and instrument meters, Nixie weather cards,
+and the real installed-design chooser. The 7-inch tablet contrasts Trinitron
+instruments with LCD segment displays. The 10-inch tablet shows LCD weather
+and Nixie instruments in the actual landscape layout. All use the built-in
+offline demo data; no private Home Assistant account is involved.
+
+Enter the debug demo session with `--ez terrazzo.test.demo_mode true`, then
+relaunch normally so display changes preserve the last dashboard. Install
+Trinitron, LCD and Nixie through Settings → Card design → Browse all designs,
+waiting for each background download to complete before capturing. The normal
+widget navigation extra `--es ee.schimke.terrazzo.widget.OPEN_NAVIGATE
+/meshcore/repeater` opens the sample instrument view; `/climate` opens weather.
+No screenshot-only screens or preview activities are used.
+
 Wear uses the existing debug-only `--ez terrazzo.test.seed_pins true` launch
 hook, which seeds the same offline store as a demo phone sync. These are
 running application screens with sample values, not preview composables.
+
+The design-server front page also bundles two phone captures. Update both
+`siteResources` in `design-server/build.gradle.kts` and `Landing.SCREENSHOTS`
+when renaming them; its route test verifies that every referenced PNG is served.
