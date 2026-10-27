@@ -51,16 +51,8 @@ def sha256(path):
     return digest.hexdigest()
 
 
-def publish(args):
-    root = args.library
-    if not os.path.isfile(os.path.join(root, "manifest.json")):
-        sys.exit(f"{root} has no manifest.json: generate the library first")
-    index = {}
-    for directory, _, files in os.walk(root):
-        for name in files:
-            path = os.path.join(directory, name)
-            index[os.path.relpath(path, root).replace(os.sep, "/")] = sha256(path)
-
+def bundle(root, index):
+    """The library's index and the files the server lacks, zipped."""
     status, body = request(
         "POST",
         f"{CHANNELS}/missing",
@@ -72,15 +64,27 @@ def publish(args):
     missing = set(json.loads(body))
     upload = sorted(path for path, digest in index.items() if digest in missing)
 
-    bundle = io.BytesIO()
-    with zipfile.ZipFile(bundle, "w", zipfile.ZIP_DEFLATED) as z:
+    zipped = io.BytesIO()
+    with zipfile.ZipFile(zipped, "w", zipfile.ZIP_DEFLATED) as z:
         z.writestr("files.json", json.dumps({"files": index}))
         for path in upload:
             z.write(os.path.join(root, path), path)
     print(
         f"{len(index)} files, uploading {len(upload)} the server lacks "
-        f"({bundle.tell() / 1048576:.1f} MiB compressed)"
+        f"({zipped.tell() / 1048576:.1f} MiB compressed)"
     )
+    return zipped.getvalue()
+
+
+def publish(args):
+    root = args.library
+    if not os.path.isfile(os.path.join(root, "manifest.json")):
+        sys.exit(f"{root} has no manifest.json: generate the library first")
+    index = {}
+    for directory, _, files in os.walk(root):
+        for name in files:
+            path = os.path.join(directory, name)
+            index[os.path.relpath(path, root).replace(os.sep, "/")] = sha256(path)
 
     params = {
         k: v
@@ -94,9 +98,15 @@ def publish(args):
         if v
     }
     query = ("?" + urllib.parse.urlencode(params)) if params else ""
-    status, body = request(
-        "PUT", f"{CHANNELS}/{args.channel}{query}", bundle.getvalue(), "application/zip"
-    )
+    # The server keeps what it said it holds through the upload, but a restart loses that promise:
+    # asked again, it names what it no longer has.
+    for attempt in range(2):
+        status, body = request(
+            "PUT", f"{CHANNELS}/{args.channel}{query}", bundle(root, index), "application/zip"
+        )
+        if status == 200 or attempt or b"held here" not in body:
+            break
+        print(f"the server lost files it held, asking again: {body.decode(errors='replace')}")
     if status != 200:
         sys.exit(f"publishing failed: {status} {body.decode(errors='replace')}")
     info = json.loads(body)

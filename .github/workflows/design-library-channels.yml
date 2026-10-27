@@ -9,11 +9,17 @@ on:
     branches: [main]
     types: [closed]
 
+# The same group as the pull request's design-server.yml run, so closing cancels a build that would
+# otherwise publish pr-<n> again after it is dropped.
+concurrency:
+  group: design-server-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   drop:
     name: Drop the preview channel
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     permissions:
       contents: read
     steps:
@@ -29,4 +35,8 @@ jobs:
             echo "No LIBRARY_PUBLISH_TOKEN: nothing was published."
             exit 0
           fi
-          python3 .github/scripts/publish-design-library.py delete "pr-${{ github.event.pull_request.number }}"
+          channel="pr-${{ github.event.pull_request.number }}"
+          python3 .github/scripts/publish-design-library.py delete "$channel"
+          # A cancelled run's upload may already be in flight and land after the first delete.
+          sleep 180
+          python3 .github/scripts/publish-design-library.py delete "$channel"

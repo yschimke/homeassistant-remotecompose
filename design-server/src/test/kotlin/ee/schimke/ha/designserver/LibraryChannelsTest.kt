@@ -315,6 +315,36 @@ class LibraryChannelsTest {
   }
 
   @Test
+  fun whatItSaidItHoldsIsKeptThroughTheUpload() {
+    var now = 10_000L
+    val channels = LibraryChannels(store(), library(), clock = { now })
+    val first = library(generatedAt = 3_000)
+    File(first, "${DesignLibrary.SOURCES}/gauge.uid").writeText("""{"id":"gauge"}""")
+    channels.install("pr-9", channels.unpack(ByteArrayInputStream(zip(first))), "ci")
+
+    // A second publish is told the gauge source is held, then the only channel holding it goes.
+    val next = library(generatedAt = 4_000)
+    File(next, "${DesignLibrary.SOURCES}/gauge.uid").writeText("""{"id":"gauge"}""")
+    val index = indexOf(next)
+    val missing = channels.missing(index.values)
+    assertTrue(index.getValue("sources/gauge.uid") !in missing)
+    assertTrue(channels.delete("pr-9"))
+
+    val upload = index.filterValues { it in missing }.keys
+    channels.install(
+      "pr-10",
+      channels.unpack(ByteArrayInputStream(zip(next, only = upload, index = index))),
+      "ci",
+    )
+    assertNotNull(channels.holder("pr-10")?.current()?.sources?.get("gauge"))
+
+    // A promise lapses: once nothing holds it, it's collected.
+    now += LibraryChannels.PROMISE_MS + 1
+    assertTrue(channels.delete("pr-10"))
+    assertTrue(index.getValue("sources/gauge.uid") in channels.missing(index.values))
+  }
+
+  @Test
   fun refusesABundleThatLeavesTheLibraryOrNamesFilesItLacks() {
     val channels = LibraryChannels(store(), library())
     val escape =

@@ -83,6 +83,12 @@ class LibraryChannels(
   /** Every installed library file, once, by content hash ([missing], [unpack]). */
   private val objects: File? = root?.let { File(it, OBJECTS) }
 
+  /**
+   * Hashes [missing] told a publisher it holds, and when: a publish that drops their last channel
+   * mid-upload mustn't collect them from under the publisher that is leaving them out.
+   */
+  private val promised = ConcurrentHashMap<String, Long>()
+
   init {
     if (root == null) {
       main = readOnlyMain ?: LibraryHolder(seed, checkIntervalMs, clock)
@@ -238,8 +244,13 @@ class LibraryChannels(
    * publisher has to upload. Every file of every installed library is kept once, by content, so a
    * publish sends only what changed since anything was last published ([unpack]).
    */
-  fun missing(hashes: Collection<String>): Set<String> =
-    hashes.filterTo(LinkedHashSet()) { !SHA256.matches(it) || !objectFile(it).isFile }
+  fun missing(hashes: Collection<String>): Set<String> {
+    val missing = hashes.filterTo(LinkedHashSet()) { !SHA256.matches(it) || !objectFile(it).isFile }
+    // What it said it holds, the publisher won't send: kept through its upload ([collectGarbage]).
+    val now = clock()
+    for (hash in hashes) if (hash !in missing) promised[hash] = now
+    return missing
+  }
 
   /**
    * Unpacks a library bundle into a [stagingDir]: a zip of library files (`manifest.json`,
@@ -337,10 +348,14 @@ class LibraryChannels(
    */
   private fun collectGarbage() {
     val objects = objects ?: return
+    val now = clock()
+    promised.entries.removeIf { now - it.value > PROMISE_MS }
     objects
       .walkTopDown()
       .filter { it.isFile }
       .forEach { file ->
+        // Promised to a publisher still uploading: its bundle leaves it out.
+        if (promised.containsKey(file.name)) return@forEach
         val links = runCatching {
           Files.getAttribute(file.toPath(), "unix:nlink") as Int
         }
@@ -452,6 +467,9 @@ class LibraryChannels(
 
     /** Where a channel keeps where its library came from. */
     const val PUBLISHED = "published.json"
+
+    /** How long an object [missing] reported as held is kept for its publisher's upload. */
+    const val PROMISE_MS: Long = 30 * 60 * 1000
 
     /** A bundle's index of the whole library ([unpack]). */
     const val INDEX = "files.json"
