@@ -236,7 +236,11 @@ private fun MarkdownLine(
       )
     }
   }
-  if (!block.hasInlineMarkup) {
+  // Without FlowLayout (launchers) a row of inline runs can't wrap, so a line of words and links
+  // is drawn as one wrapping text instead: the emphasis goes, the words stay in the cell.
+  val wrapsAsOneText =
+    !LocalSupportsFlowLayout.current && block.inlines.none { it is MarkdownInline.Image }
+  if (!block.hasInlineMarkup || wrapsAsOneText) {
     val text = block.boundText ?: block.text.rs
     val emphasis = block.drawnStyle
     val line: @Composable () -> Unit = {

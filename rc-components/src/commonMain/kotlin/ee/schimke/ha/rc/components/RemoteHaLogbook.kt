@@ -118,8 +118,9 @@ fun RemoteHaLogbookIdentity(data: HaLogbookData, modifier: RemoteModifier = Remo
           modifier = RemoteModifier.weight(1f).padding(start = 12.rdp),
           verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
         ) {
+          // The latest entry is row 0: the same keys as the full list, so a template bakes it.
           RemoteText(
-            text = latest.name.rs,
+            text = cardText("row.0.name", latest.name),
             color = theme.primaryText,
             fontSize = HaType.Title,
             fontWeight = FontWeight.SemiBold,
@@ -128,7 +129,7 @@ fun RemoteHaLogbookIdentity(data: HaLogbookData, modifier: RemoteModifier = Remo
             overflow = TextOverflow.Ellipsis,
           )
           RemoteText(
-            text = latest.message.rs,
+            text = cardText("row.0.message", latest.message),
             color = theme.secondaryText,
             fontSize = HaType.Label,
             style = haTextStyle(),

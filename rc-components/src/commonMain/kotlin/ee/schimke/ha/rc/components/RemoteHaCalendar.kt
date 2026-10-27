@@ -103,7 +103,7 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
       verticalArrangement = RemoteArrangement.spacedBy(3.rdp),
     ) {
       RemoteText(
-        text = data.title.rs,
+        text = cardTitle(data.title),
         color = theme.secondaryText,
         fontSize = HaType.Caption,
         style = haTextStyle(),
@@ -119,7 +119,8 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
                 .background(haInk(next.accent))
           )
           RemoteText(
-            text = next.whenLabel.rs,
+            // The next event is row 0: the full agenda's keys, so a template bakes it.
+            text = cardText("row.0.when", next.whenLabel),
             color = theme.secondaryText,
             fontSize = HaType.Label,
             style = haTextStyle(),
@@ -128,7 +129,7 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
           )
         }
         RemoteText(
-          text = next.summary.rs,
+          text = cardText("row.0.summary", next.summary),
           color = theme.primaryText,
           fontSize = HaType.Title,
           fontWeight = FontWeight.SemiBold,

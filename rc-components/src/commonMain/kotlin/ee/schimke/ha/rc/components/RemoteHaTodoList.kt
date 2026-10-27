@@ -126,7 +126,7 @@ fun RemoteHaTodoListIdentity(data: HaTodoListData, modifier: RemoteModifier = Re
       verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
     ) {
       RemoteText(
-        text = data.title.rs,
+        text = cardTitle(data.title),
         color = theme.secondaryText,
         fontSize = HaType.Label,
         style = haTextStyle(),
@@ -134,7 +134,7 @@ fun RemoteHaTodoListIdentity(data: HaTodoListData, modifier: RemoteModifier = Re
         overflow = TextOverflow.Ellipsis,
       )
       RemoteText(
-        text = (if (remaining == 0) "All done" else "$remaining left").rs,
+        text = cardText("remaining", todoRemainingLabel(remaining)),
         color = theme.primaryText,
         fontSize = HaType.Value,
         fontWeight = haValueWeight(),
@@ -145,6 +145,10 @@ fun RemoteHaTodoListIdentity(data: HaTodoListData, modifier: RemoteModifier = Re
     }
   }
 }
+
+/** The identity tier's counter for [remaining] open items; a template binds it as `remaining`. */
+fun todoRemainingLabel(remaining: Int): String =
+  if (remaining == 0) "All done" else "$remaining left"
 
 @Composable
 private fun CompactTodoList(
