@@ -112,7 +112,7 @@ use it** (Android) puts it on the card, for that person alone:
    person, newest first, each with the card type it was seeded for. The server
    records a design when the signed-in browser opens a studio handoff (or seeds a
    schema or fork); UI Builder itself records the server as the owner. It also lists
-   the designs the person owns or edits in UI Builder directly (no card type), read
+   the `ha-cards` designs the person owns or edits in UI Builder directly (no card type), read
    from the builder's admin listing with `UI_BUILDER_ADMIN_READ_TOKEN`; a design in
    both is listed once, as the server recorded it.
 3. `POST /api/my/designs` publishes this card's design: the newest one opened from a

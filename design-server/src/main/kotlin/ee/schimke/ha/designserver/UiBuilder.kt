@@ -356,8 +356,9 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
    * The UI Builder designs [login] owns or edits, as [MadeDesign]s of no card type, from the admin
    * listing (`GET /admin/ui-builder/designs`, with [UiBuilderConfig.adminReadToken]); none without
    * that token. A design shared with others is asked about one by one ([editors]): the listing
-   * counts its collaborators but doesn't name them. Designs UI Builder can't serve are left out, as
-   * nothing would publish them.
+   * counts its collaborators but doesn't name them. Only [HaCardsSeed.CATALOG] designs are cards;
+   * the others (Material, Wear, golden tiles) are left out, as are designs UI Builder can't serve,
+   * as nothing would publish them.
    */
   suspend fun designsFor(login: String): Result<List<MadeDesign>> = runCatching {
     val adminToken = config.adminReadToken ?: return@runCatching emptyList()
@@ -372,6 +373,7 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
       ?.jsonArray
       .orEmpty()
       .map { it.jsonObject }
+      .filter { it["catalogSystemId"]?.jsonPrimitive?.content == HaCardsSeed.CATALOG }
       .filter { it["unusableReason"].let { reason -> reason == null || reason is JsonNull } }
       .filter { design ->
         val owner = design["ownerActorId"]?.jsonPrimitive?.content.orEmpty()
