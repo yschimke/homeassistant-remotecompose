@@ -116,7 +116,8 @@ async function handle(method, body, send, limiter) {
         body: { message: 'The Terrazzo app has a new push token; open it to register again.' },
       };
     }
-    return { status: 502, body: { message: 'FCM refused the wake.' } };
+    // FCM's code (no token or content in it) says which: a bad request, credentials, quota.
+    return { status: 502, body: { message: 'FCM refused the wake.', code: (e && e.code) || 'unknown' } };
   }
 }
 

@@ -46,7 +46,9 @@ test('a delivered wake answers 201 with FCM\'s id', async () => {
 test('a stale token answers 410; other FCM errors are a 502', async () => {
   const fail = (code) => async () => { const e = new Error(code); e.code = code; throw e; };
   assert.equal((await handle('POST', request(), fail('messaging/registration-token-not-registered'), rateLimiter())).status, 410);
-  assert.equal((await handle('POST', request(), fail('messaging/internal-error'), rateLimiter())).status, 502);
+  const refused = await handle('POST', request(), fail('messaging/internal-error'), rateLimiter());
+  assert.equal(refused.status, 502);
+  assert.equal(refused.body.code, 'messaging/internal-error');
 });
 
 test('each token is limited per window, and the window resets', async () => {
