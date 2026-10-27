@@ -110,9 +110,17 @@ fun RemoteHaTodoList(
  */
 @Composable
 @RemoteComposable
-fun RemoteHaTodoListIdentity(data: HaTodoListData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaTodoListIdentity(
+  data: HaTodoListData,
+  modifier: RemoteModifier = RemoteModifier,
+  narrow: Boolean = false,
+) {
   val theme = haTheme()
   val remaining = data.activeItems.size
+  if (narrow) {
+    NarrowTodoIdentity(remaining, modifier, theme)
+    return
+  }
   RemoteBox(
     modifier =
       modifier
@@ -145,6 +153,41 @@ fun RemoteHaTodoListIdentity(data: HaTodoListData, modifier: RemoteModifier = Re
     }
   }
 }
+
+/**
+ * The identity in one launcher column (`57 dp`), where "2 left" doesn't fit at value size: the
+ * count alone, with "left" (or "done") under it.
+ */
+@Composable
+private fun NarrowTodoIdentity(remaining: Int, modifier: RemoteModifier, theme: RemoteHaTheme) {
+  RemoteColumn(
+    modifier = modifier.fillMaxSize().then(cardChrome(theme.cardBackground, theme.divider)),
+    horizontalAlignment = RemoteAlignment.CenterHorizontally,
+    verticalArrangement = RemoteArrangement.spacedBy(0.rdp, RemoteAlignment.CenterVertically),
+  ) {
+    RemoteText(
+      text = cardText("remaining_count", todoRemainingCount(remaining)),
+      color = theme.primaryText,
+      fontSize = HaType.Value,
+      fontWeight = haValueWeight(),
+      style = haTextStyle(),
+      maxLines = 1,
+    )
+    RemoteText(
+      text = cardText("remaining_caption", todoRemainingCaption(remaining)),
+      color = theme.secondaryText,
+      fontSize = HaType.Label,
+      style = haTextStyle(),
+      maxLines = 1,
+    )
+  }
+}
+
+/** The narrow identity's count of [remaining] open items, bound as `remaining_count`. */
+fun todoRemainingCount(remaining: Int): String = if (remaining == 0) "✓" else "$remaining"
+
+/** What the narrow identity's count is, bound as `remaining_caption`. */
+fun todoRemainingCaption(remaining: Int): String = if (remaining == 0) "done" else "left"
 
 /** The identity tier's counter for [remaining] open items; a template binds it as `remaining`. */
 fun todoRemainingLabel(remaining: Int): String =

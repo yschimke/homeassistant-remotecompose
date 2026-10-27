@@ -48,11 +48,13 @@ import androidx.compose.ui.text.style.TextOverflow
 fun RemoteHaStatisticsGraph(
   data: HaStatisticsGraphData,
   modifier: RemoteModifier = RemoteModifier,
+  plotHeightDp: Int = SPARKLINE_HEIGHT_DP,
 ) {
   if (data.chartType != "bar") {
     RemoteHaHistoryGraph(
       HaHistoryGraphData(title = data.title, rangeLabel = data.rangeLabel, rows = data.rows),
       modifier = modifier,
+      plotHeightDp = plotHeightDp,
     )
     return
   }
@@ -94,17 +96,17 @@ fun RemoteHaStatisticsGraph(
             style = haTextStyle(),
           )
       } else if (data.stacked) {
-        StackedBars(data.rows, theme)
+        StackedBars(data.rows, theme, plotHeightDp.coerceAtLeast(STACKED_BARS_HEIGHT_DP))
         data.rows.forEach { row -> Legend(row, theme) }
       } else {
-        data.rows.forEach { row -> BarRow(row, theme) }
+        data.rows.forEach { row -> BarRow(row, theme, plotHeightDp) }
       }
     }
   }
 }
 
 @Composable
-private fun BarRow(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
+private fun BarRow(row: HaHistoryGraphRow, theme: RemoteHaTheme, plotHeightDp: Int) {
   RemoteRow(
     modifier = RemoteModifier.fillMaxWidth(),
     verticalAlignment = RemoteAlignment.CenterVertically,
@@ -138,7 +140,7 @@ private fun BarRow(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
         style = haTextStyle(),
       )
   } else {
-    Bars(row.entityId, row.points, row.accent, theme)
+    Bars(row.entityId, row.points, row.accent, theme, plotHeightDp)
   }
 }
 
@@ -181,7 +183,13 @@ private fun Legend(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
 }
 
 @Composable
-private fun Bars(entityId: String?, points: List<Float>, accent: Color, theme: RemoteHaTheme) {
+private fun Bars(
+  entityId: String?,
+  points: List<Float>,
+  accent: Color,
+  theme: RemoteHaTheme,
+  heightDp: Int,
+) {
   // One bar per bucket; the count is structure, every value and the axis are
   // `<entityId>.bar.<i>` / `bar_base` / `bar_span` — constants in a live capture,
   // bindings in a design template.
@@ -191,13 +199,16 @@ private fun Bars(entityId: String?, points: List<Float>, accent: Color, theme: R
   val values = points.mapIndexed { i, v -> entityFloat(entityId, "bar.$i", v) }
   val look = meterLook(accent.rc, theme.divider)
   val family = visualFamily()
-  RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(28.rdp)) {
+  RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(heightDp.rdp)) {
     familyBars(family, look, values, base, span)
   }
 }
 
+/** The stacked chart's least height: one canvas carries every row. */
+private const val STACKED_BARS_HEIGHT_DP = 64
+
 @Composable
-private fun StackedBars(rows: List<HaHistoryGraphRow>, theme: RemoteHaTheme) {
+private fun StackedBars(rows: List<HaHistoryGraphRow>, theme: RemoteHaTheme, heightDp: Int) {
   // A monochrome theme prints every row in its ink, told apart by strength.
   val ink = currentHaUberTheme().ink
   val rowColors = rows.mapIndexed { r, row ->
@@ -211,7 +222,7 @@ private fun StackedBars(rows: List<HaHistoryGraphRow>, theme: RemoteHaTheme) {
     List(n) { i -> entityFloat(row.entityId, "stack.$i", stackValue(row.points, i)) }
   }
 
-  RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(64.rdp)) {
+  RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(heightDp.rdp)) {
     val w = width
     val h = height
     val padX = 2f.rf

@@ -33,14 +33,24 @@ import androidx.compose.ui.text.style.TextOverflow
  */
 @Composable
 @RemoteComposable
-fun RemoteHaArea(data: HaAreaCardData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaArea(
+  data: HaAreaCardData,
+  modifier: RemoteModifier = RemoteModifier,
+  widthDp: Int? = null,
+) {
   val theme = haTheme()
+  // A fixed-width cell (a launcher widget) shows the readings and chips its width holds, not a row
+  // that runs off the edge; a narrow one pads less so one chip still fits.
+  val padding = if (widthDp != null && widthDp < AREA_NARROW_DP) 8 else 14
+  val room = widthDp?.let { it - 2 * padding }
+  val stats = if (room == null) data.stats else data.stats.take((room + 12) / AREA_STAT_DP)
+  val actions = if (room == null) data.actions else data.actions.take((room + 8) / AREA_CHIP_DP)
   RemoteBox(
     modifier =
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 14.rdp, vertical = 12.rdp)
+        .padding(horizontal = padding.rdp, vertical = 12.rdp)
   ) {
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
       RemoteText(
@@ -52,26 +62,35 @@ fun RemoteHaArea(data: HaAreaCardData, modifier: RemoteModifier = RemoteModifier
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
-      if (data.stats.isNotEmpty()) {
+      if (stats.isNotEmpty()) {
         RemoteRow(
           modifier = RemoteModifier.fillMaxWidth(),
           horizontalArrangement = RemoteArrangement.spacedBy(12.rdp),
           verticalAlignment = RemoteAlignment.CenterVertically,
         ) {
-          data.stats.forEach { Stat(it, theme) }
+          stats.forEach { Stat(it, theme) }
         }
       }
-      if (data.actions.isNotEmpty()) {
+      if (actions.isNotEmpty()) {
         RemoteRow(
           modifier = RemoteModifier.fillMaxWidth().padding(top = 4.rdp),
           horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
         ) {
-          data.actions.forEach { ActionChip(it, theme) }
+          actions.forEach { ActionChip(it, theme) }
         }
       }
     }
   }
 }
+
+/** Below this width the area pads 8 dp a side, not 14. */
+private const val AREA_NARROW_DP = 100
+
+/** A reading's share of a row: its icon, a short value like "21.5 °C" and the gap after it. */
+private const val AREA_STAT_DP = 84
+
+/** An action chip's share of a row: 40 dp and the 8 dp gap after it. */
+private const val AREA_CHIP_DP = 48
 
 @Composable
 private fun Stat(stat: HaAreaStat, theme: RemoteHaTheme) {

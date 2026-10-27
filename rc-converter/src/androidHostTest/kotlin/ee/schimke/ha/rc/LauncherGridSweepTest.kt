@@ -492,6 +492,8 @@ internal class LauncherCellLayout(
   /** The content reaches the right edge on this many rows of text-sized height. */
   val rightEdgeRows: Int,
   val fullBleed: Boolean,
+  /** The bottom row's content reaches both side edges: a band, not a cut line of text. */
+  val bottomBand: Boolean,
 ) {
   /**
    * The launcher rules a render breaks: `clipped` when content runs into the right edge (text cut
@@ -500,7 +502,11 @@ internal class LauncherCellLayout(
    */
   fun findings(columns: Int, rows: Int): List<String> = buildList {
     if (fullBleed) return@buildList
-    if (rightEdgeRows >= CLIP_ROWS) add("clipped")
+    // Content as near the left edge as the right (a centred chip as wide as the cell) isn't cut.
+    if (rightEdgeRows >= CLIP_ROWS && left - right > EDGE) add("clipped")
+    // Content running into the bottom edge under a padded top has run out of height; a band drawn
+    // edge to edge there (a picture's strip) is meant to.
+    if (bottom <= 1 && top - bottom > CLIP_ROWS && !bottomBand) add("clipped-bottom")
     if (rows >= 2 && bottom - top > height * PINNED_FRACTION) add("pinned")
   }
 
@@ -515,6 +521,9 @@ internal class LauncherCellLayout(
     private const val PINNED_FRACTION = 0.25
 
     private const val DISTANCE = 48
+
+    /** How near the inner edge (px) content counts as touching it. */
+    private const val EDGE = 3
 
     fun of(image: Bitmap): LauncherCellLayout {
       val w = image.width
@@ -551,9 +560,13 @@ internal class LauncherCellLayout(
           }
         }
       }
+      // Overflow is lopsided: a row of text starts at the left padding and runs off the right
+      // edge. Content at both edges (an image, a centred chip as wide as the cell) is not cut.
       var edgeRows = 0
       for (y in corner until h - corner) {
-        if ((w - INSET - 3 until w - INSET).any { content(it, y) }) edgeRows++
+        val atRight = (w - INSET - EDGE until w - INSET).any { content(it, y) }
+        val atLeft = (INSET until INSET + EDGE).any { content(it, y) }
+        if (atRight && !atLeft) edgeRows++
       }
       val empty = top < 0
       return LauncherCellLayout(
@@ -564,6 +577,11 @@ internal class LauncherCellLayout(
         left = if (empty) w else left - INSET,
         right = if (empty) w else w - 1 - INSET - right,
         rightEdgeRows = edgeRows,
+        bottomBand =
+          // The last row above the border, at either rounded corner's inner end.
+          (h - 2 - INSET).let { y ->
+            content(INSET + corner, y) && content(w - 1 - INSET - corner, y)
+          },
         fullBleed = ringContent > ring.size / 3,
       )
     }

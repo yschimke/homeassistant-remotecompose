@@ -82,9 +82,51 @@ fun RemoteHaLogbook(data: HaLogbookData, modifier: RemoteModifier = RemoteModifi
  */
 @Composable
 @RemoteComposable
-fun RemoteHaLogbookIdentity(data: HaLogbookData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaLogbookIdentity(
+  data: HaLogbookData,
+  modifier: RemoteModifier = RemoteModifier,
+  narrow: Boolean = false,
+) {
   val theme = haTheme()
   val latest = data.entries.firstOrNull()
+  // One launcher column (`57 dp`) leaves no room beside the icon: the icon over the latest entry's
+  // name and message.
+  if (narrow && latest != null) {
+    RemoteColumn(
+      modifier =
+        modifier
+          .fillMaxSize()
+          .then(cardChrome(theme.cardBackground, theme.divider))
+          .padding(horizontal = 6.rdp, vertical = 8.rdp),
+      horizontalAlignment = RemoteAlignment.CenterHorizontally,
+      verticalArrangement = RemoteArrangement.spacedBy(2.rdp, RemoteAlignment.CenterVertically),
+    ) {
+      RemoteBasicIcon(
+        imageVector = latest.icon.toRemoteImageVector(),
+        contentDescription = null,
+        modifier = RemoteModifier.size(20.rdp),
+        tint = theme.secondaryText,
+      )
+      RemoteText(
+        text = cardText("row.0.name", latest.name),
+        color = theme.primaryText,
+        fontSize = HaType.Caption,
+        fontWeight = FontWeight.SemiBold,
+        style = haTextStyle(),
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+      )
+      RemoteText(
+        text = cardText("row.0.message", latest.message),
+        color = theme.secondaryText,
+        fontSize = HaType.Caption,
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
+    return
+  }
   RemoteBox(
     modifier =
       modifier

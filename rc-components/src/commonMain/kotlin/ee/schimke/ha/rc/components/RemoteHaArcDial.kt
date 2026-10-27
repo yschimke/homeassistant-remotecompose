@@ -26,6 +26,7 @@ import androidx.compose.remote.creation.compose.modifier.drawWithContent
 import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.modifier.width
@@ -178,8 +179,9 @@ fun RemoteHaArcDialWide(
         .then(cardChrome(theme.cardBackground, theme.divider))
         .padding(horizontal = 10.rdp, vertical = if (compact) 2.rdp else 8.rdp),
     verticalAlignment = RemoteAlignment.CenterVertically,
-    horizontalArrangement = RemoteArrangement.spacedBy(10.rdp),
   ) {
+    // The gap is the text column's padding, not spacedBy: the player shares a weighted row's width
+    // out before spacing, so spacedBy ran the text off a narrow cell's edge.
     RemoteBox(
       modifier =
         if (isConsoleThermostat(data) || isIkeaLight(data))
@@ -205,7 +207,7 @@ fun RemoteHaArcDialWide(
       }
     }
     RemoteColumn(
-      modifier = RemoteModifier.weight(1f),
+      modifier = RemoteModifier.weight(1f).padding(start = 10.rdp),
       verticalArrangement = RemoteArrangement.Center,
       horizontalAlignment = RemoteAlignment.Start,
     ) {
@@ -266,6 +268,7 @@ fun RemoteHaArcDialFill(
   modifier: RemoteModifier = RemoteModifier,
   showName: Boolean = true,
   compactCenter: Boolean = false,
+  dialHeightDp: Int? = null,
 ) {
   if (
     isIkeaLight(data) || isConsoleThermostat(data) || visualFamily() == HaVisualFamily.Cupertino
@@ -284,7 +287,7 @@ fun RemoteHaArcDialFill(
         .then(cardChrome(theme.cardBackground, theme.divider))
         .padding(horizontal = 12.rdp, vertical = 10.rdp),
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
-    verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
+    verticalArrangement = RemoteArrangement.spacedBy(2.rdp, RemoteAlignment.CenterVertically),
   ) {
     if (showName)
       RemoteText(
@@ -296,8 +299,12 @@ fun RemoteHaArcDialFill(
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
+    // A cell taller than it is wide ([dialHeightDp]) sizes the dial's box to the dial, so the name
+    // and dial centre together rather than the name sitting on the top edge above a gap.
     RemoteBox(
-      modifier = RemoteModifier.fillMaxWidth().weight(1f),
+      modifier =
+        if (dialHeightDp != null) RemoteModifier.fillMaxWidth().height(dialHeightDp.rdp)
+        else RemoteModifier.fillMaxWidth().weight(1f),
       contentAlignment = RemoteAlignment.Center,
     ) {
       ArcCanvas(

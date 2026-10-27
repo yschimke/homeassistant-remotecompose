@@ -215,8 +215,9 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
         // itself on taller cells.
         .padding(horizontal = 10.rdp, vertical = 2.rdp),
     verticalAlignment = RemoteAlignment.CenterVertically,
-    horizontalArrangement = RemoteArrangement.spacedBy(10.rdp),
   ) {
+    // Gaps are padding on the weighted column, not spacedBy: the player shares a weighted row's
+    // width out before spacing, so spacedBy pushed the play glyph off a narrow cell's edge.
     RemoteBox(
       modifier =
         RemoteModifier.size(40.rdp)
@@ -237,7 +238,7 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
         )
     }
     RemoteColumn(
-      modifier = RemoteModifier.weight(1f),
+      modifier = RemoteModifier.weight(1f).padding(horizontal = 10.rdp),
       verticalArrangement = RemoteArrangement.Center,
     ) {
       RemoteText(

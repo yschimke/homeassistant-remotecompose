@@ -186,12 +186,54 @@ fun RemoteHaGaugeStacked(
   modifier: RemoteModifier = RemoteModifier,
   narrow: Boolean = false,
   hero: HaHeroScale? = null,
+  arcHeightDp: Int? = null,
 ) {
   val theme = haTheme()
   val fraction = animatedGaugeFraction(data)
   val severityColor = gaugeSeverityColor(data)
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+
+  // A cell much taller than it is wide ([arcHeightDp], a one-column launcher widget): the backdrop
+  // arc is as wide as the cell and would float in its middle over text pinned to the bottom edge,
+  // so the arc and its text stack and centre together.
+  if (arcHeightDp != null) {
+    RemoteColumn(
+      modifier =
+        modifier
+          .fillMaxSize()
+          .then(clickable)
+          .then(cardChrome(theme.cardBackground, theme.divider))
+          .padding(HaSpace.XS.rdp),
+      verticalArrangement = RemoteArrangement.spacedBy(4.rdp, RemoteAlignment.CenterVertically),
+      horizontalAlignment = RemoteAlignment.CenterHorizontally,
+    ) {
+      RemoteHaArcMeter(
+        zones = gaugeZones(data),
+        fraction = fraction,
+        color = severityColor,
+        modifier = RemoteModifier.fillMaxWidth().height(arcHeightDp.rdp),
+        strokeWidthPx = 8f,
+      )
+      RemoteText(
+        text = data.valueText,
+        color = theme.primaryText,
+        fontSize = HaType.Label,
+        fontWeight = haValueWeight(),
+        style = haTextStyle(),
+        maxLines = 1,
+      )
+      RemoteText(
+        text = entityName(data.entityId, data.name),
+        color = theme.secondaryText,
+        fontSize = HaType.Caption,
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
+    return
+  }
 
   RemoteBox(
     modifier =
@@ -285,12 +327,12 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
         // the name (Caption) is ~39dp of it (lines are ~1.33× their size).
         .padding(horizontal = 8.rdp, vertical = 2.rdp),
     verticalAlignment = RemoteAlignment.Bottom,
-    horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
   ) {
     // Arc canvas sized off the row height so the half-arc grows
     // with taller cells (Wear L vs Wear S). The text column gets
     // the rest of the width via `weight()` so value / name aren't
-    // clipped on narrower 2×1 chips.
+    // clipped on narrower 2×1 chips; the gap is its padding, as spacedBy isn't taken out of the
+    // weighted share and would push the column past the row's end.
     RemoteHaArcMeter(
       zones = gaugeZones(data),
       fraction = fraction,
@@ -299,7 +341,7 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
       strokeWidthPx = 6f,
     )
     RemoteColumn(
-      modifier = RemoteModifier.weight(1f),
+      modifier = RemoteModifier.weight(1f).padding(start = 8.rdp),
       verticalArrangement = RemoteArrangement.Center,
       horizontalAlignment = RemoteAlignment.Start,
     ) {

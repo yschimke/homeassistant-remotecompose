@@ -45,7 +45,11 @@ import androidx.compose.ui.text.style.TextOverflow
  */
 @Composable
 @RemoteComposable
-fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaMarkdown(
+  data: HaMarkdownData,
+  modifier: RemoteModifier = RemoteModifier,
+  large: Boolean = false,
+) {
   // The note's material is its visual family's (docs/design/everyday-cards.md §4): what it sits
   // on, how its title is set, and how its blocks are marked. Blocks keep their live bindings.
   val material = markdownMaterial()
@@ -55,14 +59,18 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
         modifier = RemoteModifier.fillMaxWidth().then(material.decoration).then(material.padding)
       ) {
         if (data.title != null) {
-          MarkdownTitle(cardTitle(data.title), adaptiveTitleSize(data.title), material.ink)
+          MarkdownTitle(
+            cardTitle(data.title),
+            if (large) HaType.Headline else adaptiveTitleSize(data.title),
+            material.ink,
+          )
           RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp))
         }
         val screen = material.screen
         if (screen != null) {
-          RemoteColumn(modifier = screen) { MarkdownBlocks(data, material) }
+          RemoteColumn(modifier = screen) { MarkdownBlocks(data, material, large) }
         } else {
-          MarkdownBlocks(data, material)
+          MarkdownBlocks(data, material, large)
         }
       }
     }
@@ -70,10 +78,14 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
   }
 }
 
-/** The note's blocks, dressed by [material]. */
+/**
+ * The note's blocks, dressed by [material]; [large] sets each a step up the type scale, for a
+ * launcher widget with room to spare.
+ */
 @Composable
 @RemoteComposable
-private fun MarkdownBlocks(data: HaMarkdownData, material: MarkdownMaterial) {
+private fun MarkdownBlocks(data: HaMarkdownData, material: MarkdownMaterial, large: Boolean) {
+  val body = if (large) HaType.Title else HaType.Body
   val theme = haTheme()
   var step = 0
   data.blocks.forEachIndexed { index, block ->
@@ -89,11 +101,10 @@ private fun MarkdownBlocks(data: HaMarkdownData, material: MarkdownMaterial) {
     when (block.kind) {
       MarkdownBlock.Kind.Heading -> {
         val size =
-          when (block.level) {
-            1 -> HaType.Title
-            2,
-            3 -> HaType.BodyLarge
-            else -> HaType.Body
+          when {
+            block.level == 1 -> if (large) HaType.Headline else HaType.Title
+            block.level <= 3 -> if (large) HaType.ValueSmall else HaType.BodyLarge
+            else -> body
           }
         val marker =
           if (material.showsMarkers) "#".repeat(block.level.coerceIn(1, 6)) + " " else null
@@ -126,7 +137,7 @@ private fun MarkdownBlocks(data: HaMarkdownData, material: MarkdownMaterial) {
         MarkdownLine(
           block = block,
           theme = theme,
-          fontSize = HaType.Body,
+          fontSize = body,
           fontWeight = material.bodyWeight,
           material = material,
           marker = if (material.showsMarkers) "- " else "• ",
@@ -144,7 +155,7 @@ private fun MarkdownBlocks(data: HaMarkdownData, material: MarkdownMaterial) {
         MarkdownLine(
           block = block,
           theme = theme,
-          fontSize = HaType.Body,
+          fontSize = body,
           fontWeight = material.bodyWeight,
           material = material,
         )
@@ -160,7 +171,11 @@ private fun MarkdownBlocks(data: HaMarkdownData, material: MarkdownMaterial) {
  */
 @Composable
 @RemoteComposable
-fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaMarkdownIdentity(
+  data: HaMarkdownData,
+  modifier: RemoteModifier = RemoteModifier,
+  narrow: Boolean = false,
+) {
   val theme = haTheme()
   val firstLine = data.blocks.firstOrNull { it.kind != MarkdownBlock.Kind.Divider }
   // The same material as the full note, so a launcher cell reads as the same family's note.
@@ -172,11 +187,26 @@ fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = Re
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteColumn(
-      modifier = RemoteModifier.fillMaxSize().then(material.decoration).then(material.padding),
+      // One launcher column ([narrow]) pads 6 dp and sets both lines a step smaller, so words fit
+      // whole rather than breaking a letter at a time.
+      modifier =
+        RemoteModifier.fillMaxSize()
+          .then(material.decoration)
+          .then(if (narrow) RemoteModifier.padding(6.rdp) else material.padding),
       verticalArrangement = RemoteArrangement.spacedBy(4.rdp, RemoteAlignment.CenterVertically),
     ) {
       if (data.title != null) {
-        if (haReference)
+        if (narrow)
+          RemoteText(
+            text = cardTitle(data.title),
+            color = theme.primaryText,
+            fontSize = HaType.Label,
+            fontWeight = FontWeight.SemiBold,
+            style = haTextStyle(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+        else if (haReference)
           RemoteText(
             text = cardTitle(data.title),
             color = theme.primaryText,
@@ -193,7 +223,7 @@ fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = Re
         RemoteText(
           text = firstLine.boundText ?: firstLine.text.rs,
           color = if (currentHaUberTheme().ink != null) material.ink else theme.secondaryText,
-          fontSize = HaType.Body,
+          fontSize = if (narrow) HaType.Caption else HaType.Body,
           fontWeight = emphasis.weight(FontWeight.Normal),
           fontFamily = emphasis.fontFamily,
           style = material.bodyStyle,

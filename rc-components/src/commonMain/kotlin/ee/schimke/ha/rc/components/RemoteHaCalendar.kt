@@ -44,6 +44,7 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
         horizontalArrangement = RemoteArrangement.SpaceBetween,
         verticalAlignment = RemoteAlignment.CenterVertically,
       ) {
+        // The title takes what the range leaves, with its own gap: the range never runs into it.
         RemoteText(
           text = cardTitle(data.title),
           color = theme.primaryText,
@@ -52,6 +53,7 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
           style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
+          modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
         )
         RemoteText(
           text = cardText("range", data.rangeLabel),
@@ -87,9 +89,36 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
  */
 @Composable
 @RemoteComposable
-fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaCalendarIdentity(
+  data: HaCalendarData,
+  modifier: RemoteModifier = RemoteModifier,
+  narrow: Boolean = false,
+) {
   val theme = haTheme()
   val next = data.events.firstOrNull()
+  // One launcher column (`57 dp`) holds neither the title nor a date beside the dot: the next
+  // event's name alone, on up to three lines.
+  if (narrow && next != null) {
+    RemoteBox(
+      modifier =
+        modifier
+          .fillMaxSize()
+          .then(cardChrome(theme.cardBackground, theme.divider))
+          .padding(horizontal = 6.rdp, vertical = 8.rdp),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      RemoteText(
+        text = cardText("row.0.summary", next.summary),
+        color = theme.primaryText,
+        fontSize = HaType.Label,
+        fontWeight = FontWeight.SemiBold,
+        style = haTextStyle(),
+        maxLines = 3,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
+    return
+  }
   RemoteBox(
     modifier =
       modifier

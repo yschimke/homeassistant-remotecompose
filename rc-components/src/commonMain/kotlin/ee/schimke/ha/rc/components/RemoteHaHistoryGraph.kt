@@ -16,6 +16,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.state.RemoteFloat
+import androidx.compose.remote.creation.compose.state.RemoteTextUnit
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
@@ -199,6 +200,8 @@ const val SensorHeroChromeDp = 116
 fun RemoteHaHistoryGraphIdentity(
   data: HaHistoryGraphData,
   modifier: RemoteModifier = RemoteModifier,
+  valueSize: RemoteTextUnit? = HaType.Value,
+  plotHeightDp: Int = SPARKLINE_HEIGHT_DP,
 ) {
   val theme = haTheme()
   val row = if (data.allSeriesEmpty) null else data.rows.firstOrNull { it.hasLine }
@@ -224,17 +227,20 @@ fun RemoteHaHistoryGraphIdentity(
         overflow = TextOverflow.Ellipsis,
       )
       if (row != null) {
-        RemoteText(
-          text = row.summary,
-          color = theme.primaryText,
-          fontSize = HaType.Value,
-          fontWeight = haValueWeight(),
-          style = haTextStyle(),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
+        // A launcher cell too narrow for the summary at value size sets it smaller, or (one column)
+        // leaves it to the line: a value is never cut short.
+        if (valueSize != null)
+          RemoteText(
+            text = row.summary,
+            color = theme.primaryText,
+            fontSize = valueSize,
+            fontWeight = haValueWeight(),
+            style = haTextStyle(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
         if (row.points.size >= 2) {
-          Sparkline(row.entityId, row.points, row.accent, theme, SPARKLINE_HEIGHT_DP)
+          Sparkline(row.entityId, row.points, row.accent, theme, plotHeightDp)
         }
       } else {
         // The cell's height is fixed and small: a short caption, like the tile's compact name +

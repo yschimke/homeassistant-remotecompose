@@ -188,7 +188,6 @@ fun RemoteHaPictureGlance(
           RemoteModifier.fillMaxWidth()
             .background(theme.cardBackground)
             .padding(horizontal = 10.rdp),
-        horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
         verticalAlignment = RemoteAlignment.CenterVertically,
       ) {
         if (data.title != null) {
@@ -202,7 +201,8 @@ fun RemoteHaPictureGlance(
             style = haTextStyle(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = RemoteModifier.weight(1f),
+            // The gap is the title's padding: spacedBy isn't taken out of a weighted share.
+            modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
           )
         }
         if (data.cells.isNotEmpty()) {

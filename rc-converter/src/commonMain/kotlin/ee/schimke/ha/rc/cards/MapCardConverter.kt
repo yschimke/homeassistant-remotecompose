@@ -28,6 +28,7 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaType
@@ -147,14 +148,25 @@ class MapCardConverter : DesignedCardConverter() {
   internal fun Draw(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val theme = currentRemoteHaTheme()
     val title = card.raw["title"]?.jsonPrimitive?.content
-    val entities = entityIds(card)
+    // A launcher widget shows the rows its height holds, and in one column gives the name the
+    // width its dot and padding took.
+    val cell = LocalWidgetCaptureSizeDp.current
+    val narrow = cell != null && cell.widthDp < MAP_NARROW_DP
+    val entities =
+      entityIds(card).let { all ->
+        if (cell == null) all
+        else {
+          val room = cell.heightDp - 20 - (if (title != null) MAP_TITLE_DP else 0)
+          all.take((room / MAP_ROW_DP).coerceAtLeast(1))
+        }
+      }
 
     RemoteBox(
       modifier =
         modifier
           .fillMaxWidth()
           .then(cardChrome(theme.cardBackground, theme.divider))
-          .padding(horizontal = 12.rdp, vertical = 10.rdp)
+          .padding(horizontal = (if (narrow) 6 else 12).rdp, vertical = 10.rdp)
     ) {
       RemoteColumn(
         modifier = RemoteModifier.fillMaxWidth(),
@@ -177,14 +189,14 @@ class MapCardConverter : DesignedCardConverter() {
             style = RemoteTextStyle.Default,
           )
         } else {
-          entities.forEachIndexed { i, id -> EntityRow(i, id, snapshot) }
+          entities.forEachIndexed { i, id -> EntityRow(i, id, snapshot, showDot = !narrow) }
         }
       }
     }
   }
 
   @Composable
-  private fun EntityRow(index: Int, entityId: String, snapshot: HaSnapshot) {
+  private fun EntityRow(index: Int, entityId: String, snapshot: HaSnapshot, showDot: Boolean) {
     val theme = currentRemoteHaTheme()
     val (name, where) = rowText(entityId, snapshot)
 
@@ -192,14 +204,17 @@ class MapCardConverter : DesignedCardConverter() {
       modifier = RemoteModifier.fillMaxWidth(),
       verticalAlignment = RemoteAlignment.CenterVertically,
     ) {
-      RemoteBox(
-        modifier =
-          RemoteModifier.size(8.rdp).clip(RemoteCircleShape).background(theme.placeholderAccent)
-      )
+      if (showDot)
+        RemoteBox(
+          modifier =
+            RemoteModifier.size(8.rdp).clip(RemoteCircleShape).background(theme.placeholderAccent)
+        )
       // The text column takes the rest of the row. The dot-to-text gap is the column's own start
       // padding, not a `spacedBy` arrangement: the RemoteCompose row doesn't subtract `spacedBy`
       // gaps from the weighted share, so the column would run 8 dp past the card edge.
-      RemoteColumn(modifier = RemoteModifier.weight(1f).padding(start = 8.rdp)) {
+      RemoteColumn(
+        modifier = RemoteModifier.weight(1f).padding(start = (if (showDot) 8 else 0).rdp)
+      ) {
         RemoteText(
           text = cardText("row.$index.name", name),
           color = theme.primaryText,
@@ -233,6 +248,13 @@ private fun entityIds(card: CardConfig): List<String> {
     }
   }
 }
+
+/** Below this width a launcher widget's map rows drop their dot. */
+private const val MAP_NARROW_DP = 100
+
+/** A map row (a Body name over a Label place) and its gap; a Title line and its gap. */
+private const val MAP_ROW_DP = 44
+private const val MAP_TITLE_DP = 30
 
 /** What HA (and a redacted fixture) puts in a coordinate it withholds. */
 private const val REDACTED = "<redacted>"

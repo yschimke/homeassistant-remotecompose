@@ -43,10 +43,13 @@ fun RemoteHaClock(
   data: HaClockData,
   modifier: RemoteModifier = RemoteModifier,
   compact: Boolean = false,
+  timeSizeSp: Int? = null,
+  narrow: Boolean = false,
 ) {
   val theme = haTheme()
   val timeSize =
     when {
+      timeSizeSp != null -> timeSizeSp
       compact -> 30
       data.isLarge -> 64
       else -> 36
@@ -57,14 +60,15 @@ fun RemoteHaClock(
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 14.rdp, vertical = (if (compact) 2 else 12).rdp),
+        // A one-column launcher widget ([narrow]) gives the time its width: 4 dp a side.
+        .padding(horizontal = (if (narrow) 4 else 14).rdp, vertical = (if (compact) 2 else 12).rdp),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteColumn(
       horizontalAlignment = RemoteAlignment.CenterHorizontally,
       verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
     ) {
-      if (data.title != null && !compact) {
+      if (data.title != null && !compact && !narrow) {
         RemoteText(
           text = cardTitle(data.title),
           color = theme.secondaryText,
@@ -101,7 +105,7 @@ fun RemoteHaClock(
           style = haTextStyle(),
           maxLines = 1,
         )
-      if (data.secondaryLabel != null && !compact) {
+      if (data.secondaryLabel != null && !compact && !narrow) {
         RemoteText(
           text = cardText("date", data.secondaryLabel),
           color = theme.secondaryText,

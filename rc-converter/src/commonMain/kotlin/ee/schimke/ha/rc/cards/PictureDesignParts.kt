@@ -7,6 +7,9 @@ import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
+import ee.schimke.ha.rc.components.HaPictureGlanceData
+import ee.schimke.ha.rc.components.MinTouchTargetDp
 import ee.schimke.ha.rc.components.RemoteHaPicture
 import ee.schimke.ha.rc.components.RemoteHaPictureEntity
 import ee.schimke.ha.rc.components.RemoteHaPictureGlance
@@ -87,7 +90,7 @@ object PictureDesignParts {
           ),
         )
       }
-    val data = pictureGlance.pictureGlanceData(card, snapshot)
+    val data = pictureGlance.pictureGlanceData(card, snapshot).fitLauncherStrip()
     if (fill) RemoteHaPictureGlance(data, modifier, fillHeight = true, showImage = showImage)
     else
       RemoteHaPictureGlance(
@@ -97,6 +100,25 @@ object PictureDesignParts {
         showImage = showImage,
       )
   }
+
+  /**
+   * On a launcher widget, the strip's cells its width holds (at least one) and the title only where
+   * a few letters of it still fit beside them: the cells are the controls, so they win the width,
+   * and none is pushed off the cell's edge. Off a launcher, as configured.
+   */
+  @Composable
+  private fun HaPictureGlanceData.fitLauncherStrip(): HaPictureGlanceData {
+    val cell = LocalWidgetCaptureSizeDp.current ?: return this
+    // The strip pads 10 dp a side and its cells' touch targets overhang that padding by 8 dp.
+    val room = cell.widthDp - 2 * GLANCE_STRIP_PADDING_DP + 2 * GLANCE_CELL_OVERHANG_DP
+    val cellsShown = cells.take((room / MinTouchTargetDp).coerceAtLeast(1))
+    val titleRoom = room - cellsShown.size * MinTouchTargetDp
+    return copy(cells = cellsShown, title = title?.takeIf { titleRoom >= GLANCE_TITLE_MIN_DP })
+  }
+
+  private const val GLANCE_STRIP_PADDING_DP = 10
+  private const val GLANCE_CELL_OVERHANG_DP = 8
+  private const val GLANCE_TITLE_MIN_DP = 56
 
   internal val components: Map<String, CardDesignComponent> =
     mapOf(
