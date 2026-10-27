@@ -31,6 +31,7 @@ import io.ktor.server.routing.options
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import java.io.File
+import java.net.URI
 import java.security.MessageDigest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -559,6 +560,18 @@ internal suspend fun ApplicationCall.editor(
         authorized = tokensMatch(request.cookies[EDIT_COOKIE], uiBuilder.config.token),
       )
   }
+
+/**
+ * Whether the request's `Origin` names another host than the one it was sent to. A browser sends
+ * `Origin` with every POST, and its `SameSite=Lax` cookies still go along from sibling hosts of the
+ * same site (any other `*.coo.ee`), so a route a cookie authorizes to change something checks this
+ * too. No `Origin` passes: that is the app or curl, which hold no browser's cookies.
+ */
+internal fun ApplicationCall.isCrossOrigin(): Boolean {
+  val origin = request.header(HttpHeaders.Origin) ?: return false
+  return runCatching { URI(origin).rawAuthority != request.header(HttpHeaders.Host) }
+    .getOrDefault(true)
+}
 
 /**
  * Whether [presented] is [expected], in time that doesn't depend on where they differ: a secret
