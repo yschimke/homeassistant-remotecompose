@@ -1,0 +1,11 @@
+{
+  "graphics": "app/src/main/play/listings/en-GB/graphics",
+  "package": "ee.schimke.harc",
+  "wearPackage": "ee.schimke.harc",
+  "slots": {
+    "phone-screenshots": 2,
+    "seven-inch-screenshots": 2,
+    "ten-inch-screenshots": 2,
+    "wear-screenshots": 2
+  }
+}

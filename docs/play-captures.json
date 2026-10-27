@@ -1,0 +1,116 @@
+{
+  "captures": {
+    "phone-screenshots/01-climate.png": {
+      "capturedAt": "2026-10-27T19:32:17.113584+00:00",
+      "device": "sdk_gphone64_x86_64",
+      "dimensions": [
+        1008,
+        1792
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Climate dashboard in the running Terrazzo app; built-in offline sample session, light theme",
+      "sdk": "35",
+      "sha256": "483a0c783b8c3c71f1e7a93dc258f6cd90ca9e9d02091b174080a40f177c7424",
+      "source": "adb-screencap",
+      "sourceRevision": "79c462ed9498dd489b67a1212a4b0d4d964813df"
+    },
+    "phone-screenshots/02-climate-dark.png": {
+      "capturedAt": "2026-10-27T19:34:48.503382+00:00",
+      "device": "sdk_gphone64_x86_64",
+      "dimensions": [
+        1008,
+        1792
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Climate dashboard in the running Terrazzo app; built-in offline sample session, system dark theme",
+      "sdk": "35",
+      "sha256": "fa40a6b3df333e63ec942e776d5d9b1134efe67eb76cdd2ab4301d3db6cd91d4",
+      "source": "adb-screencap",
+      "sourceRevision": "79c462ed9498dd489b67a1212a4b0d4d964813df"
+    },
+    "seven-inch-screenshots/01-climate-light.png": {
+      "capturedAt": "2026-10-27T19:35:16.115331+00:00",
+      "device": "sdk_gphone64_x86_64",
+      "dimensions": [
+        1000,
+        1600
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Running Terrazzo at a 667dp-wide tablet viewport; built-in offline Climate sample, light theme",
+      "sdk": "35",
+      "sha256": "0d10505392888e87a2321784dcf27c0b9777cee03a2db657b74fb7ac058289cf",
+      "source": "adb-screencap",
+      "sourceRevision": "79c462ed9498dd489b67a1212a4b0d4d964813df"
+    },
+    "seven-inch-screenshots/02-climate-dark.png": {
+      "capturedAt": "2026-10-27T19:35:37.286566+00:00",
+      "device": "sdk_gphone64_x86_64",
+      "dimensions": [
+        1000,
+        1600
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Running Terrazzo at a 667dp-wide tablet viewport; built-in offline Climate sample, dark theme",
+      "sdk": "35",
+      "sha256": "682676b13e74d9c403b395e08269aba99513581879782889eb4c482215cdd4e3",
+      "source": "adb-screencap",
+      "sourceRevision": "79c462ed9498dd489b67a1212a4b0d4d964813df"
+    },
+    "ten-inch-screenshots/01-climate-light.png": {
+      "capturedAt": "2026-10-27T19:36:16.637091+00:00",
+      "device": "sdk_gphone64_x86_64",
+      "dimensions": [
+        1120,
+        1792
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Running Terrazzo at an 800dp-wide tablet viewport; built-in offline Climate sample, light theme",
+      "sdk": "35",
+      "sha256": "b104a46d74042bdb59a640b3c2b8811e4204a1e6b190396b9763d5db6e1e90f2",
+      "source": "adb-screencap",
+      "sourceRevision": "79c462ed9498dd489b67a1212a4b0d4d964813df"
+    },
+    "ten-inch-screenshots/02-climate-dark.png": {
+      "capturedAt": "2026-10-27T19:36:31.949995+00:00",
+      "device": "sdk_gphone64_x86_64",
+      "dimensions": [
+        1120,
+        1792
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Running Terrazzo at an 800dp-wide tablet viewport; built-in offline Climate sample, dark theme",
+      "sdk": "35",
+      "sha256": "8f211fa4bbdd8233c48fe8a2cc9a0b6b31f132297034529c675ad242d22b3299",
+      "source": "adb-screencap",
+      "sourceRevision": "79c462ed9498dd489b67a1212a4b0d4d964813df"
+    },
+    "wear-screenshots/01-living-room.png": {
+      "capturedAt": "2026-10-27T20:47:08.553559+00:00",
+      "device": "sdk_gwear_x86_64",
+      "dimensions": [
+        480,
+        480
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Running Wear pinned Living room section using the existing debug offline demo seed; no Home Assistant account or paired phone.",
+      "sdk": "36",
+      "sha256": "f7f0830d404244bdceea7c78fd8f5e58c7ac25df173485b58df8d52e8b0d2682",
+      "source": "adb-screencap",
+      "sourceRevision": "79c462ed9498dd489b67a1212a4b0d4d964813df"
+    },
+    "wear-screenshots/02-pinned-cards.png": {
+      "capturedAt": "2026-10-27T20:47:38.364740+00:00",
+      "device": "sdk_gwear_x86_64",
+      "dimensions": [
+        480,
+        480
+      ],
+      "package": "ee.schimke.harc",
+      "scenario": "Running Wear pinned Home cards with Kitchen and Outside readings from the existing offline demo seed; no live Home Assistant account.",
+      "sdk": "36",
+      "sha256": "355c1542a44df27ed82f1e50350286f513c3023eedb8f27e5b3e2cca4f1df406",
+      "source": "adb-screencap",
+      "sourceRevision": "79c462ed9498dd489b67a1212a4b0d4d964813df"
+    }
+  }
+}
