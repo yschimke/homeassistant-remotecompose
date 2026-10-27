@@ -181,8 +181,8 @@ private val VARIANT = Regex("[a-z0-9][a-z0-9-]{0,39}")
  *   private variant of a library design; `POST /api/my/designs/<sha>/share` shares or unshares one
  *   (`{"shared": true}`). Only a design they own or edit in UI Builder, or one this server made for
  *   them, publishes; it publishes for its card in each theme of its card style.
- * - `GET /api/my/studio` lists the UI Builder designs this server made for them: what the app's
- *   card studio publishes.
+ * - `GET /api/my/studio` lists the UI Builder designs this server made for them and the ones they
+ *   own or edit in UI Builder: what the app's card studio publishes.
  * - `POST /api/my/device-token` mints the token the app sends as `Authorization: Bearer`.
  * - `/my` is the same for a browser: the designs, share buttons and a device token to copy.
  *
@@ -215,12 +215,23 @@ fun Route.userDesignRoutes(
   }
 
   // The UI Builder designs this server opened for them (the app's card studio, a seeded schema or
-  // fork), newest first: what the app offers to publish for a card.
+  // fork) and the ones they own or edit there themselves, newest first: what the app offers to
+  // publish for a card. A design in both is listed once, as this server recorded it.
   get("/api/my/studio") {
     val login = call.requireUser() ?: return@get
-    call.respondJson(
-      apiJson.encodeToString(ListSerializer(MadeDesign.serializer()), store.made(login))
-    )
+    val made = store.made(login)
+    val builder =
+      uiBuilder?.client?.designsFor(login)?.getOrElse {
+        return@get call.respondText(
+          "UI Builder couldn't list your designs: ${it.message}",
+          status = HttpStatusCode.BadGateway,
+        )
+      }
+    val designs =
+      (made + builder.orEmpty())
+        .distinctBy { it.designId }
+        .sortedByDescending { it.createdAtEpochMs }
+    call.respondJson(apiJson.encodeToString(ListSerializer(MadeDesign.serializer()), designs))
   }
 
   post("/api/my/designs") {

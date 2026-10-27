@@ -23,13 +23,16 @@ import java.util.Base64
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
@@ -42,8 +45,17 @@ import kotlinx.serialization.json.putJsonObject
  * - [browserUrl]: the base the editor links use.
  * - [token]: UI Builder's operator token. It gates the editor (links carry it) and is the design
  *   server's edit token: only a browser that presented it can create designs (see [designServer]).
+ * - [adminReadToken]: UI Builder's read-only admin token (`--admin-read-token`), which lists every
+ *   design with its owner: how [UiBuilderClient.designsFor] finds the ones a person made there
+ *   themselves. The operator token can't, since UI Builder lists only the caller's own designs.
+ *   Null lists none.
  */
-data class UiBuilderConfig(val apiUrl: String, val browserUrl: String, val token: String) {
+data class UiBuilderConfig(
+  val apiUrl: String,
+  val browserUrl: String,
+  val token: String,
+  val adminReadToken: String? = null,
+) {
   /** The editor for [designId], ready to open: UI Builder reads its operator token from the URL. */
   fun editorUrl(designId: String): String =
     "${designUrl(designId)}?token=${token.encodeURLParameter()}"
@@ -61,12 +73,15 @@ data class UiBuilderConfig(val apiUrl: String, val browserUrl: String, val token
      *   `UI_BUILDER_HOST` (127.0.0.1), `UI_BUILDER_BROWSER_URL` (`http://localhost:<port>`),
      *   `UI_BUILDER_STATE_DIR`, `UI_BUILDER_TOKEN` (random when unset) and `UI_BUILDER_ARGS`: more
      *   `serve` flags, space-separated — its GitHub sign-in, for one (see design-server's README).
+     * - `UI_BUILDER_ADMIN_READ_TOKEN`, either way: the builder's `--admin-read-token`
+     *   ([adminReadToken]). The bundled one takes it through `UI_BUILDER_ARGS`.
      *
      * Null when neither is set: the design server runs without editing.
      */
     fun fromEnvironment(
       env: Map<String, String> = System.getenv()
     ): Pair<UiBuilderConfig, UiBuilderProcess?>? {
+      val adminReadToken = env["UI_BUILDER_ADMIN_READ_TOKEN"]?.takeIf { it.isNotBlank() }
       val binary = env["UI_BUILDER_BINARY"]?.takeIf { it.isNotBlank() }
       if (binary != null) {
         val port = env["UI_BUILDER_PORT"]?.toIntOrNull() ?: 8724
@@ -88,6 +103,7 @@ data class UiBuilderConfig(val apiUrl: String, val browserUrl: String, val token
             apiUrl = "http://${connectHost(host)}:$port",
             browserUrl = env["UI_BUILDER_BROWSER_URL"] ?: "http://localhost:$port",
             token = token,
+            adminReadToken = adminReadToken,
           )
         return config to process
       }
@@ -96,7 +112,8 @@ data class UiBuilderConfig(val apiUrl: String, val browserUrl: String, val token
         requireNotNull(env["UI_BUILDER_TOKEN"]?.takeIf { it.isNotBlank() }) {
           "UI_BUILDER_URL needs UI_BUILDER_TOKEN, the UI Builder's operator token"
         }
-      return UiBuilderConfig(url, env["UI_BUILDER_BROWSER_URL"] ?: url, token) to null
+      return UiBuilderConfig(url, env["UI_BUILDER_BROWSER_URL"] ?: url, token, adminReadToken) to
+        null
     }
 
     /**
@@ -333,6 +350,45 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
         }
       }
     }
+  }
+
+  /**
+   * The UI Builder designs [login] owns or edits, as [MadeDesign]s of no card type, from the admin
+   * listing (`GET /admin/ui-builder/designs`, with [UiBuilderConfig.adminReadToken]); none without
+   * that token. A design shared with others is asked about one by one ([editors]): the listing
+   * counts its collaborators but doesn't name them. Designs UI Builder can't serve are left out, as
+   * nothing would publish them.
+   */
+  suspend fun designsFor(login: String): Result<List<MadeDesign>> = runCatching {
+    val adminToken = config.adminReadToken ?: return@runCatching emptyList()
+    val response =
+      http.get("${config.apiUrl.trimEnd('/')}/admin/ui-builder/designs") {
+        header("X-Compose-Preview-Admin-Token", adminToken)
+      }
+    check(response.status.isSuccess()) { "UI Builder design listing failed (${response.status})" }
+    val actor = UserDesignStore.authorOf(login)
+    Json.parseToJsonElement(response.bodyAsText())
+      .jsonObject["designs"]
+      ?.jsonArray
+      .orEmpty()
+      .map { it.jsonObject }
+      .filter { it["unusableReason"].let { reason -> reason == null || reason is JsonNull } }
+      .filter { design ->
+        val owner = design["ownerActorId"]?.jsonPrimitive?.content.orEmpty()
+        val collaborators = design["collaborators"]?.jsonPrimitive?.intOrNull ?: 0
+        owner.equals(actor, ignoreCase = true) ||
+          (collaborators > 0 &&
+            editors(design.getValue("designId").jsonPrimitive.content).getOrThrow().any {
+              it.equals(actor, ignoreCase = true)
+            })
+      }
+      .map { design ->
+        MadeDesign(
+          designId = design.getValue("designId").jsonPrimitive.content,
+          login = login,
+          createdAtEpochMs = design["createdAtEpochMillis"]?.jsonPrimitive?.longOrNull ?: 0,
+        )
+      }
   }
 
   /**

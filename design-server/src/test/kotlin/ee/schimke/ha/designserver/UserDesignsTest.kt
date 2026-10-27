@@ -240,6 +240,8 @@ class UserDesignsTest {
       "viewed" ->
         """{"ownerActorId":"github:mallory","actorGrants":[{"actorId":"github:octocat","role":"VIEWER"}]}"""
       "made" -> """{"ownerActorId":"operator","actorGrants":[]}"""
+      "garage-door-mallory" ->
+        """{"ownerActorId":"github:mallory","actorGrants":[{"actorId":"github:octocat","role":"EDITOR"}]}"""
       "good",
       "bad",
       "wear",
@@ -253,10 +255,43 @@ class UserDesignsTest {
     }
 
   /** The server with a fake UI Builder whose design `good` exports the template, `bad` junk. */
-  private fun ApplicationTestBuilder.fixture(libraryDir: File = library()): Fixture {
+  private fun ApplicationTestBuilder.fixture(
+    libraryDir: File = library(),
+    adminReadToken: String? = null,
+  ): Fixture {
     externalServices {
       hosts("http://uib") {
         routing {
+          // Every design on the builder, whoever owns it: octocat made `garage-door-octocat` there
+          // and edits mallory's `garage-door-mallory`; `viewed` they only view, and `broken` won't
+          // serve.
+          get("/admin/ui-builder/designs") {
+            assertEquals(adminReadToken, call.request.headers["X-Compose-Preview-Admin-Token"])
+            fun row(
+              id: String,
+              owner: String,
+              collaborators: Int,
+              created: Long,
+              unusable: String? = null,
+            ) =
+              """{"designId":"$id","title":"$id","revision":1,"catalogSystemId":"ha-cards",""" +
+                """"ownerActorId":"$owner","collaborators":$collaborators,""" +
+                """"createdAtEpochMillis":$created,"updatedAtEpochMillis":$created,""" +
+                """"activeSubscribers":0,"unusableReason":${unusable?.let { "\"$it\"" } ?: "null"}}"""
+            val designs =
+              listOf(
+                row("garage-door-octocat", "github:octocat", 0, 100),
+                row("garage-door-mallory", "github:mallory", 1, 30),
+                row("viewed", "github:mallory", 1, 200),
+                row("mallorys", "github:mallory", 0, 300),
+                row("good", "github:octocat", 0, 7),
+                row("broken", "github:octocat", 0, 400, unusable = "catalog gone"),
+              )
+            call.respondText(
+              """{"designs":[${designs.joinToString(",")}],"trash":[]}""",
+              ContentType.Application.Json,
+            )
+          }
           post("/api/ui-builder/v1/requests") {
             assertEquals("secret", call.request.queryParameters["token"])
             val request =
@@ -366,7 +401,13 @@ class UserDesignsTest {
       }
     }
     val http = createClient { followRedirects = false }
-    val config = UiBuilderConfig(apiUrl = "http://uib", browserUrl = "https://b", token = "secret")
+    val config =
+      UiBuilderConfig(
+        apiUrl = "http://uib",
+        browserUrl = "https://b",
+        token = "secret",
+        adminReadToken = adminReadToken,
+      )
     val github =
       GithubAuth(
         clientId = "id",
@@ -851,6 +892,38 @@ class UserDesignsTest {
     assertEquals(HttpStatusCode.Unauthorized, f.client.get("/api/my/studio").status)
     // Recording it doesn't move anyone's manifest.
     assertEquals(5, f.client.manifest().serial)
+  }
+
+  @Test
+  fun theDesignsTheyOwnOrEditInUiBuilderAreListedForTheAppToo() = testApplication {
+    val f = fixture(adminReadToken = "admin-read")
+    f.store.recordMade("octocat", "made", cardType = "tile")
+    // Made by this server and owned in UI Builder too: listed once, as the server recorded it.
+    f.store.recordMade("octocat", "good", cardType = "tile")
+    suspend fun studio(login: String): List<MadeDesign> {
+      val listed =
+        f.client.get("/api/my/studio") {
+          header(HttpHeaders.Authorization, "Bearer ${f.github.deviceToken(login)}")
+        }
+      assertEquals(HttpStatusCode.OK, listed.status, listed.bodyAsText())
+      return json.decodeFromString(ListSerializer(MadeDesign.serializer()), listed.bodyAsText())
+    }
+    assertEquals(
+      listOf(
+        MadeDesign("garage-door-octocat", "octocat", createdAtEpochMs = 100),
+        MadeDesign("made", "octocat", "tile", 42),
+        MadeDesign("good", "octocat", "tile", 42),
+        MadeDesign("garage-door-mallory", "octocat", createdAtEpochMs = 30),
+      ),
+      studio("octocat"),
+    )
+    // Mallory sees their own, never octocat's.
+    assertEquals(
+      listOf("mallorys", "viewed", "garage-door-mallory"),
+      studio("mallory").map { it.designId },
+    )
+    // And a design they made in UI Builder publishes like one the server made.
+    assertEquals(HttpStatusCode.Created, f.publish("good").status)
   }
 
   @Test
