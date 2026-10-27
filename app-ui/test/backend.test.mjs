@@ -28,10 +28,23 @@ test('only a versioned JSON response enables Wasmo', async () => {
   assert.equal(calls[0].url, '/api/wasmo/v1/capabilities');
   assert.equal(calls[0].options.credentials, 'same-origin');
   assert.equal(calls[0].options.cache, 'no-store');
-  for (const response of [new Response('missing', { status: 404 }), new Response('<html>login</html>'), new Response('{"api":2}', { headers: { 'content-type': 'application/json' } }), new Response('invalid', { headers: { 'content-type': 'application/json' } }), new Error('offline')]) {
-    assert.equal((await page({ response }).backend.ready).kind, 'local');
+  for (const response of [new Response('missing', { status: 404 }), new Response('<html>login</html>'), new Response('{"api":2}', { headers: { 'content-type': 'application/json' } }), new Response('invalid', { headers: { 'content-type': 'application/json' } })]) {
+    assert.deepEqual({ ...(await page({ response }).backend.ready) }, { kind: 'local', caps: null, reason: 'not-enabled' });
   }
-  assert.equal((await page({ timeout: true }).backend.ready).kind, 'local');
+  for (const options of [{ response: new Error('offline') }, { timeout: true }, { response: new Response('down', { status: 503 }) }]) {
+    const { backend, calls } = page(options);
+    assert.equal((await backend.ready).reason, 'unavailable');
+    assert.equal(calls.length, 2);
+  }
+});
+
+test('an unavailable backend gets a second chance before falling back', async () => {
+  let attempts = 0;
+  const { backend } = page({ fetchImpl: async () => (++attempts === 1
+    ? new Response('starting', { status: 502 })
+    : new Response('{"api":1,"kv":true}', { headers: { 'Content-Type': 'application/json' } })) });
+  assert.equal((await backend.ready).kind, 'wasmo');
+  assert.equal(attempts, 2);
 });
 
 test('panel and both demo entry points never probe', async () => {

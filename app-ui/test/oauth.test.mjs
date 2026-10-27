@@ -14,14 +14,16 @@ function storage(seed = {}) {
 function service() {
   return { session: null, initialized: false, fail: null, calls: [], onImport: null };
 }
-function page({ cloud = true, server = service(), local = storage(), search = '', pending = null, tokenFailure = false } = {}) {
+function page({ cloud = true, server = service(), local = storage(), search = '', pending = null, tokenFailure = false, confirm = () => false } = {}) {
   const sessionStorage = storage(pending ? { 'terrazzo-oauth-pending': JSON.stringify(pending) } : {});
   const location = { protocol: 'https:', host: 'app.example.test', origin: 'https://app.example.test', pathname: '/app.html', search, href: `https://app.example.test/app.html${search}`, reload: () => { location.reloaded = true; }, assign: url => { location.assigned = url; } };
-  const window = { frameElement: null };
+  const window = { frameElement: null, confirm };
   const context = { window, location, localStorage: local, sessionStorage, crypto: webcrypto, URL, URLSearchParams, Headers, Response, AbortController, setTimeout, clearTimeout,
     console: { warn() {} }, atob, btoa, history: { state: {}, replaceState: (_state, _unused, url) => { location.href = url; } },
     fetch: async (url, options = {}) => {
       server.calls.push({ url, options });
+      if (url === 'https://ha.example.test/auth/revoke') return new Response(null, { status: 200 });
+      if (server.busy && url.endsWith('/ha/token')) { server.busy--; return Response.json({ error: 'busy' }, { status: 503 }); }
       if (url.endsWith('/capabilities')) return Response.json({ api: 1, kv: true, haSession: cloud, publish: false });
       if (url === 'https://ha.example.test/auth/token') return tokenFailure ? Response.json({}, { status: 400 }) : Response.json({ access_token: 'fixture-new-access', refresh_token: 'fixture-refresh', expires_in: 1800 });
       if (server.fail) return Response.json({}, { status: server.fail });
@@ -41,6 +43,7 @@ function page({ cloud = true, server = service(), local = storage(), search = ''
       }
       if (url.endsWith('/ha/session') && options.method === 'DELETE') {
         if (value.sessionId !== server.session?.sessionId) return Response.json({}, { status: 409 });
+        if (server.haDown && !value.forget) return Response.json({ error: 'ha-unavailable' }, { status: 502 });
         server.session = null;
         server.initialized = true;
         return Response.json({ signedIn: false });
@@ -151,4 +154,47 @@ test('explicit recovery skips this tab legacy import without deleting an unsaved
   assert.equal(await instance.auth.restore(), '');
   assert.equal(instance.local.getItem('terrazzo-oauth'), raw);
   assert.equal(instance.server.session, null);
+});
+
+test('sign-out can forget the saved sign-in when Home Assistant cannot confirm it', async () => {
+  const declined = page();
+  declined.server.session = { signedIn: true, hassUrl: 'https://ha.example.test', sessionId: 'fixture-session' };
+  await declined.auth.restore();
+  declined.server.haDown = true;
+  await assert.rejects(declined.auth.signOut());
+  assert.ok(declined.server.session);
+
+  let asked = 0;
+  const accepted = page({ server: declined.server, confirm: () => { asked++; return true; } });
+  await accepted.auth.restore();
+  await accepted.auth.signOut();
+  assert.equal(asked, 1);
+  assert.equal(accepted.server.session, null);
+  const forget = accepted.server.calls.filter(call => call.options.method === 'DELETE').at(-1);
+  assert.equal(JSON.parse(forget.options.body).forget, true);
+});
+
+test('a busy Wasmo token request is retried once, and concurrent callers share it', async () => {
+  const instance = page();
+  instance.server.session = { signedIn: true, hassUrl: 'https://ha.example.test', sessionId: 'fixture-session' };
+  await instance.auth.restore();
+  const before = instance.server.calls.filter(call => call.url.endsWith('/ha/token')).length;
+  instance.server.busy = 1;
+  const values = await Promise.all([instance.auth.accessToken(), instance.auth.accessToken()]);
+  assert.deepEqual(values, ['fixture-cloud-access', 'fixture-cloud-access']);
+  assert.equal(instance.server.calls.filter(call => call.url.endsWith('/ha/token')).length - before, 2);
+  instance.server.busy = 2;
+  await assert.rejects(instance.auth.accessToken());
+});
+
+test('a legacy grant the Wasmo refuses is revoked at Home Assistant before it is forgotten', async () => {
+  const server = service();
+  server.initialized = true;
+  const local = storage({ 'terrazzo-oauth': JSON.stringify(fixtureTokens()) });
+  const instance = page({ server, local });
+  assert.equal(await instance.auth.restore(), '');
+  const revoke = server.calls.find(call => call.url === 'https://ha.example.test/auth/revoke');
+  assert.equal(revoke.options.mode, 'no-cors');
+  assert.equal(revoke.options.body.get('token'), 'fixture-refresh');
+  assert.equal(local.getItem('terrazzo-oauth'), null);
 });
