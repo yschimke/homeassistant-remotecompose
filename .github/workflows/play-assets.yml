@@ -47,9 +47,9 @@ jobs:
       - name: Ensure ImageMagick
         run: command -v convert >/dev/null || { sudo apt-get update -q && sudo apt-get install -yq imagemagick; }
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v6.3.0
         with:
-          python-version: '3.12'
+          python-version: '3.12.16'
 
       - name: Verify real app screenshots (never regenerate previews)
         run: |
