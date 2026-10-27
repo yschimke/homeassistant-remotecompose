@@ -521,12 +521,14 @@ class UiBuilderIntegration(
  * Whether pages offer editing, and whether this browser may use it.
  * - [login]: the GitHub login it is signed in as, with GitHub sign-in.
  * - [signInPath]: where to sign in, with GitHub sign-in and nobody signed in.
+ * - [signOutPath]: where a sign-out form posts, with GitHub sign-in.
  */
 data class EditorState(
   val enabled: Boolean,
   val authorized: Boolean,
   val login: String? = null,
   val signInPath: String? = null,
+  val signOutPath: String? = null,
 ) {
   companion object {
     val Off = EditorState(enabled = false, authorized = false)
@@ -535,7 +537,7 @@ data class EditorState(
 
 private const val EDIT_COOKIE = "design-server-edit"
 
-internal fun ApplicationCall.editor(
+internal suspend fun ApplicationCall.editor(
   uiBuilder: UiBuilderIntegration?,
   github: GithubAuth?,
 ): EditorState =
@@ -548,6 +550,7 @@ internal fun ApplicationCall.editor(
         authorized = login != null,
         login = login,
         signInPath = if (login == null) github.signInPath(request.local.uri) else null,
+        signOutPath = github.signOutPath,
       )
     }
     else ->

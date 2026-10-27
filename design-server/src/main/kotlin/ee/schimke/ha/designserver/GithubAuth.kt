@@ -18,11 +18,15 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import java.io.File
 import java.net.URLEncoder
+import java.nio.file.Files
+import java.nio.file.attribute.PosixFilePermissions
 import java.security.MessageDigest
 import java.util.Base64
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
@@ -32,37 +36,112 @@ import kotlinx.serialization.json.jsonPrimitive
  * GitHub sign-in for the design server's editing: who is designing, so the UI Builder designs they
  * seed are shared with them (`github:<login>`, as editor) and nobody else.
  *
- * Plain OAuth web flow against a GitHub OAuth App whose callback is
- * `<publicUrl>/my/auth/github/callback`. No scope is requested: the login is all the server needs.
- * The session is a signed cookie (`login|expiry|HMAC`), so the server keeps no session state.
+ * Who signed in comes from [signIn]: the server's own OAuth App ([SignIn.OAuthApp]), or the sign-in
+ * of the server it shares its host with ([SignIn.Host]).
  *
- * - [clientId], [clientSecret]: the OAuth App's.
- * - [publicUrl]: where browsers reach this server (`https://ha.coo.ee`).
- * - [sessionSecret]: signs session and state cookies.
+ * - [sessionSecret]: signs device tokens, and with an OAuth App its session and state cookies.
  * - [allowedUsers]: when not empty, only these logins may design.
  */
 class GithubAuth(
-  private val clientId: String,
-  private val clientSecret: String,
-  private val publicUrl: String,
+  private val signIn: SignIn,
   sessionSecret: String,
   private val allowedUsers: Set<String> = emptySet(),
   private val http: HttpClient,
   private val clock: () -> Long = System::currentTimeMillis,
-  private val authorizeUrl: String = "https://github.com/login/oauth/authorize",
-  private val tokenUrl: String = "https://github.com/login/oauth/access_token",
-  private val userUrl: String = "https://api.github.com/user",
 ) {
+  constructor(
+    clientId: String,
+    clientSecret: String,
+    publicUrl: String,
+    sessionSecret: String,
+    allowedUsers: Set<String> = emptySet(),
+    http: HttpClient,
+    clock: () -> Long = System::currentTimeMillis,
+    authorizeUrl: String = "https://github.com/login/oauth/authorize",
+    tokenUrl: String = "https://github.com/login/oauth/access_token",
+    userUrl: String = "https://api.github.com/user",
+  ) : this(
+    SignIn.OAuthApp(clientId, clientSecret, publicUrl, authorizeUrl, tokenUrl, userUrl),
+    sessionSecret,
+    allowedUsers,
+    http,
+    clock,
+  )
+
+  /** Where who is signed in comes from. */
+  sealed interface SignIn {
+    /**
+     * Plain OAuth web flow against a GitHub OAuth App whose callback is
+     * `<publicUrl>/my/auth/github/callback`. No scope is requested: the login is all the server
+     * needs. The session is a signed cookie (`login|expiry|HMAC`), so the server keeps no session
+     * state. [publicUrl] is where browsers reach this server (`https://ha.coo.ee`).
+     */
+    data class OAuthApp(
+      val clientId: String,
+      val clientSecret: String,
+      val publicUrl: String,
+      val authorizeUrl: String = "https://github.com/login/oauth/authorize",
+      val tokenUrl: String = "https://github.com/login/oauth/access_token",
+      val userUrl: String = "https://api.github.com/user",
+    ) : SignIn
+
+    /**
+     * The GitHub sign-in of the Compose Preview server this one shares its host with (ha.coo.ee's
+     * `/auth/github`, signed in through preview.coo.ee): no OAuth App or cookie of its own.
+     * Browsers sign in at `/auth/github/start`, and a request's login is that server's `GET
+     * /auth/github/whoami`, asked at [url] (internal, e.g. `http://preview:8080`) with the
+     * request's session cookie.
+     */
+    data class Host(val url: String) : SignIn
+  }
+
   private val key = SecretKeySpec(sessionSecret.encodeToByteArray(), "HmacSHA256")
 
-  private val secure = publicUrl.startsWith("https://")
+  private val secure = (signIn as? SignIn.OAuthApp)?.publicUrl?.startsWith("https://") == true
 
   /** The signed-in GitHub login of this browser, or null. */
-  fun login(call: ApplicationCall): String? {
-    val session = call.request.cookies[SESSION_COOKIE]?.let(::verify) ?: return null
-    val login = session.substringBefore('|')
-    val expiry = session.substringAfter('|', "").toLongOrNull() ?: return null
-    return login.takeIf { expiry > clock() && it.isNotEmpty() && allowed(it) }
+  suspend fun login(call: ApplicationCall): String? =
+    when (signIn) {
+      is SignIn.OAuthApp -> {
+        val session = call.request.cookies[SESSION_COOKIE]?.let(::verify)
+        val login = session?.substringBefore('|')
+        val expiry = session?.substringAfter('|', "")?.toLongOrNull()
+        login?.takeIf { expiry != null && expiry > clock() && it.isNotEmpty() }
+      }
+      is SignIn.Host -> hostLogin(signIn, call)
+    }?.takeIf(::allowed)
+
+  /**
+   * The login the host's sign-in names for [call]'s session cookie. Only that cookie is sent, and
+   * only when the request has one, so anonymous requests (every app's manifest fetch) cost nothing.
+   * Any failure reads as signed out.
+   */
+  private suspend fun hostLogin(host: SignIn.Host, call: ApplicationCall): String? {
+    val session =
+      call.request.cookies.rawCookies.filterKeys {
+        it == HOST_COOKIE || it == "__Host-$HOST_COOKIE"
+      }
+    if (session.isEmpty()) return null
+    return withTimeoutOrNull(HOST_TIMEOUT_MS) {
+        runCatching {
+          val reply =
+            http.get("${host.url.trimEnd('/')}$HOST_WHOAMI_PATH") {
+              header(
+                HttpHeaders.Cookie,
+                session.entries.joinToString("; ") { "${it.key}=${it.value}" },
+              )
+              accept(ContentType.Application.Json)
+            }
+          if (!reply.status.isSuccess()) return@runCatching null
+          Json.parseToJsonElement(reply.bodyAsText())
+            .jsonObject["login"]
+            ?.jsonPrimitive
+            ?.contentOrNull
+        }
+          .onFailure { System.err.println("sign-in: ${host.url} whoami failed: ${it.message}") }
+          .getOrNull()
+      }
+      ?.takeIf { it.isNotEmpty() }
   }
 
   /**
@@ -80,7 +159,7 @@ class GithubAuth(
   }
 
   /** The signed-in browser's login, or else the login of the request's device token. */
-  fun user(call: ApplicationCall): String? =
+  suspend fun user(call: ApplicationCall): String? =
     login(call)
       ?: call.request.headers[HttpHeaders.Authorization]
         ?.takeIf { it.startsWith("Bearer ", ignoreCase = true) }
@@ -90,9 +169,31 @@ class GithubAuth(
 
   /** Where to send a browser to sign in, returning to [returnPath] afterwards. */
   fun signInPath(returnPath: String): String =
-    "$START_PATH?return=${URLEncoder.encode(safeReturn(returnPath), Charsets.UTF_8)}"
+    when (signIn) {
+      is SignIn.OAuthApp -> START_PATH
+      is SignIn.Host -> HOST_START_PATH
+    } + "?return=${enc(safeReturn(returnPath))}"
+
+  /** Where a sign-out form posts. The host's sign-out ends the sign-in on every host it reached. */
+  val signOutPath: String
+    get() =
+      when (signIn) {
+        is SignIn.OAuthApp -> SIGN_OUT_PATH
+        is SignIn.Host -> "$HOST_SIGN_OUT_PATH?return=%2F"
+      }
 
   fun routes(route: Route) {
+    when (signIn) {
+      is SignIn.OAuthApp -> oauthAppRoutes(route, signIn)
+      // Links and checks that name this server's own sign-in still land on the host's.
+      is SignIn.Host ->
+        route.get(START_PATH) {
+          call.respondRedirect(signInPath(call.request.queryParameters["return"] ?: "/my"))
+        }
+    }
+  }
+
+  private fun oauthAppRoutes(route: Route, app: SignIn.OAuthApp) {
     route.get(START_PATH) {
       val state = UiBuilderConfig.randomToken()
       val returnPath = safeReturn(call.request.queryParameters["return"])
@@ -100,8 +201,8 @@ class GithubAuth(
       // a sign-in this browser didn't start is refused.
       call.response.cookies.append(cookie(STATE_COOKIE, sign("$state|$returnPath"), maxAge = 600))
       call.respondRedirect(
-        "$authorizeUrl?client_id=${enc(clientId)}" +
-          "&redirect_uri=${enc(callbackUrl())}&state=${enc(state)}&allow_signup=true"
+        "${app.authorizeUrl}?client_id=${enc(app.clientId)}" +
+          "&redirect_uri=${enc(app.callbackUrl())}&state=${enc(state)}&allow_signup=true"
       )
     }
 
@@ -124,7 +225,7 @@ class GithubAuth(
             status = HttpStatusCode.Forbidden,
           )
       val login = runCatching {
-        exchange(code)
+        exchange(app, code)
       }
         .getOrElse {
           return@get call.respondText(
@@ -151,15 +252,15 @@ class GithubAuth(
     }
   }
 
-  private suspend fun exchange(code: String): String {
+  private suspend fun exchange(app: SignIn.OAuthApp, code: String): String {
     val token =
       http.submitForm(
-        tokenUrl,
+        app.tokenUrl,
         parameters {
-          append("client_id", clientId)
-          append("client_secret", clientSecret)
+          append("client_id", app.clientId)
+          append("client_secret", app.clientSecret)
           append("code", code)
-          append("redirect_uri", callbackUrl())
+          append("redirect_uri", app.callbackUrl())
         },
       ) {
         accept(ContentType.Application.Json)
@@ -170,7 +271,7 @@ class GithubAuth(
       body["access_token"]?.jsonPrimitive?.contentOrNull
         ?: error(body["error_description"]?.jsonPrimitive?.contentOrNull ?: "no access token")
     val user =
-      http.get(userUrl) {
+      http.get(app.userUrl) {
         header(HttpHeaders.Authorization, "Bearer $accessToken")
         accept(ContentType.parse("application/vnd.github+json"))
       }
@@ -184,7 +285,7 @@ class GithubAuth(
   private fun allowed(login: String) =
     allowedUsers.isEmpty() || allowedUsers.any { it.equals(login, ignoreCase = true) }
 
-  private fun callbackUrl() = "${publicUrl.trimEnd('/')}$CALLBACK_PATH"
+  private fun SignIn.OAuthApp.callbackUrl() = "${publicUrl.trimEnd('/')}$CALLBACK_PATH"
 
   private fun cookie(name: String, value: String, maxAge: Int) =
     Cookie(
@@ -236,6 +337,15 @@ class GithubAuth(
     private const val DEVICE = "device"
     private const val DEVICE_TTL_MS = 365L * 24 * 60 * 60 * 1000
 
+    /** The Compose Preview server's sign-in, on the host this server shares ([SignIn.Host]). */
+    const val HOST_START_PATH = "/auth/github/start"
+    const val HOST_WHOAMI_PATH = "/auth/github/whoami"
+    const val HOST_SIGN_OUT_PATH = "/auth/github/logout"
+
+    /** Its session cookie; `__Host-` prefixed over HTTPS. */
+    private const val HOST_COOKIE = "cp_gh_auth"
+    private const val HOST_TIMEOUT_MS = 5_000L
+
     /**
      * Only a same-site path: never an absolute URL a sign-in could be bounced to. Control
      * characters are refused too: browsers drop tabs and newlines while parsing a URL, so
@@ -251,30 +361,74 @@ class GithubAuth(
       } ?: "/"
 
     /**
-     * From the environment: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `PUBLIC_URL` and
-     * `SESSION_SECRET`, plus optional `GITHUB_USERS` (comma-separated). Null when the client id is
-     * unset: the server then gates editing with its printed edit link instead.
+     * From the environment, one of:
+     * - `HOST_SIGN_IN_URL`: the internal URL of the Compose Preview server this one shares its host
+     *   with, whose GitHub sign-in it reuses ([SignIn.Host]). `SESSION_SECRET` is optional: without
+     *   it, the key that signs device tokens is generated once and kept in [keyDir].
+     * - `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `PUBLIC_URL` and `SESSION_SECRET`: its own
+     *   OAuth App ([SignIn.OAuthApp]).
+     *
+     * Plus optional `GITHUB_USERS` (comma-separated). Null when neither is set: the server then
+     * gates editing with its printed edit link instead.
      */
-    fun fromEnvironment(env: Map<String, String>, http: HttpClient): GithubAuth? {
-      val clientId = env["GITHUB_CLIENT_ID"]?.takeIf { it.isNotBlank() } ?: return null
+    fun fromEnvironment(env: Map<String, String>, http: HttpClient, keyDir: File?): GithubAuth? {
+      fun value(name: String) = env[name]?.takeIf { it.isNotBlank() }
+      val hostUrl = value("HOST_SIGN_IN_URL")
+      val clientId = value("GITHUB_CLIENT_ID")
+      require(hostUrl == null || clientId == null) {
+        "set HOST_SIGN_IN_URL or GITHUB_CLIENT_ID, not both: they are two ways to sign in"
+      }
+      val allowedUsers =
+        value("GITHUB_USERS")
+          .orEmpty()
+          .split(',')
+          .map { it.trim() }
+          .filter { it.isNotEmpty() }
+          .toSet()
+      if (hostUrl != null) {
+        val secret =
+          value("SESSION_SECRET")
+            ?: storedKey(
+              requireNotNull(keyDir) {
+                "HOST_SIGN_IN_URL is set, so SESSION_SECRET or USER_DESIGNS_DIR is needed too"
+              }
+            )
+        return GithubAuth(SignIn.Host(hostUrl), secret, allowedUsers, http)
+      }
+      if (clientId == null) return null
       fun required(name: String) =
-        requireNotNull(env[name]?.takeIf { it.isNotBlank() }) {
-          "GITHUB_CLIENT_ID is set, so $name is needed too"
-        }
+        requireNotNull(value(name)) { "GITHUB_CLIENT_ID is set, so $name is needed too" }
       return GithubAuth(
         clientId = clientId,
         clientSecret = required("GITHUB_CLIENT_SECRET"),
         publicUrl = required("PUBLIC_URL"),
         sessionSecret = required("SESSION_SECRET"),
-        allowedUsers =
-          env["GITHUB_USERS"]
-            .orEmpty()
-            .split(',')
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
-            .toSet(),
+        allowedUsers = allowedUsers,
         http = http,
       )
     }
+
+    /**
+     * The device-token key kept in [dir], made on first use and readable by this user only. Losing
+     * it only means signing in again for a new device token.
+     */
+    internal fun storedKey(dir: File): String {
+      val file = File(dir, KEY_FILE)
+      if (!file.isFile) {
+        dir.mkdirs()
+        val fresh = File(dir, "$KEY_FILE.tmp")
+        fresh.writeText(UiBuilderConfig.randomToken() + UiBuilderConfig.randomToken())
+        runCatching {
+          Files.setPosixFilePermissions(
+            fresh.toPath(),
+            PosixFilePermissions.fromString("rw-------"),
+          )
+        }
+        check(fresh.renameTo(file)) { "could not write $file" }
+      }
+      return file.readText().trim().also { check(it.length >= 32) { "$file is too short" } }
+    }
+
+    private const val KEY_FILE = "device-token-key"
   }
 }
