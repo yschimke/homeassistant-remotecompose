@@ -100,6 +100,7 @@ in the builder.
 | `UI_BUILDER_COOKIE_SECRET` | Signs UI Builder's session cookie |
 | `UI_BUILDER_BROWSER_URL` | Where browsers reach UI Builder, e.g. `https://builder.ha.coo.ee` |
 | `UI_BUILDER_TOKEN` | The operator token the server creates and shares designs with. Set it, keep it secret |
+| `UI_BUILDER_ADMIN_READ_TOKEN` | Optional: the builder's `--admin-read-token`, so the app's design list (`/api/my/studio`) also shows designs people made in UI Builder themselves. The operator token can't list them. For the bundled builder, pass the same value as `--admin-read-token` in `UI_BUILDER_ARGS` |
 | `UI_BUILDER_ARGS` | Optional: more `compose-preview-server serve` flags for the bundled builder. The image defaults load `/app/catalogs.json` with `remote-m3,ha-cards`; retain those flags when overriding this value. |
 
 You need two OAuth Apps because a GitHub OAuth App has one callback host. A GitHub App with both
@@ -135,7 +136,8 @@ One hostname, split by path:
   - Its sign-in owns `/auth/*`, which is why this server's sign-in lives under `/my/auth/`.
 
 There it runs without its bundled UI Builder (`UI_BUILDER_BINARY` empty). `UI_BUILDER_URL` and
-`UI_BUILDER_TOKEN` point it at the preview box's builder instead.
+`UI_BUILDER_TOKEN` point it at the preview box's builder instead, and `UI_BUILDER_ADMIN_READ_TOKEN`
+(the preview server's `--admin-read-token`) lets it list the designs people made there directly.
 
 Publishing private designs from the app needs GitHub sign-in on top, and `USER_DESIGNS_DIR` on the
 `/data` volume. On `ha.coo.ee` that is `HOST_SIGN_IN_URL=http://preview:8080`, reusing the preview

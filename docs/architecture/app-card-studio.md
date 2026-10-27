@@ -111,7 +111,10 @@ use it** (Android) puts it on the card, for that person alone:
 2. `GET /api/my/studio` lists the UI Builder designs the server opened for that
    person, newest first, each with the card type it was seeded for. The server
    records a design when the signed-in browser opens a studio handoff (or seeds a
-   schema or fork); UI Builder itself records the server as the owner.
+   schema or fork); UI Builder itself records the server as the owner. It also lists
+   the designs the person owns or edits in UI Builder directly (no card type), read
+   from the builder's admin listing with `UI_BUILDER_ADMIN_READ_TOKEN`; a design in
+   both is listed once, as the server recorded it.
 3. `POST /api/my/designs` publishes this card's design: the newest one opened from a
    handoff this card's studio opened (the server records each design with its handoff
    token), else the only one of its card type, never a guess between several. It
