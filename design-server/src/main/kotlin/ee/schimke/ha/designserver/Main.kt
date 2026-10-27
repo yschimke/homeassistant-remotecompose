@@ -17,9 +17,11 @@ import java.io.File
  * - UI Builder, optional: `UI_BUILDER_BINARY` runs the bundled one, `UI_BUILDER_URL` +
  *   `UI_BUILDER_TOKEN` use another (see [UiBuilderConfig.fromEnvironment]). With it, a browser can
  *   seed UI Builder designs from card schemas.
- * - Who may: with `GITHUB_CLIENT_ID` (+ `GITHUB_CLIENT_SECRET`, `PUBLIC_URL`, `SESSION_SECRET`,
- *   optional `GITHUB_USERS`), anyone who signs in with GitHub, each design shared with its designer
- *   ([GithubAuth]); without it, a browser that opened the edit link the server prints.
+ * - Who may: with `HOST_SIGN_IN_URL` (the sign-in of the preview server sharing this host) or
+ *   `GITHUB_CLIENT_ID` (+ `GITHUB_CLIENT_SECRET`, `PUBLIC_URL`, `SESSION_SECRET`), plus optional
+ *   `GITHUB_USERS`, anyone who signs in with GitHub, each design shared with its designer
+ *   ([GithubAuth.fromEnvironment]); without either, a browser that opened the edit link the server
+ *   prints.
  * - The front page's links: `DESIGNER_URL`, `CATALOG_URL`, `STORE_URL`
  *   ([SiteConfig.fromEnvironment]).
  * - `USER_DESIGNS_DIR`: where designs people publish are kept ([UserDesignStore]); defaults to
@@ -43,7 +45,13 @@ fun main(args: Array<String>) {
   )
   // Redirects are answers here (UI Builder's share route, GitHub's), never something to follow.
   val http = HttpClient(io.ktor.client.engine.cio.CIO) { followRedirects = false }
-  val github = GithubAuth.fromEnvironment(System.getenv(), http)
+  val userDesignsDir =
+    System.getenv("USER_DESIGNS_DIR")?.takeIf { it.isNotBlank() }?.let(::File)
+      ?: System.getenv("UI_BUILDER_STATE_DIR")
+        ?.takeIf { it.isNotBlank() }
+        ?.let { File(it, "user-designs") }
+  val userDesigns = userDesignsDir?.let(::UserDesignStore)
+  val github = GithubAuth.fromEnvironment(System.getenv(), http, keyDir = userDesignsDir)
   val uiBuilder =
     UiBuilderConfig.fromEnvironment()?.let { (config, process) ->
       process?.start()
@@ -57,12 +65,6 @@ fun main(args: Array<String>) {
       )
       UiBuilderIntegration(config, UiBuilderClient(config, http))
     }
-  val userDesigns =
-    (System.getenv("USER_DESIGNS_DIR")?.takeIf { it.isNotBlank() }?.let(::File)
-        ?: System.getenv("UI_BUILDER_STATE_DIR")
-          ?.takeIf { it.isNotBlank() }
-          ?.let { File(it, "user-designs") })
-      ?.let(::UserDesignStore)
   if (userDesigns != null) println("user designs: revision ${userDesigns.revision}")
   val usage =
     UsageStats(

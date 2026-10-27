@@ -523,6 +523,81 @@ class UserDesignsTest {
   }
 
   @Test
+  fun withTheHostsSignIn_myPagesFollowItsSessionAndOnlyItsCookieIsSent() = testApplication {
+    val forwarded = mutableListOf<String?>()
+    externalServices {
+      hosts("http://preview") {
+        routing {
+          get(GithubAuth.HOST_WHOAMI_PATH) {
+            val cookie = call.request.headers[HttpHeaders.Cookie]
+            forwarded += cookie
+            if (cookie == "__Host-cp_gh_auth=live")
+              call.respondText(
+                """{"login":"octocat","guest":false}""",
+                ContentType.Application.Json,
+              )
+            else call.respondText("Not signed in.", status = HttpStatusCode.Unauthorized)
+          }
+        }
+      }
+    }
+    val github =
+      GithubAuth(
+        GithubAuth.SignIn.Host("http://preview"),
+        sessionSecret = "session-secret",
+        http = createClient { followRedirects = false },
+      )
+    val store = UserDesignStore(Files.createTempDirectory("user-designs").toFile())
+    application { designServer(LibraryHolder(library()), github = github, userDesigns = store) }
+    val browser = createClient { followRedirects = false }
+
+    // Signed out: sign-in is the host's, and an anonymous request never asks it.
+    val signedOut = browser.get("/my")
+    assertEquals(HttpStatusCode.Found, signedOut.status)
+    assertEquals("/auth/github/start?return=%2Fmy", signedOut.headers[HttpHeaders.Location])
+    assertEquals(
+      "/auth/github/start?return=%2Fmy",
+      browser.get(GithubAuth.START_PATH).headers[HttpHeaders.Location],
+    )
+    assertEquals(HttpStatusCode.Unauthorized, browser.get("/api/my/studio").status)
+    assertTrue(forwarded.isEmpty())
+
+    val session = "__Host-cp_gh_auth=live; design-server-edit=other"
+    val page = browser.get("/my") { header(HttpHeaders.Cookie, session) }
+    assertEquals(HttpStatusCode.OK, page.status)
+    assertTrue("octocat" in page.bodyAsText())
+    assertEquals("__Host-cp_gh_auth=live", forwarded.last(), "only the host's session cookie")
+
+    val minted = browser.post("/api/my/device-token") { header(HttpHeaders.Cookie, session) }
+    assertEquals(HttpStatusCode.OK, minted.status)
+    val token = json.parseToJsonElement(minted.bodyAsText()).jsonObject["token"]!!.jsonPrimitive
+    assertEquals("octocat", github.deviceLogin(token.content))
+
+    val ended = browser.get("/my") { header(HttpHeaders.Cookie, "__Host-cp_gh_auth=ended") }
+    assertEquals(HttpStatusCode.Found, ended.status)
+    assertEquals(
+      HttpStatusCode.Unauthorized,
+      browser
+        .post("/api/my/device-token") { header(HttpHeaders.Cookie, "cp_gh_auth=ended") }
+        .status,
+    )
+  }
+
+  @Test
+  fun theHostSignInsDeviceTokenKeyIsMadeOnceAndKept() {
+    val dir = Files.createTempDirectory("user-designs").toFile()
+    val key = GithubAuth.storedKey(dir)
+    assertTrue(key.length >= 32)
+    assertEquals(key, GithubAuth.storedKey(dir))
+    assertEquals(
+      "rw-------",
+      java.nio.file.attribute.PosixFilePermissions.toString(
+        Files.getPosixFilePermissions(File(dir, "device-token-key").toPath())
+      ),
+    )
+  }
+
+  @Test
   fun aDeviceTokenCannotMintAnother() = testApplication {
     val f = fixture()
     val token = f.github.deviceToken("octocat")

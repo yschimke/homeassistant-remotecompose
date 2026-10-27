@@ -66,7 +66,8 @@ in the builder.
 |---|---|
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | The design server's GitHub OAuth App. Callback: `<PUBLIC_URL>/my/auth/github/callback` |
 | `PUBLIC_URL` | Where browsers reach the design server, e.g. `https://ha.coo.ee` |
-| `SESSION_SECRET` | Signs the session cookie: a long random string |
+| `SESSION_SECRET` | Signs the session cookie and the app's device tokens: a long random string |
+| `HOST_SIGN_IN_URL` | Instead of the three above: reuse the sign-in of the Compose Preview server sharing this host, at this internal URL (see below) |
 | `GITHUB_USERS` | Optional: comma-separated logins allowed to design (default: anyone) |
 | `UI_BUILDER_GITHUB_CLIENT_ID`, `UI_BUILDER_GITHUB_CLIENT_SECRET` | The bundled UI Builder's own OAuth App. Callback: `<UI_BUILDER_BROWSER_URL>/auth/github/callback` |
 | `UI_BUILDER_COOKIE_SECRET` | Signs UI Builder's session cookie |
@@ -106,11 +107,22 @@ One hostname, split by path:
 There it runs without its bundled UI Builder (`UI_BUILDER_BINARY` empty). `UI_BUILDER_URL` and
 `UI_BUILDER_TOKEN` point it at the preview box's builder instead.
 
-Publishing private designs from the app needs this server's own GitHub sign-in on top: the
-`GITHUB_*`, `SESSION_SECRET` and `PUBLIC_URL` settings above, its OAuth App's callback at
-`https://ha.coo.ee/my/auth/github/callback`, and `USER_DESIGNS_DIR` on the `/data` volume.
+Publishing private designs from the app needs GitHub sign-in on top, and `USER_DESIGNS_DIR` on the
+`/data` volume. On `ha.coo.ee` that is `HOST_SIGN_IN_URL=http://preview:8080`, reusing the preview
+server's sign-in rather than an OAuth App of this server's own:
 
-- Without them, `/my` and `/api/my/*` answer 404.
+- `/my` sends a browser to `/auth/github/start?return=/my`, the preview server's. ha.coo.ee is one
+  of its handoff site hosts, so GitHub returns to `preview.coo.ee` and the browser comes back with a
+  host-only `cp_gh_auth` cookie. One sign-in covers UI Builder and `/my`, and so does signing out.
+- This server reads who that is from the preview server's `GET /auth/github/whoami`, sending only
+  that cookie, and only for requests that carry it.
+- Device tokens are signed with `SESSION_SECRET` when set, or else a key made once and kept in
+  `USER_DESIGNS_DIR` (`device-token-key`).
+
+The other way, its own OAuth App, takes the `GITHUB_*`, `SESSION_SECRET` and `PUBLIC_URL` settings
+above with the callback at `https://<host>/my/auth/github/callback`.
+
+- Without either, `/my` and `/api/my/*` answer 404.
 - With them, editing the library in UI Builder needs `LIBRARY_EDITORS`: GitHub sign-in replaces
   the shared edit link.
 

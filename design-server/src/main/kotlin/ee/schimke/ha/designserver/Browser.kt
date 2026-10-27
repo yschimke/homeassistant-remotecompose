@@ -487,7 +487,9 @@ object Pages {
         )
         if (editor.login != null)
           append(
-            "<form id=\"sign-out\" method=\"post\" action=\"${GithubAuth.SIGN_OUT_PATH}\"></form>"
+            "<form id=\"sign-out\" method=\"post\" action=\"${
+              esc(editor.signOutPath ?: GithubAuth.SIGN_OUT_PATH)
+            }\"></form>"
           )
         val unsupported = UiBuilderSeed.unsupported(schema)
         if (unsupported.isNotEmpty())
