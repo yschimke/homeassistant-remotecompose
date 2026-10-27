@@ -503,8 +503,9 @@ private fun HaNotificationsSetting(session: HaSession) {
   SettingSwitch(
     title = "Home Assistant notifications",
     summary =
-      "Messages sent to this device with notify.mobile_app, while the app is connected. " +
-        "They show on a paired watch too.",
+      "Messages sent to this device with notify.mobile_app. With the Terrazzo integration in " +
+        "Home Assistant they arrive while the app is closed too; without it, while it's " +
+        "connected. They show on a paired watch too.",
     checked = allowed,
   ) { on ->
     if (on && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

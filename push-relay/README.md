@@ -38,6 +38,8 @@ Set it up once:
    and `FIREBASE_DEPLOY_SERVICE_ACCOUNT` (its email);
    or store a key for it as the `FIREBASE_DEPLOY_SERVICE_ACCOUNT_JSON` secret.
 
+A failed wake's FCM error code is in the function's logs (`Wake refused`) and in the 502 answer.
+
 To deploy by hand:
 
 ```sh
