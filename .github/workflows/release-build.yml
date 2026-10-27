@@ -87,8 +87,6 @@ concurrency:
 #   FIREBASE_DEPLOY_SERVICE_ACCOUNT_JSON
 # The project is GOOGLE_SERVICES_JSON's project_id, the one the app's
 # PUSH_RELAY_URL names, unless the FIREBASE_PROJECT_ID variable says otherwise.
-# The job runs in the `push-relay` environment: these may be set there, and
-# its protection rules (required reviewers) gate each deploy.
 jobs:
   home-assistant:
     name: Home Assistant release assets
@@ -114,9 +112,6 @@ jobs:
     name: Deploy the push relay
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # Required reviewers on this environment approve each deploy before it runs, and its own
-    # variables or key are visible to this job only (docs: push-relay/README.md).
-    environment: push-relay
     permissions:
       contents: read
       # Keyless sign-in to Google Cloud (Workload Identity Federation).

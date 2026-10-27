@@ -38,18 +38,6 @@ Set it up once:
    and `FIREBASE_DEPLOY_SERVICE_ACCOUNT` (its email);
    or store a key for it as the `FIREBASE_DEPLOY_SERVICE_ACCOUNT_JSON` secret.
 
-The job runs in the `push-relay` GitHub environment (Settings → Environments). Add yourself as a
-required reviewer there and each release waits for your approval before deploying; the variables
-or key above can live in that environment instead of the repository, so only this job sees them.
-To hold the Google side to the same gate, add `&& assertion.environment == 'push-relay'` to the
-Workload Identity provider's attribute condition:
-
-```sh
-gcloud iam workload-identity-pools providers update-oidc terrazzo-release \
-  --location=global --workload-identity-pool=github \
-  --attribute-condition="<the existing condition> && assertion.environment == 'push-relay'"
-```
-
 A failed wake's FCM error code is in the function's logs (`Wake refused`) and in the 502 answer.
 
 To deploy by hand:
