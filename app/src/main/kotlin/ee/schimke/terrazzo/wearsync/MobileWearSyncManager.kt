@@ -641,8 +641,9 @@ class MobileWearSyncManager(
           }
           if (chosen.keys.any { it !in live }) watchWidgetChoices.retainOnly(live.toSet())
           if (liveUpdates.any { it !in live }) watchWidgetLive.retainOnly(live.toSet())
-          // Only with every card known: a partial list would stop waking for the rest.
-          if (pinned != null || sections != null) {
+          // Only with every card known, pins and sections both written (empty ones are too): a
+          // partial list would stop waking for the rest.
+          if (pinned != null && sections != null) {
             val cards = liveWatchWidgetCards(placed, chosen, options, liveUpdates)
             watchWidgetLive.setEntities(
               wearEntityIds(cards.map { it.rawJson }, registrySnapshot.value) +
