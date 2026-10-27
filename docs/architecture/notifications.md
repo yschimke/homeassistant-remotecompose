@@ -32,6 +32,9 @@ Without the integration, or in a build without Firebase (no `google-services.jso
 and no token), the registration has no push URL, and notifications arrive only while the app is
 connected.
 
+The same wake keeps the app's launcher and Wear widgets current when an entity they show visibly
+changes: see [live-widget-updates.md](live-widget-updates.md).
+
 ## What leaves Home Assistant
 
 Only the wake. The message's title, text and data stay on the HA machine: HA posts them to itself,

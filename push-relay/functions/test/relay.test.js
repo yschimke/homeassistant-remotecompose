@@ -14,6 +14,16 @@ test('a wake carries the registration and nothing else', () => {
   assert.deepEqual(m.android, { priority: 'high', collapseKey: 'sync-hook1' });
 });
 
+test('a state wake names the registration, at high priority only when urgent', () => {
+  const routine = buildWake(request({ type: 'state', urgent: false }));
+  assert.deepEqual(routine.data, { type: 'state', webhook_id: 'hook1' });
+  assert.deepEqual(routine.android, { priority: 'normal', collapseKey: 'state-hook1' });
+  const urgent = buildWake(request({ type: 'state', urgent: true, entity_id: 'cover.garage' }));
+  assert.deepEqual(urgent.data, { type: 'state', webhook_id: 'hook1' });
+  assert.equal(urgent.android.priority, 'high');
+  assert.throws(() => buildWake(request({ type: 'notification' })), /Unknown wake type/);
+});
+
 test('other apps, bad tokens and bad webhook ids are refused', async () => {
   const send = async () => 'id';
   const status = async (body) => (await handle('POST', body, send, rateLimiter())).status;

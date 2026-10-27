@@ -145,6 +145,22 @@ open class OfflineCacheStorage(rootDir: File) {
   }
 
   /**
+   * Replaces [baseUrl]'s latest snapshot's entity states with [states], a live session's, keeping
+   * what it holds besides (history, devices, the unit system); stored as is when there is none.
+   * Atomic with [putSnapshot] and [updateLatestState].
+   */
+  @Synchronized
+  fun putLatestStates(baseUrl: String, states: HaSnapshot) {
+    val stored = latestSnapshot(baseUrl)
+    val pointer = readJson(snapshotPointerFile(baseUrl), SnapshotPointer.serializer())
+    putSnapshot(
+      baseUrl,
+      pointer?.urlPath,
+      stored?.copy(states = stored.states + states.states) ?: states,
+    )
+  }
+
+  /**
    * The last [hours] of history read live for [entityIds] (the card-history screen), so an offline
    * open still draws a chart; null when it was never read. Order of [entityIds] doesn't matter.
    */

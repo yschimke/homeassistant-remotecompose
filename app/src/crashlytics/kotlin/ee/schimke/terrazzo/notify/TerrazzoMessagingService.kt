@@ -4,16 +4,23 @@ import android.util.Log
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import ee.schimke.terrazzo.terrazzoGraph
+import ee.schimke.terrazzo.widget.WidgetStateWorker
 import kotlinx.coroutines.runBlocking
 
 /**
  * Silent wakes from the Terrazzo push relay ([PushRelay]): the Terrazzo integration holds a Home
  * Assistant notification for this device and asked for the app. The message carries no content,
  * only `type: sync` and the registration's `webhook_id`; the app connects with its own login and
- * takes what was held.
+ * takes what was held. A `type: state` wake says an entity a widget reads changed
+ * ([WidgetStateWorker]).
  */
 class TerrazzoMessagingService : FirebaseMessagingService() {
   override fun onMessageReceived(message: RemoteMessage) {
+    // An entity a widget reads visibly changed: redraw them, following it while it moves.
+    if (message.data["type"] == "state") {
+      message.data["webhook_id"]?.let { WidgetStateWorker.enqueue(applicationContext, it) }
+      return
+    }
     if (message.data["type"] != "sync") return
     // Called on a background thread, with about 20 seconds to finish.
     runBlocking {

@@ -238,6 +238,17 @@ interface HaSession {
   suspend fun takeHeldNotifications(webhookId: String): List<HaPushNotification> = emptyList()
 
   /**
+   * Tells the Terrazzo integration which entities this device's widgets read, so a change to one
+   * wakes the app, with a lease of [leaseSeconds] while the app follows them itself. The lease
+   * granted, in seconds, or null without the integration (or a live HA).
+   */
+  suspend fun watchStates(
+    webhookId: String,
+    entityIds: Collection<String>,
+    leaseSeconds: Int,
+  ): Int? = null
+
+  /**
    * Dismiss a single persistent notification by id — removes it from HA's bell-icon list. Live
    * sessions round-trip `persistent_notification.dismiss`; HA then re-broadcasts the shortened list
    * over the subscription. Sessions that can't observe notifications (demo, offline) no-op.
@@ -578,6 +589,18 @@ class LiveHaSession(
 
   override suspend fun takeHeldNotifications(webhookId: String): List<HaPushNotification> =
     client.takeTerrazzoPushes(webhookId).mapNotNull { HaPushNotification.parse(it) }
+
+  override suspend fun watchStates(
+    webhookId: String,
+    entityIds: Collection<String>,
+    leaseSeconds: Int,
+  ): Int? =
+    try {
+      client.watchTerrazzoStates(webhookId, entityIds, leaseSeconds)
+    } catch (refused: HaCommandException) {
+      // No Terrazzo integration, or one older than state wakes, or not registered for push yet.
+      null
+    }
 
   override suspend fun dismissNotification(notificationId: String) {
     // Optimistically drop it so the bell/sheet update on the tap

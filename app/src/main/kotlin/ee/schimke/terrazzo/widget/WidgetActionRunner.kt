@@ -187,10 +187,15 @@ internal object WidgetActionRunner {
 
   /**
    * Runs [block] on [baseUrl]'s HA from the background (a silent push wake): on the app's socket
-   * while connected, else a short-lived session from the stored login.
+   * while connected, else a short-lived session from the stored login; for [timeoutMs] at most.
    */
-  suspend fun withSession(context: Context, baseUrl: String, block: suspend (HaSession) -> Unit) {
-    withTimeout(SYNC_TIMEOUT_MS) {
+  suspend fun withSession(
+    context: Context,
+    baseUrl: String,
+    timeoutMs: Long = SYNC_TIMEOUT_MS,
+    block: suspend (HaSession) -> Unit,
+  ) {
+    withTimeout(timeoutMs) {
       val live = connectedAppSession(baseUrl)
       if (live != null) block(live) else onNewSession(context.terrazzoGraph(), baseUrl, block)
     }

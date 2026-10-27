@@ -7,6 +7,10 @@ wake the app. The wake is a high-priority FCM data message with only `{type: "sy
 the app connects and takes the held messages itself. No notification content reaches the relay or
 FCM. See [docs/architecture/notifications.md](../docs/architecture/notifications.md).
 
+The integration also asks for `{type: "state", webhook_id}` wakes when an entity a widget shows
+visibly changes: high priority when a movement starts or ends (a garage door `opening`), normal
+priority otherwise. See [docs/architecture/live-widget-updates.md](../docs/architecture/live-widget-updates.md).
+
 It runs in the same Firebase project as the app's `google-services.json`, under its own service
 account, so no FCM credential is handed to Home Assistant or the integration. It wakes only the
 Terrazzo app (`app_id`), limits each token to 500 wakes a day per instance, and collapses repeated

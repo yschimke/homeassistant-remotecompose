@@ -12,6 +12,7 @@ import kotlin.test.assertFailsWith
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -82,6 +83,25 @@ class HaClientTerrazzoPushTest {
       assertEquals(listOf("Washer done", "Second"), held.map { it.string("message") })
       assertEquals("washer", HaPushNotification.parse(held.first())?.tag)
     }
+  }
+
+  @Test
+  fun watchingSendsTheEntitiesAndLeaseAndReturnsTheLeaseGranted() {
+    val commands = mutableListOf<JsonObject>()
+    fakeHa(
+      commands,
+      { id -> """{"id":$id,"type":"result","success":true,"result":{"lease_seconds":120}}""" },
+    ) { client ->
+      assertEquals(120, client.watchTerrazzoStates("hook", listOf("cover.garage", "sun.sun"), 120))
+    }
+    val command = commands.single()
+    assertEquals("terrazzo/push/watch", command.string("type"))
+    assertEquals("hook", command.string("webhook_id"))
+    assertEquals(
+      listOf("cover.garage", "sun.sun"),
+      command.getValue("entity_ids").jsonArray.map { it.jsonPrimitive.content },
+    )
+    assertEquals(120, command.getValue("lease_seconds").jsonPrimitive.int)
   }
 
   @Test

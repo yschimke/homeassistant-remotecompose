@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo.core.wearsync
 
+import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.HaSession
@@ -30,6 +31,15 @@ interface WearSyncManager {
   suspend fun revokeWatchAccess(session: HaSession) {}
 
   val streamActive: StateFlow<Boolean>
+
+  /** Every entity a card on the paired watches reads: whose changes should reach them. */
+  suspend fun watchedEntities(): Set<String> = emptySet()
+
+  /**
+   * Sends [snapshot]'s values for the watch's cards now, from a wake that has a session of its own
+   * rather than the app's ([setSession]).
+   */
+  suspend fun pushValues(snapshot: HaSnapshot) {}
 
   /**
    * The Terrazzo widgets placed on the paired watches, each with the card the phone chose: what is
