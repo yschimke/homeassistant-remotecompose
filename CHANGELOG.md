@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.70](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.69...v0.1.70) (2026-10-27)
+
+
+### Features
+
+* **widgets:** per-widget live updates, with in-app and routine refresh for all ([#1285](https://github.com/yschimke/homeassistant-remotecompose/issues/1285)) ([7ff4992](https://github.com/yschimke/homeassistant-remotecompose/commit/7ff4992d2bc6a15c38aa56a8b09dada201a7cedc))
+* **widgets:** wake the app when a widget's entity visibly changes ([#1283](https://github.com/yschimke/homeassistant-remotecompose/issues/1283)) ([c936344](https://github.com/yschimke/homeassistant-remotecompose/commit/c93634418dd56a01032f5e97f6c8ee9f996f79a3))
+
+
+### Bug Fixes
+
+* **design-server:** sign in under /my/auth so ha.coo.ee can route it ([#1286](https://github.com/yschimke/homeassistant-remotecompose/issues/1286)) ([7bde79b](https://github.com/yschimke/homeassistant-remotecompose/commit/7bde79bc9c866e80fbfb52be10a7a74f29242868))
+* **push-relay:** report FCM's refusal code; say notifications arrive while closed ([#1287](https://github.com/yschimke/homeassistant-remotecompose/issues/1287)) ([8519247](https://github.com/yschimke/homeassistant-remotecompose/commit/85192474ebd151abe2bbe282926a356d5d338b29))
+
 ## [0.1.69](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.68...v0.1.69) (2026-10-26)
 
 
