@@ -3,11 +3,15 @@
 package ee.schimke.terrazzo.shared
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
@@ -119,6 +123,14 @@ fun CardStudioScreen(
   var editorUrl by remember { mutableStateOf<String?>(null) }
   var externalUrl by remember(editorUrl) { mutableStateOf<String?>(null) }
   var showAdvanced by remember { mutableStateOf(false) }
+  val instructionIntoView = remember { BringIntoViewRequester() }
+  var instructionFocused by remember { mutableStateOf(false) }
+  var viewportHeight by remember { mutableIntStateOf(0) }
+  // The text field brings only its cursor into view, and focus can arrive before the IME shrinks
+  // the viewport: relocate the whole field again after that layout change, and as it grows.
+  LaunchedEffect(instructionFocused, viewportHeight, instruction) {
+    if (instructionFocused && viewportHeight > 0) instructionIntoView.bringIntoView()
+  }
   // Which step's request the message belongs to.
   var messageStep by remember { mutableStateOf(0) }
   var message by remember { mutableStateOf<String?>(null) }
@@ -272,6 +284,7 @@ fun CardStudioScreen(
         Modifier.fillMaxSize()
           .padding(padding)
           .consumeWindowInsets(padding)
+          .onSizeChanged { viewportHeight = it.height }
           .verticalScroll(rememberScrollState())
           .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -368,7 +381,10 @@ fun CardStudioScreen(
               enabled = !busy,
               minLines = if (compactHeight) 2 else 3,
               maxLines = if (compactHeight) 2 else Int.MAX_VALUE,
-              modifier = Modifier.fillMaxWidth(),
+              modifier =
+                Modifier.fillMaxWidth().bringIntoViewRequester(instructionIntoView).onFocusChanged {
+                  instructionFocused = it.isFocused
+                },
             )
             Text(
               "Sending shares this card's display text and current values with ${provider.label}. Other entities, Home Assistant tokens and entity-picture URLs stay on this device.",
