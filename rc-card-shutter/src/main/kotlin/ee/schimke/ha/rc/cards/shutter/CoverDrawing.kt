@@ -239,10 +239,13 @@ private fun CoverButton(
   action: HaAction,
 ) {
   val theme = currentRemoteHaTheme()
+  // A gone component can still take touches inside its bounds, so a hidden button sends nothing
+  // and keeps no bounds to touch.
   val clickable =
-    action.toRemoteAction(live.enabled, now == CoverButtonState.Enabled)?.let {
+    action.toRemoteAction(live.enabled.and(live.shown), now == CoverButtonState.Enabled)?.let {
       RemoteModifier.clickable(it)
     } ?: RemoteModifier
+  val edge = live.shown.select(32.rdp, 0.rdp)
   val background =
     live.enabled.select(
       theme.divider,
@@ -255,7 +258,8 @@ private fun CoverButton(
     )
   RemoteBox(
     modifier =
-      RemoteModifier.size(32.rdp)
+      RemoteModifier.width(edge)
+        .height(edge)
         .visibility(live.shown.visibility())
         .clip(RemoteCircleShape)
         .background(background)
