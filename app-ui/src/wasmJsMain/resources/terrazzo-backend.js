@@ -1,6 +1,28 @@
 // Capability detection is per page. Static hosts, the HA panel and demo keep browser storage.
 (() => {
-  const local = () => ({ kind: 'local', caps: null });
+  // reason says why a page that could have had a backend fell back: 'not-enabled' when the host
+  // answered without one, 'unavailable' when it didn't answer in time.
+  const local = (reason = null) => ({ kind: 'local', caps: null, reason });
+
+  async function probe(timeoutMs) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch('/api/wasmo/v1/capabilities', {
+        credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal: controller.signal,
+      });
+      if (response.status >= 500) return local('unavailable');
+      if (response.status !== 200 || !/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type') ?? '')) {
+        return local('not-enabled');
+      }
+      const caps = await response.json().catch(() => null);
+      return caps?.api === 1 ? { kind: 'wasmo', caps } : local('not-enabled');
+    } catch {
+      return local('unavailable');
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
 
   async function detect() {
     // Accessing frameElement can throw for a cross-origin embedding page.
@@ -12,22 +34,9 @@
     if (/\/demo\/?$/.test(location.pathname) || new URLSearchParams(location.search).get('demo') === '1') {
       return local();
     }
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
-    try {
-      const response = await fetch('/api/wasmo/v1/capabilities', {
-        credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal: controller.signal,
-      });
-      if (response.status !== 200 || !/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type') ?? '')) {
-        return local();
-      }
-      const caps = await response.json();
-      return caps?.api === 1 ? { kind: 'wasmo', caps } : local();
-    } catch {
-      return local();
-    } finally {
-      clearTimeout(timeout);
-    }
+    const first = await probe(3000);
+    // A backend that is starting up or briefly overloaded gets one longer second chance.
+    return first.reason === 'unavailable' ? probe(6000) : first;
   }
 
   const backend = window.terrazzoBackend = {
@@ -95,6 +104,31 @@
     button.addEventListener('click', () => window.terrazzoOAuth.useDifferentSignIn());
     document.querySelector('#app .loading')?.append(button);
   };
+  // The .wasmo build marks its page, so only a Wasmo install says it fell back to this browser.
+  backend.ready.then(({ reason }) => {
+    if (!reason || typeof document === 'undefined') return;
+    if (document.querySelector('meta[name="terrazzo-host"]')?.content !== 'wasmo') return;
+    const text = reason === 'not-enabled'
+      ? 'This Wasmo isn\u2019t saving Terrazzo\u2019s settings or sign-in. Install the app under the name your Wasmo enables for it (usually \u201cterrazzo\u201d). Until then, they\u2019re saved in this browser only.'
+      : 'Your Wasmo didn\u2019t answer, so settings and sign-in are saved in this browser only for now. Reload to try again.';
+    showNotice(text);
+  });
+
+  function showNotice(text) {
+    const notice = document.createElement('div');
+    notice.setAttribute('role', 'status');
+    notice.style.cssText = 'position:fixed;inset:0 0 auto 0;z-index:2147483647;display:flex;gap:12px;align-items:center;'
+      + 'padding:8px 12px;font:14px/1.4 system-ui,sans-serif;background:#fff4d6;color:#3d2e00;box-shadow:0 1px 4px #0003';
+    const message = document.createElement('span');
+    message.style.flex = '1';
+    message.textContent = text;
+    const close = document.createElement('button');
+    close.textContent = 'Dismiss';
+    close.addEventListener('click', () => notice.remove());
+    notice.append(message, close);
+    (document.body ?? document.documentElement).append(notice);
+  }
+
   backend.showStorageError = () => showStartupError('Settings on your Wasmo could not be loaded. Reload to try again.');
 
   function showStartupError(text) {

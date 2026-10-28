@@ -64,6 +64,9 @@
   let refreshing = null;
   let cloud = false;
   let session = null;
+  // Concurrent callers share one cloud token request. Each use still asks the Wasmo (which caches
+  // at HA), so a sign-out from another device takes effect on this one's next request.
+  let cloudRefreshing = null;
 
   class CloudAuthError extends Error {
     constructor(status) { super('Saved sign-in request failed'); this.status = status; }
@@ -81,6 +84,19 @@
       if (!/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type') ?? '')) throw new CloudAuthError(502);
       return await response.json();
     } finally { clearTimeout(timeout); }
+  }
+
+  // A legacy grant the Wasmo refused (it already holds a sign-in) would otherwise stay valid at HA.
+  // A form POST needs no CORS; the response is unreadable, so this is best effort.
+  function revokeLegacyGrant(value) {
+    if (!value?.hassUrl || !value?.refresh_token) return;
+    try {
+      fetch(`${value.hassUrl}/auth/revoke`, {
+        method: 'POST', mode: 'no-cors', credentials: 'omit',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ token: value.refresh_token }),
+      }).catch(() => {});
+    } catch { /* best effort */ }
   }
 
   function forgetLegacyTokens(expected) {
@@ -140,6 +156,20 @@
     return true;
   }
 
+  async function cloudAccessToken(current) {
+    let value;
+    try {
+      value = await cloudRequest('ha/token', 'POST', { sessionId: current.sessionId });
+    } catch (error) {
+      // 503 busy: another request held the session briefly (e.g. a slow HA refresh). Retry once.
+      if (!(error instanceof CloudAuthError) || error.status !== 503) throw error;
+      await new Promise(resolve => setTimeout(resolve, 500));
+      value = await cloudRequest('ha/token', 'POST', { sessionId: current.sessionId });
+    }
+    if (value.sessionId !== current.sessionId || value.hassUrl !== current.hassUrl || typeof value.access_token !== 'string') throw new CloudAuthError(502);
+    return value.access_token;
+  }
+
   window.terrazzoOAuth = {
     /** The signed-in Home Assistant origin after any pending redirect completes, or ''. */
     async restore() {
@@ -156,6 +186,9 @@
           catch (error) {
             if (!(error instanceof CloudAuthError) || ![401, 409].includes(error.status)) throw error;
             session = checkSession(await cloudRequest('ha/session'));
+            // Signed out means a sign-out tombstone refused it. Signed in may be another tab that
+            // imported this very grant, so leave it unrevoked.
+            if (error.status === 409 && !session.signedIn) revokeLegacyGrant(tokens);
           }
         }
         tokens = null;
@@ -200,7 +233,17 @@
     async signOut() {
       if (cloud) {
         if (!session) throw new CloudAuthError(409);
-        await cloudRequest('ha/session', 'DELETE', { sessionId: session.sessionId });
+        try {
+          await cloudRequest('ha/session', 'DELETE', { sessionId: session.sessionId });
+        } catch (error) {
+          // HA is down or gone: let the owner drop the saved sign-in rather than be stuck with it.
+          if (!(error instanceof CloudAuthError) || error.status !== 502) throw error;
+          const forget = window.confirm?.(
+            'Home Assistant could not confirm the sign-out. Remove the saved sign-in from your Wasmo anyway? '
+            + 'It stays valid in Home Assistant until you remove it from your profile there.');
+          if (!forget) throw error;
+          await cloudRequest('ha/session', 'DELETE', { sessionId: session.sessionId, forget: true });
+        }
         session = null;
       }
       tokens = null;
@@ -221,9 +264,8 @@
     async accessToken() {
       if (cloud) {
         if (!session?.signedIn) throw new AuthError('not signed in');
-        const value = await cloudRequest('ha/token', 'POST', { sessionId: session.sessionId });
-        if (value.sessionId !== session.sessionId || value.hassUrl !== session.hassUrl || typeof value.access_token !== 'string') throw new CloudAuthError(502);
-        return value.access_token;
+        cloudRefreshing ??= cloudAccessToken(session).finally(() => { cloudRefreshing = null; });
+        return await cloudRefreshing;
       }
       if (!tokens) throw new AuthError('not signed in');
       if (tokens.expires - Date.now() > 30_000) return tokens.access_token;
