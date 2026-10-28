@@ -752,7 +752,7 @@ private fun DashboardList(
         // them: a one-column section's items join up with no gap between them.
         horizontalAlignment = Alignment.CenterHorizontally,
       ) {
-        item(key = "local-card-briefs") {
+        item(key = "local-card-briefs", contentType = "local-card-briefs") {
           DashboardPlaceholders(
             session = placeholderSession,
             urlPath = dashboardUrlPath.takeIf { it.isNotEmpty() },
@@ -977,7 +977,7 @@ private fun LazyListScope.renderView(
   val header = view.header
   val headerCard = header?.card
   if (headerCard != null) {
-    item(key = "$viewKey-header") {
+    item(key = "$viewKey-header", contentType = "view-header") {
       ViewHeaderCard(
         card = headerCard,
         centered = header.centered,
@@ -1039,7 +1039,7 @@ private fun LazyListScope.renderView(
         )
       fun Modifier.gapAbove(piece: Int) = if (piece == 0) padding(top = ItemGap) else this
       if (heading != null) {
-        item(key = "$sectionKey-heading") {
+        item(key = "$sectionKey-heading", contentType = "section-heading") {
           SectionGroupSurface(haTheme, modifier = pieceModifier.gapAbove(0), shape = shape(0)) {
             PinnableSectionHeading(
               title = heading.title,
@@ -1056,7 +1056,7 @@ private fun LazyListScope.renderView(
       val firstRowPiece = if (heading != null) 1 else 0
       pieces.rows.forEachIndexed { rowIndex, row ->
         val piece = firstRowPiece + rowIndex
-        item(key = "$sectionKey-r$rowIndex") {
+        item(key = "$sectionKey-r$rowIndex", contentType = "section-row") {
           SectionGroupSurface(
             haTheme,
             modifier = pieceModifier.gapAbove(piece),
@@ -1082,7 +1082,7 @@ private fun LazyListScope.renderView(
       }
     }
   } else if (useGridLayout) {
-    item(key = "$viewKey-grid") {
+    item(key = "$viewKey-grid", contentType = "section-grid") {
       SectionGrid(
         sections = view.sections,
         grid = grid,
@@ -1097,7 +1097,7 @@ private fun LazyListScope.renderView(
       )
     }
   } else {
-    item(key = "$viewKey-sections") {
+    item(key = "$viewKey-sections", contentType = "sections") {
       LovelaceSectionsGrid(
         grid = grid,
         modifier = contentModifier,
@@ -1502,7 +1502,7 @@ private fun LazyListScope.cardRows(
 ) {
   val rows = packAndChunk(cards, compactPerRow) { c -> registry.cardWidthClass(c, snapshot) }
   rows.forEachIndexed { rowIndex, row ->
-    item(key = "$keyPrefix-r$rowIndex") {
+    item(key = "$keyPrefix-r$rowIndex", contentType = "card-row") {
       CardRow(row, snapshot, registry, baseUrl, imageLoader, onLongPress, modifier)
     }
   }

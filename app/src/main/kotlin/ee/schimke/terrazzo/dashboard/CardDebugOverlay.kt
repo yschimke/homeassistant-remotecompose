@@ -26,6 +26,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +37,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -91,18 +94,27 @@ internal fun BoxScope.CardChangeFlash(signature: String) {
       flash.animateTo(targetValue = 0f, animationSpec = tween(durationMillis = 850))
     }
   }
-  val alpha = flash.value
-  if (alpha > 0f) {
-    val shape = RoundedCornerShape(12.dp)
+  // Composition only enters and leaves the flash; each frame's fade is read in the draw phase.
+  val flashing by remember { derivedStateOf { flash.value > 0f } }
+  if (flashing) {
     Box(
       modifier =
         Modifier.matchParentSize()
-          .clip(shape)
-          .background(FLASH_COLOR.copy(alpha = 0.28f * alpha))
-          .border(2.dp, FLASH_COLOR.copy(alpha = alpha), shape)
+          .graphicsLayer {
+            alpha = flash.value
+            // The alpha scales the fill and the border each on its own, as their colours' alphas
+            // did, rather than fading the two as one composited layer.
+            compositingStrategy = CompositingStrategy.ModulateAlpha
+            shape = FLASH_SHAPE
+            clip = true
+          }
+          .background(FLASH_COLOR.copy(alpha = 0.28f))
+          .border(2.dp, FLASH_COLOR, FLASH_SHAPE)
     )
   }
 }
+
+private val FLASH_SHAPE = RoundedCornerShape(12.dp)
 
 /**
  * Floating debug panel listing the live data the current dashboard's cards consume: one row per
