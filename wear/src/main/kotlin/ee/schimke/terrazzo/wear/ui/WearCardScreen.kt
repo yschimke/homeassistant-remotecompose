@@ -27,7 +27,6 @@ import androidx.wear.compose.material3.onehandedgesture.OneHandedGestureDefaults
 import androidx.wear.compose.material3.onehandedgesture.OneHandedGesturePageIndicatorState
 import androidx.wear.compose.material3.onehandedgesture.OneHandedGesturePriority
 import androidx.wear.compose.material3.onehandedgesture.OneHandedGestureVerticalPageIndicator
-import androidx.wear.compose.material3.onehandedgesture.oneHandedGesture
 import androidx.wear.compose.material3.onehandedgesture.rememberOneHandedGestureConfiguration
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -70,6 +69,13 @@ internal fun WearCardScreen(
     )
   val pageHint = remember(pageGesture) { OneHandedGesturePageIndicatorState() }
   val scope = rememberCoroutineScope()
+  val pageGestureModifier =
+    rememberOneHandedGesture(
+      gestureConfiguration = pageGesture,
+      onGestureLabel = "Next card",
+      onGestureAvailable = { scope.launch { pageHint.showIndicator() } },
+      onGesture = { OneHandedGestureDefaults.scrollToNextPage(pager) },
+    )
   VerticalPagerScaffold(
     pagerState = pager,
     modifier = modifier,
@@ -77,18 +83,7 @@ internal fun WearCardScreen(
   ) {
     VerticalPager(
       state = pager,
-      modifier =
-        Modifier.fillMaxSize()
-          .then(
-            if (cards.size < 2) Modifier
-            else
-              Modifier.oneHandedGesture(
-                gestureConfiguration = pageGesture,
-                onGestureLabel = "Next card",
-                onGestureAvailable = { scope.launch { pageHint.showIndicator() } },
-                onGesture = { OneHandedGestureDefaults.scrollToNextPage(pager) },
-              )
-          ),
+      modifier = Modifier.fillMaxSize().then(if (cards.size < 2) Modifier else pageGestureModifier),
     ) { page ->
       AnimatedPage(page, pager) {
         WearCardPage(cards[page], values, onOpenDetails = { onOpenDetails(cards[page]) })
@@ -165,20 +160,17 @@ private fun CardActionButton(
   val hint = remember(gesture) { OneHandedGestureClickIndicatorState() }
   val interactions = remember { MutableInteractionSource() }
   val scope = rememberCoroutineScope()
+  val gestureModifier =
+    rememberOneHandedGesture(
+      gestureConfiguration = gesture,
+      onGestureLabel = label,
+      interactionSource = interactions,
+      onGestureAvailable = { scope.launch { hint.showIndicator() } },
+      onGesture = { onRun() },
+    )
   EdgeButton(
     onClick = onRun,
-    modifier =
-      modifier.then(
-        if (!enabled) Modifier
-        else
-          Modifier.oneHandedGesture(
-            gestureConfiguration = gesture,
-            onGestureLabel = label,
-            interactionSource = interactions,
-            onGestureAvailable = { scope.launch { hint.showIndicator() } },
-            onGesture = { onRun() },
-          )
-      ),
+    modifier = modifier.then(if (enabled) gestureModifier else Modifier),
     buttonSize = EdgeButtonSize.ExtraSmall,
     interactionSource = interactions,
   ) {
