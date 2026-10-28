@@ -374,6 +374,17 @@ class PreferencesStore(private val context: Context) {
   }
 
   /**
+   * The card studio's remembered choices (how to design, the agent's provider, model and endpoint),
+   * as the studio encodes them; never an API key. Blank until first chosen.
+   */
+  val cardStudioDefaults: Flow<String>
+    get() = context.store.data.map { it[CARD_STUDIO_DEFAULTS_KEY] ?: "" }
+
+  suspend fun setCardStudioDefaults(encoded: String) {
+    context.store.edit { it[CARD_STUDIO_DEFAULTS_KEY] = encoded }
+  }
+
+  /**
    * Whether anonymous card usage is shared with the design server
    * (docs/followups/template-usage-tracking.md). Stored as the [UsageSharing] tri-state, starting
    * at [UsageSharing.Default], which follows [UsageSharing.DEFAULT_SHARES] (off: opt-in). Settings
@@ -408,6 +419,7 @@ class PreferencesStore(private val context: Context) {
     private val DESIGN_VARIANT_KEY = stringPreferencesKey("design_variant")
     private val DESIGN_AUTHOR_KEY = stringPreferencesKey("design_author")
     private val DESIGN_TOKEN_KEY = stringPreferencesKey("design_token")
+    private val CARD_STUDIO_DEFAULTS_KEY = stringPreferencesKey("card_studio_defaults")
     private val WEAR_PROMPTS_SHOWN_KEY = stringSetPreferencesKey("wear_prompts_shown")
 
     /** The public card design server, on by default. */

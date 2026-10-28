@@ -10,6 +10,8 @@ import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.terrazzo.shared.CardStudioDefaults
+import ee.schimke.terrazzo.shared.CardStudioMode
 import ee.schimke.terrazzo.shared.CardStudioScreen
 import kotlinx.serialization.json.buildJsonObject
 import org.junit.Assert.assertTrue
@@ -31,23 +33,26 @@ class CardStudioLayoutTest {
             HaSnapshot(),
             {},
             initialServerUrl = "http://invalid.example",
+            defaults = CardStudioDefaults(mode = CardStudioMode.Builder),
             preview = {},
           )
         }
       }
     }
-    val open = compose.onNodeWithText("Design in UI Builder")
-    open.performClick()
+    val open = compose.onNodeWithText("Open in UI Builder")
+    open.performScrollTo().performClick()
     val error =
       compose.onNodeWithText(
         "The draft or connection settings are invalid. Check the HTTPS address and try again."
       )
     error.assertIsDisplayed()
-    val agentHeading = compose.onNodeWithText("Connect an agent").fetchSemanticsNode().boundsInRoot
+    val options = compose.onNodeWithText("More options").fetchSemanticsNode().boundsInRoot
     assertTrue(
-      "Server errors must appear near the server controls, before the agent form",
-      error.fetchSemanticsNode().boundsInRoot.bottom <= agentHeading.top,
+      "Server errors must appear in the step that failed, before the options below it",
+      error.fetchSemanticsNode().boundsInRoot.bottom <= options.top,
     )
-    compose.onNodeWithText("Generate or fix draft").performScrollTo().assertIsDisplayed()
+    // The remembered choice folds its step, and Change reopens it.
+    compose.onNodeWithText("Change").performScrollTo().performClick()
+    compose.onNodeWithText("With an AI agent").performScrollTo().assertIsDisplayed()
   }
 }

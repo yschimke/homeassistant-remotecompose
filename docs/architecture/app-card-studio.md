@@ -4,9 +4,27 @@ The app can open a card in UI Builder or ask OpenRouter, Claude, OpenAI, or an
 OpenAI-compatible agent endpoint to create or repair a draft. Android exposes it from
 the card's long-press history screen; desktop exposes it below each dashboard card.
 
-This version uses the hosted web editor in an Android WebView or desktop Chromium
-view, with **Open in browser** available in both. Native CMP embedding is the preferred
-next step. The shared provider client and draft gate are independent of the editor host.
+The studio is a wizard: **Sign in**, **How do you want to design it?** (yourself in
+UI Builder, or with an AI agent), **Edit in UI Builder** / **Describe the design**, then
+**Use it on this card**. An answered step folds to one line with **Change**.
+
+- **Sign-in comes first** where the host can sign in (Android): it is the design
+  server's app sign-in (`/my/oauth`, a Custom Tab, [AppSignIn]), which also signs the
+  browser in to the host that serves UI Builder. Everything after it uses the device
+  token, so no web page asks for a sign-in again.
+- **Remembered choices are strong defaults** (`CardStudioDefaults`, stored by the host:
+  Android's `card_studio_defaults` preference). How to design, the agent's provider,
+  model and endpoint start answered and folded. API keys are not written to disk: they
+  are kept in memory until the app closes, so a remembered agent asks only for its key
+  once per run.
+- **No in-app web view on Android.** With a device token the app opens a draft with
+  `POST /api/studio/open` and opens the returned UI Builder link in the browser, which
+  shares the Custom Tab's sign-in. Desktop, with no app sign-in, keeps the embedded
+  Chromium view and the `/studio/<token>` handoff page.
+
+The editor itself is still the hosted web UI Builder; native CMP embedding is the
+preferred next step (below). The shared provider client and draft gate are independent
+of the editor host.
 
 ## Preview data and drafts
 
@@ -30,9 +48,19 @@ The design server adds three routes:
   supplied values. Its random id identifies the original contract for later validation.
 - `POST /api/studio/handoffs`: validate the draft against that original contract and
   return a capability link under `/studio/<token>`.
+- `POST /api/studio/open` (`Authorization: Bearer <device token>`): the app's way in.
+  Checks the draft against its seed as a handoff is, creates a fresh UI Builder design,
+  shares it with the token's GitHub login, records it as theirs, and returns
+  `{"url", "handoff"}` (the handoff id the publish step matches). 401 without a valid
+  token, 410 when the seed expired, 502 naming the step that failed.
 - `GET` / `POST /studio/<token>`: review the handoff and, after normal browser sign-in
   or edit-link authorization, create a fresh private UI Builder design. The builder
   performs its own catalog/schema validation. No existing design is overwritten.
+  The `GET` page checks that UI Builder serves the draft's catalog *before* asking
+  anyone to sign in, and says so instead of offering sign-in when it doesn't. A failed
+  `POST` answers with the same page, naming the step that failed (catalog lookup,
+  create, or share) without echoing the builder's response, and a **Try again** button;
+  the cause goes to the server log.
 
 Seed and handoff documents live in separate bounded, in-memory stores of 128 entries
 each and expire after ten minutes. Responses containing drafts use `no-store`; the

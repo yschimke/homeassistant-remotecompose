@@ -36,14 +36,33 @@ fun CardConfig.historyEntityIds(): List<String> {
 
 /**
  * A human-readable title for the card, reusing the same key precedence the pin/section code uses
- * (`title` → `heading` → `name`) before falling back to the entity id or the raw card type.
+ * (`title` → `heading` → `name`), then a markdown card's first heading, before falling back to the
+ * entity id or the raw card type.
  */
 fun CardConfig.historyTitle(): String =
   raw["title"]?.jsonPrimitive?.contentOrNull
     ?: raw["heading"]?.jsonPrimitive?.contentOrNull
     ?: raw["name"]?.jsonPrimitive?.contentOrNull
+    ?: markdownHeading()
     ?: historyEntityIds().firstOrNull()
     ?: type
+
+/**
+ * A markdown card's first heading line (`## 🖨️ P2s` → `🖨️ P2s`), so its sheet isn't titled
+ * "markdown". Skips headings that are templates, which would show their source.
+ */
+private fun CardConfig.markdownHeading(): String? {
+  if (type != "markdown") return null
+  val content = raw["content"]?.jsonPrimitive?.contentOrNull ?: return null
+  return content
+    .lineSequence()
+    .map { it.trim() }
+    .firstOrNull { it.startsWith("#") }
+    ?.trimStart('#')
+    ?.trim()
+    ?.takeIf { it.isNotEmpty() && "{{" !in it && "{%" !in it }
+    ?.take(60)
+}
 
 /** A string looks like an HA entity id when it's `domain.object_id`. */
 private fun String.isEntityId(): Boolean {

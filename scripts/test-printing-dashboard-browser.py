@@ -57,7 +57,9 @@ states += [{'entity_id': 'image.p2s_' + suffix, 'state': '2026-10-18T17:23:17.43
 states += [{'entity_id': 'light.p2s_chamber', 'state': 'on', 'attributes': {'friendly_name': 'P2S_SERIAL_LONG_Chamber light'}},
            {'entity_id': 'switch.p2s_camera', 'state': 'on', 'attributes': {'friendly_name': 'P2S_SERIAL_LONG_Camera'}}]
 commands, errors, resolutions, image_reads = [], [], [], []
-latest_socket = latest_subscription = None
+# Every state_changed subscription the page has opened, with its socket: the app reconnects, so an
+# update goes to each one rather than to whichever socket happened to open last.
+subscriptions = []
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def translate_path(self, path):
@@ -95,18 +97,16 @@ def settled_capture(page, path):
 
 
 def socket_route(socket):
-    global latest_socket
-    latest_socket = socket
     socket.send(json.dumps({'type': 'auth_required'}))
     def receive(raw):
-        global latest_subscription
         msg = json.loads(raw)
         if msg['type'] == 'auth':
             assert msg['access_token'] == 'fixture-token'
             socket.send(json.dumps({'type': 'auth_ok'})); return
         commands.append(msg)
         kind = msg['type']
-        if kind == 'subscribe_events': latest_subscription = msg['id']
+        if kind == 'subscribe_events' and msg.get('event_type') == 'state_changed':
+            subscriptions.append((socket, msg['id']))
         result = {'get_states': states, 'lovelace/dashboards/list': [{'url_path': 'printing', 'title': '3D Printing'}],
                   'lovelace/config': dashboard, 'subscribe_events': None,
                   'config/entity_registry/list_for_display': {'entities': [
@@ -125,6 +125,7 @@ try:
         for name, width, height in [('phone', 390, 844), ('narrow', 320, 800), ('wall', 1280, 900)]:
             print('Printing dashboard:', name, 'before' if before else 'after', flush=True)
             page = browser.new_page(viewport={'width': width, 'height': height}, device_scale_factor=1)
+            subscriptions.clear()
             page.on('pageerror', lambda e: errors.append(str(e)))
             page.route_web_socket('wss://ha.example.test/api/websocket', socket_route)
             page_resolutions = len(resolutions)
@@ -188,10 +189,20 @@ try:
             expect(page.get_by_role('button', name='ETA Unknown', exact=True)).to_have_count(1)
             # Live values, condition changes, and a new image with the same entity_picture URL.
             def update(id, value):
+                # The app subscribes once its connection is ready, which can land after the
+                # dashboard first paints: wait for it rather than sending to no subscriber.
+                for _ in range(100):
+                    if subscriptions: break
+                    page.wait_for_timeout(100)
+                assert subscriptions, 'The app never subscribed to state_changed'
                 old = next(item for item in states if item['entity_id'] == id)
                 new = {**old, 'state': value}
-                latest_socket.send(json.dumps({'id': latest_subscription, 'type': 'event', 'event': {
-                    'event_type': 'state_changed', 'data': {'entity_id': id, 'old_state': old, 'new_state': new}}}))
+                for socket, subscription in subscriptions:
+                    try:
+                        socket.send(json.dumps({'id': subscription, 'type': 'event', 'event': {
+                            'event_type': 'state_changed', 'data': {'entity_id': id, 'old_state': old, 'new_state': new}}}))
+                    except Exception:
+                        pass  # A socket the app has since closed.
             update('sensor.p2s_fixture_print_status', 'running')
             expect(page.get_by_text('Print is running', exact=True)).to_have_count(1)
             expect(page.get_by_text('Print is complete', exact=True)).to_have_count(0)

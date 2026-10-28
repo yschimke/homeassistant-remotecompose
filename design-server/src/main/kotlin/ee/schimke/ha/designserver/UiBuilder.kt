@@ -216,6 +216,10 @@ class UiBuilderProcess(
   }
 }
 
+/** UI Builder can't take a design pinned to [systemId]: unreachable, or not serving it. */
+class CatalogUnavailableException(val systemId: String, message: String, cause: Throwable? = null) :
+  IllegalStateException(message, cause)
+
 /**
  * Creates UI Builder designs over its REST API (`PUT /api/ui-builder/v1/designs/<id>`) and shares
  * them. [http] must not follow redirects (see [share]).
@@ -437,41 +441,72 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
 
   /** Resolve the published revision on the host that will validate and render this draft. */
   private suspend fun pinToServedCatalog(document: JsonObject): JsonObject {
-    val system = document.getValue("catalogPin").jsonObject.getValue("systemId")
+    val system = document.getValue("catalogPin").jsonObject.getValue("systemId").jsonPrimitive
+    return JsonObject(document + ("catalogPin" to servedPin(system.content)))
+  }
+
+  /**
+   * Whether UI Builder serves [systemId], so a studio handoff can be opened there: checked before
+   * someone is asked to sign in, rather than after.
+   */
+  suspend fun servesCatalog(systemId: String): Boolean =
+    try {
+      servedPin(systemId)
+      true
+    } catch (e: Exception) {
+      if (e is CancellationException) throw e
+      false
+    }
+
+  /** The pin for [system]'s served revision, or a [CatalogUnavailableException] saying why not. */
+  private suspend fun servedPin(system: String): JsonObject {
     val response =
-      http.post(
-        "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/requests" +
-          "?token=${config.token.encodeURLParameter()}"
-      ) {
-        contentType(ContentType.Application.Json)
-        setBody(
-          buildJsonObject {
-            put("schemaVersion", 1)
-            put("requestId", UiBuilderConfig.randomToken())
-            put("actorId", "operator")
-            putJsonObject("request") { put("type", "listCatalogs") }
-          }
-            .toString()
-        )
+      try {
+        http.post(
+          "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/requests" +
+            "?token=${config.token.encodeURLParameter()}"
+        ) {
+          contentType(ContentType.Application.Json)
+          setBody(
+            buildJsonObject {
+              put("schemaVersion", 1)
+              put("requestId", UiBuilderConfig.randomToken())
+              put("actorId", "operator")
+              putJsonObject("request") { put("type", "listCatalogs") }
+            }
+              .toString()
+          )
+        }
+      } catch (e: Exception) {
+        if (e is CancellationException) throw e
+        throw CatalogUnavailableException(system, "UI Builder is unreachable", e)
       }
-    check(response.status.isSuccess()) { "UI Builder catalog lookup failed" }
-    val payload =
-      Json.parseToJsonElement(response.bodyAsText()).jsonObject.getValue("response").jsonObject
-    check(payload["type"] == JsonPrimitive("catalogs")) { "UI Builder did not list catalogs" }
+    if (!response.status.isSuccess())
+      throw CatalogUnavailableException(
+        system,
+        "UI Builder catalog lookup failed (${response.status.value})",
+      )
     val benchmark =
-      payload
-        .getValue("catalogs")
-        .jsonArray
-        .map { it.jsonObject.getValue("benchmark").jsonObject }
-        .single { it["catalogSystemId"] == system }
-    val pin = buildJsonObject {
+      try {
+        val payload =
+          Json.parseToJsonElement(response.bodyAsText()).jsonObject.getValue("response").jsonObject
+        check(payload["type"] == JsonPrimitive("catalogs")) { "UI Builder did not list catalogs" }
+        payload
+          .getValue("catalogs")
+          .jsonArray
+          .map { it.jsonObject.getValue("benchmark").jsonObject }
+          .singleOrNull { it["catalogSystemId"] == JsonPrimitive(system) }
+      } catch (e: Exception) {
+        if (e is CancellationException) throw e
+        throw CatalogUnavailableException(system, "UI Builder listed catalogs unreadably", e)
+      } ?: throw CatalogUnavailableException(system, "UI Builder does not serve $system")
+    return buildJsonObject {
       put("systemId", system)
       put("catalogRevision", benchmark.getValue("catalogRevision").jsonPrimitive)
       // The v1 service uses this frozen digest; its catalog wire shape has no digest field.
       put("capabilityDigest", "candidate")
       put("nativeRuntimeId", benchmark.getValue("nativeRuntimeId").jsonPrimitive)
     }
-    return JsonObject(document + ("catalogPin" to pin))
   }
 
   /** Public catalog metadata for the embedded dashboard editor; never a design or HA credential. */
