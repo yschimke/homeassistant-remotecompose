@@ -2,21 +2,19 @@ package ee.schimke.terrazzo.dashboard
 
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
 import androidx.compose.ui.input.pointer.PointerInputChange
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.input.pointer.SuspendingPointerInputModifierNode
+import androidx.compose.ui.node.CompositionLocalConsumerModifierNode
+import androidx.compose.ui.node.DelegatingNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.currentValueOf
+import androidx.compose.ui.node.requireLayoutCoordinates
+import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.platform.LocalHapticFeedback
 import kotlinx.coroutines.withTimeout
 
@@ -45,52 +43,84 @@ import kotlinx.coroutines.withTimeout
  * pointer-input scope, so they match platform conventions. Slop is measured in window coordinates:
  * a drag scrolls the card along with the finger, so a slow one never leaves the card-local slop.
  */
-fun Modifier.longPressBeforeChild(onLongPress: () -> Unit): Modifier = composed {
-  val haptic = LocalHapticFeedback.current
-  val callback by rememberUpdatedState(onLongPress)
+fun Modifier.longPressBeforeChild(onLongPress: () -> Unit): Modifier =
+  this then LongPressBeforeChildElement(onLongPress)
+
+private class LongPressBeforeChildElement(val onLongPress: () -> Unit) :
+  ModifierNodeElement<LongPressBeforeChildNode>() {
+  override fun create() = LongPressBeforeChildNode(onLongPress)
+
+  override fun update(node: LongPressBeforeChildNode) {
+    // The gesture loop reads the node's callback when it fires, so a new lambda needs no restart.
+    node.onLongPress = onLongPress
+  }
+
+  override fun InspectorInfo.inspectableProperties() {
+    name = "longPressBeforeChild"
+  }
+
+  override fun equals(other: Any?): Boolean =
+    other is LongPressBeforeChildElement && other.onLongPress === onLongPress
+
+  override fun hashCode(): Int = onLongPress.hashCode()
+}
+
+/**
+ * A [Modifier.Node] rather than `composed {}`: no per-card composition for the modifier, and the
+ * haptic and the card's window position are read when a gesture needs them instead of being held in
+ * state that every placement writes.
+ */
+private class LongPressBeforeChildNode(var onLongPress: () -> Unit) :
+  DelegatingNode(), CompositionLocalConsumerModifierNode {
   // The card scrolls with the finger during a drag, so the pointer barely moves in the card's own
   // coordinates; slop is measured in the window's instead, or a slow drag would long-press.
-  var coordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
-  fun PointerInputChange.windowPosition(): Offset =
-    coordinates?.takeIf { it.isAttached }?.localToWindow(position) ?: position
-  onPlaced { coordinates = it }
-    .pointerInput(Unit) {
-      awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-        val downId = down.id
-        val downPosition: Offset = down.windowPosition()
-        var firedLongPress = false
-        try {
-          withTimeout(viewConfiguration.longPressTimeoutMillis) {
-            var pressed = true
-            while (pressed) {
-              val event = awaitPointerEvent(PointerEventPass.Initial)
-              val change: PointerInputChange =
-                event.changes.firstOrNull { it.id == downId } ?: return@withTimeout
-              if (!change.pressed) return@withTimeout
-              if (
-                (change.windowPosition() - downPosition).getDistance() > viewConfiguration.touchSlop
-              ) {
-                return@withTimeout
+  private fun PointerInputChange.windowPosition(): Offset =
+    if (isAttached)
+      requireLayoutCoordinates().takeIf { it.isAttached }?.localToWindow(position) ?: position
+    else position
+
+  init {
+    delegate(
+      SuspendingPointerInputModifierNode {
+        awaitEachGesture {
+          val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+          val downId = down.id
+          val downPosition: Offset = down.windowPosition()
+          var firedLongPress = false
+          try {
+            withTimeout(viewConfiguration.longPressTimeoutMillis) {
+              var pressed = true
+              while (pressed) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                val change: PointerInputChange =
+                  event.changes.firstOrNull { it.id == downId } ?: return@withTimeout
+                if (!change.pressed) return@withTimeout
+                if (
+                  (change.windowPosition() - downPosition).getDistance() >
+                    viewConfiguration.touchSlop
+                ) {
+                  return@withTimeout
+                }
+                pressed = change.pressed
               }
-              pressed = change.pressed
             }
+          } catch (_: PointerEventTimeoutCancellationException) {
+            onLongPress()
+            currentValueOf(LocalHapticFeedback).performHapticFeedback(HapticFeedbackType.LongPress)
+            firedLongPress = true
           }
-        } catch (_: PointerEventTimeoutCancellationException) {
-          callback()
-          haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-          firedLongPress = true
-        }
-        if (firedLongPress) {
-          // Drain remaining changes for this gesture so a
-          // late release at the same position doesn't ALSO
-          // bubble through to the player as an unrelated tap.
-          while (true) {
-            val event = awaitPointerEvent(PointerEventPass.Initial)
-            event.changes.forEach { it.consume() }
-            if (event.changes.none { it.pressed }) break
+          if (firedLongPress) {
+            // Drain remaining changes for this gesture so a
+            // late release at the same position doesn't ALSO
+            // bubble through to the player as an unrelated tap.
+            while (true) {
+              val event = awaitPointerEvent(PointerEventPass.Initial)
+              event.changes.forEach { it.consume() }
+              if (event.changes.none { it.pressed }) break
+            }
           }
         }
       }
-    }
+    )
+  }
 }

@@ -9,6 +9,7 @@ import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.model.Section
 import ee.schimke.ha.model.View
 import ee.schimke.ha.model.ViewHeader
+import ee.schimke.ha.room.HaArea
 import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.time.Instant
@@ -125,9 +126,44 @@ object DemoData {
   private val baseStates: Map<String, EntityState> =
     BOARDS.flatMap { b -> loadStates(b).entries }.associate { it.key to it.value }
 
-  /** Which device each entity belongs to, from each board's `devices.json` where it has one. */
-  private val baseDevices: Map<String, ee.schimke.ha.design.DeviceInfo> =
-    BOARDS.flatMap { b -> loadDevices(b).entries }.associate { it.key to it.value }
+  /**
+   * The demo house's rooms, so the room controls have somewhere to stand: each climate zone, the
+   * garage the security board watches and the workshop the printers are in.
+   */
+  val areas: Map<String, HaArea> =
+    listOf(
+        HaArea("downstairs", "Downstairs"),
+        HaArea("upstairs", "Upstairs"),
+        HaArea("kids_room", "Kids' room"),
+        HaArea("garage", "Garage"),
+        HaArea("workshop", "Workshop"),
+      )
+      .associateBy { it.id }
+
+  /** The room each demo entity is in ([areas]); what a live registry's `area_id` would say. */
+  private val demoAreaOf: Map<String, String> =
+    mapOf(
+      "climate.downstairs" to "downstairs",
+      "climate.upstairs" to "upstairs",
+      "climate.kids_room" to "kids_room",
+      "cover.garage_door_garage_door_2" to "garage",
+      "light.garage_door_garage_door_light" to "garage",
+      "fan.a1mini_sn1_cooling_fan" to "workshop",
+      "light.a1mini_sn1_chamber_light" to "workshop",
+      "light.p2s_sn2_chamber_light" to "workshop",
+    )
+
+  /**
+   * Which device each entity belongs to, from each board's `devices.json` where it has one, with
+   * the room [demoAreaOf] puts it in.
+   */
+  private val baseDevices: Map<String, ee.schimke.ha.design.DeviceInfo> = run {
+    val devices = BOARDS.flatMap { b -> loadDevices(b).entries }.associate { it.key to it.value }
+    devices +
+      demoAreaOf.mapValues { (id, area) ->
+        (devices[id] ?: ee.schimke.ha.design.DeviceInfo()).copy(areaId = area)
+      }
+  }
 
   fun dashboard(urlPath: String?): Dashboard {
     val slug = urlPathToSlug(urlPath)
@@ -140,7 +176,7 @@ object DemoData {
   ): HaSnapshot {
     val drifted = baseStates.mapValues { (id, st) -> drift(id, st, nowMs) }
     val withOverrides = router.snapshotOverrides(drifted, nowMs)
-    return HaSnapshot(states = withOverrides, devices = baseDevices)
+    return HaSnapshot(states = withOverrides, devices = baseDevices, areas = areas)
   }
 
   /**

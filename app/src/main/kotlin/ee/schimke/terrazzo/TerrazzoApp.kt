@@ -26,6 +26,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.terrazzo.auth.designTokenLogin
+import ee.schimke.terrazzo.auth.rememberDesignSignIn
 import ee.schimke.terrazzo.auth.rememberLoginController
 import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
@@ -51,6 +53,7 @@ import ee.schimke.terrazzo.dashboard.rememberSelectedDashboardListState
 import ee.schimke.terrazzo.dashboard.rememberStudioDesignKey
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.shared.AppScreen
+import ee.schimke.terrazzo.shared.CardStudioDefaults
 import ee.schimke.terrazzo.shared.CardStudioScreen
 import ee.schimke.terrazzo.shared.TerrazzoNavigation
 import ee.schimke.terrazzo.wearsync.wearInstallPrompts
@@ -350,6 +353,7 @@ private fun AuthenticatedShell(
           onOpenWidgets = { screen = AppScreen.Widgets },
           onOpenPinned = { screen = AppScreen.Pinned },
           onOpenLogs = { screen = AppScreen.Logs },
+          onOpenRoom = { screen = AppScreen.Room },
           onSignOut = onSignOut,
           // Demo mode has a curated dashboard set: nothing to choose.
           onManageDashboards =
@@ -389,6 +393,17 @@ private fun AuthenticatedShell(
       }
       AppScreen.Logs ->
         ee.schimke.terrazzo.logs.LogsScreen(onBack = { screen = AppScreen.Dashboards })
+      AppScreen.Room -> {
+        // The same write mode the dashboard's chip and Settings set: read-only shows, doesn't send.
+        val permanentWrite by
+          graph.preferencesStore.permanentWriteMode.collectAsState(initial = false)
+        val sessionWrite by graph.sessionWriteMode.writeMode.collectAsState()
+        ee.schimke.terrazzo.room.RoomScreen(
+          session = session,
+          readOnly = !(sessionWrite ?: permanentWrite),
+          onBack = { screen = AppScreen.Dashboards },
+        )
+      }
       AppScreen.ChooseDashboards -> {
         val rawList by rememberDashboardListState(session)
         // Render the screen only once we have a snapshot of the
@@ -435,6 +450,7 @@ private fun DashboardsRoot(
   onOpenWidgets: () -> Unit,
   onOpenPinned: () -> Unit,
   onOpenLogs: () -> Unit,
+  onOpenRoom: () -> Unit,
   onSignOut: () -> Unit,
   onManageDashboards: (() -> Unit)?,
 ) {
@@ -479,6 +495,9 @@ private fun DashboardsRoot(
   val studioServer by
     graph.preferencesStore.designServerUrl.collectAsState(initial = "https://ha.coo.ee/designs/v1")
   val designToken by graph.preferencesStore.designToken.collectAsState(initial = "")
+  val studioDefaults by
+    graph.preferencesStore.cardStudioDefaults.collectAsState(initial = null as String?)
+  val designSignIn = rememberDesignSignIn()
   val openedValue = opened
 
   var startupResolved by rememberSaveable { mutableStateOf(dashboards is DashboardListState.Ready) }
@@ -640,7 +659,7 @@ private fun DashboardsRoot(
       onBack = { editorOpen = false },
       onSaved = { dashboardSaves++ },
     )
-  } else if (studioOverlay != null) {
+  } else if (studioOverlay != null && studioDefaults != null) {
     val (card, snapshot) = studioOverlay
     BackHandler { studioTarget = null }
     CardStudioScreen(
@@ -649,6 +668,14 @@ private fun DashboardsRoot(
       onBack = { studioTarget = null },
       initialServerUrl = studioServer.ifBlank { "https://ha.coo.ee" },
       designToken = designToken,
+      // A Custom Tab: it signs the browser in to UI Builder too, so the editor opens signed in.
+      onSignIn = { designSignIn(studioServer.ifBlank { "https://ha.coo.ee/designs/v1" }) },
+      account = designTokenLogin(designToken),
+      defaults = CardStudioDefaults.decode(studioDefaults.orEmpty()),
+      onDefaultsChange = {
+        scope.launch { graph.preferencesStore.setCardStudioDefaults(it.encode()) }
+      },
+      openEditorInBrowser = true,
       designKey = rememberStudioDesignKey(card, snapshot),
       // Downloads the published design and switches this card to it, as the card's skin picker
       // does, even once the studio has closed.
@@ -709,6 +736,7 @@ private fun DashboardsRoot(
               onInstallOnWatch = installOnWatch,
               onEditDashboard = { editorOpen = true },
               onManageDashboards = onManageDashboards,
+              onOpenRoom = onOpenRoom,
             )
           },
         )

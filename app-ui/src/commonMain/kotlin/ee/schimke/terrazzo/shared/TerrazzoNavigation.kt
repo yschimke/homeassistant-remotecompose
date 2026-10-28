@@ -17,6 +17,7 @@ enum class AppScreen : NavKey {
   SyncDiagnostics,
   Logs,
   ChooseDashboards,
+  Room,
 }
 
 @Composable

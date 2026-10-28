@@ -1,6 +1,7 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.ha.client.design.CardStudioClient
+import ee.schimke.ha.client.design.CardStudioException
 import ee.schimke.ha.client.design.DesignPublisher
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
@@ -13,7 +14,10 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.request.receiveText
+import io.ktor.server.response.header
 import io.ktor.server.response.respondText
+import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
@@ -169,6 +173,8 @@ class CardStudioLifecycleTest {
       assertEquals(HttpStatusCode.BadGateway, failed.status)
       assertFalse(failed.bodyAsText().contains("operator-private-preview"))
       assertFalse(failed.bodyAsText().contains("private catalog error"))
+      assertTrue(failed.bodyAsText().contains("catalog"))
+      assertTrue(failed.bodyAsText().contains("Try again"))
       assertEquals(0, creates.get())
       assertEquals(
         HttpStatusCode.BadGateway,
@@ -181,6 +187,96 @@ class CardStudioLifecycleTest {
         browser.post(link) { header(HttpHeaders.Cookie, "design-server-edit=operator") }.status,
       )
       assertEquals(2, creates.get())
+    } finally {
+      studio.close()
+      dir.deleteRecursively()
+    }
+  }
+
+  @Test
+  fun theAppOpensADraftWithItsDeviceTokenAndNoWebSignIn() = testApplication {
+    val dir = library()
+    val shared = mutableListOf<String>()
+    externalServices {
+      hosts("https://builder.test") {
+        routing {
+          studioCatalogFixture()
+          put("/api/ui-builder/v1/designs/{id}") {
+            call.respondText("created", status = HttpStatusCode.Created)
+          }
+          post("/ui-builder/{id}/access") {
+            shared += call.receiveText()
+            call.response.header(HttpHeaders.Location, "/ui-builder/x/access")
+            call.respondText("", status = HttpStatusCode.SeeOther)
+          }
+        }
+      }
+    }
+    val http = createClient { followRedirects = false }
+    val config = UiBuilderConfig("https://builder.test", "https://builder.test", "operator")
+    val github =
+      GithubAuth(
+        clientId = "id",
+        clientSecret = "secret",
+        publicUrl = "https://ha.example",
+        sessionSecret = "session-secret",
+        http = http,
+      )
+    val storeDir = Files.createTempDirectory("studio-open").toFile()
+    val store = UserDesignStore(storeDir)
+    application {
+      designServer(
+        LibraryHolder(dir),
+        UiBuilderIntegration(config, UiBuilderClient(config, http)),
+        github,
+        userDesigns = store,
+      )
+    }
+    val studio = CardStudioClient("https://localhost", http.engine)
+    try {
+      val seed = studio.seed(card, snapshot("21"))
+      val refused =
+        assertFailsWith<CardStudioException> {
+          studio.openAsUser("not-a-token", seed, card, snapshot("21"))
+        }
+      assertEquals(401, refused.status)
+      val opened = studio.openAsUser(github.deviceToken("octocat"), seed, card, snapshot("21"))
+      assertTrue(opened.url.startsWith("https://builder.test/ui-builder/card-"))
+      assertFalse(opened.url.contains("token="))
+      assertTrue(shared.single().contains("github%3Aoctocat"))
+      assertEquals(opened.handoff, store.made("octocat").single().handoff)
+    } finally {
+      studio.close()
+      dir.deleteRecursively()
+      storeDir.deleteRecursively()
+    }
+  }
+
+  @Test
+  fun aBuilderWithoutTheCatalogSaysSoBeforeSignIn() = testApplication {
+    val dir = library()
+    externalServices {
+      hosts("https://builder.test") {
+        routing {
+          post("/api/ui-builder/v1/requests") {
+            call.respondText("""{"response":{"type":"catalogs","catalogs":[]}}""")
+          }
+        }
+      }
+    }
+    val http = createClient { followRedirects = false }
+    val config = UiBuilderConfig("https://builder.test", "https://builder.test", "operator")
+    application {
+      designServer(LibraryHolder(dir), UiBuilderIntegration(config, UiBuilderClient(config, http)))
+    }
+    val studio = CardStudioClient("https://localhost", http.engine)
+    try {
+      val link = studio.handoff(studio.seed(card, snapshot("21")))
+      val page = createClient { followRedirects = false }.get(link)
+      assertEquals(HttpStatusCode.OK, page.status)
+      val body = page.bodyAsText()
+      assertTrue(body.contains("isn't serving the <code>ha-cards</code> catalog"))
+      assertFalse(body.contains("<form"))
     } finally {
       studio.close()
       dir.deleteRecursively()

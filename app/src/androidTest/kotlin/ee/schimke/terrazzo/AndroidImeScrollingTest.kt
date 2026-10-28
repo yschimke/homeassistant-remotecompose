@@ -26,6 +26,8 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.discovery.DiscoveryForm
 import ee.schimke.terrazzo.discovery.HaInstance
+import ee.schimke.terrazzo.shared.CardStudioDefaults
+import ee.schimke.terrazzo.shared.CardStudioMode
 import ee.schimke.terrazzo.shared.CardStudioScreen
 import ee.schimke.terrazzo.ui.AndroidImeHost
 import kotlinx.serialization.json.buildJsonObject
@@ -167,12 +169,13 @@ class AndroidImeScrollingTest {
             card = CardConfig("tile", buildJsonObject {}),
             snapshot = HaSnapshot(),
             onBack = { backedOut = true },
+            defaults = CardStudioDefaults(mode = CardStudioMode.Agent),
             preview = {},
           )
         }
       }
     }
-    val field = compose.onNodeWithText("Create a missing design or describe the issue")
+    val field = compose.onNodeWithText("What should change?")
     field.performScrollTo().performClick()
     waitForIme(true)
     val draft = "Make the last field easy to reach\nKeep the reading clear\nKeep Send reachable"
@@ -180,7 +183,7 @@ class AndroidImeScrollingTest {
     field.assertTextContains(draft)
     captureWindowEvidence("card-studio-focused-ime")
     assertAboveKeyboard(field)
-    val action = compose.onNodeWithText("Generate or fix draft")
+    val action = compose.onNodeWithText("Draft it")
     action.performScrollTo().assertIsDisplayed()
     captureWindowEvidence("card-studio-bottom-ime")
     assertAboveKeyboard(action)

@@ -56,6 +56,50 @@ class CardStudioClient(serverUrl: String, engine: HttpClientEngine? = null) {
   }
 
   /**
+   * Opens [document] in UI Builder for the person [token] (the design server's device token)
+   * belongs to, with no web sign-in: the server creates the design, shares it with them and records
+   * it as theirs to publish. Recovers an expired preview contract as [openDraft] does.
+   */
+  suspend fun openAsUser(
+    token: String,
+    document: JsonObject,
+    card: CardConfig,
+    snapshot: HaSnapshot,
+  ): CardStudioOpened {
+    try {
+      return open(token, document)
+    } catch (e: CardStudioException) {
+      if (e.status != HttpStatusCode.Gone.value) throw e
+    }
+    return open(token, refreshCardDraft(document, seed(card, snapshot)))
+  }
+
+  private suspend fun open(token: String, document: JsonObject): CardStudioOpened {
+    val response =
+      http.post(base + "/api/studio/open") {
+        bearer(token)
+        contentType(ContentType.Application.Json)
+        setBody(document.toString())
+      }
+    if (!response.status.isSuccess()) {
+      // A 502 is the design server's own words for which step failed, never preview values.
+      val reason =
+        response.bodyAsText().take(300).takeIf { response.status == HttpStatusCode.BadGateway }
+      throw CardStudioException(response.status.value, reason)
+    }
+    val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+    val url = body["url"]?.jsonPrimitive?.contentOrNull ?: error("Missing editor link")
+    require(Url(url).protocol.let { it == URLProtocol.HTTPS || it == URLProtocol.HTTP }) {
+      "Invalid editor link"
+    }
+    return CardStudioOpened(
+      document,
+      url,
+      body["handoff"]?.jsonPrimitive?.contentOrNull ?: error("Missing handoff"),
+    )
+  }
+
+  /**
    * The UI Builder designs the design server opened for the person [token] (the design server's
    * device token) belongs to, newest first: what they can publish. Those seeded for another card
    * type are left out when [cardType] is given.
@@ -133,6 +177,12 @@ class CardStudioClient(serverUrl: String, engine: HttpClientEngine? = null) {
 data class CardStudioHandoff(val document: JsonObject, val url: String)
 
 /**
+ * A draft [CardStudioClient.openAsUser] opened: the [document] it sent, the editor [url], already
+ * shared with the person, and the [handoff] its design is recorded under.
+ */
+data class CardStudioOpened(val document: JsonObject, val url: String, val handoff: String)
+
+/**
  * A UI Builder design the design server opened for this person, for [cardType]'s card, from card
  * studio handoff [handoff] (the token at the end of [CardStudioClient.handoff]'s link).
  */
@@ -171,9 +221,11 @@ class CardPublishException(val status: Int, reason: String? = null) :
   )
 
 /** Safe, actionable errors; server response bodies may contain private preview text. */
-class CardStudioException(val status: Int) :
+class CardStudioException(val status: Int, reason: String? = null) :
   IllegalStateException(
     when (status) {
+      401 -> "The design server didn't accept this device's sign-in. Sign in again."
+      502 -> reason ?: "UI Builder couldn't open this draft. Try again."
       404 -> "This design server does not support Card Studio. Update it or choose another server."
       410 -> "This preview expired. Refresh preview data and try again."
       429 -> "Too many pending previews. Wait a little and try again."

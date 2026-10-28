@@ -23,7 +23,8 @@ import androidx.compose.runtime.setValue
  * [onEditDashboard], when non-null, adds "Edit dashboard" at the top, and [onManageDashboards]
  * "Manage dashboards" (which of Home Assistant's dashboards the switcher lists) after it.
  * [onInstallOnWatch], when non-null, adds "Install on watch" for a connected watch without the
- * watch app.
+ * watch app. [onOpenRoom], when non-null, leads with "This room": controls for the room the user is
+ * in.
  */
 @Composable
 fun TopBarOverflowMenu(
@@ -35,6 +36,7 @@ fun TopBarOverflowMenu(
   onInstallOnWatch: (() -> Unit)? = null,
   onEditDashboard: (() -> Unit)? = null,
   onManageDashboards: (() -> Unit)? = null,
+  onOpenRoom: (() -> Unit)? = null,
 ) {
   var expanded by remember { mutableStateOf(false) }
   IconButton(onClick = { expanded = true }) {
@@ -42,6 +44,10 @@ fun TopBarOverflowMenu(
   }
   DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
     val close = { expanded = false }
+    onOpenRoom?.let {
+      MenuEntry("This room", close, it)
+      HorizontalDivider()
+    }
     onEditDashboard?.let { MenuEntry("Edit dashboard", close, it) }
     onManageDashboards?.let { MenuEntry("Manage dashboards", close, it) }
     // Where cards live outside the app: one entry per place, named for the place rather than the

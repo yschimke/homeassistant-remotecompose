@@ -16,6 +16,7 @@ import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.model.forecastRequests
 import ee.schimke.ha.model.forecastsByEntity
 import ee.schimke.ha.model.historyWindows
+import ee.schimke.ha.room.HaArea
 import io.ktor.client.engine.HttpClientEngine
 import kotlin.concurrent.Volatile
 import kotlin.coroutines.cancellation.CancellationException
@@ -395,7 +396,7 @@ class LiveHaSession(
         }
         try {
           val events = client.subscribeEvents("state_changed")
-          stateSnapshots(events) { client.snapshot().copy(devices = devices()) }
+          stateSnapshots(events) { client.snapshot().copy(devices = devices(), areas = areas()) }
             .collect { _liveStates.value = it }
         } catch (e: CancellationException) {
           throw e
@@ -444,7 +445,8 @@ class LiveHaSession(
       // Read alongside the dashboard and states, never in front of them; bounded and best effort.
       val unit = async { temperatureUnit() }
       val dashboard = client.fetchDashboard(urlPath)
-      val snapshot = client.snapshot().copy(devices = devices(), temperatureUnit = unit.await())
+      val snapshot =
+        client.snapshot().copy(devices = devices(), areas = areas(), temperatureUnit = unit.await())
       dashboard to withDataCardData(dashboard, snapshot)
     }
 
@@ -482,7 +484,7 @@ class LiveHaSession(
 
   override suspend fun loadSnapshot(): HaSnapshot = coroutineScope {
     val unit = async { temperatureUnit() }
-    client.snapshot().copy(devices = devices(), temperatureUnit = unit.await())
+    client.snapshot().copy(devices = devices(), areas = areas(), temperatureUnit = unit.await())
   }
 
   // The instance's unit system: asked once a session. An instance that doesn't answer (or refuses
@@ -507,6 +509,15 @@ class LiveHaSession(
   private suspend fun devices(): Map<String, ee.schimke.ha.design.DeviceInfo> =
     deviceCache
       ?: runCatching { client.fetchDevices() }.getOrNull()?.also { deviceCache = it }
+      ?: emptyMap()
+
+  // The rooms entities are placed in: as rare a change as the devices, so read once a session too.
+  // A failure leaves the room controls without rooms and is retried.
+  @Volatile private var areaCache: Map<String, HaArea>? = null
+
+  private suspend fun areas(): Map<String, HaArea> =
+    areaCache
+      ?: runCatching { client.fetchAreas() }.getOrNull()?.also { areaCache = it }
       ?: emptyMap()
 
   override suspend fun fetchInstanceConfig(): HaInstanceConfig = client.fetchConfig()

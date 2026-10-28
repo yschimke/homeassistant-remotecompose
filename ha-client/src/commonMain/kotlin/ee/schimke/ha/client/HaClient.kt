@@ -10,6 +10,7 @@ import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.HistoryPoint
+import ee.schimke.ha.room.HaArea
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.websocket.WebSockets
@@ -62,6 +63,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
@@ -319,11 +321,39 @@ class HaClient(
             translationKey = entity["tk"]?.jsonPrimitive?.contentOrNull,
             displayPrecision = entity["dp"]?.jsonPrimitive?.intOrNull,
             deviceId = deviceId,
+            // The entity's own area, else its device's: Home Assistant's frontend resolves it so.
+            areaId =
+              entity["ai"]?.jsonPrimitive?.contentOrNull
+                ?: device?.get("area_id")?.jsonPrimitive?.contentOrNull,
+            entityCategory = entityCategoryOf(entity["ec"]),
+            hidden = entity["hb"]?.jsonPrimitive?.booleanOrNull == true,
           )
         (id to info).takeIf { info != DeviceInfo() }
       }
       .toMap()
   }
+
+  /**
+   * Home Assistant's areas (`config/area_registry/list`) by id: the rooms [fetchDevices] places
+   * entities in.
+   */
+  suspend fun fetchAreas(): Map<String, HaArea> =
+    runCommandArray("config/area_registry/list")
+      .mapNotNull { element ->
+        val area = element as? JsonObject ?: return@mapNotNull null
+        val id = area["area_id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+        HaArea(
+          id = id,
+          name = area["name"]?.jsonPrimitive?.contentOrNull ?: id,
+          floorId = area["floor_id"]?.jsonPrimitive?.contentOrNull,
+          icon = area["icon"]?.jsonPrimitive?.contentOrNull,
+          aliases =
+            (area["aliases"] as? JsonArray).orEmpty().mapNotNull {
+              (it as? JsonPrimitive)?.contentOrNull
+            },
+        )
+      }
+      .associateBy { it.id }
 
   /**
    * Register a new storage-mode dashboard (`lovelace/dashboards/create`) at [urlPath], which HA
@@ -1160,3 +1190,14 @@ class CommandNotSentException(message: String) : IllegalStateException(message)
  */
 class HaCommandException(val command: String, val code: String?, val reason: String) :
   IllegalStateException("HA command $command failed: $reason")
+
+/**
+ * The entity registry display list's `ec`: an index into Home Assistant's entity categories
+ * (`config`, `diagnostic`), or null for an entity without one.
+ */
+internal fun entityCategoryOf(element: kotlinx.serialization.json.JsonElement?): String? =
+  when ((element as? JsonPrimitive)?.intOrNull) {
+    0 -> "config"
+    1 -> "diagnostic"
+    else -> (element as? JsonPrimitive)?.takeIf { it.isString }?.content
+  }
