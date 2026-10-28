@@ -99,10 +99,10 @@ val stageAndroidCatalogBundle =
       }
       from(library.layout.buildDirectory.file("outputs/aar/$module-debug.aar")) { into("android") }
     }
-    // The cards (rc-components), their converters (rc-converter) and the players' error boundaries
-    // (rc-player-ui, RcErrorBoundary) are multiplatform libraries whose Android variant is
-    // `androidMain`, not `debug`.
-    for (module in listOf("rc-player-ui", "rc-components", "rc-converter")) {
+    // The cards (rc-components), their converters (rc-converter), the cards' motion layer
+    // (rc-material3-motion) and the players' error boundaries (rc-player-ui, RcErrorBoundary) are
+    // multiplatform libraries whose Android variant is `androidMain`, not `debug`.
+    for (module in listOf("rc-player-ui", "rc-components", "rc-converter", "rc-material3-motion")) {
       val library = project(":$module")
       dependsOn(":$module:bundleAndroidMainAar")
       from(
