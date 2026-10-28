@@ -175,6 +175,43 @@ class PreferencesStore(private val context: Context) {
    * locally-dispatched service calls). Off by default; the toggle lives in Settings and the
    * corresponding overflow-menu entry only appears while it's on.
    */
+  /**
+   * The room the user picked on the room controls (a Home Assistant area id), or null to follow
+   * [roomTracker] and presence sensors.
+   */
+  val roomPicked: Flow<String?>
+    get() = context.store.data.map { it[ROOM_PICKED_KEY] }
+
+  suspend fun setRoomPicked(areaId: String?) {
+    context.store.edit {
+      if (areaId == null) it.remove(ROOM_PICKED_KEY) else it[ROOM_PICKED_KEY] = areaId
+    }
+  }
+
+  /**
+   * The entity whose state says which room the user is in (Bermuda's `sensor.<phone>_area`, an
+   * ESPresense sensor), or null for none.
+   */
+  val roomTracker: Flow<String?>
+    get() = context.store.data.map { it[ROOM_TRACKER_KEY] }
+
+  suspend fun setRoomTracker(entityId: String?) {
+    context.store.edit {
+      if (entityId == null) it.remove(ROOM_TRACKER_KEY) else it[ROOM_TRACKER_KEY] = entityId
+    }
+  }
+
+  /**
+   * Controls pinned to places in the room on an XR headset, as the room controls encode them (a
+   * JSON list of anchor id, Home Assistant instance and entity); null before the first pin.
+   */
+  val roomPins: Flow<String?>
+    get() = context.store.data.map { it[ROOM_PINS_KEY] }
+
+  suspend fun setRoomPins(encoded: String) {
+    context.store.edit { it[ROOM_PINS_KEY] = encoded }
+  }
+
   val logsViewEnabled: Flow<Boolean>
     get() = context.store.data.map { it[LOGS_VIEW_KEY] ?: false }
 
@@ -411,6 +448,9 @@ class PreferencesStore(private val context: Context) {
     private val GRID_LAYOUT_KEY = booleanPreferencesKey("experimental_grid_layout")
     private val COLLAPSED_MODE_KEY = booleanPreferencesKey("collapsed_mode")
     private val LOGS_VIEW_KEY = booleanPreferencesKey("logs_view_enabled")
+    private val ROOM_PICKED_KEY = stringPreferencesKey("room_picked")
+    private val ROOM_TRACKER_KEY = stringPreferencesKey("room_tracker")
+    private val ROOM_PINS_KEY = stringPreferencesKey("room_pins")
     private val FLASH_ON_CHANGE_KEY = booleanPreferencesKey("flash_on_data_change")
     private val DATA_GRID_OVERLAY_KEY = booleanPreferencesKey("data_grid_overlay")
     private val PERMANENT_WRITE_KEY = booleanPreferencesKey("permanent_write_mode")

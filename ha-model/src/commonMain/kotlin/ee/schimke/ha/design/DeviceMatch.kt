@@ -13,6 +13,11 @@ import kotlinx.serialization.Serializable
  *
  * [deviceId] is the registry id of that one device (what a card config such as the Bambu Lab cards'
  * `printer:` names). It says which device, not what kind, so design matching ignores it.
+ *
+ * [areaId] is the room the entity is in: its own area, else its device's, as Home Assistant's
+ * frontend resolves it. [entityCategory] (`config`, `diagnostic`) and [hidden] mark entities the
+ * frontend leaves off auto-generated views; the room controls do the same. None of the three is
+ * part of device matching.
  */
 @Serializable
 data class DeviceInfo(
@@ -22,6 +27,9 @@ data class DeviceInfo(
   val translationKey: String? = null,
   val displayPrecision: Int? = null,
   val deviceId: String? = null,
+  val areaId: String? = null,
+  val entityCategory: String? = null,
+  val hidden: Boolean = false,
 )
 
 /**

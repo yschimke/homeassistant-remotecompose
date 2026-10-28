@@ -30,6 +30,11 @@ data class HaSnapshot(
    * `°F`): the unit a climate entity's temperatures are in. Null when the config wasn't read.
    */
   val temperatureUnit: String? = null,
+  /**
+   * Home Assistant's areas (the rooms entities are placed in,
+   * [ee.schimke.ha.design.DeviceInfo.areaId]) by area id. Empty when the area registry wasn't read.
+   */
+  val areas: Map<String, ee.schimke.ha.room.HaArea> = emptyMap(),
 )
 
 /**
