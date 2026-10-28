@@ -157,4 +157,37 @@ class TileSliderFeaturesTest {
       )
     assertEquals(listOf(listOf<HaTileFeature>(brightness), listOf(other, other)), rows)
   }
+
+  @Test
+  fun aNumericSliderNeverPassesTheEntitysMaximum() {
+    val number =
+      entity(
+        "input_number.odd",
+        "4",
+        "min" to 0,
+        "max" to 11,
+        "step" to 4,
+        "unit_of_measurement" to "",
+      )
+    val action = assertNotNull(slider(number, "numeric-input", "style" to "slider")).spec.action
+    // 0, 4, 8: a fourth step would send 12, past the maximum of 11.
+    assertEquals(2, action.maxTicks)
+    assertEquals(
+      JsonPrimitive(8L),
+      action.copy(ticks = 2).toCallService()?.serviceData?.get("value"),
+    )
+    val tenths =
+      entity(
+        "number.level",
+        "0.5",
+        "min" to 0,
+        "max" to 1,
+        "step" to 0.1,
+        "unit_of_measurement" to "",
+      )
+    assertEquals(
+      10,
+      assertNotNull(slider(tenths, "numeric-input", "style" to "slider")).spec.action.maxTicks,
+    )
+  }
 }

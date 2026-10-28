@@ -107,7 +107,7 @@ read-only there and cards don't lock (`touchControlsSupported`).
 | Host | A `SetValue` release |
 | --- | --- |
 | App (`DashboardActionDispatcher`) | Unchanged → nothing. Else the service call, unless read-only mode drops it. |
-| Launcher widget (`WidgetActionReceiver`) | The value travels in the tap's RemoteCompose metadata; the static payload on the `PendingIntent` is the slider resting where it was drawn, so a platform that drops the metadata sends nothing. `trustedWidgetAction` accepts only the app's own slider with a different position inside its range. A high-risk one (a garage door's position) runs only while the app's controls are unlocked: the confirmation activity's immutable `PendingIntent` can't receive the dragged value. A locked control's `None` is honoured even over a design template's resolved action. |
+| Launcher widget (`WidgetActionReceiver`) | The value travels in the tap's RemoteCompose metadata; the static payload on the `PendingIntent` is the slider resting where it was drawn, so a platform that drops the metadata sends nothing. `trustedWidgetAction` accepts only the app's own slider with a different position inside its range. A high-risk one (a garage door's position) runs only while the app's controls are unlocked: the confirmation activity's immutable `PendingIntent` can't receive the dragged value. A locked control's `None` is honoured even over a design template's resolved action. A locked card's toggles and service calls are marked (`WidgetActionRegistry.lockedEntries`): they always go to the receiver, which refuses them when the platform forwarded no metadata (the static payload would run them while locked) and holds a high-risk one to lock mode, as for a slider. |
 | Wear app (`WearTapDispatcher` → phone `wearTapCall`) | Unchanged → nothing sent. The phone accepts only its own capture's slider moved within range; one drawn from a value the phone has since seen change is refused, not guessed. |
 
 ## Cards with sliders today
@@ -119,7 +119,7 @@ Tile `features:` (HA `hui-*-card-feature`), in `TileContent.sliderFeature`:
 | `light-brightness` | a light with a brightness mode (not `onoff` only) | `light.turn_on` `brightness_pct` 0–100 (an off light rests at 0) |
 | `cover-position` | a cover with `set_position` (feature 4) | `cover.set_cover_position` `position` 0–100 |
 | `media-player-volume-slider` | a media player with `volume_set` (feature 4) | `media_player.volume_set` `volume_level` 0–1 |
-| `numeric-input`, `style: slider` | `input_number`, `number` | `<domain>.set_value` `value`, in the entity's `step`s from `min` to `max` |
+| `numeric-input`, `style: slider` | `input_number`, `number` | `<domain>.set_value` `value`, in the entity's `step`s from `min`, never past `max` |
 
 A slider's resting value is baked: a tile with features re-encodes on a data change
 ([live-card-updates.md](live-card-updates.md), path 2), so a release that lands is drawn from Home

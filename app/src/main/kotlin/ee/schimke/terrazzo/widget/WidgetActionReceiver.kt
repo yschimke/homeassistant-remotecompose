@@ -45,6 +45,13 @@ class WidgetActionReceiver : BroadcastReceiver() {
         "documentTime=${decodedMetadata?.documentTime} " +
         "receivedAt=$receivedAt",
     )
+    // A locked card's control: its action is in the metadata only (None while locked). Without
+    // metadata the static payload would run it whatever the lock says, so it fails closed.
+    val requiresMetadata = intent.getBooleanExtra(EXTRA_REQUIRES_METADATA, false)
+    if (requiresMetadata && !metadataWasForwarded) {
+      Log.w(TAG, "Refusing a locked control on widget $widgetId: the platform sent no metadata")
+      return
+    }
     // Prefer the value resolved by RemoteCompose at interaction time. The mirrored payload keeps
     // fixed actions working on platform versions whose RemoteViews bridge drops the metadata
     // callback. Dynamic PINs deliberately fail closed because their capture-time fallback cannot
@@ -79,19 +86,20 @@ class WidgetActionReceiver : BroadcastReceiver() {
     runnerScope.launch {
       try {
         // A slider's value exists only in the tap's metadata, which the confirmation activity
-        // can't receive (its PendingIntent is immutable): a high-risk one runs only while the
+        // can't receive (its PendingIntent is immutable), and a locked card's control comes here
+        // rather than to that activity too: a high-risk one runs only while the
         // app's controls are unlocked.
         if (
-          action is HaAction.SetValue &&
+          (action is HaAction.SetValue || requiresMetadata) &&
             !WidgetActionRunner.runsWithoutAsking(context.applicationContext, widgetId, call)
         ) {
-          Log.w(TAG, "Refusing a high-risk slider on widget $widgetId while controls are locked")
+          Log.w(TAG, "Refusing a high-risk control on widget $widgetId while controls are locked")
           context
             .terrazzoGraph()
             .logStore
             .recordLocalAction(
-              "Widget slider refused: unlock controls in the app",
-              action.entityId,
+              "Widget control refused: unlock controls in the app",
+              actionEntityId(call),
             )
           return@launch
         }
@@ -134,6 +142,12 @@ class WidgetActionReceiver : BroadcastReceiver() {
      * payload names template slots, never real entities, so this one wins when present.
      */
     const val EXTRA_RESOLVED_ACTION = "resolved_action"
+
+    /**
+     * Set on a locked card's control (`WidgetActionRegistry.lockedEntries`): the tap runs only with
+     * the RemoteCompose metadata, which says whether the card was unlocked.
+     */
+    const val EXTRA_REQUIRES_METADATA = "requires_metadata"
 
     /** Hard-coded by the platform RemoteViews RemoteCompose bridge; no public constant exists. */
     const val EXTRA_REMOTE_COMPOSE_METADATA = "remotecompose_metadata"

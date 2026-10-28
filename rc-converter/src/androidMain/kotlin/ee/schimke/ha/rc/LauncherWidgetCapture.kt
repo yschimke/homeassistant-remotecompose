@@ -20,8 +20,15 @@ import ee.schimke.ha.rc.components.WidgetActionRegistry
 import kotlin.math.roundToInt
 import kotlinx.coroutines.runBlocking
 
-/** A direct capture ready for a host without an image loader, with its numeric host actions. */
-class LauncherDirectCapture(val bytes: ByteArray, val actions: Map<Int, String>)
+/**
+ * A direct capture ready for a host without an image loader, with its numeric host actions and, of
+ * those, the ones a locked card holds back ([WidgetActionRegistry.lockedEntries]).
+ */
+class LauncherDirectCapture(
+  val bytes: ByteArray,
+  val actions: Map<Int, String>,
+  val lockedActions: Set<Int> = emptySet(),
+)
 
 /**
  * Capture non-templated cards with self-contained images. Fetch through the embedding app before
@@ -85,5 +92,9 @@ fun captureLauncherWidgetDocument(
     }
   }
 
-  return LauncherDirectCapture(captured.bytes, widgetActions.entries.toMap())
+  return LauncherDirectCapture(
+    captured.bytes,
+    widgetActions.entries.toMap(),
+    widgetActions.lockedEntries,
+  )
 }

@@ -161,9 +161,23 @@ private val json = Json { ignoreUnknownKeys = true }
  */
 class WidgetActionRegistry(private val initialEntityStates: Map<String, String> = emptyMap()) {
   private val actions = linkedMapOf<Int, String>()
+  private val locked = linkedSetOf<Int>()
 
   val entries: Map<Int, String>
     get() = actions.toMap()
+
+  /**
+   * The ids of [entries] a locked card holds back ([HaControlLock]): their real action travels only
+   * in the tap's metadata, `None` while the card is locked. A host must refuse such a tap when the
+   * platform didn't forward the metadata, rather than fall back to the static payload: that would
+   * run a locked control.
+   */
+  val lockedEntries: Set<Int>
+    get() = locked.toSet()
+
+  internal fun markLocked(id: Int) {
+    locked += id
+  }
 
   internal fun register(payload: String): Int {
     // Host action 0 means "named action" in the AndroidX authoring API, so reserve it.
@@ -322,7 +336,7 @@ fun HaAction.toRemoteAction(): Action? {
       hostAction(HA_ACTION_NAME.rs, lock.select(payload.rs, NonePayload.rs))
     } else {
       hostAction(
-        registry.register(payload),
+        registry.register(payload).also(registry::markLocked),
         lock.select(
           registry.metadata(this, payload.rs),
           registry.metadata(HaAction.None, NonePayload.rs),

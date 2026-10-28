@@ -161,7 +161,8 @@ fun RemoteHaSlider(
         height / 2f.rf,
         RemotePaint {
           style = PaintingStyle.Fill
-          textSize = height * 0.36f.rf
+          // The value reads as a row's state does: the type scale's body role.
+          textSize = HaType.Body.toPx()
         }
           .apply {
             color =

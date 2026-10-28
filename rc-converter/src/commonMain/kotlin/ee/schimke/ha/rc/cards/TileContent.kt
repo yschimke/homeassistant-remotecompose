@@ -383,7 +383,10 @@ internal object TileContent {
     val min = entity.number("min") ?: return null
     val max = entity.number("max") ?: return null
     val step = entity.number("step")?.takeIf { it > 0 } ?: 1.0
-    val maxTicks = kotlin.math.round((max - min) / step).toInt()
+    // Whole steps that stay within `max`: a range that isn't a multiple of the step stops short of
+    // it rather than overshoot (min 0, max 11, step 4 reaches 8). The hair absorbs float error in
+    // a range that is a multiple (0.1 steps up to 1.0).
+    val maxTicks = kotlin.math.floor((max - min) / step + 1e-9).toInt()
     // Past a few thousand steps a pixel moves more than one: still settable, not by the step.
     if (maxTicks !in 1..100_000) return null
     val value = entity.state.toDoubleOrNull() ?: min

@@ -404,10 +404,20 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         // bridge adds that payload to the PendingIntent's fill-in Intent as
         // "remotecompose_metadata". Keep a static copy too: it lets the receiver log whether the
         // platform forwarded metadata and remains a fallback on platform builds that omit it.
+        // A locked card's control always goes to the receiver, which needs its metadata (the
+        // static payload would run it while locked) and holds a high-risk one to lock mode.
+        val locked = actionId in captured.lockedActions
         remoteViews.setOnClickPendingIntent(
           actionId,
-          appPendingIntent(context, widgetId, actionId, decodeHaAction(payload), snapshot)
-            ?: widgetActionPendingIntent(context, widgetId, actionId, payload),
+          (if (locked) null
+          else appPendingIntent(context, widgetId, actionId, decodeHaAction(payload), snapshot))
+            ?: widgetActionPendingIntent(
+              context,
+              widgetId,
+              actionId,
+              payload,
+              requiresMetadata = locked,
+            ),
         )
       }
     return remoteViews
@@ -460,6 +470,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     actionId: Int,
     payload: String,
     resolved: Boolean = false,
+    requiresMetadata: Boolean = false,
   ): PendingIntent {
     val intent =
       Intent(context, WidgetActionReceiver::class.java).apply {
@@ -471,6 +482,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         putExtra(WidgetActionReceiver.EXTRA_ACTION_ID, actionId)
         putExtra(WidgetActionReceiver.EXTRA_ACTION_PAYLOAD, payload)
         if (resolved) putExtra(WidgetActionReceiver.EXTRA_RESOLVED_ACTION, payload)
+        if (requiresMetadata) putExtra(WidgetActionReceiver.EXTRA_REQUIRES_METADATA, true)
       }
     return PendingIntent.getBroadcast(
       context,

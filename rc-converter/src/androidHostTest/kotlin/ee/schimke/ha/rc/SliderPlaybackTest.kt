@@ -227,6 +227,10 @@ class SliderPlaybackTest {
       )
       assertTrue(stripPixel() != before, "the unlock strip shows after a locked touch")
 
+      // The toggle's own payload is marked locked: a host refuses it without the metadata.
+      val toggleId = registry.entries.entries.single { decodeHaAction(it.value) == toggle }.key
+      assertTrue(toggleId in registry.lockedEntries, "the locked toggle is marked for the host")
+
       // Slide the knob across the strip.
       drag(30f, 295f, 128f)
       sent.clear()
