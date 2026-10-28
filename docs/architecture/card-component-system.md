@@ -238,6 +238,10 @@ How each part takes it:
   only borrowed thing is the VU scale itself (ANSI C16.5), which is a standard. Don't trace a
   product's artwork: raster knobs from a CC-licensed gallery would also be legal with attribution,
   but they neither scale nor follow live values, so vectors are the rule.
+- **Motion**: every theme moves by its family's motion scheme (`HaUberTheme.motion`, read with
+  `haMotion()`): Material springs, physical ballistics or a discrete display. A part animates a
+  `0..1` fraction on a token (`spatial*` to move, `effects*` to recolour), never a raw reading or
+  seconds of its own. See [animation-first design systems](../design/animation-first-design-systems.md).
 - **Text**: every `RemoteHa*` text takes `style = haTextStyle()`, the theme's font family and
   tracking. Readings take `fontWeight = haValueWeight()`.
 - **Ink** replaces rule 2's semantic data colours on themes that are monochrome by nature (LCD,

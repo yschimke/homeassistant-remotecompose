@@ -44,6 +44,7 @@ import androidx.wear.compose.remote.material3.RemoteIcon
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.animateRemoteFloat
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
+import ee.schimke.ha.rc.components.haMotion
 import ee.schimke.ha.rc.components.toRemoteAction
 
 /**
@@ -70,7 +71,8 @@ internal fun GarageDoorDrawing(cover: CoverLive, widthDp: Int = 120, heightDp: I
   val openingHeightDp = heightDp - lintelDp - sillDp
   // Four panels when closed: three grooves between them.
   val panelPitchDp = (openingHeightDp.toInt() / 4).coerceAtLeast(4).toFloat()
-  val fraction = animateRemoteFloat(cover.closedFraction, durationSeconds = DOOR_TWEEN_SECONDS)
+  // A door's travel is seconds long and reported in steps: the slow spatial token joins them up.
+  val fraction = animateRemoteFloat(cover.closedFraction, haMotion().spatialSlow)
   val idle = cover.moving.not()
   val wall = theme.divider
   val interior = theme.sectionBackground
@@ -121,7 +123,7 @@ internal fun ShutterWindowDrawing(cover: CoverLive, widthDp: Int = 96, heightDp:
   val frameDp = 3f
   val innerHeightDp = heightDp - 2 * frameDp
   val slatPitchDp = 6f
-  val fraction = animateRemoteFloat(cover.closedFraction, durationSeconds = DOOR_TWEEN_SECONDS)
+  val fraction = animateRemoteFloat(cover.closedFraction, haMotion().spatialSlow)
   val frame = theme.divider
   val glass = theme.sectionBackground
   val shutter = theme.secondaryText
@@ -274,9 +276,6 @@ private fun CoverButton(
     )
   }
 }
-
-/** A door's travel is seconds long and reported in steps: a tween joins the steps up. */
-private const val DOOR_TWEEN_SECONDS = 0.6f
 
 private val Transparent: RemoteColor = Color.Transparent.rc
 

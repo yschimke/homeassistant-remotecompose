@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.rc
 
+import android.animation.ValueAnimator
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.remote.core.Operation
@@ -18,6 +19,7 @@ import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.remote.player.view.RemoteComposePlayer
 import androidx.compose.remote.player.view.platform.RemoteComposeView
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.key
@@ -36,6 +38,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.rc.m3.LocalRcReduceMotion
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -123,9 +126,14 @@ fun CachedCardPreview(
   val density = LocalDensity.current
   // Mix the debug-borders flag into the cache key so toggling it
   // re-encodes the document (the wrapper changes the captured bytes).
+  // Android's "Remove animations" asks for less motion: the card style's spatial motion snaps and
+  // only short fades remain (`LocalRcReduceMotion`). It changes the captured bytes, so it keys
+  // them.
+  val reduceMotion = !ValueAnimator.areAnimatorsEnabled()
   val effectiveCacheKey =
-    remember(cacheKey, debugBorders, density.density, density.fontScale) {
-      val displayed = DisplayKeyedCacheKey(cacheKey, density.density, density.fontScale)
+    remember(cacheKey, debugBorders, density.density, density.fontScale, reduceMotion) {
+      val displayed =
+        DisplayKeyedCacheKey(cacheKey, density.density, density.fontScale, reduceMotion)
       if (debugBorders) DebugBorderedCacheKey(displayed) else displayed
     }
 
@@ -155,11 +163,17 @@ fun CachedCardPreview(
 
   // What producing this document cost, for [CardRebuilds]: set by the block below.
   val produced = remember(documentKey, template) { arrayOf(CardRebuilds.Cost.None) }
-  val captureContent: @RemoteComposable @Composable () -> Unit =
+  val bordered: @RemoteComposable @Composable () -> Unit =
     if (debugBorders) {
       { DebugRcBorderWrapper { content() } }
     } else {
       content
+    }
+  val captureContent: @RemoteComposable @Composable () -> Unit =
+    if (reduceMotion) {
+      { CompositionLocalProvider(LocalRcReduceMotion provides true, content = bordered) }
+    } else {
+      bordered
     }
   // The document this slot last drew. A rebuild that has to capture (a converter card whose key
   // moved under it) keeps drawing it while the capture runs off the main thread, then swaps: a
@@ -449,7 +463,12 @@ private data class DebugBorderedCacheKey(val inner: Any)
 private data class PictureKeyedCacheKey(val inner: Any, val pictures: String)
 
 /** [inner] as captured on a display of [density] and [fontScale]. */
-private data class DisplayKeyedCacheKey(val inner: Any, val density: Float, val fontScale: Float)
+private data class DisplayKeyedCacheKey(
+  val inner: Any,
+  val density: Float,
+  val fontScale: Float,
+  val reduceMotion: Boolean,
+)
 
 /** Where [pushSnapshotBindings] writes: the Compose player's named values or the View player. */
 internal interface BindingWriter {

@@ -132,10 +132,12 @@ How the pieces keep to it:
   shared hosts. Effects only carry *later* snapshots. This matters most
   for cached documents: their bytes hold the values of their first
   capture, which can be long stale by the time the card scrolls back.
-- **Converters animate bindings, not appearance.** Wrap a bound value in
-  `animateRemoteFloat` so updates tween; don't add an entrance animation
-  (a sweep from zero, a fade or scale in) to a card or part. A tween that
-  only ever starts from a constant is an entrance animation.
+- **Converters animate bindings, not appearance.** Wrap a bound `0..1` fraction in
+  `animateRemoteFloat(fraction, haMotion().<token>)` so updates move by the card style's motion
+  scheme ([animation-first design systems](../design/animation-first-design-systems.md));
+  don't add an entrance animation (a sweep from zero, a fade or scale in)
+  to a card or part. A tween that only ever starts from a constant is an
+  entrance animation.
 - **Re-encode cards (path 2) don't animate at all**: each data change is a
   new document, which starts settled.
 

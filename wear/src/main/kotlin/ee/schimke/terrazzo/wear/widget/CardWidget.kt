@@ -68,6 +68,7 @@ import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.wearBackground
 import ee.schimke.ha.rc.converterFor
+import ee.schimke.rc.m3.LocalRcSpringsSupported
 import ee.schimke.terrazzo.wear.data.toEntityState
 import ee.schimke.terrazzo.wear.sync.WearDirectAccess
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
@@ -470,14 +471,16 @@ internal suspend fun neutralWidgetTemplate(
       runCatching {
         neutralTemplateCaptures.incrementAndGet()
         WearWidgetTemplate.capture(context, cardStyle, wearLevel(input.card, input.snapshot)) {
-          SlotContent(
-            registry,
-            colors,
-            input.card,
-            input.snapshot,
-            template = true,
-            cardStyle = cardStyle,
-          )
+          ForSystemRenderer {
+            SlotContent(
+              registry,
+              colors,
+              input.card,
+              input.snapshot,
+              template = true,
+              cardStyle = cardStyle,
+            )
+          }
         }
       }
         .onFailure { Log.w("CardWidget", "neutral template capture failed", it) }
@@ -562,8 +565,20 @@ internal fun slotDocument(
 ): WearWidgetDocument =
   WearWidgetDocument(
     background = wearWidgetBrush(tint, cardStyle.wearBackground()),
-    content = { SlotContent(registry, colors, card, snapshot, template, cardStyle) },
+    content = {
+      ForSystemRenderer { SlotContent(registry, colors, card, snapshot, template, cardStyle) }
+    },
   )
+
+/**
+ * A document for the watch's system widget renderer, whose spring support is unverified: a style's
+ * springs encode as tweens of about the same length. The app's own players run springs, so
+ * `WearRemoteCard`'s direct captures stay outside this.
+ */
+@Composable
+private fun ForSystemRenderer(content: @Composable () -> Unit) {
+  CompositionLocalProvider(LocalRcSpringsSupported provides false, content = content)
+}
 
 /**
  * The container brush for a widget filled with [fill] (ARGB, or null for Glance Wear's default

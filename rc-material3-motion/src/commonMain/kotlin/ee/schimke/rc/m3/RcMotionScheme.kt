@@ -118,8 +118,29 @@ val LocalRcMotionMode = staticCompositionLocalOf { RcMotionMode.Normal }
  */
 val LocalRcAnimationsEnabled = staticCompositionLocalOf { true }
 
-/** The motion scheme in effect: the design's, under the host's mode. */
+/**
+ * Whether the player this document is for runs springs. A host capturing for a player it can't
+ * vouch for (a system widget renderer) turns this off, and springs encode as
+ * [RcMotionSpec.Spring.asTween].
+ */
+val LocalRcSpringsSupported = staticCompositionLocalOf { true }
+
+/**
+ * Whether the viewer asked for less motion (Android's "Remove animations", the web's
+ * `prefers-reduced-motion`). It applies on top of any mode: an ambient display under it still fades
+ * but never travels.
+ */
+val LocalRcReduceMotion = staticCompositionLocalOf { false }
+
+/** [scheme] under the host's mode and the viewer's reduce-motion preference. */
 @Composable
 @ReadOnlyComposable
-fun currentRcMotion(): RcMotionScheme =
-  LocalRcMotionScheme.current.resolve(LocalRcMotionMode.current)
+fun resolveRcMotion(scheme: RcMotionScheme): RcMotionScheme =
+  scheme.resolve(LocalRcMotionMode.current).let {
+    if (LocalRcReduceMotion.current) it.reducedMotion() else it
+  }
+
+/** The motion scheme in effect: the design's, under the host's mode and the viewer's preference. */
+@Composable
+@ReadOnlyComposable
+fun currentRcMotion(): RcMotionScheme = resolveRcMotion(LocalRcMotionScheme.current)

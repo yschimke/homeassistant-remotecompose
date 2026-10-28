@@ -87,4 +87,39 @@ class RcMotionSpecTest {
     assertEquals(RcMotionScheme.expressive().effects, reduced.effects)
     assertEquals(RcMotionScheme.ambient(), RcMotionScheme.standard().resolve(RcMotionMode.Ambient))
   }
+
+  @Test
+  fun attackReleaseRisesFastAndFallsSlowly() {
+    fun lamp(from: Float, to: Float): Int {
+      // Fresh engines: each keeps the time it last ran to.
+      val attack = SpringStopEngine(RcMotionSpec.Spring(900f, 1f).encode()!!)
+      val release = SpringStopEngine(RcMotionSpec.Spring(100f, 1f).encode()!!)
+      for (engine in listOf(attack, release)) {
+        engine.setInitialValue(from)
+        engine.setTargetValue(to)
+      }
+      // The shown value is the larger copy; count frames until it is within 2 % of the target.
+      return (1..240).indexOfFirst {
+        val t = it / 120f
+        abs(maxOf(attack.get(t), release.get(t)) - to) < 0.02f
+      }
+    }
+    val warm = lamp(0f, 1f)
+    val cool = lamp(1f, 0f)
+    assertTrue(warm in 0..30, "warms in ${warm}f")
+    assertTrue(cool > 2 * warm, "cools ($cool f) slower than it warms ($warm f)")
+  }
+
+  @Test
+  fun springsStandInAsTweensOfAboutTheirLength() {
+    val vu = RcMotionSpec.Spring(183f, 0.81f).asTween()
+    assertTrue(vu.seconds in 0.3f..0.4f, "VU needle tween ${vu.seconds}s")
+    assertEquals(RcEasing.Decelerate, vu.easing)
+    assertEquals(RcEasing.Overshoot, RcMotionSpec.Spring(800f, 0.6f).asTween().easing)
+    // A bounded spring stays on its track; a tween can't reflect, so it must not overshoot.
+    val bounded = RcMotionScheme.expressive().spatialFast as RcMotionSpec.Spring
+    assertEquals(RcEasing.Decelerate, bounded.asTween().easing)
+    val slow = RcMotionScheme.ambient().effectsSlow as RcMotionSpec.Spring
+    assertTrue(slow.asTween().seconds in 1f..1.1f)
+  }
 }
