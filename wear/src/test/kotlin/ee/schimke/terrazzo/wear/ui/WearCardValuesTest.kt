@@ -1,9 +1,6 @@
 package ee.schimke.terrazzo.wear.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import kotlin.test.assertEquals
@@ -38,38 +35,57 @@ class WearCardValuesTest {
 
     assertNull(wearCardEntityIds(raw))
     val values = mapOf("sensor.p1s_nozzle" to EntityValue(state = "210"))
-    assertEquals(values, values.forCard(null))
+    assertEquals(values, WearValues(values).forIds(null))
   }
 
   @Test
-  fun `a card skips when only another card's entity changes`() {
+  fun `an entity first read after an update reads the update`() {
+    val values = WearValues(mapOf("light.kitchen" to EntityValue(state = "on")))
+    values.update(mapOf("light.kitchen" to EntityValue(state = "off")))
+
+    assertEquals("off", values["light.kitchen"]?.state)
+    assertNull(values["sensor.missing"])
+  }
+
+  @Test
+  fun `a value update recomposes only the card that shows it`() {
     val raw = """{"type":"tile","entity":"light.kitchen"}"""
-    var values by
-      mutableStateOf(
+    val values =
+      WearValues(
         mapOf(
           "light.kitchen" to EntityValue(state = "on"),
           "sensor.power" to EntityValue(state = "100", unit = "W"),
         )
       )
-    compose.setContent { Card(rememberCardValues(raw, values)) }
+    compose.setContent { Screen(raw, values) }
     compose.waitForIdle()
+    assertEquals(1, screenCompositions)
     assertEquals(1, cardCompositions)
 
-    values = values + ("sensor.power" to EntityValue(state = "120", unit = "W"))
+    values.update(values.all() + ("sensor.power" to EntityValue(state = "120", unit = "W")))
     compose.waitForIdle()
     assertEquals(1, cardCompositions, "another card's value leaves this card alone")
 
-    values = values + ("light.kitchen" to EntityValue(state = "off"))
+    values.update(values.all() + ("light.kitchen" to EntityValue(state = "off")))
     compose.waitForIdle()
     assertEquals(2, cardCompositions, "its own value recomposes it")
+    assertEquals(1, screenCompositions, "the screen holding the values never recomposes")
   }
 
+  private var screenCompositions = 0
   private var cardCompositions = 0
 
-  /** Stands in for a card: takes only its values, so it skips while they stay the same. */
+  /** Stands in for a screen: passes the values on and reads none of them. */
   @Composable
-  private fun Card(values: Map<String, EntityValue>) {
+  private fun Screen(raw: String, values: WearValues) {
+    screenCompositions++
+    Card(raw, values)
+  }
+
+  /** Stands in for a card: reads its own entities. */
+  @Composable
+  private fun Card(raw: String, values: WearValues) {
     cardCompositions++
-    check(values.isNotEmpty())
+    check(rememberCardValues(raw, values).isNotEmpty())
   }
 }

@@ -19,7 +19,6 @@ import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
-import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.PinnedCard
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSection
@@ -53,7 +52,7 @@ fun WearTopLevelScreen(
   settings: WearSettings,
   pinned: PinnedCardSet,
   sections: PinnedSectionSet,
-  values: Map<String, EntityValue>,
+  values: WearValues,
   onOpenSection: (PinnedSection) -> Unit,
   onBrowseDashboards: () -> Unit,
   onOpenSettings: () -> Unit,

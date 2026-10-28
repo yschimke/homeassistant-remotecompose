@@ -48,6 +48,7 @@ import ee.schimke.terrazzo.wear.ui.fullScreenCardKey
 import ee.schimke.terrazzo.wear.ui.fullScreenDeck
 import ee.schimke.terrazzo.wear.ui.opensFullScreen
 import ee.schimke.terrazzo.wear.ui.rememberWearColorScheme
+import ee.schimke.terrazzo.wear.ui.rememberWearValues
 import ee.schimke.terrazzo.wear.ui.wearCardLook
 import ee.schimke.terrazzo.wear.ui.wearTypographyFor
 import ee.schimke.terrazzo.wear.widget.WearWidgetPreviewCapturer
@@ -179,7 +180,9 @@ private fun WearApp(
   val sections: PinnedSectionSet by repo.sections.collectAsState()
   val widgetCardsRevision by repo.widgetCardsRevision.collectAsState()
   val dashboards: List<DashboardData> by repo.dashboards.collectAsState()
-  val values by repo.values.collectAsState()
+  // One object for the app's life: cards read their own entities from it, so a value update
+  // recomposes only the cards that show it.
+  val values = rememberWearValues(repo.values)
 
   var screen by rememberSaveable { mutableStateOf(WearScreen.TopLevel) }
   var openedDashboard by rememberSaveable { mutableStateOf<String?>(null) }

@@ -37,7 +37,7 @@ import kotlinx.serialization.json.contentOrNull
 @Composable
 internal fun WearCardDetailsScreen(
   summary: CardSummary,
-  values: Map<String, EntityValue>,
+  values: WearValues,
   loadHistory: suspend (entityId: String) -> List<HistoryPoint>?,
   modifier: Modifier = Modifier,
   loadStates: suspend (ids: Set<String>) -> Map<String, EntityState>? = { null },

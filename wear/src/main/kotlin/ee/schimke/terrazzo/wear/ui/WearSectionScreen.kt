@@ -12,7 +12,6 @@ import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
-import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.PinnedSection
 
 /**
@@ -27,7 +26,7 @@ import ee.schimke.terrazzo.wearsync.proto.PinnedSection
 @Composable
 fun WearSectionScreen(
   section: PinnedSection?,
-  values: Map<String, EntityValue>,
+  values: WearValues,
   onBack: () -> Unit,
   modifier: Modifier = Modifier,
   onInputSend: (suspend (String, Map<String, String>) -> Unit)? = null,
