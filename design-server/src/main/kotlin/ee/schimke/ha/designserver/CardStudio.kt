@@ -4,6 +4,7 @@ import ee.schimke.ha.client.design.validateCardDraft
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respondRedirect
@@ -183,46 +184,39 @@ fun Route.cardStudioRoutes(
     val token = call.parameters["token"].orEmpty()
     val document =
       handoffs.get(token)
-        ?: return@get call.respondText(
-          "This card preview has expired. Return to the app to open it again.",
+        ?: return@get call.respondStudioPage(
+          heading = "This preview has expired",
+          body =
+            "<p>Card previews last ten minutes. Go back to the app and choose " +
+              "<b>Design in UI Builder</b> again; your layout edits there are kept.</p>",
           status = HttpStatusCode.Gone,
+          integration = integration,
         )
     val editor = call.editor(integration, github)
-    call.response.header(HttpHeaders.CacheControl, "no-store")
-    call.response.header("Referrer-Policy", "no-referrer")
-    call.response.header("X-Robots-Tag", "noindex, nofollow")
-    // Chromium applies form-action to the redirect too, including a separately hosted builder.
-    val builderOrigin =
-      integration
-        ?.config
-        ?.browserUrl
-        ?.let { url ->
-          val uri = URI(url)
-          require(uri.scheme in setOf("http", "https") && uri.host != null)
-          URI(uri.scheme, null, uri.host, uri.port, null, null, null).toASCIIString()
-        }
-        .orEmpty()
-    call.response.header(
-      "Content-Security-Policy",
-      "default-src 'none'; style-src 'unsafe-inline'; form-action 'self' $builderOrigin; frame-ancestors 'self'",
-    )
+    // Checked before asking anyone to sign in: a builder without the card catalog can't open it.
+    val served = integration?.client?.servesCatalog(document.catalogSystem()) ?: true
     val action =
       when {
-        editor.authorized ->
-          "<form method=\"post\"><button>Open this draft in UI Builder</button></form>"
+        !served ->
+          notice(
+            "UI Builder on this server can't open card drafts right now: it isn't serving the " +
+              "<code>${studioEscape(document.catalogSystem())}</code> catalog. Your draft is kept " +
+              "for ten minutes, so reload this page to try again. If it keeps happening, the " +
+              "design server's operator needs to publish that catalog."
+          )
+        editor.authorized -> OPEN_FORM
         editor.signInPath != null ->
-          "<a href=\"${studioEscape(editor.signInPath)}\">Sign in to design this card</a>"
+          "<ol><li>Sign in with GitHub, so the design is saved as yours.</li>" +
+            "<li>Open the draft in UI Builder and change the layout.</li>" +
+            "<li>Back in the app, choose <b>Publish privately and use it</b>.</li></ol>" +
+            "<p><a class=\"button\" href=\"${studioEscape(editor.signInPath)}\">" +
+            "Sign in with GitHub to continue</a></p>"
         else -> "<p>Open the design server's edit link in this browser first, then return here.</p>"
       }
-    call.respondText(
-      """
-      <!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-      <title>Card design preview</title><style>body{font:16px system-ui;max-width:900px;margin:24px auto;padding:16px}pre{white-space:pre-wrap;overflow-wrap:anywhere}button,a{font:inherit}</style>
-      <h1>Card design preview</h1><p>This draft uses the selected card's data. Review it in UI Builder before saving or exporting. The preview link expires after ten minutes.</p>
-      $action<details><summary>Draft document</summary><pre>${studioEscape(document.toString())}</pre></details></html>
-    """
-        .trimIndent(),
-      ContentType.Text.Html,
+    call.respondStudioPage(
+      heading = "Design this card",
+      body = INTRO + action + draftDetails(document),
+      integration = integration,
     )
   }
 
@@ -247,8 +241,16 @@ fun Route.cardStudioRoutes(
             status = HttpStatusCode.Conflict,
           )
         CardStudioDrafts.Claim.Missing ->
-          return@post call.respondText("Preview expired", status = HttpStatusCode.Gone)
+          return@post call.respondStudioPage(
+            heading = "This preview has expired",
+            body =
+              "<p>Card previews last ten minutes. Go back to the app and choose " +
+                "<b>Design in UI Builder</b> again; your layout edits there are kept.</p>",
+            status = HttpStatusCode.Gone,
+            integration = integration,
+          )
       }
+    var created: String? = null
     val location =
       try {
         // New id on every attempt: no existing design can be overwritten, including retries.
@@ -257,6 +259,7 @@ fun Route.cardStudioRoutes(
             document + ("id" to JsonPrimitive("card-${UiBuilderConfig.randomToken()}")) - "template"
           )
         val id = builder.client.create(draft, resolveCatalog = true)
+        created = id
         val url =
           if (editor.login == null) builder.config.editorUrl(id)
           else {
@@ -275,9 +278,27 @@ fun Route.cardStudioRoutes(
         url
       } catch (e: Exception) {
         if (e is CancellationException) throw e
-        return@post call.respondText(
-          "UI Builder could not open this draft. Check the catalog and try again.",
+        call.application.environment.log.warn("Card studio handoff failed", e)
+        // Says which step failed, never the builder's own response, which may echo the draft.
+        val reason =
+          when {
+            e is CatalogUnavailableException ->
+              "UI Builder isn't serving the <code>${studioEscape(e.systemId)}</code> catalog " +
+                "right now, so it couldn't open this draft. Nothing was created."
+            created == null ->
+              "UI Builder refused this draft. Nothing was created. Try again; if it keeps " +
+                "failing, refresh the preview data in the app and open it again."
+            else -> "UI Builder made the design but couldn't give your GitHub account access to it."
+          }
+        return@post call.respondStudioPage(
+          heading = "UI Builder couldn't open this draft",
+          body =
+            notice(reason) +
+              "<p>Your draft is kept for ten minutes, so you can try again.</p>" +
+              OPEN_FORM.replace("Open this draft in UI Builder", "Try again") +
+              draftDetails(document),
           status = HttpStatusCode.BadGateway,
+          integration = integration,
         )
       } finally {
         // Failures and cancellation leave the handoff available for a deliberate retry.
@@ -286,6 +307,69 @@ fun Route.cardStudioRoutes(
     call.response.header(HttpHeaders.CacheControl, "no-store")
     call.respondRedirect(location)
   }
+}
+
+private const val INTRO =
+  "<p>This opens a private copy of the card in UI Builder, filled with the card's current " +
+    "values. Nothing changes on your dashboard until you publish it from the app.</p>"
+
+private const val OPEN_FORM =
+  "<form method=\"post\"><button>Open this draft in UI Builder</button></form>"
+
+private fun notice(html: String) = "<p class=\"notice\" role=\"alert\">$html</p>"
+
+private fun draftDetails(document: JsonObject) =
+  "<details><summary>Technical details</summary><pre>${studioEscape(document.toString())}</pre>" +
+    "</details>"
+
+/** The catalog the draft is pinned to: the one UI Builder must serve to open it. */
+private fun JsonObject.catalogSystem(): String =
+  (this["catalogPin"] as? JsonObject)?.get("systemId")?.jsonPrimitive?.contentOrNull ?: "ha-cards"
+
+/**
+ * A studio handoff page: no script, no referrer, and a form that may post only here or to the
+ * builder (Chromium applies `form-action` to the redirect too, including a separately hosted one).
+ */
+private suspend fun ApplicationCall.respondStudioPage(
+  heading: String,
+  body: String,
+  integration: UiBuilderIntegration?,
+  status: HttpStatusCode = HttpStatusCode.OK,
+) {
+  val builderOrigin =
+    integration
+      ?.config
+      ?.browserUrl
+      ?.let { url ->
+        val uri = URI(url)
+        require(uri.scheme in setOf("http", "https") && uri.host != null)
+        URI(uri.scheme, null, uri.host, uri.port, null, null, null).toASCIIString()
+      }
+      .orEmpty()
+  response.header(HttpHeaders.CacheControl, "no-store")
+  response.header("Referrer-Policy", "no-referrer")
+  response.header("X-Robots-Tag", "noindex, nofollow")
+  response.header(
+    "Content-Security-Policy",
+    "default-src 'none'; style-src 'unsafe-inline'; form-action 'self' $builderOrigin; frame-ancestors 'self'",
+  )
+  respondText(
+    """
+    <!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>$heading</title><style>
+    body{font:16px/1.5 system-ui,sans-serif;max-width:640px;margin:0 auto;padding:16px 16px 32px;color:#1b1c1f;background:#fafafc}
+    h1{font-size:1.5rem;line-height:1.25;margin:8px 0 12px}ol{padding-left:1.25em}li{margin:4px 0}
+    button,a.button{display:inline-block;font:inherit;font-weight:600;padding:10px 20px;border:0;border-radius:999px;background:#25628e;color:#fff;text-decoration:none;cursor:pointer}
+    .notice{padding:12px 16px;border-radius:12px;background:#fde7e6;color:#5c1513}
+    details{margin-top:24px;color:#555}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}
+    @media (prefers-color-scheme:dark){body{background:#121316;color:#e3e2e6}.notice{background:#4f1d1b;color:#ffdad6}details{color:#aaa}button,a.button{background:#94ccf9;color:#00344f}}
+    </style>
+    <h1>$heading</h1>$body</html>
+    """
+      .trimIndent(),
+    ContentType.Text.Html,
+    status,
+  )
 }
 
 private fun studioEscape(text: String): String =

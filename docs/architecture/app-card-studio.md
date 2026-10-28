@@ -33,6 +33,11 @@ The design server adds three routes:
 - `GET` / `POST /studio/<token>`: review the handoff and, after normal browser sign-in
   or edit-link authorization, create a fresh private UI Builder design. The builder
   performs its own catalog/schema validation. No existing design is overwritten.
+  The `GET` page checks that UI Builder serves the draft's catalog *before* asking
+  anyone to sign in, and says so instead of offering sign-in when it doesn't. A failed
+  `POST` answers with the same page, naming the step that failed (catalog lookup,
+  create, or share) without echoing the builder's response, and a **Try again** button;
+  the cause goes to the server log.
 
 Seed and handoff documents live in separate bounded, in-memory stores of 128 entries
 each and expire after ten minutes. Responses containing drafts use `no-store`; the

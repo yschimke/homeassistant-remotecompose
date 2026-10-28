@@ -84,4 +84,24 @@ class CardEntitiesTest {
     )
     assertEquals("markdown", card { put("type", "markdown") }.historyTitle())
   }
+
+  @Test
+  fun markdownTitleIsItsFirstHeading() {
+    assertEquals(
+      "🖨️ P2s",
+      card {
+        put("type", "markdown")
+        put("content", "Intro\n## 🖨️ P2s\n**Status:** finish")
+      }
+        .historyTitle(),
+    )
+    assertEquals(
+      "markdown",
+      card {
+        put("type", "markdown")
+        put("content", "## {{ states('sensor.name') }}")
+      }
+        .historyTitle(),
+    )
+  }
 }
