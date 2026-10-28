@@ -34,6 +34,11 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+    <!--
+      Android XR: the room controls spread into spatial panels in full space (room/SpatialRoom.kt).
+      Optional, so phones and tablets without it still install the app.
+    -->
+    <uses-feature android:name="android.software.xr.api.spatial" android:required="false" />
 
     <application
         android:name=".TerrazzoApplication"

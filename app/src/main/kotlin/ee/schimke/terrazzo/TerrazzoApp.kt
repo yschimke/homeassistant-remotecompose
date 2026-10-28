@@ -350,6 +350,7 @@ private fun AuthenticatedShell(
           onOpenWidgets = { screen = AppScreen.Widgets },
           onOpenPinned = { screen = AppScreen.Pinned },
           onOpenLogs = { screen = AppScreen.Logs },
+          onOpenRoom = { screen = AppScreen.Room },
           onSignOut = onSignOut,
           // Demo mode has a curated dashboard set: nothing to choose.
           onManageDashboards =
@@ -389,6 +390,17 @@ private fun AuthenticatedShell(
       }
       AppScreen.Logs ->
         ee.schimke.terrazzo.logs.LogsScreen(onBack = { screen = AppScreen.Dashboards })
+      AppScreen.Room -> {
+        // The same write mode the dashboard's chip and Settings set: read-only shows, doesn't send.
+        val permanentWrite by
+          graph.preferencesStore.permanentWriteMode.collectAsState(initial = false)
+        val sessionWrite by graph.sessionWriteMode.writeMode.collectAsState()
+        ee.schimke.terrazzo.room.RoomScreen(
+          session = session,
+          readOnly = !(sessionWrite ?: permanentWrite),
+          onBack = { screen = AppScreen.Dashboards },
+        )
+      }
       AppScreen.ChooseDashboards -> {
         val rawList by rememberDashboardListState(session)
         // Render the screen only once we have a snapshot of the
@@ -435,6 +447,7 @@ private fun DashboardsRoot(
   onOpenWidgets: () -> Unit,
   onOpenPinned: () -> Unit,
   onOpenLogs: () -> Unit,
+  onOpenRoom: () -> Unit,
   onSignOut: () -> Unit,
   onManageDashboards: (() -> Unit)?,
 ) {
@@ -709,6 +722,7 @@ private fun DashboardsRoot(
               onInstallOnWatch = installOnWatch,
               onEditDashboard = { editorOpen = true },
               onManageDashboards = onManageDashboards,
+              onOpenRoom = onOpenRoom,
             )
           },
         )
