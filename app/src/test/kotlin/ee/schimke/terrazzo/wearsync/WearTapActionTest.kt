@@ -27,11 +27,23 @@ class WearTapActionTest {
       JsonObject(mapOf("brightness_pct" to JsonPrimitive(40))),
     )
   private val armAway = HaAction.AlarmIntent("alarm_control_panel.house", "arm_away", 4)
+  private val brightness =
+    HaAction.SetValue(
+      domain = "light",
+      service = "turn_on",
+      entityId = "light.kitchen",
+      field = "brightness_pct",
+      min = 0.0,
+      step = 1.0,
+      maxTicks = 100,
+      from = 30,
+      ticks = 30,
+    )
 
   /** What the phone's capture of each card makes: the fake for [captureWearCardActions]. */
   private val produced: (CardConfig) -> Set<HaAction> = { card ->
     when (card) {
-      light -> setOf(toggle, dim, HaAction.MoreInfo("light.kitchen"))
+      light -> setOf(toggle, dim, brightness, HaAction.MoreInfo("light.kitchen"))
       alarm ->
         setOf(
           armAway,
@@ -188,4 +200,32 @@ class WearTapActionTest {
   }
 
   private fun card(raw: String): CardConfig = requireNotNull(raw.toCardConfigOrNull())
+
+  @Test
+  fun aWatchSliderRunsAsTheCardsOwnSliderMovedToItsValue() {
+    val call = call(lightRaw, brightness.copy(ticks = 80))
+    assertEquals(
+      HaAction.CallService(
+        "light",
+        "turn_on",
+        "light.kitchen",
+        JsonObject(mapOf("brightness_pct" to JsonPrimitive(80L))),
+      ),
+      call,
+    )
+  }
+
+  @Test
+  fun aWatchSliderOffItsRangeOrFromAStaleValueIsRefused() {
+    assertFailsWith<IllegalArgumentException> { call(lightRaw, brightness.copy(ticks = 101)) }
+    // The watch drew the slider at 10 %, the phone's card rests at 30 %: refused, not guessed.
+    assertFailsWith<IllegalArgumentException> {
+      call(lightRaw, brightness.copy(from = 10, ticks = 50))
+    }
+    // Released where it rested: there is nothing to run.
+    assertFailsWith<IllegalArgumentException> { call(lightRaw, brightness) }
+    assertFailsWith<IllegalArgumentException> {
+      call(lightRaw, brightness.copy(ticks = 50), readOnly = true)
+    }
+  }
 }

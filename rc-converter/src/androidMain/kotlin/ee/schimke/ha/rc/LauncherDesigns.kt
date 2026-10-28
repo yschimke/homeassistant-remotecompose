@@ -23,15 +23,18 @@ import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.HaControlLockMode
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideCardStyle
 import ee.schimke.ha.rc.components.ProvideExpressionNames
+import ee.schimke.ha.rc.components.ProvideHaControlLockMode
 import ee.schimke.ha.rc.components.ProvideHaUberStyle
 import ee.schimke.ha.rc.components.ProvideSystemHaTheme
 import ee.schimke.ha.rc.components.ProvideWidgetActionRegistry
+import ee.schimke.ha.rc.components.RemoteHaControlLockFrame
 import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
 import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
@@ -90,6 +93,12 @@ data class LauncherLook(
  * The launcher-widget content of [card]: the same tree for a live capture and a design template.
  * The widget surface paints the themed card background across the whole canvas and suppresses the
  * card's own chrome; taps are numeric host actions collected in [widgetActions].
+ *
+ * A card with a slider starts with its controls locked ([HaControlLockMode.Locked], by default when
+ * [cardHasDragControls]): a home screen is brushed by every swipe across it, and a slider makes the
+ * player claim the swipes that start on the widget, so its toggles and sliders act only once its
+ * "Slide to unlock" strip has been slid ([RemoteHaControlLockFrame]). Taps that only show something
+ * (more-info, open the app) are never locked.
  */
 @Composable
 fun LauncherWidgetContent(
@@ -101,6 +110,8 @@ fun LauncherWidgetContent(
   snapshot: HaSnapshot,
   captureSizeDp: WidgetCaptureSizeDp? = null,
   look: LauncherLook = LauncherLook(),
+  controlLock: HaControlLockMode =
+    if (cardHasDragControls(card)) HaControlLockMode.Locked else HaControlLockMode.Off,
   content: @Composable (RemoteModifier) -> Unit = { RenderChild(card, snapshot, it) },
 ) {
   CompositionLocalProvider(
@@ -121,7 +132,11 @@ fun LauncherWidgetContent(
                 // the top edge (docs/architecture/adaptive-card-layouts.md, "No dead space"); one
                 // that fills it measures first and leaves the spacers nothing.
                 RemoteHaWidgetSurface {
-                  ee.schimke.ha.rc.cards.CenteredCell { content(RemoteModifier.fillMaxWidth()) }
+                  ProvideHaControlLockMode(controlLock) {
+                    RemoteHaControlLockFrame {
+                      ee.schimke.ha.rc.cards.CenteredCell { content(RemoteModifier.fillMaxWidth()) }
+                    }
+                  }
                 }
               }
             }

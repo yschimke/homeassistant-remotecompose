@@ -57,6 +57,7 @@ class CardTemplatePlayback(
       is HaAction.AlarmKey -> action.entityId
       is HaAction.AlarmPin -> action.entityId
       is HaAction.AlarmIntent -> action.entityId
+      is HaAction.SetValue -> action.entityId
       is HaAction.Navigate,
       is HaAction.Url,
       HaAction.None -> null

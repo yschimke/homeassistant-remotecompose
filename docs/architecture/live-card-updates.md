@@ -179,8 +179,9 @@ under a newer snapshot must never draw the stale bake, frame by frame.
   floats; the `thermostat` *converter* still re-encodes (its accent follows `hvac_action`).
 - **Re-encode (path 2):** a tile with baked extras (`TileContent.bakes`: the climate /
   cover / humidifier / valve default secondary line such as "Heat · 22.8 °C", a configured
-  `state_content`, the `hvac_action` badge, or `features:` whose stepped `set_temperature` payloads
-  and selected mode are baked; its line goes under `<id>.state_label`, never `<id>.state`),
+  `state_content`, the `hvac_action` badge, or `features:` whose stepped `set_temperature` payloads,
+  selected mode and sliders' resting values are baked ([slider-controls.md](slider-controls.md)); its
+  line goes under `<id>.state_label`, never `<id>.state`),
   sensor (its history sparkline; on the design path the samples are `SeriesDesign` slot bindings),
   alarm-panel (its button row is the configured ARM states while `disarmed` and DISARM in every
   other state, as in HA; the status variants still switch on `state_int`, and on the design path

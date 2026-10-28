@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rs
@@ -47,6 +48,7 @@ import ee.schimke.ha.rc.ProvideFixedCanvasAxis
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
+import ee.schimke.ha.rc.components.HaControlLockMode
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.HaWearBackground
 import ee.schimke.ha.rc.components.HaWearGradient
@@ -56,9 +58,11 @@ import ee.schimke.ha.rc.components.PictureImageStrategy
 import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideExpressionNames
 import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
+import ee.schimke.ha.rc.components.ProvideHaControlLockMode
 import ee.schimke.ha.rc.components.ProvideHaUberStyle
 import ee.schimke.ha.rc.components.ProvideHaUberTheme
 import ee.schimke.ha.rc.components.ProvideRemoteHaTheme
+import ee.schimke.ha.rc.components.RemoteHaControlLockFrame
 import ee.schimke.ha.rc.components.RemoteHaTheme
 import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
@@ -577,7 +581,14 @@ internal fun wearWidgetBrush(fill: Int?, background: HaWearBackground?): WearWid
   return brush
 }
 
-/** What a widget shows inside its container: see [slotDocument]. */
+/**
+ * What a widget shows inside its container: see [slotDocument].
+ *
+ * [controlLock] is how its controls take a touch ([HaControlLockMode]): read-only on a widget,
+ * whose every tap opens the app (a slider shows its value but doesn't drag); the Wear app's list
+ * locks a card with a slider behind "Slide to unlock", and its full-screen card, opened
+ * deliberately, doesn't.
+ */
 @Composable
 internal fun SlotContent(
   registry: CardRegistry,
@@ -586,6 +597,7 @@ internal fun SlotContent(
   snapshot: HaSnapshot,
   template: Boolean,
   cardStyle: HaUberTheme,
+  controlLock: HaControlLockMode = HaControlLockMode.ReadOnly,
   // What draws the card: its converter, or a card design authored in UI Builder captured for the
   // card's key (server-owned-card-designs.md, "One source, every surface").
   content: @Composable (RemoteModifier) -> Unit = { RenderChild(card!!, snapshot, it) },
@@ -621,7 +633,18 @@ internal fun SlotContent(
                     if (card != null) {
                       // One card per slot document: its expressions are named in composition
                       // order, as its template's are.
-                      ProvideExpressionNames { content(RemoteModifier.fillMaxWidth()) }
+                      ProvideExpressionNames {
+                        ProvideHaControlLockMode(controlLock) {
+                          if (controlLock == HaControlLockMode.Locked) {
+                            // The lock's badge and strip overlay the card: a box to draw them in.
+                            RemoteBox(modifier = RemoteModifier.fillMaxSize()) {
+                              RemoteHaControlLockFrame { content(RemoteModifier.fillMaxWidth()) }
+                            }
+                          } else {
+                            content(RemoteModifier.fillMaxWidth())
+                          }
+                        }
+                      }
                     } else {
                       ChooseCardPlaceholder(theme)
                     }

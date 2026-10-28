@@ -20,6 +20,10 @@
   seed named values before the player's first frame (never only from an
   effect); converters animate bound values on change, not on appearance. See
   [`docs/architecture/live-card-updates.md`](docs/architecture/live-card-updates.md#first-frame-shows-current-data-only-updates-animate).
+- **Drag controls and the control lock.** Sliders and the "Slide to unlock" lock live in the
+  document and play in the AndroidX View player; read
+  [`docs/architecture/slider-controls.md`](docs/architecture/slider-controls.md) before adding a
+  drag control or changing what locks where.
 - **Card parts follow the component system.** Theme roles for chrome, `HaType` for text sizes,
   `HaReading` for numeric values, Layer 2 meters before a new canvas: see
   [`docs/architecture/card-component-system.md`](docs/architecture/card-component-system.md).

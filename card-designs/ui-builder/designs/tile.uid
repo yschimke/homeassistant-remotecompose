@@ -44,7 +44,7 @@
           "dashboard"
         ],
         "height": [
-          "wear-tiers"
+          "wear"
         ],
         "width": [
           "launcher"
@@ -56,6 +56,42 @@
       "componentId": "ha-cards/tile-full",
       "properties": {},
       "modifiers": [],
+      "slots": {}
+    },
+    "wear": {
+      "id": "wear",
+      "componentId": "ha-cards/tile-wear-cell",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "slider": [
+          "wear-slider-cell"
+        ],
+        "other": [
+          "wear-tiers"
+        ]
+      }
+    },
+    "wear-slider-cell": {
+      "id": "wear-slider-cell",
+      "componentId": "ha-cards/centered-cell",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "wear-slider"
+        ]
+      }
+    },
+    "wear-slider": {
+      "id": "wear-slider",
+      "componentId": "ha-cards/tile-compact-slider",
+      "properties": {},
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
       "slots": {}
     },
     "wear-tiers": {

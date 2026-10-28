@@ -133,6 +133,16 @@ private class DashboardActionDispatcher(
         }
         handleCallService(action)
       }
+      // A slider's release: a service call with the value it was dragged to; one released where it
+      // rested (a tap) changes nothing and sends nothing.
+      is HaAction.SetValue -> {
+        val call = action.toCallService() ?: return
+        if (readOnly()) {
+          Log.i(TAG, "Read-only mode: dropping ${action.domain}.${action.service}")
+          return
+        }
+        handleCallService(call)
+      }
       // Navigation and more-info only show something: read-only mode keeps them.
       is HaAction.Navigate -> onNavigate(action.path)
       is HaAction.MoreInfo -> onMoreInfo(action.entityId)
@@ -158,6 +168,9 @@ private class DashboardActionDispatcher(
         is HaAction.AlarmKey -> "Alarm key ${action.key}" to action.entityId
         is HaAction.AlarmPin -> "Alarm PIN submitted" to action.entityId
         is HaAction.AlarmIntent -> "Alarm ${action.service}" to action.entityId
+        is HaAction.SetValue ->
+          if (action.isUnchanged) return
+          else "Set ${action.field} to ${action.serviceValue}" to action.entityId
         HaAction.None -> return
       }
     logStore.recordLocalAction(summary = summary, entityId = entityId)

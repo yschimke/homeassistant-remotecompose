@@ -4,7 +4,9 @@ package ee.schimke.ha.rc.components
 
 import androidx.annotation.RestrictTo
 import androidx.compose.remote.creation.compose.action.Action
+import androidx.compose.remote.creation.compose.action.combinedAction
 import androidx.compose.remote.creation.compose.action.hostAction
+import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rs
@@ -77,6 +79,57 @@ sealed interface HaAction {
   @Serializable
   data class AlarmIntent(val entityId: String, val service: String, val codeLength: Int? = null) :
     HaAction
+
+  /**
+   * A slider's release: set [field] of [entityId] through `<domain>.<service>` to the value the
+   * slider was dragged to. The slider moves in whole [step]s from [min], so the document carries
+   * the position as an integer [ticks] (`0..maxTicks`): no decimal separator to localise, and a
+   * host can check it against the range the app drew. [from] is where the slider rested when the
+   * card was drawn; a release that didn't move it ([isUnchanged]) is a tap, not a change.
+   *
+   * The service gets `(min + ticks × step) × scale`: a volume slider shows 0–100 % and sends
+   * `volume_level` 0–1 with [scale] 0.01. [extra] rides along unchanged (a light's `turn_on` has
+   * none; a cover's `set_cover_position` has none either; kept for services that need a fixed field
+   * beside the value).
+   */
+  @Serializable
+  data class SetValue(
+    val domain: String,
+    val service: String,
+    val entityId: String,
+    val field: String,
+    val min: Double,
+    val step: Double,
+    val maxTicks: Int,
+    val from: Int,
+    val ticks: Int,
+    val scale: Double = 1.0,
+    val extra: JsonObject = JsonObject(emptyMap()),
+  ) : HaAction {
+    /** Whether the release left the slider where it was drawn. */
+    val isUnchanged: Boolean
+      get() = ticks == from
+
+    /** Whether [ticks] lies on the slider the app drew. */
+    val inRange: Boolean
+      get() = ticks in 0..maxTicks
+
+    /** The value the service receives. */
+    val serviceValue: Double
+      get() = (min + ticks.coerceIn(0, maxTicks) * step) * scale
+
+    /** The Home Assistant call this release makes; null for an unchanged or out-of-range one. */
+    fun toCallService(): CallService? {
+      if (isUnchanged || !inRange) return null
+      val value = serviceValue
+      // A whole number goes as an integer: `brightness_pct` and `position` are ints in HA.
+      val number =
+        if (value == kotlin.math.round(value) && kotlin.math.abs(value) < 1e9)
+          kotlinx.serialization.json.JsonPrimitive(value.toLong())
+        else kotlinx.serialization.json.JsonPrimitive(kotlin.math.round(value * 1e6) / 1e6)
+      return CallService(domain, service, entityId, JsonObject(extra + (field to number)))
+    }
+  }
 
   @Serializable data object None : HaAction
 }
@@ -193,6 +246,7 @@ private fun HaAction.entityIdForWidgetMetadata(): String? =
     is HaAction.AlarmKey -> entityId
     is HaAction.AlarmPin -> entityId
     is HaAction.AlarmIntent -> entityId
+    is HaAction.SetValue -> entityId
     is HaAction.Navigate,
     is HaAction.Url,
     HaAction.None -> null
@@ -254,10 +308,66 @@ fun HaAction.toNamedRemoteAction(): Action? {
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 fun HaAction.toRemoteAction(): Action? {
   if (this is HaAction.None) return null
-  val registry = LocalWidgetActionRegistry.current ?: return toNamedRemoteAction()
+  val lock = haControlLock()?.takeIf { it.canUnlock && locksBehindControls() }
+  val registry = LocalWidgetActionRegistry.current
   val payload = json.encodeToString(HaAction.serializer(), this)
-  val actionId = registry.register(payload)
-  return hostAction(actionId, registry.metadata(this, payload))
+  if (lock == null) {
+    registry ?: return toNamedRemoteAction()
+    return hostAction(registry.register(payload), registry.metadata(this, payload))
+  }
+  // Locked: the tap sends `None` (which no host runs) and shows the unlock strip; once the card is
+  // unlocked it sends the action.
+  val host =
+    if (registry == null) {
+      hostAction(HA_ACTION_NAME.rs, lock.select(payload.rs, NonePayload.rs))
+    } else {
+      hostAction(
+        registry.register(payload),
+        lock.select(
+          registry.metadata(this, payload.rs),
+          registry.metadata(HaAction.None, NonePayload.rs),
+        ),
+      )
+    }
+  return lock.touched?.let { combinedAction(host, it) } ?: host
+}
+
+/** Whether a locked card holds this action back: the writes. An alarm panel has its own code. */
+private fun HaAction.locksBehindControls(): Boolean =
+  this is HaAction.Toggle || this is HaAction.CallService || this is HaAction.SetValue
+
+private val NonePayload: String = json.encodeToString(HaAction.serializer(), HaAction.None)
+
+/**
+ * The action a slider sends on release, [template] with the position the finger left it at: [ticks]
+ * is resolved by the player at release. For a launcher widget it is a numeric host action whose
+ * static payload is the unchanged [template] (a release that moved nothing, which no host runs), so
+ * a platform that drops the metadata can't send a value the user didn't pick.
+ *
+ * [define] writes the payload where it follows [ticks]: the slider calls it from its canvas.
+ */
+@Composable
+internal fun sliderRemoteAction(
+  template: HaAction.SetValue,
+  ticks: RemoteString,
+  payloadSlot: ReservedId,
+): Pair<Action, RemoteDrawScope.() -> Unit> {
+  val marker = Int.MIN_VALUE
+  val encoded = json.encodeToString(HaAction.serializer(), template.copy(ticks = marker))
+  val before = encoded.substringBefore(marker.toString())
+  val after = encoded.substringAfter(marker.toString())
+  val dynamic = before.rs + ticks + after
+  val registry = LocalWidgetActionRegistry.current
+  val payload = reservedString(payloadSlot)
+  val action =
+    if (registry == null) {
+      hostAction(HA_ACTION_NAME.rs, payload)
+    } else {
+      val fallback = template.copy(ticks = template.from)
+      hostAction(registry.register(json.encodeToString(HaAction.serializer(), fallback)), payload)
+    }
+  val value = registry?.metadata(template, dynamic) ?: dynamic
+  return action to { defineString(payloadSlot, value) }
 }
 
 /**

@@ -50,6 +50,7 @@ object HighRiskActions {
         is HaAction.AlarmIntent -> "alarm_control_panel" to listOf(action.entityId)
         is HaAction.AlarmPin -> "alarm_control_panel" to listOf(action.entityId)
         is HaAction.AlarmKey -> "alarm_control_panel" to listOf(action.entityId)
+        is HaAction.SetValue -> action.domain to listOf(action.entityId)
         is HaAction.MoreInfo,
         is HaAction.Navigate,
         is HaAction.Url,

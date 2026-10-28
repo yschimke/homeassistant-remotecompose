@@ -109,7 +109,9 @@ fun WrapAdaptiveRemoteDocumentPlayer(
             runCatching {
                 RemoteComposePlayer(context).apply {
                   setBitmapLoader(bitmapLoader)
-                  setDocument(RemoteDocument(decode(documentBytes)))
+                  setDocument(
+                    RemoteDocument(decode(documentBytes).withNamedActions(onNamedAction, fail))
+                  )
                   // The live values before the first draw, so the View starts settled on them
                   // rather than tweening in from the document's baked ones a frame later.
                   seed(this)
@@ -135,7 +137,9 @@ fun WrapAdaptiveRemoteDocumentPlayer(
             runCatching {
                 RemoteComposePlayer(context).apply {
                   setBitmapLoader(bitmapLoader)
-                  setDocument(RemoteDocument(decode(documentBytes)))
+                  setDocument(
+                    RemoteDocument(decode(documentBytes).withNamedActions(onNamedAction, fail))
+                  )
                   // The live values before the first draw, so the View starts settled on them
                   // rather than tweening in from the document's baked ones a frame later.
                   seed(this)
@@ -166,6 +170,18 @@ fun WrapAdaptiveRemoteDocumentPlayer(
       }
     }
   }
+}
+
+/**
+ * Route [this] document's named host actions (the `ha` taps every in-app card sends) to
+ * [onNamedAction]. The View player reports only numeric ones through `addIdActionListener`; a named
+ * action goes to the document's own action callbacks, which nothing else registers.
+ */
+private fun CoreDocument.withNamedActions(
+  onNamedAction: (String, Any?) -> Unit,
+  fail: (Throwable) -> Unit,
+): CoreDocument = apply {
+  addActionCallback { name, value -> runCatching { onNamedAction(name, value) }.onFailure(fail) }
 }
 
 private fun decode(bytes: ByteArray): CoreDocument {

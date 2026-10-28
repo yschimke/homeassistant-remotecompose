@@ -43,6 +43,10 @@ deliberate control, so the dashboard's read-only default doesn't apply. What a t
 | `AlarmIntent`, `AlarmPin`, `AlarmKey` | Paired per widget and entity by `WidgetAlarmPairing` into one `alarm_control_panel.alarm_<service>` call with the entered `code` (below). | Paired on the watch by `AlarmKeypadCoordinator` into one call; the phone rebuilds it from the card's own button with `WidgetAlarmPairing`. | Opens the Wear app on the widget's card, full screen. |
 | `MoreInfo`, `Navigate` | Open the app on the entity's details or the dashboard path (`WidgetOpenRequests`, through an activity `PendingIntent`: a receiver can't start one from the background), as the card's own tap would. | More-info opens the card full screen (`WearCardScreen`); navigate does nothing, since the watch has no dashboard navigation. | Opens the Wear app on the widget's card, full screen. |
 | `Url` | Opens the URL. | Nothing: the watch has no browser. | Opens the Wear app on the widget's card, full screen. |
+| `SetValue` (a slider's release) | Calls Home Assistant with the dragged value, read from the tap's metadata; the app's own payload is the slider unmoved, and only its position may differ, within its range. A high-risk one runs only while the phone's controls are unlocked. | Relayed to the phone, which accepts its own capture's slider moved within range. | The slider is read-only; a tap opens the Wear app on the card. |
+
+A widget with a slider starts with its controls locked: a toggle sends `None` and shows a "Slide to
+unlock" strip until the strip is slid. See [slider-controls.md](slider-controls.md).
 
 Every write must be the action the app itself put on the widget's `PendingIntent`
 (`trustedWidgetAction`). The one exception is a widget PIN: its digits are typed in the player

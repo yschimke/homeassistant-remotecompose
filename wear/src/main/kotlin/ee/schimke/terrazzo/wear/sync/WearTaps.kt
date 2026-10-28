@@ -87,7 +87,8 @@ internal class WearTapDispatcher(
   private val toPhone = HaActionDispatcher { action ->
     when (action) {
       is HaAction.Toggle,
-      is HaAction.CallService -> relay(action)
+      is HaAction.CallService,
+      is HaAction.SetValue -> relay(action)
       else -> Unit
     }
   }
@@ -95,7 +96,10 @@ internal class WearTapDispatcher(
   private val alarms = AlarmKeypadCoordinator(toPhone, scope, alarmIdleTimeoutMs)
 
   override fun dispatch(action: HaAction) {
+    // A slider released where it rested (a tap on it) changes nothing: nothing to send or feel.
+    if (action is HaAction.SetValue && action.isUnchanged) return
     when (action) {
+      is HaAction.SetValue,
       is HaAction.Toggle,
       is HaAction.CallService,
       is HaAction.AlarmIntent,

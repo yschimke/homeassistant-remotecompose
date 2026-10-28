@@ -134,6 +134,30 @@ fun HaTileFeaturesGate(modifier: RemoteModifier = RemoteModifier) {
 }
 
 /**
+ * `ha-cards/tile-compact-slider`: a Wear card for a tile with a slider, the compact tile over the
+ * slider.
+ */
+@Composable
+@RemoteComposable
+fun HaTileCompactSlider(modifier: RemoteModifier = RemoteModifier) {
+  TileDesignParts.CompactSlider(modifier)
+}
+
+/**
+ * `ha-cards/tile-wear-cell`: which Wear form the card takes, [slider] for a tile with a slider,
+ * else [other].
+ */
+@Composable
+@RemoteComposable
+fun HaTileWearCell(
+  modifier: RemoteModifier = RemoteModifier,
+  slider: @Composable @RemoteComposable () -> Unit = {},
+  other: @Composable @RemoteComposable () -> Unit = {},
+) {
+  RemoteBox(modifier) { TileDesignParts.WearCell(slider, other) }
+}
+
+/**
  * `ha-cards/tile-launcher-cell`: which launcher form fits the cell, [hero] or [row] when the cell
  * has a hero scale and the tile no features, [features] when it has features, else [other].
  */

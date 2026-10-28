@@ -49,5 +49,12 @@ val androidXExperimentalWrap: Profile =
       RemoteComposeWriter.hTag(Header.DOC_CONTENT_DESCRIPTION, ""),
       RemoteComposeWriter.hTag(Header.DOC_PROFILES, profile.operationsProfiles),
       RemoteComposeWriter.hTag(Header.FEATURE_PAINT_MEASURE, 0),
+      // A card with a drag (a slider) must not take every gesture that starts on it: by default
+      // the View player claims the touch from its first frame
+      // (`requestDisallowInterceptTouchEvent`)
+      // whenever a document has a touch expression, so a dashboard or the watch's list couldn't
+      // scroll past it. Off, the scrolling parent takes vertical drags and the slider horizontal
+      // ones. (A launcher widget keeps it on: there a sideways drag would page the home screen.)
+      RemoteComposeWriter.hTag(Header.FEATURE_DISALLOW_INTERCEPT_TOUCH, 0),
     )
   }
