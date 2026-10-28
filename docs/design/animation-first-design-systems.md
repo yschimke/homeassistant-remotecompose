@@ -1,6 +1,7 @@
 # Animation-first design systems
 
-Status: **proposal**, 2026-10-28. Nothing here is implemented yet.
+Status: **in progress**, 2026-10-28. Implemented: the motion layer (§2) and its schemes, the
+M3 Expressive switch (§3), and ambient mode (§5) on the TV kiosk. The rest is proposal.
 
 Today every uber theme ([card-component-system.md §5](../architecture/card-component-system.md#5-uber-themes))
 is designed as a set of still frames, and motion is added afterwards: a dozen `animateRemoteFloat`
@@ -18,7 +19,9 @@ document proposes:
    Assistant code in it;
 3. a second, contrasting system — **Console instrument ballistics** — to prove the layer is not just
    M3 in disguise;
-4. how the remaining themes fall out of the same three archetypes.
+4. a third, **Ambient**: calm motion for always-on and glanceable displays, applied by the host over
+   any theme;
+5. how the remaining themes fall out of the same three archetypes.
 
 ## 1. What the player can already do
 
@@ -132,13 +135,13 @@ about entities.
 
 ### Where it lives: outside `ee.schimke.ha`
 
-Proposed: a new module, **`rc-material3-motion`**, package `ee.schimke.rc.m3`:
+A module, **`rc-material3-motion`**, package `ee.schimke.rc.m3`:
 
 - depends only on `remote-creation-compose` (the AndroidX artifact on Android, the
   `third-party-remote-creation-compose` fork elsewhere, as `rc-components` already does) and the
   Compose runtime;
-- **no** `ha-model`, `rc-converter` or `rc-components` dependency, enforced by a dependency-hygiene
-  check, so nothing Home Assistant leaks in;
+- **no** `ha-model`, `rc-converter` or `rc-components` dependency, so nothing Home Assistant leaks
+  in (its build file says so; a hygiene check can enforce it once a second module depends on it);
 - holds the motion layer (§2) plus the M3 scheme and building blocks (§3); the Console scheme
   (§4) stays in `rc-components`, since it is ours.
 
@@ -177,7 +180,26 @@ below the displayed value). That is one extra expression per part and no host wo
 Console's motion keeps its skeuomorphism rule: everything is a vector moved by the live fraction,
 and the sounds and haptics (`SoundVoice`, `FeedbackSynth`) already match it.
 
-## 5. The rest: three archetypes
+## 5. System three: Ambient
+
+A kiosk on a wall, a watch in ambient, a TV screensaver: displays watched from across the room, or
+not at all, for hours. Bounce there reads as nervous and every flicker costs attention (and, on
+OLED, pixels). Ambient is a scheme of **slow, critically damped springs** — nothing overshoots,
+nothing snaps — settling to 2 % in about 0.35 / 0.6 / 0.9 s spatially and 0.4 / 0.65 / 1.05 s for
+effects:
+
+| Token | Stiffness | Damping ratio |
+|---|---:|---:|
+| `spatialFast` / `spatial` / `spatialSlow` | 300 / 100 / 40 | 1.0 |
+| `effectsFast` / `effects` / `effectsSlow` | 200 / 80 / 30 | 1.0 |
+
+Ambient is a property of the *display*, not of a design, so it is not a card style. A host sets
+`LocalRcMotionMode` to `Ambient` and every theme's motion resolves to `RcMotionScheme.ambient()`
+(`RcMotionMode.Reduced` works the same way for reduced motion). The TV kiosk's card row does this
+today. A Wear ambient host is next: it re-renders on the ambient tick, where a slow critically
+damped spring is the only motion that doesn't look like a glitch.
+
+## 6. The rest: three archetypes
 
 Every other theme picks one of three motion archetypes and tunes its tokens, rather than
 inventing a fourth:
@@ -188,7 +210,7 @@ inventing a fourth:
 | **Physical ballistics** | `console`, `trinitron`, `braun` | needles with mass (Trinitron's VU, Braun's pointer on its hub), lamp and LED thermal response |
 | **Discrete** | `lcd`, `nixie`, `lcars` | no interpolation between values: segments switch (`Snap`); an LCD segment fades in ~150 ms as liquid crystal does, a Nixie digit crossfades cathodes with a brief glow overlap |
 
-## 6. Rules carried over
+## 7. Rules carried over
 
 - **First frame shows current data.** Springs start settled (§1). No scheme may add an entrance
   animation; looping motion (wavy progress, a loader) is allowed only while the entity *is* doing
@@ -203,7 +225,7 @@ inventing a fourth:
 - **Widgets.** Community widgets already bake settled values; the platform (launcher) player's
   spring support must be verified before springs reach widget documents, with a tween fallback.
 
-## 7. Plan
+## 8. Plan
 
 1. `rc-material3-motion`: `RcMotionSpec`, `RcMotionScheme`, `animate`, the spring encoder, M3
    `expressive()` / `standard()`; unit tests that decode the spec and step the spring.
@@ -216,10 +238,7 @@ inventing a fourth:
 5. The discrete archetype for LCD and Nixie.
 6. Graduate the module to `rc-players`.
 
-## Open questions
+## Decisions
 
-- Is a new **third system** wanted beyond these, or is the archetype table enough? A candidate is a
-  calm, low-energy **ambient** scheme for always-on displays (TV kiosk, Wear ambient), where motion
-  is slow and every spring critically damped.
-- Name and home of the reusable module: `rc-material3-motion` here first (proposed), or straight
-  into the `rc-players` repository.
+- The reusable module incubates here as `rc-material3-motion`, then graduates to `rc-players`.
+- Ambient is the third system, applied as a host motion mode rather than a card style.

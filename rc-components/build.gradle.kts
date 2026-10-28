@@ -43,6 +43,7 @@ kotlin {
     commonMain.dependencies {
       implementation(project.dependencies.platform(libs.rc.players.bom))
       implementation(libs.rc.player.protocol)
+      api(project(":rc-material3-motion"))
       // Compile-only, so Android consumers never see the fork beside AndroidX's.
       compileOnly(libs.rc.creation.compose)
       implementation(libs.cmp.runtime)

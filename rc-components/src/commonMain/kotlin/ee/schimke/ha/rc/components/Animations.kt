@@ -2,34 +2,14 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.state.AnimatedRemoteFloat
-import androidx.compose.remote.creation.compose.state.CUBIC_ACCELERATE
-import androidx.compose.remote.creation.compose.state.CUBIC_ANTICIPATE
-import androidx.compose.remote.creation.compose.state.CUBIC_DECELERATE
-import androidx.compose.remote.creation.compose.state.CUBIC_LINEAR
-import androidx.compose.remote.creation.compose.state.CUBIC_OVERSHOOT
-import androidx.compose.remote.creation.compose.state.CUBIC_STANDARD
-import androidx.compose.remote.creation.compose.state.EASE_OUT_BOUNCE
-import androidx.compose.remote.creation.compose.state.EASE_OUT_ELASTIC
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.staticCompositionLocalOf
+import ee.schimke.rc.m3.LocalRcAnimationsEnabled
+import ee.schimke.rc.m3.RcMotionSpec
+import ee.schimke.rc.m3.animate
 
-/**
- * Easing curve identifiers (mirrored from RemoteCompose's `RemoteFloat.kt`). The encoded `.rc`
- * document carries the easing type id; the player evaluates the curve at playback time.
- */
-object RcEasing {
-  const val Standard: Int = CUBIC_STANDARD
-  const val Accelerate: Int = CUBIC_ACCELERATE
-  const val Decelerate: Int = CUBIC_DECELERATE
-  const val Linear: Int = CUBIC_LINEAR
-  const val Anticipate: Int = CUBIC_ANTICIPATE
-  const val Overshoot: Int = CUBIC_OVERSHOOT
-  const val Bounce: Int = EASE_OUT_BOUNCE
-  const val Elastic: Int = EASE_OUT_ELASTIC
-}
+/** Easing curve identifiers; they live with the motion layer in `rc-material3-motion`. */
+typealias RcEasing = ee.schimke.rc.m3.RcEasing
 
 /**
  * Whether encoded value tweens ([animateRemoteFloat]) are emitted into the document.
@@ -43,7 +23,7 @@ object RcEasing {
  * PNG drifts between runs (see the homeassistant-remotecompose #409 / #412 flaky-render
  * investigation). Same rationale as the clock card's frozen static-label path.
  */
-val LocalRemoteAnimationsEnabled = staticCompositionLocalOf { true }
+val LocalRemoteAnimationsEnabled = LocalRcAnimationsEnabled
 
 /**
  * Wrap [input] in an [AnimatedRemoteFloat] so the player tweens between successive values whenever
@@ -65,18 +45,20 @@ fun animateRemoteFloat(
   input: RemoteFloat,
   durationSeconds: Float = 0.20f,
   easing: Int = RcEasing.Standard,
-): RemoteFloat {
+): RemoteFloat = animateRemoteFloat(input, RcMotionSpec.Tween(durationSeconds, easing))
+
+/**
+ * [input], moving by [spec] — a token of the active card style's motion scheme ([haMotion]).
+ *
+ * As [animateRemoteFloat] by duration: nothing is encoded for a frozen capture, nor for a community
+ * widget. Launcher widgets are re-baked on every change and the platform player's spring support is
+ * unverified, so a widget capture encodes a spring token as no animation.
+ */
+@Composable
+fun animateRemoteFloat(input: RemoteFloat, spec: RcMotionSpec): RemoteFloat {
   if (!LocalRemoteAnimationsEnabled.current) return input
-  // Community widgets are baked snapshots. Settled values let the baker fold segmented colours
-  // into constants for the platform player; a startup tween would keep those colours dynamic.
-  if (isWidgetActionCapture() && visualFamily().isCommunity) return input
-  // `AnimatedRemoteFloat` is `@RememberInComposition` since remote-compose alpha21.
-  return remember(input, durationSeconds, easing) {
-    AnimatedRemoteFloat(
-      input,
-      // Only the duration and easing: no wrap or initial value, which the player would apply as
-      // a wrap-around or a starting offset.
-      RcProtocol.tween(durationSeconds, easing),
-    )
+  if (isWidgetActionCapture() && (visualFamily().isCommunity || spec is RcMotionSpec.Spring)) {
+    return input
   }
+  return input.animate(spec)
 }

@@ -62,15 +62,4 @@ internal object RcProtocol {
   val FLOAT_TIME_IN_SEC: Float = asNan(2)
   val FLOAT_TIME_IN_MIN: Float = asNan(3)
   val FLOAT_TIME_IN_HR: Float = asNan(4)
-
-  /**
-   * A float animation of [duration] seconds with [easing], packed as the player's `FloatAnimation`
-   * reads it: no custom spec, initial value or wrap.
-   */
-  fun tween(duration: Float, easing: Int): FloatArray =
-    when {
-      easing != 1 -> floatArrayOf(duration, Float.fromBits(easing))
-      duration != 1f -> floatArrayOf(duration)
-      else -> floatArrayOf()
-    }
 }
