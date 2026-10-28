@@ -118,6 +118,24 @@ internal fun WearRemoteCard(
   fullScreen: Boolean = false,
   taps: WearCardTaps = rememberWearCardTaps(summary.rawJson, onOpen),
 ) {
+  // Only this card's values: a delta for another card's entity leaves this one skipped.
+  WearRemoteCardContent(
+    summary,
+    rememberCardValues(summary.rawJson, values),
+    onOpen,
+    fullScreen,
+    taps,
+  )
+}
+
+@Composable
+private fun WearRemoteCardContent(
+  summary: CardSummary,
+  values: Map<String, EntityValue>,
+  onOpen: (() -> Unit)?,
+  fullScreen: Boolean,
+  taps: WearCardTaps,
+) {
   val card = remember(summary.rawJson) { decodeWearCard(summary.rawJson) }
   if (card == null) {
     Column {

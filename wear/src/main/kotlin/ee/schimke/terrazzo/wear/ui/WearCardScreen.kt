@@ -86,7 +86,12 @@ internal fun WearCardScreen(
       modifier = Modifier.fillMaxSize().then(if (cards.size < 2) Modifier else pageGestureModifier),
     ) { page ->
       AnimatedPage(page, pager) {
-        WearCardPage(cards[page], values, onOpenDetails = { onOpenDetails(cards[page]) })
+        val summary = cards[page]
+        WearCardPage(
+          summary,
+          rememberCardValues(summary.rawJson, values),
+          onOpenDetails = { onOpenDetails(summary) },
+        )
       }
     }
   }
