@@ -76,13 +76,14 @@ class LongPressHistoryTest {
     val fork = device.wait(Until.findObject(By.text("Redesign a copy in Card Studio")), 10_000)
     assertNotNull(fork)
     fork!!.click()
-    assertTrue(device.wait(Until.hasObject(By.text("Design or fix this card")), 10_000))
+    assertTrue(device.wait(Until.hasObject(By.text("Design this card")), 10_000))
     assertTrue(device.wait(Until.hasObject(By.descContains("Current card preview")), 15_000))
     assertTrue(
       "Forking must not show launcher size controls",
       !device.hasObject(By.textStartsWith("Preview at ")),
     )
-    assertTrue(device.wait(Until.hasObject(By.text("Design in UI Builder")), 10_000))
+    // Signed out, the studio asks for sign-in before anything else.
+    assertTrue(device.wait(Until.hasObject(By.text("Sign in with GitHub")), 10_000))
   }
 
   @Test

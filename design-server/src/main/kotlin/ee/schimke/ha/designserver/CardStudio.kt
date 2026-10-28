@@ -144,26 +144,7 @@ fun Route.cardStudioRoutes(
         "UI Builder is not configured",
         status = HttpStatusCode.ServiceUnavailable,
       )
-    var cardType: String? = null
-    val document =
-      try {
-        val text = call.receiveText()
-        require(text.length <= 128_000)
-        val document = Json.parseToJsonElement(text).jsonObject
-        val id = document["id"]!!.jsonPrimitive.content
-        val original =
-          seeds.get(id.removePrefix("card-"))
-            ?: return@post call.respondText(
-              "Preview expired; reload the card",
-              status = HttpStatusCode.Gone,
-            )
-        validateCardDraft(JsonObject(original + ("id" to JsonPrimitive(id))), document)
-        cardType = original["title"]?.jsonPrimitive?.contentOrNull
-        document
-      } catch (e: Exception) {
-        if (e is CancellationException) throw e
-        return@post call.respondText("Invalid card draft", status = HttpStatusCode.BadRequest)
-      }
+    val (document, cardType) = call.receiveDraft(seeds) ?: return@post
     val token =
       try {
         handoffs.put(document, cardType)
@@ -176,6 +157,48 @@ fun Route.cardStudioRoutes(
     call.response.header(HttpHeaders.CacheControl, "no-store")
     call.respondText(
       buildJsonObject { put("path", "/studio/$token") }.toString(),
+      ContentType.Application.Json,
+    )
+  }
+
+  // The app's own way in: its device token says who is designing, so nobody signs in to a web page
+  // here. The draft is checked against its seed as a handoff is, then opened in UI Builder, shared
+  // with them, and recorded as theirs to publish.
+  post("/api/studio/open") {
+    call.response.header(HttpHeaders.CacheControl, "no-store")
+    val builder =
+      integration
+        ?: return@post call.respondText(
+          "UI Builder is not configured",
+          status = HttpStatusCode.ServiceUnavailable,
+        )
+    if (call.isCrossOrigin())
+      return@post call.respondText(
+        "same-origin request required",
+        status = HttpStatusCode.Forbidden,
+      )
+    val login =
+      github?.user(call)
+        ?: return@post call.respondText(
+          "Sign in to the design server first",
+          status = HttpStatusCode.Unauthorized,
+        )
+    val (document, cardType) = call.receiveDraft(seeds) ?: return@post
+    // Stands in for a handoff token: what the app matches its published design by.
+    val handoff = UiBuilderConfig.randomToken()
+    val url =
+      try {
+        builder.openInBuilder(document, login, cardType, handoff, made)
+      } catch (e: StudioOpenException) {
+        call.application.environment.log.warn("Card studio open failed", e)
+        return@post call.respondText(e.message!!, status = HttpStatusCode.BadGateway)
+      }
+    call.respondText(
+      buildJsonObject {
+        put("url", url)
+        put("handoff", handoff)
+      }
+        .toString(),
       ContentType.Application.Json,
     )
   }
@@ -250,50 +273,23 @@ fun Route.cardStudioRoutes(
             integration = integration,
           )
       }
-    var created: String? = null
     val location =
       try {
-        // New id on every attempt: no existing design can be overwritten, including retries.
-        val draft =
-          JsonObject(
-            document + ("id" to JsonPrimitive("card-${UiBuilderConfig.randomToken()}")) - "template"
+        builder
+          .openInBuilder(
+            document,
+            editor.login,
+            (claim as CardStudioDrafts.Claim.Ready).cardType,
+            token,
+            made,
           )
-        val id = builder.client.create(draft, resolveCatalog = true)
-        created = id
-        val url =
-          if (editor.login == null) builder.config.editorUrl(id)
-          else {
-            builder.client.share(id, "github:${editor.login}", editor = true)
-            // Theirs to publish from the app (`/api/my/studio`), though UI Builder records the
-            // server as its owner.
-            made?.recordMade(
-              editor.login,
-              id,
-              cardType = (claim as CardStudioDrafts.Claim.Ready).cardType,
-              handoff = token,
-            )
-            builder.config.designUrl(id)
-          }
-        handoffs.remove(token)
-        url
-      } catch (e: Exception) {
-        if (e is CancellationException) throw e
+          .also { handoffs.remove(token) }
+      } catch (e: StudioOpenException) {
         call.application.environment.log.warn("Card studio handoff failed", e)
-        // Says which step failed, never the builder's own response, which may echo the draft.
-        val reason =
-          when {
-            e is CatalogUnavailableException ->
-              "UI Builder isn't serving the <code>${studioEscape(e.systemId)}</code> catalog " +
-                "right now, so it couldn't open this draft. Nothing was created."
-            created == null ->
-              "UI Builder refused this draft. Nothing was created. Try again; if it keeps " +
-                "failing, refresh the preview data in the app and open it again."
-            else -> "UI Builder made the design but couldn't give your GitHub account access to it."
-          }
         return@post call.respondStudioPage(
           heading = "UI Builder couldn't open this draft",
           body =
-            notice(reason) +
+            notice(studioEscape(e.message!!)) +
               "<p>Your draft is kept for ten minutes, so you can try again.</p>" +
               OPEN_FORM.replace("Open this draft in UI Builder", "Try again") +
               draftDetails(document),
@@ -306,6 +302,83 @@ fun Route.cardStudioRoutes(
       }
     call.response.header(HttpHeaders.CacheControl, "no-store")
     call.respondRedirect(location)
+  }
+}
+
+/**
+ * The posted draft and the card type its seed was made for, once it is checked against that seed;
+ * null once the refusal is sent (410 when the seed expired, 400 when the draft breaks its
+ * contract).
+ */
+private suspend fun ApplicationCall.receiveDraft(
+  seeds: CardStudioDrafts
+): Pair<JsonObject, String?>? =
+  try {
+    val text = receiveText()
+    require(text.length <= 128_000)
+    val document = Json.parseToJsonElement(text).jsonObject
+    val id = document["id"]!!.jsonPrimitive.content
+    val original = seeds.get(id.removePrefix("card-"))
+    if (original == null) {
+      respondText("Preview expired; reload the card", status = HttpStatusCode.Gone)
+      null
+    } else {
+      validateCardDraft(JsonObject(original + ("id" to JsonPrimitive(id))), document)
+      document to original["title"]?.jsonPrimitive?.contentOrNull
+    }
+  } catch (e: Exception) {
+    if (e is CancellationException) throw e
+    respondText("Invalid card draft", status = HttpStatusCode.BadRequest)
+    null
+  }
+
+/**
+ * Why a draft couldn't be opened in UI Builder, in words for the person: which step failed, never
+ * the builder's own response, which may echo the draft.
+ */
+class StudioOpenException(message: String, cause: Throwable) : Exception(message, cause)
+
+/**
+ * Creates [document] as a new UI Builder design and returns the link to edit it. For [login] it is
+ * shared with them and recorded as theirs to publish, opened from [handoff] for [cardType]; with no
+ * login (an edit-link browser) the link carries the operator token instead.
+ */
+private suspend fun UiBuilderIntegration.openInBuilder(
+  document: JsonObject,
+  login: String?,
+  cardType: String?,
+  handoff: String,
+  made: UserDesignStore?,
+): String {
+  var created: String? = null
+  try {
+    // New id on every attempt: no existing design can be overwritten, including retries.
+    val draft =
+      JsonObject(
+        document + ("id" to JsonPrimitive("card-${UiBuilderConfig.randomToken()}")) - "template"
+      )
+    val id = client.create(draft, resolveCatalog = true)
+    created = id
+    if (login == null) return config.editorUrl(id)
+    client.share(id, "github:$login", editor = true)
+    // Theirs to publish from the app (`/api/my/studio`), though UI Builder records the server as
+    // its owner.
+    made?.recordMade(login, id, cardType = cardType, handoff = handoff)
+    return config.designUrl(id)
+  } catch (e: Exception) {
+    if (e is CancellationException) throw e
+    throw StudioOpenException(
+      when {
+        e is CatalogUnavailableException ->
+          "UI Builder isn't serving the ${e.systemId} catalog right now, so it couldn't open " +
+            "this draft. Nothing was created."
+        created == null ->
+          "UI Builder refused this draft. Nothing was created. Try again; if it keeps failing, " +
+            "refresh the preview data and open it again."
+        else -> "UI Builder made the design but couldn't give your GitHub account access to it."
+      },
+      e,
+    )
   }
 }
 

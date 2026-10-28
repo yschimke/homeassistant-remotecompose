@@ -1,6 +1,7 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.ha.client.design.CardStudioClient
+import ee.schimke.ha.client.design.CardStudioException
 import ee.schimke.ha.client.design.DesignPublisher
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
@@ -13,6 +14,8 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.request.receiveText
+import io.ktor.server.response.header
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
@@ -187,6 +190,65 @@ class CardStudioLifecycleTest {
     } finally {
       studio.close()
       dir.deleteRecursively()
+    }
+  }
+
+  @Test
+  fun theAppOpensADraftWithItsDeviceTokenAndNoWebSignIn() = testApplication {
+    val dir = library()
+    val shared = mutableListOf<String>()
+    externalServices {
+      hosts("https://builder.test") {
+        routing {
+          studioCatalogFixture()
+          put("/api/ui-builder/v1/designs/{id}") {
+            call.respondText("created", status = HttpStatusCode.Created)
+          }
+          post("/ui-builder/{id}/access") {
+            shared += call.receiveText()
+            call.response.header(HttpHeaders.Location, "/ui-builder/x/access")
+            call.respondText("", status = HttpStatusCode.SeeOther)
+          }
+        }
+      }
+    }
+    val http = createClient { followRedirects = false }
+    val config = UiBuilderConfig("https://builder.test", "https://builder.test", "operator")
+    val github =
+      GithubAuth(
+        clientId = "id",
+        clientSecret = "secret",
+        publicUrl = "https://ha.example",
+        sessionSecret = "session-secret",
+        http = http,
+      )
+    val storeDir = Files.createTempDirectory("studio-open").toFile()
+    val store = UserDesignStore(storeDir)
+    application {
+      designServer(
+        LibraryHolder(dir),
+        UiBuilderIntegration(config, UiBuilderClient(config, http)),
+        github,
+        userDesigns = store,
+      )
+    }
+    val studio = CardStudioClient("https://localhost", http.engine)
+    try {
+      val seed = studio.seed(card, snapshot("21"))
+      val refused =
+        assertFailsWith<CardStudioException> {
+          studio.openAsUser("not-a-token", seed, card, snapshot("21"))
+        }
+      assertEquals(401, refused.status)
+      val opened = studio.openAsUser(github.deviceToken("octocat"), seed, card, snapshot("21"))
+      assertTrue(opened.url.startsWith("https://builder.test/ui-builder/card-"))
+      assertFalse(opened.url.contains("token="))
+      assertTrue(shared.single().contains("github%3Aoctocat"))
+      assertEquals(opened.handoff, store.made("octocat").single().handoff)
+    } finally {
+      studio.close()
+      dir.deleteRecursively()
+      storeDir.deleteRecursively()
     }
   }
 
