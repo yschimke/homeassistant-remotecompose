@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo.room
 
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.xr.compose.platform.LocalSpatialCapabilities
 import androidx.xr.compose.platform.LocalSpatialConfiguration
@@ -52,13 +52,16 @@ internal fun SpatialRoomHost(
   spatial: @Composable (onCollapse: () -> Unit) -> Unit,
   flat: @Composable (onEnterSpace: (() -> Unit)?) -> Unit,
 ) {
-  val activity = LocalContext.current as? ComponentActivity
+  val activity = LocalActivity.current as? ComponentActivity
   val scope = rememberCoroutineScope()
   if (LocalSpatialCapabilities.current.isSpatialUiEnabled) {
     spatial { activity?.let { scope.launch { it.requestHomeSpace() } } }
   } else {
-    val canEnter = activity != null && LocalSpatialConfiguration.current.hasXrSpatialFeature
-    flat(if (canEnter) ({ scope.launch { activity!!.requestFullSpace() } }) else null)
+    val enter: (() -> Unit)? =
+      activity
+        ?.takeIf { LocalSpatialConfiguration.current.hasXrSpatialFeature }
+        ?.let { a -> { scope.launch { a.requestFullSpace() } } }
+    flat(enter)
   }
 }
 
