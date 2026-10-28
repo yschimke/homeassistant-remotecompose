@@ -7,10 +7,15 @@ import androidx.compose.remote.core.RemoteComposeBuffer
 import androidx.compose.remote.core.operations.FloatExpression
 import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.CompositionLocalProvider
+import ee.schimke.ha.rc.components.HaGaugeData
+import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.LiveValues
+import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ProvideHaUberTheme
+import ee.schimke.ha.rc.components.RemoteHaGauge
 import ee.schimke.ha.rc.components.RemoteHaToggleSwitch
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.rc.m3.LocalRcMotionMode
@@ -33,31 +38,33 @@ import org.robolectric.annotation.Config
 @Config(sdk = [35])
 class MotionSchemeSwitchTest {
   private fun animations(theme: HaUberTheme, mode: RcMotionMode = RcMotionMode.Normal) =
-    runBlocking {
-      val bytes =
-        captureSingleRemoteDocument(
-            context = org.robolectric.RuntimeEnvironment.getApplication(),
-            creationDisplayInfo = RemoteCreationDisplayInfo(200, 100, 160),
-            profile = androidXExperimentalWrap,
-          ) {
-            CompositionLocalProvider(LocalRcMotionMode provides mode) {
-              ProvideHaUberTheme(theme, darkTheme = false) {
-                RemoteHaToggleSwitch(
-                  isOn = LiveValues.isOn("switch.kitchen", initial = false)!!,
-                  activeAccent = currentRemoteHaTheme().linkText,
-                  inactiveAccent = currentRemoteHaTheme().divider,
-                )
-              }
-            }
-          }
-          .bytes
-      val operations = arrayListOf<Operation>()
-      RemoteComposeBuffer.fromInputStream(bytes.inputStream()).inflateFromBuffer(operations)
-      operations
-        .filterIsInstance<FloatExpression>()
-        .mapNotNull { it.mSrcAnimation?.toList() }
-        .toSet()
+    animationsOf(mode) {
+      ProvideHaUberTheme(theme, darkTheme = false) {
+        RemoteHaToggleSwitch(
+          isOn = LiveValues.isOn("switch.kitchen", initial = false)!!,
+          activeAccent = currentRemoteHaTheme().linkText,
+          inactiveAccent = currentRemoteHaTheme().divider,
+        )
+      }
     }
+
+  private fun animationsOf(
+    mode: RcMotionMode = RcMotionMode.Normal,
+    content: @androidx.compose.runtime.Composable () -> Unit,
+  ) = runBlocking {
+    val bytes =
+      captureSingleRemoteDocument(
+          context = org.robolectric.RuntimeEnvironment.getApplication(),
+          creationDisplayInfo = RemoteCreationDisplayInfo(200, 100, 160),
+          profile = androidXExperimentalWrap,
+        ) {
+          CompositionLocalProvider(LocalRcMotionMode provides mode, content = content)
+        }
+        .bytes
+    val operations = arrayListOf<Operation>()
+    RemoteComposeBuffer.fromInputStream(bytes.inputStream()).inflateFromBuffer(operations)
+    operations.filterIsInstance<FloatExpression>().mapNotNull { it.mSrcAnimation?.toList() }.toSet()
+  }
 
   private fun RcMotionSpec.wire() = encode()!!.toList()
 
@@ -89,6 +96,43 @@ class MotionSchemeSwitchTest {
     assertEquals(
       setOf(RcMotionScheme.expressive().effectsFast.wire()),
       animations(HaUberTheme.Expressive, RcMotionMode.Reduced),
+    )
+  }
+
+  @Test
+  fun paletteOnlyKeepsTheClassicTween() {
+    val animations = animationsOf {
+      ProvideHaTheme(HaTheme.Light) {
+        RemoteHaToggleSwitch(
+          isOn = LiveValues.isOn("switch.kitchen", initial = false)!!,
+          activeAccent = currentRemoteHaTheme().linkText,
+          inactiveAccent = currentRemoteHaTheme().divider,
+        )
+      }
+    }
+    assertEquals(setOf(listOf(0.20f)), animations)
+  }
+
+  @Test
+  fun ambientGaugeSpringsItsFraction() {
+    val gauge =
+      @androidx.compose.runtime.Composable {
+        RemoteHaGauge(
+          HaGaugeData(
+            entityId = "sensor.humidity",
+            name = "Humidity",
+            valueText = "40".rs,
+            unit = "%",
+            value = LiveValues.numericState("sensor.humidity", 40f),
+            min = 0.0,
+            max = 100.0,
+          )
+        )
+      }
+    assertEquals(setOf(listOf(0.45f)), animationsOf(content = gauge))
+    assertEquals(
+      setOf(RcMotionScheme.ambient().spatial.wire()),
+      animationsOf(RcMotionMode.Ambient, gauge),
     )
   }
 }

@@ -2,9 +2,9 @@ package ee.schimke.ha.rc.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import ee.schimke.rc.m3.LocalRcMotionMode
 import ee.schimke.rc.m3.RcMotionScheme
 import ee.schimke.rc.m3.RcMotionSpec
-import ee.schimke.rc.m3.currentRcMotion
 
 /**
  * The cards' motion schemes beyond the Material ones in `rc-material3-motion`. See
@@ -27,5 +27,12 @@ object HaMotion {
     )
 }
 
-/** The active card style's motion scheme, under the host's motion mode (ambient, reduced). */
-@Composable @ReadOnlyComposable fun haMotion(): RcMotionScheme = currentRcMotion()
+/**
+ * The active card style's motion scheme, under the host's motion mode (ambient, reduced). Read from
+ * the uber theme rather than `LocalRcMotionScheme`, whose default is Material: a part played under
+ * a palette alone ([ProvideHaTheme]) keeps the Classic tweens.
+ */
+@Composable
+@ReadOnlyComposable
+fun haMotion(): RcMotionScheme =
+  currentHaUberTheme().theme.motion.resolve(LocalRcMotionMode.current)

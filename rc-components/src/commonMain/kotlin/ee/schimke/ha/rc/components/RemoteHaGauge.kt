@@ -169,8 +169,6 @@ private fun HomeAssistantGaugeReading(
   }
 }
 
-private const val GaugeAnimationSeconds = 0.45f
-
 /**
  * Stacked Fixed-mode gauge variant — the dominant Fixed-mode tier. Renders the arc as a backdrop
  * (top-anchored half-circle, capped so its visible base lands at ~60 % of the cell height) and
@@ -371,13 +369,9 @@ private fun animatedGaugeFraction(data: HaGaugeData): RemoteFloat {
   // min / max are template bindings (card.min / card.max), so the fraction is computed in-document.
   val min = cardFloat("min", data.min.toFloat())
   val max = cardFloat("max", data.max.toFloat())
-  val animatedValue: RemoteFloat =
-    animateRemoteFloat(
-      data.value,
-      durationSeconds = GaugeAnimationSeconds,
-      easing = RcEasing.Standard,
-    )
-  return normalizedFraction(animatedValue, min, max)
+  // The fraction animates, not the raw value: motion tokens are for `0..1` (a spring's stop
+  // threshold, and Material's bounds at the ends of the scale).
+  return animateRemoteFloat(normalizedFraction(data.value, min, max), haMotion().spatial)
 }
 
 /**

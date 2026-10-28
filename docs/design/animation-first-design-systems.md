@@ -1,7 +1,8 @@
 # Animation-first design systems
 
 Status: **in progress**, 2026-10-28. Implemented: the motion layer (§2) and its schemes, the
-M3 Expressive switch (§3), and ambient mode (§5) on the TV kiosk. The rest is proposal.
+M3 Expressive switch (§3), motion tokens on the switch, gauge and dials, and ambient mode (§5)
+on the TV kiosk. The rest is proposal.
 
 Today every uber theme ([card-component-system.md §5](../architecture/card-component-system.md#5-uber-themes))
 is designed as a set of still frames, and motion is added afterwards: a dozen `animateRemoteFloat`
@@ -227,13 +228,19 @@ inventing a fourth:
 
 ## 8. Plan
 
-1. `rc-material3-motion`: `RcMotionSpec`, `RcMotionScheme`, `animate`, the spring encoder, M3
-   `expressive()` / `standard()`; unit tests that decode the spec and step the spring.
-2. `HaUberTheme.motion`; move the `animateRemoteFloat` sites to roles (§2 table); spring
-   fractions rather than raw values. `classic` pinned unchanged.
-3. Expressive building blocks one at a time, switch first (most visible), each with a live-update
-   test in the style of `CommunityFamilyLiveRenderTest` that captures mid-flight frames, since a
-   screenshot of a settled frame proves nothing about motion.
+1. **Done.** `rc-material3-motion` (package `ee.schimke.rc.m3`): `RcMotionSpec`, `RcMotionScheme`
+   (`expressive()`, `standard()`, `ambient()`, `reducedMotion()`), `RcMotionMode`, `animate`, the
+   spring encoder. `RcMotionSpecTest` steps the encoded springs through the player's own
+   `SpringStopEngine`.
+2. **Started.** `HaUberTheme.motion`: Expressive takes `expressive()`, every other theme
+   `HaMotion.Classic`, the old tweens. `haMotion()` resolves from the uber theme, so a part under a
+   palette alone keeps them too. The switch, the gauge and the control dials read their tokens;
+   the gauge now animates its `0..1` fraction instead of the raw value. Next: the remaining
+   `animateRemoteFloat` sites (§2 table).
+3. **Switch done.** `RemoteM3Switch` in the module; `RemoteHaToggleSwitch` draws it under
+   Expressive. `MotionSchemeSwitchTest` checks the encoded animations per scheme and mode, and the
+   ambient gauge. Further blocks one at a time, each with a test that captures mid-flight frames,
+   since a screenshot of a settled frame proves nothing about motion.
 4. Console ballistics scheme and the asymmetric lamp.
 5. The discrete archetype for LCD and Nixie.
 6. Graduate the module to `rc-players`.
