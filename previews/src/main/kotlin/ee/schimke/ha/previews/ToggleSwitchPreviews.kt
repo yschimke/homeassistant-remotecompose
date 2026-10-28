@@ -10,9 +10,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import ee.schimke.ha.rc.androidXExperimental
 import ee.schimke.ha.rc.components.HaTheme
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.ProvideHaUberTheme
 import ee.schimke.ha.rc.components.RemoteHaToggleSwitch
 import ee.schimke.ha.rc.components.RemoteHaToggleSwitchByProgress
+import ee.schimke.ha.rc.components.currentRemoteHaTheme
 
 /**
  * Dedicated previews for [RemoteHaToggleSwitch].
@@ -103,3 +106,33 @@ fun ToggleInitial_On_Dark() =
       inactiveAccent = PreviewInactiveAccent.rc,
     )
   }
+
+// ——— Material 3 Expressive: the thumb grows as it turns on ———
+
+@Composable
+private fun ExpressiveSwitch(progress: Float, dark: Boolean = false) =
+  CapturingRemoteContentPreview(profile = androidXExperimental) {
+    ProvideHaUberTheme(HaUberTheme.Expressive, darkTheme = dark) {
+      RemoteHaToggleSwitchByProgress(
+        progress = progress.rf,
+        activeAccent = currentRemoteHaTheme().linkText,
+        inactiveAccent = currentRemoteHaTheme().secondaryText,
+      )
+    }
+  }
+
+@Preview(name = "expressive toggle off", showBackground = false, widthDp = 40, heightDp = 24)
+@Composable
+fun ToggleExpressive_Off() = ExpressiveSwitch(0f)
+
+@Preview(name = "expressive toggle mid", showBackground = false, widthDp = 40, heightDp = 24)
+@Composable
+fun ToggleExpressive_Mid() = ExpressiveSwitch(0.5f)
+
+@Preview(name = "expressive toggle on", showBackground = false, widthDp = 40, heightDp = 24)
+@Composable
+fun ToggleExpressive_On() = ExpressiveSwitch(1f)
+
+@Preview(name = "expressive toggle on (dark)", showBackground = false, widthDp = 40, heightDp = 24)
+@Composable
+fun ToggleExpressive_On_Dark() = ExpressiveSwitch(1f, dark = true)

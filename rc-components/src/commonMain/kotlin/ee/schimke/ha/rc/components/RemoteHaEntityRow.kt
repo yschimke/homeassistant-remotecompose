@@ -35,6 +35,8 @@ import androidx.compose.remote.creation.compose.state.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.rc.m3.RcM3SwitchColors
+import ee.schimke.rc.m3.RemoteM3SwitchByProgress
 
 /**
  * One row of an Entities card:
@@ -188,18 +190,16 @@ private val KnobInset = KnobInsetDp.toInt().rdp
 /** Distance the knob travels in dp between off and on. */
 private const val KnobTravelDp = 36f - 16f - 2f * KnobInsetDp // = 14f
 
-/** Animation timings. */
-private const val ToggleDurationSeconds = 0.20f
-
 /**
  * Pill-shaped toggle switch — animates between off / on.
  *
  * 1. [isOn] is the live `RemoteBoolean` for the entity (typically `<entityId>.is_on` from
  *    [LiveValues.isOn]). The host pushes by name; the document re-renders without re-encoding.
- * 2. The boolean drives a `select`-derived `RemoteFloat` progress in `[0, 1]`, wrapped in
- *    [animateRemoteFloat] so successive flips tween instead of snapping.
+ * 2. The boolean drives a `select`-derived `RemoteFloat` progress in `[0, 1]`, animated on the card
+ *    style's `spatialFast` motion token ([haMotion]) so successive flips move instead of snapping.
  * 3. The track color tweens between [inactiveAccent] and [activeAccent] via the alpha010 [tween]
- *    color helper.
+ *    color helper, on its own `effectsFast` progress where the style has one: a spring that
+ *    overshoots may move the knob but never the colour.
  * 4. The knob position is the same animated `progress` mapped through `toRemoteDp()` and applied as
  *    `Modifier.offset` — avoids the weight()-on-derived-RemoteFloat issue that bit alpha08
  *    (b/504893436).
@@ -218,7 +218,12 @@ fun RemoteHaToggleSwitch(
   tapAction: HaAction = HaAction.None,
 ) {
   val target: RemoteFloat = isOn.select(1f.rf, 0f.rf)
-  val progress: RemoteFloat = animateRemoteFloat(target, ToggleDurationSeconds)
+  val motion = haMotion()
+  val progress: RemoteFloat = animateRemoteFloat(target, motion.spatialFast)
+  // One expression when both tokens agree (every tween style), so their documents don't change.
+  val colorProgress: RemoteFloat =
+    if (motion.effectsFast == motion.spatialFast) progress
+    else animateRemoteFloat(target, motion.effectsFast)
 
   val host: Action? = tapAction.toRemoteAction()
   val clickable = if (host != null) RemoteModifier.clickable(host) else RemoteModifier
@@ -229,13 +234,15 @@ fun RemoteHaToggleSwitch(
     inactiveAccent = inactiveAccent,
     modifier = modifier,
     clickable = clickable,
+    colorProgress = colorProgress,
   )
 }
 
 /**
  * Progress-driven variant — deterministic layout for any [RemoteFloat] `progress` in `[0, 1]`.
- * Exposed so previews can freeze the switch at 0 / 0.5 / 1, and so callers (driving an externally
- * animated source like a host-bound RemoteBoolean) can supply their own progress directly.
+ * [colorProgress] mixes the colours, where a caller animates them apart from the knob. Exposed so
+ * previews can freeze the switch at 0 / 0.5 / 1, and so callers (driving an externally animated
+ * source like a host-bound RemoteBoolean) can supply their own progress directly.
  *
  * Track color: `tween(inactiveAccent, activeAccent, progress)`. Knob position: derived `start`
  * padding — `(KnobInsetDp + progress * KnobTravelDp).asRemoteDp()`. Use `asRemoteDp` (the
@@ -259,7 +266,25 @@ fun RemoteHaToggleSwitchByProgress(
   inactiveAccent: RemoteColor,
   modifier: RemoteModifier = RemoteModifier,
   clickable: RemoteModifier = RemoteModifier,
+  colorProgress: RemoteFloat = progress,
 ) {
+  if (visualFamily() == HaVisualFamily.Expressive) {
+    // Material 3 Expressive's own switch: the thumb grows as it turns on and springs across.
+    RemoteM3SwitchByProgress(
+      position = progress,
+      colorProgress = colorProgress,
+      colors =
+        RcM3SwitchColors(
+          checkedTrack = activeAccent,
+          checkedThumb = Color.White.rc,
+          uncheckedTrack = haTheme().cardBackground,
+          uncheckedThumb = inactiveAccent,
+          uncheckedBorder = inactiveAccent,
+        ),
+      modifier = modifier.size(width = TrackWidth, height = TrackHeight).then(clickable),
+    )
+    return
+  }
   if (visualFamily() == HaVisualFamily.Ikea) {
     IkeaControlFace(
       tween(inactiveAccent, activeAccent, progress),
@@ -296,7 +321,7 @@ fun RemoteHaToggleSwitchByProgress(
       ink != null -> tween(ink.copy(alpha = 0.35f).rc, ink.rc, progress)
       // Painted metal: off is the bare recessed slot, on lights it in the accent.
       metal -> tween(ConsoleSlot.rc, activeAccent, progress)
-      else -> tween(inactiveAccent, activeAccent, progress)
+      else -> tween(inactiveAccent, activeAccent, colorProgress)
     }
   val knobColor = if (ink != null) haTheme().cardBackground else Color.White.rc
   // A machined cap, lit from above, in place of a flat knob.

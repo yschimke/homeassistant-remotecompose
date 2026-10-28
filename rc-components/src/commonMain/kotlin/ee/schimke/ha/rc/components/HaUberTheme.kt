@@ -22,6 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamicColorScheme
+import ee.schimke.rc.m3.LocalRcMotionScheme
+import ee.schimke.rc.m3.RcMotionScheme
 
 // ---------------------------------------------------------------------------------------------
 // Uber themes: a whole look, not a palette. A palette (ThemeStyle / HaTheme) recolours the chrome;
@@ -153,6 +155,10 @@ data class HaUberTheme(
   val unavailable: HaUnavailableStyle = HaUnavailableStyle(),
   val description: String = "",
   val appTheme: Boolean = false,
+  /**
+   * How the theme's parts move: [HaMotion.Classic] tweens unless the theme is designed in motion.
+   */
+  val motion: RcMotionScheme = HaMotion.Classic,
 ) {
   init {
     require(light != null || dark != null) { "$id needs a light or a dark palette" }
@@ -213,6 +219,7 @@ data class HaUberTheme(
         visuals = HaVisualFamily.Expressive,
         readout = HaReadoutStyle.TonalPill,
         valueWeight = FontWeight.Bold,
+        motion = RcMotionScheme.expressive(),
       )
 
     /**
@@ -554,7 +561,10 @@ val LocalHaUberTheme = staticCompositionLocalOf {
  */
 @Composable
 fun ProvideHaUberTheme(theme: HaUberTheme, darkTheme: Boolean, content: @Composable () -> Unit) {
-  CompositionLocalProvider(LocalHaUberTheme provides HaActiveUberTheme(theme, darkTheme)) {
+  CompositionLocalProvider(
+    LocalHaUberTheme provides HaActiveUberTheme(theme, darkTheme),
+    LocalRcMotionScheme provides theme.motion,
+  ) {
     ProvideHaTheme(theme.palette(darkTheme), content)
   }
 }
@@ -707,6 +717,7 @@ fun haControlShape(classicDp: Int, round: Boolean = false): RemoteShape {
 fun ProvideHaUberStyle(theme: HaUberTheme, darkTheme: Boolean, content: @Composable () -> Unit) {
   CompositionLocalProvider(
     LocalHaUberTheme provides HaActiveUberTheme(theme, darkTheme, ownPalette = false),
+    LocalRcMotionScheme provides theme.motion,
     content = content,
   )
 }

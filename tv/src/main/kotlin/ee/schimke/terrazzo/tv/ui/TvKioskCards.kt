@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -26,6 +27,8 @@ import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ProvideCardStyle
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.cardPalette
+import ee.schimke.rc.m3.LocalRcMotionMode
+import ee.schimke.rc.m3.RcMotionMode
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 
@@ -59,8 +62,11 @@ fun TvKioskCards(
       ) {
         ProvideCardRegistry(registry) {
           ProvideCardStyle(cardStyle, palette, darkTheme = true) {
-            ProvideCardSizeMode(CardSizeMode.Fixed) {
-              RenderChild(card, snapshot, RemoteModifier.fillMaxSize())
+            // A kiosk is glanced at from across the room: calm, critically damped motion.
+            CompositionLocalProvider(LocalRcMotionMode provides RcMotionMode.Ambient) {
+              ProvideCardSizeMode(CardSizeMode.Fixed) {
+                RenderChild(card, snapshot, RemoteModifier.fillMaxSize())
+              }
             }
           }
         }

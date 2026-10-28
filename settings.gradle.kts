@@ -134,6 +134,7 @@ if (providers.gradleProperty("addonServerOnly").orNull == "true") {
     ":ha-client",
     ":rc-components",
     ":rc-components-ui",
+    ":rc-material3-motion",
     ":rc-converter",
     ":rc-card-shutter",
     ":rc-image-coil",

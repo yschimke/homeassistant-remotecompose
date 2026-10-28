@@ -441,7 +441,7 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
             "value_fraction",
             data.valueFraction.coerceIn(0f, 1f),
           ),
-        DialAnimationSeconds,
+        haMotion().spatial,
       )
     val rawTarget =
       if (data.live != null) data.live.targetFraction
@@ -449,7 +449,7 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
         data.targetFraction?.let {
           LiveValues.namedFloat(data.entityId, "target_fraction", it.coerceIn(0f, 1f))
         }
-    val target = rawTarget?.let { animateRemoteFloat(it, DialAnimationSeconds) }
+    val target = rawTarget?.let { animateRemoteFloat(it, haMotion().spatial) }
     val targetInk =
       data.live?.targetVisible?.select(theme.primaryText, Color.Transparent.rc) ?: theme.primaryText
     RemoteColumn(
@@ -675,7 +675,7 @@ private fun ArcCanvas(
   val v = data.valueFraction.coerceIn(0f, 1f)
   val rawValueFraction =
     data.live?.valueFraction ?: LiveValues.namedFloat(data.entityId, "value_fraction", v)
-  val animatedValueFraction = animateRemoteFloat(rawValueFraction, DialAnimationSeconds)
+  val animatedValueFraction = animateRemoteFloat(rawValueFraction, haMotion().spatial)
   val animatedSweep: RemoteFloat = animatedValueFraction * 270f.rf
 
   val target = data.targetFraction
@@ -686,7 +686,7 @@ private fun ArcCanvas(
       LiveValues.namedFloat(data.entityId, "target_fraction", target.coerceIn(0f, 1f))
     } else null
   val animatedTargetFraction =
-    if (rawTargetFraction != null) animateRemoteFloat(rawTargetFraction, DialAnimationSeconds)
+    if (rawTargetFraction != null) animateRemoteFloat(rawTargetFraction, haMotion().spatial)
     else null
   val animatedMarkerAngle = animatedTargetFraction?.let { 135f.rf + it * 270f.rf }
   val accent = dialAccent(data)
@@ -768,8 +768,6 @@ private fun ArcCanvas(
     }
   }
 }
-
-private const val DialAnimationSeconds = 0.45f
 
 /** The centre readout: the live expression, else `<entityId>.attributes.<centerLabelAttribute>`. */
 private fun centerText(data: HaArcDialData): RemoteString =
