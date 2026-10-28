@@ -18,6 +18,16 @@ import kotlinx.serialization.json.*
 @Composable
 internal fun WearMessageCard(
   rawJson: String,
+  values: WearValues,
+  onSend: (suspend (String, Map<String, String>) -> Unit)?,
+) {
+  // Only this card's entities are read: a delta for another card's entity leaves this one alone.
+  WearMessageCardContent(rawJson, rememberCardValues(rawJson, values), onSend)
+}
+
+@Composable
+private fun WearMessageCardContent(
+  rawJson: String,
   values: Map<String, EntityValue>,
   onSend: (suspend (String, Map<String, String>) -> Unit)?,
 ) {

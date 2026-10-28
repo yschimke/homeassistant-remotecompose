@@ -49,8 +49,8 @@ import org.robolectric.annotation.GraphicsMode
 
 /**
  * A slider and the control lock, played by the AndroidX View player: the player a launcher widget
- * runs (the platform's copy of it), and the one every in-app card with a slider falls back to (the
- * Compose player has no touch expression outside a scroll, see `HaRcComposePlayer`).
+ * runs (the platform's copy of it). [SliderComposePlaybackTest] plays the same card in the Compose
+ * player the app and the watch use.
  *
  * Each test drives real `MotionEvent`s through the View and reads what it sends and draws. The
  * document is 300 × 160 px at mdpi: a 42 px slider (0–100 in steps of 1, resting at 30) above a 40

@@ -52,7 +52,9 @@ class WearDashboardRenderingTest {
         """{"type":"grid","columns":1,"square":false,"cards":[{"type":"gauge","entity":"sensor.battery","name":"Battery","min":0,"max":100}]}""",
     )
 
-  private fun values(state: String) =
+  private fun values(state: String) = WearValues(valueMap(state))
+
+  private fun valueMap(state: String) =
     mapOf(
       "sensor.battery" to
         EntityValue(state = state, friendlyName = "Battery", unit = "%", deviceClass = "battery")
@@ -157,7 +159,7 @@ class WearDashboardRenderingTest {
               )
           ),
           ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet(),
-          emptyMap(),
+          WearValues(),
           {},
           {},
           {},
@@ -176,7 +178,7 @@ class WearDashboardRenderingTest {
   @Test
   fun malformedContainerHasAnExplicitFallbackWithoutLeakingItsType() {
     compose.setContent {
-      MaterialTheme { WearRemoteCard(grid.copy(rawJson = "invalid"), emptyMap()) }
+      MaterialTheme { WearRemoteCard(grid.copy(rawJson = "invalid"), WearValues()) }
     }
     compose.onNodeWithText("Card unavailable").assertExists()
     compose.onNodeWithText("grid").assertDoesNotExist()
@@ -187,7 +189,7 @@ class WearDashboardRenderingTest {
     // Exercise the persisted wire representation, not just an in-memory style resolver.
     var summary by mutableStateOf(decodeProto<CardSummary>(encodeProto(grid))!!)
     var look by mutableStateOf(WearCardLook(style = "classic"))
-    var live by mutableStateOf(values("20"))
+    val live = values("20")
     var visible by mutableStateOf(true)
     var density by mutableStateOf(Density(1f, 1f))
     compose.setContent {
@@ -210,7 +212,7 @@ class WearDashboardRenderingTest {
     }
     val overridden = screenshot()
     assertFalse(lcd.sameAs(overridden), "Phone override must replace the watch style")
-    compose.runOnIdle { live = values("80") }
+    compose.runOnIdle { live.update(valueMap("80")) }
     val updated = screenshot()
     assertFalse(overridden.sameAs(updated), "A nested gauge must show updated values")
     compose.runOnIdle { visible = false }
@@ -304,7 +306,9 @@ class WearDashboardRenderingTest {
             if (visible)
               WearRemoteCard(
                 summary,
-                mapOf("light.kitchen" to EntityValue(state = state, friendlyName = "Kitchen")),
+                WearValues(
+                  mapOf("light.kitchen" to EntityValue(state = state, friendlyName = "Kitchen"))
+                ),
               )
           }
         }

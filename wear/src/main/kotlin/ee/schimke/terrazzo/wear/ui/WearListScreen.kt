@@ -21,7 +21,6 @@ import androidx.wear.compose.material3.onehandedgesture.OneHandedGestureDefaults
 import androidx.wear.compose.material3.onehandedgesture.OneHandedGesturePriority
 import androidx.wear.compose.material3.onehandedgesture.OneHandedGestureScrollIndicator
 import androidx.wear.compose.material3.onehandedgesture.OneHandedGestureScrollIndicatorState
-import androidx.wear.compose.material3.onehandedgesture.oneHandedGesture
 import androidx.wear.compose.material3.onehandedgesture.rememberOneHandedGestureConfiguration
 import kotlinx.coroutines.launch
 
@@ -50,6 +49,13 @@ internal fun WearListScreen(
     )
   val hint = remember(gesture) { OneHandedGestureScrollIndicatorState() }
   val scope = rememberCoroutineScope()
+  val gestureModifier =
+    rememberOneHandedGesture(
+      gestureConfiguration = gesture,
+      onGestureLabel = "Next card",
+      onGestureAvailable = { scope.launch { hint.showIndicator() } },
+      onGesture = { OneHandedGestureDefaults.scrollDownToNextItem(state) },
+    )
   ScreenScaffold(
     scrollState = state,
     scrollIndicator = {
@@ -62,19 +68,7 @@ internal fun WearListScreen(
   ) { scaffoldPadding ->
     ScalingLazyColumn(
       state = state,
-      modifier =
-        modifier
-          .fillMaxWidth()
-          .then(
-            if (!gestureScroll) Modifier
-            else
-              Modifier.oneHandedGesture(
-                gestureConfiguration = gesture,
-                onGestureLabel = "Next card",
-                onGestureAvailable = { scope.launch { hint.showIndicator() } },
-                onGesture = { OneHandedGestureDefaults.scrollDownToNextItem(state) },
-              )
-          ),
+      modifier = modifier.fillMaxWidth().then(if (gestureScroll) gestureModifier else Modifier),
       verticalArrangement = Arrangement.spacedBy(spacing),
       contentPadding =
         PaddingValues(

@@ -142,7 +142,7 @@ fun WearTopLevelPreview_Live() {
       settings = WearSettings(demoMode = false, baseUrl = "https://home.assistant.io"),
       pinned = PINNED_FIXTURE,
       sections = SECTIONS_FIXTURE,
-      values = VALUES_FIXTURE,
+      values = WearValues(VALUES_FIXTURE),
       onOpenSection = {},
       onBrowseDashboards = {},
       onOpenSettings = {},
@@ -158,7 +158,7 @@ fun WearTopLevelPreview_Demo() {
       settings = WearSettings(demoMode = true, baseUrl = "demo://terrazzo"),
       pinned = PINNED_FIXTURE,
       sections = SECTIONS_FIXTURE,
-      values = VALUES_FIXTURE,
+      values = WearValues(VALUES_FIXTURE),
       onOpenSection = {},
       onBrowseDashboards = {},
       onOpenSettings = {},
@@ -174,7 +174,7 @@ fun WearTopLevelPreview_Empty() {
       settings = WearSettings(demoMode = false),
       pinned = PinnedCardSet(),
       sections = PinnedSectionSet(),
-      values = emptyMap(),
+      values = WearValues(),
       onOpenSection = {},
       onBrowseDashboards = {},
       onOpenSettings = {},
@@ -188,7 +188,10 @@ fun WearSectionPreview() {
   WearPreviewFrame {
     WearSectionScreen(
       section = SECTIONS_FIXTURE.sections.first(),
-      values = VALUES_FIXTURE + mapOf("sensor.bedroom" to EntityValue(state = "19.2", unit = "°C")),
+      values =
+        WearValues(
+          VALUES_FIXTURE + mapOf("sensor.bedroom" to EntityValue(state = "19.2", unit = "°C"))
+        ),
       onBack = {},
     )
   }
@@ -201,7 +204,7 @@ fun WearCardScreenPreview() {
     WearCardScreen(
       cards = PINNED_FIXTURE.cards.map { it.card },
       initialPage = 1,
-      values = VALUES_FIXTURE,
+      values = WearValues(VALUES_FIXTURE),
     )
   }
 }
@@ -212,7 +215,7 @@ fun WearCardDetailsPreview() {
   WearPreviewFrame {
     WearCardDetailsScreen(
       summary = PINNED_FIXTURE.cards.first().card,
-      values = VALUES_FIXTURE,
+      values = WearValues(VALUES_FIXTURE),
       loadHistory = { previewHistory(listOf("19.5", "20.1", "21.0", "21.5")) },
       loadStates = { previewLiveStates },
       now = { PREVIEW_NOW },
@@ -238,7 +241,7 @@ fun WearCardDetailsPreview_Entities() {
   WearPreviewFrame {
     WearCardDetailsScreen(
       summary = entities,
-      values = VALUES_FIXTURE,
+      values = WearValues(VALUES_FIXTURE),
       loadHistory = { id ->
         previewHistory(
           if (id.startsWith("lock.")) listOf("locked", "unlocked", "locked")
@@ -334,8 +337,10 @@ private fun WearDashboardPreviewContent(style: String) {
             ),
         ),
       values =
-        VALUES_FIXTURE +
-          mapOf("switch.coffee_maker" to EntityValue(state = "on", friendlyName = "Coffee maker")),
+        WearValues(
+          VALUES_FIXTURE +
+            mapOf("switch.coffee_maker" to EntityValue(state = "on", friendlyName = "Coffee maker"))
+        ),
       onBack = {},
     )
   }

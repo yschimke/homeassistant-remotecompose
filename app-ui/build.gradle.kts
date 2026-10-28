@@ -137,7 +137,10 @@ val wasmoAppDirectory =
                 "  <link rel=\"apple-touch-icon\" href=\"/apple-touch-icon.png\">\n" +
                 "  <meta name=\"theme-color\" content=\"#faf6ec\">\n" +
                 "  <meta name=\"mobile-web-app-capable\" content=\"yes\">\n" +
-                "  <meta name=\"apple-mobile-web-app-title\" content=\"Terrazzo\">",
+                "  <meta name=\"apple-mobile-web-app-title\" content=\"Terrazzo\">\n" +
+                // terrazzo-backend.js tells a Wasmo owner when this page fell back to browser
+                // storage; static hosts carry no marker and stay silent.
+                "  <meta name=\"terrazzo-host\" content=\"wasmo\">",
             )
         }
         name = "app.html"

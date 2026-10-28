@@ -87,9 +87,17 @@ Requirements:
 - **Home Assistant must be reachable over HTTPS** from the viewer's browser (Nabu Casa, or your
   own TLS). The app is served over `https://`, so the browser blocks `ws://` to a plain-HTTP
   `homeassistant.local:8123`.
-- **Entity pictures** are plain HTTP fetches, so they also need the Wasmo origin in Home
+- **Entity pictures and camera images** are plain HTTP fetches, so they also need the app's exact
+  origin (`https://<name>-<computer>.<wasmo host>`, which changes with the install name) in Home
   Assistant's `http: cors_allowed_origins`. Cards render without it; only those pictures are
   missing.
+
+When the page can't reach a backend it falls back to browser storage and, on a `.wasmo` install
+(its `app.html` carries `<meta name="terrazzo-host" content="wasmo">`), shows a dismissible notice
+saying why: the install name isn't one the Wasmo enables services for, or the Wasmo didn't answer
+(one longer retry first). If Home Assistant can't confirm a sign-out, Terrazzo offers to remove the
+saved sign-in anyway. Removing the app from the launcher revokes and forgets the saved sign-in;
+settings are kept for a reinstall under the same name.
 
 ## Installing
 
@@ -104,7 +112,8 @@ placeholder **Smart Home** entry, is only the built-in catalog, not the only way
    `https://github.com/yschimke/homeassistant-remotecompose/releases/latest/download/terrazzo.wasmo`.
    To host it yourself instead, build `./gradlew :app-ui:wasmoApp` and serve
    `app-ui/build/wasmo/terrazzo.wasmo` from any HTTPS URL Wasmo can reach.
-2. In Wasmo, choose **Install App**, paste the URL, and name it (e.g. `terrazzo`).
+2. In Wasmo, choose **Install App**, paste the URL, and name it `terrazzo` (or whichever name the
+   operator lists in `WASMO_SERVICE_APPS`; other names work but keep settings in the browser).
 3. Open it from the launcher, or `https://terrazzo-<computer>.wasmo.com/`.
 
 The **Wasmo server**, not your browser, fetches the URL (`ZipResourceInstaller`, OkHttp), so the
@@ -117,8 +126,9 @@ address must be reachable from wherever Wasmo runs:
   for changes.
 
 Wasmo does not yet update an app installed from a URL when the file changes
-(`docs/platform/plans/app_updates.md` is a plan, and `InstallAppResponse.url` is still `"TODO"`),
-so updating today means reinstalling.
+(`docs/platform/plans/app_updates.md` is a plan), so updating means installing again under the same
+name. On a Wasmo with the in-place reinstall fix (the `yschimke/wasmo` `deploy` branch) that
+replaces the release and keeps the install's data; older resource versions are then deleted.
 
 ## Wasmo gaps worked around here
 

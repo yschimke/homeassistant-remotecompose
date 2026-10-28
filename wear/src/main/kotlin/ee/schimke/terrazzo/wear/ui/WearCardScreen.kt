@@ -27,7 +27,6 @@ import androidx.wear.compose.material3.onehandedgesture.OneHandedGestureDefaults
 import androidx.wear.compose.material3.onehandedgesture.OneHandedGesturePageIndicatorState
 import androidx.wear.compose.material3.onehandedgesture.OneHandedGesturePriority
 import androidx.wear.compose.material3.onehandedgesture.OneHandedGestureVerticalPageIndicator
-import androidx.wear.compose.material3.onehandedgesture.oneHandedGesture
 import androidx.wear.compose.material3.onehandedgesture.rememberOneHandedGestureConfiguration
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -37,7 +36,6 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
-import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import kotlinx.coroutines.launch
 
 /**
@@ -57,7 +55,7 @@ import kotlinx.coroutines.launch
 internal fun WearCardScreen(
   cards: List<CardSummary>,
   initialPage: Int,
-  values: Map<String, EntityValue>,
+  values: WearValues,
   modifier: Modifier = Modifier,
   onOpenDetails: (CardSummary) -> Unit = {},
 ) {
@@ -70,6 +68,13 @@ internal fun WearCardScreen(
     )
   val pageHint = remember(pageGesture) { OneHandedGesturePageIndicatorState() }
   val scope = rememberCoroutineScope()
+  val pageGestureModifier =
+    rememberOneHandedGesture(
+      gestureConfiguration = pageGesture,
+      onGestureLabel = "Next card",
+      onGestureAvailable = { scope.launch { pageHint.showIndicator() } },
+      onGesture = { OneHandedGestureDefaults.scrollToNextPage(pager) },
+    )
   VerticalPagerScaffold(
     pagerState = pager,
     modifier = modifier,
@@ -77,21 +82,11 @@ internal fun WearCardScreen(
   ) {
     VerticalPager(
       state = pager,
-      modifier =
-        Modifier.fillMaxSize()
-          .then(
-            if (cards.size < 2) Modifier
-            else
-              Modifier.oneHandedGesture(
-                gestureConfiguration = pageGesture,
-                onGestureLabel = "Next card",
-                onGestureAvailable = { scope.launch { pageHint.showIndicator() } },
-                onGesture = { OneHandedGestureDefaults.scrollToNextPage(pager) },
-              )
-          ),
+      modifier = Modifier.fillMaxSize().then(if (cards.size < 2) Modifier else pageGestureModifier),
     ) { page ->
       AnimatedPage(page, pager) {
-        WearCardPage(cards[page], values, onOpenDetails = { onOpenDetails(cards[page]) })
+        val summary = cards[page]
+        WearCardPage(summary, values, onOpenDetails = { onOpenDetails(summary) })
       }
     }
   }
@@ -100,12 +95,13 @@ internal fun WearCardScreen(
 @Composable
 private fun WearCardPage(
   summary: CardSummary,
-  values: Map<String, EntityValue>,
+  values: WearValues,
   onOpenDetails: () -> Unit,
 ) {
   val registry = remember { defaultRegistry().withEnhancedShutter() }
   val card = remember(summary.rawJson) { decodeWearCard(summary.rawJson) }
-  val snapshot = remember(values) { wearSnapshot(values) }
+  val cardValues = rememberCardValues(summary.rawJson, values)
+  val snapshot = remember(cardValues) { wearSnapshot(cardValues) }
   // The card's more-info tap opens its details, as a long press does.
   val taps = rememberWearCardTaps(summary.rawJson, onMoreInfo = onOpenDetails)
   val action = card?.let { wearCardPrimaryAction(it, snapshot, registry) }
@@ -165,20 +161,17 @@ private fun CardActionButton(
   val hint = remember(gesture) { OneHandedGestureClickIndicatorState() }
   val interactions = remember { MutableInteractionSource() }
   val scope = rememberCoroutineScope()
+  val gestureModifier =
+    rememberOneHandedGesture(
+      gestureConfiguration = gesture,
+      onGestureLabel = label,
+      interactionSource = interactions,
+      onGestureAvailable = { scope.launch { hint.showIndicator() } },
+      onGesture = { onRun() },
+    )
   EdgeButton(
     onClick = onRun,
-    modifier =
-      modifier.then(
-        if (!enabled) Modifier
-        else
-          Modifier.oneHandedGesture(
-            gestureConfiguration = gesture,
-            onGestureLabel = label,
-            interactionSource = interactions,
-            onGestureAvailable = { scope.launch { hint.showIndicator() } },
-            onGesture = { onRun() },
-          )
-      ),
+    modifier = modifier.then(if (enabled) gestureModifier else Modifier),
     buttonSize = EdgeButtonSize.ExtraSmall,
     interactionSource = interactions,
   ) {
