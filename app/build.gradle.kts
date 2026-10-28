@@ -294,6 +294,7 @@ dependencies {
   implementation(libs.compose.material.icons.extended)
   // Spatial room controls on Android XR; inert on phones and tablets (no XR spatial feature).
   implementation(libs.xr.compose)
+  implementation(libs.xr.arcore)
   implementation(libs.compose.ui.text.google.fonts)
   implementation(libs.compose.ui.tooling.preview)
   debugImplementation(libs.compose.ui.tooling)

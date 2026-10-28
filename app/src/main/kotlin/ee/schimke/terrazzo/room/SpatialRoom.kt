@@ -79,10 +79,29 @@ internal fun SurroundButton(onClick: () -> Unit) {
  * control, the most important nearest the centre of view. Every panel can be moved; the room panel
  * resized too, as its list grows. An orbiter under the room panel goes back or collapses to home
  * space.
+ *
+ * Each control can be pinned to the spot ahead of the user ("Pin here"): it then stays there, on a
+ * persisted anchor, across visits ([PinnedPanels]), and a pin found nearby says which room the user
+ * is in.
  */
 @Composable
-internal fun SpatialRoomControls(content: RoomContent, onBack: () -> Unit, onCollapse: () -> Unit) {
+internal fun SpatialRoomControls(
+  content: RoomContent,
+  pinning: RoomPinning,
+  onBack: () -> Unit,
+  onCollapse: () -> Unit,
+) {
   val controls = content.state?.controls
+  val anchors = rememberPinAnchors()
+  val pin: ((String) -> Unit)? = anchors?.let {
+    rememberPinning(it, pinning.pins, pinning.onPinned, pinning.onNearestPin)
+  }
+  val unpin: (RoomPin) -> Unit = { p ->
+    anchors?.unpin(p.anchorId)
+    pinning.onUnpinned(p)
+  }
+  if (anchors != null) PinnedPanels(anchors, pinning.pins, content, onUnpin = unpin)
+  val lost = anchors?.let { a -> pinning.pins.filter { it.anchorId in a.lost } }.orEmpty()
   Subspace {
     SpatialCurvedRow(
       curveRadius = CURVE_RADIUS,
@@ -91,7 +110,7 @@ internal fun SpatialRoomControls(content: RoomContent, onBack: () -> Unit, onCol
       SpatialPanel(
         SubspaceModifier.width(ROOM_PANEL_WIDTH).height(PANEL_HEIGHT).movable().resizable()
       ) {
-        RoomPanel(content)
+        RoomPanel(content, lost, onRemoveLost = unpin)
         Orbiter(position = OrbiterPosition.BottomCenter()) {
           SpatialRoomActions(onBack = onBack, onCollapse = onCollapse)
         }
@@ -101,6 +120,7 @@ internal fun SpatialRoomControls(content: RoomContent, onBack: () -> Unit, onCol
           Surface(Modifier.fillMaxSize()) {
             Column(Modifier.verticalScroll(rememberScrollState()).padding(20.dp)) {
               RoomEntityCard(entity, content)
+              pin?.let { PinHereButton { it(entity.entityId) } }
             }
           }
         }
@@ -110,7 +130,7 @@ internal fun SpatialRoomControls(content: RoomContent, onBack: () -> Unit, onCol
 }
 
 @Composable
-private fun RoomPanel(content: RoomContent) {
+private fun RoomPanel(content: RoomContent, lost: List<RoomPin>, onRemoveLost: (RoomPin) -> Unit) {
   val controls = content.state?.controls
   Surface(Modifier.fillMaxSize()) {
     Column(
@@ -119,6 +139,7 @@ private fun RoomPanel(content: RoomContent) {
     ) {
       Text(controls?.area?.name ?: "This room", style = MaterialTheme.typography.headlineMedium)
       RoomHeader(content)
+      LostPins(lost, content, onRemoveLost)
       if (controls == null || controls.isEmpty) {
         Text("Nothing to control here.", style = MaterialTheme.typography.bodyLarge)
       } else if (controls.more.isNotEmpty()) {

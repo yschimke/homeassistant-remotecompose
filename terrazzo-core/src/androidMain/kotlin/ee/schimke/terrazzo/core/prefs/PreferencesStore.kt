@@ -201,6 +201,17 @@ class PreferencesStore(private val context: Context) {
     }
   }
 
+  /**
+   * Controls pinned to places in the room on an XR headset, as the room controls encode them (a
+   * JSON list of anchor id, Home Assistant instance and entity); null before the first pin.
+   */
+  val roomPins: Flow<String?>
+    get() = context.store.data.map { it[ROOM_PINS_KEY] }
+
+  suspend fun setRoomPins(encoded: String) {
+    context.store.edit { it[ROOM_PINS_KEY] = encoded }
+  }
+
   val logsViewEnabled: Flow<Boolean>
     get() = context.store.data.map { it[LOGS_VIEW_KEY] ?: false }
 
@@ -428,6 +439,7 @@ class PreferencesStore(private val context: Context) {
     private val LOGS_VIEW_KEY = booleanPreferencesKey("logs_view_enabled")
     private val ROOM_PICKED_KEY = stringPreferencesKey("room_picked")
     private val ROOM_TRACKER_KEY = stringPreferencesKey("room_tracker")
+    private val ROOM_PINS_KEY = stringPreferencesKey("room_pins")
     private val FLASH_ON_CHANGE_KEY = booleanPreferencesKey("flash_on_data_change")
     private val DATA_GRID_OVERLAY_KEY = booleanPreferencesKey("data_grid_overlay")
     private val PERMANENT_WRITE_KEY = booleanPreferencesKey("permanent_write_mode")

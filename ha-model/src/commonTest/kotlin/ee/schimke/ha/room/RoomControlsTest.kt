@@ -194,6 +194,30 @@ class RoomControlsTest {
   }
 
   @Test
+  fun aPinnedControlNamesItsRoomAheadOfTheTracker() {
+    val room =
+      currentRoom(
+        snapshot,
+        picked = null,
+        trackerEntityId = "sensor.phone_area",
+        nearestPin = "light.kitchen",
+      )
+    assertEquals(CurrentRoom(kitchen, CurrentRoom.Source.Pinned), room)
+  }
+
+  @Test
+  fun aPinWithoutAnAreaFallsThroughToTheTracker() {
+    val room =
+      currentRoom(
+        snapshot,
+        picked = null,
+        trackerEntityId = "sensor.phone_area",
+        nearestPin = "device_tracker.phone",
+      )
+    assertEquals(CurrentRoom.Source.Tracker, room.source)
+  }
+
+  @Test
   fun trackerStateMatchesAnAreaAlias() {
     val room = currentRoom(snapshot, picked = null, trackerEntityId = "sensor.phone_area")
     assertEquals(CurrentRoom(living, CurrentRoom.Source.Tracker), room)

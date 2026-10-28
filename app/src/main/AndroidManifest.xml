@@ -39,6 +39,13 @@
       Optional, so phones and tablets without it still install the app.
     -->
     <uses-feature android:name="android.software.xr.api.spatial" android:required="false" />
+    <!--
+      Android XR: pinning a room control to a place (room/SpatialPins.kt) persists an anchor there
+      and reads where the headset is. Asked for only when the user first pins; phones don't define
+      these permissions, so they're inert there.
+    -->
+    <uses-permission android:name="android.permission.SCENE_UNDERSTANDING_COARSE" />
+    <uses-permission android:name="android.permission.HEAD_TRACKING" />
 
     <application
         android:name=".TerrazzoApplication"

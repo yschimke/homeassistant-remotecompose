@@ -193,6 +193,8 @@ compose-material-icons-extended = { module = "androidx.compose.material:material
 activity-compose = { module = "androidx.activity:activity-compose", version = "1.13.0" }
 # Jetpack Compose for XR: the room controls' spatial panels on Android XR headsets (`app/.../room`).
 xr-compose = { module = "androidx.xr.compose:compose", version = "1.0.0-beta02" }
+# The version xr-compose 1.0.0-beta02 brings (through scenecore): pinned room controls' persisted anchors.
+xr-arcore = { module = "androidx.xr.arcore:arcore", version = "1.0.0-rc01" }
 
 # Wear Compose (stub module — full app lands later)
 wear-compose-material3 = { module = "androidx.wear.compose:compose-material3", version = "1.7.1" }

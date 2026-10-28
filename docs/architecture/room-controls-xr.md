@@ -43,14 +43,16 @@ room's prefix, as HA's area page does ("Living Room TV" → "TV" in the Living R
 ## 3. Which room is the user in? — `currentRoom`
 
 1. **Picked**: a room chip the user tapped. It sticks until they tap **Automatic**.
-2. **Tracker**: an entity the user follows (the location button in the top bar). Its state — or
+2. **Pinned**: on a headset, the room of the pinned control (below) nearest the user, within
+   4 m, once the headset has found its place.
+3. **Tracker**: an entity the user follows (the location button in the top bar). Its state — or
    its `area` / `area_id` / `room` attribute — names an area by id, name or alias, ignoring case
    and separators. That covers Bermuda's `sensor.<phone>_area`, ESPresense and room-assistant
    sensors, and any template sensor a user builds. The menu offers the entities naming an area
    right now.
-3. **Presence**: the area whose `presence`, then `occupancy`, then `motion` binary sensor most
+4. **Presence**: the area whose `presence`, then `occupancy`, then `motion` binary sensor most
    recently turned on.
-4. **None**: the room the dashboards care most about, labelled as a guess.
+5. **None**: the room the dashboards care most about, labelled as a guess.
 
 The picked room and the tracker are stored in `PreferencesStore` (`roomPicked`, `roomTracker`).
 
@@ -77,12 +79,30 @@ headsets.
   orbiter under the room panel goes back (leaving full space first, since the dashboards are flat)
   or collapses to home space.
 
+## Pinned controls (XR)
+
+Without a room signal, the user can place a control themselves. In full space every control panel
+has **Pin here**: it creates an ARCore for XR anchor 0.8 m ahead of where the user is looking
+(facing them), persists it to the headset's local storage (`AnchorPersistenceMode.LOCAL`) and
+records `RoomPin(anchorId, baseUrl, entityId)` in `PreferencesStore.roomPins`. Stand by the
+heater, look at the wall beside it, pin.
+
+On later visits to full space the room screen loads each pin's anchor (`Anchor.load`) and puts a
+panel on it with `Subspace(follow = FollowTarget.anchor(anchor))`, so the heater's controls are
+where the user left them, live. The pin found nearest the user (polled every 2 s from the device
+pose) is the **Pinned** room signal above, so pinning doubles as room calibration.
+
+The first pin asks for `SCENE_UNDERSTANDING_COARSE` and `HEAD_TRACKING`. A pin whose anchor doesn't
+load (the room changed, the headset forgot its spaces) is listed under "Pins not found here" on
+the room panel to remove and pin again; **Unpin** on a pinned panel forgets the anchor on the
+headset too. Pins live in `room/RoomPins.kt` (storage, nearest-pin choice) and
+`room/SpatialPins.kt` (anchors, permissions, panels).
+
 ## Not yet
 
 - Following the headset's own position: Android XR doesn't place the headset in a Home Assistant
   area. A tracker entity (Bermuda with the headset or phone as the beacon) is the bridge for now.
-- Spatial anchors per room (pinning the heater's panel to the heater). Compose for XR's
-  `anchorable` and ARCore for XR persistent anchors would allow it; it needs a per-room store of
-  anchor ids.
+- Snapping a pinned panel to a wall or table (`SubspaceModifier.anchorable()` with plane
+  tracking) rather than placing it ahead of the user, and moving a pin once placed.
 - Wear, TV and the shared desktop / Wasm hosts don't show room controls yet; the ranking lives in
   `ha-model` so they can.

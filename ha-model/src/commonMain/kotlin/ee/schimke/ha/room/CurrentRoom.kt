@@ -7,8 +7,10 @@ import kotlinx.serialization.json.JsonPrimitive
 /**
  * Which room the user is in, and how that was decided.
  *
- * In order: a room the user [picked][Source.Picked] wins until they go back to automatic; then a
- * room-tracker entity's state ([Source.Tracker]): Bermuda's `sensor.<phone>_area`, an ESPresense or
+ * In order: a room the user [picked][Source.Picked] wins until they go back to automatic; then the
+ * room of the control the user pinned nearest to where they stand ([Source.Pinned]: an XR headset
+ * that found a pinned panel's place again knows it is in that panel's room); then a room-tracker
+ * entity's state ([Source.Tracker]): Bermuda's `sensor.<phone>_area`, an ESPresense or
  * room-assistant sensor, or anything else whose state (or `area` / `area_id` / `room` attribute)
  * names an area; then the area whose presence, occupancy or motion sensor most recently turned on
  * ([Source.Presence]). With none of those it is null, and the host shows its best room.
@@ -16,6 +18,7 @@ import kotlinx.serialization.json.JsonPrimitive
 data class CurrentRoom(val area: HaArea?, val source: Source) {
   enum class Source {
     Picked,
+    Pinned,
     Tracker,
     Presence,
     None,
@@ -24,14 +27,25 @@ data class CurrentRoom(val area: HaArea?, val source: Source) {
 
 /**
  * The [CurrentRoom] under [snapshot], given the room the user [picked] (an area id, or null for
- * automatic) and the [trackerEntityId] they chose to follow, if any.
+ * automatic), the entity id of the [nearestPin] (the pinned control nearest the user, if a pin's
+ * place was found) and the [trackerEntityId] they chose to follow, if any.
  */
-fun currentRoom(snapshot: HaSnapshot, picked: String?, trackerEntityId: String?): CurrentRoom {
+fun currentRoom(
+  snapshot: HaSnapshot,
+  picked: String?,
+  trackerEntityId: String?,
+  nearestPin: String? = null,
+): CurrentRoom {
   picked?.let { id ->
     snapshot.areas[id]?.let {
       return CurrentRoom(it, CurrentRoom.Source.Picked)
     }
   }
+  nearestPin
+    ?.let { snapshot.areaOf(it) }
+    ?.let {
+      return CurrentRoom(it, CurrentRoom.Source.Pinned)
+    }
   trackerEntityId
     ?.let { snapshot.states[it] }
     ?.let { trackedArea(it, snapshot) }

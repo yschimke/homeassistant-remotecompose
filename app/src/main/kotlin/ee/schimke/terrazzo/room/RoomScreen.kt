@@ -92,6 +92,11 @@ fun RoomScreen(session: HaSession, readOnly: Boolean, onBack: () -> Unit) {
   val scope = rememberCoroutineScope()
   val picked by prefs.roomPicked.collectAsState(initial = null)
   val tracker by prefs.roomTracker.collectAsState(initial = null)
+  val pinsEncoded by prefs.roomPins.collectAsState(initial = null)
+  val allPins = remember(pinsEncoded) { decodeRoomPins(pinsEncoded) }
+  val pins = remember(allPins, session.baseUrl) { allPins.filter { it.baseUrl == session.baseUrl } }
+  // The pinned control the user stands nearest, while the spatial room finds pins' places.
+  var nearestPin by remember { mutableStateOf<String?>(null) }
 
   val loaded = rememberRoomData(session)
   val polled = rememberPolledSnapshot(session)
@@ -117,13 +122,27 @@ fun RoomScreen(session: HaSession, readOnly: Boolean, onBack: () -> Unit) {
     )
 
   val state =
-    remember(snapshot, loaded?.importance, picked, tracker) {
+    remember(snapshot, loaded?.importance, picked, tracker, nearestPin) {
       snapshot?.let {
-        roomState(it, loaded?.importance ?: DashboardImportance.Empty, picked, tracker)
+        roomState(it, loaded?.importance ?: DashboardImportance.Empty, picked, tracker, nearestPin)
       }
     }
   val onPick: (String?) -> Unit = { id -> scope.launch { prefs.setRoomPicked(id) } }
   val onFollow: (String?) -> Unit = { id -> scope.launch { prefs.setRoomTracker(id) } }
+  val pinning =
+    RoomPinning(
+      pins = pins,
+      onPinned = { anchorId, entityId ->
+        val pin = RoomPin(anchorId, session.baseUrl, entityId)
+        scope.launch { prefs.setRoomPins(encodeRoomPins(allPins + pin)) }
+      },
+      onUnpinned = { pin ->
+        scope.launch {
+          prefs.setRoomPins(encodeRoomPins(allPins.filter { it.anchorId != pin.anchorId }))
+        }
+      },
+      onNearestPin = { nearestPin = it },
+    )
 
   CompositionLocalProvider(LocalHaActionDispatcher provides dispatcher) {
     val content: RoomContent =
@@ -141,6 +160,7 @@ fun RoomScreen(session: HaSession, readOnly: Boolean, onBack: () -> Unit) {
         // Leaving the room leaves full space too: the dashboards are a flat screen.
         SpatialRoomControls(
           content,
+          pinning,
           onBack = {
             exit()
             onBack()
@@ -164,6 +184,16 @@ internal class RoomContent(
   val onAction: (HaAction) -> Unit,
 )
 
+/**
+ * This instance's pinned controls, and what to do as the spatial room pins, unpins and finds them.
+ */
+internal class RoomPinning(
+  val pins: List<RoomPin>,
+  val onPinned: (anchorId: String, entityId: String) -> Unit,
+  val onUnpinned: (RoomPin) -> Unit,
+  val onNearestPin: (String?) -> Unit,
+)
+
 /** The room on show and why, its controls, and the other rooms to switch to. */
 internal data class RoomState(
   val current: CurrentRoom,
@@ -177,9 +207,10 @@ internal fun roomState(
   importance: DashboardImportance,
   picked: String?,
   tracker: String?,
+  nearestPin: String? = null,
 ): RoomState {
   val rooms = roomsWithControls(snapshot, importance)
-  val current = currentRoom(snapshot, picked, tracker)
+  val current = currentRoom(snapshot, picked, tracker, nearestPin)
   // Nothing says where the user is: show the room the dashboards care most about.
   val area = current.area ?: rooms.firstOrNull()
   return RoomState(
@@ -351,6 +382,7 @@ internal fun sourceLabel(state: RoomState): String {
   val area = state.current.area
   return when (state.current.source) {
     CurrentRoom.Source.Picked -> "You picked ${area?.name}"
+    CurrentRoom.Source.Pinned -> "You're in ${area?.name}, by the controls you pinned here"
     CurrentRoom.Source.Tracker -> "You're in ${area?.name}, by your room tracker"
     CurrentRoom.Source.Presence -> "Someone's in ${area?.name}, by its presence sensor"
     CurrentRoom.Source.None ->
