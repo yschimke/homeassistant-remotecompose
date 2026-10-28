@@ -94,7 +94,7 @@ read-only there and cards don't lock (`touchControlsSupported`).
   player the tests drive.
 - **App and watch**: the Compose Multiplatform `RcComposePlayer`, like every other card
   (`HaRcComposePlayer`). It moves a touch expression for drags inside the component it is written
-  in, and runs that component's touch-up when its own expression took the drag;
+  in, and runs that component's touch-up when its own expression took the drag (rc-players 2.21.0);
   `SliderComposePlaybackTest` drives the same card as `SliderPlaybackTest` through it, with the
   fallback failing the test.
 - **Scrolling**: a slider takes a drag only once it has moved past the touch slop along its axis,
