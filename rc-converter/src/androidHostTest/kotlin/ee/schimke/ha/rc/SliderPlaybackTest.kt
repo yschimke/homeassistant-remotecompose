@@ -145,9 +145,12 @@ class SliderPlaybackTest {
       SystemClock.sleep(120)
       player.dispatchTouchEvent(event(MotionEvent.ACTION_MOVE, toX))
       player.dispatchTouchEvent(event(MotionEvent.ACTION_UP, toX))
-      // The knob eases to its end after release; let the player's animation clock run.
+      // The knob eases to its end after release, on the player's wall clock, which Robolectric's
+      // SystemClock doesn't move: let real time pass too, or a fast machine draws all 30 frames
+      // before the ease is done.
       repeat(30) {
         SystemClock.sleep(16)
+        Thread.sleep(16)
         frame()
       }
     }
