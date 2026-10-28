@@ -68,15 +68,39 @@ object HaLiveBindings {
   fun stateInt(entityId: String, state: String): Int? =
     when (entityId.substringBefore('.', missingDelimiterValue = "")) {
       "alarm_control_panel" -> alarmStateIntFromRaw(state)
+      "cover" -> coverStateInt(state)
       else -> null
     }
+
+  /**
+   * A cover's `<id>.state_int`: [COVER_CLOSED], [COVER_OPEN], [COVER_OPENING], [COVER_CLOSING],
+   * [COVER_UNAVAILABLE], else [COVER_UNKNOWN]. Wire keys: never reorder them. The shutter cards
+   * draw the door, its motion arrow and which buttons work from this and the position floats.
+   */
+  fun coverStateInt(state: String): Int =
+    when (state) {
+      "closed" -> COVER_CLOSED
+      "open" -> COVER_OPEN
+      "opening" -> COVER_OPENING
+      "closing" -> COVER_CLOSING
+      UNAVAILABLE -> COVER_UNAVAILABLE
+      else -> COVER_UNKNOWN
+    }
+
+  const val COVER_CLOSED: Int = 0
+  const val COVER_OPEN: Int = 1
+  const val COVER_OPENING: Int = 2
+  const val COVER_CLOSING: Int = 3
+  const val COVER_UNAVAILABLE: Int = 4
+  const val COVER_UNKNOWN: Int = 5
 
   /**
    * Numeric attributes a domain publishes as their own float bindings, by binding suffix:
    * `<entityId>.<suffix>`. A climate entity's state is its mode (`heat`), so a thermostat dial
    * can't sweep on `numeric_state`; it binds `current_temperature` and `target_temperature` instead
-   * and computes its fraction and labels in-document. Attributes that are missing or not numeric
-   * have no binding.
+   * and computes its fraction and labels in-document. A cover publishes its `current_position` and
+   * `supported_features`, from which the shutter cards draw the door and pick their buttons.
+   * Attributes that are missing or not numeric have no binding.
    */
   fun attributeFloats(entityId: String, attributes: JsonObject): Map<String, Float> {
     val keys = AttributeFloats[entityId.substringBefore('.', missingDelimiterValue = "")]
@@ -96,15 +120,26 @@ object HaLiveBindings {
         mapOf(
           CURRENT_TEMPERATURE to "current_temperature",
           TARGET_TEMPERATURE to "temperature",
-        )
+        ),
+      "cover" to
+        mapOf(
+          CURRENT_POSITION to "current_position",
+          SUPPORTED_FEATURES to "supported_features",
+        ),
     )
 
   /**
    * The value [attributeFloats] pushes for an attribute the entity doesn't have: far below any
-   * temperature (absolute zero is −273 °C), so a document tests `value > -1000` for presence. Not
-   * NaN, which Remote Compose reserves for variable references.
+   * temperature (absolute zero is −273 °C), position or feature mask, so a document tests `value >
+   * -1000` for presence. Not NaN, which Remote Compose reserves for variable references.
    */
   const val ABSENT: Float = -9999f
+
+  /** `<cover>.current_position`: 0 closed to 100 open, [ABSENT] for a cover without one. */
+  const val CURRENT_POSITION: String = "current_position"
+
+  /** `<cover>.supported_features`: the `CoverEntityFeature` bits, [ABSENT] when not reported. */
+  const val SUPPORTED_FEATURES: String = "supported_features"
 
   /** `<climate>.current_temperature`: the room temperature a thermostat reads. */
   const val CURRENT_TEMPERATURE: String = "current_temperature"

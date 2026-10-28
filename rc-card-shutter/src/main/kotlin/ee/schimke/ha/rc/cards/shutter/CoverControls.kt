@@ -105,9 +105,6 @@ private fun isFullyOpen(entity: EntityState): Boolean =
 private fun isFullyClosed(entity: EntityState): Boolean =
   coverPosition(entity)?.let { it == 0 } ?: (entity.state == "closed")
 
-private fun assumedState(entity: EntityState): Boolean =
-  (entity.attributes["assumed_state"] as? JsonPrimitive)?.content == "true"
-
 /**
  * The state name `button_*_hide_states` lists are matched against: the cover's state, except that
  * an `open` cover part-way (0 < position < 100) is `partial_open`, as the upstream card defines it.
@@ -120,6 +117,10 @@ fun coverHideState(entity: EntityState?): String? {
 }
 
 /**
+ * The reference for the shutter cards' controls, state line and door: the document computes the
+ * same in-document from the cover's bindings ([CoverLive]), and `CoverLiveDocumentTest` checks it
+ * against these for every state.
+ *
  * Which of a cover's open / stop / close buttons to show, and which of those can be tapped. Follows
  * Home Assistant's frontend cover controls (`canOpen` / `canClose` in `data/cover.ts`):
  * - a button the cover's `supported_features` lacks is hidden;
@@ -138,7 +139,7 @@ fun coverControls(
 ): CoverControls {
   val features = entity?.let(::supportedFeatures) ?: CoverFeature.DEFAULT
   val unavailable = isUnavailable(entity)
-  val assumed = entity != null && assumedState(entity)
+  val assumed = entity != null && isAssumedState(entity)
   val hideState = coverHideState(entity)
 
   fun button(feature: Int, hideIn: Set<String>, enabled: (EntityState) -> Boolean) =
@@ -188,6 +189,13 @@ fun coverClosedFraction(entity: EntityState?, unknownFraction: Float): Float {
     "closing" -> 0.5f
     else -> unknownFraction
   }
+}
+
+/** Direction of in-progress motion, drives the motion-arrow overlay. */
+enum class GarageMotion {
+  Idle,
+  Opening,
+  Closing,
 }
 
 /** Direction of travel, for the in-drawing motion arrow. */

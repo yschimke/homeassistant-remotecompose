@@ -1,6 +1,7 @@
 package ee.schimke.ha.design
 
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardSnapshotBindings
 import kotlin.math.abs
@@ -283,7 +284,34 @@ object CardBindingRecipes {
       )
     }
 
-  private val byPrototype = listOf(GAUGE, TILE).associateBy { it.prototype }
+  /**
+   * `cover`: the shutter cards' [count] covers. Slot bindings carry each one's `state_int` and
+   * formatted state; the door's height, the position in its state line and which buttons it shows
+   * come from `current_position` and `supported_features`, as `HaLiveBindings.attributeFloats`
+   * pushes them on the direct path ([HaLiveBindings.ABSENT] when a cover reports none).
+   */
+  fun cover(count: Int): CardBindingRecipe =
+    with(CardBindingRecipe) {
+      CardBindingRecipe(
+        prototype = "cover",
+        floats =
+          buildMap {
+            for (i in 0 until count) {
+              for (attribute in listOf("current_position", "supported_features")) {
+                put(
+                  "\$$i.$attribute",
+                  first(number(attr(attribute, i)), literal(HaLiveBindings.ABSENT)),
+                )
+              }
+            }
+          },
+      )
+    }
+
+  /** [cover] for one cover: the built-in form a host may implement itself. */
+  val COVER: CardBindingRecipe = cover(1)
+
+  private val byPrototype = listOf(GAUGE, TILE, COVER).associateBy { it.prototype }
 
   fun forPrototype(prototype: String): CardBindingRecipe? = byPrototype[prototype]
 }

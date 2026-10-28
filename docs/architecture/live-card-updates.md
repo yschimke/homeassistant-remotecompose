@@ -5,7 +5,10 @@ byte stream. Home Assistant entity values change constantly, so every
 card needs a path from "new entity state" to "what the user sees". There
 are exactly **two** such paths, and every card must use one of them.
 
-This document is the contract. When you add or change a card converter,
+This document is the contract. **Path 1 is the default and the goal for every
+card** ([design principle 10](../design/design-principles.md#10-named-slots-not-baked-values));
+path 2 is for structure only, and each field a card re-encodes for is justified in
+[card-update-audit.md](card-update-audit.md). When you add or change a card converter,
 decide which path it takes and follow the rules below — otherwise the
 card silently goes stale on live data (the failure mode is invisible in a
 screenshot test, which renders a single frozen snapshot).
@@ -83,9 +86,12 @@ Use a custom signature when the entity id isn't in a standard `entity:` /
 every frame (e.g. `media_position` ticks every second — exclude it, the
 progress bar is baked).
 
-Re-encoding is more expensive than a binding push and doesn't animate, so
-prefer path 1. Reach for path 2 only when the content genuinely can't be
-expressed as a binding.
+Re-encoding is more expensive than a binding push, doesn't animate, and
+rules the card out of card designs, so path 1 is the default. Reach for path 2
+only for structure that genuinely can't be a slot, and record each field and
+its reason in [card-update-audit.md](card-update-audit.md). A missing binding
+kind is not such a reason: add it (a `state_int` mapping, an attribute float,
+a recipe) as the shutter cards did.
 
 ### Relative times
 
@@ -143,9 +149,12 @@ under a newer snapshot must never draw the stale bake, frame by frame.
 2. For each: is it a **host-reproducible** binding (`state`, `is_on`,
    `numeric_state`, `state_int`)? Bake it with `LiveValues`, using
    `formatState(entity)` for `<id>.state`.
-3. Anything else — formatted labels, lists, series, fractions, forecast
-   strips — means the card is a **re-encode** card: override
-   `dataSignature`.
+3. Anything else: derive it **in-document** from those bindings (a
+   fraction, a colour, a "· 40 %" suffix, which buttons are enabled), or add
+   the binding kind it needs (step 6). Only structure — a list whose length
+   changes, a series, a forecast strip — makes a card a **re-encode** card
+   (`dataSignature`), and each such field goes in
+   [card-update-audit.md](card-update-audit.md) with its reason.
 4. Never bake a bespoke string under `<id>.state`. The host pushes
    `formatState` there; a custom string belongs under a different
    `LiveValues.named(id, "…_label", …)` suffix (refreshed by re-encode)
@@ -160,7 +169,12 @@ under a newer snapshot must never draw the stale bake, frame by frame.
 
 ## Card matrix (current)
 
-- **Binding (path 1):** entity, glance, tile (a plain one — a tile that bakes a
+- **Binding (path 1):** the shutter cards (`custom:enhanced-shutter-card`,
+  `custom:garage-shutter-card`: the door's height, motion arrow, which buttons show and work, and
+  the "· 40 %" state line are computed in-document from `<id>.state`, `<id>.state_int`
+  (`HaLiveBindings.coverStateInt`) and the `current_position` / `supported_features` floats; a
+  card design gets the floats from the `cover` binding recipe, and only `assumed_state` is shape),
+  entity, glance, tile (a plain one — a tile that bakes a
   `state_content` line, a climate `hvac_action` badge or `features:` re-encodes, see below; a
   metered sensor tile's glyph reads `<id>.numeric_state`, decided from `device_class` and unit so
   it is baked even while the sensor is unavailable, and on the design path the template's `tile`
@@ -189,9 +203,7 @@ under a newer snapshot must never draw the stale bake, frame by frame.
   calendar, logbook, to-do, history-graph,
   statistics-graph, statistic, map, weather-forecast, thermostat /
   humidifier / light (arc fill + labels), media-control, Bambu (AMS /
-  print status), the shutter cards (`custom:enhanced-shutter-card`,
-  `custom:garage-shutter-card`: door height, which buttons are enabled,
-  and the state line are baked from the cover). Markdown also re-encodes on Jinja template changes via
+  print status). Markdown also re-encodes on Jinja template changes via
   `templateValues`.
 - **Static / self-driven:** heading, clock (RemoteCompose time ops),
   unsupported.

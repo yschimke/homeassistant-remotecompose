@@ -6,10 +6,12 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.cards.shutter.CoverButtonState.Disabled
 import ee.schimke.ha.rc.cards.shutter.CoverButtonState.Enabled
 import ee.schimke.ha.rc.cards.shutter.CoverButtonState.Hidden
+import ee.schimke.ha.rc.components.HaAction
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -170,7 +172,7 @@ class CoverControlsTest {
   }
 
   @Test
-  fun bothConvertersReEncodeWhenTheCoverChanges() {
+  fun bothConvertersRenderFromCardDesignsWhateverTheDoorDoes() {
     val enhanced =
       CardConfig(
         "custom:enhanced-shutter-card",
@@ -189,10 +191,26 @@ class CoverControlsTest {
     val opening = HaSnapshot(states = mapOf("cover.garage" to cover("opening", 10)))
     for ((converter, card) in
       listOf(EnhancedShutterCardConverter() to enhanced, GarageShutterCardConverter() to garage)) {
-      val before = converter.dataSignature(card, closed)
-      val after = converter.dataSignature(card, opening)
-      assertTrue(!before.isNullOrEmpty(), "${card.type} has a data signature")
-      assertNotEquals(before, after, "${card.type} re-encodes on a state change")
+      assertNull(converter.dataSignature(card, closed), "${card.type} never re-encodes")
+      val shape = assertNotNull(converter.designProperties(card, closed), card.type).shape
+      assertEquals(shape, converter.designProperties(card, opening)?.shape, "one design per door")
+      assertNotNull(
+        converter.designTemplate(assertNotNull(converter.designProperties(card, closed)))
+      )
+
+      // The template's position and features come from its recipe, keyed by slot.
+      val bindings = assertNotNull(converter.designBindings(card, opening))
+      assertEquals(10f, bindings.floats["cover.s0.current_position"])
+
+      // A template's tap runs the real cover's service, and only while that button works.
+      val close = HaAction.CallService("cover", "close_cover", "cover.s0")
+      val open = HaAction.CallService("cover", "open_cover", "cover.s0")
+      assertEquals(HaAction.None, converter.designAction(card, closed, 0, close))
+      assertEquals(
+        HaAction.CallService("cover", "open_cover", "cover.garage"),
+        converter.designAction(card, closed, 0, open),
+      )
+      assertEquals(HaAction.None, converter.designAction(card, opening, 0, HaAction.None))
     }
   }
 }

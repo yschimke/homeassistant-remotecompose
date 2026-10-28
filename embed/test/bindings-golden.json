@@ -692,9 +692,9 @@
                     "light.s1.status": 0,
                     "switch.s2.state_int": -1,
                     "switch.s2.status": 0,
-                    "cover.s3.state_int": -1,
+                    "cover.s3.state_int": 2,
                     "cover.s3.status": 0,
-                    "cover.s4.state_int": -1,
+                    "cover.s4.state_int": 0,
                     "cover.s4.status": 0,
                     "lock.s5.state_int": -1,
                     "lock.s5.status": 0,
@@ -2576,6 +2576,225 @@
                 },
                 "floats": {
                     "sensor.s0.numeric_state": 0.0
+                }
+            }
+        },
+        {
+            "name": "cover recipe",
+            "card": {
+                "type": "custom:garage-shutter-card",
+                "entities": [
+                    "cover.a",
+                    {
+                        "entity": "cover.b",
+                        "name": "Side"
+                    },
+                    "cover.c"
+                ]
+            },
+            "states": {
+                "cover.a": {
+                    "state": "opening",
+                    "attributes": {
+                        "friendly_name": "Main",
+                        "current_position": 40,
+                        "supported_features": 15
+                    }
+                },
+                "cover.b": {
+                    "state": "closed",
+                    "attributes": {
+                        "friendly_name": "B"
+                    }
+                },
+                "cover.c": {
+                    "state": "stopped",
+                    "attributes": {
+                        "friendly_name": "C",
+                        "current_position": "55.5",
+                        "supported_features": "nope"
+                    }
+                }
+            },
+            "recipe": {
+                "v": 1,
+                "prototype": "cover",
+                "floats": {
+                    "$0.current_position": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "current_position",
+                                    "slot": 0
+                                }
+                            },
+                            -9999.0
+                        ]
+                    },
+                    "$0.supported_features": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "supported_features",
+                                    "slot": 0
+                                }
+                            },
+                            -9999.0
+                        ]
+                    },
+                    "$1.current_position": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "current_position",
+                                    "slot": 1
+                                }
+                            },
+                            -9999.0
+                        ]
+                    },
+                    "$1.supported_features": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "supported_features",
+                                    "slot": 1
+                                }
+                            },
+                            -9999.0
+                        ]
+                    },
+                    "$2.current_position": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "current_position",
+                                    "slot": 2
+                                }
+                            },
+                            -9999.0
+                        ]
+                    },
+                    "$2.supported_features": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "supported_features",
+                                    "slot": 2
+                                }
+                            },
+                            -9999.0
+                        ]
+                    }
+                }
+            },
+            "recipe_json": {
+                "v": 1,
+                "prototype": "cover",
+                "floats": {
+                    "$0.current_position": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "current_position",
+                                    "slot": 0
+                                }
+                            },
+                            -9999.0
+                        ]
+                    },
+                    "$0.supported_features": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "supported_features",
+                                    "slot": 0
+                                }
+                            },
+                            -9999.0
+                        ]
+                    },
+                    "$1.current_position": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "current_position",
+                                    "slot": 1
+                                }
+                            },
+                            -9999.0
+                        ]
+                    },
+                    "$1.supported_features": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "supported_features",
+                                    "slot": 1
+                                }
+                            },
+                            -9999.0
+                        ]
+                    },
+                    "$2.current_position": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "current_position",
+                                    "slot": 2
+                                }
+                            },
+                            -9999.0
+                        ]
+                    },
+                    "$2.supported_features": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "supported_features",
+                                    "slot": 2
+                                }
+                            },
+                            -9999.0
+                        ]
+                    }
+                }
+            },
+            "expected": {
+                "strings": {
+                    "cover.s0.state": "Opening",
+                    "cover.s0.name": "Main",
+                    "cover.s1.state": "Closed",
+                    "cover.s1.name": "Side",
+                    "cover.s2.state": "Stopped",
+                    "cover.s2.name": "C"
+                },
+                "booleans": {
+                    "cover.s0.is_on": true,
+                    "cover.s0.is_available": true,
+                    "cover.s1.is_on": false,
+                    "cover.s1.is_available": true,
+                    "cover.s2.is_on": false,
+                    "cover.s2.is_available": true
+                },
+                "ints": {
+                    "cover.s0.state_int": 2,
+                    "cover.s0.status": 0,
+                    "cover.s1.state_int": 0,
+                    "cover.s1.status": 0,
+                    "cover.s2.state_int": 5,
+                    "cover.s2.status": 0
+                },
+                "floats": {
+                    "cover.s0.numeric_state": "NaN",
+                    "cover.s1.numeric_state": "NaN",
+                    "cover.s2.numeric_state": "NaN",
+                    "cover.s0.current_position": 40.0,
+                    "cover.s0.supported_features": 15.0,
+                    "cover.s1.current_position": -9999.0,
+                    "cover.s1.supported_features": -9999.0,
+                    "cover.s2.current_position": 55.5,
+                    "cover.s2.supported_features": -9999.0
                 }
             }
         }

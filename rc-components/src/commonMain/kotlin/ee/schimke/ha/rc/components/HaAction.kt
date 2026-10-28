@@ -7,6 +7,7 @@ import androidx.compose.remote.creation.compose.action.Action
 import androidx.compose.remote.creation.compose.action.combinedAction
 import androidx.compose.remote.creation.compose.action.hostAction
 import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
+import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rs
@@ -344,6 +345,32 @@ fun HaAction.toRemoteAction(): Action? {
       )
     }
   return lock.touched?.let { combinedAction(host, it) } ?: host
+}
+
+/**
+ * [toRemoteAction] for a control the card's live state can grey out (a closed door's close button):
+ * while [enabled] is false the tap sends `None`, which no host runs. [enabled] follows the card's
+ * bindings, so the control re-enables without a re-encode.
+ *
+ * A launcher widget's numeric action can't follow a binding (its platform may drop the metadata),
+ * so a widget capture, which is re-made for each change, decides once from [enabledNow]. A launcher
+ * *template* is captured from placeholder values, so it keeps the action and the card's
+ * `designAction` drops it at tap time if the live state greys the control.
+ */
+@Composable
+@Suppress("RestrictedApi")
+fun HaAction.toRemoteAction(enabled: RemoteBoolean, enabledNow: Boolean): Action? {
+  if (this is HaAction.None) return null
+  val registry = LocalWidgetActionRegistry.current
+  if (registry != null) {
+    val template = LocalTemplateBindings.current != null
+    return if (enabledNow || template) toRemoteAction() else null
+  }
+  val lock = haControlLock()?.takeIf { it.canUnlock && locksBehindControls() }
+  val payload = json.encodeToString(HaAction.serializer(), this)
+  val gate = if (lock == null) enabled else enabled.and(lock.isUnlocked)
+  val host = hostAction(HA_ACTION_NAME.rs, gate.select(payload.rs, NonePayload.rs))
+  return lock?.touched?.let { combinedAction(host, it) } ?: host
 }
 
 /** Whether a locked card holds this action back: the writes. An alarm panel has its own code. */
