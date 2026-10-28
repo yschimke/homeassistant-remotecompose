@@ -46,6 +46,7 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.CLASSIC_WEAR_SURFACE
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.HaControlLockMode
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.HaWearLevel
 import ee.schimke.ha.rc.components.RemoteWearContainer
@@ -252,6 +253,11 @@ internal fun WearRemoteCard(
               StablePictures.snapshot(card, snapshot),
               template = false,
               cardStyle = style,
+              // In a list a card with a slider is brushed by every scroll: its controls start
+              // locked. Full screen, it was opened to be used.
+              controlLock =
+                if (!fullScreen && cardHasDragControls(card)) HaControlLockMode.Locked
+                else HaControlLockMode.Off,
             )
           }
         }

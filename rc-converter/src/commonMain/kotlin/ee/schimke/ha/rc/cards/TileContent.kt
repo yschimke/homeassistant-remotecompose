@@ -195,8 +195,10 @@ internal object TileContent {
 
   /**
    * The tile's `features:` this renderer supports for [entity], in config order. Feature types that
-   * don't apply to the entity, or that a document can't do (a slider, a dropdown that opens), are
-   * left out; a dropdown mode select draws as buttons, since a document can't open a menu.
+   * don't apply to the entity, or that a document can't do (a dropdown that opens), are left out; a
+   * dropdown mode select draws as buttons, since a document can't open a menu. Sliders
+   * (`light-brightness`, `cover-position`, `media-player-volume-slider`, a slider-style
+   * `numeric-input`) drag in the document and send their value on release ([sliderFeature]).
    */
   fun features(
     card: CardConfig,
@@ -213,6 +215,10 @@ internal object TileContent {
         "climate-preset-modes" -> modeSelect(entity, obj, ClimatePresetModes, defaultIcons = false)
         "climate-fan-modes" -> modeSelect(entity, obj, ClimateFanModes, defaultIcons = false)
         "climate-swing-modes" -> modeSelect(entity, obj, ClimateSwingModes, defaultIcons = false)
+        "light-brightness",
+        "cover-position",
+        "media-player-volume-slider",
+        "numeric-input" -> sliderFeature(entity, obj)
         else -> null
       }
     }
@@ -277,6 +283,135 @@ internal object TileContent {
   }
 
   private fun round(value: Double, digits: Int): Double = plainHalfUp(value, digits).toDouble()
+
+  // --- sliders --------------------------------------------------------------------------------
+
+  private const val LIGHT_BRIGHTNESS_MODES_NONE = "onoff"
+  private const val COVER_SET_POSITION = 4
+  private const val MEDIA_VOLUME_SET = 4
+
+  /**
+   * A slider feature for [entity] (HA `hui-*-card-feature` with `ha-control-slider`), or null when
+   * the entity can't take it: a light without brightness, a cover without `set_position`, a media
+   * player without `volume_set`, or a `numeric-input` that isn't the slider style or isn't on an
+   * `input_number` / `number`.
+   *
+   * Each moves in whole steps from its minimum ([HaAction.SetValue]); the value it rests at is the
+   * entity's now, baked: the tile re-encodes on a data change ([bakes]).
+   */
+  fun sliderFeature(entity: EntityState, config: JsonObject): HaTileFeature.Slider? {
+    val domain = domainOf(entity.entityId)
+    val available = HaLiveBindings.isAvailable(entity.state)
+    fun percent(
+      service: String,
+      field: String,
+      label: String,
+      value: Double,
+      scale: Double = 1.0,
+    ): HaTileFeature.Slider {
+      val ticks = kotlin.math.round(value).toInt().coerceIn(0, 100)
+      return HaTileFeature.Slider(
+        ee.schimke.ha.rc.components.HaSliderSpec(
+          HaAction.SetValue(
+            domain = domain,
+            service = service,
+            entityId = entity.entityId,
+            field = field,
+            min = 0.0,
+            step = 1.0,
+            maxTicks = 100,
+            from = ticks,
+            ticks = ticks,
+            scale = scale,
+          ),
+          label = label,
+          unit = "%",
+          available = available,
+        )
+      )
+    }
+    val features = entity.number("supported_features")?.toInt() ?: 0
+    return when (config.string("type")) {
+      "light-brightness" -> {
+        if (domain != "light") return null
+        val modes = entity.attributes["supported_color_modes"] as? JsonArray
+        val dims =
+          modes?.any { (it as? JsonPrimitive)?.contentOrNull != LIGHT_BRIGHTNESS_MODES_NONE }
+            ?: (entity.number("brightness") != null)
+        if (!dims) return null
+        // An off light has no brightness: it rests at 0, and a drag turns it on at the new level.
+        val brightness = if (entity.state == "on") entity.number("brightness") ?: 255.0 else 0.0
+        percent("turn_on", "brightness_pct", "Brightness", brightness / 255.0 * 100.0)
+      }
+      "cover-position" -> {
+        if (domain != "cover" || features and COVER_SET_POSITION == 0) return null
+        percent(
+          "set_cover_position",
+          "position",
+          "Position",
+          entity.number("current_position") ?: if (entity.state == "open") 100.0 else 0.0,
+        )
+      }
+      "media-player-volume-slider" -> {
+        if (domain != "media_player" || features and MEDIA_VOLUME_SET == 0) return null
+        percent(
+          "volume_set",
+          "volume_level",
+          "Volume",
+          (entity.number("volume_level") ?: 0.0) * 100.0,
+          scale = 0.01,
+        )
+      }
+      "numeric-input" -> numericSlider(entity, config, domain, available)
+      else -> null
+    }
+  }
+
+  /**
+   * HA's `numeric-input` feature in its slider style, over an `input_number` / `number`'s own `min`
+   * … `max` in its `step`s. The buttons style (HA's default) isn't drawn: [targetTemperature] is
+   * the stepper this renderer has.
+   */
+  private fun numericSlider(
+    entity: EntityState,
+    config: JsonObject,
+    domain: String,
+    available: Boolean,
+  ): HaTileFeature.Slider? {
+    if (domain != "input_number" && domain != "number") return null
+    if (config.string("style") != "slider") return null
+    val min = entity.number("min") ?: return null
+    val max = entity.number("max") ?: return null
+    val step = entity.number("step")?.takeIf { it > 0 } ?: 1.0
+    // Whole steps that stay within `max`: a range that isn't a multiple of the step stops short of
+    // it rather than overshoot (min 0, max 11, step 4 reaches 8). The hair absorbs float error in
+    // a range that is a multiple (0.1 steps up to 1.0).
+    val maxTicks = kotlin.math.floor((max - min) / step + 1e-9).toInt()
+    // Past a few thousand steps a pixel moves more than one: still settable, not by the step.
+    if (maxTicks !in 1..100_000) return null
+    val value = entity.state.toDoubleOrNull() ?: min
+    val ticks = kotlin.math.round((value - min) / step).toInt().coerceIn(0, maxTicks)
+    return HaTileFeature.Slider(
+      ee.schimke.ha.rc.components.HaSliderSpec(
+        HaAction.SetValue(
+          domain = domain,
+          service = "set_value",
+          entityId = entity.entityId,
+          field = "value",
+          min = min,
+          step = step,
+          maxTicks = maxTicks,
+          from = ticks,
+          ticks = ticks,
+        ),
+        // The tile already names the entity: the track shows the value alone.
+        label = "",
+        unit = (entity.attributes["unit_of_measurement"] as? JsonPrimitive)?.contentOrNull ?: "",
+        decimals = decimalPlaces(step),
+        available = available && entity.state.toDoubleOrNull() != null,
+      )
+    )
+  }
 
   // --- mode selects ---------------------------------------------------------------------------
 

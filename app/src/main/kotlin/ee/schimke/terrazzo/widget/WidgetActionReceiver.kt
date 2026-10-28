@@ -45,6 +45,13 @@ class WidgetActionReceiver : BroadcastReceiver() {
         "documentTime=${decodedMetadata?.documentTime} " +
         "receivedAt=$receivedAt",
     )
+    // A locked card's control: its action is in the metadata only (None while locked). Without
+    // metadata the static payload would run it whatever the lock says, so it fails closed.
+    val requiresMetadata = intent.getBooleanExtra(EXTRA_REQUIRES_METADATA, false)
+    if (requiresMetadata && !metadataWasForwarded) {
+      Log.w(TAG, "Refusing a locked control on widget $widgetId: the platform sent no metadata")
+      return
+    }
     // Prefer the value resolved by RemoteCompose at interaction time. The mirrored payload keeps
     // fixed actions working on platform versions whose RemoteViews bridge drops the metadata
     // callback. Dynamic PINs deliberately fail closed because their capture-time fallback cannot
@@ -78,6 +85,24 @@ class WidgetActionReceiver : BroadcastReceiver() {
     val pending = goAsync()
     runnerScope.launch {
       try {
+        // A slider's value exists only in the tap's metadata, which the confirmation activity
+        // can't receive (its PendingIntent is immutable), and a locked card's control comes here
+        // rather than to that activity too: a high-risk one runs only while the
+        // app's controls are unlocked.
+        if (
+          (action is HaAction.SetValue || requiresMetadata) &&
+            !WidgetActionRunner.runsWithoutAsking(context.applicationContext, widgetId, call)
+        ) {
+          Log.w(TAG, "Refusing a high-risk control on widget $widgetId while controls are locked")
+          context
+            .terrazzoGraph()
+            .logStore
+            .recordLocalAction(
+              "Widget control refused: unlock controls in the app",
+              actionEntityId(call),
+            )
+          return@launch
+        }
         WidgetActionRunner.run(context.applicationContext, widgetId, call)
       } finally {
         pending.finish()
@@ -97,6 +122,8 @@ class WidgetActionReceiver : BroadcastReceiver() {
         is HaAction.AlarmKey -> "Widget alarm key ${action.key}" to action.entityId
         is HaAction.AlarmPin -> "Widget alarm PIN submitted" to action.entityId
         is HaAction.AlarmIntent -> "Widget alarm ${action.service}" to action.entityId
+        is HaAction.SetValue ->
+          "Widget set ${action.domain}.${action.service} ${action.field}" to action.entityId
         HaAction.None -> return
       }
     context.terrazzoGraph().logStore.recordLocalAction(summary, entityId)
@@ -115,6 +142,12 @@ class WidgetActionReceiver : BroadcastReceiver() {
      * payload names template slots, never real entities, so this one wins when present.
      */
     const val EXTRA_RESOLVED_ACTION = "resolved_action"
+
+    /**
+     * Set on a locked card's control (`WidgetActionRegistry.lockedEntries`): the tap runs only with
+     * the RemoteCompose metadata, which says whether the card was unlocked.
+     */
+    const val EXTRA_REQUIRES_METADATA = "requires_metadata"
 
     /** Hard-coded by the platform RemoteViews RemoteCompose bridge; no public constant exists. */
     const val EXTRA_REMOTE_COMPOSE_METADATA = "remotecompose_metadata"
@@ -140,6 +173,10 @@ internal fun trustedWidgetAction(
   // own is the same entity's PIN with none yet (decodeDeliveredWidgetAction fills them in).
   if (action is HaAction.AlarmPin && own is HaAction.AlarmPin && own.pin.isEmpty())
     return own.entityId == action.entityId
+  // A slider's position is where the finger left it: the app's own is the same slider resting where
+  // it was drawn, and only the position may differ, within the slider's range.
+  if (action is HaAction.SetValue && own is HaAction.SetValue)
+    return action.inRange && own.copy(ticks = action.ticks) == action
   return own == action
 }
 
@@ -149,6 +186,10 @@ internal fun decodeDeliveredWidgetAction(
   fallbackPayload: String?,
   resolvedAction: String? = null,
 ): HaAction? {
+  // A locked card's control sends `None` until it is unlocked: that holds whatever the app's own
+  // payload for the tap is, a design template's resolved action included.
+  val delivered = decodeHaAction(decodeWidgetActionMetadata(remoteComposeMetadata)?.actionPayload)
+  if (delivered == HaAction.None) return HaAction.None
   resolvedAction?.let { resolved ->
     val action = decodeHaAction(resolved) ?: return null
     if (action !is HaAction.AlarmPin || action.pin.isNotEmpty()) return action

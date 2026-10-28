@@ -61,7 +61,8 @@ fun tileNaturalHeightDp(featureRows: Int): Int =
  * Rows of features below the tile's name and state, after HA's `computeCardFeatureRows`: one per
  * feature at the bottom; with [HaTileFeaturePosition.Inline] the first feature sits beside the name
  * and the rest share rows two at a time. A stepper ([HaTileFeature.NumberButtons]) keeps a row to
- * itself: at half a tile its two square buttons leave its value no room.
+ * itself: at half a tile its two square buttons leave its value no room. So does a slider
+ * ([HaTileFeature.Slider]): half a tile is too short a throw to set a value by.
  */
 fun tileFeatureRows(
   features: List<HaTileFeature>,
@@ -74,7 +75,8 @@ fun tileFeatureRows(
         var pair: HaTileFeature? = null
         for (feature in features.drop(1)) {
           when {
-            feature is HaTileFeature.NumberButtons -> add(listOf(feature))
+            feature is HaTileFeature.NumberButtons || feature is HaTileFeature.Slider ->
+              add(listOf(feature))
             pair == null -> pair = feature
             else -> {
               add(listOf(pair, feature))
@@ -170,6 +172,7 @@ internal fun TileFeature(
     // The steppers keep the primary ink, as HA's number buttons do; the accent marks a selection.
     is HaTileFeature.NumberButtons -> NumberButtons(feature, heightDp, subject)
     is HaTileFeature.ModeSelect -> ModeSelect(feature, accent, heightDp, subject)
+    is HaTileFeature.Slider -> RemoteHaSlider(feature.spec, accent, heightDp, subject)
   }
 }
 
@@ -312,6 +315,33 @@ private fun ModeSelect(
           )
         }
       }
+    }
+  }
+}
+
+/**
+ * A tile's Wear form when it has a slider: the compact tile (icon, name, state) over its first
+ * slider, at the inline feature height. A Wear container is too short for the full tile's feature
+ * row ([tileNaturalHeightDp]), and the other features are taps a watch reaches full screen; the
+ * slider is the control worth keeping in the card. Null [slider] draws the compact tile alone.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaTileCompactWithSlider(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
+  val slider = data.features.firstOrNull { it is HaTileFeature.Slider } as? HaTileFeature.Slider
+  val compact = data.copy(features = emptyList())
+  if (slider == null) {
+    RemoteHaTileCompact(compact, modifier)
+    return
+  }
+  val accent = entityLook(data.entityId, data.accent, live = false).accent
+  RemoteColumn(
+    modifier = modifier.fillMaxWidth(),
+    verticalArrangement = RemoteArrangement.spacedBy(HaSpace.S.rdp),
+  ) {
+    RemoteHaTileCompact(compact, RemoteModifier.fillMaxWidth())
+    RemoteBox(modifier = RemoteModifier.fillMaxWidth().padding(horizontal = HaSpace.M.rdp)) {
+      RemoteHaSlider(slider.spec, accent, TileInlineFeatureHeightDp, data.name)
     }
   }
 }

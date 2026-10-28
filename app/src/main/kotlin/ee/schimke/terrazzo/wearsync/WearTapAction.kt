@@ -54,15 +54,32 @@ internal fun wearTapCall(
   require(!readOnly) { "This host is read-only" }
   val card = requireNotNull(publishedCards[rawCard]) { "Card is no longer on the watch" }
   requireNotNull(tapped) { "Unreadable action" }
-  require(tapped is HaAction.Toggle || tapped is HaAction.CallService) {
-    "Only toggles and service calls run from the watch"
+  require(
+    tapped is HaAction.Toggle || tapped is HaAction.CallService || tapped is HaAction.SetValue
+  ) {
+    "Only toggles, service calls and sliders run from the watch"
   }
   val produced = cardActions(card)
+  if (tapped is HaAction.SetValue) return sliderCall(tapped, produced)
   if (tapped in produced) return tapped
   val alarm =
     (tapped as? HaAction.CallService)?.let { alarmCall(it, produced) }
       ?: throw IllegalArgumentException("The card doesn't make this call")
   return alarm
+}
+
+/**
+ * The call a watch slider's release makes: the card's own slider ([produced] holds it resting where
+ * the phone's copy of the card draws it), moved to where the watch's finger left it. Only the
+ * position may differ, within the slider's range; one drawn from a value the phone has since seen
+ * change rests elsewhere, and is refused rather than guessed.
+ */
+private fun sliderCall(tapped: HaAction.SetValue, produced: Set<HaAction>): HaAction {
+  require(tapped.inRange) { "The slider doesn't reach that value" }
+  require(produced.any { it is HaAction.SetValue && it.copy(ticks = tapped.ticks) == tapped }) {
+    "The card doesn't make this call"
+  }
+  return requireNotNull(tapped.toCallService()) { "The slider didn't move" }
 }
 
 /**

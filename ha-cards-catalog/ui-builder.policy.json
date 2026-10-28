@@ -1994,6 +1994,51 @@
       "group": "Card layout",
       "nativeOnly": true
     },
+    "ha-cards/tile-compact-slider": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaTileCompactSlider",
+      "displayName": "Tile compact slider",
+      "group": "Card layout",
+      "nativeOnly": true
+    },
+    "ha-cards/tile-wear-cell": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaTileWearCell",
+      "displayName": "Tile Wear cell",
+      "group": "Card layout",
+      "nativeOnly": true,
+      "shelfRole": "Container",
+      "slotCapabilities": [
+        {
+          "name": "slider",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        },
+        {
+          "name": "other",
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          },
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        }
+      ]
+    },
     "ha-cards/min-size-gate": {
       "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDesignPartsKt.HaMinSizeGate",
       "displayName": "Min size gate",

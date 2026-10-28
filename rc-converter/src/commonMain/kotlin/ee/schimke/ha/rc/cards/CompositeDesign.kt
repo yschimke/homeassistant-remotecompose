@@ -195,6 +195,7 @@ internal object CompositeDesign {
       is HaAction.AlarmKey -> action.copy(entityId = rename(action.entityId))
       is HaAction.AlarmPin -> action.copy(entityId = rename(action.entityId))
       is HaAction.AlarmIntent -> action.copy(entityId = rename(action.entityId))
+      is HaAction.SetValue -> action.copy(entityId = rename(action.entityId))
       is HaAction.Navigate,
       is HaAction.Url,
       HaAction.None -> action

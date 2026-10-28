@@ -131,6 +131,13 @@ sealed interface HaTileFeature {
    * its label (HA's `icons` style).
    */
   data class ModeSelect(val options: List<HaTileModeOption>, val showIcons: Boolean) : HaTileFeature
+
+  /**
+   * A slider over one of the entity's values (HA `light-brightness`, `cover-position`,
+   * `media-player-volume-slider`, a `numeric-input` in the slider style): drawn by
+   * [RemoteHaSlider], sending [HaSliderSpec.action] on release.
+   */
+  data class Slider(val spec: HaSliderSpec) : HaTileFeature
 }
 
 /** One option of a [HaTileFeature.ModeSelect]. */

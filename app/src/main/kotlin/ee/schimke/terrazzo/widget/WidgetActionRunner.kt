@@ -13,6 +13,7 @@ import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.terrazzoGraph
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -46,7 +47,8 @@ internal object WidgetActionRunner {
       action is HaAction.CallService ||
       action is HaAction.AlarmIntent ||
       action is HaAction.AlarmPin ||
-      action is HaAction.AlarmKey
+      action is HaAction.AlarmKey ||
+      action is HaAction.SetValue
 
   private val alarmPairing = WidgetAlarmPairing()
 
@@ -59,8 +61,26 @@ internal object WidgetActionRunner {
     when {
       !runs(tapped) -> null
       tapped is HaAction.CallService || tapped is HaAction.Toggle -> tapped
+      // A slider released where it rested is a tap, not a change: nothing to send.
+      tapped is HaAction.SetValue -> tapped.toCallService()
       else -> alarmPairing.accept(widgetId, tapped)
     }
+
+  /**
+   * Whether [call] may run from widget [widgetId] without the confirmation a high-risk tap gets
+   * ([WidgetConfirmActivity]): it isn't high risk on the widget's server, or the app's controls are
+   * unlocked (its write mode), as the confirmation itself would skip asking.
+   */
+  suspend fun runsWithoutAsking(context: Context, widgetId: Int, call: HaAction): Boolean {
+    val graph = context.terrazzoGraph()
+    val entry = graph.widgetStore.get(widgetId) ?: return false
+    val snapshot = graph.offlineCache.latestSnapshot(entry.baseUrl)
+    if (snapshot != null && !ee.schimke.ha.rc.HighRiskActions.isHighRisk(call, snapshot)) {
+      return true
+    }
+    return graph.sessionWriteMode.writeMode.value
+      ?: graph.preferencesStore.permanentWriteMode.first()
+  }
 
   /** Performs [action], a call [prepare] returned. */
   suspend fun run(context: Context, widgetId: Int, action: HaAction) {
@@ -289,6 +309,7 @@ internal fun actionEntityId(action: HaAction): String? =
     is HaAction.AlarmKey -> action.entityId
     is HaAction.AlarmPin -> action.entityId
     is HaAction.AlarmIntent -> action.entityId
+    is HaAction.SetValue -> action.entityId
     is HaAction.Navigate,
     is HaAction.Url,
     HaAction.None -> null

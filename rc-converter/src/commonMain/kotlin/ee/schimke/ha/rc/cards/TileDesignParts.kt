@@ -7,10 +7,12 @@ import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
+import ee.schimke.ha.rc.components.HaTileFeature
 import ee.schimke.ha.rc.components.RemoteHaIconChip
 import ee.schimke.ha.rc.components.RemoteHaIconHero
 import ee.schimke.ha.rc.components.RemoteHaTile
 import ee.schimke.ha.rc.components.RemoteHaTileCompact
+import ee.schimke.ha.rc.components.RemoteHaTileCompactWithSlider
 import ee.schimke.ha.rc.components.RemoteHaWideHero
 import ee.schimke.ha.rc.design.CardDesignComponent
 import ee.schimke.ha.rc.design.LocalCardInput
@@ -101,6 +103,26 @@ object TileDesignParts {
   }
 
   /**
+   * `ha-cards/tile-compact-slider`: a Wear card for a tile with a slider: the compact tile over the
+   * slider ([RemoteHaTileCompactWithSlider]).
+   */
+  @Composable
+  fun CompactSlider(modifier: RemoteModifier) {
+    RemoteHaTileCompactWithSlider(data(), modifier)
+  }
+
+  /**
+   * `ha-cards/tile-wear-cell`: which Wear form the card takes, chosen at capture: [slider] for a
+   * tile with a slider, else [other] (the height tiers). Not a size tier: the AndroidX player
+   * doesn't drag a touch expression inside a state layout, so a slider is never under one.
+   */
+  @Composable
+  fun WearCell(slider: @Composable () -> Unit, other: @Composable () -> Unit) {
+    val (card, snapshot) = input()
+    if (converter.features(card, snapshot).any { it is HaTileFeature.Slider }) slider() else other()
+  }
+
+  /**
    * `ha-cards/tile-launcher-cell`: which launcher form fits the cell: [hero] or [row] when the cell
    * has a hero scale and the tile no features, [features] when it has features, else [other].
    */
@@ -132,6 +154,14 @@ object TileDesignParts {
           WideHero(node.string("scale", "row"), modifier)
         },
       "ha-cards/tile-features-gate" to { _, modifier -> FeaturesGate(modifier) },
+      "ha-cards/tile-compact-slider" to { _, modifier -> CompactSlider(modifier) },
+      "ha-cards/tile-wear-cell" to
+        { node, modifier ->
+          WearCell(
+            slider = { node.Slot("slider", modifier) },
+            other = { node.Slot("other", modifier) },
+          )
+        },
       "ha-cards/tile-launcher-cell" to
         { node, modifier ->
           LauncherCell(

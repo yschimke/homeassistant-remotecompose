@@ -98,4 +98,61 @@ class WidgetActionRunnerTest {
     )
     assertNull(optimisticState(HaAction.Toggle("cover.garage"), "closed"))
   }
+
+  private val slider =
+    HaAction.SetValue(
+      domain = "light",
+      service = "turn_on",
+      entityId = "light.kitchen",
+      field = "brightness_pct",
+      min = 0.0,
+      step = 1.0,
+      maxTicks = 100,
+      from = 30,
+      ticks = 30,
+    )
+
+  @Test
+  fun aSliderMayMoveOnlyItsPositionWithinItsRange() {
+    val own = encodeHaAction(slider)
+    assertTrue(trustedWidgetAction(slider.copy(ticks = 75), own, null))
+    assertTrue(trustedWidgetAction(slider.copy(ticks = 0), own, null))
+    // Past either end of the slider the app drew.
+    assertFalse(trustedWidgetAction(slider.copy(ticks = 101), own, null))
+    assertFalse(trustedWidgetAction(slider.copy(ticks = -1), own, null))
+    // Anything but the position: another field, another entity, another range or resting point.
+    assertFalse(trustedWidgetAction(slider.copy(ticks = 75, field = "color_temp"), own, null))
+    assertFalse(trustedWidgetAction(slider.copy(ticks = 75, entityId = "light.porch"), own, null))
+    assertFalse(trustedWidgetAction(slider.copy(ticks = 75, maxTicks = 255), own, null))
+    assertFalse(trustedWidgetAction(slider.copy(ticks = 75, from = 10), own, null))
+    assertFalse(trustedWidgetAction(slider.copy(ticks = 75, scale = 2.0), own, null))
+  }
+
+  @Test
+  fun aSliderReleasedWhereItRestedSendsNothing() {
+    assertNull(WidgetActionRunner.prepare(1, slider))
+    val moved =
+      assertIs<HaAction.CallService>(WidgetActionRunner.prepare(1, slider.copy(ticks = 62)))
+    assertEquals("light", moved.domain)
+    assertEquals("turn_on", moved.service)
+    assertEquals(
+      kotlinx.serialization.json.JsonPrimitive(62L),
+      moved.serviceData["brightness_pct"],
+    )
+  }
+
+  @Test
+  fun aLockedControlSendsNoneWhateverItsResolvedAction() {
+    val toggle = HaAction.Toggle("light.kitchen")
+    val lockedTap =
+      encodeHaAction(HaAction.None) +
+        "\n--RC-METADATA-V1--\nlight.kitchen\n--RC-VALUE--\nOn\n--RC-TIME--\n10:00:00"
+    // A design template's tap resolves to the card's own action, but the locked card held it back.
+    assertEquals(
+      HaAction.None,
+      decodeDeliveredWidgetAction(lockedTap, encodeHaAction(toggle), encodeHaAction(toggle)),
+    )
+    assertEquals(HaAction.None, decodeDeliveredWidgetAction(lockedTap, encodeHaAction(toggle)))
+    assertFalse(WidgetActionRunner.runs(HaAction.None))
+  }
 }

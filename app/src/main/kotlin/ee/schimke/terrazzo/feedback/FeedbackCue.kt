@@ -44,6 +44,8 @@ fun feedbackCueFor(action: HaAction, stateOf: (String) -> String? = { null }): F
         else -> FeedbackCue.Press
       }
     is HaAction.AlarmKey -> FeedbackCue.Key
+    // A slider released where it rested sends nothing to feel.
+    is HaAction.SetValue -> if (action.isUnchanged) null else FeedbackCue.Press
     is HaAction.AlarmPin,
     is HaAction.AlarmIntent -> FeedbackCue.Confirm
     is HaAction.MoreInfo,
