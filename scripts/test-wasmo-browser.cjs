@@ -230,9 +230,18 @@ async function screenshot(page, name) {
       }
       throw new Error(`Missing button: ${value}`);
     };
+    // HA can't confirm the revoke (502): sign-out asks whether to forget the saved sign-in anyway.
+    // An unanswered confirm() blocks the page, so answer it: keep it, which leaves the error.
+    const prompts = [];
+    authPage.on('dialog', async dialog => {
+      prompts.push(dialog.message());
+      await dialog.dismiss();
+    });
     await authFailure(502);
     await clickText(authPage, 'Sign out');
     await label(authPage, 'Could not sign out');
+    assert.equal(prompts.length, 1);
+    assert.match(prompts[0], /could not confirm the sign-out/);
     await screenshot(authPage, 'wasmo-session-signout-error.png');
     await authFailure(0);
     await clickText(authPage, 'OK');
