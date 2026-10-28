@@ -38,7 +38,14 @@ Modifier.oneHandedGesture(
 `OneHandedGestureDefaults` scrolls a `ScalingLazyListState` (`scrollDownToNextItem`) and pages a
 `PagerState` (`scrollToNextPage`). The hint indicators (`OneHandedGestureClickIndicator`,
 `OneHandedGestureScrollIndicator`, `OneHandedGestureVerticalPageIndicator`) are drawn by the system
-on its own schedule (Always / Daily), so the app never builds a tutorial. Below API 37, or on a watch
+on its own schedule (Always / Daily), so the app never builds a tutorial.
+
+Every target goes through `rememberOneHandedGesture`, never `Modifier.oneHandedGesture` directly.
+`oneHandedGesture` wraps `onGesture` in a new lambda on each call, so a fresh modifier never equals
+the last one, and each recomposition re-registers the target. Re-registering re-asks the system
+whether to hint, and a yes replays the hint. The list and card screens recompose on every live entity
+value, so the scroll hint played continually. The remembered modifier only changes when the target
+does (its configuration, label or interaction source). Below API 37, or on a watch
 without the gestures, the modifier does nothing, so `minSdk = 30` needs no checks.
 
 The [design guidance](https://developer.android.com/design/ui/wear/guides/patterns/gestures) sets
