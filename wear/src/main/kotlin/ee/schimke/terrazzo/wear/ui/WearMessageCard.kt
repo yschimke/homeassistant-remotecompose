@@ -21,6 +21,16 @@ internal fun WearMessageCard(
   values: Map<String, EntityValue>,
   onSend: (suspend (String, Map<String, String>) -> Unit)?,
 ) {
+  // Only this card's values: a delta for another card's entity leaves this one skipped.
+  WearMessageCardContent(rawJson, rememberCardValues(rawJson, values), onSend)
+}
+
+@Composable
+private fun WearMessageCardContent(
+  rawJson: String,
+  values: Map<String, EntityValue>,
+  onSend: (suspend (String, Map<String, String>) -> Unit)?,
+) {
   val drafts = remember(rawJson) { RcInputDrafts() }
   val scope = rememberCoroutineScope()
   var pending by remember(rawJson) { mutableStateOf(false) }
