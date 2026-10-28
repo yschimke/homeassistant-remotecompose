@@ -10,6 +10,7 @@ import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocum
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.CompositionLocalProvider
 import ee.schimke.ha.rc.components.HaGaugeData
+import ee.schimke.ha.rc.components.HaMotion
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.LiveValues
@@ -19,6 +20,8 @@ import ee.schimke.ha.rc.components.RemoteHaGauge
 import ee.schimke.ha.rc.components.RemoteHaToggleSwitch
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.rc.m3.LocalRcMotionMode
+import ee.schimke.rc.m3.LocalRcReduceMotion
+import ee.schimke.rc.m3.LocalRcSpringsSupported
 import ee.schimke.rc.m3.RcMotionMode
 import ee.schimke.rc.m3.RcMotionScheme
 import ee.schimke.rc.m3.RcMotionSpec
@@ -133,6 +136,78 @@ class MotionSchemeSwitchTest {
     assertEquals(
       setOf(RcMotionScheme.ambient().spatial.wire()),
       animationsOf(RcMotionMode.Ambient, gauge),
+    )
+  }
+
+  @Test
+  fun consoleLampWarmsFastAndCoolsSlowly() {
+    val instrument = HaMotion.Instrument
+    assertEquals(
+      setOf(
+        instrument.spatialFast.wire(),
+        instrument.effectsFast.wire(),
+        instrument.effectsSlow.wire(),
+      ),
+      animations(HaUberTheme.Console),
+    )
+  }
+
+  @Test
+  fun lcdSnapsTheKnobAndFadesTheSegments() {
+    assertEquals(setOf(HaMotion.Lcd.effectsFast.wire()), animations(HaUberTheme.Lcd))
+  }
+
+  @Test
+  fun everyStyleTakesItsFamilysArchetype() {
+    assertEquals(HaMotion.Classic, HaUberTheme.Classic.motion)
+    assertEquals(RcMotionScheme.expressive(), HaUberTheme.Expressive.motion)
+    assertEquals(RcMotionScheme.standard(), HaUberTheme.HomeAssistant.motion)
+    for (theme in listOf(HaUberTheme.Console, HaUberTheme.Trinitron, HaUberTheme.Braun)) {
+      assertEquals(HaMotion.Instrument, theme.motion, theme.id)
+    }
+    assertEquals(HaMotion.Lcd, HaUberTheme.Lcars.motion)
+    assertEquals(HaMotion.Nixie, HaUberTheme.Nixie.motion)
+    assertEquals(HaMotion.Cupertino, HaUberTheme.Cupertino.motion)
+    assertEquals(RcMotionScheme.standard(), HaUberTheme.Mushroom.motion)
+  }
+
+  @Test
+  fun reduceMotionAppliesOverAmbient() {
+    val animations =
+      animationsOf(RcMotionMode.Ambient) {
+        CompositionLocalProvider(LocalRcReduceMotion provides true) {
+          ProvideHaUberTheme(HaUberTheme.Expressive, darkTheme = false) {
+            RemoteHaToggleSwitch(
+              isOn = LiveValues.isOn("switch.kitchen", initial = false)!!,
+              activeAccent = currentRemoteHaTheme().linkText,
+              inactiveAccent = currentRemoteHaTheme().divider,
+            )
+          }
+        }
+      }
+    assertEquals(setOf(RcMotionScheme.ambient().effectsFast.wire()), animations)
+  }
+
+  @Test
+  fun unsupportedSpringsEncodeAsTweens() {
+    val animations = animationsOf {
+      CompositionLocalProvider(LocalRcSpringsSupported provides false) {
+        ProvideHaUberTheme(HaUberTheme.Expressive, darkTheme = false) {
+          RemoteHaToggleSwitch(
+            isOn = LiveValues.isOn("switch.kitchen", initial = false)!!,
+            activeAccent = currentRemoteHaTheme().linkText,
+            inactiveAccent = currentRemoteHaTheme().divider,
+          )
+        }
+      }
+    }
+    val expressive = RcMotionScheme.expressive()
+    assertEquals(
+      setOf(
+        (expressive.spatialFast as RcMotionSpec.Spring).asTween().wire(),
+        (expressive.effectsFast as RcMotionSpec.Spring).asTween().wire(),
+      ),
+      animations,
     )
   }
 }

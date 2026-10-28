@@ -85,15 +85,15 @@ fun RemoteHaToggleButton(
 }
 
 /**
- * The toggle button's accent: tweened between inactive ↔ active so a host writeback crossfades the
- * icon halo and tint instead of snapping. Falls back to the active accent unconditionally when
- * there's no live binding (preview / non-toggleable / null entityId). An unavailable entity takes
- * the look's neutral accent instead.
+ * The toggle button's accent: animated (the style's `effectsFast`) between inactive ↔ active so a
+ * host writeback crossfades the icon halo and tint instead of snapping. Falls back to the active
+ * accent unconditionally when there's no live binding (preview / non-toggleable / null entityId).
+ * An unavailable entity takes the look's neutral accent instead.
  */
 @Composable
 private fun toggleAccent(data: HaButtonData, look: HaEntityLook): RemoteColor {
   val isOnBinding = look.isOn ?: return look.accent
-  val accentProgress = animateRemoteFloat(isOnBinding.select(1f.rf, 0f.rf), durationSeconds = 0.20f)
+  val accentProgress = animateRemoteFloat(isOnBinding.select(1f.rf, 0f.rf), haMotion().effectsFast)
   return look.available(
     tween(data.accent.themed().inactiveAccent, data.accent.themed().activeAccent, accentProgress)
   )

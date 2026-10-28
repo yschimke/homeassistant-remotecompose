@@ -3,6 +3,7 @@
 package ee.schimke.ha.rc.components
 
 import androidx.compose.remote.creation.compose.state.RemoteFloat
+import androidx.compose.remote.creation.compose.state.max
 import androidx.compose.runtime.Composable
 import ee.schimke.rc.m3.LocalRcAnimationsEnabled
 import ee.schimke.rc.m3.RcMotionSpec
@@ -61,4 +62,19 @@ fun animateRemoteFloat(input: RemoteFloat, spec: RcMotionSpec): RemoteFloat {
     return input
   }
   return input.animate(spec)
+}
+
+/**
+ * [input] rising by [attack] and falling by [release] (`animateAttackRelease` in
+ * `rc-material3-motion`), under the same capture rules as [animateRemoteFloat].
+ */
+@Composable
+fun animateAttackRelease(
+  input: RemoteFloat,
+  attack: RcMotionSpec,
+  release: RcMotionSpec,
+): RemoteFloat {
+  val rising = animateRemoteFloat(input, attack)
+  val falling = animateRemoteFloat(input, release)
+  return if (rising === falling || attack == release) rising else max(rising, falling)
 }

@@ -68,6 +68,7 @@ import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.wearBackground
 import ee.schimke.ha.rc.converterFor
+import ee.schimke.rc.m3.LocalRcSpringsSupported
 import ee.schimke.terrazzo.wear.data.toEntityState
 import ee.schimke.terrazzo.wear.sync.WearDirectAccess
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
@@ -608,6 +609,9 @@ internal fun SlotContent(
     LocalTemplateBindings provides if (template) TemplateBindings() else null,
     LocalPictureImageStrategy provides
       if (template) PictureImageStrategy.DefaultAppUrl else NO_PICTURES,
+    // The watch's system widget renderer plays these documents; its spring support is unverified,
+    // so a style's springs encode as tweens of about the same length.
+    LocalRcSpringsSupported provides false,
   ) {
     ProvideCardRegistry(registry) {
       RemoteMaterialTheme(colorScheme = colors) {

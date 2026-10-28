@@ -250,14 +250,14 @@ fun HaReading.color(): RemoteColor = meterColor(value, kind.colorRule(unit))
 
 /**
  * Where the value sits on the reading's scale, `0..1`, clamped — computed in-document from the live
- * value and tweened so each host update animates rather than snaps.
+ * value and animated on the style's `spatial` motion token, so each host update moves rather than
+ * snaps. The fraction animates, not the value: motion tokens are for `0..1`.
  */
 @Composable
-fun HaReading.fraction(durationSeconds: Float = 0.45f): RemoteFloat =
-  normalizedFraction(
-    animateRemoteFloat(value, durationSeconds = durationSeconds, easing = RcEasing.Standard),
-    min.toFloat().rf,
-    max.toFloat().rf,
+fun HaReading.fraction(): RemoteFloat =
+  animateRemoteFloat(
+    normalizedFraction(value, min.toFloat().rf, max.toFloat().rf),
+    haMotion().spatial,
   )
 
 /** `(value - min) / (max - min)` clamped to `0..1`; a degenerate span reads as empty. */

@@ -1,8 +1,8 @@
 # Animation-first design systems
 
-Status: **in progress**, 2026-10-28. Implemented: the motion layer (§2) and its schemes, the
-M3 Expressive switch (§3), motion tokens on the switch, gauge and dials, and ambient mode (§5)
-on the TV kiosk. The rest is proposal.
+Status: **implemented**, 2026-10-28: the motion layer (§2) on every animated card part, the three
+systems (§3–§5) and the archetypes for every card style (§6). Open: the further Expressive building
+blocks in §3's table beyond the switch, and the module's move to `rc-players` (§8).
 
 Today every uber theme ([card-component-system.md §5](../architecture/card-component-system.md#5-uber-themes))
 is designed as a set of still frames, and motion is added afterwards: a dozen `animateRemoteFloat`
@@ -89,16 +89,18 @@ val LocalRcMotionScheme: ProvidableCompositionLocal<RcMotionScheme>
 | Part | Role today | Token |
 |---|---|---|
 | Switch thumb, toggle knob | 0.20 s cubic | `spatialFast` |
-| Switch track / button accent | 0.20 s cubic | `effectsFast` |
-| Gauge, arc, meter fill | 0.45 s cubic | `spatial` (bounded `0..1`) |
+| Switch track / button accent | 0.20 s cubic | `effectsFast` (Console: `effectsFast` up, `effectsSlow` down) |
+| Gauge, meter fill (`HaReading.fraction`) | 0.45 s cubic | `spatial` (bounded `0..1`) |
 | Control dial value and target | 0.45 s cubic | `spatial` |
-| Wear container level | `LEVEL_SECONDS` | `spatialSlow` |
-| Cover / door position | `DOOR_TWEEN_SECONDS` | `spatialSlow` |
-| Meter colour (ramp, zone) | follows the fill | `effects` |
+| Wear container level | 0.6 s cubic | `spatialSlow` |
+| Cover / door position | 0.6 s cubic | `spatialSlow` |
+| Meter colour (ramp, zone) | follows the fill | follows the fill |
 
-`HaUberTheme` gains a `motion: RcMotionScheme`, and `ProvideCardStyle` provides it with the rest
-of the theme. `classic` keeps its current tweens as a `Tween` scheme, so `HaUberThemeTest`'s
-"classic is unchanged" pin still holds.
+Every part animates a `0..1` fraction; the gauge and `HaReading.fraction` used to animate the raw
+value and normalise it afterwards. `HaUberTheme.motion` defaults to its family's archetype
+(`HaMotion.forFamily`, §6) and `haMotion()` reads it under the host's mode and the viewer's
+reduce-motion preference. `classic` keeps its tweens as a `Tween` scheme (`HaMotion.Classic`),
+whose values are the durations above, so its documents carry the same animations.
 
 ## 3. System one: Material 3 Expressive
 
@@ -169,14 +171,18 @@ sit on one engine — but the rest of the Console scheme is nothing like M3:
 | VU needle, fader cap | VU ballistics above | `spatial` = (183, 0.81) |
 | Knob in a lamp ring | heavy detented knob: overdamped, no bounce | (300, 1.2) |
 | Rocker / key | mechanical throw: very stiff, one tiny rebound | (2000, 0.55), bounded |
-| Pilot lamp | incandescent filament: warms in ~100 ms, cools slower | effects (900, 1.0); see below |
-| LED clock segments | instant | `Snap` |
+| Pilot lamp | incandescent filament: warms in ~0.2 s, cools in ~0.6 s | `effectsFast` (900, 1.0) up, `effectsSlow` (100, 1.0) down |
+| LED clock segments | instant | (the clock is not animated) |
 
 **Asymmetry** is what makes real instruments read as real: a lamp cools slower than it warms, a
 PPM meter (IEC 60268-10) rises in milliseconds and falls 20 dB over 1.5 s. One animated float has
-one spec, so asymmetric parts animate two copies — the fast and slow responses of the same bound
-value — and pick per frame with an in-document `select` on the direction of change (target above or
-below the displayed value). That is one extra expression per part and no host work.
+one spec, so an asymmetric part animates two copies of the same bound value, the attack and the
+release, and shows the **larger**: on a rise the fast copy leads, on a fall the slow one lags
+(`animateAttackRelease`). Both must be critically damped, or an overshoot shows through. It costs
+one extra animated expression and no host work. Console's switch lamp uses it; a PPM or a
+Trinitron peak-hold would too.
+
+`HaMotion.Instrument` serves Trinitron's VU meter and Braun's pointer as well as Console.
 
 Console's motion keeps its skeuomorphism rule: everything is a vector moved by the live fraction,
 and the sounds and haptics (`SoundVoice`, `FeedbackSynth`) already match it.
@@ -195,10 +201,9 @@ effects:
 | `effectsFast` / `effects` / `effectsSlow` | 200 / 80 / 30 | 1.0 |
 
 Ambient is a property of the *display*, not of a design, so it is not a card style. A host sets
-`LocalRcMotionMode` to `Ambient` and every theme's motion resolves to `RcMotionScheme.ambient()`
-(`RcMotionMode.Reduced` works the same way for reduced motion). The TV kiosk's card row does this
-today. A Wear ambient host is next: it re-renders on the ambient tick, where a slow critically
-damped spring is the only motion that doesn't look like a glitch.
+`LocalRcMotionMode` to `Ambient` inside the card's capture and every theme's motion resolves to
+`RcMotionScheme.ambient()`. The TV kiosk's card row does. The Wear app has no ambient mode of its
+own yet; when it gains one, it sets the same mode.
 
 ## 6. The rest: three archetypes
 
@@ -207,9 +212,9 @@ inventing a fourth:
 
 | Archetype | Themes | Character |
 |---|---|---|
-| **Designed springs** | `expressive`, `home-assistant`, `classic` (as tweens), the community families (Mushroom, Bubble, Cupertino …) | M3 `expressive()` or `standard()`; Cupertino-style families take an iOS-like critically damped `spatial` |
-| **Physical ballistics** | `console`, `trinitron`, `braun` | needles with mass (Trinitron's VU, Braun's pointer on its hub), lamp and LED thermal response |
-| **Discrete** | `lcd`, `nixie`, `lcars` | no interpolation between values: segments switch (`Snap`); an LCD segment fades in ~150 ms as liquid crystal does, a Nixie digit crossfades cathodes with a brief glow overlap |
+| **Designed springs** | `expressive` (`expressive()`), `home-assistant`, IKEA and the community families (`standard()`), `cupertino` (`HaMotion.Cupertino`), `classic` (`HaMotion.Classic` tweens) | Cupertino's springs are iOS's: critically damped, by response time 0.3 / 0.55 / 0.8 s (`stiffness = (2π / response)²`) |
+| **Physical ballistics** | `console`, `trinitron`, `braun` (`HaMotion.Instrument`) | needles with VU mass, a stiff rocker, an overdamped knob, a lamp's attack and release |
+| **Discrete** | `lcd`, `lcars` (`HaMotion.Lcd`), `nixie` (`HaMotion.Nixie`) | spatial tokens `Snap`: segments switch, nothing glides. Effects fade linearly, 0.15 s for liquid crystal, 0.25 s for a Nixie cathode's lingering glow |
 
 ## 7. Rules carried over
 
@@ -220,11 +225,16 @@ inventing a fourth:
   re-encode ([live-card-updates.md](../architecture/live-card-updates.md)).
 - **Frozen captures stay deterministic.** `animate` encodes no animation when
   `LocalRemoteAnimationsEnabled` is off, as `animateRemoteFloat` does today.
-- **Reduced motion is a scheme, not a theme.** A user setting (and the system's
-  "remove animations") swaps spatial tokens for `Snap` and keeps short effects fades, under any
-  theme.
-- **Widgets.** Community widgets already bake settled values; the platform (launcher) player's
-  spring support must be verified before springs reach widget documents, with a tween fallback.
+- **Reduced motion is a preference, not a theme.** `LocalRcReduceMotion` swaps spatial tokens for
+  `Snap` and keeps short effects fades, under any theme and over any mode. `CachedCardPreview`
+  sets it from Android's "Remove animations" (`ValueAnimator.areAnimatorsEnabled()`) and keys the
+  document by it. Pre-captured template documents (server designs) carry the motion they were
+  captured with.
+- **Widgets.** Launcher widgets are re-baked on every change, so a launcher capture encodes springs
+  as no animation (and community widgets nothing at all, to fold their colours). Wear widgets are
+  played by the watch's system renderer, whose spring support is unverified, so their capture sets
+  `LocalRcSpringsSupported` off and a spring encodes as a tween of about its length
+  (`Spring.asTween()`).
 
 ## 8. Plan
 
@@ -232,18 +242,22 @@ inventing a fourth:
    (`expressive()`, `standard()`, `ambient()`, `reducedMotion()`), `RcMotionMode`, `animate`, the
    spring encoder. `RcMotionSpecTest` steps the encoded springs through the player's own
    `SpringStopEngine`.
-2. **Started.** `HaUberTheme.motion`: Expressive takes `expressive()`, every other theme
-   `HaMotion.Classic`, the old tweens. `haMotion()` resolves from the uber theme, so a part under a
-   palette alone keeps them too. The switch, the gauge and the control dials read their tokens;
-   the gauge now animates its `0..1` fraction instead of the raw value. Next: the remaining
-   `animateRemoteFloat` sites (§2 table).
+2. **Done.** `HaUberTheme.motion` from the family's archetype; every `animateRemoteFloat` site in
+   the §2 table reads a token. `haMotion()` resolves from the uber theme, so a part under a palette
+   alone keeps the Classic tweens.
 3. **Switch done.** `RemoteM3Switch` in the module; `RemoteHaToggleSwitch` draws it under
-   Expressive. `MotionSchemeSwitchTest` checks the encoded animations per scheme and mode, and the
-   ambient gauge. Further blocks one at a time, each with a test that captures mid-flight frames,
-   since a screenshot of a settled frame proves nothing about motion.
-4. Console ballistics scheme and the asymmetric lamp.
-5. The discrete archetype for LCD and Nixie.
-6. Graduate the module to `rc-players`.
+   Expressive. The other blocks in §3's table (press squish, shape morph on state, wavy progress,
+   the loader) remain, one at a time, each with a test that captures mid-flight frames, since a
+   screenshot of a settled frame proves nothing about motion.
+4. **Done.** `HaMotion.Instrument` and `animateAttackRelease` on Console's lamp.
+5. **Done.** `HaMotion.Lcd` / `HaMotion.Nixie`.
+6. **Done.** Reduced motion from the system setting; ambient on the TV kiosk; the Wear widget
+   spring fallback.
+7. Graduate the module to `rc-players` (another repository).
+
+`RcMotionSpecTest` steps the encoded springs, the attack/release pair and the tween stand-ins
+through the player's own engines; `MotionSchemeSwitchTest` checks the animations encoded in real
+documents for every archetype, mode and preference.
 
 ## Decisions
 

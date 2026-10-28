@@ -108,7 +108,10 @@ fun RemoteWearContainer(
     background?.layers.orEmpty().filterIsInstance<HaWearBand>().map { it.thicknessDp.rdp.toPx() }
   val fraction = level?.let {
     val value = LiveValues.numericState(it.entityId, it.value)
-    animateRemoteFloat(clamp((value - it.min.rf) / (it.max - it.min).rf, 0f, 1f), LEVEL_SECONDS)
+    animateRemoteFloat(
+      clamp((value - it.min.rf) / (it.max - it.min).rf, 0f, 1f),
+      haMotion().spatialSlow,
+    )
   }
   RemoteBox(
     modifier =
@@ -393,8 +396,6 @@ private fun RemoteDrawScope.drawFill(
   }
 }
 
-/** How long a level takes to move to a new reading. A first reading is drawn in place. */
-private const val LEVEL_SECONDS = 0.6f
 private const val SEGMENT_GAP_DP = 2f
 private const val MARKER_DP = 2f
 

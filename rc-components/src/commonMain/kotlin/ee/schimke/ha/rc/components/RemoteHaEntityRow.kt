@@ -221,9 +221,14 @@ fun RemoteHaToggleSwitch(
   val motion = haMotion()
   val progress: RemoteFloat = animateRemoteFloat(target, motion.spatialFast)
   // One expression when both tokens agree (every tween style), so their documents don't change.
+  // Console's pilot lamp is a filament: it warms on the fast effect and cools on the slow one.
   val colorProgress: RemoteFloat =
-    if (motion.effectsFast == motion.spatialFast) progress
-    else animateRemoteFloat(target, motion.effectsFast)
+    when {
+      visualFamily() == HaVisualFamily.Console ->
+        animateAttackRelease(target, motion.effectsFast, motion.effectsSlow)
+      motion.effectsFast == motion.spatialFast -> progress
+      else -> animateRemoteFloat(target, motion.effectsFast)
+    }
 
   val host: Action? = tapAction.toRemoteAction()
   val clickable = if (host != null) RemoteModifier.clickable(host) else RemoteModifier
@@ -295,7 +300,7 @@ fun RemoteHaToggleSwitchByProgress(
   }
   if (visualFamily() == HaVisualFamily.Console) {
     ConsoleControlFace(
-      tween(ConsoleSlot.rc, activeAccent, progress),
+      tween(ConsoleSlot.rc, activeAccent, colorProgress),
       modifier.size(width = TrackWidth, height = TrackHeight).then(clickable),
       progress,
     )
@@ -318,9 +323,9 @@ fun RemoteHaToggleSwitchByProgress(
   val metal = shape.material == HaSurfaceMaterial.PaintedMetal
   val trackColor: RemoteColor =
     when {
-      ink != null -> tween(ink.copy(alpha = 0.35f).rc, ink.rc, progress)
+      ink != null -> tween(ink.copy(alpha = 0.35f).rc, ink.rc, colorProgress)
       // Painted metal: off is the bare recessed slot, on lights it in the accent.
-      metal -> tween(ConsoleSlot.rc, activeAccent, progress)
+      metal -> tween(ConsoleSlot.rc, activeAccent, colorProgress)
       else -> tween(inactiveAccent, activeAccent, colorProgress)
     }
   val knobColor = if (ink != null) haTheme().cardBackground else Color.White.rc
