@@ -63,6 +63,7 @@ import ee.schimke.ha.room.roomTrackerCandidates
 import ee.schimke.ha.room.roomsWithControls
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.core.session.withLiveStates
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.EntityControlsPanel
 import ee.schimke.terrazzo.dashboard.currentScreenSkin
@@ -72,6 +73,7 @@ import ee.schimke.terrazzo.dashboard.rememberSelectedDashboardListState
 import ee.schimke.terrazzo.dashboard.skinnedAccent
 import ee.schimke.terrazzo.feedback.rememberInteractionFeedback
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -92,9 +94,18 @@ fun RoomScreen(session: HaSession, readOnly: Boolean, onBack: () -> Unit) {
   val tracker by prefs.roomTracker.collectAsState(initial = null)
 
   val loaded = rememberRoomData(session)
-  val live by session.liveStates.collectAsState()
-  // Live states carry the registries too; until the feed is up, the dashboards' own snapshot.
-  val snapshot = live?.takeIf { it.areas.isNotEmpty() } ?: loaded?.snapshot
+  val polled = rememberPolledSnapshot(session)
+  val liveState by session.liveStates.collectAsState()
+  val live = liveState
+  // The loaded snapshot (polled, for a session that asks to be: demo mode) keeps the instance's
+  // metadata, the temperature unit among it; live states replace its states as they arrive.
+  val base = polled ?: loaded?.snapshot
+  val snapshot =
+    when {
+      base == null -> live
+      live == null -> base
+      else -> base.withLiveStates(live).copy(areas = live.areas.ifEmpty { base.areas })
+    }
 
   val feedback = rememberInteractionFeedback()
   val dispatcher =
@@ -177,6 +188,30 @@ internal fun roomState(
     rooms = rooms,
     trackerCandidates = roomTrackerCandidates(snapshot),
   )
+}
+
+/**
+ * The session's snapshot reloaded every [HaSession.refreshIntervalMillis], for a session that polls
+ * instead of pushing live states (demo mode, so its simulated changes and the user's own taps
+ * show); null for any other session.
+ */
+@Composable
+private fun rememberPolledSnapshot(session: HaSession): HaSnapshot? {
+  val polled by
+    produceState<HaSnapshot?>(initialValue = null, session) {
+      val interval = session.refreshIntervalMillis ?: return@produceState
+      while (true) {
+        try {
+          value = session.loadSnapshot()
+        } catch (e: CancellationException) {
+          throw e
+        } catch (e: Exception) {
+          // Keep the last snapshot; the next tick tries again.
+        }
+        delay(interval)
+      }
+    }
+  return polled
 }
 
 /** The selected dashboards, scored, and the snapshot the first of them loaded with. */
