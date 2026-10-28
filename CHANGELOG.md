@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.72](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.71...v0.1.72) (2026-10-28)
+
+
+### Features
+
+* **cards:** shutter cards follow the cover through named slots ([#1307](https://github.com/yschimke/homeassistant-remotecompose/issues/1307)) ([803b06e](https://github.com/yschimke/homeassistant-remotecompose/commit/803b06e1b83017e46c9b6e7a12d08a589eabd150))
+* **cards:** slider controls with an in-document slide-to-unlock lock ([#1305](https://github.com/yschimke/homeassistant-remotecompose/issues/1305)) ([3fc9f92](https://github.com/yschimke/homeassistant-remotecompose/commit/3fc9f92e6b0d584581b4493ee625465b6bc92d15))
+
+
+### Bug Fixes
+
+* **design-server:** list only ha-cards designs from UI Builder in /api/my/studio ([#1300](https://github.com/yschimke/homeassistant-remotecompose/issues/1300)) ([86b36f0](https://github.com/yschimke/homeassistant-remotecompose/commit/86b36f04c8d0ed93ed0ed9c41495895f6d68dd5b))
+* **notify:** drop BigTextStyle when a live card is attached ([#1303](https://github.com/yschimke/homeassistant-remotecompose/issues/1303)) ([a59045c](https://github.com/yschimke/homeassistant-remotecompose/commit/a59045c9c2afd8278c6ba3bcdb46306178860e43))
+* **wasmo:** say when settings fall back to the browser and let sign-out forget ([#1306](https://github.com/yschimke/homeassistant-remotecompose/issues/1306)) ([0830d37](https://github.com/yschimke/homeassistant-remotecompose/commit/0830d37ed35ef446e986f278db2cee6926a5e8b1))
+* **wear:** stop the scroll hint replaying on every live value ([#1310](https://github.com/yschimke/homeassistant-remotecompose/issues/1310)) ([b2b8eaa](https://github.com/yschimke/homeassistant-remotecompose/commit/b2b8eaa5c07c3ecb02f9d0e58d825f5d3c454266))
+
+
+### Performance Improvements
+
+* **wear:** recompose a card only when its own values change ([#1311](https://github.com/yschimke/homeassistant-remotecompose/issues/1311)) ([413a021](https://github.com/yschimke/homeassistant-remotecompose/commit/413a0217b8515aa3bb4be3f7beb85ae65bd4ea34))
+
 ## [0.1.71](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.70...v0.1.71) (2026-10-27)
 
 
