@@ -471,14 +471,16 @@ internal suspend fun neutralWidgetTemplate(
       runCatching {
         neutralTemplateCaptures.incrementAndGet()
         WearWidgetTemplate.capture(context, cardStyle, wearLevel(input.card, input.snapshot)) {
-          SlotContent(
-            registry,
-            colors,
-            input.card,
-            input.snapshot,
-            template = true,
-            cardStyle = cardStyle,
-          )
+          ForSystemRenderer {
+            SlotContent(
+              registry,
+              colors,
+              input.card,
+              input.snapshot,
+              template = true,
+              cardStyle = cardStyle,
+            )
+          }
         }
       }
         .onFailure { Log.w("CardWidget", "neutral template capture failed", it) }
@@ -563,8 +565,20 @@ internal fun slotDocument(
 ): WearWidgetDocument =
   WearWidgetDocument(
     background = wearWidgetBrush(tint, cardStyle.wearBackground()),
-    content = { SlotContent(registry, colors, card, snapshot, template, cardStyle) },
+    content = {
+      ForSystemRenderer { SlotContent(registry, colors, card, snapshot, template, cardStyle) }
+    },
   )
+
+/**
+ * A document for the watch's system widget renderer, whose spring support is unverified: a style's
+ * springs encode as tweens of about the same length. The app's own players run springs, so
+ * `WearRemoteCard`'s direct captures stay outside this.
+ */
+@Composable
+private fun ForSystemRenderer(content: @Composable () -> Unit) {
+  CompositionLocalProvider(LocalRcSpringsSupported provides false, content = content)
+}
 
 /**
  * The container brush for a widget filled with [fill] (ARGB, or null for Glance Wear's default
@@ -609,9 +623,6 @@ internal fun SlotContent(
     LocalTemplateBindings provides if (template) TemplateBindings() else null,
     LocalPictureImageStrategy provides
       if (template) PictureImageStrategy.DefaultAppUrl else NO_PICTURES,
-    // The watch's system widget renderer plays these documents; its spring support is unverified,
-    // so a style's springs encode as tweens of about the same length.
-    LocalRcSpringsSupported provides false,
   ) {
     ProvideCardRegistry(registry) {
       RemoteMaterialTheme(colorScheme = colors) {

@@ -68,7 +68,8 @@ sealed interface RcMotionSpec {
 
     /**
      * A tween standing in for this spring where a player's spring support is unknown: about as long
-     * as the spring takes to settle within 2 %, overshooting only if the spring visibly does.
+     * as the spring takes to settle within 2 %, overshooting only if the spring visibly does and
+     * has no [bounds]. A tween can't reflect off them, so a bounded spring decelerates instead.
      */
     fun asTween(): Tween {
       val omega = sqrt(stiffness)
@@ -76,7 +77,9 @@ sealed interface RcMotionSpec {
         if (dampingRatio < 1f) 4f / (dampingRatio * omega) else 5.8f * dampingRatio / omega
       return Tween(
         seconds = settle.coerceIn(0.1f, 1.5f),
-        easing = if (dampingRatio < 0.7f) RcEasing.Overshoot else RcEasing.Decelerate,
+        easing =
+          if (dampingRatio < 0.7f && bounds == RcBounds.None) RcEasing.Overshoot
+          else RcEasing.Decelerate,
       )
     }
   }

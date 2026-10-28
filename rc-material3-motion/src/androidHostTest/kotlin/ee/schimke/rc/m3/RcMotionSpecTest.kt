@@ -116,6 +116,9 @@ class RcMotionSpecTest {
     assertTrue(vu.seconds in 0.3f..0.4f, "VU needle tween ${vu.seconds}s")
     assertEquals(RcEasing.Decelerate, vu.easing)
     assertEquals(RcEasing.Overshoot, RcMotionSpec.Spring(800f, 0.6f).asTween().easing)
+    // A bounded spring stays on its track; a tween can't reflect, so it must not overshoot.
+    val bounded = RcMotionScheme.expressive().spatialFast as RcMotionSpec.Spring
+    assertEquals(RcEasing.Decelerate, bounded.asTween().easing)
     val slow = RcMotionScheme.ambient().effectsSlow as RcMotionSpec.Spring
     assertTrue(slow.asTween().seconds in 1f..1.1f)
   }
