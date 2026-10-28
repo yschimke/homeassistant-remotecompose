@@ -100,3 +100,34 @@ width changes. Headings keep a row to themselves, because they divide a section 
   design's minimum.
 - *Limit:* order is never changed to fill a gap. A wide card that doesn't fit after a compact one
   starts the next row, even if a later compact card would have fitted beside it.
+
+## 10. Named slots, not baked values
+
+**A design is captured once; data and size flow into it.**
+
+Every value a card shows that comes from Home Assistant reaches its document as a named slot:
+`<id>.state`, `<id>.state_int`, `<id>.numeric_state`, an attribute float, a recipe's card-level
+value. The document derives everything else from those slots in-document: a door's height, which
+buttons work, a fill fraction, a colour, a "· 40 %". A state change is a value pushed into the
+running player, never a new document. The same goes for size: a card adapts to the space it is
+given through its layout (principle 6), not by being captured again for each size.
+
+That makes one document serve every state, so it can be a card design anyone can publish (a
+template is a document with slots and no values), it animates changes instead of jumping, and it
+costs a push instead of a capture.
+
+- *Re-encoding is the exception, and is justified per field.* Only structure may change the
+  document: how many rows a list has, a history series, a forecast strip. A card that re-encodes
+  names each field that forces it, and why no slot can carry it, in
+  [card-update-audit.md](../architecture/card-update-audit.md). "It was easier to bake" is not a
+  reason.
+- *Fixed properties of an entity are shape, not slots.* What an integration reports once and never
+  changes for an entity (`assumed_state`, a `device_class`) may be baked, as part of the card
+  design's key. A property that follows the state never is.
+- *Launcher widgets bake the slots at the last moment.* A widget's player can't receive pushes,
+  so when the app draws a widget it fills the design's slots with the current values and captures
+  that (`LauncherDesigns.render`); the design itself still has slots. Partial-update documents,
+  which would let a widget take new values without a full capture, are a possible next step.
+- *Check:* a card's converter has no `dataSignature`, or each field it fingerprints is listed in
+  the audit with its reason. A test plays one captured document through the entity's states and
+  checks what it shows (`CoverLiveDocumentTest` is the pattern).

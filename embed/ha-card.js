@@ -553,10 +553,19 @@ const ALARM_STATE_INT = {
   armed_custom_bypass: 5, triggered: 6, pending: 7, arming: 8, disarming: 9, unavailable: 10,
 };
 
+/** `HaLiveBindings.coverStateInt`: wire keys, never reordered; anything else is 5 (unknown). */
+const COVER_STATE_INT = { closed: 0, open: 1, opening: 2, closing: 3, unavailable: 4 };
+
 /** `HaLiveBindings.stateInt` ↔ `<slot>.state_int`; null when the domain has no int key. */
 export function stateInt(entityId, state) {
-  if (domainOf(entityId) !== 'alarm_control_panel') return null;
-  return Object.hasOwn(ALARM_STATE_INT, state) ? ALARM_STATE_INT[state] : 11;
+  switch (domainOf(entityId)) {
+    case 'alarm_control_panel':
+      return Object.hasOwn(ALARM_STATE_INT, state) ? ALARM_STATE_INT[state] : 11;
+    case 'cover':
+      return Object.hasOwn(COVER_STATE_INT, state) ? COVER_STATE_INT[state] : 5;
+    default:
+      return null;
+  }
 }
 
 // Kotlin's toFloatOrNull follows Java's Float.valueOf grammar: surrounding control/space

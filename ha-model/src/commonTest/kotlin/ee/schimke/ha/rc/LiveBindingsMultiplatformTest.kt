@@ -32,6 +32,33 @@ class LiveBindingsMultiplatformTest {
   }
 
   @Test
+  fun coverStateAndPositionAreBindings() {
+    val id = "cover.garage"
+    val attributes = buildJsonObject {
+      put("current_position", 40)
+      put("supported_features", 15)
+    }
+    val snapshot = HaSnapshot(states = mapOf(id to EntityState(id, "opening", attributes)))
+    val bindings = cardSnapshotBindings(setOf(id), snapshot)
+    assertEquals(HaLiveBindings.COVER_OPENING, bindings.ints["$id.state_int"])
+    assertEquals(40f, bindings.floats["$id.current_position"])
+    assertEquals(15f, bindings.floats["$id.supported_features"])
+    // A door without position feedback still has a state; its position is pushed as ABSENT.
+    assertEquals(
+      mapOf(
+        "current_position" to HaLiveBindings.ABSENT,
+        "supported_features" to HaLiveBindings.ABSENT,
+      ),
+      HaLiveBindings.attributeFloats(id, buildJsonObject {}),
+    )
+    val keys =
+      listOf("closed", "open", "opening", "closing", "unavailable", "unknown", "stopped").map {
+        HaLiveBindings.stateInt(id, it)
+      }
+    assertEquals(listOf(0, 1, 2, 3, 4, 5, 5), keys)
+  }
+
+  @Test
   fun isOnFollowsTheActiveStateConvertersBake() {
     val cases =
       mapOf(

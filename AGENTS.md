@@ -6,9 +6,11 @@
   or open a PR does not by itself authorize merging. Honor required checks,
   reviews, and branch protections.
 
-- **Cards must update on live data.** Every card converter takes one of
-  two update paths — host-reproducible named bindings, or a
-  `dataSignature` document re-encode. Read and follow
+- **Cards must update on live data, through named slots.** Every card converter takes one of
+  two update paths — host-reproducible named bindings (the default, design principle 10), or a
+  `dataSignature` document re-encode, which is for structure only and justified per field in
+  [`docs/architecture/card-update-audit.md`](docs/architecture/card-update-audit.md). A missing
+  binding kind is a reason to add one, not to re-encode. Read and follow
   [`docs/architecture/live-card-updates.md`](docs/architecture/live-card-updates.md)
   before adding or changing a `*CardConverter`. The default expectation:
   a new card keeps up with Home Assistant without going stale, and a
