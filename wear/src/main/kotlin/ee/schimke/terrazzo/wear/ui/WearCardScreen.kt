@@ -36,7 +36,6 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
-import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import kotlinx.coroutines.launch
 
 /**
@@ -56,7 +55,7 @@ import kotlinx.coroutines.launch
 internal fun WearCardScreen(
   cards: List<CardSummary>,
   initialPage: Int,
-  values: Map<String, EntityValue>,
+  values: WearValues,
   modifier: Modifier = Modifier,
   onOpenDetails: (CardSummary) -> Unit = {},
 ) {
@@ -87,11 +86,7 @@ internal fun WearCardScreen(
     ) { page ->
       AnimatedPage(page, pager) {
         val summary = cards[page]
-        WearCardPage(
-          summary,
-          rememberCardValues(summary.rawJson, values),
-          onOpenDetails = { onOpenDetails(summary) },
-        )
+        WearCardPage(summary, values, onOpenDetails = { onOpenDetails(summary) })
       }
     }
   }
@@ -100,12 +95,13 @@ internal fun WearCardScreen(
 @Composable
 private fun WearCardPage(
   summary: CardSummary,
-  values: Map<String, EntityValue>,
+  values: WearValues,
   onOpenDetails: () -> Unit,
 ) {
   val registry = remember { defaultRegistry().withEnhancedShutter() }
   val card = remember(summary.rawJson) { decodeWearCard(summary.rawJson) }
-  val snapshot = remember(values) { wearSnapshot(values) }
+  val cardValues = rememberCardValues(summary.rawJson, values)
+  val snapshot = remember(cardValues) { wearSnapshot(cardValues) }
   // The card's more-info tap opens its details, as a long press does.
   val taps = rememberWearCardTaps(summary.rawJson, onMoreInfo = onOpenDetails)
   val action = card?.let { wearCardPrimaryAction(it, snapshot, registry) }

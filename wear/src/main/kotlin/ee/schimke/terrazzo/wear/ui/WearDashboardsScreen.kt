@@ -16,7 +16,6 @@ import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
-import ee.schimke.terrazzo.wearsync.proto.EntityValue
 
 /**
  * Browse-mode list — one row per dashboard the phone published. Tap a row to drill into
@@ -84,7 +83,7 @@ fun WearDashboardsScreen(
 @Composable
 fun WearDashboardScreen(
   dashboard: DashboardData,
-  values: Map<String, EntityValue>,
+  values: WearValues,
   onBack: () -> Unit,
   modifier: Modifier = Modifier,
   onInputSend: (suspend (String, Map<String, String>) -> Unit)? = null,

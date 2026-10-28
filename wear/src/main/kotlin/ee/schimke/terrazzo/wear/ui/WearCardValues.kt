@@ -15,25 +15,14 @@ internal fun wearCardEntityIds(rawJson: String): Set<String>? =
   if (BAMBU_CARD_MARKER in rawJson) null
   else ENTITY_ID.findAll(rawJson).mapTo(HashSet()) { it.value }
 
-/** [values] narrowed to [entityIds], or all of them when [entityIds] is null. */
-internal fun Map<String, EntityValue>.forCard(entityIds: Set<String>?): Map<String, EntityValue> =
-  if (entityIds == null) this else filterKeys { it in entityIds }
-
 /**
- * [values] narrowed to the entities the card [rawJson] reads, and the same map instance while those
- * entities' values don't change.
- *
- * Every streamed delta replaces the watch's whole value map, which recomposes the list. With the
- * whole map as its parameter, every visible card then re-ran its body for a value it doesn't show.
- * With its own slice, unchanged, a card's composable skips.
+ * The values of the entities the card [rawJson] reads, and the same map instance while they don't
+ * change. Reads only those entities from [values], so only their changes recompose the caller.
  */
 @Composable
-internal fun rememberCardValues(
-  rawJson: String,
-  values: Map<String, EntityValue>,
-): Map<String, EntityValue> {
+internal fun rememberCardValues(rawJson: String, values: WearValues): Map<String, EntityValue> {
   val entityIds = remember(rawJson) { wearCardEntityIds(rawJson) }
-  val slice = values.forCard(entityIds)
+  val slice = values.forIds(entityIds)
   // `remember` compares its key with `==`: an equal slice returns the instance remembered first.
   return remember(slice) { slice }
 }

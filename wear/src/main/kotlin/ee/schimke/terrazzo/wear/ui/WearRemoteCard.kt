@@ -113,12 +113,12 @@ internal val LocalWearCardLook = staticCompositionLocalOf { WearCardLook() }
 @Composable
 internal fun WearRemoteCard(
   summary: CardSummary,
-  values: Map<String, EntityValue>,
+  values: WearValues,
   onOpen: (() -> Unit)? = null,
   fullScreen: Boolean = false,
   taps: WearCardTaps = rememberWearCardTaps(summary.rawJson, onOpen),
 ) {
-  // Only this card's values: a delta for another card's entity leaves this one skipped.
+  // Only this card's entities are read: a delta for another card's entity leaves this one alone.
   WearRemoteCardContent(
     summary,
     rememberCardValues(summary.rawJson, values),

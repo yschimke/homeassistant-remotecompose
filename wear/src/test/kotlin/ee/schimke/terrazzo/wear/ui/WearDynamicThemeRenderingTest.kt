@@ -86,7 +86,9 @@ class WearDynamicThemeRenderingTest {
                   type = "tile",
                   rawJson = """{"type":"tile","entity":"light.kitchen"}""",
                 ),
-                mapOf("light.kitchen" to EntityValue(state = "off", friendlyName = "Kitchen")),
+                WearValues(
+                  mapOf("light.kitchen" to EntityValue(state = "off", friendlyName = "Kitchen"))
+                ),
               )
             }
           }
