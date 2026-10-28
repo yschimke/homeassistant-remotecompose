@@ -185,8 +185,10 @@
           try { session = await saveCloudTokens(tokens, true); }
           catch (error) {
             if (!(error instanceof CloudAuthError) || ![401, 409].includes(error.status)) throw error;
-            if (error.status === 409) revokeLegacyGrant(tokens);
             session = checkSession(await cloudRequest('ha/session'));
+            // Signed out means a sign-out tombstone refused it. Signed in may be another tab that
+            // imported this very grant, so leave it unrevoked.
+            if (error.status === 409 && !session.signedIn) revokeLegacyGrant(tokens);
           }
         }
         tokens = null;

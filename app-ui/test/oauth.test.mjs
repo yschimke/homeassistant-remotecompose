@@ -198,3 +198,13 @@ test('a legacy grant the Wasmo refuses is revoked at Home Assistant before it is
   assert.equal(revoke.options.body.get('token'), 'fixture-refresh');
   assert.equal(local.getItem('terrazzo-oauth'), null);
 });
+
+test('tabs restoring the same legacy grant at once never revoke the copy another tab imported', async () => {
+  const server = service();
+  const raw = JSON.stringify(fixtureTokens());
+  const tabs = [page({ server, local: storage({ 'terrazzo-oauth': raw }) }), page({ server, local: storage({ 'terrazzo-oauth': raw }) })];
+  assert.deepEqual(await Promise.all(tabs.map(tab => tab.auth.restore())), ['https://ha.example.test', 'https://ha.example.test']);
+  assert.equal(server.calls.filter(call => call.url.endsWith('/ha/session/import')).length, 2);
+  assert.equal(server.calls.find(call => call.url === 'https://ha.example.test/auth/revoke'), undefined);
+  assert.ok(server.session?.signedIn);
+});
