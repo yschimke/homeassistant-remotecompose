@@ -1013,6 +1013,7 @@ fun DashboardContent(
           view.header?.card?.let { header ->
             item(
               key = "view-header",
+              contentType = "view-header",
               span = androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan.FullLine,
             ) {
               renderCard(
@@ -1025,7 +1026,7 @@ fun DashboardContent(
             val visibleCards =
               group.cards.filter { visibleDashboardCard(it.second, snapshot) != null }
             if (visibleCards.isEmpty()) return@forEach
-            item(key = group.id) {
+            item(key = group.id, contentType = "card-group") {
               Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 group.title?.let {
                   Text(

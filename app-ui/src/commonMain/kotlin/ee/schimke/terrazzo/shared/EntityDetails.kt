@@ -6,8 +6,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.input.pointer.*
+import androidx.compose.ui.node.DelegatingNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.formatState
@@ -19,10 +21,37 @@ internal fun Modifier.entityDetails(
   onMoreInfo: ((String) -> Unit)?,
 ): Modifier =
   if (entityId == null || onMoreInfo == null) this
-  else
-    composed {
-      val currentCallback by rememberUpdatedState(onMoreInfo)
-      pointerInput(entityId) {
+  else this then EntityDetailsElement(entityId, onMoreInfo)
+
+private class EntityDetailsElement(val entityId: String, val onMoreInfo: (String) -> Unit) :
+  ModifierNodeElement<EntityDetailsNode>() {
+  override fun create() = EntityDetailsNode(entityId, onMoreInfo)
+
+  override fun update(node: EntityDetailsNode) = node.update(entityId, onMoreInfo)
+
+  override fun InspectorInfo.inspectableProperties() {
+    name = "entityDetails"
+    properties["entityId"] = entityId
+  }
+
+  override fun equals(other: Any?): Boolean =
+    other is EntityDetailsElement && other.entityId == entityId && other.onMoreInfo === onMoreInfo
+
+  override fun hashCode(): Int = 31 * entityId.hashCode() + onMoreInfo.hashCode()
+}
+
+/**
+ * A [Modifier.Node] rather than `composed {}`, so the cards that carry it add no composition of
+ * their own. The press loop restarts for a new entity, as `pointerInput(entityId)` did, and always
+ * calls the latest callback.
+ */
+private class EntityDetailsNode(
+  private var entityId: String,
+  private var onMoreInfo: (String) -> Unit,
+) : DelegatingNode() {
+  private val pointerInput =
+    delegate(
+      SuspendingPointerInputModifierNode {
         awaitPointerEventScope {
           while (true) {
             val event = awaitPointerEvent(PointerEventPass.Initial)
@@ -33,12 +62,21 @@ internal fun Modifier.entityDetails(
             ) {
               event.changes.forEach { it.consume() }
               suppressNextEntityContextMenu()
-              currentCallback(entityId)
+              onMoreInfo(entityId)
             }
           }
         }
       }
+    )
+
+  fun update(entityId: String, onMoreInfo: (String) -> Unit) {
+    this.onMoreInfo = onMoreInfo
+    if (entityId != this.entityId) {
+      this.entityId = entityId
+      pointerInput.resetPointerInputHandler()
     }
+  }
+}
 
 internal expect fun suppressNextEntityContextMenu()
 
