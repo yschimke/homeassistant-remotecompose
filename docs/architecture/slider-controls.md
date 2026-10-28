@@ -92,15 +92,17 @@ read-only there and cards don't lock (`touchControlsSupported`).
 
 - **Launcher widget**: the platform `RemoteComposePlayer`, the same code as the AndroidX View
   player the tests drive.
-- **App and watch**: the Compose Multiplatform `RcComposePlayer` implements touch expressions only
-  as a scroll's child, so its capability report sends a slider card to the AndroidX View player
-  (`HaRcComposePlayer`'s fallback). That player reports named host actions only through the
-  document's own action callbacks, which `WrapAdaptiveRemoteDocumentPlayer` now registers.
-- **Scrolling**: by default the View player claims a gesture from its first touch whenever a
-  document has a touch expression. The in-app profile (`androidXExperimentalWrap`) turns that off
-  (`FEATURE_DISALLOW_INTERCEPT_TOUCH = 0`), so a dashboard or the watch's list still scrolls
-  vertically over a slider card while the slider takes horizontal drags. The launcher widget keeps
-  it on: there a sideways drag would page the home screen.
+- **App and watch**: the Compose Multiplatform `RcComposePlayer`, like every other card
+  (`HaRcComposePlayer`). It moves a touch expression for drags inside the component it is written
+  in, and runs that component's touch-up when its own expression took the drag (rc-players 2.21.0);
+  `SliderComposePlaybackTest` drives the same card as `SliderPlaybackTest` through it, with the
+  fallback failing the test.
+- **Scrolling**: a slider takes a drag only once it has moved past the touch slop along its axis,
+  so a dashboard or the watch's list still scrolls vertically over a slider card. The launcher's
+  View player claims a gesture from its first touch whenever a document has a touch expression;
+  there a sideways drag would otherwise page the home screen. The in-app profile
+  (`androidXExperimentalWrap`) turns that off (`FEATURE_DISALLOW_INTERCEPT_TOUCH = 0`) for the
+  previews that play it in the View player.
 
 ### Hosts
 
@@ -128,7 +130,7 @@ Assistant's new state.
 ## Not yet
 
 - **Verified only in Robolectric.** Drag, release, lock and unlock are driven through the AndroidX
-  View player with real `MotionEvent`s; nothing has run on a launcher, phone or watch yet. On a
+  View player with real `MotionEvent`s and through the Compose player with Compose test input; nothing has run on a launcher, phone or watch yet. On a
   device, check that a home screen still pages when a swipe starts beside (not on) a slider widget,
   and how a launcher treats a horizontal drag that starts on one.
 - **Button-only cards don't lock.** Locking them with a slide would make the player claim their
@@ -136,7 +138,5 @@ Assistant's new state.
 - **The unlock lasts until the card is redrawn.** A widget redraws when its entity changes, so on a
   live widget a successful release usually relocks it. Holding the unlock for a while needs the
   host to remember it per widget.
-- **The Compose Multiplatform player** has no free-standing touch expression, so slider cards fall
-  back to the AndroidX player in the app.
 - **More sliders**: `fan-speed`, a light's colour temperature, a climate target as a slider, and the
   entities card's `input_number` row.
