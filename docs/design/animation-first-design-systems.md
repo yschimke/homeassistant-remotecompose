@@ -1,8 +1,8 @@
 # Animation-first design systems
 
 Status: **implemented**, 2026-10-29: the motion layer (§2) on every animated card part, the three
-systems (§3–§5), the archetypes for every card style (§6) and the Expressive building blocks marked
-done in §3. Open: the slider handle and the travelling track gap in §3, ambient on Wear
+systems (§3–§5), the archetypes for every card style (§6) and the Expressive building blocks in §3.
+Open: ambient on Wear
 ([#1323](https://github.com/yschimke/homeassistant-remotecompose/issues/1323)), and the module's
 move to `rc-players` (on hold, §8).
 
@@ -131,8 +131,8 @@ frames, each a building block:
 | **Press** (`rememberRcPress`) | a pressed control squishes and springs back on release | touch down / up / cancel write an in-document `0/1`; the fraction follows on `spatialFast`. It sits on the same component as the click and doesn't take it | done; the button card under Expressive |
 | **Shape morph** (`RemoteM3ShapeMorph`, `m3MorphCorner`) | a container is round at rest, squarer when selected, squarer still while pressed | a rounded rectangle whose corner is an expression of the two fractions. Material morphs polygons (`MorphTweenUtility`), but that is Android-only and writer-level; a corner morph is portable and covers the toggle-button shapes | done; the button chip under Expressive |
 | **Wavy progress** (`RemoteM3WavyProgress`, `RemoteM3WavyProgressRing`) | the filled part ripples while the thing it shows works; flat when not | line segments along a sine whose phase is the player's animation clock; a gap and a stop dot on the linear form | done; the Bambu progress ring under Expressive, rippling only while printing |
-| **Track gap and stop dot** | the gap travels with the fill; the stop dot fades as the fill reaches it | gap on the fill's spring, dot on `effectsFast` | the wavy indicator has a gap and a stop dot; the fade is not built |
-| **Slider handle** | handle narrows while dragged, springs back on release | the drag state the [slider controls](../architecture/slider-controls.md) already keep in-document | not built |
+| **Track gap and stop dot** | the gap travels with the fill or handle; the stop dot fades as the fill reaches it | the gap is placed from the same fraction as the fill, and the dot's alpha from the room left before it | done; the wavy indicator and the slider |
+| **Slider** (`drawM3Slider`) | active track, gap, a narrow full-height handle, gap, inactive track ending in a stop dot; the handle narrows to half while held and springs back | drawn in the canvas that takes the drag, so it follows the finger with no lag; the press ([rememberRcPress]) is a second set of touch handlers beside the drag's own | done; tile slider features (brightness, position, volume) under Expressive |
 | **Loading indicator** (`RemoteM3LoadingIndicator`) | a shape that turns and breathes between circle and rounded square | rotation and corner on the player's clock. Material cycles seven polygons; this keeps to what a rounded rectangle draws | built; no card shows a loading state yet |
 
 Loops on the player's clock (wavy progress, the loader) are motion the design asks for while
@@ -256,9 +256,9 @@ inventing a fourth:
 2. **Done.** `HaUberTheme.motion` from the family's archetype; every `animateRemoteFloat` site in
    the §2 table reads a token. `haMotion()` resolves from the uber theme, so a part under a palette
    alone keeps the Classic tweens.
-3. **Done but two.** The switch, press, shape morph, wavy progress and loader blocks (§3's table),
-   used by the toggle switch, the button card and the Bambu ring under Expressive. The slider
-   handle and the travelling gap remain.
+3. **Done.** The switch, press, shape morph, wavy progress, slider and loader blocks (§3's table),
+   used by the toggle switch, the button card, the tile sliders and the Bambu ring under
+   Expressive.
 4. **Done.** `HaMotion.Instrument` and `animateAttackRelease` on Console's lamp.
 5. **Done.** `HaMotion.Lcd` / `HaMotion.Nixie`.
 6. **Done.** Reduced motion from the system setting; ambient on the TV kiosk; the Wear widget

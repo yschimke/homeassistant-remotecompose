@@ -32,9 +32,11 @@ import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcInput
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaButtonData
+import ee.schimke.ha.rc.components.HaSliderSpec
 import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ProvideHaUberTheme
+import ee.schimke.ha.rc.components.RemoteHaSlider
 import ee.schimke.ha.rc.components.RemoteHaToggleButton
 import ee.schimke.rc.m3.LocalRcReduceMotion
 import ee.schimke.rc.m3.RcM3ProgressColors
@@ -230,5 +232,56 @@ class ExpressiveBlocksPlaybackTest {
     val first = frame()
     settle(250)
     assertEquals(0, frame().differs(first), "a viewer who asked for less motion sees no ripple")
+  }
+
+  private val brightness =
+    HaAction.SetValue(
+      domain = "light",
+      service = "turn_on",
+      entityId = "light.kitchen",
+      field = "brightness_pct",
+      min = 0.0,
+      step = 1.0,
+      maxTicks = 100,
+      from = 30,
+      ticks = 30,
+    )
+
+  private fun slider() = document {
+    RemoteHaSlider(
+      HaSliderSpec(brightness, "Brightness", unit = "%"),
+      accent = Color(0xFFFFA000).rc,
+      heightDp = 42,
+      subject = "Kitchen",
+    )
+  }
+
+  @Test
+  fun expressiveSliderStillSendsWhereItWasDraggedTo() {
+    play(slider())
+    // 60 px of a 200 px slider is 30 of its 100 steps: 30 → 60.
+    compose.onRoot().performTouchInput {
+      down(Offset(60f, 20f))
+      for (i in 1..8) moveTo(Offset(60f + 60f * i / 8, 20f), delayMillis = 16)
+      moveTo(Offset(120f, 20f), delayMillis = 120)
+      up()
+    }
+    settle()
+    val release = sent.filterIsInstance<HaAction.SetValue>().last()
+    assertEquals(60, release.ticks, "sent: $sent")
+  }
+
+  @Test
+  fun holdingTheSliderNarrowsItsHandle() {
+    play(slider())
+    val rest = frame()
+    compose.onRoot().performTouchInput { down(Offset(60f, 20f)) }
+    settle(400)
+    val held = frame()
+    compose.onRoot().performTouchInput { up() }
+    settle()
+    val released = frame()
+    assertTrue(held.differs(rest) > 10, "a held handle narrows: ${held.differs(rest)}")
+    assertEquals(0, released.differs(rest), "the handle springs back")
   }
 }

@@ -2,10 +2,15 @@
 
 package ee.schimke.ha.previews
 
+import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
+import androidx.compose.remote.creation.compose.layout.RemoteCanvas
+import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.rc
@@ -21,10 +26,12 @@ import ee.schimke.ha.rc.components.ProvideHaUberTheme
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.rc.m3.LocalRcAnimationsEnabled
 import ee.schimke.rc.m3.RcM3ProgressColors
+import ee.schimke.rc.m3.RcM3SliderColors
 import ee.schimke.rc.m3.RemoteM3LoadingIndicator
 import ee.schimke.rc.m3.RemoteM3ShapeMorph
 import ee.schimke.rc.m3.RemoteM3WavyProgress
 import ee.schimke.rc.m3.RemoteM3WavyProgressRing
+import ee.schimke.rc.m3.drawM3Slider
 
 /**
  * The M3 Expressive building blocks in `rc-material3-motion`, frozen at fixed fractions. They are
@@ -85,4 +92,28 @@ fun ExpressiveWavyRing() = Expressive {
 @Composable
 fun ExpressiveLoadingIndicator() = Expressive {
   RemoteM3LoadingIndicator(Color(0xFF6750A4).rc, RemoteModifier.fillMaxSize())
+}
+
+/**
+ * The slider at rest (30 %), held (the handle narrowed), and near full, where the gap has travelled
+ * up to the end and the stop dot has faded.
+ */
+@Preview(name = "expressive slider", showBackground = true, widthDp = 220, heightDp = 150)
+@Composable
+fun ExpressiveSlider() = Expressive {
+  val colors =
+    RcM3SliderColors(
+      active = currentRemoteHaTheme().linkText,
+      inactive = currentRemoteHaTheme().divider,
+    )
+  RemoteColumn(
+    modifier = RemoteModifier.fillMaxSize().padding(8.rdp),
+    verticalArrangement = RemoteArrangement.spacedBy(8.rdp),
+  ) {
+    for ((fraction, pressed) in listOf(0.3f to 0f, 0.3f to 1f, 0.97f to 0f)) {
+      RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(36.rdp)) {
+        drawM3Slider(fraction.rf, pressed.rf, colors)
+      }
+    }
+  }
 }
