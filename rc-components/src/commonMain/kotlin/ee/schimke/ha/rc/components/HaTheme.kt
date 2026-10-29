@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import ee.schimke.rc.m3.RcAmbient
 import ee.schimke.rc.m3.rcAmbient
 
@@ -267,11 +268,18 @@ private object AmbientPalette {
   val divider = Color(0xFF3A3A3A)
 }
 
-/** [this] crossing to [AmbientPalette] with the ambient flag; itself when the flag isn't read. */
+/**
+ * [this] crossing to [AmbientPalette] with the ambient flag; itself when the flag isn't read, or
+ * when the style prints in a dark ink of its own.
+ */
 @Composable
 private fun RemoteHaTheme.underAmbient(): RemoteHaTheme {
   val ambient = rcAmbient()
   if (ambient === RcAmbient.Never) return this
+  // A style that prints in its own dark ink (a light LCD's segments, icons and switch markings)
+  // reads that ink straight from the uber theme, not from these roles: a black surface would hide
+  // it, so such a card keeps its own surface while ambient.
+  if ((currentHaUberTheme().ink?.luminance() ?: 1f) < 0.5f) return this
   fun RemoteColor.to(color: Color) = ambient.color(this, color.rc)
   return RemoteHaTheme(
     cardBackground = cardBackground.to(AmbientPalette.surface),

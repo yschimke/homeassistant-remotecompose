@@ -437,6 +437,21 @@ class ExpressiveBlocksPlaybackTest {
     assertEquals(interactive, corner(), "and back")
   }
 
+  /** A light LCD prints in dark ink of its own, so it keeps its light glass while ambient. */
+  @Test
+  fun ambientKeepsALightLcdsOwnSurface() {
+    manualClock = true
+    play(
+      document(HaUberTheme.Lcd) {
+        RemoteBox(RemoteModifier.fillMaxSize().background(currentRemoteHaTheme().cardBackground))
+      }
+    )
+    val glass = frame().getPixel(100, 100)
+    setAmbient(true)
+    oneFrame()
+    assertEquals(glass, frame().getPixel(100, 100), "its ink would vanish on black")
+  }
+
   @Test
   fun ambientStillsTheLoader() {
     manualClock = true

@@ -61,7 +61,9 @@ must be complete on its own:
    `ProvideRemoteHaTheme` crosses each colour role to an ambient palette (black surfaces; light grey
    text, links and dividers, so a light theme's dark text still reads), and the classic toggle
    switch outlines its track and lights its knob in the track's colour. Accents that mark state (an
-   entity's on colour, a style's own fixed colours) stay. Previews: `Ambient_*` in
+   entity's on colour, a style's own fixed colours) stay. A style that prints in a dark ink of its
+   own (a light LCD) keeps its own surface: its ink comes from the style, not the roles, and would
+   vanish on black. Previews: `Ambient_*` in
    `AmbientCardPreviews.kt`.
 5. **No reason to wake faster than a minute.** A clock on the page reads minutes, not seconds, while
    ambient. Nothing in the motion layer asks for a sooner wake.
