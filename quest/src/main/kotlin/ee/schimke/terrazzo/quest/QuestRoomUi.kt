@@ -21,6 +21,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.meta.spatial.uiset.button.BorderlessButton
@@ -149,11 +155,35 @@ fun QuestEntityCard(
         SpatialSwitch(
           HaLiveBindings.isOn(entity.entityId, state.state),
           { onToggle(entity.entityId) },
+          Modifier.semantics { contentDescription = entity.name },
         )
       }
     }
-    onPin?.let { pin -> BorderlessButton("Pin here", { pin(entity.entityId) }) }
-    onUnpin?.let { BorderlessButton("Unpin", it) }
+    onPin?.let { pin ->
+      NamedButton("Pin here", "Pin ${entity.name} here") { pin(entity.entityId) }
+    }
+    onUnpin?.let { NamedButton("Unpin", "Unpin ${entity.name}", it) }
+  }
+}
+
+/**
+ * A [BorderlessButton] read out as [description]: each card's "Pin here" names its control, so a
+ * screen reader can tell them apart. The UI set's button takes no modifier, so this replaces its
+ * semantics from outside.
+ */
+@Composable
+private fun NamedButton(label: String, description: String, onClick: () -> Unit) {
+  Box(
+    Modifier.clearAndSetSemantics {
+      contentDescription = description
+      role = Role.Button
+      onClick {
+        onClick()
+        true
+      }
+    }
+  ) {
+    BorderlessButton(label, onClick)
   }
 }
 

@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -68,7 +69,10 @@ fun RoomScenePreview(
       val turn = camera.yawToward(panel)
       key(panel.id) {
         Box(
-          Modifier.requiredSize(panelWidth, panelHeight)
+          // A picture of the room, not controls: the panels are shrunk to fit the view, and their
+          // buttons shouldn't read as real (and far too small) touch targets.
+          Modifier.clearAndSetSemantics {}
+            .requiredSize(panelWidth, panelHeight)
             .layout { measurable, constraints ->
               val placeable = measurable.measure(constraints)
               layout(placeable.width, placeable.height) {
