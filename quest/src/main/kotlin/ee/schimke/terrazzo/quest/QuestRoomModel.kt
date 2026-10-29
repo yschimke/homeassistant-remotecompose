@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import ee.schimke.ha.room.DashboardImportance
+import ee.schimke.terrazzo.room.DemoHouse
 import ee.schimke.terrazzo.room.RoomPin
 import ee.schimke.terrazzo.room.RoomState
 import ee.schimke.terrazzo.room.decodeRoomPins
@@ -16,17 +17,17 @@ import ee.schimke.terrazzo.room.roomState
  * `ComponentActivity`): the house's snapshot, the room the user picked, the tracker they follow and
  * their pins, kept in [prefs].
  *
- * The house is [QuestDemoHouse] for now, toggled in memory; signing in to a Home Assistant (through
+ * The house is [DemoHouse] for now, toggled in memory; signing in to a Home Assistant (through
  * `:ha-client`) is still to come on Quest.
  */
 class QuestRoomModel(private val prefs: SharedPreferences) {
-  private val baseUrl = QuestDemoHouse.BASE_URL
+  private val baseUrl = DemoHouse.BASE_URL
 
-  var snapshot by mutableStateOf(QuestDemoHouse.snapshot)
+  var snapshot by mutableStateOf(DemoHouse.snapshot)
     private set
 
-  /** No dashboards on the demo house: every control ranks by its room and state alone. */
-  val importance: DashboardImportance = DashboardImportance.Empty
+  /** The demo house's stand-in for its dashboards. */
+  val importance: DashboardImportance = DemoHouse.importance
 
   var picked by mutableStateOf(prefs.getString(PICKED, null))
     private set
@@ -55,7 +56,7 @@ class QuestRoomModel(private val prefs: SharedPreferences) {
   }
 
   fun toggle(entityId: String) {
-    snapshot = QuestDemoHouse.toggled(snapshot, entityId)
+    snapshot = DemoHouse.toggled(snapshot, entityId)
   }
 
   fun pinned(anchorId: String, entityId: String) =

@@ -198,6 +198,9 @@ activity-compose = { module = "androidx.activity:activity-compose", version = "1
 xr-compose = { module = "androidx.xr.compose:compose", version = "1.0.0-beta02" }
 # The version xr-compose 1.0.0-beta02 brings (through scenecore): pinned room controls' persisted anchors.
 xr-arcore = { module = "androidx.xr.arcore:arcore", version = "1.0.0" }
+# AI glasses: Glimmer is the glasses' Compose UI; projected starts a phone app's activity on them.
+xr-glimmer = { module = "androidx.xr.glimmer:glimmer", version = "1.0.0-alpha22" }
+xr-projected = { module = "androidx.xr.projected:projected", version = "1.0.0-alpha14" }
 # Meta Spatial SDK: the room controls on Meta Quest (`:quest`). Closed source, from Maven Central;
 # keep every artifact on the same version.
 meta-spatial-sdk = { module = "com.meta.spatial:meta-spatial-sdk", version.ref = "meta-spatial" }
