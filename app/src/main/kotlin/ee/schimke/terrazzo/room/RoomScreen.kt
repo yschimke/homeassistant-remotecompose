@@ -4,32 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -52,15 +32,9 @@ import ee.schimke.ha.rc.LocalHaActionDispatcher
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
-import ee.schimke.ha.room.CurrentRoom
 import ee.schimke.ha.room.DashboardImportance
-import ee.schimke.ha.room.HaArea
-import ee.schimke.ha.room.RoomControls
 import ee.schimke.ha.room.RoomEntity
 import ee.schimke.ha.room.currentRoom
-import ee.schimke.ha.room.roomControls
-import ee.schimke.ha.room.roomTrackerCandidates
-import ee.schimke.ha.room.roomsWithControls
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.withLiveStates
@@ -157,15 +131,16 @@ fun RoomScreen(session: HaSession, readOnly: Boolean, onBack: () -> Unit) {
     )
 
   CompositionLocalProvider(LocalHaActionDispatcher provides dispatcher) {
-    val content: RoomContent =
+    val content =
       RoomContent(
         state = state,
         snapshot = snapshot,
-        readOnly = readOnly,
         tracker = tracker,
         onPick = onPick,
         onFollow = onFollow,
-        onAction = dispatcher::dispatch,
+        entityCard = { entity, modifier ->
+          RoomEntityCard(entity, snapshot, readOnly, dispatcher::dispatch, modifier)
+        },
       )
     SpatialRoomHost(
       spatial = { exit ->
@@ -180,58 +155,11 @@ fun RoomScreen(session: HaSession, readOnly: Boolean, onBack: () -> Unit) {
           onCollapse = exit,
         )
       },
-      flat = { enter -> FlatRoomControls(content, onBack = onBack, onEnterSpace = enter) },
+      flat = { enter ->
+        FlatRoomControls(content, onBack = onBack) { enter?.let { SurroundButton(it) } }
+      },
     )
   }
-}
-
-/** What both layouts draw from. */
-internal class RoomContent(
-  val state: RoomState?,
-  val snapshot: HaSnapshot?,
-  val readOnly: Boolean,
-  val tracker: String?,
-  val onPick: (String?) -> Unit,
-  val onFollow: (String?) -> Unit,
-  val onAction: (HaAction) -> Unit,
-)
-
-/**
- * This instance's pinned controls, and what to do as the spatial room pins, unpins and finds them.
- */
-internal class RoomPinning(
-  val pins: List<RoomPin>,
-  val onPinned: (anchorId: String, entityId: String) -> Unit,
-  val onMoved: (old: RoomPin, anchorId: String) -> Unit,
-  val onUnpinned: (RoomPin) -> Unit,
-  val onNearestPin: (String?) -> Unit,
-)
-
-/** The room on show and why, its controls, and the other rooms to switch to. */
-internal data class RoomState(
-  val current: CurrentRoom,
-  val controls: RoomControls?,
-  val rooms: List<HaArea>,
-  val trackerCandidates: List<String>,
-)
-
-internal fun roomState(
-  snapshot: HaSnapshot,
-  importance: DashboardImportance,
-  picked: String?,
-  tracker: String?,
-  nearestPin: String? = null,
-): RoomState {
-  val rooms = roomsWithControls(snapshot, importance)
-  val current = currentRoom(snapshot, picked, tracker, nearestPin)
-  // Nothing says where the user is: show the room the dashboards care most about.
-  val area = current.area ?: rooms.firstOrNull()
-  return RoomState(
-    current = current,
-    controls = area?.let { roomControls(it, snapshot, importance) },
-    rooms = rooms,
-    trackerCandidates = roomTrackerCandidates(snapshot),
-  )
 }
 
 /**
@@ -301,150 +229,6 @@ private fun rememberRoomData(session: HaSession): RoomData? {
   return loaded
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FlatRoomControls(
-  content: RoomContent,
-  onBack: () -> Unit,
-  onEnterSpace: (() -> Unit)?,
-) {
-  Scaffold(
-    topBar = {
-      TopAppBar(
-        title = { Text(content.state?.controls?.area?.name ?: "This room") },
-        navigationIcon = {
-          IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-          }
-        },
-        actions = {
-          RoomTrackerMenu(content)
-          onEnterSpace?.let { SurroundButton(it) }
-        },
-      )
-    }
-  ) { padding ->
-    val state = content.state
-    if (state == null) {
-      Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
-      }
-      return@Scaffold
-    }
-    LazyVerticalGrid(
-      columns = GridCells.Adaptive(320.dp),
-      modifier = Modifier.fillMaxSize().padding(padding),
-      contentPadding = PaddingValues(16.dp),
-      horizontalArrangement = Arrangement.spacedBy(16.dp),
-      verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-      item(span = { GridItemSpan(maxLineSpan) }) { RoomHeader(content) }
-      val controls = state.controls
-      if (controls == null || controls.isEmpty) {
-        item(span = { GridItemSpan(maxLineSpan) }) { EmptyRoom(state) }
-        return@LazyVerticalGrid
-      }
-      items(controls.primary, key = { it.entityId }) { RoomEntityCard(it, content) }
-      if (controls.more.isNotEmpty()) {
-        item(span = { GridItemSpan(maxLineSpan) }) {
-          Text(
-            "More in ${controls.area.name}",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(top = 8.dp),
-          )
-        }
-        items(controls.more, key = { it.entityId }) { RoomEntityCard(it, content) }
-      }
-    }
-  }
-}
-
-/** Where the room came from, and the other rooms to switch to: automatic first. */
-@Composable
-internal fun RoomHeader(content: RoomContent, modifier: Modifier = Modifier) {
-  val state = content.state ?: return
-  Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    Text(
-      sourceLabel(state),
-      style = MaterialTheme.typography.bodyMedium,
-      color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    val showing = state.controls?.area?.id
-    val automatic = state.current.source != CurrentRoom.Source.Picked
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      item {
-        FilterChip(
-          selected = automatic,
-          onClick = { content.onPick(null) },
-          label = { Text("Automatic") },
-          leadingIcon = { Icon(Icons.Filled.MyLocation, null, Modifier.size(18.dp)) },
-        )
-      }
-      items(state.rooms, key = { it.id }) { room ->
-        FilterChip(
-          selected = !automatic && room.id == showing,
-          onClick = { content.onPick(room.id) },
-          label = { Text(room.name) },
-        )
-      }
-    }
-  }
-}
-
-internal fun sourceLabel(state: RoomState): String {
-  val area = state.current.area
-  return when (state.current.source) {
-    CurrentRoom.Source.Picked -> "You picked ${area?.name}"
-    CurrentRoom.Source.Pinned -> "You're in ${area?.name}, by the controls you pinned here"
-    CurrentRoom.Source.Tracker -> "You're in ${area?.name}, by your room tracker"
-    CurrentRoom.Source.Presence -> "Someone's in ${area?.name}, by its presence sensor"
-    CurrentRoom.Source.None ->
-      state.controls?.let { "Not sure where you are: showing ${it.area.name}" }
-        ?: "Not sure where you are"
-  }
-}
-
-/** Picks the entity that follows the user between rooms, from those naming a room now. */
-@Composable
-private fun RoomTrackerMenu(content: RoomContent) {
-  val candidates = content.state?.trackerCandidates.orEmpty()
-  if (candidates.isEmpty() && content.tracker == null) return
-  var open by remember { mutableStateOf(false) }
-  IconButton(onClick = { open = true }) {
-    Icon(Icons.Filled.MyLocation, contentDescription = "Room tracker")
-  }
-  DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-    DropdownMenuItem(
-      text = { Text("No room tracker") },
-      onClick = {
-        open = false
-        content.onFollow(null)
-      },
-    )
-    (listOfNotNull(content.tracker) + candidates).distinct().forEach { id ->
-      val name = content.snapshot?.states?.get(id)?.friendlyName() ?: id
-      DropdownMenuItem(
-        text = { Text(if (id == content.tracker) "✓ $name" else name) },
-        onClick = {
-          open = false
-          content.onFollow(id)
-        },
-      )
-    }
-  }
-}
-
-@Composable
-private fun EmptyRoom(state: RoomState) {
-  val message =
-    when {
-      state.rooms.isEmpty() ->
-        "No rooms with controls yet. Assign devices to areas in Home Assistant and they'll show here."
-      else -> "Nothing to control in ${state.current.area?.name ?: "this room"}."
-    }
-  Text(message, style = MaterialTheme.typography.bodyLarge)
-}
-
 /**
  * One entity: its icon, name and current state, then its controls (a heater's setpoint and mode, a
  * TV's volume and play / pause), as its more-info sheet shows them.
@@ -452,10 +236,12 @@ private fun EmptyRoom(state: RoomState) {
 @Composable
 internal fun RoomEntityCard(
   entity: RoomEntity,
-  content: RoomContent,
+  snapshot: HaSnapshot?,
+  readOnly: Boolean,
+  onAction: (HaAction) -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  val snapshot = content.snapshot ?: return
+  snapshot ?: return
   val state = snapshot.states[entity.entityId]
   val accent =
     skinnedAccent(
@@ -467,7 +253,7 @@ internal fun RoomEntityCard(
     }
   Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
     EntityHeading(entity, state, snapshot, accent)
-    EntityControlsPanel(controls, accent, content.readOnly, content.onAction)
+    EntityControlsPanel(controls, accent, readOnly, onAction)
   }
 }
 
@@ -511,8 +297,3 @@ private fun EntityHeading(
     }
   }
 }
-
-private fun EntityState.friendlyName(): String? =
-  (attributes["friendly_name"] as? kotlinx.serialization.json.JsonPrimitive)
-    ?.takeIf { it.isString }
-    ?.content
