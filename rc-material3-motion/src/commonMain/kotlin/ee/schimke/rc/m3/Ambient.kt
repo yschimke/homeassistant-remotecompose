@@ -6,6 +6,7 @@ import androidx.compose.remote.creation.compose.state.AnimatedRemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteState
+import androidx.compose.remote.creation.compose.state.clamp
 import androidx.compose.remote.creation.compose.state.max
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.tween
@@ -86,7 +87,9 @@ fun rcAmbient(): RcAmbient {
   val flag = rcAmbientFlag() ?: return RcAmbient.Never
   val motion = currentRcMotion()
   // The larger of the flag and its animation: a rise shows the flag at once, a fall the fade.
-  return RcAmbient(max(flag, flag.animateRaw(motion.effectsFast)))
+  // Clamped: a player whose spring overshoots would otherwise make `fade` negative, and an alpha
+  // below zero is drawn opaque by some.
+  return RcAmbient(clamp(max(flag, flag.animateRaw(motion.effectsFast)), 0f, 1f))
 }
 
 /** The host's flag, raw: `0` or `1`. Null when the document doesn't read it. */

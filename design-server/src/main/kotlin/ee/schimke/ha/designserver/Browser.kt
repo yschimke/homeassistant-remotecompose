@@ -8,7 +8,10 @@ import java.time.Instant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.floatOrNull
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
@@ -53,6 +56,8 @@ data class BrowserFilter(
   val wear: Boolean = false,
   val changes: Changes? = null,
   val compare: Boolean = false,
+  /** Play each design in the browser's player instead of showing its picture ([Pages.live]). */
+  val live: Boolean = false,
 ) {
   enum class Preview {
     Example,
@@ -110,6 +115,7 @@ data class BrowserFilter(
         ("wear" to "1").takeIf { f.wear },
         f.changes?.let { "changes" to it.param },
         ("compare" to "1").takeIf { f.compare },
+        ("live" to "1").takeIf { f.live },
       )
     return params.joinToString("&") { (k, v) -> "$k=${URLEncoder.encode(v, Charsets.UTF_8)}" }
   }
@@ -118,7 +124,7 @@ data class BrowserFilter(
     const val ALL = "all"
 
     /** The query keys the browser reads. */
-    val KEYS = setOf("type", "style", "mode", "q", "preview", "wear", "changes", "compare")
+    val KEYS = setOf("type", "style", "mode", "q", "preview", "wear", "changes", "compare", "live")
 
     fun from(params: Parameters, library: DesignLibrary, defaults: Boolean): BrowserFilter {
       fun param(name: String, default: String?): String? =
@@ -144,6 +150,7 @@ data class BrowserFilter(
         wear = params["wear"] == "1",
         changes = Changes.entries.firstOrNull { it.param == params["changes"] },
         compare = params["compare"] == "1",
+        live = params["live"] == "1",
       )
     }
   }
@@ -265,6 +272,11 @@ object Pages {
           (if (filter.wear) " checked" else "") +
           "> On a watch</label>"
       )
+      append(
+        "<label><input type=\"checkbox\" name=\"live\" value=\"1\"" +
+          (if (filter.live) " checked" else "") +
+          "> Live</label>"
+      )
       if (diff != null) {
         append("<label>Changes <select name=\"changes\">")
         option(BrowserFilter.ALL, "All", filter.changes == null)
@@ -283,6 +295,7 @@ object Pages {
           (if (removed.isNotEmpty()) " · ${removed.size} removed" else "") +
           "</p>"
       )
+      if (filter.live) liveControls()
       if (designs.isEmpty() && removed.isEmpty()) {
         append("<p class=\"empty\">No designs match.</p>")
         val styleModes =
@@ -317,6 +330,7 @@ object Pages {
             design,
             filter.preview,
             wear = filter.wear,
+            live = library.takeIf { filter.live },
             change = change,
             before =
               // Only a picture change has a different picture to show beside it.
@@ -336,6 +350,7 @@ object Pages {
         for (design in removed) tile(design, filter.preview, removed = true)
         append("</div></section>")
       }
+      if (filter.live) liveScript()
     }
   }
 
@@ -375,6 +390,20 @@ object Pages {
       if (design.catalog == null)
         append("<p class=\"muted\">No previews: this library has no catalog.</p>")
       append("</div>")
+      append(
+        "<h2>Live</h2><p class=\"muted\">This design in the web player with its example values. " +
+          "<b>Change values</b> swaps them for others and back, so you see how it moves when a " +
+          "card's data changes. <b>Ambient</b> sets the host's ambient flag, as a watch in " +
+          "always-on would (<a href=\"https://github.com/yschimke/homeassistant-remotecompose/" +
+          "blob/main/docs/architecture/ambient-mode.md\">ambient mode</a>).</p>"
+      )
+      liveControls()
+      append("<div class=\"live big\"${liveAttributes(library, design)}>")
+      design.catalog?.previews?.example?.let {
+        append("<img src=\"${paths.api}/$it\" alt=\"${esc(key.cardType)} preview\">")
+      }
+      append("</div>")
+      liveScript()
       val before = diff?.before(design)
       if (before != null && change != LibraryDiff.Change.Unchanged) {
         append("<h2>Published</h2><div class=\"previews\">")
@@ -722,6 +751,8 @@ object Pages {
     preview: BrowserFilter.Preview,
     compact: Boolean = false,
     wear: Boolean = false,
+    /** Its library, to play it live ([liveAttributes]) rather than show its picture. */
+    live: DesignLibrary? = null,
     /** How it differs from the published library, on a pull request's channel. */
     change: LibraryDiff.Change? = null,
     /** The published design it replaces, to show beside it. */
@@ -747,11 +778,14 @@ object Pages {
       )
       append("<figcaption>Published</figcaption></figure><figure>")
     }
+    // Live: the picture until the player takes its place, and if scripts are off.
+    if (live != null) append("<div class=\"live\"${liveAttributes(live, design)}>")
     if (image != null)
       append(
         "<img loading=\"lazy\" src=\"${design.paths.api}/$image\" alt=\"${esc(design.key.cardType)} preview\">"
       )
     else append("<div class=\"noimage\">no preview</div>")
+    if (live != null) append("</div>")
     if (beforeImage != null) append("<figcaption>This pull request</figcaption></figure></div>")
     if (wear && image != null) wearPanes("${design.paths.api}/$image", design.key.cardType)
     append("<div class=\"meta\">")
@@ -769,6 +803,99 @@ object Pages {
       "<div class=\"facts\">${esc(theme.style)}${theme.mode?.let { " · ${esc(it)}" } ?: ""} · ${design.entry.slots} slots · ${kib(design.entry.bytes.toLong())}</div>"
     )
     append("</div></a>")
+  }
+
+  /**
+   * What [liveScript] needs to play [design]: its blob, its library (channel and all), its mode and
+   * its example values as named bindings (`{strings, floats, ints, booleans}`), from the catalog's
+   * example. Values the host owns (`host.*`) are the controls', not the card's.
+   */
+  private fun liveAttributes(library: DesignLibrary, design: LibraryDesign): String {
+    val schema = CardSchema.fromDesign(library, design)
+    val values = buildJsonObject {
+      putJsonObject("strings") {
+        for (b in schema.bindings) if (b.type == BindingType.Text)
+          b.example?.let { put(b.name, it.content) }
+      }
+      putJsonObject("floats") {
+        for (b in schema.bindings) if (b.type == BindingType.Float && !b.name.startsWith("host."))
+          b.example?.floatOrNull?.takeIf { it.isFinite() }?.let { put(b.name, it) }
+      }
+      putJsonObject("ints") {
+        for (b in schema.bindings) if (b.type == BindingType.Int)
+          b.example?.intOrNull?.let { put(b.name, it) }
+      }
+      putJsonObject("booleans") {
+        for (b in schema.bindings) if (b.type == BindingType.Bool)
+          (b.example?.booleanOrNull ?: b.example?.intOrNull?.let { it != 0 })?.let {
+            put(b.name, it)
+          }
+      }
+    }
+    val card = design.catalog?.example?.card ?: buildJsonObject { put("type", design.key.cardType) }
+    val theme = ThemeParts.of(design.key).mode ?: "auto"
+    return " data-design=\"${design.entry.sha256}\" data-library=\"${esc(design.paths.api)}/\"" +
+      " data-theme=\"${esc(theme)}\" data-card=\"${esc(card.toString())}\"" +
+      " data-values=\"${esc(values.toString())}\""
+  }
+
+  /** The Ambient switch and the Change values button for the page's live designs. */
+  private fun StringBuilder.liveControls() {
+    append(
+      "<div class=\"live-controls\"><label><input type=\"checkbox\" id=\"live-ambient\"> " +
+        "Ambient</label> <button type=\"button\" id=\"live-change\">Change values</button>" +
+        " <span class=\"muted\" id=\"live-state\">example values</span></div>"
+    )
+  }
+
+  /**
+   * Plays each `.live` placeholder in the `<ha-card>` embed's player once it scrolls into view,
+   * with its design's example values and no Home Assistant, and wires [liveControls] to all of
+   * them: the ambient flag pushed into the running cards, and the values swapped for
+   * `changedValues` and back, so a design's own animations play. Pictures stay without scripts.
+   */
+  private fun StringBuilder.liveScript() {
+    append(
+      """<script type="module">
+import { changedValues } from '/embed/v1/ha-card.js';
+const ambient = document.getElementById('live-ambient');
+const change = document.getElementById('live-change');
+const state = document.getElementById('live-state');
+const cards = [];
+let changed = false;
+const valuesOf = (card) => (changed ? changedValues(card.values) : card.values);
+function play(placeholder) {
+  const d = placeholder.dataset;
+  const el = document.createElement('ha-card');
+  el.setAttribute('read-only', '');
+  el.setAttribute('library', new URL(d.library, location.href).href);
+  if (d.theme !== 'auto') el.setAttribute('theme', d.theme);
+  el.setAttribute('card', d.card);
+  el.setAttribute('ambient', String(ambient.checked));
+  const card = { el, values: JSON.parse(d.values) };
+  el.setValues(valuesOf(card));
+  el.setAttribute('design', d.design);
+  cards.push(card);
+  placeholder.replaceChildren(el);
+}
+const seen = new IntersectionObserver((entries) => {
+  for (const entry of entries) {
+    if (!entry.isIntersecting) continue;
+    seen.unobserve(entry.target);
+    play(entry.target);
+  }
+}, { rootMargin: '200px' });
+document.querySelectorAll('.live[data-design]').forEach((p) => seen.observe(p));
+ambient.addEventListener('change', () => {
+  for (const { el } of cards) el.setAttribute('ambient', String(ambient.checked));
+});
+change.addEventListener('click', () => {
+  changed = !changed;
+  state.textContent = changed ? 'changed values' : 'example values';
+  for (const card of cards) card.el.setValues(valuesOf(card));
+});
+</script>"""
+    )
   }
 
   private fun StringBuilder.select(
@@ -864,6 +991,8 @@ object Pages {
 main{max-width:1200px;margin:0 auto;padding:20px 16px 48px}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 h1{margin:0 0 4px;font-size:26px}h2{margin:28px 0 10px;font-size:18px}h2 span{color:var(--muted);font-weight:normal;font-size:14px}
 .changes{margin:6px 0 0;font-size:14px}.change{display:inline-block;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:600;background:#e6a700;color:#1b1d21}.change.added{background:#2da44e;color:#fff}.change.removed{background:var(--err);color:#fff}.change.document{background:var(--chip);color:var(--fg)}
+.live-controls{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:8px 0;padding:8px 12px;background:var(--card);border:1px solid var(--line);border-radius:10px;position:sticky;top:0;z-index:1}.live-controls label{display:flex;gap:6px;align-items:center}
+.live{margin:8px 8px 0}.live img{margin:0!important;width:100%!important}.live.big{max-width:420px;margin:0 0 16px}ha-card{display:block}
 .tile.changed{border-color:#e6a700}.compare{display:flex;flex-direction:column;gap:2px;padding:0 8px}.compare figure{max-width:none}.tile .compare img{width:100%;margin:8px 0 0;padding:0;border:0}.compare figcaption{margin:2px 0 0}
 .channel{border:2px solid #e6a700;border-radius:8px;padding:8px 12px;margin:8px 0}.channel p{margin:4px 0}.channels{font-size:13px;margin:6px 0 0}.stats,.hint,.count,.muted{color:var(--muted)}.stats{margin:0}.hint{margin:4px 0 0;font-size:13px}code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}
 .filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:end;margin:18px 0 6px;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:10px}
