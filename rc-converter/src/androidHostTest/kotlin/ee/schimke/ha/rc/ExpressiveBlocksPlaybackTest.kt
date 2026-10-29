@@ -408,6 +408,16 @@ class ExpressiveBlocksPlaybackTest {
   }
 
   @Test
+  fun ambientStillsTheLoader() {
+    manualClock = true
+    setAmbient(true)
+    play(document { RemoteM3LoadingIndicator(Color.Blue.rc, RemoteModifier.fillMaxSize()) })
+    val first = frame()
+    settle(250)
+    assertEquals(0, frame().differs(first), "ambient, the loader rests")
+  }
+
+  @Test
   fun leavingAmbientRestoresTheInteractiveLook() {
     manualClock = true
     val slider = slider()

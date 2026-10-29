@@ -280,8 +280,9 @@ private const val RingWaves = 8f
 @Composable
 @RemoteComposable
 fun RemoteM3LoadingIndicator(color: RemoteColor, modifier: RemoteModifier = RemoteModifier) {
-  val time = if (rcLoopsAllowed()) RemoteTimeVariables.animationTime else 0f.rf
   val ambient = rcAmbient()
+  // Ambient: the clock stops counting for it, so it rests at its first pose, as when loops are off.
+  val time = if (rcLoopsAllowed()) RemoteTimeVariables.animationTime * ambient.fade else 0f.rf
   RemoteCanvas(modifier = modifier) {
     val size = min(width, height) * 0.7f.rf
     // A half turn a second; the corner breathes between round and square twice a turn.
