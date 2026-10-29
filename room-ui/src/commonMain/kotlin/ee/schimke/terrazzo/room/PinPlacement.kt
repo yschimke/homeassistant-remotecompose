@@ -31,7 +31,9 @@ data class Vec3(val x: Float, val y: Float, val z: Float) {
 
 /**
  * A wall the headset tracks: its centre, its [normal] (pointing into the room), the two directions
- * along its surface its [width] and [height] run, and those sizes, in metres.
+ * along its surface its [width] and [height] run, and those sizes, in metres. [id] is the
+ * platform's own name for the wall, where it has a lasting one (a Quest Space Setup anchor's UUID),
+ * so a pin can be kept relative to it.
  */
 data class WallPlane(
   val center: Vec3,
@@ -40,14 +42,20 @@ data class WallPlane(
   val heightAxis: Vec3,
   val width: Float,
   val height: Float,
+  val id: String? = null,
 )
 
 /**
  * Where a pinned panel goes: its [position], and the direction its front faces ([facing], level or
- * along a wall's normal). Panels stand upright ([Vec3.Up]); the platform turns these into its own
- * pose.
+ * along a wall's normal), and the [wall] it is on, if any. Panels stand upright ([Vec3.Up]); the
+ * platform turns these into its own pose.
  */
-data class PinPlacement(val position: Vec3, val facing: Vec3, val onWall: Boolean)
+data class PinPlacement(
+  val position: Vec3,
+  val facing: Vec3,
+  val onWall: Boolean,
+  val wall: WallPlane? = null,
+)
 
 /**
  * Where a control pinned by a user at [eye] looking along [gaze] goes: on the wall the gaze meets
@@ -84,7 +92,9 @@ fun wallPlacement(
       continue
     }
     if (best == null || distance < best.first) {
-      best = distance to PinPlacement(hit + normal * WALL_OFFSET_METRES, normal, onWall = true)
+      best =
+        distance to
+          PinPlacement(hit + normal * WALL_OFFSET_METRES, normal, onWall = true, wall = wall)
     }
   }
   return best?.second
