@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.73](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.72...v0.1.73) (2026-10-29)
+
+
+### Features
+
+* motion archetypes for every card style, reduced motion ([#1321](https://github.com/yschimke/homeassistant-remotecompose/issues/1321)) ([6463292](https://github.com/yschimke/homeassistant-remotecompose/commit/64632925c729e63842aa93f722cc797a0c2157c3))
+* motion layer with M3 Expressive and ambient schemes, M3 switch ([#1317](https://github.com/yschimke/homeassistant-remotecompose/issues/1317)) ([71f53e8](https://github.com/yschimke/homeassistant-remotecompose/commit/71f53e816dea28c3422048f745445b83f3bf100d))
+* room controls with an Android XR spatial layout ([#1319](https://github.com/yschimke/homeassistant-remotecompose/issues/1319)) ([3762d2a](https://github.com/yschimke/homeassistant-remotecompose/commit/3762d2a377e9ab57a540c4b14b26556e61ab9366))
+* **studio:** card studio wizard, signed in by the app, with clear handoff errors ([#1316](https://github.com/yschimke/homeassistant-remotecompose/issues/1316)) ([a1f1a09](https://github.com/yschimke/homeassistant-remotecompose/commit/a1f1a09b8759ed173cc0057b23871d7c5db899f5))
+
+
+### Bug Fixes
+
+* **deps:** update dependency androidx.xr.arcore:arcore to v1.0.0 ([#1320](https://github.com/yschimke/homeassistant-remotecompose/issues/1320)) ([1c302fe](https://github.com/yschimke/homeassistant-remotecompose/commit/1c302feac7f84fce2b73d7b737d8d2493ec54508))
+
+
+### Performance Improvements
+
+* **compose:** node-based card modifiers, content types, draw-phase flash ([#1318](https://github.com/yschimke/homeassistant-remotecompose/issues/1318)) ([4ef5982](https://github.com/yschimke/homeassistant-remotecompose/commit/4ef598252aaeecc3b0e8ddcee0281c4439e1f494))
+* **wear:** hold live values in a stable WearValues, one state per entity ([#1313](https://github.com/yschimke/homeassistant-remotecompose/issues/1313)) ([244d3c1](https://github.com/yschimke/homeassistant-remotecompose/commit/244d3c19191ad7bcf96e0950351d518b05c01d16))
+
 ## [0.1.72](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.71...v0.1.72) (2026-10-28)
 
 
