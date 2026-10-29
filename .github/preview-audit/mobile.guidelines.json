@@ -1,0 +1,14 @@
+{
+  "schema": "compose-ui-builder/catalog-guidelines/v1",
+  "catalog": "homeassistant-remotecompose-mobile",
+  "platform": "mobile",
+  "version": 1,
+  "about": "Rules the Preview Audit workflow asks of the phone, tablet and desktop previews: the shared compose-ui pack, pinned. Add app-specific rules under `rules`.",
+  "includes": [
+    {
+      "url": "https://raw.githubusercontent.com/yschimke/compose-ai-tools/v2.74.1/guidelines/packs/compose-ui.guidelines.json",
+      "sha256": "f8a9ba061f1b8bb84c0246818a4b2e926aa72c8529bea0efef7b7cbe40f34496"
+    }
+  ],
+  "rules": []
+}

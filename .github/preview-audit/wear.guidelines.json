@@ -1,0 +1,18 @@
+{
+  "schema": "compose-ui-builder/catalog-guidelines/v1",
+  "catalog": "homeassistant-remotecompose-wear",
+  "platform": "wear",
+  "version": 1,
+  "about": "Rules the Preview Audit workflow asks of the Wear OS previews: compose-ui, then wear-compose (which replaces compose-ui's sign-in and keyboard rules with the Wear versions), pinned. Add app-specific rules under `rules`.",
+  "includes": [
+    {
+      "url": "https://raw.githubusercontent.com/yschimke/compose-ai-tools/v2.74.1/guidelines/packs/compose-ui.guidelines.json",
+      "sha256": "f8a9ba061f1b8bb84c0246818a4b2e926aa72c8529bea0efef7b7cbe40f34496"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/yschimke/compose-ai-tools/v2.74.1/guidelines/packs/wear-compose.guidelines.json",
+      "sha256": "7a33c7dbf4ff4b93338bb2ddbd781f0c8ec145ead04c6e2b5fa8746dedd303e4"
+    }
+  ],
+  "rules": []
+}
