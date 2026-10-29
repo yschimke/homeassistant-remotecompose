@@ -11,7 +11,9 @@ import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimental
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.ProvideHaUberTheme
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -232,4 +234,28 @@ fun Tile_Climate_Inline_Features() =
       ),
       climateTiles,
     )
+  }
+
+/** The brightness feature under M3 Expressive: the slider with its handle and travelling gaps. */
+@Preview(
+  name = "tile — light brightness (expressive)",
+  showBackground = false,
+  widthDp = TILE_WIDTH_DP,
+  heightDp = 112,
+)
+@Composable
+fun Tile_LightBrightness_Expressive() =
+  CapturingRemoteContentPreview(profile = androidXExperimental) {
+    ProvideCardRegistry(defaultRegistry()) {
+      ProvideHaUberTheme(HaUberTheme.Expressive, darkTheme = false) {
+        RenderChild(
+          card =
+            card(
+              """{"type":"tile","entity":"light.kitchen","color":"amber",
+              "features":[{"type":"light-brightness"}]}"""
+            ),
+          snapshot = Fixtures.kitchenLight,
+        )
+      }
+    }
   }

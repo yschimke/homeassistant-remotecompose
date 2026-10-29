@@ -7,6 +7,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteCanvas
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
+import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
 import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.layout.RemoteSize
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
@@ -18,7 +19,9 @@ import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemotePaint
 import androidx.compose.remote.creation.compose.state.RemoteTimeVariables
+import androidx.compose.remote.creation.compose.state.clamp
 import androidx.compose.remote.creation.compose.state.cos
+import androidx.compose.remote.creation.compose.state.max
 import androidx.compose.remote.creation.compose.state.min
 import androidx.compose.remote.creation.compose.state.rememberMutableRemoteFloat
 import androidx.compose.remote.creation.compose.state.rf
@@ -34,8 +37,8 @@ import androidx.compose.ui.graphics.StrokeCap
 /**
  * A press, held in the document: [modifier] marks the component touched (touch down sets it, touch
  * up or cancel clears it) and [fraction] follows it on the scheme's `spatialFast`, `0` released to
- * `1` pressed. Put [modifier] on the same component as its click; the press neither replaces nor
- * delays the click.
+ * `1` pressed. Put [modifier] on the same component as its click or drag: its touch handlers run
+ * beside that component's own, neither replacing nor delaying them.
  */
 class RcPress internal constructor(val modifier: RemoteModifier, val fraction: RemoteFloat) {
   companion object {
@@ -49,10 +52,9 @@ class RcPress internal constructor(val modifier: RemoteModifier, val fraction: R
 fun rememberRcPress(motion: RcMotionScheme = currentRcMotion()): RcPress {
   if (!LocalRcInteractivePlayer.current) return RcPress.None
   val pressed = rememberMutableRemoteFloat(0f)
+  val up = valueChange(pressed, 0f.rf)
   val modifier =
-    RemoteModifier.onTouchDown(valueChange(pressed, 1f.rf))
-      .onTouchUp(valueChange(pressed, 0f.rf))
-      .onTouchCancel(valueChange(pressed, 0f.rf))
+    RemoteModifier.onTouchDown(valueChange(pressed, 1f.rf)).onTouchUp(up).onTouchCancel(up)
   return RcPress(modifier, pressed.animate(motion.spatialFast))
 }
 
@@ -157,7 +159,12 @@ fun RemoteM3WavyProgress(
       RemoteOffset(min(head + gap, end), mid),
       RemoteOffset(end, mid),
     )
-    drawCircle(fill(colors.stop), stroke / 2f.rf, RemoteOffset(end, mid))
+    // The stop dot fades out as the head reaches it: there is nothing left to stop at.
+    drawCircle(
+      fill(colors.stop.copy(alpha = colors.stop.alpha * stopVisibility(end - head, gap * 2f.rf))),
+      stroke / 2f.rf,
+      RemoteOffset(end, mid),
+    )
     // The wave: short segments along a sine, each clamped to the head so the rest collapse.
     val wavelength = height * 2.5f.rf
     val segments = WaveSegments
@@ -277,3 +284,124 @@ private fun stroke(color: RemoteColor, width: RemoteFloat) = RemotePaint {
   strokeCap = StrokeCap.Round
 }
   .apply { this.color = color }
+
+/**
+ * How visible a stop dot is with [room] left between the head and it: fully over [fade] or more,
+ * gone at none. The dot marks where the track ends, so it fades as the fill arrives there.
+ */
+private fun stopVisibility(room: RemoteFloat, fade: RemoteFloat): RemoteFloat =
+  clamp(room / fade, 0f, 1f)
+
+/**
+ * Colours of an M3 Expressive slider: the active track, the inactive track, handle and stop. Give
+ * the tracks opaque colours: each is drawn as a cap and a body that overlap by a pixel.
+ */
+data class RcM3SliderColors(
+  val active: RemoteColor,
+  val inactive: RemoteColor,
+  val handle: RemoteColor = active,
+  val stop: RemoteColor = active,
+)
+
+/** Where [drawM3Slider] put things, for a label that sits in one of the tracks. */
+class RcM3SliderLayout
+internal constructor(
+  /** The x of the handle's centre. */
+  val handle: RemoteFloat,
+  /** The active track's end, before the gap. */
+  val activeEnd: RemoteFloat,
+  /** The inactive track's start, after the gap. */
+  val inactiveStart: RemoteFloat,
+  /** The track's height and its vertical centre. */
+  val trackHeight: RemoteFloat,
+  val middle: RemoteFloat,
+)
+
+/**
+ * M3 Expressive's slider, drawn across this canvas at [fraction] (`0..1`): an active track, a gap,
+ * a narrow handle the canvas's full height, a gap, and the inactive track ending in a stop dot. The
+ * gaps travel with the handle and the stop dot fades as the active track reaches it. While
+ * [pressed] (a `0..1` fraction, [rememberRcPress]) the handle narrows to half its width, springing
+ * back on release. Draw it in the canvas that takes the drag, so the handle stays under the finger.
+ */
+fun RemoteDrawScope.drawM3Slider(
+  fraction: RemoteFloat,
+  pressed: RemoteFloat,
+  colors: RcM3SliderColors,
+): RcM3SliderLayout {
+  val trackHeight = height * 0.55f.rf
+  val top = (height - trackHeight) / 2f.rf
+  val middle = height / 2f.rf
+  val handleWidth = height * 0.1f.rf * (1f.rf - pressed * 0.5f.rf)
+  val gap = height * 0.12f.rf
+  // The handle's centre stays a half-handle and a gap in from either end, so a track always shows.
+  val inset = height * 0.05f.rf + gap
+  val handle = inset + (width - inset * 2f.rf) * clamp(fraction, 0f, 1f)
+  val activeEnd = handle - handleWidth / 2f.rf - gap
+  val inactiveStart = handle + handleWidth / 2f.rf + gap
+  // Outer ends round, inner ends (beside the handle) square.
+  trackSegment(0f.rf, activeEnd, top, trackHeight, colors.active, squareEnd = true)
+  trackSegment(inactiveStart, width, top, trackHeight, colors.inactive, squareEnd = false)
+  val stopRadius = trackHeight * 0.12f.rf
+  val stopX = width - trackHeight / 2f.rf
+  drawCircle(
+    fill(
+      colors.stop.copy(
+        alpha = colors.stop.alpha * stopVisibility(stopX - inactiveStart, trackHeight)
+      )
+    ),
+    stopRadius,
+    RemoteOffset(stopX, middle),
+  )
+  drawRoundRect(
+    fill(colors.handle),
+    RemoteOffset(handle - handleWidth / 2f.rf, 0f.rf),
+    RemoteSize(handleWidth, height),
+    RemoteOffset(handleWidth / 2f.rf, handleWidth / 2f.rf),
+  )
+  return RcM3SliderLayout(handle, activeEnd, inactiveStart, trackHeight, middle)
+}
+
+/**
+ * One track segment from [from] to [to], round at its outer end and square at the end beside the
+ * handle ([squareEnd] true: the square end is [to]). Drawn as a half-disc cap and a rectangle that
+ * meet without overlapping, so a translucent track colour is even all along.
+ */
+private fun RemoteDrawScope.trackSegment(
+  from: RemoteFloat,
+  to: RemoteFloat,
+  top: RemoteFloat,
+  height: RemoteFloat,
+  color: RemoteColor,
+  squareEnd: Boolean,
+) {
+  val length = max(to - from, 0f)
+  val radius = min(height / 2f.rf, length)
+  val paint = fill(color)
+  // The body's edges are straight, so it needs no anti-aliasing, and it reaches under the cap's
+  // anti-aliased diameter by a hair: otherwise the seam where they meet shows as a faint line.
+  val body = RemotePaint {
+    isAntiAlias = false
+    style = PaintingStyle.Fill
+  }
+    .apply { this.color = color }
+  val capSize = RemoteSize(radius * 2f.rf, height)
+  if (squareEnd) {
+    // Round start: the left half of a disc, then the body to the square end.
+    drawArc(paint, 90f.rf, 180f.rf, true, RemoteOffset(from, top), capSize)
+    val seam = min(radius, SeamPx.rf)
+    drawRect(
+      body,
+      RemoteOffset(from + radius - seam, top),
+      RemoteSize(length - radius + seam, height),
+    )
+  } else {
+    // Square start, then the body, then the right half of a disc.
+    val seam = min(radius, SeamPx.rf)
+    drawRect(body, RemoteOffset(from, top), RemoteSize(length - radius + seam, height))
+    drawArc(paint, (-90f).rf, 180f.rf, true, RemoteOffset(to - radius * 2f.rf, top), capSize)
+  }
+}
+
+/** How far a track body reaches under its cap's edge, in px: past the cap's anti-aliasing. */
+private const val SeamPx = 1f

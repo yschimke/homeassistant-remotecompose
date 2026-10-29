@@ -30,8 +30,14 @@ import androidx.compose.remote.creation.compose.state.rememberMutableRemoteInt
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.remote.creation.compose.state.rs
+import androidx.compose.remote.creation.compose.state.selectIfGt
+import androidx.compose.remote.creation.compose.state.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.PaintingStyle
+import ee.schimke.rc.m3.RcM3SliderColors
+import ee.schimke.rc.m3.RcPress
+import ee.schimke.rc.m3.drawM3Slider
+import ee.schimke.rc.m3.rememberRcPress
 
 /**
  * What a [RemoteHaSlider] shows and sends.
@@ -89,6 +95,9 @@ fun RemoteHaSlider(
       else -> accent
     }
   val spokenLabel = listOf(subject, spec.label).filter { it.isNotEmpty() }.joinToString(", ")
+  // M3 Expressive draws its own slider: tracks either side of a handle that narrows while held.
+  val expressive = visualFamily() == HaVisualFamily.Expressive
+  val press = if (expressive && interactive) rememberRcPress(haMotion()) else RcPress.None
 
   val ticks: RemoteFloat
   val canvasModifier: RemoteModifier
@@ -102,7 +111,10 @@ fun RemoteHaSlider(
     // A touch-down handler makes the canvas the component that takes the touch, so its release
     // runs; on a locked card it also shows the unlock strip.
     val down = lock?.touched ?: valueChange(rememberMutableRemoteInt(0), 1.ri)
-    canvasModifier = RemoteModifier.fillMaxSize().onTouchDown(down).onTouchUp(release)
+    // The press rides beside the drag's own touch handlers, as handlers of its own: this canvas
+    // already takes touch down and up.
+    canvasModifier =
+      RemoteModifier.fillMaxSize().onTouchDown(down).onTouchUp(release).then(press.modifier)
     define = {
       defineTouch(
         touchSlot,
@@ -124,6 +136,66 @@ fun RemoteHaSlider(
   val shown: RemoteFloat = action.min.toFloat().rf + ticks * action.step.toFloat().rf
   val valueText: RemoteString =
     shown.toDecimalRemoteString(spec.decimals) + (if (spec.unit.isEmpty()) "" else " ${spec.unit}")
+
+  val valueColor =
+    when {
+      !spec.available -> theme.secondaryText
+      lock != null -> lock.color(theme.primaryText, theme.secondaryText)
+      else -> theme.primaryText
+    }
+  if (expressive) {
+    RemoteBox(
+      modifier =
+        modifier.fillMaxWidth().height(heightDp.rdp).semantics {
+          contentDescription = spokenLabel.rs
+        }
+    ) {
+      RemoteCanvas(modifier = canvasModifier) {
+        define?.invoke(this)
+        val layout =
+          drawM3Slider(
+            fraction,
+            press.fraction,
+            RcM3SliderColors(
+              active = fill,
+              // The same tint as HA's track, mixed onto the card so it is opaque: a track drawn
+              // in pieces shows no overlap.
+              inactive = tween(theme.cardBackground, theme.secondaryText, 0.18f.rf),
+            ),
+          )
+        // The value sits in the inactive track while it has room, then in the active one on a
+        // pill in the card's colour, so it reads on any accent.
+        val room = height * BubbleWidthPerHeight.rf
+        val inInactive = selectIfGt(width - layout.inactiveStart, room, 1f.rf, 0f.rf)
+        val x =
+          layout.activeEnd / 2f.rf +
+            ((layout.inactiveStart + width) / 2f.rf - layout.activeEnd / 2f.rf) * inInactive
+        val pillHeight = layout.trackHeight * 0.8f.rf
+        val pillWidth = room * 0.75f.rf
+        drawRoundRect(
+          RemotePaint { style = PaintingStyle.Fill }
+            .apply {
+              color =
+                theme.cardBackground.copy(alpha = theme.cardBackground.alpha * (1f.rf - inInactive))
+            },
+          RemoteOffset(x - pillWidth / 2f.rf, layout.middle - pillHeight / 2f.rf),
+          RemoteSize(pillWidth, pillHeight),
+          RemoteOffset(pillHeight / 2f.rf, pillHeight / 2f.rf),
+        )
+        drawAnchoredText(
+          valueText,
+          x,
+          layout.middle,
+          RemotePaint {
+            style = PaintingStyle.Fill
+            textSize = HaType.Body.toPx()
+          }
+            .apply { color = valueColor },
+        )
+      }
+    }
+    return
+  }
 
   RemoteBox(
     modifier =
@@ -164,14 +236,7 @@ fun RemoteHaSlider(
           // The value reads as a row's state does: the type scale's body role.
           textSize = HaType.Body.toPx()
         }
-          .apply {
-            color =
-              when {
-                !spec.available -> theme.secondaryText
-                lock != null -> lock.color(theme.primaryText, theme.secondaryText)
-                else -> theme.primaryText
-              }
-          },
+          .apply { color = valueColor },
       )
     }
   }
