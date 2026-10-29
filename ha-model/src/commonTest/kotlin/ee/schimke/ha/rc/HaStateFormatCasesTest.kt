@@ -59,6 +59,8 @@ class HaStateFormatCasesTest {
         entity("event.back_door_motion", "2026-04-20T12:22:53.298+00:00") to "3 h ago",
         entity("sensor.last_boot", ago(10.seconds), ts) to "just now",
         entity("sensor.last_boot", ago(50.seconds), ts) to "1 min ago",
+        // A half rounds up, as JavaScript's Math.round in HA's selectUnit.
+        entity("sensor.last_boot", ago(150.seconds), ts) to "3 min ago",
         entity("sensor.last_boot", ago(5.minutes + 59.seconds), ts) to "6 min ago",
         entity("sensor.last_boot", ago(44.minutes), ts) to "44 min ago",
         entity("sensor.last_boot", ago(50.minutes), ts) to "1 h ago",

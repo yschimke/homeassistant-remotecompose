@@ -9,12 +9,14 @@ import ee.schimke.ha.model.HaSnapshot
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Instant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -83,6 +85,11 @@ class EmbedBindingsGoldenTest {
           entityId = id,
           state = state.getValue("state").jsonPrimitive.content,
           attributes = state["attributes"]?.jsonObject ?: JsonObject(emptyMap()),
+          // As the embed keeps HA's compressed `lc`: epoch seconds, possibly fractional.
+          lastChanged =
+            state["last_changed"]?.jsonPrimitive?.doubleOrNull?.let {
+              Instant.fromEpochMilliseconds((it * 1000).toLong())
+            },
         )
       }
     val config = CardConfig(card["type"]?.jsonPrimitive?.contentOrNull.orEmpty(), card)

@@ -29,3 +29,7 @@ kotlin {
     commonTest.dependencies { implementation(libs.kotlin.test) }
   }
 }
+
+// CI runs `./gradlew test` across modules; a multiplatform module has no `test` of its own, so
+// without this the model's tests (room ranking, state formatting, templates) never run there.
+tasks.register("test") { dependsOn("jvmTest") }

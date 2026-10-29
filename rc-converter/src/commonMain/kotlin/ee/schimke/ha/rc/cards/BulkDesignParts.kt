@@ -17,6 +17,7 @@ import ee.schimke.ha.rc.components.RemoteHaSummaryLine
 import ee.schimke.ha.rc.components.RemoteHaTodoList
 import ee.schimke.ha.rc.components.RemoteHaTodoListIdentity
 import ee.schimke.ha.rc.components.cardText
+import ee.schimke.ha.rc.components.logbookSummaryText
 import ee.schimke.ha.rc.design.CardDesignComponent
 import ee.schimke.ha.rc.design.LocalCardInput
 import kotlinx.serialization.json.JsonObject
@@ -98,10 +99,14 @@ object BulkDesignParts {
   @Composable
   fun Summary() {
     val (card, snapshot) = input()
+    if (card.type == CardTypes.LOGBOOK) {
+      // The latest row's own bindings, so the line follows its entity as the full card does.
+      val data = logbookData(card, snapshot)
+      RemoteHaSummaryLine(cardText("title", data.title ?: "Logbook"), logbookSummaryText(data))
+      return
+    }
     val (title, summary) =
       when (card.type) {
-        CardTypes.LOGBOOK ->
-          logbookData(card, snapshot).let { (it.title ?: "Logbook") to logbookSummary(it) }
         CardTypes.CALENDAR -> calendarData(card, snapshot).let { it.title to calendarSummary(it) }
         else -> todoData(card, snapshot).let { it.title to todoSummary(it) }
       }

@@ -93,14 +93,16 @@ internal fun SpatialRoomControls(
 ) {
   val controls = content.state?.controls
   val anchors = rememberPinAnchors()
-  val pin: ((String) -> Unit)? = anchors?.let {
-    rememberPinning(it, pinning.pins, pinning.onPinned, pinning.onNearestPin)
+  val actions: PinActions? = anchors?.let {
+    rememberPinning(it, pinning.pins, pinning.onPinned, pinning.onMoved, pinning.onNearestPin)
   }
   val unpin: (RoomPin) -> Unit = { p ->
     anchors?.unpin(p.anchorId)
     pinning.onUnpinned(p)
   }
-  if (anchors != null) PinnedPanels(anchors, pinning.pins, content, onUnpin = unpin)
+  if (anchors != null && actions != null) {
+    PinnedPanels(anchors, pinning.pins, content, onMove = actions.move, onUnpin = unpin)
+  }
   val lost = anchors?.let { a -> pinning.pins.filter { it.anchorId in a.lost } }.orEmpty()
   Subspace {
     SpatialCurvedRow(
@@ -119,8 +121,8 @@ internal fun SpatialRoomControls(
         SpatialPanel(SubspaceModifier.width(CONTROL_PANEL_WIDTH).height(PANEL_HEIGHT).movable()) {
           Surface(Modifier.fillMaxSize()) {
             Column(Modifier.verticalScroll(rememberScrollState()).padding(20.dp)) {
-              RoomEntityCard(entity, content)
-              pin?.let { PinHereButton { it(entity.entityId) } }
+              content.entityCard(entity, Modifier)
+              actions?.let { PinHereButton { it.pin(entity.entityId) } }
             }
           }
         }
@@ -139,12 +141,12 @@ private fun RoomPanel(content: RoomContent, lost: List<RoomPin>, onRemoveLost: (
     ) {
       Text(controls?.area?.name ?: "This room", style = MaterialTheme.typography.headlineMedium)
       RoomHeader(content)
-      LostPins(lost, content, onRemoveLost)
+      LostPins(lost, content.snapshot, onRemoveLost)
       if (controls == null || controls.isEmpty) {
         Text("Nothing to control here.", style = MaterialTheme.typography.bodyLarge)
       } else if (controls.more.isNotEmpty()) {
         Text("More in ${controls.area.name}", style = MaterialTheme.typography.titleMedium)
-        controls.more.forEach { RoomEntityCard(it, content) }
+        controls.more.forEach { content.entityCard(it, Modifier) }
       }
     }
   }

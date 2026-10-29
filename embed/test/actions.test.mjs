@@ -67,9 +67,12 @@ test('domain defaults: sensors open more-info', () => {
 test('compressed entity events add, change and remove', () => {
   const states = {};
   applyEntitiesEvent(states, { a: { 'light.k': { s: 'off', a: { friendly_name: 'K', brightness: 1 }, c: 'ctx', lc: 1, lu: 1 } } });
-  assert.deepEqual(states, { 'light.k': { state: 'off', attributes: { friendly_name: 'K', brightness: 1 } } });
-  applyEntitiesEvent(states, { c: { 'light.k': { '+': { s: 'on', a: { brightness: 255 } }, '-': { a: ['friendly_name'] } } } });
-  assert.deepEqual(states, { 'light.k': { state: 'on', attributes: { brightness: 255 } } });
+  assert.deepEqual(states, { 'light.k': { state: 'off', attributes: { friendly_name: 'K', brightness: 1 }, last_changed: 1 } });
+  applyEntitiesEvent(states, { c: { 'light.k': { '+': { s: 'on', a: { brightness: 255 }, lc: 2.5 }, '-': { a: ['friendly_name'] } } } });
+  assert.deepEqual(states, { 'light.k': { state: 'on', attributes: { brightness: 255 }, last_changed: 2.5 } });
+  // An attribute-only change keeps the state's last_changed.
+  applyEntitiesEvent(states, { c: { 'light.k': { '+': { a: { brightness: 128 }, lu: 3 } } } });
+  assert.equal(states['light.k'].last_changed, 2.5);
   applyEntitiesEvent(states, { r: ['light.k'] });
   assert.deepEqual(states, {});
 });
