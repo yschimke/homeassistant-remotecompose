@@ -216,6 +216,8 @@ dependencies {
   implementation(libs.wear.compose.material3)
   implementation(libs.wear.compose.foundation)
   implementation(libs.wear.tooling.preview)
+  // AmbientLifecycleObserver: the app's always-on (ambient) mode.
+  implementation(libs.wear.ambient)
 
   // AndroidX Glance Wear — runtime widget rendering. Pulls
   // remote-creation-compose, lifecycle-service, etc. transitively.

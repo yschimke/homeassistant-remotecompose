@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +40,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.rc.m3.LocalRcReduceMotion
+import ee.schimke.rc.m3.RcAmbientValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -96,6 +98,15 @@ import kotlinx.serialization.json.contentOrNull
  * [WrapAdaptiveRemoteDocumentPlayer], which primes the View's paint context before Compose measures
  * it — the workaround for https://github.com/yschimke/homeassistant-remotecompose/issues/153.
  */
+/**
+ * The host display's low-power ambient state, for every card [CachedCardPreview] plays below it:
+ * written to each document that reads the ambient flag (`RcAmbientValue`,
+ * docs/architecture/ambient-mode.md), in either player, without a re-encode. Null, the default, is
+ * a host that doesn't know: nothing is written, and documents keep the value they were captured
+ * with.
+ */
+val LocalHostAmbient = compositionLocalOf<Boolean?> { null }
+
 @OptIn(ExperimentalRemotePlayerApi::class)
 @Composable
 fun CachedCardPreview(
@@ -302,6 +313,14 @@ fun CachedCardPreview(
   // theme flip, resize).
   val playerHolder = remember { mutableStateOf<RemoteComposePlayer?>(null) }
 
+  // The display's ambient state: the View player's flag (the Compose player takes it as a parameter
+  // below). The View player drops a name its document doesn't declare.
+  val ambient = LocalHostAmbient.current
+  LaunchedEffect(playerHolder.value, ambient) {
+    val updater = playerHolder.value ?: return@LaunchedEffect
+    if (ambient != null && writeAmbient(updater, ambient)) refreshBoundPlayerViews(updater)
+  }
+
   if (pushBindings && snapshot != null) {
     // A relative time ("3 h ago", see `isRelativeTimeState`) moves with the clock, not the
     // entity: while the card shows one, the host's tick (`LocalRelativeTimeTick`) re-runs the
@@ -365,6 +384,7 @@ fun CachedCardPreview(
         // Seeded like the Compose player's values: written before the View's first draw, and
         // recorded as pushed so the effect below only writes what changes after.
         seed = { player ->
+          ambient?.let { writeAmbient(player, it) }
           val current = latestSnapshot.value
           if (pushBindings && current != null) {
             val seeded = HashMap<String, Any?>()
@@ -388,6 +408,7 @@ fun CachedCardPreview(
         namedValues = namedValues,
         onNamedAction = onNamedAction,
         fallback = androidXPlayer,
+        ambient = ambient,
         inputDrafts = inputDrafts,
         onInputSubmit = { action, values ->
           if (card != null && snapshot != null) {
@@ -524,6 +545,12 @@ private class ViewPlayerWriter(private val updater: RemoteComposePlayer) : Bindi
 
   override fun flush() = refreshBoundPlayerViews(updater)
 }
+
+/** The ambient flag into a View player's document; false when the document doesn't read it. */
+private fun writeAmbient(player: RemoteComposePlayer, ambient: Boolean): Boolean = runCatching {
+  player.setUserLocalFloat(RcAmbientValue, if (ambient) 1f else 0f)
+}
+  .isSuccess
 
 private fun documentView(view: View): RemoteComposeView? =
   view as? RemoteComposeView
