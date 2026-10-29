@@ -286,6 +286,7 @@ dependencies {
   implementation(project(":rc-card-shutter"))
   implementation(project(":rc-image-coil"))
   implementation(project(":terrazzo-core"))
+  implementation(project(":room-ui"))
 
   implementation(platform(libs.compose.bom))
   implementation(libs.compose.ui)

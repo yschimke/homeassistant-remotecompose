@@ -121,7 +121,7 @@ internal fun SpatialRoomControls(
         SpatialPanel(SubspaceModifier.width(CONTROL_PANEL_WIDTH).height(PANEL_HEIGHT).movable()) {
           Surface(Modifier.fillMaxSize()) {
             Column(Modifier.verticalScroll(rememberScrollState()).padding(20.dp)) {
-              RoomEntityCard(entity, content)
+              content.entityCard(entity, Modifier)
               actions?.let { PinHereButton { it.pin(entity.entityId) } }
             }
           }
@@ -141,12 +141,12 @@ private fun RoomPanel(content: RoomContent, lost: List<RoomPin>, onRemoveLost: (
     ) {
       Text(controls?.area?.name ?: "This room", style = MaterialTheme.typography.headlineMedium)
       RoomHeader(content)
-      LostPins(lost, content, onRemoveLost)
+      LostPins(lost, content.snapshot, onRemoveLost)
       if (controls == null || controls.isEmpty) {
         Text("Nothing to control here.", style = MaterialTheme.typography.bodyLarge)
       } else if (controls.more.isNotEmpty()) {
         Text("More in ${controls.area.name}", style = MaterialTheme.typography.titleMedium)
-        controls.more.forEach { RoomEntityCard(it, content) }
+        controls.more.forEach { content.entityCard(it, Modifier) }
       }
     }
   }

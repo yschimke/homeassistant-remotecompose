@@ -88,10 +88,10 @@ headset's local storage (`AnchorPersistenceMode.LOCAL`) and records
 the wall beside it, pin.
 
 **Snapping to walls.** The session also runs plane tracking (`HORIZONTAL_AND_VERTICAL`). Pinning
-casts the gaze against the tracked vertical planes (`PinPlacement.kt`, `wallPose`): the nearest
+casts the gaze against the tracked vertical planes (`room-ui` `PinPlacement.kt`, `wallPlacement`): the nearest
 wall the gaze meets from the front, within 4 m and inside its extent (with 0.3 m of slack, since
 tracked extents run short), takes the anchor 2 cm off its surface, facing into the room and
-upright. With no wall in reach the pin goes in the air instead (`airPose`): 0.8 m ahead, level
+upright. With no wall in reach the pin goes in the air instead (`airPlacement`): 0.8 m ahead, level
 with the eyes, facing the user. **Move here** on a pinned panel pins it again where the user now
 looks (on a wall if there is one) and forgets the old anchor.
 
@@ -110,8 +110,23 @@ pose) is the **Pinned** room signal above, so pinning doubles as room calibratio
 The first pin asks for `SCENE_UNDERSTANDING_COARSE` and `HEAD_TRACKING`. A pin whose anchor doesn't
 load (the room changed, the headset forgot its spaces) is listed under "Pins not found here" on
 the room panel to remove and pin again; **Unpin** on a pinned panel forgets the anchor on the
-headset too. Pins live in `room/RoomPins.kt` (storage, nearest-pin choice) and
-`room/SpatialPins.kt` (anchors, permissions, panels).
+headset too. Pins live in `room-ui` (`RoomPins.kt`: storage, nearest-pin choice;
+`PinPlacement.kt`: where a pin goes) and, for Android XR, `app/.../room/SpatialPins.kt` (anchors,
+permissions, panels).
+
+## Modules
+
+The room controls are split so another XR platform can reuse everything but its spatial layer:
+
+| Where | What |
+|---|---|
+| `ha-model` (`ee.schimke.ha.room`) | Areas, dashboard importance, room ranking, which room the user is in. Pure KMP. |
+| `room-ui` (KMP: Android, JVM) | `RoomPin` storage and nearest pin; `pinPlacement` / `wallPlacement` / `airPlacement` on a platform-neutral `Vec3` and `WallPlane`; the `RoomAnchors` interface a platform implements for persisted anchors; `RoomState` and `sourceLabel`; the flat screen (`FlatRoomControls`, `RoomHeader`, `RoomTrackerMenu`, `LostPins`, `PinHereButton`), drawn from a `RoomContent` whose `entityCard` slot each host fills. |
+| `app` (`ee.schimke.terrazzo.room`) | The glue (`RoomScreen`: preferences, dashboards, live states, the action dispatcher), the entity card in the user's card style (`RoomEntityCard`, the more-info controls), and the Android XR layer: `SpatialRoom.kt` (Compose for XR panels) and `SpatialPins.kt` (`PinAnchors`, the ARCore for XR `RoomAnchors`; permissions; panels on anchors). |
+
+A Quest build would add an app module on Meta's Spatial SDK that reuses `ha-model`, `ha-client`,
+`terrazzo-core` and `room-ui`, implements `RoomAnchors` with the Spatial SDK's anchors and MRUK walls
+(converted to `WallPlane`), and hosts the room's Compose UI in Spatial SDK panels.
 
 ## Not yet
 

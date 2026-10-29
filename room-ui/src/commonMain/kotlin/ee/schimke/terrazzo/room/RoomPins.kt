@@ -19,22 +19,21 @@ private val pinListSerializer = ListSerializer(RoomPin.serializer())
 private val pinJson = Json { ignoreUnknownKeys = true }
 
 /** [encoded] as pins; none for null or anything that doesn't parse. */
-internal fun decodeRoomPins(encoded: String?): List<RoomPin> =
+fun decodeRoomPins(encoded: String?): List<RoomPin> =
   encoded?.let { runCatching { pinJson.decodeFromString(pinListSerializer, it) }.getOrNull() }
     ?: emptyList()
 
-internal fun encodeRoomPins(pins: List<RoomPin>): String =
-  pinJson.encodeToString(pinListSerializer, pins)
+fun encodeRoomPins(pins: List<RoomPin>): String = pinJson.encodeToString(pinListSerializer, pins)
 
 /**
  * Of [placed] (each pin's entity with its distance from the user in metres, for the pins whose
  * place the headset found), the entity of the nearest within [reach]: what says which room the user
  * stands in. Farther than [reach], a pin is in view but not where the user is.
  */
-internal fun nearestPinnedEntity(
+fun nearestPinnedEntity(
   placed: List<Pair<String, Float>>,
   reach: Float = PIN_REACH_METRES,
 ): String? = placed.filter { it.second <= reach }.minByOrNull { it.second }?.first
 
 /** About a room's width: a pin nearer than this is in the room the user stands in. */
-internal const val PIN_REACH_METRES = 4f
+const val PIN_REACH_METRES = 4f
