@@ -167,11 +167,18 @@ fun RemoteHaSlider(
         // pill in the card's colour, so it reads on any accent.
         val room = height * BubbleWidthPerHeight.rf
         val inInactive = selectIfGt(width - layout.inactiveStart, room, 1f.rf, 0f.rf)
-        val x =
-          layout.activeEnd / 2f.rf +
-            ((layout.inactiveStart + width) / 2f.rf - layout.activeEnd / 2f.rf) * inInactive
         val pillHeight = layout.trackHeight * 0.8f.rf
         val pillWidth = room * 0.75f.rf
+        // On a narrow slider neither track may have room: keep the value inside the slider.
+        val x =
+          min(
+            max(
+              layout.activeEnd / 2f.rf +
+                ((layout.inactiveStart + width) / 2f.rf - layout.activeEnd / 2f.rf) * inInactive,
+              pillWidth / 2f.rf,
+            ),
+            width - pillWidth / 2f.rf,
+          )
         drawRoundRect(
           RemotePaint { style = PaintingStyle.Fill }
             .apply {
