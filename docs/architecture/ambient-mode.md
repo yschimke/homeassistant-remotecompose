@@ -28,9 +28,14 @@ card's live values, seeded before the first frame like them, and never a re-enco
   already does for every value) and finds `host.ambient` there or not.
 - **A host that doesn't know its display state writes nothing.** The document keeps the value it
   was captured with (`0`, or `1` under `LocalRcAmbientInitial`, for a capture made while ambient or
-  a preview of the look). `HaRcComposePlayer`'s `ambient` parameter is `null` by default for this
-  reason. A host that does know provides `LocalHostAmbient` above its cards: `CachedCardPreview`
-  writes it to every card it plays, in either player.
+  a preview of the look). `HaRcComposePlayer`'s `ambient` reader returns `null` by default
+  (`NoHostAmbient`) for this reason. A host that does know provides `LocalHostAmbient` above its
+  cards: `CachedCardPreview` writes it to every card it plays, in either player.
+- **Going in or out of ambient recomposes nothing and encodes nothing.** `LocalHostAmbient` is a
+  reader (`() -> Boolean?`) backed by snapshot state, not a value: the players call it only in
+  their effects (`snapshotFlow`), and read it unobserved when they seed a new document's first
+  frame. The flag is not part of a document's cache key, so the cached bytes play on unchanged
+  (`HostAmbientTest` checks both).
 - **A document that doesn't declare it** can't promise anything below. The host dims it, draws a
   placeholder, or settles it before every frame (below, "Ticking").
 
@@ -150,11 +155,12 @@ interactive frame greyed.
 The watch app is the first host that goes ambient
 ([#1323](https://github.com/yschimke/homeassistant-remotecompose/issues/1323)):
 
-- `WearMainActivity` observes the system's ambient mode (`AmbientLifecycleObserver`, from
-  `androidx.wear:wear`) into `WearAmbient`: whether the watch is ambient, and a tick for each of the
-  system's ambient updates (about one a minute).
-- `WearApp` provides `LocalHostAmbient` from it, so every card on every screen plays with the flag.
-  Only entering and leaving ambient recompose the screen.
+- `WearApp` takes the system's ambient mode from Wear Compose (`rememberAmbientModeManager()`,
+  also provided as `LocalAmbientModeManager`): whether the watch is ambient
+  (`currentAmbientMode`, snapshot state), and `withAmbientTick` for each of the system's ambient
+  updates (about one a minute).
+- `WearApp` provides `LocalHostAmbient` as a reader of it, so every card on every screen plays
+  with the flag, and no screen recomposes when it changes.
 - Live values are held while ambient (`heldWhileAmbient`): the phone's changes between ambient
   updates don't redraw the screen; the latest lands on the next update, and leaving ambient shows
   it at once. The cards draw that frame exact (promise 1), so nothing has to settle.

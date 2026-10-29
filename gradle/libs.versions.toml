@@ -211,7 +211,6 @@ meta-spatial-sdk-uiset = { module = "com.meta.spatial:meta-spatial-sdk-uiset", v
 wear-compose-material3 = { module = "androidx.wear.compose:compose-material3", version = "1.7.1" }
 wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation", version = "1.7.1" }
 wear-tooling-preview = { module = "androidx.wear:wear-tooling-preview", version = "1.0.0" }
-wear-ambient = { module = "androidx.wear:wear", version = "1.4.0" }
 
 # AndroidX Glance Wear — Wear OS widget framework (alpha).
 glance-wear = { module = "androidx.glance.wear:wear", version.ref = "glance-wear" }

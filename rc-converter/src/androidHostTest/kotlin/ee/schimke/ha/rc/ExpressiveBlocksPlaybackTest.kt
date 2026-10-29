@@ -108,6 +108,7 @@ class ExpressiveBlocksPlaybackTest {
 
   private val values = mutableStateMapOf<String, RcNamedValue>()
   private val ambient = mutableStateOf<Boolean?>(false)
+  private val readAmbient = { ambient.value }
 
   private fun play(bytes: ByteArray) {
     val report =
@@ -126,7 +127,7 @@ class ExpressiveBlocksPlaybackTest {
           namedValues = values,
           onNamedAction = { _, value -> sent.add(decodeHaAction(value?.toString().orEmpty())) },
           fallback = { error("plays in the Compose player") },
-          ambient = ambient.value,
+          ambient = readAmbient,
         )
       }
     }

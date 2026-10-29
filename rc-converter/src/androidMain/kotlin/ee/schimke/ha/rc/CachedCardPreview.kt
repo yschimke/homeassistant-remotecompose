@@ -22,12 +22,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.Snapshot
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -99,13 +101,16 @@ import kotlinx.serialization.json.contentOrNull
  * it — the workaround for https://github.com/yschimke/homeassistant-remotecompose/issues/153.
  */
 /**
- * The host display's low-power ambient state, for every card [CachedCardPreview] plays below it:
- * written to each document that reads the ambient flag (`RcAmbientValue`,
- * docs/architecture/ambient-mode.md), in either player, without a re-encode. Null, the default, is
- * a host that doesn't know: nothing is written, and documents keep the value they were captured
- * with.
+ * Reads the host display's low-power ambient state, for every card [CachedCardPreview] plays below
+ * it: written to each document that reads the ambient flag (`RcAmbientValue`,
+ * docs/architecture/ambient-mode.md), in either player.
+ *
+ * A reader, not a value: provide one stable function backed by snapshot state. The players call it
+ * in their effects only, so going in or out of ambient recomposes nothing and encodes no document.
+ * [NoHostAmbient], the default, is a host that doesn't know: nothing is written, and documents keep
+ * the value they were captured with.
  */
-val LocalHostAmbient = compositionLocalOf<Boolean?> { null }
+val LocalHostAmbient = staticCompositionLocalOf { NoHostAmbient }
 
 @OptIn(ExperimentalRemotePlayerApi::class)
 @Composable
@@ -318,7 +323,9 @@ fun CachedCardPreview(
   val ambient = LocalHostAmbient.current
   LaunchedEffect(playerHolder.value, ambient) {
     val updater = playerHolder.value ?: return@LaunchedEffect
-    if (ambient != null && writeAmbient(updater, ambient)) refreshBoundPlayerViews(updater)
+    snapshotFlow(ambient).collect { on ->
+      if (on != null && writeAmbient(updater, on)) refreshBoundPlayerViews(updater)
+    }
   }
 
   if (pushBindings && snapshot != null) {
@@ -384,7 +391,7 @@ fun CachedCardPreview(
         // Seeded like the Compose player's values: written before the View's first draw, and
         // recorded as pushed so the effect below only writes what changes after.
         seed = { player ->
-          ambient?.let { writeAmbient(player, it) }
+          Snapshot.withoutReadObservation(ambient)?.let { writeAmbient(player, it) }
           val current = latestSnapshot.value
           if (pushBindings && current != null) {
             val seeded = HashMap<String, Any?>()

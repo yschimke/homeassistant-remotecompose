@@ -8,7 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import ee.schimke.terrazzo.wear.WearAmbientState
+import androidx.wear.compose.foundation.AmbientModeManager
 import ee.schimke.terrazzo.wear.heldWhileAmbient
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import kotlinx.coroutines.flow.StateFlow
@@ -65,7 +65,7 @@ class WearValues(initial: Map<String, EntityValue> = emptyMap()) {
 @Composable
 fun rememberWearValues(
   source: StateFlow<Map<String, EntityValue>>,
-  ambient: StateFlow<WearAmbientState>? = null,
+  ambient: AmbientModeManager? = null,
 ): WearValues {
   val values = remember(source) { WearValues(source.value) }
   LaunchedEffect(values, ambient) {
