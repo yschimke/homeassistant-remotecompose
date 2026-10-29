@@ -829,6 +829,48 @@ export function cardBindings(card, states, recipe) {
   };
 }
 
+/**
+ * The host's ambient flag (`RcAmbientValue`, docs/architecture/ambient-mode.md): `1` while the
+ * display is in a low-power ambient state. The display's state, not the card's data.
+ */
+export const AMBIENT_BINDING = 'host.ambient';
+
+/** The flag's value for an `ambient` attribute: `true`/empty is 1, `false` is 0, absent is none. */
+export function ambientValue(attribute) {
+  if (attribute === null || attribute === undefined) return null;
+  return attribute === 'false' ? 0 : 1;
+}
+
+const OPPOSITE_STATES = new Map([
+  ['on', 'off'], ['On', 'Off'], ['open', 'closed'], ['Open', 'Closed'],
+  ['locked', 'unlocked'], ['Locked', 'Unlocked'], ['home', 'not_home'], ['Home', 'Away'],
+]);
+for (const [a, b] of [...OPPOSITE_STATES]) OPPOSITE_STATES.set(b, a);
+
+/**
+ * Other values for a design's [values] (`{strings, floats, ints, booleans}`): each one changed so
+ * that a design bound to it moves. A fraction swings across its range and stays in it, a number
+ * grows, a flag or an on/off state flips; an entity's status and other text are kept. Changing them back is the same call
+ * on the result's source, so a page toggles between the two.
+ */
+export function changedValues(values) {
+  const floats = {};
+  for (const [name, x] of Object.entries(values.floats ?? {})) {
+    floats[name] = x >= 0 && x <= 1 ? (x <= 0.5 ? x + 0.4 : x - 0.4) : x * 1.5;
+  }
+  const ints = {};
+  for (const [name, x] of Object.entries(values.ints ?? {})) {
+    // A status stays available ([STATUS_AVAILABLE]): changing it would show a different card, not
+    // the same card moving.
+    ints[name] = name.endsWith('.status') ? x : x === 0 || x === 1 ? 1 - x : x + 1;
+  }
+  const booleans = {};
+  for (const [name, x] of Object.entries(values.booleans ?? {})) booleans[name] = !x;
+  const strings = {};
+  for (const [name, x] of Object.entries(values.strings ?? {})) strings[name] = OPPOSITE_STATES.get(x) ?? x;
+  return { strings, floats, ints, booleans };
+}
+
 // ---------------------------------------------------------------------------------------------
 // Actions: a template only picks which of the card's own actions runs.
 // ---------------------------------------------------------------------------------------------
@@ -1447,6 +1489,9 @@ const BaseElement = globalThis.HTMLElement ?? class {};
  * - `height`: a fixed CSS height in px (default: the card's own).
  * - `read-only`: taps run no service calls.
  * - `require-host-bindings`: reject templates declaring data this host cannot populate.
+ * - `ambient`: the display is in a low-power ambient state (`true`) or not (`false`); written to a
+ *   design that reads the host's ambient flag. Absent, the design keeps its own value. Changing it
+ *   doesn't reload the card, so the design's own transition plays.
  *
  * Events (bubbling, composed): `ha-card-action` (cancelable, before a tap runs: detail is the
  * action), `ha-card-more-info` and `ha-card-navigate` (actions a page handles itself). The
@@ -1455,7 +1500,7 @@ const BaseElement = globalThis.HTMLElement ?? class {};
  */
 export class HaCardElement extends BaseElement {
   static get observedAttributes() {
-    return ['hass', 'card', 'design', 'design-key', 'template-url', 'card-style', 'library', 'theme', 'height', 'require-host-bindings', 'read-only'];
+    return ['hass', 'card', 'design', 'design-key', 'template-url', 'card-style', 'library', 'theme', 'height', 'require-host-bindings', 'read-only', 'ambient'];
   }
 
   constructor() {
@@ -1467,6 +1512,7 @@ export class HaCardElement extends BaseElement {
     this.player = null;
     this.unsubscribe = null;
     this.localStates = null;
+    this.localValues = null;
     const root = this.attachShadow({ mode: 'open' });
     root.innerHTML = `
       <style>
@@ -1504,16 +1550,33 @@ export class HaCardElement extends BaseElement {
     if (this.resizer) this.resizer.disconnect();
   }
 
-  attributeChangedCallback(_name, previous, next) {
-    if (previous !== next && this.isConnected) this.start();
+  attributeChangedCallback(name, previous, next) {
+    if (previous === next || !this.isConnected) return;
+    // The host's state, pushed into the running card: a reload would skip the design's transition.
+    if (name === 'ambient') this.render();
+    else this.start();
   }
 
   /** Render from these states instead of a Home Assistant: entity id → `{ state, attributes }`. */
   setStates(states) {
     this.localStates = states;
+    // States again, not a design's values ([setValues]).
+    this.localValues = null;
     // Without any Home Assistant: no more events over these states, and no service calls.
     this.detachHass();
     this.states = { ...states };
+    this.render();
+  }
+
+  /**
+   * Play the design with these values, as its named bindings (`{strings, floats, ints, booleans}`,
+   * by binding name) rather than derived from entity states: a design library's own page showing a
+   * design with its example values. No Home Assistant is used.
+   */
+  setValues(values) {
+    this.localValues = values;
+    this.localStates ??= {};
+    this.detachHass();
     this.render();
   }
 
@@ -1647,6 +1710,7 @@ export class HaCardElement extends BaseElement {
         // leaving a converter-specific declaration alone would display the library's fixture.
         // The recipe declares the card-level values; it is read, never shown.
         const supported = variable.type === 2 ||
+          key === AMBIENT_BINDING ||
           (variable.type === 0 && key === RECIPE_BINDING) ||
           (variable.type === 0 && Object.hasOwn(bindings.strings, key)) ||
           (variable.type === 1 && Object.hasOwn(bindings.floats, key)) ||
@@ -1665,6 +1729,9 @@ export class HaCardElement extends BaseElement {
       },
     });
     this.render();
+    // Shown even when there was nothing to push: a design played with no values (a library
+    // without catalog bindings) is still drawn.
+    this.fit();
   }
 
   async connectHass(card, started) {
@@ -1753,7 +1820,7 @@ export class HaCardElement extends BaseElement {
     }
     const context = player.getRemoteContext();
     if (!context) return;
-    const bindings = cardBindings(card, this.states, this.recipe);
+    const bindings = this.localValues ?? cardBindings(card, this.states, this.recipe);
     const push = (name, value, set) => {
       const key = `USER:${name}`;
       if (Object.is(this.pushed.get(key), value)) return false;
@@ -1762,11 +1829,15 @@ export class HaCardElement extends BaseElement {
       return true;
     };
     let changed = false;
-    for (const [n, v] of Object.entries(bindings.strings)) changed = push(n, v, (k, x) => context.setNamedStringOverride(k, x)) || changed;
+    for (const [n, v] of Object.entries(bindings.strings ?? {})) changed = push(n, v, (k, x) => context.setNamedStringOverride(k, x)) || changed;
     // A RemoteBoolean is an int (0/1) in the document.
-    for (const [n, v] of Object.entries(bindings.booleans)) changed = push(n, v ? 1 : 0, (k, x) => context.setNamedIntegerOverride(k, x)) || changed;
-    for (const [n, v] of Object.entries(bindings.ints)) changed = push(n, v, (k, x) => context.setNamedIntegerOverride(k, x)) || changed;
-    for (const [n, v] of Object.entries(bindings.floats)) changed = push(n, v, (k, x) => context.setNamedFloatOverride(k, x)) || changed;
+    for (const [n, v] of Object.entries(bindings.booleans ?? {})) changed = push(n, v ? 1 : 0, (k, x) => context.setNamedIntegerOverride(k, x)) || changed;
+    for (const [n, v] of Object.entries(bindings.ints ?? {})) changed = push(n, v, (k, x) => context.setNamedIntegerOverride(k, x)) || changed;
+    for (const [n, v] of Object.entries(bindings.floats ?? {})) changed = push(n, v, (k, x) => context.setNamedFloatOverride(k, x)) || changed;
+    const ambient = ambientValue(this.getAttribute('ambient'));
+    if (ambient !== null && context.namedVariables?.has(`USER:${AMBIENT_BINDING}`)) {
+      changed = push(AMBIENT_BINDING, ambient, (k, x) => context.setNamedFloatOverride(k, x)) || changed;
+    }
     if (!changed) return;
     const doc = player.getDocument();
     if (doc && doc.invalidateMeasure) doc.invalidateMeasure();

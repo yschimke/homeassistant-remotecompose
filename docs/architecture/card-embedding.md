@@ -75,12 +75,16 @@ fetches them. None of them holds user data.
 | `theme` | `light`, `dark` or `auto`. Templates are baked per theme, so this only steers the player. |
 | `height` | A fixed CSS height. By default the canvas fits the laid-out card. |
 | `read-only` | Taps run no service calls. Events still fire. |
+| `ambient` | The page's display is in a low-power ambient state (`true`) or not (`false`): written to a design that reads the host's ambient flag ([ambient mode](ambient-mode.md)). Absent, the design keeps its own value. Changing it pushes the flag into the running card, so the design's own transition plays. |
 
 Events, which bubble and are composed: `ha-card-action` fires before a tap runs and is
 cancelable, with the resolved action as its detail. `ha-card-more-info` and `ha-card-navigate`
 carry the actions a page has to handle itself. `data-status` reads `loading`, `signed-out`,
 `connecting`, `live`, `reconnecting` or `error`. `setStates({...})` plays the card from given
-states without any Home Assistant. The demo uses it.
+states without any Home Assistant. The demo uses it. `setValues({strings, floats, ints,
+booleans})` plays it from a design's named bindings directly, with no states at all: the design
+library's pages use it to show each design live with its example values, and to swap them for
+others (`changedValues`) so its animations play.
 
 ### Choosing the template
 

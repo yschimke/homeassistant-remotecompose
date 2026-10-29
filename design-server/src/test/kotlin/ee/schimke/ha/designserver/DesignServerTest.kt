@@ -251,6 +251,38 @@ class DesignServerTest {
       assertEquals(4, Regex("class=\"watch ").findAll(detailOnWatch).count())
     }
 
+  /**
+   * "Live" is opt in: off, pictures and no script; on, each design is a placeholder the embed's
+   * player takes over, carrying its blob, library and example card (escaped), under the Ambient
+   * switch and the Change values button. A design's own page always has them.
+   */
+  @Test
+  fun liveDesignsPlayWithAmbientAndChangeValues() =
+    serve(library()) {
+      val off = client.get("/designs?style=all&mode=all").bodyAsText()
+      assertFalse("live-ambient" in off, "off by default")
+      assertFalse("<script" in off, "the browser stays script-free by default")
+      val on = client.get("/designs?style=all&mode=all&live=1").bodyAsText()
+      assertEquals(
+        2,
+        Regex("class=\"live\" data-design=").findAll(on).count(),
+        "a player per design",
+      )
+      for (control in
+        listOf("id=\"live-ambient\"", "id=\"live-change\"", "/embed/v1/ha-card.js")) assertTrue(
+        control in on,
+        control,
+      )
+      assertTrue("name=\"live\" value=\"1\" checked" in on, "the checkbox stays on")
+      assertTrue("data-library=\"/designs/v1/\"" in on)
+      assertTrue("data-theme=\"light\"" in on)
+      assertFalse("<script>alert(1)" in on, "the example card is escaped into its attribute")
+
+      val detail = client.get("/designs/${DesignLibrary.idOf(light)}").bodyAsText()
+      assertTrue("class=\"live big\"" in detail)
+      assertTrue("id=\"live-change\"" in detail)
+    }
+
   @Test
   fun browserDefaultsToOneThemeAndFilters() =
     serve(library()) {
