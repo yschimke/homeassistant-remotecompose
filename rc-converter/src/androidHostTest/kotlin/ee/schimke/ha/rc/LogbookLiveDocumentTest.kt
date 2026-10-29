@@ -66,7 +66,7 @@ class LogbookLiveDocumentTest {
       Json.parseToJsonElement("""{"type":"logbook","entities":["$DOOR"]}""").jsonObject,
     )
 
-  private fun door(state: String, changed: Instant?) =
+  private fun door(state: String, changed: Instant?, name: String = "Front door") =
     HaSnapshot(
       states =
         mapOf(
@@ -76,7 +76,7 @@ class LogbookLiveDocumentTest {
               state,
               JsonObject(
                 mapOf(
-                  "friendly_name" to JsonPrimitive("Front door"),
+                  "friendly_name" to JsonPrimitive(name),
                   "device_class" to JsonPrimitive("door"),
                 )
               ),
@@ -163,6 +163,17 @@ class LogbookLiveDocumentTest {
     compose.waitForIdle()
     assertTrue("3 h ago" in texts(), "and on again: ${texts()}")
     assertEquals(1, documents.size, "one document throughout")
+  }
+
+  @Test
+  fun aRenamedEntityIsRenamedInTheSameDocument() {
+    snapshot = door("on", null)
+    play()
+    assertTrue("Front door" in texts(), texts().toString())
+    snapshot = door("on", null, name = "Back door")
+    compose.waitForIdle()
+    assertTrue("Back door" in texts(), "the new name: ${texts()}")
+    assertEquals(1, documents.size, "one document for both names")
   }
 
   @Test

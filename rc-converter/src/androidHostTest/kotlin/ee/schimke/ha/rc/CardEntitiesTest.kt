@@ -90,7 +90,12 @@ class CardEntitiesTest {
     // `formatState` bake), not the raw HA state — so `on` capitalises and a
     // numeric value stays as-is.
     assertEquals(
-      mapOf("light.kitchen.state" to "On", "sensor.temp.state" to "21.4"),
+      mapOf(
+        "light.kitchen.state" to "On",
+        "light.kitchen.name" to "light.kitchen",
+        "sensor.temp.state" to "21.4",
+        "sensor.temp.name" to "sensor.temp",
+      ),
       bindings.strings,
     )
     assertEquals(
@@ -157,7 +162,7 @@ class CardEntitiesTest {
     // than push an empty string — the document keeps its bake.
     val snapshot = HaSnapshot(states = mapOf("light.kitchen" to EntityState("light.kitchen", "on")))
     val bindings = cardSnapshotBindings(setOf("light.kitchen", "sensor.missing"), snapshot)
-    assertEquals(setOf("light.kitchen.state"), bindings.strings.keys)
+    assertEquals(setOf("light.kitchen.state", "light.kitchen.name"), bindings.strings.keys)
     assertEquals(setOf("light.kitchen.is_on", "light.kitchen.is_available"), bindings.booleans.keys)
   }
 

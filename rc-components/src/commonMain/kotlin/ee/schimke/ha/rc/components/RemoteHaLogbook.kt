@@ -185,8 +185,14 @@ fun RemoteHaLogbookIdentity(
   }
 }
 
-/** The row's name: `<id>.name` in a template, else as given. */
-@Composable private fun HaLogbookEntry.liveName(): RemoteString = entityName(entityId, name)
+/**
+ * The row's name, `<id>.name`: in a template the slot's name, otherwise the entity's own
+ * (`HaLiveBindings.name`), which every host pushes, so a rename needs no new document.
+ */
+@Composable
+private fun HaLogbookEntry.liveName(): RemoteString =
+  if (LocalTemplateBindings.current != null) entityName(entityId, name)
+  else LiveValues.named(entityId, "name", name)
 
 /** What the row's entity is now: `<id>.state`, the host's own formatted state. */
 private fun HaLogbookEntry.liveMessage(): RemoteString = LiveValues.state(entityId, message)

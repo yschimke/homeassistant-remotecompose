@@ -68,6 +68,14 @@ object HaLiveBindings {
    */
   fun lastChanged(state: EntityState): Int = state.lastChanged?.epochSeconds?.toInt() ?: NO_TIME
 
+  /**
+   * The entity's display name ↔ `<entityId>.name`: its `friendly_name`, else its id. A card that
+   * shows the entity's own name (not a configured `name:`) binds this, so renaming the entity in
+   * Home Assistant reaches the card without a new document.
+   */
+  fun name(state: EntityState): String =
+    (state.attributes["friendly_name"] as? JsonPrimitive)?.contentOrNull ?: state.entityId
+
   /** [lastChanged] for an entity with no `last_changed`; documents show no time for it. */
   const val NO_TIME: Int = 0
 

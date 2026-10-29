@@ -111,6 +111,7 @@ fun cardSnapshotBindings(entityIds: Set<String>, snapshot: HaSnapshot): CardSnap
   for (id in entityIds) {
     val state = snapshot.states[id] ?: continue
     strings["$id.state"] = formatState(state, snapshot)
+    strings["$id.name"] = HaLiveBindings.name(state)
     booleans["$id.is_on"] = HaLiveBindings.isOn(id, state.state)
     booleans["$id.is_available"] = HaLiveBindings.isAvailable(state.state)
     HaLiveBindings.stateInt(id, state.state)?.let { ints["$id.state_int"] = it }

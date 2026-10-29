@@ -61,6 +61,11 @@ fun relativeTimeText(since: RemoteInt): RemoteString {
 /**
  * [seconds] (Unix) as `20 Apr 2026` in the player's time zone: the days since the epoch turned into
  * a civil date with whole numbers only (Howard Hinnant's `civil_from_days`).
+ *
+ * The player only knows its UTC offset now, not the one in force at [seconds], so across a
+ * daylight-saving change a time within the change (an hour) of midnight shows the neighbouring day.
+ * That only reaches the date line, which is for changes a week old or more; the offset at an
+ * arbitrary past time would need a value no host gets from Home Assistant.
  */
 private fun dateText(seconds: RemoteInt): RemoteString {
   val day = (seconds + RemoteTimeVariables.utcOffsetSeconds) / SECONDS_PER_DAY
