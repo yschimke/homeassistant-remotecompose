@@ -22,13 +22,16 @@ fun canPlayWithCmp(bytes: ByteArray): Boolean = decodePlayableDocument(bytes).is
 /**
  * A values-free template is safe only when the host can populate every data declaration. `meta.*`
  * names are the template's own metadata (a card design's binding recipe, `meta.binding_recipe`),
- * carried in the document for hosts that read it, never bound.
+ * carried in the document for hosts that read it, never bound. `host.*` names are the display's
+ * state (`host.ambient`, docs/architecture/ambient-mode.md), not the card's data: a host writes
+ * them when it knows them, and the document's own value stands otherwise.
  */
 fun canBindWithCmp(bytes: ByteArray, bindings: Map<String, RcNamedValue>): Boolean =
   decodePlayableDocument(bytes).getOrNull()?.operations?.filterIsInstance<RcNamedVariable>()?.all {
     val name = it.name.removePrefix("USER:")
     it.type == RcNamedVariable.COLOR_TYPE ||
       name.startsWith("meta.") ||
+      name.startsWith("host.") ||
       acceptsBinding(it.type, bindings[name])
   } == true
 

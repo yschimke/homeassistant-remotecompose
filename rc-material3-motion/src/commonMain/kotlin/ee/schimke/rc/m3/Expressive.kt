@@ -85,14 +85,23 @@ fun RemoteM3ShapeMorph(
   modifier: RemoteModifier = RemoteModifier,
   content: @Composable @RemoteComposable () -> Unit,
 ) {
+  val ambient = rcAmbient()
   RemoteBox(modifier = modifier, contentAlignment = RemoteAlignment.Center) {
     RemoteCanvas(modifier = RemoteModifier.fillMaxSize()) {
       val radius = min(width, height) * m3MorphCorner(selected, pressed)
+      // Ambient: the container's outline instead of its fill.
       drawRoundRect(
-        fill(color),
+        fill(color.copy(alpha = color.alpha * ambient.fade)),
         RemoteOffset(0f.rf, 0f.rf),
         RemoteSize(width, height),
         RemoteOffset(radius, radius),
+      )
+      val line = min(width, height) / 16f.rf
+      drawRoundRect(
+        stroke(color.copy(alpha = color.alpha * ambient.fraction), line),
+        RemoteOffset(line / 2f.rf, line / 2f.rf),
+        RemoteSize(width - line, height - line),
+        RemoteOffset(radius - line / 2f.rf, radius - line / 2f.rf),
       )
     }
     content()
@@ -117,6 +126,9 @@ private fun wavePhase(running: Boolean, cyclesPerSecond: Float): RemoteFloat =
   else 0f.rf
 
 private const val TwoPi = 6.2831855f
+
+/** How thick a stroke or track is while ambient, as a fraction of its interactive thickness. */
+private const val AmbientStroke = 0.35f
 
 /**
  * Whether a loop on the player's clock may run: animations on, an interactive player, and the
@@ -145,9 +157,11 @@ fun RemoteM3WavyProgress(
   modifier: RemoteModifier = RemoteModifier,
 ) {
   val phase = wavePhase(running, cyclesPerSecond = 1f)
+  val ambient = rcAmbient()
   RemoteCanvas(modifier = modifier) {
-    val stroke = height * 0.25f.rf
-    val amplitude = if (running) height * 0.2f.rf else 0f.rf
+    // Ambient: a flat, thin line with no track; the wave comes to rest.
+    val stroke = ambient.scale(height * 0.25f.rf, AmbientStroke)
+    val amplitude = if (running) height * 0.2f.rf * ambient.fade else 0f.rf
     val mid = height / 2f.rf
     val start = stroke / 2f.rf
     val end = width - stroke / 2f.rf
@@ -155,13 +169,17 @@ fun RemoteM3WavyProgress(
     val gap = stroke * 1.5f.rf
     // The flat track after the gap, and the stop dot at its end.
     drawLine(
-      stroke(colors.track, stroke),
+      stroke(colors.track.copy(alpha = colors.track.alpha * ambient.fade), stroke),
       RemoteOffset(min(head + gap, end), mid),
       RemoteOffset(end, mid),
     )
     // The stop dot fades out as the head reaches it: there is nothing left to stop at.
     drawCircle(
-      fill(colors.stop.copy(alpha = colors.stop.alpha * stopVisibility(end - head, gap * 2f.rf))),
+      fill(
+        colors.stop.copy(
+          alpha = colors.stop.alpha * stopVisibility(end - head, gap * 2f.rf) * ambient.fade
+        )
+      ),
       stroke / 2f.rf,
       RemoteOffset(end, mid),
     )
@@ -206,13 +224,22 @@ fun RemoteM3WavyProgressRing(
   strokeFraction: Float = 0.12f,
 ) {
   val phase = wavePhase(running, cyclesPerSecond = 0.5f)
+  val ambient = rcAmbient()
   RemoteCanvas(modifier = modifier) {
     val size = min(width, height)
-    val stroke = size * strokeFraction.rf
-    val amplitude = if (running) stroke * 0.22f.rf else 0f.rf
-    val radius = size / 2f.rf - stroke / 2f.rf - amplitude
+    // Ambient: a thin arc with no track; the ripple comes to rest. The radius keeps its interactive
+    // value, so the arc doesn't shift as it thins.
+    val fullStroke = size * strokeFraction.rf
+    val stroke = ambient.scale(fullStroke, AmbientStroke)
+    val fullAmplitude = if (running) fullStroke * 0.22f.rf else 0f.rf
+    val amplitude = fullAmplitude * ambient.fade
+    val radius = size / 2f.rf - fullStroke / 2f.rf - fullAmplitude
     val centre = RemoteOffset(width / 2f.rf, height / 2f.rf)
-    drawCircle(stroke(colors.track, stroke), radius, centre)
+    drawCircle(
+      stroke(colors.track.copy(alpha = colors.track.alpha * ambient.fade), stroke),
+      radius,
+      centre,
+    )
     val paint = stroke(colors.indicator, stroke)
     val sweep = progress * TwoPi.rf
     for (i in 0 until RingSegments) {
@@ -253,7 +280,9 @@ private const val RingWaves = 8f
 @Composable
 @RemoteComposable
 fun RemoteM3LoadingIndicator(color: RemoteColor, modifier: RemoteModifier = RemoteModifier) {
-  val time = if (rcLoopsAllowed()) RemoteTimeVariables.animationTime else 0f.rf
+  val ambient = rcAmbient()
+  // Ambient: the clock stops counting for it, so it rests at its first pose, as when loops are off.
+  val time = if (rcLoopsAllowed()) RemoteTimeVariables.animationTime * ambient.fade else 0f.rf
   RemoteCanvas(modifier = modifier) {
     val size = min(width, height) * 0.7f.rf
     // A half turn a second; the corner breathes between round and square twice a turn.
@@ -261,11 +290,22 @@ fun RemoteM3LoadingIndicator(color: RemoteColor, modifier: RemoteModifier = Remo
     val radius = size * (M3RoundCorner.rf + (M3PressedCorner - M3RoundCorner).rf * morph)
     val centre = RemoteOffset(width / 2f.rf, height / 2f.rf)
     rotate(time * 180f.rf, centre) {
+      // Ambient: the shape's outline instead of its fill.
       drawRoundRect(
-        fill(color),
+        fill(color.copy(alpha = color.alpha * ambient.fade)),
         RemoteOffset(centre.x - size / 2f.rf, centre.y - size / 2f.rf),
         RemoteSize(size, size),
         RemoteOffset(radius, radius),
+      )
+      val line = size / 12f.rf
+      drawRoundRect(
+        stroke(color.copy(alpha = color.alpha * ambient.fraction), line),
+        RemoteOffset(
+          centre.x - size / 2f.rf + line / 2f.rf,
+          centre.y - size / 2f.rf + line / 2f.rf,
+        ),
+        RemoteSize(size - line, size - line),
+        RemoteOffset(radius - line / 2f.rf, radius - line / 2f.rf),
       )
     }
   }
@@ -323,13 +363,18 @@ internal constructor(
  * gaps travel with the handle and the stop dot fades as the active track reaches it. While
  * [pressed] (a `0..1` fraction, [rememberRcPress]) the handle narrows to half its width, springing
  * back on release. Draw it in the canvas that takes the drag, so the handle stays under the finger.
+ *
+ * While [ambient], the active track thins to a line and the inactive track and stop dot go: the
+ * handle and the line still read as the value, with a fraction of the lit pixels.
  */
 fun RemoteDrawScope.drawM3Slider(
   fraction: RemoteFloat,
   pressed: RemoteFloat,
   colors: RcM3SliderColors,
+  ambient: RcAmbient = RcAmbient.Never,
 ): RcM3SliderLayout {
-  val trackHeight = height * 0.55f.rf
+  val fullTrackHeight = height * 0.55f.rf
+  val trackHeight = ambient.scale(fullTrackHeight, AmbientStroke)
   val top = (height - trackHeight) / 2f.rf
   val middle = height / 2f.rf
   val handleWidth = height * 0.1f.rf * (1f.rf - pressed * 0.5f.rf)
@@ -341,13 +386,21 @@ fun RemoteDrawScope.drawM3Slider(
   val inactiveStart = handle + handleWidth / 2f.rf + gap
   // Outer ends round, inner ends (beside the handle) square.
   trackSegment(0f.rf, activeEnd, top, trackHeight, colors.active, squareEnd = true)
-  trackSegment(inactiveStart, width, top, trackHeight, colors.inactive, squareEnd = false)
-  val stopRadius = trackHeight * 0.12f.rf
-  val stopX = width - trackHeight / 2f.rf
+  trackSegment(
+    inactiveStart,
+    width,
+    top,
+    trackHeight,
+    colors.inactive.copy(alpha = colors.inactive.alpha * ambient.fade),
+    squareEnd = false,
+  )
+  val stopRadius = fullTrackHeight * 0.12f.rf
+  val stopX = width - fullTrackHeight / 2f.rf
   drawCircle(
     fill(
       colors.stop.copy(
-        alpha = colors.stop.alpha * stopVisibility(stopX - inactiveStart, trackHeight)
+        alpha =
+          colors.stop.alpha * stopVisibility(stopX - inactiveStart, fullTrackHeight) * ambient.fade
       )
     ),
     stopRadius,

@@ -10,15 +10,25 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
+import androidx.compose.remote.creation.compose.layout.RemoteCanvas
+import androidx.compose.remote.creation.compose.layout.RemoteOffset
+import androidx.compose.remote.creation.compose.layout.RemoteSize
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
+import androidx.compose.remote.creation.compose.state.RemoteFloat
+import androidx.compose.remote.creation.compose.state.RemotePaint
+import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
@@ -30,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import ee.schimke.composeai.rcplayer.compose.composeSupportReport
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcInput
+import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaButtonData
 import ee.schimke.ha.rc.components.HaSliderSpec
@@ -39,10 +50,13 @@ import ee.schimke.ha.rc.components.ProvideHaUberTheme
 import ee.schimke.ha.rc.components.RemoteHaSlider
 import ee.schimke.ha.rc.components.RemoteHaToggleButton
 import ee.schimke.rc.m3.LocalRcReduceMotion
+import ee.schimke.rc.m3.RcAmbientValue
 import ee.schimke.rc.m3.RcM3ProgressColors
+import ee.schimke.rc.m3.RcMotionScheme
 import ee.schimke.rc.m3.RemoteM3LoadingIndicator
 import ee.schimke.rc.m3.RemoteM3WavyProgress
 import ee.schimke.rc.m3.RemoteM3WavyProgressRing
+import ee.schimke.rc.m3.animate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -85,6 +99,9 @@ class ExpressiveBlocksPlaybackTest {
    */
   private var manualClock = false
 
+  private val values = mutableStateMapOf<String, RcNamedValue>()
+  private val ambient = mutableStateOf<Boolean?>(false)
+
   private fun play(bytes: ByteArray) {
     val report =
       RcDocumentCodec.decode(bytes)
@@ -99,8 +116,10 @@ class ExpressiveBlocksPlaybackTest {
         HaRcComposePlayer(
           documentBytes = bytes,
           modifier = Modifier.size(200.dp, 200.dp),
+          namedValues = values,
           onNamedAction = { _, value -> sent.add(decodeHaAction(value?.toString().orEmpty())) },
           fallback = { error("plays in the Compose player") },
+          ambient = ambient.value,
         )
       }
     }
@@ -283,5 +302,133 @@ class ExpressiveBlocksPlaybackTest {
     val released = frame()
     assertTrue(held.differs(rest) > 10, "a held handle narrows: ${held.differs(rest)}")
     assertEquals(0, released.differs(rest), "the handle springs back")
+  }
+
+  /**
+   * A bar as wide as the host's `test.level` (`0..1`), on the expressive scheme's spatial spring.
+   */
+  private fun bar() = document {
+    val level = RemoteFloat.createNamedRemoteFloat("test.level", 0.2f, RemoteState.Domain.User)
+    val shown = level.animate(RcMotionScheme.expressive().spatial)
+    // Two animated values: the document still declares the ambient flag once.
+    val alpha = level.animate(RcMotionScheme.expressive().effects)
+    RemoteCanvas(RemoteModifier.fillMaxSize()) {
+      drawRect(
+        RemotePaint { style = PaintingStyle.Fill }
+          .apply { color = Color.Blue.rc.copy(alpha = alpha) },
+        RemoteOffset(0f.rf, 0f.rf),
+        RemoteSize(width * shown, height),
+      )
+    }
+  }
+
+  /** The host's ambient state, changed on the UI thread as a host would. */
+  private fun setAmbient(on: Boolean) = onUiThread { ambient.value = on }
+
+  /** The host pushing a new `test.level`. */
+  private fun setLevel(level: Float) = onUiThread {
+    values["test.level"] = RcNamedValue.FloatValue(level)
+  }
+
+  private fun onUiThread(write: () -> Unit) = compose.runOnUiThread {
+    write()
+    Snapshot.sendApplyNotifications()
+  }
+
+  /** One frame's worth of the player's clock after a change. */
+  private fun oneFrame() {
+    compose.mainClock.advanceTimeByFrame()
+    compose.waitForIdle()
+  }
+
+  @Test
+  fun aDocumentReadsTheAmbientFlagOnce() {
+    val declared = RcDocumentCodec.decode(bar()).declaredNamedVariables()
+    assertEquals(
+      1,
+      declared.keys.count { it.endsWith(RcAmbientValue) },
+      "one named ambient flag however many values animate: ${declared.keys}",
+    )
+  }
+
+  @Test
+  fun interactiveAChangeAnimates() {
+    manualClock = true
+    values["test.level"] = RcNamedValue.FloatValue(0.2f)
+    play(bar())
+    setLevel(0.9f)
+    oneFrame()
+    val moving = frame()
+    settle(2_000)
+    assertTrue(frame().differs(moving) > 20, "interactive, a change springs to its value")
+  }
+
+  @Test
+  fun ambientAChangeLandsInTheNextFrame() {
+    manualClock = true
+    values["test.level"] = RcNamedValue.FloatValue(0.2f)
+    setAmbient(true)
+    play(bar())
+    setLevel(0.9f)
+    oneFrame()
+    val first = frame()
+    settle(2_000)
+    // An ambient host draws about once a minute: the frame after a change is the one it keeps.
+    assertEquals(0, frame().differs(first), "ambient, the first frame after a change is final")
+  }
+
+  @Test
+  fun ambientStillsARunningWave() {
+    manualClock = true
+    setAmbient(true)
+    play(
+      document {
+        RemoteM3WavyProgress(
+          0.6f.rf,
+          running = true,
+          RcM3ProgressColors(Color.Blue.rc, Color.LightGray.rc),
+          RemoteModifier.fillMaxSize(),
+        )
+      }
+    )
+    val first = frame()
+    settle(250)
+    assertEquals(0, frame().differs(first), "ambient, the wave rests as a flat line")
+  }
+
+  @Test
+  fun goingAmbientTakesOneFrame() {
+    manualClock = true
+    play(slider())
+    setAmbient(true)
+    oneFrame()
+    val first = frame()
+    settle(1_000)
+    assertEquals(0, frame().differs(first), "the first frame after the flag is the ambient look")
+  }
+
+  @Test
+  fun ambientStillsTheLoader() {
+    manualClock = true
+    setAmbient(true)
+    play(document { RemoteM3LoadingIndicator(Color.Blue.rc, RemoteModifier.fillMaxSize()) })
+    val first = frame()
+    settle(250)
+    assertEquals(0, frame().differs(first), "ambient, the loader rests")
+  }
+
+  @Test
+  fun leavingAmbientRestoresTheInteractiveLook() {
+    manualClock = true
+    val slider = slider()
+    play(slider)
+    val interactive = frame()
+    setAmbient(true)
+    settle(1_000)
+    val ambientFrame = frame()
+    assertTrue(ambientFrame.differs(interactive) > 20, "ambient thins the slider's tracks")
+    setAmbient(false)
+    settle(1_000)
+    assertEquals(0, frame().differs(interactive), "and leaving ambient brings them back")
   }
 }

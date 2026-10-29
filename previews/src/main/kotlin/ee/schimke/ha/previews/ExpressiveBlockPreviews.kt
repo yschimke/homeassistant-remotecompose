@@ -13,6 +13,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
@@ -24,14 +25,18 @@ import ee.schimke.ha.rc.androidXExperimental
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ProvideHaUberTheme
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
+import ee.schimke.rc.m3.LocalRcAmbientInitial
 import ee.schimke.rc.m3.LocalRcAnimationsEnabled
 import ee.schimke.rc.m3.RcM3ProgressColors
 import ee.schimke.rc.m3.RcM3SliderColors
+import ee.schimke.rc.m3.RcM3SwitchColors
 import ee.schimke.rc.m3.RemoteM3LoadingIndicator
 import ee.schimke.rc.m3.RemoteM3ShapeMorph
+import ee.schimke.rc.m3.RemoteM3Switch
 import ee.schimke.rc.m3.RemoteM3WavyProgress
 import ee.schimke.rc.m3.RemoteM3WavyProgressRing
 import ee.schimke.rc.m3.drawM3Slider
+import ee.schimke.rc.m3.rcAmbient
 
 /**
  * The M3 Expressive building blocks in `rc-material3-motion`, frozen at fixed fractions. They are
@@ -117,3 +122,65 @@ fun ExpressiveSlider() = Expressive {
     }
   }
 }
+
+/**
+ * The blocks in their ambient look, as a watch in always-on draws them: outlines for fills, thin
+ * tracks, no inactive track or stop dot, and the waves at rest. The same documents draw this when
+ * the host sets its ambient flag; here the flag starts set.
+ */
+@Preview(
+  name = "expressive ambient",
+  showBackground = true,
+  backgroundColor = 0xFF000000,
+  widthDp = 220,
+  heightDp = 200,
+)
+@Composable
+fun ExpressiveAmbient() =
+  CapturingRemoteContentPreview(profile = androidXExperimental) {
+    CompositionLocalProvider(
+      LocalRcAnimationsEnabled provides false,
+      LocalRcAmbientInitial provides true,
+    ) {
+      ProvideHaUberTheme(HaUberTheme.Expressive, darkTheme = true) {
+        val accent = currentRemoteHaTheme().linkText
+        val track = currentRemoteHaTheme().divider
+        val ambient = rcAmbient()
+        RemoteColumn(
+          modifier = RemoteModifier.fillMaxSize().padding(8.rdp),
+          verticalArrangement = RemoteArrangement.spacedBy(10.rdp),
+        ) {
+          RemoteRow(horizontalArrangement = RemoteArrangement.spacedBy(10.rdp)) {
+            RemoteM3ShapeMorph(1f.rf, 0f.rf, accent, RemoteModifier.size(44.rdp)) {}
+            RemoteM3Switch(
+              RemoteBoolean(true),
+              RcM3SwitchColors(
+                checkedTrack = accent,
+                checkedThumb = Color.Black.rc,
+                uncheckedTrack = track,
+                uncheckedThumb = track,
+                uncheckedBorder = track,
+              ),
+              RemoteModifier.size(52.rdp, 32.rdp),
+            )
+            RemoteM3WavyProgressRing(
+              0.6f.rf,
+              running = true,
+              RcM3ProgressColors(accent, track),
+              RemoteModifier.size(44.rdp),
+            )
+            RemoteM3LoadingIndicator(accent, RemoteModifier.size(44.rdp))
+          }
+          RemoteM3WavyProgress(
+            0.6f.rf,
+            running = true,
+            RcM3ProgressColors(accent, track),
+            RemoteModifier.fillMaxWidth().height(20.rdp),
+          )
+          RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(36.rdp)) {
+            drawM3Slider(0.3f.rf, 0f.rf, RcM3SliderColors(accent, track), ambient)
+          }
+        }
+      }
+    }
+  }

@@ -13,6 +13,7 @@ import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.design.DeviceMatch
 import ee.schimke.ha.design.HaSharedValues
+import ee.schimke.rc.m3.RcAmbientValue
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -142,6 +143,9 @@ fun userTemplateProblem(
         profile == RcTargetProfiles.WEAR_WIDGETS &&
           (it.startsWith(WEAR_HOST_COLOURS) || it in WEAR_HOST_FRAME)
       }
+      // The display's state, not the card's data: written by the host that knows it, the
+      // document's own value otherwise (docs/architecture/ambient-mode.md).
+      .filterNot { it == RcAmbientValue }
       .distinct()
       .sorted()
   if (unknown.isNotEmpty()) {
