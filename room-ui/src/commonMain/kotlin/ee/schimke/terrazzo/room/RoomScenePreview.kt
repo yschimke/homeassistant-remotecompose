@@ -83,7 +83,10 @@ fun RoomScenePreview(
             .graphicsLayer {
               scaleX = scale
               scaleY = scale
-              rotationY = turn
+              // A positive rotationY swings the layer's right edge away from the viewer; the
+              // panel's right edge goes away when the camera is round to its left (a negative
+              // turn).
+              rotationY = -turn
               cameraDistance = 12f * density
             },
           contentAlignment = Alignment.Center,

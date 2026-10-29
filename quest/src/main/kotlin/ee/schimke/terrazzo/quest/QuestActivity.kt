@@ -4,6 +4,10 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import com.meta.spatial.compose.ComposeFeature
 import com.meta.spatial.compose.ComposeViewPanelRegistration
@@ -43,11 +47,18 @@ class QuestActivity : AppSystemActivity() {
     QuestRoomModel(getSharedPreferences("quest_room", Context.MODE_PRIVATE))
   }
   private lateinit var mruk: MRUKFeature
-  private var anchors: QuestRoomAnchors? = null
+
+  // Compose state: the panels may compose before the scene is ready or a pin's entity is mapped,
+  // and
+  // must pick them up when they arrive.
+  private var anchors by mutableStateOf<QuestRoomAnchors?>(null)
+
+  /** Space Setup's rooms are loaded: a pin has a wall or room to be kept against. */
+  private var sceneLoaded by mutableStateOf(false)
 
   /** The panel entity on each placed pin, by anchor id, and the pin behind each panel entity. */
   private val pinPanels = mutableMapOf<String, Entity>()
-  private val panelPins = mutableMapOf<Long, RoomPin>()
+  private val panelPins = mutableStateMapOf<Long, RoomPin>()
 
   override fun registerFeatures(): List<SpatialFeature> {
     mruk = MRUKFeature(this, systemManager)
@@ -140,7 +151,8 @@ class QuestActivity : AppSystemActivity() {
   private fun RoomPanel() {
     val anchors = anchors
     QuestRoomPanel(
-      content = roomContent(onPin = anchors?.let { { entityId -> pin(entityId) } }),
+      content =
+        roomContent(onPin = anchors?.takeIf { sceneLoaded }?.let { { entityId -> pin(entityId) } }),
       lostPins = model.pins.filter { anchors != null && it.anchorId in anchors.lost },
       onRemoveLost = ::unpin,
     )
@@ -149,7 +161,12 @@ class QuestActivity : AppSystemActivity() {
   @Composable
   private fun PinnedPanel(pin: RoomPin?) {
     pin ?: return
-    QuestPinnedPanel(pinnedEntity(pin, model.snapshot), model.snapshot, model::toggle)
+    QuestPinnedPanel(
+      pinnedEntity(pin, model.snapshot),
+      model.snapshot,
+      model::toggle,
+      onUnpin = { unpin(pin) },
+    )
   }
 
   private fun roomContent(onPin: ((String) -> Unit)?) =
@@ -168,6 +185,7 @@ class QuestActivity : AppSystemActivity() {
     mruk.loadSceneFromDevice(true, true, SceneModel.V2_FALLBACK_V1).thenAccept { result ->
       if (result != MRUKLoadDeviceResult.SUCCESS) return@thenAccept
       runOnUiThread {
+        sceneLoaded = true
         anchors?.load(model.pins)
         syncPinPanels()
       }

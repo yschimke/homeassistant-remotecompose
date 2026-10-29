@@ -16,6 +16,7 @@ import ee.schimke.terrazzo.room.PinPlace
 import ee.schimke.terrazzo.room.RoomAnchors
 import ee.schimke.terrazzo.room.RoomPin
 import ee.schimke.terrazzo.room.Vec3
+import ee.schimke.terrazzo.room.WALL_OFFSET_METRES
 import ee.schimke.terrazzo.room.WallPlane
 import ee.schimke.terrazzo.room.pinPlacement
 
@@ -52,7 +53,8 @@ class QuestRoomAnchors(private val scene: Scene, private val mruk: MRUKFeature) 
   }
 
   override suspend fun pinWhereLooking(): PinPlace? {
-    val room = mruk.getCurrentRoom() ?: return null
+    // Standing outside every room's bounds (a hallway, a doorway): the first room still anchors it.
+    val room = mruk.getCurrentRoom() ?: mruk.rooms.firstOrNull() ?: return null
     val head = scene.getViewerPose()
     val walls = walls(room)
     val placement = pinPlacement(head.t.toVec3(), head.forward().toVec3(), walls.map { it.plane })
@@ -99,7 +101,7 @@ class QuestRoomAnchors(private val scene: Scene, private val mruk: MRUKFeature) 
           plane.center +
             plane.widthAxis * place.along +
             plane.heightAxis * place.up +
-            plane.normal * ee.schimke.terrazzo.room.WALL_OFFSET_METRES
+            plane.normal * WALL_OFFSET_METRES
         panelPose(position, plane.normal)
       }
       is QuestPinPlace.InRoom -> {

@@ -38,6 +38,7 @@ fun QuestPinnedPanelPreview() {
       pinnedEntity(RoomPin("preview", PREVIEW_BASE_URL, HEATER), PreviewSnapshot),
       PreviewSnapshot,
       onToggle = {},
+      onUnpin = {},
     )
   }
 }
@@ -66,6 +67,7 @@ fun QuestRoomScenePreview() {
             pinnedEntity(RoomPin(panel.id, PREVIEW_BASE_URL, panel.id), PreviewSnapshot),
             PreviewSnapshot,
             onToggle = {},
+            onUnpin = {},
           )
       }
     }

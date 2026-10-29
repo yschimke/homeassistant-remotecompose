@@ -46,19 +46,23 @@ fun QuestTheme(content: @Composable () -> Unit) {
   SpatialTheme(darkSpatialColorScheme()) { MaterialTheme(darkColorScheme()) { content() } }
 }
 
-/** A pinned control on its own panel: the card on the panel's background, filling it. */
+/**
+ * A pinned control on its own panel: the card on the panel's background, filling it, with **Unpin**
+ * ([onUnpin], null to leave it out) to take the pin down.
+ */
 @Composable
 fun QuestPinnedPanel(
   entity: RoomEntity,
   snapshot: HaSnapshot?,
   onToggle: (entityId: String) -> Unit,
+  onUnpin: (() -> Unit)?,
   modifier: Modifier = Modifier,
 ) {
   Box(
     modifier.fillMaxSize().background(SpatialTheme.colorScheme.panel, RoundedCornerShape(24.dp)),
     contentAlignment = Alignment.Center,
   ) {
-    QuestEntityCard(entity, snapshot, onToggle, onPin = null)
+    QuestEntityCard(entity, snapshot, onToggle, onPin = null, onUnpin = onUnpin)
   }
 }
 
@@ -107,7 +111,8 @@ fun QuestRoomPanel(
 
 /**
  * One control on Quest: its name and current state, a switch for one that turns on and off, and
- * "Pin here" to pin it where the user looks ([onPin], null where pinning isn't available).
+ * "Pin here" to pin it where the user looks ([onPin], null where pinning isn't available) or
+ * "Unpin" on a pinned panel ([onUnpin]).
  */
 @Composable
 fun QuestEntityCard(
@@ -116,6 +121,7 @@ fun QuestEntityCard(
   onToggle: (entityId: String) -> Unit,
   onPin: ((entityId: String) -> Unit)?,
   modifier: Modifier = Modifier,
+  onUnpin: (() -> Unit)? = null,
 ) {
   val state = snapshot?.states?.get(entity.entityId)
   Column(
@@ -147,6 +153,7 @@ fun QuestEntityCard(
       }
     }
     onPin?.let { pin -> BorderlessButton("Pin here", { pin(entity.entityId) }) }
+    onUnpin?.let { BorderlessButton("Unpin", it) }
   }
 }
 
