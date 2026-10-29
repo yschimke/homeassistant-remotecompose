@@ -13,8 +13,10 @@ metro = "1.5.0"
 androidx-appfunctions = "1.0.0-beta01"
 ksp = "2.3.12"
 
-# Compose
-compose-bom = "2026.09.00"
+# Compose: the alpha-channel BOM, for the Compose 1.13 line (1.13.0-beta02 in 2026.10.01). Compose
+# Multiplatform 1.13 already pulled the Android modules onto 1.13, past the stable BOM's 1.12, and
+# Glimmer needs 1.13; this lines every module up on one 1.13 release.
+compose-bom = "2026.10.01"
 
 # RemoteCompose + the Wear widget stack that sits on it (APIs change per alpha).
 # These three move in lockstep — `remote-material3` and `glance-wear` both
@@ -184,7 +186,7 @@ composeai-daemon-bom = { module = "ee.schimke.composeai:compose-preview-daemon-b
 composeai-preview-annotations = { module = "ee.schimke.composeai:preview-annotations" }
 
 # Compose
-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
+compose-bom = { module = "androidx.compose:compose-bom-alpha", version.ref = "compose-bom" }
 compose-ui = { module = "androidx.compose.ui:ui" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }

@@ -8,8 +8,8 @@ plugins {
 // runs
 // on the phone and starts `GlassesRoomActivity` on the glasses' display through `:projected`, where
 // the room is drawn with Jetpack Compose Glimmer. The room model and the phone screen are shared
-// (`:ha-model`, `:room-ui`). Its own module because Glimmer pulls Compose to a 1.13 alpha, past the
-// main app's BOM.
+// (`:ha-model`, `:room-ui`). Its own module, like `:quest`, so the glasses' alpha libraries
+// (Glimmer, projected) stay out of the main app until they settle.
 android {
   namespace = "ee.schimke.terrazzo.glasses"
   compileSdk {

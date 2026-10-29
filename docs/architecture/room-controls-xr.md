@@ -187,9 +187,9 @@ toggling a control on either screen shows on the other at once.
   Android 15.
 - **Which room.** Glasses can't pin, so it's the room the user picks, their tracker, or the room
   the dashboards care most about.
-- **Its own module.** Glimmer (1.0.0-alpha22) pulls Compose to 1.13.0-alpha02, past the main app's
-  BOM, so it stays out of `:app` until the BOM catches up. Like Quest, it shows `DemoHouse` until it
-  signs in through `ha-client`.
+- **Its own module.** Glimmer (1.0.0-alpha22) needs Compose 1.13, which the whole build is on now
+  (the alpha-channel BOM); it stays out of `:app` so the glasses' alpha libraries do too, until
+  they settle. Like Quest, it shows `DemoHouse` until it signs in through `ha-client`.
 
 ### Previews
 
