@@ -136,6 +136,14 @@ fun RoomScreen(session: HaSession, readOnly: Boolean, onBack: () -> Unit) {
         val pin = RoomPin(anchorId, session.baseUrl, entityId)
         scope.launch { prefs.setRoomPins(encodeRoomPins(allPins + pin)) }
       },
+      onMoved = { old, anchorId ->
+        val moved = old.copy(anchorId = anchorId)
+        scope.launch {
+          prefs.setRoomPins(
+            encodeRoomPins(allPins.map { if (it.anchorId == old.anchorId) moved else it })
+          )
+        }
+      },
       onUnpinned = { pin ->
         scope.launch {
           prefs.setRoomPins(encodeRoomPins(allPins.filter { it.anchorId != pin.anchorId }))
@@ -190,6 +198,7 @@ internal class RoomContent(
 internal class RoomPinning(
   val pins: List<RoomPin>,
   val onPinned: (anchorId: String, entityId: String) -> Unit,
+  val onMoved: (old: RoomPin, anchorId: String) -> Unit,
   val onUnpinned: (RoomPin) -> Unit,
   val onNearestPin: (String?) -> Unit,
 )

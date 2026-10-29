@@ -36,6 +36,8 @@ import androidx.core.content.ContextCompat
 import androidx.xr.arcore.Anchor
 import androidx.xr.arcore.AnchorCreateSuccess
 import androidx.xr.arcore.ArDevice
+import androidx.xr.arcore.Plane
+import androidx.xr.arcore.PlaneType
 import androidx.xr.arcore.TrackingState
 import androidx.xr.compose.platform.LocalSession
 import androidx.xr.compose.spatial.ExperimentalFollowingSubspaceApi
@@ -48,9 +50,9 @@ import androidx.xr.compose.subspace.layout.width
 import androidx.xr.runtime.AnchorPersistenceMode
 import androidx.xr.runtime.Config
 import androidx.xr.runtime.DeviceTrackingMode
+import androidx.xr.runtime.PlaneTrackingMode
 import androidx.xr.runtime.Session
 import androidx.xr.runtime.SessionConfigureSuccess
-import androidx.xr.runtime.math.Pose
 import androidx.xr.runtime.math.Vector3
 import ee.schimke.ha.room.RoomEntity
 import java.util.UUID
@@ -84,6 +86,8 @@ internal class PinAnchors(private val session: Session) {
           Config.Builder(session.config)
             .setAnchorPersistence(AnchorPersistenceMode.LOCAL)
             .setDeviceTracking(DeviceTrackingMode.SPATIAL)
+            // Walls to pin controls onto ([wallPose]).
+            .setPlaneTracking(PlaneTrackingMode.HORIZONTAL_AND_VERTICAL)
             .build()
         session.configure(config) is SessionConfigureSuccess
       } catch (e: RuntimeException) {
@@ -110,26 +114,42 @@ internal class PinAnchors(private val session: Session) {
   }
 
   /**
-   * A new anchor [PIN_DISTANCE_METRES] ahead of where the user looks, persisted: the place a
-   * control is pinned to. Its id, or null when the headset can't place or keep one right now.
+   * A new persisted anchor where the user looks: on the wall their gaze meets, if one is in reach
+   * ([wallPose]), else in the air ahead of them ([airPose]). The place a control is pinned to, or
+   * null when the headset can't place or keep one right now.
    */
-  suspend fun pinAhead(): String? {
+  suspend fun pinWhereLooking(): PinPlace? {
     if (!configure()) return null
     return try {
       val device = ArDevice.getInstance(session).state.value
       if (device.trackingState != TrackingState.TRACKING) return null
-      // Facing the way the user looks, so the panel on it faces back at them.
-      val pose = device.devicePose compose Pose(Vector3(0f, 0f, -PIN_DISTANCE_METRES))
+      val onWall = wallPose(device.devicePose, trackedWalls())
+      val pose = onWall ?: airPose(device.devicePose)
       val anchor = (Anchor.create(session, pose) as? AnchorCreateSuccess)?.anchor ?: return null
       val id = anchor.persist().toString()
       anchors[id] = anchor
-      id
+      PinPlace(id, onWall = onWall != null)
     } catch (e: CancellationException) {
       throw e
     } catch (e: RuntimeException) {
       null
     }
   }
+
+  /** The walls the headset tracks now; none when plane tracking is off or refused. */
+  private fun trackedWalls(): List<WallPlane> =
+    try {
+      Plane.subscribe(session).value.mapNotNull { plane ->
+        if (plane.type != PlaneType.VERTICAL) return@mapNotNull null
+        val state = plane.state.value
+        if (state.trackingState != TrackingState.TRACKING || state.subsumedBy != null) {
+          return@mapNotNull null
+        }
+        WallPlane(state.centerPose, state.extents.width, state.extents.height)
+      }
+    } catch (e: RuntimeException) {
+      emptyList()
+    }
 
   /** Forgets [anchorId]'s place, on the headset as well. */
   fun unpin(anchorId: String) {
@@ -160,6 +180,9 @@ internal class PinAnchors(private val session: Session) {
   }
 }
 
+/** A new pin's anchor and whether it landed on a wall. */
+internal data class PinPlace(val anchorId: String, val onWall: Boolean)
+
 /** The session's [PinAnchors], or null off a headset (no XR session). */
 @Composable
 internal fun rememberPinAnchors(): PinAnchors? {
@@ -172,34 +195,56 @@ internal val PIN_PERMISSIONS =
   arrayOf("android.permission.SCENE_UNDERSTANDING_COARSE", "android.permission.HEAD_TRACKING")
 
 /**
+ * What the spatial room can do with pins: [pin] an entity's controls where the user looks, or
+ * [move] a pin there. Either lands on the wall the user looks at when one is in reach.
+ */
+internal class PinActions(val pin: (entityId: String) -> Unit, val move: (RoomPin) -> Unit)
+
+/**
  * Pinning for the spatial room: configures [anchors] and loads [pins] when the permissions are
  * already granted, keeps [onNearestPin] told which pinned entity the user stands nearest, and
- * returns the action that pins an entity ahead of the user (asking for the permissions first, the
- * first time).
+ * returns the [PinActions] (which ask for the permissions first, the first time). A new pin goes to
+ * [onPinned]; a moved one to [onMoved] with its new anchor, its old one forgotten.
  */
 @Composable
 internal fun rememberPinning(
   anchors: PinAnchors,
   pins: List<RoomPin>,
   onPinned: (anchorId: String, entityId: String) -> Unit,
+  onMoved: (old: RoomPin, anchorId: String) -> Unit,
   onNearestPin: (String?) -> Unit,
-): (entityId: String) -> Unit {
+): PinActions {
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
-  var pending by remember { mutableStateOf<String?>(null) }
+  // The entity to pin, and the pin it replaces when moving, while the permissions are asked for.
+  var pending by remember { mutableStateOf<Pair<String, RoomPin?>?>(null) }
   fun granted() = PIN_PERMISSIONS.all {
     ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
   }
-  fun pinNow(entityId: String) {
-    scope.launch { anchors.pinAhead()?.let { onPinned(it, entityId) } }
+  fun pinNow(entityId: String, replacing: RoomPin?) {
+    scope.launch {
+      val place = anchors.pinWhereLooking() ?: return@launch
+      if (replacing == null) onPinned(place.anchorId, entityId)
+      else {
+        anchors.unpin(replacing.anchorId)
+        onMoved(replacing, place.anchorId)
+      }
+    }
   }
   val launcher =
     rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result
       ->
-      val entity = pending
+      val request = pending
       pending = null
-      if (entity != null && result.values.all { it }) pinNow(entity)
+      if (request != null && result.values.all { it }) pinNow(request.first, request.second)
     }
+  fun request(entityId: String, replacing: RoomPin?) {
+    if (granted()) pinNow(entityId, replacing)
+    else {
+      pending = entityId to replacing
+      launcher.launch(PIN_PERMISSIONS)
+    }
+  }
 
   LaunchedEffect(anchors, pins) {
     if (pins.isNotEmpty() && granted() && anchors.configure()) anchors.load(pins)
@@ -216,18 +261,14 @@ internal fun rememberPinning(
       delay(NEAREST_PIN_INTERVAL_MS)
     }
   }
-  return { entityId ->
-    if (granted()) pinNow(entityId)
-    else {
-      pending = entityId
-      launcher.launch(PIN_PERMISSIONS)
-    }
+  return remember(anchors) {
+    PinActions(pin = { request(it, null) }, move = { request(it.entityId, it) })
   }
 }
 
 /**
  * A panel on each of [pins] whose place the headset found: the entity's controls, where the user
- * left them, and a way to unpin it.
+ * left them, with ways to move it to where the user now looks ([onMove]) or unpin it.
  */
 @OptIn(ExperimentalFollowingSubspaceApi::class)
 @Composable
@@ -235,6 +276,7 @@ internal fun PinnedPanels(
   anchors: PinAnchors,
   pins: List<RoomPin>,
   content: RoomContent,
+  onMove: (RoomPin) -> Unit,
   onUnpin: (RoomPin) -> Unit,
 ) {
   for (pin in pins) {
@@ -248,7 +290,10 @@ internal fun PinnedPanels(
               verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
               RoomEntityCard(pinnedEntity(pin, content), content)
-              TextButton(onClick = { onUnpin(pin) }) { Text("Unpin") }
+              Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = { onMove(pin) }) { Text("Move here") }
+                TextButton(onClick = { onUnpin(pin) }) { Text("Unpin") }
+              }
             }
           }
         }
@@ -257,7 +302,10 @@ internal fun PinnedPanels(
   }
 }
 
-/** A control panel's "Pin here": pins the entity's controls to the spot ahead of the user. */
+/**
+ * A control panel's "Pin here": pins the entity's controls where the user looks, onto the wall
+ * there if one is in reach.
+ */
 @Composable
 internal fun PinHereButton(onClick: () -> Unit) {
   TextButton(onClick = onClick) {
@@ -300,8 +348,6 @@ private fun pinnedEntity(pin: RoomPin, content: RoomContent): RoomEntity {
   return RoomEntity(pin.entityId, name, importance = 0f, active = state?.state == "on")
 }
 
-/** Far enough to read at a glance, near enough to reach: about arm's length past the hand. */
-private const val PIN_DISTANCE_METRES = 0.8f
 private const val NEAREST_PIN_INTERVAL_MS = 2_000L
 private val PINNED_PANEL_WIDTH = 340.dp
 private val PINNED_PANEL_HEIGHT = 420.dp

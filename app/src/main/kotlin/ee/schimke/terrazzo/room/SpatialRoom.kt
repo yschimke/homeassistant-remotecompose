@@ -93,14 +93,16 @@ internal fun SpatialRoomControls(
 ) {
   val controls = content.state?.controls
   val anchors = rememberPinAnchors()
-  val pin: ((String) -> Unit)? = anchors?.let {
-    rememberPinning(it, pinning.pins, pinning.onPinned, pinning.onNearestPin)
+  val actions: PinActions? = anchors?.let {
+    rememberPinning(it, pinning.pins, pinning.onPinned, pinning.onMoved, pinning.onNearestPin)
   }
   val unpin: (RoomPin) -> Unit = { p ->
     anchors?.unpin(p.anchorId)
     pinning.onUnpinned(p)
   }
-  if (anchors != null) PinnedPanels(anchors, pinning.pins, content, onUnpin = unpin)
+  if (anchors != null && actions != null) {
+    PinnedPanels(anchors, pinning.pins, content, onMove = actions.move, onUnpin = unpin)
+  }
   val lost = anchors?.let { a -> pinning.pins.filter { it.anchorId in a.lost } }.orEmpty()
   Subspace {
     SpatialCurvedRow(
@@ -120,7 +122,7 @@ internal fun SpatialRoomControls(
           Surface(Modifier.fillMaxSize()) {
             Column(Modifier.verticalScroll(rememberScrollState()).padding(20.dp)) {
               RoomEntityCard(entity, content)
-              pin?.let { PinHereButton { it(entity.entityId) } }
+              actions?.let { PinHereButton { it.pin(entity.entityId) } }
             }
           }
         }
