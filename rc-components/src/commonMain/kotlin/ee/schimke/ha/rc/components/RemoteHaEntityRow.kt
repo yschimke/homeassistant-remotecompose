@@ -11,6 +11,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
+import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
@@ -35,8 +36,10 @@ import androidx.compose.remote.creation.compose.state.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.rc.m3.RcAmbient
 import ee.schimke.rc.m3.RcM3SwitchColors
 import ee.schimke.rc.m3.RemoteM3SwitchByProgress
+import ee.schimke.rc.m3.rcAmbient
 
 /**
  * One row of an Entities card:
@@ -184,6 +187,9 @@ private val Gone = 0.ri
 private val TrackWidth = 36.rdp
 private val TrackHeight = 22.rdp
 private val KnobSize = 16.rdp
+
+/** The switch track's outline while ambient. */
+private val AmbientOutline = 2.rdp
 private const val KnobInsetDp = 3f
 private val KnobInset = KnobInsetDp.toInt().rdp
 
@@ -328,19 +334,38 @@ fun RemoteHaToggleSwitchByProgress(
       metal -> tween(ConsoleSlot.rc, activeAccent, colorProgress)
       else -> tween(inactiveAccent, activeAccent, colorProgress)
     }
-  val knobColor = if (ink != null) haTheme().cardBackground else Color.White.rc
+  // Ambient (a low-power display): the track's outline in place of its fill, and the knob lit in
+  // the track's colour, so the switch still reads on black with few pixels lit.
+  val ambient = rcAmbient()
+  val outlined = ambient !== RcAmbient.Never
+  val knobColor =
+    (if (ink != null) haTheme().cardBackground else Color.White.rc).let {
+      if (outlined) ambient.color(it, trackColor) else it
+    }
   // A machined cap, lit from above, in place of a flat knob.
   val knobFill =
     if (metal) RemoteModifier.background(RemoteBrush.verticalGradient(ConsoleMetal.map { it.rc }))
     else RemoteModifier.background(knobColor)
   val startPaddingDp = (KnobInsetDp.rf + progress * KnobTravelDp.rf).asRemoteDp()
+  val trackShape = RemoteRoundedCornerShape(shape.controlCornerDp.rdp)
 
   RemoteBox(
     modifier =
       modifier
         .size(width = TrackWidth, height = TrackHeight)
-        .clip(RemoteRoundedCornerShape(shape.controlCornerDp.rdp))
-        .background(trackColor)
+        .clip(trackShape)
+        .background(
+          if (outlined) trackColor.copy(alpha = trackColor.alpha * ambient.fade) else trackColor
+        )
+        .then(
+          if (outlined)
+            RemoteModifier.border(
+              AmbientOutline,
+              trackColor.copy(alpha = trackColor.alpha * ambient.fraction),
+              trackShape,
+            )
+          else RemoteModifier
+        )
         .then(clickable)
   ) {
     RemoteBox(

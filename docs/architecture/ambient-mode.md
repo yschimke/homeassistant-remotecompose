@@ -56,12 +56,22 @@ must be complete on its own:
    indicator), thin their tracks to about a third (the slider, both wavy indicators), and drop what
    only decorates (the inactive track, the stop dot). The switch's thumb is lit in its outline's
    colour so its side still reads on black. Preview: `ExpressiveAmbient`.
+
+   Every card's chrome follows too, through the theme rather than card by card:
+   `ProvideRemoteHaTheme` crosses each colour role to an ambient palette (black surfaces; light grey
+   text, links and dividers, so a light theme's dark text still reads), and the classic toggle
+   switch outlines its track and lights its knob in the track's colour. Accents that mark state (an
+   entity's on colour, a style's own fixed colours) stay. A style that prints in a dark ink of its
+   own (a light LCD) keeps its own surface: its ink comes from the style, not the roles, and would
+   vanish on black. Previews: `Ambient_*` in
+   `AmbientCardPreviews.kt`.
 5. **No reason to wake faster than a minute.** A clock on the page reads minutes, not seconds, while
    ambient. Nothing in the motion layer asks for a sooner wake.
 
 `ExpressiveBlocksPlaybackTest` plays each of these in the Compose player: a change lands in the
 first frame while ambient and springs while not, the first frame after the flag is final, a running
-wave is still, and leaving ambient restores the interactive frame exactly.
+wave is still, leaving ambient restores the interactive frame exactly, and a light theme's card
+turns black.
 
 ## Document to host: does anything need to come back?
 
@@ -135,7 +145,6 @@ interactive frame greyed.
 - **The Wear app.** Entering and leaving ambient (`AmbientLifecycleObserver`), passing `ambient` to
   `HaRcComposePlayer`, and the tick cadence are
   [#1323](https://github.com/yschimke/homeassistant-remotecompose/issues/1323).
-- **Card chrome.** The flag reaches the Material 3 building blocks (and so the Expressive tile
-  sliders). A card's own background, text and icons don't read it yet; the theme's colour roles are
-  the place to do that once, for every card, rather than card by card.
+- **Style-specific controls.** The IKEA, console and community switch faces, and large accent fills
+  (a tile's icon chip, a gauge's arc), keep their interactive look while ambient.
 - **The player API** above, in rc-players.
