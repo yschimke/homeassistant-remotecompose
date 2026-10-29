@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
+import ee.schimke.rc.m3.RcAmbient
+import ee.schimke.rc.m3.rcAmbient
 
 /**
  * Concrete fallback palette for Home Assistant cards. Normal in-app rendering uses these colors
@@ -242,9 +244,47 @@ fun ProvideNamedHaTheme(theme: HaTheme, content: @Composable () -> Unit) {
   ProvideRemoteHaTheme(theme.asNamedRemote(), content)
 }
 
+/**
+ * Provide [theme] to the card parts in [content], under the host's ambient flag ([rcAmbient]):
+ * while a low-power display is ambient every role takes [AmbientPalette]'s, so any card style goes
+ * dark there without a capture of its own (docs/architecture/ambient-mode.md).
+ */
 @Composable
 fun ProvideRemoteHaTheme(theme: RemoteHaTheme, content: @Composable () -> Unit) {
-  CompositionLocalProvider(LocalRemoteHaTheme provides theme, content = content)
+  CompositionLocalProvider(LocalRemoteHaTheme provides theme.underAmbient(), content = content)
+}
+
+/**
+ * The roles while ambient: black surfaces, so few pixels are lit, and light grey text and lines, so
+ * a light theme's dark text still reads on them. Accents (an entity's on colour, a style's own
+ * fixed colours) stay: they mark state.
+ */
+private object AmbientPalette {
+  val surface = Color.Black
+  val primaryText = Color(0xFFE6E6E6)
+  val secondaryText = Color(0xFFA0A0A0)
+  val linkText = Color(0xFFCCCCCC)
+  val divider = Color(0xFF3A3A3A)
+}
+
+/** [this] crossing to [AmbientPalette] with the ambient flag; itself when the flag isn't read. */
+@Composable
+private fun RemoteHaTheme.underAmbient(): RemoteHaTheme {
+  val ambient = rcAmbient()
+  if (ambient === RcAmbient.Never) return this
+  fun RemoteColor.to(color: Color) = ambient.color(this, color.rc)
+  return RemoteHaTheme(
+    cardBackground = cardBackground.to(AmbientPalette.surface),
+    dashboardBackground = dashboardBackground.to(AmbientPalette.surface),
+    sectionBackground = sectionBackground.to(AmbientPalette.surface),
+    primaryText = primaryText.to(AmbientPalette.primaryText),
+    secondaryText = secondaryText.to(AmbientPalette.secondaryText),
+    linkText = linkText.to(AmbientPalette.linkText),
+    divider = divider.to(AmbientPalette.divider),
+    placeholderAccent = placeholderAccent.to(AmbientPalette.secondaryText),
+    placeholderBackground = placeholderBackground.to(AmbientPalette.surface),
+    unknownAccent = unknownAccent.to(AmbientPalette.secondaryText),
+  )
 }
 
 @Composable fun currentRemoteHaTheme(): RemoteHaTheme = LocalRemoteHaTheme.current

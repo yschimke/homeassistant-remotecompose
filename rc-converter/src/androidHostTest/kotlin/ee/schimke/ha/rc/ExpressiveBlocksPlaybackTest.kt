@@ -10,10 +10,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
+import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteCanvas
 import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.layout.RemoteSize
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemotePaint
@@ -30,6 +32,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -49,6 +52,7 @@ import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ProvideHaUberTheme
 import ee.schimke.ha.rc.components.RemoteHaSlider
 import ee.schimke.ha.rc.components.RemoteHaToggleButton
+import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.rc.m3.LocalRcReduceMotion
 import ee.schimke.rc.m3.RcAmbientValue
 import ee.schimke.rc.m3.RcM3ProgressColors
@@ -82,13 +86,16 @@ class ExpressiveBlocksPlaybackTest {
   private val sent = mutableListOf<HaAction?>()
   private val toggle = HaAction.Toggle("light.kitchen")
 
-  private fun document(content: @Composable () -> Unit) = runBlocking {
+  private fun document(
+    theme: HaUberTheme = HaUberTheme.Expressive,
+    content: @Composable () -> Unit,
+  ) = runBlocking {
     captureSingleRemoteDocument(
         context = compose.activity,
         creationDisplayInfo = RemoteCreationDisplayInfo(200, 200, 160),
         profile = androidXExperimentalWrap,
       ) {
-        ProvideHaUberTheme(HaUberTheme.Expressive, darkTheme = false) { content() }
+        ProvideHaUberTheme(theme, darkTheme = false) { content() }
       }
       .bytes
   }
@@ -405,6 +412,29 @@ class ExpressiveBlocksPlaybackTest {
     val first = frame()
     settle(1_000)
     assertEquals(0, frame().differs(first), "the first frame after the flag is the ambient look")
+  }
+
+  /**
+   * Any card style goes dark while ambient: the theme's roles take the ambient palette, so a light
+   * theme's card background turns black, and back when the flag clears.
+   */
+  @Test
+  fun ambientTurnsALightCardBlack() {
+    manualClock = true
+    play(
+      document(HaUberTheme.Classic) {
+        RemoteBox(RemoteModifier.fillMaxSize().background(currentRemoteHaTheme().cardBackground))
+      }
+    )
+    val corner = { frame().getPixel(100, 100) }
+    val interactive = corner()
+    assertTrue(Color(interactive).luminance() > 0.5f, "a light card")
+    setAmbient(true)
+    oneFrame()
+    assertEquals(android.graphics.Color.BLACK, corner(), "ambient, the card is black")
+    setAmbient(false)
+    settle(1_000)
+    assertEquals(interactive, corner(), "and back")
   }
 
   @Test
