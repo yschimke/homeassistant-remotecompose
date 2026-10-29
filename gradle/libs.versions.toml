@@ -7,7 +7,7 @@ okhttp = "5.5.1"
 play-publisher = "4.1.1"
 
 # Metro (DI) — requires Kotlin 2.2.20+.
-metro = "1.5.0"
+metro = "1.5.1"
 # AppFunctions: the on-device agent surface (`app/.../assistant/`). Experimental upstream; the
 # compiler runs through KSP, which nothing else in the build uses.
 androidx-appfunctions = "1.0.0-beta01"
