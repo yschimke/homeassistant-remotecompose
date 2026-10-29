@@ -155,6 +155,7 @@ if (providers.gradleProperty("addonServerOnly").orNull == "true") {
     ":ha-cards-catalog",
     ":room-ui",
     ":quest",
+    ":glasses",
   )
 }
 

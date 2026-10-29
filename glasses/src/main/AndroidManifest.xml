@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:label="@string/app_name"
+        android:theme="@android:style/Theme.Material.NoActionBar">
+
+        <!-- On the phone: the room, and "Show on glasses". -->
+        <activity
+            android:name=".GlassesLauncherActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- On the glasses' display: only a projected display can show it. -->
+        <activity
+            android:name=".GlassesRoomActivity"
+            android:exported="true"
+            android:label="@string/glasses_label"
+            android:requiredDisplayCategory="xr_projected"
+            tools:targetApi="34">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
