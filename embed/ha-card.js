@@ -1560,6 +1560,8 @@ export class HaCardElement extends BaseElement {
   /** Render from these states instead of a Home Assistant: entity id → `{ state, attributes }`. */
   setStates(states) {
     this.localStates = states;
+    // States again, not a design's values ([setValues]).
+    this.localValues = null;
     // Without any Home Assistant: no more events over these states, and no service calls.
     this.detachHass();
     this.states = { ...states };
@@ -1727,6 +1729,9 @@ export class HaCardElement extends BaseElement {
       },
     });
     this.render();
+    // Shown even when there was nothing to push: a design played with no values (a library
+    // without catalog bindings) is still drawn.
+    this.fit();
   }
 
   async connectHass(card, started) {
