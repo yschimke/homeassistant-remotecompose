@@ -14,6 +14,7 @@ import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
+import ee.schimke.rc.m3.LocalRcInteractivePlayer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -287,7 +288,12 @@ internal fun isWidgetActionCapture(): Boolean = LocalWidgetActionRegistry.curren
 /** Switch action encoding to numeric host actions for a launcher-widget capture. */
 @Composable
 fun ProvideWidgetActionRegistry(registry: WidgetActionRegistry, content: @Composable () -> Unit) {
-  CompositionLocalProvider(LocalWidgetActionRegistry provides registry, content = content)
+  // The launcher's system renderer plays the capture: no press feedback, no loops on its clock.
+  CompositionLocalProvider(
+    LocalWidgetActionRegistry provides registry,
+    LocalRcInteractivePlayer provides false,
+    content = content,
+  )
 }
 
 /**

@@ -68,6 +68,7 @@ import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.wearBackground
 import ee.schimke.ha.rc.converterFor
+import ee.schimke.rc.m3.LocalRcInteractivePlayer
 import ee.schimke.rc.m3.LocalRcSpringsSupported
 import ee.schimke.terrazzo.wear.data.toEntityState
 import ee.schimke.terrazzo.wear.sync.WearDirectAccess
@@ -572,12 +573,16 @@ internal fun slotDocument(
 
 /**
  * A document for the watch's system widget renderer, whose spring support is unverified: a style's
- * springs encode as tweens of about the same length. The app's own players run springs, so
- * `WearRemoteCard`'s direct captures stay outside this.
+ * springs encode as tweens of about the same length, with no press feedback or clock loops. The
+ * app's own players run springs, so `WearRemoteCard`'s direct captures stay outside this.
  */
 @Composable
 private fun ForSystemRenderer(content: @Composable () -> Unit) {
-  CompositionLocalProvider(LocalRcSpringsSupported provides false, content = content)
+  CompositionLocalProvider(
+    LocalRcSpringsSupported provides false,
+    LocalRcInteractivePlayer provides false,
+    content = content,
+  )
 }
 
 /**
