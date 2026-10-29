@@ -17,10 +17,6 @@ on:
 
 permissions: {}
 
-concurrency:
-  group: claude-review-${{ github.event.issue.number }}
-  cancel-in-progress: true
-
 jobs:
   review:
     name: Claude review
@@ -28,6 +24,11 @@ jobs:
       github.event.issue.pull_request != null &&
       github.event.comment.user.login == github.repository_owner &&
       (github.event.comment.body == '/review' || startsWith(github.event.comment.body, '/review '))
+    # Job-level, so only an eligible `/review` replaces a running review;
+    # every other PR comment also starts this workflow and must not cancel it.
+    concurrency:
+      group: claude-review-${{ github.event.issue.number }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:

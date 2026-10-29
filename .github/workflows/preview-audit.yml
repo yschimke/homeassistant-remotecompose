@@ -38,10 +38,6 @@ on:
 
 permissions: {}
 
-concurrency:
-  group: preview-audit-${{ inputs.pr || github.event.workflow_run.head_branch }}
-  cancel-in-progress: true
-
 jobs:
   gate:
     name: Decide whether to audit
@@ -137,6 +133,11 @@ jobs:
     name: Audit changed previews (${{ needs.gate.outputs.agent }})
     needs: gate
     if: needs.gate.outputs.agent != ''
+    # Job-level, so only a run that passed the gate replaces an audit in
+    # progress; every Compose Preview completion starts this workflow.
+    concurrency:
+      group: preview-audit-${{ needs.gate.outputs.pr }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -227,7 +228,10 @@ jobs:
           OPENCODE_MODEL: ${{ vars.PREVIEW_AUDIT_OPENCODE_MODEL || 'opencode/glm-5.3-flash' }}
         run: |
           set -euo pipefail
-          marker="<!-- preview-audit fingerprint=$FINGERPRINT -->"
+          # Only a finished report records the fingerprint the gate skips on,
+          # so a failed audit is retried on the next run.
+          marker="<!-- preview-audit -->"
+          [ -s _audit/report.md ] && marker="<!-- preview-audit fingerprint=$FINGERPRINT -->"
           judge="$AGENT"
           [ "$AGENT" = opencode ] && judge="OpenCode ($OPENCODE_MODEL)"
           [ "$AGENT" = claude ] && judge="Claude"
