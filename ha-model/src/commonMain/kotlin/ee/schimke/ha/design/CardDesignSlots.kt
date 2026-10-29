@@ -140,6 +140,8 @@ object CardDesignSlots {
       booleans["$slot.is_available"] = state?.let { HaLiveBindings.isAvailable(it.state) } ?: false
       ints["$slot.state_int"] = state?.let { HaLiveBindings.stateInt(entityId, it.state) } ?: -1
       ints["$slot.status"] = statusOf(state)
+      ints["$slot.${HaLiveBindings.LAST_CHANGED}"] =
+        state?.let(HaLiveBindings::lastChanged) ?: HaLiveBindings.NO_TIME
       floats["$slot.numeric_state"] =
         state?.let { HaLiveBindings.numericState(it.state) } ?: Float.NaN
     }

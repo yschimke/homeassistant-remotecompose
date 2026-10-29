@@ -161,9 +161,11 @@ private suspend fun handleClientFrame(
 internal fun JsonObjectBuilder.putStateBindings(state: EntityState, displayPrecision: Int? = null) {
   val entityId = state.entityId
   put("$entityId.state", JsonPrimitive(formatState(state, displayPrecision)))
+  put("$entityId.name", JsonPrimitive(HaLiveBindings.name(state)))
   put("$entityId.is_on", JsonPrimitive(HaLiveBindings.isOn(entityId, state.state)))
   put("$entityId.is_available", JsonPrimitive(HaLiveBindings.isAvailable(state.state)))
   putStateInt(entityId, state.state)
+  put("$entityId.${HaLiveBindings.LAST_CHANGED}", JsonPrimitive(HaLiveBindings.lastChanged(state)))
   putNumericState(entityId, state.state)
   HaLiveBindings.attributeFloats(entityId, state.attributes).forEach { (suffix, value) ->
     put("$entityId.$suffix", JsonPrimitive(value))
