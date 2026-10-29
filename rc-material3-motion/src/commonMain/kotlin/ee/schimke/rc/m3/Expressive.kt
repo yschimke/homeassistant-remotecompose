@@ -111,11 +111,22 @@ data class RcM3ProgressColors(
  */
 @Composable
 private fun wavePhase(running: Boolean, cyclesPerSecond: Float): RemoteFloat =
-  if (running && LocalRcAnimationsEnabled.current && LocalRcInteractivePlayer.current)
-    RemoteTimeVariables.animationTime * (cyclesPerSecond * TwoPi).rf
+  if (running && rcLoopsAllowed()) RemoteTimeVariables.animationTime * (cyclesPerSecond * TwoPi).rf
   else 0f.rf
 
 private const val TwoPi = 6.2831855f
+
+/**
+ * Whether a loop on the player's clock may run: animations on, an interactive player, and the
+ * viewer and host not asking for less motion (reduce motion, or the reduced or ambient mode, which
+ * keep only short fades and slow springs). Otherwise a loop draws its resting frame.
+ */
+@Composable
+private fun rcLoopsAllowed(): Boolean =
+  LocalRcAnimationsEnabled.current &&
+    LocalRcInteractivePlayer.current &&
+    !LocalRcReduceMotion.current &&
+    LocalRcMotionMode.current == RcMotionMode.Normal
 
 /**
  * M3 Expressive's linear wavy progress indicator. The filled part waves while [running]; the rest
@@ -235,10 +246,7 @@ private const val RingWaves = 8f
 @Composable
 @RemoteComposable
 fun RemoteM3LoadingIndicator(color: RemoteColor, modifier: RemoteModifier = RemoteModifier) {
-  val time =
-    if (LocalRcAnimationsEnabled.current && LocalRcInteractivePlayer.current)
-      RemoteTimeVariables.animationTime
-    else 0f.rf
+  val time = if (rcLoopsAllowed()) RemoteTimeVariables.animationTime else 0f.rf
   RemoteCanvas(modifier = modifier) {
     val size = min(width, height) * 0.7f.rf
     // A half turn a second; the corner breathes between round and square twice a turn.

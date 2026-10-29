@@ -136,9 +136,10 @@ frames, each a building block:
 | **Loading indicator** (`RemoteM3LoadingIndicator`) | a shape that turns and breathes between circle and rounded square | rotation and corner on the player's clock. Material cycles seven polygons; this keeps to what a rounded rectangle draws | built; no card shows a loading state yet |
 
 Loops on the player's clock (wavy progress, the loader) are motion the design asks for while
-something works, not entrances, and they draw their first frame when animations are off (frozen
-previews) or the player is a system renderer (`LocalRcInteractivePlayer`: launcher and watch
-widgets), where press feedback is off too. `ExpressiveBlocksPlaybackTest` plays them in the Compose
+something works, not entrances. They draw their first frame when animations are off (frozen
+previews), when the viewer asks for less motion (reduce motion, or the reduced or ambient mode),
+and when the player is a system renderer (`LocalRcInteractivePlayer`: launcher and watch widgets),
+where press feedback is off too. `ExpressiveBlocksPlaybackTest` plays them in the Compose
 player: a held press reshapes the chip and the tap still sends, the running wave, ring and loader
 move between frames, and a ring that isn't running stays still.
 

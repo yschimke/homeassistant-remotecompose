@@ -15,6 +15,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -35,6 +36,7 @@ import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ProvideHaUberTheme
 import ee.schimke.ha.rc.components.RemoteHaToggleButton
+import ee.schimke.rc.m3.LocalRcReduceMotion
 import ee.schimke.rc.m3.RcM3ProgressColors
 import ee.schimke.rc.m3.RemoteM3LoadingIndicator
 import ee.schimke.rc.m3.RemoteM3WavyProgress
@@ -208,5 +210,25 @@ class ExpressiveBlocksPlaybackTest {
     val first = frame()
     settle(250)
     assertTrue(frame().differs(first) > 20, "the loader turns and morphs")
+  }
+
+  @Test
+  fun reducedMotionStillsARunningRing() {
+    manualClock = true
+    play(
+      document {
+        CompositionLocalProvider(LocalRcReduceMotion provides true) {
+          RemoteM3WavyProgressRing(
+            0.6f.rf,
+            running = true,
+            RcM3ProgressColors(Color.Blue.rc, Color.LightGray.rc),
+            RemoteModifier.fillMaxSize(),
+          )
+        }
+      }
+    )
+    val first = frame()
+    settle(250)
+    assertEquals(0, frame().differs(first), "a viewer who asked for less motion sees no ripple")
   }
 }
