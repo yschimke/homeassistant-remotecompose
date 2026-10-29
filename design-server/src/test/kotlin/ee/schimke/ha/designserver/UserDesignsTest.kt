@@ -12,6 +12,7 @@ import ee.schimke.ha.client.design.handoffToken
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignSurface
+import ee.schimke.rc.m3.RcAmbientValue
 import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
@@ -248,6 +249,7 @@ class UserDesignsTest {
       "wear",
       "framed",
       "foreign",
+      "dimmed",
       "handmade",
       "sunlit",
       "peeking",
@@ -345,7 +347,7 @@ class UserDesignsTest {
           }
           // `wear`: a card design whose Small Wear widget exports and whose Large one doesn't.
           get("/api/ui-builder/v1/designs/{id}") {
-            if (call.parameters["id"] !in setOf("wear", "framed", "foreign")) {
+            if (call.parameters["id"] !in setOf("wear", "framed", "foreign", "dimmed")) {
               return@get call.respondText("no such design", status = HttpStatusCode.NotFound)
             }
             val id = call.parameters["id"]!!
@@ -373,6 +375,13 @@ class UserDesignsTest {
                   wearSmallNaming("somewhere.else"),
                   ContentType.Application.OctetStream,
                 )
+              // `dimmed`: its Wear widgets read the watch's ambient flag.
+              "dimmed-wear-small",
+              "dimmed-wear-large" ->
+                call.respondBytes(
+                  wearSmallNaming(RcAmbientValue),
+                  ContentType.Application.OctetStream,
+                )
               // A name under the frame's prefix the watch doesn't fill.
               "foreign-wear-large" ->
                 call.respondBytes(
@@ -392,7 +401,8 @@ class UserDesignsTest {
               "made",
               "wear",
               "framed",
-              "foreign" -> {
+              "foreign",
+              "dimmed" -> {
                 call.response.headers.append("X-UI-Builder-Revision", "3")
                 call.respondBytes(template, ContentType.Application.OctetStream)
               }
@@ -782,6 +792,32 @@ class UserDesignsTest {
     val wear =
       UserDesignStore(f.storeDir).designs("octocat").mapNotNull { it.entry.key.container }.toSet()
     assertEquals(setOf(DesignKey.WEAR_SMALL, DesignKey.WEAR_LARGE), wear)
+  }
+
+  @Test
+  fun aWearWidgetSaysWhetherItReadsTheWatchsAmbientFlag() = testApplication {
+    val f = fixture()
+    assertEquals(HttpStatusCode.Created, f.publish("dimmed").status)
+    val dimmed =
+      UserDesignStore(f.storeDir).designs("octocat").filter { it.entry.key.container != null }
+    assertEquals(2, dimmed.size)
+    assertTrue(dimmed.all { it.readsAmbient == true })
+    val card =
+      UserDesignStore(f.storeDir).designs("octocat").single { it.entry.key.container == null }
+    assertNull(card.readsAmbient, "a card design isn't a Wear widget")
+    assertFalse(
+      "ambient-note" in f.client.get("/my") { header(HttpHeaders.Cookie, f.cookie) }.bodyAsText()
+    )
+
+    // One that doesn't still publishes, and the page says what it means on the watch.
+    assertEquals(HttpStatusCode.Created, f.publish("wear").status)
+    val plain =
+      UserDesignStore(f.storeDir).designs("octocat").filter {
+        it.entry.key.container != null && it.readsAmbient == false
+      }
+    assertTrue(plain.isNotEmpty())
+    val page = f.client.get("/my") { header(HttpHeaders.Cookie, f.cookie) }.bodyAsText()
+    assertTrue("ambient-note" in page && RcAmbientValue in page, page)
   }
 
   @Test

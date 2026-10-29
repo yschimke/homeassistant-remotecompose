@@ -171,6 +171,13 @@ The watch app is the first host that goes ambient
 Entering ambient doesn't wait for running animations to finish: the system has already dimmed the
 screen, and the flag makes the next frame final anyway (promises 1 and 2).
 
+Designs the phone syncs to the watch are the design server's own bytes, played the same way. The
+library's are captured reading the flag (`CardDesignTemplates.capture` leaves `LocalRcAmbientAware`
+on). A person's Wear widget designs come from UI Builder's export: the server records whether each
+reads `host.ambient` (`UserDesign.readsAmbient`), and the /my page says when one doesn't. Such a
+design still publishes; on the watch its values are held between ambient updates, but it keeps its
+interactive look.
+
 ## Not done yet
 
 - **Style-specific controls.** The IKEA, console and community switch faces, and large accent fills
