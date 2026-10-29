@@ -301,6 +301,25 @@ runs inside native Lovelace; a WASM dashboard containing that custom type may
 show the existing unsupported-card message. More-info and navigation actions
 in the panel are forwarded to the parent HA frontend.
 
+## Web installs on another site
+
+Terrazzo outside Home Assistant (a Wasmo app, GitHub Pages, any other HTTPS site) reaches HA over its
+websocket, which needs nothing extra, but loads camera and entity pictures with `fetch`, which needs
+HA to allow the site's origin (CORS). When such a page connects, the integration checks that origin
+and, if HA doesn't allow it, raises a repair: **Allow Terrazzo at `https://…` to load images**.
+
+- The origin comes from the sign-in itself: HA issued the connection's token to that page through
+  its OAuth sign-in, so a page can't ask on another site's behalf. Long-lived tokens, the app and
+  HA's own pages raise nothing.
+- Fixing the repair (an admin, under **Settings → Repairs**) adds the origin to HA's HTTP settings,
+  keeping every other setting and origin, and restarts Home Assistant. Once HA is back the
+  integration confirms the change; if HA doesn't start with it, HA reverts it after five minutes as
+  usual.
+- It needs Home Assistant 2026.10 or later, which keeps CORS in its HTTP settings store and no
+  longer reads `http: cors_allowed_origins` from YAML. On an older HA the repair is not raised; add
+  the origin under `http:` in `configuration.yaml` instead.
+- Nothing is changed while another HTTP settings change is waiting to be confirmed.
+
 ## Notifications on the phone while the app is closed
 
 With the integration installed, the Terrazzo Android app also receives `notify.mobile_app_<phone>`

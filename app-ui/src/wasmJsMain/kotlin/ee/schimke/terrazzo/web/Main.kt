@@ -93,6 +93,7 @@ private fun App(panel: Boolean, signedInServer: String) {
       signInStorageLabel = signInStorageLabel().ifBlank { null },
       isFullScreen = fullScreen,
       onToggleFullScreen = fullScreenToggle,
+      reportsWebOrigin = true,
     )
 }
 

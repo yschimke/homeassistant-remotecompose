@@ -105,6 +105,9 @@ private class AppConnection(
  *   colors the `classic` card style draws the app in. Null follows the system's light or dark.
  * @param isFullScreen whether the host currently shows the app full screen.
  * @param onToggleFullScreen enters or leaves full screen; null hides the header's button.
+ * @param reportsWebOrigin tells the Terrazzo integration, once a connection is ready, that this
+ *   page on another site signed in, so HA can be asked to allow it to load images (CORS). Only a
+ *   page outside Home Assistant sets it.
  */
 @Composable
 fun TerrazzoMultiplatformApp(
@@ -120,6 +123,7 @@ fun TerrazzoMultiplatformApp(
   onToggleFullScreen: (() -> Unit)? = null,
   settingsStorageLabel: String? = null,
   signInStorageLabel: String? = null,
+  reportsWebOrigin: Boolean = false,
 ) {
   val dark = hostTheme?.dark ?: isSystemInDarkTheme()
   // App-wide, so the chrome and every dashboard share one look. Chosen in Settings and kept across
@@ -164,6 +168,14 @@ fun TerrazzoMultiplatformApp(
               kotlinx.coroutines.awaitCancellation()
             } finally {
               withContext(NonCancellable) { active.close() }
+            }
+          }
+          if (reportsWebOrigin && active.hosted) {
+            LaunchedEffect(active) {
+              active.client.state.first { it == HaClient.ConnectionState.Ready }
+              // Without the integration, or on an older one, there is nothing to ask.
+              runCatching { active.client.reportTerrazzoWebOrigin() }
+                .onFailure { if (it is CancellationException) throw it }
             }
           }
           DashboardShell(
