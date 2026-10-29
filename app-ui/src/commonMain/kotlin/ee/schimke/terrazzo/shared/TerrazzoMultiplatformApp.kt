@@ -60,6 +60,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -171,11 +172,16 @@ fun TerrazzoMultiplatformApp(
             }
           }
           if (reportsWebOrigin && active.hosted) {
+            // On every connection, not just the first: the repair it raises doesn't survive an HA
+            // restart, and a report can fail while the connection drops.
             LaunchedEffect(active) {
-              active.client.state.first { it == HaClient.ConnectionState.Ready }
-              // Without the integration, or on an older one, there is nothing to ask.
-              runCatching { active.client.reportTerrazzoWebOrigin() }
-                .onFailure { if (it is CancellationException) throw it }
+              active.client.state
+                .filter { it == HaClient.ConnectionState.Ready }
+                .collect {
+                  // Without the integration, or on an older one, there is nothing to ask.
+                  runCatching { active.client.reportTerrazzoWebOrigin() }
+                    .onFailure { if (it is CancellationException) throw it }
+                }
             }
           }
           DashboardShell(
