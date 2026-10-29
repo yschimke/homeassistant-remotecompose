@@ -39,6 +39,10 @@ data class ThemeParts(val style: String, val mode: String?) {
  * screens too ([wear]: [Pages.wearPanes]). With [defaults], an unset style and mode pick the
  * library's first style and that style's first mode, so the first page shows each shape once,
  * including for styles that only have a dark palette.
+ *
+ * On a pull request's channel, [changes] keeps only the designs that differ from the published
+ * library ([LibraryDiff]) in that way, and [compare] shows the published picture beside each
+ * changed one.
  */
 data class BrowserFilter(
   val cardType: String?,
@@ -47,21 +51,50 @@ data class BrowserFilter(
   val query: String?,
   val preview: Preview,
   val wear: Boolean = false,
+  val changes: Changes? = null,
+  val compare: Boolean = false,
 ) {
   enum class Preview {
     Example,
     Template,
   }
 
-  fun apply(library: DesignLibrary): List<LibraryDesign> =
-    library.designs.filter { design ->
-      val theme = ThemeParts.of(design.key)
-      (cardType == null || design.key.cardType == cardType) &&
-        (style == null || theme.style == style) &&
-        (mode == null || mode in theme.availableModes) &&
-        (query == null ||
-          design.key.cardType.contains(query, ignoreCase = true) ||
-          design.key.shape.contains(query, ignoreCase = true))
+  /** Which of a pull request's designs to keep, by how they differ from the published ones. */
+  enum class Changes(val param: String, val label: String) {
+    Changed("changed", "Any change"),
+    Picture("picture", "Picture changed"),
+    Document("document", "Document only"),
+    Added("added", "New"),
+    Removed("removed", "Removed"),
+  }
+
+  /** [library]'s designs this filter keeps; [diff] is what [changes] reads, absent on main. */
+  fun apply(library: DesignLibrary, diff: LibraryDiff? = null): List<LibraryDesign> =
+    library.designs.filter { design -> matches(design) && keepsChange(diff?.of(design)) }
+
+  /** The published designs [diff] removes that this filter keeps. */
+  fun removed(diff: LibraryDiff?): List<LibraryDesign> =
+    if (diff == null || changes !in setOf(null, Changes.Changed, Changes.Removed)) emptyList()
+    else diff.removed.filter(::matches)
+
+  private fun matches(design: LibraryDesign): Boolean {
+    val theme = ThemeParts.of(design.key)
+    return (cardType == null || design.key.cardType == cardType) &&
+      (style == null || theme.style == style) &&
+      (mode == null || mode in theme.availableModes) &&
+      (query == null ||
+        design.key.cardType.contains(query, ignoreCase = true) ||
+        design.key.shape.contains(query, ignoreCase = true))
+  }
+
+  private fun keepsChange(change: LibraryDiff.Change?): Boolean =
+    when (changes) {
+      null -> true
+      Changes.Changed -> change != null && change != LibraryDiff.Change.Unchanged
+      Changes.Picture -> change == LibraryDiff.Change.Picture
+      Changes.Document -> change == LibraryDiff.Change.Document
+      Changes.Added -> change == LibraryDiff.Change.Added
+      Changes.Removed -> false
     }
 
   /** This filter as a query string, with [change] applied: for links that keep the rest. */
@@ -75,6 +108,8 @@ data class BrowserFilter(
         f.query?.let { "q" to it },
         ("preview" to "template").takeIf { f.preview == Preview.Template },
         ("wear" to "1").takeIf { f.wear },
+        f.changes?.let { "changes" to it.param },
+        ("compare" to "1").takeIf { f.compare },
       )
     return params.joinToString("&") { (k, v) -> "$k=${URLEncoder.encode(v, Charsets.UTF_8)}" }
   }
@@ -83,7 +118,7 @@ data class BrowserFilter(
     const val ALL = "all"
 
     /** The query keys the browser reads. */
-    val KEYS = setOf("type", "style", "mode", "q", "preview", "wear")
+    val KEYS = setOf("type", "style", "mode", "q", "preview", "wear", "changes", "compare")
 
     fun from(params: Parameters, library: DesignLibrary, defaults: Boolean): BrowserFilter {
       fun param(name: String, default: String?): String? =
@@ -107,6 +142,8 @@ data class BrowserFilter(
         query = param("q", null),
         preview = if (params["preview"] == "template") Preview.Template else Preview.Example,
         wear = params["wear"] == "1",
+        changes = Changes.entries.firstOrNull { it.param == params["changes"] },
+        compare = params["compare"] == "1",
       )
     }
   }
@@ -179,9 +216,12 @@ object Pages {
     filter: BrowserFilter,
     /** Every channel the server serves ([LibraryChannels]): the in-flight pull requests to pick. */
     channels: List<LibraryChannels.ChannelInfo> = emptyList(),
+    /** How this channel differs from the published library; null on main. */
+    diff: LibraryDiff? = null,
   ): String {
     val paths = library.paths
-    val designs = filter.apply(library)
+    val designs = filter.apply(library, diff)
+    val removed = filter.removed(diff)
     val all = library.designs
     val types = all.map { it.key.cardType }.distinct().sorted()
     val styles = all.map { ThemeParts.of(it.key).style }.distinct()
@@ -203,6 +243,7 @@ object Pages {
           "<a href=\"/schema\">Schema from a card's JSON</a></p>"
       )
       channelBanner(library)
+      diff?.let { changeSummary(it, filter) }
       channelPicker(channels, paths.channel)
       append("</header>")
 
@@ -224,10 +265,25 @@ object Pages {
           (if (filter.wear) " checked" else "") +
           "> On a watch</label>"
       )
+      if (diff != null) {
+        append("<label>Changes <select name=\"changes\">")
+        option(BrowserFilter.ALL, "All", filter.changes == null)
+        BrowserFilter.Changes.entries.forEach { option(it.param, it.label, it == filter.changes) }
+        append("</select></label>")
+        append(
+          "<label><input type=\"checkbox\" name=\"compare\" value=\"1\"" +
+            (if (filter.compare) " checked" else "") +
+            "> Before and after</label>"
+        )
+      }
       append("<button type=\"submit\">Apply</button></form>")
 
-      append("<p class=\"count\">${designs.size} shown</p>")
-      if (designs.isEmpty()) {
+      append(
+        "<p class=\"count\">${designs.size} shown" +
+          (if (removed.isNotEmpty()) " · ${removed.size} removed" else "") +
+          "</p>"
+      )
+      if (designs.isEmpty() && removed.isEmpty()) {
         append("<p class=\"empty\">No designs match.</p>")
         val styleModes =
           all
@@ -255,7 +311,29 @@ object Pages {
         append(
           "<section><h2 id=\"${esc(type)}\">${esc(type)} <span>${group.size}</span></h2><div class=\"grid\">"
         )
-        for (design in group) tile(design, filter.preview, wear = filter.wear)
+        for (design in group) {
+          val change = diff?.of(design)
+          tile(
+            design,
+            filter.preview,
+            wear = filter.wear,
+            change = change,
+            before =
+              // Only a picture change has a different picture to show beside it.
+              diff?.before(design).takeIf {
+                filter.compare && change == LibraryDiff.Change.Picture
+              },
+          )
+        }
+        append("</div></section>")
+      }
+      if (removed.isNotEmpty()) {
+        append(
+          "<section><h2 id=\"removed\">Removed <span>${removed.size}</span></h2>" +
+            "<p class=\"muted\">In the published library, with no design for the same key here: " +
+            "merging this pull request takes them away.</p><div class=\"grid\">"
+        )
+        for (design in removed) tile(design, filter.preview, removed = true)
         append("</div></section>")
       }
     }
@@ -268,6 +346,8 @@ object Pages {
     /** Whether [editor] may edit the library's own designs ([LibrarySources.mayEdit]). */
     libraryEditor: Boolean = false,
     wear: Boolean = false,
+    /** How this channel differs from the published library; null on main. */
+    diff: LibraryDiff? = null,
   ): String {
     val decoded = library.decode(design)
     val key = design.key
@@ -278,7 +358,9 @@ object Pages {
         "<nav><a href=\"${esc(paths.page("/designs", "type=${enc(key.cardType)}&style=all&mode=all"))}\">← ${esc(key.cardType)} designs</a></nav>"
       )
       channelBanner(library)
+      val change = diff?.of(design)
       append("<h1>${esc(key.cardType)}</h1>")
+      if (change != null) append("<p>${badge(change)}</p>")
       append("<p class=\"chips\">")
       design.properties.forEach { (k, v) -> append(chip(k, v)) }
       if (design.properties.isEmpty())
@@ -293,6 +375,23 @@ object Pages {
       if (design.catalog == null)
         append("<p class=\"muted\">No previews: this library has no catalog.</p>")
       append("</div>")
+      val before = diff?.before(design)
+      if (before != null && change != LibraryDiff.Change.Unchanged) {
+        append("<h2>Published</h2><div class=\"previews\">")
+        before.catalog?.previews?.example?.let {
+          figure("${before.paths.api}/$it", "With example values, published")
+        }
+        before.catalog?.previews?.template?.let {
+          figure("${before.paths.api}/$it", "Template placeholders, published")
+        }
+        append("</div>")
+        if (before.entry.sha256 != design.entry.sha256)
+          append(
+            "<p class=\"muted\">Document <a href=\"${before.paths.api}/blobs/${before.entry.sha256}.rc\">" +
+              "<code>${before.entry.sha256.take(12)}</code></a> · ${kib(before.entry.bytes.toLong())} " +
+              "→ <code>${design.entry.sha256.take(12)}</code> · ${kib(design.entry.bytes.toLong())}</p>"
+          )
+      }
       design.catalog?.previews?.example?.let { example ->
         if (wear) {
           append("<h2>On a watch</h2>")
@@ -552,6 +651,48 @@ object Pages {
     )
   }
 
+  /**
+   * How this pull request changes the published library, as counts that link to the browser
+   * filtered to each, and a link to see those changes before and after.
+   */
+  private fun StringBuilder.changeSummary(diff: LibraryDiff, filter: BrowserFilter) {
+    val paths = diff.library.paths
+    fun link(changes: BrowserFilter.Changes, count: Int, label: String): String {
+      val query =
+        "type=all&style=all&mode=all&changes=${changes.param}" +
+          (if (changes == BrowserFilter.Changes.Picture) "&compare=1" else "")
+      val text = "$count $label"
+      return if (count == 0) "<span class=\"muted\">$text</span>"
+      else if (filter.changes == changes) "<b>$text</b>"
+      else "<a href=\"${esc(paths.page("/designs", query))}\">$text</a>"
+    }
+    val counts = diff.counts
+    fun count(change: LibraryDiff.Change) = counts[change] ?: 0
+    append("<p class=\"changes\">Against the published library: ")
+    append(
+      listOf(
+          link(
+            BrowserFilter.Changes.Picture,
+            count(LibraryDiff.Change.Picture),
+            "pictures changed",
+          ),
+          link(
+            BrowserFilter.Changes.Document,
+            count(LibraryDiff.Change.Document),
+            "documents changed, same picture",
+          ),
+          link(BrowserFilter.Changes.Added, count(LibraryDiff.Change.Added), "new"),
+          link(BrowserFilter.Changes.Removed, diff.removed.size, "removed"),
+          "<span class=\"muted\">${count(LibraryDiff.Change.Unchanged)} unchanged</span>",
+        )
+        .joinToString(" · ")
+    )
+    append("</p>")
+  }
+
+  private fun badge(change: LibraryDiff.Change): String =
+    "<span class=\"change ${change.name.lowercase()}\">${esc(change.label)}</span>"
+
   /** Links to every channel, the current one marked: the published library and each open PR. */
   private fun StringBuilder.channelPicker(
     channels: List<LibraryChannels.ChannelInfo>,
@@ -581,21 +722,42 @@ object Pages {
     preview: BrowserFilter.Preview,
     compact: Boolean = false,
     wear: Boolean = false,
+    /** How it differs from the published library, on a pull request's channel. */
+    change: LibraryDiff.Change? = null,
+    /** The published design it replaces, to show beside it. */
+    before: LibraryDesign? = null,
+    /** A published design the channel takes away. */
+    removed: Boolean = false,
   ) {
     val theme = ThemeParts.of(design.key)
-    val image =
+    fun imageOf(d: LibraryDesign) =
       when (preview) {
-        BrowserFilter.Preview.Example -> design.catalog?.previews?.example
-        BrowserFilter.Preview.Template -> design.catalog?.previews?.template
+        BrowserFilter.Preview.Example -> d.catalog?.previews?.example
+        BrowserFilter.Preview.Template -> d.catalog?.previews?.template
       }
-    append("<a class=\"tile\" href=\"${esc(design.paths.design(design.id))}\">")
+    val image = imageOf(design)
+    append(
+      "<a class=\"tile${if (change != null && change != LibraryDiff.Change.Unchanged || removed) " changed" else ""}\" href=\"${esc(design.paths.design(design.id))}\">"
+    )
+    val beforeImage = before?.let(::imageOf)
+    if (beforeImage != null) {
+      append("<div class=\"compare\"><figure>")
+      append(
+        "<img loading=\"lazy\" src=\"${before.paths.api}/$beforeImage\" alt=\"published ${esc(design.key.cardType)} preview\">"
+      )
+      append("<figcaption>Published</figcaption></figure><figure>")
+    }
     if (image != null)
       append(
         "<img loading=\"lazy\" src=\"${design.paths.api}/$image\" alt=\"${esc(design.key.cardType)} preview\">"
       )
     else append("<div class=\"noimage\">no preview</div>")
+    if (beforeImage != null) append("<figcaption>This pull request</figcaption></figure></div>")
     if (wear && image != null) wearPanes("${design.paths.api}/$image", design.key.cardType)
     append("<div class=\"meta\">")
+    if (removed) append("<div>${"<span class=\"change removed\">removed</span>"}</div>")
+    else if (change != null && change != LibraryDiff.Change.Unchanged)
+      append("<div>${badge(change)}</div>")
     if (!compact) {
       append("<div class=\"chips\">")
       design.properties.entries.take(6).forEach { (k, v) -> append(chip(k, v)) }
@@ -701,6 +863,8 @@ object Pages {
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 main{max-width:1200px;margin:0 auto;padding:20px 16px 48px}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 h1{margin:0 0 4px;font-size:26px}h2{margin:28px 0 10px;font-size:18px}h2 span{color:var(--muted);font-weight:normal;font-size:14px}
+.changes{margin:6px 0 0;font-size:14px}.change{display:inline-block;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:600;background:#e6a700;color:#1b1d21}.change.added{background:#2da44e;color:#fff}.change.removed{background:var(--err);color:#fff}.change.document{background:var(--chip);color:var(--fg)}
+.tile.changed{border-color:#e6a700}.compare{display:flex;flex-direction:column;gap:2px;padding:0 8px}.compare figure{max-width:none}.tile .compare img{width:100%;margin:8px 0 0;padding:0;border:0}.compare figcaption{margin:2px 0 0}
 .channel{border:2px solid #e6a700;border-radius:8px;padding:8px 12px;margin:8px 0}.channel p{margin:4px 0}.channels{font-size:13px;margin:6px 0 0}.stats,.hint,.count,.muted{color:var(--muted)}.stats{margin:0}.hint{margin:4px 0 0;font-size:13px}code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}
 .filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:end;margin:18px 0 6px;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:10px}
 .filters label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}select,input,button{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
