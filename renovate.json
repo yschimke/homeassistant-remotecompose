@@ -1,6 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["github>yschimke/renovate-config"],
+  "description": "`platformAutomerge` hands the merge of an automerging PR to GitHub's native auto-merge, which lands it the moment the Protect Main ruleset's required checks pass, instead of on Renovate's next run (about hourly). Safe because the required set builds, tests and renders previews (yschimke/renovate-config repo-policy: assemble, Unit tests and Render previews); native auto-merge waits only on required checks, so it would not be safe on a repository whose ruleset required nothing.",
+  "platformAutomerge": true,
   "packageRules": [
     {
       "description": "The push relay's `engines.node` names a Cloud Functions runtime major (\"24\"), which is all Firebase accepts there: pinning it to an exact release (v24.22.1, #1244) would be refused at deploy. Keep it a bare major and only move it when a new major comes.",
