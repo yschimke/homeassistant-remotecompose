@@ -161,6 +161,9 @@ The watch app is the first host that goes ambient
   updates (about one a minute).
 - `WearApp` provides `LocalHostAmbient` as a reader of it, so every card on every screen plays
   with the flag, and no screen recomposes when it changes.
+- The app's cards play their widget's container-neutral template, captured for the app with the
+  flag (`neutralWidgetTemplate(ambientAware = true)`). A widget's own template leaves it out: the
+  system renderer that plays it never writes the flag.
 - Live values are held while ambient (`heldWhileAmbient`): the phone's changes between ambient
   updates don't redraw the screen; the latest lands on the next update, and leaving ambient shows
   it at once. The cards draw that frame exact (promise 1), so nothing has to settle.

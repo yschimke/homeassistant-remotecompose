@@ -440,6 +440,10 @@ private val NO_PICTURES = PictureImageStrategy.Inline { null }
  * the widgets and the Wear app's own cards, so both draw the same layout. Null when the capture
  * fails.
  *
+ * [ambientAware] is for the app's own players, which write the host's ambient flag
+ * (docs/architecture/ambient-mode.md): its template reads the flag, a widget's (which the system
+ * renderer plays, and never writes it) doesn't. Each is its own template.
+ *
  * Captured once even when asked for at once (the warm-up and the app's first frame): a second
  * caller waits for the first's capture. Kept on disk too ([WearNeutralTemplateStore]), so a new
  * process reads it rather than capturing again; memory only keeps the ones this process used.
@@ -453,8 +457,9 @@ internal suspend fun neutralWidgetTemplate(
   shape: String,
   input: DesignTemplateInput,
   cardStyle: HaUberTheme,
+  ambientAware: Boolean = false,
 ): ByteArray? {
-  val key = WearNeutralTemplateKey(cardType, shape, themeKey to cardStyle.id)
+  val key = WearNeutralTemplateKey(cardType, shape, themeKey to cardStyle.id, ambientAware)
   neutralTemplates[key]?.let {
     return it
   }
@@ -465,7 +470,7 @@ internal suspend fun neutralWidgetTemplate(
         return@withLock it
       }
       val store = WearNeutralTemplateStore.of(context)
-      val fileName = neutralTemplateFileName(cardType, shape, themeKey, cardStyle.id)
+      val fileName = neutralTemplateFileName(cardType, shape, themeKey, cardStyle.id, ambientAware)
       fileName?.let(store::read)?.let {
         neutralTemplates[key] = it
         return@withLock it
@@ -474,14 +479,16 @@ internal suspend fun neutralWidgetTemplate(
         neutralTemplateCaptures.incrementAndGet()
         WearWidgetTemplate.capture(context, cardStyle, wearLevel(input.card, input.snapshot)) {
           ForSystemRenderer {
-            SlotContent(
-              registry,
-              colors,
-              input.card,
-              input.snapshot,
-              template = true,
-              cardStyle = cardStyle,
-            )
+            CompositionLocalProvider(LocalRcAmbientAware provides ambientAware) {
+              SlotContent(
+                registry,
+                colors,
+                input.card,
+                input.snapshot,
+                template = true,
+                cardStyle = cardStyle,
+              )
+            }
           }
         }
       }
@@ -504,6 +511,7 @@ internal fun neutralTemplateFileName(
   shape: String,
   themeKey: Any,
   cardStyleId: String,
+  ambientAware: Boolean = false,
 ): String? {
   val theme =
     when (themeKey) {
@@ -511,8 +519,11 @@ internal fun neutralTemplateFileName(
       is String -> themeKey.takeIf { it.startsWith("wear-palette-v1:") } ?: return null
       else -> return null
     }
+  // A widget's template keeps its name from before the app's ambient-aware ones.
   val stable =
-    listOf(cardType, shape, theme, cardStyleId, NEUTRAL_TEMPLATE_VERSION).joinToString("\u0000")
+    (listOf(cardType, shape, theme, cardStyleId, NEUTRAL_TEMPLATE_VERSION) +
+        listOfNotNull("ambient".takeIf { ambientAware }))
+      .joinToString("\u0000")
   return java.security.MessageDigest.getInstance("SHA-256")
     .digest(stable.encodeToByteArray())
     .joinToString("") { "%02x".format(it) }
@@ -526,7 +537,12 @@ internal fun neutralTemplateFileName(
 private const val NEUTRAL_TEMPLATE_VERSION = "3"
 
 /** One container-neutral Wear template per card shape and theme: see [WearWidgetTemplate]. */
-private data class WearNeutralTemplateKey(val cardType: String, val shape: String, val theme: Any)
+private data class WearNeutralTemplateKey(
+  val cardType: String,
+  val shape: String,
+  val theme: Any,
+  val ambientAware: Boolean,
+)
 
 private val neutralTemplates =
   java.util.concurrent.ConcurrentHashMap<WearNeutralTemplateKey, ByteArray>()
