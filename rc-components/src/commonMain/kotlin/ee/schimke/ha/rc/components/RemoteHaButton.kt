@@ -16,6 +16,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.RemoteColor
+import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
@@ -23,6 +24,9 @@ import androidx.compose.remote.creation.compose.state.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.rc.m3.RcPress
+import ee.schimke.rc.m3.RemoteM3ShapeMorph
+import ee.schimke.rc.m3.rememberRcPress
 
 /**
  * HA `button` card — tappable card with a centered tinted icon chip and name. Maps to
@@ -113,8 +117,9 @@ fun RemoteHaButtonRow(data: HaButtonData, modifier: RemoteModifier = RemoteModif
   val theme = haTheme()
   val look = entityLook(data.entityId, data.accent)
   val accent = if (data.accent.toggleable) toggleAccent(data, look) else look.accent
+  val press = expressivePress(data)
   val clickable =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { press.modifier.clickable(it) } ?: RemoteModifier
   RemoteBox(
     modifier =
       modifier
@@ -127,7 +132,7 @@ fun RemoteHaButtonRow(data: HaButtonData, modifier: RemoteModifier = RemoteModif
       modifier = RemoteModifier.fillMaxWidth(),
       verticalAlignment = RemoteAlignment.CenterVertically,
     ) {
-      if (data.showIcon) ButtonIconChip(data, look, accent, RowChipDp, RowIconDp)
+      if (data.showIcon) ButtonIconChip(data, look, accent, RowChipDp, RowIconDp, press.fraction)
       RemoteBox(
         modifier =
           RemoteModifier.weight(1f).padding(start = (if (data.showIcon) 10 else 0).rdp, end = 8.rdp)
@@ -176,8 +181,9 @@ fun RemoteHaButtonIcon(
   val theme = haTheme()
   val look = entityLook(data.entityId, data.accent)
   val accent = look.accent
+  val press = expressivePress(data)
   val clickable =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { press.modifier.clickable(it) } ?: RemoteModifier
   RemoteBox(
     modifier =
       modifier
@@ -186,11 +192,12 @@ fun RemoteHaButtonIcon(
         .padding(horizontal = (if (showName) 6 else 0).rdp),
     contentAlignment = RemoteAlignment.Center,
   ) {
-    if (!showName) ButtonIconChip(data, look, accent, FullChipDp, FullIconDp, iconOnly = true)
+    if (!showName)
+      ButtonIconChip(data, look, accent, FullChipDp, FullIconDp, press.fraction, iconOnly = true)
     // 44dp chip + 4dp + a Label line (~17dp) is ~65dp: inside a 1×1 cell's 84dp.
     else
       RemoteColumn(horizontalAlignment = RemoteAlignment.CenterHorizontally) {
-        ButtonIconChip(data, look, accent, CompactChipDp, CompactIconDp)
+        ButtonIconChip(data, look, accent, CompactChipDp, CompactIconDp, press.fraction)
         RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp)) {
           RemoteText(
             text = entityName(data.entityId, data.name),
@@ -232,8 +239,9 @@ private fun ButtonBody(
   dense: Boolean = false,
 ) {
   val theme = haTheme()
+  val press = expressivePress(data)
   val clickable =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { press.modifier.clickable(it) } ?: RemoteModifier
   val chipDp =
     when {
       dense -> RowChipDp
@@ -286,7 +294,7 @@ private fun ButtonBody(
   ) {
     RemoteColumn(horizontalAlignment = RemoteAlignment.CenterHorizontally) {
       // HA's `show_icon: false` drops the icon; the name (and state) then lead the column.
-      if (data.showIcon) ButtonIconChip(data, look, accent, chipDp, iconDp)
+      if (data.showIcon) ButtonIconChip(data, look, accent, chipDp, iconDp, press.fraction)
       if (data.showName) {
         RemoteBox(
           modifier = RemoteModifier.padding(top = (if (data.showIcon) namePadDp else 0).rdp)
@@ -327,9 +335,25 @@ private fun ButtonIconChip(
   accent: RemoteColor,
   chipDp: Int,
   iconDp: Int,
+  pressed: RemoteFloat,
   iconOnly: Boolean = false,
 ) {
   val console = visualFamily() == HaVisualFamily.Console
+  if (visualFamily() == HaVisualFamily.Expressive) {
+    // M3 Expressive's shape morph: a round chip that squares off when its entity is on and
+    // squares further while pressed, both moving by the style's springs.
+    val selected =
+      look.isOn?.let { animateRemoteFloat(it.select(1f.rf, 0f.rf), haMotion().spatial) } ?: 0f.rf
+    RemoteM3ShapeMorph(
+      selected = selected,
+      pressed = pressed,
+      color = accent.copy(alpha = accent.alpha * 0.2f.rf),
+      modifier = RemoteModifier.size(chipDp.rdp),
+    ) {
+      ButtonIcon(data, look, accent, iconDp, console = false, iconOnly)
+    }
+    return
+  }
   RemoteBox(
     modifier =
       RemoteModifier.size(chipDp.rdp)
@@ -347,22 +371,45 @@ private fun ButtonIconChip(
         RemoteModifier.size(chipDp.rdp),
         look.isOn?.select(1f.rf, 0f.rf),
       )
-    HaStateIcon(
-      icon = data.icon,
-      accent = data.accent,
-      look = look,
-      tint = if (console) look.dim(haTheme().primaryText) else accent,
-      // Decorative when the name is drawn under it; the icon alone carries it otherwise.
-      contentDescription =
-        if (data.showName && !iconOnly) null else entityName(data.entityId, data.name),
-      modifier =
-        RemoteModifier.then(
-            if (console) RemoteModifier.padding(end = (chipDp * 0.28f).rdp) else RemoteModifier
-          )
-          .size((if (console) iconDp - 6 else iconDp).rdp),
-    )
+    ButtonIcon(data, look, accent, iconDp, console, iconOnly, chipDp)
   }
 }
+
+@Composable
+private fun ButtonIcon(
+  data: HaButtonData,
+  look: HaEntityLook,
+  accent: RemoteColor,
+  iconDp: Int,
+  console: Boolean,
+  iconOnly: Boolean,
+  chipDp: Int = 0,
+) {
+  HaStateIcon(
+    icon = data.icon,
+    accent = data.accent,
+    look = look,
+    tint = if (console) look.dim(haTheme().primaryText) else accent,
+    // Decorative when the name is drawn under it; the icon alone carries it otherwise.
+    contentDescription =
+      if (data.showName && !iconOnly) null else entityName(data.entityId, data.name),
+    modifier =
+      RemoteModifier.then(
+          if (console) RemoteModifier.padding(end = (chipDp * 0.28f).rdp) else RemoteModifier
+        )
+        .size((if (console) iconDp - 6 else iconDp).rdp),
+  )
+}
+
+/**
+ * The button's press under M3 Expressive, so its chip squishes while held ([RemoteM3ShapeMorph]);
+ * no press feedback otherwise, or without an action to press.
+ */
+@Composable
+private fun expressivePress(data: HaButtonData): RcPress =
+  if (visualFamily() == HaVisualFamily.Expressive && data.tapAction != HaAction.None)
+    rememberRcPress(haMotion())
+  else RcPress.None
 
 private const val FullChipDp = 48
 private const val FullIconDp = 28

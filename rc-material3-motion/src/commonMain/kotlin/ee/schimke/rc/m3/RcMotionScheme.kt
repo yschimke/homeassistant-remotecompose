@@ -140,6 +140,13 @@ fun resolveRcMotion(scheme: RcMotionScheme): RcMotionScheme =
     if (LocalRcReduceMotion.current) it.reducedMotion() else it
   }
 
+/**
+ * Whether the document plays in an interactive app player. A system renderer (a launcher or
+ * watch-face widget) turns this off: press feedback ([rememberRcPress]) and loops on the player's
+ * clock (a running wavy progress, the loading indicator) then draw their resting frame.
+ */
+val LocalRcInteractivePlayer = staticCompositionLocalOf { true }
+
 /** The motion scheme in effect: the design's, under the host's mode and the viewer's preference. */
 @Composable
 @ReadOnlyComposable

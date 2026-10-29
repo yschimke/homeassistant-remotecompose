@@ -25,7 +25,9 @@ import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimental
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.ProvideHaUberTheme
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
@@ -122,6 +124,7 @@ private fun buttonCard() =
 // the daemon captures semantics, keeping the button card in the sticker sheet. See
 // homeassistant-remotecompose#418.
 private val KitchenLightOn: HaSnapshot = KitchenLightStatesProvider().values.first().second
+private val KitchenLightOff: HaSnapshot = KitchenLightStatesProvider().values.elementAt(1).second
 
 @Preview(name = "button on (light)", showBackground = false, widthDp = 187, heightDp = 91)
 @Composable
@@ -756,6 +759,44 @@ fun BambuPrintStatus_Dark() =
   CardHost(HaTheme.Dark) {
     RenderChild(bambuPrintStatusCard(), Fixtures.bambuPrinting, RemoteModifier.fillMaxWidth())
   }
+
+// ——— M3 Expressive building blocks in cards ———
+
+/** [CardHost] under the Material 3 Expressive card style. */
+@Composable
+private fun ExpressiveCardHost(content: @Composable () -> Unit) =
+  CapturingRemoteContentPreview(profile = androidXExperimental) {
+    CompositionLocalProvider(LocalHaClock provides FixedHaClock(PreviewNow)) {
+      ProvideCardRegistry(defaultRegistry()) {
+        ProvideHaUberTheme(HaUberTheme.Expressive, darkTheme = false) { content() }
+      }
+    }
+  }
+
+/** The wavy progress ring of a printing printer, frozen at its first frame. */
+@Preview(
+  name = "bambu print-status (expressive)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 168,
+)
+@Composable
+fun BambuPrintStatus_Expressive() = ExpressiveCardHost {
+  RenderChild(bambuPrintStatusCard(), Fixtures.bambuPrinting, RemoteModifier.fillMaxWidth())
+}
+
+/** The button's chip morph: round while the light is off, squarer while it is on. */
+@Preview(name = "button off (expressive)", showBackground = false, widthDp = 187, heightDp = 91)
+@Composable
+fun Button_Expressive_Off() = ExpressiveCardHost {
+  RenderChild(buttonCard(), KitchenLightOff, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "button on (expressive)", showBackground = false, widthDp = 187, heightDp = 91)
+@Composable
+fun Button_Expressive_On() = ExpressiveCardHost {
+  RenderChild(buttonCard(), KitchenLightOn, RemoteModifier.fillMaxWidth())
+}
 
 @Preview(
   name = "bambu print-status idle (light)",
