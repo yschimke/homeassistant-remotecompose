@@ -15,15 +15,19 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.lifecycleScope
+import androidx.wear.compose.foundation.LocalAmbientModeManager
+import androidx.wear.compose.foundation.rememberAmbientModeManager
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.TimeText
+import ee.schimke.ha.rc.LocalHostAmbient
 import ee.schimke.ha.rc.LocalRelativeTimeTick
 import ee.schimke.ha.rc.rememberRelativeTimeTick
 import ee.schimke.terrazzo.wear.data.WearPrefs
@@ -180,9 +184,14 @@ private fun WearApp(
   val sections: PinnedSectionSet by repo.sections.collectAsState()
   val widgetCardsRevision by repo.widgetCardsRevision.collectAsState()
   val dashboards: List<DashboardData> by repo.dashboards.collectAsState()
+  // Always-on: the system tells the app when the watch goes ambient and when to update in it. Read
+  // only in effects, so going in and out of ambient recomposes nothing: the cards' players take
+  // the flag through [LocalHostAmbient], their values through [values].
+  val ambient = rememberAmbientModeManager()
   // One object for the app's life: cards read their own entities from it, so a value update
   // recomposes only the cards that show it.
-  val values = rememberWearValues(repo.values)
+  val values = rememberWearValues(repo.values, ambient)
+  val readAmbient = remember(ambient) { { ambient.isAmbient } }
 
   var screen by rememberSaveable { mutableStateOf(WearScreen.TopLevel) }
   var openedDashboard by rememberSaveable { mutableStateOf<String?>(null) }
@@ -240,6 +249,9 @@ private fun WearApp(
       LocalRelativeTimeTick provides rememberRelativeTimeTick(),
       // A card's taps act through the phone while it allows input editing, outside demo mode.
       LocalWearTapSender provides if (wearTapsEnabled(settings)) repo::sendTap else null,
+      LocalAmbientModeManager provides ambient,
+      // Every card plays with the host's ambient flag: dark, still and exact while always-on.
+      LocalHostAmbient provides readAmbient,
     ) {
       AppScaffold(timeText = { TimeText() }) {
         when (screen) {

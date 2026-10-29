@@ -28,8 +28,14 @@ card's live values, seeded before the first frame like them, and never a re-enco
   already does for every value) and finds `host.ambient` there or not.
 - **A host that doesn't know its display state writes nothing.** The document keeps the value it
   was captured with (`0`, or `1` under `LocalRcAmbientInitial`, for a capture made while ambient or
-  a preview of the look). `HaRcComposePlayer`'s `ambient` parameter is `null` by default for this
-  reason.
+  a preview of the look). `HaRcComposePlayer`'s `ambient` reader returns `null` by default
+  (`NoHostAmbient`) for this reason. A host that does know provides `LocalHostAmbient` above its
+  cards: `CachedCardPreview` writes it to every card it plays, in either player.
+- **Going in or out of ambient recomposes nothing and encodes nothing.** `LocalHostAmbient` is a
+  reader (`() -> Boolean?`) backed by snapshot state, not a value: the players call it only in
+  their effects (`snapshotFlow`), and read it unobserved when they seed a new document's first
+  frame. The flag is not part of a document's cache key, so the cached bytes play on unchanged
+  (`HostAmbientTest` checks both).
 - **A document that doesn't declare it** can't promise anything below. The host dims it, draws a
   placeholder, or settles it before every frame (below, "Ticking").
 
@@ -47,7 +53,11 @@ must be complete on its own:
    of. The spring still runs underneath, so leaving ambient picks up wherever it is, with no jump.
 2. **Going ambient takes one frame.** The look's fraction (`rcAmbient().fraction`) is the larger of
    the flag and its fade, so it jumps to `1` and fades back to `0`: the first frame after the flag
-   is already the ambient look, and leaving ambient fades the interactive look back in.
+   is already the ambient look, and leaving ambient fades the interactive look back in. Only parts
+   drawn on a canvas fade (`rcAmbient()`): colours a text or a layout reads (the theme's roles, the
+   classic switch's track) switch both ways (`rcAmbient(fade = false)`), because the Compose player
+   resolves them when a named value changes, not on every frame of the animation that follows, so a
+   fade back would stop at its first frame.
 3. **Loops come to rest.** A wave's amplitude is multiplied by `1 − fraction`, so the wavy
    indicators are flat lines. (Their phase still reads the clock; an ambient host doesn't advance
    it, see below.)
@@ -140,11 +150,29 @@ interactive frame greyed.
 2. The look fades back on `effectsFast`. Values follow their springs, which are timed from the last
    change: a change made a minute ago has long settled, one made just now finishes its motion.
 
+## The Wear app
+
+The watch app is the first host that goes ambient
+([#1323](https://github.com/yschimke/homeassistant-remotecompose/issues/1323)):
+
+- `WearApp` takes the system's ambient mode from Wear Compose (`rememberAmbientModeManager()`,
+  also provided as `LocalAmbientModeManager`): whether the watch is ambient
+  (`currentAmbientMode`, snapshot state), and `withAmbientTick` for each of the system's ambient
+  updates (about one a minute).
+- `WearApp` provides `LocalHostAmbient` as a reader of it, so every card on every screen plays
+  with the flag, and no screen recomposes when it changes.
+- The app's cards play their widget's container-neutral template, captured for the app with the
+  flag (`neutralWidgetTemplate(ambientAware = true)`). A widget's own template leaves it out: the
+  system renderer that plays it never writes the flag.
+- Live values are held while ambient (`heldWhileAmbient`): the phone's changes between ambient
+  updates don't redraw the screen; the latest lands on the next update, and leaving ambient shows
+  it at once. The cards draw that frame exact (promise 1), so nothing has to settle.
+
+Entering ambient doesn't wait for running animations to finish: the system has already dimmed the
+screen, and the flag makes the next frame final anyway (promises 1 and 2).
+
 ## Not done yet
 
-- **The Wear app.** Entering and leaving ambient (`AmbientLifecycleObserver`), passing `ambient` to
-  `HaRcComposePlayer`, and the tick cadence are
-  [#1323](https://github.com/yschimke/homeassistant-remotecompose/issues/1323).
 - **Style-specific controls.** The IKEA, console and community switch faces, and large accent fills
   (a tile's icon chip, a gauge's arc), keep their interactive look while ambient.
 - **The player API** above, in rc-players.

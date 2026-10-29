@@ -81,10 +81,16 @@ class RcAmbient internal constructor(val fraction: RemoteFloat) {
  * The host's ambient state for this document ([RcAmbientValue]). Every call shares the one named
  * value, so a document declares it once however many parts read it. [RcAmbient.Never] when
  * [LocalRcAmbientAware] is off.
+ *
+ * With [fade] off its fraction is the flag itself, both ways: for colours a text or a layout reads.
+ * The Compose player resolves those when a named value changes, not on every frame of an animation
+ * that follows one, so a fade back would stop at its first frame. A canvas redraws every frame and
+ * can take the fade.
  */
 @Composable
-fun rcAmbient(): RcAmbient {
+fun rcAmbient(fade: Boolean = true): RcAmbient {
   val flag = rcAmbientFlag() ?: return RcAmbient.Never
+  if (!fade) return RcAmbient(flag)
   val motion = currentRcMotion()
   // The larger of the flag and its animation: a rise shows the flag at once, a fall the fade.
   // Clamped: a player whose spring overshoots would otherwise make `fade` negative, and an alpha
