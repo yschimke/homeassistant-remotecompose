@@ -114,6 +114,7 @@ fun cardSnapshotBindings(entityIds: Set<String>, snapshot: HaSnapshot): CardSnap
     booleans["$id.is_on"] = HaLiveBindings.isOn(id, state.state)
     booleans["$id.is_available"] = HaLiveBindings.isAvailable(state.state)
     HaLiveBindings.stateInt(id, state.state)?.let { ints["$id.state_int"] = it }
+    ints["$id.${HaLiveBindings.LAST_CHANGED}"] = HaLiveBindings.lastChanged(state)
     HaLiveBindings.numericState(state.state)?.let { floats["$id.numeric_state"] = it }
     HaLiveBindings.attributeFloats(id, state.attributes).forEach { (suffix, value) ->
       floats["$id.$suffix"] = value

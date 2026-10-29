@@ -170,14 +170,16 @@ private const val DAY = 24 * HOUR
  * nearest unit with the thresholds of Home Assistant's `selectUnit` (45 s, 45 min, 22 h); a date
  * (`20 Apr 2026`) from a week either way, so a fixed past timestamp renders the same every day.
  */
-internal fun formatRelativeTime(time: Instant, now: Instant, timeZone: TimeZone): String {
+fun formatRelativeTime(time: Instant, now: Instant, timeZone: TimeZone): String {
   val seconds = (now - time).inWholeSeconds
   val past = seconds >= 0
   val magnitude = abs(seconds).toDouble()
   fun relative(text: String) = if (past) "$text ago" else "in $text"
-  val minutes = kotlin.math.round(magnitude / MINUTE).toLong()
-  val hours = kotlin.math.round(magnitude / HOUR).toLong()
-  val days = kotlin.math.round(magnitude / DAY).toLong()
+  // JavaScript's Math.round, as HA's selectUnit uses: a half rounds up (150 s is 3 min).
+  fun round(value: Double) = kotlin.math.floor(value + 0.5).toLong()
+  val minutes = round(magnitude / MINUTE)
+  val hours = round(magnitude / HOUR)
+  val days = round(magnitude / DAY)
   return when {
     magnitude < 45 -> if (past) "just now" else "now"
     minutes < 45 -> relative("$minutes min")

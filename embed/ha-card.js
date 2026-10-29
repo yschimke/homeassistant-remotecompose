@@ -582,6 +582,15 @@ export function numericState(state) {
   return Number.isFinite(value) ? value : null;
 }
 
+/**
+ * `HaLiveBindings.lastChanged` ↔ `<slot>.last_changed`: HA's `last_changed` as whole Unix seconds,
+ * 0 when unknown. The document formats "5 min ago" from it against the player's own clock.
+ */
+export function lastChanged(entity) {
+  const seconds = entity ? entity.last_changed : undefined;
+  return typeof seconds === 'number' && Number.isFinite(seconds) ? Math.floor(seconds) : 0;
+}
+
 /** `CardDesignSlots.statusOf` ↔ `<slot>.status`. */
 export function statusOf(entity) {
   const state = entity ? entity.state : null;
@@ -655,6 +664,7 @@ export function slotBindings(card, states) {
     booleans[`${slot}.is_available`] = state ? isAvailable(state.state) : false;
     ints[`${slot}.state_int`] = (state ? stateInt(entityId, state.state) : null) ?? -1;
     ints[`${slot}.status`] = statusOf(state);
+    ints[`${slot}.last_changed`] = lastChanged(state);
     floats[`${slot}.numeric_state`] = (state ? numericState(state.state) : null) ?? Number.NaN;
   });
   return { strings, booleans, ints, floats };
@@ -1116,19 +1126,22 @@ const exchanges = {};
 
 /**
  * Applies one `subscribe_entities` event (HA's compressed state format) to [states], entity id →
- * `{ state, attributes }`.
+ * `{ state, attributes, last_changed }` (`lc`, epoch seconds).
  */
 export function applyEntitiesEvent(states, event) {
   if (event.a) {
-    for (const [id, s] of Object.entries(event.a)) states[id] = { state: s.s, attributes: s.a ?? {} };
+    for (const [id, s] of Object.entries(event.a)) {
+      states[id] = { state: s.s, attributes: s.a ?? {}, last_changed: s.lc };
+    }
   }
   if (event.c) {
     for (const [id, diff] of Object.entries(event.c)) {
       const current = states[id];
       if (!current) continue;
-      const next = { state: current.state, attributes: { ...current.attributes } };
+      const next = { state: current.state, attributes: { ...current.attributes }, last_changed: current.last_changed };
       if (diff['+']) {
         if (diff['+'].s !== undefined) next.state = diff['+'].s;
+        if (diff['+'].lc !== undefined) next.last_changed = diff['+'].lc;
         if (diff['+'].a) Object.assign(next.attributes, diff['+'].a);
       }
       if (diff['-'] && diff['-'].a) for (const key of diff['-'].a) delete next.attributes[key];

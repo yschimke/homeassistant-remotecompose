@@ -98,8 +98,9 @@ The page pushes the **slot bindings** a template reads, which is everything
 - `card.title`;
 - for each slot `<domain>.s<N>`: `.state` (formatted, as `formatState`), `.name`, `.is_on`
   (`HaLiveBindings.isOn`, pushed as an int 0/1 like the app does), `.is_available`
-  (`HaLiveBindings.isAvailable`, likewise 0/1; false for a missing entity), `.state_int`, `.status`
-  and `.numeric_state`.
+  (`HaLiveBindings.isAvailable`, likewise 0/1; false for a missing entity), `.state_int`, `.status`,
+  `.numeric_state` and `.last_changed` (HA's `last_changed`, whole Unix seconds from the compressed
+  `lc`; 0 when unknown).
 
 Names go to the player in the `USER:` domain, as the AndroidX player's `setUserLocal*` writes them.
 

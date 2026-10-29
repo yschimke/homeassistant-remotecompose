@@ -2,6 +2,7 @@ package ee.schimke.ha.rc
 
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -104,7 +105,12 @@ class CardEntitiesTest {
     // Numeric states get a parsed float binding so gauges track the value;
     // non-numeric states (`on`) contribute none.
     assertEquals(mapOf("sensor.temp.numeric_state" to 21.4f), bindings.floats)
-    assertTrue(bindings.ints.isEmpty())
+    // Every entity carries HA's last_changed; these have none, so it is 0 (no time).
+    assertEquals(
+      setOf("light.kitchen.last_changed", "sensor.temp.last_changed"),
+      bindings.ints.keys,
+    )
+    assertTrue(bindings.ints.values.all { it == HaLiveBindings.NO_TIME })
   }
 
   @Test
@@ -117,7 +123,21 @@ class CardEntitiesTest {
     val bindings = cardSnapshotBindings(setOf("alarm_control_panel.home"), snapshot)
     // Alarm panels carry a domain-keyed int so the armed/disarmed chrome
     // variant flips without a re-encode.
-    assertEquals(setOf("alarm_control_panel.home.state_int"), bindings.ints.keys)
+    assertEquals(
+      setOf("alarm_control_panel.home.state_int", "alarm_control_panel.home.last_changed"),
+      bindings.ints.keys,
+    )
+  }
+
+  @Test
+  fun snapshotBindingsCarryLastChangedAsWholeSeconds() {
+    val changed = kotlin.time.Instant.parse("2026-10-29T10:15:20.732Z")
+    val snapshot =
+      HaSnapshot(
+        states = mapOf("light.kitchen" to EntityState("light.kitchen", "on", lastChanged = changed))
+      )
+    val bindings = cardSnapshotBindings(setOf("light.kitchen"), snapshot)
+    assertEquals(changed.epochSeconds.toInt(), bindings.ints["light.kitchen.last_changed"])
   }
 
   @Test

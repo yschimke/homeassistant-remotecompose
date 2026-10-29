@@ -15,6 +15,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.foundation.icon.RemoteBasicIcon
@@ -68,7 +69,7 @@ fun RemoteHaLogbook(data: HaLogbookData, modifier: RemoteModifier = RemoteModifi
             style = haTextStyle(),
           )
       } else {
-        data.entries.forEachIndexed { i, entry -> Entry(i, entry, theme) }
+        data.entries.forEach { entry -> Entry(entry, theme) }
       }
     }
   }
@@ -108,7 +109,7 @@ fun RemoteHaLogbookIdentity(
         tint = theme.secondaryText,
       )
       RemoteText(
-        text = cardText("row.0.name", latest.name),
+        text = latest.liveName(),
         color = theme.primaryText,
         fontSize = HaType.Caption,
         fontWeight = FontWeight.SemiBold,
@@ -117,7 +118,7 @@ fun RemoteHaLogbookIdentity(
         overflow = TextOverflow.Ellipsis,
       )
       RemoteText(
-        text = cardText("row.0.message", latest.message),
+        text = latest.liveMessage(),
         color = theme.secondaryText,
         fontSize = HaType.Caption,
         style = haTextStyle(),
@@ -152,7 +153,7 @@ fun RemoteHaLogbookIdentity(
       ) {
         RemoteBasicIcon(
           imageVector = latest.icon.toRemoteImageVector(),
-          contentDescription = latest.name.rs,
+          contentDescription = latest.liveName(),
           modifier = RemoteModifier.size(22.rdp),
           tint = theme.secondaryText,
         )
@@ -162,7 +163,7 @@ fun RemoteHaLogbookIdentity(
         ) {
           // The latest entry is row 0: the same keys as the full list, so a template bakes it.
           RemoteText(
-            text = cardText("row.0.name", latest.name),
+            text = latest.liveName(),
             color = theme.primaryText,
             fontSize = HaType.Title,
             fontWeight = FontWeight.SemiBold,
@@ -171,7 +172,7 @@ fun RemoteHaLogbookIdentity(
             overflow = TextOverflow.Ellipsis,
           )
           RemoteText(
-            text = cardText("row.0.message", latest.message),
+            text = latest.liveMessage(),
             color = theme.secondaryText,
             fontSize = HaType.Label,
             style = haTextStyle(),
@@ -184,9 +185,30 @@ fun RemoteHaLogbookIdentity(
   }
 }
 
+/** The row's name: `<id>.name` in a template, else as given. */
+@Composable private fun HaLogbookEntry.liveName(): RemoteString = entityName(entityId, name)
+
+/** What the row's entity is now: `<id>.state`, the host's own formatted state. */
+private fun HaLogbookEntry.liveMessage(): RemoteString = LiveValues.state(entityId, message)
+
+/** When it changed, relative to the player's clock; a row without an entity draws [whenText]. */
+private fun HaLogbookEntry.liveWhen(): RemoteString =
+  if (entityId == null) whenText.rs
+  else relativeTimeText(LiveValues.lastChanged(entityId, lastChanged))
+
+/**
+ * The Wear Small summary line: the latest entry's name and what it is now, or that there is none.
+ * Built from the row's own bindings, so it follows the entity like the full card.
+ */
 @Composable
-private fun Entry(index: Int, entry: HaLogbookEntry, theme: RemoteHaTheme) {
-  val name = cardText("row.$index.name", entry.name)
+fun logbookSummaryText(data: HaLogbookData): RemoteString {
+  val latest = data.entries.firstOrNull() ?: return "No recent activity".rs
+  return latest.liveName() + " " + latest.liveMessage()
+}
+
+@Composable
+private fun Entry(entry: HaLogbookEntry, theme: RemoteHaTheme) {
+  val name = entry.liveName()
   RemoteRow(
     modifier = RemoteModifier.fillMaxWidth(),
     verticalAlignment = RemoteAlignment.CenterVertically,
@@ -209,7 +231,7 @@ private fun Entry(index: Int, entry: HaLogbookEntry, theme: RemoteHaTheme) {
         overflow = TextOverflow.Ellipsis,
       )
       RemoteText(
-        text = cardText("row.$index.message", entry.message),
+        text = entry.liveMessage(),
         color = theme.secondaryText,
         fontSize = HaType.Label,
         style = haTextStyle(),
@@ -218,7 +240,7 @@ private fun Entry(index: Int, entry: HaLogbookEntry, theme: RemoteHaTheme) {
       )
     }
     RemoteText(
-      text = cardText("row.$index.when", entry.whenText),
+      text = entry.liveWhen(),
       color = theme.secondaryText,
       fontSize = HaType.Caption,
       style = haTextStyle(),

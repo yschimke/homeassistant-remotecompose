@@ -45,6 +45,14 @@ object LiveValues {
     namedInt(entityId, "state_int", initial)
 
   /**
+   * When the entity's state last changed ↔ `<entityId>.last_changed`: Home Assistant's
+   * `last_changed` in whole Unix seconds (`HaLiveBindings.lastChanged`), 0 when unknown. A document
+   * shows it with [relativeTimeText], which keeps the label moving with the player's clock.
+   */
+  fun lastChanged(entityId: String?, initial: Int): RemoteInt =
+    namedInt(entityId, "last_changed", initial)
+
+  /**
    * Generic integer host binding. The caller picks the suffix; useful for any enum-shaped state
    * that isn't the primary `state` (e.g. mode indices). When [entityId] is null the helper falls
    * back to a constant.

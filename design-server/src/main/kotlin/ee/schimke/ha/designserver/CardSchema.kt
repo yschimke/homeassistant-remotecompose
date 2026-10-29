@@ -22,8 +22,9 @@ import kotlinx.serialization.json.jsonPrimitive
  * - [slots]: the entities the card binds, by position. A design names them by slot
  *   (`<domain>.s<N>`), never by entity id, so one design serves every card of its shape.
  * - [bindings]: every named value a client pushes, with its type and an example value: per slot
- *   `name`, `state`, `is_on`, `state_int`, `status`, `numeric_state`, plus card-level values
- *   (`card.title`, …). This is the binding schema in docs/architecture/card-design-server.md.
+ *   `name`, `state`, `is_on`, `state_int`, `status`, `numeric_state`, `last_changed`, plus
+ *   card-level values (`card.title`, …). This is the binding schema in
+ *   docs/architecture/card-design-server.md.
  * - [shared]: the values every home shares, which any design may read besides its card's
  *   (`HA:sun.sun.elevation`, [HaSharedValues]), each with what it means.
  * - [properties]: the generation properties that pick the design's structure, when it comes from a
