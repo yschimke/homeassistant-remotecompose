@@ -82,10 +82,25 @@ headsets.
 ## Pinned controls (XR)
 
 Without a room signal, the user can place a control themselves. In full space every control panel
-has **Pin here**: it creates an ARCore for XR anchor 0.8 m ahead of where the user is looking
-(facing them), persists it to the headset's local storage (`AnchorPersistenceMode.LOCAL`) and
-records `RoomPin(anchorId, baseUrl, entityId)` in `PreferencesStore.roomPins`. Stand by the
-heater, look at the wall beside it, pin.
+has **Pin here**: it creates an ARCore for XR anchor where the user is looking, persists it to the
+headset's local storage (`AnchorPersistenceMode.LOCAL`) and records
+`RoomPin(anchorId, baseUrl, entityId)` in `PreferencesStore.roomPins`. Stand by the heater, look at
+the wall beside it, pin.
+
+**Snapping to walls.** The session also runs plane tracking (`HORIZONTAL_AND_VERTICAL`). Pinning
+casts the gaze against the tracked vertical planes (`PinPlacement.kt`, `wallPose`): the nearest
+wall the gaze meets from the front, within 4 m and inside its extent (with 0.3 m of slack, since
+tracked extents run short), takes the anchor 2 cm off its surface, facing into the room and
+upright. With no wall in reach the pin goes in the air instead (`airPose`): 0.8 m ahead, level
+with the eyes, facing the user. **Move here** on a pinned panel pins it again where the user now
+looks (on a wall if there is one) and forgets the old anchor.
+
+Why not `SubspaceModifier.anchorable()`: in Compose for XR 1.0.0-beta02 it is internal. Its public
+counterpart, `movable(movePolicy = MovePolicy.anchor(...))` (`@ExperimentalMoveAnchorPolicy`),
+snaps a panel to a plane while it is dragged, but reparents it under an anchor entity it doesn't
+expose: the move event's pose is relative to that hidden parent, so there is nothing to persist
+and restore next visit. Casting the gaze against `Plane.subscribe` gives a pose in the session's
+own space, which `Anchor.create` and `persist` keep.
 
 On later visits to full space the room screen loads each pin's anchor (`Anchor.load`) and puts a
 panel on it with `Subspace(follow = FollowTarget.anchor(anchor))`, so the heater's controls are
@@ -102,7 +117,9 @@ headset too. Pins live in `room/RoomPins.kt` (storage, nearest-pin choice) and
 
 - Following the headset's own position: Android XR doesn't place the headset in a Home Assistant
   area. A tracker entity (Bermuda with the headset or phone as the beacon) is the bridge for now.
-- Snapping a pinned panel to a wall or table (`SubspaceModifier.anchorable()` with plane
-  tracking) rather than placing it ahead of the user, and moving a pin once placed.
+- Dragging a pinned panel along a wall: once Compose for XR exposes the anchor a
+  `MovePolicy.anchor` drag lands on, that can replace **Move here**.
+- Tables: horizontal planes are tracked but pins only snap to walls; a control lying flat on a
+  table needs its own facing rule.
 - Wear, TV and the shared desktop / Wasm hosts don't show room controls yet; the ranking lives in
   `ha-model` so they can.
