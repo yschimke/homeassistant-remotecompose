@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.PaintingStyle
 import ee.schimke.rc.m3.RcM3SliderColors
 import ee.schimke.rc.m3.RcPress
 import ee.schimke.rc.m3.drawM3Slider
+import ee.schimke.rc.m3.rcAmbient
 import ee.schimke.rc.m3.rememberRcPress
 
 /**
@@ -144,6 +145,7 @@ fun RemoteHaSlider(
       else -> theme.primaryText
     }
   if (expressive) {
+    val ambient = rcAmbient()
     RemoteBox(
       modifier =
         modifier.fillMaxWidth().height(heightDp.rdp).semantics {
@@ -162,6 +164,7 @@ fun RemoteHaSlider(
               // in pieces shows no overlap.
               inactive = tween(theme.cardBackground, theme.secondaryText, 0.18f.rf),
             ),
+            ambient,
           )
         // The value sits in the inactive track while it has room, then in the active one on a
         // pill in the card's colour, so it reads on any accent.

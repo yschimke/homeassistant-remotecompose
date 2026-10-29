@@ -31,6 +31,7 @@ import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import ee.schimke.composeai.rcplayer.runtime.RcPlayerEvent
 import ee.schimke.composeai.rcplayer.runtime.RcTimeSnapshot
 import ee.schimke.composeai.rcplayer.runtime.RcTimeSource
+import ee.schimke.rc.m3.RcAmbientValue
 import ee.schimke.terrazzo.shared.RcErrorBoundary
 import java.time.Instant
 import java.time.ZonedDateTime
@@ -72,6 +73,10 @@ enum class CardPlayback {
  * - [namedValues] carries live binding writes (`<entity>.state`, …) into the running document
  *   without re-creating it, so document animations are not restarted.
  * - [onNamedAction] receives the document's named host actions (`ha` + JSON payload).
+ * - [ambient] is the display's low-power ambient state, written to the document's [RcAmbientValue]
+ *   when it reads one (docs/architecture/ambient-mode.md): set it once the card has settled, and
+ *   the next frame is the ambient one. Null, a host that doesn't know, writes nothing: the document
+ *   keeps the value it was captured with.
  * - A frozen [LocalHaClock] (previews, tests) pins the player's time source too, so time-driven
  *   expressions resolve to the same instant the converters encoded, and decodes a plain
  *   [BitmapLoader]'s images inline rather than on `Dispatchers.IO`, so a capture never races them.
@@ -93,7 +98,21 @@ fun HaRcComposePlayer(
     ee.schimke.composeai.rcplayer.runtime.RcInputDrafts()
   },
   onInputSubmit: (String, Map<String, String>) -> Unit = { _, _ -> },
+  ambient: Boolean? = null,
 ) {
+  // The host's own values ride with the card's: seeded before the first frame like them, so a card
+  // that appears while ambient draws ambient from its first frame.
+  val ambientState = androidx.compose.runtime.rememberUpdatedState(ambient)
+  val hostValues: () -> Map<String, RcNamedValue> =
+    remember(namedValues) {
+      {
+        val values = namedValues.toMap()
+        when (val on = ambientState.value) {
+          null -> values
+          else -> values + (RcAmbientValue to RcNamedValue.FloatValue(if (on) 1f else 0f))
+        }
+      }
+    }
   val error = remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
   // The player only skips a recomposition when every argument is equal to the last, and a host
   // recomposes this on every data change (its caller's snapshot moved). So nothing handed to the
@@ -138,7 +157,9 @@ fun HaRcComposePlayer(
   RcErrorBoundary(
     documentBytes,
     modifier,
-    namedValues = { namedValues.filter { (name, value) -> decoded.declared.accepts(name, value) } },
+    namedValues = {
+      hostValues().filter { (name, value) -> decoded.declared.accepts(name, value) }
+    },
   ) { fail ->
     run {
       val clock = LocalHaClock.current
@@ -165,11 +186,11 @@ fun HaRcComposePlayer(
       val playerValues =
         remember(document) {
           mutableStateMapOf<String, RcNamedValue>().apply {
-            putAll(namedValues.filter { (name, value) -> declared.accepts(name, value) })
+            putAll(hostValues().filter { (name, value) -> declared.accepts(name, value) })
           }
         }
       LaunchedEffect(playerValues, namedValues) {
-        snapshotFlow { namedValues.toMap() }
+        snapshotFlow { hostValues() }
           .collect { values ->
             val accepted = values.filter { (name, value) -> declared.accepts(name, value) }
             playerValues.keys.retainAll(accepted.keys)

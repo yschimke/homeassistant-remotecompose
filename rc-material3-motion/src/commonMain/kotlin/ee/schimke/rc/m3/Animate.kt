@@ -2,11 +2,9 @@
 
 package ee.schimke.rc.m3
 
-import androidx.compose.remote.creation.compose.state.AnimatedRemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.max
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 
 /**
  * [this], moving by [spec] whenever the document state behind it changes (a host writing a new
@@ -16,17 +14,22 @@ import androidx.compose.runtime.remember
  * later change animates; a document played with current values never animates in. Don't feed this a
  * constant to make an entrance: that is an appearance animation, not an update.
  *
+ * While the host's display is ambient ([RcAmbientValue]) it shows [this] itself: an ambient host
+ * draws a single frame a minute, and that frame must show the new value, not a spring's first step.
+ * The spring still runs underneath, so leaving ambient picks up wherever it is.
+ *
  * Returns [this] unchanged for [RcMotionSpec.Snap], and when [LocalRcAnimationsEnabled] is off. A
  * spring becomes its [RcMotionSpec.Spring.asTween] when [LocalRcSpringsSupported] is off.
  */
 @Composable
 fun RemoteFloat.animate(spec: RcMotionSpec): RemoteFloat {
-  if (!LocalRcAnimationsEnabled.current) return this
-  val played =
-    if (spec is RcMotionSpec.Spring && !LocalRcSpringsSupported.current) spec.asTween() else spec
-  val description = played.encode() ?: return this
-  // `AnimatedRemoteFloat` is `@RememberInComposition` since remote-compose alpha21.
-  return remember(this, played) { AnimatedRemoteFloat(this, description) }
+  val animated = animateRaw(spec)
+  if (animated === this) return this
+  // The raw flag, not the animated [rcAmbient] fraction: one shared value rather than a second
+  // animation per animated value. The host only sets it once animations have settled, so the
+  // switch shows no jump.
+  val ambient = rcAmbientFlag() ?: return animated
+  return animated + (this - animated) * ambient
 }
 
 /**

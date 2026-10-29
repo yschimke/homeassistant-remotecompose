@@ -212,9 +212,13 @@ effects:
 
 Ambient is a property of the *display*, not of a design, so it is not a card style. A host sets
 `LocalRcMotionMode` to `Ambient` inside the card's capture and every theme's motion resolves to
-`RcMotionScheme.ambient()`. The TV kiosk's card row does. The Wear app has no ambient mode of its
-own yet; when it gains one, it sets the same mode
-([#1323](https://github.com/yschimke/homeassistant-remotecompose/issues/1323)).
+`RcMotionScheme.ambient()`. The TV kiosk's card row does.
+
+A watch's always-on is a different thing: a low-power display that draws about once a minute. That
+is a runtime flag the host writes (`host.ambient`), not this capture-time mode. Under it, values
+show their targets, loops rest and the building blocks draw outlines and thin tracks; see
+[ambient mode](../architecture/ambient-mode.md) for the contract and the host's sequence. The Wear
+app sets neither yet ([#1323](https://github.com/yschimke/homeassistant-remotecompose/issues/1323)).
 
 ## 6. The rest: three archetypes
 
