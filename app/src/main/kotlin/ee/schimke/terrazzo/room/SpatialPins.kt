@@ -27,6 +27,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -216,6 +217,9 @@ internal fun rememberPinning(
 ): PinActions {
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
+  // The actions below are remembered; read the callbacks fresh so they never act on a stale caller.
+  val pinned by rememberUpdatedState(onPinned)
+  val moved by rememberUpdatedState(onMoved)
   // The entity to pin, and the pin it replaces when moving, while the permissions are asked for.
   var pending by remember { mutableStateOf<Pair<String, RoomPin?>?>(null) }
   fun granted() = PIN_PERMISSIONS.all {
@@ -224,10 +228,10 @@ internal fun rememberPinning(
   fun pinNow(entityId: String, replacing: RoomPin?) {
     scope.launch {
       val place = anchors.pinWhereLooking() ?: return@launch
-      if (replacing == null) onPinned(place.anchorId, entityId)
+      if (replacing == null) pinned(place.anchorId, entityId)
       else {
         anchors.unpin(replacing.anchorId)
-        onMoved(replacing, place.anchorId)
+        moved(replacing, place.anchorId)
       }
     }
   }

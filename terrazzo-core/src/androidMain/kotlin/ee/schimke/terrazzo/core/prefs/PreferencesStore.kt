@@ -208,8 +208,12 @@ class PreferencesStore(private val context: Context) {
   val roomPins: Flow<String?>
     get() = context.store.data.map { it[ROOM_PINS_KEY] }
 
-  suspend fun setRoomPins(encoded: String) {
-    context.store.edit { it[ROOM_PINS_KEY] = encoded }
+  /**
+   * Replaces the stored pins with [update] of what is stored now, in one edit: two pins made in
+   * quick succession each see the other, never a list read before it landed.
+   */
+  suspend fun updateRoomPins(update: (encoded: String?) -> String) {
+    context.store.edit { it[ROOM_PINS_KEY] = update(it[ROOM_PINS_KEY]) }
   }
 
   val logsViewEnabled: Flow<Boolean>
