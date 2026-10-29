@@ -116,6 +116,9 @@ fun LauncherWidgetContent(
 ) {
   CompositionLocalProvider(
     LocalWidgetCaptureSizeDp provides captureSizeDp,
+    // The launcher's renderer never writes the ambient flag, and its colours must fold to
+    // constants: no ambient crossing on the theme provided below.
+    ee.schimke.rc.m3.LocalRcAmbientAware provides false,
     ee.schimke.ha.rc.components.LocalSupportsFlowLayout provides
       (androidx.compose.remote.core.Operations.LAYOUT_FLOW in profile.supportedOperations),
   ) {
