@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.74](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.73...v0.1.74) (2026-10-29)
+
+
+### Features
+
+* **cards:** every card goes dark while ambient ([#1339](https://github.com/yschimke/homeassistant-remotecompose/issues/1339)) ([101a5fd](https://github.com/yschimke/homeassistant-remotecompose/commit/101a5fd38c07c4ae9223ad22ee417933f1ff85a8))
+* **cards:** logbook shows when from HA's last_changed, worked out in the document ([#1326](https://github.com/yschimke/homeassistant-remotecompose/issues/1326)) ([698269d](https://github.com/yschimke/homeassistant-remotecompose/commit/698269d322ccfe4dcb3e7723088a82537bc1c779))
+* **design-server:** play designs live with an ambient switch and changing values ([#1334](https://github.com/yschimke/homeassistant-remotecompose/issues/1334)) ([085bbfe](https://github.com/yschimke/homeassistant-remotecompose/commit/085bbfe587ea90eb799921bb69d56546da7ee97f))
+* M3 Expressive slider, and a pull request's design changes in the design browser ([#1330](https://github.com/yschimke/homeassistant-remotecompose/issues/1330)) ([83c69fe](https://github.com/yschimke/homeassistant-remotecompose/commit/83c69feb106682ee291eb641f97bdd103bc42444))
+* **motion:** M3 Expressive press, shape morph, wavy progress and loader ([#1325](https://github.com/yschimke/homeassistant-remotecompose/issues/1325)) ([b8212d6](https://github.com/yschimke/homeassistant-remotecompose/commit/b8212d60a3de4855284579de27a8c76e3dece27c))
+* **motion:** runtime ambient flag for low-power displays ([#1333](https://github.com/yschimke/homeassistant-remotecompose/issues/1333)) ([e27e49c](https://github.com/yschimke/homeassistant-remotecompose/commit/e27e49c565394cb9f85da3169925a643cd000740))
+* room controls on Android XR glasses with Glimmer, on Compose 1.13 ([#1340](https://github.com/yschimke/homeassistant-remotecompose/issues/1340)) ([44e1fe6](https://github.com/yschimke/homeassistant-remotecompose/commit/44e1fe677b873165afb4d93fc324f83325a03e06))
+* room controls on Meta Quest with scene previews ([#1331](https://github.com/yschimke/homeassistant-remotecompose/issues/1331)) ([39bb475](https://github.com/yschimke/homeassistant-remotecompose/commit/39bb475dda394b15cd3e2af842649bb08219405f))
+* snap pinned room controls to walls on an XR headset ([#1324](https://github.com/yschimke/homeassistant-remotecompose/issues/1324)) ([2728159](https://github.com/yschimke/homeassistant-remotecompose/commit/2728159e1924f4b36ddb9cc02ffcc03511995dae))
+* **wear:** ambient mode for the app's cards ([#1343](https://github.com/yschimke/homeassistant-remotecompose/issues/1343)) ([d43efa3](https://github.com/yschimke/homeassistant-remotecompose/commit/d43efa3b54d44e8083586706b6e37aaf4f1c954c))
+
+
+### Bug Fixes
+
+* **previews:** load demo camera images synchronously in screen previews ([#1335](https://github.com/yschimke/homeassistant-remotecompose/issues/1335)) ([eb7595c](https://github.com/yschimke/homeassistant-remotecompose/commit/eb7595c57446300bc8efb6e723b6d4ed58b0e5ee))
+
 ## [0.1.73](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.72...v0.1.73) (2026-10-29)
 
 
