@@ -50,6 +50,14 @@ class PinPlacementTest {
   }
 
   @Test
+  fun theWallHitIsReportedSoAHostCanAnchorToIt() {
+    val near = wallAhead(1.5f).copy(id = "near")
+    val placement = assertNotNull(wallPlacement(eye, ahead, listOf(wallAhead(3.5f), near)))
+    assertEquals(near, placement.wall)
+    assertNull(airPlacement(eye, ahead).wall)
+  }
+
+  @Test
   fun aWallOutOfReachOrBehindTheUserIsIgnored() {
     assertNull(wallPlacement(eye, ahead, listOf(wallAhead(WALL_REACH_METRES + 1f))))
     assertNull(wallPlacement(eye, ahead, listOf(wallAhead(-2f))))

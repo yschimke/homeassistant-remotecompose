@@ -124,9 +124,47 @@ The room controls are split so another XR platform can reuse everything but its 
 | `room-ui` (KMP: Android, JVM) | `RoomPin` storage and nearest pin; `pinPlacement` / `wallPlacement` / `airPlacement` on a platform-neutral `Vec3` and `WallPlane`; the `RoomAnchors` interface a platform implements for persisted anchors; `RoomState` and `sourceLabel`; the flat screen (`FlatRoomControls`, `RoomHeader`, `RoomTrackerMenu`, `LostPins`, `PinHereButton`), drawn from a `RoomContent` whose `entityCard` slot each host fills. |
 | `app` (`ee.schimke.terrazzo.room`) | The glue (`RoomScreen`: preferences, dashboards, live states, the action dispatcher), the entity card in the user's card style (`RoomEntityCard`, the more-info controls), and the Android XR layer: `SpatialRoom.kt` (Compose for XR panels) and `SpatialPins.kt` (`PinAnchors`, the ARCore for XR `RoomAnchors`; permissions; panels on anchors). |
 
-A Quest build would add an app module on Meta's Spatial SDK that reuses `ha-model`, `ha-client`,
-`terrazzo-core` and `room-ui`, implements `RoomAnchors` with the Spatial SDK's anchors and MRUK walls
-(converted to `WallPlane`), and hosts the room's Compose UI in Spatial SDK panels.
+| `quest` (`ee.schimke.terrazzo.quest`) | The Meta Quest app on the Spatial SDK: `QuestActivity` (passthrough, the room panel, a panel per pin), `QuestRoomAnchors` (the MRUK `RoomAnchors`), the panels in the Spatial SDK UI set (`QuestRoomUi.kt`) and their previews. |
+
+The `room-ui` row also has `ScenePanel`, `curvedRow` and `rotateY` for laying panels out around
+the user, and `RoomScenePreview`, which draws walls, floor and panels from a camera behind the user
+so a `@Preview` shows the spatial layout.
+
+## Meta Quest
+
+`:quest` reuses `ha-model` and `room-ui` and adds only the Spatial SDK layer. It doesn't depend on
+`terrazzo-core`, which needs API 35 (Quest 3 runs API 34), so for now it shows a demo house
+(`QuestDemoHouse`: a living room with a heater, TV, lamp and fan, and a kitchen) toggled in
+memory. Signing in to a Home Assistant through `ha-client` comes next.
+
+- **Room panel.** A grabbable 1.0 × 0.7 m panel 1.2 m ahead when the scene is ready (`airPlacement`),
+  at 1000 dp a metre: the same `RoomContent` as the phone, drawn with `SpatialSwitch` and
+  `BorderlessButton`. The shared Material parts (`RoomHeader`, `LostPins`) sit inside a dark
+  Material scheme so they read on the dark panel.
+- **Pins.** The Spatial SDK has no public API for an app to persist its own anchors, but Horizon OS
+  keeps the room's Space Setup anchors (each wall, the room) with stable UUIDs. So a Quest pin is
+  stored relative to one of those (`QuestPinPlace`, encoded into `RoomPin.anchorId`): on a wall, the
+  wall's UUID and the offset across and up it from its centre; in the air, the room's UUID and the
+  pose in the room anchor's frame. `pinPlacement` decides which, using MRUK's walls as `WallPlane`s
+  (the hit wall comes back as `PinPlacement.wall`). Loading looks the anchor up again; a pin whose
+  wall or room is gone (Space Setup was redone) is listed under "Pins not found here".
+- **Which room.** As on Android XR: the pin the user stands nearest, checked every two seconds.
+- **To check on a headset.** Panels are posed facing against their forward axis
+  (`panelPose`); if they show their backs, that sign flips.
+
+### Previews
+
+The Spatial SDK needs its native runtime, so `QuestActivity` doesn't render off-device (its
+synthetic `activity__QuestActivity` preview fails and is tolerated, like the phone's). Everything
+inside the panels is plain Compose, so `QuestPreviews.kt` shows:
+
+- **Room panel** and **pinned heater** at their real size, 1000 × 700 dp and 360 × 200 dp at 160 dpi
+  (1 dp a pixel).
+- **Room scene**: a 4 × 5 m living room from behind the user through `RoomScenePreview`, with the
+  room panel ahead and the heater and TV pinned on the walls where `pinPlacement` puts them. Each
+  panel is the real composable, scaled and turned in perspective.
+
+Run `compose-preview show --filter Quest` to render them.
 
 ## Not yet
 

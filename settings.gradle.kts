@@ -154,6 +154,7 @@ if (providers.gradleProperty("addonServerOnly").orNull == "true") {
     ":rc-player-ui",
     ":ha-cards-catalog",
     ":room-ui",
+    ":quest",
   )
 }
 

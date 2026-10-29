@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Spatial SDK panel registrations: the room panel, and one per pinned control. -->
+    <item name="room_panel" type="id" />
+    <item name="pinned_panel" type="id" />
+</resources>
