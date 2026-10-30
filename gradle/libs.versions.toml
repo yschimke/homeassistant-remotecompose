@@ -11,7 +11,7 @@ metro = "1.5.1"
 # AppFunctions: the on-device agent surface (`app/.../assistant/`). Experimental upstream; the
 # compiler runs through KSP, which nothing else in the build uses.
 androidx-appfunctions = "1.0.0-beta01"
-ksp = "2.3.12"
+ksp = "2.3.13"
 
 # Compose: the alpha-channel BOM, for the Compose 1.13 line (1.13.0-beta02 in 2026.10.01). Compose
 # Multiplatform 1.13 already pulled the Android modules onto 1.13, past the stable BOM's 1.12, and
