@@ -9,6 +9,7 @@ import ee.schimke.ha.design.DeviceInfo
 import ee.schimke.ha.design.DeviceMatch
 import ee.schimke.ha.design.GeneratedDesign
 import io.ktor.client.HttpClient
+import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -44,11 +45,13 @@ data class DesignServerConfig(
   val clientVersion: Int = 0,
   val choice: List<DesignQuery> = emptyList(),
   /**
-   * A device token (signed in from Settings, or copied from the server's `/my` page), sent as
-   * `Authorization: Bearer` with the manifest request so it lists the signed-in person's private
-   * designs too. Blank for none.
+   * The bearer token for this server, asked for on each request and sent with every one of them, to
+   * [baseUrl] only: a device token (signed in from Settings, or copied from the server's `/my`
+   * page), so the manifest lists the signed-in person's private designs too; or, for a Home
+   * Assistant's own design add-on reached through it, that Home Assistant's access token, which
+   * expires, so it is minted when needed. Blank for none.
    */
-  val token: String = "",
+  val token: suspend () -> String = { "" },
   /**
    * The fixed User-Agent sent with every manifest and blob request ([UsageUserAgent.header]:
    * `Terrazzo/<version> (<platform>; surface=<surface>)`), so the server can count which templates
@@ -559,9 +562,7 @@ class DesignRepository(
       httpClient!!.get("$baseUrl/manifest.json") {
         config.userAgent?.let { header(HttpHeaders.UserAgent, it.header) }
         stored?.etag?.let { header(HttpHeaders.IfNoneMatch, it) }
-        config.token
-          .takeIf { it.isNotBlank() }
-          ?.let { header(HttpHeaders.Authorization, "Bearer $it") }
+        bearer()
       }
     if (response.status == HttpStatusCode.NotModified) {
       return if (stored != null && stored.manifest.expiresAtEpochMs > now) Fetch.NotModified
@@ -572,10 +573,18 @@ class DesignRepository(
     return Fetch.Body(manifest, response.headers[HttpHeaders.ETag])
   }
 
+  private suspend fun HttpRequestBuilder.bearer() {
+    config
+      .token()
+      .takeIf { it.isNotBlank() }
+      ?.let { header(HttpHeaders.Authorization, "Bearer $it") }
+  }
+
   private suspend fun fetchBlob(baseUrl: String, entry: DesignEntry): ByteArray? {
     val response =
       httpClient!!.get("$baseUrl/${DesignManifest.blobPath(entry.sha256)}") {
         config.userAgent?.let { header(HttpHeaders.UserAgent, it.header) }
+        bearer()
       }
     if (!response.status.isSuccess()) return null
     val bytes = response.bodyAsBytes()

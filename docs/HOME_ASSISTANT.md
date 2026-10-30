@@ -329,6 +329,20 @@ and the app then fetches the message from this integration with its own login. W
 integration the app gets notifications only while it is connected. See
 [notifications.md](architecture/notifications.md).
 
+## Your own card design server
+
+The **Terrazzo Card Designs** add-on runs the design server and UI Builder that ha.coo.ee runs, on
+this Home Assistant and private to it: add this repository in the add-on store and install it (see
+[design-server/addon](../design-server/addon/README.md)). Its library follows ha.coo.ee's; the
+designs you make are kept here, under your Home Assistant username, with no GitHub account.
+
+With the integration installed too, the Terrazzo app finds the add-on when it connects
+(`terrazzo/design_server`) and uses it in place of ha.coo.ee: it fetches designs and opens Card
+Studio through `/api/terrazzo/designs` with its own Home Assistant login, and a design opens in the
+browser through a one-time link (`terrazzo/design_server/open`, administrators only) that signs the
+browser in to the add-on's ingress. Settings shows which server is in use. The add-on's **Card
+designs** panel opens the same pages from Home Assistant's sidebar.
+
 ## MCP server for AI assistants
 
 Terrazzo can also answer the [Model Context Protocol](https://modelcontextprotocol.io), so an AI

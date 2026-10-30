@@ -42,6 +42,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 
 /**
@@ -237,6 +238,19 @@ interface HaSession {
 
   /** The notifications the Terrazzo integration held for [webhookId]; each is answered once. */
   suspend fun takeHeldNotifications(webhookId: String): List<HaPushNotification> = emptyList()
+
+  /**
+   * Whether this Home Assistant runs its own card design server (the Terrazzo integration's
+   * `terrazzo/design_server`, for the Card Designs add-on): its API is then at
+   * `<baseUrl>/api/terrazzo/designs`, with this session's access token.
+   */
+  suspend fun privateDesignServer(): Boolean = false
+
+  /**
+   * A one-time link that opens the design server's page [path] in a browser, signed in through this
+   * Home Assistant ([privateDesignServer]); null where there is none or the user isn't an admin.
+   */
+  suspend fun privateDesignLink(path: String): String? = null
 
   /**
    * Tells the Terrazzo integration which entities this device's widgets read, so a change to one
@@ -597,6 +611,22 @@ class LiveHaSession(
     val token = (result["push_token"] as? JsonPrimitive)?.contentOrNull ?: return null
     return url to token
   }
+
+  override suspend fun privateDesignServer(): Boolean =
+    try {
+      (client.terrazzoDesignServer()["available"] as? JsonPrimitive)?.booleanOrNull == true
+    } catch (refused: HaCommandException) {
+      // No Terrazzo integration, or one from before the design add-on.
+      false
+    }
+
+  override suspend fun privateDesignLink(path: String): String? =
+    try {
+      baseUrl.trimEnd('/') + client.terrazzoDesignLink(path)
+    } catch (refused: HaCommandException) {
+      // No integration, not an admin, or not a design page.
+      null
+    }
 
   override suspend fun takeHeldNotifications(webhookId: String): List<HaPushNotification> =
     client.takeTerrazzoPushes(webhookId).mapNotNull { HaPushNotification.parse(it) }

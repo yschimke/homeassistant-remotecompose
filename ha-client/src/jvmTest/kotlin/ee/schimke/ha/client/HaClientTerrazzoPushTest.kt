@@ -120,4 +120,29 @@ class HaClientTerrazzoPushTest {
       assertEquals("unknown_command", refused.code)
     }
   }
+
+  @Test
+  fun theDesignServerIsAskedForAndALinkOpensOnlyThePageNamed() {
+    val commands = mutableListOf<JsonObject>()
+    fakeHa(
+      commands,
+      { id ->
+        if (id == 1)
+          """{"id":$id,"type":"result","success":true,"result":
+            {"available":true,"url":"/api/terrazzo/designs","panel":"/hassio/ingress/x_card_designs"}}"""
+        else
+          """{"id":$id,"type":"result","success":true,"result":
+            {"url":"/api/terrazzo/designs-open/nonce"}}"""
+      },
+    ) { client ->
+      assertEquals("true", client.terrazzoDesignServer().string("available"))
+      assertEquals(
+        "/api/terrazzo/designs-open/nonce",
+        client.terrazzoDesignLink("/ui-builder/card-x"),
+      )
+    }
+    assertEquals("terrazzo/design_server", commands[0].string("type"))
+    assertEquals("terrazzo/design_server/open", commands[1].string("type"))
+    assertEquals("/ui-builder/card-x", commands[1].string("path"))
+  }
 }

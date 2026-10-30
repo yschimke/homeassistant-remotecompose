@@ -19,6 +19,9 @@ import java.io.File
  *   it the server serves `DESIGN_LIBRARY` read-only.
  * - `LIBRARY_PUBLISH_TOKEN`: the bearer token CI publishes libraries with (`PUT
  *   /api/library/channels/<channel>`); without it nobody can.
+ * - `LIBRARY_UPSTREAM`: another design server (`https://ha.coo.ee`) whose published library `main`
+ *   follows ([LibraryMirror]), checked every `LIBRARY_UPSTREAM_POLL_SECONDS` (default an hour).
+ *   Needs `LIBRARY_STORE`.
  * - `LIBRARY_TTL_SECONDS`: how long an app keeps a published manifest before asking again (default
  *   an hour; it revalidates by ETag).
  * - `LIBRARY_EDIT_POLL_SECONDS`: how often edits to the library's designs in UI Builder are checked
@@ -83,7 +86,7 @@ fun main(args: Array<String>) {
       println(
         "UI Builder: ${config.browserUrl}" +
           (if (process != null) " (bundled)" else "") +
-          if (github != null) " - editing: sign in with GitHub"
+          if (github != null) " - editing: ${github.signInDescription}"
           else
             " - edit link (keep it private, it unlocks editing): " +
               "http://localhost:$port/edit?token=${config.token.encodeURLParameter()}"
@@ -112,6 +115,14 @@ fun main(args: Array<String>) {
       .map { it.trim() }
       .filter { it.isNotEmpty() }
       .toSet()
+  val mirror =
+    System.getenv("LIBRARY_UPSTREAM")
+      ?.takeIf { it.isNotBlank() }
+      ?.let { upstream ->
+        require(channels.publishable) { "LIBRARY_UPSTREAM is set, so LIBRARY_STORE is needed too" }
+        println("library mirror: main follows $upstream")
+        LibraryMirror(channels, upstream, http)
+      }
   embeddedServer(CIO, port = port, host = host) {
       install(CallLogging)
       designServer(
@@ -126,6 +137,9 @@ fun main(args: Array<String>) {
         channels,
         publishToken,
         editPollMs = (System.getenv("LIBRARY_EDIT_POLL_SECONDS")?.toLongOrNull() ?: 60L) * 1_000,
+        mirror = mirror,
+        mirrorPollMs =
+          (System.getenv("LIBRARY_UPSTREAM_POLL_SECONDS")?.toLongOrNull() ?: 3_600L) * 1_000,
       )
     }
     .start(wait = true)
