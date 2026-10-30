@@ -16,7 +16,9 @@ import kotlinx.serialization.json.Json
  * revision it was exported from; its entry's [DesignEntry.designId] is `user:<sourceDesignId>`, so
  * every key published from one UI Builder design is one design to a client. A Wear widget design
  * made from a card design names that design's blob in [wearOf], and is shared, unshared and
- * replaced with it.
+ * replaced with it. Its [readsAmbient] says whether it reads the watch's ambient flag
+ * (docs/architecture/ambient-mode.md): one that doesn't keeps its interactive look on an always-on
+ * watch. Null for a card design, and for a Wear widget design published before it was recorded.
  */
 @Serializable
 data class UserDesign(
@@ -26,6 +28,7 @@ data class UserDesign(
   val revision: Long? = null,
   val publishedAtEpochMs: Long = 0,
   val wearOf: String? = null,
+  val readsAmbient: Boolean? = null,
 ) {
   /**
    * [entry] as the manifest serves it: with its design id, which an entry published before ids
@@ -216,6 +219,7 @@ class UserDesignStore(
             bytes = bytes.size,
           ),
         wearOf = card.entry.sha256,
+        readsAmbient = readsHostAmbient(bytes),
       )
     }
     save(
