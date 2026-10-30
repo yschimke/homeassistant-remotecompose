@@ -126,7 +126,9 @@ costs a push instead of a capture.
   host derives the same way (`state_int`). A host never makes up a label and pushes it: "5 min
   ago" is computed by the document from `<id>.last_changed` and the player's own clock
   (`relativeTimeText`), so it keeps moving without a timer or a push. When the document needs
-  arithmetic a float can't do exactly (today's epoch in seconds), it uses whole numbers.
+  arithmetic a float can't do exactly (today's epoch in seconds), it uses whole numbers. Reading
+  HA's value in the host's time zone is not making one up: `<id>.last_changed_offset` is the UTC
+  offset in force at `last_changed`, which the player can't know for a past instant.
 - *Fixed properties of an entity are shape, not slots.* What an integration reports once and never
   changes for an entity (`assumed_state`, a `device_class`) may be baked, as part of the card
   design's key. A property that follows the state never is.

@@ -166,6 +166,23 @@ class LogbookLiveDocumentTest {
   }
 
   @Test
+  fun anOldChangeIsDatedWithTheOffsetInForceThen() {
+    // 23:30 UTC on 30 June is 00:30 on 1 July in London (BST); viewed in October, after the clocks
+    // went back, the player's own offset (GMT) would put it on 30 June.
+    val zone = TimeZone.of("Europe/London")
+    clock = FixedHaClock(Instant.parse("2026-10-29T12:00:00Z"), zone)
+    snapshot = door("on", null)
+    play()
+    snapshot = door("on", Instant.parse("2026-06-30T23:30:00Z"))
+    compose.waitForIdle()
+    assertTrue("1 Jul 2026" in texts(), "dated in BST, as pushed: ${texts()}")
+    snapshot = door("on", Instant.parse("2026-01-15T23:30:00Z"))
+    compose.waitForIdle()
+    assertTrue("15 Jan 2026" in texts(), "dated in GMT: ${texts()}")
+    assertEquals(1, documents.size, "one document throughout")
+  }
+
+  @Test
   fun aRenamedEntityIsRenamedInTheSameDocument() {
     snapshot = door("on", null)
     play()

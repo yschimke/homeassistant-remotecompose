@@ -200,7 +200,11 @@ private fun HaLogbookEntry.liveMessage(): RemoteString = LiveValues.state(entity
 /** When it changed, relative to the player's clock; a row without an entity draws [whenText]. */
 private fun HaLogbookEntry.liveWhen(): RemoteString =
   if (entityId == null) whenText.rs
-  else relativeTimeText(LiveValues.lastChanged(entityId, lastChanged))
+  else
+    relativeTimeText(
+      LiveValues.lastChanged(entityId, lastChanged),
+      LiveValues.lastChangedOffset(entityId, lastChangedOffset),
+    )
 
 /**
  * The Wear Small summary line: the latest entry's name and what it is now, or that there is none.

@@ -247,7 +247,7 @@ fun CachedCardPreview(
   val bindingsFor: (HaSnapshot) -> CardSnapshotBindings =
     template?.let { t -> { snap -> t.bindings(snap, clock) } }
       ?: { snap ->
-        cardSnapshotBindings(entityIds(card), snap)
+        cardSnapshotBindings(entityIds(card), snap, clock.zone())
       }
 
   // Hand the encoded document to an observer once the composition succeeds. `SideEffect` rather
