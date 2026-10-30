@@ -2,6 +2,7 @@ package ee.schimke.ha.rc
 
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -89,7 +90,12 @@ class CardEntitiesTest {
     // `formatState` bake), not the raw HA state — so `on` capitalises and a
     // numeric value stays as-is.
     assertEquals(
-      mapOf("light.kitchen.state" to "On", "sensor.temp.state" to "21.4"),
+      mapOf(
+        "light.kitchen.state" to "On",
+        "light.kitchen.name" to "light.kitchen",
+        "sensor.temp.state" to "21.4",
+        "sensor.temp.name" to "sensor.temp",
+      ),
       bindings.strings,
     )
     assertEquals(
@@ -104,7 +110,17 @@ class CardEntitiesTest {
     // Numeric states get a parsed float binding so gauges track the value;
     // non-numeric states (`on`) contribute none.
     assertEquals(mapOf("sensor.temp.numeric_state" to 21.4f), bindings.floats)
-    assertTrue(bindings.ints.isEmpty())
+    // Every entity carries HA's last_changed and its offset; these have none, so both are 0.
+    assertEquals(
+      setOf(
+        "light.kitchen.last_changed",
+        "light.kitchen.last_changed_offset",
+        "sensor.temp.last_changed",
+        "sensor.temp.last_changed_offset",
+      ),
+      bindings.ints.keys,
+    )
+    assertTrue(bindings.ints.values.all { it == HaLiveBindings.NO_TIME })
   }
 
   @Test
@@ -117,7 +133,50 @@ class CardEntitiesTest {
     val bindings = cardSnapshotBindings(setOf("alarm_control_panel.home"), snapshot)
     // Alarm panels carry a domain-keyed int so the armed/disarmed chrome
     // variant flips without a re-encode.
-    assertEquals(setOf("alarm_control_panel.home.state_int"), bindings.ints.keys)
+    assertEquals(
+      setOf(
+        "alarm_control_panel.home.state_int",
+        "alarm_control_panel.home.last_changed",
+        "alarm_control_panel.home.last_changed_offset",
+      ),
+      bindings.ints.keys,
+    )
+  }
+
+  @Test
+  fun snapshotBindingsCarryLastChangedAsWholeSeconds() {
+    val changed = kotlin.time.Instant.parse("2026-10-29T10:15:20.732Z")
+    val snapshot =
+      HaSnapshot(
+        states = mapOf("light.kitchen" to EntityState("light.kitchen", "on", lastChanged = changed))
+      )
+    val bindings = cardSnapshotBindings(setOf("light.kitchen"), snapshot)
+    assertEquals(changed.epochSeconds.toInt(), bindings.ints["light.kitchen.last_changed"])
+  }
+
+  @Test
+  fun snapshotBindingsCarryTheOffsetInForceAtLastChanged() {
+    // Read in October, a June change keeps its summer offset.
+    val zone = kotlinx.datetime.TimeZone.of("Europe/London")
+    fun offsetAt(changed: String) =
+      cardSnapshotBindings(
+          setOf("light.kitchen"),
+          HaSnapshot(
+            states =
+              mapOf(
+                "light.kitchen" to
+                  EntityState(
+                    "light.kitchen",
+                    "on",
+                    lastChanged = kotlin.time.Instant.parse(changed),
+                  )
+              )
+          ),
+          zone,
+        )
+        .ints["light.kitchen.last_changed_offset"]
+    assertEquals(3600, offsetAt("2026-06-30T23:30:00Z"))
+    assertEquals(0, offsetAt("2026-10-29T10:15:20Z"))
   }
 
   @Test
@@ -137,7 +196,7 @@ class CardEntitiesTest {
     // than push an empty string — the document keeps its bake.
     val snapshot = HaSnapshot(states = mapOf("light.kitchen" to EntityState("light.kitchen", "on")))
     val bindings = cardSnapshotBindings(setOf("light.kitchen", "sensor.missing"), snapshot)
-    assertEquals(setOf("light.kitchen.state"), bindings.strings.keys)
+    assertEquals(setOf("light.kitchen.state", "light.kitchen.name"), bindings.strings.keys)
     assertEquals(setOf("light.kitchen.is_on", "light.kitchen.is_available"), bindings.booleans.keys)
   }
 

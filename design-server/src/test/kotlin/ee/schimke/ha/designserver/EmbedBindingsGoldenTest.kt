@@ -9,12 +9,15 @@ import ee.schimke.ha.model.HaSnapshot
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -39,10 +42,12 @@ class EmbedBindingsGoldenTest {
   fun portMatchesHaModel() {
     val golden = Json.parseToJsonElement(file.readText()).jsonObject
     val cases = golden.getValue("cases").jsonArray.map { it.jsonObject }
+    // The embed reads times in the browser's zone; both sides read the golden file's.
+    val zone = TimeZone.of(golden.getValue("time_zone").jsonPrimitive.content)
     val computed = cases.map { case ->
       val recipe = recipeOf(case)
       val resolved = recipe?.let { mapOf("recipe_json" to it.toJson()) }.orEmpty()
-      JsonObject(case + resolved + ("expected" to expected(case, recipe)))
+      JsonObject(case + resolved + ("expected" to expected(case, recipe, zone)))
     }
 
     if (System.getProperty("embed.golden.update") == "true") {
@@ -74,7 +79,7 @@ class EmbedBindingsGoldenTest {
         }
     }
 
-  private fun expected(case: JsonObject, recipe: CardBindingRecipe?): JsonObject {
+  private fun expected(case: JsonObject, recipe: CardBindingRecipe?, zone: TimeZone): JsonObject {
     val card = case.getValue("card").jsonObject
     val states =
       case.getValue("states").jsonObject.mapValues { (id, value) ->
@@ -83,11 +88,16 @@ class EmbedBindingsGoldenTest {
           entityId = id,
           state = state.getValue("state").jsonPrimitive.content,
           attributes = state["attributes"]?.jsonObject ?: JsonObject(emptyMap()),
+          // As the embed keeps HA's compressed `lc`: epoch seconds, possibly fractional.
+          lastChanged =
+            state["last_changed"]?.jsonPrimitive?.doubleOrNull?.let {
+              Instant.fromEpochMilliseconds((it * 1000).toLong())
+            },
         )
       }
     val config = CardConfig(card["type"]?.jsonPrimitive?.contentOrNull.orEmpty(), card)
     val snapshot = HaSnapshot(states = states)
-    val slots = CardDesignSlots.slotBindings(config, snapshot)
+    val slots = CardDesignSlots.slotBindings(config, snapshot, zone)
     // As template playback pushes them: the card-level bindings on top of the slot ones.
     val bindings = recipe?.let { slots + it.evaluate(config, snapshot) } ?: slots
     return buildJsonObject {

@@ -65,10 +65,16 @@ fun RemoteM3SwitchByProgress(
   colors: RcM3SwitchColors,
   modifier: RemoteModifier = RemoteModifier,
 ) {
-  val track = tween(colors.uncheckedTrack, colors.checkedTrack, colorProgress)
-  val thumb = tween(colors.uncheckedThumb, colors.checkedThumb, colorProgress)
+  val ambient = rcAmbient()
+  // Ambient: the track's outline only, in the colour the track would fill with, and the thumb.
+  val filled = tween(colors.uncheckedTrack, colors.checkedTrack, colorProgress)
+  val track = filled.copy(alpha = filled.alpha * ambient.fade)
   // The outline fades into the track as it fills, so a checked switch shows none.
   val border = tween(colors.uncheckedBorder, colors.checkedTrack, colorProgress)
+  // A checked thumb is drawn to sit on its filled track, so ambient lights it in the outline's
+  // colour: a dark thumb on a black screen would hide which side it's on.
+  val thumb =
+    ambient.color(tween(colors.uncheckedThumb, colors.checkedThumb, colorProgress), border)
   RemoteCanvas(modifier) {
     val radius = height / 2f.rf
     // M3: a 2 dp outline on a 32 dp track.

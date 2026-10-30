@@ -44,8 +44,6 @@ Classes:
 | | which trays and lines exist | structure | device discovery. |
 | Calendar | event rows | structure | a variable list from the `events` attribute. |
 | To-do list | item rows; item summary inside `update_item` taps | structure | a variable list. `designAction` covers the template path. |
-| Logbook | message | bindable now | `<id>.state`. Rows are a fixed count, one per configured entity. |
-| | "when" | new binding | a host-pushed `<id>.last_changed_label` on the relative-time tick. **The whole card can then be path 1.** |
 | Map | "where" | new binding | latitude and longitude floats, or a host `location_label`. Whether a row has a location is shape. |
 | Weather forecast | current temperature, humidity, wind | new binding | weather attribute floats. |
 | | condition text | bindable now | check that `formatState` matches `formatCondition`. |
@@ -69,15 +67,22 @@ Classes:
 | Stacks, grid | — | inherited | they re-encode with their children and disable the push for binding children of a mixed container (gap 1). |
 
 **Path 1, with design properties:** area, button, clock, entities (no input rows), entity, gauge,
-glance, heading, markdown, picture, picture-elements, picture-entity, picture-glance, tile (a plain
-one), and both shutter cards. The shutter cards moved in this change: `HaLiveBindings.coverStateInt`
+glance, heading, logbook, markdown, picture, picture-elements, picture-entity, picture-glance, tile
+(a plain one), and both shutter cards. The shutter cards moved in this change: `HaLiveBindings.coverStateInt`
 plus the `current_position` / `supported_features` floats, a `cover` binding recipe, and
-everything else in-document (`CoverLive`). Only `assumed_state` is baked, as shape.
+everything else in-document (`CoverLive`). Only `assumed_state` is baked, as shape. The logbook
+moved with `<id>.last_changed`: Home Assistant's own timestamp, which the document shows relative
+to the player's clock (`relativeTimeText`) rather than a label a host formats and re-sends; its
+date line, for changes a week old, adds `<id>.last_changed_offset`, the host zone's UTC offset in
+force at that time, so a daylight-saving switch since doesn't move it to the next day.
 
 ## Order of work
 
 1. Gap 1: the structure-signature lane, and `designBindings` pushed on direct captures.
-2. Logbook to path 1, with `last_changed_label`.
+2. Relative-time states (a `timestamp` sensor, an `event`, a `button`): today the host re-pushes
+   `<id>.state` on a timer (`LocalRelativeTimeTick`). They can bind the state's own time and use
+   `relativeTimeText`, like the logbook. The AndroidX player (launcher widgets) doesn't work such a
+   label out again as its clock moves; a widget keeps the label of its last update.
 3. Alarm panel and sensor: narrow their signatures and keep the push on.
 4. Entity filter: key on membership only.
 5. A climate `hvac_action` / mode `state_int`, for the thermostat accent and chip, the tile badge,

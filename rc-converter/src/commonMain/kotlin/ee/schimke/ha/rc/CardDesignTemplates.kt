@@ -152,7 +152,9 @@ object CardDesignTemplates {
       bytes = bytes,
       bindings = { snapshot, clock ->
         // A design may also read the values every home shares (`HA:sun.sun.elevation`).
-        val slots = HaSharedValues.bindings(snapshot) + CardDesignSlots.slotBindings(card, snapshot)
+        val slots =
+          HaSharedValues.bindings(snapshot) +
+            CardDesignSlots.slotBindings(card, snapshot, clock.zone())
         converter?.designBindings(card, snapshot, clock)?.let { slots + it } ?: slots
       },
       tapAction = tapActionOf(card, card.raw["tap_action"] as? JsonObject, entityId),

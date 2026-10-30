@@ -61,7 +61,13 @@ class MotionSchemeSwitchTest {
           creationDisplayInfo = RemoteCreationDisplayInfo(200, 100, 160),
           profile = androidXExperimentalWrap,
         ) {
-          CompositionLocalProvider(LocalRcMotionMode provides mode, content = content)
+          // The motion a part's own state change runs; the ambient look's fade is a document's
+          // too, and ExpressiveBlocksPlaybackTest plays it.
+          CompositionLocalProvider(
+            LocalRcMotionMode provides mode,
+            ee.schimke.rc.m3.LocalRcAmbientAware provides false,
+            content = content,
+          )
         }
         .bytes
     val operations = arrayListOf<Operation>()

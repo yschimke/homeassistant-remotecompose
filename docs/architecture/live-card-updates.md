@@ -32,6 +32,9 @@ derived by `HaLiveBindings` / `cardSnapshotBindings` (the host):
 | `<id>.is_available` | bool | `HaLiveBindings.isAvailable(state)`: false for `unavailable` / `unknown`. Entity rows, tiles, glance cells and buttons read it to dim the entity and swap its accent for a neutral one, so an entity going offline or coming back restyles without a re-encode. Converters seed it through `HaStateColor.toggleAccentFor` (false too for a configured entity missing from the snapshot). |
 | `<id>.numeric_state` | float | parsed numeric state (gauges/arcs derive their sweep in-document) |
 | `<id>.state_int` | int | domain-keyed variant (alarm panel today) |
+| `<id>.name` | string | `HaLiveBindings.name`: the entity's `friendly_name`, else its id. A card showing the entity's own name (the logbook's rows) binds it, so a rename in Home Assistant needs no new document; a configured `name:` stays a literal. |
+| `<id>.last_changed` | int | `HaLiveBindings.lastChanged`: HA's `last_changed` as whole Unix seconds, 0 when unknown. A document shows it relative to the player's own clock with `relativeTimeText` ("just now", "5 min ago", "3 h ago", "2 days ago", then the date), so the label keeps moving with no host timer and no push. Whole numbers keep the subtraction exact. rc-player redraws a document that reads the epoch every second; the AndroidX player shows the label as of its last draw, so a launcher widget keeps the label of its last update. |
+| `<id>.last_changed_offset` | int | `HaLiveBindings.lastChangedOffset`: the UTC offset, in seconds, in force at `last_changed` in the host's display zone (the app's `HaClock` zone, the add-on's zone, the browser's); 0 when unknown. `relativeTimeText` adds it for the date line, so a change dated across a daylight-saving switch lands on its own day: the player knows only its offset now. |
 | `<id>.current_temperature`, `<id>.target_temperature` | float | `HaLiveBindings.attributeFloats`: a climate entity's `current_temperature` and `temperature` attributes (its state is the mode, so it has no `numeric_state`). A missing attribute — a thermostat switched off has no set point — is pushed as `HaLiveBindings.ABSENT` (−9999, not NaN), so the document clears it instead of keeping a stale value. The `ha-cards/thermostat` builder dial computes its fractions and labels from them in-document |
 
 The golden rule: **a binding's value must be reproducible by the host
@@ -58,7 +61,7 @@ follow the same rule: host-reproducible from the snapshot alone. See
 ### 2. Document re-encode — for baked content
 
 Some content can't be a host-reproducible binding: a forecast strip, a
-history sparkline, a to-do / calendar / logbook list, an arc fill
+history sparkline, a to-do / calendar list, an arc fill
 fraction, a per-card-formatted label. For these, the converter overrides
 `CardConverter.dataSignature` to return a fingerprint of the
 snapshot-derived content it bakes. The dashboard folds that signature
@@ -187,7 +190,9 @@ under a newer snapshot must never draw the stale bake, frame by frame.
   player's loader resolves it to the live URL, and a rotated camera token or
   new frame is a new image epoch for the same document — see "Measuring
   rebuilds" below), gauge
-  (`numeric_state`; the severity band is picked in-document), markdown (`.state` tokens + Jinja `templateValues`).
+  (`numeric_state`; the severity band is picked in-document), markdown (`.state` tokens + Jinja `templateValues`),
+  logbook (one row per configured entity: `<id>.name`, `<id>.state`, and `<id>.last_changed`
+  shown relative to the player's clock, dated with `<id>.last_changed_offset`).
   Every typed measurement (thermometer, battery, arc / bar meters) is path 1 by construction:
   `HaReading` binds `<id>.state` and `<id>.numeric_state`, and the fill fraction and band colour
   are computed in-document ([card-component-system.md](card-component-system.md)). The
@@ -202,7 +207,7 @@ under a newer snapshot must never draw the stale bake, frame by frame.
   alarm-panel (its button row is the configured ARM states while `disarmed` and DISARM in every
   other state, as in HA; the status variants still switch on `state_int`, and on the design path
   the `disarm_row` property picks the template), entity-filter (which entities match),
-  calendar, logbook, to-do, history-graph,
+  calendar, to-do, history-graph,
   statistics-graph, statistic, map, weather-forecast, thermostat /
   humidifier / light (arc fill + labels), media-control, Bambu (AMS /
   print status). Markdown also re-encodes on Jinja template changes via

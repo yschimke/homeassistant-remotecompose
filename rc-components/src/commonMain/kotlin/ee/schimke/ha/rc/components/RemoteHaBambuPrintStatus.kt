@@ -39,6 +39,8 @@ import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.rc.m3.RcM3ProgressColors
+import ee.schimke.rc.m3.RemoteM3WavyProgressRing
 
 /**
  * `custom:ha-bambulab-print_status-card` — printer hero tile. While printing: a progress ring with
@@ -138,6 +140,7 @@ fun RemoteHaBambuPrintStatusWear(
             theme,
             sizeDp = if (large) 52 else 36,
             strokePx = if (large) 7f else 5f,
+            running = true,
           )
         else PhaseGlyph(data, theme, sizeDp = if (large) 44 else 36)
         RemoteColumn(
@@ -189,7 +192,13 @@ private fun PrintingLayout(data: HaBambuPrintStatusData, wide: Boolean, theme: R
         modifier = if (twoColumns) RemoteModifier.weight(1f) else RemoteModifier,
         verticalAlignment = RemoteAlignment.CenterVertically,
       ) {
-        ProgressRing(data.progressEntityId, data.progressFraction, data.accent, theme)
+        ProgressRing(
+          data.progressEntityId,
+          data.progressFraction,
+          data.accent,
+          theme,
+          running = true,
+        )
         RemoteColumn(
           modifier = RemoteModifier.padding(start = 14.rdp),
           verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
@@ -407,11 +416,24 @@ private fun ProgressRing(
   theme: RemoteHaTheme,
   sizeDp: Int = 64,
   strokePx: Float = 8f,
+  running: Boolean = false,
 ) {
   val sweep = (fraction.coerceIn(0f, 1f) * 360f)
   // `<entityId>.progress_fraction`: constant in a live capture, bound in a design template. Whether
   // the arc exists at all stays structure (a template keys on it).
-  val sweepRf = entityFloat(entityId, "progress_fraction", fraction.coerceIn(0f, 1f)) * 360f.rf
+  val progressRf = entityFloat(entityId, "progress_fraction", fraction.coerceIn(0f, 1f))
+  val sweepRf = progressRf * 360f.rf
+  if (visualFamily() == HaVisualFamily.Expressive) {
+    // M3 Expressive's wavy indicator: it ripples while the printer prints (a system widget
+    // renderer draws it still), and is a plain full ring once finished.
+    RemoteM3WavyProgressRing(
+      progress = progressRf,
+      running = running,
+      colors = RcM3ProgressColors(indicator = accent.rc, track = theme.divider),
+      modifier = RemoteModifier.size(sizeDp.rdp),
+    )
+    return
+  }
   RemoteBox(modifier = RemoteModifier.size(sizeDp.rdp)) {
     RemoteCanvas(modifier = RemoteModifier.size(sizeDp.rdp)) {
       val w = width

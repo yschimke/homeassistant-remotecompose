@@ -216,7 +216,10 @@ fun Application.designServer(
     get("/api/designs") {
       val library = call.libraryOf(channels)?.current() ?: return@get call.notFound()
       val filter = BrowserFilter.from(call.request.queryParameters, library, defaults = false)
-      call.respondText(Api.list(library, filter.apply(library)), ContentType.Application.Json)
+      call.respondText(
+        Api.list(library, filter.apply(library, channels.diffOf(library))),
+        ContentType.Application.Json,
+      )
     }
 
     get("/api/designs/{id}") {
@@ -245,7 +248,10 @@ fun Application.designServer(
     get("/designs") {
       val library = call.libraryOf(channels)?.current() ?: return@get call.notFound()
       val filter = BrowserFilter.from(call.request.queryParameters, library, defaults = true)
-      call.respondText(Pages.browser(library, filter, channels.list()), ContentType.Text.Html)
+      call.respondText(
+        Pages.browser(library, filter, channels.list(), channels.diffOf(library)),
+        ContentType.Text.Html,
+      )
     }
 
     get("/designs/{id}") {
@@ -259,6 +265,7 @@ fun Application.designServer(
             editor,
             librarySources.mayEdit(editor),
             wear = call.request.queryParameters["wear"] == "1",
+            diff = channels.diffOf(library),
           )
         },
         ContentType.Text.Html,
@@ -468,6 +475,10 @@ fun Application.designServer(
  * The library a browser page or API call asks for: `?channel=` names a pull request's preview
  * ([LibraryChannels]); without it, `main`. Null for a channel nothing was published to.
  */
+/** How [library], a pull request's channel, differs from the published one; null on main. */
+internal fun LibraryChannels.diffOf(library: DesignLibrary): LibraryDiff? =
+  if (library.paths.isMain) null else LibraryDiff.of(library, main.current())
+
 internal fun ApplicationCall.libraryOf(channels: LibraryChannels): LibraryHolder? =
   channels.holder(
     request.queryParameters["channel"]?.takeIf { it.isNotBlank() } ?: LibraryPaths.MAIN

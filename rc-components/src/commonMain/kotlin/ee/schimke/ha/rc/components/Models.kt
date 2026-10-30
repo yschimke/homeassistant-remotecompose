@@ -288,17 +288,26 @@ data class HaWeatherExtra(val icon: ImageVector, val label: String, val value: S
 data class HaWeatherDay(val label: String, val high: String, val low: String, val icon: ImageVector)
 
 /**
- * `logbook` card model. Each entry is one row: name, what changed, and a short "when" suffix
- * (relative time). Logbook content is permanent once captured — the host re-renders by re-fetching
- * the dashboard if a new event is interesting enough to surface.
+ * `logbook` card model. Each entry is one row: name, what changed, and when.
+ *
+ * With an [HaLogbookEntry.entityId], a row follows its entity through named bindings: the name
+ * (`<id>.name` in a template), the message (`<id>.state`) and the time (`<id>.last_changed`, shown
+ * relative to the player's clock by [relativeTimeText]). Without one, the row draws its texts as
+ * given.
  */
 data class HaLogbookData(val title: String?, val entries: List<HaLogbookEntry>)
 
 data class HaLogbookEntry(
   val name: String,
   val message: String,
+  /** The "when" text of a row without an entity. */
   val whenText: String,
   val icon: ImageVector,
+  val entityId: String? = null,
+  /** Home Assistant's `last_changed`, whole Unix seconds: the `<id>.last_changed` seed. */
+  val lastChanged: Int = 0,
+  /** The UTC offset in force at [lastChanged], seconds: the `<id>.last_changed_offset` seed. */
+  val lastChangedOffset: Int = 0,
 )
 
 /**

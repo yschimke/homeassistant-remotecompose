@@ -106,9 +106,9 @@ width changes. Headings keep a row to themselves, because they divide a section 
 **A design is captured once; data and size flow into it.**
 
 Every value a card shows that comes from Home Assistant reaches its document as a named slot:
-`<id>.state`, `<id>.state_int`, `<id>.numeric_state`, an attribute float, a recipe's card-level
-value. The document derives everything else from those slots in-document: a door's height, which
-buttons work, a fill fraction, a colour, a "· 40 %". A state change is a value pushed into the
+`<id>.state`, `<id>.state_int`, `<id>.numeric_state`, `<id>.last_changed`, an attribute float, a
+recipe's card-level value. The document derives everything else from those slots in-document: a
+door's height, which buttons work, a fill fraction, a colour, a "· 40 %", a "5 min ago". A state change is a value pushed into the
 running player, never a new document. The same goes for size: a card adapts to the space it is
 given through its layout (principle 6), not by being captured again for each size.
 
@@ -121,6 +121,14 @@ costs a push instead of a capture.
   names each field that forces it, and why no slot can carry it, in
   [card-update-audit.md](../architecture/card-update-audit.md). "It was easier to bake" is not a
   reason.
+- *Slots carry Home Assistant's own values, never a host's text.* A slot holds what HA reports
+  (a state, an attribute, `last_changed` as whole Unix seconds), or a fixed mapping of it every
+  host derives the same way (`state_int`). A host never makes up a label and pushes it: "5 min
+  ago" is computed by the document from `<id>.last_changed` and the player's own clock
+  (`relativeTimeText`), so it keeps moving without a timer or a push. When the document needs
+  arithmetic a float can't do exactly (today's epoch in seconds), it uses whole numbers. Reading
+  HA's value in the host's time zone is not making one up: `<id>.last_changed_offset` is the UTC
+  offset in force at `last_changed`, which the player can't know for a past instant.
 - *Fixed properties of an entity are shape, not slots.* What an integration reports once and never
   changes for an entity (`assumed_state`, a `device_class`) may be baked, as part of the card
   design's key. A property that follows the state never is.
@@ -130,4 +138,5 @@ costs a push instead of a capture.
   which would let a widget take new values without a full capture, are a possible next step.
 - *Check:* a card's converter has no `dataSignature`, or each field it fingerprints is listed in
   the audit with its reason. A test plays one captured document through the entity's states and
-  checks what it shows (`CoverLiveDocumentTest` is the pattern).
+  checks what it shows (`CoverLiveDocumentTest` is the pattern; `LogbookLiveDocumentTest` moves the
+  player's clock too).

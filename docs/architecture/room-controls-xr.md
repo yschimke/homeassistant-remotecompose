@@ -82,10 +82,25 @@ headsets.
 ## Pinned controls (XR)
 
 Without a room signal, the user can place a control themselves. In full space every control panel
-has **Pin here**: it creates an ARCore for XR anchor 0.8 m ahead of where the user is looking
-(facing them), persists it to the headset's local storage (`AnchorPersistenceMode.LOCAL`) and
-records `RoomPin(anchorId, baseUrl, entityId)` in `PreferencesStore.roomPins`. Stand by the
-heater, look at the wall beside it, pin.
+has **Pin here**: it creates an ARCore for XR anchor where the user is looking, persists it to the
+headset's local storage (`AnchorPersistenceMode.LOCAL`) and records
+`RoomPin(anchorId, baseUrl, entityId)` in `PreferencesStore.roomPins`. Stand by the heater, look at
+the wall beside it, pin.
+
+**Snapping to walls.** The session also runs plane tracking (`HORIZONTAL_AND_VERTICAL`). Pinning
+casts the gaze against the tracked vertical planes (`room-ui` `PinPlacement.kt`, `wallPlacement`): the nearest
+wall the gaze meets from the front, within 4 m and inside its extent (with 0.3 m of slack, since
+tracked extents run short), takes the anchor 2 cm off its surface, facing into the room and
+upright. With no wall in reach the pin goes in the air instead (`airPlacement`): 0.8 m ahead, level
+with the eyes, facing the user. **Move here** on a pinned panel pins it again where the user now
+looks (on a wall if there is one) and forgets the old anchor.
+
+Why not `SubspaceModifier.anchorable()`: in Compose for XR 1.0.0-beta02 it is internal. Its public
+counterpart, `movable(movePolicy = MovePolicy.anchor(...))` (`@ExperimentalMoveAnchorPolicy`),
+snaps a panel to a plane while it is dragged, but reparents it under an anchor entity it doesn't
+expose: the move event's pose is relative to that hidden parent, so there is nothing to persist
+and restore next visit. Casting the gaze against `Plane.subscribe` gives a pose in the session's
+own space, which `Anchor.create` and `persist` keep.
 
 On later visits to full space the room screen loads each pin's anchor (`Anchor.load`) and puts a
 panel on it with `Subspace(follow = FollowTarget.anchor(anchor))`, so the heater's controls are
@@ -95,14 +110,103 @@ pose) is the **Pinned** room signal above, so pinning doubles as room calibratio
 The first pin asks for `SCENE_UNDERSTANDING_COARSE` and `HEAD_TRACKING`. A pin whose anchor doesn't
 load (the room changed, the headset forgot its spaces) is listed under "Pins not found here" on
 the room panel to remove and pin again; **Unpin** on a pinned panel forgets the anchor on the
-headset too. Pins live in `room/RoomPins.kt` (storage, nearest-pin choice) and
-`room/SpatialPins.kt` (anchors, permissions, panels).
+headset too. Pins live in `room-ui` (`RoomPins.kt`: storage, nearest-pin choice;
+`PinPlacement.kt`: where a pin goes) and, for Android XR, `app/.../room/SpatialPins.kt` (anchors,
+permissions, panels).
+
+## Modules
+
+The room controls are split so another XR platform can reuse everything but its spatial layer:
+
+| Where | What |
+|---|---|
+| `ha-model` (`ee.schimke.ha.room`) | Areas, dashboard importance, room ranking, which room the user is in. Pure KMP. |
+| `room-ui` (KMP: Android, JVM) | `RoomPin` storage and nearest pin; `pinPlacement` / `wallPlacement` / `airPlacement` on a platform-neutral `Vec3` and `WallPlane`; the `RoomAnchors` interface a platform implements for persisted anchors; `RoomState` and `sourceLabel`; the flat screen (`FlatRoomControls`, `RoomHeader`, `RoomTrackerMenu`, `LostPins`, `PinHereButton`), drawn from a `RoomContent` whose `entityCard` slot each host fills. |
+| `app` (`ee.schimke.terrazzo.room`) | The glue (`RoomScreen`: preferences, dashboards, live states, the action dispatcher), the entity card in the user's card style (`RoomEntityCard`, the more-info controls), and the Android XR layer: `SpatialRoom.kt` (Compose for XR panels) and `SpatialPins.kt` (`PinAnchors`, the ARCore for XR `RoomAnchors`; permissions; panels on anchors). |
+
+| `quest` (`ee.schimke.terrazzo.quest`) | The Meta Quest app on the Spatial SDK: `QuestActivity` (passthrough, the room panel, a panel per pin), `QuestRoomAnchors` (the MRUK `RoomAnchors`), the panels in the Spatial SDK UI set (`QuestRoomUi.kt`) and their previews. |
+| `glasses` (`ee.schimke.terrazzo.glasses`) | The Android XR AI glasses app: a phone launcher (`GlassesLauncherActivity`, the shared `FlatRoomControls`) that starts `GlassesRoomActivity` on the glasses through `androidx.xr.projected`, drawn with Jetpack Compose Glimmer (`GlassesRoomUi.kt`), and its previews. |
+
+The `room-ui` row also has `DemoHouse` (the demo snapshot, its stand-in dashboard importance and
+an in-memory toggle) and `TOGGLE_DOMAINS`, which the Quest and glasses apps share, and `ScenePanel`, `curvedRow` and `rotateY` for laying panels out around
+the user, and `RoomScenePreview`, which draws walls, floor and panels from a camera behind the user
+so a `@Preview` shows the spatial layout.
+
+## Meta Quest
+
+`:quest` reuses `ha-model` and `room-ui` and adds only the Spatial SDK layer. It doesn't depend on
+`terrazzo-core`, which needs API 35 (Quest 3 runs API 34), so for now it shows a demo house
+(`DemoHouse` in `room-ui`: a living room with a heater, TV, lamp and fan, and a kitchen) toggled in
+memory. Signing in to a Home Assistant through `ha-client` comes next.
+
+- **Room panel.** A grabbable 1.0 × 0.7 m panel 1.2 m ahead when the scene is ready (`airPlacement`),
+  at 1000 dp a metre: the same `RoomContent` as the phone, drawn with `SpatialSwitch` and
+  `BorderlessButton`. The shared Material parts (`RoomHeader`, `LostPins`) sit inside a dark
+  Material scheme so they read on the dark panel.
+- **Pins.** The Spatial SDK has no public API for an app to persist its own anchors, but Horizon OS
+  keeps the room's Space Setup anchors (each wall, the room) with stable UUIDs. So a Quest pin is
+  stored relative to one of those (`QuestPinPlace`, encoded into `RoomPin.anchorId`): on a wall, the
+  wall's UUID and the offset across and up it from its centre; in the air, the room's UUID and the
+  pose in the room anchor's frame. `pinPlacement` decides which, using MRUK's walls as `WallPlane`s
+  (the hit wall comes back as `PinPlacement.wall`). Loading looks the anchor up again; a pin whose
+  wall or room is gone (Space Setup was redone) is listed under "Pins not found here".
+- **Which room.** As on Android XR: the pin the user stands nearest, checked every two seconds.
+- **To check on a headset.** Panels are posed facing against their forward axis
+  (`panelPose`); if they show their backs, that sign flips.
+
+### Previews
+
+The Spatial SDK needs its native runtime, so `QuestActivity` doesn't render off-device (its
+synthetic `activity__QuestActivity` preview fails and is tolerated, like the phone's). Everything
+inside the panels is plain Compose, so `QuestPreviews.kt` shows:
+
+- **Room panel** and **pinned heater** at their real size, 1000 × 700 dp and 360 × 200 dp at 160 dpi
+  (1 dp a pixel).
+- **Room scene**: a 4 × 5 m living room from behind the user through `RoomScenePreview`, with the
+  room panel ahead and the heater and TV pinned on the walls where `pinPlacement` puts them. Each
+  panel is the real composable, scaled and turned in perspective.
+
+Run `compose-preview show --filter Quest` to render them.
+
+## AI glasses (Glimmer)
+
+`:glasses` puts the room on Android XR display glasses. A glasses app is a phone app: its launcher
+runs on the phone and `ProjectedContext.createProjectedActivityOptions` starts `GlassesRoomActivity`
+on the glasses' display (it declares `android:requiredDisplayCategory="xr_projected"`). Both
+activities run in the phone's process and read one holder, `GlassesRoom`, so picking a room or
+toggling a control on either screen shows on the other at once.
+
+- **On the glasses.** Glimmer, made for small additive displays: the room's name in a `TitleChip`,
+  then a `GlimmerLazyColumn` of its controls, at most four, the dashboards' first, and the other
+  rooms to switch to. The touchpad moves focus down the list and a tap acts on the focused row: a
+  control toggles, a room becomes the one on show. The background stays black, which an additive
+  display shows as see-through.
+- **On the phone.** The shared `FlatRoomControls` with a **Show on glasses** action. It's enabled
+  while glasses are connected (`ProjectedContext.isProjectedDeviceConnected`, Android 16); on
+  Android 15 it's offered and says so if there's nothing to show it on. Projected activities need
+  Android 15.
+- **Which room.** Glasses can't pin, so it's the room the user picks, their tracker, or the room
+  the dashboards care most about.
+- **Its own module.** Glimmer (1.0.0-alpha22) needs Compose 1.13, which the whole build is on now
+  (the alpha-channel BOM); it stays out of `:app` so the glasses' alpha libraries do too, until
+  they settle. Like Quest, it shows `DemoHouse` until it signs in through `ha-client`.
+
+### Previews
+
+`GlassesPreviews.kt` renders the glasses' screen for the living room and the kitchen, a phone
+screen, and **through the lens**: the glasses' screen over a room from `RoomScenePreview`,
+composited with `BlendMode.Screen` the way an additive display adds its light (black adds nothing).
+The glasses' display size in the previews (480 dp square at 160 dpi) is an assumption; the screen
+only uses Glimmer's own list and spacing, so another size reflows. Run
+`compose-preview show --filter Glasses` to render them.
 
 ## Not yet
 
 - Following the headset's own position: Android XR doesn't place the headset in a Home Assistant
   area. A tracker entity (Bermuda with the headset or phone as the beacon) is the bridge for now.
-- Snapping a pinned panel to a wall or table (`SubspaceModifier.anchorable()` with plane
-  tracking) rather than placing it ahead of the user, and moving a pin once placed.
+- Dragging a pinned panel along a wall: once Compose for XR exposes the anchor a
+  `MovePolicy.anchor` drag lands on, that can replace **Move here**.
+- Tables: horizontal planes are tracked but pins only snap to walls; a control lying flat on a
+  table needs its own facing rule.
 - Wear, TV and the shared desktop / Wasm hosts don't show room controls yet; the ranking lives in
   `ha-model` so they can.

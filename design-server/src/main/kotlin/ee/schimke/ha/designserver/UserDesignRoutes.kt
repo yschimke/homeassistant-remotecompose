@@ -13,6 +13,7 @@ import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.design.DeviceMatch
 import ee.schimke.ha.design.HaSharedValues
+import ee.schimke.rc.m3.RcAmbientValue
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -142,6 +143,9 @@ fun userTemplateProblem(
         profile == RcTargetProfiles.WEAR_WIDGETS &&
           (it.startsWith(WEAR_HOST_COLOURS) || it in WEAR_HOST_FRAME)
       }
+      // The display's state, not the card's data: written by the host that knows it, the
+      // document's own value otherwise (docs/architecture/ambient-mode.md).
+      .filterNot { it == RcAmbientValue }
       .distinct()
       .sorted()
   if (unknown.isNotEmpty()) {
@@ -149,6 +153,17 @@ fun userTemplateProblem(
   }
   return null
 }
+
+/**
+ * Whether [bytes] reads the host's ambient flag ([RcAmbientValue]), so it draws its ambient look on
+ * an always-on watch. Not a problem when it doesn't: the watch still holds its values between
+ * ambient updates, and the design keeps its interactive look. False when it doesn't decode.
+ */
+fun readsHostAmbient(bytes: ByteArray): Boolean =
+  runCatching { RcDocumentCodec.decode(bytes, RcWireLimits()) }
+    .getOrNull()
+    ?.namedVariables
+    ?.any { it.name.removePrefix(DesignLibrary.USER_PREFIX) == RcAmbientValue } == true
 
 /** The named variable type a host pushes a shared value of [kind] as: a flag is an int. */
 private fun playerType(kind: HaSharedValues.Kind): Int =
@@ -409,7 +424,14 @@ object MyPage {
             listOfNotNull(it.integration, it.manufacturer, it.model).joinToString(" ")
           } ?: "any"
         val card = key.cardType + (key.container?.let { " (Wear widget, $it)" } ?: "")
-        append("<tr><td>${esc(card)}</td><td>${esc(key.variant)}</td>")
+        append("<tr><td>${esc(card)}")
+        if (design.readsAmbient == false) {
+          append(
+            "<br><small class=\"ambient-note\">Doesn't read <code>$RcAmbientValue</code>: keeps " +
+              "its interactive look on an always-on watch.</small>"
+          )
+        }
+        append("</td><td>${esc(key.variant)}</td>")
         append("<td>${esc(device)}</td>")
         append("<td>${esc(key.theme)}</td><td>${if (design.shared) "yes" else "no"}</td><td>")
         append("<form method=\"post\" action=\"/my/designs/${design.entry.sha256}/share\">")

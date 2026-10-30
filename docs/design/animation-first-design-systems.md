@@ -1,8 +1,10 @@
 # Animation-first design systems
 
-Status: **implemented**, 2026-10-28: the motion layer (§2) on every animated card part, the three
-systems (§3–§5) and the archetypes for every card style (§6). Open: the further Expressive building
-blocks in §3's table beyond the switch, and the module's move to `rc-players` (§8).
+Status: **implemented**, 2026-10-29: the motion layer (§2) on every animated card part, the three
+systems (§3–§5), the archetypes for every card style (§6) and the Expressive building blocks in §3.
+Open: ambient on Wear
+([#1323](https://github.com/yschimke/homeassistant-remotecompose/issues/1323)), and the module's
+move to `rc-players` (on hold, §8).
 
 Today every uber theme ([card-component-system.md §5](../architecture/card-component-system.md#5-uber-themes))
 is designed as a set of still frames, and motion is added afterwards: a dozen `animateRemoteFloat`
@@ -123,15 +125,23 @@ writing.
 Beyond the scheme, the Expressive *behaviours* the current `expressive` theme draws as still
 frames, each a building block:
 
-| Building block | Motion | Mechanism |
-|---|---|---|
-| **Switch** | thumb grows from 16 to 24 dp as it turns on, then springs across; icon in the thumb crossfades | size and position on `spatialFast`, icon alpha on `effectsFast` |
-| **Press squish** | a pressed button or key narrows its corners (shape morph) and rebounds on release | `FLOAT_TOUCH_EVENT_TIME` → a decaying press fraction → `PathTween` between rest and pressed shapes |
-| **Shape morph on state** | a toggle tile's icon container morphs between two M3 shapes (circle ↔ cookie / pill) when on | `PathTween` on the bound on/off fraction, `spatial` |
-| **Wavy progress** | a running vacuum, a printing Bambu job: the progress indicator's track waves; amplitude springs to flat when idle | wave phase from `FLOAT_ANIMATION_TIME` (a deliberate loop, not an entrance); amplitude on `effects` |
-| **Track gap and stop dot** | the gap travels with the fill; the stop dot fades as the fill reaches it | gap on the fill's spring, dot on `effectsFast` |
-| **Slider handle** | handle narrows while dragged, springs back on release | the drag state the [slider controls](../architecture/slider-controls.md) already keep in-document |
-| **Loading indicator** | the M3 morphing-polygon loader for a card waiting on data | `PathTween` through the shape sequence, looping |
+| Building block | Motion | Mechanism | Status |
+|---|---|---|---|
+| **Switch** (`RemoteM3Switch`) | thumb grows from half to three quarters of the track as it turns on, then springs across | size and position on `spatialFast`, colours on `effectsFast` | done; the toggle switch under Expressive |
+| **Press** (`rememberRcPress`) | a pressed control squishes and springs back on release | touch down / up / cancel write an in-document `0/1`; the fraction follows on `spatialFast`. It sits on the same component as the click and doesn't take it | done; the button card under Expressive |
+| **Shape morph** (`RemoteM3ShapeMorph`, `m3MorphCorner`) | a container is round at rest, squarer when selected, squarer still while pressed | a rounded rectangle whose corner is an expression of the two fractions. Material morphs polygons (`MorphTweenUtility`), but that is Android-only and writer-level; a corner morph is portable and covers the toggle-button shapes | done; the button chip under Expressive |
+| **Wavy progress** (`RemoteM3WavyProgress`, `RemoteM3WavyProgressRing`) | the filled part ripples while the thing it shows works; flat when not | line segments along a sine whose phase is the player's animation clock; a gap and a stop dot on the linear form | done; the Bambu progress ring under Expressive, rippling only while printing |
+| **Track gap and stop dot** | the gap travels with the fill or handle; the stop dot fades as the fill reaches it | the gap is placed from the same fraction as the fill, and the dot's alpha from the room left before it | done; the wavy indicator and the slider |
+| **Slider** (`drawM3Slider`) | active track, gap, a narrow full-height handle, gap, inactive track ending in a stop dot; the handle narrows to half while held and springs back | drawn in the canvas that takes the drag, so it follows the finger with no lag; the press ([rememberRcPress]) is a second set of touch handlers beside the drag's own | done; tile slider features (brightness, position, volume) under Expressive |
+| **Loading indicator** (`RemoteM3LoadingIndicator`) | a shape that turns and breathes between circle and rounded square | rotation and corner on the player's clock. Material cycles seven polygons; this keeps to what a rounded rectangle draws | built; no card shows a loading state yet |
+
+Loops on the player's clock (wavy progress, the loader) are motion the design asks for while
+something works, not entrances. They draw their first frame when animations are off (frozen
+previews), when the viewer asks for less motion (reduce motion, or the reduced or ambient mode),
+and when the player is a system renderer (`LocalRcInteractivePlayer`: launcher and watch widgets),
+where press feedback is off too. `ExpressiveBlocksPlaybackTest` plays them in the Compose
+player: a held press reshapes the chip and the tap still sends, the running wave, ring and loader
+move between frames, and a ring that isn't running stays still.
 
 Each block is a Remote Compose composable that takes bound values and a scheme, and knows nothing
 about entities.
@@ -202,8 +212,13 @@ effects:
 
 Ambient is a property of the *display*, not of a design, so it is not a card style. A host sets
 `LocalRcMotionMode` to `Ambient` inside the card's capture and every theme's motion resolves to
-`RcMotionScheme.ambient()`. The TV kiosk's card row does. The Wear app has no ambient mode of its
-own yet; when it gains one, it sets the same mode.
+`RcMotionScheme.ambient()`. The TV kiosk's card row does.
+
+A watch's always-on is a different thing: a low-power display that draws about once a minute. That
+is a runtime flag the host writes (`host.ambient`), not this capture-time mode. Under it, values
+show their targets, loops rest and the building blocks draw outlines and thin tracks; see
+[ambient mode](../architecture/ambient-mode.md) for the contract and the host's sequence. The Wear
+app sets neither yet ([#1323](https://github.com/yschimke/homeassistant-remotecompose/issues/1323)).
 
 ## 6. The rest: three archetypes
 
@@ -245,15 +260,14 @@ inventing a fourth:
 2. **Done.** `HaUberTheme.motion` from the family's archetype; every `animateRemoteFloat` site in
    the §2 table reads a token. `haMotion()` resolves from the uber theme, so a part under a palette
    alone keeps the Classic tweens.
-3. **Switch done.** `RemoteM3Switch` in the module; `RemoteHaToggleSwitch` draws it under
-   Expressive. The other blocks in §3's table (press squish, shape morph on state, wavy progress,
-   the loader) remain, one at a time, each with a test that captures mid-flight frames, since a
-   screenshot of a settled frame proves nothing about motion.
+3. **Done.** The switch, press, shape morph, wavy progress, slider and loader blocks (§3's table),
+   used by the toggle switch, the button card, the tile sliders and the Bambu ring under
+   Expressive.
 4. **Done.** `HaMotion.Instrument` and `animateAttackRelease` on Console's lamp.
 5. **Done.** `HaMotion.Lcd` / `HaMotion.Nixie`.
 6. **Done.** Reduced motion from the system setting; ambient on the TV kiosk; the Wear widget
    spring fallback.
-7. Graduate the module to `rc-players` (another repository).
+7. Graduate the module to `rc-players` (another repository): on hold.
 
 `RcMotionSpecTest` steps the encoded springs, the attack/release pair and the tween stand-ins
 through the player's own engines; `MotionSchemeSwitchTest` checks the animations encoded in real

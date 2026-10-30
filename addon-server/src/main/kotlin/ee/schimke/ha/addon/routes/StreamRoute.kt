@@ -11,6 +11,7 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
@@ -161,9 +162,16 @@ private suspend fun handleClientFrame(
 internal fun JsonObjectBuilder.putStateBindings(state: EntityState, displayPrecision: Int? = null) {
   val entityId = state.entityId
   put("$entityId.state", JsonPrimitive(formatState(state, displayPrecision)))
+  put("$entityId.name", JsonPrimitive(HaLiveBindings.name(state)))
   put("$entityId.is_on", JsonPrimitive(HaLiveBindings.isOn(entityId, state.state)))
   put("$entityId.is_available", JsonPrimitive(HaLiveBindings.isAvailable(state.state)))
   putStateInt(entityId, state.state)
+  put("$entityId.${HaLiveBindings.LAST_CHANGED}", JsonPrimitive(HaLiveBindings.lastChanged(state)))
+  // The add-on runs in Home Assistant's time zone, so dates read as HA's own frontend shows them.
+  put(
+    "$entityId.${HaLiveBindings.LAST_CHANGED_OFFSET}",
+    JsonPrimitive(HaLiveBindings.lastChangedOffset(state, TimeZone.currentSystemDefault())),
+  )
   putNumericState(entityId, state.state)
   HaLiveBindings.attributeFloats(entityId, state.attributes).forEach { (suffix, value) ->
     put("$entityId.$suffix", JsonPrimitive(value))

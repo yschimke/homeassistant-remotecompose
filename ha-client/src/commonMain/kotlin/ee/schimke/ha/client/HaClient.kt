@@ -601,6 +601,15 @@ class HaClient(
       ?.jsonPrimitive
       ?.intOrNull ?: 0
 
+  /**
+   * Asks the Terrazzo integration whether HA lets this page's origin load images (CORS), raising a
+   * repair for an admin to allow it if not. HA takes the origin from this sign-in's own OAuth
+   * client, so the page can't name another. Answers its `status`: `allowed`, `needs_approval`,
+   * `not_needed`, or `unsupported`. Fails with [HaCommandException] without the integration.
+   */
+  suspend fun reportTerrazzoWebOrigin(): String =
+    runCommand("terrazzo/web_origin")["status"]?.jsonPrimitive?.contentOrNull.orEmpty()
+
   /** Fires an event on HA's bus, as a notification action button does. Needs an admin user. */
   suspend fun fireEvent(eventType: String, eventData: JsonObject) {
     awaitCommand("fire_event") {

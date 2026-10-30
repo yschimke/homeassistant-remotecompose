@@ -1,0 +1,270 @@
+name: Preview Audit
+
+# Design-guideline audit of the previews a PR changed, judged by an agent.
+#
+# Runs after Compose Preview finishes on a PR, and only when:
+#   - an agent credential is configured: OPENCODE_API_KEY (OpenCode Zen) or
+#     CLAUDE_CODE_OAUTH_TOKEN (the same subscription token claude.yml uses).
+#     Neither set: the workflow skips with a notice and costs nothing;
+#   - the PR comes from a branch of this repository and was not opened by a
+#     bot (dependency bumps don't get design audits);
+#   - the sticky `<!-- preview-diff -->` comment from this run lists Changed or
+#     New previews, and that set differs from the one last audited, so a push
+#     that doesn't change which previews moved doesn't re-run it.
+#
+# The agent runs `compose-preview review --backend prompt` (the agent is the
+# model, so no OpenRouter key) against the pinned guideline packs in
+# .github/preview-audit/, following .github/preview-audit/PROMPT.md. It gets
+# no GitHub write access of its own: it writes _audit/report.md and this
+# workflow posts it as the sticky `<!-- preview-audit -->` comment. Findings
+# are advisory model output, never a merge gate.
+#
+# Repository variables (all optional):
+#   PREVIEW_AUDIT_AGENT           auto (default: OpenCode, then Claude), claude, opencode or off
+#   PREVIEW_AUDIT_OPENCODE_MODEL  default opencode/glm-5.3-flash
+#   PREVIEW_AUDIT_CLAUDE_MODEL    default: the action's
+# Manual run: Actions -> Preview Audit -> Run workflow with a PR number. It
+# re-audits even when the changed set matches the last audit.
+
+on:
+  workflow_run:
+    workflows: [Compose Preview]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: PR number to audit
+        required: true
+
+permissions: {}
+
+jobs:
+  gate:
+    name: Decide whether to audit
+    # workflow_run runs this file from main with secrets, so only PRs whose
+    # head branch lives in this repository (pushed by someone with write
+    # access) get as far as checking out code in the audit job.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.event == 'pull_request' &&
+       github.event.workflow_run.conclusion != 'cancelled' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read
+    outputs:
+      agent: ${{ steps.gate.outputs.agent }}
+      pr: ${{ steps.gate.outputs.pr }}
+      sha: ${{ steps.gate.outputs.sha }}
+      fingerprint: ${{ steps.gate.outputs.fingerprint }}
+    steps:
+      - id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
+          INPUT_PR: ${{ inputs.pr }}
+          RUN_PR: ${{ github.event.workflow_run.pull_requests[0].number }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN_CREATED: ${{ github.event.workflow_run.created_at }}
+          HAS_OPENCODE: ${{ secrets.OPENCODE_API_KEY != '' }}
+          HAS_CLAUDE: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+          PREFERRED: ${{ vars.PREVIEW_AUDIT_AGENT }}
+        run: |
+          set -euo pipefail
+          skip() { echo "::notice::Preview audit skipped: $1"; exit 0; }
+
+          case "${PREFERRED:-auto}" in
+            off) skip "PREVIEW_AUDIT_AGENT is off" ;;
+            opencode) [ "$HAS_OPENCODE" = true ] && agent=opencode || skip "PREVIEW_AUDIT_AGENT=opencode but no OPENCODE_API_KEY secret" ;;
+            claude) [ "$HAS_CLAUDE" = true ] && agent=claude || skip "PREVIEW_AUDIT_AGENT=claude but no CLAUDE_CODE_OAUTH_TOKEN secret" ;;
+            *)
+              if [ "$HAS_OPENCODE" = true ]; then agent=opencode
+              elif [ "$HAS_CLAUDE" = true ]; then agent=claude
+              else skip "no OPENCODE_API_KEY or CLAUDE_CODE_OAUTH_TOKEN secret"; fi ;;
+          esac
+
+          if [ "$EVENT" = workflow_dispatch ]; then
+            pr="$INPUT_PR"
+          else
+            pr="${RUN_PR:-}"
+            [ -n "$pr" ] || pr=$(gh api "repos/$REPO/commits/$RUN_SHA/pulls" --jq '.[0].number // empty')
+          fi
+          [ -n "$pr" ] || skip "no pull request for this run"
+
+          read -r state author_type head_sha head_repo < <(gh api "repos/$REPO/pulls/$pr" \
+            --jq '[.state, .user.type, .head.sha, .head.repo.full_name] | @tsv')
+          [ "$state" = open ] || skip "PR #$pr is $state"
+          [ "$author_type" != Bot ] || skip "PR #$pr was opened by a bot"
+          [ "$head_repo" = "$REPO" ] || skip "PR #$pr comes from a fork"
+          if [ "$EVENT" != workflow_dispatch ] && [ "$head_sha" != "$RUN_SHA" ]; then
+            skip "PR #$pr has moved on to ${head_sha:0:8}; that commit's run decides"
+          fi
+
+          comments=$(gh api --paginate "repos/$REPO/issues/$pr/comments" \
+            --jq '.[] | select(.user.login == "github-actions[bot]") | {id, updated_at, body}' | jq -s .)
+          diff_comment=$(jq -c '[.[] | select(.body | startswith("<!-- preview-diff -->"))] | last // empty' <<<"$comments")
+          [ -n "$diff_comment" ] || skip "no preview-diff comment on PR #$pr"
+          if [ "$EVENT" != workflow_dispatch ] && [[ "$(jq -r .updated_at <<<"$diff_comment")" < "$RUN_CREATED" ]]; then
+            skip "the preview-diff comment predates this run (no visual changes this time)"
+          fi
+          body=$(jq -r .body <<<"$diff_comment")
+          grep -qE '^### (Changed|New)' <<<"$body" || skip "no changed or new previews"
+
+          # Which previews moved, not how: the bold function headings of the
+          # Changed / New sections. Image URLs change on every push.
+          fingerprint=$(awk '/^### /{keep = ($2 == "Changed" || $2 == "New")} /^<details>/{keep = 0} keep && /^\*\*`/' <<<"$body" | sort | sha256sum | cut -c1-16)
+          last=$(jq -r '[.[] | select(.body | startswith("<!-- preview-audit"))] | last | .body // ""' <<<"$comments" \
+            | grep -o 'fingerprint=[0-9a-f]*' | head -1 | cut -d= -f2 || true)
+          if [ "$EVENT" != workflow_dispatch ] && [ "$last" = "$fingerprint" ]; then
+            skip "the same previews were already audited on PR #$pr"
+          fi
+
+          echo "Auditing PR #$pr at ${head_sha:0:8} with $agent"
+          {
+            echo "agent=$agent"
+            echo "pr=$pr"
+            echo "sha=$head_sha"
+            echo "fingerprint=$fingerprint"
+          } >> "$GITHUB_OUTPUT"
+
+  audit:
+    name: Audit changed previews (${{ needs.gate.outputs.agent }})
+    needs: gate
+    if: needs.gate.outputs.agent != ''
+    # Job-level, so only a run that passed the gate replaces an audit in
+    # progress; every Compose Preview completion starts this workflow.
+    concurrency:
+      group: preview-audit-${{ needs.gate.outputs.pr }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      # The sticky audit comment.
+      pull-requests: write
+      # Exchanged by claude-code-action for a short-lived Claude App token.
+      id-token: write
+    env:
+      PR: ${{ needs.gate.outputs.pr }}
+      AGENT: ${{ needs.gate.outputs.agent }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.gate.outputs.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          cache-read-only: 'true'
+      - uses: yschimke/compose-ai-tools/.github/actions/install@v2.74.1
+        with:
+          version: catalog
+          catalog-key: compose-preview-plugin
+
+      - name: Stage audit inputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ needs.gate.outputs.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p _audit
+          id=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
+            --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("<!-- preview-diff -->"))) | .id' | tail -1)
+          gh api "repos/$REPO/issues/comments/$id" --jq .body > _audit/preview-diff.md
+          title=$(gh api "repos/$REPO/pulls/$PR" --jq .title)
+          printf '# PR #%s\n\nTitle: %s\nHead: %s\n' "$PR" "$title" "$SHA" > _audit/context.md
+
+      - name: Audit with Claude
+        if: env.AGENT == 'claude'
+        uses: anthropics/claude-code-action@6d5ae526d25ce88daa2200be073e1a373167f064 # v1.0.265
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: Read .github/preview-audit/PROMPT.md and follow it exactly.
+          settings: |
+            {
+              "includeCoAuthoredBy": false,
+              "attribution": { "commit": "", "pr": "" }
+            }
+          claude_args: >-
+            --max-turns 120
+            ${{ vars.PREVIEW_AUDIT_CLAUDE_MODEL && format('--model {0}', vars.PREVIEW_AUDIT_CLAUDE_MODEL) || '' }}
+            --allowedTools "Bash(compose-preview:*),Bash(./gradlew:*),Bash(ls:*),Bash(cat:*),Bash(jq:*),Read,Write,Edit,Glob,Grep"
+
+      - name: Audit with OpenCode
+        if: env.AGENT == 'opencode'
+        timeout-minutes: 45
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          MODEL: ${{ vars.PREVIEW_AUDIT_OPENCODE_MODEL || 'opencode/glm-5.3-flash' }}
+          # No web access and no GitHub tooling: the agent only needs the
+          # checkout, the CLI and its own file tools.
+          OPENCODE_CONFIG_CONTENT: |
+            {
+              "permission": {
+                "*": "deny",
+                "read": "allow",
+                "list": "allow",
+                "glob": "allow",
+                "grep": "allow",
+                "edit": "allow",
+                "bash": "allow",
+                "task": "allow"
+              }
+            }
+        run: |
+          npm install -g opencode-ai@1.19.5
+          opencode run --model "$MODEL" "Read .github/preview-audit/PROMPT.md and follow it exactly."
+
+      - name: Post the audit comment
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ needs.gate.outputs.sha }}
+          FINGERPRINT: ${{ needs.gate.outputs.fingerprint }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          OPENCODE_MODEL: ${{ vars.PREVIEW_AUDIT_OPENCODE_MODEL || 'opencode/glm-5.3-flash' }}
+        run: |
+          set -euo pipefail
+          # Only a finished report records the fingerprint the gate skips on,
+          # so a failed audit is retried on the next run.
+          marker="<!-- preview-audit -->"
+          [ -s _audit/report.md ] && marker="<!-- preview-audit fingerprint=$FINGERPRINT -->"
+          judge="$AGENT"
+          [ "$AGENT" = opencode ] && judge="OpenCode ($OPENCODE_MODEL)"
+          [ "$AGENT" = claude ] && judge="Claude"
+          {
+            echo "$marker"
+            if [ -s _audit/report.md ]; then
+              head -c 60000 _audit/report.md
+            else
+              echo "## Preview audit"
+              echo
+              echo "The audit did not produce a report. See [the run]($RUN_URL)."
+            fi
+            echo
+            echo "---"
+            echo "<sub>Advisory: judged by $judge against the pinned guideline packs in \`.github/preview-audit/\` at ${SHA:0:8}. [Run]($RUN_URL) · re-run from Actions → Preview Audit.</sub>"
+          } > _audit/comment.md
+          existing=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
+            --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("<!-- preview-audit"))) | .id' | tail -1)
+          if [ -n "$existing" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$existing" -F body=@_audit/comment.md >/dev/null
+          else
+            gh api "repos/$REPO/issues/$PR/comments" -F body=@_audit/comment.md >/dev/null
+          fi
+
+      - name: Upload audit evidence
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: preview-audit
+          path: |
+            _audit/
+            **/build/compose-previews/guidelines.json
+            **/build/compose-previews/review/
+            **/build/compose-previews/renders/**/*.guidelines.png
+          if-no-files-found: ignore
+          retention-days: 14

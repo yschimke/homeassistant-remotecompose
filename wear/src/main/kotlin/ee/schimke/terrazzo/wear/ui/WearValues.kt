@@ -8,6 +8,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.wear.compose.foundation.AmbientModeManager
+import ee.schimke.terrazzo.wear.heldWhileAmbient
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import kotlinx.coroutines.flow.StateFlow
 
@@ -56,10 +58,18 @@ class WearValues(initial: Map<String, EntityValue> = emptyMap()) {
   }
 }
 
-/** A [WearValues] kept in step with [source], updated on the composition's (main) thread. */
+/**
+ * A [WearValues] kept in step with [source], updated on the composition's (main) thread. While the
+ * watch is [ambient] its changes are held for the next ambient update ([heldWhileAmbient]).
+ */
 @Composable
-fun rememberWearValues(source: StateFlow<Map<String, EntityValue>>): WearValues {
+fun rememberWearValues(
+  source: StateFlow<Map<String, EntityValue>>,
+  ambient: AmbientModeManager? = null,
+): WearValues {
   val values = remember(source) { WearValues(source.value) }
-  LaunchedEffect(values) { source.collect(values::update) }
+  LaunchedEffect(values, ambient) {
+    (if (ambient == null) source else source.heldWhileAmbient(ambient)).collect(values::update)
+  }
   return values
 }

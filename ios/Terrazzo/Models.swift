@@ -63,7 +63,10 @@ enum BindingValue: Equatable, Sendable {
     case let value as NSNumber:
       if CFGetTypeID(value) == CFBooleanGetTypeID() {
         self = .integer(value.boolValue ? 1 : 0)
-      } else if name.hasSuffix(".state_int") || name.hasSuffix(".is_on") {
+      } else if name.hasSuffix(".state_int") || name.hasSuffix(".last_changed")
+        || name.hasSuffix(".last_changed_offset")
+        || name.hasSuffix(".is_on")
+      {
         guard let integer = Int(exactly: value.doubleValue),
           !name.hasSuffix(".is_on") || integer == 0 || integer == 1
         else { return nil }

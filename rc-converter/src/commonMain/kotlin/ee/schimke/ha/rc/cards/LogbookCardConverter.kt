@@ -3,17 +3,16 @@ package ee.schimke.ha.rc.cards
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
+import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
-import ee.schimke.ha.rc.cardDataSignature
-import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaLogbookData
 import ee.schimke.ha.rc.components.HaLogbookEntry
 import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
-import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
@@ -26,9 +25,13 @@ import kotlinx.serialization.json.putJsonArray
 /**
  * `logbook` card. The dashboard JSON only carries the entity ids — real logbook data lives behind
  * the `/api/logbook` REST endpoint, which the `.rc` document can't fetch at playback. We render one
- * entry per configured entity using its current state as the most-recent "message" line, with the
- * entity's last-changed timestamp where available. Hosts that hydrate logbook history at capture
- * time can extend [HaSnapshot] later; for now this gives a representative slot.
+ * entry per configured entity: its current state as the most-recent "message" line and when it last
+ * changed.
+ *
+ * Every row follows its entity through named bindings alone (live-card-updates.md, path 1): the
+ * message is `<id>.state`, and the time is `<id>.last_changed`, Home Assistant's own timestamp,
+ * which the document shows relative to the player's clock (`relativeTimeText`). Nothing re-encodes
+ * as the entities change or the clock moves.
  *
  * Its layout is its card design, `logbook.uid` ([BulkDesignParts]): the full card on a dashboard;
  * in a launcher cell its identity below 180 dp wide and the full card above; in a Wear slot its
@@ -36,11 +39,6 @@ import kotlinx.serialization.json.putJsonArray
  */
 class LogbookCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.LOGBOOK
-
-  // Baked, non-bindable content (see CardConverter.dataSignature):
-  // re-encode when any referenced entity's snapshot data moves.
-  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String =
-    cardDataSignature(cardEntityIds(card), snapshot)
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
     val rows = entityIds(card).size.coerceAtLeast(1)
@@ -50,7 +48,8 @@ class LogbookCardConverter : DesignedCardConverter() {
 
   /**
    * A logbook renders from a card design: per row, the entity's [EntityDesign] properties (its
-   * icon); each row's name, message and time are `card.row.<i>.*` bindings.
+   * icon). Each row's name, message and time are its slot's own bindings (`<slot>.name`,
+   * `<slot>.state`, `<slot>.last_changed`).
    */
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
     if (!setOf("type", "title", "entities", "hours_to_show").containsAll(card.raw.keys)) return null
@@ -84,18 +83,10 @@ class LogbookCardConverter : DesignedCardConverter() {
     return DesignTemplateInput(card, HaSnapshot(states = entities.associateBy { it.entityId }))
   }
 
+  /** The title, `Logbook` when the card has none, as the Wear summary line's heading shows it. */
   override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings =
     CardSnapshotBindings(
-      buildMap {
-        val data = logbookData(card, snapshot)
-        put("card.title", data.title ?: "Logbook")
-        put("card.summary", logbookSummary(data))
-        data.entries.forEachIndexed { i, entry ->
-          put("card.row.$i.name", entry.name)
-          put("card.row.$i.message", entry.message)
-          put("card.row.$i.when", entry.whenText)
-        }
-      },
+      mapOf("card.title" to (logbookData(card, snapshot).title ?: "Logbook")),
       emptyMap(),
       emptyMap(),
       emptyMap(),
@@ -112,12 +103,12 @@ private fun entityIds(card: CardConfig): List<String> {
   }
 }
 
-private fun formatRelative(instant: Instant?): String {
-  if (instant == null) return ""
-  return instant.toString().substringBefore('T')
-}
-
-internal fun logbookData(card: CardConfig, snapshot: HaSnapshot): HaLogbookData {
+/** The card's rows; times are read in [zone], the display zone the host pushes offsets in. */
+internal fun logbookData(
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  zone: TimeZone = TimeZone.UTC,
+): HaLogbookData {
   val title = card.raw["title"]?.jsonPrimitive?.content
   val entries =
     entityIds(card).map { entityId ->
@@ -126,16 +117,12 @@ internal fun logbookData(card: CardConfig, snapshot: HaSnapshot): HaLogbookData 
       HaLogbookEntry(
         name = name,
         message = formatState(entity, snapshot),
-        whenText = formatRelative(entity?.lastChanged),
+        whenText = "",
         icon = HaIconMap.resolve(null, entity),
+        entityId = entityId,
+        lastChanged = entity?.let(HaLiveBindings::lastChanged) ?: HaLiveBindings.NO_TIME,
+        lastChangedOffset = entity?.let { HaLiveBindings.lastChangedOffset(it, zone) } ?: 0,
       )
     }
   return HaLogbookData(title = title, entries = entries)
 }
-
-/**
- * The Wear Small summary line: the latest entry, or that there is none. A `card.summary` binding,
- * so a design template shows the real card's line rather than the template's.
- */
-internal fun logbookSummary(data: HaLogbookData): String =
-  data.entries.firstOrNull()?.let { "${it.name} ${it.message}" } ?: "No recent activity"

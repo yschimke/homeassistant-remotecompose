@@ -205,6 +205,10 @@ private fun PhoneHost(
   val context = LocalContext.current.applicationContext
   val imageStack =
     remember(context) { HaImageStack(context, graph.lanConnectionPolicy, graph.remoteUrlStore) }
+  // Demo pictures in memory before the first frame, so camera tiles don't race the capture. Held
+  // by the composition (the remembered list) so a memory-cache eviction still finds them through
+  // Coil's weak cache.
+  remember(imageStack) { prewarmDemoPictures(imageStack, DemoData.snapshot(DEMO_CLOCK_MS)) }
   TerrazzoTheme(style = style, darkMode = darkMode, cardStyle = cardStyle) {
     CompositionLocalProvider(
       LocalTerrazzoGraph provides graph,

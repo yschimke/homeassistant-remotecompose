@@ -314,6 +314,8 @@ config, then pushes values under the slot names.
 | `s<N>.numeric_state` | float | parsed numeric state |
 | `s<N>.state_int` | int | domain-keyed variant, same tables as today |
 | `s<N>.status` | int | `0` available, `1` unavailable, `2` unknown, `3` entity missing |
+| `s<N>.last_changed` | int | HA's `last_changed`, whole Unix seconds; `0` when unknown. The document shows it relative to the player's clock |
+| `s<N>.last_changed_offset` | int | The UTC offset in force at `last_changed` in the client's display zone, seconds; `0` when unknown. Dates a change a week or more old |
 | `s<N>.name` | string | `name:` from config, else `friendly_name` |
 | `s<N>.icon` | bitmap | icon rendered by the client (MDI path → bitmap) |
 | `card.min`, `card.max` | float | range from config (`min:` / `max:`), else the card's default; from the template's binding recipe |

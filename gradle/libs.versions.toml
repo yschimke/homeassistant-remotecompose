@@ -7,14 +7,16 @@ okhttp = "5.5.1"
 play-publisher = "4.1.1"
 
 # Metro (DI) — requires Kotlin 2.2.20+.
-metro = "1.5.0"
+metro = "1.5.1"
 # AppFunctions: the on-device agent surface (`app/.../assistant/`). Experimental upstream; the
 # compiler runs through KSP, which nothing else in the build uses.
 androidx-appfunctions = "1.0.0-beta01"
 ksp = "2.3.12"
 
-# Compose
-compose-bom = "2026.09.00"
+# Compose: the alpha-channel BOM, for the Compose 1.13 line (1.13.0-beta02 in 2026.10.01). Compose
+# Multiplatform 1.13 already pulled the Android modules onto 1.13, past the stable BOM's 1.12, and
+# Glimmer needs 1.13; this lines every module up on one 1.13 release.
+compose-bom = "2026.10.01"
 
 # RemoteCompose + the Wear widget stack that sits on it (APIs change per alpha).
 # These three move in lockstep — `remote-material3` and `glance-wear` both
@@ -54,7 +56,7 @@ junit = "4.13.2"
 # Robolectric 4.17's exact API 35 provider jar. Android-all versions identify platform images,
 # not interchangeable library releases; change this together with the tests' @Config(sdk = [35]).
 robolectric-sdk35 = "15-robolectric-13954326-i7"
-mockserver = "8.0.0"
+mockserver = "9.0.0"
 indriya = "2.2.4"
 
 # Preview tooling — pinned compose-ai-tools release. The CLI and the
@@ -83,7 +85,7 @@ composeai-contracts = "3.39.0"
 # pin at a release version 404s the first time a release skips a module (the
 # daemon BOM 3.15.0 carries preview-annotations 3.13.2). Resolve it versionless
 # through the BOM. It must not predate the daemon baked into the preview plugin.
-compose-preview-daemon = "3.26.0"
+compose-preview-daemon = "3.27.0"
 tapmoc = "0.5.0"
 
 # Image loading (BitmapLoader / RemoteCompose named-bitmap resolution)
@@ -118,6 +120,9 @@ compose-webview = "2.0.3"
 jogamp = "2.6.0"
 compose-multiplatform = "1.13.0-beta01"
 cmp-material3 = "1.13.0-beta01"
+
+# Meta Spatial SDK (`:quest`): every com.meta.spatial artifact moves together.
+meta-spatial = "0.14.0"
 
 [libraries]
 jogl-runtime = { module = "org.jogamp.jogl:jogl-all-main", version.ref = "jogamp" }
@@ -181,7 +186,7 @@ composeai-daemon-bom = { module = "ee.schimke.composeai:compose-preview-daemon-b
 composeai-preview-annotations = { module = "ee.schimke.composeai:preview-annotations" }
 
 # Compose
-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
+compose-bom = { module = "androidx.compose:compose-bom-alpha", version.ref = "compose-bom" }
 compose-ui = { module = "androidx.compose.ui:ui" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
@@ -195,6 +200,17 @@ activity-compose = { module = "androidx.activity:activity-compose", version = "1
 xr-compose = { module = "androidx.xr.compose:compose", version = "1.0.0-beta02" }
 # The version xr-compose 1.0.0-beta02 brings (through scenecore): pinned room controls' persisted anchors.
 xr-arcore = { module = "androidx.xr.arcore:arcore", version = "1.0.0" }
+# AI glasses: Glimmer is the glasses' Compose UI; projected starts a phone app's activity on them.
+xr-glimmer = { module = "androidx.xr.glimmer:glimmer", version = "1.0.0-alpha22" }
+xr-projected = { module = "androidx.xr.projected:projected", version = "1.0.0-alpha14" }
+# Meta Spatial SDK: the room controls on Meta Quest (`:quest`). Closed source, from Maven Central;
+# keep every artifact on the same version.
+meta-spatial-sdk = { module = "com.meta.spatial:meta-spatial-sdk", version.ref = "meta-spatial" }
+meta-spatial-sdk-compose = { module = "com.meta.spatial:meta-spatial-sdk-compose", version.ref = "meta-spatial" }
+meta-spatial-sdk-toolkit = { module = "com.meta.spatial:meta-spatial-sdk-toolkit", version.ref = "meta-spatial" }
+meta-spatial-sdk-vr = { module = "com.meta.spatial:meta-spatial-sdk-vr", version.ref = "meta-spatial" }
+meta-spatial-sdk-mruk = { module = "com.meta.spatial:meta-spatial-sdk-mruk", version.ref = "meta-spatial" }
+meta-spatial-sdk-uiset = { module = "com.meta.spatial:meta-spatial-sdk-uiset", version.ref = "meta-spatial" }
 
 # Wear Compose (stub module — full app lands later)
 wear-compose-material3 = { module = "androidx.wear.compose:compose-material3", version = "1.7.1" }

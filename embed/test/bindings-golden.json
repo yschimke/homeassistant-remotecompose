@@ -1,5 +1,6 @@
 {
     "_comment": "Inputs for the slot-binding and binding-recipe ports in embed/ha-card.js. `expected` (and `recipe_json`, for a case with a `recipe`: a built-in prototype name or an inline recipe) is written by design-server's EmbedBindingsGoldenTest from ha-model (CardDesignSlots.slotBindings plus CardBindingRecipe.evaluate); run it with -Pembed.golden.update=true after changing a case. Floats are exact float values as doubles, or \"NaN\".",
+    "time_zone": "Europe/London",
     "cases": [
         {
             "name": "numeric and text formatting",
@@ -321,62 +322,120 @@
                 "ints": {
                     "sensor.s0.state_int": -1,
                     "sensor.s0.status": 0,
+                    "sensor.s0.last_changed": 0,
+                    "sensor.s0.last_changed_offset": 0,
                     "sensor.s1.state_int": -1,
                     "sensor.s1.status": 0,
+                    "sensor.s1.last_changed": 0,
+                    "sensor.s1.last_changed_offset": 0,
                     "sensor.s2.state_int": -1,
                     "sensor.s2.status": 0,
+                    "sensor.s2.last_changed": 0,
+                    "sensor.s2.last_changed_offset": 0,
                     "sensor.s3.state_int": -1,
                     "sensor.s3.status": 0,
+                    "sensor.s3.last_changed": 0,
+                    "sensor.s3.last_changed_offset": 0,
                     "sensor.s4.state_int": -1,
                     "sensor.s4.status": 0,
+                    "sensor.s4.last_changed": 0,
+                    "sensor.s4.last_changed_offset": 0,
                     "sensor.s5.state_int": -1,
                     "sensor.s5.status": 0,
+                    "sensor.s5.last_changed": 0,
+                    "sensor.s5.last_changed_offset": 0,
                     "sensor.s6.state_int": -1,
                     "sensor.s6.status": 0,
+                    "sensor.s6.last_changed": 0,
+                    "sensor.s6.last_changed_offset": 0,
                     "sensor.s7.state_int": -1,
                     "sensor.s7.status": 0,
+                    "sensor.s7.last_changed": 0,
+                    "sensor.s7.last_changed_offset": 0,
                     "sensor.s8.state_int": -1,
                     "sensor.s8.status": 0,
+                    "sensor.s8.last_changed": 0,
+                    "sensor.s8.last_changed_offset": 0,
                     "sensor.s9.state_int": -1,
                     "sensor.s9.status": 0,
+                    "sensor.s9.last_changed": 0,
+                    "sensor.s9.last_changed_offset": 0,
                     "sensor.s10.state_int": -1,
                     "sensor.s10.status": 0,
+                    "sensor.s10.last_changed": 0,
+                    "sensor.s10.last_changed_offset": 0,
                     "sensor.s11.state_int": -1,
                     "sensor.s11.status": 0,
+                    "sensor.s11.last_changed": 0,
+                    "sensor.s11.last_changed_offset": 0,
                     "sensor.s12.state_int": -1,
                     "sensor.s12.status": 0,
+                    "sensor.s12.last_changed": 0,
+                    "sensor.s12.last_changed_offset": 0,
                     "sensor.s13.state_int": -1,
                     "sensor.s13.status": 0,
+                    "sensor.s13.last_changed": 0,
+                    "sensor.s13.last_changed_offset": 0,
                     "sensor.s14.state_int": -1,
                     "sensor.s14.status": 0,
+                    "sensor.s14.last_changed": 0,
+                    "sensor.s14.last_changed_offset": 0,
                     "sensor.s15.state_int": -1,
                     "sensor.s15.status": 0,
+                    "sensor.s15.last_changed": 0,
+                    "sensor.s15.last_changed_offset": 0,
                     "sensor.s16.state_int": -1,
                     "sensor.s16.status": 0,
+                    "sensor.s16.last_changed": 0,
+                    "sensor.s16.last_changed_offset": 0,
                     "sensor.s17.state_int": -1,
                     "sensor.s17.status": 0,
+                    "sensor.s17.last_changed": 0,
+                    "sensor.s17.last_changed_offset": 0,
                     "sensor.s18.state_int": -1,
                     "sensor.s18.status": 0,
+                    "sensor.s18.last_changed": 0,
+                    "sensor.s18.last_changed_offset": 0,
                     "sensor.s19.state_int": -1,
                     "sensor.s19.status": 0,
+                    "sensor.s19.last_changed": 0,
+                    "sensor.s19.last_changed_offset": 0,
                     "sensor.s20.state_int": -1,
                     "sensor.s20.status": 0,
+                    "sensor.s20.last_changed": 0,
+                    "sensor.s20.last_changed_offset": 0,
                     "sensor.s21.state_int": -1,
                     "sensor.s21.status": 0,
+                    "sensor.s21.last_changed": 0,
+                    "sensor.s21.last_changed_offset": 0,
                     "sensor.s22.state_int": -1,
                     "sensor.s22.status": 0,
+                    "sensor.s22.last_changed": 0,
+                    "sensor.s22.last_changed_offset": 0,
                     "sensor.s23.state_int": -1,
                     "sensor.s23.status": 0,
+                    "sensor.s23.last_changed": 0,
+                    "sensor.s23.last_changed_offset": 0,
                     "sensor.s24.state_int": -1,
                     "sensor.s24.status": 2,
+                    "sensor.s24.last_changed": 0,
+                    "sensor.s24.last_changed_offset": 0,
                     "sensor.s25.state_int": -1,
                     "sensor.s25.status": 1,
+                    "sensor.s25.last_changed": 0,
+                    "sensor.s25.last_changed_offset": 0,
                     "sensor.s26.state_int": -1,
                     "sensor.s26.status": 0,
+                    "sensor.s26.last_changed": 0,
+                    "sensor.s26.last_changed_offset": 0,
                     "sensor.s27.state_int": -1,
                     "sensor.s27.status": 0,
+                    "sensor.s27.last_changed": 0,
+                    "sensor.s27.last_changed_offset": 0,
                     "sensor.s28.state_int": -1,
-                    "sensor.s28.status": 0
+                    "sensor.s28.status": 0,
+                    "sensor.s28.last_changed": 0,
+                    "sensor.s28.last_changed_offset": 0
                 },
                 "floats": {
                     "sensor.s0.numeric_state": 21.45599937438965,
@@ -688,48 +747,92 @@
                 "ints": {
                     "light.s0.state_int": -1,
                     "light.s0.status": 0,
+                    "light.s0.last_changed": 0,
+                    "light.s0.last_changed_offset": 0,
                     "light.s1.state_int": -1,
                     "light.s1.status": 0,
+                    "light.s1.last_changed": 0,
+                    "light.s1.last_changed_offset": 0,
                     "switch.s2.state_int": -1,
                     "switch.s2.status": 0,
+                    "switch.s2.last_changed": 0,
+                    "switch.s2.last_changed_offset": 0,
                     "cover.s3.state_int": 2,
                     "cover.s3.status": 0,
+                    "cover.s3.last_changed": 0,
+                    "cover.s3.last_changed_offset": 0,
                     "cover.s4.state_int": 0,
                     "cover.s4.status": 0,
+                    "cover.s4.last_changed": 0,
+                    "cover.s4.last_changed_offset": 0,
                     "lock.s5.state_int": -1,
                     "lock.s5.status": 0,
+                    "lock.s5.last_changed": 0,
+                    "lock.s5.last_changed_offset": 0,
                     "lock.s6.state_int": -1,
                     "lock.s6.status": 0,
+                    "lock.s6.last_changed": 0,
+                    "lock.s6.last_changed_offset": 0,
                     "media_player.s7.state_int": -1,
                     "media_player.s7.status": 0,
+                    "media_player.s7.last_changed": 0,
+                    "media_player.s7.last_changed_offset": 0,
                     "media_player.s8.state_int": -1,
                     "media_player.s8.status": 0,
+                    "media_player.s8.last_changed": 0,
+                    "media_player.s8.last_changed_offset": 0,
                     "media_player.s9.state_int": -1,
                     "media_player.s9.status": 0,
+                    "media_player.s9.last_changed": 0,
+                    "media_player.s9.last_changed_offset": 0,
                     "media_player.s10.state_int": -1,
                     "media_player.s10.status": 0,
+                    "media_player.s10.last_changed": 0,
+                    "media_player.s10.last_changed_offset": 0,
                     "climate.s11.state_int": -1,
                     "climate.s11.status": 0,
+                    "climate.s11.last_changed": 0,
+                    "climate.s11.last_changed_offset": 0,
                     "climate.s12.state_int": -1,
                     "climate.s12.status": 0,
+                    "climate.s12.last_changed": 0,
+                    "climate.s12.last_changed_offset": 0,
                     "vacuum.s13.state_int": -1,
                     "vacuum.s13.status": 0,
+                    "vacuum.s13.last_changed": 0,
+                    "vacuum.s13.last_changed_offset": 0,
                     "person.s14.state_int": -1,
                     "person.s14.status": 0,
+                    "person.s14.last_changed": 0,
+                    "person.s14.last_changed_offset": 0,
                     "device_tracker.s15.state_int": -1,
                     "device_tracker.s15.status": 0,
+                    "device_tracker.s15.last_changed": 0,
+                    "device_tracker.s15.last_changed_offset": 0,
                     "valve.s16.state_int": -1,
                     "valve.s16.status": 0,
+                    "valve.s16.last_changed": 0,
+                    "valve.s16.last_changed_offset": 0,
                     "scene.s17.state_int": -1,
                     "scene.s17.status": 0,
+                    "scene.s17.last_changed": 0,
+                    "scene.s17.last_changed_offset": 0,
                     "binary_sensor.s18.state_int": -1,
                     "binary_sensor.s18.status": 0,
+                    "binary_sensor.s18.last_changed": 0,
+                    "binary_sensor.s18.last_changed_offset": 0,
                     "fan.s19.state_int": -1,
                     "fan.s19.status": 1,
+                    "fan.s19.last_changed": 0,
+                    "fan.s19.last_changed_offset": 0,
                     "input_boolean.s20.state_int": -1,
                     "input_boolean.s20.status": 2,
+                    "input_boolean.s20.last_changed": 0,
+                    "input_boolean.s20.last_changed_offset": 0,
                     "weather.s21.state_int": -1,
-                    "weather.s21.status": 0
+                    "weather.s21.status": 0,
+                    "weather.s21.last_changed": 0,
+                    "weather.s21.last_changed_offset": 0
                 },
                 "floats": {
                     "light.s0.numeric_state": "NaN",
@@ -893,30 +996,56 @@
                 "ints": {
                     "alarm_control_panel.s0.state_int": 0,
                     "alarm_control_panel.s0.status": 0,
+                    "alarm_control_panel.s0.last_changed": 0,
+                    "alarm_control_panel.s0.last_changed_offset": 0,
                     "alarm_control_panel.s1.state_int": 1,
                     "alarm_control_panel.s1.status": 0,
+                    "alarm_control_panel.s1.last_changed": 0,
+                    "alarm_control_panel.s1.last_changed_offset": 0,
                     "alarm_control_panel.s2.state_int": 2,
                     "alarm_control_panel.s2.status": 0,
+                    "alarm_control_panel.s2.last_changed": 0,
+                    "alarm_control_panel.s2.last_changed_offset": 0,
                     "alarm_control_panel.s3.state_int": 3,
                     "alarm_control_panel.s3.status": 0,
+                    "alarm_control_panel.s3.last_changed": 0,
+                    "alarm_control_panel.s3.last_changed_offset": 0,
                     "alarm_control_panel.s4.state_int": 4,
                     "alarm_control_panel.s4.status": 0,
+                    "alarm_control_panel.s4.last_changed": 0,
+                    "alarm_control_panel.s4.last_changed_offset": 0,
                     "alarm_control_panel.s5.state_int": 5,
                     "alarm_control_panel.s5.status": 0,
+                    "alarm_control_panel.s5.last_changed": 0,
+                    "alarm_control_panel.s5.last_changed_offset": 0,
                     "alarm_control_panel.s6.state_int": 6,
                     "alarm_control_panel.s6.status": 0,
+                    "alarm_control_panel.s6.last_changed": 0,
+                    "alarm_control_panel.s6.last_changed_offset": 0,
                     "alarm_control_panel.s7.state_int": 7,
                     "alarm_control_panel.s7.status": 0,
+                    "alarm_control_panel.s7.last_changed": 0,
+                    "alarm_control_panel.s7.last_changed_offset": 0,
                     "alarm_control_panel.s8.state_int": 8,
                     "alarm_control_panel.s8.status": 0,
+                    "alarm_control_panel.s8.last_changed": 0,
+                    "alarm_control_panel.s8.last_changed_offset": 0,
                     "alarm_control_panel.s9.state_int": 9,
                     "alarm_control_panel.s9.status": 0,
+                    "alarm_control_panel.s9.last_changed": 0,
+                    "alarm_control_panel.s9.last_changed_offset": 0,
                     "alarm_control_panel.s10.state_int": 10,
                     "alarm_control_panel.s10.status": 1,
+                    "alarm_control_panel.s10.last_changed": 0,
+                    "alarm_control_panel.s10.last_changed_offset": 0,
                     "alarm_control_panel.s11.state_int": 11,
                     "alarm_control_panel.s11.status": 2,
+                    "alarm_control_panel.s11.last_changed": 0,
+                    "alarm_control_panel.s11.last_changed_offset": 0,
                     "alarm_control_panel.s12.state_int": 11,
-                    "alarm_control_panel.s12.status": 0
+                    "alarm_control_panel.s12.status": 0,
+                    "alarm_control_panel.s12.last_changed": 0,
+                    "alarm_control_panel.s12.last_changed_offset": 0
                 },
                 "floats": {
                     "alarm_control_panel.s0.numeric_state": "NaN",
@@ -962,7 +1091,9 @@
                 },
                 "ints": {
                     "light.s0.state_int": -1,
-                    "light.s0.status": 0
+                    "light.s0.status": 0,
+                    "light.s0.last_changed": 0,
+                    "light.s0.last_changed_offset": 0
                 },
                 "floats": {
                     "light.s0.numeric_state": "NaN"
@@ -987,7 +1118,9 @@
                 },
                 "ints": {
                     "light.s0.state_int": -1,
-                    "light.s0.status": 3
+                    "light.s0.status": 3,
+                    "light.s0.last_changed": 0,
+                    "light.s0.last_changed_offset": 0
                 },
                 "floats": {
                     "light.s0.numeric_state": "NaN"
@@ -1066,12 +1199,20 @@
                 "ints": {
                     "light.s0.state_int": -1,
                     "light.s0.status": 0,
+                    "light.s0.last_changed": 0,
+                    "light.s0.last_changed_offset": 0,
                     "sensor.s1.state_int": -1,
                     "sensor.s1.status": 0,
+                    "sensor.s1.last_changed": 0,
+                    "sensor.s1.last_changed_offset": 0,
                     "switch.s2.state_int": -1,
                     "switch.s2.status": 0,
+                    "switch.s2.last_changed": 0,
+                    "switch.s2.last_changed_offset": 0,
                     "switch.s3.state_int": -1,
-                    "switch.s3.status": 0
+                    "switch.s3.status": 0,
+                    "switch.s3.last_changed": 0,
+                    "switch.s3.last_changed_offset": 0
                 },
                 "floats": {
                     "light.s0.numeric_state": "NaN",
@@ -1127,8 +1268,12 @@
                 "ints": {
                     "light.s0.state_int": -1,
                     "light.s0.status": 0,
+                    "light.s0.last_changed": 0,
+                    "light.s0.last_changed_offset": 0,
                     "sensor.s1.state_int": -1,
-                    "sensor.s1.status": 2
+                    "sensor.s1.status": 2,
+                    "sensor.s1.last_changed": 0,
+                    "sensor.s1.last_changed_offset": 0
                 },
                 "floats": {
                     "light.s0.numeric_state": "NaN",
@@ -1184,8 +1329,12 @@
                 "ints": {
                     "light.s0.state_int": -1,
                     "light.s0.status": 0,
+                    "light.s0.last_changed": 0,
+                    "light.s0.last_changed_offset": 0,
                     "light.s1.state_int": -1,
-                    "light.s1.status": 0
+                    "light.s1.status": 0,
+                    "light.s1.last_changed": 0,
+                    "light.s1.last_changed_offset": 0
                 },
                 "floats": {
                     "light.s0.numeric_state": "NaN",
@@ -1652,84 +1801,164 @@
                 "ints": {
                     "binary_sensor.s0.state_int": -1,
                     "binary_sensor.s0.status": 0,
+                    "binary_sensor.s0.last_changed": 0,
+                    "binary_sensor.s0.last_changed_offset": 0,
                     "binary_sensor.s1.state_int": -1,
                     "binary_sensor.s1.status": 0,
+                    "binary_sensor.s1.last_changed": 0,
+                    "binary_sensor.s1.last_changed_offset": 0,
                     "binary_sensor.s2.state_int": -1,
                     "binary_sensor.s2.status": 0,
+                    "binary_sensor.s2.last_changed": 0,
+                    "binary_sensor.s2.last_changed_offset": 0,
                     "binary_sensor.s3.state_int": -1,
                     "binary_sensor.s3.status": 0,
+                    "binary_sensor.s3.last_changed": 0,
+                    "binary_sensor.s3.last_changed_offset": 0,
                     "sensor.s4.state_int": -1,
                     "sensor.s4.status": 0,
+                    "sensor.s4.last_changed": 0,
+                    "sensor.s4.last_changed_offset": 0,
                     "sensor.s5.state_int": -1,
                     "sensor.s5.status": 0,
+                    "sensor.s5.last_changed": 0,
+                    "sensor.s5.last_changed_offset": 0,
                     "sensor.s6.state_int": -1,
                     "sensor.s6.status": 0,
+                    "sensor.s6.last_changed": 0,
+                    "sensor.s6.last_changed_offset": 0,
                     "sensor.s7.state_int": -1,
                     "sensor.s7.status": 2,
+                    "sensor.s7.last_changed": 0,
+                    "sensor.s7.last_changed_offset": 0,
                     "sensor.s8.state_int": -1,
                     "sensor.s8.status": 0,
+                    "sensor.s8.last_changed": 0,
+                    "sensor.s8.last_changed_offset": 0,
                     "sensor.s9.state_int": -1,
                     "sensor.s9.status": 0,
+                    "sensor.s9.last_changed": 0,
+                    "sensor.s9.last_changed_offset": 0,
                     "sensor.s10.state_int": -1,
                     "sensor.s10.status": 0,
+                    "sensor.s10.last_changed": 0,
+                    "sensor.s10.last_changed_offset": 0,
                     "sensor.s11.state_int": -1,
                     "sensor.s11.status": 0,
+                    "sensor.s11.last_changed": 0,
+                    "sensor.s11.last_changed_offset": 0,
                     "sensor.s12.state_int": -1,
                     "sensor.s12.status": 0,
+                    "sensor.s12.last_changed": 0,
+                    "sensor.s12.last_changed_offset": 0,
                     "sensor.s13.state_int": -1,
                     "sensor.s13.status": 0,
+                    "sensor.s13.last_changed": 0,
+                    "sensor.s13.last_changed_offset": 0,
                     "sensor.s14.state_int": -1,
                     "sensor.s14.status": 0,
+                    "sensor.s14.last_changed": 0,
+                    "sensor.s14.last_changed_offset": 0,
                     "sensor.s15.state_int": -1,
                     "sensor.s15.status": 0,
+                    "sensor.s15.last_changed": 0,
+                    "sensor.s15.last_changed_offset": 0,
                     "sensor.s16.state_int": -1,
                     "sensor.s16.status": 0,
+                    "sensor.s16.last_changed": 0,
+                    "sensor.s16.last_changed_offset": 0,
                     "sensor.s17.state_int": -1,
                     "sensor.s17.status": 0,
+                    "sensor.s17.last_changed": 0,
+                    "sensor.s17.last_changed_offset": 0,
                     "sensor.s18.state_int": -1,
                     "sensor.s18.status": 0,
+                    "sensor.s18.last_changed": 0,
+                    "sensor.s18.last_changed_offset": 0,
                     "sensor.s19.state_int": -1,
                     "sensor.s19.status": 0,
+                    "sensor.s19.last_changed": 0,
+                    "sensor.s19.last_changed_offset": 0,
                     "sensor.s20.state_int": -1,
                     "sensor.s20.status": 0,
+                    "sensor.s20.last_changed": 0,
+                    "sensor.s20.last_changed_offset": 0,
                     "sensor.s21.state_int": -1,
                     "sensor.s21.status": 0,
+                    "sensor.s21.last_changed": 0,
+                    "sensor.s21.last_changed_offset": 0,
                     "sensor.s22.state_int": -1,
                     "sensor.s22.status": 0,
+                    "sensor.s22.last_changed": 0,
+                    "sensor.s22.last_changed_offset": 0,
                     "sensor.s23.state_int": -1,
                     "sensor.s23.status": 0,
+                    "sensor.s23.last_changed": 0,
+                    "sensor.s23.last_changed_offset": 0,
                     "sensor.s24.state_int": -1,
                     "sensor.s24.status": 0,
+                    "sensor.s24.last_changed": 0,
+                    "sensor.s24.last_changed_offset": 0,
                     "sensor.s25.state_int": -1,
                     "sensor.s25.status": 0,
+                    "sensor.s25.last_changed": 0,
+                    "sensor.s25.last_changed_offset": 0,
                     "sensor.s26.state_int": -1,
                     "sensor.s26.status": 0,
+                    "sensor.s26.last_changed": 0,
+                    "sensor.s26.last_changed_offset": 0,
                     "sensor.s27.state_int": -1,
                     "sensor.s27.status": 0,
+                    "sensor.s27.last_changed": 0,
+                    "sensor.s27.last_changed_offset": 0,
                     "sensor.s28.state_int": -1,
                     "sensor.s28.status": 0,
+                    "sensor.s28.last_changed": 0,
+                    "sensor.s28.last_changed_offset": 0,
                     "sensor.s29.state_int": -1,
                     "sensor.s29.status": 0,
+                    "sensor.s29.last_changed": 0,
+                    "sensor.s29.last_changed_offset": 0,
                     "sensor.s30.state_int": -1,
                     "sensor.s30.status": 0,
+                    "sensor.s30.last_changed": 0,
+                    "sensor.s30.last_changed_offset": 0,
                     "sensor.s31.state_int": -1,
                     "sensor.s31.status": 0,
+                    "sensor.s31.last_changed": 0,
+                    "sensor.s31.last_changed_offset": 0,
                     "sensor.s32.state_int": -1,
                     "sensor.s32.status": 0,
+                    "sensor.s32.last_changed": 0,
+                    "sensor.s32.last_changed_offset": 0,
                     "sensor.s33.state_int": -1,
                     "sensor.s33.status": 0,
+                    "sensor.s33.last_changed": 0,
+                    "sensor.s33.last_changed_offset": 0,
                     "sensor.s34.state_int": -1,
                     "sensor.s34.status": 0,
+                    "sensor.s34.last_changed": 0,
+                    "sensor.s34.last_changed_offset": 0,
                     "event.s35.state_int": -1,
                     "event.s35.status": 0,
+                    "event.s35.last_changed": 0,
+                    "event.s35.last_changed_offset": 0,
                     "sensor.s36.state_int": -1,
                     "sensor.s36.status": 0,
+                    "sensor.s36.last_changed": 0,
+                    "sensor.s36.last_changed_offset": 0,
                     "sensor.s37.state_int": -1,
                     "sensor.s37.status": 0,
+                    "sensor.s37.last_changed": 0,
+                    "sensor.s37.last_changed_offset": 0,
                     "sensor.s38.state_int": -1,
                     "sensor.s38.status": 0,
+                    "sensor.s38.last_changed": 0,
+                    "sensor.s38.last_changed_offset": 0,
                     "sensor.s39.state_int": -1,
-                    "sensor.s39.status": 0
+                    "sensor.s39.status": 0,
+                    "sensor.s39.last_changed": 0,
+                    "sensor.s39.last_changed_offset": 0
                 },
                 "floats": {
                     "binary_sensor.s0.numeric_state": "NaN",
@@ -1895,7 +2124,9 @@
                 },
                 "ints": {
                     "sensor.s0.state_int": -1,
-                    "sensor.s0.status": 0
+                    "sensor.s0.status": 0,
+                    "sensor.s0.last_changed": 0,
+                    "sensor.s0.last_changed_offset": 0
                 },
                 "floats": {
                     "sensor.s0.numeric_state": 64.0,
@@ -2036,7 +2267,9 @@
                 },
                 "ints": {
                     "sensor.s0.state_int": -1,
-                    "sensor.s0.status": 1
+                    "sensor.s0.status": 1,
+                    "sensor.s0.last_changed": 0,
+                    "sensor.s0.last_changed_offset": 0
                 },
                 "floats": {
                     "sensor.s0.numeric_state": -10.0,
@@ -2166,7 +2399,9 @@
                 },
                 "ints": {
                     "sensor.s0.state_int": -1,
-                    "sensor.s0.status": 0
+                    "sensor.s0.status": 0,
+                    "sensor.s0.last_changed": 0,
+                    "sensor.s0.last_changed_offset": 0
                 },
                 "floats": {
                     "sensor.s0.numeric_state": 12.5,
@@ -2290,7 +2525,9 @@
                 },
                 "ints": {
                     "sensor.s0.state_int": -1,
-                    "sensor.s0.status": 3
+                    "sensor.s0.status": 3,
+                    "sensor.s0.last_changed": 0,
+                    "sensor.s0.last_changed_offset": 0
                 },
                 "floats": {
                     "sensor.s0.numeric_state": 0.0,
@@ -2466,7 +2703,9 @@
                 },
                 "ints": {
                     "sensor.s0.state_int": -1,
-                    "sensor.s0.status": 0
+                    "sensor.s0.status": 0,
+                    "sensor.s0.last_changed": 0,
+                    "sensor.s0.last_changed_offset": 0
                 },
                 "floats": {
                     "sensor.s0.numeric_state": 100.0,
@@ -2521,7 +2760,9 @@
                 },
                 "ints": {
                     "sensor.s0.state_int": -1,
-                    "sensor.s0.status": 0
+                    "sensor.s0.status": 0,
+                    "sensor.s0.last_changed": 0,
+                    "sensor.s0.last_changed_offset": 0
                 },
                 "floats": {
                     "sensor.s0.numeric_state": 71.5999984741211
@@ -2572,7 +2813,9 @@
                 },
                 "ints": {
                     "sensor.s0.state_int": -1,
-                    "sensor.s0.status": 1
+                    "sensor.s0.status": 1,
+                    "sensor.s0.last_changed": 0,
+                    "sensor.s0.last_changed_offset": 0
                 },
                 "floats": {
                     "sensor.s0.numeric_state": 0.0
@@ -2780,10 +3023,16 @@
                 "ints": {
                     "cover.s0.state_int": 2,
                     "cover.s0.status": 0,
+                    "cover.s0.last_changed": 0,
+                    "cover.s0.last_changed_offset": 0,
                     "cover.s1.state_int": 0,
                     "cover.s1.status": 0,
+                    "cover.s1.last_changed": 0,
+                    "cover.s1.last_changed_offset": 0,
                     "cover.s2.state_int": 5,
-                    "cover.s2.status": 0
+                    "cover.s2.status": 0,
+                    "cover.s2.last_changed": 0,
+                    "cover.s2.last_changed_offset": 0
                 },
                 "floats": {
                     "cover.s0.numeric_state": "NaN",
@@ -2795,6 +3044,119 @@
                     "cover.s1.supported_features": -9999.0,
                     "cover.s2.current_position": 55.5,
                     "cover.s2.supported_features": -9999.0
+                }
+            }
+        },
+        {
+            "name": "last_changed per slot",
+            "card": {
+                "type": "logbook",
+                "entities": [
+                    "light.porch",
+                    "binary_sensor.door",
+                    "sensor.gone"
+                ]
+            },
+            "states": {
+                "light.porch": {
+                    "state": "on",
+                    "attributes": {
+                        "friendly_name": "Porch"
+                    },
+                    "last_changed": 1.761700000732E9
+                },
+                "binary_sensor.door": {
+                    "state": "off",
+                    "attributes": {
+                        "device_class": "door"
+                    }
+                }
+            },
+            "expected": {
+                "strings": {
+                    "light.s0.state": "On",
+                    "light.s0.name": "Porch",
+                    "binary_sensor.s1.state": "Closed",
+                    "binary_sensor.s1.name": "binary_sensor.door",
+                    "sensor.s2.state": "Unavailable",
+                    "sensor.s2.name": "sensor.gone"
+                },
+                "booleans": {
+                    "light.s0.is_on": true,
+                    "light.s0.is_available": true,
+                    "binary_sensor.s1.is_on": false,
+                    "binary_sensor.s1.is_available": true,
+                    "sensor.s2.is_on": false,
+                    "sensor.s2.is_available": false
+                },
+                "ints": {
+                    "light.s0.state_int": -1,
+                    "light.s0.status": 0,
+                    "light.s0.last_changed": 1761700000,
+                    "light.s0.last_changed_offset": 0,
+                    "binary_sensor.s1.state_int": -1,
+                    "binary_sensor.s1.status": 0,
+                    "binary_sensor.s1.last_changed": 0,
+                    "binary_sensor.s1.last_changed_offset": 0,
+                    "sensor.s2.state_int": -1,
+                    "sensor.s2.status": 3,
+                    "sensor.s2.last_changed": 0,
+                    "sensor.s2.last_changed_offset": 0
+                },
+                "floats": {
+                    "light.s0.numeric_state": "NaN",
+                    "binary_sensor.s1.numeric_state": "NaN",
+                    "sensor.s2.numeric_state": "NaN"
+                }
+            }
+        },
+        {
+            "name": "last_changed offset across daylight saving",
+            "card": {
+                "type": "entities",
+                "entities": [
+                    "binary_sensor.door",
+                    "binary_sensor.window"
+                ]
+            },
+            "states": {
+                "binary_sensor.door": {
+                    "state": "on",
+                    "attributes": {},
+                    "last_changed": 1782862200
+                },
+                "binary_sensor.window": {
+                    "state": "off",
+                    "attributes": {},
+                    "last_changed": 1768519800
+                }
+            },
+            "expected": {
+                "strings": {
+                    "binary_sensor.s0.state": "On",
+                    "binary_sensor.s0.name": "binary_sensor.door",
+                    "binary_sensor.s1.state": "Off",
+                    "binary_sensor.s1.name": "binary_sensor.window"
+                },
+                "booleans": {
+                    "binary_sensor.s0.is_on": true,
+                    "binary_sensor.s0.is_available": true,
+                    "binary_sensor.s1.is_on": false,
+                    "binary_sensor.s1.is_available": true
+                },
+                "ints": {
+                    "binary_sensor.s0.state_int": -1,
+                    "binary_sensor.s0.status": 0,
+                    "binary_sensor.s0.last_changed": 1782862200,
+                    "binary_sensor.s0.last_changed_offset": 3600,
+                    "binary_sensor.s1.state_int": -1,
+                    "binary_sensor.s1.status": 0,
+                    "binary_sensor.s1.last_changed": 1768519800,
+                    "binary_sensor.s1.last_changed_offset": 0
+                },
+                "floats": {
+                    "binary_sensor.s0.numeric_state": "NaN",
+                    "binary_sensor.s1.numeric_state": "NaN"
                 }
             }
         }
