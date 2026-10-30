@@ -157,7 +157,7 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           cache-read-only: 'true'
-      - uses: yschimke/compose-ai-tools/.github/actions/install@v2.74.1
+      - uses: yschimke/compose-ai-tools/.github/actions/install@v2.75.0
         with:
           version: catalog
           catalog-key: compose-preview-plugin
