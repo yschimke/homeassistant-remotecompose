@@ -43,7 +43,7 @@ concurrency:
 jobs:
   build:
     name: Build and test Wasm website
-    runs-on: ubuntu-24.04  # Playwright has no Chromium for ubuntu-26.04 (ubuntu-latest)
+    runs-on: ubuntu-26.04  # Playwright has no Chromium for ubuntu-26.04 (ubuntu-latest)
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7.0.1
