@@ -378,6 +378,19 @@ class PreferencesStore(private val context: Context) {
     context.store.edit { it[DESIGN_SERVER_URL_KEY] = url.trim() }
   }
 
+  /**
+   * The Home Assistant (its base URL) that runs its own card design server, the Card Designs
+   * add-on, found when the app last connected to it; blank for none. While set it is the design
+   * server, reached through that Home Assistant with its access token, in place of
+   * [designServerUrl] (which still turns designs off when blank).
+   */
+  val privateDesignServer: Flow<String>
+    get() = context.store.data.map { it[PRIVATE_DESIGN_SERVER_KEY] ?: "" }
+
+  suspend fun setPrivateDesignServer(haBaseUrl: String) {
+    context.store.edit { it[PRIVATE_DESIGN_SERVER_KEY] = haBaseUrl.trim() }
+  }
+
   /** The card design variant to prefer (`DesignKey.variant`); cards without one use `default`. */
   val designVariant: Flow<String>
     get() = context.store.data.map { it[DESIGN_VARIANT_KEY] ?: DEFAULT_DESIGN_VARIANT }
@@ -459,6 +472,7 @@ class PreferencesStore(private val context: Context) {
     private val DESIGN_VARIANT_KEY = stringPreferencesKey("design_variant")
     private val DESIGN_AUTHOR_KEY = stringPreferencesKey("design_author")
     private val DESIGN_TOKEN_KEY = stringPreferencesKey("design_token")
+    private val PRIVATE_DESIGN_SERVER_KEY = stringPreferencesKey("private_design_server")
     private val CARD_STUDIO_DEFAULTS_KEY = stringPreferencesKey("card_studio_defaults")
     private val WEAR_PROMPTS_SHOWN_KEY = stringSetPreferencesKey("wear_prompts_shown")
 

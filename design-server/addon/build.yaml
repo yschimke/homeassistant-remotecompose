@@ -1,0 +1,5 @@
+# The Supervisor builds the add-on on the box, on top of the published design server image
+# (.github/workflows/design-server.yml publishes it for both architectures).
+build_from:
+  aarch64: ghcr.io/yschimke/ha-card-design-server:latest
+  amd64: ghcr.io/yschimke/ha-card-design-server:latest

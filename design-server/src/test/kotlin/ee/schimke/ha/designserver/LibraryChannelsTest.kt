@@ -276,6 +276,64 @@ class LibraryChannelsTest {
   }
 
   @Test
+  fun aMirrorFollowsTheUpstreamsNewerLibraryDownloadingOnlyWhatItLacks() {
+    // Upstream published a library built at 5 000 with a new source; the mirror's image is older.
+    val upstream = LibraryChannels(store(), library(generatedAt = 1_000))
+    val next = library(generatedAt = 5_000)
+    File(next, "${DesignLibrary.SOURCES}/gauge.uid").writeText("""{"id":"gauge"}""")
+    upstream.install(
+      LibraryPaths.MAIN,
+      upstream.stagingDir().also { next.copyRecursively(it) },
+      "ci",
+    )
+    val local = LibraryChannels(store(), library(generatedAt = 1_000))
+    serve(upstream) {
+      val fetched = mutableListOf<String>()
+      val http = createClient {
+        install(
+          io.ktor.client.plugins.api.createClientPlugin("record") {
+            onRequest { request, _ -> fetched += request.url.build().encodedPath }
+          }
+        )
+      }
+      val mirror = LibraryMirror(local, "", http)
+
+      assertTrue(mirror.sync(), "a newer library is installed")
+      assertNotNull(local.main.current().sources["gauge"])
+      assertEquals("mirror", local.list().single().published?.origin)
+      assertEquals(5_000, local.builtAt(LibraryPaths.MAIN))
+      val files = fetched.filter { "/files/" in it }.map { it.substringAfter("/files/") }
+      assertTrue("sources/gauge.uid" in files)
+      assertTrue(files.none { it.startsWith("blobs/") }, "blobs it held stay: $files")
+
+      fetched.clear()
+      assertFalse(mirror.sync(), "nothing newer")
+      assertEquals(listOf("$LIBRARY_CHANNELS_PATH/main/files.json"), fetched)
+    }
+  }
+
+  @Test
+  fun aChannelsFilesAreReadByPathAndNothingElse() {
+    serve(LibraryChannels(store(), library())) {
+      assertEquals(
+        HttpStatusCode.OK,
+        client.get("$LIBRARY_CHANNELS_PATH/main/files/manifest.json").status,
+      )
+      for (path in listOf("published.json", "../published.json", "files.json", "blobs/x.rc")) {
+        assertEquals(
+          HttpStatusCode.NotFound,
+          client.get("$LIBRARY_CHANNELS_PATH/main/files/$path").status,
+          path,
+        )
+      }
+      assertEquals(
+        HttpStatusCode.NotFound,
+        client.get("$LIBRARY_CHANNELS_PATH/pr-4/files.json").status,
+      )
+    }
+  }
+
+  @Test
   fun aPublishSendsOnlyWhatTheServerLacks() {
     val channels = LibraryChannels(store(), library())
     serve(channels) {

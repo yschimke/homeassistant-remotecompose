@@ -136,6 +136,9 @@ fun Application.designServer(
    * ([LibraryEditPublisher]); 0 never. Needs UI Builder and a library store.
    */
   editPollMs: Long = 0,
+  /** Keeps `main` a copy of another server's library ([LibraryMirror]), every [mirrorPollMs]. */
+  mirror: LibraryMirror? = null,
+  mirrorPollMs: Long = 60 * 60 * 1000,
 ) {
   install(DefaultHeaders)
   install(AutoHeadResponse)
@@ -175,6 +178,10 @@ fun Application.designServer(
   if (uiBuilder != null && channels.publishable && editPollMs > 0) {
     val edits = LibraryEditPublisher(channels, librarySources).start(this, editPollMs)
     monitor.subscribe(ApplicationStopping) { edits.cancel() }
+  }
+  if (mirror != null) {
+    val mirroring = mirror.start(this, mirrorPollMs)
+    monitor.subscribe(ApplicationStopping) { mirroring.cancel() }
   }
   routing {
     if (usage != null) usageRoutes(usage, github, statsUsers)
@@ -390,7 +397,7 @@ fun Application.designServer(
 
     // Seeds a UI Builder design from a library design (`design`, a fork of its source) or a card's
     // JSON (`card`), then opens it in the editor.
-    post("/ui-builder/designs") {
+    post(SEED_PATH) {
       val integration = uiBuilder ?: return@post call.notFound()
       val editor = call.editor(uiBuilder, github)
       if (!editor.authorized) {
@@ -478,7 +485,7 @@ class UiBuilderIntegration(
  * Whether pages offer editing, and whether this browser may use it.
  * - [login]: the GitHub login it is signed in as, with GitHub sign-in.
  * - [signInPath]: where to sign in, with GitHub sign-in and nobody signed in.
- * - [signOutPath]: where a sign-out form posts, with GitHub sign-in.
+ * - [signOutPath]: where a sign-out form posts, with a sign-in of the server's own.
  */
 data class EditorState(
   val enabled: Boolean,
@@ -548,6 +555,13 @@ internal const val MAX_REQUEST_BODY_BYTES: Long = 4L * 1024 * 1024
 
 /** How often counted usage is written to disk. */
 private const val USAGE_FLUSH_MS: Long = 60_000
+
+/**
+ * Where a page's "Design in UI Builder" form posts. Under `/designs`, never `/ui-builder`: where
+ * the server shares an origin with UI Builder (ha.coo.ee, the Home Assistant add-on), the builder's
+ * own New design form owns `/ui-builder/designs`.
+ */
+const val SEED_PATH = "/designs/seed"
 
 /** The client protocol's base path: the app's design server URL is `<host>$API_BASE`. */
 const val API_BASE = "/designs/v1"

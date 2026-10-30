@@ -29,7 +29,7 @@ from .const import (
     STATIC_URL,
     clean_options,
 )
-from . import edits, push
+from . import design_server, edits, push
 from .mcp_view import TerrazzoMcpMetadataView, TerrazzoMcpView
 
 CONFIG_SCHEMA = vol.Schema(
@@ -99,6 +99,10 @@ async def async_setup_entry(hass, entry):
     if "push" not in state:
         state["push"] = await push.Push.async_load(hass)
         push.async_register(hass)
+    # The private card design add-on's API and the app's question for it (design_server.py).
+    if not state.get("designs"):
+        design_server.async_register(hass)
+        state["designs"] = True
     options = entry.options
     # Static files are served without Cache-Control, so a browser may keep an old release's panel
     # and renderer for hours after an update. Each release gets its own URLs instead.

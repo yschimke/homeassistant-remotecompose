@@ -233,7 +233,7 @@ class LibrarySourcesTest {
         .content,
     )
 
-    browser.submitForm("/ui-builder/designs", parameters { append("design", id) }) {
+    browser.submitForm(SEED_PATH, parameters { append("design", id) }) {
       header(HttpHeaders.Cookie, cookie)
     }
     val fork = fake.created.single()
