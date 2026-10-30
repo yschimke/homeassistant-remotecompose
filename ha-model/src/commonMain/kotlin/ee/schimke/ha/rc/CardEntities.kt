@@ -3,6 +3,7 @@ package ee.schimke.ha.rc
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -100,7 +101,15 @@ data class CardSnapshotBindings(
     )
 }
 
-fun cardSnapshotBindings(entityIds: Set<String>, snapshot: HaSnapshot): CardSnapshotBindings {
+/**
+ * The named bindings for [entityIds] in [snapshot]; times read in [zone], the host's display zone
+ * (`<id>.last_changed_offset`).
+ */
+fun cardSnapshotBindings(
+  entityIds: Set<String>,
+  snapshot: HaSnapshot,
+  zone: TimeZone = TimeZone.currentSystemDefault(),
+): CardSnapshotBindings {
   if (entityIds.isEmpty()) {
     return CardSnapshotBindings(emptyMap(), emptyMap(), emptyMap(), emptyMap())
   }
@@ -116,6 +125,8 @@ fun cardSnapshotBindings(entityIds: Set<String>, snapshot: HaSnapshot): CardSnap
     booleans["$id.is_available"] = HaLiveBindings.isAvailable(state.state)
     HaLiveBindings.stateInt(id, state.state)?.let { ints["$id.state_int"] = it }
     ints["$id.${HaLiveBindings.LAST_CHANGED}"] = HaLiveBindings.lastChanged(state)
+    ints["$id.${HaLiveBindings.LAST_CHANGED_OFFSET}"] =
+      HaLiveBindings.lastChangedOffset(state, zone)
     HaLiveBindings.numericState(state.state)?.let { floats["$id.numeric_state"] = it }
     HaLiveBindings.attributeFloats(id, state.attributes).forEach { (suffix, value) ->
       floats["$id.$suffix"] = value

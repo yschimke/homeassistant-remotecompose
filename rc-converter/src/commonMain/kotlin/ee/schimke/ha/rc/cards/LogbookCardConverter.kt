@@ -12,6 +12,7 @@ import ee.schimke.ha.rc.components.HaLogbookEntry
 import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
@@ -102,7 +103,12 @@ private fun entityIds(card: CardConfig): List<String> {
   }
 }
 
-internal fun logbookData(card: CardConfig, snapshot: HaSnapshot): HaLogbookData {
+/** The card's rows; times are read in [zone], the display zone the host pushes offsets in. */
+internal fun logbookData(
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  zone: TimeZone = TimeZone.UTC,
+): HaLogbookData {
   val title = card.raw["title"]?.jsonPrimitive?.content
   val entries =
     entityIds(card).map { entityId ->
@@ -115,6 +121,7 @@ internal fun logbookData(card: CardConfig, snapshot: HaSnapshot): HaLogbookData 
         icon = HaIconMap.resolve(null, entity),
         entityId = entityId,
         lastChanged = entity?.let(HaLiveBindings::lastChanged) ?: HaLiveBindings.NO_TIME,
+        lastChangedOffset = entity?.let { HaLiveBindings.lastChangedOffset(it, zone) } ?: 0,
       )
     }
   return HaLogbookData(title = title, entries = entries)

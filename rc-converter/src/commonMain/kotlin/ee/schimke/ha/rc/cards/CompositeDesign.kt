@@ -137,7 +137,7 @@ internal object CompositeDesign {
     children(card).forEachIndexed { k, child ->
       val converter = registry.get(child.type)
       val own =
-        CardDesignSlots.slotBindings(child, snapshot).let { slots ->
+        CardDesignSlots.slotBindings(child, snapshot, clock.zone()).let { slots ->
           converter?.designBindings(child, snapshot, clock)?.let { slots + it } ?: slots
         }
       val childPrefix = childCardBindingPrefix(CARD_BINDING_PREFIX, k)

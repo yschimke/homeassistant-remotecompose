@@ -10,6 +10,7 @@ import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -41,10 +42,12 @@ class EmbedBindingsGoldenTest {
   fun portMatchesHaModel() {
     val golden = Json.parseToJsonElement(file.readText()).jsonObject
     val cases = golden.getValue("cases").jsonArray.map { it.jsonObject }
+    // The embed reads times in the browser's zone; both sides read the golden file's.
+    val zone = TimeZone.of(golden.getValue("time_zone").jsonPrimitive.content)
     val computed = cases.map { case ->
       val recipe = recipeOf(case)
       val resolved = recipe?.let { mapOf("recipe_json" to it.toJson()) }.orEmpty()
-      JsonObject(case + resolved + ("expected" to expected(case, recipe)))
+      JsonObject(case + resolved + ("expected" to expected(case, recipe, zone)))
     }
 
     if (System.getProperty("embed.golden.update") == "true") {
@@ -76,7 +79,7 @@ class EmbedBindingsGoldenTest {
         }
     }
 
-  private fun expected(case: JsonObject, recipe: CardBindingRecipe?): JsonObject {
+  private fun expected(case: JsonObject, recipe: CardBindingRecipe?, zone: TimeZone): JsonObject {
     val card = case.getValue("card").jsonObject
     val states =
       case.getValue("states").jsonObject.mapValues { (id, value) ->
@@ -94,7 +97,7 @@ class EmbedBindingsGoldenTest {
       }
     val config = CardConfig(card["type"]?.jsonPrimitive?.contentOrNull.orEmpty(), card)
     val snapshot = HaSnapshot(states = states)
-    val slots = CardDesignSlots.slotBindings(config, snapshot)
+    val slots = CardDesignSlots.slotBindings(config, snapshot, zone)
     // As template playback pushes them: the card-level bindings on top of the slot ones.
     val bindings = recipe?.let { slots + it.evaluate(config, snapshot) } ?: slots
     return buildJsonObject {

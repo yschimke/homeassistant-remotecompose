@@ -306,6 +306,8 @@ data class HaLogbookEntry(
   val entityId: String? = null,
   /** Home Assistant's `last_changed`, whole Unix seconds: the `<id>.last_changed` seed. */
   val lastChanged: Int = 0,
+  /** The UTC offset in force at [lastChanged], seconds: the `<id>.last_changed_offset` seed. */
+  val lastChangedOffset: Int = 0,
 )
 
 /**
