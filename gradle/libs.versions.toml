@@ -56,7 +56,7 @@ junit = "4.13.2"
 # Robolectric 4.17's exact API 35 provider jar. Android-all versions identify platform images,
 # not interchangeable library releases; change this together with the tests' @Config(sdk = [35]).
 robolectric-sdk35 = "15-robolectric-13954326-i7"
-mockserver = "9.0.0"
+mockserver = "9.2.0"
 indriya = "2.2.4"
 
 # Preview tooling — pinned compose-ai-tools release. The CLI and the
