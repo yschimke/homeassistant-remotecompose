@@ -27,6 +27,7 @@ import ee.schimke.terrazzo.core.widget.WidgetStore
 import ee.schimke.terrazzo.dashboard.CardDesignPreload
 import ee.schimke.terrazzo.dashboard.DESIGN_PRELOAD_WAIT_MS
 import ee.schimke.terrazzo.di.AppGraph
+import ee.schimke.terrazzo.shared.promptForPlayStoreUpgrade
 import ee.schimke.terrazzo.ui.AndroidImeHost
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.TerrazzoTheme
@@ -41,6 +42,7 @@ import kotlinx.coroutines.runBlocking
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    promptForPlayStoreUpgrade()
     if (BuildConfig.TEST_HOOKS) StartupHangWatchdog.arm()
     val graph = (application as TerrazzoApplication).graph
 

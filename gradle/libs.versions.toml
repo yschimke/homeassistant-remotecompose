@@ -100,6 +100,7 @@ jetbrains-markdown = "0.7.18"
 # Wear data layer + Proto DataStore + Horologist
 horologist = "0.8.3-alpha"
 play-services-wearable = "20.0.1"
+play-app-update = "2.1.0"
 
 # Firebase Crashlytics (opt-in — only resolved when a google-services.json
 # key is configured; see app/build.gradle.kts `crashlyticsEnabled`).
@@ -300,6 +301,7 @@ coil-test = { module = "io.coil-kt.coil3:coil-test-android", version.ref = "coil
 # helpers ride on Google Play Services Wearable; both peers share a
 # protobuf schema and a `WearDataLayerRegistry`.
 play-services-wearable = { module = "com.google.android.gms:play-services-wearable", version.ref = "play-services-wearable" }
+play-app-update = { module = "com.google.android.play:app-update", version.ref = "play-app-update" }
 horologist-datalayer = { module = "com.google.android.horologist:horologist-datalayer", version.ref = "horologist" }
 horologist-datalayer-watch = { module = "com.google.android.horologist:horologist-datalayer-watch", version.ref = "horologist" }
 horologist-datalayer-phone = { module = "com.google.android.horologist:horologist-datalayer-phone", version.ref = "horologist" }

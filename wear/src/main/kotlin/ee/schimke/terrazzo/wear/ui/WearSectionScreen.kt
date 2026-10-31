@@ -27,6 +27,7 @@ fun WearSectionScreen(
   modifier: Modifier = Modifier,
   onInputSend: (suspend (String, Map<String, String>) -> Unit)? = null,
   onOpenCard: (CardSummary) -> Unit = {},
+  onNavigate: (String) -> Unit = {},
 ) {
   WearListScreen(modifier = modifier, gestureScroll = true) {
     val title = section?.title?.ifEmpty { null } ?: "Section"
@@ -47,7 +48,7 @@ fun WearSectionScreen(
         if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
           WearMessageCard(card.rawJson, values, onInputSend)
         } else {
-          WearRemoteCard(card, values, onOpen = { onOpenCard(card) })
+          WearRemoteCard(card, values, onOpen = { onOpenCard(card) }, onNavigate = onNavigate)
         }
       }
     }

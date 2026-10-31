@@ -115,8 +115,9 @@ internal fun WearRemoteCard(
   summary: CardSummary,
   values: WearValues,
   onOpen: (() -> Unit)? = null,
+  onNavigate: ((String) -> Unit)? = null,
   fullScreen: Boolean = false,
-  taps: WearCardTaps = rememberWearCardTaps(summary.rawJson, onOpen),
+  taps: WearCardTaps = rememberWearCardTaps(summary.rawJson, onOpen, onNavigate),
 ) {
   // Only this card's entities are read: a delta for another card's entity leaves this one alone.
   WearRemoteCardContent(
@@ -327,9 +328,14 @@ internal class WearCardTaps(val dispatcher: HaActionDispatcher, val enabled: () 
  * Taps act on Home Assistant through the phone; the card says how one went.
  */
 @Composable
-internal fun rememberWearCardTaps(rawJson: String, onMoreInfo: (() -> Unit)? = null): WearCardTaps {
+internal fun rememberWearCardTaps(
+  rawJson: String,
+  onMoreInfo: (() -> Unit)? = null,
+  onNavigate: ((String) -> Unit)? = null,
+): WearCardTaps {
   val sender = rememberUpdatedState(LocalWearTapSender.current)
   val moreInfo = rememberUpdatedState(onMoreInfo)
+  val navigate = rememberUpdatedState(onNavigate)
   val view = LocalView.current
   val scope = rememberCoroutineScope()
   return remember(rawJson, scope, view) {
@@ -353,6 +359,7 @@ internal fun rememberWearCardTaps(rawJson: String, onMoreInfo: (() -> Unit)? = n
         },
         onFailure = { taps.status = it },
         onMoreInfo = { moreInfo.value?.invoke() },
+        onNavigate = { path -> navigate.value?.invoke(path) },
       )
     WearCardTaps(dispatcher, enabled = { sender.value != null }).also { taps = it }
   }

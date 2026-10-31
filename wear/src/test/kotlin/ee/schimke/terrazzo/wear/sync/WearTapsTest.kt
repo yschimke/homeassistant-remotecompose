@@ -127,16 +127,24 @@ class WearTapsTest {
   }
 
   @Test
-  fun moreInfoNavigateAndUrlStayOnTheWatch() = runTest {
+  fun navigateStaysOnTheWatchAndUrlIsIgnored() = runTest {
     val recorder = Recorder()
-    val taps = dispatcher(recorder)
+    var path: String? = null
+    val taps =
+      WearTapDispatcher(
+        card = card,
+        scope = this,
+        enabled = { true },
+        send = { c, a -> recorder.sent += c to a },
+        onNavigate = { path = it },
+      )
     taps.dispatch(HaAction.MoreInfo("light.kitchen"))
     taps.dispatch(HaAction.Navigate("/lovelace/1"))
     taps.dispatch(HaAction.Url("https://example.com"))
     taps.dispatch(HaAction.None)
     advanceUntilIdle()
     assertTrue(recorder.sent.isEmpty())
-    assertTrue(recorder.outcomes.isEmpty())
+    assertEquals("/lovelace/1", path)
   }
 
   @Test
