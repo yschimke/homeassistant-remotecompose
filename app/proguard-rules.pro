@@ -40,3 +40,11 @@
 # library that some devices provide at runtime (an optional <uses-library> in its own manifest),
 # so it is never on the build classpath.
 -dontwarn com.android.extensions.appfunctions.**
+
+# Android XR (room/SpatialRoom.kt, room/SpatialPins.kt): androidx.xr.scenecore links against the
+# XR system extensions (com.android.extensions.xr.**, and the older android.extensions.xr.**),
+# which only an XR headset provides at runtime, so they are never on the build classpath. Without
+# these R8 fails the release build with "Missing classes" — which skipped the Play upload for
+# v0.1.73 through v0.1.75.
+-dontwarn com.android.extensions.xr.**
+-dontwarn android.extensions.xr.**
