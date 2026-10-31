@@ -104,4 +104,37 @@ class CardEntitiesTest {
         .historyTitle(),
     )
   }
+
+  @Test
+  fun anUntitledGridIsNamedByItsCards() {
+    val grid = card {
+      put("type", "grid")
+      putJsonArray("cards") {
+        addJsonObject {
+          put("type", "tile")
+          put("entity", "cover.garage")
+          put("name", "State")
+        }
+        addJsonObject {
+          put("type", "tile")
+          put("entity", "light.garage")
+          put("name", "Garage light")
+        }
+        addJsonObject {
+          put("type", "tile")
+          put("entity", "binary_sensor.bridge")
+        }
+      }
+    }
+    assertEquals("State, Garage light +1", grid.historyTitle())
+    assertEquals(
+      "Hall",
+      card {
+        put("type", "vertical-stack")
+        putJsonArray("cards") { addJsonObject { put("title", "Hall") } }
+      }
+        .historyTitle(),
+    )
+    assertEquals("grid", card { put("type", "grid") }.historyTitle())
+  }
 }
