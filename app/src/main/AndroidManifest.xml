@@ -56,6 +56,15 @@
         android:theme="@style/Theme.Terrazzo">
 
         <!--
+          androidx.xr.arcore pulls in com.google.ar:core, which merges
+          com.google.ar.core.min_apk_version. Play rejects the bundle unless the
+          app also says whether ARCore is required. It is optional: only pinning
+          on Android XR uses it, so phones and tablets must not be filtered out
+          or prompted to install ARCore.
+        -->
+        <meta-data android:name="com.google.ar.core" android:value="optional" />
+
+        <!--
           Belt and braces with the AD_ID removals above: Analytics doesn't
           even try to read the advertising ID. Ignored when Firebase isn't
           compiled in.
