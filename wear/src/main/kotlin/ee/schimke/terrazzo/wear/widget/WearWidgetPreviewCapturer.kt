@@ -6,7 +6,6 @@ import android.app.Application
 import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -14,6 +13,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.wear.compose.material3.MaterialTheme
 import com.google.android.horologist.tiles.composable.ServiceComposableBitmapRenderer
 import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.data.displayState
