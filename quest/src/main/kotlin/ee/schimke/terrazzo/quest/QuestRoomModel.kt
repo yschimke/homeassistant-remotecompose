@@ -142,7 +142,7 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
     prefs.edit().putString(TRACKER, entityId).apply()
   }
 
-  fun setControlsLocked(locked: Boolean) {
+  fun updateControlsLocked(locked: Boolean) {
     controlsLocked = locked
     prefs.edit().putBoolean(CONTROLS_LOCKED, locked).apply()
   }

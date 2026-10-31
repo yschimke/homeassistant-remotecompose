@@ -179,7 +179,7 @@ class QuestActivity : AppSystemActivity() {
           onRemoveLost = ::unpin,
           onSignOut = model::signOut,
           controlsLocked = model.controlsLocked,
-          onControlsLocked = model::setControlsLocked,
+          onControlsLocked = model::updateControlsLocked,
           pinningHint =
             when {
               !supportsRoomMapping ->
