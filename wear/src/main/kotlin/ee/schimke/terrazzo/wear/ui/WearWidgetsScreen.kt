@@ -115,7 +115,7 @@ internal fun WearWidgetsContent(
 }
 
 /** The name the watch's widget picker lists the widgets under: the providers' `label`. */
-internal const val WIDGET_PICKER_LABEL = "Home Assistant card"
+internal const val WIDGET_PICKER_LABEL = "Terrazzo"
 
 /** The Widgets screen's text with no widget placed: how to add one. */
 internal const val WIDGETS_EMPTY =

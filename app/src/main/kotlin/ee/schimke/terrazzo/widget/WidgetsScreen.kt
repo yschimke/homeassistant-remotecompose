@@ -268,11 +268,11 @@ internal fun WidgetsContent(
 
 /**
  * How to put a card on the watch face, in the words the watch's widget picker uses: its providers
- * are labelled "Home Assistant card".
+ * are labelled "Terrazzo".
  */
 internal const val WATCH_WIDGET_STEPS =
-  "On your watch, swipe left from the watch face to the end, tap Add widget and choose Home " +
-    "Assistant card. Then pick its card here: any card you show on your watch."
+  "On your watch, swipe left from the watch face to the end, tap Add widget and choose " +
+    "Terrazzo. Then pick its card here: any card you show on your watch."
 
 @Composable
 private fun SectionHeader(text: String) {
