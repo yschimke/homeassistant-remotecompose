@@ -15,9 +15,14 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -83,6 +88,7 @@ fun QuestRoomPanel(
   content: RoomContent,
   lostPins: List<RoomPin> = emptyList(),
   onRemoveLost: (RoomPin) -> Unit = {},
+  onSignOut: () -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   val controls = content.state?.controls
@@ -101,6 +107,7 @@ fun QuestRoomPanel(
           color = QuestText,
         )
         RoomHeader(content)
+        NamedButton("Sign out", "Sign out of Home Assistant", onSignOut)
       }
     }
     if (controls != null) {
@@ -113,6 +120,44 @@ fun QuestRoomPanel(
         LostPins(lostPins, content.snapshot, onRemoveLost)
       }
     }
+  }
+}
+
+/** First-run panel. OAuth itself runs in Home Assistant's browser page, never inside the app. */
+@Composable
+fun QuestSignInPanel(
+  connection: QuestConnection,
+  onSignIn: (String) -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  var url by rememberSaveable { mutableStateOf("") }
+  Column(
+    modifier.fillMaxSize().background(SpatialTheme.colorScheme.panel).padding(48.dp),
+    verticalArrangement = Arrangement.spacedBy(20.dp),
+  ) {
+    Text("Connect Terrazzo", style = SpatialTheme.typography.headline1Strong, color = QuestText)
+    Text(
+      "Sign in to your Home Assistant to see and control the devices in your rooms.",
+      style = SpatialTheme.typography.body1,
+      color = QuestTextSecondary,
+    )
+    OutlinedTextField(
+      value = url,
+      onValueChange = { url = it },
+      label = { Text("Home Assistant URL") },
+      placeholder = { Text("https://homeassistant.local:8123") },
+      singleLine = true,
+      modifier = Modifier.fillMaxWidth(),
+    )
+    when (connection) {
+      QuestConnection.SigningIn ->
+        Text("Waiting for sign-in in the browser…", color = QuestTextSecondary)
+      QuestConnection.Connecting ->
+        Text("Connecting to Home Assistant…", color = QuestTextSecondary)
+      is QuestConnection.Error -> Text(connection.message, color = MaterialTheme.colorScheme.error)
+      else -> Unit
+    }
+    NamedButton("Sign in", "Sign in to Home Assistant") { onSignIn(url) }
   }
 }
 

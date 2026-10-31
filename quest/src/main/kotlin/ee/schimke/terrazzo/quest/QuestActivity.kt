@@ -44,7 +44,7 @@ import kotlinx.coroutines.launch
 class QuestActivity : AppSystemActivity() {
   private val scope = MainScope()
   private val model by lazy {
-    QuestRoomModel(getSharedPreferences("quest_room", Context.MODE_PRIVATE))
+    QuestRoomModel(this, getSharedPreferences("quest_room", Context.MODE_PRIVATE))
   }
   private lateinit var mruk: MRUKFeature
 
@@ -61,13 +61,21 @@ class QuestActivity : AppSystemActivity() {
   private val panelPins = mutableStateMapOf<Long, RoomPin>()
 
   override fun registerFeatures(): List<SpatialFeature> {
+    val base = listOf(VRFeature(this), ComposeFeature())
+    // Room mapping and passthrough need the Android-14 Horizon OS path. Older supported Quest
+    // firmware still gets a movable room-control panel, just without Space Setup anchors/pins.
+    if (!supportsRoomMapping) return base
     mruk = MRUKFeature(this, systemManager)
-    return listOf(VRFeature(this), ComposeFeature(), mruk)
+    return base + mruk
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    if (checkSelfPermission(SCENE_PERMISSION) != PackageManager.PERMISSION_GRANTED) {
+    model.restore()
+    if (
+      supportsRoomMapping &&
+        checkSelfPermission(SCENE_PERMISSION) != PackageManager.PERMISSION_GRANTED
+    ) {
       requestPermissions(arrayOf(SCENE_PERMISSION), SCENE_REQUEST)
     }
   }
@@ -79,16 +87,23 @@ class QuestActivity : AppSystemActivity() {
   ) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     if (
-      requestCode == SCENE_REQUEST &&
+      supportsRoomMapping &&
+        requestCode == SCENE_REQUEST &&
         grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
     ) {
       loadScene()
     }
   }
 
+  @Deprecated("AppAuth delivers the browser result to the initiating activity.")
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?) {
+    super.onActivityResult(requestCode, resultCode, data)
+    if (requestCode == SIGN_IN_REQUEST) model.authorizationResult(data)
+  }
+
   override fun onSceneReady() {
     super.onSceneReady()
-    scene.enablePassthrough(true)
+    if (supportsRoomMapping) scene.enablePassthrough(true)
     val head = scene.getViewerPose()
     // The room panel a little over arm's length ahead, facing the user.
     val place =
@@ -100,8 +115,10 @@ class QuestActivity : AppSystemActivity() {
         Grabbable(),
       )
     )
-    anchors = QuestRoomAnchors(scene, mruk)
-    if (checkSelfPermission(SCENE_PERMISSION) == PackageManager.PERMISSION_GRANTED) loadScene()
+    if (supportsRoomMapping) {
+      anchors = QuestRoomAnchors(scene, mruk)
+      if (checkSelfPermission(SCENE_PERMISSION) == PackageManager.PERMISSION_GRANTED) loadScene()
+    }
     // Which pin the user stands nearest: the room they are in. Every couple of seconds is enough.
     scope.launch {
       while (true) {
@@ -117,6 +134,7 @@ class QuestActivity : AppSystemActivity() {
 
   override fun onDestroy() {
     scope.cancel()
+    model.close()
     super.onDestroy()
   }
 
@@ -150,12 +168,25 @@ class QuestActivity : AppSystemActivity() {
   @Composable
   private fun RoomPanel() {
     val anchors = anchors
-    QuestRoomPanel(
-      content =
-        roomContent(onPin = anchors?.takeIf { sceneLoaded }?.let { { entityId -> pin(entityId) } }),
-      lostPins = model.pins.filter { anchors != null && it.anchorId in anchors.lost },
-      onRemoveLost = ::unpin,
-    )
+    when (val connection = model.connection) {
+      QuestConnection.Connected ->
+        QuestRoomPanel(
+          content =
+            roomContent(
+              onPin = anchors?.takeIf { sceneLoaded }?.let { { entityId -> pin(entityId) } }
+            ),
+          lostPins = model.pins.filter { anchors != null && it.anchorId in anchors.lost },
+          onRemoveLost = ::unpin,
+          onSignOut = model::signOut,
+        )
+      else ->
+        QuestSignInPanel(
+          connection = connection,
+          onSignIn = { url ->
+            model.authorizationIntent(url)?.let { startActivityForResult(it, SIGN_IN_REQUEST) }
+          },
+        )
+    }
   }
 
   @Composable
@@ -182,6 +213,7 @@ class QuestActivity : AppSystemActivity() {
     )
 
   private fun loadScene() {
+    if (!supportsRoomMapping) return
     mruk.loadSceneFromDevice(true, true, SceneModel.V2_FALLBACK_V1).thenAccept { result ->
       if (result != MRUKLoadDeviceResult.SUCCESS) return@thenAccept
       runOnUiThread {
@@ -227,8 +259,13 @@ class QuestActivity : AppSystemActivity() {
   }
 
   private companion object {
+    /** Android 14 is the first Horizon OS version with this room-mapping/passthrough route. */
+    val supportsRoomMapping: Boolean
+      get() = supportsQuestRoomMapping()
+
     const val SCENE_PERMISSION = "com.oculus.permission.USE_SCENE"
     const val SCENE_REQUEST = 1
+    const val SIGN_IN_REQUEST = 2
     const val NEAREST_PIN_INTERVAL_MS = 2_000L
     const val ROOM_PANEL_DISTANCE = 1.2f
     const val ROOM_PANEL_WIDTH = 1.0f
