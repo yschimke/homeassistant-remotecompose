@@ -96,33 +96,34 @@ fun WearTopLevelScreen(
     } else {
       items(rows, key = { it.key }) { row ->
         when (row) {
-          is HomeRow.Entry -> when (val entry = row.entry) {
-          is TopLevelEntry.Card -> {
-            val card = entry.card.card
-            if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
-              WearMessageCard(card.rawJson, values, onInputSend)
-            } else {
-              WearRemoteCard(
-                card,
-                values,
-                onOpen = { onOpenCard(null, card) },
-                onNavigate = onNavigate,
-              )
+          is HomeRow.Entry ->
+            when (val entry = row.entry) {
+              is TopLevelEntry.Card -> {
+                val card = entry.card.card
+                if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
+                  WearMessageCard(card.rawJson, values, onInputSend)
+                } else {
+                  WearRemoteCard(
+                    card,
+                    values,
+                    onOpen = { onOpenCard(null, card) },
+                    onNavigate = onNavigate,
+                  )
+                }
+              }
+              is TopLevelEntry.Section -> {
+                val section = entry.section
+                val expanded = section.sectionKey in expandedSections
+                PinnedSectionRow(
+                  section = section,
+                  expanded = expanded,
+                  onClick = {
+                    if (expanded) expandedSections.remove(section.sectionKey)
+                    else expandedSections += section.sectionKey
+                  },
+                )
+              }
             }
-          }
-          is TopLevelEntry.Section -> {
-            val section = entry.section
-            val expanded = section.sectionKey in expandedSections
-            PinnedSectionRow(
-              section = section,
-              expanded = expanded,
-              onClick = {
-                if (expanded) expandedSections.remove(section.sectionKey)
-                else expandedSections += section.sectionKey
-              },
-            )
-          }
-          }
           is HomeRow.SectionCard -> {
             val card = row.card
             if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {

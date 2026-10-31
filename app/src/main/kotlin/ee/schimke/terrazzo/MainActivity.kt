@@ -27,13 +27,13 @@ import ee.schimke.terrazzo.core.widget.WidgetStore
 import ee.schimke.terrazzo.dashboard.CardDesignPreload
 import ee.schimke.terrazzo.dashboard.DESIGN_PRELOAD_WAIT_MS
 import ee.schimke.terrazzo.di.AppGraph
+import ee.schimke.terrazzo.shared.promptForPlayStoreUpgrade
 import ee.schimke.terrazzo.ui.AndroidImeHost
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.TerrazzoTheme
 import ee.schimke.terrazzo.ui.toThemeStyle
 import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.ui.updateSystemBars
-import ee.schimke.terrazzo.shared.promptForPlayStoreUpgrade
 import ee.schimke.terrazzo.widget.WidgetOpenRequests
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import kotlinx.coroutines.plus
