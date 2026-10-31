@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.76](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.75...v0.1.76) (2026-10-31)
+
+
+### Bug Fixes
+
+* **app:** let R8 build the release with the Android XR libraries ([#1360](https://github.com/yschimke/homeassistant-remotecompose/issues/1360)) ([cc1e5e9](https://github.com/yschimke/homeassistant-remotecompose/commit/cc1e5e9efa4a42388c4aa26778cc7be0ccde3938))
+
 ## [0.1.75](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.74...v0.1.75) (2026-10-30)
 
 
