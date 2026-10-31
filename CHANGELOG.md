@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.77](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.76...v0.1.77) (2026-10-31)
+
+
+### Features
+
+* **wear:** a simpler watch that only views, and findable watch widgets ([#1367](https://github.com/yschimke/homeassistant-remotecompose/issues/1367)) ([ac4972d](https://github.com/yschimke/homeassistant-remotecompose/commit/ac4972de033c52ad6816e7620427545512eca7a2))
+* **wear:** list the watch widgets as Terrazzo ([#1368](https://github.com/yschimke/homeassistant-remotecompose/issues/1368)) ([409d28e](https://github.com/yschimke/homeassistant-remotecompose/commit/409d28e58ba3a6d7421f08095bf40af1d4f75139))
+
+
+### Bug Fixes
+
+* **app:** declare ARCore optional so Play accepts the release bundle ([#1371](https://github.com/yschimke/homeassistant-remotecompose/issues/1371)) ([bbecfbb](https://github.com/yschimke/homeassistant-remotecompose/commit/bbecfbb7a83ce761f4ccc69b7178ec5c86dc1aab))
+* **deps:** update compose-ai-tools ([#1362](https://github.com/yschimke/homeassistant-remotecompose/issues/1362)) ([e51588a](https://github.com/yschimke/homeassistant-remotecompose/commit/e51588a4637f297532d67b2a07b7ecd38d5fc3ed))
+* **wear:** stop dropping every live stream frame on the watch ([#1365](https://github.com/yschimke/homeassistant-remotecompose/issues/1365)) ([f3c1aa0](https://github.com/yschimke/homeassistant-remotecompose/commit/f3c1aa0a80a2bdc13a4876254c8b9ab4bf34592f))
+* **widgets:** keep the 1.1 header on API 37 launcher documents ([#1372](https://github.com/yschimke/homeassistant-remotecompose/issues/1372)) ([8e54a74](https://github.com/yschimke/homeassistant-remotecompose/commit/8e54a74fe95e634081f41b5e820804c9a98a7d52))
+
 ## [0.1.76](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.75...v0.1.76) (2026-10-31)
 
 
