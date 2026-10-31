@@ -218,7 +218,7 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
       return@OnMessageReceivedListener
     }
     if (event.path != WearSyncPaths.STREAM_MESSAGE) return@OnMessageReceivedListener
-    val frame: StreamUpdate = decodeProto(event.data) ?: return@OnMessageReceivedListener
+    val frame = decodeProto<StreamUpdate>(event.data) ?: return@OnMessageReceivedListener
     val merged = mergeStreamUpdate(offline.readValues(), frame) ?: return@OnMessageReceivedListener
     _values.value = merged.values
     // Persist the merged snapshot so a process restart resumes from
@@ -521,7 +521,7 @@ internal fun mergeStreamUpdate(stored: LiveValues?, frame: StreamUpdate): LiveVa
  * The newest by [time] of the DataItems at [path]: each node that ever wrote one (a replaced phone,
  * say) keeps its own copy, in no particular order. Null if none decode.
  */
-private suspend inline fun <reified T> dataItem(
+private suspend inline fun <reified T : Any> dataItem(
   client: DataClient,
   path: String,
   crossinline time: (T) -> Long,
