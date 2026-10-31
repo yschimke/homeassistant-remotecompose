@@ -57,7 +57,7 @@ jobs:
       - name: Record render start
         run: echo "RENDER_STARTED=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
       - id: apply
-        uses: yschimke/compose-ai-tools/.github/actions/apply@v2.74.1
+        uses: yschimke/compose-ai-tools/.github/actions/apply@v2.78.0
         with:
           # Generated branches (compose-preview/main, compose-preview/pr and the
           # a11y / resources pairs) go to the public output repository so this

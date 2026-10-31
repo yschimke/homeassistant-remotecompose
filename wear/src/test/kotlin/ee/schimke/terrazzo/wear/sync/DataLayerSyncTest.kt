@@ -4,6 +4,8 @@ import ee.schimke.terrazzo.wearsync.proto.EntityDelta
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import ee.schimke.terrazzo.wearsync.proto.StreamUpdate
+import ee.schimke.terrazzo.wearsync.proto.decodeProto
+import ee.schimke.terrazzo.wearsync.proto.encodeProto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -71,5 +73,14 @@ class DataLayerSyncTest {
   fun firstStreamCanStartWithoutADataItem() {
     val frame = StreamUpdate(listOf(EntityDelta("light.kitchen", EntityValue(state = "on"))), 100)
     assertEquals(values("on", at = 100), mergeStreamUpdate(null, frame))
+  }
+
+  @Test
+  fun aStreamFrameDecodesWhenItsTypeIsInferred() {
+    // As the watch's message listener reads it: the type comes from the declaration, not an
+    // explicit type argument. A nullable inference decodes every frame as null.
+    val sent = StreamUpdate(listOf(EntityDelta("light.kitchen", EntityValue(state = "on"))), 100)
+    val frame: StreamUpdate = decodeProto(encodeProto(sent)) ?: error("frame dropped")
+    assertEquals(sent, frame)
   }
 }

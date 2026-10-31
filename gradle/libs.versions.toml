@@ -11,7 +11,7 @@ metro = "1.5.1"
 # AppFunctions: the on-device agent surface (`app/.../assistant/`). Experimental upstream; the
 # compiler runs through KSP, which nothing else in the build uses.
 androidx-appfunctions = "1.0.0-beta01"
-ksp = "2.3.12"
+ksp = "2.3.13"
 
 # Compose: the alpha-channel BOM, for the Compose 1.13 line (1.13.0-beta02 in 2026.10.01). Compose
 # Multiplatform 1.13 already pulled the Android modules onto 1.13, past the stable BOM's 1.12, and
@@ -68,7 +68,7 @@ indriya = "2.2.4"
 # of the plugin marker. The preview-baselines / preview-comment GitHub
 # Actions read this key (`catalog-key: compose-preview-plugin`) to pin
 # the CLI release they install on the runner.
-compose-preview-plugin = "2.74.1"
+compose-preview-plugin = "2.75.0"
 # The `ee.schimke.composeai:*-core` protocol artifacts are versioned on their
 # own 2.x line, NOT with the plugin. Tying `data-render-core` to
 # `compose-preview-plugin` is what pinned this repo at 1.47.0: that is the last

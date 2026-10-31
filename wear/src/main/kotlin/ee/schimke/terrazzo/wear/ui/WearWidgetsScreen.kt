@@ -11,10 +11,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.items
-import androidx.wear.compose.material3.Button
-import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
@@ -41,8 +40,8 @@ fun WearWidgetsScreen(
   pinned: PinnedCardSet,
   sections: PinnedSectionSet,
   widgetCardsRevision: Long,
-  onBack: () -> Unit,
   modifier: Modifier = Modifier,
+  onOpenOnPhone: (() -> Unit)? = null,
 ) {
   val context = LocalContext.current
   val store = remember(context) { WearWidgetCardStore(context.applicationContext) }
@@ -57,15 +56,18 @@ fun WearWidgetsScreen(
         )
       }
     }
-  WearWidgetsContent(rows = rows, onBack = onBack, modifier = modifier)
+  WearWidgetsContent(rows = rows, modifier = modifier, onOpenOnPhone = onOpenOnPhone)
 }
 
-/** [WearWidgetsScreen]'s list: [rows] null while the placed widgets load. */
+/**
+ * [WearWidgetsScreen]'s list: [rows] null while the placed widgets load. With none placed, the
+ * steps to add one, in the words the watch's widget picker uses ([WIDGET_PICKER_LABEL]).
+ */
 @Composable
 internal fun WearWidgetsContent(
   rows: List<WidgetRow>?,
-  onBack: () -> Unit,
   modifier: Modifier = Modifier,
+  onOpenOnPhone: (() -> Unit)? = null,
 ) {
   WearListScreen(modifier = modifier, spacing = 6.dp) {
     item { ListHeader { Text("Widgets") } }
@@ -77,7 +79,8 @@ internal fun WearWidgetsContent(
             text = WIDGETS_EMPTY,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
           )
         }
       else ->
@@ -102,28 +105,26 @@ internal fun WearWidgetsContent(
           text = WIDGETS_CHOOSE_ON_PHONE,
           style = MaterialTheme.typography.bodySmall,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
-          modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+          textAlign = TextAlign.Center,
+          modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
         )
       }
     }
-    item {
-      Button(
-        onClick = onBack,
-        modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.filledTonalButtonColors(),
-      ) {
-        Text("Back")
-      }
-    }
+    onOpenOnPhone?.let { open -> item { OpenOnPhoneButton(open) } }
   }
 }
 
-/** The Widgets screen's text with no Terrazzo widget placed. */
+/** The name the watch's widget picker lists the widgets under: the providers' `label`. */
+internal const val WIDGET_PICKER_LABEL = "Terrazzo"
+
+/** The Widgets screen's text with no widget placed: how to add one. */
 internal const val WIDGETS_EMPTY =
-  "Add a Terrazzo widget from your watch's widget list, then choose its card on your phone."
+  "Swipe left from your watch face to the end, tap Add widget and choose $WIDGET_PICKER_LABEL." +
+    "\n\nThen pick its card on your phone, under Widgets."
 
 /** Under the Widgets screen's list: where the cards are chosen. */
-internal const val WIDGETS_CHOOSE_ON_PHONE = "Change a widget's card in Terrazzo on your phone."
+internal const val WIDGETS_CHOOSE_ON_PHONE =
+  "Each widget's card is chosen on your phone, under Widgets."
 
 /** What a list names [card] by: its title, else its entity, else its type. */
 internal fun cardLabel(card: CardSummary): String =

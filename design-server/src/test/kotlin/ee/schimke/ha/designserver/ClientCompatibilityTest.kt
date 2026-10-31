@@ -89,7 +89,7 @@ class ClientCompatibilityTest {
         DesignServerConfig(
           baseUrl = "http://localhost$API_BASE",
           allowUnsigned = true,
-          token = token,
+          token = { token },
         ),
         InMemoryDesignStore(),
         client,

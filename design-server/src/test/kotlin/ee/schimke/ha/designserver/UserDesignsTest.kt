@@ -654,6 +654,45 @@ class UserDesignsTest {
   }
 
   @Test
+  fun behindATrustedProxy_theHeaderIsWhoIsSignedIn() = testApplication {
+    val github =
+      GithubAuth.fromEnvironment(
+        mapOf("TRUSTED_USER_HEADER" to "X-Remote-User-Name"),
+        createClient {},
+        keyDir = Files.createTempDirectory("keys").toFile(),
+      )!!
+    val store = UserDesignStore(Files.createTempDirectory("user-designs").toFile())
+    application { designServer(LibraryHolder(library()), github = github, userDesigns = store) }
+    val browser = createClient { followRedirects = false }
+
+    val page = browser.get("/my") { header("X-Remote-User-Name", "yuri") }
+    assertEquals(HttpStatusCode.OK, page.status)
+    assertTrue("yuri" in page.bodyAsText())
+    assertEquals(null, github.signOutPath, "the proxy's sign-in has no sign-out here")
+    val minted = browser.post("/api/my/device-token") { header("X-Remote-User-Name", "yuri") }
+    assertEquals(HttpStatusCode.OK, minted.status)
+
+    // Nobody named: no sign-in of its own to send them to.
+    val anonymous = browser.get("/my")
+    assertEquals(HttpStatusCode.Found, anonymous.status)
+    assertEquals(HttpStatusCode.Unauthorized, browser.get(GithubAuth.START_PATH).status)
+    assertEquals(HttpStatusCode.Unauthorized, browser.post("/api/my/device-token").status)
+  }
+
+  @Test
+  fun aTrustedHeaderIsOneWayToSignIn() {
+    val failure = runCatching {
+      GithubAuth.fromEnvironment(
+        mapOf("TRUSTED_USER_HEADER" to "X-Remote-User-Name", "HOST_SIGN_IN_URL" to "http://x"),
+        HttpClient(),
+        keyDir = Files.createTempDirectory("keys").toFile(),
+      )
+    }
+      .exceptionOrNull()
+    assertTrue(failure is IllegalArgumentException)
+  }
+
+  @Test
   fun theAppSignsInWithPkceAndGetsADeviceToken() = testApplication {
     externalServices {
       hosts("http://preview") {

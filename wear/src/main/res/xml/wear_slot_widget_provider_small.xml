@@ -14,8 +14,8 @@
   in here.
 -->
 <wearwidget-provider
-    label="Home Assistant card"
-    description="Shows a card you show on your watch. Choose it in the Terrazzo app."
+    label="Terrazzo"
+    description="Shows a Home Assistant card. Choose which one on your phone, under Widgets."
     preferredType="@integer/glance_wear_container_type_small"
     previewImage="@drawable/wear_slot_preview_small">
     <container

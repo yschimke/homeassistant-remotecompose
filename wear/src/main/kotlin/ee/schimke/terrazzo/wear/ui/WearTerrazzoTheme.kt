@@ -61,9 +61,11 @@ fun terrazzoWearColorScheme(style: ThemeStyle, context: Context? = null): ColorS
     tertiaryDim = m3.tertiaryContainer,
     background = m3.background,
     onBackground = m3.onBackground,
-    surfaceContainerLow = m3.surface,
-    surfaceContainer = m3.surface,
-    surfaceContainerHigh = m3.surfaceVariant,
+    // The container roles, not `surface`: a dark scheme's surface is its background, so a tonal
+    // button drawn in it would have no visible shape.
+    surfaceContainerLow = m3.surfaceContainerLow,
+    surfaceContainer = m3.surfaceContainer,
+    surfaceContainerHigh = m3.surfaceContainerHigh,
     onSurface = m3.onSurface,
     onSurfaceVariant = m3.onSurfaceVariant,
     outline = m3.outline,

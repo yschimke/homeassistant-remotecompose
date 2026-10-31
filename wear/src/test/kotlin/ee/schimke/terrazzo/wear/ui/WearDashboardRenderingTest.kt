@@ -82,7 +82,6 @@ class WearDashboardRenderingTest {
         WearSectionScreen(
           ee.schimke.terrazzo.wearsync.proto.PinnedSection(title = "Room", cards = listOf(grid)),
           values("65"),
-          {},
         )
       }
     }
@@ -359,13 +358,17 @@ class WearDashboardRenderingTest {
         Box(
           Modifier.size(240.dp).background(MaterialTheme.colorScheme.background).testTag("screen")
         ) {
-          WearSettingsScreen(ee.schimke.terrazzo.wearsync.proto.WearSettings(), onBack = {})
+          WearSettingsScreen(ee.schimke.terrazzo.wearsync.proto.WearSettings())
         }
       }
     }
     compose.onNodeWithText("Theme").assertDoesNotExist()
     compose.onNodeWithText("Card style").assertDoesNotExist()
-    compose.onNodeWithText("Theme and card designs follow your phone.").assertExists()
+    compose
+      .onNodeWithText(
+        "What your watch shows, its theme and card designs are all chosen on your phone."
+      )
+      .assertExists()
     save("wear-settings-mobile-appearance", screenshot())
   }
 

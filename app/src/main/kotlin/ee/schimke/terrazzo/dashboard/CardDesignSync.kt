@@ -22,6 +22,7 @@ import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.terrazzoGraph
 import ee.schimke.terrazzo.ui.toThemeStyle
 import ee.schimke.terrazzo.ui.toUberTheme
+import ee.schimke.terrazzo.widget.WidgetActionRunner
 import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.flow.Flow
@@ -66,6 +67,7 @@ object CardDesignSync {
         choice.copy(overrides = overrides)
       }
       .combine(prefs.designToken) { choice, token -> choice.copy(token = token) }
+      .combine(prefs.privateDesignServer) { choice, ha -> choice.withPrivateServer(ha) }
       .combine(SkinStore.of(context).installed) { choice, skins -> choice.copy(skins = skins) }
       .combine(CardStyleStore.of(context).installed) { choice, styles ->
         choice.copy(cardStyles = styles)
@@ -125,12 +127,23 @@ object CardDesignSync {
           baseUrl = choice.serverUrl,
           allowUnsigned = true,
           choice = choice.queries,
-          token = choice.token,
+          token = tokenFor(context, choice),
           userAgent = CardUsage.userAgent,
         ),
       store = FileDesignStore(storeDir(context, choice.serverUrl)),
       clock = System::currentTimeMillis,
     )
+
+  /**
+   * The bearer for [choice]'s server: its Home Assistant's access token, minted as needed, for that
+   * Home Assistant's own design add-on; the device token for any other.
+   */
+  private fun tokenFor(context: Context, choice: CardDesignChoice): suspend () -> String {
+    val ha = choice.homeAssistant
+    if (ha.isBlank()) return { choice.token }
+    val graph = context.terrazzoGraph()
+    return { WidgetActionRunner.accessToken(graph, ha) }
+  }
 
   /**
    * Every tag value the cached manifest for [serverUrl] offers, with counts: what the settings
@@ -171,15 +184,19 @@ class CardDesignSyncWorker(context: Context, params: WorkerParameters) :
       }
     if (result == RefreshResult.Updated) CardDesignGeneration.manifestStored()
     if (result == RefreshResult.Updated || result == RefreshResult.Filled) CardDesignSync.stored()
-    // Yesterday's card usage goes up with the nightly refresh, only if the user shares it.
-    val sent = runCatching {
-      CardUsage.upload(
-        applicationContext,
-        applicationContext.terrazzoGraph().preferencesStore,
-        choice.serverUrl,
-      )
-    }
-      .getOrDefault(0)
+    // Yesterday's card usage goes up with the nightly refresh, only if the user shares it, and only
+    // to the public library's server: a Home Assistant's own design add-on doesn't count usage.
+    val sent =
+      if (choice.homeAssistant.isNotBlank()) 0
+      else
+        runCatching {
+            CardUsage.upload(
+              applicationContext,
+              applicationContext.terrazzoGraph().preferencesStore,
+              choice.serverUrl,
+            )
+          }
+          .getOrDefault(0)
     Log.d(TAG, "card design sync: $result, usage days sent: $sent")
     return Result.success()
   }

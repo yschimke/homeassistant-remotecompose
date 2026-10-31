@@ -13,6 +13,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import ee.schimke.terrazzo.LocalTerrazzoGraph
+import ee.schimke.terrazzo.core.auth.BrowserSignInUnavailableException
 import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.auth.TokenVault
 import ee.schimke.terrazzo.core.mobileapp.MobileAppRegistrar
@@ -43,11 +44,22 @@ class LoginController
 internal constructor(
   private val authService: HaAuthService,
   private val launch: (baseUrl: String, intent: Intent) -> Unit,
+  private val onError: (Throwable) -> Unit = {},
 ) {
 
+  /**
+   * Starts the browser sign-in; reports a device that has none to [onError] rather than throwing.
+   */
   fun start(baseUrl: String) {
     val normalized = baseUrl.trim().removeSuffix("/")
-    launch(normalized, authService.prepareAuthIntent(normalized))
+    val intent =
+      try {
+        authService.prepareAuthIntent(normalized)
+      } catch (e: BrowserSignInUnavailableException) {
+        onError(e)
+        return
+      }
+    launch(normalized, intent)
   }
 }
 
@@ -144,7 +156,9 @@ fun rememberLoginController(
       )
     }
   val launch = rememberKeyedLauncher(results::onResult)
-  return remember(authService, launch) { LoginController(authService, launch) }
+  return remember(authService, launch) {
+    LoginController(authService, launch, onError = { currentOnError(it) })
+  }
 }
 
 /**

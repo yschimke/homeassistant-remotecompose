@@ -47,6 +47,35 @@ class CardStudioPublishTest {
   }
 
   @Test
+  fun throughHomeAssistantEveryCallCarriesItsTokenOnItsOwnScheme() = runTest {
+    val seen = mutableListOf<Pair<String, String?>>()
+    val engine = MockEngine { request ->
+      seen += request.url.toString() to request.headers[HttpHeaders.Authorization]
+      if (request.url.encodedPath.endsWith("/handoffs"))
+        respond("""{"path":"/studio/${"a".repeat(32)}"}""", HttpStatusCode.OK, json)
+      else respond("[]", HttpStatusCode.OK, json)
+    }
+    // A Home Assistant on the LAN is often plain http; it already holds its own token.
+    val client =
+      CardStudioClient.throughHomeAssistant(
+        "http://homeassistant.local:8123/",
+        { "ha-token" },
+        engine,
+      )
+    // A call that names no token (ha.coo.ee takes these anonymously) gets Home Assistant's.
+    client.handoff(JsonObject(emptyMap()))
+    client.studioDesigns("ha-token")
+    val base = "http://homeassistant.local:8123/api/terrazzo/designs"
+    assertEquals(
+      listOf<Pair<String, String?>>(
+        "$base/api/studio/handoffs" to "Bearer ha-token",
+        "$base/api/my/studio" to "Bearer ha-token",
+      ),
+      seen,
+    )
+  }
+
+  @Test
   fun publishesPrivatelyAndReturnsTheSkinToSwitchTo() = runTest {
     val engine = MockEngine { request ->
       assertEquals("/api/my/designs", request.url.encodedPath)

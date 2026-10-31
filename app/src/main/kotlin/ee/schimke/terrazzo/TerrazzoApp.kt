@@ -55,8 +55,10 @@ import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.shared.AppScreen
 import ee.schimke.terrazzo.shared.CardStudioDefaults
 import ee.schimke.terrazzo.shared.CardStudioScreen
+import ee.schimke.terrazzo.shared.HomeDesignServer
 import ee.schimke.terrazzo.shared.TerrazzoNavigation
 import ee.schimke.terrazzo.wearsync.wearInstallPrompts
+import ee.schimke.terrazzo.widget.WidgetActionRunner
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
 import ee.schimke.terrazzo.widget.WidgetOpenRequests
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
@@ -495,6 +497,20 @@ private fun DashboardsRoot(
   val studioServer by
     graph.preferencesStore.designServerUrl.collectAsState(initial = "https://ha.coo.ee/designs/v1")
   val designToken by graph.preferencesStore.designToken.collectAsState(initial = "")
+  val privateDesignServer by graph.preferencesStore.privateDesignServer.collectAsState(initial = "")
+  // This Home Assistant's own design server, when the one it found is this session's.
+  val homeDesignServer =
+    remember(session, privateDesignServer) {
+      session
+        .takeIf { privateDesignServer.isNotBlank() && it.baseUrl == privateDesignServer }
+        ?.let { home ->
+          HomeDesignServer(
+            haBaseUrl = home.baseUrl,
+            accessToken = { WidgetActionRunner.accessToken(graph, home.baseUrl) },
+            link = { path -> home.privateDesignLink(path) },
+          )
+        }
+    }
   val studioDefaults by
     graph.preferencesStore.cardStudioDefaults.collectAsState(initial = null as String?)
   val designSignIn = rememberDesignSignIn()
@@ -617,6 +633,19 @@ private fun DashboardsRoot(
   // StateFlow already de-duplicates identical emissions, so each
   // entry here corresponds to a real transition.
   val logStore = graph.logStore
+  // Whether this Home Assistant runs its own design server (the Card Designs add-on), asked on each
+  // connect so installing or removing the add-on takes effect then. The design choice follows the
+  // preference, and a change syncs (TerrazzoApplication).
+  LaunchedEffect(session) {
+    if (session is DemoHaSession) return@LaunchedEffect
+    session.connectionStatus.collect { status ->
+      if (status != SessionConnectionStatus.Connected) return@collect
+      val found = if (session.privateDesignServer()) session.baseUrl else ""
+      if (graph.preferencesStore.privateDesignServer.first() != found) {
+        graph.preferencesStore.setPrivateDesignServer(found)
+      }
+    }
+  }
   LaunchedEffect(session, logStore) {
     session.connectionStatus.collect { status ->
       logStore.recordConnection(status = status.toLogStatus(), message = session.baseUrl)
@@ -680,6 +709,7 @@ private fun DashboardsRoot(
       // Downloads the published design and switches this card to it, as the card's skin picker
       // does, even once the studio has closed.
       onPublished = { designId -> SkinInstallWorker.enqueue(context, card, designId) },
+      homeServer = homeDesignServer,
       refreshSnapshot = {
         val current = session.loadDashboard(openedValue).second
         studioTarget = card to current

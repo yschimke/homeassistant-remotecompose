@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.core.auth
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import ee.schimke.terrazzo.core.di.AppScope
@@ -70,11 +71,32 @@ class HaAuthService(context: Context, httpEngineFactory: HttpEngineFactory) {
   // Allow HTTP for the integration Docker container. AppAuth's
   // default ConnectionBuilder rejects non-HTTPS endpoints at the
   // token-exchange step; HA on 10.0.2.2:8124 is plain HTTP.
-  private val appAuth =
-    AuthorizationService(
-      context,
-      AppAuthConfiguration.Builder().setConnectionBuilder(PlainHttpConnectionBuilder).build(),
-    )
+  //
+  // Built on first use, not with the graph: AppAuth lists the device's browsers as it is
+  // constructed, and that can throw (a browser package reporting no signatures, an AppAuth bug some
+  // devices and the compose-preview simulator hit). Constructed eagerly, that crashed the first
+  // frame; now only a browser sign-in fails, as [BrowserSignInUnavailableException].
+  private val appAuthLazy: Lazy<Result<AuthorizationService>> = lazy {
+    runCatching {
+      AuthorizationService(
+        context,
+        AppAuthConfiguration.Builder().setConnectionBuilder(PlainHttpConnectionBuilder).build(),
+      )
+    }
+      .onFailure { Log.w(TAG, "AppAuth unavailable: browser sign-in is off", it) }
+  }
+
+  private val appAuthResult: Result<AuthorizationService>
+    get() = appAuthLazy.value
+
+  private val appAuth: AuthorizationService
+    get() = appAuthResult.getOrElse { throw BrowserSignInUnavailableException(it) }
+
+  /**
+   * Whether a browser sign-in can start on this device (see [BrowserSignInUnavailableException]).
+   */
+  val browserSignInAvailable: Boolean
+    get() = appAuthResult.isSuccess
 
   // Shares the engine (and its interceptor chain) with HaClient /
   // AddonClient so token refresh participates in the same URL-rewrite
@@ -82,8 +104,19 @@ class HaAuthService(context: Context, httpEngineFactory: HttpEngineFactory) {
   // connection pool from the engine.
   private val httpClient: HttpClient = HttpClient(httpEngineFactory.engine)
 
+  /**
+   * AppAuth's Custom Tab intent for [request]; with no browser to open it in (AppAuth's
+   * `ActivityNotFoundException`), a [BrowserSignInUnavailableException].
+   */
+  private fun authorizationIntent(request: AuthorizationRequest): Intent =
+    try {
+      appAuth.getAuthorizationRequestIntent(request)
+    } catch (e: android.content.ActivityNotFoundException) {
+      throw BrowserSignInUnavailableException(e)
+    }
+
   fun close() {
-    appAuth.dispose()
+    if (appAuthLazy.isInitialized()) appAuthResult.getOrNull()?.dispose()
     httpClient.close()
   }
 
@@ -106,7 +139,7 @@ class HaAuthService(context: Context, httpEngineFactory: HttpEngineFactory) {
           Uri.parse(REDIRECT_URI),
         )
         .build()
-    return appAuth.getAuthorizationRequestIntent(request)
+    return authorizationIntent(request)
   }
 
   /**
@@ -130,7 +163,7 @@ class HaAuthService(context: Context, httpEngineFactory: HttpEngineFactory) {
           Uri.parse(REDIRECT_URI),
         )
         .build()
-    return appAuth.getAuthorizationRequestIntent(request)
+    return authorizationIntent(request)
   }
 
   /**
@@ -197,6 +230,8 @@ class HaAuthService(context: Context, httpEngineFactory: HttpEngineFactory) {
     parseTokenResponse(HaPasswordLogin.login(httpClient, baseUrl, username, password))
 
   companion object {
+    private const val TAG = "HaAuthService"
+
     /** The public demo Home Assistant: read-only, with a public guest login (`demo` / `demo`). */
     const val DEMO_SERVER = "https://ha-demo.coo.ee"
     const val DEMO_USERNAME = "demo"
@@ -237,6 +272,14 @@ class HaAuthService(context: Context, httpEngineFactory: HttpEngineFactory) {
       }
   }
 }
+
+/**
+ * A browser sign-in can't start here: AppAuth could not list the device's browsers, or there is no
+ * browser to open it in ([cause]). The caller reports it; the other ways in (the demos, a password
+ * sign-in, an injected test token) still work.
+ */
+class BrowserSignInUnavailableException(cause: Throwable) :
+  IllegalStateException("No browser can sign in on this device", cause)
 
 /**
  * Result of a refresh-token exchange. Fields mirror the OAuth response shape so the call site can
