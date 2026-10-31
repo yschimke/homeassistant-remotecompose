@@ -24,6 +24,11 @@
           "type": "json",
           "path": "custom_components/terrazzo/manifest.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "yaml",
+          "path": "design-server/addon/config.yaml",
+          "jsonpath": "$.version"
         }
       ]
     }
