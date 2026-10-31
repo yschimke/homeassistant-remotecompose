@@ -324,7 +324,7 @@ class UiBuilderTest {
     assertTrue("open the edit link" in browser.get("/designs/$id").bodyAsText())
     assertEquals(
       HttpStatusCode.Forbidden,
-      browser.submitForm("/ui-builder/designs", parameters { append("design", id) }).status,
+      browser.submitForm(SEED_PATH, parameters { append("design", id) }).status,
     )
     assertEquals(HttpStatusCode.Forbidden, browser.get("/edit?token=wrong").status)
 
@@ -336,7 +336,7 @@ class UiBuilderTest {
     )
 
     val response =
-      browser.submitForm("/ui-builder/designs", parameters { append("design", id) }) {
+      browser.submitForm(SEED_PATH, parameters { append("design", id) }) {
         header(HttpHeaders.Cookie, cookie)
       }
     assertEquals(HttpStatusCode.Found, response.status)
@@ -366,7 +366,7 @@ class UiBuilderTest {
     // From a card's JSON too.
     val fromCard =
       browser.submitForm(
-        "/ui-builder/designs",
+        SEED_PATH,
         parameters { append("card", entitiesCard.toString()) },
       ) {
         header(HttpHeaders.Cookie, cookie)
@@ -509,7 +509,7 @@ class UiBuilderTest {
     assertTrue("Sign in with GitHub" in browser.get("/designs/$id").bodyAsText())
     assertEquals(
       HttpStatusCode.Forbidden,
-      browser.submitForm("/ui-builder/designs", parameters { append("design", id) }).status,
+      browser.submitForm(SEED_PATH, parameters { append("design", id) }).status,
     )
     assertEquals(HttpStatusCode.NotFound, browser.get("/edit?token=secret").status)
 
@@ -541,7 +541,7 @@ class UiBuilderTest {
 
     // Seeded, then shared with the designer as an editor; the editor link carries no token.
     val seeded =
-      browser.submitForm("/ui-builder/designs", parameters { append("design", id) }) {
+      browser.submitForm(SEED_PATH, parameters { append("design", id) }) {
         header(HttpHeaders.Cookie, session)
       }
     assertEquals(HttpStatusCode.Found, seeded.status)

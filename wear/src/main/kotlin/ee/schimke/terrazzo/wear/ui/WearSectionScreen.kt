@@ -1,13 +1,10 @@
 package ee.schimke.terrazzo.wear.ui
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.items
-import androidx.wear.compose.material3.Button
-import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
@@ -27,15 +24,15 @@ import ee.schimke.terrazzo.wearsync.proto.PinnedSection
 fun WearSectionScreen(
   section: PinnedSection?,
   values: WearValues,
-  onBack: () -> Unit,
   modifier: Modifier = Modifier,
   onInputSend: (suspend (String, Map<String, String>) -> Unit)? = null,
   onOpenCard: (CardSummary) -> Unit = {},
 ) {
   WearListScreen(modifier = modifier, gestureScroll = true) {
-    item { ListHeader { Text(section?.title?.ifEmpty { "Section" } ?: "Section") } }
+    val title = section?.title?.ifEmpty { null } ?: "Section"
+    item { ListHeader { Text(title) } }
 
-    val cards = section?.cards.orEmpty()
+    val cards = withoutRepeatedHeading(section?.cards.orEmpty(), title)
     if (cards.isEmpty()) {
       item {
         Text(
@@ -54,15 +51,14 @@ fun WearSectionScreen(
         }
       }
     }
-
-    item {
-      Button(
-        onClick = onBack,
-        modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.filledTonalButtonColors(),
-      ) {
-        Text("Back")
-      }
-    }
   }
+}
+
+/**
+ * [cards] without a leading heading card that only repeats the screen's [title]: a Home Assistant
+ * section usually opens with its own heading, which the list header already shows.
+ */
+internal fun withoutRepeatedHeading(cards: List<CardSummary>, title: String): List<CardSummary> {
+  val first = cards.firstOrNull() ?: return cards
+  return if (first.type == "heading" && first.title.trim() == title.trim()) cards.drop(1) else cards
 }

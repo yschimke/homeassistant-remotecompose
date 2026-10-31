@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import ee.schimke.ha.room.DashboardImportance
+import ee.schimke.terrazzo.room.DemoHouse
 import ee.schimke.terrazzo.room.RoomContent
 import ee.schimke.terrazzo.room.RoomPin
 import ee.schimke.terrazzo.room.RoomScenePreview
@@ -79,7 +79,7 @@ private fun previewContent(): RoomContent =
     state =
       roomState(
         PreviewSnapshot,
-        DashboardImportance.Empty,
+        DemoHouse.importance,
         picked = null,
         tracker = null,
         nearestPin = HEATER,
@@ -93,10 +93,10 @@ private fun previewContent(): RoomContent =
     },
   )
 
-private val PreviewSnapshot = QuestDemoHouse.snapshot
-private const val PREVIEW_BASE_URL = QuestDemoHouse.BASE_URL
-private const val HEATER = QuestDemoHouse.HEATER
-private const val TV = QuestDemoHouse.TV
+private val PreviewSnapshot = DemoHouse.snapshot
+private const val PREVIEW_BASE_URL = DemoHouse.BASE_URL
+private const val HEATER = DemoHouse.HEATER
+private const val TV = DemoHouse.TV
 
 /** A 4 m × 5 m living room around the user: a wall ahead and one to each side. */
 private val PreviewWalls =

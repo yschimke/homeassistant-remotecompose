@@ -2,6 +2,7 @@ package ee.schimke.terrazzo
 
 import android.Manifest
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -70,6 +71,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import ee.schimke.ha.client.design.UsageSharing
+import ee.schimke.ha.client.design.privateDesignServerUrl
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignTags
 import ee.schimke.ha.rc.components.HaUberTheme
@@ -138,6 +140,7 @@ internal fun SettingsScreen(
     )
   val designAuthor by graph.preferencesStore.designAuthor.collectAsState(initial = "")
   val designToken by graph.preferencesStore.designToken.collectAsState(initial = "")
+  val privateDesignServer by graph.preferencesStore.privateDesignServer.collectAsState(initial = "")
   val usageSharing by
     graph.preferencesStore.usageSharing.collectAsState(initial = UsageSharing.Default)
   val permanentWriteEnabled by
@@ -365,6 +368,7 @@ internal fun SettingsScreen(
           variant = designVariant,
           author = designAuthor,
           token = designToken,
+          homeAssistant = privateDesignServer,
           onUrlChange = { url -> scope.launch { graph.preferencesStore.setDesignServerUrl(url) } },
           onVariantChange = { scope.launch { graph.preferencesStore.setDesignVariant(it) } },
           onAuthorChange = { scope.launch { graph.preferencesStore.setDesignAuthor(it) } },
@@ -983,6 +987,11 @@ private fun DesignServerSetting(
   variant: String,
   author: String,
   token: String,
+  /**
+   * The Home Assistant (base URL) whose own design server is used in place of [url] while designs
+   * are on; blank for none.
+   */
+  homeAssistant: String,
   onUrlChange: (String) -> Unit,
   onVariantChange: (String) -> Unit,
   onAuthorChange: (String) -> Unit,
@@ -991,9 +1000,12 @@ private fun DesignServerSetting(
   val context = LocalContext.current
   var draft by remember(url) { mutableStateOf(url) }
   val revision by CardDesignSync.revision.collectAsState()
+  val home = homeAssistant.takeIf { it.isNotBlank() && url.isNotBlank() }
+  // What the dashboard draws from: this Home Assistant's own server when it has one.
+  val served = home?.let { "${privateDesignServerUrl(it)}/designs/v1" } ?: url
   val tags by
-    produceState<DesignTags?>(initialValue = null, url, revision) {
-      value = CardDesignSync.tags(context, url)
+    produceState<DesignTags?>(initialValue = null, served, revision) {
+      value = CardDesignSync.tags(context, served)
     }
   Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
     Text("Card design server", style = MaterialTheme.typography.titleMedium)
@@ -1020,7 +1032,15 @@ private fun DesignServerSetting(
           if (!it.isFocused && draft != url) onUrlChange(draft)
         },
     )
-    if (url.isNotBlank()) {
+    if (home != null) {
+      Text(
+        "Your Home Assistant at ${Uri.parse(home).host ?: home} runs its own design server " +
+          "(the Card Designs add-on): your designs are kept there, signed in as you are to Home " +
+          "Assistant, and its library follows ha.coo.ee. Clear the address to turn designs off.",
+        style = MaterialTheme.typography.bodySmall,
+      )
+      DesignSourcesSummary()
+    } else if (url.isNotBlank()) {
       DesignTokenField(url, token, onTokenChange)
       DesignSourcesSummary()
     }

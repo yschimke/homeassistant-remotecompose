@@ -40,6 +40,22 @@
     "yaml_overrides_ui": {
       "title": "Terrazzo is configured in YAML",
       "description": "Terrazzo's `terrazzo:` block in configuration.yaml is applied again on every start, so it replaces changes made under Settings → Devices & services. Your settings are already in the integration: remove the `terrazzo:` block and restart to manage Terrazzo from the UI."
+    },
+    "web_origin": {
+      "title": "Allow Terrazzo at {origin} to load images",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Allow {origin}?",
+            "description": "Terrazzo at {origin} is signed in to Home Assistant, but Home Assistant blocks it from loading camera and entity pictures. Allowing it adds {origin} to Home Assistant's allowed CORS origins, then restarts Home Assistant. Terrazzo confirms the change once Home Assistant is back; if it doesn't start, Home Assistant reverts it after five minutes.\n\nOnly allow a site you installed Terrazzo on yourself."
+          }
+        },
+        "abort": {
+          "unsupported": "This Home Assistant keeps its HTTP settings in configuration.yaml. Add {origin} under `http:` → `cors_allowed_origins` and restart.",
+          "not_running": "Home Assistant is still starting. Try again once it has finished.",
+          "pending_change": "Another HTTP settings change is waiting to be confirmed. Confirm or discard it first."
+        }
+      }
     }
   }
 }

@@ -154,6 +154,17 @@ fun userTemplateProblem(
   return null
 }
 
+/**
+ * Whether [bytes] reads the host's ambient flag ([RcAmbientValue]), so it draws its ambient look on
+ * an always-on watch. Not a problem when it doesn't: the watch still holds its values between
+ * ambient updates, and the design keeps its interactive look. False when it doesn't decode.
+ */
+fun readsHostAmbient(bytes: ByteArray): Boolean =
+  runCatching { RcDocumentCodec.decode(bytes, RcWireLimits()) }
+    .getOrNull()
+    ?.namedVariables
+    ?.any { it.name.removePrefix(DesignLibrary.USER_PREFIX) == RcAmbientValue } == true
+
 /** The named variable type a host pushes a shared value of [kind] as: a flag is an int. */
 private fun playerType(kind: HaSharedValues.Kind): Int =
   when (kind) {
@@ -413,7 +424,14 @@ object MyPage {
             listOfNotNull(it.integration, it.manufacturer, it.model).joinToString(" ")
           } ?: "any"
         val card = key.cardType + (key.container?.let { " (Wear widget, $it)" } ?: "")
-        append("<tr><td>${esc(card)}</td><td>${esc(key.variant)}</td>")
+        append("<tr><td>${esc(card)}")
+        if (design.readsAmbient == false) {
+          append(
+            "<br><small class=\"ambient-note\">Doesn't read <code>$RcAmbientValue</code>: keeps " +
+              "its interactive look on an always-on watch.</small>"
+          )
+        }
+        append("</td><td>${esc(key.variant)}</td>")
         append("<td>${esc(device)}</td>")
         append("<td>${esc(key.theme)}</td><td>${if (design.shared) "yes" else "no"}</td><td>")
         append("<form method=\"post\" action=\"/my/designs/${design.entry.sha256}/share\">")

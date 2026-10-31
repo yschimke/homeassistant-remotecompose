@@ -313,7 +313,7 @@
             android:exported="true"
             android:enabled="false"
             android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER"
-            android:label="Home Assistant card (small)">
+            android:label="Terrazzo (small)">
             <intent-filter>
                 <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
                 <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
@@ -327,7 +327,7 @@
             android:exported="true"
             android:enabled="false"
             android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER"
-            android:label="Home Assistant card (large)">
+            android:label="Terrazzo (large)">
             <intent-filter>
                 <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
                 <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />

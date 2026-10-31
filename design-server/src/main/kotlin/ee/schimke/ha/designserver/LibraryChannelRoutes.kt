@@ -12,6 +12,7 @@ import io.ktor.server.request.receiveChannel
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respondBytes
+import io.ktor.server.response.respondFile
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
@@ -189,6 +190,26 @@ internal fun Route.libraryChannelRoutes(
       ),
       ContentType.Application.Json,
     )
+  }
+
+  // A channel's library as a mirror copies it (LibraryMirror): its index, then the files it lacks.
+  // Every file here is already public through the client protocol; these read it whole.
+  get("$LIBRARY_CHANNELS_PATH/{channel}/${LibraryMirror.INDEX_PATH}") {
+    val channel = call.parameters["channel"].orEmpty()
+    val index =
+      withContext(Dispatchers.IO) { channels.index(channel) } ?: return@get call.notFound()
+    call.response.header(HttpHeaders.CacheControl, "no-cache")
+    call.respondText(
+      channelJson.encodeToString(LibraryChannels.LibraryIndex.serializer(), index),
+      ContentType.Application.Json,
+    )
+  }
+
+  get("$LIBRARY_CHANNELS_PATH/{channel}/${LibraryMirror.FILES_PATH}/{path...}") {
+    val path = call.parameters.getAll("path").orEmpty().joinToString("/")
+    val file =
+      channels.libraryFile(call.parameters["channel"].orEmpty(), path) ?: return@get call.notFound()
+    call.respondFile(file)
   }
 
   put("$LIBRARY_CHANNELS_PATH/{channel}") {

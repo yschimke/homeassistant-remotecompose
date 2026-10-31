@@ -72,7 +72,9 @@ glance, heading, logbook, markdown, picture, picture-elements, picture-entity, p
 plus the `current_position` / `supported_features` floats, a `cover` binding recipe, and
 everything else in-document (`CoverLive`). Only `assumed_state` is baked, as shape. The logbook
 moved with `<id>.last_changed`: Home Assistant's own timestamp, which the document shows relative
-to the player's clock (`relativeTimeText`) rather than a label a host formats and re-sends.
+to the player's clock (`relativeTimeText`) rather than a label a host formats and re-sends; its
+date line, for changes a week old, adds `<id>.last_changed_offset`, the host zone's UTC offset in
+force at that time, so a daylight-saving switch since doesn't move it to the next day.
 
 ## Order of work
 

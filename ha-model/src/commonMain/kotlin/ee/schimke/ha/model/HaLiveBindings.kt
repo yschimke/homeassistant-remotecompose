@@ -1,5 +1,7 @@
 package ee.schimke.ha.model
 
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.offsetAt
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
@@ -69,6 +71,16 @@ object HaLiveBindings {
   fun lastChanged(state: EntityState): Int = state.lastChanged?.epochSeconds?.toInt() ?: NO_TIME
 
   /**
+   * The UTC offset in force at [lastChanged] in the host's display [zone] ↔
+   * `<entityId>.last_changed_offset`, in seconds; 0 when the snapshot has no `last_changed`. A
+   * document that shows the date of a change a week or more old adds this, not the player's offset
+   * now, so a change on the other side of a daylight-saving switch still lands on its own day. It
+   * is Home Assistant's timestamp read in a time zone, not a value the host makes up.
+   */
+  fun lastChangedOffset(state: EntityState, zone: TimeZone): Int =
+    state.lastChanged?.let { zone.offsetAt(it).totalSeconds } ?: 0
+
+  /**
    * The entity's display name ↔ `<entityId>.name`: its `friendly_name`, else its id. A card that
    * shows the entity's own name (not a configured `name:`) binds this, so renaming the entity in
    * Home Assistant reaches the card without a new document.
@@ -81,6 +93,9 @@ object HaLiveBindings {
 
   /** The `<entityId>.last_changed` binding suffix. */
   const val LAST_CHANGED: String = "last_changed"
+
+  /** The `<entityId>.last_changed_offset` binding suffix. */
+  const val LAST_CHANGED_OFFSET: String = "last_changed_offset"
 
   /**
    * Domain-specific integer key for an entity's state ↔ `<entityId>.state_int`. The document drives

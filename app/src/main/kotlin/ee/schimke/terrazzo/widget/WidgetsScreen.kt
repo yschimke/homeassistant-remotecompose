@@ -60,6 +60,7 @@ fun WidgetsScreen(onBack: () -> Unit) {
   val graph = LocalTerrazzoGraph.current
   val installed by graph.widgetStore.installed.collectAsState(initial = emptyList())
   val watchWidgets by graph.wearSyncManager.watchWidgets.collectAsState()
+  val wearable by graph.wearSyncManager.wearableAvailable.collectAsState()
   // Drop rows for widgets the user has since removed from the launcher before listing them.
   LaunchedEffect(Unit) { WidgetSync.reconcile(context.applicationContext) }
   WidgetsContent(
@@ -73,6 +74,7 @@ fun WidgetsScreen(onBack: () -> Unit) {
         )
       },
     watchWidgets = watchWidgets,
+    watchHelp = wearable,
     onChooseWatchCard = { widget, cardKey ->
       graph.wearSyncManager.chooseWatchWidgetCard(widget.nodeId, widget.instanceId, cardKey)
     },
@@ -118,7 +120,8 @@ internal fun watchWidgetLabel(widget: WatchWidget, named: Boolean): String {
 /**
  * The screen's content for [widgets] and [watchWidgets], apart from the stores so a preview can
  * draw it. Tapping a watch widget offers its cards; [onChooseWatchCard] takes the choice. Each
- * watch widget's switch turns its live updates on or off ([onWatchLiveUpdates]).
+ * watch widget's switch turns its live updates on or off ([onWatchLiveUpdates]). With [watchHelp]
+ * (this phone can reach a watch) and no watch widget yet, the Watch section says how to add one.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -127,6 +130,7 @@ internal fun WidgetsContent(
   onBack: () -> Unit,
   onEdit: (InstalledWidget) -> Unit = {},
   watchWidgets: List<WatchWidget> = emptyList(),
+  watchHelp: Boolean = false,
   onChooseWatchCard: (WatchWidget, String) -> Unit = { _, _ -> },
   onWatchLiveUpdates: (WatchWidget, Boolean) -> Unit = { _, _ -> },
 ) {
@@ -178,8 +182,8 @@ internal fun WidgetsContent(
         Text(
           text =
             "Long-press a card on a dashboard and choose Add to home screen. You can have up " +
-              "to ${WidgetStore.MAX_WIDGETS}. On a watch, add a Terrazzo widget from its " +
-              "widget list, then choose its card here.",
+              "to ${WidgetStore.MAX_WIDGETS}." +
+              if (watchHelp) "\n\n$WATCH_WIDGET_STEPS" else "",
           style = MaterialTheme.typography.bodyMedium,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
           textAlign = TextAlign.Center,
@@ -216,12 +220,23 @@ internal fun WidgetsContent(
           modifier = Modifier.clickable(onClickLabel = "Edit widget") { onEdit(widget) },
         )
       }
+      if (watchWidgets.isEmpty() && watchHelp) {
+        item { SectionHeader("Watch") }
+        item {
+          Text(
+            WATCH_WIDGET_STEPS,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+          )
+        }
+      }
       if (watchWidgets.isNotEmpty()) {
         item { SectionHeader("Watch") }
         item {
           Text(
             "Tap a widget to choose its card. Turn on its switch for live updates while the app " +
-              "is closed. To add or remove one, use your watch's widget list.",
+              "is closed. To add or remove one, swipe left from the watch face to the end.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -250,6 +265,14 @@ internal fun WidgetsContent(
     }
   }
 }
+
+/**
+ * How to put a card on the watch face, in the words the watch's widget picker uses: its providers
+ * are labelled "Terrazzo".
+ */
+internal const val WATCH_WIDGET_STEPS =
+  "On your watch, swipe left from the watch face to the end, tap Add widget and choose " +
+    "Terrazzo. Then pick its card here: any card you show on your watch."
 
 @Composable
 private fun SectionHeader(text: String) {

@@ -76,6 +76,12 @@ DESIGN_SERVER_URL=http://localhost:8080 LIBRARY_PUBLISH_TOKEN=… \
 | `LIBRARY_PUBLISH_TOKEN` | The bearer token CI publishes and deletes channels with; without it nobody can |
 | `LIBRARY_TTL_SECONDS` | How long an app keeps a manifest before asking again (default 3600, revalidated by ETag) |
 | `LIBRARY_EDIT_POLL_SECONDS` | How often library edits in UI Builder are checked and published to `main` (default 60; 0 off) |
+| `LIBRARY_UPSTREAM` | Another design server (`https://ha.coo.ee`) whose published `main` this one follows: when it was built later than the local one it is installed, downloading only the files missing here (`LibraryMirror`). Needs `LIBRARY_STORE` |
+| `LIBRARY_UPSTREAM_POLL_SECONDS` | How often `LIBRARY_UPSTREAM` is checked (default 3600) |
+
+A mirror reads `GET /api/library/channels/<channel>/files.json` (each file by path, with its
+SHA-256, and when the library was built) and `GET /api/library/channels/<channel>/files/<path>`.
+Both are public: every file is already served through the client protocol.
 
 Environment: `DESIGN_LIBRARY` (or the first argument), `PORT` (default 8080), `HOST`,
 `LIBRARY_EDITORS` (comma-separated GitHub logins that may edit the library's designs) and the
@@ -95,6 +101,7 @@ in the builder.
 | `PUBLIC_URL` | Where browsers reach the design server, e.g. `https://ha.coo.ee` |
 | `SESSION_SECRET` | Signs the session cookie and the app's device tokens: a long random string |
 | `HOST_SIGN_IN_URL` | Instead of the three above: reuse the sign-in of the Compose Preview server sharing this host, at this internal URL (see below) |
+| `TRUSTED_USER_HEADER` | Instead of GitHub: the proxy in front has signed the person in and names them in this header (`X-Remote-User-Name` in the Home Assistant add-on, [`addon/`](addon/README.md)). Only for a server nothing else can reach |
 | `GITHUB_USERS` | Optional: comma-separated logins allowed to design (default: anyone) |
 | `UI_BUILDER_GITHUB_CLIENT_ID`, `UI_BUILDER_GITHUB_CLIENT_SECRET` | The bundled UI Builder's own OAuth App. Callback: `<UI_BUILDER_BROWSER_URL>/auth/github/callback` |
 | `UI_BUILDER_COOKIE_SECRET` | Signs UI Builder's session cookie |

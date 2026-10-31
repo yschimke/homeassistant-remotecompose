@@ -8,6 +8,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.LocalHaClock
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.components.RemoteHaCalendar
 import ee.schimke.ha.rc.components.RemoteHaCalendarIdentity
@@ -58,7 +59,7 @@ object BulkDesignParts {
     val (card, snapshot) = input()
     when (card.type) {
       CardTypes.LOGBOOK -> {
-        val data = logbookData(card, snapshot)
+        val data = logbookData(card, snapshot, LocalHaClock.current.zone())
         val header = if (data.title != null) LIST_TITLED_DP else LIST_PADDING_DP
         val rows = launcherRows(header, LOGBOOK_ROW_DP) ?: data.entries.size
         RemoteHaLogbook(data.copy(entries = data.entries.take(rows)), modifier)
@@ -87,7 +88,12 @@ object BulkDesignParts {
     // One launcher column takes each identity's narrow form.
     val narrow = (LocalWidgetCaptureSizeDp.current?.widthDp ?: Int.MAX_VALUE) < NARROW_IDENTITY_DP
     when (card.type) {
-      CardTypes.LOGBOOK -> RemoteHaLogbookIdentity(logbookData(card, snapshot), modifier, narrow)
+      CardTypes.LOGBOOK ->
+        RemoteHaLogbookIdentity(
+          logbookData(card, snapshot, LocalHaClock.current.zone()),
+          modifier,
+          narrow,
+        )
       CardTypes.CALENDAR -> RemoteHaCalendarIdentity(calendarData(card, snapshot), modifier, narrow)
       else -> RemoteHaTodoListIdentity(todoData(card, snapshot), modifier, narrow)
     }
@@ -101,7 +107,7 @@ object BulkDesignParts {
     val (card, snapshot) = input()
     if (card.type == CardTypes.LOGBOOK) {
       // The latest row's own bindings, so the line follows its entity as the full card does.
-      val data = logbookData(card, snapshot)
+      val data = logbookData(card, snapshot, LocalHaClock.current.zone())
       RemoteHaSummaryLine(cardText("title", data.title ?: "Logbook"), logbookSummaryText(data))
       return
     }

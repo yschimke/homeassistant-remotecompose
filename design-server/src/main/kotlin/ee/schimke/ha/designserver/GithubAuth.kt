@@ -94,6 +94,15 @@ class GithubAuth(
      * request's session cookie.
      */
     data class Host(val url: String) : SignIn
+
+    /**
+     * The proxy in front of the server already signed the person in and names them in [header]:
+     * Home Assistant's ingress, or the terrazzo integration's proxy, both of which send
+     * `X-Remote-User-Name`. Only for a server nothing else can reach (the Home Assistant add-on's
+     * nginx admits Home Assistant alone), since the header is taken as given. There is no sign-in
+     * or sign-out of its own.
+     */
+    data class Proxy(val header: String) : SignIn
   }
 
   private val key = SecretKeySpec(sessionSecret.encodeToByteArray(), "HmacSHA256")
@@ -110,6 +119,7 @@ class GithubAuth(
         login?.takeIf { expiry != null && expiry > clock() && it.isNotEmpty() }
       }
       is SignIn.Host -> hostLogin(signIn, call)
+      is SignIn.Proxy -> call.request.headers[signIn.header]?.trim()?.takeIf { it.isNotEmpty() }
     }?.takeIf(::allowed)
 
   /**
@@ -171,16 +181,30 @@ class GithubAuth(
   /** Where to send a browser to sign in, returning to [returnPath] afterwards. */
   fun signInPath(returnPath: String): String =
     when (signIn) {
-      is SignIn.OAuthApp -> START_PATH
+      is SignIn.OAuthApp,
+      is SignIn.Proxy -> START_PATH
       is SignIn.Host -> HOST_START_PATH
     } + "?return=${enc(safeReturn(returnPath))}"
 
-  /** Where a sign-out form posts. The host's sign-out ends the sign-in on every host it reached. */
-  val signOutPath: String
+  /**
+   * Where a sign-out form posts, or null behind a [SignIn.Proxy], whose sign-in is the proxy's. The
+   * host's sign-out ends the sign-in on every host it reached.
+   */
+  val signOutPath: String?
     get() =
       when (signIn) {
         is SignIn.OAuthApp -> SIGN_OUT_PATH
         is SignIn.Host -> "$HOST_SIGN_OUT_PATH?return=%2F"
+        is SignIn.Proxy -> null
+      }
+
+  /** How people sign in, for the startup log. */
+  val signInDescription: String
+    get() =
+      when (signIn) {
+        is SignIn.OAuthApp,
+        is SignIn.Host -> "sign in with GitHub"
+        is SignIn.Proxy -> "signed in by the proxy in front (${signIn.header})"
       }
 
   fun routes(route: Route) {
@@ -190,6 +214,14 @@ class GithubAuth(
       is SignIn.Host ->
         route.get(START_PATH) {
           call.respondRedirect(signInPath(call.request.queryParameters["return"] ?: "/my"))
+        }
+      // Reached only by a request the proxy didn't name anyone in.
+      is SignIn.Proxy ->
+        route.get(START_PATH) {
+          call.respondText(
+            "Open this page from Home Assistant, signed in there.",
+            status = HttpStatusCode.Unauthorized,
+          )
         }
     }
   }
@@ -369,16 +401,21 @@ class GithubAuth(
      *   it, the key that signs device tokens is generated once and kept in [keyDir].
      * - `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `PUBLIC_URL` and `SESSION_SECRET`: its own
      *   OAuth App ([SignIn.OAuthApp]).
+     * - `TRUSTED_USER_HEADER`: the header a proxy in front names the signed-in person in
+     *   ([SignIn.Proxy]; `X-Remote-User-Name` in the Home Assistant add-on). `SESSION_SECRET` is
+     *   optional, as with `HOST_SIGN_IN_URL`.
      *
-     * Plus optional `GITHUB_USERS` (comma-separated). Null when neither is set: the server then
-     * gates editing with its printed edit link instead.
+     * Plus optional `GITHUB_USERS` (comma-separated). Null when none is set: the server then gates
+     * editing with its printed edit link instead.
      */
     fun fromEnvironment(env: Map<String, String>, http: HttpClient, keyDir: File?): GithubAuth? {
       fun value(name: String) = env[name]?.takeIf { it.isNotBlank() }
       val hostUrl = value("HOST_SIGN_IN_URL")
       val clientId = value("GITHUB_CLIENT_ID")
-      require(hostUrl == null || clientId == null) {
-        "set HOST_SIGN_IN_URL or GITHUB_CLIENT_ID, not both: they are two ways to sign in"
+      val userHeader = value("TRUSTED_USER_HEADER")
+      require(listOfNotNull(hostUrl, clientId, userHeader).size <= 1) {
+        "set one of HOST_SIGN_IN_URL, GITHUB_CLIENT_ID and TRUSTED_USER_HEADER: " +
+          "they are different ways to sign in"
       }
       val allowedUsers =
         value("GITHUB_USERS")
@@ -387,15 +424,28 @@ class GithubAuth(
           .map { it.trim() }
           .filter { it.isNotEmpty() }
           .toSet()
+      fun storedSecret(setting: String) =
+        value("SESSION_SECRET")
+          ?: storedKey(
+            requireNotNull(keyDir) {
+              "$setting is set, so SESSION_SECRET or USER_DESIGNS_DIR is needed too"
+            }
+          )
       if (hostUrl != null) {
-        val secret =
-          value("SESSION_SECRET")
-            ?: storedKey(
-              requireNotNull(keyDir) {
-                "HOST_SIGN_IN_URL is set, so SESSION_SECRET or USER_DESIGNS_DIR is needed too"
-              }
-            )
-        return GithubAuth(SignIn.Host(hostUrl), secret, allowedUsers, http)
+        return GithubAuth(
+          SignIn.Host(hostUrl),
+          storedSecret("HOST_SIGN_IN_URL"),
+          allowedUsers,
+          http,
+        )
+      }
+      if (userHeader != null) {
+        return GithubAuth(
+          SignIn.Proxy(userHeader),
+          storedSecret("TRUSTED_USER_HEADER"),
+          allowedUsers,
+          http,
+        )
       }
       if (clientId == null) return null
       fun required(name: String) =

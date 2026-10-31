@@ -398,6 +398,8 @@ internal suspend fun wearAppTemplate(
       properties.shape,
       input,
       style,
+      // The app's players write the host's ambient flag: its template reads it.
+      ambientAware = true,
     ) ?: return null
   return WearWidgetTemplate.forApp(neutral, frame, tint)
 }

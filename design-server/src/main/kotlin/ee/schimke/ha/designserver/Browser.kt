@@ -616,7 +616,7 @@ object Pages {
           "<p class=\"muted\">UI Builder is available: open the edit link the server printed at startup to design this card there.</p>"
         )
       else -> {
-        append("<form method=\"post\" action=\"/ui-builder/designs\">")
+        append("<form method=\"post\" action=\"$SEED_PATH\">")
         append("<input type=\"hidden\" name=\"$field\" value=\"${esc(value)}\">")
         val fork = field == "design"
         append(
@@ -624,8 +624,11 @@ object Pages {
         )
         editor.login?.let {
           append(
-            "<span class=\"muted\">as <b>${esc(it)}</b> · <button form=\"sign-out\" " +
-              "class=\"link\" type=\"submit\">sign out</button></span> "
+            "<span class=\"muted\">as <b>${esc(it)}</b>" +
+              (if (editor.signOutPath == null) "</span> "
+              else
+                " · <button form=\"sign-out\" class=\"link\" type=\"submit\">sign out</button>" +
+                  "</span> ")
           )
         }
         append(
@@ -636,12 +639,9 @@ object Pages {
             else "Seeds an adaptive RemoteCompose layout bound to these values.") +
             "</span></form>"
         )
-        if (editor.login != null)
-          append(
-            "<form id=\"sign-out\" method=\"post\" action=\"${
-              esc(editor.signOutPath ?: GithubAuth.SIGN_OUT_PATH)
-            }\"></form>"
-          )
+        editor.signOutPath
+          ?.takeIf { editor.login != null }
+          ?.let { append("<form id=\"sign-out\" method=\"post\" action=\"${esc(it)}\"></form>") }
         val unsupported = UiBuilderSeed.unsupported(schema)
         if (unsupported.isNotEmpty())
           append(

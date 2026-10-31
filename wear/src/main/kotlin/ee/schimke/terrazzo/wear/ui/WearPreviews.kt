@@ -192,7 +192,6 @@ fun WearSectionPreview() {
         WearValues(
           VALUES_FIXTURE + mapOf("sensor.bedroom" to EntityValue(state = "19.2", unit = "°C"))
         ),
-      onBack = {},
     )
   }
 }
@@ -352,8 +351,7 @@ fun WearSettingsPreview() {
   WearPreviewFrame {
     WearSettingsScreen(
       settings = WearSettings(demoMode = true, baseUrl = "demo://terrazzo"),
-      onBack = {},
-      onOpenWidgets = {},
+      onOpenOnPhone = {},
     )
   }
 }
@@ -369,7 +367,7 @@ fun WearWidgetsPreview() {
           WidgetRow(ee.schimke.terrazzo.wear.widget.PlacedWidget(1, provider, false), "Kitchen"),
           WidgetRow(ee.schimke.terrazzo.wear.widget.PlacedWidget(2, provider, true), null),
         ),
-      onBack = {},
+      onOpenOnPhone = {},
     )
   }
 }
@@ -377,7 +375,7 @@ fun WearWidgetsPreview() {
 @Preview(name = "Wear: widgets (empty)", device = WearDevices.SMALL_ROUND, showSystemUi = true)
 @Composable
 fun WearWidgetsPreview_Empty() {
-  WearPreviewFrame { WearWidgetsContent(rows = emptyList(), onBack = {}) }
+  WearPreviewFrame { WearWidgetsContent(rows = emptyList(), onOpenOnPhone = {}) }
 }
 
 // --- Play Store listing graphics ----------------------------------------

@@ -68,6 +68,18 @@ private object StudioKeys {
 }
 
 /**
+ * A Home Assistant's own design server (the Card Designs add-on), which the studio uses in place of
+ * a design server elsewhere: no sign-in (it is the Home Assistant's), that Home Assistant's
+ * [accessToken] on every call, and the editor opened through it ([link]).
+ */
+class HomeDesignServer(
+  val haBaseUrl: String,
+  val accessToken: suspend () -> String,
+  /** A one-time link that opens the add-on's page [path] signed in; null when this user can't. */
+  val link: suspend (path: String) -> String?,
+)
+
+/**
  * Shared phone/desktop authoring surface, as a wizard: sign in, choose how to design, design, then
  * use the design on the card. Each answered step folds to one line; [defaults] pre-answer the ones
  * answered last time.
@@ -108,6 +120,10 @@ fun CardStudioScreen(
    * switches this card to it. Null where the host can't, which hides publishing.
    */
   onPublished: ((designId: String) -> Unit)? = null,
+  /**
+   * This Home Assistant's own design server, used instead of [initialServerUrl] when it has one.
+   */
+  homeServer: HomeDesignServer? = null,
   preview: @Composable () -> Unit,
 ) {
   var server by remember { mutableStateOf(initialServerUrl) }
@@ -143,7 +159,8 @@ fun CardStudioScreen(
   val scope = rememberCoroutineScope()
   val uriHandler = LocalUriHandler.current
   val latestSnapshot by rememberUpdatedState(snapshot)
-  val signedIn = designToken.isNotBlank()
+  // A Home Assistant's own design server needs no sign-in of its own.
+  val signedIn = designToken.isNotBlank() || homeServer != null
   // A host that can sign in asks for it first: everything after works without a web sign-in.
   val needsSignIn = onSignIn != null && !signedIn
 
@@ -160,7 +177,9 @@ fun CardStudioScreen(
       message = null
       var studio: CardStudioClient? = null
       try {
-        studio = CardStudioClient(server)
+        studio =
+          homeServer?.let { CardStudioClient.throughHomeAssistant(it.haBaseUrl, it.accessToken) }
+            ?: CardStudioClient(server)
         message = block(studio)
       } catch (e: CancellationException) {
         throw e
@@ -182,6 +201,9 @@ fun CardStudioScreen(
     }
   }
 
+  /** The bearer for the signed-in calls: the Home Assistant's own token, or the device token. */
+  suspend fun bearer(): String = homeServer?.accessToken?.invoke() ?: designToken
+
   suspend fun currentSnapshot(fresh: Boolean): HaSnapshot =
     if (fresh && refreshSnapshot != null) refreshSnapshot() else latestSnapshot
 
@@ -191,10 +213,11 @@ fun CardStudioScreen(
       val seed = draft ?: studio.seed(card, now)
       val url =
         if (signedIn) {
-          val opened = studio.openAsUser(designToken, seed, card, now)
+          val opened = studio.openAsUser(bearer(), seed, card, now)
           draft = opened.document
           openedHandoffs += opened.handoff
-          opened.url
+          // The add-on names its editor by path; a browser reaches it through Home Assistant.
+          homeServer?.let { it.link(opened.url) ?: throw CardStudioException(403) } ?: opened.url
         } else {
           val handoff = studio.openDraft(seed, card, now)
           draft = handoff.document
@@ -234,7 +257,7 @@ fun CardStudioScreen(
   fun publish() {
     val key = designKey ?: return
     launch(4) { studio ->
-      val designs = studio.studioDesigns(designToken, key.cardType)
+      val designs = studio.studioDesigns(bearer(), key.cardType)
       val design = designForCard(designs, openedHandoffs)
       if (design == null) {
         requestFailed = true
@@ -242,7 +265,7 @@ fun CardStudioScreen(
         else
           "You have designs for more than one card like this. Open this card in UI Builder from here, save, then publish."
       } else {
-        val skin = studio.publishPrivately(designToken, design.designId, key)
+        val skin = studio.publishPrivately(bearer(), design.designId, key)
         onPublished?.invoke(skin)
         publishedId = skin
         "Published privately: only you see it. This card switches to it once it downloads."
@@ -297,7 +320,7 @@ fun CardStudioScreen(
         }
         preview()
         var number = 1
-        if (onSignIn != null) {
+        if (onSignIn != null && homeServer == null) {
           StudioStep(
             number = number++,
             title = "Sign in",
@@ -461,18 +484,25 @@ fun CardStudioScreen(
           Text(if (showAdvanced) "Hide options" else "More options")
         }
         if (showAdvanced) {
-          OutlinedTextField(
-            server,
-            {
-              server = it
-              draft = null
-              message = null
-            },
-            label = { Text("Design server") },
-            singleLine = true,
-            enabled = !busy,
-            modifier = Modifier.fillMaxWidth(),
-          )
+          if (homeServer != null) {
+            Text(
+              "Designs are saved on this Home Assistant's own design server.",
+              style = MaterialTheme.typography.bodyMedium,
+            )
+          } else {
+            OutlinedTextField(
+              server,
+              {
+                server = it
+                draft = null
+                message = null
+              },
+              label = { Text("Design server") },
+              singleLine = true,
+              enabled = !busy,
+              modifier = Modifier.fillMaxWidth(),
+            )
+          }
           FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TextButton(onClick = { refresh() }, enabled = !busy && server.isNotBlank()) {
               Text("Refresh preview data")

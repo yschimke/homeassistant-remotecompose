@@ -64,7 +64,6 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
   private val messageClient: MessageClient = Wearable.getMessageClient(context)
   private val nodeClient: NodeClient = Wearable.getNodeClient(context)
 
-  @Suppress("unused")
   private val registry: WearDataLayerRegistry =
     WearDataLayerRegistry.fromContext(
       application = context.applicationContext as android.app.Application,
@@ -218,13 +217,36 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
       return@OnMessageReceivedListener
     }
     if (event.path != WearSyncPaths.STREAM_MESSAGE) return@OnMessageReceivedListener
-    val frame: StreamUpdate = decodeProto(event.data) ?: return@OnMessageReceivedListener
+    val frame = decodeProto<StreamUpdate>(event.data) ?: return@OnMessageReceivedListener
     val merged = mergeStreamUpdate(offline.readValues(), frame) ?: return@OnMessageReceivedListener
     _values.value = merged.values
     // Persist the merged snapshot so a process restart resumes from
     // the latest delta-updated state, not the last full DataItem.
     offline.writeValues(merged)
   }
+
+  private val appHelper by lazy {
+    com.google.android.horologist.datalayer.watch.WearDataLayerAppHelper(
+      appContext,
+      registry,
+      scope,
+    )
+  }
+
+  /**
+   * Opens Terrazzo on the connected phone, where everything the watch shows is chosen. True when
+   * the phone started it.
+   */
+  suspend fun openOnPhone(): Boolean = runCatching {
+    val node = nodeClient.connectedNodes.await().firstOrNull() ?: return false
+    appHelper.startRemoteOwnApp(node.id) ==
+      com.google.android.horologist.data.AppHelperResultCode.APP_HELPER_RESULT_SUCCESS
+  }
+    .onFailure {
+      if (it is kotlinx.coroutines.CancellationException) throw it
+      Log.w(TAG, "openOnPhone failed", it)
+    }
+    .getOrDefault(false)
 
   fun start() {
     dataClient.addListener(dataListener)
@@ -521,7 +543,7 @@ internal fun mergeStreamUpdate(stored: LiveValues?, frame: StreamUpdate): LiveVa
  * The newest by [time] of the DataItems at [path]: each node that ever wrote one (a replaced phone,
  * say) keeps its own copy, in no particular order. Null if none decode.
  */
-private suspend inline fun <reified T> dataItem(
+private suspend inline fun <reified T : Any> dataItem(
   client: DataClient,
   path: String,
   crossinline time: (T) -> Long,

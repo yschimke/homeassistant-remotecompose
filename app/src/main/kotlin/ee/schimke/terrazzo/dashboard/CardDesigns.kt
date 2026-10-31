@@ -18,6 +18,7 @@ import ee.schimke.ha.client.design.DesignsById
 import ee.schimke.ha.client.design.GeneratedDesigns
 import ee.schimke.ha.client.design.StoredManifest
 import ee.schimke.ha.client.design.UsageSource
+import ee.schimke.ha.client.design.privateDesignServerUrl
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignQuery
@@ -74,9 +75,24 @@ data class CardDesignChoice(
    * keeps their designs too, so switching to one draws at once, offline included.
    */
   val cardStyles: Set<String> = emptySet(),
+  /**
+   * The Home Assistant (base URL) whose own design add-on [serverUrl] is, reached through it with
+   * its access token in place of [token]; blank for a design server elsewhere.
+   */
+  val homeAssistant: String = "",
 ) {
   val enabled: Boolean
     get() = serverUrl.isNotBlank()
+
+  /**
+   * This choice with Home Assistant [haBaseUrl]'s design add-on as its server, when it has one (not
+   * blank) and designs are on: its library mirrors ha.coo.ee's, with the person's own designs
+   * beside it.
+   */
+  fun withPrivateServer(haBaseUrl: String): CardDesignChoice =
+    if (haBaseUrl.isBlank() || !enabled) this
+    else
+      copy(serverUrl = privateDesignServerUrl(haBaseUrl) + "/designs/v1", homeAssistant = haBaseUrl)
 
   private val authors: List<String>
     get() = listOf(author.trim(), DesignEntry.BUILTIN_AUTHOR).filter { it.isNotEmpty() }.distinct()

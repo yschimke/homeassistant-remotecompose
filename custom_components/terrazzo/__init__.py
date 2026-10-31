@@ -5,6 +5,8 @@ serves exactly one chosen HA user of this instance, with that user's own tokens 
 Dashboard edit sessions (`edits.py`) hold an agent's drafts until a person applies one with their
 own session. The app's notifications, while it holds no websocket, are held here too (`push.py`):
 the app is woken with a content-free FCM message and collects them with its own session.
+A Terrazzo page on another site can ask for its origin to be allowed (`web_origins.py`); only an
+admin's fix of the repair it raises changes HA's HTTP config.
 """
 from pathlib import Path
 
@@ -29,7 +31,7 @@ from .const import (
     STATIC_URL,
     clean_options,
 )
-from . import edits, push
+from . import design_server, edits, push, web_origins
 from .mcp_view import TerrazzoMcpMetadataView, TerrazzoMcpView
 
 CONFIG_SCHEMA = vol.Schema(
@@ -99,6 +101,14 @@ async def async_setup_entry(hass, entry):
     if "push" not in state:
         state["push"] = await push.Push.async_load(hass)
         push.async_register(hass)
+    # The private card design add-on's API and the app's question for it (design_server.py).
+    if not state.get("designs"):
+        design_server.async_register(hass)
+        state["designs"] = True
+    # A Terrazzo page on another site asks for its origin to be allowed (web_origins.py).
+    if not state.get("web_origins"):
+        web_origins.async_register(hass)
+        state["web_origins"] = True
     options = entry.options
     # Static files are served without Cache-Control, so a browser may keep an old release's panel
     # and renderer for hours after an update. Each release gets its own URLs instead.

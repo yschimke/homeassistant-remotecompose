@@ -84,6 +84,33 @@ class DesignRepositoryTest {
   }
 
   @Test
+  fun theTokenIsAskedForEachTimeAndSentWithEveryRequest() = runTest {
+    val files = published().files
+    val sent = mutableListOf<String?>()
+    val client =
+      HttpClient(
+        MockEngine { request ->
+          sent += request.headers["Authorization"]
+          val body =
+            files[request.url.encodedPath.removePrefix("/v1/")]
+              ?: return@MockEngine respondError(HttpStatusCode.NotFound)
+          respond(body, HttpStatusCode.OK)
+        }
+      )
+    var minted = 0
+    val repository =
+      DesignRepository(
+        config.copy(token = { "token-${++minted}" }),
+        InMemoryDesignStore(),
+        client,
+        clock = { now },
+      )
+    assertEquals(RefreshResult.Updated, repository.refresh())
+    // A Home Assistant's token expires, so each request asks for a fresh one: manifest, then blob.
+    assertEquals(listOf<String?>("Bearer token-1", "Bearer token-2"), sent)
+  }
+
+  @Test
   fun refreshDownloadsVerifiedBlobs_andResolvesFresh() = runTest {
     val host = FakeHost(published().files)
     val repository = repo(host)

@@ -157,7 +157,7 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           cache-read-only: 'true'
-      - uses: yschimke/compose-ai-tools/.github/actions/install@v2.74.1
+      - uses: yschimke/compose-ai-tools/.github/actions/install@v2.78.0
         with:
           version: catalog
           catalog-key: compose-preview-plugin
@@ -178,7 +178,7 @@ jobs:
 
       - name: Audit with Claude
         if: env.AGENT == 'claude'
-        uses: anthropics/claude-code-action@d70510b174a1244958df0b03166a54912811f3e6 # v1.0.264
+        uses: anthropics/claude-code-action@d535f5172dec02b204866b393d6b20b9b2aaf98d # v1.0.266
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: Read .github/preview-audit/PROMPT.md and follow it exactly.
