@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import ee.schimke.terrazzo.LocalTerrazzoGraph
+import ee.schimke.terrazzo.core.auth.BrowserSignInUnavailableException
 import java.util.Base64
 import kotlinx.coroutines.launch
 import net.openid.appauth.AuthorizationException
@@ -57,7 +58,13 @@ fun rememberDesignSignIn(onError: (Throwable) -> Unit = {}): (designServerUrl: S
     }
   val launch = rememberKeyedLauncher(onResult)
   return remember(authService, launch) {
-    { url: String -> launch(url, authService.prepareDesignSignInIntent(url)) }
+    { url: String ->
+      try {
+        launch(url, authService.prepareDesignSignInIntent(url))
+      } catch (e: BrowserSignInUnavailableException) {
+        currentOnError(e)
+      }
+    }
   }
 }
 
