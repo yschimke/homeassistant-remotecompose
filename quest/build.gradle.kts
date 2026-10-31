@@ -10,9 +10,12 @@ plugins {
 // Compose UI in Spatial SDK panels. (`:terrazzo-core` needs API 35; Quest 3 runs API 34.)
 android {
   namespace = "ee.schimke.terrazzo.quest"
-  // Horizon OS currently supports API 34 for immersive Quest apps. Keep this module pinned
-  // instead of inheriting the newer phone/Android-XR SDK level from the version catalog.
-  compileSdk = 34
+  // Shared Home Assistant and Compose libraries publish API-37 AAR metadata, so this module
+  // compiles against the catalog SDK. Its runtime target remains API 34, with newer Quest APIs
+  // guarded in code so Horizon OS API-34 firmware keeps its supported fallback path.
+  compileSdk {
+    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+  }
   defaultConfig {
     applicationId = "ee.schimke.terrazzo.quest"
     // The Spatial SDK's Compose and UI set need 28; the shared modules need the repo's floor.
