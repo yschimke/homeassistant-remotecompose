@@ -1,36 +1,23 @@
-# Home Assistant add-on: a private card design server, the same server and UI Builder as ha.coo.ee,
-# reached only through Home Assistant. See README.md beside this file.
-#
-# Reference: https://developers.home-assistant.io/docs/add-ons/configuration/
-
 slug: card_designs
 name: Terrazzo Card Designs
-# Each release sets this (release-please, .github/release-please-config.json), so the Supervisor
-# offers the add-on as an update and rebuilds it on the design server image published since.
-version: "0.1.77"
+version: 0.1.78
 description: >-
-  Your own card design server and UI Builder, private to this Home Assistant. The Terrazzo app
-  finds it through the Terrazzo integration and keeps your designs here instead of ha.coo.ee.
-url: https://github.com/yschimke/homeassistant-remotecompose/tree/main/design-server/addon
+  Your own card design server and UI Builder, private to this Home Assistant.
+  The Terrazzo app finds it through the Terrazzo integration and keeps your
+  designs here instead of ha.coo.ee.
+url: >-
+  https://github.com/yschimke/homeassistant-remotecompose/tree/main/design-server/addon
 arch:
   - amd64
   - aarch64
 startup: application
 boot: auto
 init: false
-
-# The only way in. Ingress sends each request signed in to Home Assistant, with the person in
-# X-Remote-User-Name and the panel's prefix in X-Ingress-Path. No port is published: nginx admits
-# the ingress gateway and Home Assistant Core (the Terrazzo integration's proxy) and nobody else.
 ingress: true
 ingress_port: 8099
 panel_icon: mdi:palette-swatch-variant
 panel_title: Card designs
 panel_admin: true
-
-# GET http://supervisor/core/info: Core's port and scheme, where nginx checks the access tokens of
-# requests that didn't come through ingress.
 hassio_api: true
-
 options: {}
 schema: {}

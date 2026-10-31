@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.78](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.77...v0.1.78) (2026-10-31)
+
+
+### Features
+
+* add Quest sign-in support ([#1378](https://github.com/yschimke/homeassistant-remotecompose/issues/1378)) ([a2feee3](https://github.com/yschimke/homeassistant-remotecompose/commit/a2feee3d82d588cd93f6a339f2965a9994851757))
+* **quest:** improve spatial room controls ([#1381](https://github.com/yschimke/homeassistant-remotecompose/issues/1381)) ([7d35520](https://github.com/yschimke/homeassistant-remotecompose/commit/7d35520adf67c4d1ecec80430e41a2bbe31d9cce))
+* release the card design add-on with each Terrazzo release ([#1382](https://github.com/yschimke/homeassistant-remotecompose/issues/1382)) ([86702b8](https://github.com/yschimke/homeassistant-remotecompose/commit/86702b85ad29ec3d4b9ff95a37773c2b30fe9309))
+* **wear:** improve upgrades and navigation ([#1377](https://github.com/yschimke/homeassistant-remotecompose/issues/1377)) ([81ce140](https://github.com/yschimke/homeassistant-remotecompose/commit/81ce14070144db34f29d54ef2c513790923392e5))
+
+
+### Bug Fixes
+
+* **deps:** update ktor to v3.6.1 ([#1342](https://github.com/yschimke/homeassistant-remotecompose/issues/1342)) ([f34e232](https://github.com/yschimke/homeassistant-remotecompose/commit/f34e232b58e44279169b707cde13c44200357f80))
+* **deps:** update mockserver to v9.2.0 ([#1355](https://github.com/yschimke/homeassistant-remotecompose/issues/1355)) ([d299411](https://github.com/yschimke/homeassistant-remotecompose/commit/d299411bad1079ac20b51989cec261deed8263bd))
+
 ## [0.1.77](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.76...v0.1.77) (2026-10-31)
 
 
