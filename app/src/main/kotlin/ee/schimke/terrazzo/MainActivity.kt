@@ -33,6 +33,7 @@ import ee.schimke.terrazzo.ui.TerrazzoTheme
 import ee.schimke.terrazzo.ui.toThemeStyle
 import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.ui.updateSystemBars
+import ee.schimke.terrazzo.shared.promptForPlayStoreUpgrade
 import ee.schimke.terrazzo.widget.WidgetOpenRequests
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import kotlinx.coroutines.plus
@@ -41,6 +42,7 @@ import kotlinx.coroutines.runBlocking
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    promptForPlayStoreUpgrade()
     if (BuildConfig.TEST_HOOKS) StartupHangWatchdog.arm()
     val graph = (application as TerrazzoApplication).graph
 

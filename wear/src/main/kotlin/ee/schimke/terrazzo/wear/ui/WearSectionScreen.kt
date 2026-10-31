@@ -47,7 +47,7 @@ fun WearSectionScreen(
         if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
           WearMessageCard(card.rawJson, values, onInputSend)
         } else {
-          WearRemoteCard(card, values, onOpen = { onOpenCard(card) })
+          WearRemoteCard(card, values, onOpen = { onOpenCard(card) }, onNavigate = onNavigate)
         }
       }
     }

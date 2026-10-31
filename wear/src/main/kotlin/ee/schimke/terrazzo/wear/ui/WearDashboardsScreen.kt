@@ -11,7 +11,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material3.Button
-import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
@@ -67,15 +66,6 @@ fun WearDashboardsScreen(
       }
     }
 
-    item {
-      Button(
-        onClick = onBack,
-        modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.filledTonalButtonColors(),
-      ) {
-        Text("Back")
-      }
-    }
   }
 }
 
@@ -87,6 +77,7 @@ fun WearDashboardScreen(
   onBack: () -> Unit,
   modifier: Modifier = Modifier,
   onInputSend: (suspend (String, Map<String, String>) -> Unit)? = null,
+  onNavigate: (String) -> Unit = {},
 ) {
   WearListScreen(modifier = modifier) {
     item { ListHeader { Text(dashboard.title.ifEmpty { "Dashboard" }) } }
@@ -105,19 +96,10 @@ fun WearDashboardScreen(
         if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
           WearMessageCard(card.rawJson, values, onInputSend)
         } else {
-          WearRemoteCard(card, values)
+          WearRemoteCard(card, values, onNavigate = onNavigate)
         }
       }
     }
 
-    item {
-      Button(
-        onClick = onBack,
-        modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.filledTonalButtonColors(),
-      ) {
-        Text("Back")
-      }
-    }
   }
 }

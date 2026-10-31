@@ -68,7 +68,8 @@ internal enum class WearTapOutcome {
  * with the typed code; the phone checks that call against the card's own buttons.
  *
  * A more-info tap opens the card full screen ([onMoreInfo]), the watch's own details for it.
- * Navigate and URL taps do nothing: the watch has no dashboard navigation and no browser.
+ * Navigate taps stay on the watch and open the already-synced target dashboard. URL taps still do
+ * nothing because the watch deliberately has no embedded browser.
  *
  * Each tap reports to [onOutcome] at once (the watch's haptic / visual feedback belongs to the
  * touch), and again when the phone answers; a failure also reaches [onFailure] with what to show.
@@ -81,6 +82,7 @@ internal class WearTapDispatcher(
   private val onOutcome: (HaAction, WearTapOutcome) -> Unit = { _, _ -> },
   private val onFailure: (String) -> Unit = {},
   private val onMoreInfo: () -> Unit = {},
+  private val onNavigate: (String) -> Unit = {},
   alarmIdleTimeoutMs: Long = AlarmKeypadCoordinator.DEFAULT_IDLE_TIMEOUT_MS,
 ) : HaActionDispatcher {
 
@@ -115,8 +117,8 @@ internal class WearTapDispatcher(
       }
       // The watch's details for a card are the card itself, full screen.
       is HaAction.MoreInfo -> onMoreInfo()
+      is HaAction.Navigate -> onNavigate(action.path)
       // Only show something: nothing on the watch to show it in.
-      is HaAction.Navigate,
       is HaAction.Url,
       HaAction.None -> Unit
     }

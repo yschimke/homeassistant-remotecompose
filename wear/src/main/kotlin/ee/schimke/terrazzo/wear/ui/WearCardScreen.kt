@@ -58,6 +58,7 @@ internal fun WearCardScreen(
   values: WearValues,
   modifier: Modifier = Modifier,
   onOpenDetails: (CardSummary) -> Unit = {},
+  onNavigate: (String) -> Unit = {},
 ) {
   val pager =
     rememberPagerState(initialPage.coerceIn(0, (cards.size - 1).coerceAtLeast(0))) { cards.size }
@@ -86,7 +87,12 @@ internal fun WearCardScreen(
     ) { page ->
       AnimatedPage(page, pager) {
         val summary = cards[page]
-        WearCardPage(summary, values, onOpenDetails = { onOpenDetails(summary) })
+        WearCardPage(
+          summary,
+          values,
+          onOpenDetails = { onOpenDetails(summary) },
+          onNavigate = onNavigate,
+        )
       }
     }
   }
@@ -97,13 +103,19 @@ private fun WearCardPage(
   summary: CardSummary,
   values: WearValues,
   onOpenDetails: () -> Unit,
+  onNavigate: (String) -> Unit,
 ) {
   val registry = remember { defaultRegistry().withEnhancedShutter() }
   val card = remember(summary.rawJson) { decodeWearCard(summary.rawJson) }
   val cardValues = rememberCardValues(summary.rawJson, values)
   val snapshot = remember(cardValues) { wearSnapshot(cardValues) }
   // The card's more-info tap opens its details, as a long press does.
-  val taps = rememberWearCardTaps(summary.rawJson, onMoreInfo = onOpenDetails)
+  val taps =
+    rememberWearCardTaps(
+      summary.rawJson,
+      onMoreInfo = onOpenDetails,
+      onNavigate = onNavigate,
+    )
   val action = card?.let { wearCardPrimaryAction(it, snapshot, registry) }
   Box(Modifier.fillMaxSize()) {
     // The card takes everything between the time text and the edge button, scaled to fit.

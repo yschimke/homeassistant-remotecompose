@@ -220,6 +220,16 @@ private fun WearApp(
     openedCard = fullScreenCardKey(card)
     screen = WearScreen.Card
   }
+  fun openDashboard(path: String) {
+    val normalized = path.substringBefore('?').trim('/').removePrefix("lovelace/")
+    dashboards.firstOrNull {
+      it.urlPath.trim('/') == normalized || (normalized == "0" && it.urlPath.isEmpty())
+    }?.let {
+      openedDashboard = it.urlPath
+      screen = WearScreen.Dashboard
+      scope.launch { repo.refreshDirect() }
+    }
+  }
 
   // A Wear widget's tap: its card full screen, paging through its pinned section or the pinned
   // list; its section, or the pinned list, for a card that doesn't open full screen.
@@ -281,9 +291,10 @@ private fun WearApp(
               },
               onBrowseDashboards = { screen = WearScreen.Dashboards },
               onOpenSettings = { screen = WearScreen.Settings },
-              onOpenCard = { openCard(null, it.card) },
+              onOpenCard = { sectionKey, card -> openCard(sectionKey, card) },
               onOpenOnPhone = openOnPhone,
               onOpenWidgets = openWidgets,
+              onNavigate = ::openDashboard,
               onInputSend =
                 if (
                   settings.inputEditingEnabled &&
@@ -316,6 +327,7 @@ private fun WearApp(
                 values = values,
                 modifier = Modifier.fillMaxSize(),
                 onOpenCard = { card -> openCard(resolved?.sectionKey, card) },
+                onNavigate = ::openDashboard,
               )
             }
           }
@@ -337,6 +349,7 @@ private fun WearApp(
                   openedCard = fullScreenCardKey(card)
                   screen = WearScreen.CardDetails
                 },
+                onNavigate = ::openDashboard,
               )
             }
           }
@@ -384,6 +397,7 @@ private fun WearApp(
                 values = values,
                 onBack = { screen = WearScreen.Dashboards },
                 modifier = Modifier.fillMaxSize(),
+                onNavigate = ::openDashboard,
               )
             } else {
               // Dashboard removed mid-flight; bounce back.
