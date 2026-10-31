@@ -66,7 +66,6 @@ fun WearDashboardsScreen(
         }
       }
     }
-
   }
 }
 
@@ -101,6 +100,5 @@ fun WearDashboardScreen(
         }
       }
     }
-
   }
 }

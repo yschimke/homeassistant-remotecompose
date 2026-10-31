@@ -222,13 +222,15 @@ private fun WearApp(
   }
   fun openDashboard(path: String) {
     val normalized = path.substringBefore('?').trim('/').removePrefix("lovelace/")
-    dashboards.firstOrNull {
-      it.urlPath.trim('/') == normalized || (normalized == "0" && it.urlPath.isEmpty())
-    }?.let {
-      openedDashboard = it.urlPath
-      screen = WearScreen.Dashboard
-      scope.launch { repo.refreshDirect() }
-    }
+    dashboards
+      .firstOrNull {
+        it.urlPath.trim('/') == normalized || (normalized == "0" && it.urlPath.isEmpty())
+      }
+      ?.let {
+        openedDashboard = it.urlPath
+        screen = WearScreen.Dashboard
+        scope.launch { repo.refreshDirect() }
+      }
   }
 
   // A Wear widget's tap: its card full screen, paging through its pinned section or the pinned
