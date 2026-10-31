@@ -163,8 +163,8 @@ fun QuestSignInPanel(
 
 /**
  * One control on Quest: its name and current state, a switch for one that turns on and off, and
- * "Pin here" to pin it where the user looks ([onPin], null where pinning isn't available) or
- * "Unpin" on a pinned panel ([onUnpin]).
+ * "Pin here" (or "Move here" for an existing pin) to place it where the user looks ([onPin],
+ * null where pinning isn't available) or "Unpin" on a pinned panel ([onUnpin]).
  */
 @Composable
 fun QuestEntityCard(
@@ -172,6 +172,7 @@ fun QuestEntityCard(
   snapshot: HaSnapshot?,
   onToggle: (entityId: String) -> Unit,
   onPin: ((entityId: String) -> Unit)?,
+  pinned: Boolean = false,
   modifier: Modifier = Modifier,
   onUnpin: (() -> Unit)? = null,
 ) {
@@ -206,7 +207,8 @@ fun QuestEntityCard(
       }
     }
     onPin?.let { pin ->
-      NamedButton("Pin here", "Pin ${entity.name} here") { pin(entity.entityId) }
+      val action = if (pinned) "Move here" else "Pin here"
+      NamedButton(action, "$action ${entity.name}") { pin(entity.entityId) }
     }
     onUnpin?.let { NamedButton("Unpin", "Unpin ${entity.name}", it) }
   }

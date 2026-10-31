@@ -158,7 +158,7 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
 
   fun pinned(anchorId: String, entityId: String) {
     val url = baseUrl ?: return
-    savePins(pins + RoomPin(anchorId, url, entityId))
+    savePins(replaceQuestPin(pins, RoomPin(anchorId, url, entityId)))
   }
 
   fun unpinned(pin: RoomPin) = savePins(pins.filter { it.anchorId != pin.anchorId })
@@ -253,3 +253,7 @@ sealed interface QuestConnection {
 
   data class Error(val message: String) : QuestConnection
 }
+
+/** Replaces an entity's previous placement: a control has one spatial panel, not a growing set. */
+internal fun replaceQuestPin(pins: List<RoomPin>, replacement: RoomPin): List<RoomPin> =
+  pins.filter { it.entityId != replacement.entityId } + replacement

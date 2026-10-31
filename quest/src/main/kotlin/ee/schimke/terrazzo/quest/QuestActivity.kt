@@ -208,7 +208,14 @@ class QuestActivity : AppSystemActivity() {
       onPick = model::pick,
       onFollow = model::follow,
       entityCard = { entity, modifier ->
-        QuestEntityCard(entity, model.snapshot, model::toggle, onPin, modifier)
+        QuestEntityCard(
+          entity = entity,
+          snapshot = model.snapshot,
+          onToggle = model::toggle,
+          onPin = onPin,
+          pinned = model.pins.any { it.entityId == entity.entityId },
+          modifier = modifier,
+        )
       },
     )
 
