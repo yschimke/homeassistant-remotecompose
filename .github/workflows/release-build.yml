@@ -140,7 +140,7 @@ jobs:
       - uses: actions/setup-node@v7.1.0
         if: steps.creds.outputs.mode != 'none'
         with:
-          node-version: 24.22.2
+          node-version: 26.12.0
       # Only tested code deploys: the function's own tests first.
       - name: Test the function
         if: steps.creds.outputs.mode != 'none'
