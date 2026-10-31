@@ -21,6 +21,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 
 /**
@@ -34,6 +35,7 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
   private var client: HaClient? = null
   private var baseUrl: String? = null
   private var pendingSignInUrl: String? = null
+  private var pendingSignInGeneration: Int? = null
   private var connectionGeneration = 0
 
   var snapshot by mutableStateOf<HaSnapshot?>(null)
@@ -48,6 +50,10 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
     private set
 
   var tracker by mutableStateOf(prefs.getString(TRACKER, null))
+    private set
+
+  /** Explicit opt-in for physical home controls; new Quest installs start read-only. */
+  var controlsLocked by mutableStateOf(prefs.getBoolean(CONTROLS_LOCKED, true))
     private set
 
   var nearestPin by mutableStateOf<String?>(null)
@@ -77,10 +83,15 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
     val normalized = url.trim().removeSuffix("/")
     pendingSignInUrl = normalized
     return try {
+      val intent = auth.authorizationIntent(normalized)
+      // A restored session may still be refreshing in the background. Once the user starts a new
+      // sign-in it must not be allowed to publish its old instance, snapshot or refresh token.
+      pendingSignInGeneration = ++connectionGeneration
       connection = QuestConnection.SigningIn
-      auth.authorizationIntent(normalized)
+      intent
     } catch (e: IllegalArgumentException) {
       pendingSignInUrl = null
+      pendingSignInGeneration = null
       connection = QuestConnection.Error(e.message ?: "Enter a Home Assistant URL")
       null
     }
@@ -91,19 +102,23 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
       try {
         val tokens = auth.exchangeResult(data)
         val url = pendingSignInUrl ?: error("No Home Assistant URL was pending")
-        connect(url, tokens.accessToken, tokens.refreshToken, ++connectionGeneration)
+        val generation = pendingSignInGeneration ?: error("Home Assistant sign-in was cancelled")
+        connect(url, tokens.accessToken, tokens.refreshToken, generation)
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
         connection = QuestConnection.Error(e.message ?: "Home Assistant sign-in failed")
       } finally {
         pendingSignInUrl = null
+        pendingSignInGeneration = null
       }
     }
   }
 
   fun signOut() {
     ++connectionGeneration
+    pendingSignInUrl = null
+    pendingSignInGeneration = null
     val closing = client
     client = null
     baseUrl = null
@@ -127,10 +142,16 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
     prefs.edit().putString(TRACKER, entityId).apply()
   }
 
+  fun updateControlsLocked(locked: Boolean) {
+    controlsLocked = locked
+    prefs.edit().putBoolean(CONTROLS_LOCKED, locked).apply()
+  }
+
   /**
    * The server remains authoritative; the state_changed subscription redraws after its response.
    */
   fun toggle(entityId: String) {
+    if (controlsLocked) return
     val entity = snapshot?.states?.get(entityId) ?: return
     val domain = entityId.substringBefore('.', missingDelimiterValue = "")
     if (domain.isEmpty()) return
@@ -147,7 +168,7 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
 
   fun pinned(anchorId: String, entityId: String) {
     val url = baseUrl ?: return
-    savePins(pins + RoomPin(anchorId, url, entityId))
+    savePins(replaceQuestPin(pins, RoomPin(anchorId, url, entityId)))
   }
 
   fun unpinned(pin: RoomPin) = savePins(pins.filter { it.anchorId != pin.anchorId })
@@ -166,6 +187,7 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
     refreshToken: String?,
     generation: Int,
   ) {
+    if (!ownsConnection(generation)) return
     connection = QuestConnection.Connecting
     val normalized = rawBaseUrl.trim().removeSuffix("/")
     var opened: HaClient? = null
@@ -174,25 +196,36 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
         if (accessToken == null) refreshToken?.let { auth.refresh(normalized, it) } else null
       val token =
         accessToken ?: refreshed?.accessToken ?: error("Home Assistant returned no access token")
+      if (!ownsConnection(generation)) return
       (refreshed?.refreshToken ?: refreshToken)?.let { tokenStore.save(normalized, it) }
-      client?.close()
       val connected = HaClient(HaConfig(normalized, token))
       opened = connected
       connected.connect()
+      if (!ownsConnection(generation)) {
+        connected.close()
+        return
+      }
+      client?.close()
       client = connected
       baseUrl = normalized
       pins = decodeRoomPins(prefs.getString(PINS, null)).filter { it.baseUrl == normalized }
-      importance =
+      val resolvedImportance =
         runCatching { dashboardImportance(connected.fetchDashboard()) }
           .getOrDefault(DashboardImportance.Empty)
+      if (!ownsConnection(generation)) return
+      importance = resolvedImportance
       stateSnapshots(connected.subscribeEvents("state_changed")) {
           connected
             .snapshotWithDevices()
             .copy(areas = runCatching { connected.fetchAreas() }.getOrDefault(emptyMap()))
         }
+        // End the old subscription when a sign-in or sign-out replaces it. Without this guard an
+        // earlier restore could keep writing its live state over the newer Home Assistant session.
+        .takeWhile { ownsConnection(generation) }
         .collect {
+          if (!ownsConnection(generation)) return@collect
           snapshot = it
-          if (generation == connectionGeneration) connection = QuestConnection.Connected
+          connection = QuestConnection.Connected
         }
     } catch (e: CancellationException) {
       throw e
@@ -213,8 +246,11 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
   private companion object {
     const val PICKED = "room_picked"
     const val TRACKER = "room_tracker"
+    const val CONTROLS_LOCKED = "room_controls_locked"
     const val PINS = "room_pins"
   }
+
+  private fun ownsConnection(generation: Int): Boolean = generation == connectionGeneration
 }
 
 sealed interface QuestConnection {
@@ -228,3 +264,7 @@ sealed interface QuestConnection {
 
   data class Error(val message: String) : QuestConnection
 }
+
+/** Replaces an entity's previous placement: a control has one spatial panel, not a growing set. */
+internal fun replaceQuestPin(pins: List<RoomPin>, replacement: RoomPin): List<RoomPin> =
+  pins.filter { it.entityId != replacement.entityId } + replacement
