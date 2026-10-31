@@ -5,7 +5,9 @@
 
 slug: card_designs
 name: Terrazzo Card Designs
-version: "0.1.0"
+# Each release sets this (release-please, .github/release-please-config.json), so the Supervisor
+# offers the add-on as an update and rebuilds it on the design server image published since.
+version: "0.1.77"
 description: >-
   Your own card design server and UI Builder, private to this Home Assistant. The Terrazzo app
   finds it through the Terrazzo integration and keeps your designs here instead of ha.coo.ee.
