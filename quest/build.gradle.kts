@@ -10,14 +10,14 @@ plugins {
 // Compose UI in Spatial SDK panels. (`:terrazzo-core` needs API 35; Quest 3 runs API 34.)
 android {
   namespace = "ee.schimke.terrazzo.quest"
-  compileSdk {
-    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
-  }
+  // Horizon OS currently supports API 34 for immersive Quest apps. Keep this module pinned
+  // instead of inheriting the newer phone/Android-XR SDK level from the version catalog.
+  compileSdk = 34
   defaultConfig {
     applicationId = "ee.schimke.terrazzo.quest"
     // The Spatial SDK's Compose and UI set need 28; the shared modules need the repo's floor.
     minSdk = libs.versions.android.minSdk.get().toInt()
-    targetSdk = libs.versions.android.targetSdk.get().toInt()
+    targetSdk = 34
     versionCode = 1
     versionName = "0.1.0"
   }
@@ -33,6 +33,7 @@ android {
 dependencies {
   implementation(project(":room-ui"))
   implementation(project(":ha-model"))
+  implementation(project(":ha-client"))
 
   implementation(libs.meta.spatial.sdk)
   implementation(libs.meta.spatial.sdk.compose)
@@ -48,6 +49,7 @@ dependencies {
   implementation(libs.compose.ui.tooling.preview)
   debugImplementation(libs.compose.ui.tooling)
   implementation(libs.kotlinx.coroutines.core)
+  implementation(libs.appauth)
 
   testImplementation(libs.kotlin.test.junit)
 }

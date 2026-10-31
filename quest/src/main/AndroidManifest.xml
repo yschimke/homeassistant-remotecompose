@@ -25,5 +25,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- AppAuth receives Home Assistant's OAuth redirect, then returns it to QuestActivity. -->
+        <activity
+            android:name="net.openid.appauth.RedirectUriReceiverActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="rcha"
+                    android:host="auth-callback" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>
