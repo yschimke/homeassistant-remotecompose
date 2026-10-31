@@ -1,5 +1,65 @@
 # Changelog
 
+## [0.1.77](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.76...v0.1.77) (2026-10-31)
+
+
+### Features
+
+* **wear:** a simpler watch that only views, and findable watch widgets ([#1367](https://github.com/yschimke/homeassistant-remotecompose/issues/1367)) ([ac4972d](https://github.com/yschimke/homeassistant-remotecompose/commit/ac4972de033c52ad6816e7620427545512eca7a2))
+* **wear:** list the watch widgets as Terrazzo ([#1368](https://github.com/yschimke/homeassistant-remotecompose/issues/1368)) ([409d28e](https://github.com/yschimke/homeassistant-remotecompose/commit/409d28e58ba3a6d7421f08095bf40af1d4f75139))
+
+
+### Bug Fixes
+
+* **app:** declare ARCore optional so Play accepts the release bundle ([#1371](https://github.com/yschimke/homeassistant-remotecompose/issues/1371)) ([bbecfbb](https://github.com/yschimke/homeassistant-remotecompose/commit/bbecfbb7a83ce761f4ccc69b7178ec5c86dc1aab))
+* **deps:** update compose-ai-tools ([#1362](https://github.com/yschimke/homeassistant-remotecompose/issues/1362)) ([e51588a](https://github.com/yschimke/homeassistant-remotecompose/commit/e51588a4637f297532d67b2a07b7ecd38d5fc3ed))
+* **wear:** stop dropping every live stream frame on the watch ([#1365](https://github.com/yschimke/homeassistant-remotecompose/issues/1365)) ([f3c1aa0](https://github.com/yschimke/homeassistant-remotecompose/commit/f3c1aa0a80a2bdc13a4876254c8b9ab4bf34592f))
+* **widgets:** keep the 1.1 header on API 37 launcher documents ([#1372](https://github.com/yschimke/homeassistant-remotecompose/issues/1372)) ([8e54a74](https://github.com/yschimke/homeassistant-remotecompose/commit/8e54a74fe95e634081f41b5e820804c9a98a7d52))
+
+## [0.1.76](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.75...v0.1.76) (2026-10-31)
+
+
+### Bug Fixes
+
+* **app:** let R8 build the release with the Android XR libraries ([#1360](https://github.com/yschimke/homeassistant-remotecompose/issues/1360)) ([cc1e5e9](https://github.com/yschimke/homeassistant-remotecompose/commit/cc1e5e9efa4a42388c4aa26778cc7be0ccde3938))
+
+## [0.1.75](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.74...v0.1.75) (2026-10-30)
+
+
+### Features
+
+* a private design server as a Home Assistant add-on ([#1356](https://github.com/yschimke/homeassistant-remotecompose/issues/1356)) ([aabf860](https://github.com/yschimke/homeassistant-remotecompose/commit/aabf8602c625a4554cd60c099b3e3d5c3da4646c))
+* **design-server:** record whether a Wear widget design reads host.ambient ([#1349](https://github.com/yschimke/homeassistant-remotecompose/issues/1349)) ([90a46b8](https://github.com/yschimke/homeassistant-remotecompose/commit/90a46b8429e0ef8837bf03e222ef8de5e24598ec))
+* **home-assistant:** let an admin allow a Terrazzo web install's origin from a repair ([#1345](https://github.com/yschimke/homeassistant-remotecompose/issues/1345)) ([9174212](https://github.com/yschimke/homeassistant-remotecompose/commit/91742124de48776e6f6fc46eecac0e5bc841661f))
+
+
+### Bug Fixes
+
+* **cards:** date a week-old logbook change with the offset in force then ([#1353](https://github.com/yschimke/homeassistant-remotecompose/issues/1353)) ([f353ac6](https://github.com/yschimke/homeassistant-remotecompose/commit/f353ac68d1f2ff47e113a9ce16135e504c0d9589))
+* **deps:** update compose-ai-tools ([#1350](https://github.com/yschimke/homeassistant-remotecompose/issues/1350)) ([1f38e96](https://github.com/yschimke/homeassistant-remotecompose/commit/1f38e9667f137854a6e3f8544ced491b5b4f8c17))
+* **deps:** update mockserver to v9 ([#1351](https://github.com/yschimke/homeassistant-remotecompose/issues/1351)) ([85d4098](https://github.com/yschimke/homeassistant-remotecompose/commit/85d4098c5a3809fe47260c8c407dcdd62d4e631a))
+
+## [0.1.74](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.73...v0.1.74) (2026-10-29)
+
+
+### Features
+
+* **cards:** every card goes dark while ambient ([#1339](https://github.com/yschimke/homeassistant-remotecompose/issues/1339)) ([101a5fd](https://github.com/yschimke/homeassistant-remotecompose/commit/101a5fd38c07c4ae9223ad22ee417933f1ff85a8))
+* **cards:** logbook shows when from HA's last_changed, worked out in the document ([#1326](https://github.com/yschimke/homeassistant-remotecompose/issues/1326)) ([698269d](https://github.com/yschimke/homeassistant-remotecompose/commit/698269d322ccfe4dcb3e7723088a82537bc1c779))
+* **design-server:** play designs live with an ambient switch and changing values ([#1334](https://github.com/yschimke/homeassistant-remotecompose/issues/1334)) ([085bbfe](https://github.com/yschimke/homeassistant-remotecompose/commit/085bbfe587ea90eb799921bb69d56546da7ee97f))
+* M3 Expressive slider, and a pull request's design changes in the design browser ([#1330](https://github.com/yschimke/homeassistant-remotecompose/issues/1330)) ([83c69fe](https://github.com/yschimke/homeassistant-remotecompose/commit/83c69feb106682ee291eb641f97bdd103bc42444))
+* **motion:** M3 Expressive press, shape morph, wavy progress and loader ([#1325](https://github.com/yschimke/homeassistant-remotecompose/issues/1325)) ([b8212d6](https://github.com/yschimke/homeassistant-remotecompose/commit/b8212d60a3de4855284579de27a8c76e3dece27c))
+* **motion:** runtime ambient flag for low-power displays ([#1333](https://github.com/yschimke/homeassistant-remotecompose/issues/1333)) ([e27e49c](https://github.com/yschimke/homeassistant-remotecompose/commit/e27e49c565394cb9f85da3169925a643cd000740))
+* room controls on Android XR glasses with Glimmer, on Compose 1.13 ([#1340](https://github.com/yschimke/homeassistant-remotecompose/issues/1340)) ([44e1fe6](https://github.com/yschimke/homeassistant-remotecompose/commit/44e1fe677b873165afb4d93fc324f83325a03e06))
+* room controls on Meta Quest with scene previews ([#1331](https://github.com/yschimke/homeassistant-remotecompose/issues/1331)) ([39bb475](https://github.com/yschimke/homeassistant-remotecompose/commit/39bb475dda394b15cd3e2af842649bb08219405f))
+* snap pinned room controls to walls on an XR headset ([#1324](https://github.com/yschimke/homeassistant-remotecompose/issues/1324)) ([2728159](https://github.com/yschimke/homeassistant-remotecompose/commit/2728159e1924f4b36ddb9cc02ffcc03511995dae))
+* **wear:** ambient mode for the app's cards ([#1343](https://github.com/yschimke/homeassistant-remotecompose/issues/1343)) ([d43efa3](https://github.com/yschimke/homeassistant-remotecompose/commit/d43efa3b54d44e8083586706b6e37aaf4f1c954c))
+
+
+### Bug Fixes
+
+* **previews:** load demo camera images synchronously in screen previews ([#1335](https://github.com/yschimke/homeassistant-remotecompose/issues/1335)) ([eb7595c](https://github.com/yschimke/homeassistant-remotecompose/commit/eb7595c57446300bc8efb6e723b6d4ed58b0e5ee))
+
 ## [0.1.73](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.72...v0.1.73) (2026-10-29)
 
 

@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
@@ -73,10 +74,11 @@ enum class CardPlayback {
  * - [namedValues] carries live binding writes (`<entity>.state`, …) into the running document
  *   without re-creating it, so document animations are not restarted.
  * - [onNamedAction] receives the document's named host actions (`ha` + JSON payload).
- * - [ambient] is the display's low-power ambient state, written to the document's [RcAmbientValue]
- *   when it reads one (docs/architecture/ambient-mode.md): set it once the card has settled, and
- *   the next frame is the ambient one. Null, a host that doesn't know, writes nothing: the document
- *   keeps the value it was captured with.
+ * - [ambient] reads the display's low-power ambient state, written to the document's
+ *   [RcAmbientValue] when it reads one (docs/architecture/ambient-mode.md). It is read in snapshot
+ *   effects only, never in composition, so a change reaches the running document with no
+ *   recomposition and no re-encode: back it with snapshot state. Null, a host that doesn't know,
+ *   writes nothing: the document keeps the value it was captured with.
  * - A frozen [LocalHaClock] (previews, tests) pins the player's time source too, so time-driven
  *   expressions resolve to the same instant the converters encoded, and decodes a plain
  *   [BitmapLoader]'s images inline rather than on `Dispatchers.IO`, so a capture never races them.
@@ -98,19 +100,18 @@ fun HaRcComposePlayer(
     ee.schimke.composeai.rcplayer.runtime.RcInputDrafts()
   },
   onInputSubmit: (String, Map<String, String>) -> Unit = { _, _ -> },
-  ambient: Boolean? = null,
+  ambient: () -> Boolean? = NoHostAmbient,
 ) {
   // The host's own values ride with the card's: seeded before the first frame like them, so a card
-  // that appears while ambient draws ambient from its first frame.
-  val ambientState = androidx.compose.runtime.rememberUpdatedState(ambient)
-  val hostValues: () -> Map<String, RcNamedValue> =
-    remember(namedValues) {
-      {
+  // that appears while ambient draws ambient from its first frame. Only the effect below observes
+  // [ambient]; the seed reads it unobserved, so an ambient change recomposes nothing.
+  val hostValues: (observeAmbient: Boolean) -> Map<String, RcNamedValue> =
+    remember(namedValues, ambient) {
+      { observeAmbient ->
         val values = namedValues.toMap()
-        when (val on = ambientState.value) {
-          null -> values
-          else -> values + (RcAmbientValue to RcNamedValue.FloatValue(if (on) 1f else 0f))
-        }
+        val on = if (observeAmbient) ambient() else Snapshot.withoutReadObservation(ambient)
+        if (on == null) values
+        else values + (RcAmbientValue to RcNamedValue.FloatValue(if (on) 1f else 0f))
       }
     }
   val error = remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
@@ -158,7 +159,7 @@ fun HaRcComposePlayer(
     documentBytes,
     modifier,
     namedValues = {
-      hostValues().filter { (name, value) -> decoded.declared.accepts(name, value) }
+      hostValues(false).filter { (name, value) -> decoded.declared.accepts(name, value) }
     },
   ) { fail ->
     run {
@@ -186,11 +187,11 @@ fun HaRcComposePlayer(
       val playerValues =
         remember(document) {
           mutableStateMapOf<String, RcNamedValue>().apply {
-            putAll(hostValues().filter { (name, value) -> declared.accepts(name, value) })
+            putAll(hostValues(false).filter { (name, value) -> declared.accepts(name, value) })
           }
         }
       LaunchedEffect(playerValues, namedValues) {
-        snapshotFlow { hostValues() }
+        snapshotFlow { hostValues(true) }
           .collect { values ->
             val accepted = values.filter { (name, value) -> declared.accepts(name, value) }
             playerValues.keys.retainAll(accepted.keys)
@@ -430,3 +431,6 @@ private class ReloadingImageLoader(private val delegate: RcImageLoader) : RcImag
 
   override fun cached(bitmap: RcBitmapData): ImageBitmap? = delegate.cached(bitmap)
 }
+
+/** No host ambient state: nothing is written, and documents keep their captured value. */
+val NoHostAmbient: () -> Boolean? = { null }

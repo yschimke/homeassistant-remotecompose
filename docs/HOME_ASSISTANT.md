@@ -301,6 +301,25 @@ runs inside native Lovelace; a WASM dashboard containing that custom type may
 show the existing unsupported-card message. More-info and navigation actions
 in the panel are forwarded to the parent HA frontend.
 
+## Web installs on another site
+
+Terrazzo outside Home Assistant (a Wasmo app, GitHub Pages, any other HTTPS site) reaches HA over its
+websocket, which needs nothing extra, but loads camera and entity pictures with `fetch`, which needs
+HA to allow the site's origin (CORS). When such a page connects, the integration checks that origin
+and, if HA doesn't allow it, raises a repair: **Allow Terrazzo at `https://…` to load images**.
+
+- The origin comes from the sign-in itself: HA issued the connection's token to that page through
+  its OAuth sign-in, so a page can't ask on another site's behalf. Long-lived tokens, the app and
+  HA's own pages raise nothing.
+- Fixing the repair (an admin, under **Settings → Repairs**) adds the origin to HA's HTTP settings,
+  keeping every other setting and origin, and restarts Home Assistant. Once HA is back the
+  integration confirms the change; if HA doesn't start with it, HA reverts it after five minutes as
+  usual.
+- It needs Home Assistant 2026.10 or later, which keeps CORS in its HTTP settings store and no
+  longer reads `http: cors_allowed_origins` from YAML. On an older HA the repair is not raised; add
+  the origin under `http:` in `configuration.yaml` instead.
+- Nothing is changed while another HTTP settings change is waiting to be confirmed.
+
 ## Notifications on the phone while the app is closed
 
 With the integration installed, the Terrazzo Android app also receives `notify.mobile_app_<phone>`
@@ -309,6 +328,20 @@ The message stays in Home Assistant; only a content-free wake goes through Fireb
 and the app then fetches the message from this integration with its own login. Without the
 integration the app gets notifications only while it is connected. See
 [notifications.md](architecture/notifications.md).
+
+## Your own card design server
+
+The **Terrazzo Card Designs** add-on runs the design server and UI Builder that ha.coo.ee runs, on
+this Home Assistant and private to it: add this repository in the add-on store and install it (see
+[design-server/addon](../design-server/addon/README.md)). Its library follows ha.coo.ee's; the
+designs you make are kept here, under your Home Assistant username, with no GitHub account.
+
+With the integration installed too, the Terrazzo app finds the add-on when it connects
+(`terrazzo/design_server`) and uses it in place of ha.coo.ee: it fetches designs and opens Card
+Studio through `/api/terrazzo/designs` with its own Home Assistant login, and a design opens in the
+browser through a one-time link (`terrazzo/design_server/open`, administrators only) that signs the
+browser in to the add-on's ingress. Settings shows which server is in use. The add-on's **Card
+designs** panel opens the same pages from Home Assistant's sidebar.
 
 ## MCP server for AI assistants
 

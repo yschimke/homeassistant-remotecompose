@@ -556,6 +556,23 @@ class HaClient(
     }
 
   /**
+   * Whether this Home Assistant runs the Terrazzo card design add-on: the integration's answer
+   * (`available`, and with it `url`, where its API is reached with this connection's token). Fails
+   * with [HaCommandException] when the integration isn't installed (`unknown_command`).
+   */
+  suspend fun terrazzoDesignServer(): JsonObject = runCommand("terrazzo/design_server")
+
+  /**
+   * A one-time link, on this Home Assistant, that signs a browser in to the design add-on and opens
+   * [path] there (a page its API named, such as `/ui-builder/<id>`). Good for a minute. Admins
+   * only, as the add-on's panel is.
+   */
+  suspend fun terrazzoDesignLink(path: String): String =
+    runCommand("terrazzo/design_server/open") { put("path", path) }["url"]
+      ?.jsonPrimitive
+      ?.contentOrNull ?: error("terrazzo/design_server/open answered no link")
+
+  /**
    * The messages the Terrazzo integration held for [webhookId] while the app had no websocket,
    * oldest first, each as HA's push body (`message`, `title`, `data`); each is answered once.
    */
@@ -583,6 +600,15 @@ class HaClient(
       }["lease_seconds"]
       ?.jsonPrimitive
       ?.intOrNull ?: 0
+
+  /**
+   * Asks the Terrazzo integration whether HA lets this page's origin load images (CORS), raising a
+   * repair for an admin to allow it if not. HA takes the origin from this sign-in's own OAuth
+   * client, so the page can't name another. Answers its `status`: `allowed`, `needs_approval`,
+   * `not_needed`, or `unsupported`. Fails with [HaCommandException] without the integration.
+   */
+  suspend fun reportTerrazzoWebOrigin(): String =
+    runCommand("terrazzo/web_origin")["status"]?.jsonPrimitive?.contentOrNull.orEmpty()
 
   /** Fires an event on HA's bus, as a notification action button does. Needs an admin user. */
   suspend fun fireEvent(eventType: String, eventData: JsonObject) {

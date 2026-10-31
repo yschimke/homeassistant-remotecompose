@@ -14,6 +14,7 @@ import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.converterFor
+import ee.schimke.rc.m3.RcAmbientValue
 import ee.schimke.terrazzo.wear.ui.WearCardLook
 import ee.schimke.terrazzo.wear.ui.wearAppTemplate
 import ee.schimke.terrazzo.wear.ui.wearTemplateShape
@@ -22,6 +23,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.After
@@ -170,5 +172,7 @@ class WearWidgetFrameTest {
     }
     // …and the card's own values stay bindings, which the app pushes live.
     assertNotNull(names.firstOrNull { it.endsWith(".state") }, "a state binding: $names")
+    // …and the host's ambient flag, which the app's players write while the watch is always-on.
+    assertTrue(RcAmbientValue in names, "the ambient flag: $names")
   }
 }

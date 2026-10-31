@@ -89,8 +89,11 @@ Requirements:
   `homeassistant.local:8123`.
 - **Entity pictures and camera images** are plain HTTP fetches, so they also need the app's exact
   origin (`https://<name>-<computer>.<wasmo host>`, which changes with the install name) in Home
-  Assistant's `http: cors_allowed_origins`. Cards render without it; only those pictures are
-  missing.
+  Assistant's allowed CORS origins. Cards render without it; only those pictures are missing. With
+  the Terrazzo integration installed, the app asks for it when it connects and an admin approves it
+  under **Settings → Repairs** ([Web installs on another site](../HOME_ASSISTANT.md#web-installs-on-another-site)).
+  Home Assistant 2026.10 and later keep this list in their HTTP settings store and ignore
+  `http: cors_allowed_origins` in YAML.
 
 When the page can't reach a backend it falls back to browser storage and, on a `.wasmo` install
 (its `app.html` carries `<meta name="terrazzo-host" content="wasmo">`), shows a dismissible notice

@@ -293,27 +293,7 @@ class LibraryChannels(
           index = json.decodeFromString(Index.serializer(), indexFile.readText()).files
           indexFile.delete()
         }
-      index?.let { files ->
-        require(files.size <= MAX_LIBRARY_FILES) { "more than $MAX_LIBRARY_FILES files" }
-        for ((path, sha) in files) {
-          require(LIBRARY_FILE.matches(path)) { "not a library file: $path" }
-          require(SHA256.matches(sha)) { "not a SHA-256: $sha" }
-          val file = File(staging, path)
-          if (file.isFile) {
-            require(sha256(file) == sha) { "$path doesn't match its hash" }
-          } else {
-            val stored = objectFile(sha)
-            require(stored.isFile) { "$path wasn't uploaded and isn't held here" }
-            file.parentFile.mkdirs()
-            link(stored, file)
-          }
-        }
-        // Nothing the index doesn't name: a stray upload would serve outside the library.
-        staging
-          .walkTopDown()
-          .filter { it.isFile }
-          .forEach { require(it.relativeTo(staging).path in files) { "${it.name} isn't indexed" } }
-      }
+      index?.let { assemble(staging, it) }
       require(File(staging, DesignLibrary.MANIFEST).isFile) { "no ${DesignLibrary.MANIFEST}" }
       return staging
     } catch (e: Throwable) {
@@ -321,6 +301,76 @@ class LibraryChannels(
       throw e
     }
   }
+
+  /**
+   * Completes [staging] (a [stagingDir]) to the library [files] indexes (path to SHA-256): each
+   * file already there is checked against its hash, and the others are taken from what this server
+   * holds ([missing] named the ones it doesn't). Anything the index doesn't name is refused.
+   */
+  fun assemble(staging: File, files: Map<String, String>) {
+    require(files.size <= MAX_LIBRARY_FILES) { "more than $MAX_LIBRARY_FILES files" }
+    for ((path, sha) in files) {
+      require(LIBRARY_FILE.matches(path)) { "not a library file: $path" }
+      require(SHA256.matches(sha)) { "not a SHA-256: $sha" }
+      val file = File(staging, path)
+      if (file.isFile) {
+        require(sha256(file) == sha) { "$path doesn't match its hash" }
+      } else {
+        val stored = objectFile(sha)
+        require(stored.isFile) { "$path wasn't uploaded and isn't held here" }
+        file.parentFile.mkdirs()
+        link(stored, file)
+      }
+    }
+    // Nothing the index doesn't name: a stray upload would serve outside the library.
+    staging
+      .walkTopDown()
+      .filter { it.isFile }
+      .forEach { require(it.relativeTo(staging).path in files) { "${it.name} isn't indexed" } }
+  }
+
+  /**
+   * [channel]'s library as a mirror copies it ([LibraryMirror]): each file by path with its
+   * SHA-256, and when the library it was published from was built. Hashed once per installed
+   * library. Null for a channel nothing was published to.
+   */
+  fun index(channel: String): LibraryIndex? {
+    val dir = holder(channel)?.dir ?: return null
+    val stamp = File(dir, DesignLibrary.MANIFEST).lastModified()
+    indexes[channel]
+      ?.takeIf { it.first == stamp }
+      ?.let {
+        return it.second
+      }
+    val files =
+      dir
+        .walkTopDown()
+        .filter { it.isFile && LIBRARY_FILE.matches(it.relativeTo(dir).path) }
+        .associate { it.relativeTo(dir).path to sha256(it) }
+        .toSortedMap()
+    val index = LibraryIndex(builtAt(dir) ?: return null, files)
+    indexes[channel] = stamp to index
+    return index
+  }
+
+  /** One file of [channel]'s library by its [path] in the library, or null. */
+  fun libraryFile(channel: String, path: String): File? {
+    if (!LIBRARY_FILE.matches(path)) return null
+    return holder(channel)?.dir?.let { File(it, path) }?.takeIf { it.isFile }
+  }
+
+  /** When the library [channel] was last published from was built, or null without one. */
+  fun builtAt(channel: String): Long? = holder(channel)?.dir?.let(::builtAt)
+
+  private fun builtAt(dir: File): Long? =
+    readPublished(dir)?.sourceGeneratedAtEpochMs
+      ?: runCatching { DesignLibrary.load(dir).manifest.generatedAtEpochMs }.getOrNull()
+
+  private val indexes = ConcurrentHashMap<String, Pair<Long, LibraryIndex>>()
+
+  /** A library's files by path, with their SHA-256 ([index]). */
+  @Serializable
+  data class LibraryIndex(val generatedAtEpochMs: Long, val files: Map<String, String>)
 
   /** Keeps every file of [library] in the object store, so later publishes needn't send it. */
   private fun remember(library: File) {
@@ -387,11 +437,7 @@ class LibraryChannels(
    */
   private fun seedMain(seed: File) {
     val seedManifest = runCatching { DesignLibrary.load(seed).manifest }.getOrNull() ?: return
-    val main = dir(LibraryPaths.MAIN)
-    val installed = runCatching { DesignLibrary.load(main) }.getOrNull()
-    val installedFrom = installed?.let {
-      readPublished(main)?.sourceGeneratedAtEpochMs ?: it.manifest.generatedAtEpochMs
-    }
+    val installedFrom = builtAt(dir(LibraryPaths.MAIN))
     if (installedFrom != null && installedFrom >= seedManifest.generatedAtEpochMs) return
     val staging = stagingDir()
     seed.copyRecursively(staging, overwrite = true)

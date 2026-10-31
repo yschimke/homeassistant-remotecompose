@@ -104,12 +104,20 @@ class MainActivity : ComponentActivity() {
         )[SessionHolder::class]
     // Demo mode needs no network, so its session is ready for the first composition too; seeding
     // null there painted the sign-in screen until the resume below swapped the demo session in.
+    // Debug builds only: a session from an injected token, with no browser sign-in (see
+    // [EXTRA_TEST_ACCESS_TOKEN]). It has no refresh token, so the cold-start resume, which would
+    // find none and mark it unreachable, is skipped.
+    val injected = if (BuildConfig.TEST_HOOKS) injectedTestSession(graph, intent) else null
     sessionHolder.start(
       initial = {
-        if (runBlocking { graph.preferencesStore.demoModeNow() }) graph.sessionFactory.createDemo()
-        else graph.offlineCache.lastInstance()?.let(graph.sessionFactory::createCachedOnly)
+        injected
+          ?: if (runBlocking { graph.preferencesStore.demoModeNow() })
+            graph.sessionFactory.createDemo()
+          else graph.offlineCache.lastInstance()?.let(graph.sessionFactory::createCachedOnly)
       },
-      resume = { initial -> resumeSession(graph, widgetScheduler, sessionHolder, initial) },
+      resume = { initial ->
+        if (injected == null) resumeSession(graph, widgetScheduler, sessionHolder, initial)
+      },
     )
 
     // The runtime graph is always an [AppGraph] (constructed via
@@ -187,8 +195,35 @@ class MainActivity : ComponentActivity() {
 
     /** With [EXTRA_TEST_DEMO_MODE]: every dashboard section open, not just the first. */
     const val EXTRA_TEST_EXPAND_SECTIONS: String = "terrazzo.test.expand_sections"
+
+    /**
+     * Debug builds only: with [EXTRA_TEST_BASE_URL], signs in to that Home Assistant with this
+     * access token (a long-lived token from the user's HA profile) instead of the browser sign-in,
+     * which a test, an emulator without a browser or the compose-preview simulator can't complete.
+     * Nothing is stored: the next plain launch starts signed out (or on its previous session).
+     */
+    const val EXTRA_TEST_ACCESS_TOKEN: String = "terrazzo.test.access_token"
+
+    /** With [EXTRA_TEST_ACCESS_TOKEN]: the Home Assistant to sign in to. */
+    const val EXTRA_TEST_BASE_URL: String = "terrazzo.test.base_url"
   }
 }
+
+/**
+ * The session [EXTRA_TEST_ACCESS_TOKEN] / [EXTRA_TEST_BASE_URL] ask for, or null. A long-lived
+ * token lasts years and can't be refreshed, so it is given a matching lifetime: the session never
+ * tries to mint a new one.
+ */
+private fun injectedTestSession(graph: TerrazzoGraph, intent: Intent?): HaSession? {
+  val token = intent?.getStringExtra(MainActivity.EXTRA_TEST_ACCESS_TOKEN)?.trim()
+  val baseUrl = intent?.getStringExtra(MainActivity.EXTRA_TEST_BASE_URL)?.trim()?.trimEnd('/')
+  if (token.isNullOrEmpty() || baseUrl.isNullOrEmpty()) return null
+  runBlocking { graph.preferencesStore.setDemoMode(false) }
+  return graph.sessionFactory.create(baseUrl, token, lifetime = INJECTED_TOKEN_LIFETIME)
+}
+
+/** How long an injected long-lived token is treated as valid: Home Assistant's 10-year default. */
+private val INJECTED_TOKEN_LIFETIME = kotlin.time.Duration.parse("3650d")
 
 /**
  * Cold-start auto-resume, run once per [SessionHolder]. Top-level rather than an Activity member so

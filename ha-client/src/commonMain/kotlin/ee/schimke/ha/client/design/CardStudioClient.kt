@@ -9,6 +9,7 @@ import ee.schimke.ha.model.HaSnapshot
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -23,11 +24,39 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.serialization.json.*
 
-/** An app session's authoring client. It never receives a Home Assistant access token. */
-class CardStudioClient(serverUrl: String, engine: HttpClientEngine? = null) {
-  private val base = studioServerUrl(serverUrl)
+/**
+ * An app session's authoring client. A design server elsewhere (ha.coo.ee) never receives a Home
+ * Assistant access token; a Home Assistant's own design add-on ([throughHomeAssistant]) is reached
+ * through that Home Assistant, which already holds it.
+ */
+class CardStudioClient
+private constructor(
+  private val base: String,
+  engine: HttpClientEngine?,
+  /** Sent as the bearer of every request that names none: the Home Assistant's own token. */
+  homeAssistantToken: (suspend () -> String)?,
+) {
+  constructor(
+    serverUrl: String,
+    engine: HttpClientEngine? = null,
+  ) : this(studioServerUrl(serverUrl), engine, null)
+
   private val http =
-    if (engine == null) platformHttpClient { configure() } else HttpClient(engine) { configure() }
+    if (engine == null) platformHttpClient { configure(homeAssistantToken) }
+    else HttpClient(engine) { configure(homeAssistantToken) }
+
+  companion object {
+    /**
+     * The design add-on of the Home Assistant at [haBaseUrl], through its Terrazzo integration
+     * ([privateDesignServerUrl]), with that Home Assistant's [accessToken] on every request. Its
+     * scheme is the Home Assistant's own.
+     */
+    fun throughHomeAssistant(
+      haBaseUrl: String,
+      accessToken: suspend () -> String,
+      engine: HttpClientEngine? = null,
+    ): CardStudioClient = CardStudioClient(privateDesignServerUrl(haBaseUrl), engine, accessToken)
+  }
 
   suspend fun seed(card: CardConfig, snapshot: HaSnapshot): JsonObject =
     request("/api/studio/seed", cardPreviewData(card, snapshot))
@@ -225,6 +254,7 @@ class CardStudioException(val status: Int, reason: String? = null) :
   IllegalStateException(
     when (status) {
       401 -> "The design server didn't accept this device's sign-in. Sign in again."
+      403 -> "Only a Home Assistant administrator can open designs on its design server."
       502 -> reason ?: "UI Builder couldn't open this draft. Try again."
       404 -> "This design server does not support Card Studio. Update it or choose another server."
       410 -> "This preview expired. Refresh preview data and try again."
@@ -258,10 +288,30 @@ fun refreshCardDraft(document: JsonObject, freshSeed: JsonObject): JsonObject {
   return refreshed
 }
 
-private fun io.ktor.client.HttpClientConfig<*>.configure() {
+private fun io.ktor.client.HttpClientConfig<*>.configure(
+  homeAssistantToken: (suspend () -> String)?
+) {
   followRedirects = false
   install(HttpTimeout) { requestTimeoutMillis = 30_000 }
+  if (homeAssistantToken != null) {
+    install(
+      createClientPlugin("HomeAssistantBearer") {
+        onRequest { request, _ ->
+          if (request.headers[HttpHeaders.Authorization] == null) {
+            request.header(HttpHeaders.Authorization, "Bearer ${homeAssistantToken()}")
+          }
+        }
+      }
+    )
+  }
 }
+
+/** Where a Home Assistant's Terrazzo integration serves its design add-on's API. */
+const val PRIVATE_DESIGNS_PATH = "/api/terrazzo/designs"
+
+/** The design add-on's API on the Home Assistant at [haBaseUrl] ([PRIVATE_DESIGNS_PATH]). */
+fun privateDesignServerUrl(haBaseUrl: String): String =
+  haBaseUrl.trim().trimEnd('/') + PRIVATE_DESIGNS_PATH
 
 /** Settings also accept the existing library URL, which ends in /designs/v1. */
 fun studioServerUrl(value: String): String {

@@ -37,6 +37,19 @@ class CardDesignChoiceTest {
   private fun CardDesignChoice.wants(entry: DesignEntry) = queries.any { it.matches(entry) }
 
   @Test
+  fun aHomeAssistantsOwnServerReplacesTheConfiguredOneButNeverTurnsDesignsOn() {
+    val choice =
+      CardDesignChoice("https://ha.coo.ee/designs/v1", ThemeStyle.TerrazzoHome, HaUberTheme.Classic)
+    val home = choice.withPrivateServer("https://home.example/")
+    assertEquals("https://home.example/api/terrazzo/designs/designs/v1", home.serverUrl)
+    assertEquals("https://home.example/", home.homeAssistant)
+    assertEquals(choice, choice.withPrivateServer(""))
+    // Designs switched off stay off.
+    val off = choice.copy(serverUrl = "")
+    assertEquals(off, off.withPrivateServer("https://home.example"))
+  }
+
+  @Test
   fun classicDownloadsItsPaletteInBothModes() {
     val choice =
       CardDesignChoice("https://designs.test", ThemeStyle.TerrazzoHome, HaUberTheme.Classic)

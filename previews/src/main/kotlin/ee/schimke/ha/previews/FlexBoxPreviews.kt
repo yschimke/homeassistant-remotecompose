@@ -1,5 +1,4 @@
 @file:Suppress("COMPOSE_APPLIER_CALL_MISMATCH", "RestrictedApi")
-@file:OptIn(ExperimentalFlexBoxApi::class)
 
 package ee.schimke.ha.previews
 
@@ -7,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalFlexBoxApi
 import androidx.compose.foundation.layout.FlexAlignItems
 import androidx.compose.foundation.layout.FlexAlignSelf
 import androidx.compose.foundation.layout.FlexBasis

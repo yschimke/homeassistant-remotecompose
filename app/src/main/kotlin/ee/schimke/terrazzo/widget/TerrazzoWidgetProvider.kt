@@ -307,7 +307,9 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     val remoteViews =
       if (baked != null) {
         RemoteViews(
-            RemoteViews.DrawInstructions.Builder(listOf(platformWidgetDocument(baked.bytes)))
+            RemoteViews.DrawInstructions.Builder(
+                listOf(platformWidgetDocument(baked.bytes, android16Wire(captureProfile)))
+              )
               .build()
           )
           .also { views ->
@@ -395,7 +397,10 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
       }
     val remoteViews =
       RemoteViews(
-        RemoteViews.DrawInstructions.Builder(listOf(platformWidgetDocument(captured.bytes))).build()
+        RemoteViews.DrawInstructions.Builder(
+            listOf(platformWidgetDocument(captured.bytes, android16Wire(captureProfile)))
+          )
+          .build()
       )
     captured.actions
       .filterKeys { widgetId != AppWidgetManager.INVALID_APPWIDGET_ID }
@@ -508,6 +513,15 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     // ColorTheme (wire op 196) is not understood by Android 16's platform
     // Remote Compose player. API 37 adds the host-side implementation.
     const val SYSTEM_THEME_MIN_HOST_API = 37
+
+    /**
+     * Whether a launcher document captured with [profile] ships at Android 16's wire version:
+     * everything but [systemThemedWidgetsProfile], whose ColorTheme an API 37 host can only read at
+     * the 1.1 header (see [platformWidgetDocument]).
+     */
+    internal fun android16Wire(profile: androidx.compose.remote.creation.profile.Profile): Boolean =
+      profile !== systemThemedWidgetsProfile
+
     val EMPTY_SNAPSHOT = HaSnapshot()
     const val TAG = "TerrazzoWidgetProvider"
 

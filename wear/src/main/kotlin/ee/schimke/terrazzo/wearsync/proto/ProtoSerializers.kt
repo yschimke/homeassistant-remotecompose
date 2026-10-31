@@ -39,9 +39,15 @@ inline fun <reified T : Any> protoBufSerializer(default: T): ProtoBufSerializer<
 inline fun <reified T> encodeProto(value: T): ByteArray =
   ProtoBuf.encodeToByteArray(serializer(), value)
 
-/** Decode proto bytes back into [T]. Returns null on corruption. */
+/**
+ * Decode proto bytes back into [T]. Returns null on corruption.
+ *
+ * [T] is bound to [Any] so it is never inferred nullable: `val x: Foo = decodeProto(bytes) ?: …`
+ * would otherwise pick `T = Foo?`, and protobuf decodes a nullable root as null, dropping every
+ * message.
+ */
 @OptIn(ExperimentalSerializationApi::class)
-inline fun <reified T> decodeProto(bytes: ByteArray): T? = runCatching {
+inline fun <reified T : Any> decodeProto(bytes: ByteArray): T? = runCatching {
   ProtoBuf.decodeFromByteArray(serializer<T>(), bytes)
 }
   .getOrNull()

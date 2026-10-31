@@ -336,7 +336,8 @@ fun RemoteHaToggleSwitchByProgress(
     }
   // Ambient (a low-power display): the track's outline in place of its fill, and the knob lit in
   // the track's colour, so the switch still reads on black with few pixels lit.
-  val ambient = rcAmbient()
+  // No fade: a background and a border, which the Compose player doesn't redraw per frame.
+  val ambient = rcAmbient(fade = false)
   val outlined = ambient !== RcAmbient.Never
   val knobColor =
     (if (ink != null) haTheme().cardBackground else Color.White.rc).let {

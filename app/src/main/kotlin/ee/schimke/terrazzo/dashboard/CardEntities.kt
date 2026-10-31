@@ -37,7 +37,7 @@ fun CardConfig.historyEntityIds(): List<String> {
 /**
  * A human-readable title for the card, reusing the same key precedence the pin/section code uses
  * (`title` → `heading` → `name`), then a markdown card's first heading, before falling back to the
- * entity id or the raw card type.
+ * entity id, a container's cards' names, or the raw card type.
  */
 fun CardConfig.historyTitle(): String =
   raw["title"]?.jsonPrimitive?.contentOrNull
@@ -45,7 +45,28 @@ fun CardConfig.historyTitle(): String =
     ?: raw["name"]?.jsonPrimitive?.contentOrNull
     ?: markdownHeading()
     ?: historyEntityIds().firstOrNull()
+    ?: childrenTitle()
     ?: type
+
+/**
+ * An untitled container's (`grid`, a stack) title from its cards' names: "State, Garage light +2",
+ * so its sheet and lists aren't titled "grid". Null when no child is named.
+ */
+private fun CardConfig.childrenTitle(): String? {
+  val names =
+    (raw["cards"] as? JsonArray)
+      ?.mapNotNull { child ->
+        (child as? JsonObject)?.let { obj ->
+          listOf("name", "title", "heading", "entity").firstNotNullOfOrNull { key ->
+            (obj[key] as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
+          }
+        }
+      }
+      .orEmpty()
+  if (names.isEmpty()) return null
+  val shown = names.take(2).joinToString(", ")
+  return if (names.size > 2) "$shown +${names.size - 2}" else shown
+}
 
 /**
  * A markdown card's first heading line (`## 🖨️ P2s` → `🖨️ P2s`), so its sheet isn't titled

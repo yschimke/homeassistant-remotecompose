@@ -12,8 +12,9 @@ import androidx.compose.remote.creation.compose.state.rs
 /**
  * How long ago [since] was, in Home Assistant's words, computed by the document against the
  * player's own clock: `just now`, `5 min ago`, `3 h ago`, `2 days ago`, and from a week on the date
- * (`20 Apr 2026`, in the player's time zone). [since] is whole Unix seconds, as `<id>.last_changed`
- * carries Home Assistant's `last_changed`; 0 (no time) reads as nothing.
+ * (`20 Apr 2026`). [since] is whole Unix seconds, as `<id>.last_changed` carries Home Assistant's
+ * `last_changed`; 0 (no time) reads as nothing. [offset] is the UTC offset in force at [since], in
+ * seconds (`<id>.last_changed_offset`), which places the date in the host's time zone.
  *
  * The label moves on by itself as the clock does: no host formats it or pushes it again. It matches
  * ha-model's `formatRelativeTime` for a past time (HA's `selectUnit` thresholds of 45 s, 45 min and
@@ -26,7 +27,7 @@ import androidx.compose.remote.creation.compose.state.rs
  * draws the document, but doesn't work this text out again as the clock moves: a launcher widget
  * shows the label of its last update.
  */
-fun relativeTimeText(since: RemoteInt): RemoteString {
+fun relativeTimeText(since: RemoteInt, offset: RemoteInt): RemoteString {
   val age = max(RemoteTimeVariables.epochSecond - since, 0.ri)
   val minutes = (age + 30) / 60
   val hours = (age + 1800) / 3600
@@ -50,7 +51,7 @@ fun relativeTimeText(since: RemoteInt): RemoteString {
                     days
                       .isEqualTo(1.ri)
                       .select("1 day ago".rs, days.toPaddedRemoteString(1) + " days ago"),
-                    dateText(since),
+                    dateText(since + offset),
                   ),
               ),
           ),
@@ -59,16 +60,15 @@ fun relativeTimeText(since: RemoteInt): RemoteString {
 }
 
 /**
- * [seconds] (Unix) as `20 Apr 2026` in the player's time zone: the days since the epoch turned into
- * a civil date with whole numbers only (Howard Hinnant's `civil_from_days`).
+ * [localSeconds] (Unix seconds plus the UTC offset in force then) as `20 Apr 2026`: the days since
+ * the epoch turned into a civil date with whole numbers only (Howard Hinnant's `civil_from_days`).
  *
- * The player only knows its UTC offset now, not the one in force at [seconds], so across a
- * daylight-saving change a time within the change (an hour) of midnight shows the neighbouring day.
- * That only reaches the date line, which is for changes a week old or more; the offset at an
- * arbitrary past time would need a value no host gets from Home Assistant.
+ * The offset is the host's for that instant, not the player's now: the player knows only its
+ * current offset, which across a daylight-saving switch puts a change within an hour of midnight on
+ * the neighbouring day.
  */
-private fun dateText(seconds: RemoteInt): RemoteString {
-  val day = (seconds + RemoteTimeVariables.utcOffsetSeconds) / SECONDS_PER_DAY
+private fun dateText(localSeconds: RemoteInt): RemoteString {
+  val day = localSeconds / SECONDS_PER_DAY
   val z = day + 719468
   val era = z / 146097
   val dayOfEra = z - era * 146097

@@ -52,17 +52,25 @@ class WearNavigationTest {
       activity.onActivity { it.onBackPressedDispatcher.onBackPressed() }
       compose.onNodeWithText("Dashboards").assertExists()
       activity.onActivity { it.onBackPressedDispatcher.onBackPressed() }
-      compose.onNodeWithText("Pinned · Demo").assertExists()
+      compose.onNodeWithText("Demo data from your phone").assertExists()
       click("Settings")
-      compose.onNodeWithText("Theme and card designs follow your phone.").assertExists()
+      compose
+        .onNodeWithText(
+          "What your watch shows, its theme and card designs are all chosen on your phone."
+        )
+        .assertExists()
       compose.onNodeWithText("Theme").assertDoesNotExist()
       click("Report a bug")
       compose.onNodeWithText("PUBLIC issue").assertExists()
       activity.onActivity { it.onBackPressedDispatcher.onBackPressed() }
-      compose.onNodeWithText("Theme and card designs follow your phone.").assertExists()
+      compose
+        .onNodeWithText(
+          "What your watch shows, its theme and card designs are all chosen on your phone."
+        )
+        .assertExists()
       compose.onNodeWithText("Theme").assertDoesNotExist()
       activity.onActivity { it.onBackPressedDispatcher.onBackPressed() }
-      compose.onNodeWithText("Pinned · Demo").assertExists()
+      compose.onNodeWithText("Demo data from your phone").assertExists()
     }
   }
 
@@ -88,7 +96,7 @@ class WearNavigationTest {
       click("QA Room")
       compose.onNodeWithText("QA Temperature").assertExists()
       activity.onActivity { it.onBackPressedDispatcher.onBackPressed() }
-      compose.onNodeWithText("Pinned · Demo").assertExists()
+      compose.onNodeWithText("Demo data from your phone").assertExists()
     }
   }
 

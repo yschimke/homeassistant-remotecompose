@@ -6,6 +6,7 @@ import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.formatState
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -117,9 +118,13 @@ object CardDesignSlots {
    * Every binding a template reads for [card], keyed by slot name. Unlike the entity-keyed
    * `cardSnapshotBindings`, every binding of every slot is always present: a value with no meaning
    * gets a neutral default, so nothing from a previous entity state lingers in the player, and
-   * `<slot>.status` says why.
+   * `<slot>.status` says why. Times are read in [zone], the host's display zone.
    */
-  fun slotBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings {
+  fun slotBindings(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    zone: TimeZone = TimeZone.currentSystemDefault(),
+  ): CardSnapshotBindings {
     val strings = LinkedHashMap<String, String>()
     val booleans = LinkedHashMap<String, Boolean>()
     val ints = LinkedHashMap<String, Int>()
@@ -142,6 +147,8 @@ object CardDesignSlots {
       ints["$slot.status"] = statusOf(state)
       ints["$slot.${HaLiveBindings.LAST_CHANGED}"] =
         state?.let(HaLiveBindings::lastChanged) ?: HaLiveBindings.NO_TIME
+      ints["$slot.${HaLiveBindings.LAST_CHANGED_OFFSET}"] =
+        state?.let { HaLiveBindings.lastChangedOffset(it, zone) } ?: 0
       floats["$slot.numeric_state"] =
         state?.let { HaLiveBindings.numericState(it.state) } ?: Float.NaN
     }

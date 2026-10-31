@@ -41,6 +41,7 @@ import ee.schimke.terrazzo.room.LostPins
 import ee.schimke.terrazzo.room.RoomContent
 import ee.schimke.terrazzo.room.RoomHeader
 import ee.schimke.terrazzo.room.RoomPin
+import ee.schimke.terrazzo.room.TOGGLE_DOMAINS
 
 /**
  * The room panels in Meta's Horizon OS look: the Spatial SDK's UI set, dark. The shared room parts
@@ -186,10 +187,6 @@ private fun NamedButton(label: String, description: String, onClick: () -> Unit)
     BorderlessButton(label, onClick)
   }
 }
-
-/** Domains a switch turns on and off with `homeassistant.toggle`. */
-internal val TOGGLE_DOMAINS =
-  setOf("light", "switch", "fan", "input_boolean", "media_player", "humidifier", "climate")
 
 private val QuestCard = Color(0x26FFFFFF)
 private val QuestText = Color(0xFFFFFFFF)

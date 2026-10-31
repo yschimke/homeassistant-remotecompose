@@ -27,6 +27,7 @@ class CardStudioWizardTest {
     defaults: CardStudioDefaults = CardStudioDefaults(),
     onSignIn: (() -> Unit)? = {},
     onDefaultsChange: (CardStudioDefaults) -> Unit = {},
+    homeServer: HomeDesignServer? = null,
   ) = setContent {
     MaterialTheme {
       Box(Modifier.size(400.dp, 900.dp)) {
@@ -40,6 +41,7 @@ class CardStudioWizardTest {
           onDefaultsChange = onDefaultsChange,
           openEditorInBrowser = true,
           onPublished = {},
+          homeServer = homeServer,
         ) {
           Text("Current card")
         }
@@ -63,6 +65,13 @@ class CardStudioWizardTest {
     // Later steps show only their titles until then.
     onNodeWithText("How do you want to design it?").assertExists()
     onNodeWithText("Myself, in UI Builder").assertDoesNotExist()
+  }
+
+  @Test
+  fun aHomeAssistantsOwnServerNeedsNoSignIn() = runComposeUiTest {
+    studio(homeServer = HomeDesignServer("https://home.example", { "ha-token" }, { null }))
+    onNodeWithText("Sign in with GitHub").assertDoesNotExist()
+    onNodeWithText("Myself, in UI Builder").assertExists()
   }
 
   @Test

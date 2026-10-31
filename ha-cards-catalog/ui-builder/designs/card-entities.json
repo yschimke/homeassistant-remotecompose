@@ -44,6 +44,12 @@
       "initialValue": 0,
       "persistence": "design"
     },
+    "light.s0.last_changed_offset": {
+      "type": "value",
+      "valueType": "int",
+      "initialValue": 0,
+      "persistence": "design"
+    },
     "light.s0.name": {
       "type": "text",
       "valueType": "string",
@@ -92,6 +98,12 @@
       "initialValue": 0,
       "persistence": "design"
     },
+    "sensor.s2.last_changed_offset": {
+      "type": "value",
+      "valueType": "int",
+      "initialValue": 0,
+      "persistence": "design"
+    },
     "sensor.s2.name": {
       "type": "text",
       "valueType": "string",
@@ -135,6 +147,12 @@
       "persistence": "design"
     },
     "switch.s1.last_changed": {
+      "type": "value",
+      "valueType": "int",
+      "initialValue": 0,
+      "persistence": "design"
+    },
+    "switch.s1.last_changed_offset": {
       "type": "value",
       "valueType": "int",
       "initialValue": 0,

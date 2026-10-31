@@ -591,6 +591,17 @@ export function lastChanged(entity) {
   return typeof seconds === 'number' && Number.isFinite(seconds) ? Math.floor(seconds) : 0;
 }
 
+/**
+ * `HaLiveBindings.lastChangedOffset` ↔ `<slot>.last_changed_offset`: the UTC offset in force at
+ * `last_changed` in the browser's time zone, in seconds; 0 when unknown. The document dates a week-old
+ * change with it, so a daylight-saving switch since doesn't move the change to the next day.
+ */
+export function lastChangedOffset(entity) {
+  const seconds = lastChanged(entity);
+  // `0 -`, not unary minus: a zero offset must be 0, not -0.
+  return seconds === 0 ? 0 : 0 - new Date(seconds * 1000).getTimezoneOffset() * 60;
+}
+
 /** `CardDesignSlots.statusOf` ↔ `<slot>.status`. */
 export function statusOf(entity) {
   const state = entity ? entity.state : null;
@@ -665,6 +676,7 @@ export function slotBindings(card, states) {
     ints[`${slot}.state_int`] = (state ? stateInt(entityId, state.state) : null) ?? -1;
     ints[`${slot}.status`] = statusOf(state);
     ints[`${slot}.last_changed`] = lastChanged(state);
+    ints[`${slot}.last_changed_offset`] = lastChangedOffset(state);
     floats[`${slot}.numeric_state`] = (state ? numericState(state.state) : null) ?? Number.NaN;
   });
   return { strings, booleans, ints, floats };

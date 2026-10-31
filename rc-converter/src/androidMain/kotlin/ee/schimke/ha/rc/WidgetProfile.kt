@@ -102,8 +102,17 @@ val widgetsProfile: Profile = createWidgetsProfile(supportsColorTheme = false)
 /** API 37+ widget host profile, including host-resolved ColorTheme values. */
 val systemThemedWidgetsProfile: Profile = createWidgetsProfile(supportsColorTheme = true)
 
-/** Downlevel only the final platform-bound document, after the AndroidX baking/codec passes. */
-fun platformWidgetDocument(bytes: ByteArray): ByteArray {
+/**
+ * Downlevel only the final platform-bound document, after the AndroidX baking/codec passes.
+ *
+ * [android16Wire] rewrites the header's wire version to 1.0, the only one Android 16's decoder
+ * accepts. Leave it on for [widgetsProfile] documents, and turn it off for
+ * [systemThemedWidgetsProfile] ones: the platform reads wire 1.0 as document API level 6, whose
+ * operation table has no profiles and no ColorTheme (196), so an API 37 host failed such a document
+ * with "Unknown operation encountered 196". At 1.1 it reads API level 7 and picks the widgets
+ * table, which has it.
+ */
+fun platformWidgetDocument(bytes: ByteArray, android16Wire: Boolean = true): ByteArray {
   require(bytes.size >= 13 && bytes[0].toInt() == Operations.HEADER) {
     "Expected an uncompressed RemoteCompose widget header"
   }
@@ -148,7 +157,7 @@ fun platformWidgetDocument(bytes: ByteArray): ByteArray {
   return buffer.buffer.copyOf(buffer.size).also { compatible ->
     // alpha21 writes 1.1 even for API-7 documents; Android 16 supports wire 1.0.
     // Preserve the tagged major version and all layout/data/profile fields.
-    compatible.fill(0, fromIndex = 5, toIndex = 9)
+    if (android16Wire) compatible.fill(0, fromIndex = 5, toIndex = 9)
   }
 }
 

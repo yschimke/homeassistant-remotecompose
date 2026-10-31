@@ -125,8 +125,10 @@ The room controls are split so another XR platform can reuse everything but its 
 | `app` (`ee.schimke.terrazzo.room`) | The glue (`RoomScreen`: preferences, dashboards, live states, the action dispatcher), the entity card in the user's card style (`RoomEntityCard`, the more-info controls), and the Android XR layer: `SpatialRoom.kt` (Compose for XR panels) and `SpatialPins.kt` (`PinAnchors`, the ARCore for XR `RoomAnchors`; permissions; panels on anchors). |
 
 | `quest` (`ee.schimke.terrazzo.quest`) | The Meta Quest app on the Spatial SDK: `QuestActivity` (passthrough, the room panel, a panel per pin), `QuestRoomAnchors` (the MRUK `RoomAnchors`), the panels in the Spatial SDK UI set (`QuestRoomUi.kt`) and their previews. |
+| `glasses` (`ee.schimke.terrazzo.glasses`) | The Android XR AI glasses app: a phone launcher (`GlassesLauncherActivity`, the shared `FlatRoomControls`) that starts `GlassesRoomActivity` on the glasses through `androidx.xr.projected`, drawn with Jetpack Compose Glimmer (`GlassesRoomUi.kt`), and its previews. |
 
-The `room-ui` row also has `ScenePanel`, `curvedRow` and `rotateY` for laying panels out around
+The `room-ui` row also has `DemoHouse` (the demo snapshot, its stand-in dashboard importance and
+an in-memory toggle) and `TOGGLE_DOMAINS`, which the Quest and glasses apps share, and `ScenePanel`, `curvedRow` and `rotateY` for laying panels out around
 the user, and `RoomScenePreview`, which draws walls, floor and panels from a camera behind the user
 so a `@Preview` shows the spatial layout.
 
@@ -134,7 +136,7 @@ so a `@Preview` shows the spatial layout.
 
 `:quest` reuses `ha-model` and `room-ui` and adds only the Spatial SDK layer. It doesn't depend on
 `terrazzo-core`, which needs API 35 (Quest 3 runs API 34), so for now it shows a demo house
-(`QuestDemoHouse`: a living room with a heater, TV, lamp and fan, and a kitchen) toggled in
+(`DemoHouse` in `room-ui`: a living room with a heater, TV, lamp and fan, and a kitchen) toggled in
 memory. Signing in to a Home Assistant through `ha-client` comes next.
 
 - **Room panel.** A grabbable 1.0 × 0.7 m panel 1.2 m ahead when the scene is ready (`airPlacement`),
@@ -165,6 +167,38 @@ inside the panels is plain Compose, so `QuestPreviews.kt` shows:
   panel is the real composable, scaled and turned in perspective.
 
 Run `compose-preview show --filter Quest` to render them.
+
+## AI glasses (Glimmer)
+
+`:glasses` puts the room on Android XR display glasses. A glasses app is a phone app: its launcher
+runs on the phone and `ProjectedContext.createProjectedActivityOptions` starts `GlassesRoomActivity`
+on the glasses' display (it declares `android:requiredDisplayCategory="xr_projected"`). Both
+activities run in the phone's process and read one holder, `GlassesRoom`, so picking a room or
+toggling a control on either screen shows on the other at once.
+
+- **On the glasses.** Glimmer, made for small additive displays: the room's name in a `TitleChip`,
+  then a `GlimmerLazyColumn` of its controls, at most four, the dashboards' first, and the other
+  rooms to switch to. The touchpad moves focus down the list and a tap acts on the focused row: a
+  control toggles, a room becomes the one on show. The background stays black, which an additive
+  display shows as see-through.
+- **On the phone.** The shared `FlatRoomControls` with a **Show on glasses** action. It's enabled
+  while glasses are connected (`ProjectedContext.isProjectedDeviceConnected`, Android 16); on
+  Android 15 it's offered and says so if there's nothing to show it on. Projected activities need
+  Android 15.
+- **Which room.** Glasses can't pin, so it's the room the user picks, their tracker, or the room
+  the dashboards care most about.
+- **Its own module.** Glimmer (1.0.0-alpha22) needs Compose 1.13, which the whole build is on now
+  (the alpha-channel BOM); it stays out of `:app` so the glasses' alpha libraries do too, until
+  they settle. Like Quest, it shows `DemoHouse` until it signs in through `ha-client`.
+
+### Previews
+
+`GlassesPreviews.kt` renders the glasses' screen for the living room and the kitchen, a phone
+screen, and **through the lens**: the glasses' screen over a room from `RoomScenePreview`,
+composited with `BlendMode.Screen` the way an additive display adds its light (black adds nothing).
+The glasses' display size in the previews (480 dp square at 160 dpi) is an assumption; the screen
+only uses Glimmer's own list and spacing, so another size reflows. Run
+`compose-preview show --filter Glasses` to render them.
 
 ## Not yet
 

@@ -212,6 +212,10 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
   override suspend fun takeHeldNotifications(webhookId: String) =
     delegate.takeHeldNotifications(webhookId)
 
+  override suspend fun privateDesignServer() = delegate.privateDesignServer()
+
+  override suspend fun privateDesignLink(path: String) = delegate.privateDesignLink(path)
+
   override suspend fun watchStates(
     webhookId: String,
     entityIds: Collection<String>,

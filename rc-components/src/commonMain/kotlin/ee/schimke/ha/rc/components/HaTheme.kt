@@ -274,7 +274,9 @@ private object AmbientPalette {
  */
 @Composable
 private fun RemoteHaTheme.underAmbient(): RemoteHaTheme {
-  val ambient = rcAmbient()
+  // No fade: these roles colour text and layout, which the Compose player doesn't redraw for a
+  // running animation ([rcAmbient]).
+  val ambient = rcAmbient(fade = false)
   if (ambient === RcAmbient.Never) return this
   // A style that prints in its own dark ink (a light LCD's segments, icons and switch markings)
   // reads that ink straight from the uber theme, not from these roles: a black surface would hide

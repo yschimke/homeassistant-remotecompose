@@ -63,8 +63,8 @@ jobs:
       - uses: actions/setup-java@v6.1.0
         with:
           distribution: temurin
-          java-version: 21.0.12+101.0.LTS
-      - uses: gradle/actions/setup-gradle@v6.4.0
+          java-version: 21.0.13+9.0.LTS
+      - uses: gradle/actions/setup-gradle@v6.4.1
       - uses: ./.github/actions/buildfetch-cache
         with:
           rw-token: ${{ github.event_name == 'push' && secrets.BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN || '' }}
@@ -186,7 +186,7 @@ jobs:
           curl -sf localhost:8081/demo/ | grep -q 'id="app"'
           curl -sf localhost:8081/demo/bootstrap.js | grep -q 'showLoadFailure'
           curl -sf -c cookies.txt -o /dev/null "localhost:8081/edit?token=ci-token"
-          location=$(curl -sS --fail-with-body -b cookies.txt -o seed-response.txt -w '%{redirect_url}' -X POST localhost:8081/ui-builder/designs \
+          location=$(curl -sS --fail-with-body -b cookies.txt -o seed-response.txt -w '%{redirect_url}' -X POST localhost:8081/designs/seed \
             --data-urlencode 'card={"type":"entities","title":"Living room","entities":["light.kitchen","sensor.temp"]}') || { cat seed-response.txt; exit 1; }
           echo "editor: $location"
           id=$(echo "$location" | sed -E 's#.*/ui-builder/([^?]+)\?.*#\1#')
@@ -203,6 +203,13 @@ jobs:
           curl -sfI localhost:8081/studio/dashboard/assets/uiBuilder.wasm | grep -qi 'application/wasm'
       - name: Open an app draft in the bundled editor in Chromium
         run: STUDIO_SMOKE_REQUIRED=1 STUDIO_SERVER_URL=http://localhost:8081 STUDIO_OPERATOR_TOKEN=ci-token node --test design-server/test/*.test.mjs
+      # Both architectures: the Home Assistant add-on (design-server/addon) builds on this image, and
+      # most Home Assistant boxes are arm64. Only the runtime stage differs; the JARs, library and
+      # Wasm built above are the same for both.
+      - uses: docker/setup-qemu-action@v4.4.0
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+      - uses: docker/setup-buildx-action@v4.4.1
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
       - name: Publish the image to GHCR
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
@@ -210,10 +217,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          docker tag card-design-server "$IMAGE:latest"
-          docker tag card-design-server "$IMAGE:${{ github.sha }}"
-          docker push "$IMAGE:${{ github.sha }}"
-          docker push "$IMAGE:latest"
+          docker buildx build --platform linux/amd64,linux/arm64 -f design-server/Dockerfile \
+            -t "$IMAGE:latest" -t "$IMAGE:${{ github.sha }}" --push .
       - name: Container logs
         if: always()
         run: docker logs designs 2>&1 | tail -100 || true

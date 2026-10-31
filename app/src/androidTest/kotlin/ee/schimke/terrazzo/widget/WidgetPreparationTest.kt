@@ -17,6 +17,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import ee.schimke.ha.model.CardConfig
@@ -653,13 +654,16 @@ class WidgetPreparationTest {
       device.waitForIdle()
       // A reconfigurable widget's first resize frame shows the launcher's one-time "Tap to change
       // widget settings" tip, which takes the next touch to dismiss it; tap it away so the drag
-      // below reaches the resize handle.
-      device
-        .wait(
-          Until.findObject(By.text(java.util.regex.Pattern.compile("(?i).*widget settings.*"))),
-          3_000,
-        )
-        ?.click()
+      // below reaches the resize handle. The launcher can take the tip down itself between finding
+      // and tapping it; a tip that's already gone is the outcome the tap was for.
+      try {
+        device
+          .wait(
+            Until.findObject(By.text(java.util.regex.Pattern.compile("(?i).*widget settings.*"))),
+            3_000,
+          )
+          ?.click()
+      } catch (_: StaleObjectException) {}
       device.waitForIdle()
       screenshot("launcher-resize-handles")
       assertTrue(

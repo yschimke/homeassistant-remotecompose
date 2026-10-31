@@ -6,6 +6,8 @@ import { readFileSync } from 'node:fs';
 import { cardBindings, cardEntityIds, parseRecipe, formatRangeNumber } from '../ha-card.js';
 
 const golden = JSON.parse(readFileSync(new URL('./bindings-golden.json', import.meta.url), 'utf8'));
+// The zone the Kotlin side read the cases' times in (`<slot>.last_changed_offset`).
+process.env.TZ = golden.time_zone;
 
 for (const c of golden.cases) {
   test(`bindings: ${c.name}`, () => {
