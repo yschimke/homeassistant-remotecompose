@@ -23,6 +23,8 @@ android {
     targetSdk = 34
     versionCode = 1
     versionName = "0.1.0"
+    // AppAuth declares its redirect receiver through this manifest placeholder.
+    manifestPlaceholders["appAuthRedirectScheme"] = "rcha"
   }
   buildFeatures { compose = true }
   compileOptions {
