@@ -27,6 +27,7 @@ fun WearSectionScreen(
   modifier: Modifier = Modifier,
   onInputSend: (suspend (String, Map<String, String>) -> Unit)? = null,
   onOpenCard: (CardSummary) -> Unit = {},
+  onNavigate: (String) -> Unit = {},
 ) {
   WearListScreen(modifier = modifier, gestureScroll = true) {
     val title = section?.title?.ifEmpty { null } ?: "Section"

@@ -75,6 +75,15 @@ fun WearTopLevelScreen(
   // The pinned list composes here: the launch is fully drawn (`timeToFullDisplayMs`).
   ReportDrawn()
 
+  val rows =
+    buildList<HomeRow> {
+      items.forEach { entry ->
+        add(HomeRow.Entry(entry))
+        if (entry is TopLevelEntry.Section && entry.section.sectionKey in expandedSections) {
+          entry.section.cards.forEach { card -> add(HomeRow.SectionCard(entry.section, card)) }
+        }
+      }
+    }
   WearListScreen(modifier = modifier, spacing = 6.dp, gestureScroll = true) {
     item { ListHeader { Text("Pinned") } }
     if (settings.demoMode) {
@@ -85,8 +94,9 @@ fun WearTopLevelScreen(
       item { EmptyPinned() }
       onOpenOnPhone?.let { open -> item { OpenOnPhoneButton(open) } }
     } else {
-      items(items, key = { it.key }) { entry ->
-        when (entry) {
+      items(rows, key = { it.key }) { row ->
+        when (row) {
+          is HomeRow.Entry -> when (val entry = row.entry) {
           is TopLevelEntry.Card -> {
             val card = entry.card.card
             if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
@@ -111,19 +121,19 @@ fun WearTopLevelScreen(
                 else expandedSections += section.sectionKey
               },
             )
-            if (expanded) {
-              items(section.cards, key = { card -> "${section.sectionKey}:${card.rawJson}" }) { card ->
-                if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
-                  WearMessageCard(card.rawJson, values, onInputSend)
-                } else {
-                  WearRemoteCard(
-                    card,
-                    values,
-                    onOpen = { onOpenCard(section.sectionKey, card) },
-                    onNavigate = onNavigate,
-                  )
-                }
-              }
+          }
+          }
+          is HomeRow.SectionCard -> {
+            val card = row.card
+            if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
+              WearMessageCard(card.rawJson, values, onInputSend)
+            } else {
+              WearRemoteCard(
+                card,
+                values,
+                onOpen = { onOpenCard(row.section.sectionKey, card) },
+                onNavigate = onNavigate,
+              )
             }
           }
         }
@@ -195,6 +205,19 @@ internal sealed interface TopLevelEntry {
 
     override val orderIndex: Int
       get() = section.orderIndex
+  }
+}
+
+/** One rendered home-list row; expanded section cards are flattened into the list scope. */
+private sealed interface HomeRow {
+  val key: String
+
+  data class Entry(val entry: TopLevelEntry) : HomeRow {
+    override val key: String = entry.key
+  }
+
+  data class SectionCard(val section: PinnedSection, val card: CardSummary) : HomeRow {
+    override val key: String = "${section.sectionKey}:${card.rawJson}"
   }
 }
 
