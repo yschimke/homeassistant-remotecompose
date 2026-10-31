@@ -100,6 +100,7 @@ fun QuestRoomPanel(
   onSignOut: () -> Unit = {},
   controlsLocked: Boolean = true,
   onControlsLocked: (Boolean) -> Unit = {},
+  pinningHint: String? = null,
   modifier: Modifier = Modifier,
 ) {
   val controls = content.state?.controls
@@ -134,6 +135,13 @@ fun QuestRoomPanel(
               contentDescription =
                 if (controlsLocked) "Unlock Home Assistant controls" else "Lock Home Assistant controls"
             },
+          )
+        }
+        pinningHint?.let { hint ->
+          Text(
+            hint,
+            style = SpatialTheme.typography.body2,
+            color = QuestTextSecondary,
           )
         }
         NamedButton("Sign out", "Sign out of Home Assistant", onSignOut)

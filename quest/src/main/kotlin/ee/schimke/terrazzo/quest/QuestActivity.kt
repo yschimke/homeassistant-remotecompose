@@ -180,6 +180,14 @@ class QuestActivity : AppSystemActivity() {
           onSignOut = model::signOut,
           controlsLocked = model.controlsLocked,
           onControlsLocked = model::setControlsLocked,
+          pinningHint =
+            when {
+              !supportsRoomMapping ->
+                "This room panel can still be moved. Pinning individual controls requires Horizon OS Android 14 or newer."
+              !sceneLoaded ->
+                "This room panel can still be moved. Allow Space Setup access to pin individual controls around your room."
+              else -> null
+            },
         )
       else ->
         QuestSignInPanel(
