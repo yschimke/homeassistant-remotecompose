@@ -18,19 +18,23 @@ import com.google.android.play.core.install.model.UpdateAvailability
 fun ComponentActivity.promptForPlayStoreUpgrade() {
   val manager = AppUpdateManagerFactory.create(applicationContext)
   val launcher =
-    registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { /* Play owns UI */ }
+    registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
+      /* Play owns UI */
+    }
   checkForPlayStoreUpgrade(manager, launcher)
 }
 
 private fun ComponentActivity.checkForPlayStoreUpgrade(
   manager: AppUpdateManager,
-  launcher: androidx.activity.result.ActivityResultLauncher<androidx.activity.result.IntentSenderRequest>,
+  launcher:
+    androidx.activity.result.ActivityResultLauncher<androidx.activity.result.IntentSenderRequest>,
 ) {
   manager.appUpdateInfo.addOnSuccessListener { info ->
     val canStart =
       info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
         info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
-    val resume = info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
+    val resume =
+      info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
     if (canStart || resume) {
       manager.startUpdateFlowForResult(
         info,
