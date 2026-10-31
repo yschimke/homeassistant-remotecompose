@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material3.Button
@@ -45,7 +46,11 @@ import ee.schimke.terrazzo.wearsync.proto.WearSettings
  * show twice (once at the top level, once inside the section). That's the v1 behaviour deliberately
  * — the user pinned both, we render both.
  *
- * "Browse dashboards" and "Settings" stay at the bottom as utility destinations.
+ * The watch only shows what the phone chose: everything is pinned, ordered and styled there. With
+ * nothing pinned the list says so and offers to open the phone app ([onOpenOnPhone]).
+ *
+ * "Browse dashboards", "Widgets" (on watches that show them, [onOpenWidgets]) and "Settings" stay
+ * at the bottom as utility destinations.
  */
 @Composable
 fun WearTopLevelScreen(
@@ -59,19 +64,22 @@ fun WearTopLevelScreen(
   modifier: Modifier = Modifier,
   onInputSend: (suspend (String, Map<String, String>) -> Unit)? = null,
   onOpenCard: (PinnedCard) -> Unit = {},
+  onOpenOnPhone: (() -> Unit)? = null,
+  onOpenWidgets: (() -> Unit)? = null,
 ) {
   val items = remember(pinned, sections) { mergeOrdered(pinned.cards, sections.sections) }
   // The pinned list composes here: the launch is fully drawn (`timeToFullDisplayMs`).
   ReportDrawn()
 
   WearListScreen(modifier = modifier, spacing = 6.dp, gestureScroll = true) {
-    item { ListHeader { Text(if (settings.demoMode) "Pinned · Demo" else "Pinned") } }
+    item { ListHeader { Text("Pinned") } }
     if (settings.demoMode) {
       item { DemoBanner() }
     }
 
     if (items.isEmpty()) {
       item { EmptyPinned() }
+      onOpenOnPhone?.let { open -> item { OpenOnPhoneButton(open) } }
     } else {
       items(items, key = { it.key }) { entry ->
         when (entry) {
@@ -97,6 +105,17 @@ fun WearTopLevelScreen(
         colors = ButtonDefaults.filledTonalButtonColors(),
       ) {
         Text("Browse dashboards")
+      }
+    }
+    onOpenWidgets?.let { open ->
+      item {
+        Button(
+          onClick = open,
+          modifier = Modifier.fillMaxWidth(),
+          colors = ButtonDefaults.filledTonalButtonColors(),
+        ) {
+          Text("Widgets")
+        }
       }
     }
     item {
@@ -153,7 +172,7 @@ private fun DemoBanner() {
     contentAlignment = Alignment.Center,
   ) {
     Text(
-      text = "Phone is in demo mode",
+      text = "Demo data from your phone",
       style = MaterialTheme.typography.labelSmall,
       color = MaterialTheme.colorScheme.tertiary,
     )
@@ -167,12 +186,32 @@ private fun EmptyPinned() {
     contentAlignment = Alignment.Center,
   ) {
     Text(
-      text = "Nothing pinned yet.\nPin sections or cards from the phone.",
+      text = WEAR_EMPTY_PINNED,
+      textAlign = TextAlign.Center,
       style = MaterialTheme.typography.bodySmall,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
   }
 }
+
+/**
+ * Opens Terrazzo on the phone, where everything the watch shows is chosen: the watch only views.
+ */
+@Composable
+internal fun OpenOnPhoneButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+  Button(
+    onClick = onClick,
+    modifier = modifier.fillMaxWidth(),
+    colors = ButtonDefaults.filledTonalButtonColors(),
+  ) {
+    Text("Open on phone")
+  }
+}
+
+/** The pinned list with nothing pinned: where to choose what the watch shows. */
+internal const val WEAR_EMPTY_PINNED =
+  "Nothing on your watch yet.\nOn your phone, long-press a card and turn on Show on watch, or " +
+    "tap a section's pin."
 
 @Composable
 private fun PinnedSectionRow(section: PinnedSection, onClick: () -> Unit) {

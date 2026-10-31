@@ -7,6 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material3.Button
@@ -19,13 +20,15 @@ import ee.schimke.terrazzo.shared.PUBLIC_ISSUE_TRACKER
 import ee.schimke.terrazzo.shared.feedbackIssueUrl
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 
-/** Wear settings: widget cards and phone connection details. Appearance follows mobile. */
+/**
+ * Wear settings: which phone the watch follows, and a bug report. Nothing is configured here: what
+ * the watch shows and how it looks are chosen on the phone ([onOpenOnPhone]).
+ */
 @Composable
 fun WearSettingsScreen(
   settings: WearSettings,
-  onBack: () -> Unit,
   modifier: Modifier = Modifier,
-  onOpenWidgets: (() -> Unit)? = null,
+  onOpenOnPhone: (() -> Unit)? = null,
 ) {
   var reporting by remember { mutableStateOf(false) }
   var failed by remember { mutableStateOf(false) }
@@ -79,21 +82,15 @@ fun WearSettingsScreen(
   WearListScreen(modifier = modifier) {
     // The screen's title first; reporting a bug is a secondary action, so it sits at the end.
     item { ListHeader { Text("Settings") } }
-    // Choosing each placed widget's card: on watches that show Glance Wear widgets.
-    onOpenWidgets?.let { open ->
-      item {
-        Button(
-          onClick = open,
-          modifier = Modifier.fillMaxWidth(),
-          colors = ButtonDefaults.filledTonalButtonColors(),
-        ) {
-          Text("Widgets")
-        }
-      }
-    }
     item {
-      Text("Theme and card designs follow your phone.", style = MaterialTheme.typography.bodySmall)
+      Text(
+        "What your watch shows, its theme and card designs are all chosen on your phone.",
+        style = MaterialTheme.typography.bodySmall,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+      )
     }
+    onOpenOnPhone?.let { open -> item { OpenOnPhoneButton(open) } }
 
     item { ListHeader { Text("Phone") } }
     item {
@@ -122,15 +119,6 @@ fun WearSettingsScreen(
         colors = ButtonDefaults.filledTonalButtonColors(),
       ) {
         Text("Report a bug")
-      }
-    }
-    item {
-      Button(
-        onClick = onBack,
-        modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.filledTonalButtonColors(),
-      ) {
-        Text("Back")
       }
     }
   }

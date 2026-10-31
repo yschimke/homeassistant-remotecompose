@@ -70,9 +70,10 @@ pick; a segmented choice between *This card* and *All tile cards*, opened on whi
 decides the card; and one radio list led by *Same as your dashboard* (or *Same as other tile
 cards*), naming the style that means.
 
-**The menu names places.** *Home screen widgets* (now listing what is installed, 2 of 5 in use, and
-how to remove one), *Cards on your watch*, *Watch widgets* (since removed: a watch widget's card is
-chosen on the watch), then a divider before Settings, Logs and Sign out.
+**The menu names places.** *Widgets* (the home screen's, 2 of 5 in use and how to remove one, and
+the watch's, each one's card chosen here, with how to add one on the watch), *Cards on your
+watch*, then a divider before Settings, Logs and Sign out. The watch only views: it points back
+to the phone for every choice.
 
 ## Not changed
 
