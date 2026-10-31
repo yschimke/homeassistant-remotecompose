@@ -175,6 +175,7 @@ private fun DemoBanner() {
       text = "Demo data from your phone",
       style = MaterialTheme.typography.labelSmall,
       color = MaterialTheme.colorScheme.tertiary,
+      textAlign = TextAlign.Center,
     )
   }
 }
