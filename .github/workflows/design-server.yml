@@ -50,7 +50,7 @@ concurrency:
 jobs:
   library:
     name: Library and server
-    runs-on: ubuntu-26.04  # Playwright 1.56 has no Chromium for ubuntu-26.04 (ubuntu-latest)
+    runs-on: ubuntu-24.04  # Playwright 1.56 has no Chromium for ubuntu-26.04 (ubuntu-latest)
     timeout-minutes: 45
     permissions:
       contents: read
