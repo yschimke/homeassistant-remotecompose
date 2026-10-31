@@ -178,6 +178,8 @@ class QuestActivity : AppSystemActivity() {
           lostPins = model.pins.filter { anchors != null && it.anchorId in anchors.lost },
           onRemoveLost = ::unpin,
           onSignOut = model::signOut,
+          controlsLocked = model.controlsLocked,
+          onControlsLocked = model::setControlsLocked,
         )
       else ->
         QuestSignInPanel(
@@ -197,6 +199,7 @@ class QuestActivity : AppSystemActivity() {
       model.snapshot,
       model::toggle,
       onUnpin = { unpin(pin) },
+      controlsLocked = model.controlsLocked,
     )
   }
 
@@ -214,6 +217,7 @@ class QuestActivity : AppSystemActivity() {
           onToggle = model::toggle,
           onPin = onPin,
           pinned = model.pins.any { it.entityId == entity.entityId },
+          controlsLocked = model.controlsLocked,
           modifier = modifier,
         )
       },

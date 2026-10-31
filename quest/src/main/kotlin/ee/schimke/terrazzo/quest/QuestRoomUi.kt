@@ -25,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -68,13 +69,21 @@ fun QuestPinnedPanel(
   snapshot: HaSnapshot?,
   onToggle: (entityId: String) -> Unit,
   onUnpin: (() -> Unit)?,
+  controlsLocked: Boolean = true,
   modifier: Modifier = Modifier,
 ) {
   Box(
     modifier.fillMaxSize().background(SpatialTheme.colorScheme.panel, RoundedCornerShape(24.dp)),
     contentAlignment = Alignment.Center,
   ) {
-    QuestEntityCard(entity, snapshot, onToggle, onPin = null, onUnpin = onUnpin)
+    QuestEntityCard(
+      entity = entity,
+      snapshot = snapshot,
+      onToggle = onToggle,
+      onPin = null,
+      controlsLocked = controlsLocked,
+      onUnpin = onUnpin,
+    )
   }
 }
 
@@ -89,6 +98,8 @@ fun QuestRoomPanel(
   lostPins: List<RoomPin> = emptyList(),
   onRemoveLost: (RoomPin) -> Unit = {},
   onSignOut: () -> Unit = {},
+  controlsLocked: Boolean = true,
+  onControlsLocked: (Boolean) -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   val controls = content.state?.controls
@@ -107,6 +118,24 @@ fun QuestRoomPanel(
           color = QuestText,
         )
         RoomHeader(content)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Column(Modifier.weight(1f)) {
+            Text("Controls", style = SpatialTheme.typography.body1Strong, color = QuestText)
+            Text(
+              if (controlsLocked) "Locked — view only" else "Unlocked — actions are live",
+              style = SpatialTheme.typography.body2,
+              color = QuestTextSecondary,
+            )
+          }
+          SpatialSwitch(
+            !controlsLocked,
+            { enabled -> onControlsLocked(!enabled) },
+            Modifier.semantics {
+              contentDescription =
+                if (controlsLocked) "Unlock Home Assistant controls" else "Lock Home Assistant controls"
+            },
+          )
+        }
         NamedButton("Sign out", "Sign out of Home Assistant", onSignOut)
       }
     }
@@ -173,6 +202,7 @@ fun QuestEntityCard(
   onToggle: (entityId: String) -> Unit,
   onPin: ((entityId: String) -> Unit)?,
   pinned: Boolean = false,
+  controlsLocked: Boolean = false,
   modifier: Modifier = Modifier,
   onUnpin: (() -> Unit)? = null,
 ) {
@@ -202,7 +232,10 @@ fun QuestEntityCard(
         SpatialSwitch(
           HaLiveBindings.isOn(entity.entityId, state.state),
           { onToggle(entity.entityId) },
-          Modifier.semantics { contentDescription = entity.name },
+          Modifier.alpha(if (controlsLocked) LOCKED_CONTROL_ALPHA else 1f).semantics {
+            contentDescription =
+              if (controlsLocked) "${entity.name}, controls locked" else entity.name
+          },
         )
       }
     }
@@ -238,3 +271,4 @@ private fun NamedButton(label: String, description: String, onClick: () -> Unit)
 private val QuestCard = Color(0x26FFFFFF)
 private val QuestText = Color(0xFFFFFFFF)
 private val QuestTextSecondary = Color(0xB3FFFFFF)
+private const val LOCKED_CONTROL_ALPHA = 0.45f

@@ -52,6 +52,10 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
   var tracker by mutableStateOf(prefs.getString(TRACKER, null))
     private set
 
+  /** Explicit opt-in for physical home controls; new Quest installs start read-only. */
+  var controlsLocked by mutableStateOf(prefs.getBoolean(CONTROLS_LOCKED, true))
+    private set
+
   var nearestPin by mutableStateOf<String?>(null)
 
   var pins by mutableStateOf(emptyList<RoomPin>())
@@ -138,10 +142,16 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
     prefs.edit().putString(TRACKER, entityId).apply()
   }
 
+  fun setControlsLocked(locked: Boolean) {
+    controlsLocked = locked
+    prefs.edit().putBoolean(CONTROLS_LOCKED, locked).apply()
+  }
+
   /**
    * The server remains authoritative; the state_changed subscription redraws after its response.
    */
   fun toggle(entityId: String) {
+    if (controlsLocked) return
     val entity = snapshot?.states?.get(entityId) ?: return
     val domain = entityId.substringBefore('.', missingDelimiterValue = "")
     if (domain.isEmpty()) return
@@ -236,6 +246,7 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
   private companion object {
     const val PICKED = "room_picked"
     const val TRACKER = "room_tracker"
+    const val CONTROLS_LOCKED = "room_controls_locked"
     const val PINS = "room_pins"
   }
 
