@@ -43,16 +43,19 @@ simulator, and a device or emulator without a browser, can't complete; the sign-
 
 ## Known simulator gaps
 
-These are the simulator's, not the app's, and are worth checking against a newer compose-preview
-before working around them:
+Mostly the simulator's, not the app's; worth checking against a newer compose-preview before working
+around them:
 
 - **Placed watch widgets aren't listed.** Glance Wear's `fetchActiveWidgets` needs the system
   `com.google.wear.services.tiles.TilesManager`, which the simulator doesn't provide, so the phone
   never hears which widgets are placed and can't choose their cards. The widget picker and
   rendering a placed widget work.
-- **The phone's widget preview fails** with "Unknown operation encountered 196": the platform
-  RemoteCompose player in the simulator's Android 17 image is older than the document the app
-  writes, so the install sheet's preview, and with it *Add widget*, is unavailable.
+- **Widget documents and the platform player.** The launcher widget goes through the platform's own
+  RemoteCompose player, which picks its operation table from the document header: wire 1.0 is
+  document level 6 (no profiles), 1.1 is level 7 with the header's profile bits. An API 37 widget
+  carries ColorTheme (op 196, in the level-7 widgets table), so it must keep the 1.1 header; only
+  the Android 16 profile's documents drop to 1.0 (`platformWidgetDocument`). Running the phone at
+  `--sdk 36` and `--sdk 37` exercises both.
 - **AppAuth's browser list** can throw on the simulator's browser package (it reports no
   signatures). The app now builds AppAuth only when a browser sign-in starts and reports that as
   "No browser can sign in on this device" rather than crashing.

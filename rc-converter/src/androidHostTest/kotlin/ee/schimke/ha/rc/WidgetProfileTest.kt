@@ -39,4 +39,16 @@ class WidgetProfileTest {
   fun systemThemedProfile_includesColorTheme() {
     assertTrue(Operations.COLOR_THEME in systemThemedWidgetsProfile.supportedOperations)
   }
+
+  @Test
+  fun onlyTheAndroid16DocumentDropsToWireVersion10() {
+    // Header layout: the HEADER opcode, then the major and minor version as ints.
+    fun minor(bytes: ByteArray) = java.nio.ByteBuffer.wrap(bytes, 5, 4).int
+    val android16 = RemoteComposeWriter.obtain(100, 100, widgetsProfile).encodeToByteArray()
+    assertTrue(minor(platformWidgetDocument(android16)) == 0)
+    // An API 37 host reads 1.0 as document level 6, whose table has no ColorTheme (196).
+    val themed =
+      RemoteComposeWriter.obtain(100, 100, systemThemedWidgetsProfile).encodeToByteArray()
+    assertTrue(minor(platformWidgetDocument(themed, android16Wire = false)) == 1)
+  }
 }
