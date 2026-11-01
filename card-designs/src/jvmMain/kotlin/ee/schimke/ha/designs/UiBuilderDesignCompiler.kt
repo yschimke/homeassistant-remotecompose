@@ -117,7 +117,6 @@ class UiBuilderDesignCompiler(
     assets: Map<String, ByteArray>,
     key: DesignKey,
     imageBudgetBytes: Int = imageBudget(key.surface),
-    framed: Boolean = true,
     wearFrame: Boolean = false,
   ): ByteArray {
     val design = Design(document, fitPictures(assets, imageBudgetBytes), dark = isDark(key))
@@ -140,8 +139,7 @@ class UiBuilderDesignCompiler(
           RemoteBox(modifier.fillMaxSize().padding(horizontal, vertical)) {
             design.Render(RemoteModifier.fillMaxSize())
           }
-        } else if (framed) FramedCard(card, snapshot, modifier) { design.Render(it) }
-        else design.Render(modifier)
+        } else FramedCard(card, snapshot, modifier) { design.Render(it) }
       }
       .bytes
   }

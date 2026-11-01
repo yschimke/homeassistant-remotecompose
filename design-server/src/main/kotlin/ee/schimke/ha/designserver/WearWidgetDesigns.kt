@@ -36,6 +36,7 @@ object WearWidgetDesigns {
   internal fun compilableScene(document: JsonObject): JsonObject? {
     val rootId =
       (document["roots"] as? JsonArray)?.singleOrNull()?.jsonPrimitive?.content ?: return null
+    if (!rootId.startsWith("__wear_widget")) return null
     val nodes = document["nodes"] as? JsonObject ?: return null
     val root = nodes[rootId] as? JsonObject ?: return null
     if (root["componentId"]?.jsonPrimitive?.content !in CONTAINERS.values.map { it.component })

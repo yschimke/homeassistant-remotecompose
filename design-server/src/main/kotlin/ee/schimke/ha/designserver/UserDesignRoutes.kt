@@ -721,7 +721,6 @@ internal fun compileWearScene(
       pictures,
       baseKey,
       imageBudgetBytes = UiBuilderDesignCompiler.imageBudget(DesignSurface.WearWidget),
-      framed = false,
       wearFrame = true,
     )
   val adapted =
