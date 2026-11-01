@@ -267,6 +267,49 @@ class WearWidgetDesignsTest {
       assertTrue(abs(camera / 32f - scale) < 0.0001f)
       assertEquals(scene["stateVariables"], wear["stateVariables"])
     }
+    // Card Studio keeps its seeded card root; its single image scene still needs its coordinate
+    // system fitted as a whole instead of having the stage discarded as card chrome.
+    val wrapped =
+      JsonObject(
+        scene +
+          ("roots" to Json.parseToJsonElement("""["card-root"]""")) +
+          ("nodes" to
+            JsonObject(
+              scene.getValue("nodes").jsonObject +
+                ("card-root" to
+                  UiBuilderSeed.node(
+                    "card-root",
+                    HaCardsSeed.DASHBOARD_CARD,
+                    slots = mapOf("content" to listOf("stage")),
+                  ))
+            ))
+      )
+    for (container in DesignKey.WEAR_CONTAINERS) {
+      val wear = assertNotNull(WearWidgetDesigns.document(wrapped, container))
+      val widget = wear.getValue("roots").jsonArray.single().jsonPrimitive.content
+      val frame = wear.children(widget, "content").single()
+      assertEquals(listOf("stage"), wear.children(frame, "children"))
+      assertFalse("card-root" in wear.getValue("nodes").jsonObject)
+      assertNotNull(WearWidgetDesigns.compilableScene(wear))
+    }
+    val wrappedNodes = wrapped.getValue("nodes").jsonObject
+    val withSibling =
+      JsonObject(
+        wrapped +
+          ("nodes" to
+            JsonObject(
+              wrappedNodes +
+                ("card-root" to
+                  UiBuilderSeed.node(
+                    "card-root",
+                    HaCardsSeed.DASHBOARD_CARD,
+                    slots = mapOf("content" to listOf("stage", "other")),
+                  )) +
+                ("other" to UiBuilderSeed.node("other", "layout/box"))
+            ))
+      )
+    val siblings = assertNotNull(WearWidgetDesigns.document(withSibling, DesignKey.WEAR_LARGE))
+    assertEquals(listOf("stage", "other"), siblings.children("card-root", "content"))
     val nodes = scene.getValue("nodes").jsonObject
     val unsafe =
       JsonObject(

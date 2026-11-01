@@ -64,23 +64,45 @@ object WearWidgetDesigns {
     val nodes = (card["nodes"] as? JsonObject)?.mapValues { it.value.jsonObject } ?: return null
     val root = nodes[rootId] ?: return null
 
-    // A fixed image scene's root is its coordinate system, not disposable card chrome. Preserve
-    // it and fit the whole scene into the host's padded content area with one uniform scale.
-    if (
-      root["componentId"]?.jsonPrimitive?.content == "layout/box" &&
-        nodes.values.any { it["componentId"]?.jsonPrimitive?.content == "asset/image" } &&
-        (root["modifiers"] as? JsonArray).orEmpty().any {
-          (it as? JsonObject)?.get("type")?.jsonPrimitive?.content == "size"
-        }
-    ) {
-      // Refuse an unsupported scene instead of dropping its coordinate root and cropping it.
-      return fixedScene(card, nodes, rootId, target, container)
-    }
-
     fun children(node: JsonObject): List<String> =
       (node["slots"] as? JsonObject)?.values.orEmpty().flatMap { ids ->
         ids.jsonArray.map { it.jsonPrimitive.content }
       }
+
+    // A cloud draft retains the seeded card root. Unwrap only a single-child chain of known card
+    // chrome; siblings may contain meaningful content and must never be silently discarded.
+    var sceneId = rootId
+    val wrappers = SURFACES + HaCardsSeed.CARD_TEMPLATE
+    val seen = mutableSetOf<String>()
+    while (sceneId !in seen) {
+      seen += sceneId
+      val node = nodes[sceneId] ?: break
+      if (node["componentId"]?.jsonPrimitive?.content !in wrappers) break
+      sceneId = children(node).singleOrNull() ?: break
+    }
+    val sceneRoot = nodes[sceneId] ?: root
+
+    // A fixed image scene's root is its coordinate system, not disposable card chrome. Preserve
+    // it and fit the whole scene into the host's padded content area with one uniform scale.
+    if (
+      sceneRoot["componentId"]?.jsonPrimitive?.content == "layout/box" &&
+        nodes.values.any { it["componentId"]?.jsonPrimitive?.content == "asset/image" } &&
+        (sceneRoot["modifiers"] as? JsonArray).orEmpty().any {
+          (it as? JsonObject)?.get("type")?.jsonPrimitive?.content == "size"
+        }
+    ) {
+      // Refuse an unsupported scene instead of dropping its coordinate root and cropping it.
+      val sceneNodes = linkedMapOf<String, JsonObject>()
+      fun visit(id: String): Boolean {
+        if (id in sceneNodes) return false
+        val node = nodes[id] ?: return false
+        sceneNodes[id] = node
+        return children(node).all(::visit)
+      }
+      if (!visit(sceneId)) return null
+      return fixedScene(card, sceneNodes, sceneId, target, container)
+    }
+
     fun isSurface(id: String) = nodes[id]?.get("componentId")?.jsonPrimitive?.content in SURFACES
     // A surface's place goes to what it holds, surfaces inside it unwrapped too.
     fun unwrapped(ids: List<String>): List<String> = ids.flatMap { id ->
