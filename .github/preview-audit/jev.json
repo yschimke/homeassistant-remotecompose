@@ -1,0 +1,10 @@
+{
+  "about": "Which guidelines file the Preview Audit jev agent checks each changed preview against: the first group whose module (and id substring, if given) matches, else default. Mirrors PROMPT.md step 3.",
+  "default": ".github/preview-audit/mobile.guidelines.json",
+  "groups": [
+    {
+      "module": "wear",
+      "guidelines": ".github/preview-audit/wear.guidelines.json"
+    }
+  ]
+}
