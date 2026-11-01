@@ -107,6 +107,33 @@ the previous main policy while a catalog change is under review.
 
 ## Calling a provider
 
+### Cloud agent draft sessions
+
+The cloud-agent option sends the selected card's sanitized preview and binding contract to the
+configured upstream design server. It creates an in-memory session with separate random owner and
+agent capabilities, valid for one hour; restarting that server also removes the session. The
+owner capability can read and revoke the session, and the agent capability can read it and submit
+a draft. The server never receives a Home Assistant token. The connection details include the
+agent capability, so the person must share them only with their chosen agent. Anyone holding it
+can read the preview data and submit drafts until the person revokes it or it expires.
+
+The agent can connect to `/api/studio/agent-mcp` with its capability as a Bearer token and call
+`get_card_request` and `submit_card_draft`. Clients without a configurable MCP connection can read
+`GET /api/studio/agent-session` with the same capability, and submit
+`POST` to the same path with a JSON object containing the last-read `revision` and complete
+`document`. The server rejects stale revisions and applies the existing draft gate against the
+original card contract. The person checks for a draft in Card Studio, opens it in UI Builder for
+review, and publishes and installs it separately. This is a scoped JSON draft handoff, not an MCP
+connection to Home Assistant or a live UI Builder editing session. It does not stream live Home Assistant values or
+LED frames; preview data is a snapshot. A cloud agent needs network access to the upstream service.
+
+On a Home Assistant with the private design add-on, the app still uses that add-on to review and
+publish; the configured upstream receives the limited preview for the cloud session. The seeded
+draft is refreshed against the private server's own contract when opened there. The upstream and
+the private add-on must both run a version that supports the relevant routes and catalog.
+
+### Provider draft generation
+
 Provider keys are entered for this studio session, masked in the UI, and kept only in
 memory. They are sent directly to the selected provider, never to Home Assistant or
 the design server. Claude uses Messages with `x-api-key` and `anthropic-version`;

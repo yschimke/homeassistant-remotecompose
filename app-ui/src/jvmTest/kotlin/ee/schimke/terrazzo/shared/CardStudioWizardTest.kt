@@ -101,6 +101,17 @@ class CardStudioWizardTest {
   }
 
   @Test
+  fun cloudAgentExplainsWhatIsSharedBeforeCreatingARequest() = runComposeUiTest {
+    studio(token = "device")
+    onNodeWithText("With a cloud agent").performClick()
+    onNodeWithText("What should change?").assertExists()
+    onNodeWithText("Create agent request").assertIsNotEnabled()
+    onNodeWithText("https://ha.coo.ee", substring = true).assertExists()
+    onNodeWithText("no Home Assistant token is sent", substring = true).assertExists()
+    capture("5-cloud-agent")
+  }
+
+  @Test
   fun defaultsRoundTrip() {
     val defaults =
       CardStudioDefaults(CardStudioMode.Agent, CardAgentProvider.Agent, "m", "https://a.example")

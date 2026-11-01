@@ -1,6 +1,7 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.ha.client.design.DesignPublisher
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -69,6 +70,117 @@ class CardStudioTest {
         }
       assertEquals(HttpStatusCode.OK, response.status)
       val document = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+      val session =
+        client.post("/api/studio/agent-sessions") {
+          setBody(
+            buildJsonObject {
+              put("instruction", "Make it brighter")
+              put("document", document)
+            }
+              .toString()
+          )
+        }
+      assertEquals(HttpStatusCode.OK, session.status)
+      assertEquals("no-store", session.headers[HttpHeaders.CacheControl])
+      val access = Json.parseToJsonElement(session.bodyAsText()).jsonObject
+      val owner = access.getValue("ownerToken").jsonPrimitive.content
+      val agent = access.getValue("agentToken").jsonPrimitive.content
+      val mcpList =
+        client.post("/api/studio/agent-mcp") {
+          header(HttpHeaders.Authorization, "Bearer $agent")
+          setBody("""{"jsonrpc":"2.0","id":1,"method":"tools/list"}""")
+        }
+      assertEquals(HttpStatusCode.OK, mcpList.status)
+      assertTrue(mcpList.bodyAsText().contains("get_card_request"))
+      assertEquals(
+        HttpStatusCode.Unauthorized,
+        client
+          .post("/api/studio/agent-mcp") {
+            header(HttpHeaders.Authorization, "Bearer $owner")
+            setBody("""{"jsonrpc":"2.0","id":1,"method":"tools/list"}""")
+          }
+          .status,
+      )
+      val mcpRead =
+        client.post("/api/studio/agent-mcp") {
+          header(HttpHeaders.Authorization, "Bearer $agent")
+          setBody(
+            """{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"get_card_request","arguments":{}}}"""
+          )
+        }
+      assertTrue(mcpRead.bodyAsText().contains("Make it brighter"))
+      val read =
+        client.get("/api/studio/agent-session") {
+          header(HttpHeaders.Authorization, "Bearer $agent")
+        }
+      assertEquals(HttpStatusCode.OK, read.status)
+      assertEquals(
+        "Make it brighter",
+        Json.parseToJsonElement(read.bodyAsText())
+          .jsonObject["instruction"]!!
+          .jsonPrimitive
+          .content,
+      )
+      val draft = JsonObject(document + ("title" to JsonPrimitive("Brighter")))
+      val submitted =
+        client.post("/api/studio/agent-session") {
+          header(HttpHeaders.Authorization, "Bearer $agent")
+          setBody(
+            buildJsonObject {
+              put("revision", 0)
+              put("document", draft)
+            }
+              .toString()
+          )
+        }
+      assertEquals(HttpStatusCode.OK, submitted.status)
+      val stale =
+        client.post("/api/studio/agent-mcp") {
+          header(HttpHeaders.Authorization, "Bearer $agent")
+          setBody(
+            buildJsonObject {
+              put("jsonrpc", "2.0")
+              put("id", 3)
+              put("method", "tools/call")
+              putJsonObject("params") {
+                put("name", "submit_card_draft")
+                putJsonObject("arguments") {
+                  put("revision", 0)
+                  put("document", draft)
+                }
+              }
+            }
+              .toString()
+          )
+        }
+      assertTrue(stale.bodyAsText().contains("\"isError\":true"))
+      val review =
+        client.get("/api/studio/agent-session") {
+          header(HttpHeaders.Authorization, "Bearer $owner")
+        }
+      assertEquals(draft, Json.parseToJsonElement(review.bodyAsText()).jsonObject["document"])
+      assertEquals(
+        HttpStatusCode.NotFound,
+        client
+          .delete("/api/studio/agent-session") {
+            header(HttpHeaders.Authorization, "Bearer $agent")
+          }
+          .status,
+      )
+      assertEquals(
+        HttpStatusCode.OK,
+        client
+          .delete("/api/studio/agent-session") {
+            header(HttpHeaders.Authorization, "Bearer $owner")
+          }
+          .status,
+      )
+      assertEquals(
+        HttpStatusCode.NotFound,
+        client
+          .get("/api/studio/agent-session") { header(HttpHeaders.Authorization, "Bearer $agent") }
+          .status,
+      )
       assertEquals(
         "ha-cards",
         document["catalogPin"]!!.jsonObject["systemId"]!!.jsonPrimitive.content,
