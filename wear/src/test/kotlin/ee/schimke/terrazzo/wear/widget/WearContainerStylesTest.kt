@@ -1,13 +1,22 @@
 package ee.schimke.terrazzo.wear.widget
 
 import android.graphics.Bitmap
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.remote.creation.compose.layout.RemoteBox
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.background
+import androidx.compose.remote.creation.compose.modifier.offset
+import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.state.rc
+import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
@@ -108,6 +117,37 @@ class WearContainerStylesTest {
       "square" to params(ContainerInfo.CONTAINER_TYPE_LARGE, 112f, 4f),
       "small" to params(ContainerInfo.CONTAINER_TYPE_SMALL, 60f, 26f),
     )
+
+  @Test
+  fun oversizedContentIsClippedToTheHostsRoundedFrame() {
+    val params = params(ContainerInfo.CONTAINER_TYPE_SMALL, 60f, 26f)
+    val template = runBlocking {
+      WearWidgetTemplate.capture(context) {
+        RemoteBox(
+          RemoteModifier.offset((-8).rdp, (-8).rdp).size(400.rdp, 400.rdp).background(Color.Red.rc)
+        ) {}
+      }
+    }
+    val widget =
+      assertNotNull(runBlocking { WearWidgetTemplate.instantiate(context, template, params) })
+    assertEquals(
+      emptyList(),
+      RcDocumentCodec.decode(widget.rcDocument, RcWireLimits())
+        .validateFor(RcTargetProfiles.WEAR_WIDGETS),
+    )
+    compose.setContent {
+      Box(Modifier.size(216.dp, 76.dp).background(Color.Magenta).testTag("widget")) {
+        HaRcComposePlayer(
+          widget.rcDocument,
+          Modifier.size(216.dp, 76.dp),
+          fallback = { error("must play") },
+        )
+      }
+    }
+    val bitmap = compose.onNodeWithTag("widget").captureToImage().asAndroidBitmap()
+    assertEquals(android.graphics.Color.MAGENTA, bitmap.getPixel(0, 0))
+    assertEquals(android.graphics.Color.RED, bitmap.getPixel(bitmap.width / 2, bitmap.height / 2))
+  }
 
   @Test
   fun everyStylesContainerPlaysAsAWearWidgetInEveryContainer() {
