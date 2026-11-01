@@ -147,10 +147,23 @@ class UiBuilderDesignCompiler(
     // A fixed illustrated scene is authored in one coordinate space. Keep that space's aspect
     // ratio when the card is played at a different width; ordinary adaptive cards keep their own
     // layout behavior. Restrict this to image/box scenes so text and controls are not shrunk.
-    private val sceneSize: Pair<Float, Float>? = run {
-      if (nodes.values.any { it.string("componentId") !in setOf(BOX, IMAGE) }) return@run null
+    private data class Scene(val root: String, val width: Float, val height: Float)
+
+    private val sceneSize: Scene? = run {
+      var rootId = roots.singleOrNull() ?: return@run null
+      val wrappers = setOf("ha-cards/dashboard-card", "ha-cards/remote-card")
+      val seen = mutableSetOf<String>()
+      while (seen.add(rootId)) {
+        val node = nodes[rootId] ?: return@run null
+        if (node.string("componentId") !in wrappers) break
+        rootId = children(rootId).singleOrNull() ?: return@run null
+      }
+      if (
+        nodes.any { (id, node) -> id !in seen && node.string("componentId") !in setOf(BOX, IMAGE) }
+      )
+        return@run null
       if (nodes.values.none { it.string("componentId") == IMAGE }) return@run null
-      val root = roots.singleOrNull()?.let(nodes::get) ?: return@run null
+      val root = nodes[rootId] ?: return@run null
       if (root.string("componentId") != BOX) return@run null
       val size =
         (root["modifiers"] as? JsonArray)
@@ -158,7 +171,7 @@ class UiBuilderDesignCompiler(
           ?.singleOrNull { it.string("type") == "size" } ?: return@run null
       val width = (size["widthDp"] as? JsonPrimitive)?.floatOrNull ?: return@run null
       val height = (size["heightDp"] as? JsonPrimitive)?.floatOrNull ?: return@run null
-      if (width <= 0f || height <= 0f) null else width to height
+      if (width <= 0f || height <= 0f) null else Scene(rootId, width, height)
     }
 
     fun problems(assets: Set<String>): List<String> = buildList {
@@ -263,14 +276,14 @@ class UiBuilderDesignCompiler(
           ) {
             componentWidth()
           }
-      val scale = widthPx / scene.first.rdp.toPx()
+      val scale = widthPx / scene.width.rdp.toPx()
       RemoteBox(modifier = modifier.fillMaxWidth()) {
         RemoteBox(
           modifier =
             RemoteModifier.fillMaxWidth()
-              .height((widthPx * (scene.second / scene.first)).toRemoteDp())
+              .height((widthPx * (scene.height / scene.width)).toRemoteDp())
         ) {
-          Node(roots.single(), RemoteModifier, scale)
+          Node(scene.root, RemoteModifier, scale)
         }
       }
     }

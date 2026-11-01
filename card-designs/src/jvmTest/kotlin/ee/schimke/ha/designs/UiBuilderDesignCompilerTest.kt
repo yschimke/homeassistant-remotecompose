@@ -159,15 +159,27 @@ class UiBuilderDesignCompilerTest {
 
   @Test
   fun illustratedSceneKeepsItsAspectAndDoorEdgesAtNarrowCardWidths() {
-    val bytes = compiler.compile(document, assets, key)
-    val closed = mapOf("cover.s0.is_on" to RcNamedValue.Integer(0))
-    val full = play(bytes, closed, 360)
-    val narrow = play(bytes, closed, 180)
-    for ((x, y) in listOf(42 to 82, 317 to 82, 42 to 277, 317 to 277)) {
-      assertTrue(full.isRed(x, y), "full-size door edge $x,$y")
-      assertTrue(narrow.isRed(x / 2, y / 2), "narrow door edge $x,$y")
+    val wrapper =
+      Json.parseToJsonElement(
+        """{"id":"card-root","componentId":"ha-cards/dashboard-card","properties":{},"modifiers":[],"slots":{"content":["stage"]}}"""
+      )
+    val wrapped =
+      JsonObject(
+        document +
+          ("roots" to JsonArray(listOf(JsonPrimitive("card-root")))) +
+          ("nodes" to JsonObject(document.getValue("nodes").jsonObject + ("card-root" to wrapper)))
+      )
+    for (source in listOf(document, wrapped)) {
+      val bytes = compiler.compile(source, assets, key)
+      val closed = mapOf("cover.s0.is_on" to RcNamedValue.Integer(0))
+      val full = play(bytes, closed, 360)
+      val narrow = play(bytes, closed, 180)
+      for ((x, y) in listOf(42 to 82, 317 to 82, 42 to 277, 317 to 277)) {
+        assertTrue(full.isRed(x, y), "full-size door edge $x,$y")
+        assertTrue(narrow.isRed(x / 2, y / 2), "narrow door edge $x,$y")
+      }
+      assertTrue(!narrow.isRed(10, 100), "the surrounding image keeps its place")
     }
-    assertTrue(!narrow.isRed(10, 100), "the surrounding image keeps its place")
   }
 
   @Test
