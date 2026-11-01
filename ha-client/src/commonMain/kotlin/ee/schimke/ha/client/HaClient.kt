@@ -566,9 +566,7 @@ class HaClient(
   suspend fun terrazzoDesignSelections(): Map<String, String> =
     (runCommand("terrazzo/design_selections/get")["cards"] as? JsonObject)
       .orEmpty()
-      .mapNotNull { (key, value) ->
-        (value as? JsonPrimitive)?.contentOrNull?.let { key to it }
-      }
+      .mapNotNull { (key, value) -> (value as? JsonPrimitive)?.contentOrNull?.let { key to it } }
       .toMap()
 
   /** Select a published design for a card fingerprint, or remove the shared selection. */
