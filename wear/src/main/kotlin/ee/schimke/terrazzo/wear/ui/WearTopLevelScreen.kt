@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,6 +21,7 @@ import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
+import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.PinnedCard
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSection
@@ -63,14 +65,25 @@ fun WearTopLevelScreen(
   onOpenSettings: () -> Unit,
   modifier: Modifier = Modifier,
   onInputSend: (suspend (String, Map<String, String>) -> Unit)? = null,
-  onOpenCard: (PinnedCard) -> Unit = {},
+  onOpenCard: (sectionKey: String?, card: CardSummary) -> Unit = { _, _ -> },
   onOpenOnPhone: (() -> Unit)? = null,
   onOpenWidgets: (() -> Unit)? = null,
+  onNavigate: (String) -> Unit = {},
 ) {
   val items = remember(pinned, sections) { mergeOrdered(pinned.cards, sections.sections) }
+  val expandedSections = remember { mutableStateListOf<String>() }
   // The pinned list composes here: the launch is fully drawn (`timeToFullDisplayMs`).
   ReportDrawn()
 
+  val rows =
+    buildList<HomeRow> {
+      items.forEach { entry ->
+        add(HomeRow.Entry(entry))
+        if (entry is TopLevelEntry.Section && entry.section.sectionKey in expandedSections) {
+          entry.section.cards.forEach { card -> add(HomeRow.SectionCard(entry.section, card)) }
+        }
+      }
+    }
   WearListScreen(modifier = modifier, spacing = 6.dp, gestureScroll = true) {
     item { ListHeader { Text("Pinned") } }
     if (settings.demoMode) {
@@ -81,18 +94,49 @@ fun WearTopLevelScreen(
       item { EmptyPinned() }
       onOpenOnPhone?.let { open -> item { OpenOnPhoneButton(open) } }
     } else {
-      items(items, key = { it.key }) { entry ->
-        when (entry) {
-          is TopLevelEntry.Card -> {
-            val card = entry.card.card
+      items(rows, key = { it.key }) { row ->
+        when (row) {
+          is HomeRow.Entry ->
+            when (val entry = row.entry) {
+              is TopLevelEntry.Card -> {
+                val card = entry.card.card
+                if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
+                  WearMessageCard(card.rawJson, values, onInputSend)
+                } else {
+                  WearRemoteCard(
+                    card,
+                    values,
+                    onOpen = { onOpenCard(null, card) },
+                    onNavigate = onNavigate,
+                  )
+                }
+              }
+              is TopLevelEntry.Section -> {
+                val section = entry.section
+                val expanded = section.sectionKey in expandedSections
+                PinnedSectionRow(
+                  section = section,
+                  expanded = expanded,
+                  onClick = {
+                    if (expanded) expandedSections.remove(section.sectionKey)
+                    else expandedSections += section.sectionKey
+                  },
+                )
+              }
+            }
+          is HomeRow.SectionCard -> {
+            val card = row.card
             if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
               WearMessageCard(card.rawJson, values, onInputSend)
             } else {
-              WearRemoteCard(card, values, onOpen = { onOpenCard(entry.card) })
+              WearRemoteCard(
+                card,
+                values,
+                onOpen = { onOpenCard(row.section.sectionKey, card) },
+                onNavigate = onNavigate,
+              )
             }
           }
-          is TopLevelEntry.Section ->
-            PinnedSectionRow(section = entry.section, onClick = { onOpenSection(entry.section) })
         }
       }
     }
@@ -165,6 +209,19 @@ internal sealed interface TopLevelEntry {
   }
 }
 
+/** One rendered home-list row; expanded section cards are flattened into the list scope. */
+private sealed interface HomeRow {
+  val key: String
+
+  data class Entry(val entry: TopLevelEntry) : HomeRow {
+    override val key: String = entry.key
+  }
+
+  data class SectionCard(val section: PinnedSection, val card: CardSummary) : HomeRow {
+    override val key: String = "${section.sectionKey}:${card.rawJson}"
+  }
+}
+
 @Composable
 private fun DemoBanner() {
   Box(
@@ -215,7 +272,7 @@ internal const val WEAR_EMPTY_PINNED =
     "tap a section's pin."
 
 @Composable
-private fun PinnedSectionRow(section: PinnedSection, onClick: () -> Unit) {
+private fun PinnedSectionRow(section: PinnedSection, expanded: Boolean, onClick: () -> Unit) {
   val title = section.title.ifEmpty { "Section" }
   val cardCount = section.cards.size
   Button(
@@ -230,7 +287,9 @@ private fun PinnedSectionRow(section: PinnedSection, onClick: () -> Unit) {
         fontWeight = FontWeight.SemiBold,
       )
       Text(
-        text = "$cardCount card${if (cardCount == 1) "" else "s"}",
+        text =
+          "$cardCount card${if (cardCount == 1) "" else "s"} · " +
+            if (expanded) "Collapse" else "Expand",
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )

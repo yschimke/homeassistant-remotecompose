@@ -21,6 +21,8 @@ on:
     paths: &paths
       - card-designs/**
       - design-server/**
+      # Built on the box from the image, not part of it; each release sets its version.
+      - '!design-server/addon/**'
       - embed/**
       - lovelace-catalog/**
       - app-ui/**

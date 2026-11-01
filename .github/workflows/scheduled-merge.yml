@@ -66,6 +66,8 @@ jobs:
               'app/src/main/play/listings/en-GB/graphics/phone-screenshots/',
               'gradle/libs.versions.toml', '.github/workflows/design-server.yml',
             ];
+            // Its `!design-server/addon/**`.
+            const designServerIgnored = 'design-server/addon/';
             for (const stub of prs) {
               if (stub.draft) continue;
               if (stub.labels.some((l) => skipLabels.has(l.name))) {
@@ -105,8 +107,10 @@ jobs:
                     const files = await github.paginate(github.rest.pulls.listFiles, {
                       owner, repo, pull_number: pr.number, per_page: 100,
                     });
-                    touchedDesignServer = files.some((f) => designServerPaths.some((path) =>
-                      path.endsWith('/') ? f.filename.startsWith(path) : f.filename === path));
+                    touchedDesignServer = files.some((f) =>
+                      !f.filename.startsWith(designServerIgnored) &&
+                      designServerPaths.some((path) =>
+                        path.endsWith('/') ? f.filename.startsWith(path) : f.filename === path));
                   } catch (e) {
                     // Unknown is a reason to publish, not to skip it.
                     core.warning(`#${pr.number}: listing files failed — ${e.message}`);

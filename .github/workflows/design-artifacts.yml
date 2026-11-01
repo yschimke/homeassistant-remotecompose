@@ -105,7 +105,7 @@ jobs:
       # `refs/design-artifacts/source/homeassistant-remotecompose` here, which
       # has to stay in this repository (it points at a source commit).
       contents: write
-    uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@84f5ee2dd1764f91772fbcfd7876515b8f9da327 # main
+    uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@5f659bed6c8cddd93ce34d9edcc7d8ce7fba8253 # main
     with:
       system: homeassistant-remotecompose
       ui-builder-catalog-task: ':ui-builder-catalog:exportTypedCatalog'
@@ -133,6 +133,10 @@ jobs:
       # `catalog` keeps the "don't silently pick up renderer regressions" property
       # while making compose-preview-plugin the single source of truth, exactly as
       # ci.yml and compose-preview.yml already do.
+      # Render the debug variant explicitly. AGP 9.5 turns unit tests off for release
+      # variants, and Compose Preview packages Android resources through the variant's
+      # unit-test APK, so a release render fails before it starts (compose-ai-tools #6382).
+      variant: debug
       cli-version: catalog
       catalog-key: compose-preview-plugin
       # Carry the executable bundle + per-preview bundles so the served catalog

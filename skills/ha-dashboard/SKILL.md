@@ -26,8 +26,10 @@ person's review.
 ## An edit session
 
 A harc or Terrazzo prompt names the MCP endpoint, a `session_id` and the request. Without one,
-`start_edit_session` with the dashboard's `url_path` (from `list_dashboards`; the default dashboard
-has none) and the request opens a session the person then sees in the phone app or the panel.
+call `list_edit_sessions` to find an existing open request and its notes on a visible dashboard. If
+there is no relevant request, call `start_edit_session` with the dashboard's `url_path` (from
+`list_dashboards`; the default dashboard has none) and the request. The person then sees the
+session in the phone app or the panel.
 
 1. `get_edit_session` with the `session_id`: the request, the dashboard as it is now, the latest
    draft and the person's notes.

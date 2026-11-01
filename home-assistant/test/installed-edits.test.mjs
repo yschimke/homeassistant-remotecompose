@@ -120,6 +120,17 @@ test('Edit sessions: agents draft, administrators apply', {timeout:180_000}, asy
       assert.equal(response.status(), 200, `${name} answers`);
       return (await response.json()).result;
     };
+    // Discovery follows the same dashboard visibility rule as reading a session.
+    const privateDashboard = await owner.ws({type:'lovelace/dashboards/create', url_path:'private-fixture',
+      title:'Private fixture', mode:'storage', require_admin:true, show_in_sidebar:false});
+    assert.ok(!privateDashboard.error);
+    assert.ok(!(await owner.ws({type:'lovelace/config/save', url_path:'private-fixture', config:BASELINE}))?.error);
+    const privateSession = await owner.ws({type:'terrazzo/edit/start', url_path:'private-fixture', request:'Private request'});
+    assert.ok(!privateSession.error);
+    const discovered = (await mcp('list_edit_sessions')).structuredContent.sessions;
+    assert.ok(discovered.some((s) => s.session_id === sessionId && s.request === 'Add the switch'));
+    assert.ok(!discovered.some((s) => s.session_id === privateSession.session.session_id));
+    assert.ok(discovered.every((s) => !('baseline' in s) && !('dashboard' in s)));
     const read = await mcp('get_edit_session', {session_id:sessionId});
     assert.notEqual(read.isError, true, read.content?.[0]?.text);
     assert.deepEqual(read.structuredContent.dashboard, BASELINE);
@@ -149,10 +160,12 @@ test('Edit sessions: agents draft, administrators apply', {timeout:180_000}, asy
     // The person asks for a change; the agent reads the note on its next call.
     assert.ok(!(await owner.ws({type:'terrazzo/edit/note', session_id:sessionId, text:'Looks good'}))?.error);
     assert.equal((await mcp('get_edit_session', {session_id:sessionId})).structuredContent.notes[0].text, 'Looks good');
+    assert.equal((await mcp('list_edit_sessions')).structuredContent.sessions.find((s) => s.session_id === sessionId).notes[0].text, 'Looks good');
 
     const applied = await owner.ws({type:'terrazzo/edit/apply', session_id:sessionId, draft_id:draftId});
     assert.ok(!applied.error, `applied: ${applied.error?.message}`);
     assert.equal(applied.session.status, 'applied');
+    assert.ok(!(await mcp('list_edit_sessions')).structuredContent.sessions.some((s) => s.session_id === sessionId));
     assert.deepEqual(await owner.ws({type:'lovelace/config', url_path:'edit-fixture'}), DRAFT);
     const again = await mcp('submit_draft', {session_id:sessionId, config:DRAFT});
     assert.equal(again.isError, true, 'an applied session takes no more drafts');

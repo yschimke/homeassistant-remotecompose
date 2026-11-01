@@ -12,7 +12,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -31,6 +33,7 @@ import kotlinx.serialization.json.JsonObject
 enum class CardStudioMode(val label: String) {
   Builder("Myself, in UI Builder"),
   Agent("With an AI agent"),
+  CloudAgent("With a cloud agent"),
 }
 
 /**
@@ -135,6 +138,10 @@ fun CardStudioScreen(
   val apiKey = StudioKeys.keys[provider].orEmpty()
   var editingAgent by remember { mutableStateOf(!defaults.agentReady) }
   var instruction by remember { mutableStateOf("") }
+  var cloudSession by remember { mutableStateOf<CardAgentSession?>(null) }
+  var cloudServer by remember { mutableStateOf<String?>(null) }
+  var cloudTarget by remember { mutableStateOf<String?>(null) }
+  var cloudTargetProblem by remember { mutableStateOf<String?>(null) }
   var draft by remember { mutableStateOf<JsonObject?>(null) }
   var editorUrl by remember { mutableStateOf<String?>(null) }
   var externalUrl by remember(editorUrl) { mutableStateOf<String?>(null) }
@@ -158,11 +165,31 @@ fun CardStudioScreen(
   var job by remember { mutableStateOf<Job?>(null) }
   val scope = rememberCoroutineScope()
   val uriHandler = LocalUriHandler.current
+  @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
   val latestSnapshot by rememberUpdatedState(snapshot)
   // A Home Assistant's own design server needs no sign-in of its own.
   val signedIn = designToken.isNotBlank() || homeServer != null
   // A host that can sign in asks for it first: everything after works without a web sign-in.
   val needsSignIn = onSignIn != null && !signedIn
+
+  LaunchedEffect(homeServer, server, mode) {
+    if (mode != CardStudioMode.CloudAgent || cloudSession != null) return@LaunchedEffect
+    cloudTarget = null
+    cloudTargetProblem = null
+    val studio = homeServer?.let {
+      CardStudioClient.throughHomeAssistant(it.haBaseUrl, it.accessToken)
+    }
+    try {
+      cloudTarget = studio?.upstreamServer() ?: studioServerUrl(server)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      cloudTargetProblem =
+        "Couldn't find an HTTPS upstream design server. Check the design server configuration."
+    } finally {
+      studio?.close()
+    }
+  }
 
   fun saveDefaults(update: CardStudioDefaults.() -> CardStudioDefaults) {
     onDefaultsChange(CardStudioDefaults(mode, provider, model.trim(), endpoint.trim()).update())
@@ -226,7 +253,10 @@ fun CardStudioScreen(
         }
       if (openEditorInBrowser) {
         uriHandler.openUri(url)
-        "Opened in your browser. Save your design there, then come back to use it."
+        if (onPublished != null)
+          "Opened in your browser. Save your design there, then come back to use it."
+        else
+          "Opened in your browser. Save your design there; applying it in this host is not yet supported."
       } else {
         editorUrl = url
         null
@@ -245,6 +275,51 @@ fun CardStudioScreen(
       saveDefaults { copy(mode = CardStudioMode.Agent) }
       editingAgent = false
       "Draft ready. Open it in UI Builder to review and save it."
+    }
+
+  fun startCloudSession() =
+    launch(3) { _ ->
+      // Use the configured upstream, not the private add-on's HA-authenticated proxy. The cloud
+      // receives only cardPreviewData; it never receives the Home Assistant access token.
+      val target = cloudTarget ?: return@launch "The upstream design server is unavailable."
+      val upstream = CardStudioClient(target)
+      try {
+        val seed = upstream.seed(card, currentSnapshot(fresh = true))
+        cloudSession = upstream.startAgentSession(seed, instruction)
+        cloudServer = target
+      } finally {
+        upstream.close()
+      }
+      "Request created. Give the agent the connection details below."
+    }
+
+  fun retrieveCloudDraft() =
+    launch(3) { _ ->
+      val session = cloudSession ?: return@launch null
+      val upstream = CardStudioClient(cloudServer ?: return@launch null)
+      try {
+        val (candidate, revision) = upstream.agentSessionDraft(session.ownerToken)
+        if (revision == 0L) return@launch "The agent hasn't submitted a draft yet."
+        draft = candidate
+      } finally {
+        upstream.close()
+      }
+      if (onPublished != null) "Draft received. Review it in UI Builder before publishing."
+      else "Draft received. Review it in UI Builder; applying it in this host is not yet supported."
+    }
+
+  fun revokeCloudSession() =
+    launch(3) { _ ->
+      val session = cloudSession ?: return@launch null
+      val upstream = CardStudioClient(cloudServer ?: return@launch null)
+      try {
+        upstream.revokeAgentSession(session.ownerToken)
+        cloudSession = null
+        cloudServer = null
+      } finally {
+        upstream.close()
+      }
+      "Agent access revoked."
     }
 
   fun refresh() =
@@ -357,6 +432,8 @@ fun CardStudioScreen(
                     "Open a copy of this card, filled with its live values, in the visual editor."
                   CardStudioMode.Agent ->
                     "Describe what you want; Claude, OpenAI or OpenRouter drafts it with your own API key."
+                  CardStudioMode.CloudAgent ->
+                    "Give a cloud agent a temporary task for this card, then review its draft."
                 },
               selected = mode == option,
               enabled = !busy,
@@ -370,14 +447,80 @@ fun CardStudioScreen(
         val designed = openedHandoffs.isNotEmpty()
         StudioStep(
           number = number++,
-          title = if (mode == CardStudioMode.Agent) "Describe the design" else "Edit in UI Builder",
+          title =
+            if (mode == CardStudioMode.Builder) "Edit in UI Builder" else "Describe the design",
           state =
             when {
               needsSignIn || !modeChosen -> StepState.Locked
               else -> StepState.Active
             },
         ) {
-          if (mode == CardStudioMode.Agent) {
+          if (mode == CardStudioMode.CloudAgent) {
+            OutlinedTextField(
+              instruction,
+              { instruction = it },
+              label = { Text("What should change?") },
+              enabled = !busy && cloudSession == null,
+              modifier = Modifier.fillMaxWidth(),
+            )
+            Text(
+              "The design server at ${cloudTarget ?: "the configured upstream"} receives this card's display text, current values and binding contract. The agent receives temporary access to this request; no Home Assistant token is sent. Access expires after one hour.",
+              style = MaterialTheme.typography.bodySmall,
+            )
+            Text(
+              if (onPublished != null)
+                "The agent can rearrange the card's supported components and bindings. Review the result in UI Builder before publishing it."
+              else
+                "The agent can rearrange supported components and bindings. Review and save the result in UI Builder; applying it in this host is not yet supported.",
+              style = MaterialTheme.typography.bodySmall,
+            )
+            val session = cloudSession
+            if (session == null) {
+              cloudTargetProblem?.let { Text(it) }
+              Button(
+                onClick = { startCloudSession() },
+                enabled = !busy && instruction.isNotBlank() && cloudTarget != null,
+              ) {
+                Text("Create agent request")
+              }
+            } else {
+              Text(
+                "Share the temporary connection details with your cloud agent. Anyone holding them can read and edit this card draft."
+              )
+              FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                  onClick = {
+                    clipboard.setText(
+                      AnnotatedString(
+                        "Redesign this card. Connect to the MCP endpoint ${cloudServer.orEmpty()}/api/studio/agent-mcp " +
+                          "with Authorization: Bearer ${session.agentToken}; call get_card_request and " +
+                          "submit_card_draft. If your client cannot connect MCP, GET ${cloudServer.orEmpty()}/api/studio/agent-session " +
+                          "with Authorization: Bearer ${session.agentToken}. Read instruction, document and revision. " +
+                          "POST to the same URL with the same Authorization and JSON body " +
+                          "{\"revision\": <revision>, \"document\": <complete edited document>}. " +
+                          "Preserve all bindings; the person reviews and publishes the draft."
+                      )
+                    )
+                    messageStep = 3
+                    message = "Connection details copied."
+                  },
+                  enabled = !busy,
+                ) {
+                  Text("Copy agent details")
+                }
+                OutlinedButton(onClick = { retrieveCloudDraft() }, enabled = !busy) {
+                  Text("Check for draft")
+                }
+                TextButton(onClick = { revokeCloudSession() }, enabled = !busy) {
+                  Text("Revoke access")
+                }
+              }
+              if (draft != null)
+                Button(onClick = { openInBuilder() }, enabled = !busy) {
+                  Text("Review in UI Builder")
+                }
+            }
+          } else if (mode == CardStudioMode.Agent) {
             AgentSetup(
               provider = provider,
               model = model,
@@ -499,7 +642,7 @@ fun CardStudioScreen(
               },
               label = { Text("Design server") },
               singleLine = true,
-              enabled = !busy,
+              enabled = !busy && cloudSession == null,
               modifier = Modifier.fillMaxWidth(),
             )
           }
@@ -521,7 +664,9 @@ fun CardStudioScreen(
           if (messageStep == 0) StudioRequestFeedback(busy, message, requestFailed)
         }
         Text(
-          "Designs stay drafts until you publish them. Nothing here changes your Home Assistant dashboard.",
+          if (onPublished != null)
+            "Designs stay drafts until you publish them. Nothing here changes your Home Assistant dashboard."
+          else "This host can create and review drafts but can't apply a custom design yet.",
           style = MaterialTheme.typography.bodySmall,
         )
       }

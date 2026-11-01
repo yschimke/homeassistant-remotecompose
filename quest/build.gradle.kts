@@ -10,6 +10,9 @@ plugins {
 // Compose UI in Spatial SDK panels. (`:terrazzo-core` needs API 35; Quest 3 runs API 34.)
 android {
   namespace = "ee.schimke.terrazzo.quest"
+  // Shared Home Assistant and Compose libraries publish API-37 AAR metadata, so this module
+  // compiles against the catalog SDK. Its runtime target remains API 34, with newer Quest APIs
+  // guarded in code so Horizon OS API-34 firmware keeps its supported fallback path.
   compileSdk {
     version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
   }
@@ -17,9 +20,11 @@ android {
     applicationId = "ee.schimke.terrazzo.quest"
     // The Spatial SDK's Compose and UI set need 28; the shared modules need the repo's floor.
     minSdk = libs.versions.android.minSdk.get().toInt()
-    targetSdk = libs.versions.android.targetSdk.get().toInt()
+    targetSdk = 34
     versionCode = 1
     versionName = "0.1.0"
+    // AppAuth declares its redirect receiver through this manifest placeholder.
+    manifestPlaceholders["appAuthRedirectScheme"] = "rcha"
   }
   buildFeatures { compose = true }
   compileOptions {
@@ -33,6 +38,7 @@ android {
 dependencies {
   implementation(project(":room-ui"))
   implementation(project(":ha-model"))
+  implementation(project(":ha-client"))
 
   implementation(libs.meta.spatial.sdk)
   implementation(libs.meta.spatial.sdk.compose)
@@ -48,6 +54,7 @@ dependencies {
   implementation(libs.compose.ui.tooling.preview)
   debugImplementation(libs.compose.ui.tooling)
   implementation(libs.kotlinx.coroutines.core)
+  implementation(libs.appauth)
 
   testImplementation(libs.kotlin.test.junit)
 }

@@ -1,33 +1,50 @@
 package ee.schimke.terrazzo.quest
 
+import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import ee.schimke.ha.client.HaClient
+import ee.schimke.ha.client.HaConfig
+import ee.schimke.ha.client.stateSnapshots
+import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.room.DashboardImportance
-import ee.schimke.terrazzo.room.DemoHouse
+import ee.schimke.ha.room.dashboardImportance
 import ee.schimke.terrazzo.room.RoomPin
 import ee.schimke.terrazzo.room.RoomState
 import ee.schimke.terrazzo.room.decodeRoomPins
 import ee.schimke.terrazzo.room.encodeRoomPins
 import ee.schimke.terrazzo.room.roomState
+import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.launch
 
 /**
- * The Quest room's state, outside any composition (a Spatial SDK activity isn't a
- * `ComponentActivity`): the house's snapshot, the room the user picked, the tracker they follow and
- * their pins, kept in [prefs].
- *
- * The house is [DemoHouse] for now, toggled in memory; signing in to a Home Assistant (through
- * `:ha-client`) is still to come on Quest.
+ * Quest's authenticated room state. It owns the Home Assistant WebSocket because the shared session
+ * layer is API-35-only; Quest remains installable on Horizon OS API 34.
  */
-class QuestRoomModel(private val prefs: SharedPreferences) {
-  private val baseUrl = DemoHouse.BASE_URL
+class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
+  private val scope = MainScope()
+  private val auth = QuestAuth(context)
+  private val tokenStore = QuestTokenStore(context)
+  private var client: HaClient? = null
+  private var baseUrl: String? = null
+  private var pendingSignInUrl: String? = null
+  private var pendingSignInGeneration: Int? = null
+  private var connectionGeneration = 0
 
-  var snapshot by mutableStateOf(DemoHouse.snapshot)
+  var snapshot by mutableStateOf<HaSnapshot?>(null)
     private set
 
-  /** The demo house's stand-in for its dashboards. */
-  val importance: DashboardImportance = DemoHouse.importance
+  private var importance by mutableStateOf(DashboardImportance.Empty)
+
+  var connection by mutableStateOf<QuestConnection>(QuestConnection.SignedOut)
+    private set
 
   var picked by mutableStateOf(prefs.getString(PICKED, null))
     private set
@@ -35,15 +52,85 @@ class QuestRoomModel(private val prefs: SharedPreferences) {
   var tracker by mutableStateOf(prefs.getString(TRACKER, null))
     private set
 
-  var nearestPin by mutableStateOf<String?>(null)
-
-  var pins by
-    mutableStateOf(decodeRoomPins(prefs.getString(PINS, null)).filter { it.baseUrl == baseUrl })
+  /** Explicit opt-in for physical home controls; new Quest installs start read-only. */
+  var controlsLocked by mutableStateOf(prefs.getBoolean(CONTROLS_LOCKED, true))
     private set
 
-  /** The room on show, its controls and the rooms to switch to. */
-  val state: RoomState
-    get() = roomState(snapshot, importance, picked, tracker, nearestPin)
+  var nearestPin by mutableStateOf<String?>(null)
+
+  var pins by mutableStateOf(emptyList<RoomPin>())
+    private set
+
+  /** Null until Home Assistant's initial state and area registries arrive. */
+  val state: RoomState?
+    get() = snapshot?.let { roomState(it, importance, picked, tracker, nearestPin) }
+
+  /** Restore a prior OAuth sign-in, minting a fresh short-lived access token first. */
+  fun restore() {
+    val credential = tokenStore.load() ?: return
+    val generation = ++connectionGeneration
+    scope.launch {
+      connect(
+        credential.baseUrl,
+        accessToken = null,
+        refreshToken = credential.refreshToken,
+        generation = generation,
+      )
+    }
+  }
+
+  fun authorizationIntent(url: String): Intent? {
+    val normalized = url.trim().removeSuffix("/")
+    pendingSignInUrl = normalized
+    return try {
+      val intent = auth.authorizationIntent(normalized)
+      // A restored session may still be refreshing in the background. Once the user starts a new
+      // sign-in it must not be allowed to publish its old instance, snapshot or refresh token.
+      pendingSignInGeneration = ++connectionGeneration
+      connection = QuestConnection.SigningIn
+      intent
+    } catch (e: IllegalArgumentException) {
+      pendingSignInUrl = null
+      pendingSignInGeneration = null
+      connection = QuestConnection.Error(e.message ?: "Enter a Home Assistant URL")
+      null
+    }
+  }
+
+  fun authorizationResult(data: Intent?) {
+    scope.launch {
+      try {
+        val tokens = auth.exchangeResult(data)
+        val url = pendingSignInUrl ?: error("No Home Assistant URL was pending")
+        val generation = pendingSignInGeneration ?: error("Home Assistant sign-in was cancelled")
+        connect(url, tokens.accessToken, tokens.refreshToken, generation)
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        connection = QuestConnection.Error(e.message ?: "Home Assistant sign-in failed")
+      } finally {
+        pendingSignInUrl = null
+        pendingSignInGeneration = null
+      }
+    }
+  }
+
+  fun signOut() {
+    ++connectionGeneration
+    pendingSignInUrl = null
+    pendingSignInGeneration = null
+    val closing = client
+    client = null
+    baseUrl = null
+    snapshot = null
+    importance = DashboardImportance.Empty
+    pins = emptyList()
+    connection = QuestConnection.SignedOut
+    scope.launch {
+      closing?.close()
+      tokenStore.clear()
+    }
+  }
 
   fun pick(areaId: String?) {
     picked = areaId
@@ -55,25 +142,130 @@ class QuestRoomModel(private val prefs: SharedPreferences) {
     prefs.edit().putString(TRACKER, entityId).apply()
   }
 
-  fun toggle(entityId: String) {
-    snapshot = DemoHouse.toggled(snapshot, entityId)
+  fun updateControlsLocked(locked: Boolean) {
+    controlsLocked = locked
+    prefs.edit().putBoolean(CONTROLS_LOCKED, locked).apply()
   }
 
-  fun pinned(anchorId: String, entityId: String) =
-    savePins(pins + RoomPin(anchorId, baseUrl, entityId))
+  /**
+   * The server remains authoritative; the state_changed subscription redraws after its response.
+   */
+  fun toggle(entityId: String) {
+    if (controlsLocked) return
+    val entity = snapshot?.states?.get(entityId) ?: return
+    val domain = entityId.substringBefore('.', missingDelimiterValue = "")
+    if (domain.isEmpty()) return
+    scope.launch {
+      try {
+        client?.callService(domain, if (entity.state == "on") "turn_off" else "turn_on", entityId)
+      } catch (e: CancellationException) {
+        throw e
+      } catch (_: Exception) {
+        // Keep the room visible: Home Assistant remains authoritative over the subscribed state.
+      }
+    }
+  }
+
+  fun pinned(anchorId: String, entityId: String) {
+    val url = baseUrl ?: return
+    savePins(replaceQuestPin(pins, RoomPin(anchorId, url, entityId)))
+  }
 
   fun unpinned(pin: RoomPin) = savePins(pins.filter { it.anchorId != pin.anchorId })
 
   private fun savePins(updated: List<RoomPin>) {
+    val activeUrl = baseUrl ?: return
     pins = updated
-    // Pins of other instances stay as they are.
-    val others = decodeRoomPins(prefs.getString(PINS, null)).filter { it.baseUrl != baseUrl }
+    // Pins belonging to other HA instances survive a sign-out or instance switch.
+    val others = decodeRoomPins(prefs.getString(PINS, null)).filter { it.baseUrl != activeUrl }
     prefs.edit().putString(PINS, encodeRoomPins(others + updated)).apply()
+  }
+
+  private suspend fun connect(
+    rawBaseUrl: String,
+    accessToken: String?,
+    refreshToken: String?,
+    generation: Int,
+  ) {
+    if (!ownsConnection(generation)) return
+    connection = QuestConnection.Connecting
+    val normalized = rawBaseUrl.trim().removeSuffix("/")
+    var opened: HaClient? = null
+    try {
+      val refreshed =
+        if (accessToken == null) refreshToken?.let { auth.refresh(normalized, it) } else null
+      val token =
+        accessToken ?: refreshed?.accessToken ?: error("Home Assistant returned no access token")
+      if (!ownsConnection(generation)) return
+      (refreshed?.refreshToken ?: refreshToken)?.let { tokenStore.save(normalized, it) }
+      val connected = HaClient(HaConfig(normalized, token))
+      opened = connected
+      connected.connect()
+      if (!ownsConnection(generation)) {
+        connected.close()
+        return
+      }
+      client?.close()
+      client = connected
+      baseUrl = normalized
+      pins = decodeRoomPins(prefs.getString(PINS, null)).filter { it.baseUrl == normalized }
+      val resolvedImportance = runCatching {
+        dashboardImportance(connected.fetchDashboard())
+      }
+        .getOrDefault(DashboardImportance.Empty)
+      if (!ownsConnection(generation)) return
+      importance = resolvedImportance
+      stateSnapshots(connected.subscribeEvents("state_changed")) {
+          connected
+            .snapshotWithDevices()
+            .copy(areas = runCatching { connected.fetchAreas() }.getOrDefault(emptyMap()))
+        }
+        // End the old subscription when a sign-in or sign-out replaces it. Without this guard an
+        // earlier restore could keep writing its live state over the newer Home Assistant session.
+        .takeWhile { ownsConnection(generation) }
+        .collect {
+          if (!ownsConnection(generation)) return@collect
+          snapshot = it
+          connection = QuestConnection.Connected
+        }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      opened?.close()
+      if (generation == connectionGeneration) {
+        if (client === opened) client = null
+        connection = QuestConnection.Error(e.message ?: "Could not connect to Home Assistant")
+      }
+    }
+  }
+
+  fun close() {
+    scope.cancel()
+    auth.close()
   }
 
   private companion object {
     const val PICKED = "room_picked"
     const val TRACKER = "room_tracker"
+    const val CONTROLS_LOCKED = "room_controls_locked"
     const val PINS = "room_pins"
   }
+
+  private fun ownsConnection(generation: Int): Boolean = generation == connectionGeneration
 }
+
+sealed interface QuestConnection {
+  data object SignedOut : QuestConnection
+
+  data object SigningIn : QuestConnection
+
+  data object Connecting : QuestConnection
+
+  data object Connected : QuestConnection
+
+  data class Error(val message: String) : QuestConnection
+}
+
+/** Replaces an entity's previous placement: a control has one spatial panel, not a growing set. */
+internal fun replaceQuestPin(pins: List<RoomPin>, replacement: RoomPin): List<RoomPin> =
+  pins.filter { it.entityId != replacement.entityId } + replacement

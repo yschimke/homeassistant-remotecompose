@@ -15,11 +15,17 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -63,13 +69,21 @@ fun QuestPinnedPanel(
   snapshot: HaSnapshot?,
   onToggle: (entityId: String) -> Unit,
   onUnpin: (() -> Unit)?,
+  controlsLocked: Boolean = true,
   modifier: Modifier = Modifier,
 ) {
   Box(
     modifier.fillMaxSize().background(SpatialTheme.colorScheme.panel, RoundedCornerShape(24.dp)),
     contentAlignment = Alignment.Center,
   ) {
-    QuestEntityCard(entity, snapshot, onToggle, onPin = null, onUnpin = onUnpin)
+    QuestEntityCard(
+      entity = entity,
+      snapshot = snapshot,
+      onToggle = onToggle,
+      onPin = null,
+      controlsLocked = controlsLocked,
+      onUnpin = onUnpin,
+    )
   }
 }
 
@@ -83,6 +97,10 @@ fun QuestRoomPanel(
   content: RoomContent,
   lostPins: List<RoomPin> = emptyList(),
   onRemoveLost: (RoomPin) -> Unit = {},
+  onSignOut: () -> Unit = {},
+  controlsLocked: Boolean = true,
+  onControlsLocked: (Boolean) -> Unit = {},
+  pinningHint: String? = null,
   modifier: Modifier = Modifier,
 ) {
   val controls = content.state?.controls
@@ -101,6 +119,33 @@ fun QuestRoomPanel(
           color = QuestText,
         )
         RoomHeader(content)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Column(Modifier.weight(1f)) {
+            Text("Controls", style = SpatialTheme.typography.body1Strong, color = QuestText)
+            Text(
+              if (controlsLocked) "Locked — view only" else "Unlocked — actions are live",
+              style = SpatialTheme.typography.body2,
+              color = QuestTextSecondary,
+            )
+          }
+          SpatialSwitch(
+            !controlsLocked,
+            { enabled -> onControlsLocked(!enabled) },
+            Modifier.semantics {
+              contentDescription =
+                if (controlsLocked) "Unlock Home Assistant controls"
+                else "Lock Home Assistant controls"
+            },
+          )
+        }
+        pinningHint?.let { hint ->
+          Text(
+            hint,
+            style = SpatialTheme.typography.body2,
+            color = QuestTextSecondary,
+          )
+        }
+        NamedButton("Sign out", "Sign out of Home Assistant", onSignOut)
       }
     }
     if (controls != null) {
@@ -116,10 +161,48 @@ fun QuestRoomPanel(
   }
 }
 
+/** First-run panel. OAuth itself runs in Home Assistant's browser page, never inside the app. */
+@Composable
+fun QuestSignInPanel(
+  connection: QuestConnection,
+  onSignIn: (String) -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  var url by rememberSaveable { mutableStateOf("") }
+  Column(
+    modifier.fillMaxSize().background(SpatialTheme.colorScheme.panel).padding(48.dp),
+    verticalArrangement = Arrangement.spacedBy(20.dp),
+  ) {
+    Text("Connect Terrazzo", style = SpatialTheme.typography.headline1Strong, color = QuestText)
+    Text(
+      "Sign in to your Home Assistant to see and control the devices in your rooms.",
+      style = SpatialTheme.typography.body1,
+      color = QuestTextSecondary,
+    )
+    OutlinedTextField(
+      value = url,
+      onValueChange = { url = it },
+      label = { Text("Home Assistant URL") },
+      placeholder = { Text("https://homeassistant.local:8123") },
+      singleLine = true,
+      modifier = Modifier.fillMaxWidth(),
+    )
+    when (connection) {
+      QuestConnection.SigningIn ->
+        Text("Waiting for sign-in in the browser…", color = QuestTextSecondary)
+      QuestConnection.Connecting ->
+        Text("Connecting to Home Assistant…", color = QuestTextSecondary)
+      is QuestConnection.Error -> Text(connection.message, color = MaterialTheme.colorScheme.error)
+      else -> Unit
+    }
+    NamedButton("Sign in", "Sign in to Home Assistant") { onSignIn(url) }
+  }
+}
+
 /**
  * One control on Quest: its name and current state, a switch for one that turns on and off, and
- * "Pin here" to pin it where the user looks ([onPin], null where pinning isn't available) or
- * "Unpin" on a pinned panel ([onUnpin]).
+ * "Pin here" (or "Move here" for an existing pin) to place it where the user looks ([onPin], null
+ * where pinning isn't available) or "Unpin" on a pinned panel ([onUnpin]).
  */
 @Composable
 fun QuestEntityCard(
@@ -127,6 +210,8 @@ fun QuestEntityCard(
   snapshot: HaSnapshot?,
   onToggle: (entityId: String) -> Unit,
   onPin: ((entityId: String) -> Unit)?,
+  pinned: Boolean = false,
+  controlsLocked: Boolean = false,
   modifier: Modifier = Modifier,
   onUnpin: (() -> Unit)? = null,
 ) {
@@ -156,12 +241,16 @@ fun QuestEntityCard(
         SpatialSwitch(
           HaLiveBindings.isOn(entity.entityId, state.state),
           { onToggle(entity.entityId) },
-          Modifier.semantics { contentDescription = entity.name },
+          Modifier.alpha(if (controlsLocked) LOCKED_CONTROL_ALPHA else 1f).semantics {
+            contentDescription =
+              if (controlsLocked) "${entity.name}, controls locked" else entity.name
+          },
         )
       }
     }
     onPin?.let { pin ->
-      NamedButton("Pin here", "Pin ${entity.name} here") { pin(entity.entityId) }
+      val action = if (pinned) "Move here" else "Pin here"
+      NamedButton(action, "$action ${entity.name}") { pin(entity.entityId) }
     }
     onUnpin?.let { NamedButton("Unpin", "Unpin ${entity.name}", it) }
   }
@@ -191,3 +280,4 @@ private fun NamedButton(label: String, description: String, onClick: () -> Unit)
 private val QuestCard = Color(0x26FFFFFF)
 private val QuestText = Color(0xFFFFFFFF)
 private val QuestTextSecondary = Color(0xB3FFFFFF)
+private const val LOCKED_CONTROL_ALPHA = 0.45f

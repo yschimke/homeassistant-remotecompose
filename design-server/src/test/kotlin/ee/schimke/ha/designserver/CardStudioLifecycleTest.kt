@@ -66,15 +66,32 @@ class CardStudioLifecycleTest {
           UiBuilderIntegration(config, UiBuilderClient(config, http)),
           null,
           seeds = seeds,
+          upstream = "https://upstream.example",
         )
       }
     }
     val studio = CardStudioClient("https://localhost", http.engine)
     try {
+      assertEquals("https://upstream.example", studio.upstreamServer())
       val original = studio.seed(card, snapshot("21"))
       val edited = JsonObject(original + ("title" to JsonPrimitive("My layout")))
+      val session = studio.startAgentSession(original, "Make a new layout")
+      val submitted =
+        client.post("/api/studio/agent-session") {
+          header(HttpHeaders.Authorization, "Bearer ${session.agentToken}")
+          setBody(
+            buildJsonObject {
+              put("revision", 0)
+              put("document", edited)
+            }
+              .toString()
+          )
+        }
+      assertEquals(HttpStatusCode.OK, submitted.status)
       now = 600_000
-      val opened = studio.openDraft(edited, card, snapshot("22"))
+      val (received, revision) = studio.agentSessionDraft(session.ownerToken)
+      assertEquals(1L, revision)
+      val opened = studio.openDraft(received, card, snapshot("22"))
       assertNotEquals(original["id"], opened.document["id"])
       assertEquals(edited["nodes"], opened.document["nodes"])
       assertEquals("My layout", opened.document["title"]!!.jsonPrimitive.content)

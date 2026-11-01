@@ -47,7 +47,7 @@ android-compileSdk = "37"
 android-targetSdk = "37"
 
 # Libraries
-ktor = "3.6.0"
+ktor = "3.6.1"
 kotlinx-serialization = "1.12.0"
 kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
@@ -56,7 +56,7 @@ junit = "4.13.2"
 # Robolectric 4.17's exact API 35 provider jar. Android-all versions identify platform images,
 # not interchangeable library releases; change this together with the tests' @Config(sdk = [35]).
 robolectric-sdk35 = "15-robolectric-13954326-i7"
-mockserver = "9.0.0"
+mockserver = "9.2.0"
 indriya = "2.2.4"
 
 # Preview tooling — pinned compose-ai-tools release. The CLI and the
@@ -68,7 +68,7 @@ indriya = "2.2.4"
 # of the plugin marker. The preview-baselines / preview-comment GitHub
 # Actions read this key (`catalog-key: compose-preview-plugin`) to pin
 # the CLI release they install on the runner.
-compose-preview-plugin = "2.75.0"
+compose-preview-plugin = "2.80.0"
 # The `ee.schimke.composeai:*-core` protocol artifacts are versioned on their
 # own 2.x line, NOT with the plugin. Tying `data-render-core` to
 # `compose-preview-plugin` is what pinned this repo at 1.47.0: that is the last
@@ -77,7 +77,7 @@ compose-preview-plugin = "2.75.0"
 # (`Could not find ee.schimke.composeai:data-render-core:1.70.0`) and could
 # never merge. compose-ai-tools declares the same artifact against its own
 # `composeai-contracts` key, which is what this mirrors.
-composeai-contracts = "3.39.0"
+composeai-contracts = "3.39.1"
 # `preview-annotations` (and the rest of the preview runtime) ships from
 # yschimke/compose-preview-daemon, not compose-ai-tools, on its own 3.x line.
 # That repository publishes only the modules a release changed, and each
@@ -85,7 +85,7 @@ composeai-contracts = "3.39.0"
 # pin at a release version 404s the first time a release skips a module (the
 # daemon BOM 3.15.0 carries preview-annotations 3.13.2). Resolve it versionless
 # through the BOM. It must not predate the daemon baked into the preview plugin.
-compose-preview-daemon = "3.27.0"
+compose-preview-daemon = "3.27.2"
 tapmoc = "0.5.0"
 
 # Image loading (BitmapLoader / RemoteCompose named-bitmap resolution)
@@ -100,6 +100,7 @@ jetbrains-markdown = "0.7.18"
 # Wear data layer + Proto DataStore + Horologist
 horologist = "0.8.3-alpha"
 play-services-wearable = "20.0.1"
+play-app-update = "2.1.0"
 
 # Firebase Crashlytics (opt-in — only resolved when a google-services.json
 # key is configured; see app/build.gradle.kts `crashlyticsEnabled`).
@@ -113,7 +114,7 @@ cmp-adaptive = "1.3.0"
 # The BOM is the release coordinate; each module can retain an older version on a partial release.
 # 2.19.0: the Compose Multiplatform creation fork writes borders, component-sized shapes and
 # padded drawWithContent as AndroidX does, so a JVM capture renders like an Android one.
-rc-players = "2.21.0"
+rc-players = "2.22.0"
 compose-webview = "2.0.3"
 # KCEF requests 2.5.0, which was not published to Central. Keep both halves on the
 # supported 2.6.0 release from Central, including the native libraries for desktop.
@@ -300,6 +301,7 @@ coil-test = { module = "io.coil-kt.coil3:coil-test-android", version.ref = "coil
 # helpers ride on Google Play Services Wearable; both peers share a
 # protobuf schema and a `WearDataLayerRegistry`.
 play-services-wearable = { module = "com.google.android.gms:play-services-wearable", version.ref = "play-services-wearable" }
+play-app-update = { module = "com.google.android.play:app-update", version.ref = "play-app-update" }
 horologist-datalayer = { module = "com.google.android.horologist:horologist-datalayer", version.ref = "horologist" }
 horologist-datalayer-watch = { module = "com.google.android.horologist:horologist-datalayer-watch", version.ref = "horologist" }
 horologist-datalayer-phone = { module = "com.google.android.horologist:horologist-datalayer-phone", version.ref = "horologist" }

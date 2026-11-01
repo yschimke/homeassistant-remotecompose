@@ -49,6 +49,7 @@ kotlin {
       implementation(libs.cmp.material.icons.core)
       implementation(libs.cmp.material.icons.extended)
     }
+    androidMain.dependencies { implementation(libs.play.app.update) }
     jvmMain.dependencies {
       implementation(compose.desktop.currentOs)
       implementation(libs.kotlinx.coroutines.swing)

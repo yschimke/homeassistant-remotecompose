@@ -119,6 +119,14 @@ async def async_start(hass, user, url_path, request):
     return session
 
 
+def open_sessions_for_agent(hass, user):
+    """Open sessions on visible dashboards, without stored dashboard configs."""
+    sessions = edits_of(hass).sessions
+    now = _now()
+    visible = visible_dashboards(hass, user)
+    return [edit_sessions.summary(session) for session in sessions.for_dashboards(visible, now)]
+
+
 async def async_session_for_agent(hass, user, session_id):
     """What an agent reads: the session without its stored configs, the dashboard as it is now,
     and the newest draft."""

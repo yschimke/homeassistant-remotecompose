@@ -75,7 +75,7 @@ class WearNavigationTest {
   }
 
   @Test
-  fun systemBackReturnsFromAPinnedSection() {
+  fun pinnedSectionExpandsOnHomeScreen() {
     val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     WearOfflineStore(context).apply {
       writeSettings(WearSettings(demoMode = true))
@@ -92,11 +92,9 @@ class WearNavigationTest {
         )
       )
     }
-    ActivityScenario.launch(WearMainActivity::class.java).use { activity ->
+    ActivityScenario.launch(WearMainActivity::class.java).use {
       click("QA Room")
       compose.onNodeWithText("QA Temperature").assertExists()
-      activity.onActivity { it.onBackPressedDispatcher.onBackPressed() }
-      compose.onNodeWithText("Demo data from your phone").assertExists()
     }
   }
 

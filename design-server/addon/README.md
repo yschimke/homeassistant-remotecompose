@@ -17,6 +17,36 @@ The **Card designs** panel (administrators only) opens the design server's pages
 Its library follows ha.coo.ee's (`LIBRARY_UPSTREAM`), checked hourly; the image's library is only
 where it starts.
 
+## Updates
+
+Each Terrazzo release sets the add-on's `version`, so the Supervisor offers it as an update
+(`update.terrazzo_card_designs_update`) once it reloads the store, every three hours. Updating
+rebuilds it on the newest design server image. The Supervisor's own auto-update doesn't suit it:
+that waits for a version to be a day old, and releases come more often than that. Install the
+update from an automation instead, as for the integration, whose HACS update entity
+(`update.terrazzo_remote_compose_update`) needs a restart to take effect, for example nightly:
+
+```yaml
+- id: terrazzo_nightly_update
+  alias: Terrazzo nightly update
+  triggers:
+    - trigger: time
+      at: "03:30:00"
+  actions:
+    - if: "{{ is_state('update.terrazzo_card_designs_update', 'on') }}"
+      then:
+        - action: update.install
+          target: { entity_id: update.terrazzo_card_designs_update }
+    - if: "{{ is_state('update.terrazzo_remote_compose_update', 'on') }}"
+      then:
+        - action: update.install
+          target: { entity_id: update.terrazzo_remote_compose_update }
+        - action: homeassistant.restart
+```
+
+HACS checks a custom repository for new releases every 48 hours, so the integration can trail a
+release by up to two days.
+
 ## How the app uses it
 
 The integration answers the app's `terrazzo/design_server` and passes its calls to the design
