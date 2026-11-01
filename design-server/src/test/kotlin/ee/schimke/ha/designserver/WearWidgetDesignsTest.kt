@@ -1,12 +1,16 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.ha.design.DesignKey
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.float
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -117,5 +121,102 @@ class WearWidgetDesignsTest {
   fun anUnknownContainerOrADesignWithoutOneRootHasNoWearWidget() {
     assertNull(WearWidgetDesigns.document(card, "medium"))
     assertNull(WearWidgetDesigns.document(JsonObject(card - "roots"), DesignKey.WEAR_SMALL))
+  }
+
+  @Test
+  fun fixedIllustrationFitsEachWidgetWithoutStretchingOrLosingTheDoor() {
+    val scene =
+      Json.parseToJsonElement(
+          """
+      {"id":"garage", "roots":["stage"], "environment":{"widthDp":360,"heightDp":301},
+       "stateVariables":{"cover.s0.is_on":{"type":"value","valueType":"bool","initialValue":false}},
+       "nodes":{
+         "stage":{"id":"stage","componentId":"layout/box","modifiers":[{"type":"size","widthDp":360,"heightDp":300.5}],"slots":{"children":["wall","door"]}},
+         "wall":{"id":"wall","componentId":"asset/image","modifiers":[{"type":"fillMaxSize"},{"type":"remoteCall","name":"graphicsLayer","args":{"rotationX":{"type":"state","variable":"cover.s0.is_on"},"cameraDistance":{"type":"float","value":32}}}],"slots":{}},
+         "door":{"id":"door","componentId":"layout/box","modifiers":[{"type":"offset","xDp":36.8,"yDp":80.6},{"type":"size","widthDp":284.5,"heightDp":191.7}],"slots":{"children":[]}}
+       }}
+    """
+        )
+        .jsonObject
+    for ((container, contentHeight) in
+      listOf(DesignKey.WEAR_SMALL to 60f, DesignKey.WEAR_LARGE to 108f)) {
+      val wear = WearWidgetDesigns.document(scene, container)!!
+      val nodes = wear.getValue("nodes").jsonObject
+      val widget = wear.getValue("roots").jsonArray.single().jsonPrimitive.content
+      val frame = wear.children(widget, "content").single()
+      assertEquals(listOf("stage"), wear.children(frame, "children"))
+      val stageSize = wear.node("stage").getValue("modifiers").jsonArray.single().jsonObject
+      val stageWidth = stageSize.getValue("widthDp").jsonPrimitive.float
+      val stageHeight = stageSize.getValue("heightDp").jsonPrimitive.float
+      val scale = stageWidth / 360f
+      assertTrue(abs(scale - stageHeight / 300.5f) < 0.0001f)
+      assertTrue(stageWidth <= 200f && stageHeight <= contentHeight + 0.001f)
+      val door = nodes.getValue("door").jsonObject.getValue("modifiers").jsonArray
+      val offset = door[0].jsonObject
+      val size = door[1].jsonObject
+      val x = offset.getValue("xDp").jsonPrimitive.float
+      val y = offset.getValue("yDp").jsonPrimitive.float
+      val w = size.getValue("widthDp").jsonPrimitive.float
+      val h = size.getValue("heightDp").jsonPrimitive.float
+      assertTrue(abs(x / 36.8f - scale) < 0.0001f)
+      assertTrue(abs(y / 80.6f - scale) < 0.0001f)
+      assertTrue(abs(w / 284.5f - scale) < 0.0001f)
+      assertTrue(abs(h / 191.7f - scale) < 0.0001f)
+      assertTrue(x >= 0 && y >= 0 && x + w <= stageWidth && y + h <= stageHeight)
+      // Check all four door corners against the actual rounded host outline, not just its bounds.
+      val hosts =
+        if (container == DesignKey.WEAR_SMALL)
+          listOf(Triple(216f, 76f, 26f), Triple(230f, 76f, 38f))
+        else listOf(Triple(216f, 124f, 26f), Triple(230f, 168f, 84f))
+      for ((hostWidth, hostHeight, radius) in hosts) {
+        val left = (hostWidth - stageWidth) / 2f + x
+        val top = (hostHeight - stageHeight) / 2f + y
+        for (px in listOf(left, left + w)) for (py in listOf(top, top + h)) {
+          val cx = px.coerceIn(radius, hostWidth - radius)
+          val cy = py.coerceIn(radius, hostHeight - radius)
+          assertTrue(
+            (px - cx) * (px - cx) + (py - cy) * (py - cy) <= radius * radius,
+            "$container door edge outside rounded host",
+          )
+        }
+      }
+      val camera =
+        nodes
+          .getValue("wall")
+          .jsonObject
+          .getValue("modifiers")
+          .jsonArray[1]
+          .jsonObject
+          .getValue("args")
+          .jsonObject
+          .getValue("cameraDistance")
+          .jsonObject
+          .getValue("value")
+          .jsonPrimitive
+          .float
+      assertTrue(abs(camera / 32f - scale) < 0.0001f)
+      assertEquals(scene["stateVariables"], wear["stateVariables"])
+    }
+    val nodes = scene.getValue("nodes").jsonObject
+    val unsafe =
+      JsonObject(
+        scene +
+          ("nodes" to
+            JsonObject(
+              nodes +
+                ("door" to
+                  JsonObject(
+                    nodes.getValue("door").jsonObject +
+                      ("modifiers" to
+                        Json.parseToJsonElement(
+                          """[{"type":"offset","xDp":{"type":"state","variable":"cover.s0.is_on"},"yDp":0}]"""
+                        ))
+                  ))
+            ))
+      )
+    assertNull(
+      WearWidgetDesigns.document(unsafe, DesignKey.WEAR_SMALL),
+      "unsupported geometry must not be silently cropped",
+    )
   }
 }

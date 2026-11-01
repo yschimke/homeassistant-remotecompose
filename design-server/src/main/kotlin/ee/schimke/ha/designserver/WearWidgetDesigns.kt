@@ -5,6 +5,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.floatOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -42,6 +43,19 @@ object WearWidgetDesigns {
       (card["roots"] as? JsonArray)?.singleOrNull()?.jsonPrimitive?.content ?: return null
     val nodes = (card["nodes"] as? JsonObject)?.mapValues { it.value.jsonObject } ?: return null
     val root = nodes[rootId] ?: return null
+
+    // A fixed image scene's root is its coordinate system, not disposable card chrome. Preserve
+    // it and fit the whole scene into the host's padded content area with one uniform scale.
+    if (
+      root["componentId"]?.jsonPrimitive?.content == "layout/box" &&
+        nodes.values.any { it["componentId"]?.jsonPrimitive?.content == "asset/image" } &&
+        (root["modifiers"] as? JsonArray).orEmpty().any {
+          (it as? JsonObject)?.get("type")?.jsonPrimitive?.content == "size"
+        }
+    ) {
+      // Refuse an unsupported scene instead of dropping its coordinate root and cropping it.
+      return fixedScene(card, nodes, rootId, target, container)
+    }
 
     fun children(node: JsonObject): List<String> =
       (node["slots"] as? JsonObject)?.values.orEmpty().flatMap { ids ->
@@ -102,6 +116,146 @@ object WearWidgetDesigns {
                 )
             ),
           "nodes" to JsonObject(out),
+        )
+    )
+  }
+
+  private fun fixedScene(
+    card: JsonObject,
+    nodes: Map<String, JsonObject>,
+    rootId: String,
+    target: Container,
+    container: String,
+  ): JsonObject? {
+    if (
+      nodes.values.any {
+        it["componentId"]?.jsonPrimitive?.content !in setOf("layout/box", "asset/image")
+      }
+    )
+      return null
+    if (nodes.values.none { it["componentId"]?.jsonPrimitive?.content == "asset/image" })
+      return null
+    val root = nodes.getValue(rootId)
+    if (root["componentId"]?.jsonPrimitive?.content != "layout/box") return null
+    val size =
+      (root["modifiers"] as? JsonArray)
+        .orEmpty()
+        .mapNotNull { it as? JsonObject }
+        .singleOrNull { it["type"]?.jsonPrimitive?.content == "size" } ?: return null
+    val width = (size["widthDp"] as? JsonPrimitive)?.floatOrNull ?: return null
+    val height = (size["heightDp"] as? JsonPrimitive)?.floatOrNull ?: return null
+    if (width <= 0 || height <= 0) return null
+    val scale = minOf((target.widthDp - 16f) / width, (target.heightDp - 16f) / height)
+    val dimensions =
+      mapOf(
+        "size" to setOf("widthDp", "heightDp"),
+        "width" to setOf("widthDp"),
+        "height" to setOf("heightDp"),
+        "offset" to setOf("xDp", "yDp"),
+        "padding" to setOf("startDp", "topDp", "endDp", "bottomDp"),
+      )
+    val scaled = LinkedHashMap<String, JsonElement>()
+    for ((id, node) in nodes) {
+      val modifiers =
+        (node["modifiers"] as? JsonArray).orEmpty().map { value ->
+          val modifier = value as? JsonObject ?: return null
+          val type = modifier["type"]?.jsonPrimitive?.content ?: return null
+          if (
+            type !in dimensions &&
+              type !in
+                setOf(
+                  "fillMaxSize",
+                  "fillMaxWidth",
+                  "fillMaxHeight",
+                  "background",
+                  "alpha",
+                  "scale",
+                  "rotate",
+                  "remoteCall",
+                )
+          )
+            return null
+          if (
+            type == "remoteCall" &&
+              (modifier["name"]?.jsonPrimitive?.content != "graphicsLayer" ||
+                (modifier["args"] as? JsonObject).orEmpty().keys.any {
+                  it !in
+                    setOf(
+                      "rotationX",
+                      "rotationY",
+                      "rotationZ",
+                      "transformOriginX",
+                      "transformOriginY",
+                      "cameraDistance",
+                      "alpha",
+                      "scaleX",
+                      "scaleY",
+                    )
+                })
+          )
+            return null
+          val fields = dimensions[type].orEmpty()
+          JsonObject(
+            modifier.mapValues { (key, value) ->
+              if (
+                type == "remoteCall" &&
+                  key == "args" &&
+                  value is JsonObject &&
+                  "cameraDistance" in value
+              ) {
+                val camera = value.getValue("cameraDistance") as? JsonObject ?: return null
+                val distance = (camera["value"] as? JsonPrimitive)?.floatOrNull ?: return null
+                if (camera["type"]?.jsonPrimitive?.content !in setOf("float", "int")) return null
+                JsonObject(
+                  value +
+                    ("cameraDistance" to
+                      JsonObject(
+                        camera +
+                          ("type" to JsonPrimitive("float")) +
+                          ("value" to JsonPrimitive(distance * scale))
+                      ))
+                )
+              } else if (key !in fields) value
+              else JsonPrimitive(((value as? JsonPrimitive)?.floatOrNull ?: return null) * scale)
+            }
+          )
+        }
+      scaled[id] = JsonObject(node + ("modifiers" to JsonArray(modifiers)))
+    }
+    fun fresh(base: String): String = generateSequence(base) { "$it-" }.first { it !in scaled }
+    val frame = fresh("__wear_frame")
+    scaled[frame] =
+      UiBuilderSeed.node(
+        frame,
+        "layout/box",
+        properties = mapOf("contentAlignment" to UiBuilderSeed.string("center")),
+        modifiers = listOf(JsonObject(mapOf("type" to JsonPrimitive("fillMaxSize")))),
+        slots = mapOf("children" to listOf(rootId)),
+      )
+    val widget = fresh("__wear_widget")
+    scaled[widget] =
+      UiBuilderSeed.node(
+        widget,
+        target.component,
+        properties = mapOf("background" to UiBuilderSeed.string(HaCardsSeed.WEAR_BACKGROUND)),
+        slots = mapOf("content" to listOf(frame)),
+      )
+    val environment = (card["environment"] as? JsonObject).orEmpty()
+    return JsonObject(
+      card - "template" +
+        mapOf(
+          "id" to JsonPrimitive("${card["id"]?.jsonPrimitive?.content.orEmpty()}-wear-$container"),
+          "roots" to JsonArray(listOf(JsonPrimitive(widget))),
+          "nodes" to JsonObject(scaled),
+          "environment" to
+            JsonObject(
+              environment +
+                mapOf(
+                  "widthDp" to JsonPrimitive(target.widthDp),
+                  "heightDp" to JsonPrimitive(target.heightDp),
+                  "theme" to JsonPrimitive("dark"),
+                )
+            ),
         )
     )
   }
