@@ -54,7 +54,10 @@ class DashboardRelayTest {
                 put("id", cmd.getValue("id"))
                 put("type", "result")
                 put("success", true)
-                putJsonObject("result") { put("session", session) }
+                putJsonObject("result") {
+                  put("session", session)
+                  if (type == "terrazzo/edit/list") putJsonArray("sessions") { add(session) }
+                }
               }
                 .toString()
             )
@@ -69,6 +72,9 @@ class DashboardRelayTest {
       home.connect()
       val started = relay.start(null, "Rename")
       val agent = Regex("Bearer ([A-Za-z0-9_-]{32})").find(started.prompt)!!.groupValues[1]
+      // Returning to the edit screen uses the same in-memory relay and recovers the handoff.
+      assertEquals(listOf("s1"), relay.open(null).map { it.id })
+      assertEquals(started.prompt, relay.resume("s1").prompt)
       val changed = Json.parseToJsonElement("""{"views":[{"title":"Garden"}]}""").jsonObject
       val response =
         http.post("https://localhost/api/studio/dashboard-session") {

@@ -357,6 +357,13 @@ private fun DashboardShell(
   var snapshot by remember(connection) { mutableStateOf(HaSnapshot()) }
   var connectionError by remember(connection) { mutableStateOf<String?>(null) }
   var designServer by remember { mutableStateOf("https://ha.coo.ee") }
+  // Keep the owner capability while navigating away from an edit, so it can be resumed and
+  // revoked. It is deliberately not persisted across a browser reload or sign-out.
+  val cloudDashboardEdits =
+    remember(connection, designServer) {
+      runCatching { CloudDashboardAgentEdits(connection.client, designServer) }.getOrNull()
+    }
+  DisposableEffect(cloudDashboardEdits) { onDispose { cloudDashboardEdits?.close() } }
   // Opt-in template usage: once a launch (and when the server setting settles on a new value),
   // send the finished days. The delay restarts on every keystroke in the server field.
   LaunchedEffect(designServer) {
@@ -577,6 +584,7 @@ private fun DashboardShell(
                 designServer = designServer,
                 cardStyle = cardStyle,
                 dark = dark,
+                cloudEdits = cloudDashboardEdits,
                 onApplied = { dashboardRefreshGeneration++ },
                 onBack = { if (stack.size > 1) stack.removeLastOrNull() },
               )
@@ -600,6 +608,7 @@ private fun AgentEditEntry(
   designServer: String,
   cardStyle: String,
   dark: Boolean,
+  cloudEdits: CloudDashboardAgentEdits?,
   onApplied: () -> Unit,
   onBack: () -> Unit,
 ) {
@@ -622,13 +631,6 @@ private fun AgentEditEntry(
     return
   }
   val cloud = useCloud == true
-  val cloudEdits =
-    remember(connection, designServer, cloud) {
-      if (cloud)
-        runCatching { CloudDashboardAgentEdits(connection.client, designServer) }.getOrNull()
-      else null
-    }
-  DisposableEffect(cloudEdits) { onDispose { cloudEdits?.close() } }
   if (cloud && cloudEdits == null) {
     Column(Modifier.padding(24.dp)) {
       Text("Set an HTTPS card design server in Settings before using a cloud agent.")
@@ -637,7 +639,7 @@ private fun AgentEditEntry(
     return
   }
   AgentEditScreen(
-    edits = cloudEdits ?: connection.client.agentEdits,
+    edits = if (cloud) requireNotNull(cloudEdits) else connection.client.agentEdits,
     urlPath = path,
     title = title,
     snapshot = snapshot,

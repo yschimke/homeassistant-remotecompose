@@ -255,8 +255,8 @@ private fun StartSession(
         "Your dashboard configuration and request will be sent to $cloudServer and shared with " +
           "your chosen agent. The agent does not get your Home Assistant login. You review and " +
           "apply drafts here; Home Assistant checks your permissions and whether the dashboard changed. " +
-          "The configuration may contain private data. Keep this screen open while the agent works; " +
-          "the upstream request expires after one hour.",
+          "The configuration may contain private data. You can return to this request while signed in; " +
+          "reloading the app loses access. The upstream request expires after one hour.",
       style = MaterialTheme.typography.bodyMedium,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )

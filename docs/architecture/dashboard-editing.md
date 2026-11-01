@@ -62,7 +62,8 @@ requested by the person are sent to the upstream for the agent. Discard revokes 
 capability before closing the HA session.
 
 The flow needs the Terrazzo HA integration, but no Wasmo backend services. It keeps the owner
-capability only in the open screen; leaving it or restarting the browser loses the ability to pick
+capability in memory for the signed-in app session, so navigating away and back can resume an
+open request. Reloading the app or signing out loses the ability to pick
 up or revoke the upstream session, which expires after one hour or on server restart. It shares the
 selected dashboard config, not a home-wide entity inventory or live stream. The agent can reuse
 entity IDs in that config; the HA relay rejects any submitted entities the person cannot read.
