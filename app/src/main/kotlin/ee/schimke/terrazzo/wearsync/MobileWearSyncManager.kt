@@ -13,6 +13,7 @@ import com.google.android.gms.wearable.Wearable
 import com.google.android.horologist.data.WearDataLayerRegistry
 import ee.schimke.ha.client.design.CardDesignOverrides
 import ee.schimke.ha.design.CardDesignSlots
+import ee.schimke.ha.design.HaSharedValues
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -21,6 +22,7 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.resolveBambuDevices
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.displayPrecisionOf
+import ee.schimke.ha.rc.sharedDesignDependencies
 import ee.schimke.terrazzo.core.pin.MobilePinnedCard
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection
 import ee.schimke.terrazzo.core.pin.PinStore
@@ -78,6 +80,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -210,6 +213,7 @@ class MobileWearSyncManager(
   private val dashboardEntities = MutableStateFlow<Map<String, Set<String>>>(emptyMap())
   private val pinnedEntities = MutableStateFlow<Set<String>>(emptySet())
   private val sectionEntities = MutableStateFlow<Set<String>>(emptySet())
+  private val sharedDesignSources = MutableStateFlow<Map<String, Set<String>>>(emptyMap())
 
   /** Every entity a card on the watch reads: see [dashboardEntities]. */
   private val watchEntityIds: Set<String>
@@ -730,6 +734,7 @@ class MobileWearSyncManager(
         .combine(wearableAvailableState) { designs, available -> designs to available }
         .whileSignedIn()
         .collect { (payload, available) ->
+          sharedDesignSources.value = sharedDesignDependencies(payload.second.values)
           if (available) pushDesigns(payload.first, payload.second)
         }
     }
@@ -876,6 +881,7 @@ class MobileWearSyncManager(
     lastCardDesigns = null
     session.connectionStatus.first { it == SessionConnectionStatus.Connected }
     while (true) {
+      val shared = sharedDesignSources.value
       // Suspend (rather than exit) when the wear API isn't usable
       // so a transient API_NOT_CONNECTED disconnect pauses the
       // pump and resumes once the recovery probe re-flips the flag.
@@ -892,7 +898,7 @@ class MobileWearSyncManager(
         .getOrNull()
       if (snapshot != null) {
         registrySnapshot.value = snapshot
-        val current = wearValues(snapshot, watchEntityIds)
+        val current = wearValues(snapshot, watchEntityIds, shared)
         // When the snapshot was fetched: a cached one (app backgrounded, offline) isn't fresh.
         val capturedAtMs =
           valuesCapturedAtMs(session.snapshotFetchedAtMs(null), System.currentTimeMillis())
@@ -901,7 +907,9 @@ class MobileWearSyncManager(
         if (delivery.dataItem) pushValuesItem(current, capturedAtMs)
         pushPictures(session.baseUrl, snapshot)
       }
-      delay(cadence)
+      // A newly selected design may need sources not in the previous snapshot. Don't wait for
+      // the heartbeat before sending its initial values to the watch.
+      withTimeoutOrNull(cadence) { sharedDesignSources.first { it != shared } }
     }
   }
 
@@ -914,9 +922,11 @@ class MobileWearSyncManager(
   override suspend fun pushValues(snapshot: HaSnapshot) {
     // A process started for a wake hasn't published the dashboards yet: the entities in the
     // `/wear/values` item last written stand in for the watch's cards.
+    val cold = watchEntityIds.isEmpty()
     val ids = watchEntityIds.ifEmpty { lastValuesKeys() }
     if (ids.isEmpty()) return
-    val values = wearValues(snapshot, ids)
+    val shared = if (cold) lastSharedDesignSources() else sharedDesignSources.value
+    val values = wearValues(snapshot, ids, shared)
     if (values == lastValuesItem) return
     val payload = LiveValues(values = values, capturedAtMs = System.currentTimeMillis())
     // A wake's session is signed in, though none was handed to [setSession].
@@ -948,6 +958,32 @@ class MobileWearSyncManager(
       .mapNotNull { payload -> payload.read(dataClient)?.let { decodeProto<LiveValues>(it) } }
       .flatMap { it.values.keys }
       .toSet()
+  }
+
+  /** The last published index survives a process started solely by a widget wake. */
+  private suspend fun lastSharedDesignSources(): Map<String, Set<String>> {
+    if (!wearableAvailableState.value) return emptyMap()
+    val buffer =
+      runCatching {
+        dataClient
+          .getDataItems(wearUri(WearSyncPaths.SLOT_DESIGNS), DataClient.FILTER_LITERAL)
+          .await()
+      }
+        .onFailure { if (it is CancellationException) throw it }
+        .getOrNull() ?: return emptyMap()
+    val payloads =
+      try {
+        buffer.map {
+          com.google.android.gms.wearable.DataMapItem.fromDataItem(it).dataMap.protoPayload()
+        }
+      } finally {
+        buffer.release()
+      }
+    val names =
+      payloads
+        .mapNotNull { it.read(dataClient)?.let { bytes -> decodeProto<WearSlotDesigns>(bytes) } }
+        .flatMap { it.designs.flatMap { design -> design.sharedValues } }
+    return HaSharedValues.dependencies(names)
   }
 
   /** The `/wear/values` DataItem, when [values] changed since the last one written. */
@@ -1171,7 +1207,10 @@ class MobileWearSyncManager(
  * This state for the watch, which formats it with the same `formatState`: the display precision
  * travels with it, since the watch has neither the registry nor the other attributes.
  */
-internal fun EntityState.toEntityValue(snapshot: HaSnapshot): EntityValue {
+internal fun EntityState.toEntityValue(
+  snapshot: HaSnapshot,
+  sharedAttributes: Set<String> = emptySet(),
+): EntityValue {
   val attrs = attributes
   return EntityValue(
     state = state,
@@ -1181,7 +1220,8 @@ internal fun EntityState.toEntityValue(snapshot: HaSnapshot): EntityValue {
     entityPicture = attrs["entity_picture"]?.jsonPrimitive?.contentOrNull.orEmpty(),
     displayPrecision = displayPrecisionOf(this, snapshot),
     attributes =
-      WEAR_EXTRA_ATTRIBUTES.mapNotNull { key ->
+      (WEAR_EXTRA_ATTRIBUTES + sharedAttributes)
+        .mapNotNull { key ->
           // A safe cast: another integration may put an object or array under the same key, which
           // is skipped rather than thrown on (that would stop the whole sync).
           (attrs[key] as? JsonPrimitive)?.contentOrNull?.let { key to it }
@@ -1228,9 +1268,15 @@ private val ENTITY_ID = Regex("""\b[a-z_][a-z0-9_]*\.[a-z0-9_]+\b""")
  * Assistant's: a large home's states outgrow one DataItem and one message (about 100 KB each), and
  * then nothing reaches the watch and every card reads unavailable.
  */
-internal fun wearValues(snapshot: HaSnapshot, entityIds: Set<String>): Map<String, EntityValue> =
-  entityIds
-    .mapNotNull { id -> snapshot.states[id]?.let { id to it.toEntityValue(snapshot) } }
+internal fun wearValues(
+  snapshot: HaSnapshot,
+  entityIds: Set<String>,
+  shared: Map<String, Set<String>> = emptyMap(),
+): Map<String, EntityValue> =
+  (entityIds + shared.keys)
+    .mapNotNull { id ->
+      snapshot.states[id]?.let { id to it.toEntityValue(snapshot, shared[id].orEmpty()) }
+    }
     .toMap()
 
 /** How entity values reach the watch on one pump tick. */

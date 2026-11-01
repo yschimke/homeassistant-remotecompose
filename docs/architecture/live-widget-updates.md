@@ -5,6 +5,12 @@ While the app holds a session that is enough; once it doesn't, the Terrazzo inte
 when an entity a widget shows visibly changes, with the same content-free FCM wake as
 [notifications](notifications.md).
 
+The phone inspects the named values declared by the selected Wear templates and sends their shared
+Home Assistant sources and required attributes alongside the cards' own entities. The watch reads
+the same dependencies from its stored templates when it fetches values directly. Missing sources
+use the shared defaults. Attribute changes do not independently trigger a widget wake, so the normal
+refresh rules below still apply.
+
 ## Every widget: while the app runs, and routinely
 
 Every widget, live updates on or off, keeps up in two ways that need no wake:

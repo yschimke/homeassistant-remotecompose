@@ -6,6 +6,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.sharedDesignNames
 import ee.schimke.terrazzo.core.pin.MobilePinnedCard
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection
 import ee.schimke.terrazzo.dashboard.CardDesigns
@@ -61,7 +62,12 @@ internal fun wearCardDesigns(
           }
           ?: variants.firstNotNullOfOrNull { designs.byKey[it] }
       bytes?.let {
-        WearSlotDesign(cardKey, container, ee.schimke.ha.client.design.Sha256.hex(it)) to it
+        WearSlotDesign(
+          cardKey,
+          container,
+          ee.schimke.ha.client.design.Sha256.hex(it),
+          sharedDesignNames(listOf(it)).sorted(),
+        ) to it
       }
     }
   }

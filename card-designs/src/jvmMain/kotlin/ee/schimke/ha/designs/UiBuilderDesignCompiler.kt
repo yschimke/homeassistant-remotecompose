@@ -22,6 +22,7 @@ import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteColor
+import androidx.compose.remote.creation.compose.state.RemoteDp
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.RemoteString
@@ -116,12 +117,29 @@ class UiBuilderDesignCompiler(
     assets: Map<String, ByteArray>,
     key: DesignKey,
     imageBudgetBytes: Int = imageBudget(key.surface),
+    wearFrame: Boolean = false,
   ): ByteArray {
     val design = Design(document, fitPictures(assets, imageBudgetBytes), dark = isDark(key))
     val problems = design.problems(assets.keys)
     require(problems.isEmpty()) { problems.joinToString("; ") }
     return CardDesignTemplates.captureWith(host, key) { card, snapshot, modifier ->
-        FramedCard(card, snapshot, modifier) { design.Render(it) }
+        if (wearFrame) {
+          val horizontal =
+            RemoteDp.createNamedRemoteDp(
+              "wear.container.horizontal_padding",
+              8f,
+              RemoteState.Domain.User,
+            )
+          val vertical =
+            RemoteDp.createNamedRemoteDp(
+              "wear.container.vertical_padding",
+              8f,
+              RemoteState.Domain.User,
+            )
+          RemoteBox(modifier.fillMaxSize().padding(horizontal, vertical)) {
+            design.Render(RemoteModifier.fillMaxSize())
+          }
+        } else FramedCard(card, snapshot, modifier) { design.Render(it) }
       }
       .bytes
   }
