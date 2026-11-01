@@ -325,6 +325,9 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
         setBody(bytes)
       }
     check(response.status.isSuccess()) { "UI Builder refused an image (${response.status})" }
+    check(asset(designId, assetKey).getOrNull()?.contentEquals(bytes) == true) {
+      "UI Builder did not store the image"
+    }
   }
 
   /**

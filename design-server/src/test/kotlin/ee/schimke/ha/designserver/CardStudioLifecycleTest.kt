@@ -18,13 +18,16 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receiveStream
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
+import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import java.io.File
 import java.nio.file.Files
+import java.util.Base64
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.*
 import kotlinx.coroutines.CompletableDeferred
@@ -217,6 +220,7 @@ class CardStudioLifecycleTest {
     val dir = library()
     val shared = mutableListOf<String>()
     val uploaded = mutableMapOf<String, ByteArray>()
+    var storeUploads = true
     externalServices {
       hosts("https://builder.test") {
         routing {
@@ -225,8 +229,14 @@ class CardStudioLifecycleTest {
             call.respondText("created", status = HttpStatusCode.Created)
           }
           put("/api/ui-builder/v1/designs/{id}/assets/{key}") {
-            uploaded[call.parameters["key"]!!] = call.receiveStream().readBytes()
+            val bytes = call.receiveStream().readBytes()
+            if (storeUploads) uploaded[call.parameters["key"]!!] = bytes
             call.respondText("stored")
+          }
+          get("/api/ui-builder/v1/designs/{id}/assets/{key}") {
+            val bytes = uploaded[call.parameters["key"]]
+            if (bytes == null) call.respondText("missing", status = HttpStatusCode.NotFound)
+            else call.respondBytes(bytes)
           }
           post("/ui-builder/{id}/access") {
             shared += call.receiveText()
@@ -269,7 +279,9 @@ class CardStudioLifecycleTest {
       assertFalse(opened.url.contains("token="))
       assertTrue(shared.single().contains("github%3Aoctocat"))
       assertEquals(opened.handoff, store.made("octocat").single().handoff)
-      val png = byteArrayOf(0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1)
+      val encodedPng =
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/a9sAAAAASUVORK5CYII="
+      val png = Base64.getDecoder().decode(encodedPng)
       val digest = "sha256:${Sha256.hex(png)}"
       val binding =
         Json.parseToJsonElement(
@@ -294,8 +306,7 @@ class CardStudioLifecycleTest {
         Json.parseToJsonElement(
           """{"id":"garage-image","componentId":"asset/image","properties":{"assetKey":{"type":"string","value":"door"}},"modifiers":[{"type":"alpha","alpha":{"type":"expr","op":"smoothstep","args":[{"type":"float","value":-6},{"type":"float","value":6},{"type":"state","variable":"HA:sun.sun.elevation"}]}}],"slots":{}}"""
         )
-      val sun =
-        seed.getValue("stateVariables").jsonObject.getValue("HA:sun.sun.elevation")
+      val sun = seed.getValue("stateVariables").jsonObject.getValue("HA:sun.sun.elevation")
       val withImage =
         JsonObject(
           seed +
@@ -313,7 +324,7 @@ class CardStudioLifecycleTest {
         client.post("/api/studio/agent-mcp") {
           header(HttpHeaders.Authorization, "Bearer ${session.agentToken}")
           setBody(
-            """{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"put_card_asset","arguments":{"key":"door","imageBase64":"iVBORw0KGgoB"}}}"""
+            """{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"put_card_asset","arguments":{"key":"door","imageBase64":"$encodedPng"}}}"""
           )
         }
       assertEquals(HttpStatusCode.OK, attached.status)
@@ -358,6 +369,19 @@ class CardStudioLifecycleTest {
           )
         }
       assertEquals(400, refusedImage.status)
+      uploaded.clear()
+      storeUploads = false
+      val missingImage =
+        assertFailsWith<CardStudioException> {
+          studio.openAsUser(
+            github.deviceToken("octocat"),
+            withImage,
+            card,
+            snapshot("21"),
+            mapOf("door" to png),
+          )
+        }
+      assertEquals(502, missingImage.status)
     } finally {
       studio.close()
       dir.deleteRecursively()
