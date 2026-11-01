@@ -113,11 +113,11 @@ class UiBuilderDesignCompilerTest {
       .jsonObject
 
   /** [bytes] played at 360dp wide with [values] pushed, as ARGB pixels. */
-  private fun play(bytes: ByteArray, values: Map<String, RcNamedValue>): Bitmap {
+  private fun play(bytes: ByteArray, values: Map<String, RcNamedValue>, width: Int = 360): Bitmap {
     val density = 1f
     val image =
-      ImageComposeScene(360, 300, Density(density)) {
-          Box(Modifier.width(360.dp)) {
+      ImageComposeScene(width, width * 300 / 360, Density(density)) {
+          Box(Modifier.width(width.dp)) {
             RcComposePlayer(
               bytes,
               namedValues = mutableStateMapOf<String, RcNamedValue>().apply { putAll(values) },
@@ -155,6 +155,19 @@ class UiBuilderDesignCompilerTest {
     val open = play(bytes, mapOf("cover.s0.is_on" to RcNamedValue.Integer(1)))
     assertTrue(closed.isRed(180, 200), "closed: the door covers the doorway")
     assertTrue(!open.isRed(180, 200), "open: the doorway shows the garage")
+  }
+
+  @Test
+  fun illustratedSceneKeepsItsAspectAndDoorEdgesAtNarrowCardWidths() {
+    val bytes = compiler.compile(document, assets, key)
+    val closed = mapOf("cover.s0.is_on" to RcNamedValue.Integer(0))
+    val full = play(bytes, closed, 360)
+    val narrow = play(bytes, closed, 180)
+    for ((x, y) in listOf(42 to 82, 317 to 82, 42 to 277, 317 to 277)) {
+      assertTrue(full.isRed(x, y), "full-size door edge $x,$y")
+      assertTrue(narrow.isRed(x / 2, y / 2), "narrow door edge $x,$y")
+    }
+    assertTrue(!narrow.isRed(10, 100), "the surrounding image keeps its place")
   }
 
   @Test

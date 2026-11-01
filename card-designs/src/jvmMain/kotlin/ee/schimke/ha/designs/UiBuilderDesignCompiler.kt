@@ -47,6 +47,7 @@ import androidx.compose.remote.creation.compose.state.sqrt as rSqrt
 import androidx.compose.remote.creation.compose.state.tan as rTan
 import androidx.compose.remote.creation.compose.state.toDeg
 import androidx.compose.remote.creation.compose.state.toRad
+import androidx.compose.remote.creation.compose.state.toRemoteDp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -59,8 +60,10 @@ import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CommonCaptureHost
 import ee.schimke.ha.rc.FramedCard
 import ee.schimke.ha.rc.components.HaType
+import ee.schimke.ha.rc.components.LocalGridCellWidthPx
 import ee.schimke.ha.rc.components.animateRemoteFloat
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
+import ee.schimke.ha.rc.components.rememberExpressionName
 import ee.schimke.ha.rc.components.rememberLocalNamedRemoteBitmap
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -140,6 +143,23 @@ class UiBuilderDesignCompiler(
       document["stateVariables"]?.jsonObject.orEmpty().mapValues { it.value.jsonObject }
     private val catalog: String? =
       document["catalogPin"]?.jsonObject?.get("systemId")?.jsonPrimitive?.contentOrNull
+
+    // A fixed illustrated scene is authored in one coordinate space. Keep that space's aspect
+    // ratio when the card is played at a different width; ordinary adaptive cards keep their own
+    // layout behavior. Restrict this to image/box scenes so text and controls are not shrunk.
+    private val sceneSize: Pair<Float, Float>? = run {
+      if (nodes.values.any { it.string("componentId") !in setOf(BOX, IMAGE) }) return@run null
+      if (nodes.values.none { it.string("componentId") == IMAGE }) return@run null
+      val root = roots.singleOrNull()?.let(nodes::get) ?: return@run null
+      if (root.string("componentId") != BOX) return@run null
+      val size =
+        (root["modifiers"] as? JsonArray)
+          ?.map { it.jsonObject }
+          ?.singleOrNull { it.string("type") == "size" } ?: return@run null
+      val width = (size["widthDp"] as? JsonPrimitive)?.floatOrNull ?: return@run null
+      val height = (size["heightDp"] as? JsonPrimitive)?.floatOrNull ?: return@run null
+      if (width <= 0f || height <= 0f) null else width to height
+    }
 
     fun problems(assets: Set<String>): List<String> = buildList {
       if (catalog != CATALOG) add("its catalog is `$catalog`, not `$CATALOG`")
@@ -230,18 +250,40 @@ class UiBuilderDesignCompiler(
 
     @Composable
     fun Render(modifier: RemoteModifier) {
-      Node(roots.single(), modifier)
+      val scene = sceneSize
+      if (scene == null) {
+        Node(roots.single(), modifier, null)
+        return
+      }
+      val widthPx =
+        LocalGridCellWidthPx.current
+          ?: RemoteFloat.createNamedRemoteFloatExpression(
+            name = rememberExpressionName("__terrazzo_scene_width_"),
+            domain = RemoteState.Domain.User,
+          ) {
+            componentWidth()
+          }
+      val scale = widthPx / scene.first.rdp.toPx()
+      RemoteBox(modifier = modifier.fillMaxWidth()) {
+        RemoteBox(
+          modifier =
+            RemoteModifier.fillMaxWidth()
+              .height((widthPx * (scene.second / scene.first)).toRemoteDp())
+        ) {
+          Node(roots.single(), RemoteModifier, scale)
+        }
+      }
     }
 
     @Composable
-    private fun Node(id: String, outer: RemoteModifier) {
+    private fun Node(id: String, outer: RemoteModifier, sceneScale: RemoteFloat?) {
       val node = nodes.getValue(id)
-      val modifier = applyModifiers(outer, node["modifiers"] as? JsonArray)
+      val modifier = applyModifiers(outer, node["modifiers"] as? JsonArray, sceneScale)
       val properties = node.properties()
       when (node.string("componentId")) {
         BOX ->
           RemoteBox(modifier = modifier, contentAlignment = alignment(properties)) {
-            children(id).forEach { Node(it, RemoteModifier) }
+            children(id).forEach { Node(it, RemoteModifier, sceneScale) }
           }
         COLUMN ->
           RemoteColumn(
@@ -249,7 +291,7 @@ class UiBuilderDesignCompiler(
             verticalArrangement = verticalArrangement(properties),
             horizontalAlignment = horizontalAlignment(properties),
           ) {
-            children(id).forEach { Node(it, RemoteModifier) }
+            children(id).forEach { Node(it, RemoteModifier, sceneScale) }
           }
         ROW ->
           RemoteRow(
@@ -257,7 +299,7 @@ class UiBuilderDesignCompiler(
             horizontalArrangement = horizontalArrangement(properties),
             verticalAlignment = verticalAlignment(properties),
           ) {
-            children(id).forEach { Node(it, RemoteModifier) }
+            children(id).forEach { Node(it, RemoteModifier, sceneScale) }
           }
         IMAGE -> {
           val key = literal(properties["assetKey"])!!.content
@@ -282,7 +324,7 @@ class UiBuilderDesignCompiler(
           )
         }
         // A card's own surface: the app draws the card's frame, so it is only its content.
-        else -> children(id).forEach { Node(it, modifier) }
+        else -> children(id).forEach { Node(it, modifier, sceneScale) }
       }
     }
 
@@ -296,7 +338,11 @@ class UiBuilderDesignCompiler(
      * scale does.
      */
     @Composable
-    private fun applyModifiers(start: RemoteModifier, modifiers: JsonArray?): RemoteModifier {
+    private fun applyModifiers(
+      start: RemoteModifier,
+      modifiers: JsonArray?,
+      sceneScale: RemoteFloat?,
+    ): RemoteModifier {
       val all = modifiers.orEmpty().map { it.jsonObject }
       var translationX: RemoteFloat? = null
       var translationY: RemoteFloat? = null
@@ -309,6 +355,7 @@ class UiBuilderDesignCompiler(
       var originY: RemoteFloat? = null
       var cameraDistance: RemoteFloat? = null
       var alpha: RemoteFloat? = null
+      fun fit(value: RemoteFloat): RemoteFloat = sceneScale?.let { value * it } ?: value
       fun RemoteFloat?.plus(other: RemoteFloat) = this?.let { it + other } ?: other
       fun RemoteFloat?.times(other: RemoteFloat) = this?.let { it * other } ?: other
       fun isLayer(m: JsonObject): Boolean =
@@ -326,9 +373,9 @@ class UiBuilderDesignCompiler(
         when (m.string("type")) {
           "offset" -> {
             translationX =
-              translationX.plus(animated(number(m["xDp"]) ?: 0f.rf).asRemoteDp().toPx())
+              translationX.plus(fit(animated(number(m["xDp"]) ?: 0f.rf)).asRemoteDp().toPx())
             translationY =
-              translationY.plus(animated(number(m["yDp"]) ?: 0f.rf).asRemoteDp().toPx())
+              translationY.plus(fit(animated(number(m["yDp"]) ?: 0f.rf)).asRemoteDp().toPx())
           }
           "scale" -> {
             scaleX = scaleX.times(animated(number(m["scaleX"]) ?: 1f.rf))
@@ -378,16 +425,23 @@ class UiBuilderDesignCompiler(
             "fillMaxHeight" -> applied.fillMaxHeight()
             "fillMaxSize" -> applied.fillMaxSize()
             "size" ->
-              applied.size(size(m["widthDp"]).asRemoteDp(), size(m["heightDp"]).asRemoteDp())
-            "width" -> applied.width(size(m["widthDp"]).asRemoteDp())
-            "height" -> applied.height(size(m["heightDp"]).asRemoteDp())
-            "offset" -> applied.offset(size(m["xDp"]).asRemoteDp(), size(m["yDp"]).asRemoteDp())
+              applied.size(
+                fit(size(m["widthDp"])).asRemoteDp(),
+                fit(size(m["heightDp"])).asRemoteDp(),
+              )
+            "width" -> applied.width(fit(size(m["widthDp"])).asRemoteDp())
+            "height" -> applied.height(fit(size(m["heightDp"])).asRemoteDp())
+            "offset" ->
+              applied.offset(
+                fit(size(m["xDp"])).asRemoteDp(),
+                fit(size(m["yDp"])).asRemoteDp(),
+              )
             "padding" ->
               applied.padding(
-                start = size(m["startDp"]).asRemoteDp(),
-                top = size(m["topDp"]).asRemoteDp(),
-                end = size(m["endDp"]).asRemoteDp(),
-                bottom = size(m["bottomDp"]).asRemoteDp(),
+                start = fit(size(m["startDp"])).asRemoteDp(),
+                top = fit(size(m["topDp"])).asRemoteDp(),
+                end = fit(size(m["endDp"])).asRemoteDp(),
+                bottom = fit(size(m["bottomDp"])).asRemoteDp(),
               )
             "background" -> color(m["color"])?.let { applied.background(it) } ?: applied
             else -> applied
