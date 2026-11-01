@@ -101,9 +101,9 @@ class DashboardAgentRoutesTest {
       client.post("/api/studio/dashboard-sessions") {
         setBody(
           buildJsonObject {
-              put("request", "Again")
-              put("dashboard", baseline)
-            }
+            put("request", "Again")
+            put("dashboard", baseline)
+          }
             .toString()
         )
       }
