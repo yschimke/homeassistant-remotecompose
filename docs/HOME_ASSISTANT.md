@@ -367,7 +367,7 @@ lights, switches, scenes and scripts, and read your dashboards. It is **off** by
 Tools: `find_entities`, `get_entity_state`, `turn_on`, `turn_off`, `toggle`, `list_dashboards`
 (with each dashboard's `/terrazzo` link) and `get_dashboard` (its Lovelace configuration).
 
-For editing a dashboard there are `start_edit_session`, `get_edit_session`, `get_card_guide` and
+For editing a dashboard there are `list_edit_sessions`, `start_edit_session`, `get_edit_session`, `get_card_guide` and
 `submit_draft`. The assistant never saves a dashboard: it submits drafts to an edit session, and a
 person previews one and applies it with their own Home Assistant administrator account, only while
 the dashboard is still as it was when the session started. Home Assistant lets only

@@ -95,6 +95,18 @@ class EditSessionsTest(unittest.TestCase):
         with self.assertRaisesRegex(es.SessionError, 'expired'):
             self.sessions.get(self.session['id'], later + es.SESSION_TTL_SECONDS + 1)
 
+    def test_discovery_is_limited_to_visible_open_unexpired_sessions(self):
+        overview = self.sessions.create(None, 'Overview', BASELINE, 'person', 101)
+        hidden = self.sessions.create('private', 'Private', BASELINE, 'person', 102)
+        discarded = self.sessions.create('garden', 'Discarded', BASELINE, 'person', 103)
+        self.sessions.discard(discarded['id'], 'person', 104)
+        self.sessions.note(self.session['id'], 'A note', 'person', 105)
+        found = self.sessions.for_dashboards({None, 'garden'}, 106)
+        self.assertEqual([s['id'] for s in found], [self.session['id'], overview['id']])
+        self.assertEqual(es.summary(found[0])['notes'][0]['text'], 'A note')
+        self.assertNotIn(hidden['id'], [s['id'] for s in found])
+        self.assertEqual(self.sessions.for_dashboards({None, 'garden'}, 106 + es.SESSION_TTL_SECONDS), [])
+
     def test_storage_round_trip_and_cap(self):
         restored = es.EditSessions(self.sessions.to_data())
         self.assertEqual(restored.get(self.session['id'], 101)['request'], 'Add soil moisture')
