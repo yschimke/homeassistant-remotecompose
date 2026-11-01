@@ -109,6 +109,25 @@ class CardStudioTest {
           )
         }
       assertTrue(mcpRead.bodyAsText().contains("Make it brighter"))
+      assertTrue(mcpRead.bodyAsText().contains("HA:sun.sun.elevation"))
+      val attach =
+        client.post("/api/studio/agent-mcp") {
+          header(HttpHeaders.Authorization, "Bearer $agent")
+          setBody(
+            """{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"put_card_asset","arguments":{"key":"door","imageBase64":"iVBORw0KGgoB"}}}"""
+          )
+        }
+      assertEquals(HttpStatusCode.OK, attach.status)
+      assertTrue(attach.bodyAsText().contains("image/png"))
+      val image =
+        client.get("/api/studio/agent-asset?key=door") {
+          header(HttpHeaders.Authorization, "Bearer $owner")
+          header(HttpHeaders.Origin, "https://wasmo.test")
+        }
+      assertEquals(HttpStatusCode.OK, image.status)
+      assertEquals("*", image.headers[HttpHeaders.AccessControlAllowOrigin])
+      assertEquals("no-store", image.headers[HttpHeaders.CacheControl])
+      assertEquals(HttpStatusCode.NotFound, client.get("/api/studio/agent-asset?key=door").status)
       val read =
         client.get("/api/studio/agent-session") {
           header(HttpHeaders.Authorization, "Bearer $agent")

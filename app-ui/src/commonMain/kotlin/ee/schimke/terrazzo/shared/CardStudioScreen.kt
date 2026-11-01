@@ -28,6 +28,9 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /** How a person designs a card in the studio: themselves in UI Builder, or with an AI agent. */
 enum class CardStudioMode(val label: String) {
@@ -145,6 +148,7 @@ fun CardStudioScreen(
   var cloudTarget by remember { mutableStateOf<String?>(null) }
   var cloudTargetProblem by remember { mutableStateOf<String?>(null) }
   var draft by remember { mutableStateOf<JsonObject?>(null) }
+  var draftAssets by remember { mutableStateOf<Map<String, ByteArray>>(emptyMap()) }
   var editorUrl by remember { mutableStateOf<String?>(null) }
   var externalUrl by remember(editorUrl) { mutableStateOf<String?>(null) }
   var showAdvanced by remember { mutableStateOf(false) }
@@ -243,12 +247,13 @@ fun CardStudioScreen(
       val seed = draft ?: studio.seed(card, now)
       val url =
         if (signedIn) {
-          val opened = studio.openAsUser(bearer(), seed, card, now)
+          val opened = studio.openAsUser(bearer(), seed, card, now, assets = draftAssets)
           draft = opened.document
           openedHandoffs += opened.handoff
           // The add-on names its editor by path; a browser reaches it through Home Assistant.
           homeServer?.let { it.link(opened.url) ?: throw CardStudioException(403) } ?: opened.url
         } else {
+          require(draftAssets.isEmpty()) { "Sign in before opening a draft with images." }
           val handoff = studio.openDraft(seed, card, now)
           draft = handoff.document
           openedHandoffs += handoffToken(handoff.url)
@@ -303,7 +308,18 @@ fun CardStudioScreen(
       try {
         val (candidate, revision) = upstream.agentSessionDraft(session.ownerToken)
         if (revision == 0L) return@launch "The agent hasn't submitted a draft yet."
+        val images =
+          (candidate["assets"] as? JsonObject).orEmpty().mapValues { (key, value) ->
+            val digest =
+              value.jsonObject["contentDigest"]
+                ?.jsonPrimitive
+                ?.contentOrNull
+                ?.removePrefix("sha256:") ?: error("Missing image digest")
+            upstream.agentSessionAsset(session.ownerToken, key, digest)
+          }
+        require(images.values.sumOf { it.size } <= 2 * 1024 * 1024)
         draft = candidate
+        draftAssets = images
       } finally {
         upstream.close()
       }
@@ -641,6 +657,7 @@ fun CardStudioScreen(
               {
                 server = it
                 draft = null
+                draftAssets = emptyMap()
                 message = null
               },
               label = { Text("Design server") },
@@ -657,6 +674,7 @@ fun CardStudioScreen(
               TextButton(
                 onClick = {
                   draft = null
+                  draftAssets = emptyMap()
                   message = null
                 }
               ) {

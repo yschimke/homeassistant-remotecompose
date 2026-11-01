@@ -33,6 +33,26 @@ class CardStudioRecoveryTest {
         document.toString().replace("card-old", "card-new").replace("21 °C", "22 °C")
       )
       .jsonObject
+
+  @Test
+  fun refreshingPreservesAddedSharedBindingsWhileUpdatingTheCardValues() {
+    val sun =
+      Json.parseToJsonElement(
+        """{"type":"value","valueType":"float","nullable":false,"initialValue":45,"persistence":"design"}"""
+      )
+    val state = document.getValue("stateVariables").jsonObject
+    val changed =
+      JsonObject(
+        document + ("stateVariables" to JsonObject(state + ("HA:sun.sun.elevation" to sun)))
+      )
+    val result = refreshCardDraft(changed, fresh)
+    assertEquals(sun, result.getValue("stateVariables").jsonObject["HA:sun.sun.elevation"])
+    assertEquals(
+      fresh.getValue("stateVariables").jsonObject["sensor.s0.state"],
+      result.getValue("stateVariables").jsonObject["sensor.s0.state"],
+    )
+  }
+
   private val card =
     CardConfig(
       "gauge",

@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+
 package ee.schimke.ha.client.design
 
 import ee.schimke.ha.client.platformHttpClient
@@ -15,6 +17,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -22,7 +25,9 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLProtocol
 import io.ktor.http.Url
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.ktor.http.isSuccess
+import kotlin.io.encoding.Base64
 import kotlinx.serialization.json.*
 
 /**
@@ -94,6 +99,20 @@ private constructor(
     return result.getValue("document").jsonObject to result.getValue("revision").jsonPrimitive.long
   }
 
+  /** Retrieve a session image by key with the owner's capability, and verify its digest. */
+  suspend fun agentSessionAsset(ownerToken: String, key: String, sha256: String): ByteArray {
+    require(Regex("[A-Za-z0-9_-]{1,80}").matches(key))
+    require(Regex("[0-9a-f]{64}").matches(sha256))
+    val response =
+      http.get(base + "/api/studio/agent-asset?key=" + key.encodeURLParameter()) {
+        bearer(ownerToken)
+      }
+    if (!response.status.isSuccess()) throw CardStudioException(response.status.value)
+    val bytes = response.bodyAsBytes()
+    require(bytes.size <= 1024 * 1024 && Sha256.hex(bytes) == sha256) { "Invalid session image." }
+    return bytes
+  }
+
   suspend fun revokeAgentSession(ownerToken: String) {
     val response = http.delete(base + "/api/studio/agent-session") { bearer(ownerToken) }
     if (response.status == HttpStatusCode.NotFound) return // Already expired or revoked.
@@ -133,21 +152,36 @@ private constructor(
     document: JsonObject,
     card: CardConfig,
     snapshot: HaSnapshot,
+    assets: Map<String, ByteArray> = emptyMap(),
   ): CardStudioOpened {
     try {
-      return open(token, document)
+      return open(token, document, assets)
     } catch (e: CardStudioException) {
       if (e.status != HttpStatusCode.Gone.value) throw e
     }
-    return open(token, refreshCardDraft(document, seed(card, snapshot)))
+    return open(token, refreshCardDraft(document, seed(card, snapshot)), assets)
   }
 
-  private suspend fun open(token: String, document: JsonObject): CardStudioOpened {
+  private suspend fun open(
+    token: String,
+    document: JsonObject,
+    assets: Map<String, ByteArray>,
+  ): CardStudioOpened {
     val response =
       http.post(base + "/api/studio/open") {
         bearer(token)
         contentType(ContentType.Application.Json)
-        setBody(document.toString())
+        setBody(
+          if (assets.isEmpty()) document.toString()
+          else
+            buildJsonObject {
+              put("document", document)
+              putJsonObject("assetData") {
+                assets.forEach { (key, bytes) -> put(key, Base64.encode(bytes)) }
+              }
+            }
+              .toString()
+        )
       }
     if (!response.status.isSuccess()) {
       // A 502 is the design server's own words for which step failed, never preview values.
@@ -311,10 +345,9 @@ fun refreshCardDraft(document: JsonObject, freshSeed: JsonObject): JsonObject {
   val oldState = document["stateVariables"]!!.jsonObject
   val freshState = freshSeed["stateVariables"]!!.jsonObject
   require(
-    oldState.keys == freshState.keys &&
-      oldState.all { (name, value) ->
-        value.jsonObject - "initialValue" == freshState[name]!!.jsonObject - "initialValue"
-      }
+    freshState.all { (name, value) ->
+      oldState[name]?.jsonObject?.minus("initialValue") == value.jsonObject - "initialValue"
+    }
   ) {
     "The card's bindings changed. Reset the draft to use its new contract."
   }
@@ -324,7 +357,13 @@ fun refreshCardDraft(document: JsonObject, freshSeed: JsonObject): JsonObject {
     "The card's catalog changed. Reset the draft to use the new catalog."
   }
   val refreshed =
-    JsonObject(document + mapOf("id" to freshSeed["id"]!!, "stateVariables" to freshState))
+    JsonObject(
+      document +
+        mapOf(
+          "id" to freshSeed["id"]!!,
+          "stateVariables" to JsonObject(freshState + (oldState - freshState.keys)),
+        )
+    )
   validateCardDraft(freshSeed, refreshed)
   return refreshed
 }
