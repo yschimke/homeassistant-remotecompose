@@ -135,6 +135,16 @@ class EditSessions:
             reverse=True,
         )
 
+    def for_dashboards(self, visible_paths, now):
+        """Open sessions on visible dashboards, across the home, newest first."""
+        self.prune(now)
+        return sorted(
+            (s for s in self._sessions.values()
+             if s["url_path"] in visible_paths and s["status"] == OPEN),
+            key=lambda s: s["updated_at"],
+            reverse=True,
+        )
+
     def _touch(self, session, now):
         session["updated_at"] = now
         session["expires_at"] = now + SESSION_TTL_SECONDS

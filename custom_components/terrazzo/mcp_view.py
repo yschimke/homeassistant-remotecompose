@@ -203,6 +203,12 @@ class HassHome:
             ) from failure
 
 
+    def edit_sessions(self):
+        try:
+            return edits.open_sessions_for_agent(self._hass, self._user)
+        except edits.SessionError as failure:
+            raise mcp.ToolError(str(failure)) from failure
+
     async def start_edit_session(self, url_path, request):
         try:
             session = await edits.async_start(self._hass, self._user, url_path, request)

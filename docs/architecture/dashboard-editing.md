@@ -51,7 +51,9 @@ Assistant's storage:
    dashboard, the request, the config it starts from, who started it, and an expiry. The prompt
    the person copies or shares holds only the MCP endpoint, the session id and the request: no
    token, no dashboard config, no entity list. The agent reads those over its own authenticated
-   MCP connection. A connected agent can also start a session itself.
+   MCP connection. A connected agent can call `list_edit_sessions` to discover open requests and
+   notes on dashboards its pinned user can see, or start a session itself. The list omits stored
+   dashboard configurations; `get_edit_session` retrieves the selected dashboard and latest draft.
 2. **Draft.** The agent reads the session and the dashboard, uses the card guide (the types harc
    draws, HA's section-grid sizes, the published catalog's preview images), and submits a draft
    with a summary. The integration checks that the draft is a dashboard whose entities exist.
@@ -92,7 +94,7 @@ Assistant's storage:
      every change), `note`, `discard`, and the administrator-only `apply` and `undo`. Apply and
      undo check and save with no await in between once Lovelace has the dashboard loaded, and
      refuse YAML dashboards.
-   - The MCP server adds `start_edit_session`, `get_edit_session` (the request, the dashboard as
+   - The MCP server adds `list_edit_sessions`, `start_edit_session`, `get_edit_session` (the request, the dashboard as
      it is now, the latest draft and the notes), `get_card_guide` and `submit_draft`. No tool
      saves.
    - Tests: `home-assistant/test/edit_sessions_test.py` and `mcp_test.py` with plain data and a
