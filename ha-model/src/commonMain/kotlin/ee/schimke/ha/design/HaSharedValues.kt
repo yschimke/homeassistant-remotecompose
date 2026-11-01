@@ -157,9 +157,7 @@ object HaSharedValues {
     names
       .mapNotNull(::valueOf)
       .groupBy { it.entityId }
-      .mapValues { (_, values) ->
-        values.mapNotNullTo(linkedSetOf()) { it.attribute }
-      }
+      .mapValues { (_, values) -> values.mapNotNullTo(linkedSetOf()) { it.attribute } }
 
   /** Whether [name] is in the shared domain, known or not. */
   fun isShared(name: String): Boolean = name.startsWith(PREFIX)
