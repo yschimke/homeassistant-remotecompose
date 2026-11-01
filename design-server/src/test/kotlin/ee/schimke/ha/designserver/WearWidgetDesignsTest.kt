@@ -7,8 +7,10 @@ import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
+import ee.schimke.ha.designs.LibraryCaptureProfile
 import ee.schimke.ha.designs.UiBuilderDesignCompiler
 import ee.schimke.ha.rc.CardDesignTemplates
+import ee.schimke.ha.rc.CommonCaptureHost
 import java.util.Base64
 import kotlin.math.abs
 import kotlin.test.Test
@@ -18,12 +20,16 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.float
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 /** A card's UI Builder design becomes its Wear widgets: the card without its surface. */
 class WearWidgetDesignsTest {
@@ -57,8 +63,61 @@ class WearWidgetDesignsTest {
         shape = "device_class=garage;domain=cover;state_icon=garage",
         theme = "baked:Material3:light",
       )
+    // Exercise the actual cloud seed and agent handoff, not just a standalone scene. An agent
+    // retains the seed root and binding declarations while replacing its content with the scene.
+    val cardConfig =
+      Json.parseToJsonElement("""{"type":"tile","entity":"cover.garage"}""").jsonObject
+    val seed =
+      UiBuilderSeed.document(
+        CardSchema.fromCard(cardConfig),
+        "card-test",
+        "Garage",
+        HaCardsSeed.card("app-card"),
+      )
+    val sessions = AgentDesignSessions()
+    val access = sessions.create("Redesign the garage", seed)
+    assertTrue(sessions.putAsset(access.agent, "door", png))
+    val asset = assertNotNull(sessions.asset(access.owner, "door"))
+    val binding = buildJsonObject {
+      put("mediaType", asset.mediaType)
+      put("contentDigest", "sha256:${asset.sha256}")
+      put(
+        "source",
+        buildJsonObject {
+          put("type", "uploaded")
+          put("storageKey", "sha256:${asset.sha256}")
+        },
+      )
+    }
+    val root = seed.getValue("nodes").jsonObject.getValue("root").jsonObject
+    val slot = root.getValue("slots").jsonObject.keys.single()
+    val wrapper =
+      JsonObject(
+        root + ("slots" to JsonObject(mapOf(slot to JsonArray(listOf(JsonPrimitive("stage"))))))
+      )
+    val candidate =
+      JsonObject(
+        seed +
+          ("nodes" to JsonObject(source.getValue("nodes").jsonObject + ("root" to wrapper))) +
+          ("assets" to JsonObject(mapOf("door" to binding)))
+      )
+    assertTrue(sessions.submit(access.agent, 0, candidate))
+    val submitted = assertNotNull(sessions.read(access.owner)).document
+    val baseline =
+      CardDesignTemplates.capture(CommonCaptureHost(LibraryCaptureProfile.OPERATIONS), key)
+    val baselineDocument = RcDocumentCodec.decode(baseline.bytes, RcWireLimits())
+    val base =
+      DecodedTemplate(
+        listOf(Binding("cover.s0.state", "text")),
+        0,
+        emptyMap(),
+        baselineDocument.validateFor(RcTargetProfiles.ANDROIDX_EXPERIMENTAL).map { it.message },
+        null,
+      )
+    val mobile = UiBuilderDesignCompiler().compile(submitted, mapOf("door" to png), key)
+    assertNull(userTemplateProblem(mobile, base, likeBase = true))
     for (container in DesignKey.WEAR_CONTAINERS) {
-      val widget = assertNotNull(WearWidgetDesigns.document(source, container))
+      val widget = assertNotNull(WearWidgetDesigns.document(submitted, container))
       val scene = assertNotNull(WearWidgetDesigns.compilableScene(widget))
       val bytes =
         assertNotNull(compileWearScene(UiBuilderDesignCompiler(), scene, mapOf("door" to png), key))
