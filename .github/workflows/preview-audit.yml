@@ -260,7 +260,7 @@ jobs:
       - name: Audit with Codex
         if: env.AGENT == 'codex'
         timeout-minutes: 45
-        uses: openai/codex-action@10cb888d2ed3b99867f7e7ccff174a861a75aeb6 # v1.9
+        uses: openai/codex-action@bdf19a4a223ec2549a3e2274a0cf61556bc07675 # v1.13
         with:
           # Held by the action's local proxy and passed on stdin, so Codex
           # itself never sees the key.
