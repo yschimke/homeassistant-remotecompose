@@ -1,9 +1,13 @@
 package ee.schimke.terrazzo.wear.widget
 
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.remote.core.CoreDocument
+import androidx.compose.remote.core.RemoteComposeBuffer
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
@@ -11,6 +15,8 @@ import androidx.compose.remote.creation.compose.modifier.offset
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.player.core.RemoteDocument
+import androidx.compose.remote.player.view.RemoteComposePlayer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -147,6 +153,26 @@ class WearContainerStylesTest {
     val bitmap = compose.onNodeWithTag("widget").captureToImage().asAndroidBitmap()
     assertEquals(android.graphics.Color.MAGENTA, bitmap.getPixel(0, 0))
     assertEquals(android.graphics.Color.RED, bitmap.getPixel(bitmap.width / 2, bitmap.height / 2))
+
+    // Exercise the AndroidX View player too: the opcode being allowed by the profile alone does
+    // not prove this renderer clips the content.
+    val document =
+      CoreDocument().apply {
+        initFromBuffer(RemoteComposeBuffer.fromInputStream(widget.rcDocument.inputStream()))
+      }
+    val player = RemoteComposePlayer(context).apply { setDocument(RemoteDocument(document)) }
+    val width = 216
+    val height = 76
+    player.measure(
+      View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+      View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY),
+    )
+    player.layout(0, 0, width, height)
+    val frame = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    frame.eraseColor(android.graphics.Color.MAGENTA)
+    player.draw(Canvas(frame))
+    assertEquals(android.graphics.Color.MAGENTA, frame.getPixel(0, 0))
+    assertEquals(android.graphics.Color.RED, frame.getPixel(width / 2, height / 2))
   }
 
   @Test
