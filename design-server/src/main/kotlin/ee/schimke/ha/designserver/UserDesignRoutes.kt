@@ -137,8 +137,7 @@ fun userTemplateProblem(
   val unknown =
     read
       .filter { '.' in it && it !in provided }
-      // A watch doesn't push shared values yet: a Wear widget reading one would never update.
-      .filterNot { profile != RcTargetProfiles.WEAR_WIDGETS && HaSharedValues.valueOf(it) != null }
+      .filterNot { HaSharedValues.valueOf(it) != null }
       .filterNot {
         profile == RcTargetProfiles.WEAR_WIDGETS &&
           (it.startsWith(WEAR_HOST_COLOURS) || it in WEAR_HOST_FRAME)

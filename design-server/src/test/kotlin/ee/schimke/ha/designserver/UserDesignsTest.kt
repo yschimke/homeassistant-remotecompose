@@ -81,7 +81,7 @@ class UserDesignsTest {
     val id = 4_000
     val named =
       listOf(
-        RcNamedVariable(id, RcNamedVariable.FLOAT_TYPE, "USER:$name"),
+        RcNamedVariable(id, RcNamedVariable.FLOAT_TYPE, if (':' in name) name else "USER:$name"),
         RcFloatConstant(id, RcFloatWord.literal(8f)),
       )
     return RcDocumentCodec.encode(
@@ -250,6 +250,7 @@ class UserDesignsTest {
       "framed",
       "foreign",
       "dimmed",
+      "wear-sun",
       "handmade",
       "sunlit",
       "peeking",
@@ -347,7 +348,9 @@ class UserDesignsTest {
           }
           // `wear`: a card design whose Small Wear widget exports and whose Large one doesn't.
           get("/api/ui-builder/v1/designs/{id}") {
-            if (call.parameters["id"] !in setOf("wear", "framed", "foreign", "dimmed")) {
+            if (
+              call.parameters["id"] !in setOf("wear", "framed", "foreign", "dimmed", "wear-sun")
+            ) {
               return@get call.respondText("no such design", status = HttpStatusCode.NotFound)
             }
             val id = call.parameters["id"]!!
@@ -382,6 +385,12 @@ class UserDesignsTest {
                   wearSmallNaming(RcAmbientValue),
                   ContentType.Application.OctetStream,
                 )
+              "wear-sun-wear-small",
+              "wear-sun-wear-large" ->
+                call.respondBytes(
+                  wearSmallNaming("HA:sun.sun.elevation"),
+                  ContentType.Application.OctetStream,
+                )
               // A name under the frame's prefix the watch doesn't fill.
               "foreign-wear-large" ->
                 call.respondBytes(
@@ -402,7 +411,8 @@ class UserDesignsTest {
               "wear",
               "framed",
               "foreign",
-              "dimmed" -> {
+              "dimmed",
+              "wear-sun" -> {
                 call.response.headers.append("X-UI-Builder-Revision", "3")
                 call.respondBytes(template, ContentType.Application.OctetStream)
               }
@@ -865,6 +875,16 @@ class UserDesignsTest {
     assertEquals(HttpStatusCode.Created, f.publish("foreign").status)
     assertTrue(
       UserDesignStore(f.storeDir).designs("octocat").none { it.entry.key.container != null }
+    )
+  }
+
+  @Test
+  fun wearWidgetsMayReadSharedSunElevation() = testApplication {
+    val f = fixture()
+    assertEquals(HttpStatusCode.Created, f.publish("wear-sun").status)
+    assertEquals(
+      setOf(DesignKey.WEAR_SMALL, DesignKey.WEAR_LARGE),
+      UserDesignStore(f.storeDir).designs("octocat").mapNotNull { it.entry.key.container }.toSet(),
     )
   }
 

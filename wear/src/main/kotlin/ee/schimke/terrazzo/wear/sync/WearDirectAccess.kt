@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.android.gms.wearable.Wearable
 import ee.schimke.ha.client.HaAuthInvalidException
 import ee.schimke.ha.client.HaEntityStates
+import ee.schimke.ha.design.HaSharedValues
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -313,10 +314,12 @@ private fun sameUrl(a: String, b: String): Boolean =
  */
 internal fun watchEntityIds(rawJson: List<String>, known: Collection<String>): Set<String> {
   val knownSnapshot = HaSnapshot(states = known.associateWith { EntityState(it, "") })
-  return rawJson.flatMapTo(HashSet()) { raw ->
-    val bambu = raw.toCardConfigOrNull()?.let { bambuEntityIds(it, knownSnapshot) }.orEmpty()
-    ENTITY_ID.findAll(raw).map { it.value }.toList() + bambu
-  }
+  return rawJson
+    .flatMapTo(HashSet()) { raw ->
+      val bambu = raw.toCardConfigOrNull()?.let { bambuEntityIds(it, knownSnapshot) }.orEmpty()
+      ENTITY_ID.findAll(raw).map { it.value }.toList() + bambu
+    }
+    .also { if (rawJson.isNotEmpty()) it.addAll(HaSharedValues.entities) }
 }
 
 private val ENTITY_ID = Regex("""\b[a-z_][a-z0-9_]*\.[a-z0-9_]+\b""")
@@ -340,7 +343,9 @@ internal fun EntityState.toWearEntityValue(snapshot: HaSnapshot): EntityValue {
     entityPicture = text("entity_picture"),
     displayPrecision = displayPrecisionOf(this, snapshot),
     attributes =
-      WEAR_EXTRA_ATTRIBUTES.mapNotNull { key ->
+      (WEAR_EXTRA_ATTRIBUTES +
+          if (entityId == HaSharedValues.SUN) HaSharedValues.sunAttributes else emptySet())
+        .mapNotNull { key ->
           (attrs[key] as? JsonPrimitive)?.contentOrNull?.let { key to it }
         }
         .toMap() +

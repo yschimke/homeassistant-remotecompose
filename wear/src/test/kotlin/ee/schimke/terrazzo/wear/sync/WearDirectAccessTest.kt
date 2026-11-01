@@ -155,7 +155,7 @@ class WearDirectAccessTest {
     )
     answer = { mapOf("sensor.outside" to state("sensor.outside", "12.5")) }
     val values = assertNotNull(direct.refresh(listOf(card), signedIn))
-    assertEquals(listOf("https://home.example.org" to setOf("sensor.outside")), fetched)
+    assertEquals(listOf("https://home.example.org" to setOf("sensor.outside", "sun.sun")), fetched)
     assertEquals("12.5", values.values.getValue("sensor.outside").state)
     assertEquals("°C", values.values.getValue("sensor.outside").unit)
     assertEquals("on", values.values.getValue("light.kitchen").state, "the phone's are kept")
@@ -321,7 +321,7 @@ class WearDirectAccessTest {
         "binary_sensor.p2s_sn2_online",
       )
     assertEquals(
-      setOf("sensor.outside") + known,
+      setOf("sensor.outside", "sun.sun") + known,
       watchEntityIds(listOf(card, bambu), known + "sensor.unrelated"),
     )
   }

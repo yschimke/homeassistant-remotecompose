@@ -13,6 +13,7 @@ import com.google.android.gms.wearable.Wearable
 import com.google.android.horologist.data.WearDataLayerRegistry
 import ee.schimke.ha.client.design.CardDesignOverrides
 import ee.schimke.ha.design.CardDesignSlots
+import ee.schimke.ha.design.HaSharedValues
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -1181,7 +1182,9 @@ internal fun EntityState.toEntityValue(snapshot: HaSnapshot): EntityValue {
     entityPicture = attrs["entity_picture"]?.jsonPrimitive?.contentOrNull.orEmpty(),
     displayPrecision = displayPrecisionOf(this, snapshot),
     attributes =
-      WEAR_EXTRA_ATTRIBUTES.mapNotNull { key ->
+      (WEAR_EXTRA_ATTRIBUTES +
+          if (entityId == HaSharedValues.SUN) HaSharedValues.sunAttributes else emptySet())
+        .mapNotNull { key ->
           // A safe cast: another integration may put an object or array under the same key, which
           // is skipped rather than thrown on (that would stop the whole sync).
           (attrs[key] as? JsonPrimitive)?.contentOrNull?.let { key to it }
@@ -1229,7 +1232,7 @@ private val ENTITY_ID = Regex("""\b[a-z_][a-z0-9_]*\.[a-z0-9_]+\b""")
  * then nothing reaches the watch and every card reads unavailable.
  */
 internal fun wearValues(snapshot: HaSnapshot, entityIds: Set<String>): Map<String, EntityValue> =
-  entityIds
+  (entityIds + if (entityIds.isNotEmpty()) HaSharedValues.entities else emptySet())
     .mapNotNull { id -> snapshot.states[id]?.let { id to it.toEntityValue(snapshot) } }
     .toMap()
 

@@ -55,6 +55,20 @@ object HaSharedValues {
   /** The sun integration's entity: on by default in every Home Assistant. */
   const val SUN: String = "sun.sun"
 
+  /** Attributes a host forwarding the shared sun entity must retain. */
+  val sunAttributes: Set<String> =
+    setOf(
+      "elevation",
+      "azimuth",
+      "rising",
+      "next_dawn",
+      "next_rising",
+      "next_noon",
+      "next_setting",
+      "next_dusk",
+      "next_midnight",
+    )
+
   /**
    * The sun's times, with their names and their daytime: a day that never ends, so a design that
    * asks whether the clock is between sunrise and sunset gets day too.
