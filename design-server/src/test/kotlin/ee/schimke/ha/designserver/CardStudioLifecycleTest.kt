@@ -275,7 +275,39 @@ class CardStudioLifecycleTest {
         Json.parseToJsonElement(
           """{"mediaType":"image/png","contentDigest":"$digest","source":{"type":"uploaded","storageKey":"$digest"}}"""
         )
-      val withImage = JsonObject(seed + ("assets" to JsonObject(mapOf("door" to binding))))
+      val rootId = seed.getValue("roots").jsonArray.single().jsonPrimitive.content
+      val nodes = seed.getValue("nodes").jsonObject
+      val root = nodes.getValue(rootId).jsonObject
+      val slots = root.getValue("slots").jsonObject
+      val slotName = slots.keys.first()
+      val rootWithImage =
+        JsonObject(
+          root +
+            ("slots" to
+              JsonObject(
+                slots +
+                  (slotName to
+                    JsonArray(slots.getValue(slotName).jsonArray + JsonPrimitive("garage-image")))
+              ))
+        )
+      val imageNode =
+        Json.parseToJsonElement(
+          """{"id":"garage-image","componentId":"asset/image","properties":{"assetKey":{"type":"string","value":"door"}},"modifiers":[{"type":"alpha","alpha":{"type":"expr","op":"smoothstep","args":[{"type":"float","value":-6},{"type":"float","value":6},{"type":"state","variable":"HA:sun.sun.elevation"}]}}],"slots":{}}"""
+        )
+      val sun =
+        seed.getValue("stateVariables").jsonObject.getValue("HA:sun.sun.elevation")
+      val withImage =
+        JsonObject(
+          seed +
+            ("assets" to JsonObject(mapOf("door" to binding))) +
+            ("nodes" to
+              JsonObject(nodes + (rootId to rootWithImage) + ("garage-image" to imageNode))) +
+            ("stateVariables" to
+              JsonObject(
+                seed.getValue("stateVariables").jsonObject + ("HA:sun.sun.elevation" to sun)
+              ))
+        )
+      ee.schimke.ha.client.design.validateCardDraft(seed, withImage)
       val session = studio.startAgentSession(seed, "Use the garage image")
       val attached =
         client.post("/api/studio/agent-mcp") {
