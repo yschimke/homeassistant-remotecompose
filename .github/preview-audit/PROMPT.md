@@ -8,7 +8,9 @@ open anything. The workflow posts your report.
 
 Inputs the workflow has already written:
 
-- `_audit/context.md`: the PR number, head commit and title.
+- `_audit/context.md`: the PR number, head commit and title, and, when the
+  `/audit` comment named one, what the requester asked you to look at. Give
+  that extra attention, but still audit every changed preview.
 - `_audit/preview-diff.md`: the sticky `<!-- preview-diff -->` comment the
   Compose Preview workflow posted for this commit. Its `### Changed` and
   `### New` sections name each changed preview function in bold backticks
