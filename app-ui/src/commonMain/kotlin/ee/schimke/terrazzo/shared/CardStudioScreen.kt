@@ -253,7 +253,10 @@ fun CardStudioScreen(
         }
       if (openEditorInBrowser) {
         uriHandler.openUri(url)
-        "Opened in your browser. Save your design there, then come back to use it."
+        if (onPublished != null)
+          "Opened in your browser. Save your design there, then come back to use it."
+        else
+          "Opened in your browser. Save your design there; applying it in this host is not yet supported."
       } else {
         editorUrl = url
         null
@@ -301,7 +304,8 @@ fun CardStudioScreen(
       } finally {
         upstream.close()
       }
-      "Draft received. Review it in UI Builder before publishing."
+      if (onPublished != null) "Draft received. Review it in UI Builder before publishing."
+      else "Draft received. Review it in UI Builder; applying it in this host is not yet supported."
     }
 
   fun revokeCloudSession() =
@@ -464,7 +468,10 @@ fun CardStudioScreen(
               style = MaterialTheme.typography.bodySmall,
             )
             Text(
-              "The agent can rearrange the card's supported components and bindings. Review the result in UI Builder before publishing it.",
+              if (onPublished != null)
+                "The agent can rearrange the card's supported components and bindings. Review the result in UI Builder before publishing it."
+              else
+                "The agent can rearrange supported components and bindings. Review and save the result in UI Builder; applying it in this host is not yet supported.",
               style = MaterialTheme.typography.bodySmall,
             )
             val session = cloudSession
@@ -657,7 +664,9 @@ fun CardStudioScreen(
           if (messageStep == 0) StudioRequestFeedback(busy, message, requestFailed)
         }
         Text(
-          "Designs stay drafts until you publish them. Nothing here changes your Home Assistant dashboard.",
+          if (onPublished != null)
+            "Designs stay drafts until you publish them. Nothing here changes your Home Assistant dashboard."
+          else "This host can create and review drafts but can't apply a custom design yet.",
           style = MaterialTheme.typography.bodySmall,
         )
       }

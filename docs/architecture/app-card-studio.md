@@ -132,6 +132,12 @@ publish; the configured upstream receives the limited preview for the cloud sess
 draft is refreshed against the private server's own contract when opened there. The upstream and
 the private add-on must both run a version that supports the relevant routes and catalog.
 
+In the shared Wasm app, including a Wasmo install without backend services, the configured design
+server is used directly. Creating and retrieving the agent request does not need a Wasmo backend or
+a design-server login; opening it in the hosted editor uses the existing browser sign-in handoff.
+The Wasm dashboard does not yet install private custom card designs, and the studio says so. The
+browser still needs its normal connection to Home Assistant for the selected card's data.
+
 ### Provider draft generation
 
 Provider keys are entered for this studio session, masked in the UI, and kept only in

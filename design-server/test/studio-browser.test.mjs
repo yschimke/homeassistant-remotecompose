@@ -63,16 +63,45 @@ test('cross-origin browser can seed a card and create an anonymous handoff', { s
       });
       // Preserve the Kotlin JSON numeric representation, just as the app client does.
       const document = await seed.text();
+      // The Wasm app can use an upstream server without any Wasmo backend. The agent and owner
+      // capabilities cross origins in Authorization headers, not URLs or Home Assistant tokens.
+      const task = await fetch(`${base}/api/studio/agent-sessions`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: `{"instruction":"Make the title brighter","document":${document}}`,
+      });
+      const access = task.ok ? await task.json() : null;
+      const agentRead = access && await fetch(`${base}/api/studio/agent-session`, {
+        headers: { Authorization: `Bearer ${access.agentToken}` },
+      });
+      const agentData = agentRead?.ok && await agentRead.json();
+      const submitted = agentData && await fetch(`${base}/api/studio/agent-session`, {
+        method: 'POST', headers: { Authorization: `Bearer ${access.agentToken}`, 'Content-Type': 'application/json' },
+        body: `{"revision":${agentData.revision},"document":${document}}`,
+      });
+      const ownerRead = access && await fetch(`${base}/api/studio/agent-session`, {
+        headers: { Authorization: `Bearer ${access.ownerToken}` },
+      });
+      const ownerData = ownerRead?.ok && await ownerRead.json();
+      const revoked = access && await fetch(`${base}/api/studio/agent-session`, {
+        method: 'DELETE', headers: { Authorization: `Bearer ${access.ownerToken}` },
+      });
       const handoff = await fetch(`${base}/api/studio/handoffs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: document,
       });
       const link = handoff.ok ? await handoff.json() : null;
-      return { seed: seed.status, handoff: handoff.status, path: link?.path };
+      return { seed: seed.status, handoff: handoff.status, path: link?.path,
+        task: task.status, agentRead: agentRead?.status, submitted: submitted?.status,
+        ownerRevision: ownerData?.revision, revoked: revoked?.status };
     }, base.replace(/\/$/, ''));
     assert.equal(result.seed, 200);
     assert.equal(result.handoff, 200);
+    assert.equal(result.task, 200);
+    assert.equal(result.agentRead, 200);
+    assert.equal(result.submitted, 200);
+    assert.equal(result.ownerRevision, 1);
+    assert.equal(result.revoked, 200);
     assert.match(result.path, /^\/studio\/[A-Za-z0-9_-]{32}$/);
     if (process.env.STUDIO_OPERATOR_TOKEN) {
       await page.goto(`${base}/edit?token=${encodeURIComponent(process.env.STUDIO_OPERATOR_TOKEN)}`);

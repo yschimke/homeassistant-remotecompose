@@ -112,6 +112,15 @@ class CardStudioWizardTest {
   }
 
   @Test
+  fun cloudAgentCanStartWithoutAHostBackendOrDesignServerLogin() = runComposeUiTest {
+    studio(onSignIn = null)
+    onNodeWithText("With a cloud agent").performClick()
+    onNodeWithText("What should change?").performTextInput("Make it brighter")
+    onNodeWithText("Create agent request").assertIsEnabled()
+    onNodeWithText("applying it in this host is not yet supported", substring = true).assertExists()
+  }
+
+  @Test
   fun defaultsRoundTrip() {
     val defaults =
       CardStudioDefaults(CardStudioMode.Agent, CardAgentProvider.Agent, "m", "https://a.example")
