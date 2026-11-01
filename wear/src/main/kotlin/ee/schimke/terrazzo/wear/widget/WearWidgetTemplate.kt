@@ -27,7 +27,11 @@ import ee.schimke.composeai.rcplayer.edit.adaptTo
 import ee.schimke.composeai.rcplayer.edit.hardcodeDensity
 import ee.schimke.composeai.rcplayer.edit.hardcodeNamedValues
 import ee.schimke.composeai.rcplayer.edit.namedVariables
+import ee.schimke.composeai.rcplayer.protocol.RcBoxLayout
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
+import ee.schimke.composeai.rcplayer.protocol.RcFloatWord
+import ee.schimke.composeai.rcplayer.protocol.RcRootLayout
+import ee.schimke.composeai.rcplayer.protocol.RcRoundedClipRectModifier
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.components.CLASSIC_WEAR_SURFACE
@@ -56,6 +60,23 @@ internal object WearWidgetTemplate {
   const val HORIZONTAL_PADDING = "wear.container.horizontal_padding"
   const val VERTICAL_PADDING = "wear.container.vertical_padding"
   const val CORNER_RADIUS = "wear.container.corner_radius"
+
+  /** Clip a captured Glance frame, including an exported design, to this host's rounded shape. */
+  fun clipFrame(context: Context, bytes: ByteArray, params: WearWidgetParams): ByteArray? =
+    runCatching {
+      val document = RcDocumentCodec.decode(bytes, RcWireLimits())
+      // Glance captures the full container as the root's first box. Do not apply a host clip to a
+      // different document structure: it could clip a card inside a multi-card composition.
+      require(document.operations.firstOrNull() is RcRootLayout)
+      require(document.operations.getOrNull(1) is RcBoxLayout)
+      val radius =
+        RcFloatWord.literal(params.cornerRadiusDp * context.resources.displayMetrics.density)
+      val clip = RcRoundedClipRectModifier(radius, radius, radius, radius)
+      RcDocumentCodec.encode(
+        document.copy(operations = document.operations.take(2) + clip + document.operations.drop(2))
+      )
+    }
+    .getOrNull()
 
   /** The container's fill, which the watch writes from the card's state ([ContainerTint]). */
   const val CONTAINER_COLOR = "wear.container.color"

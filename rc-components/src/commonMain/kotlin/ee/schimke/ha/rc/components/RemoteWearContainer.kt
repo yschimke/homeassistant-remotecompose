@@ -7,6 +7,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
 import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.layout.RemoteSize
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.drawWithContent
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.shaders.RemoteBrush
@@ -15,6 +16,7 @@ import androidx.compose.remote.creation.compose.shaders.linearGradient
 import androidx.compose.remote.creation.compose.shaders.radialGradient
 import androidx.compose.remote.creation.compose.shaders.sweepGradient
 import androidx.compose.remote.creation.compose.shaders.verticalGradient
+import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteDp
 import androidx.compose.remote.creation.compose.state.RemoteFloat
@@ -81,11 +83,11 @@ data class HaWearLevel(
  * all of them use the whole container under it.
  *
  * The container's shape is the host's and stays it: everything here is drawn to fit inside the
- * rounded rect of [cornerRadius], nothing is clipped by it or drawn outside it. Fills and glows are
- * that rounded rect; bands, edges and a ring follow its outline inwards ([outline]); a fill level
- * is the rounded rect cut straight along its reading. [cornerRadius] is whatever the host knows:
- * the Wear template's named `wear.container.corner_radius`, a widget frame's own value in the Wear
- * app, or a preview's approximation.
+ * rounded rect of [cornerRadius], and the same shape clips content that would overflow. Fills and
+ * glows are that rounded rect; bands, edges and a ring follow its outline inwards ([outline]); a
+ * fill level is the rounded rect cut straight along its reading. [cornerRadius] is whatever the
+ * host knows: the Wear template's named `wear.container.corner_radius`, a widget frame's own value
+ * in the Wear app, or a preview's approximation.
  */
 @Composable
 fun RemoteWearContainer(
@@ -115,7 +117,7 @@ fun RemoteWearContainer(
   }
   RemoteBox(
     modifier =
-      modifier.fillMaxSize().drawWithContent {
+      modifier.fillMaxSize().clip(RemoteRoundedCornerShape(cornerRadius)).drawWithContent {
         val corner = RemoteOffset(cornerPx, cornerPx)
         drawRoundRect(RemotePaint { color = fill }, cornerRadius = corner)
         var band = 0
