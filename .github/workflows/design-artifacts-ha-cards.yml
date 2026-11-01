@@ -69,6 +69,10 @@ jobs:
       spec: ha-cards-catalog/catalog.spec.json
       module: ':ha-cards-catalog'
       # The render CLI in lockstep with the applied Gradle plugin, as the main sheet does.
+      # Render the debug variant explicitly. AGP 9.5 turns unit tests off for release
+      # variants, and Compose Preview packages Android resources through the variant's
+      # unit-test APK, so a release render fails before it starts (compose-ai-tools #6382).
+      variant: debug
       cli-version: catalog
       catalog-key: compose-preview-plugin
       # An ANDROID module: every sticker is a RemoteDocument rasterised under Robolectric.
