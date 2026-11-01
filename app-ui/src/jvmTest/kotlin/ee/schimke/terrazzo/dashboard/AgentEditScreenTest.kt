@@ -80,6 +80,7 @@ class AgentEditScreenTest {
     edits: FakeEdits,
     shared: MutableList<String>,
     writeBlockedReason: String? = null,
+    cloudServer: String? = null,
   ) = setContent {
     AgentEditScreen(
       edits = edits,
@@ -90,9 +91,29 @@ class AgentEditScreenTest {
       onSharePrompt = { shared += it },
       onApplied = {},
       writeBlockedReason = writeBlockedReason,
+      cloudServer = cloudServer,
     ) { _, card ->
       Text("card:${card.type}:${card.raw["entity"]}")
     }
+  }
+
+  @Test
+  fun cloudSessionExplainsTheDataAndKeepsTheConnectionDetailsAvailable() = runComposeUiTest {
+    val edits = FakeEdits()
+    show(edits, mutableListOf(), cloudServer = "https://ha.coo.ee")
+    onNodeWithText("https://ha.coo.ee", substring = true).assertExists()
+    onNodeWithText("configuration may contain private data", substring = true).assertExists()
+    onNodeWithText("Start edit session").assertIsNotEnabled()
+    onNodeWithText("Request").performTextInput("Make it easier to read")
+    onNodeWithText("Start edit session").performClick()
+    waitUntil { edits.current.value != null }
+    edits.current.value =
+      edits.current.value!!.copy(
+        drafts = listOf(AgentEditSession.Draft("d1", config = draftConfig))
+      )
+    waitUntil { onAllNodesWithText("Apply").fetchSemanticsNodes().isNotEmpty() }
+    onNodeWithText("Share prompt").assertExists()
+    onNodeWithText("Anyone holding them", substring = true).assertExists()
   }
 
   @Test

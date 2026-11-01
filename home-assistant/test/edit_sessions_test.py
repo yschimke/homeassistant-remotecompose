@@ -56,6 +56,14 @@ class EditSessionsTest(unittest.TestCase):
         self.assertEqual(len(drafts), es.MAX_DRAFTS)
         self.assertEqual(drafts[-1]['summary'], f'd{es.MAX_DRAFTS + 2}')
 
+    def test_relay_retries_do_not_duplicate_or_replace_a_draft(self):
+        first = self.sessions.submit(self.session['id'], DRAFT, 'Soil', exists, 'person', 110, 'cloud:1')
+        retry = self.sessions.submit(self.session['id'], DRAFT, 'Soil', exists, 'person', 111, 'cloud:1')
+        self.assertEqual(first['id'], retry['id'])
+        self.assertEqual(len(self.session['drafts']), 1)
+        with self.assertRaisesRegex(es.SessionError, 'another draft'):
+            self.sessions.submit(self.session['id'], BASELINE, 'Other', exists, 'person', 112, 'cloud:1')
+
     def test_apply_needs_the_dashboard_unchanged_and_undo_needs_the_draft_still_there(self):
         draft = self.sessions.submit(self.session['id'], DRAFT, '', exists, 'agent', 110)
         changed = {'views': [{'cards': []}]}

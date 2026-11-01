@@ -42,6 +42,7 @@ import androidx.navigation3.ui.NavDisplay
 import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.client.UnsupportedDashboardException
+import ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits
 import ee.schimke.ha.client.dashboard.DashboardEditSession
 import ee.schimke.ha.client.dashboard.toCardConfig
 import ee.schimke.ha.client.listRenderableDashboards
@@ -409,6 +410,7 @@ private fun DashboardShell(
   }
   // Edit sessions need the Terrazzo integration, which serves the panel itself.
   var integrationInstalled by remember(connection) { mutableStateOf(false) }
+  var dashboardRefreshGeneration by remember(connection) { mutableIntStateOf(0) }
   LaunchedEffect(connection) {
     connection.client.state.collectLatest { state ->
       if (state != HaClient.ConnectionState.Ready) return@collectLatest
@@ -542,6 +544,7 @@ private fun DashboardShell(
                   cardStyle,
                   dark,
                   customizing,
+                  dashboardRefreshGeneration,
                 )
               }
             }
@@ -574,6 +577,7 @@ private fun DashboardShell(
                 designServer = designServer,
                 cardStyle = cardStyle,
                 dark = dark,
+                onApplied = { dashboardRefreshGeneration++ },
                 onBack = { if (stack.size > 1) stack.removeLastOrNull() },
               )
             }
@@ -596,18 +600,51 @@ private fun AgentEditEntry(
   designServer: String,
   cardStyle: String,
   dark: Boolean,
+  onApplied: () -> Unit,
   onBack: () -> Unit,
 ) {
   @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
   val preview = rememberDraftPreview(connection, designServer, cardStyle, dark)
+  var useCloud by remember { mutableStateOf<Boolean?>(null) }
+  if (useCloud == null) {
+    Column(
+      Modifier.fillMaxSize().padding(24.dp),
+      verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+      Text("How should the agent connect?", style = MaterialTheme.typography.titleLarge)
+      Text(
+        "Use the trusted design server for a cloud agent, or let an agent sign in to Home Assistant directly."
+      )
+      Button(onClick = { useCloud = true }) { Text("Use a cloud agent") }
+      OutlinedButton(onClick = { useCloud = false }) { Text("Connect to Home Assistant") }
+      TextButton(onClick = onBack) { Text("Back") }
+    }
+    return
+  }
+  val cloud = useCloud == true
+  val cloudEdits =
+    remember(connection, designServer, cloud) {
+      if (cloud)
+        runCatching { CloudDashboardAgentEdits(connection.client, designServer) }.getOrNull()
+      else null
+    }
+  DisposableEffect(cloudEdits) { onDispose { cloudEdits?.close() } }
+  if (cloud && cloudEdits == null) {
+    Column(Modifier.padding(24.dp)) {
+      Text("Set an HTTPS card design server in Settings before using a cloud agent.")
+      TextButton(onClick = { useCloud = null }) { Text("Back") }
+    }
+    return
+  }
   AgentEditScreen(
-    edits = connection.client.agentEdits,
+    edits = cloudEdits ?: connection.client.agentEdits,
     urlPath = path,
     title = title,
     snapshot = snapshot,
     onBack = onBack,
     onSharePrompt = { clipboard.setText(AnnotatedString(it)) },
-    onApplied = {},
+    onApplied = onApplied,
+    cloudServer = if (cloud) designServer else null,
   ) { _, card ->
     preview(card, snapshot)
   }
@@ -851,10 +888,12 @@ private fun LiveDashboard(
   cardStyle: String,
   dark: Boolean,
   customizing: Boolean,
+  refreshGeneration: Int,
 ) {
   val uriHandler = LocalUriHandler.current
   var designCard by remember(connection, path) { mutableStateOf<CardConfig?>(null) }
-  var dashboard by remember(connection, path) { mutableStateOf<Dashboard?>(null) }
+  var dashboard by
+    remember(connection, path, refreshGeneration) { mutableStateOf<Dashboard?>(null) }
   var error by remember(connection, path) { mutableStateOf<String?>(null) }
   val scope = rememberCoroutineScope()
   // Keyed on the configured server so changing the setting reloads designs from it.
@@ -870,7 +909,7 @@ private fun LiveDashboard(
         decodeEntityPicture(connection.pictures.load(key))
       }
     }
-  LaunchedEffect(connection, path) {
+  LaunchedEffect(connection, path, refreshGeneration) {
     connection.client.state.collectLatest { state ->
       if (state == HaClient.ConnectionState.Ready && dashboard == null) {
         try {

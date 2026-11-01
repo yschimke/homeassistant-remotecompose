@@ -178,6 +178,17 @@ test('Edit sessions: agents draft, administrators apply', {timeout:180_000}, asy
     // An agent can start a session itself, and a person can discard it.
     const own = await mcp('start_edit_session', {url_path:'edit-fixture', request:'Tidy up'});
     assert.notEqual(own.isError, true, own.content?.[0]?.text);
+    const relayedInvalid = await agent.ws({type:'terrazzo/edit/submit', session_id:own.structuredContent.session_id,
+      config:{views:[{cards:[{type:'tile', entity:'light.not_here'}]}]}});
+    assert.ok(relayedInvalid.error, 'relayed drafts still validate entity permissions');
+    const relayed = await agent.ws({type:'terrazzo/edit/submit', session_id:own.structuredContent.session_id,
+      config:DRAFT, summary:'Relayed draft', relay_id:'cloud:1'});
+    assert.equal(relayed.session.drafts[0].summary, 'Relayed draft');
+    const retryRelay = await agent.ws({type:'terrazzo/edit/submit', session_id:own.structuredContent.session_id,
+      config:DRAFT, summary:'Relayed draft', relay_id:'cloud:1'});
+    assert.equal(retryRelay.session.drafts.length, 1, 'a retry does not duplicate a draft');
+    assert.deepEqual(await owner.ws({type:'lovelace/config', url_path:'edit-fixture'}), BASELINE,
+      'relaying a draft does not apply it');
     const discarded = await owner.ws({type:'terrazzo/edit/discard', session_id:own.structuredContent.session_id});
     assert.equal(discarded.session.status, 'discarded');
 

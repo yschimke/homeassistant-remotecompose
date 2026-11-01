@@ -140,3 +140,40 @@ test('cross-origin browser can seed a card and create an anonymous handoff', { s
     await new Promise((resolve) => server.close(resolve));
   }
 });
+
+test('cross-origin browser can relay a dashboard draft without a Wasmo backend', { skip }, async () => {
+  const server = createServer((request, response) => response.end('<!doctype html><title>Dashboard handoff</title>'));
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  let browser;
+  try {
+    browser = await chromium.launch({
+      ...(process.env.CHROMIUM_EXECUTABLE ? { executablePath: process.env.CHROMIUM_EXECUTABLE } : {}),
+    });
+    const page = await browser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async (url) => {
+      const baseline = { views: [{ title: 'Home', cards: [{ type: 'tile', entity: 'light.kitchen' }] }] };
+      const create = await fetch(`${url}/api/studio/dashboard-sessions`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ request: 'Rename view', dashboard: baseline }),
+      });
+      const access = create.ok && await create.json();
+      if (!access) return { create: create.status };
+      const draft = structuredClone(baseline); draft.views[0].title = 'Living room';
+      const submit = await fetch(`${url}/api/studio/dashboard-session`, {
+        method: 'POST', headers: { Authorization: `Bearer ${access.agentToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ revision: 0, dashboard: draft, summary: 'Renamed view' }),
+      });
+      const read = await fetch(`${url}/api/studio/dashboard-session`, {
+        headers: { Authorization: `Bearer ${access.ownerToken}` },
+      });
+      const result = read.ok && await read.json();
+      const revoke = await fetch(`${url}/api/studio/dashboard-session`, {
+        method: 'DELETE', headers: { Authorization: `Bearer ${access.ownerToken}` },
+      });
+      return { create: create.status, submit: submit.status, read: read.status,
+        title: result?.dashboard?.views?.[0]?.title, revoke: revoke.status };
+    }, base.replace(/\/$/, ''));
+    assert.deepEqual(result, { create: 200, submit: 200, read: 200, title: 'Living room', revoke: 200 });
+  } finally { await browser?.close(); await new Promise((resolve) => server.close(resolve)); }
+});

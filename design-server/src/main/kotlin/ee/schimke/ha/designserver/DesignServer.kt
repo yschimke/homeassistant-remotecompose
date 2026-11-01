@@ -189,6 +189,7 @@ fun Application.designServer(
     dashboardStudioRoutes(uiBuilder, github)
     demoSite(File(System.getenv("WASM_SITE_DIR") ?: "/app/wasm"))
     cardStudioRoutes(holder, uiBuilder, github, made = userDesigns)
+    dashboardAgentRoutes()
     if (userDesigns != null && github != null) {
       userDesignRoutes(holder, userDesigns, uiBuilder, github)
       AppSignIn(github).routes(this)

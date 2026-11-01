@@ -692,6 +692,23 @@ class HaClient(
     }
   }
 
+  /** Put an externally prepared draft into an HA edit session as this signed-in user. */
+  suspend fun relayAgentDraft(
+    sessionId: String,
+    config: JsonObject,
+    summary: String,
+    relayId: String,
+  ): AgentEditSession {
+    val result =
+      runCommand("terrazzo/edit/submit") {
+        put("session_id", sessionId)
+        put("config", config)
+        put("summary", summary)
+        put("relay_id", relayId)
+      }
+    return json.decodeFromJsonElement(AgentEditSession.serializer(), result.getValue("session"))
+  }
+
   /** The Terrazzo integration's edit sessions on this Home Assistant, as this connection's user. */
   val agentEdits: AgentEdits =
     object : AgentEdits {
