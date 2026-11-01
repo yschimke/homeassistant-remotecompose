@@ -35,14 +35,14 @@ name: Preview Audit
 #                                 claude, claude-api, codex or off. Set it per repository
 #                                 to choose which credential pays for that repository's audits.
 #   PREVIEW_AUDIT_RECHECK_MODEL   jev only: the vision model that answers again what Jev
-#                                 is unsure of (default deepseek/deepseek-v4.1-flash;
-#                                 `none` turns the recheck off)
+#                                 is unsure of (default: the preview-audit-jev action's,
+#                                 xiaomi/mimo-v2.6-flash; `none` turns the recheck off)
 #   PREVIEW_AUDIT_CODEX_MODEL     default: the action's
 #   PREVIEW_AUDIT_OPENCODE_MODEL  default opencode/glm-5.3-flash
 #   PREVIEW_AUDIT_CLAUDE_MODEL    default: the action's
 #
 # The `jev` agent (OPENROUTER_API_KEY secret) is no coding agent: it runs
-# .github/scripts/jev-audit.py, which checks the changed previews with
+# compose-ai-tools' preview-audit-jev action, which checks the changed previews with
 # `compose-preview review --backend openrouter --checker jev --recheck-model <model>`.
 # Jev, OpenRouter's decision model, answers each rule from the render and the
 # source for fractions of a cent, and what it is unsure of goes to the recheck
@@ -300,10 +300,13 @@ jobs:
       - name: Audit with Jev
         if: env.AGENT == 'jev'
         timeout-minutes: 40
-        env:
-          COMPOSE_PREVIEW_OPENROUTER_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          RECHECK_MODEL: ${{ vars.PREVIEW_AUDIT_RECHECK_MODEL || 'deepseek/deepseek-v4.1-flash' }}
-        run: python3 .github/scripts/jev-audit.py
+        # compose-ai-tools' reusable Jev audit: the defaults (typesafe/jev-1.13, rechecked by
+        # xiaomi/mimo-v2.6-flash) are its own; .github/preview-audit/jev.json says which guidelines
+        # file covers which module.
+        uses: yschimke/compose-ai-tools/.github/actions/preview-audit-jev@v2.83.0
+        with:
+          openrouter-key: ${{ secrets.OPENROUTER_API_KEY }}
+          recheck-model: ${{ vars.PREVIEW_AUDIT_RECHECK_MODEL }}
 
       - name: Audit with Claude
         if: env.AGENT == 'claude' || env.AGENT == 'claude-api'
@@ -380,7 +383,7 @@ jobs:
           FINGERPRINT: ${{ needs.gate.outputs.fingerprint }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           OPENCODE_MODEL: ${{ vars.PREVIEW_AUDIT_OPENCODE_MODEL || 'opencode/glm-5.3-flash' }}
-          RECHECK_MODEL: ${{ vars.PREVIEW_AUDIT_RECHECK_MODEL || 'deepseek/deepseek-v4.1-flash' }}
+          RECHECK_MODEL: ${{ vars.PREVIEW_AUDIT_RECHECK_MODEL || 'xiaomi/mimo-v2.6-flash' }}
         run: |
           set -euo pipefail
           # Only a finished report records the fingerprint the gate skips on,
