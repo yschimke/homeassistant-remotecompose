@@ -130,10 +130,17 @@ TOOLS = [
 
 _SESSION_ID = {
     "type": "string",
-    "description": "The edit session's id, from the person's prompt or start_edit_session.",
+    "description": "The edit session's id, from list_edit_sessions, the person's prompt or start_edit_session.",
 }
 
 EDIT_TOOLS = [
+    {
+        "name": "list_edit_sessions",
+        "title": "Find open dashboard edits",
+        "description": "Lists open edit requests and notes on dashboards this user can see, newest first. Use get_edit_session to inspect a request before drafting.",
+        "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
+        "annotations": {"readOnlyHint": True, "openWorldHint": False},
+    },
     {
         "name": "start_edit_session",
         "title": "Start a dashboard edit",
@@ -353,6 +360,8 @@ async def call_tool(home, name, arguments):
         return summary(before)
     if name == "list_dashboards":
         return {"dashboards": home.dashboards()}
+    if name == "list_edit_sessions":
+        return {"sessions": home.edit_sessions()}
     if name == "start_edit_session":
         url_path = _optional_text(arguments, "url_path")
         return await home.start_edit_session(url_path or None, _optional_text(arguments, "request"))
@@ -411,7 +420,8 @@ async def handle(message, home, server_version):
                     f"Controls one private Home Assistant instance, '{home.name}', as the user "
                     "Terrazzo's MCP server is pinned to, with that user's permissions. Use "
                     "find_entities to resolve names to entity ids before reading or switching. "
-                    "To change a dashboard, work in an edit session (get_edit_session, "
+                    "To change a dashboard, find open requests with list_edit_sessions, then work "
+                    "in an edit session (get_edit_session, "
                     "get_card_guide, submit_draft): you submit drafts and a person applies them."
                 ),
             },

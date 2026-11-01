@@ -42,6 +42,9 @@ class FakeHome:
     def dashboards(self):
         return [{'url_path': None, 'title': 'Overview', 'terrazzo_url': 'http://ha/terrazzo?dashboard='}]
 
+    def edit_sessions(self):
+        return [{'session_id': 's1', 'notes': [{'text': 'Bigger, please'}]}]
+
     async def start_edit_session(self, url_path, request):
         self.started = (url_path, request)
         return {'session_id': 's1', 'url_path': url_path, 'request': request, 'status': 'open'}
@@ -138,6 +141,7 @@ class McpProtocolTest(unittest.TestCase):
 
     def test_edit_session_tools_pass_through_and_check_their_arguments(self):
         home = FakeHome()
+        self.assertEqual(call(home, 'list_edit_sessions')['structuredContent']['sessions'][0]['notes'][0]['text'], 'Bigger, please')
         started = call(home, 'start_edit_session', {'url_path': 'garden', 'request': 'Add soil'})
         self.assertEqual(started['structuredContent']['session_id'], 's1')
         self.assertEqual(home.started, ('garden', 'Add soil'))
