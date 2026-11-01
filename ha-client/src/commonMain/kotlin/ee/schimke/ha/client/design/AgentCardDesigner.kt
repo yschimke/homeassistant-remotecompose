@@ -250,7 +250,8 @@ fun validateCardDraft(original: JsonObject, candidate: JsonObject) {
       else -> emptySet()
     }
   val previousReads = references(originalNodes)
-  require(previousReads.isEmpty() || references(nodes).any { it in previousReads }) {
+  val cardBindings = originalState.keys.filterNot { it.startsWith("HA:") }.toSet()
+  require(previousReads.isEmpty() || references(nodes).any { it in cardBindings }) {
     "The draft dropped every live card binding."
   }
   val visited = mutableSetOf<String>()

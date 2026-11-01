@@ -182,6 +182,21 @@ class CardStudioTest {
   }
 
   @Test
+  fun draftCanUseAnExistingCardBindingNotReadByTheSeedLayout() {
+    val state = document.getValue("stateVariables").jsonObject
+    val bindings = JsonObject(state + ("sensor.s0.is_on" to state.getValue("sensor.s0.state")))
+    val extended = JsonObject(document + ("stateVariables" to bindings))
+    val redesigned =
+      Json.parseToJsonElement(
+          extended
+            .toString()
+            .replace("\"variable\":\"sensor.s0.state\"", "\"variable\":\"sensor.s0.is_on\"")
+        )
+        .jsonObject
+    validateCardDraft(extended, redesigned)
+  }
+
+  @Test
   fun draftCanAddOnlyKnownSharedValuesWithTheirDeclaredTypes() {
     val original = document.getValue("stateVariables").jsonObject
     val sun =
