@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.ImageBitmap
 import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.design.UsageSource
+import ee.schimke.ha.client.design.cardFingerprint
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -31,6 +32,7 @@ internal fun AuthenticatedCard(
   // A preview (an agent's draft): no control may reach Home Assistant, not even ones that call the
   // client themselves.
   readOnly: Boolean = false,
+  designSelections: Map<String, String> = emptyMap(),
 ) {
   DashboardCardTheme(style, dark) {
     CardCluster(card, snapshot) { outer ->
@@ -111,6 +113,7 @@ internal fun AuthenticatedCard(
               onToggle,
               onMoreInfo,
               designCache = designCache,
+              designId = designSelections[cardFingerprint(leaf)],
               requireExactDesign = true,
               onSource = { AppCardUsage.record(leaf, leafStyle, it) },
               fallback = fallback,

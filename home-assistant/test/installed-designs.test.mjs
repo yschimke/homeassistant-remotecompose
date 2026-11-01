@@ -114,3 +114,21 @@ test('a one-time link signs a browser in to the add-on and opens a design page',
   assert.match(opened.headers.get('set-cookie'), /^ingress_session=[^;]+;.*Path=\/api\/hassio_ingress\//i);
   assert.equal((await fetch(`${base}${link.result.url}`, {redirect: 'manual'})).status, 410, 'once');
 });
+
+test('a signed-in user can select and clear a card design', async () => {
+  const tokens = await signIn('panel', 'fixture-only-password', 'Test panel user');
+  const card = 'a'.repeat(64);
+  const set = await command(tokens.access_token,
+    {type: 'terrazzo/design_selections/set', card, design_id: 'user:garage'});
+  assert.equal(set.success, true);
+  assert.equal(set.result.cards[card], 'user:garage');
+  const read = await command(tokens.access_token, {type: 'terrazzo/design_selections/get'});
+  assert.equal(read.result.cards[card], 'user:garage');
+  const bad = await command(tokens.access_token,
+    {type: 'terrazzo/design_selections/set', card: 'bad', design_id: 'user:garage'});
+  assert.equal(bad.success, false);
+  const clear = await command(tokens.access_token,
+    {type: 'terrazzo/design_selections/set', card, design_id: null});
+  assert.equal(clear.success, true);
+  assert.equal(clear.result.cards[card], undefined);
+});

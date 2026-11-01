@@ -562,6 +562,23 @@ class HaClient(
    */
   suspend fun terrazzoDesignServer(): JsonObject = runCommand("terrazzo/design_server")
 
+  /** This Home Assistant user's per-card design selections, shared across their devices. */
+  suspend fun terrazzoDesignSelections(): Map<String, String> =
+    (runCommand("terrazzo/design_selections/get")["cards"] as? JsonObject)
+      .orEmpty()
+      .mapNotNull { (key, value) ->
+        (value as? JsonPrimitive)?.contentOrNull?.let { key to it }
+      }
+      .toMap()
+
+  /** Select a published design for a card fingerprint, or remove the shared selection. */
+  suspend fun setTerrazzoDesignSelection(card: String, designId: String?) {
+    runCommand("terrazzo/design_selections/set") {
+      put("card", card)
+      put("design_id", designId)
+    }
+  }
+
   /**
    * A one-time link, on this Home Assistant, that signs a browser in to the design add-on and opens
    * [path] there (a page its API named, such as `/ui-builder/<id>`). Good for a minute. Admins

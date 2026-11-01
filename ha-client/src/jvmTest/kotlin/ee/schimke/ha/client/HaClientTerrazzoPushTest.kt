@@ -145,4 +145,25 @@ class HaClientTerrazzoPushTest {
     assertEquals("terrazzo/design_server/open", commands[1].string("type"))
     assertEquals("/ui-builder/card-x", commands[1].string("path"))
   }
+
+  @Test
+  fun cardSelectionsAreReadAndChangedAsTheAuthenticatedUser() {
+    val commands = mutableListOf<JsonObject>()
+    val fingerprint = "a".repeat(64)
+    fakeHa(
+      commands,
+      { id ->
+        """{"id":$id,"type":"result","success":true,"result":{"cards":{"$fingerprint":"user:door"}}}"""
+      },
+    ) { client ->
+      assertEquals(mapOf(fingerprint to "user:door"), client.terrazzoDesignSelections())
+      client.setTerrazzoDesignSelection(fingerprint, "user:door")
+      client.setTerrazzoDesignSelection(fingerprint, null)
+    }
+    assertEquals("terrazzo/design_selections/get", commands[0].string("type"))
+    assertEquals("terrazzo/design_selections/set", commands[1].string("type"))
+    assertEquals(fingerprint, commands[1].string("card"))
+    assertEquals("user:door", commands[1].string("design_id"))
+    assertEquals(kotlinx.serialization.json.JsonNull, commands[2]["design_id"])
+  }
 }

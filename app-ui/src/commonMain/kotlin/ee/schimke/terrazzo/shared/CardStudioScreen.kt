@@ -82,6 +82,8 @@ class HomeDesignServer(
   val link: suspend (path: String) -> String?,
 )
 
+internal class CardSelectionException(message: String) : Exception(message)
+
 /**
  * Shared phone/desktop authoring surface, as a wizard: sign in, choose how to design, design, then
  * use the design on the card. Each answered step folds to one line; [defaults] pre-answer the ones
@@ -122,7 +124,7 @@ fun CardStudioScreen(
    * Called with a design published privately for this card (its skin id): the host downloads it and
    * switches this card to it. Null where the host can't, which hides publishing.
    */
-  onPublished: ((designId: String) -> Unit)? = null,
+  onPublished: (suspend (designId: String) -> Unit)? = null,
   /**
    * This Home Assistant's own design server, used instead of [initialServerUrl] when it has one.
    */
@@ -215,7 +217,8 @@ fun CardStudioScreen(
         message =
           when (e) {
             is CardStudioException,
-            is CardPublishException -> e.message
+            is CardPublishException,
+            is CardSelectionException -> e.message
             is IllegalArgumentException ->
               "The draft or connection settings are invalid. Check the HTTPS address and try again."
             else ->

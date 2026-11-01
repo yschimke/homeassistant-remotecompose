@@ -45,6 +45,7 @@ import ee.schimke.ha.client.UnsupportedDashboardException
 import ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits
 import ee.schimke.ha.client.dashboard.DashboardEditSession
 import ee.schimke.ha.client.dashboard.toCardConfig
+import ee.schimke.ha.client.design.cardFingerprint
 import ee.schimke.ha.client.listRenderableDashboards
 import ee.schimke.ha.client.stateSnapshots
 import ee.schimke.ha.model.*
@@ -911,12 +912,27 @@ private fun LiveDashboard(
   var dashboard by
     remember(connection, path, refreshGeneration) { mutableStateOf<Dashboard?>(null) }
   var error by remember(connection, path) { mutableStateOf<String?>(null) }
+  var selections by remember(connection) { mutableStateOf<Map<String, String>?>(null) }
+  var designGeneration by remember(connection) { mutableIntStateOf(0) }
   val scope = rememberCoroutineScope()
+  LaunchedEffect(connection, privateDesignServer) {
+    if (privateDesignServer) {
+      try {
+        selections = connection.client.terrazzoDesignSelections()
+      } catch (e: CancellationException) {
+        throw e
+      } catch (_: Exception) {
+        selections = null
+      }
+    } else selections = null
+  }
   // Keyed on the configured server so changing the setting reloads designs from it.
   val designCache =
-    remember(connection, path, designServer) {
+    remember(connection, path, designServer, designGeneration, privateDesignServer) {
       DashboardLoadCache(scope) { key: LibraryDesignKey ->
-        loadLibraryDesign(key, designServer, AppCardUsage.userAgent?.header)
+        if (key.designId != null && privateDesignServer)
+          loadSelectedDesign(key, connection.config.baseUrl, token = { connection.accessToken() })
+        else loadLibraryDesign(key, designServer, AppCardUsage.userAgent?.header)
       }
     }
   val pictureCache =
@@ -1005,6 +1021,41 @@ private fun LiveDashboard(
       homeServer = homeServer,
       openEditorInBrowser = privateDesignServer,
       refreshSnapshot = { connection.client.snapshotWithDevices() },
+      designKey = exactDesignKey(editing, shown, cardStyle, dark),
+      onPublished =
+        if (selections != null)
+          { id ->
+            val fingerprint = cardFingerprint(editing)
+            val exact = checkNotNull(exactDesignKey(editing, shown, cardStyle, dark))
+            val entity =
+              ee.schimke.ha.design.CardDesignSlots.slotEntries(editing)
+                .orEmpty()
+                .firstOrNull()
+                ?.entityId
+            val candidate =
+              LibraryDesignKey(
+                anonymousTemplateCard(editing),
+                cardStyle,
+                dark,
+                exact = exact,
+                designId = id,
+                device = entity?.let(shown.devices::get),
+              )
+            val bytes =
+              loadSelectedDesign(
+                candidate,
+                connection.config.baseUrl,
+                token = { connection.accessToken() },
+              )
+            if (bytes == null || !canBindWithCmp(bytes, exactTemplateBindings(editing, shown)))
+              throw CardSelectionException(
+                "The design was published but could not be loaded for this card. Try publishing again."
+              )
+            connection.client.setTerrazzoDesignSelection(fingerprint, id)
+            selections = selections.orEmpty() + (fingerprint to id)
+            designGeneration++
+          }
+        else null,
     ) {
       NativeCard(editing, shown) {}
     }
@@ -1029,6 +1080,7 @@ private fun LiveDashboard(
               pictureCache,
               cardStyle,
               dark,
+              designSelections = selections.orEmpty(),
               onMoreInfo = ::moreInfo,
               onAction = ::dispatch,
               onToggle = { entityId ->
@@ -1052,8 +1104,28 @@ private fun LiveDashboard(
                 )
               },
             )
-            if (customizing)
+            if (customizing) {
               TextButton(onClick = { designCard = card }) { Text("Design or fix this card") }
+              val fingerprint = cardFingerprint(card)
+              if (fingerprint in selections.orEmpty()) {
+                TextButton(
+                  onClick = {
+                    scope.launch {
+                      try {
+                        connection.client.setTerrazzoDesignSelection(fingerprint, null)
+                        selections = selections.orEmpty() - fingerprint
+                      } catch (e: CancellationException) {
+                        throw e
+                      } catch (_: Exception) {
+                        error = "Could not restore this card's default design. Try again."
+                      }
+                    }
+                  }
+                ) {
+                  Text("Use default design")
+                }
+              }
+            }
           }
         }
       }

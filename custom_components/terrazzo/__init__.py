@@ -31,7 +31,7 @@ from .const import (
     STATIC_URL,
     clean_options,
 )
-from . import design_server, edits, push, web_origins
+from . import design_selections, design_server, edits, push, web_origins
 from .mcp_view import TerrazzoMcpMetadataView, TerrazzoMcpView
 
 CONFIG_SCHEMA = vol.Schema(
@@ -105,6 +105,9 @@ async def async_setup_entry(hass, entry):
     if not state.get("designs"):
         design_server.async_register(hass)
         state["designs"] = True
+    if "design_selections" not in state:
+        state["design_selections"] = await design_selections.DesignSelections.async_load(hass)
+        design_selections.async_register(hass)
     # A Terrazzo page on another site asks for its origin to be allowed (web_origins.py).
     if not state.get("web_origins"):
         web_origins.async_register(hass)

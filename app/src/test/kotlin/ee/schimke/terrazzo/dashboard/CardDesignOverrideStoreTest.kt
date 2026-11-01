@@ -58,4 +58,42 @@ class CardDesignOverrideStoreTest {
       CardDesignOverrideStore(file).overrides.value.forCard(card),
     )
   }
+
+  @Test
+  fun sharedSelectionOverridesTheDesignWithoutPersistingAnotherUsersChoice() = runBlocking {
+    val store = CardDesignOverrideStore(file)
+    val owner = Any()
+    store.set(
+      CardDesignScope.Card,
+      card,
+      CardDesignOverride(cardStyle = "lcd", designId = "user:local"),
+    )
+    store.beginShared(owner)
+    store.setShared(owner, mapOf(cardFingerprint(card) to "user:shared"))
+    assertEquals(
+      CardDesignOverride(cardStyle = "lcd", designId = "user:shared"),
+      store.overrides.value.forCard(card),
+    )
+    store.setDesign(cardFingerprint(card), "user:new-local")
+    assertEquals("user:shared", store.overrides.value.forCard(card)?.designId)
+    assertEquals(
+      "user:new-local",
+      CardDesignOverrideStore(file).overrides.value.forCard(card)?.designId,
+    )
+    store.endShared(owner)
+    assertEquals("user:new-local", store.overrides.value.forCard(card)?.designId)
+  }
+
+  @Test
+  fun anOldSessionCannotOverwriteOrClearTheNewUsersChoices() = runBlocking {
+    val store = CardDesignOverrideStore(file)
+    val old = Any()
+    val current = Any()
+    store.beginShared(old)
+    store.beginShared(current)
+    store.setShared(current, mapOf(cardFingerprint(card) to "user:new"))
+    store.setShared(old, mapOf(cardFingerprint(card) to "user:old"))
+    store.endShared(old)
+    assertEquals("user:new", store.overrides.value.forCard(card)?.designId)
+  }
 }
