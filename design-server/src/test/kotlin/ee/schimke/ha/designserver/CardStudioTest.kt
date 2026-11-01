@@ -109,6 +109,7 @@ class CardStudioTest {
           )
         }
       assertTrue(mcpRead.bodyAsText().contains("Make it brighter"))
+      assertTrue(mcpRead.bodyAsText().contains("HA:sun.sun.elevation"))
       val read =
         client.get("/api/studio/agent-session") {
           header(HttpHeaders.Authorization, "Bearer $agent")

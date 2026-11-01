@@ -182,6 +182,58 @@ class CardStudioTest {
   }
 
   @Test
+  fun draftCanAddOnlyKnownSharedValuesWithTheirDeclaredTypes() {
+    val original = document.getValue("stateVariables").jsonObject
+    val sun =
+      Json.parseToJsonElement(
+        """{"type":"value","valueType":"float","nullable":false,"initialValue":45,"persistence":"design"}"""
+      )
+    fun with(name: String, value: JsonElement) =
+      JsonObject(document + ("stateVariables" to JsonObject(original + (name to value))))
+    validateCardDraft(document, with("HA:sun.sun.elevation", sun))
+    assertFailsWith<IllegalArgumentException> {
+      validateCardDraft(document, with("HA:person.private.state", sun))
+    }
+    assertFailsWith<IllegalArgumentException> {
+      validateCardDraft(
+        document,
+        with(
+          "HA:sun.sun.elevation",
+          JsonObject(sun.jsonObject + ("valueType" to JsonPrimitive("bool"))),
+        ),
+      )
+    }
+  }
+
+  @Test
+  fun draftMayStopReadingAnUnneededValueButMustKeepALiveCardBinding() {
+    val state = document.getValue("stateVariables").jsonObject
+    val nodes = document.getValue("nodes").jsonObject
+    val root = nodes.getValue("root").jsonObject
+    val original =
+      JsonObject(
+        document +
+          ("stateVariables" to
+            JsonObject(state + ("sensor.s0.name" to state.getValue("sensor.s0.state")))) +
+          ("nodes" to
+            JsonObject(
+              nodes +
+                ("root" to
+                  JsonObject(
+                    root + ("slots" to Json.parseToJsonElement("""{"content":["text","name"]}"""))
+                  )) +
+                ("name" to
+                  Json.parseToJsonElement(
+                    """{"id":"name","componentId":"ha-cards/remote-text","properties":{"text":{"type":"state","variable":"sensor.s0.name"}},"slots":{}}"""
+                  ))
+            ))
+      )
+    val simplified =
+      JsonObject(document + ("stateVariables" to original.getValue("stateVariables")))
+    validateCardDraft(original, simplified)
+  }
+
+  @Test
   fun serverSettingsAcceptLibraryUrlAndRejectCredentialsOrInsecureUrls() {
     assertEquals("https://designs.test", studioServerUrl("https://designs.test/designs/v1/"))
     for (url in

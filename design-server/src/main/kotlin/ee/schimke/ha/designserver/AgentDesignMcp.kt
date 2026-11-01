@@ -1,5 +1,6 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.ha.design.HaSharedValues
 import kotlinx.serialization.json.*
 
 /** A small stateless MCP surface scoped by the agent capability, never an HA identity. */
@@ -90,6 +91,35 @@ object AgentDesignMcp {
                 put("instruction", session.instruction)
                 put("document", session.document)
                 put("revision", session.revision)
+                putJsonArray("sharedValues") {
+                  HaSharedValues.values.forEach { shared ->
+                    add(
+                      buildJsonObject {
+                        put("name", shared.name)
+                        put("description", shared.description)
+                        putJsonObject("definition") {
+                          put("type", "value")
+                          when (shared.kind) {
+                            HaSharedValues.Kind.Text -> {
+                              put("valueType", "string")
+                              put("initialValue", shared.daytime as String)
+                            }
+                            HaSharedValues.Kind.Bool -> {
+                              put("valueType", "bool")
+                              put("initialValue", shared.daytime as Boolean)
+                            }
+                            HaSharedValues.Kind.Float -> {
+                              put("valueType", "float")
+                              put("initialValue", (shared.daytime as Number).toFloat())
+                            }
+                          }
+                          put("nullable", false)
+                          put("persistence", "design")
+                        }
+                      }
+                    )
+                  }
+                }
               }
             }
             "submit_card_draft" -> {

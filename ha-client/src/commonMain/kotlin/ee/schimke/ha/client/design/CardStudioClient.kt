@@ -311,10 +311,9 @@ fun refreshCardDraft(document: JsonObject, freshSeed: JsonObject): JsonObject {
   val oldState = document["stateVariables"]!!.jsonObject
   val freshState = freshSeed["stateVariables"]!!.jsonObject
   require(
-    oldState.keys == freshState.keys &&
-      oldState.all { (name, value) ->
-        value.jsonObject - "initialValue" == freshState[name]!!.jsonObject - "initialValue"
-      }
+    freshState.all { (name, value) ->
+      oldState[name]?.jsonObject?.minus("initialValue") == value.jsonObject - "initialValue"
+    }
   ) {
     "The card's bindings changed. Reset the draft to use its new contract."
   }
@@ -324,7 +323,13 @@ fun refreshCardDraft(document: JsonObject, freshSeed: JsonObject): JsonObject {
     "The card's catalog changed. Reset the draft to use the new catalog."
   }
   val refreshed =
-    JsonObject(document + mapOf("id" to freshSeed["id"]!!, "stateVariables" to freshState))
+    JsonObject(
+      document +
+        mapOf(
+          "id" to freshSeed["id"]!!,
+          "stateVariables" to JsonObject(freshState + (oldState - freshState.keys)),
+        )
+    )
   validateCardDraft(freshSeed, refreshed)
   return refreshed
 }
