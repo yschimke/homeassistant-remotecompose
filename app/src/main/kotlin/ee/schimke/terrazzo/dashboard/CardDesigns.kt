@@ -264,9 +264,9 @@ val LocalCardDesignOverrides = staticCompositionLocalOf { CardDesignOverrides() 
  * not fetched yet falls through to that same order. Null when the card has no template shape (an
  * unsupported type or config, or an entity not loaded yet), or when the server's design for its key
  * isn't cached yet (it is then fetched by key: [CardDesignGeneration]); those cards capture through
- * their converter.
- * A selected custom card that uses a different card's key as its library anchor never falls back
- * to that anchor's generic design: it renders through its own converter until its selection loads.
+ * their converter. A selected custom card that uses a different card's key as its library anchor
+ * never falls back to that anchor's generic design: it renders through its own converter until its
+ * selection loads.
  *
  * A dashboard card counts towards template usage ([CardUsage]); [recordUsage] false is for samples
  * that aren't the user's cards (the card style picker).

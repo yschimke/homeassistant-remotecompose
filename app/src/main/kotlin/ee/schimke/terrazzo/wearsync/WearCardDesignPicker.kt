@@ -20,9 +20,8 @@ import ee.schimke.terrazzo.wearsync.proto.WearSlotDesign
  * same design as the dashboard, rooted on the Wear container. Every pinned card gets them: the
  * watch chooses which card a widget shows, from the cards it was sent. The watch is dark, so it is
  * the card's dark design. A card or container the server has no Wear design for is sent its phone
- * template, adapted to the Wear frame by the watch.
- * A custom card using a projected library key waits for its selected design instead of receiving
- * the projected card's generic design.
+ * template, adapted to the Wear frame by the watch. A custom card using a projected library key
+ * waits for its selected design instead of receiving the projected card's generic design.
  *
  * Empty while no design server is configured or its designs haven't loaded.
  *
