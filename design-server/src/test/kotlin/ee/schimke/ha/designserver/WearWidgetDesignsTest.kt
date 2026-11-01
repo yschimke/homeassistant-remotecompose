@@ -70,7 +70,20 @@ class WearWidgetDesignsTest {
         userTemplateProblem(
           bytes,
           DecodedTemplate(
-            listOf(Binding("cover.s0.is_on", "boolean")),
+            listOf(Binding("cover.s0.state", "text")),
+            0,
+            emptyMap(),
+            emptyList(),
+            null,
+          ),
+          RcTargetProfiles.WEAR_WIDGETS,
+        )
+      )
+      assertNotNull(
+        userTemplateProblem(
+          bytes,
+          DecodedTemplate(
+            listOf(Binding("cover.s1.state", "text")),
             0,
             emptyMap(),
             emptyList(),

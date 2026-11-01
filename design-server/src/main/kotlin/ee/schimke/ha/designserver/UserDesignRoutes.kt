@@ -122,6 +122,11 @@ fun userTemplateProblem(
       return "it uses something the app can't play: ${it.message}"
     }
   val provided = base.bindings.map { it.name }.toSet()
+  // Hosts push these standard values for every entity slot, even when the original template did
+  // not read them. Limit them to slots already present in the base template.
+  val slots = provided.mapNotNull { SLOT_BINDING.find(it)?.groupValues?.get(1) }.toSet()
+  val standard =
+    slots.flatMap { slot -> SLOT_VALUE_TYPES.map { (field, type) -> "$slot.$field" to type } }.toMap()
   val read = document.namedVariables.map { it.name.removePrefix(DesignLibrary.USER_PREFIX) }
   val unshared =
     read.filter { HaSharedValues.isShared(it) && HaSharedValues.valueOf(it) == null }.distinct()
@@ -138,9 +143,17 @@ fun userTemplateProblem(
       val value = HaSharedValues.valueOf(it.name)!!
       return "it reads ${value.name} as the wrong type: it's a ${value.kind.name.lowercase()}"
     }
+  document.namedVariables
+    .firstOrNull { variable ->
+      val type = standard[variable.name.removePrefix(DesignLibrary.USER_PREFIX)]
+      type != null && type != variable.type
+    }
+    ?.let {
+      return "it reads ${it.name.removePrefix(DesignLibrary.USER_PREFIX)} as the wrong type"
+    }
   val unknown =
     read
-      .filter { '.' in it && it !in provided }
+      .filter { '.' in it && it !in provided && it !in standard }
       .filterNot { HaSharedValues.valueOf(it) != null }
       .filterNot {
         profile == RcTargetProfiles.WEAR_WIDGETS &&
@@ -156,6 +169,20 @@ fun userTemplateProblem(
   }
   return null
 }
+
+private val SLOT_BINDING = Regex("^([a-z_]+\\.s[0-9]+)\\.")
+private val SLOT_VALUE_TYPES =
+  mapOf(
+    "state" to RcNamedVariable.STRING_TYPE,
+    "name" to RcNamedVariable.STRING_TYPE,
+    "is_on" to RcNamedVariable.INT_TYPE,
+    "is_available" to RcNamedVariable.INT_TYPE,
+    "state_int" to RcNamedVariable.INT_TYPE,
+    "status" to RcNamedVariable.INT_TYPE,
+    "last_changed" to RcNamedVariable.INT_TYPE,
+    "last_changed_offset" to RcNamedVariable.INT_TYPE,
+    "numeric_state" to RcNamedVariable.FLOAT_TYPE,
+  )
 
 /**
  * Whether [bytes] reads the host's ambient flag ([RcAmbientValue]), so it draws its ambient look on

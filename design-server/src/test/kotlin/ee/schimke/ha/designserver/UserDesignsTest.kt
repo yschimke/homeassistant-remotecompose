@@ -91,6 +91,14 @@ class UserDesignsTest {
     )
   }
 
+  @Test
+  fun standardSlotValuesMustUseTheTypeTheHostPushes() {
+    val base =
+      DecodedTemplate(listOf(Binding("cover.s0.state", "text")), 0, emptyMap(), emptyList(), null)
+    val problem = userTemplateProblem(wearSmallNaming("cover.s0.is_on"), base)
+    assertTrue(problem.orEmpty().contains("cover.s0.is_on as the wrong type"), problem)
+  }
+
   /** The designs the card studio opened in UI Builder. */
   private val opened = mutableListOf<String>()
 
