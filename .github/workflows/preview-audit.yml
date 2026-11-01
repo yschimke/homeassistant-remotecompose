@@ -3,9 +3,12 @@ name: Preview Audit
 # Design-guideline audit of the previews a PR changed, judged by an agent.
 #
 # Runs after Compose Preview finishes on a PR, and only when:
-#   - an agent credential is configured: OPENCODE_API_KEY (OpenCode Zen) or
-#     CLAUDE_CODE_OAUTH_TOKEN (the same subscription token claude.yml uses).
-#     Neither set: the workflow skips with a notice and costs nothing;
+#   - an agent credential is configured: OPENCODE_API_KEY (OpenCode Zen),
+#     CLAUDE_CODE_OAUTH_TOKEN (the same subscription token claude.yml uses),
+#     ANTHROPIC_API_KEY (Claude billed to the API organization, so API or
+#     promotional credits pay for it) or OPENAI_API_KEY (Codex, billed to the
+#     OpenAI API organization). None set: the workflow skips with a notice and
+#     costs nothing;
 #   - the PR comes from a branch of this repository and was not opened by a
 #     bot (dependency bumps don't get design audits);
 #   - the sticky `<!-- preview-diff -->` comment from this run lists Changed or
@@ -20,7 +23,11 @@ name: Preview Audit
 # are advisory model output, never a merge gate.
 #
 # Repository variables (all optional):
-#   PREVIEW_AUDIT_AGENT           auto (default: OpenCode, then Claude), claude, opencode or off
+#   PREVIEW_AUDIT_AGENT           auto (default: OpenCode, then Claude subscription, then
+#                                 Claude API, then Codex), opencode, claude, claude-api,
+#                                 codex or off. Set it per repository to choose which
+#                                 credential pays for that repository's audits.
+#   PREVIEW_AUDIT_CODEX_MODEL     default: the action's
 #   PREVIEW_AUDIT_OPENCODE_MODEL  default opencode/glm-5.3-flash
 #   PREVIEW_AUDIT_CLAUDE_MODEL    default: the action's
 # Manual run: Actions -> Preview Audit -> Run workflow with a PR number. It
@@ -70,6 +77,8 @@ jobs:
           RUN_CREATED: ${{ github.event.workflow_run.created_at }}
           HAS_OPENCODE: ${{ secrets.OPENCODE_API_KEY != '' }}
           HAS_CLAUDE: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+          HAS_CLAUDE_API: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+          HAS_CODEX: ${{ secrets.OPENAI_API_KEY != '' }}
           PREFERRED: ${{ vars.PREVIEW_AUDIT_AGENT }}
         run: |
           set -euo pipefail
@@ -79,10 +88,14 @@ jobs:
             off) skip "PREVIEW_AUDIT_AGENT is off" ;;
             opencode) [ "$HAS_OPENCODE" = true ] && agent=opencode || skip "PREVIEW_AUDIT_AGENT=opencode but no OPENCODE_API_KEY secret" ;;
             claude) [ "$HAS_CLAUDE" = true ] && agent=claude || skip "PREVIEW_AUDIT_AGENT=claude but no CLAUDE_CODE_OAUTH_TOKEN secret" ;;
+            claude-api) [ "$HAS_CLAUDE_API" = true ] && agent=claude-api || skip "PREVIEW_AUDIT_AGENT=claude-api but no ANTHROPIC_API_KEY secret" ;;
+            codex) [ "$HAS_CODEX" = true ] && agent=codex || skip "PREVIEW_AUDIT_AGENT=codex but no OPENAI_API_KEY secret" ;;
             *)
               if [ "$HAS_OPENCODE" = true ]; then agent=opencode
               elif [ "$HAS_CLAUDE" = true ]; then agent=claude
-              else skip "no OPENCODE_API_KEY or CLAUDE_CODE_OAUTH_TOKEN secret"; fi ;;
+              elif [ "$HAS_CLAUDE_API" = true ]; then agent=claude-api
+              elif [ "$HAS_CODEX" = true ]; then agent=codex
+              else skip "no OPENCODE_API_KEY, CLAUDE_CODE_OAUTH_TOKEN, ANTHROPIC_API_KEY or OPENAI_API_KEY secret"; fi ;;
           esac
 
           if [ "$EVENT" = workflow_dispatch ]; then
@@ -176,11 +189,38 @@ jobs:
           title=$(gh api "repos/$REPO/pulls/$PR" --jq .title)
           printf '# PR #%s\n\nTitle: %s\nHead: %s\n' "$PR" "$title" "$SHA" > _audit/context.md
 
+      # Discovery is the slow, cold part (a Gradle configure + compile per
+      # module). Done here, before the agent starts, it can't outlive the
+      # agent's shell timeout: runs that left it to the agent ended after ~2
+      # minutes with Gradle still going and no report written. The agent reads
+      # these files instead of running `compose-preview show` itself.
+      - name: Discover the changed modules' previews
+        timeout-minutes: 30
+        run: |
+          set -uo pipefail
+          modules=$(grep -oE '^\*\*`[^`]+`\*\* \([A-Za-z0-9_.-]+\)' _audit/preview-diff.md \
+            | sed -E 's/.*\(([^)]+)\)$/\1/' | sort -u)
+          for m in $modules; do
+            echo "::group::compose-preview show --module $m"
+            compose-preview show --module "$m" --json > "_audit/$m.show.json" \
+              || { echo "::warning::compose-preview show failed for $m"; rm -f "_audit/$m.show.json"; }
+            echo "::endgroup::"
+          done
+
       - name: Audit with Claude
-        if: env.AGENT == 'claude'
+        if: env.AGENT == 'claude' || env.AGENT == 'claude-api'
+        env:
+          # Keep Gradle in the foreground. With a backgrounded command the agent
+          # ends its turn to wait, which ends a headless session with no report.
+          CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: '1'
+          BASH_DEFAULT_TIMEOUT_MS: '1200000'
+          BASH_MAX_TIMEOUT_MS: '2400000'
         uses: anthropics/claude-code-action@d535f5172dec02b204866b393d6b20b9b2aaf98d # v1.0.266
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Exactly one credential, chosen by the gate: the subscription token,
+          # or the API key (billed to the API organization's credits).
+          claude_code_oauth_token: ${{ env.AGENT == 'claude' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
+          anthropic_api_key: ${{ env.AGENT == 'claude-api' && secrets.ANTHROPIC_API_KEY || '' }}
           prompt: Read .github/preview-audit/PROMPT.md and follow it exactly.
           settings: |
             {
@@ -190,7 +230,7 @@ jobs:
           claude_args: >-
             --max-turns 120
             ${{ vars.PREVIEW_AUDIT_CLAUDE_MODEL && format('--model {0}', vars.PREVIEW_AUDIT_CLAUDE_MODEL) || '' }}
-            --allowedTools "Bash(compose-preview:*),Bash(./gradlew:*),Bash(ls:*),Bash(cat:*),Bash(jq:*),Read,Write,Edit,Glob,Grep"
+            --allowedTools "Bash(compose-preview:*),Bash(./gradlew:*),Bash(ls:*),Bash(cat:*),Bash(jq:*),Bash(head:*),Bash(wc:*),Bash(mkdir:*),Read,Write,Edit,Glob,Grep"
 
       - name: Audit with OpenCode
         if: env.AGENT == 'opencode'
@@ -217,6 +257,22 @@ jobs:
           npm install -g opencode-ai@1.19.5
           opencode run --model "$MODEL" "Read .github/preview-audit/PROMPT.md and follow it exactly."
 
+      - name: Audit with Codex
+        if: env.AGENT == 'codex'
+        timeout-minutes: 45
+        uses: openai/codex-action@10cb888d2ed3b99867f7e7ccff174a861a75aeb6 # v1.9
+        with:
+          # Held by the action's local proxy and passed on stdin, so Codex
+          # itself never sees the key.
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt: Read .github/preview-audit/PROMPT.md and follow it exactly.
+          model: ${{ vars.PREVIEW_AUDIT_CODEX_MODEL }}
+          # Gradle needs the network and its daemon, which the workspace-write
+          # sandbox blocks. The checkout has no persisted credentials and the
+          # job holds no write token in the environment; drop-sudo (the
+          # default safety strategy) still applies.
+          sandbox: danger-full-access
+
       - name: Post the audit comment
         if: always()
         env:
@@ -235,6 +291,8 @@ jobs:
           judge="$AGENT"
           [ "$AGENT" = opencode ] && judge="OpenCode ($OPENCODE_MODEL)"
           [ "$AGENT" = claude ] && judge="Claude"
+          [ "$AGENT" = claude-api ] && judge="Claude (API)"
+          [ "$AGENT" = codex ] && judge="Codex"
           {
             echo "$marker"
             if [ -s _audit/report.md ]; then
@@ -243,6 +301,19 @@ jobs:
               echo "## Preview audit"
               echo
               echo "The audit did not produce a report. See [the run]($RUN_URL)."
+              echo
+              echo "How far it got:"
+              echo
+              found=0
+              for f in _audit/*.show.json _audit/*.ids; do
+                [ -e "$f" ] || continue
+                found=1
+                echo "- \`$f\` ($(wc -l < "$f") lines)"
+              done
+              requests=$( (ls -d */build/compose-previews/review/*/ 2>/dev/null || true) | wc -l)
+              replies=$( (ls */build/compose-previews/review/*/reply.json 2>/dev/null || true) | wc -l)
+              [ "$requests" -gt 0 ] && { found=1; echo "- review requests: $requests, replies written: $replies"; }
+              [ "$found" = 1 ] || echo "- nothing past the staged inputs"
             fi
             echo
             echo "---"
