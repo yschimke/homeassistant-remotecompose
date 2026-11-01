@@ -37,8 +37,22 @@ internal fun wearCardDesigns(
     val cardStyle = override?.cardStyle?.let(HaUberTheme::byId) ?: choice.cardStyle
     val design = CardDesignTemplates.designCard(card, snapshot)
     val key =
-      CardDesignTemplates.keyFor(design, snapshot, choice.style, dark = true, cardStyle = cardStyle)
-        ?: return@flatMap emptyList()
+      (if (override?.designId == null)
+        CardDesignTemplates.keyFor(
+          design,
+          snapshot,
+          choice.style,
+          dark = true,
+          cardStyle = cardStyle,
+        )
+      else
+        CardDesignTemplates.selectedDesignKeyFor(
+          card,
+          snapshot,
+          choice.style,
+          dark = true,
+          cardStyle = cardStyle,
+        )) ?: return@flatMap emptyList()
     val variants = listOf(key.copy(variant = override?.variant ?: designs.variant), key).distinct()
     val device = cardDevice(design, snapshot)
     DesignKey.WEAR_CONTAINERS.mapNotNull { container ->

@@ -73,6 +73,38 @@ object CardDesignTemplates {
   }
 
   /**
+   * A library anchor for an explicitly selected design when a card has no template of its own. The
+   * selected design still plays against the original card's slot bindings and actions. Limit this
+   * projection to one entity: a tile cannot describe a multi-entity card's binding contract.
+   */
+  fun selectedDesignKeyFor(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    style: ThemeStyle,
+    dark: Boolean,
+    registry: CardRegistry = defaultTemplateRegistry,
+    cardStyle: HaUberTheme = HaUberTheme.Classic,
+  ): DesignKey? {
+    // A generic unsupported-card delegate is useful for display, but its key does not necessarily
+    // have a library entry. Only use a card's own key when this host actually registers its type.
+    if (registry.get(card.type) != null) {
+      keyFor(card, snapshot, style, dark, registry, cardStyle = cardStyle)?.let {
+        return it
+      }
+    }
+    val entry = CardDesignSlots.slotEntries(card)?.singleOrNull() ?: return null
+    val tile =
+      CardConfig(
+        type = "tile",
+        raw =
+          JsonObject(
+            mapOf("type" to JsonPrimitive("tile"), "entity" to JsonPrimitive(entry.entityId))
+          ),
+      )
+    return keyFor(tile, snapshot, style, dark, registry, cardStyle = cardStyle)
+  }
+
+  /**
    * The `theme` of a design key. Classic is baked in the app palette, `baked:<palette>:<mode>`. Any
    * other card style brings its own palette ([cardPalette]), so its theme names only the style and
    * the mode it is drawn in, `style:<id>:<mode>`: one design per shape whichever app palette is

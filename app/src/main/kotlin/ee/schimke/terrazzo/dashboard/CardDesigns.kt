@@ -281,10 +281,19 @@ fun cardTemplateFor(
   variant: String? = null,
   recordUsage: Boolean = true,
   designId: String? = null,
+  selectedCard: CardConfig = card,
 ): CardTemplatePlayback? {
   val key =
-    CardDesignTemplates.keyFor(card, snapshot, style, dark, registry, cardStyle = cardStyle)
-      ?: return null
+    (if (designId == null)
+      CardDesignTemplates.keyFor(card, snapshot, style, dark, registry, cardStyle = cardStyle)
+    else
+      CardDesignTemplates.selectedDesignKeyFor(
+        selectedCard,
+        snapshot,
+        style,
+        dark,
+        cardStyle = cardStyle,
+      )) ?: return null
   val (server, usedKey) =
     serverDesignFor(
       key,
@@ -383,6 +392,7 @@ suspend fun warmCardTemplates(
             variant = override?.variant,
             recordUsage = false,
             designId = override?.designId,
+            selectedCard = card,
           )
           ?.let { preloadForComposePlayer(it.bytes) }
       }

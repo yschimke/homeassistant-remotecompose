@@ -1033,12 +1033,12 @@ private fun LiveDashboard(
       homeServer = homeServer,
       openEditorInBrowser = privateDesignServer,
       refreshSnapshot = { connection.client.snapshotWithDevices() },
-      designKey = exactDesignKey(editing, shown, cardStyle, dark),
+      designKey = selectedDesignKey(editing, shown, cardStyle, dark),
       onPublished =
         if (selections != null)
           { id ->
             val fingerprint = cardFingerprint(editing)
-            val exact = checkNotNull(exactDesignKey(editing, shown, cardStyle, dark))
+            val exact = checkNotNull(selectedDesignKey(editing, shown, cardStyle, dark))
             val entity =
               ee.schimke.ha.design.CardDesignSlots.slotEntries(editing)
                 .orEmpty()

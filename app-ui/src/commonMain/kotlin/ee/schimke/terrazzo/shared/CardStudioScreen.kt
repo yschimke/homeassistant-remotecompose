@@ -351,7 +351,8 @@ fun CardStudioScreen(
   fun publish() {
     val key = designKey ?: return
     launch(4) { studio ->
-      val designs = studio.studioDesigns(bearer(), key.cardType)
+      // The library anchor can be a tile even when the design was opened for a custom card.
+      val designs = studio.studioDesigns(bearer(), card.type)
       val design = designForCard(designs, openedHandoffs)
       if (design == null) {
         requestFailed = true

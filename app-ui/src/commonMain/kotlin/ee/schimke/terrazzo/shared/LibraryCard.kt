@@ -72,7 +72,11 @@ internal fun LibraryCard(
       ?: remember(scope) {
         DashboardLoadCache(scope) { key: LibraryDesignKey -> loadLibraryDesign(key) }
       }
-  val exact = remember(card, snapshot, style, dark) { exactDesignKey(card, snapshot, style, dark) }
+  val exact =
+    remember(card, snapshot, style, dark, designId) {
+      if (designId == null) exactDesignKey(card, snapshot, style, dark)
+      else selectedDesignKey(card, snapshot, style, dark)
+    }
   val hint = remember(card, snapshot, exact) { cacheShapeHint(exact, card, snapshot) }
   val designKey =
     remember(card, hint, style, dark, requireExactDesign, exact, designId, snapshot.devices) {
@@ -296,6 +300,23 @@ internal fun exactDesignKey(
   dark: Boolean,
 ): DesignKey? = runCatching {
   CardDesignTemplates.keyFor(
+    card,
+    snapshot,
+    ThemeStyle.entries.first(),
+    dark,
+    cardStyle = HaUberTheme.byId(style),
+  )
+}
+  .getOrNull()
+
+/** Key for a design explicitly chosen for this card, including single-entity custom cards. */
+internal fun selectedDesignKey(
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  style: String,
+  dark: Boolean,
+): DesignKey? = runCatching {
+  CardDesignTemplates.selectedDesignKeyFor(
     card,
     snapshot,
     ThemeStyle.entries.first(),

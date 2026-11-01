@@ -1699,6 +1699,7 @@ private fun CardSlot(
           cardStyle,
           variant = override?.variant,
           designId = override?.designId,
+          selectedCard = card,
         )
       }
     }
