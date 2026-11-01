@@ -65,6 +65,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 
@@ -914,15 +916,25 @@ private fun LiveDashboard(
   var error by remember(connection, path) { mutableStateOf<String?>(null) }
   var selections by remember(connection) { mutableStateOf<Map<String, String>?>(null) }
   var designGeneration by remember(connection) { mutableIntStateOf(0) }
+  val selectionLock = remember(connection) { Mutex() }
   val scope = rememberCoroutineScope()
   LaunchedEffect(connection, privateDesignServer) {
     if (privateDesignServer) {
-      try {
-        selections = connection.client.terrazzoDesignSelections()
-      } catch (e: CancellationException) {
-        throw e
-      } catch (_: Exception) {
-        selections = null
+      while (true) {
+        try {
+          selectionLock.withLock {
+            val updated = connection.client.terrazzoDesignSelections()
+            if (updated != selections) {
+              selections = updated
+              designGeneration++
+            }
+          }
+        } catch (e: CancellationException) {
+          throw e
+        } catch (_: Exception) {
+          // Keep the last selection while offline and retry after reconnection.
+        }
+        delay(30_000)
       }
     } else selections = null
   }
@@ -1051,9 +1063,11 @@ private fun LiveDashboard(
               throw CardSelectionException(
                 "The design was published but could not be loaded for this card. Try publishing again."
               )
-            connection.client.setTerrazzoDesignSelection(fingerprint, id)
-            selections = selections.orEmpty() + (fingerprint to id)
-            designGeneration++
+            selectionLock.withLock {
+              connection.client.setTerrazzoDesignSelection(fingerprint, id)
+              selections = selections.orEmpty() + (fingerprint to id)
+              designGeneration++
+            }
           }
         else null,
     ) {
@@ -1112,8 +1126,10 @@ private fun LiveDashboard(
                   onClick = {
                     scope.launch {
                       try {
-                        connection.client.setTerrazzoDesignSelection(fingerprint, null)
-                        selections = selections.orEmpty() - fingerprint
+                        selectionLock.withLock {
+                          connection.client.setTerrazzoDesignSelection(fingerprint, null)
+                          selections = selections.orEmpty() - fingerprint
+                        }
                       } catch (e: CancellationException) {
                         throw e
                       } catch (_: Exception) {

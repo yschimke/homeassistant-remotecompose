@@ -96,6 +96,8 @@ combines them in memory with its local style overrides, fetches their designs on
 private add-on, and sends the selected templates through the existing Wear sync. A session change
 clears the shared selections; they are never persisted into the device-local overrides file. An
 older integration leaves the existing device-local behavior in place.
+Wasm refreshes the selections on the same cadence and serializes reads with writes, so a stale
+refresh cannot undo a choice the person just made.
 
 | Piece | Where |
 | --- | --- |
