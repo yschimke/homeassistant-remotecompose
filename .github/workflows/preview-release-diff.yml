@@ -124,7 +124,7 @@ jobs:
           set -euo pipefail
           v=$(python3 -c 'import sys,tomllib; print(tomllib.load(open("gradle/libs.versions.toml","rb")).get("versions",{}).get(sys.argv[1],""))' "$CATALOG_KEY")
           echo "version=${v:-$FALLBACK}" >> "$GITHUB_OUTPUT"
-      - uses: yschimke/compose-ai-tools/.github/actions/install@v2.79.2
+      - uses: yschimke/compose-ai-tools/.github/actions/install@v2.80.0
         with:
           version: ${{ steps.cli.outputs.version }}
 
