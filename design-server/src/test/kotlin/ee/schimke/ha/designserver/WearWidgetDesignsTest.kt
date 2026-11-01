@@ -35,10 +35,11 @@ class WearWidgetDesignsTest {
           """
       {"id":"garage","catalogPin":{"systemId":"ha-cards"},
        "roots":["stage"],"environment":{"widthDp":360,"heightDp":300},
-       "stateVariables":{"cover.s0.is_on":{"type":"value","valueType":"bool","initialValue":false}},
+       "stateVariables":{"cover.s0.is_on":{"type":"value","valueType":"bool","initialValue":false},"HA:sun.sun.elevation":{"type":"value","valueType":"float","initialValue":45}},
        "nodes":{
-         "stage":{"id":"stage","componentId":"layout/box","properties":{},"modifiers":[{"type":"size","widthDp":360,"heightDp":300}],"slots":{"children":["door"]}},
-         "door":{"id":"door","componentId":"asset/image","properties":{"assetKey":{"type":"string","value":"door"},"contentScale":{"type":"string","value":"fillBounds"}},"modifiers":[{"type":"size","widthDp":200,"heightDp":180},{"type":"remoteCall","name":"graphicsLayer","args":{"rotationX":{"type":"expr","op":"select","args":[{"type":"state","variable":"cover.s0.is_on"},{"type":"float","value":85},{"type":"float","value":0}]}}}],"slots":{}}
+         "stage":{"id":"stage","componentId":"layout/box","properties":{},"modifiers":[{"type":"size","widthDp":360,"heightDp":300}],"slots":{"children":["door","night"]}},
+         "door":{"id":"door","componentId":"asset/image","properties":{"assetKey":{"type":"string","value":"door"},"contentScale":{"type":"string","value":"fillBounds"}},"modifiers":[{"type":"size","widthDp":200,"heightDp":180},{"type":"remoteCall","name":"graphicsLayer","args":{"rotationX":{"type":"expr","op":"select","args":[{"type":"state","variable":"cover.s0.is_on"},{"type":"float","value":85},{"type":"float","value":0}]}}}],"slots":{}},
+         "night":{"id":"night","componentId":"layout/box","properties":{},"modifiers":[{"type":"fillMaxSize"},{"type":"alpha","alpha":{"type":"expr","op":"mul","args":[{"type":"float","value":0.55},{"type":"expr","op":"sub","args":[{"type":"float","value":1},{"type":"expr","op":"smoothstep","args":[{"type":"float","value":-6},{"type":"float","value":6},{"type":"state","variable":"HA:sun.sun.elevation"}]}]}]}}],"slots":{"children":[]}}
        }}
     """
         )
@@ -64,6 +65,20 @@ class WearWidgetDesignsTest {
       val document = RcDocumentCodec.decode(bytes, RcWireLimits())
       assertTrue(document.validateFor(RcTargetProfiles.WEAR_WIDGETS).isEmpty())
       assertTrue(document.namedVariables.any { it.name.endsWith("cover.s0.is_on") })
+      assertTrue(document.namedVariables.any { it.name == "HA:sun.sun.elevation" })
+      assertNull(
+        userTemplateProblem(
+          bytes,
+          DecodedTemplate(
+            listOf(Binding("cover.s0.is_on", "boolean")),
+            0,
+            emptyMap(),
+            emptyList(),
+            null,
+          ),
+          RcTargetProfiles.WEAR_WIDGETS,
+        )
+      )
       assertTrue(
         document.namedVariables.any { it.name.endsWith("wear.container.horizontal_padding") }
       )
