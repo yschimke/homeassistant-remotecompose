@@ -133,6 +133,10 @@ jobs:
       # `catalog` keeps the "don't silently pick up renderer regressions" property
       # while making compose-preview-plugin the single source of truth, exactly as
       # ci.yml and compose-preview.yml already do.
+      # Render the debug variant explicitly. AGP 9.5 turns unit tests off for release
+      # variants, and Compose Preview packages Android resources through the variant's
+      # unit-test APK, so a release render fails before it starts (compose-ai-tools #6382).
+      variant: debug
       cli-version: catalog
       catalog-key: compose-preview-plugin
       # Carry the executable bundle + per-preview bundles so the served catalog

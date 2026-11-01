@@ -57,8 +57,12 @@ jobs:
       - name: Record render start
         run: echo "RENDER_STARTED=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
       - id: apply
-        uses: yschimke/compose-ai-tools/.github/actions/apply@v2.80.0
+        uses: yschimke/compose-ai-tools/.github/actions/apply@v2.81.0
         with:
+          # Render the debug variant explicitly. AGP 9.5 turns unit tests off for release
+          # variants, and Compose Preview packages Android resources through the variant's
+          # unit-test APK, so a release render fails before it starts (compose-ai-tools #6382).
+          variant: debug
           # Generated branches (compose-preview/main, compose-preview/pr and the
           # a11y / resources pairs) go to the public output repository so this
           # source repository stops accumulating generated PNG history. The

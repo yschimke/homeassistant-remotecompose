@@ -277,7 +277,7 @@ jobs:
             | sed -E 's/.*\(([^)]+)\)$/\1/' | sort -u)
           for m in $modules; do
             echo "::group::compose-preview show --module $m"
-            compose-preview show --module "$m" --json > "_audit/$m.show.json" \
+            compose-preview show --module "$m" --variant debug --json > "_audit/$m.show.json" \
               || { echo "::warning::compose-preview show failed for $m"; rm -f "_audit/$m.show.json"; }
             echo "::endgroup::"
           done

@@ -134,7 +134,7 @@ jobs:
           mkdir -p _release
           # A preview that fails to render is left out of the JSON rather than failing the
           # comparison; the render log keeps the reason.
-          compose-preview show --json > _release/show.json 2> _release/show.log
+          compose-preview show --variant debug --json > _release/show.json 2> _release/show.log
           status=$?
           [ "$status" -eq 0 ] || echo "::warning::compose-preview show exited $status; comparing what rendered."
           python3 - <<'PY'
