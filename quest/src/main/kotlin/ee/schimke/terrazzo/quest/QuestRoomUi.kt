@@ -133,7 +133,8 @@ fun QuestRoomPanel(
             { enabled -> onControlsLocked(!enabled) },
             Modifier.semantics {
               contentDescription =
-                if (controlsLocked) "Unlock Home Assistant controls" else "Lock Home Assistant controls"
+                if (controlsLocked) "Unlock Home Assistant controls"
+                else "Lock Home Assistant controls"
             },
           )
         }
@@ -200,8 +201,8 @@ fun QuestSignInPanel(
 
 /**
  * One control on Quest: its name and current state, a switch for one that turns on and off, and
- * "Pin here" (or "Move here" for an existing pin) to place it where the user looks ([onPin],
- * null where pinning isn't available) or "Unpin" on a pinned panel ([onUnpin]).
+ * "Pin here" (or "Move here" for an existing pin) to place it where the user looks ([onPin], null
+ * where pinning isn't available) or "Unpin" on a pinned panel ([onUnpin]).
  */
 @Composable
 fun QuestEntityCard(

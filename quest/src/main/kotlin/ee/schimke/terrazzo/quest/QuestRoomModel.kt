@@ -209,9 +209,10 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
       client = connected
       baseUrl = normalized
       pins = decodeRoomPins(prefs.getString(PINS, null)).filter { it.baseUrl == normalized }
-      val resolvedImportance =
-        runCatching { dashboardImportance(connected.fetchDashboard()) }
-          .getOrDefault(DashboardImportance.Empty)
+      val resolvedImportance = runCatching {
+        dashboardImportance(connected.fetchDashboard())
+      }
+        .getOrDefault(DashboardImportance.Empty)
       if (!ownsConnection(generation)) return
       importance = resolvedImportance
       stateSnapshots(connected.subscribeEvents("state_changed")) {
