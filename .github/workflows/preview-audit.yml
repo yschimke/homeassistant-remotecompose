@@ -30,13 +30,25 @@ name: Preview Audit
 # are advisory model output, never a merge gate.
 #
 # Repository variables (all optional):
-#   PREVIEW_AUDIT_AGENT           auto (default: OpenCode, then Claude subscription, then
-#                                 Claude API, then Codex), opencode, claude, claude-api,
-#                                 codex or off. Set it per repository to choose which
-#                                 credential pays for that repository's audits.
+#   PREVIEW_AUDIT_AGENT           auto (default: Jev, then OpenCode, then Claude
+#                                 subscription, then Claude API, then Codex), jev, opencode,
+#                                 claude, claude-api, codex or off. Set it per repository
+#                                 to choose which credential pays for that repository's audits.
+#   PREVIEW_AUDIT_RECHECK_MODEL   jev only: the vision model that answers again what Jev
+#                                 is unsure of (default deepseek/deepseek-v4.1-flash;
+#                                 `none` turns the recheck off)
 #   PREVIEW_AUDIT_CODEX_MODEL     default: the action's
 #   PREVIEW_AUDIT_OPENCODE_MODEL  default opencode/glm-5.3-flash
 #   PREVIEW_AUDIT_CLAUDE_MODEL    default: the action's
+#
+# The `jev` agent (OPENROUTER_API_KEY secret) is no coding agent: it runs
+# .github/scripts/jev-audit.py, which checks the changed previews with
+# `compose-preview review --backend openrouter --checker jev --recheck-model <model>`.
+# Jev, OpenRouter's decision model, answers each rule from the render and the
+# source for fractions of a cent, and what it is unsure of goes to the recheck
+# model. Which guidelines file covers which module is in
+# .github/preview-audit/jev.json. The report gives the cost, and how much of it
+# was the recheck.
 # Manual run: Actions -> Preview Audit -> Run workflow with a PR number does the
 # same as `/audit`.
 #
@@ -107,6 +119,7 @@ jobs:
           BASE_TAG: ${{ inputs.base }}
           COMMENT_ID: ${{ github.event.comment.id }}
           COMMENT_BODY: ${{ github.event.comment.body }}
+          HAS_JEV: ${{ secrets.OPENROUTER_API_KEY != '' }}
           HAS_OPENCODE: ${{ secrets.OPENCODE_API_KEY != '' }}
           HAS_CLAUDE: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
           HAS_CLAUDE_API: ${{ secrets.ANTHROPIC_API_KEY != '' }}
@@ -126,16 +139,18 @@ jobs:
 
           case "${PREFERRED:-auto}" in
             off) skip "PREVIEW_AUDIT_AGENT is off" ;;
+            jev) [ "$HAS_JEV" = true ] && agent=jev || skip "PREVIEW_AUDIT_AGENT=jev but no OPENROUTER_API_KEY secret" ;;
             opencode) [ "$HAS_OPENCODE" = true ] && agent=opencode || skip "PREVIEW_AUDIT_AGENT=opencode but no OPENCODE_API_KEY secret" ;;
             claude) [ "$HAS_CLAUDE" = true ] && agent=claude || skip "PREVIEW_AUDIT_AGENT=claude but no CLAUDE_CODE_OAUTH_TOKEN secret" ;;
             claude-api) [ "$HAS_CLAUDE_API" = true ] && agent=claude-api || skip "PREVIEW_AUDIT_AGENT=claude-api but no ANTHROPIC_API_KEY secret" ;;
             codex) [ "$HAS_CODEX" = true ] && agent=codex || skip "PREVIEW_AUDIT_AGENT=codex but no OPENAI_API_KEY secret" ;;
             *)
-              if [ "$HAS_OPENCODE" = true ]; then agent=opencode
+              if [ "$HAS_JEV" = true ]; then agent=jev
+              elif [ "$HAS_OPENCODE" = true ]; then agent=opencode
               elif [ "$HAS_CLAUDE" = true ]; then agent=claude
               elif [ "$HAS_CLAUDE_API" = true ]; then agent=claude-api
               elif [ "$HAS_CODEX" = true ]; then agent=codex
-              else skip "no OPENCODE_API_KEY, CLAUDE_CODE_OAUTH_TOKEN, ANTHROPIC_API_KEY or OPENAI_API_KEY secret"; fi ;;
+              else skip "no OPENROUTER_API_KEY, OPENCODE_API_KEY, CLAUDE_CODE_OAUTH_TOKEN, ANTHROPIC_API_KEY or OPENAI_API_KEY secret"; fi ;;
           esac
 
           if [ -n "${RELEASE:-}" ]; then
@@ -282,6 +297,14 @@ jobs:
             echo "::endgroup::"
           done
 
+      - name: Audit with Jev
+        if: env.AGENT == 'jev'
+        timeout-minutes: 40
+        env:
+          COMPOSE_PREVIEW_OPENROUTER_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          RECHECK_MODEL: ${{ vars.PREVIEW_AUDIT_RECHECK_MODEL || 'deepseek/deepseek-v4.1-flash' }}
+        run: python3 .github/scripts/jev-audit.py
+
       - name: Audit with Claude
         if: env.AGENT == 'claude' || env.AGENT == 'claude-api'
         env:
@@ -357,6 +380,7 @@ jobs:
           FINGERPRINT: ${{ needs.gate.outputs.fingerprint }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           OPENCODE_MODEL: ${{ vars.PREVIEW_AUDIT_OPENCODE_MODEL || 'opencode/glm-5.3-flash' }}
+          RECHECK_MODEL: ${{ vars.PREVIEW_AUDIT_RECHECK_MODEL || 'deepseek/deepseek-v4.1-flash' }}
         run: |
           set -euo pipefail
           # Only a finished report records the fingerprint the gate skips on,
@@ -368,6 +392,10 @@ jobs:
           [ "$AGENT" = claude ] && judge="Claude"
           [ "$AGENT" = claude-api ] && judge="Claude (API)"
           [ "$AGENT" = codex ] && judge="Codex"
+          if [ "$AGENT" = jev ]; then
+            judge="Jev (typesafe/jev-1.13)"
+            [ "$RECHECK_MODEL" != none ] && judge="$judge, rechecked by $RECHECK_MODEL"
+          fi
           {
             echo "$marker"
             if [ -s _audit/report.md ]; then
