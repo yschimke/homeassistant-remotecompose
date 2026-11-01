@@ -1,12 +1,18 @@
 package ee.schimke.terrazzo.wear.sync
 
+import ee.schimke.composeai.rcplayer.protocol.*
 import ee.schimke.ha.client.HaAuthInvalidException
+import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import ee.schimke.terrazzo.wearsync.proto.WearAccess
+import ee.schimke.terrazzo.wearsync.proto.WearDesignBlob
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
+import ee.schimke.terrazzo.wearsync.proto.WearSlotDesign
+import ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns
+import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
 import java.io.IOException
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -155,7 +161,7 @@ class WearDirectAccessTest {
     )
     answer = { mapOf("sensor.outside" to state("sensor.outside", "12.5")) }
     val values = assertNotNull(direct.refresh(listOf(card), signedIn))
-    assertEquals(listOf("https://home.example.org" to setOf("sensor.outside", "sun.sun")), fetched)
+    assertEquals(listOf("https://home.example.org" to setOf("sensor.outside")), fetched)
     assertEquals("12.5", values.values.getValue("sensor.outside").state)
     assertEquals("°C", values.values.getValue("sensor.outside").unit)
     assertEquals("on", values.values.getValue("light.kitchen").state, "the phone's are kept")
@@ -165,6 +171,43 @@ class WearDirectAccessTest {
     // Fresh now, and read at most once a minute.
     assertNull(direct.refresh(listOf(card, """{"entity":"sensor.new"}"""), signedIn))
     assertEquals(1, fetched.size)
+  }
+
+  @Test
+  fun directReadUsesTheStoredDesignsDeclaredDependencies() = runTest {
+    store.write(access)
+    val bytes =
+      RcDocumentCodec.encode(
+        RcDocument(
+          RcHeader(RcVersion(1, 0, 0)),
+          listOf(RcNamedVariable(100, RcNamedVariable.FLOAT_TYPE, "HA:sun.sun.elevation")),
+        )
+      )
+    val sha = Sha256.hex(bytes)
+    offline.writeDesign(WearDesignBlob(sha, bytes))
+    offline.writeSlotDesigns(WearSlotDesigns(listOf(WearSlotDesign("card", "small", sha))))
+    try {
+      answer = {
+        mapOf(
+          "sun.sun" to
+            EntityState(
+              "sun.sun",
+              "below_horizon",
+              JsonObject(
+                mapOf(
+                  "elevation" to JsonPrimitive(-12.5),
+                  "azimuth" to JsonPrimitive(220),
+                )
+              ),
+            )
+        )
+      }
+      val values = assertNotNull(direct.refresh(listOf(card), signedIn))
+      assertEquals(setOf("sensor.outside", "sun.sun"), fetched.single().second)
+      assertEquals(mapOf("elevation" to "-12.5"), values.values.getValue("sun.sun").attributes)
+    } finally {
+      offline.forget(WearSyncPaths.SLOT_DESIGNS)
+    }
   }
 
   @Test
@@ -321,7 +364,7 @@ class WearDirectAccessTest {
         "binary_sensor.p2s_sn2_online",
       )
     assertEquals(
-      setOf("sensor.outside", "sun.sun") + known,
+      setOf("sensor.outside") + known,
       watchEntityIds(listOf(card, bambu), known + "sensor.unrelated"),
     )
   }

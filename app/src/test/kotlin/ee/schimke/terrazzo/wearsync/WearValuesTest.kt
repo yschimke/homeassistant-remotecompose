@@ -113,14 +113,13 @@ class WearValuesTest {
       )
     val snapshot =
       HaSnapshot(states = mapOf(sun.entityId to sun, "cover.garage" to entity("cover.garage")))
-    val sent = wearValues(snapshot, setOf("cover.garage"))
+    val shared = HaSharedValues.dependencies(listOf("HA:sun.sun.elevation"))
+    val sent = wearValues(snapshot, setOf("cover.garage"), shared)
     assertEquals(setOf("cover.garage", HaSharedValues.SUN), sent.keys)
     assertEquals("-12.5", sent.getValue(HaSharedValues.SUN).attributes["elevation"])
-    assertEquals(
-      "2026-11-01T07:00:00Z",
-      sent.getValue(HaSharedValues.SUN).attributes["next_rising"],
-    )
+    assertTrue("next_rising" !in sent.getValue(HaSharedValues.SUN).attributes)
     assertTrue("private_extra" !in sent.getValue(HaSharedValues.SUN).attributes)
     assertTrue(wearValues(snapshot, emptySet()).isEmpty())
+    assertEquals(setOf("cover.garage"), wearValues(snapshot, setOf("cover.garage")).keys)
   }
 }

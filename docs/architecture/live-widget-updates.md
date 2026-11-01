@@ -5,11 +5,11 @@ While the app holds a session that is enough; once it doesn't, the Terrazzo inte
 when an entity a widget shows visibly changes, with the same content-free FCM wake as
 [notifications](notifications.md).
 
-Wear also receives the shared `sun.sun` state and the attributes named by `HaSharedValues` when
-there are card entities to sync. The watch includes that entity in its own fallback read. This lets
-widget designs bake the same sun bindings as cards, including the current elevation on the first
-frame; absent or unavailable sun data uses the shared daytime defaults. Sun attribute changes do
-not independently trigger a widget wake, so the normal refresh rules below still apply.
+The phone inspects the named values declared by the selected Wear templates and sends their shared
+Home Assistant sources and required attributes alongside the cards' own entities. The watch reads
+the same dependencies from its stored templates when it fetches values directly. Missing sources
+use the shared defaults. Attribute changes do not independently trigger a widget wake, so the normal
+refresh rules below still apply.
 
 ## Every widget: while the app runs, and routinely
 

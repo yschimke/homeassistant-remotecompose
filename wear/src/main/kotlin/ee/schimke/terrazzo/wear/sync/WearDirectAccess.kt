@@ -5,13 +5,13 @@ import android.util.Log
 import com.google.android.gms.wearable.Wearable
 import ee.schimke.ha.client.HaAuthInvalidException
 import ee.schimke.ha.client.HaEntityStates
-import ee.schimke.ha.design.HaSharedValues
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.cards.bambuEntityIds
 import ee.schimke.ha.rc.displayPrecisionOf
+import ee.schimke.ha.rc.sharedDesignDependencies
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import ee.schimke.terrazzo.wearsync.proto.WEAR_EXTRA_ATTRIBUTES
@@ -119,7 +119,11 @@ class WearDirectAccess(
       return null
     }
     val stored = offline.readValues()
-    val ids = watchEntityIds(cardsRawJson, stored?.values?.keys.orEmpty())
+    val shared =
+      sharedDesignDependencies(
+        offline.readSlotDesigns()?.designs.orEmpty().mapNotNull { offline.readDesign(it.sha256) }
+      )
+    val ids = watchEntityIds(cardsRawJson, stored?.values?.keys.orEmpty()) + shared.keys
     if (!needsDirectValues(stored, ids, now(), lastDirectAt(), retained)) return null
     val access = store.read()?.takeIf { signedInTo(settings, it.baseUrl) }
     if (access == null) {
@@ -133,7 +137,9 @@ class WearDirectAccess(
     }
     val states = fetchFromAny(access, ids) ?: return null
     val snapshot = HaSnapshot(states = states)
-    val fetched = states.mapValues { (_, state) -> state.toWearEntityValue(snapshot) }
+    val fetched = states.mapValues { (id, state) ->
+      state.toWearEntityValue(snapshot, shared[id].orEmpty())
+    }
     // Every entity asked for takes what Home Assistant answered: one it no longer has (a 404) is
     // dropped rather than kept at the phone's old value. Newer than the phone's: a later phone
     // capture still replaces these as it arrives.
@@ -314,12 +320,10 @@ private fun sameUrl(a: String, b: String): Boolean =
  */
 internal fun watchEntityIds(rawJson: List<String>, known: Collection<String>): Set<String> {
   val knownSnapshot = HaSnapshot(states = known.associateWith { EntityState(it, "") })
-  return rawJson
-    .flatMapTo(HashSet()) { raw ->
-      val bambu = raw.toCardConfigOrNull()?.let { bambuEntityIds(it, knownSnapshot) }.orEmpty()
-      ENTITY_ID.findAll(raw).map { it.value }.toList() + bambu
-    }
-    .also { if (rawJson.isNotEmpty()) it.addAll(HaSharedValues.entities) }
+  return rawJson.flatMapTo(HashSet()) { raw ->
+    val bambu = raw.toCardConfigOrNull()?.let { bambuEntityIds(it, knownSnapshot) }.orEmpty()
+    ENTITY_ID.findAll(raw).map { it.value }.toList() + bambu
+  }
 }
 
 private val ENTITY_ID = Regex("""\b[a-z_][a-z0-9_]*\.[a-z0-9_]+\b""")
@@ -332,7 +336,10 @@ private fun String.toCardConfigOrNull(): CardConfig? = runCatching {
   .getOrNull()
 
 /** [EntityValue] for an entity the watch read itself: as the phone builds it for the watch. */
-internal fun EntityState.toWearEntityValue(snapshot: HaSnapshot): EntityValue {
+internal fun EntityState.toWearEntityValue(
+  snapshot: HaSnapshot,
+  sharedAttributes: Set<String> = emptySet(),
+): EntityValue {
   val attrs = attributes
   fun text(key: String) = (attrs[key] as? JsonPrimitive)?.contentOrNull.orEmpty()
   return EntityValue(
@@ -343,8 +350,7 @@ internal fun EntityState.toWearEntityValue(snapshot: HaSnapshot): EntityValue {
     entityPicture = text("entity_picture"),
     displayPrecision = displayPrecisionOf(this, snapshot),
     attributes =
-      (WEAR_EXTRA_ATTRIBUTES +
-          if (entityId == HaSharedValues.SUN) HaSharedValues.sunAttributes else emptySet())
+      (WEAR_EXTRA_ATTRIBUTES + sharedAttributes)
         .mapNotNull { key ->
           (attrs[key] as? JsonPrimitive)?.contentOrNull?.let { key to it }
         }

@@ -133,6 +133,8 @@ data class WearSlotDesign(
   val container: String = "",
   /** The [WearDesignBlob] holding its template. */
   val sha256: String = "",
+  /** Recognized shared named values read by this template, for a cold phone refresh. */
+  val sharedValues: List<String> = emptyList(),
 )
 
 /** A Wear widget design's Remote Compose template, content-addressed by [sha256]. */
