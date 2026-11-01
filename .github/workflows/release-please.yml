@@ -36,6 +36,22 @@ jobs:
           config-file: .github/release-please-config.json
           manifest-file: .github/.release-please-manifest.json
 
+  preview-release-diff:
+    # Compare every preview with the previous release, add it to the release notes, and audit
+    # what changed (preview-release-diff.yml). Called here because a release created with
+    # GITHUB_TOKEN raises no `release` event for a workflow to trigger on.
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    uses: ./.github/workflows/preview-release-diff.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}
+    secrets: inherit
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+
   release:
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
