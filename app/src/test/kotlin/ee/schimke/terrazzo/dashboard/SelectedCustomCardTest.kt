@@ -18,6 +18,7 @@ import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import kotlin.test.Test
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -28,6 +29,35 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class SelectedCustomCardTest {
+  @Test
+  fun missingSelectedCustomDesignDoesNotRenderGenericAnchor() {
+    val raw =
+      Json.parseToJsonElement(
+          """{"type":"custom:enhanced-shutter-card","entities":[{"entity":"cover.garage","top_offset_pct":13}]}"""
+        )
+        .jsonObject
+    val card = CardConfig("custom:enhanced-shutter-card", raw)
+    val snapshot =
+      HaSnapshot(states = mapOf("cover.garage" to EntityState("cover.garage", "closed")))
+    val style = ThemeStyle.Material3
+    val key = assertNotNull(CardDesignTemplates.selectedDesignKeyFor(card, snapshot, style, false))
+    val designs = CardDesigns(byKey = mapOf(key to byteArrayOf(1)))
+    assertNull(
+      cardTemplateFor(
+        ApplicationProvider.getApplicationContext(),
+        card,
+        snapshot,
+        designs,
+        style,
+        false,
+        defaultRegistry().withEnhancedShutter(),
+        recordUsage = false,
+        designId = "user:missing",
+        selectedCard = card,
+      )
+    )
+  }
+
   @Test
   fun phoneUsesSelectedAnchorAndOriginalCustomCardBindings() {
     val raw =

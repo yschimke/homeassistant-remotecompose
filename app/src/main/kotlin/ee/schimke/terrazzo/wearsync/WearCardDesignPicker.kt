@@ -21,6 +21,8 @@ import ee.schimke.terrazzo.wearsync.proto.WearSlotDesign
  * watch chooses which card a widget shows, from the cards it was sent. The watch is dark, so it is
  * the card's dark design. A card or container the server has no Wear design for is sent its phone
  * template, adapted to the Wear frame by the watch.
+ * A custom card using a projected library key waits for its selected design instead of receiving
+ * the projected card's generic design.
  *
  * Empty while no design server is configured or its designs haven't loaded.
  *
@@ -36,15 +38,10 @@ internal fun wearCardDesigns(
     val override = choice.overrides.forCard(card)
     val cardStyle = override?.cardStyle?.let(HaUberTheme::byId) ?: choice.cardStyle
     val design = CardDesignTemplates.designCard(card, snapshot)
+    val originalKey =
+      CardDesignTemplates.keyFor(design, snapshot, choice.style, dark = true, cardStyle = cardStyle)
     val key =
-      (if (override?.designId == null)
-        CardDesignTemplates.keyFor(
-          design,
-          snapshot,
-          choice.style,
-          dark = true,
-          cardStyle = cardStyle,
-        )
+      (if (override?.designId == null) originalKey
       else
         CardDesignTemplates.selectedDesignKeyFor(
           card,
@@ -64,6 +61,8 @@ internal fun wearCardDesigns(
           designs.byDesign.find(id, keys.first(), device)?.second
             ?: designs.byDesign.find(id, variants.first(), device)?.second
         }
+      if (override?.designId != null && key != originalKey && selected == null)
+        return@mapNotNull null
       // The design the card was switched to, when it has a Wear widget design for the container.
       val bytes =
         selected

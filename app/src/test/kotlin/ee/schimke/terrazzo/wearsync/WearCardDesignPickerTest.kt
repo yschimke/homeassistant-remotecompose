@@ -122,6 +122,36 @@ class WearCardDesignPickerTest {
   }
 
   @Test
+  fun missingSelectedCustomDesignDoesNotSendGenericAnchor() {
+    val raw =
+      Json.parseToJsonElement(
+        """{"type":"custom:enhanced-shutter-card","entities":[{"entity":"cover.garage","top_offset_pct":13}]}"""
+      ) as JsonObject
+    val custom = CardConfig("custom:enhanced-shutter-card", raw)
+    val states = HaSnapshot(states = mapOf("cover.garage" to EntityState("cover.garage", "closed")))
+    val anchor =
+      requireNotNull(
+        CardDesignTemplates.selectedDesignKeyFor(
+          custom,
+          states,
+          choice.style,
+          dark = true,
+          cardStyle = choice.cardStyle,
+        )
+      )
+    val overrides =
+      CardDesignOverrides(
+        byCard = mapOf(cardFingerprint(custom) to CardDesignOverride(designId = "missing"))
+      )
+    val loaded =
+      designs(
+        mapOf(anchor.forWearWidget(DesignKey.WEAR_SMALL) to byteArrayOf(99)),
+        choice.copy(overrides = overrides),
+      )
+    assertTrue(wearCardDesigns(listOf("garage" to custom), states, loaded).isEmpty())
+  }
+
+  @Test
   fun selectedSingleEntityCustomCardSendsItsChosenWearDesign() {
     val raw =
       Json.parseToJsonElement(
