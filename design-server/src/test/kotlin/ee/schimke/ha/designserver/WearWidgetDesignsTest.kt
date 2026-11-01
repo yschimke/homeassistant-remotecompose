@@ -6,11 +6,14 @@ import ee.schimke.composeai.rcplayer.edit.validateFor
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.design.DesignKey
-import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.designs.LibraryCaptureProfile
 import ee.schimke.ha.designs.UiBuilderDesignCompiler
+import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CommonCaptureHost
+import ee.schimke.ha.rc.components.ThemeStyle
 import java.util.Base64
 import kotlin.math.abs
 import kotlin.test.Test
@@ -55,21 +58,35 @@ class WearWidgetDesignsTest {
         .decode(
           "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/a9sAAAAASUVORK5CYII="
         )
-    val key =
-      DesignKey(
-        cardType = "tile",
-        surface = DesignSurface.MobileApp,
-        rcApiLevel = CardDesignTemplates.MOBILE_APP_API_LEVEL,
-        shape = "device_class=garage;domain=cover;state_icon=garage",
-        theme = "baked:Material3:light",
-      )
     // Exercise the actual cloud seed and agent handoff, not just a standalone scene. An agent
     // retains the seed root and binding declarations while replacing its content with the scene.
     val cardConfig =
-      Json.parseToJsonElement("""{"type":"tile","entity":"cover.garage"}""").jsonObject
+      Json.parseToJsonElement(
+          """{"type":"custom:enhanced-shutter-card","grid_options":{"columns":"full"},"entities":[{"entity":"cover.garage","name":"Garage Door","top_offset_pct":13}]}"""
+        )
+        .jsonObject
+    val states =
+      mapOf(
+        "cover.garage" to
+          EntityState(
+            "cover.garage",
+            "closed",
+            JsonObject(mapOf("device_class" to JsonPrimitive("garage"))),
+          )
+      )
+    val key =
+      assertNotNull(
+        CardDesignTemplates.selectedDesignKeyFor(
+          CardConfig("custom:enhanced-shutter-card", cardConfig),
+          HaSnapshot(states = states),
+          ThemeStyle.Material3,
+          dark = false,
+        )
+      )
+    assertEquals("device_class=garage;domain=cover;state_icon=garage", key.shape)
     val seed =
       UiBuilderSeed.document(
-        CardSchema.fromCard(cardConfig),
+        CardSchema.fromCard(cardConfig, states),
         "card-test",
         "Garage",
         HaCardsSeed.card("app-card"),
