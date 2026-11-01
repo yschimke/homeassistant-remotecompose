@@ -137,9 +137,9 @@ class WearDirectAccess(
     }
     val states = fetchFromAny(access, ids) ?: return null
     val snapshot = HaSnapshot(states = states)
-    val fetched = states.mapValues { (id, state) ->
+    fun convert(id: String, state: EntityState) =
       state.toWearEntityValue(snapshot, shared[id].orEmpty())
-    }
+    val fetched = states.mapValues { (id, state) -> convert(id, state) }
     // Every entity asked for takes what Home Assistant answered: one it no longer has (a 404) is
     // dropped rather than kept at the phone's old value. Newer than the phone's: a later phone
     // capture still replaces these as it arrives.
@@ -351,9 +351,7 @@ internal fun EntityState.toWearEntityValue(
     displayPrecision = displayPrecisionOf(this, snapshot),
     attributes =
       (WEAR_EXTRA_ATTRIBUTES + sharedAttributes)
-        .mapNotNull { key ->
-          (attrs[key] as? JsonPrimitive)?.contentOrNull?.let { key to it }
-        }
+        .mapNotNull { key -> (attrs[key] as? JsonPrimitive)?.contentOrNull?.let { key to it } }
         .toMap() +
         (attrs["options"] as? JsonArray)?.let { mapOf("input_options" to it.toString()) }.orEmpty(),
   )
