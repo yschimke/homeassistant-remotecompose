@@ -187,6 +187,15 @@ class SlotWidgetServerDesignTest {
         emptyList(),
         RcDocumentCodec.decode(baked, RcWireLimits()).validateFor(RcTargetProfiles.WEAR_WIDGETS),
       )
+      val clipped =
+        kotlin.test.assertNotNull(
+          WearWidgetTemplate.clipFrame(RuntimeEnvironment.getApplication(), baked, params),
+          "$container: the exported widget has a clip-capable root",
+        )
+      assertEquals(
+        emptyList(),
+        RcDocumentCodec.decode(clipped, RcWireLimits()).validateFor(RcTargetProfiles.WEAR_WIDGETS),
+      )
     }
   }
 

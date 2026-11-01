@@ -156,23 +156,46 @@ class WearContainerStylesTest {
 
     // Exercise the AndroidX View player too: the opcode being allowed by the profile alone does
     // not prove this renderer clips the content.
-    val document =
-      CoreDocument().apply {
-        initFromBuffer(RemoteComposeBuffer.fromInputStream(widget.rcDocument.inputStream()))
-      }
-    val player = RemoteComposePlayer(context).apply { setDocument(RemoteDocument(document)) }
     val width = 216
     val height = 76
-    player.measure(
-      View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
-      View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY),
+    fun androidFrame(bytes: ByteArray): Bitmap {
+      val document =
+        CoreDocument().apply {
+          initFromBuffer(RemoteComposeBuffer.fromInputStream(bytes.inputStream()))
+        }
+      val player = RemoteComposePlayer(context).apply { setDocument(RemoteDocument(document)) }
+      player.measure(
+        View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+        View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY),
+      )
+      player.layout(0, 0, width, height)
+      return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also {
+        it.eraseColor(android.graphics.Color.MAGENTA)
+        player.draw(Canvas(it))
+      }
+    }
+    val templateFrame = androidFrame(widget.rcDocument)
+    assertEquals(android.graphics.Color.MAGENTA, templateFrame.getPixel(0, 0))
+    assertEquals(android.graphics.Color.RED, templateFrame.getPixel(width / 2, height / 2))
+
+    // This is the actual Glance capture path used for direct and server-provided widget frames.
+    val direct =
+      androidx.glance.wear.WearWidgetDocument(androidx.glance.wear.WearWidgetBrush.Companion) {
+        RemoteBox(
+          RemoteModifier.offset((-8).rdp, (-8).rdp).size(400.rdp, 400.rdp).background(Color.Red.rc)
+        ) {}
+      }
+    val raw = runBlocking { direct.captureRawContent(context, params, false) }
+    val clipped = runBlocking { direct.clippedToHost().captureRawContent(context, params, false) }
+    assertEquals(
+      emptyList(),
+      RcDocumentCodec.decode(clipped.rcDocument, RcWireLimits())
+        .validateFor(RcTargetProfiles.WEAR_WIDGETS),
     )
-    player.layout(0, 0, width, height)
-    val frame = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    frame.eraseColor(android.graphics.Color.MAGENTA)
-    player.draw(Canvas(frame))
-    assertEquals(android.graphics.Color.MAGENTA, frame.getPixel(0, 0))
-    assertEquals(android.graphics.Color.RED, frame.getPixel(width / 2, height / 2))
+    val directFrame = androidFrame(clipped.rcDocument)
+    assertEquals(android.graphics.Color.MAGENTA, directFrame.getPixel(0, 0))
+    assertEquals(android.graphics.Color.RED, directFrame.getPixel(width / 2, height / 2))
+    assertEquals(android.graphics.Color.RED, androidFrame(raw.rcDocument).getPixel(0, 0))
   }
 
   @Test

@@ -148,7 +148,8 @@ abstract class CardWidget : GlanceWearWidget() {
     // The pinned cards' Wear widget designs from the design server, synced by the phone.
     withTimeoutOrNull(DATA_LAYER_TIMEOUT_MS) { syncDesignsFromDataLayer(app, store) }
     // A tap opens the Wear app on the card (WearWidgetTaps): the widget can't run its actions.
-    val data = slotWidgetDataFromStore(app, store, chosen).openingApp(chosen?.cardKey)
+    val data =
+      slotWidgetDataFromStore(app, store, chosen).openingApp(chosen?.cardKey).clippedToHost()
     // The card's values from Home Assistant itself when the phone has sent none lately: after the
     // render, never before it. Values it reads render the widget again.
     chosen?.let { card ->
@@ -172,6 +173,21 @@ abstract class CardWidget : GlanceWearWidget() {
     publishPlacedWidgets(context)
   }
 }
+
+/** Glance's container paints rounded chrome, but alpha21 does not clip its child content. */
+internal fun WearWidgetData.clippedToHost(): WearWidgetData =
+  object : WearWidgetData {
+    override suspend fun captureRawContent(
+      context: Context,
+      params: WearWidgetParams,
+      isPreview: Boolean,
+    ): WearWidgetRawContent {
+      val captured = this@clippedToHost.captureRawContent(context, params, isPreview)
+      val clipped =
+        WearWidgetTemplate.clipFrame(context, captured.rcDocument, params) ?: captured.rcDocument
+      return WearWidgetRawContent(clipped, captured.extras, captured.widgetTitle)
+    }
+  }
 
 /**
  * Reads the values of [chosen]'s card from Home Assistant when the phone's are stale
