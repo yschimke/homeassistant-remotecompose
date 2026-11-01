@@ -1,7 +1,10 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.composeai.rcplayer.edit.RcApproximation
+import ee.schimke.composeai.rcplayer.edit.RcDisplay
 import ee.schimke.composeai.rcplayer.edit.RcTargetProfile
 import ee.schimke.composeai.rcplayer.edit.RcTargetProfiles
+import ee.schimke.composeai.rcplayer.edit.adaptTo
 import ee.schimke.composeai.rcplayer.edit.namedVariables
 import ee.schimke.composeai.rcplayer.edit.validateFor
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
@@ -13,6 +16,7 @@ import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.design.DeviceMatch
 import ee.schimke.ha.design.HaSharedValues
+import ee.schimke.ha.designs.UiBuilderDesignCompiler
 import ee.schimke.rc.m3.RcAmbientValue
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -546,7 +550,10 @@ private suspend fun publish(
   // widget still publishes, and the watch draws the card's own design instead.
   val wear =
     if (design.entry.key.surface != DesignSurface.MobileApp) emptyMap()
-    else templates.source?.let { wearWidgets(client, it, library.decode(base)) }.orEmpty()
+    else
+      templates.source
+        ?.let { wearWidgets(integration, request.designId, it, baseKey, library.decode(base)) }
+        .orEmpty()
   store.publishWear(login, design, wear)
   return Published.Done(design)
 }
@@ -653,18 +660,78 @@ private suspend fun templates(
  * Wear widget and binds what [base] does. A container whose design fails is left out.
  */
 private suspend fun wearWidgets(
-  client: UiBuilderClient,
+  integration: UiBuilderIntegration,
+  designId: String,
   source: JsonObject,
+  baseKey: DesignKey,
   base: DecodedTemplate,
 ): Map<String, ByteArray> {
+  val client = integration.client
+  // The UI Builder binary exporter does not handle every image scene. Fetch the same source's
+  // pictures only when its export fails, then compile its fitted content without a card frame.
+  var assets: Map<String, ByteArray>? = null
   return DesignKey.WEAR_CONTAINERS.mapNotNull { container ->
       val document = WearWidgetDesigns.document(source, container) ?: return@mapNotNull null
-      val bytes = client.exportRc(document).getOrNull() ?: return@mapNotNull null
+      val exported =
+        client.exportRc(document).getOrNull()?.takeIf {
+          userTemplateProblem(it, base, RcTargetProfiles.WEAR_WIDGETS) == null
+        }
+      val bytes =
+        exported
+          ?: run {
+            val scene = WearWidgetDesigns.compilableScene(document) ?: return@mapNotNull null
+            val pictures =
+              assets
+                ?: source["assets"]
+                  ?.jsonObject
+                  .orEmpty()
+                  .keys
+                  .associateWith { key ->
+                    client.asset(designId, key).getOrNull() ?: return@mapNotNull null
+                  }
+                  .also { assets = it }
+            try {
+              withContext(compiles) {
+                compileWearScene(integration.compiler, scene, pictures, baseKey)
+              }
+            } catch (e: CancellationException) {
+              throw e
+            } catch (_: Exception) {
+              null
+            }
+          }
+          ?: return@mapNotNull null
       bytes
         .takeIf { userTemplateProblem(it, base, RcTargetProfiles.WEAR_WIDGETS) == null }
         ?.let { container to it }
     }
     .toMap()
+}
+
+/** Compile fitted scene content, and refuse it if the widget player cannot play it. */
+internal fun compileWearScene(
+  compiler: UiBuilderDesignCompiler,
+  scene: JsonObject,
+  pictures: Map<String, ByteArray>,
+  baseKey: DesignKey,
+): ByteArray? {
+  val captured =
+    compiler.compile(
+      scene,
+      pictures,
+      baseKey,
+      imageBudgetBytes = UiBuilderDesignCompiler.imageBudget(DesignSurface.WearWidget),
+      framed = false,
+      wearFrame = true,
+    )
+  val adapted =
+    RcDocumentCodec.decode(captured, RcWireLimits())
+      .adaptTo(
+        RcTargetProfiles.WEAR_WIDGETS,
+        setOf(RcApproximation.TEXT, RcApproximation.THEME_COLORS),
+        RcDisplay(1f, 1f),
+      )
+  return if (adapted.isPlayable) RcDocumentCodec.encode(adapted.document) else null
 }
 
 /** The device match a form names (`integration`, `manufacturer`, `model`), or null for none. */

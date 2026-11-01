@@ -32,6 +32,25 @@ object WearWidgetDesigns {
       DesignKey.WEAR_LARGE to Container(HaCardsSeed.WEAR_LARGE, widthDp = 216, heightDp = 124),
     )
 
+  /** Convert a fitted image scene into content for the fallback compiler, without host chrome. */
+  internal fun compilableScene(document: JsonObject): JsonObject? {
+    val rootId =
+      (document["roots"] as? JsonArray)?.singleOrNull()?.jsonPrimitive?.content ?: return null
+    val nodes = document["nodes"] as? JsonObject ?: return null
+    val root = nodes[rootId] as? JsonObject ?: return null
+    if (root["componentId"]?.jsonPrimitive?.content !in CONTAINERS.values.map { it.component })
+      return null
+    val children = (root["slots"] as? JsonObject)?.get("content") as? JsonArray ?: return null
+    val replacement =
+      UiBuilderSeed.node(
+        rootId,
+        "layout/box",
+        modifiers = listOf(JsonObject(mapOf("type" to JsonPrimitive("fillMaxSize")))),
+        slots = mapOf("children" to children.map { it.jsonPrimitive.content }),
+      )
+    return JsonObject(document + ("nodes" to JsonObject(nodes + (rootId to replacement))))
+  }
+
   /**
    * [card] (a UI Builder document) as a Wear widget for [container]: its root's children under the
    * container root, every card surface replaced by what it holds, and the environment the

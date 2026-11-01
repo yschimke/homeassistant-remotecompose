@@ -229,6 +229,20 @@ class UserDesignsTest {
   }
 
   private val sunlit = dimmedBy("HA:sun.sun.elevation")
+  private val fittedGarage: JsonObject = run {
+    val nodes = handmade.getValue("nodes").jsonObject
+    val door = nodes.getValue("door").jsonObject
+    val modifiers =
+      Json.parseToJsonElement(
+        """[{"type":"size","widthDp":280,"heightDp":160},
+      {"type":"remoteCall","name":"graphicsLayer","args":{"rotationX":{"type":"expr","op":"select","args":[{"type":"state","variable":"light.s0.is_on"},{"type":"float","value":85},{"type":"float","value":0}]}}}]"""
+      )
+    JsonObject(
+      handmade +
+        ("id" to JsonPrimitive("fitted-garage")) +
+        ("nodes" to JsonObject(nodes + ("door" to JsonObject(door + ("modifiers" to modifiers)))))
+    )
+  }
   private val peeking = dimmedBy("HA:lock.front_door.numeric_state")
   private val mistyped = dimmedBy("HA:sun.sun.elevation", valueType = "bool")
 
@@ -252,6 +266,7 @@ class UserDesignsTest {
       "dimmed",
       "wear-sun",
       "handmade",
+      "fitted-garage",
       "sunlit",
       "peeking",
       "mistyped" -> """{"ownerActorId":"github:octocat","actorGrants":[]}"""
@@ -333,6 +348,7 @@ class UserDesignsTest {
           for ((id, document) in
             listOf(
               "handmade" to handmade,
+              "fitted-garage" to fittedGarage,
               "sunlit" to sunlit,
               "peeking" to peeking,
               "mistyped" to mistyped,
@@ -361,6 +377,12 @@ class UserDesignsTest {
           }
           post("/api/ui-builder/v1/documents/export.rc") {
             val document = Json.parseToJsonElement(call.receiveText()).jsonObject
+            if (document["id"]!!.jsonPrimitive.content.startsWith("fitted-garage-wear-")) {
+              return@post call.respondText(
+                "image export unsupported",
+                status = HttpStatusCode.UnprocessableEntity,
+              )
+            }
             val root = document["nodes"]!!.jsonObject["root"]!!.jsonObject
             exportedWear += root["componentId"]!!.jsonPrimitive.content
             when (document["id"]!!.jsonPrimitive.content) {
@@ -1148,6 +1170,27 @@ class UserDesignsTest {
         .map { it.name }
     assertTrue("USER:light.s0.is_on" in names, "named: $names")
   }
+
+  @Test
+  fun publishingAnImageSceneAlsoBuildsPlayableWearWidgetsWhenExportIsUnavailable() =
+    testApplication {
+      val f = compilingFixture()
+      val published = f.publish("fitted-garage")
+      assertEquals(HttpStatusCode.Created, published.status, published.bodyAsText())
+      val store = UserDesignStore(f.storeDir)
+      val widgets = store.designs("octocat").filter { it.entry.key.container != null }
+      assertEquals(
+        setOf(DesignKey.WEAR_SMALL, DesignKey.WEAR_LARGE),
+        widgets.map { it.entry.key.container }.toSet(),
+      )
+      for (widget in widgets) {
+        val bytes = assertNotNull(store.blob(widget.entry.sha256))
+        val document = RcDocumentCodec.decode(bytes, RcWireLimits())
+        val names = document.operations.filterIsInstance<RcNamedVariable>().map { it.name }
+        assertTrue("USER:light.s0.is_on" in names)
+        assertTrue("USER:wear.container.horizontal_padding" in names)
+      }
+    }
 
   /** The library as this server captures it on the JVM, which a compiled design is held to. */
   private fun ApplicationTestBuilder.compilingFixture() =

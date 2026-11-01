@@ -1,10 +1,20 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.composeai.rcplayer.edit.RcTargetProfiles
+import ee.schimke.composeai.rcplayer.edit.namedVariables
+import ee.schimke.composeai.rcplayer.edit.validateFor
+import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
+import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.DesignSurface
+import ee.schimke.ha.designs.UiBuilderDesignCompiler
+import ee.schimke.ha.rc.CardDesignTemplates
+import java.util.Base64
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
@@ -17,6 +27,51 @@ import kotlinx.serialization.json.jsonPrimitive
 
 /** A card's UI Builder design becomes its Wear widgets: the card without its surface. */
 class WearWidgetDesignsTest {
+
+  @Test
+  fun fittedImageSceneCompilesForTheWearPlayerAndKeepsItsLiveBinding() {
+    val source =
+      Json.parseToJsonElement(
+          """
+      {"id":"garage","catalogPin":{"systemId":"ha-cards"},
+       "roots":["stage"],"environment":{"widthDp":360,"heightDp":300},
+       "stateVariables":{"cover.s0.is_on":{"type":"value","valueType":"bool","initialValue":false}},
+       "nodes":{
+         "stage":{"id":"stage","componentId":"layout/box","properties":{},"modifiers":[{"type":"size","widthDp":360,"heightDp":300}],"slots":{"children":["door"]}},
+         "door":{"id":"door","componentId":"asset/image","properties":{"assetKey":{"type":"string","value":"door"},"contentScale":{"type":"string","value":"fillBounds"}},"modifiers":[{"type":"size","widthDp":200,"heightDp":180},{"type":"remoteCall","name":"graphicsLayer","args":{"rotationX":{"type":"expr","op":"select","args":[{"type":"state","variable":"cover.s0.is_on"},{"type":"float","value":85},{"type":"float","value":0}]}}}],"slots":{}}
+       }}
+    """
+        )
+        .jsonObject
+    val png =
+      Base64.getDecoder()
+        .decode(
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/a9sAAAAASUVORK5CYII="
+        )
+    val key =
+      DesignKey(
+        cardType = "tile",
+        surface = DesignSurface.MobileApp,
+        rcApiLevel = CardDesignTemplates.MOBILE_APP_API_LEVEL,
+        shape = "device_class=garage;domain=cover;state_icon=garage",
+        theme = "baked:Material3:light",
+      )
+    for (container in DesignKey.WEAR_CONTAINERS) {
+      val widget = assertNotNull(WearWidgetDesigns.document(source, container))
+      val scene = assertNotNull(WearWidgetDesigns.compilableScene(widget))
+      val bytes =
+        assertNotNull(compileWearScene(UiBuilderDesignCompiler(), scene, mapOf("door" to png), key))
+      val document = RcDocumentCodec.decode(bytes, RcWireLimits())
+      assertTrue(document.validateFor(RcTargetProfiles.WEAR_WIDGETS).isEmpty())
+      assertTrue(document.namedVariables.any { it.name.endsWith("cover.s0.is_on") })
+      assertTrue(
+        document.namedVariables.any { it.name.endsWith("wear.container.horizontal_padding") }
+      )
+      assertTrue(
+        document.namedVariables.any { it.name.endsWith("wear.container.vertical_padding") }
+      )
+    }
+  }
 
   /** The editable source of a library card: section root → template → surface → body. */
   private val card: JsonObject =
