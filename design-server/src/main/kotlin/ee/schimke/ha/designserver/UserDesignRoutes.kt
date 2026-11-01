@@ -126,7 +126,9 @@ fun userTemplateProblem(
   // not read them. Limit them to slots already present in the base template.
   val slots = provided.mapNotNull { SLOT_BINDING.find(it)?.groupValues?.get(1) }.toSet()
   val standard =
-    slots.flatMap { slot -> SLOT_VALUE_TYPES.map { (field, type) -> "$slot.$field" to type } }.toMap()
+    slots
+      .flatMap { slot -> SLOT_VALUE_TYPES.map { (field, type) -> "$slot.$field" to type } }
+      .toMap()
   val read = document.namedVariables.map { it.name.removePrefix(DesignLibrary.USER_PREFIX) }
   val unshared =
     read.filter { HaSharedValues.isShared(it) && HaSharedValues.valueOf(it) == null }.distinct()
