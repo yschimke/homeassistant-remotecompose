@@ -1,5 +1,6 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.client.design.validateCardDraft
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -7,6 +8,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
+import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
@@ -15,6 +17,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.options
 import io.ktor.server.routing.post
 import java.net.URI
+import java.util.Base64
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.*
 
@@ -123,11 +126,20 @@ fun Route.cardStudioRoutes(
       call.respondText("", status = HttpStatusCode.NoContent)
     }
   }
-  options("/api/studio/agent-session") {
+  for (path in listOf("/api/studio/agent-session", "/api/studio/agent-asset")) options(path) {
     call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
     call.response.header(HttpHeaders.AccessControlAllowMethods, "GET, POST, DELETE, OPTIONS")
     call.response.header(HttpHeaders.AccessControlAllowHeaders, "Authorization, Content-Type")
     call.respondText("", status = HttpStatusCode.NoContent)
+  }
+  get("/api/studio/agent-asset") {
+    call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
+    call.response.header(HttpHeaders.CacheControl, "no-store")
+    val key = call.request.queryParameters["key"].orEmpty()
+    val asset =
+      agentSessions.asset(call.agentSessionToken(), key)
+        ?: return@get call.respondText("Image unavailable", status = HttpStatusCode.NotFound)
+    call.respondBytes(asset.bytes, ContentType.parse(asset.mediaType))
   }
   post("/api/studio/agent-sessions") {
     call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
@@ -262,7 +274,7 @@ fun Route.cardStudioRoutes(
     val message =
       try {
         val text = call.receiveText()
-        require(text.length <= 132_000)
+        require(text.length <= 1_500_000)
         Json.parseToJsonElement(text).jsonObject
       } catch (e: Exception) {
         if (e is CancellationException) throw e
@@ -358,12 +370,12 @@ fun Route.cardStudioRoutes(
           "Sign in to the design server first",
           status = HttpStatusCode.Unauthorized,
         )
-    val (document, cardType) = call.receiveDraft(seeds) ?: return@post
+    val (document, cardType, assets) = call.receiveDraft(seeds, allowAssets = true) ?: return@post
     // Stands in for a handoff token: what the app matches its published design by.
     val handoff = UiBuilderConfig.randomToken()
     val url =
       try {
-        builder.openInBuilder(document, login, cardType, handoff, made)
+        builder.openInBuilder(document, login, cardType, handoff, made, assets)
       } catch (e: StudioOpenException) {
         call.application.environment.log.warn("Card studio open failed", e)
         return@post call.respondText(e.message!!, status = HttpStatusCode.BadGateway)
@@ -493,12 +505,33 @@ private fun ApplicationCall.agentSessionToken(): String =
  * contract).
  */
 private suspend fun ApplicationCall.receiveDraft(
-  seeds: CardStudioDrafts
-): Pair<JsonObject, String?>? =
+  seeds: CardStudioDrafts,
+  allowAssets: Boolean = false,
+): Triple<JsonObject, String?, Map<String, ByteArray>>? =
   try {
     val text = receiveText()
-    require(text.length <= 128_000)
-    val document = Json.parseToJsonElement(text).jsonObject
+    require(text.length <= if (allowAssets) 3_000_000 else 128_000)
+    val body = Json.parseToJsonElement(text).jsonObject
+    val document = (body["document"] as? JsonObject) ?: body
+    val encoded = (body["assetData"] as? JsonObject).orEmpty()
+    val bindings = (document["assets"] as? JsonObject).orEmpty()
+    require(
+      (encoded.isEmpty() && bindings.isEmpty()) || (allowAssets && encoded.keys == bindings.keys)
+    )
+    val assets = encoded.mapValues { (key, value) ->
+      val data = value.jsonPrimitive.content
+      require(data.length <= 1_400_000)
+      val bytes = Base64.getDecoder().decode(data)
+      require(bytes.isNotEmpty() && bytes.size <= AgentDesignSessions.MAX_ASSET_BYTES)
+      val type = requireNotNull(AgentDesignSessions.imageType(bytes))
+      val binding = bindings.getValue(key).jsonObject
+      require(
+        binding["mediaType"]?.jsonPrimitive?.content == type &&
+          binding["contentDigest"]?.jsonPrimitive?.content == "sha256:${Sha256.hex(bytes)}"
+      )
+      bytes
+    }
+    require(assets.values.sumOf { it.size } <= AgentDesignSessions.MAX_ASSET_TOTAL_BYTES)
     val id = document["id"]!!.jsonPrimitive.content
     val original = seeds.get(id.removePrefix("card-"))
     if (original == null) {
@@ -506,7 +539,7 @@ private suspend fun ApplicationCall.receiveDraft(
       null
     } else {
       validateCardDraft(JsonObject(original + ("id" to JsonPrimitive(id))), document)
-      document to original["title"]?.jsonPrimitive?.contentOrNull
+      Triple(document, original["title"]?.jsonPrimitive?.contentOrNull, assets)
     }
   } catch (e: Exception) {
     if (e is CancellationException) throw e
@@ -531,16 +564,26 @@ private suspend fun UiBuilderIntegration.openInBuilder(
   cardType: String?,
   handoff: String,
   made: UserDesignStore?,
+  assets: Map<String, ByteArray> = emptyMap(),
 ): String {
   var created: String? = null
   try {
     // New id on every attempt: no existing design can be overwritten, including retries.
+    // Omit image dimensions from the initial bindings: upload then writes the bytes even when the
+    // same digest was supplied, and the builder fills in the dimensions it actually decoded.
+    val bindings =
+      (document["assets"] as? JsonObject).orEmpty().mapValues { (_, value) ->
+        JsonObject(value.jsonObject - "widthPx" - "heightPx")
+      }
     val draft =
       JsonObject(
-        document + ("id" to JsonPrimitive("card-${UiBuilderConfig.randomToken()}")) - "template"
+        document +
+          ("id" to JsonPrimitive("card-${UiBuilderConfig.randomToken()}")) +
+          ("assets" to JsonObject(bindings)) - "template"
       )
     val id = client.create(draft, resolveCatalog = true)
     created = id
+    assets.forEach { (key, bytes) -> client.putAsset(id, key, bytes) }
     if (login == null) return config.editorUrl(id)
     client.share(id, "github:$login", editor = true)
     // Theirs to publish from the app (`/api/my/studio`), though UI Builder records the server as
@@ -557,7 +600,8 @@ private suspend fun UiBuilderIntegration.openInBuilder(
         created == null ->
           "UI Builder refused this draft. Nothing was created. Try again; if it keeps failing, " +
             "refresh the preview data and open it again."
-        else -> "UI Builder made the design but couldn't give your GitHub account access to it."
+        else ->
+          "UI Builder made the design but couldn't attach its images or grant access. Try again."
       },
       e,
     )

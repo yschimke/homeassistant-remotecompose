@@ -3,6 +3,7 @@ package ee.schimke.ha.designserver
 import ee.schimke.ha.client.design.CardStudioClient
 import ee.schimke.ha.client.design.CardStudioException
 import ee.schimke.ha.client.design.DesignPublisher
+import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -14,6 +15,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.request.receiveStream
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respondText
@@ -214,12 +216,17 @@ class CardStudioLifecycleTest {
   fun theAppOpensADraftWithItsDeviceTokenAndNoWebSignIn() = testApplication {
     val dir = library()
     val shared = mutableListOf<String>()
+    val uploaded = mutableMapOf<String, ByteArray>()
     externalServices {
       hosts("https://builder.test") {
         routing {
           studioCatalogFixture()
           put("/api/ui-builder/v1/designs/{id}") {
             call.respondText("created", status = HttpStatusCode.Created)
+          }
+          put("/api/ui-builder/v1/designs/{id}/assets/{key}") {
+            uploaded[call.parameters["key"]!!] = call.receiveStream().readBytes()
+            call.respondText("stored")
           }
           post("/ui-builder/{id}/access") {
             shared += call.receiveText()
@@ -262,6 +269,63 @@ class CardStudioLifecycleTest {
       assertFalse(opened.url.contains("token="))
       assertTrue(shared.single().contains("github%3Aoctocat"))
       assertEquals(opened.handoff, store.made("octocat").single().handoff)
+      val png = byteArrayOf(0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1)
+      val digest = "sha256:${Sha256.hex(png)}"
+      val binding =
+        Json.parseToJsonElement(
+          """{"mediaType":"image/png","contentDigest":"$digest","source":{"type":"uploaded","storageKey":"$digest"}}"""
+        )
+      val withImage = JsonObject(seed + ("assets" to JsonObject(mapOf("door" to binding))))
+      val session = studio.startAgentSession(seed, "Use the garage image")
+      val attached =
+        client.post("/api/studio/agent-mcp") {
+          header(HttpHeaders.Authorization, "Bearer ${session.agentToken}")
+          setBody(
+            """{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"put_card_asset","arguments":{"key":"door","imageBase64":"iVBORw0KGgoB"}}}"""
+          )
+        }
+      assertEquals(HttpStatusCode.OK, attached.status)
+      val submitted =
+        client.post("/api/studio/agent-session") {
+          header(HttpHeaders.Authorization, "Bearer ${session.agentToken}")
+          setBody(
+            buildJsonObject {
+              put("revision", 0)
+              put("document", withImage)
+            }
+              .toString()
+          )
+        }
+      assertEquals(HttpStatusCode.OK, submitted.status, submitted.bodyAsText())
+      val (received, revision) = studio.agentSessionDraft(session.ownerToken)
+      assertEquals(1L, revision)
+      assertEquals(withImage, received)
+      val transferred = studio.agentSessionAsset(session.ownerToken, "door", Sha256.hex(png))
+      assertContentEquals(png, transferred)
+      assertFailsWith<IllegalArgumentException> {
+        studio.agentSessionAsset(session.ownerToken, "door", "0".repeat(64))
+      }
+      val imageDraft =
+        studio.openAsUser(
+          github.deviceToken("octocat"),
+          withImage,
+          card,
+          snapshot("21"),
+          mapOf("door" to transferred),
+        )
+      assertTrue(imageDraft.url.startsWith("https://builder.test/ui-builder/card-"))
+      assertContentEquals(png, uploaded["door"])
+      val refusedImage =
+        assertFailsWith<CardStudioException> {
+          studio.openAsUser(
+            github.deviceToken("octocat"),
+            withImage,
+            card,
+            snapshot("21"),
+            mapOf("door" to byteArrayOf(1)),
+          )
+        }
+      assertEquals(400, refusedImage.status)
     } finally {
       studio.close()
       dir.deleteRecursively()

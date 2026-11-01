@@ -127,6 +127,15 @@ review, and publishes and installs it separately. This is a scoped JSON draft ha
 connection to Home Assistant or a live UI Builder editing session. It does not stream live Home Assistant values or
 LED frames; preview data is a snapshot. A cloud agent needs network access to the upstream service.
 
+For a design with pictures, the agent calls `put_card_asset` once per image with its key and
+base64-encoded PNG, JPEG or WebP bytes, and places the returned binding in the draft's `assets`
+map before submitting. Each session holds at most eight images, 1 MiB each and 2 MiB total, in
+memory until it is revoked or expires. A submission is accepted only when its image bindings
+match the attached bytes. The owner retrieves images with its own capability and verifies their
+digests before sending them to the authenticated private server; the private server verifies them
+again and uploads them to UI Builder before returning the review link. This does not publish the
+design or apply a dashboard change.
+
 On a Home Assistant with the private design add-on, the app still uses that add-on to review and
 publish; the configured upstream receives the limited preview for the cloud session. The seeded
 draft is refreshed against the private server's own contract when opened there. The upstream and

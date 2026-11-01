@@ -206,6 +206,55 @@ class CardStudioTest {
   }
 
   @Test
+  fun anImageNodeRequiresAnUploadedDigestAndCannotIntroduceActions() {
+    val digest = "sha256:" + "a".repeat(64)
+    val binding =
+      Json.parseToJsonElement(
+        """{"mediaType":"image/png","contentDigest":"$digest","source":{"type":"uploaded","storageKey":"$digest"}}"""
+      )
+    val nodes = document.getValue("nodes").jsonObject
+    val root = nodes.getValue("root").jsonObject
+    val image =
+      Json.parseToJsonElement(
+          """{"id":"image","componentId":"asset/image","properties":{"assetKey":{"type":"string","value":"door"}},"slots":{}}"""
+        )
+        .jsonObject
+    val changed =
+      JsonObject(
+        document +
+          ("assets" to JsonObject(mapOf("door" to binding))) +
+          ("nodes" to
+            JsonObject(
+              nodes +
+                ("root" to
+                  JsonObject(
+                    root + ("slots" to Json.parseToJsonElement("""{"content":["text","image"]}"""))
+                  )) +
+                ("image" to image)
+            ))
+      )
+    validateCardDraft(document, changed)
+    assertFailsWith<IllegalArgumentException> {
+      validateCardDraft(document, JsonObject(changed - "assets"))
+    }
+    val unsafe =
+      JsonObject(
+        changed +
+          ("nodes" to
+            JsonObject(
+              changed.getValue("nodes").jsonObject +
+                ("image" to
+                  JsonObject(
+                    image +
+                      ("eventBindings" to
+                        Json.parseToJsonElement("""{"click":{"type":"callService"}}"""))
+                  ))
+            ))
+      )
+    assertFailsWith<IllegalArgumentException> { validateCardDraft(document, unsafe) }
+  }
+
+  @Test
   fun draftMayStopReadingAnUnneededValueButMustKeepALiveCardBinding() {
     val state = document.getValue("stateVariables").jsonObject
     val nodes = document.getValue("nodes").jsonObject

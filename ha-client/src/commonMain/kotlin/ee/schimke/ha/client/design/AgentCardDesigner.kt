@@ -45,7 +45,7 @@ class AgentCardDesigner(engine: HttpClientEngine? = null) {
       Keep schema, id, catalogPin, existing stateVariables and roots unchanged. Keep the root node.
       You may add a known HA: shared value with its declared type when the design needs it.
       Shared values: ${HaSharedValues.values.joinToString { "${it.name} (${it.kind.name.lowercase()}): ${it.description}" }}
-      Use componentIds already present in the document, ha-cards/remote-text, layout/column or layout/row.
+      Use componentIds already present in the document, ha-cards/remote-text, layout/box, layout/column or layout/row.
       Keep at least one existing card binding in use when the card has one.
       Bind changing display values using {"type":"state","variable":"<existing variable>"}.
       Preserve node ids, slot references and binding names. Do not invent API calls, URLs, actions,
@@ -196,10 +196,29 @@ fun validateCardDraft(original: JsonObject, candidate: JsonObject) {
   val components =
     originalNodes.values.map { it.jsonObject["componentId"] }.toSet() +
       setOf(
+        JsonPrimitive("layout/box"),
         JsonPrimitive("layout/column"),
         JsonPrimitive("layout/row"),
+        JsonPrimitive("asset/image"),
         JsonPrimitive("ha-cards/remote-text"),
       )
+  val assets = (candidate["assets"] as? JsonObject).orEmpty()
+  require(assets.size <= 8) { "Too many images." }
+  for ((key, value) in assets) {
+    val binding = value as? JsonObject ?: error("Invalid image binding.")
+    val digest = (binding["contentDigest"] as? JsonPrimitive)?.contentOrNull.orEmpty()
+    val source = binding["source"] as? JsonObject
+    require(
+      Regex("[A-Za-z0-9_-]{1,80}").matches(key) &&
+        Regex("sha256:[0-9a-f]{64}").matches(digest) &&
+        (binding["mediaType"] as? JsonPrimitive)?.contentOrNull in
+          setOf("image/png", "image/jpeg", "image/webp") &&
+        source?.get("type") == JsonPrimitive("uploaded") &&
+        source["storageKey"] == JsonPrimitive(digest)
+    ) {
+      "Invalid image binding."
+    }
+  }
   val roots = candidate["roots"]!!.jsonArray.map { it.jsonPrimitive.content }
   val state = candidate["stateVariables"]!!.jsonObject.keys
   fun checkValues(value: JsonElement) {
@@ -243,7 +262,21 @@ fun validateCardDraft(original: JsonObject, candidate: JsonObject) {
     require(node["id"] == JsonPrimitive(id) && node["componentId"] in components) {
       "Unsupported card component."
     }
+    if (node["componentId"] == JsonPrimitive("asset/image")) {
+      val key = ((node["properties"] as? JsonObject)?.get("assetKey") as? JsonObject)
+      require(
+        key?.get("type") == JsonPrimitive("string") &&
+          (key["value"] as? JsonPrimitive)?.contentOrNull in assets
+      ) {
+        "Image is not attached."
+      }
+    }
     require(node["events"] == null || node["events"] == JsonObject(emptyMap())) {
+      "Agent actions are not allowed."
+    }
+    val events = node["eventBindings"]
+    val oldEvents = (originalNodes[id] as? JsonObject)?.get("eventBindings")
+    require(events == null || events == oldEvents || events == JsonObject(emptyMap())) {
       "Agent actions are not allowed."
     }
     checkValues(node)

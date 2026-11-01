@@ -314,6 +314,19 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
     return Result.success(response.bodyAsBytes())
   }
 
+  /** Upload the picture to a newly created private draft before giving the person its link. */
+  suspend fun putAsset(designId: String, assetKey: String, bytes: ByteArray) {
+    val response =
+      http.put(
+        "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/designs/${designId.encodeURLPathPart()}" +
+          "/assets/${assetKey.encodeURLPathPart()}?token=${config.token.encodeURLParameter()}"
+      ) {
+        contentType(ContentType.Application.OctetStream)
+        setBody(bytes)
+      }
+    check(response.status.isSuccess()) { "UI Builder refused an image (${response.status})" }
+  }
+
   /**
    * Who may edit [designId] (`getDesignAccess`): its owner, then every actor it is shared with as
    * an editor, as actor ids (`github:<login>`). A failure when UI Builder won't say.
