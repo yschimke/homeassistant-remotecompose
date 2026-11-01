@@ -173,9 +173,11 @@ jobs:
     outputs:
       changed: ${{ steps.diff.outputs.changed }}
     steps:
+      # The comparison tooling comes from this workflow's own revision, not the release
+      # tag: a tag older than this workflow has no .github/scripts/release-preview-diff.py.
+      # The renders being compared arrive as artifacts, so nothing here reads the tag.
       - uses: actions/checkout@v7.0.1
         with:
-          ref: ${{ needs.prep.outputs.head }}
           persist-credentials: false
           sparse-checkout: .github
       - uses: actions/download-artifact@v8.0.2
