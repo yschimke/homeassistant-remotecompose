@@ -28,6 +28,7 @@ class CardStudioWizardTest {
     onSignIn: (() -> Unit)? = {},
     onDefaultsChange: (CardStudioDefaults) -> Unit = {},
     homeServer: HomeDesignServer? = null,
+    canPublish: Boolean = true,
   ) = setContent {
     MaterialTheme {
       Box(Modifier.size(400.dp, 900.dp)) {
@@ -40,7 +41,7 @@ class CardStudioWizardTest {
           defaults = defaults,
           onDefaultsChange = onDefaultsChange,
           openEditorInBrowser = true,
-          onPublished = {},
+          onPublished = if (canPublish) ({}) else null,
           homeServer = homeServer,
         ) {
           Text("Current card")
@@ -98,6 +99,26 @@ class CardStudioWizardTest {
     // The key isn't remembered on disk, so it is the one field asked for.
     onNodeWithText("Claude API key").assertExists()
     capture("4-agent-remembered")
+  }
+
+  @Test
+  fun cloudAgentExplainsWhatIsSharedBeforeCreatingARequest() = runComposeUiTest {
+    studio(token = "device")
+    onNodeWithText("With a cloud agent").performClick()
+    onNodeWithText("What should change?").assertExists()
+    onNodeWithText("Create agent request").assertIsNotEnabled()
+    onNodeWithText("https://ha.coo.ee", substring = true).assertExists()
+    onNodeWithText("no Home Assistant token is sent", substring = true).assertExists()
+    capture("5-cloud-agent")
+  }
+
+  @Test
+  fun cloudAgentCanStartWithoutAHostBackendOrDesignServerLogin() = runComposeUiTest {
+    studio(onSignIn = null, canPublish = false)
+    onNodeWithText("With a cloud agent").performClick()
+    onNodeWithText("What should change?").performTextInput("Make it brighter")
+    onNodeWithText("Create agent request").assertIsEnabled()
+    onNodeWithText("applying it in this host is not yet supported", substring = true).assertExists()
   }
 
   @Test

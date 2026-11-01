@@ -10,6 +10,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.api.createClientPlugin
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -60,6 +61,44 @@ private constructor(
 
   suspend fun seed(card: CardConfig, snapshot: HaSnapshot): JsonObject =
     request("/api/studio/seed", cardPreviewData(card, snapshot))
+
+  /** The private add-on's configured library upstream, validated before any data is sent. */
+  suspend fun upstreamServer(): String {
+    val response = http.get(base + "/api/studio/upstream")
+    if (!response.status.isSuccess()) throw CardStudioException(response.status.value)
+    val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+    return studioServerUrl(json.getValue("url").jsonPrimitive.content)
+  }
+
+  /** Start a short-lived agent task on this server. Tokens are distinct from HA credentials. */
+  suspend fun startAgentSession(document: JsonObject, instruction: String): CardAgentSession {
+    val response =
+      request(
+        "/api/studio/agent-sessions",
+        buildJsonObject {
+          put("document", document)
+          put("instruction", instruction)
+        },
+      )
+    return CardAgentSession(
+      response.getValue("ownerToken").jsonPrimitive.content,
+      response.getValue("agentToken").jsonPrimitive.content,
+    )
+  }
+
+  suspend fun agentSessionDraft(ownerToken: String): Pair<JsonObject, Long> {
+    val response = http.get(base + "/api/studio/agent-session") { bearer(ownerToken) }
+    if (response.status == HttpStatusCode.NotFound) throw CardStudioException(410)
+    if (!response.status.isSuccess()) throw CardStudioException(response.status.value)
+    val result = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+    return result.getValue("document").jsonObject to result.getValue("revision").jsonPrimitive.long
+  }
+
+  suspend fun revokeAgentSession(ownerToken: String) {
+    val response = http.delete(base + "/api/studio/agent-session") { bearer(ownerToken) }
+    if (response.status == HttpStatusCode.NotFound) return // Already expired or revoked.
+    if (!response.status.isSuccess()) throw CardStudioException(response.status.value)
+  }
 
   /** A short-lived capability link; permanent creation still requires browser sign-in. */
   suspend fun handoff(document: JsonObject): String {
@@ -204,6 +243,8 @@ private constructor(
 }
 
 data class CardStudioHandoff(val document: JsonObject, val url: String)
+
+data class CardAgentSession(val ownerToken: String, val agentToken: String)
 
 /**
  * A draft [CardStudioClient.openAsUser] opened: the [document] it sent, the editor [url], already

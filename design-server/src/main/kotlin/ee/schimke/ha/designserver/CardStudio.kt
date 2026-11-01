@@ -10,6 +10,7 @@ import io.ktor.server.response.header
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.options
 import io.ktor.server.routing.post
@@ -86,16 +87,190 @@ fun Route.cardStudioRoutes(
   made: UserDesignStore? = null,
   seeds: CardStudioDrafts = CardStudioDrafts(),
   handoffs: CardStudioDrafts = CardStudioDrafts(),
+  agentSessions: AgentDesignSessions = AgentDesignSessions(),
+  upstream: String? = System.getenv("LIBRARY_UPSTREAM"),
 ) {
+  get("/api/studio/upstream") {
+    call.response.header(HttpHeaders.CacheControl, "no-store")
+    val configured =
+      upstream?.takeIf {
+        runCatching {
+            val uri = URI(it)
+            uri.scheme == "https" &&
+              !uri.host.isNullOrBlank() &&
+              uri.userInfo == null &&
+              uri.query == null &&
+              uri.fragment == null
+          }
+          .getOrDefault(false)
+      }
+        ?: return@get call.respondText(
+          "No upstream design server configured",
+          status = HttpStatusCode.NotFound,
+        )
+    call.respondText(
+      buildJsonObject { put("url", configured) }.toString(),
+      ContentType.Application.Json,
+    )
+  }
   // The Pages/Wasm app calls these anonymous JSON APIs from a different origin.
   // Browser-authorized create/share routes below deliberately remain same-origin.
-  for (path in listOf("/api/studio/seed", "/api/studio/handoffs")) {
+  for (path in listOf("/api/studio/seed", "/api/studio/handoffs", "/api/studio/agent-sessions")) {
     options(path) {
       call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
       call.response.header(HttpHeaders.AccessControlAllowMethods, "POST, OPTIONS")
       call.response.header(HttpHeaders.AccessControlAllowHeaders, "Content-Type")
       call.respondText("", status = HttpStatusCode.NoContent)
     }
+  }
+  options("/api/studio/agent-session") {
+    call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
+    call.response.header(HttpHeaders.AccessControlAllowMethods, "GET, POST, DELETE, OPTIONS")
+    call.response.header(HttpHeaders.AccessControlAllowHeaders, "Authorization, Content-Type")
+    call.respondText("", status = HttpStatusCode.NoContent)
+  }
+  post("/api/studio/agent-sessions") {
+    call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
+    call.response.header(HttpHeaders.CacheControl, "no-store")
+    if (integration == null)
+      return@post call.respondText(
+        "UI Builder is not configured",
+        status = HttpStatusCode.ServiceUnavailable,
+      )
+    val input =
+      try {
+        val text = call.receiveText()
+        require(text.length <= 132_000)
+        Json.parseToJsonElement(text).jsonObject
+      } catch (e: Exception) {
+        if (e is CancellationException) throw e
+        return@post call.respondText("Invalid design request", status = HttpStatusCode.BadRequest)
+      }
+    val document =
+      input["document"] as? JsonObject
+        ?: return@post call.respondText("Missing document", status = HttpStatusCode.BadRequest)
+    val instruction = (input["instruction"] as? JsonPrimitive)?.contentOrNull.orEmpty()
+    val id = (document["id"] as? JsonPrimitive)?.contentOrNull.orEmpty()
+    if (!id.startsWith("card-"))
+      return@post call.respondText("Invalid card draft", status = HttpStatusCode.BadRequest)
+    val seed =
+      seeds.get(id.removePrefix("card-"))
+        ?: return@post call.respondText(
+          "Preview expired; reload the card",
+          status = HttpStatusCode.Gone,
+        )
+    try {
+      validateCardDraft(JsonObject(seed + ("id" to JsonPrimitive(id))), document)
+    } catch (e: Exception) {
+      if (e is CancellationException) throw e
+      return@post call.respondText("Invalid design request", status = HttpStatusCode.BadRequest)
+    }
+    val access =
+      try {
+        agentSessions.create(instruction, document)
+      } catch (e: IllegalStateException) {
+        return@post call.respondText(
+          "Design session capacity reached",
+          status = HttpStatusCode.TooManyRequests,
+        )
+      } catch (e: IllegalArgumentException) {
+        return@post call.respondText("Invalid design request", status = HttpStatusCode.BadRequest)
+      }
+    call.respondText(
+      buildJsonObject {
+        put("ownerToken", access.owner)
+        put("agentToken", access.agent)
+        put("expiresInSeconds", 3600)
+      }
+        .toString(),
+      ContentType.Application.Json,
+    )
+  }
+
+  get("/api/studio/agent-session") {
+    call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
+    call.response.header(HttpHeaders.CacheControl, "no-store")
+    val session =
+      agentSessions.read(call.agentSessionToken())
+        ?: return@get call.respondText(
+          "Design session unavailable",
+          status = HttpStatusCode.NotFound,
+        )
+    call.respondText(
+      buildJsonObject {
+        put("instruction", session.instruction)
+        put("document", session.document)
+        put("revision", session.revision)
+      }
+        .toString(),
+      ContentType.Application.Json,
+    )
+  }
+
+  post("/api/studio/agent-session") {
+    call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
+    call.response.header(HttpHeaders.CacheControl, "no-store")
+    val body =
+      try {
+        val text = call.receiveText()
+        require(text.length <= 132_000)
+        Json.parseToJsonElement(text).jsonObject
+      } catch (e: Exception) {
+        if (e is CancellationException) throw e
+        return@post call.respondText("Invalid design draft", status = HttpStatusCode.BadRequest)
+      }
+    val revision =
+      (body["revision"] as? JsonPrimitive)?.longOrNull
+        ?: return@post call.respondText("Missing revision", status = HttpStatusCode.BadRequest)
+    val document =
+      body["document"] as? JsonObject
+        ?: return@post call.respondText("Missing document", status = HttpStatusCode.BadRequest)
+    try {
+      if (!agentSessions.submit(call.agentSessionToken(), revision, document))
+        return@post call.respondText("Design session unavailable", status = HttpStatusCode.NotFound)
+    } catch (e: Exception) {
+      if (e is CancellationException) throw e
+      return@post call.respondText(
+        "Invalid or stale design draft",
+        status = HttpStatusCode.Conflict,
+      )
+    }
+    call.respondText("Draft submitted; the person must review and publish it.")
+  }
+
+  delete("/api/studio/agent-session") {
+    call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
+    call.response.header(HttpHeaders.CacheControl, "no-store")
+    if (!agentSessions.revoke(call.agentSessionToken()))
+      return@delete call.respondText("Design session unavailable", status = HttpStatusCode.NotFound)
+    call.respondText("Design session revoked")
+  }
+
+  post("/api/studio/agent-mcp") {
+    call.response.header(HttpHeaders.CacheControl, "no-store")
+    if (call.request.headers[HttpHeaders.Origin] != null)
+      return@post call.respondText(
+        "Browser origins are not supported",
+        status = HttpStatusCode.Forbidden,
+      )
+    val token = call.agentSessionToken()
+    if (!agentSessions.isAgent(token))
+      return@post call.respondText(
+        "Design session unavailable",
+        status = HttpStatusCode.Unauthorized,
+      )
+    val message =
+      try {
+        val text = call.receiveText()
+        require(text.length <= 132_000)
+        Json.parseToJsonElement(text).jsonObject
+      } catch (e: Exception) {
+        if (e is CancellationException) throw e
+        return@post call.respondText("Invalid MCP request", status = HttpStatusCode.BadRequest)
+      }
+    val response = AgentDesignMcp.handle(message, token, agentSessions)
+    if (response == null) call.respondText("", status = HttpStatusCode.Accepted)
+    else call.respondText(response.toString(), ContentType.Application.Json)
   }
   post("/api/studio/seed") {
     call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
@@ -304,6 +479,13 @@ fun Route.cardStudioRoutes(
     call.respondRedirect(location)
   }
 }
+
+private fun ApplicationCall.agentSessionToken(): String =
+  request.headers[HttpHeaders.Authorization]
+    ?.takeIf { it.startsWith("Bearer ", ignoreCase = true) }
+    ?.substring(7)
+    ?.trim()
+    .orEmpty()
 
 /**
  * The posted draft and the card type its seed was made for, once it is checked against that seed;
