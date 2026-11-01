@@ -81,12 +81,14 @@ private data class DashboardEditDestination(val path: String?) : NavKey
 
 private class AppConnection(
   val config: HaConfig,
-  accessTokenProvider: (suspend () -> String)? = null,
+  private val accessTokenProvider: (suspend () -> String)? = null,
   val hostedAction: ((String) -> Boolean)? = null,
 ) {
   val hosted = accessTokenProvider != null
   val pictures = EntityPictureClient(config, accessTokenProvider)
   val client = HaClient(config, accessTokenProvider = accessTokenProvider)
+
+  suspend fun accessToken(): String = accessTokenProvider?.invoke() ?: config.accessToken
 
   suspend fun close() {
     pictures.close()
@@ -417,6 +419,7 @@ private fun DashboardShell(
   }
   // Edit sessions need the Terrazzo integration, which serves the panel itself.
   var integrationInstalled by remember(connection) { mutableStateOf(false) }
+  var privateDesignServer by remember(connection) { mutableStateOf(false) }
   var dashboardRefreshGeneration by remember(connection) { mutableIntStateOf(0) }
   LaunchedEffect(connection) {
     connection.client.state.collectLatest { state ->
@@ -424,6 +427,15 @@ private fun DashboardShell(
       integrationInstalled =
         runCatching { TERRAZZO_DOMAIN in connection.client.fetchConfig().components }
           .getOrDefault(integrationInstalled)
+      privateDesignServer =
+        try {
+          (connection.client.terrazzoDesignServer()["available"] as? JsonPrimitive)
+            ?.booleanOrNull == true
+        } catch (e: CancellationException) {
+          throw e
+        } catch (_: Exception) {
+          false
+        }
     }
   }
   fun select(route: NavKey) {
@@ -552,6 +564,7 @@ private fun DashboardShell(
                   dark,
                   customizing,
                   dashboardRefreshGeneration,
+                  privateDesignServer,
                 )
               }
             }
@@ -891,6 +904,7 @@ private fun LiveDashboard(
   dark: Boolean,
   customizing: Boolean,
   refreshGeneration: Int,
+  privateDesignServer: Boolean,
 ) {
   val uriHandler = LocalUriHandler.current
   var designCard by remember(connection, path) { mutableStateOf<CardConfig?>(null) }
@@ -964,11 +978,33 @@ private fun LiveDashboard(
   val shown = remember(snapshot, data) { withDashboardData(snapshot, data) }
   val editing = designCard
   if (editing != null) {
+    val homeServer =
+      remember(connection, privateDesignServer) {
+        if (!privateDesignServer) null
+        else
+          HomeDesignServer(
+            haBaseUrl = connection.config.baseUrl,
+            accessToken = { connection.accessToken() },
+            link = { page ->
+              try {
+                val path = connection.client.terrazzoDesignLink(page)
+                privateDesignEditorUrl(connection.config.baseUrl, path)
+              } catch (e: CancellationException) {
+                throw e
+              } catch (_: Exception) {
+                null
+              }
+            },
+          )
+      }
     CardStudioScreen(
       editing,
       snapshot,
       onBack = { designCard = null },
       initialServerUrl = designServer,
+      homeServer = homeServer,
+      openEditorInBrowser = privateDesignServer,
+      refreshSnapshot = { connection.client.snapshotWithDevices() },
     ) {
       NativeCard(editing, shown) {}
     }
@@ -1023,6 +1059,11 @@ private fun LiveDashboard(
       }
   }
 }
+
+/** Only open a one-time link on the Home Assistant that issued it. */
+internal fun privateDesignEditorUrl(home: String, path: String): String? =
+  if (path.matches(Regex("/api/terrazzo/designs-open/[A-Za-z0-9_-]+"))) home.trimEnd('/') + path
+  else null
 
 /** Common adaptive grid. The caller supplies generation so Android can retain local converters. */
 @Composable
