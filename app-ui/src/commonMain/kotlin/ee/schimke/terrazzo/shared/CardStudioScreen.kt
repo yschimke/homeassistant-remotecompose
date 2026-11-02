@@ -135,6 +135,9 @@ fun CardStudioScreen(
   homeServer: HomeDesignServer? = null,
   /** Stable key scoped to the signed-in home and card, for recovering a cloud request. */
   cloudSessionKey: String? = null,
+  /** Why this host cannot load shared selections, and an immediate retry when available. */
+  selectionProblem: String? = null,
+  onRetrySelections: (() -> Unit)? = null,
   preview: @Composable () -> Unit,
 ) {
   val recovered = remember(cloudSessionKey) { cloudSessionKey?.let { CardAgentSessions.get(it) } }
@@ -272,6 +275,8 @@ fun CardStudioScreen(
         uriHandler.openUri(url)
         if (onPublished != null)
           "Opened in your browser. Save your design there, then come back to use it."
+        else if (selectionProblem != null)
+          "Opened in your browser. Save your design there; retry loading card selections here."
         else
           "Opened in your browser. Save your design there; applying it in this host is not yet supported."
       } else {
@@ -348,6 +353,8 @@ fun CardStudioScreen(
         upstream.close()
       }
       if (onPublished != null) "Draft received. Review it in UI Builder before publishing."
+      else if (selectionProblem != null)
+        "Draft received. Review it in UI Builder; retry loading card selections here."
       else "Draft received. Review it in UI Builder; applying it in this host is not yet supported."
     }
 
@@ -516,6 +523,8 @@ fun CardStudioScreen(
             Text(
               if (onPublished != null)
                 "The agent can rearrange the card's supported components and bindings. Review the result in UI Builder before publishing it."
+              else if (selectionProblem != null)
+                "Review and save the result in UI Builder. Retry loading card selections before publishing."
               else
                 "The agent can rearrange supported components and bindings. Review and save the result in UI Builder; applying it in this host is not yet supported.",
               style = MaterialTheme.typography.bodySmall,
@@ -668,6 +677,12 @@ fun CardStudioScreen(
           }
           if (messageStep == 4) StudioRequestFeedback(busy, message, requestFailed)
         }
+        if (onPublished == null && selectionProblem != null) {
+          Text(selectionProblem, color = MaterialTheme.colorScheme.error)
+          onRetrySelections?.let { retry ->
+            TextButton(onClick = retry) { Text("Retry loading card selections") }
+          }
+        }
         HorizontalDivider()
         TextButton(onClick = { showAdvanced = !showAdvanced }) {
           Text(if (showAdvanced) "Hide options" else "More options")
@@ -714,6 +729,8 @@ fun CardStudioScreen(
         Text(
           if (onPublished != null)
             "Designs stay drafts until you publish them. Nothing here changes your Home Assistant dashboard."
+          else if (selectionProblem != null)
+            "Publishing will be available once card selections load."
           else "This host can create and review drafts but can't apply a custom design yet.",
           style = MaterialTheme.typography.bodySmall,
         )

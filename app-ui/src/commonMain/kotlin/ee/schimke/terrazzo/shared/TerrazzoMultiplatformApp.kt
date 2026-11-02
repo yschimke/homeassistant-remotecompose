@@ -916,15 +916,18 @@ private fun LiveDashboard(
     remember(connection, path, refreshGeneration) { mutableStateOf<Dashboard?>(null) }
   var error by remember(connection, path) { mutableStateOf<String?>(null) }
   var selections by remember(connection) { mutableStateOf<Map<String, String>?>(null) }
+  var selectionProblem by remember(connection) { mutableStateOf<String?>(null) }
+  var selectionRetry by remember(connection) { mutableIntStateOf(0) }
   var designGeneration by remember(connection) { mutableIntStateOf(0) }
   val selectionLock = remember(connection) { Mutex() }
   val scope = rememberCoroutineScope()
-  LaunchedEffect(connection, privateDesignServer) {
+  LaunchedEffect(connection, privateDesignServer, selectionRetry) {
     if (privateDesignServer) {
       while (true) {
         try {
           selectionLock.withLock {
             val updated = connection.client.terrazzoDesignSelections()
+            selectionProblem = null
             if (updated != selections) {
               selections = updated
               designGeneration++
@@ -932,12 +935,20 @@ private fun LiveDashboard(
           }
         } catch (e: CancellationException) {
           throw e
-        } catch (_: Exception) {
+        } catch (e: Exception) {
           // Keep the last selection while offline and retry after reconnection.
+          val code = (e as? ee.schimke.ha.client.HaCommandException)?.code
+          selectionProblem =
+            if (code != null) "Couldn't load card selections from Home Assistant ($code)."
+            else
+              "Couldn't load card selections from Home Assistant. Check the connection and retry."
         }
         delay(30_000)
       }
-    } else selections = null
+    } else {
+      selections = null
+      selectionProblem = null
+    }
   }
   // Keyed on the configured server so changing the setting reloads designs from it.
   val designCache =
@@ -1033,6 +1044,8 @@ private fun LiveDashboard(
       initialServerUrl = designServer,
       homeServer = homeServer,
       cloudSessionKey = connection.config.baseUrl.trimEnd('/') + ":" + cardFingerprint(editing),
+      selectionProblem = selectionProblem,
+      onRetrySelections = { selectionRetry++ },
       openEditorInBrowser = privateDesignServer,
       refreshSnapshot = { connection.client.snapshotWithDevices() },
       designKey = selectedDesignKey(editing, shown, cardStyle, dark),

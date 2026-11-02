@@ -30,6 +30,8 @@ class CardStudioWizardTest {
     homeServer: HomeDesignServer? = null,
     canPublish: Boolean = true,
     cloudSessionKey: String? = null,
+    selectionProblem: String? = null,
+    onRetrySelections: (() -> Unit)? = null,
   ) = setContent {
     MaterialTheme {
       Box(Modifier.size(400.dp, 900.dp)) {
@@ -45,11 +47,29 @@ class CardStudioWizardTest {
           onPublished = if (canPublish) ({}) else null,
           homeServer = homeServer,
           cloudSessionKey = cloudSessionKey,
+          selectionProblem = selectionProblem,
+          onRetrySelections = onRetrySelections,
         ) {
           Text("Current card")
         }
       }
     }
+  }
+
+  @Test
+  fun selectionFailureIsExplainedAndCanBeRetriedWithoutLeavingStudio() = runComposeUiTest {
+    var retries = 0
+    studio(
+      onSignIn = null,
+      canPublish = false,
+      selectionProblem = "Couldn't load card selections (unknown_command).",
+      onRetrySelections = { retries++ },
+    )
+    onNodeWithText("Couldn't load card selections (unknown_command).").assertExists()
+    onNodeWithText("Retry loading card selections").performClick()
+    assertEquals(1, retries)
+    onNodeWithText("This host can create and review drafts but can't apply a custom design yet.")
+      .assertDoesNotExist()
   }
 
   @Test
