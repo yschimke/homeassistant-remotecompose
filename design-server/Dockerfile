@@ -27,10 +27,10 @@ RUN mkdir -p /opt && tar xzf /tmp/ui-builder.tar.gz -C /opt \
   && mv /opt/compose-preview-server-${UI_BUILDER_VERSION} /opt/compose-preview-server
 
 # UI Builder's launcher is a shell script, so a JRE with a shell rather than distroless. Its
-# renderer (Skiko) loads libGL and fontconfig even when it draws offscreen, for PNG/SVG export.
+# renderer and image compiler (Skiko) load libGL, libEGL and fontconfig even offscreen.
 FROM eclipse-temurin:21-jre
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends libgl1 libfontconfig1 fonts-dejavu-core \
+  && apt-get install -y --no-install-recommends libgl1 libegl1 libfontconfig1 fonts-dejavu-core \
   && rm -rf /var/lib/apt/lists/*
 RUN useradd --create-home --home-dir /data --uid 10001 designs
 COPY --from=ui-builder /opt/compose-preview-server /opt/compose-preview-server
