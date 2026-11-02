@@ -29,6 +29,9 @@ class CardStudioWizardTest {
     onDefaultsChange: (CardStudioDefaults) -> Unit = {},
     homeServer: HomeDesignServer? = null,
     canPublish: Boolean = true,
+    cloudSessionKey: String? = null,
+    selectionProblem: String? = null,
+    onRetrySelections: (() -> Unit)? = null,
   ) = setContent {
     MaterialTheme {
       Box(Modifier.size(400.dp, 900.dp)) {
@@ -43,10 +46,53 @@ class CardStudioWizardTest {
           openEditorInBrowser = true,
           onPublished = if (canPublish) ({}) else null,
           homeServer = homeServer,
+          cloudSessionKey = cloudSessionKey,
+          selectionProblem = selectionProblem,
+          onRetrySelections = onRetrySelections,
         ) {
           Text("Current card")
         }
       }
+    }
+  }
+
+  @Test
+  fun selectionFailureIsExplainedAndCanBeRetriedWithoutLeavingStudio() = runComposeUiTest {
+    var retries = 0
+    studio(
+      onSignIn = null,
+      canPublish = false,
+      selectionProblem = "Couldn't load card selections (unknown_command).",
+      onRetrySelections = { retries++ },
+    )
+    onNodeWithText("Couldn't load card selections (unknown_command).").assertExists()
+    onNodeWithText("Retry loading card selections").performClick()
+    assertEquals(1, retries)
+    onNodeWithText("This host can create and review drafts but can't apply a custom design yet.")
+      .assertDoesNotExist()
+  }
+
+  @Test
+  fun restoredCloudRequestIsVisibleWithoutOfferingAnUnfetchedDraft() = runComposeUiTest {
+    CardAgentSessions.clear()
+    CardAgentSessions.put(
+      "home:card",
+      SavedCardAgentSession(
+        "https://ha.coo.ee",
+        "owner",
+        "agent",
+        "Use the door design",
+        Long.MAX_VALUE,
+      ),
+    )
+    try {
+      studio(onSignIn = null, canPublish = false, cloudSessionKey = "home:card")
+      onNodeWithText("Use the door design").assertExists()
+      onNodeWithText("Check for draft").assertExists()
+      onNodeWithText("Review in UI Builder").assertDoesNotExist()
+      capture("restored-cloud-session")
+    } finally {
+      CardAgentSessions.clear()
     }
   }
 

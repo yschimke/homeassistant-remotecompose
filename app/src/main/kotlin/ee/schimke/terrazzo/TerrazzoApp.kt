@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import ee.schimke.ha.client.design.cardFingerprint
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.auth.designTokenLogin
@@ -37,6 +38,7 @@ import ee.schimke.terrazzo.core.session.ReconnectBackoff
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.dashboard.CardActionsSheet
 import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
+import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardHistoryScreen
 import ee.schimke.terrazzo.dashboard.CardStyleSheet
 import ee.schimke.terrazzo.dashboard.DashboardEditorScreen
@@ -46,6 +48,7 @@ import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.dashboard.ManagePinnedScreen
 import ee.schimke.terrazzo.dashboard.SkinInstallWorker
+import ee.schimke.terrazzo.dashboard.Skins
 import ee.schimke.terrazzo.dashboard.StudioCardPreview
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
 import ee.schimke.terrazzo.dashboard.preferredDashboardPath
@@ -54,6 +57,7 @@ import ee.schimke.terrazzo.dashboard.rememberSelectedDashboardListState
 import ee.schimke.terrazzo.dashboard.rememberStudioDesignKey
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.shared.AppScreen
+import ee.schimke.terrazzo.shared.CardSelectionException
 import ee.schimke.terrazzo.shared.CardStudioDefaults
 import ee.schimke.terrazzo.shared.CardStudioScreen
 import ee.schimke.terrazzo.shared.HomeDesignServer
@@ -649,9 +653,10 @@ private fun DashboardsRoot(
       }
     }
   }
+  val sharedSelectionOwner = remember(session) { Any() }
   LaunchedEffect(session) {
     val selections = CardDesignOverrideStore.of(context)
-    val owner = Any()
+    val owner = sharedSelectionOwner
     try {
       selections.beginShared(owner)
       if (session !is DemoHaSession) {
@@ -738,7 +743,28 @@ private fun DashboardsRoot(
       designKey = rememberStudioDesignKey(card, snapshot),
       // Downloads the published design and switches this card to it, as the card's skin picker
       // does, even once the studio has closed.
-      onPublished = { designId -> SkinInstallWorker.enqueue(context, card, designId) },
+      onPublished = { designId ->
+        if (homeDesignServer == null) SkinInstallWorker.enqueue(context, card, designId)
+        else {
+          val choice = CardDesignSync.choice(context, graph.preferencesStore).first()
+          if (Skins.install(context, choice, designId) != Skins.Installed.Yes)
+            throw CardSelectionException(
+              "The design was published but could not be downloaded. Try again."
+            )
+          try {
+            session.setSharedDesignSelection(cardFingerprint(card), designId)
+          } catch (e: CancellationException) {
+            throw e
+          } catch (e: Exception) {
+            throw CardSelectionException(
+              "The design was downloaded but Home Assistant couldn't select it. Try again."
+            )
+          }
+          val overrides = CardDesignOverrideStore.of(context)
+          overrides.setPublishedShared(sharedSelectionOwner, cardFingerprint(card), designId)
+          WidgetRefreshScheduler(context).refreshAllNow()
+        }
+      },
       homeServer = homeDesignServer,
       refreshSnapshot = {
         val current = session.loadDashboard(openedValue).second

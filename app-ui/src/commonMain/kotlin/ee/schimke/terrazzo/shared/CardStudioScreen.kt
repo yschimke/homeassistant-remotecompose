@@ -22,6 +22,7 @@ import ee.schimke.ha.client.design.*
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import kotlin.time.Clock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -85,7 +86,7 @@ class HomeDesignServer(
   val link: suspend (path: String) -> String?,
 )
 
-internal class CardSelectionException(message: String) : Exception(message)
+class CardSelectionException(message: String) : Exception(message)
 
 /**
  * Shared phone/desktop authoring surface, as a wizard: sign in, choose how to design, design, then
@@ -132,22 +133,33 @@ fun CardStudioScreen(
    * This Home Assistant's own design server, used instead of [initialServerUrl] when it has one.
    */
   homeServer: HomeDesignServer? = null,
+  /** Stable key scoped to the signed-in home and card, for recovering a cloud request. */
+  cloudSessionKey: String? = null,
+  /** Why this host cannot load shared selections, and an immediate retry when available. */
+  selectionProblem: String? = null,
+  onRetrySelections: (() -> Unit)? = null,
   preview: @Composable () -> Unit,
 ) {
+  val recovered = remember(cloudSessionKey) { cloudSessionKey?.let { CardAgentSessions.get(it) } }
   var server by remember { mutableStateOf(initialServerUrl) }
-  var mode by remember { mutableStateOf(defaults.mode) }
+  var mode by remember {
+    mutableStateOf(if (recovered != null) CardStudioMode.CloudAgent else defaults.mode)
+  }
   var choosingMode by remember { mutableStateOf(false) }
   var provider by remember { mutableStateOf(defaults.provider) }
   var model by remember { mutableStateOf(defaults.model) }
   var endpoint by remember { mutableStateOf(defaults.endpoint) }
   val apiKey = StudioKeys.keys[provider].orEmpty()
   var editingAgent by remember { mutableStateOf(!defaults.agentReady) }
-  var instruction by remember { mutableStateOf("") }
-  var cloudSession by remember { mutableStateOf<CardAgentSession?>(null) }
-  var cloudServer by remember { mutableStateOf<String?>(null) }
+  var instruction by remember { mutableStateOf(recovered?.instruction.orEmpty()) }
+  var cloudSession by remember {
+    mutableStateOf(recovered?.let { CardAgentSession(it.ownerToken, it.agentToken) })
+  }
+  var cloudServer by remember { mutableStateOf(recovered?.server) }
   var cloudTarget by remember { mutableStateOf<String?>(null) }
   var cloudTargetProblem by remember { mutableStateOf<String?>(null) }
   var draft by remember { mutableStateOf<JsonObject?>(null) }
+  var cloudDraftReady by remember { mutableStateOf(false) }
   var draftAssets by remember { mutableStateOf<Map<String, ByteArray>>(emptyMap()) }
   var editorUrl by remember { mutableStateOf<String?>(null) }
   var externalUrl by remember(editorUrl) { mutableStateOf<String?>(null) }
@@ -263,6 +275,8 @@ fun CardStudioScreen(
         uriHandler.openUri(url)
         if (onPublished != null)
           "Opened in your browser. Save your design there, then come back to use it."
+        else if (selectionProblem != null)
+          "Opened in your browser. Save your design there; retry loading card selections here."
         else
           "Opened in your browser. Save your design there; applying it in this host is not yet supported."
       } else {
@@ -294,7 +308,21 @@ fun CardStudioScreen(
       try {
         val seed = upstream.seed(card, currentSnapshot(fresh = true))
         cloudSession = upstream.startAgentSession(seed, instruction)
+        cloudDraftReady = false
         cloudServer = target
+        cloudSessionKey?.let { key ->
+          val session = checkNotNull(cloudSession)
+          CardAgentSessions.put(
+            key,
+            SavedCardAgentSession(
+              target,
+              session.ownerToken,
+              session.agentToken,
+              instruction,
+              Clock.System.now().toEpochMilliseconds() + 3_600_000,
+            ),
+          )
+        }
       } finally {
         upstream.close()
       }
@@ -320,10 +348,13 @@ fun CardStudioScreen(
         require(images.values.sumOf { it.size } <= 2 * 1024 * 1024)
         draft = candidate
         draftAssets = images
+        cloudDraftReady = true
       } finally {
         upstream.close()
       }
       if (onPublished != null) "Draft received. Review it in UI Builder before publishing."
+      else if (selectionProblem != null)
+        "Draft received. Review it in UI Builder; retry loading card selections here."
       else "Draft received. Review it in UI Builder; applying it in this host is not yet supported."
     }
 
@@ -333,8 +364,10 @@ fun CardStudioScreen(
       val upstream = CardStudioClient(cloudServer ?: return@launch null)
       try {
         upstream.revokeAgentSession(session.ownerToken)
+        cloudSessionKey?.let(CardAgentSessions::remove)
         cloudSession = null
         cloudServer = null
+        cloudDraftReady = false
       } finally {
         upstream.close()
       }
@@ -490,6 +523,8 @@ fun CardStudioScreen(
             Text(
               if (onPublished != null)
                 "The agent can rearrange the card's supported components and bindings. Review the result in UI Builder before publishing it."
+              else if (selectionProblem != null)
+                "Review and save the result in UI Builder. Retry loading card selections before publishing."
               else
                 "The agent can rearrange supported components and bindings. Review and save the result in UI Builder; applying it in this host is not yet supported.",
               style = MaterialTheme.typography.bodySmall,
@@ -535,7 +570,7 @@ fun CardStudioScreen(
                   Text("Revoke access")
                 }
               }
-              if (draft != null)
+              if (cloudDraftReady)
                 Button(onClick = { openInBuilder() }, enabled = !busy) {
                   Text("Review in UI Builder")
                 }
@@ -642,6 +677,12 @@ fun CardStudioScreen(
           }
           if (messageStep == 4) StudioRequestFeedback(busy, message, requestFailed)
         }
+        if (onPublished == null && selectionProblem != null) {
+          Text(selectionProblem, color = MaterialTheme.colorScheme.error)
+          onRetrySelections?.let { retry ->
+            TextButton(onClick = retry) { Text("Retry loading card selections") }
+          }
+        }
         HorizontalDivider()
         TextButton(onClick = { showAdvanced = !showAdvanced }) {
           Text(if (showAdvanced) "Hide options" else "More options")
@@ -688,6 +729,8 @@ fun CardStudioScreen(
         Text(
           if (onPublished != null)
             "Designs stay drafts until you publish them. Nothing here changes your Home Assistant dashboard."
+          else if (selectionProblem != null)
+            "Publishing will be available once card selections load."
           else "This host can create and review drafts but can't apply a custom design yet.",
           style = MaterialTheme.typography.bodySmall,
         )
