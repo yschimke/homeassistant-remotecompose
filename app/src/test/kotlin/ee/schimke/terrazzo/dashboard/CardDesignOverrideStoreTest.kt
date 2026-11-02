@@ -76,6 +76,8 @@ class CardDesignOverrideStoreTest {
     )
     store.setDesign(cardFingerprint(card), "user:new-local")
     assertEquals("user:shared", store.overrides.value.forCard(card)?.designId)
+    store.setPublishedShared(owner, cardFingerprint(card), "user:published")
+    assertEquals("user:published", store.overrides.value.forCard(card)?.designId)
     assertEquals(
       "user:new-local",
       CardDesignOverrideStore(file).overrides.value.forCard(card)?.designId,
@@ -93,6 +95,7 @@ class CardDesignOverrideStoreTest {
     store.beginShared(current)
     store.setShared(current, mapOf(cardFingerprint(card) to "user:new"))
     store.setShared(old, mapOf(cardFingerprint(card) to "user:old"))
+    store.setPublishedShared(old, cardFingerprint(card), "user:old-published")
     store.endShared(old)
     assertEquals("user:new", store.overrides.value.forCard(card)?.designId)
   }

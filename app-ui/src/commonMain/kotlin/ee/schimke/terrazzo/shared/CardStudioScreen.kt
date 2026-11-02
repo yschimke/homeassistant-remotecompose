@@ -86,7 +86,7 @@ class HomeDesignServer(
   val link: suspend (path: String) -> String?,
 )
 
-internal class CardSelectionException(message: String) : Exception(message)
+class CardSelectionException(message: String) : Exception(message)
 
 /**
  * Shared phone/desktop authoring surface, as a wizard: sign in, choose how to design, design, then

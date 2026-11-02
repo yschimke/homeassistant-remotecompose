@@ -59,6 +59,16 @@ class CardDesignOverrideStore internal constructor(private val file: File) {
     }
   }
 
+  /** Reflect a selection accepted by Home Assistant immediately, before the next poll. */
+  suspend fun setPublishedShared(owner: Any, card: String, designId: String) {
+    writes.withLock {
+      if (sharedOwner === owner) {
+        _shared.value = _shared.value + (card to designId)
+        publish()
+      }
+    }
+  }
+
   private fun publish() {
     val cards = local.byCard.toMutableMap()
     _shared.value.forEach { (card, design) ->

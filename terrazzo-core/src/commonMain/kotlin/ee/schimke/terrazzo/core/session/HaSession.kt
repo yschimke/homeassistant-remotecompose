@@ -249,6 +249,11 @@ interface HaSession {
   /** The current user's shared card selections, or null when the integration is too old. */
   suspend fun sharedDesignSelections(): Map<String, String>? = null
 
+  /** Select a private design for the signed-in user across their devices. */
+  suspend fun setSharedDesignSelection(card: String, designId: String) {
+    throw UnsupportedOperationException("Shared card selections are unavailable")
+  }
+
   /**
    * A one-time link that opens the design server's page [path] in a browser, signed in through this
    * Home Assistant ([privateDesignServer]); null where there is none or the user isn't an admin.
@@ -629,6 +634,10 @@ class LiveHaSession(
     } catch (refused: HaCommandException) {
       null
     }
+
+  override suspend fun setSharedDesignSelection(card: String, designId: String) {
+    client.setTerrazzoDesignSelection(card, designId)
+  }
 
   override suspend fun privateDesignLink(path: String): String? =
     try {
