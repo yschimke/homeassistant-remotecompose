@@ -29,6 +29,7 @@ class CardStudioWizardTest {
     onDefaultsChange: (CardStudioDefaults) -> Unit = {},
     homeServer: HomeDesignServer? = null,
     canPublish: Boolean = true,
+    cloudSessionKey: String? = null,
   ) = setContent {
     MaterialTheme {
       Box(Modifier.size(400.dp, 900.dp)) {
@@ -43,10 +44,35 @@ class CardStudioWizardTest {
           openEditorInBrowser = true,
           onPublished = if (canPublish) ({}) else null,
           homeServer = homeServer,
+          cloudSessionKey = cloudSessionKey,
         ) {
           Text("Current card")
         }
       }
+    }
+  }
+
+  @Test
+  fun restoredCloudRequestIsVisibleWithoutOfferingAnUnfetchedDraft() = runComposeUiTest {
+    CardAgentSessions.clear()
+    CardAgentSessions.put(
+      "home:card",
+      SavedCardAgentSession(
+        "https://ha.coo.ee",
+        "owner",
+        "agent",
+        "Use the door design",
+        Long.MAX_VALUE,
+      ),
+    )
+    try {
+      studio(onSignIn = null, canPublish = false, cloudSessionKey = "home:card")
+      onNodeWithText("Use the door design").assertExists()
+      onNodeWithText("Check for draft").assertExists()
+      onNodeWithText("Review in UI Builder").assertDoesNotExist()
+      capture("restored-cloud-session")
+    } finally {
+      CardAgentSessions.clear()
     }
   }
 

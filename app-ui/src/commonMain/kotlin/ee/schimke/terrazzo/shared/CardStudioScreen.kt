@@ -22,6 +22,7 @@ import ee.schimke.ha.client.design.*
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import kotlin.time.Clock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -132,22 +133,30 @@ fun CardStudioScreen(
    * This Home Assistant's own design server, used instead of [initialServerUrl] when it has one.
    */
   homeServer: HomeDesignServer? = null,
+  /** Stable key scoped to the signed-in home and card, for recovering a cloud request. */
+  cloudSessionKey: String? = null,
   preview: @Composable () -> Unit,
 ) {
+  val recovered = remember(cloudSessionKey) { cloudSessionKey?.let { CardAgentSessions.get(it) } }
   var server by remember { mutableStateOf(initialServerUrl) }
-  var mode by remember { mutableStateOf(defaults.mode) }
+  var mode by remember {
+    mutableStateOf(if (recovered != null) CardStudioMode.CloudAgent else defaults.mode)
+  }
   var choosingMode by remember { mutableStateOf(false) }
   var provider by remember { mutableStateOf(defaults.provider) }
   var model by remember { mutableStateOf(defaults.model) }
   var endpoint by remember { mutableStateOf(defaults.endpoint) }
   val apiKey = StudioKeys.keys[provider].orEmpty()
   var editingAgent by remember { mutableStateOf(!defaults.agentReady) }
-  var instruction by remember { mutableStateOf("") }
-  var cloudSession by remember { mutableStateOf<CardAgentSession?>(null) }
-  var cloudServer by remember { mutableStateOf<String?>(null) }
+  var instruction by remember { mutableStateOf(recovered?.instruction.orEmpty()) }
+  var cloudSession by remember {
+    mutableStateOf(recovered?.let { CardAgentSession(it.ownerToken, it.agentToken) })
+  }
+  var cloudServer by remember { mutableStateOf(recovered?.server) }
   var cloudTarget by remember { mutableStateOf<String?>(null) }
   var cloudTargetProblem by remember { mutableStateOf<String?>(null) }
   var draft by remember { mutableStateOf<JsonObject?>(null) }
+  var cloudDraftReady by remember { mutableStateOf(false) }
   var draftAssets by remember { mutableStateOf<Map<String, ByteArray>>(emptyMap()) }
   var editorUrl by remember { mutableStateOf<String?>(null) }
   var externalUrl by remember(editorUrl) { mutableStateOf<String?>(null) }
@@ -294,7 +303,21 @@ fun CardStudioScreen(
       try {
         val seed = upstream.seed(card, currentSnapshot(fresh = true))
         cloudSession = upstream.startAgentSession(seed, instruction)
+        cloudDraftReady = false
         cloudServer = target
+        cloudSessionKey?.let { key ->
+          val session = checkNotNull(cloudSession)
+          CardAgentSessions.put(
+            key,
+            SavedCardAgentSession(
+              target,
+              session.ownerToken,
+              session.agentToken,
+              instruction,
+              Clock.System.now().toEpochMilliseconds() + 3_600_000,
+            ),
+          )
+        }
       } finally {
         upstream.close()
       }
@@ -320,6 +343,7 @@ fun CardStudioScreen(
         require(images.values.sumOf { it.size } <= 2 * 1024 * 1024)
         draft = candidate
         draftAssets = images
+        cloudDraftReady = true
       } finally {
         upstream.close()
       }
@@ -333,8 +357,10 @@ fun CardStudioScreen(
       val upstream = CardStudioClient(cloudServer ?: return@launch null)
       try {
         upstream.revokeAgentSession(session.ownerToken)
+        cloudSessionKey?.let(CardAgentSessions::remove)
         cloudSession = null
         cloudServer = null
+        cloudDraftReady = false
       } finally {
         upstream.close()
       }
@@ -535,7 +561,7 @@ fun CardStudioScreen(
                   Text("Revoke access")
                 }
               }
-              if (draft != null)
+              if (cloudDraftReady)
                 Button(onClick = { openInBuilder() }, enabled = !busy) {
                   Text("Review in UI Builder")
                 }

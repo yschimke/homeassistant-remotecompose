@@ -201,6 +201,7 @@ fun TerrazzoMultiplatformApp(
                 scope.launch {
                   try {
                     onSignOut?.invoke()
+                    CardAgentSessions.clear()
                     connection = null
                   } catch (e: CancellationException) {
                     throw e
@@ -1031,6 +1032,7 @@ private fun LiveDashboard(
       onBack = { designCard = null },
       initialServerUrl = designServer,
       homeServer = homeServer,
+      cloudSessionKey = connection.config.baseUrl.trimEnd('/') + ":" + cardFingerprint(editing),
       openEditorInBrowser = privateDesignServer,
       refreshSnapshot = { connection.client.snapshotWithDevices() },
       designKey = selectedDesignKey(editing, shown, cardStyle, dark),
