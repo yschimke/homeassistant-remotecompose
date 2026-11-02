@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.1.79](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.78...v0.1.79) (2026-11-02)
+
+
+### Features
+
+* add scoped cloud card design sessions ([#1399](https://github.com/yschimke/homeassistant-remotecompose/issues/1399)) ([9ddd809](https://github.com/yschimke/homeassistant-remotecompose/commit/9ddd80915afff72862e311575acfb5aa88ca5a34))
+* integrate garage card editing and Wear rendering ([#1410](https://github.com/yschimke/homeassistant-remotecompose/issues/1410)) ([4144a42](https://github.com/yschimke/homeassistant-remotecompose/commit/4144a427c942620a20582d63c69231529200d424))
+* let agents discover dashboard edit requests ([#1397](https://github.com/yschimke/homeassistant-remotecompose/issues/1397)) ([f85d8e3](https://github.com/yschimke/homeassistant-remotecompose/commit/f85d8e382ac16596934c69f6cf275911f1b456f6))
+
+
+### Bug Fixes
+
+* **deps:** update compose-ai-tools ([#1385](https://github.com/yschimke/homeassistant-remotecompose/issues/1385)) ([52b3fb6](https://github.com/yschimke/homeassistant-remotecompose/commit/52b3fb61e79bb9edc1289e5595ce774aeea7bd78))
+* **deps:** update compose-ai-tools ([#1391](https://github.com/yschimke/homeassistant-remotecompose/issues/1391)) ([0c23087](https://github.com/yschimke/homeassistant-remotecompose/commit/0c2308772e398f4ae3b4510ddfecaad179b54d6f))
+* **deps:** update compose-ai-tools ([#1396](https://github.com/yschimke/homeassistant-remotecompose/issues/1396)) ([c9f0f8b](https://github.com/yschimke/homeassistant-remotecompose/commit/c9f0f8b4b2b76270a839fe0c6928352528a07e92))
+* **deps:** update compose-ai-tools ([#1413](https://github.com/yschimke/homeassistant-remotecompose/issues/1413)) ([99076c6](https://github.com/yschimke/homeassistant-remotecompose/commit/99076c6e3f376d8f2ac7c1d6d19eafe4863ea42a))
+* **deps:** update dependency ee.schimke.composeai:data-render-core to v3.39.1 ([#1390](https://github.com/yschimke/homeassistant-remotecompose/issues/1390)) ([8abcd42](https://github.com/yschimke/homeassistant-remotecompose/commit/8abcd4202158a477fd57af6fb8952ce958e2030f))
+
 ## [0.1.78](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.77...v0.1.78) (2026-10-31)
 
 
