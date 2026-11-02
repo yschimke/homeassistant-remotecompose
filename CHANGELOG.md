@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.80](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.79...v0.1.80) (2026-11-02)
+
+
+### Bug Fixes
+
+* preserve card edits and share private selections ([#1419](https://github.com/yschimke/homeassistant-remotecompose/issues/1419)) ([3a19dee](https://github.com/yschimke/homeassistant-remotecompose/commit/3a19deed6f1c03d943f138df98e6bb30ef4746ed))
+
 ## [0.1.79](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.78...v0.1.79) (2026-11-02)
 
 
