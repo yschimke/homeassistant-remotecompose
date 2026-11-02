@@ -28,6 +28,9 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /** How a person designs a card in the studio: themselves in UI Builder, or with an AI agent. */
 enum class CardStudioMode(val label: String) {
@@ -82,6 +85,8 @@ class HomeDesignServer(
   val link: suspend (path: String) -> String?,
 )
 
+internal class CardSelectionException(message: String) : Exception(message)
+
 /**
  * Shared phone/desktop authoring surface, as a wizard: sign in, choose how to design, design, then
  * use the design on the card. Each answered step folds to one line; [defaults] pre-answer the ones
@@ -122,7 +127,7 @@ fun CardStudioScreen(
    * Called with a design published privately for this card (its skin id): the host downloads it and
    * switches this card to it. Null where the host can't, which hides publishing.
    */
-  onPublished: ((designId: String) -> Unit)? = null,
+  onPublished: (suspend (designId: String) -> Unit)? = null,
   /**
    * This Home Assistant's own design server, used instead of [initialServerUrl] when it has one.
    */
@@ -143,6 +148,7 @@ fun CardStudioScreen(
   var cloudTarget by remember { mutableStateOf<String?>(null) }
   var cloudTargetProblem by remember { mutableStateOf<String?>(null) }
   var draft by remember { mutableStateOf<JsonObject?>(null) }
+  var draftAssets by remember { mutableStateOf<Map<String, ByteArray>>(emptyMap()) }
   var editorUrl by remember { mutableStateOf<String?>(null) }
   var externalUrl by remember(editorUrl) { mutableStateOf<String?>(null) }
   var showAdvanced by remember { mutableStateOf(false) }
@@ -215,7 +221,8 @@ fun CardStudioScreen(
         message =
           when (e) {
             is CardStudioException,
-            is CardPublishException -> e.message
+            is CardPublishException,
+            is CardSelectionException -> e.message
             is IllegalArgumentException ->
               "The draft or connection settings are invalid. Check the HTTPS address and try again."
             else ->
@@ -240,12 +247,13 @@ fun CardStudioScreen(
       val seed = draft ?: studio.seed(card, now)
       val url =
         if (signedIn) {
-          val opened = studio.openAsUser(bearer(), seed, card, now)
+          val opened = studio.openAsUser(bearer(), seed, card, now, assets = draftAssets)
           draft = opened.document
           openedHandoffs += opened.handoff
           // The add-on names its editor by path; a browser reaches it through Home Assistant.
           homeServer?.let { it.link(opened.url) ?: throw CardStudioException(403) } ?: opened.url
         } else {
+          require(draftAssets.isEmpty()) { "Sign in before opening a draft with images." }
           val handoff = studio.openDraft(seed, card, now)
           draft = handoff.document
           openedHandoffs += handoffToken(handoff.url)
@@ -300,7 +308,18 @@ fun CardStudioScreen(
       try {
         val (candidate, revision) = upstream.agentSessionDraft(session.ownerToken)
         if (revision == 0L) return@launch "The agent hasn't submitted a draft yet."
+        val images =
+          (candidate["assets"] as? JsonObject).orEmpty().mapValues { (key, value) ->
+            val digest =
+              value.jsonObject["contentDigest"]
+                ?.jsonPrimitive
+                ?.contentOrNull
+                ?.removePrefix("sha256:") ?: error("Missing image digest")
+            upstream.agentSessionAsset(session.ownerToken, key, digest)
+          }
+        require(images.values.sumOf { it.size } <= 2 * 1024 * 1024)
         draft = candidate
+        draftAssets = images
       } finally {
         upstream.close()
       }
@@ -332,7 +351,8 @@ fun CardStudioScreen(
   fun publish() {
     val key = designKey ?: return
     launch(4) { studio ->
-      val designs = studio.studioDesigns(bearer(), key.cardType)
+      // The library anchor can be a tile even when the design was opened for a custom card.
+      val designs = studio.studioDesigns(bearer(), card.type)
       val design = designForCard(designs, openedHandoffs)
       if (design == null) {
         requestFailed = true
@@ -638,6 +658,7 @@ fun CardStudioScreen(
               {
                 server = it
                 draft = null
+                draftAssets = emptyMap()
                 message = null
               },
               label = { Text("Design server") },
@@ -654,6 +675,7 @@ fun CardStudioScreen(
               TextButton(
                 onClick = {
                   draft = null
+                  draftAssets = emptyMap()
                   message = null
                 }
               ) {

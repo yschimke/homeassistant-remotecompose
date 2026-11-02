@@ -6,6 +6,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.sharedDesignNames
 import ee.schimke.terrazzo.core.pin.MobilePinnedCard
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection
 import ee.schimke.terrazzo.dashboard.CardDesigns
@@ -19,7 +20,8 @@ import ee.schimke.terrazzo.wearsync.proto.WearSlotDesign
  * same design as the dashboard, rooted on the Wear container. Every pinned card gets them: the
  * watch chooses which card a widget shows, from the cards it was sent. The watch is dark, so it is
  * the card's dark design. A card or container the server has no Wear design for is sent its phone
- * template, adapted to the Wear frame by the watch.
+ * template, adapted to the Wear frame by the watch. A custom card using a projected library key
+ * waits for its selected design instead of receiving the projected card's generic design.
  *
  * Empty while no design server is configured or its designs haven't loaded.
  *
@@ -35,9 +37,18 @@ internal fun wearCardDesigns(
     val override = choice.overrides.forCard(card)
     val cardStyle = override?.cardStyle?.let(HaUberTheme::byId) ?: choice.cardStyle
     val design = CardDesignTemplates.designCard(card, snapshot)
-    val key =
+    val originalKey =
       CardDesignTemplates.keyFor(design, snapshot, choice.style, dark = true, cardStyle = cardStyle)
-        ?: return@flatMap emptyList()
+    val key =
+      (if (override?.designId == null) originalKey
+      else
+        CardDesignTemplates.selectedDesignKeyFor(
+          card,
+          snapshot,
+          choice.style,
+          dark = true,
+          cardStyle = cardStyle,
+        )) ?: return@flatMap emptyList()
     val variants = listOf(key.copy(variant = override?.variant ?: designs.variant), key).distinct()
     val device = cardDevice(design, snapshot)
     DesignKey.WEAR_CONTAINERS.mapNotNull { container ->
@@ -49,6 +60,8 @@ internal fun wearCardDesigns(
           designs.byDesign.find(id, keys.first(), device)?.second
             ?: designs.byDesign.find(id, variants.first(), device)?.second
         }
+      if (override?.designId != null && key != originalKey && selected == null)
+        return@mapNotNull null
       // The design the card was switched to, when it has a Wear widget design for the container.
       val bytes =
         selected
@@ -61,7 +74,12 @@ internal fun wearCardDesigns(
           }
           ?: variants.firstNotNullOfOrNull { designs.byKey[it] }
       bytes?.let {
-        WearSlotDesign(cardKey, container, ee.schimke.ha.client.design.Sha256.hex(it)) to it
+        WearSlotDesign(
+          cardKey,
+          container,
+          ee.schimke.ha.client.design.Sha256.hex(it),
+          sharedDesignNames(listOf(it)).sorted(),
+        ) to it
       }
     }
   }

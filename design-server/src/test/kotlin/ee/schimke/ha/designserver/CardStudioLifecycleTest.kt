@@ -3,6 +3,7 @@ package ee.schimke.ha.designserver
 import ee.schimke.ha.client.design.CardStudioClient
 import ee.schimke.ha.client.design.CardStudioException
 import ee.schimke.ha.client.design.DesignPublisher
+import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -14,15 +15,19 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.request.receiveStream
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
+import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import java.io.File
 import java.nio.file.Files
+import java.util.Base64
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.*
 import kotlinx.coroutines.CompletableDeferred
@@ -214,12 +219,24 @@ class CardStudioLifecycleTest {
   fun theAppOpensADraftWithItsDeviceTokenAndNoWebSignIn() = testApplication {
     val dir = library()
     val shared = mutableListOf<String>()
+    val uploaded = mutableMapOf<String, ByteArray>()
+    var storeUploads = true
     externalServices {
       hosts("https://builder.test") {
         routing {
           studioCatalogFixture()
           put("/api/ui-builder/v1/designs/{id}") {
             call.respondText("created", status = HttpStatusCode.Created)
+          }
+          put("/api/ui-builder/v1/designs/{id}/assets/{key}") {
+            val bytes = call.receiveStream().readBytes()
+            if (storeUploads) uploaded[call.parameters["key"]!!] = bytes
+            call.respondText("stored")
+          }
+          get("/api/ui-builder/v1/designs/{id}/assets/{key}") {
+            val bytes = uploaded[call.parameters["key"]]
+            if (bytes == null) call.respondText("missing", status = HttpStatusCode.NotFound)
+            else call.respondBytes(bytes)
           }
           post("/ui-builder/{id}/access") {
             shared += call.receiveText()
@@ -262,6 +279,109 @@ class CardStudioLifecycleTest {
       assertFalse(opened.url.contains("token="))
       assertTrue(shared.single().contains("github%3Aoctocat"))
       assertEquals(opened.handoff, store.made("octocat").single().handoff)
+      val encodedPng =
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/a9sAAAAASUVORK5CYII="
+      val png = Base64.getDecoder().decode(encodedPng)
+      val digest = "sha256:${Sha256.hex(png)}"
+      val binding =
+        Json.parseToJsonElement(
+          """{"mediaType":"image/png","contentDigest":"$digest","source":{"type":"uploaded","storageKey":"$digest"}}"""
+        )
+      val rootId = seed.getValue("roots").jsonArray.single().jsonPrimitive.content
+      val nodes = seed.getValue("nodes").jsonObject
+      val root = nodes.getValue(rootId).jsonObject
+      val slots = root.getValue("slots").jsonObject
+      val slotName = slots.keys.first()
+      val rootWithImage =
+        JsonObject(
+          root +
+            ("slots" to
+              JsonObject(
+                slots +
+                  (slotName to
+                    JsonArray(slots.getValue(slotName).jsonArray + JsonPrimitive("garage-image")))
+              ))
+        )
+      val imageNode =
+        Json.parseToJsonElement(
+          """{"id":"garage-image","componentId":"asset/image","properties":{"assetKey":{"type":"string","value":"door"}},"modifiers":[{"type":"alpha","alpha":{"type":"expr","op":"smoothstep","args":[{"type":"float","value":-6},{"type":"float","value":6},{"type":"state","variable":"HA:sun.sun.elevation"}]}}],"slots":{}}"""
+        )
+      val sun = seed.getValue("stateVariables").jsonObject.getValue("HA:sun.sun.elevation")
+      val withImage =
+        JsonObject(
+          seed +
+            ("assets" to JsonObject(mapOf("door" to binding))) +
+            ("nodes" to
+              JsonObject(nodes + (rootId to rootWithImage) + ("garage-image" to imageNode))) +
+            ("stateVariables" to
+              JsonObject(
+                seed.getValue("stateVariables").jsonObject + ("HA:sun.sun.elevation" to sun)
+              ))
+        )
+      ee.schimke.ha.client.design.validateCardDraft(seed, withImage)
+      val session = studio.startAgentSession(seed, "Use the garage image")
+      val attached =
+        client.post("/api/studio/agent-mcp") {
+          header(HttpHeaders.Authorization, "Bearer ${session.agentToken}")
+          setBody(
+            """{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"put_card_asset","arguments":{"key":"door","imageBase64":"$encodedPng"}}}"""
+          )
+        }
+      assertEquals(HttpStatusCode.OK, attached.status)
+      val submitted =
+        client.post("/api/studio/agent-session") {
+          header(HttpHeaders.Authorization, "Bearer ${session.agentToken}")
+          setBody(
+            buildJsonObject {
+              put("revision", 0)
+              put("document", withImage)
+            }
+              .toString()
+          )
+        }
+      assertEquals(HttpStatusCode.OK, submitted.status, submitted.bodyAsText())
+      val (received, revision) = studio.agentSessionDraft(session.ownerToken)
+      assertEquals(1L, revision)
+      assertEquals(withImage, received)
+      val transferred = studio.agentSessionAsset(session.ownerToken, "door", Sha256.hex(png))
+      assertContentEquals(png, transferred)
+      assertFailsWith<IllegalArgumentException> {
+        studio.agentSessionAsset(session.ownerToken, "door", "0".repeat(64))
+      }
+      val imageDraft =
+        studio.openAsUser(
+          github.deviceToken("octocat"),
+          withImage,
+          card,
+          snapshot("21"),
+          mapOf("door" to transferred),
+        )
+      assertTrue(imageDraft.url.startsWith("https://builder.test/ui-builder/card-"))
+      assertContentEquals(png, uploaded["door"])
+      val refusedImage =
+        assertFailsWith<CardStudioException> {
+          studio.openAsUser(
+            github.deviceToken("octocat"),
+            withImage,
+            card,
+            snapshot("21"),
+            mapOf("door" to byteArrayOf(1)),
+          )
+        }
+      assertEquals(400, refusedImage.status)
+      uploaded.clear()
+      storeUploads = false
+      val missingImage =
+        assertFailsWith<CardStudioException> {
+          studio.openAsUser(
+            github.deviceToken("octocat"),
+            withImage,
+            card,
+            snapshot("21"),
+            mapOf("door" to png),
+          )
+        }
+      assertEquals(502, missingImage.status)
     } finally {
       studio.close()
       dir.deleteRecursively()

@@ -138,7 +138,7 @@ async def async_session_for_agent(hass, user, session_id):
     return result
 
 
-def submit(hass, user, session_id, config, summary):
+def submit(hass, user, session_id, config, summary, relay_id=None):
     edits, _ = _visible_session(hass, user, session_id)
     draft = edits.sessions.submit(
         session_id,
@@ -149,6 +149,7 @@ def submit(hass, user, session_id, config, summary):
         and user.permissions.check_entity(entity_id, POLICY_READ),
         user.id,
         _now(),
+        relay_id,
     )
     session = edits.sessions.get(session_id, _now())
     edits.changed(session)
@@ -300,6 +301,27 @@ def ws_note(hass, connection, msg):
 
 
 @websocket_api.websocket_command(
+    {
+        vol.Required("type"): "terrazzo/edit/submit",
+        vol.Required("session_id"): str,
+        vol.Required("config"): dict,
+        vol.Optional("summary"): str,
+        vol.Optional("relay_id"): str,
+    }
+)
+@callback
+def ws_submit(hass, connection, msg):
+    """Relay a draft as the signed-in person, with the same checks as MCP submission."""
+    try:
+        submit(hass, connection.user, msg["session_id"], msg["config"], msg.get("summary"), msg.get("relay_id"))
+        _, session = _visible_session(hass, connection.user, msg["session_id"])
+    except SessionError as failure:
+        _send_failure(connection, msg, failure)
+        return
+    connection.send_result(msg["id"], _session_reply(session))
+
+
+@websocket_api.websocket_command(
     {vol.Required("type"): "terrazzo/edit/discard", vol.Required("session_id"): str}
 )
 @callback
@@ -346,7 +368,7 @@ async def ws_undo(hass, connection, msg):
     connection.send_result(msg["id"], _session_reply(session))
 
 
-COMMANDS = (ws_start, ws_list, ws_get, ws_subscribe, ws_note, ws_discard, ws_apply, ws_undo)
+COMMANDS = (ws_start, ws_list, ws_get, ws_subscribe, ws_note, ws_submit, ws_discard, ws_apply, ws_undo)
 
 
 def async_register(hass):

@@ -155,17 +155,29 @@ class EditSessions:
             raise SessionError(f"Edit session {session_id} is {session['status']}")
         return session
 
-    def submit(self, session_id, config, summary, entity_exists, user_id, now):
+    def submit(self, session_id, config, summary, entity_exists, user_id, now, relay_id=None):
         """Add a draft to an open session; the newest [MAX_DRAFTS] are kept."""
         session = self._open(session_id, now)
         validate_draft(config, entity_exists)
+        summary = _text(summary, "The summary")
+        if relay_id is not None:
+            if not isinstance(relay_id, str) or not relay_id or len(relay_id) > 100:
+                raise SessionError("Invalid relay id")
+            previous = next((d for d in session["drafts"]
+                             if d.get("relay_id") == relay_id and d["by"] == user_id), None)
+            if previous is not None:
+                if previous["config"] != config or previous["summary"] != summary:
+                    raise SessionError("This relay id already names another draft")
+                return previous
         draft = {
             "id": secrets.token_urlsafe(6),
             "config": copy.deepcopy(config),
-            "summary": _text(summary, "The summary"),
+            "summary": summary,
             "by": user_id,
             "at": now,
         }
+        if relay_id is not None:
+            draft["relay_id"] = relay_id
         session["drafts"] = (session["drafts"] + [draft])[-MAX_DRAFTS:]
         self._touch(session, now)
         return draft

@@ -634,8 +634,9 @@ class SlotWidgetDesignTest {
   private fun assertPlayedParity(name: String, card: CardConfig, snapshot: HaSnapshot) {
     val data = data(card, snapshot)
     assertFalse(data is WearWidgetDocument, "${card.type} renders from its design")
-    val direct = capture(slotDocumentForTest(card, snapshot))
-    val baked = capture(data)
+    // CardWidget applies the same host clip to either source before handing it to Glance.
+    val direct = capture(slotDocumentForTest(card, snapshot).clippedToHost())
+    val baked = capture(data.clippedToHost())
     var bytes by mutableStateOf(direct)
     compose.setContent {
       Box(Modifier.size(params.widthDp.dp, params.heightDp.dp).testTag("widget")) {
@@ -661,8 +662,8 @@ class SlotWidgetDesignTest {
   }
 
   private fun assertParity(name: String, card: CardConfig, snapshot: HaSnapshot) {
-    val direct = capture(slotDocumentForTest(card, snapshot))
-    val baked = capture(data(card, snapshot))
+    val direct = capture(slotDocumentForTest(card, snapshot).clippedToHost())
+    val baked = capture(data(card, snapshot).clippedToHost())
     var bytes by mutableStateOf(direct)
     compose.setContent {
       Box(Modifier.size(params.widthDp.dp, params.heightDp.dp).testTag("widget")) {

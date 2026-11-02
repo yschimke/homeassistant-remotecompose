@@ -50,7 +50,15 @@ object HaSharedValues {
    * One shared value: its full [name], type and what it means, for a designer, and what it reads
    * without the data: [daytime], a `String`, `Boolean` or `Float` as [kind] says.
    */
-  data class Value(val name: String, val kind: Kind, val description: String, val daytime: Any)
+  data class Value(
+    val name: String,
+    val kind: Kind,
+    val description: String,
+    val daytime: Any,
+    val entityId: String,
+    /** The source attribute, or null when the value derives from the entity's state. */
+    val attribute: String? = null,
+  )
 
   /** The sun integration's entity: on by default in every Home Assistant. */
   const val SUN: String = "sun.sun"
@@ -71,7 +79,7 @@ object HaSharedValues {
 
   /** Every shared value, by entity. */
   val values: List<Value> = buildList {
-    add(Value(name(SUN, "state"), Kind.Text, "The sun's state.", ABOVE_HORIZON))
+    add(Value(name(SUN, "state"), Kind.Text, "The sun's state.", ABOVE_HORIZON, SUN))
     add(
       Value(
         name(SUN, "is_available"),
@@ -79,6 +87,7 @@ object HaSharedValues {
         "Whether Home Assistant has the sun and it isn't unavailable or unknown. Without it, " +
           "every other value reads daytime.",
         false,
+        SUN,
       )
     )
     add(
@@ -87,6 +96,7 @@ object HaSharedValues {
         Kind.Bool,
         "Whether the sun is above the horizon (its state is above_horizon).",
         true,
+        SUN,
       )
     )
     add(
@@ -96,15 +106,28 @@ object HaSharedValues {
         "The sun's elevation above the horizon, in degrees: negative at night, below -6 after " +
           "civil dusk.",
         45f,
+        SUN,
+        "elevation",
       )
     )
-    add(Value(name(SUN, "azimuth"), Kind.Float, "The sun's compass bearing, in degrees.", 180f))
+    add(
+      Value(
+        name(SUN, "azimuth"),
+        Kind.Float,
+        "The sun's compass bearing, in degrees.",
+        180f,
+        SUN,
+        "azimuth",
+      )
+    )
     add(
       Value(
         name(SUN, "rising"),
         Kind.Bool,
         "Whether the sun is rising: true before solar noon.",
         false,
+        SUN,
+        "rising",
       )
     )
     for ((attribute, label, daytime) in SUN_TIMES) {
@@ -114,18 +137,27 @@ object HaSharedValues {
           Kind.Float,
           "The next $label, as the minute of the local day (0-1440), like time.minuteOfDay.",
           daytime,
+          SUN,
+          attribute,
         )
       )
     }
   }
 
   /** The entities [values] read: what a host that fetches only chosen entities also fetches. */
-  val entities: Set<String> = setOf(SUN)
+  val entities: Set<String> = values.mapTo(linkedSetOf()) { it.entityId }
 
   private val byName = values.associateBy { it.name }
 
   /** The shared value called [name] (`HA:sun.sun.elevation`), or null. */
   fun valueOf(name: String): Value? = byName[name]
+
+  /** Source entities and only the attributes needed to reproduce the known named values. */
+  fun dependencies(names: Iterable<String>): Map<String, Set<String>> =
+    names
+      .mapNotNull(::valueOf)
+      .groupBy { it.entityId }
+      .mapValues { (_, values) -> values.mapNotNullTo(linkedSetOf()) { it.attribute } }
 
   /** Whether [name] is in the shared domain, known or not. */
   fun isShared(name: String): Boolean = name.startsWith(PREFIX)

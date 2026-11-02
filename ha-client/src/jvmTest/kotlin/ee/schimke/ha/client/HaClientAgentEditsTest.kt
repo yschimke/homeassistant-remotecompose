@@ -83,6 +83,21 @@ class HaClientAgentEditsTest {
   }
 
   @Test
+  fun aRelayedDraftUsesTheSignedInHomeAssistantSession() {
+    val commands = mutableListOf<JsonObject>()
+    fakeHa(commands, { _, id -> listOf(result(id, session())) }) { client ->
+      val draft = Json.parseToJsonElement("""{"views":[{"title":"Garden"}]}""").jsonObject
+      client.relayAgentDraft("s1", draft, "Garden", "cloud:1")
+      val command = commands.single()
+      assertEquals("terrazzo/edit/submit", command.type)
+      assertEquals("s1", command.getValue("session_id").jsonPrimitive.content)
+      assertEquals(draft, command["config"])
+      assertEquals("Garden", command.getValue("summary").jsonPrimitive.content)
+      assertEquals("cloud:1", command.getValue("relay_id").jsonPrimitive.content)
+    }
+  }
+
+  @Test
   fun aConflictingApplyIsAConflict() {
     fakeHa(
       mutableListOf(),

@@ -36,6 +36,7 @@ import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.ReconnectBackoff
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.dashboard.CardActionsSheet
+import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.dashboard.CardHistoryScreen
 import ee.schimke.terrazzo.dashboard.CardStyleSheet
 import ee.schimke.terrazzo.dashboard.DashboardEditorScreen
@@ -67,6 +68,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -644,6 +647,33 @@ private fun DashboardsRoot(
       if (graph.preferencesStore.privateDesignServer.first() != found) {
         graph.preferencesStore.setPrivateDesignServer(found)
       }
+    }
+  }
+  LaunchedEffect(session) {
+    val selections = CardDesignOverrideStore.of(context)
+    val owner = Any()
+    try {
+      selections.beginShared(owner)
+      if (session !is DemoHaSession) {
+        session.connectionStatus.collectLatest { status ->
+          if (status == SessionConnectionStatus.Connected) {
+            while (true) {
+              try {
+                if (session.privateDesignServer()) {
+                  session.sharedDesignSelections()?.let { selections.setShared(owner, it) }
+                } else selections.setShared(owner, emptyMap())
+              } catch (e: CancellationException) {
+                throw e
+              } catch (_: Exception) {
+                // A temporary outage leaves the last answer until the next refresh.
+              }
+              delay(30_000)
+            }
+          }
+        }
+      }
+    } finally {
+      withContext(NonCancellable) { selections.endShared(owner) }
     }
   }
   LaunchedEffect(session, logStore) {

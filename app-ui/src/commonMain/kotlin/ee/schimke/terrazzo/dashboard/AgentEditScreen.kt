@@ -80,6 +80,7 @@ fun AgentEditScreen(
   onSharePrompt: (String) -> Unit,
   onApplied: () -> Unit,
   writeBlockedReason: String? = null,
+  cloudServer: String? = null,
   renderCard: @Composable (CardKey, CardConfig) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -125,7 +126,9 @@ fun AgentEditScreen(
       } catch (e: HaCommandException) {
         problem = e.reason
       } catch (e: Exception) {
-        problem = "Reconnecting to Home Assistant…"
+        problem =
+          if (cloudServer != null) e.message ?: "Reconnecting to the design server…"
+          else "Reconnecting to Home Assistant…"
       }
       delay(3_000)
     }
@@ -153,6 +156,7 @@ fun AgentEditScreen(
             urlPath = urlPath,
             title = title,
             busy = busy,
+            cloudServer = cloudServer,
             onStart = { request ->
               run {
                 val started = edits.start(urlPath, request)
@@ -180,6 +184,7 @@ fun AgentEditScreen(
             busy = busy,
             writeBlockedReason = writeBlockedReason,
             onSharePrompt = onSharePrompt,
+            cloud = cloudServer != null,
             onApply = { draft ->
               run {
                 session = edits.apply(current.id, draft.id)
@@ -226,6 +231,7 @@ private fun StartSession(
   urlPath: String?,
   title: String?,
   busy: Boolean,
+  cloudServer: String?,
   onStart: (String) -> Unit,
   onResume: (AgentEditSession) -> Unit,
 ) {
@@ -241,9 +247,16 @@ private fun StartSession(
       style = MaterialTheme.typography.titleMedium,
     )
     Text(
-      "Home Assistant opens an edit session and gives you a prompt for your AI assistant. The " +
-        "assistant signs in to Home Assistant itself and can only submit drafts: you see each one " +
-        "here, drawn with your cards, before anything changes.",
+      if (cloudServer == null)
+        "Home Assistant opens an edit session and gives you a prompt for your AI assistant. The " +
+          "assistant signs in to Home Assistant itself and can only submit drafts: you see each one " +
+          "here, drawn with your cards, before anything changes."
+      else
+        "Your dashboard configuration and request will be sent to $cloudServer and shared with " +
+          "your chosen agent. The agent does not get your Home Assistant login. You review and " +
+          "apply drafts here; Home Assistant checks your permissions and whether the dashboard changed. " +
+          "The configuration may contain private data. You can return to this request while signed in; " +
+          "reloading the app loses access. The upstream request expires after one hour.",
       style = MaterialTheme.typography.bodyMedium,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -254,7 +267,12 @@ private fun StartSession(
       placeholder = { Text("A garden section with soil moisture charts") },
       modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp).heightIn(min = 96.dp),
     )
-    Button(enabled = !busy, onClick = { onStart(request) }) { Text("Start edit session") }
+    Button(
+      enabled = !busy && (cloudServer == null || request.isNotBlank()),
+      onClick = { onStart(request) },
+    ) {
+      Text("Start edit session")
+    }
     if (open.isNotEmpty()) {
       Text("Open sessions", style = MaterialTheme.typography.titleSmall)
       open.forEach { s ->
@@ -289,6 +307,7 @@ private fun SessionReview(
   busy: Boolean,
   writeBlockedReason: String?,
   onSharePrompt: (String) -> Unit,
+  cloud: Boolean,
   onApply: (AgentEditSession.Draft) -> Unit,
   onUndo: () -> Unit,
   onNote: (String) -> Unit,
@@ -329,8 +348,8 @@ private fun SessionReview(
         )
       }
       val canWrite = !busy && writeBlockedReason == null
-      if (prompt != null && session.isOpen && session.drafts.isEmpty()) {
-        PromptCard(prompt, onSharePrompt)
+      if (prompt != null && session.isOpen && (cloud || session.drafts.isEmpty())) {
+        PromptCard(prompt, onSharePrompt, cloud)
       }
       if (session.drafts.size > 1) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -415,15 +434,18 @@ private fun SessionReview(
 }
 
 @Composable
-private fun PromptCard(prompt: String, onSharePrompt: (String) -> Unit) {
+private fun PromptCard(prompt: String, onSharePrompt: (String) -> Unit, cloud: Boolean) {
   Surface(
     color = MaterialTheme.colorScheme.surfaceContainerHigh,
     shape = MaterialTheme.shapes.medium,
   ) {
     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
       Text(
-        "Give this to your AI assistant. It holds no password or token: the assistant signs in " +
-          "to Home Assistant when it connects.",
+        if (cloud)
+          "Share these temporary details only with your chosen agent. Anyone holding them can read and submit drafts for this request."
+        else
+          "Give this to your AI assistant. It holds no password or token: the assistant signs in " +
+            "to Home Assistant when it connects.",
         style = MaterialTheme.typography.bodySmall,
       )
       SelectionContainer {

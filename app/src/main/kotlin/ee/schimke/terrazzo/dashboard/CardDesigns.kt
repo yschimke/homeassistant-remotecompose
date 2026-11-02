@@ -264,7 +264,9 @@ val LocalCardDesignOverrides = staticCompositionLocalOf { CardDesignOverrides() 
  * not fetched yet falls through to that same order. Null when the card has no template shape (an
  * unsupported type or config, or an entity not loaded yet), or when the server's design for its key
  * isn't cached yet (it is then fetched by key: [CardDesignGeneration]); those cards capture through
- * their converter.
+ * their converter. A selected custom card that uses a different card's key as its library anchor
+ * never falls back to that anchor's generic design: it renders through its own converter until its
+ * selection loads.
  *
  * A dashboard card counts towards template usage ([CardUsage]); [recordUsage] false is for samples
  * that aren't the user's cards (the card style picker).
@@ -281,18 +283,38 @@ fun cardTemplateFor(
   variant: String? = null,
   recordUsage: Boolean = true,
   designId: String? = null,
+  selectedCard: CardConfig = card,
 ): CardTemplatePlayback? {
-  val key =
+  val originalKey =
     CardDesignTemplates.keyFor(card, snapshot, style, dark, registry, cardStyle = cardStyle)
-      ?: return null
+  val key =
+    (if (designId == null) originalKey
+    else
+      CardDesignTemplates.selectedDesignKeyFor(
+        selectedCard,
+        snapshot,
+        style,
+        dark,
+        cardStyle = cardStyle,
+      )) ?: return null
+  val projected = designId != null && key != originalKey
   val (server, usedKey) =
-    serverDesignFor(
-      key,
-      designs,
-      variant = variant ?: designs.variant,
-      device = cardDevice(card, snapshot),
-      designId = designId,
-    )
+    if (projected) {
+      designs.byDesign
+        .find(
+          requireNotNull(designId),
+          key.copy(variant = variant ?: designs.variant),
+          cardDevice(card, snapshot),
+        )
+        ?.let { (foundKey, bytes) -> bytes to foundKey } ?: (null to key)
+    } else
+      serverDesignFor(
+        key,
+        designs,
+        variant = variant ?: designs.variant,
+        device = cardDevice(card, snapshot),
+        designId = designId,
+      )
   designs.loadedFor?.let { CardDesignSources.record(it, key, fromServer = server != null) }
   if (recordUsage) {
     CardUsage.record(
@@ -308,7 +330,7 @@ fun cardTemplateFor(
   val bytes =
     server
       ?: run {
-        designs.loadedFor?.let { CardDesignGeneration.request(context, it, key) }
+        if (!projected) designs.loadedFor?.let { CardDesignGeneration.request(context, it, key) }
         return null
       }
   // Designs read the player's display (Host density); fold this phone's in once.
@@ -383,6 +405,7 @@ suspend fun warmCardTemplates(
             variant = override?.variant,
             recordUsage = false,
             designId = override?.designId,
+            selectedCard = card,
           )
           ?.let { preloadForComposePlayer(it.bytes) }
       }

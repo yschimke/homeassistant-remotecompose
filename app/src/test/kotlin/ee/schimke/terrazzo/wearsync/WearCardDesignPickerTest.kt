@@ -122,6 +122,88 @@ class WearCardDesignPickerTest {
   }
 
   @Test
+  fun missingSelectedCustomDesignDoesNotSendGenericAnchor() {
+    val raw =
+      Json.parseToJsonElement(
+        """{"type":"custom:enhanced-shutter-card","entities":[{"entity":"cover.garage","top_offset_pct":13}]}"""
+      ) as JsonObject
+    val custom = CardConfig("custom:enhanced-shutter-card", raw)
+    val states = HaSnapshot(states = mapOf("cover.garage" to EntityState("cover.garage", "closed")))
+    val anchor =
+      requireNotNull(
+        CardDesignTemplates.selectedDesignKeyFor(
+          custom,
+          states,
+          choice.style,
+          dark = true,
+          cardStyle = choice.cardStyle,
+        )
+      )
+    val overrides =
+      CardDesignOverrides(
+        byCard = mapOf(cardFingerprint(custom) to CardDesignOverride(designId = "missing"))
+      )
+    val loaded =
+      designs(
+        mapOf(anchor.forWearWidget(DesignKey.WEAR_SMALL) to byteArrayOf(99)),
+        choice.copy(overrides = overrides),
+      )
+    assertTrue(wearCardDesigns(listOf("garage" to custom), states, loaded).isEmpty())
+  }
+
+  @Test
+  fun selectedSingleEntityCustomCardSendsItsChosenWearDesign() {
+    val raw =
+      Json.parseToJsonElement(
+        """{"type":"custom:enhanced-shutter-card","entities":[{"entity":"cover.garage","top_offset_pct":13}]}"""
+      ) as JsonObject
+    val custom = CardConfig("custom:enhanced-shutter-card", raw)
+    val states = HaSnapshot(states = mapOf("cover.garage" to EntityState("cover.garage", "closed")))
+    val anchor =
+      requireNotNull(
+        CardDesignTemplates.selectedDesignKeyFor(
+          custom,
+          states,
+          choice.style,
+          dark = true,
+          cardStyle = choice.cardStyle,
+        )
+      )
+    val id = "garage-skin"
+    val overrides =
+      CardDesignOverrides(
+        byCard = mapOf(cardFingerprint(custom) to CardDesignOverride(designId = id))
+      )
+    val small = byteArrayOf(12)
+    val large = byteArrayOf(34)
+    val selected =
+      ee.schimke.ha.client.design.DesignsById(
+        mapOf(
+          id to
+            listOf(
+              ee.schimke.ha.client.design.DesignedBlob(
+                anchor.forWearWidget(DesignKey.WEAR_SMALL),
+                null,
+                small,
+              ),
+              ee.schimke.ha.client.design.DesignedBlob(
+                anchor.forWearWidget(DesignKey.WEAR_LARGE),
+                null,
+                large,
+              ),
+            )
+        )
+      )
+    val loaded =
+      designs(emptyMap(), choice.copy(overrides = overrides, skins = setOf(id)))
+        .copy(byDesign = selected)
+    val picked = wearCardDesigns(listOf("garage" to custom), states, loaded)
+    assertEquals(2, picked.size)
+    assertContentEquals(small, picked[0].second)
+    assertContentEquals(large, picked[1].second)
+  }
+
+  @Test
   fun aCardsOwnVariantOverrideWins() {
     val garage = byteArrayOf(5)
     val overrides =

@@ -124,8 +124,10 @@ class WearWidgetTemplateTest {
           runBlocking { WearWidgetTemplate.instantiate(context, template, params) },
           name,
         )
+      // CardWidget clips Glance's raw content to the host outline before it is displayed.
       val glance = runBlocking {
         slotDirectDocument(registry, colors, card, snapshot)
+          .clippedToHost()
           .captureRawContent(context, params, false)
           .rcDocument
       }
@@ -183,6 +185,7 @@ class WearWidgetTemplateTest {
     for ((name, params) in containers) {
       val glance = runBlocking {
         slotDirectDocument(registry, colors, card, snapshot)
+          .clippedToHost()
           .captureRawContent(context, params, false)
           .rcDocument
       }
@@ -252,6 +255,7 @@ class WearWidgetTemplateTest {
         )
         val glance = runBlocking {
           slotDocument(registry, colors, card, snapshot, cardStyle = style, tint = fill)
+            .clippedToHost()
             .captureRawContent(context, params, false)
             .rcDocument
         }

@@ -83,6 +83,22 @@ preferred variant's design for its key, then the `default` one, then the library
 authors' designs for one key, the preferred author's wins. A revoked server design falls back to the
 library's, never to nothing.
 
+With the private Card Designs add-on, a person can also publish a design from Wasm and select it
+for a card. Wasm first downloads and checks the selected template and its bindings, then records
+the choice through the authenticated `terrazzo/design_selections` commands. The integration stores
+the map under the Home Assistant user ID; it is not part of the Lovelace dashboard and does not
+apply an agent's dashboard draft. Its keys are canonical card-config fingerprints, so identical
+card configurations share a selection and changing a card's configuration starts a new choice.
+The person can restore the default design from the card's customization controls.
+
+The phone reads its current user's selections on connect and every 30 seconds while connected. It
+combines them in memory with its local style overrides, fetches their designs only from that home's
+private add-on, and sends the selected templates through the existing Wear sync. A session change
+clears the shared selections; they are never persisted into the device-local overrides file. An
+older integration leaves the existing device-local behavior in place.
+Wasm refreshes the selections on the same cadence and serializes reads with writes, so a stale
+refresh cannot undo a choice the person just made.
+
 | Piece | Where |
 | --- | --- |
 | Wire model: `DesignKey`, `DesignSurface`, `DesignManifest`, `DesignEntry` | `ha-model/.../design/CardDesign.kt` |

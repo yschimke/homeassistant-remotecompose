@@ -1,7 +1,10 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.composeai.rcplayer.edit.RcApproximation
+import ee.schimke.composeai.rcplayer.edit.RcDisplay
 import ee.schimke.composeai.rcplayer.edit.RcTargetProfile
 import ee.schimke.composeai.rcplayer.edit.RcTargetProfiles
+import ee.schimke.composeai.rcplayer.edit.adaptTo
 import ee.schimke.composeai.rcplayer.edit.namedVariables
 import ee.schimke.composeai.rcplayer.edit.validateFor
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
@@ -13,6 +16,7 @@ import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.design.DeviceMatch
 import ee.schimke.ha.design.HaSharedValues
+import ee.schimke.ha.designs.UiBuilderDesignCompiler
 import ee.schimke.rc.m3.RcAmbientValue
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -118,6 +122,13 @@ fun userTemplateProblem(
       return "it uses something the app can't play: ${it.message}"
     }
   val provided = base.bindings.map { it.name }.toSet()
+  // Hosts push these standard values for every entity slot, even when the original template did
+  // not read them. Limit them to slots already present in the base template.
+  val slots = provided.mapNotNull { SLOT_BINDING.find(it)?.groupValues?.get(1) }.toSet()
+  val standard =
+    slots
+      .flatMap { slot -> SLOT_VALUE_TYPES.map { (field, type) -> "$slot.$field" to type } }
+      .toMap()
   val read = document.namedVariables.map { it.name.removePrefix(DesignLibrary.USER_PREFIX) }
   val unshared =
     read.filter { HaSharedValues.isShared(it) && HaSharedValues.valueOf(it) == null }.distinct()
@@ -134,11 +145,18 @@ fun userTemplateProblem(
       val value = HaSharedValues.valueOf(it.name)!!
       return "it reads ${value.name} as the wrong type: it's a ${value.kind.name.lowercase()}"
     }
+  document.namedVariables
+    .firstOrNull { variable ->
+      val type = standard[variable.name.removePrefix(DesignLibrary.USER_PREFIX)]
+      type != null && type != variable.type
+    }
+    ?.let {
+      return "it reads ${it.name.removePrefix(DesignLibrary.USER_PREFIX)} as the wrong type"
+    }
   val unknown =
     read
-      .filter { '.' in it && it !in provided }
-      // A watch doesn't push shared values yet: a Wear widget reading one would never update.
-      .filterNot { profile != RcTargetProfiles.WEAR_WIDGETS && HaSharedValues.valueOf(it) != null }
+      .filter { '.' in it && it !in provided && it !in standard }
+      .filterNot { HaSharedValues.valueOf(it) != null }
       .filterNot {
         profile == RcTargetProfiles.WEAR_WIDGETS &&
           (it.startsWith(WEAR_HOST_COLOURS) || it in WEAR_HOST_FRAME)
@@ -153,6 +171,20 @@ fun userTemplateProblem(
   }
   return null
 }
+
+private val SLOT_BINDING = Regex("^([a-z_]+\\.s[0-9]+)\\.")
+private val SLOT_VALUE_TYPES =
+  mapOf(
+    "state" to RcNamedVariable.STRING_TYPE,
+    "name" to RcNamedVariable.STRING_TYPE,
+    "is_on" to RcNamedVariable.INT_TYPE,
+    "is_available" to RcNamedVariable.INT_TYPE,
+    "state_int" to RcNamedVariable.INT_TYPE,
+    "status" to RcNamedVariable.INT_TYPE,
+    "last_changed" to RcNamedVariable.INT_TYPE,
+    "last_changed_offset" to RcNamedVariable.INT_TYPE,
+    "numeric_state" to RcNamedVariable.FLOAT_TYPE,
+  )
 
 /**
  * Whether [bytes] reads the host's ambient flag ([RcAmbientValue]), so it draws its ambient look on
@@ -547,7 +579,10 @@ private suspend fun publish(
   // widget still publishes, and the watch draws the card's own design instead.
   val wear =
     if (design.entry.key.surface != DesignSurface.MobileApp) emptyMap()
-    else templates.source?.let { wearWidgets(client, it, library.decode(base)) }.orEmpty()
+    else
+      templates.source
+        ?.let { wearWidgets(integration, request.designId, it, baseKey, library.decode(base)) }
+        .orEmpty()
   store.publishWear(login, design, wear)
   return Published.Done(design)
 }
@@ -654,18 +689,77 @@ private suspend fun templates(
  * Wear widget and binds what [base] does. A container whose design fails is left out.
  */
 private suspend fun wearWidgets(
-  client: UiBuilderClient,
+  integration: UiBuilderIntegration,
+  designId: String,
   source: JsonObject,
+  baseKey: DesignKey,
   base: DecodedTemplate,
 ): Map<String, ByteArray> {
+  val client = integration.client
+  // The UI Builder binary exporter does not handle every image scene. Fetch the same source's
+  // pictures only when its export fails, then compile its fitted content without a card frame.
+  var assets: Map<String, ByteArray>? = null
   return DesignKey.WEAR_CONTAINERS.mapNotNull { container ->
       val document = WearWidgetDesigns.document(source, container) ?: return@mapNotNull null
-      val bytes = client.exportRc(document).getOrNull() ?: return@mapNotNull null
+      val exported =
+        client.exportRc(document).getOrNull()?.takeIf {
+          userTemplateProblem(it, base, RcTargetProfiles.WEAR_WIDGETS) == null
+        }
+      val bytes =
+        exported
+          ?: run {
+            val scene = WearWidgetDesigns.compilableScene(document) ?: return@mapNotNull null
+            val pictures =
+              assets
+                ?: source["assets"]
+                  ?.jsonObject
+                  .orEmpty()
+                  .keys
+                  .associateWith { key ->
+                    client.asset(designId, key).getOrNull() ?: return@mapNotNull null
+                  }
+                  .also { assets = it }
+            try {
+              withContext(compiles) {
+                compileWearScene(integration.compiler, scene, pictures, baseKey)
+              }
+            } catch (e: CancellationException) {
+              throw e
+            } catch (_: Exception) {
+              null
+            }
+          }
+          ?: return@mapNotNull null
       bytes
         .takeIf { userTemplateProblem(it, base, RcTargetProfiles.WEAR_WIDGETS) == null }
         ?.let { container to it }
     }
     .toMap()
+}
+
+/** Compile fitted scene content, and refuse it if the widget player cannot play it. */
+internal fun compileWearScene(
+  compiler: UiBuilderDesignCompiler,
+  scene: JsonObject,
+  pictures: Map<String, ByteArray>,
+  baseKey: DesignKey,
+): ByteArray? {
+  val captured =
+    compiler.compile(
+      scene,
+      pictures,
+      baseKey,
+      imageBudgetBytes = UiBuilderDesignCompiler.imageBudget(DesignSurface.WearWidget),
+      wearFrame = true,
+    )
+  val adapted =
+    RcDocumentCodec.decode(captured, RcWireLimits())
+      .adaptTo(
+        RcTargetProfiles.WEAR_WIDGETS,
+        setOf(RcApproximation.TEXT, RcApproximation.THEME_COLORS),
+        RcDisplay(1f, 1f),
+      )
+  return if (adapted.isPlayable) RcDocumentCodec.encode(adapted.document) else null
 }
 
 /** The device match a form names (`integration`, `manufacturer`, `model`), or null for none. */

@@ -69,6 +69,12 @@ object CardDesignSync {
       .combine(prefs.designToken) { choice, token -> choice.copy(token = token) }
       .combine(prefs.privateDesignServer) { choice, ha -> choice.withPrivateServer(ha) }
       .combine(SkinStore.of(context).installed) { choice, skins -> choice.copy(skins = skins) }
+      .combine(CardDesignOverrideStore.of(context).shared) { choice, shared ->
+        // A Home Assistant selection names a private design on that home's add-on, never an id
+        // to look up on a separately configured public server.
+        if (choice.homeAssistant.isNotBlank()) choice.copy(skins = choice.skins + shared.values)
+        else choice
+      }
       .combine(CardStyleStore.of(context).installed) { choice, styles ->
         choice.copy(cardStyles = styles)
       }

@@ -1,5 +1,7 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.ha.design.HaSharedValues
+import java.util.Base64
 import kotlinx.serialization.json.*
 
 /** A small stateless MCP surface scoped by the agent capability, never an HA identity. */
@@ -56,10 +58,31 @@ object AgentDesignMcp {
               )
               add(
                 buildJsonObject {
+                  put("name", "put_card_asset")
+                  put(
+                    "description",
+                    "Attach one PNG, JPEG or WebP image to this session before submitting a draft. Images expire with the session.",
+                  )
+                  putJsonObject("inputSchema") {
+                    put("type", "object")
+                    putJsonObject("properties") {
+                      putJsonObject("key") { put("type", "string") }
+                      putJsonObject("imageBase64") { put("type", "string") }
+                    }
+                    putJsonArray("required") {
+                      add("key")
+                      add("imageBase64")
+                    }
+                  }
+                }
+              )
+              add(
+                buildJsonObject {
                   put("name", "submit_card_draft")
                   put(
                     "description",
-                    "Submit the complete card document at the revision you read; the person reviews it.",
+                    "Submit the complete card document at the revision you read; the person reviews it. " +
+                      "For each asset/image, first call put_card_asset and put its returned binding under document.assets using the same key.",
                   )
                   putJsonObject("inputSchema") {
                     put("type", "object")
@@ -83,6 +106,42 @@ object AgentDesignMcp {
         val args = params["arguments"] as? JsonObject ?: JsonObject(emptyMap())
         val data =
           when (name) {
+            "put_card_asset" -> {
+              val key =
+                (args["key"] as? JsonPrimitive)?.contentOrNull
+                  ?: return error(-32602, "Missing asset key")
+              val encoded =
+                (args["imageBase64"] as? JsonPrimitive)?.contentOrNull
+                  ?: return error(-32602, "Missing image")
+              val image =
+                try {
+                  require(encoded.length <= 1_400_000)
+                  Base64.getDecoder().decode(encoded)
+                } catch (_: IllegalArgumentException) {
+                  return result(toolResult(buildJsonObject { put("error", "Invalid image") }, true))
+                }
+              try {
+                if (!sessions.putAsset(token, key, image))
+                  return error(-32001, "Design session unavailable")
+              } catch (_: IllegalArgumentException) {
+                return result(toolResult(buildJsonObject { put("error", "Image rejected") }, true))
+              }
+              val asset =
+                sessions.asset(token, key) ?: return error(-32001, "Design session unavailable")
+              buildJsonObject {
+                put("key", key)
+                put("mediaType", asset.mediaType)
+                put("sha256", asset.sha256)
+                putJsonObject("binding") {
+                  put("mediaType", asset.mediaType)
+                  put("contentDigest", "sha256:${asset.sha256}")
+                  putJsonObject("source") {
+                    put("type", "uploaded")
+                    put("storageKey", "sha256:${asset.sha256}")
+                  }
+                }
+              }
+            }
             "get_card_request" -> {
               val session =
                 sessions.readAgent(token) ?: return error(-32001, "Design session unavailable")
@@ -90,6 +149,35 @@ object AgentDesignMcp {
                 put("instruction", session.instruction)
                 put("document", session.document)
                 put("revision", session.revision)
+                putJsonArray("sharedValues") {
+                  HaSharedValues.values.forEach { shared ->
+                    add(
+                      buildJsonObject {
+                        put("name", shared.name)
+                        put("description", shared.description)
+                        putJsonObject("definition") {
+                          put("type", "value")
+                          when (shared.kind) {
+                            HaSharedValues.Kind.Text -> {
+                              put("valueType", "string")
+                              put("initialValue", shared.daytime as String)
+                            }
+                            HaSharedValues.Kind.Bool -> {
+                              put("valueType", "bool")
+                              put("initialValue", shared.daytime as Boolean)
+                            }
+                            HaSharedValues.Kind.Float -> {
+                              put("valueType", "float")
+                              put("initialValue", (shared.daytime as Number).toFloat())
+                            }
+                          }
+                          put("nullable", false)
+                          put("persistence", "design")
+                        }
+                      }
+                    )
+                  }
+                }
               }
             }
             "submit_card_draft" -> {

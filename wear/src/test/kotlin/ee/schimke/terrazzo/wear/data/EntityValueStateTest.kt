@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo.wear.data
 
 import ee.schimke.ha.design.DeviceInfo
+import ee.schimke.ha.design.HaSharedValues
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.displayPrecisionOf
@@ -16,6 +17,15 @@ import org.junit.Test
 
 /** Wear text reads exactly what the phone's cards show: the shared `formatState`, not raw state. */
 class EntityValueStateTest {
+
+  @Test
+  fun sharedSunElevationSurvivesTheWatchSnapshot() {
+    val sun = EntityValue(state = "below_horizon", attributes = mapOf("elevation" to "-12.5"))
+    val snapshot =
+      HaSnapshot(states = mapOf(HaSharedValues.SUN to sun.toEntityState(HaSharedValues.SUN)))
+    assertEquals(-12.5f, HaSharedValues.bindings(snapshot).floats["HA:sun.sun.elevation"]!!, 0f)
+    assertEquals(45f, HaSharedValues.bindings(HaSnapshot()).floats["HA:sun.sun.elevation"]!!, 0f)
+  }
 
   @Test
   fun wearTextUsesTheSharedFormatter() {

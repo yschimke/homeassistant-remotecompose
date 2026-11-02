@@ -10,7 +10,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -21,7 +20,10 @@ import kotlinx.coroutines.withContext
  * sign-out leaves the file alone as it does the design cache. Writes replace the file atomically.
  */
 class CardDesignOverrideStore internal constructor(private val file: File) {
-  private val _overrides = MutableStateFlow(read())
+  private var local = read()
+  private var sharedOwner: Any? = null
+  private val _shared = MutableStateFlow<Map<String, String>>(emptyMap())
+  private val _overrides = MutableStateFlow(local)
 
   /** One update and its write at a time, so the file always ends up with the newest overrides. */
   private val writes = Mutex()
@@ -29,11 +31,48 @@ class CardDesignOverrideStore internal constructor(private val file: File) {
   /** The current overrides; the dashboard and the design sync both follow it. */
   val overrides: StateFlow<CardDesignOverrides> = _overrides.asStateFlow()
 
+  /** Selections belonging to the active Home Assistant user, kept in memory only. */
+  val shared: StateFlow<Map<String, String>> = _shared.asStateFlow()
+
+  suspend fun beginShared(owner: Any) {
+    writes.withLock {
+      sharedOwner = owner
+      _shared.value = emptyMap()
+      publish()
+    }
+  }
+
+  suspend fun setShared(owner: Any, selections: Map<String, String>) {
+    writes.withLock {
+      if (sharedOwner !== owner) return@withLock
+      _shared.value = selections.toMap()
+      publish()
+    }
+  }
+
+  suspend fun endShared(owner: Any) {
+    writes.withLock {
+      if (sharedOwner !== owner) return@withLock
+      sharedOwner = null
+      _shared.value = emptyMap()
+      publish()
+    }
+  }
+
+  private fun publish() {
+    val cards = local.byCard.toMutableMap()
+    _shared.value.forEach { (card, design) ->
+      cards[card] = (cards[card] ?: CardDesignOverride()).copy(designId = design)
+    }
+    _overrides.value = local.copy(byCard = cards)
+  }
+
   /** Sets [override] at [scope] for [card], or clears it when null or empty. */
   suspend fun set(scope: CardDesignScope, card: CardConfig, override: CardDesignOverride?) {
     writes.withLock {
-      _overrides.update { it.with(scope, card, override) }
-      val text = _overrides.value.encode()
+      local = local.with(scope, card, override)
+      publish()
+      val text = local.encode()
       withContext(Dispatchers.IO) { write(text) }
     }
   }
@@ -41,11 +80,12 @@ class CardDesignOverrideStore internal constructor(private val file: File) {
   /** Applies a completed background skin install, preserving the card's latest style/variant. */
   suspend fun setDesign(cardKey: String, designId: String) {
     writes.withLock {
-      _overrides.update { current ->
+      local = local.let { current ->
         val keep = current.byCard[cardKey] ?: CardDesignOverride()
         current.copy(byCard = current.byCard + (cardKey to keep.copy(designId = designId)))
       }
-      val text = _overrides.value.encode()
+      publish()
+      val text = local.encode()
       withContext(Dispatchers.IO) { write(text) }
     }
   }

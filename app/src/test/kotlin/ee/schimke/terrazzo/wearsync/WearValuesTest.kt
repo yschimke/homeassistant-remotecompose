@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo.wearsync
 
+import ee.schimke.ha.design.HaSharedValues
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
@@ -94,5 +95,31 @@ class WearValuesTest {
     assertEquals(setOf("binary_sensor.p2s_online"), sent.keys, "unknown tokens match nothing")
     assertEquals("on", sent.getValue("binary_sensor.p2s_online").state)
     assertTrue(encodeProto(LiveValues(values = sent)).size < 1_000)
+  }
+
+  @Test
+  fun sharedSunValuesTravelWithCardValuesWithoutOtherHomeData() {
+    val sun =
+      EntityState(
+        HaSharedValues.SUN,
+        "below_horizon",
+        JsonObject(
+          mapOf(
+            "elevation" to JsonPrimitive(-12.5),
+            "next_rising" to JsonPrimitive("2026-11-01T07:00:00Z"),
+            "private_extra" to JsonPrimitive("not sent"),
+          )
+        ),
+      )
+    val snapshot =
+      HaSnapshot(states = mapOf(sun.entityId to sun, "cover.garage" to entity("cover.garage")))
+    val shared = HaSharedValues.dependencies(listOf("HA:sun.sun.elevation"))
+    val sent = wearValues(snapshot, setOf("cover.garage"), shared)
+    assertEquals(setOf("cover.garage", HaSharedValues.SUN), sent.keys)
+    assertEquals("-12.5", sent.getValue(HaSharedValues.SUN).attributes["elevation"])
+    assertTrue("next_rising" !in sent.getValue(HaSharedValues.SUN).attributes)
+    assertTrue("private_extra" !in sent.getValue(HaSharedValues.SUN).attributes)
+    assertTrue(wearValues(snapshot, emptySet()).isEmpty())
+    assertEquals(setOf("cover.garage"), wearValues(snapshot, setOf("cover.garage")).keys)
   }
 }

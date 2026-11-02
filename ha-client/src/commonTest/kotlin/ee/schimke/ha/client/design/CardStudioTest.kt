@@ -182,6 +182,122 @@ class CardStudioTest {
   }
 
   @Test
+  fun draftCanUseAnExistingCardBindingNotReadByTheSeedLayout() {
+    val state = document.getValue("stateVariables").jsonObject
+    val bindings = JsonObject(state + ("sensor.s0.is_on" to state.getValue("sensor.s0.state")))
+    val extended = JsonObject(document + ("stateVariables" to bindings))
+    val redesigned =
+      Json.parseToJsonElement(
+          extended
+            .toString()
+            .replace("\"variable\":\"sensor.s0.state\"", "\"variable\":\"sensor.s0.is_on\"")
+        )
+        .jsonObject
+    validateCardDraft(extended, redesigned)
+  }
+
+  @Test
+  fun draftCanAddOnlyKnownSharedValuesWithTheirDeclaredTypes() {
+    val original = document.getValue("stateVariables").jsonObject
+    val sun =
+      Json.parseToJsonElement(
+        """{"type":"value","valueType":"float","nullable":false,"initialValue":45,"persistence":"design"}"""
+      )
+    fun with(name: String, value: JsonElement) =
+      JsonObject(document + ("stateVariables" to JsonObject(original + (name to value))))
+    validateCardDraft(document, with("HA:sun.sun.elevation", sun))
+    assertFailsWith<IllegalArgumentException> {
+      validateCardDraft(document, with("HA:person.private.state", sun))
+    }
+    assertFailsWith<IllegalArgumentException> {
+      validateCardDraft(
+        document,
+        with(
+          "HA:sun.sun.elevation",
+          JsonObject(sun.jsonObject + ("valueType" to JsonPrimitive("bool"))),
+        ),
+      )
+    }
+  }
+
+  @Test
+  fun anImageNodeRequiresAnUploadedDigestAndCannotIntroduceActions() {
+    val digest = "sha256:" + "a".repeat(64)
+    val binding =
+      Json.parseToJsonElement(
+        """{"mediaType":"image/png","contentDigest":"$digest","source":{"type":"uploaded","storageKey":"$digest"}}"""
+      )
+    val nodes = document.getValue("nodes").jsonObject
+    val root = nodes.getValue("root").jsonObject
+    val image =
+      Json.parseToJsonElement(
+          """{"id":"image","componentId":"asset/image","properties":{"assetKey":{"type":"string","value":"door"}},"slots":{}}"""
+        )
+        .jsonObject
+    val changed =
+      JsonObject(
+        document +
+          ("assets" to JsonObject(mapOf("door" to binding))) +
+          ("nodes" to
+            JsonObject(
+              nodes +
+                ("root" to
+                  JsonObject(
+                    root + ("slots" to Json.parseToJsonElement("""{"content":["text","image"]}"""))
+                  )) +
+                ("image" to image)
+            ))
+      )
+    validateCardDraft(document, changed)
+    assertFailsWith<IllegalArgumentException> {
+      validateCardDraft(document, JsonObject(changed - "assets"))
+    }
+    val unsafe =
+      JsonObject(
+        changed +
+          ("nodes" to
+            JsonObject(
+              changed.getValue("nodes").jsonObject +
+                ("image" to
+                  JsonObject(
+                    image +
+                      ("eventBindings" to
+                        Json.parseToJsonElement("""{"click":{"type":"callService"}}"""))
+                  ))
+            ))
+      )
+    assertFailsWith<IllegalArgumentException> { validateCardDraft(document, unsafe) }
+  }
+
+  @Test
+  fun draftMayStopReadingAnUnneededValueButMustKeepALiveCardBinding() {
+    val state = document.getValue("stateVariables").jsonObject
+    val nodes = document.getValue("nodes").jsonObject
+    val root = nodes.getValue("root").jsonObject
+    val original =
+      JsonObject(
+        document +
+          ("stateVariables" to
+            JsonObject(state + ("sensor.s0.name" to state.getValue("sensor.s0.state")))) +
+          ("nodes" to
+            JsonObject(
+              nodes +
+                ("root" to
+                  JsonObject(
+                    root + ("slots" to Json.parseToJsonElement("""{"content":["text","name"]}"""))
+                  )) +
+                ("name" to
+                  Json.parseToJsonElement(
+                    """{"id":"name","componentId":"ha-cards/remote-text","properties":{"text":{"type":"state","variable":"sensor.s0.name"}},"slots":{}}"""
+                  ))
+            ))
+      )
+    val simplified =
+      JsonObject(document + ("stateVariables" to original.getValue("stateVariables")))
+    validateCardDraft(original, simplified)
+  }
+
+  @Test
   fun serverSettingsAcceptLibraryUrlAndRejectCredentialsOrInsecureUrls() {
     assertEquals("https://designs.test", studioServerUrl("https://designs.test/designs/v1/"))
     for (url in

@@ -246,6 +246,9 @@ interface HaSession {
    */
   suspend fun privateDesignServer(): Boolean = false
 
+  /** The current user's shared card selections, or null when the integration is too old. */
+  suspend fun sharedDesignSelections(): Map<String, String>? = null
+
   /**
    * A one-time link that opens the design server's page [path] in a browser, signed in through this
    * Home Assistant ([privateDesignServer]); null where there is none or the user isn't an admin.
@@ -618,6 +621,13 @@ class LiveHaSession(
     } catch (refused: HaCommandException) {
       // No Terrazzo integration, or one from before the design add-on.
       false
+    }
+
+  override suspend fun sharedDesignSelections(): Map<String, String>? =
+    try {
+      client.terrazzoDesignSelections()
+    } catch (refused: HaCommandException) {
+      null
     }
 
   override suspend fun privateDesignLink(path: String): String? =

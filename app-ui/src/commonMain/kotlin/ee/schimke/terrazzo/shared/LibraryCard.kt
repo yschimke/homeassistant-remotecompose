@@ -14,10 +14,15 @@ import androidx.compose.ui.unit.dp
 import ee.schimke.composeai.rcplayer.runtime.RcHostActionValue
 import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import ee.schimke.composeai.rcplayer.runtime.RcPlayerEvent
+import ee.schimke.ha.client.design.DesignRepository
+import ee.schimke.ha.client.design.DesignServerConfig
+import ee.schimke.ha.client.design.InMemoryDesignStore
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.client.design.UsageSource
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.DesignQuery
+import ee.schimke.ha.design.DeviceInfo
 import ee.schimke.ha.design.GeneratedDesign
 import ee.schimke.ha.design.HaSharedValues
 import ee.schimke.ha.model.CardConfig
@@ -32,6 +37,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlin.time.Clock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
@@ -55,6 +61,7 @@ internal fun LibraryCard(
   showFallbackNotice: Boolean = true,
   requireExactDesign: Boolean = false,
   designCache: DashboardLoadCache<LibraryDesignKey, ByteArray?>? = null,
+  designId: String? = null,
   /** Hears, once the design lookup settles, whether the card drew from a design or [fallback]. */
   onSource: ((UsageSource) -> Unit)? = null,
   fallback: @Composable () -> Unit,
@@ -65,11 +72,25 @@ internal fun LibraryCard(
       ?: remember(scope) {
         DashboardLoadCache(scope) { key: LibraryDesignKey -> loadLibraryDesign(key) }
       }
-  val exact = remember(card, snapshot, style, dark) { exactDesignKey(card, snapshot, style, dark) }
+  val exact =
+    remember(card, snapshot, style, dark, designId) {
+      if (designId == null) exactDesignKey(card, snapshot, style, dark)
+      else selectedDesignKey(card, snapshot, style, dark)
+    }
   val hint = remember(card, snapshot, exact) { cacheShapeHint(exact, card, snapshot) }
   val designKey =
-    remember(card, hint, style, dark, requireExactDesign, exact) {
-      LibraryDesignKey(anonymousTemplateCard(card), style, dark, requireExactDesign, exact, hint)
+    remember(card, hint, style, dark, requireExactDesign, exact, designId, snapshot.devices) {
+      val entity = CardDesignSlots.slotEntries(card).orEmpty().firstOrNull()?.entityId
+      LibraryDesignKey(
+        anonymousTemplateCard(card),
+        style,
+        dark,
+        requireExactDesign,
+        exact,
+        hint,
+        designId,
+        entity?.let(snapshot.devices::get),
+      )
     }
   fun bindings() =
     if (exact != null) exactTemplateBindings(card, snapshot) else templateBindings(card, snapshot)
@@ -288,6 +309,23 @@ internal fun exactDesignKey(
 }
   .getOrNull()
 
+/** Key for a design explicitly chosen for this card, including single-entity custom cards. */
+internal fun selectedDesignKey(
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  style: String,
+  dark: Boolean,
+): DesignKey? = runCatching {
+  CardDesignTemplates.selectedDesignKeyFor(
+    card,
+    snapshot,
+    ThemeStyle.entries.first(),
+    dark,
+    cardStyle = HaUberTheme.byId(style),
+  )
+}
+  .getOrNull()
+
 /** The values an exact design binds: its converter's own, as the phone app plays it. */
 internal fun exactTemplateBindings(
   card: CardConfig,
@@ -379,7 +417,42 @@ internal data class LibraryDesignKey(
   val exact: DesignKey? = null,
   /** [shapeHint] for the card: the observable shape discriminators, empty when none apply. */
   val shapeHint: JsonObject = EMPTY_SHAPE_HINT,
+  val designId: String? = null,
+  val device: DeviceInfo? = null,
 )
+
+/**
+ * Load only the selected private design, from the signed-in home, and verify its manifest and
+ * blobs.
+ */
+internal suspend fun loadSelectedDesign(
+  key: LibraryDesignKey,
+  home: String,
+  token: suspend () -> String,
+  client: HttpClient? = null,
+): ByteArray? {
+  val id = key.designId ?: return null
+  val exact = key.exact ?: return null
+  val http = client ?: HttpClient { followRedirects = false }
+  try {
+    val repository =
+      DesignRepository(
+        DesignServerConfig(
+          baseUrl = home.trimEnd('/') + "/api/terrazzo/designs/designs/v1",
+          allowUnsigned = true,
+          choice = listOf(DesignQuery(designId = id)),
+          token = token,
+        ),
+        InMemoryDesignStore(),
+        http,
+        clock = { Clock.System.now().toEpochMilliseconds() },
+      )
+    repository.refresh(force = true)
+    return repository.byDesign(id, exact, key.device)
+  } finally {
+    http.close()
+  }
+}
 
 internal fun exactLibraryDesign(response: JsonObject): Boolean =
   (response["exact"] as? JsonPrimitive)?.booleanOrNull == true

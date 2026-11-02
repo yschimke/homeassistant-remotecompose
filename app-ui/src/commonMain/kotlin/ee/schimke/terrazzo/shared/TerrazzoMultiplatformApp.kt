@@ -42,8 +42,10 @@ import androidx.navigation3.ui.NavDisplay
 import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.client.UnsupportedDashboardException
+import ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits
 import ee.schimke.ha.client.dashboard.DashboardEditSession
 import ee.schimke.ha.client.dashboard.toCardConfig
+import ee.schimke.ha.client.design.cardFingerprint
 import ee.schimke.ha.client.listRenderableDashboards
 import ee.schimke.ha.client.stateSnapshots
 import ee.schimke.ha.model.*
@@ -63,6 +65,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 
@@ -80,12 +84,14 @@ private data class DashboardEditDestination(val path: String?) : NavKey
 
 private class AppConnection(
   val config: HaConfig,
-  accessTokenProvider: (suspend () -> String)? = null,
+  private val accessTokenProvider: (suspend () -> String)? = null,
   val hostedAction: ((String) -> Boolean)? = null,
 ) {
   val hosted = accessTokenProvider != null
   val pictures = EntityPictureClient(config, accessTokenProvider)
   val client = HaClient(config, accessTokenProvider = accessTokenProvider)
+
+  suspend fun accessToken(): String = accessTokenProvider?.invoke() ?: config.accessToken
 
   suspend fun close() {
     pictures.close()
@@ -356,6 +362,13 @@ private fun DashboardShell(
   var snapshot by remember(connection) { mutableStateOf(HaSnapshot()) }
   var connectionError by remember(connection) { mutableStateOf<String?>(null) }
   var designServer by remember { mutableStateOf("https://ha.coo.ee") }
+  // Keep the owner capability while navigating away from an edit, so it can be resumed and
+  // revoked. It is deliberately not persisted across a browser reload or sign-out.
+  val cloudDashboardEdits =
+    remember(connection, designServer) {
+      runCatching { CloudDashboardAgentEdits(connection.client, designServer) }.getOrNull()
+    }
+  DisposableEffect(cloudDashboardEdits) { onDispose { cloudDashboardEdits?.close() } }
   // Opt-in template usage: once a launch (and when the server setting settles on a new value),
   // send the finished days. The delay restarts on every keystroke in the server field.
   LaunchedEffect(designServer) {
@@ -409,12 +422,23 @@ private fun DashboardShell(
   }
   // Edit sessions need the Terrazzo integration, which serves the panel itself.
   var integrationInstalled by remember(connection) { mutableStateOf(false) }
+  var privateDesignServer by remember(connection) { mutableStateOf(false) }
+  var dashboardRefreshGeneration by remember(connection) { mutableIntStateOf(0) }
   LaunchedEffect(connection) {
     connection.client.state.collectLatest { state ->
       if (state != HaClient.ConnectionState.Ready) return@collectLatest
       integrationInstalled =
         runCatching { TERRAZZO_DOMAIN in connection.client.fetchConfig().components }
           .getOrDefault(integrationInstalled)
+      privateDesignServer =
+        try {
+          (connection.client.terrazzoDesignServer()["available"] as? JsonPrimitive)
+            ?.booleanOrNull == true
+        } catch (e: CancellationException) {
+          throw e
+        } catch (_: Exception) {
+          false
+        }
     }
   }
   fun select(route: NavKey) {
@@ -542,6 +566,8 @@ private fun DashboardShell(
                   cardStyle,
                   dark,
                   customizing,
+                  dashboardRefreshGeneration,
+                  privateDesignServer,
                 )
               }
             }
@@ -574,6 +600,8 @@ private fun DashboardShell(
                 designServer = designServer,
                 cardStyle = cardStyle,
                 dark = dark,
+                cloudEdits = cloudDashboardEdits,
+                onApplied = { dashboardRefreshGeneration++ },
                 onBack = { if (stack.size > 1) stack.removeLastOrNull() },
               )
             }
@@ -596,18 +624,45 @@ private fun AgentEditEntry(
   designServer: String,
   cardStyle: String,
   dark: Boolean,
+  cloudEdits: CloudDashboardAgentEdits?,
+  onApplied: () -> Unit,
   onBack: () -> Unit,
 ) {
   @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
   val preview = rememberDraftPreview(connection, designServer, cardStyle, dark)
+  var useCloud by remember { mutableStateOf<Boolean?>(null) }
+  if (useCloud == null) {
+    Column(
+      Modifier.fillMaxSize().padding(24.dp),
+      verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+      Text("How should the agent connect?", style = MaterialTheme.typography.titleLarge)
+      Text(
+        "Use the trusted design server for a cloud agent, or let an agent sign in to Home Assistant directly."
+      )
+      Button(onClick = { useCloud = true }) { Text("Use a cloud agent") }
+      OutlinedButton(onClick = { useCloud = false }) { Text("Connect to Home Assistant") }
+      TextButton(onClick = onBack) { Text("Back") }
+    }
+    return
+  }
+  val cloud = useCloud == true
+  if (cloud && cloudEdits == null) {
+    Column(Modifier.padding(24.dp)) {
+      Text("Set an HTTPS card design server in Settings before using a cloud agent.")
+      TextButton(onClick = { useCloud = null }) { Text("Back") }
+    }
+    return
+  }
   AgentEditScreen(
-    edits = connection.client.agentEdits,
+    edits = if (cloud) requireNotNull(cloudEdits) else connection.client.agentEdits,
     urlPath = path,
     title = title,
     snapshot = snapshot,
     onBack = onBack,
     onSharePrompt = { clipboard.setText(AnnotatedString(it)) },
-    onApplied = {},
+    onApplied = onApplied,
+    cloudServer = if (cloud) designServer else null,
   ) { _, card ->
     preview(card, snapshot)
   }
@@ -851,17 +906,45 @@ private fun LiveDashboard(
   cardStyle: String,
   dark: Boolean,
   customizing: Boolean,
+  refreshGeneration: Int,
+  privateDesignServer: Boolean,
 ) {
   val uriHandler = LocalUriHandler.current
   var designCard by remember(connection, path) { mutableStateOf<CardConfig?>(null) }
-  var dashboard by remember(connection, path) { mutableStateOf<Dashboard?>(null) }
+  var dashboard by
+    remember(connection, path, refreshGeneration) { mutableStateOf<Dashboard?>(null) }
   var error by remember(connection, path) { mutableStateOf<String?>(null) }
+  var selections by remember(connection) { mutableStateOf<Map<String, String>?>(null) }
+  var designGeneration by remember(connection) { mutableIntStateOf(0) }
+  val selectionLock = remember(connection) { Mutex() }
   val scope = rememberCoroutineScope()
+  LaunchedEffect(connection, privateDesignServer) {
+    if (privateDesignServer) {
+      while (true) {
+        try {
+          selectionLock.withLock {
+            val updated = connection.client.terrazzoDesignSelections()
+            if (updated != selections) {
+              selections = updated
+              designGeneration++
+            }
+          }
+        } catch (e: CancellationException) {
+          throw e
+        } catch (_: Exception) {
+          // Keep the last selection while offline and retry after reconnection.
+        }
+        delay(30_000)
+      }
+    } else selections = null
+  }
   // Keyed on the configured server so changing the setting reloads designs from it.
   val designCache =
-    remember(connection, path, designServer) {
+    remember(connection, path, designServer, designGeneration, privateDesignServer) {
       DashboardLoadCache(scope) { key: LibraryDesignKey ->
-        loadLibraryDesign(key, designServer, AppCardUsage.userAgent?.header)
+        if (key.designId != null && privateDesignServer)
+          loadSelectedDesign(key, connection.config.baseUrl, token = { connection.accessToken() })
+        else loadLibraryDesign(key, designServer, AppCardUsage.userAgent?.header)
       }
     }
   val pictureCache =
@@ -870,7 +953,7 @@ private fun LiveDashboard(
         decodeEntityPicture(connection.pictures.load(key))
       }
     }
-  LaunchedEffect(connection, path) {
+  LaunchedEffect(connection, path, refreshGeneration) {
     connection.client.state.collectLatest { state ->
       if (state == HaClient.ConnectionState.Ready && dashboard == null) {
         try {
@@ -923,11 +1006,70 @@ private fun LiveDashboard(
   val shown = remember(snapshot, data) { withDashboardData(snapshot, data) }
   val editing = designCard
   if (editing != null) {
+    val homeServer =
+      remember(connection, privateDesignServer) {
+        if (!privateDesignServer) null
+        else
+          HomeDesignServer(
+            haBaseUrl = connection.config.baseUrl,
+            accessToken = { connection.accessToken() },
+            link = { page ->
+              try {
+                val path = connection.client.terrazzoDesignLink(page)
+                privateDesignEditorUrl(connection.config.baseUrl, path)
+              } catch (e: CancellationException) {
+                throw e
+              } catch (_: Exception) {
+                null
+              }
+            },
+          )
+      }
     CardStudioScreen(
       editing,
       snapshot,
       onBack = { designCard = null },
       initialServerUrl = designServer,
+      homeServer = homeServer,
+      openEditorInBrowser = privateDesignServer,
+      refreshSnapshot = { connection.client.snapshotWithDevices() },
+      designKey = selectedDesignKey(editing, shown, cardStyle, dark),
+      onPublished =
+        if (selections != null)
+          { id ->
+            val fingerprint = cardFingerprint(editing)
+            val exact = checkNotNull(selectedDesignKey(editing, shown, cardStyle, dark))
+            val entity =
+              ee.schimke.ha.design.CardDesignSlots.slotEntries(editing)
+                .orEmpty()
+                .firstOrNull()
+                ?.entityId
+            val candidate =
+              LibraryDesignKey(
+                anonymousTemplateCard(editing),
+                cardStyle,
+                dark,
+                exact = exact,
+                designId = id,
+                device = entity?.let(shown.devices::get),
+              )
+            val bytes =
+              loadSelectedDesign(
+                candidate,
+                connection.config.baseUrl,
+                token = { connection.accessToken() },
+              )
+            if (bytes == null || !canBindWithCmp(bytes, exactTemplateBindings(editing, shown)))
+              throw CardSelectionException(
+                "The design was published but could not be loaded for this card. Try publishing again."
+              )
+            selectionLock.withLock {
+              connection.client.setTerrazzoDesignSelection(fingerprint, id)
+              selections = selections.orEmpty() + (fingerprint to id)
+              designGeneration++
+            }
+          }
+        else null,
     ) {
       NativeCard(editing, shown) {}
     }
@@ -952,6 +1094,7 @@ private fun LiveDashboard(
               pictureCache,
               cardStyle,
               dark,
+              designSelections = selections.orEmpty(),
               onMoreInfo = ::moreInfo,
               onAction = ::dispatch,
               onToggle = { entityId ->
@@ -975,13 +1118,40 @@ private fun LiveDashboard(
                 )
               },
             )
-            if (customizing)
+            if (customizing) {
               TextButton(onClick = { designCard = card }) { Text("Design or fix this card") }
+              val fingerprint = cardFingerprint(card)
+              if (fingerprint in selections.orEmpty()) {
+                TextButton(
+                  onClick = {
+                    scope.launch {
+                      try {
+                        selectionLock.withLock {
+                          connection.client.setTerrazzoDesignSelection(fingerprint, null)
+                          selections = selections.orEmpty() - fingerprint
+                        }
+                      } catch (e: CancellationException) {
+                        throw e
+                      } catch (_: Exception) {
+                        error = "Could not restore this card's default design. Try again."
+                      }
+                    }
+                  }
+                ) {
+                  Text("Use default design")
+                }
+              }
+            }
           }
         }
       }
   }
 }
+
+/** Only open a one-time link on the Home Assistant that issued it. */
+internal fun privateDesignEditorUrl(home: String, path: String): String? =
+  if (path.matches(Regex("/api/terrazzo/designs-open/[A-Za-z0-9_-]+"))) home.trimEnd('/') + path
+  else null
 
 /** Common adaptive grid. The caller supplies generation so Android can retain local converters. */
 @Composable

@@ -44,6 +44,30 @@ Assistant is the editor in practice.
 
 ## Edit sessions
 
+### Cloud agent from the Wasm host
+
+The shared dashboard host offers a cloud-agent choice alongside the existing direct Home Assistant
+MCP path. It creates the regular edit session using the person's signed-in HA connection, then sends
+that dashboard's complete configuration and request to the configured HTTPS design server. The
+screen names the destination and warns that configurations can contain private data. No HA token is
+sent upstream. The one-hour session has separate owner and agent capabilities; the person copies
+the agent's temporary connection details. A holder may read the configuration and submit drafts.
+
+The upstream offers `get_dashboard_request` and `submit_dashboard_draft` over scoped MCP, with a
+JSON fallback. The browser polls for revisions and relays each new draft through
+`terrazzo/edit/submit` as the signed-in person. That command uses the same dashboard visibility and
+entity permission checks as MCP draft submission. HA's existing subscription, preview, atomic
+apply/conflict checks, and undo remain the review boundary; the upstream never writes to HA. Notes
+requested by the person are sent to the upstream for the agent. Discard revokes the upstream
+capability before closing the HA session.
+
+The flow needs the Terrazzo HA integration, but no Wasmo backend services. It keeps the owner
+capability in memory for the signed-in app session, so navigating away and back can resume an
+open request. Reloading the app or signing out loses the ability to pick
+up or revoke the upstream session, which expires after one hour or on server restart. It shares the
+selected dashboard config, not a home-wide entity inventory or live stream. The agent can reuse
+entity IDs in that config; the HA relay rejects any submitted entities the person cannot read.
+
 An edit session is the handoff between a person and an agent, held by the integration in Home
 Assistant's storage:
 
