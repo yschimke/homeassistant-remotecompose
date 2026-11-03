@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.82](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.81...v0.1.82) (2026-11-03)
+
+
+### Features
+
+* connect an agent once, then edit cards and dashboards with it live ([#1425](https://github.com/yschimke/homeassistant-remotecompose/issues/1425)) ([9bdd307](https://github.com/yschimke/homeassistant-remotecompose/commit/9bdd307d6c1b3d2711a8f42a8055b13c8f416b5c))
+* one flow for everyone: Ask your agent ([#1429](https://github.com/yschimke/homeassistant-remotecompose/issues/1429)) ([ae4f384](https://github.com/yschimke/homeassistant-remotecompose/commit/ae4f3846d2a8b12d1faa815235e09f0a58cc54d2))
+
 ## [0.1.81](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.80...v0.1.81) (2026-11-03)
 
 
