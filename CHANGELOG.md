@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.81](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.80...v0.1.81) (2026-11-03)
+
+
+### Features
+
+* live agent sessions with join codes, presence and conversation ([#1422](https://github.com/yschimke/homeassistant-remotecompose/issues/1422)) ([a1df410](https://github.com/yschimke/homeassistant-remotecompose/commit/a1df41024da448d587218bef3858eee03ab3c2d1))
+
+
+### Bug Fixes
+
+* include EGL for card design image publishing ([#1421](https://github.com/yschimke/homeassistant-remotecompose/issues/1421)) ([3f6bd1a](https://github.com/yschimke/homeassistant-remotecompose/commit/3f6bd1a561106292ae682c1e4a22ebea94f730ea))
+
 ## [0.1.80](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.79...v0.1.80) (2026-11-02)
 
 

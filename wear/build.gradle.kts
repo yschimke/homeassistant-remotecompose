@@ -1,4 +1,4 @@
-val wearVersionName = "0.1.80" // x-release-please-version
+val wearVersionName = "0.1.81" // x-release-please-version
 
 // Keep Wear version tied to release-please while reserving a unique code
 // lane for the shared package id (`ee.schimke.harc`): same base as `:app`
