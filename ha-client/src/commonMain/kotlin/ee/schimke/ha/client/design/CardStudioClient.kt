@@ -81,12 +81,18 @@ private constructor(
    * the relay shows ([ee.schimke.ha.client.agent.AgentRelayClient]); no Home Assistant token is
    * sent.
    */
-  suspend fun startAgentSession(document: JsonObject, instruction: String): String =
+  suspend fun startAgentSession(
+    document: JsonObject,
+    instruction: String,
+    /** The person's agent link: the request goes straight to their agent, with no code. */
+    agentLink: String? = null,
+  ): String =
     request(
         "/api/studio/agent-sessions",
         buildJsonObject {
           put("document", document)
           put("instruction", instruction)
+          if (agentLink != null) put("agentLink", agentLink)
         },
       )
       .getValue("ownerToken")

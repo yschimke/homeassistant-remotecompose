@@ -215,6 +215,24 @@ EDIT_TOOLS = [
 ]
 EDIT_TOOLS += [
     {
+        "name": "await_request",
+        "title": "Listen for dashboard requests",
+        "description": (
+            "Waits up to 25 s for edit sessions the person starts in the app after cursor (0 at "
+            "first), and returns them. While you listen, the person starts a request with "
+            "nothing to copy. Work each one (get_edit_session, submit_draft, await_feedback), "
+            "then call this again with the returned cursor."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "since": {"type": "number", "description": "The cursor from the last call; 0 at first."},
+            },
+            "additionalProperties": False,
+        },
+        "annotations": {"readOnlyHint": True, "openWorldHint": False},
+    },
+    {
         "name": "await_feedback",
         "title": "Wait for the person's feedback",
         "description": (
@@ -415,6 +433,11 @@ async def call_tool(home, name, arguments):
         return await home.edit_session(_session_id(arguments))
     if name == "get_card_guide":
         return CARD_GUIDE
+    if name == "await_request":
+        since = arguments.get("since", 0)
+        if not isinstance(since, (int, float)) or isinstance(since, bool) or since < 0:
+            raise ToolError("since must be the cursor from the last call, or 0")
+        return await home.await_request(since)
     if name == "await_feedback":
         since = arguments.get("since", 0)
         if not isinstance(since, int) or isinstance(since, bool) or since < 0:
@@ -478,8 +501,8 @@ async def handle(message, home, server_version):
                     f"Controls one private Home Assistant instance, '{home.name}', as the user "
                     "Terrazzo's MCP server is pinned to, with that user's permissions. Use "
                     "find_entities to resolve names to entity ids before reading or switching. "
-                    "To change a dashboard, find open requests with list_edit_sessions, then work "
-                    "in an edit session (get_edit_session, get_card_guide, submit_draft, then "
+                    "To change a dashboard, listen with await_request (or find open requests with "
+                    "list_edit_sessions), then work in an edit session (get_edit_session, get_card_guide, submit_draft, then "
                     "await_feedback in a loop): the person watches your drafts live and comments; "
                     "you submit drafts and they apply them."
                 ),

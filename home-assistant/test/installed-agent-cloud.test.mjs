@@ -1,7 +1,8 @@
 // CI-only, after installed-agent-live.test.mjs: a cloud agent edit, end to end. A real design
 // server (DESIGN_SERVER_BIN, started here) relays between the real panel in a real Home Assistant
-// and an agent that only reaches the design server: the agent joins with the code the panel shows,
-// drafts, and listens; the person comments on a card and applies. The design server is restarted
+// and an agent that only reaches the design server. Setup happens once: the person connects the
+// agent in Settings. After that a request goes straight to the listening agent with nothing to
+// copy; it drafts, the person comments on a card and applies. The design server is restarted
 // mid-session, which neither side should notice beyond a pause.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -111,21 +112,35 @@ test('Cloud agent edit: joined by code, relayed through a restart, applied', {sk
     };
     await page.goto(`${base}/terrazzo?dashboard=cloud-fixture`);
     await panel.getByText('Lights', {exact:true}).first().waitFor({timeout:90_000});
+
+    // Setup, once: Settings, Connect an agent; the agent connects with the code and listens.
+    await panel.getByRole('button', {name:'Settings'}).click({force:true});
+    await panel.getByText('Connect an agent', {exact:true}).click({force:true});
+    const codeNode = panel.getByText(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+    await codeNode.waitFor({timeout:30_000});
+    const setupCode = (await codeNode.innerText()).trim();
+    await page.screenshot({path:`${evidence}/agent-cloud-0-setup.png`});
+    const {link} = await agent('connect', {code:setupCode, agentName:'Claude'});
+    assert.ok(link, 'a setup code gives the agent a lasting link');
+    let waitingForRequest = agent('await_request', {link, since:0});
+    await panel.getByText('Claude is connected and listening', {exact:true}).waitFor({timeout:30_000});
+    await page.screenshot({path:`${evidence}/agent-cloud-1-connected.png`});
+
+    // From now on a request goes straight to the agent: no code, nothing to copy.
+    await page.goto(`${base}/terrazzo?dashboard=cloud-fixture`);
+    await panel.getByText('Lights', {exact:true}).first().waitFor({timeout:90_000});
     await panel.getByRole('button', {name:'More options'}).click({force:true});
     await panel.getByText('Ask an agent', {exact:true}).click({force:true});
     await panel.getByText('Use a cloud agent', {exact:true}).click({force:true});
+    await panel.getByText('Claude is connected and listening', {exact:true}).waitFor({timeout:30_000});
     await typeInto('Request', 'Add the switch next to the light');
     await panel.getByText('Start edit session', {exact:true}).click({force:true});
-
-    // No capability to copy: the panel shows a short code, and that's all the agent needs.
-    const codeNode = panel.getByText(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
-    await codeNode.waitFor({timeout:30_000});
-    const code = (await codeNode.innerText()).trim();
-    await panel.getByText('Waiting for an agent to join', {exact:true}).waitFor();
-    await page.screenshot({path:`${evidence}/agent-cloud-1-code.png`});
-    const joined = await agent('join_session', {code, agentName:'Claude'});
-    assert.equal(joined.kind, 'dashboard');
-    const session = joined.session;
+    let inbox = await waitingForRequest;
+    while (inbox.requests.length === 0) inbox = await agent('await_request', {link, since:inbox.cursor});
+    const [delivered] = inbox.requests;
+    assert.equal(delivered.kind, 'dashboard');
+    const session = delivered.session;
+    assert.equal(await panel.getByText(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/).count(), 0, 'no code to hand over');
     const read = await agent('get_session', {session});
     assert.deepEqual(read.dashboard, BASELINE);
     assert.equal(read.request, 'Add the switch next to the light');

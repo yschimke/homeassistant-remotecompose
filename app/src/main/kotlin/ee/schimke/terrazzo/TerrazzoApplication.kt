@@ -67,6 +67,8 @@ class TerrazzoApplication : Application() {
 
   override fun onCreate() {
     super.onCreate()
+    // Agent links and session capabilities: private to this app, never backed up or synced.
+    ee.schimke.terrazzo.shared.AgentGrantFiles.use(java.io.File(noBackupFilesDir, "agent-grants"))
     // Install crash logging first so anything that throws during the
     // rest of startup is still captured (the in-app LogStore sink is
     // always wired; Crashlytics rides along when a key is configured).

@@ -29,6 +29,11 @@ data class AgentEditSession(
   val agent: Activity? = null,
   /** Home Assistant's clock when this was read ([Activity.seenAt] is in it); 0 when unknown. */
   @SerialName("server_time") val serverTime: Double = 0.0,
+  /**
+   * An agent signed in to Home Assistant is listening for requests (`await_request`): it picks this
+   * session up by itself, so there's no prompt to hand over.
+   */
+  @SerialName("agent_listening") val agentListening: Boolean = false,
 ) {
   /** Seconds since the agent was last active, by Home Assistant's clock; null before it joined. */
   val agentIdleSeconds: Double?

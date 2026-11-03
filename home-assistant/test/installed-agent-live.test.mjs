@@ -1,7 +1,8 @@
 // CI-only, after installed-edits.test.mjs: a live dashboard edit, end to end in a real HA container
-// with the real panel. The person asks an agent from the panel's menu; an agent signed in to Home
-// Assistant (the MCP server's non-admin user) drafts, says what it's doing and waits for feedback;
-// the person sees the draft drawn with their cards, comments on one card, and applies it.
+// with the real panel. An agent signed in to Home Assistant (the MCP server's non-admin user) is
+// listening; the person asks from the panel's menu and the request reaches it with nothing to
+// copy. It drafts, says what it's doing and waits for feedback; the person sees the draft drawn
+// with their cards, comments on one card, and applies it.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
@@ -99,12 +100,19 @@ test('Live agent edit: the person watches, comments on a card and applies', {tim
       await page.waitForTimeout(400);
       await page.keyboard.type(text, {delay:20});
     };
+    // The agent is already signed in to Home Assistant and listening: the person's request goes
+    // straight to it, with no prompt to hand over.
+    const waitingForRequest = mcp('await_request', {since:0});
+    await new Promise((resolve) => setTimeout(resolve, 500));
     await typeInto('Request', 'Add the switch next to the light');
     await panel.getByText('Start edit session', {exact:true}).click({force:true});
-    await panel.getByText('Share prompt', {exact:true}).waitFor();
-    const [session] = (await ws({type:'terrazzo/edit/list', url_path:'live-fixture'})).sessions;
+    await panel.getByText('Your agent is listening and picks this up now.', {exact:true}).waitFor();
+    assert.equal(await panel.getByText('Share prompt', {exact:true}).count(), 0, 'no prompt to hand over');
+    let heard = await waitingForRequest;
+    while (heard.requests.length === 0) heard = await mcp('await_request', {since:heard.cursor});
+    const [session] = heard.requests;
     assert.equal(session.request, 'Add the switch next to the light');
-    await page.screenshot({path:`${evidence}/agent-live-1-prompt.png`});
+    await page.screenshot({path:`${evidence}/agent-live-1-listening.png`});
 
     // The agent works; the person sees what it's doing, its draft and its question.
     const read = await mcp('get_edit_session', {session_id:session.session_id});

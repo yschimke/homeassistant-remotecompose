@@ -58,6 +58,10 @@ class FakeHome:
         self.submitted = (session_id, config, summary)
         return {'draft_id': 'd1', 'status': 'submitted'}
 
+    async def await_request(self, since):
+        self.listened = since
+        return {'cursor': 5.0, 'requests': [{'session_id': 's2', 'request': 'Garden'}]}
+
     async def await_feedback(self, session_id, since):
         self.awaited = (session_id, since)
         return {'cursor': 3, 'feedback': [{'seq': 3, 'text': 'Bigger', 'target': 'Camera'}],
@@ -195,6 +199,15 @@ class LiveFeedbackToolsTest(unittest.TestCase):
         self.assertEqual(home.awaited, ('s1', 0))
         for bad in (-1, 'two', True):
             self.assertTrue(call(home, 'await_feedback', {'session_id': 's1', 'since': bad})['isError'])
+
+    def test_await_request_listens_from_the_cursor(self):
+        home = FakeHome()
+        result = call(home, 'await_request', {'since': 2.5})['structuredContent']
+        self.assertEqual(home.listened, 2.5)
+        self.assertEqual(result['requests'][0]['session_id'], 's2')
+        call(home, 'await_request')
+        self.assertEqual(home.listened, 0)
+        self.assertTrue(call(home, 'await_request', {'since': 'x'})['isError'])
 
     def test_messages_and_status_reach_the_person(self):
         home = FakeHome()

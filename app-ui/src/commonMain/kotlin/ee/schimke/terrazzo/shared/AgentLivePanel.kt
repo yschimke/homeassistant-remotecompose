@@ -37,8 +37,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import ee.schimke.ha.client.agent.AgentRelayClient
 import ee.schimke.ha.client.agent.AgentRelayMessage
 import ee.schimke.ha.client.agent.AgentRelayState
+import kotlinx.coroutines.launch
 
 /**
  * The live half of an agent session, shared by Card Studio and dashboard edits on every host
@@ -71,9 +73,12 @@ fun AgentLivePanel(
       }
       Presence(state)
       val code = state.joinCode
-      if (!state.agent.joined || code != null) {
+      if (code != null || (!state.agent.joined && !state.linked)) {
         JoinCode(code, state.joinCodeExpiresInSeconds, busy, onCopyInvite, onNewCode)
         AgentCode(busy, onClaim)
+      } else if (state.linked && !state.agent.joined) {
+        // Sent to the connected agent: nothing to hand over, unless the person wants another one.
+        TextButton(onClick = onNewCode, enabled = !busy) { Text("Use another agent instead") }
       }
       Conversation(state.messages)
       if (state.agent.joined) Composer(busy, target, onClearTarget, onSend)
@@ -95,6 +100,8 @@ private fun Presence(state: AgentRelayState) {
       agent.joined ->
         colors.outline to
           "${agent.name} was here ${ago(agent.lastSeenSecondsAgo)}. It picks up your messages when it's back."
+      state.linked ->
+        colors.outline to "Sent to ${agent.name}. It picks this up when it next listens."
       else -> colors.outline to "Waiting for an agent to join"
     }
   Row(
@@ -254,6 +261,172 @@ private fun Composer(
         maxLines = 4,
       )
       Button(onClick = { send() }, enabled = !busy && text.isNotBlank()) { Text("Send") }
+    }
+  }
+}
+
+/** The person's agent links, one per design server, kept on this device ([readAgentGrants]). */
+internal object AgentLinkStore {
+  private const val KEY = "terrazzo.agentLinks"
+  private val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+  private var memory = emptyMap<String, String>()
+
+  private fun all(): Map<String, String> =
+    readAgentGrants(KEY)?.let {
+      runCatching { json.decodeFromString<Map<String, String>>(it) }.getOrNull()
+    } ?: memory
+
+  fun get(server: String): String? = keyOf(server)?.let { all()[it] }
+
+  fun put(server: String, link: String?) {
+    val key = keyOf(server) ?: return
+    val values = if (link == null) all() - key else all() + (key to link)
+    memory = values
+    writeAgentGrants(KEY, if (values.isEmpty()) null else json.encodeToString(values))
+  }
+
+  private fun keyOf(server: String) = runCatching {
+    ee.schimke.ha.client.design.studioServerUrl(server)
+  }
+    .getOrNull()
+}
+
+/**
+ * The setup phase: connect an AI agent to this person once, on [server]. After that every card and
+ * dashboard they ask about goes straight to it (Card Studio, Ask an agent), with nothing to copy.
+ * Shows the setup code (or takes the agent's), then who is connected and whether it is listening.
+ * [onCopy] puts text on the clipboard or share sheet.
+ */
+@Composable
+fun AgentConnection(server: String, onCopy: (String) -> Unit, modifier: Modifier = Modifier) {
+  val scope = androidx.compose.runtime.rememberCoroutineScope()
+  var link by remember(server) { mutableStateOf(AgentLinkStore.get(server)) }
+  var state by
+    remember(server, link) { mutableStateOf<ee.schimke.ha.client.agent.AgentLinkState?>(null) }
+  var busy by remember { mutableStateOf(false) }
+  var problem by remember { mutableStateOf<String?>(null) }
+
+  androidx.compose.runtime.LaunchedEffect(server, link) {
+    val current = link ?: return@LaunchedEffect
+    val relay =
+      runCatching { ee.schimke.ha.client.agent.AgentRelayClient(server) }.getOrNull()
+        ?: return@LaunchedEffect
+    try {
+      relay.watchLink(current).collect { state = it }
+    } catch (e: ee.schimke.ha.client.agent.AgentSessionEndedException) {
+      // Disconnected elsewhere, or idle for a month: back to the setup.
+      AgentLinkStore.put(server, null)
+      link = null
+    } finally {
+      relay.close()
+    }
+  }
+
+  fun act(block: suspend (ee.schimke.ha.client.agent.AgentRelayClient) -> Unit) {
+    if (busy) return
+    busy = true
+    problem = null
+    scope.launch {
+      val relay = ee.schimke.ha.client.agent.AgentRelayClient(server)
+      try {
+        block(relay)
+      } catch (e: kotlinx.coroutines.CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        problem = e.message ?: "The design server didn't answer."
+      } finally {
+        relay.close()
+        busy = false
+      }
+    }
+  }
+
+  Surface(
+    modifier = modifier.fillMaxWidth(),
+    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    shape = MaterialTheme.shapes.medium,
+  ) {
+    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      val current = state
+      when {
+        link == null -> {
+          Text("Your AI agent", style = MaterialTheme.typography.titleSmall)
+          Text(
+            "Connect your agent once. After that, every card or dashboard you ask about goes " +
+              "straight to it, and you talk to it here: nothing to copy.",
+            style = MaterialTheme.typography.bodySmall,
+          )
+          Button(
+            onClick = {
+              act { relay ->
+                val (created, _) = relay.createLink()
+                AgentLinkStore.put(server, created)
+                link = created
+              }
+            },
+            enabled = !busy,
+          ) {
+            Text("Connect an agent")
+          }
+        }
+        current == null -> Text("Connecting to the design server…")
+        !current.connected -> {
+          Text("Connect your agent", style = MaterialTheme.typography.titleSmall)
+          JoinCode(
+            current.code,
+            current.codeExpiresInSeconds,
+            busy,
+            onCopyInvite = { code -> onCopy(AgentRelayClient.setupInvite(server, code)) },
+            onNewCode = { act { it.newLinkCode(requireNotNull(link)) } },
+          )
+          AgentCode(busy) { code -> act { it.claimLink(requireNotNull(link), code) } }
+          TextButton(
+            onClick = {
+              act { relay ->
+                relay.disconnect(requireNotNull(link))
+                AgentLinkStore.put(server, null)
+                link = null
+              }
+            },
+            enabled = !busy,
+          ) {
+            Text("Cancel")
+          }
+        }
+        else -> {
+          val colors = MaterialTheme.colorScheme
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+          ) {
+            Box(
+              Modifier.size(10.dp)
+                .background(if (current.listening) colors.primary else colors.outline, CircleShape)
+            )
+            Text(
+              if (current.listening) "${current.name} is connected and listening"
+              else
+                "${current.name} is connected. It picks up requests when it next listens " +
+                  "(last seen ${ago(current.lastSeenSecondsAgo)}).",
+              style = MaterialTheme.typography.titleSmall,
+            )
+          }
+          TextButton(
+            onClick = {
+              act { relay ->
+                relay.disconnect(requireNotNull(link))
+                AgentLinkStore.put(server, null)
+                link = null
+              }
+            },
+            enabled = !busy,
+          ) {
+            Text("Disconnect ${current.name}")
+          }
+        }
+      }
+      problem?.let { Text(it, color = MaterialTheme.colorScheme.error) }
     }
   }
 }

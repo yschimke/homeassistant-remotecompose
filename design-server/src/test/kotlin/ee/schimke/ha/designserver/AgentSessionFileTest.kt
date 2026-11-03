@@ -23,9 +23,9 @@ class AgentSessionFileTest {
 
     val before = relay()
     val dash = before.dashboards.create("Tidy", baseline)
-    val code = before.register(AgentRelay.Kind.Dashboard, dash.owner, dash.agent, "Tidy")
+    val code = before.register(AgentRelay.Kind.Dashboard, dash.owner, dash.agent, "Tidy")!!
     val card = before.cards.create("Bigger icon", buildJsonObject { put("id", "card-x") })
-    val cardCode = before.register(AgentRelay.Kind.Card, card.owner, card.agent, "Bigger icon")
+    val cardCode = before.register(AgentRelay.Kind.Card, card.owner, card.agent, "Bigger icon")!!
     assertTrue(before.cards.putAsset(card.agent, "logo", PNG))
     assertNotNull(before.join(cardCode, "Claude"))
     assertTrue(before.dashboards.submit(dash.agent, 0, changed, "Garden"))

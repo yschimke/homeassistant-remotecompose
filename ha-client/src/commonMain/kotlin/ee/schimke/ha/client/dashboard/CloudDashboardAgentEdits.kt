@@ -25,6 +25,8 @@ class CloudDashboardAgentEdits(
   server: String,
   engine: HttpClientEngine? = null,
   private val grants: AgentGrantStore = AgentGrantStore.memory(),
+  /** The person's agent link on this design server, when set up: requests go straight to it. */
+  private val agentLink: () -> String? = { null },
 ) : AgentEdits, AgentLiveControls {
   private val relay = AgentRelayClient(server, engine)
   override val relayServer: String = relay.base
@@ -60,7 +62,8 @@ class CloudDashboardAgentEdits(
   override suspend fun start(urlPath: String?, request: String): StartedAgentEdit {
     val started = delegate.start(urlPath, request)
     try {
-      val owner = relay.startDashboard(request, requireNotNull(started.session.baseline))
+      val owner =
+        relay.startDashboard(request, requireNotNull(started.session.baseline), agentLink())
       sessions[started.session.id] = Access(owner, server = relay.base)
       persist()
       // The code shows at once, before the screen starts watching.

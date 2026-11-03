@@ -312,7 +312,8 @@ fun CardStudioScreen(
       val upstream = CardStudioClient(target)
       try {
         val seed = upstream.seed(card, currentSnapshot(fresh = true))
-        val owner = upstream.startAgentSession(seed, instruction)
+        // With a connected agent the request goes straight to it: no code.
+        val owner = upstream.startAgentSession(seed, instruction, AgentLinkStore.get(target))
         cloudSession = owner
         cloudDraftReady = false
         cloudRevision = 0
@@ -333,7 +334,8 @@ fun CardStudioScreen(
       } finally {
         upstream.close()
       }
-      "Request created. Give your agent the code below."
+      if (AgentLinkStore.get(target) != null) "Sent to your agent."
+      else "Request created. Give your agent the code below."
     }
 
   /** The agent's latest draft and its images, checked; returns its revision (0: none yet). */
@@ -587,6 +589,11 @@ fun CardStudioScreen(
             },
         ) {
           if (mode == CardStudioMode.CloudAgent) {
+            // The setup phase, once: after it, requests go straight to the connected agent.
+            if (cloudSession == null)
+              cloudTarget?.let { target ->
+                AgentConnection(target, onCopy = { clipboard.setText(AnnotatedString(it)) })
+              }
             OutlinedTextField(
               instruction,
               { instruction = it },

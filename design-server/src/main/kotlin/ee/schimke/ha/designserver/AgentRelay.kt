@@ -62,6 +62,8 @@ class AgentRelay(
     val agent: Presence,
     val messages: List<Message>,
     val decision: String?,
+    /** Sent to the person's linked agent: no code to hand over. */
+    val linked: Boolean = false,
   )
 
   data class AgentView(
@@ -90,6 +92,8 @@ class AgentRelay(
     var seq = 0L
     val messages = ArrayList<Message>()
     var decision: String? = null
+    /** The person's link (its owner capability) this session was delivered through. */
+    var link: String? = null
 
     fun bump() {
       version.update { it + 1 }
@@ -98,6 +102,9 @@ class AgentRelay(
   }
 
   private val changeCount = MutableStateFlow(0L)
+
+  /** People's lasting connections to their agents: requests go to them without a code. */
+  val links = AgentLinks(clock, maxWaitMs) { changeCount.update { it + 1 } }
 
   /** Bumped on every change to any session: what [AgentSessionFile] saves after. */
   val changes: StateFlow<Long>
@@ -118,6 +125,7 @@ class AgentRelay(
     val seq: Long = 0,
     val messages: List<Message> = emptyList(),
     val decision: String? = null,
+    val link: String? = null,
   )
 
   fun snapshot(): List<Saved> =
@@ -136,6 +144,7 @@ class AgentRelay(
           e.seq,
           e.messages.toList(),
           e.decision,
+          e.link,
         )
       }
     }
@@ -152,6 +161,7 @@ class AgentRelay(
         entry.seq = s.seq
         entry.messages += s.messages
         entry.decision = s.decision
+        entry.link = s.link
         s.joinCode
           ?.takeIf { s.joinCodeExpires > clock() }
           ?.let { code ->
@@ -167,6 +177,8 @@ class AgentRelay(
 
   private class Request(val code: String, val poll: String, val name: String, val expires: Long) {
     @Volatile var entry: Entry? = null
+    /** Set instead of [entry] when the person entered the code for their agent link. */
+    @Volatile var link: String? = null
     val done = MutableStateFlow(false)
   }
 
@@ -183,12 +195,30 @@ class AgentRelay(
     dashboards.onChange = { owner -> byOwner[owner]?.bump() }
   }
 
-  /** Start relaying a session the stores just created; returns its first join code. */
-  fun register(kind: Kind, owner: String, agent: String, title: String): String {
+  /**
+   * Start relaying a session the stores just created. With the person's connected [link] it goes
+   * straight to their agent and needs no code (null); otherwise it returns the code to hand over.
+   */
+  fun register(
+    kind: Kind,
+    owner: String,
+    agent: String,
+    title: String,
+    link: String? = null,
+  ): String? {
     prune()
     val entry = Entry(kind, owner, agent, title.take(200))
     byOwner[owner] = entry
     byAgent[agent] = entry
+    val linkedTo = link?.let { links.deliver(it, agent, kind, entry.title) }
+    if (linkedTo != null) {
+      synchronized(this) {
+        entry.link = link
+        entry.agentName = linkedTo
+      }
+      entry.bump()
+      return null
+    }
     return synchronized(this) { issueCode(entry) }.also { entry.bump() }
   }
 
@@ -232,6 +262,7 @@ class AgentRelay(
         agent = presence(entry, now),
         messages = entry.messages.takeLast(OWNER_MESSAGES),
         decision = entry.decision,
+        linked = entry.link != null,
       )
     }
   }
@@ -264,6 +295,25 @@ class AgentRelay(
       }
     request.done.value = true
     entry.bump()
+    return ClaimResult.Claimed
+  }
+
+  /** Let the agent that showed the person [code] (from `request_access`) into their [link]. */
+  fun claimLink(link: String, code: String): ClaimResult {
+    if (!links.isOwner(link)) return ClaimResult.Gone
+    val normalized = normalizeCode(code) ?: return ClaimResult.Unknown
+    val request =
+      synchronized(this) {
+        expireRequests()
+        if (throttled()) return ClaimResult.Throttled
+        requests.remove(normalized)
+          ?: run {
+            failures.addLast(clock())
+            return ClaimResult.Unknown
+          }
+      }
+    request.link = links.attachAgent(link, request.name) ?: return ClaimResult.Gone
+    request.done.value = true
     return ClaimResult.Claimed
   }
 
@@ -332,6 +382,17 @@ class AgentRelay(
 
   data class Joined(val session: String, val kind: Kind, val title: String)
 
+  /**
+   * Redeem the code the person gave their agent in setup: the agent's link capability, or null when
+   * [code] isn't an unused link code.
+   */
+  fun connect(code: String, agentName: String?): String? {
+    val normalized = normalizeCode(code) ?: return null
+    if (synchronized(this) { throttled() }) return null
+    // A miss isn't counted here: the caller tries the code as a session's next, which counts it.
+    return links.connect(normalized, agentName)
+  }
+
   /** An agent asks first: it shows the person [Pending.code] and polls with [Pending.poll]. */
   fun requestAccess(agentName: String?): Pending {
     synchronized(this) {
@@ -352,7 +413,7 @@ class AgentRelay(
   /** Waits for the person to enter the code; null once the request is unknown or expired. */
   suspend fun pollAccess(poll: String, waitMs: Long = maxWaitMs): PollResult? {
     val request = synchronized(this) { pollers[poll] } ?: return null
-    if (request.entry == null) {
+    if (request.entry == null && request.link == null) {
       if (request.expires <= clock()) {
         synchronized(this) {
           pollers.remove(poll)
@@ -362,13 +423,18 @@ class AgentRelay(
       }
       withTimeoutOrNull(waitMs.coerceIn(0, maxWaitMs)) { request.done.first { it } }
     }
+    request.link?.let { link ->
+      synchronized(this) { pollers.remove(poll) }
+      return PollResult(null, link)
+    }
     val entry = request.entry ?: return PollResult(null)
     synchronized(this) { pollers.remove(poll) }
     if (!alive(entry)) return null
     return PollResult(Joined(entry.agent, entry.kind, entry.title))
   }
 
-  data class PollResult(val joined: Joined?)
+  /** What the person let the agent into: one session, or (from setup) a lasting link. */
+  data class PollResult(val joined: Joined?, val link: String? = null)
 
   /** Record that the agent is active, optionally with what it's doing. Null when gone. */
   fun seen(agent: String, status: String? = null): Kind? {
@@ -443,14 +509,26 @@ class AgentRelay(
     entry.bump()
   }
 
-  private fun presence(entry: Entry, now: Long) =
-    Presence(
+  private fun presence(entry: Entry, now: Long): Presence {
+    val link = entry.link
+    if (link != null && entry.agentSeen == 0L) {
+      val listening = links.listening(link)
+      return Presence(
+        joined = false,
+        connected = listening,
+        name = entry.agentName,
+        status = if (listening) "Picking it up" else "Waiting for it to listen",
+        lastSeenMs = null,
+      )
+    }
+    return Presence(
       joined = entry.agentSeen > 0,
       connected = entry.agentSeen > 0 && now - entry.agentSeen < CONNECTED_MS,
       name = entry.agentName,
       status = entry.agentStatus,
       lastSeenMs = entry.agentSeen.takeIf { it > 0 }?.let { now - it },
     )
+  }
 
   private fun alive(entry: Entry): Boolean =
     when (entry.kind) {
@@ -543,7 +621,7 @@ class AgentRelay(
     private const val ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
     private val random = SecureRandom()
 
-    private fun randomCode() = buildString {
+    internal fun randomCode() = buildString {
       repeat(8) { append(ALPHABET[random.nextInt(ALPHABET.length)]) }
     }
 
@@ -556,7 +634,7 @@ class AgentRelay(
         .filter { it.isLetterOrDigit() }
         .takeIf { c -> c.length == 8 && c.all { it in ALPHABET } }
 
-    private fun cleanName(name: String?) =
+    internal fun cleanName(name: String?) =
       name?.filter { it.isLetterOrDigit() || it in " .-_()" }?.trim()?.take(40)?.ifEmpty { null }
         ?: "Agent"
   }

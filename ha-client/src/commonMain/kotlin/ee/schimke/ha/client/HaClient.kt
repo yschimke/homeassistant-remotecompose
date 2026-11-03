@@ -733,7 +733,11 @@ class HaClient(
           session ->
           // The reply carries Home Assistant's clock beside the session: presence ages by it.
           val now = result["server_time"]?.jsonPrimitive?.doubleOrNull
-          if (now != null) session.copy(serverTime = now) else session
+          val listening = result["agent_listening"]?.jsonPrimitive?.booleanOrNull
+          session.copy(
+            serverTime = now ?: session.serverTime,
+            agentListening = listening ?: session.agentListening,
+          )
         }
 
       private suspend fun edit(

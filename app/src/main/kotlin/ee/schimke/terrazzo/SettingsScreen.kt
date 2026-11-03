@@ -374,6 +374,25 @@ internal fun SettingsScreen(
           onAuthorChange = { scope.launch { graph.preferencesStore.setDesignAuthor(it) } },
           onTokenChange = { scope.launch { graph.preferencesStore.setDesignToken(it) } },
         )
+        // Connect an AI agent once; Card Studio's requests then go straight to it.
+        val shareContext = androidx.compose.ui.platform.LocalContext.current
+        ee.schimke.terrazzo.shared.AgentConnection(
+          designServerUrl.ifBlank { "https://ha.coo.ee" },
+          onCopy = { text ->
+            runCatching {
+              shareContext.startActivity(
+                android.content.Intent.createChooser(
+                    android.content
+                      .Intent(android.content.Intent.ACTION_SEND)
+                      .setType("text/plain")
+                      .putExtra(android.content.Intent.EXTRA_TEXT, text),
+                    "Send to your agent",
+                  )
+                  .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+              )
+            }
+          },
+        )
         if (designServerUrl.isNotBlank()) {
           UsageSharingSetting(
             // The switch shows the effective value; touching it stores an explicit choice.

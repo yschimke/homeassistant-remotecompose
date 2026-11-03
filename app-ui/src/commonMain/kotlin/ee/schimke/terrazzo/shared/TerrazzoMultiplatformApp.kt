@@ -368,7 +368,12 @@ private fun DashboardShell(
   val cloudDashboardEdits =
     remember(connection, designServer) {
       runCatching {
-        CloudDashboardAgentEdits(connection.client, designServer, grants = dashboardAgentGrants())
+        CloudDashboardAgentEdits(
+          connection.client,
+          designServer,
+          grants = dashboardAgentGrants(),
+          agentLink = { AgentLinkStore.get(designServer) },
+        )
       }
         .getOrNull()
     }
@@ -524,6 +529,11 @@ private fun DashboardShell(
                     singleLine = true,
                   )
                   settingsStorageLabel?.let { Text(it) }
+                  @Suppress("DEPRECATION") val settingsClipboard = LocalClipboardManager.current
+                  AgentConnection(
+                    designServer,
+                    onCopy = { settingsClipboard.setText(AnnotatedString(it)) },
+                  )
                   CardUsageSetting(designServer)
                   ReportFeedbackButton()
                   Button(onClick = onSignOut) { Text("Sign out") }

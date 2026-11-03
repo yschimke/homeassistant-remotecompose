@@ -34,6 +34,9 @@ class Edits:
         self.hass = hass
         self._store = store
         self.sessions = sessions
+        # When an agent signed in to this Home Assistant last listened for requests
+        # (await_request): while recent, a new session needs no prompt handed over.
+        self.listening_at = 0.0
 
     @classmethod
     async def async_load(cls, hass):
@@ -159,6 +162,48 @@ def submit(hass, user, session_id, config, summary, relay_id=None):
 
 # The longest await_feedback holds an agent's request: under common reverse-proxy idle timeouts.
 FEEDBACK_WAIT_SECONDS = 25
+# An agent counts as listening this long after its last await_request.
+LISTENING_SECONDS = 90
+
+
+def agent_listening(hass):
+    """Whether an agent signed in to this Home Assistant is listening for requests now."""
+    edits = hass.data.get(DOMAIN, {}).get("edits")
+    return edits is not None and _now() - edits.listening_at < LISTENING_SECONDS
+
+
+async def async_await_request(hass, user, since, timeout=FEEDBACK_WAIT_SECONDS):
+    """Open sessions on dashboards [user] can see started after [since] (a cursor from an earlier
+    call), waiting up to [timeout] seconds for one. Listening this way is what lets a person start
+    a session in the app with nothing to hand over."""
+    edits = edits_of(hass)
+    woke = asyncio.Event()
+
+    @callback
+    def changed(_session_id):
+        woke.set()
+
+    unsubscribe = async_dispatcher_connect(hass, SIGNAL_SESSION, changed)
+    try:
+        deadline = time.monotonic() + max(0, min(timeout, FEEDBACK_WAIT_SECONDS))
+        while True:
+            edits.listening_at = _now()
+            visible = visible_dashboards(hass, user)
+            fresh = [s for s in edits.sessions.for_dashboards(visible, _now()) if s["created_at"] > since]
+            left = deadline - time.monotonic()
+            if fresh or left <= 0:
+                break
+            woke.clear()
+            try:
+                await asyncio.wait_for(woke.wait(), left)
+            except asyncio.TimeoutError:
+                pass
+    finally:
+        unsubscribe()
+        edits.listening_at = _now()
+    fresh.sort(key=lambda s: s["created_at"])
+    cursor = max([since] + [s["created_at"] for s in fresh])
+    return {"cursor": cursor, "requests": [edit_sessions.summary(s) for s in fresh]}
 
 
 def agent_message(hass, user, session_id, text):
@@ -258,6 +303,9 @@ def _session_reply(session, hass=None):
         # The agent's seen_at is in this clock: the app ages presence against it.
         "server_time": _now(),
     }
+    if hass is not None:
+        # An agent already listening picks a new session up by itself: no prompt to hand over.
+        reply["agent_listening"] = agent_listening(hass)
     if hass is not None:
         reply["prompt"] = edit_sessions.agent_prompt(
             session, mcp_url(hass), hass.config.location_name

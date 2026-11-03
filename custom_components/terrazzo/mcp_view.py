@@ -236,6 +236,12 @@ class HassHome:
             "await_feedback to hear what they think.",
         }
 
+    async def await_request(self, since):
+        try:
+            return await edits.async_await_request(self._hass, self._user, since)
+        except edits.SessionError as failure:
+            raise mcp.ToolError(str(failure)) from failure
+
     async def await_feedback(self, session_id, since):
         try:
             return await edits.async_await_feedback(self._hass, self._user, session_id, since)

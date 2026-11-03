@@ -27,6 +27,7 @@ class AgentSessionFile(private val file: File, private val relay: AgentRelay) {
     val cards: List<AgentDesignSessions.Saved> = emptyList(),
     val dashboards: List<DashboardAgentSessions.Saved> = emptyList(),
     val relay: List<AgentRelay.Saved> = emptyList(),
+    val links: List<AgentLinks.Saved> = emptyList(),
   )
 
   private val json = Json {
@@ -44,6 +45,7 @@ class AgentSessionFile(private val file: File, private val relay: AgentRelay) {
         .getOrNull() ?: return
     relay.cards.restore(contents.cards)
     relay.dashboards.restore(contents.dashboards)
+    relay.links.restore(contents.links)
     relay.restore(contents.relay)
   }
 
@@ -54,6 +56,7 @@ class AgentSessionFile(private val file: File, private val relay: AgentRelay) {
         cards = relay.cards.snapshot(),
         dashboards = relay.dashboards.snapshot(),
         relay = relay.snapshot(),
+        links = relay.links.snapshot(),
       )
     file.parentFile?.mkdirs()
     val temp = File(file.parentFile, file.name + ".tmp")

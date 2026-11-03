@@ -56,6 +56,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardKey
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.terrazzo.shared.AgentConnection
 import ee.schimke.terrazzo.shared.AgentLivePanel
 import ee.schimke.terrazzo.shared.DashboardContent
 import kotlin.coroutines.cancellation.CancellationException
@@ -169,6 +170,7 @@ fun AgentEditScreen(
             title = title,
             busy = busy,
             cloudServer = cloudServer,
+            onCopy = onSharePrompt,
             onStart = { request ->
               run {
                 val started = edits.start(urlPath, request)
@@ -271,6 +273,7 @@ private fun StartSession(
   title: String?,
   busy: Boolean,
   cloudServer: String?,
+  onCopy: (String) -> Unit,
   onStart: (String) -> Unit,
   onResume: (AgentEditSession) -> Unit,
 ) {
@@ -285,6 +288,8 @@ private fun StartSession(
       "What should change on ${title ?: "this dashboard"}?",
       style = MaterialTheme.typography.titleMedium,
     )
+    // The setup phase: once an agent is connected, the request goes straight to it.
+    if (cloudServer != null) AgentConnection(cloudServer, onCopy)
     Text(
       if (cloudServer == null)
         "Home Assistant opens an edit session and gives you a prompt for your AI assistant. The " +
@@ -294,9 +299,10 @@ private fun StartSession(
         "Your dashboard configuration and request will be sent to $cloudServer and shared with " +
           "your chosen agent. The agent does not get your Home Assistant login. You review and " +
           "apply drafts here; Home Assistant checks your permissions and whether the dashboard changed. " +
-          "The configuration may contain private data. You get a short code to give your agent, " +
-          "and can talk to it here while it works. This device keeps access to the request; it " +
-          "ends an hour after the last activity, after a day at most, or when you discard it.",
+          "The configuration may contain private data. Your connected agent gets the request at " +
+          "once (without one, you get a short code to give it), and you talk to it here while it " +
+          "works. The request ends an hour after the last activity, after a day at most, or when " +
+          "you discard it.",
       style = MaterialTheme.typography.bodyMedium,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -416,6 +422,12 @@ private fun SessionReview(
           },
           target = target,
           onClearTarget = { target = null },
+        )
+      } else if (session.isOpen && session.agentListening && session.drafts.isEmpty()) {
+        // An agent signed in to Home Assistant is listening: it picks this up by itself.
+        Text(
+          "Your agent is listening and picks this up now.",
+          style = MaterialTheme.typography.bodyMedium,
         )
       } else if (prompt != null && session.isOpen && (cloud || session.drafts.isEmpty())) {
         PromptCard(prompt, onSharePrompt, cloud)
