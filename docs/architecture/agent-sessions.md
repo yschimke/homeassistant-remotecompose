@@ -28,14 +28,17 @@ Agent (Claude, Codex, …) ──MCP──▶ design server relay ◀──HTTPS
 
 ## The flow
 
-1. **Connect, once.** Settings → **Connect an agent** (also shown at the start of Card Studio's
-   cloud mode and of **Ask an agent → Use a cloud agent** until an agent is connected) shows a
+**Ask your agent** is the one flow, for a card (its long-press sheet, or below it on desktop) and
+for a dashboard (its menu), on every host. Under **Advanced**, a dashboard can use an agent signed
+in to Home Assistant instead, and a card can be designed by hand in UI Builder.
+
+1. **Connect, once.** Settings → **Connect an agent** (also shown at the start of **Ask your agent** until an agent is connected) shows a
    code such as `K7QM-4MD2`. **Copy invite for the agent** copies one message with the code and
    the MCP address. The agent calls `connect` with it and keeps the **link** it gets back. The
    other direction works too: the agent calls `request_access`, shows the person a code, and the
    person enters it under **Have a code from your agent?**. Settings then say "Claude is connected
    and listening", or when it last listened. **Disconnect** ends the link.
-2. **Ask.** In Card Studio or **Ask an agent**, the person writes a request and starts it. The app
+2. **Ask.** In **Ask your agent**, the person writes what should change and sends it. The app
    sends the card's preview contract or the dashboard's configuration to the design server with
    its link, and the request goes straight to the agent, waiting in `await_request`: no code,
    nothing to copy. Without a connected agent the request gets its own code instead, as in step 1.
@@ -49,9 +52,11 @@ Agent (Claude, Codex, …) ──MCP──▶ design server relay ◀──HTTPS
 5. **Talk.** The person types in the panel. On a dashboard draft each card has a **Comment**
    button that pins the next message to that card (its title or entity, and where it sits). The
    agent, waiting in `await_feedback`, gets the message at once, and can `send_message` back.
-6. **Decide.** **Apply** (dashboard) or **Publish privately and use it** (card) does what it did
-   before and also tells the agent `accepted`. **Discard** or **Stop and revoke access** ends the
-   session for both sides.
+6. **Decide.** **Use it** applies the dashboard draft, or puts the card design on the card (the
+   design server opens and publishes it privately, with no browser), and tells the agent
+   `accepted`; **Undo** puts a dashboard back. A message asks for changes (on a card, **Not this** says so in
+   one tap); **Stop**
+   ends the session for both sides.
 
 ## Lifetimes and storage
 

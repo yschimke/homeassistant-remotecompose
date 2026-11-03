@@ -93,6 +93,8 @@ fun AgentEditScreen(
   onApplied: () -> Unit,
   writeBlockedReason: String? = null,
   cloudServer: String? = null,
+  /** Another way to connect an agent, under Advanced: its label and how to switch to it. */
+  alternative: Pair<String, () -> Unit>? = null,
   renderCard: @Composable (CardKey, CardConfig) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -168,7 +170,7 @@ fun AgentEditScreen(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Ask an agent", maxLines = 1) },
+        title = { Text("Ask your agent", maxLines = 1) },
         navigationIcon = {
           IconButton(onClick = { if (sessionId != null) sessionId = null else onBack() }) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -189,6 +191,7 @@ fun AgentEditScreen(
             busy = busy,
             cloudServer = cloudServer,
             onCopy = onSharePrompt,
+            alternative = alternative,
             onStart = { request ->
               run {
                 val started = edits.start(urlPath, request)
@@ -250,7 +253,7 @@ fun AgentEditScreen(
               run {
                 session = edits.apply(current.id, draft.id)
                 onApplied()
-                tell("Applied to Home Assistant.")
+                tell("Done: your dashboard uses it.")
               }
             },
             onUndo = {
@@ -298,6 +301,7 @@ private fun StartSession(
   busy: Boolean,
   cloudServer: String?,
   onCopy: (String) -> Unit,
+  alternative: Pair<String, () -> Unit>?,
   onStart: (String) -> Unit,
   onResume: (AgentEditSession) -> Unit,
 ) {
@@ -341,8 +345,9 @@ private fun StartSession(
       enabled = !busy && (cloudServer == null || request.isNotBlank()),
       onClick = { onStart(request) },
     ) {
-      Text("Start edit session")
+      Text("Send to your agent")
     }
+    alternative?.let { (label, switch) -> TextButton(onClick = switch) { Text(label) } }
     if (open.isNotEmpty()) {
       Text("Open sessions", style = MaterialTheme.typography.titleSmall)
       open.forEach { s ->
@@ -420,7 +425,7 @@ private fun SessionReview(
       )
       Text(
         when {
-          session.isApplied -> "Applied to Home Assistant."
+          session.isApplied -> "Your dashboard uses it. Undo puts it back."
           !session.isOpen -> "This session was ${session.status}."
           draft == null -> "Waiting for the agent's first draft…"
           else -> draft.summary.ifBlank { "Draft from the agent" }
@@ -476,12 +481,14 @@ private fun SessionReview(
           session.isApplied -> OutlinedButton(enabled = canWrite, onClick = onUndo) { Text("Undo") }
           session.isOpen -> {
             if (draft != null) {
-              Button(enabled = canWrite, onClick = { onApply(draft) }) { Text("Apply") }
-              OutlinedButton(enabled = !busy, onClick = { noting = true }) {
-                Text("Request changes")
-              }
+              Button(enabled = canWrite, onClick = { onApply(draft) }) { Text("Use it") }
+              // With the live panel, its message box is how to ask for changes.
+              if (live == null)
+                OutlinedButton(enabled = !busy, onClick = { noting = true }) {
+                  Text("Request changes")
+                }
             }
-            TextButton(enabled = !busy, onClick = onDiscard) { Text("Discard") }
+            TextButton(enabled = !busy, onClick = onDiscard) { Text("Stop") }
           }
         }
       }

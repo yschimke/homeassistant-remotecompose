@@ -15,7 +15,6 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.agent.AgentRelayClient
@@ -37,45 +36,31 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-/** How a person designs a card in the studio: themselves in UI Builder, or with an AI agent. */
+/**
+ * How a person designs a card in the studio: with their agent (everyone's flow), or themselves in
+ * UI Builder (under More options). [Agent] is an earlier API-key flow, read from old settings and
+ * treated as the agent flow.
+ */
 enum class CardStudioMode(val label: String) {
   Builder("Myself, in UI Builder"),
-  Agent("With an AI agent"),
-  CloudAgent("With a cloud agent"),
+  Agent("With your agent"),
+  CloudAgent("With your agent"),
 }
 
-/**
- * The studio choices remembered between visits, as strong defaults: the step they answer starts
- * answered, folded to one line with a Change button. No API key: keys stay in memory
- * ([StudioKeys]).
- */
+/** The studio choice remembered between visits: whether the person designs in UI Builder. */
 @Serializable
-data class CardStudioDefaults(
-  val mode: CardStudioMode? = null,
-  val provider: CardAgentProvider = CardAgentProvider.OpenRouter,
-  val model: String = "",
-  val endpoint: String = "",
-) {
-  /** Whether the agent's provider, model (and endpoint) are chosen: its setup can fold away. */
-  val agentReady: Boolean
-    get() = model.isNotBlank() && (provider != CardAgentProvider.Agent || endpoint.isNotBlank())
-
+data class CardStudioDefaults(val mode: CardStudioMode? = null) {
   fun encode(): String = Json.encodeToString(serializer(), this)
 
   companion object {
+    private val json = Json { ignoreUnknownKeys = true }
+
+    /** Earlier settings (with an API-key provider and model) still read: those keys are gone. */
     fun decode(text: String): CardStudioDefaults = runCatching {
-      Json.decodeFromString(serializer(), text)
+      json.decodeFromString(serializer(), text)
     }
       .getOrDefault(CardStudioDefaults())
   }
-}
-
-/**
- * Provider API keys for this app process only: entered once per run, never written to disk, never
- * sent to Home Assistant or the design server.
- */
-private object StudioKeys {
-  val keys = mutableStateMapOf<CardAgentProvider, String>()
 }
 
 /**
@@ -147,14 +132,12 @@ fun CardStudioScreen(
   val recovered = remember(cloudSessionKey) { cloudSessionKey?.let { CardAgentSessions.get(it) } }
   var server by remember { mutableStateOf(initialServerUrl) }
   var mode by remember {
-    mutableStateOf(if (recovered != null) CardStudioMode.CloudAgent else defaults.mode)
+    // One flow for everyone: Ask your agent. UI Builder stays under More options.
+    mutableStateOf(
+      if (defaults.mode == CardStudioMode.Builder && recovered == null) CardStudioMode.Builder
+      else CardStudioMode.CloudAgent
+    )
   }
-  var choosingMode by remember { mutableStateOf(false) }
-  var provider by remember { mutableStateOf(defaults.provider) }
-  var model by remember { mutableStateOf(defaults.model) }
-  var endpoint by remember { mutableStateOf(defaults.endpoint) }
-  val apiKey = StudioKeys.keys[provider].orEmpty()
-  var editingAgent by remember { mutableStateOf(!defaults.agentReady) }
   var instruction by remember { mutableStateOf(recovered?.instruction.orEmpty()) }
   /** The cloud session's owner capability: the agent itself joins with a code. */
   var cloudSession by remember { mutableStateOf(recovered?.ownerToken) }
@@ -215,7 +198,7 @@ fun CardStudioScreen(
   }
 
   fun saveDefaults(update: CardStudioDefaults.() -> CardStudioDefaults) {
-    onDefaultsChange(CardStudioDefaults(mode, provider, model.trim(), endpoint.trim()).update())
+    onDefaultsChange(CardStudioDefaults(mode).update())
   }
 
   fun launch(step: Int, block: suspend (CardStudioClient) -> String?) {
@@ -288,20 +271,6 @@ fun CardStudioScreen(
         editorUrl = url
         null
       }
-    }
-
-  fun generate() =
-    launch(3) { studio ->
-      val seed = draft ?: studio.seed(card, currentSnapshot(fresh = true))
-      val agent = AgentCardDesigner()
-      try {
-        draft = agent.design(provider, apiKey, model, instruction, seed, endpoint)
-      } finally {
-        agent.close()
-      }
-      saveDefaults { copy(mode = CardStudioMode.Agent) }
-      editingAgent = false
-      "Draft ready. Open it in UI Builder to review and save it."
     }
 
   fun startCloudSession() =
@@ -450,6 +419,44 @@ fun CardStudioScreen(
       "Preview data refreshed. Your design edits are kept."
     }
 
+  suspend fun tellAgent(accepted: Boolean) {
+    val owner = cloudSession ?: return
+    val target = cloudServer ?: return
+    val relay = AgentRelayClient(target)
+    try {
+      runCatching { relay.decide(owner, accepted) }
+    } finally {
+      relay.close()
+    }
+  }
+  /**
+   * Use the agent's draft on this card in one tap: the design server opens it as the person's own
+   * design (no browser), publishes it privately, and the card switches to it.
+   */
+  fun useDraft() {
+    val key = designKey ?: return
+    val candidate = draft ?: return
+    launch(4) { studio ->
+      val opened =
+        studio.openAsUser(bearer(), candidate, card, currentSnapshot(fresh = true), draftAssets)
+      openedHandoffs += opened.handoff
+      val design =
+        designForCard(studio.studioDesigns(bearer(), card.type), listOf(opened.handoff))
+          ?: return@launch "The design server couldn't find the draft it just saved. Try again."
+      val skin = studio.publishPrivately(bearer(), design.designId, key)
+      onPublished?.invoke(skin)
+      publishedId = skin
+      tellAgent(accepted = true)
+      "Done: this card uses your agent's design. Only you see it."
+    }
+  }
+
+  fun notThis() =
+    launch(3) { _ ->
+      tellAgent(accepted = false)
+      "Told your agent. Say what you'd like instead, or stop here."
+    }
+
   fun publish() {
     val key = designKey ?: return
     launch(4) { studio ->
@@ -489,7 +496,7 @@ fun CardStudioScreen(
       topBar = {
         if (!compactHeight)
           TopAppBar(
-            title = { Text("Design this card", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            title = { Text("Ask your agent", maxLines = 1, overflow = TextOverflow.Ellipsis) },
             navigationIcon = { TextButton(onClick = onBack) { Text("Back") } },
           )
       }
@@ -523,248 +530,118 @@ fun CardStudioScreen(
         if (compactHeight) {
           FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TextButton(onClick = onBack) { Text("Back") }
-            Text("Design this card", style = MaterialTheme.typography.titleLarge)
+            Text("Ask your agent", style = MaterialTheme.typography.titleLarge)
           }
         }
         preview()
-        var number = 1
-        if (onSignIn != null && homeServer == null) {
-          StudioStep(
-            number = number++,
-            title = "Sign in",
-            state = if (signedIn) StepState.Done else StepState.Active,
-            summary = account?.let { "Signed in as $it" } ?: "Signed in with GitHub",
-          ) {
+        if (mode == CardStudioMode.Builder) {
+          BuilderSteps(
+            signInStep = onSignIn != null && homeServer == null,
+            signedIn = signedIn,
+            account = account,
+            onSignIn = onSignIn,
+            designed = openedHandoffs.isNotEmpty(),
+            openEditorInBrowser = openEditorInBrowser,
+            canPublish = onPublished != null,
+            published = publishedId != null,
+            busy = busy,
+            serverReady = server.isNotBlank() && designKey != null,
+            message = message,
+            messageStep = messageStep,
+            requestFailed = requestFailed,
+            onOpen = { openInBuilder() },
+            onPublish = { publish() },
+            onCancel = { job?.cancel() },
+            onBackToAgent = {
+              mode = CardStudioMode.CloudAgent
+              saveDefaults { copy(mode = CardStudioMode.CloudAgent) }
+            },
+          )
+        } else {
+          // Using a design on the card needs the person's own account, once.
+          if (onPublished != null && needsSignIn) {
             Text(
-              "Sign in once with GitHub. Your designs are saved to your account and open " +
-                "in UI Builder without signing in again.",
+              "Sign in once so the designs you use are yours alone.",
               style = MaterialTheme.typography.bodyMedium,
             )
-            Button(onClick = onSignIn) { Text("Sign in with GitHub") }
+            Button(onClick = { onSignIn?.invoke() }) { Text("Sign in with GitHub") }
           }
-        }
-        val modeChosen = mode != null && !choosingMode
-        StudioStep(
-          number = number++,
-          title = "How do you want to design it?",
-          state =
-            when {
-              needsSignIn -> StepState.Locked
-              modeChosen -> StepState.Done
-              else -> StepState.Active
-            },
-          summary = mode?.label.orEmpty(),
-          onChange = { choosingMode = true },
-        ) {
-          CardStudioMode.entries.forEach { option ->
-            StudioChoice(
-              title = option.label,
-              detail =
-                when (option) {
-                  CardStudioMode.Builder ->
-                    "Open a copy of this card, filled with its live values, in the visual editor."
-                  CardStudioMode.Agent ->
-                    "Describe what you want; Claude, OpenAI or OpenRouter drafts it with your own API key."
-                  CardStudioMode.CloudAgent ->
-                    "Give a cloud agent a temporary task for this card, then review its draft."
-                },
-              selected = mode == option,
-              enabled = !busy,
-            ) {
-              mode = option
-              choosingMode = false
-              saveDefaults { copy(mode = option) }
+          if (cloudSession == null) {
+            // The setup, once: after it, a request goes straight to the connected agent.
+            cloudTarget?.let { target ->
+              AgentConnection(target, onCopy = { clipboard.setText(AnnotatedString(it)) })
             }
-          }
-        }
-        val designed = openedHandoffs.isNotEmpty()
-        StudioStep(
-          number = number++,
-          title =
-            if (mode == CardStudioMode.Builder) "Edit in UI Builder" else "Describe the design",
-          state =
-            when {
-              needsSignIn || !modeChosen -> StepState.Locked
-              else -> StepState.Active
-            },
-        ) {
-          if (mode == CardStudioMode.CloudAgent) {
-            // The setup phase, once: after it, requests go straight to the connected agent.
-            if (cloudSession == null)
-              cloudTarget?.let { target ->
-                AgentConnection(target, onCopy = { clipboard.setText(AnnotatedString(it)) })
-              }
             OutlinedTextField(
               instruction,
               { instruction = it },
               label = { Text("What should change?") },
-              enabled = !busy && cloudSession == null,
-              modifier = Modifier.fillMaxWidth(),
-            )
-            Text(
-              "The design server at ${cloudTarget ?: "the configured upstream"} receives this card's display text, current values and binding contract. The agent receives temporary access to this request; no Home Assistant token is sent. Access ends an hour after the last activity, after a day at most, or when you revoke it.",
-              style = MaterialTheme.typography.bodySmall,
-            )
-            Text(
-              if (onPublished != null)
-                "The agent can rearrange the card's supported components and bindings. Review the result in UI Builder before publishing it."
-              else if (selectionProblem != null)
-                "Review and save the result in UI Builder. Retry loading card selections before publishing."
-              else
-                "The agent can rearrange supported components and bindings. Review and save the result in UI Builder; applying it in this host is not yet supported.",
-              style = MaterialTheme.typography.bodySmall,
-            )
-            if (cloudSession == null) {
-              cloudTargetProblem?.let { Text(it) }
-              Button(
-                onClick = { startCloudSession() },
-                enabled = !busy && instruction.isNotBlank() && cloudTarget != null,
-              ) {
-                Text("Create agent request")
-              }
-            } else {
-              AgentLivePanel(
-                state = cloudLive,
-                busy = busy,
-                onCopyInvite = { code ->
-                  clipboard.setText(
-                    AnnotatedString(
-                      AgentRelayClient.invite(
-                        cloudServer.orEmpty(),
-                        code,
-                        "the design of this ${card.type} card",
-                      )
-                    )
-                  )
-                  messageStep = 3
-                  requestFailed = false
-                  message = "Invite copied. Paste it to your agent."
-                },
-                onNewCode = { relayCall { relay, owner -> relay.newJoinCode(owner).let { null } } },
-                onClaim = { code ->
-                  relayCall { relay, owner ->
-                    relay.claim(owner, code)
-                    "Agent connected."
-                  }
-                },
-                onSend = { text ->
-                  relayCall { relay, owner ->
-                    relay.comment(owner, text)
-                    null
-                  }
-                },
-              )
-              FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (cloudDraftReady)
-                  Button(onClick = { openInBuilder() }, enabled = !busy) {
-                    Text("Review draft $cloudRevision in UI Builder")
-                  }
-                TextButton(onClick = { revokeCloudSession() }, enabled = !busy) {
-                  Text("Stop and revoke access")
-                }
-              }
-            }
-          } else if (mode == CardStudioMode.Agent) {
-            AgentSetup(
-              provider = provider,
-              model = model,
-              endpoint = endpoint,
-              apiKey = apiKey,
-              expanded = editingAgent,
+              placeholder = { Text("Make the temperature bigger and the name quieter") },
               enabled = !busy,
-              onExpand = { editingAgent = true },
-              onProvider = {
-                provider = it
-                model = ""
-              },
-              onModel = { model = it },
-              onEndpoint = { endpoint = it },
-              onApiKey = { StudioKeys.keys[provider] = it },
-            )
-            OutlinedTextField(
-              instruction,
-              { instruction = it },
-              label = { Text("What should change?") },
-              placeholder = {
-                Text("Make the state easier to read and fit this card at phone width.")
-              },
-              enabled = !busy,
-              minLines = if (compactHeight) 2 else 3,
-              maxLines = if (compactHeight) 2 else Int.MAX_VALUE,
+              minLines = if (compactHeight) 1 else 2,
               modifier =
                 Modifier.fillMaxWidth().bringIntoViewRequester(instructionIntoView).onFocusChanged {
                   instructionFocused = it.isFocused
                 },
             )
+            cloudTargetProblem?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            Button(
+              onClick = { startCloudSession() },
+              enabled = !busy && instruction.isNotBlank() && cloudTarget != null,
+            ) {
+              Text("Send to your agent")
+            }
             Text(
-              "Sending shares this card's display text and current values with ${provider.label}. Other entities, Home Assistant tokens and entity-picture URLs stay on this device.",
+              "Your agent sees this card's text and current values, never your Home Assistant " +
+                "login, and can only suggest a design.",
               style = MaterialTheme.typography.bodySmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-              val ready =
-                apiKey.isNotBlank() &&
-                  model.isNotBlank() &&
-                  instruction.isNotBlank() &&
-                  (provider != CardAgentProvider.Agent || endpoint.isNotBlank())
-              if (draft == null || busy) {
-                Button(onClick = { generate() }, enabled = !busy && ready) {
-                  Text(if (busy && messageStep == 3) "Working…" else "Draft it")
-                }
-              } else {
-                Button(onClick = { openInBuilder() }) { Text("Review in UI Builder") }
-                OutlinedButton(onClick = { generate() }, enabled = ready) { Text("Draft again") }
-              }
-              if (busy && messageStep == 3)
-                TextButton(onClick = { job?.cancel() }) { Text("Cancel") }
-            }
           } else {
-            Text(
-              if (openEditorInBrowser)
-                "UI Builder opens in your browser. Save your design there, then come back here."
-              else "Save your design in UI Builder, then come back here.",
-              style = MaterialTheme.typography.bodyMedium,
-            )
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-              Button(onClick = { openInBuilder() }, enabled = !busy && server.isNotBlank()) {
-                Text(if (designed) "Open again" else "Open in UI Builder")
-              }
-              if (busy && messageStep == 3)
-                TextButton(onClick = { job?.cancel() }) { Text("Cancel") }
-            }
-          }
-          if (messageStep == 3) StudioRequestFeedback(busy, message, requestFailed)
-        }
-        if (onPublished != null) {
-          StudioStep(
-            number = number,
-            title = "Use it on this card",
-            state =
-              when {
-                publishedId != null -> StepState.Done
-                needsSignIn || !modeChosen -> StepState.Locked
-                else -> StepState.Active
+            Text(instruction, style = MaterialTheme.typography.titleMedium)
+            AgentLivePanel(
+              state = cloudLive,
+              busy = busy,
+              onCopyInvite = { code ->
+                clipboard.setText(
+                  AnnotatedString(
+                    AgentRelayClient.invite(
+                      cloudServer.orEmpty(),
+                      code,
+                      "the design of this ${card.type} card",
+                    )
+                  )
+                )
+                messageStep = 3
+                requestFailed = false
+                message = "Invite copied. Paste it to your agent."
               },
-            summary = "Published privately",
-            onChange = { publishedId = null },
-          ) {
-            Text(
-              if (!signedIn) "Sign in to use designs you save in UI Builder."
-              else
-                "Publishes the design you saved for this card, for your devices only, and switches this card to it.",
-              style = MaterialTheme.typography.bodyMedium,
+              onNewCode = { relayCall { relay, owner -> relay.newJoinCode(owner).let { null } } },
+              onClaim = { code ->
+                relayCall { relay, owner ->
+                  relay.claim(owner, code)
+                  "Agent connected."
+                }
+              },
+              onSend = { text ->
+                relayCall { relay, owner ->
+                  relay.comment(owner, text)
+                  null
+                }
+              },
             )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-              Button(
-                onClick = { publish() },
-                enabled = !busy && signedIn && designKey != null && server.isNotBlank(),
-              ) {
-                Text("Publish privately and use it")
+              if (cloudDraftReady && publishedId == null) {
+                if (onPublished != null)
+                  Button(onClick = { useDraft() }, enabled = !busy && signedIn) { Text("Use it") }
+                OutlinedButton(onClick = { notThis() }, enabled = !busy) { Text("Not this") }
               }
-              if (busy && messageStep == 4)
-                TextButton(onClick = { job?.cancel() }) { Text("Cancel") }
+              TextButton(onClick = { revokeCloudSession() }, enabled = !busy) {
+                Text(if (publishedId != null) "Done" else "Stop")
+              }
             }
           }
-          if (messageStep == 4) StudioRequestFeedback(busy, message, requestFailed)
+          if (messageStep == 3 || messageStep == 4)
+            StudioRequestFeedback(busy, message, requestFailed)
         }
         if (onPublished == null && selectionProblem != null) {
           Text(selectionProblem, color = MaterialTheme.colorScheme.error)
@@ -777,6 +654,19 @@ fun CardStudioScreen(
           Text(if (showAdvanced) "Hide options" else "More options")
         }
         if (showAdvanced) {
+          if (mode != CardStudioMode.Builder)
+            TextButton(
+              onClick = {
+                mode = CardStudioMode.Builder
+                saveDefaults { copy(mode = CardStudioMode.Builder) }
+              }
+            ) {
+              Text("Design it myself in UI Builder")
+            }
+          if (cloudDraftReady)
+            TextButton(onClick = { openInBuilder() }, enabled = !busy) {
+              Text("Open the agent's draft in UI Builder")
+            }
           if (homeServer != null) {
             Text(
               "Designs are saved on this Home Assistant's own design server.",
@@ -817,7 +707,7 @@ fun CardStudioScreen(
         }
         Text(
           if (onPublished != null)
-            "Designs stay drafts until you publish them. Nothing here changes your Home Assistant dashboard."
+            "Nothing changes until you choose Use it, and only for you. Your Home Assistant dashboard stays as it is."
           else if (selectionProblem != null)
             "Publishing will be available once card selections load."
           else "This host can create and review drafts but can't apply a custom design yet.",
@@ -895,109 +785,6 @@ private fun StudioStep(
 }
 
 @Composable
-private fun StudioChoice(
-  title: String,
-  detail: String,
-  selected: Boolean,
-  enabled: Boolean,
-  onClick: () -> Unit,
-) {
-  OutlinedCard(
-    onClick = onClick,
-    enabled = enabled,
-    border =
-      androidx.compose.foundation.BorderStroke(
-        if (selected) 2.dp else 1.dp,
-        if (selected) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.outlineVariant,
-      ),
-    modifier = Modifier.fillMaxWidth(),
-  ) {
-    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-      Text(title, style = MaterialTheme.typography.titleSmall)
-      Text(detail, style = MaterialTheme.typography.bodySmall)
-    }
-  }
-}
-
-/**
- * The agent's provider, model, endpoint and key. Once a provider and model are remembered it folds
- * to one line, opening only the key field when this run hasn't been given one yet.
- */
-@Composable
-private fun AgentSetup(
-  provider: CardAgentProvider,
-  model: String,
-  endpoint: String,
-  apiKey: String,
-  expanded: Boolean,
-  enabled: Boolean,
-  onExpand: () -> Unit,
-  onProvider: (CardAgentProvider) -> Unit,
-  onModel: (String) -> Unit,
-  onEndpoint: (String) -> Unit,
-  onApiKey: (String) -> Unit,
-) {
-  val keyField: @Composable () -> Unit = {
-    OutlinedTextField(
-      apiKey,
-      onApiKey,
-      label = { Text("${provider.label} API key") },
-      supportingText = {
-        Text("Kept until the app closes; never saved or sent to Home Assistant.")
-      },
-      enabled = enabled,
-      singleLine = true,
-      visualTransformation = PasswordVisualTransformation(),
-      modifier = Modifier.fillMaxWidth(),
-    )
-  }
-  if (!expanded) {
-    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-      Text(
-        "${provider.label} · $model",
-        style = MaterialTheme.typography.bodyMedium,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.weight(1f),
-      )
-      TextButton(onClick = onExpand, enabled = enabled) { Text("Change") }
-    }
-    if (apiKey.isBlank()) keyField()
-    return
-  }
-  FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    CardAgentProvider.entries.forEach { option ->
-      FilterChip(
-        provider == option,
-        { if (provider != option) onProvider(option) },
-        label = { Text(option.label) },
-        enabled = enabled,
-      )
-    }
-  }
-  if (provider == CardAgentProvider.Agent) {
-    OutlinedTextField(
-      endpoint,
-      onEndpoint,
-      label = { Text("Agent chat-completions HTTPS endpoint") },
-      enabled = enabled,
-      singleLine = true,
-      modifier = Modifier.fillMaxWidth(),
-    )
-  }
-  OutlinedTextField(
-    model,
-    onModel,
-    label = { Text("Model ID") },
-    enabled = enabled,
-    singleLine = true,
-    modifier = Modifier.fillMaxWidth(),
-  )
-  keyField()
-}
-
-@Composable
 private fun StudioRequestFeedback(busy: Boolean, message: String?, failed: Boolean) {
   if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
   message?.let {
@@ -1014,3 +801,85 @@ internal expect fun CardEditorBrowser(
   modifier: Modifier,
   onNavigation: (String) -> Unit,
 )
+
+/** Designing the card yourself in UI Builder: sign in, open, save there, publish it here. */
+@Composable
+private fun BuilderSteps(
+  signInStep: Boolean,
+  signedIn: Boolean,
+  account: String?,
+  onSignIn: (() -> Unit)?,
+  designed: Boolean,
+  openEditorInBrowser: Boolean,
+  canPublish: Boolean,
+  published: Boolean,
+  busy: Boolean,
+  serverReady: Boolean,
+  message: String?,
+  messageStep: Int,
+  requestFailed: Boolean,
+  onOpen: () -> Unit,
+  onPublish: () -> Unit,
+  onCancel: () -> Unit,
+  onBackToAgent: () -> Unit,
+) {
+  var number = 1
+  if (signInStep) {
+    StudioStep(
+      number = number++,
+      title = "Sign in",
+      state = if (signedIn) StepState.Done else StepState.Active,
+      summary = account?.let { "Signed in as $it" } ?: "Signed in with GitHub",
+    ) {
+      Text(
+        "Sign in once with GitHub. Your designs are saved to your account and open in UI " +
+          "Builder without signing in again.",
+        style = MaterialTheme.typography.bodyMedium,
+      )
+      Button(onClick = { onSignIn?.invoke() }) { Text("Sign in with GitHub") }
+    }
+  }
+  StudioStep(
+    number = number++,
+    title = "Edit in UI Builder",
+    state = if (signInStep && !signedIn) StepState.Locked else StepState.Active,
+  ) {
+    Text(
+      if (openEditorInBrowser)
+        "UI Builder opens in your browser. Save your design there, then come back here."
+      else "Save your design in UI Builder, then come back here.",
+      style = MaterialTheme.typography.bodyMedium,
+    )
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      Button(onClick = onOpen, enabled = !busy) {
+        Text(if (designed) "Open again" else "Open in UI Builder")
+      }
+      if (busy && messageStep == 3) TextButton(onClick = onCancel) { Text("Cancel") }
+    }
+    if (messageStep == 3) StudioRequestFeedback(busy, message, requestFailed)
+  }
+  if (canPublish) {
+    StudioStep(
+      number = number,
+      title = "Use it on this card",
+      state =
+        when {
+          published -> StepState.Done
+          signInStep && !signedIn -> StepState.Locked
+          else -> StepState.Active
+        },
+      summary = "Published privately",
+    ) {
+      Text(
+        "Publishes the design you saved for this card, for your devices only, and switches this " +
+          "card to it.",
+        style = MaterialTheme.typography.bodyMedium,
+      )
+      Button(onClick = onPublish, enabled = !busy && signedIn && serverReady) {
+        Text("Publish privately and use it")
+      }
+    }
+    if (messageStep == 4) StudioRequestFeedback(busy, message, requestFailed)
+  }
+  TextButton(onClick = onBackToAgent) { Text("Ask your agent instead") }
+}

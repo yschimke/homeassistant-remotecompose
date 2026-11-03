@@ -72,3 +72,12 @@ internal object CardAgentSessions {
     writeAgentGrants(CARD_SESSIONS_KEY, if (values.isEmpty()) null else Json.encodeToString(values))
   }
 }
+
+/** What this device keeps for "Ask your agent", for hosts outside this module (the Android app). */
+object AgentOnThisDevice {
+  /** Dashboard sessions' owner capabilities. */
+  fun dashboardGrants(): AgentGrantStore = dashboardAgentGrants()
+
+  /** The connected agent's link on [server], or null before the one-time setup. */
+  fun link(server: String): String? = AgentLinkStore.get(server)
+}
