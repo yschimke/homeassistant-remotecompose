@@ -313,6 +313,23 @@ class AgentRelayTest {
   }
 
   @Test
+  fun abandonedSessionsArePrunedWhenNewOnesStart() {
+    var now = 0L
+    val relay = relay({ now })
+    repeat(3) {
+      val access = relay.dashboards.create("Tidy", baseline)
+      relay.register(AgentRelay.Kind.Dashboard, access.owner, access.agent, "Tidy")
+    }
+    assertEquals(3, relay.size)
+    // Nobody comes back; the stores expire them, and the next registration sweeps the relay.
+    now += AgentRelay.JOIN_CODE_MS + DashboardAgentSessions.IDLE_MS
+    val fresh = relay.dashboards.create("Again", baseline)
+    val code = relay.register(AgentRelay.Kind.Dashboard, fresh.owner, fresh.agent, "Again")
+    assertEquals(1, relay.size)
+    assertNotNull(relay.join(code, null), "the new session's code still works")
+  }
+
+  @Test
   fun idleSessionsSlideButNeverPastADay() {
     var now = 0L
     val relay = relay({ now })

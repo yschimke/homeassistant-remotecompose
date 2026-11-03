@@ -429,10 +429,11 @@ fun CardStudioScreen(
           } catch (e: CancellationException) {
             throw e
           } catch (e: Exception) {
+            // Keep the revision unloaded: the next relay answer (25 s at most) tries again, so a
+            // dropped connection doesn't lose the draft.
             messageStep = 3
             requestFailed = true
-            message = "The agent's draft couldn't be loaded: it may not match this card."
-            cloudRevision = state.revision
+            message = "The agent's draft couldn't be loaded yet; retrying."
           }
         }
       }

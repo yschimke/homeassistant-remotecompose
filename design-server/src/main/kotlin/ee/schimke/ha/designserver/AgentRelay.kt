@@ -107,6 +107,7 @@ class AgentRelay(
 
   /** Start relaying a session the stores just created; returns its first join code. */
   fun register(kind: Kind, owner: String, agent: String, title: String): String {
+    prune()
     val entry = Entry(kind, owner, agent, title.take(200))
     byOwner[owner] = entry
     byAgent[agent] = entry
@@ -384,6 +385,19 @@ class AgentRelay(
       Kind.Card -> cards.touch(entry.owner)
       Kind.Dashboard -> dashboards.touch(entry.owner)
     }
+
+  /**
+   * Drop sessions the stores have expired that nobody came back to. The stores cap live sessions,
+   * so sweeping on every registration keeps the relay's indexes (and conversations) bounded too.
+   */
+  internal fun prune() {
+    byOwner.values.filterNot(::alive).forEach { forget<Unit>(it) }
+    synchronized(this) { expireRequests() }
+  }
+
+  /** Sessions the relay still indexes (for tests). */
+  internal val size: Int
+    get() = byOwner.size
 
   private fun <T> forget(entry: Entry): T? {
     byOwner.remove(entry.owner)

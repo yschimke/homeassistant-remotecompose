@@ -105,9 +105,10 @@ class AgentRelayClient(server: String, engine: HttpClientEngine? = null) {
   }
 
   /**
-   * The state now and after every change, until the session ends ([AgentSessionEndedException]).
-   * Network failures retry with a growing pause, so a phone switching networks or a laptop waking
-   * picks the session back up by itself.
+   * The state now, after every change, and at least every 25 s while nothing changes (so time-only
+   * changes such as an agent going quiet show up), until the session ends
+   * ([AgentSessionEndedException]). Network failures retry with a growing pause, so a phone
+   * switching networks or a laptop waking picks the session back up by itself.
    */
   fun watch(owner: String): Flow<AgentRelayState> = flow {
     var since: Long? = null
@@ -126,7 +127,9 @@ class AgentRelayClient(server: String, engine: HttpClientEngine? = null) {
           continue
         }
       pause = 1_000
-      if (since == null || state.version > since) emit(state)
+      // Emit every answer, even at an unchanged version: presence ("connected") and the code's
+      // remaining time change with the clock alone, without a version bump.
+      emit(state)
       since = state.version
     }
   }
