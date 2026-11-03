@@ -108,9 +108,11 @@ test('Live agent edit: the person watches, comments on a card and applies', {tim
     await panel.getByText('Start edit session', {exact:true}).click({force:true});
     await panel.getByText('Your agent is listening and picks this up now.', {exact:true}).waitFor();
     assert.equal(await panel.getByText('Share prompt', {exact:true}).count(), 0, 'no prompt to hand over');
+    // The first listen also returns requests already open (from earlier tests): find this one.
+    const ours = (r) => r.request === 'Add the switch next to the light';
     let heard = await waitingForRequest;
-    while (heard.requests.length === 0) heard = await mcp('await_request', {since:heard.cursor});
-    const [session] = heard.requests;
+    while (!heard.requests.some(ours)) heard = await mcp('await_request', {since:heard.cursor});
+    const session = heard.requests.find(ours);
     assert.equal(session.request, 'Add the switch next to the light');
     await page.screenshot({path:`${evidence}/agent-live-1-listening.png`});
 

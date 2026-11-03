@@ -296,17 +296,17 @@ def _send_failure(connection, msg, failure):
     connection.send_error(msg["id"], code, str(failure))
 
 
-def _session_reply(session, hass=None):
-    """The session with its configs; with [hass], also the prompt to hand an agent again."""
+def _session_reply(hass, session, with_prompt=False):
+    """The session with its configs; [with_prompt], also the prompt to hand an agent again."""
     reply = {
         "session": edit_sessions.summary(session, with_configs=True),
         # The agent's seen_at is in this clock: the app ages presence against it.
         "server_time": _now(),
-    }
-    if hass is not None:
         # An agent already listening picks a new session up by itself: no prompt to hand over.
-        reply["agent_listening"] = agent_listening(hass)
-    if hass is not None:
+        # In every reply, so a subscription's updates don't hide it again.
+        "agent_listening": agent_listening(hass),
+    }
+    if with_prompt:
         reply["prompt"] = edit_sessions.agent_prompt(
             session, mcp_url(hass), hass.config.location_name
         )
@@ -327,7 +327,7 @@ async def ws_start(hass, connection, msg):
     except SessionError as failure:
         _send_failure(connection, msg, failure)
         return
-    connection.send_result(msg["id"], _session_reply(session, hass))
+    connection.send_result(msg["id"], _session_reply(hass, session, with_prompt=True))
 
 
 @websocket_api.websocket_command(
@@ -355,7 +355,7 @@ def ws_get(hass, connection, msg):
     except SessionError as failure:
         _send_failure(connection, msg, failure)
         return
-    connection.send_result(msg["id"], _session_reply(session, hass))
+    connection.send_result(msg["id"], _session_reply(hass, session, with_prompt=True))
 
 
 @websocket_api.websocket_command(
@@ -379,11 +379,11 @@ def ws_subscribe(hass, connection, msg):
             _, current = _visible_session(hass, connection.user, session_id)
         except SessionError:
             return
-        connection.send_message(websocket_api.event_message(msg["id"], _session_reply(current)))
+        connection.send_message(websocket_api.event_message(msg["id"], _session_reply(hass, current)))
 
     connection.subscriptions[msg["id"]] = async_dispatcher_connect(hass, SIGNAL_SESSION, forward)
     connection.send_result(msg["id"])
-    connection.send_message(websocket_api.event_message(msg["id"], _session_reply(session)))
+    connection.send_message(websocket_api.event_message(msg["id"], _session_reply(hass, session)))
 
 
 @websocket_api.websocket_command(
@@ -406,7 +406,7 @@ def ws_note(hass, connection, msg):
         _send_failure(connection, msg, failure)
         return
     edits.changed(session)
-    connection.send_result(msg["id"], _session_reply(session))
+    connection.send_result(msg["id"], _session_reply(hass, session))
 
 
 @websocket_api.websocket_command(
@@ -427,7 +427,7 @@ def ws_submit(hass, connection, msg):
     except SessionError as failure:
         _send_failure(connection, msg, failure)
         return
-    connection.send_result(msg["id"], _session_reply(session))
+    connection.send_result(msg["id"], _session_reply(hass, session))
 
 
 @websocket_api.websocket_command(
@@ -442,7 +442,7 @@ def ws_discard(hass, connection, msg):
         _send_failure(connection, msg, failure)
         return
     edits.changed(session)
-    connection.send_result(msg["id"], _session_reply(session))
+    connection.send_result(msg["id"], _session_reply(hass, session))
 
 
 @websocket_api.require_admin
@@ -460,7 +460,7 @@ async def ws_apply(hass, connection, msg):
     except SessionError as failure:
         _send_failure(connection, msg, failure)
         return
-    connection.send_result(msg["id"], _session_reply(session))
+    connection.send_result(msg["id"], _session_reply(hass, session))
 
 
 @websocket_api.require_admin
@@ -474,7 +474,7 @@ async def ws_undo(hass, connection, msg):
     except SessionError as failure:
         _send_failure(connection, msg, failure)
         return
-    connection.send_result(msg["id"], _session_reply(session))
+    connection.send_result(msg["id"], _session_reply(hass, session))
 
 
 COMMANDS = (ws_start, ws_list, ws_get, ws_subscribe, ws_note, ws_submit, ws_discard, ws_apply, ws_undo)
