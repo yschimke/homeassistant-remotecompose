@@ -388,7 +388,10 @@ private fun RemoteDrawScope.grammarLock(spec: HaVisualSpec) {
   // Butt-ended legs, so a round cap doesn't poke out under the body.
   val leg = strokePaint(st, look.muted, round = false)
   drawLine(leg, RemoteOffset(box.centerX - r, arcCy), RemoteOffset(box.centerX - r, legBottom))
-  drawLine(leg, RemoteOffset(box.centerX + r, arcCy), RemoteOffset(box.centerX + r, legBottom))
+  // The free leg lifts clear of the body as it unlocks, so an open lock shows a gap — not just a
+  // taller shackle — whatever the body's colour or ink.
+  val freeBottom = legBottom - (1f.rf - f) * (st + lift * 0.6f.rf)
+  drawLine(leg, RemoteOffset(box.centerX + r, arcCy), RemoteOffset(box.centerX + r, freeBottom))
 
   haloPaint(spec, RemoteOffset(box.left, bodyTop), RemoteOffset(box.right, box.bottom))?.let {
     val halo = st * 0.6f.rf
