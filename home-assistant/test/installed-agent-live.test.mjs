@@ -92,7 +92,14 @@ test('Live agent edit: the person watches, comments on a card and applies', {tim
     await panel.getByRole('button', {name:'More options'}).click({force:true});
     await panel.getByText('Ask an agent', {exact:true}).click({force:true});
     await panel.getByText('Connect to Home Assistant', {exact:true}).click({force:true});
-    await panel.getByRole('textbox').first().fill('Add the switch next to the light');
+    // Compose draws on a canvas: focus the field through its accessibility node, then type keys.
+    const typeInto = async (label, text) => {
+      await panel.getByRole('textbox', {name:label}).click({force:true});
+      // Compose moves focus on the next frame; a key sent at once is dropped.
+      await page.waitForTimeout(400);
+      await page.keyboard.type(text, {delay:20});
+    };
+    await typeInto('Request', 'Add the switch next to the light');
     await panel.getByText('Start edit session', {exact:true}).click({force:true});
     await panel.getByText('Share prompt', {exact:true}).waitFor();
     const [session] = (await ws({type:'terrazzo/edit/list', url_path:'live-fixture'})).sessions;
@@ -115,12 +122,14 @@ test('Live agent edit: the person watches, comments on a card and applies', {tim
     const listening = mcp('await_feedback', {session_id:session.session_id, since:0});
     await panel.getByText('Agent · Waiting for feedback', {exact:true}).waitFor();
     await panel.getByText('Comment', {exact:true}).first().click({force:true});
-    await panel.getByText(/^About .*card 1/).waitFor();
-    await panel.getByRole('textbox').last().fill('Yes, side by side');
+    // Section headings are drawn by the dashboard itself: the first card with Comment is the light.
+    await panel.getByText(/^About light\.wall_light \(.*card 2\)/).waitFor();
+    await typeInto('Tell the agent what to change', 'Yes, side by side');
     await panel.getByText('Send', {exact:true}).click({force:true});
     const feedback = await listening;
     assert.equal(feedback.feedback[0].text, 'Yes, side by side');
-    assert.match(feedback.feedback[0].target, /card 1\)$/, 'the comment names the card it was left on');
+    assert.match(feedback.feedback[0].target, /^light\.wall_light \(.*card 2\)$/,
+      'the comment names the card it was left on');
     await panel.getByText('Yes, side by side', {exact:true}).waitFor();
     await page.screenshot({path:`${evidence}/agent-live-3-comment.png`});
 

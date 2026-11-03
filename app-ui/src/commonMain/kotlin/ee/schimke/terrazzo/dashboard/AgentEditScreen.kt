@@ -443,13 +443,17 @@ private fun SessionReview(
           }
         }
       }
-      session.notes.lastOrNull()?.let {
-        Text(
-          "Your last note: ${it.text}",
-          style = MaterialTheme.typography.bodySmall,
-          color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-      }
+      // With the live panel the conversation shows every note already.
+      session.notes
+        .lastOrNull()
+        ?.takeIf { live == null }
+        ?.let {
+          Text(
+            "Your last note: ${it.text}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
+        }
     }
     val dashboard = previewDashboard(draft?.config)
     when {
