@@ -2,12 +2,12 @@
 
 package ee.schimke.terrazzo.shared
 
-@JsFun(
-  "() => { try { return sessionStorage.getItem('terrazzo.cardAgentSessions'); } catch (_) { return null; } }"
-)
-internal actual external fun readCardAgentSessions(): String?
+// Local, not session, storage: a reload or a new tab picks a running agent session back up. The
+// capabilities expire with their sessions (a day at most) and are dropped once a session ends.
+@JsFun("(key) => { try { return localStorage.getItem(key); } catch (_) { return null; } }")
+internal actual external fun readAgentGrants(key: String): String?
 
 @JsFun(
-  "(value) => { try { if (value == null) sessionStorage.removeItem('terrazzo.cardAgentSessions'); else sessionStorage.setItem('terrazzo.cardAgentSessions', value); } catch (_) {} }"
+  "(key, value) => { try { if (value == null) localStorage.removeItem(key); else localStorage.setItem(key, value); } catch (_) {} }"
 )
-internal actual external fun writeCardAgentSessions(value: String?)
+internal actual external fun writeAgentGrants(key: String, value: String?)

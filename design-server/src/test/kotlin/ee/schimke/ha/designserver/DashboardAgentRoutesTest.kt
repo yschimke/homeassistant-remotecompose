@@ -12,7 +12,7 @@ class DashboardAgentRoutesTest {
   @Test
   fun draftRequiresAgentCapabilityAndIsNeverApplied() = testApplication {
     var now = 0L
-    application { routing { dashboardAgentRoutes(DashboardAgentSessions { now }) } }
+    application { routing { dashboardAgentRoutes(sessions = DashboardAgentSessions { now }) } }
     val baseline = Json.parseToJsonElement("""{"views":[{"title":"Home"}]}""").jsonObject
     val create =
       client.post("/api/studio/dashboard-sessions") {

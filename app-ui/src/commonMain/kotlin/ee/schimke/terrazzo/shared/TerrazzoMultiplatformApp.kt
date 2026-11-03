@@ -363,11 +363,14 @@ private fun DashboardShell(
   var snapshot by remember(connection) { mutableStateOf(HaSnapshot()) }
   var connectionError by remember(connection) { mutableStateOf<String?>(null) }
   var designServer by remember { mutableStateOf("https://ha.coo.ee") }
-  // Keep the owner capability while navigating away from an edit, so it can be resumed and
-  // revoked. It is deliberately not persisted across a browser reload or sign-out.
+  // Keep the owner capability while navigating away from an edit, and in the browser across a
+  // reload, so a running agent session can be resumed and revoked. It never leaves this device.
   val cloudDashboardEdits =
     remember(connection, designServer) {
-      runCatching { CloudDashboardAgentEdits(connection.client, designServer) }.getOrNull()
+      runCatching {
+        CloudDashboardAgentEdits(connection.client, designServer, grants = dashboardAgentGrants())
+      }
+        .getOrNull()
     }
   DisposableEffect(cloudDashboardEdits) { onDispose { cloudDashboardEdits?.close() } }
   // Opt-in template usage: once a launch (and when the server setting settles on a new value),

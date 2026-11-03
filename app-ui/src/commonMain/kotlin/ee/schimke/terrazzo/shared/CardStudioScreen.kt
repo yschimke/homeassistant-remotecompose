@@ -18,6 +18,10 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import ee.schimke.ha.client.agent.AgentRelayClient
+import ee.schimke.ha.client.agent.AgentRelayException
+import ee.schimke.ha.client.agent.AgentRelayState
+import ee.schimke.ha.client.agent.AgentSessionEndedException
 import ee.schimke.ha.client.design.*
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig
@@ -156,6 +160,10 @@ fun CardStudioScreen(
     mutableStateOf(recovered?.let { CardAgentSession(it.ownerToken, it.agentToken) })
   }
   var cloudServer by remember { mutableStateOf(recovered?.server) }
+  // The server runs the agent relay: the agent joins by code and drafts arrive by themselves.
+  var cloudRelay by remember { mutableStateOf(recovered?.relay == true) }
+  var cloudLive by remember { mutableStateOf<AgentRelayState?>(null) }
+  var cloudRevision by remember { mutableLongStateOf(0L) }
   var cloudTarget by remember { mutableStateOf<String?>(null) }
   var cloudTargetProblem by remember { mutableStateOf<String?>(null) }
   var draft by remember { mutableStateOf<JsonObject?>(null) }
@@ -309,6 +317,9 @@ fun CardStudioScreen(
         val seed = upstream.seed(card, currentSnapshot(fresh = true))
         cloudSession = upstream.startAgentSession(seed, instruction)
         cloudDraftReady = false
+        cloudRevision = 0
+        cloudLive = null
+        cloudRelay = cloudSession?.relay == true
         cloudServer = target
         cloudSessionKey?.let { key ->
           val session = checkNotNull(cloudSession)
@@ -319,44 +330,121 @@ fun CardStudioScreen(
               session.ownerToken,
               session.agentToken,
               instruction,
-              Clock.System.now().toEpochMilliseconds() + 3_600_000,
+              // The relay keeps an active session for up to a day; the server says when it ends.
+              Clock.System.now().toEpochMilliseconds() +
+                if (cloudRelay) 24 * 3_600_000L else 3_600_000L,
+              relay = cloudRelay,
             ),
           )
         }
       } finally {
         upstream.close()
       }
-      "Request created. Give the agent the connection details below."
+      if (cloudRelay) "Request created. Give your agent the code below."
+      else "Request created. Give the agent the connection details below."
     }
+
+  /** The agent's latest draft and its images, checked; returns its revision (0: none yet). */
+  suspend fun loadCloudDraft(session: CardAgentSession, target: String): Long {
+    val upstream = CardStudioClient(target)
+    try {
+      val (candidate, revision) = upstream.agentSessionDraft(session.ownerToken)
+      if (revision == 0L) return 0
+      val images =
+        (candidate["assets"] as? JsonObject).orEmpty().mapValues { (key, value) ->
+          val digest =
+            value.jsonObject["contentDigest"]?.jsonPrimitive?.contentOrNull?.removePrefix("sha256:")
+              ?: error("Missing image digest")
+          upstream.agentSessionAsset(session.ownerToken, key, digest)
+        }
+      require(images.values.sumOf { it.size } <= 2 * 1024 * 1024)
+      draft = candidate
+      draftAssets = images
+      cloudDraftReady = true
+      cloudRevision = revision
+      return revision
+    } finally {
+      upstream.close()
+    }
+  }
+
+  fun draftReceivedMessage() =
+    if (onPublished != null) "Draft received. Review it in UI Builder before publishing."
+    else if (selectionProblem != null)
+      "Draft received. Review it in UI Builder; retry loading card selections here."
+    else "Draft received. Review it in UI Builder; applying it in this host is not yet supported."
 
   fun retrieveCloudDraft() =
     launch(3) { _ ->
       val session = cloudSession ?: return@launch null
-      val upstream = CardStudioClient(cloudServer ?: return@launch null)
-      try {
-        val (candidate, revision) = upstream.agentSessionDraft(session.ownerToken)
-        if (revision == 0L) return@launch "The agent hasn't submitted a draft yet."
-        val images =
-          (candidate["assets"] as? JsonObject).orEmpty().mapValues { (key, value) ->
-            val digest =
-              value.jsonObject["contentDigest"]
-                ?.jsonPrimitive
-                ?.contentOrNull
-                ?.removePrefix("sha256:") ?: error("Missing image digest")
-            upstream.agentSessionAsset(session.ownerToken, key, digest)
-          }
-        require(images.values.sumOf { it.size } <= 2 * 1024 * 1024)
-        draft = candidate
-        draftAssets = images
-        cloudDraftReady = true
-      } finally {
-        upstream.close()
-      }
-      if (onPublished != null) "Draft received. Review it in UI Builder before publishing."
-      else if (selectionProblem != null)
-        "Draft received. Review it in UI Builder; retry loading card selections here."
-      else "Draft received. Review it in UI Builder; applying it in this host is not yet supported."
+      if (loadCloudDraft(session, cloudServer ?: return@launch null) == 0L)
+        "The agent hasn't submitted a draft yet."
+      else draftReceivedMessage()
     }
+
+  fun forgetCloudSession() {
+    cloudSessionKey?.let(CardAgentSessions::remove)
+    cloudSession = null
+    cloudServer = null
+    cloudRelay = false
+    cloudLive = null
+    cloudDraftReady = false
+  }
+
+  /** Something the person does on the relay: a message, a code, letting an agent in. */
+  fun relayCall(block: suspend (AgentRelayClient, String) -> String?) =
+    launch(3) { _ ->
+      val session = cloudSession ?: return@launch null
+      val relay = AgentRelayClient(cloudServer ?: return@launch null)
+      try {
+        block(relay, session.ownerToken).also { cloudLive = relay.state(session.ownerToken) }
+      } catch (e: AgentSessionEndedException) {
+        forgetCloudSession()
+        "The agent session ended. Start a new request to continue."
+      } catch (e: AgentRelayException) {
+        requestFailed = true
+        e.message
+      } finally {
+        relay.close()
+      }
+    }
+
+  // With the relay, drafts, presence and the agent's messages arrive on their own: the server holds
+  // each request until something changes, so there's nothing to check by hand.
+  LaunchedEffect(cloudSession, cloudServer, cloudRelay) {
+    val session = cloudSession ?: return@LaunchedEffect
+    val target = cloudServer ?: return@LaunchedEffect
+    if (!cloudRelay) return@LaunchedEffect
+    val relay = AgentRelayClient(target)
+    try {
+      relay.watch(session.ownerToken).collect { state ->
+        cloudLive = state
+        if (state.revision > cloudRevision) {
+          try {
+            if (loadCloudDraft(session, target) > 0) {
+              messageStep = 3
+              requestFailed = false
+              message = draftReceivedMessage()
+            }
+          } catch (e: CancellationException) {
+            throw e
+          } catch (e: Exception) {
+            // Keep the revision unloaded: the next relay answer (25 s at most) tries again, so a
+            // dropped connection doesn't lose the draft.
+            messageStep = 3
+            requestFailed = true
+            message = "The agent's draft couldn't be loaded yet; retrying."
+          }
+        }
+      }
+    } catch (e: AgentSessionEndedException) {
+      forgetCloudSession()
+      messageStep = 3
+      message = "The agent session ended. Start a new request to continue."
+    } finally {
+      relay.close()
+    }
+  }
 
   fun revokeCloudSession() =
     launch(3) { _ ->
@@ -364,10 +452,7 @@ fun CardStudioScreen(
       val upstream = CardStudioClient(cloudServer ?: return@launch null)
       try {
         upstream.revokeAgentSession(session.ownerToken)
-        cloudSessionKey?.let(CardAgentSessions::remove)
-        cloudSession = null
-        cloudServer = null
-        cloudDraftReady = false
+        forgetCloudSession()
       } finally {
         upstream.close()
       }
@@ -396,6 +481,17 @@ fun CardStudioScreen(
         val skin = studio.publishPrivately(bearer(), design.designId, key)
         onPublished?.invoke(skin)
         publishedId = skin
+        // Tell a connected agent it's done: the design is now on the card.
+        val session = cloudSession
+        val target = cloudServer
+        if (cloudRelay && session != null && target != null) {
+          val relay = AgentRelayClient(target)
+          try {
+            runCatching { relay.decide(session.ownerToken, accepted = true) }
+          } finally {
+            relay.close()
+          }
+        }
         "Published privately: only you see it. This card switches to it once it downloads."
       }
     }
@@ -517,7 +613,7 @@ fun CardStudioScreen(
               modifier = Modifier.fillMaxWidth(),
             )
             Text(
-              "The design server at ${cloudTarget ?: "the configured upstream"} receives this card's display text, current values and binding contract. The agent receives temporary access to this request; no Home Assistant token is sent. Access expires after one hour.",
+              "The design server at ${cloudTarget ?: "the configured upstream"} receives this card's display text, current values and binding contract. The agent receives temporary access to this request; no Home Assistant token is sent. Access ends an hour after the last activity, after a day at most, or when you revoke it.",
               style = MaterialTheme.typography.bodySmall,
             )
             Text(
@@ -537,6 +633,47 @@ fun CardStudioScreen(
                 enabled = !busy && instruction.isNotBlank() && cloudTarget != null,
               ) {
                 Text("Create agent request")
+              }
+            } else if (cloudRelay) {
+              AgentLivePanel(
+                state = cloudLive,
+                busy = busy,
+                onCopyInvite = { code ->
+                  clipboard.setText(
+                    AnnotatedString(
+                      AgentRelayClient.invite(
+                        cloudServer.orEmpty(),
+                        code,
+                        "the design of this ${card.type} card",
+                      )
+                    )
+                  )
+                  messageStep = 3
+                  requestFailed = false
+                  message = "Invite copied. Paste it to your agent."
+                },
+                onNewCode = { relayCall { relay, owner -> relay.newJoinCode(owner).let { null } } },
+                onClaim = { code ->
+                  relayCall { relay, owner ->
+                    relay.claim(owner, code)
+                    "Agent connected."
+                  }
+                },
+                onSend = { text ->
+                  relayCall { relay, owner ->
+                    relay.comment(owner, text)
+                    null
+                  }
+                },
+              )
+              FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (cloudDraftReady)
+                  Button(onClick = { openInBuilder() }, enabled = !busy) {
+                    Text("Review draft $cloudRevision in UI Builder")
+                  }
+                TextButton(onClick = { revokeCloudSession() }, enabled = !busy) {
+                  Text("Stop and revoke access")
+                }
               }
             } else {
               Text(

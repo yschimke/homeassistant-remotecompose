@@ -90,7 +90,9 @@ fun Route.cardStudioRoutes(
   made: UserDesignStore? = null,
   seeds: CardStudioDrafts = CardStudioDrafts(),
   handoffs: CardStudioDrafts = CardStudioDrafts(),
-  agentSessions: AgentDesignSessions = AgentDesignSessions(),
+  /** The live relay (join codes, presence, conversation) around [agentSessions], when served. */
+  relay: AgentRelay? = null,
+  agentSessions: AgentDesignSessions = relay?.cards ?: AgentDesignSessions(),
   upstream: String? = System.getenv("LIBRARY_UPSTREAM"),
 ) {
   get("/api/studio/upstream") {
@@ -188,11 +190,16 @@ fun Route.cardStudioRoutes(
       } catch (e: IllegalArgumentException) {
         return@post call.respondText("Invalid design request", status = HttpStatusCode.BadRequest)
       }
+    val joinCode = relay?.register(AgentRelay.Kind.Card, access.owner, access.agent, instruction)
     call.respondText(
       buildJsonObject {
         put("ownerToken", access.owner)
         put("agentToken", access.agent)
         put("expiresInSeconds", 3600)
+        joinCode?.let {
+          put("joinCode", it)
+          put("relay", true)
+        }
       }
         .toString(),
       ContentType.Application.Json,
@@ -240,6 +247,7 @@ fun Route.cardStudioRoutes(
     try {
       if (!agentSessions.submit(call.agentSessionToken(), revision, document))
         return@post call.respondText("Design session unavailable", status = HttpStatusCode.NotFound)
+      relay?.seen(call.agentSessionToken(), "Draft submitted")
     } catch (e: Exception) {
       if (e is CancellationException) throw e
       return@post call.respondText(
@@ -253,7 +261,9 @@ fun Route.cardStudioRoutes(
   delete("/api/studio/agent-session") {
     call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
     call.response.header(HttpHeaders.CacheControl, "no-store")
-    if (!agentSessions.revoke(call.agentSessionToken()))
+    if (
+      !(relay?.revoke(call.agentSessionToken()) ?: agentSessions.revoke(call.agentSessionToken()))
+    )
       return@delete call.respondText("Design session unavailable", status = HttpStatusCode.NotFound)
     call.respondText("Design session revoked")
   }
@@ -280,6 +290,7 @@ fun Route.cardStudioRoutes(
         if (e is CancellationException) throw e
         return@post call.respondText("Invalid MCP request", status = HttpStatusCode.BadRequest)
       }
+    relay?.seen(token)
     val response = AgentDesignMcp.handle(message, token, agentSessions)
     if (response == null) call.respondText("", status = HttpStatusCode.Accepted)
     else call.respondText(response.toString(), ContentType.Application.Json)

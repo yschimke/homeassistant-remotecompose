@@ -188,8 +188,10 @@ fun Application.designServer(
     librarySourceRoutes(librarySources, uiBuilder, github)
     dashboardStudioRoutes(uiBuilder, github)
     demoSite(File(System.getenv("WASM_SITE_DIR") ?: "/app/wasm"))
-    cardStudioRoutes(holder, uiBuilder, github, made = userDesigns)
-    dashboardAgentRoutes()
+    val agentRelay = AgentRelay(AgentDesignSessions(), DashboardAgentSessions())
+    cardStudioRoutes(holder, uiBuilder, github, made = userDesigns, relay = agentRelay)
+    dashboardAgentRoutes(agentRelay)
+    agentRelayRoutes(agentRelay)
     if (userDesigns != null && github != null) {
       userDesignRoutes(holder, userDesigns, uiBuilder, github)
       AppSignIn(github).routes(this)
