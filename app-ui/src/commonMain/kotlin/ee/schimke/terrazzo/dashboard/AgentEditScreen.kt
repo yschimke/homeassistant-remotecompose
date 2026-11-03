@@ -316,8 +316,6 @@ private fun StartSession(
       "What should change on ${title ?: "this dashboard"}?",
       style = MaterialTheme.typography.titleMedium,
     )
-    // The setup phase: once an agent is connected, the request goes straight to it.
-    if (cloudServer != null) AgentConnection(cloudServer, onCopy)
     Text(
       if (cloudServer == null)
         "Home Assistant opens an edit session and gives you a prompt for your AI assistant. The " +
@@ -347,6 +345,9 @@ private fun StartSession(
     ) {
       Text("Send to your agent")
     }
+    // The setup phase: once an agent is connected, the request goes straight to it. Below Send: it
+    // changes as the agent connects, and must not move the field being typed in.
+    if (cloudServer != null) AgentConnection(cloudServer, onCopy)
     alternative?.let { (label, switch) -> TextButton(onClick = switch) { Text(label) } }
     if (open.isNotEmpty()) {
       Text("Open sessions", style = MaterialTheme.typography.titleSmall)

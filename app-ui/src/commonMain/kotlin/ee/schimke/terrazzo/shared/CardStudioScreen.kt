@@ -610,10 +610,6 @@ fun CardStudioScreen(
             Button(onClick = { onSignIn?.invoke() }) { Text("Sign in with GitHub") }
           }
           if (cloudSession == null) {
-            // The setup, once: after it, a request goes straight to the connected agent.
-            cloudTarget?.let { target ->
-              AgentConnection(target, onCopy = { clipboard.setText(AnnotatedString(it)) })
-            }
             OutlinedTextField(
               instruction,
               { instruction = it },
@@ -639,6 +635,12 @@ fun CardStudioScreen(
               style = MaterialTheme.typography.bodySmall,
               color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            // The setup, once: after it, a request goes straight to the connected agent. Below the
+            // request, not above it: it appears once the server is known and changes as the agent
+            // connects, and must never push the field being typed in, or Send, under the keyboard.
+            cloudTarget?.let { target ->
+              AgentConnection(target, onCopy = { clipboard.setText(AnnotatedString(it)) })
+            }
           } else {
             Text(instruction, style = MaterialTheme.typography.titleMedium)
             AgentLivePanel(
