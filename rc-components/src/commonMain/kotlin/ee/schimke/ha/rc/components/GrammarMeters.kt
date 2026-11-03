@@ -86,14 +86,19 @@ private const val HaloAlpha = 0.45f
 
 /**
  * A scale tick's colour at [at] along the scale: hot past the zone's hot mark, else muted. A live
- * mark (a gauge's bound `severity_red`) is compared in the document, so the ticks follow it.
+ * mark (a gauge's bound `severity_red`) is compared in the document, so the ticks follow it. A mark
+ * at 1 or above means no hot end (`gaugeZones` uses 1 for "none"), so the end tick, which sits at
+ * exactly 1, stays muted then rather than matching it.
  */
 private fun HaVisualSpec.tickColor(at: Float): RemoteColor {
   val live = zones.hotFromLive
   val static = zones.hotFrom
   return when {
-    live != null -> at.rf.isGreaterThanOrEqualTo(live).select(look.hot, look.muted)
-    static != null && at >= static -> look.hot
+    live != null -> {
+      val past = at.rf.isGreaterThanOrEqualTo(live).select(look.hot, look.muted)
+      if (at < 1f) past else live.isGreaterThanOrEqualTo(1f.rf).select(look.muted, past)
+    }
+    static != null && static < 1f && at >= static -> look.hot
     else -> look.muted
   }
 }
