@@ -162,15 +162,25 @@ fun Route.cardStudioRoutes(
           "Design session unavailable",
           status = HttpStatusCode.NotFound,
         )
-    val key =
+    // {key, revision}: the revision is the draft the app loaded, the one Use it would publish.
+    val (key, revision) =
       try {
         val text = call.receiveText()
         require(text.length <= 4_000)
-        Json.decodeFromString(ee.schimke.ha.design.DesignKey.serializer(), text)
+        val body = Json.parseToJsonElement(text).jsonObject
+        Json.decodeFromJsonElement(
+          ee.schimke.ha.design.DesignKey.serializer(),
+          body.getValue("key"),
+        ) to body.getValue("revision").jsonPrimitive.long
       } catch (e: Exception) {
         if (e is CancellationException) throw e
-        return@post call.respondText("Invalid design key", status = HttpStatusCode.BadRequest)
+        return@post call.respondText("Invalid preview request", status = HttpStatusCode.BadRequest)
       }
+    if (session.revision != revision)
+      return@post call.respondText(
+        "A newer draft has arrived",
+        status = HttpStatusCode.Conflict,
+      )
     val compiler = integration?.compiler ?: previewCompiler
     val assets =
       (session.document["assets"] as? JsonObject)

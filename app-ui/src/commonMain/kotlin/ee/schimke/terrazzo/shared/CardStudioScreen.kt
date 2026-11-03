@@ -212,7 +212,7 @@ fun CardStudioScreen(
     if (cloudRevision == 0L) return@LaunchedEffect
     val upstream = CardStudioClient(target)
     try {
-      draftPreview = upstream.agentSessionPreview(owner, key)
+      draftPreview = upstream.agentSessionPreview(owner, key, cloudRevision)
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {

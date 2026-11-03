@@ -385,7 +385,12 @@ class CardStudioLifecycleTest {
             dark = false,
           )
         )
-      val preview = studio.agentSessionPreview(owner, key)
+      val preview = studio.agentSessionPreview(owner, key, revision)
+      // Only the draft the app loaded: a stale revision is refused rather than shown.
+      assertEquals(
+        409,
+        assertFailsWith<CardStudioException> { studio.agentSessionPreview(owner, key, 0) }.status,
+      )
       val names =
         ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec.decode(
             preview,
