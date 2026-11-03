@@ -56,7 +56,11 @@ Agent (Claude, Codex, …) ──MCP──▶ design server relay ◀──HTTPS
 - A join code is single use and lasts 15 minutes; **New code** replaces it. An agent's
   `request_access` code lasts 10 minutes.
 - A session ends an hour after its last activity (either side), never more than a day after it
-  started, on revocation, or when the design server restarts (sessions are in memory).
+  started, or on revocation. A design server restart or deploy does not end it: sessions, unused
+  codes, presence and the conversation are saved to `AGENT_SESSIONS_DIR` (`/data/agent-sessions`
+  on the server's volume) a second after each change, atomically and readable by the server
+  alone, and restored on start (`AgentSessionFile`). Without that directory they last until a
+  restart.
 - The owner capability is kept in the browser's `localStorage` (memory on Android and desktop,
   whose process outlives the screen), so a reload resumes the session. It is never written to
   Wasmo's synced settings: a capability is a secret for this device.
@@ -102,20 +106,34 @@ client that sees no code falls back to the pasted-prompt flow.
 | Piece | Where |
 | --- | --- |
 | Relay: codes, presence, conversation, long-polls, sliding expiry | `design-server/.../AgentRelay.kt` |
+| Saved across restarts | `AgentSessionFile.kt` |
+| Direct path: `await_feedback`, `send_message`, `set_status` | `custom_components/terrazzo/edit_sessions.py`, `edits.py`, `mcp.py` |
 | MCP and HTTP routes | `AgentRelayMcp.kt`, `AgentRelayRoutes.kt` |
 | Drafts and their validation (unchanged) | `AgentDesignSessions.kt`, `DashboardAgentSessions.kt` |
 | Client | `ha-client/.../agent/AgentRelayClient.kt`, `CloudDashboardAgentEdits` |
 | Panel (both screens, every host) | `app-ui/.../shared/AgentLivePanel.kt`; `CardStudioScreen`, `AgentEditScreen` |
 | Tests | `AgentRelayTest`, `DashboardRelayTest` (code → join → draft → HA → comment → accept), `AgentLivePanelTest` |
 
-## Not yet
+## Agents signed in to Home Assistant directly
 
-- **Agents signed in to Home Assistant directly** (the integration's own MCP server) still use
-  notes and `get_edit_session`: an `await_feedback` tool there would give them the same loop.
+An agent that can reach Home Assistant (on the LAN, or through a public URL) uses the integration's
+own MCP server instead of the relay ([assistant-access.md](assistant-access.md)). It gets the same
+loop: `set_status` and `send_message` show in the person's panel, `submit_draft` appears at once
+over the edit session's subscription, and `await_feedback(session_id, since)` waits up to 25 s
+for the person's notes, which can name a card (`target`), or for the session to be applied or
+discarded. Notes and messages share one sequence (`seq`), so `since` says which notes the agent
+has read; presence ages by Home Assistant's clock (`server_time` in every reply). The screen shows
+the prompt to hand the agent until the agent first calls a tool, then the same live panel.
+`installed-agent-live.test.mjs` runs this end to end in a real Home Assistant with the real
+panel: ask from the menu, draft, a comment pinned to a card, apply.
+
+## Not yet
 - **The integration as the owner.** Holding the relay link in the always-on integration would let
   a session survive the phone sleeping, with an FCM wake through `push-relay` when a draft arrives.
 - **Renders for the agent.** The app could upload the draft as it draws it, so the agent sees
   exactly what the person sees rather than catalog images.
 - **One session for a card and its dashboard.** Card and dashboard sessions share the relay and
   the MCP tools but are still started separately, and accepted separately.
-- **Durable sessions.** They are in memory: a design server restart ends them, and the app says so.
+- **Card sessions in the browser end-to-end test.** The cloud path is covered against the real
+  relay routes and a fake Home Assistant (`DashboardRelayTest`); a browser run needs a design
+  server with UI Builder beside the Home Assistant container.

@@ -6,6 +6,7 @@ dashboard can start a session on it, read it and leave notes; only an administra
 undo a draft, which is Home Assistant's own rule for saving a dashboard. The MCP server reaches
 the same sessions as its pinned user (`mcp_view.py`).
 """
+import asyncio
 import copy
 import time
 
@@ -156,6 +157,59 @@ def submit(hass, user, session_id, config, summary, relay_id=None):
     return draft
 
 
+# The longest await_feedback holds an agent's request: under common reverse-proxy idle timeouts.
+FEEDBACK_WAIT_SECONDS = 25
+
+
+def agent_message(hass, user, session_id, text):
+    edits, _ = _visible_session(hass, user, session_id)
+    message = edits.sessions.agent_message(session_id, text, user.id, _now())
+    edits.changed(edits.sessions.get(session_id, _now()))
+    return message
+
+
+def agent_seen(hass, user, session_id, status=None):
+    edits, _ = _visible_session(hass, user, session_id)
+    session = edits.sessions.agent_seen(session_id, status, user.id, _now())
+    edits.changed(session)
+    return session
+
+
+async def async_await_feedback(hass, user, session_id, since, timeout=FEEDBACK_WAIT_SECONDS):
+    """The person's notes after [since], waiting up to [timeout] seconds for one, and whether the
+    session is still open. The agent's own activity wakes nothing: only a note or a decision does."""
+    agent_seen(hass, user, session_id, "Waiting for feedback")
+    woke = asyncio.Event()
+
+    @callback
+    def changed(changed_id):
+        if changed_id == session_id:
+            woke.set()
+
+    unsubscribe = async_dispatcher_connect(hass, SIGNAL_SESSION, changed)
+    try:
+        deadline = time.monotonic() + max(0, min(timeout, FEEDBACK_WAIT_SECONDS))
+        while True:
+            _, session = _visible_session(hass, user, session_id)
+            notes, cursor = edit_sessions.EditSessions.feedback(session, since)
+            left = deadline - time.monotonic()
+            if notes or session["status"] != edit_sessions.OPEN or left <= 0:
+                break
+            woke.clear()
+            try:
+                await asyncio.wait_for(woke.wait(), left)
+            except asyncio.TimeoutError:
+                pass
+    finally:
+        unsubscribe()
+    return {
+        "cursor": cursor,
+        "feedback": notes,
+        "status": session["status"],
+        "applied": session["applied"],
+    }
+
+
 async def async_apply(hass, user, session_id, draft_id):
     """Save [draft_id] as the dashboard, only if it still holds the session's starting config.
 
@@ -199,7 +253,11 @@ def _send_failure(connection, msg, failure):
 
 def _session_reply(session, hass=None):
     """The session with its configs; with [hass], also the prompt to hand an agent again."""
-    reply = {"session": edit_sessions.summary(session, with_configs=True)}
+    reply = {
+        "session": edit_sessions.summary(session, with_configs=True),
+        # The agent's seen_at is in this clock: the app ages presence against it.
+        "server_time": _now(),
+    }
     if hass is not None:
         reply["prompt"] = edit_sessions.agent_prompt(
             session, mcp_url(hass), hass.config.location_name
@@ -285,13 +343,16 @@ def ws_subscribe(hass, connection, msg):
         vol.Required("type"): "terrazzo/edit/note",
         vol.Required("session_id"): str,
         vol.Required("text"): str,
+        vol.Optional("target"): vol.Any(None, str),
     }
 )
 @callback
 def ws_note(hass, connection, msg):
     try:
         edits, _ = _visible_session(hass, connection.user, msg["session_id"])
-        edits.sessions.note(msg["session_id"], msg["text"], connection.user.id, _now())
+        edits.sessions.note(
+            msg["session_id"], msg["text"], connection.user.id, _now(), msg.get("target")
+        )
         session = edits.sessions.get(msg["session_id"], _now())
     except SessionError as failure:
         _send_failure(connection, msg, failure)

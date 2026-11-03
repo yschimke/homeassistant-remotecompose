@@ -60,10 +60,12 @@ session in the phone app or the panel.
 3. `submit_draft` with the **complete** new dashboard config and a one-line `summary`. The
    integration refuses a config without a `views` list or one naming entities the home doesn't
    have, and says which.
-4. Tell the person the draft is ready to review in harc or the Terrazzo panel. If they ask for
-   changes, they leave a note: call `get_edit_session` again, read `notes`, and submit a new
-   draft. A session expires a day after its last change; an applied or discarded one takes no
-   more drafts.
+4. The person watches the session in harc or the Terrazzo panel and sees each draft at once.
+   Use `set_status` while you work and `send_message` to ask them something. Then call
+   `await_feedback` with `since` = the last `cursor` (0 at first): it waits up to 25 s and
+   returns their notes, which may name a card in `target`. Act on them, submit again, and keep
+   listening until `status` is `applied` or `discarded`. A session expires a day after its last
+   change; an applied or discarded one takes no more drafts.
 
 ## Rules
 

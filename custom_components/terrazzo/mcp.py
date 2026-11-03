@@ -213,6 +213,52 @@ EDIT_TOOLS = [
         "annotations": {"readOnlyHint": False, "destructiveHint": False, "openWorldHint": False},
     },
 ]
+EDIT_TOOLS += [
+    {
+        "name": "await_feedback",
+        "title": "Wait for the person's feedback",
+        "description": (
+            "Waits up to 25 s for the person's notes on an edit session after cursor (0 at "
+            "first). The person watches each draft in the app and comments, sometimes on one card "
+            "(target). Call it again with the returned cursor until it returns feedback, or the "
+            "status is applied or discarded."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "session_id": _SESSION_ID,
+                "since": {"type": "integer", "description": "The cursor from the last call; 0 at first."},
+            },
+            "required": ["session_id"],
+            "additionalProperties": False,
+        },
+        "annotations": {"readOnlyHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "send_message",
+        "title": "Message the person",
+        "description": "Says something to the person in the app: a question, or what you changed.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"session_id": _SESSION_ID, "text": {"type": "string"}},
+            "required": ["session_id", "text"],
+            "additionalProperties": False,
+        },
+        "annotations": {"readOnlyHint": False, "destructiveHint": False, "openWorldHint": False},
+    },
+    {
+        "name": "set_status",
+        "title": "Show what you're doing",
+        "description": "Shows the person, in a few words, what you're doing (e.g. Drafting a garden section).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"session_id": _SESSION_ID, "status": {"type": "string"}},
+            "required": ["session_id", "status"],
+            "additionalProperties": False,
+        },
+        "annotations": {"readOnlyHint": False, "destructiveHint": False, "openWorldHint": False},
+    },
+]
 TOOLS += EDIT_TOOLS
 
 # What an agent reads before drafting (get_card_guide). skills/ha-dashboard/SKILL.md says the same
@@ -369,6 +415,18 @@ async def call_tool(home, name, arguments):
         return await home.edit_session(_session_id(arguments))
     if name == "get_card_guide":
         return CARD_GUIDE
+    if name == "await_feedback":
+        since = arguments.get("since", 0)
+        if not isinstance(since, int) or isinstance(since, bool) or since < 0:
+            raise ToolError("since must be the cursor from the last call, or 0")
+        return await home.await_feedback(_session_id(arguments), since)
+    if name == "send_message":
+        text = _optional_text(arguments, "text")
+        if not text.strip():
+            raise ToolError("text must say something")
+        return home.send_message(_session_id(arguments), text)
+    if name == "set_status":
+        return home.set_status(_session_id(arguments), _optional_text(arguments, "status"))
     if name == "submit_draft":
         config = arguments.get("config")
         if not isinstance(config, dict):
@@ -421,8 +479,9 @@ async def handle(message, home, server_version):
                     "Terrazzo's MCP server is pinned to, with that user's permissions. Use "
                     "find_entities to resolve names to entity ids before reading or switching. "
                     "To change a dashboard, find open requests with list_edit_sessions, then work "
-                    "in an edit session (get_edit_session, "
-                    "get_card_guide, submit_draft): you submit drafts and a person applies them."
+                    "in an edit session (get_edit_session, get_card_guide, submit_draft, then "
+                    "await_feedback in a loop): the person watches your drafts live and comments; "
+                    "you submit drafts and they apply them."
                 ),
             },
         )

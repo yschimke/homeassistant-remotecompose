@@ -199,9 +199,9 @@ class CloudDashboardAgentEdits(
     persist()
   }
 
-  override suspend fun note(sessionId: String, text: String): AgentEditSession {
-    comment(sessionId, text, null)
-    return delegate.note(sessionId, text)
+  override suspend fun note(sessionId: String, text: String, target: String?): AgentEditSession {
+    comment(sessionId, text, target)
+    return delegate.note(sessionId, text, target)
   }
 
   override suspend fun comment(sessionId: String, text: String, target: String?) {

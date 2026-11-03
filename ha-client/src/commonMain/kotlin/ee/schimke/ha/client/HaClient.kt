@@ -67,6 +67,7 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -728,10 +729,12 @@ class HaClient(
   val agentEdits: AgentEdits =
     object : AgentEdits {
       private fun sessionOf(result: JsonObject) =
-        json.decodeFromJsonElement(
-          AgentEditSession.serializer(),
-          result.getValue("session"),
-        )
+        json.decodeFromJsonElement(AgentEditSession.serializer(), result.getValue("session")).let {
+          session ->
+          // The reply carries Home Assistant's clock beside the session: presence ages by it.
+          val now = result["server_time"]?.jsonPrimitive?.doubleOrNull
+          if (now != null) session.copy(serverTime = now) else session
+        }
 
       private suspend fun edit(
         type: String,
@@ -785,11 +788,12 @@ class HaClient(
         subscription("terrazzo/edit/subscribe") { put("session_id", sessionId) }
           .map { sessionOf(it) }
 
-      override suspend fun note(sessionId: String, text: String) =
+      override suspend fun note(sessionId: String, text: String, target: String?) =
         sessionOf(
           edit("terrazzo/edit/note") {
             put("session_id", sessionId)
             put("text", text)
+            if (target != null) put("target", target)
           }
         )
 

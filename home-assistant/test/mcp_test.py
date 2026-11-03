@@ -58,6 +58,19 @@ class FakeHome:
         self.submitted = (session_id, config, summary)
         return {'draft_id': 'd1', 'status': 'submitted'}
 
+    async def await_feedback(self, session_id, since):
+        self.awaited = (session_id, since)
+        return {'cursor': 3, 'feedback': [{'seq': 3, 'text': 'Bigger', 'target': 'Camera'}],
+                'status': 'open', 'applied': None}
+
+    def send_message(self, session_id, text):
+        self.sent = (session_id, text)
+        return {'status': 'sent'}
+
+    def set_status(self, session_id, status):
+        self.status = (session_id, status)
+        return {'status': 'shown'}
+
     async def dashboard(self, url_path):
         if url_path == 'missing':
             raise mcp.ToolError('No dashboard missing')
@@ -169,6 +182,27 @@ class McpProtocolTest(unittest.TestCase):
         names = {tool['name'] for tool in mcp.TOOLS}
         self.assertFalse({'save_dashboard', 'apply_draft'} & names)
         self.assertIn('submit_draft', names)
+
+
+
+class LiveFeedbackToolsTest(unittest.TestCase):
+    def test_await_feedback_passes_the_cursor_and_returns_notes(self):
+        home = FakeHome()
+        result = call(home, 'await_feedback', {'session_id': 's1', 'since': 2})['structuredContent']
+        self.assertEqual(home.awaited, ('s1', 2))
+        self.assertEqual(result['feedback'][0]['target'], 'Camera')
+        call(home, 'await_feedback', {'session_id': 's1'})
+        self.assertEqual(home.awaited, ('s1', 0))
+        for bad in (-1, 'two', True):
+            self.assertTrue(call(home, 'await_feedback', {'session_id': 's1', 'since': bad})['isError'])
+
+    def test_messages_and_status_reach_the_person(self):
+        home = FakeHome()
+        call(home, 'send_message', {'session_id': 's1', 'text': 'Two columns?'})
+        self.assertEqual(home.sent, ('s1', 'Two columns?'))
+        self.assertTrue(call(home, 'send_message', {'session_id': 's1', 'text': '  '})['isError'])
+        call(home, 'set_status', {'session_id': 's1', 'status': 'Drafting'})
+        self.assertEqual(home.status, ('s1', 'Drafting'))
 
 
 if __name__ == '__main__':

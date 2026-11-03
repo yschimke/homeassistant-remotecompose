@@ -45,7 +45,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.HaCommandException
 import ee.schimke.ha.client.agent.AgentLiveControls
+import ee.schimke.ha.client.agent.AgentPresence
 import ee.schimke.ha.client.agent.AgentRelayClient
+import ee.schimke.ha.client.agent.AgentRelayMessage
 import ee.schimke.ha.client.agent.AgentRelayState
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
@@ -186,7 +188,9 @@ fun AgentEditScreen(
         else ->
           SessionReview(
             session = current,
-            live = live?.live(current.id)?.collectAsState()?.value,
+            // An agent signed in to Home Assistant directly has no relay; the session itself
+            // carries its presence and messages once it has joined.
+            live = live?.live(current.id)?.collectAsState()?.value ?: directLive(current),
             liveBusy = busy,
             onCopyInvite = { code ->
               onSharePrompt(
@@ -206,7 +210,10 @@ fun AgentEditScreen(
               }
             },
             onComment = { text, target ->
-              run { requireNotNull(live).comment(current.id, text, target) }
+              run {
+                if (live != null) live.comment(current.id, text, target)
+                else session = edits.note(current.id, text, target)
+              }
             },
             prompt = prompt,
             problem = problem,
@@ -540,9 +547,48 @@ internal fun cardLabel(key: CardKey, card: CardConfig): String {
     (card.raw[name] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content
   val name = field("title") ?: field("name") ?: field("heading") ?: field("entity") ?: card.type
   val where = buildString {
-    key.viewPath?.let { append("view $it, ") }
+    // A view without a path of its own gets a made-up one ("view-0"): name it by position.
+    key.viewPath?.let { path ->
+      val position = Regex("view-(\\d+)").matchEntire(path)?.groupValues?.get(1)?.toIntOrNull()
+      append(if (position != null) "view ${position + 1}, " else "view $path, ")
+    }
     key.sectionIndex?.let { append("section ${it + 1}, ") }
     append("card ${key.cardIndex + 1}")
   }
   return "$name ($where)"
+}
+
+/**
+ * The live panel's state for a session whose agent is signed in to Home Assistant directly: null
+ * until the agent has been active, so the prompt to hand it shows until then. Presence counts as
+ * connected for a minute and a half after the agent's last call, by Home Assistant's clock.
+ */
+internal fun directLive(session: AgentEditSession): AgentRelayState? {
+  val agent = session.agent ?: return null
+  val idle = session.agentIdleSeconds
+  return AgentRelayState(
+    version = session.conversation.lastOrNull()?.seq ?: 0,
+    kind = "dashboard",
+    title = session.request,
+    revision = session.drafts.size.toLong(),
+    agent =
+      AgentPresence(
+        joined = true,
+        connected = idle != null && idle < 90,
+        name = "Agent",
+        status = agent.status,
+        lastSeenSecondsAgo = idle?.toLong(),
+      ),
+    messages =
+      session.conversation.map {
+        AgentRelayMessage(
+          it.seq,
+          if (it.fromAgent) "agent" else "person",
+          if (it.fromAgent) "message" else "comment",
+          it.text,
+          it.target,
+        )
+      },
+    decision = if (session.isApplied) "accepted" else null,
+  )
 }

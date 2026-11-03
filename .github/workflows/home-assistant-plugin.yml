@@ -113,6 +113,7 @@ jobs:
           node --test home-assistant/test/installed.test.mjs
           node --test home-assistant/test/installed-mcp.test.mjs
           node --test home-assistant/test/installed-edits.test.mjs
+          node --test home-assistant/test/installed-agent-live.test.mjs
           node --test home-assistant/test/installed-push.test.mjs
           node --test home-assistant/test/installed-designs.test.mjs
           # Last: it restarts Home Assistant.

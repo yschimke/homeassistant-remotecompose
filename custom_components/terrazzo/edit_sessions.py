@@ -21,6 +21,8 @@ SESSION_TTL_SECONDS = 24 * 3600
 MAX_SESSIONS = 50
 MAX_DRAFTS = 10
 MAX_NOTES = 50
+MAX_MESSAGES = 50
+MAX_STATUS = 120
 MAX_TEXT = 2000
 MAX_DRAFT_BYTES = 512 * 1024
 _UNKNOWN_SHOWN = 10
@@ -114,6 +116,11 @@ class EditSessions:
             "drafts": [],
             "notes": [],
             "applied": None,
+            # The conversation: notes (the person's) and messages (the agent's) share one sequence,
+            # so an agent waiting in await_feedback can say which notes it has already read.
+            "seq": 0,
+            "messages": [],
+            "agent": None,
         }
         self._sessions[session["id"]] = session
         self.prune(now)  # After adding: the oldest goes, never the new one.
@@ -182,13 +189,52 @@ class EditSessions:
         self._touch(session, now)
         return draft
 
-    def note(self, session_id, text, user_id, now):
-        """A note for the agent ("request changes"), read on its next call."""
+    @staticmethod
+    def _next_seq(session):
+        session["seq"] = session.get("seq", 0) + 1
+        return session["seq"]
+
+    def note(self, session_id, text, user_id, now, target=None):
+        """A note for the agent ("request changes"), optionally about one card ([target]); an
+        agent waiting in await_feedback gets it at once."""
         session = self._open(session_id, now)
         note = {"text": _text(text, "The note", required=True), "by": user_id, "at": now}
+        if target is not None:
+            target = _text(target, "The card")[:200]
+            if target:
+                note["target"] = target
+        note["seq"] = self._next_seq(session)
         session["notes"] = (session["notes"] + [note])[-MAX_NOTES:]
         self._touch(session, now)
         return note
+
+    def agent_message(self, session_id, text, user_id, now):
+        """Something the agent says to the person: a question, or what it changed."""
+        session = self._open(session_id, now)
+        message = {"text": _text(text, "The message", required=True), "by": user_id, "at": now}
+        message["seq"] = self._next_seq(session)
+        session["messages"] = (session.get("messages", []) + [message])[-MAX_MESSAGES:]
+        self._touch(session, now)
+        return message
+
+    def agent_seen(self, session_id, status, user_id, now):
+        """The agent is active, and what it's doing in a few words; the person sees it live."""
+        session = self.get(session_id, now)
+        previous = session.get("agent") or {}
+        session["agent"] = {
+            "by": user_id,
+            "seen_at": now,
+            "status": _text(status, "The status")[:MAX_STATUS] if status is not None
+            else previous.get("status", ""),
+        }
+        self._touch(session, now)
+        return session
+
+    @staticmethod
+    def feedback(session, since):
+        """The person's notes after [since] (a cursor from an earlier call), and the cursor now."""
+        notes = [n for n in session["notes"] if n.get("seq", 0) > since]
+        return notes, session.get("seq", 0)
 
     def discard(self, session_id, user_id, now):
         session = self._open(session_id, now)
@@ -250,6 +296,9 @@ def summary(session, with_configs=False):
         "updated_at": session["updated_at"],
         "expires_at": session["expires_at"],
         "notes": session["notes"],
+        "messages": session.get("messages", []),
+        "agent": session.get("agent"),
+        "seq": session.get("seq", 0),
         "applied": session["applied"],
         "drafts": [
             {key: draft[key] for key in ("id", "summary", "by", "at")}
@@ -275,8 +324,11 @@ def agent_prompt(session, mcp_url, home_name):
             "it is now, and any notes.",
             "2. get_card_guide for the card types harc draws and how to size them; find_entities "
             "for the home's entities.",
-            "3. submit_draft with the complete new dashboard config and a one-line summary. You "
-            "can submit again after notes; the person previews each draft and applies it.",
+            "3. submit_draft with the complete new dashboard config and a one-line summary; "
+            "set_status while you work and send_message to ask the person something.",
+            "4. await_feedback in a loop (it waits up to 25 s), passing back its cursor: the "
+            "person watches each draft in the app and comments, sometimes on one card. Act on "
+            "each note and submit again until the session is applied or discarded.",
             "",
             f"Request: {session['request'] or '(none given; improve the dashboard)'}",
         ]
