@@ -23,6 +23,28 @@ Never ask the person for a token to paste into a prompt, and never fall back to 
 WebSocket `lovelace/config/save`: a token carries its user's full rights, and a save skips the
 person's review.
 
+### With a Terrazzo code (no Home Assistant sign-in)
+
+When the person gives you a short code such as `K7QM-4MD2` (from **Ask an agent** with a cloud
+agent, or a card's **Design this card → With a cloud agent**), use the design server's agent relay
+instead: the MCP server at `https://ha.coo.ee/api/agent/mcp` (or the design server the invite
+names). It needs no header or sign-in. The person watches the session live in the app, sees each
+draft drawn with their own cards and states, and talks to you there.
+
+1. `join_session` with the code (and your name as `agentName`). It returns a `session`; pass it to
+   every other tool. If the person has no code, `request_access`, tell them the code it returns to
+   enter under **Have a code from your agent?**, and `poll_access` until it says `joined`.
+2. `get_session`: the request, the dashboard (or card document), its `revision` and the
+   conversation so far.
+3. `set_status` with a few words while you work; `send_message` to ask a question.
+4. `submit_draft` with the `revision` you read, the **complete** `dashboard` (or `document` for a
+   card) and a one-line `summary`. A stale revision is refused: read again.
+5. `await_feedback` with `since` = the last `cursor` (0 at first). It waits up to 25 s; call it
+   again until it returns feedback. Comments may name a card in `target`. Act on them, submit a new
+   draft, and keep listening until `decision` is `accepted` (you're done) or `rejected`.
+
+The person applies the dashboard or publishes the card design themselves; you never can.
+
 ## An edit session
 
 A harc or Terrazzo prompt names the MCP endpoint, a `session_id` and the request. Without one,

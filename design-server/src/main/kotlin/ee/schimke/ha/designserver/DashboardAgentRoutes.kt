@@ -11,7 +11,11 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.*
 
-fun Route.dashboardAgentRoutes(sessions: DashboardAgentSessions = DashboardAgentSessions()) {
+fun Route.dashboardAgentRoutes(
+  /** The live relay (join codes, presence, conversation), when served. */
+  relay: AgentRelay? = null,
+  sessions: DashboardAgentSessions = relay?.dashboards ?: DashboardAgentSessions(),
+) {
   for (path in
     listOf(
       "/api/studio/dashboard-sessions",
@@ -46,11 +50,16 @@ fun Route.dashboardAgentRoutes(sessions: DashboardAgentSessions = DashboardAgent
           status = HttpStatusCode.TooManyRequests,
         )
       }
+    val joinCode = relay?.register(AgentRelay.Kind.Dashboard, access.owner, access.agent, request)
     call.respondText(
       buildJsonObject {
         put("ownerToken", access.owner)
         put("agentToken", access.agent)
         put("expiresInSeconds", 3600)
+        joinCode?.let {
+          put("joinCode", it)
+          put("relay", true)
+        }
       }
         .toString(),
       ContentType.Application.Json,
@@ -96,6 +105,8 @@ fun Route.dashboardAgentRoutes(sessions: DashboardAgentSessions = DashboardAgent
     try {
       if (!sessions.submit(call.cloudToken(), revision, dashboard, summary))
         return@post call.respondText("Session unavailable", status = HttpStatusCode.NotFound)
+      relay?.seen(call.cloudToken(), "Draft submitted")
+      if (summary.isNotBlank()) relay?.agentMessage(call.cloudToken(), summary, "summary")
     } catch (_: IllegalArgumentException) {
       return@post call.respondText("Invalid or stale draft", status = HttpStatusCode.Conflict)
     }
@@ -103,7 +114,7 @@ fun Route.dashboardAgentRoutes(sessions: DashboardAgentSessions = DashboardAgent
   }
   delete("/api/studio/dashboard-session") {
     call.cloudHeaders()
-    if (!sessions.revoke(call.cloudToken()))
+    if (!(relay?.revoke(call.cloudToken()) ?: sessions.revoke(call.cloudToken())))
       return@delete call.respondText("Session unavailable", status = HttpStatusCode.NotFound)
     call.respondText("Session revoked")
   }
@@ -118,7 +129,22 @@ fun Route.dashboardAgentRoutes(sessions: DashboardAgentSessions = DashboardAgent
     if (sessions.read(token, agentOnly = true) == null)
       return@post call.respondText("Session unavailable", status = HttpStatusCode.Unauthorized)
     val message = call.dashboardRequest() ?: return@post
+    relay?.seen(token)
     val result = DashboardAgentMcp.handle(message, token, sessions)
+    if (
+      relay != null &&
+        result != null &&
+        (message["params"] as? JsonObject)?.get("name") ==
+          JsonPrimitive("submit_dashboard_draft") &&
+        (result["result"] as? JsonObject)?.get("isError") == null
+    ) {
+      val summary =
+        ((message["params"] as JsonObject)["arguments"] as? JsonObject)
+          ?.get("summary")
+          ?.jsonPrimitive
+          ?.contentOrNull
+      if (!summary.isNullOrBlank()) relay.agentMessage(token, summary, "summary")
+    }
     if (result == null) call.respondText("", status = HttpStatusCode.Accepted)
     else call.respondText(result.toString(), ContentType.Application.Json)
   }

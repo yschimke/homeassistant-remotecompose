@@ -109,6 +109,11 @@ the previous main policy while a catalog change is under review.
 
 ### Cloud agent draft sessions
 
+> With a design server that runs the agent relay, the agent joins with a short code, drafts
+> load by themselves, and the person talks to the agent in the studio: see
+> [agent-sessions.md](agent-sessions.md). What follows still describes the session and its draft
+> gate, and the pasted-capability flow an older server falls back to.
+
 The cloud-agent option sends the selected card's sanitized preview and binding contract to the
 configured upstream design server. It creates an in-memory session with separate random owner and
 agent capabilities, valid for one hour; restarting that server also removes the session. The

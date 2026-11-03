@@ -46,6 +46,11 @@ Assistant is the editor in practice.
 
 ### Cloud agent from the Wasm host
 
+> The agent now joins with a short code and the screen long-polls the design server's relay for
+> drafts, presence and messages; comments can be pinned to a card on the draft. See
+> [agent-sessions.md](agent-sessions.md). The owner capability is kept in the browser's local
+> storage, so a reload resumes the request (the paragraph below predates that).
+
 The shared dashboard host offers a cloud-agent choice alongside the existing direct Home Assistant
 MCP path. It creates the regular edit session using the person's signed-in HA connection, then sends
 that dashboard's complete configuration and request to the configured HTTPS design server. The

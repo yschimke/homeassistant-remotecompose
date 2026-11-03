@@ -33,15 +33,20 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.HaCommandException
+import ee.schimke.ha.client.agent.AgentLiveControls
+import ee.schimke.ha.client.agent.AgentRelayClient
+import ee.schimke.ha.client.agent.AgentRelayState
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
 import ee.schimke.ha.client.dashboard.DashboardConflictException
@@ -49,6 +54,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardKey
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.terrazzo.shared.AgentLivePanel
 import ee.schimke.terrazzo.shared.DashboardContent
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.delay
@@ -85,6 +91,8 @@ fun AgentEditScreen(
 ) {
   val scope = rememberCoroutineScope()
   val snackbars = remember { SnackbarHostState() }
+  // Sessions through the design server's relay join an agent by code and talk to it live.
+  val live = edits as? AgentLiveControls
   var sessionId by remember(edits, urlPath) { mutableStateOf<String?>(null) }
   var prompt by remember(edits, urlPath) { mutableStateOf<String?>(null) }
   var session by remember(edits, urlPath) { mutableStateOf<AgentEditSession?>(null) }
@@ -161,7 +169,7 @@ fun AgentEditScreen(
               run {
                 val started = edits.start(urlPath, request)
                 session = started.session
-                prompt = started.prompt
+                prompt = started.prompt.ifBlank { null }
                 sessionId = started.session.id
               }
             },
@@ -178,6 +186,28 @@ fun AgentEditScreen(
         else ->
           SessionReview(
             session = current,
+            live = live?.live(current.id)?.collectAsState()?.value,
+            liveBusy = busy,
+            onCopyInvite = { code ->
+              onSharePrompt(
+                AgentRelayClient.invite(
+                  requireNotNull(live).relayServer,
+                  code,
+                  "my ${title ?: "Home Assistant"} dashboard",
+                )
+              )
+              tell("Invite copied. Paste it to your agent.")
+            },
+            onNewCode = { run { requireNotNull(live).newJoinCode(current.id) } },
+            onClaim = { code ->
+              run {
+                requireNotNull(live).claim(current.id, code)
+                tell("Agent connected.")
+              }
+            },
+            onComment = { text, target ->
+              run { requireNotNull(live).comment(current.id, text, target) }
+            },
             prompt = prompt,
             problem = problem,
             snapshot = snapshot,
@@ -255,8 +285,9 @@ private fun StartSession(
         "Your dashboard configuration and request will be sent to $cloudServer and shared with " +
           "your chosen agent. The agent does not get your Home Assistant login. You review and " +
           "apply drafts here; Home Assistant checks your permissions and whether the dashboard changed. " +
-          "The configuration may contain private data. You can return to this request while signed in; " +
-          "reloading the app loses access. The upstream request expires after one hour.",
+          "The configuration may contain private data. You get a short code to give your agent, " +
+          "and can talk to it here while it works. This device keeps access to the request; it " +
+          "ends an hour after the last activity, after a day at most, or when you discard it.",
       style = MaterialTheme.typography.bodyMedium,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -301,6 +332,12 @@ internal fun previewDashboard(config: JsonObject?): Dashboard? = config?.let {
 @Composable
 private fun SessionReview(
   session: AgentEditSession,
+  live: AgentRelayState?,
+  liveBusy: Boolean,
+  onCopyInvite: (String) -> Unit,
+  onNewCode: () -> Unit,
+  onClaim: (String) -> Unit,
+  onComment: (String, String?) -> Unit,
   prompt: String?,
   problem: String?,
   snapshot: HaSnapshot,
@@ -316,13 +353,22 @@ private fun SessionReview(
 ) {
   var shown by remember(session.id) { mutableStateOf<String?>(null) }
   var noting by remember { mutableStateOf(false) }
+  // The card the next message is about, picked with a card's Comment button.
+  var target by remember(session.id) { mutableStateOf<String?>(null) }
   // The newest draft unless the person picked another, or the applied one once applied.
   val draft =
     session.drafts.firstOrNull { it.id == (shown ?: session.applied?.draftId) }
       ?: session.latestDraft
+  val headerScroll = rememberScrollState()
   Column(Modifier.fillMaxSize()) {
     Column(
-      Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+      Modifier.fillMaxWidth()
+        // With the conversation the header can grow: keep room for the draft below it.
+        .then(
+          if (live != null) Modifier.heightIn(max = 420.dp).verticalScroll(headerScroll)
+          else Modifier
+        )
+        .padding(horizontal = 16.dp, vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
       Text(
@@ -348,7 +394,21 @@ private fun SessionReview(
         )
       }
       val canWrite = !busy && writeBlockedReason == null
-      if (prompt != null && session.isOpen && (cloud || session.drafts.isEmpty())) {
+      if (live != null && session.isOpen) {
+        AgentLivePanel(
+          state = live,
+          busy = liveBusy,
+          onCopyInvite = onCopyInvite,
+          onNewCode = onNewCode,
+          onClaim = onClaim,
+          onSend = { text ->
+            onComment(text, target)
+            target = null
+          },
+          target = target,
+          onClearTarget = { target = null },
+        )
+      } else if (prompt != null && session.isOpen && (cloud || session.drafts.isEmpty())) {
         PromptCard(prompt, onSharePrompt, cloud)
       }
       if (session.drafts.size > 1) {
@@ -399,8 +459,21 @@ private fun SessionReview(
           "agent-draft-${session.id}-${draft.id}",
           snapshot,
           Modifier.weight(1f),
-          renderCard,
-        )
+        ) { key, card ->
+          if (live?.agent?.joined == true && session.isOpen)
+            Box {
+              renderCard(key, card)
+              // Pin the next message to this card, so the agent knows which one you mean.
+              Surface(
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.92f),
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
+              ) {
+                TextButton(onClick = { target = cardLabel(key, card) }) { Text("Comment") }
+              }
+            }
+          else renderCard(key, card)
+        }
     }
   }
 
@@ -459,4 +532,17 @@ private fun PromptCard(prompt: String, onSharePrompt: (String) -> Unit, cloud: B
       Button(onClick = { onSharePrompt(prompt) }) { Text("Share prompt") }
     }
   }
+}
+
+/** How a message names a card for the agent: its title or entity, and where it sits. */
+internal fun cardLabel(key: CardKey, card: CardConfig): String {
+  fun field(name: String) =
+    (card.raw[name] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content
+  val name = field("title") ?: field("name") ?: field("heading") ?: field("entity") ?: card.type
+  val where = buildString {
+    key.viewPath?.let { append("view $it, ") }
+    key.sectionIndex?.let { append("section ${it + 1}, ") }
+    append("card ${key.cardIndex + 1}")
+  }
+  return "$name ($where)"
 }

@@ -88,6 +88,7 @@ private constructor(
     return CardAgentSession(
       response.getValue("ownerToken").jsonPrimitive.content,
       response.getValue("agentToken").jsonPrimitive.content,
+      response["joinCode"]?.jsonPrimitive?.contentOrNull,
     )
   }
 
@@ -278,7 +279,19 @@ private constructor(
 
 data class CardStudioHandoff(val document: JsonObject, val url: String)
 
-data class CardAgentSession(val ownerToken: String, val agentToken: String)
+/**
+ * A cloud agent session for one card. [joinCode] is set when the server runs the agent relay: the
+ * person gives the agent that code (see [ee.schimke.ha.client.agent.AgentRelayClient]) instead of
+ * the [agentToken], and the app long-polls the relay for drafts and messages.
+ */
+data class CardAgentSession(
+  val ownerToken: String,
+  val agentToken: String,
+  val joinCode: String? = null,
+) {
+  val relay: Boolean
+    get() = joinCode != null
+}
 
 /**
  * A draft [CardStudioClient.openAsUser] opened: the [document] it sent, the editor [url], already

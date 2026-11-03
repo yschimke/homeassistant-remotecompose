@@ -22,13 +22,17 @@ class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMil
     val agent: String,
     val instruction: String,
     val original: JsonObject,
-    val expiresAt: Long,
+    val createdAt: Long,
+    var expiresAt: Long,
     var document: JsonObject,
     var revision: Long = 0,
     val assets: MutableMap<String, Asset> = mutableMapOf(),
   )
 
   private val entries = mutableListOf<Entry>()
+
+  /** Called with the owner capability after a draft, image or revocation changes a session. */
+  @Volatile var onChange: (owner: String) -> Unit = {}
 
   @Synchronized
   fun create(instruction: String, document: JsonObject): Access {
@@ -37,7 +41,8 @@ class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMil
     check(entries.size < 128) { "Too many pending design sessions" }
     val owner = UiBuilderConfig.randomToken()
     val agent = UiBuilderConfig.randomToken()
-    entries += Entry(owner, agent, instruction.trim(), document, clock() + 60 * 60_000, document)
+    val now = clock()
+    entries += Entry(owner, agent, instruction.trim(), document, now, now + IDLE_MS, document)
     return Access(owner, agent)
   }
 
@@ -46,6 +51,19 @@ class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMil
     expire()
     val entry = entries.firstOrNull { it.owner == token || it.agent == token } ?: return null
     return Snapshot(entry.instruction, entry.document, entry.revision)
+  }
+
+  /**
+   * Keep a session in use alive: an hour after its last activity, never past a day from creation.
+   * Returns the seconds left, or null when the session is gone.
+   */
+  @Synchronized
+  fun touch(token: String): Long? {
+    expire()
+    val entry = entries.firstOrNull { it.owner == token || it.agent == token } ?: return null
+    val now = clock()
+    entry.expiresAt = minOf(entry.createdAt + MAX_MS, maxOf(entry.expiresAt, now + IDLE_MS))
+    return (entry.expiresAt - now) / 1000
   }
 
   @Synchronized
@@ -73,6 +91,7 @@ class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMil
     val total = entry.assets.filterKeys { it != key }.values.sumOf { it.bytes.size } + bytes.size
     require(total <= MAX_ASSET_TOTAL_BYTES) { "Images are too large" }
     entry.assets[key] = Asset(type, bytes.copyOf())
+    onChange(entry.owner)
     return true
   }
 
@@ -88,6 +107,8 @@ class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMil
     const val MAX_ASSET_BYTES = 1024 * 1024
     const val MAX_ASSET_TOTAL_BYTES = 2 * 1024 * 1024
     const val MAX_ASSETS = 8
+    const val IDLE_MS = 60 * 60_000L
+    const val MAX_MS = 24 * 60 * 60_000L
 
     internal fun imageType(bytes: ByteArray): String? {
       fun prefix(vararg expected: Int) =
@@ -123,13 +144,16 @@ class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMil
     }
     entry.document = document
     entry.revision++
+    onChange(entry.owner)
     return true
   }
 
   @Synchronized
   fun revoke(owner: String): Boolean {
     expire()
-    return entries.removeIf { it.owner == owner }
+    val removed = entries.removeIf { it.owner == owner }
+    if (removed) onChange(owner)
+    return removed
   }
 
   private fun expire() {
