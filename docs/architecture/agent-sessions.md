@@ -47,8 +47,10 @@ in to Home Assistant instead, and a card can be designed by hand in UI Builder.
 4. **Drafts arrive.** The app long-polls the relay, so a submitted draft shows up within moments,
    with no **Check for draft**. A dashboard draft is relayed into Home Assistant's edit session
    (`terrazzo/edit/submit`) as the signed-in person and drawn with their real cards; a card draft
-   is loaded with its images, checked against the card's contract, and is ready to review in UI
-   Builder.
+   is loaded with its images, checked against the card's contract, and drawn in place of the card
+   with its live values, built exactly as **Use it** would publish it
+   (`POST /api/studio/agent-session/preview`); **Use it** waits for that drawing, and a draft that
+   can't be built says why instead.
 5. **Talk.** The person types in the panel. On a dashboard draft each card has a **Comment**
    button that pins the next message to that card (its title or entity, and where it sits). The
    agent, waiting in `await_feedback`, gets the message at once, and can `send_message` back.
@@ -56,8 +58,8 @@ in to Home Assistant instead, and a card can be designed by hand in UI Builder.
    design server opens it as the person's own design and publishes it privately, compiling it to
    a template itself with `UiBuilderDesignCompiler`, which draws what the server seeds a card
    with: collapsible rows, a switch on the slot's `is_on`; no browser), and tells the agent
-   `accepted`; **Undo** puts a dashboard back. A message asks for changes (on a card, **Not this** says so in
-   one tap); **Stop**
+   `accepted`; **Undo** puts a dashboard back. A message asks for changes (on a card, **Not this** asks for another try in
+   one tap, and the session stays open); **Stop**
    ends the session for both sides.
 
 ## Lifetimes and storage
@@ -114,6 +116,7 @@ with a pasted capability, and also count as presence.
 | `POST /api/agent/claim {code}` | Let in the agent that asked first |
 | `POST /api/agent/session/comment {text, target?}` | A message to the agent; on a dashboard also a session note |
 | `POST /api/agent/session/decision {decision}` | `accepted` or `rejected` |
+| `POST /api/studio/agent-session/preview` (a `DesignKey`) | The card draft built as a template for that key, or 422 and why |
 | `DELETE /api/agent/session` | Revoke |
 
 Session creation is `POST /api/studio/agent-sessions` and `POST /api/studio/dashboard-sessions`;
@@ -155,7 +158,8 @@ A moment after a dashboard draft appears on the person's screen, the app capture
 the relay for a cloud agent (`get_render`), with the integration for an agent signed in to Home
 Assistant (`terrazzo/edit/render`, `get_draft_render`). Both return MCP image content. Renders are
 kept in memory only, the newest per session; the app shares again whenever it draws a draft.
-Card drafts are reviewed in UI Builder, whose own MCP server renders them.
+A card draft is drawn by the app from the template the design server builds for it (the same
+build **Use it** publishes), so the person decides on what they will get.
 
 ## When the person isn't watching
 

@@ -64,6 +64,8 @@ data class AgentEditSession(
     val summary: String = "",
     val at: Double = 0.0,
     val config: JsonObject? = null,
+    /** For a draft relayed from a cloud agent, `cloud:<relay revision>`. */
+    @kotlinx.serialization.SerialName("relay_id") val relayId: String? = null,
   )
 
   @Serializable

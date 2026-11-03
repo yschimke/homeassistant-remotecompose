@@ -302,6 +302,7 @@ def summary(session, with_configs=False):
         "applied": session["applied"],
         "drafts": [
             {key: draft[key] for key in ("id", "summary", "by", "at")}
+            | ({"relay_id": draft["relay_id"]} if draft.get("relay_id") else {})
             | ({"config": draft["config"]} if with_configs else {})
             for draft in session["drafts"]
         ],

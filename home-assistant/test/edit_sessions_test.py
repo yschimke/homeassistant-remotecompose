@@ -61,6 +61,8 @@ class EditSessionsTest(unittest.TestCase):
         retry = self.sessions.submit(self.session['id'], DRAFT, 'Soil', exists, 'person', 111, 'cloud:1')
         self.assertEqual(first['id'], retry['id'])
         self.assertEqual(len(self.session['drafts']), 1)
+        # The app labels its render of a relayed draft with the relay's revision.
+        self.assertEqual(es.summary(self.session)['drafts'][0]['relay_id'], 'cloud:1')
         with self.assertRaisesRegex(es.SessionError, 'another draft'):
             self.sessions.submit(self.session['id'], BASELINE, 'Other', exists, 'person', 112, 'cloud:1')
 

@@ -292,6 +292,11 @@ def ws_render(hass, connection, msg):
     except (SessionError, binascii.Error, ValueError) as failure:
         _send_failure(connection, msg, failure if isinstance(failure, SessionError) else SessionError("Invalid PNG"))
         return
+    # One render per session, and none for a session that is gone: the sessions' own bound
+    # (expiry, MAX_SESSIONS) bounds what renders hold.
+    live = {s["id"] for s in edits.sessions.to_data()}
+    for gone in [key for key in edits.renders if key not in live]:
+        del edits.renders[gone]
     edits.renders[msg["session_id"]] = (msg["draft_id"], png)
     connection.send_result(msg["id"], {"shared": True})
 

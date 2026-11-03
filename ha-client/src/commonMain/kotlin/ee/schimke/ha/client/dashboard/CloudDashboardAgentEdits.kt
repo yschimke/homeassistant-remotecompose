@@ -158,10 +158,15 @@ class CloudDashboardAgentEdits(
 
   override suspend fun undo(sessionId: String) = delegate.undo(sessionId)
 
-  /** The relay keeps the agent's view; a relayed draft's id is `cloud:<revision>`. */
+  /**
+   * The relay keeps the agent's view, labelled with the relay revision of the draft it shows: the
+   * draft's `relay_id` (`cloud:<revision>`). A draft the relay didn't hand over has no revision
+   * there, so its render isn't shared rather than passed off as the newest.
+   */
   override suspend fun shareRender(sessionId: String, draftId: String, png: ByteArray) {
     val access = access(sessionId)
-    val revision = draftId.removePrefix("cloud:").toLongOrNull() ?: access.revision
+    val relayId = delegate.get(sessionId).drafts.firstOrNull { it.id == draftId }?.relayId
+    val revision = relayId?.removePrefix("cloud:")?.toLongOrNull() ?: return
     relay.putRender(access.owner, png, revision)
   }
 

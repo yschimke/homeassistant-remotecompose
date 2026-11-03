@@ -121,6 +121,24 @@ private constructor(
     return bytes
   }
 
+  /**
+   * The agent's current draft built as a template for [key], as "Use it" would publish it: the
+   * bytes to play with the card's live values. Throws [CardStudioException] (422, with why) for a
+   * draft that can't be used as it is.
+   */
+  suspend fun agentSessionPreview(ownerToken: String, key: DesignKey): ByteArray {
+    val response =
+      http.post(base + "/api/studio/agent-session/preview") {
+        bearer(ownerToken)
+        contentType(ContentType.Application.Json)
+        setBody(Json.encodeToString(DesignKey.serializer(), key))
+      }
+    if (response.status == HttpStatusCode.NotFound) throw CardStudioException(410)
+    if (!response.status.isSuccess())
+      throw CardStudioException(response.status.value, response.bodyAsText().take(600))
+    return response.bodyAsBytes()
+  }
+
   suspend fun revokeAgentSession(ownerToken: String) {
     val response = http.delete(base + "/api/studio/agent-session") { bearer(ownerToken) }
     if (response.status == HttpStatusCode.NotFound) return // Already expired or revoked.
@@ -337,6 +355,7 @@ class CardStudioException(val status: Int, reason: String? = null) :
       401 -> "The design server didn't accept this device's sign-in. Sign in again."
       403 -> "Only a Home Assistant administrator can open designs on its design server."
       502 -> reason ?: "UI Builder couldn't open this draft. Try again."
+      422 -> reason ?: "This draft can't be used as it is."
       404 -> "This design server does not support Card Studio. Update it or choose another server."
       410 -> "This preview expired. Refresh preview data and try again."
       429 -> "Too many pending previews. Wait a little and try again."

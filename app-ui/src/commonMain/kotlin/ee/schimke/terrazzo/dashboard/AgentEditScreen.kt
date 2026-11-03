@@ -676,7 +676,7 @@ private fun Modifier.sharesRender(
       } ?: return@LaunchedEffect
     if (drawn.width == 0 || drawn.height == 0) return@LaunchedEffect
     drawn
-      .scaledTo(MAX_RENDER_WIDTH)
+      .scaledTo(MAX_RENDER_WIDTH, MAX_RENDER_HEIGHT)
       .encodePng()
       ?.takeIf { it.size <= MAX_RENDER_BYTES }
       ?.let { latest(draftId, it) }
@@ -688,20 +688,25 @@ private fun Modifier.sharesRender(
 }
 
 private const val MAX_RENDER_WIDTH = 1080
+/** No image this project shares is over 1800px in either dimension. */
+private const val MAX_RENDER_HEIGHT = 1800
 private const val MAX_RENDER_BYTES = 1_400_000
 
-/** This image no wider than [maxWidth], keeping its aspect ratio. */
+/** This image no wider than [maxWidth] and no taller than [maxHeight], keeping its aspect ratio. */
 internal fun androidx.compose.ui.graphics.ImageBitmap.scaledTo(
-  maxWidth: Int
+  maxWidth: Int,
+  maxHeight: Int = Int.MAX_VALUE,
 ): androidx.compose.ui.graphics.ImageBitmap {
-  if (width <= maxWidth) return this
-  val height = (height.toLong() * maxWidth / width).toInt().coerceAtLeast(1)
-  val target = androidx.compose.ui.graphics.ImageBitmap(maxWidth, height)
+  if (width <= maxWidth && height <= maxHeight) return this
+  val scale = minOf(maxWidth.toDouble() / width, maxHeight.toDouble() / height)
+  val newWidth = (width * scale).toInt().coerceIn(1, maxWidth)
+  val newHeight = (height * scale).toInt().coerceIn(1, maxHeight)
+  val target = androidx.compose.ui.graphics.ImageBitmap(newWidth, newHeight)
   androidx.compose.ui.graphics
     .Canvas(target)
     .drawImageRect(
       this,
-      dstSize = androidx.compose.ui.unit.IntSize(maxWidth, height),
+      dstSize = androidx.compose.ui.unit.IntSize(newWidth, newHeight),
       paint =
         androidx.compose.ui.graphics.Paint().apply {
           filterQuality = androidx.compose.ui.graphics.FilterQuality.Medium

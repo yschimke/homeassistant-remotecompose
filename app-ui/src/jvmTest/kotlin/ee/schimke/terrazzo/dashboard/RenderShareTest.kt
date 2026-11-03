@@ -27,4 +27,10 @@ class RenderShareTest {
     val narrow = ImageBitmap(400, 300)
     assertSame(narrow, narrow.scaledTo(1080))
   }
+
+  @Test
+  fun aTallDraftIsBoundedInHeightToo() {
+    val scaled = ImageBitmap(1080, 3600).scaledTo(1080, 1800)
+    assertEquals(540 to 1800, scaled.width to scaled.height)
+  }
 }

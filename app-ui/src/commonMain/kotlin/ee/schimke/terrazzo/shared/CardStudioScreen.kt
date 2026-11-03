@@ -149,6 +149,9 @@ fun CardStudioScreen(
   var draft by remember { mutableStateOf<JsonObject?>(null) }
   var cloudDraftReady by remember { mutableStateOf(false) }
   var draftAssets by remember { mutableStateOf<Map<String, ByteArray>>(emptyMap()) }
+  /** The agent's draft built as "Use it" would publish it, to play before deciding. */
+  var draftPreview by remember { mutableStateOf<ByteArray?>(null) }
+  var draftPreviewProblem by remember { mutableStateOf<String?>(null) }
   var editorUrl by remember { mutableStateOf<String?>(null) }
   var externalUrl by remember(editorUrl) { mutableStateOf<String?>(null) }
   var showAdvanced by remember { mutableStateOf(false) }
@@ -194,6 +197,27 @@ fun CardStudioScreen(
         "Couldn't find an HTTPS upstream design server. Check the design server configuration."
     } finally {
       studio?.close()
+    }
+  }
+
+  // Each new draft is built for this card and played here, with its live values, before the person
+  // can use it: what they see is what Use it publishes.
+  LaunchedEffect(cloudRevision, cloudSession, cloudServer, designKey) {
+    draftPreview = null
+    draftPreviewProblem = null
+    val owner = cloudSession ?: return@LaunchedEffect
+    val target = cloudServer ?: return@LaunchedEffect
+    val key = designKey ?: return@LaunchedEffect
+    if (cloudRevision == 0L) return@LaunchedEffect
+    val upstream = CardStudioClient(target)
+    try {
+      draftPreview = upstream.agentSessionPreview(owner, key)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      draftPreviewProblem = e.message ?: "Couldn't draw your agent's draft."
+    } finally {
+      upstream.close()
     }
   }
 
@@ -451,10 +475,20 @@ fun CardStudioScreen(
     }
   }
 
+  /**
+   * Ask for another try. Not a decision: the session stays open and the agent keeps listening for
+   * what the person says next. Stop is what ends it.
+   */
   fun notThis() =
     launch(3) { _ ->
-      tellAgent(accepted = false)
-      "Told your agent. Say what you'd like instead, or stop here."
+      val owner = cloudSession ?: return@launch null
+      val relay = AgentRelayClient(cloudServer ?: return@launch null)
+      try {
+        relay.comment(owner, "Not this one. Please try a different design.")
+      } finally {
+        relay.close()
+      }
+      "Told your agent to try again. Say what you'd like instead, or stop here."
     }
 
   fun publish() {
@@ -533,7 +567,16 @@ fun CardStudioScreen(
             Text("Ask your agent", style = MaterialTheme.typography.titleLarge)
           }
         }
-        preview()
+        val shownDraft = draftPreview.takeIf { publishedId == null }
+        if (shownDraft != null) {
+          Text(
+            "Your agent's draft",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+          )
+          val values = remember(card, snapshot) { exactTemplateBindings(card, snapshot) }
+          RemoteComposeCard(shownDraft, Modifier.fillMaxWidth(), values)
+        } else preview()
         if (mode == CardStudioMode.Builder) {
           BuilderSteps(
             signInStep = onSignIn != null && homeServer == null,
@@ -632,13 +675,20 @@ fun CardStudioScreen(
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
               if (cloudDraftReady && publishedId == null) {
                 if (onPublished != null)
-                  Button(onClick = { useDraft() }, enabled = !busy && signedIn) { Text("Use it") }
+                  Button(
+                    onClick = { useDraft() },
+                    enabled = !busy && signedIn && draftPreview != null,
+                  ) {
+                    Text("Use it")
+                  }
                 OutlinedButton(onClick = { notThis() }, enabled = !busy) { Text("Not this") }
               }
               TextButton(onClick = { revokeCloudSession() }, enabled = !busy) {
                 Text(if (publishedId != null) "Done" else "Stop")
               }
             }
+            if (cloudDraftReady && publishedId == null)
+              draftPreviewProblem?.let { Text(it, color = MaterialTheme.colorScheme.error) }
           }
           if (messageStep == 3 || messageStep == 4)
             StudioRequestFeedback(busy, message, requestFailed)
