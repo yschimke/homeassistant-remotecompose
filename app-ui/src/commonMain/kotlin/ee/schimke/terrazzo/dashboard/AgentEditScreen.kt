@@ -394,6 +394,8 @@ private fun SessionReview(
 ) {
   var shown by remember(session.id) { mutableStateOf<String?>(null) }
   var noting by remember { mutableStateOf(false) }
+  // True for the frame the draft is captured for the agent: no Comment buttons in it.
+  var capturing by remember { mutableStateOf(false) }
   // The card the next message is about, picked with a card's Comment button.
   var target by remember(session.id) { mutableStateOf<String?>(null) }
   // The newest draft unless the person picked another, or the applied one once applied.
@@ -509,9 +511,10 @@ private fun SessionReview(
           dashboard,
           "agent-draft-${session.id}-${draft.id}",
           snapshot,
-          Modifier.weight(1f).sharesRender(draft.id, session.isOpen, onRender),
+          Modifier.weight(1f).sharesRender(draft.id, session.isOpen, onRender) { capturing = it },
         ) { key, card ->
-          if (live?.agent?.joined == true && session.isOpen)
+          // The Comment buttons are this screen's, not the design's: hidden while it is captured.
+          if (live?.agent?.joined == true && session.isOpen && !capturing)
             Box {
               renderCard(key, card)
               // Pin the next message to this card, so the agent knows which one you mean.
@@ -647,13 +650,23 @@ private fun Modifier.sharesRender(
   draftId: String,
   enabled: Boolean,
   onRender: (String, ByteArray) -> Unit,
+  onCapturing: (Boolean) -> Unit,
 ): Modifier {
   val layer = androidx.compose.ui.graphics.rememberGraphicsLayer()
   val latest by androidx.compose.runtime.rememberUpdatedState(onRender)
   LaunchedEffect(draftId, enabled) {
     if (!enabled) return@LaunchedEffect
     delay(2_000)
-    val drawn = runCatching { layer.toImageBitmap() }.getOrNull() ?: return@LaunchedEffect
+    // Draw one frame without this screen's own chrome, capture it, then put the chrome back.
+    onCapturing(true)
+    val drawn =
+      try {
+        androidx.compose.runtime.withFrameNanos {}
+        androidx.compose.runtime.withFrameNanos {}
+        runCatching { layer.toImageBitmap() }.getOrNull()
+      } finally {
+        onCapturing(false)
+      } ?: return@LaunchedEffect
     if (drawn.width == 0 || drawn.height == 0) return@LaunchedEffect
     drawn
       .scaledTo(MAX_RENDER_WIDTH)
