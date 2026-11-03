@@ -77,10 +77,10 @@ class CardStudioWizardTest {
     CardAgentSessions.clear()
     CardAgentSessions.put(
       "home:card",
+      // An unreachable server: the session stays, its live panel waits to connect.
       SavedCardAgentSession(
-        "https://ha.coo.ee",
+        "https://design.invalid",
         "owner",
-        "agent",
         "Use the door design",
         Long.MAX_VALUE,
       ),
@@ -88,8 +88,8 @@ class CardStudioWizardTest {
     try {
       studio(onSignIn = null, canPublish = false, cloudSessionKey = "home:card")
       onNodeWithText("Use the door design").assertExists()
-      onNodeWithText("Check for draft").assertExists()
-      onNodeWithText("Review in UI Builder").assertDoesNotExist()
+      onNodeWithText("Stop and revoke access").assertExists()
+      onNodeWithText("Review draft", substring = true).assertDoesNotExist()
       capture("restored-cloud-session")
     } finally {
       CardAgentSessions.clear()

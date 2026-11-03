@@ -76,22 +76,22 @@ private constructor(
     return studioServerUrl(json.getValue("url").jsonPrimitive.content)
   }
 
-  /** Start a short-lived agent task on this server. Tokens are distinct from HA credentials. */
-  suspend fun startAgentSession(document: JsonObject, instruction: String): CardAgentSession {
-    val response =
-      request(
+  /**
+   * Start a cloud agent session for this card: its owner capability. The agent joins with the code
+   * the relay shows ([ee.schimke.ha.client.agent.AgentRelayClient]); no Home Assistant token is
+   * sent.
+   */
+  suspend fun startAgentSession(document: JsonObject, instruction: String): String =
+    request(
         "/api/studio/agent-sessions",
         buildJsonObject {
           put("document", document)
           put("instruction", instruction)
         },
       )
-    return CardAgentSession(
-      response.getValue("ownerToken").jsonPrimitive.content,
-      response.getValue("agentToken").jsonPrimitive.content,
-      response["joinCode"]?.jsonPrimitive?.contentOrNull,
-    )
-  }
+      .getValue("ownerToken")
+      .jsonPrimitive
+      .content
 
   suspend fun agentSessionDraft(ownerToken: String): Pair<JsonObject, Long> {
     val response = http.get(base + "/api/studio/agent-session") { bearer(ownerToken) }
@@ -279,20 +279,6 @@ private constructor(
 }
 
 data class CardStudioHandoff(val document: JsonObject, val url: String)
-
-/**
- * A cloud agent session for one card. [joinCode] is set when the server runs the agent relay: the
- * person gives the agent that code (see [ee.schimke.ha.client.agent.AgentRelayClient]) instead of
- * the [agentToken], and the app long-polls the relay for drafts and messages.
- */
-data class CardAgentSession(
-  val ownerToken: String,
-  val agentToken: String,
-  val joinCode: String? = null,
-) {
-  val relay: Boolean
-    get() = joinCode != null
-}
 
 /**
  * A draft [CardStudioClient.openAsUser] opened: the [document] it sent, the editor [url], already

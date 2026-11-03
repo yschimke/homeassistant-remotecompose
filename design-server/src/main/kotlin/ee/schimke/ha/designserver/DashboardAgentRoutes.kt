@@ -56,10 +56,7 @@ fun Route.dashboardAgentRoutes(
         put("ownerToken", access.owner)
         put("agentToken", access.agent)
         put("expiresInSeconds", 3600)
-        joinCode?.let {
-          put("joinCode", it)
-          put("relay", true)
-        }
+        joinCode?.let { put("joinCode", it) }
       }
         .toString(),
       ContentType.Application.Json,

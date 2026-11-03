@@ -66,50 +66,6 @@ class DashboardRelayTest {
   }
 
   @Test
-  fun upstreamDraftIsRelayedForReviewBeforeHomeAssistantApply() = testApplication {
-    val commands = mutableListOf<String>()
-    install(WebSockets)
-    routing {
-      dashboardAgentRoutes()
-      fakeHome(commands)
-    }
-    val http = createClient {}
-    val home = HaClient(HaConfig("http://localhost", "home-token"), http.engine)
-    val relay = CloudDashboardAgentEdits(home, "https://localhost", http.engine)
-    try {
-      home.connect()
-      val started = relay.start(null, "Rename")
-      val agent = Regex("Bearer ([A-Za-z0-9_-]{32})").find(started.prompt)!!.groupValues[1]
-      // Returning to the edit screen uses the same in-memory relay and recovers the handoff.
-      assertEquals(listOf("s1"), relay.open(null).map { it.id })
-      assertEquals(started.prompt, relay.resume("s1").prompt)
-      val changed = Json.parseToJsonElement("""{"views":[{"title":"Garden"}]}""").jsonObject
-      val response =
-        http.post("https://localhost/api/studio/dashboard-session") {
-          header(HttpHeaders.Authorization, "Bearer $agent")
-          setBody(
-            buildJsonObject {
-              put("revision", 0)
-              put("dashboard", changed)
-              put("summary", "Renamed")
-            }
-              .toString()
-          )
-        }
-      assertEquals(HttpStatusCode.OK, response.status)
-      val received = withTimeout(10_000) { relay.watch("s1").first { it.drafts.isNotEmpty() } }
-      assertEquals(changed, received.drafts.single().config)
-      assertFalse(commands.contains("terrazzo/edit/apply"))
-      relay.apply("s1", "d1")
-      assertTrue(commands.contains("terrazzo/edit/apply"))
-    } finally {
-      relay.close()
-      home.close()
-      http.close()
-    }
-  }
-
-  @Test
   fun relayJoinsAgentByCodeAndWakesTheScreenOnADraft() = testApplication {
     val commands = mutableListOf<String>()
     val agentRelay = AgentRelay(AgentDesignSessions(), DashboardAgentSessions(), maxWaitMs = 5_000)

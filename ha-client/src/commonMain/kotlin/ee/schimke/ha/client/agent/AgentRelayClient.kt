@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -93,6 +94,40 @@ class AgentRelayClient(server: String, engine: HttpClientEngine? = null) {
     install(HttpTimeout) { requestTimeoutMillis = 45_000 }
     networkErrorsAsExceptions()
   }
+
+  /** Open a dashboard session for [request] on [dashboard]: its owner capability. */
+  suspend fun startDashboard(request: String, dashboard: JsonObject): String {
+    val response =
+      http.post("$base/api/studio/dashboard-sessions") {
+        contentType(ContentType.Application.Json)
+        setBody(
+          buildJsonObject {
+            put("request", request)
+            put("dashboard", dashboard)
+          }
+            .toString()
+        )
+      }
+    response.check("The design server couldn't open the agent request")
+    return json.decodeFromString<Started>(response.bodyAsText()).ownerToken
+  }
+
+  /** The agent's latest dashboard draft: its revision, config and one-line summary. */
+  suspend fun dashboardDraft(owner: String): DashboardDraft {
+    val response = http.get("$base/api/studio/dashboard-session") { bearer(owner) }
+    if (response.status == HttpStatusCode.NotFound) throw AgentSessionEndedException()
+    response.check("The design server didn't answer")
+    return json.decodeFromString(response.bodyAsText())
+  }
+
+  @Serializable private data class Started(val ownerToken: String)
+
+  @Serializable
+  data class DashboardDraft(
+    val revision: Long,
+    val dashboard: JsonObject,
+    val summary: String = "",
+  )
 
   /**
    * The session now or, with [since], once it changes after that version (the server holds the

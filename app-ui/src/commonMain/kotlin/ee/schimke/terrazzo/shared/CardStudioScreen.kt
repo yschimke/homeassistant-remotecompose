@@ -156,12 +156,9 @@ fun CardStudioScreen(
   val apiKey = StudioKeys.keys[provider].orEmpty()
   var editingAgent by remember { mutableStateOf(!defaults.agentReady) }
   var instruction by remember { mutableStateOf(recovered?.instruction.orEmpty()) }
-  var cloudSession by remember {
-    mutableStateOf(recovered?.let { CardAgentSession(it.ownerToken, it.agentToken) })
-  }
+  /** The cloud session's owner capability: the agent itself joins with a code. */
+  var cloudSession by remember { mutableStateOf(recovered?.ownerToken) }
   var cloudServer by remember { mutableStateOf(recovered?.server) }
-  // The server runs the agent relay: the agent joins by code and drafts arrive by themselves.
-  var cloudRelay by remember { mutableStateOf(recovered?.relay == true) }
   var cloudLive by remember { mutableStateOf<AgentRelayState?>(null) }
   var cloudRevision by remember { mutableLongStateOf(0L) }
   var cloudTarget by remember { mutableStateOf<String?>(null) }
@@ -315,47 +312,42 @@ fun CardStudioScreen(
       val upstream = CardStudioClient(target)
       try {
         val seed = upstream.seed(card, currentSnapshot(fresh = true))
-        cloudSession = upstream.startAgentSession(seed, instruction)
+        val owner = upstream.startAgentSession(seed, instruction)
+        cloudSession = owner
         cloudDraftReady = false
         cloudRevision = 0
         cloudLive = null
-        cloudRelay = cloudSession?.relay == true
         cloudServer = target
         cloudSessionKey?.let { key ->
-          val session = checkNotNull(cloudSession)
           CardAgentSessions.put(
             key,
             SavedCardAgentSession(
               target,
-              session.ownerToken,
-              session.agentToken,
+              owner,
               instruction,
-              // The relay keeps an active session for up to a day; the server says when it ends.
-              Clock.System.now().toEpochMilliseconds() +
-                if (cloudRelay) 24 * 3_600_000L else 3_600_000L,
-              relay = cloudRelay,
+              // A session in use lasts up to a day; the relay says when it ends sooner.
+              Clock.System.now().toEpochMilliseconds() + 24 * 3_600_000L,
             ),
           )
         }
       } finally {
         upstream.close()
       }
-      if (cloudRelay) "Request created. Give your agent the code below."
-      else "Request created. Give the agent the connection details below."
+      "Request created. Give your agent the code below."
     }
 
   /** The agent's latest draft and its images, checked; returns its revision (0: none yet). */
-  suspend fun loadCloudDraft(session: CardAgentSession, target: String): Long {
+  suspend fun loadCloudDraft(owner: String, target: String): Long {
     val upstream = CardStudioClient(target)
     try {
-      val (candidate, revision) = upstream.agentSessionDraft(session.ownerToken)
+      val (candidate, revision) = upstream.agentSessionDraft(owner)
       if (revision == 0L) return 0
       val images =
         (candidate["assets"] as? JsonObject).orEmpty().mapValues { (key, value) ->
           val digest =
             value.jsonObject["contentDigest"]?.jsonPrimitive?.contentOrNull?.removePrefix("sha256:")
               ?: error("Missing image digest")
-          upstream.agentSessionAsset(session.ownerToken, key, digest)
+          upstream.agentSessionAsset(owner, key, digest)
         }
       require(images.values.sumOf { it.size } <= 2 * 1024 * 1024)
       draft = candidate
@@ -374,19 +366,10 @@ fun CardStudioScreen(
       "Draft received. Review it in UI Builder; retry loading card selections here."
     else "Draft received. Review it in UI Builder; applying it in this host is not yet supported."
 
-  fun retrieveCloudDraft() =
-    launch(3) { _ ->
-      val session = cloudSession ?: return@launch null
-      if (loadCloudDraft(session, cloudServer ?: return@launch null) == 0L)
-        "The agent hasn't submitted a draft yet."
-      else draftReceivedMessage()
-    }
-
   fun forgetCloudSession() {
     cloudSessionKey?.let(CardAgentSessions::remove)
     cloudSession = null
     cloudServer = null
-    cloudRelay = false
     cloudLive = null
     cloudDraftReady = false
   }
@@ -394,10 +377,10 @@ fun CardStudioScreen(
   /** Something the person does on the relay: a message, a code, letting an agent in. */
   fun relayCall(block: suspend (AgentRelayClient, String) -> String?) =
     launch(3) { _ ->
-      val session = cloudSession ?: return@launch null
+      val owner = cloudSession ?: return@launch null
       val relay = AgentRelayClient(cloudServer ?: return@launch null)
       try {
-        block(relay, session.ownerToken).also { cloudLive = relay.state(session.ownerToken) }
+        block(relay, owner).also { cloudLive = relay.state(owner) }
       } catch (e: AgentSessionEndedException) {
         forgetCloudSession()
         "The agent session ended. Start a new request to continue."
@@ -409,19 +392,18 @@ fun CardStudioScreen(
       }
     }
 
-  // With the relay, drafts, presence and the agent's messages arrive on their own: the server holds
-  // each request until something changes, so there's nothing to check by hand.
-  LaunchedEffect(cloudSession, cloudServer, cloudRelay) {
-    val session = cloudSession ?: return@LaunchedEffect
+  // Drafts, presence and the agent's messages arrive on their own: the server holds each request
+  // until something changes, so there's nothing to check by hand.
+  LaunchedEffect(cloudSession, cloudServer) {
+    val owner = cloudSession ?: return@LaunchedEffect
     val target = cloudServer ?: return@LaunchedEffect
-    if (!cloudRelay) return@LaunchedEffect
     val relay = AgentRelayClient(target)
     try {
-      relay.watch(session.ownerToken).collect { state ->
+      relay.watch(owner).collect { state ->
         cloudLive = state
         if (state.revision > cloudRevision) {
           try {
-            if (loadCloudDraft(session, target) > 0) {
+            if (loadCloudDraft(owner, target) > 0) {
               messageStep = 3
               requestFailed = false
               message = draftReceivedMessage()
@@ -448,10 +430,10 @@ fun CardStudioScreen(
 
   fun revokeCloudSession() =
     launch(3) { _ ->
-      val session = cloudSession ?: return@launch null
+      val owner = cloudSession ?: return@launch null
       val upstream = CardStudioClient(cloudServer ?: return@launch null)
       try {
-        upstream.revokeAgentSession(session.ownerToken)
+        upstream.revokeAgentSession(owner)
         forgetCloudSession()
       } finally {
         upstream.close()
@@ -482,12 +464,12 @@ fun CardStudioScreen(
         onPublished?.invoke(skin)
         publishedId = skin
         // Tell a connected agent it's done: the design is now on the card.
-        val session = cloudSession
+        val owner = cloudSession
         val target = cloudServer
-        if (cloudRelay && session != null && target != null) {
+        if (owner != null && target != null) {
           val relay = AgentRelayClient(target)
           try {
-            runCatching { relay.decide(session.ownerToken, accepted = true) }
+            runCatching { relay.decide(owner, accepted = true) }
           } finally {
             relay.close()
           }
@@ -625,8 +607,7 @@ fun CardStudioScreen(
                 "The agent can rearrange supported components and bindings. Review and save the result in UI Builder; applying it in this host is not yet supported.",
               style = MaterialTheme.typography.bodySmall,
             )
-            val session = cloudSession
-            if (session == null) {
+            if (cloudSession == null) {
               cloudTargetProblem?.let { Text(it) }
               Button(
                 onClick = { startCloudSession() },
@@ -634,7 +615,7 @@ fun CardStudioScreen(
               ) {
                 Text("Create agent request")
               }
-            } else if (cloudRelay) {
+            } else {
               AgentLivePanel(
                 state = cloudLive,
                 busy = busy,
@@ -675,42 +656,6 @@ fun CardStudioScreen(
                   Text("Stop and revoke access")
                 }
               }
-            } else {
-              Text(
-                "Share the temporary connection details with your cloud agent. Anyone holding them can read and edit this card draft."
-              )
-              FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(
-                  onClick = {
-                    clipboard.setText(
-                      AnnotatedString(
-                        "Redesign this card. Connect to the MCP endpoint ${cloudServer.orEmpty()}/api/studio/agent-mcp " +
-                          "with Authorization: Bearer ${session.agentToken}; call get_card_request and " +
-                          "submit_card_draft. If your client cannot connect MCP, GET ${cloudServer.orEmpty()}/api/studio/agent-session " +
-                          "with Authorization: Bearer ${session.agentToken}. Read instruction, document and revision. " +
-                          "POST to the same URL with the same Authorization and JSON body " +
-                          "{\"revision\": <revision>, \"document\": <complete edited document>}. " +
-                          "Preserve all bindings; the person reviews and publishes the draft."
-                      )
-                    )
-                    messageStep = 3
-                    message = "Connection details copied."
-                  },
-                  enabled = !busy,
-                ) {
-                  Text("Copy agent details")
-                }
-                OutlinedButton(onClick = { retrieveCloudDraft() }, enabled = !busy) {
-                  Text("Check for draft")
-                }
-                TextButton(onClick = { revokeCloudSession() }, enabled = !busy) {
-                  Text("Revoke access")
-                }
-              }
-              if (cloudDraftReady)
-                Button(onClick = { openInBuilder() }, enabled = !busy) {
-                  Text("Review in UI Builder")
-                }
             }
           } else if (mode == CardStudioMode.Agent) {
             AgentSetup(
