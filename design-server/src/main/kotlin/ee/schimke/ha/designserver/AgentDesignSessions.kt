@@ -2,6 +2,8 @@ package ee.schimke.ha.designserver
 
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.client.design.validateCardDraft
+import java.util.Base64
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -30,6 +32,65 @@ class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMil
   )
 
   private val entries = mutableListOf<Entry>()
+
+  /** A session as [AgentSessionFile] keeps it across restarts; images as base64. */
+  @Serializable
+  data class Saved(
+    val owner: String,
+    val agent: String,
+    val instruction: String,
+    val original: JsonObject,
+    val createdAt: Long,
+    val expiresAt: Long,
+    val document: JsonObject,
+    val revision: Long,
+    val assets: Map<String, SavedAsset> = emptyMap(),
+  )
+
+  @Serializable data class SavedAsset(val mediaType: String, val base64: String)
+
+  @Synchronized
+  fun snapshot(): List<Saved> {
+    expire()
+    return entries.map { e ->
+      Saved(
+        e.owner,
+        e.agent,
+        e.instruction,
+        e.original,
+        e.createdAt,
+        e.expiresAt,
+        e.document,
+        e.revision,
+        e.assets.mapValues { (_, a) ->
+          SavedAsset(a.mediaType, Base64.getEncoder().encodeToString(a.bytes))
+        },
+      )
+    }
+  }
+
+  /** Bring back sessions saved before a restart; expired ones stay gone. */
+  @Synchronized
+  fun restore(saved: List<Saved>) {
+    val now = clock()
+    for (s in saved) {
+      if (s.expiresAt <= now || entries.any { it.owner == s.owner }) continue
+      entries +=
+        Entry(
+          s.owner,
+          s.agent,
+          s.instruction,
+          s.original,
+          s.createdAt,
+          s.expiresAt,
+          s.document,
+          s.revision,
+          s.assets
+            .mapValues { (_, a) -> Asset(a.mediaType, Base64.getDecoder().decode(a.base64)) }
+            .toMutableMap(),
+        )
+    }
+  }
 
   /** Called with the owner capability after a draft, image or revocation changes a session. */
   @Volatile var onChange: (owner: String) -> Unit = {}

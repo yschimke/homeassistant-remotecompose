@@ -3,6 +3,7 @@ package ee.schimke.ha.designserver
 import java.security.SecureRandom
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withTimeoutOrNull
@@ -31,6 +32,7 @@ class AgentRelay(
   }
 
   /** One line of the conversation: a person's comment or decision, or an agent's message. */
+  @kotlinx.serialization.Serializable
   data class Message(
     val seq: Long,
     val from: String,
@@ -72,7 +74,12 @@ class AgentRelay(
     val expiresInSeconds: Long,
   )
 
-  private class Entry(val kind: Kind, val owner: String, val agent: String, val title: String) {
+  private inner class Entry(
+    val kind: Kind,
+    val owner: String,
+    val agent: String,
+    val title: String,
+  ) {
     val version = MutableStateFlow(1L)
     var joinCode: String? = null
     var joinCodeExpires = 0L
@@ -84,7 +91,78 @@ class AgentRelay(
     val messages = ArrayList<Message>()
     var decision: String? = null
 
-    fun bump() = version.update { it + 1 }
+    fun bump() {
+      version.update { it + 1 }
+      changeCount.update { it + 1 }
+    }
+  }
+
+  private val changeCount = MutableStateFlow(0L)
+
+  /** Bumped on every change to any session: what [AgentSessionFile] saves after. */
+  val changes: StateFlow<Long>
+    get() = changeCount
+
+  /** The relay's part of a session, saved beside the stores' across a restart. */
+  @kotlinx.serialization.Serializable
+  data class Saved(
+    val kind: Kind,
+    val owner: String,
+    val agent: String,
+    val title: String,
+    val joinCode: String? = null,
+    val joinCodeExpires: Long = 0,
+    val agentName: String = "Agent",
+    val agentStatus: String = "",
+    val agentSeen: Long = 0,
+    val seq: Long = 0,
+    val messages: List<Message> = emptyList(),
+    val decision: String? = null,
+  )
+
+  fun snapshot(): List<Saved> =
+    synchronized(this) {
+      byOwner.values.map { e ->
+        Saved(
+          e.kind,
+          e.owner,
+          e.agent,
+          e.title,
+          e.joinCode,
+          e.joinCodeExpires,
+          e.agentName,
+          e.agentStatus,
+          e.agentSeen,
+          e.seq,
+          e.messages.toList(),
+          e.decision,
+        )
+      }
+    }
+
+  /** Restore after the stores have restored theirs: only sessions they still hold come back. */
+  fun restore(saved: List<Saved>) {
+    for (s in saved) {
+      val entry = Entry(s.kind, s.owner, s.agent, s.title)
+      if (!alive(entry)) continue
+      synchronized(this) {
+        entry.agentName = s.agentName
+        entry.agentStatus = s.agentStatus
+        entry.agentSeen = s.agentSeen
+        entry.seq = s.seq
+        entry.messages += s.messages
+        entry.decision = s.decision
+        s.joinCode
+          ?.takeIf { s.joinCodeExpires > clock() }
+          ?.let { code ->
+            normalizeCode(code)?.let { codes[it] = entry }
+            entry.joinCode = code
+            entry.joinCodeExpires = s.joinCodeExpires
+          }
+      }
+      byOwner[s.owner] = entry
+      byAgent[s.agent] = entry
+    }
   }
 
   private class Request(val code: String, val poll: String, val name: String, val expires: Long) {
@@ -111,7 +189,7 @@ class AgentRelay(
     val entry = Entry(kind, owner, agent, title.take(200))
     byOwner[owner] = entry
     byAgent[agent] = entry
-    return synchronized(this) { issueCode(entry) }
+    return synchronized(this) { issueCode(entry) }.also { entry.bump() }
   }
 
   // ---- The person's side (owner capability) ----

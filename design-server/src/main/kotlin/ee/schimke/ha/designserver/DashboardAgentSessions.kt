@@ -1,5 +1,6 @@
 package ee.schimke.ha.designserver
 
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
 /** A temporary dashboard draft exchange; it never stores an HA credential or applies a draft. */
@@ -13,6 +14,59 @@ class DashboardAgentSessions(private val clock: () -> Long = System::currentTime
     val summary: String,
     val notes: List<String>,
   )
+
+  /** A session as [AgentSessionFile] keeps it across restarts. */
+  @Serializable
+  data class Saved(
+    val owner: String,
+    val agent: String,
+    val request: String,
+    val created: Long,
+    val expires: Long,
+    val dashboard: JsonObject,
+    val revision: Long,
+    val summary: String,
+    val notes: List<String>,
+  )
+
+  @Synchronized
+  fun snapshot(): List<Saved> {
+    expire()
+    return entries.map {
+      Saved(
+        it.owner,
+        it.agent,
+        it.request,
+        it.created,
+        it.expires,
+        it.dashboard,
+        it.revision,
+        it.summary,
+        it.notes,
+      )
+    }
+  }
+
+  /** Bring back sessions saved before a restart; expired ones stay gone. */
+  @Synchronized
+  fun restore(saved: List<Saved>) {
+    val now = clock()
+    for (s in saved) {
+      if (s.expires <= now || entries.any { it.owner == s.owner }) continue
+      entries +=
+        Entry(
+          s.owner,
+          s.agent,
+          s.request,
+          s.created,
+          s.expires,
+          s.dashboard,
+          s.revision,
+          s.summary,
+          s.notes,
+        )
+    }
+  }
 
   private data class Entry(
     val owner: String,
