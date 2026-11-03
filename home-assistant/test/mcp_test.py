@@ -1,5 +1,6 @@
 """The MCP protocol and tools, driven with a fake home; the installed test covers the HTTP view."""
 import asyncio
+import base64
 import importlib.util
 import json
 from pathlib import Path
@@ -57,6 +58,9 @@ class FakeHome:
     async def submit_draft(self, session_id, config, summary):
         self.submitted = (session_id, config, summary)
         return {'draft_id': 'd1', 'status': 'submitted'}
+
+    def draft_render(self, session_id):
+        return ('d1', b'\x89PNG\r\n\x1a\nfake') if session_id == 's1' else None
 
     async def await_request(self, since):
         self.listened = since
@@ -208,6 +212,15 @@ class LiveFeedbackToolsTest(unittest.TestCase):
         call(home, 'await_request')
         self.assertEqual(home.listened, 0)
         self.assertTrue(call(home, 'await_request', {'since': 'x'})['isError'])
+
+    def test_a_draft_render_is_image_content(self):
+        result = call(FakeHome(), 'get_draft_render', {'session_id': 's1'})
+        image = result['content'][0]
+        self.assertEqual((image['type'], image['mimeType']), ('image', 'image/png'))
+        self.assertEqual(base64.b64decode(image['data']), b'\x89PNG\r\n\x1a\nfake')
+        self.assertEqual(result['structuredContent'], {'draft_id': 'd1'})
+        none = call(FakeHome(), 'get_draft_render', {'session_id': 's2'})['structuredContent']
+        self.assertEqual(none['status'], 'none')
 
     def test_messages_and_status_reach_the_person(self):
         home = FakeHome()

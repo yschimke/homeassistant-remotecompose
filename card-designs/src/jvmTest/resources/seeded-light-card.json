@@ -1,0 +1,210 @@
+{
+ "schema": "compose-ui-builder-document/v1-candidate",
+ "id": "card-Tgwdfg0NiKNQWu6vP1-U7kQlOOSIefPM",
+ "title": "Kitchen light",
+ "revision": 0,
+ "catalogPin": {
+  "systemId": "ha-cards",
+  "catalogRevision": "sha256:f7f04868a82e64b0fd9735fa4966ef9f",
+  "capabilityDigest": "candidate",
+  "nativeRuntimeId": "candidate"
+ },
+ "environment": {
+  "widthDp": 360,
+  "heightDp": 160,
+  "density": 2.0,
+  "theme": "light",
+  "locale": "en-US",
+  "fontScale": 1.0,
+  "layoutDirection": "ltr",
+  "exportDevices": []
+ },
+ "stateVariables": {
+  "light.s0.is_on": {
+   "type": "value",
+   "valueType": "bool",
+   "initialValue": true,
+   "persistence": "design"
+  },
+  "light.s0.name": {
+   "type": "text",
+   "valueType": "string",
+   "initialValue": "Kitchen",
+   "persistence": "design"
+  },
+  "light.s0.state": {
+   "type": "text",
+   "valueType": "string",
+   "initialValue": "On",
+   "persistence": "design"
+  }
+ },
+ "roots": [
+  "root"
+ ],
+ "nodes": {
+  "name0": {
+   "id": "name0",
+   "componentId": "ha-cards/remote-text",
+   "properties": {
+    "text": {
+     "type": "state",
+     "variable": "light.s0.name"
+    },
+    "fontSize": {
+     "type": "float",
+     "value": 15.0
+    },
+    "color": {
+     "type": "string",
+     "value": "#FF141414"
+    },
+    "maxLines": {
+     "type": "int",
+     "value": 1
+    }
+   },
+   "modifiers": [],
+   "slots": {}
+  },
+  "state0": {
+   "id": "state0",
+   "componentId": "ha-cards/remote-text",
+   "properties": {
+    "text": {
+     "type": "state",
+     "variable": "light.s0.state"
+    },
+    "fontSize": {
+     "type": "float",
+     "value": 13.0
+    },
+    "color": {
+     "type": "string",
+     "value": "#FF8F8F8F"
+    },
+    "maxLines": {
+     "type": "int",
+     "value": 1
+    }
+   },
+   "modifiers": [],
+   "slots": {}
+  },
+  "text0": {
+   "id": "text0",
+   "componentId": "layout/column",
+   "properties": {
+    "weight": {
+     "type": "float",
+     "value": 1.0
+    }
+   },
+   "modifiers": [],
+   "slots": {
+    "children": [
+     "name0",
+     "state0"
+    ]
+   }
+  },
+  "switch-label0": {
+   "id": "switch-label0",
+   "componentId": "ha-cards/remote-text",
+   "properties": {
+    "text": {
+     "type": "state",
+     "variable": "light.s0.state"
+    },
+    "fontSize": {
+     "type": "float",
+     "value": 12.0
+    },
+    "color": {
+     "type": "string",
+     "value": "#FF8F8F8F"
+    },
+    "maxLines": {
+     "type": "int",
+     "value": 1
+    }
+   },
+   "modifiers": [],
+   "slots": {}
+  },
+  "switch0": {
+   "id": "switch0",
+   "componentId": "ha-cards/remote-switch-button",
+   "properties": {
+    "checked": {
+     "type": "state",
+     "variable": "light.s0.is_on"
+    }
+   },
+   "modifiers": [],
+   "slots": {
+    "label": [
+     "switch-label0"
+    ],
+    "icon": [],
+    "secondaryLabel": []
+   }
+  },
+  "row0": {
+   "id": "row0",
+   "componentId": "layout/collapsible-row",
+   "properties": {
+    "horizontalSpacingDp": {
+     "type": "float",
+     "value": 12.0
+    },
+    "verticalAlignment": {
+     "type": "enum",
+     "value": "center"
+    }
+   },
+   "modifiers": [
+    {
+     "type": "fillMaxWidth"
+    }
+   ],
+   "slots": {
+    "children": [
+     "text0",
+     "switch0"
+    ]
+   }
+  },
+  "column": {
+   "id": "column",
+   "componentId": "layout/collapsible-column",
+   "properties": {
+    "verticalSpacingDp": {
+     "type": "float",
+     "value": 8.0
+    }
+   },
+   "modifiers": [
+    {
+     "type": "fillMaxWidth"
+    }
+   ],
+   "slots": {
+    "children": [
+     "row0"
+    ]
+   }
+  },
+  "root": {
+   "id": "root",
+   "componentId": "ha-cards/dashboard-card",
+   "properties": {},
+   "modifiers": [],
+   "slots": {
+    "content": [
+     "column"
+    ]
+   }
+  }
+ }
+}

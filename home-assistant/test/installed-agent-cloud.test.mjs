@@ -130,11 +130,10 @@ test('Cloud agent edit: joined by code, relayed through a restart, applied', {sk
     await page.goto(`${base}/terrazzo?dashboard=cloud-fixture`);
     await panel.getByText('Lights', {exact:true}).first().waitFor({timeout:90_000});
     await panel.getByRole('button', {name:'More options'}).click({force:true});
-    await panel.getByText('Ask an agent', {exact:true}).click({force:true});
-    await panel.getByText('Use a cloud agent', {exact:true}).click({force:true});
+    await panel.getByText('Ask your agent', {exact:true}).click({force:true});
     await panel.getByText('Claude is connected and listening', {exact:true}).waitFor({timeout:30_000});
     await typeInto('Request', 'Add the switch next to the light');
-    await panel.getByText('Start edit session', {exact:true}).click({force:true});
+    await panel.getByText('Send to your agent', {exact:true}).click({force:true});
     let inbox = await waitingForRequest;
     while (inbox.requests.length === 0) inbox = await agent('await_request', {link, since:inbox.cursor});
     const [delivered] = inbox.requests;
@@ -149,9 +148,20 @@ test('Cloud agent edit: joined by code, relayed through a restart, applied', {sk
     await agent('submit_draft', {session, revision:read.revision, dashboard:DRAFT, summary:'Switch beside the light'});
     await agent('send_message', {session, text:'Should the switch sit beside the light?'});
     // The draft reaches Home Assistant's edit session through the panel, as the person.
-    await panel.getByText('Apply', {exact:true}).waitFor({timeout:30_000});
+    await panel.getByText('Use it', {exact:true}).waitFor({timeout:30_000});
     await panel.getByText('Should the switch sit beside the light?', {exact:true}).waitFor();
     await page.screenshot({path:`${evidence}/agent-cloud-2-draft.png`});
+    // The agent sees the draft exactly as the person's panel drew it.
+    let render;
+    for (let i = 0; i < 30; i++) {
+      const response = await fetch(`${design}/api/agent/mcp`, {method:'POST',
+        body:JSON.stringify({jsonrpc:'2.0', id:1, method:'tools/call', params:{name:'get_render', arguments:{session}}})});
+      render = (await response.json()).result;
+      if (render.content?.[0]?.type === 'image') break;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    assert.equal(render.content[0].type, 'image', 'the panel shared its render');
+    writeFileSync(`${evidence}/agent-cloud-2-agent-view.png`, Buffer.from(render.content[0].data, 'base64'));
 
     // A deploy restarts the design server; the session, presence and conversation survive it.
     await new Promise((resolve) => setTimeout(resolve, 1_500)); // let the change be saved
@@ -172,7 +182,7 @@ test('Cloud agent edit: joined by code, relayed through a restart, applied', {sk
     await page.screenshot({path:`${evidence}/agent-cloud-3-comment.png`});
 
     const done = agent('await_feedback', {session, since:feedback.cursor});
-    await panel.getByText('Apply', {exact:true}).click({force:true});
+    await panel.getByText('Use it', {exact:true}).click({force:true});
     assert.equal((await done).decision, 'accepted', 'the agent hears the draft was applied');
     assert.deepEqual(await ws({type:'lovelace/config', url_path:'cloud-fixture'}), DRAFT);
     await page.screenshot({path:`${evidence}/agent-cloud-4-applied.png`});

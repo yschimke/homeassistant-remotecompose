@@ -644,32 +644,12 @@ private fun AgentEditEntry(
 ) {
   @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
   val preview = rememberDraftPreview(connection, designServer, cardStyle, dark)
-  var useCloud by remember { mutableStateOf<Boolean?>(null) }
-  if (useCloud == null) {
-    Column(
-      Modifier.fillMaxSize().padding(24.dp),
-      verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-      Text("How should the agent connect?", style = MaterialTheme.typography.titleLarge)
-      Text(
-        "Use the trusted design server for a cloud agent, or let an agent sign in to Home Assistant directly."
-      )
-      Button(onClick = { useCloud = true }) { Text("Use a cloud agent") }
-      OutlinedButton(onClick = { useCloud = false }) { Text("Connect to Home Assistant") }
-      TextButton(onClick = onBack) { Text("Back") }
-    }
-    return
-  }
-  val cloud = useCloud == true
-  if (cloud && cloudEdits == null) {
-    Column(Modifier.padding(24.dp)) {
-      Text("Set an HTTPS card design server in Settings before using a cloud agent.")
-      TextButton(onClick = { useCloud = null }) { Text("Back") }
-    }
-    return
-  }
+  // One flow for everyone: your agent through the design server. An agent signed in to Home
+  // Assistant directly is the Advanced alternative.
+  var direct by remember { mutableStateOf(cloudEdits == null) }
+  val cloud = !direct
   AgentEditScreen(
-    edits = if (cloud) requireNotNull(cloudEdits) else connection.client.agentEdits,
+    edits = if (cloud && cloudEdits != null) cloudEdits else connection.client.agentEdits,
     urlPath = path,
     title = title,
     snapshot = snapshot,
@@ -677,6 +657,9 @@ private fun AgentEditEntry(
     onSharePrompt = { clipboard.setText(AnnotatedString(it)) },
     onApplied = onApplied,
     cloudServer = if (cloud) designServer else null,
+    alternative =
+      if (cloud) "Advanced: use an agent signed in to Home Assistant" to { direct = true }
+      else if (cloudEdits != null) "Ask your agent instead" to { direct = false } else null,
   ) { _, card ->
     preview(card, snapshot)
   }
@@ -825,7 +808,7 @@ internal fun DashboardMoreMenu(
       )
       if (onAskAgent != null)
         DropdownMenuItem(
-          text = { Text("Ask an agent") },
+          text = { Text("Ask your agent") },
           onClick = {
             expanded = false
             onAskAgent()

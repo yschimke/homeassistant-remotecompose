@@ -64,6 +64,8 @@ data class AgentEditSession(
     val summary: String = "",
     val at: Double = 0.0,
     val config: JsonObject? = null,
+    /** For a draft relayed from a cloud agent, `cloud:<relay revision>`. */
+    @kotlinx.serialization.SerialName("relay_id") val relayId: String? = null,
   )
 
   @Serializable
@@ -129,4 +131,10 @@ interface AgentEdits {
   suspend fun apply(sessionId: String, draftId: String): AgentEditSession
 
   suspend fun undo(sessionId: String): AgentEditSession
+
+  /**
+   * Share [draftId] as this app drew it ([png]), so the agent sees exactly what the person sees.
+   * Best effort: an older integration or server just doesn't keep it.
+   */
+  suspend fun shareRender(sessionId: String, draftId: String, png: ByteArray) {}
 }

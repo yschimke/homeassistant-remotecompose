@@ -375,6 +375,31 @@ class CardStudioLifecycleTest {
       assertFailsWith<IllegalArgumentException> {
         studio.agentSessionAsset(owner, "door", "0".repeat(64))
       }
+      // Before Use it, the app plays the draft built exactly as Use it would publish it.
+      val key =
+        assertNotNull(
+          ee.schimke.ha.rc.CardDesignTemplates.selectedDesignKeyFor(
+            card,
+            snapshot("21"),
+            ee.schimke.ha.rc.components.ThemeStyle.entries.first(),
+            dark = false,
+          )
+        )
+      val preview = studio.agentSessionPreview(owner, key, revision)
+      // Only the draft the app loaded: a stale revision is refused rather than shown.
+      assertEquals(
+        409,
+        assertFailsWith<CardStudioException> { studio.agentSessionPreview(owner, key, 0) }.status,
+      )
+      val names =
+        ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec.decode(
+            preview,
+            ee.schimke.composeai.rcplayer.protocol.RcWireLimits(),
+          )
+          .operations
+          .filterIsInstance<ee.schimke.composeai.rcplayer.protocol.RcNamedVariable>()
+          .map { it.name }
+      assertTrue(names.any { it.endsWith("sun.sun.elevation") }, "the draft's live value: $names")
       val imageDraft =
         studio.openAsUser(
           github.deviceToken("octocat"),

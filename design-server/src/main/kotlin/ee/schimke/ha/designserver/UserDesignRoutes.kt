@@ -611,7 +611,8 @@ private suspend fun mayPublish(
 }
 
 /** One compile at a time: each is a composition, and a burst shouldn't starve requests. */
-private val compiles = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+/** One compile at a time: a capture composes on its thread. */
+internal val compiles = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 
 /** A UI Builder design as templates by key, from one revision of it ([source]). */
 private class Templates(

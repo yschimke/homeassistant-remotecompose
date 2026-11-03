@@ -210,6 +210,25 @@ class AgentRelayClient(server: String, engine: HttpClientEngine? = null) {
     }
   }
 
+  /** Share the draft at [revision] as the person's app drew it ([png]) with the agent. */
+  @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+  suspend fun putRender(owner: String, png: ByteArray, revision: Long) {
+    val response =
+      http.post("$base/api/agent/session/render") {
+        bearer(owner)
+        contentType(ContentType.Application.Json)
+        setBody(
+          buildJsonObject {
+            put("png", kotlin.io.encoding.Base64.encode(png))
+            put("revision", revision)
+          }
+            .toString()
+        )
+      }
+    if (response.status == HttpStatusCode.NotFound) throw AgentSessionEndedException()
+    response.check("Couldn't share the draft with the agent")
+  }
+
   suspend fun disconnect(link: String) {
     val response = http.delete("$base/api/agent/link") { bearer(link) }
     if (response.status == HttpStatusCode.NotFound) return

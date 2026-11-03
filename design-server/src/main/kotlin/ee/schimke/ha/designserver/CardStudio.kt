@@ -19,6 +19,7 @@ import io.ktor.server.routing.post
 import java.net.URI
 import java.util.Base64
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 
 /**
@@ -128,7 +129,12 @@ fun Route.cardStudioRoutes(
       call.respondText("", status = HttpStatusCode.NoContent)
     }
   }
-  for (path in listOf("/api/studio/agent-session", "/api/studio/agent-asset")) options(path) {
+  for (path in
+    listOf(
+      "/api/studio/agent-session",
+      "/api/studio/agent-asset",
+      "/api/studio/agent-session/preview",
+    )) options(path) {
     call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
     call.response.header(HttpHeaders.AccessControlAllowMethods, "GET, POST, DELETE, OPTIONS")
     call.response.header(HttpHeaders.AccessControlAllowHeaders, "Authorization, Content-Type")
@@ -142,6 +148,63 @@ fun Route.cardStudioRoutes(
       agentSessions.asset(call.agentSessionToken(), key)
         ?: return@get call.respondText("Image unavailable", status = HttpStatusCode.NotFound)
     call.respondBytes(asset.bytes, ContentType.parse(asset.mediaType))
+  }
+  // The agent's current card draft as the template "Use it" would publish, for the app to play
+  // with the card's live values before the person decides. The same compiler builds the published
+  // one; a draft it can't build is refused here, so the person hears why before tapping Use it.
+  post("/api/studio/agent-session/preview") {
+    call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
+    call.response.header(HttpHeaders.CacheControl, "no-store")
+    val token = call.agentSessionToken()
+    val session =
+      agentSessions.read(token)
+        ?: return@post call.respondText(
+          "Design session unavailable",
+          status = HttpStatusCode.NotFound,
+        )
+    // {key, revision}: the revision is the draft the app loaded, the one Use it would publish.
+    val (key, revision) =
+      try {
+        val text = call.receiveText()
+        require(text.length <= 4_000)
+        val body = Json.parseToJsonElement(text).jsonObject
+        Json.decodeFromJsonElement(
+          ee.schimke.ha.design.DesignKey.serializer(),
+          body.getValue("key"),
+        ) to body.getValue("revision").jsonPrimitive.long
+      } catch (e: Exception) {
+        if (e is CancellationException) throw e
+        return@post call.respondText("Invalid preview request", status = HttpStatusCode.BadRequest)
+      }
+    if (session.revision != revision)
+      return@post call.respondText(
+        "A newer draft has arrived",
+        status = HttpStatusCode.Conflict,
+      )
+    val compiler = integration?.compiler ?: previewCompiler
+    val assets =
+      (session.document["assets"] as? JsonObject)
+        .orEmpty()
+        .keys
+        .mapNotNull { name -> agentSessions.asset(token, name)?.let { name to it.bytes } }
+        .toMap()
+    val problems = compiler.problems(session.document, assets.keys)
+    if (problems.isNotEmpty())
+      return@post call.respondText(
+        "This draft can't be used as it is: ${problems.joinToString("; ")}",
+        status = HttpStatusCode.UnprocessableEntity,
+      )
+    val bytes =
+      try {
+        withContext(compiles) { compiler.compile(session.document, assets, key) }
+      } catch (e: Exception) {
+        if (e is CancellationException) throw e
+        return@post call.respondText(
+          "This draft couldn't be built: ${e.message ?: e.javaClass.simpleName}",
+          status = HttpStatusCode.UnprocessableEntity,
+        )
+      }
+    call.respondBytes(bytes, ContentType.Application.OctetStream)
   }
   post("/api/studio/agent-sessions") {
     call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
@@ -690,3 +753,6 @@ private fun studioEscape(text: String): String =
     .replace(">", "&gt;")
     .replace("\"", "&quot;")
     .replace("'", "&#39;")
+
+/** A compiler for previews where no UI Builder is configured: it needs none. */
+private val previewCompiler by lazy { ee.schimke.ha.designs.UiBuilderDesignCompiler() }

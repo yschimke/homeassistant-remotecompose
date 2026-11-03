@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.*
 import androidx.compose.ui.unit.dp
-import ee.schimke.ha.client.design.CardAgentProvider
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import java.io.File
@@ -88,7 +87,7 @@ class CardStudioWizardTest {
     try {
       studio(onSignIn = null, canPublish = false, cloudSessionKey = "home:card")
       onNodeWithText("Use the door design").assertExists()
-      onNodeWithText("Stop and revoke access").assertExists()
+      onNodeWithText("Stop").assertExists()
       onNodeWithText("Review draft", substring = true).assertDoesNotExist()
       capture("restored-cloud-session")
     } finally {
@@ -103,74 +102,71 @@ class CardStudioWizardTest {
   }
 
   @Test
-  fun signingInComesFirst() = runComposeUiTest {
+  fun signingInIsOfferedForUsingADesign() = runComposeUiTest {
     var signIns = 0
     studio(onSignIn = { signIns++ })
     capture("1-signed-out")
     onNodeWithText("Sign in with GitHub").performClick()
     assertEquals(1, signIns)
-    // Later steps show only their titles until then.
-    onNodeWithText("How do you want to design it?").assertExists()
-    onNodeWithText("Myself, in UI Builder").assertDoesNotExist()
+    // Asking doesn't wait for it: only Use it needs the person's account.
+    onNodeWithText("What should change?").assertExists()
   }
 
   @Test
   fun aHomeAssistantsOwnServerNeedsNoSignIn() = runComposeUiTest {
     studio(homeServer = HomeDesignServer("https://home.example", { "ha-token" }, { null }))
     onNodeWithText("Sign in with GitHub").assertDoesNotExist()
-    onNodeWithText("Myself, in UI Builder").assertExists()
+    onNodeWithText("Send to your agent").assertExists()
   }
 
   @Test
-  fun aFirstChoiceIsRememberedAndFolds() = runComposeUiTest {
+  fun everyoneStartsWithTheirAgent() = runComposeUiTest {
+    studio(token = "device")
+    capture("2-ask")
+    onNodeWithText("What should change?").assertExists()
+    onNodeWithText("Send to your agent").assertIsNotEnabled()
+    onNodeWithText("never your Home Assistant login", substring = true).assertExists()
+    // No mode to choose and no API key to enter.
+    onNodeWithText("How do you want to design it?").assertDoesNotExist()
+    onNodeWithText("API key", substring = true).assertDoesNotExist()
+  }
+
+  @Test
+  fun uiBuilderIsUnderMoreOptionsAndRemembered() = runComposeUiTest {
     var saved: CardStudioDefaults? = null
     studio(token = "device", onDefaultsChange = { saved = it })
-    capture("2-choose")
-    onNodeWithText("Myself, in UI Builder").performClick()
+    onNodeWithText("Open in UI Builder").assertDoesNotExist()
+    onNodeWithText("More options").performClick()
+    onNodeWithText("Design it myself in UI Builder").performClick()
     assertEquals(CardStudioMode.Builder, saved?.mode)
     onNodeWithText("Open in UI Builder").assertExists()
-    onNodeWithText("With an AI agent").assertDoesNotExist()
     capture("3-builder")
+    onNodeWithText("Ask your agent instead").performClick()
+    assertEquals(CardStudioMode.CloudAgent, saved?.mode)
+    onNodeWithText("Send to your agent").assertExists()
   }
 
   @Test
-  fun rememberedAgentSetupFoldsToOneLine() = runComposeUiTest {
-    studio(
-      token = "device",
-      defaults =
-        CardStudioDefaults(CardStudioMode.Agent, CardAgentProvider.Claude, model = "claude-x"),
-    )
-    onNodeWithText("Claude · claude-x").assertExists()
-    onNodeWithText("Model ID").assertDoesNotExist()
-    // The key isn't remembered on disk, so it is the one field asked for.
-    onNodeWithText("Claude API key").assertExists()
-    capture("4-agent-remembered")
-  }
-
-  @Test
-  fun cloudAgentExplainsWhatIsSharedBeforeCreatingARequest() = runComposeUiTest {
-    studio(token = "device")
-    onNodeWithText("With a cloud agent").performClick()
+  fun anEarlierApiKeyChoiceOpensTheAgentFlow() = runComposeUiTest {
+    val old =
+      CardStudioDefaults.decode("""{"mode":"Agent","provider":"Claude","model":"claude-x"}""")
+    assertEquals(CardStudioMode.Agent, old.mode)
+    studio(token = "device", defaults = old)
     onNodeWithText("What should change?").assertExists()
-    onNodeWithText("Create agent request").assertIsNotEnabled()
-    onNodeWithText("https://ha.coo.ee", substring = true).assertExists()
-    onNodeWithText("no Home Assistant token is sent", substring = true).assertExists()
-    capture("5-cloud-agent")
+    onNodeWithText("Send to your agent").assertExists()
   }
 
   @Test
-  fun cloudAgentCanStartWithoutAHostBackendOrDesignServerLogin() = runComposeUiTest {
+  fun theAgentCanBeAskedWithoutAHostBackendOrDesignServerLogin() = runComposeUiTest {
     studio(onSignIn = null, canPublish = false)
-    onNodeWithText("With a cloud agent").performClick()
     onNodeWithText("What should change?").performTextInput("Make it brighter")
-    onNodeWithText("Create agent request").assertIsEnabled()
-    onNodeWithText("applying it in this host is not yet supported", substring = true).assertExists()
+    onNodeWithText("Send to your agent").assertIsEnabled()
+    onNodeWithText("can't apply a custom design yet", substring = true).assertExists()
   }
 
   @Test
   fun defaultsRoundTrip() {
-    val defaults =
-      CardStudioDefaults(CardStudioMode.Agent, CardAgentProvider.Agent, "m", "https://a.example")
+    val defaults = CardStudioDefaults(CardStudioMode.Builder)
     assertEquals(defaults, CardStudioDefaults.decode(defaults.encode()))
     assertEquals(CardStudioDefaults(), CardStudioDefaults.decode(""))
   }

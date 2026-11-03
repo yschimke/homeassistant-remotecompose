@@ -103,15 +103,15 @@ class AgentEditScreenTest {
     show(edits, mutableListOf(), cloudServer = "https://ha.coo.ee")
     onNodeWithText("https://ha.coo.ee", substring = true).assertExists()
     onNodeWithText("configuration may contain private data", substring = true).assertExists()
-    onNodeWithText("Start edit session").assertIsNotEnabled()
+    onNodeWithText("Send to your agent").assertIsNotEnabled()
     onNodeWithText("Request").performTextInput("Make it easier to read")
-    onNodeWithText("Start edit session").performClick()
+    onNodeWithText("Send to your agent").performClick()
     waitUntil { edits.current.value != null }
     edits.current.value =
       edits.current.value!!.copy(
         drafts = listOf(AgentEditSession.Draft("d1", config = draftConfig))
       )
-    waitUntil { onAllNodesWithText("Apply").fetchSemanticsNodes().isNotEmpty() }
+    waitUntil { onAllNodesWithText("Use it").fetchSemanticsNodes().isNotEmpty() }
     onNodeWithText("Share prompt").assertExists()
     onNodeWithText("Anyone holding them", substring = true).assertExists()
   }
@@ -122,7 +122,7 @@ class AgentEditScreenTest {
     val shared = mutableListOf<String>()
     show(edits, shared)
     onNodeWithText("Request").performTextInput("Add the pump")
-    onNodeWithText("Start edit session").performClick()
+    onNodeWithText("Send to your agent").performClick()
     waitUntil { edits.current.value != null }
     // Until the agent has been active, the prompt to hand it is what shows.
     onNodeWithText("Share prompt").assertExists()
@@ -154,7 +154,7 @@ class AgentEditScreenTest {
     show(edits, shared)
 
     onNodeWithText("Request").performTextInput("Add the pump")
-    onNodeWithText("Start edit session").performClick()
+    onNodeWithText("Send to your agent").performClick()
     waitUntil { edits.calls.isNotEmpty() }
     assertEquals("start:garden:Add the pump", edits.calls.single())
     onNodeWithText("Waiting for the agent's first draft…").assertExists()
@@ -170,9 +170,9 @@ class AgentEditScreenTest {
     onNodeWithText("card:tile:\"switch.pump\"").assertExists()
     onNodeWithText("Share prompt").assertDoesNotExist()
 
-    onNodeWithText("Apply").performClick()
+    onNodeWithText("Use it").performClick()
     waitUntil {
-      onAllNodesWithText("Applied to Home Assistant.").fetchSemanticsNodes().isNotEmpty()
+      onAllNodesWithText("Done: your dashboard uses it.").fetchSemanticsNodes().isNotEmpty()
     }
     assertEquals("apply:d1", edits.calls.last())
     onNodeWithText("Undo").performClick()
@@ -191,9 +191,9 @@ class AgentEditScreenTest {
     edits.applyFailure = DashboardConflictException("This dashboard changed in Home Assistant.")
     show(edits, mutableListOf())
     onNodeWithText("Request").performTextInput("ignored")
-    onNodeWithText("Start edit session").performClick()
-    waitUntil { onAllNodesWithText("Apply").fetchSemanticsNodes().isNotEmpty() }
-    onNodeWithText("Apply").performClick()
+    onNodeWithText("Send to your agent").performClick()
+    waitUntil { onAllNodesWithText("Use it").fetchSemanticsNodes().isNotEmpty() }
+    onNodeWithText("Use it").performClick()
     waitUntil {
       onAllNodesWithText("This dashboard changed in Home Assistant.")
         .fetchSemanticsNodes()
@@ -228,9 +228,9 @@ class AgentEditScreenTest {
         drafts = listOf(AgentEditSession.Draft("d1", "Pump tile", config = draftConfig)),
       )
     show(edits, mutableListOf(), writeBlockedReason = "Read-only mode is on.")
-    onNodeWithText("Start edit session").performClick()
-    waitUntil { onAllNodesWithText("Apply").fetchSemanticsNodes().isNotEmpty() }
-    onNodeWithText("Apply").assertIsNotEnabled()
+    onNodeWithText("Send to your agent").performClick()
+    waitUntil { onAllNodesWithText("Use it").fetchSemanticsNodes().isNotEmpty() }
+    onNodeWithText("Use it").assertIsNotEnabled()
     onNodeWithText("Read-only mode is on. Drafts can be reviewed but not applied.").assertExists()
     onNodeWithText("card:tile:\"switch.pump\"").assertExists()
   }

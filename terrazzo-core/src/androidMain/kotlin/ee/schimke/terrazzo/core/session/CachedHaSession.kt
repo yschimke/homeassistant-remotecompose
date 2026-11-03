@@ -141,6 +141,12 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
   override val agentEdits: ee.schimke.ha.client.dashboard.AgentEdits?
     get() = delegate.agentEdits
 
+  override fun cloudAgentEdits(
+    server: String,
+    grants: ee.schimke.ha.client.agent.AgentGrantStore,
+    agentLink: () -> String?,
+  ) = delegate.cloudAgentEdits(server, grants, agentLink)
+
   override suspend fun createLongLivedToken(clientName: String, lifespanDays: Int): String? =
     delegate.createLongLivedToken(clientName, lifespanDays)
 

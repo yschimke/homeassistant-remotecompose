@@ -8,7 +8,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -78,12 +79,16 @@ class AgentSessionFile(private val file: File, private val relay: AgentRelay) {
     // collector subscribes would otherwise be taken for the starting point and never saved.
     val loaded = relay.changes.value
     return scope.launch(Dispatchers.IO) {
-      relay.changes.collectLatest { count ->
-        if (count == loaded) return@collectLatest
-        delay(pauseMs)
-        runCatching { save() }
-          .onFailure { System.err.println("Agent sessions not saved to $file: ${it.message}") }
-      }
+      // Not collectLatest: steady traffic would restart the pause forever and never save. Each
+      // burst is saved at most [pauseMs] after its first change; changes meanwhile are conflated.
+      relay.changes
+        .filter { it != loaded }
+        .conflate()
+        .collect {
+          delay(pauseMs)
+          runCatching { save() }
+            .onFailure { System.err.println("Agent sessions not saved to $file: ${it.message}") }
+        }
     }
   }
 }

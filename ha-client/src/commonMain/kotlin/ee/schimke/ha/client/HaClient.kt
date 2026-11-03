@@ -814,6 +814,15 @@ class HaClient(
 
       override suspend fun undo(sessionId: String) =
         sessionOf(edit("terrazzo/edit/undo") { put("session_id", sessionId) })
+
+      @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+      override suspend fun shareRender(sessionId: String, draftId: String, png: ByteArray) {
+        edit("terrazzo/edit/render") {
+          put("session_id", sessionId)
+          put("draft_id", draftId)
+          put("png", kotlin.io.encoding.Base64.encode(png))
+        }
+      }
     }
 
   /**

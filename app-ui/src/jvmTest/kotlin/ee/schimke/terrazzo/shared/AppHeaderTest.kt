@@ -86,7 +86,7 @@ class AppHeaderTest {
     }
     onNodeWithText("Customize").assertDoesNotExist()
     onNodeWithContentDescription("More options").performClick()
-    onNodeWithText("Ask an agent").assertDoesNotExist()
+    onNodeWithText("Ask your agent").assertDoesNotExist()
     onNodeWithText("Customize").performClick()
     assertEquals("customize", opened)
   }

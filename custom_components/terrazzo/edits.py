@@ -7,6 +7,8 @@ undo a draft, which is Home Assistant's own rule for saving a dashboard. The MCP
 the same sessions as its pinned user (`mcp_view.py`).
 """
 import asyncio
+import base64
+import binascii
 import copy
 import time
 
@@ -17,6 +19,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from homeassistant.helpers.storage import Store
+from homeassistant.util import slugify
 
 from . import edit_sessions
 from .const import DOMAIN, MCP_URL
@@ -37,6 +40,11 @@ class Edits:
         # When an agent signed in to this Home Assistant last listened for requests
         # (await_request): while recent, a new session needs no prompt handed over.
         self.listening_at = 0.0
+        # Open subscriptions per session: a draft nobody is watching is announced on the phone.
+        self.watchers = {}
+        # The newest draft as the person's app drew it, per session: (draft id, PNG bytes). In
+        # memory only: the app shares it again whenever it draws the draft.
+        self.renders = {}
 
     @classmethod
     async def async_load(cls, hass):
@@ -255,6 +263,59 @@ async def async_await_feedback(hass, user, session_id, since, timeout=FEEDBACK_W
     }
 
 
+MAX_RENDER_BYTES = 1_500_000
+
+
+def draft_render(hass, user, session_id):
+    """The newest render the person's app shared for [session_id]: (draft id, PNG) or None."""
+    edits, _ = _visible_session(hass, user, session_id)
+    return edits.renders.get(session_id)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "terrazzo/edit/render",
+        vol.Required("session_id"): str,
+        vol.Required("draft_id"): str,
+        vol.Required("png"): str,
+    }
+)
+@callback
+def ws_render(hass, connection, msg):
+    """The person's app shares a draft as it drew it, so the agent sees exactly that."""
+    try:
+        edits, session = _visible_session(hass, connection.user, msg["session_id"])
+        edits.sessions.draft(session, msg["draft_id"])
+        png = base64.b64decode(msg["png"], validate=True)
+        if not (0 < len(png) <= MAX_RENDER_BYTES and png.startswith(b"\x89PNG\r\n\x1a\n")):
+            raise SessionError(f"A render is a PNG of at most {MAX_RENDER_BYTES // 1000} KB")
+    except (SessionError, binascii.Error, ValueError) as failure:
+        _send_failure(connection, msg, failure if isinstance(failure, SessionError) else SessionError("Invalid PNG"))
+        return
+    # One render per session, and none for a session that is gone: the sessions' own bound
+    # (expiry, MAX_SESSIONS) bounds what renders hold.
+    live = {s["id"] for s in edits.sessions.to_data()}
+    for gone in [key for key in edits.renders if key not in live]:
+        del edits.renders[gone]
+    edits.renders[msg["session_id"]] = (msg["draft_id"], png)
+    connection.send_result(msg["id"], {"shared": True})
+
+
+async def async_notice_draft(hass, session_id, draft):
+    """Tell the person who started [session_id] that their agent's draft is ready, on their
+    Terrazzo phones, unless they are watching the session now. Delivered by mobile_app's own
+    notify (held by the integration and woken through the push relay when the app is closed)."""
+    edits = edits_of(hass)
+    if edits.watchers.get(session_id):
+        return
+    session = edits.sessions.get(session_id, _now())
+    registrations = [entry.data for entry in hass.config_entries.async_entries("mobile_app")]
+    notice = edit_sessions.draft_notice(session, draft)
+    for service in edit_sessions.notice_services(registrations, session["created_by"], slugify):
+        if hass.services.has_service("notify", service):
+            await hass.services.async_call("notify", service, notice, blocking=False)
+
+
 async def async_apply(hass, user, session_id, draft_id):
     """Save [draft_id] as the dashboard, only if it still holds the session's starting config.
 
@@ -381,7 +442,20 @@ def ws_subscribe(hass, connection, msg):
             return
         connection.send_message(websocket_api.event_message(msg["id"], _session_reply(hass, current)))
 
-    connection.subscriptions[msg["id"]] = async_dispatcher_connect(hass, SIGNAL_SESSION, forward)
+    edits = edits_of(hass)
+    edits.watchers[session_id] = edits.watchers.get(session_id, 0) + 1
+    unsubscribe = async_dispatcher_connect(hass, SIGNAL_SESSION, forward)
+
+    @callback
+    def stop():
+        unsubscribe()
+        left = edits.watchers.get(session_id, 1) - 1
+        if left > 0:
+            edits.watchers[session_id] = left
+        else:
+            edits.watchers.pop(session_id, None)
+
+    connection.subscriptions[msg["id"]] = stop
     connection.send_result(msg["id"])
     connection.send_message(websocket_api.event_message(msg["id"], _session_reply(hass, session)))
 
@@ -477,7 +551,10 @@ async def ws_undo(hass, connection, msg):
     connection.send_result(msg["id"], _session_reply(hass, session))
 
 
-COMMANDS = (ws_start, ws_list, ws_get, ws_subscribe, ws_note, ws_submit, ws_discard, ws_apply, ws_undo)
+COMMANDS = (
+    ws_start, ws_list, ws_get, ws_subscribe, ws_note, ws_submit, ws_discard, ws_apply, ws_undo,
+    ws_render,
+)
 
 
 def async_register(hass):

@@ -51,8 +51,8 @@ class CardStudioLayoutTest {
       "Server errors must appear in the step that failed, before the options below it",
       error.fetchSemanticsNode().boundsInRoot.bottom <= options.top,
     )
-    // The remembered choice folds its step, and Change reopens it.
-    compose.onNodeWithText("Change").performScrollTo().performClick()
-    compose.onNodeWithText("With an AI agent").performScrollTo().assertIsDisplayed()
+    // UI Builder is the remembered detour; one tap goes back to asking the agent.
+    compose.onNodeWithText("Ask your agent instead").performScrollTo().performClick()
+    compose.onNodeWithText("Send to your agent").performScrollTo().assertIsDisplayed()
   }
 }

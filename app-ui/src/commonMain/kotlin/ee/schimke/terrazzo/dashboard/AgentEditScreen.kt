@@ -41,6 +41,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.HaCommandException
@@ -59,6 +61,8 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.shared.AgentConnection
 import ee.schimke.terrazzo.shared.AgentLivePanel
 import ee.schimke.terrazzo.shared.DashboardContent
+import ee.schimke.terrazzo.shared.drawable
+import ee.schimke.terrazzo.shared.encodePng
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -90,6 +94,8 @@ fun AgentEditScreen(
   onApplied: () -> Unit,
   writeBlockedReason: String? = null,
   cloudServer: String? = null,
+  /** Another way to connect an agent, under Advanced: its label and how to switch to it. */
+  alternative: Pair<String, () -> Unit>? = null,
   renderCard: @Composable (CardKey, CardConfig) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -99,6 +105,21 @@ fun AgentEditScreen(
   var sessionId by remember(edits, urlPath) { mutableStateOf<String?>(null) }
   var prompt by remember(edits, urlPath) { mutableStateOf<String?>(null) }
   var session by remember(edits, urlPath) { mutableStateOf<AgentEditSession?>(null) }
+  // When the last session reply arrived, and a clock ticking past it: a direct agent's presence
+  // ages by elapsed time even when no session event comes (an agent that went quiet sends none).
+  var receivedAt by remember(edits, urlPath) { mutableStateOf(0L) }
+  var now by remember { mutableStateOf(nowMillis()) }
+  LaunchedEffect(Unit) {
+    while (true) {
+      delay(10_000)
+      now = nowMillis()
+    }
+  }
+  LaunchedEffect(session) {
+    receivedAt = nowMillis()
+    now = receivedAt
+  }
+  val sinceReply = ((now - receivedAt).coerceAtLeast(0) / 1000.0)
   var problem by remember(edits, urlPath) { mutableStateOf<String?>(null) }
   var busy by remember { mutableStateOf(false) }
 
@@ -150,7 +171,7 @@ fun AgentEditScreen(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Ask an agent", maxLines = 1) },
+        title = { Text("Ask your agent", maxLines = 1) },
         navigationIcon = {
           IconButton(onClick = { if (sessionId != null) sessionId = null else onBack() }) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -171,6 +192,7 @@ fun AgentEditScreen(
             busy = busy,
             cloudServer = cloudServer,
             onCopy = onSharePrompt,
+            alternative = alternative,
             onStart = { request ->
               run {
                 val started = edits.start(urlPath, request)
@@ -194,7 +216,9 @@ fun AgentEditScreen(
             session = current,
             // An agent signed in to Home Assistant directly has no relay; the session itself
             // carries its presence and messages once it has joined.
-            live = live?.live(current.id)?.collectAsState()?.value ?: directLive(current),
+            live =
+              live?.live(current.id)?.collectAsState()?.value ?: directLive(current, sinceReply),
+            agentListening = current.agentListening && sinceReply < LISTENING_SECONDS,
             liveBusy = busy,
             onCopyInvite = { code ->
               onSharePrompt(
@@ -230,7 +254,7 @@ fun AgentEditScreen(
               run {
                 session = edits.apply(current.id, draft.id)
                 onApplied()
-                tell("Applied to Home Assistant.")
+                tell("Done: your dashboard uses it.")
               }
             },
             onUndo = {
@@ -240,6 +264,10 @@ fun AgentEditScreen(
               }
             },
             onNote = { text -> run { session = edits.note(current.id, text) } },
+            // Best effort, quietly: the agent sees the draft as drawn here when it asks.
+            onRender = { draftId, png ->
+              scope.launch { runCatching { edits.shareRender(current.id, draftId, png) } }
+            },
             onDiscard = {
               run {
                 edits.discard(current.id)
@@ -274,6 +302,7 @@ private fun StartSession(
   busy: Boolean,
   cloudServer: String?,
   onCopy: (String) -> Unit,
+  alternative: Pair<String, () -> Unit>?,
   onStart: (String) -> Unit,
   onResume: (AgentEditSession) -> Unit,
 ) {
@@ -288,8 +317,6 @@ private fun StartSession(
       "What should change on ${title ?: "this dashboard"}?",
       style = MaterialTheme.typography.titleMedium,
     )
-    // The setup phase: once an agent is connected, the request goes straight to it.
-    if (cloudServer != null) AgentConnection(cloudServer, onCopy)
     Text(
       if (cloudServer == null)
         "Home Assistant opens an edit session and gives you a prompt for your AI assistant. The " +
@@ -317,8 +344,12 @@ private fun StartSession(
       enabled = !busy && (cloudServer == null || request.isNotBlank()),
       onClick = { onStart(request) },
     ) {
-      Text("Start edit session")
+      Text("Send to your agent")
     }
+    // The setup phase: once an agent is connected, the request goes straight to it. Below Send: it
+    // changes as the agent connects, and must not move the field being typed in.
+    if (cloudServer != null) AgentConnection(cloudServer, onCopy)
+    alternative?.let { (label, switch) -> TextButton(onClick = switch) { Text(label) } }
     if (open.isNotEmpty()) {
       Text("Open sessions", style = MaterialTheme.typography.titleSmall)
       open.forEach { s ->
@@ -348,6 +379,7 @@ internal fun previewDashboard(config: JsonObject?): Dashboard? = config?.let {
 private fun SessionReview(
   session: AgentEditSession,
   live: AgentRelayState?,
+  agentListening: Boolean,
   liveBusy: Boolean,
   onCopyInvite: (String) -> Unit,
   onNewCode: () -> Unit,
@@ -364,10 +396,13 @@ private fun SessionReview(
   onUndo: () -> Unit,
   onNote: (String) -> Unit,
   onDiscard: () -> Unit,
+  onRender: (draftId: String, png: ByteArray) -> Unit,
   renderCard: @Composable (CardKey, CardConfig) -> Unit,
 ) {
   var shown by remember(session.id) { mutableStateOf<String?>(null) }
   var noting by remember { mutableStateOf(false) }
+  // True for the frame the draft is captured for the agent: no Comment buttons in it.
+  var capturing by remember { mutableStateOf(false) }
   // The card the next message is about, picked with a card's Comment button.
   var target by remember(session.id) { mutableStateOf<String?>(null) }
   // The newest draft unless the person picked another, or the applied one once applied.
@@ -392,7 +427,7 @@ private fun SessionReview(
       )
       Text(
         when {
-          session.isApplied -> "Applied to Home Assistant."
+          session.isApplied -> "Your dashboard uses it. Undo puts it back."
           !session.isOpen -> "This session was ${session.status}."
           draft == null -> "Waiting for the agent's first draft…"
           else -> draft.summary.ifBlank { "Draft from the agent" }
@@ -423,7 +458,7 @@ private fun SessionReview(
           target = target,
           onClearTarget = { target = null },
         )
-      } else if (session.isOpen && session.agentListening && session.drafts.isEmpty()) {
+      } else if (session.isOpen && agentListening && session.drafts.isEmpty()) {
         // An agent signed in to Home Assistant is listening: it picks this up by itself.
         Text(
           "Your agent is listening and picks this up now.",
@@ -448,12 +483,14 @@ private fun SessionReview(
           session.isApplied -> OutlinedButton(enabled = canWrite, onClick = onUndo) { Text("Undo") }
           session.isOpen -> {
             if (draft != null) {
-              Button(enabled = canWrite, onClick = { onApply(draft) }) { Text("Apply") }
-              OutlinedButton(enabled = !busy, onClick = { noting = true }) {
-                Text("Request changes")
-              }
+              Button(enabled = canWrite, onClick = { onApply(draft) }) { Text("Use it") }
+              // With the live panel, its message box is how to ask for changes.
+              if (live == null)
+                OutlinedButton(enabled = !busy, onClick = { noting = true }) {
+                  Text("Request changes")
+                }
             }
-            TextButton(enabled = !busy, onClick = onDiscard) { Text("Discard") }
+            TextButton(enabled = !busy, onClick = onDiscard) { Text("Stop") }
           }
         }
       }
@@ -483,9 +520,10 @@ private fun SessionReview(
           dashboard,
           "agent-draft-${session.id}-${draft.id}",
           snapshot,
-          Modifier.weight(1f),
+          Modifier.weight(1f).sharesRender(draft.id, session.isOpen, onRender) { capturing = it },
         ) { key, card ->
-          if (live?.agent?.joined == true && session.isOpen)
+          // The Comment buttons are this screen's, not the design's: hidden while it is captured.
+          if (live?.agent?.joined == true && session.isOpen && !capturing)
             Box {
               renderCard(key, card)
               // Pin the next message to this card, so the agent knows which one you mean.
@@ -581,9 +619,9 @@ internal fun cardLabel(key: CardKey, card: CardConfig): String {
  * until the agent has been active, so the prompt to hand it shows until then. Presence counts as
  * connected for a minute and a half after the agent's last call, by Home Assistant's clock.
  */
-internal fun directLive(session: AgentEditSession): AgentRelayState? {
+internal fun directLive(session: AgentEditSession, sinceReply: Double = 0.0): AgentRelayState? {
   val agent = session.agent ?: return null
-  val idle = session.agentIdleSeconds
+  val idle = session.agentIdleSeconds?.let { it + sinceReply }
   return AgentRelayState(
     version = session.conversation.lastOrNull()?.seq ?: 0,
     kind = "dashboard",
@@ -610,3 +648,79 @@ internal fun directLive(session: AgentEditSession): AgentRelayState? {
     decision = if (session.isApplied) "accepted" else null,
   )
 }
+
+/**
+ * Records what this draws and, a moment after a draft appears (its cards and pictures loaded),
+ * hands it to [onRender] as a PNG at most [MAX_RENDER_WIDTH] wide: what the agent sees when it asks
+ * how its draft looks.
+ */
+@Composable
+private fun Modifier.sharesRender(
+  draftId: String,
+  enabled: Boolean,
+  onRender: (String, ByteArray) -> Unit,
+  onCapturing: (Boolean) -> Unit,
+): Modifier {
+  val layer = androidx.compose.ui.graphics.rememberGraphicsLayer()
+  val latest by androidx.compose.runtime.rememberUpdatedState(onRender)
+  LaunchedEffect(draftId, enabled) {
+    if (!enabled) return@LaunchedEffect
+    delay(2_000)
+    // Draw one frame without this screen's own chrome, capture it, then put the chrome back.
+    onCapturing(true)
+    val drawn =
+      try {
+        androidx.compose.runtime.withFrameNanos {}
+        androidx.compose.runtime.withFrameNanos {}
+        runCatching { layer.toImageBitmap() }.getOrNull()
+      } finally {
+        onCapturing(false)
+      } ?: return@LaunchedEffect
+    if (drawn.width == 0 || drawn.height == 0) return@LaunchedEffect
+    // Best effort: a render that can't be made is simply not shared.
+    runCatching {
+      drawn.drawable().scaledTo(MAX_RENDER_WIDTH, MAX_RENDER_HEIGHT).encodePng()?.takeIf {
+        it.size <= MAX_RENDER_BYTES
+      }
+    }
+      .getOrNull()
+      ?.let { latest(draftId, it) }
+  }
+  return drawWithContent {
+    layer.record { this@drawWithContent.drawContent() }
+    drawLayer(layer)
+  }
+}
+
+private const val MAX_RENDER_WIDTH = 1080
+/** No image this project shares is over 1800px in either dimension. */
+private const val MAX_RENDER_HEIGHT = 1800
+private const val MAX_RENDER_BYTES = 1_400_000
+
+/** This image no wider than [maxWidth] and no taller than [maxHeight], keeping its aspect ratio. */
+internal fun androidx.compose.ui.graphics.ImageBitmap.scaledTo(
+  maxWidth: Int,
+  maxHeight: Int = Int.MAX_VALUE,
+): androidx.compose.ui.graphics.ImageBitmap {
+  if (width <= maxWidth && height <= maxHeight) return this
+  val scale = minOf(maxWidth.toDouble() / width, maxHeight.toDouble() / height)
+  val newWidth = (width * scale).toInt().coerceIn(1, maxWidth)
+  val newHeight = (height * scale).toInt().coerceIn(1, maxHeight)
+  val target = androidx.compose.ui.graphics.ImageBitmap(newWidth, newHeight)
+  androidx.compose.ui.graphics
+    .Canvas(target)
+    .drawImageRect(
+      this,
+      dstSize = androidx.compose.ui.unit.IntSize(newWidth, newHeight),
+      paint =
+        androidx.compose.ui.graphics.Paint().apply {
+          filterQuality = androidx.compose.ui.graphics.FilterQuality.Medium
+        },
+    )
+  return target
+}
+
+/** How long after an agent's last `await_request` it still counts as listening. */
+private const val LISTENING_SECONDS = 90
+
+private fun nowMillis(): Long = kotlin.time.Clock.System.now().toEpochMilliseconds()

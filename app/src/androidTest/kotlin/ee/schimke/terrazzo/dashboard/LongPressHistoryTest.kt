@@ -73,10 +73,10 @@ class LongPressHistoryTest {
   @Test
   fun forkUsesTheDashboardPreviewInsteadOfTheLauncherGrid() {
     waitForFirstCard().longClick()
-    val fork = device.wait(Until.findObject(By.text("Redesign a copy in Card Studio")), 10_000)
+    val fork = device.wait(Until.findObject(By.text("Ask your agent")), 10_000)
     assertNotNull(fork)
     fork!!.click()
-    assertTrue(device.wait(Until.hasObject(By.text("Design this card")), 10_000))
+    assertTrue(device.wait(Until.hasObject(By.text("What should change?")), 10_000))
     assertTrue(device.wait(Until.hasObject(By.descContains("Current card preview")), 15_000))
     assertTrue(
       "Forking must not show launcher size controls",

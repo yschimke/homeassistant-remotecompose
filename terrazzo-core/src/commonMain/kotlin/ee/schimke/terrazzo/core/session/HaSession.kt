@@ -187,6 +187,16 @@ interface HaSession {
     get() = null
 
   /**
+   * Edit sessions whose agent works through the design [server]'s relay (agent-sessions.md): the
+   * one "Ask your agent" flow. Null where there's no Home Assistant behind the session.
+   */
+  fun cloudAgentEdits(
+    server: String,
+    grants: ee.schimke.ha.client.agent.AgentGrantStore,
+    agentLink: () -> String?,
+  ): ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits? = null
+
+  /**
    * Fetch HA's `get_config` payload — version + `internal_url` / `external_url`. Live sessions
    * round-trip the WebSocket; demo / offline sessions return null so callers can skip the
    * persist-public-URL side effect.
@@ -546,6 +556,20 @@ class LiveHaSession(
 
   override val agentEdits: ee.schimke.ha.client.dashboard.AgentEdits
     get() = client.agentEdits
+
+  override fun cloudAgentEdits(
+    server: String,
+    grants: ee.schimke.ha.client.agent.AgentGrantStore,
+    agentLink: () -> String?,
+  ) = runCatching {
+    ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits(
+      client,
+      server,
+      grants = grants,
+      agentLink = agentLink,
+    )
+  }
+    .getOrNull()
 
   override suspend fun createLongLivedToken(clientName: String, lifespanDays: Int): String =
     client.createLongLivedAccessToken(clientName, lifespanDays)

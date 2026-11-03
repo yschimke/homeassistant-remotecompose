@@ -28,14 +28,17 @@ Agent (Claude, Codex, …) ──MCP──▶ design server relay ◀──HTTPS
 
 ## The flow
 
-1. **Connect, once.** Settings → **Connect an agent** (also shown at the start of Card Studio's
-   cloud mode and of **Ask an agent → Use a cloud agent** until an agent is connected) shows a
+**Ask your agent** is the one flow, for a card (its long-press sheet, or below it on desktop) and
+for a dashboard (its menu), on every host. Under **Advanced**, a dashboard can use an agent signed
+in to Home Assistant instead, and a card can be designed by hand in UI Builder.
+
+1. **Connect, once.** Settings → **Connect an agent** (also shown at the start of **Ask your agent** until an agent is connected) shows a
    code such as `K7QM-4MD2`. **Copy invite for the agent** copies one message with the code and
    the MCP address. The agent calls `connect` with it and keeps the **link** it gets back. The
    other direction works too: the agent calls `request_access`, shows the person a code, and the
    person enters it under **Have a code from your agent?**. Settings then say "Claude is connected
    and listening", or when it last listened. **Disconnect** ends the link.
-2. **Ask.** In Card Studio or **Ask an agent**, the person writes a request and starts it. The app
+2. **Ask.** In **Ask your agent**, the person writes what should change and sends it. The app
    sends the card's preview contract or the dashboard's configuration to the design server with
    its link, and the request goes straight to the agent, waiting in `await_request`: no code,
    nothing to copy. Without a connected agent the request gets its own code instead, as in step 1.
@@ -44,14 +47,20 @@ Agent (Claude, Codex, …) ──MCP──▶ design server relay ◀──HTTPS
 4. **Drafts arrive.** The app long-polls the relay, so a submitted draft shows up within moments,
    with no **Check for draft**. A dashboard draft is relayed into Home Assistant's edit session
    (`terrazzo/edit/submit`) as the signed-in person and drawn with their real cards; a card draft
-   is loaded with its images, checked against the card's contract, and is ready to review in UI
-   Builder.
+   is loaded with its images, checked against the card's contract, and drawn in place of the card
+   with its live values, built exactly as **Use it** would publish it
+   (`POST /api/studio/agent-session/preview`); **Use it** waits for that drawing, and a draft that
+   can't be built says why instead.
 5. **Talk.** The person types in the panel. On a dashboard draft each card has a **Comment**
    button that pins the next message to that card (its title or entity, and where it sits). The
    agent, waiting in `await_feedback`, gets the message at once, and can `send_message` back.
-6. **Decide.** **Apply** (dashboard) or **Publish privately and use it** (card) does what it did
-   before and also tells the agent `accepted`. **Discard** or **Stop and revoke access** ends the
-   session for both sides.
+6. **Decide.** **Use it** applies the dashboard draft, or puts the card design on the card (the
+   design server opens it as the person's own design and publishes it privately, compiling it to
+   a template itself with `UiBuilderDesignCompiler`, which draws what the server seeds a card
+   with: collapsible rows, a switch on the slot's `is_on`; no browser), and tells the agent
+   `accepted`; **Undo** puts a dashboard back. A message asks for changes (on a card, **Not this** asks for another try in
+   one tap, and the session stays open); **Stop**
+   ends the session for both sides.
 
 ## Lifetimes and storage
 
@@ -107,6 +116,7 @@ with a pasted capability, and also count as presence.
 | `POST /api/agent/claim {code}` | Let in the agent that asked first |
 | `POST /api/agent/session/comment {text, target?}` | A message to the agent; on a dashboard also a session note |
 | `POST /api/agent/session/decision {decision}` | `accepted` or `rejected` |
+| `POST /api/studio/agent-session/preview` (a `DesignKey`) | The card draft built as a template for that key, or 422 and why |
 | `DELETE /api/agent/session` | Revoke |
 
 Session creation is `POST /api/studio/agent-sessions` and `POST /api/studio/dashboard-sessions`;
@@ -141,11 +151,28 @@ the prompt to hand the agent until the agent first calls a tool, then the same l
 `installed-agent-live.test.mjs` runs this end to end in a real Home Assistant with the real
 panel: ask from the menu, draft, a comment pinned to a card, apply.
 
+## The agent sees what the person sees
+
+A moment after a dashboard draft appears on the person's screen, the app captures it as drawn
+(their own cards, card style and live states, at most 1080 px wide) and shares it as a PNG: with
+the relay for a cloud agent (`get_render`), with the integration for an agent signed in to Home
+Assistant (`terrazzo/edit/render`, `get_draft_render`). Both return MCP image content. Renders are
+kept in memory only, the newest per session; the app shares again whenever it draws a draft.
+A card draft is drawn by the app from the template the design server builds for it (the same
+build **Use it** publishes), so the person decides on what they will get.
+
+## When the person isn't watching
+
+When an agent signed in to Home Assistant submits a draft and nobody has the session open, the
+integration tells the person who started it on their Terrazzo phones, through `mobile_app`'s own
+notify (held and woken through the push relay when the app is closed;
+[notifications.md](notifications.md)): "Your agent has a draft", with its summary, one notice per
+session. A cloud agent's drafts reach Home Assistant through the person's app, so they arrive
+when the app next shows the session.
+
 ## Not yet
-- **The integration as the owner.** Holding the relay link in the always-on integration would let
-  a session survive the phone sleeping, with an FCM wake through `push-relay` when a draft arrives.
-- **Renders for the agent.** The app could upload the draft as it draws it, so the agent sees
-  exactly what the person sees rather than catalog images.
+- **Notices for cloud drafts while the app is closed.** The relay has no way to reach the phone;
+  the integration holding the person's relay link would let it relay and announce drafts itself.
 - **One session for a card and its dashboard.** Card and dashboard sessions share the relay and
   the MCP tools but are still started separately, and accepted separately.
 - **Card sessions in the browser end-to-end test.** The cloud path is covered against the real

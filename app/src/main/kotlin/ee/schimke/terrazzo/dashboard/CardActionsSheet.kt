@@ -313,7 +313,7 @@ fun CardActions(
         if (state.canMonitor) {
           SecondaryAction(Icons.Outlined.Timer, "Watch live for 15 minutes", onMonitor)
         }
-        SecondaryAction(Icons.Outlined.Brush, "Redesign a copy in Card Studio", onOpenInStudio)
+        SecondaryAction(Icons.Outlined.Brush, "Ask your agent", onOpenInStudio)
       }
     }
   }

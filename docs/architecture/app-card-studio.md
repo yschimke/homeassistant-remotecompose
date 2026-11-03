@@ -1,22 +1,24 @@
 # Card Studio in the mobile and desktop apps
 
-The app can open a card in UI Builder or ask OpenRouter, Claude, OpenAI, or an
-OpenAI-compatible agent endpoint to create or repair a draft. Android exposes it from
-the card's long-press history screen; desktop exposes it below each dashboard card.
+Card Studio is **Ask your agent** for one card: the same flow as for a dashboard, on every host
+(Android from a card's long-press sheet, desktop below each card, the web and Wasmo app). The
+person writes what should change and sends it; their connected agent drafts it while they watch
+([agent-sessions.md](agent-sessions.md)); **Use it** puts the design on the card, **Not this**
+tells the agent to try again, **Stop** ends the request.
 
-The studio is a wizard: **Sign in**, **How do you want to design it?** (yourself in
-UI Builder, or with an AI agent), **Edit in UI Builder** / **Describe the design**, then
-**Use it on this card**. An answered step folds to one line with **Change**.
-
-- **Sign-in comes first** where the host can sign in (Android): it is the design
-  server's app sign-in (`/my/oauth`, a Custom Tab, [AppSignIn]), which also signs the
-  browser in to the host that serves UI Builder. Everything after it uses the device
-  token, so no web page asks for a sign-in again.
-- **Remembered choices are strong defaults** (`CardStudioDefaults`, stored by the host:
-  Android's `card_studio_defaults` preference). How to design, the agent's provider,
-  model and endpoint start answered and folded. API keys are not written to disk: they
-  are kept in memory until the app closes, so a remembered agent asks only for its key
-  once per run.
+- **Connect once.** The first time, the screen shows **Connect an agent** above the request
+  (as Settings do). After that a request goes straight to the agent: no code, nothing to copy.
+- **Use it, with no browser.** The design server opens the agent's draft as the person's own
+  design (`POST /api/studio/open` with the device token, recorded under its handoff), publishes
+  it privately (`POST /api/my/designs`) and the card switches to it. Using a design needs the
+  person's account: where the host can sign in (Android) the screen offers **Sign in with
+  GitHub** once; asking never waits for it.
+- **UI Builder is under More options.** **Design it myself in UI Builder** opens the earlier
+  steps (sign in, edit in UI Builder, publish privately), and **Open the agent's draft in UI
+  Builder** hands a draft over for hand editing. The choice is remembered
+  (`CardStudioDefaults.mode`); **Ask your agent instead** goes back.
+- **No API keys.** The earlier option of drafting with the person's own OpenRouter, Claude or
+  OpenAI key is gone from the app; old settings that chose it open the agent flow.
 - **No in-app web view on Android.** With a device token the app opens a draft with
   `POST /api/studio/open` and opens the returned UI Builder link in the browser, which
   shares the Custom Tab's sign-in. Desktop, with no app sign-in, keeps the embedded

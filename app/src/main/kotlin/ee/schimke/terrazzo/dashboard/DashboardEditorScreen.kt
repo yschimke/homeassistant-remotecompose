@@ -30,6 +30,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -70,7 +71,7 @@ private const val TAG = "DashboardEditor"
  *
  * Adding cards, sections, views and dashboards and editing a card's settings belong to Home
  * Assistant's editor or the Terrazzo panel; [IntegrationCard] points there. With the Terrazzo
- * integration installed it also offers **Ask an agent** ([AgentEditScreen]): an edit session in
+ * integration installed it also offers **Ask your agent** ([AgentEditScreen]): an edit session in
  * Home Assistant whose drafts are previewed here and applied by an administrator.
  *
  * The dashboard view itself lays sections out by harc's own card designs ([SectionCardFlow]), so it
@@ -145,12 +146,39 @@ fun DashboardEditorScreen(
     session.liveDashboardSnapshots(loaded).collect { snapshot = it }
   }
 
-  val agentEdits = session.agentEdits
+  val directEdits = session.agentEdits
+  // One flow for everyone: your agent through the design server, as on the web and desktop. An
+  // agent signed in to Home Assistant directly is the Advanced alternative.
+  val designServer by
+    ee.schimke.terrazzo.LocalTerrazzoGraph.current.preferencesStore.designServerUrl.collectAsState(
+      initial = "https://ha.coo.ee"
+    )
+  val relayServer = designServer.ifBlank { "https://ha.coo.ee" }
+  val cloudEdits =
+    remember(session, relayServer) {
+      session.cloudAgentEdits(
+        relayServer,
+        ee.schimke.terrazzo.shared.AgentOnThisDevice.dashboardGrants(),
+      ) {
+        ee.schimke.terrazzo.shared.AgentOnThisDevice.link(relayServer)
+      }
+    }
+  androidx.compose.runtime.DisposableEffect(cloudEdits) { onDispose { cloudEdits?.close() } }
+  var direct by rememberSaveable(session) { mutableStateOf(false) }
+  val agentEdits = if (direct || cloudEdits == null) directEdits else cloudEdits
   if (askingAgent && agentEdits != null) {
     val context = LocalContext.current
     BackHandler { askingAgent = false }
     AgentEditScreen(
       edits = agentEdits,
+      cloudServer = if (agentEdits === cloudEdits) relayServer else null,
+      alternative =
+        when {
+          agentEdits === cloudEdits && directEdits != null ->
+            "Advanced: use an agent signed in to Home Assistant" to { direct = true }
+          direct && cloudEdits != null -> "Ask your agent instead" to { direct = false }
+          else -> null
+        },
       urlPath = urlPath,
       title = title,
       snapshot = snapshot,
@@ -364,7 +392,7 @@ internal fun IntegrationCard(
           style = MaterialTheme.typography.bodyMedium,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        FilledTonalButton(onClick = ask) { Text("Ask an agent") }
+        FilledTonalButton(onClick = ask) { Text("Ask your agent") }
       }
       if (status != IntegrationStatus.Installed) {
         HorizontalDivider(Modifier.padding(vertical = 4.dp))

@@ -61,6 +61,8 @@ class EditSessionsTest(unittest.TestCase):
         retry = self.sessions.submit(self.session['id'], DRAFT, 'Soil', exists, 'person', 111, 'cloud:1')
         self.assertEqual(first['id'], retry['id'])
         self.assertEqual(len(self.session['drafts']), 1)
+        # The app labels its render of a relayed draft with the relay's revision.
+        self.assertEqual(es.summary(self.session)['drafts'][0]['relay_id'], 'cloud:1')
         with self.assertRaisesRegex(es.SessionError, 'another draft'):
             self.sessions.submit(self.session['id'], BASELINE, 'Other', exists, 'person', 112, 'cloud:1')
 
@@ -180,6 +182,28 @@ class ConversationTest(unittest.TestCase):
         sessions.note(old['id'], 'New', 'person', 1)
         self.assertEqual(es.EditSessions.feedback(sessions.get(old['id'], 1), 0)[0][0]['text'], 'New')
         self.assertEqual(es.summary(sessions.get(old['id'], 1))['messages'], [])
+
+
+
+class DraftNoticeTest(unittest.TestCase):
+    def test_only_the_starters_terrazzo_devices_hear_of_a_draft(self):
+        slug = lambda name: name.lower().replace(' ', '_')
+        registrations = [
+            {'app_id': 'ee.schimke.harc', 'user_id': 'person', 'device_name': 'Pixel 9'},
+            {'app_id': 'ee.schimke.harc', 'user_id': 'person', 'device_name': 'Tablet'},
+            {'app_id': 'io.homeassistant.companion.android', 'user_id': 'person', 'device_name': 'Phone'},
+            {'app_id': 'ee.schimke.harc', 'user_id': 'someone else', 'device_name': 'Theirs'},
+            {'app_id': 'ee.schimke.harc', 'user_id': 'person'},
+        ]
+        self.assertEqual(es.notice_services(registrations, 'person', slug),
+                         ['mobile_app_pixel_9', 'mobile_app_tablet'])
+
+    def test_the_notice_says_what_changed_and_replaces_the_last_one(self):
+        session = es.EditSessions().create(None, 'Garden', BASELINE, 'person', 0)
+        notice = es.draft_notice(session, {'summary': 'Soil moisture section'})
+        self.assertEqual(notice['message'], 'Soil moisture section')
+        self.assertEqual(notice['data']['tag'], f"terrazzo-edit-{session['id']}")
+        self.assertEqual(es.draft_notice(session, {'summary': ''})['message'], 'Garden')
 
 
 if __name__ == '__main__':
