@@ -72,4 +72,13 @@ class HaControlSlotsTest {
         .toSet(),
     )
   }
+
+  @Test
+  fun everyAcceptedSegmentCountLeavesCellsOfPositiveWidth() {
+    for (n in 2..48) {
+      val cell = (1f - segmentGapShare(n) * (n - 1)) / n
+      assertTrue(cell > 0f, "$n segments")
+      HaComponentGrammar(level = HaLevelStyle.Segmented, segments = n)
+    }
+  }
 }

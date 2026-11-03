@@ -287,8 +287,8 @@ private fun HaSwitchSpec.sized(): RemoteModifier =
 /**
  * A key mount drawn from the grammar: nothing on a filled grammar (a flat key is the card's own
  * surface), a rim at the grammar's stroke weight on an outlined one — in the live accent when it
- * has one — and, for a selected mode key, a dot in the accent, with a halo on a glowing grammar. A
- * kit's keys; bespoke flat families keep keys with no mount.
+ * has one, except in a launcher widget — and, for a selected mode key, a dot in the accent, with a
+ * halo on a glowing grammar. A kit's keys; bespoke flat families keep keys with no mount.
  */
 internal object GrammarKey : HaKeyRenderer {
   @Composable
@@ -296,8 +296,11 @@ internal object GrammarKey : HaKeyRenderer {
     val grammar = haGrammar()
     val theme = haTheme()
     if (!grammar.outline && selected != true) return RemoteModifier
-    val rimColor = accent ?: theme.divider
-    val dotColor = accent ?: theme.linkText
+    // A launcher widget is re-baked on every change and its platform player can't fold a live
+    // colour expression (a tween of the entity's accents), so its keys take the theme's constants.
+    val live = accent?.takeUnless { isWidgetActionCapture() }
+    val rimColor = live ?: theme.divider
+    val dotColor = live ?: theme.linkText
     val rim = (1.5f * grammar.stroke.scale).coerceAtLeast(1f)
     val corner = currentHaUberTheme().theme.shape.controlCornerDp.toFloat()
     return RemoteModifier.drawWithContent {

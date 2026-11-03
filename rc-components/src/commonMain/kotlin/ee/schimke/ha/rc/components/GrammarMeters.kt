@@ -12,6 +12,7 @@ import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemotePaint
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.remote.creation.compose.state.selectIfGe
 import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.StrokeCap
 
@@ -33,6 +34,13 @@ internal object GrammarRenderers {
   val Battery = HaVisualRenderer { spec -> grammarBattery(spec) }
   val Lock = HaVisualRenderer { spec -> grammarLock(spec) }
 }
+
+/**
+ * The gap between [segments] cells as a share of the run: 2.5 %, but never more than 30 % of a
+ * cell's pitch, so every count [HaComponentGrammar] accepts (up to 48) leaves cells of positive
+ * width.
+ */
+internal fun segmentGapShare(segments: Int): Float = minOf(0.025f, 0.3f / segments)
 
 /** Width : height of [RemoteHaLockGlyph]. */
 const val LockAspect = 0.78f
@@ -84,22 +92,58 @@ private fun RemoteDrawScope.haloPaint(
 
 private const val HaloAlpha = 0.45f
 
+// Live state that picks a colour — a segment lit or not, a tick past the hot mark — is drawn as
+// layers rather than a colour select: the mark in its resting colour, then each other colour over
+// it, sized by a 0..1 float switch. A float expression plays everywhere; a colour expression does
+// not fold in a launcher widget's platform player, which re-bakes on every change instead.
+
+/** 1 when [value] ≥ [threshold], else 0. */
+private fun ge(value: RemoteFloat, threshold: RemoteFloat): RemoteFloat =
+  selectIfGe(value, threshold, 1f.rf, 0f.rf)
+
 /**
- * A scale tick's colour at [at] along the scale: hot past the zone's hot mark, else muted. A live
- * mark (a gauge's bound `severity_red`) is compared in the document, so the ticks follow it. A mark
- * at 1 or above means no hot end (`gaugeZones` uses 1 for "none"), so the end tick, which sits at
- * exactly 1, stays muted then rather than matching it.
+ * The colours segment [index] of [count] lights in over its ghost, each with the 0..1 switch that
+ * shows it: lit once the value passes the segment's midpoint, in the hot colour inside a zone.
  */
-private fun HaVisualSpec.tickColor(at: Float): RemoteColor {
+private fun HaVisualSpec.segmentLayers(
+  index: Int,
+  count: Int,
+): List<Pair<RemoteColor, RemoteFloat>> {
+  val mid = (index + 0.5f) / count
+  val lit = ge(fraction, mid.rf)
+  val live = zones.hotFromLive
+  val static = zones.hotFrom
+  val low = zones.lowBelow
+  return when {
+    live != null -> {
+      val hot = ge(mid.rf, live)
+      listOf(look.value to lit * (1f.rf - hot), look.hot to lit * hot)
+    }
+    static != null && mid >= static -> listOf(look.hot to lit)
+    low != null -> {
+      val isLow = 1f.rf - ge(fraction, low.rf)
+      listOf(look.value to lit * (1f.rf - isLow), look.hot to lit * isLow)
+    }
+    else -> listOf(look.value to lit)
+  }
+}
+
+/**
+ * The 0..1 switch that shows a scale tick at [at] in the hot colour over its muted one, or null
+ * when it never is. A live mark (a gauge's bound `severity_red`) is compared in the document, so
+ * the ticks follow it. A mark at 1 or above means no hot end (`gaugeZones` uses 1 for "none"), so
+ * the end tick, which sits at exactly 1, stays muted then rather than matching it.
+ */
+private fun HaVisualSpec.tickHot(at: Float): RemoteFloat? {
   val live = zones.hotFromLive
   val static = zones.hotFrom
   return when {
     live != null -> {
-      val past = at.rf.isGreaterThanOrEqualTo(live).select(look.hot, look.muted)
-      if (at < 1f) past else live.isGreaterThanOrEqualTo(1f.rf).select(look.muted, past)
+      val past = ge(at.rf, live)
+      if (at < 1f) past else past * (1f.rf - ge(live, 1f.rf))
     }
-    static != null && static < 1f && at >= static -> look.hot
-    else -> look.muted
+    static != null && static < 1f && at >= static -> 1f.rf
+    else -> null
   }
 }
 
@@ -120,13 +164,15 @@ private fun RemoteDrawScope.grammarArc(spec: HaVisualSpec) {
     HaLevelStyle.Segmented -> {
       val n = g.segments
       val share = 0.72f
+      // Flat-ended cells: a lit layer of no length then draws nothing, where a round cap would
+      // leave a dot.
       for (i in 0 until n) {
-        val start = 180f + (i + (1f - share) / 2f) * 180f / n
-        arc(
-          strokePaint(thick, look.segment(f, i, n, spec.zones), round),
-          start.rf,
-          (180f / n * share).rf,
-        )
+        val start = (180f + (i + (1f - share) / 2f) * 180f / n).rf
+        val sweep = (180f / n * share).rf
+        arc(strokePaint(thick, look.ghost, round = false), start, sweep)
+        for ((color, on) in spec.segmentLayers(i, n)) {
+          arc(strokePaint(thick, color, round = false), start, sweep * on)
+        }
       }
     }
     HaLevelStyle.Pointer -> {
@@ -181,11 +227,20 @@ private fun RemoteDrawScope.arcTicks(spec: HaVisualSpec, arc: ArcBox, thick: Flo
     val at = i.toFloat() / count
     val long = i == 0 || i == count || (count % 2 == 0 && i == count / 2)
     val len = arc.radius * (if (long) 0.14f else 0.07f).rf
+    val stroke = (thick * 0.25f).coerceAtLeast(1f)
+    val from = arc.point(at * 180f, inner)
     drawLine(
-      strokePaint((thick * 0.25f).coerceAtLeast(1f), spec.tickColor(at)),
-      arc.point(at * 180f, inner),
+      strokePaint(stroke, spec.look.muted, round = false),
+      from,
       arc.point(at * 180f, inner - len),
     )
+    spec.tickHot(at)?.let { on ->
+      drawLine(
+        strokePaint(stroke, spec.look.hot, round = false),
+        from,
+        arc.point(at * 180f, inner - len * on),
+      )
+    }
   }
 }
 
@@ -221,16 +276,14 @@ private fun RemoteDrawScope.levelRun(
 
   when (g.level) {
     HaLevelStyle.Segmented -> {
-      val gap = len * 0.025f.rf
+      val gap = len * segmentGapShare(segments).rf
       val cell = (len - gap * (segments - 1).toFloat().rf) / segments.toFloat().rf
       for (i in 0 until segments) {
-        rect(
-          look.segment(f, i, segments, spec.zones),
-          (cell + gap) * i.toFloat().rf,
-          cell,
-          0f.rf,
-          cross,
-        )
+        val a0 = (cell + gap) * i.toFloat().rf
+        rect(look.ghost, a0, cell, 0f.rf, cross)
+        for ((color, on) in spec.segmentLayers(i, segments)) {
+          rect(color, a0, cell, cross * (1f.rf - on) / 2f.rf, cross * on)
+        }
       }
     }
     HaLevelStyle.Pointer -> {
@@ -241,9 +294,16 @@ private fun RemoteDrawScope.levelRun(
         val at = i.toFloat() / count
         val long = i == 0 || i == count || (count % 2 == 0 && i == count / 2)
         val tick = cross * (if (long) 0.45f else 0.25f).rf
-        val color = spec.tickColor(at)
-        if (vertical) fillRect(color, x + spine, y + h - len * at.rf - line / 2f.rf, tick, line)
-        else fillRect(color, x + len * at.rf - line / 2f.rf, y + spine - tick + line, line, tick)
+        val hot = spec.tickHot(at)
+        if (vertical) {
+          val ty = y + h - len * at.rf - line / 2f.rf
+          fillRect(look.muted, x + spine, ty, tick, line)
+          hot?.let { fillRect(look.hot, x + spine, ty, tick * it, line) }
+        } else {
+          val tx = x + len * at.rf - line / 2f.rf
+          fillRect(look.muted, tx, y + spine - tick + line, line, tick)
+          hot?.let { fillRect(look.hot, tx, y + spine - tick * it + line, line, tick * it) }
+        }
       }
       if (vertical) fillRect(look.track, x + spine, y, line, len)
       else fillRect(look.track, x, y + spine, len, line)
@@ -286,13 +346,12 @@ private fun RemoteDrawScope.levelRun(
             RemoteOffset(corner(ht), corner(ht)),
           )
       }
-      val value =
-        when {
-          spec.zones.lowBelow != null ->
-            f.isGreaterThanOrEqualTo(spec.zones.lowBelow.rf).select(look.value, look.hot)
-          else -> look.value
-        }
-      rect(value, 0f.rf, filled, c0, t)
+      rect(look.value, 0f.rf, filled, c0, t)
+      // Below a low mark (a battery past critical) the fill turns hot.
+      spec.zones.lowBelow?.let { low ->
+        val isLow = 1f.rf - ge(f, low.rf)
+        rect(look.hot, 0f.rf, filled, c0 + t * (1f.rf - isLow) / 2f.rf, t * isLow)
+      }
       if (g.stopDot) {
         val dot = t * 0.22f.rf
         val at = len - t / 2f.rf
@@ -452,17 +511,16 @@ private fun RemoteDrawScope.grammarLock(spec: HaVisualSpec) {
       val n = 3
       val gap = ih * 0.12f.rf
       val bar = (ih - gap * (n - 1).toFloat().rf) / n.toFloat().rf
-      val lit = f.isGreaterThanOrEqualTo(0.5f.rf).select(look.value, look.ghost)
+      val lit = ge(f, 0.5f.rf)
       for (i in 0 until n) {
         val c = bar * (if (g.roundCaps) 0.5f else 0.1f).rf
-        fillRound(
-          if (i == n - 1) look.value else lit,
-          ix,
-          iy + (bar + gap) * i.toFloat().rf,
-          iw,
-          bar,
-          c,
-        )
+        val by = iy + (bar + gap) * i.toFloat().rf
+        if (i == n - 1) {
+          fillRound(look.value, ix, by, iw, bar, c)
+        } else {
+          fillRound(look.ghost, ix, by, iw, bar, c)
+          fillRound(look.value, ix, by + bar * (1f.rf - lit) / 2f.rf, iw, bar * lit, c * lit)
+        }
       }
     }
     HaLevelStyle.Pointer -> {
