@@ -135,7 +135,9 @@ fun AgentEditScreen(
         throw e
       } catch (e: HaCommandException) {
         problem = e.reason
-      } catch (e: Exception) {
+      } catch (e: Throwable) {
+        // Throwable, not Exception: on Wasm a failed fetch is an Error, and this loop must outlive
+        // a network blip or a design server deploy.
         problem =
           if (cloudServer != null) e.message ?: "Reconnecting to the design server…"
           else "Reconnecting to Home Assistant…"

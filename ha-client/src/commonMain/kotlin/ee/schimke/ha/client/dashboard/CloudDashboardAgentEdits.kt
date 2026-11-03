@@ -7,6 +7,7 @@ import ee.schimke.ha.client.agent.AgentRelayClient
 import ee.schimke.ha.client.agent.AgentRelayState
 import ee.schimke.ha.client.agent.AgentSessionEndedException
 import ee.schimke.ha.client.design.studioServerUrl
+import ee.schimke.ha.client.networkErrorsAsExceptions
 import ee.schimke.ha.client.platformHttpClient
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
@@ -40,8 +41,15 @@ class CloudDashboardAgentEdits(
   override val relayServer: String = base
   private val http =
     if (engine == null)
-      platformHttpClient { install(HttpTimeout) { requestTimeoutMillis = 30_000 } }
-    else HttpClient(engine) { install(HttpTimeout) { requestTimeoutMillis = 30_000 } }
+      platformHttpClient {
+        install(HttpTimeout) { requestTimeoutMillis = 30_000 }
+        networkErrorsAsExceptions()
+      }
+    else
+      HttpClient(engine) {
+        install(HttpTimeout) { requestTimeoutMillis = 30_000 }
+        networkErrorsAsExceptions()
+      }
   private val relay = AgentRelayClient(base, engine)
   private val delegate = home.agentEdits
 

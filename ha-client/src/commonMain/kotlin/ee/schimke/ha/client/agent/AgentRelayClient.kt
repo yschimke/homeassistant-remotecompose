@@ -1,6 +1,7 @@
 package ee.schimke.ha.client.agent
 
 import ee.schimke.ha.client.design.studioServerUrl
+import ee.schimke.ha.client.networkErrorsAsExceptions
 import ee.schimke.ha.client.platformHttpClient
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
@@ -90,6 +91,7 @@ class AgentRelayClient(server: String, engine: HttpClientEngine? = null) {
   private fun HttpClientConfig<*>.configure() {
     // A long-poll is held for up to 25 s; leave room for slow networks on top.
     install(HttpTimeout) { requestTimeoutMillis = 45_000 }
+    networkErrorsAsExceptions()
   }
 
   /**

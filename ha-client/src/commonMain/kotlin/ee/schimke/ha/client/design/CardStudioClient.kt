@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.client.design
 
+import ee.schimke.ha.client.networkErrorsAsExceptions
 import ee.schimke.ha.client.platformHttpClient
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignEntry
@@ -386,6 +387,7 @@ private fun io.ktor.client.HttpClientConfig<*>.configure(
 ) {
   followRedirects = false
   install(HttpTimeout) { requestTimeoutMillis = 30_000 }
+  networkErrorsAsExceptions()
   if (homeAssistantToken != null) {
     install(
       createClientPlugin("HomeAssistantBearer") {
