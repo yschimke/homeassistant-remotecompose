@@ -5,12 +5,15 @@ package ee.schimke.ha.designs
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
+import androidx.compose.remote.creation.compose.layout.RemoteCollapsibleColumn
+import androidx.compose.remote.creation.compose.layout.RemoteCollapsibleRow
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteImage
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
+import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
@@ -57,15 +60,21 @@ import androidx.compose.ui.layout.ContentScale
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.design.HaSharedValues
+import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CommonCaptureHost
 import ee.schimke.ha.rc.FramedCard
+import ee.schimke.ha.rc.HaStateColor
+import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaType
 import ee.schimke.ha.rc.components.LocalGridCellWidthPx
+import ee.schimke.ha.rc.components.RemoteHaToggleSwitch
 import ee.schimke.ha.rc.components.animateRemoteFloat
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
+import ee.schimke.ha.rc.components.haNeutralAccent
 import ee.schimke.ha.rc.components.rememberExpressionName
 import ee.schimke.ha.rc.components.rememberLocalNamedRemoteBitmap
+import ee.schimke.ha.rc.components.toRemoteAction
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlinx.serialization.json.JsonArray
@@ -91,7 +100,9 @@ import org.jetbrains.skia.SamplingMode
  * Builder can't export one (`export.rc` is a build feature of the builder, and the hosted one
  * doesn't serve it). It covers what a hand-made card is drawn with: boxes, columns and rows, the
  * design's own pictures (`asset/image`) and text, with size, offset, padding, alpha, scale and
- * rotation.
+ * rotation; and what the design server seeds a card with: collapsible rows and columns (a child
+ * that doesn't fit drops out as the card narrows, rather than overflowing), a child's `weight`, and
+ * a switch (`remote-switch-button`) whose `checked` reads a slot's `is_on` ([SWITCH]).
  *
  * A property or modifier value may read a state variable (`{"type": "state"}`), or pick between two
  * numbers by a boolean one (`{"type": "expr", "op": "select"}`). State variables become named
@@ -228,6 +239,8 @@ class UiBuilderDesignCompiler(
           val type = (value as? JsonObject)?.string("type")
           when {
             // Only a text's text is drawn live; any other property is captured as it is.
+            component == SWITCH && name == "checked" ->
+              switchProblem(value)?.let { add("$id.checked: $it") }
             type in DYNAMIC && !(component == TEXT && name == "text") ->
               add("$id.$name: a property reading state isn't drawn live here yet")
             type == "colorToken" && name != "color" ->
@@ -247,6 +260,21 @@ class UiBuilderDesignCompiler(
           ?.takeIf { it !is kotlinx.serialization.json.JsonNull }
           ?.let { add("$id: a predicate isn't drawn here yet") }
         children(id).filter { it !in nodes }.forEach { add("$id: missing child $it") }
+      }
+    }
+
+    /**
+     * Why a switch's `checked` can't be drawn: it must read a slot's `is_on` (`light.s0.is_on`), a
+     * boolean the host pushes, so the switch follows Home Assistant and its tap names the slot.
+     */
+    private fun switchProblem(value: JsonElement): String? {
+      val variable =
+        (value as? JsonObject)?.takeIf { it.string("type") == "state" }?.string("variable")
+      return when {
+        variable == null -> "a switch's checked reads a slot's `is_on`, not a fixed value"
+        variable !in variables -> "no state `$variable`"
+        slotEntity(variable) == null -> "`$variable` isn't a slot's `is_on`"
+        else -> null
       }
     }
 
@@ -307,10 +335,22 @@ class UiBuilderDesignCompiler(
     }
 
     @Composable
-    private fun Node(id: String, outer: RemoteModifier, sceneScale: RemoteFloat?) {
+    private fun Node(
+      id: String,
+      outer: RemoteModifier,
+      sceneScale: RemoteFloat?,
+      weigh: ((RemoteModifier, Float) -> RemoteModifier)? = null,
+    ) {
       val node = nodes.getValue(id)
-      val modifier = applyModifiers(outer, node["modifiers"] as? JsonArray, sceneScale)
       val properties = node.properties()
+      // A child's `weight` is its share of what its row or column leaves; elsewhere it means
+      // nothing.
+      val weighted =
+        literal(properties["weight"])
+          ?.floatOrNull
+          ?.takeIf { it > 0f && weigh != null }
+          ?.let { weigh!!(outer, it) } ?: outer
+      val modifier = applyModifiers(weighted, node["modifiers"] as? JsonArray, sceneScale)
       when (node.string("componentId")) {
         BOX ->
           RemoteBox(modifier = modifier, contentAlignment = alignment(properties)) {
@@ -322,15 +362,32 @@ class UiBuilderDesignCompiler(
             verticalArrangement = verticalArrangement(properties),
             horizontalAlignment = horizontalAlignment(properties),
           ) {
-            children(id).forEach { Node(it, RemoteModifier, sceneScale) }
+            children(id).forEach { Node(it, RemoteModifier, sceneScale) { m, w -> m.weight(w) } }
           }
+        COLLAPSIBLE_COLUMN ->
+          RemoteCollapsibleColumn(
+            modifier = modifier,
+            verticalArrangement = verticalArrangement(properties),
+            horizontalAlignment = horizontalAlignment(properties),
+          ) {
+            children(id).forEach { Node(it, RemoteModifier, sceneScale) { m, w -> m.weight(w) } }
+          }
+        COLLAPSIBLE_ROW ->
+          RemoteCollapsibleRow(
+            modifier = modifier,
+            horizontalArrangement = horizontalArrangement(properties),
+            verticalAlignment = verticalAlignment(properties),
+          ) {
+            children(id).forEach { Node(it, RemoteModifier, sceneScale) { m, w -> m.weight(w) } }
+          }
+        SWITCH -> Switch(id, properties, modifier, sceneScale)
         ROW ->
           RemoteRow(
             modifier = modifier,
             horizontalArrangement = horizontalArrangement(properties),
             verticalAlignment = verticalAlignment(properties),
           ) {
-            children(id).forEach { Node(it, RemoteModifier, sceneScale) }
+            children(id).forEach { Node(it, RemoteModifier, sceneScale) { m, w -> m.weight(w) } }
           }
         IMAGE -> {
           val key = literal(properties["assetKey"])!!.content
@@ -356,6 +413,46 @@ class UiBuilderDesignCompiler(
         }
         // A card's own surface: the app draws the card's frame, so it is only its content.
         else -> children(id).forEach { Node(it, modifier, sceneScale) }
+      }
+    }
+
+    /**
+     * A switch: its label (and icon) beside a toggle drawn from the slot's live `is_on`, the whole
+     * of it one tap target. The tap is a toggle of the slot's entity (`light.s0`), which the host
+     * resolves to the card's own action for that slot (`CardTemplatePlayback.resolveTap`): a design
+     * never names a real entity or a service. The switch follows the pushed `is_on` only, with no
+     * optimistic flip, as the converters' switches do.
+     */
+    @Composable
+    private fun Switch(
+      id: String,
+      properties: Map<String, JsonElement>,
+      modifier: RemoteModifier,
+      sceneScale: RemoteFloat?,
+    ) {
+      val checked = properties.getValue("checked")
+      val variable = checked.jsonObject.string("variable")!!
+      val entity = slotEntity(variable)!!
+      val isOn = boolean(checked)!!
+      val tap = HaAction.Toggle(entity).toRemoteAction()
+      val slots = nodes.getValue(id)["slots"]?.jsonObject.orEmpty()
+      fun slot(name: String) =
+        (slots[name] as? JsonArray).orEmpty().map { it.jsonPrimitive.content }
+      RemoteRow(
+        modifier = if (tap != null) modifier.clickable(tap) else modifier,
+        horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
+        verticalAlignment = RemoteAlignment.CenterVertically,
+      ) {
+        slot("icon").forEach { Node(it, RemoteModifier, sceneScale) }
+        val labels = slot("label") + slot("secondaryLabel")
+        if (labels.isNotEmpty()) {
+          RemoteColumn { labels.forEach { Node(it, RemoteModifier, sceneScale) } }
+        }
+        RemoteHaToggleSwitch(
+          isOn = isOn,
+          activeAccent = HaStateColor.activeFor(EntityState(entity, "on")).rc,
+          inactiveAccent = haNeutralAccent(),
+        )
       }
     }
 
@@ -665,6 +762,22 @@ class UiBuilderDesignCompiler(
     private const val ROW = "layout/row"
     private const val IMAGE = "asset/image"
     private const val TEXT = "ha-cards/remote-text"
+    private const val COLLAPSIBLE_ROW = "layout/collapsible-row"
+    private const val COLLAPSIBLE_COLUMN = "layout/collapsible-column"
+
+    /**
+     * `ha-cards/remote-switch-button`, as the design server seeds a toggleable slot: `checked`
+     * reads the slot's `is_on`, and its `label` slot holds the state text.
+     */
+    const val SWITCH = "ha-cards/remote-switch-button"
+
+    /**
+     * The slot entity (`light.s0`) a slot binding (`light.s0.is_on`) is of; null if it isn't one.
+     */
+    private val SLOT_IS_ON = Regex("^([a-z_]+\\.s\\d+)\\.is_on$")
+
+    private fun slotEntity(variable: String): String? =
+      SLOT_IS_ON.find(variable)?.groupValues?.get(1)
 
     private val COMPONENTS =
       setOf(
@@ -673,6 +786,9 @@ class UiBuilderDesignCompiler(
         ROW,
         IMAGE,
         TEXT,
+        COLLAPSIBLE_ROW,
+        COLLAPSIBLE_COLUMN,
+        SWITCH,
         "ha-cards/dashboard-card",
         "ha-cards/dashboard-section",
         "ha-cards/remote-card",
@@ -695,7 +811,8 @@ class UiBuilderDesignCompiler(
         "remoteCall",
       )
 
-    private val LITERALS = setOf("string", "bool", "int", "float", "dimension", "color", "null")
+    private val LITERALS =
+      setOf("string", "bool", "int", "float", "dimension", "color", "enum", "null")
 
     /** Values that read state: drawn live in modifiers and a text's text, refused elsewhere. */
     private val DYNAMIC = setOf("state", "expr", "system")

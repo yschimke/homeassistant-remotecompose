@@ -53,7 +53,9 @@ in to Home Assistant instead, and a card can be designed by hand in UI Builder.
    button that pins the next message to that card (its title or entity, and where it sits). The
    agent, waiting in `await_feedback`, gets the message at once, and can `send_message` back.
 6. **Decide.** **Use it** applies the dashboard draft, or puts the card design on the card (the
-   design server opens and publishes it privately, with no browser), and tells the agent
+   design server opens it as the person's own design and publishes it privately, compiling it to
+   a template itself with `UiBuilderDesignCompiler`, which draws what the server seeds a card
+   with: collapsible rows, a switch on the slot's `is_on`; no browser), and tells the agent
    `accepted`; **Undo** puts a dashboard back. A message asks for changes (on a card, **Not this** says so in
    one tap); **Stop**
    ends the session for both sides.
