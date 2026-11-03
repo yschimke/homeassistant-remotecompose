@@ -423,14 +423,25 @@ class AgentRelay(
     entry.joinCodeExpires = 0
   }
 
+  /**
+   * Drop access requests past their lifetime. Sweep [pollers], not only [requests]: a claimed
+   * request leaves [requests] at once but waits in [pollers] for its agent's next `poll_access`,
+   * which may never come.
+   */
   private fun expireRequests() {
     val now = clock()
-    val stale = requests.values.filter { it.expires <= now }
-    stale.forEach {
-      requests.remove(it.code)
-      pollers.remove(it.poll)
-    }
+    pollers.values
+      .filter { it.expires <= now }
+      .forEach {
+        requests.remove(it.code)
+        pollers.remove(it.poll)
+      }
+    requests.values.filter { it.expires <= now }.forEach { requests.remove(it.code) }
   }
+
+  /** Access requests still indexed (for tests). */
+  internal val pendingRequests: Int
+    get() = synchronized(this) { pollers.size + requests.size }
 
   /** A guess budget shared by everyone: codes are short, so wrong ones slow all guessing down. */
   private fun throttled(): Boolean {

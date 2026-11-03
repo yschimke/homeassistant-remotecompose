@@ -330,6 +330,20 @@ class AgentRelayTest {
   }
 
   @Test
+  fun aClaimedRequestWhoseAgentNeverPollsIsSwept() {
+    var now = 0L
+    val relay = relay({ now })
+    val access = relay.dashboards.create("Tidy", baseline)
+    relay.register(AgentRelay.Kind.Dashboard, access.owner, access.agent, "Tidy")
+    val pending = relay.requestAccess("Codex")
+    assertEquals(AgentRelay.ClaimResult.Claimed, relay.claim(access.owner, pending.code))
+    // The agent disconnects and never calls poll_access again.
+    now += AgentRelay.REQUEST_MS
+    relay.prune()
+    assertEquals(0, relay.pendingRequests)
+  }
+
+  @Test
   fun idleSessionsSlideButNeverPastADay() {
     var now = 0L
     val relay = relay({ now })
