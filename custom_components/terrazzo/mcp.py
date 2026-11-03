@@ -4,7 +4,11 @@
 tests drive it with a fake one. Only stateless request/response JSON is spoken: no sessions, no
 server-sent events, no batching, which every current MCP client accepts.
 """
+import base64
 import json
+
+# A tool result's PNG bytes under this key become MCP image content.
+IMAGE = "_png"
 
 # Newest first; an older client gets its own version back when this server speaks it.
 PROTOCOL_VERSIONS = ("2025-11-25", "2025-06-18", "2025-03-26")
@@ -253,6 +257,21 @@ EDIT_TOOLS += [
         "annotations": {"readOnlyHint": True, "openWorldHint": False},
     },
     {
+        "name": "get_draft_render",
+        "title": "See the draft as the person does",
+        "description": (
+            "Shows your newest draft exactly as the person's app draws it (a PNG, with their own "
+            "cards and live states), once they have opened it. Use it after submit_draft."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {"session_id": _SESSION_ID},
+            "required": ["session_id"],
+            "additionalProperties": False,
+        },
+        "annotations": {"readOnlyHint": True, "openWorldHint": False},
+    },
+    {
         "name": "send_message",
         "title": "Message the person",
         "description": "Says something to the person in the app: a question, or what you changed.",
@@ -443,6 +462,12 @@ async def call_tool(home, name, arguments):
         if not isinstance(since, int) or isinstance(since, bool) or since < 0:
             raise ToolError("since must be the cursor from the last call, or 0")
         return await home.await_feedback(_session_id(arguments), since)
+    if name == "get_draft_render":
+        render = home.draft_render(_session_id(arguments))
+        if render is None:
+            return {"status": "none", "next": "The person's app hasn't drawn a draft yet."}
+        draft_id, png = render
+        return {"draft_id": draft_id, IMAGE: png}
     if name == "send_message":
         text = _optional_text(arguments, "text")
         if not text.strip():
@@ -523,6 +548,19 @@ async def handle(message, home, server_version):
             structured = await call_tool(home, name, arguments)
         except ToolError as failure:
             return _result(message_id, {"content": [{"type": "text", "text": str(failure)}], "isError": True})
+        if IMAGE in structured:
+            # An image is MCP image content; the rest stays structured.
+            png = structured.pop(IMAGE)
+            return _result(
+                message_id,
+                {
+                    "content": [
+                        {"type": "image", "data": base64.b64encode(png).decode("ascii"), "mimeType": "image/png"},
+                        {"type": "text", "text": json.dumps(structured, ensure_ascii=False, default=str)},
+                    ],
+                    "structuredContent": structured,
+                },
+            )
         return _result(
             message_id,
             {

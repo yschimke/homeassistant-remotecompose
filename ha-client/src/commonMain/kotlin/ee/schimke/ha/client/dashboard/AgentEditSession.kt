@@ -129,4 +129,10 @@ interface AgentEdits {
   suspend fun apply(sessionId: String, draftId: String): AgentEditSession
 
   suspend fun undo(sessionId: String): AgentEditSession
+
+  /**
+   * Share [draftId] as this app drew it ([png]), so the agent sees exactly what the person sees.
+   * Best effort: an older integration or server just doesn't keep it.
+   */
+  suspend fun shareRender(sessionId: String, draftId: String, png: ByteArray) {}
 }

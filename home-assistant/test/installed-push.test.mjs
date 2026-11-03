@@ -132,6 +132,43 @@ test('a notification for a device with no websocket is held by the integration a
     const again = await ws.call({type: 'terrazzo/push/take', webhook_id: webhookId});
     assert.deepEqual(again.result.messages, [], 'each message is taken once');
 
+    // An agent's draft that nobody is watching reaches the person's phone the same way.
+    const me = (await ws.call({type: 'auth/current_user'})).result;
+    const [entry] = await (await fetch(`${base}/api/config/config_entries/entry?domain=terrazzo`, {headers: auth})).json();
+    const setMcpUser = async (userId) => {
+      const form = await (await fetch(`${base}/api/config/config_entries/options/flow`,
+        {method: 'POST', headers: auth, body: JSON.stringify({handler: entry.entry_id})})).json();
+      const saved = await (await fetch(`${base}/api/config/config_entries/options/flow/${form.flow_id}`,
+        {method: 'POST', headers: auth, body: JSON.stringify({title: 'Terrazzo', dashboard: 'wall-panel', mcp_user: userId})})).json();
+      assert.equal(saved.type, 'create_entry');
+    };
+    await setMcpUser(me.id);
+    try {
+      const baseline = {views: [{title: 'Home', cards: [{type: 'tile', entity: 'light.wall_light'}]}]};
+      assert.equal((await ws.call({type: 'lovelace/dashboards/create', url_path: 'push-fixture',
+        title: 'Push fixture', mode: 'storage', show_in_sidebar: false})).success, true);
+      assert.equal((await ws.call({type: 'lovelace/config/save', url_path: 'push-fixture', config: baseline})).success, true);
+      const started = await ws.call({type: 'terrazzo/edit/start', url_path: 'push-fixture', request: 'Add the switch'});
+      const sessionId = started.result.session.session_id;
+      const draft = {views: [{title: 'Home', cards: [{type: 'tile', entity: 'light.wall_light'},
+        {type: 'tile', entity: 'input_boolean.wall_light'}]}]};
+      const submitted = await (await fetch(`${base}/api/terrazzo/mcp`, {method: 'POST',
+        headers: {...auth, Accept: 'application/json, text/event-stream'},
+        body: JSON.stringify({jsonrpc: '2.0', id: 1, method: 'tools/call', params: {name: 'submit_draft',
+          arguments: {session_id: sessionId, config: draft, summary: 'Switch beside the light'}}})})).json();
+      assert.notEqual(submitted.result.isError, true, JSON.stringify(submitted));
+      let notice;
+      for (let i = 0; i < 20; i++) {
+        notice = await ws.call({type: 'terrazzo/push/take', webhook_id: webhookId});
+        if (notice.result?.messages?.length) break;
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+      assert.deepEqual(notice.result.messages, [{message: 'Switch beside the light',
+        title: 'Your agent has a draft', data: {tag: `terrazzo-edit-${sessionId}`}}]);
+    } finally {
+      await setMcpUser('off');
+    }
+
     // The entities the app's widgets read: their changes wake it, except during a lease.
     const watched = await ws.call({type: 'terrazzo/push/watch', webhook_id: webhookId,
       entity_ids: ['sun.sun'], lease_seconds: 9999});

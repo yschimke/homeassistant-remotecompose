@@ -94,6 +94,9 @@ class AgentRelay(
     var decision: String? = null
     /** The person's link (its owner capability) this session was delivered through. */
     var link: String? = null
+    /** The latest draft as the person's app drew it (PNG), and the revision it shows. */
+    var render: ByteArray? = null
+    var renderRevision = 0L
 
     fun bump() {
       version.update { it + 1 }
@@ -322,6 +325,24 @@ class AgentRelay(
     Unknown,
     Throttled,
     Gone,
+  }
+
+  /** The person's app shares the draft as it drew it, so the agent sees exactly that. */
+  fun putRender(owner: String, png: ByteArray, revision: Long): Boolean {
+    val entry = byOwner[owner]?.takeIf(::alive) ?: return false
+    require(png.size in 1..MAX_RENDER_BYTES && AgentDesignSessions.imageType(png) == "image/png")
+    synchronized(this) {
+      entry.render = png.copyOf()
+      entry.renderRevision = revision
+    }
+    entry.bump()
+    return true
+  }
+
+  /** The latest render for the agent: PNG bytes and the draft revision they show. */
+  fun render(agent: String): Pair<ByteArray, Long>? {
+    val entry = byAgent[agent]?.takeIf(::alive) ?: return null
+    return synchronized(this) { entry.render?.let { it.copyOf() to entry.renderRevision } }
   }
 
   fun comment(owner: String, text: String, target: String?): Boolean {
@@ -612,6 +633,7 @@ class AgentRelay(
     const val CONNECTED_MS = 90_000L
     const val WATCHING_MS = 60_000L
     const val MAX_TEXT = 2000
+    const val MAX_RENDER_BYTES = 1_500_000
     const val MAX_MESSAGES = 200
     const val OWNER_MESSAGES = 50
     const val MAX_REQUESTS = 256

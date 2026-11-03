@@ -75,6 +75,25 @@ class AgentSessionFileTest {
   }
 
   @Test
+  fun steadyTrafficCannotPostponeSaving() = runBlocking {
+    val file = createTempDirectory("agent-sessions").toFile().resolve("sessions.json")
+    val relay = AgentRelay(AgentDesignSessions(), DashboardAgentSessions())
+    val saving = AgentSessionFile(file, relay).start(this, pauseMs = 200)
+    try {
+      val dash = relay.dashboards.create("Tidy", baseline)
+      relay.register(AgentRelay.Kind.Dashboard, dash.owner, dash.agent, "Tidy")
+      // A change every 50 ms, far more often than the pause, for a second and a half.
+      repeat(30) {
+        relay.comment(dash.owner, "note $it", null)
+        delay(50)
+      }
+      assertTrue(file.isFile && dash.owner in file.readText(), "saved while traffic continued")
+    } finally {
+      saving.cancel()
+    }
+  }
+
+  @Test
   fun anUnreadableFileStartsEmpty() {
     val dir = createTempDirectory("agent-sessions").toFile()
     val file = dir.resolve("sessions.json").apply { writeText("{not json") }

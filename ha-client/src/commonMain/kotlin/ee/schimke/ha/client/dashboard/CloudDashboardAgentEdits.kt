@@ -158,5 +158,12 @@ class CloudDashboardAgentEdits(
 
   override suspend fun undo(sessionId: String) = delegate.undo(sessionId)
 
+  /** The relay keeps the agent's view; a relayed draft's id is `cloud:<revision>`. */
+  override suspend fun shareRender(sessionId: String, draftId: String, png: ByteArray) {
+    val access = access(sessionId)
+    val revision = draftId.removePrefix("cloud:").toLongOrNull() ?: access.revision
+    relay.putRender(access.owner, png, revision)
+  }
+
   fun close() = relay.close()
 }

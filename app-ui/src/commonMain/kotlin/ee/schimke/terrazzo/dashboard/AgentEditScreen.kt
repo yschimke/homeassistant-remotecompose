@@ -41,6 +41,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.HaCommandException
@@ -59,6 +61,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.shared.AgentConnection
 import ee.schimke.terrazzo.shared.AgentLivePanel
 import ee.schimke.terrazzo.shared.DashboardContent
+import ee.schimke.terrazzo.shared.encodePng
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -99,6 +102,21 @@ fun AgentEditScreen(
   var sessionId by remember(edits, urlPath) { mutableStateOf<String?>(null) }
   var prompt by remember(edits, urlPath) { mutableStateOf<String?>(null) }
   var session by remember(edits, urlPath) { mutableStateOf<AgentEditSession?>(null) }
+  // When the last session reply arrived, and a clock ticking past it: a direct agent's presence
+  // ages by elapsed time even when no session event comes (an agent that went quiet sends none).
+  var receivedAt by remember(edits, urlPath) { mutableStateOf(0L) }
+  var now by remember { mutableStateOf(nowMillis()) }
+  LaunchedEffect(Unit) {
+    while (true) {
+      delay(10_000)
+      now = nowMillis()
+    }
+  }
+  LaunchedEffect(session) {
+    receivedAt = nowMillis()
+    now = receivedAt
+  }
+  val sinceReply = ((now - receivedAt).coerceAtLeast(0) / 1000.0)
   var problem by remember(edits, urlPath) { mutableStateOf<String?>(null) }
   var busy by remember { mutableStateOf(false) }
 
@@ -194,7 +212,9 @@ fun AgentEditScreen(
             session = current,
             // An agent signed in to Home Assistant directly has no relay; the session itself
             // carries its presence and messages once it has joined.
-            live = live?.live(current.id)?.collectAsState()?.value ?: directLive(current),
+            live =
+              live?.live(current.id)?.collectAsState()?.value ?: directLive(current, sinceReply),
+            agentListening = current.agentListening && sinceReply < LISTENING_SECONDS,
             liveBusy = busy,
             onCopyInvite = { code ->
               onSharePrompt(
@@ -240,6 +260,10 @@ fun AgentEditScreen(
               }
             },
             onNote = { text -> run { session = edits.note(current.id, text) } },
+            // Best effort, quietly: the agent sees the draft as drawn here when it asks.
+            onRender = { draftId, png ->
+              scope.launch { runCatching { edits.shareRender(current.id, draftId, png) } }
+            },
             onDiscard = {
               run {
                 edits.discard(current.id)
@@ -348,6 +372,7 @@ internal fun previewDashboard(config: JsonObject?): Dashboard? = config?.let {
 private fun SessionReview(
   session: AgentEditSession,
   live: AgentRelayState?,
+  agentListening: Boolean,
   liveBusy: Boolean,
   onCopyInvite: (String) -> Unit,
   onNewCode: () -> Unit,
@@ -364,6 +389,7 @@ private fun SessionReview(
   onUndo: () -> Unit,
   onNote: (String) -> Unit,
   onDiscard: () -> Unit,
+  onRender: (draftId: String, png: ByteArray) -> Unit,
   renderCard: @Composable (CardKey, CardConfig) -> Unit,
 ) {
   var shown by remember(session.id) { mutableStateOf<String?>(null) }
@@ -423,7 +449,7 @@ private fun SessionReview(
           target = target,
           onClearTarget = { target = null },
         )
-      } else if (session.isOpen && session.agentListening && session.drafts.isEmpty()) {
+      } else if (session.isOpen && agentListening && session.drafts.isEmpty()) {
         // An agent signed in to Home Assistant is listening: it picks this up by itself.
         Text(
           "Your agent is listening and picks this up now.",
@@ -483,7 +509,7 @@ private fun SessionReview(
           dashboard,
           "agent-draft-${session.id}-${draft.id}",
           snapshot,
-          Modifier.weight(1f),
+          Modifier.weight(1f).sharesRender(draft.id, session.isOpen, onRender),
         ) { key, card ->
           if (live?.agent?.joined == true && session.isOpen)
             Box {
@@ -581,9 +607,9 @@ internal fun cardLabel(key: CardKey, card: CardConfig): String {
  * until the agent has been active, so the prompt to hand it shows until then. Presence counts as
  * connected for a minute and a half after the agent's last call, by Home Assistant's clock.
  */
-internal fun directLive(session: AgentEditSession): AgentRelayState? {
+internal fun directLive(session: AgentEditSession, sinceReply: Double = 0.0): AgentRelayState? {
   val agent = session.agent ?: return null
-  val idle = session.agentIdleSeconds
+  val idle = session.agentIdleSeconds?.let { it + sinceReply }
   return AgentRelayState(
     version = session.conversation.lastOrNull()?.seq ?: 0,
     kind = "dashboard",
@@ -610,3 +636,61 @@ internal fun directLive(session: AgentEditSession): AgentRelayState? {
     decision = if (session.isApplied) "accepted" else null,
   )
 }
+
+/**
+ * Records what this draws and, a moment after a draft appears (its cards and pictures loaded),
+ * hands it to [onRender] as a PNG at most [MAX_RENDER_WIDTH] wide: what the agent sees when it asks
+ * how its draft looks.
+ */
+@Composable
+private fun Modifier.sharesRender(
+  draftId: String,
+  enabled: Boolean,
+  onRender: (String, ByteArray) -> Unit,
+): Modifier {
+  val layer = androidx.compose.ui.graphics.rememberGraphicsLayer()
+  val latest by androidx.compose.runtime.rememberUpdatedState(onRender)
+  LaunchedEffect(draftId, enabled) {
+    if (!enabled) return@LaunchedEffect
+    delay(2_000)
+    val drawn = runCatching { layer.toImageBitmap() }.getOrNull() ?: return@LaunchedEffect
+    if (drawn.width == 0 || drawn.height == 0) return@LaunchedEffect
+    drawn
+      .scaledTo(MAX_RENDER_WIDTH)
+      .encodePng()
+      ?.takeIf { it.size <= MAX_RENDER_BYTES }
+      ?.let { latest(draftId, it) }
+  }
+  return drawWithContent {
+    layer.record { this@drawWithContent.drawContent() }
+    drawLayer(layer)
+  }
+}
+
+private const val MAX_RENDER_WIDTH = 1080
+private const val MAX_RENDER_BYTES = 1_400_000
+
+/** This image no wider than [maxWidth], keeping its aspect ratio. */
+internal fun androidx.compose.ui.graphics.ImageBitmap.scaledTo(
+  maxWidth: Int
+): androidx.compose.ui.graphics.ImageBitmap {
+  if (width <= maxWidth) return this
+  val height = (height.toLong() * maxWidth / width).toInt().coerceAtLeast(1)
+  val target = androidx.compose.ui.graphics.ImageBitmap(maxWidth, height)
+  androidx.compose.ui.graphics
+    .Canvas(target)
+    .drawImageRect(
+      this,
+      dstSize = androidx.compose.ui.unit.IntSize(maxWidth, height),
+      paint =
+        androidx.compose.ui.graphics.Paint().apply {
+          filterQuality = androidx.compose.ui.graphics.FilterQuality.Medium
+        },
+    )
+  return target
+}
+
+/** How long after an agent's last `await_request` it still counts as listening. */
+private const val LISTENING_SECONDS = 90
+
+private fun nowMillis(): Long = kotlin.time.Clock.System.now().toEpochMilliseconds()

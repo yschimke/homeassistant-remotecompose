@@ -469,6 +469,52 @@ class AgentRelayTest {
   }
 
   @Test
+  fun theAgentSeesTheDraftAsThePersonsAppDrewIt() = testApplication {
+    val relay = relay()
+    application {
+      routing {
+        dashboardAgentRoutes(relay)
+        agentRelayRoutes(relay)
+      }
+    }
+    val access = create()
+    val owner = access.getValue("ownerToken").jsonPrimitive.content
+    val code = access.getValue("joinCode").jsonPrimitive.content
+    val session =
+      mcp("join_session", buildJsonObject { put("code", code) })
+        .data()
+        .getValue("session")
+        .jsonPrimitive
+        .content
+    val before = mcp("get_render", buildJsonObject { put("session", session) }).data()
+    assertEquals("none", before.getValue("status").jsonPrimitive.content)
+    val png =
+      java.util.Base64.getDecoder()
+        .decode(
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+        )
+    suspend fun share(data: String) =
+      client.post("/api/agent/session/render") {
+        header(HttpHeaders.Authorization, "Bearer $owner")
+        setBody(
+          buildJsonObject {
+            put("png", data)
+            put("revision", 1)
+          }
+            .toString()
+        )
+      }
+    assertEquals(HttpStatusCode.BadRequest, share("bm90IGEgcG5n").status, "only a PNG")
+    val encoded = java.util.Base64.getEncoder().encodeToString(png)
+    assertEquals(HttpStatusCode.OK, share(encoded).status)
+    val seen = mcp("get_render", buildJsonObject { put("session", session) })
+    val image = seen.getValue("content").jsonArray.first().jsonObject
+    assertEquals("image", image.getValue("type").jsonPrimitive.content)
+    assertEquals(encoded, image.getValue("data").jsonPrimitive.content)
+    assertEquals(1, seen.data().getValue("revision").jsonPrimitive.int)
+  }
+
+  @Test
   fun abandonedSessionsArePrunedWhenNewOnesStart() {
     var now = 0L
     val relay = relay({ now })

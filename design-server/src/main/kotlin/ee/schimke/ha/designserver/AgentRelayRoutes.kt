@@ -63,6 +63,26 @@ fun Route.agentRelayRoutes(relay: AgentRelay) {
     }
     call.respondText("Comment sent")
   }
+  post("/api/agent/session/render") {
+    call.relayHeaders()
+    val input = call.relayBody(limit = 2_100_000) ?: return@post
+    val png = runCatching {
+      java.util.Base64.getDecoder()
+        .decode((input["png"] as? JsonPrimitive)?.contentOrNull.orEmpty())
+    }
+      .getOrNull()
+    val revision = (input["revision"] as? JsonPrimitive)?.longOrNull ?: 0
+    try {
+      if (png == null || !relay.putRender(call.bearerToken(), png, revision))
+        return@post call.respondText("Session unavailable", status = HttpStatusCode.NotFound)
+    } catch (_: IllegalArgumentException) {
+      return@post call.respondText(
+        "Expected a PNG of at most 1.5 MB",
+        status = HttpStatusCode.BadRequest,
+      )
+    }
+    call.respondText("Render shared")
+  }
   post("/api/agent/session/decision") {
     call.relayHeaders()
     val input = call.relayBody() ?: return@post
@@ -245,6 +265,7 @@ private val OWNER_PATHS =
     "/api/agent/session",
     "/api/agent/session/join-code",
     "/api/agent/session/comment",
+    "/api/agent/session/render",
     "/api/agent/session/decision",
     "/api/agent/claim",
   )

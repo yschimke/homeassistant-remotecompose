@@ -16,7 +16,7 @@ object AgentRelayMcp {
       "request_access, tell them its code, and call poll_access until it returns a link. Then " +
       "listen: call await_request with the link in a loop (it waits up to 25 s). Each request " +
       "brings a session: get_session, set_status while you work, submit_draft with the revision " +
-      "you read, and await_feedback in a loop passing back its cursor, acting on each comment " +
+      "you read, get_render to see it as the person does, and await_feedback in a loop passing back its cursor, acting on each comment " +
       "(sometimes about one card) until a decision arrives. Then go back to await_request. " +
       "send_message asks the person something. You never apply a draft; the person does."
 
@@ -226,6 +226,44 @@ object AgentRelayMcp {
               delegateRaw(relay, AgentRelay.Kind.Card, session, "put_card_asset", args)
                 ?: return failed(gone)
             result(inner)
+          }
+          "get_render" -> {
+            relay.seen(session) ?: return failed(gone)
+            val (png, revision) =
+              relay.render(session)
+                ?: return tool(
+                  buildJsonObject {
+                    put("status", "none")
+                    put(
+                      "next",
+                      "The person's app hasn't drawn a draft yet; try after submit_draft.",
+                    )
+                  }
+                )
+            result(
+              buildJsonObject {
+                putJsonArray("content") {
+                  add(
+                    buildJsonObject {
+                      put("type", "image")
+                      put("data", java.util.Base64.getEncoder().encodeToString(png))
+                      put("mimeType", "image/png")
+                    }
+                  )
+                  add(
+                    buildJsonObject {
+                      put("type", "text")
+                      put(
+                        "text",
+                        "Revision $revision as the person's app draws it, with their own cards " +
+                          "and live states.",
+                      )
+                    }
+                  )
+                }
+                putJsonObject("structuredContent") { put("revision", revision) }
+              }
+            )
           }
           "await_feedback" -> {
             val since = (args["since"] as? JsonPrimitive)?.longOrNull ?: 0L
@@ -439,6 +477,13 @@ object AgentRelayMcp {
           "imageBase64" to "string",
           required = listOf("session", "key", "imageBase64"),
         ),
+      )
+    )
+    add(
+      toolDef(
+        "get_render",
+        "See your latest dashboard draft exactly as the person's app draws it (a PNG, with their own cards and live states), once they have opened it.",
+        schema("session" to "string", required = listOf("session")),
       )
     )
     add(

@@ -141,11 +141,27 @@ the prompt to hand the agent until the agent first calls a tool, then the same l
 `installed-agent-live.test.mjs` runs this end to end in a real Home Assistant with the real
 panel: ask from the menu, draft, a comment pinned to a card, apply.
 
+## The agent sees what the person sees
+
+A moment after a dashboard draft appears on the person's screen, the app captures it as drawn
+(their own cards, card style and live states, at most 1080 px wide) and shares it as a PNG: with
+the relay for a cloud agent (`get_render`), with the integration for an agent signed in to Home
+Assistant (`terrazzo/edit/render`, `get_draft_render`). Both return MCP image content. Renders are
+kept in memory only, the newest per session; the app shares again whenever it draws a draft.
+Card drafts are reviewed in UI Builder, whose own MCP server renders them.
+
+## When the person isn't watching
+
+When an agent signed in to Home Assistant submits a draft and nobody has the session open, the
+integration tells the person who started it on their Terrazzo phones, through `mobile_app`'s own
+notify (held and woken through the push relay when the app is closed;
+[notifications.md](notifications.md)): "Your agent has a draft", with its summary, one notice per
+session. A cloud agent's drafts reach Home Assistant through the person's app, so they arrive
+when the app next shows the session.
+
 ## Not yet
-- **The integration as the owner.** Holding the relay link in the always-on integration would let
-  a session survive the phone sleeping, with an FCM wake through `push-relay` when a draft arrives.
-- **Renders for the agent.** The app could upload the draft as it draws it, so the agent sees
-  exactly what the person sees rather than catalog images.
+- **Notices for cloud drafts while the app is closed.** The relay has no way to reach the phone;
+  the integration holding the person's relay link would let it relay and announce drafts itself.
 - **One session for a card and its dashboard.** Card and dashboard sessions share the relay and
   the MCP tools but are still started separately, and accepted separately.
 - **Card sessions in the browser end-to-end test.** The cloud path is covered against the real

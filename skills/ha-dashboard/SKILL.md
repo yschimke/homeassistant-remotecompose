@@ -41,7 +41,8 @@ their own cards and states, and talks to you there.
    conversation so far.
 3. `set_status` with a few words while you work; `send_message` to ask a question.
 4. `submit_draft` with the `revision` you read, the **complete** `dashboard` (or `document` for a
-   card) and a one-line `summary`. A stale revision is refused: read again.
+   card) and a one-line `summary`. A stale revision is refused: read again. `get_render` then
+   shows a dashboard draft exactly as the person's app draws it.
 5. `await_feedback` with `since` = the last `cursor` (0 at first). It waits up to 25 s; call it
    again until it returns feedback. Comments may name a card in `target`. Act on them, submit a new
    draft, and keep listening until `decision` is `accepted` (you're done) or `rejected`. Then go
@@ -68,7 +69,8 @@ session in the phone app or the panel.
    integration refuses a config without a `views` list or one naming entities the home doesn't
    have, and says which.
 4. The person watches the session in harc or the Terrazzo panel and sees each draft at once.
-   Use `set_status` while you work and `send_message` to ask them something. Then call
+   Use `set_status` while you work and `send_message` to ask them something;
+   `get_draft_render` shows the draft exactly as their app draws it. Then call
    `await_feedback` with `since` = the last `cursor` (0 at first): it waits up to 25 s and
    returns their notes, which may name a card in `target`. Act on them, submit again, and keep
    listening until `status` is `applied` or `discarded`. A session expires a day after its last

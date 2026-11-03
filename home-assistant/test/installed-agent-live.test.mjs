@@ -5,7 +5,7 @@
 // with their cards, comments on one card, and applies it.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const { chromium, request } = await import(`${root}embed/node_modules/playwright/index.mjs`);
@@ -127,6 +127,20 @@ test('Live agent edit: the person watches, comments on a card and applies', {tim
     await panel.getByText('Switch beside the light', {exact:true}).first().waitFor();
     await panel.getByText('Apply', {exact:true}).waitFor();
     await page.screenshot({path:`${evidence}/agent-live-2-draft.png`});
+    // The agent sees the draft exactly as the person's panel drew it.
+    let render;
+    for (let i = 0; i < 30; i++) {
+      const response = await api.post('/api/terrazzo/mcp', {
+        headers:{Authorization:`Bearer ${agentTokens.access_token}`, Accept:'application/json, text/event-stream'},
+        data:{jsonrpc:'2.0', id:1, method:'tools/call', params:{name:'get_draft_render', arguments:{session_id:session.session_id}}},
+      });
+      render = (await response.json()).result;
+      if (render.content?.[0]?.type === 'image') break;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    assert.equal(render.content[0].type, 'image', 'the panel shared its render');
+    assert.equal(render.content[0].mimeType, 'image/png');
+    writeFileSync(`${evidence}/agent-live-2-agent-view.png`, Buffer.from(render.content[0].data, 'base64'));
 
     // The agent listens; the person pins a comment to a card on the draft.
     const listening = mcp('await_feedback', {session_id:session.session_id, since:0});

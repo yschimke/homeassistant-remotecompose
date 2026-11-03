@@ -152,6 +152,17 @@ test('Cloud agent edit: joined by code, relayed through a restart, applied', {sk
     await panel.getByText('Apply', {exact:true}).waitFor({timeout:30_000});
     await panel.getByText('Should the switch sit beside the light?', {exact:true}).waitFor();
     await page.screenshot({path:`${evidence}/agent-cloud-2-draft.png`});
+    // The agent sees the draft exactly as the person's panel drew it.
+    let render;
+    for (let i = 0; i < 30; i++) {
+      const response = await fetch(`${design}/api/agent/mcp`, {method:'POST',
+        body:JSON.stringify({jsonrpc:'2.0', id:1, method:'tools/call', params:{name:'get_render', arguments:{session}}})});
+      render = (await response.json()).result;
+      if (render.content?.[0]?.type === 'image') break;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    assert.equal(render.content[0].type, 'image', 'the panel shared its render');
+    writeFileSync(`${evidence}/agent-cloud-2-agent-view.png`, Buffer.from(render.content[0].data, 'base64'));
 
     // A deploy restarts the design server; the session, presence and conversation survive it.
     await new Promise((resolve) => setTimeout(resolve, 1_500)); // let the change be saved

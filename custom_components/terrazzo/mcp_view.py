@@ -227,6 +227,7 @@ class HassHome:
         try:
             draft = edits.submit(self._hass, self._user, session_id, config, summary)
             edits.agent_seen(self._hass, self._user, session_id, "Draft submitted")
+            await edits.async_notice_draft(self._hass, session_id, draft)
         except edits.SessionError as failure:
             raise mcp.ToolError(str(failure)) from failure
         return {
@@ -235,6 +236,12 @@ class HassHome:
             "next": "The person sees this draft now, drawn with their own cards. Call "
             "await_feedback to hear what they think.",
         }
+
+    def draft_render(self, session_id):
+        try:
+            return edits.draft_render(self._hass, self._user, session_id)
+        except edits.SessionError as failure:
+            raise mcp.ToolError(str(failure)) from failure
 
     async def await_request(self, since):
         try:

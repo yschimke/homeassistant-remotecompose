@@ -311,6 +311,33 @@ def summary(session, with_configs=False):
     return result
 
 
+TERRAZZO_APP_ID = "ee.schimke.harc"
+
+
+def notice_services(registrations, user_id, slugify):
+    """The `notify` services of [user_id]'s Terrazzo devices among mobile_app [registrations]
+    (each a config entry's data): where to tell a person their agent has a draft ready."""
+    return sorted(
+        {
+            f"mobile_app_{slugify(data['device_name'])}"
+            for data in registrations
+            if data.get("app_id") == TERRAZZO_APP_ID
+            and data.get("user_id") == user_id
+            and data.get("device_name")
+        }
+    )
+
+
+def draft_notice(session, draft):
+    """What the person's phone says when their agent's draft is ready and they aren't watching."""
+    return {
+        "title": "Your agent has a draft",
+        "message": draft.get("summary") or session.get("request") or "A dashboard draft is ready",
+        # One notice per session: a newer draft replaces it.
+        "data": {"tag": f"terrazzo-edit-{session['id']}"},
+    }
+
+
 def agent_prompt(session, mcp_url, home_name):
     """What a person hands their agent: where to connect and which session, never a token or the
     dashboard itself (the agent reads both over its own signed-in MCP connection)."""
