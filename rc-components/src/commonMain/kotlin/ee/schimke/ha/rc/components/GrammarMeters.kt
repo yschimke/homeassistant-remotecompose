@@ -84,6 +84,20 @@ private fun RemoteDrawScope.haloPaint(
 
 private const val HaloAlpha = 0.45f
 
+/**
+ * A scale tick's colour at [at] along the scale: hot past the zone's hot mark, else muted. A live
+ * mark (a gauge's bound `severity_red`) is compared in the document, so the ticks follow it.
+ */
+private fun HaVisualSpec.tickColor(at: Float): RemoteColor {
+  val live = zones.hotFromLive
+  val static = zones.hotFrom
+  return when {
+    live != null -> at.rf.isGreaterThanOrEqualTo(live).select(look.hot, look.muted)
+    static != null && at >= static -> look.hot
+    else -> look.muted
+  }
+}
+
 // ---- Dial -----------------------------------------------------------------------------------
 
 private fun RemoteDrawScope.grammarArc(spec: HaVisualSpec) {
@@ -162,9 +176,8 @@ private fun RemoteDrawScope.arcTicks(spec: HaVisualSpec, arc: ArcBox, thick: Flo
     val at = i.toFloat() / count
     val long = i == 0 || i == count || (count % 2 == 0 && i == count / 2)
     val len = arc.radius * (if (long) 0.14f else 0.07f).rf
-    val hot = spec.zones.hotFrom?.let { at >= it } == true
     drawLine(
-      strokePaint((thick * 0.25f).coerceAtLeast(1f), if (hot) spec.look.hot else spec.look.muted),
+      strokePaint((thick * 0.25f).coerceAtLeast(1f), spec.tickColor(at)),
       arc.point(at * 180f, inner),
       arc.point(at * 180f, inner - len),
     )
@@ -223,8 +236,7 @@ private fun RemoteDrawScope.levelRun(
         val at = i.toFloat() / count
         val long = i == 0 || i == count || (count % 2 == 0 && i == count / 2)
         val tick = cross * (if (long) 0.45f else 0.25f).rf
-        val hot = spec.zones.hotFrom?.let { at >= it } == true
-        val color = if (hot) look.hot else look.muted
+        val color = spec.tickColor(at)
         if (vertical) fillRect(color, x + spine, y + h - len * at.rf - line / 2f.rf, tick, line)
         else fillRect(color, x + len * at.rf - line / 2f.rf, y + spine - tick + line, line, tick)
       }
