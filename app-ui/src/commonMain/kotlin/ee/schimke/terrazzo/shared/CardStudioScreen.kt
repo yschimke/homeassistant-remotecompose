@@ -152,6 +152,7 @@ fun CardStudioScreen(
   /** The agent's draft built as "Use it" would publish it, to play before deciding. */
   var draftPreview by remember { mutableStateOf<ByteArray?>(null) }
   var draftPreviewProblem by remember { mutableStateOf<String?>(null) }
+  var draftPreviewAttempt by remember { mutableIntStateOf(0) }
   var editorUrl by remember { mutableStateOf<String?>(null) }
   var externalUrl by remember(editorUrl) { mutableStateOf<String?>(null) }
   var showAdvanced by remember { mutableStateOf(false) }
@@ -202,7 +203,7 @@ fun CardStudioScreen(
 
   // Each new draft is built for this card and played here, with its live values, before the person
   // can use it: what they see is what Use it publishes.
-  LaunchedEffect(cloudRevision, cloudSession, cloudServer, designKey) {
+  LaunchedEffect(cloudRevision, cloudSession, cloudServer, designKey, draftPreviewAttempt) {
     draftPreview = null
     draftPreviewProblem = null
     val owner = cloudSession ?: return@LaunchedEffect
@@ -302,6 +303,7 @@ fun CardStudioScreen(
       // Use the configured upstream, not the private add-on's HA-authenticated proxy. The cloud
       // receives only cardPreviewData; it never receives the Home Assistant access token.
       val target = cloudTarget ?: return@launch "The upstream design server is unavailable."
+      publishedId = null
       val upstream = CardStudioClient(target)
       try {
         val seed = upstream.seed(card, currentSnapshot(fresh = true))
@@ -367,6 +369,11 @@ fun CardStudioScreen(
     cloudServer = null
     cloudLive = null
     cloudDraftReady = false
+    cloudRevision = 0L
+    draftPreview = null
+    draftPreviewProblem = null
+    // The next request's draft can be used in its turn.
+    publishedId = null
   }
 
   /** Something the person does on the relay: a message, a code, letting an agent in. */
@@ -690,7 +697,12 @@ fun CardStudioScreen(
               }
             }
             if (cloudDraftReady && publishedId == null)
-              draftPreviewProblem?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+              draftPreviewProblem?.let {
+                Text(it, color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = { draftPreviewAttempt++ }, enabled = !busy) {
+                  Text("Try again")
+                }
+              }
           }
           if (messageStep == 3 || messageStep == 4)
             StudioRequestFeedback(busy, message, requestFailed)
