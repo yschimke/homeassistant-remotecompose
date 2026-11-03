@@ -16,6 +16,10 @@ class CardLabelTest {
       "camera.front_door (view security, section 2, card 3)",
       cardLabel(CardKey(null, "security", 1, 2, "picture-entity"), camera),
     )
+    assertEquals(
+      "camera.front_door (view 2, card 1)",
+      cardLabel(CardKey(null, "view-1", null, 0, "picture-entity"), camera),
+    )
     val titled = CardConfig("entities", buildJsonObject { put("title", "Locks") })
     assertEquals("Locks (card 1)", cardLabel(CardKey(null, null, null, 0, "entities"), titled))
   }

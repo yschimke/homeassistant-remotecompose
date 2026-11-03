@@ -10,14 +10,15 @@ import kotlinx.serialization.json.*
  */
 object AgentRelayMcp {
   const val INSTRUCTIONS =
-    "You are editing a Home Assistant card or dashboard together with a person who is watching it " +
-      "in the Terrazzo app. 1) Call join_session with the code the person gives you; if they have " +
-      "none, call request_access, tell them its code, and call poll_access until approved. " +
-      "2) Call get_session. 3) Use set_status while you work and send_message to talk to the " +
-      "person. 4) Call submit_draft with the revision you read; the person sees it immediately " +
-      "with their own live data. 5) Call await_feedback (it waits up to 25 s) in a loop, passing " +
-      "back its cursor, and act on each comment until a decision of accepted or rejected arrives. " +
-      "You can never apply a draft; the person does."
+    "You edit Home Assistant cards and dashboards with a person who watches in the Terrazzo app. " +
+      "Connect once: call connect with the code the person gives you (from Settings, Connect an " +
+      "agent), and keep the link it returns for later conversations. If they have no code, call " +
+      "request_access, tell them its code, and call poll_access until it returns a link. Then " +
+      "listen: call await_request with the link in a loop (it waits up to 25 s). Each request " +
+      "brings a session: get_session, set_status while you work, submit_draft with the revision " +
+      "you read, and await_feedback in a loop passing back its cursor, acting on each comment " +
+      "(sometimes about one card) until a decision arrives. Then go back to await_request. " +
+      "send_message asks the person something. You never apply a draft; the person does."
 
   suspend fun handle(message: JsonObject, bearer: String, relay: AgentRelay): JsonObject? {
     val id = message["id"] ?: return null
@@ -64,13 +65,49 @@ object AgentRelayMcp {
         val session = arg("session")?.takeIf { it.isNotBlank() } ?: bearer
         val gone = "This session ended or expired. Ask the person for a new code."
         when (name) {
+          "connect",
           "join_session" -> {
+            val code = arg("code").orEmpty()
+            relay.connect(code, arg("agentName"))?.let {
+              return tool(linked(it))
+            }
             val joined =
-              relay.join(arg("code").orEmpty(), arg("agentName"))
+              relay.join(code, arg("agentName"))
                 ?: return failed(
                   "Unknown or expired code. Ask the person for the code in their app."
                 )
             tool(joined.json("Call get_session next."))
+          }
+          "await_request" -> {
+            val since = (args["since"] as? JsonPrimitive)?.longOrNull ?: 0L
+            val inbox =
+              relay.links.awaitRequests(arg("link").orEmpty(), since)
+                ?: return failed(
+                  "This link was disconnected or expired. Ask the person to connect you again."
+                )
+            tool(
+              buildJsonObject {
+                put("cursor", inbox.cursor)
+                putJsonArray("requests") {
+                  inbox.requests.forEach { r ->
+                    add(
+                      buildJsonObject {
+                        put("session", r.session)
+                        put("kind", r.kind)
+                        put("title", r.title)
+                      }
+                    )
+                  }
+                }
+                put(
+                  "next",
+                  if (inbox.requests.isEmpty()) "Nothing yet; call await_request again with cursor."
+                  else
+                    "Work each request in its session (get_session first), then call " +
+                      "await_request again with cursor.",
+                )
+              }
+            )
           }
           "request_access" -> {
             val pending =
@@ -86,8 +123,9 @@ object AgentRelayMcp {
                 put("expiresInSeconds", pending.expiresInSeconds)
                 put(
                   "next",
-                  "Tell the person: in Terrazzo, open the card or dashboard, choose Connect an " +
-                    "agent, and enter ${pending.code}. Then call poll_access with requestToken.",
+                  "Tell the person: in Terrazzo, open Settings, Connect an agent, and enter " +
+                    "${pending.code} under Have a code from your agent (or enter it on the card " +
+                    "or dashboard they are asking about). Then call poll_access with requestToken.",
                 )
               }
             )
@@ -96,6 +134,9 @@ object AgentRelayMcp {
             val polled =
               relay.pollAccess(arg("requestToken").orEmpty())
                 ?: return failed("Unknown or expired request; call request_access again.")
+            polled.link?.let {
+              return tool(linked(it))
+            }
             val joined = polled.joined
             if (joined == null)
               tool(
@@ -251,6 +292,16 @@ object AgentRelayMcp {
     return response["result"] as? JsonObject
   }
 
+  private fun linked(link: String) = buildJsonObject {
+    put("status", "connected")
+    put("link", link)
+    put(
+      "next",
+      "Keep this link: it lasts while you use it (30 days idle at most). Call await_request " +
+        "with it now, and again whenever you are free, to receive the person's requests.",
+    )
+  }
+
   private fun AgentRelay.Joined.json(next: String) = buildJsonObject {
     put("status", "joined")
     put("session", session)
@@ -304,8 +355,22 @@ object AgentRelayMcp {
   private val TOOLS = buildJsonArray {
     add(
       toolDef(
+        "connect",
+        "Connect with the code the person gives you (like K7QM-4MD2). A setup code returns a lasting link for await_request; a code from one card or dashboard returns that session.",
+        schema("code" to "string", "agentName" to "string", required = listOf("code")),
+      )
+    )
+    add(
+      toolDef(
+        "await_request",
+        "Listen for the person's requests on your link: waits up to 25 s, returns new requests after cursor (0 at first), each with its session. Call it again with the returned cursor.",
+        schema("link" to "string", "since" to "integer", required = listOf("link")),
+      )
+    )
+    add(
+      toolDef(
         "join_session",
-        "Join the session whose code the person's Terrazzo app shows (like K7QM-4MD2). Returns the session to pass to every other tool.",
+        "The same as connect, kept for agents that learned this name first.",
         schema("code" to "string", "agentName" to "string", required = listOf("code")),
       )
     )
@@ -319,7 +384,7 @@ object AgentRelayMcp {
     add(
       toolDef(
         "poll_access",
-        "Wait (up to 25 s) for the person to enter the request_access code. Returns the session once approved.",
+        "Wait (up to 25 s) for the person to enter the request_access code. Returns a link (entered in Settings) or a session (entered on one card or dashboard).",
         schema("requestToken" to "string", required = listOf("requestToken")),
       )
     )

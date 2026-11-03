@@ -107,6 +107,85 @@ fun Route.agentRelayRoutes(relay: AgentRelay) {
     call.respondText("Session revoked")
   }
 
+  // ---- The person's agent link: set up once, then requests go to that agent ----
+
+  post("/api/agent/links") {
+    call.relayHeaders()
+    val created =
+      try {
+        relay.links.create()
+      } catch (_: IllegalStateException) {
+        return@post call.respondText(
+          "Too many agent links",
+          status = HttpStatusCode.TooManyRequests,
+        )
+      }
+    call.respondText(
+      buildJsonObject {
+        put("link", created.owner)
+        put("code", created.code)
+      }
+        .toString(),
+      ContentType.Application.Json,
+    )
+  }
+  get("/api/agent/link") {
+    call.relayHeaders()
+    val since = call.request.queryParameters["since"]?.toLongOrNull()
+    val state =
+      relay.links.state(call.bearerToken(), since)
+        ?: return@get call.respondText("Link unavailable", status = HttpStatusCode.NotFound)
+    call.respondText(
+      buildJsonObject {
+        put("version", state.version)
+        put("connected", state.connected)
+        put("name", state.name)
+        put("listening", state.listening)
+        state.lastSeenMs?.let { put("lastSeenSecondsAgo", it / 1000) }
+        state.code?.let {
+          put("code", it)
+          put("codeExpiresInSeconds", state.codeExpiresInSeconds)
+        }
+      }
+        .toString(),
+      ContentType.Application.Json,
+    )
+  }
+  post("/api/agent/link/code") {
+    call.relayHeaders()
+    val code =
+      relay.links.newCode(call.bearerToken())
+        ?: return@post call.respondText("Link unavailable", status = HttpStatusCode.NotFound)
+    call.respondText(buildJsonObject { put("code", code) }.toString(), ContentType.Application.Json)
+  }
+  post("/api/agent/link/claim") {
+    call.relayHeaders()
+    val input = call.relayBody() ?: return@post
+    when (
+      relay.claimLink(
+        call.bearerToken(),
+        (input["code"] as? JsonPrimitive)?.contentOrNull.orEmpty(),
+      )
+    ) {
+      AgentRelay.ClaimResult.Claimed -> call.respondText("Agent connected")
+      AgentRelay.ClaimResult.Unknown ->
+        call.respondText("Unknown or expired code", status = HttpStatusCode.NotFound)
+      AgentRelay.ClaimResult.Throttled ->
+        call.respondText(
+          "Too many wrong codes; wait a minute",
+          status = HttpStatusCode.TooManyRequests,
+        )
+      AgentRelay.ClaimResult.Gone ->
+        call.respondText("Link unavailable", status = HttpStatusCode.Gone)
+    }
+  }
+  delete("/api/agent/link") {
+    call.relayHeaders()
+    if (!relay.links.revoke(call.bearerToken()))
+      return@delete call.respondText("Link unavailable", status = HttpStatusCode.NotFound)
+    call.respondText("Agent disconnected")
+  }
+
   // ---- Agents: never from a browser page (MCP's DNS-rebinding rule) ----
 
   post("/api/agent/mcp") {
@@ -159,6 +238,10 @@ fun Route.agentRelayRoutes(relay: AgentRelay) {
 
 private val OWNER_PATHS =
   listOf(
+    "/api/agent/links",
+    "/api/agent/link",
+    "/api/agent/link/code",
+    "/api/agent/link/claim",
     "/api/agent/session",
     "/api/agent/session/join-code",
     "/api/agent/session/comment",
@@ -185,6 +268,7 @@ fun AgentRelay.OwnerState.json() = buildJsonObject {
   }
   put("messages", messages.json())
   decision?.let { put("decision", it) }
+  if (linked) put("linked", true)
 }
 
 private fun ApplicationCall.relayHeaders() {

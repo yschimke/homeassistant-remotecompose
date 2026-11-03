@@ -48,6 +48,7 @@ ENV DESIGN_LIBRARY=/library \
     UI_BUILDER_STATE_DIR=/data/ui-builder \
     USER_DESIGNS_DIR=/data/user-designs \
     USAGE_DIR=/data/usage \
+    AGENT_SESSIONS_DIR=/data/agent-sessions \
     UI_BUILDER_ARGS="--catalogs-file /app/catalogs.json --catalog-cache-dir /data/catalog-cache --ui-builder-catalogs remote-m3,ha-cards,lovelace"
 USER designs
 WORKDIR /data

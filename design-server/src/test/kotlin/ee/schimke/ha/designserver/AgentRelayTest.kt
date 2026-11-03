@@ -10,6 +10,7 @@ import kotlin.test.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
 
 class AgentRelayTest {
@@ -313,6 +314,161 @@ class AgentRelayTest {
   }
 
   @Test
+  fun connectOnceThenRequestsReachTheAgentWithoutACode() = testApplication {
+    val relay = relay()
+    application {
+      routing {
+        dashboardAgentRoutes(relay)
+        agentRelayRoutes(relay)
+      }
+    }
+    // Setup: the person's Settings make a link and show its code; the agent connects with it.
+    val created = Json.parseToJsonElement(client.post("/api/agent/links").bodyAsText()).jsonObject
+    val ownerLink = created.getValue("link").jsonPrimitive.content
+    val setupCode = created.getValue("code").jsonPrimitive.content
+    suspend fun linkState() =
+      Json.parseToJsonElement(
+          client
+            .get("/api/agent/link") { header(HttpHeaders.Authorization, "Bearer $ownerLink") }
+            .bodyAsText()
+        )
+        .jsonObject
+    assertEquals(false, linkState().getValue("connected").jsonPrimitive.boolean)
+    val connected =
+      mcp(
+          "connect",
+          buildJsonObject {
+            put("code", setupCode)
+            put("agentName", "Claude")
+          },
+        )
+        .data()
+    val agentLink = connected.getValue("link").jsonPrimitive.content
+    val afterSetup = linkState()
+    assertEquals("Claude", afterSetup.getValue("name").jsonPrimitive.content)
+    assertEquals(true, afterSetup.getValue("listening").jsonPrimitive.boolean)
+    assertNull(afterSetup["code"], "the setup code is spent")
+
+    // Every request after that goes straight to the agent: no code, no prompt.
+    coroutineScope {
+      val listening = async {
+        mcp("await_request", buildJsonObject { put("link", agentLink) }).data()
+      }
+      delay(100)
+      val started =
+        client.post("/api/studio/dashboard-sessions") {
+          setBody(
+            buildJsonObject {
+              put("request", "Tidy the security view")
+              put("dashboard", baseline)
+              put("agentLink", ownerLink)
+            }
+              .toString()
+          )
+        }
+      val access = Json.parseToJsonElement(started.bodyAsText()).jsonObject
+      assertNull(access["joinCode"], "a linked request needs no code")
+      assertEquals(true, access["linked"]?.jsonPrimitive?.boolean)
+      val owner = access.getValue("ownerToken").jsonPrimitive.content
+      val state = ownerState(owner)
+      assertEquals(true, state["linked"]?.jsonPrimitive?.boolean)
+      assertEquals(
+        "Claude",
+        state.getValue("agent").jsonObject.getValue("name").jsonPrimitive.content,
+      )
+      assertNull(state["joinCode"])
+
+      val inbox = listening.await()
+      val request = inbox.getValue("requests").jsonArray.single().jsonObject
+      assertEquals("dashboard", request.getValue("kind").jsonPrimitive.content)
+      val session = request.getValue("session").jsonPrimitive.content
+      assertEquals(
+        baseline,
+        mcp("get_session", buildJsonObject { put("session", session) }).data()["dashboard"],
+      )
+      assertEquals(
+        true,
+        ownerState(owner).getValue("agent").jsonObject.getValue("joined").jsonPrimitive.boolean,
+        "the person sees the agent pick it up",
+      )
+      // The next listen only returns newer requests.
+      val again =
+        mcp(
+            "await_request",
+            buildJsonObject {
+              put("link", agentLink)
+              put("since", inbox.getValue("cursor").jsonPrimitive.long)
+            },
+          )
+          .data()
+      assertTrue(again.getValue("requests").jsonArray.isEmpty())
+    }
+
+    // Disconnecting ends the link for the agent; new requests fall back to a code.
+    assertEquals(
+      HttpStatusCode.OK,
+      client
+        .delete("/api/agent/link") { header(HttpHeaders.Authorization, "Bearer $ownerLink") }
+        .status,
+    )
+    assertEquals(
+      true,
+      mcp("await_request", buildJsonObject { put("link", agentLink) })["isError"]
+        ?.jsonPrimitive
+        ?.boolean,
+    )
+  }
+
+  @Test
+  fun anAgentThatAsksFirstCanBeLinkedFromSettings() = testApplication {
+    val relay = relay()
+    application { routing { agentRelayRoutes(relay) } }
+    val ownerLink =
+      Json.parseToJsonElement(client.post("/api/agent/links").bodyAsText())
+        .jsonObject
+        .getValue("link")
+        .jsonPrimitive
+        .content
+    val asked = mcp("request_access", buildJsonObject { put("agentName", "Codex") }).data()
+    coroutineScope {
+      val polling = async {
+        mcp(
+            "poll_access",
+            buildJsonObject {
+              put("requestToken", asked.getValue("requestToken").jsonPrimitive.content)
+            },
+          )
+          .data()
+      }
+      delay(100)
+      val claimed =
+        client.post("/api/agent/link/claim") {
+          header(HttpHeaders.Authorization, "Bearer $ownerLink")
+          setBody(
+            buildJsonObject { put("code", asked.getValue("code").jsonPrimitive.content) }.toString()
+          )
+        }
+      assertEquals(HttpStatusCode.OK, claimed.status)
+      val linked = polling.await()
+      assertEquals("connected", linked.getValue("status").jsonPrimitive.content)
+      assertNotNull(linked["link"])
+    }
+  }
+
+  @Test
+  fun linksSurviveARestart(): Unit = runBlocking {
+    val file = kotlin.io.path.createTempDirectory("links").toFile().resolve("sessions.json")
+    val before = relay()
+    val created = before.links.create()
+    val agentLink = assertNotNull(before.connect(created.code, "Claude"))
+    AgentSessionFile(file, before).save()
+    val after = relay()
+    AgentSessionFile(file, after).load()
+    assertEquals("Claude", after.links.state(created.owner)?.name)
+    assertNotNull(after.links.awaitRequests(agentLink, 0))
+  }
+
+  @Test
   fun abandonedSessionsArePrunedWhenNewOnesStart() {
     var now = 0L
     val relay = relay({ now })
@@ -324,7 +480,7 @@ class AgentRelayTest {
     // Nobody comes back; the stores expire them, and the next registration sweeps the relay.
     now += AgentRelay.JOIN_CODE_MS + DashboardAgentSessions.IDLE_MS
     val fresh = relay.dashboards.create("Again", baseline)
-    val code = relay.register(AgentRelay.Kind.Dashboard, fresh.owner, fresh.agent, "Again")
+    val code = relay.register(AgentRelay.Kind.Dashboard, fresh.owner, fresh.agent, "Again")!!
     assertEquals(1, relay.size)
     assertNotNull(relay.join(code, null), "the new session's code still works")
   }
@@ -363,7 +519,7 @@ class AgentRelayTest {
   fun wrongCodesAreThrottledForEveryone() {
     val relay = relay()
     val access = relay.dashboards.create("Tidy", baseline)
-    val code = relay.register(AgentRelay.Kind.Dashboard, access.owner, access.agent, "Tidy")
+    val code = relay.register(AgentRelay.Kind.Dashboard, access.owner, access.agent, "Tidy")!!
     repeat(AgentRelay.MAX_FAILURES_PER_MINUTE) { relay.join("ZZZZ-ZZZZ", null) }
     assertNull(relay.join(code, null), "a guessing burst blocks even a right code for a minute")
   }
@@ -374,7 +530,7 @@ class AgentRelayTest {
     application { routing { agentRelayRoutes(relay) } }
     val document = buildJsonObject { put("id", "card-x") }
     val access = relay.cards.create("Bigger icon", document)
-    val code = relay.register(AgentRelay.Kind.Card, access.owner, access.agent, "Bigger icon")
+    val code = relay.register(AgentRelay.Kind.Card, access.owner, access.agent, "Bigger icon")!!
     val joined = mcp("join_session", buildJsonObject { put("code", code) }).data()
     assertEquals("card", joined.getValue("kind").jsonPrimitive.content)
     val read =

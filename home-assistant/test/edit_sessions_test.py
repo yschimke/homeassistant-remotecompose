@@ -141,5 +141,46 @@ class EditSessionsTest(unittest.TestCase):
         self.assertNotIn('Bearer', prompt)
 
 
+
+class ConversationTest(unittest.TestCase):
+    def test_notes_and_messages_share_a_cursor_and_notes_name_cards(self):
+        sessions = es.EditSessions()
+        session = sessions.create(None, 'Garden', BASELINE, 'person', 0)
+        sid = session['id']
+        sessions.note(sid, 'Bigger camera', 'person', 1, target='Front door (card 2)')
+        sessions.agent_message(sid, 'Full width?', 'agent', 2)
+        sessions.note(sid, 'Yes', 'person', 3)
+        notes, cursor = es.EditSessions.feedback(sessions.get(sid, 3), 0)
+        self.assertEqual([n['text'] for n in notes], ['Bigger camera', 'Yes'])
+        self.assertEqual(notes[0]['target'], 'Front door (card 2)')
+        self.assertNotIn('target', notes[1])
+        self.assertEqual(cursor, 3)
+        # After the agent read up to the first note, only the newer one is feedback.
+        self.assertEqual([n['text'] for n in es.EditSessions.feedback(sessions.get(sid, 3), 1)[0]], ['Yes'])
+        result = es.summary(sessions.get(sid, 3))
+        self.assertEqual([m['text'] for m in result['messages']], ['Full width?'])
+        self.assertEqual(result['seq'], 3)
+
+    def test_presence_keeps_its_status_until_changed(self):
+        sessions = es.EditSessions()
+        sid = sessions.create(None, 'Garden', BASELINE, 'person', 0)['id']
+        sessions.agent_seen(sid, 'Drafting', 'agent', 5)
+        sessions.agent_seen(sid, None, 'agent', 9)
+        agent = es.summary(sessions.get(sid, 9))['agent']
+        self.assertEqual((agent['status'], agent['seen_at']), ('Drafting', 9))
+
+    def test_sessions_saved_before_the_conversation_still_load(self):
+        old = es.EditSessions().create(None, 'Garden', BASELINE, 'person', 0)
+        for key in ('seq', 'messages', 'agent'):
+            old.pop(key)
+        old['notes'] = [{'text': 'Old note', 'by': 'person', 'at': 0}]
+        sessions = es.EditSessions([old])
+        notes, cursor = es.EditSessions.feedback(sessions.get(old['id'], 1), 0)
+        self.assertEqual((notes, cursor), ([], 0))
+        sessions.note(old['id'], 'New', 'person', 1)
+        self.assertEqual(es.EditSessions.feedback(sessions.get(old['id'], 1), 0)[0][0]['text'], 'New')
+        self.assertEqual(es.summary(sessions.get(old['id'], 1))['messages'], [])
+
+
 if __name__ == '__main__':
     unittest.main()

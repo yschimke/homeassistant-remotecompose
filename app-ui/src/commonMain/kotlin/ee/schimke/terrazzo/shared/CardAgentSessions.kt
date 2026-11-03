@@ -14,11 +14,8 @@ import kotlinx.serialization.json.Json
 internal data class SavedCardAgentSession(
   val server: String,
   val ownerToken: String,
-  val agentToken: String,
   val instruction: String,
   val expiresAt: Long,
-  /** The server runs the agent relay: the agent joins by code and drafts arrive by themselves. */
-  val relay: Boolean = false,
 )
 
 internal expect fun readAgentGrants(key: String): String?
@@ -42,12 +39,14 @@ internal fun dashboardAgentGrants(): AgentGrantStore =
 
 private const val KEY = "terrazzo.dashboardAgentGrants"
 
+private val json = Json { ignoreUnknownKeys = true }
+
 internal object CardAgentSessions {
   private var memory = emptyMap<String, SavedCardAgentSession>()
 
   private fun all(): Map<String, SavedCardAgentSession> =
     readAgentGrants(CARD_SESSIONS_KEY)?.let {
-      runCatching { Json.decodeFromString<Map<String, SavedCardAgentSession>>(it) }.getOrNull()
+      runCatching { json.decodeFromString<Map<String, SavedCardAgentSession>>(it) }.getOrNull()
     } ?: memory
 
   fun get(

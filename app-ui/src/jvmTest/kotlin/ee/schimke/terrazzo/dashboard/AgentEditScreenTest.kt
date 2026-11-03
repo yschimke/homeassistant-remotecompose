@@ -48,11 +48,11 @@ class AgentEditScreenTest {
 
     override fun watch(sessionId: String): Flow<AgentEditSession> = current.filterNotNull()
 
-    override suspend fun note(sessionId: String, text: String): AgentEditSession {
-      calls += "note:$text"
-      return current.value!!.copy(notes = listOf(AgentEditSession.Note(text))).also {
-        current.value = it
-      }
+    override suspend fun note(sessionId: String, text: String, target: String?): AgentEditSession {
+      calls += "note:$text" + (target?.let { "@$it" } ?: "")
+      return current.value!!
+        .copy(notes = listOf(AgentEditSession.Note(text, target = target)))
+        .also { current.value = it }
     }
 
     override suspend fun discard(sessionId: String): AgentEditSession {
@@ -114,6 +114,37 @@ class AgentEditScreenTest {
     waitUntil { onAllNodesWithText("Apply").fetchSemanticsNodes().isNotEmpty() }
     onNodeWithText("Share prompt").assertExists()
     onNodeWithText("Anyone holding them", substring = true).assertExists()
+  }
+
+  @Test
+  fun aDirectlySignedInAgentTalksLiveAndCommentsNameACard() = runComposeUiTest {
+    val edits = FakeEdits()
+    val shared = mutableListOf<String>()
+    show(edits, shared)
+    onNodeWithText("Request").performTextInput("Add the pump")
+    onNodeWithText("Start edit session").performClick()
+    waitUntil { edits.current.value != null }
+    // Until the agent has been active, the prompt to hand it is what shows.
+    onNodeWithText("Share prompt").assertExists()
+    edits.current.value =
+      edits.current.value!!.copy(
+        drafts = listOf(AgentEditSession.Draft("d1", summary = "Pump tile", config = draftConfig)),
+        messages = listOf(AgentEditSession.Message("Full width?", seq = 1)),
+        agent = AgentEditSession.Activity("Waiting for feedback", seenAt = 100.0),
+        serverTime = 110.0,
+      )
+    waitUntil { onAllNodesWithText("Full width?").fetchSemanticsNodes().isNotEmpty() }
+    onNodeWithText("Agent · Waiting for feedback").assertExists()
+    onNodeWithText("Share prompt").assertDoesNotExist()
+    onNodeWithText("Give your agent this code").assertDoesNotExist()
+    onNodeWithText("Comment").performClick()
+    onNodeWithText("Tell the agent what to change").performTextInput("Yes")
+    onNodeWithText("Send").performClick()
+    waitUntil { edits.calls.any { it.startsWith("note:") } }
+    assertEquals(
+      "note:Yes@switch.pump (view 1, section 1, card 1)",
+      edits.calls.last { it.startsWith("note:") },
+    )
   }
 
   @Test

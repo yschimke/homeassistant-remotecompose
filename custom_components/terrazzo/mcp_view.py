@@ -218,6 +218,7 @@ class HassHome:
 
     async def edit_session(self, session_id):
         try:
+            edits.agent_seen(self._hass, self._user, session_id, "Reading the request")
             return await edits.async_session_for_agent(self._hass, self._user, session_id)
         except edits.SessionError as failure:
             raise mcp.ToolError(str(failure)) from failure
@@ -225,14 +226,41 @@ class HassHome:
     async def submit_draft(self, session_id, config, summary):
         try:
             draft = edits.submit(self._hass, self._user, session_id, config, summary)
+            edits.agent_seen(self._hass, self._user, session_id, "Draft submitted")
         except edits.SessionError as failure:
             raise mcp.ToolError(str(failure)) from failure
         return {
             "draft_id": draft["id"],
             "status": "submitted",
-            "next": "A person previews this draft and applies it. Call get_edit_session later to "
-            "read their notes if they ask for changes.",
+            "next": "The person sees this draft now, drawn with their own cards. Call "
+            "await_feedback to hear what they think.",
         }
+
+    async def await_request(self, since):
+        try:
+            return await edits.async_await_request(self._hass, self._user, since)
+        except edits.SessionError as failure:
+            raise mcp.ToolError(str(failure)) from failure
+
+    async def await_feedback(self, session_id, since):
+        try:
+            return await edits.async_await_feedback(self._hass, self._user, session_id, since)
+        except edits.SessionError as failure:
+            raise mcp.ToolError(str(failure)) from failure
+
+    def send_message(self, session_id, text):
+        try:
+            edits.agent_message(self._hass, self._user, session_id, text)
+        except edits.SessionError as failure:
+            raise mcp.ToolError(str(failure)) from failure
+        return {"status": "sent"}
+
+    def set_status(self, session_id, status):
+        try:
+            edits.agent_seen(self._hass, self._user, session_id, status)
+        except edits.SessionError as failure:
+            raise mcp.ToolError(str(failure)) from failure
+        return {"status": "shown"}
 
 
 def _entity(state):

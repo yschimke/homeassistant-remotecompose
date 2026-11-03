@@ -36,6 +36,28 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.*
 
 class CardStudioLifecycleTest {
+  /** An agent joins as a real one does: with the code the person's app shows. */
+  private suspend fun io.ktor.server.testing.ApplicationTestBuilder.agentJoins(
+    owner: String
+  ): String {
+    val state =
+      client.get("/api/agent/session") { header(HttpHeaders.Authorization, "Bearer $owner") }
+    val code =
+      Json.parseToJsonElement(state.bodyAsText())
+        .jsonObject
+        .getValue("joinCode")
+        .jsonPrimitive
+        .content
+    val joined =
+      client.post("/api/agent/join") { setBody(buildJsonObject { put("code", code) }.toString()) }
+    assertEquals(HttpStatusCode.OK, joined.status)
+    return Json.parseToJsonElement(joined.bodyAsText())
+      .jsonObject
+      .getValue("session")
+      .jsonPrimitive
+      .content
+  }
+
   private val card =
     CardConfig(
       "entities",
@@ -64,6 +86,7 @@ class CardStudioLifecycleTest {
     val seeds = CardStudioDrafts { now }
     val http = createClient { followRedirects = false }
     val config = UiBuilderConfig("https://builder.test", "https://builder.test", "operator")
+    val relay = AgentRelay(AgentDesignSessions { now }, DashboardAgentSessions { now }, { now })
     application {
       routing {
         cardStudioRoutes(
@@ -71,8 +94,10 @@ class CardStudioLifecycleTest {
           UiBuilderIntegration(config, UiBuilderClient(config, http)),
           null,
           seeds = seeds,
+          relay = relay,
           upstream = "https://upstream.example",
         )
+        agentRelayRoutes(relay)
       }
     }
     val studio = CardStudioClient("https://localhost", http.engine)
@@ -80,10 +105,11 @@ class CardStudioLifecycleTest {
       assertEquals("https://upstream.example", studio.upstreamServer())
       val original = studio.seed(card, snapshot("21"))
       val edited = JsonObject(original + ("title" to JsonPrimitive("My layout")))
-      val session = studio.startAgentSession(original, "Make a new layout")
+      val owner = studio.startAgentSession(original, "Make a new layout")
+      val agent = agentJoins(owner)
       val submitted =
         client.post("/api/studio/agent-session") {
-          header(HttpHeaders.Authorization, "Bearer ${session.agentToken}")
+          header(HttpHeaders.Authorization, "Bearer $agent")
           setBody(
             buildJsonObject {
               put("revision", 0)
@@ -94,7 +120,7 @@ class CardStudioLifecycleTest {
         }
       assertEquals(HttpStatusCode.OK, submitted.status)
       now = 600_000
-      val (received, revision) = studio.agentSessionDraft(session.ownerToken)
+      val (received, revision) = studio.agentSessionDraft(owner)
       assertEquals(1L, revision)
       val opened = studio.openDraft(received, card, snapshot("22"))
       assertNotEquals(original["id"], opened.document["id"])
@@ -319,10 +345,11 @@ class CardStudioLifecycleTest {
               ))
         )
       ee.schimke.ha.client.design.validateCardDraft(seed, withImage)
-      val session = studio.startAgentSession(seed, "Use the garage image")
+      val owner = studio.startAgentSession(seed, "Use the garage image")
+      val agent = agentJoins(owner)
       val attached =
         client.post("/api/studio/agent-mcp") {
-          header(HttpHeaders.Authorization, "Bearer ${session.agentToken}")
+          header(HttpHeaders.Authorization, "Bearer $agent")
           setBody(
             """{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"put_card_asset","arguments":{"key":"door","imageBase64":"$encodedPng"}}}"""
           )
@@ -330,7 +357,7 @@ class CardStudioLifecycleTest {
       assertEquals(HttpStatusCode.OK, attached.status)
       val submitted =
         client.post("/api/studio/agent-session") {
-          header(HttpHeaders.Authorization, "Bearer ${session.agentToken}")
+          header(HttpHeaders.Authorization, "Bearer $agent")
           setBody(
             buildJsonObject {
               put("revision", 0)
@@ -340,13 +367,13 @@ class CardStudioLifecycleTest {
           )
         }
       assertEquals(HttpStatusCode.OK, submitted.status, submitted.bodyAsText())
-      val (received, revision) = studio.agentSessionDraft(session.ownerToken)
+      val (received, revision) = studio.agentSessionDraft(owner)
       assertEquals(1L, revision)
       assertEquals(withImage, received)
-      val transferred = studio.agentSessionAsset(session.ownerToken, "door", Sha256.hex(png))
+      val transferred = studio.agentSessionAsset(owner, "door", Sha256.hex(png))
       assertContentEquals(png, transferred)
       assertFailsWith<IllegalArgumentException> {
-        studio.agentSessionAsset(session.ownerToken, "door", "0".repeat(64))
+        studio.agentSessionAsset(owner, "door", "0".repeat(64))
       }
       val imageDraft =
         studio.openAsUser(

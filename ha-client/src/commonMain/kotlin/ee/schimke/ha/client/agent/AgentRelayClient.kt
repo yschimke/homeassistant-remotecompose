@@ -1,6 +1,7 @@
 package ee.schimke.ha.client.agent
 
 import ee.schimke.ha.client.design.studioServerUrl
+import ee.schimke.ha.client.networkErrorsAsExceptions
 import ee.schimke.ha.client.platformHttpClient
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -44,6 +46,23 @@ data class AgentRelayState(
   val messages: List<AgentRelayMessage> = emptyList(),
   /** `accepted` or `rejected`, once the person has decided. */
   val decision: String? = null,
+  /** Sent to the person's linked agent: there is no code to hand over. */
+  val linked: Boolean = false,
+)
+
+/** The person's lasting connection to their agent, as Settings show it. */
+@Serializable
+data class AgentLinkState(
+  val version: Long = 0,
+  /** An agent has connected with the setup code (or the person entered the agent's code). */
+  val connected: Boolean = false,
+  val name: String = "Agent",
+  /** The agent is waiting for requests right now. */
+  val listening: Boolean = false,
+  val lastSeenSecondsAgo: Long? = null,
+  /** The setup code, while unused. */
+  val code: String? = null,
+  val codeExpiresInSeconds: Long = 0,
 )
 
 @Serializable
@@ -90,7 +109,121 @@ class AgentRelayClient(server: String, engine: HttpClientEngine? = null) {
   private fun HttpClientConfig<*>.configure() {
     // A long-poll is held for up to 25 s; leave room for slow networks on top.
     install(HttpTimeout) { requestTimeoutMillis = 45_000 }
+    networkErrorsAsExceptions()
   }
+
+  /** Open a dashboard session for [request] on [dashboard]: its owner capability. */
+  suspend fun startDashboard(
+    request: String,
+    dashboard: JsonObject,
+    /** The person's agent link: the request goes straight to their agent, with no code. */
+    agentLink: String? = null,
+  ): String {
+    val response =
+      http.post("$base/api/studio/dashboard-sessions") {
+        contentType(ContentType.Application.Json)
+        setBody(
+          buildJsonObject {
+            put("request", request)
+            put("dashboard", dashboard)
+            if (agentLink != null) put("agentLink", agentLink)
+          }
+            .toString()
+        )
+      }
+    response.check("The design server couldn't open the agent request")
+    return json.decodeFromString<Started>(response.bodyAsText()).ownerToken
+  }
+
+  /** The agent's latest dashboard draft: its revision, config and one-line summary. */
+  suspend fun dashboardDraft(owner: String): DashboardDraft {
+    val response = http.get("$base/api/studio/dashboard-session") { bearer(owner) }
+    if (response.status == HttpStatusCode.NotFound) throw AgentSessionEndedException()
+    response.check("The design server didn't answer")
+    return json.decodeFromString(response.bodyAsText())
+  }
+
+  @Serializable private data class Started(val ownerToken: String)
+
+  // ---- The agent link: connect once, then every request goes to that agent ----
+
+  /** Start the setup: the link's capability (kept on this device) and the code for the agent. */
+  suspend fun createLink(): Pair<String, String> {
+    val response = http.post("$base/api/agent/links")
+    response.check("Couldn't start connecting an agent")
+    val created = json.decodeFromString<CreatedLink>(response.bodyAsText())
+    return created.link to created.code
+  }
+
+  /** The link now or, with [since], once it changes (the server holds the request up to 25 s). */
+  suspend fun linkState(link: String, since: Long? = null): AgentLinkState {
+    val response =
+      http.get("$base/api/agent/link" + (since?.let { "?since=$it" } ?: "")) { bearer(link) }
+    if (response.status == HttpStatusCode.NotFound) throw AgentSessionEndedException()
+    response.check("The design server didn't answer")
+    return json.decodeFromString(response.bodyAsText())
+  }
+
+  /** The link now and after each change, until it is disconnected; network failures retry. */
+  fun watchLink(link: String): Flow<AgentLinkState> = flow {
+    var since: Long? = null
+    var pause = 1_000L
+    while (true) {
+      val state =
+        try {
+          linkState(link, since)
+        } catch (e: CancellationException) {
+          throw e
+        } catch (e: AgentSessionEndedException) {
+          throw e
+        } catch (e: Exception) {
+          delay(pause)
+          pause = (pause * 2).coerceAtMost(30_000)
+          continue
+        }
+      pause = 1_000
+      emit(state)
+      since = state.version
+    }
+  }
+
+  suspend fun newLinkCode(link: String) {
+    val response = http.post("$base/api/agent/link/code") { bearer(link) }
+    if (response.status == HttpStatusCode.NotFound) throw AgentSessionEndedException()
+    response.check("Couldn't make a new code")
+  }
+
+  /** Connect the agent that showed the person [code] (its `request_access`). */
+  suspend fun claimLink(link: String, code: String) {
+    val response =
+      http.post("$base/api/agent/link/claim") {
+        bearer(link)
+        contentType(ContentType.Application.Json)
+        setBody(buildJsonObject { put("code", code.trim()) }.toString())
+      }
+    when (response.status) {
+      HttpStatusCode.NotFound -> throw AgentRelayException("That code is unknown or expired.")
+      HttpStatusCode.TooManyRequests ->
+        throw AgentRelayException("Too many wrong codes. Wait a minute and try again.")
+      HttpStatusCode.Gone -> throw AgentSessionEndedException()
+      else -> response.check("Couldn't connect the agent")
+    }
+  }
+
+  suspend fun disconnect(link: String) {
+    val response = http.delete("$base/api/agent/link") { bearer(link) }
+    if (response.status == HttpStatusCode.NotFound) return
+    response.check("Couldn't disconnect the agent; try again")
+  }
+
+  @Serializable private data class CreatedLink(val link: String, val code: String)
+
+  @Serializable
+  data class DashboardDraft(
+    val revision: Long,
+    val dashboard: JsonObject,
+    val summary: String = "",
+  )
 
   /**
    * The session now or, with [since], once it changes after that version (the server holds the
@@ -219,6 +352,13 @@ class AgentRelayClient(server: String, engine: HttpClientEngine? = null) {
      * What the person tells (or pastes to) their agent. The code is short-lived and single use; it
      * is not the capability, which only the agent that redeems it ever holds.
      */
+    /** The one-time setup message: after it, the agent listens for every request. */
+    fun setupInvite(server: String, code: String): String =
+      "Connect to my Terrazzo (Home Assistant cards and dashboards) so I can ask you for " +
+        "changes from the app. Add the MCP server ${mcpUrl(server)} (no sign-in), call connect " +
+        "with code $code and keep the link it returns. Then call await_request with that link " +
+        "whenever you're free: my requests arrive there, and I'll watch and comment in the app."
+
     fun invite(server: String, code: String, what: String): String =
       "Help me with $what in Terrazzo. Join with code $code using the Terrazzo MCP server at " +
         "${mcpUrl(server)} (no sign-in: call join_session with the code, then follow its " +

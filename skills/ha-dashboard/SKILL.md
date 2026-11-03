@@ -25,15 +25,18 @@ person's review.
 
 ### With a Terrazzo code (no Home Assistant sign-in)
 
-When the person gives you a short code such as `K7QM-4MD2` (from **Ask an agent** with a cloud
-agent, or a card's **Design this card → With a cloud agent**), use the design server's agent relay
-instead: the MCP server at `https://ha.coo.ee/api/agent/mcp` (or the design server the invite
-names). It needs no header or sign-in. The person watches the session live in the app, sees each
-draft drawn with their own cards and states, and talks to you there.
+When the person gives you a short code such as `K7QM-4MD2` (from Settings → **Connect an
+agent**, or from one card or dashboard), use the design server's agent relay instead: the MCP
+server at `https://ha.coo.ee/api/agent/mcp` (or the design server the invite names). It needs no
+header or sign-in. The person watches each session live in the app, sees each draft drawn with
+their own cards and states, and talks to you there.
 
-1. `join_session` with the code (and your name as `agentName`). It returns a `session`; pass it to
-   every other tool. If the person has no code, `request_access`, tell them the code it returns to
-   enter under **Have a code from your agent?**, and `poll_access` until it says `joined`.
+1. `connect` with the code (and your name as `agentName`). A setup code returns a `link`: keep it
+   (it lasts 30 days of use) and call `await_request` with it whenever you're free; each request
+   arrives with its own `session`. A code from one card or dashboard returns that `session`
+   directly. If the person has no code, `request_access`, tell them the code it returns to enter
+   under **Have a code from your agent?** (in Settings for a lasting link), and `poll_access`
+   until it returns a link or a session. Pass the `session` to every tool below.
 2. `get_session`: the request, the dashboard (or card document), its `revision` and the
    conversation so far.
 3. `set_status` with a few words while you work; `send_message` to ask a question.
@@ -41,13 +44,17 @@ draft drawn with their own cards and states, and talks to you there.
    card) and a one-line `summary`. A stale revision is refused: read again.
 5. `await_feedback` with `since` = the last `cursor` (0 at first). It waits up to 25 s; call it
    again until it returns feedback. Comments may name a card in `target`. Act on them, submit a new
-   draft, and keep listening until `decision` is `accepted` (you're done) or `rejected`.
+   draft, and keep listening until `decision` is `accepted` (you're done) or `rejected`. Then go
+   back to `await_request` on your link for the next request.
 
 The person applies the dashboard or publishes the card design themselves; you never can.
 
 ## An edit session
 
-A harc or Terrazzo prompt names the MCP endpoint, a `session_id` and the request. Without one,
+Listen first: `await_request` (with `since` = the last `cursor`, 0 at first) waits up to 25 s
+and returns the sessions the person starts in the app. While you listen, they start a request
+with nothing to copy, and the app tells them you're picking it up. Otherwise a harc or Terrazzo
+prompt names the MCP endpoint, a `session_id` and the request. Without one,
 call `list_edit_sessions` to find an existing open request and its notes on a visible dashboard. If
 there is no relevant request, call `start_edit_session` with the dashboard's `url_path` (from
 `list_dashboards`; the default dashboard has none) and the request. The person then sees the
@@ -60,10 +67,12 @@ session in the phone app or the panel.
 3. `submit_draft` with the **complete** new dashboard config and a one-line `summary`. The
    integration refuses a config without a `views` list or one naming entities the home doesn't
    have, and says which.
-4. Tell the person the draft is ready to review in harc or the Terrazzo panel. If they ask for
-   changes, they leave a note: call `get_edit_session` again, read `notes`, and submit a new
-   draft. A session expires a day after its last change; an applied or discarded one takes no
-   more drafts.
+4. The person watches the session in harc or the Terrazzo panel and sees each draft at once.
+   Use `set_status` while you work and `send_message` to ask them something. Then call
+   `await_feedback` with `since` = the last `cursor` (0 at first): it waits up to 25 s and
+   returns their notes, which may name a card in `target`. Act on them, submit again, and keep
+   listening until `status` is `applied` or `discarded`. A session expires a day after its last
+   change; an applied or discarded one takes no more drafts.
 
 ## Rules
 

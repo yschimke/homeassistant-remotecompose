@@ -45,7 +45,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.HaCommandException
 import ee.schimke.ha.client.agent.AgentLiveControls
+import ee.schimke.ha.client.agent.AgentPresence
 import ee.schimke.ha.client.agent.AgentRelayClient
+import ee.schimke.ha.client.agent.AgentRelayMessage
 import ee.schimke.ha.client.agent.AgentRelayState
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
@@ -54,6 +56,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardKey
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.terrazzo.shared.AgentConnection
 import ee.schimke.terrazzo.shared.AgentLivePanel
 import ee.schimke.terrazzo.shared.DashboardContent
 import kotlin.coroutines.cancellation.CancellationException
@@ -133,7 +136,9 @@ fun AgentEditScreen(
         throw e
       } catch (e: HaCommandException) {
         problem = e.reason
-      } catch (e: Exception) {
+      } catch (e: Throwable) {
+        // Throwable, not Exception: on Wasm a failed fetch is an Error, and this loop must outlive
+        // a network blip or a design server deploy.
         problem =
           if (cloudServer != null) e.message ?: "Reconnecting to the design server…"
           else "Reconnecting to Home Assistant…"
@@ -165,6 +170,7 @@ fun AgentEditScreen(
             title = title,
             busy = busy,
             cloudServer = cloudServer,
+            onCopy = onSharePrompt,
             onStart = { request ->
               run {
                 val started = edits.start(urlPath, request)
@@ -186,7 +192,9 @@ fun AgentEditScreen(
         else ->
           SessionReview(
             session = current,
-            live = live?.live(current.id)?.collectAsState()?.value,
+            // An agent signed in to Home Assistant directly has no relay; the session itself
+            // carries its presence and messages once it has joined.
+            live = live?.live(current.id)?.collectAsState()?.value ?: directLive(current),
             liveBusy = busy,
             onCopyInvite = { code ->
               onSharePrompt(
@@ -206,7 +214,10 @@ fun AgentEditScreen(
               }
             },
             onComment = { text, target ->
-              run { requireNotNull(live).comment(current.id, text, target) }
+              run {
+                if (live != null) live.comment(current.id, text, target)
+                else session = edits.note(current.id, text, target)
+              }
             },
             prompt = prompt,
             problem = problem,
@@ -262,6 +273,7 @@ private fun StartSession(
   title: String?,
   busy: Boolean,
   cloudServer: String?,
+  onCopy: (String) -> Unit,
   onStart: (String) -> Unit,
   onResume: (AgentEditSession) -> Unit,
 ) {
@@ -276,6 +288,8 @@ private fun StartSession(
       "What should change on ${title ?: "this dashboard"}?",
       style = MaterialTheme.typography.titleMedium,
     )
+    // The setup phase: once an agent is connected, the request goes straight to it.
+    if (cloudServer != null) AgentConnection(cloudServer, onCopy)
     Text(
       if (cloudServer == null)
         "Home Assistant opens an edit session and gives you a prompt for your AI assistant. The " +
@@ -285,9 +299,10 @@ private fun StartSession(
         "Your dashboard configuration and request will be sent to $cloudServer and shared with " +
           "your chosen agent. The agent does not get your Home Assistant login. You review and " +
           "apply drafts here; Home Assistant checks your permissions and whether the dashboard changed. " +
-          "The configuration may contain private data. You get a short code to give your agent, " +
-          "and can talk to it here while it works. This device keeps access to the request; it " +
-          "ends an hour after the last activity, after a day at most, or when you discard it.",
+          "The configuration may contain private data. Your connected agent gets the request at " +
+          "once (without one, you get a short code to give it), and you talk to it here while it " +
+          "works. The request ends an hour after the last activity, after a day at most, or when " +
+          "you discard it.",
       style = MaterialTheme.typography.bodyMedium,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -408,6 +423,12 @@ private fun SessionReview(
           target = target,
           onClearTarget = { target = null },
         )
+      } else if (session.isOpen && session.agentListening && session.drafts.isEmpty()) {
+        // An agent signed in to Home Assistant is listening: it picks this up by itself.
+        Text(
+          "Your agent is listening and picks this up now.",
+          style = MaterialTheme.typography.bodyMedium,
+        )
       } else if (prompt != null && session.isOpen && (cloud || session.drafts.isEmpty())) {
         PromptCard(prompt, onSharePrompt, cloud)
       }
@@ -436,13 +457,17 @@ private fun SessionReview(
           }
         }
       }
-      session.notes.lastOrNull()?.let {
-        Text(
-          "Your last note: ${it.text}",
-          style = MaterialTheme.typography.bodySmall,
-          color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-      }
+      // With the live panel the conversation shows every note already.
+      session.notes
+        .lastOrNull()
+        ?.takeIf { live == null }
+        ?.let {
+          Text(
+            "Your last note: ${it.text}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
+        }
     }
     val dashboard = previewDashboard(draft?.config)
     when {
@@ -540,9 +565,48 @@ internal fun cardLabel(key: CardKey, card: CardConfig): String {
     (card.raw[name] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content
   val name = field("title") ?: field("name") ?: field("heading") ?: field("entity") ?: card.type
   val where = buildString {
-    key.viewPath?.let { append("view $it, ") }
+    // A view without a path of its own gets a made-up one ("view-0"): name it by position.
+    key.viewPath?.let { path ->
+      val position = Regex("view-(\\d+)").matchEntire(path)?.groupValues?.get(1)?.toIntOrNull()
+      append(if (position != null) "view ${position + 1}, " else "view $path, ")
+    }
     key.sectionIndex?.let { append("section ${it + 1}, ") }
     append("card ${key.cardIndex + 1}")
   }
   return "$name ($where)"
+}
+
+/**
+ * The live panel's state for a session whose agent is signed in to Home Assistant directly: null
+ * until the agent has been active, so the prompt to hand it shows until then. Presence counts as
+ * connected for a minute and a half after the agent's last call, by Home Assistant's clock.
+ */
+internal fun directLive(session: AgentEditSession): AgentRelayState? {
+  val agent = session.agent ?: return null
+  val idle = session.agentIdleSeconds
+  return AgentRelayState(
+    version = session.conversation.lastOrNull()?.seq ?: 0,
+    kind = "dashboard",
+    title = session.request,
+    revision = session.drafts.size.toLong(),
+    agent =
+      AgentPresence(
+        joined = true,
+        connected = idle != null && idle < 90,
+        name = "Agent",
+        status = agent.status,
+        lastSeenSecondsAgo = idle?.toLong(),
+      ),
+    messages =
+      session.conversation.map {
+        AgentRelayMessage(
+          it.seq,
+          if (it.fromAgent) "agent" else "person",
+          if (it.fromAgent) "message" else "comment",
+          it.text,
+          it.target,
+        )
+      },
+    decision = if (session.isApplied) "accepted" else null,
+  )
 }

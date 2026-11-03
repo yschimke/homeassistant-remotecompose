@@ -64,7 +64,7 @@ jobs:
         with:
           cache-read-only: 'true'
       - name: Build existing renderers and run shared checks
-        run: ./gradlew :app-ui:wasmJsBrowserDistribution :app-ui:wasmoApp :design-server:embedResources :ha-client:jvmTest :app-ui:jvmTest ktfmtCheck --stacktrace
+        run: ./gradlew :app-ui:wasmJsBrowserDistribution :app-ui:wasmoApp :design-server:embedResources :design-server:installDist :ha-client:jvmTest :app-ui:jvmTest ktfmtCheck --stacktrace
       - uses: actions/setup-python@v7.1.0
         with:
           python-version: '3.15.2'
@@ -113,6 +113,10 @@ jobs:
           node --test home-assistant/test/installed.test.mjs
           node --test home-assistant/test/installed-mcp.test.mjs
           node --test home-assistant/test/installed-edits.test.mjs
+          node --test home-assistant/test/installed-agent-live.test.mjs
+          # A real design server relays a cloud agent's session, through a restart of its own.
+          DESIGN_SERVER_BIN="$PWD/design-server/build/install/design-server/bin/design-server" \
+            node --test home-assistant/test/installed-agent-cloud.test.mjs
           node --test home-assistant/test/installed-push.test.mjs
           node --test home-assistant/test/installed-designs.test.mjs
           # Last: it restarts Home Assistant.

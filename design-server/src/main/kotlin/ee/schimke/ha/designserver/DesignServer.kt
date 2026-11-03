@@ -189,6 +189,15 @@ fun Application.designServer(
     dashboardStudioRoutes(uiBuilder, github)
     demoSite(File(System.getenv("WASM_SITE_DIR") ?: "/app/wasm"))
     val agentRelay = AgentRelay(AgentDesignSessions(), DashboardAgentSessions())
+    agentSessionsDir()?.let { dir ->
+      val saved = AgentSessionFile(File(dir, "sessions.json"), agentRelay)
+      saved.load()
+      val saving = saved.start(this@designServer)
+      monitor.subscribe(ApplicationStopping) {
+        saving.cancel()
+        runCatching { saved.save() }
+      }
+    }
     cardStudioRoutes(holder, uiBuilder, github, made = userDesigns, relay = agentRelay)
     dashboardAgentRoutes(agentRelay)
     agentRelayRoutes(agentRelay)
@@ -605,3 +614,13 @@ private val json = Json { prettyPrint = true }
 
 internal suspend fun ApplicationCall.notFound() =
   respondText("not found", status = HttpStatusCode.NotFound)
+
+/**
+ * Where agent sessions survive a restart ([AgentSessionFile]): `AGENT_SESSIONS_DIR`, else
+ * `agent-sessions` under `UI_BUILDER_STATE_DIR`. Without either they last until a restart.
+ */
+private fun agentSessionsDir(): File? =
+  System.getenv("AGENT_SESSIONS_DIR")?.takeIf { it.isNotBlank() }?.let(::File)
+    ?: System.getenv("UI_BUILDER_STATE_DIR")
+      ?.takeIf { it.isNotBlank() }
+      ?.let { File(it, "agent-sessions") }

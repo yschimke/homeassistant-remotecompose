@@ -190,16 +190,17 @@ fun Route.cardStudioRoutes(
       } catch (e: IllegalArgumentException) {
         return@post call.respondText("Invalid design request", status = HttpStatusCode.BadRequest)
       }
-    val joinCode = relay?.register(AgentRelay.Kind.Card, access.owner, access.agent, instruction)
+    // With the person's agent link the request goes straight to their agent: no code.
+    val agentLink = (input["agentLink"] as? JsonPrimitive)?.contentOrNull
+    val joinCode =
+      relay?.register(AgentRelay.Kind.Card, access.owner, access.agent, instruction, agentLink)
     call.respondText(
       buildJsonObject {
         put("ownerToken", access.owner)
         put("agentToken", access.agent)
         put("expiresInSeconds", 3600)
-        joinCode?.let {
-          put("joinCode", it)
-          put("relay", true)
-        }
+        joinCode?.let { put("joinCode", it) }
+        if (relay != null && joinCode == null) put("linked", true)
       }
         .toString(),
       ContentType.Application.Json,

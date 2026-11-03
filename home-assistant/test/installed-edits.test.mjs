@@ -157,10 +157,24 @@ test('Edit sessions: agents draft, administrators apply', {timeout:180_000}, asy
     assert.equal((await owner.ws({type:'lovelace/config', url_path:'edit-fixture'})).title, 'Changed elsewhere');
     assert.ok(!(await owner.ws({type:'lovelace/config/save', url_path:'edit-fixture', config:BASELINE}))?.error);
 
+    // The agent waits for feedback; a note pinned to a card ends the wait at once.
+    assert.notEqual((await mcp('set_status', {session_id:sessionId, status:'Waiting on you'})).isError, true);
+    assert.notEqual((await mcp('send_message', {session_id:sessionId, text:'Two columns?'})).isError, true);
+    await owner.page.waitForFunction(() => window.sessionUpdates.some((s) => s.messages?.[0]?.text === 'Two columns?'));
+    const waitStarted = Date.now();
+    const waiting = mcp('await_feedback', {session_id:sessionId, since:0});
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    assert.ok(!(await owner.ws({type:'terrazzo/edit/note', session_id:sessionId, text:'One column', target:'Lamp (card 1)'}))?.error);
+    const feedback = (await waiting).structuredContent;
+    assert.ok(Date.now() - waitStarted < 10_000, 'the note ended the wait, not the timeout');
+    assert.equal(feedback.feedback[0].text, 'One column');
+    assert.equal(feedback.feedback[0].target, 'Lamp (card 1)');
+    await owner.page.waitForFunction(() => window.sessionUpdates.some((s) => s.agent?.status === 'Waiting for feedback'));
+
     // The person asks for a change; the agent reads the note on its next call.
     assert.ok(!(await owner.ws({type:'terrazzo/edit/note', session_id:sessionId, text:'Looks good'}))?.error);
-    assert.equal((await mcp('get_edit_session', {session_id:sessionId})).structuredContent.notes[0].text, 'Looks good');
-    assert.equal((await mcp('list_edit_sessions')).structuredContent.sessions.find((s) => s.session_id === sessionId).notes[0].text, 'Looks good');
+    assert.equal((await mcp('get_edit_session', {session_id:sessionId})).structuredContent.notes.at(-1).text, 'Looks good');
+    assert.equal((await mcp('list_edit_sessions')).structuredContent.sessions.find((s) => s.session_id === sessionId).notes.at(-1).text, 'Looks good');
 
     const applied = await owner.ws({type:'terrazzo/edit/apply', session_id:sessionId, draft_id:draftId});
     assert.ok(!applied.error, `applied: ${applied.error?.message}`);

@@ -50,16 +50,17 @@ fun Route.dashboardAgentRoutes(
           status = HttpStatusCode.TooManyRequests,
         )
       }
-    val joinCode = relay?.register(AgentRelay.Kind.Dashboard, access.owner, access.agent, request)
+    // With the person's agent link the request goes straight to their agent: no code.
+    val agentLink = (input["agentLink"] as? JsonPrimitive)?.contentOrNull
+    val joinCode =
+      relay?.register(AgentRelay.Kind.Dashboard, access.owner, access.agent, request, agentLink)
     call.respondText(
       buildJsonObject {
         put("ownerToken", access.owner)
         put("agentToken", access.agent)
         put("expiresInSeconds", 3600)
-        joinCode?.let {
-          put("joinCode", it)
-          put("relay", true)
-        }
+        joinCode?.let { put("joinCode", it) }
+        if (relay != null && joinCode == null) put("linked", true)
       }
         .toString(),
       ContentType.Application.Json,
