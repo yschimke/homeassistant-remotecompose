@@ -260,7 +260,7 @@ private fun ActionPill(
         .clip(haControlShape(6))
         .background(accent.copy(alpha = accent.alpha * 0.0f.rf))
         .border(1.rdp, accent, haControlShape(6))
-        .then(consoleKeyChrome(accent))
+        .then(haKeyChrome(accent))
         .padding(horizontal = horizontalPaddingDp.rdp, vertical = 8.rdp),
     contentAlignment = RemoteAlignment.Center,
   ) {
@@ -433,7 +433,7 @@ private fun KeypadKey(
         .size(keyDp.rdp)
         .clip(haControlShape(6))
         .border(1.rdp, haInk(accent), haControlShape(6))
-        .then(consoleKeyChrome(haInk(accent))),
+        .then(haKeyChrome(haInk(accent))),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteText(

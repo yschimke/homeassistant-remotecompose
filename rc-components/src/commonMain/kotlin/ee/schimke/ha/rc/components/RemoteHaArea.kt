@@ -139,7 +139,7 @@ private fun ActionChip(action: HaAreaAction, theme: RemoteHaTheme) {
         .size(40.rdp)
         .clip(haControlShape(20, round = true))
         .background(bg)
-        .then(consoleKeyChrome(tint)),
+        .then(haKeyChrome(tint)),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteBasicIcon(

@@ -3,6 +3,8 @@
 package ee.schimke.ha.rc.components
 
 import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.runtime.Composable
 
@@ -11,9 +13,9 @@ import androidx.compose.runtime.Composable
 // for the slots it cares about and nothing else; every other slot resolves, in order, to
 //
 //   1. the theme's own drawing for the slot (HaUberTheme.components), else
-//   2. the drawing every theme shares, read from the theme's grammar (GrammarMeters.kt) —
-//      except for the visuals that predate slots (arc, bar, thermometer, battery), whose
-//      fallback is still the bespoke family's drawing in Meters<Family>.kt.
+//   2. for a part that predates slots, the bespoke family's own (Meters<Family>.kt for the meters,
+//      HaControls.kt's one family table for the switch and keys), else
+//   3. the drawing every theme shares, read from the theme's grammar and tokens.
 //
 // So a new component is one grammar drawing plus one slot, and it works under every theme at once;
 // a new theme is tokens plus the overrides that make it itself. Neither multiplies by the other.
@@ -32,7 +34,26 @@ enum class HaComponentSlot {
   Battery,
   /** [RemoteHaLockGlyph]: a padlock, its shackle and bolt placed by how locked it is. */
   Lock,
+  /** [RemoteHaToggleSwitch]: an on / off control, its knob and colour moved by live progress. */
+  Switch,
+  /**
+   * The mount a key or button face sits in ([haKeyChrome]): a machined key, a moulded paddle, an
+   * outlined rim — or nothing, on a flat theme. Applied inside the caller's target, so the caller
+   * keeps the action, accessible name and touch area.
+   */
+  Key,
 }
+
+/** Something that draws one slot; each slot takes one kind. */
+internal sealed interface HaSlotRenderer
+
+/** The kind of renderer [this] slot takes. */
+internal fun HaComponentSlot.accepts(renderer: HaSlotRenderer): Boolean =
+  when (this) {
+    HaComponentSlot.Switch -> renderer is HaSwitchRenderer
+    HaComponentSlot.Key -> renderer is HaKeyRenderer
+    else -> renderer is HaVisualRenderer
+  }
 
 /** What a slot's drawing is handed: the theme's colours and grammar, and the live value. */
 internal class HaVisualSpec(
@@ -49,9 +70,37 @@ internal class HaVisualSpec(
   val vertical: Boolean = false,
 )
 
-/** One slot's drawing. It fills the canvas it is played in, sized from that canvas at playback. */
-internal fun interface HaVisualRenderer {
+/** One visual slot's drawing. It fills the canvas it is played in, sized from that canvas. */
+internal fun interface HaVisualRenderer : HaSlotRenderer {
   fun RemoteDrawScope.render(spec: HaVisualSpec)
+}
+
+/**
+ * What a switch is handed: live progress for the knob ([progress]) and for the colours
+ * ([colorProgress], which a style may animate apart), the accents, and the caller's modifier and
+ * click. The renderer sizes the control and applies [clickable] itself, so a face can sit inside
+ * the target (a rocker) or be the target (a track).
+ */
+internal class HaSwitchSpec(
+  val progress: RemoteFloat,
+  val colorProgress: RemoteFloat,
+  val activeAccent: RemoteColor,
+  val inactiveAccent: RemoteColor,
+  val modifier: RemoteModifier,
+  val clickable: RemoteModifier,
+)
+
+/** Draws a switch. It owns no state and no action: [HaSwitchSpec] brings both. */
+internal interface HaSwitchRenderer : HaSlotRenderer {
+  @Composable fun Switch(spec: HaSwitchSpec)
+}
+
+/**
+ * Draws a key's mount as a modifier on the caller's key. [accent] is a live state or selection
+ * colour for the rim, and [selected] a mode key's state (a lamp, a dot), or null for a plain key.
+ */
+internal interface HaKeyRenderer : HaSlotRenderer {
+  @Composable fun chrome(accent: RemoteColor?, selected: Boolean?): RemoteModifier
 }
 
 /**
@@ -59,15 +108,27 @@ internal fun interface HaVisualRenderer {
  * and add one with [with].
  */
 class HaComponentSlots
-internal constructor(private val renderers: Map<HaComponentSlot, HaVisualRenderer>) {
+internal constructor(private val renderers: Map<HaComponentSlot, HaSlotRenderer>) {
+  init {
+    renderers.forEach { (slot, renderer) ->
+      require(slot.accepts(renderer)) { "$slot can't take ${renderer::class.simpleName}" }
+    }
+  }
 
   /** The slots this set draws. */
   val slots: Set<HaComponentSlot>
     get() = renderers.keys
 
-  internal operator fun get(slot: HaComponentSlot): HaVisualRenderer? = renderers[slot]
+  internal fun visual(slot: HaComponentSlot): HaVisualRenderer? =
+    renderers[slot] as? HaVisualRenderer
 
-  internal fun with(slot: HaComponentSlot, renderer: HaVisualRenderer): HaComponentSlots =
+  internal val switch: HaSwitchRenderer?
+    get() = renderers[HaComponentSlot.Switch] as? HaSwitchRenderer
+
+  internal val key: HaKeyRenderer?
+    get() = renderers[HaComponentSlot.Key] as? HaKeyRenderer
+
+  internal fun with(slot: HaComponentSlot, renderer: HaSlotRenderer): HaComponentSlots =
     HaComponentSlots(renderers + (slot to renderer))
 
   /** These slots, with [other]'s drawings replacing any they share. */
@@ -97,6 +158,8 @@ internal constructor(private val renderers: Map<HaComponentSlot, HaVisualRendere
           HaComponentSlot.Thermometer to GrammarRenderers.Thermometer,
           HaComponentSlot.Battery to GrammarRenderers.Battery,
           HaComponentSlot.Lock to GrammarRenderers.Lock,
+          HaComponentSlot.Switch to TokenSwitch,
+          HaComponentSlot.Key to GrammarKey,
         )
       )
   }
@@ -105,7 +168,7 @@ internal constructor(private val renderers: Map<HaComponentSlot, HaVisualRendere
 /** The active theme's own drawing for [slot], or null to fall back. */
 @Composable
 internal fun themedRenderer(slot: HaComponentSlot): HaVisualRenderer? =
-  currentHaUberTheme().theme.components[slot]
+  currentHaUberTheme().theme.components.visual(slot)
 
 /** The active theme's grammar. */
 @Composable internal fun haGrammar(): HaComponentGrammar = currentHaUberTheme().theme.grammar

@@ -41,10 +41,10 @@ import ee.schimke.ha.rc.components.HaType
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ProvideHaUberTheme
 import ee.schimke.ha.rc.components.RemoteHaArcMeter
-import ee.schimke.ha.rc.components.RemoteHaBatteryGlyph
 import ee.schimke.ha.rc.components.RemoteHaLiveLockGlyph
 import ee.schimke.ha.rc.components.RemoteHaLockRow
 import ee.schimke.ha.rc.components.RemoteHaMeasurement
+import ee.schimke.ha.rc.components.RemoteHaToggleSwitchByProgress
 import ee.schimke.ha.rc.components.cardChrome
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.ha.rc.components.haTextStyle
@@ -73,12 +73,13 @@ private fun KitShowcase(theme: HaUberTheme, darkTheme: Boolean) {
               verticalArrangement = RemoteArrangement.spacedBy(HaSpace.M.rdp),
             ) {
               CarDoorsCard()
+              // Switches and keys are slots too: a kit's own or the shared token switch.
               RenderChild(
                 card(
-                  """{"type":"gauge","entity":"sensor.repeater_battery","name":"Battery %",
-                      "min":0,"max":100,"severity":{"green":60,"yellow":30,"red":0}}"""
+                  """{"type":"entities","title":"Living Room","entities":[
+                      "sensor.living_room","light.kitchen","switch.coffee_maker"]}"""
                 ),
-                Fixtures.battery,
+                Fixtures.mixed,
                 RemoteModifier.fillMaxWidth(),
               )
               RemoteRow(modifier = RemoteModifier.fillMaxWidth()) {
@@ -180,7 +181,7 @@ fun Kit_Cockpit() = KitShowcase(HaUberTheme.Cockpit, darkTheme = true)
 
 /**
  * One component under every theme: the lock — written once against the grammar — locked and
- * unlocked, beside a dial, a battery, in each theme's palette and grammar. Bespoke themes draw it
+ * unlocked, beside a dial and a switch, in each theme's palette and grammar. Bespoke themes draw it
  * from the grammar their family implies; kits from their own.
  */
 @Preview(name = "kit: lock under every theme", widthDp = 360, heightDp = 516)
@@ -231,10 +232,11 @@ private fun LockCell(theme: HaUberTheme, modifier: RemoteModifier) {
       strokeWidthPx = 6f,
     )
     RemoteBox(RemoteModifier.size(6.rdp, 4.rdp)) {}
-    RemoteHaBatteryGlyph(
-      0.4f.rf,
-      ee.schimke.ha.rc.components.HaStatusColors.Normal.rc,
-      RemoteModifier.size(26.rdp, 13.rdp),
+    // The switch is a slot: each theme's own, its family's, or the shared token switch.
+    RemoteHaToggleSwitchByProgress(
+      progress = 1f.rf,
+      activeAccent = ee.schimke.ha.rc.components.HaStatusColors.None.rc,
+      inactiveAccent = palette.divider,
     )
     RemoteText(
       text = theme.id.rs,
@@ -245,5 +247,49 @@ private fun LockCell(theme: HaUberTheme, modifier: RemoteModifier) {
       overflow = TextOverflow.Ellipsis,
       modifier = RemoteModifier.padding(start = HaSpace.S.rdp),
     )
+  }
+}
+
+/**
+ * Keys as a slot: the same glance card — each entity a key — under bespoke themes with their own
+ * key mounts (Console's machined keys, IKEA's moulded paddles), Classic's flat keys, and the kits,
+ * whose keys come from the grammar (Engineered's outlined rims; none on a filled grammar).
+ */
+@Preview(name = "kit: keys across themes", widthDp = 360, heightDp = 630)
+@Composable
+fun Kit_Keys() {
+  val themes =
+    listOf(
+      HaUberTheme.Classic to false,
+      HaUberTheme.Console to true,
+      HaUberTheme.Ikea to false,
+      HaUberTheme.Aurora to false,
+      HaUberTheme.Engineered to false,
+      HaUberTheme.Cockpit to true,
+    )
+  Box(Modifier.uiFillMaxSize().background(androidx.compose.ui.graphics.Color(0xFF808285))) {
+    CapturingRemoteContentPreview(profile = androidXExperimental) {
+      CompositionLocalProvider(LocalHaClock provides FixedHaClock(KitNow)) {
+        ProvideCardRegistry(defaultRegistry()) {
+          RemoteColumn(
+            modifier = RemoteModifier.fillMaxWidth().padding(HaSpace.S.rdp),
+            verticalArrangement = RemoteArrangement.spacedBy(HaSpace.S.rdp),
+          ) {
+            for ((theme, dark) in themes) {
+              ProvideHaUberTheme(theme, dark) {
+                RenderChild(
+                  card(
+                    """{"type":"glance","entities":[
+                        "light.kitchen","switch.coffee_maker","lock.front_door"]}"""
+                  ),
+                  Fixtures.mixed,
+                  RemoteModifier.fillMaxWidth(),
+                )
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }

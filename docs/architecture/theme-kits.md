@@ -11,7 +11,7 @@ chrome, and values bound by name ([live-card-updates.md](live-card-updates.md)).
 ![The lock, written once, under every theme](images/theme-kits/lock-every-theme.png)
 
 *One lock component, with no code specific to any theme, drawn locked and unlocked under all 23
-themes beside a dial and a battery. A segment LCD lights bars, Braun and Cockpit slide a bolt,
+themes beside a dial and the `Switch` slot. A segment LCD lights bars, Braun and Cockpit slide a bolt,
 Nixie glows, and a kit uses its own tokens.*
 
 ## The problem: N themes × M components
@@ -36,17 +36,26 @@ A theme is three layers, each a fallback for the one above it:
  ├─ grammar     HaComponentGrammar: stroke weight · round/flat caps
  │              · level = Continuous | Segmented(n) | Pointer · ticks · track gap
  │              · stop dot · glow · gradient halo · outline bodies            ── new
- └─ components  HaComponentSlots: the theme's own drawing per slot (ArcMeter, BarMeter,
-                Thermometer, Battery, Lock, …)                                ── new
+ └─ components  HaComponentSlots: the theme's own drawing per slot — visuals
+                (ArcMeter, BarMeter, Thermometer, Battery, Lock) and controls
+                (Switch, Key)                                                 ── new
 ```
 
 **Resolution.** A part asks the active theme for its slot's drawing:
 
-1. the theme's own drawing for that slot (`theme.components[slot]`), else
-2. for a slot that predates slots (arc, bar, thermometer, battery), the bespoke family's drawing in
-   `Meters<Family>.kt`, unchanged, else
-3. the shared **grammar drawing** (`GrammarMeters.kt`), which reads only the theme's grammar and
-   tokens.
+1. the theme's own drawing for that slot (`theme.components`), else
+2. for a part that predates slots, the bespoke family's own, unchanged: the meters in
+   `Meters<Family>.kt`, and the switch and key mount from the one family table in
+   [`HaControls.kt`](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/HaControls.kt)
+   (`familySwitch`, `familyKey`), else
+3. the shared drawing, which reads only the theme's grammar and tokens: `GrammarMeters.kt` for
+   visuals, `TokenSwitch` and `GrammarKey` for controls.
+
+A slot takes one kind of renderer: a canvas drawing for a visual (`HaVisualRenderer`), a
+composable control for the switch (`HaSwitchRenderer`, handed live knob and colour progress, the
+accents, and the caller's click), and a modifier for a key's mount (`HaKeyRenderer`, applied
+inside the caller's target so the action, accessible name and touch area stay with the card).
+`HaComponentSlots` rejects a renderer of the wrong kind.
 
 Every bespoke family has a grammar derived from it (`HaComponentGrammar.forFamily`): LCD and
 Trinitron are segmented, Braun and Console use a pointer, Expressive is bold with a gap and stop
@@ -60,6 +69,7 @@ theme. The lock above is that case: it has no LCD drawing, yet under LCD it is a
 | What it is | its own `HaVisualFamily`, drawn by hand | tokens + grammar over a bespoke theme it `extends` |
 | Older visuals | the family's `Meters<Family>.kt` | `HaComponentSlots.Grammar` (all slots drawn from the grammar) |
 | New components | grammar drawing, from its derived grammar | grammar drawing, from its own grammar |
+| Switch and keys | the family's own, from the family table, else the token switch / no mount | `TokenSwitch` and `GrammarKey`, or a family's control it borrows |
 | Card layouts and controls not yet in slots | the family's branches | inherited from the base it extends |
 | Cost to add | a family, about 40 files | one `HaUberTheme(...)` value |
 
@@ -87,6 +97,28 @@ is the reference:
 `RemoteHaLockRow` (glyph, name, live state) is then a card part: a car's doors, boot and charge
 port are a column of these, and a front door is one. A theme that wants a bespoke lock (Console's
 brass padlock, say) overrides `HaComponentSlot.Lock` and nothing else changes.
+
+## Controls: the switch and the key mount
+
+Cards ask for controls by role. `RemoteHaToggleSwitch` (an entities row, a tile) and
+`haKeyChrome(accent, selected)` (about twenty key, chip and button sites across the cards) used to
+branch on Console, IKEA, Expressive and the community families. They now resolve through the
+`Switch` and `Key` slots, and no card names a family for them. `HaControlSlotsTest` checks that.
+
+- **Bespoke themes are unchanged.** The family table hands Expressive its M3 switch, IKEA its
+  paddle and moulded keys, Console its rocker and machined keys, and the community families their
+  thumbs. Classic, Home Assistant, Trinitron, LCD, Braun and Nixie keep the token switch and keys
+  with no mount. All 39 `Uber*` previews render byte-identical before and after the move.
+- **Kits draw the shared controls.** `TokenSwitch` takes its look from the shape tokens (track
+  corner, square or round knob), the material (a machined cap on painted metal) and the ink.
+  `GrammarKey` draws nothing on a filled grammar, an outlined rim in the live accent on an outline
+  grammar (Engineered), and a selected mode key's dot, with a halo on a glowing grammar.
+- **A kit can borrow a family's control.** Aurora keeps Material 3 Expressive's switch with
+  `HaComponentSlots.Grammar.with(HaComponentSlot.Switch, FamilyControls.ExpressiveSwitch)`.
+- **One filament stays a token.** A painted-metal switch's lamp warms on the fast effect and
+  cools on the slow one. That is now keyed on `HaSurfaceMaterial.PaintedMetal`, not on Console.
+
+![The same glance card's keys across themes](images/theme-kits/keys.png)
 
 ## Adding a brand-style theme
 
@@ -152,7 +184,7 @@ code:
 
 | Part | Where | Slot it should become |
 |---|---|---|
-| Toggle switch and keys | `RemoteHaButton`, `CommunityControls`, `ConsoleControls` | `Switch`, `Key` |
+| Button icon chip (Expressive shape morph, Console face) | `RemoteHaButton` | `Chip` |
 | Control dials (thermostat, light) | `Dials.kt`, `RemoteHaArcDial` | `ControlDial` |
 | Sparklines and bars | `Charts.kt`, `HistoryTraces.kt` | `Sparkline`, `StatBars` |
 | Tile layout | `RemoteHaTile`, `TileFamilies.kt` | `TileLayout` (a layout slot, not a canvas) |

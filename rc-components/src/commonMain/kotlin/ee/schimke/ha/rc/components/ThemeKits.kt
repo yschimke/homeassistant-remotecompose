@@ -62,8 +62,8 @@ internal object ThemeKits {
     )
 
   /**
-   * **Aurora** — an assistant's look: soft rounded surfaces, and every value sweeping through a
-   * blue-violet-rose gradient with a faint glow. Warnings stay in their semantic colours.
+   * **Aurora** — an assistant's look: soft rounded surfaces, and a glowing blue-violet-rose
+   * gradient halo under every value, which keeps its own colour. Borrows Expressive's switch.
    */
   val Aurora =
     HaUberTheme(
@@ -102,7 +102,9 @@ internal object ThemeKits {
           glow = true,
           gradient = listOf(Color(0xFF4C8DF6), Color(0xFF9A6FE0), Color(0xFFE0727F)),
         ),
-      components = HaComponentSlots.Grammar,
+      // A kit can borrow a bespoke family's control: Material 3 Expressive's switch.
+      components =
+        HaComponentSlots.Grammar.with(HaComponentSlot.Switch, FamilyControls.ExpressiveSwitch),
       extends = "expressive",
     )
 

@@ -6,13 +6,10 @@ import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
-import androidx.compose.remote.creation.compose.layout.RemoteSize
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.drawWithContent
 import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
@@ -21,54 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-
-/**
- * Shared tactile key mount for Console commands and IKEA moulded controls. Applied inside the
- * existing target so its action, semantics and hit area remain with the caller. A bound [accent]
- * keeps live state/selection visible on the rim. Flat themes return a no-op.
- */
-@Composable
-internal fun consoleKeyChrome(
-  accent: RemoteColor? = null,
-  selected: Boolean? = null,
-): RemoteModifier {
-  if (visualFamily() == HaVisualFamily.Ikea) return ikeaKeyChrome(accent)
-  if (visualFamily() != HaVisualFamily.Console) return RemoteModifier
-  return RemoteModifier.drawWithContent {
-    val edge = width.min(height) * 0.045f.rf
-    val depth = edge + 1f.rf
-    fillRound(ConsoleSlot.rc, 0f.rf, 0f.rf, width, height, 3f.rf)
-    drawRoundRect(
-      metalPaint(0f.rf, height),
-      RemoteOffset(0f.rf, 0f.rf),
-      RemoteSize(width, height - depth),
-      RemoteOffset(3f.rf, 3f.rf),
-    )
-    drawRoundRect(
-      consoleCapPaint(0f.rf, height),
-      RemoteOffset(edge, edge),
-      RemoteSize(width - edge * 2f.rf, height - depth - edge * 2f.rf),
-      RemoteOffset(2f.rf, 2f.rf),
-    )
-    if (accent != null)
-      drawRoundRect(
-        strokePaint(1f, accent),
-        RemoteOffset(edge, edge),
-        RemoteSize(width - edge * 2f.rf, height - depth - edge * 2f.rf),
-        RemoteOffset(2f.rf, 2f.rf),
-      )
-    if (selected != null) {
-      val lamp = RemoteOffset(width - 7f.rf, 6f.rf)
-      drawCircle(fillPaint(ConsoleSlotLip.rc), 3f.rf, lamp)
-      drawCircle(
-        fillPaint(if (selected) accent ?: Color(0xFFF2A93B).rc else ConsoleSlot.rc),
-        2f.rf,
-        lamp,
-      )
-    }
-    drawContent()
-  }
-}
 
 /**
  * White service tape on the panel. The message can be a live binding, including a template label. A
