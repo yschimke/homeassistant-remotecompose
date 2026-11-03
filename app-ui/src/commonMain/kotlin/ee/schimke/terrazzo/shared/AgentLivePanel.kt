@@ -293,9 +293,9 @@ internal object AgentLinkStore {
 
 /**
  * The setup phase: connect an AI agent to this person once, on [server]. After that every card and
- * dashboard they ask about goes straight to it (Card Studio, Ask an agent), with nothing to copy.
- * Shows the setup code (or takes the agent's), then who is connected and whether it is listening.
- * [onCopy] puts text on the clipboard or share sheet.
+ * dashboard they ask about goes straight to it (Ask your agent, for a card or a dashboard), with
+ * nothing to copy. Shows the setup code (or takes the agent's), then who is connected and whether
+ * it is listening. [onCopy] puts text on the clipboard or share sheet.
  */
 @Composable
 fun AgentConnection(server: String, onCopy: (String) -> Unit, modifier: Modifier = Modifier) {

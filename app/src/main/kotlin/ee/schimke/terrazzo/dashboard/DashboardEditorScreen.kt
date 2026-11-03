@@ -71,7 +71,7 @@ private const val TAG = "DashboardEditor"
  *
  * Adding cards, sections, views and dashboards and editing a card's settings belong to Home
  * Assistant's editor or the Terrazzo panel; [IntegrationCard] points there. With the Terrazzo
- * integration installed it also offers **Ask an agent** ([AgentEditScreen]): an edit session in
+ * integration installed it also offers **Ask your agent** ([AgentEditScreen]): an edit session in
  * Home Assistant whose drafts are previewed here and applied by an administrator.
  *
  * The dashboard view itself lays sections out by harc's own card designs ([SectionCardFlow]), so it
@@ -392,7 +392,7 @@ internal fun IntegrationCard(
           style = MaterialTheme.typography.bodyMedium,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        FilledTonalButton(onClick = ask) { Text("Ask an agent") }
+        FilledTonalButton(onClick = ask) { Text("Ask your agent") }
       }
       if (status != IntegrationStatus.Installed) {
         HorizontalDivider(Modifier.padding(vertical = 4.dp))

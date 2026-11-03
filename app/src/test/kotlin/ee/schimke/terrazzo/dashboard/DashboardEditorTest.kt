@@ -163,11 +163,11 @@ class DashboardEditorTest {
         ) {}
       }
     }
-    compose.onNodeWithText("Ask an agent").performClick()
+    compose.onNodeWithText("Ask your agent").performClick()
     assertEquals(1, asked)
     compose.onNodeWithText("Install with HACS").assertDoesNotExist()
     status = IntegrationStatus.Missing
-    compose.onNodeWithText("Ask an agent").assertDoesNotExist()
+    compose.onNodeWithText("Ask your agent").assertDoesNotExist()
     compose.onNodeWithText("Install with HACS").assertExists()
   }
 
@@ -177,12 +177,12 @@ class DashboardEditorTest {
     val (edits, _) = setUp(onAskAgent = { asked += 1 })
     compose.onNodeWithContentDescription("Card 1: tile").performClick()
     compose.onNodeWithContentDescription("Delete card").performClick()
-    compose.onNodeWithText("Ask an agent").performScrollTo().performClick()
+    compose.onNodeWithText("Ask your agent").performScrollTo().performClick()
     compose.onNodeWithText("Keep editing").performClick()
     assertEquals(0, asked)
     assertEquals(1, DashboardDraft.cards(edits.draft, 0, 0).size)
 
-    compose.onNodeWithText("Ask an agent").performScrollTo().performClick()
+    compose.onNodeWithText("Ask your agent").performScrollTo().performClick()
     compose.onNodeWithText("Discard and ask").performClick()
     assertEquals(1, asked)
     assertEquals(original, edits.draft)
