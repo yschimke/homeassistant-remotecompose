@@ -157,6 +157,24 @@ data class HaUberTheme(
   val appTheme: Boolean = false,
   /** How the theme's parts move: its family's motion archetype ([HaMotion.forFamily]). */
   val motion: RcMotionScheme = HaMotion.forFamily(visuals),
+  /**
+   * How the theme draws any visual, as tokens (line weight, caps, smooth / segmented / pointer
+   * levels, track gap, glow, gradient). A bespoke family's grammar is derived from it
+   * ([HaComponentGrammar.forFamily]), so a component it has no drawing of yet still matches it.
+   */
+  val grammar: HaComponentGrammar = HaComponentGrammar.forFamily(visuals),
+  /**
+   * The theme's own drawings, slot by slot. A slot it leaves out falls back to the shared drawing
+   * from [grammar] (or, for the visuals that predate slots, to [visuals]' bespoke drawing). A theme
+   * kit — tokens over a base family, no bespoke family of its own — starts from
+   * [HaComponentSlots.Grammar]. See docs/architecture/theme-kits.md.
+   */
+  val components: HaComponentSlots = HaComponentSlots.None,
+  /**
+   * The bespoke theme a kit builds on, for everything not yet drawn through slots (card layouts,
+   * controls): the kit shares [visuals] with it. Null for a bespoke theme, which owns its family.
+   */
+  val extends: String? = null,
 ) {
   init {
     require(light != null || dark != null) { "$id needs a light or a dark palette" }
@@ -458,6 +476,11 @@ data class HaUberTheme(
     val Arctic = CommunityThemes.Arctic
     val Aeon = CommunityThemes.Aeon
 
+    val EvDash = ThemeKits.EvDash
+    val Aurora = ThemeKits.Aurora
+    val Engineered = ThemeKits.Engineered
+    val Cockpit = ThemeKits.Cockpit
+
     /** Every uber theme, [Classic] first. */
     val all: List<HaUberTheme> =
       listOf(
@@ -480,7 +503,19 @@ data class HaUberTheme(
         Lcars,
         Arctic,
         Aeon,
+        EvDash,
+        Aurora,
+        Engineered,
+        Cockpit,
       )
+
+    /** The bespoke themes: each owns its [HaVisualFamily], drawn by hand in Meters<Family>.kt. */
+    val bespoke: List<HaUberTheme>
+      get() = all.filter { it.extends == null }
+
+    /** The theme kits: tokens and slot overrides over a bespoke theme's family. */
+    val kits: List<HaUberTheme>
+      get() = all.filter { it.extends != null }
 
     /** The theme with [id], or [Classic]. */
     fun byId(id: String): HaUberTheme =

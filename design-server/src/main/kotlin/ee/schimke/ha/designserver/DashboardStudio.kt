@@ -1,5 +1,6 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.ha.rc.components.HaUberTheme
 import io.ktor.http.*
 import io.ktor.server.http.content.staticFiles
 import io.ktor.server.request.*
@@ -113,30 +114,7 @@ fun Route.dashboardStudioRoutes(
       require(card["type"] is JsonPrimitive)
       val snapshot = body["snapshot"] as? JsonObject ?: JsonObject(emptyMap())
       val style = (body["style"] as? JsonPrimitive)?.content ?: "classic"
-      require(
-        style in
-          setOf(
-            "classic",
-            "home-assistant",
-            "expressive",
-            "trinitron",
-            "lcd",
-            "braun",
-            "nixie",
-            "console",
-            "ikea",
-            "mushroom",
-            "bubble",
-            "minimalist",
-            "cupertino",
-            "catppuccin",
-            "obsidian",
-            "noctis",
-            "lcars",
-            "arctic",
-            "aeon",
-          )
-      )
+      require(HaUberTheme.all.any { it.id == style })
       val dark = (body["dark"] as? JsonPrimitive)?.booleanOrNull ?: false
       val bytes =
         builder.client.renderDashboardCard(

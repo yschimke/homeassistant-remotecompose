@@ -63,6 +63,11 @@ enum class CardStylePref(val id: String) {
   Lcars("lcars"),
   Arctic("arctic"),
   Aeon("aeon"),
+  // Theme kits: tokens over a bespoke style (docs/architecture/theme-kits.md).
+  EvDash("ev-dash"),
+  Aurora("aurora"),
+  Engineered("engineered"),
+  Cockpit("cockpit"),
 }
 
 /**

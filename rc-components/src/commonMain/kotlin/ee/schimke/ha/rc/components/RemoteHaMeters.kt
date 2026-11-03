@@ -53,7 +53,13 @@ fun RemoteHaArcMeter(
       trackColor
         ?: if (family == HaVisualFamily.HomeAssistant) haTheme().dashboardBackground else null,
     )
+  val themed = themedRenderer(HaComponentSlot.ArcMeter)
+  val grammar = haGrammar()
   RemoteCanvas(modifier = modifier) {
+    if (themed != null) {
+      render(themed, HaVisualSpec(look, fraction, grammar, zones, strokeWidthPx, baseline))
+      return@RemoteCanvas
+    }
     when (family) {
       HaVisualFamily.Classic -> classicArc(look, fraction, strokeWidthPx, baseline)
       HaVisualFamily.HomeAssistant -> homeAssistantArc(look, fraction, baseline)
@@ -95,7 +101,13 @@ fun RemoteHaBarMeter(
 ) {
   val look = meterLook(color, trackColor)
   val family = visualFamily()
+  val themed = themedRenderer(HaComponentSlot.BarMeter)
+  val grammar = haGrammar()
   RemoteCanvas(modifier = modifier) {
+    if (themed != null) {
+      render(themed, HaVisualSpec(look, fraction, grammar, zones, vertical = vertical))
+      return@RemoteCanvas
+    }
     when (family) {
       HaVisualFamily.HomeAssistant,
       HaVisualFamily.Classic -> classicBar(look, fraction, vertical)
@@ -136,7 +148,13 @@ fun RemoteHaThermometerGlyph(
 ) {
   val look = meterLook(color, trackColor)
   val family = visualFamily()
+  val themed = themedRenderer(HaComponentSlot.Thermometer)
+  val grammar = haGrammar()
   RemoteCanvas(modifier = modifier) {
+    if (themed != null) {
+      render(themed, HaVisualSpec(look, fraction, grammar, zones))
+      return@RemoteCanvas
+    }
     when (family) {
       HaVisualFamily.HomeAssistant,
       HaVisualFamily.Classic -> classicThermometer(look, fraction)
@@ -176,7 +194,13 @@ fun RemoteHaBatteryGlyph(
 ) {
   val look = meterLook(color, trackColor)
   val family = visualFamily()
+  val themed = themedRenderer(HaComponentSlot.Battery)
+  val grammar = haGrammar()
   RemoteCanvas(modifier = modifier) {
+    if (themed != null) {
+      render(themed, HaVisualSpec(look, fraction, grammar, zones))
+      return@RemoteCanvas
+    }
     when (family) {
       HaVisualFamily.HomeAssistant,
       HaVisualFamily.Classic -> classicBattery(look, fraction)

@@ -974,7 +974,11 @@ private fun cardStyleTagline(pref: CardStylePref): String =
     CardStylePref.Noctis,
     CardStylePref.Lcars,
     CardStylePref.Arctic,
-    CardStylePref.Aeon -> pref.toUberTheme().description
+    CardStylePref.Aeon,
+    CardStylePref.EvDash,
+    CardStylePref.Aurora,
+    CardStylePref.Engineered,
+    CardStylePref.Cockpit -> pref.toUberTheme().description
   }
 
 private fun themePrefDisplayName(pref: ThemePref): String =

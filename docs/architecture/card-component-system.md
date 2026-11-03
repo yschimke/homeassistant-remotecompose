@@ -256,6 +256,12 @@ dark too. The card style list labels these styles "Themes the whole app". Second
 more-info and card actions sheets, card history) are skinned in the card style either way through
 `ProvideScreenSkin`: its corners, borders, readout and chart grammar.
 
+**Theme kits.** A theme no longer needs a family of its own. A *kit* is tokens, a component
+grammar (`HaComponentGrammar`) and optional per-slot drawings (`HaComponentSlots`) over a bespoke
+theme it `extends`: `ev-dash`, `aurora`, `engineered` and `cockpit` add no drawings. New components
+(the lock, `RemoteHaLock.kt`) are drawn once from the grammar and work under every theme. See
+[theme-kits.md](theme-kits.md).
+
 `classic` is exactly the look the cards had before uber themes (`HaUberThemeTest` pins it), so
 nothing changes until a host provides another.
 
@@ -370,8 +376,9 @@ When you add or change a part or a card:
 3. A numeric reading is a `HaReading` built with `haReading(…)`, so its bindings are the hosts'
    and its derived values are computed in-document.
 4. Draw with an existing Layer 2 meter before writing a new canvas. A new visual is a meter, not
-   a card-private canvas, with a drawing for every `HaVisualFamily`, so each uber theme has its
-   own design of it.
+   a card-private canvas: a `HaComponentSlot` with **one** grammar drawing (`GrammarMeters.kt`),
+   which every theme draws in its own grammar. A theme that wants its own design of it overrides
+   the slot. Never branch on `visualFamily()` in new code ([theme-kits.md](theme-kits.md)).
 5. Give a measurement a presentation, or `RemoteHaAdaptiveMeasurement` in a Fixed-mode cell, and
    check the smallest and largest cells against adaptive-card-layouts.md's design-review checklist.
 6. A new part that the builder should offer gets a `ha-cards` wrapper (scalar arguments only), a
