@@ -9,3 +9,5 @@ actual fun ImageBitmap.encodePng(): ByteArray? = runCatching {
   Image.makeFromBitmap(asSkiaBitmap()).encodeToData(EncodedImageFormat.PNG)?.bytes
 }
   .getOrNull()
+
+actual fun ImageBitmap.drawable(): ImageBitmap = this

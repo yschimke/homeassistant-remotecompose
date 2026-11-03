@@ -61,6 +61,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.shared.AgentConnection
 import ee.schimke.terrazzo.shared.AgentLivePanel
 import ee.schimke.terrazzo.shared.DashboardContent
+import ee.schimke.terrazzo.shared.drawable
 import ee.schimke.terrazzo.shared.encodePng
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.delay
@@ -676,10 +677,13 @@ private fun Modifier.sharesRender(
         onCapturing(false)
       } ?: return@LaunchedEffect
     if (drawn.width == 0 || drawn.height == 0) return@LaunchedEffect
-    drawn
-      .scaledTo(MAX_RENDER_WIDTH, MAX_RENDER_HEIGHT)
-      .encodePng()
-      ?.takeIf { it.size <= MAX_RENDER_BYTES }
+    // Best effort: a render that can't be made is simply not shared.
+    runCatching {
+      drawn.drawable().scaledTo(MAX_RENDER_WIDTH, MAX_RENDER_HEIGHT).encodePng()?.takeIf {
+        it.size <= MAX_RENDER_BYTES
+      }
+    }
+      .getOrNull()
       ?.let { latest(draftId, it) }
   }
   return drawWithContent {
