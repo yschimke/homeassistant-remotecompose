@@ -7,14 +7,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.*
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.HaCommandException
+import ee.schimke.ha.client.agent.AgentPresence
+import ee.schimke.ha.client.agent.AgentRelayState
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
 import ee.schimke.ha.client.dashboard.DashboardConflictException
 import ee.schimke.ha.client.dashboard.EditScope
 import ee.schimke.ha.client.dashboard.StartedAgentEdit
+import ee.schimke.ha.model.CardKey
 import ee.schimke.ha.model.HaSnapshot
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +37,11 @@ class AgentEditScreenTest {
       .jsonObject
 
   /** One session in memory; the test publishes its changes as the integration would. */
-  private class FakeEdits(val listed: List<AgentEditSession> = emptyList()) : AgentEdits {
+  private class FakeEdits(
+    val listed: List<AgentEditSession> = emptyList(),
+    /** As the relay's open(): only sessions it relays, not Home Assistant's alone. */
+    val openHidesUnrelayed: Boolean = false,
+  ) : AgentEdits {
     val current = MutableStateFlow<AgentEditSession?>(null)
     val calls = mutableListOf<String>()
     var applyFailure: Exception? = null
@@ -58,7 +66,8 @@ class AgentEditScreenTest {
       return StartedAgentEdit(session, "")
     }
 
-    override suspend fun open(urlPath: String?) = listed.filter { it.isOpen }
+    override suspend fun open(urlPath: String?) =
+      if (openHidesUnrelayed) emptyList() else listed.filter { it.isOpen }
 
     override suspend fun recent(urlPath: String?) = listed
 
@@ -324,5 +333,50 @@ class AgentEditScreenTest {
       val bounds = node.getBoundsInRoot()
       assertTrue(bounds.bottom <= 200.dp, "${bounds.bottom} is past the window")
     }
+  }
+
+  @Test
+  fun aSectionReopensItsHomeAssistantOnlySession() = runComposeUiTest {
+    val earlier =
+      AgentEditSession(
+        id = "ha-only",
+        urlPath = "garden",
+        request = "Pumps",
+        baseline = draftConfig,
+        scope = EditScope.section(0, 0, "Pumps"),
+      )
+    val edits = FakeEdits(listOf(earlier), openHidesUnrelayed = true)
+    show(edits, mutableListOf(), startScope = EditScope.section(0, 0, "Pumps"))
+    waitUntil { edits.current.value != null }
+    assertEquals("ha-only", edits.current.value!!.id)
+    assertTrue(edits.calls.none { it.startsWith("start:") }, "no second session")
+  }
+
+  @Test
+  fun aSectionScopeResolvesNamedViews() {
+    val dashboard =
+      previewDashboard(
+        Json.parseToJsonElement(
+            """{"views":[{"path":"home","type":"sections","sections":[]},
+              {"path":"garden","type":"sections","sections":[]},{"type":"sections"}]}"""
+          )
+          .jsonObject
+      )!!
+    fun key(path: String?) = CardKey("d", path, sectionIndex = 0, cardIndex = 0, type = "tile")
+    val garden = EditScope.section(1, 0, "Pumps")
+    assertTrue(sameView(key("garden"), garden, dashboard))
+    assertFalse(sameView(key("home"), garden, dashboard), "section 0 of another named view")
+    assertTrue(sameView(key("view-2"), EditScope.section(2, 0, "X"), dashboard))
+  }
+
+  @Test
+  fun anAgentJoinedThroughHomeAssistantIsShownOverAnEmptyRelay() {
+    val relay = AgentRelayState(version = 1, kind = "dashboard", title = "t")
+    val direct = relay.copy(agent = AgentPresence(joined = true, connected = true, name = "Agent"))
+    assertEquals(direct, shownLive(relay, direct))
+    assertEquals(relay, shownLive(relay, null))
+    val relayJoined = relay.copy(agent = AgentPresence(joined = true, name = "Claude"))
+    assertEquals(relayJoined, shownLive(relayJoined, direct))
+    assertEquals(direct, shownLive(null, direct))
   }
 }

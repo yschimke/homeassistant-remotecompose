@@ -164,11 +164,13 @@ fun AgentEditScreen(
     if (startScope == null || opened) return@LaunchedEffect
     opened = true
     run {
+      // Every open session on the dashboard, Home Assistant's alone too (started while the
+      // design server was out of reach): reopening a section picks its conversation back up.
       val existing = runCatching {
-        edits.open(urlPath)
+        edits.recent(urlPath)
       }
         .getOrNull()
-        ?.firstOrNull { it.scope sameAs startScope }
+        ?.firstOrNull { it.isOpen && it.scope sameAs startScope }
       if (existing != null) {
         session = existing
         sessionId = existing.id
@@ -297,9 +299,10 @@ fun AgentEditScreen(
               // A session not relayed by this device (an agent signed in to Home Assistant, or
               // another device) carries its presence and messages itself.
               live =
-                live?.live(current.id)?.collectAsState()?.value
-                  ?: directLive(current, sinceReply)
-                  ?: pendingLive(current, current.agentListening && sinceReply < LISTENING_SECONDS),
+                shownLive(
+                  relayed = live?.live(current.id)?.collectAsState()?.value,
+                  direct = directLive(current, sinceReply),
+                ) ?: pendingLive(current, current.agentListening && sinceReply < LISTENING_SECONDS),
               liveBusy = busy,
               onComment = { text, target ->
                 run {
@@ -554,7 +557,8 @@ private fun SessionReview(
         val commentable =
           session.isOpen &&
             !capturing &&
-            (focus == null || (key.sectionIndex == focus.section && sameView(key, focus)))
+            (focus == null ||
+              (key.sectionIndex == focus.section && sameView(key, focus, dashboard)))
         // The Comment buttons are this screen's, not the design's: hidden while it is captured.
         if (commentable)
           Box {
@@ -574,12 +578,30 @@ private fun SessionReview(
   }
 }
 
-/** Whether [key] is in [focus]'s view: a view without a path of its own is `view-<index>`. */
-private fun sameView(key: CardKey, focus: EditScope): Boolean {
-  val path = key.viewPath ?: return true
-  val index = Regex("view-(\\d+)").matchEntire(path)?.groupValues?.get(1)?.toIntOrNull()
-  return index == null || index == focus.view
+/**
+ * Whether [key] is in [focus]'s view of [dashboard]: a card's view path is its view's own path, or
+ * `view-<index>` for a view without one.
+ */
+internal fun sameView(key: CardKey, focus: EditScope, dashboard: Dashboard): Boolean {
+  val path = key.viewPath ?: return focus.view == 0
+  val index =
+    dashboard.views.indices.firstOrNull { i ->
+      (dashboard.views[i].path?.takeIf { it.isNotEmpty() } ?: "view-$i") == path
+    }
+  return index == focus.view
 }
+
+/**
+ * Whose presence and conversation the panel shows: the relay's, unless an agent joined through Home
+ * Assistant instead (its prompt, copied on a device without the relay's agent token) while none has
+ * joined through the relay, so that agent's replies are seen.
+ */
+internal fun shownLive(relayed: AgentRelayState?, direct: AgentRelayState?): AgentRelayState? =
+  when {
+    relayed == null -> direct
+    direct != null && !relayed.agent.joined -> direct
+    else -> relayed
+  }
 
 /**
  * The live panel's state before anyone joined a session not relayed by this device: the person's
