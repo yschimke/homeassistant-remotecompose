@@ -51,7 +51,7 @@ import ee.schimke.terrazzo.dashboard.SkinInstallWorker
 import ee.schimke.terrazzo.dashboard.Skins
 import ee.schimke.terrazzo.dashboard.StudioCardPreview
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
-import ee.schimke.terrazzo.dashboard.offerUnlock
+import ee.schimke.terrazzo.dashboard.UnlockPrompts
 import ee.schimke.terrazzo.dashboard.preferredDashboardPath
 import ee.schimke.terrazzo.dashboard.rememberDashboardListState
 import ee.schimke.terrazzo.dashboard.rememberSelectedDashboardListState
@@ -559,6 +559,8 @@ private fun DashboardsRoot(
   }
   val connectionStatus = rememberMobileConnectionStatus(session)
   val snackbars = remember { SnackbarHostState() }
+  // A locked tap's "Unlock" prompt; a newer one replaces it.
+  val unlockPrompts = remember(snackbars, scope) { UnlockPrompts(snackbars, scope) }
   // Offers the watch app on a connected watch without it.
   val installOnWatch = wearInstallPrompts(snackbars)
   val lifecycleOwner = LocalLifecycleOwner.current
@@ -850,7 +852,7 @@ private fun DashboardsRoot(
           connectionPending = connectionStatus == ConnectionStatus.Connecting,
           // A tap dropped by the lock says so where it was made, with Unlock right there.
           onControlsLocked = { locked ->
-            scope.launch { snackbars.offerUnlock(locked) { graph.sessionWriteMode.set(true) } }
+            unlockPrompts.offer(locked) { graph.sessionWriteMode.set(true) }
           },
           // Long-press opens the card's actions, handed the live
           // snapshot the card was pressed against so a fork or the

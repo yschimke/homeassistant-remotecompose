@@ -82,4 +82,26 @@ class LockedControlsTest {
     // Only the tap the user was looking at runs.
     assertEquals(listOf(2), replays)
   }
+
+  @Test
+  fun aNewerTapDropsAPromptQueuedBehindAnotherSnackbar() = runTest {
+    val host = SnackbarHostState()
+    val prompts = UnlockPrompts(host, this)
+    val replays = mutableListOf<Int>()
+    // A Home Assistant notification is showing; both prompts would queue behind it.
+    launch { host.showSnackbar("New notification") }
+    runCurrent()
+    prompts.offer(LockedAction { replays += 1 }) {}
+    runCurrent()
+    prompts.offer(LockedAction { replays += 2 }) {}
+    runCurrent()
+    assertNotNull(host.currentSnackbarData).dismiss()
+    runCurrent()
+    assertEquals(CONTROLS_LOCKED, assertNotNull(host.currentSnackbarData).visuals.message)
+    assertNotNull(host.currentSnackbarData).performAction()
+    runCurrent()
+    // Only the latest tap runs, and no stale prompt follows it.
+    assertEquals(listOf(2), replays)
+    assertNull(host.currentSnackbarData)
+  }
 }

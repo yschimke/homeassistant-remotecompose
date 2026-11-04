@@ -6,6 +6,9 @@ import androidx.compose.material3.SnackbarResult
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.HighRiskActions
 import ee.schimke.ha.rc.components.HaAction
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 /**
  * A write a card sent while the app's controls were locked, which the dispatcher dropped. [replay]
@@ -34,7 +37,8 @@ internal const val UNLOCK = "Unlock"
  * an Unlock action. Unlocking calls [unlock] and then runs the tap (when it may be replayed), so
  * the user doesn't have to find the top bar's lock and tap the card a second time.
  *
- * A newer locked tap replaces the prompt still showing rather than queueing behind it.
+ * A prompt still showing for an earlier tap is dismissed first; [UnlockPrompts] also drops one
+ * still queued behind another snackbar.
  */
 internal suspend fun SnackbarHostState.offerUnlock(locked: LockedAction, unlock: () -> Unit) {
   currentSnackbarData?.takeIf { it.visuals.message.startsWith(CONTROLS_LOCKED) }?.dismiss()
@@ -48,5 +52,22 @@ internal suspend fun SnackbarHostState.offerUnlock(locked: LockedAction, unlock:
   if (result == SnackbarResult.ActionPerformed) {
     unlock()
     locked.replay?.invoke()
+  }
+}
+
+/**
+ * The dashboard's unlock prompts on [host]: a newer locked tap cancels the prompt for the one
+ * before, whether it is showing or still queued behind another snackbar (a Home Assistant
+ * notification), so Unlock only ever runs the tap the user just made.
+ */
+internal class UnlockPrompts(
+  private val host: SnackbarHostState,
+  private val scope: CoroutineScope,
+) {
+  private var pending: Job? = null
+
+  fun offer(locked: LockedAction, unlock: () -> Unit) {
+    pending?.cancel()
+    pending = scope.launch { host.offerUnlock(locked, unlock) }
   }
 }
