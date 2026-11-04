@@ -27,6 +27,7 @@ import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.SystemHaClock
 import ee.schimke.ha.rc.UNSUPPORTED_CARD_TYPE
+import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.childrenDataSignature
 import ee.schimke.ha.rc.components.HORIZONTAL_STACK_GAP_DP
 import ee.schimke.ha.rc.components.HaAction
@@ -81,9 +82,70 @@ class VerticalStackCardConverter : DesignedCardConverter() {
    */
   @Composable
   internal fun Draw(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    RemoteHaVerticalStack(modifier = modifier) { RenderChildren(card, snapshot) }
+    val all = childCards(card)
+    // A Wear slot is a fixed, short canvas whose height is only known at playback, and it can't
+    // grow: a child cut off at its bottom edge left a sliver that still took taps. There the stack
+    // shows the first child, or the first two once both fit. Hidden conditionals take no place, and
+    // each child keeps its authored index for its card-level template bindings (as the grid does).
+    // Everywhere else the stack draws every child as before.
+    val wearSlot =
+      LocalCardSizeMode.current == CardSizeMode.Fixed &&
+        LocalFixedCanvasAxis.current == BreakpointAxis.Height &&
+        LocalWidgetCaptureSizeDp.current == null
+    val visible = all.mapIndexedNotNull { k, child -> shownCard(child, snapshot)?.let { k to it } }
+    if (!wearSlot || visible.isEmpty()) {
+      RemoteHaVerticalStack(modifier = modifier) { RenderChildren(all, snapshot) }
+      return
+    }
+    val indices = visible.map { it.first }
+    if (visible.size == 1) {
+      RemoteHaVerticalStack(modifier = modifier) { RenderChildren(all, snapshot, indices) }
+      return
+    }
+    val registry = LocalCardRegistry.current
+    val (first, second) =
+      visible.take(2).map { (_, shown) -> stackChildHeightDp(shown, snapshot, registry) }
+    RemoteSizeBreakpoint(
+      thresholdsDp = intArrayOf(first + VERTICAL_STACK_GAP_DP + second),
+      modifier = modifier,
+      axis = BreakpointAxis.Height,
+    ) { tier ->
+      RemoteHaVerticalStack { RenderChildren(all, snapshot, indices.take(tier + 1)) }
+    }
   }
 }
+
+/**
+ * [card]'s height as a stack child: a nested stack from its own children (a vertical one their sum
+ * with its gaps, a horizontal one its tallest), a grid from its rows of cells, and any other card
+ * its converter's natural height. Containers don't override `naturalHeightDp`, so its 160dp default
+ * would otherwise stand in for every nested container, however short its content.
+ */
+internal fun stackChildHeightDp(
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  registry: CardRegistry,
+): Int {
+  // A hidden conditional takes no room.
+  val children = childCards(card).mapNotNull { shownCard(it, snapshot) }
+  return when (card.type) {
+    CardTypes.VERTICAL_STACK ->
+      children.sumOf { stackChildHeightDp(it, snapshot, registry) } +
+        VERTICAL_STACK_GAP_DP * (children.size - 1).coerceAtLeast(0)
+    CardTypes.HORIZONTAL_STACK ->
+      children.maxOfOrNull { stackChildHeightDp(it, snapshot, registry) } ?: 0
+    CardTypes.GRID ->
+      gridColumns(card).coerceAtLeast(1).let { columns ->
+        children.chunked(columns).sumOf { row ->
+          row.maxOf { stackChildHeightDp(it, snapshot, registry) }
+        }
+      }
+    else -> registry.cardHeightDp(card, snapshot)
+  }
+}
+
+/** The gap [RemoteHaVerticalStack] leaves between children. */
+private const val VERTICAL_STACK_GAP_DP = 8
 
 class HorizontalStackCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.HORIZONTAL_STACK
@@ -397,16 +459,19 @@ internal fun gridSquare(card: CardConfig): Boolean =
 /**
  * Each child, as child k of this card for its card-level template bindings. A stack is not a grid
  * cell, so a stack nested in a square grid doesn't pass the square default on to its children.
+ * [indices] picks which children draw (all by default); each keeps its authored index's bindings.
  */
 @Composable
-private fun RenderChildren(card: CardConfig, snapshot: HaSnapshot) {
+private fun RenderChildren(
+  children: List<CardConfig>,
+  snapshot: HaSnapshot,
+  indices: List<Int> = children.indices.toList(),
+) {
   CompositionLocalProvider(
     LocalGridSquareCells provides false,
     LocalInCardContainer provides true,
   ) {
-    childCards(card).forEachIndexed { k, child ->
-      ProvideChildCardBindings(k) { RenderChild(child, snapshot) }
-    }
+    indices.forEach { k -> ProvideChildCardBindings(k) { RenderChild(children[k], snapshot) } }
   }
 }
 

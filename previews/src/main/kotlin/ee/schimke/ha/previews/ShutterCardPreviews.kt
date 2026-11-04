@@ -26,7 +26,7 @@ import kotlinx.serialization.json.JsonPrimitive
  * rendering path is unchanged.
  */
 private const val CARD_WIDTH_DP = 280
-private const val CARD_HEIGHT_DP = 300
+private const val CARD_HEIGHT_DP = 430
 
 @Composable
 private fun ShutterHost(theme: HaTheme, content: @Composable () -> Unit) {
@@ -59,7 +59,7 @@ fun Shutter_Dark() = ShutterHost(HaTheme.Dark) { RenderChild(shutterCard(), shut
 
 // Name + door/buttons row (three 32-dp buttons) + state line + padding.
 private const val GARAGE_WIDTH_DP = 280
-private const val GARAGE_HEIGHT_DP = 176
+private const val GARAGE_HEIGHT_DP = 212
 
 /**
  * The demo's garage door card exactly as configured there: `button_*_hide_states` leave only the

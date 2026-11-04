@@ -135,3 +135,9 @@ private fun CoverRow(
 internal fun coverService(service: String, entityId: String?): HaAction =
   entityId?.let { HaAction.CallService(domain = "cover", service = service, entityId = it) }
     ?: HaAction.None
+
+/**
+ * One cover row's height: 13dp name + 4dp + the 144dp button column + 4dp + 11dp state, and the
+ * 10dp gap to the next row.
+ */
+internal const val CoverRowHeightDp = 186
