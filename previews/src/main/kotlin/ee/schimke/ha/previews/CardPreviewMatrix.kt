@@ -47,11 +47,13 @@ import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.CardPlayback
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.FixedHaClock
+import ee.schimke.ha.rc.LauncherWidgetContent
 import ee.schimke.ha.rc.LocalHaClock
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.ProvideFixedCanvasAxis
 import ee.schimke.ha.rc.RenderChild
+import ee.schimke.ha.rc.WidgetCaptureSizeDp
 import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
@@ -62,7 +64,9 @@ import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.R as ComponentsR
 import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
+import ee.schimke.ha.rc.components.WidgetActionRegistry
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
+import ee.schimke.ha.rc.formatState
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
@@ -328,19 +332,24 @@ private fun FixedModeCell(
           // `RemoteComposePlayer`, so these cells use it too. Every other cell is CMP.
           playback = CardPlayback.LauncherWidget,
         ) {
-          MatrixCaptureLocals {
-            ProvideCardSizeMode(CardSizeMode.Fixed) {
-              // Same full-canvas surface the launcher
-              // widget wraps the card in, so the preview
-              // fills the cell instead of leaving blank
-              // space below short content.
-              ProvideCardChrome(enabled = false) {
-                RemoteHaWidgetSurface {
-                  WithImageStrategy(imageStrategy) {
-                    RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
-                  }
-                }
-              }
+          // The launcher's own capture, for this cell's size: the widget lays out for the size
+          // it is shown at, as on the home screen. A size-independent document leaves its size
+          // gates to the player, and the AndroidX player can't play nested ones (it disables the
+          // document: the red warning triangle).
+          CompositionLocalProvider(LocalHaClock provides FixedHaClock(PreviewNow)) {
+            LauncherWidgetContent(
+              registry = defaultRegistry(),
+              profile = androidXExperimentalWrap,
+              dark = true,
+              widgetActions =
+                WidgetActionRegistry(
+                  snapshot.states.mapValues { (_, entity) -> formatState(entity, snapshot) }
+                ),
+              card = card,
+              snapshot = snapshot,
+              captureSizeDp = WidgetCaptureSizeDp(sizeDp.widthDp, sizeDp.heightDp),
+            ) { modifier ->
+              WithImageStrategy(imageStrategy) { RenderChild(card, snapshot, modifier) }
             }
           }
         }
