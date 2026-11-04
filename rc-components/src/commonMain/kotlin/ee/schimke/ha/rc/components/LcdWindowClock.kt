@@ -32,8 +32,8 @@ import androidx.compose.ui.graphics.lerp
 // A rugged digital watch's LCD window: big italic segment hours and minutes in the watch's own
 // Digital-7 face, with every unlit segment ghosted behind them ("88:88"), small seconds in the
 // accent sitting on the baseline, all in a recessed window over a fine mesh. Colours come from the
-// theme — the window is the dashboard
-// colour, lit segments the primary text, seconds the accent — so the positive (light) display is
+// theme — the window is the dashboard colour, lit segments the primary text, seconds the accent —
+// so the positive (light) display is
 // black segments on grey and the negative (dark) one white on black. Every digit reads the
 // player's clock, so the face ticks without a re-encode.
 
@@ -110,15 +110,22 @@ internal fun LcdWindowClock(data: HaClockData, timeLabel: RemoteString, heightDp
   // under any time as its unlit segments.
   val mainPx = (heightDp * MainShare).toInt()
   val smallPx = (heightDp * MainShare * SecondsShare).toInt()
+  // A launcher widget is played by the system, which can't load the app's bundled Digital-7: there
+  // the digits fall back to the theme's monospace and the ghosts are left out, since "88:88" lines
+  // up under the time only in Digital-7's single glyph width.
+  val bundledFont = !isWidgetActionCapture()
+  val themeStyle = haTextStyle()
   // Digital-7's digits stand taller than the player's default font, which sizes the text's box;
   // a line height of the full glyph keeps their feet inside it.
   fun segments(size: Int) =
-    RemoteTextStyle.Default.merge(
-      RemoteTextStyle(
-        fontFamily = RemoteFontFamily.Named(HaDigital7Font),
-        lineHeight = (size * GlyphLine).toInt().rsp,
+    if (bundledFont)
+      RemoteTextStyle.Default.merge(
+        RemoteTextStyle(
+          fontFamily = RemoteFontFamily.Named(HaDigital7Font),
+          lineHeight = (size * GlyphLine).toInt().rsp,
+        )
       )
-    )
+    else themeStyle
   val mainSize = mainPx.rsp
   val smallSize = smallPx.rsp
   val shadow = Color.Black.copy(alpha = if (palette.isDark) 0.28f else 0.1f).rc
@@ -166,7 +173,13 @@ internal fun LcdWindowClock(data: HaClockData, timeLabel: RemoteString, heightDp
       verticalAlignment = RemoteAlignment.Bottom,
     ) {
       RemoteBox {
-        RemoteText(text = "88:88".rs, color = ghost, fontSize = mainSize, style = segments(mainPx))
+        if (bundledFont)
+          RemoteText(
+            text = "88:88".rs,
+            color = ghost,
+            fontSize = mainSize,
+            style = segments(mainPx),
+          )
         RemoteText(text = time, color = lit, fontSize = mainSize, style = segments(mainPx))
       }
       if (data.showSeconds) {
@@ -174,12 +187,13 @@ internal fun LcdWindowClock(data: HaClockData, timeLabel: RemoteString, heightDp
           modifier =
             RemoteModifier.padding(start = (heightDp * 0.08f).rdp, bottom = (heightDp * 0.1f).rdp)
         ) {
-          RemoteText(
-            text = "88".rs,
-            color = accentGhost,
-            fontSize = smallSize,
-            style = segments(smallPx),
-          )
+          if (bundledFont)
+            RemoteText(
+              text = "88".rs,
+              color = accentGhost,
+              fontSize = smallSize,
+              style = segments(smallPx),
+            )
           RemoteText(text = secs, color = accent, fontSize = smallSize, style = segments(smallPx))
         }
       }
