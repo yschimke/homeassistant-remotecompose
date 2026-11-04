@@ -21,6 +21,8 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ee.schimke.ha.rc.components.HaComponentGrammar
+import ee.schimke.ha.rc.components.HaLevelStyle
 import ee.schimke.ha.rc.components.HaReadoutStyle
 import ee.schimke.ha.rc.components.HaSurfaceMaterial
 import ee.schimke.ha.rc.components.HaTheme
@@ -243,8 +245,47 @@ private fun skinFor(
     readout = theme.readout,
     valueWeight = theme.valueWeight,
     capsLabels = theme.readout == HaReadoutStyle.Plate || theme.visuals == HaVisualFamily.Lcars,
-    chart = chartStyleFor(theme.visuals),
+    chart =
+      if (theme.extends != null) chartStyleFor(theme.grammar) else chartStyleFor(theme.visuals),
   )
+}
+
+/**
+ * A theme kit's chart, from its component grammar rather than the family it extends: segmented
+ * grammars step through lit cells, pointer grammars draw a fine line to a pointer dot, a glowing or
+ * gradient grammar glows, and the line takes the grammar's weight and caps.
+ */
+internal fun chartStyleFor(grammar: HaComponentGrammar): HistoryChartStyle {
+  val width = (2f * grammar.stroke.scale).coerceIn(1f, 3.5f).dp
+  val corner = if (grammar.roundCaps) 0.5f else 0.1f
+  return when (grammar.level) {
+    HaLevelStyle.Segmented ->
+      HistoryChartStyle(
+        stepped = true,
+        fill = false,
+        lineWidth = width,
+        endDot = false,
+        cells = true,
+        segmentGap = 2.dp,
+        cornerFraction = corner,
+      )
+    HaLevelStyle.Pointer ->
+      HistoryChartStyle(
+        fill = false,
+        lineWidth = width.coerceAtMost(1.5.dp),
+        glow = grammar.glow,
+        dashedGrid = grammar.ticks > 0,
+        cornerFraction = corner,
+      )
+    HaLevelStyle.Continuous ->
+      HistoryChartStyle(
+        lineWidth = width,
+        glow = grammar.glow || grammar.gradient != null,
+        endDot = grammar.stopDot || grammar.roundCaps,
+        segmentGap = if (grammar.trackGap) 3.dp else 0.dp,
+        cornerFraction = corner,
+      )
+  }
 }
 
 /** Each visual family's chart grammar, in the spirit of its meters. */

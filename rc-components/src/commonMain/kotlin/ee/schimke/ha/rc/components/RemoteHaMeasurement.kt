@@ -224,7 +224,7 @@ private fun Chip(reading: HaReading, modifier: RemoteModifier, showName: Boolean
  */
 @Composable
 private fun Expanded(reading: HaReading, modifier: RemoteModifier) {
-  if (visualFamily().isCommunity) {
+  if (haLayouts().expandedReading == HaReadingLayout.Community) {
     CommunityReadingLayout(
       reading.nameText(),
       reading.text,

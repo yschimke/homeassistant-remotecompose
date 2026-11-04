@@ -118,134 +118,7 @@ data class HaWearLevelLook(
  */
 fun HaUberTheme.wearBackground(): HaWearBackground? {
   if (id == HaUberTheme.Classic.id) return null
-  val p = palette(darkTheme = true)
-  val accent = p.linkText
-  val base = p.cardBackground
-  return when (visuals) {
-    HaVisualFamily.Classic -> HaWearBackground(base)
-    HaVisualFamily.HomeAssistant ->
-      HaWearBackground(base, listOf(HaWearGradient(listOf(accent.copy(alpha = 0.22f), CLEAR))))
-    HaVisualFamily.Expressive ->
-      HaWearBackground(
-        base,
-        listOf(
-          HaWearGlow(
-            listOf(p.placeholderBackground, p.placeholderBackground.copy(alpha = 0f)),
-            0f,
-            0f,
-            0.9f,
-          ),
-          HaWearGlow(listOf(accent.copy(alpha = 0.18f), CLEAR), 1f, 0.6f, 0.45f),
-        ),
-      )
-    HaVisualFamily.Trinitron ->
-      HaWearBackground(
-        base,
-        listOf(
-          HaWearGradient(listOf(Color.White.copy(alpha = 0.05f), CLEAR)),
-          HaWearBand(accent.copy(alpha = 0.85f), HaWearBand.Side.Top, 1.5f),
-        ),
-        HaWearEdge(listOf(p.divider), 1f),
-      )
-    HaVisualFamily.Lcd ->
-      HaWearBackground(
-        base,
-        listOf(HaWearGlow(listOf(p.placeholderBackground, CLEAR), 0.5f, 0.5f, 0.6f)),
-        HaWearEdge(listOf(p.divider), 2f, insetDp = 3f),
-      )
-    HaVisualFamily.Braun ->
-      HaWearBackground(base, listOf(HaWearBand(accent, HaWearBand.Side.Bottom, 3f)))
-    HaVisualFamily.Nixie ->
-      HaWearBackground(
-        base,
-        listOf(HaWearGlow(listOf(accent.copy(alpha = 0.20f), CLEAR), 0.5f, 1.15f, 0.7f)),
-        HaWearEdge(listOf(p.divider), 1f),
-      )
-    HaVisualFamily.Console ->
-      HaWearBackground(
-        base,
-        listOf(
-          HaWearGradient(
-            listOf(
-              Color.White.copy(alpha = 0.10f),
-              Color.White.copy(alpha = 0.02f),
-              Color.Black.copy(alpha = 0.08f),
-              Color.Black.copy(alpha = 0.24f),
-            )
-          )
-        ),
-        HaWearEdge(listOf(Color.White.copy(alpha = 0.14f), Color.Black.copy(alpha = 0.4f)), 1f),
-      )
-    HaVisualFamily.Ikea ->
-      HaWearBackground(
-        base,
-        listOf(HaWearGradient(listOf(CLEAR, BIRCH.copy(alpha = 0.22f)))),
-        HaWearEdge(listOf(BIRCH.copy(alpha = 0.75f)), 3f),
-      )
-    HaVisualFamily.Mushroom ->
-      HaWearBackground(
-        base,
-        listOf(HaWearGlow(listOf(accent.copy(alpha = 0.22f), CLEAR), 1f, 1f, 0.7f)),
-      )
-    HaVisualFamily.Bubble ->
-      HaWearBackground(
-        base,
-        listOf(
-          HaWearGlow(listOf(accent.copy(alpha = 0.22f), CLEAR), 0.95f, 0.05f, 0.35f),
-          HaWearGlow(listOf(p.divider, CLEAR), 0.08f, 1f, 0.3f),
-        ),
-      )
-    HaVisualFamily.Minimalist ->
-      HaWearBackground(base, listOf(HaWearBand(accent, HaWearBand.Side.Start, 4f)))
-    HaVisualFamily.Cupertino ->
-      HaWearBackground(
-        base,
-        listOf(HaWearGradient(listOf(Color.White.copy(alpha = 0.09f), CLEAR))),
-        HaWearEdge(listOf(Color.White.copy(alpha = 0.16f)), 1f),
-      )
-    HaVisualFamily.Catppuccin ->
-      HaWearBackground(
-        base,
-        listOf(
-          HaWearDiagonal(
-            listOf(accent.copy(alpha = 0.16f), CLEAR, CATPPUCCIN_SKY.copy(alpha = 0.10f))
-          )
-        ),
-        HaWearEdge(listOf(accent, CATPPUCCIN_SKY, CATPPUCCIN_PINK, accent), 1.5f),
-      )
-    HaVisualFamily.Obsidian ->
-      HaWearBackground(
-        base,
-        listOf(HaWearBand(p.divider, HaWearBand.Side.Top, 1f)),
-        HaWearEdge(listOf(p.divider), 1f),
-      )
-    HaVisualFamily.Noctis ->
-      HaWearBackground(
-        base,
-        listOf(HaWearGlow(listOf(accent.copy(alpha = 0.20f), CLEAR), 1f, 0f, 0.8f)),
-        HaWearEdge(listOf(accent.copy(alpha = 0.35f)), 1f),
-      )
-    HaVisualFamily.Lcars ->
-      HaWearBackground(
-        base,
-        listOf(
-          HaWearBand(accent, HaWearBand.Side.Start, 10f),
-          HaWearBand(p.secondaryText, HaWearBand.Side.Top, 4f),
-        ),
-      )
-    HaVisualFamily.Arctic ->
-      HaWearBackground(
-        base,
-        listOf(HaWearGradient(listOf(accent.copy(alpha = 0.16f), CLEAR))),
-        HaWearEdge(listOf(accent.copy(alpha = 0.30f)), 1f),
-      )
-    HaVisualFamily.Aeon ->
-      HaWearBackground(
-        base,
-        listOf(HaWearGradient(listOf(CLEAR, accent.copy(alpha = 0.08f)))),
-        HaWearEdge(listOf(accent, accent.copy(alpha = 0.35f), accent), 2f, insetDp = 3f),
-      )
-  }
+  return wearContainer().background(this)
 }
 
 /**
@@ -260,53 +133,291 @@ fun HaUberTheme.wearBackground(): HaWearBackground? {
  * ([readableAlpha]): an accent close to the text colour (an LCD's cyan ink) fills faintly, one far
  * from it more strongly.
  */
-fun HaUberTheme.wearLevelLook(): HaWearLevelLook {
-  val background = wearBackground()
-  val p = if (background == null) CLASSIC_WEAR else palette(darkTheme = true)
-  val base = background?.base ?: CLASSIC_WEAR_SURFACE
-  val color =
-    when (visuals) {
-      HaVisualFamily.Classic -> Color.White
-      HaVisualFamily.Ikea -> IKEA_YELLOW
-      HaVisualFamily.Console -> p.linkText
-      else -> inkFor(darkTheme = true) ?: p.linkText
-    }
-  fun fill(max: Float) = readableAlpha(base, color, p.primaryText, p.secondaryText, max)
-  // A marker over a fill of [alpha]: the most it can add before the two pass what text allows.
-  fun marker(alpha: Float): Float {
-    val readable = fill(MARKER_MAX)
-    return (1f - (1f - readable) / (1f - alpha)).coerceAtLeast(0f)
-  }
-  return when (visuals) {
-    HaVisualFamily.Classic -> HaWearLevelLook(color, 0.85f, ringDp = 3f)
-    HaVisualFamily.HomeAssistant -> HaWearLevelLook(color, 1f, ringDp = 4f)
-    HaVisualFamily.Expressive -> HaWearLevelLook(color, 1f, ringDp = 6f)
-    HaVisualFamily.Cupertino -> HaWearLevelLook(color, 1f, ringDp = 5f)
-    HaVisualFamily.Braun -> HaWearLevelLook(color, 1f, ringDp = 4f, pointer = true)
-    HaVisualFamily.Bubble -> HaWearLevelLook(color, 1f, ringDp = 6f)
-    HaVisualFamily.Mushroom,
-    HaVisualFamily.Noctis -> HaWearLevelLook(color, 1f, ringDp = 3f)
-    HaVisualFamily.Catppuccin ->
-      HaWearLevelLook(
-        color,
-        1f,
-        ringDp = 3f,
-        sweep = listOf(color, CATPPUCCIN_SKY, CATPPUCCIN_PINK, color),
-      )
-    HaVisualFamily.Arctic -> HaWearLevelLook(color, 1f, ringDp = 2f, track = false)
-    HaVisualFamily.Lcd -> HaWearLevelLook(color, fill(0.40f), segments = 10, ghosts = true)
-    HaVisualFamily.Trinitron -> HaWearLevelLook(color, fill(0.40f), segments = 20)
-    HaVisualFamily.Minimalist -> HaWearLevelLook(color, fill(0.40f), segments = 5, ghosts = true)
-    HaVisualFamily.Nixie ->
-      fill(0.45f).let {
-        HaWearLevelLook(color, it, fades = true, marker = true, markerAlpha = marker(it))
+fun HaUberTheme.wearLevelLook(): HaWearLevelLook = wearContainer().levelLook(this)
+
+/**
+ * The renderer of this style's Wear container ([HaComponentSlot.WearContainer]): its own (a kit's,
+ * from its grammar), else its bespoke family's.
+ */
+internal fun HaUberTheme.wearContainer(): HaWearContainerRenderer =
+  components.wearContainer ?: FamilyWearContainer.of(visuals)
+
+/**
+ * A bespoke family's Wear container, unchanged from when it was a `when` over the theme's family:
+ * the one table where a family names its container.
+ */
+internal class FamilyWearContainer private constructor(private val family: HaVisualFamily) :
+  HaWearContainerRenderer {
+
+  override fun background(theme: HaUberTheme): HaWearBackground {
+    with(theme) {
+      val p = palette(darkTheme = true)
+      val accent = p.linkText
+      val base = p.cardBackground
+      return when (family) {
+        HaVisualFamily.Classic -> HaWearBackground(base)
+        HaVisualFamily.HomeAssistant ->
+          HaWearBackground(base, listOf(HaWearGradient(listOf(accent.copy(alpha = 0.22f), CLEAR))))
+        HaVisualFamily.Expressive ->
+          HaWearBackground(
+            base,
+            listOf(
+              HaWearGlow(
+                listOf(p.placeholderBackground, p.placeholderBackground.copy(alpha = 0f)),
+                0f,
+                0f,
+                0.9f,
+              ),
+              HaWearGlow(listOf(accent.copy(alpha = 0.18f), CLEAR), 1f, 0.6f, 0.45f),
+            ),
+          )
+        HaVisualFamily.Trinitron ->
+          HaWearBackground(
+            base,
+            listOf(
+              HaWearGradient(listOf(Color.White.copy(alpha = 0.05f), CLEAR)),
+              HaWearBand(accent.copy(alpha = 0.85f), HaWearBand.Side.Top, 1.5f),
+            ),
+            HaWearEdge(listOf(p.divider), 1f),
+          )
+        HaVisualFamily.Lcd ->
+          HaWearBackground(
+            base,
+            listOf(HaWearGlow(listOf(p.placeholderBackground, CLEAR), 0.5f, 0.5f, 0.6f)),
+            HaWearEdge(listOf(p.divider), 2f, insetDp = 3f),
+          )
+        HaVisualFamily.Braun ->
+          HaWearBackground(base, listOf(HaWearBand(accent, HaWearBand.Side.Bottom, 3f)))
+        HaVisualFamily.Nixie ->
+          HaWearBackground(
+            base,
+            listOf(HaWearGlow(listOf(accent.copy(alpha = 0.20f), CLEAR), 0.5f, 1.15f, 0.7f)),
+            HaWearEdge(listOf(p.divider), 1f),
+          )
+        HaVisualFamily.Console ->
+          HaWearBackground(
+            base,
+            listOf(
+              HaWearGradient(
+                listOf(
+                  Color.White.copy(alpha = 0.10f),
+                  Color.White.copy(alpha = 0.02f),
+                  Color.Black.copy(alpha = 0.08f),
+                  Color.Black.copy(alpha = 0.24f),
+                )
+              )
+            ),
+            HaWearEdge(listOf(Color.White.copy(alpha = 0.14f), Color.Black.copy(alpha = 0.4f)), 1f),
+          )
+        HaVisualFamily.Ikea ->
+          HaWearBackground(
+            base,
+            listOf(HaWearGradient(listOf(CLEAR, BIRCH.copy(alpha = 0.22f)))),
+            HaWearEdge(listOf(BIRCH.copy(alpha = 0.75f)), 3f),
+          )
+        HaVisualFamily.Mushroom ->
+          HaWearBackground(
+            base,
+            listOf(HaWearGlow(listOf(accent.copy(alpha = 0.22f), CLEAR), 1f, 1f, 0.7f)),
+          )
+        HaVisualFamily.Bubble ->
+          HaWearBackground(
+            base,
+            listOf(
+              HaWearGlow(listOf(accent.copy(alpha = 0.22f), CLEAR), 0.95f, 0.05f, 0.35f),
+              HaWearGlow(listOf(p.divider, CLEAR), 0.08f, 1f, 0.3f),
+            ),
+          )
+        HaVisualFamily.Minimalist ->
+          HaWearBackground(base, listOf(HaWearBand(accent, HaWearBand.Side.Start, 4f)))
+        HaVisualFamily.Cupertino ->
+          HaWearBackground(
+            base,
+            listOf(HaWearGradient(listOf(Color.White.copy(alpha = 0.09f), CLEAR))),
+            HaWearEdge(listOf(Color.White.copy(alpha = 0.16f)), 1f),
+          )
+        HaVisualFamily.Catppuccin ->
+          HaWearBackground(
+            base,
+            listOf(
+              HaWearDiagonal(
+                listOf(accent.copy(alpha = 0.16f), CLEAR, CATPPUCCIN_SKY.copy(alpha = 0.10f))
+              )
+            ),
+            HaWearEdge(listOf(accent, CATPPUCCIN_SKY, CATPPUCCIN_PINK, accent), 1.5f),
+          )
+        HaVisualFamily.Obsidian ->
+          HaWearBackground(
+            base,
+            listOf(HaWearBand(p.divider, HaWearBand.Side.Top, 1f)),
+            HaWearEdge(listOf(p.divider), 1f),
+          )
+        HaVisualFamily.Noctis ->
+          HaWearBackground(
+            base,
+            listOf(HaWearGlow(listOf(accent.copy(alpha = 0.20f), CLEAR), 1f, 0f, 0.8f)),
+            HaWearEdge(listOf(accent.copy(alpha = 0.35f)), 1f),
+          )
+        HaVisualFamily.Lcars ->
+          HaWearBackground(
+            base,
+            listOf(
+              HaWearBand(accent, HaWearBand.Side.Start, 10f),
+              HaWearBand(p.secondaryText, HaWearBand.Side.Top, 4f),
+            ),
+          )
+        HaVisualFamily.Arctic ->
+          HaWearBackground(
+            base,
+            listOf(HaWearGradient(listOf(accent.copy(alpha = 0.16f), CLEAR))),
+            HaWearEdge(listOf(accent.copy(alpha = 0.30f)), 1f),
+          )
+        HaVisualFamily.Aeon ->
+          HaWearBackground(
+            base,
+            listOf(HaWearGradient(listOf(CLEAR, accent.copy(alpha = 0.08f)))),
+            HaWearEdge(listOf(accent, accent.copy(alpha = 0.35f), accent), 2f, insetDp = 3f),
+          )
       }
-    HaVisualFamily.Console,
-    HaVisualFamily.Ikea,
-    HaVisualFamily.Obsidian,
-    HaVisualFamily.Lcars,
-    HaVisualFamily.Aeon ->
-      fill(0.30f).let { HaWearLevelLook(color, it, marker = true, markerAlpha = marker(it)) }
+    }
+  }
+
+  override fun levelLook(theme: HaUberTheme): HaWearLevelLook {
+    with(theme) {
+      val background = wearBackground()
+      val p = if (background == null) CLASSIC_WEAR else palette(darkTheme = true)
+      val base = background?.base ?: CLASSIC_WEAR_SURFACE
+      val color =
+        when (family) {
+          HaVisualFamily.Classic -> Color.White
+          HaVisualFamily.Ikea -> IKEA_YELLOW
+          HaVisualFamily.Console -> p.linkText
+          else -> inkFor(darkTheme = true) ?: p.linkText
+        }
+      fun fill(max: Float) = readableAlpha(base, color, p.primaryText, p.secondaryText, max)
+      // A marker over a fill of [alpha]: the most it can add before the two pass what text allows.
+      fun marker(alpha: Float): Float {
+        val readable = fill(MARKER_MAX)
+        return (1f - (1f - readable) / (1f - alpha)).coerceAtLeast(0f)
+      }
+      return when (family) {
+        HaVisualFamily.Classic -> HaWearLevelLook(color, 0.85f, ringDp = 3f)
+        HaVisualFamily.HomeAssistant -> HaWearLevelLook(color, 1f, ringDp = 4f)
+        HaVisualFamily.Expressive -> HaWearLevelLook(color, 1f, ringDp = 6f)
+        HaVisualFamily.Cupertino -> HaWearLevelLook(color, 1f, ringDp = 5f)
+        HaVisualFamily.Braun -> HaWearLevelLook(color, 1f, ringDp = 4f, pointer = true)
+        HaVisualFamily.Bubble -> HaWearLevelLook(color, 1f, ringDp = 6f)
+        HaVisualFamily.Mushroom,
+        HaVisualFamily.Noctis -> HaWearLevelLook(color, 1f, ringDp = 3f)
+        HaVisualFamily.Catppuccin ->
+          HaWearLevelLook(
+            color,
+            1f,
+            ringDp = 3f,
+            sweep = listOf(color, CATPPUCCIN_SKY, CATPPUCCIN_PINK, color),
+          )
+        HaVisualFamily.Arctic -> HaWearLevelLook(color, 1f, ringDp = 2f, track = false)
+        HaVisualFamily.Lcd -> HaWearLevelLook(color, fill(0.40f), segments = 10, ghosts = true)
+        HaVisualFamily.Trinitron -> HaWearLevelLook(color, fill(0.40f), segments = 20)
+        HaVisualFamily.Minimalist ->
+          HaWearLevelLook(color, fill(0.40f), segments = 5, ghosts = true)
+        HaVisualFamily.Nixie ->
+          fill(0.45f).let {
+            HaWearLevelLook(color, it, fades = true, marker = true, markerAlpha = marker(it))
+          }
+        HaVisualFamily.Console,
+        HaVisualFamily.Ikea,
+        HaVisualFamily.Obsidian,
+        HaVisualFamily.Lcars,
+        HaVisualFamily.Aeon ->
+          fill(0.30f).let { HaWearLevelLook(color, it, marker = true, markerAlpha = marker(it)) }
+      }
+    }
+  }
+
+  companion object {
+    private val byFamily = HaVisualFamily.entries.associateWith { FamilyWearContainer(it) }
+
+    fun of(family: HaVisualFamily): FamilyWearContainer = byFamily.getValue(family)
+  }
+}
+
+/**
+ * A theme kit's Wear container, from its grammar and palette rather than a family's: the watch
+ * shows the kit as itself, not as the style it extends.
+ *
+ * - The fill is the kit's dark card surface.
+ * - A **gradient** grammar sweeps faintly across it on the diagonal and runs round the edge
+ *   (Aurora).
+ * - A **glow** without one rises in the accent from the foot of the container (Cockpit).
+ * - An **outline** grammar draws an edge at its stroke weight (Engineered).
+ * - A **pointer** grammar rules a thin accent band across the top, an instrument's index; a
+ *   **segmented** one a hairline in the divider; a plain **continuous** one lights the top faintly.
+ *
+ * The level follows the same grammar: a segmented grammar fills the container with cells (ghosts
+ * when outlined), a pointer one marks the reading on a ring, a continuous one rings it at the
+ * grammar's weight, sweeping through the gradient where there is one.
+ */
+internal object GrammarWearContainer : HaWearContainerRenderer {
+  override fun background(theme: HaUberTheme): HaWearBackground {
+    val g = theme.grammar
+    val p = theme.palette(darkTheme = true)
+    val accent = theme.inkFor(darkTheme = true) ?: p.linkText
+    val gradient = g.gradient
+    val layers = buildList {
+      when {
+        gradient != null ->
+          add(
+            HaWearDiagonal(
+              listOf(
+                gradient.first().copy(alpha = 0.16f),
+                CLEAR,
+                gradient.last().copy(alpha = 0.12f),
+              )
+            )
+          )
+        g.glow -> add(HaWearGlow(listOf(accent.copy(alpha = 0.22f), CLEAR), 0.5f, 1.1f, 0.75f))
+      }
+      when (g.level) {
+        HaLevelStyle.Pointer ->
+          add(HaWearBand(accent.copy(alpha = 0.85f), HaWearBand.Side.Top, 1.5f))
+        HaLevelStyle.Segmented -> add(HaWearBand(p.divider, HaWearBand.Side.Top, 1f))
+        HaLevelStyle.Continuous ->
+          if (gradient == null && !g.glow)
+            add(HaWearGradient(listOf(Color.White.copy(alpha = 0.06f), CLEAR)))
+      }
+    }
+    val edge =
+      when {
+        gradient != null -> HaWearEdge(gradient + gradient.first(), 1.5f)
+        g.outline -> HaWearEdge(listOf(p.divider), (1.5f * g.stroke.scale).coerceAtLeast(1f))
+        else -> null
+      }
+    return HaWearBackground(p.cardBackground, layers, edge)
+  }
+
+  override fun levelLook(theme: HaUberTheme): HaWearLevelLook {
+    val g = theme.grammar
+    val p = theme.palette(darkTheme = true)
+    val color = theme.inkFor(darkTheme = true) ?: p.linkText
+    val ring = (3f * g.stroke.scale).coerceIn(2f, 6f)
+    return when (g.level) {
+      HaLevelStyle.Segmented ->
+        HaWearLevelLook(
+          color,
+          readableAlpha(p.cardBackground, color, p.primaryText, p.secondaryText, 0.40f),
+          segments = g.segments.coerceAtMost(24),
+          ghosts = g.outline,
+        )
+      HaLevelStyle.Pointer -> HaWearLevelLook(color, 1f, ringDp = ring, pointer = true)
+      HaLevelStyle.Continuous ->
+        HaWearLevelLook(
+          color,
+          1f,
+          ringDp = ring,
+          sweep = g.gradient?.let { it + it.first() }.orEmpty(),
+        )
+    }
   }
 }
 

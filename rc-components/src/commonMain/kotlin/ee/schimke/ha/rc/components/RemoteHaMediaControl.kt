@@ -48,9 +48,7 @@ fun RemoteHaMediaControl(
   modifier: RemoteModifier = RemoteModifier,
   fillHeight: Boolean = false,
 ) {
-  if (
-    visualFamily() in setOf(HaVisualFamily.Cupertino, HaVisualFamily.Arctic, HaVisualFamily.Aeon)
-  ) {
+  if (haLayouts().media != HaMediaLayout.ArtBeside) {
     CommunityMediaPanel(data, modifier, fillHeight)
     return
   }
@@ -96,12 +94,12 @@ fun RemoteHaMediaControl(
             RemoteModifier.size(96.rdp)
               .clip(haControlShape(8))
               .background(
-                if (visualFamily() == HaVisualFamily.Console) ConsoleSlot.rc
+                if (haLayouts().artwork == HaArtwork.TapedSlot) ConsoleSlot.rc
                 else haInk(data.accent).copy(alpha = haInk(data.accent).alpha * 0.15f.rf)
               ),
           contentAlignment = RemoteAlignment.Center,
         ) {
-          if (visualFamily() == HaVisualFamily.Console)
+          if (haLayouts().artwork == HaArtwork.TapedSlot)
             ConsoleTapeLabel("No artwork".rs, RemoteModifier.padding(6.rdp))
           else
             RemoteBasicIcon(
@@ -223,12 +221,12 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
         RemoteModifier.size(40.rdp)
           .clip(haControlShape(6))
           .background(
-            if (visualFamily() == HaVisualFamily.Console) ConsoleSlot.rc
+            if (haLayouts().artwork == HaArtwork.TapedSlot) ConsoleSlot.rc
             else haInk(data.accent).copy(alpha = haInk(data.accent).alpha * 0.15f.rf)
           ),
       contentAlignment = RemoteAlignment.Center,
     ) {
-      if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel("No art".rs, compact = true)
+      if (haLayouts().artwork == HaArtwork.TapedSlot) ConsoleTapeLabel("No art".rs, compact = true)
       else
         RemoteBasicIcon(
           imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
@@ -321,7 +319,7 @@ private fun CommunityMediaPanel(
   fillHeight: Boolean,
 ) {
   val theme = haTheme()
-  val family = visualFamily()
+  val layout = haLayouts().media
   val artwork: @Composable (RemoteModifier) -> Unit = { artModifier ->
     RemoteBox(
       artModifier.clip(haControlShape(16)).background(theme.placeholderBackground),
@@ -341,8 +339,8 @@ private fun CommunityMediaPanel(
       .then(cardChrome(theme.cardBackground, theme.divider))
       .padding(14.rdp)
   ) {
-    when (family) {
-      HaVisualFamily.Cupertino -> {
+    when (layout) {
+      HaMediaLayout.ControlCentre -> {
         RemoteRow(
           RemoteModifier.fillMaxWidth(),
           verticalAlignment = RemoteAlignment.CenterVertically,
@@ -358,7 +356,7 @@ private fun CommunityMediaPanel(
         }
         SeekBlock(data, theme)
       }
-      HaVisualFamily.Arctic -> {
+      HaMediaLayout.Landscape -> {
         TitleBlock(data, theme)
         if (fillHeight) RemoteBox(RemoteModifier.weight(1f))
         RemoteRow(

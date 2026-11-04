@@ -88,8 +88,7 @@ fun RemoteHaTodoList(
       }
       // Note: an empty stub when both sections empty.
       if (data.activeItems.isEmpty() && data.completedItems.isEmpty()) {
-        if (visualFamily() == HaVisualFamily.Console)
-          ConsoleTapeLabel("No items".rs, compact = false)
+        if (haLayouts().notes == HaNoteStyle.Tape) ConsoleTapeLabel("No items".rs, compact = false)
         else
           RemoteText(
             text = "No items".rs,
@@ -269,8 +268,7 @@ private fun Row(
     RemoteBox(modifier = RemoteModifier.width(0.rdp).height(heightDp.rdp))
     RemoteBox(
       modifier =
-        RemoteModifier.size((if (visualFamily() == HaVisualFamily.Console) 22 else 18).rdp)
-          .then(haKeyChrome()),
+        RemoteModifier.size((if (haLayouts().keyFaces) 22 else 18).rdp).then(haKeyChrome()),
       contentAlignment = RemoteAlignment.Center,
     ) {
       RemoteBasicIcon(

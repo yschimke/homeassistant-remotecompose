@@ -1,5 +1,6 @@
 package ee.schimke.ha.rc.components
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -54,5 +55,33 @@ class HaWearBackgroundTest {
     assertNull(HaWearLevel.of("light.kitchen", null, "%", 50f))
     assertNull(HaWearLevel.of("sensor.power", "power", "W", 900f))
     assertNull(HaWearLevel.of("sensor.text", null, null, Float.NaN))
+  }
+
+  @Test
+  fun kitsShowOnTheWatchAsThemselvesNotAsTheStyleTheyExtend() {
+    for (kit in HaUberTheme.kits) {
+      val base = HaUberTheme.byId(kit.extends!!)
+      // Classic keeps the watch's own surface (null); every other base is compared in black, so
+      // only the layers, edge and level, not the palette, can tell the two apart.
+      val baseBackground = base.wearBackground()?.copy(base = Color.Black)
+      assertTrue(
+        kit.wearBackground()!!.copy(base = Color.Black) != baseBackground ||
+          kit.wearLevelLook().copy(color = Color.Black, alpha = 0f) !=
+            base.wearLevelLook().copy(color = Color.Black, alpha = 0f),
+        "${kit.id} has its own container, not ${base.id}'s in other colours",
+      )
+    }
+    // The grammar decides the level: segments for Engineered, a pointer ring for Cockpit, a
+    // gradient sweep for Aurora.
+    assertEquals(24, HaUberTheme.Engineered.wearLevelLook().segments)
+    assertTrue(HaUberTheme.Cockpit.wearLevelLook().pointer)
+    assertTrue(HaUberTheme.Aurora.wearLevelLook().sweep.size > 2)
+  }
+
+  @Test
+  fun bespokeStylesKeepTheirFamilysContainer() {
+    for (style in HaUberTheme.bespoke) {
+      assertEquals(FamilyWearContainer.of(style.visuals), style.wearContainer(), style.id)
+    }
   }
 }

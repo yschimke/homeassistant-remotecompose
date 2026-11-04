@@ -679,7 +679,7 @@ private fun ArcCanvas(
     else null
   val animatedMarkerAngle = animatedTargetFraction?.let { 135f.rf + it * 270f.rf }
   val accent = dialAccent(data)
-  val family = visualFamily()
+  val family = familyVisuals()
   val look = meterLook(accent, theme.divider)
   val mechanical = isConsoleThermostat(data)
   // A theme's own ring (a kit's, from its grammar) wins over its family's.
@@ -712,7 +712,7 @@ private fun ArcCanvas(
       return@RemoteCanvas
     }
     // A skeuomorphic theme turns the dial into a rotary control: a knob inside a lamp ring.
-    if (family == HaVisualFamily.Console) {
+    if (family.dialRing == HaDialRingKind.Knob) {
       consoleDial(
         accent,
         animatedValueFraction,
@@ -726,9 +726,9 @@ private fun ArcCanvas(
       return@RemoteCanvas
     }
     // Every other family but Classic draws its own instrument (Dials.kt).
-    if (family != HaVisualFamily.Classic) {
+    if (family.dialRing == HaDialRingKind.Family) {
       familyDial(
-        family,
+        family.family,
         look,
         animatedValueFraction,
         animatedTargetFraction,

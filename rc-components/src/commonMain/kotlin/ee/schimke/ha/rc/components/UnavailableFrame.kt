@@ -79,7 +79,7 @@ fun RemoteHaUnavailableFrame(
 @Composable
 @RemoteComposable
 private fun UnavailableLabel(style: HaUnavailableStyle, modifier: RemoteModifier) {
-  if (visualFamily() == HaVisualFamily.Console) {
+  if (haLayouts().unavailable == HaUnavailableLabel.Tape) {
     ConsoleTapeLabel(style.label.rs, modifier)
     return
   }

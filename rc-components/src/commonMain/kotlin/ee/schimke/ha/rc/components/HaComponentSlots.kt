@@ -63,6 +63,23 @@ enum class HaComponentSlot {
    * on and to a press.
    */
   IconChip,
+  /**
+   * The Wear widget container a card plays in on the watch: its fill, the layers and edge that
+   * carry the style's identity, and how a level reading shows in it ([HaWearBackground],
+   * [HaWearLevelLook]).
+   */
+  WearContainer,
+  /**
+   * How a style arranges and frames cards ([HaLayouts]): tile composition and chip, media panel and
+   * artwork, reading layouts, the unavailable label, the card frame. Not in
+   * [HaComponentSlots.Grammar]: a kit keeps the arrangements of the style it extends unless it
+   * picks its own.
+   */
+  Layouts,
+  /** Graph rows: a history sparkline and a statistics bar row ([HaChartRenderer]). */
+  Charts,
+  /** The heading card, a markdown note's material and its title ([HaTextSurfaceRenderer]). */
+  TextSurfaces,
 }
 
 /** Something that draws one slot; each slot takes one kind. */
@@ -77,6 +94,10 @@ internal fun HaComponentSlot.accepts(renderer: HaSlotRenderer): Boolean =
     HaComponentSlot.DialLayout -> renderer is HaDialLayoutRenderer
     HaComponentSlot.TransportKey -> renderer is HaTransportKeyRenderer
     HaComponentSlot.IconChip -> renderer is HaIconChipRenderer
+    HaComponentSlot.WearContainer -> renderer is HaWearContainerRenderer
+    HaComponentSlot.Layouts -> renderer is HaLayouts
+    HaComponentSlot.Charts -> renderer is HaChartRenderer
+    HaComponentSlot.TextSurfaces -> renderer is HaTextSurfaceRenderer
     else -> renderer is HaVisualRenderer
   }
 
@@ -225,6 +246,18 @@ internal interface HaIconChipRenderer : HaSlotRenderer {
 }
 
 /**
+ * A style's Wear container as data: the watch's widget host draws it at its own shape (round or
+ * square, its own corner) from these, so it holds colours and proportions, not geometry.
+ */
+internal interface HaWearContainerRenderer : HaSlotRenderer {
+  /** The container's fill, layers and edge for [theme] (dark: the watch is dark). */
+  fun background(theme: HaUberTheme): HaWearBackground
+
+  /** How a level reading ([HaWearLevel]) shows in the container for [theme]. */
+  fun levelLook(theme: HaUberTheme): HaWearLevelLook
+}
+
+/**
  * The drawings a theme supplies for its slots. Immutable; combine with [plus] (the right side wins)
  * and add one with [with].
  */
@@ -257,6 +290,18 @@ internal constructor(private val renderers: Map<HaComponentSlot, HaSlotRenderer>
 
   internal val iconChip: HaIconChipRenderer?
     get() = renderers[HaComponentSlot.IconChip] as? HaIconChipRenderer
+
+  internal val wearContainer: HaWearContainerRenderer?
+    get() = renderers[HaComponentSlot.WearContainer] as? HaWearContainerRenderer
+
+  internal val textSurfaces: HaTextSurfaceRenderer?
+    get() = renderers[HaComponentSlot.TextSurfaces] as? HaTextSurfaceRenderer
+
+  internal val charts: HaChartRenderer?
+    get() = renderers[HaComponentSlot.Charts] as? HaChartRenderer
+
+  internal val layouts: HaLayouts?
+    get() = renderers[HaComponentSlot.Layouts] as? HaLayouts
 
   internal val key: HaKeyRenderer?
     get() = renderers[HaComponentSlot.Key] as? HaKeyRenderer
@@ -297,6 +342,9 @@ internal constructor(private val renderers: Map<HaComponentSlot, HaSlotRenderer>
           HaComponentSlot.DialLayout to StandardDialLayout,
           HaComponentSlot.TransportKey to TokenTransportKey,
           HaComponentSlot.IconChip to TokenIconChip,
+          HaComponentSlot.WearContainer to GrammarWearContainer,
+          HaComponentSlot.Charts to GrammarCharts,
+          HaComponentSlot.TextSurfaces to GrammarTextSurfaces,
         )
       )
   }

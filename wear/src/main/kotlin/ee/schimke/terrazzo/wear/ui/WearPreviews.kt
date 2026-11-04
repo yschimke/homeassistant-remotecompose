@@ -312,6 +312,24 @@ fun WearDashboardPreview_Lcd() = WearDashboardPreviewContent("lcd")
 @Composable
 fun WearDashboardPreview_Braun() = WearDashboardPreviewContent("braun")
 
+// Theme kits on the watch: each container comes from the kit's own grammar
+// (docs/architecture/theme-kits.md), not from the style it extends.
+@Preview(name = "Wear: dashboard Aurora", device = WearDevices.SMALL_ROUND, showSystemUi = true)
+@Composable
+fun WearDashboardPreview_Aurora() = WearDashboardPreviewContent("aurora")
+
+@Preview(name = "Wear: dashboard Engineered", device = WearDevices.SMALL_ROUND, showSystemUi = true)
+@Composable
+fun WearDashboardPreview_Engineered() = WearDashboardPreviewContent("engineered")
+
+@Preview(name = "Wear: dashboard Cockpit", device = WearDevices.SMALL_ROUND, showSystemUi = true)
+@Composable
+fun WearDashboardPreview_Cockpit() = WearDashboardPreviewContent("cockpit")
+
+@Preview(name = "Wear: dashboard EV Dash", device = WearDevices.SMALL_ROUND, showSystemUi = true)
+@Composable
+fun WearDashboardPreview_EvDash() = WearDashboardPreviewContent("ev-dash")
+
 @Composable
 private fun WearDashboardPreviewContent(style: String) {
   WearPreviewFrame(style) {

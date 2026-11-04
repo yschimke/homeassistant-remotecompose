@@ -78,13 +78,13 @@ private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolea
   val inline =
     data.features.firstOrNull()?.takeIf { data.featuresPosition == HaTileFeaturePosition.Inline }
   if (inline == null && data.badge == null) {
-    val family = visualFamily()
+    val layouts = haLayouts()
     val identity: @Composable () -> Unit = {
       TileIdentity(data, look, renderChip) { TileIcon(data, look, renderChip) }
     }
-    if (FamilyTileInfo(family, data, look, identity)) return
-    if (family.isCommunity) {
-      CommunityTileInfo(data, look, identity)
+    if (layouts.tile == HaTileComposition.Family && FamilyTileInfo(data, look, identity)) return
+    if (layouts.tile == HaTileComposition.Arranged) {
+      ArrangedTileInfo(data, look, layouts.tileArrangement, identity)
       return
     }
   }
@@ -143,9 +143,10 @@ private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolea
 private fun TileIcon(data: HaTileData, look: HaEntityLook, renderChip: Boolean) {
   // Decorative: the tile draws the name beside it.
   val accent = look.accent
-  if (renderChip && visualFamily() == HaVisualFamily.Ikea && look.isOn != null) {
+  val layouts = haLayouts()
+  if (renderChip && layouts.tileChip == HaTileChip.Paddle && look.isOn != null) {
     IkeaControlFace(accent, look.isOn.select(1f.rf, 0f.rf), RemoteModifier.size(32.rdp))
-  } else if (renderChip && visualFamily() == HaVisualFamily.Console) {
+  } else if (renderChip && layouts.tileChip == HaTileChip.KeyFace) {
     ConsoleControlFace(
       look.isOn?.select(accent, ConsoleSlot.rc) ?: accent,
       RemoteModifier.size(32.rdp),
@@ -168,7 +169,7 @@ private fun TileIcon(data: HaTileData, look: HaEntityLook, renderChip: Boolean) 
         modifier = RemoteModifier.size(20.rdp),
       )
     }
-  } else if (visualFamily() == HaVisualFamily.Console && data.tapAction is HaAction.CallService) {
+  } else if (layouts.serviceTileKey && data.tapAction is HaAction.CallService) {
     RemoteBox(
       modifier = RemoteModifier.size(24.rdp).then(haKeyChrome(accent)),
       contentAlignment = RemoteAlignment.Center,
@@ -378,13 +379,14 @@ fun RemoteHaIconChip(
   }
 }
 
+/** A tile row rearranged by [arrangement] ([HaTileComposition.Arranged]). */
 @Composable
-private fun CommunityTileInfo(
+private fun ArrangedTileInfo(
   data: HaTileData,
   look: HaEntityLook,
+  arrangement: HaTileArrangement,
   identity: @Composable () -> Unit,
 ) {
-  val family = visualFamily()
   val theme = haTheme()
   val label: @Composable () -> Unit = {
     RemoteText(
@@ -408,17 +410,17 @@ private fun CommunityTileInfo(
     )
   }
   RemoteRow(RemoteModifier.fillMaxWidth(), verticalAlignment = RemoteAlignment.CenterVertically) {
-    if (family != HaVisualFamily.Minimalist && family != HaVisualFamily.Arctic) identity()
+    if (!arrangement.identityAtEnd) identity()
     RemoteColumn(RemoteModifier.weight(1f).padding(horizontal = 10.rdp)) {
-      if (family == HaVisualFamily.Cupertino || family == HaVisualFamily.Minimalist) {
+      if (arrangement.stateFirst) {
         state()
         label()
       } else {
         label()
-        if (family != HaVisualFamily.Bubble) state()
+        if (!arrangement.stateTrailing) state()
       }
     }
-    if (family == HaVisualFamily.Bubble) state()
-    if (family == HaVisualFamily.Minimalist || family == HaVisualFamily.Arctic) identity()
+    if (arrangement.stateTrailing) state()
+    if (arrangement.identityAtEnd) identity()
   }
 }

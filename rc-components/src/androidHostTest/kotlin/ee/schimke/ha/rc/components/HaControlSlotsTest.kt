@@ -71,6 +71,7 @@ class HaControlSlotsTest {
       assertSame(GrammarRenderers.Dial, kit.components.dial, kit.id)
       assertSame(StandardDialLayout, kit.components.dialLayout, kit.id)
       assertSame(TokenTransportKey, kit.components.transportKey, kit.id)
+      assertSame(GrammarWearContainer, kit.wearContainer(), kit.id)
     }
   }
 
@@ -115,33 +116,33 @@ class HaControlSlotsTest {
   }
 
   @Test
-  fun cardsAskForControlsByRoleNotFamily() {
-    // The switch and key mount were family branches in these files; they resolve through slots now.
+  fun cardsAskByRoleNotFamily() {
+    // No card names a style family: every card file (RemoteHa*) and the card chrome ask the active
+    // theme's slots and layouts. Families are named only in the registries — the theme
+    // definitions, the family tables (HaControls, HaLayouts, FamilyVisuals, the Wear container) and
+    // each family's own drawings (Meters<Family>.kt, Dials.kt, HistoryTraces.kt, ...).
     val dir = File("src/commonMain/kotlin/ee/schimke/ha/rc/components")
-    for (name in listOf("RemoteHaEntityRow.kt", "ConsoleSurfaces.kt", "RemoteHaButton.kt")) {
-      assertFalse(File(dir, name).readText().contains("HaVisualFamily."), name)
+    val cards =
+      dir.listFiles()!!.filter {
+        it.name.startsWith("RemoteHa") ||
+          it.name in setOf("CardChrome.kt", "UnavailableFrame.kt", "ConsoleSurfaces.kt")
+      }
+    assertTrue(cards.size > 40, "found the card files")
+    for (file in cards) {
+      val text = file.readText()
+      for (name in listOf("HaVisualFamily.", "visualFamily()", "isCommunity")) {
+        assertFalse(text.contains(name), "${file.name} names a family ($name)")
+      }
     }
-    // The dial card names no family for its layout or body — only its ring's fallback table
-    // (Classic's arc, Console's knob, the rest in Dials.kt) — and the media card none for its keys.
-    val dial = File(dir, "RemoteHaArcDial.kt").readText()
-    for (family in listOf("Cupertino", "Ikea", "Bubble", "Lcars", "Aeon")) {
-      assertFalse(dial.contains("HaVisualFamily.$family"), "dial names $family")
-    }
-    assertFalse(dial.contains("isCommunity"))
-    assertFalse(File(dir, "RemoteHaMediaControl.kt").readText().contains("ikeaKeyChrome"))
     assertTrue(dir.listFiles()!!.none { it.readText().contains("consoleKeyChrome") })
+  }
+
+  @Test
+  fun everySlotTakesOneKindAndKitsFillAllButLayouts() {
+    // Every slot but Layouts has a shared drawing in the grammar set; Layouts is inherited.
     assertEquals(
-      setOf(
-        HaComponentSlot.Switch,
-        HaComponentSlot.Key,
-        HaComponentSlot.DialRing,
-        HaComponentSlot.DialLayout,
-        HaComponentSlot.TransportKey,
-        HaComponentSlot.IconChip,
-      ),
-      HaComponentSlot.entries
-        .filter { slot -> HaComponentSlots.Grammar.visual(slot) == null }
-        .toSet(),
+      HaComponentSlot.entries.toSet() - HaComponentSlot.Layouts,
+      HaComponentSlots.Grammar.slots,
     )
   }
 

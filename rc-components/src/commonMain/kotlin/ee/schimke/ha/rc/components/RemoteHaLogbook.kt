@@ -59,7 +59,7 @@ fun RemoteHaLogbook(data: HaLogbookData, modifier: RemoteModifier = RemoteModifi
         )
       }
       if (data.entries.isEmpty()) {
-        if (visualFamily() == HaVisualFamily.Console)
+        if (haLayouts().notes == HaNoteStyle.Tape)
           ConsoleTapeLabel("No recent activity".rs, compact = false)
         else
           RemoteText(
@@ -137,7 +137,7 @@ fun RemoteHaLogbookIdentity(
     contentAlignment = RemoteAlignment.Center,
   ) {
     if (latest == null) {
-      if (visualFamily() == HaVisualFamily.Console)
+      if (haLayouts().notes == HaNoteStyle.Tape)
         ConsoleTapeLabel("No recent activity".rs, compact = true)
       else
         RemoteText(

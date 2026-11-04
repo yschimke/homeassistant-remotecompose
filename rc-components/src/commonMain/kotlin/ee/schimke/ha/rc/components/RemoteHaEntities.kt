@@ -59,7 +59,7 @@ fun RemoteHaEntities(
         )
         RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp))
       }
-      if (visualFamily() in setOf(HaVisualFamily.Cupertino, HaVisualFamily.Minimalist)) {
+      if (haLayouts().entitiesGrid) {
         data.rows.chunked(2).forEach { pair ->
           RemoteRow(RemoteModifier.fillMaxWidth()) {
             pair.forEach { row ->

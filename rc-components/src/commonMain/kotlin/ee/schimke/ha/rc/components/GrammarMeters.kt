@@ -62,7 +62,7 @@ private fun strokePaint(width: RemoteFloat, color: RemoteColor, round: Boolean) 
   .apply { this.color = color }
 
 /** The grammar's gradient, unless an ink (which always wins) prints the theme in one colour. */
-private val HaVisualSpec.gradient: List<androidx.compose.ui.graphics.Color>?
+internal val HaVisualSpec.gradient: List<androidx.compose.ui.graphics.Color>?
   get() = grammar.gradient?.takeUnless { look.inked }
 
 /**
@@ -106,7 +106,7 @@ private fun ge(value: RemoteFloat, threshold: RemoteFloat): RemoteFloat =
  * The colours segment [index] of [count] lights in over its ghost, each with the 0..1 switch that
  * shows it: lit once the value passes the segment's midpoint, in the hot colour inside a zone.
  */
-private fun HaVisualSpec.segmentLayers(
+internal fun HaVisualSpec.segmentLayers(
   index: Int,
   count: Int,
 ): List<Pair<RemoteColor, RemoteFloat>> {

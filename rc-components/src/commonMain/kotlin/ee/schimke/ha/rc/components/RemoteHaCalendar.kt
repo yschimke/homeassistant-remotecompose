@@ -64,7 +64,7 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
         )
       }
       if (data.events.isEmpty()) {
-        if (visualFamily() == HaVisualFamily.Console)
+        if (haLayouts().notes == HaNoteStyle.Tape)
           ConsoleTapeLabel("No upcoming events".rs, compact = false)
         else
           RemoteText(
@@ -167,7 +167,7 @@ fun RemoteHaCalendarIdentity(
           overflow = TextOverflow.Ellipsis,
         )
       } else {
-        if (visualFamily() == HaVisualFamily.Console)
+        if (haLayouts().notes == HaNoteStyle.Tape)
           ConsoleTapeLabel("No upcoming events".rs, compact = true)
         else
           RemoteText(

@@ -266,7 +266,7 @@ private fun ActionPill(
   ) {
     RemoteText(
       text = action.label.rs,
-      color = if (visualFamily() == HaVisualFamily.Console) theme.primaryText else accent,
+      color = if (haLayouts().keyFaces) theme.primaryText else accent,
       fontSize = HaType.Label,
       fontWeight = FontWeight.Medium,
       style = haTextStyle(),
@@ -438,7 +438,7 @@ private fun KeypadKey(
   ) {
     RemoteText(
       text = label.rs,
-      color = if (visualFamily() == HaVisualFamily.Console) theme.primaryText else haInk(accent),
+      color = if (haLayouts().keyFaces) theme.primaryText else haInk(accent),
       fontSize = HaType.Title,
       fontWeight = FontWeight.Medium,
       style = haTextStyle(),

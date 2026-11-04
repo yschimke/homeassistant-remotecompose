@@ -99,7 +99,7 @@ fun RemoteHaBambuSpool(data: HaBambuSpoolDetail, modifier: RemoteModifier = Remo
           fontSize = HaType.Caption,
           style = haTextStyle(),
         )
-        if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel(data.slot.material)
+        if (haLayouts().notes == HaNoteStyle.Tape) ConsoleTapeLabel(data.slot.material)
         else
           RemoteText(
             text = data.slot.material,
@@ -136,7 +136,7 @@ private fun SpoolSlot(
   RemoteColumn(modifier = modifier, horizontalAlignment = RemoteAlignment.CenterHorizontally) {
     SpoolSwatch(slot, big = big, theme = theme)
     RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
-      if (visualFamily() == HaVisualFamily.Console)
+      if (haLayouts().notes == HaNoteStyle.Tape)
         ConsoleTapeLabel(slot.material, modifier = RemoteModifier.fillMaxWidth(), compact = true)
       else
         RemoteText(
