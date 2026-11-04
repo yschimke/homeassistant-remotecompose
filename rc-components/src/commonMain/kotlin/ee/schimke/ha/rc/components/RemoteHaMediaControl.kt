@@ -263,23 +263,12 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
     // same RemoteAction captured in both breakpoint branches blanks
     // the Full tier in alpha010, and a tiny chip is a glance target —
     // the tap opens the full card.
-    val console = visualFamily() == HaVisualFamily.Console
-    RemoteBox(
-      modifier = RemoteModifier.size((if (console) 32 else 22).rdp),
-      contentAlignment = RemoteAlignment.Center,
-    ) {
-      if (console) ConsoleControlFace(haInk(data.accent), RemoteModifier.size(32.rdp))
-      RemoteBasicIcon(
-        imageVector =
-          (if (data.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow)
-            .toRemoteImageVector(),
-        contentDescription = "play/pause".rs,
-        modifier =
-          RemoteModifier.then(if (console) RemoteModifier.padding(end = 9.rdp) else RemoteModifier)
-            .size((if (console) 18 else 22).rdp),
-        tint = if (console) theme.primaryText else haInk(data.accent),
+    transportKeyRenderer()
+      .Glyph(
+        if (data.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+        data.accent,
+        "play/pause".rs,
       )
-    }
   }
 }
 
@@ -296,23 +285,10 @@ private fun TransportButton(
   big: Boolean = false,
 ) {
   val size = if (big) 40 else 32
-  val iconSize = if (big) 22.rdp else 18.rdp
+  // The key's face is the theme's [HaComponentSlot.TransportKey]: Console's key with a pilot lamp,
+  // IKEA's moulded key, a kit's rim, or the bare icon.
   RemoteHaTouchTarget(size, size, action.toRemoteAction(), label.rs) {
-    val console = visualFamily() == HaVisualFamily.Console
-    if (console) ConsoleControlFace(haInk(accent), RemoteModifier.size(size.rdp))
-    if (visualFamily() == HaVisualFamily.Ikea) {
-      RemoteBox(RemoteModifier.size(size.rdp).then(ikeaKeyChrome(haInk(accent))))
-    }
-    RemoteBasicIcon(
-      imageVector = icon.toRemoteImageVector(),
-      contentDescription = null,
-      modifier =
-        RemoteModifier.then(
-            if (console) RemoteModifier.padding(end = (size * 0.28f).rdp) else RemoteModifier
-          )
-          .size(iconSize),
-      tint = if (console) haTheme().primaryText else haInk(accent),
-    )
+    transportKeyRenderer().Key(HaTransportSpec(icon, accent, size, if (big) 22 else 18))
   }
 }
 

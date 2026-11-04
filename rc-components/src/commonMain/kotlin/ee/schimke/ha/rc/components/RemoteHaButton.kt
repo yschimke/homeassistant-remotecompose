@@ -9,15 +9,12 @@ import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.tween
@@ -326,7 +323,10 @@ private fun ButtonBody(
   }
 }
 
-/** Tinted circular icon chip shared by both button tiers. */
+/**
+ * The icon chip shared by both button tiers: the theme's [HaComponentSlot.IconChip] (a tinted round
+ * face, Expressive's shape morph, Console's key face, IKEA's moulded key, a kit's rim).
+ */
 @Composable
 @RemoteComposable
 private fun ButtonIconChip(
@@ -338,40 +338,8 @@ private fun ButtonIconChip(
   pressed: RemoteFloat,
   iconOnly: Boolean = false,
 ) {
-  val console = visualFamily() == HaVisualFamily.Console
-  if (visualFamily() == HaVisualFamily.Expressive) {
-    // M3 Expressive's shape morph: a round chip that squares off when its entity is on and
-    // squares further while pressed, both moving by the style's springs.
-    val selected =
-      look.isOn?.let { animateRemoteFloat(it.select(1f.rf, 0f.rf), haMotion().spatial) } ?: 0f.rf
-    RemoteM3ShapeMorph(
-      selected = selected,
-      pressed = pressed,
-      color = accent.copy(alpha = accent.alpha * 0.2f.rf),
-      modifier = RemoteModifier.size(chipDp.rdp),
-    ) {
-      ButtonIcon(data, look, accent, iconDp, console = false, iconOnly)
-    }
-    return
-  }
-  RemoteBox(
-    modifier =
-      RemoteModifier.size(chipDp.rdp)
-        .clip(haControlShape(20, round = true))
-        .then(
-          if (console) RemoteModifier
-          else if (visualFamily() == HaVisualFamily.Ikea) ikeaKeyChrome(accent)
-          else RemoteModifier.background(accent.copy(alpha = accent.alpha * 0.2f.rf))
-        ),
-    contentAlignment = RemoteAlignment.Center,
-  ) {
-    if (console)
-      ConsoleControlFace(
-        look.isOn?.select(accent, ConsoleSlot.rc) ?: accent,
-        RemoteModifier.size(chipDp.rdp),
-        look.isOn?.select(1f.rf, 0f.rf),
-      )
-    ButtonIcon(data, look, accent, iconDp, console, iconOnly, chipDp)
+  iconChipRenderer().Chip(HaIconChipSpec(look, accent, chipDp, pressed)) { onFace ->
+    ButtonIcon(data, look, accent, iconDp, onFace, iconOnly, if (onFace) chipDp else 0)
   }
 }
 
@@ -402,13 +370,12 @@ private fun ButtonIcon(
 }
 
 /**
- * The button's press under M3 Expressive, so its chip squishes while held ([RemoteM3ShapeMorph]);
- * no press feedback otherwise, or without an action to press.
+ * The button's press, when its icon chip reacts to one (M3 Expressive squishes while held,
+ * [RemoteM3ShapeMorph]); no press feedback otherwise, or without an action to press.
  */
 @Composable
 private fun expressivePress(data: HaButtonData): RcPress =
-  if (visualFamily() == HaVisualFamily.Expressive && data.tapAction != HaAction.None)
-    rememberRcPress(haMotion())
+  if (iconChipRenderer().pressable && data.tapAction != HaAction.None) rememberRcPress(haMotion())
   else RcPress.None
 
 private const val FullChipDp = 48

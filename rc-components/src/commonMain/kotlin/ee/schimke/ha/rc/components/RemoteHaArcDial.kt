@@ -101,16 +101,7 @@ fun RemoteHaArcDial(data: HaArcDialData, modifier: RemoteModifier = RemoteModifi
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
-      if (
-        visualFamily().isCommunity &&
-          visualFamily() in
-            setOf(
-              HaVisualFamily.Bubble,
-              HaVisualFamily.Cupertino,
-              HaVisualFamily.Lcars,
-              HaVisualFamily.Aeon,
-            )
-      ) {
+      if (dialLayout().sideSteppers) {
         RemoteRow(
           RemoteModifier.fillMaxWidth(),
           verticalAlignment = RemoteAlignment.CenterVertically,
@@ -270,9 +261,7 @@ fun RemoteHaArcDialFill(
   compactCenter: Boolean = false,
   dialHeightDp: Int? = null,
 ) {
-  if (
-    isIkeaLight(data) || isConsoleThermostat(data) || visualFamily() == HaVisualFamily.Cupertino
-  ) {
+  if (dialBody(data) != HaDialBody.Ring) {
     RemoteHaArcDialWide(data, modifier, showName = showName)
     return
   }
@@ -370,9 +359,7 @@ fun RemoteHaArcDialNarrow(
   modifier: RemoteModifier = RemoteModifier,
   showName: Boolean = true,
 ) {
-  if (
-    isIkeaLight(data) || isConsoleThermostat(data) || visualFamily() == HaVisualFamily.Cupertino
-  ) {
+  if (dialBody(data) != HaDialBody.Ring) {
     RemoteHaArcDialWide(data, modifier)
     return
   }
@@ -432,7 +419,7 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
     ConsoleThermostatBody(data, theme)
     return
   }
-  if (visualFamily() == HaVisualFamily.Cupertino) {
+  if (dialBody(data) == HaDialBody.CupertinoBar) {
     val fraction =
       animateRemoteFloat(
         data.live?.valueFraction
@@ -543,15 +530,17 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
   }
 }
 
+/** The body this dial shows under the active theme's [HaComponentSlot.DialLayout]. */
 @Composable
-private fun isIkeaLight(data: HaArcDialData): Boolean =
-  visualFamily() == HaVisualFamily.Ikea && data.centerLabelAttribute == "brightness_pct"
+private fun dialBody(data: HaArcDialData): HaDialBody = dialLayout().body(data.centerLabelAttribute)
+
+@Composable
+private fun isIkeaLight(data: HaArcDialData): Boolean = dialBody(data) == HaDialBody.IkeaLight
 
 /** A thermostat is a room display beside a set-point control, never a display on a moving cap. */
 @Composable
 private fun isConsoleThermostat(data: HaArcDialData): Boolean =
-  visualFamily() == HaVisualFamily.Console &&
-    data.centerLabelAttribute == "current_temperature_label"
+  dialBody(data) == HaDialBody.ConsoleThermostat
 
 @Composable
 private fun ConsoleThermostatBody(data: HaArcDialData, theme: RemoteHaTheme) {
@@ -693,6 +682,9 @@ private fun ArcCanvas(
   val family = visualFamily()
   val look = meterLook(accent, theme.divider)
   val mechanical = isConsoleThermostat(data)
+  // A theme's own ring (a kit's, from its grammar) wins over its family's.
+  val themedRing = themedDialRenderer()
+  val grammar = haGrammar()
 
   RemoteCanvas(modifier = RemoteModifier.fillMaxSize()) {
     val w = width
@@ -706,6 +698,19 @@ private fun ArcCanvas(
     val top = (h - side) / 2f.rf
     val topLeft = RemoteOffset(left, top)
     val arcSize = RemoteSize(side, side)
+    if (themedRing != null) {
+      render(
+        themedRing,
+        HaDialSpec(
+          HaVisualSpec(look, animatedValueFraction, grammar),
+          animatedTargetFraction,
+          data.live?.targetVisible,
+          DialBox(left, top, side),
+          trackStrokePx,
+        ),
+      )
+      return@RemoteCanvas
+    }
     // A skeuomorphic theme turns the dial into a rotary control: a knob inside a lamp ring.
     if (family == HaVisualFamily.Console) {
       consoleDial(

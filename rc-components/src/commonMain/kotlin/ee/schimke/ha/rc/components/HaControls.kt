@@ -2,6 +2,8 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
+import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.layout.RemoteSize
@@ -17,15 +19,19 @@ import androidx.compose.remote.creation.compose.shaders.verticalGradient
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
+import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.asRemoteDp
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.tween
+import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import ee.schimke.rc.m3.RcAmbient
 import ee.schimke.rc.m3.RcM3SwitchColors
+import ee.schimke.rc.m3.RemoteM3ShapeMorph
 import ee.schimke.rc.m3.RemoteM3SwitchByProgress
 import ee.schimke.rc.m3.rcAmbient
 
@@ -271,6 +277,140 @@ internal object FamilyControls {
         }
     }
 
+  /** Console's thermostat body; its other dials are the knob in a lamp ring. */
+  val ConsoleDialLayout =
+    object : HaDialLayoutRenderer {
+      override fun body(centerLabelAttribute: String?): HaDialBody =
+        if (centerLabelAttribute == "current_temperature_label") HaDialBody.ConsoleThermostat
+        else HaDialBody.Ring
+
+      override val sideSteppers: Boolean
+        get() = false
+    }
+
+  /** IKEA's light remote for a light's brightness; the ring otherwise. */
+  val IkeaDialLayout =
+    object : HaDialLayoutRenderer {
+      override fun body(centerLabelAttribute: String?): HaDialBody =
+        if (centerLabelAttribute == "brightness_pct") HaDialBody.IkeaLight else HaDialBody.Ring
+
+      override val sideSteppers: Boolean
+        get() = false
+    }
+
+  /** Cupertino's filled bar, its steppers beside it. */
+  val CupertinoDialLayout =
+    object : HaDialLayoutRenderer {
+      override fun body(centerLabelAttribute: String?): HaDialBody = HaDialBody.CupertinoBar
+
+      override val sideSteppers: Boolean
+        get() = true
+    }
+
+  /** The ring with its steppers beside it (Bubble, LCARS, Aeon). */
+  val SideStepperDialLayout =
+    object : HaDialLayoutRenderer {
+      override fun body(centerLabelAttribute: String?): HaDialBody = HaDialBody.Ring
+
+      override val sideSteppers: Boolean
+        get() = true
+    }
+
+  /** Console's transport keys: a key face with a pilot lamp, the icon in the face's ink. */
+  val ConsoleTransportKey =
+    object : HaTransportKeyRenderer {
+      @Composable
+      override fun Key(spec: HaTransportSpec) {
+        ConsoleControlFace(haInk(spec.accent), RemoteModifier.size(spec.sizeDp.rdp))
+        RemoteBasicIcon(
+          imageVector = spec.icon.toRemoteImageVector(),
+          contentDescription = null,
+          modifier = RemoteModifier.padding(end = (spec.sizeDp * 0.28f).rdp).size(spec.iconDp.rdp),
+          tint = haTheme().primaryText,
+        )
+      }
+
+      @Composable
+      override fun Glyph(icon: ImageVector, accent: Color, contentDescription: RemoteString) {
+        RemoteBox(
+          modifier = RemoteModifier.size(32.rdp),
+          contentAlignment = RemoteAlignment.Center,
+        ) {
+          ConsoleControlFace(haInk(accent), RemoteModifier.size(32.rdp))
+          RemoteBasicIcon(
+            imageVector = icon.toRemoteImageVector(),
+            contentDescription = contentDescription,
+            modifier = RemoteModifier.padding(end = 9.rdp).size(18.rdp),
+            tint = haTheme().primaryText,
+          )
+        }
+      }
+    }
+
+  /**
+   * Material 3 Expressive's shape morph: a round chip that squares off when its entity is on and
+   * squares further while pressed, both moving by the style's springs.
+   */
+  val ExpressiveIconChip =
+    object : HaIconChipRenderer {
+      override val pressable: Boolean
+        get() = true
+
+      @Composable
+      override fun Chip(spec: HaIconChipSpec, icon: @Composable (onFace: Boolean) -> Unit) {
+        val selected =
+          spec.look.isOn?.let { animateRemoteFloat(it.select(1f.rf, 0f.rf), haMotion().spatial) }
+            ?: 0f.rf
+        RemoteM3ShapeMorph(
+          selected = selected,
+          pressed = spec.pressed,
+          color = spec.accent.copy(alpha = spec.accent.alpha * 0.2f.rf),
+          modifier = RemoteModifier.size(spec.chipDp.rdp),
+        ) {
+          icon(false)
+        }
+      }
+    }
+
+  /** Console's key face, lit by the entity's state, the icon on it. */
+  val ConsoleIconChip =
+    object : HaIconChipRenderer {
+      @Composable
+      override fun Chip(spec: HaIconChipSpec, icon: @Composable (onFace: Boolean) -> Unit) {
+        RemoteBox(
+          modifier =
+            RemoteModifier.size(spec.chipDp.rdp)
+              .clip(haControlShape(20, round = true))
+              .then(RemoteModifier),
+          contentAlignment = RemoteAlignment.Center,
+        ) {
+          ConsoleControlFace(
+            spec.look.isOn?.select(spec.accent, ConsoleSlot.rc) ?: spec.accent,
+            RemoteModifier.size(spec.chipDp.rdp),
+            spec.look.isOn?.select(1f.rf, 0f.rf),
+          )
+          icon(true)
+        }
+      }
+    }
+
+  /** IKEA's moulded key behind the icon. */
+  val IkeaIconChip =
+    object : HaIconChipRenderer {
+      @Composable
+      override fun Chip(spec: HaIconChipSpec, icon: @Composable (onFace: Boolean) -> Unit) {
+        RemoteBox(
+          modifier =
+            RemoteModifier.size(spec.chipDp.rdp)
+              .clip(haControlShape(20, round = true))
+              .then(ikeaKeyChrome(spec.accent)),
+          contentAlignment = RemoteAlignment.Center,
+        ) {
+          icon(false)
+        }
+      }
+    }
+
   /** IKEA's moulded remote key. */
   val IkeaKey =
     object : HaKeyRenderer {
@@ -318,6 +458,122 @@ internal object GrammarKey : HaKeyRenderer {
         drawCircle(fillPaint(dotColor), 2.5f.rf, at)
       }
       drawContent()
+    }
+  }
+}
+
+// ---- Control dial, transport keys and icon chips --------------------------------------------
+//
+// Same order as the switch and key: the theme's own (a kit's slot), else its bespoke family's
+// (the one table below), else the shared one from the theme's tokens. The bespoke families' own
+// are moved here unchanged from the cards that used to branch on them.
+
+/** The theme's own dial ring, or null for the family's (Classic's, Console's knob, Dials.kt). */
+@Composable
+internal fun themedDialRenderer(): HaDialRenderer? = currentHaUberTheme().theme.components.dial
+
+/** The dial layout the active theme uses: its own, its family's, or [StandardDialLayout]. */
+@Composable
+internal fun dialLayout(): HaDialLayoutRenderer {
+  val theme = currentHaUberTheme().theme
+  return theme.components.dialLayout ?: familyDialLayout(theme.visuals) ?: StandardDialLayout
+}
+
+/** The transport keys the active theme draws: its own, its family's, or [TokenTransportKey]. */
+@Composable
+internal fun transportKeyRenderer(): HaTransportKeyRenderer {
+  val theme = currentHaUberTheme().theme
+  return theme.components.transportKey ?: familyTransportKey(theme.visuals) ?: TokenTransportKey
+}
+
+/** The icon chip the active theme draws: its own, its family's, or [TokenIconChip]. */
+@Composable
+internal fun iconChipRenderer(): HaIconChipRenderer {
+  val theme = currentHaUberTheme().theme
+  return theme.components.iconChip ?: familyIconChip(theme.visuals) ?: TokenIconChip
+}
+
+/** A bespoke family's own dial layout, or null for the standard ring with steppers under it. */
+internal fun familyDialLayout(family: HaVisualFamily): HaDialLayoutRenderer? =
+  when (family) {
+    HaVisualFamily.Console -> FamilyControls.ConsoleDialLayout
+    HaVisualFamily.Ikea -> FamilyControls.IkeaDialLayout
+    HaVisualFamily.Cupertino -> FamilyControls.CupertinoDialLayout
+    HaVisualFamily.Bubble,
+    HaVisualFamily.Lcars,
+    HaVisualFamily.Aeon -> FamilyControls.SideStepperDialLayout
+    else -> null
+  }
+
+/** A bespoke family's own transport keys, or null for [TokenTransportKey]. */
+internal fun familyTransportKey(family: HaVisualFamily): HaTransportKeyRenderer? =
+  if (family == HaVisualFamily.Console) FamilyControls.ConsoleTransportKey else null
+
+/** A bespoke family's own icon chip, or null for [TokenIconChip]. */
+internal fun familyIconChip(family: HaVisualFamily): HaIconChipRenderer? =
+  when (family) {
+    HaVisualFamily.Expressive -> FamilyControls.ExpressiveIconChip
+    HaVisualFamily.Console -> FamilyControls.ConsoleIconChip
+    HaVisualFamily.Ikea -> FamilyControls.IkeaIconChip
+    else -> null
+  }
+
+/** The ring for every card, steppers under it. */
+internal object StandardDialLayout : HaDialLayoutRenderer {
+  override fun body(centerLabelAttribute: String?): HaDialBody = HaDialBody.Ring
+
+  override val sideSteppers: Boolean
+    get() = false
+}
+
+/**
+ * Transport keys from the theme's tokens: the icon in the marking colour, mounted on the theme's
+ * key ([haKeyChrome]) when it has one — IKEA's moulded key, a kit's outlined rim — and bare
+ * otherwise.
+ */
+internal object TokenTransportKey : HaTransportKeyRenderer {
+  @Composable
+  override fun Key(spec: HaTransportSpec) {
+    if (keyRenderer() != null) {
+      RemoteBox(RemoteModifier.size(spec.sizeDp.rdp).then(haKeyChrome(haInk(spec.accent))))
+    }
+    RemoteBasicIcon(
+      imageVector = spec.icon.toRemoteImageVector(),
+      contentDescription = null,
+      modifier = RemoteModifier.size(spec.iconDp.rdp),
+      tint = haInk(spec.accent),
+    )
+  }
+
+  @Composable
+  override fun Glyph(icon: ImageVector, accent: Color, contentDescription: RemoteString) {
+    RemoteBox(modifier = RemoteModifier.size(22.rdp), contentAlignment = RemoteAlignment.Center) {
+      RemoteBasicIcon(
+        imageVector = icon.toRemoteImageVector(),
+        contentDescription = contentDescription,
+        modifier = RemoteModifier.size(22.rdp),
+        tint = haInk(accent),
+      )
+    }
+  }
+}
+
+/**
+ * A button's icon chip from the theme's tokens: a round, tinted face in the theme's control shape,
+ * with the theme's key mount over it when it has one (a kit's outlined rim).
+ */
+internal object TokenIconChip : HaIconChipRenderer {
+  @Composable
+  override fun Chip(spec: HaIconChipSpec, icon: @Composable (onFace: Boolean) -> Unit) {
+    val face =
+      RemoteModifier.size(spec.chipDp.rdp)
+        .clip(haControlShape(20, round = true))
+        .then(RemoteModifier.background(spec.accent.copy(alpha = spec.accent.alpha * 0.2f.rf)))
+    RemoteBox(
+      modifier = if (keyRenderer() != null) face.then(haKeyChrome(spec.accent)) else face,
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      icon(false)
     }
   }
 }
