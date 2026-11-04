@@ -53,7 +53,7 @@ fun RemoteHaBambuPrintControl(
       )
       val buttons = listOfNotNull(data.pause, data.resume, data.stop)
       if (buttons.isEmpty()) {
-        if (visualFamily() == HaVisualFamily.Console)
+        if (haLayouts().notes == HaNoteStyle.Tape)
           ConsoleTapeLabel(cardText("status", data.statusLine ?: "No controls available"))
         else
           RemoteText(
@@ -88,7 +88,7 @@ private fun Button(button: HaBambuControlButton, theme: RemoteHaTheme) {
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
     val accent = if (button.enabled) haInk(button.accent) else theme.secondaryText
-    val console = visualFamily() == HaVisualFamily.Console
+    val console = haLayouts().keyFaces
     RemoteBox(
       modifier =
         RemoteModifier.size(48.rdp)

@@ -46,41 +46,19 @@ fun RemoteHaArcMeter(
   trackColor: RemoteColor? = null,
   zones: HaMeterZones = HaMeterZones(),
 ) {
-  val family = visualFamily()
+  val family = familyVisuals()
   val look =
     meterLook(
       color,
-      trackColor
-        ?: if (family == HaVisualFamily.HomeAssistant) haTheme().dashboardBackground else null,
+      trackColor ?: family.arcTrack(),
     )
   val themed = themedRenderer(HaComponentSlot.ArcMeter)
   val grammar = haGrammar()
   RemoteCanvas(modifier = modifier) {
-    if (themed != null) {
-      render(themed, HaVisualSpec(look, fraction, grammar, zones, strokeWidthPx, baseline))
-      return@RemoteCanvas
-    }
-    when (family) {
-      HaVisualFamily.Classic -> classicArc(look, fraction, strokeWidthPx, baseline)
-      HaVisualFamily.HomeAssistant -> homeAssistantArc(look, fraction, baseline)
-      HaVisualFamily.Expressive -> expressiveArc(look, fraction, strokeWidthPx, baseline)
-      HaVisualFamily.Trinitron -> trinitronArc(look, fraction, baseline, zones)
-      HaVisualFamily.Lcd -> lcdArc(look, fraction, strokeWidthPx, baseline, zones)
-      HaVisualFamily.Braun -> braunArc(look, fraction, baseline)
-      HaVisualFamily.Nixie -> nixieArc(look, fraction, strokeWidthPx, baseline)
-      HaVisualFamily.Console -> consoleArc(look, fraction, baseline, zones)
-      HaVisualFamily.Ikea -> ikeaArc(look, fraction, baseline)
-      HaVisualFamily.Mushroom,
-      HaVisualFamily.Bubble,
-      HaVisualFamily.Minimalist,
-      HaVisualFamily.Cupertino,
-      HaVisualFamily.Catppuccin,
-      HaVisualFamily.Obsidian,
-      HaVisualFamily.Noctis,
-      HaVisualFamily.Lcars,
-      HaVisualFamily.Arctic,
-      HaVisualFamily.Aeon -> communityArc(family, look, fraction, strokeWidthPx, baseline, zones)
-    }
+    render(
+      themed ?: family.arc,
+      HaVisualSpec(look, fraction, grammar, zones, strokeWidthPx, baseline),
+    )
   }
 }
 
@@ -100,35 +78,11 @@ fun RemoteHaBarMeter(
   zones: HaMeterZones = HaMeterZones(),
 ) {
   val look = meterLook(color, trackColor)
-  val family = visualFamily()
+  val family = familyVisuals()
   val themed = themedRenderer(HaComponentSlot.BarMeter)
   val grammar = haGrammar()
   RemoteCanvas(modifier = modifier) {
-    if (themed != null) {
-      render(themed, HaVisualSpec(look, fraction, grammar, zones, vertical = vertical))
-      return@RemoteCanvas
-    }
-    when (family) {
-      HaVisualFamily.HomeAssistant,
-      HaVisualFamily.Classic -> classicBar(look, fraction, vertical)
-      HaVisualFamily.Expressive -> expressiveBar(look, fraction, vertical)
-      HaVisualFamily.Trinitron -> trinitronBar(look, fraction, vertical, zones)
-      HaVisualFamily.Lcd -> lcdBar(look, fraction, vertical, zones)
-      HaVisualFamily.Braun -> braunBar(look, fraction, vertical)
-      HaVisualFamily.Nixie -> nixieBar(look, fraction, vertical)
-      HaVisualFamily.Console -> consoleBar(look, fraction, vertical)
-      HaVisualFamily.Ikea -> ikeaBar(look, fraction, vertical)
-      HaVisualFamily.Mushroom,
-      HaVisualFamily.Bubble,
-      HaVisualFamily.Minimalist,
-      HaVisualFamily.Cupertino,
-      HaVisualFamily.Catppuccin,
-      HaVisualFamily.Obsidian,
-      HaVisualFamily.Noctis,
-      HaVisualFamily.Lcars,
-      HaVisualFamily.Arctic,
-      HaVisualFamily.Aeon -> communityBar(family, look, fraction, vertical, zones)
-    }
+    render(themed ?: family.bar, HaVisualSpec(look, fraction, grammar, zones, vertical = vertical))
   }
 }
 
@@ -147,35 +101,11 @@ fun RemoteHaThermometerGlyph(
   zones: HaMeterZones = HaMeterZones(),
 ) {
   val look = meterLook(color, trackColor)
-  val family = visualFamily()
+  val family = familyVisuals()
   val themed = themedRenderer(HaComponentSlot.Thermometer)
   val grammar = haGrammar()
   RemoteCanvas(modifier = modifier) {
-    if (themed != null) {
-      render(themed, HaVisualSpec(look, fraction, grammar, zones))
-      return@RemoteCanvas
-    }
-    when (family) {
-      HaVisualFamily.HomeAssistant,
-      HaVisualFamily.Classic -> classicThermometer(look, fraction)
-      HaVisualFamily.Expressive -> expressiveThermometer(look, fraction)
-      HaVisualFamily.Trinitron -> trinitronThermometer(look, fraction, zones)
-      HaVisualFamily.Lcd -> lcdThermometer(look, fraction, zones)
-      HaVisualFamily.Braun -> braunThermometer(look, fraction, zones)
-      HaVisualFamily.Nixie -> nixieThermometer(look, fraction)
-      HaVisualFamily.Console -> consoleThermometer(look, fraction, zones)
-      HaVisualFamily.Ikea -> ikeaThermometer(look, fraction, zones)
-      HaVisualFamily.Mushroom,
-      HaVisualFamily.Bubble,
-      HaVisualFamily.Minimalist,
-      HaVisualFamily.Cupertino,
-      HaVisualFamily.Catppuccin,
-      HaVisualFamily.Obsidian,
-      HaVisualFamily.Noctis,
-      HaVisualFamily.Lcars,
-      HaVisualFamily.Arctic,
-      HaVisualFamily.Aeon -> communityThermometer(family, look, fraction, zones)
-    }
+    render(themed ?: family.thermometer, HaVisualSpec(look, fraction, grammar, zones))
   }
 }
 
@@ -193,35 +123,11 @@ fun RemoteHaBatteryGlyph(
   zones: HaMeterZones = HaMeterZones(),
 ) {
   val look = meterLook(color, trackColor)
-  val family = visualFamily()
+  val family = familyVisuals()
   val themed = themedRenderer(HaComponentSlot.Battery)
   val grammar = haGrammar()
   RemoteCanvas(modifier = modifier) {
-    if (themed != null) {
-      render(themed, HaVisualSpec(look, fraction, grammar, zones))
-      return@RemoteCanvas
-    }
-    when (family) {
-      HaVisualFamily.HomeAssistant,
-      HaVisualFamily.Classic -> classicBattery(look, fraction)
-      HaVisualFamily.Expressive -> expressiveBattery(look, fraction)
-      HaVisualFamily.Trinitron -> trinitronBattery(look, fraction, zones)
-      HaVisualFamily.Lcd -> lcdBattery(look, fraction, zones)
-      HaVisualFamily.Braun -> braunBattery(look, fraction)
-      HaVisualFamily.Nixie -> nixieBattery(look, fraction)
-      HaVisualFamily.Console -> consoleBattery(look, fraction, zones)
-      HaVisualFamily.Ikea -> ikeaBattery(look, fraction, zones)
-      HaVisualFamily.Mushroom,
-      HaVisualFamily.Bubble,
-      HaVisualFamily.Minimalist,
-      HaVisualFamily.Cupertino,
-      HaVisualFamily.Catppuccin,
-      HaVisualFamily.Obsidian,
-      HaVisualFamily.Noctis,
-      HaVisualFamily.Lcars,
-      HaVisualFamily.Arctic,
-      HaVisualFamily.Aeon -> communityBattery(family, look, fraction, zones)
-    }
+    render(themed ?: family.battery, HaVisualSpec(look, fraction, grammar, zones))
   }
 }
 

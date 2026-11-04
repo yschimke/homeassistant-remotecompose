@@ -69,7 +69,7 @@ fun RemoteHaPicture(
       modifier.then(click).then(sizeModifier).then(cardChrome(theme.divider, theme.divider)),
     contentAlignment = RemoteAlignment.Center,
   ) {
-    if (visualFamily() == HaVisualFamily.Console) {
+    if (haLayouts().notes == HaNoteStyle.Tape) {
       RemoteColumn(
         horizontalAlignment = RemoteAlignment.CenterHorizontally,
         verticalArrangement = RemoteArrangement.spacedBy(6.rdp),
@@ -227,7 +227,7 @@ private fun GlanceImage(data: HaPictureGlanceData, theme: RemoteHaTheme, modifie
   ) {
     // The placeholder first, the picture over it: a picture that can't load (no loader, offline)
     // leaves the placeholder showing rather than an empty band.
-    if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel("Image unavailable".rs)
+    if (haLayouts().notes == HaNoteStyle.Tape) ConsoleTapeLabel("Image unavailable".rs)
     else
       RemoteBasicIcon(
         imageVector = data.placeholderIcon.toRemoteImageVector(),
@@ -333,7 +333,7 @@ fun RemoteHaPictureElements(
       modifier = RemoteModifier.fillMaxWidth().height(PICTURE_ELEMENTS_CANVAS_H_DP.rdp),
       contentAlignment = RemoteAlignment.Center,
     ) {
-      if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel("Image unavailable".rs)
+      if (haLayouts().notes == HaNoteStyle.Tape) ConsoleTapeLabel("Image unavailable".rs)
       else
         RemoteBasicIcon(
           imageVector = data.placeholderIcon.toRemoteImageVector(),

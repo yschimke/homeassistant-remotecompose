@@ -20,7 +20,7 @@ fun RemoteHaHeading(
   modifier: RemoteModifier = RemoteModifier,
   textSize: RemoteTextUnit = data.style.textSize,
 ) {
-  EverydayHeading(cardTitle(data.title), textSize, data.style.weight, modifier)
+  textSurfaces().Heading(cardTitle(data.title), textSize, data.style.weight, modifier)
 }
 
 enum class HaHeadingStyle(val sizeSp: Int, val weight: FontWeight) {

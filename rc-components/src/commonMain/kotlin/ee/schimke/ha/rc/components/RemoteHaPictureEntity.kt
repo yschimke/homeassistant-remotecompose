@@ -102,7 +102,7 @@ fun RemoteHaPictureEntity(
             .background(accent.copy(alpha = accent.alpha * 0.10f.rf)),
         contentAlignment = RemoteAlignment.Center,
       ) {
-        if (visualFamily() == HaVisualFamily.Console)
+        if (haLayouts().notes == HaNoteStyle.Tape)
           ConsoleTapeLabel(
             (if (data.imageUrl == null) "No image" else "Image unavailable").rs,
             RemoteModifier.padding(6.rdp),
@@ -135,7 +135,7 @@ fun RemoteHaPictureEntity(
             // Inline strategy with no pre-fetched bytes for
             // this URL — fall back to the icon path so the
             // tile renders something instead of a hole.
-            if (visualFamily() != HaVisualFamily.Console)
+            if (haLayouts().notes != HaNoteStyle.Tape)
               HaStateIcon(
                 icon = data.icon,
                 activeIcon = data.accent.activeIcon,
@@ -150,7 +150,7 @@ fun RemoteHaPictureEntity(
               )
           }
         } else {
-          if (visualFamily() != HaVisualFamily.Console)
+          if (haLayouts().notes != HaNoteStyle.Tape)
             HaStateIcon(
               icon = data.icon,
               activeIcon = data.accent.activeIcon,

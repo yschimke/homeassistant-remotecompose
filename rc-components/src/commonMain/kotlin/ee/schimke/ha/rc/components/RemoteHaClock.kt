@@ -54,7 +54,7 @@ fun RemoteHaClock(
       data.isLarge -> 64
       else -> 36
     }
-  val console = visualFamily() == HaVisualFamily.Console
+  val console = haLayouts().clock == HaClockFace.LedModules
   RemoteBox(
     modifier =
       modifier

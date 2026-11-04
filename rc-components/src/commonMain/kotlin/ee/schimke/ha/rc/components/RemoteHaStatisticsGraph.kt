@@ -86,7 +86,7 @@ fun RemoteHaStatisticsGraph(
         style = haTextStyle(),
       )
       if (data.rows.isEmpty()) {
-        if (visualFamily() == HaVisualFamily.Console)
+        if (haLayouts().notes == HaNoteStyle.Tape)
           ConsoleTapeLabel("No entities".rs, compact = true)
         else
           RemoteText(
@@ -131,7 +131,7 @@ private fun BarRow(row: HaHistoryGraphRow, theme: RemoteHaTheme, plotHeightDp: I
     )
   }
   if (row.points.isEmpty()) {
-    if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel("No samples".rs, compact = true)
+    if (haLayouts().notes == HaNoteStyle.Tape) ConsoleTapeLabel("No samples".rs, compact = true)
     else
       RemoteText(
         text = "No samples".rs,
@@ -198,9 +198,10 @@ private fun Bars(
   val span = entityFloat(entityId, "bar_span", range.span)
   val values = points.mapIndexed { i, v -> entityFloat(entityId, "bar.$i", v) }
   val look = meterLook(accent.rc, theme.divider)
-  val family = visualFamily()
+  val charts = chartRenderer()
+  val grammar = haGrammar()
   RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(heightDp.rdp)) {
-    familyBars(family, look, values, base, span)
+    with(charts) { bars(look, grammar, values, base, span) }
   }
 }
 

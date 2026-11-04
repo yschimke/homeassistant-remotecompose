@@ -102,7 +102,7 @@ fun RemoteHaHistoryGraph(
           style = haTextStyle(),
         )
         if (data.rows.isEmpty()) {
-          if (visualFamily() == HaVisualFamily.Console)
+          if (haLayouts().notes == HaNoteStyle.Tape)
             ConsoleTapeLabel("No entities".rs, compact = true)
           else
             RemoteText(
@@ -245,7 +245,7 @@ fun RemoteHaHistoryGraphIdentity(
       } else {
         // The cell's height is fixed and small: a short caption, like the tile's compact name +
         // value, never a wrapped sentence.
-        if (visualFamily() == HaVisualFamily.Console)
+        if (haLayouts().notes == HaNoteStyle.Tape)
           ConsoleTapeLabel(
             (if (data.rows.isEmpty()) "No entities" else COMPACT_EMPTY_LABEL).rs,
             compact = true,
@@ -271,7 +271,7 @@ fun RemoteHaHistoryGraphIdentity(
  */
 @Composable
 private fun EmptyState(data: HaHistoryGraphData, theme: RemoteHaTheme) {
-  if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel(cardText("empty", data.emptyLabel))
+  if (haLayouts().notes == HaNoteStyle.Tape) ConsoleTapeLabel(cardText("empty", data.emptyLabel))
   else
     RemoteText(
       text = cardText("empty", data.emptyLabel),
@@ -313,7 +313,7 @@ private fun CompactEmptyState(data: HaHistoryGraphData, theme: RemoteHaTheme) {
       overflow = TextOverflow.Ellipsis,
       modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
     )
-    if (visualFamily() == HaVisualFamily.Console)
+    if (haLayouts().notes == HaNoteStyle.Tape)
       ConsoleTapeLabel(COMPACT_EMPTY_LABEL.rs, compact = true)
     else
       RemoteText(
@@ -386,9 +386,10 @@ private fun Sparkline(
   // The row's design is the uber theme's family (Charts.kt); its colour the theme's ink, else the
   // row's accent.
   val look = meterLook(accent.rc, theme.divider)
-  val family = visualFamily()
+  val charts = chartRenderer()
+  val grammar = haGrammar()
   RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(heightDp.rdp)) {
-    familySparkline(family, look, bound, minRf, spanRf)
+    with(charts) { sparkline(look, grammar, bound, minRf, spanRf) }
   }
 }
 

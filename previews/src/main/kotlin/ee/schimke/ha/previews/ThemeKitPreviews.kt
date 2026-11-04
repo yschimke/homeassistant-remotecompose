@@ -420,3 +420,69 @@ fun Kit_ButtonChips() =
       ),
     snapshot = Fixtures.mixed,
   )
+
+/**
+ * Text surfaces as a slot: a heading and a markdown note under bespoke themes (their own
+ * treatments) and kits (from their grammar — Engineered's ruled heading and leading bar, Cockpit's
+ * index dot, Aurora's tonal capsule, EV Dash's plain line).
+ */
+@Preview(name = "kit: text surfaces across themes", widthDp = 360, heightDp = 560)
+@Composable
+fun Kit_TextSurfaces() =
+  KitCardSheet(
+    listOf(
+      HaUberTheme.Classic to false,
+      HaUberTheme.Braun to false,
+      HaUberTheme.Engineered to false,
+      HaUberTheme.Cockpit to true,
+      HaUberTheme.Aurora to true,
+      HaUberTheme.EvDash to true,
+    ),
+    columns = 2,
+    cards =
+      listOf(
+        """{"type":"heading","heading":"Downstairs"}""",
+        """{"type":"markdown","title":"Notes","content":"Welcome home.\nTemperature is normal."}""",
+      ),
+    snapshot = Fixtures.mixed,
+  )
+
+/** History sparklines as a slot: the bespoke trace (Classic) and each kit's from its grammar. */
+@Preview(name = "kit: history across themes", widthDp = 360, heightDp = 420)
+@Composable
+fun Kit_History() =
+  KitCardSheet(
+    listOf(
+      HaUberTheme.Classic to false,
+      HaUberTheme.Engineered to false,
+      HaUberTheme.Cockpit to true,
+      HaUberTheme.Aurora to true,
+    ),
+    columns = 2,
+    cards =
+      listOf(
+        """{"type":"history-graph","title":"Temperature","hours_to_show":24,
+            "entities":["sensor.outside_temp","sensor.upstairs_temp"]}"""
+      ),
+    snapshot = Fixtures.temperatureHistory,
+  )
+
+/** Statistics bars as a slot: the bespoke bars (Classic) and each kit's from its grammar. */
+@Preview(name = "kit: statistics across themes", widthDp = 360, heightDp = 420)
+@Composable
+fun Kit_Statistics() =
+  KitCardSheet(
+    listOf(
+      HaUberTheme.Classic to false,
+      HaUberTheme.Engineered to false,
+      HaUberTheme.Cockpit to true,
+      HaUberTheme.Aurora to true,
+    ),
+    columns = 2,
+    cards =
+      listOf(
+        """{"type":"statistics-graph","title":"Power","period":"hour","stat_types":["mean"],
+            "entities":["sensor.house_power","sensor.solar_power"]}"""
+      ),
+    snapshot = Fixtures.energyStatistics,
+  )

@@ -61,12 +61,11 @@ private fun HaMeasureVisual.tileGlyphSizeDp(): Pair<Int, Int> =
  */
 @Composable
 internal fun FamilyTileInfo(
-  family: HaVisualFamily,
   data: HaTileData,
   look: HaEntityLook,
   identity: @Composable () -> Unit,
 ): Boolean {
-  when (family) {
+  when (visualFamily()) {
     HaVisualFamily.Expressive -> ExpressiveTile(data, look, identity)
     HaVisualFamily.Trinitron -> TrinitronTile(data, look, identity)
     HaVisualFamily.Lcd -> LcdTile(data, look, identity)

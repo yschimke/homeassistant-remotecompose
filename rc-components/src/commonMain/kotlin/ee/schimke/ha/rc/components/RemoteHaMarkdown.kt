@@ -52,18 +52,19 @@ fun RemoteHaMarkdown(
 ) {
   // The note's material is its visual family's (docs/design/everyday-cards.md §4): what it sits
   // on, how its title is set, and how its blocks are marked. Blocks keep their live bindings.
-  val material = markdownMaterial()
+  val material = textSurfaces().material()
   RemoteColumn(modifier = modifier.fillMaxWidth()) {
     RemoteBox(modifier = RemoteModifier.fillMaxWidth().then(material.surface)) {
       RemoteColumn(
         modifier = RemoteModifier.fillMaxWidth().then(material.decoration).then(material.padding)
       ) {
         if (data.title != null) {
-          MarkdownTitle(
-            cardTitle(data.title),
-            if (large) HaType.Headline else adaptiveTitleSize(data.title),
-            material.ink,
-          )
+          textSurfaces()
+            .Title(
+              cardTitle(data.title),
+              if (large) HaType.Headline else adaptiveTitleSize(data.title),
+              material.ink,
+            )
           RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp))
         }
         val screen = material.screen
@@ -74,7 +75,7 @@ fun RemoteHaMarkdown(
         }
       }
     }
-    if (visualFamily() == HaVisualFamily.Bubble && LocalCardChromeEnabled.current) BubbleTail()
+    if (material.tail && LocalCardChromeEnabled.current) BubbleTail()
   }
 }
 
@@ -179,9 +180,8 @@ fun RemoteHaMarkdownIdentity(
   val theme = haTheme()
   val firstLine = data.blocks.firstOrNull { it.kind != MarkdownBlock.Kind.Divider }
   // The same material as the full note, so a launcher cell reads as the same family's note.
-  val material = markdownMaterial()
-  val haReference =
-    visualFamily().let { it == HaVisualFamily.Classic || it == HaVisualFamily.HomeAssistant }
+  val material = textSurfaces().material()
+  val haReference = material.haReference
   RemoteBox(
     modifier = modifier.fillMaxSize().then(material.surface),
     contentAlignment = RemoteAlignment.Center,
@@ -216,7 +216,7 @@ fun RemoteHaMarkdownIdentity(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
-        else MarkdownTitle(cardTitle(data.title), HaType.Title, material.ink)
+        else textSurfaces().Title(cardTitle(data.title), HaType.Title, material.ink)
       }
       if (firstLine != null) {
         val emphasis = firstLine.drawnStyle

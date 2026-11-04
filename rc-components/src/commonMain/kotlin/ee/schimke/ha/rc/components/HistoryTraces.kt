@@ -63,7 +63,7 @@ internal fun RemoteDrawScope.historyTrace(
 
 // --- Line helpers on a Plot ------------------------------------------------------------------
 
-private fun Plot.line(
+internal fun Plot.line(
   scope: RemoteDrawScope,
   fractions: List<RemoteFloat>,
   widthPx: Float,
@@ -136,17 +136,17 @@ private fun areaPaint(color: RemoteColor) = RemotePaint {
 }
   .apply { this.color = color }
 
-private fun Plot.baseline(scope: RemoteDrawScope, color: RemoteColor, widthPx: Float = 1f) =
+internal fun Plot.baseline(scope: RemoteDrawScope, color: RemoteColor, widthPx: Float = 1f) =
   scope.drawLine(
     strokePaint(widthPx, color, round = false),
     RemoteOffset(left, bottom),
     RemoteOffset(left + width, bottom),
   )
 
-private fun Plot.point(i: Int, fractions: List<RemoteFloat>): RemoteOffset =
+internal fun Plot.point(i: Int, fractions: List<RemoteFloat>): RemoteOffset =
   RemoteOffset(x(i, fractions.size), y(fractions[i]))
 
-private fun Plot.last(fractions: List<RemoteFloat>): RemoteOffset =
+internal fun Plot.last(fractions: List<RemoteFloat>): RemoteOffset =
   point(fractions.size - 1, fractions)
 
 /** A diamond (a square turned 45°) of half-diagonal [r] at [at]. */

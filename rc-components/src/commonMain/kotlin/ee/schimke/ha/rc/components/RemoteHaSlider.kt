@@ -97,7 +97,7 @@ fun RemoteHaSlider(
     }
   val spokenLabel = listOf(subject, spec.label).filter { it.isNotEmpty() }.joinToString(", ")
   // M3 Expressive draws its own slider: tracks either side of a handle that narrows while held.
-  val expressive = visualFamily() == HaVisualFamily.Expressive
+  val expressive = haLayouts().slider == HaSliderStyle.SplitTrack
   val press = if (expressive && interactive) rememberRcPress(haMotion()) else RcPress.None
 
   val ticks: RemoteFloat
