@@ -97,14 +97,20 @@ internal fun LcdWindowClock(data: HaClockData, timeLabel: RemoteString) {
     if (data.use24Hour) hour24 else hour24.rem(12f).isEqualTo(0f.rf).select(12f.rf, hour24.rem(12f))
   val main = listOf(floor(hour / 10f), hour.rem(10f), floor(minute / 10f), minute.rem(10f))
   val seconds = listOf(floor(second / 10f), second.rem(10f))
-  // Ghosts are opaque blends over the window, so a segment's bar and tips can overlap without
-  // darkening where they meet.
-  val palette = currentHaUberTheme().let { it.theme.palette(it.darkTheme) }
-  val window = palette.dashboardBackground
+  // Under the kit's own palette, ghosts are opaque blends over the window, so a segment's bar and
+  // tips can overlap without darkening where they meet. On a host's surfaces (a launcher widget in
+  // system colours) the window and segments are the host's runtime roles, so the ghosts are
+  // translucent copies of those roles and follow the host's colours too.
+  val active = currentHaUberTheme()
+  val palette = active.theme.palette(active.darkTheme)
   val lit = theme.primaryText
-  val ghost = lerp(window, palette.primaryText, 0.12f).rc
   val accent = theme.linkText
-  val accentGhost = lerp(window, palette.linkText, 0.18f).rc
+  val ghost =
+    if (active.ownPalette) lerp(palette.dashboardBackground, palette.primaryText, 0.12f).rc
+    else theme.primaryText.copy(alpha = 0.12f.rf)
+  val accentGhost =
+    if (active.ownPalette) lerp(palette.dashboardBackground, palette.linkText, 0.18f).rc
+    else theme.linkText.copy(alpha = 0.18f.rf)
   RemoteColumn(horizontalAlignment = RemoteAlignment.CenterHorizontally) {
     RemoteCanvas(
       RemoteModifier.semantics { contentDescription = timeLabel }
