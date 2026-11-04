@@ -35,9 +35,10 @@ internal fun RemoteDrawScope.historyTrace(
   val n = fractions.size
   if (n < 2) return
   when (family) {
-    // Drawn by the grammar (FamilyCharts): a 2 px line over a baseline.
+    // Drawn by the grammar (FamilyCharts).
     HaVisualFamily.Classic,
-    HaVisualFamily.HomeAssistant -> Unit
+    HaVisualFamily.HomeAssistant,
+    HaVisualFamily.Arctic -> Unit
     HaVisualFamily.Expressive -> expressiveTrace(look, fractions)
     HaVisualFamily.Trinitron -> trinitronTrace(look, fractions)
     HaVisualFamily.Lcd -> lcdTrace(look, fractions)
@@ -53,7 +54,6 @@ internal fun RemoteDrawScope.historyTrace(
     HaVisualFamily.Obsidian -> obsidianTrace(look, fractions)
     HaVisualFamily.Noctis -> noctisTrace(look, fractions)
     HaVisualFamily.Lcars -> lcarsTrace(look, fractions)
-    HaVisualFamily.Arctic -> arcticTrace(look, fractions)
     HaVisualFamily.Aeon -> aeonTrace(look, fractions)
   }
 }
@@ -386,22 +386,6 @@ private fun RemoteDrawScope.lcarsTrace(look: MeterLook, fractions: List<RemoteFl
       vertical = true,
     )
   }
-}
-
-/** Arctic: a hairline over the horizon, with a suspended "now" needle at the newest sample. */
-private fun RemoteDrawScope.arcticTrace(look: MeterLook, fractions: List<RemoteFloat>) {
-  val p = Plot(this, left = 2f, top = 3f, right = 8f, bottom = 6f)
-  val n = fractions.size
-  // The horizon: a clear ice rail with a hairline on it.
-  fillRect(look.track, p.left, p.bottom, p.width, 4f.rf)
-  fillRect(look.muted, p.left, p.bottom, p.width, 1f.rf)
-  p.line(this, fractions, 1.5f, look.value)
-  // The needle hangs from the top edge down to the horizon, a ring where it meets the trace.
-  val x = p.x(n - 1, n)
-  drawLine(strokePaint(1f, look.accent), RemoteOffset(x, 0f.rf), RemoteOffset(x, p.bottom + 4f.rf))
-  drawCircle(fillPaint(look.accent), 2.5f.rf, RemoteOffset(x, 0f.rf + 2.5f.rf))
-  drawCircle(fillPaint(look.surface), 4f.rf, p.last(fractions))
-  drawCircle(strokePaint(1.5f, look.accent), 4f.rf, p.last(fractions))
 }
 
 /**

@@ -44,39 +44,6 @@ private fun RemoteDrawScope.segmentRun(
   }
 }
 
-internal fun RemoteDrawScope.lcdArc(
-  look: MeterLook,
-  fraction: RemoteFloat,
-  strokePx: Float,
-  baseline: Float,
-  zones: HaMeterZones,
-) {
-  val stroke = strokePx * 1.8f
-  val arc = ArcBox(width, height, stroke / 2f + 1f, baseline)
-  val count = 12
-  val pitch = 180f / count
-  for (i in 0 until count) {
-    drawArc(
-      strokePaint(stroke, look.segment(fraction, i, count, zones), round = false),
-      (180f + i * pitch + pitch * 0.09f).rf,
-      (pitch * 0.82f).rf,
-      false,
-      arc.topLeft,
-      arc.size,
-    )
-  }
-}
-
-internal fun RemoteDrawScope.lcdBar(
-  look: MeterLook,
-  fraction: RemoteFloat,
-  vertical: Boolean,
-  zones: HaMeterZones,
-) {
-  if (vertical) segmentRun(look, fraction, zones, 12, 0.18f, true, 0f.rf, height, 0f.rf, width)
-  else segmentRun(look, fraction, zones, 12, 0.18f, false, 0f.rf, width, 0f.rf, height)
-}
-
 /**
  * A framed column of ten bars beside a tick scale, at 1 : 3. No bulb: the LCD is a bar graph, its
  * hot bars lit in the hot ink.

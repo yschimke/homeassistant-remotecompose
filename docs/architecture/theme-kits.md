@@ -87,14 +87,27 @@ the same family tables (`FamilyVisuals`, `FamilyCharts`):
 | Classic (the cards' own) | arc, bar, thermometer, battery, dial ring, history line, statistics bars | — |
 | Home Assistant | bar, thermometer, battery, history line, statistics bars | the chunky half gauge, the thermostat ring with its white handle |
 | Material 3 Expressive | arc, bar, thermometer, battery, dial ring, statistics bars | the filled history trace; its switch, icon-chip morph, split slider and wavy progress |
+| LCD | arc, bar, dial ring | the framed thermometer column, the phone battery, the framed history and bar graphs |
+| Trinitron | bar | the VU needle, the bracketed LED column, the battery, the dial ring of LED cells, its traces |
+| Arctic | arc, bar, thermometer, dial ring, history line | the scale battery, its statistics bars |
+| Obsidian | bar, thermometer, dial ring | the index-mark arc, the ruler battery, the ruled-notebook history and bars |
+| Minimalist | arc, dial ring | the slider bar, the T thermometer, the battery, the stepped history |
+| Cupertino | bar | the double activity ring, the bulbless thermometer, the pill battery, the dial's bar layout, the filled history |
 
-The grammar learned the one rule that made this possible: a **gapped** grammar (`trackGap`, the
-grammar of M3 Expressive's progress indicators) draws a bare capsule thermometer with no bulb and a
-pill battery with no body outline.
+Braun, Nixie, Console, IKEA, Mushroom, Bubble, Catppuccin, Noctis, LCARS and Aeon keep all their
+meters. Each one's character is in them: Braun's orange pointer, Nixie's tubes, Console's VU
+meter behind glass, IKEA's moulded parts, and the community styles' beads, petals, stitching, twin
+rails, elbow bands and marquee rails. In the community styles, all of those come from two short
+per-family drawings (`communityRing` and `communityBar` in `MetersCommunity.kt`).
 
-The other bespoke families (Trinitron, LCD, Braun, Nixie, Console, IKEA and the community styles)
-keep their meters: each is a design of its own, and in the community styles all of them come from
-just two short per-family grammars (`communityRing`, `communityBar` in `MetersCommunity.kt`).
+Two grammar rules made the moves possible:
+- A **gapped** grammar (`trackGap`, the grammar of M3 Expressive's progress indicators) draws a
+  capsule thermometer with no bulb and a pill battery with no body outline.
+- A bulb thermometer's liquid is a slim column inside the glass.
+
+Two family grammars were corrected so the grammar reads like the family:
+- Obsidian is a hairline **pointer** scale with ten ticks.
+- Minimalist is a hairline continuous line with four index ticks, where it was segmented.
 
 To move another family×part onto the grammar, render the family beside
 `theme.copy(components = HaComponentSlots.Grammar)`. Where the two read the same, point its row in

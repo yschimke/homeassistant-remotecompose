@@ -139,9 +139,31 @@ class HaControlSlotsTest {
     assertSame(GrammarRenderers.Battery, expressive.battery)
     assertEquals(HaDialRingKind.Grammar, expressive.dialRing)
 
-    // A hand-drawn family keeps its drawings.
+    // Parts that read the same in the grammar draw from it; the rest stay the family's own.
     val lcd = FamilyVisuals.of(HaVisualFamily.Lcd)
-    assertTrue(lcd.arc !== GrammarRenderers.Arc && lcd.battery !== GrammarRenderers.Battery)
+    assertSame(GrammarRenderers.Arc, lcd.arc)
+    assertSame(GrammarRenderers.Bar, lcd.bar)
+    assertEquals(HaDialRingKind.Grammar, lcd.dialRing)
+    assertTrue(lcd.thermometer !== GrammarRenderers.Thermometer, "LCD keeps its framed column")
+    val arctic = FamilyVisuals.of(HaVisualFamily.Arctic)
+    assertSame(GrammarRenderers.Arc, arctic.arc)
+    assertSame(GrammarRenderers.Thermometer, arctic.thermometer)
+    assertTrue(arctic.battery !== GrammarRenderers.Battery, "Arctic keeps its scale battery")
+    val obsidian = FamilyVisuals.of(HaVisualFamily.Obsidian)
+    assertSame(GrammarRenderers.Bar, obsidian.bar)
+    assertTrue(obsidian.arc !== GrammarRenderers.Arc, "Obsidian keeps its index-mark arc")
+
+    // A family whose every drawing is its own.
+    val nixie = FamilyVisuals.of(HaVisualFamily.Nixie)
+    assertTrue(
+      listOf(nixie.arc, nixie.bar, nixie.thermometer, nixie.battery).none {
+        it === GrammarRenderers.Arc ||
+          it === GrammarRenderers.Bar ||
+          it === GrammarRenderers.Thermometer ||
+          it === GrammarRenderers.Battery
+      }
+    )
+    assertEquals(HaDialRingKind.Family, nixie.dialRing)
   }
 
   @Test
