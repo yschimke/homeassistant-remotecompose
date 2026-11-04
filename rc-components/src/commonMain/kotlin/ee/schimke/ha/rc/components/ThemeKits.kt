@@ -15,8 +15,9 @@ import ee.schimke.rc.m3.RcMotionScheme
 // shared parts takes it, and so does every component added later.
 //
 // Kits evoke a genre — an electric car's centre screen, an assistant's gradient, an engineered
-// appliance, a car's digital cluster, a rugged digital sports watch — with original palettes and drawings. They carry no brand
-// name, logo, typeface or artwork; see docs/architecture/theme-kits.md §"Brands".
+// appliance, a car's digital cluster, a rugged digital sports watch — with original palettes and
+// drawings. They carry no brand name, logo, typeface or artwork; see
+// docs/architecture/theme-kits.md §"Brands".
 // ---------------------------------------------------------------------------------------------
 
 internal object ThemeKits {
