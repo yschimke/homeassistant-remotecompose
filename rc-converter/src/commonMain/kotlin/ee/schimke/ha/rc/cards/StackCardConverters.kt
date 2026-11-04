@@ -83,46 +83,34 @@ class VerticalStackCardConverter : DesignedCardConverter() {
   @Composable
   internal fun Draw(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val all = childCards(card)
-    if (LocalCardSizeMode.current != CardSizeMode.Fixed || all.size < 2) {
+    // A Wear slot is a fixed, short canvas whose height is only known at playback, and it can't
+    // grow: a child cut off at its bottom edge left a sliver that still took taps. There the stack
+    // shows the first child, or the first two once both fit. Hidden conditionals take no place, and
+    // each child keeps its authored index for its card-level template bindings (as the grid does).
+    // Everywhere else the stack draws every child as before.
+    val wearSlot =
+      LocalCardSizeMode.current == CardSizeMode.Fixed &&
+        LocalFixedCanvasAxis.current == BreakpointAxis.Height &&
+        LocalWidgetCaptureSizeDp.current == null
+    val visible = all.mapIndexedNotNull { k, child -> shownCard(child, snapshot)?.let { k to it } }
+    if (!wearSlot || visible.isEmpty()) {
       RemoteHaVerticalStack(modifier = modifier) { RenderChildren(all, snapshot) }
       return
     }
-    // A fixed canvas (a launcher widget, a Wear slot) can't grow. Show only the children that fit
-    // whole: a child cut off at the bottom edge would still take taps in the sliver left showing.
-    // Fit what the children draw now: a hidden conditional takes no room or place, and each child
-    // keeps its authored index for its card-level template bindings (as the grid does).
-    val visible = all.mapIndexedNotNull { k, child -> shownCard(child, snapshot)?.let { k to it } }
-    if (visible.isEmpty()) {
-      RemoteHaVerticalStack(modifier = modifier) { RenderChildren(all, snapshot) }
+    val indices = visible.map { it.first }
+    if (visible.size == 1) {
+      RemoteHaVerticalStack(modifier = modifier) { RenderChildren(all, snapshot, indices) }
       return
     }
     val registry = LocalCardRegistry.current
-    val capture = LocalWidgetCaptureSizeDp.current
-    val heights = visible.map { (_, shown) ->
-      stackChildHeightDp(shown, snapshot, registry, capture?.widthDp, capture?.heightDp)
-    }
-    val indices = visible.map { it.first }
-    when {
-      capture != null -> {
-        val count = fittingChildren(heights, capture.heightDp)
-        RemoteHaVerticalStack(modifier = modifier) {
-          RenderChildren(all, snapshot, indices.take(count))
-        }
-      }
-      // A Wear slot's height is only known at playback: one child, or two once both fit.
-      LocalFixedCanvasAxis.current == BreakpointAxis.Height && visible.size >= 2 ->
-        RemoteSizeBreakpoint(
-          thresholdsDp = intArrayOf(heights[0] + VERTICAL_STACK_GAP_DP + heights[1]),
-          modifier = modifier,
-          axis = BreakpointAxis.Height,
-        ) { tier ->
-          RemoteHaVerticalStack { RenderChildren(all, snapshot, indices.take(tier + 1)) }
-        }
-      LocalFixedCanvasAxis.current == BreakpointAxis.Height ->
-        RemoteHaVerticalStack(modifier = modifier) {
-          RenderChildren(all, snapshot, indices.take(1))
-        }
-      else -> RemoteHaVerticalStack(modifier = modifier) { RenderChildren(all, snapshot) }
+    val (first, second) =
+      visible.take(2).map { (_, shown) -> stackChildHeightDp(shown, snapshot, registry) }
+    RemoteSizeBreakpoint(
+      thresholdsDp = intArrayOf(first + VERTICAL_STACK_GAP_DP + second),
+      modifier = modifier,
+      axis = BreakpointAxis.Height,
+    ) { tier ->
+      RemoteHaVerticalStack { RenderChildren(all, snapshot, indices.take(tier + 1)) }
     }
   }
 }
@@ -137,88 +125,23 @@ internal fun stackChildHeightDp(
   card: CardConfig,
   snapshot: HaSnapshot,
   registry: CardRegistry,
-  widthDp: Int? = null,
-  heightDp: Int? = null,
 ): Int {
   // A hidden conditional takes no room.
   val children = childCards(card).mapNotNull { shownCard(it, snapshot) }
   return when (card.type) {
     CardTypes.VERTICAL_STACK ->
-      children.sumOf { stackChildHeightDp(it, snapshot, registry, widthDp, heightDp) } +
+      children.sumOf { stackChildHeightDp(it, snapshot, registry) } +
         VERTICAL_STACK_GAP_DP * (children.size - 1).coerceAtLeast(0)
-    CardTypes.HORIZONTAL_STACK -> {
-      val share = widthDp?.let {
-        (it - HORIZONTAL_STACK_GAP_DP * (children.size - 1)) / children.size.coerceAtLeast(1)
-      }
-      children.maxOfOrNull { stackChildHeightDp(it, snapshot, registry, share, heightDp) } ?: 0
-    }
+    CardTypes.HORIZONTAL_STACK ->
+      children.maxOfOrNull { stackChildHeightDp(it, snapshot, registry) } ?: 0
     CardTypes.GRID ->
-      widthDp?.let { launcherGridHeightDp(card, children, snapshot, registry, it, heightDp) }
-        ?: gridColumns(card).coerceAtLeast(1).let { columns ->
-          children.chunked(columns).sumOf { row ->
-            row.maxOf { stackChildHeightDp(it, snapshot, registry) }
-          }
+      gridColumns(card).coerceAtLeast(1).let { columns ->
+        children.chunked(columns).sumOf { row ->
+          row.maxOf { stackChildHeightDp(it, snapshot, registry) }
         }
+      }
     else -> registry.cardHeightDp(card, snapshot)
   }
-}
-
-/**
- * The height a grid of [children] draws in a launcher widget [widthDp] × [heightDp], by the rules
- * [GridCardConverter.Draw] lays it out with there ([HaGridLayout.fit]): as many cells to a row as
- * the width holds, more to a row when the widget's height can't hold the rows that leaves, each
- * [HaGridLayout.MIN_FIXED_CELL_DP] tall or, for square cells, as tall as it is wide.
- */
-private fun launcherGridHeightDp(
-  card: CardConfig,
-  children: List<CardConfig>,
-  snapshot: HaSnapshot,
-  registry: CardRegistry,
-  widthDp: Int,
-  heightDp: Int?,
-): Int {
-  if (children.isEmpty()) return 0
-  val converters = children.map { registry.get(it.type) ?: registry.get(UNSUPPORTED_CARD_TYPE) }
-  val minCellDp =
-    children.indices.maxOf { k ->
-      converters[k]?.gridMinCellWidthDp(children[k], snapshot)
-        ?: GridCardConverter.DEFAULT_MIN_CELL_DP
-    }
-  val square =
-    gridSquare(card) &&
-      children.indices.any { k -> converters[k]?.gridSquareCell(children[k], snapshot) == true }
-  val columns = gridColumns(card)
-  val keepColumns =
-    children.indices.any { k -> converters[k]?.gridKeepsColumnWidth(children[k], snapshot) == true }
-  val planCount = if (keepColumns) maxOf(children.size, columns) else children.size
-  val widthPerRow =
-    HaGridLayout.perRowAt(widthDp.toFloat(), planCount, columns, minCellDp).coerceAtLeast(1)
-  val gap = HaGridLayout.GAP_DP
-  val (perRow, shown) =
-    heightDp?.let {
-      val fit = HaGridLayout.fit(widthDp, it, children.size, widthPerRow, square)
-      fit.perRow.coerceAtLeast(1) to fit.shown
-    } ?: (widthPerRow to children.size)
-  val cellDp =
-    if (square) (widthDp - gap * (perRow - 1)) / perRow else HaGridLayout.MIN_FIXED_CELL_DP
-  val rows = (shown + perRow - 1) / perRow
-  return rows * cellDp + gap * (rows - 1).coerceAtLeast(0)
-}
-
-/**
- * How many of a vertical stack's children, [heightsDp] tall, fit whole in [availableDp]: one at
- * least.
- */
-internal fun fittingChildren(heightsDp: List<Int>, availableDp: Int): Int {
-  var used = 0
-  var count = 0
-  for (h in heightsDp) {
-    val next = used + (if (count > 0) VERTICAL_STACK_GAP_DP else 0) + h
-    if (next > availableDp) break
-    used = next
-    count++
-  }
-  return count.coerceAtLeast(1)
 }
 
 /** The gap [RemoteHaVerticalStack] leaves between children. */
@@ -466,7 +389,7 @@ class GridCardConverter : DesignedCardConverter() {
     }
   }
 
-  internal companion object {
+  private companion object {
     const val COLUMNS = "columns"
     const val SQUARE = "square"
 

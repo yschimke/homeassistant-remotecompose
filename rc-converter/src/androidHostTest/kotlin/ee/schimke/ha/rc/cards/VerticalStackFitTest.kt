@@ -8,26 +8,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-/** A vertical stack on a fixed canvas shows only the children that fit whole. */
+/** The heights a Wear-slot vertical stack fits its children by. */
 class VerticalStackFitTest {
-  @Test
-  fun keepsTheChildrenThatFitWhole() {
-    // 60 + 8 + 60 = 128 fits a 130dp canvas; the third would need 196.
-    assertEquals(2, fittingChildren(listOf(60, 60, 60), availableDp = 130))
-    assertEquals(3, fittingChildren(listOf(60, 60, 60), availableDp = 196))
-  }
-
-  @Test
-  fun dropsAChildThatWouldOnlyShowAsASliver() {
-    // The second child would start 8dp above the bottom edge: it is left out, not cut off.
-    assertEquals(1, fittingChildren(listOf(100, 100), availableDp = 116))
-  }
-
-  @Test
-  fun alwaysShowsTheFirstChild() {
-    assertEquals(1, fittingChildren(listOf(200, 60), availableDp = 112))
-  }
-
   @Test
   fun aNestedContainerIsAsTallAsItsChildren() {
     val registry = defaultRegistry()
@@ -61,24 +43,6 @@ class VerticalStackFitTest {
             {"type":"entity","entity":"sensor.b"}]}"""
       )
     assertEquals(one, stackChildHeightDp(stack, HaSnapshot(), registry))
-  }
-
-  @Test
-  fun aLauncherGridIsMeasuredAsItLaysOut() {
-    // In a 104dp-wide widget a two-button grid is one row of two square cells, not two buttons'
-    // natural height: an entity card still fits under it in a 104dp-tall widget.
-    val registry = defaultRegistry()
-    val grid =
-      card(
-        """{"type":"grid","columns":2,"cards":[{"type":"button","entity":"light.a"},
-            {"type":"button","entity":"light.b"}]}"""
-      )
-    val entity = card("""{"type":"entity","entity":"sensor.a"}""")
-    val heights =
-      listOf(grid, entity).map {
-        stackChildHeightDp(it, HaSnapshot(), registry, widthDp = 104, heightDp = 104)
-      }
-    assertEquals(2, fittingChildren(heights, availableDp = 104), "heights $heights")
   }
 
   private fun card(json: String): CardConfig {
