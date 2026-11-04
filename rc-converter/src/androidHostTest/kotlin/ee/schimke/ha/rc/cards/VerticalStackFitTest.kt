@@ -48,6 +48,21 @@ class VerticalStackFitTest {
     assertEquals(one, stackChildHeightDp(row, HaSnapshot(), registry))
   }
 
+  @Test
+  fun aHiddenConditionalTakesNoRoom() {
+    val registry = defaultRegistry()
+    val one =
+      stackChildHeightDp(card("""{"type":"entity","entity":"sensor.a"}"""), HaSnapshot(), registry)
+    val stack =
+      card(
+        """{"type":"vertical-stack","cards":[
+            {"type":"conditional","conditions":[{"entity":"sensor.gone","state":"on"}],
+             "card":{"type":"entity","entity":"sensor.a"}},
+            {"type":"entity","entity":"sensor.b"}]}"""
+      )
+    assertEquals(one, stackChildHeightDp(stack, HaSnapshot(), registry))
+  }
+
   private fun card(json: String): CardConfig {
     val obj = Json.parseToJsonElement(json).jsonObject
     return CardConfig(obj["type"]!!.jsonPrimitive.content, obj)

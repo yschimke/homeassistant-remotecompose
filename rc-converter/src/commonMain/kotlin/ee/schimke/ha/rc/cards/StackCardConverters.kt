@@ -89,22 +89,36 @@ class VerticalStackCardConverter : DesignedCardConverter() {
     }
     // A fixed canvas (a launcher widget, a Wear slot) can't grow. Show only the children that fit
     // whole: a child cut off at the bottom edge would still take taps in the sliver left showing.
+    // Fit what the children draw now: a hidden conditional takes no room or place, and each child
+    // keeps its authored index for its card-level template bindings (as the grid does).
+    val visible = all.mapIndexedNotNull { k, child -> shownCard(child, snapshot)?.let { k to it } }
+    if (visible.isEmpty()) {
+      RemoteHaVerticalStack(modifier = modifier) { RenderChildren(all, snapshot) }
+      return
+    }
     val registry = LocalCardRegistry.current
-    val heights = all.map { stackChildHeightDp(it, snapshot, registry) }
+    val heights = visible.map { (_, shown) -> stackChildHeightDp(shown, snapshot, registry) }
+    val indices = visible.map { it.first }
     val capture = LocalWidgetCaptureSizeDp.current
     when {
       capture != null -> {
-        val shown = fittingChildren(heights, capture.heightDp)
-        RemoteHaVerticalStack(modifier = modifier) { RenderChildren(all.take(shown), snapshot) }
+        val count = fittingChildren(heights, capture.heightDp)
+        RemoteHaVerticalStack(modifier = modifier) {
+          RenderChildren(all, snapshot, indices.take(count))
+        }
       }
       // A Wear slot's height is only known at playback: one child, or two once both fit.
-      LocalFixedCanvasAxis.current == BreakpointAxis.Height ->
+      LocalFixedCanvasAxis.current == BreakpointAxis.Height && visible.size >= 2 ->
         RemoteSizeBreakpoint(
           thresholdsDp = intArrayOf(heights[0] + VERTICAL_STACK_GAP_DP + heights[1]),
           modifier = modifier,
           axis = BreakpointAxis.Height,
         ) { tier ->
-          RemoteHaVerticalStack { RenderChildren(all.take(tier + 1), snapshot) }
+          RemoteHaVerticalStack { RenderChildren(all, snapshot, indices.take(tier + 1)) }
+        }
+      LocalFixedCanvasAxis.current == BreakpointAxis.Height ->
+        RemoteHaVerticalStack(modifier = modifier) {
+          RenderChildren(all, snapshot, indices.take(1))
         }
       else -> RemoteHaVerticalStack(modifier = modifier) { RenderChildren(all, snapshot) }
     }
@@ -122,7 +136,8 @@ internal fun stackChildHeightDp(
   snapshot: HaSnapshot,
   registry: CardRegistry,
 ): Int {
-  val children = childCards(card)
+  // A hidden conditional takes no room.
+  val children = childCards(card).mapNotNull { shownCard(it, snapshot) }
   return when (card.type) {
     CardTypes.VERTICAL_STACK ->
       children.sumOf { stackChildHeightDp(it, snapshot, registry) } +
@@ -470,16 +485,19 @@ internal fun gridSquare(card: CardConfig): Boolean =
 /**
  * Each child, as child k of this card for its card-level template bindings. A stack is not a grid
  * cell, so a stack nested in a square grid doesn't pass the square default on to its children.
+ * [indices] picks which children draw (all by default); each keeps its authored index's bindings.
  */
 @Composable
-private fun RenderChildren(children: List<CardConfig>, snapshot: HaSnapshot) {
+private fun RenderChildren(
+  children: List<CardConfig>,
+  snapshot: HaSnapshot,
+  indices: List<Int> = children.indices.toList(),
+) {
   CompositionLocalProvider(
     LocalGridSquareCells provides false,
     LocalInCardContainer provides true,
   ) {
-    children.forEachIndexed { k, child ->
-      ProvideChildCardBindings(k) { RenderChild(child, snapshot) }
-    }
+    indices.forEach { k -> ProvideChildCardBindings(k) { RenderChild(children[k], snapshot) } }
   }
 }
 
