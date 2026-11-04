@@ -152,7 +152,7 @@ fun RemoteHaClock(
         RemoteText(
           text = data.title?.let { cardTitle(it) } ?: LcdWindowWordmark.rs,
           color = theme.linkText,
-          fontSize = 30.rsp,
+          fontSize = HaType.Headline,
           fontWeight = FontWeight.Black,
           style =
             RemoteTextStyle.Default.merge(

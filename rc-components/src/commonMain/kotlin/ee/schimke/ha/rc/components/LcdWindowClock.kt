@@ -14,7 +14,6 @@ import androidx.compose.remote.creation.compose.modifier.contentDescription
 import androidx.compose.remote.creation.compose.modifier.drawWithContent
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.semantics
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
@@ -305,24 +304,43 @@ private fun segmentPaint(width: RemoteFloat, color: RemoteColor) = RemotePaint {
 
 /**
  * A rugged watch's complication window as a key: a square recessed tile in the window colour, with
- * a bevelled rim, a shadow under its top edge and the same fine mesh as the time's window. The key
- * carries its own padding so an icon sits inside the tile, as a watch's step or heart-rate icon
- * does.
+ * a bevelled rim, a shadow under its top edge and the same fine mesh as the time's window.
+ *
+ * The tile reaches [KeyOutset] past the key's bounds rather than padding them, so a caller that
+ * sizes its key (a to-do checkbox, a mode segment) keeps its content at full size. A selected key
+ * keeps the caller's accent fill under it: the tile draws only its rim, so the caller's foreground
+ * stays legible on its own background.
  */
 internal object LcdWindowKey : HaKeyRenderer {
+  /** How far the tile reaches past the key, in document pixels. */
+  private const val KeyOutset = 9f
+
   @Composable
   override fun chrome(accent: RemoteColor?, selected: Boolean?): RemoteModifier {
     val theme = haTheme()
     val dark = currentHaUberTheme().let { it.theme.palette(it.darkTheme).isDark }
     return RemoteModifier.drawWithContent {
-        val r = 9f.rf
-        fillRound(theme.divider, 0f.rf, 0f.rf, width, height, r)
-        fillRound(theme.dashboardBackground, 1.5f.rf, 1.5f.rf, width - 3f.rf, height - 3f.rf, r)
+      val o = KeyOutset.rf
+      val x = 0f.rf - o
+      val y = 0f.rf - o
+      val w = width + o * 2f.rf
+      val h = height + o * 2f.rf
+      val r = 9f.rf
+      if (selected == true) {
+        drawRoundRect(
+          strokePaint(2f, accent ?: theme.linkText, round = false),
+          RemoteOffset(x + 1f.rf, y + 1f.rf),
+          androidx.compose.remote.creation.compose.layout.RemoteSize(w - 2f.rf, h - 2f.rf),
+          RemoteOffset(r, r),
+        )
+      } else {
+        fillRound(theme.divider, x, y, w, h, r)
+        fillRound(theme.dashboardBackground, x + 1.5f.rf, y + 1.5f.rf, w - 3f.rf, h - 3f.rf, r)
         fillRound(
           Color.Black.copy(alpha = if (dark) 0.3f else 0.1f).rc,
-          4f.rf,
-          1.5f.rf,
-          width - 8f.rf,
+          x + 4f.rf,
+          y + 1.5f.rf,
+          w - 8f.rf,
           2.5f.rf,
           1.2f.rf,
         )
@@ -333,19 +351,13 @@ internal object LcdWindowKey : HaKeyRenderer {
             mesh,
             0.9f.rf,
             RemoteOffset(
-              width * ((col + if (row % 2 == 0) 0.5f else 1f) / (n + 0.5f)).rf,
-              height * ((row + 0.6f) / (n + 0.2f)).rf,
+              x + w * ((col + if (row % 2 == 0) 0.5f else 1f) / (n + 0.5f)).rf,
+              y + h * ((row + 0.6f) / (n + 0.2f)).rf,
             ),
           )
         }
-        if (selected == true)
-          drawCircle(
-            fillPaint(accent ?: theme.linkText),
-            2.5f.rf,
-            RemoteOffset(width - 7f.rf, 7f.rf),
-          )
-        drawContent()
       }
-      .padding(8.rdp)
+      drawContent()
+    }
   }
 }
