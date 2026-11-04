@@ -89,6 +89,11 @@ enum class HaClockFace {
   Text,
   /** Seven-segment LED modules behind smoked glass (Console). */
   LedModules,
+  /**
+   * A rugged digital watch's LCD window: italic segment digits with their unlit segments ghosted,
+   * small accent seconds, over a fine mesh.
+   */
+  LcdWindow,
 }
 
 /** How a value slider draws itself. */

@@ -246,7 +246,14 @@ internal object ThemeKits {
           ticks = 12,
           outline = true,
         ),
-      components = HaComponentSlots.Grammar,
+      // The LCD's layouts, with the watch's own clock face: italic segment digits in a window.
+      components =
+        HaComponentSlots.Grammar.with(
+            HaComponentSlot.Layouts,
+            familyLayouts(HaVisualFamily.Lcd).copy(clock = HaClockFace.LcdWindow),
+          )
+          // Keys are the watch's complication windows: square recessed tiles over a mesh.
+          .with(HaComponentSlot.Key, LcdWindowKey),
       extends = "lcd",
     )
 

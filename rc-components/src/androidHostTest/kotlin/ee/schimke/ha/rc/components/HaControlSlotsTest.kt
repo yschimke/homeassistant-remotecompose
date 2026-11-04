@@ -57,7 +57,12 @@ class HaControlSlotsTest {
   @Test
   fun kitsDrawTheSharedControlsUnlessTheyPickOne() {
     for (kit in HaUberTheme.kits) {
-      assertSame(GrammarKey, kit.components.key, kit.id)
+      // Rugged Digital's keys are its complication windows; every other kit's are the grammar's.
+      assertSame(
+        if (kit == HaUberTheme.RuggedDigital) LcdWindowKey else GrammarKey,
+        kit.components.key,
+        kit.id,
+      )
       val aurora = kit == HaUberTheme.Aurora
       assertSame(
         if (aurora) FamilyControls.ExpressiveSwitch else TokenSwitch,

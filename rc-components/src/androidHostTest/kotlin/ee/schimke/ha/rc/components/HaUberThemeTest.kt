@@ -99,7 +99,8 @@ class HaUberThemeTest {
       // Every slot but Layouts, which a kit inherits from the style it extends unless it picks its
       // own.
       assertEquals(
-        HaComponentSlot.entries.toSet() - HaComponentSlot.Layouts,
+        HaComponentSlot.entries.toSet() -
+          if (kit == HaUberTheme.RuggedDigital) emptySet() else setOf(HaComponentSlot.Layouts),
         kit.components.slots,
         kit.id,
       )

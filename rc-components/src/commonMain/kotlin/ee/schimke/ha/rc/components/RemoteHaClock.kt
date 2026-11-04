@@ -9,20 +9,27 @@ import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.background
+import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
+import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteString
+import androidx.compose.remote.creation.compose.state.asRemoteTextUnit
 import androidx.compose.remote.creation.compose.state.floor
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
+import androidx.compose.remote.creation.compose.text.RemoteFontFamily
+import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.remote.creation.compose.text.RemoteTimeDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 
 /**
  * `clock` card — local time text. The default path binds `RemoteTimeDefaults.defaultTimeString` so
@@ -54,7 +61,9 @@ fun RemoteHaClock(
       data.isLarge -> 64
       else -> 36
     }
-  val console = haLayouts().clock == HaClockFace.LedModules
+  val face = haLayouts().clock
+  val console = face == HaClockFace.LedModules
+  val window = face == HaClockFace.LcdWindow
   RemoteBox(
     modifier =
       modifier
@@ -68,7 +77,9 @@ fun RemoteHaClock(
       horizontalAlignment = RemoteAlignment.CenterHorizontally,
       verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
     ) {
-      if (data.title != null && !compact && !narrow) {
+      // On a large LCD-window clock the title is the watch's wordmark, set under the date instead.
+      val wordmark = window && data.isLarge && data.title != null && !compact && !narrow
+      if (data.title != null && !compact && !narrow && !wordmark) {
         RemoteText(
           text = cardTitle(data.title),
           color = theme.secondaryText,
@@ -80,7 +91,7 @@ fun RemoteHaClock(
       }
       val timeText: RemoteString =
         data.staticTimeLabel?.rs
-          ?: if (data.zoned || data.showSeconds || console) {
+          ?: if (data.zoned || data.showSeconds || console || window) {
             liveClockTimeString(
               zoneOffsetMinutes =
                 if (data.zoned) cardFloat("zone_offset_minutes", data.zoneOffsetMinutes.toFloat())
@@ -96,6 +107,8 @@ fun RemoteHaClock(
           }
       if (console) {
         ConsoleClock(data, timeText)
+      } else if (window) {
+        LcdWindowClock(data, timeText)
       } else
         RemoteText(
           text = timeText,
@@ -105,7 +118,26 @@ fun RemoteHaClock(
           style = haTextStyle(),
           maxLines = 1,
         )
-      if (data.secondaryLabel != null && !compact && !narrow) {
+      if (data.secondaryLabel != null && !compact && !narrow && window) {
+        // The date sits in its own recessed window under the time, as on the watch.
+        RemoteBox(
+          modifier =
+            RemoteModifier.padding(top = 4.rdp)
+              .clip(RemoteRoundedCornerShape(6.rdp))
+              .background(theme.dashboardBackground)
+              .padding(horizontal = 12.rdp, vertical = 3.rdp)
+        ) {
+          RemoteText(
+            text = cardText("date", data.secondaryLabel),
+            color = theme.primaryText,
+            fontSize = HaType.Body,
+            fontWeight = FontWeight.Bold,
+            style = haTextStyle(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+        }
+      } else if (data.secondaryLabel != null && !compact && !narrow) {
         RemoteText(
           text = cardText("date", data.secondaryLabel),
           color = theme.secondaryText,
@@ -113,6 +145,24 @@ fun RemoteHaClock(
           style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
+        )
+      }
+      if (wordmark) {
+        RemoteText(
+          text = cardTitle(data.title!!),
+          color = theme.linkText,
+          fontSize = 30.rsp,
+          fontWeight = FontWeight.Black,
+          style =
+            RemoteTextStyle.Default.merge(
+              RemoteTextStyle(
+                fontFamily = RemoteFontFamily.SansSerif,
+                letterSpacing = 3.sp.asRemoteTextUnit(),
+              )
+            ),
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+          modifier = RemoteModifier.padding(top = 6.rdp),
         )
       }
     }
