@@ -90,7 +90,7 @@ class VerticalStackCardConverter : DesignedCardConverter() {
     // A fixed canvas (a launcher widget, a Wear slot) can't grow. Show only the children that fit
     // whole: a child cut off at the bottom edge would still take taps in the sliver left showing.
     val registry = LocalCardRegistry.current
-    val heights = all.map { registry.cardHeightDp(it, snapshot) }
+    val heights = all.map { stackChildHeightDp(it, snapshot, registry) }
     val capture = LocalWidgetCaptureSizeDp.current
     when {
       capture != null -> {
@@ -108,6 +108,34 @@ class VerticalStackCardConverter : DesignedCardConverter() {
         }
       else -> RemoteHaVerticalStack(modifier = modifier) { RenderChildren(all, snapshot) }
     }
+  }
+}
+
+/**
+ * [card]'s height as a stack child: a nested stack from its own children (a vertical one their sum
+ * with its gaps, a horizontal one its tallest), a grid from its rows of cells, and any other card
+ * its converter's natural height. Containers don't override `naturalHeightDp`, so its 160dp default
+ * would otherwise stand in for every nested container, however short its content.
+ */
+internal fun stackChildHeightDp(
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  registry: CardRegistry,
+): Int {
+  val children = childCards(card)
+  return when (card.type) {
+    CardTypes.VERTICAL_STACK ->
+      children.sumOf { stackChildHeightDp(it, snapshot, registry) } +
+        VERTICAL_STACK_GAP_DP * (children.size - 1).coerceAtLeast(0)
+    CardTypes.HORIZONTAL_STACK ->
+      children.maxOfOrNull { stackChildHeightDp(it, snapshot, registry) } ?: 0
+    CardTypes.GRID -> {
+      val columns = gridColumns(card).coerceAtLeast(1)
+      children.chunked(columns).sumOf { row ->
+        row.maxOf { stackChildHeightDp(it, snapshot, registry) }
+      }
+    }
+    else -> registry.cardHeightDp(card, snapshot)
   }
 }
 
