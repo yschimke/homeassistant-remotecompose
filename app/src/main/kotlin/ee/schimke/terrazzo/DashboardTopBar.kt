@@ -14,8 +14,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,7 +52,8 @@ import kotlinx.coroutines.delay
  * slot, usually a `DashboardSwitcher`) keeps the bar's width on a ~360 dp phone:
  * - the connection state is always a small coloured dot; the strip says the same thing in words (or
  *   shows progress) for every state but Connected, without taking width from the title;
- * - write mode is an [IconToggleButton] (pencil when writable, lock when read-only).
+ * - the controls lock is an [IconToggleButton] (a closed lock while locked, an open one while
+ *   unlocked).
  *
  * Every action is a 48 dp touch target and the bar adds a 16 dp title inset and a 4 dp trailing
  * pad, so the title gets `width − 20 dp − 48 dp × actions`: 148 dp on a 360 dp phone with the four
@@ -214,9 +215,10 @@ internal fun ConnectionStatusStrip(
 }
 
 /**
- * Session write-mode toggle: a 48 dp icon toggle showing a pencil when writes are enabled and a
- * lock when the dashboard is read-only. Screen readers get "Write mode" plus a Write / Read only
- * state.
+ * The controls lock (the session's write mode): a 48 dp icon toggle showing a closed lock while
+ * cards' controls are locked and an open one, in the primary colour, while they are unlocked. Not a
+ * pencil: that reads as "edit the dashboard", which is the editor's job. Screen readers get
+ * "Controls" plus a Locked / Unlocked state.
  */
 @Composable
 internal fun WriteModeToggle(
@@ -229,12 +231,12 @@ internal fun WriteModeToggle(
     onCheckedChange = onWriteModeChange,
     modifier =
       modifier.semantics {
-        contentDescription = "Write mode"
-        stateDescription = if (writeMode) "Write" else "Read only"
+        contentDescription = "Controls"
+        stateDescription = if (writeMode) "Unlocked" else "Locked"
       },
   ) {
     Icon(
-      imageVector = if (writeMode) Icons.Filled.Edit else Icons.Filled.Lock,
+      imageVector = if (writeMode) Icons.Filled.LockOpen else Icons.Filled.Lock,
       contentDescription = null,
     )
   }

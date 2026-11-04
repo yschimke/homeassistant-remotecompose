@@ -42,8 +42,12 @@ import kotlinx.coroutines.launch
  *
  * With [feedback], every action that changes something is also felt (and, if the user turned sounds
  * on, heard): a toggle-on / toggle-off for switches — [stateOf] tells which way a bare toggle flips
- * — a key tap for keypads, a confirm for an alarm, and a reject when read-only mode drops an action
+ * — a key tap for keypads, a confirm for an alarm, and a reject when locked controls drop an action
  * or the service call fails.
+ *
+ * A write dropped because controls are locked goes to [onLocked] with a `replay` that runs it as if
+ * they had been unlocked, so the host can offer to unlock right where the tap failed (and, for a
+ * low-risk action, still do what was tapped).
  *
  * In demo mode the dispatcher also evicts the [CardDocumentCache] so cards baking state into bytes
  * (e.g. the garage shutter card's `closedFraction`) re-encode against the new snapshot on the next
@@ -57,6 +61,7 @@ fun rememberDashboardActionDispatcher(
   stateOf: (String) -> String? = { null },
   onNavigate: (String) -> Unit = {},
   onMoreInfo: (String) -> Unit = {},
+  onLocked: (action: HaAction, replay: () -> Unit) -> Unit = { _, _ -> },
 ): HaActionDispatcher {
   val context = LocalContext.current
   val cache = LocalCardDocumentCache.current
@@ -68,6 +73,7 @@ fun rememberDashboardActionDispatcher(
   val stateOfState = rememberUpdatedState(stateOf)
   val onNavigateState = rememberUpdatedState(onNavigate)
   val onMoreInfoState = rememberUpdatedState(onMoreInfo)
+  val onLockedState = rememberUpdatedState(onLocked)
   return remember(session, context, cache, scope, logStore, feedback) {
     val core =
       DashboardActionDispatcher(
@@ -80,6 +86,7 @@ fun rememberDashboardActionDispatcher(
         onFailure = { feedback?.play(FeedbackCue.Reject) },
         onNavigate = { onNavigateState.value(it) },
         onMoreInfo = { onMoreInfoState.value(it) },
+        onLocked = { action, replay -> onLockedState.value(action, replay) },
       )
     // The keypad coordinator buffers per-key host actions and
     // translates ARM intents into a single `call_service` with the
@@ -91,7 +98,7 @@ fun rememberDashboardActionDispatcher(
         // Cue before dispatching: the feel belongs to the touch, not to the round trip.
         feedbackCueFor(action) { stateOfState.value(it) }
           ?.let { cue ->
-            // Read-only mode drops every write; a keypad key only fills the local buffer.
+            // Locked controls drop every write; a keypad key only fills the local buffer.
             val dropped = readOnlyState.value && cue != FeedbackCue.Key
             feedback.play(if (dropped) FeedbackCue.Reject else cue)
           }
@@ -110,6 +117,7 @@ private class DashboardActionDispatcher(
   private val onFailure: () -> Unit = {},
   private val onNavigate: (String) -> Unit = {},
   private val onMoreInfo: (String) -> Unit = {},
+  private val onLocked: (HaAction, () -> Unit) -> Unit = { _, _ -> },
 ) : HaActionDispatcher {
   override fun dispatch(action: HaAction) {
     // Log every dispatched action (before any network round-trip)
@@ -119,30 +127,11 @@ private class DashboardActionDispatcher(
     recordToLog(action)
     when (action) {
       is HaAction.Url -> launchUrl(action.url)
-      is HaAction.Toggle -> {
-        if (readOnly()) {
-          Log.i(TAG, "Read-only mode: dropping toggle for ${action.entityId}")
-          return
-        }
-        handleToggle(action.entityId)
-      }
-      is HaAction.CallService -> {
-        if (readOnly()) {
-          Log.i(TAG, "Read-only mode: dropping ${action.domain}.${action.service}")
-          return
-        }
-        handleCallService(action)
-      }
+      is HaAction.Toggle,
+      is HaAction.CallService -> runWrite(action)
       // A slider's release: a service call with the value it was dragged to; one released where it
       // rested (a tap) changes nothing and sends nothing.
-      is HaAction.SetValue -> {
-        val call = action.toCallService() ?: return
-        if (readOnly()) {
-          Log.i(TAG, "Read-only mode: dropping ${action.domain}.${action.service}")
-          return
-        }
-        handleCallService(call)
-      }
+      is HaAction.SetValue -> if (action.toCallService() != null) runWrite(action)
       // Navigation and more-info only show something: read-only mode keeps them.
       is HaAction.Navigate -> onNavigate(action.path)
       is HaAction.MoreInfo -> onMoreInfo(action.entityId)
@@ -154,6 +143,25 @@ private class DashboardActionDispatcher(
       HaAction.None -> Log.i(TAG, "Action not yet wired: $action")
       is HaAction.AlarmPin ->
         Log.i(TAG, "Alarm PIN action escaped coordinator for ${action.entityId}")
+    }
+  }
+
+  /** Runs a write, or hands it to [onLocked] while controls are locked. */
+  private fun runWrite(action: HaAction) {
+    if (readOnly()) {
+      Log.i(TAG, "Controls locked: dropping $action")
+      onLocked(action) { perform(action) }
+      return
+    }
+    perform(action)
+  }
+
+  private fun perform(action: HaAction) {
+    when (action) {
+      is HaAction.Toggle -> handleToggle(action.entityId)
+      is HaAction.CallService -> handleCallService(action)
+      is HaAction.SetValue -> action.toCallService()?.let(::handleCallService)
+      else -> Unit
     }
   }
 

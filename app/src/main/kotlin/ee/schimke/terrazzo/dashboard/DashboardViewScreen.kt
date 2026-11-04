@@ -189,6 +189,7 @@ fun DashboardViewScreen(
   onOpenDashboard: (urlPath: String?, viewPath: String?) -> Boolean = { _, _ -> false },
   onInitialViewShown: () -> Unit = {},
   connectionPending: Boolean = false,
+  onControlsLocked: (LockedAction) -> Unit = {},
 ) {
   val cache = LocalTerrazzoGraph.current.offlineCache
   // Seed from the session (demo mode's boards need no round trip) or
@@ -365,6 +366,10 @@ fun DashboardViewScreen(
       },
       onNavigate = navigate,
       onMoreInfo = { moreInfoEntity = it },
+      onLocked = { action, replay ->
+        val snapshot = (latestState.value as? DashboardState.Ready)?.snapshot
+        onControlsLocked(lockedAction(action, snapshot, replay))
+      },
     )
 
   CompositionLocalProvider(
