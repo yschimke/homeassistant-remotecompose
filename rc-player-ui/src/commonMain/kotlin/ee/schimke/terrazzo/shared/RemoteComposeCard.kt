@@ -57,6 +57,15 @@ private fun decodePlayableDocument(bytes: ByteArray): Result<RcDocument> = runCa
   }
 }
 
+/**
+ * The fonts a card may name that the host ships (a bundled face the device doesn't have); the
+ * player's default resolves the device's own. The app provides its bundled fonts at its root.
+ */
+val LocalRcTypefaceLoader =
+  androidx.compose.runtime.staticCompositionLocalOf {
+    ee.schimke.composeai.rcplayer.compose.RcTypefaceLoader.Default
+  }
+
 /** Common playback boundary. Live values update without recreating document animations. */
 @Composable
 fun RemoteComposeCard(
@@ -105,6 +114,7 @@ fun RemoteComposeCard(
           modifier = Modifier,
           namedValues = values,
           onEvent = { event -> runCatching { onEvent(event) }.onFailure(fail) },
+          typefaces = LocalRcTypefaceLoader.current,
           customComponents =
             ee.schimke.composeai.rcplayer.compose.rcInputComponents(
               inputDrafts,

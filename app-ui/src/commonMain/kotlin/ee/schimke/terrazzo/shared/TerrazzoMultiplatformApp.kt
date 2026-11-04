@@ -148,95 +148,101 @@ fun TerrazzoMultiplatformApp(
     var signOutFailed by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val active = connection
-    Surface(Modifier.fillMaxSize()) {
-      if (active == null) {
-        ConnectionScreen(busy, error, signInWithHomeAssistant) { url, token ->
-          scope.launch {
-            busy = true
-            error = null
-            val candidate = AppConnection(HaConfig(url.trimEnd('/'), token))
-            try {
-              candidate.client.connect()
-              connection = candidate
-            } catch (e: CancellationException) {
-              withContext(NonCancellable) { candidate.close() }
-              throw e
-            } catch (e: Exception) {
-              withContext(NonCancellable) { candidate.close() }
-              error = "Could not connect. Check the address, token, and network access."
-            } finally {
-              busy = false
+    // Cards may name a font the app bundles (Rugged Digital's Digital-7); every card player
+    // under the app resolves it here.
+    androidx.compose.runtime.CompositionLocalProvider(
+      LocalRcTypefaceLoader provides ee.schimke.ha.rc.HaTypefaceLoader
+    ) {
+      Surface(Modifier.fillMaxSize()) {
+        if (active == null) {
+          ConnectionScreen(busy, error, signInWithHomeAssistant) { url, token ->
+            scope.launch {
+              busy = true
+              error = null
+              val candidate = AppConnection(HaConfig(url.trimEnd('/'), token))
+              try {
+                candidate.client.connect()
+                connection = candidate
+              } catch (e: CancellationException) {
+                withContext(NonCancellable) { candidate.close() }
+                throw e
+              } catch (e: Exception) {
+                withContext(NonCancellable) { candidate.close() }
+                error = "Could not connect. Check the address, token, and network access."
+              } finally {
+                busy = false
+              }
             }
           }
-        }
-      } else {
-        key(active) {
-          LaunchedEffect(active) {
-            try {
-              kotlinx.coroutines.awaitCancellation()
-            } finally {
-              withContext(NonCancellable) { active.close() }
-            }
-          }
-          if (reportsWebOrigin && active.hosted) {
-            // On every connection, not just the first: the repair it raises doesn't survive an HA
-            // restart, and a report can fail while the connection drops.
+        } else {
+          key(active) {
             LaunchedEffect(active) {
-              active.client.state
-                .filter { it == HaClient.ConnectionState.Ready }
-                .collect {
-                  // Without the integration, or on an older one, there is nothing to ask.
-                  runCatching { active.client.reportTerrazzoWebOrigin() }
-                    .onFailure { if (it is CancellationException) throw it }
-                }
+              try {
+                kotlinx.coroutines.awaitCancellation()
+              } finally {
+                withContext(NonCancellable) { active.close() }
+              }
             }
-          }
-          DashboardShell(
-            active,
-            initialDashboardPath,
-            registerReturnHome,
-            signInRemembered = active.hosted && onSignOut != null,
-            onSignOut = {
-              if (!signingOut) {
-                signingOut = true
-                scope.launch {
-                  try {
-                    onSignOut?.invoke()
-                    CardAgentSessions.clear()
-                    connection = null
-                  } catch (e: CancellationException) {
-                    throw e
-                  } catch (_: Exception) {
-                    signOutFailed = true
-                  } finally {
-                    signingOut = false
+            if (reportsWebOrigin && active.hosted) {
+              // On every connection, not just the first: the repair it raises doesn't survive an HA
+              // restart, and a report can fail while the connection drops.
+              LaunchedEffect(active) {
+                active.client.state
+                  .filter { it == HaClient.ConnectionState.Ready }
+                  .collect {
+                    // Without the integration, or on an older one, there is nothing to ask.
+                    runCatching { active.client.reportTerrazzoWebOrigin() }
+                      .onFailure { if (it is CancellationException) throw it }
+                  }
+              }
+            }
+            DashboardShell(
+              active,
+              initialDashboardPath,
+              registerReturnHome,
+              signInRemembered = active.hosted && onSignOut != null,
+              onSignOut = {
+                if (!signingOut) {
+                  signingOut = true
+                  scope.launch {
+                    try {
+                      onSignOut?.invoke()
+                      CardAgentSessions.clear()
+                      connection = null
+                    } catch (e: CancellationException) {
+                      throw e
+                    } catch (_: Exception) {
+                      signOutFailed = true
+                    } finally {
+                      signingOut = false
+                    }
                   }
                 }
-              }
-            },
-            cardStyle = cardStyle,
-            onCardStyle = {
-              cardStyle = it
-              settings?.set(CARD_STYLE_KEY, it)
-            },
-            dark = dark,
-            isFullScreen = isFullScreen,
-            onToggleFullScreen = onToggleFullScreen,
-            settingsStorageLabel = settingsStorageLabel,
-            signInStorageLabel = signInStorageLabel,
-          )
+              },
+              cardStyle = cardStyle,
+              onCardStyle = {
+                cardStyle = it
+                settings?.set(CARD_STYLE_KEY, it)
+              },
+              dark = dark,
+              isFullScreen = isFullScreen,
+              onToggleFullScreen = onToggleFullScreen,
+              settingsStorageLabel = settingsStorageLabel,
+              signInStorageLabel = signInStorageLabel,
+            )
+          }
         }
       }
-    }
-    if (signOutFailed) {
-      AlertDialog(
-        onDismissRequest = { signOutFailed = false },
-        title = { Text("Could not sign out") },
-        text = {
-          Text("Your saved sign-in could not be removed. Check your connection and try again.")
-        },
-        confirmButton = { TextButton(onClick = { signOutFailed = false }) { Text("OK") } },
-      )
+      if (signOutFailed) {
+        AlertDialog(
+          onDismissRequest = { signOutFailed = false },
+          title = { Text("Could not sign out") },
+          text = {
+            Text("Your saved sign-in could not be removed. Check your connection and try again.")
+          },
+          confirmButton = { TextButton(onClick = { signOutFailed = false }) { Text("OK") } },
+        )
+      }
     }
   }
 }

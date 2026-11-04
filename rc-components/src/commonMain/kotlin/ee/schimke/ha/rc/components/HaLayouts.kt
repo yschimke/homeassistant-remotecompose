@@ -153,6 +153,11 @@ data class HaLayouts(
   val notes: HaNoteStyle = HaNoteStyle.Text,
   val keyFaces: Boolean = false,
   val clock: HaClockFace = HaClockFace.Text,
+  /**
+   * Whether a glance cell is a watch's complication window: its icon and value together in a small
+   * recessed LCD tile, greyscale, lit when on and dim when off (Rugged Digital).
+   */
+  val glanceComplication: Boolean = false,
   val entitiesGrid: Boolean = false,
   val slider: HaSliderStyle = HaSliderStyle.Track,
   val progressRing: HaProgressRing = HaProgressRing.Arc,

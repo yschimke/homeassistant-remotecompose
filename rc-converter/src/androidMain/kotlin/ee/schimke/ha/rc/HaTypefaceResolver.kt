@@ -5,6 +5,7 @@ import android.graphics.Typeface
 import androidx.compose.remote.player.core.platform.FontInstance
 import androidx.compose.remote.player.core.platform.TypefaceResolver
 import androidx.compose.remote.player.view.RemoteComposePlayer
+import ee.schimke.ha.rc.components.HaBundledFonts
 import java.io.File
 
 /**
@@ -13,28 +14,24 @@ import java.io.File
  * other name falls through to the player's own resolver.
  *
  * - `digital7` — Digital-7 Mono Italic (Style-7, free for non-commercial use), the segment face of
- *   the GShark watch face that the Rugged Digital kit is drawn from, with its designer.
+ *   the GShark watch face that the Rugged Digital kit is drawn from, with its designer. Its bytes
+ *   live in [HaBundledFonts], shared with the Compose players.
  */
 object HaFonts {
   /** The name a card uses for Digital-7 Mono Italic. */
   const val Digital7 = ee.schimke.ha.rc.components.HaDigital7Font
 
-  private val bundled = mapOf(Digital7 to "fonts/digital7.ttf")
   private val loaded = HashMap<String, Typeface?>()
 
   /** The bundled typeface for [name], or null when the app doesn't ship one. */
   @Synchronized
   fun typeface(context: Context, name: String): Typeface? {
-    val path = bundled[name] ?: return null
+    val bytes = HaBundledFonts.bytes(name) ?: return null
     return loaded.getOrPut(name) {
       runCatching {
-        // Typeface reads a file, not a stream: copy the resource out once per process.
+        // Typeface reads a file, not bytes: write the font out once per process.
         val file = File(context.cacheDir, "ha-font-$name.ttf")
-        if (!file.exists() || file.length() == 0L) {
-          HaFonts::class.java.getResourceAsStream(path)!!.use { input ->
-            file.outputStream().use { input.copyTo(it) }
-          }
-        }
+        if (!file.exists() || file.length() != bytes.size.toLong()) file.writeBytes(bytes)
         Typeface.createFromFile(file)
       }
         .getOrNull()

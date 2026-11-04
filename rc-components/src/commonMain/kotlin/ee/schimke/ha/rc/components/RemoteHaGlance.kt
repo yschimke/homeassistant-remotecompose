@@ -11,12 +11,16 @@ import androidx.compose.remote.creation.compose.layout.RemoteFlowRow
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.background
+import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
+import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
@@ -149,6 +153,10 @@ fun RemoteHaGlanceCell(
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   val look = entityLook(data.entityId, data.accent)
   val accent: RemoteColor = look.accent
+  if (haLayouts().glanceComplication && !compact) {
+    GlanceComplication(data, look, clickable, modifier)
+    return
+  }
   RemoteColumn(
     modifier =
       modifier
@@ -190,5 +198,63 @@ fun RemoteHaGlanceCell(
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,
     )
+  }
+}
+
+/**
+ * A glance cell as a watch's complication window: the name over a small recessed LCD tile holding a
+ * greyscale icon and the value. The icon is lit in the primary ink while the entity is on and dims
+ * to the secondary when off, as an LCD segment does; the tile is the window colour, as the clock's.
+ */
+@Composable
+@RemoteComposable
+private fun GlanceComplication(
+  data: HaGlanceCellData,
+  look: HaEntityLook,
+  clickable: RemoteModifier,
+  modifier: RemoteModifier,
+) {
+  val theme = haTheme()
+  val ink = look.isOn?.select(theme.primaryText, theme.secondaryText) ?: theme.primaryText
+  RemoteColumn(
+    modifier = modifier.then(clickable).padding(horizontal = HaSpace.XXS.rdp, vertical = 2.rdp),
+    horizontalAlignment = RemoteAlignment.CenterHorizontally,
+  ) {
+    RemoteText(
+      text = entityName(data.entityId, data.name),
+      color = look.dim(theme.secondaryText),
+      fontSize = HaType.Caption,
+      style = haTextStyle(),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+    )
+    RemoteColumn(
+      modifier =
+        RemoteModifier.padding(top = 3.rdp)
+          .clip(RemoteRoundedCornerShape(8.rdp))
+          .background(theme.dashboardBackground)
+          .border(1.rdp, theme.divider, RemoteRoundedCornerShape(8.rdp))
+          .padding(horizontal = 10.rdp, vertical = 5.rdp),
+      horizontalAlignment = RemoteAlignment.CenterHorizontally,
+    ) {
+      HaStateIcon(
+        icon = data.icon,
+        accent = data.accent,
+        look = look,
+        tint = look.dim(ink),
+        // Decorative: the name is drawn above it.
+        contentDescription = null,
+        modifier = RemoteModifier.size(20.rdp),
+      )
+      RemoteText(
+        text = data.state,
+        color = look.dim(theme.primaryText),
+        fontSize = HaType.Caption,
+        fontWeight = FontWeight.Bold,
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
   }
 }
