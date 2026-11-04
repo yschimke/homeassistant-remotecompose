@@ -194,17 +194,17 @@ class AndroidImeScrollingTest {
     val draft = "Make the last field easy to reach\nKeep the reading clear\nKeep Send reachable"
     field.performTextInput(draft)
     field.assertTextContains(draft)
+    // Typing brings up the keyboard's suggestion strip, which shortens the window again: scroll
+    // against the settled keyboard, as the person would see it.
+    scrollToAboveKeyboard(field)
     captureWindowEvidence("agent-session-focused-ime")
-    assertAboveKeyboard(field)
     val action = compose.onNodeWithText("Send")
-    action.performScrollTo().assertIsDisplayed()
+    scrollToAboveKeyboard(action)
     captureWindowEvidence("agent-session-bottom-ime")
-    assertAboveKeyboard(action)
     if (InstrumentationRegistry.getArguments().getString("expectedRotation") == "1") {
       // A short window scrolls the toolbar with the conversation.
       val back = compose.onNodeWithContentDescription("Back")
-      back.performScrollTo().assertIsDisplayed()
-      assertAboveKeyboard(back)
+      scrollToAboveKeyboard(back)
       captureWindowEvidence("agent-session-compact-back-ime")
       back.performClick()
       compose.runOnIdle { assertTrue("The toolbar must retain Back", backedOut) }
