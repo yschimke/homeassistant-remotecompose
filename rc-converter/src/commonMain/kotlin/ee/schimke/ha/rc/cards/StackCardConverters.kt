@@ -27,6 +27,7 @@ import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.SystemHaClock
 import ee.schimke.ha.rc.UNSUPPORTED_CARD_TYPE
+import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.childrenDataSignature
 import ee.schimke.ha.rc.components.HORIZONTAL_STACK_GAP_DP
 import ee.schimke.ha.rc.components.HaAction
@@ -81,9 +82,53 @@ class VerticalStackCardConverter : DesignedCardConverter() {
    */
   @Composable
   internal fun Draw(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    RemoteHaVerticalStack(modifier = modifier) { RenderChildren(card, snapshot) }
+    val all = childCards(card)
+    if (LocalCardSizeMode.current != CardSizeMode.Fixed || all.size < 2) {
+      RemoteHaVerticalStack(modifier = modifier) { RenderChildren(all, snapshot) }
+      return
+    }
+    // A fixed canvas (a launcher widget, a Wear slot) can't grow. Show only the children that fit
+    // whole: a child cut off at the bottom edge would still take taps in the sliver left showing.
+    val registry = LocalCardRegistry.current
+    val heights = all.map { registry.cardHeightDp(it, snapshot) }
+    val capture = LocalWidgetCaptureSizeDp.current
+    when {
+      capture != null -> {
+        val shown = fittingChildren(heights, capture.heightDp)
+        RemoteHaVerticalStack(modifier = modifier) { RenderChildren(all.take(shown), snapshot) }
+      }
+      // A Wear slot's height is only known at playback: one child, or two once both fit.
+      LocalFixedCanvasAxis.current == BreakpointAxis.Height ->
+        RemoteSizeBreakpoint(
+          thresholdsDp = intArrayOf(heights[0] + VERTICAL_STACK_GAP_DP + heights[1]),
+          modifier = modifier,
+          axis = BreakpointAxis.Height,
+        ) { tier ->
+          RemoteHaVerticalStack { RenderChildren(all.take(tier + 1), snapshot) }
+        }
+      else -> RemoteHaVerticalStack(modifier = modifier) { RenderChildren(all, snapshot) }
+    }
   }
 }
+
+/**
+ * How many of a vertical stack's children, [heightsDp] tall, fit whole in [availableDp]: one at
+ * least.
+ */
+internal fun fittingChildren(heightsDp: List<Int>, availableDp: Int): Int {
+  var used = 0
+  var count = 0
+  for (h in heightsDp) {
+    val next = used + (if (count > 0) VERTICAL_STACK_GAP_DP else 0) + h
+    if (next > availableDp) break
+    used = next
+    count++
+  }
+  return count.coerceAtLeast(1)
+}
+
+/** The gap [RemoteHaVerticalStack] leaves between children. */
+private const val VERTICAL_STACK_GAP_DP = 8
 
 class HorizontalStackCardConverter : DesignedCardConverter() {
   override val cardType: String = CardTypes.HORIZONTAL_STACK
@@ -399,12 +444,12 @@ internal fun gridSquare(card: CardConfig): Boolean =
  * cell, so a stack nested in a square grid doesn't pass the square default on to its children.
  */
 @Composable
-private fun RenderChildren(card: CardConfig, snapshot: HaSnapshot) {
+private fun RenderChildren(children: List<CardConfig>, snapshot: HaSnapshot) {
   CompositionLocalProvider(
     LocalGridSquareCells provides false,
     LocalInCardContainer provides true,
   ) {
-    childCards(card).forEachIndexed { k, child ->
+    children.forEachIndexed { k, child ->
       ProvideChildCardBindings(k) { RenderChild(child, snapshot) }
     }
   }

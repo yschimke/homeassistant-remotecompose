@@ -45,6 +45,12 @@ import java.time.ZonedDateTime
 // preview, so each publishes its `.rc` sidecar.
 // ---------------------------------------------------------------------------------------------
 
+/**
+ * The showcase's height: the whole sheet, the entities card's 48dp rows included. A shorter preview
+ * squeezes the last card's rows below a tap target, which the accessibility check reports.
+ */
+private const val UberShowcaseHeightDp = 720
+
 private val PreviewNow: ZonedDateTime = ZonedDateTime.of(2026, 5, 5, 10, 8, 0, 0, ZoneOffset.UTC)
 
 @Composable
@@ -135,43 +141,56 @@ private fun MeasurementCard(modifier: RemoteModifier, content: @Composable () ->
   }
 }
 
-@Preview(name = "uber: Classic (light)", widthDp = 360, heightDp = 640, showBackground = false)
+@Preview(
+  name = "uber: Classic (light)",
+  widthDp = 360,
+  heightDp = UberShowcaseHeightDp,
+  showBackground = false,
+)
 @Composable
 fun Uber_Classic_Light() = UberShowcase(HaUberTheme.Classic, darkTheme = false)
 
-@Preview(name = "uber: Material 3 Expressive (light)", widthDp = 360, heightDp = 640)
+@Preview(
+  name = "uber: Material 3 Expressive (light)",
+  widthDp = 360,
+  heightDp = UberShowcaseHeightDp,
+)
 @Composable
 fun Uber_Expressive_Light() = UberShowcase(HaUberTheme.Expressive, darkTheme = false)
 
-@Preview(name = "uber: Material 3 Expressive (dark)", widthDp = 360, heightDp = 640)
+@Preview(
+  name = "uber: Material 3 Expressive (dark)",
+  widthDp = 360,
+  heightDp = UberShowcaseHeightDp,
+)
 @Composable
 fun Uber_Expressive_Dark() = UberShowcase(HaUberTheme.Expressive, darkTheme = true)
 
-@Preview(name = "uber: Trinitron", widthDp = 360, heightDp = 640)
+@Preview(name = "uber: Trinitron", widthDp = 360, heightDp = UberShowcaseHeightDp)
 @Composable
 fun Uber_Trinitron() = UberShowcase(HaUberTheme.Trinitron, darkTheme = true)
 
-@Preview(name = "uber: LCD (reflective)", widthDp = 360, heightDp = 640)
+@Preview(name = "uber: LCD (reflective)", widthDp = 360, heightDp = UberShowcaseHeightDp)
 @Composable
 fun Uber_Lcd_Light() = UberShowcase(HaUberTheme.Lcd, darkTheme = false)
 
-@Preview(name = "uber: LCD (Indiglo backlight)", widthDp = 360, heightDp = 640)
+@Preview(name = "uber: LCD (Indiglo backlight)", widthDp = 360, heightDp = UberShowcaseHeightDp)
 @Composable
 fun Uber_Lcd_Dark() = UberShowcase(HaUberTheme.Lcd, darkTheme = true)
 
-@Preview(name = "uber: Braun (light)", widthDp = 360, heightDp = 640)
+@Preview(name = "uber: Braun (light)", widthDp = 360, heightDp = UberShowcaseHeightDp)
 @Composable
 fun Uber_Braun_Light() = UberShowcase(HaUberTheme.Braun, darkTheme = false)
 
-@Preview(name = "uber: Braun (dark)", widthDp = 360, heightDp = 640)
+@Preview(name = "uber: Braun (dark)", widthDp = 360, heightDp = UberShowcaseHeightDp)
 @Composable
 fun Uber_Braun_Dark() = UberShowcase(HaUberTheme.Braun, darkTheme = true)
 
-@Preview(name = "uber: Nixie", widthDp = 360, heightDp = 640)
+@Preview(name = "uber: Nixie", widthDp = 360, heightDp = UberShowcaseHeightDp)
 @Composable
 fun Uber_Nixie() = UberShowcase(HaUberTheme.Nixie, darkTheme = true)
 
-@Preview(name = "uber: Console", widthDp = 360, heightDp = 640)
+@Preview(name = "uber: Console", widthDp = 360, heightDp = UberShowcaseHeightDp)
 @Composable
 fun Uber_Console() = UberShowcase(HaUberTheme.Console, darkTheme = true)
 
