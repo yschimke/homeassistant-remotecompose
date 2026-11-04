@@ -61,6 +61,10 @@ fun cardChrome(
   val clipped =
     if (style.material == HaSurfaceMaterial.PaintedMetal) filled.background(panelSheen())
     else if (style.material == HaSurfaceMaterial.BirchFrame) filled.then(ikeaFrameChrome(border))
+    else if (style.material == HaSurfaceMaterial.MeshPlate)
+      filled.background(
+        meshPlateBrush(LocalHaUberTheme.current.let { it.theme.palette(it.darkTheme).isDark })
+      )
     else if (haLayouts().cardFrame)
       filled.then(communityFrame(LocalHaUberTheme.current.theme.visuals, border))
     else filled

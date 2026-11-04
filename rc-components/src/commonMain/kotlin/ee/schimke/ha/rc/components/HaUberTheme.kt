@@ -113,6 +113,11 @@ enum class HaSurfaceMaterial {
   PaintedMetal,
   /** Laminated furniture frame with a recessed face and a fine timber edge. */
   BirchFrame,
+  /**
+   * A rugged watch's face plate: a fine perforated mesh pressed into the card, each hole a dark pit
+   * with a faint lit lower lip, tiled over whatever colour the card is.
+   */
+  MeshPlate,
 }
 
 /**

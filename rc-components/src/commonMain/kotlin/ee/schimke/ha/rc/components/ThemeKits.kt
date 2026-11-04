@@ -232,10 +232,17 @@ internal object ThemeKits {
           divider = 0xFF2C3036,
           placeholder = 0xFF24282D,
         ),
-      shape = HaCardShapeStyle(cornerDp = 10, borderDp = 1, controlCornerDp = 4, squareKnob = true),
+      shape =
+        HaCardShapeStyle(
+          cornerDp = 10,
+          borderDp = 1,
+          controlCornerDp = 4,
+          squareKnob = true,
+          material = HaSurfaceMaterial.MeshPlate,
+        ),
       visuals = HaVisualFamily.Lcd,
       readout = HaReadoutStyle.Screen,
-      fontFamily = RemoteFontFamily.Monospace,
+      fontFamily = RemoteFontFamily.SansSerif,
       valueWeight = FontWeight.Bold,
       motion = HaMotion.Instrument,
       grammar =
