@@ -61,8 +61,11 @@ there is no relevant request, call `start_edit_session` with the dashboard's `ur
 `list_dashboards`; the default dashboard has none) and the request. The person then sees the
 session in the phone app or the panel.
 
-1. `get_edit_session` with the `session_id`: the request, the dashboard as it is now, the latest
-   draft and the person's notes.
+1. `get_edit_session` with the `session_id`: the request, the session's `scope`, the dashboard as
+   it is now, the latest draft and the person's notes. The opening request is often just "work on
+   this with me": say hello with `send_message` and follow the person's comments. A `section`
+   scope (`view`, `section`) means change only `views[view].sections[section]`; still submit the
+   complete dashboard, and the integration refuses a draft that changes anything else.
 2. `get_card_guide` for the card types harc draws and how to size them; `find_entities` for the
    home's entities (search by name, area words or domain).
 3. `submit_draft` with the **complete** new dashboard config and a one-line `summary`. The

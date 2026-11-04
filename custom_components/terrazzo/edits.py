@@ -127,10 +127,10 @@ def _visible_session(hass, user, session_id):
     return edits, session
 
 
-async def async_start(hass, user, url_path, request):
+async def async_start(hass, user, url_path, request, scope=None):
     edits = edits_of(hass)
     baseline = await current_config(dashboard_for(hass, user, url_path), url_path)
-    session = edits.sessions.create(url_path or None, request, baseline, user.id, _now())
+    session = edits.sessions.create(url_path or None, request, baseline, user.id, _now(), scope)
     edits.changed(session)
     return session
 
@@ -474,12 +474,15 @@ def _session_reply(hass, session, with_prompt=False, user=None):
         vol.Required("type"): "terrazzo/edit/start",
         vol.Optional("url_path"): vol.Any(None, str),
         vol.Optional("request"): str,
+        vol.Optional("scope"): vol.Any(None, dict),
     }
 )
 @websocket_api.async_response
 async def ws_start(hass, connection, msg):
     try:
-        session = await async_start(hass, connection.user, msg.get("url_path"), msg.get("request"))
+        session = await async_start(
+            hass, connection.user, msg.get("url_path"), msg.get("request"), msg.get("scope")
+        )
     except SessionError as failure:
         _send_failure(connection, msg, failure)
         return
@@ -489,7 +492,11 @@ async def ws_start(hass, connection, msg):
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "terrazzo/edit/list", vol.Optional("url_path"): vol.Any(None, str)}
+    {
+        vol.Required("type"): "terrazzo/edit/list",
+        vol.Optional("url_path"): vol.Any(None, str),
+        vol.Optional("include_closed"): bool,
+    }
 )
 @callback
 def ws_list(hass, connection, msg):
@@ -499,7 +506,9 @@ def ws_list(hass, connection, msg):
     except SessionError as failure:
         _send_failure(connection, msg, failure)
         return
-    sessions = edits.sessions.for_dashboard(msg.get("url_path") or None, _now())
+    sessions = edits.sessions.for_dashboard(
+        msg.get("url_path") or None, _now(), msg.get("include_closed", False)
+    )
     connection.send_result(
         msg["id"], {"sessions": [_summary_for(s, connection.user) for s in sessions]}
     )

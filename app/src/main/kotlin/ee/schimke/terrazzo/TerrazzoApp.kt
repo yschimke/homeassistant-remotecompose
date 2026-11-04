@@ -500,6 +500,8 @@ private fun DashboardsRoot(
   var styleTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
   // The dashboard editor for the opened dashboard, and a count of saves that re-keys it to reload.
   var editorOpen by remember { mutableStateOf(false) }
+  // The agent sessions screen, and the section it was asked about (null: the whole dashboard).
+  var agentSessions by remember { mutableStateOf<AgentSessionsTarget?>(null) }
   var dashboardSaves by remember { mutableIntStateOf(0) }
   val studioServer by
     graph.preferencesStore.designServerUrl.collectAsState(initial = "https://ha.coo.ee/designs/v1")
@@ -709,7 +711,25 @@ private fun DashboardsRoot(
 
   val historyOverlay = historyTarget
   val studioOverlay = studioTarget
-  if (editorOpen) {
+  val phoneAgentEdits = ee.schimke.terrazzo.dashboard.rememberPhoneAgentEdits(session)
+  val sessionsTarget = agentSessions
+  if (sessionsTarget != null && phoneAgentEdits != null) {
+    ee.schimke.terrazzo.dashboard.AgentSessionsScreen(
+      session = session,
+      edits = phoneAgentEdits,
+      urlPath = openedValue,
+      title = readyDashboards.firstOrNull { it.urlPath == openedValue }?.title,
+      saveBlockedReason =
+        when {
+          session is DemoHaSession -> "Demo dashboards can't be saved."
+          readOnly -> "Turn on write mode to save."
+          else -> null
+        },
+      startScope = sessionsTarget.scope,
+      onBack = { agentSessions = null },
+      onApplied = { dashboardSaves++ },
+    )
+  } else if (editorOpen) {
     DashboardEditorScreen(
       session = session,
       urlPath = openedValue,
@@ -821,6 +841,9 @@ private fun DashboardsRoot(
               onSignOut = onSignOut,
               onInstallOnWatch = installOnWatch,
               onEditDashboard = { editorOpen = true },
+              onAskAgent =
+                if (phoneAgentEdits != null) ({ agentSessions = AgentSessionsTarget(null) })
+                else null,
               onManageDashboards = onManageDashboards,
               onOpenRoom = onOpenRoom,
             )
@@ -868,6 +891,15 @@ private fun DashboardsRoot(
           },
           // Once shown, the view isn't asked for again when the screen is recreated.
           onInitialViewShown = { openedView = null },
+          onAskAgentAboutSection =
+            if (phoneAgentEdits != null)
+              ({ view, section, title ->
+                agentSessions =
+                  AgentSessionsTarget(
+                    ee.schimke.ha.client.dashboard.EditScope.section(view, section, title)
+                  )
+              })
+            else null,
         )
       }
     }
@@ -933,3 +965,6 @@ private fun SessionConnectionStatus.toLogStatus():
     SessionConnectionStatus.Disconnected ->
       ee.schimke.terrazzo.core.logs.LogConnectionStatus.Disconnected
   }
+
+/** What the agent sessions screen opens on: a section's session, or the list ([scope] null). */
+private data class AgentSessionsTarget(val scope: ee.schimke.ha.client.dashboard.EditScope?)

@@ -53,6 +53,10 @@ class CardStudioLayoutTest {
     )
     // UI Builder is the remembered detour; one tap goes back to asking the agent.
     compose.onNodeWithText("Ask your agent instead").performScrollTo().performClick()
-    compose.onNodeWithText("Send to your agent").performScrollTo().assertIsDisplayed()
+    // Back with the agent, its session starts by itself: nothing to type first.
+    compose.waitUntil(5_000) {
+      compose.onAllNodesWithText("Starting a session…").fetchSemanticsNodes().isNotEmpty() ||
+        compose.onAllNodesWithText("New session").fetchSemanticsNodes().isNotEmpty()
+    }
   }
 }

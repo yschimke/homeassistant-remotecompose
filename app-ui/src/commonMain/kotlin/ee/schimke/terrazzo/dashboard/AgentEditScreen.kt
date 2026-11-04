@@ -9,13 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -23,7 +20,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -43,17 +39,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.layer.drawLayer
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.HaCommandException
 import ee.schimke.ha.client.agent.AgentLiveControls
 import ee.schimke.ha.client.agent.AgentPresence
-import ee.schimke.ha.client.agent.AgentRelayClient
 import ee.schimke.ha.client.agent.AgentRelayMessage
 import ee.schimke.ha.client.agent.AgentRelayState
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
 import ee.schimke.ha.client.dashboard.DashboardConflictException
+import ee.schimke.ha.client.dashboard.EditScope
+import ee.schimke.ha.client.dashboard.openingRequest
+import ee.schimke.ha.client.dashboard.scopeLabel
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardKey
 import ee.schimke.ha.model.Dashboard
@@ -70,16 +68,18 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
 /**
- * Ask an agent to change a dashboard, through the Terrazzo integration's edit sessions
- * (docs/architecture/dashboard-editing.md). The person writes a request and hands the agent the
- * prompt Home Assistant returns — the MCP endpoint and the session id, never a token or the
- * dashboard. The screen then watches the session: each draft the agent submits is drawn with the
- * home's real cards and live states ([renderCard], the dashboard's own renderer), and can be
- * applied (Home Assistant allows administrators only, and only while the dashboard still holds the
- * config the session started from), answered with a note, or discarded. One undo is kept.
+ * Work on a dashboard with agents, in sessions (docs/architecture/agent-sessions.md). A session has
+ * a scope, the whole dashboard or one section ([startScope]), and opens straight into its preview:
+ * there is nothing to fill in first. The person talks to the agent in the conversation and pins
+ * comments to cards on the preview; the agent's drafts replace the preview as they arrive, drawn
+ * with the home's real cards and live states ([renderCard]). **Copy prompt** hands the session to
+ * one or more agents; a connected agent gets it by itself. **Use it** applies a draft (Home
+ * Assistant allows administrators only, and only while the dashboard still holds the config the
+ * session started from); **Stop** ends it. One undo is kept.
  *
+ * Without [startScope] the screen opens on the dashboard's sessions, open and recent, newest first.
  * The phone and the Terrazzo panel both show this; [onSharePrompt] is the platform's share sheet or
- * clipboard. [writeBlockedReason] (the phone's read-only mode, say) withholds Apply and Undo: the
+ * clipboard. [writeBlockedReason] (the phone's read-only mode, say) withholds Use it and Undo: a
  * session can still be started, drafted and reviewed.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,24 +94,23 @@ fun AgentEditScreen(
   onApplied: () -> Unit,
   writeBlockedReason: String? = null,
   cloudServer: String? = null,
-  /** Another way to connect an agent, under Advanced: its label and how to switch to it. */
-  alternative: Pair<String, () -> Unit>? = null,
+  /** Open straight into a session about this (an open one if there is, else a new one). */
+  startScope: EditScope? = null,
   /** A session to open at once: picked up from the dashboard's draft bar. */
   initialSessionId: String? = null,
   /**
    * Back to the dashboard, which keeps showing the session's drafts as they come
-   * ([DashboardAgentDraft]): Back and sharing the prompt return there once a session is open. Null
-   * where the dashboard doesn't show drafts, and Back leaves the session for the start screen.
+   * ([DashboardAgentDraft]): where a session opened from there goes back. Null where the dashboard
+   * doesn't show drafts.
    */
   onDashboard: (() -> Unit)? = null,
   renderCard: @Composable (CardKey, CardConfig) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
   val snackbars = remember { SnackbarHostState() }
-  // Sessions through the design server's relay join an agent by code and talk to it live.
+  // Sessions through the design server's relay: presence and the conversation, live.
   val live = edits as? AgentLiveControls
   var sessionId by remember(edits, urlPath) { mutableStateOf(initialSessionId) }
-  var prompt by remember(edits, urlPath) { mutableStateOf<String?>(null) }
   var session by remember(edits, urlPath) { mutableStateOf<AgentEditSession?>(null) }
   // When the last session reply arrived, and a clock ticking past it: a direct agent's presence
   // ages by elapsed time even when no session event comes (an agent that went quiet sends none).
@@ -151,11 +150,31 @@ fun AgentEditScreen(
     }
   }
 
-  // Opened on a session: its prompt, for an agent that hasn't joined yet.
-  LaunchedEffect(edits, initialSessionId) {
-    val resumed = initialSessionId ?: return@LaunchedEffect
-    runCatching { edits.resume(resumed) }.getOrNull()?.let { prompt = it.prompt.ifBlank { null } }
+  suspend fun open(about: EditScope?) {
+    // Nothing typed: the opening says what the session is about; the person says the rest.
+    val started = edits.start(urlPath, about.openingRequest(title), about)
+    session = started.session
+    sessionId = started.session.id
   }
+
+  // Asked from a section (or a dashboard's own "Ask your agent"): straight into its session.
+  var opened by remember(edits, urlPath, startScope) { mutableStateOf(false) }
+  LaunchedEffect(edits, urlPath, startScope) {
+    if (startScope == null || opened) return@LaunchedEffect
+    opened = true
+    run {
+      val existing = runCatching {
+        edits.open(urlPath)
+      }
+        .getOrNull()
+        ?.firstOrNull { it.scope sameAs startScope }
+      if (existing != null) {
+        session = existing
+        sessionId = existing.id
+      } else open(startScope)
+    }
+  }
+
   val id = sessionId
   LaunchedEffect(edits, id) {
     if (id == null) return@LaunchedEffect
@@ -181,17 +200,28 @@ fun AgentEditScreen(
     }
   }
 
+  val current = session?.takeIf { it.id == id }
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Ask your agent", maxLines = 1) },
+        title = {
+          Text(
+            current?.scopeLabel(title) ?: "Agent sessions",
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+        },
         navigationIcon = {
           IconButton(
             onClick = {
               when {
-                sessionId != null && onDashboard != null && session?.isOpen != false ->
+                // Opened from the dashboard's draft bar or a section: back there.
+                sessionId != null && sessionId == initialSessionId && onDashboard != null ->
                   onDashboard()
-                sessionId != null -> sessionId = null
+                sessionId != null && startScope == null && initialSessionId == null -> {
+                  sessionId = null
+                  session = null
+                }
                 else -> onBack()
               }
             }
@@ -199,83 +229,61 @@ fun AgentEditScreen(
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
           }
         },
+        actions = {
+          if (current?.isOpen == true)
+            TextButton(
+              enabled = !busy,
+              onClick = {
+                run {
+                  onSharePrompt(edits.prompt(current.id))
+                  tell("Prompt copied. Give it to one or more agents.")
+                }
+              },
+            ) {
+              Text("Copy prompt")
+            }
+        },
       )
     },
     snackbarHost = { SnackbarHost(snackbars) },
   ) { padding ->
     Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
-      val current = session?.takeIf { it.id == id }
       when {
-        id == null ->
-          StartSession(
+        id == null && startScope == null ->
+          SessionList(
             edits = edits,
             urlPath = urlPath,
             title = title,
             busy = busy,
             cloudServer = cloudServer,
             onCopy = onSharePrompt,
-            alternative = alternative,
-            onStart = { request ->
-              run {
-                val started = edits.start(urlPath, request)
-                session = started.session
-                prompt = started.prompt.ifBlank { null }
-                sessionId = started.session.id
-              }
-            },
-            onResume = { resumed ->
-              run {
-                val handoff = edits.resume(resumed.id)
-                session = handoff.session
-                prompt = handoff.prompt.ifBlank { null }
-                sessionId = handoff.session.id
-              }
+            onNew = { run { open(null) } },
+            onOpen = { picked ->
+              session = picked
+              sessionId = picked.id
             },
           )
-        current == null -> Text(problem ?: "Loading the edit session…", Modifier.padding(24.dp))
+        current == null -> Text(problem ?: "Opening the session…", Modifier.padding(24.dp))
         else ->
           SessionReview(
             session = current,
-            // An agent signed in to Home Assistant directly has no relay; the session itself
-            // carries its presence and messages once it has joined.
+            // A session not relayed by this device (an agent signed in to Home Assistant, or
+            // another device) carries its presence and messages itself.
             live =
-              live?.live(current.id)?.collectAsState()?.value ?: directLive(current, sinceReply),
-            agentListening = current.agentListening && sinceReply < LISTENING_SECONDS,
+              live?.live(current.id)?.collectAsState()?.value
+                ?: directLive(current, sinceReply)
+                ?: pendingLive(current, current.agentListening && sinceReply < LISTENING_SECONDS),
             liveBusy = busy,
-            onCopyInvite = { code ->
-              onSharePrompt(
-                AgentRelayClient.invite(
-                  requireNotNull(live).relayServer,
-                  code,
-                  "my ${title ?: "Home Assistant"} dashboard",
-                )
-              )
-              tell("Invite copied. Paste it to your agent.")
-            },
-            onNewCode = { run { requireNotNull(live).newJoinCode(current.id) } },
-            onClaim = { code ->
-              run {
-                requireNotNull(live).claim(current.id, code)
-                tell("Agent connected.")
-              }
-            },
             onComment = { text, target ->
               run {
-                if (live != null) live.comment(current.id, text, target)
+                if (live != null) edits.note(current.id, text, target)
                 else session = edits.note(current.id, text, target)
               }
             },
-            prompt = prompt,
             problem = problem,
             snapshot = snapshot,
             busy = busy,
             writeBlockedReason = writeBlockedReason,
-            onSharePrompt = { text ->
-              onSharePrompt(text)
-              // The draft shows on the dashboard as the agent works: go back there to watch it.
-              onDashboard?.invoke()
-            },
-            cloud = cloudServer != null,
             onApply = { draft ->
               run {
                 session = edits.apply(current.id, draft.id)
@@ -289,7 +297,6 @@ fun AgentEditScreen(
                 onApplied()
               }
             },
-            onNote = { text -> run { session = edits.note(current.id, text) } },
             // Best effort, quietly: the agent sees the draft as drawn here when it asks.
             onRender = { draftId, png ->
               scope.launch { runCatching { edits.shareRender(current.id, draftId, png) } }
@@ -297,6 +304,7 @@ fun AgentEditScreen(
             onDiscard = {
               run {
                 edits.discard(current.id)
+                if (startScope != null) onBack()
                 sessionId = null
                 session = null
               }
@@ -306,6 +314,13 @@ fun AgentEditScreen(
       }
     }
   }
+}
+
+/** Whether two scopes name the same part of a dashboard; a null scope is the whole of it. */
+internal infix fun EditScope?.sameAs(other: EditScope?): Boolean {
+  val a = this?.takeIf { it.isSection }
+  val b = other?.takeIf { it.isSection }
+  return a?.view == b?.view && a?.section == b?.section
 }
 
 /** What to tell the person when Home Assistant refuses an edit-session command. */
@@ -320,74 +335,61 @@ internal fun agentEditFailure(e: Exception): String =
     else -> e.message ?: "Home Assistant didn't answer."
   }
 
+/** A dashboard's sessions, open and recent, and the one way to start another. */
 @Composable
-private fun StartSession(
+private fun SessionList(
   edits: AgentEdits,
   urlPath: String?,
   title: String?,
   busy: Boolean,
   cloudServer: String?,
   onCopy: (String) -> Unit,
-  alternative: Pair<String, () -> Unit>?,
-  onStart: (String) -> Unit,
-  onResume: (AgentEditSession) -> Unit,
+  onNew: () -> Unit,
+  onOpen: (AgentEditSession) -> Unit,
 ) {
-  var request by remember { mutableStateOf("") }
-  var open by remember(edits, urlPath) { mutableStateOf<List<AgentEditSession>>(emptyList()) }
-  LaunchedEffect(edits, urlPath) { open = runCatching { edits.open(urlPath) }.getOrDefault(open) }
+  var sessions by remember(edits, urlPath) { mutableStateOf<List<AgentEditSession>?>(null) }
+  LaunchedEffect(edits, urlPath) {
+    sessions = runCatching { edits.recent(urlPath) }.getOrDefault(sessions.orEmpty())
+  }
   Column(
     Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
     verticalArrangement = Arrangement.spacedBy(12.dp),
   ) {
-    Text(
-      "What should change on ${title ?: "this dashboard"}?",
-      style = MaterialTheme.typography.titleMedium,
-    )
-    Text(
-      if (cloudServer == null)
-        "Home Assistant opens an edit session and gives you a prompt for your AI assistant. The " +
-          "assistant signs in to Home Assistant itself and can only submit drafts: you see each one " +
-          "here, drawn with your cards, before anything changes."
-      else
-        "Your dashboard configuration and request will be sent to $cloudServer and shared with " +
-          "your chosen agent. The agent does not get your Home Assistant login. You review and " +
-          "apply drafts here; Home Assistant checks your permissions and whether the dashboard changed. " +
-          "The configuration may contain private data. Your connected agent gets the request at " +
-          "once (without one, you get a short code to give it), and you talk to it here while it " +
-          "works. The request ends an hour after the last activity, after a day at most, or when " +
-          "you discard it.",
-      style = MaterialTheme.typography.bodyMedium,
-      color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    OutlinedTextField(
-      value = request,
-      onValueChange = { request = it },
-      label = { Text("Request") },
-      placeholder = { Text("A garden section with soil moisture charts") },
-      modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp).heightIn(min = 96.dp),
-    )
-    Button(
-      enabled = !busy && (cloudServer == null || request.isNotBlank()),
-      onClick = { onStart(request) },
-    ) {
-      Text("Send to your agent")
-    }
-    // The setup phase: once an agent is connected, the request goes straight to it. Below Send: it
-    // changes as the agent connects, and must not move the field being typed in.
+    Button(enabled = !busy, onClick = onNew) { Text("New session") }
+    // Connect once; after that a new session goes straight to the agent.
     if (cloudServer != null) AgentConnection(cloudServer, onCopy)
-    alternative?.let { (label, switch) -> TextButton(onClick = switch) { Text(label) } }
-    if (open.isNotEmpty()) {
-      Text("Open sessions", style = MaterialTheme.typography.titleSmall)
-      open.forEach { s ->
-        OutlinedButton(onClick = { onResume(s) }, modifier = Modifier.fillMaxWidth()) {
-          Text(
-            s.request.ifBlank { "No request" } +
-              " · ${s.drafts.size} draft${if (s.drafts.size == 1) "" else "s"}",
-            maxLines = 1,
-          )
+    val listed = sessions
+    when {
+      listed == null ->
+        Text("Loading sessions…", color = MaterialTheme.colorScheme.onSurfaceVariant)
+      listed.isEmpty() ->
+        Text(
+          "No sessions on ${title ?: "this dashboard"} yet.",
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+      else ->
+        listed.forEach { s ->
+          OutlinedButton(onClick = { onOpen(s) }, modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.fillMaxWidth()) {
+              Text(s.scopeLabel(title), style = MaterialTheme.typography.titleSmall, maxLines = 1)
+              Text(sessionLine(s), style = MaterialTheme.typography.bodySmall, maxLines = 1)
+            }
+          }
         }
-      }
     }
+  }
+}
+
+/** A session's state in a few words, for the list. */
+internal fun sessionLine(session: AgentEditSession): String {
+  val drafts = session.drafts.size
+  val counted = if (drafts == 0) "no draft yet" else "$drafts draft${if (drafts == 1) "" else "s"}"
+  val status = session.agent?.status?.takeIf { it.isNotBlank() }
+  return when {
+    session.isApplied -> "In use · $counted"
+    !session.isOpen -> "Stopped · $counted"
+    status != null -> "Open · $status · $counted"
+    else -> "Open · $counted"
   }
 }
 
@@ -405,28 +407,19 @@ internal fun previewDashboard(config: JsonObject?): Dashboard? = config?.let {
 private fun SessionReview(
   session: AgentEditSession,
   live: AgentRelayState?,
-  agentListening: Boolean,
   liveBusy: Boolean,
-  onCopyInvite: (String) -> Unit,
-  onNewCode: () -> Unit,
-  onClaim: (String) -> Unit,
   onComment: (String, String?) -> Unit,
-  prompt: String?,
   problem: String?,
   snapshot: HaSnapshot,
   busy: Boolean,
   writeBlockedReason: String?,
-  onSharePrompt: (String) -> Unit,
-  cloud: Boolean,
   onApply: (AgentEditSession.Draft) -> Unit,
   onUndo: () -> Unit,
-  onNote: (String) -> Unit,
   onDiscard: () -> Unit,
   onRender: (draftId: String, png: ByteArray) -> Unit,
   renderCard: @Composable (CardKey, CardConfig) -> Unit,
 ) {
   var shown by remember(session.id) { mutableStateOf<String?>(null) }
-  var noting by remember { mutableStateOf(false) }
   // True for the frame the draft is captured for the agent: no Comment buttons in it.
   var capturing by remember { mutableStateOf(false) }
   // The card the next message is about, picked with a card's Comment button.
@@ -439,23 +432,17 @@ private fun SessionReview(
   Column(Modifier.fillMaxSize()) {
     Column(
       Modifier.fillMaxWidth()
-        // With the conversation the header can grow: keep room for the draft below it.
-        .then(
-          if (live != null) Modifier.heightIn(max = 420.dp).verticalScroll(headerScroll)
-          else Modifier
-        )
+        // With the conversation the header can grow: keep room for the preview below it.
+        .heightIn(max = 420.dp)
+        .verticalScroll(headerScroll)
         .padding(horizontal = 16.dp, vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
       Text(
-        session.request.ifBlank { "No request given" },
-        style = MaterialTheme.typography.titleMedium,
-      )
-      Text(
         when {
           session.isApplied -> "Your dashboard uses it. Undo puts it back."
           !session.isOpen -> "This session was ${session.status}."
-          draft == null -> "Waiting for the agent's first draft…"
+          draft == null -> "The dashboard as it is: comment on a card, or tell the agent below."
           else -> draft.summary.ifBlank { "Draft from the agent" }
         },
         style = MaterialTheme.typography.bodyMedium,
@@ -470,28 +457,22 @@ private fun SessionReview(
         )
       }
       val canWrite = !busy && writeBlockedReason == null
-      if (live != null && session.isOpen) {
+      if (session.isOpen) {
         AgentLivePanel(
           state = live,
           busy = liveBusy,
-          onCopyInvite = onCopyInvite,
-          onNewCode = onNewCode,
-          onClaim = onClaim,
+          onCopyInvite = {},
+          onNewCode = {},
+          onClaim = {},
           onSend = { text ->
             onComment(text, target)
             target = null
           },
           target = target,
           onClearTarget = { target = null },
+          showCodes = false,
+          composeBeforeJoin = true,
         )
-      } else if (session.isOpen && agentListening && session.drafts.isEmpty()) {
-        // An agent signed in to Home Assistant is listening: it picks this up by itself.
-        Text(
-          "Your agent is listening and picks this up now.",
-          style = MaterialTheme.typography.bodyMedium,
-        )
-      } else if (prompt != null && session.isOpen && (cloud || session.drafts.isEmpty())) {
-        PromptCard(prompt, onSharePrompt, cloud)
       }
       if (session.drafts.size > 1) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -508,120 +489,88 @@ private fun SessionReview(
         when {
           session.isApplied -> OutlinedButton(enabled = canWrite, onClick = onUndo) { Text("Undo") }
           session.isOpen -> {
-            if (draft != null) {
+            if (draft != null)
               Button(enabled = canWrite, onClick = { onApply(draft) }) { Text("Use it") }
-              // With the live panel, its message box is how to ask for changes.
-              if (live == null)
-                OutlinedButton(enabled = !busy, onClick = { noting = true }) {
-                  Text("Request changes")
-                }
-            }
             TextButton(enabled = !busy, onClick = onDiscard) { Text("Stop") }
           }
         }
       }
-      // With the live panel the conversation shows every note already.
-      session.notes
-        .lastOrNull()
-        ?.takeIf { live == null }
-        ?.let {
-          Text(
-            "Your last note: ${it.text}",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-          )
-        }
     }
-    val dashboard = previewDashboard(draft?.config)
-    when {
-      draft == null -> Unit
-      dashboard == null ->
+    // The preview: the draft once there is one, the dashboard as it is until then.
+    val dashboard = previewDashboard(draft?.config ?: session.baseline)
+    if (dashboard == null) {
+      if (draft != null)
         Text(
           "This draft can't be drawn here; ask the agent for a dashboard with a views list.",
           Modifier.padding(16.dp),
           color = MaterialTheme.colorScheme.error,
         )
-      else ->
-        DashboardContent(
-          dashboard,
-          "agent-draft-${session.id}-${draft.id}",
-          snapshot,
-          Modifier.weight(1f).sharesRender(draft.id, session.isOpen, onRender) { capturing = it },
-        ) { key, card ->
-          // The Comment buttons are this screen's, not the design's: hidden while it is captured.
-          if (live?.agent?.joined == true && session.isOpen && !capturing)
-            Box {
-              renderCard(key, card)
-              // Pin the next message to this card, so the agent knows which one you mean.
-              Surface(
-                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.92f),
-                shape = MaterialTheme.shapes.small,
-                modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
-              ) {
-                TextButton(onClick = { target = cardLabel(key, card) }) { Text("Comment") }
-              }
+    } else {
+      val focus = session.scope?.takeIf { it.isSection }
+      DashboardContent(
+        dashboard,
+        "agent-draft-${session.id}-${draft?.id ?: "baseline"}",
+        snapshot,
+        Modifier.weight(1f)
+          .then(
+            if (draft != null)
+              Modifier.sharesRender(draft.id, session.isOpen, onRender) { capturing = it }
+            else Modifier
+          ),
+      ) { key, card ->
+        // A section session comments on its own cards; the rest of the dashboard is context.
+        val commentable =
+          session.isOpen &&
+            !capturing &&
+            (focus == null || (key.sectionIndex == focus.section && sameView(key, focus)))
+        // The Comment buttons are this screen's, not the design's: hidden while it is captured.
+        if (commentable)
+          Box {
+            renderCard(key, card)
+            // Pin the next message to this card, so the agent knows which one you mean.
+            Surface(
+              color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.92f),
+              shape = MaterialTheme.shapes.small,
+              modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
+            ) {
+              TextButton(onClick = { target = cardLabel(key, card) }) { Text("Comment") }
             }
-          else renderCard(key, card)
-        }
-    }
-  }
-
-  if (noting) {
-    var text by remember { mutableStateOf("") }
-    AlertDialog(
-      onDismissRequest = { noting = false },
-      title = { Text("Request changes") },
-      text = {
-        OutlinedTextField(
-          value = text,
-          onValueChange = { text = it },
-          label = { Text("What should the agent change?") },
-          modifier = Modifier.fillMaxWidth(),
-        )
-      },
-      confirmButton = {
-        TextButton(
-          enabled = text.isNotBlank(),
-          onClick = {
-            noting = false
-            onNote(text)
-          },
-        ) {
-          Text("Send")
-        }
-      },
-      dismissButton = { TextButton(onClick = { noting = false }) { Text("Cancel") } },
-    )
-  }
-}
-
-@Composable
-private fun PromptCard(prompt: String, onSharePrompt: (String) -> Unit, cloud: Boolean) {
-  Surface(
-    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-    shape = MaterialTheme.shapes.medium,
-  ) {
-    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-      Text(
-        if (cloud)
-          "Share these temporary details only with your chosen agent. Anyone holding them can read and submit drafts for this request."
-        else
-          "Give this to your AI assistant. It holds no password or token: the assistant signs in " +
-            "to Home Assistant when it connects.",
-        style = MaterialTheme.typography.bodySmall,
-      )
-      SelectionContainer {
-        Text(
-          prompt,
-          style = MaterialTheme.typography.bodySmall,
-          fontFamily = FontFamily.Monospace,
-          maxLines = 8,
-        )
+          }
+        else renderCard(key, card)
       }
-      Button(onClick = { onSharePrompt(prompt) }) { Text("Share prompt") }
     }
   }
 }
+
+/** Whether [key] is in [focus]'s view: a view without a path of its own is `view-<index>`. */
+private fun sameView(key: CardKey, focus: EditScope): Boolean {
+  val path = key.viewPath ?: return true
+  val index = Regex("view-(\\d+)").matchEntire(path)?.groupValues?.get(1)?.toIntOrNull()
+  return index == null || index == focus.view
+}
+
+/**
+ * The live panel's state before anyone joined a session not relayed by this device: the person's
+ * notes so far, and whether an agent signed in to Home Assistant is listening for it.
+ */
+internal fun pendingLive(session: AgentEditSession, agentListening: Boolean) =
+  AgentRelayState(
+    version = session.conversation.lastOrNull()?.seq ?: 0,
+    kind = "dashboard",
+    title = session.request,
+    revision = session.drafts.size.toLong(),
+    messages =
+      session.conversation.map {
+        AgentRelayMessage(
+          it.seq,
+          if (it.fromAgent) "agent" else "person",
+          if (it.fromAgent) "message" else "comment",
+          it.text,
+          it.target,
+        )
+      },
+    linked = agentListening,
+  )
 
 /** How a message names a card for the agent: its title or entity, and where it sits. */
 internal fun cardLabel(key: CardKey, card: CardConfig): String {

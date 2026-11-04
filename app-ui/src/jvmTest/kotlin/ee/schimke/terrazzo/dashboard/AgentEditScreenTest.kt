@@ -6,6 +6,7 @@ import ee.schimke.ha.client.HaCommandException
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
 import ee.schimke.ha.client.dashboard.DashboardConflictException
+import ee.schimke.ha.client.dashboard.EditScope
 import ee.schimke.ha.client.dashboard.StartedAgentEdit
 import ee.schimke.ha.model.HaSnapshot
 import kotlin.test.Test
@@ -27,26 +28,48 @@ class AgentEditScreenTest {
       .jsonObject
 
   /** One session in memory; the test publishes its changes as the integration would. */
-  private class FakeEdits : AgentEdits {
+  private class FakeEdits(val listed: List<AgentEditSession> = emptyList()) : AgentEdits {
     val current = MutableStateFlow<AgentEditSession?>(null)
     val calls = mutableListOf<String>()
     var applyFailure: Exception? = null
+    var baseline: kotlinx.serialization.json.JsonObject? = null
 
-    override suspend fun start(urlPath: String?, request: String): StartedAgentEdit {
-      calls += "start:$urlPath:$request"
+    override suspend fun start(
+      urlPath: String?,
+      request: String,
+      scope: EditScope?,
+    ): StartedAgentEdit {
+      calls += "start:$urlPath:$request:${scope?.label}"
       val session =
-        current.value ?: AgentEditSession(id = "s1", urlPath = urlPath, request = request)
+        current.value
+          ?: AgentEditSession(
+            id = "s1",
+            urlPath = urlPath,
+            request = request,
+            baseline = baseline,
+            scope = scope,
+          )
       current.value = session
-      return StartedAgentEdit(session, "Connect to /api/terrazzo/mcp, session s1")
+      return StartedAgentEdit(session, "")
     }
 
-    override suspend fun open(urlPath: String?) = emptyList<AgentEditSession>()
+    override suspend fun open(urlPath: String?) = listed.filter { it.isOpen }
+
+    override suspend fun recent(urlPath: String?) = listed
+
+    override suspend fun prompt(sessionId: String) =
+      "Connect to /api/terrazzo/mcp, session $sessionId"
 
     override suspend fun get(sessionId: String) = current.value!!
 
     override suspend fun resume(sessionId: String) = StartedAgentEdit(current.value!!, "")
 
-    override fun watch(sessionId: String): Flow<AgentEditSession> = current.filterNotNull()
+    override fun watch(sessionId: String): Flow<AgentEditSession> =
+      current.filterNotNull().let { flow ->
+        if (current.value == null)
+          listed.firstOrNull { it.id == sessionId }?.let { current.value = it }
+        flow
+      }
 
     override suspend fun note(sessionId: String, text: String, target: String?): AgentEditSession {
       calls += "note:$text" + (target?.let { "@$it" } ?: "")
@@ -81,6 +104,7 @@ class AgentEditScreenTest {
     shared: MutableList<String>,
     writeBlockedReason: String? = null,
     cloudServer: String? = null,
+    startScope: EditScope? = null,
   ) = setContent {
     AgentEditScreen(
       edits = edits,
@@ -92,40 +116,79 @@ class AgentEditScreenTest {
       onApplied = {},
       writeBlockedReason = writeBlockedReason,
       cloudServer = cloudServer,
+      startScope = startScope,
     ) { _, card ->
       Text("card:${card.type}:${card.raw["entity"]}")
     }
   }
 
   @Test
-  fun cloudSessionExplainsTheDataAndKeepsTheConnectionDetailsAvailable() = runComposeUiTest {
-    val edits = FakeEdits()
-    show(edits, mutableListOf(), cloudServer = "https://ha.coo.ee")
-    onNodeWithText("https://ha.coo.ee", substring = true).assertExists()
-    onNodeWithText("configuration may contain private data", substring = true).assertExists()
-    onNodeWithText("Send to your agent").assertIsNotEnabled()
-    onNodeWithText("Request").performTextInput("Make it easier to read")
-    onNodeWithText("Send to your agent").performClick()
+  fun aNewSessionNeedsNothingTypedAndPreviewsTheDashboardAsItIs() = runComposeUiTest {
+    val edits = FakeEdits().apply { baseline = draftConfig }
+    val shared = mutableListOf<String>()
+    show(edits, shared)
+    onNodeWithText("No sessions on Garden yet.").assertExists()
+    onNodeWithText("New session").performClick()
     waitUntil { edits.current.value != null }
-    edits.current.value =
-      edits.current.value!!.copy(
-        drafts = listOf(AgentEditSession.Draft("d1", config = draftConfig))
-      )
-    waitUntil { onAllNodesWithText("Use it").fetchSemanticsNodes().isNotEmpty() }
-    onNodeWithText("Share prompt").assertExists()
-    onNodeWithText("Anyone holding them", substring = true).assertExists()
+    assertEquals(
+      "start:garden:Work on the Garden dashboard with me. Say hello, then follow my comments " +
+        "on the preview.:null",
+      edits.calls.single(),
+    )
+    // Straight into the preview: the dashboard as it is, every card open to a comment.
+    waitUntil { onAllNodesWithText("card:tile:\"switch.pump\"").fetchSemanticsNodes().isNotEmpty() }
+    onNodeWithText("Comment").performClick()
+    onNodeWithText("Tell the agent what to change").performTextInput("Bigger")
+    onNodeWithText("Send").performClick()
+    waitUntil { edits.calls.any { it.startsWith("note:") } }
+    assertEquals("note:Bigger@switch.pump (view 1, section 1, card 1)", edits.calls.last())
+    // One prompt, for one or more agents.
+    onNodeWithText("Copy prompt").performClick()
+    waitUntil { shared.isNotEmpty() }
+    assertEquals(listOf("Connect to /api/terrazzo/mcp, session s1"), shared)
   }
 
   @Test
-  fun aDirectlySignedInAgentTalksLiveAndCommentsNameACard() = runComposeUiTest {
-    val edits = FakeEdits()
-    val shared = mutableListOf<String>()
-    show(edits, shared)
-    onNodeWithText("Request").performTextInput("Add the pump")
-    onNodeWithText("Send to your agent").performClick()
+  fun aSectionOpensStraightIntoItsSession() = runComposeUiTest {
+    val edits = FakeEdits().apply { baseline = draftConfig }
+    show(edits, mutableListOf(), startScope = EditScope.section(0, 0, "Pumps"))
     waitUntil { edits.current.value != null }
-    // Until the agent has been active, the prompt to hand it is what shows.
-    onNodeWithText("Share prompt").assertExists()
+    assertEquals(
+      "start:garden:Work on the Pumps section of the Garden dashboard with me. Say hello, then " +
+        "follow my comments on the preview.:Pumps",
+      edits.calls.single(),
+    )
+    waitUntil { onAllNodesWithText("Pumps").fetchSemanticsNodes().isNotEmpty() }
+    onNodeWithText("card:tile:\"switch.pump\"").assertExists()
+  }
+
+  @Test
+  fun theListShowsOpenAndRecentSessions() = runComposeUiTest {
+    val edits =
+      FakeEdits(
+        listOf(
+          AgentEditSession(
+            id = "open",
+            scope = EditScope.section(0, 1, "Garage"),
+            drafts = listOf(AgentEditSession.Draft("d1")),
+          ),
+          AgentEditSession(id = "done", status = AgentEditSession.APPLIED),
+        )
+      )
+    show(edits, mutableListOf())
+    waitUntil { onAllNodesWithText("Garage").fetchSemanticsNodes().isNotEmpty() }
+    onNodeWithText("Open · 1 draft").assertExists()
+    onNodeWithText("In use · no draft yet").assertExists()
+    onNodeWithText("Garage").performClick()
+    waitUntil { onAllNodesWithText("Copy prompt").fetchSemanticsNodes().isNotEmpty() }
+  }
+
+  @Test
+  fun aDirectlySignedInAgentTalksLive() = runComposeUiTest {
+    val edits = FakeEdits()
+    show(edits, mutableListOf())
+    onNodeWithText("New session").performClick()
+    waitUntil { edits.current.value != null }
     edits.current.value =
       edits.current.value!!.copy(
         drafts = listOf(AgentEditSession.Draft("d1", summary = "Pump tile", config = draftConfig)),
@@ -135,32 +198,15 @@ class AgentEditScreenTest {
       )
     waitUntil { onAllNodesWithText("Full width?").fetchSemanticsNodes().isNotEmpty() }
     onNodeWithText("Agent · Waiting for feedback").assertExists()
-    onNodeWithText("Share prompt").assertDoesNotExist()
     onNodeWithText("Give your agent this code").assertDoesNotExist()
-    onNodeWithText("Comment").performClick()
-    onNodeWithText("Tell the agent what to change").performTextInput("Yes")
-    onNodeWithText("Send").performClick()
-    waitUntil { edits.calls.any { it.startsWith("note:") } }
-    assertEquals(
-      "note:Yes@switch.pump (view 1, section 1, card 1)",
-      edits.calls.last { it.startsWith("note:") },
-    )
   }
 
   @Test
-  fun aRequestStartsASessionWhoseDraftIsPreviewedAndApplied() = runComposeUiTest {
+  fun aDraftIsPreviewedAndApplied() = runComposeUiTest {
     val edits = FakeEdits()
-    val shared = mutableListOf<String>()
-    show(edits, shared)
-
-    onNodeWithText("Request").performTextInput("Add the pump")
-    onNodeWithText("Send to your agent").performClick()
-    waitUntil { edits.calls.isNotEmpty() }
-    assertEquals("start:garden:Add the pump", edits.calls.single())
-    onNodeWithText("Waiting for the agent's first draft…").assertExists()
-    onNodeWithText("Share prompt").performClick()
-    assertEquals(listOf("Connect to /api/terrazzo/mcp, session s1"), shared)
-
+    show(edits, mutableListOf())
+    onNodeWithText("New session").performClick()
+    waitUntil { edits.current.value != null }
     // The agent submits a draft: it is drawn with the dashboard's own card renderer.
     edits.current.value =
       edits.current.value!!.copy(
@@ -168,8 +214,6 @@ class AgentEditScreenTest {
       )
     waitUntil { onAllNodesWithText("Pump tile").fetchSemanticsNodes().isNotEmpty() }
     onNodeWithText("card:tile:\"switch.pump\"").assertExists()
-    onNodeWithText("Share prompt").assertDoesNotExist()
-
     onNodeWithText("Use it").performClick()
     waitUntil {
       onAllNodesWithText("Done: your dashboard uses it.").fetchSemanticsNodes().isNotEmpty()
@@ -185,13 +229,11 @@ class AgentEditScreenTest {
     edits.current.value =
       AgentEditSession(
         id = "s1",
-        request = "Add the pump",
         drafts = listOf(AgentEditSession.Draft("d1", "Pump tile", config = draftConfig)),
       )
     edits.applyFailure = DashboardConflictException("This dashboard changed in Home Assistant.")
     show(edits, mutableListOf())
-    onNodeWithText("Request").performTextInput("ignored")
-    onNodeWithText("Send to your agent").performClick()
+    onNodeWithText("New session").performClick()
     waitUntil { onAllNodesWithText("Use it").fetchSemanticsNodes().isNotEmpty() }
     onNodeWithText("Use it").performClick()
     waitUntil {
@@ -228,10 +270,17 @@ class AgentEditScreenTest {
         drafts = listOf(AgentEditSession.Draft("d1", "Pump tile", config = draftConfig)),
       )
     show(edits, mutableListOf(), writeBlockedReason = "Read-only mode is on.")
-    onNodeWithText("Send to your agent").performClick()
+    onNodeWithText("New session").performClick()
     waitUntil { onAllNodesWithText("Use it").fetchSemanticsNodes().isNotEmpty() }
     onNodeWithText("Use it").assertIsNotEnabled()
     onNodeWithText("Read-only mode is on. Drafts can be reviewed but not applied.").assertExists()
     onNodeWithText("card:tile:\"switch.pump\"").assertExists()
+  }
+
+  @Test
+  fun scopesMatchBySection() {
+    assertEquals(true, null sameAs EditScope())
+    assertEquals(true, EditScope.section(0, 1, "A") sameAs EditScope.section(0, 1, "B"))
+    assertEquals(false, EditScope.section(0, 1, "A") sameAs null)
   }
 }

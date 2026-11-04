@@ -4,6 +4,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.test.*
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
+import ee.schimke.ha.client.dashboard.EditScope
 import ee.schimke.ha.client.dashboard.StartedAgentEdit
 import ee.schimke.ha.model.HaSnapshot
 import kotlin.test.Test
@@ -28,7 +29,8 @@ class DashboardAgentDraftTest {
     val current = MutableStateFlow(session)
     val calls = mutableListOf<String>()
 
-    override suspend fun start(urlPath: String?, request: String) = error("not started here")
+    override suspend fun start(urlPath: String?, request: String, scope: EditScope?) =
+      error("not started here")
 
     override suspend fun open(urlPath: String?) =
       listOfNotNull(current.value?.takeIf { it.isOpen && it.urlPath == urlPath })

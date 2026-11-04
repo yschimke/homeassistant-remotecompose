@@ -118,6 +118,65 @@ def cloud_for(session, user_id):
     return {"server": cloud["server"], "owner": cloud["owner"]}
 
 
+DASHBOARD = "dashboard"
+SECTION = "section"
+MAX_SCOPE_LABEL = 200
+
+
+def _section_of(config, view, section):
+    """Section [section] of view [view] in a dashboard config, or None when there's none."""
+    views = config.get("views") if isinstance(config, dict) else None
+    if not isinstance(views, list) or not 0 <= view < len(views) or not isinstance(views[view], dict):
+        return None
+    sections = views[view].get("sections")
+    if not isinstance(sections, list) or not 0 <= section < len(sections):
+        return None
+    return sections[section]
+
+
+def _without_section(config, view, section):
+    """[config] with one section blanked out: what a section-scoped draft must leave as it was."""
+    rest = copy.deepcopy(config)
+    rest["views"][view]["sections"][section] = None
+    return rest
+
+
+def validate_scope(scope, baseline):
+    """A session's scope: the whole dashboard (None or kind "dashboard"), or one section of it
+    ({"kind": "section", "view": i, "section": j, "label": ...}) that the dashboard has."""
+    if scope is None:
+        return None
+    if not isinstance(scope, dict) or scope.get("kind") not in (DASHBOARD, SECTION):
+        raise SessionError("A scope is a dashboard or one of its sections")
+    label = scope.get("label")
+    if label is not None and not isinstance(label, str):
+        raise SessionError("A scope's label must be text")
+    result = {"kind": scope["kind"]}
+    if label:
+        result["label"] = label.strip()[:MAX_SCOPE_LABEL]
+    if scope["kind"] == SECTION:
+        view, section = scope.get("view"), scope.get("section")
+        if (not isinstance(view, int) or not isinstance(section, int)
+                or _section_of(baseline, view, section) is None):
+            raise SessionError("This dashboard has no such section")
+        result["view"], result["section"] = view, section
+    return result
+
+
+def check_in_scope(scope, baseline, config):
+    """Refuse a section-scoped draft that changes anything outside its section."""
+    if not scope or scope.get("kind") != SECTION:
+        return
+    view, section = scope["view"], scope["section"]
+    if _section_of(config, view, section) is None or (
+        _without_section(config, view, section) != _without_section(baseline, view, section)
+    ):
+        raise SessionError(
+            f"This session is about {scope.get('label') or 'one section'}: change only that "
+            f"section (views[{view}].sections[{section}]) and keep the rest of the dashboard as it is"
+        )
+
+
 def _text(value, what, required=False):
     if value is None and not required:
         return ""
@@ -144,7 +203,8 @@ class EditSessions:
             for session in oldest[: len(self._sessions) - MAX_SESSIONS]:
                 del self._sessions[session["id"]]
 
-    def create(self, url_path, request, baseline, user_id, now):
+    def create(self, url_path, request, baseline, user_id, now, scope=None):
+        scope = validate_scope(scope, baseline)
         session = {
             "id": secrets.token_urlsafe(9),
             "url_path": url_path,
@@ -163,6 +223,7 @@ class EditSessions:
             "seq": 0,
             "messages": [],
             "agent": None,
+            "scope": scope,
         }
         self._sessions[session["id"]] = session
         self.prune(now)  # After adding: the oldest goes, never the new one.
@@ -175,11 +236,13 @@ class EditSessions:
             raise SessionError(f"No edit session {session_id}; it may have expired")
         return session
 
-    def for_dashboard(self, url_path, now):
-        """The open sessions on [url_path], newest first."""
+    def for_dashboard(self, url_path, now, include_closed=False):
+        """The open sessions on [url_path], newest first; with [include_closed] also the applied and
+        discarded ones still kept (a day after their last change): the recent ones."""
         self.prune(now)
         return sorted(
-            (s for s in self._sessions.values() if s["url_path"] == url_path and s["status"] == OPEN),
+            (s for s in self._sessions.values()
+             if s["url_path"] == url_path and (include_closed or s["status"] == OPEN)),
             key=lambda s: s["updated_at"],
             reverse=True,
         )
@@ -208,6 +271,7 @@ class EditSessions:
         """Add a draft to an open session; the newest [MAX_DRAFTS] are kept."""
         session = self._open(session_id, now)
         validate_draft(config, entity_exists)
+        check_in_scope(session.get("scope"), session["baseline"], config)
         summary = _text(summary, "The summary")
         if relay_id is not None:
             if not isinstance(relay_id, str) or not relay_id or len(relay_id) > 100:
@@ -377,6 +441,7 @@ def summary(session, with_configs=False):
         "agent": session.get("agent"),
         "seq": session.get("seq", 0),
         "applied": session["applied"],
+        "scope": session.get("scope"),
         "drafts": [
             {key: draft[key] for key in ("id", "summary", "by", "at")}
             | ({"relay_id": draft["relay_id"]} if draft.get("relay_id") else {})
@@ -435,6 +500,17 @@ def agent_prompt(session, mcp_url, home_name):
             "person watches each draft in the app and comments, sometimes on one card. Act on "
             "each note and submit again until the session is applied or discarded.",
             "",
-            f"Request: {session['request'] or '(none given; improve the dashboard)'}",
+            *_scope_lines(session.get("scope")),
+            f"Request: {session['request'] or '(none yet: say hello, then follow the notes)'}",
         ]
     )
+
+
+def _scope_lines(scope):
+    if not scope or scope.get("kind") != SECTION:
+        return []
+    return [
+        f"Scope: only {scope.get('label') or 'one section'} "
+        f"(views[{scope['view']}].sections[{scope['section']}]); keep the rest of the dashboard "
+        "exactly as it is, or the draft is refused.",
+    ]

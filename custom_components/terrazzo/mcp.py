@@ -198,7 +198,8 @@ EDIT_TOOLS = [
         "description": (
             "Submits the complete new dashboard config to an edit session, with a one-line summary "
             "of the change. A person previews it with live cards and applies it; it isn't saved by "
-            "this call. Every entity it names must exist in this home."
+            "this call. Every entity it names must exist in this home. A session whose scope is "
+            "a section (get_edit_session's scope) takes changes to that section only."
         ),
         "inputSchema": {
             "type": "object",

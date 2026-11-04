@@ -22,14 +22,18 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
-import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.client.dashboard.AgentEditSession
+import ee.schimke.ha.client.dashboard.AgentEdits
+import ee.schimke.ha.client.dashboard.EditScope
+import ee.schimke.ha.client.dashboard.StartedAgentEdit
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.terrazzo.dashboard.AgentEditScreen
 import ee.schimke.terrazzo.discovery.DiscoveryForm
 import ee.schimke.terrazzo.discovery.HaInstance
-import ee.schimke.terrazzo.shared.CardStudioDefaults
-import ee.schimke.terrazzo.shared.CardStudioScreen
 import ee.schimke.terrazzo.ui.AndroidImeHost
-import kotlinx.serialization.json.buildJsonObject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -159,47 +163,86 @@ class AndroidImeScrollingTest {
   }
 
   @Test
-  fun lastCardStudioFieldAndActionsRemainReachableWithIme() {
+  fun lastAgentSessionFieldAndActionsRemainReachableWithIme() {
     var backedOut = false
+    val edits = OneSession()
     compose.setContent {
       MaterialTheme {
         AndroidImeHost {
-          CardStudioScreen(
-            card = CardConfig("tile", buildJsonObject {}),
+          AgentEditScreen(
+            edits = edits,
+            urlPath = "garden",
+            title = "Garden",
             snapshot = HaSnapshot(),
             onBack = { backedOut = true },
-            defaults = CardStudioDefaults(),
-            preview = {},
-          )
+            onSharePrompt = {},
+            onApplied = {},
+            // A dashboard's own "Ask your agent": straight into its session.
+            startScope = EditScope(),
+          ) { _, _ ->
+          }
         }
       }
     }
-    val field = compose.onNodeWithText("What should change?")
+    // What the person types into now: the session's conversation.
+    compose.waitUntil(10_000) {
+      compose.onAllNodesWithText("Tell the agent what to change").fetchSemanticsNodes().isNotEmpty()
+    }
+    val field = compose.onNodeWithText("Tell the agent what to change")
     field.performScrollTo().performClick()
     waitForIme(true)
     val draft = "Make the last field easy to reach\nKeep the reading clear\nKeep Send reachable"
     field.performTextInput(draft)
     field.assertTextContains(draft)
-    captureWindowEvidence("card-studio-focused-ime")
+    captureWindowEvidence("agent-session-focused-ime")
     assertAboveKeyboard(field)
-    val action = compose.onNodeWithText("Send to your agent")
+    val action = compose.onNodeWithText("Send")
     action.performScrollTo().assertIsDisplayed()
-    captureWindowEvidence("card-studio-bottom-ime")
+    captureWindowEvidence("agent-session-bottom-ime")
     assertAboveKeyboard(action)
     if (InstrumentationRegistry.getArguments().getString("expectedRotation") == "1") {
-      val back = compose.onNodeWithText("Back")
-      back.performScrollTo().assertIsDisplayed()
+      val back = compose.onNodeWithContentDescription("Back")
+      back.assertIsDisplayed()
       assertAboveKeyboard(back)
-      captureWindowEvidence("card-studio-compact-back-ime")
+      captureWindowEvidence("agent-session-compact-back-ime")
       back.performClick()
-      compose.runOnIdle { assertTrue("Compact toolbar must retain Back", backedOut) }
+      compose.runOnIdle { assertTrue("The toolbar must retain Back", backedOut) }
     }
     waitForIme(true)
     device.pressBack()
     waitForIme(false)
     field.performScrollTo().assertTextContains(draft)
     action.performScrollTo().assertIsDisplayed()
-    captureWindowEvidence("card-studio-bottom-closed")
+    captureWindowEvidence("agent-session-bottom-closed")
+  }
+
+  /** One agent session held in memory, as Home Assistant would hold it. */
+  private class OneSession : AgentEdits {
+    private val current = MutableStateFlow<AgentEditSession?>(null)
+
+    override suspend fun start(urlPath: String?, request: String, scope: EditScope?) =
+      StartedAgentEdit(
+        AgentEditSession(id = "s1", urlPath = urlPath, request = request).also {
+          current.value = it
+        },
+        "",
+      )
+
+    override suspend fun open(urlPath: String?) = emptyList<AgentEditSession>()
+
+    override suspend fun get(sessionId: String) = current.value!!
+
+    override suspend fun resume(sessionId: String) = StartedAgentEdit(current.value!!, "")
+
+    override fun watch(sessionId: String): Flow<AgentEditSession> = current.filterNotNull()
+
+    override suspend fun note(sessionId: String, text: String, target: String?) = current.value!!
+
+    override suspend fun discard(sessionId: String) = current.value!!
+
+    override suspend fun apply(sessionId: String, draftId: String) = current.value!!
+
+    override suspend fun undo(sessionId: String) = current.value!!
   }
 
   private fun windowInsets(): WindowInsetsCompat =

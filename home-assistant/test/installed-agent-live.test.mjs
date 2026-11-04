@@ -92,7 +92,6 @@ test('Live agent edit: the person watches, comments on a card and applies', {tim
     await panel.getByText('Lights', {exact:true}).first().waitFor({timeout:90_000});
     await panel.getByRole('button', {name:'More options'}).click({force:true});
     await panel.getByText('Ask your agent', {exact:true}).click({force:true});
-    await panel.getByText('Advanced: use an agent signed in to Home Assistant', {exact:true}).click({force:true});
     // Compose draws on a canvas: focus the field through its accessibility node, then type keys.
     const typeInto = async (label, text) => {
       await panel.getByRole('textbox', {name:label}).click({force:true});
@@ -100,20 +99,24 @@ test('Live agent edit: the person watches, comments on a card and applies', {tim
       await page.waitForTimeout(400);
       await page.keyboard.type(text, {delay:20});
     };
-    // The agent is already signed in to Home Assistant and listening: the person's request goes
-    // straight to it, with no prompt to hand over.
+    // The agent is already signed in to Home Assistant and listening. A session needs nothing
+    // typed first: it opens on the dashboard as it is, and the request is the first message. No
+    // design server is reachable here, so the session is Home Assistant's alone.
     const waitingForRequest = mcp('await_request', {since:0});
     await new Promise((resolve) => setTimeout(resolve, 500));
-    await typeInto('Request', 'Add the switch next to the light');
-    await panel.getByText('Send to your agent', {exact:true}).click({force:true});
-    await panel.getByText('Your agent is listening and picks this up now.', {exact:true}).waitFor();
-    assert.equal(await panel.getByText('Share prompt', {exact:true}).count(), 0, 'no prompt to hand over');
+    await panel.getByText('New session', {exact:true}).click({force:true});
+    await panel.getByText('Sent to Agent. It picks this up when it next listens.', {exact:true}).waitFor();
     // The first listen also returns requests already open (from earlier tests): find this one.
-    const ours = (r) => r.request === 'Add the switch next to the light';
+    const ours = (r) => r.url_path === 'live-fixture';
     let heard = await waitingForRequest;
     while (!heard.requests.some(ours)) heard = await mcp('await_request', {since:heard.cursor});
     const session = heard.requests.find(ours);
-    assert.equal(session.request, 'Add the switch next to the light');
+    assert.match(session.request, /^Work on the Live fixture dashboard with me/);
+    const asked = mcp('await_feedback', {session_id:session.session_id, since:0});
+    await typeInto('Tell the agent what to change', 'Add the switch next to the light');
+    await panel.getByText('Send', {exact:true}).click({force:true});
+    const request = await asked;
+    assert.equal(request.feedback[0].text, 'Add the switch next to the light');
     await page.screenshot({path:`${evidence}/agent-live-1-listening.png`});
 
     // The agent works; the person sees what it's doing, its draft and its question.
@@ -143,7 +146,7 @@ test('Live agent edit: the person watches, comments on a card and applies', {tim
     writeFileSync(`${evidence}/agent-live-2-agent-view.png`, Buffer.from(render.content[0].data, 'base64'));
 
     // The agent listens; the person pins a comment to a card on the draft.
-    const listening = mcp('await_feedback', {session_id:session.session_id, since:0});
+    const listening = mcp('await_feedback', {session_id:session.session_id, since:request.cursor});
     await panel.getByText('Agent · Waiting for feedback', {exact:true}).waitFor();
     await panel.getByText('Comment', {exact:true}).first().click({force:true});
     // Section headings are drawn by the dashboard itself: the first card with Comment is the light.

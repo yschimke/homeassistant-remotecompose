@@ -4,13 +4,11 @@ package ee.schimke.terrazzo.shared
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
@@ -142,6 +140,8 @@ fun CardStudioScreen(
   /** The cloud session's owner capability: the agent itself joins with a code. */
   var cloudSession by remember { mutableStateOf(recovered?.ownerToken) }
   var cloudServer by remember { mutableStateOf(recovered?.server) }
+  /** The agents' capability for this session: what Copy prompt hands one or more agents. */
+  var cloudAgentToken by remember { mutableStateOf(recovered?.agentToken.orEmpty()) }
   var cloudLive by remember { mutableStateOf<AgentRelayState?>(null) }
   var cloudRevision by remember { mutableLongStateOf(0L) }
   var cloudTarget by remember { mutableStateOf<String?>(null) }
@@ -307,8 +307,13 @@ fun CardStudioScreen(
       val upstream = CardStudioClient(target)
       try {
         val seed = upstream.seed(card, currentSnapshot(fresh = true))
+        // Nothing to type first: the person says the rest in the conversation.
+        if (instruction.isBlank()) instruction = CARD_OPENING_REQUEST
         // With a connected agent the request goes straight to it: no code.
-        val owner = upstream.startAgentSession(seed, instruction, AgentLinkStore.get(target))
+        val started =
+          upstream.startAgentSessionAccess(seed, instruction, AgentLinkStore.get(target))
+        val owner = started.ownerToken
+        cloudAgentToken = started.agentToken
         cloudSession = owner
         cloudDraftReady = false
         cloudRevision = 0
@@ -323,6 +328,7 @@ fun CardStudioScreen(
               instruction,
               // A session in use lasts up to a day; the relay says when it ends sooner.
               Clock.System.now().toEpochMilliseconds() + 24 * 3_600_000L,
+              started.agentToken,
             ),
           )
         }
@@ -330,8 +336,22 @@ fun CardStudioScreen(
         upstream.close()
       }
       if (AgentLinkStore.get(target) != null) "Sent to your agent."
-      else "Request created. Give your agent the code below."
+      else "Session started. Copy prompt hands it to one or more agents."
     }
+
+  // Opening the card's agent session is asking for it: start one at once, nothing to fill in.
+  var autoStarted by remember { mutableStateOf(false) }
+  LaunchedEffect(mode, cloudSession, cloudTarget) {
+    if (
+      mode == CardStudioMode.CloudAgent &&
+        cloudSession == null &&
+        cloudTarget != null &&
+        !autoStarted
+    ) {
+      autoStarted = true
+      startCloudSession()
+    }
+  }
 
   /** The agent's latest draft and its images, checked; returns its revision (0: none yet). */
   suspend fun loadCloudDraft(owner: String, target: String): Long {
@@ -365,6 +385,8 @@ fun CardStudioScreen(
 
   fun forgetCloudSession() {
     cloudSessionKey?.let(CardAgentSessions::remove)
+    instruction = ""
+    cloudAgentToken = ""
     cloudSession = null
     cloudServer = null
     cloudLive = null
@@ -617,39 +639,13 @@ fun CardStudioScreen(
             Button(onClick = { onSignIn?.invoke() }) { Text("Sign in with GitHub") }
           }
           if (cloudSession == null) {
-            OutlinedTextField(
-              instruction,
-              { instruction = it },
-              label = { Text("What should change?") },
-              placeholder = { Text("Make the temperature bigger and the name quieter") },
-              enabled = !busy,
-              minLines = if (compactHeight) 1 else 2,
-              modifier =
-                Modifier.fillMaxWidth().bringIntoViewRequester(instructionIntoView).onFocusChanged {
-                  instructionFocused = it.isFocused
-                },
-            )
             cloudTargetProblem?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            Button(
-              onClick = { startCloudSession() },
-              enabled = !busy && instruction.isNotBlank() && cloudTarget != null,
-            ) {
-              Text("Send to your agent")
-            }
-            Text(
-              "Your agent sees this card's text and current values, never your Home Assistant " +
-                "login, and can only suggest a design.",
-              style = MaterialTheme.typography.bodySmall,
-              color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            // The setup, once: after it, a request goes straight to the connected agent. Below the
-            // request, not above it: it appears once the server is known and changes as the agent
-            // connects, and must never push the field being typed in, or Send, under the keyboard.
-            cloudTarget?.let { target ->
-              AgentConnection(target, onCopy = { clipboard.setText(AnnotatedString(it)) })
-            }
+            if (busy || !autoStarted)
+              Text("Starting a session…", style = MaterialTheme.typography.bodyMedium)
+            else if (cloudTarget != null)
+              // Stopped, or the start failed: one tap for another.
+              Button(onClick = { startCloudSession() }) { Text("New session") }
           } else {
-            Text(instruction, style = MaterialTheme.typography.titleMedium)
             AgentLivePanel(
               state = cloudLive,
               busy = busy,
@@ -680,8 +676,33 @@ fun CardStudioScreen(
                   null
                 }
               },
+              // Copy prompt is the way in for agents: no code to hand over.
+              showCodes = false,
+              composeBeforeJoin = true,
             )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+              if (cloudAgentToken.isNotBlank() && publishedId == null)
+                TextButton(
+                  onClick = {
+                    clipboard.setText(
+                      AnnotatedString(
+                        AgentRelayClient.sessionPrompt(
+                          cloudServer.orEmpty(),
+                          cloudAgentToken,
+                          instruction,
+                          what = "the design of a ${card.type} card",
+                          draft = "the whole card document (put_card_asset for its images)",
+                        )
+                      )
+                    )
+                    messageStep = 3
+                    requestFailed = false
+                    message = "Prompt copied. Give it to one or more agents."
+                  },
+                  enabled = !busy,
+                ) {
+                  Text("Copy prompt")
+                }
               if (cloudDraftReady && publishedId == null) {
                 if (onPublished != null)
                   Button(
@@ -947,3 +968,7 @@ private fun BuilderSteps(
   }
   TextButton(onClick = onBackToAgent) { Text("Ask your agent instead") }
 }
+
+/** What a card session opened without typing asks of the agent; the rest is in the conversation. */
+internal const val CARD_OPENING_REQUEST =
+  "Work on this card's design with me. Say hello, then follow my comments."

@@ -184,6 +184,33 @@ class ConversationTest(unittest.TestCase):
         self.assertEqual(es.EditSessions.feedback(sessions.get(old['id'], 1), 0)[0][0]['text'], 'New')
         self.assertEqual(es.summary(sessions.get(old['id'], 1))['messages'], [])
 
+    def test_a_section_session_takes_changes_to_its_section_only(self):
+        two = {'title': 'Garden', 'views': [{'type': 'sections', 'sections': [
+            {'type': 'grid', 'cards': [{'type': 'tile', 'entity': 'light.kitchen'}]},
+            {'type': 'grid', 'cards': [{'type': 'tile', 'entity': 'sensor.rain'}]}]}]}
+        sessions = es.EditSessions()
+        session = sessions.create('garden', '', two, 'person', 100,
+                                  {'kind': 'section', 'view': 0, 'section': 1, 'label': 'Rain'})
+        self.assertEqual(es.summary(session)['scope'],
+                         {'kind': 'section', 'view': 0, 'section': 1, 'label': 'Rain'})
+        inside = es.copy.deepcopy(two)
+        inside['views'][0]['sections'][1]['cards'].append({'type': 'gauge', 'entity': 'sensor.soil'})
+        sessions.submit(session['id'], inside, 'Soil beside rain', exists, 'agent', 110)
+        outside = es.copy.deepcopy(two)
+        outside['views'][0]['sections'][0]['cards'] = []
+        with self.assertRaisesRegex(es.SessionError, 'only that section'):
+            sessions.submit(session['id'], outside, 'Emptied the lights', exists, 'agent', 111)
+        with self.assertRaisesRegex(es.SessionError, 'no such section'):
+            sessions.create('garden', '', two, 'person', 100, {'kind': 'section', 'view': 0, 'section': 5})
+        self.assertIn('Scope: only Rain', es.agent_prompt(session, 'http://ha/mcp', 'Home'))
+
+    def test_recent_sessions_include_applied_and_discarded_ones(self):
+        sessions = es.EditSessions()
+        session = sessions.create('garden', 'Soil', BASELINE, 'person', 100)
+        sessions.discard(session['id'], 'person', 105)
+        self.assertEqual(sessions.for_dashboard('garden', 106), [])
+        self.assertEqual([s['id'] for s in sessions.for_dashboard('garden', 106, include_closed=True)],
+                         [session['id']])
 
 
 class CloudLinkTest(unittest.TestCase):

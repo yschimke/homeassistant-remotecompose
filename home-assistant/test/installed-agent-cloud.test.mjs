@@ -132,8 +132,8 @@ test('Cloud agent edit: joined by code, relayed through a restart, applied', {sk
     await panel.getByRole('button', {name:'More options'}).click({force:true});
     await panel.getByText('Ask your agent', {exact:true}).click({force:true});
     await panel.getByText('Claude is connected and listening', {exact:true}).waitFor({timeout:30_000});
-    await typeInto('Request', 'Add the switch next to the light');
-    await panel.getByText('Send to your agent', {exact:true}).click({force:true});
+    // Nothing to type first: a new session goes to the agent, and the request is a message.
+    await panel.getByText('New session', {exact:true}).click({force:true});
     let inbox = await waitingForRequest;
     while (inbox.requests.length === 0) inbox = await agent('await_request', {link, since:inbox.cursor});
     const [delivered] = inbox.requests;
@@ -142,7 +142,11 @@ test('Cloud agent edit: joined by code, relayed through a restart, applied', {sk
     assert.equal(await panel.getByText(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/).count(), 0, 'no code to hand over');
     const read = await agent('get_session', {session});
     assert.deepEqual(read.dashboard, BASELINE);
-    assert.equal(read.request, 'Add the switch next to the light');
+    assert.match(read.request, /^Work on the Cloud fixture dashboard with me/);
+    const asked = agent('await_feedback', {session, since:read.cursor ?? 0});
+    await typeInto('Tell the agent what to change', 'Add the switch next to the light');
+    await panel.getByText('Send', {exact:true}).click({force:true});
+    assert.equal((await asked).feedback[0].text, 'Add the switch next to the light');
     await agent('set_status', {session, status:'Drafting the switch tile'});
     await panel.getByText('Claude · Drafting the switch tile', {exact:true}).waitFor();
     await agent('submit_draft', {session, revision:read.revision, dashboard:DRAFT, summary:'Switch beside the light'});

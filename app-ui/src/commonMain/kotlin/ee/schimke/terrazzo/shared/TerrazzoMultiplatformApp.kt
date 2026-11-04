@@ -666,12 +666,11 @@ private fun AgentEditEntry(
 ) {
   @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
   val preview = rememberDraftPreview(connection, designServer, cardStyle, dark)
-  // One flow for everyone: your agent through the design server. An agent signed in to Home
-  // Assistant directly is the Advanced alternative.
-  var direct by remember { mutableStateOf(cloudEdits == null) }
-  val cloud = !direct
+  // One flow: sessions through the design server, which Home Assistant also holds, so an agent
+  // signed in to Home Assistant directly sees and joins the same sessions.
+  val cloud = cloudEdits != null
   AgentEditScreen(
-    edits = if (cloud && cloudEdits != null) cloudEdits else connection.client.agentEdits,
+    edits = cloudEdits ?: connection.client.agentEdits,
     urlPath = path,
     title = title,
     snapshot = snapshot,
@@ -682,9 +681,6 @@ private fun AgentEditEntry(
     initialSessionId = sessionId,
     // The dashboard below shows the session's drafts as they come (DashboardDraftEntry).
     onDashboard = onBack,
-    alternative =
-      if (cloud) "Advanced: use an agent signed in to Home Assistant" to { direct = true }
-      else if (cloudEdits != null) "Ask your agent instead" to { direct = false } else null,
   ) { _, card ->
     preview(card, snapshot)
   }

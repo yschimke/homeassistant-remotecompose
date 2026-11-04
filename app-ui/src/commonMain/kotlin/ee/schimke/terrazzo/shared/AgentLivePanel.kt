@@ -60,6 +60,13 @@ fun AgentLivePanel(
   modifier: Modifier = Modifier,
   target: String? = null,
   onClearTarget: () -> Unit = {},
+  /**
+   * The join code and "Have a code from your agent?": off where the screen hands agents a prompt
+   * instead (a dashboard session's Copy prompt), so there's one way in.
+   */
+  showCodes: Boolean = true,
+  /** Let the person write before an agent has joined: it reads the conversation when it does. */
+  composeBeforeJoin: Boolean = false,
 ) {
   Surface(
     modifier = modifier.fillMaxWidth(),
@@ -73,7 +80,9 @@ fun AgentLivePanel(
       }
       Presence(state)
       val code = state.joinCode
-      if (code != null || (!state.agent.joined && !state.linked)) {
+      if (!showCodes) {
+        // The screen offers its own way in.
+      } else if (code != null || (!state.agent.joined && !state.linked)) {
         JoinCode(code, state.joinCodeExpiresInSeconds, busy, onCopyInvite, onNewCode)
         AgentCode(busy, onClaim)
       } else if (state.linked && !state.agent.joined) {
@@ -81,7 +90,7 @@ fun AgentLivePanel(
         TextButton(onClick = onNewCode, enabled = !busy) { Text("Use another agent instead") }
       }
       Conversation(state.messages)
-      if (state.agent.joined) Composer(busy, target, onClearTarget, onSend)
+      if (state.agent.joined || composeBeforeJoin) Composer(busy, target, onClearTarget, onSend)
     }
   }
 }

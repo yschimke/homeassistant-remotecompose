@@ -86,12 +86,24 @@ class CardStudioWizardTest {
     )
     try {
       studio(onSignIn = null, canPublish = false, cloudSessionKey = "home:card")
-      onNodeWithText("Use the door design").assertExists()
+      // The session itself: its conversation and Stop, nothing to fill in.
       onNodeWithText("Stop").assertExists()
+      onNodeWithText("What should change?").assertDoesNotExist()
       onNodeWithText("Review draft", substring = true).assertDoesNotExist()
       capture("restored-cloud-session")
     } finally {
       CardAgentSessions.clear()
+    }
+  }
+
+  /**
+   * The agent flow opens by starting its session, with nothing to type: it is starting, or (with no
+   * design server reachable in a test) offers another try.
+   */
+  private fun ComposeUiTest.sessionStarts() {
+    waitUntil(timeoutMillis = 5_000) {
+      onAllNodesWithText("Starting a session…").fetchSemanticsNodes().isNotEmpty() ||
+        onAllNodesWithText("New session").fetchSemanticsNodes().isNotEmpty()
     }
   }
 
@@ -109,23 +121,23 @@ class CardStudioWizardTest {
     onNodeWithText("Sign in with GitHub").performClick()
     assertEquals(1, signIns)
     // Asking doesn't wait for it: only Use it needs the person's account.
-    onNodeWithText("What should change?").assertExists()
+    sessionStarts()
   }
 
   @Test
   fun aHomeAssistantsOwnServerNeedsNoSignIn() = runComposeUiTest {
     studio(homeServer = HomeDesignServer("https://home.example", { "ha-token" }, { null }))
     onNodeWithText("Sign in with GitHub").assertDoesNotExist()
-    onNodeWithText("Send to your agent").assertExists()
+    sessionStarts()
   }
 
   @Test
   fun everyoneStartsWithTheirAgent() = runComposeUiTest {
     studio(token = "device")
     capture("2-ask")
-    onNodeWithText("What should change?").assertExists()
-    onNodeWithText("Send to your agent").assertIsNotEnabled()
-    onNodeWithText("never your Home Assistant login", substring = true).assertExists()
+    // Opening it starts the session: there's no request to write first.
+    sessionStarts()
+    onNodeWithText("What should change?").assertDoesNotExist()
     // No mode to choose and no API key to enter.
     onNodeWithText("How do you want to design it?").assertDoesNotExist()
     onNodeWithText("API key", substring = true).assertDoesNotExist()
@@ -143,7 +155,7 @@ class CardStudioWizardTest {
     capture("3-builder")
     onNodeWithText("Ask your agent instead").performClick()
     assertEquals(CardStudioMode.CloudAgent, saved?.mode)
-    onNodeWithText("Send to your agent").assertExists()
+    sessionStarts()
   }
 
   @Test
@@ -152,15 +164,13 @@ class CardStudioWizardTest {
       CardStudioDefaults.decode("""{"mode":"Agent","provider":"Claude","model":"claude-x"}""")
     assertEquals(CardStudioMode.Agent, old.mode)
     studio(token = "device", defaults = old)
-    onNodeWithText("What should change?").assertExists()
-    onNodeWithText("Send to your agent").assertExists()
+    sessionStarts()
   }
 
   @Test
   fun theAgentCanBeAskedWithoutAHostBackendOrDesignServerLogin() = runComposeUiTest {
     studio(onSignIn = null, canPublish = false)
-    onNodeWithText("What should change?").performTextInput("Make it brighter")
-    onNodeWithText("Send to your agent").assertIsEnabled()
+    sessionStarts()
     onNodeWithText("can't apply a custom design yet", substring = true).assertExists()
   }
 

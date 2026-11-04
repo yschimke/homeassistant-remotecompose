@@ -38,8 +38,8 @@ Assistant is the editor in practice.
 
 | | Without the integration | With the integration |
 | --- | --- | --- |
-| Phone | Light edits on the live dashboard; **Open in Home Assistant** for HA's own editor; an **Install with HACS** card | Light edits; **Ask an agent** (start an edit session, share its prompt); preview, apply or discard agent drafts |
-| Web panel | — | Full editor (add cards, sections and views, card settings); **Ask an agent** and the same draft preview |
+| Phone | Light edits on the live dashboard; **Open in Home Assistant** for HA's own editor; an **Install with HACS** card | Light edits; **Ask your agent** (dashboard or section sessions, copy a prompt); preview, apply or discard agent drafts |
+| Web panel | — | Full editor (add cards, sections and views, card settings); **Ask your agent** and the same draft preview |
 | Agent | — (no supported path) | MCP: read dashboards and entities, read the card guide, submit drafts to an edit session |
 
 ## Edit sessions
@@ -94,8 +94,10 @@ relay rejects any submitted entities the person cannot read.
 An edit session is the handoff between a person and an agent, held by the integration in Home
 Assistant's storage:
 
-1. **Start.** "Ask an agent" in the phone or panel asks the integration for a session: the
-   dashboard, the request, the config it starts from, who started it, and an expiry. The prompt
+1. **Start.** "Ask your agent" in the phone or panel asks the integration for a session: the
+   dashboard, its scope (the whole dashboard, or one section), an opening request, the config it
+   starts from, who started it, and an expiry. A section session's drafts may change only that
+   section. The prompt
    the person copies or shares holds only the MCP endpoint, the session id and the request: no
    token, no dashboard config, no entity list. The agent reads those over its own authenticated
    MCP connection. A connected agent can call `list_edit_sessions` to discover open requests and
@@ -106,8 +108,8 @@ Assistant's storage:
    with a summary. The integration checks that the draft is a dashboard whose entities exist.
 3. **Preview.** The phone and the panel watch the session. A draft appears drawn with the user's
    real cards and live states — the same renderer as the dashboard — so the user sees exactly
-   what applying it would show. "Request changes" stores a note the agent reads on its next call
-   (MCP here is request/response: the agent is not pushed to).
+   what applying it would show. A message or a comment on a card stores a note the agent reads in
+   `await_feedback` (MCP here is request/response: the agent long-polls).
 4. **Apply.** An administrator applies the draft from the phone or panel with their own session.
    The integration saves it inside Home Assistant only if the dashboard still holds the config the
    session started from, which it can check and write without another client's save in between —
@@ -156,15 +158,16 @@ Assistant's storage:
      connection so the screen re-subscribes after a reconnect. A `conflict` from apply or undo is
      a `DashboardConflictException`. `HaSession.agentEdits` exposes it on the phone (null in demo
      mode).
-   - `AgentEditScreen` (`app-ui`, shared by the phone, the desktop app and the panel): write a
-     request and start a session, share its prompt (the phone's share sheet, the panel's
-     clipboard), or pick an open session back up. It watches the session and draws each draft
-     with `DashboardContent` and the host's own card renderer and live states; **Apply** (Home
-     Assistant refuses non-administrators), **Request changes** (a note), **Discard**, and **Undo**
-     after applying. Older drafts stay selectable.
+   - `AgentEditScreen` (`app-ui`, shared by the phone, the desktop app and the panel): a
+     dashboard's open and recent sessions and **New session**, or straight into a section's
+     session; **Copy prompt** for any session (the phone's share sheet, the panel's clipboard).
+     It watches the session and draws the dashboard, then each draft, with `DashboardContent` and
+     the host's own card renderer and live states; the person talks to the agent or comments on a
+     card; **Use it** (Home Assistant refuses non-administrators), **Stop**, and **Undo** after
+     applying.
    - The phone opens it from the editor's integration card when `get_config` lists `terrazzo`, and
-     reloads the editor after an apply; the panel and desktop app show **Ask an agent** in a
-     dashboard's top bar.
+     reloads the editor after an apply, and from a dashboard's menu or a section heading's long
+     press; the panel and desktop app show **Ask your agent** in a dashboard's top bar.
 4. **Agent guidance** — done. `skills/ha-dashboard/SKILL.md` describes the MCP edit session and no
    longer the long-lived-token `lovelace/config/save` path. `DashboardAgentPrompt` keeps only the
    dashboard-and-entities context the placeholder card's coding prompt carries; the card guide

@@ -76,7 +76,15 @@ class LongPressHistoryTest {
     val fork = device.wait(Until.findObject(By.text("Ask your agent")), 10_000)
     assertNotNull(fork)
     fork!!.click()
-    assertTrue(device.wait(Until.hasObject(By.text("What should change?")), 10_000))
+    // Opening it starts the agent session: there is nothing to type first.
+    assertTrue(
+      device.wait(
+        Until.hasObject(
+          By.text(java.util.regex.Pattern.compile("Starting a session…|New session|Stop"))
+        ),
+        10_000,
+      )
+    )
     assertTrue(device.wait(Until.hasObject(By.descContains("Current card preview")), 15_000))
     assertTrue(
       "Forking must not show launcher size controls",

@@ -28,39 +28,54 @@ Agent (Claude, Codex, …) ──MCP──▶ design server relay ◀──HTTPS
 
 ## The flow
 
-**Ask your agent** is the one flow, for a card (its long-press sheet, or below it on desktop) and
-for a dashboard (its menu), on every host. Under **Advanced**, a dashboard can use an agent signed
-in to Home Assistant instead, and a card can be designed by hand in UI Builder.
+A **session** is the one thing to think about: the person and an agent working on one scope, a
+whole **dashboard**, one **section** of it, or one **card** design (a card's design isn't tied to a
+dashboard). Nothing asks the person to describe the change up front: a session opens on the
+thing as it is, and they say what they want by talking to the agent or commenting on a card in
+the preview.
 
-1. **Connect, once.** Settings → **Connect an agent** (also shown at the start of **Ask your agent** until an agent is connected) shows a
+- **Dashboard:** its menu → **Ask your agent** opens its sessions: **New session**, then the open
+  and recent ones (scope, state, when), each opening on its preview.
+- **Section:** long-press a section's heading on the phone → **Ask your agent** opens straight
+  into the open session for that section, or starts one. Home Assistant holds a section session
+  to it: `submit_draft` refuses a draft that changes anything outside `views[v].sections[s]`.
+- **Card:** its long-press sheet (or below it on desktop) → **Ask your agent** starts a session on
+  its design at once.
+
+1. **Connect, once.** Settings → **Connect an agent** (also shown in the session list until an agent is connected) shows a
    code such as `K7QM-4MD2`. **Copy invite for the agent** copies one message with the code and
    the MCP address. The agent calls `connect` with it and keeps the **link** it gets back. The
    other direction works too: the agent calls `request_access`, shows the person a code, and the
    person enters it under **Have a code from your agent?**. Settings then say "Claude is connected
    and listening", or when it last listened. **Disconnect** ends the link.
-2. **Ask.** In **Ask your agent**, the person writes what should change and sends it. The app
-   sends the card's preview contract or the dashboard's configuration to the design server with
-   its link, and the request goes straight to the agent, waiting in `await_request`: no code,
-   nothing to copy. Without a connected agent the request gets its own code instead, as in step 1.
-3. **Presence.** The panel shows "Claude · Drafting a compact layout" from the agent's tool calls
+2. **Start.** The app sends the scope and the card's preview contract or the dashboard's
+   configuration to the design server with its link; the opening request ("Work on the Lights
+   section of the Home dashboard with me…") goes straight to the agent waiting in
+   `await_request`. Home Assistant keeps the same session (`terrazzo/edit/start` with `scope`), so
+   an agent signed in to Home Assistant sees it too, and if the relay can't be reached the session
+   carries on in Home Assistant alone.
+3. **Copy prompt.** Any session's top bar has **Copy prompt**: a self-contained prompt with the
+   session's agent token, to hand to one or more other agents. They all work the same session.
+4. **Presence.** The panel shows "Claude · Drafting a compact layout" from the agent's tool calls
    and `set_status`, "was here 3 min ago" when it's quiet, or "Waiting for an agent to join".
-4. **Drafts arrive.** The app long-polls the relay, so a submitted draft shows up within moments,
+5. **Drafts arrive.** The app long-polls the relay, so a submitted draft shows up within moments,
    with no **Check for draft**. A dashboard draft is relayed into Home Assistant's edit session
    (`terrazzo/edit/submit`) as the signed-in person and drawn with their real cards; a card draft
    is loaded with its images, checked against the card's contract, and drawn in place of the card
    with its live values, built exactly as **Use it** would publish it
    (`POST /api/studio/agent-session/preview`); **Use it** waits for that drawing, and a draft that
-   can't be built says why instead.
-5. **Talk.** The person types in the panel. On a dashboard draft each card has a **Comment**
-   button that pins the next message to that card (its title or entity, and where it sits). The
-   agent, waiting in `await_feedback`, gets the message at once, and can `send_message` back.
-6. **Decide.** **Use it** applies the dashboard draft, or puts the card design on the card (the
+   can't be built says why instead. Before a draft, the preview is the dashboard as it is.
+6. **Talk.** The person types in the panel. Each card in the preview (only the section's cards,
+   for a section session) has a **Comment** button that pins the next message to that card (its
+   title or entity, and where it sits). The agent, waiting in `await_feedback`, gets the message
+   at once, and can `send_message` back.
+7. **Decide.** **Use it** applies the dashboard draft, or puts the card design on the card (the
    design server opens it as the person's own design and publishes it privately, compiling it to
    a template itself with `UiBuilderDesignCompiler`, which draws what the server seeds a card
    with: collapsible rows, a switch on the slot's `is_on`; no browser), and tells the agent
-   `accepted`; **Undo** puts a dashboard back. A message asks for changes (on a card, **Not this** asks for another try in
-   one tap, and the session stays open); **Stop**
-   ends the session for both sides.
+   `accepted`; **Undo** puts a dashboard back. A message asks for changes (on a card, **Not this**
+   asks for another try in one tap, and the session stays open); **Stop** ends the session for
+   both sides, and it stays in the recent list.
 
 ## Lifetimes and storage
 
@@ -144,13 +159,13 @@ installed; current apps no longer use them.
 An agent that can reach Home Assistant (on the LAN, or through a public URL) uses the integration's
 own MCP server instead of the relay ([assistant-access.md](assistant-access.md)). Adding that
 MCP server is its setup; after it, `await_request(since)` listens for sessions the person starts,
-and while an agent is listening the app says "Your agent is listening and picks this up now" in
-place of the prompt to hand over. It gets the same loop: `set_status` and `send_message` show in the person's panel, `submit_draft` appears at once
+and while an agent is listening the app says "Your agent is listening and picks this up now". It gets the same loop: `set_status` and `send_message` show in the person's panel, `submit_draft` appears at once
 over the edit session's subscription, and `await_feedback(session_id, since)` waits up to 25 s
 for the person's notes, which can name a card (`target`), or for the session to be applied or
 discarded. Notes and messages share one sequence (`seq`), so `since` says which notes the agent
 has read; presence ages by Home Assistant's clock (`server_time` in every reply). The screen shows
-the prompt to hand the agent until the agent first calls a tool, then the same live panel.
+the same live panel from the start; **Copy prompt** hands the session to an agent that isn't
+listening.
 `installed-agent-live.test.mjs` runs this end to end in a real Home Assistant with the real
 panel: ask from the menu, draft, a comment pinned to a card, apply.
 
@@ -177,7 +192,10 @@ when the app next shows the session.
 - **Notices for cloud drafts while the app is closed.** The relay has no way to reach the phone;
   the integration holding the person's relay link would let it relay and announce drafts itself.
 - **One session for a card and its dashboard.** Card and dashboard sessions share the relay and
-  the MCP tools but are still started separately, and accepted separately.
+  the MCP tools but are still started separately, and accepted separately; a dashboard's session
+  list doesn't show card sessions.
+- **Section sessions from the panel.** Only the phone starts a section session (a section
+  heading's long press); the panel and desktop app start dashboard sessions.
 - **Card sessions in the browser end-to-end test.** The cloud path is covered against the real
   relay routes and a fake Home Assistant (`DashboardRelayTest`); a browser run needs a design
   server with UI Builder beside the Home Assistant container.
