@@ -22,3 +22,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+Digital-7 Mono Italic font (rc-converter/src/androidMain/resources/ee/schimke/ha/rc/fonts/digital7.ttf)
+Copyright Sizenko Alexander, Style-7 (http://www.styleseven.com)
+
+Free for personal, non-commercial use. Bundled for the Rugged Digital card style, a non-commercial
+one-off made with Greg Bullock from his GShark watch face, which uses the same font.
