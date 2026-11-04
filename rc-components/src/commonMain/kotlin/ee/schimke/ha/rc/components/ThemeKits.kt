@@ -234,7 +234,6 @@ internal object ThemeKits {
       visuals = HaVisualFamily.Lcd,
       readout = HaReadoutStyle.Screen,
       fontFamily = RemoteFontFamily.Monospace,
-      letterSpacingSp = 0.4f,
       valueWeight = FontWeight.Bold,
       motion = HaMotion.Instrument,
       grammar =
