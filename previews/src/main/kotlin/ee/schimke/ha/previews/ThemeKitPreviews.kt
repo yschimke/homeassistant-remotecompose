@@ -179,6 +179,14 @@ fun Kit_Engineered_Dark() = KitShowcase(HaUberTheme.Engineered, darkTheme = true
 @Composable
 fun Kit_Cockpit() = KitShowcase(HaUberTheme.Cockpit, darkTheme = true)
 
+@Preview(name = "kit: Rugged Digital (light)", widthDp = 360, heightDp = 640)
+@Composable
+fun Kit_RuggedDigital_Light() = KitShowcase(HaUberTheme.RuggedDigital, darkTheme = false)
+
+@Preview(name = "kit: Rugged Digital (dark)", widthDp = 360, heightDp = 640)
+@Composable
+fun Kit_RuggedDigital_Dark() = KitShowcase(HaUberTheme.RuggedDigital, darkTheme = true)
+
 /**
  * One component under every theme: the lock — written once against the grammar — locked and
  * unlocked, beside a dial and a switch, in each theme's palette and grammar. Bespoke themes draw it

@@ -15,7 +15,7 @@ import ee.schimke.rc.m3.RcMotionScheme
 // shared parts takes it, and so does every component added later.
 //
 // Kits evoke a genre — an electric car's centre screen, an assistant's gradient, an engineered
-// appliance, a car's digital cluster — with original palettes and drawings. They carry no brand
+// appliance, a car's digital cluster, a rugged digital sports watch — with original palettes and drawings. They carry no brand
 // name, logo, typeface or artwork; see docs/architecture/theme-kits.md §"Brands".
 // ---------------------------------------------------------------------------------------------
 
@@ -195,6 +195,59 @@ internal object ThemeKits {
         ),
       components = HaComponentSlots.Grammar,
       extends = "trinitron",
+    )
+
+  /**
+   * **Rugged Digital** — a rugged digital sports watch: big segment numerals with their unlit
+   * segments ghosted behind them, readings set in recessed screens, square-shouldered complication
+   * tiles on a dark dial, and one cyan accent like a small seconds readout. By day it is the
+   * positive display, black segments on pale grey.
+   */
+  val RuggedDigital =
+    HaUberTheme(
+      id = "rugged",
+      displayName = "Rugged Digital",
+      description = "Rugged sports-watch display · ghosted segments in recessed screens",
+      light =
+        palette(
+          dark = false,
+          card = 0xFFD4D7D7,
+          dashboard = 0xFFAFB4B6,
+          primary = 0xFF0A0C0E,
+          secondary = 0xFF33383D,
+          link = 0xFF00657D,
+          divider = 0xFFB9BEC0,
+          placeholder = 0xFFC3C7C8,
+        ),
+      dark =
+        palette(
+          dark = true,
+          card = 0xFF1A1D21,
+          dashboard = 0xFF0B0C0E,
+          primary = 0xFFF4F6F8,
+          secondary = 0xFF9AA2AC,
+          link = 0xFF1EC8F0,
+          divider = 0xFF2C3036,
+          placeholder = 0xFF24282D,
+        ),
+      shape = HaCardShapeStyle(cornerDp = 10, borderDp = 1, controlCornerDp = 4, squareKnob = true),
+      visuals = HaVisualFamily.Lcd,
+      readout = HaReadoutStyle.Screen,
+      fontFamily = RemoteFontFamily.Monospace,
+      letterSpacingSp = 0.4f,
+      valueWeight = FontWeight.Bold,
+      motion = HaMotion.Instrument,
+      grammar =
+        HaComponentGrammar(
+          stroke = HaStrokeWeight.Bold,
+          roundCaps = false,
+          level = HaLevelStyle.Segmented,
+          segments = 12,
+          ticks = 12,
+          outline = true,
+        ),
+      components = HaComponentSlots.Grammar,
+      extends = "lcd",
     )
 
   private fun palette(

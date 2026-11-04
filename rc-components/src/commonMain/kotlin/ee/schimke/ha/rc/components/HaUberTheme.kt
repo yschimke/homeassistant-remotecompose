@@ -480,6 +480,7 @@ data class HaUberTheme(
     val Aurora = ThemeKits.Aurora
     val Engineered = ThemeKits.Engineered
     val Cockpit = ThemeKits.Cockpit
+    val RuggedDigital = ThemeKits.RuggedDigital
 
     /** Every uber theme, [Classic] first. */
     val all: List<HaUberTheme> =
@@ -507,6 +508,7 @@ data class HaUberTheme(
         Aurora,
         Engineered,
         Cockpit,
+        RuggedDigital,
       )
 
     /** The bespoke themes: each owns its [HaVisualFamily], drawn by hand in Meters<Family>.kt. */

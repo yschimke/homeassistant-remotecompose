@@ -200,7 +200,7 @@ role.
 ## Adding a brand-style theme
 
 [`ThemeKits.kt`](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/ThemeKits.kt)
-has four kits:
+has five kits:
 
 | Kit | Genre | Extends | Grammar |
 |---|---|---|---|
@@ -208,6 +208,7 @@ has four kits:
 | `aurora` | an assistant's gradients | expressive | regular, round, a glowing **gradient halo** under each value |
 | `engineered` | an engineered appliance's display | braun | light, flat, **24 fine segments**, outlined bodies; fuchsia accent |
 | `cockpit` | a car's digital cluster at night (dark only) | trinitron | flat, **pointer needles** over 12 ticks |
+| `rugged` | a rugged digital sports watch | lcd | bold, flat, **12 ghosted segments** over 12 ticks; readings in recessed screens, a cyan accent |
 
 |  |  |  |
 |---|---|---|

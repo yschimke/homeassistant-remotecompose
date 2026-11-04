@@ -326,6 +326,10 @@ fun WearDashboardPreview_Engineered() = WearDashboardPreviewContent("engineered"
 @Composable
 fun WearDashboardPreview_Cockpit() = WearDashboardPreviewContent("cockpit")
 
+@Preview(name = "Wear: dashboard Rugged Digital", device = WearDevices.SMALL_ROUND, showSystemUi = true)
+@Composable
+fun WearDashboardPreview_RuggedDigital() = WearDashboardPreviewContent("rugged")
+
 @Preview(name = "Wear: dashboard EV Dash", device = WearDevices.SMALL_ROUND, showSystemUi = true)
 @Composable
 fun WearDashboardPreview_EvDash() = WearDashboardPreviewContent("ev-dash")

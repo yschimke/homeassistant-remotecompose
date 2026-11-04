@@ -258,7 +258,7 @@ more-info and card actions sheets, card history) are skinned in the card style e
 
 **Theme kits.** A theme no longer needs a family of its own. A *kit* is tokens, a component
 grammar (`HaComponentGrammar`) and optional per-slot drawings (`HaComponentSlots`) over a bespoke
-theme it `extends`: `ev-dash`, `aurora`, `engineered` and `cockpit` add no drawings. New components
+theme it `extends`: `ev-dash`, `aurora`, `engineered`, `cockpit` and `rugged` add no drawings. New components
 (the lock, `RemoteHaLock.kt`) are drawn once from the grammar and work under every theme. See
 [theme-kits.md](theme-kits.md).
 
