@@ -149,12 +149,21 @@ private class DashboardActionDispatcher(
   /** Runs a write, or hands it to [onLocked] while controls are locked. */
   private fun runWrite(action: HaAction) {
     if (readOnly()) {
-      Log.i(TAG, "Controls locked: dropping $action")
+      // Never the whole action: a locked alarm keypad's call carries its PIN in the service data.
+      Log.i(TAG, "Controls locked: dropping ${action.logLabel()}")
       onLocked(action) { perform(action) }
       return
     }
     perform(action)
   }
+
+  private fun HaAction.logLabel(): String =
+    when (this) {
+      is HaAction.Toggle -> "toggle for $entityId"
+      is HaAction.CallService -> "$domain.$service"
+      is HaAction.SetValue -> "$domain.$service for $entityId"
+      else -> this::class.simpleName.orEmpty()
+    }
 
   private fun perform(action: HaAction) {
     when (action) {
