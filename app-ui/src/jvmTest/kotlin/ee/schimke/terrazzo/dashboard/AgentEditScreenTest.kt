@@ -333,6 +333,18 @@ class AgentEditScreenTest {
       val bounds = node.getBoundsInRoot()
       assertTrue(bounds.bottom <= 200.dp, "${bounds.bottom} is past the window")
     }
+    // A long message scrolls within the field, which stays two lines tall: all of it fits.
+    val field = onNodeWithText("Tell the agent what to change")
+    field.performTextInput(
+      "Make the last field easy to reach\nKeep the reading clear\nKeep Send reachable"
+    )
+    field.performScrollTo()
+    val bounds = field.getBoundsInRoot()
+    assertTrue(
+      bounds.bottom - bounds.top < 80.dp,
+      "the field grew to ${bounds.bottom - bounds.top}",
+    )
+    assertTrue(bounds.bottom <= 200.dp, "${bounds.bottom} is past the window")
   }
 
   @Test

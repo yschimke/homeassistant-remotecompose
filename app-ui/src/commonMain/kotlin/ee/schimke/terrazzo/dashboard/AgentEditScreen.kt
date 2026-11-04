@@ -507,6 +507,7 @@ private fun SessionReview(
           onClearTarget = { target = null },
           showCodes = false,
           composeBeforeJoin = true,
+          compact = compactBar != null,
         )
       }
       if (session.drafts.size > 1) {
