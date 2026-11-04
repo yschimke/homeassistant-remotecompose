@@ -45,8 +45,10 @@ A theme is three layers, each a fallback for the one above it:
 **Resolution.** A part asks the active theme for its slot's drawing:
 
 1. the theme's own drawing for that slot (`theme.components`), else
-2. for a part that predates slots, the bespoke family's own, unchanged: the meters in
-   `Meters<Family>.kt`, and the switch and key mount from the one family table in
+2. for a part that predates slots, the bespoke family's own: its hand drawing where it has one
+   (the meters in `Meters<Family>.kt`; see [Bespoke families draw only what is
+   theirs](#bespoke-families-draw-only-what-is-theirs)), and the switch and key mount from the one
+   family table in
    [`HaControls.kt`](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/HaControls.kt)
    (`familySwitch`, `familyKey`), else
 3. the shared drawing, which reads only the theme's grammar and tokens: `GrammarMeters.kt` for
@@ -68,11 +70,36 @@ theme. The lock above is that case: it has no LCD drawing, yet under LCD it is a
 | | Bespoke theme | Theme kit |
 |---|---|---|
 | What it is | its own `HaVisualFamily`, drawn by hand | tokens + grammar over a bespoke theme it `extends` |
-| Older visuals | the family's `Meters<Family>.kt` | `HaComponentSlots.Grammar` (all slots drawn from the grammar) |
+| Older visuals | the family's `Meters<Family>.kt` where it has a drawing, else the grammar | `HaComponentSlots.Grammar` (all slots drawn from the grammar) |
 | New components | grammar drawing, from its derived grammar | grammar drawing, from its own grammar |
 | Controls, Wear container, charts, text surfaces | the family's own, from the family tables | drawn from its grammar, or a family's it borrows |
 | Layouts (tile, media panel, readings, notes, …) | the family's row in `familyLayouts` | inherited from the base it extends, unless it sets its own |
 | Cost to add | a family, about 40 files | one `HaUberTheme(...)` value |
+
+### Bespoke families draw only what is theirs
+
+A bespoke family keeps a hand drawing only where it says something the grammar cannot. Everything
+else is the grammar's drawing in the family's own tokens (`HaComponentGrammar.forFamily`), through
+the same family tables (`FamilyVisuals`, `FamilyCharts`):
+
+| Family | From the grammar | Its own (the novel bits) |
+|---|---|---|
+| Classic (the cards' own) | arc, bar, thermometer, battery, dial ring, history line, statistics bars | — |
+| Home Assistant | bar, thermometer, battery, history line, statistics bars | the chunky half gauge, the thermostat ring with its white handle |
+| Material 3 Expressive | arc, bar, thermometer, battery, dial ring, statistics bars | the filled history trace; its switch, icon-chip morph, split slider and wavy progress |
+
+The grammar learned the one rule that made this possible: a **gapped** grammar (`trackGap`, the
+grammar of M3 Expressive's progress indicators) draws a bare capsule thermometer with no bulb and a
+pill battery with no body outline.
+
+The other bespoke families (Trinitron, LCD, Braun, Nixie, Console, IKEA and the community styles)
+keep their meters: each is a design of its own, and in the community styles all of them come from
+just two short per-family grammars (`communityRing`, `communityBar` in `MetersCommunity.kt`).
+
+To move another family×part onto the grammar, render the family beside
+`theme.copy(components = HaComponentSlots.Grammar)`. Where the two read the same, point its row in
+the family table at the grammar and delete the drawing. Where they differ, decide whether the
+difference is the style or a missing grammar rule.
 
 ## Adding a component (the car door lock)
 

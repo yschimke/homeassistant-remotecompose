@@ -5,39 +5,45 @@ package ee.schimke.ha.rc.components
 import androidx.compose.runtime.Composable
 
 // ---------------------------------------------------------------------------------------------
-// The bespoke families' own drawings of the visuals that predate slots — meters and the control
-// dial's ring — as one table. A part asks [familyVisuals] for its family's renderer only when the
-// theme has no drawing of its own for the slot (HaComponentSlots); the drawings themselves live in
-// Meters<Family>.kt and Dials.kt, unchanged.
+// The bespoke families' visuals that predate slots — meters and the control dial's ring — as one
+// table. A part asks [familyVisuals] for its family's renderer only when the theme has no drawing
+// of
+// its own for the slot (HaComponentSlots). Each entry is the grammar, or the family's hand drawing
+// in Meters<Family>.kt and Dials.kt where it has something the grammar cannot say.
 // ---------------------------------------------------------------------------------------------
 
 /** How a family draws a control dial's ring. */
 internal enum class HaDialRingKind {
-  /** The cards' own arc, drawn by [RemoteHaArcDial]. */
-  Standard,
+  /** The grammar's ring ([GrammarRenderers.Dial]), in the family's tokens. */
+  Grammar,
   /** A rotary knob inside a lamp ring (Console, MetersConsole.kt). */
   Knob,
   /** The family's own ring in Dials.kt ([familyDial]). */
   Family,
 }
 
-/** A bespoke family's own visuals. */
+/**
+ * A bespoke family's own visuals: its hand drawing where it has something to say, else the grammar
+ * ([GrammarRenderers]) drawn with the family's [HaComponentGrammar.forFamily] tokens. A family
+ * keeps a drawing only for what the grammar cannot express — Home Assistant's chunky half gauge, an
+ * LCD's framed segment columns, a Nixie tube — so the cards' own style (Classic) and the styles the
+ * grammar was modelled on draw from the same code as every theme kit.
+ */
 internal class FamilyVisuals private constructor(val family: HaVisualFamily) {
   /** The half-circle dial of [RemoteHaArcMeter]. */
-  val arc = HaVisualRenderer { spec ->
-    val look = spec.look
-    val fraction = spec.fraction
-    val zones = spec.zones
+  val arc: HaVisualRenderer =
     when (family) {
-      HaVisualFamily.Classic -> classicArc(look, fraction, spec.strokePx, spec.baseline)
-      HaVisualFamily.HomeAssistant -> homeAssistantArc(look, fraction, spec.baseline)
-      HaVisualFamily.Expressive -> expressiveArc(look, fraction, spec.strokePx, spec.baseline)
-      HaVisualFamily.Trinitron -> trinitronArc(look, fraction, spec.baseline, zones)
-      HaVisualFamily.Lcd -> lcdArc(look, fraction, spec.strokePx, spec.baseline, zones)
-      HaVisualFamily.Braun -> braunArc(look, fraction, spec.baseline)
-      HaVisualFamily.Nixie -> nixieArc(look, fraction, spec.strokePx, spec.baseline)
-      HaVisualFamily.Console -> consoleArc(look, fraction, spec.baseline, zones)
-      HaVisualFamily.Ikea -> ikeaArc(look, fraction, spec.baseline)
+      HaVisualFamily.Classic,
+      HaVisualFamily.Expressive -> GrammarRenderers.Arc
+      HaVisualFamily.HomeAssistant -> drawn { homeAssistantArc(it.look, it.fraction, it.baseline) }
+      HaVisualFamily.Trinitron ->
+        drawn { trinitronArc(it.look, it.fraction, it.baseline, it.zones) }
+      HaVisualFamily.Lcd ->
+        drawn { lcdArc(it.look, it.fraction, it.strokePx, it.baseline, it.zones) }
+      HaVisualFamily.Braun -> drawn { braunArc(it.look, it.fraction, it.baseline) }
+      HaVisualFamily.Nixie -> drawn { nixieArc(it.look, it.fraction, it.strokePx, it.baseline) }
+      HaVisualFamily.Console -> drawn { consoleArc(it.look, it.fraction, it.baseline, it.zones) }
+      HaVisualFamily.Ikea -> drawn { ikeaArc(it.look, it.fraction, it.baseline) }
       HaVisualFamily.Mushroom,
       HaVisualFamily.Bubble,
       HaVisualFamily.Minimalist,
@@ -48,25 +54,22 @@ internal class FamilyVisuals private constructor(val family: HaVisualFamily) {
       HaVisualFamily.Lcars,
       HaVisualFamily.Arctic,
       HaVisualFamily.Aeon ->
-        communityArc(family, look, fraction, spec.strokePx, spec.baseline, zones)
+        drawn { communityArc(family, it.look, it.fraction, it.strokePx, it.baseline, it.zones) }
     }
-  }
 
   /** The straight meter of [RemoteHaBarMeter]. */
-  val bar = HaVisualRenderer { spec ->
-    val look = spec.look
-    val fraction = spec.fraction
-    val zones = spec.zones
+  val bar: HaVisualRenderer =
     when (family) {
+      HaVisualFamily.Classic,
       HaVisualFamily.HomeAssistant,
-      HaVisualFamily.Classic -> classicBar(look, fraction, spec.vertical)
-      HaVisualFamily.Expressive -> expressiveBar(look, fraction, spec.vertical)
-      HaVisualFamily.Trinitron -> trinitronBar(look, fraction, spec.vertical, zones)
-      HaVisualFamily.Lcd -> lcdBar(look, fraction, spec.vertical, zones)
-      HaVisualFamily.Braun -> braunBar(look, fraction, spec.vertical)
-      HaVisualFamily.Nixie -> nixieBar(look, fraction, spec.vertical)
-      HaVisualFamily.Console -> consoleBar(look, fraction, spec.vertical)
-      HaVisualFamily.Ikea -> ikeaBar(look, fraction, spec.vertical)
+      HaVisualFamily.Expressive -> GrammarRenderers.Bar
+      HaVisualFamily.Trinitron ->
+        drawn { trinitronBar(it.look, it.fraction, it.vertical, it.zones) }
+      HaVisualFamily.Lcd -> drawn { lcdBar(it.look, it.fraction, it.vertical, it.zones) }
+      HaVisualFamily.Braun -> drawn { braunBar(it.look, it.fraction, it.vertical) }
+      HaVisualFamily.Nixie -> drawn { nixieBar(it.look, it.fraction, it.vertical) }
+      HaVisualFamily.Console -> drawn { consoleBar(it.look, it.fraction, it.vertical) }
+      HaVisualFamily.Ikea -> drawn { ikeaBar(it.look, it.fraction, it.vertical) }
       HaVisualFamily.Mushroom,
       HaVisualFamily.Bubble,
       HaVisualFamily.Minimalist,
@@ -76,25 +79,22 @@ internal class FamilyVisuals private constructor(val family: HaVisualFamily) {
       HaVisualFamily.Noctis,
       HaVisualFamily.Lcars,
       HaVisualFamily.Arctic,
-      HaVisualFamily.Aeon -> communityBar(family, look, fraction, spec.vertical, zones)
+      HaVisualFamily.Aeon ->
+        drawn { communityBar(family, it.look, it.fraction, it.vertical, it.zones) }
     }
-  }
 
   /** [RemoteHaThermometerGlyph]. */
-  val thermometer = HaVisualRenderer { spec ->
-    val look = spec.look
-    val fraction = spec.fraction
-    val zones = spec.zones
+  val thermometer: HaVisualRenderer =
     when (family) {
+      HaVisualFamily.Classic,
       HaVisualFamily.HomeAssistant,
-      HaVisualFamily.Classic -> classicThermometer(look, fraction)
-      HaVisualFamily.Expressive -> expressiveThermometer(look, fraction)
-      HaVisualFamily.Trinitron -> trinitronThermometer(look, fraction, zones)
-      HaVisualFamily.Lcd -> lcdThermometer(look, fraction, zones)
-      HaVisualFamily.Braun -> braunThermometer(look, fraction, zones)
-      HaVisualFamily.Nixie -> nixieThermometer(look, fraction)
-      HaVisualFamily.Console -> consoleThermometer(look, fraction, zones)
-      HaVisualFamily.Ikea -> ikeaThermometer(look, fraction, zones)
+      HaVisualFamily.Expressive -> GrammarRenderers.Thermometer
+      HaVisualFamily.Trinitron -> drawn { trinitronThermometer(it.look, it.fraction, it.zones) }
+      HaVisualFamily.Lcd -> drawn { lcdThermometer(it.look, it.fraction, it.zones) }
+      HaVisualFamily.Braun -> drawn { braunThermometer(it.look, it.fraction, it.zones) }
+      HaVisualFamily.Nixie -> drawn { nixieThermometer(it.look, it.fraction) }
+      HaVisualFamily.Console -> drawn { consoleThermometer(it.look, it.fraction, it.zones) }
+      HaVisualFamily.Ikea -> drawn { ikeaThermometer(it.look, it.fraction, it.zones) }
       HaVisualFamily.Mushroom,
       HaVisualFamily.Bubble,
       HaVisualFamily.Minimalist,
@@ -104,25 +104,21 @@ internal class FamilyVisuals private constructor(val family: HaVisualFamily) {
       HaVisualFamily.Noctis,
       HaVisualFamily.Lcars,
       HaVisualFamily.Arctic,
-      HaVisualFamily.Aeon -> communityThermometer(family, look, fraction, zones)
+      HaVisualFamily.Aeon -> drawn { communityThermometer(family, it.look, it.fraction, it.zones) }
     }
-  }
 
   /** [RemoteHaBatteryGlyph]. */
-  val battery = HaVisualRenderer { spec ->
-    val look = spec.look
-    val fraction = spec.fraction
-    val zones = spec.zones
+  val battery: HaVisualRenderer =
     when (family) {
+      HaVisualFamily.Classic,
       HaVisualFamily.HomeAssistant,
-      HaVisualFamily.Classic -> classicBattery(look, fraction)
-      HaVisualFamily.Expressive -> expressiveBattery(look, fraction)
-      HaVisualFamily.Trinitron -> trinitronBattery(look, fraction, zones)
-      HaVisualFamily.Lcd -> lcdBattery(look, fraction, zones)
-      HaVisualFamily.Braun -> braunBattery(look, fraction)
-      HaVisualFamily.Nixie -> nixieBattery(look, fraction)
-      HaVisualFamily.Console -> consoleBattery(look, fraction, zones)
-      HaVisualFamily.Ikea -> ikeaBattery(look, fraction, zones)
+      HaVisualFamily.Expressive -> GrammarRenderers.Battery
+      HaVisualFamily.Trinitron -> drawn { trinitronBattery(it.look, it.fraction, it.zones) }
+      HaVisualFamily.Lcd -> drawn { lcdBattery(it.look, it.fraction, it.zones) }
+      HaVisualFamily.Braun -> drawn { braunBattery(it.look, it.fraction) }
+      HaVisualFamily.Nixie -> drawn { nixieBattery(it.look, it.fraction) }
+      HaVisualFamily.Console -> drawn { consoleBattery(it.look, it.fraction, it.zones) }
+      HaVisualFamily.Ikea -> drawn { ikeaBattery(it.look, it.fraction, it.zones) }
       HaVisualFamily.Mushroom,
       HaVisualFamily.Bubble,
       HaVisualFamily.Minimalist,
@@ -132,9 +128,8 @@ internal class FamilyVisuals private constructor(val family: HaVisualFamily) {
       HaVisualFamily.Noctis,
       HaVisualFamily.Lcars,
       HaVisualFamily.Arctic,
-      HaVisualFamily.Aeon -> communityBattery(family, look, fraction, zones)
+      HaVisualFamily.Aeon -> drawn { communityBattery(family, it.look, it.fraction, it.zones) }
     }
-  }
 
   /**
    * The arc meter's track: Home Assistant's gauge sits on the dashboard colour, else the divider.
@@ -146,12 +141,18 @@ internal class FamilyVisuals private constructor(val family: HaVisualFamily) {
   /** How the family draws a control dial's ring. */
   val dialRing: HaDialRingKind =
     when (family) {
-      HaVisualFamily.Classic -> HaDialRingKind.Standard
+      HaVisualFamily.Classic,
+      HaVisualFamily.Expressive -> HaDialRingKind.Grammar
       HaVisualFamily.Console -> HaDialRingKind.Knob
       else -> HaDialRingKind.Family
     }
 
   companion object {
+    /** A hand drawing: [draw] with the spec as its argument. */
+    private fun drawn(
+      draw: androidx.compose.remote.creation.compose.layout.RemoteDrawScope.(HaVisualSpec) -> Unit
+    ) = HaVisualRenderer { spec -> draw(spec) }
+
     private val byFamily = HaVisualFamily.entries.associateWith { FamilyVisuals(it) }
 
     fun of(family: HaVisualFamily): FamilyVisuals = byFamily.getValue(family)

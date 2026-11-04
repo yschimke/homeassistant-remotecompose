@@ -116,6 +116,35 @@ class HaControlSlotsTest {
   }
 
   @Test
+  fun familiesWithNothingOfTheirOwnDrawTheGrammar() {
+    // Classic is the grammar's default; Home Assistant and Expressive keep only their novel parts.
+    val classic = FamilyVisuals.of(HaVisualFamily.Classic)
+    assertSame(GrammarRenderers.Arc, classic.arc)
+    assertSame(GrammarRenderers.Bar, classic.bar)
+    assertSame(GrammarRenderers.Thermometer, classic.thermometer)
+    assertSame(GrammarRenderers.Battery, classic.battery)
+    assertEquals(HaDialRingKind.Grammar, classic.dialRing)
+
+    val homeAssistant = FamilyVisuals.of(HaVisualFamily.HomeAssistant)
+    assertTrue(homeAssistant.arc !== GrammarRenderers.Arc, "HA keeps its half gauge")
+    assertSame(GrammarRenderers.Bar, homeAssistant.bar)
+    assertSame(GrammarRenderers.Thermometer, homeAssistant.thermometer)
+    assertSame(GrammarRenderers.Battery, homeAssistant.battery)
+    assertEquals(HaDialRingKind.Family, homeAssistant.dialRing)
+
+    val expressive = FamilyVisuals.of(HaVisualFamily.Expressive)
+    assertSame(GrammarRenderers.Arc, expressive.arc)
+    assertSame(GrammarRenderers.Bar, expressive.bar)
+    assertSame(GrammarRenderers.Thermometer, expressive.thermometer)
+    assertSame(GrammarRenderers.Battery, expressive.battery)
+    assertEquals(HaDialRingKind.Grammar, expressive.dialRing)
+
+    // A hand-drawn family keeps its drawings.
+    val lcd = FamilyVisuals.of(HaVisualFamily.Lcd)
+    assertTrue(lcd.arc !== GrammarRenderers.Arc && lcd.battery !== GrammarRenderers.Battery)
+  }
+
+  @Test
   fun cardsAskByRoleNotFamily() {
     // No card names a style family: every card file (RemoteHa*) and the card chrome ask the active
     // theme's slots and layouts. Families are named only in the registries — the theme
