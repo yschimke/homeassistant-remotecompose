@@ -63,6 +63,24 @@ class VerticalStackFitTest {
     assertEquals(one, stackChildHeightDp(stack, HaSnapshot(), registry))
   }
 
+  @Test
+  fun aLauncherGridIsMeasuredAsItLaysOut() {
+    // In a 104dp-wide widget a two-button grid is one row of two square cells, not two buttons'
+    // natural height: an entity card still fits under it in a 104dp-tall widget.
+    val registry = defaultRegistry()
+    val grid =
+      card(
+        """{"type":"grid","columns":2,"cards":[{"type":"button","entity":"light.a"},
+            {"type":"button","entity":"light.b"}]}"""
+      )
+    val entity = card("""{"type":"entity","entity":"sensor.a"}""")
+    val heights =
+      listOf(grid, entity).map {
+        stackChildHeightDp(it, HaSnapshot(), registry, widthDp = 104, heightDp = 104)
+      }
+    assertEquals(2, fittingChildren(heights, availableDp = 104), "heights $heights")
+  }
+
   private fun card(json: String): CardConfig {
     val obj = Json.parseToJsonElement(json).jsonObject
     return CardConfig(obj["type"]!!.jsonPrimitive.content, obj)

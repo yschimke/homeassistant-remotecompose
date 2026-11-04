@@ -97,9 +97,11 @@ class VerticalStackCardConverter : DesignedCardConverter() {
       return
     }
     val registry = LocalCardRegistry.current
-    val heights = visible.map { (_, shown) -> stackChildHeightDp(shown, snapshot, registry) }
-    val indices = visible.map { it.first }
     val capture = LocalWidgetCaptureSizeDp.current
+    val heights = visible.map { (_, shown) ->
+      stackChildHeightDp(shown, snapshot, registry, capture?.widthDp, capture?.heightDp)
+    }
+    val indices = visible.map { it.first }
     when {
       capture != null -> {
         val count = fittingChildren(heights, capture.heightDp)
@@ -135,23 +137,72 @@ internal fun stackChildHeightDp(
   card: CardConfig,
   snapshot: HaSnapshot,
   registry: CardRegistry,
+  widthDp: Int? = null,
+  heightDp: Int? = null,
 ): Int {
   // A hidden conditional takes no room.
   val children = childCards(card).mapNotNull { shownCard(it, snapshot) }
   return when (card.type) {
     CardTypes.VERTICAL_STACK ->
-      children.sumOf { stackChildHeightDp(it, snapshot, registry) } +
+      children.sumOf { stackChildHeightDp(it, snapshot, registry, widthDp, heightDp) } +
         VERTICAL_STACK_GAP_DP * (children.size - 1).coerceAtLeast(0)
-    CardTypes.HORIZONTAL_STACK ->
-      children.maxOfOrNull { stackChildHeightDp(it, snapshot, registry) } ?: 0
-    CardTypes.GRID -> {
-      val columns = gridColumns(card).coerceAtLeast(1)
-      children.chunked(columns).sumOf { row ->
-        row.maxOf { stackChildHeightDp(it, snapshot, registry) }
+    CardTypes.HORIZONTAL_STACK -> {
+      val share = widthDp?.let {
+        (it - HORIZONTAL_STACK_GAP_DP * (children.size - 1)) / children.size.coerceAtLeast(1)
       }
+      children.maxOfOrNull { stackChildHeightDp(it, snapshot, registry, share, heightDp) } ?: 0
     }
+    CardTypes.GRID ->
+      widthDp?.let { launcherGridHeightDp(card, children, snapshot, registry, it, heightDp) }
+        ?: gridColumns(card).coerceAtLeast(1).let { columns ->
+          children.chunked(columns).sumOf { row ->
+            row.maxOf { stackChildHeightDp(it, snapshot, registry) }
+          }
+        }
     else -> registry.cardHeightDp(card, snapshot)
   }
+}
+
+/**
+ * The height a grid of [children] draws in a launcher widget [widthDp] × [heightDp], by the rules
+ * [GridCardConverter.Draw] lays it out with there ([HaGridLayout.fit]): as many cells to a row as
+ * the width holds, more to a row when the widget's height can't hold the rows that leaves, each
+ * [HaGridLayout.MIN_FIXED_CELL_DP] tall or, for square cells, as tall as it is wide.
+ */
+private fun launcherGridHeightDp(
+  card: CardConfig,
+  children: List<CardConfig>,
+  snapshot: HaSnapshot,
+  registry: CardRegistry,
+  widthDp: Int,
+  heightDp: Int?,
+): Int {
+  if (children.isEmpty()) return 0
+  val converters = children.map { registry.get(it.type) ?: registry.get(UNSUPPORTED_CARD_TYPE) }
+  val minCellDp =
+    children.indices.maxOf { k ->
+      converters[k]?.gridMinCellWidthDp(children[k], snapshot)
+        ?: GridCardConverter.DEFAULT_MIN_CELL_DP
+    }
+  val square =
+    gridSquare(card) &&
+      children.indices.any { k -> converters[k]?.gridSquareCell(children[k], snapshot) == true }
+  val columns = gridColumns(card)
+  val keepColumns =
+    children.indices.any { k -> converters[k]?.gridKeepsColumnWidth(children[k], snapshot) == true }
+  val planCount = if (keepColumns) maxOf(children.size, columns) else children.size
+  val widthPerRow =
+    HaGridLayout.perRowAt(widthDp.toFloat(), planCount, columns, minCellDp).coerceAtLeast(1)
+  val gap = HaGridLayout.GAP_DP
+  val (perRow, shown) =
+    heightDp?.let {
+      val fit = HaGridLayout.fit(widthDp, it, children.size, widthPerRow, square)
+      fit.perRow.coerceAtLeast(1) to fit.shown
+    } ?: (widthPerRow to children.size)
+  val cellDp =
+    if (square) (widthDp - gap * (perRow - 1)) / perRow else HaGridLayout.MIN_FIXED_CELL_DP
+  val rows = (shown + perRow - 1) / perRow
+  return rows * cellDp + gap * (rows - 1).coerceAtLeast(0)
 }
 
 /**
@@ -415,7 +466,7 @@ class GridCardConverter : DesignedCardConverter() {
     }
   }
 
-  private companion object {
+  internal companion object {
     const val COLUMNS = "columns"
     const val SQUARE = "square"
 
