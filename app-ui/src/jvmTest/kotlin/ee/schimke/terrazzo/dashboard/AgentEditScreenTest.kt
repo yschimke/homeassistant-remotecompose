@@ -1,7 +1,11 @@
 package ee.schimke.terrazzo.dashboard
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.*
+import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.HaCommandException
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
@@ -11,6 +15,7 @@ import ee.schimke.ha.client.dashboard.StartedAgentEdit
 import ee.schimke.ha.model.HaSnapshot
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -282,5 +287,41 @@ class AgentEditScreenTest {
     assertEquals(true, null sameAs EditScope())
     assertEquals(true, EditScope.section(0, 1, "A") sameAs EditScope.section(0, 1, "B"))
     assertEquals(false, EditScope.section(0, 1, "A") sameAs null)
+  }
+
+  @Test
+  fun aShortWindowKeepsBackAndTheConversationInReach() = runComposeUiTest {
+    val edits = FakeEdits().apply { baseline = draftConfig }
+    // A landscape phone with the keyboard up: less height than a toolbar and the conversation.
+    setContent {
+      Box(Modifier.size(width = 640.dp, height = 200.dp)) {
+        AgentEditScreen(
+          edits = edits,
+          urlPath = "garden",
+          title = "Garden",
+          snapshot = HaSnapshot(),
+          onBack = {},
+          onSharePrompt = {},
+          onApplied = {},
+          startScope = EditScope(),
+        ) { _, card ->
+          Text("card:${card.type}")
+        }
+      }
+    }
+    waitUntil {
+      onAllNodesWithText("Tell the agent what to change").fetchSemanticsNodes().isNotEmpty()
+    }
+    for (node in
+      listOf(
+        onNodeWithContentDescription("Back"),
+        onNodeWithText("Copy prompt"),
+        onNodeWithText("Tell the agent what to change"),
+        onNodeWithText("Send"),
+      )) {
+      node.performScrollTo().assertIsDisplayed()
+      val bounds = node.getBoundsInRoot()
+      assertTrue(bounds.bottom <= 200.dp, "${bounds.bottom} is past the window")
+    }
   }
 }

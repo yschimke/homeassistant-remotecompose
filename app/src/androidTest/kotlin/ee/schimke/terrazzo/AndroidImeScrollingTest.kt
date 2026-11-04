@@ -201,8 +201,9 @@ class AndroidImeScrollingTest {
     captureWindowEvidence("agent-session-bottom-ime")
     assertAboveKeyboard(action)
     if (InstrumentationRegistry.getArguments().getString("expectedRotation") == "1") {
+      // A short window scrolls the toolbar with the conversation.
       val back = compose.onNodeWithContentDescription("Back")
-      back.assertIsDisplayed()
+      back.performScrollTo().assertIsDisplayed()
       assertAboveKeyboard(back)
       captureWindowEvidence("agent-session-compact-back-ime")
       back.performClick()

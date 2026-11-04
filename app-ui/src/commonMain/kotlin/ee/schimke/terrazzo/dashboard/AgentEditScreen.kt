@@ -2,6 +2,7 @@ package ee.schimke.terrazzo.dashboard
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -201,118 +202,143 @@ fun AgentEditScreen(
   }
 
   val current = session?.takeIf { it.id == id }
-  Scaffold(
-    topBar = {
-      TopAppBar(
-        title = {
-          Text(
-            current?.scopeLabel(title) ?: "Agent sessions",
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-          )
+  val barTitle = current?.scopeLabel(title) ?: "Agent sessions"
+  val backButton: @Composable () -> Unit = {
+    IconButton(
+      onClick = {
+        when {
+          // Opened from the dashboard's draft bar or a section: back there.
+          sessionId != null && sessionId == initialSessionId && onDashboard != null -> onDashboard()
+          sessionId != null && startScope == null && initialSessionId == null -> {
+            sessionId = null
+            session = null
+          }
+          else -> onBack()
+        }
+      }
+    ) {
+      Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+    }
+  }
+  val copyPrompt: @Composable () -> Unit = {
+    if (current?.isOpen == true)
+      TextButton(
+        enabled = !busy,
+        onClick = {
+          run {
+            onSharePrompt(edits.prompt(current.id))
+            tell("Prompt copied. Give it to one or more agents.")
+          }
         },
-        navigationIcon = {
-          IconButton(
-            onClick = {
-              when {
-                // Opened from the dashboard's draft bar or a section: back there.
-                sessionId != null && sessionId == initialSessionId && onDashboard != null ->
-                  onDashboard()
-                sessionId != null && startScope == null && initialSessionId == null -> {
+      ) {
+        Text("Copy prompt")
+      }
+  }
+  BoxWithConstraints(Modifier.fillMaxSize()) {
+    // A landscape keyboard can leave less height than a toolbar and the conversation: the toolbar
+    // then scrolls with the content, keeping Back and the field reachable.
+    val compactHeight = maxHeight < 240.dp
+    val compactBar: (@Composable () -> Unit)? =
+      if (!compactHeight) null
+      else {
+        {
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            backButton()
+            Text(
+              barTitle,
+              Modifier.weight(1f),
+              style = MaterialTheme.typography.titleMedium,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+            )
+            copyPrompt()
+          }
+        }
+      }
+    Scaffold(
+      topBar = {
+        if (!compactHeight)
+          TopAppBar(
+            title = { Text(barTitle, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            navigationIcon = backButton,
+            actions = { copyPrompt() },
+          )
+      },
+      snackbarHost = { SnackbarHost(snackbars) },
+    ) { padding ->
+      Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
+        when {
+          id == null && startScope == null ->
+            SessionList(
+              compactBar = compactBar,
+              edits = edits,
+              urlPath = urlPath,
+              title = title,
+              busy = busy,
+              cloudServer = cloudServer,
+              onCopy = onSharePrompt,
+              onNew = { run { open(null) } },
+              onOpen = { picked ->
+                session = picked
+                sessionId = picked.id
+                // The list leaves out the configurations: the whole session, for its preview.
+                run { edits.get(picked.id).let { if (sessionId == it.id) session = it } }
+              },
+            )
+          current == null ->
+            Column {
+              compactBar?.invoke()
+              Text(problem ?: "Opening the session…", Modifier.padding(24.dp))
+            }
+          else ->
+            SessionReview(
+              compactBar = compactBar,
+              session = current,
+              // A session not relayed by this device (an agent signed in to Home Assistant, or
+              // another device) carries its presence and messages itself.
+              live =
+                live?.live(current.id)?.collectAsState()?.value
+                  ?: directLive(current, sinceReply)
+                  ?: pendingLive(current, current.agentListening && sinceReply < LISTENING_SECONDS),
+              liveBusy = busy,
+              onComment = { text, target ->
+                run {
+                  if (live != null) edits.note(current.id, text, target)
+                  else session = edits.note(current.id, text, target)
+                }
+              },
+              problem = problem,
+              snapshot = snapshot,
+              busy = busy,
+              writeBlockedReason = writeBlockedReason,
+              onApply = { draft ->
+                run {
+                  session = edits.apply(current.id, draft.id)
+                  onApplied()
+                  tell("Done: your dashboard uses it.")
+                }
+              },
+              onUndo = {
+                run {
+                  session = edits.undo(current.id)
+                  onApplied()
+                }
+              },
+              // Best effort, quietly: the agent sees the draft as drawn here when it asks.
+              onRender = { draftId, png ->
+                scope.launch { runCatching { edits.shareRender(current.id, draftId, png) } }
+              },
+              onDiscard = {
+                run {
+                  edits.discard(current.id)
+                  if (startScope != null) onBack()
                   sessionId = null
                   session = null
                 }
-                else -> onBack()
-              }
-            }
-          ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-          }
-        },
-        actions = {
-          if (current?.isOpen == true)
-            TextButton(
-              enabled = !busy,
-              onClick = {
-                run {
-                  onSharePrompt(edits.prompt(current.id))
-                  tell("Prompt copied. Give it to one or more agents.")
-                }
               },
-            ) {
-              Text("Copy prompt")
-            }
-        },
-      )
-    },
-    snackbarHost = { SnackbarHost(snackbars) },
-  ) { padding ->
-    Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
-      when {
-        id == null && startScope == null ->
-          SessionList(
-            edits = edits,
-            urlPath = urlPath,
-            title = title,
-            busy = busy,
-            cloudServer = cloudServer,
-            onCopy = onSharePrompt,
-            onNew = { run { open(null) } },
-            onOpen = { picked ->
-              session = picked
-              sessionId = picked.id
-              // The list leaves out the configurations: the whole session, for its preview.
-              run { edits.get(picked.id).let { if (sessionId == it.id) session = it } }
-            },
-          )
-        current == null -> Text(problem ?: "Opening the session…", Modifier.padding(24.dp))
-        else ->
-          SessionReview(
-            session = current,
-            // A session not relayed by this device (an agent signed in to Home Assistant, or
-            // another device) carries its presence and messages itself.
-            live =
-              live?.live(current.id)?.collectAsState()?.value
-                ?: directLive(current, sinceReply)
-                ?: pendingLive(current, current.agentListening && sinceReply < LISTENING_SECONDS),
-            liveBusy = busy,
-            onComment = { text, target ->
-              run {
-                if (live != null) edits.note(current.id, text, target)
-                else session = edits.note(current.id, text, target)
-              }
-            },
-            problem = problem,
-            snapshot = snapshot,
-            busy = busy,
-            writeBlockedReason = writeBlockedReason,
-            onApply = { draft ->
-              run {
-                session = edits.apply(current.id, draft.id)
-                onApplied()
-                tell("Done: your dashboard uses it.")
-              }
-            },
-            onUndo = {
-              run {
-                session = edits.undo(current.id)
-                onApplied()
-              }
-            },
-            // Best effort, quietly: the agent sees the draft as drawn here when it asks.
-            onRender = { draftId, png ->
-              scope.launch { runCatching { edits.shareRender(current.id, draftId, png) } }
-            },
-            onDiscard = {
-              run {
-                edits.discard(current.id)
-                if (startScope != null) onBack()
-                sessionId = null
-                session = null
-              }
-            },
-            renderCard = renderCard,
-          )
+              renderCard = renderCard,
+            )
+        }
       }
     }
   }
@@ -340,6 +366,7 @@ internal fun agentEditFailure(e: Exception): String =
 /** A dashboard's sessions, open and recent, and the one way to start another. */
 @Composable
 private fun SessionList(
+  compactBar: (@Composable () -> Unit)?,
   edits: AgentEdits,
   urlPath: String?,
   title: String?,
@@ -357,6 +384,7 @@ private fun SessionList(
     Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
     verticalArrangement = Arrangement.spacedBy(12.dp),
   ) {
+    compactBar?.invoke()
     Button(enabled = !busy, onClick = onNew) { Text("New session") }
     // Connect once; after that a new session goes straight to the agent.
     if (cloudServer != null) AgentConnection(cloudServer, onCopy)
@@ -407,6 +435,7 @@ internal fun previewDashboard(config: JsonObject?): Dashboard? = config?.let {
 
 @Composable
 private fun SessionReview(
+  compactBar: (@Composable () -> Unit)?,
   session: AgentEditSession,
   live: AgentRelayState?,
   liveBusy: Boolean,
@@ -440,6 +469,7 @@ private fun SessionReview(
         .padding(horizontal = 16.dp, vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+      compactBar?.invoke()
       Text(
         when {
           session.isApplied -> "Your dashboard uses it. Undo puts it back."
