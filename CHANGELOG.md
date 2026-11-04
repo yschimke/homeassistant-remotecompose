@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.83](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.82...v0.1.83) (2026-11-04)
+
+
+### Features
+
+* **app:** offer Unlock where a locked tap fails ([#1448](https://github.com/yschimke/homeassistant-remotecompose/issues/1448)) ([4421595](https://github.com/yschimke/homeassistant-remotecompose/commit/442159561f84dea7277a658037e036b0b98a61c2))
+* complete theme kits — Wear container, charts, text surfaces and layouts as slots ([#1442](https://github.com/yschimke/homeassistant-remotecompose/issues/1442)) ([fd3721d](https://github.com/yschimke/homeassistant-remotecompose/commit/fd3721de49985d345486d34899705ea05ed02451))
+* move the control dial, media transport keys and button icon chip into slots ([#1440](https://github.com/yschimke/homeassistant-remotecompose/issues/1440)) ([3d21c2a](https://github.com/yschimke/homeassistant-remotecompose/commit/3d21c2a492cebf15fedce943db9bbd7838dd5e48))
+* resume cloud agent requests from any client and review drafts on the dashboard ([#1443](https://github.com/yschimke/homeassistant-remotecompose/issues/1443)) ([b20d428](https://github.com/yschimke/homeassistant-remotecompose/commit/b20d4284528fd2ce57b47f0f118cdbea23a192d5))
+* scoped agent sessions for a dashboard, a section or a card, with no request box ([#1450](https://github.com/yschimke/homeassistant-remotecompose/issues/1450)) ([4dfb053](https://github.com/yschimke/homeassistant-remotecompose/commit/4dfb053f82d618a16b2feeeb828f29fede21ebba))
+* theme kits — component grammar and slots so cards and themes stop multiplying ([#1430](https://github.com/yschimke/homeassistant-remotecompose/issues/1430)) ([e9d00bb](https://github.com/yschimke/homeassistant-remotecompose/commit/e9d00bb5ab0d71bee8fefae7224bcc0e9f26f9e8))
+
+
+### Bug Fixes
+
+* 48dp cover buttons and no tappable slivers in Wear stacks ([#1452](https://github.com/yschimke/homeassistant-remotecompose/issues/1452)) ([616ae45](https://github.com/yschimke/homeassistant-remotecompose/commit/616ae4516e4e1661013b1ec0d8f6524d2df4fc8d))
+* capture matrix launcher cells at their size, so they don't show the error triangle ([#1454](https://github.com/yschimke/homeassistant-remotecompose/issues/1454)) ([4bfd645](https://github.com/yschimke/homeassistant-remotecompose/commit/4bfd6450d90692456da632a1e01dc239e03c072b))
+* check the agent session's keyboard test against the settled keyboard ([#1461](https://github.com/yschimke/homeassistant-remotecompose/issues/1461)) ([68972bf](https://github.com/yschimke/homeassistant-remotecompose/commit/68972bfd1c00f3eb4c3bdaea21e0cd921c99d78d))
+* **deps:** update androidx ([#1456](https://github.com/yschimke/homeassistant-remotecompose/issues/1456)) ([a3e1e1d](https://github.com/yschimke/homeassistant-remotecompose/commit/a3e1e1d0c132f4e89433aa23a2d2c2e056359f85))
+* **deps:** update meta.spatial to v0.15.0 ([#1433](https://github.com/yschimke/homeassistant-remotecompose/issues/1433)) ([a45a56b](https://github.com/yschimke/homeassistant-remotecompose/commit/a45a56bd949369d0928cff31765a8a7d7eef4151))
+
 ## [0.1.82](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.81...v0.1.82) (2026-11-03)
 
 
