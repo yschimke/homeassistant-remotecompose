@@ -51,6 +51,7 @@ import ee.schimke.ha.client.stateSnapshots
 import ee.schimke.ha.model.*
 import ee.schimke.ha.rc.formatState
 import ee.schimke.terrazzo.dashboard.AgentEditScreen
+import ee.schimke.terrazzo.dashboard.DashboardAgentDraft
 import ee.schimke.terrazzo.dashboard.DashboardDraftEditor
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
@@ -77,7 +78,7 @@ private data object SettingsDestination : NavKey
 private data class DashboardDestination(val path: String?) : NavKey
 
 /** Asking an agent to change [path]'s dashboard, through the Terrazzo integration. */
-private data class AgentEditDestination(val path: String?) : NavKey
+private data class AgentEditDestination(val path: String?, val sessionId: String? = null) : NavKey
 
 /** Editing [path]'s dashboard: cards, sections and views ([EditorScope.Full]). */
 private data class DashboardEditDestination(val path: String?) : NavKey
@@ -570,19 +571,38 @@ private fun DashboardShell(
                   )
                 }
               ) { padding ->
-                LiveDashboard(
-                  connection,
-                  route.path,
-                  snapshot,
-                  connectionError,
-                  Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
-                  designServer,
-                  cardStyle,
-                  dark,
-                  customizing,
-                  dashboardRefreshGeneration,
-                  privateDesignServer,
-                )
+                val dashboardModifier =
+                  Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)
+                val showDashboard: @Composable (Modifier) -> Unit = { shown ->
+                  LiveDashboard(
+                    connection,
+                    route.path,
+                    snapshot,
+                    connectionError,
+                    shown,
+                    designServer,
+                    cardStyle,
+                    dark,
+                    customizing,
+                    dashboardRefreshGeneration,
+                    privateDesignServer,
+                  )
+                }
+                if (integrationInstalled && !customizing)
+                  DashboardDraftEntry(
+                    connection,
+                    route.path,
+                    snapshot,
+                    designServer,
+                    cardStyle,
+                    dark,
+                    cloudDashboardEdits,
+                    dashboardModifier,
+                    onOpenSession = { id -> stack.add(AgentEditDestination(route.path, id)) },
+                    onApplied = { dashboardRefreshGeneration++ },
+                    current = showDashboard,
+                  )
+                else showDashboard(dashboardModifier)
               }
             }
             entry<DashboardEditDestination> { route ->
@@ -615,6 +635,7 @@ private fun DashboardShell(
                 cardStyle = cardStyle,
                 dark = dark,
                 cloudEdits = cloudDashboardEdits,
+                sessionId = route.sessionId,
                 onApplied = { dashboardRefreshGeneration++ },
                 onBack = { if (stack.size > 1) stack.removeLastOrNull() },
               )
@@ -639,6 +660,7 @@ private fun AgentEditEntry(
   cardStyle: String,
   dark: Boolean,
   cloudEdits: CloudDashboardAgentEdits?,
+  sessionId: String?,
   onApplied: () -> Unit,
   onBack: () -> Unit,
 ) {
@@ -657,12 +679,48 @@ private fun AgentEditEntry(
     onSharePrompt = { clipboard.setText(AnnotatedString(it)) },
     onApplied = onApplied,
     cloudServer = if (cloud) designServer else null,
+    initialSessionId = sessionId,
+    // The dashboard below shows the session's drafts as they come (DashboardDraftEntry).
+    onDashboard = onBack,
     alternative =
       if (cloud) "Advanced: use an agent signed in to Home Assistant" to { direct = true }
       else if (cloudEdits != null) "Ask your agent instead" to { direct = false } else null,
   ) { _, card ->
     preview(card, snapshot)
   }
+}
+
+/**
+ * The dashboard with an agent's draft drawn in place while an edit session on it is open, from this
+ * device or another ([DashboardAgentDraft]); [current] otherwise.
+ */
+@Composable
+private fun DashboardDraftEntry(
+  connection: AppConnection,
+  path: String?,
+  snapshot: HaSnapshot,
+  designServer: String,
+  cardStyle: String,
+  dark: Boolean,
+  cloudEdits: CloudDashboardAgentEdits?,
+  modifier: Modifier,
+  onOpenSession: (String) -> Unit,
+  onApplied: () -> Unit,
+  current: @Composable (Modifier) -> Unit,
+) {
+  val preview = rememberDraftPreview(connection, designServer, cardStyle, dark)
+  val sources =
+    remember(cloudEdits, connection) { listOfNotNull(cloudEdits, connection.client.agentEdits) }
+  DashboardAgentDraft(
+    sources = sources,
+    urlPath = path,
+    snapshot = snapshot,
+    onOpenSession = onOpenSession,
+    onApplied = onApplied,
+    modifier = modifier,
+    renderCard = { _, card -> preview(card, snapshot) },
+    current = current,
+  )
 }
 
 /**

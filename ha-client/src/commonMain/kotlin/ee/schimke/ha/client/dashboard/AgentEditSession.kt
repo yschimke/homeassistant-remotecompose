@@ -34,6 +34,11 @@ data class AgentEditSession(
    * session up by itself, so there's no prompt to hand over.
    */
   @SerialName("agent_listening") val agentListening: Boolean = false,
+  /**
+   * The design server request a cloud agent works on, linked by whoever started the session: only
+   * their own clients read it, and with it any of them picks the request back up.
+   */
+  val cloud: CloudLink? = null,
 ) {
   /** Seconds since the agent was last active, by Home Assistant's clock; null before it joined. */
   val agentIdleSeconds: Double?
@@ -84,6 +89,9 @@ data class AgentEditSession(
     val status: String = "",
     @SerialName("seen_at") val seenAt: Double = 0.0,
   )
+
+  /** A design server ([server]) and the owner capability of a request on it. */
+  @Serializable data class CloudLink(val server: String, val owner: String)
 
   @Serializable
   data class Applied(@SerialName("draft_id") val draftId: String, val at: Double = 0.0)
@@ -137,4 +145,11 @@ interface AgentEdits {
    * Best effort: an older integration or server just doesn't keep it.
    */
   suspend fun shareRender(sessionId: String, draftId: String, png: ByteArray) {}
+
+  /**
+   * Keep a cloud agent's design server request ([server], [owner]) with the session, so this
+   * person's other clients can pick it up and Home Assistant relays its drafts with no app open. An
+   * integration too old for it refuses with `unknown_command`.
+   */
+  suspend fun linkCloud(sessionId: String, server: String, owner: String) {}
 }

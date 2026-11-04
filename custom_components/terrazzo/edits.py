@@ -13,15 +13,17 @@ import copy
 import time
 
 import voluptuous as vol
+from aiohttp import ClientError, ClientTimeout
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import websocket_api
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
-from . import edit_sessions
+from . import cloud_relay, edit_sessions
 from .const import DOMAIN, MCP_URL
 from .edit_sessions import Conflict, SessionError
 
@@ -45,6 +47,8 @@ class Edits:
         # The newest draft as the person's app drew it, per session: (draft id, PNG bytes). In
         # memory only: the app shares it again whenever it draws the draft.
         self.renders = {}
+        # The running cloud relays, per session (cloud_relay.py).
+        self.relays = {}
 
     @classmethod
     async def async_load(cls, hass):
@@ -346,7 +350,88 @@ async def async_undo(hass, user, session_id):
     baseline = edits.sessions.check_undo(session_id, current, _now())
     await dashboard.async_save(copy.deepcopy(baseline))
     edits.changed(edits.sessions.undone(session_id, _now()))
+    # Open again: a cloud agent's next draft is relayed as before.
+    if session.get("cloud"):
+        async_start_relay(hass, session_id)
     return edits.sessions.get(session_id, _now())
+
+
+# --- Cloud relay ----------------------------------------------------------------------------
+
+RELAY_TIMEOUT = ClientTimeout(total=45)
+
+
+async def _relay_get_json(hass, url, owner):
+    async with async_get_clientsession(hass).get(
+        url,
+        headers={"Authorization": f"Bearer {owner}"},
+        timeout=RELAY_TIMEOUT,
+        allow_redirects=False,
+    ) as response:
+        if response.status in (401, 403, 404, 410):
+            raise cloud_relay.Ended()
+        if response.status != 200:
+            raise ClientError(f"design server answered {response.status}")
+        return await response.json(content_type=None)
+
+
+@callback
+def async_start_relay(hass, session_id):
+    """Relay [session_id]'s cloud agent drafts into it, unless that already runs."""
+    edits = edits_of(hass)
+    running = edits.relays.get(session_id)
+    if running is not None and not running.done():
+        return
+
+    def link():
+        try:
+            session = edits.sessions.get(session_id, _now())
+        except SessionError:
+            return None
+        return session.get("cloud") if session["status"] == edit_sessions.OPEN else None
+
+    async def submit_as_starter(config, summary, relay_id):
+        session = edits.sessions.get(session_id, _now())
+        user = await hass.auth.async_get_user(session["created_by"])
+        if user is None or not user.is_active:
+            raise ValueError("the person who started this session can't sign in")
+        try:
+            draft = submit(hass, user, session_id, config, summary, relay_id)
+        except SessionError as refused:
+            raise ValueError(str(refused)) from refused
+        await async_notice_draft(hass, session_id, draft)
+
+    def relayed(revision):
+        edits.changed(edits.sessions.cloud_relayed(session_id, revision, _now()))
+
+    def ended():
+        try:
+            edits.changed(edits.sessions.unlink_cloud(session_id, _now()))
+        except SessionError:
+            pass
+
+    async def get_json(url, owner):
+        try:
+            return await _relay_get_json(hass, url, owner)
+        except (ClientError, TimeoutError, ValueError) as failure:
+            raise ConnectionError(str(failure)) from failure
+
+    async def run():
+        try:
+            await cloud_relay.relay(link, get_json, submit_as_starter, relayed, ended)
+        finally:
+            if edits.relays.get(session_id) is task:
+                del edits.relays[session_id]
+
+    task = hass.async_create_background_task(run(), f"terrazzo_cloud_relay_{session_id}")
+    edits.relays[session_id] = task
+
+
+@callback
+def async_start_relays(hass):
+    """Pick up every linked session's relay, as after a restart."""
+    for session in edits_of(hass).sessions.cloud_linked(_now()):
+        async_start_relay(hass, session["id"])
 
 
 # --- WebSocket commands ---------------------------------------------------------------------
@@ -357,10 +442,20 @@ def _send_failure(connection, msg, failure):
     connection.send_error(msg["id"], code, str(failure))
 
 
-def _session_reply(hass, session, with_prompt=False):
+def _summary_for(session, user, with_configs=False):
+    """What [user]'s app reads of a session: with the cloud link when they started it, so any of
+    their clients can pick a cloud agent's request back up."""
+    result = edit_sessions.summary(session, with_configs=with_configs)
+    cloud = edit_sessions.cloud_for(session, user.id) if user is not None else None
+    if cloud is not None:
+        result["cloud"] = cloud
+    return result
+
+
+def _session_reply(hass, session, with_prompt=False, user=None):
     """The session with its configs; [with_prompt], also the prompt to hand an agent again."""
     reply = {
-        "session": edit_sessions.summary(session, with_configs=True),
+        "session": _summary_for(session, user, with_configs=True),
         # The agent's seen_at is in this clock: the app ages presence against it.
         "server_time": _now(),
         # An agent already listening picks a new session up by itself: no prompt to hand over.
@@ -388,7 +483,9 @@ async def ws_start(hass, connection, msg):
     except SessionError as failure:
         _send_failure(connection, msg, failure)
         return
-    connection.send_result(msg["id"], _session_reply(hass, session, with_prompt=True))
+    connection.send_result(
+        msg["id"], _session_reply(hass, session, with_prompt=True, user=connection.user)
+    )
 
 
 @websocket_api.websocket_command(
@@ -403,7 +500,9 @@ def ws_list(hass, connection, msg):
         _send_failure(connection, msg, failure)
         return
     sessions = edits.sessions.for_dashboard(msg.get("url_path") or None, _now())
-    connection.send_result(msg["id"], {"sessions": [edit_sessions.summary(s) for s in sessions]})
+    connection.send_result(
+        msg["id"], {"sessions": [_summary_for(s, connection.user) for s in sessions]}
+    )
 
 
 @websocket_api.websocket_command(
@@ -416,7 +515,9 @@ def ws_get(hass, connection, msg):
     except SessionError as failure:
         _send_failure(connection, msg, failure)
         return
-    connection.send_result(msg["id"], _session_reply(hass, session, with_prompt=True))
+    connection.send_result(
+        msg["id"], _session_reply(hass, session, with_prompt=True, user=connection.user)
+    )
 
 
 @websocket_api.websocket_command(
@@ -440,7 +541,8 @@ def ws_subscribe(hass, connection, msg):
             _, current = _visible_session(hass, connection.user, session_id)
         except SessionError:
             return
-        connection.send_message(websocket_api.event_message(msg["id"], _session_reply(hass, current)))
+        reply = _session_reply(hass, current, user=connection.user)
+        connection.send_message(websocket_api.event_message(msg["id"], reply))
 
     edits = edits_of(hass)
     edits.watchers[session_id] = edits.watchers.get(session_id, 0) + 1
@@ -457,7 +559,8 @@ def ws_subscribe(hass, connection, msg):
 
     connection.subscriptions[msg["id"]] = stop
     connection.send_result(msg["id"])
-    connection.send_message(websocket_api.event_message(msg["id"], _session_reply(hass, session)))
+    reply = _session_reply(hass, session, user=connection.user)
+    connection.send_message(websocket_api.event_message(msg["id"], reply))
 
 
 @websocket_api.websocket_command(
@@ -480,7 +583,7 @@ def ws_note(hass, connection, msg):
         _send_failure(connection, msg, failure)
         return
     edits.changed(session)
-    connection.send_result(msg["id"], _session_reply(hass, session))
+    connection.send_result(msg["id"], _session_reply(hass, session, user=connection.user))
 
 
 @websocket_api.websocket_command(
@@ -501,7 +604,32 @@ def ws_submit(hass, connection, msg):
     except SessionError as failure:
         _send_failure(connection, msg, failure)
         return
-    connection.send_result(msg["id"], _session_reply(hass, session))
+    connection.send_result(msg["id"], _session_reply(hass, session, user=connection.user))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "terrazzo/edit/cloud",
+        vol.Required("session_id"): str,
+        vol.Required("server"): str,
+        vol.Required("owner"): str,
+    }
+)
+@callback
+def ws_cloud(hass, connection, msg):
+    """Link the design server request a cloud agent works on to the session: the person's other
+    clients can then pick it up, and Home Assistant relays its drafts with no app open."""
+    try:
+        edits, _ = _visible_session(hass, connection.user, msg["session_id"])
+        session = edits.sessions.link_cloud(
+            msg["session_id"], msg["server"], msg["owner"], connection.user.id, _now()
+        )
+    except SessionError as failure:
+        _send_failure(connection, msg, failure)
+        return
+    edits.changed(session)
+    async_start_relay(hass, session["id"])
+    connection.send_result(msg["id"], _session_reply(hass, session, user=connection.user))
 
 
 @websocket_api.websocket_command(
@@ -516,7 +644,7 @@ def ws_discard(hass, connection, msg):
         _send_failure(connection, msg, failure)
         return
     edits.changed(session)
-    connection.send_result(msg["id"], _session_reply(hass, session))
+    connection.send_result(msg["id"], _session_reply(hass, session, user=connection.user))
 
 
 @websocket_api.require_admin
@@ -534,7 +662,7 @@ async def ws_apply(hass, connection, msg):
     except SessionError as failure:
         _send_failure(connection, msg, failure)
         return
-    connection.send_result(msg["id"], _session_reply(hass, session))
+    connection.send_result(msg["id"], _session_reply(hass, session, user=connection.user))
 
 
 @websocket_api.require_admin
@@ -548,15 +676,16 @@ async def ws_undo(hass, connection, msg):
     except SessionError as failure:
         _send_failure(connection, msg, failure)
         return
-    connection.send_result(msg["id"], _session_reply(hass, session))
+    connection.send_result(msg["id"], _session_reply(hass, session, user=connection.user))
 
 
 COMMANDS = (
     ws_start, ws_list, ws_get, ws_subscribe, ws_note, ws_submit, ws_discard, ws_apply, ws_undo,
-    ws_render,
+    ws_render, ws_cloud,
 )
 
 
 def async_register(hass):
     for command in COMMANDS:
         websocket_api.async_register_command(hass, command)
+    async_start_relays(hass)

@@ -66,12 +66,30 @@ apply/conflict checks, and undo remain the review boundary; the upstream never w
 requested by the person are sent to the upstream for the agent. Discard revokes the upstream
 capability before closing the HA session.
 
-The flow needs the Terrazzo HA integration, but no Wasmo backend services. It keeps the owner
-capability in memory for the signed-in app session, so navigating away and back can resume an
-open request. Reloading the app or signing out loses the ability to pick
-up or revoke the upstream session, which expires after one hour or on server restart. It shares the
-selected dashboard config, not a home-wide entity inventory or live stream. The agent can reuse
-entity IDs in that config; the HA relay rejects any submitted entities the person cannot read.
+The flow needs the Terrazzo HA integration, but no Wasmo backend services. The starting client
+keeps the owner capability on the device and also links it to the Home Assistant session
+(`terrazzo/edit/cloud`). Home Assistant stores it with the session and returns it only to the
+person who started the session, never in what an agent reads. So:
+
+- **Any of that person's clients picks the request up.** The phone, the Wasmo app and the panel
+  list the open requests on a dashboard from Home Assistant (`terrazzo/edit/list`), not just the
+  ones started on that device, and can continue, comment on, apply or discard any of them.
+- **Drafts land with no app open.** The integration long-polls the design server for each linked
+  request (`cloud_relay.py`) and submits every new draft as the person who started the session,
+  with the same entity checks as a relayed draft, then notifies their phones. The app still
+  relays while it is open; both use the relay id `cloud:<revision>`, so a draft never lands twice.
+  The design server URL must be HTTPS (plain HTTP only for `localhost`), and Home Assistant calls
+  only the relay's two fixed paths on it.
+- **The draft shows on the dashboard.** While a session is open, the dashboard draws its newest
+  draft in place, with live states, under a bar showing what the agent is doing, **Use it**,
+  **Show current**, a message box (pinned to a card by that card's **Comment** button) and
+  **Details** for the full session screen. Sharing the prompt or pressing Back from the session
+  screen returns to the dashboard. Nothing changes in Home Assistant until **Use it**.
+
+The request on the design server expires an hour after its last activity; Home Assistant forgets
+its link once the server no longer has it. The flow shares the selected dashboard config, not a
+home-wide entity inventory or live stream. The agent can reuse entity IDs in that config; the HA
+relay rejects any submitted entities the person cannot read.
 
 An edit session is the handoff between a person and an agent, held by the integration in Home
 Assistant's storage:

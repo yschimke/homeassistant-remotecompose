@@ -1,5 +1,6 @@
 """Edit sessions' rules, driven with plain data; the installed test runs them inside Home Assistant."""
 import importlib.util
+import json
 from pathlib import Path
 import unittest
 
@@ -183,6 +184,53 @@ class ConversationTest(unittest.TestCase):
         self.assertEqual(es.EditSessions.feedback(sessions.get(old['id'], 1), 0)[0][0]['text'], 'New')
         self.assertEqual(es.summary(sessions.get(old['id'], 1))['messages'], [])
 
+
+
+class CloudLinkTest(unittest.TestCase):
+    def setUp(self):
+        self.sessions = es.EditSessions()
+        self.session = self.sessions.create('garden', 'Add soil', BASELINE, 'person', 100)
+
+    def test_the_starter_links_a_cloud_request_and_only_they_see_its_capability(self):
+        self.sessions.link_cloud(self.session['id'], 'https://ha.coo.ee/', 'owner-cap', 'person', 101)
+        self.assertEqual(es.cloud_for(self.session, 'person'),
+                         {'server': 'https://ha.coo.ee', 'owner': 'owner-cap'})
+        self.assertIsNone(es.cloud_for(self.session, 'someone else'))
+        # What an agent reads never carries it.
+        self.assertNotIn('owner-cap', json.dumps(es.summary(self.session, with_configs=True)))
+        self.assertEqual([s['id'] for s in self.sessions.cloud_linked(102)], [self.session['id']])
+
+    def test_someone_else_cannot_link_a_session(self):
+        with self.assertRaises(es.SessionError):
+            self.sessions.link_cloud(self.session['id'], 'https://ha.coo.ee', 'cap', 'other', 101)
+
+    def test_only_a_plain_https_url_is_a_design_server(self):
+        for bad in ['http://ha.coo.ee', 'https://ha.coo.ee#x', 'https://u:p@ha.coo.ee',
+                    'https://ha.coo.ee?x=1', 'ftp://ha.coo.ee', 'ha.coo.ee', 'https://', 7]:
+            with self.subTest(bad=bad), self.assertRaises(es.SessionError):
+                es.clean_cloud_server(bad)
+        self.assertEqual(es.clean_cloud_server('https://ha.coo.ee:8443'), 'https://ha.coo.ee:8443')
+        self.assertEqual(es.clean_cloud_server('http://localhost:8080'), 'http://localhost:8080')
+        self.assertEqual(es.clean_cloud_server('https://example.com/studio/'),
+                         'https://example.com/studio')
+        with self.assertRaises(es.SessionError):
+            self.sessions.link_cloud(self.session['id'], 'https://ha.coo.ee', 'a b', 'person', 101)
+
+    def test_relayed_revisions_only_move_forward_and_relinking_keeps_them(self):
+        self.sessions.link_cloud(self.session['id'], 'https://ha.coo.ee', 'cap', 'person', 101)
+        self.sessions.cloud_relayed(self.session['id'], 3, 102)
+        self.sessions.cloud_relayed(self.session['id'], 2, 103)
+        self.assertEqual(self.session['cloud']['revision'], 3)
+        self.sessions.link_cloud(self.session['id'], 'https://ha.coo.ee', 'cap', 'person', 104)
+        self.assertEqual(self.session['cloud']['revision'], 3)
+
+    def test_a_closed_or_unlinked_session_is_not_relayed(self):
+        self.sessions.link_cloud(self.session['id'], 'https://ha.coo.ee', 'cap', 'person', 101)
+        self.sessions.unlink_cloud(self.session['id'], 102)
+        self.assertEqual(self.sessions.cloud_linked(103), [])
+        self.sessions.link_cloud(self.session['id'], 'https://ha.coo.ee', 'cap', 'person', 104)
+        self.sessions.discard(self.session['id'], 'person', 105)
+        self.assertEqual(self.sessions.cloud_linked(106), [])
 
 
 class DraftNoticeTest(unittest.TestCase):
