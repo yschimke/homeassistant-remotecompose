@@ -67,6 +67,11 @@ fun AgentLivePanel(
   showCodes: Boolean = true,
   /** Let the person write before an agent has joined: it reads the conversation when it does. */
   composeBeforeJoin: Boolean = false,
+  /**
+   * A short window (landscape with the keyboard up): the field shows two lines at most and scrolls
+   * within itself, so all of it fits above the keyboard.
+   */
+  compact: Boolean = false,
 ) {
   Surface(
     modifier = modifier.fillMaxWidth(),
@@ -96,7 +101,8 @@ fun AgentLivePanel(
           color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
       Conversation(state.messages)
-      if (state.agent.joined || composeBeforeJoin) Composer(busy, target, onClearTarget, onSend)
+      if (state.agent.joined || composeBeforeJoin)
+        Composer(busy, target, onClearTarget, onSend, maxLines = if (compact) 2 else 4)
     }
   }
 }
@@ -253,6 +259,7 @@ private fun Composer(
   target: String?,
   onClearTarget: () -> Unit,
   onSend: (String) -> Unit,
+  maxLines: Int = 4,
 ) {
   var text by remember { mutableStateOf("") }
   fun send() {
@@ -273,7 +280,7 @@ private fun Composer(
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
         keyboardActions = KeyboardActions(onSend = { send() }),
         modifier = Modifier.weight(1f),
-        maxLines = 4,
+        maxLines = maxLines,
       )
       Button(onClick = { send() }, enabled = !busy && text.isNotBlank()) { Text("Send") }
     }
