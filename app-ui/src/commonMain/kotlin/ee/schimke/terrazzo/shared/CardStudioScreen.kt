@@ -676,8 +676,10 @@ fun CardStudioScreen(
                   null
                 }
               },
-              // Copy prompt is the way in for agents: no code to hand over.
-              showCodes = false,
+              // Copy prompt is the way in for agents; a session saved before agent tokens has no
+              // prompt,
+              // so its code still joins.
+              showCodes = cloudAgentToken.isBlank(),
               composeBeforeJoin = true,
             )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

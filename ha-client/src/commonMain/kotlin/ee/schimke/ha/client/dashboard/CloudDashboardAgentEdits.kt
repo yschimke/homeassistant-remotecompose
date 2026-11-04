@@ -181,9 +181,10 @@ class CloudDashboardAgentEdits(
    * on the way.
    */
   override fun watch(sessionId: String) = flow {
-    val access = relayed(sessionId)
+    // A closed session's relay is revoked: Home Assistant holds what's left of it.
+    val access = if (delegate.get(sessionId).isOpen) relayed(sessionId) else null
     if (access == null) {
-      // Not relayed: Home Assistant holds the whole session.
+      // Not relayed, or closed: Home Assistant holds the whole session.
       emitAll(delegate.watch(sessionId))
       return@flow
     }

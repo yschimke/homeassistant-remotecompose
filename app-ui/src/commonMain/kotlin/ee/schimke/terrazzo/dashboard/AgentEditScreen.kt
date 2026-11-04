@@ -261,6 +261,8 @@ fun AgentEditScreen(
             onOpen = { picked ->
               session = picked
               sessionId = picked.id
+              // The list leaves out the configurations: the whole session, for its preview.
+              run { edits.get(picked.id).let { if (sessionId == it.id) session = it } }
             },
           )
         current == null -> Text(problem ?: "Opening the session…", Modifier.padding(24.dp))
