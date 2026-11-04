@@ -67,10 +67,13 @@ private object Face {
   fun aspect(seconds: Boolean) = 2f * Pad + MainWidth + if (seconds) SecondsWidth else 0f
 }
 
-/** The time in an LCD window: italic segment digits with ghosts, accent seconds. */
+/**
+ * The time in an LCD window: italic segment digits with ghosts, accent seconds, in a window
+ * [heightDp] tall (the presentation's: a Wear Small slot's compact clock as well as a card's).
+ */
 @Composable
 @RemoteComposable
-internal fun LcdWindowClock(data: HaClockData, timeLabel: RemoteString) {
+internal fun LcdWindowClock(data: HaClockData, timeLabel: RemoteString, heightDp: Int) {
   val frozen = data.staticTimeLabel?.let { parseClockLabel(it, data.use24Hour) }
   // Preserve the public static-label override even when it isn't a numeric time.
   if (data.staticTimeLabel != null && frozen == null) {
@@ -115,7 +118,7 @@ internal fun LcdWindowClock(data: HaClockData, timeLabel: RemoteString) {
     RemoteCanvas(
       RemoteModifier.semantics { contentDescription = timeLabel }
         .fillMaxWidth()
-        .height((if (data.isLarge) 112 else 76).rdp)
+        .height(heightDp.rdp)
     ) {
       val box = FitBox(width, height, Face.aspect(data.showSeconds))
       val x = box.left

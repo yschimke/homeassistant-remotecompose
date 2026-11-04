@@ -109,7 +109,8 @@ fun RemoteHaClock(
       if (console) {
         ConsoleClock(data, timeText)
       } else if (window) {
-        LcdWindowClock(data, timeText)
+        // The window takes the presentation's height: about 1.5× the time size it would have set.
+        LcdWindowClock(data, timeText, heightDp = (timeSize * 1.6f).toInt().coerceAtLeast(28))
       } else
         RemoteText(
           text = timeText,
