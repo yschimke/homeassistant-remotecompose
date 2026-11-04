@@ -202,7 +202,8 @@ internal object ThemeKits {
    * **Rugged Digital** — a rugged digital sports watch: big segment numerals with their unlit
    * segments ghosted behind them, readings set in recessed screens, square-shouldered complication
    * tiles on a dark dial, and one cyan accent like a small seconds readout. By day it is the
-   * positive display, black segments on pale grey.
+   * positive display, black segments on pale grey. A one-off made with Greg Bullock, designer of
+   * the GShark watch face it is drawn from, so a large clock carries the face's G-SPOT wordmark.
    */
   val RuggedDigital =
     HaUberTheme(

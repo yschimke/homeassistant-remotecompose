@@ -209,7 +209,7 @@ private fun RuggedWatch(darkTheme: Boolean) {
               RenderChild(
                 card(
                   """{"type":"clock","clock_size":"large","time_format":"24",
-                      "show_seconds":true,"title":"G-HOME"}"""
+                      "show_seconds":true}"""
                 ),
                 Fixtures.mixed,
                 RemoteModifier.fillMaxWidth(),

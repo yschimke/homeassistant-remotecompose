@@ -77,8 +77,9 @@ fun RemoteHaClock(
       horizontalAlignment = RemoteAlignment.CenterHorizontally,
       verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
     ) {
-      // On a large LCD-window clock the title is the watch's wordmark, set under the date instead.
-      val wordmark = window && data.isLarge && data.title != null && !compact && !narrow
+      // On a large LCD-window clock the title is the watch's wordmark, set under the date instead;
+      // without one it is the face's own, G-SPOT.
+      val wordmark = window && data.isLarge && !compact && !narrow
       if (data.title != null && !compact && !narrow && !wordmark) {
         RemoteText(
           text = cardTitle(data.title),
@@ -149,7 +150,7 @@ fun RemoteHaClock(
       }
       if (wordmark) {
         RemoteText(
-          text = cardTitle(data.title!!),
+          text = data.title?.let { cardTitle(it) } ?: LcdWindowWordmark.rs,
           color = theme.linkText,
           fontSize = 30.rsp,
           fontWeight = FontWeight.Black,

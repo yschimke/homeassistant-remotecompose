@@ -39,6 +39,13 @@ import androidx.compose.ui.graphics.lerp
 // black segments on grey and the negative (dark) one white on black. Every digit reads the
 // player's clock, so the face ticks without a re-encode.
 
+/**
+ * The wordmark a large LCD-window clock sets under its date when the card has no title of its own.
+ * Rugged Digital is a one-off made with Greg Bullock, the designer of the GShark watch face it
+ * comes from; G-SPOT is that face's riff on a sports-watch maker's mark.
+ */
+internal const val LcdWindowWordmark = "G-SPOT"
+
 /** How far a digit's top leans right of its foot, as a share of its height. */
 private const val Slant = 0.11f
 
