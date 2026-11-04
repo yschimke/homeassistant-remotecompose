@@ -16,6 +16,8 @@ internal data class SavedCardAgentSession(
   val ownerToken: String,
   val instruction: String,
   val expiresAt: Long,
+  /** The agents' capability: what Copy prompt hands one or more agents. */
+  val agentToken: String = "",
 )
 
 internal expect fun readAgentGrants(key: String): String?

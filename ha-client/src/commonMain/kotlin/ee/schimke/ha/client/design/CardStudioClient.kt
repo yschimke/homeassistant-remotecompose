@@ -86,7 +86,14 @@ private constructor(
     instruction: String,
     /** The person's agent link: the request goes straight to their agent, with no code. */
     agentLink: String? = null,
-  ): String =
+  ): String = startAgentSessionAccess(document, instruction, agentLink).ownerToken
+
+  /** [startAgentSession], with the agents' capability too: what Copy prompt hands them. */
+  suspend fun startAgentSessionAccess(
+    document: JsonObject,
+    instruction: String,
+    agentLink: String? = null,
+  ): ee.schimke.ha.client.agent.AgentRelayClient.Started =
     request(
         "/api/studio/agent-sessions",
         buildJsonObject {
@@ -95,9 +102,12 @@ private constructor(
           if (agentLink != null) put("agentLink", agentLink)
         },
       )
-      .getValue("ownerToken")
-      .jsonPrimitive
-      .content
+      .let {
+        ee.schimke.ha.client.agent.AgentRelayClient.Started(
+          it.getValue("ownerToken").jsonPrimitive.content,
+          it["agentToken"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+        )
+      }
 
   suspend fun agentSessionDraft(ownerToken: String): Pair<JsonObject, Long> {
     val response = http.get(base + "/api/studio/agent-session") { bearer(ownerToken) }

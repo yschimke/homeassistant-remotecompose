@@ -35,6 +35,8 @@ fun TopBarOverflowMenu(
   onSignOut: () -> Unit,
   onInstallOnWatch: (() -> Unit)? = null,
   onEditDashboard: (() -> Unit)? = null,
+  /** The dashboard's agent sessions: open and recent, and a new one. */
+  onAskAgent: (() -> Unit)? = null,
   onManageDashboards: (() -> Unit)? = null,
   onOpenRoom: (() -> Unit)? = null,
 ) {
@@ -48,6 +50,7 @@ fun TopBarOverflowMenu(
       MenuEntry("This room", close, it)
       HorizontalDivider()
     }
+    onAskAgent?.let { MenuEntry("Ask your agent", close, it) }
     onEditDashboard?.let { MenuEntry("Edit dashboard", close, it) }
     onManageDashboards?.let { MenuEntry("Manage dashboards", close, it) }
     // Where cards live outside the app: one entry per place, named for the place rather than the

@@ -146,6 +146,21 @@ class EditSessionsTest(unittest.TestCase):
 
 
 class ConversationTest(unittest.TestCase):
+    def test_notes_left_before_an_agent_joins_are_its_first_work(self):
+        sessions = es.EditSessions()
+        sid = sessions.create(None, 'Work on it with me', BASELINE, 'person', 0)['id']
+        self.assertRegex(es.next_step(sessions.get(sid, 0)), '^Say hello')
+        # The person comments on a card before any agent has read the session.
+        sessions.note(sid, 'Bigger camera', 'person', 1, target='Front door (card 2)')
+        session = sessions.get(sid, 1)
+        self.assertEqual([n['text'] for n in es.waiting_notes(session)], ['Bigger camera'])
+        self.assertIn('already left notes', es.next_step(session))
+        # A draft answers them; a note after it is waiting again.
+        sessions.submit(sid, DRAFT, 'Bigger camera', exists, 'agent', 2)
+        self.assertRegex(es.next_step(sessions.get(sid, 2)), '^await_feedback')
+        sessions.note(sid, 'Now the doorbell', 'person', 3)
+        self.assertIn('already left notes', es.next_step(sessions.get(sid, 3)))
+
     def test_notes_and_messages_share_a_cursor_and_notes_name_cards(self):
         sessions = es.EditSessions()
         session = sessions.create(None, 'Garden', BASELINE, 'person', 0)
@@ -184,6 +199,33 @@ class ConversationTest(unittest.TestCase):
         self.assertEqual(es.EditSessions.feedback(sessions.get(old['id'], 1), 0)[0][0]['text'], 'New')
         self.assertEqual(es.summary(sessions.get(old['id'], 1))['messages'], [])
 
+    def test_a_section_session_takes_changes_to_its_section_only(self):
+        two = {'title': 'Garden', 'views': [{'type': 'sections', 'sections': [
+            {'type': 'grid', 'cards': [{'type': 'tile', 'entity': 'light.kitchen'}]},
+            {'type': 'grid', 'cards': [{'type': 'tile', 'entity': 'sensor.rain'}]}]}]}
+        sessions = es.EditSessions()
+        session = sessions.create('garden', '', two, 'person', 100,
+                                  {'kind': 'section', 'view': 0, 'section': 1, 'label': 'Rain'})
+        self.assertEqual(es.summary(session)['scope'],
+                         {'kind': 'section', 'view': 0, 'section': 1, 'label': 'Rain'})
+        inside = es.copy.deepcopy(two)
+        inside['views'][0]['sections'][1]['cards'].append({'type': 'gauge', 'entity': 'sensor.soil'})
+        sessions.submit(session['id'], inside, 'Soil beside rain', exists, 'agent', 110)
+        outside = es.copy.deepcopy(two)
+        outside['views'][0]['sections'][0]['cards'] = []
+        with self.assertRaisesRegex(es.SessionError, 'only that section'):
+            sessions.submit(session['id'], outside, 'Emptied the lights', exists, 'agent', 111)
+        with self.assertRaisesRegex(es.SessionError, 'no such section'):
+            sessions.create('garden', '', two, 'person', 100, {'kind': 'section', 'view': 0, 'section': 5})
+        self.assertIn('Scope: only Rain', es.agent_prompt(session, 'http://ha/mcp', 'Home'))
+
+    def test_recent_sessions_include_applied_and_discarded_ones(self):
+        sessions = es.EditSessions()
+        session = sessions.create('garden', 'Soil', BASELINE, 'person', 100)
+        sessions.discard(session['id'], 'person', 105)
+        self.assertEqual(sessions.for_dashboard('garden', 106), [])
+        self.assertEqual([s['id'] for s in sessions.for_dashboard('garden', 106, include_closed=True)],
+                         [session['id']])
 
 
 class CloudLinkTest(unittest.TestCase):

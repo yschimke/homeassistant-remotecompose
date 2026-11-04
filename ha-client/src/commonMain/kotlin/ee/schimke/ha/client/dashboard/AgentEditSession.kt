@@ -39,6 +39,8 @@ data class AgentEditSession(
    * their own clients read it, and with it any of them picks the request back up.
    */
   val cloud: CloudLink? = null,
+  /** What the session is about: the whole dashboard (null) or one section of it. */
+  val scope: EditScope? = null,
 ) {
   /** Seconds since the agent was last active, by Home Assistant's clock; null before it joined. */
   val agentIdleSeconds: Double?
@@ -104,6 +106,47 @@ data class AgentEditSession(
 }
 
 /**
+ * What an edit session is about: the whole dashboard, or one of its sections ([view] and [section]
+ * index its config's `views[].sections[]`). Home Assistant refuses a section session's drafts that
+ * change anything else. [label] is how the person and the agent name it ("Garage").
+ */
+@Serializable
+data class EditScope(
+  val kind: String = DASHBOARD,
+  val view: Int? = null,
+  val section: Int? = null,
+  val label: String? = null,
+) {
+  val isSection: Boolean
+    get() = kind == SECTION && view != null && section != null
+
+  companion object {
+    const val DASHBOARD = "dashboard"
+    const val SECTION = "section"
+
+    fun section(view: Int, section: Int, label: String?) = EditScope(SECTION, view, section, label)
+  }
+}
+
+/** How a session is named in a list or a title: its section's label, or the dashboard's. */
+fun AgentEditSession.scopeLabel(dashboardTitle: String?): String =
+  scope?.takeIf { it.isSection }?.let { it.label ?: "Section ${(it.section ?: 0) + 1}" }
+    ?: dashboardTitle
+    ?: "Dashboard"
+
+/**
+ * What a session opened without typing asks of the agent: the person says the rest in the
+ * conversation and on the preview.
+ */
+fun EditScope?.openingRequest(dashboardTitle: String?): String {
+  val what =
+    this?.takeIf { it.isSection }?.let { "the ${it.label ?: "section"} section of " }.orEmpty() +
+      (dashboardTitle?.let { "the $it dashboard" } ?: "this dashboard")
+  return "Work on $what with me. Start with any comments I've left on the preview; if there are " +
+    "none yet, say hello and follow my comments as they come."
+}
+
+/**
  * A session just started, and the prompt to hand an agent: the MCP endpoint and session id only.
  */
 data class StartedAgentEdit(val session: AgentEditSession, val prompt: String)
@@ -115,10 +158,22 @@ data class StartedAgentEdit(val session: AgentEditSession, val prompt: String)
  * [DashboardConflictException] when the dashboard changed meanwhile, and write nothing.
  */
 interface AgentEdits {
-  suspend fun start(urlPath: String?, request: String): StartedAgentEdit
+  /**
+   * A session on [urlPath] about [scope] (the whole dashboard when null); [request] may be empty.
+   */
+  suspend fun start(urlPath: String?, request: String, scope: EditScope? = null): StartedAgentEdit
 
   /** The open sessions on [urlPath], newest first. */
   suspend fun open(urlPath: String?): List<AgentEditSession>
+
+  /** The open sessions on [urlPath] and the recently applied or discarded ones, newest first. */
+  suspend fun recent(urlPath: String?): List<AgentEditSession> = open(urlPath)
+
+  /**
+   * What to hand one or more agents so they join [sessionId]: the same text for each, so several
+   * can work on it.
+   */
+  suspend fun prompt(sessionId: String): String = resume(sessionId).prompt
 
   suspend fun get(sessionId: String): AgentEditSession
 

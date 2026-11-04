@@ -23,6 +23,7 @@ class DashboardRelayTest {
   private fun Route.fakeHome(commands: MutableList<String>) {
     var draft: JsonObject? = null
     var cloud: JsonObject? = null
+    var status = "open"
     webSocket("/api/websocket") {
       send(Frame.Text("""{"type":"auth_required"}"""))
       incoming.receive()
@@ -32,6 +33,8 @@ class DashboardRelayTest {
         val type = cmd.getValue("type").jsonPrimitive.content
         commands += type
         if (type == "terrazzo/edit/submit") draft = cmd.getValue("config").jsonObject
+        if (type == "terrazzo/edit/apply") status = "applied"
+        if (type == "terrazzo/edit/discard") status = "discarded"
         if (type == "terrazzo/edit/cloud")
           cloud = buildJsonObject {
             put("server", cmd.getValue("server"))
@@ -41,7 +44,7 @@ class DashboardRelayTest {
           put("session_id", "s1")
           put("request", "Rename")
           put("baseline", baseline)
-          put("status", if (type == "terrazzo/edit/apply") "applied" else "open")
+          put("status", status)
           cloud?.let { put("cloud", it) }
           putJsonArray("drafts") {
             draft?.let {
@@ -68,6 +71,17 @@ class DashboardRelayTest {
               .toString()
           )
         )
+        if (type == "terrazzo/edit/subscribe")
+          send(
+            Frame.Text(
+              buildJsonObject {
+                put("id", cmd.getValue("id"))
+                put("type", "event")
+                putJsonObject("event") { put("session", session) }
+              }
+                .toString()
+            )
+          )
       }
     }
   }
@@ -202,6 +216,62 @@ class DashboardRelayTest {
     } finally {
       phone.close()
       browser.close()
+      home.close()
+      http.close()
+    }
+  }
+
+  @Test
+  fun aStoppedSessionIsWatchedThroughHomeAssistant() = testApplication {
+    val commands = mutableListOf<String>()
+    val agentRelay = AgentRelay(AgentDesignSessions(), DashboardAgentSessions(), maxWaitMs = 5_000)
+    install(WebSockets)
+    routing {
+      dashboardAgentRoutes(agentRelay)
+      agentRelayRoutes(agentRelay)
+      fakeHome(commands)
+    }
+    val http = createClient {}
+    val home = HaClient(HaConfig("http://localhost", "home-token"), http.engine)
+    val phone = CloudDashboardAgentEdits(home, "https://localhost", http.engine)
+    val browser = CloudDashboardAgentEdits(home, "https://localhost", http.engine)
+    try {
+      home.connect()
+      phone.start(null, "Rename")
+      phone.discard("s1")
+      // Its relay is revoked but its link stays: a recent session still opens, from Home Assistant.
+      val seen = withTimeout(10_000) { browser.watch("s1").first() }
+      assertEquals("discarded", seen.status)
+    } finally {
+      phone.close()
+      browser.close()
+      home.close()
+      http.close()
+    }
+  }
+
+  @Test
+  fun aDraftFromAnAgentInHomeAssistantSharesItsRenderThere() = testApplication {
+    val commands = mutableListOf<String>()
+    val agentRelay = AgentRelay(AgentDesignSessions(), DashboardAgentSessions(), maxWaitMs = 5_000)
+    install(WebSockets)
+    routing {
+      dashboardAgentRoutes(agentRelay)
+      agentRelayRoutes(agentRelay)
+      fakeHome(commands)
+    }
+    val http = createClient {}
+    val home = HaClient(HaConfig("http://localhost", "home-token"), http.engine)
+    val phone = CloudDashboardAgentEdits(home, "https://localhost", http.engine)
+    try {
+      home.connect()
+      phone.start(null, "Rename")
+      // A draft with no relay revision: an agent signed in to Home Assistant submitted it.
+      home.relayAgentDraft("s1", baseline, "Renamed", "direct")
+      phone.shareRender("s1", "d1", byteArrayOf(1, 2, 3))
+      assertTrue("terrazzo/edit/render" in commands, "its agent reads the render there")
+    } finally {
+      phone.close()
       home.close()
       http.close()
     }

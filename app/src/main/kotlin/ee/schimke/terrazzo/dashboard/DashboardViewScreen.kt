@@ -195,6 +195,8 @@ fun DashboardViewScreen(
   onOpenDashboard: (urlPath: String?, viewPath: String?) -> Boolean = { _, _ -> false },
   onInitialViewShown: () -> Unit = {},
   connectionPending: Boolean = false,
+  /** A section heading's long press: start an agent session about that section. */
+  onAskAgentAboutSection: ((view: Int, section: Int, title: String) -> Unit)? = null,
   unlockSnackbars: SnackbarHostState? = null,
   onUnlock: () -> Unit = {},
 ) {
@@ -435,6 +437,7 @@ fun DashboardViewScreen(
           baseUrl = session.baseUrl,
           dashboardUrlPath = urlPath ?: "",
           onCardLongPress = onCardLongPress,
+          onAskAgentAboutSection = onAskAgentAboutSection,
           contentPadding = contentPadding,
           pendingView = pendingView,
           onViewShown = {
@@ -523,6 +526,7 @@ private fun DashboardList(
   baseUrl: String,
   dashboardUrlPath: String,
   onCardLongPress: (card: CardConfig, snapshot: HaSnapshot, section: List<CardConfig>) -> Unit,
+  onAskAgentAboutSection: ((view: Int, section: Int, title: String) -> Unit)?,
   contentPadding: PaddingValues,
   pendingView: ViewTarget? = null,
   onViewShown: () -> Unit = {},
@@ -810,6 +814,10 @@ private fun DashboardList(
                 pinStore = pinStore,
                 onPinAction = { action -> pinScope.launch { action() } },
                 onPlanCard = { planningCard = true },
+                onAskAgent =
+                  onAskAgentAboutSection?.let { ask ->
+                    { sectionIndex, title -> ask(viewIndex, sectionIndex, title) }
+                  },
               ),
           )
         }
@@ -1240,6 +1248,7 @@ internal fun SectionHeading(
   expanded: Boolean = true,
   onClick: () -> Unit = {},
   onLongClick: (() -> Unit)? = null,
+  onLongClickLabel: String = "Plan a card",
   trailing: @Composable (() -> Unit)? = null,
 ) {
   val haptics = LocalHapticFeedback.current
@@ -1249,7 +1258,7 @@ internal fun SectionHeading(
         onLongClick != null ->
           it.combinedClickable(
             onClickLabel = if (collapsible) (if (expanded) "Collapse" else "Expand") else null,
-            onLongClickLabel = "Plan a card",
+            onLongClickLabel = onLongClickLabel,
             onLongClick = {
               haptics.performHapticFeedback(HapticFeedbackType.LongPress)
               onLongClick()
@@ -1290,6 +1299,8 @@ private data class SectionPinContext(
   val pinStore: PinStore,
   val onPinAction: (suspend () -> Unit) -> Unit,
   val onPlanCard: () -> Unit,
+  /** Start an agent session about one section of this view: its index and title. */
+  val onAskAgent: ((sectionIndex: Int, title: String) -> Unit)? = null,
 )
 
 /**
@@ -1317,13 +1328,37 @@ private fun PinnableSectionHeading(
       )
     }
   val isPinned by pinContext.pinStore.isSectionPinned(key).collectAsState(initial = false)
+  // A long press offers what a section can start: an agent session about it, or a planned card.
+  var menu by remember { mutableStateOf(false) }
+  val askAgent = pinContext.onAskAgent
   SectionHeading(
     title = title,
     collapsible = collapsible,
     expanded = expanded,
     onClick = onClick,
-    onLongClick = pinContext.onPlanCard,
+    onLongClick = if (askAgent == null) pinContext.onPlanCard else ({ menu = true }),
+    onLongClickLabel = if (askAgent == null) "Plan a card" else "Section actions",
     trailing = {
+      if (askAgent != null)
+        androidx.compose.material3.DropdownMenu(
+          expanded = menu,
+          onDismissRequest = { menu = false },
+        ) {
+          androidx.compose.material3.DropdownMenuItem(
+            text = { Text("Ask your agent") },
+            onClick = {
+              menu = false
+              askAgent(sectionIndex, title)
+            },
+          )
+          androidx.compose.material3.DropdownMenuItem(
+            text = { Text("Plan a card") },
+            onClick = {
+              menu = false
+              pinContext.onPlanCard()
+            },
+          )
+        }
       IconButton(
         onClick = {
           pinContext.onPinAction {

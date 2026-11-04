@@ -10,6 +10,7 @@ import io.ktor.client.engine.HttpClientEngine
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -39,7 +40,13 @@ class CloudDashboardAgentEdits(
 
   /** One session's owner capability and the newest draft already handed to Home Assistant. */
   @Serializable
-  private data class Access(val owner: String, var revision: Long = 0, val server: String = "")
+  private data class Access(
+    val owner: String,
+    var revision: Long = 0,
+    val server: String = "",
+    /** The agents' capability: what the session's prompt hands them, one or several. */
+    val agent: String = "",
+  )
 
   private val json = Json { ignoreUnknownKeys = true }
 
@@ -90,28 +97,47 @@ class CloudDashboardAgentEdits(
     } catch (_: Exception) {}
   }
 
+  /** The relay access for [sessionId], when this device or another of this person's has one. */
+  private suspend fun relayed(sessionId: String): Access? =
+    sessions[sessionId]
+      ?: try {
+        adopt(delegate.get(sessionId))
+      } catch (e: CancellationException) {
+        throw e
+      } catch (_: Exception) {
+        null
+      }
+
   private fun liveState(sessionId: String) = states.getOrPut(sessionId) { MutableStateFlow(null) }
 
   override fun live(sessionId: String): StateFlow<AgentRelayState?> = liveState(sessionId)
 
-  override suspend fun start(urlPath: String?, request: String): StartedAgentEdit {
-    val started = delegate.start(urlPath, request)
+  /**
+   * A session in Home Assistant, relayed through the design server. When the design server can't
+   * take it (unreachable, an older one), the session stays Home Assistant's alone: an agent signed
+   * in to Home Assistant can still pick it up, and its prompt is Home Assistant's.
+   */
+  override suspend fun start(
+    urlPath: String?,
+    request: String,
+    scope: EditScope?,
+  ): StartedAgentEdit {
+    val asked = relayRequest(request, scope)
+    val started = delegate.start(urlPath, asked, scope)
     try {
-      val owner =
-        relay.startDashboard(request, requireNotNull(started.session.baseline), agentLink())
-      val access = Access(owner, server = relay.base)
+      val relayed =
+        relay.startDashboardSession(asked, requireNotNull(started.session.baseline), agentLink())
+      val access = Access(relayed.ownerToken, server = relay.base, agent = relayed.agentToken)
       sessions[started.session.id] = access
       persist()
       link(started.session.id, access)
-      // The code shows at once, before the screen starts watching.
+      // Presence shows at once, before the screen starts watching.
       refresh(started.session.id)
       return StartedAgentEdit(started.session, "")
     } catch (e: CancellationException) {
       throw e
-    } catch (e: Exception) {
-      // Don't leave an orphan Home Assistant request when the design server refused.
-      runCatching { delegate.discard(started.session.id) }
-      throw e
+    } catch (_: Exception) {
+      return started
     }
   }
 
@@ -127,6 +153,24 @@ class CloudDashboardAgentEdits(
       adopt(session) != null
     }
 
+  /**
+   * Every session on the dashboard, open or recently closed, this device's and others' alike: one
+   * started elsewhere (another device, or an agent signed in to Home Assistant) is watched through
+   * Home Assistant, without the relay.
+   */
+  override suspend fun recent(urlPath: String?) = delegate.recent(urlPath)
+
+  /**
+   * The relay prompt with the agents' capability for a session started here, so one or more agents
+   * can join it; for any other session, Home Assistant's own prompt.
+   */
+  override suspend fun prompt(sessionId: String): String {
+    val agent = sessions[sessionId]?.agent?.takeIf { it.isNotBlank() }
+    if (agent == null) return delegate.prompt(sessionId)
+    val session = delegate.get(sessionId)
+    return AgentRelayClient.sessionPrompt(relay.base, agent, session.request)
+  }
+
   override suspend fun get(sessionId: String) = delegate.get(sessionId)
 
   override suspend fun resume(sessionId: String) = StartedAgentEdit(delegate.get(sessionId), "")
@@ -137,7 +181,13 @@ class CloudDashboardAgentEdits(
    * on the way.
    */
   override fun watch(sessionId: String) = flow {
-    val access = access(sessionId)
+    // A closed session's relay is revoked: Home Assistant holds what's left of it.
+    val access = if (delegate.get(sessionId).isOpen) relayed(sessionId) else null
+    if (access == null) {
+      // Not relayed, or closed: Home Assistant holds the whole session.
+      emitAll(delegate.watch(sessionId))
+      return@flow
+    }
     var since: Long? = null
     while (true) {
       val state =
@@ -165,7 +215,7 @@ class CloudDashboardAgentEdits(
   }
 
   override suspend fun note(sessionId: String, text: String, target: String?): AgentEditSession {
-    comment(sessionId, text, target)
+    if (relayed(sessionId) != null) comment(sessionId, text, target)
     return delegate.note(sessionId, text, target)
   }
 
@@ -209,15 +259,34 @@ class CloudDashboardAgentEdits(
 
   /**
    * The relay keeps the agent's view, labelled with the relay revision of the draft it shows: the
-   * draft's `relay_id` (`cloud:<revision>`). A draft the relay didn't hand over has no revision
-   * there, so its render isn't shared rather than passed off as the newest.
+   * draft's `relay_id` (`cloud:<revision>`). A draft the relay didn't hand over (one an agent
+   * signed in to Home Assistant submitted) has no revision there: its render goes to Home
+   * Assistant, which keeps it for that agent, rather than being passed off as the relay's newest.
    */
   override suspend fun shareRender(sessionId: String, draftId: String, png: ByteArray) {
-    val access = access(sessionId)
+    // Not relayed: Home Assistant keeps the render for its agent.
+    val access = relayed(sessionId) ?: return delegate.shareRender(sessionId, draftId, png)
     val relayId = delegate.get(sessionId).drafts.firstOrNull { it.id == draftId }?.relayId
-    val revision = relayId?.removePrefix("cloud:")?.toLongOrNull() ?: return
+    // A draft an agent signed in to Home Assistant submitted: its render goes to Home Assistant.
+    val revision =
+      relayId?.removePrefix("cloud:")?.toLongOrNull()
+        ?: return delegate.shareRender(sessionId, draftId, png)
     relay.putRender(access.owner, png, revision)
   }
 
   fun close() = relay.close()
+
+  companion object {
+    /**
+     * What the relay's agent reads as the request: the person's words, or an opening that sends
+     * them to the conversation, and for a section the rule Home Assistant applies to its drafts.
+     */
+    fun relayRequest(request: String, scope: EditScope?): String {
+      val asked = request.ifBlank { scope.openingRequest(null) }
+      if (scope?.isSection != true) return asked
+      return "$asked\nScope: only ${scope.label ?: "one section"} " +
+        "(views[${scope.view}].sections[${scope.section}]). Keep the rest of the dashboard exactly " +
+        "as it is: Home Assistant refuses a draft that changes anything else."
+    }
+  }
 }

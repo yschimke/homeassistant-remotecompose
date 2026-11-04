@@ -3,6 +3,7 @@ package ee.schimke.ha.client
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
 import ee.schimke.ha.client.dashboard.DashboardConflictException
+import ee.schimke.ha.client.dashboard.EditScope
 import ee.schimke.ha.client.dashboard.StartedAgentEdit
 import ee.schimke.ha.design.DeviceInfo
 import ee.schimke.ha.model.Dashboard
@@ -754,11 +755,13 @@ class HaClient(
       override suspend fun start(
         urlPath: String?,
         request: String,
+        scope: EditScope?,
       ): StartedAgentEdit {
         val result =
           edit("terrazzo/edit/start") {
             if (urlPath != null) put("url_path", urlPath)
             put("request", request)
+            if (scope != null) put("scope", json.encodeToJsonElement(EditScope.serializer(), scope))
           }
         return StartedAgentEdit(
           sessionOf(result),
@@ -766,8 +769,15 @@ class HaClient(
         )
       }
 
-      override suspend fun open(urlPath: String?) =
-        (edit("terrazzo/edit/list") { if (urlPath != null) put("url_path", urlPath) }["sessions"]
+      override suspend fun open(urlPath: String?) = list(urlPath, includeClosed = false)
+
+      override suspend fun recent(urlPath: String?) = list(urlPath, includeClosed = true)
+
+      private suspend fun list(urlPath: String?, includeClosed: Boolean) =
+        (edit("terrazzo/edit/list") {
+            if (urlPath != null) put("url_path", urlPath)
+            if (includeClosed) put("include_closed", true)
+          }["sessions"]
             as? JsonArray)
           .orEmpty()
           .map {

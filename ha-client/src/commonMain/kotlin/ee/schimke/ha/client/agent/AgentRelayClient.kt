@@ -118,7 +118,14 @@ class AgentRelayClient(server: String, engine: HttpClientEngine? = null) {
     dashboard: JsonObject,
     /** The person's agent link: the request goes straight to their agent, with no code. */
     agentLink: String? = null,
-  ): String {
+  ): String = startDashboardSession(request, dashboard, agentLink).ownerToken
+
+  /** [startDashboard], with the agents' capability too: what the session's prompt hands them. */
+  suspend fun startDashboardSession(
+    request: String,
+    dashboard: JsonObject,
+    agentLink: String? = null,
+  ): Started {
     val response =
       http.post("$base/api/studio/dashboard-sessions") {
         contentType(ContentType.Application.Json)
@@ -132,7 +139,7 @@ class AgentRelayClient(server: String, engine: HttpClientEngine? = null) {
         )
       }
     response.check("The design server couldn't open the agent request")
-    return json.decodeFromString<Started>(response.bodyAsText()).ownerToken
+    return json.decodeFromString<Started>(response.bodyAsText())
   }
 
   /** The agent's latest dashboard draft: its revision, config and one-line summary. */
@@ -143,7 +150,8 @@ class AgentRelayClient(server: String, engine: HttpClientEngine? = null) {
     return json.decodeFromString(response.bodyAsText())
   }
 
-  @Serializable private data class Started(val ownerToken: String)
+  /** A session's two capabilities: the person's ([ownerToken]) and its agents' ([agentToken]). */
+  @Serializable data class Started(val ownerToken: String, val agentToken: String = "")
 
   // ---- The agent link: connect once, then every request goes to that agent ----
 
@@ -377,6 +385,23 @@ class AgentRelayClient(server: String, engine: HttpClientEngine? = null) {
         "changes from the app. Add the MCP server ${mcpUrl(server)} (no sign-in), call connect " +
         "with code $code and keep the link it returns. Then call await_request with that link " +
         "whenever you're free: my requests arrive there, and I'll watch and comment in the app."
+
+    /**
+     * What to hand one or more agents for one session: the MCP server and the session's agent
+     * capability, which several agents may share. No Home Assistant credential is in it.
+     */
+    fun sessionPrompt(
+      server: String,
+      session: String,
+      request: String,
+      what: String = "a Home Assistant dashboard",
+      draft: String = "the whole dashboard",
+    ): String =
+      "Help me edit $what in Terrazzo. Use the Terrazzo MCP server at " +
+        "${mcpUrl(server)} (no sign-in) with session \"$session\": get_session for the request, " +
+        "what to change and our conversation; set_status while you work; submit_draft with " +
+        "$draft; send_message to talk to me; and await_feedback in a loop for my comments, " +
+        "which may name a card. I watch each draft in the app.\n\nRequest: $request"
 
     fun invite(server: String, code: String, what: String): String =
       "Help me with $what in Terrazzo. Join with code $code using the Terrazzo MCP server at " +
