@@ -61,12 +61,15 @@ private const val GlyphLine = 1.25f
 private const val SecondsShare = 0.46f
 
 /**
- * The time in an LCD window: Digital-7 digits over their ghosts, accent seconds, in a window
- * [heightDp] tall (the presentation's: a Wear Small slot's compact clock as well as a card's).
+ * The time in an LCD window: Digital-7 digits over their ghosts, accent seconds, in a window sized
+ * so its hours and minutes are [digitSp] tall: the caller's time size, which a launcher widget has
+ * already fitted to its width.
  */
 @Composable
 @RemoteComposable
-internal fun LcdWindowClock(data: HaClockData, timeLabel: RemoteString, heightDp: Int) {
+internal fun LcdWindowClock(data: HaClockData, timeLabel: RemoteString, digitSp: Int) {
+  // The window's height, from which its padding is measured.
+  val heightDp = digitSp / MainShare
   val frozen = data.staticTimeLabel?.let { parseClockLabel(it, data.use24Hour) }
   // Preserve the public static-label override even when it isn't a numeric time.
   if (data.staticTimeLabel != null && frozen == null) {
@@ -108,8 +111,8 @@ internal fun LcdWindowClock(data: HaClockData, timeLabel: RemoteString, heightDp
     else theme.linkText.copy(alpha = 0.18f.rf)
   // Digital-7 Mono Italic: every glyph, the colon included, is one width, so "88:88" sits exactly
   // under any time as its unlit segments.
-  val mainPx = (heightDp * MainShare).toInt()
-  val smallPx = (heightDp * MainShare * SecondsShare).toInt()
+  val mainPx = digitSp
+  val smallPx = (digitSp * SecondsShare).toInt()
   // A launcher widget is played by the system, which can't load the app's bundled Digital-7: there
   // the digits fall back to the theme's monospace and the ghosts are left out, since "88:88" lines
   // up under the time only in Digital-7's single glyph width.

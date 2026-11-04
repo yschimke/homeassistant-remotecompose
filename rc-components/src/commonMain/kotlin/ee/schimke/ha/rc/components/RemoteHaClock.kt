@@ -109,8 +109,13 @@ fun RemoteHaClock(
       if (console) {
         ConsoleClock(data, timeText)
       } else if (window) {
-        // The window takes the presentation's height: about 1.5× the time size it would have set.
-        LcdWindowClock(data, timeText, heightDp = (timeSize * 1.6f).toInt().coerceAtLeast(28))
+        // A size the caller fitted (a launcher widget's width budget) is the digits' size as given;
+        // the card's own sizes are for light text, so the bolder LCD digits take a step up.
+        LcdWindowClock(
+          data,
+          timeText,
+          digitSp = timeSizeSp ?: (timeSize * LcdDigitStep).toInt().coerceAtLeast(24),
+        )
       } else
         RemoteText(
           text = timeText,
@@ -170,6 +175,9 @@ fun RemoteHaClock(
     }
   }
 }
+
+/** How much larger a card's LCD-window digits are than the text time it would set. */
+private const val LcdDigitStep = 1.37f
 
 /**
  * Build a live time `RemoteString` from the player's hour/minute/second floats. Mirrors the shape
