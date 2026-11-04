@@ -56,10 +56,11 @@ internal suspend fun SnackbarHostState.offerUnlock(locked: LockedAction, unlock:
 }
 
 /**
- * The dashboard's unlock prompts on [host]: a newer locked tap cancels the prompt for the one
- * before, whether it is showing or still queued behind another snackbar (a Home Assistant
- * notification), and unlocking any other way cancels it too ([cancel]), so Unlock only ever runs
- * the tap the user just made.
+ * A dashboard screen's unlock prompts on [host], launched in [scope] (the screen's, so leaving the
+ * screen cancels them with the dispatcher that would replay them). A newer locked tap cancels the
+ * prompt for the one before, whether it is showing or still queued behind another snackbar (a Home
+ * Assistant notification), and unlocking any other way cancels it too ([cancel]), so Unlock only
+ * ever runs the tap the user just made, on a screen that can still run it.
  */
 internal class UnlockPrompts(
   private val host: SnackbarHostState,

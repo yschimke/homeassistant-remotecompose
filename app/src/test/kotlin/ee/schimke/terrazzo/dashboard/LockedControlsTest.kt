@@ -10,6 +10,9 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -120,5 +123,23 @@ class LockedControlsTest {
     runCurrent()
     assertNull(host.currentSnackbarData)
     assertFalse(replayed)
+  }
+
+  @Test
+  fun leavingTheDashboardDropsAQueuedPrompt() = runTest {
+    val host = SnackbarHostState()
+    // The dashboard screen's scope: switching dashboards or opening the editor cancels it.
+    val screen = CoroutineScope(coroutineContext + Job())
+    val prompts = UnlockPrompts(host, screen)
+    var unlocked = false
+    launch { host.showSnackbar("New notification") }
+    runCurrent()
+    prompts.offer(LockedAction {}) { unlocked = true }
+    runCurrent()
+    screen.cancel()
+    assertNotNull(host.currentSnackbarData).dismiss()
+    runCurrent()
+    assertNull(host.currentSnackbarData)
+    assertFalse(unlocked)
   }
 }
