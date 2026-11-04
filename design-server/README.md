@@ -135,8 +135,12 @@ One hostname, split by path:
 
 - **This server:** `/`, `/designs*`, `/site/*`, `/schema`, `/embed/*`, `/studio/*`, `/api/designs*`,
   `/api/schema`, `/api/studio*`, `/my`, `/my/*` (the person's page and its GitHub sign-in,
-  `/my/auth/github`) and `/api/my/*` (the app's device-token API). Also the library at
-  `/designs/v1`, which is the app's card design server setting.
+  `/my/auth/github`), `/api/my/*` (the app's device-token API) and `/api/agent/*` (the agent
+  relay: connecting an agent, its MCP server, sessions and their conversation). Also the library
+  at `/designs/v1`, which is the app's card design server setting.
+  - A path missing here reaches the preview server, which answers 404 without Ktor's `Server`
+    header: that is how a route left out of `ha.caddy` shows up in the app ("Couldn't start
+    connecting an agent: 404").
 - **The preview server:** the card designer (`/ui-builder/*`, `/api/ui-builder/*`, `/auth/*`,
   `/mcp`) and the catalog (`/homeassistant-remotecompose/*` and the routes its pages load). Its
   builder profile white-labels them as the Home Assistant card designer.
