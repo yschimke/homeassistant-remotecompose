@@ -62,11 +62,26 @@ internal class FamilyVisuals private constructor(val family: HaVisualFamily) {
       HaVisualFamily.Classic,
       HaVisualFamily.HomeAssistant,
       HaVisualFamily.Expressive,
-      HaVisualFamily.Trinitron,
       HaVisualFamily.Lcd,
       HaVisualFamily.Cupertino,
       HaVisualFamily.Obsidian,
       HaVisualFamily.Arctic -> GrammarRenderers.Bar
+      // The grammar's LED run, with Trinitron's red peak zone when the reading has none.
+      HaVisualFamily.Trinitron ->
+        drawn {
+          render(
+            GrammarRenderers.Bar,
+            HaVisualSpec(
+              it.look,
+              it.fraction,
+              it.grammar,
+              trinitronPeakZones(it.zones),
+              it.strokePx,
+              it.baseline,
+              it.vertical,
+            ),
+          )
+        }
       HaVisualFamily.Braun -> drawn { braunBar(it.look, it.fraction, it.vertical) }
       HaVisualFamily.Nixie -> drawn { nixieBar(it.look, it.fraction, it.vertical) }
       HaVisualFamily.Console -> drawn { consoleBar(it.look, it.fraction, it.vertical) }
