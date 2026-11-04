@@ -820,8 +820,8 @@ private fun StepperButton(
         RemoteModifier.size(36.rdp)
           .clip(haControlShape(18, round = true))
           .border(1.rdp, theme.divider, haControlShape(18, round = true))
-          // The IKEA key chrome too: consoleKeyChrome returns it for that family.
-          .then(consoleKeyChrome(accent)),
+          // The IKEA key chrome too: haKeyChrome resolves to it for that family.
+          .then(haKeyChrome(accent)),
       contentAlignment = RemoteAlignment.Center,
     ) {
       RemoteBasicIcon(

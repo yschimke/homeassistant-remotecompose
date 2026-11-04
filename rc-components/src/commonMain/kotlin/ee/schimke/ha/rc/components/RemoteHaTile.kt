@@ -170,7 +170,7 @@ private fun TileIcon(data: HaTileData, look: HaEntityLook, renderChip: Boolean) 
     }
   } else if (visualFamily() == HaVisualFamily.Console && data.tapAction is HaAction.CallService) {
     RemoteBox(
-      modifier = RemoteModifier.size(24.rdp).then(consoleKeyChrome(accent)),
+      modifier = RemoteModifier.size(24.rdp).then(haKeyChrome(accent)),
       contentAlignment = RemoteAlignment.Center,
     ) {
       HaStateIcon(
@@ -229,9 +229,7 @@ fun RemoteHaTileCompact(data: HaTileData, modifier: RemoteModifier = RemoteModif
       RemoteBox(
         modifier =
           RemoteModifier.size(24.rdp)
-            .then(
-              if (data.tapAction != HaAction.None) consoleKeyChrome(accent) else RemoteModifier
-            ),
+            .then(if (data.tapAction != HaAction.None) haKeyChrome(accent) else RemoteModifier),
         contentAlignment = RemoteAlignment.Center,
       ) {
         HaStateIcon(
@@ -341,7 +339,7 @@ fun RemoteHaIconChip(
     RemoteBox(
       modifier =
         RemoteModifier.size(iconDp.rdp)
-          .then(if (data.tapAction != HaAction.None) consoleKeyChrome(accent) else RemoteModifier),
+          .then(if (data.tapAction != HaAction.None) haKeyChrome(accent) else RemoteModifier),
       contentAlignment = RemoteAlignment.Center,
     ) {
       HaStateIcon(

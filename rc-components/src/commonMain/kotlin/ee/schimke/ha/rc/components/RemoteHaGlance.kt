@@ -170,7 +170,7 @@ fun RemoteHaGlanceCell(
     RemoteBox(
       modifier =
         RemoteModifier.padding(vertical = (if (compact) 0 else 4).rdp)
-          .then(if (data.tapAction != HaAction.None) consoleKeyChrome(accent) else RemoteModifier)
+          .then(if (data.tapAction != HaAction.None) haKeyChrome(accent) else RemoteModifier)
     ) {
       HaStateIcon(
         icon = data.icon,

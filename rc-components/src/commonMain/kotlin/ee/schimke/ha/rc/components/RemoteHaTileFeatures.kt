@@ -243,7 +243,7 @@ private fun StepButton(
     modifier =
       RemoteModifier.then(click ?: RemoteModifier)
         .size(heightDp.rdp)
-        .then(consoleKeyChrome(if (click != null) theme.primaryText else theme.secondaryText)),
+        .then(haKeyChrome(if (click != null) theme.primaryText else theme.secondaryText)),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteBasicIcon(
@@ -287,7 +287,7 @@ private fun ModeSelect(
       RemoteColumn(
         modifier =
           segment.then(
-            consoleKeyChrome(if (option.selected) accent else null, selected = option.selected)
+            haKeyChrome(if (option.selected) accent else null, selected = option.selected)
           ),
         verticalArrangement = RemoteArrangement.Center,
         horizontalAlignment = RemoteAlignment.CenterHorizontally,

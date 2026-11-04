@@ -96,9 +96,7 @@ fun RemoteHaIconHero(
     RemoteBox(
       modifier =
         RemoteModifier.size(scale.iconDp.rdp)
-          .then(
-            if (data.tapAction != HaAction.None) consoleKeyChrome(look.accent) else RemoteModifier
-          ),
+          .then(if (data.tapAction != HaAction.None) haKeyChrome(look.accent) else RemoteModifier),
       contentAlignment = RemoteAlignment.Center,
     ) {
       HaStateIcon(
@@ -167,9 +165,7 @@ fun RemoteHaWideHero(
     RemoteBox(
       modifier =
         RemoteModifier.size(iconDp.rdp)
-          .then(
-            if (data.tapAction != HaAction.None) consoleKeyChrome(look.accent) else RemoteModifier
-          ),
+          .then(if (data.tapAction != HaAction.None) haKeyChrome(look.accent) else RemoteModifier),
       contentAlignment = RemoteAlignment.Center,
     ) {
       HaStateIcon(

@@ -10,36 +10,23 @@ import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.modifier.visibility
 import androidx.compose.remote.creation.compose.modifier.width
-import androidx.compose.remote.creation.compose.shaders.RemoteBrush
-import androidx.compose.remote.creation.compose.shaders.verticalGradient
-import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.asRemoteDp
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.remote.creation.compose.state.tween
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
-import ee.schimke.rc.m3.RcAmbient
-import ee.schimke.rc.m3.RcM3SwitchColors
-import ee.schimke.rc.m3.RemoteM3SwitchByProgress
-import ee.schimke.rc.m3.rcAmbient
 
 /**
  * One row of an Entities card:
@@ -183,18 +170,7 @@ private val Gone = 0.ri
 
 // ——— toggle switch ———
 
-/** Roughly Material 2's switch dimensions. */
-private val TrackWidth = 36.rdp
-private val TrackHeight = 22.rdp
-private val KnobSize = 16.rdp
-
-/** The switch track's outline while ambient. */
-private val AmbientOutline = 2.rdp
-private const val KnobInsetDp = 3f
-private val KnobInset = KnobInsetDp.toInt().rdp
-
-/** Distance the knob travels in dp between off and on. */
-private const val KnobTravelDp = 36f - 16f - 2f * KnobInsetDp // = 14f
+// The switch is a slot: its track, knob and the families' faces are in HaControls.kt.
 
 /**
  * Pill-shaped toggle switch — animates between off / on.
@@ -227,10 +203,11 @@ fun RemoteHaToggleSwitch(
   val motion = haMotion()
   val progress: RemoteFloat = animateRemoteFloat(target, motion.spatialFast)
   // One expression when both tokens agree (every tween style), so their documents don't change.
-  // Console's pilot lamp is a filament: it warms on the fast effect and cools on the slow one.
+  // Painted metal's pilot lamp is a filament: it warms on the fast effect and cools on the slow
+  // one.
   val colorProgress: RemoteFloat =
     when {
-      visualFamily() == HaVisualFamily.Console ->
+      currentHaUberTheme().theme.shape.material == HaSurfaceMaterial.PaintedMetal ->
         animateAttackRelease(target, motion.effectsFast, motion.effectsSlow)
       motion.effectsFast == motion.spatialFast -> progress
       else -> animateRemoteFloat(target, motion.effectsFast)
@@ -256,11 +233,11 @@ fun RemoteHaToggleSwitch(
  * source like a host-bound RemoteBoolean) can supply their own progress directly.
  *
  * Track color: `tween(inactiveAccent, activeAccent, progress)`. Knob position: derived `start`
- * padding — `(KnobInsetDp + progress * KnobTravelDp).asRemoteDp()`. Use `asRemoteDp` (the
- * documented public converter — see [RemoteCompose docs][rc]) and not the `toRemoteDp()` cousin:
- * the latter divides the input by display density (it expects px input and returns dp), so feeding
- * it a dp-scaled float silently scales the travel down by `1 / density` (~38 % at 2.625) and the
- * knob barely moves. `asRemoteDp` wraps the float as-dp directly.
+ * padding — `(KnobInsetDp + progress * KnobTravelDp).asRemoteDp()` ([TokenSwitch]). Use
+ * `asRemoteDp` (the documented public converter — see [RemoteCompose docs][rc]) and not the
+ * `toRemoteDp()` cousin: the latter divides the input by display density (it expects px input and
+ * returns dp), so feeding it a dp-scaled float silently scales the travel down by `1 / density`
+ * (~38 % at 2.625) and the knob barely moves. `asRemoteDp` wraps the float as-dp directly.
  *
  * `Modifier.offset(x: RemoteDp)` is not used here — see commit f1832a9: `offset` with a
  * RemoteFloat-derived RemoteDp visibly collapsed the travel even when scaling was correct, so the
@@ -279,105 +256,15 @@ fun RemoteHaToggleSwitchByProgress(
   clickable: RemoteModifier = RemoteModifier,
   colorProgress: RemoteFloat = progress,
 ) {
-  if (visualFamily() == HaVisualFamily.Expressive) {
-    // Material 3 Expressive's own switch: the thumb grows as it turns on and springs across.
-    RemoteM3SwitchByProgress(
-      position = progress,
-      colorProgress = colorProgress,
-      colors =
-        RcM3SwitchColors(
-          checkedTrack = activeAccent,
-          checkedThumb = Color.White.rc,
-          uncheckedTrack = haTheme().cardBackground,
-          uncheckedThumb = inactiveAccent,
-          uncheckedBorder = inactiveAccent,
-        ),
-      modifier = modifier.size(width = TrackWidth, height = TrackHeight).then(clickable),
+  switchRenderer()
+    .Switch(
+      HaSwitchSpec(
+        progress = progress,
+        colorProgress = colorProgress,
+        activeAccent = activeAccent,
+        inactiveAccent = inactiveAccent,
+        modifier = modifier,
+        clickable = clickable,
+      )
     )
-    return
-  }
-  if (visualFamily() == HaVisualFamily.Ikea) {
-    IkeaControlFace(
-      tween(inactiveAccent, activeAccent, progress),
-      progress,
-      modifier.size(width = TrackWidth, height = TrackHeight).then(clickable),
-    )
-    return
-  }
-  if (visualFamily() == HaVisualFamily.Console) {
-    ConsoleControlFace(
-      tween(ConsoleSlot.rc, activeAccent, colorProgress),
-      modifier.size(width = TrackWidth, height = TrackHeight).then(clickable),
-      progress,
-    )
-    return
-  }
-  if (visualFamily().isCommunity) {
-    CommunitySwitch(
-      progress,
-      activeAccent,
-      inactiveAccent,
-      modifier.size(width = TrackWidth, height = TrackHeight).then(clickable),
-    )
-    return
-  }
-  // The uber theme's control shape and ink: an LCD switch is a square-knobbed block printed in its
-  // ink, a Trinitron one a hairline-cornered slider.
-  val uber = currentHaUberTheme()
-  val ink = uber.ink
-  val shape = uber.theme.shape
-  val metal = shape.material == HaSurfaceMaterial.PaintedMetal
-  val trackColor: RemoteColor =
-    when {
-      ink != null -> tween(ink.copy(alpha = 0.35f).rc, ink.rc, colorProgress)
-      // Painted metal: off is the bare recessed slot, on lights it in the accent.
-      metal -> tween(ConsoleSlot.rc, activeAccent, colorProgress)
-      else -> tween(inactiveAccent, activeAccent, colorProgress)
-    }
-  // Ambient (a low-power display): the track's outline in place of its fill, and the knob lit in
-  // the track's colour, so the switch still reads on black with few pixels lit.
-  // No fade: a background and a border, which the Compose player doesn't redraw per frame.
-  val ambient = rcAmbient(fade = false)
-  val outlined = ambient !== RcAmbient.Never
-  val knobColor =
-    (if (ink != null) haTheme().cardBackground else Color.White.rc).let {
-      if (outlined) ambient.color(it, trackColor) else it
-    }
-  // A machined cap, lit from above, in place of a flat knob.
-  val knobFill =
-    if (metal) RemoteModifier.background(RemoteBrush.verticalGradient(ConsoleMetal.map { it.rc }))
-    else RemoteModifier.background(knobColor)
-  val startPaddingDp = (KnobInsetDp.rf + progress * KnobTravelDp.rf).asRemoteDp()
-  val trackShape = RemoteRoundedCornerShape(shape.controlCornerDp.rdp)
-
-  RemoteBox(
-    modifier =
-      modifier
-        .size(width = TrackWidth, height = TrackHeight)
-        .clip(trackShape)
-        .background(
-          if (outlined) trackColor.copy(alpha = trackColor.alpha * ambient.fade) else trackColor
-        )
-        .then(
-          if (outlined)
-            RemoteModifier.border(
-              AmbientOutline,
-              trackColor.copy(alpha = trackColor.alpha * ambient.fraction),
-              trackShape,
-            )
-          else RemoteModifier
-        )
-        .then(clickable)
-  ) {
-    RemoteBox(
-      modifier =
-        RemoteModifier.padding(start = startPaddingDp, top = KnobInset)
-          .size(KnobSize)
-          .clip(
-            if (shape.squareKnob) RemoteRoundedCornerShape((shape.controlCornerDp / 2).rdp)
-            else RemoteCircleShape
-          )
-          .then(knobFill)
-    )
-  }
 }

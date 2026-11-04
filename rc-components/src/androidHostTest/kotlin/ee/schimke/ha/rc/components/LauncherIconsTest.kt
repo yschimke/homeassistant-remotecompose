@@ -16,7 +16,9 @@ class LauncherIconsTest {
 
   @Test
   fun everyOtherDesignHasItsOwnIcon() {
-    val own = HaUberTheme.all.map { it.id }.filter { it !in materialStyles }
+    // Theme kits keep the default icon until one is drawn for them.
+    HaUberTheme.kits.forEach { assertEquals(LauncherIcons.DEFAULT, LauncherIcons.keyFor(it.id)) }
+    val own = HaUberTheme.bespoke.map { it.id }.filter { it !in materialStyles }
     own.forEach { assertEquals(it, LauncherIcons.keyFor(it)) }
     assertEquals(own.toSet(), LauncherIcons.designIcons)
     LauncherIcons.designIcons.forEach { key ->

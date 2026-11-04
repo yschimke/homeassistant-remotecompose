@@ -270,7 +270,7 @@ private fun Row(
     RemoteBox(
       modifier =
         RemoteModifier.size((if (visualFamily() == HaVisualFamily.Console) 22 else 18).rdp)
-          .then(consoleKeyChrome()),
+          .then(haKeyChrome()),
       contentAlignment = RemoteAlignment.Center,
     ) {
       RemoteBasicIcon(

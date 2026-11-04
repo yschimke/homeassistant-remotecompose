@@ -128,6 +128,10 @@ private fun DemoToolbar(
       "lcars" to "LCARS · Starship",
       "arctic" to "Arctic",
       "aeon" to "Aeon",
+      "ev-dash" to "EV Dash",
+      "aurora" to "Aurora",
+      "engineered" to "Engineered",
+      "cockpit" to "Cockpit",
     )
   var stylesExpanded by remember { mutableStateOf(false) }
   var optionsExpanded by remember { mutableStateOf(false) }

@@ -276,7 +276,7 @@ private fun Cell(cell: HaPictureGlanceCell, theme: RemoteHaTheme) {
         RemoteModifier.size(CELL_DP.rdp)
           .clip(haControlShape(16, round = true))
           .background(bg)
-          .then(consoleKeyChrome(tint)),
+          .then(haKeyChrome(tint)),
       contentAlignment = RemoteAlignment.Center,
     ) {
       HaStateIcon(
@@ -401,7 +401,7 @@ private fun Element(
             .size(28.rdp)
             .clip(haControlShape(14, round = true))
             .background(bg)
-            .then(consoleKeyChrome(tint)),
+            .then(haKeyChrome(tint)),
         contentAlignment = RemoteAlignment.Center,
       ) {
         HaStateIcon(
@@ -444,7 +444,7 @@ private fun Element(
             .then(click)
             .clip(haControlShape(6))
             .border(1.rdp, accent, haControlShape(6))
-            .then(consoleKeyChrome(accent))
+            .then(haKeyChrome(accent))
             .padding(horizontal = 10.rdp, vertical = 6.rdp)
       ) {
         RemoteText(

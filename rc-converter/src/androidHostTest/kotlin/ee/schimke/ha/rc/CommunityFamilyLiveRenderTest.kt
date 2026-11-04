@@ -44,6 +44,10 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class CommunityFamilyLiveRenderTest {
   @get:Rule val compose = createComposeRule()
+  /**
+   * The community families and the theme kits (docs/architecture/theme-kits.md): every style with a
+   * description.
+   */
   private val families = HaUberTheme.all.filter { it.description.isNotEmpty() }
   private val kinds =
     listOf(
@@ -136,7 +140,8 @@ class CommunityFamilyLiveRenderTest {
         }
       }
     }
-    assertEquals(10, families.size)
+    assertEquals(10, families.count { it.extends == null }, "community families")
+    assertEquals(HaUberTheme.kits, families.filter { it.extends != null })
     for (family in families) for (mode in listOf(false, true)) {
       compose.runOnIdle {
         theme = family

@@ -82,10 +82,47 @@ class HaUberThemeTest {
   }
 
   @Test
-  fun everyThemeDrawsItsOwnVisuals() {
-    // Each uber theme is its own design, not a restyle of another's.
-    val families = HaUberTheme.all.map { it.visuals }
+  fun everyBespokeThemeDrawsItsOwnVisuals() {
+    // Each bespoke theme is its own design, not a restyle of another's.
+    val families = HaUberTheme.bespoke.map { it.visuals }
     assertEquals(families.toSet().size, families.size)
+  }
+
+  @Test
+  fun everyKitExtendsABespokeThemeAndDrawsThroughItsGrammar() {
+    // A kit shares its base's family for what isn't drawn through slots yet, and draws every slot
+    // from its own grammar — so it is a look of its own without a Meters<Family>.kt.
+    assertTrue(HaUberTheme.kits.isNotEmpty())
+    for (kit in HaUberTheme.kits) {
+      val base = HaUberTheme.bespoke.single { it.id == kit.extends }
+      assertEquals(base.visuals, kit.visuals, kit.id)
+      assertEquals(HaComponentSlot.entries.toSet(), kit.components.slots, kit.id)
+      assertTrue(kit.grammar != base.grammar || kit.palette(true) != base.palette(true), kit.id)
+    }
+    // No two kits are the same tokens.
+    assertEquals(HaUberTheme.kits.size, HaUberTheme.kits.map { it.grammar }.toSet().size)
+  }
+
+  @Test
+  fun kitPalettesAreLegible() {
+    for (kit in HaUberTheme.kits) for (dark in listOf(false, true)) {
+      val palette = kit.palette(dark)
+      assertTrue(contrast(palette.primaryText, palette.cardBackground) >= 4.5f, "${kit.id} text")
+      assertTrue(
+        contrast(palette.secondaryText, palette.cardBackground) >= 4.5f,
+        "${kit.id} secondary",
+      )
+      assertTrue(contrast(palette.linkText, palette.cardBackground) >= 3f, "${kit.id} accent")
+    }
+  }
+
+  @Test
+  fun bespokeThemesKeepTheirOwnDrawings() {
+    // Bespoke themes draw every older visual by hand; only new slots fall back to the grammar.
+    for (theme in HaUberTheme.bespoke) assertEquals(HaComponentSlots.None, theme.components)
+    assertEquals(HaComponentGrammar.Default, HaUberTheme.Classic.grammar)
+    assertEquals(HaLevelStyle.Segmented, HaUberTheme.Lcd.grammar.level)
+    assertEquals(HaLevelStyle.Pointer, HaUberTheme.Braun.grammar.level)
   }
 
   @Test
