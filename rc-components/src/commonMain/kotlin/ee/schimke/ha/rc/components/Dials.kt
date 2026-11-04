@@ -17,7 +17,9 @@ import androidx.compose.ui.graphics.Color
 // 135° (bottom left) and sweeps clockwise to 45° (bottom right); the centre is left for the card's
 // text. Every design is live: fills sweep, cells light and pointers swing with the animated value
 // fraction, and the target marker rides the target fraction (hidden while [targetVisible] is
-// false). Classic is RemoteHaArcDial's own drawing; Console's knob is in MetersConsole.kt.
+// false). Classic and Expressive draw the grammar's ring (GrammarRenderers.Dial); Console's knob is
+// in
+// MetersConsole.kt.
 // ---------------------------------------------------------------------------------------------
 
 /** The square a dial is drawn in: [side] wide at ([left], [top]). */
@@ -43,8 +45,9 @@ private fun shown(color: RemoteColor, visible: RemoteBoolean?): RemoteColor =
   visible?.select(color, Color.Transparent.rc) ?: color
 
 /**
- * The dial for [family] — every family but Classic and Console, which [RemoteHaArcDial] draws
- * itself. [stroke] is the classic track stroke, in document pixels, that each design scales from.
+ * The dial for [family] — every family but those [RemoteHaArcDial] draws itself (the grammar's ring
+ * and Console's knob). [stroke] is the classic track stroke, in document pixels, that each design
+ * scales from.
  */
 internal fun RemoteDrawScope.familyDial(
   family: HaVisualFamily,
@@ -57,7 +60,6 @@ internal fun RemoteDrawScope.familyDial(
 ) {
   when (family) {
     HaVisualFamily.HomeAssistant -> homeAssistantDial(look, value, target, targetVisible, box)
-    HaVisualFamily.Expressive -> expressiveDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Trinitron -> trinitronDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Lcd -> lcdDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Braun -> braunDial(look, value, target, targetVisible, box, stroke)
@@ -93,7 +95,9 @@ internal fun RemoteDrawScope.familyDial(
           )
         }
     }
+    // Drawn by RemoteHaArcDial: the grammar's ring, or Console's knob.
     HaVisualFamily.Classic,
+    HaVisualFamily.Expressive,
     HaVisualFamily.Console -> Unit
   }
 }
@@ -136,46 +140,6 @@ private fun RemoteDrawScope.homeAssistantDial(
       val point = box.point(DialStart, middle)
       drawCircle(fillPaint(shown(look.value, targetVisible)), thickness * 0.57f.rf, point)
       drawCircle(fillPaint(shown(Color.White.rc, targetVisible)), thickness * 0.42f.rf, point)
-    }
-  }
-}
-
-/** M3 Expressive: a fat round value arc, a gap, the track, and a stop dot at the end. */
-private fun RemoteDrawScope.expressiveDial(
-  look: MeterLook,
-  value: RemoteFloat,
-  target: RemoteFloat?,
-  targetVisible: RemoteBoolean?,
-  box: DialBox,
-  stroke: Float,
-) {
-  val s = stroke * 1.6f
-  val inset = (s - stroke) / 2f
-  val sweep = value * DialSweep.rf
-  val gap = 14f.rf
-  drawArc(
-    strokePaint(s, look.track),
-    DialStart.rf + sweep + gap,
-    remoteMax(DialSweep.rf - sweep - gap, 0f.rf),
-    false,
-    box.topLeft(inset),
-    box.size(inset),
-  )
-  val r = box.radius - inset.rf
-  drawCircle(fillPaint(look.value), (s * 0.2f).rf, box.point(DialStart + DialSweep, r))
-  drawArc(
-    strokePaint(s, look.value),
-    DialStart.rf,
-    sweep,
-    false,
-    box.topLeft(inset),
-    box.size(inset),
-  )
-  if (target != null) {
-    rotate(target * DialSweep.rf, box.center) {
-      val p = box.point(DialStart, r)
-      drawCircle(fillPaint(shown(look.surface, targetVisible)), (s * 0.42f).rf, p)
-      drawCircle(fillPaint(shown(look.text, targetVisible)), (s * 0.26f).rf, p)
     }
   }
 }

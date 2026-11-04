@@ -43,8 +43,7 @@ internal class Plot(
 
 /**
  * A sparkline of [values] on the scale [min] .. min + [span], drawn in [family]'s design
- * ([historyTrace], docs/design/everyday-cards.md §2). Classic is a 2px round line over a hairline
- * baseline.
+ * ([historyTrace], docs/design/everyday-cards.md §2).
  */
 internal fun RemoteDrawScope.familySparkline(
   family: HaVisualFamily,
@@ -59,7 +58,7 @@ internal fun RemoteDrawScope.familySparkline(
 
 /**
  * One bar per sample of [values] on the scale [base] .. base + [span], drawn in [family]'s design.
- * Classic is a flat bar 70% of its slot over a hairline baseline.
+ * Classic, Home Assistant and Expressive draw the grammar's bars instead (FamilyCharts).
  */
 internal fun RemoteDrawScope.familyBars(
   family: HaVisualFamily,
@@ -99,30 +98,20 @@ internal fun RemoteDrawScope.familyBars(
       }
     }
 
+    // Drawn by the grammar (FamilyCharts).
     HaVisualFamily.HomeAssistant,
     HaVisualFamily.Classic,
+    HaVisualFamily.Expressive -> Unit
+    // Thin flat bars over a muted scale line.
     HaVisualFamily.Braun -> {
-      val share = if (family == HaVisualFamily.Braun) 0.3f else 0.7f
       drawLine(
-        strokePaint(
-          1f,
-          if (family == HaVisualFamily.Braun) look.muted else look.track,
-          round = false,
-        ),
+        strokePaint(1f, look.muted, round = false),
         RemoteOffset(plot.left, plot.bottom),
         RemoteOffset(plot.left + plot.width, plot.bottom),
       )
       for (i in 0 until n) {
         val y = plot.y(fractions[i])
-        fillRect(look.value, x(i, share), y, slot * share.rf, plot.bottom - y)
-      }
-    }
-    // Capsules, round at the top.
-    HaVisualFamily.Expressive -> {
-      for (i in 0 until n) {
-        val y = plot.y(fractions[i])
-        val w = slot * 0.7f.rf
-        fillRound(look.value, x(i, 0.7f), y, w, plot.bottom - y, w / 2f.rf)
+        fillRect(look.value, x(i, 0.3f), y, slot * 0.3f.rf, plot.bottom - y)
       }
     }
     // Stacked LED cells (Trinitron) or chunky segments with ghosts (LCD).

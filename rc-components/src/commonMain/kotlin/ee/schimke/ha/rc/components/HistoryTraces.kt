@@ -25,7 +25,7 @@ private fun strided(n: Int, step: Int): List<Int> = ((n - 1) downTo 0 step step)
 
 /**
  * [fractions] (0 = the series minimum, 1 = its maximum) drawn as [family]'s history trace. Classic
- * and Home Assistant are HA's line over a baseline.
+ * and Home Assistant draw the grammar's line over a baseline instead (FamilyCharts).
  */
 internal fun RemoteDrawScope.historyTrace(
   family: HaVisualFamily,
@@ -35,12 +35,9 @@ internal fun RemoteDrawScope.historyTrace(
   val n = fractions.size
   if (n < 2) return
   when (family) {
+    // Drawn by the grammar (FamilyCharts): a 2 px line over a baseline.
     HaVisualFamily.Classic,
-    HaVisualFamily.HomeAssistant -> {
-      val p = Plot(this)
-      p.baseline(this, look.track)
-      p.line(this, fractions, 2f, look.value)
-    }
+    HaVisualFamily.HomeAssistant -> Unit
     HaVisualFamily.Expressive -> expressiveTrace(look, fractions)
     HaVisualFamily.Trinitron -> trinitronTrace(look, fractions)
     HaVisualFamily.Lcd -> lcdTrace(look, fractions)

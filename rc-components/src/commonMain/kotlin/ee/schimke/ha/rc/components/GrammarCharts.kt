@@ -43,16 +43,26 @@ internal fun chartRenderer(): HaChartRenderer {
   return theme.components.charts ?: FamilyCharts.of(theme.visuals)
 }
 
-/** A bespoke family's graph rows: its traces (HistoryTraces.kt) and bars (Charts.kt), unchanged. */
+/**
+ * A bespoke family's graph rows: its traces (HistoryTraces.kt) and bars (Charts.kt) where it has
+ * its own, else the grammar's ([GrammarCharts]) in its tokens — the cards' own line and bars are
+ * those.
+ */
 internal class FamilyCharts private constructor(private val family: HaVisualFamily) :
   HaChartRenderer {
+  private val grammarTrace =
+    family == HaVisualFamily.Classic || family == HaVisualFamily.HomeAssistant
+  private val grammarBars = grammarTrace || family == HaVisualFamily.Expressive
+
   override fun RemoteDrawScope.sparkline(
     look: MeterLook,
     grammar: HaComponentGrammar,
     values: List<RemoteFloat>,
     min: RemoteFloat,
     span: RemoteFloat,
-  ) = familySparkline(family, look, values, min, span)
+  ) =
+    if (grammarTrace) with(GrammarCharts) { sparkline(look, grammar, values, min, span) }
+    else familySparkline(family, look, values, min, span)
 
   override fun RemoteDrawScope.bars(
     look: MeterLook,
@@ -60,7 +70,9 @@ internal class FamilyCharts private constructor(private val family: HaVisualFami
     values: List<RemoteFloat>,
     base: RemoteFloat,
     span: RemoteFloat,
-  ) = familyBars(family, look, values, base, span)
+  ) =
+    if (grammarBars) with(GrammarCharts) { bars(look, grammar, values, base, span) }
+    else familyBars(family, look, values, base, span)
 
   companion object {
     private val byFamily = HaVisualFamily.entries.associateWith { FamilyCharts(it) }
