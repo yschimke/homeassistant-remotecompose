@@ -104,4 +104,21 @@ class LockedControlsTest {
     assertEquals(listOf(2), replays)
     assertNull(host.currentSnackbarData)
   }
+
+  @Test
+  fun unlockingElsewhereDropsAQueuedPrompt() = runTest {
+    val host = SnackbarHostState()
+    val prompts = UnlockPrompts(host, this)
+    var replayed = false
+    launch { host.showSnackbar("New notification") }
+    runCurrent()
+    prompts.offer(LockedAction { replayed = true }) {}
+    runCurrent()
+    // The top bar's lock is opened while the prompt waits behind the notification.
+    prompts.cancel()
+    assertNotNull(host.currentSnackbarData).dismiss()
+    runCurrent()
+    assertNull(host.currentSnackbarData)
+    assertFalse(replayed)
+  }
 }

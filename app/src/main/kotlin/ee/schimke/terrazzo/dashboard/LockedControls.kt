@@ -58,7 +58,8 @@ internal suspend fun SnackbarHostState.offerUnlock(locked: LockedAction, unlock:
 /**
  * The dashboard's unlock prompts on [host]: a newer locked tap cancels the prompt for the one
  * before, whether it is showing or still queued behind another snackbar (a Home Assistant
- * notification), so Unlock only ever runs the tap the user just made.
+ * notification), and unlocking any other way cancels it too ([cancel]), so Unlock only ever runs
+ * the tap the user just made.
  */
 internal class UnlockPrompts(
   private val host: SnackbarHostState,
@@ -67,7 +68,16 @@ internal class UnlockPrompts(
   private var pending: Job? = null
 
   fun offer(locked: LockedAction, unlock: () -> Unit) {
-    pending?.cancel()
+    cancel()
     pending = scope.launch { host.offerUnlock(locked, unlock) }
+  }
+
+  /**
+   * Drops the prompt, showing or queued: controls were unlocked some other way (the top bar's
+   * lock), so its tap is stale and must not be replayed.
+   */
+  fun cancel() {
+    pending?.cancel()
+    pending = null
   }
 }

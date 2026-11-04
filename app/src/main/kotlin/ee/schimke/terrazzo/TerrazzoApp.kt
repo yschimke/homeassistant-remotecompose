@@ -561,6 +561,8 @@ private fun DashboardsRoot(
   val snackbars = remember { SnackbarHostState() }
   // A locked tap's "Unlock" prompt; a newer one replaces it.
   val unlockPrompts = remember(snackbars, scope) { UnlockPrompts(snackbars, scope) }
+  // Unlocked from the top bar or Settings: a prompt still waiting would replay a stale tap.
+  LaunchedEffect(writeMode) { if (writeMode) unlockPrompts.cancel() }
   // Offers the watch app on a connected watch without it.
   val installOnWatch = wearInstallPrompts(snackbars)
   val lifecycleOwner = LocalLifecycleOwner.current
