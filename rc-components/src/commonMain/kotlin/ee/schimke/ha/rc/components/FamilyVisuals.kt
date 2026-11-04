@@ -34,25 +34,24 @@ internal class FamilyVisuals private constructor(val family: HaVisualFamily) {
   val arc: HaVisualRenderer =
     when (family) {
       HaVisualFamily.Classic,
-      HaVisualFamily.Expressive -> GrammarRenderers.Arc
+      HaVisualFamily.Expressive,
+      HaVisualFamily.Lcd,
+      HaVisualFamily.Minimalist,
+      HaVisualFamily.Arctic -> GrammarRenderers.Arc
       HaVisualFamily.HomeAssistant -> drawn { homeAssistantArc(it.look, it.fraction, it.baseline) }
       HaVisualFamily.Trinitron ->
         drawn { trinitronArc(it.look, it.fraction, it.baseline, it.zones) }
-      HaVisualFamily.Lcd ->
-        drawn { lcdArc(it.look, it.fraction, it.strokePx, it.baseline, it.zones) }
       HaVisualFamily.Braun -> drawn { braunArc(it.look, it.fraction, it.baseline) }
       HaVisualFamily.Nixie -> drawn { nixieArc(it.look, it.fraction, it.strokePx, it.baseline) }
       HaVisualFamily.Console -> drawn { consoleArc(it.look, it.fraction, it.baseline, it.zones) }
       HaVisualFamily.Ikea -> drawn { ikeaArc(it.look, it.fraction, it.baseline) }
       HaVisualFamily.Mushroom,
       HaVisualFamily.Bubble,
-      HaVisualFamily.Minimalist,
       HaVisualFamily.Cupertino,
       HaVisualFamily.Catppuccin,
       HaVisualFamily.Obsidian,
       HaVisualFamily.Noctis,
       HaVisualFamily.Lcars,
-      HaVisualFamily.Arctic,
       HaVisualFamily.Aeon ->
         drawn { communityArc(family, it.look, it.fraction, it.strokePx, it.baseline, it.zones) }
     }
@@ -62,10 +61,27 @@ internal class FamilyVisuals private constructor(val family: HaVisualFamily) {
     when (family) {
       HaVisualFamily.Classic,
       HaVisualFamily.HomeAssistant,
-      HaVisualFamily.Expressive -> GrammarRenderers.Bar
+      HaVisualFamily.Expressive,
+      HaVisualFamily.Lcd,
+      HaVisualFamily.Cupertino,
+      HaVisualFamily.Obsidian,
+      HaVisualFamily.Arctic -> GrammarRenderers.Bar
+      // The grammar's LED run, with Trinitron's red peak zone when the reading has none.
       HaVisualFamily.Trinitron ->
-        drawn { trinitronBar(it.look, it.fraction, it.vertical, it.zones) }
-      HaVisualFamily.Lcd -> drawn { lcdBar(it.look, it.fraction, it.vertical, it.zones) }
+        drawn {
+          render(
+            GrammarRenderers.Bar,
+            HaVisualSpec(
+              it.look,
+              it.fraction,
+              it.grammar,
+              trinitronPeakZones(it.zones),
+              it.strokePx,
+              it.baseline,
+              it.vertical,
+            ),
+          )
+        }
       HaVisualFamily.Braun -> drawn { braunBar(it.look, it.fraction, it.vertical) }
       HaVisualFamily.Nixie -> drawn { nixieBar(it.look, it.fraction, it.vertical) }
       HaVisualFamily.Console -> drawn { consoleBar(it.look, it.fraction, it.vertical) }
@@ -73,12 +89,9 @@ internal class FamilyVisuals private constructor(val family: HaVisualFamily) {
       HaVisualFamily.Mushroom,
       HaVisualFamily.Bubble,
       HaVisualFamily.Minimalist,
-      HaVisualFamily.Cupertino,
       HaVisualFamily.Catppuccin,
-      HaVisualFamily.Obsidian,
       HaVisualFamily.Noctis,
       HaVisualFamily.Lcars,
-      HaVisualFamily.Arctic,
       HaVisualFamily.Aeon ->
         drawn { communityBar(family, it.look, it.fraction, it.vertical, it.zones) }
     }
@@ -88,7 +101,9 @@ internal class FamilyVisuals private constructor(val family: HaVisualFamily) {
     when (family) {
       HaVisualFamily.Classic,
       HaVisualFamily.HomeAssistant,
-      HaVisualFamily.Expressive -> GrammarRenderers.Thermometer
+      HaVisualFamily.Expressive,
+      HaVisualFamily.Obsidian,
+      HaVisualFamily.Arctic -> GrammarRenderers.Thermometer
       HaVisualFamily.Trinitron -> drawn { trinitronThermometer(it.look, it.fraction, it.zones) }
       HaVisualFamily.Lcd -> drawn { lcdThermometer(it.look, it.fraction, it.zones) }
       HaVisualFamily.Braun -> drawn { braunThermometer(it.look, it.fraction, it.zones) }
@@ -100,10 +115,8 @@ internal class FamilyVisuals private constructor(val family: HaVisualFamily) {
       HaVisualFamily.Minimalist,
       HaVisualFamily.Cupertino,
       HaVisualFamily.Catppuccin,
-      HaVisualFamily.Obsidian,
       HaVisualFamily.Noctis,
       HaVisualFamily.Lcars,
-      HaVisualFamily.Arctic,
       HaVisualFamily.Aeon -> drawn { communityThermometer(family, it.look, it.fraction, it.zones) }
     }
 
@@ -142,7 +155,11 @@ internal class FamilyVisuals private constructor(val family: HaVisualFamily) {
   val dialRing: HaDialRingKind =
     when (family) {
       HaVisualFamily.Classic,
-      HaVisualFamily.Expressive -> HaDialRingKind.Grammar
+      HaVisualFamily.Expressive,
+      HaVisualFamily.Lcd,
+      HaVisualFamily.Minimalist,
+      HaVisualFamily.Obsidian,
+      HaVisualFamily.Arctic -> HaDialRingKind.Grammar
       HaVisualFamily.Console -> HaDialRingKind.Knob
       else -> HaDialRingKind.Family
     }

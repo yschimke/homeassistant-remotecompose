@@ -15,6 +15,12 @@ import androidx.compose.remote.creation.compose.state.selectIfGe
 /** Where the red peak zone starts when the reading marks none. */
 private const val PeakFrom = 0.8f
 
+/**
+ * [zones] with Trinitron's red peak from [PeakFrom] when the reading names no hot end of its own.
+ */
+internal fun trinitronPeakZones(zones: HaMeterZones): HaMeterZones =
+  if (zones.hotFromLive != null) zones else zones.copy(hotFrom = zones.hotFrom ?: PeakFrom)
+
 internal fun RemoteDrawScope.trinitronArc(
   look: MeterLook,
   fraction: RemoteFloat,
@@ -92,18 +98,6 @@ private fun RemoteDrawScope.ledRun(
   }
 }
 
-internal fun RemoteDrawScope.trinitronBar(
-  look: MeterLook,
-  fraction: RemoteFloat,
-  vertical: Boolean,
-  zones: HaMeterZones,
-) {
-  val peakZones =
-    if (zones.hotFromLive != null) zones else zones.copy(hotFrom = zones.hotFrom ?: PeakFrom)
-  if (vertical) ledRun(look, fraction, peakZones, 24, true, 0f.rf, height, 0f.rf, width)
-  else ledRun(look, fraction, peakZones, 24, false, 0f.rf, width, 0f.rf, height)
-}
-
 /** An LED level column beside a five-tick scale, at 1 : 3. */
 internal fun RemoteDrawScope.trinitronThermometer(
   look: MeterLook,
@@ -125,7 +119,7 @@ internal fun RemoteDrawScope.trinitronThermometer(
   ledRun(
     look,
     fraction,
-    if (zones.hotFromLive != null) zones else zones.copy(hotFrom = zones.hotFrom ?: PeakFrom),
+    trinitronPeakZones(zones),
     20,
     true,
     box.top,

@@ -17,9 +17,8 @@ import androidx.compose.ui.graphics.Color
 // 135° (bottom left) and sweeps clockwise to 45° (bottom right); the centre is left for the card's
 // text. Every design is live: fills sweep, cells light and pointers swing with the animated value
 // fraction, and the target marker rides the target fraction (hidden while [targetVisible] is
-// false). Classic and Expressive draw the grammar's ring (GrammarRenderers.Dial); Console's knob is
-// in
-// MetersConsole.kt.
+// false). Classic, Expressive, LCD, Minimalist, Obsidian and Arctic draw the grammar's ring
+// (GrammarRenderers.Dial); Console's knob is in MetersConsole.kt.
 // ---------------------------------------------------------------------------------------------
 
 /** The square a dial is drawn in: [side] wide at ([left], [top]). */
@@ -61,19 +60,15 @@ internal fun RemoteDrawScope.familyDial(
   when (family) {
     HaVisualFamily.HomeAssistant -> homeAssistantDial(look, value, target, targetVisible, box)
     HaVisualFamily.Trinitron -> trinitronDial(look, value, target, targetVisible, box, stroke)
-    HaVisualFamily.Lcd -> lcdDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Braun -> braunDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Nixie -> nixieDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Ikea -> ikeaDial(look, value, target, targetVisible, box, stroke)
     HaVisualFamily.Mushroom,
     HaVisualFamily.Bubble,
-    HaVisualFamily.Minimalist,
     HaVisualFamily.Cupertino,
     HaVisualFamily.Catppuccin,
-    HaVisualFamily.Obsidian,
     HaVisualFamily.Noctis,
     HaVisualFamily.Lcars,
-    HaVisualFamily.Arctic,
     HaVisualFamily.Aeon -> {
       communityRing(
         family,
@@ -98,6 +93,10 @@ internal fun RemoteDrawScope.familyDial(
     // Drawn by RemoteHaArcDial: the grammar's ring, or Console's knob.
     HaVisualFamily.Classic,
     HaVisualFamily.Expressive,
+    HaVisualFamily.Lcd,
+    HaVisualFamily.Minimalist,
+    HaVisualFamily.Obsidian,
+    HaVisualFamily.Arctic,
     HaVisualFamily.Console -> Unit
   }
 }
@@ -188,42 +187,6 @@ private fun RemoteDrawScope.trinitronDial(
         strokePaint(2.5f, shown(look.text, targetVisible), round = false),
         box.point(DialStart, outer + 1f.rf),
         box.point(DialStart, box.radius - (inset + s).rf),
-      )
-    }
-  }
-}
-
-/**
- * LCD: fifteen chunky blocks with their ghosts, and a pointer bar outside the ring at the target.
- */
-private fun RemoteDrawScope.lcdDial(
-  look: MeterLook,
-  value: RemoteFloat,
-  target: RemoteFloat?,
-  targetVisible: RemoteBoolean?,
-  box: DialBox,
-  stroke: Float,
-) {
-  val blocks = 15
-  val pitch = DialSweep / blocks
-  val s = stroke * 1.8f
-  val inset = s / 2f + stroke * 0.8f
-  for (i in 0 until blocks) {
-    drawArc(
-      strokePaint(s, look.segment(value, i, blocks, HaMeterZones()), round = false),
-      (DialStart + i * pitch + pitch * 0.1f).rf,
-      (pitch * 0.8f).rf,
-      false,
-      box.topLeft(inset),
-      box.size(inset),
-    )
-  }
-  if (target != null) {
-    rotate(target * DialSweep.rf, box.center) {
-      drawLine(
-        strokePaint(stroke * 0.7f, shown(look.value, targetVisible), round = false),
-        box.point(DialStart, box.radius),
-        box.point(DialStart, box.radius - (stroke * 0.7f).rf),
       )
     }
   }

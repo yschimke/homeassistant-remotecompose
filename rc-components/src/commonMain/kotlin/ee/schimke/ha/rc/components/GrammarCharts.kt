@@ -51,8 +51,13 @@ internal fun chartRenderer(): HaChartRenderer {
 internal class FamilyCharts private constructor(private val family: HaVisualFamily) :
   HaChartRenderer {
   private val grammarTrace =
-    family == HaVisualFamily.Classic || family == HaVisualFamily.HomeAssistant
-  private val grammarBars = grammarTrace || family == HaVisualFamily.Expressive
+    family == HaVisualFamily.Classic ||
+      family == HaVisualFamily.HomeAssistant ||
+      family == HaVisualFamily.Arctic
+  private val grammarBars =
+    family == HaVisualFamily.Classic ||
+      family == HaVisualFamily.HomeAssistant ||
+      family == HaVisualFamily.Expressive
 
   override fun RemoteDrawScope.sparkline(
     look: MeterLook,
