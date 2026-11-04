@@ -40,6 +40,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
@@ -177,6 +178,11 @@ import kotlinx.serialization.json.jsonPrimitive
  * [initialViewPath] is the view to show first; [onInitialViewShown] runs once the list has scrolled
  * to it, so a host can stop asking for it. A `more-info` action opens [EntityMoreInfoSheet] on the
  * live snapshot.
+ *
+ * A tap the controls lock drops ([readOnly]) is answered on [unlockSnackbars] with an Unlock prompt
+ * ([UnlockPrompts]) that calls [onUnlock] and replays the tap. The prompt belongs to this screen:
+ * it is dropped when the screen leaves composition (another dashboard, the editor, an overlay),
+ * whose dispatcher could no longer run the tap, and when controls are unlocked some other way.
  */
 @Composable
 fun DashboardViewScreen(
@@ -189,6 +195,8 @@ fun DashboardViewScreen(
   onOpenDashboard: (urlPath: String?, viewPath: String?) -> Boolean = { _, _ -> false },
   onInitialViewShown: () -> Unit = {},
   connectionPending: Boolean = false,
+  unlockSnackbars: SnackbarHostState? = null,
+  onUnlock: () -> Unit = {},
 ) {
   val cache = LocalTerrazzoGraph.current.offlineCache
   // Seed from the session (demo mode's boards need no round trip) or
@@ -355,6 +363,14 @@ fun DashboardViewScreen(
     card?.let { pendingCard = CardTarget(it.card) }
     WidgetOpenRequests.consume(target)
   }
+  val promptScope = rememberCoroutineScope()
+  val unlockPrompts =
+    remember(unlockSnackbars, promptScope) {
+      unlockSnackbars?.let { UnlockPrompts(it, promptScope) }
+    }
+  val onUnlockState = rememberUpdatedState(onUnlock)
+  // Unlocked from the top bar or Settings: a prompt still waiting would replay a stale tap.
+  LaunchedEffect(readOnly, unlockPrompts) { if (!readOnly) unlockPrompts?.cancel() }
   val actionDispatcher =
     rememberDashboardActionDispatcher(
       session,
@@ -365,6 +381,10 @@ fun DashboardViewScreen(
       },
       onNavigate = navigate,
       onMoreInfo = { moreInfoEntity = it },
+      onLocked = { action, replay ->
+        val snapshot = (latestState.value as? DashboardState.Ready)?.snapshot
+        unlockPrompts?.offer(lockedAction(action, snapshot, replay)) { onUnlockState.value() }
+      },
     )
 
   CompositionLocalProvider(

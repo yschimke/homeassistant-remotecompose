@@ -285,12 +285,13 @@ internal fun SettingsScreen(
 
       SettingsGroup("Dashboard") {
         SettingSwitch(
-          title = "Permanent write mode",
+          title = "Start with controls unlocked",
           summary =
-            "When off, every relaunch starts in Read so taps on the dashboard " +
-              "(and on home-screen widgets) never silently fire HA service " +
-              "calls. Turn on if you trust this device and prefer Write by " +
-              "default; the chip in the top bar still overrides per session.",
+            "When off, every relaunch starts with controls locked, so a stray " +
+              "tap on the dashboard (or a risky one on a home-screen widget) " +
+              "never fires a Home Assistant service call: a locked tap offers " +
+              "Unlock instead. Turn on if you trust this device; the lock in " +
+              "the top bar still overrides per session.",
           checked = permanentWriteEnabled,
           onCheckedChange = { scope.launch { graph.preferencesStore.setPermanentWriteMode(it) } },
         )
