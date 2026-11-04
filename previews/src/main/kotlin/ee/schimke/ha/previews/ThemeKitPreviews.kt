@@ -293,3 +293,130 @@ fun Kit_Keys() {
     }
   }
 }
+
+/**
+ * One card under several themes, [columns] to a row: each cell is the card under its own theme and
+ * mode, on that theme's dashboard colour, so slot drawings can be compared side by side.
+ */
+@Composable
+private fun KitCardSheet(
+  themes: List<Pair<HaUberTheme, Boolean>>,
+  columns: Int,
+  cards: List<String>,
+  snapshot: ee.schimke.ha.model.HaSnapshot,
+) {
+  Box(Modifier.uiFillMaxSize().background(androidx.compose.ui.graphics.Color(0xFF808285))) {
+    CapturingRemoteContentPreview(profile = androidXExperimental) {
+      CompositionLocalProvider(LocalHaClock provides FixedHaClock(KitNow)) {
+        ProvideCardRegistry(defaultRegistry()) {
+          RemoteColumn(
+            modifier = RemoteModifier.fillMaxWidth().padding(HaSpace.S.rdp),
+            verticalArrangement = RemoteArrangement.spacedBy(HaSpace.S.rdp),
+          ) {
+            for (row in themes.chunked(columns)) {
+              RemoteRow(modifier = RemoteModifier.fillMaxWidth()) {
+                row.forEachIndexed { index, (theme, dark) ->
+                  ProvideHaUberTheme(theme, dark) {
+                    RemoteColumn(
+                      modifier =
+                        RemoteModifier.weight(1f)
+                          .padding(end = if (index < row.size - 1) HaSpace.S.rdp else 0.rdp),
+                      verticalArrangement = RemoteArrangement.spacedBy(HaSpace.S.rdp),
+                    ) {
+                      for (json in cards) {
+                        RenderChild(card(json), snapshot, RemoteModifier.fillMaxWidth())
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * The control dial as slots: the same thermostat under bespoke themes, which keep their own ring
+ * (Classic's arc, Console's set-point knob), and the kits, whose rings come from their grammar —
+ * Engineered's segments, Cockpit's needle, Aurora's gradient halo, EV Dash's thin arc.
+ */
+@Preview(name = "kit: dials across themes", widthDp = 360, heightDp = 640)
+@Composable
+fun Kit_Dials() =
+  KitCardSheet(
+    listOf(
+      HaUberTheme.Classic to false,
+      HaUberTheme.Console to true,
+      HaUberTheme.Engineered to false,
+      HaUberTheme.Cockpit to true,
+    ),
+    columns = 2,
+    cards = listOf("""{"type":"thermostat","entity":"climate.living_room"}"""),
+    snapshot = Fixtures.thermostat,
+  )
+
+/**
+ * The dial's layout as a slot too: Cupertino keeps its bar with the steppers beside it, Expressive
+ * its own ring; Aurora and EV Dash draw theirs from their grammar.
+ */
+@Preview(name = "kit: dials across themes (soft)", widthDp = 360, heightDp = 640)
+@Composable
+fun Kit_DialsSoft() =
+  KitCardSheet(
+    listOf(
+      HaUberTheme.Expressive to false,
+      HaUberTheme.Cupertino to false,
+      HaUberTheme.Aurora to true,
+      HaUberTheme.EvDash to true,
+    ),
+    columns = 2,
+    cards = listOf("""{"type":"thermostat","entity":"climate.living_room"}"""),
+    snapshot = Fixtures.thermostat,
+  )
+
+/**
+ * Media transport keys as a slot: Console's keys with pilot lamps, IKEA's moulded keys, and the
+ * kits' keys from their grammar — Engineered's outlined rims, Cockpit's bare icons on a filled one.
+ */
+@Preview(name = "kit: media keys across themes", widthDp = 360, heightDp = 640)
+@Composable
+fun Kit_MediaKeys() =
+  KitCardSheet(
+    listOf(
+      HaUberTheme.Console to true,
+      HaUberTheme.Ikea to false,
+      HaUberTheme.Engineered to false,
+      HaUberTheme.Cockpit to true,
+    ),
+    columns = 1,
+    cards = listOf("""{"type":"media-control","entity":"media_player.office_speaker"}"""),
+    snapshot = Fixtures.mediaPlaying,
+  )
+
+/**
+ * Button icon chips as a slot: Expressive's shape morph (borrowed by Aurora), Console's key face,
+ * IKEA's moulded key, Classic's tinted chip and Engineered's rimmed one.
+ */
+@Preview(name = "kit: button chips across themes", widthDp = 360, heightDp = 450)
+@Composable
+fun Kit_ButtonChips() =
+  KitCardSheet(
+    listOf(
+      HaUberTheme.Classic to false,
+      HaUberTheme.Expressive to false,
+      HaUberTheme.Console to true,
+      HaUberTheme.Ikea to false,
+      HaUberTheme.Aurora to true,
+      HaUberTheme.Engineered to false,
+    ),
+    columns = 3,
+    cards =
+      listOf(
+        """{"type":"button","entity":"light.kitchen","name":"Kitchen","show_state":true}""",
+        """{"type":"button","entity":"switch.coffee_maker","name":"Coffee","show_state":true}""",
+      ),
+    snapshot = Fixtures.mixed,
+  )

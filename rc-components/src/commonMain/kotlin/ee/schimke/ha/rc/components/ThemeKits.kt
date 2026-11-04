@@ -63,7 +63,8 @@ internal object ThemeKits {
 
   /**
    * **Aurora** — an assistant's look: soft rounded surfaces, and a glowing blue-violet-rose
-   * gradient halo under every value, which keeps its own colour. Borrows Expressive's switch.
+   * gradient halo under every value, which keeps its own colour. Borrows Expressive's switch and
+   * icon chip.
    */
   val Aurora =
     HaUberTheme(
@@ -104,7 +105,8 @@ internal object ThemeKits {
         ),
       // A kit can borrow a bespoke family's control: Material 3 Expressive's switch.
       components =
-        HaComponentSlots.Grammar.with(HaComponentSlot.Switch, FamilyControls.ExpressiveSwitch),
+        HaComponentSlots.Grammar.with(HaComponentSlot.Switch, FamilyControls.ExpressiveSwitch)
+          .with(HaComponentSlot.IconChip, FamilyControls.ExpressiveIconChip),
       extends = "expressive",
     )
 

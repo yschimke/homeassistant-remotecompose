@@ -38,7 +38,7 @@ A theme is three layers, each a fallback for the one above it:
  │              · stop dot · glow · gradient halo · outline bodies            ── new
  └─ components  HaComponentSlots: the theme's own drawing per slot — visuals
                 (ArcMeter, BarMeter, Thermometer, Battery, Lock) and controls
-                (Switch, Key)                                                 ── new
+                (Switch, Key, DialRing, DialLayout, TransportKey, IconChip)   ── new
 ```
 
 **Resolution.** A part asks the active theme for its slot's drawing:
@@ -69,7 +69,7 @@ theme. The lock above is that case: it has no LCD drawing, yet under LCD it is a
 | What it is | its own `HaVisualFamily`, drawn by hand | tokens + grammar over a bespoke theme it `extends` |
 | Older visuals | the family's `Meters<Family>.kt` | `HaComponentSlots.Grammar` (all slots drawn from the grammar) |
 | New components | grammar drawing, from its derived grammar | grammar drawing, from its own grammar |
-| Switch and keys | the family's own, from the family table, else the token switch / no mount | `TokenSwitch` and `GrammarKey`, or a family's control it borrows |
+| Controls (switch, keys, dial, transport keys, icon chip) | the family's own, from the family table, else the token control | the token / grammar controls, or a family's control it borrows |
 | Card layouts and controls not yet in slots | the family's branches | inherited from the base it extends |
 | Cost to add | a family, about 40 files | one `HaUberTheme(...)` value |
 
@@ -119,6 +119,42 @@ branch on Console, IKEA, Expressive and the community families. They now resolve
   cools on the slow one. That is now keyed on `HaSurfaceMaterial.PaintedMetal`, not on Console.
 
 ![The same glance card's keys across themes](images/theme-kits/keys.png)
+
+### The control dial, transport keys and icon chip
+
+Three more controls resolve the same way. Each family's own moved unchanged into the one table in
+`HaControls.kt` (`familyDialLayout`, `familyTransportKey`, `familyIconChip`), and the cards ask by
+role.
+
+- **Control dial: two slots.** `DialRing` draws the 270° ring of a thermostat, humidifier or
+  light. Kits get `GrammarRenderers.Dial`, built from their grammar:
+  - Engineered: a ring of cells, lit as layers so a widget can play them.
+  - Cockpit: ticks with a pointer on the ring. A needle from the centre would cross the readout.
+  - Aurora: a gradient halo under the arc.
+  - EV Dash: a thin arc.
+
+  The target marker hides by size, not by colour. `DialLayout` is data rather than a drawing: which
+  body a card shows (the ring, Console's thermostat with a separate set-point knob, Cupertino's bar,
+  IKEA's light remote) and whether the steppers sit beside it (Bubble, Cupertino, LCARS, Aeon).
+  Bespoke rings keep their fallback table: Classic's arc, Console's knob, the rest in `Dials.kt`.
+- **Transport keys.** `TransportKey` draws the media card's previous, play/pause and next keys, and
+  the compact play glyph. Console keeps its key faces with pilot lamps. Everything else is
+  `TokenTransportKey`: the icon in the marking colour, mounted on the theme's `Key` slot when it
+  has one. That gives IKEA its moulded key and Engineered an outlined rim.
+- **Icon chip.** `IconChip` draws the button card's chip:
+  - Expressive: the shape morph. It is `pressable`, so the card tracks a press only for chips that
+    react to one.
+  - Console: its key face.
+  - IKEA: its moulded key.
+  - Everyone else: `TokenIconChip`, a tinted round face with the theme's key mount when it has one.
+
+  Aurora borrows Expressive's chip, as it borrows its switch.
+- **Unchanged.** 187 previews (all `Uber*` showcases plus media, button, thermostat, dial, light
+  and humidifier) render byte-identical before and after the move.
+
+| Dials | Soft dials | Media keys | Button chips |
+|---|---|---|---|
+| ![Dials](images/theme-kits/dials.png) | ![Soft dials](images/theme-kits/dials-soft.png) | ![Media keys](images/theme-kits/media-keys.png) | ![Button chips](images/theme-kits/button-chips.png) |
 
 ## Adding a brand-style theme
 
@@ -184,8 +220,8 @@ code:
 
 | Part | Where | Slot it should become |
 |---|---|---|
-| Button icon chip (Expressive shape morph, Console face) | `RemoteHaButton` | `Chip` |
-| Control dials (thermostat, light) | `Dials.kt`, `RemoteHaArcDial` | `ControlDial` |
+| Media panel layouts and artwork (Cupertino, Arctic, Aeon panels; Console's taped placeholder) | `RemoteHaMediaControl` | `MediaLayout`, `Artwork` |
+| Bespoke dial rings (still a fallback table, like the meters) | `Dials.kt`, `RemoteHaArcDial` | one `DialRing` per family |
 | Sparklines and bars | `Charts.kt`, `HistoryTraces.kt` | `Sparkline`, `StatBars` |
 | Tile layout | `RemoteHaTile`, `TileFamilies.kt` | `TileLayout` (a layout slot, not a canvas) |
 | Card chrome material | `CardChrome.kt` (`communityFrame`, painted metal) | `CardSurface` |

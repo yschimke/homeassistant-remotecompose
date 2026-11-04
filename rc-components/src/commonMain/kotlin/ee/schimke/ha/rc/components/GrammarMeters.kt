@@ -33,6 +33,7 @@ internal object GrammarRenderers {
   val Thermometer = HaVisualRenderer { spec -> grammarThermometer(spec) }
   val Battery = HaVisualRenderer { spec -> grammarBattery(spec) }
   val Lock = HaVisualRenderer { spec -> grammarLock(spec) }
+  val Dial = HaDialRenderer { spec -> grammarDial(spec) }
 }
 
 /**
@@ -427,6 +428,105 @@ private fun RemoteDrawScope.grammarBattery(spec: HaVisualSpec) {
 
 private fun HaVisualSpec.copyGrammar(grammar: HaComponentGrammar) =
   HaVisualSpec(look, fraction, grammar, zones, strokePx, baseline, vertical)
+
+// ---- Control dial --------------------------------------------------------------------------
+
+private const val DialStartDeg = 135f
+private const val DialSweepDeg = 270f
+
+/**
+ * A control dial's 270° ring in the grammar: a track and a value arc (with a gap, a stop dot and a
+ * halo where the grammar has them), a ring of cells, or index ticks with a pointer; then the target
+ * marker riding the target fraction — a dot on a round grammar, a tick across the ring on a flat
+ * one. The marker hides by size, not colour (see [ge]), so a launcher widget can play it.
+ */
+private fun RemoteDrawScope.grammarDial(spec: HaDialSpec) {
+  val vs = spec.visual
+  val g = vs.grammar
+  val look = vs.look
+  val v = vs.fraction
+  val box = spec.box
+  val s = (spec.stroke * g.weight).coerceAtLeast(1.5f)
+  val halo = g.glow || vs.gradient != null
+  val inset = s / 2f + (if (halo) s * 0.9f else 0f) + 1f
+  val r = box.radius - inset.rf
+  fun arc(paint: RemotePaint, start: RemoteFloat, sweep: RemoteFloat) =
+    drawArc(paint, start, sweep, false, box.topLeft(inset), box.size(inset))
+
+  when (g.level) {
+    HaLevelStyle.Segmented -> {
+      val n = g.segments.coerceIn(8, 36)
+      val pitch = DialSweepDeg / n
+      for (i in 0 until n) {
+        val start = (DialStartDeg + i * pitch + pitch * 0.12f).rf
+        val sweep = (pitch * 0.76f).rf
+        arc(strokePaint(s, look.ghost, round = false), start, sweep)
+        for ((color, on) in vs.segmentLayers(i, n)) {
+          arc(strokePaint(s, color, round = false), start, sweep * on)
+        }
+      }
+    }
+    HaLevelStyle.Pointer -> {
+      arc(
+        strokePaint((s * 0.5f).coerceAtLeast(1f), look.track, g.roundCaps),
+        DialStartDeg.rf,
+        DialSweepDeg.rf,
+      )
+      val count = g.ticks.takeIf { it > 0 } ?: 12
+      val tick = strokePaint((s * 0.3f).coerceAtLeast(1f), look.muted, round = false)
+      for (i in 0..count) {
+        val deg = DialStartDeg + i * DialSweepDeg / count
+        val len = (s * if (i == 0 || i == count || i * 2 == count) 1.6f else 0.9f).rf
+        drawLine(tick, box.point(deg, r - (s * 0.6f).rf), box.point(deg, r - (s * 0.6f).rf - len))
+      }
+      // A pointer across the ring, not a needle from the centre: a control dial's centre holds
+      // its readout.
+      rotate(v * DialSweepDeg.rf, box.center) {
+        drawLine(
+          strokePaint((s * 0.55f).coerceAtLeast(1.5f), look.value, g.roundCaps),
+          box.point(DialStartDeg, r + (s * 0.5f).rf),
+          box.point(DialStartDeg, r - (s * 3f).rf),
+        )
+      }
+    }
+    HaLevelStyle.Continuous -> {
+      val value = v * DialSweepDeg.rf
+      val track = strokePaint(s, look.track, g.roundCaps)
+      if (g.trackGap) {
+        val gap = 10f.rf
+        arc(track, DialStartDeg.rf + value + gap, remoteMax(0f.rf, DialSweepDeg.rf - value - gap))
+      } else {
+        arc(track, DialStartDeg.rf, DialSweepDeg.rf)
+      }
+      haloPaint(
+          vs,
+          box.point(DialStartDeg, r),
+          box.point(DialStartDeg + DialSweepDeg, r),
+          s * 2.4f,
+        )
+        ?.let { arc(it, DialStartDeg.rf, value) }
+      arc(strokePaint(s, look.value, g.roundCaps), DialStartDeg.rf, value)
+      if (g.stopDot) {
+        drawCircle(fillPaint(look.value), (s * 0.22f).rf, box.point(DialStartDeg + DialSweepDeg, r))
+      }
+    }
+  }
+
+  val target = spec.target ?: return
+  val shown = spec.targetVisible?.select(1f.rf, 0f.rf) ?: 1f.rf
+  rotate(target * DialSweepDeg.rf, box.center) {
+    if (g.roundCaps) {
+      drawCircle(fillPaint(look.text), (s * 0.42f).rf * shown, box.point(DialStartDeg, r))
+    } else {
+      val half = (s * 0.9f).rf * shown
+      drawLine(
+        strokePaint((s * 0.4f).coerceAtLeast(1.5f), look.text, round = false),
+        box.point(DialStartDeg, r + half),
+        box.point(DialStartDeg, r - half),
+      )
+    }
+  }
+}
 
 // ---- Lock -----------------------------------------------------------------------------------
 
