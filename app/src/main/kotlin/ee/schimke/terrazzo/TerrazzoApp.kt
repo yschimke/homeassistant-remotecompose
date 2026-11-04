@@ -403,7 +403,7 @@ private fun AuthenticatedShell(
       AppScreen.Logs ->
         ee.schimke.terrazzo.logs.LogsScreen(onBack = { screen = AppScreen.Dashboards })
       AppScreen.Room -> {
-        // The same write mode the dashboard's chip and Settings set: read-only shows, doesn't send.
+        // The same lock the dashboard's top bar and Settings set: locked shows, doesn't send.
         val permanentWrite by
           graph.preferencesStore.permanentWriteMode.collectAsState(initial = false)
         val sessionWrite by graph.sessionWriteMode.writeMode.collectAsState()
@@ -737,7 +737,7 @@ private fun DashboardsRoot(
       saveBlockedReason =
         when {
           session is DemoHaSession -> "Demo dashboards can't be saved."
-          readOnly -> "Turn on write mode to save."
+          readOnly -> "Controls are locked: unlock them in the top bar to save."
           else -> null
         },
       onBack = { editorOpen = false },
@@ -870,6 +870,9 @@ private fun DashboardsRoot(
           urlPath = openedValue,
           readOnly = readOnly,
           connectionPending = connectionStatus == ConnectionStatus.Connecting,
+          // A tap dropped by the lock says so where it was made, with Unlock right there.
+          unlockSnackbars = snackbars,
+          onUnlock = { graph.sessionWriteMode.set(true) },
           // Long-press opens the card's actions, handed the live
           // snapshot the card was pressed against so a fork or the
           // history preview matches the dashboard frame.

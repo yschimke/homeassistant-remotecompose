@@ -96,7 +96,13 @@ class HaUberThemeTest {
     for (kit in HaUberTheme.kits) {
       val base = HaUberTheme.bespoke.single { it.id == kit.extends }
       assertEquals(base.visuals, kit.visuals, kit.id)
-      assertEquals(HaComponentSlot.entries.toSet(), kit.components.slots, kit.id)
+      // Every slot but Layouts, which a kit inherits from the style it extends unless it picks its
+      // own.
+      assertEquals(
+        HaComponentSlot.entries.toSet() - HaComponentSlot.Layouts,
+        kit.components.slots,
+        kit.id,
+      )
       assertTrue(kit.grammar != base.grammar || kit.palette(true) != base.palette(true), kit.id)
     }
     // No two kits are the same tokens.

@@ -12,9 +12,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteCanvas
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteSize
 import androidx.compose.remote.creation.compose.layout.RemoteStateLayout
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
@@ -31,8 +29,6 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemotePaint
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
@@ -42,8 +38,6 @@ import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PaintingStyle
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
@@ -192,7 +186,6 @@ fun RemoteHaArcDialWide(
           theme = theme,
           trackStrokePx = 6f,
           fillStrokePx = 6f,
-          markerStrokePx = 8f,
           paddingPx = 3f,
         )
       }
@@ -301,7 +294,6 @@ fun RemoteHaArcDialFill(
         theme = theme,
         trackStrokePx = 10f,
         fillStrokePx = 10f,
-        markerStrokePx = 12f,
         paddingPx = 4f,
       )
       RemoteColumn(
@@ -386,7 +378,6 @@ fun RemoteHaArcDialNarrow(
         theme = theme,
         trackStrokePx = 5f,
         fillStrokePx = 5f,
-        markerStrokePx = 7f,
         paddingPx = 3f,
       )
     }
@@ -492,7 +483,6 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
       theme = theme,
       trackStrokePx = 12f,
       fillStrokePx = 12f,
-      markerStrokePx = 14f,
       paddingPx = 4f,
     )
     RemoteColumn(
@@ -581,7 +571,7 @@ private fun ConsoleThermostatBody(data: HaArcDialData, theme: RemoteHaTheme) {
       verticalAlignment = RemoteAlignment.CenterVertically,
       horizontalArrangement = RemoteArrangement.spacedBy(12.rdp),
     ) {
-      RemoteBox(RemoteModifier.size(116.rdp)) { ArcCanvas(data, theme, 6f, 6f, 8f, 3f) }
+      RemoteBox(RemoteModifier.size(116.rdp)) { ArcCanvas(data, theme, 6f, 6f, 3f) }
       RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(4.rdp)) {
         RemoteText(
           "SET POINT".rs,
@@ -658,14 +648,12 @@ private fun ArcCanvas(
   theme: RemoteHaTheme,
   trackStrokePx: Float,
   fillStrokePx: Float,
-  markerStrokePx: Float,
   paddingPx: Float,
 ) {
   val v = data.valueFraction.coerceIn(0f, 1f)
   val rawValueFraction =
     data.live?.valueFraction ?: LiveValues.namedFloat(data.entityId, "value_fraction", v)
   val animatedValueFraction = animateRemoteFloat(rawValueFraction, haMotion().spatial)
-  val animatedSweep: RemoteFloat = animatedValueFraction * 270f.rf
 
   val target = data.targetFraction
   val rawTargetFraction =
@@ -677,13 +665,15 @@ private fun ArcCanvas(
   val animatedTargetFraction =
     if (rawTargetFraction != null) animateRemoteFloat(rawTargetFraction, haMotion().spatial)
     else null
-  val animatedMarkerAngle = animatedTargetFraction?.let { 135f.rf + it * 270f.rf }
   val accent = dialAccent(data)
-  val family = visualFamily()
+  val family = familyVisuals()
   val look = meterLook(accent, theme.divider)
   val mechanical = isConsoleThermostat(data)
-  // A theme's own ring (a kit's, from its grammar) wins over its family's.
-  val themedRing = themedDialRenderer()
+  // A theme's own ring (a kit's, from its grammar) wins over its family's; the grammar's ring is
+  // the cards' own.
+  val themedRing =
+    themedDialRenderer()
+      ?: GrammarRenderers.Dial.takeIf { family.dialRing == HaDialRingKind.Grammar }
   val grammar = haGrammar()
 
   RemoteCanvas(modifier = RemoteModifier.fillMaxSize()) {
@@ -696,8 +686,6 @@ private fun ArcCanvas(
     val side = byHeight.min(byWidth)
     val left = (w - side) / 2f.rf
     val top = (h - side) / 2f.rf
-    val topLeft = RemoteOffset(left, top)
-    val arcSize = RemoteSize(side, side)
     if (themedRing != null) {
       render(
         themedRing,
@@ -712,7 +700,7 @@ private fun ArcCanvas(
       return@RemoteCanvas
     }
     // A skeuomorphic theme turns the dial into a rotary control: a knob inside a lamp ring.
-    if (family == HaVisualFamily.Console) {
+    if (family.dialRing == HaDialRingKind.Knob) {
       consoleDial(
         accent,
         animatedValueFraction,
@@ -725,52 +713,16 @@ private fun ArcCanvas(
       )
       return@RemoteCanvas
     }
-    // Every other family but Classic draws its own instrument (Dials.kt).
-    if (family != HaVisualFamily.Classic) {
-      familyDial(
-        family,
-        look,
-        animatedValueFraction,
-        animatedTargetFraction,
-        data.live?.targetVisible,
-        DialBox(left, top, side),
-        trackStrokePx,
-      )
-      return@RemoteCanvas
-    }
-
-    val track = RemotePaint {
-      isAntiAlias = true
-      style = PaintingStyle.Stroke
-      strokeWidth = trackStrokePx.rf
-      strokeCap = StrokeCap.Round
-    }
-      .apply { color = theme.divider }
-    drawArc(track, 135f.rf, 270f.rf, false, topLeft, arcSize)
-
-    val fill = RemotePaint {
-      isAntiAlias = true
-      style = PaintingStyle.Stroke
-      strokeWidth = fillStrokePx.rf
-      strokeCap = StrokeCap.Round
-    }
-      .apply { color = accent }
-    drawArc(fill, 135f.rf, animatedSweep, false, topLeft, arcSize)
-
-    if (animatedMarkerAngle != null) {
-      val marker = RemotePaint {
-        isAntiAlias = true
-        style = PaintingStyle.Stroke
-        strokeWidth = markerStrokePx.rf
-        strokeCap = StrokeCap.Round
-      }
-        .apply {
-          color =
-            data.live?.targetVisible?.select(theme.primaryText, Color.Transparent.rc)
-              ?: theme.primaryText
-        }
-      drawArc(marker, animatedMarkerAngle, 0.1f.rf, false, topLeft, arcSize)
-    }
+    // Every other family draws its own instrument (Dials.kt).
+    familyDial(
+      family.family,
+      look,
+      animatedValueFraction,
+      animatedTargetFraction,
+      data.live?.targetVisible,
+      DialBox(left, top, side),
+      trackStrokePx,
+    )
   }
 }
 

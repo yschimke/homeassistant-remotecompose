@@ -63,9 +63,10 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
         .then(cardChrome(theme.cardBackground, theme.divider))
         .padding(horizontal = 14.rdp, vertical = 12.rdp)
   ) {
-    if (visualFamily() == HaVisualFamily.HomeAssistant) {
+    val layout = haLayouts().gauge
+    if (layout == HaReadingLayout.ValueInside) {
       HomeAssistantGaugeReading(data, fraction, severityColor)
-    } else if (visualFamily().isCommunity) {
+    } else if (layout == HaReadingLayout.Community) {
       CommunityReadingLayout(
         entityName(data.entityId, data.name),
         data.valueText,

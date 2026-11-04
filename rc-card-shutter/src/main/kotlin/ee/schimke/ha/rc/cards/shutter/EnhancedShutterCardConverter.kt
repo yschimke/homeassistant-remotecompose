@@ -37,8 +37,9 @@ class EnhancedShutterCardConverter : CardConverter {
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
     val hasTitle = card.raw["title"]?.jsonPrimitive?.content?.isNotBlank() == true
     val entryCount = CoverDesign.rowsOf(card).size.coerceAtLeast(1)
-    // ~140dp per shutter row (viz + name + state + gaps); plus title.
-    return (if (hasTitle) 28 else 0) + 20 + entryCount * 140
+    // Per row: name, the 144dp button column (three 48dp tap targets, taller than the window),
+    // state and gaps; plus title.
+    return (if (hasTitle) 28 else 0) + 20 + entryCount * CoverRowHeightDp
   }
 
   @Composable

@@ -423,7 +423,7 @@ private fun ProgressRing(
   // the arc exists at all stays structure (a template keys on it).
   val progressRf = entityFloat(entityId, "progress_fraction", fraction.coerceIn(0f, 1f))
   val sweepRf = progressRf * 360f.rf
-  if (visualFamily() == HaVisualFamily.Expressive) {
+  if (haLayouts().progressRing == HaProgressRing.Wavy) {
     // M3 Expressive's wavy indicator: it ripples while the printer prints (a system widget
     // renderer draws it still), and is a plain full ring once finished.
     RemoteM3WavyProgressRing(

@@ -443,6 +443,10 @@ internal class MarkdownMaterial(
   val numbersHeadings: Boolean,
   /** Cupertino separates blocks with inset hairlines like a grouped list. */
   val dividesBlocks: Boolean,
+  /** Bubble's note ends in a speech-bubble tail. */
+  val tail: Boolean = false,
+  /** Classic and Home Assistant keep HA's own compact note layout in a launcher cell. */
+  val haReference: Boolean = false,
 )
 
 @Composable
@@ -475,6 +479,8 @@ internal fun markdownMaterial(): MarkdownMaterial {
       showsMarkers = showsMarkers,
       numbersHeadings = numbersHeadings,
       dividesBlocks = dividesBlocks,
+      tail = family == HaVisualFamily.Bubble,
+      haReference = family == HaVisualFamily.Classic || family == HaVisualFamily.HomeAssistant,
     )
   val haStyle = haTextStyle()
   return when (family) {
@@ -776,5 +782,170 @@ internal fun BubbleTail() {
         .clip(RemoteCircleShape)
         .background(theme.cardBackground)
     )
+  }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Text surfaces as a slot (HaComponentSlot.TextSurfaces): the heading card, a markdown note's
+// material and its title. A theme's own win; a bespoke family's are the treatments above; a kit's
+// come from its grammar.
+// ---------------------------------------------------------------------------------------------
+
+/** Draws a style's text surfaces: a heading, a markdown note's material and its title. */
+internal interface HaTextSurfaceRenderer : HaSlotRenderer {
+  @Composable
+  fun Heading(
+    text: RemoteString,
+    size: RemoteTextUnit,
+    weight: FontWeight,
+    modifier: RemoteModifier,
+  )
+
+  @Composable fun material(): MarkdownMaterial
+
+  @Composable fun Title(title: RemoteString, size: RemoteTextUnit, ink: RemoteColor)
+}
+
+/** The text surfaces the active theme draws: its own, else its family's. */
+@Composable
+internal fun textSurfaces(): HaTextSurfaceRenderer =
+  currentHaUberTheme().theme.components.textSurfaces ?: FamilyTextSurfaces
+
+/** The bespoke families' treatments ([EverydayHeading], [markdownMaterial], [MarkdownTitle]). */
+internal object FamilyTextSurfaces : HaTextSurfaceRenderer {
+  @Composable
+  override fun Heading(
+    text: RemoteString,
+    size: RemoteTextUnit,
+    weight: FontWeight,
+    modifier: RemoteModifier,
+  ) = EverydayHeading(text, size, weight, modifier)
+
+  @Composable override fun material(): MarkdownMaterial = markdownMaterial()
+
+  @Composable
+  override fun Title(title: RemoteString, size: RemoteTextUnit, ink: RemoteColor) =
+    MarkdownTitle(title, size, ink)
+}
+
+/**
+ * Text surfaces from the grammar:
+ * - a **pointer** grammar leads a heading with an index dot in the accent and tracks it, as an
+ *   instrument's scale label;
+ * - a **segmented** one runs a hairline rule from the heading to the edge;
+ * - a **glowing** or **gradient** one leads it with a tonal capsule in the accent;
+ * - a plain continuous one keeps the heading one plain line.
+ *
+ * A note's material is the card's own chrome, with a leading bar in the accent on an outlined
+ * grammar; its title is a tracked label over a hairline on a segmented or pointer grammar, else a
+ * medium-weight line.
+ */
+internal object GrammarTextSurfaces : HaTextSurfaceRenderer {
+  @Composable
+  override fun Heading(
+    text: RemoteString,
+    size: RemoteTextUnit,
+    weight: FontWeight,
+    modifier: RemoteModifier,
+  ) {
+    val theme = haTheme()
+    val g = haGrammar()
+    val line: @Composable (RemoteModifier, RemoteTextStyle) -> Unit = { m, style ->
+      RemoteText(
+        text = text,
+        modifier = m,
+        color = theme.primaryText,
+        fontSize = size,
+        fontWeight = weight,
+        style = style,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
+    val marked = g.glow || g.gradient != null
+    if (g.level == HaLevelStyle.Continuous && !marked) {
+      line(modifier.padding(vertical = 8.rdp), haTextStyle())
+      return
+    }
+    RemoteRow(
+      modifier = modifier.fillMaxWidth().padding(vertical = 8.rdp),
+      verticalAlignment = RemoteAlignment.CenterVertically,
+      horizontalArrangement = RemoteArrangement.spacedBy(HaSpace.S.rdp),
+    ) {
+      when {
+        g.level == HaLevelStyle.Pointer -> {
+          RemoteBox(RemoteModifier.size(8.rdp).clip(RemoteCircleShape).background(familyAccent()))
+          line(RemoteModifier, trackedTextStyle(1.6f))
+        }
+        g.level == HaLevelStyle.Segmented -> {
+          line(RemoteModifier, trackedTextStyle(1.2f))
+          RemoteBox(
+            RemoteModifier.weight(1f).height(HaSpace.Hairline.rdp).background(theme.divider)
+          )
+        }
+        else -> {
+          RemoteBox(
+            RemoteModifier.size(6.rdp, 24.rdp).clip(RemoteCircleShape).background(familyAccent())
+          )
+          line(RemoteModifier.weight(1f), haTextStyle())
+        }
+      }
+    }
+  }
+
+  @Composable
+  override fun material(): MarkdownMaterial {
+    val theme = haTheme()
+    val g = haGrammar()
+    return MarkdownMaterial(
+      surface = cardChrome(theme.cardBackground, theme.divider),
+      decoration = if (g.outline && decorated()) leadingBar(familyAccent()) else RemoteModifier,
+      padding =
+        if (g.outline)
+          RemoteModifier.padding(start = 24.rdp, end = 12.rdp, top = 10.rdp, bottom = 10.rdp)
+        else RemoteModifier.padding(horizontal = 12.rdp, vertical = 10.rdp),
+      screen = null,
+      ink = inkOrPrimary(),
+      bodyWeight = FontWeight.Normal,
+      bodyStyle = haTextStyle(),
+      showsMarkers = false,
+      numbersHeadings = false,
+      dividesBlocks = g.level == HaLevelStyle.Segmented,
+    )
+  }
+
+  @Composable
+  override fun Title(title: RemoteString, size: RemoteTextUnit, ink: RemoteColor) {
+    val theme = haTheme()
+    val g = haGrammar()
+    if (g.level == HaLevelStyle.Continuous) {
+      RemoteText(
+        text = title,
+        color = ink,
+        fontSize = size,
+        fontWeight = FontWeight.Medium,
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+      return
+    }
+    RemoteColumn(modifier = RemoteModifier.fillMaxWidth()) {
+      RemoteText(
+        text = title,
+        color = theme.secondaryText,
+        fontSize = HaType.Label,
+        fontWeight = FontWeight.Medium,
+        style = trackedTextStyle(2f),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+      RemoteBox(
+        RemoteModifier.padding(top = HaSpace.XXS.rdp)
+          .fillMaxWidth()
+          .height(HaSpace.Hairline.rdp)
+          .background(theme.divider)
+      )
+    }
   }
 }

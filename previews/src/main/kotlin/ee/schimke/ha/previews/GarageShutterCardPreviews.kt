@@ -34,17 +34,17 @@ import kotlinx.serialization.json.JsonPrimitive
  * **Two-entity** — [Garage_TwoEntities_Light] / `_Dark` covers the card-with-title + multi-row
  * layout (one door open, one closed) the shutter card preview already covers for windows.
  */
-// Single-entity canvas: name (13) + viz/buttons row (108 — buttons
-// stack three 32-dp circles + 6-dp gaps) + state (11) + spacing (8)
-// + card padding (20) ≈ 160 dp; pad to 168 so the state label has
-// breathing room and the bottom rounded corner reads cleanly.
+// Single-entity canvas: name (13) + viz/buttons row (144 — three 48dp tap
+// targets around 32dp buttons) + state (11) + spacing (8) + card padding
+// (20) ≈ 196 dp; pad to 208 so the state label has breathing room and the
+// bottom rounded corner reads cleanly.
 private const val SINGLE_WIDTH_DP = 200
-private const val SINGLE_HEIGHT_DP = 172
+private const val SINGLE_HEIGHT_DP = 208
 
 /**
  * Two garages under one title: tall enough for the second door's state line at the card type scale.
  */
-private const val TWO_ENTITIES_HEIGHT_DP = 357
+private const val TWO_ENTITIES_HEIGHT_DP = 429
 
 @Composable
 private fun GarageHost(theme: HaTheme, content: @Composable () -> Unit) {

@@ -122,16 +122,6 @@ internal fun RemoteDrawScope.communityRing(
       arc(0f, 2f, look.track)
       cells(9, true, 1f, stroke * 1.8f)
     }
-    HaVisualFamily.Minimalist -> {
-      arc(0f, stroke * 0.45f, look.track)
-      arc(0f, stroke * 0.45f, look.value, length = value * sweep.rf)
-      for (i in 0..4) drawCircle(
-        fillPaint(look.muted),
-        2f.rf,
-        polar(cx, cy, start + i * sweep / 4f, radius - stroke.rf),
-      )
-      index(stroke, stroke * 0.7f)
-    }
     HaVisualFamily.Cupertino -> {
       // Two concentric rings, with an inset full activity track.
       arc(stroke * 1.2f, stroke * 0.45f, look.track)
@@ -185,40 +175,6 @@ internal fun RemoteDrawScope.communityRing(
         length = (sweep * 0.68f).rf,
         round = false,
       )
-    }
-    HaVisualFamily.Arctic -> {
-      arc(0f, 1.5f, look.track)
-      if (sweep > 180f) {
-        // A control ring has text in its centre: keep the horizon and index outside that window.
-        val horizon = cy + radius * 0.9f.rf
-        drawLine(
-          strokePaint(1.5f, look.muted),
-          RemoteOffset(cx - radius * 0.6f.rf, horizon),
-          RemoteOffset(cx + radius * 0.6f.rf, horizon),
-        )
-        rotate(value * sweep.rf, RemoteOffset(cx, cy)) {
-          drawLine(
-            strokePaint(2f, look.value),
-            polar(cx, cy, start, radius * 0.74f.rf),
-            polar(cx, cy, start, radius),
-          )
-        }
-      } else {
-        // A half gauge has its reading below the scale, leaving room for a suspended needle.
-        drawLine(
-          strokePaint(1.5f, look.muted),
-          RemoteOffset(cx - radius, cy),
-          RemoteOffset(cx + radius, cy),
-        )
-        rotate(value * sweep.rf, RemoteOffset(cx, cy)) {
-          drawLine(
-            strokePaint(2f, look.value),
-            RemoteOffset(cx, cy),
-            polar(cx, cy, start, radius - (stroke / 2f).rf),
-          )
-        }
-        drawCircle(fillPaint(look.value), 3f.rf, RemoteOffset(cx, cy))
-      }
     }
     HaVisualFamily.Aeon -> {
       arc(0f, 1f, look.accent, round = false)

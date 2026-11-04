@@ -62,7 +62,7 @@ private fun strokePaint(width: RemoteFloat, color: RemoteColor, round: Boolean) 
   .apply { this.color = color }
 
 /** The grammar's gradient, unless an ink (which always wins) prints the theme in one colour. */
-private val HaVisualSpec.gradient: List<androidx.compose.ui.graphics.Color>?
+internal val HaVisualSpec.gradient: List<androidx.compose.ui.graphics.Color>?
   get() = grammar.gradient?.takeUnless { look.inked }
 
 /**
@@ -106,7 +106,7 @@ private fun ge(value: RemoteFloat, threshold: RemoteFloat): RemoteFloat =
  * The colours segment [index] of [count] lights in over its ghost, each with the 0..1 switch that
  * shows it: lit once the value passes the segment's midpoint, in the hot colour inside a zone.
  */
-private fun HaVisualSpec.segmentLayers(
+internal fun HaVisualSpec.segmentLayers(
   index: Int,
   count: Int,
 ): List<Pair<RemoteColor, RemoteFloat>> {
@@ -372,25 +372,75 @@ private fun RemoteDrawScope.grammarThermometer(spec: HaVisualSpec) {
     levelRun(spec, box.left, box.top, box.width, box.height, vertical = true, g.segments)
     return
   }
-  val bulb = g.roundCaps && g.level == HaLevelStyle.Continuous
-  val tubeW = box.width * (if (bulb) 0.5f else 0.62f).rf
-  val tubeX = box.centerX - tubeW / 2f.rf
-  val bulbR = box.width / 2f.rf
-  val runH = if (bulb) box.height - bulbR else box.height
-  levelRun(spec, tubeX, box.top, tubeW, runH, vertical = true, minOf(g.segments, 12))
-  if (bulb) {
-    fillCircle(fillPaint(spec.look.track), box.centerX, box.bottom - bulbR, bulbR)
-    fillCircle(fillPaint(spec.look.value), box.centerX, box.bottom - bulbR, bulbR * 0.72f.rf)
+  // A gapped grammar (Material 3 Expressive's progress indicators) draws a bare capsule: its gap
+  // and stop dot read the scale, so it needs no bulb.
+  val bulb = g.roundCaps && g.level == HaLevelStyle.Continuous && !g.trackGap
+  if (!bulb) {
+    val tubeW = box.width * 0.62f.rf
+    val tubeX = box.centerX - tubeW / 2f.rf
+    levelRun(spec, tubeX, box.top, tubeW, box.height, vertical = true, minOf(g.segments, 12))
+    return
   }
+  // A liquid thermometer: a round-topped glass tube over a bulb, the liquid a slimmer column
+  // inside it.
+  val look = spec.look
+  val bulbR = box.width / 2f.rf
+  val bulbCy = box.bottom - bulbR
+  val tubeW = box.width * 0.5f.rf
+  fillRound(
+    look.track,
+    box.centerX - tubeW / 2f.rf,
+    box.top,
+    tubeW,
+    bulbCy - box.top,
+    tubeW / 2f.rf,
+  )
+  fillCircle(fillPaint(look.track), box.centerX, bulbCy, bulbR)
+  val liquidW = tubeW * 0.5f.rf
+  val liquidTop = box.top + (tubeW - liquidW) / 2f.rf
+  levelRun(
+    spec,
+    box.centerX - liquidW / 2f.rf,
+    liquidTop,
+    liquidW,
+    bulbCy - liquidTop,
+    vertical = true,
+    minOf(g.segments, 12),
+  )
+  fillCircle(fillPaint(look.value), box.centerX, bulbCy, bulbR * 0.7f.rf)
 }
 
-/** A battery: a body with a terminal nub, its charge a level inside. */
+/**
+ * A battery: a body with a terminal nub, its charge a level inside. A gapped grammar draws a bare
+ * pill instead — the charge, a gap, the track and a stop dot — with the nub after it.
+ */
 private fun RemoteDrawScope.grammarBattery(spec: HaVisualSpec) {
   val g = spec.grammar
   val look = spec.look
   val box = FitBox(width, height, BatteryAspect)
   val nubW = box.width * 0.07f.rf
   val bodyW = box.width - nubW
+  if (g.trackGap) {
+    val thick = box.height * 0.6f.rf
+    levelRun(
+      spec,
+      box.left,
+      box.top + (box.height - thick) / 2f.rf,
+      bodyW - nubW * 0.6f.rf,
+      thick,
+      vertical = false,
+      g.segments,
+    )
+    fillRound(
+      look.track,
+      box.left + bodyW,
+      box.top + box.height * 0.3f.rf,
+      nubW,
+      box.height * 0.4f.rf,
+      nubW / 2f.rf,
+    )
+    return
+  }
   val wall = box.height * (0.09f * g.weight.coerceIn(0.6f, 1.6f)).rf
   val corner = box.height * (if (g.roundCaps) 0.26f else 0.08f).rf
   fillRound(look.track, box.left, box.top, bodyW, box.height, corner)

@@ -42,7 +42,7 @@ fun RemoteHaUnsupported(
         .padding(12.rdp),
     contentAlignment = RemoteAlignment.CenterStart,
   ) {
-    if (visualFamily() == HaVisualFamily.Console) {
+    if (haLayouts().notes == HaNoteStyle.Tape) {
       ConsoleTapeLabel("Not yet supported".rs, detail = data.cardType.rs)
     } else if (compact)
       RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {

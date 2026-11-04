@@ -33,7 +33,7 @@ release where it rested is a tap, which no host runs.
 
 | Surface | Mode | Why |
 | --- | --- | --- |
-| Phone app dashboard | `Off` | The app has its own lock: the top bar's read-only chip. |
+| Phone app dashboard | `Off` | The app has its own lock: the top bar's controls lock (below). |
 | Launcher widget | `Locked` for a card with a slider (`cardHasDragControls`), else `Off` | A slider makes the platform player claim every gesture that starts on the widget, so the card is unlocked on purpose with the same kind of gesture. A widget of taps alone keeps today's behaviour and leaves home-screen swipes to the launcher. |
 | Wear app, card list | `Locked` for a card with a slider, else `Off` | Scrolling a watch list brushes the cards. A tile shows its compact form over the slider; the strip covers the slider while it is shown. |
 | Wear app, full-screen card | `Off` | Opened deliberately, to be used. |
@@ -46,7 +46,18 @@ check) are never locked. The card relocks when it is drawn again (a widget's nex
 scrolling back into the watch list).
 
 The lock guards against brushes; it isn't a permission. Every host still applies its own rules:
-the app's read-only mode, the phone's lock mode for high-risk actions, the trust checks below.
+the app's controls lock, the phone's lock mode for high-risk actions, the trust checks below.
+
+### The app's controls lock
+
+The phone app's own lock is the top bar's lock icon (a closed lock while locked, an open one while
+unlocked; Settings' "Start with controls unlocked" picks the state a launch starts in). While it is
+locked the dashboard dispatcher drops every toggle, service call and slider release, and says so
+where the tap was made: a reject cue and a "Controls are locked" snackbar with **Unlock**
+(`LockedControls.kt`). Unlock unlocks the session and runs the dropped tap, so a locked tap costs
+one more tap, not a trip to the top bar and a second try. A high-risk tap
+(`HighRiskActions`: a lock, an alarm, a garage door) is never run on the strength of that Unlock: the
+snackbar asks for it to be tapped again.
 
 ## How it works
 

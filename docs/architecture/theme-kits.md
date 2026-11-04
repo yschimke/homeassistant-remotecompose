@@ -37,15 +37,18 @@ A theme is three layers, each a fallback for the one above it:
  │              · level = Continuous | Segmented(n) | Pointer · ticks · track gap
  │              · stop dot · glow · gradient halo · outline bodies            ── new
  └─ components  HaComponentSlots: the theme's own drawing per slot — visuals
-                (ArcMeter, BarMeter, Thermometer, Battery, Lock) and controls
-                (Switch, Key, DialRing, DialLayout, TransportKey, IconChip)   ── new
+                (ArcMeter, BarMeter, Thermometer, Battery, Lock), controls
+                (Switch, Key, DialRing, DialLayout, TransportKey, IconChip),
+                surfaces (WearContainer, Charts, TextSurfaces) and Layouts    ── new
 ```
 
 **Resolution.** A part asks the active theme for its slot's drawing:
 
 1. the theme's own drawing for that slot (`theme.components`), else
-2. for a part that predates slots, the bespoke family's own, unchanged: the meters in
-   `Meters<Family>.kt`, and the switch and key mount from the one family table in
+2. for a part that predates slots, the bespoke family's own: its hand drawing where it has one
+   (the meters in `Meters<Family>.kt`; see [Bespoke families draw only what is
+   theirs](#bespoke-families-draw-only-what-is-theirs)), and the switch and key mount from the one
+   family table in
    [`HaControls.kt`](../../rc-components/src/commonMain/kotlin/ee/schimke/ha/rc/components/HaControls.kt)
    (`familySwitch`, `familyKey`), else
 3. the shared drawing, which reads only the theme's grammar and tokens: `GrammarMeters.kt` for
@@ -67,11 +70,49 @@ theme. The lock above is that case: it has no LCD drawing, yet under LCD it is a
 | | Bespoke theme | Theme kit |
 |---|---|---|
 | What it is | its own `HaVisualFamily`, drawn by hand | tokens + grammar over a bespoke theme it `extends` |
-| Older visuals | the family's `Meters<Family>.kt` | `HaComponentSlots.Grammar` (all slots drawn from the grammar) |
+| Older visuals | the family's `Meters<Family>.kt` where it has a drawing, else the grammar | `HaComponentSlots.Grammar` (all slots drawn from the grammar) |
 | New components | grammar drawing, from its derived grammar | grammar drawing, from its own grammar |
-| Controls (switch, keys, dial, transport keys, icon chip) | the family's own, from the family table, else the token control | the token / grammar controls, or a family's control it borrows |
-| Card layouts and controls not yet in slots | the family's branches | inherited from the base it extends |
+| Controls, Wear container, charts, text surfaces | the family's own, from the family tables | drawn from its grammar, or a family's it borrows |
+| Layouts (tile, media panel, readings, notes, …) | the family's row in `familyLayouts` | inherited from the base it extends, unless it sets its own |
 | Cost to add | a family, about 40 files | one `HaUberTheme(...)` value |
+
+### Bespoke families draw only what is theirs
+
+A bespoke family keeps a hand drawing only where it says something the grammar cannot. Everything
+else is the grammar's drawing in the family's own tokens (`HaComponentGrammar.forFamily`), through
+the same family tables (`FamilyVisuals`, `FamilyCharts`):
+
+| Family | From the grammar | Its own (the novel bits) |
+|---|---|---|
+| Classic (the cards' own) | arc, bar, thermometer, battery, dial ring, history line, statistics bars | — |
+| Home Assistant | bar, thermometer, battery, history line, statistics bars | the chunky half gauge, the thermostat ring with its white handle |
+| Material 3 Expressive | arc, bar, thermometer, battery, dial ring, statistics bars | the filled history trace; its switch, icon-chip morph, split slider and wavy progress |
+| LCD | arc, bar, dial ring | the framed thermometer column, the phone battery, the framed history and bar graphs |
+| Trinitron | bar | the VU needle, the bracketed LED column, the battery, the dial ring of LED cells, its traces |
+| Arctic | arc, bar, thermometer, dial ring, history line | the scale battery, its statistics bars |
+| Obsidian | bar, thermometer, dial ring | the index-mark arc, the ruler battery, the ruled-notebook history and bars |
+| Minimalist | arc, dial ring | the slider bar, the T thermometer, the battery, the stepped history |
+| Cupertino | bar | the double activity ring, the bulbless thermometer, the pill battery, the dial's bar layout, the filled history |
+
+Braun, Nixie, Console, IKEA, Mushroom, Bubble, Catppuccin, Noctis, LCARS and Aeon keep all their
+meters. Each one's character is in them: Braun's orange pointer, Nixie's tubes, Console's VU
+meter behind glass, IKEA's moulded parts, and the community styles' beads, petals, stitching, twin
+rails, elbow bands and marquee rails. In the community styles, all of those come from two short
+per-family drawings (`communityRing` and `communityBar` in `MetersCommunity.kt`).
+
+Two grammar rules made the moves possible:
+- A **gapped** grammar (`trackGap`, the grammar of M3 Expressive's progress indicators) draws a
+  capsule thermometer with no bulb and a pill battery with no body outline.
+- A bulb thermometer's liquid is a slim column inside the glass.
+
+Two family grammars were corrected so the grammar reads like the family:
+- Obsidian is a hairline **pointer** scale with ten ticks.
+- Minimalist is a hairline continuous line with four index ticks, where it was segmented.
+
+To move another family×part onto the grammar, render the family beside
+`theme.copy(components = HaComponentSlots.Grammar)`. Where the two read the same, point its row in
+the family table at the grammar and delete the drawing. Where they differ, decide whether the
+difference is the style or a missing grammar rule.
 
 ## Adding a component (the car door lock)
 
@@ -212,21 +253,75 @@ code change.
 - **Live, then styled.** A slot drawing is handed the live fraction and live colour. It cannot
   read entity state itself, so a theme can't break the binding contract.
 
-## Migration: what still multiplies
+## The Wear container, charts, text surfaces and layouts
 
-The kit layer is in place for Layer 2 visuals. These places still branch on the family and are
-next to move into slots. Each one moved makes every kit look more like itself, without per-kit
-code:
+The last family branches in card code moved the same way.
 
-| Part | Where | Slot it should become |
-|---|---|---|
-| Media panel layouts and artwork (Cupertino, Arctic, Aeon panels; Console's taped placeholder) | `RemoteHaMediaControl` | `MediaLayout`, `Artwork` |
-| Bespoke dial rings (still a fallback table, like the meters) | `Dials.kt`, `RemoteHaArcDial` | one `DialRing` per family |
-| Sparklines and bars | `Charts.kt`, `HistoryTraces.kt` | `Sparkline`, `StatBars` |
-| Tile layout | `RemoteHaTile`, `TileFamilies.kt` | `TileLayout` (a layout slot, not a canvas) |
-| Card chrome material | `CardChrome.kt` (`communityFrame`, painted metal) | `CardSurface` |
-| Wear container and level | `HaWearBackground.kt` | derived from grammar + palette |
-| Theme id lists | prefs enum, Settings, policy JSON, design-server page, demo | read `HaUberTheme.all` |
+- **`WearContainer`** is data: the watch container's fill, its layers (glows, gradients, bands)
+  and edge, and how a level reading shows in it (`HaWearBackground`, `HaWearLevelLook`). The watch
+  host draws it at its own shape. Bespoke styles keep their containers, moved unchanged into
+  `FamilyWearContainer`. Kits get `GrammarWearContainer`, so they show on the watch as themselves:
+  - Aurora: a gradient edge and diagonal sweep.
+  - Engineered: an outline with a hairline top and a segmented fill.
+  - Cockpit: an accent index band, a glow from the foot and a pointer ring.
+  - EV Dash: a faint top light and a thin ring.
+
+  Before, a kit wore its base style's container in its own colours.
+- **`Charts`** draws a history sparkline and a statistics bar row. Bespoke styles keep their
+  traces (`HistoryTraces.kt`) and bars (`Charts.kt`) through `FamilyCharts`. Kits get
+  `GrammarCharts`:
+  - Engineered: ghosted cells lit as layers.
+  - Cockpit: a hairline over ticks with the newest sample dotted.
+  - Aurora: a line with a gradient halo.
+
+  The app's secondary screens follow the same grammar for kits (`chartStyleFor(grammar)` in
+  `ScreenSkin`).
+- **`TextSurfaces`** covers the heading card, a markdown note's material and its title. Kits get
+  them from the grammar:
+  - Engineered: a heading ruled to the edge and a leading bar on the note.
+  - Cockpit: an index dot.
+  - Aurora: a tonal capsule.
+  - EV Dash: a plain line.
+- **`Layouts`** is data, named by layout rather than family. It covers:
+  - tile composition and chip;
+  - the service-tile key;
+  - the card frame;
+  - the media panel and empty artwork;
+  - gauge and expanded-reading layouts;
+  - the unavailable label and short notes ("No entities", taped on Console);
+  - solid key faces, the clock face, the two-up entities grid;
+  - the slider and the progress ring.
+
+  `familyLayouts` is the one table where a family names them. Kits inherit the layouts of the style
+  they extend, since layouts are composition rather than drawing. A kit can set its own, for
+  example `HaComponentSlots.Grammar.with(HaComponentSlot.Layouts, HaLayouts(media =
+  HaMediaLayout.Cinema))`.
+
+| Wear | Text surfaces | History | Statistics |
+|---|---|---|---|
+| ![Wear](images/theme-kits/wear-kits.png) | ![Text surfaces](images/theme-kits/text-surfaces.png) | ![History](images/theme-kits/history.png) | ![Statistics](images/theme-kits/statistics.png) |
+
+## Where families are still named
+
+No card names a style family. `HaControlSlotsTest.cardsAskByRoleNotFamily` checks every
+`RemoteHa*` card file and the card chrome. Families are named only in the registries:
+- the theme definitions (`HaUberTheme`, `CommunityThemes`);
+- the grammar each family implies (`HaComponentGrammar.forFamily`) and its motion
+  (`HaMotion.forFamily`);
+- the family tables (`HaControls`, `HaLayouts`, `FamilyVisuals`, `FamilyWearContainer`,
+  `FamilyCharts`, `FamilyTextSurfaces`);
+- each family's own drawings: `Meters<Family>.kt`, `Dials.kt`, `HistoryTraces.kt`, `Charts.kt`,
+  `TileFamilies.kt`, `CommunityLayouts.kt`, `CommunityControls.kt` and `EverydaySurfaces.kt`;
+- the app's own skin table for its secondary screens (`ScreenSkin`).
+
+A new bespoke family is added to those tables. A new kit or component touches none of them.
+
+The theme id lists outside the catalogue are held to it by tests:
+- `CardStylePref` in the app (`CardStyleListsTest`);
+- the design-server studio's picker (`StudioStyleListTest`);
+- the `ha-cards/uber-theme` policy (`HaCardMeasurementsTest`).
+
+The web demo's style list is a curated subset.
 
 Renderer types (`HaVisualRenderer`, `HaVisualSpec`) are `internal` to `rc-components` for now.
 Making them public is the step that lets a theme come from outside the module, for example from

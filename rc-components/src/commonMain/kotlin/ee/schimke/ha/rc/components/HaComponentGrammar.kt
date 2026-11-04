@@ -124,16 +124,16 @@ data class HaComponentGrammar(
             level = HaLevelStyle.Segmented,
             segments = 9,
           )
-        HaVisualFamily.Minimalist ->
-          HaComponentGrammar(
-            stroke = HaStrokeWeight.Light,
-            level = HaLevelStyle.Segmented,
-            segments = 5,
-          )
+        HaVisualFamily.Minimalist -> HaComponentGrammar(stroke = HaStrokeWeight.Hairline, ticks = 4)
         HaVisualFamily.Cupertino -> HaComponentGrammar(stroke = HaStrokeWeight.Bold)
         HaVisualFamily.Catppuccin -> HaComponentGrammar(stopDot = true)
         HaVisualFamily.Obsidian ->
-          HaComponentGrammar(stroke = HaStrokeWeight.Light, roundCaps = false, ticks = 10)
+          HaComponentGrammar(
+            stroke = HaStrokeWeight.Hairline,
+            roundCaps = false,
+            level = HaLevelStyle.Pointer,
+            ticks = 10,
+          )
         HaVisualFamily.Noctis -> HaComponentGrammar(stroke = HaStrokeWeight.Light)
         HaVisualFamily.Lcars ->
           HaComponentGrammar(

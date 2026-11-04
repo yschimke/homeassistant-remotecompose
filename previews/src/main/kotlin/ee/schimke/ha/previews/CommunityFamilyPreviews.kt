@@ -275,8 +275,8 @@ fun CommunityCards_Noctis() = UberSheet(HaUberTheme.Noctis, Cards.take(2))
 @Preview(
   name = "community: Lcars (light)",
   widthDp = 360,
-  heightDp = 680,
-  device = "spec:width=360dp,height=680dp,dpi=160",
+  heightDp = 760,
+  device = "spec:width=360dp,height=760dp,dpi=160",
 )
 @Composable
 fun Community_Lcars_Light() = UberShowcase(HaUberTheme.Lcars, darkTheme = false)
@@ -284,8 +284,8 @@ fun Community_Lcars_Light() = UberShowcase(HaUberTheme.Lcars, darkTheme = false)
 @Preview(
   name = "community: Lcars (dark)",
   widthDp = 360,
-  heightDp = 680,
-  device = "spec:width=360dp,height=680dp,dpi=160",
+  heightDp = 760,
+  device = "spec:width=360dp,height=760dp,dpi=160",
 )
 @Composable
 fun Community_Lcars_Dark() = UberShowcase(HaUberTheme.Lcars, darkTheme = true)

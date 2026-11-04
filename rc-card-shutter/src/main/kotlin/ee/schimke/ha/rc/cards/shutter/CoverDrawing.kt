@@ -8,7 +8,6 @@ import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteCanvas
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
@@ -42,6 +41,7 @@ import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.wear.compose.remote.material3.RemoteIcon
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.MinTouchTargetDp
 import ee.schimke.ha.rc.components.animateRemoteFloat
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.ha.rc.components.haMotion
@@ -221,10 +221,9 @@ internal fun CoverButtonColumn(
   stop: HaAction,
   close: HaAction,
 ) {
-  RemoteColumn(
-    verticalArrangement = RemoteArrangement.spacedBy(6.rdp),
-    horizontalAlignment = RemoteAlignment.CenterHorizontally,
-  ) {
+  // Each button is a full 48dp tap target around its 32dp face, so the targets touch and the faces
+  // sit 16dp apart.
+  RemoteColumn(horizontalAlignment = RemoteAlignment.CenterHorizontally) {
     CoverButton(Icons.Outlined.ArrowUpward, "Open", controls.open, now.open, open)
     CoverButton(Icons.Outlined.Stop, "Stop", controls.stop, now.stop, stop)
     CoverButton(Icons.Outlined.ArrowDownward, "Close", controls.close, now.close, close)
@@ -247,7 +246,8 @@ private fun CoverButton(
     action.toRemoteAction(live.enabled.and(live.shown), now == CoverButtonState.Enabled)?.let {
       RemoteModifier.clickable(it)
     } ?: RemoteModifier
-  val edge = live.shown.select(32.rdp, 0.rdp)
+  val edge = live.shown.select(ButtonFaceDp.rdp, 0.rdp)
+  val target = live.shown.select(MinTouchTargetDp.rdp, 0.rdp)
   val background =
     live.enabled.select(
       theme.divider,
@@ -260,22 +260,29 @@ private fun CoverButton(
     )
   RemoteBox(
     modifier =
-      RemoteModifier.width(edge)
-        .height(edge)
+      RemoteModifier.width(target)
+        .height(target)
         .visibility(live.shown.visibility())
-        .clip(RemoteCircleShape)
-        .background(background)
         .then(clickable),
     contentAlignment = RemoteAlignment.Center,
   ) {
-    RemoteIcon(
-      imageVector = icon.toRemoteImageVector(),
-      contentDescription = live.enabled.select(description.rs, "$description (unavailable)".rs),
-      modifier = RemoteModifier.size(18.rdp),
-      tint = tint,
-    )
+    RemoteBox(
+      modifier =
+        RemoteModifier.width(edge).height(edge).clip(RemoteCircleShape).background(background),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      RemoteIcon(
+        imageVector = icon.toRemoteImageVector(),
+        contentDescription = live.enabled.select(description.rs, "$description (unavailable)".rs),
+        modifier = RemoteModifier.size(18.rdp),
+        tint = tint,
+      )
+    }
   }
 }
+
+/** A cover button's drawn face; its tap target is [MinTouchTargetDp]. */
+private const val ButtonFaceDp = 32
 
 private val Transparent: RemoteColor = Color.Transparent.rc
 

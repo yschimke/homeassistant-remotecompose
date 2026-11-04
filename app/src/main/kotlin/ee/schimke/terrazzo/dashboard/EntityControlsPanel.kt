@@ -60,7 +60,7 @@ import kotlin.math.roundToInt
 
 /**
  * The [controls] of an entity's more-info sheet in a panel, each input sent through [onAction] (the
- * dashboard's dispatcher, so read-only mode, demo mode, haptics and the action log apply as to a
+ * dashboard's dispatcher, so the controls lock, demo mode, haptics and the action log apply as to a
  * card's own tap). With [readOnly] the controls show the current values, disabled, under a note
  * saying why.
  *
@@ -81,7 +81,7 @@ internal fun EntityControlsPanel(
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
       if (readOnly) {
         Text(
-          skin.label("Read-only mode is on: turn it off to control devices"),
+          skin.label("Controls are locked: unlock them in the top bar to control devices"),
           style = MaterialTheme.typography.bodySmall,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

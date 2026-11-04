@@ -37,9 +37,9 @@ class GarageShutterCardConverter : CardConverter {
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
     val hasTitle = card.raw["title"]?.jsonPrimitive?.content?.isNotBlank() == true
     val entryCount = CoverDesign.rowsOf(card).size.coerceAtLeast(1)
-    // Per-row: 13dp name + 4dp + 72dp viz + 4dp + 11dp state ≈ 104dp,
-    // plus 10dp inter-row gap. Title + outer padding adds ~28dp + 20dp.
-    return (if (hasTitle) 28 else 0) + 20 + entryCount * 114
+    // Per row: 13dp name + 4dp + the 144dp button column (three 48dp tap targets, taller than
+    // the door) + 4dp + 11dp state, plus a 10dp gap. Title + outer padding adds 28dp + 20dp.
+    return (if (hasTitle) 28 else 0) + 20 + entryCount * CoverRowHeightDp
   }
 
   @Composable
