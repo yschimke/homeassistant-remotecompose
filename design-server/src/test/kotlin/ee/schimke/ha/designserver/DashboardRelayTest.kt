@@ -249,4 +249,31 @@ class DashboardRelayTest {
       http.close()
     }
   }
+
+  @Test
+  fun aDraftFromAnAgentInHomeAssistantSharesItsRenderThere() = testApplication {
+    val commands = mutableListOf<String>()
+    val agentRelay = AgentRelay(AgentDesignSessions(), DashboardAgentSessions(), maxWaitMs = 5_000)
+    install(WebSockets)
+    routing {
+      dashboardAgentRoutes(agentRelay)
+      agentRelayRoutes(agentRelay)
+      fakeHome(commands)
+    }
+    val http = createClient {}
+    val home = HaClient(HaConfig("http://localhost", "home-token"), http.engine)
+    val phone = CloudDashboardAgentEdits(home, "https://localhost", http.engine)
+    try {
+      home.connect()
+      phone.start(null, "Rename")
+      // A draft with no relay revision: an agent signed in to Home Assistant submitted it.
+      home.relayAgentDraft("s1", baseline, "Renamed", "direct")
+      phone.shareRender("s1", "d1", byteArrayOf(1, 2, 3))
+      assertTrue("terrazzo/edit/render" in commands, "its agent reads the render there")
+    } finally {
+      phone.close()
+      home.close()
+      http.close()
+    }
+  }
 }

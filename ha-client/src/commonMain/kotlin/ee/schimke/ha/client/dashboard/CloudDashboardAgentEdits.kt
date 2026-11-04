@@ -259,14 +259,18 @@ class CloudDashboardAgentEdits(
 
   /**
    * The relay keeps the agent's view, labelled with the relay revision of the draft it shows: the
-   * draft's `relay_id` (`cloud:<revision>`). A draft the relay didn't hand over has no revision
-   * there, so its render isn't shared rather than passed off as the newest.
+   * draft's `relay_id` (`cloud:<revision>`). A draft the relay didn't hand over (one an agent
+   * signed in to Home Assistant submitted) has no revision there: its render goes to Home
+   * Assistant, which keeps it for that agent, rather than being passed off as the relay's newest.
    */
   override suspend fun shareRender(sessionId: String, draftId: String, png: ByteArray) {
     // Not relayed: Home Assistant keeps the render for its agent.
     val access = relayed(sessionId) ?: return delegate.shareRender(sessionId, draftId, png)
     val relayId = delegate.get(sessionId).drafts.firstOrNull { it.id == draftId }?.relayId
-    val revision = relayId?.removePrefix("cloud:")?.toLongOrNull() ?: return
+    // A draft an agent signed in to Home Assistant submitted: its render goes to Home Assistant.
+    val revision =
+      relayId?.removePrefix("cloud:")?.toLongOrNull()
+        ?: return delegate.shareRender(sessionId, draftId, png)
     relay.putRender(access.owner, png, revision)
   }
 
