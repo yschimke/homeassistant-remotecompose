@@ -96,13 +96,21 @@ fun AgentEditScreen(
   cloudServer: String? = null,
   /** Another way to connect an agent, under Advanced: its label and how to switch to it. */
   alternative: Pair<String, () -> Unit>? = null,
+  /** A session to open at once: picked up from the dashboard's draft bar. */
+  initialSessionId: String? = null,
+  /**
+   * Back to the dashboard, which keeps showing the session's drafts as they come
+   * ([DashboardAgentDraft]): Back and sharing the prompt return there once a session is open. Null
+   * where the dashboard doesn't show drafts, and Back leaves the session for the start screen.
+   */
+  onDashboard: (() -> Unit)? = null,
   renderCard: @Composable (CardKey, CardConfig) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
   val snackbars = remember { SnackbarHostState() }
   // Sessions through the design server's relay join an agent by code and talk to it live.
   val live = edits as? AgentLiveControls
-  var sessionId by remember(edits, urlPath) { mutableStateOf<String?>(null) }
+  var sessionId by remember(edits, urlPath) { mutableStateOf(initialSessionId) }
   var prompt by remember(edits, urlPath) { mutableStateOf<String?>(null) }
   var session by remember(edits, urlPath) { mutableStateOf<AgentEditSession?>(null) }
   // When the last session reply arrived, and a clock ticking past it: a direct agent's presence
@@ -143,6 +151,11 @@ fun AgentEditScreen(
     }
   }
 
+  // Opened on a session: its prompt, for an agent that hasn't joined yet.
+  LaunchedEffect(edits, initialSessionId) {
+    val resumed = initialSessionId ?: return@LaunchedEffect
+    runCatching { edits.resume(resumed) }.getOrNull()?.let { prompt = it.prompt.ifBlank { null } }
+  }
   val id = sessionId
   LaunchedEffect(edits, id) {
     if (id == null) return@LaunchedEffect
@@ -173,7 +186,16 @@ fun AgentEditScreen(
       TopAppBar(
         title = { Text("Ask your agent", maxLines = 1) },
         navigationIcon = {
-          IconButton(onClick = { if (sessionId != null) sessionId = null else onBack() }) {
+          IconButton(
+            onClick = {
+              when {
+                sessionId != null && onDashboard != null && session?.isOpen != false ->
+                  onDashboard()
+                sessionId != null -> sessionId = null
+                else -> onBack()
+              }
+            }
+          ) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
           }
         },
@@ -248,7 +270,11 @@ fun AgentEditScreen(
             snapshot = snapshot,
             busy = busy,
             writeBlockedReason = writeBlockedReason,
-            onSharePrompt = onSharePrompt,
+            onSharePrompt = { text ->
+              onSharePrompt(text)
+              // The draft shows on the dashboard as the agent works: go back there to watch it.
+              onDashboard?.invoke()
+            },
             cloud = cloudServer != null,
             onApply = { draft ->
               run {

@@ -19,6 +19,11 @@ import kotlinx.serialization.json.Json
  * (docs/architecture/agent-sessions.md): the person gives the agent a short code, the screen
  * long-polls the relay, and each draft is handed to Home Assistant as the signed-in person, which
  * checks it and applies it only when they say so. No Home Assistant token leaves this device.
+ *
+ * Each request's owner capability is also linked to its Home Assistant session
+ * ([AgentEdits.linkCloud]), readable only by the person who started it: their phone, browser or the
+ * panel can then pick the request up ([open]), and Home Assistant relays its drafts itself while no
+ * app is watching. The relay id `cloud:<revision>` keeps a draft from landing twice.
  */
 class CloudDashboardAgentEdits(
   private val home: HaClient,
@@ -53,7 +58,37 @@ class CloudDashboardAgentEdits(
     grants.save(if (sessions.isEmpty()) null else json.encodeToString(sessions.toMap()))
   }
 
-  private fun access(sessionId: String) = sessions[sessionId] ?: throw AgentSessionEndedException()
+  /** This device's capability for [sessionId], or the one its Home Assistant session carries. */
+  private suspend fun access(sessionId: String): Access =
+    sessions[sessionId] ?: adopt(delegate.get(sessionId)) ?: throw AgentSessionEndedException()
+
+  /** Take up the cloud request [session] links to on this design server, when it links one. */
+  private fun adopt(session: AgentEditSession): Access? {
+    sessions[session.id]?.let {
+      return it
+    }
+    val cloud = session.cloud?.takeIf { sameServer(it.server) } ?: return null
+    val access = Access(cloud.owner, latestRelayed(session), server = relay.base)
+    sessions[session.id] = access
+    persist()
+    return access
+  }
+
+  private fun sameServer(server: String) =
+    runCatching { ee.schimke.ha.client.design.studioServerUrl(server) }.getOrNull() == relay.base
+
+  /** The newest relay revision already among [session]'s drafts: someone handed it over. */
+  private fun latestRelayed(session: AgentEditSession): Long =
+    session.drafts.maxOfOrNull { it.relayId?.removePrefix("cloud:")?.toLongOrNull() ?: 0L } ?: 0L
+
+  /** Best effort: an older integration keeps the request on this device only. */
+  private suspend fun link(sessionId: String, access: Access) {
+    try {
+      delegate.linkCloud(sessionId, relay.base, access.owner)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (_: Exception) {}
+  }
 
   private fun liveState(sessionId: String) = states.getOrPut(sessionId) { MutableStateFlow(null) }
 
@@ -64,8 +99,10 @@ class CloudDashboardAgentEdits(
     try {
       val owner =
         relay.startDashboard(request, requireNotNull(started.session.baseline), agentLink())
-      sessions[started.session.id] = Access(owner, server = relay.base)
+      val access = Access(owner, server = relay.base)
+      sessions[started.session.id] = access
       persist()
+      link(started.session.id, access)
       // The code shows at once, before the screen starts watching.
       refresh(started.session.id)
       return StartedAgentEdit(started.session, "")
@@ -78,7 +115,17 @@ class CloudDashboardAgentEdits(
     }
   }
 
-  override suspend fun open(urlPath: String?) = delegate.open(urlPath).filter { it.id in sessions }
+  /**
+   * The open requests on [urlPath] this person can pick up: those started here, and those any of
+   * their other clients linked to Home Assistant. A request started here before linking existed is
+   * linked now, so the others see it too.
+   */
+  override suspend fun open(urlPath: String?): List<AgentEditSession> =
+    delegate.open(urlPath).filter { session ->
+      val local = sessions[session.id]
+      if (local != null && session.cloud == null) link(session.id, local)
+      adopt(session) != null
+    }
 
   override suspend fun get(sessionId: String) = delegate.get(sessionId)
 
@@ -141,7 +188,7 @@ class CloudDashboardAgentEdits(
   }
 
   override suspend fun discard(sessionId: String): AgentEditSession {
-    sessions[sessionId]?.let { relay.revoke(it.owner) }
+    runCatching { access(sessionId) }.getOrNull()?.let { relay.revoke(it.owner) }
     val result = delegate.discard(sessionId)
     sessions.remove(sessionId)
     persist()
@@ -152,7 +199,9 @@ class CloudDashboardAgentEdits(
   override suspend fun apply(sessionId: String, draftId: String): AgentEditSession {
     val applied = delegate.apply(sessionId, draftId)
     // Tell a waiting agent it's done; the apply itself already happened in Home Assistant.
-    sessions[sessionId]?.let { runCatching { relay.decide(it.owner, accepted = true) } }
+    runCatching { access(sessionId) }
+      .getOrNull()
+      ?.let { runCatching { relay.decide(it.owner, accepted = true) } }
     return applied
   }
 

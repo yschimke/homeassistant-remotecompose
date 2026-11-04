@@ -25,6 +25,8 @@ MAX_MESSAGES = 50
 MAX_STATUS = 120
 MAX_TEXT = 2000
 MAX_DRAFT_BYTES = 512 * 1024
+MAX_CLOUD_TOKEN = 512
+MAX_CLOUD_SERVER = 200
 _UNKNOWN_SHOWN = 10
 
 
@@ -74,6 +76,46 @@ def validate_draft(config, entity_exists):
         shown = ", ".join(unknown[:_UNKNOWN_SHOWN])
         more = f" and {len(unknown) - _UNKNOWN_SHOWN} more" if len(unknown) > _UNKNOWN_SHOWN else ""
         raise SessionError(f"The draft names entities this home doesn't have: {shown}{more}")
+
+
+def clean_cloud_server(server):
+    """A design server's base URL: HTTPS (plain HTTP only for this machine), with no credentials,
+    query or fragment. Home Assistant calls only its fixed relay paths under it."""
+    if not isinstance(server, str):
+        raise SessionError("The design server must be a URL")
+    server = server.strip().rstrip("/")
+    scheme, sep, rest = server.partition("://")
+    authority = rest.split("/", 1)[0]
+    host = authority.split(":", 1)[0]
+    if (
+        not sep
+        or len(server) > MAX_CLOUD_SERVER
+        or not host
+        or any(char in rest for char in "?#@\\ ")
+        or not (scheme == "https" or (scheme == "http" and host in ("localhost", "127.0.0.1")))
+    ):
+        raise SessionError("The design server must be an https:// URL")
+    return server
+
+
+def _token(value):
+    if (
+        not isinstance(value, str)
+        or not value.strip()
+        or len(value) > MAX_CLOUD_TOKEN
+        or any(ord(char) <= 32 or ord(char) >= 127 for char in value)
+    ):
+        raise SessionError("Invalid design server capability")
+    return value
+
+
+def cloud_for(session, user_id):
+    """The cloud link as [user_id] may see it: whole for the session's starter, else nothing.
+    The owner capability is never in what an agent reads (`summary`)."""
+    cloud = session.get("cloud")
+    if not cloud or session["created_by"] != user_id:
+        return None
+    return {"server": cloud["server"], "owner": cloud["owner"]}
 
 
 def _text(value, what, required=False):
@@ -242,6 +284,41 @@ class EditSessions:
         session["discarded"] = {"by": user_id, "at": now}
         self._touch(session, now)
         return session
+
+    def link_cloud(self, session_id, server, owner, user_id, now):
+        """Keep the design server request a cloud agent works on ([server] and its owner
+        capability [owner]) with the session, so any of its starter's clients can pick it up and
+        Home Assistant can relay its drafts. Only the person who started the session may."""
+        session = self._open(session_id, now)
+        if session["created_by"] != user_id:
+            raise SessionError("Only the person who started this session can link a cloud agent")
+        session["cloud"] = {
+            "server": clean_cloud_server(server),
+            "owner": _token(owner),
+            # The newest relay revision already in the session's drafts.
+            "revision": (session.get("cloud") or {}).get("revision", 0),
+        }
+        self._touch(session, now)
+        return session
+
+    def cloud_relayed(self, session_id, revision, now):
+        """The relay's [revision] is in the session now (or was refused): don't fetch it again."""
+        session = self.get(session_id, now)
+        cloud = session.get("cloud")
+        if cloud is not None and revision > cloud.get("revision", 0):
+            cloud["revision"] = revision
+        return session
+
+    def unlink_cloud(self, session_id, now):
+        """The design server ended the request: forget its capability."""
+        session = self.get(session_id, now)
+        session.pop("cloud", None)
+        return session
+
+    def cloud_linked(self, now):
+        """Open sessions with a cloud agent's request linked."""
+        self.prune(now)
+        return [s for s in self._sessions.values() if s["status"] == OPEN and s.get("cloud")]
 
     def draft(self, session, draft_id):
         found = next((d for d in session["drafts"] if d["id"] == draft_id), None)

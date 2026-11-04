@@ -823,6 +823,14 @@ class HaClient(
           put("png", kotlin.io.encoding.Base64.encode(png))
         }
       }
+
+      override suspend fun linkCloud(sessionId: String, server: String, owner: String) {
+        edit("terrazzo/edit/cloud") {
+          put("session_id", sessionId)
+          put("server", server)
+          put("owner", owner)
+        }
+      }
     }
 
   /**

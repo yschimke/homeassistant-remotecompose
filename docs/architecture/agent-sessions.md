@@ -78,7 +78,10 @@ in to Home Assistant instead, and a card can be designed by hand in UI Builder.
 - The link and the sessions' owner capabilities are kept on this device: the browser's
   `localStorage`, the Android app's no-backup files, `~/.terrazzo/agent-grants` on desktop. A
   reload or restart resumes them. They are never written to Wasmo's synced settings: a capability
-  is a secret for this device.
+  is a secret for this device. A dashboard request's owner capability is also linked to its Home
+  Assistant edit session, readable only by the person who started it, so their other clients pick
+  it up and Home Assistant relays its drafts itself
+  ([dashboard-editing.md](dashboard-editing.md#cloud-agent-from-the-wasm-host)).
 - Wrong codes share one budget: after 30 failures in a minute every redemption waits, which keeps
   eight-character codes (31 symbols, no `0/O/1/I/L`) unguessable in practice.
 
