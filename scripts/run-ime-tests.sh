@@ -42,6 +42,10 @@ for report in Path("app/build/outputs/androidTest-results/connected/debug").glob
     for test in ET.parse(report).iter("testcase"):
         name = test.get("classname")
         actual[name] = actual.get(name, 0) + 1
+        # Say why in the job log: the reports themselves are only in the uploaded artifact.
+        for failure in list(test.iter("failure")) + list(test.iter("error")):
+            detail = (failure.get("message") or failure.text or "").strip().splitlines()[:12]
+            print(f"FAILED {name}.{test.get('name')}:", *detail, sep="\n  ")
 if actual != expected:
     raise SystemExit(f"Incomplete inset regression run: expected {expected}, got {actual}")
 print(f"Verified all {sum(actual.values())} inset regression tests executed")
