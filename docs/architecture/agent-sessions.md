@@ -68,7 +68,10 @@ the preview.
 6. **Talk.** The person types in the panel. Each card in the preview (only the section's cards,
    for a section session) has a **Comment** button that pins the next message to that card (its
    title or entity, and where it sits). The agent, waiting in `await_feedback`, gets the message
-   at once, and can `send_message` back.
+   at once, and can `send_message` back. The person can comment before any agent has joined:
+   the comments wait in the session, and when an agent reads it (`get_session` on the relay,
+   `get_edit_session` in Home Assistant) its `next` tells it to start with them, so it has work
+   the moment it arrives.
 7. **Decide.** **Use it** applies the dashboard draft, or puts the card design on the card (the
    design server opens it as the person's own design and publishes it privately, compiling it to
    a template itself with `UiBuilderDesignCompiler`, which draws what the server seeds a card

@@ -142,7 +142,8 @@ fun EditScope?.openingRequest(dashboardTitle: String?): String {
   val what =
     this?.takeIf { it.isSection }?.let { "the ${it.label ?: "section"} section of " }.orEmpty() +
       (dashboardTitle?.let { "the $it dashboard" } ?: "this dashboard")
-  return "Work on $what with me. Say hello, then follow my comments on the preview."
+  return "Work on $what with me. Start with any comments I've left on the preview; if there are " +
+    "none yet, say hello and follow my comments as they come."
 }
 
 /**

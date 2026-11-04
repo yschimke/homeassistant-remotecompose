@@ -106,17 +106,24 @@ test('Live agent edit: the person watches, comments on a card and applies', {tim
     await new Promise((resolve) => setTimeout(resolve, 500));
     await panel.getByText('New session', {exact:true}).click({force:true});
     await panel.getByText('Sent to Agent. It picks this up when it next listens.', {exact:true}).waitFor();
+    // Before the agent reads anything: a comment on a card, so it has work when it starts.
+    await panel.getByText('Comment', {exact:true}).first().click({force:true});
+    await panel.getByText(/^About light\.wall_light/).waitFor();
+    await typeInto('Tell the agent what to change', 'Add the switch next to the light');
+    await panel.getByText('Send', {exact:true}).click({force:true});
+    await panel.getByText('Add the switch next to the light', {exact:true}).waitFor();
     // The first listen also returns requests already open (from earlier tests): find this one.
     const ours = (r) => r.url_path === 'live-fixture';
     let heard = await waitingForRequest;
     while (!heard.requests.some(ours)) heard = await mcp('await_request', {since:heard.cursor});
     const session = heard.requests.find(ours);
     assert.match(session.request, /^Work on the Live fixture dashboard with me/);
-    const asked = mcp('await_feedback', {session_id:session.session_id, since:0});
-    await typeInto('Tell the agent what to change', 'Add the switch next to the light');
-    await panel.getByText('Send', {exact:true}).click({force:true});
-    const request = await asked;
-    assert.equal(request.feedback[0].text, 'Add the switch next to the light');
+    // The comment waits for the agent, and it's told to start there.
+    const request = await mcp('get_edit_session', {session_id:session.session_id});
+    assert.equal(request.notes[0].text, 'Add the switch next to the light');
+    assert.match(request.notes[0].target, /^light\.wall_light/);
+    assert.match(request.next, /already left notes/);
+    request.cursor = request.seq;
     await page.screenshot({path:`${evidence}/agent-live-1-listening.png`});
 
     // The agent works; the person sees what it's doing, its draft and its question.

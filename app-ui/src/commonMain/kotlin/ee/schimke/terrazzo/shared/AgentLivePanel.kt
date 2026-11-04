@@ -89,6 +89,12 @@ fun AgentLivePanel(
         // Sent to the connected agent: nothing to hand over, unless the person wants another one.
         TextButton(onClick = onNewCode, enabled = !busy) { Text("Use another agent instead") }
       }
+      if (composeBeforeJoin && !state.agent.joined)
+        Text(
+          "Comment now: your agent starts with your comments when it joins.",
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
       Conversation(state.messages)
       if (state.agent.joined || composeBeforeJoin) Composer(busy, target, onClearTarget, onSend)
     }

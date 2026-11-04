@@ -973,4 +973,5 @@ private fun BuilderSteps(
 
 /** What a card session opened without typing asks of the agent; the rest is in the conversation. */
 internal const val CARD_OPENING_REQUEST =
-  "Work on this card's design with me. Say hello, then follow my comments."
+  "Work on this card's design with me. Start with any comments I've left; if there are none " +
+    "yet, say hello and follow my comments as they come."

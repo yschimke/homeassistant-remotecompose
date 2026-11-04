@@ -136,8 +136,8 @@ class AgentEditScreenTest {
     onNodeWithText("New session").performClick()
     waitUntil { edits.current.value != null }
     assertEquals(
-      "start:garden:Work on the Garden dashboard with me. Say hello, then follow my comments " +
-        "on the preview.:null",
+      "start:garden:Work on the Garden dashboard with me. Start with any comments I've left on " +
+        "the preview; if there are none yet, say hello and follow my comments as they come.:null",
       edits.calls.single(),
     )
     // Straight into the preview: the dashboard as it is, every card open to a comment.
@@ -159,8 +159,9 @@ class AgentEditScreenTest {
     show(edits, mutableListOf(), startScope = EditScope.section(0, 0, "Pumps"))
     waitUntil { edits.current.value != null }
     assertEquals(
-      "start:garden:Work on the Pumps section of the Garden dashboard with me. Say hello, then " +
-        "follow my comments on the preview.:Pumps",
+      "start:garden:Work on the Pumps section of the Garden dashboard with me. Start with any " +
+        "comments I've left on the preview; if there are none yet, say hello and follow my " +
+        "comments as they come.:Pumps",
       edits.calls.single(),
     )
     waitUntil { onAllNodesWithText("Pumps").fetchSemanticsNodes().isNotEmpty() }

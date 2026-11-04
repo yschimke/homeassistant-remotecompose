@@ -254,6 +254,51 @@ class AgentRelayTest {
   }
 
   @Test
+  fun commentsBeforeAnAgentJoinsAreItsFirstWork() = testApplication {
+    val relay = relay()
+    application {
+      routing {
+        dashboardAgentRoutes(relay)
+        agentRelayRoutes(relay)
+      }
+    }
+    val access = create()
+    val owner = access.getValue("ownerToken").jsonPrimitive.content
+    val code = access.getValue("joinCode").jsonPrimitive.content
+    // The person comments on a card while no agent has joined yet.
+    val early =
+      client.post("/api/agent/session/comment") {
+        header(HttpHeaders.Authorization, "Bearer $owner")
+        setBody("""{"text":"Make the camera bigger","target":"Front door camera"}""")
+      }
+    assertEquals(HttpStatusCode.OK, early.status)
+    val session =
+      mcp("join_session", buildJsonObject { put("code", code) })
+        .data()
+        .getValue("session")
+        .jsonPrimitive
+        .content
+    val read = mcp("get_session", buildJsonObject { put("session", session) }).data()
+    val comment = read.getValue("conversation").jsonArray.single().jsonObject
+    assertEquals("Make the camera bigger", comment.getValue("text").jsonPrimitive.content)
+    assertEquals("Front door camera", comment.getValue("target").jsonPrimitive.content)
+    assertTrue(
+      read.getValue("next").jsonPrimitive.content.contains("already commented"),
+      "the agent is told to start with it",
+    )
+    // Once it has answered, a new session read just waits for what comes next.
+    mcp(
+      "send_message",
+      buildJsonObject {
+        put("session", session)
+        put("text", "Bigger it is")
+      },
+    )
+    val after = mcp("get_session", buildJsonObject { put("session", session) }).data()
+    assertTrue(after.getValue("next").jsonPrimitive.content.startsWith("Say hello"))
+  }
+
+  @Test
   fun agentCanAskFirstAndThePersonEntersItsCode() = testApplication {
     val relay = relay()
     application {

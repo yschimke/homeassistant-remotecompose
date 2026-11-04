@@ -63,7 +63,9 @@ session in the phone app or the panel.
 
 1. `get_edit_session` with the `session_id`: the request, the session's `scope`, the dashboard as
    it is now, the latest draft and the person's notes. The opening request is often just "work on
-   this with me": say hello with `send_message` and follow the person's comments. A `section`
+   this with me": the person may already have commented on the preview before you joined, so act on
+   those notes first (`next` says when there are some); otherwise say hello with `send_message`
+   and follow their comments. A `section`
    scope (`view`, `section`) means change only `views[view].sections[section]`; still submit the
    complete dashboard, and the integration refuses a draft that changes anything else.
 2. `get_card_guide` for the card types harc draws and how to size them; `find_entities` for the

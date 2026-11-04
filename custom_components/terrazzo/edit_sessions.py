@@ -454,6 +454,32 @@ def summary(session, with_configs=False):
     return result
 
 
+def waiting_notes(session):
+    """The person's notes since the newest draft: what the agent hasn't acted on yet, including
+    any left before it joined."""
+    last_draft = session["drafts"][-1]["at"] if session["drafts"] else None
+    return [n for n in session["notes"] if last_draft is None or n["at"] > last_draft]
+
+
+def next_step(session):
+    """What an agent reading [session] does now: act on notes that are waiting (a person can
+    comment before any agent joins), else say hello and wait for them."""
+    if session["status"] != OPEN:
+        return f"This session was {session['status']}: nothing to do."
+    seq = session.get("seq", 0)
+    if waiting_notes(session):
+        return (
+            "The person has already left notes (notes) since the last draft: act on them now and "
+            f"submit_draft, then await_feedback with since {seq}."
+        )
+    if session["drafts"]:
+        return f"await_feedback with since {seq} for what the person thinks of the draft."
+    return (
+        "Say hello with send_message, then await_feedback with since "
+        f"{seq} for the person's comments on the preview."
+    )
+
+
 TERRAZZO_APP_ID = "ee.schimke.harc"
 
 
@@ -491,7 +517,8 @@ def agent_prompt(session, mcp_url, home_name):
             f"Connect to the Terrazzo MCP server at {mcp_url} (sign in with Home Assistant when "
             "asked), then:",
             f"1. get_edit_session with session_id {session['id']}: the request, the dashboard as "
-            "it is now, and any notes.",
+            "it is now, and any notes. The person may have commented before you joined: act on "
+            "those notes first (its next says so).",
             "2. get_card_guide for the card types harc draws and how to size them; find_entities "
             "for the home's entities.",
             "3. submit_draft with the complete new dashboard config and a one-line summary; "

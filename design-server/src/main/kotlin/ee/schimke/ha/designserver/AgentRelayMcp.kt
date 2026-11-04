@@ -17,8 +17,23 @@ object AgentRelayMcp {
       "listen: call await_request with the link in a loop (it waits up to 25 s). Each request " +
       "brings a session: get_session, set_status while you work, submit_draft with the revision " +
       "you read, get_render to see it as the person does, and await_feedback in a loop passing back its cursor, acting on each comment " +
+      "(the person may comment before you join: act first on comments already in get_session's conversation) " +
       "(sometimes about one card) until a decision arrives. Then go back to await_request. " +
       "send_message asks the person something. You never apply a draft; the person does."
+
+  /**
+   * What an agent reading a session does now: the person can comment before any agent joins, so
+   * comments may already be waiting for it (in the conversation, before its cursor).
+   */
+  internal fun nextStep(view: AgentRelay.AgentView): String {
+    val lastAgent = view.messages.lastOrNull { it.from == "agent" }?.seq ?: 0
+    val waiting =
+      view.messages.count { it.from == "person" && it.kind == "comment" && it.seq > lastAgent }
+    return if (waiting > 0)
+      "The person has already commented ($waiting in the conversation): act on those now and " +
+        "submit_draft, then await_feedback with cursor."
+    else "Say hello with send_message, then await_feedback with cursor for the person's comments."
+  }
 
   suspend fun handle(message: JsonObject, bearer: String, relay: AgentRelay): JsonObject? {
     val id = message["id"] ?: return null
@@ -166,6 +181,7 @@ object AgentRelayMcp {
                 view.decision?.let { put("decision", it) }
                 put("personWatching", view.personWatching)
                 put("expiresInSeconds", view.expiresInSeconds)
+                put("next", nextStep(view))
                 put(
                   "submitWith",
                   if (kind == AgentRelay.Kind.Card)

@@ -151,6 +151,7 @@ async def async_session_for_agent(hass, user, session_id):
     result = edit_sessions.summary(session)
     result["dashboard"] = await current_config(dashboard, session["url_path"])
     result["latest_draft"] = session["drafts"][-1]["config"] if session["drafts"] else None
+    result["next"] = edit_sessions.next_step(session)
     return result
 
 

@@ -146,6 +146,21 @@ class EditSessionsTest(unittest.TestCase):
 
 
 class ConversationTest(unittest.TestCase):
+    def test_notes_left_before_an_agent_joins_are_its_first_work(self):
+        sessions = es.EditSessions()
+        sid = sessions.create(None, 'Work on it with me', BASELINE, 'person', 0)['id']
+        self.assertRegex(es.next_step(sessions.get(sid, 0)), '^Say hello')
+        # The person comments on a card before any agent has read the session.
+        sessions.note(sid, 'Bigger camera', 'person', 1, target='Front door (card 2)')
+        session = sessions.get(sid, 1)
+        self.assertEqual([n['text'] for n in es.waiting_notes(session)], ['Bigger camera'])
+        self.assertIn('already left notes', es.next_step(session))
+        # A draft answers them; a note after it is waiting again.
+        sessions.submit(sid, DRAFT, 'Bigger camera', exists, 'agent', 2)
+        self.assertRegex(es.next_step(sessions.get(sid, 2)), '^await_feedback')
+        sessions.note(sid, 'Now the doorbell', 'person', 3)
+        self.assertIn('already left notes', es.next_step(sessions.get(sid, 3)))
+
     def test_notes_and_messages_share_a_cursor_and_notes_name_cards(self):
         sessions = es.EditSessions()
         session = sessions.create(None, 'Garden', BASELINE, 'person', 0)

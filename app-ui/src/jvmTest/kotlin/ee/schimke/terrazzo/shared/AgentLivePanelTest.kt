@@ -109,4 +109,28 @@ class AgentLivePanelTest {
     onNodeWithText("About Front door (card 2)  ✕").performClick()
     assertEquals(null, target)
   }
+
+  @Test
+  fun thePersonCanCommentBeforeAnyAgentJoins() = runComposeUiTest {
+    val sent = mutableListOf<String>()
+    setContent {
+      MaterialTheme {
+        AgentLivePanel(
+          state = waiting.copy(joinCode = null),
+          busy = false,
+          onCopyInvite = {},
+          onNewCode = {},
+          onClaim = {},
+          onSend = { sent += it },
+          showCodes = false,
+          composeBeforeJoin = true,
+        )
+      }
+    }
+    onNodeWithText("Comment now: your agent starts with your comments when it joins.")
+      .assertExists()
+    onNodeWithText("Tell the agent what to change").performTextInput("Bigger camera")
+    onNodeWithText("Send").performClick()
+    assertEquals(listOf("Bigger camera"), sent)
+  }
 }
