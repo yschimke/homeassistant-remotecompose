@@ -22,6 +22,7 @@ class DashboardRelayTest {
   /** A Home Assistant that answers edit-session commands, recording them in [commands]. */
   private fun Route.fakeHome(commands: MutableList<String>) {
     var draft: JsonObject? = null
+    var cloud: JsonObject? = null
     webSocket("/api/websocket") {
       send(Frame.Text("""{"type":"auth_required"}"""))
       incoming.receive()
@@ -31,11 +32,17 @@ class DashboardRelayTest {
         val type = cmd.getValue("type").jsonPrimitive.content
         commands += type
         if (type == "terrazzo/edit/submit") draft = cmd.getValue("config").jsonObject
+        if (type == "terrazzo/edit/cloud")
+          cloud = buildJsonObject {
+            put("server", cmd.getValue("server"))
+            put("owner", cmd.getValue("owner"))
+          }
         val session = buildJsonObject {
           put("session_id", "s1")
           put("request", "Rename")
           put("baseline", baseline)
           put("status", if (type == "terrazzo/edit/apply") "applied" else "open")
+          cloud?.let { put("cloud", it) }
           putJsonArray("drafts") {
             draft?.let {
               add(
@@ -158,6 +165,43 @@ class DashboardRelayTest {
       assertEquals("accepted", done.getValue("decision").jsonPrimitive.content)
     } finally {
       relay.close()
+      home.close()
+      http.close()
+    }
+  }
+
+  @Test
+  fun anotherClientPicksTheRequestUpFromHomeAssistant() = testApplication {
+    val commands = mutableListOf<String>()
+    val agentRelay = AgentRelay(AgentDesignSessions(), DashboardAgentSessions(), maxWaitMs = 5_000)
+    install(WebSockets)
+    routing {
+      dashboardAgentRoutes(agentRelay)
+      agentRelayRoutes(agentRelay)
+      fakeHome(commands)
+    }
+    val http = createClient {}
+    val home = HaClient(HaConfig("http://localhost", "home-token"), http.engine)
+    val phone = CloudDashboardAgentEdits(home, "https://localhost", http.engine)
+    // A browser that never saw the request: nothing kept on this device.
+    val browserGrants = AgentGrantStore.memory()
+    val browser = CloudDashboardAgentEdits(home, "https://localhost", http.engine, browserGrants)
+    try {
+      home.connect()
+      phone.start(null, "Rename")
+      assertTrue(commands.contains("terrazzo/edit/cloud"), "the request is linked to the session")
+      assertEquals(listOf("s1"), browser.open(null).map { it.id })
+      assertFalse(browserGrants.load().isNullOrEmpty(), "the browser keeps what it picked up")
+      // And it can act on the request, as the phone could.
+      browser.newJoinCode("s1")
+      assertNotNull(browser.live("s1").value?.joinCode)
+      // Another design server's request isn't one this client can pick up.
+      val elsewhere = CloudDashboardAgentEdits(home, "https://elsewhere.example", http.engine)
+      assertEquals(emptyList(), elsewhere.open(null).map { it.id })
+      elsewhere.close()
+    } finally {
+      phone.close()
+      browser.close()
       home.close()
       http.close()
     }
