@@ -76,7 +76,12 @@ class HaControlSlotsTest {
       assertSame(GrammarRenderers.Dial, kit.components.dial, kit.id)
       assertSame(StandardDialLayout, kit.components.dialLayout, kit.id)
       assertSame(TokenTransportKey, kit.components.transportKey, kit.id)
-      assertSame(GrammarWearContainer, kit.wearContainer(), kit.id)
+      // Rugged Digital's Wear container is its watch face; every other kit's is the grammar's.
+      assertSame(
+        if (kit == HaUberTheme.RuggedDigital) RuggedWearContainer else GrammarWearContainer,
+        kit.wearContainer(),
+        kit.id,
+      )
     }
   }
 

@@ -16,10 +16,15 @@ import java.io.File
  * - `digital7` — Digital-7 Mono Italic (Style-7, free for non-commercial use), the segment face of
  *   the GShark watch face that the Rugged Digital kit is drawn from, with its designer. Its bytes
  *   live in [HaBundledFonts], shared with the Compose players.
+ * - `gspot` — Russo One (SIL Open Font License 1.1), the nearest open face to the G-SPOT wordmark's
+ *   lettering, for Rugged Digital's section headings.
  */
 object HaFonts {
   /** The name a card uses for Digital-7 Mono Italic. */
   const val Digital7 = ee.schimke.ha.rc.components.HaDigital7Font
+
+  /** The name a card uses for Russo One, Rugged Digital's heading face. */
+  const val GSpot = ee.schimke.ha.rc.components.HaGSpotFont
 
   private val loaded = HashMap<String, Typeface?>()
 

@@ -51,6 +51,13 @@ internal const val LcdWindowWordmark = "G-SPOT"
  */
 const val HaDigital7Font = "digital7"
 
+/**
+ * The name a card gives Russo One (`RemoteFontFamily.Named`): heavy, wide and squared, the nearest
+ * open face to the G-SPOT wordmark's lettering, for Rugged Digital's section headings. Hosts
+ * resolve it to the font the app bundles (`ee.schimke.ha.rc.HaFonts`).
+ */
+const val HaGSpotFont = "gspot"
+
 /** The hours-minutes digits' size, as a share of the window's height. */
 private const val MainShare = 0.86f
 

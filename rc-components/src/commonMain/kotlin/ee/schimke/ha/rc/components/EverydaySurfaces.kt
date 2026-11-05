@@ -23,6 +23,18 @@ import androidx.compose.ui.unit.sp
 // its palette. Text stays live: these wrap the caller's RemoteStrings, never repaint them.
 // ---------------------------------------------------------------------------------------------
 
+/**
+ * The active theme's heading font ([HaUberTheme.headingFont]) as a family, or null for its own;
+ * null on a launcher widget, whose system player can't load the app's bundled fonts.
+ */
+@Composable
+internal fun headingFamily(): RemoteFontFamily? =
+  currentHaUberTheme()
+    .theme
+    .headingFont
+    ?.takeUnless { isWidgetActionCapture() }
+    ?.let { RemoteFontFamily.Named(it) }
+
 /** The theme's text style with [trackingSp] of letter spacing and, optionally, another family. */
 @Composable
 internal fun trackedTextStyle(
@@ -69,7 +81,7 @@ internal fun EverydayHeading(
       color = theme.primaryText,
       fontSize = size,
       fontWeight = weight,
-      style = haTextStyle(),
+      style = haHeadingTextStyle(),
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,
     )
@@ -101,7 +113,7 @@ internal fun EverydayHeading(
         color = theme.primaryText,
         fontSize = size,
         fontWeight = weight,
-        style = haTextStyle(),
+        style = haHeadingTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -126,7 +138,7 @@ internal fun EverydayHeading(
           color = theme.primaryText,
           fontSize = HaType.Title,
           fontWeight = FontWeight.Medium,
-          style = trackedTextStyle(2.4f),
+          style = trackedTextStyle(2.4f, headingFamily()),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -148,7 +160,7 @@ internal fun EverydayHeading(
           text = text,
           color = inkOrPrimary(),
           fontSize = size,
-          style = haTextStyle(),
+          style = haHeadingTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -163,7 +175,7 @@ internal fun EverydayHeading(
           color = theme.primaryText,
           fontSize = HaType.Title,
           fontWeight = FontWeight.Medium,
-          style = trackedTextStyle(1.6f),
+          style = trackedTextStyle(1.6f, headingFamily()),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -180,7 +192,7 @@ internal fun EverydayHeading(
           color = ink?.copy(alpha = 0.35f)?.rc ?: theme.secondaryText,
           fontSize = size,
           fontWeight = FontWeight.Black,
-          style = trackedTextStyle(1.2f),
+          style = trackedTextStyle(1.2f, headingFamily()),
           maxLines = 1,
         )
         RemoteText(
@@ -188,7 +200,7 @@ internal fun EverydayHeading(
           color = inkOrPrimary(),
           fontSize = size,
           fontWeight = FontWeight.Normal,
-          style = trackedTextStyle(1.2f),
+          style = trackedTextStyle(1.2f, headingFamily()),
           maxLines = 1,
         )
       }
@@ -208,7 +220,7 @@ internal fun EverydayHeading(
             color = theme.cardBackground,
             fontSize = HaType.Body,
             fontWeight = FontWeight.Bold,
-            style = haTextStyle(),
+            style = haHeadingTextStyle(),
           )
         }
         RemoteText(
@@ -216,7 +228,7 @@ internal fun EverydayHeading(
           color = theme.primaryText,
           fontSize = size,
           fontWeight = FontWeight.Bold,
-          style = haTextStyle(),
+          style = haHeadingTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -229,7 +241,7 @@ internal fun EverydayHeading(
           color = theme.primaryText,
           fontSize = HaType.Headline,
           fontWeight = FontWeight.Bold,
-          style = haTextStyle(),
+          style = haHeadingTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -250,7 +262,7 @@ internal fun EverydayHeading(
             color = theme.primaryText,
             fontSize = HaType.Title,
             fontWeight = FontWeight.SemiBold,
-            style = haTextStyle(),
+            style = haHeadingTextStyle(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
@@ -264,7 +276,7 @@ internal fun EverydayHeading(
         color = theme.secondaryText,
         fontSize = HaType.Label,
         fontWeight = FontWeight.SemiBold,
-        style = trackedTextStyle(2.4f),
+        style = trackedTextStyle(2.4f, headingFamily()),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -293,7 +305,7 @@ internal fun EverydayHeading(
             color = theme.primaryText,
             fontSize = HaType.Title,
             fontWeight = FontWeight.Medium,
-            style = haTextStyle(),
+            style = haHeadingTextStyle(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
@@ -343,7 +355,7 @@ internal fun EverydayHeading(
           color = theme.primaryText,
           fontSize = HaType.Title,
           fontWeight = FontWeight.Bold,
-          style = trackedTextStyle(1.8f),
+          style = trackedTextStyle(1.8f, headingFamily()),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -356,7 +368,7 @@ internal fun EverydayHeading(
           color = theme.primaryText,
           fontSize = size,
           fontWeight = FontWeight.Light,
-          style = trackedTextStyle(3f),
+          style = trackedTextStyle(3f, headingFamily()),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -378,13 +390,13 @@ internal fun EverydayHeading(
             "◆".rs,
             color = familyAccent(),
             fontSize = HaType.Caption,
-            style = haTextStyle(),
+            style = haHeadingTextStyle(),
           )
           RemoteText(
             text = text,
             color = theme.primaryText,
             fontSize = HaType.Title,
-            style = trackedTextStyle(2f),
+            style = trackedTextStyle(2f, headingFamily()),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
@@ -392,7 +404,7 @@ internal fun EverydayHeading(
             "◆".rs,
             color = familyAccent(),
             fontSize = HaType.Caption,
-            style = haTextStyle(),
+            style = haHeadingTextStyle(),
           )
         }
         RemoteBox(
@@ -868,7 +880,7 @@ internal object GrammarTextSurfaces : HaTextSurfaceRenderer {
     }
     val marked = g.glow || g.gradient != null
     if (g.level == HaLevelStyle.Continuous && !marked) {
-      line(modifier.padding(vertical = 8.rdp), haTextStyle())
+      line(modifier.padding(vertical = 8.rdp), haHeadingTextStyle())
       return
     }
     RemoteRow(
@@ -879,10 +891,10 @@ internal object GrammarTextSurfaces : HaTextSurfaceRenderer {
       when {
         g.level == HaLevelStyle.Pointer -> {
           RemoteBox(RemoteModifier.size(8.rdp).clip(RemoteCircleShape).background(familyAccent()))
-          line(RemoteModifier, trackedTextStyle(1.6f))
+          line(RemoteModifier, trackedTextStyle(1.6f, headingFamily()))
         }
         g.level == HaLevelStyle.Segmented -> {
-          line(RemoteModifier, trackedTextStyle(1.2f))
+          line(RemoteModifier, trackedTextStyle(1.2f, headingFamily()))
           RemoteBox(
             RemoteModifier.weight(1f).height(HaSpace.Hairline.rdp).background(theme.divider)
           )
@@ -891,7 +903,7 @@ internal object GrammarTextSurfaces : HaTextSurfaceRenderer {
           RemoteBox(
             RemoteModifier.size(6.rdp, 24.rdp).clip(RemoteCircleShape).background(familyAccent())
           )
-          line(RemoteModifier.weight(1f), haTextStyle())
+          line(RemoteModifier.weight(1f), haHeadingTextStyle())
         }
       }
     }

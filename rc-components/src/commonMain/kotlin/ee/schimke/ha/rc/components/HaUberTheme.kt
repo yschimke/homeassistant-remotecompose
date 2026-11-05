@@ -155,6 +155,12 @@ data class HaUberTheme(
   val hotInk: Color? = null,
   val darkHotInk: Color? = hotInk,
   val fontFamily: RemoteFontFamily = RemoteFontFamily.Default,
+  /**
+   * The bundled font ([HaBundledFonts]) the theme sets its section headings in, by the name a card
+   * gives it (`RemoteFontFamily.Named`), or null for [fontFamily]. The app's own section headings
+   * take it too, so a dashboard's headings read as one face.
+   */
+  val headingFont: String? = null,
   val letterSpacingSp: Float = 0f,
   val valueWeight: FontWeight = FontWeight.SemiBold,
   val unavailable: HaUnavailableStyle = HaUnavailableStyle(),
@@ -630,6 +636,19 @@ fun haTextStyle(): RemoteTextStyle {
       letterSpacing = theme.letterSpacingSp.sp.asRemoteTextUnit(),
     )
   )
+}
+
+/**
+ * [haTextStyle] in the active theme's heading font ([HaUberTheme.headingFont]), for section
+ * headings. A launcher widget is played by the system, which can't load the app's bundled fonts:
+ * there it is the theme's own style.
+ */
+@Composable
+fun haHeadingTextStyle(): RemoteTextStyle {
+  val font = LocalHaUberTheme.current.theme.headingFont
+  val base = haTextStyle()
+  if (font == null || isWidgetActionCapture()) return base
+  return base.merge(RemoteTextStyle(fontFamily = RemoteFontFamily.Named(font)))
 }
 
 /** The weight readings are set in under the active uber theme. */

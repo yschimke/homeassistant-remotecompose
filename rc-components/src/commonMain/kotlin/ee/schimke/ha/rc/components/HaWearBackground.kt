@@ -39,6 +39,12 @@ sealed interface HaWearLayer
 /** A straight gradient across the container: top to bottom when [vertical], else start to end. */
 data class HaWearGradient(val colors: List<Color>, val vertical: Boolean = true) : HaWearLayer
 
+/**
+ * The face plate's fine mesh ([HaSurfaceMaterial.MeshPlate]) across the container: the same stripes
+ * pressed into the style's cards on the phone, so a card reads as the same material on the watch.
+ */
+data object HaWearMesh : HaWearLayer
+
 /** A gradient from the top start corner to the bottom end corner. */
 data class HaWearDiagonal(val colors: List<Color>) : HaWearLayer
 
@@ -458,3 +464,44 @@ val CLASSIC_WEAR_SURFACE: Color = Color(39, 36, 48)
 /** A Wear Material 3 dark palette's text roles, which Classic's text keeps on the watch. */
 private val CLASSIC_WEAR =
   HaTheme.Dark.copy(primaryText = Color(0xFFE6E1E5), secondaryText = Color(0xFFCAC4D0))
+
+/**
+ * Rugged Digital's Wear container: the GShark watch face it comes from, round the card.
+ * - **Plate:** the style's card background, the face's matte near-black.
+ * - **Mesh:** the plate's fine mesh, the same stripes as Rugged's cards on the phone.
+ * - **Highlight:** a soft glow in the upper start corner, where the light comes from.
+ * - **Bezel:** a steel edge just inside the outline, dark where it faces away from the light (upper
+ *   start) and brightest where it faces into it (lower end), as the face's bezel ring is lit.
+ *
+ * A reading fills the container as LCD cells in the accent, its unlit cells ghosted, as the face's
+ * segment display.
+ */
+internal object RuggedWearContainer : HaWearContainerRenderer {
+  private val STEEL_DARK = Color(0xFF14181D)
+  private val STEEL = Color(0xFF4E5B69)
+  private val STEEL_LIT = Color(0xFF9DB2C8)
+
+  override fun background(theme: HaUberTheme): HaWearBackground =
+    HaWearBackground(
+      theme.palette(darkTheme = true).cardBackground,
+      listOf(
+        // The plate's mesh, as on Rugged's cards on the phone.
+        HaWearMesh,
+        HaWearGlow(listOf(Color.White.copy(alpha = 0.07f), CLEAR), 0.15f, 0f, 0.85f),
+      ),
+      // A sweep from the end (3 o'clock) clockwise: lit through the lower end, dark round the
+      // upper start, back to the end.
+      HaWearEdge(listOf(STEEL, STEEL_LIT, STEEL, STEEL_DARK, STEEL_DARK, STEEL), 2f, insetDp = 1f),
+    )
+
+  override fun levelLook(theme: HaUberTheme): HaWearLevelLook {
+    val p = theme.palette(darkTheme = true)
+    val color = p.linkText
+    return HaWearLevelLook(
+      color,
+      readableAlpha(p.cardBackground, color, p.primaryText, p.secondaryText, 0.40f),
+      segments = 10,
+      ghosts = true,
+    )
+  }
+}

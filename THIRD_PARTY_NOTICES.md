@@ -33,6 +33,14 @@ one-off made with Greg Bullock from his GShark watch face, which uses the same f
 
 ---
 
+Russo One font (rc-components HaBundledFonts, as `gspot`)
+Copyright (c) 2011-2012, Jovanny Lemonad (jovanny.ru), with Reserved Font Name "Russo".
+
+Licensed under the SIL Open Font License, Version 1.1 (https://openfontlicense.org). Bundled
+unmodified for the Rugged Digital card style's section headings.
+
+---
+
 G-SPOT wordmark (rc-components HaBundledImages, from logo_gspot_highres_4x_white.png)
 Copyright Greg Bullock, from his GShark watch face (https://github.com/yschimke/casino-gshark).
 
