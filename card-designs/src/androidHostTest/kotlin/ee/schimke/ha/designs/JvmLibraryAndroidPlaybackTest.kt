@@ -14,6 +14,9 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
+import ee.schimke.composeai.rcplayer.compose.composeSupportReport
+import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
+import ee.schimke.composeai.rcplayer.protocol.RcInput
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.CardSnapshotBindings
@@ -83,6 +86,22 @@ class JvmLibraryAndroidPlaybackTest {
       emptyList(),
       different.map { "${it.key.cardType} ${it.key.shape} ${it.key.theme}" },
     )
+    // The app plays a design in rc-player-compose; one it reports it can't fully render falls back
+    // to AndroidX's player, which can't read everything the JVM writes (core text), so a sampled
+    // design that matched above may still only match by both falling back.
+    val unplayable = sample.mapNotNull { entry ->
+      val jvm = dir.resolve(DesignManifest.blobPath(entry.sha256)).readBytes()
+      val report =
+        RcDocumentCodec.decode(jvm)
+          .composeSupportReport(
+            allowExternalImagePlaceholders = true,
+            availableCustomComponents = RcInput.configs,
+          )
+      if (report.fullyRenderable) null
+      else
+        "${entry.key.cardType} ${entry.key.shape} ${entry.key.theme}: ${report.issues.map { it.detail }.distinct()}"
+    }
+    assertEquals(emptyList(), unplayable)
   }
 
   private var current by mutableStateOf<ByteArray?>(null)

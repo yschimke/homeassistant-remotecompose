@@ -139,8 +139,7 @@ internal fun EverydayHeading(
           modifier
             .fillMaxWidth()
             .padding(vertical = 6.rdp)
-            .clip(RemoteRoundedCornerShape(HaSpace.XXS.rdp))
-            .background(theme.dashboardBackground)
+            .then(lcdScreen())
             .padding(horizontal = HaSpace.M.rdp, vertical = HaSpace.XS.rdp),
         verticalAlignment = RemoteAlignment.CenterVertically,
         horizontalArrangement = RemoteArrangement.spacedBy(HaSpace.XS.rdp),
@@ -497,7 +496,12 @@ internal fun markdownMaterial(): MarkdownMaterial {
     // The note on the segment screen itself.
     HaVisualFamily.Lcd ->
       material(
-        screen = screenPanel(theme.dashboardBackground),
+        screen =
+          if (haLayouts().screenChamber)
+            RemoteModifier.fillMaxWidth()
+              .then(lcdScreen())
+              .padding(horizontal = 10.rdp, vertical = 8.rdp)
+          else screenPanel(theme.dashboardBackground),
         ink = inkOrPrimary(),
         bodyStyle = trackedTextStyle(0.6f, RemoteFontFamily.Monospace),
       )

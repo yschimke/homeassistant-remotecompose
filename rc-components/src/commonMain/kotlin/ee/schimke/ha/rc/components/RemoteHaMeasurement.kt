@@ -300,10 +300,7 @@ private fun ValueReadout(reading: HaReading, size: RemoteTextUnit) {
       }
     HaReadoutStyle.Screen ->
       RemoteBox(
-        modifier =
-          RemoteModifier.clip(RemoteRoundedCornerShape(HaSpace.XXS.rdp))
-            .background(theme.dashboardBackground)
-            .padding(horizontal = HaSpace.S.rdp, vertical = HaSpace.Hairline.rdp)
+        modifier = lcdScreen().padding(horizontal = HaSpace.S.rdp, vertical = HaSpace.Hairline.rdp)
       ) {
         value()
       }
