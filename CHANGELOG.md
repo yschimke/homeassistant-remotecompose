@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.84](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.83...v0.1.84) (2026-11-05)
+
+
+### Features
+
+* rugged digital theme kit — a sports-watch display with ghosted segments ([#1463](https://github.com/yschimke/homeassistant-remotecompose/issues/1463)) ([339e060](https://github.com/yschimke/homeassistant-remotecompose/commit/339e0609a3646c4a38b671251843746131e5fc06))
+
+
+### Bug Fixes
+
+* rugged clock reads as one time label; complication tiles are 48dp targets ([#1469](https://github.com/yschimke/homeassistant-remotecompose/issues/1469)) ([f765161](https://github.com/yschimke/homeassistant-remotecompose/commit/f765161782174dcf2150862a44dc6e568c408dce))
+
 ## [0.1.83](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.82...v0.1.83) (2026-11-04)
 
 
