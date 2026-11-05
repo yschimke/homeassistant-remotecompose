@@ -263,7 +263,9 @@ internal object ThemeKits {
               .copy(clock = HaClockFace.LcdWindow, glanceComplication = true, screenChamber = true),
           )
           // Keys are the watch's complication windows: square recessed tiles over a mesh.
-          .with(HaComponentSlot.Key, LcdWindowKey),
+          .with(HaComponentSlot.Key, LcdWindowKey)
+          // On the watch the container is the face itself: plate, brushed sheen and steel bezel.
+          .with(HaComponentSlot.WearContainer, RuggedWearContainer),
       extends = "lcd",
     )
 

@@ -458,3 +458,53 @@ val CLASSIC_WEAR_SURFACE: Color = Color(39, 36, 48)
 /** A Wear Material 3 dark palette's text roles, which Classic's text keeps on the watch. */
 private val CLASSIC_WEAR =
   HaTheme.Dark.copy(primaryText = Color(0xFFE6E1E5), secondaryText = Color(0xFFCAC4D0))
+
+/**
+ * Rugged Digital's Wear container: the GShark watch face it comes from, round the card.
+ * - **Plate:** the face's matte near-black.
+ * - **Brushed sheen:** faint bands across the diagonal, as the face's conic brushing catches the
+ *   light.
+ * - **Highlight:** a soft glow in the upper start corner, where the light comes from.
+ * - **Bezel:** a steel edge just inside the outline, dark where it faces away from the light (upper
+ *   start) and brightest where it faces into it (lower end), as the face's bezel ring is lit.
+ *
+ * A reading fills the container as LCD cells in the accent, its unlit cells ghosted, as the face's
+ * segment display.
+ */
+internal object RuggedWearContainer : HaWearContainerRenderer {
+  private val PLATE = Color(0xFF111316)
+  private val STEEL_DARK = Color(0xFF14181D)
+  private val STEEL = Color(0xFF4E5B69)
+  private val STEEL_LIT = Color(0xFF9DB2C8)
+
+  override fun background(theme: HaUberTheme): HaWearBackground =
+    HaWearBackground(
+      PLATE,
+      listOf(
+        HaWearDiagonal(
+          listOf(
+            Color.White.copy(alpha = 0.035f),
+            CLEAR,
+            Color.White.copy(alpha = 0.05f),
+            CLEAR,
+            Color.White.copy(alpha = 0.02f),
+          )
+        ),
+        HaWearGlow(listOf(Color.White.copy(alpha = 0.07f), CLEAR), 0.15f, 0f, 0.85f),
+      ),
+      // A sweep from the end (3 o'clock) clockwise: lit through the lower end, dark round the
+      // upper start, back to the end.
+      HaWearEdge(listOf(STEEL, STEEL_LIT, STEEL, STEEL_DARK, STEEL_DARK, STEEL), 2f, insetDp = 1f),
+    )
+
+  override fun levelLook(theme: HaUberTheme): HaWearLevelLook {
+    val p = theme.palette(darkTheme = true)
+    val color = p.linkText
+    return HaWearLevelLook(
+      color,
+      readableAlpha(PLATE, color, p.primaryText, p.secondaryText, 0.40f),
+      segments = 10,
+      ghosts = true,
+    )
+  }
+}
