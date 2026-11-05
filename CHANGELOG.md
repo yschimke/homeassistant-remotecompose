@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.85](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.84...v0.1.85) (2026-11-05)
+
+
+### Features
+
+* offer Play updates to testers at once, everyone else after a week ([#1477](https://github.com/yschimke/homeassistant-remotecompose/issues/1477)) ([7c9bcc4](https://github.com/yschimke/homeassistant-remotecompose/commit/7c9bcc47016d07a905c1c6af075bf0dc956963a1))
+* rugged complication cells are the watch's display windows, backlit when on ([#1472](https://github.com/yschimke/homeassistant-remotecompose/issues/1472)) ([1693e97](https://github.com/yschimke/homeassistant-remotecompose/commit/1693e97b3a7116f8c69f73f58ec84737c8b33322))
+* **rugged:** draw complication windows after the GShark face's chamber recipe ([#1475](https://github.com/yschimke/homeassistant-remotecompose/issues/1475)) ([c7d502e](https://github.com/yschimke/homeassistant-remotecompose/commit/c7d502e112cc90b9d7d4d392c22a3d239dad01b7))
+* trim the dashboard overflow menu ([#1474](https://github.com/yschimke/homeassistant-remotecompose/issues/1474)) ([9cb1208](https://github.com/yschimke/homeassistant-remotecompose/commit/9cb1208ddc44c717da41189094dbc0012df48165))
+
+
+### Bug Fixes
+
+* **deps:** update compose-ai-tools ([#1471](https://github.com/yschimke/homeassistant-remotecompose/issues/1471)) ([8c20e71](https://github.com/yschimke/homeassistant-remotecompose/commit/8c20e711e8681d9d839944eb9e0eb187cb356eda))
+* **rugged:** complication window chrome follows host theme roles ([#1476](https://github.com/yschimke/homeassistant-remotecompose/issues/1476)) ([c20fafe](https://github.com/yschimke/homeassistant-remotecompose/commit/c20fafe90ce773bbd0de6f274c4b3d5cd0de0c92))
+
 ## [0.1.84](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.83...v0.1.84) (2026-11-05)
 
 
