@@ -170,6 +170,8 @@ private fun RemoteDrawScope.shaded(layer: HaWearLayer): RemotePaint {
           center = RemoteOffset(size.width * layer.x, size.height * layer.y),
           radius = size.width * layer.radius,
         )
+      // The watch is dark: the mesh's dark-surface stripes.
+      HaWearMesh -> meshPlateBrush(dark = true)
       is HaWearBand -> error("a band is a stroke")
     }
   return RemotePaint().also { paint -> with(brush) { applyTo(paint, size) } }

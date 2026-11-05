@@ -39,6 +39,12 @@ sealed interface HaWearLayer
 /** A straight gradient across the container: top to bottom when [vertical], else start to end. */
 data class HaWearGradient(val colors: List<Color>, val vertical: Boolean = true) : HaWearLayer
 
+/**
+ * The face plate's fine mesh ([HaSurfaceMaterial.MeshPlate]) across the container: the same stripes
+ * pressed into the style's cards on the phone, so a card reads as the same material on the watch.
+ */
+data object HaWearMesh : HaWearLayer
+
 /** A gradient from the top start corner to the bottom end corner. */
 data class HaWearDiagonal(val colors: List<Color>) : HaWearLayer
 
@@ -462,8 +468,7 @@ private val CLASSIC_WEAR =
 /**
  * Rugged Digital's Wear container: the GShark watch face it comes from, round the card.
  * - **Plate:** the style's card background, the face's matte near-black.
- * - **Brushed sheen:** faint bands across the diagonal, as the face's conic brushing catches the
- *   light.
+ * - **Mesh:** the plate's fine mesh, the same stripes as Rugged's cards on the phone.
  * - **Highlight:** a soft glow in the upper start corner, where the light comes from.
  * - **Bezel:** a steel edge just inside the outline, dark where it faces away from the light (upper
  *   start) and brightest where it faces into it (lower end), as the face's bezel ring is lit.
@@ -480,15 +485,8 @@ internal object RuggedWearContainer : HaWearContainerRenderer {
     HaWearBackground(
       theme.palette(darkTheme = true).cardBackground,
       listOf(
-        HaWearDiagonal(
-          listOf(
-            Color.White.copy(alpha = 0.035f),
-            CLEAR,
-            Color.White.copy(alpha = 0.05f),
-            CLEAR,
-            Color.White.copy(alpha = 0.02f),
-          )
-        ),
+        // The plate's mesh, as on Rugged's cards on the phone.
+        HaWearMesh,
         HaWearGlow(listOf(Color.White.copy(alpha = 0.07f), CLEAR), 0.15f, 0f, 0.85f),
       ),
       // A sweep from the end (3 o'clock) clockwise: lit through the lower end, dark round the
