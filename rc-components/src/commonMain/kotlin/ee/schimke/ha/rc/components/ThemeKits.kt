@@ -259,7 +259,7 @@ internal object ThemeKits {
         HaComponentSlots.Grammar.with(
             HaComponentSlot.Layouts,
             familyLayouts(HaVisualFamily.Lcd)
-              .copy(clock = HaClockFace.LcdWindow, glanceComplication = true),
+              .copy(clock = HaClockFace.LcdWindow, glanceComplication = true, screenChamber = true),
           )
           // Keys are the watch's complication windows: square recessed tiles over a mesh.
           .with(HaComponentSlot.Key, LcdWindowKey),

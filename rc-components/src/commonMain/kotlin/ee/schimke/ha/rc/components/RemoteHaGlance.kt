@@ -7,32 +7,21 @@ import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
 import androidx.compose.remote.creation.compose.layout.RemoteFlowRow
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteSize
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.drawWithContent
 import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.modifier.widthIn
-import androidx.compose.remote.creation.compose.shaders.RemoteBrush
-import androidx.compose.remote.creation.compose.shaders.linearGradient
 import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemotePaint
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
@@ -283,13 +272,11 @@ private const val ComplicationHeight = 69
 
 // The window in the face's own units (its 450px dial): a 66 × 78 window with 12-unit corners,
 // 6 units in from each side of the 78 × 90 tile its trench and edge need.
-private const val TileW = 78f
-private const val TileH = 90f
 private const val WinX = 6f
 private const val WinY = 6f
 private const val WinW = 66f
-private const val WinH = 78f
-private const val WinR = 12f
+private const val WinH = ChamberWinH
+private const val WinR = ChamberWinR
 
 /** The wafer's honeycomb cell, vertex to vertex, in face units. */
 private const val HexW = 10.8f
@@ -343,302 +330,11 @@ private val HoneycombWalls: List<FloatArray> = buildList {
   }
 }
 
-/** A colour at a strength: a window layer's ink, which gradients fade by its alpha alone. */
-private class Ink(val color: RemoteColor, val alpha: Float) {
-  val rc: RemoteColor
-    get() = color.copy(alpha = alpha.rf)
-
-  fun at(alpha: Float) = Ink(color, alpha)
-}
-
 /**
- * One window's colours: the lit and shaded bevel, the wafer's walls, the lip's shadow and the
- * glass's sheen, each at full strength, and the shadow's gain.
- */
-private class WindowLook(
-  val lit: RemoteColor,
-  val shade: RemoteColor,
-  val wafer: Ink,
-  val shadow: RemoteColor,
-  val shadowGain: Float,
-  val sheen: RemoteColor,
-)
-
-/**
- * The window's colours. Under the kit's own palette they're Greg's chamber colours: steel-blue
- * light and near-black shade on the dark (negative) display, white and graphite on the light one.
- * On a host's surfaces (a launcher widget in system colours) they're the host's runtime roles, so
- * the window's chrome follows the host's colours as its floor does: the wafer in the divider, the
- * lit edge in the text (dark) or card (light) colour, the shade and shadow neutral.
+ * The watch's complication window, drawn behind a cell's icon and value: the display window
+ * ([lcdChamber]) at the face's own size, with its honeycomb wafer. A toggle's window is backlit
+ * while it's on and dark while off; a reading's window is never lit.
  */
 @Composable
-private fun windowLook(dark: Boolean): WindowLook {
-  val theme = haTheme()
-  val own = currentHaUberTheme().ownPalette
-  val sheen = Color(175, 228, 255).rc
-  return when {
-    !own ->
-      WindowLook(
-        lit = if (dark) theme.primaryText else theme.cardBackground,
-        shade = Color.Black.rc,
-        wafer = Ink(theme.divider, if (dark) 0.35f else 0.3f),
-        shadow = Color.Black.rc,
-        shadowGain = if (dark) 1f else 0.4f,
-        sheen = theme.primaryText,
-      )
-    dark ->
-      WindowLook(
-        lit = Color(150, 172, 198).rc,
-        shade = Color(3, 5, 8).rc,
-        wafer = Ink(Color(190, 215, 240).rc, 0.05f),
-        shadow = Color.Black.rc,
-        shadowGain = 1f,
-        sheen = sheen,
-      )
-    else ->
-      WindowLook(
-        lit = Color.White.rc,
-        shade = Color(70, 76, 84).rc,
-        wafer = Ink(Color(70, 82, 96).rc, 0.045f),
-        shadow = Color(20, 26, 32).rc,
-        shadowGain = 0.5f,
-        sheen = sheen,
-      )
-  }
-}
-
-/**
- * The watch's complication window, drawn behind a cell's icon and value: Greg Bullock's GShark quad
- * chamber, after the face's own recipe (casino-gshark's quad-chamber generator), drawn as Remote
- * Compose ops in the face's units so it's crisp at any size and follows the theme's colours:
- * - a dark trench just outside the edge,
- * - the floor in the window colour under a faint honeycomb wafer,
- * - the lip's shadow falling into the window from its top and sides, and occlusion at its foot,
- * - the glass's faint anti-reflective sheen,
- * - the bevel lit from the upper left: the lower and right walls catch the light, the upper and
- *   left fall into shade.
- *
- * A toggle's window is backlit while it's on, a soft accent glow rising from the middle of its
- * floor like the watch's backlight, and dark while off; a reading's window is never lit.
- */
-@Composable
-private fun complicationWindow(isOn: RemoteBoolean?): RemoteModifier {
-  val theme = haTheme()
-  val dark = currentHaUberTheme().let { it.theme.palette(it.darkTheme).isDark }
-  val look = windowLook(dark)
-  val clear = Color.Transparent.rc
-  // The backlight, live: eight faint layers in the accent while on, so it brightens smoothly
-  // toward the middle; nothing while off.
-  val glow =
-    List(8) { 0.045f }.map { a -> isOn?.select(theme.linkText.copy(alpha = a.rf), clear) ?: clear }
-  fun shadow(alpha: Float) = Ink(look.shadow, (alpha * look.shadowGain).coerceAtMost(0.9f))
-  fun lit(alpha: Float) = Ink(look.lit, alpha)
-  fun shade(alpha: Float) = Ink(look.shade, alpha)
-  return RemoteModifier.drawWithContent {
-    scale(width / TileW.rf, height / TileH.rf, RemoteOffset(0f.rf, 0f.rf)) {
-      // The trench, then the floor.
-      drawRoundRect(
-        strokePaint(1.3f, Color.Black.copy(alpha = 0.45f).rc, round = false),
-        RemoteOffset((WinX - 0.8f).rf, (WinY - 0.8f).rf),
-        RemoteSize((WinW + 1.6f).rf, (WinH + 1.6f).rf),
-        RemoteOffset((WinR + 0.8f).rf, (WinR + 0.8f).rf),
-      )
-      fillRound(theme.dashboardBackground, WinX.rf, WinY.rf, WinW.rf, WinH.rf, WinR.rf)
-      // The wafer.
-      val wall = strokePaint(0.8f, look.wafer.rc, round = false)
-      for (seg in HoneycombWalls) {
-        drawLine(wall, RemoteOffset(seg[0].rf, seg[1].rf), RemoteOffset(seg[2].rf, seg[3].rf))
-      }
-      // The backlight, brightest in the middle.
-      glow.forEachIndexed { i, color ->
-        val inset = 2f + i * 3.2f
-        fillRound(
-          color,
-          (WinX + inset).rf,
-          (WinY + inset).rf,
-          (WinW - inset * 2f).rf,
-          (WinH - inset * 2f).rf,
-          (9f + i * 2f).rf,
-        )
-      }
-      // The lip's shadow and the glass's sheen, each a gradient across the whole window that fades
-      // out where it ends, so the window's own corners clip it.
-      fun window(from: RemoteOffset, to: RemoteOffset, vararg stops: Pair<Float, Ink>) =
-        drawRoundRect(
-          gradientPaint(from, to, stops.toList(), samples = 64),
-          RemoteOffset(WinX.rf, WinY.rf),
-          RemoteSize(WinW.rf, WinH.rf),
-          RemoteOffset(WinR.rf, WinR.rf),
-        )
-      // Deepest under the top edge, softer down the left (the light's from the upper left), a
-      // short fall down the right, and occlusion at the floor's foot.
-      window(
-        RemoteOffset(0f.rf, WinY.rf),
-        RemoteOffset(0f.rf, (WinY + 13f).rf),
-        0f to shadow(0.9f),
-        0.3f to shadow(0.5f),
-        0.6f to shadow(0.16f),
-        1f to shadow(0f),
-      )
-      window(
-        RemoteOffset(WinX.rf, 0f.rf),
-        RemoteOffset((WinX + 9f).rf, 0f.rf),
-        0f to shadow(0.6f),
-        0.4f to shadow(0.22f),
-        1f to shadow(0f),
-      )
-      window(
-        RemoteOffset((WinX + WinW).rf, 0f.rf),
-        RemoteOffset((WinX + WinW - 7f).rf, 0f.rf),
-        0f to shadow(0.38f),
-        0.45f to shadow(0.12f),
-        1f to shadow(0f),
-      )
-      window(
-        RemoteOffset(0f.rf, (WinY + WinH).rf),
-        RemoteOffset(0f.rf, (WinY + WinH - 4f).rf),
-        0f to shadow(0.28f),
-        1f to shadow(0f),
-      )
-      // Two faint diagonal bands of the glass's anti-reflective coating.
-      val sheen = Ink(look.sheen, 0f)
-      val s = if (dark) 0.03f else 0.022f
-      window(
-        RemoteOffset(WinX.rf, WinY.rf),
-        RemoteOffset((WinX + 78f).rf, (WinY + 63.3f).rf),
-        0.30f to sheen.at(0f),
-        0.39f to sheen.at(s),
-        0.48f to sheen.at(0f),
-        0.64f to sheen.at(0f),
-        0.674f to sheen.at(s * 0.66f),
-        0.705f to sheen.at(0f),
-      )
-      // The bevel, on the window's edge: each side by how squarely it faces the light (from the
-      // upper left), each corner graded between its sides.
-      val b = 0.25f // the bevel's centre, just inside the edge
-      val x0 = WinX + b
-      val y0 = WinY + b
-      val x1 = WinX + WinW - b
-      val y1 = WinY + WinH - b
-      val r = WinR - b
-      val edge = 1.6f
-      val top = shade(0.74f)
-      val left = shade(0.58f)
-      val right = lit(0.42f)
-      val bottom = lit(0.58f)
-      fun side(color: Ink, ax: Float, ay: Float, bx: Float, by: Float) =
-        drawLine(
-          strokePaint(edge, color.rc, round = false),
-          RemoteOffset(ax.rf, ay.rf),
-          RemoteOffset(bx.rf, by.rf),
-        )
-      side(top, x0 + r, y0, x1 - r, y0)
-      side(left, x0, y0 + r, x0, y1 - r)
-      side(right, x1, y0 + r, x1, y1 - r)
-      side(bottom, x0 + r, y1, x1 - r, y1)
-      // A corner's quarter arc around (cx, cy) from [startDeg], its colour graded along the chord
-      // from its first side to its second.
-      fun corner(
-        cx: Float,
-        cy: Float,
-        startDeg: Float,
-        from: RemoteOffset,
-        to: RemoteOffset,
-        vararg stops: Pair<Float, Ink>,
-      ) {
-        val paint = gradientPaint(from, to, stops.toList())
-        paint.style = PaintingStyle.Stroke
-        paint.strokeWidth = edge.rf
-        drawArc(
-          paint,
-          startDeg.rf,
-          90f.rf,
-          false,
-          RemoteOffset((cx - r).rf, (cy - r).rf),
-          RemoteSize((r * 2f).rf, (r * 2f).rf),
-        )
-      }
-      // Upper left: in shade throughout, deepest where it faces away from the light.
-      corner(
-        x0 + r,
-        y0 + r,
-        180f,
-        RemoteOffset(x0.rf, (y0 + r).rf),
-        RemoteOffset((x0 + r).rf, y0.rf),
-        0f to left,
-        0.5f to shade(0.95f),
-        1f to top,
-      )
-      // Upper right: from the top's shade, through the turn, into the right side's light.
-      corner(
-        x1 - r,
-        y0 + r,
-        270f,
-        RemoteOffset((x1 - r).rf, y0.rf),
-        RemoteOffset(x1.rf, (y0 + r).rf),
-        0f to top,
-        0.55f to shade(0f),
-        0.6f to lit(0f),
-        1f to right,
-      )
-      // Lower right: lit throughout, brightest where it faces the light.
-      corner(
-        x1 - r,
-        y1 - r,
-        0f,
-        RemoteOffset(x1.rf, (y1 - r).rf),
-        RemoteOffset((x1 - r).rf, y1.rf),
-        0f to right,
-        0.5f to lit(0.72f),
-        1f to bottom,
-      )
-      // Lower left: from the bottom's light, through the turn, into the left side's shade.
-      corner(
-        x0 + r,
-        y1 - r,
-        90f,
-        RemoteOffset((x0 + r).rf, y1.rf),
-        RemoteOffset(x0.rf, (y1 - r).rf),
-        0f to bottom,
-        0.42f to lit(0f),
-        0.48f to shade(0f),
-        1f to left,
-      )
-    }
-    drawContent()
-  }
-}
-
-/**
- * A fill paint holding a linear gradient from [from] to [to] through [stops] (position, ink),
- * sampled to [samples] evenly spaced colours: the one gradient form every player takes. Between two
- * stops the strength blends and the colour is the nearer stop's, so a gradient can pass from one
- * colour to another through nothing, and every colour keeps its runtime binding.
- */
-private fun RemoteDrawScope.gradientPaint(
-  from: RemoteOffset,
-  to: RemoteOffset,
-  stops: List<Pair<Float, Ink>>,
-  samples: Int = 24,
-): RemotePaint {
-  val colors =
-    List(samples) { i ->
-      val t = i / (samples - 1f)
-      val next = stops.indexOfFirst { it.first >= t }
-      when {
-        next < 0 -> stops.last().second.rc
-        next == 0 -> stops.first().second.rc
-        else -> {
-          val (f0, c0) = stops[next - 1]
-          val (f1, c1) = stops[next]
-          val k = if (f1 > f0) (t - f0) / (f1 - f0) else 1f
-          Ink(if (k < 0.5f) c0.color else c1.color, c0.alpha + (c1.alpha - c0.alpha) * k).rc
-        }
-      }
-    }
-  return RemotePaint().also { paint ->
-    paint.style = PaintingStyle.Fill
-    paint.isAntiAlias = true
-    with(RemoteBrush.linearGradient(colors, from, to)) { applyTo(paint, size) }
-  }
-}
+private fun complicationWindow(isOn: RemoteBoolean?): RemoteModifier =
+  lcdChamber(isOn = isOn, padUnits = WinX, wafer = HoneycombWalls)

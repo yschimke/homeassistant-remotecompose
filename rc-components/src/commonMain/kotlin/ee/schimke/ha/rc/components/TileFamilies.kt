@@ -171,8 +171,7 @@ private fun LcdTile(data: HaTileData, look: HaEntityLook, identity: @Composable 
   RemoteColumn(RemoteModifier.fillMaxWidth()) {
     RemoteRow(
       RemoteModifier.fillMaxWidth()
-        .clip(RemoteRoundedCornerShape(HaSpace.XXS.rdp))
-        .background(theme.dashboardBackground)
+        .then(lcdScreen())
         .padding(horizontal = HaSpace.M.rdp, vertical = HaSpace.XS.rdp),
       verticalAlignment = RemoteAlignment.CenterVertically,
     ) {

@@ -158,6 +158,12 @@ data class HaLayouts(
    * recessed LCD tile, greyscale, lit when on and dim when off (Rugged Digital).
    */
   val glanceComplication: Boolean = false,
+  /**
+   * Whether an LCD family's screens (a reading's readout, a tile's screen, a heading strip, a
+   * note's panel) are the watch's display windows ([lcdChamber]) rather than flat recessed panels
+   * (Rugged Digital).
+   */
+  val screenChamber: Boolean = false,
   val entitiesGrid: Boolean = false,
   val slider: HaSliderStyle = HaSliderStyle.Track,
   val progressRing: HaProgressRing = HaProgressRing.Arc,
