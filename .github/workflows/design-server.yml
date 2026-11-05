@@ -52,7 +52,7 @@ concurrency:
 jobs:
   library:
     name: Library and server
-    runs-on: ubuntu-24.04  # Playwright 1.56 has no Chromium for ubuntu-26.04 (ubuntu-latest)
+    runs-on: ubuntu-26.04
     timeout-minutes: 45
     permissions:
       contents: read
@@ -148,7 +148,7 @@ jobs:
         # of <ha-card> with the real player and a stubbed Home Assistant. The player comes from
         # :design-server:embedResources, which the test task above already ran.
         run: |
-          npm install --no-save --prefix embed playwright@1.56.1
+          npm install --no-save --prefix embed playwright@1.62.0
           npx --prefix embed playwright install --with-deps chromium
           EMBED_SMOKE_REQUIRED=1 node --test embed/test/*.test.mjs
       - name: Serve the library
