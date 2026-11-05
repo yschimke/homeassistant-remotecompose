@@ -68,6 +68,7 @@ enum class CardStylePref(val id: String) {
   Aurora("aurora"),
   Engineered("engineered"),
   Cockpit("cockpit"),
+  RuggedDigital("rugged"),
 }
 
 /**

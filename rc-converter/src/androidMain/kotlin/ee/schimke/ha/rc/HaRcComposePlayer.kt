@@ -209,6 +209,7 @@ fun HaRcComposePlayer(
           modifier = WrapUnpinnedHeight,
           namedValues = playerValues,
           onEvent = guardedEvent,
+          typefaces = HaTypefaceLoader,
         )
       }
       if (frozenTime != null) {

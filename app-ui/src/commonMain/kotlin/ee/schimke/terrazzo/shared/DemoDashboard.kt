@@ -132,6 +132,7 @@ private fun DemoToolbar(
       "aurora" to "Aurora",
       "engineered" to "Engineered",
       "cockpit" to "Cockpit",
+      "rugged" to "Rugged Digital",
     )
   var stylesExpanded by remember { mutableStateOf(false) }
   var optionsExpanded by remember { mutableStateOf(false) }

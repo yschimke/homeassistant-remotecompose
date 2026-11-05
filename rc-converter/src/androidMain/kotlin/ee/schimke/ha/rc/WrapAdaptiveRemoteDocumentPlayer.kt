@@ -109,6 +109,7 @@ fun WrapAdaptiveRemoteDocumentPlayer(
             runCatching {
                 RemoteComposePlayer(context).apply {
                   setBitmapLoader(bitmapLoader)
+                  installHaFonts()
                   setDocument(
                     RemoteDocument(decode(documentBytes).withNamedActions(onNamedAction, fail))
                   )
@@ -137,6 +138,7 @@ fun WrapAdaptiveRemoteDocumentPlayer(
             runCatching {
                 RemoteComposePlayer(context).apply {
                   setBitmapLoader(bitmapLoader)
+                  installHaFonts()
                   setDocument(
                     RemoteDocument(decode(documentBytes).withNamedActions(onNamedAction, fail))
                   )

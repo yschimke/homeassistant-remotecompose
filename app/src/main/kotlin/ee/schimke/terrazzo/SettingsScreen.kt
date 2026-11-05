@@ -979,7 +979,8 @@ private fun cardStyleTagline(pref: CardStylePref): String =
     CardStylePref.EvDash,
     CardStylePref.Aurora,
     CardStylePref.Engineered,
-    CardStylePref.Cockpit -> pref.toUberTheme().description
+    CardStylePref.Cockpit,
+    CardStylePref.RuggedDigital -> pref.toUberTheme().description
   }
 
 private fun themePrefDisplayName(pref: ThemePref): String =

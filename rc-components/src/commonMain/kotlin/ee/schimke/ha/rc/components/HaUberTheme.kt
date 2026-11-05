@@ -113,6 +113,11 @@ enum class HaSurfaceMaterial {
   PaintedMetal,
   /** Laminated furniture frame with a recessed face and a fine timber edge. */
   BirchFrame,
+  /**
+   * A rugged watch's face plate: a fine perforated mesh pressed into the card, each hole a dark pit
+   * with a faint lit lower lip, tiled over whatever colour the card is.
+   */
+  MeshPlate,
 }
 
 /**
@@ -480,6 +485,7 @@ data class HaUberTheme(
     val Aurora = ThemeKits.Aurora
     val Engineered = ThemeKits.Engineered
     val Cockpit = ThemeKits.Cockpit
+    val RuggedDigital = ThemeKits.RuggedDigital
 
     /** Every uber theme, [Classic] first. */
     val all: List<HaUberTheme> =
@@ -507,6 +513,7 @@ data class HaUberTheme(
         Aurora,
         Engineered,
         Cockpit,
+        RuggedDigital,
       )
 
     /** The bespoke themes: each owns its [HaVisualFamily], drawn by hand in Meters<Family>.kt. */

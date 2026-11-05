@@ -179,6 +179,80 @@ fun Kit_Engineered_Dark() = KitShowcase(HaUberTheme.Engineered, darkTheme = true
 @Composable
 fun Kit_Cockpit() = KitShowcase(HaUberTheme.Cockpit, darkTheme = true)
 
+@Preview(name = "kit: Rugged Digital (light)", widthDp = 360, heightDp = 640)
+@Composable
+fun Kit_RuggedDigital_Light() = KitShowcase(HaUberTheme.RuggedDigital, darkTheme = false)
+
+@Preview(name = "kit: Rugged Digital (dark)", widthDp = 360, heightDp = 640)
+@Composable
+fun Kit_RuggedDigital_Dark() = KitShowcase(HaUberTheme.RuggedDigital, darkTheme = true)
+
+/**
+ * Rugged Digital as the watch it comes from: the clock card in its LCD window (italic segment
+ * digits, ghosted segments, accent seconds and a recessed date), over a glance row of complication
+ * windows and two compact readings.
+ */
+@Composable
+private fun RuggedWatch(darkTheme: Boolean) {
+  val theme = HaUberTheme.RuggedDigital
+  Box(
+    Modifier.uiFillMaxSize().background(theme.palette(darkTheme).dashboardBackground).padding(8.dp)
+  ) {
+    CapturingRemoteContentPreview(profile = androidXExperimental) {
+      CompositionLocalProvider(LocalHaClock provides FixedHaClock(KitNow.withSecond(37))) {
+        ProvideCardRegistry(defaultRegistry()) {
+          ProvideHaUberTheme(theme, darkTheme) {
+            RemoteColumn(
+              modifier = RemoteModifier.fillMaxWidth(),
+              verticalArrangement = RemoteArrangement.spacedBy(HaSpace.M.rdp),
+            ) {
+              RenderChild(
+                card(
+                  """{"type":"clock","clock_size":"large","time_format":"24",
+                      "show_seconds":true}"""
+                ),
+                Fixtures.mixed,
+                RemoteModifier.fillMaxWidth(),
+              )
+              RenderChild(
+                card(
+                  """{"type":"glance","columns":4,"show_name":false,"entities":[
+                      "sensor.living_room","light.kitchen","lock.front_door",
+                      "switch.coffee_maker"]}"""
+                ),
+                Fixtures.mixed,
+                RemoteModifier.fillMaxWidth(),
+              )
+              RemoteRow(modifier = RemoteModifier.fillMaxWidth()) {
+                KitCard(RemoteModifier.weight(1f).padding(end = HaSpace.M.rdp)) {
+                  RemoteHaMeasurement(
+                    HaReading.static("Range", 12f, "%", HaMeasureKind.Battery),
+                    HaPresentation.Compact,
+                  )
+                }
+                KitCard(RemoteModifier.weight(1f)) {
+                  RemoteHaMeasurement(
+                    HaReading.static("Humidity", 64f, "%", HaMeasureKind.Humidity),
+                    HaPresentation.Compact,
+                  )
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@Preview(name = "kit: Rugged Digital watch (dark)", widthDp = 360, heightDp = 520)
+@Composable
+fun Kit_RuggedDigital_Watch_Dark() = RuggedWatch(darkTheme = true)
+
+@Preview(name = "kit: Rugged Digital watch (light)", widthDp = 360, heightDp = 520)
+@Composable
+fun Kit_RuggedDigital_Watch_Light() = RuggedWatch(darkTheme = false)
+
 /**
  * One component under every theme: the lock — written once against the grammar — locked and
  * unlocked, beside a dial and a switch, in each theme's palette and grammar. Bespoke themes draw it
