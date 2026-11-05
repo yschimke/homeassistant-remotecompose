@@ -68,7 +68,7 @@ internal fun AgentSessionsScreen(
   onBack: () -> Unit,
   onApplied: () -> Unit,
   /** Takes a draft into the dashboard editor to adjust by hand ([AgentEditScreen]'s Adjust). */
-  onEditDraft: ((JsonObject) -> Unit)? = null,
+  onEditDraft: ((draft: JsonObject, baseline: JsonObject?) -> Unit)? = null,
 ) {
   val context = LocalContext.current
   BackHandler(onBack = onBack)

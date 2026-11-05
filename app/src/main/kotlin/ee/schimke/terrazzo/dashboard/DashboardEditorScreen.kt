@@ -160,12 +160,21 @@ fun DashboardEditorScreen(
         onSaved()
       },
       // One flow: the agent's draft comes back here as an unsaved edit, to move and resize by hand
-      // and save like any other.
+      // and save like any other. Only a draft made from the config this editor saves against:
+      // Save checks Home Assistant against that, so a draft from an older dashboard would
+      // silently undo what changed since (Use it refuses the same draft for the same reason).
       onEditDraft =
         (load as? EditorLoad.Ready)?.let { ready ->
-          { config ->
-            ready.edits.edit(config)
+          { config, baseline ->
             askingAgent = false
+            if (canAdjust(baseline, ready.edits.baseline)) ready.edits.edit(config)
+            else
+              scope.launch {
+                snackbars.showSnackbar(
+                  "The dashboard changed after the agent started. Ask it again to work from " +
+                    "this version."
+                )
+              }
           }
         },
     )
@@ -197,6 +206,13 @@ fun DashboardEditorScreen(
       )
   }
 }
+
+/**
+ * Whether an agent's draft made from [sessionBaseline] can be taken into an editor saving against
+ * [editorBaseline]: only when they are the same config. An unknown baseline is refused.
+ */
+internal fun canAdjust(sessionBaseline: JsonObject?, editorBaseline: JsonObject): Boolean =
+  sessionBaseline != null && sessionBaseline == editorBaseline
 
 /** The Terrazzo integration's domain (`custom_components/terrazzo`). */
 private const val INTEGRATION_DOMAIN = "terrazzo"
