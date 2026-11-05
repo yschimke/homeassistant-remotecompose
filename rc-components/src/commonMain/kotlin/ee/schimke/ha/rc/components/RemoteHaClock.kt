@@ -5,21 +5,30 @@ package ee.schimke.ha.rc.components
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
+import androidx.compose.remote.creation.compose.layout.RemoteCanvas
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
+import androidx.compose.remote.creation.compose.layout.RemoteOffset
+import androidx.compose.remote.creation.compose.layout.RemoteSize
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.modifier.contentDescription
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
+import androidx.compose.remote.creation.compose.modifier.semantics
+import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.asRemoteTextUnit
 import androidx.compose.remote.creation.compose.state.floor
+import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.creation.compose.state.rememberNamedRemoteImageBitmap
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
@@ -27,6 +36,7 @@ import androidx.compose.remote.creation.compose.text.RemoteFontFamily
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.remote.creation.compose.text.RemoteTimeDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
@@ -154,7 +164,29 @@ fun RemoteHaClock(
           overflow = TextOverflow.Ellipsis,
         )
       }
-      if (wordmark) {
+      // Without a title of its own the wordmark is Greg's G-SPOT logo, as the watch draws it; a
+      // host that can't decode it (a plain-JVM bake) sets the name in text instead.
+      val logo = if (wordmark && data.title == null) HaBundledImages.gSpotWordmarkBitmap else null
+      if (logo != null) {
+        val bitmap = rememberNamedRemoteImageBitmap(name = "ha.gspot_wordmark", value = { logo })
+        RemoteCanvas(
+          RemoteModifier.padding(top = 4.rdp).width(200.rdp).height(48.rdp).semantics {
+            contentDescription = LcdWindowWordmark.rs
+          }
+        ) {
+          // The player draws a bitmap with the paint the last draw left set, translucent from the
+          // window's ghosts and shadow: an opaque, empty rect resets it so the logo draws solid.
+          drawRect(fillPaint(Color.White.rc), RemoteOffset(0f.rf, 0f.rf), RemoteSize(0f.rf, 0f.rf))
+          // The canvas is the logo's own aspect (460 × 110), so it fills it exactly.
+          drawScaledBitmap(
+            image = bitmap,
+            srcOffset = RemoteOffset(0f.rf, 0f.rf),
+            srcSize = RemoteSize(logo.width.toFloat().rf, logo.height.toFloat().rf),
+            dstOffset = RemoteOffset(0f.rf, 0f.rf),
+            dstSize = RemoteSize(width, height),
+          )
+        }
+      } else if (wordmark) {
         RemoteText(
           text = data.title?.let { cardTitle(it) } ?: LcdWindowWordmark.rs,
           color = theme.linkText,

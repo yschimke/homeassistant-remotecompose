@@ -30,3 +30,11 @@ Copyright Sizenko Alexander, Style-7 (http://www.styleseven.com)
 
 Free for personal, non-commercial use. Bundled for the Rugged Digital card style, a non-commercial
 one-off made with Greg Bullock from his GShark watch face, which uses the same font.
+
+---
+
+G-SPOT wordmark (rc-components HaBundledImages, from logo_gspot_highres_4x_white.png)
+Copyright Greg Bullock, from his GShark watch face (https://github.com/yschimke/casino-gshark).
+
+Used with the designer's permission for the Rugged Digital card style, a non-commercial one-off
+made with him.
