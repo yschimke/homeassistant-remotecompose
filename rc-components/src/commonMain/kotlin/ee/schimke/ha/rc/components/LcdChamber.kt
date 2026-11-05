@@ -32,6 +32,9 @@ import androidx.compose.ui.graphics.PaintingStyle
 /** The window's height, in face units. */
 internal const val ChamberWinH = 78f
 
+/** The narrowest window, in face units, before a box's width sets its scale: the face's own. */
+internal const val ChamberMinWinW = 66f
+
 /** The window's corner radius, in face units. */
 internal const val ChamberWinR = 12f
 
@@ -82,10 +85,12 @@ internal fun lcdChamber(
   fun shade(alpha: Float) = look.shade.at(alpha)
   val p = padUnits
   return RemoteModifier.drawWithContent {
-    // One face unit, from the box's height; the window's width follows from the box's.
-    val unit = height / (ChamberWinH + p * 2f).rf
+    // One face unit: the box's height over the face's window height, unless the box is narrower
+    // than the face's window (a tall note), when its width sets it instead, so the corners and
+    // edge never outgrow a narrow box. The window then fills the box both ways.
+    val unit = (height / (ChamberWinH + p * 2f).rf).min(width / (ChamberMinWinW + p * 2f).rf)
     val ww = width / unit - (p * 2f).rf
-    val wh = ChamberWinH.rf
+    val wh = height / unit - (p * 2f).rf
     val wr = ChamberWinR.rf
     val x0w = p.rf
     val y0w = p.rf
@@ -163,7 +168,7 @@ internal fun lcdChamber(
       val s = if (dark) 0.03f else 0.022f
       // Each band is its own short gradient along the diagonal, clear past its ends.
       val dx = ww * 1.18f.rf
-      val dy = 63.3f.rf
+      val dy = wh * (63.3f / ChamberWinH).rf
       fun along(t: Float) = RemoteOffset(x0w + dx * t.rf, y0w + dy * t.rf)
       window(
         along(0.30f),
