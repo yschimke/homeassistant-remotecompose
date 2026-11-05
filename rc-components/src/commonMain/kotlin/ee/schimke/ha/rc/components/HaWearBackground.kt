@@ -461,7 +461,7 @@ private val CLASSIC_WEAR =
 
 /**
  * Rugged Digital's Wear container: the GShark watch face it comes from, round the card.
- * - **Plate:** the face's matte near-black.
+ * - **Plate:** the style's card background, the face's matte near-black.
  * - **Brushed sheen:** faint bands across the diagonal, as the face's conic brushing catches the
  *   light.
  * - **Highlight:** a soft glow in the upper start corner, where the light comes from.
@@ -472,14 +472,13 @@ private val CLASSIC_WEAR =
  * segment display.
  */
 internal object RuggedWearContainer : HaWearContainerRenderer {
-  private val PLATE = Color(0xFF111316)
   private val STEEL_DARK = Color(0xFF14181D)
   private val STEEL = Color(0xFF4E5B69)
   private val STEEL_LIT = Color(0xFF9DB2C8)
 
   override fun background(theme: HaUberTheme): HaWearBackground =
     HaWearBackground(
-      PLATE,
+      theme.palette(darkTheme = true).cardBackground,
       listOf(
         HaWearDiagonal(
           listOf(
@@ -502,7 +501,7 @@ internal object RuggedWearContainer : HaWearContainerRenderer {
     val color = p.linkText
     return HaWearLevelLook(
       color,
-      readableAlpha(PLATE, color, p.primaryText, p.secondaryText, 0.40f),
+      readableAlpha(p.cardBackground, color, p.primaryText, p.secondaryText, 0.40f),
       segments = 10,
       ghosts = true,
     )
