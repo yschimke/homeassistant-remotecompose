@@ -237,7 +237,7 @@ internal fun WidgetsContent(
         )
       }
       if (watchWidgets.isEmpty() && watchHelp) {
-        item { SectionHeader("Watch") }
+        item { SectionHeader("Watch widgets") }
         item {
           Text(
             WATCH_WIDGET_STEPS,
@@ -248,7 +248,7 @@ internal fun WidgetsContent(
         }
       }
       if (watchWidgets.isNotEmpty()) {
-        item { SectionHeader("Watch") }
+        item { SectionHeader("Watch widgets") }
         item {
           Text(
             "Tap a widget to choose its card. Turn on its switch for live updates while the app " +
