@@ -218,7 +218,7 @@ private fun RuggedWatch(darkTheme: Boolean) {
                 card(
                   """{"type":"glance","columns":4,"show_name":false,"entities":[
                       "sensor.living_room","light.kitchen","lock.front_door",
-                      "switch.coffee_maker"]}"""
+                      "light.office_lamp"]}"""
                 ),
                 Fixtures.mixed,
                 RemoteModifier.fillMaxWidth(),

@@ -8,23 +8,25 @@ import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.layout.RemoteFlowRow
+import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.modifier.drawWithContent
 import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.modifier.widthIn
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
+import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteColor
+import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
@@ -216,6 +218,7 @@ private fun GlanceComplication(
   modifier: RemoteModifier,
 ) {
   val theme = haTheme()
+  // Lit while on, as an LCD's backlit segment; dim while off; a reading is always lit.
   val ink = look.isOn?.select(theme.primaryText, theme.secondaryText) ?: theme.primaryText
   RemoteColumn(
     // A 48dp-wide target however short the name and value.
@@ -237,10 +240,8 @@ private fun GlanceComplication(
     RemoteColumn(
       modifier =
         RemoteModifier.padding(top = 3.rdp)
-          .clip(RemoteRoundedCornerShape(8.rdp))
-          .background(theme.dashboardBackground)
-          .border(1.rdp, theme.divider, RemoteRoundedCornerShape(8.rdp))
-          .padding(horizontal = 10.rdp, vertical = 5.rdp),
+          .then(complicationWindow(look.isOn))
+          .padding(horizontal = 10.rdp, vertical = 6.rdp),
       horizontalAlignment = RemoteAlignment.CenterHorizontally,
     ) {
       HaStateIcon(
@@ -254,7 +255,7 @@ private fun GlanceComplication(
       )
       RemoteText(
         text = data.state,
-        color = look.dim(theme.primaryText),
+        color = look.dim(ink),
         fontSize = HaType.Caption,
         fontWeight = FontWeight.Bold,
         style = haTextStyle(),
@@ -262,5 +263,63 @@ private fun GlanceComplication(
         overflow = TextOverflow.Ellipsis,
       )
     }
+  }
+}
+
+/**
+ * The watch's complication window, drawn behind a cell's icon and value: a slightly recessed
+ * rounded square in the window colour, shaded under its top edge, with a fine mesh floor and a lit
+ * lip along its lower and right bevel, as the GShark face's own chambers are. A toggle's window is
+ * backlit while it's on, an accent glow rising from its middle like the watch's backlight, and dark
+ * when off; a reading's window is never lit. Drawn with plain fills only, so every player draws it.
+ */
+@Composable
+private fun complicationWindow(isOn: RemoteBoolean?): RemoteModifier {
+  val theme = haTheme()
+  val dark = currentHaUberTheme().let { it.theme.palette(it.darkTheme).isDark }
+  val shade = Color.Black.copy(alpha = if (dark) 0.55f else 0.22f).rc
+  val lip = Color.White.copy(alpha = if (dark) 0.16f else 0.55f).rc
+  val mesh = theme.divider.copy(alpha = 0.55f.rf)
+  val clear = Color.Transparent.rc
+  // The backlight, live: eight faint layers in the accent while on, so it brightens smoothly
+  // toward the middle; nothing while off.
+  val glow =
+    List(8) { 0.045f }.map { a -> isOn?.select(theme.linkText.copy(alpha = a.rf), clear) ?: clear }
+  return RemoteModifier.drawWithContent {
+    val r = 9f.rf
+    // The recess: the window, a dark rim above it, and the shadow its top edge throws.
+    fillRound(shade, 0f.rf, 0f.rf, width, height, r)
+    fillRound(theme.dashboardBackground, 1.5f.rf, 2.5f.rf, width - 3f.rf, height - 3.5f.rf, r)
+    fillRound(shade, 3f.rf, 2.5f.rf, width - 6f.rf, 3f.rf, 1.5f.rf)
+    // The mesh floor.
+    val dots = fillPaint(mesh)
+    val cols = 7
+    val rows = 8
+    for (row in 0 until rows) for (col in 0 until cols) {
+      drawCircle(
+        dots,
+        0.9f.rf,
+        RemoteOffset(
+          width * ((col + if (row % 2 == 0) 0.5f else 1f) / (cols + 0.5f)).rf,
+          height * ((row + 0.7f) / (rows + 0.4f)).rf,
+        ),
+      )
+    }
+    // The backlight, brightest in the middle.
+    glow.forEachIndexed { i, color ->
+      val inset = (2.5f + i * 3.2f).rf
+      fillRound(
+        color,
+        inset,
+        inset + 1f.rf,
+        width - inset * 2f.rf,
+        height - inset * 2f.rf - 1f.rf,
+        r + (i * 2f).rf,
+      )
+    }
+    // The bevel's lit lip along the lower and right edges.
+    fillRound(lip, r, height - 1.5f.rf, width - r * 2f.rf, 1.2f.rf, 0.6f.rf)
+    fillRound(lip, width - 1.8f.rf, r, 1.2f.rf, height - r * 2f.rf, 0.6f.rf)
+    drawContent()
   }
 }
