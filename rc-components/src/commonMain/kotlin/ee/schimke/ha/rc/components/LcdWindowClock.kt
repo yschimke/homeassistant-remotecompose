@@ -10,10 +10,10 @@ import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.clearAndSetSemantics
 import androidx.compose.remote.creation.compose.modifier.contentDescription
 import androidx.compose.remote.creation.compose.modifier.drawWithContent
 import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.semantics
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteString
@@ -135,7 +135,8 @@ internal fun LcdWindowClock(data: HaClockData, timeLabel: RemoteString, digitSp:
   RemoteColumn(horizontalAlignment = RemoteAlignment.CenterHorizontally) {
     RemoteRow(
       modifier =
-        RemoteModifier.semantics { contentDescription = timeLabel }
+        // One label for the time: the digits and their ghost "88:88" stay out of the reader.
+        RemoteModifier.clearAndSetSemantics { contentDescription = timeLabel }
           .drawWithContent {
             // The window: a bevel in the divider, the recess in the dashboard colour, a shadow
             // under its top edge, and a fine mesh behind the glass.
