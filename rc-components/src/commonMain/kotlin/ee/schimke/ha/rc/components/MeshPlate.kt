@@ -9,49 +9,39 @@ import androidx.compose.remote.creation.compose.shaders.linearGradient
 import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.TileMode
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 // The GShark face plate's perforated mesh, as one small tile repeated over a card. The tile is
 // transparent but for its hole, so it presses into a card of any colour, and it is a single image
 // fill: a card pays one draw for the whole plate, not one per hole.
 //
-// Drawing the tile needs a Compose graphics backend. A host that bakes cards without one (the
-// design-library generator on a plain JVM) gets fine stripes of the same pitch instead: one
-// gradient fill, no bitmap.
+// The tile is decoded from PNG bytes, as every host that bakes cards can (the design-library
+// generator on the JVM included), so a published design draws the plate it was captured with. A
+// host with no image decoder at all gets fine stripes of the same pitch instead.
 
 /** The mesh's pitch, in document pixels. */
 private const val MeshPitch = 7
 
 /**
- * One hole of the mesh: a dark pit with a faint lit lower lip, in a [MeshPitch] tile. A light plate
- * takes shallower holes, so the mesh stays behind the text on it. Null without a graphics backend.
+ * One hole of the mesh in a [MeshPitch] tile: a dark pit with a faint lit lower lip. A light plate
+ * takes shallower holes, so the mesh stays behind the text on it. Shipped as PNG bytes and decoded
+ * like the bundled wordmark, so the JVM library bake and Android's own capture draw the same tile;
+ * null only where a host can't decode an image at all.
  */
-private fun meshTile(dark: Boolean): ImageBitmap? = runCatching {
-  val tile = ImageBitmap(MeshPitch, MeshPitch)
-  val canvas = Canvas(tile)
-  val centre = MeshPitch / 2f
-  canvas.drawCircle(
-    Offset(centre + 0.5f, centre + 0.6f),
-    2.2f,
-    Paint().apply { color = Color.White.copy(alpha = if (dark) 0.10f else 0.18f) },
-  )
-  canvas.drawCircle(
-    Offset(centre, centre),
-    2.1f,
-    Paint().apply { color = Color.Black.copy(alpha = if (dark) 0.6f else 0.16f) },
-  )
-  tile
-}
-  .getOrNull()
+@OptIn(ExperimentalEncodingApi::class)
+private val DarkMeshTile: ImageBitmap? by lazy { decodeBundledImage(Base64.decode(DarkMeshPng)) }
 
-/** The mesh tiles, drawn once per process; documents share them by name. */
-private val DarkMeshTile: ImageBitmap? by lazy { meshTile(dark = true) }
-private val LightMeshTile: ImageBitmap? by lazy { meshTile(dark = false) }
+@OptIn(ExperimentalEncodingApi::class)
+private val LightMeshTile: ImageBitmap? by lazy { decodeBundledImage(Base64.decode(LightMeshPng)) }
+
+private const val DarkMeshPng =
+  "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAHCAYAAADEUlfTAAAAj0lEQVR42m2OIQ7CABAE5+5yvbRIRB/QkKoKgsCRIAn9DYpvIngAJChMXRPSHoKAYtUkI2bh/wTAvgBsVPVoZjrP8wMQ+4qIOFdVtXL3fV3X92EYbgrg7uuIUFV9ZubL3bdFUaAAZVleAJumaQlY27ZXkU9NRISu63ZN05z6vj9k5gIQ+d0TISIAGMdRgHwDPWAfbp7lARYAAAAASUVORK5CYII="
+private const val LightMeshPng =
+  "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAHCAYAAADEUlfTAAAAiklEQVR42m2OMQ7CMBAE946IAqdBQAmF5YKT3IQmjf2FPMMvy394AlT5gKWgiGKpKIjYbkZTLPB/shat9/6SUtqvi3YYhpuZHUhKCOFeSnkoAPR9f4wxnpxzbxGhqnqS2wYAuq6bVVVqrQ0AmtkLwEYAiIhwHMfrsiznEMKcc34CmH4ekdyRdF/+ABuuJuhqikX8AAAAAElFTkSuQmCC"
 
 /** Fine stripes at the mesh's pitch, for a host that can't draw the tile. */
 private fun meshStripes(dark: Boolean): RemoteBrush {
