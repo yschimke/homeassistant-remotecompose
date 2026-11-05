@@ -46,7 +46,9 @@ private fun ComponentActivity.checkForPlayStoreUpgrade(
   resumeOnly: Boolean,
 ) {
   val tester = isPlayUpdateTester(applicationContext)
-  manager.appUpdateInfo.addOnSuccessListener { info ->
+  // Activity-scoped: Play's answer is dropped once this activity stops, so a stale reply can't
+  // launch a launcher that was unregistered when the activity was destroyed.
+  manager.appUpdateInfo.addOnSuccessListener(this) { info ->
     val start =
       shouldStartPlayUpdate(
         available =
