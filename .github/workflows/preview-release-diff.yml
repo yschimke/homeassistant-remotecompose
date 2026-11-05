@@ -42,7 +42,7 @@ concurrency:
 
 jobs:
   diff:
-    uses: yschimke/compose-ai-tools/.github/workflows/preview-release-diff-reusable.yml@v2.84.0
+    uses: yschimke/compose-ai-tools/.github/workflows/preview-release-diff-reusable.yml@v2.85.0
     with:
       tag: ${{ inputs.tag }}
       base: ${{ inputs.base }}
