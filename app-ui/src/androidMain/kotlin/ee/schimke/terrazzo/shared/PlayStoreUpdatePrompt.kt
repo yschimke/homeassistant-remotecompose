@@ -6,6 +6,8 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.edit
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.appupdate.AppUpdateOptions
@@ -27,19 +29,29 @@ fun ComponentActivity.promptForPlayStoreUpgrade() {
     registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
       /* Play owns UI */
     }
-  checkForPlayStoreUpgrade(manager, launcher)
+  checkForPlayStoreUpgrade(manager, launcher, resumeOnly = false)
+  // An immediate update interrupted in the background resumes when the app returns, as Play's
+  // immediate-flow guidance does; new updates are only offered once per launch.
+  lifecycle.addObserver(
+    LifecycleEventObserver { _, event ->
+      if (event == Lifecycle.Event.ON_RESUME)
+        checkForPlayStoreUpgrade(manager, launcher, resumeOnly = true)
+    }
+  )
 }
 
 private fun ComponentActivity.checkForPlayStoreUpgrade(
   manager: AppUpdateManager,
   launcher: ActivityResultLauncher<IntentSenderRequest>,
+  resumeOnly: Boolean,
 ) {
   val tester = isPlayUpdateTester(applicationContext)
   manager.appUpdateInfo.addOnSuccessListener { info ->
     val start =
       shouldStartPlayUpdate(
         available =
-          info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
+          !resumeOnly &&
+            info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
             info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE),
         inProgress =
           info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS,
