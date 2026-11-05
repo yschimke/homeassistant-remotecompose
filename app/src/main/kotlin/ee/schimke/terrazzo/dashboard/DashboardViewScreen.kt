@@ -62,6 +62,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -589,11 +590,10 @@ private fun DashboardList(
   val cardStyle = LocalCardStyle.current
   val haTheme = remember(style, dark, cardStyle) { cardStyle.cardPalette(style, dark) }
 
-  // An uber card style paints the whole dashboard in its own background, so a dark-only style
-  // (Nixie, Trinitron) never sits in light gutters; Classic keeps the app's surface as before.
+  val background = dashboardBackground()
   val dashboardModifier =
-    if (cardStyle.id == HaUberTheme.Classic.id) Modifier.fillMaxSize()
-    else Modifier.fillMaxSize().background(haTheme.dashboardBackground)
+    if (background.isSpecified) Modifier.fillMaxSize().background(background)
+    else Modifier.fillMaxSize()
   BoxWithConstraints(modifier = dashboardModifier, contentAlignment = Alignment.TopCenter) {
     // Each sections view is placed with HA's sections-grid rules (shared with the preview
     // harness via [ViewLayout.sectionsGrid]): HA's responsive column gap (8 dp up to a 600 dp
@@ -1908,4 +1908,20 @@ private fun packAndChunk(
     }
   }
   flushPending()
+}
+
+/**
+ * The dashboard's own background: an uber card style paints the whole dashboard in its own, so a
+ * dark-only style (Nixie, Trinitron) never sits in light gutters. Unspecified for Classic, which
+ * keeps the app's surface. The editor uses it too, so editing reads as the same screen.
+ */
+@Composable
+internal fun dashboardBackground(): androidx.compose.ui.graphics.Color {
+  val style = LocalThemeStyle.current
+  val dark = LocalIsDarkTheme.current
+  val cardStyle = LocalCardStyle.current
+  return remember(style, dark, cardStyle) {
+    if (cardStyle.id == HaUberTheme.Classic.id) androidx.compose.ui.graphics.Color.Unspecified
+    else cardStyle.cardPalette(style, dark).dashboardBackground
+  }
 }

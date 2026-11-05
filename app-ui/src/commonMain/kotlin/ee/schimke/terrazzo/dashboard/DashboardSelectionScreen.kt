@@ -40,7 +40,7 @@ import ee.schimke.ha.client.DashboardSummary
 
 /**
  * Multi-select screen for the dashboards the user wants surfaced in the picker and the top-bar
- * switcher. Available from the dashboard's overflow menu → "Manage dashboards"; it is optional.
+ * switcher. Available from Settings → "Manage dashboards"; it is optional.
  *
  * Lists the supported dashboards supplied by the host, including the default only when usable.
  *

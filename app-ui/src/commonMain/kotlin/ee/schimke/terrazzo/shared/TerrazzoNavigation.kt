@@ -13,7 +13,6 @@ enum class AppScreen : NavKey {
   Dashboards,
   Settings,
   Widgets,
-  Pinned,
   SyncDiagnostics,
   Logs,
   ChooseDashboards,

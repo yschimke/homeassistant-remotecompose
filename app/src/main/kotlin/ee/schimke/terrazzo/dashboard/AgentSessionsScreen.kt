@@ -19,6 +19,7 @@ import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.liveDashboardSnapshots
 import ee.schimke.terrazzo.shared.AgentOnThisDevice
 import kotlinx.coroutines.delay
+import kotlinx.serialization.json.JsonObject
 
 /** How the phone reaches agent sessions: through the design server, or Home Assistant alone. */
 internal class PhoneAgentEdits(val edits: AgentEdits, val relayServer: String?)
@@ -66,6 +67,8 @@ internal fun AgentSessionsScreen(
   startScope: EditScope?,
   onBack: () -> Unit,
   onApplied: () -> Unit,
+  /** Takes a draft into the dashboard editor to adjust by hand ([AgentEditScreen]'s Adjust). */
+  onEditDraft: ((draft: JsonObject, baseline: JsonObject?) -> Unit)? = null,
 ) {
   val context = LocalContext.current
   BackHandler(onBack = onBack)
@@ -97,6 +100,7 @@ internal fun AgentSessionsScreen(
     onApplied = onApplied,
     writeBlockedReason = saveBlockedReason,
     startScope = startScope,
+    onEditDraft = onEditDraft,
   ) { _, card ->
     DashboardCardPreview(session, card, snapshot)
   }

@@ -159,6 +159,24 @@ fun DashboardEditorScreen(
         reloads++
         onSaved()
       },
+      // One flow: the agent's draft comes back here as an unsaved edit, to move and resize by hand
+      // and save like any other. Only a draft made from the config this editor saves against:
+      // Save checks Home Assistant against that, so a draft from an older dashboard would
+      // silently undo what changed since (Use it refuses the same draft for the same reason).
+      onEditDraft =
+        (load as? EditorLoad.Ready)?.let { ready ->
+          { config, baseline ->
+            askingAgent = false
+            if (canAdjust(baseline, ready.edits.baseline)) ready.edits.edit(config)
+            else
+              scope.launch {
+                snackbars.showSnackbar(
+                  "The dashboard changed after the agent started. Ask it again to work from " +
+                    "this version."
+                )
+              }
+          }
+        },
     )
     return
   }
@@ -188,6 +206,13 @@ fun DashboardEditorScreen(
       )
   }
 }
+
+/**
+ * Whether an agent's draft made from [sessionBaseline] can be taken into an editor saving against
+ * [editorBaseline]: only when they are the same config. An unknown baseline is refused.
+ */
+internal fun canAdjust(sessionBaseline: JsonObject?, editorBaseline: JsonObject): Boolean =
+  sessionBaseline != null && sessionBaseline == editorBaseline
 
 /** The Terrazzo integration's domain (`custom_components/terrazzo`). */
 private const val INTEGRATION_DOMAIN = "terrazzo"
@@ -235,7 +260,23 @@ internal fun DashboardEditor(
   // The agent works from the dashboard in Home Assistant, and leaving for it drops this draft:
   // what to do once the person agrees.
   var confirmAgent by remember { mutableStateOf<(() -> Unit)?>(null) }
+  // Asking the agent is part of editing: from the top bar, and from the card at the end. Offered
+  // unless Home Assistant is known to lack the integration that holds agent sessions.
+  val askAgent: ((Boolean, () -> Unit) -> Unit)? =
+    onAskAgent
+      ?.takeIf { integration != IntegrationStatus.Missing }
+      ?.let { ask ->
+        { dirty, discardEdits ->
+          if (dirty)
+            confirmAgent = {
+              discardEdits()
+              ask()
+            }
+          else ask()
+        }
+      }
   DashboardDraftEditor(
+    onAskAgent = askAgent,
     edits = edits,
     title = title,
     snackbars = snackbars,
@@ -244,20 +285,10 @@ internal fun DashboardEditor(
     launch = launch,
     initialSelection = initialSelection,
     backHandler = { back -> BackHandler(onBack = back) },
+    // The dashboard's background, so editing reads as the same screen with more controls.
+    containerColor = dashboardBackground(),
     footer = { dirty, discardEdits ->
-      val ask =
-        onAskAgent
-          ?.takeIf { integration == IntegrationStatus.Installed }
-          ?.let { ask ->
-            {
-              if (dirty)
-                confirmAgent = {
-                  discardEdits()
-                  ask()
-                }
-              else ask()
-            }
-          }
+      val ask = askAgent?.let { ask -> { ask(dirty, discardEdits) } }
       IntegrationCard(integration, editInHomeAssistant, onAskAgent = ask) {
         openUrl(context, HACS_INSTALL_URL)
       }

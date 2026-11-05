@@ -1,6 +1,6 @@
 # Wear widgets choose their card on the watch
 
-The phone chooses what the Wear app shows ("Show on watch", ordered in "Cards on your watch"). It no
+The phone chooses what the Wear app shows ("Show on watch", ordered in "Manage widgets" → Watch app). It no
 longer assigns cards to widget slots. On the watch, each Terrazzo widget chooses one of those cards:
 
 - **Two providers.** One Small and one Large widget provider replace the ten slot services. They are
