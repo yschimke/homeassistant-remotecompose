@@ -20,6 +20,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.modifier.widthIn
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rdp
@@ -217,7 +218,12 @@ private fun GlanceComplication(
   val theme = haTheme()
   val ink = look.isOn?.select(theme.primaryText, theme.secondaryText) ?: theme.primaryText
   RemoteColumn(
-    modifier = modifier.then(clickable).padding(horizontal = HaSpace.XXS.rdp, vertical = 2.rdp),
+    // A 48dp-wide target however short the name and value.
+    modifier =
+      modifier
+        .then(clickable)
+        .widthIn(min = 48.rdp)
+        .padding(horizontal = HaSpace.XXS.rdp, vertical = 2.rdp),
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
     RemoteText(
