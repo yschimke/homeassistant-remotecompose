@@ -1269,10 +1269,15 @@ internal fun SectionHeading(
         else -> it
       }
     }
+  // The card style's heading face (Rugged Digital's G-SPOT lettering), so the dashboard's own
+  // section headings read as one face with the heading cards under them.
+  val headingFont = sectionHeadingFont()
   Row(modifier = rowModifier, verticalAlignment = Alignment.CenterVertically) {
     Text(
       text = title,
-      style = MaterialTheme.typography.titleMedium,
+      style =
+        headingFont?.let { MaterialTheme.typography.titleMedium.copy(fontFamily = it) }
+          ?: MaterialTheme.typography.titleMedium,
       color = MaterialTheme.colorScheme.onSurface,
       modifier = Modifier.weight(1f),
     )
@@ -1284,6 +1289,21 @@ internal fun SectionHeading(
       )
     }
     trailing?.invoke()
+  }
+}
+
+/**
+ * The active card style's heading font ([HaUberTheme.headingFont]) as a Compose family, from the
+ * fonts the app bundles; null when the style has none (or the font can't be loaded).
+ */
+@Composable
+private fun sectionHeadingFont(): androidx.compose.ui.text.font.FontFamily? {
+  val name = LocalCardStyle.current.headingFont ?: return null
+  val context = androidx.compose.ui.platform.LocalContext.current
+  return remember(name) {
+    ee.schimke.ha.rc.HaFonts.typeface(context, name)?.let {
+      androidx.compose.ui.text.font.FontFamily(it)
+    }
   }
 }
 

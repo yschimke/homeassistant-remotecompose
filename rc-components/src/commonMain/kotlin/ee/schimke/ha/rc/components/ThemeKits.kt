@@ -243,6 +243,7 @@ internal object ThemeKits {
       visuals = HaVisualFamily.Lcd,
       readout = HaReadoutStyle.Screen,
       fontFamily = RemoteFontFamily.SansSerif,
+      headingFont = HaGSpotFont,
       valueWeight = FontWeight.Bold,
       motion = HaMotion.Instrument,
       grammar =
