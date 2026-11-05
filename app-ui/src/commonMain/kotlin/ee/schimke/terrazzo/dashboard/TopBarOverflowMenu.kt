@@ -21,9 +21,10 @@ import androidx.compose.runtime.setValue
  * they actually want to switch between.
  *
  * Kept short on purpose: managing which dashboards are listed and the debug logs live in Settings.
- * [onEditDashboard], when non-null, adds "Edit dashboard". [onInstallOnWatch], when non-null, adds
- * "Install on watch" for a connected watch without the watch app. [onOpenRoom], when non-null,
- * leads with "This room": controls for the room the user is in.
+ * [onEditDashboard], when non-null, adds "Edit dashboard", which is also where the agent is asked:
+ * editing by hand and by agent are one flow. [onInstallOnWatch], when non-null, adds "Install on
+ * watch" for a connected watch without the watch app. [onOpenRoom], when non-null, leads with "This
+ * room": controls for the room the user is in.
  */
 @Composable
 fun TopBarOverflowMenu(
@@ -33,8 +34,6 @@ fun TopBarOverflowMenu(
   onSignOut: () -> Unit,
   onInstallOnWatch: (() -> Unit)? = null,
   onEditDashboard: (() -> Unit)? = null,
-  /** The dashboard's agent sessions: open and recent, and a new one. */
-  onAskAgent: (() -> Unit)? = null,
   onOpenRoom: (() -> Unit)? = null,
 ) {
   var expanded by remember { mutableStateOf(false) }
@@ -47,7 +46,6 @@ fun TopBarOverflowMenu(
       MenuEntry("This room", close, it)
       HorizontalDivider()
     }
-    onAskAgent?.let { MenuEntry("Ask your agent", close, it) }
     onEditDashboard?.let { MenuEntry("Edit dashboard", close, it) }
     // One place for cards outside the app: the phone's home screen, the watch's widgets and the
     // cards the watch app shows.

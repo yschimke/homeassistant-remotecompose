@@ -30,6 +30,7 @@ import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
@@ -117,6 +118,9 @@ enum class EditorScope {
  * is told whether the draft has unsaved edits, with a way to drop them. [entities] are the home's
  * entities, for [EditorScope.Full]'s add-card picker.
  *
+ * [onAskAgent], when non-null, adds **Ask your agent** to the top bar: the same edit, described
+ * instead of done by hand. It is told whether the draft has unsaved edits, with a way to drop them.
+ *
  * [containerColor] is the dashboard's own background, so editing reads as the dashboard with more
  * controls rather than a different screen; unspecified, the theme's background.
  */
@@ -135,11 +139,14 @@ fun DashboardDraftEditor(
   backHandler: @Composable (onBack: () -> Unit) -> Unit = {},
   footer: @Composable (dirty: Boolean, discardEdits: () -> Unit) -> Unit = { _, _ -> },
   containerColor: Color = Color.Unspecified,
+  onAskAgent: ((dirty: Boolean, discardEdits: () -> Unit) -> Unit)? = null,
   renderCard: @Composable (JsonObject) -> Unit,
 ) {
   val full = scope == EditorScope.Full
   var draft by remember(edits) { mutableStateOf(edits.draft) }
-  var saved by remember(edits) { mutableStateOf(edits.draft) }
+  // What Home Assistant holds, not the draft: a draft handed in from elsewhere (an agent's, to
+  // adjust) arrives already unsaved.
+  var saved by remember(edits) { mutableStateOf(edits.baseline) }
   val history = remember(edits) { mutableStateListOf<JsonObject>() }
   var viewIndex by remember(edits) { mutableIntStateOf(0) }
   var selected by remember(edits) { mutableStateOf(initialSelection) }
@@ -219,6 +226,20 @@ fun DashboardDraftEditor(
           }
         },
         actions = {
+          onAskAgent?.let { ask ->
+            IconButton(
+              onClick = {
+                ask(dirty) {
+                  edits.edit(saved)
+                  draft = saved
+                  history.clear()
+                  selected = null
+                }
+              }
+            ) {
+              Icon(Icons.Filled.AutoAwesome, contentDescription = "Ask your agent")
+            }
+          }
           IconButton(
             enabled = history.isNotEmpty(),
             onClick = {

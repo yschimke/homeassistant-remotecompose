@@ -317,6 +317,8 @@ CARD_GUIDE = {
         'Lay views out with "type": "sections" and group related cards into sections that start '
         "with a heading card. harc shows sections in one column on a phone, side by side wider.",
         "Give a card a short name or title when the entity's own name is unclear.",
+        "Reordering is an edit like any other: move cards within and between sections, and "
+        "sections within a view, when the request asks for a different order or layout.",
         "Don't add automations, scripts, scenes or helpers: this only edits dashboards.",
     ],
     "sizing": [

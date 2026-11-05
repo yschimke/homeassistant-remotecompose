@@ -94,6 +94,8 @@ session in the phone app or the panel.
 - Lay views out with `"type": "sections"` and group related cards into sections that start with a
   heading card. harc shows sections in one column on a phone and side by side on wider screens.
 - Give every card a short `name` or `title` when the entity's own name is unclear.
+- Reordering is an edit like any other: move cards within and between sections, and sections
+  within a view, when the request asks for a different order or layout.
 - Do not add automations, scripts, scenes or helpers.
 
 These rules match `CARD_GUIDE` in `custom_components/terrazzo/mcp.py`, which `get_card_guide`

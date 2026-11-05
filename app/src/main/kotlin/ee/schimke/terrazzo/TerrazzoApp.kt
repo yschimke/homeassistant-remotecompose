@@ -836,9 +836,6 @@ private fun DashboardsRoot(
               onSignOut = onSignOut,
               onInstallOnWatch = installOnWatch,
               onEditDashboard = { editorOpen = true },
-              onAskAgent =
-                if (phoneAgentEdits != null) ({ agentSessions = AgentSessionsTarget(null) })
-                else null,
               onOpenRoom = onOpenRoom,
             )
           },

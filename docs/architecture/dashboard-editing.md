@@ -38,7 +38,7 @@ Assistant is the editor in practice.
 
 | | Without the integration | With the integration |
 | --- | --- | --- |
-| Phone | Light edits on the live dashboard; **Open in Home Assistant** for HA's own editor; an **Install with HACS** card | Light edits; **Ask your agent** (dashboard or section sessions, copy a prompt); preview, apply or discard agent drafts |
+| Phone | Light edits on the live dashboard; **Open in Home Assistant** for HA's own editor; an **Install with HACS** card | Light edits; **Ask your agent** from the editor's top bar (dashboard or section sessions, copy a prompt); preview, apply or discard agent drafts, or **Adjust** one: it comes back into the editor as an unsaved edit to move and resize by hand and save |
 | Web panel | — | Full editor (add cards, sections and views, card settings); **Ask your agent** and the same draft preview |
 | Agent | — (no supported path) | MCP: read dashboards and entities, read the card guide, submit drafts to an edit session |
 

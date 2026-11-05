@@ -159,6 +159,15 @@ fun DashboardEditorScreen(
         reloads++
         onSaved()
       },
+      // One flow: the agent's draft comes back here as an unsaved edit, to move and resize by hand
+      // and save like any other.
+      onEditDraft =
+        (load as? EditorLoad.Ready)?.let { ready ->
+          { config ->
+            ready.edits.edit(config)
+            askingAgent = false
+          }
+        },
     )
     return
   }
@@ -235,7 +244,23 @@ internal fun DashboardEditor(
   // The agent works from the dashboard in Home Assistant, and leaving for it drops this draft:
   // what to do once the person agrees.
   var confirmAgent by remember { mutableStateOf<(() -> Unit)?>(null) }
+  // Asking the agent is part of editing: from the top bar, and from the card at the end. Offered
+  // unless Home Assistant is known to lack the integration that holds agent sessions.
+  val askAgent: ((Boolean, () -> Unit) -> Unit)? =
+    onAskAgent
+      ?.takeIf { integration != IntegrationStatus.Missing }
+      ?.let { ask ->
+        { dirty, discardEdits ->
+          if (dirty)
+            confirmAgent = {
+              discardEdits()
+              ask()
+            }
+          else ask()
+        }
+      }
   DashboardDraftEditor(
+    onAskAgent = askAgent,
     edits = edits,
     title = title,
     snackbars = snackbars,
@@ -247,19 +272,7 @@ internal fun DashboardEditor(
     // The dashboard's background, so editing reads as the same screen with more controls.
     containerColor = dashboardBackground(),
     footer = { dirty, discardEdits ->
-      val ask =
-        onAskAgent
-          ?.takeIf { integration == IntegrationStatus.Installed }
-          ?.let { ask ->
-            {
-              if (dirty)
-                confirmAgent = {
-                  discardEdits()
-                  ask()
-                }
-              else ask()
-            }
-          }
+      val ask = askAgent?.let { ask -> { ask(dirty, discardEdits) } }
       IntegrationCard(integration, editInHomeAssistant, onAskAgent = ask) {
         openUrl(context, HACS_INSTALL_URL)
       }

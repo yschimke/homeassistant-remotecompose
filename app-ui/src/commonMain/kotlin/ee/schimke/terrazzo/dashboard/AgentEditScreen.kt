@@ -105,6 +105,11 @@ fun AgentEditScreen(
    * doesn't show drafts.
    */
   onDashboard: (() -> Unit)? = null,
+  /**
+   * Takes a draft into the dashboard editor to move and resize by hand before saving: offered as
+   * **Adjust** beside **Use it**. Null where there is no editor to take it.
+   */
+  onEditDraft: ((JsonObject) -> Unit)? = null,
   renderCard: @Composable (CardKey, CardConfig) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -321,6 +326,7 @@ fun AgentEditScreen(
                   tell("Done: your dashboard uses it.")
                 }
               },
+              onEditDraft = onEditDraft,
               onUndo = {
                 run {
                   session = edits.undo(current.id)
@@ -448,6 +454,7 @@ private fun SessionReview(
   busy: Boolean,
   writeBlockedReason: String?,
   onApply: (AgentEditSession.Draft) -> Unit,
+  onEditDraft: ((JsonObject) -> Unit)?,
   onUndo: () -> Unit,
   onDiscard: () -> Unit,
   onRender: (draftId: String, png: ByteArray) -> Unit,
@@ -527,6 +534,9 @@ private fun SessionReview(
           session.isOpen -> {
             if (draft != null)
               Button(enabled = canWrite, onClick = { onApply(draft) }) { Text("Use it") }
+            val config = draft?.config
+            if (onEditDraft != null && config != null)
+              OutlinedButton(enabled = !busy, onClick = { onEditDraft(config) }) { Text("Adjust") }
             TextButton(enabled = !busy, onClick = onDiscard) { Text("Stop") }
           }
         }
