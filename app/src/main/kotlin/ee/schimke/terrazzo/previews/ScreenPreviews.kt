@@ -1551,6 +1551,8 @@ private fun EditorPreviewHost(selection: ee.schimke.ha.client.dashboard.CardAddr
     onSaved = {},
     launch = {},
     initialSelection = selection,
+    integration = ee.schimke.terrazzo.dashboard.IntegrationStatus.Installed,
+    onAskAgent = {},
   )
 }
 
