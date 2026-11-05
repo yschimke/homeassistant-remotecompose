@@ -16,28 +16,25 @@ import androidx.compose.runtime.setValue
 
 /**
  * Trailing overflow menu in the dashboard top-bar. Carries the destinations the [DashboardSwitcher]
- * dropdown deliberately doesn't: Settings, installed widgets, sign-out. Dashboard quick-switching
- * stays in the title-side dropdown so users don't have to scroll past "Widgets" / "Settings"
- * entries to reach the dashboards they actually want to switch between.
+ * dropdown deliberately doesn't: widgets, Settings, sign-out. Dashboard quick-switching stays in
+ * the title-side dropdown so users don't have to scroll past other entries to reach the dashboards
+ * they actually want to switch between.
  *
- * [onEditDashboard], when non-null, adds "Edit dashboard" at the top, and [onManageDashboards]
- * "Manage dashboards" (which of Home Assistant's dashboards the switcher lists) after it.
- * [onInstallOnWatch], when non-null, adds "Install on watch" for a connected watch without the
- * watch app. [onOpenRoom], when non-null, leads with "This room": controls for the room the user is
- * in.
+ * Kept short on purpose: managing which dashboards are listed and the debug logs live in Settings.
+ * [onEditDashboard], when non-null, adds "Edit dashboard". [onInstallOnWatch], when non-null, adds
+ * "Install on watch" for a connected watch without the watch app. [onOpenRoom], when non-null,
+ * leads with "This room": controls for the room the user is in.
  */
 @Composable
 fun TopBarOverflowMenu(
   onOpenSettings: () -> Unit,
+  /** "Manage widgets": home screen and watch widgets, and the cards the watch shows. */
   onOpenWidgets: () -> Unit,
-  onOpenPinned: () -> Unit,
-  onOpenLogs: (() -> Unit)?,
   onSignOut: () -> Unit,
   onInstallOnWatch: (() -> Unit)? = null,
   onEditDashboard: (() -> Unit)? = null,
   /** The dashboard's agent sessions: open and recent, and a new one. */
   onAskAgent: (() -> Unit)? = null,
-  onManageDashboards: (() -> Unit)? = null,
   onOpenRoom: (() -> Unit)? = null,
 ) {
   var expanded by remember { mutableStateOf(false) }
@@ -52,17 +49,12 @@ fun TopBarOverflowMenu(
     }
     onAskAgent?.let { MenuEntry("Ask your agent", close, it) }
     onEditDashboard?.let { MenuEntry("Edit dashboard", close, it) }
-    onManageDashboards?.let { MenuEntry("Manage dashboards", close, it) }
-    // Where cards live outside the app: one entry per place, named for the place rather than the
-    // mechanism, so "pinned" and "widgets" no longer read as the same thing twice.
-    // "Widgets": the phone's home screen and the watch's alike, the name the watch points to.
-    MenuEntry("Widgets", close, onOpenWidgets)
-    MenuEntry("Cards on your watch", close, onOpenPinned)
+    // One place for cards outside the app: the phone's home screen, the watch's widgets and the
+    // cards the watch app shows.
+    MenuEntry("Manage widgets", close, onOpenWidgets)
     onInstallOnWatch?.let { MenuEntry("Install on watch", close, it) }
     HorizontalDivider()
     MenuEntry("Settings", close, onOpenSettings)
-    // Hidden unless the user enabled the logs view in Settings.
-    onOpenLogs?.let { MenuEntry("Logs", close, it) }
     MenuEntry("Sign out", close, onSignOut)
   }
 }

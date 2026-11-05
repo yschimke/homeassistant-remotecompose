@@ -71,7 +71,6 @@ import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.dashboard.EntityMoreInfo
-import ee.schimke.terrazzo.dashboard.ManagePinnedContent
 import ee.schimke.terrazzo.dashboard.PinRowItem
 import ee.schimke.terrazzo.dashboard.ProvideScreenSkin
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
@@ -652,8 +651,6 @@ private fun TopBarPreviewHost(
         TopBarOverflowMenu(
           onOpenSettings = {},
           onOpenWidgets = {},
-          onOpenPinned = {},
-          onOpenLogs = null,
           onSignOut = {},
           onEditDashboard = {},
         )
@@ -1364,7 +1361,7 @@ private val SAMPLE_PIN_ITEMS: List<PinRowItem> =
 )
 @Composable
 fun Screen_ManagePinned() = PhoneHost {
-  ManagePinnedContent(items = SAMPLE_PIN_ITEMS, onReorder = {}, onUnpin = {}, onBack = {})
+  WidgetsContent(widgets = emptyList(), onBack = {}, watchCards = SAMPLE_PIN_ITEMS)
 }
 
 @Preview(
@@ -1375,7 +1372,7 @@ fun Screen_ManagePinned() = PhoneHost {
 )
 @Composable
 fun Screen_ManagePinned_Empty() = PhoneHost {
-  ManagePinnedContent(items = emptyList(), onReorder = {}, onUnpin = {}, onBack = {})
+  WidgetsContent(widgets = emptyList(), onBack = {}, watchHelp = true)
 }
 
 private val SAMPLE_SYNC_STATS =
@@ -1479,12 +1476,12 @@ fun Play_Phone_04_Picker() =
     )
   }
 
-/** Phone slot 5 — the cards the phone shows on the watch ("Cards on your watch"). */
+/** Phone slot 5 — the cards the phone shows on the watch ("Manage widgets" → Watch app). */
 @Preview(name = "play · phone · watch cards", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
 fun Play_Phone_05_WatchCards() =
   PhoneHost(darkMode = DarkModePref.Light) {
-    ManagePinnedContent(items = SAMPLE_PIN_ITEMS, onReorder = {}, onUnpin = {}, onBack = {})
+    WidgetsContent(widgets = emptyList(), onBack = {}, watchCards = SAMPLE_PIN_ITEMS)
   }
 
 /** 7-inch tablet slot 1 — home (dashboard view). */

@@ -29,6 +29,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Button
@@ -113,6 +114,10 @@ internal fun SettingsScreen(
   onSignOut: () -> Unit,
   onBack: () -> Unit,
   onOpenSyncDiagnostics: (() -> Unit)?,
+  /** Which of Home Assistant's dashboards the switcher lists; null in demo mode. */
+  onManageDashboards: (() -> Unit)? = null,
+  /** The debug logs view, offered while "Show logs view" is on. */
+  onOpenLogs: (() -> Unit)? = null,
 ) {
   val isDemo = session is DemoHaSession
   val graph = LocalTerrazzoGraph.current
@@ -284,6 +289,15 @@ internal fun SettingsScreen(
       }
 
       SettingsGroup("Dashboard") {
+        onManageDashboards?.let { manage ->
+          SettingRow(
+            title = "Manage dashboards",
+            summary = "Choose which Home Assistant dashboards the dashboard switcher lists.",
+            modifier = Modifier.clickable(onClick = manage),
+          ) {
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+          }
+        }
         SettingSwitch(
           title = "Start with controls unlocked",
           summary =
@@ -338,12 +352,15 @@ internal fun SettingsScreen(
         SettingSwitch(
           title = "Show logs view",
           summary =
-            "Exposes a debug screen via the overflow menu listing recent " +
+            "Adds a debug screen, opened below, listing recent " +
               "dashboard-entity updates, connect / disconnect events, and " +
               "locally-dispatched service calls. In-memory only.",
           checked = logsViewEnabled,
           onCheckedChange = { scope.launch { graph.preferencesStore.setLogsViewEnabled(it) } },
         )
+        if (logsViewEnabled && onOpenLogs != null) {
+          OutlinedButton(onClick = onOpenLogs) { Text("Open logs") }
+        }
         SettingSwitch(
           title = "Flash cards on data change",
           summary =

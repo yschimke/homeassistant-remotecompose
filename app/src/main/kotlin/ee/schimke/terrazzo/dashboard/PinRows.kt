@@ -1,29 +1,18 @@
 package ee.schimke.terrazzo.dashboard
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,20 +27,17 @@ import ee.schimke.terrazzo.core.pin.MobilePinnedSection
 import kotlinx.coroutines.launch
 
 /**
- * Manages the user's Wear pin set: lists every pinned card and pinned section in their unified
- * ordering, lets the user reorder via up/down arrows (drag handles are a polish follow-up), and
- * lets them unpin.
- *
- * Cards and sections share a single ordered list — the position here is the position the watch's
- * top-level nav will render. New pins land at the tail; the user reshuffles from this screen.
+ * The user's Wear pin set as rows for the "On your watch" section of the widgets screen
+ * ([ee.schimke.terrazzo.widget.WidgetsScreen]): every pinned card and pinned section in their
+ * unified ordering, which is the order the watch's top-level nav renders. New pins land at the
+ * tail; the user reshuffles with [PinRow]'s arrows.
  */
 @Composable
-fun ManagePinnedScreen(onBack: () -> Unit) {
+internal fun rememberPinRows(): PinRows {
   val pinStore = LocalTerrazzoGraph.current.pinStore
   val scope = rememberCoroutineScope()
   val cards by pinStore.cards.collectAsState(initial = emptyList())
   val sections by pinStore.sections.collectAsState(initial = emptyList())
-
   val items: List<PinRowItem> =
     remember(cards, sections) {
       buildList {
@@ -60,8 +46,7 @@ fun ManagePinnedScreen(onBack: () -> Unit) {
       }
         .sortedBy { it.orderIndex }
     }
-
-  ManagePinnedContent(
+  return PinRows(
     items = items,
     onReorder = { newOrder -> scope.launch { pinStore.reorder(newOrder) } },
     onUnpin = { item ->
@@ -72,89 +57,31 @@ fun ManagePinnedScreen(onBack: () -> Unit) {
         }
       }
     },
-    onBack = onBack,
   )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun ManagePinnedContent(
-  items: List<PinRowItem>,
-  onReorder: (List<String>) -> Unit,
-  onUnpin: (PinRowItem) -> Unit,
-  onBack: () -> Unit,
-) {
-  Scaffold(
-    topBar = {
-      TopAppBar(
-        title = { Text("Cards on your watch") },
-        navigationIcon = {
-          IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-          }
-        },
-      )
-    },
-    contentWindowInsets = WindowInsets.safeDrawing,
-  ) { padding ->
-    if (items.isEmpty()) {
-      Column(
-        modifier =
-          Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-      ) {
-        Text("Nothing on your watch yet", style = MaterialTheme.typography.titleMedium)
-        Text(
-          "Long-press a card and turn on Show on watch, or tap the pin on a section " +
-            "heading. They appear in this order in the watch app.",
-          style = MaterialTheme.typography.bodyMedium,
-        )
-      }
-      return@Scaffold
-    }
+/** The pinned rows and what reordering or unpinning one does. */
+internal class PinRows(
+  val items: List<PinRowItem>,
+  val onReorder: (List<String>) -> Unit,
+  val onUnpin: (PinRowItem) -> Unit,
+)
 
-    LazyColumn(
-      modifier =
-        Modifier.fillMaxSize()
-          .padding(padding)
-          .consumeWindowInsets(padding)
-          .padding(horizontal = 16.dp),
-      contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 12.dp),
-      verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-      items(items, key = { it.key }) { item ->
-        val index = items.indexOfFirst { it.key == item.key }
-        PinRow(
-          item = item,
-          canMoveUp = index > 0,
-          canMoveDown = index >= 0 && index < items.lastIndex,
-          onMoveUp = {
-            val reordered =
-              items.toMutableList().apply { add(index - 1, removeAt(index)) }.map { it.key }
-            onReorder(reordered)
-          },
-          onMoveDown = {
-            val reordered =
-              items.toMutableList().apply { add(index + 1, removeAt(index)) }.map { it.key }
-            onReorder(reordered)
-          },
-          onUnpin = { onUnpin(item) },
-        )
-      }
-    }
-  }
-}
+/** [items] with the row at [index] moved by [delta] (-1 up, +1 down), as keys. */
+internal fun reorderedKeys(items: List<PinRowItem>, index: Int, delta: Int): List<String> =
+  items.toMutableList().apply { add(index + delta, removeAt(index)) }.map { it.key }
 
 @Composable
-private fun PinRow(
+internal fun PinRow(
   item: PinRowItem,
   canMoveUp: Boolean,
   canMoveDown: Boolean,
   onMoveUp: () -> Unit,
   onMoveDown: () -> Unit,
   onUnpin: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
-  Card(modifier = Modifier.fillMaxWidth()) {
+  Card(modifier = modifier.fillMaxWidth()) {
     Row(
       modifier =
         Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
@@ -170,7 +97,9 @@ private fun PinRow(
       IconButton(onClick = onMoveDown, enabled = canMoveDown) {
         Icon(Icons.Filled.ArrowDownward, contentDescription = "Move down")
       }
-      IconButton(onClick = onUnpin) { Icon(Icons.Filled.Close, contentDescription = "Unpin") }
+      IconButton(onClick = onUnpin) {
+        Icon(Icons.Filled.Close, contentDescription = "Remove from watch")
+      }
     }
   }
 }

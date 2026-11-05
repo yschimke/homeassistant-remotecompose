@@ -71,9 +71,14 @@ class WearAppInstallHelper(private val context: Context, scope: CoroutineScope) 
         }
           .getOrDefault(emptySet())
         val installedIds = (installed + legacy).mapTo(HashSet()) { it.id }
-        registry.nodeClient.connectedNodes.await().map { node ->
-          PairedWatch(node.id, node.displayName, appInstalled = node.id in installedIds)
-        }
+        // Only watches paired directly with this phone: a node reached through the cloud is
+        // neither nearby nor somewhere the user can finish an install.
+        registry.nodeClient.connectedNodes
+          .await()
+          .filter { it.isNearby }
+          .map { node ->
+            PairedWatch(node.id, node.displayName, appInstalled = node.id in installedIds)
+          }
       }
       .retryWhen { error, _ ->
         Log.i(TAG, "watch install status unavailable: ${error.message}")

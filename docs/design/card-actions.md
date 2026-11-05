@@ -11,7 +11,7 @@ and the card details screen. Each finding is followed by what replaced it.
 | Long-press sheet | Fork in card designer · Add to home screen · History and details |
 | Install sheet ("Make it yours") | name field · launcher size preview · dashboard note · **Pin to Wear** · **Monitor for 15 min** · Install widget |
 | Details screen | launcher size preview (again) · Prepare a home screen widget · Design or fix this card · **Card style** (two rows of chips) · History · Other actions → **Add to Home Screen** (again) · Open in Home Assistant |
-| Overflow menu | Settings · Manage widgets · Manage pinned · Wear widgets · Install on watch · Logs · Sign out |
+| Overflow menu | This room · Ask your agent · Edit dashboard · Manage widgets (home screen, watch widgets, watch app cards) · Install on watch (only while a connected watch lacks the app) · Settings (Manage dashboards, Logs) · Sign out |
 | Manage widgets | always "No widgets yet", even with widgets installed |
 
 ## Findings

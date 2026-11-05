@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Watch
@@ -46,13 +47,19 @@ import androidx.compose.ui.unit.dp
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.wearsync.WatchWidget
 import ee.schimke.terrazzo.core.widget.WidgetStore
+import ee.schimke.terrazzo.dashboard.PinRow
+import ee.schimke.terrazzo.dashboard.PinRowItem
 import ee.schimke.terrazzo.dashboard.historyTitle
+import ee.schimke.terrazzo.dashboard.rememberPinRows
+import ee.schimke.terrazzo.dashboard.reorderedKeys
 
 /**
- * Widgets, reached via the dashboard top-bar's overflow menu: the cards this app has on the
- * launcher, against the [WidgetStore.MAX_WIDGETS] cap, and the Terrazzo widgets placed on paired
- * watches. A home screen row opens the widget's editor ([WidgetConfigureActivity]); a watch row
- * chooses the card that widget shows. The launcher and the watch own placement and removal.
+ * Manage widgets, reached via the dashboard top-bar's overflow menu: every place cards live outside
+ * the app. The cards this app has on the launcher, against the [WidgetStore.MAX_WIDGETS] cap; the
+ * Terrazzo widgets placed on paired watches; and the cards and sections the watch app lists, in its
+ * order. A home screen row opens the widget's editor ([WidgetConfigureActivity]); a watch widget
+ * row chooses the card that widget shows; a watch app row moves up, down or off the watch. The
+ * launcher and the watch own widget placement and removal.
  */
 @Composable
 fun WidgetsScreen(onBack: () -> Unit) {
@@ -63,6 +70,7 @@ fun WidgetsScreen(onBack: () -> Unit) {
   val wearable by graph.wearSyncManager.wearableAvailable.collectAsState()
   // Drop rows for widgets the user has since removed from the launcher before listing them.
   LaunchedEffect(Unit) { WidgetSync.reconcile(context.applicationContext) }
+  val pins = rememberPinRows()
   WidgetsContent(
     widgets =
       installed.map {
@@ -83,6 +91,9 @@ fun WidgetsScreen(onBack: () -> Unit) {
     },
     onBack = onBack,
     onEdit = { context.startActivity(WidgetConfigureActivity.intent(context, it.widgetId)) },
+    watchCards = pins.items,
+    onReorderWatchCards = pins.onReorder,
+    onRemoveWatchCard = pins.onUnpin,
   )
 }
 
@@ -118,10 +129,12 @@ internal fun watchWidgetLabel(widget: WatchWidget, named: Boolean): String {
 }
 
 /**
- * The screen's content for [widgets] and [watchWidgets], apart from the stores so a preview can
- * draw it. Tapping a watch widget offers its cards; [onChooseWatchCard] takes the choice. Each
- * watch widget's switch turns its live updates on or off ([onWatchLiveUpdates]). With [watchHelp]
- * (this phone can reach a watch) and no watch widget yet, the Watch section says how to add one.
+ * The screen's content for [widgets], [watchWidgets] and [watchCards], apart from the stores so a
+ * preview can draw it. Tapping a watch widget offers its cards; [onChooseWatchCard] takes the
+ * choice. Each watch widget's switch turns its live updates on or off ([onWatchLiveUpdates]). With
+ * [watchHelp] (this phone can reach a watch) and no watch widget yet, the Watch section says how to
+ * add one. [watchCards] are what the watch app lists, reordered with [onReorderWatchCards] and
+ * taken off the watch with [onRemoveWatchCard].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -133,6 +146,9 @@ internal fun WidgetsContent(
   watchHelp: Boolean = false,
   onChooseWatchCard: (WatchWidget, String) -> Unit = { _, _ -> },
   onWatchLiveUpdates: (WatchWidget, Boolean) -> Unit = { _, _ -> },
+  watchCards: List<PinRowItem> = emptyList(),
+  onReorderWatchCards: (List<String>) -> Unit = {},
+  onRemoveWatchCard: (PinRowItem) -> Unit = {},
 ) {
   var choosing by remember { mutableStateOf<WatchWidget?>(null) }
   choosing?.let { widget ->
@@ -148,7 +164,7 @@ internal fun WidgetsContent(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Widgets") },
+        title = { Text("Manage widgets") },
         navigationIcon = {
           IconButton(onClick = onBack) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -158,7 +174,7 @@ internal fun WidgetsContent(
     },
     contentWindowInsets = WindowInsets.safeDrawing,
   ) { padding ->
-    if (widgets.isEmpty() && watchWidgets.isEmpty()) {
+    if (widgets.isEmpty() && watchWidgets.isEmpty() && watchCards.isEmpty()) {
       Column(
         modifier =
           Modifier.fillMaxSize()
@@ -183,7 +199,7 @@ internal fun WidgetsContent(
           text =
             "Long-press a card on a dashboard and choose Add to home screen. You can have up " +
               "to ${WidgetStore.MAX_WIDGETS}." +
-              if (watchHelp) "\n\n$WATCH_WIDGET_STEPS" else "",
+              if (watchHelp) "\n\n$WATCH_WIDGET_STEPS\n\n$WATCH_CARDS_STEPS" else "",
           style = MaterialTheme.typography.bodyMedium,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
           textAlign = TextAlign.Center,
@@ -262,6 +278,31 @@ internal fun WidgetsContent(
           )
         }
       }
+      if (watchCards.isNotEmpty() || watchHelp) {
+        item { SectionHeader("Watch app") }
+        item {
+          Text(
+            if (watchCards.isEmpty()) WATCH_CARDS_STEPS
+            else
+              "The cards and sections the watch app lists, in this order. Long-press a card on a " +
+                "dashboard to add it.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+          )
+        }
+        itemsIndexed(watchCards, key = { _, it -> "pin/${it.key}" }) { index, item ->
+          PinRow(
+            item = item,
+            canMoveUp = index > 0,
+            canMoveDown = index < watchCards.lastIndex,
+            onMoveUp = { onReorderWatchCards(reorderedKeys(watchCards, index, -1)) },
+            onMoveDown = { onReorderWatchCards(reorderedKeys(watchCards, index, +1)) },
+            onUnpin = { onRemoveWatchCard(item) },
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+          )
+        }
+      }
     }
   }
 }
@@ -273,6 +314,11 @@ internal fun WidgetsContent(
 internal const val WATCH_WIDGET_STEPS =
   "On your watch, swipe left from the watch face to the end, tap Add widget and choose " +
     "Terrazzo. Then pick its card here: any card you show on your watch."
+
+/** How to put a card in the watch app's list. */
+internal const val WATCH_CARDS_STEPS =
+  "To show a card in the watch app, long-press it on a dashboard and turn on Show on watch, or " +
+    "tap the pin on a section heading."
 
 @Composable
 private fun SectionHeader(text: String) {

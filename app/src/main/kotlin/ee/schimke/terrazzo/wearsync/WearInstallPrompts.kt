@@ -34,8 +34,9 @@ private sealed interface WearPrompt {
  * in [ee.schimke.terrazzo.core.prefs.PreferencesStore.wearPromptsShown]. (Wear widgets are set up
  * on the watch, from the cards shown there: the phone has no widget prompt.)
  *
- * Returns the install action for the overflow menu's "Install on watch" while a connected watch
- * lacks the app, so the offer stays reachable after its snackbar is gone; null otherwise.
+ * Returns the install action for the overflow menu's "Install on watch" only while a nearby,
+ * connected watch is found without the app, so the offer stays reachable after its snackbar is
+ * gone; null otherwise (no watch, or every watch has the app), and the menu leaves it out.
  */
 @Composable
 fun wearInstallPrompts(snackbars: SnackbarHostState): (() -> Unit)? {
@@ -45,7 +46,12 @@ fun wearInstallPrompts(snackbars: SnackbarHostState): (() -> Unit)? {
   val scope = rememberCoroutineScope()
   val watches by app.wearAppInstallHelper.watches.collectAsState(initial = emptyList())
   val shown by graph.preferencesStore.wearPromptsShown.collectAsState(initial = null)
-  val missing = watches.firstOrNull { !it.appInstalled }
+  // A watch that reports Terrazzo widgets is running the watch app, whatever its capability says
+  // (a sideloaded or differently signed watch build doesn't match the phone's capability lookup).
+  val watchWidgets by graph.wearSyncManager.watchWidgets.collectAsState()
+  val missing = watches.firstOrNull { watch ->
+    !watch.appInstalled && watchWidgets.none { it.nodeId == watch.nodeId }
+  }
 
   val install: (PairedWatch) -> Unit = { watch ->
     scope.launch {

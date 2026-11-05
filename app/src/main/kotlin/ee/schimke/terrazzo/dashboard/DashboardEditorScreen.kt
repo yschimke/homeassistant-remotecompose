@@ -244,6 +244,8 @@ internal fun DashboardEditor(
     launch = launch,
     initialSelection = initialSelection,
     backHandler = { back -> BackHandler(onBack = back) },
+    // The dashboard's background, so editing reads as the same screen with more controls.
+    containerColor = dashboardBackground(),
     footer = { dirty, discardEdits ->
       val ask =
         onAskAgent

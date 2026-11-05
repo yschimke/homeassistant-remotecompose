@@ -68,6 +68,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
@@ -114,6 +116,9 @@ enum class EditorScope {
  * [backHandler] hooks the platform's back gesture (none on the web); [footer] ends the canvas and
  * is told whether the draft has unsaved edits, with a way to drop them. [entities] are the home's
  * entities, for [EditorScope.Full]'s add-card picker.
+ *
+ * [containerColor] is the dashboard's own background, so editing reads as the dashboard with more
+ * controls rather than a different screen; unspecified, the theme's background.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -129,6 +134,7 @@ fun DashboardDraftEditor(
   initialSelection: CardAddress? = null,
   backHandler: @Composable (onBack: () -> Unit) -> Unit = {},
   footer: @Composable (dirty: Boolean, discardEdits: () -> Unit) -> Unit = { _, _ -> },
+  containerColor: Color = Color.Unspecified,
   renderCard: @Composable (JsonObject) -> Unit,
 ) {
   val full = scope == EditorScope.Full
@@ -313,6 +319,7 @@ fun DashboardDraftEditor(
       }
     },
     snackbarHost = { SnackbarHost(snackbars) },
+    containerColor = containerColor.takeOrElse { MaterialTheme.colorScheme.background },
   ) { padding ->
     Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
       edits.readOnlyReason?.let {

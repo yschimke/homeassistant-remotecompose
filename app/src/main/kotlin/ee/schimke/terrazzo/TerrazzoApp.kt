@@ -46,7 +46,6 @@ import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
-import ee.schimke.terrazzo.dashboard.ManagePinnedScreen
 import ee.schimke.terrazzo.dashboard.SkinInstallWorker
 import ee.schimke.terrazzo.dashboard.Skins
 import ee.schimke.terrazzo.dashboard.StudioCardPreview
@@ -343,13 +342,30 @@ private fun AuthenticatedShell(
   var selectionInitial by remember { mutableStateOf<Set<String>?>(null) }
   var selectionInitialResolved by remember { mutableStateOf(false) }
 
-  // Dashboard management is optional and always returns to the dashboard.
+  // Screens opened from Settings (dashboard management, logs, sync diagnostics) return to it;
+  // everything else returns to the dashboard.
   val navigateBack: () -> Unit = {
-    when {
-      screen == AppScreen.SyncDiagnostics -> screen = AppScreen.Settings
-      else -> screen = AppScreen.Dashboards
-    }
+    screen =
+      when (screen) {
+        AppScreen.SyncDiagnostics,
+        AppScreen.Logs,
+        AppScreen.ChooseDashboards -> AppScreen.Settings
+        else -> AppScreen.Dashboards
+      }
   }
+  // Demo mode has a curated dashboard set: nothing to choose.
+  val manageDashboards: (() -> Unit)? =
+    if (session is DemoHaSession) null
+    else {
+      {
+        selectionInitialResolved = false
+        scope.launch {
+          selectionInitial = graph.preferencesStore.selectedDashboardUrlsNow()
+          selectionInitialResolved = true
+        }
+        screen = AppScreen.ChooseDashboards
+      }
+    }
   BackHandler(enabled = screen != AppScreen.Dashboards, onBack = navigateBack)
 
   TerrazzoNavigation(screen, onBack = navigateBack) { destination ->
@@ -360,23 +376,8 @@ private fun AuthenticatedShell(
           initialDashboard = initialDashboard,
           onOpenSettings = { screen = AppScreen.Settings },
           onOpenWidgets = { screen = AppScreen.Widgets },
-          onOpenPinned = { screen = AppScreen.Pinned },
-          onOpenLogs = { screen = AppScreen.Logs },
           onOpenRoom = { screen = AppScreen.Room },
           onSignOut = onSignOut,
-          // Demo mode has a curated dashboard set: nothing to choose.
-          onManageDashboards =
-            if (session is DemoHaSession) null
-            else {
-              {
-                selectionInitialResolved = false
-                scope.launch {
-                  selectionInitial = graph.preferencesStore.selectedDashboardUrlsNow()
-                  selectionInitialResolved = true
-                }
-                screen = AppScreen.ChooseDashboards
-              }
-            },
         )
       AppScreen.Settings -> {
         val wearReady by graph.wearSyncManager.wearableAvailable.collectAsState()
@@ -384,6 +385,8 @@ private fun AuthenticatedShell(
           session = session,
           onSignOut = onSignOut,
           onBack = { screen = AppScreen.Dashboards },
+          onManageDashboards = manageDashboards,
+          onOpenLogs = { screen = AppScreen.Logs },
           onOpenSyncDiagnostics =
             if (wearReady) {
               { screen = AppScreen.SyncDiagnostics }
@@ -391,7 +394,6 @@ private fun AuthenticatedShell(
         )
       }
       AppScreen.Widgets -> WidgetsScreen(onBack = { screen = AppScreen.Dashboards })
-      AppScreen.Pinned -> ManagePinnedScreen(onBack = { screen = AppScreen.Dashboards })
       AppScreen.SyncDiagnostics -> {
         val streaming by graph.wearSyncManager.streamActive.collectAsState()
         ee.schimke.terrazzo.wearsync.SyncDiagnosticsScreen(
@@ -401,7 +403,7 @@ private fun AuthenticatedShell(
         )
       }
       AppScreen.Logs ->
-        ee.schimke.terrazzo.logs.LogsScreen(onBack = { screen = AppScreen.Dashboards })
+        ee.schimke.terrazzo.logs.LogsScreen(onBack = { screen = AppScreen.Settings })
       AppScreen.Room -> {
         // The same lock the dashboard's top bar and Settings set: locked shows, doesn't send.
         val permanentWrite by
@@ -426,7 +428,7 @@ private fun AuthenticatedShell(
             state = DashboardListState.Loading,
             initialSelection = null,
             onConfirm = {},
-            onBack = { screen = AppScreen.Dashboards },
+            onBack = { screen = AppScreen.Settings },
             title = "Manage dashboards",
           )
         } else {
@@ -435,9 +437,9 @@ private fun AuthenticatedShell(
             initialSelection = selectionInitial,
             onConfirm = { urls ->
               scope.launch { graph.preferencesStore.setSelectedDashboardUrls(urls) }
-              screen = AppScreen.Dashboards
+              screen = AppScreen.Settings
             },
-            onBack = { screen = AppScreen.Dashboards },
+            onBack = { screen = AppScreen.Settings },
             title = "Manage dashboards",
           )
         }
@@ -457,18 +459,13 @@ private fun DashboardsRoot(
   initialDashboard: String?,
   onOpenSettings: () -> Unit,
   onOpenWidgets: () -> Unit,
-  onOpenPinned: () -> Unit,
-  onOpenLogs: () -> Unit,
   onOpenRoom: () -> Unit,
   onSignOut: () -> Unit,
-  onManageDashboards: (() -> Unit)?,
 ) {
   val graph = LocalTerrazzoGraph.current
   val scope = rememberCoroutineScope()
   val dashboards by rememberSelectedDashboardListState(session)
   val context = LocalContext.current
-  val logsViewEnabled by graph.preferencesStore.logsViewEnabled.collectAsState(initial = false)
-
   val readyDashboards = (dashboards as? DashboardListState.Ready)?.dashboards.orEmpty()
   var opened by rememberSaveable {
     mutableStateOf(preferredDashboardPath(readyDashboards, initialDashboard))
@@ -836,15 +833,12 @@ private fun DashboardsRoot(
             TopBarOverflowMenu(
               onOpenSettings = onOpenSettings,
               onOpenWidgets = onOpenWidgets,
-              onOpenPinned = onOpenPinned,
-              onOpenLogs = if (logsViewEnabled) onOpenLogs else null,
               onSignOut = onSignOut,
               onInstallOnWatch = installOnWatch,
               onEditDashboard = { editorOpen = true },
               onAskAgent =
                 if (phoneAgentEdits != null) ({ agentSessions = AgentSessionsTarget(null) })
                 else null,
-              onManageDashboards = onManageDashboards,
               onOpenRoom = onOpenRoom,
             )
           },
