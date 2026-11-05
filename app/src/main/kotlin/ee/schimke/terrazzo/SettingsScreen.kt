@@ -97,6 +97,8 @@ import ee.schimke.terrazzo.dashboard.CardStyles
 import ee.schimke.terrazzo.notify.HaNotifications
 import ee.schimke.terrazzo.notify.TestNotification
 import ee.schimke.terrazzo.shared.ReportFeedbackButton
+import ee.schimke.terrazzo.shared.isPlayUpdateTester
+import ee.schimke.terrazzo.shared.setPlayUpdateTester
 import ee.schimke.terrazzo.ui.appThemeOrNull
 import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
@@ -424,6 +426,7 @@ internal fun SettingsScreen(
 
       SettingsGroup("Help", divider = false) {
         ReportFeedbackButton(version = BuildConfig.VERSION_NAME)
+        AppVersionRow(version = BuildConfig.VERSION_NAME)
         // Sync diagnostics — buried at the bottom of Settings on
         // purpose. Shows DataItem write / MessageClient send counts
         // so power users can sanity-check wear-side chatter. Hidden
@@ -434,6 +437,47 @@ internal fun SettingsScreen(
         }
       }
     }
+  }
+}
+
+/** Taps on [AppVersionRow] that turn on early Play updates for internal testers. */
+private const val TESTER_TAPS = 7
+
+/**
+ * The installed version. Tapping it [TESTER_TAPS] times opts this device in to Play updates as soon
+ * as they appear (internal testers); otherwise updates are offered once they are a week old. While
+ * opted in, a switch shows the choice and turns it back off.
+ */
+@Composable
+private fun AppVersionRow(version: String) {
+  val context = LocalContext.current
+  var tester by remember { mutableStateOf(isPlayUpdateTester(context)) }
+  var taps by remember { mutableStateOf(0) }
+  fun choose(on: Boolean) {
+    tester = on
+    setPlayUpdateTester(context, on)
+  }
+  Text(
+    "Version $version",
+    style = MaterialTheme.typography.bodySmall,
+    color = MaterialTheme.colorScheme.onSurfaceVariant,
+    modifier =
+      Modifier.clickable(enabled = !tester) {
+          taps++
+          if (taps >= TESTER_TAPS) {
+            taps = 0
+            choose(true)
+          }
+        }
+        .padding(horizontal = 12.dp, vertical = 8.dp),
+  )
+  if (tester) {
+    SettingSwitch(
+      title = "Early updates",
+      summary = "Update as soon as a new version is on Play, for testers.",
+      checked = true,
+      onCheckedChange = { choose(it) },
+    )
   }
 }
 
