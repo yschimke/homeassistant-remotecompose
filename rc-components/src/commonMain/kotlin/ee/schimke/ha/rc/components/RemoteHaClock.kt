@@ -89,7 +89,9 @@ fun RemoteHaClock(
     ) {
       // On a large LCD-window clock the title is the watch's wordmark, set under the date instead;
       // without one it is the face's own, G-SPOT.
-      val wordmark = window && data.isLarge && !compact && !narrow
+      // A launcher widget fits the clock to its fixed cell (it passes [timeSizeSp]) and budgets
+      // only the title and date, so the wordmark is for cards that grow to their content.
+      val wordmark = window && data.isLarge && !compact && !narrow && timeSizeSp == null
       if (data.title != null && !compact && !narrow && !wordmark) {
         RemoteText(
           text = cardTitle(data.title),
