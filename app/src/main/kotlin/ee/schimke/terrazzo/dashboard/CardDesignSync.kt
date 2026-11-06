@@ -144,7 +144,7 @@ object CardDesignSync {
    * The bearer for [choice]'s server: its Home Assistant's access token, minted as needed, for that
    * Home Assistant's own design add-on; the device token for any other.
    */
-  private fun tokenFor(context: Context, choice: CardDesignChoice): suspend () -> String {
+  internal fun tokenFor(context: Context, choice: CardDesignChoice): suspend () -> String {
     val ha = choice.homeAssistant
     if (ha.isBlank()) return { choice.token }
     val graph = context.terrazzoGraph()
@@ -189,7 +189,7 @@ class CardDesignSyncWorker(context: Context, params: WorkerParameters) :
         CardDesignSync.networkRepository(applicationContext, choice).refresh()
       }
     // The fonts the designs name, beside them: only faces the cache lacks are fetched.
-    CardFonts.refresh(applicationContext, choice.serverUrl)
+    CardFonts.refresh(applicationContext, choice)
     if (result == RefreshResult.Updated) CardDesignGeneration.manifestStored()
     if (result == RefreshResult.Updated || result == RefreshResult.Filled) CardDesignSync.stored()
     // Yesterday's card usage goes up with the nightly refresh, only if the user shares it, and only

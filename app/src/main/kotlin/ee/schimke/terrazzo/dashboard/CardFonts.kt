@@ -26,11 +26,19 @@ object CardFonts {
     HaFontLibrary.install(faces)
   }
 
-  /** Fetch [serverUrl]'s fonts the cache lacks, and install them when anything changed. */
-  suspend fun refresh(context: Context, serverUrl: String) {
+  /**
+   * Fetch [choice]'s server's fonts the cache lacks, with the bearer its designs use, and install
+   * them when anything changed.
+   */
+  suspend fun refresh(context: Context, choice: CardDesignChoice) {
+    val serverUrl = choice.serverUrl
     if (serverUrl.isBlank()) return
     val changed = runCatching {
-      DesignFonts.refresh(serverUrl, store(context, serverUrl))
+      DesignFonts.refresh(
+        serverUrl,
+        store(context, serverUrl),
+        CardDesignSync.tokenFor(context, choice),
+      )
     }
       .getOrDefault(false)
     if (changed) load(context, serverUrl)

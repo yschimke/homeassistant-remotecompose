@@ -6,6 +6,7 @@ import ee.schimke.ha.design.CardFontManifest
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -52,11 +53,16 @@ class DesignFontsTest {
     }
   }
 
-  private fun client(manifest: String, requests: MutableList<String> = mutableListOf()) =
+  private fun client(
+    manifest: String,
+    requests: MutableList<String> = mutableListOf(),
+    bearers: MutableList<String?> = mutableListOf(),
+  ) =
     HttpClient(
       MockEngine { request ->
         val path = request.url.encodedPath
         requests += path
+        bearers += request.headers[HttpHeaders.Authorization]
         when (path) {
           "/designs/v1/fonts/fonts.json" -> respond(manifest, HttpStatusCode.OK)
           "/designs/v1/fonts/digital7.ttf" -> respond(digital7, HttpStatusCode.OK)
@@ -120,5 +126,18 @@ class DesignFontsTest {
     val down = HttpClient(MockEngine { respond("", HttpStatusCode.ServiceUnavailable) })
     assertFalse(DesignFonts.refresh("https://ha.coo.ee/designs/v1", down, store))
     assertEquals(2, DesignFonts.cached(store).size)
+  }
+
+  @Test
+  fun everyRequestCarriesTheServersBearer() = runTest {
+    val bearers = mutableListOf<String?>()
+    DesignFonts.refresh(
+      "https://ha.coo.ee/designs/v1",
+      client(manifest(), bearers = bearers),
+      MemoryFontStore(),
+      token = { "ha-access" },
+    )
+    assertEquals(listOf("Bearer ha-access"), bearers.distinct())
+    assertEquals(3, bearers.size, "the manifest and both faces")
   }
 }
