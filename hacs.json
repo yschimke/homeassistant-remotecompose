@@ -2,6 +2,5 @@
   "name": "Terrazzo Remote Compose",
   "zip_release": true,
   "filename": "terrazzo.zip",
-  "hide_default_branch": true,
-  "homeassistant": "2024.7.0"
+  "homeassistant": "2026.11.0"
 }

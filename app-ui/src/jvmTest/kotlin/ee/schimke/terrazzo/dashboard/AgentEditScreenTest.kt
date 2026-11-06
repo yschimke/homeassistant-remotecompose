@@ -265,7 +265,7 @@ class AgentEditScreenTest {
       agentEditFailure(HaCommandException("terrazzo/edit/apply", "unauthorized", "Unauthorized")),
     )
     assertEquals(
-      "Update the Terrazzo integration in HACS to ask an agent.",
+      "Update the Terrazzo integration in the Marketplace to ask an agent.",
       agentEditFailure(HaCommandException("terrazzo/edit/start", "unknown_command", "Unknown")),
     )
   }

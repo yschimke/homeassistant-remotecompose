@@ -4,12 +4,16 @@
   "after_dependencies": [
     "lovelace"
   ],
+  "categories": [
+    "presence_location.phones_companion_apps"
+  ],
   "codeowners": [
     "@yschimke"
   ],
   "config_flow": true,
   "dependencies": [
     "frontend",
+    "http",
     "panel_custom"
   ],
   "documentation": "https://github.com/yschimke/homeassistant-remotecompose/blob/main/docs/HOME_ASSISTANT.md",

@@ -40,17 +40,17 @@ class PackageTest(unittest.TestCase):
                              'strings.json', 'translations/en.json']:
                     self.assertIn('custom_components/terrazzo/' + name, names)
                 self.assertFalse(any('__pycache__' in name for name in names))
-            # HACS unpacks directly into the integration directory. Installing
+            # The Marketplace unpacks directly into the integration directory. Installing
             # either archive must produce byte-for-byte identical runnable files.
-            with zipfile.ZipFile(root / 'output/terrazzo.zip') as hacs, zipfile.ZipFile(archive) as manual:
-                self.assertIn('manifest.json', hacs.namelist())
-                self.assertFalse(any(name.startswith('custom_components/') for name in hacs.namelist()))
+            with zipfile.ZipFile(root / 'output/terrazzo.zip') as release, zipfile.ZipFile(archive) as manual:
+                self.assertIn('manifest.json', release.namelist())
+                self.assertFalse(any(name.startswith('custom_components/') for name in release.namelist()))
                 self.assertEqual(set(manual.namelist()),
-                                 {'custom_components/terrazzo/' + name for name in hacs.namelist()})
-                for name in hacs.namelist():
-                    self.assertEqual(hacs.read(name), manual.read('custom_components/terrazzo/' + name))
+                                 {'custom_components/terrazzo/' + name for name in release.namelist()})
+                for name in release.namelist():
+                    self.assertEqual(release.read(name), manual.read('custom_components/terrazzo/' + name))
                 install = root / 'config/custom_components/terrazzo'
-                hacs.extractall(install)
+                release.extractall(install)
                 self.assertEqual((install / 'frontend/wasm/app.wasm').read_text(), 'fixture')
             for line in (root / 'output/SHA256SUMS-home-assistant.txt').read_text().splitlines():
                 digest, name = line.split()
@@ -83,17 +83,15 @@ class PackageTest(unittest.TestCase):
                     module.package(wasm, root / 'player.js', root / 'unused', invalid)
                 self.assertFalse((root / 'unused').exists())
 
-    def test_hacs_metadata_selects_built_release_only(self):
+    def test_marketplace_metadata_selects_built_release_only(self):
         metadata = json.loads((module.ROOT / 'hacs.json').read_text())
         self.assertTrue(metadata['zip_release'])
-        self.assertTrue(metadata['hide_default_branch'])
         self.assertEqual(metadata['filename'], 'terrazzo.zip')
-        # __init__.py registers its frontend with StaticPathConfig / async_register_static_paths,
-        # which arrived in Home Assistant 2024.7; HACS must not offer it to older cores.
-        init = (module.ROOT / 'custom_components/terrazzo/__init__.py').read_text()
-        if 'async_register_static_paths' in init:
-            floor = tuple(int(part) for part in metadata['homeassistant'].split('.')[:2])
-            self.assertGreaterEqual(floor, (2024, 7))
+        # The Marketplace (Home Assistant 2026.11) downloads the release asset itself: the
+        # aiohttp client of earlier cores and of HACS rejects GitHub's oversized
+        # Content-Security-Policy header on release redirects (hacs/integration#5643).
+        floor = tuple(int(part) for part in metadata['homeassistant'].split('.')[:2])
+        self.assertGreaterEqual(floor, (2026, 11))
         config = json.loads((module.ROOT / '.github/release-please-config.json').read_text())
         self.assertIn({'type': 'json', 'path': 'custom_components/terrazzo/manifest.json',
                        'jsonpath': '$.version'}, config['packages']['.']['extra-files'])

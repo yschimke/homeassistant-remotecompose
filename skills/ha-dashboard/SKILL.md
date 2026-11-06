@@ -14,7 +14,7 @@ applies it as themselves ([`docs/architecture/dashboard-editing.md`](../../docs/
 ## Connecting
 
 Edit sessions are served by the Terrazzo integration (`custom_components/terrazzo`, installed from
-HACS) through its MCP server at `https://<home>/api/terrazzo/mcp`. Add it as a remote MCP server;
+the Marketplace) through its MCP server at `https://<home>/api/terrazzo/mcp`. Add it as a remote MCP server;
 connector apps sign in with Home Assistant's own OAuth, command-line agents send a long-lived token
 of the user the integration's options name as the MCP user. That user can read dashboards and
 submit drafts, and — when it isn't an administrator, as it should be — cannot save a dashboard.

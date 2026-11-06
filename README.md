@@ -5,6 +5,23 @@ cards into [RemoteCompose](https://developer.android.com/jetpack/androidx/releas
 documents. Android and iOS app targets are included. The SwiftUI app under [`ios/`](ios/) uses the
 pure Swift/UIKit player from `yschimke/rc-players`; shared Kotlin data/client layers remain KMP.
 
+## Home Assistant integration
+
+**Terrazzo Remote Compose** brings the same renderer into Home Assistant 2026.11 or newer. It adds
+a sidebar panel at `/terrazzo` that shows your Lovelace dashboards, suited to wall panels and
+tablets, behind Home Assistant's own sign-in. It also adds a **Remote Compose** card to the card
+picker, and an MCP server so AI assistants can read your home and propose dashboard edits for you
+to apply. It is a custom integration, not an app, so it works on Home Assistant OS, Container and
+Core. Setup, wall-panel options, updates and rollback are in
+[the integration guide](https://github.com/yschimke/homeassistant-remotecompose/blob/main/docs/HOME_ASSISTANT.md).
+
+<!-- ha-marketplace:exclude-start -->
+[![Open your Home Assistant instance and open a repository in the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=yschimke&repository=homeassistant-remotecompose&category=integration)
+
+Or in Home Assistant, go to **Settings → Marketplace → ⋮ → Add from link** and enter
+`https://github.com/yschimke/homeassistant-remotecompose`.
+<!-- ha-marketplace:exclude-end -->
+
 ## Rendered previews
 
 Full gallery (every card type, light + dark):
@@ -59,6 +76,9 @@ nobody has re-implemented the card set natively. That is the gap this
 library fills: take a card config + an HA state snapshot and emit a
 RemoteCompose byte stream that any RC player can render (Android apps,
 Glance widgets, Wear launcher tiles, ESP32 devices, etc.).
+
+<!-- The rest is for developers of this repository; the Marketplace page leaves it out. -->
+<!-- ha-marketplace:exclude-start -->
 
 ## Module layout
 
@@ -173,7 +193,7 @@ Local packaging: `./gradlew :app-ui:packageDistributionForCurrentOS`. Override t
 
 ### Web app
 
-For a local authenticated `/terrazzo` wall-panel URL and Remote Compose Lovelace cards, including HACS installation, updates and rollback, see [the Home Assistant integration installation guide](docs/HOME_ASSISTANT.md).
+For a local authenticated `/terrazzo` wall-panel URL and Remote Compose Lovelace cards, including Marketplace installation, updates and rollback, see [the Home Assistant integration installation guide](docs/HOME_ASSISTANT.md).
 
 The production Wasm app is deployed by **Wasm website** to [GitHub Pages](https://yschimke.github.io/homeassistant-remotecompose/). Pull requests build the same production distribution and exercise browser flows before deployment. Existing documentation and Android authentication pages remain available alongside the app.
 

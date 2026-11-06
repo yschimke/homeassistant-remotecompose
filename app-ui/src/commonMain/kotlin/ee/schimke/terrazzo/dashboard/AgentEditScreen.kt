@@ -369,7 +369,7 @@ internal fun agentEditFailure(e: Exception): String =
     e is HaCommandException && e.code == "unauthorized" ->
       "Only a Home Assistant administrator can apply or undo a draft."
     e is HaCommandException && e.code == "unknown_command" ->
-      "Update the Terrazzo integration in HACS to ask an agent."
+      "Update the Terrazzo integration in the Marketplace to ask an agent."
     e is HaCommandException -> e.reason
     else -> e.message ?: "Home Assistant didn't answer."
   }

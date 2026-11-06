@@ -290,7 +290,7 @@ internal fun DashboardEditor(
     footer = { dirty, discardEdits ->
       val ask = askAgent?.let { ask -> { ask(dirty, discardEdits) } }
       IntegrationCard(integration, editInHomeAssistant, onAskAgent = ask) {
-        openUrl(context, HACS_INSTALL_URL)
+        openUrl(context, MARKETPLACE_INSTALL_URL)
       }
     },
   ) { card ->
@@ -358,7 +358,7 @@ enum class IntegrationStatus {
 /**
  * Where the editing the phone doesn't do lives: Home Assistant's own dashboard editor for adding
  * cards, sections and dashboards, an agent through the Terrazzo integration ([onAskAgent], when it
- * is installed), and — when it isn't — the integration from HACS.
+ * is installed), and — when it isn't — the integration from the Marketplace.
  */
 @Composable
 internal fun IntegrationCard(
@@ -396,20 +396,20 @@ internal fun IntegrationCard(
       if (status != IntegrationStatus.Installed) {
         HorizontalDivider(Modifier.padding(vertical = 4.dp))
         Text(
-          "The Terrazzo integration, from HACS, shows your dashboards in Home Assistant as harc " +
-            "draws them, and lets AI assistants read your home.",
+          "The Terrazzo integration, from the Marketplace, shows your dashboards in Home " +
+            "Assistant as harc draws them, and lets AI assistants read your home.",
           style = MaterialTheme.typography.bodyMedium,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        FilledTonalButton(onClick = onInstall) { Text("Install with HACS") }
+        FilledTonalButton(onClick = onInstall) { Text("Install from the Marketplace") }
       }
     }
   }
 }
 
-/** HACS's page for this repository, through My Home Assistant (docs/HOME_ASSISTANT.md). */
-internal const val HACS_INSTALL_URL =
-  "https://my.home-assistant.io/redirect/hacs_repository/" +
+/** The Marketplace page for this repository, through My Home Assistant (docs/HOME_ASSISTANT.md). */
+internal const val MARKETPLACE_INSTALL_URL =
+  "https://my.home-assistant.io/redirect/marketplace_repository/" +
     "?owner=yschimke&repository=homeassistant-remotecompose&category=integration"
 
 /** [urlPath]'s dashboard in Home Assistant's frontend, opened in edit mode. */
