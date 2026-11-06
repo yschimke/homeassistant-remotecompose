@@ -10,7 +10,7 @@
         },
         "data_description": {
           "title": "The name of the panel in the sidebar.",
-          "dashboard": "Leave empty to start on the dashboard picker. Any dashboard can still be opened from the panel, or bookmarked as /terrazzo?dashboard=<url path>."
+          "dashboard": "Leave empty to start on the dashboard picker. Any dashboard can still be opened from the panel, or bookmarked as /terrazzo?dashboard= followed by its URL path."
         }
       }
     },

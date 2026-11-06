@@ -13,6 +13,7 @@
   "config_flow": true,
   "dependencies": [
     "frontend",
+    "http",
     "panel_custom"
   ],
   "documentation": "https://github.com/yschimke/homeassistant-remotecompose/blob/main/docs/HOME_ASSISTANT.md",
