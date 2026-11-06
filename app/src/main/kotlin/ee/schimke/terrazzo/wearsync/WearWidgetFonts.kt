@@ -21,7 +21,10 @@ internal object WearWidgetFonts {
   /** A watch's display, for the glyphs: a Wear widget scales them with the watch's own. */
   private const val WATCH_DENSITY = 2f
 
-  /** Filtered designs by their source's hash: the same design is sent again on every change. */
+  /**
+   * Filtered designs by their source's hash and the locale they were filtered for: the same design
+   * is sent again on every change.
+   */
   private val filtered: MutableMap<String, ByteArray> =
     Collections.synchronizedMap(
       object : LinkedHashMap<String, ByteArray>(CACHE_SIZE, 0.75f, true) {
@@ -37,21 +40,23 @@ internal object WearWidgetFonts {
   ): List<Pair<WearSlotDesign, ByteArray>> {
     if (choice == null || choice.serverUrl.isBlank()) return picked
     val token = CardDesignSync.tokenFor(context, choice)
+    // Live text in the language the phone shows: its letters, or text where they won't fit.
+    val locale = Locale.getDefault().toLanguageTag()
     return picked.map { (design, bytes) ->
       if (!DesignFilters.namesAny(bytes, WidgetBitmapFonts.FAMILIES)) return@map design to bytes
+      // The same design filters differently for another language: both make the key.
+      val key = "${design.sha256}:$locale"
       val withFonts =
-        filtered[design.sha256]
+        filtered[key]
           ?: DesignFilters.bitmapFonts(
               choice.serverUrl,
               bytes,
               DesignFilters.WEAR_WIDGETS,
               WATCH_DENSITY,
               token,
-              // Live text in the language the phone shows: its letters, or text where they won't
-              // fit.
-              locale = Locale.getDefault().toLanguageTag(),
+              locale = locale,
             )
-            ?.also { filtered[design.sha256] = it }
+            ?.also { filtered[key] = it }
           ?: return@map design to bytes
       // The watch keeps a design by its hash: the filtered one is another design.
       design.copy(sha256 = Sha256.hex(withFonts)) to withFonts
