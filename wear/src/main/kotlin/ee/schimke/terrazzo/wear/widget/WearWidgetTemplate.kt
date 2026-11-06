@@ -135,7 +135,7 @@ internal object WearWidgetTemplate {
     val fill =
       RemoteColor.createNamedRemoteColor(
         CONTAINER_COLOR,
-        background?.base ?: SURFACE_CONTAINER_LOW,
+        (background?.base ?: SURFACE_CONTAINER_LOW).toArgb(),
         RemoteState.Domain.User,
       )
     RemoteWearContainer(background, fill, corner, level, cardStyle.wearLevelLook()) {

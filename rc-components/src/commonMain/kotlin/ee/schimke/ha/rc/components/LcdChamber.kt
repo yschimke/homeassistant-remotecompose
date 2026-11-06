@@ -347,7 +347,10 @@ private fun windowLook(dark: Boolean): WindowLook {
   }
 }
 
-/** The most colours a gradient may hold: rc-player-compose refuses a document with more. */
+/**
+ * How many colours a window's gradient samples: smooth across the short runs they cover, and well
+ * under the 255 every player takes, so each stays small.
+ */
 private const val MaxGradientColors = 16
 
 /**

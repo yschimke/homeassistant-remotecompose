@@ -68,7 +68,7 @@ class NamedBitmapOverrideTest {
         ) {
           val bitmap = rememberLocalNamedRemoteBitmap(NAME) { solid(red).asImageBitmap() }
           RemoteImage(
-            remoteBitmap = bitmap,
+            bitmap = bitmap,
             contentDescription = null,
             modifier = RemoteModifier.fillMaxSize(),
             contentScale = ContentScale.FillBounds,

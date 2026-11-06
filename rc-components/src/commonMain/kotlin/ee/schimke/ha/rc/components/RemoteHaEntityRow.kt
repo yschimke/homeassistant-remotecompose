@@ -2,7 +2,7 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.action.Action
+import androidx.compose.remote.creation.compose.action.RemoteAction
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -213,7 +213,7 @@ fun RemoteHaToggleSwitch(
       else -> animateRemoteFloat(target, motion.effectsFast)
     }
 
-  val host: Action? = tapAction.toRemoteAction()
+  val host: RemoteAction? = tapAction.toRemoteAction()
   val clickable = if (host != null) RemoteModifier.clickable(host) else RemoteModifier
 
   RemoteHaToggleSwitchByProgress(

@@ -505,7 +505,7 @@ private fun MarkdownBadge(image: MarkdownInline.Image) {
   // [description] is null inside the labelled tap target, so the badge is announced once.
   val badge: @Composable @RemoteComposable (description: RemoteString?) -> Unit = { description ->
     RemoteImage(
-      remoteBitmap = rb,
+      bitmap = rb,
       contentDescription = description,
       modifier = RemoteModifier.height(BADGE_HEIGHT_DP.rdp).width(BADGE_WIDTH_DP.rdp),
       contentScale = ContentScale.Fit,
