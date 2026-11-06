@@ -54,10 +54,10 @@ internal class WidgetFilters(fonts: CardFonts) {
   /** One filter at a time: the text stack draws on one thread. */
   private val lock = Mutex()
 
-  /** Filtered documents by their source's hash, host and density: designs repeat across clients. */
+  /** Filtered documents by their whole input: designs repeat across clients. */
   private val cache =
-    object : LinkedHashMap<String, Filtered>(CACHE_SIZE, 0.75f, true) {
-      override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Filtered>?) =
+    object : LinkedHashMap<Key, Filtered>(CACHE_SIZE, 0.75f, true) {
+      override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Key, Filtered>?) =
         size > CACHE_SIZE
     }
 
@@ -68,7 +68,7 @@ internal class WidgetFilters(fonts: CardFonts) {
     density: Float,
     live: LiveText = LiveText(),
   ): Filtered? = lock.withLock {
-    val key = "${Sha256.hex(bytes)}:${host.wire}:$density:${live.hashCode()}"
+    val key = Key(Sha256.hex(bytes), host, density, live)
     cache[key]?.let {
       return@withLock it
     }
@@ -82,6 +82,14 @@ internal class WidgetFilters(fonts: CardFonts) {
       )
       .also { cache[key] = it }
   }
+
+  /** A filter's whole input, compared by value: two inputs never share an entry. */
+  private data class Key(
+    val sha256: String,
+    val host: WidgetHost,
+    val density: Float,
+    val live: LiveText,
+  )
 
   class Filtered(val bytes: ByteArray, val converted: Int, val skipped: Int)
 
