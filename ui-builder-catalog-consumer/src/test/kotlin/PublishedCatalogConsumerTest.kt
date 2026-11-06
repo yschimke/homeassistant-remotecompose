@@ -20,14 +20,14 @@ class PublishedCatalogConsumerTest {
       )
     for (record in records.components) {
       assertNull(
-        javaClass.classLoader.getResource(record.symbol.jvmOwner.replace('.', '/') + ".class")
+        javaClass.classLoader.getResource(record.symbol.jvmOwner.replace('.', '/') + ".class"),
       )
     }
     val text = Files.readString(directory.resolve("ui-builder.json"))
     val policy = Json.decodeFromString(UiBuilderCatalogFile.serializer(), text).statusSemantics
     val composed =
       assertIs<PublishedUiBuilderCatalog.Result.Composed>(
-        PublishedUiBuilderCatalog.compose(text, records, ExportCapabilitiesV1.Builder().build())
+        PublishedUiBuilderCatalog.compose(text, records, ExportCapabilitiesV1.Builder().build()),
       )
     assertEquals(
       policy.components.keys + policy.builtins.keys,

@@ -74,9 +74,9 @@ class MemoryBenchmark {
 
   private fun MacrobenchmarkScope.browse() {
     scrollList()
-    openSection()
+    expandSection()
     scrollList()
-    backToTopLevel()
+    collapseSection()
   }
 
   private companion object {

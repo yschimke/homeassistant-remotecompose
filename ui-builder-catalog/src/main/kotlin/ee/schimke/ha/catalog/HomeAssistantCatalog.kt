@@ -435,7 +435,7 @@ internal object HomeAssistantLegacy {
         val name = field(Entity::name, AdapterValueCodecs.String)
         val state = field(Entity::state, AdapterValueCodecs.String, default = "")
         construct { Entity(it[name], it[state]) }
-      }
+      },
     )
 
   private fun <T> read(properties: JsonObject, name: String, codec: AdapterValueCodec<T>): T? =

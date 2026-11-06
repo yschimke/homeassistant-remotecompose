@@ -5,7 +5,7 @@ package ee.schimke.ha.rc.components
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
-import androidx.compose.remote.creation.compose.action.Action
+import androidx.compose.remote.creation.compose.action.RemoteAction
 import androidx.compose.remote.creation.compose.action.valueChange
 import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
@@ -109,7 +109,7 @@ internal constructor(val unlocked: RemoteFloat, private val hint: MutableRemoteI
     get() = hint != null
 
   /** The action that shows the unlock strip; null when there is nothing to unlock. */
-  val touched: Action?
+  val touched: RemoteAction?
     get() = hint?.let {
       hasControls = true
       valueChange(it, 1.ri)

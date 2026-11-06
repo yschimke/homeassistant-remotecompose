@@ -37,7 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PaintingStyle
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
@@ -72,8 +71,8 @@ import org.robolectric.annotation.GraphicsMode
  * the renders go to `build/wear-profile-capabilities/` and the table to
  * `build/wear-profile-capabilities.md` (see `docs/architecture/wear-container-design.md`).
  *
- * A dash path effect validates and plays too, but the player draws it solid, so a dashed stroke is
- * not one of the container's tools.
+ * A dashed stroke isn't one of the container's tools: the player drew a dash path effect solid, and
+ * Remote Compose 1.0.0-alpha23 no longer lets a paint carry one.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -169,22 +168,6 @@ class WearWidgetProfileCapabilitiesTest {
               }
               with(RemoteBrush.sweepGradient(colors)) { applyTo(paint, size) }
               drawRoundRect(paint, cornerRadius = RemoteOffset(20f.rf, 20f.rf))
-            },
-          )
-        },
-      "dashed stroke" to
-        {
-          RemoteBox(
-            RemoteModifier.fillMaxSize().drawWithContent {
-              drawRoundRect(
-                RemotePaint {
-                  style = PaintingStyle.Stroke
-                  strokeWidth = 3f.rf
-                  color = Color.Red.rc
-                  pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f))
-                },
-                cornerRadius = RemoteOffset(20f.rf, 20f.rf),
-              )
             },
           )
         },

@@ -50,7 +50,7 @@ fun KeyScreen(
                 if (initialDetail) ListDetailPaneScaffoldRole.Detail
                 else ListDetailPaneScaffoldRole.List,
                 initialSelectedIndex,
-              )
+              ),
             ),
         )
       val selected = navigator.currentDestination?.contentKey ?: 0
@@ -87,7 +87,7 @@ fun KeyScreen(
                   Text(
                     if (screen == "choose-dashboards")
                       "${if (viewing) "Viewing · " else ""}${panel.title} · ${if (panel.id in selectedDashboards) "Included" else "Hidden"}"
-                    else if (viewing) "Selected · ${panel.title}" else panel.title
+                    else if (viewing) "Selected · ${panel.title}" else panel.title,
                   )
                 }
               }
@@ -108,7 +108,7 @@ fun KeyScreen(
                     rememberSaveable(selected) {
                       mutableStateOf(
                         if (selected == 0) "http://homeassistant.local:8123"
-                        else "https://home.example.com"
+                        else "https://home.example.com",
                       )
                     }
                   TextField(

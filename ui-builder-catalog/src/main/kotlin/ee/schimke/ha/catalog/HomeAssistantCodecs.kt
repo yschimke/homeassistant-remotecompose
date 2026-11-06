@@ -915,7 +915,7 @@ val PictureElementCodec: AdapterValueCodec<HaPictureElementUiData> =
     case(
       "stateIcon",
       AdapterValueCodecs.obj<HaPictureElementUiData.StateIcon>(
-        "$UI.HaPictureElementUiData.StateIcon"
+        "$UI.HaPictureElementUiData.StateIcon",
       ) {
         val icon = field(HaPictureElementUiData.StateIcon::icon, IconCodec)
         val accent = field(HaPictureElementUiData.StateIcon::accent, ColorCodec)
@@ -938,7 +938,7 @@ val PictureElementCodec: AdapterValueCodec<HaPictureElementUiData> =
     case(
       "stateLabel",
       AdapterValueCodecs.obj<HaPictureElementUiData.StateLabel>(
-        "$UI.HaPictureElementUiData.StateLabel"
+        "$UI.HaPictureElementUiData.StateLabel",
       ) {
         val text = field(HaPictureElementUiData.StateLabel::text, Text)
         val position =
@@ -949,7 +949,7 @@ val PictureElementCodec: AdapterValueCodec<HaPictureElementUiData> =
     case(
       "serviceButton",
       AdapterValueCodecs.obj<HaPictureElementUiData.ServiceButton>(
-        "$UI.HaPictureElementUiData.ServiceButton"
+        "$UI.HaPictureElementUiData.ServiceButton",
       ) {
         val label = field(HaPictureElementUiData.ServiceButton::label, Text)
         val accent = field(HaPictureElementUiData.ServiceButton::accent, ColorCodec)

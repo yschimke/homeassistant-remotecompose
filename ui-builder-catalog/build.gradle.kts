@@ -91,8 +91,8 @@ val stageAndroidCatalogBundle =
       dependsOn(":$module:bundleDebugAar")
       from(
         library.layout.buildDirectory.file(
-          "intermediates/aar_main_jar/debug/syncDebugLibJars/classes.jar"
-        )
+          "intermediates/aar_main_jar/debug/syncDebugLibJars/classes.jar",
+        ),
       ) {
         into("lib")
         rename { "$module.jar" }
@@ -107,8 +107,8 @@ val stageAndroidCatalogBundle =
       dependsOn(":$module:bundleAndroidMainAar")
       from(
         library.layout.buildDirectory.file(
-          "intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar"
-        )
+          "intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
+        ),
       ) {
         into("lib")
         rename { "$module.jar" }

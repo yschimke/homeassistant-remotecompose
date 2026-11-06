@@ -239,7 +239,7 @@ private fun GlanceImage(data: HaPictureGlanceData, theme: RemoteHaTheme, modifie
       ?.let { rememberPictureBitmap(it, data.pictureEntityId) }
       ?.let { picture ->
         RemoteImage(
-          remoteBitmap = picture,
+          bitmap = picture,
           contentDescription = data.title?.let { cardTitle(it) } ?: "image".rs,
           modifier = RemoteModifier.fillMaxSize(),
           // Fill-crop, as HA's picture cards cover their area.

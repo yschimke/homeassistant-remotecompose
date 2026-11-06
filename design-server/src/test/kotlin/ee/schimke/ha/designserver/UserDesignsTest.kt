@@ -395,6 +395,10 @@ class UserDesignsTest {
             exportedWear += root["componentId"]!!.jsonPrimitive.content
             when (document["id"]!!.jsonPrimitive.content) {
               "wear-wear-small" -> call.respondBytes(wearSmall, ContentType.Application.OctetStream)
+              // An export the watch can't play: not a Remote Compose document at all. (A phone
+              // document is no longer a reliable stand-in, since Wear widgets now play core text.)
+              "wear-wear-large" ->
+                call.respondBytes(byteArrayOf(1, 2, 3), ContentType.Application.OctetStream)
               // `framed`: its Wear widgets leave the container frame to the watch; `foreign`'s
               // read values nothing supplies.
               "framed-wear-small",

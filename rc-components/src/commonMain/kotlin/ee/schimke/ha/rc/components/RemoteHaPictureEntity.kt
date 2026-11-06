@@ -124,7 +124,7 @@ fun RemoteHaPictureEntity(
           val rb = rememberPictureBitmap(data.imageUrl, data.pictureEntityId)
           if (rb != null) {
             RemoteImage(
-              remoteBitmap = rb,
+              bitmap = rb,
               contentDescription = entityName(data.entityId, data.name),
               modifier = RemoteModifier.fillMaxSize(),
               // Fill-crop, not letterbox: the image owns the

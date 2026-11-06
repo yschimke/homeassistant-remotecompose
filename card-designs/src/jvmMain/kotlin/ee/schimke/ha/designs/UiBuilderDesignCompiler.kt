@@ -394,7 +394,7 @@ class UiBuilderDesignCompiler(
           // Baked in, under a name of the design's own (no dot): no card binding reads it.
           val bitmap = rememberLocalNamedRemoteBitmap(assetName(key)) { images.getValue(key) }
           RemoteImage(
-            remoteBitmap = bitmap,
+            bitmap = bitmap,
             contentDescription = literal(properties["contentDescription"])?.contentOrNull?.rs,
             modifier = modifier,
             contentScale = contentScale(literal(properties["contentScale"])?.contentOrNull),
