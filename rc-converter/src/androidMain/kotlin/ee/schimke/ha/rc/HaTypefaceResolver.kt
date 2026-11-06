@@ -5,7 +5,6 @@ import android.graphics.Typeface
 import androidx.compose.remote.player.core.platform.FontInstance
 import androidx.compose.remote.player.core.platform.TypefaceResolver
 import androidx.compose.remote.player.view.RemoteComposePlayer
-import ee.schimke.ha.rc.components.HaBundledFonts
 import java.io.File
 
 /**
@@ -14,10 +13,12 @@ import java.io.File
  * other name falls through to the player's own resolver.
  *
  * - `digital7` — Digital-7 Mono Italic (Style-7, free for non-commercial use), the segment face of
- *   the GShark watch face that the Rugged Digital kit is drawn from, with its designer. Its bytes
- *   live in [HaBundledFonts], shared with the Compose players.
+ *   the GShark watch face that the Rugged Digital kit is drawn from, with its designer.
  * - `gspot` — Russo One (SIL Open Font License 1.1), the nearest open face to the G-SPOT wordmark's
  *   lettering, for Rugged Digital's section headings.
+ *
+ * Their bytes come from the design server, by way of the font cache ([HaFontLibrary]), shared with
+ * the Compose players; a name the cache doesn't hold yet resolves to null.
  */
 object HaFonts {
   /** The name a card uses for Digital-7 Mono Italic. */
@@ -28,15 +29,15 @@ object HaFonts {
 
   private val loaded = HashMap<String, Typeface?>()
 
-  /** The bundled typeface for [name], or null when the app doesn't ship one. */
+  /** The typeface for [name] from the font cache, or null when it holds none. */
   @Synchronized
   fun typeface(context: Context, name: String): Typeface? {
-    val bytes = HaBundledFonts.bytes(name) ?: return null
-    return loaded.getOrPut(name) {
+    val face = HaFontLibrary.bytes(name) ?: return null
+    return loaded.getOrPut(face.sha256) {
       runCatching {
-        // Typeface reads a file, not bytes: write the font out once per process.
-        val file = File(context.cacheDir, "ha-font-$name.ttf")
-        if (!file.exists() || file.length() != bytes.size.toLong()) file.writeBytes(bytes)
+        // Typeface reads a file, not bytes: write each face out once, by its hash.
+        val file = File(context.cacheDir, "ha-font-${face.sha256}.ttf")
+        if (!file.exists() || file.length() != face.bytes.size.toLong()) file.writeBytes(face.bytes)
         Typeface.createFromFile(file)
       }
         .getOrNull()
@@ -44,7 +45,7 @@ object HaFonts {
   }
 }
 
-/** [fallback] with the app's bundled fonts ([HaFonts]) resolved by name first. */
+/** [fallback] with the cached card fonts ([HaFonts]) resolved by name first. */
 class HaTypefaceResolver(private val context: Context, private val fallback: TypefaceResolver?) :
   TypefaceResolver {
   override fun resolve(

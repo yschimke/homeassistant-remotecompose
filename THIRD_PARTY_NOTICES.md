@@ -25,7 +25,7 @@ SOFTWARE.
 
 ---
 
-Digital-7 Mono Italic font (rc-converter/src/androidMain/resources/ee/schimke/ha/rc/fonts/digital7.ttf)
+Digital-7 Mono Italic font (card-fonts/digital7.ttf, served by the design server)
 Copyright Sizenko Alexander, Style-7 (http://www.styleseven.com)
 
 Free for personal, non-commercial use. Bundled for the Rugged Digital card style, a non-commercial
@@ -33,7 +33,7 @@ one-off made with Greg Bullock from his GShark watch face, which uses the same f
 
 ---
 
-Russo One font (rc-components HaBundledFonts, as `gspot`)
+Russo One font (card-fonts/russo-one.ttf, as `gspot`, served by the design server)
 Copyright (c) 2011-2012, Jovanny Lemonad (jovanny.ru), with Reserved Font Name "Russo".
 
 Licensed under the SIL Open Font License, Version 1.1 (https://openfontlicense.org). Bundled

@@ -148,10 +148,27 @@ fun TerrazzoMultiplatformApp(
     var signOutFailed by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val active = connection
-    // Cards may name a font the app bundles (Rugged Digital's Digital-7); every card player
-    // under the app resolves it here.
+    // Cards may name a font the design server serves (Rugged Digital's Digital-7); every card
+    // player under the app resolves it here, and draws again when it arrives. This host keeps no
+    // design server of its own, so it fetches the public one's on each start.
+    LaunchedEffect(Unit) {
+      val store = ee.schimke.ha.client.design.InMemoryFontStore()
+      val fetched = runCatching {
+        ee.schimke.ha.client.design.DesignFonts.refresh(
+          ee.schimke.ha.client.design.DesignFonts.PUBLIC_SERVER,
+          store,
+        )
+      }
+      if (fetched.getOrDefault(false)) {
+        ee.schimke.ha.rc.HaFontLibrary.install(
+          ee.schimke.ha.client.design.DesignFonts.cached(store),
+        )
+      }
+    }
+    val fontFaces by ee.schimke.ha.rc.HaFontLibrary.faces.collectAsState()
     androidx.compose.runtime.CompositionLocalProvider(
-      LocalRcTypefaceLoader provides ee.schimke.ha.rc.HaTypefaceLoader,
+      LocalRcTypefaceLoader provides
+        remember(fontFaces) { ee.schimke.ha.rc.HaFontLibrary.loader(fontFaces) },
     ) {
       Surface(Modifier.fillMaxSize()) {
         if (active == null) {

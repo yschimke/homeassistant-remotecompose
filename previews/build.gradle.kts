@@ -18,6 +18,35 @@ android {
   kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
 }
 
+// The fonts card designs name (card-fonts/), as classpath resources: the app fetches them from the
+// design server, the previews draw with the same files (HaFontLibrary seeds itself from them).
+abstract class CardFontResources : DefaultTask() {
+  @get:InputDirectory abstract val fonts: DirectoryProperty
+
+  @get:OutputDirectory abstract val output: DirectoryProperty
+
+  @TaskAction
+  fun copy() {
+    val into = output.get().asFile.resolve("card-fonts")
+    into.deleteRecursively()
+    into.mkdirs()
+    fonts
+      .get()
+      .asFile
+      .listFiles { file -> file.name == "fonts.json" || file.extension in setOf("ttf", "otf") }
+      ?.forEach { it.copyTo(into.resolve(it.name)) }
+  }
+}
+
+val cardFonts by
+  tasks.registering(CardFontResources::class) {
+    fonts.set(rootProject.layout.projectDirectory.dir("card-fonts"))
+  }
+
+androidComponents.onVariants { variant ->
+  variant.sources.resources?.addGeneratedSourceDirectory(cardFonts, CardFontResources::output)
+}
+
 dependencies {
   implementation(project(":ha-model"))
   implementation(project(":rc-converter"))

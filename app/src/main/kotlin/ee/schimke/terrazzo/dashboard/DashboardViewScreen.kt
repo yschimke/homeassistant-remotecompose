@@ -1294,13 +1294,15 @@ internal fun SectionHeading(
 
 /**
  * The active card style's heading font ([HaUberTheme.headingFont]) as a Compose family, from the
- * fonts the app bundles; null when the style has none (or the font can't be loaded).
+ * card font cache; null when the style has none or the cache doesn't hold it yet.
  */
 @Composable
 private fun sectionHeadingFont(): androidx.compose.ui.text.font.FontFamily? {
   val name = LocalCardStyle.current.headingFont ?: return null
   val context = androidx.compose.ui.platform.LocalContext.current
-  return remember(name) {
+  // The font cache's faces: a heading font that arrives with the design sync draws in.
+  val faces by ee.schimke.ha.rc.HaFontLibrary.faces.collectAsState()
+  return remember(name, faces) {
     ee.schimke.ha.rc.HaFonts.typeface(context, name)?.let {
       androidx.compose.ui.text.font.FontFamily(it)
     }

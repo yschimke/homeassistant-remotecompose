@@ -144,7 +144,7 @@ object CardDesignSync {
    * The bearer for [choice]'s server: its Home Assistant's access token, minted as needed, for that
    * Home Assistant's own design add-on; the device token for any other.
    */
-  private fun tokenFor(context: Context, choice: CardDesignChoice): suspend () -> String {
+  internal fun tokenFor(context: Context, choice: CardDesignChoice): suspend () -> String {
     val ha = choice.homeAssistant
     if (ha.isBlank()) return { choice.token }
     val graph = context.terrazzoGraph()
@@ -186,7 +186,11 @@ class CardDesignSyncWorker(context: Context, params: WorkerParameters) :
     // process keeps them from writing the same cache files concurrently.
     val result =
       CardDesignSync.refreshLock.withLock {
-        CardDesignSync.networkRepository(applicationContext, choice).refresh()
+        val designs = CardDesignSync.networkRepository(applicationContext, choice).refresh()
+        // The fonts the designs name, beside them and under the same lock, since they share a
+        // store: only faces the cache lacks are fetched.
+        CardFonts.refresh(applicationContext, choice)
+        designs
       }
     if (result == RefreshResult.Updated) CardDesignGeneration.manifestStored()
     if (result == RefreshResult.Updated || result == RefreshResult.Filled) CardDesignSync.stored()
