@@ -67,7 +67,7 @@ class CatalogContractTest {
       assertEquals(
         emptyList(),
         definition.validateAgainst(
-          records.components.single { it.canonicalId == definition.component.canonicalId }
+          records.components.single { it.canonicalId == definition.component.canonicalId },
         ),
       )
     }
@@ -164,7 +164,7 @@ class CatalogCodecTest {
             "isOn":{"type":"bool","value":false}}},
           "tapAction":{"type":"union","case":"moreInfo","fields":{
             "entityId":{"type":"string","value":"lock.porch"}}}}}
-        """
+        """,
       )
     val tile = catalog.tile.data.unwrap(stored)
     assertEquals(
@@ -237,7 +237,7 @@ class CatalogCodecTest {
         {"type":"union","case":"callService","fields":{
           "domain":{"type":"string","value":"light"},"service":{"type":"string","value":"turn_on"},
           "serviceData":{"type":"string","value":"{\"brightness_pct\": 40}"}}}
-        """
+        """,
       )
     assertEquals(
       HaAction.CallService(
@@ -282,7 +282,7 @@ class CatalogCodecTest {
         buildJsonObject {
           put("type", "object")
           put("fields", empty)
-        }
+        },
       )
     }
   }

@@ -22,6 +22,9 @@ private const val EXTRA_TEST_SEED_PINS = "terrazzo.test.seed_pins"
  * pinned (a section and a dozen cards): an unpaired emulator otherwise has nothing pinned.
  */
 internal fun MacrobenchmarkScope.startTopLevel() {
+  // The app asks for notifications on launch (Wear OS 4+); granted up front so the dialog doesn't
+  // cover the list. A no-op below API 33.
+  device.executeShellCommand("pm grant $TARGET_PACKAGE android.permission.POST_NOTIFICATIONS")
   startActivityAndWait { it.putExtra(EXTRA_TEST_SEED_PINS, true) }
   awaitText("Pinned · Demo", "Living room")
 }

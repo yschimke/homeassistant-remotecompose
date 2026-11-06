@@ -304,7 +304,7 @@ private fun parityCases(): Map<String, ParityCase> {
              "rows":{"type":"list","values":[
                {"type":"object","fields":{"name":{"type":"string","value":"Porch"},
                  "state":{"type":"string","value":"Off"}}}]}}
-            """
+            """,
           )
           .jsonObject,
       ) {
@@ -312,7 +312,7 @@ private fun parityCases(): Map<String, ParityCase> {
           HaEntitiesUiData(
             title = null,
             rows = listOf(D.entities.rows.first().copy(name = "Porch", state = "Off")),
-          )
+          ),
         )
       },
   )
