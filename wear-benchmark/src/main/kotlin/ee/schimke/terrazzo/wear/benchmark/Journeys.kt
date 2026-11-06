@@ -52,8 +52,9 @@ private fun sectionRow(state: String) = By.text("4 cards · $state")
 
 /** Opens Settings from the top-level list; the longest list the unpaired app has. */
 internal fun MacrobenchmarkScope.openSettings() {
-  // The list opens centred on its second item, so either of the first two may be the one on screen.
-  open("Settings", "Report a bug", "Theme")
+  // The list opens on its header and the line saying everything is chosen on the phone, with the
+  // button that opens it; "Report a bug" sits further down.
+  open("Settings", "Open on phone", "Report a bug")
 }
 
 /** Opens the dashboard library from the top-level list. */
