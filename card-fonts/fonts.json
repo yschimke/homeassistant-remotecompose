@@ -1,0 +1,14 @@
+{
+  "families": [
+    {
+      "name": "digital7",
+      "role": "display",
+      "fonts": [{ "file": "digital7.ttf", "weight": 400, "style": "italic" }]
+    },
+    {
+      "name": "gspot",
+      "role": "heading",
+      "fonts": [{ "file": "russo-one.ttf", "weight": 400, "style": "normal" }]
+    }
+  ]
+}

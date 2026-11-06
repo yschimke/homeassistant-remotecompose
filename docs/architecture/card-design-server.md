@@ -608,6 +608,11 @@ GET /designs/v1/manifest.json
 
 GET /designs/v1/blobs/<sha256>.rc     (immutable, Cache-Control: max-age=31536000, immutable)
 
+GET /designs/v1/fonts/fonts.json      (ETag, no-cache)
+  → { families: [ { name, role, fonts: [ { file, weight, style, sha256 } … ] } … ] }
+
+GET /designs/v1/fonts/<file>          (Cache-Control: max-age=86400)
+
 ```
 
 **Tags.** A design is chosen by four tags: its **card type**, its **style** (the card style it is
@@ -619,6 +624,14 @@ and works out what a picker offers from it (`DesignTags`: every value with its c
 lookup endpoint: the server only ever sees a manifest fetch and the blobs a client's choice of tags
 matches, never which cards it renders.
 
+- **Fonts.** A design names a font no device ships (`RemoteFontFamily.Named("digital7")`) by
+  name only; the bytes are served beside the designs, from the repository's `card-fonts/`, in the
+  players' font manifest shape (`RcManifestTypefaceLoader`) with each face's SHA-256 added
+  (`CardFontManifest`). The client's design sync fetches the faces it lacks, verifies them against
+  the manifest and caches them by hash beside the designs (`DesignFonts`), and the app installs
+  them for every player by name (`HaFontLibrary`): the same for `main` and every channel. A card
+  naming a font the cache doesn't hold yet draws in its theme's own face, and draws again when it
+  arrives. A launcher widget, played by the system, keeps the theme's face.
 - One manifest lists every target. The client filters it to the
   surfaces it serves. The manifest is small, and a single file keeps
   hosting static. Split it by surface only if size becomes a problem.

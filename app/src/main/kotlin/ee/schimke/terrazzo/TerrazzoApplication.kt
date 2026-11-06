@@ -21,6 +21,7 @@ import ee.schimke.terrazzo.crash.CrashedDocuments
 import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.dashboard.CardDesignPreload
 import ee.schimke.terrazzo.dashboard.CardDesignSync
+import ee.schimke.terrazzo.dashboard.CardFonts
 import ee.schimke.terrazzo.dashboard.CardStyleStore
 import ee.schimke.terrazzo.dashboard.CardUsage
 import ee.schimke.terrazzo.di.AppGraph
@@ -168,6 +169,8 @@ class TerrazzoApplication : Application() {
       CardDesignSync.choice(applicationContext, graph.preferencesStore)
         .distinctUntilChanged()
         .collect { choice ->
+          // The fonts cards name, from the cache for this server, before the sync's refresh.
+          CardFonts.load(applicationContext, choice.serverUrl)
           CardDesignSync.apply(applicationContext, choice.serverUrl, syncNow = true)
         }
     }

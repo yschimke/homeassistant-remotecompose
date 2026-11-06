@@ -7,6 +7,7 @@ import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
@@ -201,6 +202,9 @@ fun HaRcComposePlayer(
       val frozenTime = remember(clock) { if (clock.isFrozen) clock.asRcTimeSource() else null }
       val guardedEvent: (RcPlayerEvent) -> Unit =
         remember(fail) { { event -> runCatching { onEvent(event) }.onFailure(fail) } }
+      // The fonts cards name, as the font cache holds them now: a font that arrives draws again.
+      val fontFaces by HaFontLibrary.faces.collectAsState()
+      val typefaces = remember(fontFaces) { HaFontLibrary.loader(fontFaces) }
       val player: @Composable () -> Unit = {
         RcComposePlayer(
           document,
@@ -209,7 +213,7 @@ fun HaRcComposePlayer(
           modifier = WrapUnpinnedHeight,
           namedValues = playerValues,
           onEvent = guardedEvent,
-          typefaces = HaTypefaceLoader,
+          typefaces = typefaces,
         )
       }
       if (frozenTime != null) {

@@ -103,6 +103,8 @@ class LibraryHolder(
  * - `POST /designs/v1/generate` with a `DesignKey` — the design for that key: the library's, or
  *   captured on the JVM now ([DesignGenerator]), its blob then served beside the library's.
  * - `/designs/v1/catalog.json`, `/designs/v1/previews/...` — the browser's data.
+ * - `/designs/v1/fonts/fonts.json`, `/designs/v1/fonts/<file>` — the fonts designs name
+ *   ([CardFonts]), which the app fetches with its designs.
  * - `/` — the app's front page ([Landing]); `/site/<name>` — its pictures.
  * - `/designs`, `/designs/<id>` — the template browser; `/api/designs[/<id>]` — the same as JSON.
  * - `/designs/v1/channels/<channel>/...` — the same protocol for a pull request's preview, and
@@ -214,6 +216,10 @@ fun Application.designServer(
       call.parameters["channel"]?.takeIf { it != LibraryPaths.MAIN }?.let(channels::holder)
     }
     libraryChannelRoutes(channels, generators, publishToken)
+    // The fonts designs name, beside the designs: the same for `main` and every channel.
+    val fonts = CardFonts.fromClasspath()
+    cardFontRoutes(API_BASE, fonts)
+    cardFontRoutes("$API_BASE/channels/{channel}", fonts)
 
     get("/embed/v1/{name}") {
       val name = call.parameters["name"].orEmpty()

@@ -148,10 +148,12 @@ fun TerrazzoMultiplatformApp(
     var signOutFailed by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val active = connection
-    // Cards may name a font the app bundles (Rugged Digital's Digital-7); every card player
-    // under the app resolves it here.
+    // Cards may name a font the design server serves (Rugged Digital's Digital-7); every card
+    // player under the app resolves it here, and draws again when it arrives.
+    val fontFaces by ee.schimke.ha.rc.HaFontLibrary.faces.collectAsState()
     androidx.compose.runtime.CompositionLocalProvider(
-      LocalRcTypefaceLoader provides ee.schimke.ha.rc.HaTypefaceLoader,
+      LocalRcTypefaceLoader provides
+        remember(fontFaces) { ee.schimke.ha.rc.HaFontLibrary.loader(fontFaces) },
     ) {
       Surface(Modifier.fillMaxSize()) {
         if (active == null) {

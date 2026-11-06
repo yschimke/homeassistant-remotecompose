@@ -188,6 +188,8 @@ class CardDesignSyncWorker(context: Context, params: WorkerParameters) :
       CardDesignSync.refreshLock.withLock {
         CardDesignSync.networkRepository(applicationContext, choice).refresh()
       }
+    // The fonts the designs name, beside them: only faces the cache lacks are fetched.
+    CardFonts.refresh(applicationContext, choice.serverUrl)
     if (result == RefreshResult.Updated) CardDesignGeneration.manifestStored()
     if (result == RefreshResult.Updated || result == RefreshResult.Filled) CardDesignSync.stored()
     // Yesterday's card usage goes up with the nightly refresh, only if the user shares it, and only
