@@ -92,7 +92,7 @@ tapmoc = "0.5.0"
 coil = "3.6.3"
 
 # Formatting
-ktfmt-gradle = "0.27.0"
+ktfmt-gradle = "0.28.0"
 
 # Markdown parsing (KMP, by JetBrains — used by IntelliJ)
 jetbrains-markdown = "0.7.18"
