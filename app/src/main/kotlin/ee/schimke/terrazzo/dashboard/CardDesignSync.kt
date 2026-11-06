@@ -186,10 +186,12 @@ class CardDesignSyncWorker(context: Context, params: WorkerParameters) :
     // process keeps them from writing the same cache files concurrently.
     val result =
       CardDesignSync.refreshLock.withLock {
-        CardDesignSync.networkRepository(applicationContext, choice).refresh()
+        val designs = CardDesignSync.networkRepository(applicationContext, choice).refresh()
+        // The fonts the designs name, beside them and under the same lock, since they share a
+        // store: only faces the cache lacks are fetched.
+        CardFonts.refresh(applicationContext, choice)
+        designs
       }
-    // The fonts the designs name, beside them: only faces the cache lacks are fetched.
-    CardFonts.refresh(applicationContext, choice)
     if (result == RefreshResult.Updated) CardDesignGeneration.manifestStored()
     if (result == RefreshResult.Updated || result == RefreshResult.Filled) CardDesignSync.stored()
     // Yesterday's card usage goes up with the nightly refresh, only if the user shares it, and only

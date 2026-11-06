@@ -36,6 +36,8 @@ class DesignFontsTest {
       )
       .encode()
 
+  private val versions = mutableListOf<String?>()
+
   private class MemoryFontStore : FontStore {
     var manifest: String? = null
     val faces = mutableMapOf<String, ByteArray>()
@@ -62,6 +64,7 @@ class DesignFontsTest {
       MockEngine { request ->
         val path = request.url.encodedPath
         requests += path
+        if (path.endsWith(".ttf")) versions += request.url.parameters["v"]
         bearers += request.headers[HttpHeaders.Authorization]
         when (path) {
           "/designs/v1/fonts/fonts.json" -> respond(manifest, HttpStatusCode.OK)
@@ -80,6 +83,7 @@ class DesignFontsTest {
     assertContentEquals(digital7, cached.getValue("digital7").bytes)
     assertTrue(cached.getValue("digital7").italic)
     assertContentEquals(russo, cached.getValue("gspot").bytes)
+    assertEquals(setOf(Sha256.hex(digital7), Sha256.hex(russo)), versions.toSet(), "faces by hash")
   }
 
   @Test

@@ -67,7 +67,8 @@ object DesignFonts {
       val sha = face.sha256?.takeIf { SHA256.matches(it) } ?: continue
       if (!CardFontManifest.FILE_NAME.matches(face.file) || store.readFace(sha) != null) continue
       val bytes = runCatching {
-        client.get("$base/${CardFontManifest.facePath(face.file)}") { bearer() }
+        // Versioned by its hash, so a face replaced under its name never comes from a cache.
+        client.get("$base/${CardFontManifest.facePath(face.file)}?v=$sha") { bearer() }
       }
         .getOrNull()
         ?.takeIf { it.status.isSuccess() }
