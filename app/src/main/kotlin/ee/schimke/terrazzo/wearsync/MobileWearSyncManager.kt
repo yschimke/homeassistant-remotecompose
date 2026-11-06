@@ -728,7 +728,14 @@ class MobileWearSyncManager(
               all.map {
                 ee.schimke.ha.client.design.cardFingerprint(resolveBambuDevices(it, snapshot)) to it
               }
-          val picked = wearCardDesigns(keyed.distinctBy { it.first }, snapshot, designs)
+          // Designs naming a card font go through the server's bitmap-font filter first: the
+          // watch's widget host can't load the fonts the app fetches.
+          val picked =
+            WearWidgetFonts.filter(
+              context,
+              designs.loadedFor,
+              wearCardDesigns(keyed.distinctBy { it.first }, snapshot, designs),
+            )
           picked.map { it.first } to picked.associate { it.first.sha256 to it.second }
         }
         .combine(wearableAvailableState) { designs, available -> designs to available }
