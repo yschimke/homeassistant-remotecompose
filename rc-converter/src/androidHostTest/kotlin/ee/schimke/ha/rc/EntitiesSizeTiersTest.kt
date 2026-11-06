@@ -48,7 +48,7 @@ class EntitiesSizeTiersTest {
             entity("switch.coffee", "off", "Coffee maker"),
             entity("lock.door", "locked", "Front door"),
           )
-          .associateBy { it.entityId }
+          .associateBy { it.entityId },
     )
 
   private val card =
@@ -92,7 +92,7 @@ class EntitiesSizeTiersTest {
       ) {
         CompositionLocalProvider(
           LocalWidgetCaptureSizeDp provides
-            (if (captureSize) WidgetCaptureSizeDp(widthDp, heightDp) else null)
+            (if (captureSize) WidgetCaptureSizeDp(widthDp, heightDp) else null),
         ) {
           ProvideCardSizeMode(CardSizeMode.Fixed) {
             ProvideFixedCanvasAxis(axis) { converter.Render(card, snapshot) }

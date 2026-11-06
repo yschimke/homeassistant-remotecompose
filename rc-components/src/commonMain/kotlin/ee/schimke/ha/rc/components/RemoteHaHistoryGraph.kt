@@ -73,7 +73,7 @@ fun RemoteHaHistoryGraph(
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 14.rdp, vertical = 10.rdp)
+        .padding(horizontal = 14.rdp, vertical = 10.rdp),
   ) {
     val empty = data.showsSingleEmptyState(singleEmptyState)
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(6.rdp)) {

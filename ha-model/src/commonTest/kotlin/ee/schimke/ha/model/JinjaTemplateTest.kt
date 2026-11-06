@@ -39,7 +39,7 @@ class JinjaTemplateTest {
           "device_tracker.unifi_default_b" to
             EntityState("device_tracker.unifi_default_b", "not_home"),
           "device_tracker.other" to EntityState("device_tracker.other", "home"),
-        )
+        ),
     )
 
   private fun render(t: String) = JinjaTemplate.render(t, snapshot)
@@ -80,7 +80,7 @@ class JinjaTemplateTest {
     assertEquals(
       "12.3 / 188",
       render(
-        "{{ states.sun.sun.attributes.elevation | round(1) }} / {{ states.sun.sun.attributes.azimuth | round(0) | int }}"
+        "{{ states.sun.sun.attributes.elevation | round(1) }} / {{ states.sun.sun.attributes.azimuth | round(0) | int }}",
       ),
     )
   }

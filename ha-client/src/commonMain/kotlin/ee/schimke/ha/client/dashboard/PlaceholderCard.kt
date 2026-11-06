@@ -42,7 +42,7 @@ object PlaceholderCardPrompt {
     dashboardTitle: String? = null,
   ): String = buildString {
     appendLine(
-      "Implement this planned Home Assistant card in yschimke/homeassistant-remotecompose."
+      "Implement this planned Home Assistant card in yschimke/homeassistant-remotecompose.",
     )
     appendLine("This is an implementation request, not a request for dashboard JSON alone.")
     appendLine()
@@ -53,25 +53,25 @@ object PlaceholderCardPrompt {
     appendLine()
     appendLine("## Implementation requirements")
     appendLine(
-      "- Read AGENTS.md, docs/architecture/live-card-updates.md and docs/architecture/card-component-system.md."
+      "- Read AGENTS.md, docs/architecture/live-card-updates.md and docs/architecture/card-component-system.md.",
     )
     appendLine(
-      "- Use the existing authenticated HA client/session. Implement any required fetching or subscriptions in the host/client layer; never put credentials or networking in Remote Compose components."
+      "- Use the existing authenticated HA client/session. Implement any required fetching or subscriptions in the host/client layer; never put credentials or networking in Remote Compose components.",
     )
     appendLine(
-      "- Use real HA entity ids. Treat missing entities as unresolved requirements; do not invent entities or pass example data off as live data."
+      "- Use real HA entity ids. Treat missing entities as unresolved requirements; do not invent entities or pass example data off as live data.",
     )
     appendLine(
-      "- Reuse the Remote Compose component system. Map each fetched state/attribute to explicit named bindings, or use dataSignature re-encoding when the host cannot reproduce a binding."
+      "- Reuse the Remote Compose component system. Map each fetched state/attribute to explicit named bindings, or use dataSignature re-encoding when the host cannot reproduce a binding.",
     )
     appendLine(
-      "- Handle live updates, loading, unavailable values, reconnects and subscription cleanup. Preserve read-only mode for actions."
+      "- Handle live updates, loading, unavailable values, reconnects and subscription cleanup. Preserve read-only mode for actions.",
     )
     appendLine(
-      "- Add tests proving changed HA data changes the displayed values, and document the data-to-component binding map."
+      "- Add tests proving changed HA data changes the displayed values, and document the data-to-component binding map.",
     )
     appendLine(
-      "- Keep other cards unchanged. Do not save to a real HA dashboard or remove this local placeholder automatically. Return code changes and instructions for installing and placing the implemented card."
+      "- Keep other cards unchanged. Do not save to a real HA dashboard or remove this local placeholder automatically. Return code changes and instructions for installing and placing the implemented card.",
     )
     appendLine()
     val available = states.associateBy { it.entityId }

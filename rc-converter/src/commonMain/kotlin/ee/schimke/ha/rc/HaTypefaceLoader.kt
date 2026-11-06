@@ -17,12 +17,12 @@ fun haTypefaceLoader(): RcTypefaceLoader =
     mapOf(
       HaDigital7Font to
         RcFontFaces(
-          RcFontFace(HaDigital7Font, HaBundledFonts.digital7, weight = 400, italic = true)
+          RcFontFace(HaDigital7Font, HaBundledFonts.digital7, weight = 400, italic = true),
         ),
       // One weight: Russo One is drawn heavy, so every heading weight takes it.
       HaGSpotFont to
         RcFontFaces(RcFontFace(HaGSpotFont, HaBundledFonts.russoOne, weight = 400, italic = false)),
-    )
+    ),
   )
 
 /** One loader per process: the faces are parsed once. */

@@ -40,7 +40,7 @@ class DashboardDecodeTest {
               }
             ]
           }
-          """
+          """,
         )
         .views
         .single()
@@ -75,7 +75,7 @@ class DashboardDecodeTest {
               }
             ]
           }
-          """
+          """,
         )
         .views
         .single()
@@ -107,11 +107,11 @@ class DashboardDecodeTest {
                 }
               ]
             }
-            """
+            """,
           )
           .views
           .single()
-          .header
+          .header,
       )
     assertTrue(header.centered)
     assertEquals("markdown", header.card?.type)
@@ -130,7 +130,7 @@ class DashboardDecodeTest {
               { "header": { "card": null } }
             ]
           }
-          """
+          """,
         )
         .views
 
@@ -163,7 +163,7 @@ class DashboardDecodeTest {
             { "header": {} }
           ]
         }
-        """
+        """,
       )
 
     val text = withDefaults.encodeToString(Dashboard.serializer(), original)
@@ -177,7 +177,7 @@ class DashboardDecodeTest {
       decode(
           """
           { "views": [ { "maxColumns": 2, "sections": [ { "columnSpan": 2, "rowSpan": 1 } ] } ] }
-          """
+          """,
         )
         .views
         .single()
@@ -195,7 +195,7 @@ class DashboardDecodeTest {
           put("layout", "responsive")
           put("card", buildJsonObject { put("type", "markdown") })
           put("unknown", 1)
-        }
+        },
       )
     assertEquals("responsive", header?.layout)
     assertEquals("markdown", header?.card?.type)
@@ -217,7 +217,7 @@ class DashboardDecodeTest {
             }
           ]
         }
-        """
+        """,
       )
 
     val templates = TemplateBindings.dashboardTemplates(dashboard)

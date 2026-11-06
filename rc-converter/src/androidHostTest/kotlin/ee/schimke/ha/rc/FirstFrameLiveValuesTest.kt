@@ -61,10 +61,10 @@ class FirstFrameLiveValuesTest {
                 mapOf(
                   "friendly_name" to JsonPrimitive("Living Room"),
                   "unit_of_measurement" to JsonPrimitive("°C"),
-                )
+                ),
               ),
-            )
-        )
+            ),
+        ),
     )
 
   @Test

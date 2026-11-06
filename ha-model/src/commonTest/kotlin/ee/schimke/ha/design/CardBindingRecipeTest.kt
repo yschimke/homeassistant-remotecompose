@@ -34,10 +34,10 @@ class CardBindingRecipeTest {
               "sensor.cpu",
               state,
               JsonObject(
-                unit?.let { mapOf("unit_of_measurement" to JsonPrimitive(it)) } ?: emptyMap()
+                unit?.let { mapOf("unit_of_measurement" to JsonPrimitive(it)) } ?: emptyMap(),
               ),
-            )
-        )
+            ),
+        ),
     )
 
   @Test
@@ -98,8 +98,8 @@ class CardBindingRecipeTest {
         buildJsonObject {
           put("v", 2)
           put("prototype", "x")
-        }
-      )
+        },
+      ),
     )
   }
 
@@ -110,8 +110,8 @@ class CardBindingRecipeTest {
         Json.parseToJsonElement(
           """{"v":1,"prototype":"t","floats":{
               "a":{"config":{"nested":1}},"b":{"fn":"nope","args":[]},"c":{"attr":[1]},
-              "${'$'}9.x":1,"d":{"first":[{"config":"missing"},7]}}}"""
-        ) as JsonObject
+              "${'$'}9.x":1,"d":{"first":[{"config":"missing"},7]}}}""",
+        ) as JsonObject,
       )!!
     assertEquals(mapOf("d" to 7f), recipe.evaluate(gauge(), snapshot("1")).floats)
   }

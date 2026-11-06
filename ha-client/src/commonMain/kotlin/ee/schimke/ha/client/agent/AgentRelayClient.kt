@@ -135,7 +135,7 @@ class AgentRelayClient(server: String, engine: HttpClientEngine? = null) {
             put("dashboard", dashboard)
             if (agentLink != null) put("agentLink", agentLink)
           }
-            .toString()
+            .toString(),
         )
       }
     response.check("The design server couldn't open the agent request")
@@ -230,7 +230,7 @@ class AgentRelayClient(server: String, engine: HttpClientEngine? = null) {
             put("png", kotlin.io.encoding.Base64.encode(png))
             put("revision", revision)
           }
-            .toString()
+            .toString(),
         )
       }
     if (response.status == HttpStatusCode.NotFound) throw AgentSessionEndedException()
@@ -330,7 +330,7 @@ class AgentRelayClient(server: String, engine: HttpClientEngine? = null) {
             put("text", text.trim())
             target?.let { put("target", it) }
           }
-            .toString()
+            .toString(),
         )
       }
     if (response.status == HttpStatusCode.NotFound) throw AgentSessionEndedException()
@@ -344,7 +344,7 @@ class AgentRelayClient(server: String, engine: HttpClientEngine? = null) {
         bearer(owner)
         contentType(ContentType.Application.Json)
         setBody(
-          buildJsonObject { put("decision", if (accepted) "accepted" else "rejected") }.toString()
+          buildJsonObject { put("decision", if (accepted) "accepted" else "rejected") }.toString(),
         )
       }
     if (response.status == HttpStatusCode.NotFound) return // Already over: nothing to tell.

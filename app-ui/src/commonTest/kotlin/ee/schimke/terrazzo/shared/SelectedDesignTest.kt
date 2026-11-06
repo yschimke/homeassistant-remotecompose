@@ -30,7 +30,7 @@ class SelectedDesignTest {
   fun selectedDesignCanUseSingleEntityCustomCardWithoutChangingItsBindings() {
     val raw =
       Json.parseToJsonElement(
-        """{"type":"custom:enhanced-shutter-card","entities":[{"entity":"cover.garage","top_offset_pct":13}]}"""
+        """{"type":"custom:enhanced-shutter-card","entities":[{"entity":"cover.garage","top_offset_pct":13}]}""",
       ) as JsonObject
     val card = CardConfig("custom:enhanced-shutter-card", raw)
     val snapshot =
@@ -42,8 +42,8 @@ class SelectedDesignTest {
                 "cover.garage",
                 "closed",
                 JsonObject(mapOf("device_class" to JsonPrimitive("garage"))),
-              )
-          )
+              ),
+          ),
       )
     val anchor = assertNotNull(selectedDesignKey(card, snapshot, "classic", false))
     assertEquals("tile", anchor.cardType)
@@ -54,7 +54,7 @@ class SelectedDesignTest {
       CardConfig(
         "custom:example",
         Json.parseToJsonElement(
-          """{"type":"custom:example","entities":["cover.one","cover.two"]}"""
+          """{"type":"custom:example","entities":["cover.one","cover.two"]}""",
         ) as JsonObject,
       )
     assertNull(selectedDesignKey(many, snapshot, "classic", false))
@@ -93,7 +93,7 @@ class SelectedDesignTest {
               headers = headersOf(HttpHeaders.ContentType, "application/json"),
             )
           else respond(blob)
-        }
+        },
       )
     val selected =
       LibraryDesignKey(
@@ -115,7 +115,7 @@ class SelectedDesignTest {
       requests,
     )
     assertNull(
-      loadSelectedDesign(selected, "https://ha.example", { "fresh-token" }, client(byteArrayOf(9)))
+      loadSelectedDesign(selected, "https://ha.example", { "fresh-token" }, client(byteArrayOf(9))),
     )
   }
 }

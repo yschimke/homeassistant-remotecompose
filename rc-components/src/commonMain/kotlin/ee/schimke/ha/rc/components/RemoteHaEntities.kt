@@ -44,7 +44,7 @@ fun RemoteHaEntities(
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 12.rdp, vertical = 10.rdp)
+        .padding(horizontal = 12.rdp, vertical = 10.rdp),
   ) {
     RemoteColumn(horizontalAlignment = RemoteAlignment.Start) {
       if (data.title != null) {
@@ -143,7 +143,7 @@ fun RemoteHaEntitiesFitted(
       modifier
         .fillMaxSize()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 12.rdp, vertical = (fit.verticalPaddingDp / 2).rdp)
+        .padding(horizontal = 12.rdp, vertical = (fit.verticalPaddingDp / 2).rdp),
   ) {
     RemoteColumn(modifier = RemoteModifier.fillMaxSize()) {
       if (data.title != null) {
@@ -218,7 +218,7 @@ private fun FittedEntityRow(
     )
     RemoteBox(
       modifier =
-        RemoteModifier.weight(1f).padding(start = (if (expanded) 12 else 8).rdp, end = 8.rdp)
+        RemoteModifier.weight(1f).padding(start = (if (expanded) 12 else 8).rdp, end = 8.rdp),
     ) {
       RemoteText(
         text = entityName(data.entityId, data.name),
@@ -299,7 +299,7 @@ private fun CommunityAccessory(data: HaEntityRowData, modifier: RemoteModifier) 
       .then(clickable)
       .clip(haControlShape(12))
       .background(theme.placeholderBackground)
-      .padding(8.rdp)
+      .padding(8.rdp),
   ) {
     RemoteRow(
       RemoteModifier.fillMaxWidth(),

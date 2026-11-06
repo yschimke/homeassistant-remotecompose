@@ -20,7 +20,7 @@ class CardStudioTest {
     "roots":["root"],"nodes":{
       "root":{"id":"root","componentId":"ha-cards/dashboard-card","properties":{},"slots":{"content":["text"]}},
       "text":{"id":"text","componentId":"ha-cards/remote-text","properties":{"text":{"type":"state","variable":"sensor.s0.state"}},"slots":{}}
-    }}"""
+    }}""",
       )
       .jsonObject
 
@@ -30,7 +30,7 @@ class CardStudioTest {
       CardConfig(
         "gauge",
         Json.parseToJsonElement(
-            """{"type":"gauge","entity":"sensor.private_id","max":100,"image":"https://camera.test/?token=private","access_token":"secret"}"""
+            """{"type":"gauge","entity":"sensor.private_id","max":100,"image":"https://camera.test/?token=private","access_token":"secret"}""",
           )
           .jsonObject,
       )
@@ -50,14 +50,14 @@ class CardStudioTest {
                 },
               ),
             "person.owner" to EntityState("person.owner", "home"),
-          )
+          ),
       )
     val preview = cardPreviewData(card, states)
     assertEquals("sensor.s0", preview["card"]!!.jsonObject["entity"]!!.jsonPrimitive.content)
     assertEquals(setOf("sensor.s0"), preview["states"]!!.jsonObject.keys)
     assertTrue(preview.toString().contains("Kitchen"))
     for (private in listOf("private_id", "person.owner", "camera.test", "secret")) assertFalse(
-      preview.toString().contains(private)
+      preview.toString().contains(private),
     )
   }
 
@@ -80,11 +80,11 @@ class CardStudioTest {
                   buildJsonObject {
                     put("type", "text")
                     put("text", document.toString())
-                  }
+                  },
                 )
               }
             }
-              .toString()
+              .toString(),
           )
         } else {
           assertEquals("Bearer key", request.headers["Authorization"])
@@ -97,11 +97,11 @@ class CardStudioTest {
                   buildJsonObject {
                     put("finish_reason", "stop")
                     putJsonObject("message") { put("content", "```json\n$document\n```") }
-                  }
+                  },
                 )
               }
             }
-              .toString()
+              .toString(),
           )
         }
       }
@@ -128,7 +128,9 @@ class CardStudioTest {
   fun providerErrorsNeverExposeKeysOrResponseBodies() = runTest {
     val agent =
       AgentCardDesigner(
-        MockEngine { respond("secret-key detailed provider response", HttpStatusCode.Unauthorized) }
+        MockEngine {
+          respond("secret-key detailed provider response", HttpStatusCode.Unauthorized)
+        },
       )
     try {
       val error =
@@ -154,13 +156,13 @@ class CardStudioTest {
       Json.parseToJsonElement(
           document
             .toString()
-            .replace("\"variable\":\"sensor.s0.state\"", "\"variable\":\"person.owner\"")
+            .replace("\"variable\":\"sensor.s0.state\"", "\"variable\":\"person.owner\""),
         )
         .jsonObject
     assertFailsWith<IllegalArgumentException> { validateCardDraft(document, unknown) }
     val cycle =
       Json.parseToJsonElement(
-          document.toString().replace("\"content\":[\"text\"]", "\"content\":[\"root\"]")
+          document.toString().replace("\"content\":[\"text\"]", "\"content\":[\"root\"]"),
         )
         .jsonObject
     assertFailsWith<IllegalArgumentException> { validateCardDraft(document, cycle) }
@@ -175,7 +177,7 @@ class CardStudioTest {
             .replace(
               "\"type\":\"state\",\"variable\":\"sensor.s0.state\"",
               "\"type\":\"string\",\"value\":\"21 °C\"",
-            )
+            ),
         )
         .jsonObject
     assertFailsWith<IllegalArgumentException> { validateCardDraft(document, frozen) }
@@ -190,7 +192,7 @@ class CardStudioTest {
       Json.parseToJsonElement(
           extended
             .toString()
-            .replace("\"variable\":\"sensor.s0.state\"", "\"variable\":\"sensor.s0.is_on\"")
+            .replace("\"variable\":\"sensor.s0.state\"", "\"variable\":\"sensor.s0.is_on\""),
         )
         .jsonObject
     validateCardDraft(extended, redesigned)
@@ -201,7 +203,7 @@ class CardStudioTest {
     val original = document.getValue("stateVariables").jsonObject
     val sun =
       Json.parseToJsonElement(
-        """{"type":"value","valueType":"float","nullable":false,"initialValue":45,"persistence":"design"}"""
+        """{"type":"value","valueType":"float","nullable":false,"initialValue":45,"persistence":"design"}""",
       )
     fun with(name: String, value: JsonElement) =
       JsonObject(document + ("stateVariables" to JsonObject(original + (name to value))))
@@ -225,13 +227,13 @@ class CardStudioTest {
     val digest = "sha256:" + "a".repeat(64)
     val binding =
       Json.parseToJsonElement(
-        """{"mediaType":"image/png","contentDigest":"$digest","source":{"type":"uploaded","storageKey":"$digest"}}"""
+        """{"mediaType":"image/png","contentDigest":"$digest","source":{"type":"uploaded","storageKey":"$digest"}}""",
       )
     val nodes = document.getValue("nodes").jsonObject
     val root = nodes.getValue("root").jsonObject
     val image =
       Json.parseToJsonElement(
-          """{"id":"image","componentId":"asset/image","properties":{"assetKey":{"type":"string","value":"door"}},"slots":{}}"""
+          """{"id":"image","componentId":"asset/image","properties":{"assetKey":{"type":"string","value":"door"}},"slots":{}}""",
         )
         .jsonObject
     val changed =
@@ -243,10 +245,10 @@ class CardStudioTest {
               nodes +
                 ("root" to
                   JsonObject(
-                    root + ("slots" to Json.parseToJsonElement("""{"content":["text","image"]}"""))
+                    root + ("slots" to Json.parseToJsonElement("""{"content":["text","image"]}""")),
                   )) +
-                ("image" to image)
-            ))
+                ("image" to image),
+            )),
       )
     validateCardDraft(document, changed)
     assertFailsWith<IllegalArgumentException> {
@@ -262,9 +264,9 @@ class CardStudioTest {
                   JsonObject(
                     image +
                       ("eventBindings" to
-                        Json.parseToJsonElement("""{"click":{"type":"callService"}}"""))
-                  ))
-            ))
+                        Json.parseToJsonElement("""{"click":{"type":"callService"}}""")),
+                  )),
+            )),
       )
     assertFailsWith<IllegalArgumentException> { validateCardDraft(document, unsafe) }
   }
@@ -284,13 +286,13 @@ class CardStudioTest {
               nodes +
                 ("root" to
                   JsonObject(
-                    root + ("slots" to Json.parseToJsonElement("""{"content":["text","name"]}"""))
+                    root + ("slots" to Json.parseToJsonElement("""{"content":["text","name"]}""")),
                   )) +
                 ("name" to
                   Json.parseToJsonElement(
-                    """{"id":"name","componentId":"ha-cards/remote-text","properties":{"text":{"type":"state","variable":"sensor.s0.name"}},"slots":{}}"""
-                  ))
-            ))
+                    """{"id":"name","componentId":"ha-cards/remote-text","properties":{"text":{"type":"state","variable":"sensor.s0.name"}},"slots":{}}""",
+                  )),
+            )),
       )
     val simplified =
       JsonObject(document + ("stateVariables" to original.getValue("stateVariables")))

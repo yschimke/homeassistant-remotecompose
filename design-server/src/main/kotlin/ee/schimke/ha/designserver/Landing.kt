@@ -69,7 +69,7 @@ object Landing {
     append(
       "<meta name=\"description\" content=\"The Home Assistant app for Android: open it, " +
         "sign in, and your dashboards are there, drawn natively. Nothing to install on your " +
-        "Home Assistant.\">"
+        "Home Assistant.\">",
     )
     append("<style>$CSS</style></head><body><main>")
 
@@ -79,7 +79,7 @@ object Landing {
     append(
       "<p class=\"lede\">Your Home Assistant dashboards, drawn natively on your phone. " +
         "Open the app, sign in, and the dashboards you already have are there. Nothing to " +
-        "install on your Home Assistant, no web view, no YAML.</p>"
+        "install on your Home Assistant, no web view, no YAML.</p>",
     )
     append("<div class=\"actions\">")
     append("<a class=\"button\" href=\"${esc(site.storeUrl)}\">Get the app on Google Play</a>")
@@ -88,14 +88,14 @@ object Landing {
     append(
       "<p class=\"aside\">Running a wall panel or a tablet? There is an " +
         "<a href=\"#home-assistant\">optional Home Assistant integration</a> as well. " +
-        "The app does not need it.</p>"
+        "The app does not need it.</p>",
     )
     append("</div>")
     append("<div class=\"phones\">")
     for (shot in SCREENSHOTS) {
       append(
         "<img class=\"phone\" src=\"/site/${shot.file}\" alt=\"${esc(shot.caption)}\" " +
-          "width=\"822\" height=\"1462\">"
+          "width=\"822\" height=\"1462\">",
       )
     }
     append("</div></section>")
@@ -105,15 +105,15 @@ object Landing {
     append("<ol class=\"steps\">")
     append(
       "<li><h3>Open</h3><p>Install from Google Play and open it. There is nothing to set up " +
-        "first, and nothing to add to Home Assistant.</p></li>"
+        "first, and nothing to add to Home Assistant.</p></li>",
     )
     append(
       "<li><h3>Sign in</h3><p>Type your Home Assistant address and sign in the way you always " +
-        "do. The sign-in stays on your phone.</p></li>"
+        "do. The sign-in stays on your phone.</p></li>",
     )
     append(
       "<li><h3>Enjoy</h3><p>Your dashboards are right there, live and tappable. Put the cards " +
-        "you use most on your home screen or your watch.</p></li>"
+        "you use most on your home screen or your watch.</p></li>",
     )
     append("</ol>")
     append("<div class=\"actions\">")
@@ -148,7 +148,7 @@ object Landing {
     append(
       "<p class=\"lede\">Start from any card on your dashboard and restyle it: rearrange it, " +
         "change its look, or turn a gauge into something only you would build. Your " +
-        "entities come with it, so you design against real values.</p>"
+        "entities come with it, so you design against real values.</p>",
     )
     val teaser = teaser(library)
     if (teaser.isNotEmpty()) {
@@ -157,7 +157,7 @@ object Landing {
         val image = design.catalog?.previews?.example ?: continue
         append(
           "<a href=\"/designs/${design.id}\"><img loading=\"lazy\" src=\"$API_BASE/$image\" " +
-            "alt=\"${esc(design.key.cardType)} card\"></a>"
+            "alt=\"${esc(design.key.cardType)} card\"></a>",
         )
       }
       append("</div>")
@@ -165,7 +165,7 @@ object Landing {
     append("<div class=\"actions\">")
     append("<a class=\"button\" href=\"${esc(site.designerUrl)}\">Open the card designer</a>")
     append(
-      "<a class=\"button quiet\" href=\"${esc(site.catalogUrl)}\">Browse cards and components</a>"
+      "<a class=\"button quiet\" href=\"${esc(site.catalogUrl)}\">Browse cards and components</a>",
     )
     append("<a class=\"button quiet\" href=\"/studio/dashboard\">Edit a dashboard</a>")
     append("</div></section>")
@@ -176,7 +176,7 @@ object Landing {
     append("<a href=\"$SOURCE_URL\">Source</a>")
     append("<a href=\"$SOURCE_URL/issues\">Feedback</a>")
     append(
-      "<a href=\"https://yschimke.github.io/homeassistant-remotecompose/privacy/\">Privacy</a>"
+      "<a href=\"https://yschimke.github.io/homeassistant-remotecompose/privacy/\">Privacy</a>",
     )
     append("<a href=\"/designs\">Card templates</a>")
     append("</footer>")
@@ -212,7 +212,7 @@ object Landing {
         "tablet, the same renderer can live inside Home Assistant: install Terrazzo there and " +
         "your Lovelace dashboards open at <code>/terrazzo</code>, behind Home Assistant's own " +
         "sign-in. It is a custom integration, not an add-on, so it works on HA OS, Container " +
-        "and Core (Home Assistant $MIN_HA_VERSION or newer).</p>"
+        "and Core (Home Assistant $MIN_HA_VERSION or newer).</p>",
     )
     append("<details><summary>Install it in Home Assistant</summary>")
     append("<ol class=\"steps\">")
@@ -220,14 +220,14 @@ object Landing {
       "<li><h3>Add Terrazzo to the Marketplace</h3><p>" +
         "<a href=\"$MARKETPLACE_REDIRECT_URL\">Open the repository in your Marketplace</a>. " +
         "Or go to <b>Settings → Marketplace → ⋮ → Add from link</b> and enter " +
-        "<code>$SOURCE_URL</code>. Home Assistant asks to connect GitHub the first time.</p></li>"
+        "<code>$SOURCE_URL</code>. Home Assistant asks to connect GitHub the first time.</p></li>",
     )
     append(
       "<li><h3>Install and set it up</h3><p>Select <b>Install</b> on <b>Terrazzo Remote " +
         "Compose</b>. Its setup opens straight away, no restart needed: name its sidebar entry " +
         "and, if you like, pick the dashboard it opens first. <b>Configure</b> changes either " +
         "later. If you closed it, <a href=\"$ADD_INTEGRATION_URL\">add Terrazzo to Home " +
-        "Assistant</a> from <b>Settings → Devices &amp; services</b>.</p></li>"
+        "Assistant</a> from <b>Settings → Devices &amp; services</b>.</p></li>",
     )
     append(
       "<li><h3>Open it</h3><p>Pick it in the sidebar or go to " +
@@ -235,7 +235,7 @@ object Landing {
         "<code>/terrazzo?dashboard=wall-panel&amp;wall</code> as a wall panel's start page: " +
         "<code>wall</code> adds full screen, keep-awake, a return to the dashboard after use " +
         "and a screensaver clock. No token goes in the URL: you sign in to Home Assistant as " +
-        "usual.</p></li>"
+        "usual.</p></li>",
     )
     append("</ol>")
     append("<details><summary>Without the Marketplace</summary>")
@@ -247,19 +247,19 @@ object Landing {
         "config folder so that <code>custom_components/terrazzo/manifest.json</code> exists, " +
         "restart Home Assistant and add Terrazzo from <b>Settings → Devices &amp; services</b>. " +
         "To update, replace the whole <code>terrazzo</code> folder " +
-        "rather than extracting over it.</p>"
+        "rather than extracting over it.</p>",
     )
     append("</details>")
     append(
       "<p class=\"note\">Updates appear under <b>Settings → Updates</b>. Install one, restart, and " +
         "refresh any wall-panel tabs. Setup also adds a <b>Remote Compose</b> card to the card " +
-        "picker of your existing Lovelace dashboards.</p>"
+        "picker of your existing Lovelace dashboards.</p>",
     )
     append("</details>")
     append("<div class=\"actions\">")
     append(
       "<a class=\"button quiet\" href=\"$SOURCE_URL/blob/main/docs/HOME_ASSISTANT.md\">" +
-        "Installation and updates</a>"
+        "Installation and updates</a>",
     )
     append("</div></section>")
   }

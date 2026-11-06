@@ -35,7 +35,7 @@ class HaActionDispatcherTest {
       Json.encodeToString(HaAction.serializer(), HaAction.AlarmPin("alarm_control_panel.house", ""))
 
     assertNull(
-      decodeDeliveredWidgetAction(remoteComposeMetadata = null, fallbackPayload = fallback)
+      decodeDeliveredWidgetAction(remoteComposeMetadata = null, fallbackPayload = fallback),
     )
   }
 

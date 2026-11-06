@@ -68,8 +68,8 @@ class WidgetOpenRequestsTest {
     assertNull(WidgetOpenRequests.launchIntent(context, HaAction.Toggle("light.kitchen")))
     assertNull(
       WidgetOpenRequests.targetOf(
-        Intent().putExtra(WidgetOpenRequests.EXTRA_NAVIGATE, "https://example.com")
-      )
+        Intent().putExtra(WidgetOpenRequests.EXTRA_NAVIGATE, "https://example.com"),
+      ),
     )
     assertNull(WidgetOpenRequests.targetOf(null))
   }
@@ -126,7 +126,7 @@ class WidgetOpenRequestsTest {
       WidgetOpenRequests.targetOf(
         WidgetOpenRequests.launchIntent(context, WidgetOpenApp, widgetId = 7),
         noOrigin,
-      )
+      ),
     )
     assertEquals(
       WidgetOpenRequests.Target.MoreInfo("light.kitchen"),

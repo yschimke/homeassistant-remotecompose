@@ -45,7 +45,7 @@ class CardStyleInstallWorker(context: Context, params: WorkerParameters) :
         OneTimeWorkRequestBuilder<CardStyleInstallWorker>()
           .setInputData(workDataOf(STYLE to style.id))
           .setConstraints(
-            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build(),
           )
           .addTag(TAG)
           .addTag(styleTag(style.id))

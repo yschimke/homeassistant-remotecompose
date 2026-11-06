@@ -66,14 +66,14 @@ class OfflineCacheTest {
                   CardConfig(
                     type = "tile",
                     raw = JsonObject(mapOf("type" to JsonPrimitive("tile"))),
-                  )
-                )
-            )
+                  ),
+                ),
+            ),
           ),
       )
     val homeSnap =
       HaSnapshot(
-        states = mapOf("light.kitchen" to EntityState(entityId = "light.kitchen", state = "on"))
+        states = mapOf("light.kitchen" to EntityState(entityId = "light.kitchen", state = "on")),
       )
 
     c.putDashboard(instance, urlPath = null, dashboard = home)
@@ -147,10 +147,10 @@ class OfflineCacheTest {
                     mapOf(
                       "friendly_name" to JsonPrimitive("Living Room"),
                       "unit_of_measurement" to JsonPrimitive("°C"),
-                    )
+                    ),
                   ),
-              )
-          )
+              ),
+          ),
       )
 
     c.putSnapshot(instance, null, snap)

@@ -273,7 +273,7 @@ fun Screen_CardActions() = PhoneHost {
       title = "Kitchen",
       stateLabel = "Kitchen lights · On",
       widgetsInUse = 2,
-    )
+    ),
   )
 }
 
@@ -291,7 +291,7 @@ fun Screen_CardActions_Placed() = PhoneHost {
       style = ee.schimke.terrazzo.dashboard.CardStyleLabel("Braun", custom = true),
       homeAssistantUrl = "https://ha.example/history?entity_id=lock.front_door",
       canMonitor = true,
-    )
+    ),
   )
 }
 
@@ -299,7 +299,7 @@ fun Screen_CardActions_Placed() = PhoneHost {
 @Preview(name = "card actions · card style", showBackground = false, widthDp = PHONE_WIDTH_DP)
 @Composable
 fun Screen_CardActions_CardStyle(
-  @PreviewParameter(CardStyleProvider::class) cardStyle: HaUberTheme
+  @PreviewParameter(CardStyleProvider::class) cardStyle: HaUberTheme,
 ) =
   PhoneHost(cardStyle = cardStyle) {
     CardActionsPreview(
@@ -312,7 +312,7 @@ fun Screen_CardActions_CardStyle(
         style = ee.schimke.terrazzo.dashboard.CardStyleLabel(cardStyle.displayName, custom = false),
         homeAssistantUrl = "https://ha.example/history?entity_id=lock.front_door",
         canMonitor = true,
-      )
+      ),
     )
   }
 
@@ -535,7 +535,7 @@ fun Screen_DashboardPicker() = PhoneHost {
             DashboardSummary(urlPath = null, title = "Home"),
             DashboardSummary(urlPath = "lovelace-mobile", title = "Living room"),
             DashboardSummary(urlPath = "lovelace-garage", title = "Garage"),
-          )
+          ),
       ),
     onDashboardPicked = {},
     // The real screen hosts the picker inside a Scaffold and hands
@@ -554,7 +554,7 @@ fun Screen_DashboardPicker() = PhoneHost {
 )
 @Composable
 fun Screen_DashboardPicker_ThemeStyle(
-  @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle
+  @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
 ) =
   PhoneHost(style = style) {
     DashboardPickerScreen(
@@ -565,7 +565,7 @@ fun Screen_DashboardPicker_ThemeStyle(
               DashboardSummary(urlPath = null, title = "Home"),
               DashboardSummary(urlPath = "lovelace-mobile", title = "Living room"),
               DashboardSummary(urlPath = "lovelace-garage", title = "Garage"),
-            )
+            ),
         ),
       onDashboardPicked = {},
       // The real screen hosts the picker inside a Scaffold and hands
@@ -610,7 +610,7 @@ fun Screen_DashboardView_PhoneLandscapeMedium() = PhoneHost {
 )
 @Composable
 fun Screen_DashboardView_ThemeStyle(
-  @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle
+  @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
 ) =
   PhoneHost(style = style) {
     DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _, _ -> })
@@ -946,7 +946,7 @@ fun Screen_MoreInfo_ThermostatControls() = PhoneHost {
 )
 @Composable
 fun Screen_MoreInfo_Numeric_ThemeStyle(
-  @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle
+  @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
 ) = PhoneHost(style = style) { MoreInfoSheetFrame(MORE_INFO_POWER_STATE, MORE_INFO_POWER_HISTORY) }
 
 @Preview(
@@ -957,7 +957,7 @@ fun Screen_MoreInfo_Numeric_ThemeStyle(
 )
 @Composable
 fun Screen_MoreInfo_Numeric_CardStyle(
-  @PreviewParameter(CardStyleProvider::class) cardStyle: HaUberTheme
+  @PreviewParameter(CardStyleProvider::class) cardStyle: HaUberTheme,
 ) =
   PhoneHost(cardStyle = cardStyle) {
     MoreInfoSheetFrame(MORE_INFO_POWER_STATE, MORE_INFO_POWER_HISTORY)
@@ -971,7 +971,7 @@ fun Screen_MoreInfo_Numeric_CardStyle(
 )
 @Composable
 fun Screen_MoreInfo_OnOff_CardStyle(
-  @PreviewParameter(CardStyleProvider::class) cardStyle: HaUberTheme
+  @PreviewParameter(CardStyleProvider::class) cardStyle: HaUberTheme,
 ) =
   PhoneHost(cardStyle = cardStyle) {
     MoreInfoSheetFrame(MORE_INFO_SWITCH_STATE, MORE_INFO_SWITCH_HISTORY)
@@ -1042,7 +1042,7 @@ fun Screen_DashboardSelection_Settings() = PhoneHost {
 )
 @Composable
 fun Screen_DashboardSelection_ThemeStyle(
-  @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle
+  @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
 ) =
   PhoneHost(style = style) {
     DashboardSelectionScreen(
@@ -1125,7 +1125,7 @@ fun Screen_Settings_Assistants() = PhoneHost {
 )
 @Composable
 fun Screen_Settings_AppTheme(
-  @PreviewParameter(AppThemeStyleProvider::class) cardStyle: HaUberTheme
+  @PreviewParameter(AppThemeStyleProvider::class) cardStyle: HaUberTheme,
 ) =
   PhoneHost(cardStyle = cardStyle) {
     Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
@@ -1328,7 +1328,7 @@ private val SAMPLE_PIN_ITEMS: List<PinRowItem> =
         dashboardUrlPath = "lovelace-mobile",
         card = PinnedCardData(type = "tile", title = "Living Room"),
         orderIndex = 0,
-      )
+      ),
     ),
     PinRowItem.Section(
       MobilePinnedSection(
@@ -1340,7 +1340,7 @@ private val SAMPLE_PIN_ITEMS: List<PinRowItem> =
         title = "Outdoor cameras",
         cards = listOf(PinnedCardData(), PinnedCardData()),
         orderIndex = 1,
-      )
+      ),
     ),
     PinRowItem.Card(
       MobilePinnedCard(
@@ -1349,7 +1349,7 @@ private val SAMPLE_PIN_ITEMS: List<PinRowItem> =
         dashboardUrlPath = "",
         card = PinnedCardData(type = "thermostat", title = ""),
         orderIndex = 2,
-      )
+      ),
     ),
   )
 
@@ -1527,7 +1527,7 @@ private val EDITOR_SAMPLE_CONFIG =
           {"type":"weather-forecast","entity":"weather.forecast_home"}
         ]}
       ]}]}
-      """
+      """,
     )
     .let { it as kotlinx.serialization.json.JsonObject }
 

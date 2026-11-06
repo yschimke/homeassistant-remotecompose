@@ -49,13 +49,13 @@ class WeatherDesignPropertiesTest {
                           put("temperature", 18)
                           put("templow", 9)
                           put("datetime", "2026-10-17T00:00:00")
-                        }
+                        },
                       )
                     },
-                )
+                ),
               ),
-            )
-        )
+            ),
+        ),
     )
 
   @Test
@@ -142,9 +142,9 @@ class WeatherDesignPropertiesTest {
                     buildJsonArray {
                       add(day)
                       add(day)
-                    }
-                )
-              )
+                    },
+                ),
+              ),
           ),
       )
     val properties = assertNotNull(converter.designProperties(card, loaded))

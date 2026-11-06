@@ -24,7 +24,7 @@ internal fun Route.studioCatalogFixture(
     assertEquals(JsonPrimitive("operator"), request["actorId"])
     assertEquals(JsonPrimitive("listCatalogs"), request["request"]!!.jsonObject["type"])
     call.respondText(
-      """{"response":{"type":"catalogs","catalogs":[{"benchmark":{"catalogSystemId":"ha-cards","catalogRevision":"sha256:published","nativeRuntimeId":"published-runtime"}}]}}"""
+      """{"response":{"type":"catalogs","catalogs":[{"benchmark":{"catalogSystemId":"ha-cards","catalogRevision":"sha256:published","nativeRuntimeId":"published-runtime"}}]}}""",
     )
   }
 }

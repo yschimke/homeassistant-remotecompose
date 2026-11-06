@@ -97,8 +97,8 @@ class WidgetPreviewParityTest {
                   put("friendly_name", "Driveway")
                   put("entity_picture", file.toURI().toString())
                 },
-              )
-          )
+              ),
+          ),
       )
     val configs =
       listOf(
@@ -119,7 +119,7 @@ class WidgetPreviewParityTest {
               snapshot,
               size,
               if (installed) 42 else AppWidgetManager.INVALID_APPWIDGET_ID,
-            )
+            ),
         )
       val width = WidgetSizing.dpToPx(context, size.widthDp)
       val height = WidgetSizing.dpToPx(context, size.heightDp)
@@ -168,7 +168,7 @@ class WidgetPreviewParityTest {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val raw =
       kotlinx.serialization.json.Json.parseToJsonElement(
-        """{"type":"picture-entity","entity":"camera.missing","name":"Unavailable camera","aspect_ratio":"16:9"}"""
+        """{"type":"picture-entity","entity":"camera.missing","name":"Unavailable camera","aspect_ratio":"16:9"}""",
       ) as kotlinx.serialization.json.JsonObject
     val card = CardConfig("picture-entity", raw)
     val snapshot =
@@ -180,13 +180,13 @@ class WidgetPreviewParityTest {
                 "camera.missing",
                 "unavailable",
                 buildJsonObject { put("entity_picture", "file:///missing-widget-image.png") },
-              )
-          )
+              ),
+          ),
       )
     val views =
       checkNotNull(
         TerrazzoWidgetProvider()
-          .renderPreview(context, DemoData.BASE_URL, card, snapshot, WidgetSizeDp(288, 252))
+          .renderPreview(context, DemoData.BASE_URL, card, snapshot, WidgetSizeDp(288, 252)),
       )
     val bitmap = renderInWindow(onMain { inflateWidgetPreview(context, views) }, 576, 504)
     val pixels = IntArray(bitmap.width * bitmap.height)
@@ -205,7 +205,7 @@ class WidgetPreviewParityTest {
     for (type in listOf("glance", "entities")) {
       val raw =
         kotlinx.serialization.json.Json.parseToJsonElement(
-          """{"type":"$type","entities":[${entities.joinToString { "\"$it\"" }}]}"""
+          """{"type":"$type","entities":[${entities.joinToString { "\"$it\"" }}]}""",
         ) as kotlinx.serialization.json.JsonObject
       val card = CardConfig(type, raw)
       fun pixels(lastValue: String): IntArray {
@@ -214,7 +214,7 @@ class WidgetPreviewParityTest {
             states =
               entities.associateWith {
                 EntityState(it, if (it == entities.last()) lastValue else "12")
-              }
+              },
           )
         val views =
           checkNotNull(
@@ -225,7 +225,7 @@ class WidgetPreviewParityTest {
                 card,
                 snapshot,
                 WidgetSizeDp(288, 336),
-              )
+              ),
           )
         val w = WidgetSizing.dpToPx(context, 288)
         val h = WidgetSizing.dpToPx(context, 336)
@@ -255,7 +255,7 @@ class WidgetPreviewParityTest {
           mapOf(
             "switch.boiler" to EntityState("switch.boiler", "on"),
             "sensor.boiler_power" to EntityState("sensor.boiler_power", "23.9"),
-          )
+          ),
       )
     val configs =
       listOf(
@@ -277,7 +277,7 @@ class WidgetPreviewParityTest {
       val views =
         checkNotNull(
           TerrazzoWidgetProvider()
-            .renderPreview(context, DemoData.BASE_URL, card, snapshot, WidgetSizeDp(288, 252))
+            .renderPreview(context, DemoData.BASE_URL, card, snapshot, WidgetSizeDp(288, 252)),
         ) {
           "${card.type} capture failed"
         }
@@ -309,7 +309,7 @@ class WidgetPreviewParityTest {
       checkNotNull(
         AppWidgetManager.getInstance(context).getInstalledProviders().find {
           it.provider == ComponentName(context, TerrazzoWidgetProvider::class.java)
-        }
+        },
       )
     val card =
       CardConfig(
@@ -327,8 +327,8 @@ class WidgetPreviewParityTest {
             states =
               mapOf(
                 "light.garage_door_garage_door_light" to
-                  EntityState("light.garage_door_garage_door_light", state)
-              )
+                  EntityState("light.garage_door_garage_door_light", state),
+              ),
           )
         val provider = TerrazzoWidgetProvider()
         val previewViews =

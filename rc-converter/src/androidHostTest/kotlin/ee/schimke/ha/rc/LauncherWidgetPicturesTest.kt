@@ -39,12 +39,12 @@ class LauncherWidgetPicturesTest {
                 put("friendly_name", "Driveway")
                 put("entity_picture", url)
               },
-            )
-        )
+            ),
+        ),
     )
   private val camera =
     card(
-      """{"type":"picture-entity","entity":"camera.driveway","camera_image":"camera.driveway","camera_view":"auto","aspect_ratio":"16:9"}"""
+      """{"type":"picture-entity","entity":"camera.driveway","camera_image":"camera.driveway","camera_view":"auto","aspect_ratio":"16:9"}""",
     )
 
   private fun card(raw: String): CardConfig {

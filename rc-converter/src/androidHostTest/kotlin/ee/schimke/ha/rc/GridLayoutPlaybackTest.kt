@@ -73,7 +73,7 @@ class GridLayoutPlaybackTest {
             entity("switch.fan", "on", "friendly_name" to "Fan"),
             entity("switch.pump", "off", "friendly_name" to "Pump"),
           )
-          .associateBy { it.entityId }
+          .associateBy { it.entityId },
     )
 
   private fun entity(id: String, state: String, vararg attrs: Pair<String, String>) =
@@ -88,14 +88,14 @@ class GridLayoutPlaybackTest {
     card(
       """{"type":"grid","columns":2,"cards":[
         {"type":"picture-entity","entity":"camera.chamber","aspect_ratio":"1:1"},
-        {"type":"picture-entity","entity":"camera.nozzle","aspect_ratio":"1:1"}]}"""
+        {"type":"picture-entity","entity":"camera.nozzle","aspect_ratio":"1:1"}]}""",
     )
 
   private val fourButtons =
     card(
       """{"type":"grid","columns":4,"cards":[
         {"type":"button","entity":"light.kitchen"},{"type":"button","entity":"light.office"},
-        {"type":"button","entity":"switch.fan"},{"type":"button","entity":"switch.pump"}]}"""
+        {"type":"button","entity":"switch.fan"},{"type":"button","entity":"switch.pump"}]}""",
     )
 
   private val sixTiles =
@@ -103,7 +103,7 @@ class GridLayoutPlaybackTest {
       """{"type":"grid","columns":3,"cards":[
         {"type":"tile","entity":"light.kitchen"},{"type":"tile","entity":"light.office"},
         {"type":"tile","entity":"switch.fan"},{"type":"tile","entity":"switch.pump"},
-        {"type":"tile","entity":"light.kitchen"},{"type":"tile","entity":"switch.fan"}]}"""
+        {"type":"tile","entity":"light.kitchen"},{"type":"tile","entity":"switch.fan"}]}""",
     )
 
   /**
@@ -130,7 +130,7 @@ class GridLayoutPlaybackTest {
         ) {
           CompositionLocalProvider(
             LocalWidgetCaptureSizeDp provides
-              if (capturePerWidth) WidgetCaptureSizeDp(width, heightDp = 400) else null
+              if (capturePerWidth) WidgetCaptureSizeDp(width, heightDp = 400) else null,
           ) {
             ProvideCardRegistry(registry) {
               ProvideCardSizeMode(mode) {
@@ -251,7 +251,7 @@ class GridLayoutPlaybackTest {
     card(
       """{"type":"grid","columns":2,"cards":[
         {"type":"tile","entity":"light.kitchen"},{"type":"tile","entity":"light.office"},
-        {"type":"tile","entity":"switch.fan"}]}"""
+        {"type":"tile","entity":"switch.fan"}]}""",
     )
 
   /**
@@ -277,7 +277,7 @@ class GridLayoutPlaybackTest {
   private val lonePicture =
     card(
       """{"type":"grid","columns":2,"cards":[
-        {"type":"picture-entity","entity":"camera.chamber","aspect_ratio":"1:1"}]}"""
+        {"type":"picture-entity","entity":"camera.chamber","aspect_ratio":"1:1"}]}""",
     )
 
   /**
@@ -295,7 +295,7 @@ class GridLayoutPlaybackTest {
       """{"type":"grid","columns":2,"cards":[
         {"type":"picture-entity","entity":"camera.chamber","aspect_ratio":"1:1"},
         {"type":"picture-entity","entity":"camera.nozzle","aspect_ratio":"1:1"},
-        {"type":"picture-entity","entity":"camera.chamber","aspect_ratio":"1:1"}]}"""
+        {"type":"picture-entity","entity":"camera.chamber","aspect_ratio":"1:1"}]}""",
     )
 
   /** A picture grid's short last row isn't stretched: the third picture is a column's square. */
@@ -316,7 +316,7 @@ class GridLayoutPlaybackTest {
         {"type":"tile","entity":"light.office"},{"type":"tile","entity":"switch.fan"},
         {"type":"conditional","conditions":[{"entity":"switch.pump","state":"on"}],
          "card":{"type":"entities","entities":["switch.pump"]}},
-        {"type":"tile","entity":"switch.pump"}]}"""
+        {"type":"tile","entity":"switch.pump"}]}""",
     )
 
   /**
@@ -411,7 +411,7 @@ class GridLayoutPlaybackTest {
       card(
         """{"type":"horizontal-stack","cards":[
           {"type":"picture-entity","entity":"camera.chamber","aspect_ratio":"1:1"},
-          {"type":"picture-entity","entity":"camera.nozzle","aspect_ratio":"1:1"}]}"""
+          {"type":"picture-entity","entity":"camera.nozzle","aspect_ratio":"1:1"}]}""",
       )
     val (phone, tablet) = heightsAt("stacked-square-pictures", stack, 360, 700)
     assertNear((360f - 8f) / 2f, phone, "360 dp")

@@ -74,7 +74,7 @@ private val PINNED_FIXTURE =
           cardKey = "k2",
           orderIndex = 3,
         ),
-      )
+      ),
   )
 
 private val SECTIONS_FIXTURE =
@@ -98,8 +98,8 @@ private val SECTIONS_FIXTURE =
             ),
           sectionKey = "s0",
           orderIndex = 1,
-        )
-      )
+        ),
+      ),
   )
 
 private val VALUES_FIXTURE =
@@ -190,7 +190,7 @@ fun WearSectionPreview() {
       section = SECTIONS_FIXTURE.sections.first(),
       values =
         WearValues(
-          VALUES_FIXTURE + mapOf("sensor.bedroom" to EntityValue(state = "19.2", unit = "°C"))
+          VALUES_FIXTURE + mapOf("sensor.bedroom" to EntityValue(state = "19.2", unit = "°C")),
         ),
     )
   }
@@ -244,7 +244,7 @@ fun WearCardDetailsPreview_Entities() {
       loadHistory = { id ->
         previewHistory(
           if (id.startsWith("lock.")) listOf("locked", "unlocked", "locked")
-          else listOf("off", "on", "off", "on")
+          else listOf("off", "on", "off", "on"),
         )
       },
       loadStates = { previewLiveStates },
@@ -364,7 +364,9 @@ private fun WearDashboardPreviewContent(style: String) {
       values =
         WearValues(
           VALUES_FIXTURE +
-            mapOf("switch.coffee_maker" to EntityValue(state = "on", friendlyName = "Coffee maker"))
+            mapOf(
+              "switch.coffee_maker" to EntityValue(state = "on", friendlyName = "Coffee maker"),
+            ),
         ),
       onBack = {},
     )

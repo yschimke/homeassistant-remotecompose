@@ -235,7 +235,7 @@ class GithubAuth(
       call.response.cookies.append(cookie(STATE_COOKIE, sign("$state|$returnPath"), maxAge = 600))
       call.respondRedirect(
         "${app.authorizeUrl}?client_id=${enc(app.clientId)}" +
-          "&redirect_uri=${enc(app.callbackUrl())}&state=${enc(state)}&allow_signup=true"
+          "&redirect_uri=${enc(app.callbackUrl())}&state=${enc(state)}&allow_signup=true",
       )
     }
 
@@ -274,7 +274,7 @@ class GithubAuth(
       }
       val expiry = clock() + SESSION_TTL_MS
       call.response.cookies.append(
-        cookie(SESSION_COOKIE, sign("$login|$expiry"), maxAge = (SESSION_TTL_MS / 1000).toInt())
+        cookie(SESSION_COOKIE, sign("$login|$expiry"), maxAge = (SESSION_TTL_MS / 1000).toInt()),
       )
       call.respondRedirect(returnPath)
     }
@@ -429,7 +429,7 @@ class GithubAuth(
           ?: storedKey(
             requireNotNull(keyDir) {
               "$setting is set, so SESSION_SECRET or USER_DESIGNS_DIR is needed too"
-            }
+            },
           )
       if (hostUrl != null) {
         return GithubAuth(

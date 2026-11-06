@@ -61,8 +61,8 @@ class LiveHaSessionTest {
             "lovelace/dashboards/list" ->
               send(
                 Frame.Text(
-                  """{"id":$id,"type":"result","success":true,"result":[{"url_path":"climate","title":"Climate"},{"url_path":"generated","title":"Generated"}]}"""
-                )
+                  """{"id":$id,"type":"result","success":true,"result":[{"url_path":"climate","title":"Climate"},{"url_path":"generated","title":"Generated"}]}""",
+                ),
               )
             "lovelace/config" -> {
               val path = command["url_path"]?.jsonPrimitive?.content
@@ -81,8 +81,8 @@ class LiveHaSessionTest {
             else ->
               send(
                 Frame.Text(
-                  """{"id":$id,"type":"result","success":false,"error":{"message":"unsupported"}}"""
-                )
+                  """{"id":$id,"type":"result","success":false,"error":{"message":"unsupported"}}""",
+                ),
               )
           }
         }

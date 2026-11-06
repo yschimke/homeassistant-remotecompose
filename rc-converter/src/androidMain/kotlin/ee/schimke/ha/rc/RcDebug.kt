@@ -66,7 +66,7 @@ internal fun DebugRcBorderWrapper(content: @Composable @RemoteComposable () -> U
   RemoteBox(
     modifier =
       RemoteModifier.fillMaxWidth()
-        .border(1.rdp, Color(0xFF1565C0).rc, RemoteRoundedCornerShape(0.rdp))
+        .border(1.rdp, Color(0xFF1565C0).rc, RemoteRoundedCornerShape(0.rdp)),
   ) {
     content()
   }

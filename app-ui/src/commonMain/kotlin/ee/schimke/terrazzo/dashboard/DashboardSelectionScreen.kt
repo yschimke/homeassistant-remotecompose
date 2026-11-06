@@ -127,7 +127,7 @@ private fun ReadyBody(
   var selected by remember(merged) { mutableStateOf(seed) }
 
   Column(
-    modifier = Modifier.fillMaxSize().padding(contentPadding).consumeWindowInsets(contentPadding)
+    modifier = Modifier.fillMaxSize().padding(contentPadding).consumeWindowInsets(contentPadding),
   ) {
     LazyColumn(
       modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -150,7 +150,7 @@ private fun ReadyBody(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
           ) {
             TextButton(
-              onClick = { selected = merged.mapTo(mutableSetOf()) { it.selectionKey() } }
+              onClick = { selected = merged.mapTo(mutableSetOf()) { it.selectionKey() } },
             ) {
               Text("Select all")
             }
@@ -165,7 +165,7 @@ private fun ReadyBody(
           modifier =
             Modifier.fillMaxWidth().padding(horizontal = 24.dp).clickable {
               selected = if (isChecked) selected - key else selected + key
-            }
+            },
         ) {
           Row(
             modifier = Modifier.fillMaxWidth().padding(8.dp),

@@ -202,7 +202,7 @@ fun SlotWidgetPreview_TileSmall() {
         friendlyName = "Living Room",
         unit = "°C",
         deviceClass = "temperature",
-      )
+      ),
     )
   SlotWidgetPreviewFixture(card, snapshot, ContainerType.Small)
 }

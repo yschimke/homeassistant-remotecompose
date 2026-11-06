@@ -147,7 +147,7 @@ class SectionCardGridTest {
           card("""{"type":"tile"}"""),
           card("""{"type":"tile"}"""),
           card("""{"type":"history-graph"}"""),
-        )
+        ),
       )
     assertEquals(12, plan.columnCount)
     assertEquals(
@@ -168,7 +168,7 @@ class SectionCardGridTest {
           card("""{"type":"tile"}"""),
           card("""{"type":"entities"}"""),
           card("""{"type":"button","show_name":false}"""),
-        )
+        ),
       )
     assertEquals(listOf(listOf(0, 0, 6), listOf(1, 0, 12), listOf(2, 0, 3)), plan.cells())
   }
@@ -182,7 +182,7 @@ class SectionCardGridTest {
           card("""{"type":"entity"}"""),
           card("""{"type":"tile"}"""),
           card("""{"type":"tile"}"""),
-        )
+        ),
       )
     assertEquals(listOf(listOf(0, 0, 6), listOf(0, 6, 6), listOf(1, 6, 6)), plan.cells())
     assertEquals(2, plan.placements[0].rowSpan)
@@ -213,7 +213,7 @@ class SectionCardGridTest {
         listOf(
           card("""{"type":"markdown","grid_options":{"columns":40}}"""),
           card("""{"type":"markdown","grid_options":{"columns":0,"rows":0}}"""),
-        )
+        ),
       )
     assertEquals(listOf(listOf(0, 0, 12), listOf(1, 0, 1)), plan.cells())
     assertNull(plan.placements[1].fixedHeightDp)

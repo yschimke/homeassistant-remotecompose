@@ -60,7 +60,7 @@ internal fun ConsoleClock(data: HaClockData, timeLabel: RemoteString) {
     RemoteCanvas(
       RemoteModifier.semantics { contentDescription = timeLabel }
         .fillMaxWidth()
-        .height((if (data.isLarge) 72 else 36).rdp)
+        .height((if (data.isLarge) 72 else 36).rdp),
     ) {
       val box = FitBox(width, height, if (data.showSeconds) 5.4f else 3.8f)
       val x = box.left

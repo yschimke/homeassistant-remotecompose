@@ -42,10 +42,10 @@ class CardDesignLibraryFailureTest {
     val empty = CardRegistry()
 
     assertNull(
-      CardDesignLibrary.templateOrNull(ApplicationProvider.getApplicationContext(), key, empty)
+      CardDesignLibrary.templateOrNull(ApplicationProvider.getApplicationContext(), key, empty),
     )
     assertNull(
-      CardDesignLibrary.templateOrNull(ApplicationProvider.getApplicationContext(), key, empty)
+      CardDesignLibrary.templateOrNull(ApplicationProvider.getApplicationContext(), key, empty),
     )
 
     assertEquals(1, reports.size, "a failed key is reported, and captured, once")

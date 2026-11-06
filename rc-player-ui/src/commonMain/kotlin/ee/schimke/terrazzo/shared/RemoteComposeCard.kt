@@ -48,9 +48,9 @@ private fun decodePlayableDocument(bytes: ByteArray): Result<RcDocument> = runCa
     check(
       document
         .composeSupportReport(
-          availableCustomComponents = ee.schimke.composeai.rcplayer.protocol.RcInput.configs
+          availableCustomComponents = ee.schimke.composeai.rcplayer.protocol.RcInput.configs,
         )
-        .fullyRenderable
+        .fullyRenderable,
     ) {
       "Document needs unsupported playback capabilities"
     }

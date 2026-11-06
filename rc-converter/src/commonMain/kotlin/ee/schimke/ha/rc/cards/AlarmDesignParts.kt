@@ -34,7 +34,7 @@ object AlarmDesignParts {
             mapOf(
               "type" to JsonPrimitive("alarm-panel"),
               "entity" to JsonPrimitive("alarm_control_panel.home"),
-            )
+            ),
           ),
         ),
         HaSnapshot(),

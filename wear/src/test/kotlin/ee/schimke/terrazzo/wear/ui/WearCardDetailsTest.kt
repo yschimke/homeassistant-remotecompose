@@ -42,7 +42,7 @@ class WearCardDetailsTest {
           HistoryChart.Segment(0f, 0.5f, "off"),
           HistoryChart.Segment(0.5f, 0.75f, "on"),
           HistoryChart.Segment(0.75f, 1f, "off"),
-        )
+        ),
       ),
       chart,
     )

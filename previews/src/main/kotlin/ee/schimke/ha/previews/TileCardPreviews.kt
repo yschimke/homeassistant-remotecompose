@@ -132,7 +132,7 @@ private fun climateState(
         "temperature" to JsonPrimitive(target),
         "hvac_action" to JsonPrimitive(action),
         "supported_features" to JsonPrimitive(401),
-      )
+      ),
     ),
   )
 
@@ -140,7 +140,7 @@ private fun climateState(
 private fun climateTile(entity: String, name: String) =
   card(
     """{"type":"tile","entity":"$entity","name":"$name","icon":"mdi:thermostat",
-    "features":[{"type":"target-temperature"},{"type":"climate-hvac-modes","style":"dropdown"}]}"""
+    "features":[{"type":"target-temperature"},{"type":"climate-hvac-modes","style":"dropdown"}]}""",
   )
 
 @Preview(
@@ -230,7 +230,7 @@ fun Tile_Climate_Inline_Features() =
       card(
         """{"type":"tile","entity":"climate.kids_room","name":"Kitchen","icon":"mdi:thermostat",
         "features_position":"inline","features":[{"type":"climate-hvac-modes","style":"dropdown"},
-        {"type":"target-temperature"},{"type":"climate-hvac-modes","style":"dropdown"}]}"""
+        {"type":"target-temperature"},{"type":"climate-hvac-modes","style":"dropdown"}]}""",
       ),
       climateTiles,
     )
@@ -252,7 +252,7 @@ fun Tile_LightBrightness_Expressive() =
           card =
             card(
               """{"type":"tile","entity":"light.kitchen","color":"amber",
-              "features":[{"type":"light-brightness"}]}"""
+              "features":[{"type":"light-brightness"}]}""",
             ),
           snapshot = Fixtures.kitchenLight,
         )

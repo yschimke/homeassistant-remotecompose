@@ -74,7 +74,7 @@ class DesignGenerator(
     }
     if (key.rcApiLevel != CardDesignTemplates.MOBILE_APP_API_LEVEL) {
       throw UnsupportedKey(
-        "mobile-app designs are captured at rcApiLevel ${CardDesignTemplates.MOBILE_APP_API_LEVEL}"
+        "mobile-app designs are captured at rcApiLevel ${CardDesignTemplates.MOBILE_APP_API_LEVEL}",
       )
     }
     if (key.schema != DesignKey.BINDING_SCHEMA_VERSION) {

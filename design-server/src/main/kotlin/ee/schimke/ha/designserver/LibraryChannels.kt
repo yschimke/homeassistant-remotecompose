@@ -164,7 +164,7 @@ class LibraryChannels(
       val current = runCatching { DesignLibrary.load(target) }.getOrNull()
       if (expectSerial != null && current?.manifest?.serial != expectSerial) {
         throw StaleLibrary(
-          "$channel moved on from serial $expectSerial to ${current?.manifest?.serial}"
+          "$channel moved on from serial $expectSerial to ${current?.manifest?.serial}",
         )
       }
       val now = clock()
@@ -542,7 +542,7 @@ class LibraryChannels(
     private val LIBRARY_FILE =
       Regex(
         "manifest\\.json|catalog\\.json|blobs/[0-9a-f]{64}\\.rc|" +
-          "previews/[0-9a-f]{16}-(example|template)\\.png|sources/[A-Za-z0-9_.-]+\\.uid"
+          "previews/[0-9a-f]{16}-(example|template)\\.png|sources/[A-Za-z0-9_.-]+\\.uid",
       )
 
     private val json = Json {

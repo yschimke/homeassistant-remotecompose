@@ -39,7 +39,7 @@ class StreamRouteTest {
       EntityState("sensor.temp", "21.46", buildJsonObject { put("unit_of_measurement", "°C") })
     val registry =
       Json.parseToJsonElement(
-          """[{"ei": "sensor.temp", "dp": 2}, {"ei": "sensor.bare"}, {"dp": 1}]"""
+          """[{"ei": "sensor.temp", "dp": 2}, {"ei": "sensor.bare"}, {"dp": 1}]""",
         )
         .jsonArray
     val precisions = registryDisplayPrecisions(registry)

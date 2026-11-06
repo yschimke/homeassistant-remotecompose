@@ -133,7 +133,7 @@ fun CardStudioScreen(
     // One flow for everyone: Ask your agent. UI Builder stays under More options.
     mutableStateOf(
       if (defaults.mode == CardStudioMode.Builder && recovered == null) CardStudioMode.Builder
-      else CardStudioMode.CloudAgent
+      else CardStudioMode.CloudAgent,
     )
   }
   var instruction by remember { mutableStateOf(recovered?.instruction.orEmpty()) }
@@ -562,7 +562,7 @@ fun CardStudioScreen(
             title = { Text("Ask your agent", maxLines = 1, overflow = TextOverflow.Ellipsis) },
             navigationIcon = { TextButton(onClick = onBack) { Text("Back") } },
           )
-      }
+      },
     ) { padding ->
       val url = editorUrl
       if (url != null) {
@@ -656,8 +656,8 @@ fun CardStudioScreen(
                       cloudServer.orEmpty(),
                       code,
                       "the design of this ${card.type} card",
-                    )
-                  )
+                    ),
+                  ),
                 )
                 messageStep = 3
                 requestFailed = false
@@ -694,8 +694,8 @@ fun CardStudioScreen(
                           instruction,
                           what = "the design of a ${card.type} card",
                           draft = "the whole card document (put_card_asset for its images)",
-                        )
-                      )
+                        ),
+                      ),
                     )
                     messageStep = 3
                     requestFailed = false
@@ -746,7 +746,7 @@ fun CardStudioScreen(
               onClick = {
                 mode = CardStudioMode.Builder
                 saveDefaults { copy(mode = CardStudioMode.Builder) }
-              }
+              },
             ) {
               Text("Design it myself in UI Builder")
             }
@@ -784,7 +784,7 @@ fun CardStudioScreen(
                   draft = null
                   draftAssets = emptyMap()
                   message = null
-                }
+                },
               ) {
                 Text("Start over from the card")
               }

@@ -55,7 +55,7 @@ class DashboardMarkdownTest {
     assertTrue(namesMissingEntity(card, loaded))
     val present =
       HaSnapshot(
-        states = mapOf("device_tracker.gone" to EntityState("device_tracker.gone", "home"))
+        states = mapOf("device_tracker.gone" to EntityState("device_tracker.gone", "home")),
       )
     assertFalse(namesMissingEntity(card, present))
   }

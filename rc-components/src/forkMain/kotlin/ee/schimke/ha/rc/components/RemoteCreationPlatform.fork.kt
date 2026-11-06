@@ -66,7 +66,7 @@ actual fun RemoteFloat.toDecimalRemoteString(maxFractionDigits: Int): RemoteStri
     DecimalFormat().apply {
       maximumFractionDigits = maxFractionDigits
       isGroupingUsed = false
-    }
+    },
   )
 
 /** `java.text.DecimalFormat("0".repeat(digits))`'s settings, in the fork's own format. */

@@ -34,7 +34,7 @@ class WidgetRefreshScheduler(private val context: Context) {
           workDataOf(
             WidgetRefreshWorker.KEY_CHAIN_DEMO to true,
             WidgetRefreshWorker.KEY_CHAIN_DELAY_MINUTES to delayMinutes,
-          )
+          ),
         )
         .build()
     WorkManager.getInstance(context)

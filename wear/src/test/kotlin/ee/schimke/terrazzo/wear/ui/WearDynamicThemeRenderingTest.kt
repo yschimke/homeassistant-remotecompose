@@ -78,7 +78,7 @@ class WearDynamicThemeRenderingTest {
             Column(
               Modifier.size(240.dp)
                 .background(MaterialTheme.colorScheme.background)
-                .testTag("screen")
+                .testTag("screen"),
             ) {
               Button(onClick = {}) { Text("System colors") }
               WearRemoteCard(
@@ -87,7 +87,7 @@ class WearDynamicThemeRenderingTest {
                   rawJson = """{"type":"tile","entity":"light.kitchen"}""",
                 ),
                 WearValues(
-                  mapOf("light.kitchen" to EntityValue(state = "off", friendlyName = "Kitchen"))
+                  mapOf("light.kitchen" to EntityValue(state = "off", friendlyName = "Kitchen")),
                 ),
               )
             }

@@ -163,7 +163,7 @@ internal fun WidgetPreparationPreview(
               onClick = {
                 width = bounds.minCellsW
                 height = bounds.minCellsH
-              }
+              },
             ) {
               Text("Try compact")
             }
@@ -253,7 +253,7 @@ private fun PreparedPreview(
         Modifier.fillMaxSize()
           .clip(RoundedCornerShape(cornerRadius))
           .testTag("widget-render")
-          .semantics { contentDescription = current.description }
+          .semantics { contentDescription = current.description },
     ) {
       AndroidView(
         factory = { ctx ->

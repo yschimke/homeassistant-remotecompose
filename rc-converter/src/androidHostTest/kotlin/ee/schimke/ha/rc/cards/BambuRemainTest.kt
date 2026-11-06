@@ -14,7 +14,7 @@ class BambuRemainTest {
     bambuRemainPercent(
       attrs.associate { (k, v) ->
         k to if (v is Boolean) JsonPrimitive(v) else JsonPrimitive(v as Number)
-      }
+      },
     )
 
   @Test

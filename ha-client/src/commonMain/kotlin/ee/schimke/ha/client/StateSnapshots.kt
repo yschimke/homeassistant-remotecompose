@@ -57,7 +57,7 @@ internal fun HaSnapshot.withStateEvent(event: JsonObject): HaSnapshot {
                 value,
               )
             }
-          }
+          },
         )
       }
   return copy(states = if (next == null) states - id else states + (id to next))

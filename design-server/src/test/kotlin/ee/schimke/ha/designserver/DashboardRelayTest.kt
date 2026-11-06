@@ -52,7 +52,7 @@ class DashboardRelayTest {
                 buildJsonObject {
                   put("id", "d1")
                   put("config", it)
-                }
+                },
               )
             }
           }
@@ -68,8 +68,8 @@ class DashboardRelayTest {
                 if (type == "terrazzo/edit/list") putJsonArray("sessions") { add(session) }
               }
             }
-              .toString()
-          )
+              .toString(),
+          ),
         )
         if (type == "terrazzo/edit/subscribe")
           send(
@@ -79,8 +79,8 @@ class DashboardRelayTest {
                 put("type", "event")
                 putJsonObject("event") { put("session", session) }
               }
-                .toString()
-            )
+                .toString(),
+            ),
           )
       }
     }
@@ -121,10 +121,10 @@ class DashboardRelayTest {
                       put("arguments", args)
                     }
                   }
-                    .toString()
+                    .toString(),
                 )
               }
-              .bodyAsText()
+              .bodyAsText(),
           )
           .jsonObject
           .getValue("result")

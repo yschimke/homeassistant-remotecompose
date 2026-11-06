@@ -68,7 +68,7 @@ class BambuPrinterResolutionTest {
       raw =
         JsonObject(
           mapOf("type" to JsonPrimitive(type)) +
-            fields.associate { (k, v) -> k to JsonPrimitive(v) }
+            fields.associate { (k, v) -> k to JsonPrimitive(v) },
         ),
     )
 
@@ -248,7 +248,7 @@ class BambuPrinterResolutionTest {
             mapOf(
               "type" to JsonPrimitive("vertical-stack"),
               "cards" to kotlinx.serialization.json.JsonArray(listOf(control("dev-a1").raw)),
-            )
+            ),
           ),
       )
     val inner =

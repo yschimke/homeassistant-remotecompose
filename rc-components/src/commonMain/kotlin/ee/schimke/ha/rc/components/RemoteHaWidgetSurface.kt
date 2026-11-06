@@ -51,7 +51,7 @@ fun RemoteHaWidgetSurface(
         .let { if (openApp != null) it.clickable(openApp) else it }
         .clip(shape)
         .background(theme.cardBackground)
-        .border(borderWidthDp.rdp, theme.divider, shape)
+        .border(borderWidthDp.rdp, theme.divider, shape),
   ) {
     content()
   }

@@ -198,7 +198,7 @@ class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMil
       val binding = definition.jsonObject
       require(
         binding["mediaType"]?.jsonPrimitive?.content == uploaded.mediaType &&
-          binding["contentDigest"]?.jsonPrimitive?.content == "sha256:${uploaded.sha256}"
+          binding["contentDigest"]?.jsonPrimitive?.content == "sha256:${uploaded.sha256}",
       ) {
         "Image does not match its binding"
       }

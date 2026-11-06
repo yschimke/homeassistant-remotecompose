@@ -71,7 +71,7 @@ fun main() {
         server.stop(1, 5, TimeUnit.SECONDS)
         kotlinx.coroutines.runBlocking { bridge.close() }
         authHttp.close()
-      }
+      },
     )
   server.start(wait = true)
 }
@@ -86,7 +86,7 @@ internal fun Application.configure(bridge: HaSupervisorBridge, auth: AddonAuthCo
       Json {
         ignoreUnknownKeys = true
         isLenient = true
-      }
+      },
     )
   }
   install(StatusPages) {

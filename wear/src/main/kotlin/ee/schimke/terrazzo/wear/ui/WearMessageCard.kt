@@ -52,7 +52,7 @@ private fun WearMessageCardContent(
                     }
                   },
                 )
-              }
+              },
           )
         messageInputs(CardConfig(MESSAGE_CARD_TYPE, raw), snapshot)
       }

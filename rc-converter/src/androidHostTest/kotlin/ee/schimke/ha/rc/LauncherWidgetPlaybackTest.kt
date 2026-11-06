@@ -51,7 +51,7 @@ class LauncherWidgetPlaybackTest {
               "on",
               JsonObject(mapOf("friendly_name" to JsonPrimitive("Kitchen"))),
             ),
-        )
+        ),
     )
 
   @Test
@@ -73,7 +73,7 @@ class LauncherWidgetPlaybackTest {
       CardConfig(
         "entities",
         Json.parseToJsonElement(
-            """{"type":"entities","entities":["light.kitchen","alarm_control_panel.house"]}"""
+            """{"type":"entities","entities":["light.kitchen","alarm_control_panel.house"]}""",
           )
           .jsonObject,
       )

@@ -135,7 +135,7 @@ fun CardPlayer(
   val converter = registry.get(card.type) ?: return
   val doc =
     rememberRemoteDocument(
-      creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi)
+      creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
     ) {
       converter.Render(card, snapshot)
     }

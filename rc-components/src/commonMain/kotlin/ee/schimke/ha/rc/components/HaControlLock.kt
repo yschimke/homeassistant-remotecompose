@@ -251,7 +251,7 @@ private fun UnlockStrip(
           // Hidden, it is also 0 dp tall: a gone component keeps taking the touches in its
           // bounds, which would hold back the card's own controls under it.
           .height(
-            (lock.isUnlocked.select(0f.rf, hint.toRemoteFloat()) * StripDp.toFloat()).toRemoteDp()
+            (lock.isUnlocked.select(0f.rf, hint.toRemoteFloat()) * StripDp.toFloat()).toRemoteDp(),
           )
           .visibility(shown)
           .clip(haControlShape(StripDp / 2, round = true))
@@ -275,7 +275,7 @@ private fun UnlockStrip(
         modifier =
           RemoteModifier.fillMaxSize()
             // A touch-down handler makes the strip the component that takes the touch.
-            .onTouchDown(valueChange(hint, 1.ri))
+            .onTouchDown(valueChange(hint, 1.ri)),
       ) {
         // Sized from the strip's height, so the knob scales with the capture density.
         val inset = height * 0.09f.rf

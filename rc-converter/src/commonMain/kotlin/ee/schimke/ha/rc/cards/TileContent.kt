@@ -327,7 +327,7 @@ internal object TileContent {
           label = label,
           unit = "%",
           available = available,
-        )
+        ),
       )
     }
     val features = entity.number("supported_features")?.toInt() ?: 0
@@ -409,7 +409,7 @@ internal object TileContent {
         unit = (entity.attributes["unit_of_measurement"] as? JsonPrimitive)?.contentOrNull ?: "",
         decimals = decimalPlaces(step),
         available = available && entity.state.toDoubleOrNull() != null,
-      )
+      ),
     )
   }
 

@@ -47,12 +47,12 @@ class HaClientDevicesTest {
         {"ei": "sensor.outdoor_temperature", "pl": "met", "dp": 1},
         {"ei": "sensor.bare"}
       ]}
-      """
+      """,
     )
 
   private val devices =
     Json.parseToJsonElement(
-      """[{"id": "dev1", "manufacturer": "Vaillant", "model": "ecoTEC plus 832"}]"""
+      """[{"id": "dev1", "manufacturer": "Vaillant", "model": "ecoTEC plus 832"}]""",
     )
 
   private fun start(deviceRegistry: Boolean): String {

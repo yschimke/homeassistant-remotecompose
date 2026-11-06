@@ -270,8 +270,8 @@ internal fun rememberPinning(
       val distances = anchors.distances()
       onNearestPin(
         nearestPinnedEntity(
-          pins.mapNotNull { pin -> distances[pin.anchorId]?.let { pin.entityId to it } }
-        )
+          pins.mapNotNull { pin -> distances[pin.anchorId]?.let { pin.entityId to it } },
+        ),
       )
       delay(NEAREST_PIN_INTERVAL_MS)
     }

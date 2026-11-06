@@ -72,7 +72,7 @@ class WidgetPreparationTest {
               "Pictures/TerrazzoWidgetTests",
             )
           },
-        )
+        ),
       )
     checkNotNull(context.contentResolver.openOutputStream(uri)).use { output ->
       val original =
@@ -104,8 +104,8 @@ class WidgetPreparationTest {
       states =
         mapOf(
           "light.garage_door_garage_door_light" to
-            EntityState("light.garage_door_garage_door_light", state)
-        )
+            EntityState("light.garage_door_garage_door_light", state),
+        ),
     )
 
   @Test
@@ -308,8 +308,8 @@ class WidgetPreparationTest {
         card.copy(
           raw =
             kotlinx.serialization.json.JsonObject(
-              card.raw + ("name" to kotlinx.serialization.json.JsonPrimitive("Renamed"))
-            )
+              card.raw + ("name" to kotlinx.serialization.json.JsonPrimitive("Renamed")),
+            ),
         )
       currentSnapshot.value = snapshot("off")
     }
@@ -355,14 +355,14 @@ class WidgetPreparationTest {
       }
       android.widget.RemoteViews(
         android.widget.RemoteViews.DrawInstructions.Builder(
-            listOf(ee.schimke.ha.rc.platformWidgetDocument(captured.bytes))
+            listOf(ee.schimke.ha.rc.platformWidgetDocument(captured.bytes)),
           )
-          .build()
+          .build(),
       )
     }
     val json =
       kotlinx.serialization.json.Json.parseToJsonElement(
-        """{"type":"picture-entity","entity":"camera.g5_turret_ultra_high_resolution_channel","camera_view":"auto","aspect_ratio":"16:9","name":"Driveway"}"""
+        """{"type":"picture-entity","entity":"camera.g5_turret_ultra_high_resolution_channel","camera_view":"auto","aspect_ratio":"16:9","name":"Driveway"}""",
       ) as kotlinx.serialization.json.JsonObject
     compose.setContent {
       CompositionLocalProvider(
@@ -391,7 +391,7 @@ class WidgetPreparationTest {
   fun picturePreviewAndConfirmedLauncherInstallation() {
     val json =
       kotlinx.serialization.json.Json.parseToJsonElement(
-        """{"type":"picture-entity","entity":"camera.g5_turret_ultra_high_resolution_channel","camera_image":"camera.g5_turret_ultra_high_resolution_channel","camera_view":"auto","aspect_ratio":"16:9","name":"Driveway"}"""
+        """{"type":"picture-entity","entity":"camera.g5_turret_ultra_high_resolution_channel","camera_image":"camera.g5_turret_ultra_high_resolution_channel","camera_view":"auto","aspect_ratio":"16:9","name":"Driveway"}""",
       ) as kotlinx.serialization.json.JsonObject
     installJourney(CardConfig("picture-entity", json), DemoData.snapshot(), "picture-")
   }
@@ -489,7 +489,7 @@ class WidgetPreparationTest {
       device.wait(
         Until.hasObject(By.text(java.util.regex.Pattern.compile("(?i).*add to home screen.*"))),
         30_000,
-      )
+      ),
     )
     device.pressBack()
     assertTrue(
@@ -514,7 +514,7 @@ class WidgetPreparationTest {
       device.wait(
         Until.hasObject(By.text(java.util.regex.Pattern.compile("(?i).*add to home screen.*"))),
         30_000,
-      )
+      ),
     )
     screenshot("${evidencePrefix}launcher-confirmation")
     val add =
@@ -522,10 +522,10 @@ class WidgetPreparationTest {
         Until.findObject(
           By.text(
               java.util.regex.Pattern.compile(
-                "(?i)^add(?: automatically| to home screen| widget)?$"
-              )
+                "(?i)^add(?: automatically| to home screen| widget)?$",
+              ),
             )
-            .clickable(true)
+            .clickable(true),
         ),
         30_000,
       )
@@ -630,7 +630,7 @@ class WidgetPreparationTest {
         android.content.Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).apply {
           component = android.content.ComponentName(context, TerrazzoWidgetProvider::class.java)
           putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(installed.widgetId))
-        }
+        },
       )
       compose.waitUntil(60_000) {
         cameraPixels()?.let { it.size == original.size && !it.contentEquals(original) } == true
@@ -673,7 +673,7 @@ class WidgetPreparationTest {
           (hostBounds.right + 2 * hostBounds.width() + 30).coerceAtMost(device.displayWidth - 20),
           hostBounds.centerY(),
           40,
-        )
+        ),
       )
       compose.waitUntil(60_000) {
         WidgetSizing.forWidgetCapture(manager, installed.widgetId).widthDp > initialSize.widthDp
@@ -686,10 +686,10 @@ class WidgetPreparationTest {
           widerBounds.bottom,
           widerBounds.centerX(),
           (widerBounds.bottom + 2 * hostBounds.height() + 30).coerceAtMost(
-            device.displayHeight - 120
+            device.displayHeight - 120,
           ),
           40,
-        )
+        ),
       )
       compose.waitUntil(60_000) {
         val resized = WidgetSizing.forWidgetCapture(manager, installed.widgetId)

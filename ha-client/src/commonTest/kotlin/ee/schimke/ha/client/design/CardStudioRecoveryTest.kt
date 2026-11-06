@@ -24,13 +24,13 @@ class CardStudioRecoveryTest {
     "roots":["root"],"nodes":{
       "root":{"id":"root","componentId":"ha-cards/dashboard-card","properties":{},"slots":{"content":["text"]}},
       "text":{"id":"text","componentId":"ha-cards/remote-text","properties":{"text":{"type":"state","variable":"sensor.s0.state"}},"slots":{}}
-    }}"""
+    }}""",
       )
       .jsonObject
   private val edited = JsonObject(document + ("title" to JsonPrimitive("My edited design")))
   private val fresh =
     Json.parseToJsonElement(
-        document.toString().replace("card-old", "card-new").replace("21 °C", "22 °C")
+        document.toString().replace("card-old", "card-new").replace("21 °C", "22 °C"),
       )
       .jsonObject
 
@@ -38,12 +38,12 @@ class CardStudioRecoveryTest {
   fun refreshingPreservesAddedSharedBindingsWhileUpdatingTheCardValues() {
     val sun =
       Json.parseToJsonElement(
-        """{"type":"value","valueType":"float","nullable":false,"initialValue":45,"persistence":"design"}"""
+        """{"type":"value","valueType":"float","nullable":false,"initialValue":45,"persistence":"design"}""",
       )
     val state = document.getValue("stateVariables").jsonObject
     val changed =
       JsonObject(
-        document + ("stateVariables" to JsonObject(state + ("HA:sun.sun.elevation" to sun)))
+        document + ("stateVariables" to JsonObject(state + ("HA:sun.sun.elevation" to sun))),
       )
     val result = refreshCardDraft(changed, fresh)
     assertEquals(sun, result.getValue("stateVariables").jsonObject["HA:sun.sun.elevation"])
@@ -161,7 +161,7 @@ class CardStudioRecoveryTest {
   fun refreshRejectsChangedCatalogOrBindingTypeInsteadOfDroppingEdits() {
     val changedType =
       Json.parseToJsonElement(
-          fresh.toString().replace("\"valueType\":\"string\"", "\"valueType\":\"bool\"")
+          fresh.toString().replace("\"valueType\":\"string\"", "\"valueType\":\"bool\""),
         )
         .jsonObject
     assertFailsWith<IllegalArgumentException> { refreshCardDraft(edited, changedType) }
@@ -200,7 +200,7 @@ class CardStudioRecoveryTest {
           } finally {
             stopped.complete(Unit)
           }
-        }
+        },
       )
     try {
       val request = async {
@@ -233,7 +233,7 @@ class CardStudioRecoveryTest {
                 buildJsonObject {
                   put("type", "text")
                   put("text", document.toString())
-                }
+                },
               )
             }
           }
@@ -244,7 +244,7 @@ class CardStudioRecoveryTest {
                 buildJsonObject {
                   put("finish_reason", reason)
                   putJsonObject("message") { put("content", document.toString()) }
-                }
+                },
               )
             }
           }
@@ -270,7 +270,7 @@ class CardStudioRecoveryTest {
               buildJsonObject {
                 put("finish_reason", "stop")
                 putJsonObject("message") { put("content", "private-preview-not-json") }
-              }
+              },
             )
           }
         }
@@ -297,7 +297,7 @@ class CardStudioRecoveryTest {
         MockEngine {
           calls++
           error("Unexpected request")
-        }
+        },
       )
     try {
       assertFailsWith<IllegalArgumentException> {

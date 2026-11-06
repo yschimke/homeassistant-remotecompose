@@ -43,8 +43,8 @@ class WearCardDesignPickerTest {
               "light.kitchen",
               "on",
               JsonObject(mapOf("friendly_name" to JsonPrimitive("Kitchen"))),
-            )
-        )
+            ),
+        ),
     )
   private val choice =
     CardDesignChoice(
@@ -63,7 +63,7 @@ class WearCardDesignPickerTest {
         choice.style,
         dark = true,
         cardStyle = choice.cardStyle,
-      )
+      ),
     )
 
   private fun designs(byKey: Map<DesignKey, ByteArray>, choice: CardDesignChoice = this.choice) =
@@ -84,7 +84,7 @@ class WearCardDesignPickerTest {
             key.forWearWidget(DesignKey.WEAR_LARGE) to large,
             // The card's phone design is not a Wear one.
             key.copy(variant = "neon") to byteArrayOf(9),
-          )
+          ),
         ),
       )
     assertEquals(
@@ -103,7 +103,7 @@ class WearCardDesignPickerTest {
     val id = "installed-skin"
     val overrides =
       CardDesignOverrides(
-        byCard = mapOf(cardFingerprint(card) to CardDesignOverride(designId = id))
+        byCard = mapOf(cardFingerprint(card) to CardDesignOverride(designId = id)),
       )
     val loaded =
       designs(
@@ -113,8 +113,8 @@ class WearCardDesignPickerTest {
         .copy(
           byDesign =
             ee.schimke.ha.client.design.DesignsById(
-              mapOf(id to listOf(ee.schimke.ha.client.design.DesignedBlob(key, null, selected)))
-            )
+              mapOf(id to listOf(ee.schimke.ha.client.design.DesignedBlob(key, null, selected))),
+            ),
         )
     val picked = wearCardDesigns(listOf("pin1" to card), snapshot, loaded)
     assertEquals(2, picked.size)
@@ -125,7 +125,7 @@ class WearCardDesignPickerTest {
   fun missingSelectedCustomDesignDoesNotSendGenericAnchor() {
     val raw =
       Json.parseToJsonElement(
-        """{"type":"custom:enhanced-shutter-card","entities":[{"entity":"cover.garage","top_offset_pct":13}]}"""
+        """{"type":"custom:enhanced-shutter-card","entities":[{"entity":"cover.garage","top_offset_pct":13}]}""",
       ) as JsonObject
     val custom = CardConfig("custom:enhanced-shutter-card", raw)
     val states = HaSnapshot(states = mapOf("cover.garage" to EntityState("cover.garage", "closed")))
@@ -137,11 +137,11 @@ class WearCardDesignPickerTest {
           choice.style,
           dark = true,
           cardStyle = choice.cardStyle,
-        )
+        ),
       )
     val overrides =
       CardDesignOverrides(
-        byCard = mapOf(cardFingerprint(custom) to CardDesignOverride(designId = "missing"))
+        byCard = mapOf(cardFingerprint(custom) to CardDesignOverride(designId = "missing")),
       )
     val loaded =
       designs(
@@ -155,7 +155,7 @@ class WearCardDesignPickerTest {
   fun selectedSingleEntityCustomCardSendsItsChosenWearDesign() {
     val raw =
       Json.parseToJsonElement(
-        """{"type":"custom:enhanced-shutter-card","entities":[{"entity":"cover.garage","top_offset_pct":13}]}"""
+        """{"type":"custom:enhanced-shutter-card","entities":[{"entity":"cover.garage","top_offset_pct":13}]}""",
       ) as JsonObject
     val custom = CardConfig("custom:enhanced-shutter-card", raw)
     val states = HaSnapshot(states = mapOf("cover.garage" to EntityState("cover.garage", "closed")))
@@ -167,12 +167,12 @@ class WearCardDesignPickerTest {
           choice.style,
           dark = true,
           cardStyle = choice.cardStyle,
-        )
+        ),
       )
     val id = "garage-skin"
     val overrides =
       CardDesignOverrides(
-        byCard = mapOf(cardFingerprint(custom) to CardDesignOverride(designId = id))
+        byCard = mapOf(cardFingerprint(custom) to CardDesignOverride(designId = id)),
       )
     val small = byteArrayOf(12)
     val large = byteArrayOf(34)
@@ -191,8 +191,8 @@ class WearCardDesignPickerTest {
                 null,
                 large,
               ),
-            )
-        )
+            ),
+        ),
       )
     val loaded =
       designs(emptyMap(), choice.copy(overrides = overrides, skins = setOf(id)))
@@ -208,7 +208,7 @@ class WearCardDesignPickerTest {
     val garage = byteArrayOf(5)
     val overrides =
       CardDesignOverrides(
-        byCard = mapOf(cardFingerprint(card) to CardDesignOverride(variant = "garage"))
+        byCard = mapOf(cardFingerprint(card) to CardDesignOverride(variant = "garage")),
       )
     val picked =
       wearCardDesigns(
@@ -280,7 +280,7 @@ class WearCardDesignPickerTest {
             sectionIndex = 0,
             title = "Kitchen",
             cards = listOf(PinnedCardData(type = "entity", rawJson = sectionJson)),
-          )
+          ),
         ),
       )
     assertEquals(listOf("pin1", "pin2"), widgetCards.pinned.map { it.first })
@@ -295,7 +295,7 @@ class WearCardDesignPickerTest {
           choice.style,
           dark = true,
           cardStyle = choice.cardStyle,
-        )
+        ),
       )
     val tileSmall = byteArrayOf(1)
     val buttonLarge = byteArrayOf(2)
@@ -307,7 +307,7 @@ class WearCardDesignPickerTest {
           mapOf(
             key.forWearWidget(DesignKey.WEAR_SMALL) to tileSmall,
             buttonKey.forWearWidget(DesignKey.WEAR_LARGE) to buttonLarge,
-          )
+          ),
         ),
       )
     assertEquals(

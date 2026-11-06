@@ -666,7 +666,7 @@ class CardDesignParityTest {
           "recording",
           "friendly_name" to "Driveway",
           "entity_picture" to url,
-        )
+        ),
       ),
       dark = false,
       bitmapLoader = loaderFor(url),
@@ -922,7 +922,7 @@ class CardDesignParityTest {
           kotlinx.serialization.json.JsonArray(
             listOf("light.kitchen", "switch.fan", "light.kitchen", "switch.fan").map { id ->
               card("button") { put("entity", id) }.raw
-            }
+            },
           ),
         )
       },
@@ -1081,7 +1081,7 @@ class CardDesignParityTest {
             put("summary", summary)
             put("start", start)
           }
-        }
+        },
       )
     assertParity(
       "calendar",
@@ -1137,11 +1137,11 @@ class CardDesignParityTest {
                     put("summary", "Eggs")
                     put("status", "completed")
                   },
-                )
+                ),
               ),
             )
           },
-        )
+        ),
       ),
       dark = true,
     )
@@ -1173,11 +1173,11 @@ class CardDesignParityTest {
                       put("templow", "${9 + i}")
                       put("datetime", "${dt}T00:00:00")
                     }
-                  }
+                  },
               ),
             )
           },
-        )
+        ),
       ),
       dark = false,
     )

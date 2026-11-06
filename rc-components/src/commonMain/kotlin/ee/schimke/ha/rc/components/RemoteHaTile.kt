@@ -53,7 +53,7 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
         .then(clickable)
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 12.rdp, vertical = 8.rdp)
+        .padding(horizontal = 12.rdp, vertical = 8.rdp),
   ) {
     if (data.features.isEmpty()) {
       TileInfoRow(data, look, renderChip)
@@ -103,7 +103,7 @@ private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolea
     RemoteColumn(
       modifier =
         if (inline != null) RemoteModifier.weight(1f).padding(start = 10.rdp)
-        else RemoteModifier.padding(start = 10.rdp)
+        else RemoteModifier.padding(start = 10.rdp),
     ) {
       RemoteText(
         text = entityName(data.entityId, data.name),
@@ -223,7 +223,7 @@ fun RemoteHaTileCompact(data: HaTileData, modifier: RemoteModifier = RemoteModif
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
         // A Label line (~17dp) over a Body line (~20dp) inside 3dp: ~43dp of the slot's ~44.
-        .padding(horizontal = 12.rdp, vertical = 3.rdp)
+        .padding(horizontal = 12.rdp, vertical = 3.rdp),
   ) {
     RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
       // A capture-selected launcher tier can bind state without colliding with hidden siblings.

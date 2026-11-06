@@ -76,8 +76,8 @@ class CardWidgetChoiceTest {
     store.writePinned(PinnedCardSet(cards = listOf(PinnedCard(card = kitchen, cardKey = "pin"))))
     store.writeValues(
       LiveValues(
-        values = mapOf("light.kitchen" to EntityValue(state = "on", friendlyName = "Kitchen"))
-      )
+        values = mapOf("light.kitchen" to EntityValue(state = "on", friendlyName = "Kitchen")),
+      ),
     )
 
     // Nothing chosen yet, at either size: where to choose one.

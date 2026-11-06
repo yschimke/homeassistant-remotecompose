@@ -68,7 +68,7 @@ class UnavailableFrameCaptureTest {
             ),
             entity("light.hall", "on", "friendly_name" to "Hall"),
           )
-          .associateBy { it.entityId }
+          .associateBy { it.entityId },
     )
 
   private fun card(type: String, entity: String) =
@@ -163,7 +163,7 @@ class UnavailableFrameCaptureTest {
           put(
             "cards",
             kotlinx.serialization.json.JsonArray(
-              listOf(card("tile", "light.porch").raw, card("tile", "light.hall").raw)
+              listOf(card("tile", "light.porch").raw, card("tile", "light.hall").raw),
             ),
           )
         },

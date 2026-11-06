@@ -65,7 +65,8 @@ object NotificationCards {
     val captured = captureDocument(context, entityId, snapshot)
     val views =
       RemoteViews(
-        RemoteViews.DrawInstructions.Builder(listOf(platformWidgetDocument(captured.bytes))).build()
+        RemoteViews.DrawInstructions.Builder(listOf(platformWidgetDocument(captured.bytes)))
+          .build(),
       )
     boundActions(captured).forEach { (actionId, action) ->
       HaNotificationActionReceiver.cardAction(context, baseUrl, entityId, actionId, action)?.let {

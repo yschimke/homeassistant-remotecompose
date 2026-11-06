@@ -361,7 +361,7 @@ private fun WidthOnlyDemo() {
         card(
           """{"type":"entities","title":"Living Room","entities":[
                 "sensor.living_room","light.kitchen"
-            ]}"""
+            ]}""",
         ),
         CardKind.Entities,
       ),
@@ -434,7 +434,7 @@ private fun ConstraintMatrix(title: String, profile: Profile) {
         card(
           """{"type":"entities","title":"Living Room","entities":[
                 "sensor.living_room","light.kitchen","switch.coffee_maker"
-            ]}"""
+            ]}""",
         ),
         CardKind.Entities,
       ),
@@ -443,7 +443,7 @@ private fun ConstraintMatrix(title: String, profile: Profile) {
         card(
           """{"type":"glance","title":"Overview","entities":[
                 "sensor.living_room","light.kitchen","lock.front_door"
-            ]}"""
+            ]}""",
         ),
         CardKind.Glance,
       ),
@@ -569,7 +569,7 @@ private fun experimentCards(): List<Triple<String, CardConfig, CardKind>> =
       card(
         """{"type":"entities","title":"Living Room","entities":[
             "sensor.living_room","light.kitchen","switch.coffee_maker"
-        ]}"""
+        ]}""",
       ),
       CardKind.Entities,
     ),
@@ -578,7 +578,7 @@ private fun experimentCards(): List<Triple<String, CardConfig, CardKind>> =
       card(
         """{"type":"glance","title":"Overview","entities":[
             "sensor.living_room","light.kitchen","lock.front_door"
-        ]}"""
+        ]}""",
       ),
       CardKind.Glance,
     ),

@@ -43,7 +43,7 @@ class CardStudioLayoutTest {
     open.performScrollTo().performClick()
     val error =
       compose.onNodeWithText(
-        "The draft or connection settings are invalid. Check the HTTPS address and try again."
+        "The draft or connection settings are invalid. Check the HTTPS address and try again.",
       )
     error.assertIsDisplayed()
     val options = compose.onNodeWithText("More options").fetchSemanticsNode().boundsInRoot

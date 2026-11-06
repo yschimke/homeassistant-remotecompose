@@ -179,7 +179,7 @@ class HaSupervisorBridge(
           put("type", "auth")
           put("access_token", accessToken)
         },
-      )
+      ),
     )
     val authResult = readMessage(s)
     if (authResult["type"]?.jsonPrimitive?.content != "auth_ok") {

@@ -26,7 +26,7 @@ class LiveImageCacheInterceptorTest {
     assertEquals(
       "http://ha.local:8123/api/camera_proxy/camera.yard",
       liveImageDiskKey(
-        "http://ha.local:8123/api/camera_proxy/camera.yard?token=a&terrazzo_frame=7"
+        "http://ha.local:8123/api/camera_proxy/camera.yard?token=a&terrazzo_frame=7",
       ),
     )
   }
@@ -35,7 +35,7 @@ class LiveImageCacheInterceptorTest {
   fun otherPicturesKeepCoilsDefaultKey() {
     assertNull(liveImageDiskKey("http://ha.local:8123/api/image/serve/abc/512x512"))
     assertNull(
-      liveImageDiskKey("http://ha.local:8123/api/media_player_proxy/media_player.tv?token=t")
+      liveImageDiskKey("http://ha.local:8123/api/media_player_proxy/media_player.tv?token=t"),
     )
     assertNull(liveImageDiskKey("http://ha.local:8123/local/floorplan.png"))
     assertNull(liveImageDiskKey("/api/camera_proxy/camera.yard?token=abc"))
@@ -48,7 +48,7 @@ class LiveImageCacheInterceptorTest {
     // Content-addressed: a changed picture is a new URL.
     assertFalse(refreshesDaily("http://ha.local:8123/api/image/serve/abc/512x512"))
     assertFalse(
-      refreshesDaily("http://ha.local:8123/api/media_player_proxy/media_player.tv?token=t&cache=h")
+      refreshesDaily("http://ha.local:8123/api/media_player_proxy/media_player.tv?token=t&cache=h"),
     )
     // Live pictures have their own rule; relative URLs aren't resolved yet.
     assertFalse(refreshesDaily("http://ha.local:8123/api/camera_proxy/camera.yard?token=a"))

@@ -42,7 +42,7 @@ class MessageCardConverter : CardConverter {
                   parseHaAction(
                     card.raw["tap_action"] as? kotlinx.serialization.json.JsonObject,
                     null,
-                  )
+                  ),
                 )
             else "",
           chrome = field.chrome,

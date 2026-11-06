@@ -19,7 +19,7 @@ class UnsupportedCardConverterTest {
       states =
         listOf("light.kitchen", "sensor.temp", "cover.garage", "sun.sun").associateWith {
           EntityState(it, "on")
-        }
+        },
     )
 
   private fun card(json: String): CardConfig {
@@ -39,7 +39,7 @@ class UnsupportedCardConverterTest {
   fun aSingleEntityCustomCardKeepsItsNameOnTheRow() {
     val generic =
       genericCard(
-        card("""{"type":"custom:mushroom-light-card","entity":"light.kitchen","name":"Kitchen"}""")
+        card("""{"type":"custom:mushroom-light-card","entity":"light.kitchen","name":"Kitchen"}"""),
       )!!
     assertEquals("entities", generic.type)
     assertNull(generic.raw["title"])
@@ -60,8 +60,8 @@ class UnsupportedCardConverterTest {
              {"type":"custom:mini-graph-card","entities":["sensor.temp",{"entity":"light.kitchen","name":"Lamp"}]},
              {"type":"custom:button-card","entity":"cover.garage"}
            ]}
-          """
-        )
+          """,
+        ),
       )!!
     assertEquals("Garage", generic.raw["title"]!!.jsonPrimitive.content)
     assertEquals(listOf("cover.garage", "sensor.temp", "light.kitchen"), ids(generic))
@@ -79,8 +79,8 @@ class UnsupportedCardConverterTest {
             {"type":"custom:button-card","entity":"cover.garage","name":"Door","icon":"mdi:garage",
              "tap_action":{"action":"more-info"}}
           ]}
-          """
-        )
+          """,
+        ),
       )!!
     val row = (generic.raw["entities"] as JsonArray).single().jsonObject
     assertEquals("Door", row["name"]!!.jsonPrimitive.content)
@@ -94,8 +94,8 @@ class UnsupportedCardConverterTest {
     // entity-shaped strings must not become rows that would never update.
     assertNull(
       genericCard(
-        card("""{"type":"custom:template-card","entity_id":"sun.sun","content":"sun.sun"}""")
-      )
+        card("""{"type":"custom:template-card","entity_id":"sun.sun","content":"sun.sun"}"""),
+      ),
     )
   }
 

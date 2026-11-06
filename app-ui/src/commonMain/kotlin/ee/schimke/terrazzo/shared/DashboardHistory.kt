@@ -63,7 +63,7 @@ internal fun rememberDashboardData(client: HaClient, dashboard: Dashboard?): Das
           windows.entries.groupBy({ it.value }, { it.key }).forEach { (hours, ids) ->
             putAll(
               attempt { client.fetchHistory(ids, now - hours.hours, now) }
-                ?: previous?.history?.filterKeys { it in ids }.orEmpty()
+                ?: previous?.history?.filterKeys { it in ids }.orEmpty(),
             )
           }
         }

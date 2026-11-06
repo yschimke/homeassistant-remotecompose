@@ -82,8 +82,8 @@ private fun demoDashboard(): Dashboard =
               entityCard("tile", "lock.front_door"),
               entityCard("entity", "binary_sensor.front_door_motion"),
               entityCard("tile", "switch.coffee_machine"),
-            )
-        )
+            ),
+        ),
       ),
   )
 
@@ -113,7 +113,7 @@ private fun DataGridOverlayPreview() {
             ent("binary_sensor.front_door_motion", "off", 330_000),
             ent("switch.coffee_machine", "off", 61_000),
           )
-          .associateBy { it.entityId }
+          .associateBy { it.entityId },
     )
 
   Box(Modifier.fillMaxSize().background(Color(0xFFEFEFF3))) {
@@ -182,7 +182,7 @@ private fun FauxDashboardBackdrop() {
       Box(
         Modifier.fillMaxWidth()
           .height(72.dp)
-          .background(Color(0xFFD9D9E3), RoundedCornerShape(16.dp))
+          .background(Color(0xFFD9D9E3), RoundedCornerShape(16.dp)),
       )
     }
   }

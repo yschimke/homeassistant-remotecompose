@@ -44,7 +44,7 @@ class WearDesignStoreTest {
     store.writeDesign(small)
     store.writeDesign(large)
     store.writeSlotDesigns(
-      WearSlotDesigns(listOf(WearSlotDesign("pin", "small", small.sha256)), updatedAtMs = 1)
+      WearSlotDesigns(listOf(WearSlotDesign("pin", "small", small.sha256)), updatedAtMs = 1),
     )
     assertContentEquals(small.rc, store.readDesign(small.sha256))
     // Data Layer items arrive independently: this blob may belong to the NEXT index.
@@ -52,7 +52,7 @@ class WearDesignStoreTest {
     assertEquals(small.sha256, store.readSlotDesigns()?.designs?.single()?.sha256)
 
     store.writeSlotDesigns(
-      WearSlotDesigns(listOf(WearSlotDesign("pin", "large", large.sha256)), updatedAtMs = 2)
+      WearSlotDesigns(listOf(WearSlotDesign("pin", "large", large.sha256)), updatedAtMs = 2),
     )
     assertContentEquals(
       large.rc,

@@ -50,7 +50,7 @@ object HaNotifications {
     val nm = context.getSystemService(NotificationManager::class.java) ?: return
     nm.createNotificationChannel(
       NotificationChannel(CHANNEL_ID, "Home Assistant", NotificationManager.IMPORTANCE_DEFAULT)
-        .apply { description = "Messages Home Assistant sends to this device." }
+        .apply { description = "Messages Home Assistant sends to this device." },
     )
   }
 

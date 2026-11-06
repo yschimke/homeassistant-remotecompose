@@ -189,7 +189,7 @@ class ExpressiveBlocksPlaybackTest {
           RcM3ProgressColors(Color.Blue.rc, Color.LightGray.rc),
           RemoteModifier.fillMaxSize(),
         )
-      }
+      },
     )
     val first = frame()
     settle(250)
@@ -207,7 +207,7 @@ class ExpressiveBlocksPlaybackTest {
           RcM3ProgressColors(Color.Blue.rc, Color.LightGray.rc),
           RemoteModifier.fillMaxSize(),
         )
-      }
+      },
     )
     val first = frame()
     settle(250)
@@ -225,7 +225,7 @@ class ExpressiveBlocksPlaybackTest {
           RcM3ProgressColors(Color.Blue.rc, Color.LightGray.rc),
           RemoteModifier.fillMaxSize(),
         )
-      }
+      },
     )
     val first = frame()
     settle(250)
@@ -254,7 +254,7 @@ class ExpressiveBlocksPlaybackTest {
             RemoteModifier.fillMaxSize(),
           )
         }
-      }
+      },
     )
     val first = frame()
     settle(250)
@@ -397,7 +397,7 @@ class ExpressiveBlocksPlaybackTest {
           RcM3ProgressColors(Color.Blue.rc, Color.LightGray.rc),
           RemoteModifier.fillMaxSize(),
         )
-      }
+      },
     )
     val first = frame()
     settle(250)
@@ -425,7 +425,7 @@ class ExpressiveBlocksPlaybackTest {
     play(
       document(HaUberTheme.Classic) {
         RemoteBox(RemoteModifier.fillMaxSize().background(currentRemoteHaTheme().cardBackground))
-      }
+      },
     )
     val corner = { frame().getPixel(100, 100) }
     val interactive = corner()
@@ -445,7 +445,7 @@ class ExpressiveBlocksPlaybackTest {
     play(
       document(HaUberTheme.Lcd) {
         RemoteBox(RemoteModifier.fillMaxSize().background(currentRemoteHaTheme().cardBackground))
-      }
+      },
     )
     val glass = frame().getPixel(100, 100)
     setAmbient(true)

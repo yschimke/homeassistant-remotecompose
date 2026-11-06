@@ -29,7 +29,7 @@ class PictureGlancePictureTest {
               "idle",
               JsonObject(mapOf("entity_picture" to JsonPrimitive("/api/camera_proxy/camera.yard"))),
             ),
-        )
+        ),
     )
 
   @Test
@@ -48,7 +48,7 @@ class PictureGlancePictureTest {
     val glance =
       card(
         """{"type":"picture-glance","image":"/local/room.jpg","camera_image":"camera.yard",""" +
-          """"entities":["light.kitchen"]}"""
+          """"entities":["light.kitchen"]}""",
       )
 
     val data = converter.pictureGlanceData(glance, snapshot)

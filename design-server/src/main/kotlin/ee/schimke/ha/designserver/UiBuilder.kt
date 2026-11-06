@@ -79,7 +79,7 @@ data class UiBuilderConfig(
      * Null when neither is set: the design server runs without editing.
      */
     fun fromEnvironment(
-      env: Map<String, String> = System.getenv()
+      env: Map<String, String> = System.getenv(),
     ): Pair<UiBuilderConfig, UiBuilderProcess?>? {
       val adminReadToken = env["UI_BUILDER_ADMIN_READ_TOKEN"]?.takeIf { it.isNotBlank() }
       val binary = env["UI_BUILDER_BINARY"]?.takeIf { it.isNotBlank() }
@@ -232,7 +232,7 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
     val response =
       http.put(
         "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/designs/${id.encodeURLPathPart()}" +
-          "?token=${config.token.encodeURLParameter()}"
+          "?token=${config.token.encodeURLParameter()}",
       ) {
         // The route creates and never replaces: a clash is a refusal, not an overwrite.
         header(HttpHeaders.IfNoneMatch, "*")
@@ -256,21 +256,21 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
       http.get(
         "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/designs/$id/export.rc" +
           "?token=${config.token.encodeURLParameter()}" +
-          (revision?.let { "&revision=$it" } ?: "")
+          (revision?.let { "&revision=$it" } ?: ""),
       )
     if (!response.status.isSuccess()) {
       return Result.failure(
         IllegalStateException(
           "UI Builder could not export $designId (${response.status}): " +
-            response.bodyAsText().take(300)
-        )
+            response.bodyAsText().take(300),
+        ),
       )
     }
     return Result.success(
       ExportedDocument(
         bytes = response.bodyAsBytes(),
         revision = response.headers["X-UI-Builder-Revision"]?.toLongOrNull() ?: revision,
-      )
+      ),
     )
   }
 
@@ -284,11 +284,11 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
       http.get(
         "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/designs/$id" +
           "?token=${config.token.encodeURLParameter()}" +
-          (revision?.let { "&revision=$it" } ?: "")
+          (revision?.let { "&revision=$it" } ?: ""),
       )
     if (!response.status.isSuccess()) {
       return Result.failure(
-        IllegalStateException("UI Builder has no design $designId (${response.status})")
+        IllegalStateException("UI Builder has no design $designId (${response.status})"),
       )
     }
     return runCatching { Json.parseToJsonElement(response.bodyAsText()).jsonObject }
@@ -302,13 +302,13 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
     val response =
       http.get(
         "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/designs/${designId.encodeURLPathPart()}" +
-          "/assets/${assetKey.encodeURLPathPart()}?token=${config.token.encodeURLParameter()}"
+          "/assets/${assetKey.encodeURLPathPart()}?token=${config.token.encodeURLParameter()}",
       )
     if (!response.status.isSuccess()) {
       return Result.failure(
         IllegalStateException(
-          "UI Builder has no picture $assetKey in $designId (${response.status})"
-        )
+          "UI Builder has no picture $assetKey in $designId (${response.status})",
+        ),
       )
     }
     return Result.success(response.bodyAsBytes())
@@ -319,7 +319,7 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
     val response =
       http.put(
         "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/designs/${designId.encodeURLPathPart()}" +
-          "/assets/${assetKey.encodeURLPathPart()}?token=${config.token.encodeURLParameter()}"
+          "/assets/${assetKey.encodeURLPathPart()}?token=${config.token.encodeURLParameter()}",
       ) {
         contentType(ContentType.Application.OctetStream)
         setBody(bytes)
@@ -338,7 +338,7 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
     val response =
       http.post(
         "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/requests" +
-          "?token=${config.token.encodeURLParameter()}"
+          "?token=${config.token.encodeURLParameter()}",
       ) {
         contentType(ContentType.Application.Json)
         setBody(
@@ -351,7 +351,7 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
               put("designId", designId)
             }
           }
-            .toString()
+            .toString(),
         )
       }
     check(response.status.isSuccess()) { "UI Builder access lookup failed (${response.status})" }
@@ -422,7 +422,7 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
     val response =
       http.get(
         "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/designs/$id" +
-          "?token=${config.token.encodeURLParameter()}"
+          "?token=${config.token.encodeURLParameter()}",
       )
     if (response.status == HttpStatusCode.NotFound) return null
     check(response.status.isSuccess()) {
@@ -439,7 +439,7 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
     val response =
       http.post(
         "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/documents/export.rc" +
-          "?token=${config.token.encodeURLParameter()}"
+          "?token=${config.token.encodeURLParameter()}",
       ) {
         contentType(ContentType.Application.Json)
         setBody(Json.encodeToString(JsonObject.serializer(), document))
@@ -448,8 +448,8 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
       return Result.failure(
         IllegalStateException(
           "UI Builder could not export the document (${response.status}): " +
-            response.bodyAsText().take(300)
-        )
+            response.bodyAsText().take(300),
+        ),
       )
     }
     return Result.success(response.bodyAsBytes())
@@ -480,7 +480,7 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
       try {
         http.post(
           "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/requests" +
-            "?token=${config.token.encodeURLParameter()}"
+            "?token=${config.token.encodeURLParameter()}",
         ) {
           contentType(ContentType.Application.Json)
           setBody(
@@ -490,7 +490,7 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
               put("actorId", "operator")
               putJsonObject("request") { put("type", "listCatalogs") }
             }
-              .toString()
+              .toString(),
           )
         }
       } catch (e: Exception) {
@@ -532,7 +532,7 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
       // header with 401.
       http.post(
         "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/requests" +
-          "?token=${config.token.encodeURLParameter()}"
+          "?token=${config.token.encodeURLParameter()}",
       ) {
         contentType(ContentType.Application.Json)
         setBody(
@@ -542,7 +542,7 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
             put("actorId", "operator")
             putJsonObject("request") { put("type", "listCatalogs") }
           }
-            .toString()
+            .toString(),
         )
       }
     check(response.status.isSuccess()) { "Dashboard catalog lookup failed" }
@@ -599,7 +599,7 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
   ): ByteArray {
     val response =
       http.post(
-        "${config.apiUrl.trimEnd('/')}/homeassistant-remotecompose/render/ee.schimke.ha.previews.LovelaceCardPreviewKt.LovelaceCardPreview.rc"
+        "${config.apiUrl.trimEnd('/')}/homeassistant-remotecompose/render/ee.schimke.ha.previews.LovelaceCardPreviewKt.LovelaceCardPreview.rc",
       ) {
         if (operator) header("X-Compose-Preview-Token", config.token)
         browserCookie?.let { header(HttpHeaders.Cookie, it) }
@@ -611,7 +611,7 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
             put("knob.cardStyle", style)
             put("knob.dark", dark.toString())
           }
-            .toString()
+            .toString(),
         )
       }
     check(response.status.isSuccess()) {

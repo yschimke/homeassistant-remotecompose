@@ -79,7 +79,7 @@ fun RemoteHaArcDial(data: HaArcDialData, modifier: RemoteModifier = RemoteModifi
         .then(click)
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 14.rdp, vertical = 12.rdp)
+        .padding(horizontal = 14.rdp, vertical = 12.rdp),
   ) {
     RemoteColumn(
       modifier = RemoteModifier.fillMaxWidth(),
@@ -439,7 +439,7 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
         RemoteModifier.size(78.rdp, 120.rdp)
           .clip(haControlShape(28))
           .background(theme.placeholderBackground)
-          .padding(8.rdp)
+          .padding(8.rdp),
       ) {
         RemoteHaBarMeter(fraction, dialAccent(data), RemoteModifier.fillMaxSize(), vertical = true)
         if (target != null)

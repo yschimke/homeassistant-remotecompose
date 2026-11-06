@@ -289,7 +289,7 @@ internal fun wearWidgetColors(style: ThemeStyle): RemoteColorScheme {
 }
 
 internal fun wearWidgetColors(
-  scheme: androidx.wear.compose.material3.ColorScheme
+  scheme: androidx.wear.compose.material3.ColorScheme,
 ): RemoteColorScheme {
   val wearColors = RemoteColorScheme(scheme)
   return wearColors.copy(tertiary = wearColors.primary, secondary = wearColors.onSurfaceVariant)

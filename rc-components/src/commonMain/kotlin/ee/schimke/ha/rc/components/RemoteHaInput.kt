@@ -68,7 +68,7 @@ fun RemoteHaInputForm(
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding((if (showFallback) 4 else 12).rdp)
+        .padding((if (showFallback) 4 else 12).rdp),
   ) {
     androidx.compose.remote.creation.compose.layout.RemoteColumn {
       title

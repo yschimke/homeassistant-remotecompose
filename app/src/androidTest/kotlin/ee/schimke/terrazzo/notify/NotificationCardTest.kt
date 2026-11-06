@@ -76,7 +76,7 @@ class NotificationCardTest {
     }
     val colours = buildSet {
       for (x in 0 until bitmap.width step 8) for (y in 0 until bitmap.height step 8) add(
-        bitmap.getPixel(x, y)
+        bitmap.getPixel(x, y),
       )
     }
     assertTrue("the card drew nothing (${colours.size} colours)", colours.size > 2)

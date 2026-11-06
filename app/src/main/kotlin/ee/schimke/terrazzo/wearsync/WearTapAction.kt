@@ -55,7 +55,7 @@ internal fun wearTapCall(
   val card = requireNotNull(publishedCards[rawCard]) { "Card is no longer on the watch" }
   requireNotNull(tapped) { "Unreadable action" }
   require(
-    tapped is HaAction.Toggle || tapped is HaAction.CallService || tapped is HaAction.SetValue
+    tapped is HaAction.Toggle || tapped is HaAction.CallService || tapped is HaAction.SetValue,
   ) {
     "Only toggles, service calls and sliders run from the watch"
   }

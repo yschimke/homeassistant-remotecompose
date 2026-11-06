@@ -36,10 +36,10 @@ class StablePicturesTest {
                 buildMap {
                   put("friendly_name", JsonPrimitive("Front"))
                   if (picture != null) put("entity_picture", JsonPrimitive(picture))
-                }
+                },
               ),
-            )
-        )
+            ),
+        ),
     )
 
   @Test
@@ -89,7 +89,7 @@ class StablePicturesTest {
     fun withDoor(picture: String) =
       snapshot(picture).let {
         it.copy(
-          states = it.states + ("binary_sensor.door" to EntityState("binary_sensor.door", "off"))
+          states = it.states + ("binary_sensor.door" to EntityState("binary_sensor.door", "off")),
         )
       }
     val first = withDoor("/api/camera_proxy/camera.front?token=a")

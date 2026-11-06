@@ -127,7 +127,7 @@ internal fun LogsContent(
         if (dataUpdates.isEmpty()) {
           emptyHint(
             "No dashboard-entity updates yet. Only entities rendered on " +
-              "the current dashboard are tracked."
+              "the current dashboard are tracked.",
           )
         } else {
           dataUpdates.forEach { DataUpdateRow(it) }
@@ -178,7 +178,7 @@ private fun ConnectionRow(entry: LogEntry.Connection) {
 private fun CrashRow(entry: LogEntry.Crash) {
   var expanded by remember { mutableStateOf(false) }
   Column(
-    modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded }.padding(vertical = 4.dp)
+    modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded }.padding(vertical = 4.dp),
   ) {
     Row(
       verticalAlignment = Alignment.CenterVertically,

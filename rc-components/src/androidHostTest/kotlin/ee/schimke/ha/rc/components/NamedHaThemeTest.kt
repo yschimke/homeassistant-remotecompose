@@ -33,7 +33,7 @@ class NamedHaThemeTest {
     val document =
       CoreDocument().apply {
         initFromBuffer(
-          RemoteComposeBuffer.fromInputStream(ByteArrayInputStream(writer.encodeToByteArray()))
+          RemoteComposeBuffer.fromInputStream(ByteArrayInputStream(writer.encodeToByteArray())),
         )
       }
     val names = requireNotNull(document.namedColors).filterNotNull()

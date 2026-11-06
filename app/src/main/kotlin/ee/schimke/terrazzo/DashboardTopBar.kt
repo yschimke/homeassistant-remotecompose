@@ -184,7 +184,7 @@ internal fun ConnectionStatusStrip(
           modifier =
             Modifier.heightIn(min = 48.dp)
               .windowInsetsPadding(
-                TopAppBarDefaults.windowInsets.only(WindowInsetsSides.Horizontal)
+                TopAppBarDefaults.windowInsets.only(WindowInsetsSides.Horizontal),
               )
               .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {

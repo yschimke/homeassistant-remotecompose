@@ -99,7 +99,7 @@ class MainActivity : ComponentActivity() {
               SessionHolder(
                 closeScope =
                   ProcessLifecycleOwner.get().lifecycleScope +
-                    graph.logStore.coroutineExceptionHandler
+                    graph.logStore.coroutineExceptionHandler,
               )
             }
           },
@@ -188,7 +188,7 @@ class MainActivity : ComponentActivity() {
           if (ready) content.viewTreeObserver.removeOnPreDrawListener(this)
           return ready
         }
-      }
+      },
     )
   }
 

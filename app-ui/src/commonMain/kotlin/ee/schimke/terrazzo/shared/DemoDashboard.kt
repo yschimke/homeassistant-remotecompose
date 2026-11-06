@@ -32,7 +32,7 @@ fun DashboardExperience(
   var design by rememberSaveable { mutableStateOf("classic") }
   var dark by rememberSaveable { mutableStateOf(false) }
   MaterialTheme(
-    colorScheme = if (dark || design == "console") darkColorScheme() else lightColorScheme()
+    colorScheme = if (dark || design == "console") darkColorScheme() else lightColorScheme(),
   ) {
     val selectedEntity = detailsEntity
     if (selectedEntity != null && snapshot != null) {
@@ -55,7 +55,7 @@ fun DashboardExperience(
           dark = dark,
           onDarkChange = { dark = it },
         )
-      }
+      },
     ) { padding ->
       Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
         controlError?.let {

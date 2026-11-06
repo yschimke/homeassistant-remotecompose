@@ -56,7 +56,7 @@ fun NotificationBell(
         if (notifications.isNotEmpty()) {
           Badge { Text(notifications.size.toString()) }
         }
-      }
+      },
     ) {
       Icon(Icons.Outlined.Notifications, contentDescription = "Notifications")
     }

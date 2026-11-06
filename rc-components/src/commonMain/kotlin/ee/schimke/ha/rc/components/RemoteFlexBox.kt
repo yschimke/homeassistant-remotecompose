@@ -690,5 +690,5 @@ internal fun FlexBasis.decode(): Basis {
 
 private fun unsupported(what: String): Nothing =
   throw UnsupportedOperationException(
-    "RemoteFlexBox: $what has no Remote Compose equivalent (see RemoteFlexBox KDoc)"
+    "RemoteFlexBox: $what has no Remote Compose equivalent (see RemoteFlexBox KDoc)",
   )

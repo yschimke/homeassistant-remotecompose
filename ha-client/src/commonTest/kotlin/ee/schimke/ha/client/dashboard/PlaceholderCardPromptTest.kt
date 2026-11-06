@@ -25,7 +25,7 @@ class PlaceholderCardPromptTest {
     assertEquals(
       brief,
       Json.decodeFromString<PlaceholderCard>(
-        Json.encodeToString(PlaceholderCard.serializer(), brief)
+        Json.encodeToString(PlaceholderCard.serializer(), brief),
       ),
     )
     assertEquals(
@@ -41,7 +41,7 @@ class PlaceholderCardPromptTest {
   fun implementationHandoffCarriesBriefContextAndLiveBindingContract() {
     val dashboard =
       Json.parseToJsonElement(
-        """{"views":[{"cards":[{"type":"custom:untouched","options":{"keep":true}}]}]}"""
+        """{"views":[{"cards":[{"type":"custom:untouched","options":{"keep":true}}]}]}""",
       ) as kotlinx.serialization.json.JsonObject
     val states =
       listOf(
@@ -53,7 +53,7 @@ class PlaceholderCardPromptTest {
             put("unit_of_measurement", "%")
             put("access_token", "must-not-be-copied")
           },
-        )
+        ),
       )
     val prompt = PlaceholderCardPrompt.build(brief, dashboard, states, "Home")
     assertTrue("Soil moisture trend" in prompt)

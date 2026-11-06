@@ -53,7 +53,7 @@ class AndroidEdgeToEdgeTest {
               Box(
                 Modifier.fillMaxWidth().height(32.dp).onConsumedWindowInsetsChanged {
                   consumed = it
-                }
+                },
               )
             },
           )

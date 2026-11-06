@@ -104,15 +104,15 @@ class CardRebuildReplayTest {
       appendLine(
         "An hour of demo data sampled every ${STEP_MS / 1000} s, every card slot on every demo " +
           "board. Rebuilds per slot per hour; a rebuild with several reasons counts once in the " +
-          "total and once per reason."
+          "total and once per reason.",
       )
       appendLine()
       appendLine(
         "| Card type | Slots | Templated | Rebuilds / slot / h | Encodes | Decodes | " +
-          "${Reason.entries.joinToString(" | ")} |"
+          "${Reason.entries.joinToString(" | ")} |",
       )
       appendLine(
-        "| --- | ---: | ---: | ---: | ---: | ---: |${Reason.entries.joinToString("") { " ---: |" }}"
+        "| --- | ---: | ---: | ---: | ---: | ---: |${Reason.entries.joinToString("") { " ---: |" }}",
       )
       tallies.values
         .sortedByDescending { it.rebuilds.toDouble() / it.slots }
@@ -122,7 +122,7 @@ class CardRebuildReplayTest {
             "| ${t.type} | ${t.slots} | ${t.templated} | ${perSlot(t.rebuilds)} | " +
               "${perSlot(t.encodes)} | ${perSlot(t.decodes)} | " +
               Reason.entries.joinToString(" | ") { perSlot(t.byReason[it] ?: 0) } +
-              " |"
+              " |",
           )
         }
       val total = tallies.values.sumOf { it.rebuilds }
@@ -131,7 +131,7 @@ class CardRebuildReplayTest {
       appendLine(
         "Total: $total rebuilds across $slots slots in the hour: " +
           "${tallies.values.sumOf { it.encodes }} encodes, " +
-          "${tallies.values.sumOf { it.decodes }} decodes."
+          "${tallies.values.sumOf { it.decodes }} decodes.",
       )
     }
     File("build/reports").apply { mkdirs() }.resolve("card-rebuilds.md").writeText(report)

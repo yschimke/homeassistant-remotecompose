@@ -55,7 +55,7 @@ class ShapeHintTest {
       shapeHint(
         tile("sensor.temp"),
         snapshot(
-          state("sensor.temp", "device_class" to "temperature", "unit_of_measurement" to "°C")
+          state("sensor.temp", "device_class" to "temperature", "unit_of_measurement" to "°C"),
         ),
       ),
     )

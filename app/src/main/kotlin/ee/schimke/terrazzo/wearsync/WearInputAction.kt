@@ -19,6 +19,6 @@ internal fun wearInputAction(
   val card = requireNotNull(publishedCards[rawCard]) { "Message card is no longer available" }
   require(card.type == MESSAGE_CARD_TYPE)
   return requireNotNull(
-    decodeHaAction(messageAction(card, snapshot, values).toString()) as? HaAction.CallService
+    decodeHaAction(messageAction(card, snapshot, values).toString()) as? HaAction.CallService,
   )
 }

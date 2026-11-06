@@ -89,7 +89,7 @@ internal object CompositeDesign {
           DesignProperties.parse(
             properties.values.entries
               .filter { it.key.startsWith(prefix) && it.key != "$prefix$TYPE" }
-              .joinToString(";") { "${it.key.removePrefix(prefix)}=${it.value}" }
+              .joinToString(";") { "${it.key.removePrefix(prefix)}=${it.value}" },
           )
         val input = registry.get(type)?.framedDesignTemplate(own) ?: return null
         val slots = CardDesignSlots.slotEntities(input.card)?.size ?: 0
@@ -118,7 +118,7 @@ internal object CompositeDesign {
                 properties[name]?.toIntOrNull()?.let { put(name, toConfig(it)) }
               }
               put("cards", JsonArray(children))
-            }
+            },
           ),
       )
     return DesignTemplateInput(

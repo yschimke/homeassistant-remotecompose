@@ -49,7 +49,7 @@ fun RemoteHaStatisticCard(
                 else -> 12
               })
               .rdp,
-        )
+        ),
   ) {
     RemoteColumn(
       verticalArrangement =
@@ -59,8 +59,8 @@ fun RemoteHaStatisticCard(
               tight -> 2
               else -> 4
             })
-            .rdp
-        )
+            .rdp,
+        ),
     ) {
       RemoteText(
         text = entityName(data.entityId, data.name),
@@ -82,7 +82,7 @@ fun RemoteHaStatisticCard(
         )
         if (data.unit != null) {
           RemoteBox(
-            modifier = RemoteModifier.padding(start = 4.rdp, bottom = (if (compact) 2 else 4).rdp)
+            modifier = RemoteModifier.padding(start = 4.rdp, bottom = (if (compact) 2 else 4).rdp),
           ) {
             RemoteText(
               text = entityText(data.entityId, "unit", data.unit),

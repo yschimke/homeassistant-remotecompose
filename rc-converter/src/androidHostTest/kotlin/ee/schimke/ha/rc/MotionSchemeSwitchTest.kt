@@ -135,7 +135,7 @@ class MotionSchemeSwitchTest {
             value = LiveValues.numericState("sensor.humidity", 40f),
             min = 0.0,
             max = 100.0,
-          )
+          ),
         )
       }
     assertEquals(setOf(listOf(0.45f)), animationsOf(content = gauge))

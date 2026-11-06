@@ -33,7 +33,7 @@ internal class PhoneAgentEdits(val edits: AgentEdits, val relayServer: String?)
 internal fun rememberPhoneAgentEdits(session: HaSession): PhoneAgentEdits? {
   val designServer by
     LocalTerrazzoGraph.current.preferencesStore.designServerUrl.collectAsState(
-      initial = "https://ha.coo.ee"
+      initial = "https://ha.coo.ee",
     )
   val relayServer = designServer.ifBlank { "https://ha.coo.ee" }
   val cloudEdits: CloudDashboardAgentEdits? =

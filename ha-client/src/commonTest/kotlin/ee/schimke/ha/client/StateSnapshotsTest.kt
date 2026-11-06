@@ -43,7 +43,7 @@ class StateSnapshotsTest {
               mapOf(
                 "light.test" to EntityState("light.test", "off"),
                 "sensor.other" to EntityState("sensor.other", "5"),
-              )
+              ),
           )
         }
         .collect { snapshots.add(it) }

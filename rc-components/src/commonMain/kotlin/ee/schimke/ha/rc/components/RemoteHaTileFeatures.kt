@@ -287,7 +287,7 @@ private fun ModeSelect(
       RemoteColumn(
         modifier =
           segment.then(
-            haKeyChrome(if (option.selected) accent else null, selected = option.selected)
+            haKeyChrome(if (option.selected) accent else null, selected = option.selected),
           ),
         verticalArrangement = RemoteArrangement.Center,
         horizontalAlignment = RemoteAlignment.CenterHorizontally,

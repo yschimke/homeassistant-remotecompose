@@ -51,7 +51,7 @@ fun HaCardEntityTile(
           string(TileCardConverter.ICON, iconAttribute.ifBlank { null })
           string(TileCardConverter.CARD_ICON, iconConfig.ifBlank { null })
           string(TileCardConverter.UNIT, unit.ifBlank { null })
-        }
+        },
       )
       ?: return
   FramedCard(input.card, input.snapshot, modifier) {

@@ -25,7 +25,7 @@ fun RemoteHaSensorCard(data: HaSensorCardData, modifier: RemoteModifier = Remote
             summary = LiveValues.state(data.entityId, data.valueLabel),
             accent = data.accent,
             points = data.points,
-          )
+          ),
         ),
     ),
     modifier = modifier,

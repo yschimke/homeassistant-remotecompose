@@ -143,7 +143,7 @@ internal fun SettingsScreen(
   val designServerUrl by graph.preferencesStore.designServerUrl.collectAsState(initial = "")
   val designVariant by
     graph.preferencesStore.designVariant.collectAsState(
-      initial = PreferencesStore.DEFAULT_DESIGN_VARIANT
+      initial = PreferencesStore.DEFAULT_DESIGN_VARIANT,
     )
   val designAuthor by graph.preferencesStore.designAuthor.collectAsState(initial = "")
   val designToken by graph.preferencesStore.designToken.collectAsState(initial = "")
@@ -408,7 +408,7 @@ internal fun SettingsScreen(
                       .putExtra(android.content.Intent.EXTRA_TEXT, text),
                     "Send to your agent",
                   )
-                  .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                  .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
               )
             }
           },
@@ -601,7 +601,7 @@ private fun HaNotificationsSetting(session: HaSession) {
     } else {
       context.startActivity(
         Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-          .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+          .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
       )
     }
   }
@@ -697,7 +697,7 @@ internal fun ThemeSection(
                 DarkModePref.Follow -> "Follow system"
                 DarkModePref.Light -> "Light"
                 DarkModePref.Dark -> "Dark"
-              }
+              },
             )
           },
         )
@@ -881,7 +881,7 @@ private fun CardStyleOptionRow(
             interactionSource = null,
             indication = null,
             onClick = onClick,
-          )
+          ),
       )
     }
   }
@@ -1109,7 +1109,7 @@ private fun DesignServerSetting(
       placeholder = { Text("Off") },
       keyboardOptions =
         androidx.compose.foundation.text.KeyboardOptions(
-          imeAction = androidx.compose.ui.text.input.ImeAction.Done
+          imeAction = androidx.compose.ui.text.input.ImeAction.Done,
         ),
       keyboardActions =
         androidx.compose.foundation.text.KeyboardActions(onDone = { onUrlChange(draft) }),
@@ -1190,7 +1190,7 @@ private fun DesignTokenField(url: String, token: String, onTokenChange: (String)
       onClick = {
         problem = null
         signIn(url)
-      }
+      },
     ) {
       Text("Sign in with GitHub")
     }
@@ -1211,11 +1211,11 @@ private fun DesignTokenField(url: String, token: String, onTokenChange: (String)
       visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
       keyboardOptions =
         androidx.compose.foundation.text.KeyboardOptions(
-          imeAction = androidx.compose.ui.text.input.ImeAction.Done
+          imeAction = androidx.compose.ui.text.input.ImeAction.Done,
         ),
       keyboardActions =
         androidx.compose.foundation.text.KeyboardActions(
-          onDone = { if (draft.isNotBlank()) onTokenChange(draft) }
+          onDone = { if (draft.isNotBlank()) onTokenChange(draft) },
         ),
       modifier = Modifier.fillMaxWidth(),
     )

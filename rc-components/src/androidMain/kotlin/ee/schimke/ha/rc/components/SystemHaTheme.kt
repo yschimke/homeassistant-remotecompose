@@ -38,7 +38,7 @@ private fun systemThemeColor(
   val lightArgb = lightFallback.toArgb()
   val darkArgb = darkFallback.toArgb()
   return remoteDocumentColor(
-    "SystemTheme.$role:$lightResource/$darkResource:$lightArgb/$darkArgb"
+    "SystemTheme.$role:$lightResource/$darkResource:$lightArgb/$darkArgb",
   ) { creationState ->
     creationState.document
       .addThemedColor(Rc.AndroidColors.GROUP, lightResource, darkResource, lightArgb, darkArgb)

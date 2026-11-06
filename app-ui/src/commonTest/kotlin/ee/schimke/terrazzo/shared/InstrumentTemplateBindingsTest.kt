@@ -20,8 +20,8 @@ class InstrumentTemplateBindingsTest {
             "climate.demo_thermostat",
             "heat",
             Json.parseToJsonElement(attributes).jsonObject,
-          )
-      )
+          ),
+      ),
     )
 
   @Test
@@ -42,8 +42,8 @@ class InstrumentTemplateBindingsTest {
                 "sensor.power",
                 state,
                 buildJsonObject { put("unit_of_measurement", "W") },
-              )
-          )
+              ),
+          ),
         ),
       )
     assertEquals(RcNamedValue.FloatValue(3000f), values("900")["card.max"])
@@ -61,14 +61,14 @@ class InstrumentTemplateBindingsTest {
       templateBindings(
         card,
         climate(
-          """{"current_temperature":21.5,"temperature":22,"min_temp":16,"max_temp":28,"hvac_action":"heating"}"""
+          """{"current_temperature":21.5,"temperature":22,"min_temp":16,"max_temp":28,"hvac_action":"heating"}""",
         ),
       )
     val after =
       templateBindings(
         card,
         climate(
-          """{"current_temperature":22,"temperature":23,"min_temp":16,"max_temp":28,"hvac_action":"idle"}"""
+          """{"current_temperature":22,"temperature":23,"min_temp":16,"max_temp":28,"hvac_action":"idle"}""",
         ),
       )
     assertEquals(

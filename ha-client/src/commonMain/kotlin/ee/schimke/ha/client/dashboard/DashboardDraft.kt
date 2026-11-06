@@ -234,7 +234,7 @@ object DashboardDraft {
             "columns" to
               (if (c >= SectionCardGrid.BASE_COLUMNS) JsonPrimitive("full") else JsonPrimitive(c)),
             "rows" to (r?.let(::JsonPrimitive) ?: JsonPrimitive("auto")),
-          )
+          ),
       )
     return JsonObject(card - "layout_options" + ("grid_options" to options))
   }
@@ -436,7 +436,7 @@ object DashboardDraft {
             all.mapIndexed { i, s ->
               if (i != section) s
               else (s as JsonObject).let { it.with("cards", JsonArray(edit(it.array("cards")))) }
-            }
+            },
           ),
         )
       }

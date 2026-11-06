@@ -16,7 +16,7 @@ fun main(args: Array<String>) {
         ?: run {
           System.err.println("usage: BuiltInCardDesignLibrary <output directory>")
           exitProcess(2)
-        }
+        },
     )
   val count =
     CardDesignLibrary.generateBuiltIn(target, CommonCaptureHost(LibraryCaptureProfile.OPERATIONS))

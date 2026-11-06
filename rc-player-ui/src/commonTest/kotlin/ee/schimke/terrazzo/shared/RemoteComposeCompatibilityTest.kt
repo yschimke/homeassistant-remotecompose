@@ -12,9 +12,9 @@ class RemoteComposeCompatibilityTest {
       RcDocument(
         RcHeader(RcVersion(1, 0, 0)),
         listOf(
-          RcBitmapData(42, 1, 1, RcBitmapData.TYPE_RAW8888, encoding, byteArrayOf(0, 0, 0, -1))
+          RcBitmapData(42, 1, 1, RcBitmapData.TYPE_RAW8888, encoding, byteArrayOf(0, 0, 0, -1)),
         ),
-      )
+      ),
     )
 
   @Test
@@ -35,13 +35,16 @@ class RemoteComposeCompatibilityTest {
         RcDocument(
           RcHeader(RcVersion(1, 0, 0)),
           listOf(RcNamedVariable(42, RcNamedVariable.STRING_TYPE, "USER:$name")),
-        )
+        ),
       )
     val bindings = mapOf("light.s0.state" to RcNamedValue.Text("Off"))
     assertTrue(canBindWithCmp(template("light.s0.state"), bindings))
     assertFalse(canBindWithCmp(template("card.md.content"), bindings))
     assertFalse(
-      canBindWithCmp(template("light.s0.state"), mapOf("light.s0.state" to RcNamedValue.Integer(1)))
+      canBindWithCmp(
+        template("light.s0.state"),
+        mapOf("light.s0.state" to RcNamedValue.Integer(1)),
+      ),
     )
   }
 }

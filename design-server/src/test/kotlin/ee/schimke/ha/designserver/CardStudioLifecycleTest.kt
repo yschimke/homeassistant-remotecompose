@@ -38,7 +38,7 @@ import kotlinx.serialization.json.*
 class CardStudioLifecycleTest {
   /** An agent joins as a real one does: with the code the person's app shows. */
   private suspend fun io.ktor.server.testing.ApplicationTestBuilder.agentJoins(
-    owner: String
+    owner: String,
   ): String {
     val state =
       client.get("/api/agent/session") { header(HttpHeaders.Authorization, "Bearer $owner") }
@@ -62,7 +62,7 @@ class CardStudioLifecycleTest {
     CardConfig(
       "entities",
       Json.parseToJsonElement(
-          """{"type":"entities","title":"Kitchen","entities":["sensor.private_temp"]}"""
+          """{"type":"entities","title":"Kitchen","entities":["sensor.private_temp"]}""",
         )
         .jsonObject,
     )
@@ -115,7 +115,7 @@ class CardStudioLifecycleTest {
               put("revision", 0)
               put("document", edited)
             }
-              .toString()
+              .toString(),
           )
         }
       assertEquals(HttpStatusCode.OK, submitted.status)
@@ -311,7 +311,7 @@ class CardStudioLifecycleTest {
       val digest = "sha256:${Sha256.hex(png)}"
       val binding =
         Json.parseToJsonElement(
-          """{"mediaType":"image/png","contentDigest":"$digest","source":{"type":"uploaded","storageKey":"$digest"}}"""
+          """{"mediaType":"image/png","contentDigest":"$digest","source":{"type":"uploaded","storageKey":"$digest"}}""",
         )
       val rootId = seed.getValue("roots").jsonArray.single().jsonPrimitive.content
       val nodes = seed.getValue("nodes").jsonObject
@@ -325,12 +325,12 @@ class CardStudioLifecycleTest {
               JsonObject(
                 slots +
                   (slotName to
-                    JsonArray(slots.getValue(slotName).jsonArray + JsonPrimitive("garage-image")))
-              ))
+                    JsonArray(slots.getValue(slotName).jsonArray + JsonPrimitive("garage-image"))),
+              )),
         )
       val imageNode =
         Json.parseToJsonElement(
-          """{"id":"garage-image","componentId":"asset/image","properties":{"assetKey":{"type":"string","value":"door"}},"modifiers":[{"type":"alpha","alpha":{"type":"expr","op":"smoothstep","args":[{"type":"float","value":-6},{"type":"float","value":6},{"type":"state","variable":"HA:sun.sun.elevation"}]}}],"slots":{}}"""
+          """{"id":"garage-image","componentId":"asset/image","properties":{"assetKey":{"type":"string","value":"door"}},"modifiers":[{"type":"alpha","alpha":{"type":"expr","op":"smoothstep","args":[{"type":"float","value":-6},{"type":"float","value":6},{"type":"state","variable":"HA:sun.sun.elevation"}]}}],"slots":{}}""",
         )
       val sun = seed.getValue("stateVariables").jsonObject.getValue("HA:sun.sun.elevation")
       val withImage =
@@ -341,8 +341,8 @@ class CardStudioLifecycleTest {
               JsonObject(nodes + (rootId to rootWithImage) + ("garage-image" to imageNode))) +
             ("stateVariables" to
               JsonObject(
-                seed.getValue("stateVariables").jsonObject + ("HA:sun.sun.elevation" to sun)
-              ))
+                seed.getValue("stateVariables").jsonObject + ("HA:sun.sun.elevation" to sun),
+              )),
         )
       ee.schimke.ha.client.design.validateCardDraft(seed, withImage)
       val owner = studio.startAgentSession(seed, "Use the garage image")
@@ -351,7 +351,7 @@ class CardStudioLifecycleTest {
         client.post("/api/studio/agent-mcp") {
           header(HttpHeaders.Authorization, "Bearer $agent")
           setBody(
-            """{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"put_card_asset","arguments":{"key":"door","imageBase64":"$encodedPng"}}}"""
+            """{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"put_card_asset","arguments":{"key":"door","imageBase64":"$encodedPng"}}}""",
           )
         }
       assertEquals(HttpStatusCode.OK, attached.status)
@@ -363,7 +363,7 @@ class CardStudioLifecycleTest {
               put("revision", 0)
               put("document", withImage)
             }
-              .toString()
+              .toString(),
           )
         }
       assertEquals(HttpStatusCode.OK, submitted.status, submitted.bodyAsText())
@@ -383,7 +383,7 @@ class CardStudioLifecycleTest {
             snapshot("21"),
             ee.schimke.ha.rc.components.ThemeStyle.entries.first(),
             dark = false,
-          )
+          ),
         )
       val preview = studio.agentSessionPreview(owner, key, revision)
       // Only the draft the app loaded: a stale revision is refused rather than shown.
@@ -556,17 +556,17 @@ class CardStudioLifecycleTest {
       assertNull(
         client
           .options(path) { header(HttpHeaders.Origin, origin) }
-          .headers[HttpHeaders.AccessControlAllowOrigin]
+          .headers[HttpHeaders.AccessControlAllowOrigin],
       )
       assertNull(
         client
           .get(path) { header(HttpHeaders.Origin, origin) }
-          .headers[HttpHeaders.AccessControlAllowOrigin]
+          .headers[HttpHeaders.AccessControlAllowOrigin],
       )
       assertNull(
         client
           .post(path) { header(HttpHeaders.Origin, origin) }
-          .headers[HttpHeaders.AccessControlAllowOrigin]
+          .headers[HttpHeaders.AccessControlAllowOrigin],
       )
       val rejected =
         client.post("/api/studio/handoffs") {

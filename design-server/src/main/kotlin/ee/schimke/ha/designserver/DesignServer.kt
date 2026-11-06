@@ -409,7 +409,7 @@ fun Application.designServer(
           httpOnly = true,
           path = "/",
           extensions = mapOf("SameSite" to "Lax"),
-        )
+        ),
       )
       call.respondRedirect("/designs")
     }
@@ -493,7 +493,7 @@ internal fun LibraryChannels.diffOf(library: DesignLibrary): LibraryDiff? =
 
 internal fun ApplicationCall.libraryOf(channels: LibraryChannels): LibraryHolder? =
   channels.holder(
-    request.queryParameters["channel"]?.takeIf { it.isNotBlank() } ?: LibraryPaths.MAIN
+    request.queryParameters["channel"]?.takeIf { it.isNotBlank() } ?: LibraryPaths.MAIN,
   )
 
 /** UI Builder for the server: where it is, and the client that creates designs there. */

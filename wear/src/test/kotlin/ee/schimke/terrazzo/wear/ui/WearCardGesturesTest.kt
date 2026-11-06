@@ -39,10 +39,12 @@ class WearCardGesturesTest {
       Box(
         Modifier.size(200.dp, 100.dp)
           .testTag("card")
-          .wearCardGestures(onLongPress = { longPresses++ }, onUnhandledTap = { unhandled++ })
+          .wearCardGestures(onLongPress = { longPresses++ }, onUnhandledTap = { unhandled++ }),
       ) {
         Box(
-          Modifier.align(Alignment.CenterStart).size(60.dp).testTag("button").clickable { clicks++ }
+          Modifier.align(Alignment.CenterStart).size(60.dp).testTag("button").clickable {
+            clicks++
+          },
         )
       }
     }

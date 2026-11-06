@@ -105,7 +105,10 @@ class HaIconIdentityTest {
       CardConfig(
         "button",
         JsonObject(
-          mapOf("entity" to kotlinx.serialization.json.JsonPrimitive("light.k"), "icon" to JsonNull)
+          mapOf(
+            "entity" to kotlinx.serialization.json.JsonPrimitive("light.k"),
+            "icon" to JsonNull,
+          ),
         ),
       )
     assertFalse(HaIconIdentity.isEvocative(nullIcon, null))

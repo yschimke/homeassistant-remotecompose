@@ -271,7 +271,7 @@ private fun NamedButton(label: String, description: String, onClick: () -> Unit)
         onClick()
         true
       }
-    }
+    },
   ) {
     BorderlessButton(label, onClick)
   }

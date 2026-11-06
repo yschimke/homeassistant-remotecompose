@@ -52,7 +52,7 @@ object TvDemoData {
             JsonObject(
               attributes.associate { (k, v) ->
                 k to if (v is Number) JsonPrimitive(v) else JsonPrimitive(v.toString())
-              }
+              },
             ),
         )
     return HaSnapshot(
@@ -83,7 +83,7 @@ object TvDemoData {
             "unit_of_measurement" to "%",
             "device_class" to "humidity",
           ),
-        )
+        ),
     )
   }
 
@@ -102,7 +102,7 @@ object TvDemoData {
               state = "unavailable",
               attributes = JsonObject(mapOf("friendly_name" to JsonPrimitive(name))),
             )
-        }
+        },
     )
 
   const val LIGHT = "light.living_room"

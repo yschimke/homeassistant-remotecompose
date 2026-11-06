@@ -54,7 +54,7 @@ class WearSmallNamesTest {
                   "current_temperature" to JsonPrimitive(20.5),
                   "temperature" to JsonPrimitive(21.5),
                   "hvac_action" to JsonPrimitive("heating"),
-                )
+                ),
               ),
             ),
           "humidifier.bedroom" to
@@ -66,10 +66,10 @@ class WearSmallNamesTest {
                   "friendly_name" to JsonPrimitive("Bedroom"),
                   "current_humidity" to JsonPrimitive(38),
                   "humidity" to JsonPrimitive(45),
-                )
+                ),
               ),
             ),
-        )
+        ),
     )
 
   private fun card(type: String, vararg extra: Pair<String, Any>) =
@@ -157,7 +157,7 @@ class WearSmallNamesTest {
       assertTrue("climate.hall.attributes.$attribute" in names, "$attribute stays live: $names")
     }
     assertTrue(
-      "Landing" in text(wearCapture(entityCard("thermostat", "climate.hall", "name" to "Landing")))
+      "Landing" in text(wearCapture(entityCard("thermostat", "climate.hall", "name" to "Landing"))),
     )
   }
 

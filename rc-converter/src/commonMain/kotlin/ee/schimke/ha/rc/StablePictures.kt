@@ -34,7 +34,7 @@ object StablePictures {
         else {
           changed = true
           entity.copy(
-            attributes = JsonObject(entity.attributes + (PICTURE to JsonPrimitive("$SCHEME$id")))
+            attributes = JsonObject(entity.attributes + (PICTURE to JsonPrimitive("$SCHEME$id"))),
           )
         }
       }

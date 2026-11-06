@@ -38,7 +38,7 @@ class SeededCardCompileTest {
 
   private val seed: JsonObject =
     Json.parseToJsonElement(
-        requireNotNull(javaClass.getResource("/seeded-light-card.json")).readText()
+        requireNotNull(javaClass.getResource("/seeded-light-card.json")).readText(),
       )
       .jsonObject
 

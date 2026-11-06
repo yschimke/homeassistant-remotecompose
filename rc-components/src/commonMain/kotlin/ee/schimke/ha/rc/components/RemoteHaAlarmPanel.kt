@@ -68,7 +68,7 @@ fun RemoteHaAlarmPanel(
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 14.rdp, vertical = 12.rdp)
+        .padding(horizontal = 14.rdp, vertical = 12.rdp),
   ) {
     // On a taller cell than the keypad needs (Fixed mode, large
     // launcher widget) the status + buttons stay at the top and the
@@ -140,7 +140,7 @@ fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = Re
         // 2dp, not more: the Wear small slot's content box is ~44dp, and the name (BodyLarge)
         // over the status (Label) is ~39dp of it (lines are ~1.33× their size). The row centres
         // itself on taller cells.
-        .padding(horizontal = 12.rdp, vertical = 2.rdp)
+        .padding(horizontal = 12.rdp, vertical = 2.rdp),
   ) {
     RemoteStateLayout(stateInt, *keys, modifier = RemoteModifier.fillMaxSize()) { key ->
       val status = statusByKey[key] ?: initialStatus

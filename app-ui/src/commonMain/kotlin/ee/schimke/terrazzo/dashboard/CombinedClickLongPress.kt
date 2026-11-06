@@ -120,7 +120,7 @@ private class LongPressBeforeChildNode(var onLongPress: () -> Unit) :
             }
           }
         }
-      }
+      },
     )
   }
 }

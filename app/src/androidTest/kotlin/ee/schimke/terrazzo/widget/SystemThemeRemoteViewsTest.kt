@@ -53,7 +53,7 @@ class SystemThemeRemoteViewsTest {
         Configuration(base.resources.configuration).apply {
           uiMode =
             (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or Configuration.UI_MODE_NIGHT_NO
-        }
+        },
       )
     val parent = FrameLayout(lightContext)
     val remoteViews =

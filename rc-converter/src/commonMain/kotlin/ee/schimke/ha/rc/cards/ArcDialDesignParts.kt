@@ -37,7 +37,7 @@ object ArcDialDesignParts {
             mapOf(
               "type" to JsonPrimitive(CardTypes.THERMOSTAT),
               "entity" to JsonPrimitive("climate.living_room"),
-            )
+            ),
           ),
         ),
         HaSnapshot(),

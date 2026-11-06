@@ -16,7 +16,7 @@ class AdaptiveDashboardGroupsTest {
         card("""{"type":"heading","heading":"Conversations"}"""),
         card("""{"type":"tile","entity":"binary_sensor.meshcore_radio_ch_0_messages"}"""),
         card(
-          """{"type":"heading","heading":"Control","tap_action":{"action":"toggle"},"entity":"light.room"}"""
+          """{"type":"heading","heading":"Control","tap_action":{"action":"toggle"},"entity":"light.room"}""",
         ),
       )
     val result =

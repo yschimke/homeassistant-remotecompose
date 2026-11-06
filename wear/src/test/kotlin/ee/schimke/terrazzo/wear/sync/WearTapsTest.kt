@@ -46,7 +46,7 @@ class WearTapsTest {
     assertEquals(
       "Demo mode is read-only",
       wearTapRefusal(
-        """{"id":"1","ok":false,"error":"Demo mode is read-only"}""".encodeToByteArray()
+        """{"id":"1","ok":false,"error":"Demo mode is read-only"}""".encodeToByteArray(),
       ),
     )
     assertEquals("The phone didn't run it", wearTapRefusal("""{"ok":false}""".encodeToByteArray()))
@@ -174,7 +174,7 @@ class WearTapsTest {
     val taps = dispatcher(recorder)
     // The panel's order: type the code, then ARM.
     for (key in listOf("1", "2", "9", "backspace", "3", "4")) taps.dispatch(
-      HaAction.AlarmKey(alarm, key)
+      HaAction.AlarmKey(alarm, key),
     )
     taps.dispatch(HaAction.AlarmIntent(alarm, "arm_away", codeLength = 4))
     advanceUntilIdle()
@@ -186,7 +186,7 @@ class WearTapsTest {
             "alarm_arm_away",
             alarm,
             JsonObject(mapOf("code" to JsonPrimitive("1234"))),
-          )
+          ),
       ),
       recorder.sent,
     )
@@ -214,7 +214,7 @@ class WearTapsTest {
             "alarm_disarm",
             alarm,
             JsonObject(mapOf("code" to JsonPrimitive("4321"))),
-          )
+          ),
       ),
       recorder.sent,
     )
@@ -234,7 +234,7 @@ class WearTapsTest {
             "alarm_arm_home",
             alarm,
             JsonObject(emptyMap()),
-          )
+          ),
       ),
       recorder.sent,
     )

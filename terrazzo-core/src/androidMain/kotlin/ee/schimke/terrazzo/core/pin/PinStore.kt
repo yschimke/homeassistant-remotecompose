@@ -160,13 +160,13 @@ class PinStore(private val context: Context) {
     } ?: emptyList()
 
   private fun androidx.datastore.preferences.core.MutablePreferences.writeCards(
-    value: List<MobilePinnedCard>
+    value: List<MobilePinnedCard>,
   ) {
     this[CARDS_KEY] = json.encodeToString(value)
   }
 
   private fun androidx.datastore.preferences.core.MutablePreferences.writeSections(
-    value: List<MobilePinnedSection>
+    value: List<MobilePinnedSection>,
   ) {
     this[SECTIONS_KEY] = json.encodeToString(value)
   }

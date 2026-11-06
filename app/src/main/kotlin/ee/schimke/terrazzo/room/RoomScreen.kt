@@ -115,7 +115,7 @@ fun RoomScreen(session: HaSession, readOnly: Boolean, onBack: () -> Unit) {
         scope.launch {
           prefs.updateRoomPins { stored ->
             encodeRoomPins(
-              decodeRoomPins(stored).map { if (it.anchorId == old.anchorId) moved else it }
+              decodeRoomPins(stored).map { if (it.anchorId == old.anchorId) moved else it },
             )
           }
         }
@@ -245,7 +245,7 @@ internal fun RoomEntityCard(
   val state = snapshot.states[entity.entityId]
   val accent =
     skinnedAccent(
-      remember(state) { state?.let { HaStateColor.activeFor(it) } ?: HaStateColor.Neutral }
+      remember(state) { state?.let { HaStateColor.activeFor(it) } ?: HaStateColor.Neutral },
     )
   val controls =
     remember(entity.entityId, state, snapshot.temperatureUnit) {

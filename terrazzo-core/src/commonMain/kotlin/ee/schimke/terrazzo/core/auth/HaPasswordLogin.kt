@@ -56,7 +56,7 @@ object HaPasswordLogin {
             }
             put("redirect_uri", "$base/?auth_callback=1")
           }
-            .toString()
+            .toString(),
         )
       }
     check(start.status.isSuccess()) { "Home Assistant refused to sign in: ${start.status}" }
@@ -72,7 +72,7 @@ object HaPasswordLogin {
             put("username", username)
             put("password", password)
           }
-            .toString()
+            .toString(),
         )
       }
     check(step.status.isSuccess()) { "Home Assistant refused to sign in: ${step.status}" }

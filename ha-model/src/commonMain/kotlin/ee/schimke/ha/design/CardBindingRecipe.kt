@@ -211,7 +211,7 @@ class CardBindingRecipe(
             val max = args.getOrNull(1) as? Double
             val unit = args.getOrNull(2) as? String
             if (min == null || max == null || unit == null) null else rangeText(min, max, unit)
-          }
+          },
       )
 
     /** A gauge's range line: "`min` – `max` `unit`", each bound as [formatRangeNumber]. */
@@ -266,7 +266,7 @@ object CardBindingRecipes {
                 ref("card.min"),
                 ref("card.max"),
                 first(config("unit"), attr("unit_of_measurement")),
-              )
+              ),
           ),
       )
     }

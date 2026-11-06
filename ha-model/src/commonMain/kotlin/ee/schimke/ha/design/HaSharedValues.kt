@@ -88,7 +88,7 @@ object HaSharedValues {
           "every other value reads daytime.",
         false,
         SUN,
-      )
+      ),
     )
     add(
       Value(
@@ -97,7 +97,7 @@ object HaSharedValues {
         "Whether the sun is above the horizon (its state is above_horizon).",
         true,
         SUN,
-      )
+      ),
     )
     add(
       Value(
@@ -108,7 +108,7 @@ object HaSharedValues {
         45f,
         SUN,
         "elevation",
-      )
+      ),
     )
     add(
       Value(
@@ -118,7 +118,7 @@ object HaSharedValues {
         180f,
         SUN,
         "azimuth",
-      )
+      ),
     )
     add(
       Value(
@@ -128,7 +128,7 @@ object HaSharedValues {
         false,
         SUN,
         "rising",
-      )
+      ),
     )
     for ((attribute, label, daytime) in SUN_TIMES) {
       add(
@@ -139,7 +139,7 @@ object HaSharedValues {
           daytime,
           SUN,
           attribute,
-        )
+        ),
       )
     }
   }

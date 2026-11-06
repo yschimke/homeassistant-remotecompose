@@ -21,7 +21,7 @@ class SharedDesignDependenciesTest {
         names.mapIndexed { index, name ->
           RcNamedVariable(100 + index, RcNamedVariable.FLOAT_TYPE, name)
         },
-      )
+      ),
     )
 
   @Test

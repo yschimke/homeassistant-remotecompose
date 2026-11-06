@@ -72,7 +72,7 @@ class FrozenClockImageLoadTest {
     compose.setContent {
       CompositionLocalProvider(
         LocalHaClock provides
-          FixedHaClock(ZonedDateTime.of(2026, 5, 5, 10, 8, 0, 0, ZoneOffset.UTC))
+          FixedHaClock(ZonedDateTime.of(2026, 5, 5, 10, 8, 0, 0, ZoneOffset.UTC)),
       ) {
         Box(Modifier.background(Color.White).width(320.dp).testTag("card")) {
           CachedCardPreview(

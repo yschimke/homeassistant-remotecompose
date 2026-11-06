@@ -83,7 +83,7 @@ class CardSettingsTest {
     val tile =
       card(
         """{"type":"tile","entity":"light.desk",
-          "tap_action":{"action":"navigate","navigation_path":"/lights"}}"""
+          "tap_action":{"action":"navigate","navigation_path":"/lights"}}""",
       )
     assertEquals("navigate", CardSettings.tapAction(tile))
     // The form offers the card's own action, so showing it changes nothing.

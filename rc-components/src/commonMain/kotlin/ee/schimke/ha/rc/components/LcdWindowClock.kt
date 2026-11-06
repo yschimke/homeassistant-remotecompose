@@ -133,7 +133,7 @@ internal fun LcdWindowClock(data: HaClockData, timeLabel: RemoteString, digitSp:
         RemoteTextStyle(
           fontFamily = RemoteFontFamily.Named(HaDigital7Font),
           lineHeight = (size * GlyphLine).toInt().rsp,
-        )
+        ),
       )
     else themeStyle
   val mainSize = mainPx.rsp
@@ -196,7 +196,7 @@ internal fun LcdWindowClock(data: HaClockData, timeLabel: RemoteString, digitSp:
       if (data.showSeconds) {
         RemoteBox(
           modifier =
-            RemoteModifier.padding(start = (heightDp * 0.08f).rdp, bottom = (heightDp * 0.1f).rdp)
+            RemoteModifier.padding(start = (heightDp * 0.08f).rdp, bottom = (heightDp * 0.1f).rdp),
         ) {
           if (bundledFont)
             RemoteText(

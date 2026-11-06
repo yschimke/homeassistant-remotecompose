@@ -105,5 +105,5 @@ fun buildDashboardLayout(dashboard: Dashboard): DashboardLayout =
           maxColumns = view.maxColumns,
           denseSectionPlacement = view.denseSectionPlacement == true,
         )
-      }
+      },
   )

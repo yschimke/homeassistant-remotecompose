@@ -50,19 +50,19 @@ class WearWidgetDesignsTest {
          "door":{"id":"door","componentId":"asset/image","properties":{"assetKey":{"type":"string","value":"door"},"contentScale":{"type":"string","value":"fillBounds"}},"modifiers":[{"type":"size","widthDp":200,"heightDp":180},{"type":"remoteCall","name":"graphicsLayer","args":{"rotationX":{"type":"expr","op":"select","args":[{"type":"state","variable":"cover.s0.is_on"},{"type":"float","value":85},{"type":"float","value":0}]}}}],"slots":{}},
          "night":{"id":"night","componentId":"layout/box","properties":{},"modifiers":[{"type":"fillMaxSize"},{"type":"alpha","alpha":{"type":"expr","op":"mul","args":[{"type":"float","value":0.55},{"type":"expr","op":"sub","args":[{"type":"float","value":1},{"type":"expr","op":"smoothstep","args":[{"type":"float","value":-6},{"type":"float","value":6},{"type":"state","variable":"HA:sun.sun.elevation"}]}]}]}}],"slots":{"children":[]}}
        }}
-    """
+    """,
         )
         .jsonObject
     val png =
       Base64.getDecoder()
         .decode(
-          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/a9sAAAAASUVORK5CYII="
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/a9sAAAAASUVORK5CYII=",
         )
     // Exercise the actual cloud seed and agent handoff, not just a standalone scene. An agent
     // retains the seed root and binding declarations while replacing its content with the scene.
     val cardConfig =
       Json.parseToJsonElement(
-          """{"type":"custom:enhanced-shutter-card","grid_options":{"columns":"full"},"entities":[{"entity":"cover.garage","name":"Garage Door","top_offset_pct":13}]}"""
+          """{"type":"custom:enhanced-shutter-card","grid_options":{"columns":"full"},"entities":[{"entity":"cover.garage","name":"Garage Door","top_offset_pct":13}]}""",
         )
         .jsonObject
     val states =
@@ -72,7 +72,7 @@ class WearWidgetDesignsTest {
             "cover.garage",
             "closed",
             JsonObject(mapOf("device_class" to JsonPrimitive("garage"))),
-          )
+          ),
       )
     val key =
       assertNotNull(
@@ -81,7 +81,7 @@ class WearWidgetDesignsTest {
           HaSnapshot(states = states),
           ThemeStyle.Material3,
           dark = false,
-        )
+        ),
       )
     assertEquals("device_class=garage;domain=cover;state_icon=garage", key.shape)
     val seed =
@@ -110,13 +110,13 @@ class WearWidgetDesignsTest {
     val slot = root.getValue("slots").jsonObject.keys.single()
     val wrapper =
       JsonObject(
-        root + ("slots" to JsonObject(mapOf(slot to JsonArray(listOf(JsonPrimitive("stage"))))))
+        root + ("slots" to JsonObject(mapOf(slot to JsonArray(listOf(JsonPrimitive("stage")))))),
       )
     val candidate =
       JsonObject(
         seed +
           ("nodes" to JsonObject(source.getValue("nodes").jsonObject + ("root" to wrapper))) +
-          ("assets" to JsonObject(mapOf("door" to binding)))
+          ("assets" to JsonObject(mapOf("door" to binding))),
       )
     assertTrue(sessions.submit(access.agent, 0, candidate))
     val submitted = assertNotNull(sessions.read(access.owner)).document
@@ -153,7 +153,7 @@ class WearWidgetDesignsTest {
             null,
           ),
           RcTargetProfiles.WEAR_WIDGETS,
-        )
+        ),
       )
       assertNotNull(
         userTemplateProblem(
@@ -166,13 +166,13 @@ class WearWidgetDesignsTest {
             null,
           ),
           RcTargetProfiles.WEAR_WIDGETS,
-        )
+        ),
       )
       assertTrue(
-        document.namedVariables.any { it.name.endsWith("wear.container.horizontal_padding") }
+        document.namedVariables.any { it.name.endsWith("wear.container.horizontal_padding") },
       )
       assertTrue(
-        document.namedVariables.any { it.name.endsWith("wear.container.vertical_padding") }
+        document.namedVariables.any { it.name.endsWith("wear.container.vertical_padding") },
       )
     }
   }
@@ -268,8 +268,8 @@ class WearWidgetDesignsTest {
                     slots = mapOf("content" to listOf("tile")),
                   ),
                 "tile" to UiBuilderSeed.node("tile", HaCardsSeed.TILE),
-              )
-            ))
+              ),
+            )),
       )
     val wear = WearWidgetDesigns.document(nested, DesignKey.WEAR_SMALL)!!
     assertEquals(listOf("tile"), wear.children("root", "content"))
@@ -294,7 +294,7 @@ class WearWidgetDesignsTest {
          "wall":{"id":"wall","componentId":"asset/image","modifiers":[{"type":"fillMaxSize"},{"type":"remoteCall","name":"graphicsLayer","args":{"rotationX":{"type":"state","variable":"cover.s0.is_on"},"cameraDistance":{"type":"float","value":32}}}],"slots":{}},
          "door":{"id":"door","componentId":"layout/box","modifiers":[{"type":"offset","xDp":36.8,"yDp":80.6},{"type":"size","widthDp":284.5,"heightDp":191.7}],"slots":{"children":[]}}
        }}
-    """
+    """,
         )
         .jsonObject
     for ((container, contentHeight) in
@@ -370,8 +370,8 @@ class WearWidgetDesignsTest {
                     "card-root",
                     HaCardsSeed.DASHBOARD_CARD,
                     slots = mapOf("content" to listOf("stage")),
-                  ))
-            ))
+                  )),
+            )),
       )
     for (container in DesignKey.WEAR_CONTAINERS) {
       val wear = assertNotNull(WearWidgetDesigns.document(wrapped, container))
@@ -394,8 +394,8 @@ class WearWidgetDesignsTest {
                     HaCardsSeed.DASHBOARD_CARD,
                     slots = mapOf("content" to listOf("stage", "other")),
                   )) +
-                ("other" to UiBuilderSeed.node("other", "layout/box"))
-            ))
+                ("other" to UiBuilderSeed.node("other", "layout/box")),
+            )),
       )
     val siblings = assertNotNull(WearWidgetDesigns.document(withSibling, DesignKey.WEAR_LARGE))
     assertEquals(listOf("stage", "other"), siblings.children("card-root", "content"))
@@ -411,10 +411,10 @@ class WearWidgetDesignsTest {
                     nodes.getValue("door").jsonObject +
                       ("modifiers" to
                         Json.parseToJsonElement(
-                          """[{"type":"offset","xDp":{"type":"state","variable":"cover.s0.is_on"},"yDp":0}]"""
-                        ))
-                  ))
-            ))
+                          """[{"type":"offset","xDp":{"type":"state","variable":"cover.s0.is_on"},"yDp":0}]""",
+                        )),
+                  )),
+            )),
       )
     assertNull(
       WearWidgetDesigns.document(unsafe, DesignKey.WEAR_SMALL),

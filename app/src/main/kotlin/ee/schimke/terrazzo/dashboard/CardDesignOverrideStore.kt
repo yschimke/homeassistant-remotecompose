@@ -128,7 +128,7 @@ class CardDesignOverrideStore internal constructor(private val file: File) {
         ?: synchronized(this) {
           instance
             ?: CardDesignOverrideStore(
-                File(context.applicationContext.filesDir, "terrazzo/designs/overrides.json")
+                File(context.applicationContext.filesDir, "terrazzo/designs/overrides.json"),
               )
               .also { instance = it }
         }

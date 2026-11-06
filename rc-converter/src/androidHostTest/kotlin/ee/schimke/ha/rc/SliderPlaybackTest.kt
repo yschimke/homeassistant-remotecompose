@@ -93,7 +93,7 @@ class SliderPlaybackTest {
             modifier =
               RemoteModifier.fillMaxWidth()
                 .height(40.rdp)
-                .then(if (tap != null) RemoteModifier.clickable(tap) else RemoteModifier)
+                .then(if (tap != null) RemoteModifier.clickable(tap) else RemoteModifier),
           )
         }
       }
@@ -226,7 +226,7 @@ class SliderPlaybackTest {
       assertEquals(HaAction.None, decode(sent.last()), "a locked toggle sends None")
       println(
         "STRIP before=${Integer.toHexString(before)} after=${Integer.toHexString(stripPixel())} row=" +
-          (0 until 300 step 20).map { Integer.toHexString(frame().getPixel(it, 128)) }
+          (0 until 300 step 20).map { Integer.toHexString(frame().getPixel(it, 128)) },
       )
       assertTrue(stripPixel() != before, "the unlock strip shows after a locked touch")
 
@@ -258,7 +258,7 @@ class SliderPlaybackTest {
       assertEquals(HaAction.None, decode(sent.last()), "a locked toggle sends None")
       println(
         "STRIP before=${Integer.toHexString(before)} after=${Integer.toHexString(stripPixel())} row=" +
-          (0 until 300 step 20).map { Integer.toHexString(frame().getPixel(it, 128)) }
+          (0 until 300 step 20).map { Integer.toHexString(frame().getPixel(it, 128)) },
       )
       assertTrue(stripPixel() != before, "the unlock strip shows after a locked touch")
 

@@ -34,7 +34,7 @@ kotlin {
     // The demo dashboards the app bundles (`dashboards/<name>/`): the library's source cards.
     commonMain {
       resources.srcDir(
-        rootProject.layout.projectDirectory.dir("terrazzo-core/src/androidMain/resources")
+        rootProject.layout.projectDirectory.dir("terrazzo-core/src/androidMain/resources"),
       )
     }
     commonMain.dependencies {

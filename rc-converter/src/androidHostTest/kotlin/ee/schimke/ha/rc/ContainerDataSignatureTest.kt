@@ -41,7 +41,7 @@ class ContainerDataSignatureTest {
           "hvac_action" to JsonPrimitive(action),
           "min_temp" to JsonPrimitive(10),
           "max_temp" to JsonPrimitive(32),
-        )
+        ),
       ),
     )
 
@@ -49,7 +49,7 @@ class ContainerDataSignatureTest {
     HaSnapshot(
       states =
         listOf(climate, EntityState("light.kitchen", "on"), EntityState("switch.fan", "off"))
-          .associateBy { it.entityId }
+          .associateBy { it.entityId },
     )
 
   private fun card(type: String, block: JsonObjectBuilder.() -> Unit) =

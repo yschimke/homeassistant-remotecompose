@@ -63,7 +63,7 @@ private fun forecastDay(
       "condition" to JsonPrimitive(condition),
       "temperature" to JsonPrimitive(high),
       "templow" to JsonPrimitive(low),
-    )
+    ),
   )
 
 /**
@@ -81,12 +81,12 @@ object Fixtures {
           "unit_of_measurement" to "°C",
           "device_class" to "temperature",
         ),
-      )
+      ),
     )
 
   val kitchenLight =
     snapshot(
-      state("light.kitchen", "on", mapOf("friendly_name" to "Kitchen", "brightness" to "200"))
+      state("light.kitchen", "on", mapOf("friendly_name" to "Kitchen", "brightness" to "200")),
     )
 
   /**
@@ -166,7 +166,7 @@ object Fixtures {
           "unit_of_measurement" to "%",
           "device_class" to "battery",
         ),
-      )
+      ),
     )
 
   val weather =
@@ -196,7 +196,7 @@ object Fixtures {
             forecastDay("2026-05-10", "sunny", high = 16.7, low = 9.0),
             forecastDay("2026-05-11", "lightning-rainy", high = 14.0, low = 7.3),
           ),
-      )
+      ),
     )
 
   val driveway =
@@ -216,7 +216,7 @@ object Fixtures {
           "friendly_name" to "Driveway",
           "entity_picture" to "https://example.invalid/driveway.jpg",
         ),
-      )
+      ),
     )
 
   val activity =
@@ -264,9 +264,9 @@ object Fixtures {
                 "temperature_unit" to JsonPrimitive("°C"),
                 "hvac_action" to JsonPrimitive("heating"),
                 "target_temp_step" to JsonPrimitive(0.5),
-              )
+              ),
             ),
-        )
+        ),
     )
 
   /** Humidifier at 45% current, target 55%. */
@@ -285,9 +285,9 @@ object Fixtures {
                 "min_humidity" to JsonPrimitive(20),
                 "max_humidity" to JsonPrimitive(80),
                 "action" to JsonPrimitive("humidifying"),
-              )
+              ),
             ),
-        )
+        ),
     )
 
   /** Alarm-panel disarmed. */
@@ -309,9 +309,9 @@ object Fixtures {
                 "media_artist" to JsonPrimitive("Good Charlotte"),
                 "media_position" to JsonPrimitive(75.0),
                 "media_duration" to JsonPrimitive(176.0),
-              )
+              ),
             ),
-        )
+        ),
     )
 
   /** Shopping list with two active items + one completed. */
@@ -332,25 +332,25 @@ object Fixtures {
                         mapOf(
                           "summary" to JsonPrimitive("Salt"),
                           "status" to JsonPrimitive("needs_action"),
-                        )
+                        ),
                       ),
                       JsonObject(
                         mapOf(
                           "summary" to JsonPrimitive("Butter"),
                           "status" to JsonPrimitive("needs_action"),
-                        )
+                        ),
                       ),
                       JsonObject(
                         mapOf(
                           "summary" to JsonPrimitive("Milk"),
                           "status" to JsonPrimitive("completed"),
-                        )
+                        ),
                       ),
-                    )
+                    ),
                   ),
-              )
+              ),
             ),
-        )
+        ),
     )
 
   /** Calendar entity with three upcoming events. */
@@ -371,25 +371,25 @@ object Fixtures {
                         mapOf(
                           "summary" to JsonPrimitive("Dentist appointment"),
                           "start" to JsonPrimitive("2026-05-08T09:30:00+01:00"),
-                        )
+                        ),
                       ),
                       JsonObject(
                         mapOf(
                           "summary" to JsonPrimitive("Trash day"),
                           "start" to JsonPrimitive("2026-05-09"),
-                        )
+                        ),
                       ),
                       JsonObject(
                         mapOf(
                           "summary" to JsonPrimitive("Anniversary"),
                           "start" to JsonPrimitive("2026-05-12"),
-                        )
+                        ),
                       ),
-                    )
+                    ),
                   ),
-              )
+              ),
             ),
-        )
+        ),
     )
 
   /** Area with two sensors + a light + a switch. */
@@ -434,9 +434,9 @@ object Fixtures {
               mapOf(
                 "friendly_name" to JsonPrimitive("Kitchen"),
                 "brightness" to JsonPrimitive(153), // 60% of 255
-              )
+              ),
             ),
-        )
+        ),
     )
 
   /**
@@ -463,7 +463,7 @@ object Fixtures {
               "remain_enabled" to JsonPrimitive(true),
               "active" to JsonPrimitive(active),
               "type" to JsonPrimitive(material.substringAfterLast(' ')),
-            )
+            ),
           ),
       )
 
@@ -668,7 +668,7 @@ object Fixtures {
                 ),
               ),
             )
-            .states
+            .states,
     )
 
   /**
@@ -680,7 +680,7 @@ object Fixtures {
       states =
         bambuPrintControl.states.mapValues { (id, e) ->
           if (id.startsWith("button.")) e.copy(state = "unavailable") else e
-        }
+        },
     )
 
   /** [bambuPrintControl] with the print paused: Resume and Stop. */
@@ -693,9 +693,9 @@ object Fixtures {
                 "sensor.p2s_printing_print_status",
                 "pause",
                 mapOf("friendly_name" to "P2S Print status"),
-              )
+              ),
             )
-            .states
+            .states,
     )
 
   /**
@@ -723,7 +723,7 @@ object Fixtures {
                   "friendly_name" to JsonPrimitive("Outside"),
                   "unit_of_measurement" to JsonPrimitive("°C"),
                   "device_class" to JsonPrimitive("temperature"),
-                )
+                ),
               ),
           ),
         "sensor.upstairs_temp" to
@@ -736,7 +736,7 @@ object Fixtures {
                   "friendly_name" to JsonPrimitive("Upstairs"),
                   "unit_of_measurement" to JsonPrimitive("°C"),
                   "device_class" to JsonPrimitive("temperature"),
-                )
+                ),
               ),
           ),
       )
@@ -829,7 +829,7 @@ object Fixtures {
                 "friendly_name" to JsonPrimitive(name),
                 "unit_of_measurement" to JsonPrimitive("kW"),
                 "device_class" to JsonPrimitive("power"),
-              )
+              ),
             ),
         )
     val baseTime = Instant.parse("2026-05-05T00:00:00Z")
@@ -882,7 +882,7 @@ object Fixtures {
             "yschimke/homeassistant-remotecompose Issues",
           ),
           issueSensor("sensor.gh_cadence_issues", "yschimke/cadence Issues"),
-        )
+        ),
     )
   }
 
@@ -903,7 +903,7 @@ object Fixtures {
                   "friendly_name" to JsonPrimitive("House power"),
                   "unit_of_measurement" to JsonPrimitive("W"),
                   "device_class" to JsonPrimitive("power"),
-                )
+                ),
               ),
           ),
         "sensor.solar_power" to
@@ -916,7 +916,7 @@ object Fixtures {
                   "friendly_name" to JsonPrimitive("Solar power"),
                   "unit_of_measurement" to JsonPrimitive("W"),
                   "device_class" to JsonPrimitive("power"),
-                )
+                ),
               ),
           ),
       )

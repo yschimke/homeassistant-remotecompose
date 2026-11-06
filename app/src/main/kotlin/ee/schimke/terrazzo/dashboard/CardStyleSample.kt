@@ -155,6 +155,6 @@ internal fun sampleSnapshot(name: String, description: String) =
                 put("friendly_name", description)
                 put("icon", "mdi:palette")
               },
-          )
-      )
+          ),
+      ),
   )

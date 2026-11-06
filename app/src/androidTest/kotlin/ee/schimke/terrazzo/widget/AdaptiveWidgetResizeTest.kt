@@ -136,7 +136,7 @@ class AdaptiveWidgetResizeTest {
               "Pictures/TerrazzoWidgetTests",
             )
           },
-        )
+        ),
       )
     checkNotNull(context.contentResolver.openOutputStream(uri)).use {
       assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it))
@@ -157,7 +157,7 @@ class AdaptiveWidgetResizeTest {
     val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
     val descriptor =
       automation.executeShellCommand(
-        "timeout 30s am wait-for-broadcast-idle --flush-broadcast-loopers"
+        "timeout 30s am wait-for-broadcast-idle --flush-broadcast-loopers",
       )
     val output =
       android.os.ParcelFileDescriptor.AutoCloseInputStream(descriptor).bufferedReader().use {
@@ -273,7 +273,7 @@ class AdaptiveWidgetResizeTest {
         val expectedViews =
           checkNotNull(
             TerrazzoWidgetProvider()
-              .renderPreview(context, DemoData.BASE_URL, card, DemoData.snapshot(), size, id)
+              .renderPreview(context, DemoData.BASE_URL, card, DemoData.snapshot(), size, id),
           )
         val fresh = onMain {
           AppWidgetHostView(view.context).apply {

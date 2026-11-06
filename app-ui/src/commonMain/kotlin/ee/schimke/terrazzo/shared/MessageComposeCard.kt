@@ -39,8 +39,8 @@ internal fun MessageComposeCard(
                     ee.schimke.composeai.rcplayer.protocol.RcInputChrome.NONE
                   else ee.schimke.composeai.rcplayer.protocol.RcInputChrome.DEFAULT,
               )
-            }
-          )
+            },
+          ),
         )
       }
     }

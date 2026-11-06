@@ -78,7 +78,7 @@ val desktopVersion =
       providers
         .fileContents(rootProject.layout.projectDirectory.file("app/build.gradle.kts"))
         .asText
-        .map { Regex("""val appVersionName = "([^"]+)"""").find(it)!!.groupValues[1] }
+        .map { Regex("""val appVersionName = "([^"]+)"""").find(it)!!.groupValues[1] },
     )
     .get()
 
@@ -94,7 +94,7 @@ val feedbackBuildInfo =
         parentFile.mkdirs()
         writeText(
           "package ee.schimke.terrazzo.shared\n\n" +
-            "internal object FeedbackBuildInfo {\n  const val VERSION = \"$version\"\n}\n"
+            "internal object FeedbackBuildInfo {\n  const val VERSION = \"$version\"\n}\n",
         )
       }
     }

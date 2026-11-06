@@ -406,7 +406,7 @@ fun DashboardViewScreen(
           Modifier.fillMaxSize()
             .padding(contentPadding)
             .consumeWindowInsets(contentPadding)
-            .padding(24.dp)
+            .padding(24.dp),
         ) {
           CircularProgressIndicator()
         }
@@ -415,7 +415,7 @@ fun DashboardViewScreen(
           Modifier.fillMaxSize()
             .padding(contentPadding)
             .consumeWindowInsets(contentPadding)
-            .padding(24.dp)
+            .padding(24.dp),
         ) {
           Text("Failed: ${s.message}", style = MaterialTheme.typography.bodyMedium)
           ReportDrawn()
@@ -1394,11 +1394,11 @@ private fun PinnableSectionHeading(
                   sectionIndex = sectionIndex,
                   title = title,
                   cards = section.cards.map { it.toPinnedData() },
-                )
+                ),
               )
             }
           }
-        }
+        },
       ) {
         Icon(
           imageVector = if (isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
@@ -1630,7 +1630,7 @@ internal fun StudioCardPreview(session: HaSession, card: CardConfig, snapshot: H
     LocalHaImageStack.current?.imageLoader
       ?: remember(context) { SingletonImageLoader.get(context.applicationContext) }
   CompositionLocalProvider(
-    LocalHaActionDispatcher provides ee.schimke.ha.rc.NoOpHaActionDispatcher
+    LocalHaActionDispatcher provides ee.schimke.ha.rc.NoOpHaActionDispatcher,
   ) {
     CardSlot(
       card,
@@ -1812,7 +1812,7 @@ private fun CardSlot(
           if (debugBorders) {
             it.border(1.dp, androidx.compose.ui.graphics.Color(0xFFD32F2F))
           } else it
-        }
+        },
   ) {
     CachedCardPreview(
       cacheKey = cacheKey,
@@ -1863,7 +1863,7 @@ private fun LiveCameraDot(modifier: Modifier = Modifier) {
       .size(8.dp)
       .graphicsLayer { this.alpha = alpha }
       .background(MaterialTheme.colorScheme.error, CircleShape)
-      .semantics { contentDescription = "Live camera" }
+      .semantics { contentDescription = "Live camera" },
   )
 }
 

@@ -151,7 +151,7 @@ fun TerrazzoMultiplatformApp(
     // Cards may name a font the app bundles (Rugged Digital's Digital-7); every card player
     // under the app resolves it here.
     androidx.compose.runtime.CompositionLocalProvider(
-      LocalRcTypefaceLoader provides ee.schimke.ha.rc.HaTypefaceLoader
+      LocalRcTypefaceLoader provides ee.schimke.ha.rc.HaTypefaceLoader,
     ) {
       Surface(Modifier.fillMaxSize()) {
         if (active == null) {
@@ -490,7 +490,7 @@ private fun DashboardShell(
           entryProvider {
             entry<DashboardsDestination> {
               Scaffold(
-                topBar = { TopAppBar(title = { Text("Dashboards") }, actions = headerActions) }
+                topBar = { TopAppBar(title = { Text("Dashboards") }, actions = headerActions) },
               ) { padding ->
                 Box(Modifier.padding(padding).consumeWindowInsets(padding)) {
                   DashboardPickerScreen(
@@ -512,7 +512,7 @@ private fun DashboardShell(
                         }
                     },
                   )
-                }
+                },
               ) { padding ->
                 Column(
                   Modifier.padding(padding)
@@ -527,7 +527,7 @@ private fun DashboardShell(
                     signInStorageLabel
                       ?: if (signInRemembered)
                         "This browser remembers your Home Assistant sign-in until you sign out."
-                      else "Access tokens are kept only for this session."
+                      else "Access tokens are kept only for this session.",
                   )
                   OutlinedTextField(
                     designServer,
@@ -575,7 +575,7 @@ private fun DashboardShell(
                       headerActions()
                     },
                   )
-                }
+                },
               ) { padding ->
                 val dashboardModifier =
                   Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)
@@ -1062,7 +1062,7 @@ private fun LiveDashboard(
         uriHandler.openUri(
           connection.config.baseUrl.trimEnd('/') +
             "/lovelace?more-info-entity-id=" +
-            entityId.encodeURLParameter()
+            entityId.encodeURLParameter(),
         )
     } catch (_: Exception) {
       error = "Could not open Home Assistant entity details."
@@ -1132,7 +1132,7 @@ private fun LiveDashboard(
               )
             if (bytes == null || !canBindWithCmp(bytes, exactTemplateBindings(editing, shown)))
               throw CardSelectionException(
-                "The design was published but could not be loaded for this card. Try publishing again."
+                "The design was published but could not be loaded for this card. Try publishing again.",
               )
             selectionLock.withLock {
               connection.client.setTerrazzoDesignSelection(fingerprint, id)
@@ -1174,7 +1174,7 @@ private fun LiveDashboard(
                     put("type", "ee.schimke.ha.rc.components.HaAction.Toggle")
                     put("entityId", entityId)
                   }
-                    .toString()
+                    .toString(),
                 )
               },
               onService = { domain, service, data ->
@@ -1185,7 +1185,7 @@ private fun LiveDashboard(
                     put("service", service)
                     put("serviceData", data)
                   }
-                    .toString()
+                    .toString(),
                 )
               },
             )
@@ -1207,7 +1207,7 @@ private fun LiveDashboard(
                         error = "Could not restore this card's default design. Try again."
                       }
                     }
-                  }
+                  },
                 ) {
                   Text("Use default design")
                 }
@@ -1399,7 +1399,7 @@ internal fun NativeCard(
         val source = (card.raw["content"] as? JsonPrimitive)?.contentOrNull.orEmpty()
         Text(
           JinjaTemplate.render(source, snapshot)
-            ?: "This template needs Home Assistant’s renderer. Open entity details in Home Assistant."
+            ?: "This template needs Home Assistant’s renderer. Open entity details in Home Assistant.",
         )
       } else if (card.type == "heading") {
         Text(
@@ -1449,7 +1449,7 @@ internal fun NativeCard(
           if (entityId != null) "Entity not found"
           else if (card.type == "conditional")
             "This condition needs Home Assistant’s evaluator. Open the original dashboard to view it."
-          else "Open this card in Home Assistant for its full view."
+          else "Open this card in Home Assistant for its full view.",
         )
       }
       val action = cardServiceAction(card)

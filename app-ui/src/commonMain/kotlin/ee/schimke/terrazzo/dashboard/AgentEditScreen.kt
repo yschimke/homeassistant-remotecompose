@@ -224,7 +224,7 @@ fun AgentEditScreen(
           }
           else -> onBack()
         }
-      }
+      },
     ) {
       Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
     }
@@ -565,7 +565,7 @@ private fun SessionReview(
           .then(
             if (draft != null)
               Modifier.sharesRender(draft.id, session.isOpen, onRender) { capturing = it }
-            else Modifier
+            else Modifier,
           ),
       ) { key, card ->
         // A section session comments on its own cards; the rest of the dashboard is context.

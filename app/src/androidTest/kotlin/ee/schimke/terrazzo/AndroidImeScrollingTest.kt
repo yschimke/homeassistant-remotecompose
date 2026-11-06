@@ -72,7 +72,7 @@ class AndroidImeScrollingTest {
       device.executeShellCommand("settings delete secure show_ime_with_hard_keyboard")
     } else {
       device.executeShellCommand(
-        "settings put secure show_ime_with_hard_keyboard $originalHardwareKeyboardSetting"
+        "settings put secure show_ime_with_hard_keyboard $originalHardwareKeyboardSetting",
       )
     }
   }
@@ -387,7 +387,7 @@ internal fun captureWindowEvidence(name: String) {
           put(MediaStore.Images.Media.MIME_TYPE, "image/png")
           put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/TerrazzoImeTests")
         },
-      )
+      ),
     )
   val original = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
   val scale = minOf(1f, 1800f / maxOf(original.width, original.height))

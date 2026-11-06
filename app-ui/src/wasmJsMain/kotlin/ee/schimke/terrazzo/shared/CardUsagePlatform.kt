@@ -81,7 +81,7 @@ private object BrowserStorageTransport : AppStorageTransport {
 }
 
 @JsFun(
-  "() => window.terrazzoBackend.ready.then(b => b.kind === 'wasmo' && b.caps.kv === true ? 'wasmo' : 'local')"
+  "() => window.terrazzoBackend.ready.then(b => b.kind === 'wasmo' && b.caps.kv === true ? 'wasmo' : 'local')",
 )
 private external fun backendStorageKind(): Promise<JsString>
 

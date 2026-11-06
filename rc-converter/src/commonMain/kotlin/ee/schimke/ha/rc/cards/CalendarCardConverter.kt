@@ -90,7 +90,7 @@ class CalendarCardConverter : DesignedCardConverter() {
           .let {
             it.copy(
               attributes =
-                kotlinx.serialization.json.JsonObject(it.attributes + ("events" to events))
+                kotlinx.serialization.json.JsonObject(it.attributes + ("events" to events)),
             )
           }
       }

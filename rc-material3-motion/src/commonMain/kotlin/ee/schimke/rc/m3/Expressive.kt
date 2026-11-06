@@ -177,8 +177,8 @@ fun RemoteM3WavyProgress(
     drawCircle(
       fill(
         colors.stop.copy(
-          alpha = colors.stop.alpha * stopVisibility(end - head, gap * 2f.rf) * ambient.fade
-        )
+          alpha = colors.stop.alpha * stopVisibility(end - head, gap * 2f.rf) * ambient.fade,
+        ),
       ),
       stroke / 2f.rf,
       RemoteOffset(end, mid),
@@ -400,8 +400,8 @@ fun RemoteDrawScope.drawM3Slider(
     fill(
       colors.stop.copy(
         alpha =
-          colors.stop.alpha * stopVisibility(stopX - inactiveStart, fullTrackHeight) * ambient.fade
-      )
+          colors.stop.alpha * stopVisibility(stopX - inactiveStart, fullTrackHeight) * ambient.fade,
+      ),
     ),
     stopRadius,
     RemoteOffset(stopX, middle),

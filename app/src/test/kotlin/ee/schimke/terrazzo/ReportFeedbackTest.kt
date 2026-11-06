@@ -58,7 +58,7 @@ class ReportFeedbackTest {
         LocalUriHandler provides
           object : UriHandler {
             override fun openUri(uri: String) = open(uri)
-          }
+          },
       ) {
         MaterialTheme { ReportFeedbackButton(version = "1.2.3") }
       }

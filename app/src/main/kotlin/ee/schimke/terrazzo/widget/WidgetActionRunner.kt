@@ -285,7 +285,7 @@ internal object WidgetActionRunner {
       Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).apply {
         component = ComponentName(context, TerrazzoWidgetProvider::class.java)
         putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(widgetId))
-      }
+      },
     )
   }
 

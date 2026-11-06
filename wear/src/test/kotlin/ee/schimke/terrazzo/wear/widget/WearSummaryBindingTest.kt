@@ -82,12 +82,12 @@ class WearSummaryBindingTest {
                         item("Milk", "needs_action"),
                         item("Bread", "needs_action"),
                         item("Eggs", "completed"),
-                      )
-                    )
-                )
+                      ),
+                    ),
+                ),
               ),
-            )
-        )
+            ),
+        ),
     )
 
   @Test
@@ -97,8 +97,8 @@ class WearSummaryBindingTest {
     val input =
       requireNotNull(
         converter.framedDesignTemplate(
-          requireNotNull(converter.framedDesignProperties(design, snapshot))
-        )
+          requireNotNull(converter.framedDesignProperties(design, snapshot)),
+        ),
       )
     val document = runBlocking {
       slotDocument(

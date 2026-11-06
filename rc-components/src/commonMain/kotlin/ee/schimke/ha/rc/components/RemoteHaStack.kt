@@ -139,7 +139,7 @@ fun RemoteHaGrid(
         RemoteRow(
           modifier =
             if (fillHeight) RemoteModifier.fillMaxWidth().weight(1f)
-            else RemoteModifier.fillMaxWidth()
+            else RemoteModifier.fillMaxWidth(),
         ) {
           for (slot in 0 until slots) {
             if (slot > 0) RemoteBox(modifier = RemoteModifier.width(HaGridLayout.GAP_DP.rdp))
@@ -147,7 +147,7 @@ fun RemoteHaGrid(
             RemoteBox(
               modifier =
                 if (fillHeight) RemoteModifier.weight(1f).fillMaxHeight()
-                else RemoteModifier.weight(1f)
+                else RemoteModifier.weight(1f),
             ) {
               if (index != null) {
                 CompositionLocalProvider(LocalGridCellWidthPx provides widthPx) { cell(index) }

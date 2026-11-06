@@ -29,7 +29,7 @@ class HaIconMapTest {
               is Number -> JsonPrimitive(v)
               else -> JsonPrimitive(v.toString())
             }
-        }
+        },
       ),
     )
 
@@ -47,7 +47,7 @@ class HaIconMapTest {
   private val dashboards: File =
     File(
       System.getProperty("harc.demoDashboards")
-        ?: "../terrazzo-core/src/androidMain/resources/dashboards"
+        ?: "../terrazzo-core/src/androidMain/resources/dashboards",
     )
 
   private fun dashboardFiles(): List<File> =
@@ -287,7 +287,7 @@ class HaIconMapTest {
     assertTrue(keys.values.all { it.size == 1 }, "$keys")
     assertEquals(byGlyph.size, keys.values.flatten().toSet().size)
     assertTrue(
-      HaIconMap.weatherConditionKey("sunny") != HaIconMap.weatherConditionKey("clear-night")
+      HaIconMap.weatherConditionKey("sunny") != HaIconMap.weatherConditionKey("clear-night"),
     )
     assertTrue(HaIconMap.weatherConditionKey("rainy") != HaIconMap.weatherConditionKey("pouring"))
   }
@@ -392,7 +392,7 @@ class HaIconMapTest {
     assertNull(icons.activeIcon)
     assertNull(HaIconMap.entityIcons("mdi:lamp", entity("light.k")).activeIcon)
     assertNull(
-      HaIconMap.stateSignature(entity("sun.sun", "above_horizon", "icon" to "mdi:weather-sunset"))
+      HaIconMap.stateSignature(entity("sun.sun", "above_horizon", "icon" to "mdi:weather-sunset")),
     )
     // Not an on/off domain: one glyph.
     assertNull(HaIconMap.entityIcons(null, entity("sun.sun", "above_horizon")).activeIcon)

@@ -15,7 +15,7 @@ class SensorCardConverterTest {
 
   private val snapshot =
     HaSnapshot(
-      states = mapOf("sensor.temp" to EntityState("sensor.temp", "21.5", JsonObject(emptyMap())))
+      states = mapOf("sensor.temp" to EntityState("sensor.temp", "21.5", JsonObject(emptyMap()))),
     )
 
   private fun card(hours: Int? = null) =

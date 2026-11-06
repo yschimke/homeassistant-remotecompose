@@ -49,7 +49,7 @@ class BuiltInCardDesignsTest {
   fun withNoServerTheBuiltInStylesStillDraw() {
     val none = loaded(CardDesignChoice("", ThemeStyle.Material3, HaUberTheme.HomeAssistant))
     assertTrue(
-      none.byKey.keys.any { it.theme == DesignKey.styledTheme("home-assistant", dark = false) }
+      none.byKey.keys.any { it.theme == DesignKey.styledTheme("home-assistant", dark = false) },
     )
   }
 }

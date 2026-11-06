@@ -197,7 +197,7 @@ class TerrazzoApplication : Application() {
           override fun onStop(owner: androidx.lifecycle.LifecycleOwner) {
             apply()
           }
-        }
+        },
       )
   }
 
@@ -233,7 +233,7 @@ class TerrazzoApplication : Application() {
               )
             }
           }
-        }
+        },
       )
   }
 

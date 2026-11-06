@@ -265,6 +265,6 @@ fun RemoteHaToggleSwitchByProgress(
         inactiveAccent = inactiveAccent,
         modifier = modifier,
         clickable = clickable,
-      )
+      ),
     )
 }
