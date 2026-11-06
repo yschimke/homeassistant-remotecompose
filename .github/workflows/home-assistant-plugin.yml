@@ -41,7 +41,7 @@ concurrency:
   cancel-in-progress: ${{ !inputs.publish }}
 jobs:
   plugin:
-    runs-on: ubuntu-24.04  # Playwright 1.56 has no Chromium for ubuntu-26.04 (ubuntu-latest)
+    runs-on: ubuntu-26.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7.0.1
@@ -81,7 +81,7 @@ jobs:
         run: cp app-ui/build/wasmo/terrazzo.wasmo build/home-assistant/terrazzo.wasmo
       - name: Install browser tools
         run: |
-          npm install --no-save --prefix embed playwright@1.56.1
+          npm install --no-save --prefix embed playwright@1.62.0
           npx --prefix embed playwright install --with-deps chromium
       - name: Test real TS-player card and panel session bridge
         run: node --test home-assistant/test/card-config.test.mjs home-assistant/test/frontend.test.mjs home-assistant/test/dashboards.test.mjs home-assistant/test/message-inputs.test.mjs
