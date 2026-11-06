@@ -99,6 +99,21 @@ class DesignFontsTest {
   }
 
   @Test
+  fun aReplacementThatFailsKeepsTheFaceItReplaces() = runTest {
+    val store = MemoryFontStore()
+    DesignFonts.refresh("https://ha.coo.ee/designs/v1", client(manifest()), store)
+    // The server now names a new Russo One whose bytes don't arrive as hashed.
+    DesignFonts.refresh(
+      "https://ha.coo.ee/designs/v1",
+      client(manifest(russoSha = "1".repeat(64))),
+      store,
+    )
+    val cached = DesignFonts.cached(store).associateBy { it.family }
+    assertContentEquals(russo, cached.getValue("gspot").bytes)
+    assertEquals(2, cached.size)
+  }
+
+  @Test
   fun aFailedFetchKeepsWhatWasStored() = runTest {
     val store = MemoryFontStore()
     DesignFonts.refresh("https://ha.coo.ee/designs/v1", client(manifest()), store)

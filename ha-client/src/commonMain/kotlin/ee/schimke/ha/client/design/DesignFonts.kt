@@ -37,8 +37,8 @@ class CachedFontFace(
 object DesignFonts {
   /**
    * Fetch [baseUrl]'s font manifest and every face [store] doesn't already hold. Returns whether
-   * the store's fonts changed. A failure keeps what was stored: fonts only ever add to what a
-   * device can draw.
+   * the store's fonts changed. A failure keeps what was stored: a stored manifest is replaced only
+   * when every face the new one names has been fetched and verified.
    */
   suspend fun refresh(baseUrl: String, client: HttpClient, store: FontStore): Boolean {
     val base = baseUrl.trimEnd('/')
@@ -47,19 +47,28 @@ object DesignFonts {
     val text = response.bodyAsText()
     val manifest = runCatching { CardFontManifest.decode(text) }.getOrNull() ?: return false
     var changed = false
+    var complete = true
     for ((_, face) in manifest.faces) {
       val sha = face.sha256?.takeIf { SHA256.matches(it) } ?: continue
       if (!CardFontManifest.FILE_NAME.matches(face.file) || store.readFace(sha) != null) continue
-      val bytes =
-        runCatching { client.get("$base/${CardFontManifest.facePath(face.file)}") }
-          .getOrNull()
-          ?.takeIf { it.status.isSuccess() }
-          ?.bodyAsBytes() ?: continue
-      if (Sha256.hex(bytes) != sha) continue
+      val bytes = runCatching {
+        client.get("$base/${CardFontManifest.facePath(face.file)}")
+      }
+        .getOrNull()
+        ?.takeIf { it.status.isSuccess() }
+        ?.bodyAsBytes()
+      if (bytes == null || Sha256.hex(bytes) != sha) {
+        complete = false
+        continue
+      }
       store.writeFace(sha, bytes)
       changed = true
     }
-    if (store.readManifest() != text) {
+    // The stored manifest names the faces a device draws with: it moves to the new one only once
+    // every face that names is stored, so a replacement that failed keeps the face it replaces.
+    // With none stored yet, whatever did arrive beats nothing.
+    val stored = store.readManifest()
+    if ((complete || stored == null) && stored != text) {
       store.writeManifest(text)
       changed = true
     }
