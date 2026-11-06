@@ -66,7 +66,7 @@ private class EntityDetailsNode(
             }
           }
         }
-      }
+      },
     )
 
   fun update(entityId: String, onMoreInfo: (String) -> Unit) {

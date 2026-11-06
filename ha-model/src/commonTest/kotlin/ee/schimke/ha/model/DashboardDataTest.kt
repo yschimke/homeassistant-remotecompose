@@ -26,7 +26,7 @@ class DashboardDataTest {
         {"type":"weather-forecast","entity":"weather.quiet","show_forecast":false},
         {"type":"tile","entity":"sensor.other"}
       ]}]}]}
-      """
+      """,
     )
 
   @Test
@@ -60,7 +60,7 @@ class DashboardDataTest {
         mapOf(
           "daily" to mapOf("weather.home" to daily),
           "hourly" to mapOf("weather.home" to hourly),
-        )
+        ),
       ),
     )
   }
@@ -86,7 +86,7 @@ class DashboardDataTest {
       HaSnapshot(history = mapOf("sensor.temp" to listOf(at(40, "10"), at(5, "11"), at(1, "12"))))
     val twoHours =
       json.decodeFromString<CardConfig>(
-        """{"type":"history-graph","hours_to_show":2,"entities":["sensor.temp"]}"""
+        """{"type":"history-graph","hours_to_show":2,"entities":["sensor.temp"]}""",
       )
     assertEquals(
       listOf(at(2, "11"), at(1, "12")),

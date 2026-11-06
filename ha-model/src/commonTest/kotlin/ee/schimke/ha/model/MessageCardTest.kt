@@ -7,7 +7,7 @@ class MessageCardTest {
   private fun card(): CardConfig {
     val raw =
       Json.parseToJsonElement(
-          """{"type":"custom:terrazzo-message","inputs":[{"key":"channel","label":"Channel","type":"choice","entity":"input_select.channel"},{"key":"message","label":"Message","type":"multiline","chrome":"none"}],"tap_action":{"action":"perform-action","perform_action":"script.send_room_message","data":{"message":"{{input.message}}","channel":"{{input.channel}}"}}}"""
+          """{"type":"custom:terrazzo-message","inputs":[{"key":"channel","label":"Channel","type":"choice","entity":"input_select.channel"},{"key":"message","label":"Message","type":"multiline","chrome":"none"}],"tap_action":{"action":"perform-action","perform_action":"script.send_room_message","data":{"message":"{{input.message}}","channel":"{{input.channel}}"}}}""",
         )
         .jsonObject
     return CardConfig(MESSAGE_CARD_TYPE, raw)
@@ -27,8 +27,8 @@ class MessageCardTest {
                   JsonArray(listOf(JsonPrimitive("matrix"), JsonPrimitive("telegram"))),
                 )
               },
-            )
-        )
+            ),
+        ),
     )
 
   @Test
@@ -65,10 +65,10 @@ class MessageCardTest {
                       buildJsonObject {
                         put("key", "password")
                         put("type", "password")
-                      }
-                    )
-                  ))
-            )
+                      },
+                    ),
+                  )),
+            ),
         )
       }
     assertFailsWith<IllegalArgumentException> { messageInputs(invalid, snapshot()) }

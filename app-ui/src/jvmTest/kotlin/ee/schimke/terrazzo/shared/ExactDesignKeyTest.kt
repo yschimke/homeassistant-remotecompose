@@ -43,14 +43,18 @@ class ExactDesignKeyTest {
               "sensor.outside",
               "12.5",
               """{"friendly_name":"Outside","unit_of_measurement":"°C","device_class":"temperature"}""",
-            )
-          )
+            ),
+          ),
         ),
       card("""{"type":"gauge","entity":"sensor.power","min":0,"max":3000}""") to
         HaSnapshot(
           mapOf(
-            state("sensor.power", "1100", """{"friendly_name":"Power","unit_of_measurement":"W"}""")
-          )
+            state(
+              "sensor.power",
+              "1100",
+              """{"friendly_name":"Power","unit_of_measurement":"W"}""",
+            ),
+          ),
         ),
     )
 

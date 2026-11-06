@@ -138,7 +138,7 @@ class AdaptivePlayerLifecycleTest {
   fun widthOnlyTextReflowsAfterFirstDrawAtSmallerAndLargerWidths() {
     val bytes =
       textDocument(
-        "One naturally measured text paragraph that must reflow as its available width changes."
+        "One naturally measured text paragraph that must reflow as its available width changes.",
       )
     var width by mutableStateOf(280)
     compose.setContent { WrapAdaptiveRemoteDocumentPlayer(bytes, Modifier.width(width.dp)) }
@@ -318,8 +318,8 @@ class AdaptivePlayerLifecycleTest {
               RemoteDocument(
                 CoreDocument().apply {
                   initFromBuffer(RemoteComposeBuffer.fromInputStream(bytes.inputStream()))
-                }
-              )
+                },
+              ),
             )
           }
         for ((w, h) in listOf(180 to 90, 280 to 140, 100 to 30)) {
@@ -332,7 +332,7 @@ class AdaptivePlayerLifecycleTest {
           player.draw(Canvas(image))
           save("upstream-$label-${w}x$h", image)
           println(
-            "RAW_RESIZE $label ${w}x$h corner=${image.getPixel(w - 3, h - 3).toUInt().toString(16)} center=${image.getPixel(w / 2, h / 2).toUInt().toString(16)}"
+            "RAW_RESIZE $label ${w}x$h corner=${image.getPixel(w - 3, h - 3).toUInt().toString(16)} center=${image.getPixel(w / 2, h / 2).toUInt().toString(16)}",
           )
           assertTrue(player.measuredWidth == w && player.measuredHeight == h)
           image.recycle()

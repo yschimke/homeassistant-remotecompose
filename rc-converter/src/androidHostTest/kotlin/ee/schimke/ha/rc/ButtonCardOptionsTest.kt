@@ -39,8 +39,8 @@ class ButtonCardOptionsTest {
               "lock.front_door",
               "locked",
               JsonObject(mapOf("friendly_name" to JsonPrimitive("Front door"))),
-            )
-        )
+            ),
+        ),
     )
 
   private fun button(vararg options: Pair<String, Boolean>) =

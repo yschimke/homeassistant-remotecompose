@@ -140,7 +140,7 @@ private fun HostFramedWearWidgetContainer(
           drawRoundRect(paint = paint, cornerRadius = cornerRadiusOffset)
         }
         drawContent()
-      }
+      },
   ) {
     RemoteBox(
       modifier =

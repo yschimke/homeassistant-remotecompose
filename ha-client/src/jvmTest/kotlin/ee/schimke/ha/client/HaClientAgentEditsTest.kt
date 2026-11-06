@@ -104,7 +104,7 @@ class HaClientAgentEditsTest {
       { _, id ->
         listOf(
           """{"id":$id,"type":"result","success":false,
-            "error":{"code":"conflict","message":"This dashboard changed in Home Assistant"}}"""
+            "error":{"code":"conflict","message":"This dashboard changed in Home Assistant"}}""",
         )
       },
     ) { client ->
@@ -121,7 +121,7 @@ class HaClientAgentEditsTest {
       { _, id ->
         listOf(
           """{"id":$id,"type":"result","success":false,
-            "error":{"code":"unauthorized","message":"Unauthorized"}}"""
+            "error":{"code":"unauthorized","message":"Unauthorized"}}""",
         )
       },
     ) { client ->

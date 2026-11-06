@@ -65,7 +65,7 @@ private fun GarageHost(theme: HaTheme, content: @Composable () -> Unit) {
 )
 @Composable
 fun Garage_Animation_Light(
-  @PreviewParameter(GarageDoorPositionsProvider::class) param: Pair<String, HaSnapshot>
+  @PreviewParameter(GarageDoorPositionsProvider::class) param: Pair<String, HaSnapshot>,
 ) = GarageHost(HaTheme.Light) { RenderChild(garageSingleCard(), param.second) }
 
 @Preview(
@@ -76,7 +76,7 @@ fun Garage_Animation_Light(
 )
 @Composable
 fun Garage_Animation_Dark(
-  @PreviewParameter(GarageDoorPositionsProvider::class) param: Pair<String, HaSnapshot>
+  @PreviewParameter(GarageDoorPositionsProvider::class) param: Pair<String, HaSnapshot>,
 ) = GarageHost(HaTheme.Dark) { RenderChild(garageSingleCard(), param.second) }
 
 // ——— State strip (closed/opening/open/closing/unavailable) ———
@@ -89,7 +89,7 @@ fun Garage_Animation_Dark(
 )
 @Composable
 fun Garage_State_Light(
-  @PreviewParameter(GarageDoorStatesProvider::class) param: Pair<String, HaSnapshot>
+  @PreviewParameter(GarageDoorStatesProvider::class) param: Pair<String, HaSnapshot>,
 ) = GarageHost(HaTheme.Light) { RenderChild(garageSingleCard(), param.second) }
 
 @Preview(
@@ -100,7 +100,7 @@ fun Garage_State_Light(
 )
 @Composable
 fun Garage_State_Dark(
-  @PreviewParameter(GarageDoorStatesProvider::class) param: Pair<String, HaSnapshot>
+  @PreviewParameter(GarageDoorStatesProvider::class) param: Pair<String, HaSnapshot>,
 ) = GarageHost(HaTheme.Dark) { RenderChild(garageSingleCard(), param.second) }
 
 // ——— Single states for the PUBLISHED design catalog ———
@@ -203,7 +203,7 @@ private fun garageSingleCard() =
     """{
         "type":"custom:garage-shutter-card",
         "entities":[{"entity":"cover.garage","name":"Garage"}]
-    }"""
+    }""",
   )
 
 private fun garageDoubleCard() =
@@ -215,7 +215,7 @@ private fun garageDoubleCard() =
             {"entity":"cover.garage_main","name":"Main"},
             {"entity":"cover.garage_workshop","name":"Workshop"}
         ]
-    }"""
+    }""",
   )
 
 private fun garageDoubleSnapshot(): HaSnapshot =
@@ -230,7 +230,7 @@ private fun garageDoubleSnapshot(): HaSnapshot =
               "friendly_name" to JsonPrimitive("Main"),
               "device_class" to JsonPrimitive("garage"),
               "current_position" to JsonPrimitive("100"),
-            )
+            ),
           ),
       ),
     "cover.garage_workshop" to
@@ -243,7 +243,7 @@ private fun garageDoubleSnapshot(): HaSnapshot =
               "friendly_name" to JsonPrimitive("Workshop"),
               "device_class" to JsonPrimitive("garage"),
               "current_position" to JsonPrimitive("0"),
-            )
+            ),
           ),
       ),
   )

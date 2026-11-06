@@ -28,15 +28,15 @@ class WidgetPartsTest {
               "sensor.boiler_power",
               "70.9",
               JsonObject(mapOf("friendly_name" to JsonPrimitive("Boiler power"))),
-            )
-        )
+            ),
+        ),
     )
 
   private val boilerRow =
     card(
       """{"type":"horizontal-stack","cards":[
         {"type":"tile","entity":"switch.boiler","name":"Boiler"},
-        {"type":"tile","entity":"sensor.boiler_power"}]}"""
+        {"type":"tile","entity":"sensor.boiler_power"}]}""",
     )
   private val history = card("""{"type":"history-graph","title":"Boiler power & status"}""")
 
@@ -69,7 +69,7 @@ class WidgetPartsTest {
         """{"type":"grid","cards":[
           {"type":"vertical-stack","cards":[
             {"type":"tile","entity":"light.a"},{"type":"tile","entity":"light.b"}]},
-          {"type":"tile","entity":"light.c"}]}"""
+          {"type":"tile","entity":"light.c"}]}""",
       )
     assertEquals(
       listOf("Grid of 2", "Column of 2", "light.a", "light.b", "light.c"),

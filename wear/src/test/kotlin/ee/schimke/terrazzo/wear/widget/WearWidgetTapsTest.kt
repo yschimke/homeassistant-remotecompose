@@ -98,11 +98,11 @@ class WearWidgetTapsTest {
     val document = capture {
       RemoteBox(
         RemoteModifier.size(80.rdp)
-          .clickable(HaAction.Toggle("light.kitchen").toNamedRemoteAction()!!)
+          .clickable(HaAction.Toggle("light.kitchen").toNamedRemoteAction()!!),
       ) {
         RemoteBox(
           RemoteModifier.size(20.rdp)
-            .clickable(HaAction.MoreInfo("sensor.temperature").toNamedRemoteAction()!!)
+            .clickable(HaAction.MoreInfo("sensor.temperature").toNamedRemoteAction()!!),
         ) {}
       }
     }
@@ -144,7 +144,7 @@ class WearWidgetTapsTest {
     val document = capture {
       RemoteBox(
         RemoteModifier.size(80.rdp)
-          .clickable(HaAction.Toggle("light.kitchen").toNamedRemoteAction()!!)
+          .clickable(HaAction.Toggle("light.kitchen").toNamedRemoteAction()!!),
       ) {}
     }
       .bytes
@@ -176,8 +176,8 @@ class WearWidgetTapsTest {
     store.writePinned(PinnedCardSet(cards = listOf(PinnedCard(card = kitchen, cardKey = "pin"))))
     store.writeValues(
       LiveValues(
-        values = mapOf("light.kitchen" to EntityValue(state = "on", friendlyName = "Kitchen"))
-      )
+        values = mapOf("light.kitchen" to EntityValue(state = "on", friendlyName = "Kitchen")),
+      ),
     )
     val params = params(3)
     val content = runBlocking {

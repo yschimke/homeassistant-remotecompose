@@ -82,7 +82,7 @@ class OfflineFirstAddonHttpTest {
         response()
           .withStatusCode(200)
           .withContentType(MediaType.APPLICATION_JSON)
-          .withBody(dashboardJson)
+          .withBody(dashboardJson),
       )
 
     val storage = OfflineCacheStorage(cacheRoot)

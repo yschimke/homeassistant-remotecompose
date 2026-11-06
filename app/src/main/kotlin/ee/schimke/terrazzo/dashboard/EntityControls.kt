@@ -129,7 +129,7 @@ fun entityControls(
               unit = "%",
             ) {
               call("turn_on", mapOf("brightness_pct" to JsonPrimitive(it.roundToInt())))
-            }
+            },
           )
         }
         val minK = attrs.double("min_color_temp_kelvin")
@@ -144,7 +144,7 @@ fun entityControls(
               unit = "K",
             ) {
               call("turn_on", mapOf("color_temp_kelvin" to JsonPrimitive(it.roundToInt())))
-            }
+            },
           )
         }
         if (modes.any { it in COLOUR_MODES }) {
@@ -162,7 +162,7 @@ fun entityControls(
                 "turn_on",
                 mapOf("hs_color" to JsonArray(listOf(JsonPrimitive(it), JsonPrimitive(100)))),
               )
-            }
+            },
           )
         }
         attrs
@@ -172,7 +172,7 @@ fun entityControls(
             add(
               EntityControl.Choice("Effect", effects, attrs.string("effect")) {
                 call("turn_on", mapOf("effect" to JsonPrimitive(it)))
-              }
+              },
             )
           }
       }
@@ -194,7 +194,7 @@ fun entityControls(
               "%",
             ) {
               call("set_percentage", mapOf("percentage" to JsonPrimitive(it.roundToInt())))
-            }
+            },
           )
         }
         attrs
@@ -204,7 +204,7 @@ fun entityControls(
             add(
               EntityControl.Choice("Preset", presets, attrs.string("preset_mode")) {
                 call("set_preset_mode", mapOf("preset_mode" to JsonPrimitive(it)))
-              }
+              },
             )
           }
       }
@@ -220,7 +220,7 @@ fun entityControls(
                 EntityControl.ButtonKind.Open,
                 call("open_cover"),
                 state.state == "open",
-              )
+              ),
             )
           }
           if (basic || supports(COVER_STOP)) {
@@ -233,7 +233,7 @@ fun entityControls(
                 EntityControl.ButtonKind.Close,
                 call("close_cover"),
                 state.state == "closed",
-              )
+              ),
             )
           }
         }
@@ -248,7 +248,7 @@ fun entityControls(
               "%",
             ) {
               call("set_cover_position", mapOf("position" to JsonPrimitive(it.roundToInt())))
-            }
+            },
           )
         }
       }
@@ -270,7 +270,7 @@ fun entityControls(
               unit,
             ) {
               call("set_temperature", mapOf("temperature" to JsonPrimitive(decimal(it))))
-            }
+            },
           )
         }
         attrs
@@ -280,7 +280,7 @@ fun entityControls(
             add(
               EntityControl.Choice("Mode", modes, state.state) {
                 call("set_hvac_mode", mapOf("hvac_mode" to JsonPrimitive(it)))
-              }
+              },
             )
           }
         attrs
@@ -290,7 +290,7 @@ fun entityControls(
             add(
               EntityControl.Choice("Preset", presets, attrs.string("preset_mode")) {
                 call("set_preset_mode", mapOf("preset_mode" to JsonPrimitive(it)))
-              }
+              },
             )
           }
       }
@@ -309,7 +309,7 @@ fun entityControls(
               "%",
             ) {
               call("set_humidity", mapOf("humidity" to JsonPrimitive(it.roundToInt())))
-            }
+            },
           )
         }
       }
@@ -325,8 +325,8 @@ fun entityControls(
               state.state == "unlocked",
               confirm = "Unlock ${attrs.string("friendly_name") ?: entityId}?",
             ),
-          )
-        )
+          ),
+        ),
       )
     "media_player" ->
       buildList {
@@ -336,7 +336,7 @@ fun entityControls(
               on = state.state != "off",
               turnOn = call("turn_on").takeIf { supports(MEDIA_TURN_ON) },
               turnOff = call("turn_off").takeIf { supports(MEDIA_TURN_OFF) },
-            )
+            ),
           )
         }
         val transport = buildList {
@@ -363,7 +363,7 @@ fun entityControls(
               "%",
             ) {
               call("volume_set", mapOf("volume_level" to JsonPrimitive(it.roundToInt() / 100.0)))
-            }
+            },
           )
         }
         attrs
@@ -373,7 +373,7 @@ fun entityControls(
             add(
               EntityControl.Choice("Source", it, attrs.string("source")) { source ->
                 call("select_source", mapOf("source" to JsonPrimitive(source)))
-              }
+              },
             )
           }
       }
@@ -393,33 +393,33 @@ fun entityControls(
                   EntityControl.ButtonKind.Dock,
                   call("return_to_base"),
                   state.state == "docked",
-                )
+                ),
               )
             }
-          }
-        )
+          },
+        ),
       )
     "button",
     "input_button" ->
       listOf(
         EntityControl.Buttons(
-          listOf(Button("Press", EntityControl.ButtonKind.Press, call("press")))
-        )
+          listOf(Button("Press", EntityControl.ButtonKind.Press, call("press"))),
+        ),
       )
     "scene" ->
       listOf(
         EntityControl.Buttons(
-          listOf(Button("Activate", EntityControl.ButtonKind.Press, call("turn_on")))
-        )
+          listOf(Button("Activate", EntityControl.ButtonKind.Press, call("turn_on"))),
+        ),
       )
     "script" ->
       listOf(
         EntityControl.Buttons(
           listOf(
             if (state.state == "on") Button("Stop", EntityControl.ButtonKind.Stop, call("turn_off"))
-            else Button("Run", EntityControl.ButtonKind.Play, call("turn_on"))
-          )
-        )
+            else Button("Run", EntityControl.ButtonKind.Play, call("turn_on")),
+          ),
+        ),
       )
     "number",
     "input_number" -> {
@@ -435,7 +435,7 @@ fun entityControls(
           attrs.string("unit_of_measurement"),
         ) {
           call("set_value", mapOf("value" to JsonPrimitive(decimal(it))))
-        }
+        },
       )
     }
     "select",
@@ -447,7 +447,7 @@ fun entityControls(
           listOf(
             EntityControl.Choice("Option", options, state.state) {
               call("select_option", mapOf("option" to JsonPrimitive(it)))
-            }
+            },
           )
         } ?: emptyList()
     else -> emptyList()

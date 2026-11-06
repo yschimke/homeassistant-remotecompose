@@ -72,8 +72,8 @@ class IkeaDesignRenderTest {
               id,
               value,
               JsonObject(attrs.associate { it.first to JsonPrimitive(it.second) }),
-            )
-        )
+            ),
+        ),
     )
 
   private fun template(
@@ -95,7 +95,7 @@ class IkeaDesignRenderTest {
         Modifier.width(f.width.dp)
           .then(if (f.fixed) Modifier.height(80.dp) else Modifier)
           .background(f.theme.palette(f.dark).dashboardBackground)
-          .testTag("card")
+          .testTag("card"),
       ) {
         key(f.playback ?: listOf(f.card, f.width, f.fixed, f.theme.id, f.dark)) {
           CachedCardPreview(
@@ -216,7 +216,7 @@ class IkeaDesignRenderTest {
       {"type":"media-control","entity":"media_player.shelf"},
       {"type":"entities","title":"At home","entities":["switch.reading","sensor.battery"]},
       {"type":"history-graph","title":"Temperature","entities":["sensor.room"]}
-    ]}"""
+    ]}""",
       )
     val snapshots =
       listOf(
@@ -263,7 +263,7 @@ class IkeaDesignRenderTest {
                   kotlin.time.Instant.fromEpochSeconds(1_790_000_000L + i * 3600),
                   v.toString(),
                 )
-              }
+              },
           ),
       )
     for (dark in listOf(false, true)) {

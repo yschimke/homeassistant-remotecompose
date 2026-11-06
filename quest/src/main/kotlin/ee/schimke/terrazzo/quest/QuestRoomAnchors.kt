@@ -142,7 +142,7 @@ class QuestRoomAnchors(private val scene: Scene, private val mruk: MRUKFeature) 
         width = plane.max.x - plane.min.x,
         height = plane.max.y - plane.min.y,
         id = anchor.uuid.toString(),
-      )
+      ),
     )
   }
 

@@ -73,7 +73,9 @@ internal object WearWidgetTemplate {
         RcFloatWord.literal(params.cornerRadiusDp * context.resources.displayMetrics.density)
       val clip = RcRoundedClipRectModifier(radius, radius, radius, radius)
       RcDocumentCodec.encode(
-        document.copy(operations = document.operations.take(2) + clip + document.operations.drop(2))
+        document.copy(
+          operations = document.operations.take(2) + clip + document.operations.drop(2),
+        ),
       )
     }
     .getOrNull()
@@ -133,7 +135,7 @@ internal object WearWidgetTemplate {
     val fill =
       RemoteColor.createNamedRemoteColor(
         CONTAINER_COLOR,
-        background?.base ?: SURFACE_CONTAINER_LOW,
+        (background?.base ?: SURFACE_CONTAINER_LOW).toArgb(),
         RemoteState.Domain.User,
       )
     RemoteWearContainer(background, fill, corner, level, cardStyle.wearLevelLook()) {
@@ -177,8 +179,8 @@ internal object WearWidgetTemplate {
               CORNER_RADIUS to RcHardcodedValue.FloatValue(frame.cornerRadiusDp),
               CONTAINER_COLOR to
                 RcHardcodedValue.Color(containerArgb ?: SURFACE_CONTAINER_LOW.toArgb()),
-            )
-          )
+            ),
+          ),
       )
     }
     .getOrNull()
@@ -214,7 +216,7 @@ internal object WearWidgetTemplate {
                 CORNER_RADIUS to RcHardcodedValue.FloatValue(params.cornerRadiusDp),
                 CONTAINER_COLOR to
                   RcHardcodedValue.Color(containerArgb ?: SURFACE_CONTAINER_LOW.toArgb()),
-              )
+              ),
             )
             .hardcodeDensity(display.density, display.fontScale)
         val adapted =

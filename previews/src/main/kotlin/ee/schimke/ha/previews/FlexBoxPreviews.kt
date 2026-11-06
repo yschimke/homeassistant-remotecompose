@@ -188,7 +188,7 @@ fun FlexBox_JustifyContent() =
       FlexCase("SpaceBetween", justify(FlexJustifyContent.SpaceBetween), items("1", "2", "3")),
       FlexCase("SpaceAround", justify(FlexJustifyContent.SpaceAround), items("1", "2", "3")),
       FlexCase("SpaceEvenly", justify(FlexJustifyContent.SpaceEvenly), items("1", "2", "3")),
-    )
+    ),
   )
 
 private val mixedHeights =
@@ -233,7 +233,7 @@ fun FlexBox_AlignItems() =
           )
           .map { it.copy(flex = RemoteFlexConfig {}) },
       ),
-    )
+    ),
   )
 
 @Preview(name = "flexbox grow and basis", widthDp = PreviewWidth, heightDp = 400)
@@ -304,7 +304,7 @@ fun FlexBox_GrowBasis() =
         ),
         boxHeight = 40,
       ),
-    )
+    ),
   )
 
 @Preview(name = "flexbox wrap and column", widthDp = PreviewWidth, heightDp = 780)
@@ -390,5 +390,5 @@ fun FlexBox_WrapColumn() =
         cellHeight = 100,
         boxHeight = 96,
       ),
-    )
+    ),
   )

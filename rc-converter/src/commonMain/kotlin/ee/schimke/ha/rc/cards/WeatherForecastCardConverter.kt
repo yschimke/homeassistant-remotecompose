@@ -73,7 +73,7 @@ class WeatherForecastCardConverter : DesignedCardConverter() {
       card.raw.keys -
         setOfNotNull(
           "show_current"
-            .takeIf { (card.raw["show_current"] as? JsonPrimitive)?.booleanOrNull == true }
+            .takeIf { (card.raw["show_current"] as? JsonPrimitive)?.booleanOrNull == true },
         )
     if (!setOf("type", "entity", "name", "show_forecast", "forecast_type").containsAll(keys))
       return null
@@ -161,7 +161,7 @@ class WeatherForecastCardConverter : DesignedCardConverter() {
  * the widest widget.
  */
 private fun weatherExtras(
-  attrs: Map<String, kotlinx.serialization.json.JsonElement>
+  attrs: Map<String, kotlinx.serialization.json.JsonElement>,
 ): List<HaWeatherExtra> {
   fun attr(key: String): String? = attrs[key]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
   val extras = mutableListOf<HaWeatherExtra>()

@@ -75,8 +75,8 @@ class HomeAssistantThemeRenderTest {
                   put("unit_of_measurement", "W")
                 }
               },
-            )
-        )
+            ),
+        ),
     )
   }
 
@@ -115,7 +115,7 @@ class HomeAssistantThemeRenderTest {
                   ThemeStyle.TerrazzoHome,
                   mode,
                   cardStyle = style,
-                )
+                ),
               )
             val built = CardDesignTemplates.capture(RuntimeEnvironment.getApplication(), key)
             captures++
@@ -133,7 +133,7 @@ class HomeAssistantThemeRenderTest {
       Box(
         Modifier.width(360.dp)
           .background(currentTheme.palette(currentDark).dashboardBackground)
-          .testTag("card")
+          .testTag("card"),
       ) {
         CachedCardPreview(
           cacheKey = playback,
@@ -197,7 +197,7 @@ class HomeAssistantThemeRenderTest {
               ThemeStyle.TerrazzoHome,
               mode,
               cardStyle = HaUberTheme.HomeAssistant,
-            )
+            ),
           )
         assertNotEquals(presentKey, absentKey)
         val absentDocument =

@@ -28,7 +28,7 @@ fun wearWidgetCardOptions(
           WearWidgetCardOption(
             card.cardKey.ifEmpty { "card:${digest(card.card.rawJson)}" },
             card.card,
-          )
+          ),
         ),
       )
     }

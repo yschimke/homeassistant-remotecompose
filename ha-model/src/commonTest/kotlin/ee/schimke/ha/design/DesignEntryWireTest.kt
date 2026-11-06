@@ -65,7 +65,7 @@ class DesignEntryWireTest {
               1,
               designId = DesignEntry.libraryDesignId("tile"),
               title = "Built-in",
-            )
+            ),
           ),
       )
     val text = json.encodeToString(DesignManifest.serializer(), manifest)

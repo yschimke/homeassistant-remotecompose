@@ -550,7 +550,7 @@ fun HaCardConsoleControlsSticker() = HaCardSticker {
           secondaryLabel = null,
           isLarge = true,
           use24Hour = true,
-        )
+        ),
       )
       RemoteHaBambuPrintControl(
         HaBambuPrintControlData(
@@ -567,7 +567,7 @@ fun HaCardConsoleControlsSticker() = HaCardSticker {
           stop =
             HaBambuControlButton("Stop", Icons.Filled.Stop, Color(0xFFE53935), HaAction.None, true),
           statusLine = null,
-        )
+        ),
       )
       HaCardButton(
         name = "Fan",
@@ -595,7 +595,7 @@ fun HaCardConsoleServiceLabelsSticker() = HaCardSticker {
   HaCardUberTheme(theme = "console", dark = true) {
     RemoteColumn(RemoteModifier.fillMaxWidth(), horizontalAlignment = RemoteAlignment.Start) {
       ee.schimke.ha.rc.components.RemoteHaUnsupported(
-        ee.schimke.ha.rc.components.HaUnsupportedData("custom:missing-card")
+        ee.schimke.ha.rc.components.HaUnsupportedData("custom:missing-card"),
       )
       ee.schimke.ha.rc.components.RemoteHaUnavailableFrame(false.rb, false) { modifier ->
         HaCardButton(name = "Fan", toggleable = true, modifier = modifier.fillMaxWidth())
@@ -607,7 +607,7 @@ fun HaCardConsoleServiceLabelsSticker() = HaCardSticker {
           resume = null,
           stop = null,
           statusLine = "No controls for this printer",
-        )
+        ),
       )
     }
   }

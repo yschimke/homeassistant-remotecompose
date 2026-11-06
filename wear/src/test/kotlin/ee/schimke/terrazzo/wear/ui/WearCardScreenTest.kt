@@ -75,11 +75,11 @@ class WearCardScreenTest {
             PinnedCard(card = second, cardKey = "b", orderIndex = 2),
             PinnedCard(card = message, cardKey = "m", orderIndex = 1),
             PinnedCard(card = first, cardKey = "a", orderIndex = 0),
-          )
+          ),
       )
     val sections =
       PinnedSectionSet(
-        sections = listOf(PinnedSection(sectionKey = "kitchen", cards = listOf(second, first)))
+        sections = listOf(PinnedSection(sectionKey = "kitchen", cards = listOf(second, first))),
       )
     assertEquals(listOf(first, second), fullScreenDeck(null, pinned, sections))
     assertEquals(listOf(second, first), fullScreenDeck("kitchen", pinned, sections))

@@ -8,6 +8,6 @@ package ee.schimke.terrazzo.shared
 internal actual external fun readAgentGrants(key: String): String?
 
 @JsFun(
-  "(key, value) => { try { if (value == null) localStorage.removeItem(key); else localStorage.setItem(key, value); } catch (_) {} }"
+  "(key, value) => { try { if (value == null) localStorage.removeItem(key); else localStorage.setItem(key, value); } catch (_) {} }",
 )
 internal actual external fun writeAgentGrants(key: String, value: String?)

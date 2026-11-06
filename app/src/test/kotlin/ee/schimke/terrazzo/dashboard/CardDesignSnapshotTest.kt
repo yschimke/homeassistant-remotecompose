@@ -39,8 +39,8 @@ class CardDesignSnapshotTest {
               listOf(
                 DesignedBlob(key, null, byteArrayOf(6)),
                 DesignedBlob(key, match, byteArrayOf(7)),
-              )
-          )
+              ),
+          ),
         ),
     )
   private val prefer = listOf(DesignQuery(author = "terrazzo"))

@@ -27,7 +27,7 @@ class HaRcComposePlayerTest {
           mapOf(
             "light.kitchen" to EntityState("light.kitchen", "on"),
             "sensor.temp" to EntityState("sensor.temp", "21.5"),
-          )
+          ),
       )
 
     pushSnapshotBindings(

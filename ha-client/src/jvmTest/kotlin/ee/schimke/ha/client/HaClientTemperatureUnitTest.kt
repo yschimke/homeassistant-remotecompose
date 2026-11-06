@@ -42,8 +42,8 @@ class HaClientTemperatureUnitTest {
               send(
                 Frame.Text(
                   """{"id":$id,"type":"result","success":true,"result":[""" +
-                    """{"entity_id":"climate.hall","state":"heat","attributes":{}}]}"""
-                )
+                    """{"entity_id":"climate.hall","state":"heat","attributes":{}}]}""",
+                ),
               )
             "get_config" ->
               when (config) {
@@ -51,23 +51,23 @@ class HaClientTemperatureUnitTest {
                   send(
                     Frame.Text(
                       """{"id":$id,"type":"result","success":true,"result":""" +
-                        """{"unit_system":{"temperature":"°F","length":"mi"}}}"""
-                    )
+                        """{"unit_system":{"temperature":"°F","length":"mi"}}}""",
+                    ),
                   )
                 Config.Refused ->
                   send(
                     Frame.Text(
                       """{"id":$id,"type":"result","success":false,""" +
-                        """"error":{"code":"unknown_command","message":"Unknown command."}}"""
-                    )
+                        """"error":{"code":"unknown_command","message":"Unknown command."}}""",
+                    ),
                   )
                 Config.Silent -> Unit
               }
             else ->
               send(
                 Frame.Text(
-                  """{"id":$id,"type":"result","success":false,"error":{"message":"unsupported"}}"""
-                )
+                  """{"id":$id,"type":"result","success":false,"error":{"message":"unsupported"}}""",
+                ),
               )
           }
         }

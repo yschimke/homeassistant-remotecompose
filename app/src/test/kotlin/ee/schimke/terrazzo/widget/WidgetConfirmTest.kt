@@ -20,7 +20,7 @@ class WidgetConfirmTest {
     assertTrue(WidgetConfirmActivity.confirms(HaAction.Toggle("cover.garage")))
     // Alarm panels pair their code in the receiver; the panel's code is its own check.
     assertFalse(
-      WidgetConfirmActivity.confirms(HaAction.AlarmIntent("alarm_control_panel.a", "disarm"))
+      WidgetConfirmActivity.confirms(HaAction.AlarmIntent("alarm_control_panel.a", "disarm")),
     )
     assertFalse(WidgetConfirmActivity.confirms(HaAction.MoreInfo("lock.front_door")))
   }
@@ -36,8 +36,8 @@ class WidgetConfirmTest {
                 "lock.front_door",
                 "locked",
                 JsonObject(mapOf("friendly_name" to JsonPrimitive("Front door"))),
-              )
-          )
+              ),
+          ),
       )
     assertEquals("Unlock Front door?", widgetConfirmPrompt(unlock, snapshot))
     // No snapshot on disk yet: the entity id is still a name.

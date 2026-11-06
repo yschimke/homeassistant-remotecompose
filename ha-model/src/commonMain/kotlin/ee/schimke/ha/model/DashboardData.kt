@@ -74,7 +74,7 @@ fun HaSnapshot.withLiveHistoryTail(): HaSnapshot {
         val at = state.lastUpdated ?: state.lastChanged ?: return@mapValues points
         if (points.isNotEmpty() && points.last().ts >= at) points
         else points + HistoryPoint(at, state.state)
-      }
+      },
   )
 }
 
@@ -93,7 +93,7 @@ fun HaSnapshot.forCardHistoryWindow(card: CardConfig, now: Instant): HaSnapshot 
         val before = points.lastOrNull { it.ts < start }
         val inside = points.filter { it.ts >= start }
         if (before == null) inside else listOf(before.copy(ts = start)) + inside
-      }
+      },
   )
 }
 

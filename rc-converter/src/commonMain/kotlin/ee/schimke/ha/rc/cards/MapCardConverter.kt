@@ -166,7 +166,7 @@ class MapCardConverter : DesignedCardConverter() {
         modifier
           .fillMaxWidth()
           .then(cardChrome(theme.cardBackground, theme.divider))
-          .padding(horizontal = (if (narrow) 6 else 12).rdp, vertical = 10.rdp)
+          .padding(horizontal = (if (narrow) 6 else 12).rdp, vertical = 10.rdp),
     ) {
       RemoteColumn(
         modifier = RemoteModifier.fillMaxWidth(),
@@ -207,13 +207,13 @@ class MapCardConverter : DesignedCardConverter() {
       if (showDot)
         RemoteBox(
           modifier =
-            RemoteModifier.size(8.rdp).clip(RemoteCircleShape).background(theme.placeholderAccent)
+            RemoteModifier.size(8.rdp).clip(RemoteCircleShape).background(theme.placeholderAccent),
         )
       // The text column takes the rest of the row. The dot-to-text gap is the column's own start
       // padding, not a `spacedBy` arrangement: the RemoteCompose row doesn't subtract `spacedBy`
       // gaps from the weighted share, so the column would run 8 dp past the card edge.
       RemoteColumn(
-        modifier = RemoteModifier.weight(1f).padding(start = (if (showDot) 8 else 0).rdp)
+        modifier = RemoteModifier.weight(1f).padding(start = (if (showDot) 8 else 0).rdp),
       ) {
         RemoteText(
           text = cardText("row.$index.name", name),

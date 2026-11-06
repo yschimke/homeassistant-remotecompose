@@ -65,7 +65,7 @@ fun RemoteHaStatisticsGraph(
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 14.rdp, vertical = 10.rdp)
+        .padding(horizontal = 14.rdp, vertical = 10.rdp),
   ) {
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(6.rdp)) {
       if (data.title != null) {
@@ -160,7 +160,7 @@ private fun Legend(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
           RemoteModifier.height(10.rdp)
             .clip(RemoteRoundedCornerShape(2.rdp))
             .background(row.accent.rc)
-            .padding(horizontal = 5.rdp)
+            .padding(horizontal = 5.rdp),
       ) {}
       RemoteText(
         text = entityName(row.entityId, row.name),

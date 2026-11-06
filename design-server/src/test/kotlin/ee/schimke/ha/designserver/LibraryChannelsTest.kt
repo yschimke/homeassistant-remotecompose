@@ -108,7 +108,7 @@ class LibraryChannelsTest {
               JsonObject.serializer(),
               JsonObject(mapOf("files" to JsonObject(index.mapValues { JsonPrimitive(it.value) }))),
             )
-            .encodeToByteArray()
+            .encodeToByteArray(),
         )
         zip.closeEntry()
       }
@@ -178,7 +178,7 @@ class LibraryChannelsTest {
       val bundle = zip(library(generatedAt = 2_000, withDark = false))
       val published =
         client.put(
-          "$LIBRARY_CHANNELS_PATH/pr-42?commit=abc1234def&title=Wrap+markdown&branch=agent%2Fmd&url=https%3A%2F%2Fgithub.com%2Fx%2Fy%2Fpull%2F42"
+          "$LIBRARY_CHANNELS_PATH/pr-42?commit=abc1234def&title=Wrap+markdown&branch=agent%2Fmd&url=https%3A%2F%2Fgithub.com%2Fx%2Fy%2Fpull%2F42",
         ) {
           header(HttpHeaders.Authorization, "Bearer ci-token")
           setBody(bundle)
@@ -293,7 +293,7 @@ class LibraryChannelsTest {
         install(
           io.ktor.client.plugins.api.createClientPlugin("record") {
             onRequest { request, _ -> fetched += request.url.build().encodedPath }
-          }
+          },
         )
       }
       val mirror = LibraryMirror(local, "", http)
@@ -348,7 +348,7 @@ class LibraryChannelsTest {
             .post("$LIBRARY_CHANNELS_PATH/missing") {
               header(HttpHeaders.Authorization, "Bearer ci-token")
               setBody(
-                Json.encodeToString(ListSerializer(String.serializer()), index.values.toList())
+                Json.encodeToString(ListSerializer(String.serializer()), index.values.toList()),
               )
             }
             .bodyAsText(),

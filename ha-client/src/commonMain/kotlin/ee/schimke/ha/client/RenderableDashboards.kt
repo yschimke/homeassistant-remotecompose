@@ -7,7 +7,7 @@ import kotlinx.serialization.json.JsonObject
 /** Strategies need HA's JavaScript frontend; decoding them as empty views hides that limitation. */
 class UnsupportedDashboardException :
   IllegalArgumentException(
-    "This dashboard needs Home Assistant's frontend. Choose a Lovelace dashboard with explicit views."
+    "This dashboard needs Home Assistant's frontend. Choose a Lovelace dashboard with explicit views.",
   )
 
 internal fun JsonObject.hasRenderableViews(): Boolean =

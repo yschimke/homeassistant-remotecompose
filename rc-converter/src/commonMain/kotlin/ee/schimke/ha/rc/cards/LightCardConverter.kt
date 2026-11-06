@@ -158,8 +158,8 @@ private fun brightnessSteppers(
         kotlinx.serialization.json.JsonObject(
           mapOf(
             "brightness" to
-              kotlinx.serialization.json.JsonPrimitive((current + step).coerceAtMost(255f).toInt())
-          )
+              kotlinx.serialization.json.JsonPrimitive((current + step).coerceAtMost(255f).toInt()),
+          ),
         ),
     )
   val down =
@@ -171,8 +171,8 @@ private fun brightnessSteppers(
         kotlinx.serialization.json.JsonObject(
           mapOf(
             "brightness" to
-              kotlinx.serialization.json.JsonPrimitive((current - step).coerceAtLeast(0f).toInt())
-          )
+              kotlinx.serialization.json.JsonPrimitive((current - step).coerceAtLeast(0f).toInt()),
+          ),
         ),
     )
   return up to down

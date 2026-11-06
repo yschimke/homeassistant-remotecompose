@@ -49,7 +49,7 @@ fun DashboardPickerScreen(
         Modifier.fillMaxSize()
           .padding(contentPadding)
           .consumeWindowInsets(contentPadding)
-          .padding(24.dp)
+          .padding(24.dp),
       ) {
         Text("Couldn't load dashboards", style = MaterialTheme.typography.titleMedium)
         Text(state.message)
@@ -77,7 +77,7 @@ fun DashboardPickerScreen(
             modifier =
               Modifier.fillMaxWidth().padding(horizontal = 24.dp).clickable {
                 onDashboardPicked(d.urlPath)
-              }
+              },
           ) {
             Column(Modifier.padding(16.dp)) {
               Text(d.title, style = MaterialTheme.typography.titleMedium)

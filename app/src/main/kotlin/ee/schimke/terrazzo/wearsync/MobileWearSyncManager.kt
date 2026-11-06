@@ -248,7 +248,7 @@ class MobileWearSyncManager(
           "This request was already submitted"
         }
         while (handledInputRequests.size > 100) handledInputRequests.remove(
-          handledInputRequests.first()
+          handledInputRequests.first(),
         )
         val raw = request["card"]?.jsonPrimitive?.contentOrNull
         val values =
@@ -274,7 +274,7 @@ class MobileWearSyncManager(
             put(
               "error",
               kotlinx.serialization.json.JsonPrimitive(
-                "Message was not sent. Check the phone connection and card choices."
+                "Message was not sent. Check the phone connection and card choices.",
               ),
             )
         }
@@ -339,7 +339,7 @@ class MobileWearSyncManager(
           "This request was already submitted"
         }
         while (handledInputRequests.size > 100) handledInputRequests.remove(
-          handledInputRequests.first()
+          handledInputRequests.first(),
         )
         val raw = request["card"]?.jsonPrimitive?.contentOrNull
         val tapped =
@@ -651,7 +651,7 @@ class MobileWearSyncManager(
             val cards = liveWatchWidgetCards(placed, chosen, options, liveUpdates)
             watchWidgetLive.setEntities(
               wearEntityIds(cards.map { it.rawJson }, registrySnapshot.value) +
-                cards.map { it.primaryEntityId }.filter { it.isNotEmpty() }
+                cards.map { it.primaryEntityId }.filter { it.isNotEmpty() },
             )
           }
           // After the entities, so whoever follows this list reads the new ones.
@@ -1315,7 +1315,7 @@ internal fun List<MobilePinnedCard>.resolvedFor(snapshot: HaSnapshot): List<Mobi
 
 @JvmName("pinnedSectionsResolvedFor")
 internal fun List<MobilePinnedSection>.resolvedFor(
-  snapshot: HaSnapshot
+  snapshot: HaSnapshot,
 ): List<MobilePinnedSection> = map { section ->
   section.copy(cards = section.cards.map { it.resolvedFor(snapshot) })
 }
@@ -1418,7 +1418,7 @@ internal fun CardSummary.withStyleOverride(
 ): CardSummary =
   copy(
     cardStyleOverride =
-      originalRawJson.toCardConfigOrNull()?.let { overrides.forCard(it)?.cardStyle }.orEmpty()
+      originalRawJson.toCardConfigOrNull()?.let { overrides.forCard(it)?.cardStyle }.orEmpty(),
   )
 
 /**

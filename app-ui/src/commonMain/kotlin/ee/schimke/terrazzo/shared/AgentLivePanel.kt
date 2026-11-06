@@ -424,7 +424,7 @@ fun AgentConnection(server: String, onCopy: (String) -> Unit, modifier: Modifier
           ) {
             Box(
               Modifier.size(10.dp)
-                .background(if (current.listening) colors.primary else colors.outline, CircleShape)
+                .background(if (current.listening) colors.primary else colors.outline, CircleShape),
             )
             Text(
               if (current.listening) "${current.name} is connected and listening"

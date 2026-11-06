@@ -57,8 +57,8 @@ class CardDesignSlotsTest {
                   "sensor.temp",
                   "unavailable",
                   JsonObject(mapOf("friendly_name" to JsonPrimitive("Temp"))),
-                )
-            )
+                ),
+            ),
         ),
       )
     assertEquals(CardDesignSlots.STATUS_UNAVAILABLE, unavailable.ints["sensor.s0.status"])
@@ -84,7 +84,7 @@ class CardDesignSlotsTest {
                   buildJsonObject {
                     put("entity", "light.kitchen")
                     put("name", "Again")
-                  }
+                  },
                 )
                 add(buildJsonObject { put("type", "divider") })
                 add(JsonPrimitive("sensor.temp"))
@@ -101,8 +101,8 @@ class CardDesignSlotsTest {
                 "light.kitchen",
                 "on",
                 JsonObject(mapOf("friendly_name" to JsonPrimitive("Kitchen"))),
-              )
-          )
+              ),
+          ),
       )
     assertEquals(
       listOf("light.kitchen", "light.kitchen", "sensor.temp"),

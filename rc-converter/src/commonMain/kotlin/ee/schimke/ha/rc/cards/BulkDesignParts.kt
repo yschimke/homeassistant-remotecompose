@@ -44,7 +44,7 @@ object BulkDesignParts {
             mapOf(
               "type" to JsonPrimitive(CardTypes.TODO_LIST),
               "entity" to JsonPrimitive("todo.shopping_list"),
-            )
+            ),
           ),
         ),
         HaSnapshot(),

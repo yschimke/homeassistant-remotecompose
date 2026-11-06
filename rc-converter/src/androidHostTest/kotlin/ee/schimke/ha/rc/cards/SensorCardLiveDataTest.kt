@@ -35,7 +35,7 @@ class SensorCardLiveDataTest {
           id to
             history.mapIndexed { i, v ->
               HistoryPoint(Instant.fromEpochMilliseconds(i * 3_600_000L), v)
-            }
+            },
         ),
     )
 

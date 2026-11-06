@@ -32,10 +32,10 @@ internal object WearBenchmarkSeed {
               cards = listOf(card(LIGHT_LIVING), card(THERMOSTAT), card(MEDIA), card(BLINDS)),
               sectionKey = "living-room",
               orderIndex = 0,
-            )
+            ),
           ),
         updatedAtMs = SEEDED_AT,
-      )
+      ),
     )
     store.writePinned(
       PinnedCardSet(
@@ -44,7 +44,7 @@ internal object WearBenchmarkSeed {
             PinnedCard(card = card(json), cardKey = "card-$index", orderIndex = index + 1)
           },
         updatedAtMs = SEEDED_AT,
-      )
+      ),
     )
   }
 

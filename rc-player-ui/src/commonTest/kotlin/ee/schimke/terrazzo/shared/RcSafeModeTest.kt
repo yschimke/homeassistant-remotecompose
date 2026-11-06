@@ -18,7 +18,7 @@ class RcSafeModeTest {
         RcDocument(
           RcHeader(RcVersion(1, 0, 0)),
           listOf(RcNamedVariable(42, RcNamedVariable.STRING_TYPE, "USER:light.s0.state")),
-        )
+        ),
       )
     assertNull(RcSafeMode.check(bytes))
     // Checked with the live values the host will play it with.

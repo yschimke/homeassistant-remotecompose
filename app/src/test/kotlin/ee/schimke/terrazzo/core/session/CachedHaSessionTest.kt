@@ -82,7 +82,7 @@ class CachedHaSessionTest {
     val points =
       mapOf(
         "sensor.t" to
-          listOf(ee.schimke.ha.model.HistoryPoint(kotlin.time.Instant.fromEpochSeconds(0), "21"))
+          listOf(ee.schimke.ha.model.HistoryPoint(kotlin.time.Instant.fromEpochSeconds(0), "21")),
       )
     var offline = false
     val session =
@@ -107,7 +107,7 @@ class CachedHaSessionTest {
     val points =
       mapOf(
         "sensor.t" to
-          listOf(ee.schimke.ha.model.HistoryPoint(kotlin.time.Instant.fromEpochSeconds(0), "21"))
+          listOf(ee.schimke.ha.model.HistoryPoint(kotlin.time.Instant.fromEpochSeconds(0), "21")),
       )
     cache.putHistory(baseUrl, listOf("sensor.t"), 24, points)
 

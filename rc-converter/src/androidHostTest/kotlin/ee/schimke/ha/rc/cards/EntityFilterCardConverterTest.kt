@@ -36,7 +36,7 @@ class EntityFilterCardConverterTest {
             put("type", JsonPrimitive("entity-filter"))
             put("entities", JsonArray(states.keys.map(::JsonPrimitive)))
             stateFilter?.let { put("state_filter", JsonArray(it.map(::JsonPrimitive))) }
-          }
+          },
         ),
     )
 

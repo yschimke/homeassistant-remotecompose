@@ -92,16 +92,16 @@ class RoomControlsTest {
                   cards =
                     listOf(
                       card(
-                        """{"type":"tile","entity":"media_player.living_room_tv","features":[{"type":"media-player-volume-slider"}]}"""
+                        """{"type":"tile","entity":"media_player.living_room_tv","features":[{"type":"media-player-volume-slider"}]}""",
                       ),
                       card("""{"type":"thermostat","entity":"climate.living_room_heater"}"""),
                       card("""{"type":"entities","entities":["light.living_room_lamp"]}"""),
-                    )
-                )
-              )
+                    ),
+                ),
+              ),
           ),
           View(cards = listOf(card("""{"type":"tile","entity":"light.living_room_lamp"}"""))),
-        )
+        ),
     )
 
   @Test
@@ -125,12 +125,12 @@ class RoomControlsTest {
               cards =
                 listOf(
                   card(
-                    """{"type":"vertical-stack","cards":[{"type":"conditional","card":{"type":"button","entity":"light.kitchen"}}]}"""
+                    """{"type":"vertical-stack","cards":[{"type":"conditional","card":{"type":"button","entity":"light.kitchen"}}]}""",
                   ),
                   card("""{"type":"area","area":"kitchen"}"""),
-                )
-            )
-          )
+                ),
+            ),
+          ),
       )
     val importance = dashboardImportance(nested)
     assertEquals(4.5f, importance.of("light.kitchen"))
@@ -232,7 +232,7 @@ class RoomControlsTest {
             ("device_tracker.phone" to
               state("device_tracker.phone", "home") {
                 JsonObject(this + ("area" to kotlinx.serialization.json.JsonPrimitive("kitchen")))
-              })
+              }),
       )
     val room = currentRoom(withAttribute, picked = null, trackerEntityId = "device_tracker.phone")
     assertEquals(kitchen, room.area)

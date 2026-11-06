@@ -55,7 +55,7 @@ class WidgetImageLoadingTest {
             socket.getOutputStream().apply {
               write(
                 "HTTP/1.1 200 OK\r\nContent-Type: image/png\r\nContent-Length: ${bytes.size}\r\nConnection: close\r\n\r\n"
-                  .toByteArray()
+                  .toByteArray(),
               )
               write(bytes)
               flush()
@@ -87,7 +87,7 @@ class WidgetImageLoadingTest {
             "http://127.0.0.1:${server.localPort}$signed",
             fresh = true,
             maxDimensionPx = 512,
-          )
+          ),
         )
         assertEquals(
           "External hosts must not receive the HA bearer",

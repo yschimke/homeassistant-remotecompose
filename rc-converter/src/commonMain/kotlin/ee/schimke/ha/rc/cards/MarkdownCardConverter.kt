@@ -192,7 +192,7 @@ class MarkdownCardConverter : DesignedCardConverter() {
         blocks =
           source.blocks.mapIndexed { i, block ->
             block.copy(boundText = cardText("md.$i", block.text))
-          }
+          },
       )
 
   private fun List<MarkdownBlock>.bind(template: MarkdownTemplateBindings): List<MarkdownBlock> =

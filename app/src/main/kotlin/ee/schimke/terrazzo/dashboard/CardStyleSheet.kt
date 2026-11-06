@@ -255,7 +255,7 @@ internal fun CardStylePicker(
             overrides.at(CardDesignScope.CardType, card) != null
         )
           CardDesignScope.CardType
-        else CardDesignScope.Card
+        else CardDesignScope.Card,
       )
     }
   var browseSkins by remember(card) { mutableStateOf(false) }

@@ -49,7 +49,7 @@ class DesignGeneratorTest {
         HaSnapshot(states = states),
         ThemeStyle.entries.first(),
         dark = false,
-      )
+      ),
     )
 
   /** A library holding one design, for another key than the kitchen tile's. */
@@ -119,7 +119,7 @@ class DesignGeneratorTest {
       }
     assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
     assertFalse(
-      json.decodeFromString(GeneratedDesign.serializer(), response.bodyAsText()).generated
+      json.decodeFromString(GeneratedDesign.serializer(), response.bodyAsText()).generated,
     )
   }
 

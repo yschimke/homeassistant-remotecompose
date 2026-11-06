@@ -62,8 +62,8 @@ class HostAmbientTest {
               SENSOR,
               "21.4",
               JsonObject(mapOf("friendly_name" to JsonPrimitive("Living Room"))),
-            )
-        )
+            ),
+        ),
       )
     val registry = defaultRegistry()
     val theme = haThemeFor(ThemeStyle.TerrazzoHome, false)

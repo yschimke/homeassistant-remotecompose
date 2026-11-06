@@ -24,7 +24,7 @@ class DashboardDraftEditorTest {
   private val original =
     Json.parseToJsonElement(
         """{"title":"Garden","views":[{"title":"Home","path":"home","type":"sections",
-          "sections":[{"type":"grid","cards":[{"type":"tile","entity":"sensor.soil"}]}]}]}"""
+          "sections":[{"type":"grid","cards":[{"type":"tile","entity":"sensor.soil"}]}]}]}""",
       )
       .jsonObject
 

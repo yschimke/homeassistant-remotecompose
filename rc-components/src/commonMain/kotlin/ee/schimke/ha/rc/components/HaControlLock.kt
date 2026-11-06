@@ -5,7 +5,7 @@ package ee.schimke.ha.rc.components
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
-import androidx.compose.remote.creation.compose.action.Action
+import androidx.compose.remote.creation.compose.action.RemoteAction
 import androidx.compose.remote.creation.compose.action.valueChange
 import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
@@ -109,7 +109,7 @@ internal constructor(val unlocked: RemoteFloat, private val hint: MutableRemoteI
     get() = hint != null
 
   /** The action that shows the unlock strip; null when there is nothing to unlock. */
-  val touched: Action?
+  val touched: RemoteAction?
     get() = hint?.let {
       hasControls = true
       valueChange(it, 1.ri)
@@ -251,7 +251,7 @@ private fun UnlockStrip(
           // Hidden, it is also 0 dp tall: a gone component keeps taking the touches in its
           // bounds, which would hold back the card's own controls under it.
           .height(
-            (lock.isUnlocked.select(0f.rf, hint.toRemoteFloat()) * StripDp.toFloat()).toRemoteDp()
+            (lock.isUnlocked.select(0f.rf, hint.toRemoteFloat()) * StripDp.toFloat()).toRemoteDp(),
           )
           .visibility(shown)
           .clip(haControlShape(StripDp / 2, round = true))
@@ -275,7 +275,7 @@ private fun UnlockStrip(
         modifier =
           RemoteModifier.fillMaxSize()
             // A touch-down handler makes the strip the component that takes the touch.
-            .onTouchDown(valueChange(hint, 1.ri))
+            .onTouchDown(valueChange(hint, 1.ri)),
       ) {
         // Sized from the strip's height, so the knob scales with the capture density.
         val inset = height * 0.09f.rf

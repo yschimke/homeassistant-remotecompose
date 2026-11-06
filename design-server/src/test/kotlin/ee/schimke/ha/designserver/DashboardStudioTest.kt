@@ -54,7 +54,7 @@ class DashboardStudioTest {
             call.respondText(
               """{"response":{"type":"catalogs","catalogs":[""" +
                 """{"benchmark":{"catalogSystemId":"ha-cards"}},""" +
-                """{"benchmark":{"catalogSystemId":"lovelace"},"statusSemantics":{"platform":"lovelace"}}]}}"""
+                """{"benchmark":{"catalogSystemId":"lovelace"},"statusSemantics":{"platform":"lovelace"}}]}}""",
             )
           }
         }
@@ -85,7 +85,7 @@ class DashboardStudioTest {
       hosts("https://builder.test") {
         routing {
           post(
-            "/homeassistant-remotecompose/render/ee.schimke.ha.previews.LovelaceCardPreviewKt.LovelaceCardPreview.rc"
+            "/homeassistant-remotecompose/render/ee.schimke.ha.previews.LovelaceCardPreviewKt.LovelaceCardPreview.rc",
           ) {
             assertEquals("operator", call.request.headers["X-Compose-Preview-Token"])
             val body = Json.parseToJsonElement(call.receiveText()).jsonObject
@@ -227,7 +227,7 @@ class DashboardStudioTest {
               )
           }
           post(
-            "/homeassistant-remotecompose/render/ee.schimke.ha.previews.LovelaceCardPreviewKt.LovelaceCardPreview.rc"
+            "/homeassistant-remotecompose/render/ee.schimke.ha.previews.LovelaceCardPreviewKt.LovelaceCardPreview.rc",
           ) {
             assertEquals("shared-session=valid", call.request.headers[HttpHeaders.Cookie])
             assertNull(call.request.headers[HttpHeaders.Authorization])

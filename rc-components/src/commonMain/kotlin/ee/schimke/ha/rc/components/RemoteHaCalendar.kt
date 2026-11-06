@@ -36,7 +36,7 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 14.rdp, vertical = 12.rdp)
+        .padding(horizontal = 14.rdp, vertical = 12.rdp),
   ) {
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
       RemoteRow(
@@ -145,7 +145,7 @@ fun RemoteHaCalendarIdentity(
             modifier =
               RemoteModifier.size(8.rdp)
                 .clip(haControlShape(4, round = true))
-                .background(haInk(next.accent))
+                .background(haInk(next.accent)),
           )
           RemoteText(
             // The next event is row 0: the full agenda's keys, so a template bakes it.
@@ -191,7 +191,7 @@ private fun Event(index: Int, event: HaCalendarEvent, theme: RemoteHaTheme) {
       modifier =
         RemoteModifier.size(8.rdp)
           .clip(haControlShape(4, round = true))
-          .background(haInk(event.accent))
+          .background(haInk(event.accent)),
     )
     RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
       RemoteText(

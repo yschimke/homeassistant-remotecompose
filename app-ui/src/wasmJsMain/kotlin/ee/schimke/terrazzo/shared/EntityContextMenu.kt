@@ -8,6 +8,6 @@ package ee.schimke.terrazzo.shared
   const listener = event => { event.preventDefault(); };
   document.addEventListener('contextmenu', listener, {once: true});
   setTimeout(() => document.removeEventListener('contextmenu', listener), 1000);
-}"""
+}""",
 )
 internal actual external fun suppressNextEntityContextMenu()

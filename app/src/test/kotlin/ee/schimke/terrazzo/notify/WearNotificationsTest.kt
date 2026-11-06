@@ -52,7 +52,7 @@ class WearNotificationsTest {
   fun aButtonThatOpensAUriStaysOnThePhone() {
     val withLink =
       message.copy(
-        actions = message.actions + HaPushNotification.Action("URI", "Open", uri = "/lovelace/0")
+        actions = message.actions + HaPushNotification.Action("URI", "Open", uri = "/lovelace/0"),
       )
     assertEquals(
       listOf(WearNotificationAction("ACK", "OK")),

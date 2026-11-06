@@ -62,7 +62,7 @@ class ToggleProgressFramesProvider : PreviewParameterProvider<Pair<String, Float
 @Preview(name = "toggle-anim (light)", showBackground = false, widthDp = 40, heightDp = 24)
 @Composable
 fun Toggle_Animation_Light(
-  @PreviewParameter(ToggleProgressFramesProvider::class) frame: Pair<String, Float>
+  @PreviewParameter(ToggleProgressFramesProvider::class) frame: Pair<String, Float>,
 ) {
   CapturingRemoteContentPreview(profile = androidXExperimental) {
     ProvideHaTheme(HaTheme.Light) {
@@ -78,7 +78,7 @@ fun Toggle_Animation_Light(
 @Preview(name = "toggle-anim (dark)", showBackground = false, widthDp = 40, heightDp = 24)
 @Composable
 fun Toggle_Animation_Dark(
-  @PreviewParameter(ToggleProgressFramesProvider::class) frame: Pair<String, Float>
+  @PreviewParameter(ToggleProgressFramesProvider::class) frame: Pair<String, Float>,
 ) {
   CapturingRemoteContentPreview(profile = androidXExperimental) {
     ProvideHaTheme(HaTheme.Dark) {
@@ -150,7 +150,7 @@ private fun gaugeFrameSnapshot(value: Int): HaSnapshot =
         "unit_of_measurement" to "%",
         "device_class" to "battery",
       ),
-    )
+    ),
   )
 
 private fun gaugeFrameCardJson(): String =
@@ -169,7 +169,7 @@ private fun GaugeFrameHost(theme: HaTheme, content: @Composable () -> Unit) {
 @Preview(name = "gauge-anim (light)", showBackground = false, widthDp = 187, heightDp = 150)
 @Composable
 fun Gauge_Animation_Light(
-  @PreviewParameter(GaugeValueFramesProvider::class) frame: Pair<String, Int>
+  @PreviewParameter(GaugeValueFramesProvider::class) frame: Pair<String, Int>,
 ) =
   GaugeFrameHost(HaTheme.Light) {
     RenderChild(
@@ -182,7 +182,7 @@ fun Gauge_Animation_Light(
 @Preview(name = "gauge-anim (dark)", showBackground = false, widthDp = 187, heightDp = 150)
 @Composable
 fun Gauge_Animation_Dark(
-  @PreviewParameter(GaugeValueFramesProvider::class) frame: Pair<String, Int>
+  @PreviewParameter(GaugeValueFramesProvider::class) frame: Pair<String, Int>,
 ) =
   GaugeFrameHost(HaTheme.Dark) {
     RenderChild(

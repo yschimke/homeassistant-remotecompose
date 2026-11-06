@@ -46,7 +46,7 @@ class GenerateCardDesignLibrary {
   fun generate() {
     val target =
       File(
-        requireNotNull(System.getProperty("cardDesignsAndroidOut")) { "no cardDesignsAndroidOut" }
+        requireNotNull(System.getProperty("cardDesignsAndroidOut")) { "no cardDesignsAndroidOut" },
       )
     val count = CardDesignLibrary.generate(target, RuntimeEnvironment.getApplication(), ::render)
     println("card designs: $count designs in $target")

@@ -94,7 +94,7 @@ class LibrarySourcesTest {
   }
 
   private fun io.ktor.server.testing.ApplicationTestBuilder.uiBuilder(
-    fake: FakeUiBuilder
+    fake: FakeUiBuilder,
   ): UiBuilderIntegration {
     externalServices {
       hosts("http://uib") {
@@ -161,7 +161,7 @@ class LibrarySourcesTest {
             mapOf(
               "id" to kotlinx.serialization.json.JsonPrimitive("library-tile"),
               "revision" to kotlinx.serialization.json.JsonPrimitive(7),
-            )
+            ),
         )
       }
     fake.stored["library-tile"] = edited
@@ -185,7 +185,7 @@ class LibrarySourcesTest {
         .substringBefore(';')
     assertTrue(
       "Edit the library design" in
-        browser.get("/designs/$id") { header(HttpHeaders.Cookie, cookie) }.bodyAsText()
+        browser.get("/designs/$id") { header(HttpHeaders.Cookie, cookie) }.bodyAsText(),
     )
 
     val first = browser.submitForm("/library/tile/edit") { header(HttpHeaders.Cookie, cookie) }

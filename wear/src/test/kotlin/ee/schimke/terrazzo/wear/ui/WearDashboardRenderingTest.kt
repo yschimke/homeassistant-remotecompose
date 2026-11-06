@@ -57,7 +57,7 @@ class WearDashboardRenderingTest {
   private fun valueMap(state: String) =
     mapOf(
       "sensor.battery" to
-        EntityValue(state = state, friendlyName = "Battery", unit = "%", deviceClass = "battery")
+        EntityValue(state = state, friendlyName = "Battery", unit = "%", deviceClass = "battery"),
     )
 
   @Test
@@ -65,7 +65,7 @@ class WearDashboardRenderingTest {
     compose.setContent {
       MaterialTheme {
         Box(
-          Modifier.size(240.dp).background(MaterialTheme.colorScheme.background).testTag("screen")
+          Modifier.size(240.dp).background(MaterialTheme.colorScheme.background).testTag("screen"),
         ) {
           WearDashboardScreen(DashboardData(title = "Home", cards = listOf(grid)), values("65"), {})
         }
@@ -95,7 +95,7 @@ class WearDashboardRenderingTest {
         WearTopLevelScreen(
           ee.schimke.terrazzo.wearsync.proto.WearSettings(),
           ee.schimke.terrazzo.wearsync.proto.PinnedCardSet(
-            cards = listOf(ee.schimke.terrazzo.wearsync.proto.PinnedCard(card = grid))
+            cards = listOf(ee.schimke.terrazzo.wearsync.proto.PinnedCard(card = grid)),
           ),
           ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet(),
           values("65"),
@@ -113,7 +113,7 @@ class WearDashboardRenderingTest {
     var selected by mutableStateOf(0)
     compose.setContent {
       Box(
-        Modifier.size(240.dp).background(MaterialTheme.colorScheme.background).testTag("screen")
+        Modifier.size(240.dp).background(MaterialTheme.colorScheme.background).testTag("screen"),
       ) {
         key(selected) {
           when (selected) {
@@ -153,9 +153,9 @@ class WearDashboardRenderingTest {
             cards =
               listOf(
                 ee.schimke.terrazzo.wearsync.proto.PinnedCard(
-                  card = CardSummary(type = ee.schimke.ha.model.MESSAGE_CARD_TYPE, rawJson = raw)
-                )
-              )
+                  card = CardSummary(type = ee.schimke.ha.model.MESSAGE_CARD_TYPE, rawJson = raw),
+                ),
+              ),
           ),
           ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet(),
           WearValues(),
@@ -195,7 +195,9 @@ class WearDashboardRenderingTest {
       MaterialTheme {
         CompositionLocalProvider(LocalWearCardLook provides look, LocalDensity provides density) {
           Box(
-            Modifier.size(240.dp).background(MaterialTheme.colorScheme.background).testTag("screen")
+            Modifier.size(240.dp)
+              .background(MaterialTheme.colorScheme.background)
+              .testTag("screen"),
           ) {
             if (visible) WearRemoteCard(summary, live)
           }
@@ -265,7 +267,7 @@ class WearDashboardRenderingTest {
             settings.wearCardLook().palette,
             dark = true,
             cardStyle = ee.schimke.ha.rc.components.HaUberTheme.byId(style),
-          )
+          ),
         )
       val bytes =
         kotlinx.coroutines.runBlocking {
@@ -300,13 +302,15 @@ class WearDashboardRenderingTest {
           LocalWearDesignRevision provides revision,
         ) {
           Box(
-            Modifier.size(240.dp).background(MaterialTheme.colorScheme.background).testTag("screen")
+            Modifier.size(240.dp)
+              .background(MaterialTheme.colorScheme.background)
+              .testTag("screen"),
           ) {
             if (visible)
               WearRemoteCard(
                 summary,
                 WearValues(
-                  mapOf("light.kitchen" to EntityValue(state = state, friendlyName = "Kitchen"))
+                  mapOf("light.kitchen" to EntityValue(state = state, friendlyName = "Kitchen")),
                 ),
               )
           }
@@ -356,7 +360,7 @@ class WearDashboardRenderingTest {
     compose.setContent {
       MaterialTheme {
         Box(
-          Modifier.size(240.dp).background(MaterialTheme.colorScheme.background).testTag("screen")
+          Modifier.size(240.dp).background(MaterialTheme.colorScheme.background).testTag("screen"),
         ) {
           WearSettingsScreen(ee.schimke.terrazzo.wearsync.proto.WearSettings())
         }
@@ -366,7 +370,7 @@ class WearDashboardRenderingTest {
     compose.onNodeWithText("Card style").assertDoesNotExist()
     compose
       .onNodeWithText(
-        "What your watch shows, its theme and card designs are all chosen on your phone."
+        "What your watch shows, its theme and card designs are all chosen on your phone.",
       )
       .assertExists()
     save("wear-settings-mobile-appearance", screenshot())

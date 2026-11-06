@@ -111,7 +111,7 @@ class DesignServerTest {
       }
       File(dir, DesignCatalog.PATH)
         .writeText(
-          Json.encodeToString(DesignCatalog.serializer(), DesignCatalog(serial, 1_000, entries))
+          Json.encodeToString(DesignCatalog.serializer(), DesignCatalog(serial, 1_000, entries)),
         )
     }
     return dir
@@ -191,7 +191,7 @@ class DesignServerTest {
         assertTrue(script.headers[HttpHeaders.ContentType]!!.startsWith("text/javascript"), name)
       }
       assertTrue(
-        client.get("/embed/v1/ha-card.js").bodyAsText().contains("customElements.define('ha-card'")
+        client.get("/embed/v1/ha-card.js").bodyAsText().contains("customElements.define('ha-card'"),
       )
       assertTrue(client.get("/embed/v1/rc-player.js").bodyAsText().contains("RcdPlayer"))
       assertTrue(client.get("/embed/v1/demo.html").bodyAsText().contains("<ha-card"))
@@ -320,13 +320,13 @@ class DesignServerTest {
         "1 shown" in
           client
             .get("/designs?type=tile&style=console&mode=light&q=domain%3Dlight&preview=template")
-            .bodyAsText()
+            .bodyAsText(),
       )
       assertTrue(
-        "0 shown" in client.get("/designs?type=gauge&style=console&mode=light").bodyAsText()
+        "0 shown" in client.get("/designs?type=gauge&style=console&mode=light").bodyAsText(),
       )
       assertTrue(
-        "0 shown" in client.get("/designs?style=console&mode=light&q=missing").bodyAsText()
+        "0 shown" in client.get("/designs?style=console&mode=light&q=missing").bodyAsText(),
       )
       assertTrue("0 shown" in client.get("/designs?style=console&mode=sepia").bodyAsText())
     }
@@ -444,7 +444,7 @@ class DesignServerTest {
 
       val detail =
         Json.parseToJsonElement(
-            client.get("/api/designs/${DesignLibrary.idOf(light)}").bodyAsText()
+            client.get("/api/designs/${DesignLibrary.idOf(light)}").bodyAsText(),
           )
           .jsonObject
       val bindings =
@@ -529,7 +529,7 @@ class DesignServerTest {
                   channel.writeFully(chunk)
                 }
               }
-            }
+            },
           )
         }
       assertEquals(HttpStatusCode.PayloadTooLarge, streamed.status)

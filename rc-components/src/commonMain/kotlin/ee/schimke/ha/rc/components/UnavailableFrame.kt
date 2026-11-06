@@ -66,7 +66,7 @@ fun RemoteHaUnavailableFrame(
   RemoteBox(modifier = modifier, contentAlignment = RemoteAlignment.Center) {
     val fade =
       RemoteModifier.alpha(
-        isAvailable?.select(1f.rf, style.contentAlpha.rf) ?: style.contentAlpha.rf
+        isAvailable?.select(1f.rf, style.contentAlpha.rf) ?: style.contentAlpha.rf,
       )
     RemoteBox(modifier = fade.fillMaxWidth()) { content(RemoteModifier.fillMaxWidth()) }
     val shown =

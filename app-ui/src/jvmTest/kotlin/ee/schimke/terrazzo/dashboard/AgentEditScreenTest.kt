@@ -32,7 +32,7 @@ class AgentEditScreenTest {
   private val draftConfig =
     Json.parseToJsonElement(
         """{"views":[{"type":"sections","sections":[{"type":"grid",
-          "cards":[{"type":"tile","entity":"switch.pump"}]}]}]}"""
+          "cards":[{"type":"tile","entity":"switch.pump"}]}]}]}""",
       )
       .jsonObject
 
@@ -188,7 +188,7 @@ class AgentEditScreenTest {
             drafts = listOf(AgentEditSession.Draft("d1")),
           ),
           AgentEditSession(id = "done", status = AgentEditSession.APPLIED),
-        )
+        ),
       )
     show(edits, mutableListOf())
     waitUntil { onAllNodesWithText("Garage").fetchSemanticsNodes().isNotEmpty() }
@@ -225,7 +225,7 @@ class AgentEditScreenTest {
     // The agent submits a draft: it is drawn with the dashboard's own card renderer.
     edits.current.value =
       edits.current.value!!.copy(
-        drafts = listOf(AgentEditSession.Draft("d1", "Pump tile", config = draftConfig))
+        drafts = listOf(AgentEditSession.Draft("d1", "Pump tile", config = draftConfig)),
       )
     waitUntil { onAllNodesWithText("Pump tile").fetchSemanticsNodes().isNotEmpty() }
     onNodeWithText("card:tile:\"switch.pump\"").assertExists()
@@ -336,7 +336,7 @@ class AgentEditScreenTest {
     // A long message scrolls within the field, which stays two lines tall: all of it fits.
     val field = onNodeWithText("Tell the agent what to change")
     field.performTextInput(
-      "Make the last field easy to reach\nKeep the reading clear\nKeep Send reachable"
+      "Make the last field easy to reach\nKeep the reading clear\nKeep Send reachable",
     )
     field.performScrollTo()
     val bounds = field.getBoundsInRoot()
@@ -370,9 +370,9 @@ class AgentEditScreenTest {
       previewDashboard(
         Json.parseToJsonElement(
             """{"views":[{"path":"home","type":"sections","sections":[]},
-              {"path":"garden","type":"sections","sections":[]},{"type":"sections"}]}"""
+              {"path":"garden","type":"sections","sections":[]},{"type":"sections"}]}""",
           )
-          .jsonObject
+          .jsonObject,
       )!!
     fun key(path: String?) = CardKey("d", path, sectionIndex = 0, cardIndex = 0, type = "tile")
     val garden = EditScope.section(1, 0, "Pumps")

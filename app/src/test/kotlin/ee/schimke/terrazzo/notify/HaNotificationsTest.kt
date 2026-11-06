@@ -29,7 +29,7 @@ class HaNotificationsTest {
   fun bridgesWithTheTagAndADismissalIdSharedAcrossDevices() {
     val wear =
       NotificationCompat.WearableExtender(
-        HaNotifications.build(context, BASE_URL, message, watchHasApp = false)
+        HaNotifications.build(context, BASE_URL, message, watchHasApp = false),
       )
     assertEquals(HaNotifications.BRIDGE_TAG, wear.bridgeTag)
     assertEquals("tag:washer", wear.dismissalId)

@@ -3,7 +3,7 @@
 package ee.schimke.ha.rc.components
 
 import androidx.annotation.RestrictTo
-import androidx.compose.remote.creation.compose.action.Action
+import androidx.compose.remote.creation.compose.action.RemoteAction
 import androidx.compose.remote.creation.compose.action.combinedAction
 import androidx.compose.remote.creation.compose.action.hostAction
 import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
@@ -306,14 +306,14 @@ fun ProvideWidgetActionRegistry(registry: WidgetActionRegistry, content: @Compos
 val WidgetOpenApp: HaAction = HaAction.Navigate("terrazzo://open-app")
 
 /**
- * Wrap an [HaAction] as a RemoteCompose [Action] ready to be plugged into
+ * Wrap an [HaAction] as a RemoteCompose [RemoteAction] ready to be plugged into
  * `Modifier.clickable(action)`. Returns null for [HaAction.None] so callers can treat "no action"
  * as "no interaction handler".
  */
 @OptIn(ExperimentalStdlibApi::class)
 @Suppress("RestrictedApi")
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-fun HaAction.toNamedRemoteAction(): Action? {
+fun HaAction.toNamedRemoteAction(): RemoteAction? {
   if (this is HaAction.None) return null
   val payload = json.encodeToString(HaAction.serializer(), this)
   return hostAction(HA_ACTION_NAME.rs, payload.rs)
@@ -330,7 +330,7 @@ fun HaAction.toNamedRemoteAction(): Action? {
 @OptIn(ExperimentalStdlibApi::class)
 @Suppress("RestrictedApi")
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-fun HaAction.toRemoteAction(): Action? {
+fun HaAction.toRemoteAction(): RemoteAction? {
   if (this is HaAction.None) return null
   val lock = haControlLock()?.takeIf { it.canUnlock && locksBehindControls() }
   val registry = LocalWidgetActionRegistry.current
@@ -368,7 +368,7 @@ fun HaAction.toRemoteAction(): Action? {
  */
 @Composable
 @Suppress("RestrictedApi")
-fun HaAction.toRemoteAction(enabled: RemoteBoolean, enabledNow: Boolean): Action? {
+fun HaAction.toRemoteAction(enabled: RemoteBoolean, enabledNow: Boolean): RemoteAction? {
   if (this is HaAction.None) return null
   val registry = LocalWidgetActionRegistry.current
   if (registry != null) {
@@ -401,7 +401,7 @@ internal fun sliderRemoteAction(
   template: HaAction.SetValue,
   ticks: RemoteString,
   payloadSlot: ReservedId,
-): Pair<Action, RemoteDrawScope.() -> Unit> {
+): Pair<RemoteAction, RemoteDrawScope.() -> Unit> {
   val marker = Int.MIN_VALUE
   val encoded = json.encodeToString(HaAction.serializer(), template.copy(ticks = marker))
   val before = encoded.substringBefore(marker.toString())
@@ -427,7 +427,7 @@ internal fun sliderRemoteAction(
  */
 @Composable
 @Suppress("RestrictedApi")
-internal fun widgetAlarmPinAction(entityId: String, pin: RemoteString): Action? {
+internal fun widgetAlarmPinAction(entityId: String, pin: RemoteString): RemoteAction? {
   val registry = LocalWidgetActionRegistry.current ?: return null
   val placeholder = "__REMOTE_PIN__"
   // The actual PIN exists only in dynamic metadata. The empty static payload is a recognizable

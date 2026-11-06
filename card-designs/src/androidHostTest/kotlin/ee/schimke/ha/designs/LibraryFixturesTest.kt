@@ -34,7 +34,7 @@ class LibraryFixturesTest {
     assertTrue(missing.isEmpty(), "fixtures yielding no design: $missing")
     println(
       "LibraryFixtures: ${LibraryFixtures.all.size} fixtures, card types " +
-        LibraryFixtures.all.map { it.card.type }.distinct()
+        LibraryFixtures.all.map { it.card.type }.distinct(),
     )
   }
 

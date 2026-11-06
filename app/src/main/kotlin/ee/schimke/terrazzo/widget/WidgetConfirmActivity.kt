@@ -80,7 +80,7 @@ class WidgetConfirmActivity : ComponentActivity() {
                 onClick = {
                   run(applicationContext, widgetId, action, confirmed = true)
                   finish()
-                }
+                },
               ) {
                 Text(widgetConfirmVerb(action))
               }

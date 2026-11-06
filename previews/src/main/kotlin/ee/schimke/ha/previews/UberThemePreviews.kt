@@ -56,7 +56,7 @@ private val PreviewNow: ZonedDateTime = ZonedDateTime.of(2026, 5, 5, 10, 8, 0, 0
 @Composable
 internal fun UberShowcase(theme: HaUberTheme, darkTheme: Boolean) {
   Box(
-    Modifier.uiFillMaxSize().background(theme.palette(darkTheme).dashboardBackground).padding(8.dp)
+    Modifier.uiFillMaxSize().background(theme.palette(darkTheme).dashboardBackground).padding(8.dp),
   ) {
     CapturingRemoteContentPreview(profile = androidXExperimental) {
       CompositionLocalProvider(LocalHaClock provides FixedHaClock(PreviewNow)) {
@@ -69,7 +69,7 @@ internal fun UberShowcase(theme: HaUberTheme, darkTheme: Boolean) {
               RenderChild(
                 card(
                   """{"type":"gauge","entity":"sensor.repeater_battery","name":"Battery %",
-                      "min":0,"max":100,"severity":{"green":60,"yellow":30,"red":0}}"""
+                      "min":0,"max":100,"severity":{"green":60,"yellow":30,"red":0}}""",
                 ),
                 Fixtures.battery,
                 RemoteModifier.fillMaxWidth(),
@@ -78,7 +78,7 @@ internal fun UberShowcase(theme: HaUberTheme, darkTheme: Boolean) {
               // weights out of its full width, so a spaced row overflows by the gap.
               RemoteRow(modifier = RemoteModifier.fillMaxWidth()) {
                 MeasurementCard(
-                  RemoteModifier.weight(1f).padding(end = HaSpace.M.rdp).height(196.rdp)
+                  RemoteModifier.weight(1f).padding(end = HaSpace.M.rdp).height(196.rdp),
                 ) {
                   RemoteHaMeasurement(
                     HaReading.static("Living room", 21.5f, "°C", HaMeasureKind.Temperature),
@@ -117,7 +117,7 @@ internal fun UberShowcase(theme: HaUberTheme, darkTheme: Boolean) {
               RenderChild(
                 card(
                   """{"type":"entities","title":"Living Room","entities":[
-                      "sensor.living_room","light.kitchen","switch.coffee_maker"]}"""
+                      "sensor.living_room","light.kitchen","switch.coffee_maker"]}""",
                 ),
                 Fixtures.mixed,
                 RemoteModifier.fillMaxWidth(),
@@ -135,7 +135,8 @@ internal fun UberShowcase(theme: HaUberTheme, darkTheme: Boolean) {
 private fun MeasurementCard(modifier: RemoteModifier, content: @Composable () -> Unit) {
   val theme = currentRemoteHaTheme()
   RemoteBox(
-    modifier = modifier.then(cardChrome(theme.cardBackground, theme.divider)).padding(HaSpace.M.rdp)
+    modifier =
+      modifier.then(cardChrome(theme.cardBackground, theme.divider)).padding(HaSpace.M.rdp),
   ) {
     content()
   }
@@ -216,7 +217,7 @@ fun Uber_Console_Desk() {
               RenderChild(
                 card(
                   """{"type":"gauge","entity":"sensor.repeater_battery","name":"Level",
-                      "min":0,"max":100,"severity":{"green":0,"yellow":60,"red":80}}"""
+                      "min":0,"max":100,"severity":{"green":0,"yellow":60,"red":80}}""",
                 ),
                 Fixtures.battery,
                 RemoteModifier.fillMaxWidth(),

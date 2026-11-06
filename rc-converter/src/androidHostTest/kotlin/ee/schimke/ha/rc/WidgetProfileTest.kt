@@ -16,7 +16,7 @@ class WidgetProfileTest {
       val document =
         CoreDocument().apply {
           initFromBuffer(
-            RemoteComposeBuffer.fromInputStream(platformWidgetDocument(bytes).inputStream())
+            RemoteComposeBuffer.fromInputStream(platformWidgetDocument(bytes).inputStream()),
           )
         }
       assertTrue(document.canBeDisplayed(1, 0, 0L))

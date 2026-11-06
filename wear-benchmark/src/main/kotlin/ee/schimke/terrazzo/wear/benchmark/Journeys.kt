@@ -2,6 +2,7 @@ package ee.schimke.terrazzo.wear.benchmark
 
 import androidx.benchmark.macro.MacrobenchmarkScope
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import java.util.regex.Pattern
@@ -22,28 +23,38 @@ private const val EXTRA_TEST_SEED_PINS = "terrazzo.test.seed_pins"
  * pinned (a section and a dozen cards): an unpaired emulator otherwise has nothing pinned.
  */
 internal fun MacrobenchmarkScope.startTopLevel() {
+  // The app asks for notifications on launch (Wear OS 4+); granted up front so the dialog doesn't
+  // cover the list. A no-op below API 33.
+  device.executeShellCommand("pm grant $TARGET_PACKAGE android.permission.POST_NOTIFICATIONS")
   startActivityAndWait { it.putExtra(EXTRA_TEST_SEED_PINS, true) }
   awaitText("Pinned · Demo", "Living room")
 }
 
 /**
- * Opens the pinned "Living room" section from the top of the top-level list. The section screen
- * shares the title and keeps its Back button below its cards, so the landmark is the top-level
- * row's card count going away.
+ * Expands the pinned "Living room" section in place on the top-level list: its row reads "4 cards ·
+ * Expand", and "4 cards · Collapse" once its cards show beneath it.
  */
-internal fun MacrobenchmarkScope.openSection() {
+internal fun MacrobenchmarkScope.expandSection() = toggleSection("Expand", "Collapse")
+
+/** Collapses the section [expandSection] opened, back to the plain top-level list. */
+internal fun MacrobenchmarkScope.collapseSection() = toggleSection("Collapse", "Expand")
+
+private fun MacrobenchmarkScope.toggleSection(from: String, to: String) {
   // A tap while the list settles from a fling can miss, as in [open]: one retry.
   repeat(2) {
-    findScrollingTo("4 cards").click()
-    if (device.wait(Until.gone(By.text("4 cards")), UI_TIMEOUT_MS / 3)) return
+    findScrollingTo(sectionRow(from)).click()
+    if (device.wait(Until.hasObject(sectionRow(to)), UI_TIMEOUT_MS / 3)) return
   }
-  error("the section didn't open; on screen: ${onScreen()}")
+  error("the section didn't ${to.lowercase()}; on screen: ${onScreen()}")
 }
+
+private fun sectionRow(state: String) = By.text("4 cards · $state")
 
 /** Opens Settings from the top-level list; the longest list the unpaired app has. */
 internal fun MacrobenchmarkScope.openSettings() {
-  // The list opens centred on its second item, so either of the first two may be the one on screen.
-  open("Settings", "Report a bug", "Theme")
+  // The list opens on its header and the line saying everything is chosen on the phone, with the
+  // button that opens it; "Report a bug" sits further down.
+  open("Settings", "Open on phone", "Report a bug")
 }
 
 /** Opens the dashboard library from the top-level list. */
@@ -83,14 +94,17 @@ private fun MacrobenchmarkScope.open(entry: String, vararg landmarks: String) {
  * flings: a fling can carry a short round-screen list past its last rows, which then sit scaled at
  * the edge where uiautomator does not report them.
  */
-private fun MacrobenchmarkScope.findScrollingTo(text: String): UiObject2 {
+private fun MacrobenchmarkScope.findScrollingTo(text: String): UiObject2 =
+  findScrollingTo(By.text(text))
+
+private fun MacrobenchmarkScope.findScrollingTo(selector: BySelector): UiObject2 {
   repeat(MAX_DRAGS) {
-    device.wait(Until.findObject(By.text(text)), 1_000)?.let {
+    device.wait(Until.findObject(selector), 1_000)?.let {
       return it
     }
     drag(up = true)
   }
-  return device.findObject(By.text(text)) ?: error("'$text' not found; on screen: ${onScreen()}")
+  return device.findObject(selector) ?: error("'$selector' not found; on screen: ${onScreen()}")
 }
 
 /** A slow drag of a third of the screen, which moves the list without flinging it. */

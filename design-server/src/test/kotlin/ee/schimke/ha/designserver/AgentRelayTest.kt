@@ -28,7 +28,7 @@ class AgentRelayTest {
             put("request", "Tidy the security view")
             put("dashboard", baseline)
           }
-            .toString()
+            .toString(),
         )
       }
     assertEquals(HttpStatusCode.OK, response.status)
@@ -53,7 +53,7 @@ class AgentRelayTest {
               put("arguments", args)
             }
           }
-            .toString()
+            .toString(),
         )
       }
     assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
@@ -197,7 +197,7 @@ class AgentRelayTest {
       mcp("get_session", buildJsonObject { put("session", session) })
         .data()
         .toString()
-        .contains("Make the camera bigger")
+        .contains("Make the camera bigger"),
     )
 
     mcp(
@@ -375,7 +375,7 @@ class AgentRelayTest {
       Json.parseToJsonElement(
           client
             .get("/api/agent/link") { header(HttpHeaders.Authorization, "Bearer $ownerLink") }
-            .bodyAsText()
+            .bodyAsText(),
         )
         .jsonObject
     assertEquals(false, linkState().getValue("connected").jsonPrimitive.boolean)
@@ -408,7 +408,7 @@ class AgentRelayTest {
               put("dashboard", baseline)
               put("agentLink", ownerLink)
             }
-              .toString()
+              .toString(),
           )
         }
       val access = Json.parseToJsonElement(started.bodyAsText()).jsonObject
@@ -490,7 +490,8 @@ class AgentRelayTest {
         client.post("/api/agent/link/claim") {
           header(HttpHeaders.Authorization, "Bearer $ownerLink")
           setBody(
-            buildJsonObject { put("code", asked.getValue("code").jsonPrimitive.content) }.toString()
+            buildJsonObject { put("code", asked.getValue("code").jsonPrimitive.content) }
+              .toString(),
           )
         }
       assertEquals(HttpStatusCode.OK, claimed.status)
@@ -536,7 +537,7 @@ class AgentRelayTest {
     val png =
       java.util.Base64.getDecoder()
         .decode(
-          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
         )
     suspend fun share(data: String) =
       client.post("/api/agent/session/render") {
@@ -546,7 +547,7 @@ class AgentRelayTest {
             put("png", data)
             put("revision", 1)
           }
-            .toString()
+            .toString(),
         )
       }
     assertEquals(HttpStatusCode.BadRequest, share("bm90IGEgcG5n").status, "only a PNG")

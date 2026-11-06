@@ -33,7 +33,7 @@ data class LovelaceTemplate(
           JsonObject(
             value.mapValues { (key, v) ->
               replace(v, key in setOf("entity", "entity_id", "entities"))
-            }
+            },
           )
         is JsonArray -> JsonArray(value.map { replace(it, entityReference) })
         is JsonPrimitive -> {

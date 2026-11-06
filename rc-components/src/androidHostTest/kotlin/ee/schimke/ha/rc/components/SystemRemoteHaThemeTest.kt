@@ -30,7 +30,7 @@ class SystemRemoteHaThemeTest {
     val document =
       CoreDocument().apply {
         initFromBuffer(
-          RemoteComposeBuffer.fromInputStream(ByteArrayInputStream(writer.encodeToByteArray()))
+          RemoteComposeBuffer.fromInputStream(ByteArrayInputStream(writer.encodeToByteArray())),
         )
       }
     val color = requireNotNull(document.themedColors).single()

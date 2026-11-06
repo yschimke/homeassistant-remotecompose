@@ -111,7 +111,7 @@ fun WrapAdaptiveRemoteDocumentPlayer(
                   setBitmapLoader(bitmapLoader)
                   installHaFonts()
                   setDocument(
-                    RemoteDocument(decode(documentBytes).withNamedActions(onNamedAction, fail))
+                    RemoteDocument(decode(documentBytes).withNamedActions(onNamedAction, fail)),
                   )
                   // The live values before the first draw, so the View starts settled on them
                   // rather than tweening in from the document's baked ones a frame later.
@@ -140,7 +140,7 @@ fun WrapAdaptiveRemoteDocumentPlayer(
                   setBitmapLoader(bitmapLoader)
                   installHaFonts()
                   setDocument(
-                    RemoteDocument(decode(documentBytes).withNamedActions(onNamedAction, fail))
+                    RemoteDocument(decode(documentBytes).withNamedActions(onNamedAction, fail)),
                   )
                   // The live values before the first draw, so the View starts settled on them
                   // rather than tweening in from the document's baked ones a frame later.

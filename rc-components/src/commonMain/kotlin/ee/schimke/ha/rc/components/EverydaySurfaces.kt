@@ -46,7 +46,7 @@ internal fun trackedTextStyle(
     RemoteTextStyle(
       fontFamily = family ?: theme.fontFamily,
       letterSpacing = trackingSp.sp.asRemoteTextUnit(),
-    )
+    ),
   )
 }
 
@@ -121,7 +121,7 @@ internal fun EverydayHeading(
     HaVisualFamily.Expressive ->
       row {
         RemoteBox(
-          RemoteModifier.size(6.rdp, 24.rdp).clip(RemoteCircleShape).background(familyAccent())
+          RemoteModifier.size(6.rdp, 24.rdp).clip(RemoteCircleShape).background(familyAccent()),
         )
         plain(RemoteModifier.weight(1f))
       }
@@ -131,7 +131,7 @@ internal fun EverydayHeading(
         RemoteBox(
           RemoteModifier.size(7.rdp)
             .clip(RemoteCircleShape)
-            .background((currentHaUberTheme().hotInk ?: HaStatusColors.Critical).rc)
+            .background((currentHaUberTheme().hotInk ?: HaStatusColors.Critical).rc),
         )
         RemoteText(
           text = text,
@@ -246,7 +246,7 @@ internal fun EverydayHeading(
           overflow = TextOverflow.Ellipsis,
         )
         RemoteBox(
-          RemoteModifier.size(36.rdp, 5.rdp).clip(RemoteCircleShape).background(familyAccent())
+          RemoteModifier.size(36.rdp, 5.rdp).clip(RemoteCircleShape).background(familyAccent()),
         )
       }
     // The title floating in its own capsule.
@@ -255,7 +255,7 @@ internal fun EverydayHeading(
         RemoteBox(
           RemoteModifier.clip(RemoteCircleShape)
             .background(theme.cardBackground)
-            .padding(horizontal = HaSpace.L.rdp, vertical = HaSpace.S.rdp)
+            .padding(horizontal = HaSpace.L.rdp, vertical = HaSpace.S.rdp),
         ) {
           RemoteText(
             text = text,
@@ -298,7 +298,7 @@ internal fun EverydayHeading(
         RemoteBox(
           RemoteModifier.clip(RemoteRoundedCornerShape(8.rdp))
             .background(theme.placeholderBackground)
-            .padding(horizontal = HaSpace.M.rdp, vertical = HaSpace.XS.rdp)
+            .padding(horizontal = HaSpace.M.rdp, vertical = HaSpace.XS.rdp),
         ) {
           RemoteText(
             text = text,
@@ -332,7 +332,7 @@ internal fun EverydayHeading(
           )
         }
         RemoteBox(
-          RemoteModifier.fillMaxWidth().height(HaSpace.Hairline.rdp).background(theme.divider)
+          RemoteModifier.fillMaxWidth().height(HaSpace.Hairline.rdp).background(theme.divider),
         )
       }
     // Twin navigation rails before the title.
@@ -348,7 +348,7 @@ internal fun EverydayHeading(
           RemoteModifier.weight(1f)
             .height(22.rdp)
             .clip(RemoteRoundedCornerShape(11.rdp, 0.rdp, 0.rdp, 11.rdp))
-            .background(familyAccent())
+            .background(familyAccent()),
         )
         RemoteText(
           text = text,
@@ -378,7 +378,7 @@ internal fun EverydayHeading(
     HaVisualFamily.Aeon ->
       column {
         RemoteBox(
-          RemoteModifier.fillMaxWidth().height(HaSpace.Hairline.rdp).background(familyAccent())
+          RemoteModifier.fillMaxWidth().height(HaSpace.Hairline.rdp).background(familyAccent()),
         )
         RemoteRow(
           modifier = RemoteModifier.fillMaxWidth(),
@@ -408,7 +408,7 @@ internal fun EverydayHeading(
           )
         }
         RemoteBox(
-          RemoteModifier.fillMaxWidth().height(HaSpace.Hairline.rdp).background(familyAccent())
+          RemoteModifier.fillMaxWidth().height(HaSpace.Hairline.rdp).background(familyAccent()),
         )
       }
   }
@@ -704,7 +704,7 @@ internal fun MarkdownTitle(title: RemoteString, size: RemoteTextUnit, ink: Remot
           RemoteModifier.padding(top = HaSpace.XXS.rdp)
             .fillMaxWidth()
             .height(HaSpace.Hairline.rdp)
-            .background(theme.divider)
+            .background(theme.divider),
         )
       }
     HaVisualFamily.Console -> ConsoleTapeLabel(title, compact = true)
@@ -796,7 +796,7 @@ internal fun BubbleTail() {
       RemoteModifier.padding(top = 10.rdp)
         .size(8.rdp)
         .clip(RemoteCircleShape)
-        .background(theme.cardBackground)
+        .background(theme.cardBackground),
     )
   }
 }
@@ -896,12 +896,12 @@ internal object GrammarTextSurfaces : HaTextSurfaceRenderer {
         g.level == HaLevelStyle.Segmented -> {
           line(RemoteModifier, trackedTextStyle(1.2f, headingFamily()))
           RemoteBox(
-            RemoteModifier.weight(1f).height(HaSpace.Hairline.rdp).background(theme.divider)
+            RemoteModifier.weight(1f).height(HaSpace.Hairline.rdp).background(theme.divider),
           )
         }
         else -> {
           RemoteBox(
-            RemoteModifier.size(6.rdp, 24.rdp).clip(RemoteCircleShape).background(familyAccent())
+            RemoteModifier.size(6.rdp, 24.rdp).clip(RemoteCircleShape).background(familyAccent()),
           )
           line(RemoteModifier.weight(1f), haHeadingTextStyle())
         }
@@ -960,7 +960,7 @@ internal object GrammarTextSurfaces : HaTextSurfaceRenderer {
         RemoteModifier.padding(top = HaSpace.XXS.rdp)
           .fillMaxWidth()
           .height(HaSpace.Hairline.rdp)
-          .background(theme.divider)
+          .background(theme.divider),
       )
     }
   }

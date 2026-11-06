@@ -47,7 +47,7 @@ fun main(args: Array<String>) {
         ?: run {
           System.err.println("usage: JvmCardDesignLibrary <output directory>")
           exitProcess(2)
-        }
+        },
     )
   val previews = JvmCardPreviewRenderer()
   val shards = Runtime.getRuntime().availableProcessors()

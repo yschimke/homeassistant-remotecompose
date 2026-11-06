@@ -9,6 +9,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import ee.schimke.rc.m3.RcAmbient
 import ee.schimke.rc.m3.rcAmbient
 
@@ -192,20 +193,35 @@ private object WearM3Roles {
 fun HaTheme.asNamedRemote(): RemoteHaTheme =
   RemoteHaTheme(
     cardBackground =
-      RemoteColor.createNamedRemoteColor(WearM3Roles.CARD_BACKGROUND, cardBackground),
+      RemoteColor.createNamedRemoteColor(WearM3Roles.CARD_BACKGROUND, cardBackground.toArgb()),
     dashboardBackground =
-      RemoteColor.createNamedRemoteColor(WearM3Roles.DASHBOARD_BACKGROUND, dashboardBackground),
+      RemoteColor.createNamedRemoteColor(
+        WearM3Roles.DASHBOARD_BACKGROUND,
+        dashboardBackground.toArgb(),
+      ),
     sectionBackground =
-      RemoteColor.createNamedRemoteColor(WearM3Roles.SECTION_BACKGROUND, sectionBackground),
-    primaryText = RemoteColor.createNamedRemoteColor(WearM3Roles.PRIMARY_TEXT, primaryText),
-    secondaryText = RemoteColor.createNamedRemoteColor(WearM3Roles.SECONDARY_TEXT, secondaryText),
-    linkText = RemoteColor.createNamedRemoteColor(WearM3Roles.LINK_TEXT, linkText),
-    divider = RemoteColor.createNamedRemoteColor(WearM3Roles.DIVIDER, divider),
+      RemoteColor.createNamedRemoteColor(
+        WearM3Roles.SECTION_BACKGROUND,
+        sectionBackground.toArgb(),
+      ),
+    primaryText =
+      RemoteColor.createNamedRemoteColor(WearM3Roles.PRIMARY_TEXT, primaryText.toArgb()),
+    secondaryText =
+      RemoteColor.createNamedRemoteColor(WearM3Roles.SECONDARY_TEXT, secondaryText.toArgb()),
+    linkText = RemoteColor.createNamedRemoteColor(WearM3Roles.LINK_TEXT, linkText.toArgb()),
+    divider = RemoteColor.createNamedRemoteColor(WearM3Roles.DIVIDER, divider.toArgb()),
     placeholderAccent =
-      RemoteColor.createNamedRemoteColor(WearM3Roles.PLACEHOLDER_ACCENT, placeholderAccent),
+      RemoteColor.createNamedRemoteColor(
+        WearM3Roles.PLACEHOLDER_ACCENT,
+        placeholderAccent.toArgb(),
+      ),
     placeholderBackground =
-      RemoteColor.createNamedRemoteColor(WearM3Roles.PLACEHOLDER_BACKGROUND, placeholderBackground),
-    unknownAccent = RemoteColor.createNamedRemoteColor(WearM3Roles.UNKNOWN_ACCENT, unknownAccent),
+      RemoteColor.createNamedRemoteColor(
+        WearM3Roles.PLACEHOLDER_BACKGROUND,
+        placeholderBackground.toArgb(),
+      ),
+    unknownAccent =
+      RemoteColor.createNamedRemoteColor(WearM3Roles.UNKNOWN_ACCENT, unknownAccent.toArgb()),
   )
 
 /**

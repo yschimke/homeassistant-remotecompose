@@ -49,7 +49,7 @@ fun WearSettingsScreen(
       item { Text(PUBLIC_FEEDBACK_WARNING, style = MaterialTheme.typography.bodySmall) }
       item {
         Text(
-          "Included: app version $version; Wear OS. No Home Assistant data or attachments. Review, edit and explicitly submit on GitHub (account required)."
+          "Included: app version $version; Wear OS. No Home Assistant data or attachments. Review, edit and explicitly submit on GitHub (account required).",
         )
       }
       if (failed) {
@@ -70,7 +70,7 @@ fun WearSettingsScreen(
             failed =
               runCatching { uriHandler.openUri(feedbackIssueUrl(version, "Wear OS")) }.isFailure
             if (!failed) reporting = false
-          }
+          },
         ) {
           Text(if (failed) "Retry PUBLIC draft" else "Review PUBLIC draft")
         }

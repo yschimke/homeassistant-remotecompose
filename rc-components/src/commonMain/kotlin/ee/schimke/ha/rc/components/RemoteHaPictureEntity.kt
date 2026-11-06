@@ -92,7 +92,7 @@ fun RemoteHaPictureEntity(
 
   RemoteBox(
     modifier =
-      modifier.then(clickable).then(sizeModifier).then(cardChrome(theme.divider, theme.divider))
+      modifier.then(clickable).then(sizeModifier).then(cardChrome(theme.divider, theme.divider)),
   ) {
     RemoteColumn(modifier = RemoteModifier.fillMaxSize()) {
       RemoteBox(
@@ -124,7 +124,7 @@ fun RemoteHaPictureEntity(
           val rb = rememberPictureBitmap(data.imageUrl, data.pictureEntityId)
           if (rb != null) {
             RemoteImage(
-              remoteBitmap = rb,
+              bitmap = rb,
               contentDescription = entityName(data.entityId, data.name),
               modifier = RemoteModifier.fillMaxSize(),
               // Fill-crop, not letterbox: the image owns the
@@ -169,7 +169,7 @@ fun RemoteHaPictureEntity(
             modifier =
               RemoteModifier.padding(8.rdp)
                 .background(theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.8f.rf))
-                .padding(horizontal = 6.rdp, vertical = 2.rdp)
+                .padding(horizontal = 6.rdp, vertical = 2.rdp),
           ) {
             RemoteText(
               text = data.frameStamp.rs,

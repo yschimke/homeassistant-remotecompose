@@ -143,7 +143,7 @@ class SupervisorCoreUrl(
       if (ssl) {
         log.warn(
           "Home Assistant serves TLS directly; direct-port token auth is unavailable " +
-            "(use ingress, or terminate TLS in a proxy add-on)"
+            "(use ingress, or terminate TLS in a proxy add-on)",
         )
         return null
       }

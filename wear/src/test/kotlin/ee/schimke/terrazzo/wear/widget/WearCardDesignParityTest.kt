@@ -76,7 +76,7 @@ class WearCardDesignParityTest {
   private fun designOf(cardType: String) =
     CardDesignDocument.parse(
       File(requireNotNull(System.getProperty("cardDesignsDir")), CardDesignFiles.fileName(cardType))
-        .readText()
+        .readText(),
     )
 
   private val design = designOf("tile")
@@ -96,7 +96,7 @@ class WearCardDesignParityTest {
                 string(TileCardConverter.DOMAIN, domain)
                 if (unavailable) string(UNAVAILABLE_DESIGN_PROPERTY, "1")
                 if (on) string(WEAR_ON_PROPERTY, "1")
-              }
+              },
             )
           }
         }
@@ -142,7 +142,7 @@ class WearCardDesignParityTest {
                   string("show_name", showName)
                   if (unavailable) string(UNAVAILABLE_DESIGN_PROPERTY, "1")
                   if (on) string(WEAR_ON_PROPERTY, "1")
-                }
+                },
               )
             }
           }
@@ -169,7 +169,7 @@ class WearCardDesignParityTest {
       }
     }
     println(
-      "button.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
+      "button.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases",
     )
     assertEquals(emptyList(), differing)
   }
@@ -189,7 +189,7 @@ class WearCardDesignParityTest {
                 string(TileCardConverter.DOMAIN, domain)
                 if (unavailable) string(UNAVAILABLE_DESIGN_PROPERTY, "1")
                 if (on) string(WEAR_ON_PROPERTY, "1")
-              }
+              },
             )
           }
         }
@@ -215,7 +215,7 @@ class WearCardDesignParityTest {
       }
     }
     println(
-      "entity.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
+      "entity.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases",
     )
     assertEquals(emptyList(), differing)
   }
@@ -233,7 +233,7 @@ class WearCardDesignParityTest {
               string(TileCardConverter.DOMAIN, "sensor")
               string("has_data", hasData)
               if (unavailable) string(UNAVAILABLE_DESIGN_PROPERTY, "1")
-            }
+            },
           )
         }
       }
@@ -258,7 +258,7 @@ class WearCardDesignParityTest {
       }
     }
     println(
-      "sensor.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
+      "sensor.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases",
     )
     assertEquals(emptyList(), differing)
   }
@@ -293,7 +293,7 @@ class WearCardDesignParityTest {
       }
     }
     println(
-      "heading.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases"
+      "heading.uid: ${inputs.size * ThemeStyle.entries.size * HaUberTheme.all.size} Wear cases",
     )
     assertEquals(emptyList(), differing)
   }
@@ -312,11 +312,11 @@ class WearCardDesignParityTest {
           listOf(
             mapOf("has_title" to 1, "seconds" to 1, "h24" to 0, "large" to 1) +
               ("zoned" to 1) +
-              ("date" to 1)
+              ("date" to 1),
           ))
         .mapNotNull { values ->
           clock.wearDesignTemplate(
-            DesignProperties.build { values.forEach { (name, value) -> enum(name, value) } }
+            DesignProperties.build { values.forEach { (name, value) -> enum(name, value) } },
           )
         }
     val differing = buildList {
@@ -355,7 +355,7 @@ class WearCardDesignParityTest {
                 "climate.living_room",
                 "heat",
                 attributes(
-                  """{"current_temperature":20.5,"temperature":21,"hvac_action":"heating"}"""
+                  """{"current_temperature":20.5,"temperature":21,"hvac_action":"heating"}""",
                 ),
               ),
             "climate.office" to EntityState("climate.office", "off"),
@@ -368,7 +368,7 @@ class WearCardDesignParityTest {
             "light.kitchen" to
               EntityState("light.kitchen", "on", attributes("""{"brightness":200}""")),
             "light.hall" to EntityState("light.hall", "off"),
-          )
+          ),
       )
     assertWearParity(
       "arc dial designs",
@@ -398,7 +398,7 @@ class WearCardDesignParityTest {
               ),
             "sensor.power" to
               EntityState("sensor.power", "640", attributes("""{"unit_of_measurement":"W"}""")),
-          )
+          ),
       )
     assertWearParity(
       "value designs",
@@ -426,7 +426,7 @@ class WearCardDesignParityTest {
                 "calendar.home",
                 "on",
                 attributes(
-                  """{"message":"Bins out","start_time":"2026-10-24 07:00:00","friendly_name":"Home"}"""
+                  """{"message":"Bins out","start_time":"2026-10-24 07:00:00","friendly_name":"Home"}""",
                 ),
               ),
             "todo.shopping" to
@@ -436,10 +436,10 @@ class WearCardDesignParityTest {
                 attributes(
                   """{"items":[{"summary":"Milk","status":"needs_action"},""" +
                     """{"summary":"Eggs","status":"needs_action"},""" +
-                    """{"summary":"Bread","status":"completed"}]}"""
+                    """{"summary":"Bread","status":"completed"}]}""",
                 ),
               ),
-          )
+          ),
       )
     assertWearParity(
       "list designs",
@@ -474,11 +474,11 @@ class WearCardDesignParityTest {
                 "playing",
                 attributes(
                   """{"friendly_name":"Living room","media_title":"Song","media_artist":"Band",""" +
-                    """"media_duration":200,"media_position":40}"""
+                    """"media_duration":200,"media_position":40}""",
                 ),
               ),
             "media_player.kitchen" to EntityState("media_player.kitchen", "off"),
-          )
+          ),
       )
     assertWearParity(
       "room designs",
@@ -512,7 +512,7 @@ class WearCardDesignParityTest {
                 attributes("""{"friendly_name":"Phone","latitude":51.5,"longitude":-0.1}"""),
               ),
             "light.porch" to EntityState("light.porch", "on"),
-          )
+          ),
       )
     assertWearParity(
       "panel designs",
@@ -548,7 +548,7 @@ class WearCardDesignParityTest {
                 "sunny",
                 attributes("""{"temperature":18,"temperature_unit":"°C","humidity":40}"""),
               ),
-          )
+          ),
       )
     assertWearParity(
       "entities and weather designs",
@@ -572,7 +572,7 @@ class WearCardDesignParityTest {
             "camera.front_door" to EntityState("camera.front_door", "idle"),
             "light.porch" to EntityState("light.porch", "on"),
             "switch.fan" to EntityState("switch.fan", "off"),
-          )
+          ),
       )
     // Each picture card with and without its optional lines, as SlotWidget keys them.
     assertWearParity(
@@ -604,7 +604,7 @@ class WearCardDesignParityTest {
               ),
             "sensor.energy" to
               EntityState("sensor.energy", "12.5", attributes("""{"unit_of_measurement":"kWh"}""")),
-          )
+          ),
       )
     assertWearParity(
       "graph designs",
@@ -630,7 +630,7 @@ class WearCardDesignParityTest {
               EntityState("light.kitchen", "on", attributes("""{"friendly_name":"Kitchen"}""")),
             "switch.fan" to
               EntityState("switch.fan", "off", attributes("""{"friendly_name":"Fan"}""")),
-          )
+          ),
       )
     assertWearParity(
       "container designs",
@@ -669,7 +669,7 @@ class WearCardDesignParityTest {
             state("sensor.x1c_remaining_time", "95"),
             state("button.x1c_pause_printing", "unknown"),
             state("button.x1c_stop_printing", "unknown"),
-          )
+          ),
       )
     assertWearParity(
       "bambu designs",

@@ -80,7 +80,7 @@ class CachedCardPlaybackTest {
             RemoteBox(
               RemoteModifier.fillMaxWidth()
                 .height(64.rdp)
-                .background(on.select(Color.Green.rc, Color.Red.rc))
+                .background(on.select(Color.Green.rc, Color.Red.rc)),
             ) {}
           }
         }

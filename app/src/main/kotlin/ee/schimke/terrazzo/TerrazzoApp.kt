@@ -766,7 +766,7 @@ private fun DashboardsRoot(
           val choice = CardDesignSync.choice(context, graph.preferencesStore).first()
           if (Skins.install(context, choice, designId) != Skins.Installed.Yes)
             throw CardSelectionException(
-              "The design was published but could not be downloaded. Try again."
+              "The design was published but could not be downloaded. Try again.",
             )
           try {
             session.setSharedDesignSelection(cardFingerprint(card), designId)
@@ -774,7 +774,7 @@ private fun DashboardsRoot(
             throw e
           } catch (e: Exception) {
             throw CardSelectionException(
-              "The design was downloaded but Home Assistant couldn't select it. Try again."
+              "The design was downloaded but Home Assistant couldn't select it. Try again.",
             )
           }
           val overrides = CardDesignOverrideStore.of(context)
@@ -890,7 +890,7 @@ private fun DashboardsRoot(
               ({ view, section, title ->
                 agentSessions =
                   AgentSessionsTarget(
-                    ee.schimke.ha.client.dashboard.EditScope.section(view, section, title)
+                    ee.schimke.ha.client.dashboard.EditScope.section(view, section, title),
                   )
               })
             else null,

@@ -117,8 +117,8 @@ class SlotWidgetDesignTest {
               "idle",
               "friendly_name" to "Driveway",
               "entity_picture" to cameraUrl,
-            )
-        )
+            ),
+        ),
     )
 
   /** A solid yellow PNG: the picture the phone synced. */
@@ -172,8 +172,8 @@ class SlotWidgetDesignTest {
       HaSnapshot(
         states =
           mapOf(
-            "camera.driveway" to entity("camera.driveway", "idle", "friendly_name" to "Driveway")
-          )
+            "camera.driveway" to entity("camera.driveway", "idle", "friendly_name" to "Driveway"),
+          ),
       )
     val first = capture(data(card, snapshot))
     val second = capture(data(card, snapshot))
@@ -243,7 +243,7 @@ class SlotWidgetDesignTest {
       card("tile", "light.kitchen"),
       HaSnapshot(
         states =
-          mapOf("light.kitchen" to entity("light.kitchen", "on", "friendly_name" to "Kitchen"))
+          mapOf("light.kitchen" to entity("light.kitchen", "on", "friendly_name" to "Kitchen")),
       ),
       "light.s0",
       "Kitchen",
@@ -263,8 +263,8 @@ class SlotWidgetDesignTest {
                 "21.5",
                 "device_class" to "temperature",
                 "unit_of_measurement" to "°C",
-              )
-          )
+              ),
+          ),
       )
     fun render(override: String) =
       capture(
@@ -275,7 +275,7 @@ class SlotWidgetDesignTest {
           card,
           snapshot,
           wearWidgetCardStyle(override, "braun"),
-        )
+        ),
       )
     val inherited = render("")
     val overridden = render("lcd")
@@ -305,8 +305,8 @@ class SlotWidgetDesignTest {
                 "friendly_name" to "Living room",
                 "device_class" to "temperature",
                 "unit_of_measurement" to "°C",
-              )
-          )
+              ),
+          ),
       )
     for (uber in HaUberTheme.all) {
       for ((container, height) in
@@ -393,9 +393,9 @@ class SlotWidgetDesignTest {
                     rawJson = raw,
                     cardStyleOverride = override,
                   ),
-              )
-            )
-        )
+              ),
+            ),
+        ),
       )
     }
     fun live(state: String) {
@@ -413,8 +413,8 @@ class SlotWidgetDesignTest {
                   state = "off",
                   friendlyName = "Office",
                 ),
-            )
-        )
+            ),
+        ),
       )
     }
     // The widget's card, chosen on the watch: a copy of the pin, which the pin's newer copy wins.
@@ -471,7 +471,7 @@ class SlotWidgetDesignTest {
         "clearing the persisted override restores the phone style",
       )
       appearance.writeSettings(
-        ee.schimke.terrazzo.wearsync.proto.WearSettings(cardStyle = "console")
+        ee.schimke.terrazzo.wearsync.proto.WearSettings(cardStyle = "console"),
       )
       val changedWatch = render()
       assertFalse(
@@ -584,8 +584,8 @@ class SlotWidgetDesignTest {
                 "friendly_name" to "Living room",
                 "device_class" to "temperature",
                 "unit_of_measurement" to "°C",
-              )
-          )
+              ),
+          ),
       ),
     )
 
@@ -598,8 +598,8 @@ class SlotWidgetDesignTest {
       HaSnapshot(
         states =
           mapOf(
-            "camera.driveway" to entity("camera.driveway", "idle", "friendly_name" to "Driveway")
-          )
+            "camera.driveway" to entity("camera.driveway", "idle", "friendly_name" to "Driveway"),
+          ),
       ),
     )
 
@@ -614,7 +614,7 @@ class SlotWidgetDesignTest {
       CardConfig(
         "entities",
         kotlinx.serialization.json.Json.parseToJsonElement(
-          """{"type":"entities","title":"Living Room","entities":["light.lamp","switch.coffee"]}"""
+          """{"type":"entities","title":"Living Room","entities":["light.lamp","switch.coffee"]}""",
         ) as JsonObject,
       ),
       HaSnapshot(
@@ -622,7 +622,7 @@ class SlotWidgetDesignTest {
           mapOf(
             "light.lamp" to entity("light.lamp", "on", "friendly_name" to "Office lamp"),
             "switch.coffee" to entity("switch.coffee", "on", "friendly_name" to "Coffee maker"),
-          )
+          ),
       ),
     )
 

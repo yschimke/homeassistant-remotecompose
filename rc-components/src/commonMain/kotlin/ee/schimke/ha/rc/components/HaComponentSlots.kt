@@ -345,7 +345,7 @@ internal constructor(private val renderers: Map<HaComponentSlot, HaSlotRenderer>
           HaComponentSlot.WearContainer to GrammarWearContainer,
           HaComponentSlot.Charts to GrammarCharts,
           HaComponentSlot.TextSurfaces to GrammarTextSurfaces,
-        )
+        ),
       )
   }
 }

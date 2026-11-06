@@ -56,7 +56,7 @@ fun RemoteHaMarkdown(
   RemoteColumn(modifier = modifier.fillMaxWidth()) {
     RemoteBox(modifier = RemoteModifier.fillMaxWidth().then(material.surface)) {
       RemoteColumn(
-        modifier = RemoteModifier.fillMaxWidth().then(material.decoration).then(material.padding)
+        modifier = RemoteModifier.fillMaxWidth().then(material.decoration).then(material.padding),
       ) {
         if (data.title != null) {
           textSurfaces()
@@ -96,7 +96,7 @@ private fun MarkdownBlocks(data: HaMarkdownData, material: MarkdownMaterial, lar
           RemoteModifier.padding(vertical = 6.rdp)
             .fillMaxWidth()
             .height(1.rdp)
-            .background(theme.divider)
+            .background(theme.divider),
       )
     }
     when (block.kind) {
@@ -149,7 +149,7 @@ private fun MarkdownBlocks(data: HaMarkdownData, material: MarkdownMaterial, lar
             RemoteModifier.padding(vertical = 4.rdp)
               .fillMaxWidth()
               .height(1.rdp)
-              .background(theme.divider)
+              .background(theme.divider),
         )
       }
       MarkdownBlock.Kind.Paragraph ->
@@ -505,7 +505,7 @@ private fun MarkdownBadge(image: MarkdownInline.Image) {
   // [description] is null inside the labelled tap target, so the badge is announced once.
   val badge: @Composable @RemoteComposable (description: RemoteString?) -> Unit = { description ->
     RemoteImage(
-      remoteBitmap = rb,
+      bitmap = rb,
       contentDescription = description,
       modifier = RemoteModifier.height(BADGE_HEIGHT_DP.rdp).width(BADGE_WIDTH_DP.rdp),
       contentScale = ContentScale.Fit,

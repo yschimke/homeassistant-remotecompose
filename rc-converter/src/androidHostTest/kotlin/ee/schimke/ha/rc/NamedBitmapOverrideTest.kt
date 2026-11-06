@@ -68,7 +68,7 @@ class NamedBitmapOverrideTest {
         ) {
           val bitmap = rememberLocalNamedRemoteBitmap(NAME) { solid(red).asImageBitmap() }
           RemoteImage(
-            remoteBitmap = bitmap,
+            bitmap = bitmap,
             contentDescription = null,
             modifier = RemoteModifier.fillMaxSize(),
             contentScale = ContentScale.FillBounds,
@@ -83,8 +83,8 @@ class NamedBitmapOverrideTest {
             RemoteDocument(
               CoreDocument().apply {
                 initFromBuffer(RemoteComposeBuffer.fromInputStream(bytes.inputStream()))
-              }
-            )
+              },
+            ),
           )
         }
       assertEquals(red, draw(player), "the document's own bitmap draws")

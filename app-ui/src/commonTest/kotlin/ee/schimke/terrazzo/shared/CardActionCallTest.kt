@@ -26,7 +26,7 @@ class CardActionCallTest {
         buildJsonObject { put("brightness", 128) },
       ),
       cardActionCall(
-        """{"type":"CallService","domain":"light","service":"turn_on","entityId":"light.kitchen","serviceData":{"brightness":128}}"""
+        """{"type":"CallService","domain":"light","service":"turn_on","entityId":"light.kitchen","serviceData":{"brightness":128}}""",
       ),
     )
   }

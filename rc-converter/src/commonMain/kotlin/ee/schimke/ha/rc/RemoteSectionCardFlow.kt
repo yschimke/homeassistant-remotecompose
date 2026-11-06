@@ -122,7 +122,7 @@ fun RemoteSectionCardFlow(
         RemoteBox(
           modifier =
             RemoteModifier.width(widthPx.toRemoteDp())
-              .padding(0f.rdp, topPx.toRemoteDp(), 0f.rdp, 0f.rdp)
+              .padding(0f.rdp, topPx.toRemoteDp(), 0f.rdp, 0f.rdp),
         ) {
           CompositionLocalProvider(LocalGridCellWidthPx provides widthPx) {
             RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())

@@ -124,7 +124,7 @@ class CardBindingRecipeTemplateTest {
       assertNotNull(
         registry
           .converterFor("gauge")
-          ?.designBindings(card, HaSnapshot(states = mapOf(cpu.entityId to cpu)))
+          ?.designBindings(card, HaSnapshot(states = mapOf(cpu.entityId to cpu))),
       )
     assertEquals(20f, bindings.floats["card.min"])
     assertEquals(90.25f, bindings.floats["card.max"])

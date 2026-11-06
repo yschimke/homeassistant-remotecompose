@@ -109,7 +109,7 @@ internal fun BoxScope.CardChangeFlash(signature: String) {
             clip = true
           }
           .background(FLASH_COLOR.copy(alpha = 0.28f))
-          .border(2.dp, FLASH_COLOR, FLASH_SHAPE)
+          .border(2.dp, FLASH_COLOR, FLASH_SHAPE),
     )
   }
 }
@@ -164,7 +164,7 @@ internal fun DataGridOverlay(
   }
 
   Box(
-    modifier = modifier.fillMaxSize().padding(contentPadding).consumeWindowInsets(contentPadding)
+    modifier = modifier.fillMaxSize().padding(contentPadding).consumeWindowInsets(contentPadding),
   ) {
     Surface(
       color = Color(0xE61C1B1F),

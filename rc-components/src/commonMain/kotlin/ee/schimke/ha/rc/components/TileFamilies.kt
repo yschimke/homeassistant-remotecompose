@@ -138,7 +138,7 @@ private fun ExpressiveTile(data: HaTileData, look: HaEntityLook, identity: @Comp
       modifier =
         RemoteModifier.clip(RemoteRoundedCornerShape(16.rdp))
           .background(theme.placeholderBackground)
-          .padding(horizontal = HaSpace.L.rdp, vertical = HaSpace.S.rdp)
+          .padding(horizontal = HaSpace.L.rdp, vertical = HaSpace.S.rdp),
     ) {
       TileValue(data, look, HaType.BodyLarge)
     }
@@ -157,7 +157,7 @@ private fun TrinitronTile(data: HaTileData, look: HaEntityLook, identity: @Compo
         RemoteModifier.padding(vertical = HaSpace.XXS.rdp)
           .fillMaxWidth()
           .height(HaSpace.Hairline.rdp)
-          .background(theme.divider)
+          .background(theme.divider),
       )
       TileValue(data, look, HaType.BodyLarge)
     }
@@ -206,7 +206,7 @@ private fun BraunTile(data: HaTileData, look: HaEntityLook, identity: @Composabl
       RemoteModifier.padding(start = HaSpace.M.rdp, end = HaSpace.S.rdp)
         .size(7.rdp)
         .clip(RemoteRoundedCornerShape(4.rdp))
-        .background(theme.linkText)
+        .background(theme.linkText),
     )
     TileName(data, look, HaType.Label, FontWeight.Normal, modifier = RemoteModifier.weight(1f))
     // The reading at body-large, a step under title, so a narrow tile keeps room for the name.
@@ -243,7 +243,7 @@ private fun ConsoleTile(data: HaTileData, look: HaEntityLook, identity: @Composa
       ConsoleTapeLabel(entityName(data.entityId, data.name), compact = true)
       RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
         RemoteBox(
-          RemoteModifier.size(8.rdp).clip(RemoteRoundedCornerShape(4.rdp)).background(look.accent)
+          RemoteModifier.size(8.rdp).clip(RemoteRoundedCornerShape(4.rdp)).background(look.accent),
         )
         TileValue(data, look, HaType.Body, modifier = RemoteModifier.padding(start = HaSpace.S.rdp))
       }
@@ -296,7 +296,7 @@ private fun CatppuccinTile(data: HaTileData, look: HaEntityLook, identity: @Comp
       RemoteBox(
         RemoteModifier.clip(RemoteRoundedCornerShape(HaSpace.M.rdp))
           .background(theme.placeholderBackground)
-          .padding(horizontal = HaSpace.M.rdp, vertical = HaSpace.XXS.rdp)
+          .padding(horizontal = HaSpace.M.rdp, vertical = HaSpace.XXS.rdp),
       ) {
         TileValue(data, look, HaType.Label)
       }
@@ -316,7 +316,7 @@ private fun ObsidianTile(data: HaTileData, look: HaEntityLook, identity: @Compos
         RemoteModifier.padding(vertical = HaSpace.XXS.rdp)
           .width(32.rdp)
           .height(HaSpace.Hairline.rdp)
-          .background(theme.secondaryText)
+          .background(theme.secondaryText),
       )
       TileName(data, look, HaType.Caption, FontWeight.Normal, secondary = true)
     }
@@ -333,7 +333,7 @@ private fun NoctisTile(data: HaTileData, look: HaEntityLook, identity: @Composab
       RemoteModifier.padding(start = 3.rdp, end = HaSpace.XL.rdp)
         .width(1.rdp)
         .height(24.rdp)
-        .background(theme.divider)
+        .background(theme.divider),
     )
     identity()
     RemoteColumn(RemoteModifier.weight(1f).padding(start = 12.rdp)) {
@@ -351,7 +351,7 @@ private fun LcarsTile(data: HaTileData, look: HaEntityLook, identity: @Composabl
       RemoteModifier.width(18.rdp)
         .height(36.rdp)
         .clip(RemoteRoundedCornerShape(topStart = 18.rdp, bottomStart = 18.rdp))
-        .background(look.accent)
+        .background(look.accent),
     )
     RemoteBox(RemoteModifier.padding(start = HaSpace.M.rdp)) { identity() }
     TileName(

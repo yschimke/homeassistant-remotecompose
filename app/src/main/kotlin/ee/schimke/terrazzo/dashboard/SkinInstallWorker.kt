@@ -45,7 +45,7 @@ class SkinInstallWorker(context: Context, params: WorkerParameters) :
         OneTimeWorkRequestBuilder<SkinInstallWorker>()
           .setInputData(workDataOf(DESIGN to designId, CARD to cardFingerprint(card)))
           .setConstraints(
-            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build(),
           )
           .addTag(TAG)
           .addTag(installTag(card, designId))

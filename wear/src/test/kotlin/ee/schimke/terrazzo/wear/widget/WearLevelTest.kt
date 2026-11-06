@@ -92,8 +92,8 @@ class WearLevelTest {
                 put("device_class", "battery")
                 put("unit_of_measurement", "%")
               },
-            )
-        )
+            ),
+        ),
     )
 
   private val design = CardDesignTemplates.designCard(card, snapshot("50"), registry)
@@ -202,8 +202,8 @@ class WearLevelTest {
                   put("friendly_name", "CPU")
                   put("unit_of_measurement", "%")
                 },
-              )
-          )
+              ),
+          ),
       )
     for (type in listOf("entity", "gauge", "tile")) {
       val config =

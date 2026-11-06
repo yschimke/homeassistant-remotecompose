@@ -59,7 +59,7 @@ class AgentDesignSessionsTest {
     val digest = "sha256:${Sha256.hex(png)}"
     val binding =
       Json.parseToJsonElement(
-        """{"mediaType":"image/png","contentDigest":"$digest","source":{"type":"uploaded","storageKey":"$digest"}}"""
+        """{"mediaType":"image/png","contentDigest":"$digest","source":{"type":"uploaded","storageKey":"$digest"}}""",
       )
     val candidate = JsonObject(original + ("assets" to JsonObject(mapOf("door" to binding))))
     assertFailsWith<IllegalArgumentException> { sessions.submit(access.agent, 0, candidate) }
@@ -71,9 +71,9 @@ class AgentDesignSessionsTest {
             JsonObject(
               mapOf(
                 "door" to
-                  Json.parseToJsonElement(binding.toString().replace("image/png", "image/jpeg"))
-              )
-            ))
+                  Json.parseToJsonElement(binding.toString().replace("image/png", "image/jpeg")),
+              ),
+            )),
       )
     assertFailsWith<IllegalArgumentException> { sessions.submit(access.agent, 0, bad) }
     assertTrue(sessions.submit(access.agent, 0, candidate))

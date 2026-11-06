@@ -231,7 +231,7 @@ private fun ButtonsRow(
           onClick = {
             confirming = null
             onAction(button.action)
-          }
+          },
         ) {
           Text(button.label)
         }
@@ -325,11 +325,11 @@ private fun ColourRow(
                 .then(
                   if (selected) {
                     Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
-                  } else Modifier
+                  } else Modifier,
                 )
                 .padding(if (selected) 5.dp else 2.dp)
                 .clip(CircleShape)
-                .background(Color.hsv(hue, 1f, 1f).copy(alpha = if (enabled) 1f else 0.38f))
+                .background(Color.hsv(hue, 1f, 1f).copy(alpha = if (enabled) 1f else 0.38f)),
             )
           }
         }

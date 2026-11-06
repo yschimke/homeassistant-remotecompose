@@ -109,7 +109,7 @@ class EmbedBindingsGoldenTest {
         JsonObject(
           bindings.floats.mapValues { (_, v) ->
             if (v.isNaN()) JsonPrimitive("NaN") else JsonPrimitive(v.toDouble())
-          }
+          },
         ),
       )
     }

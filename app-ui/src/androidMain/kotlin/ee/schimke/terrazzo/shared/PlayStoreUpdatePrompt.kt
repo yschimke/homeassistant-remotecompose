@@ -36,7 +36,7 @@ fun ComponentActivity.promptForPlayStoreUpgrade() {
     LifecycleEventObserver { _, event ->
       if (event == Lifecycle.Event.ON_RESUME)
         checkForPlayStoreUpgrade(manager, launcher, resumeOnly = true)
-    }
+    },
   )
 }
 

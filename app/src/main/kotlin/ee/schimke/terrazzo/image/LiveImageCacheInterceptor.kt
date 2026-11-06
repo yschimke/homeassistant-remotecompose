@@ -68,7 +68,7 @@ internal class LiveImageCacheInterceptor(
     val fresh =
       chain
         .withRequest(
-          request.newBuilder().diskCacheKey(key).diskCachePolicy(CachePolicy.WRITE_ONLY).build()
+          request.newBuilder().diskCacheKey(key).diskCachePolicy(CachePolicy.WRITE_ONLY).build(),
         )
         .proceed()
     if (fresh is SuccessResult) return fresh

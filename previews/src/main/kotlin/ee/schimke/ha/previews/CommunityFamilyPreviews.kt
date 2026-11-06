@@ -384,10 +384,10 @@ fun CommunityCards_Aeon() = UberSheet(HaUberTheme.Aeon, Cards.take(2))
 private fun CommunityCompact(theme: HaUberTheme) {
   Box(Modifier.fillMaxSize().background(theme.palette(true).dashboardBackground)) {
     androidx.compose.foundation.layout.Column(
-      verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+      verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
     ) {
       androidx.compose.foundation.layout.Row(
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
       ) {
         CommunityWidgetCell(
           theme,
@@ -441,7 +441,7 @@ private fun CommunityWidgetCell(
       playback = ee.schimke.ha.rc.CardPlayback.LauncherWidget,
     ) {
       CompositionLocalProvider(
-        LocalHaClock provides FixedHaClock(java.time.ZonedDateTime.parse("2026-05-05T10:08:00Z"))
+        LocalHaClock provides FixedHaClock(java.time.ZonedDateTime.parse("2026-05-05T10:08:00Z")),
       ) {
         ee.schimke.ha.rc.LauncherWidgetContent(
           registry = defaultRegistry(),
@@ -451,7 +451,7 @@ private fun CommunityWidgetCell(
             ee.schimke.ha.rc.components.WidgetActionRegistry(
               snapshot.states.mapValues { (_, entity) ->
                 ee.schimke.ha.rc.formatState(entity, snapshot)
-              }
+              },
             ),
           card = config,
           snapshot = snapshot,

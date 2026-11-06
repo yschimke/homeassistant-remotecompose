@@ -164,7 +164,7 @@ class CardStyleStore internal constructor(private val file: File) {
         ?: synchronized(this) {
           instance
             ?: CardStyleStore(
-                File(context.applicationContext.filesDir, "terrazzo/designs/card-styles.json")
+                File(context.applicationContext.filesDir, "terrazzo/designs/card-styles.json"),
               )
               .also { instance = it }
         }

@@ -98,7 +98,7 @@ internal fun LiveCameraFeed(entityId: String, state: EntityState?, modifier: Mod
       .fillMaxWidth()
       .aspectRatio(ratio)
       .clip(shape)
-      .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+      .background(MaterialTheme.colorScheme.surfaceContainerHighest),
   ) {
     val current = frame
     when {

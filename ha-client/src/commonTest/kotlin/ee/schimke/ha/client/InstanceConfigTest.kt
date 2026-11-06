@@ -22,7 +22,7 @@ class InstanceConfigTest {
           "external_url": "https://example.ui.nabu.casa",
           "unit_system": {"length": "mi", "mass": "lb", "temperature": "°F", "volume": "gal"}
         }
-        """
+        """,
       )
     assertEquals("°F", config.temperatureUnit)
     assertEquals("2026.10.2", config.version)

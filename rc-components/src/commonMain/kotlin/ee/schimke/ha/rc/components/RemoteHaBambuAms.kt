@@ -44,7 +44,7 @@ fun RemoteHaBambuAms(data: HaBambuAmsData, modifier: RemoteModifier = RemoteModi
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 14.rdp, vertical = 12.rdp)
+        .padding(horizontal = 14.rdp, vertical = 12.rdp),
   ) {
     RemoteColumn(
       modifier = RemoteModifier.fillMaxWidth(),
@@ -88,7 +88,7 @@ fun RemoteHaBambuSpool(data: HaBambuSpoolDetail, modifier: RemoteModifier = Remo
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 14.rdp, vertical = 12.rdp)
+        .padding(horizontal = 14.rdp, vertical = 12.rdp),
   ) {
     RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
       SpoolSwatch(data.slot, big = true, theme = theme)
@@ -185,7 +185,7 @@ private fun SpoolSwatch(slot: HaBambuSpoolSlot, big: Boolean, theme: RemoteHaThe
   ) {
     RemoteBox(
       modifier =
-        RemoteModifier.size(innerSize).clip(haControlShape(if (big) 12 else 8)).background(swatch)
+        RemoteModifier.size(innerSize).clip(haControlShape(if (big) 12 else 8)).background(swatch),
     )
   }
 }

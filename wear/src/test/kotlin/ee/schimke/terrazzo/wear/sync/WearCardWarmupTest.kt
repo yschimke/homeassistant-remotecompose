@@ -74,10 +74,10 @@ class WearCardWarmupTest {
           listOf(
             PinnedCard(card = second, cardKey = "b", orderIndex = 2),
             PinnedCard(card = first, cardKey = "a", orderIndex = 0),
-          )
+          ),
         ),
         PinnedSectionSet(
-          listOf(PinnedSection(cards = listOf(inSection, first), sectionKey = "s", orderIndex = 1))
+          listOf(PinnedSection(cards = listOf(inSection, first), sectionKey = "s", orderIndex = 1)),
         ),
       )
     // A card pinned on its own and in a section is warmed once.
@@ -121,10 +121,10 @@ class WearCardWarmupTest {
     val offline = WearOfflineStore(context)
     offline.writePinned(PinnedCardSet(listOf(PinnedCard(card = pinnedCard))))
     offline.writeValues(
-      LiveValues(mapOf("light.warmup_lamp" to EntityValue(state = "on")), capturedAtMs = 1L)
+      LiveValues(mapOf("light.warmup_lamp" to EntityValue(state = "on")), capturedAtMs = 1L),
     )
     offline.writeSettings(
-      ee.schimke.terrazzo.wearsync.proto.WearSettings(themeStyle = "TerrazzoMushroom")
+      ee.schimke.terrazzo.wearsync.proto.WearSettings(themeStyle = "TerrazzoMushroom"),
     )
     val before = neutralTemplateCaptures.get()
 
@@ -169,7 +169,7 @@ class WearCardWarmupTest {
           ThemeStyle.Material3,
           dark = true,
           cardStyle = ee.schimke.ha.rc.components.HaUberTheme.byId("lcd"),
-        )
+        ),
       )
     val bytes = CardDesignTemplates.capture(context, key).bytes
     val sha = ee.schimke.ha.client.design.Sha256.hex(bytes)
@@ -184,7 +184,7 @@ class WearCardWarmupTest {
           )
         },
         updatedAtMs = 1,
-      )
+      ),
     )
     val before = neutralTemplateCaptures.get()
     runBlocking { WearCardWarmup.run(context, syncFirst = false) }

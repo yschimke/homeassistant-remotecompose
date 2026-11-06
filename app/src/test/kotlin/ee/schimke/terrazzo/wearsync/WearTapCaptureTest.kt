@@ -42,7 +42,7 @@ class WearTapCaptureTest {
               state("light.kitchen", "on", "friendly_name" to "Kitchen"),
               state("sensor.temperature", "21.5", "unit_of_measurement" to "°C"),
             )
-            .associateBy { it.entityId }
+            .associateBy { it.entityId },
       )
     val actions = captureWearCardActions(context, card, snapshot, registry)
     assertTrue(HaAction.Toggle("light.kitchen") in actions, "captured: $actions")
@@ -70,8 +70,8 @@ class WearTapCaptureTest {
         states =
           mapOf(
             "alarm_control_panel.house" to
-              state("alarm_control_panel.house", "disarmed", "friendly_name" to "House")
-          )
+              state("alarm_control_panel.house", "disarmed", "friendly_name" to "House"),
+          ),
       )
     val actions = captureWearCardActions(context, card, snapshot, registry)
     val buttons = actions.filterIsInstance<HaAction.AlarmIntent>()

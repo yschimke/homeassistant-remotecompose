@@ -37,7 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PaintingStyle
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
@@ -72,8 +71,8 @@ import org.robolectric.annotation.GraphicsMode
  * the renders go to `build/wear-profile-capabilities/` and the table to
  * `build/wear-profile-capabilities.md` (see `docs/architecture/wear-container-design.md`).
  *
- * A dash path effect validates and plays too, but the player draws it solid, so a dashed stroke is
- * not one of the container's tools.
+ * A dashed stroke isn't one of the container's tools: the player drew a dash path effect solid, and
+ * Remote Compose 1.0.0-alpha23 no longer lets a paint carry one.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -116,8 +115,8 @@ class WearWidgetProfileCapabilitiesTest {
                   colors,
                   RemoteOffset(0f.rf, 0f.rf),
                   RemoteOffset(80f.rf, 80f.rf),
-                )
-              )
+                ),
+              ),
           )
         },
       "radial gradient bg" to
@@ -132,7 +131,7 @@ class WearWidgetProfileCapabilitiesTest {
         {
           RemoteBox(
             RemoteModifier.fillMaxSize()
-              .border(2.rdp, Color.Red.rc, RemoteRoundedCornerShape(12.rdp))
+              .border(2.rdp, Color.Red.rc, RemoteRoundedCornerShape(12.rdp)),
           )
         },
       "clip to named radius" to
@@ -141,7 +140,7 @@ class WearWidgetProfileCapabilitiesTest {
           RemoteBox(
             RemoteModifier.fillMaxSize()
               .clip(RemoteRoundedCornerShape(corner))
-              .background(Color.Red.rc)
+              .background(Color.Red.rc),
           )
         },
       "stroke round rect" to
@@ -156,7 +155,7 @@ class WearWidgetProfileCapabilitiesTest {
                 },
                 cornerRadius = RemoteOffset(20f.rf, 20f.rf),
               )
-            }
+            },
           )
         },
       "gradient stroke (shader on stroke)" to
@@ -169,23 +168,7 @@ class WearWidgetProfileCapabilitiesTest {
               }
               with(RemoteBrush.sweepGradient(colors)) { applyTo(paint, size) }
               drawRoundRect(paint, cornerRadius = RemoteOffset(20f.rf, 20f.rf))
-            }
-          )
-        },
-      "dashed stroke" to
-        {
-          RemoteBox(
-            RemoteModifier.fillMaxSize().drawWithContent {
-              drawRoundRect(
-                RemotePaint {
-                  style = PaintingStyle.Stroke
-                  strokeWidth = 3f.rf
-                  color = Color.Red.rc
-                  pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f))
-                },
-                cornerRadius = RemoteOffset(20f.rf, 20f.rf),
-              )
-            }
+            },
           )
         },
       "rect width from named float" to
@@ -197,7 +180,7 @@ class WearWidgetProfileCapabilitiesTest {
                 RemotePaint { color = Color.Red.rc },
                 size = RemoteSize(size.width * fraction, size.height),
               )
-            }
+            },
           )
         },
       "animated named float" to
@@ -209,7 +192,7 @@ class WearWidgetProfileCapabilitiesTest {
                 RemotePaint { color = Color.Red.rc },
                 size = RemoteSize(size.width * animated, size.height),
               )
-            }
+            },
           )
         },
       "arc" to
@@ -228,7 +211,7 @@ class WearWidgetProfileCapabilitiesTest {
                 RemoteOffset(0f.rf, 0f.rf),
                 size,
               )
-            }
+            },
           )
         },
       "line" to
@@ -243,7 +226,7 @@ class WearWidgetProfileCapabilitiesTest {
                 RemoteOffset(0f.rf, 0f.rf),
                 RemoteOffset(size.width, size.height),
               )
-            }
+            },
           )
         },
       "clipRect" to
@@ -256,7 +239,7 @@ class WearWidgetProfileCapabilitiesTest {
                   cornerRadius = RemoteOffset(20f.rf, 20f.rf),
                 )
               }
-            }
+            },
           )
         },
       "alpha color + translucent layers" to
@@ -264,7 +247,7 @@ class WearWidgetProfileCapabilitiesTest {
           RemoteBox(
             RemoteModifier.fillMaxSize()
               .background(Color.Red.copy(alpha = 0.3f).rc)
-              .background(Color.Blue.copy(alpha = 0.3f).rc)
+              .background(Color.Blue.copy(alpha = 0.3f).rc),
           )
         },
     )
@@ -283,7 +266,7 @@ class WearWidgetProfileCapabilitiesTest {
               RemotePaint { color = Color.Blue.rc },
               size = RemoteSize(size.width, size.height * level() / 100f.rf),
             )
-          }
+          },
         )
       }
     }
@@ -313,7 +296,7 @@ class WearWidgetProfileCapabilitiesTest {
     val dir = File("build/wear-profile-capabilities").also { it.mkdirs() }
     val report =
       StringBuilder(
-        "| Feature | validateFor violations | playable after adaptTo |\n|---|---|---|\n"
+        "| Feature | validateFor violations | playable after adaptTo |\n|---|---|---|\n",
       )
     for ((name, content) in probes) {
       val result = runCatching {
@@ -334,7 +317,7 @@ class WearWidgetProfileCapabilitiesTest {
         "| $name | ${violations.joinToString("; ").ifEmpty { "none" }} | $playable |"
       }
       report.append(
-        result.getOrElse { "| $name | capture failed: ${it.message?.take(120)} | false |" }
+        result.getOrElse { "| $name | capture failed: ${it.message?.take(120)} | false |" },
       )
       report.append('\n')
     }

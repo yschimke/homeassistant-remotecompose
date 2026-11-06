@@ -9,7 +9,7 @@ class KitchenLightStatesProvider : PreviewParameterProvider<Pair<String, HaSnaps
     sequenceOf(
       "on" to
         snapshot(
-          state("light.kitchen", "on", mapOf("friendly_name" to "Kitchen", "brightness" to "200"))
+          state("light.kitchen", "on", mapOf("friendly_name" to "Kitchen", "brightness" to "200")),
         ),
       "off" to snapshot(state("light.kitchen", "off", mapOf("friendly_name" to "Kitchen"))),
       "unavailable" to
@@ -27,7 +27,7 @@ class GarageCoverStatesProvider : PreviewParameterProvider<Pair<String, HaSnapsh
             "cover.garage",
             "closed",
             mapOf("friendly_name" to "Garage", "device_class" to "garage"),
-          )
+          ),
         ),
       "open" to
         snapshot(
@@ -35,7 +35,7 @@ class GarageCoverStatesProvider : PreviewParameterProvider<Pair<String, HaSnapsh
             "cover.garage",
             "open",
             mapOf("friendly_name" to "Garage", "device_class" to "garage"),
-          )
+          ),
         ),
       "opening" to
         snapshot(
@@ -43,7 +43,7 @@ class GarageCoverStatesProvider : PreviewParameterProvider<Pair<String, HaSnapsh
             "cover.garage",
             "opening",
             mapOf("friendly_name" to "Garage", "device_class" to "garage"),
-          )
+          ),
         ),
     )
 }

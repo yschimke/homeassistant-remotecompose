@@ -119,7 +119,7 @@ fun DashboardEditorScreen(
         EditorLoad.Ready(
           DashboardEditSession(config, reason) { expected, replacement ->
             session.compareAndReplaceDashboardConfig(urlPath, expected, replacement)
-          }
+          },
         )
       } catch (e: CancellationException) {
         throw e
@@ -172,7 +172,7 @@ fun DashboardEditorScreen(
               scope.launch {
                 snackbars.showSnackbar(
                   "The dashboard changed after the agent started. Ask it again to work from " +
-                    "this version."
+                    "this version.",
                 )
               }
           }
@@ -304,7 +304,7 @@ internal fun DashboardEditor(
       text = {
         Text(
           "The agent works from the dashboard saved in Home Assistant. Save your edits first to " +
-            "keep them."
+            "keep them.",
         )
       },
       confirmButton = {
@@ -312,7 +312,7 @@ internal fun DashboardEditor(
           onClick = {
             confirmAgent = null
             go()
-          }
+          },
         ) {
           Text("Discard and ask")
         }
@@ -424,7 +424,7 @@ internal fun sharePrompt(context: Context, prompt: String) {
   val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, prompt)
   runCatching {
     context.startActivity(
-      Intent.createChooser(send, "Share prompt").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+      Intent.createChooser(send, "Share prompt").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
     )
   }
     .onFailure { Log.w(TAG, "Nothing shares the prompt", it) }
@@ -433,7 +433,8 @@ internal fun sharePrompt(context: Context, prompt: String) {
 private fun openUrl(context: Context, url: String) {
   runCatching {
     context.startActivity(
-      Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+      Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
     )
   }
     .onFailure { Log.w(TAG, "Nothing opens $url", it) }

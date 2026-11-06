@@ -58,7 +58,7 @@ fun wearInstallPrompts(snackbars: SnackbarHostState): (() -> Unit)? {
       val sent = app.wearAppInstallHelper.installOnWatch(watch.nodeId)
       snackbars.showSnackbar(
         if (sent) "Continue on ${watch.displayName} to install"
-        else "Couldn't reach ${watch.displayName}"
+        else "Couldn't reach ${watch.displayName}",
       )
     }
   }

@@ -58,7 +58,7 @@ class TileContentTest {
           put("preset_mode", JsonPrimitive("none"))
           put("supported_features", JsonPrimitive(401))
           putAll(extra)
-        }
+        },
       ),
     )
 
@@ -230,7 +230,7 @@ class TileContentTest {
     // The colour is baked as the active accent, so it is a design property the template carries.
     val properties =
       assertNotNull(
-        tile.designProperties(card("sensor.req_ok") { put("color", "green") }, snapshot)
+        tile.designProperties(card("sensor.req_ok") { put("color", "green") }, snapshot),
       )
     assertTrue("color=green" in properties.shape.split(';'), properties.shape)
   }
@@ -265,8 +265,8 @@ class TileContentTest {
     val stepped =
       assertNotNull(
         TileContent.targetTemperature(
-          climate(target = 21.0, extra = arrayOf("target_temp_step" to JsonPrimitive(1)))
-        )
+          climate(target = 21.0, extra = arrayOf("target_temp_step" to JsonPrimitive(1))),
+        ),
       )
     assertEquals("21 °C", stepped.valueLabel)
     assertEquals(setTemperature(20.0), stepped.decrement)
@@ -295,8 +295,8 @@ class TileContentTest {
                 "min_temp" to JsonPrimitive(45),
                 "max_temp" to JsonPrimitive(95),
               ),
-          )
-        )
+          ),
+        ),
       )
     assertEquals("70 °F", f.valueLabel)
     assertEquals(setTemperature(71.0), f.increment)
@@ -318,7 +318,7 @@ class TileContentTest {
             extra = arrayOf("min_temp" to JsonPrimitive(45), "max_temp" to JsonPrimitive(95)),
           ),
           unitSystem = "°F",
-        )
+        ),
       )
     assertEquals("70 °F", f.valueLabel)
     assertEquals(setTemperature(71.0), f.increment)
@@ -357,7 +357,7 @@ class TileContentTest {
               add("off")
             }
           },
-        )
+        ),
       )
     assertEquals(listOf("Heat", "Off"), narrowed.options.map { it.label })
   }

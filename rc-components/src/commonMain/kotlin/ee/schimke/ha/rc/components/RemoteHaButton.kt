@@ -96,7 +96,7 @@ private fun toggleAccent(data: HaButtonData, look: HaEntityLook): RemoteColor {
   val isOnBinding = look.isOn ?: return look.accent
   val accentProgress = animateRemoteFloat(isOnBinding.select(1f.rf, 0f.rf), haMotion().effectsFast)
   return look.available(
-    tween(data.accent.themed().inactiveAccent, data.accent.themed().activeAccent, accentProgress)
+    tween(data.accent.themed().inactiveAccent, data.accent.themed().activeAccent, accentProgress),
   )
 }
 
@@ -132,7 +132,8 @@ fun RemoteHaButtonRow(data: HaButtonData, modifier: RemoteModifier = RemoteModif
       if (data.showIcon) ButtonIconChip(data, look, accent, RowChipDp, RowIconDp, press.fraction)
       RemoteBox(
         modifier =
-          RemoteModifier.weight(1f).padding(start = (if (data.showIcon) 10 else 0).rdp, end = 8.rdp)
+          RemoteModifier.weight(1f)
+            .padding(start = (if (data.showIcon) 10 else 0).rdp, end = 8.rdp),
       ) {
         RemoteText(
           text = entityName(data.entityId, data.name),
@@ -294,7 +295,7 @@ private fun ButtonBody(
       if (data.showIcon) ButtonIconChip(data, look, accent, chipDp, iconDp, press.fraction)
       if (data.showName) {
         RemoteBox(
-          modifier = RemoteModifier.padding(top = (if (data.showIcon) namePadDp else 0).rdp)
+          modifier = RemoteModifier.padding(top = (if (data.showIcon) namePadDp else 0).rdp),
         ) {
           RemoteText(
             text = entityName(data.entityId, data.name),
@@ -363,7 +364,7 @@ private fun ButtonIcon(
       if (data.showName && !iconOnly) null else entityName(data.entityId, data.name),
     modifier =
       RemoteModifier.then(
-          if (console) RemoteModifier.padding(end = (chipDp * 0.28f).rdp) else RemoteModifier
+          if (console) RemoteModifier.padding(end = (chipDp * 0.28f).rdp) else RemoteModifier,
         )
         .size((if (console) iconDp - 6 else iconDp).rdp),
   )

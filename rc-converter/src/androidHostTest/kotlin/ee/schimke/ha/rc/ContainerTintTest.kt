@@ -26,8 +26,8 @@ class ContainerTintTest {
                 id,
                 state,
                 JsonObject(attrs.associate { (k, v) -> k to JsonPrimitive(v) }),
-              )
-          )
+              ),
+          ),
       ),
     )
 

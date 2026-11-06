@@ -20,7 +20,7 @@ class DashboardAgentDraftTest {
   private val draftConfig =
     Json.parseToJsonElement(
         """{"views":[{"type":"sections","sections":[{"type":"grid",
-          "cards":[{"type":"tile","entity":"cover.garage","name":"Garage Door"}]}]}]}"""
+          "cards":[{"type":"tile","entity":"cover.garage","name":"Garage Door"}]}]}]}""",
       )
       .jsonObject
 
@@ -87,7 +87,7 @@ class DashboardAgentDraftTest {
           urlPath = "security",
           request = "Adopt the garage door design",
           drafts = listOf(AgentEditSession.Draft("d1", "Garage tile", config = draftConfig)),
-        )
+        ),
       )
     val opened = mutableListOf<String>()
     show(edits, opened)

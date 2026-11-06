@@ -54,7 +54,7 @@ class WearAmbientTest {
 
       values.value = 2 // interactive: shown
       enter(
-        AmbientMode.Ambient(isBurnInProtectionRequired = false, isLowBitAmbientSupported = false)
+        AmbientMode.Ambient(isBurnInProtectionRequired = false, isLowBitAmbientSupported = false),
       )
       values.value = 3 // ambient: held
       values.value = 4 // held, replaced

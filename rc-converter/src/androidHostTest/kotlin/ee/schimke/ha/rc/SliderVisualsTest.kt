@@ -64,7 +64,7 @@ class SliderVisualsTest {
           "friendly_name" to JsonPrimitive("Kitchen"),
           "brightness" to JsonPrimitive(158),
           "supported_color_modes" to JsonArray(listOf(JsonPrimitive("brightness"))),
-        )
+        ),
       ),
     )
   private val blind =
@@ -76,7 +76,7 @@ class SliderVisualsTest {
           "friendly_name" to JsonPrimitive("Blind"),
           "current_position" to JsonPrimitive(40),
           "supported_features" to JsonPrimitive(15),
-        )
+        ),
       ),
     )
   private val snapshot = HaSnapshot(states = listOf(light, blind).associateBy { it.entityId })

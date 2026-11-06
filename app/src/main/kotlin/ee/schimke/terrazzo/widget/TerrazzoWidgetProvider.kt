@@ -308,9 +308,9 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
       if (baked != null) {
         RemoteViews(
             RemoteViews.DrawInstructions.Builder(
-                listOf(platformWidgetDocument(baked.bytes, android16Wire(captureProfile)))
+                listOf(platformWidgetDocument(baked.bytes, android16Wire(captureProfile))),
               )
-              .build()
+              .build(),
           )
           .also { views ->
             baked.actions
@@ -398,9 +398,9 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     val remoteViews =
       RemoteViews(
         RemoteViews.DrawInstructions.Builder(
-            listOf(platformWidgetDocument(captured.bytes, android16Wire(captureProfile)))
+            listOf(platformWidgetDocument(captured.bytes, android16Wire(captureProfile))),
           )
-          .build()
+          .build(),
       )
     captured.actions
       .filterKeys { widgetId != AppWidgetManager.INVALID_APPWIDGET_ID }

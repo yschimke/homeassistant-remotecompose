@@ -127,7 +127,7 @@ class WearDirectAccessTest {
               throw javax.crypto.AEADBadTagException()
           },
         )
-        .read()
+        .read(),
     )
   }
 
@@ -157,7 +157,7 @@ class WearDirectAccessTest {
       LiveValues(
         values = mapOf("light.kitchen" to EntityValue(state = "on")),
         capturedAtMs = clock - WearDirectAccess.STALE_AFTER_MS,
-      )
+      ),
     )
     answer = { mapOf("sensor.outside" to state("sensor.outside", "12.5")) }
     val values = assertNotNull(direct.refresh(listOf(card), signedIn))
@@ -181,7 +181,7 @@ class WearDirectAccessTest {
         RcDocument(
           RcHeader(RcVersion(1, 0, 0)),
           listOf(RcNamedVariable(100, RcNamedVariable.FLOAT_TYPE, "HA:sun.sun.elevation")),
-        )
+        ),
       )
     val sha = Sha256.hex(bytes)
     offline.writeDesign(WearDesignBlob(sha, bytes))
@@ -197,9 +197,9 @@ class WearDirectAccessTest {
                 mapOf(
                   "elevation" to JsonPrimitive(-12.5),
                   "azimuth" to JsonPrimitive(220),
-                )
+                ),
               ),
-            )
+            ),
         )
       }
       val values = assertNotNull(direct.refresh(listOf(card), signedIn))
@@ -243,7 +243,7 @@ class WearDirectAccessTest {
       LiveValues(
         values = mapOf("sensor.outside" to EntityValue("9"), "light.kitchen" to EntityValue("on")),
         capturedAtMs = clock - WearDirectAccess.STALE_AFTER_MS,
-      )
+      ),
     )
     // Home Assistant answers 404 for sensor.outside: HaEntityStates leaves it out.
     answer = { emptyMap() }
@@ -263,7 +263,7 @@ class WearDirectAccessTest {
   fun freshPhoneValuesAreNotReadAgain() = runTest {
     store.write(access)
     offline.writeValues(
-      LiveValues(values = mapOf("sensor.outside" to EntityValue("3")), capturedAtMs = clock - 1000)
+      LiveValues(values = mapOf("sensor.outside" to EntityValue("3")), capturedAtMs = clock - 1000),
     )
     assertNull(direct.refresh(listOf(card), signedIn))
     assertTrue(fetched.isEmpty())
@@ -332,7 +332,7 @@ class WearDirectAccessTest {
         ids,
         now,
         null,
-      )
+      ),
     )
     assertFalse(needsDirectValues(null, ids, now, lastDirectAtMs = now - 1))
     assertFalse(needsDirectValues(null, emptySet(), now, null), "no cards, nothing to read")

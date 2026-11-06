@@ -21,7 +21,7 @@ class DashboardAgentRoutesTest {
             put("request", "Tidy it")
             put("dashboard", baseline)
           }
-            .toString()
+            .toString(),
         )
       }
     assertEquals(HttpStatusCode.OK, create.status)
@@ -55,7 +55,7 @@ class DashboardAgentRoutesTest {
             put("dashboard", draft)
             put("summary", "Garden")
           }
-            .toString()
+            .toString(),
         )
       }
     assertEquals(HttpStatusCode.NotFound, submit(owner, 0, changed).status)
@@ -104,7 +104,7 @@ class DashboardAgentRoutesTest {
             put("request", "Again")
             put("dashboard", baseline)
           }
-            .toString()
+            .toString(),
         )
       }
     val expiringAgent =

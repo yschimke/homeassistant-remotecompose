@@ -131,7 +131,7 @@ class UserDesignStore(
       index.copy(
         made =
           others +
-            (mine + MadeDesign(designId, login, cardType, clock(), handoff)).takeLast(MAX_MADE)
+            (mine + MadeDesign(designId, login, cardType, clock(), handoff)).takeLast(MAX_MADE),
       )
     write(next)
   }
@@ -255,7 +255,7 @@ class UserDesignStore(
         revision = index.revision + 1,
         designs = designs,
         sharedRevision = sharedRevision + if (sharedChanged) 1 else 0,
-      )
+      ),
     )
   }
 

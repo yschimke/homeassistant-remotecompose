@@ -108,7 +108,7 @@ class UiBuilderDesignCompilerTest {
               "slots": {}}
           }
         }
-        """
+        """,
       )
       .jsonObject
 
@@ -161,13 +161,13 @@ class UiBuilderDesignCompilerTest {
   fun illustratedSceneKeepsItsAspectAndDoorEdgesAtNarrowCardWidths() {
     val wrapper =
       Json.parseToJsonElement(
-        """{"id":"card-root","componentId":"ha-cards/dashboard-card","properties":{},"modifiers":[],"slots":{"content":["stage"]}}"""
+        """{"id":"card-root","componentId":"ha-cards/dashboard-card","properties":{},"modifiers":[],"slots":{"content":["stage"]}}""",
       )
     val wrapped =
       JsonObject(
         document +
           ("roots" to JsonArray(listOf(JsonPrimitive("card-root")))) +
-          ("nodes" to JsonObject(document.getValue("nodes").jsonObject + ("card-root" to wrapper)))
+          ("nodes" to JsonObject(document.getValue("nodes").jsonObject + ("card-root" to wrapper))),
       )
     for (source in listOf(document, wrapped)) {
       val bytes = compiler.compile(source, assets, key)
@@ -231,7 +231,7 @@ class UiBuilderDesignCompilerTest {
       JsonObject(
         node +
           ("slots" to
-            JsonObject(mapOf("children" to JsonArray(children.map { JsonPrimitive(it) }))))
+            JsonObject(mapOf("children" to JsonArray(children.map { JsonPrimitive(it) })))),
       )
     val tint =
       Json.parseToJsonElement(
@@ -241,12 +241,12 @@ class UiBuilderDesignCompilerTest {
               door.getValue("modifiers").jsonArray +
                 Json.parseToJsonElement(
                     """[{"type": "alpha", "alpha": 0.5},
-                    {"type": "background", "color": {"type": "colorToken", "value": "accent"}}]"""
+                    {"type": "background", "color": {"type": "colorToken", "value": "accent"}}]""",
                   )
-                  .jsonArray
+                  .jsonArray,
             )
           }}
-          """
+          """,
         )
         .jsonObject
     val night =
@@ -255,7 +255,7 @@ class UiBuilderDesignCompilerTest {
           {"id": "night", "componentId": "layout/box", "modifiers": [{"type": "fillMaxSize"},
             {"type": "alpha", "alpha": 0.5},
             {"type": "background", "color": {"type": "colorToken", "value": "night"}}]}
-          """
+          """,
         )
         .jsonObject
     JsonObject(
@@ -268,8 +268,8 @@ class UiBuilderDesignCompilerTest {
                 "stage" to withChildren(stage, listOf("inside", "door-well", "night")),
                 "tint" to tint,
                 "night" to night,
-              )
-          ))
+              ),
+          )),
     )
   }
 
@@ -317,7 +317,7 @@ class UiBuilderDesignCompilerTest {
                "fontSize": {"type": "expr", "op": "select", "args": [
                  {"type": "state", "variable": "cover.s0.is_on"},
                  {"type": "float", "value": 20}, {"type": "float", "value": 14}]}}}}}
-          """
+          """,
         )
         .jsonObject
     // The text is live; its size would be captured as one value, so it is refused.
@@ -332,10 +332,10 @@ class UiBuilderDesignCompilerTest {
     val bitmap = Bitmap().apply { allocN32Pixels(width, height) }
     val random = java.util.Random(7)
     bitmap.installPixels(
-      ByteArray(width * height * 4) { i -> if (i % 4 == 3) -1 else random.nextInt(256).toByte() }
+      ByteArray(width * height * 4) { i -> if (i % 4 == 3) -1 else random.nextInt(256).toByte() },
     )
     return requireNotNull(
-        org.jetbrains.skia.Image.makeFromBitmap(bitmap).encodeToData(EncodedImageFormat.PNG)
+        org.jetbrains.skia.Image.makeFromBitmap(bitmap).encodeToData(EncodedImageFormat.PNG),
       )
       .bytes
   }
@@ -373,11 +373,11 @@ class UiBuilderDesignCompilerTest {
     val modifiers =
       Json.parseToJsonElement(
         """[{"type": "fillMaxSize"},
-            {"type": "remoteCall", "name": "graphicsLayer", "args": $layer}]"""
+            {"type": "remoteCall", "name": "graphicsLayer", "args": $layer}]""",
       )
     return JsonObject(
       document +
-        ("nodes" to JsonObject(nodes + ("door" to JsonObject(door + ("modifiers" to modifiers)))))
+        ("nodes" to JsonObject(nodes + ("door" to JsonObject(door + ("modifiers" to modifiers))))),
     )
   }
 
@@ -389,7 +389,7 @@ class UiBuilderDesignCompilerTest {
               {"type": "state", "variable": "cover.s0.is_on"},
               {"type": "float", "value": 86}, {"type": "float", "value": 0}]},
             "transformOriginY": {"type": "float", "value": 0},
-            "cameraDistance": {"type": "float", "value": 32}}"""
+            "cameraDistance": {"type": "float", "value": 32}}""",
       )
     assertEquals(emptyList(), compiler.problems(door, assets.keys))
     val bytes = compiler.compile(door, assets, key)
@@ -404,7 +404,7 @@ class UiBuilderDesignCompilerTest {
     assertTrue(compiler.problems(unknownArgument, assets.keys).any { "renderEffect" in it })
     val otherCall =
       Json.parseToJsonElement(
-          tilted("{}").toString().replace("\"graphicsLayer\"", "\"drawWithContent\"")
+          tilted("{}").toString().replace("\"graphicsLayer\"", "\"drawWithContent\""),
         )
         .jsonObject
     assertTrue(compiler.problems(otherCall, assets.keys).any { "drawWithContent" in it })
@@ -418,12 +418,12 @@ class UiBuilderDesignCompilerTest {
       Json.parseToJsonElement(
           """{"id": "scrim", "componentId": "layout/box", "modifiers": [{"type": "fillMaxSize"},
               {"type": "alpha", "alpha": $alpha},
-              {"type": "background", "color": {"type": "color", "value": "#FF000000"}}]}"""
+              {"type": "background", "color": {"type": "color", "value": "#FF000000"}}]}""",
         )
         .jsonObject
     val children =
       JsonArray(
-        stage.getValue("slots").jsonObject.getValue("children").jsonArray + JsonPrimitive("scrim")
+        stage.getValue("slots").jsonObject.getValue("children").jsonArray + JsonPrimitive("scrim"),
       )
     return JsonObject(
       document +
@@ -434,8 +434,8 @@ class UiBuilderDesignCompilerTest {
                 "stage" to
                   JsonObject(stage + ("slots" to JsonObject(mapOf("children" to children)))),
                 "scrim" to scrim,
-              )
-          ))
+              ),
+          )),
     )
   }
 
@@ -465,7 +465,7 @@ class UiBuilderDesignCompilerTest {
         """{"type": "expr", "op": "mul", "args": [{"type": "float", "value": 0.8},
              {"type": "expr", "op": "sub", "args": [{"type": "float", "value": 1},
                {"type": "expr", "op": "smoothstep", "args": [{"type": "float", "value": -6},
-                 {"type": "float", "value": 6}, {"type": "state", "variable": "$elevation"}]}]}]}"""
+                 {"type": "float", "value": 6}, {"type": "state", "variable": "$elevation"}]}]}]}""",
       )
     val design =
       JsonObject(
@@ -476,9 +476,9 @@ class UiBuilderDesignCompilerTest {
                 (elevation to
                   Json.parseToJsonElement(
                     """{"type": "value", "valueType": "float", "nullable": false,
-                        "initialValue": 25, "persistence": "design"}"""
-                  ))
-            ))
+                        "initialValue": 25, "persistence": "design"}""",
+                  )),
+            )),
       )
     assertEquals(emptyList(), compiler.problems(design, assets.keys))
     val bytes = compiler.compile(design, assets, key)
@@ -496,8 +496,9 @@ class UiBuilderDesignCompilerTest {
           ("stateVariables" to
             JsonObject(
               design.getValue("stateVariables").jsonObject +
-                ("SYSTEM:clock" to design.getValue("stateVariables").jsonObject.getValue(elevation))
-            ))
+                ("SYSTEM:clock" to
+                  design.getValue("stateVariables").jsonObject.getValue(elevation)),
+            )),
       )
     assertTrue(compiler.problems(foreign, assets.keys).any { "SYSTEM:clock" in it })
     // Pushed the way the app pushes them: every shared value, from the snapshot's sun.sun.
@@ -512,7 +513,7 @@ class UiBuilderDesignCompilerTest {
         )
       val shared =
         ee.schimke.ha.design.HaSharedValues.bindings(
-          ee.schimke.ha.model.HaSnapshot(states = mapOf("sun.sun" to sun))
+          ee.schimke.ha.model.HaSnapshot(states = mapOf("sun.sun" to sun)),
         )
       val values =
         shared.floats.mapValues { RcNamedValue.FloatValue(it.value) } +
@@ -567,10 +568,10 @@ class UiBuilderDesignCompilerTest {
     assertTrue(
       compiler.problems(withScrim(e("add", f(1.0), f(2.0), f(3.0))), assets.keys).any {
         "takes 2" in it
-      }
+      },
     )
     assertTrue(
-      compiler.problems(withScrim(sys("lunarPhase")), assets.keys).any { "lunarPhase" in it }
+      compiler.problems(withScrim(sys("lunarPhase")), assets.keys).any { "lunarPhase" in it },
     )
   }
 
@@ -578,7 +579,7 @@ class UiBuilderDesignCompilerTest {
   fun anUnknownColourTokenIsRefused() {
     val unknown =
       Json.parseToJsonElement(
-          adaptive.toString().replace("\"value\":\"accent\"", "\"value\":\"brandPink\"")
+          adaptive.toString().replace("\"value\":\"accent\"", "\"value\":\"brandPink\""),
         )
         .jsonObject
     assertTrue(compiler.problems(unknown, assets.keys).any { "brandPink" in it })
@@ -594,9 +595,9 @@ class UiBuilderDesignCompilerTest {
               document.getValue("nodes").jsonObject +
                 ("stage" to
                   Json.parseToJsonElement(
-                    """{"id": "stage", "componentId": "m3/button", "slots": {}}"""
-                  ))
-            ))
+                    """{"id": "stage", "componentId": "m3/button", "slots": {}}""",
+                  )),
+            )),
       )
     val problems = compiler.problems(unknown, assets.keys)
     assertEquals(listOf("stage: `m3/button` isn't drawn here yet"), problems.take(1))

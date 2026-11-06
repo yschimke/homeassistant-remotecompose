@@ -63,12 +63,12 @@ private const val SAMPLE_PICTURE_BITMAP_PX = 512
 
 private val pictureSampleCard: CardConfig =
   card(
-    """{"type":"picture-entity","entity":"camera.preview_cam","name":"Preview cam","show_name":true,"show_state":true}"""
+    """{"type":"picture-entity","entity":"camera.preview_cam","name":"Preview cam","show_name":true,"show_state":true}""",
   )
 
 private val pictureSampleCardNoEntity: CardConfig =
   card(
-    """{"type":"picture-entity","entity":"camera.offline_cam","name":"Offline cam","show_name":true,"show_state":false}"""
+    """{"type":"picture-entity","entity":"camera.offline_cam","name":"Offline cam","show_name":true,"show_state":false}""",
   )
 
 private const val SAMPLE_PICTURE_URL = "/api/camera_proxy/camera.preview_cam?token=preview-token"
@@ -86,10 +86,10 @@ private val pictureSampleSnapshotWithImage: HaSnapshot =
                 mapOf(
                   "friendly_name" to JsonPrimitive("Preview cam"),
                   "entity_picture" to JsonPrimitive(SAMPLE_PICTURE_URL),
-                )
+                ),
               ),
-          )
-      )
+          ),
+      ),
   )
 
 private val pictureSampleSnapshotNoImage: HaSnapshot =
@@ -101,8 +101,8 @@ private val pictureSampleSnapshotNoImage: HaSnapshot =
             entityId = "camera.offline_cam",
             state = "idle",
             attributes = JsonObject(mapOf("friendly_name" to JsonPrimitive("Offline cam"))),
-          )
-      )
+          ),
+      ),
   )
 
 /** Visible test bitmap — yellow disc on blue. */
@@ -185,7 +185,7 @@ fun PictureEntity_WidgetMode_Light() {
 /** A door sensor drawn over the camera watching the door (`camera_image`). */
 private val pictureCameraImageCard: CardConfig =
   card(
-    """{"type":"picture-entity","entity":"binary_sensor.front_door","camera_image":"camera.preview_cam","show_name":true,"show_state":true}"""
+    """{"type":"picture-entity","entity":"binary_sensor.front_door","camera_image":"camera.preview_cam","show_name":true,"show_state":true}""",
   )
 
 private val pictureCameraImageSnapshot: HaSnapshot =
@@ -201,9 +201,9 @@ private val pictureCameraImageSnapshot: HaSnapshot =
                 mapOf(
                   "friendly_name" to JsonPrimitive("Front door"),
                   "device_class" to JsonPrimitive("door"),
-                )
+                ),
               ),
-          ))
+          )),
   )
 
 @Preview(

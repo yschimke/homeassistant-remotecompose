@@ -65,7 +65,7 @@ class CardStudioTest {
       val response =
         client.post("/api/studio/seed") {
           setBody(
-            """{"card":{"type":"entities","title":"Kitchen","entities":["sensor.s0"]},"states":{"sensor.s0":{"state":"21","attributes":{"friendly_name":"<script>bad</script>","unit_of_measurement":"°C"}}}}"""
+            """{"card":{"type":"entities","title":"Kitchen","entities":["sensor.s0"]},"states":{"sensor.s0":{"state":"21","attributes":{"friendly_name":"<script>bad</script>","unit_of_measurement":"°C"}}}}""",
           )
         }
       assertEquals(HttpStatusCode.OK, response.status)
@@ -77,7 +77,7 @@ class CardStudioTest {
               put("instruction", "Make it brighter")
               put("document", document)
             }
-              .toString()
+              .toString(),
           )
         }
       assertEquals(HttpStatusCode.OK, session.status)
@@ -105,7 +105,7 @@ class CardStudioTest {
         client.post("/api/studio/agent-mcp") {
           header(HttpHeaders.Authorization, "Bearer $agent")
           setBody(
-            """{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"get_card_request","arguments":{}}}"""
+            """{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"get_card_request","arguments":{}}}""",
           )
         }
       assertTrue(mcpRead.bodyAsText().contains("Make it brighter"))
@@ -114,7 +114,7 @@ class CardStudioTest {
         client.post("/api/studio/agent-mcp") {
           header(HttpHeaders.Authorization, "Bearer $agent")
           setBody(
-            """{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"put_card_asset","arguments":{"key":"door","imageBase64":"iVBORw0KGgoB"}}}"""
+            """{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"put_card_asset","arguments":{"key":"door","imageBase64":"iVBORw0KGgoB"}}}""",
           )
         }
       assertEquals(HttpStatusCode.OK, attach.status)
@@ -149,7 +149,7 @@ class CardStudioTest {
               put("revision", 0)
               put("document", draft)
             }
-              .toString()
+              .toString(),
           )
         }
       assertEquals(HttpStatusCode.OK, submitted.status)
@@ -169,7 +169,7 @@ class CardStudioTest {
                 }
               }
             }
-              .toString()
+              .toString(),
           )
         }
       assertTrue(stale.bodyAsText().contains("\"isError\":true"))
@@ -212,8 +212,8 @@ class CardStudioTest {
       val page = client.get(path)
       assertTrue(
         page.headers["Content-Security-Policy"]!!.contains(
-          "form-action 'self' https://builder.test;"
-        )
+          "form-action 'self' https://builder.test;",
+        ),
       )
       assertEquals("no-store", page.headers[HttpHeaders.CacheControl])
       assertFalse(page.bodyAsText().contains("<script>bad</script>"))
@@ -237,7 +237,7 @@ class CardStudioTest {
       assertNotEquals(document["id"], created!!["id"])
       assertEquals(
         Json.parseToJsonElement(
-          """{"systemId":"ha-cards","catalogRevision":"sha256:published","capabilityDigest":"candidate","nativeRuntimeId":"published-runtime"}"""
+          """{"systemId":"ha-cards","catalogRevision":"sha256:published","capabilityDigest":"candidate","nativeRuntimeId":"published-runtime"}""",
         ),
         created!!["catalogPin"],
       )
@@ -245,7 +245,7 @@ class CardStudioTest {
       assertEquals(document["stateVariables"], created!!["stateVariables"])
       assertNull(created!!["template"])
       assertTrue(
-        opened.headers[HttpHeaders.Location]!!.startsWith("https://builder.test/ui-builder/card-")
+        opened.headers[HttpHeaders.Location]!!.startsWith("https://builder.test/ui-builder/card-"),
       )
       assertEquals(
         HttpStatusCode.Gone,

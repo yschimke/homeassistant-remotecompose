@@ -83,8 +83,8 @@ class WearSliderTest {
                 put("brightness", 128)
                 put("supported_color_modes", JsonArray(listOf(JsonPrimitive("brightness"))))
               },
-            )
-        )
+            ),
+        ),
     )
 
   private val w = 200

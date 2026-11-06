@@ -1,6 +1,6 @@
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.action.Action
+import androidx.compose.remote.creation.compose.action.RemoteAction
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
@@ -28,7 +28,7 @@ const val MinTouchTargetDp: Int = 48
 fun RemoteHaTouchTarget(
   widthDp: Int,
   heightDp: Int,
-  action: Action?,
+  action: RemoteAction?,
   label: RemoteString?,
   modifier: RemoteModifier = RemoteModifier,
   content: @Composable @RemoteComposable () -> Unit,

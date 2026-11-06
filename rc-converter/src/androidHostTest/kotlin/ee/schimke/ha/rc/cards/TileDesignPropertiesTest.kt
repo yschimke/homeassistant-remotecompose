@@ -98,8 +98,8 @@ class TileDesignPropertiesTest {
             string("domain", "sensor")
             string("device_class", "temperature")
             string("icon", "mdi:thermometer")
-          }
-        )
+          },
+        ),
       )
     assertEquals("sensor.s0", input.card.raw["entity"]?.jsonPrimitive?.content)
     val entity = assertNotNull(input.snapshot.states["sensor.s0"])
@@ -126,7 +126,7 @@ class TileDesignPropertiesTest {
     assertEquals("domain=sensor", tile.designProperties(card("sensor.count"), plain)?.shape)
     val energy =
       snapshotOf(
-        state("sensor.meter", "12", "device_class" to "energy", "unit_of_measurement" to "kWh")
+        state("sensor.meter", "12", "device_class" to "energy", "unit_of_measurement" to "kWh"),
       )
     assertEquals(
       "device_class=energy;domain=sensor",

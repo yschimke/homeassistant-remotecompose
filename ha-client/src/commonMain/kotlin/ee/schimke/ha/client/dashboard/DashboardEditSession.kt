@@ -54,5 +54,5 @@ class DashboardEditSession(
 
 class DashboardConflictException(
   message: String =
-    "This dashboard changed in Home Assistant. Export your draft, reload the dashboard and reapply your changes."
+    "This dashboard changed in Home Assistant. Export your draft, reload the dashboard and reapply your changes.",
 ) : IllegalStateException(message)

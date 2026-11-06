@@ -98,7 +98,7 @@ object CardDesignTemplates {
         type = "tile",
         raw =
           JsonObject(
-            mapOf("type" to JsonPrimitive("tile"), "entity" to JsonPrimitive(entry.entityId))
+            mapOf("type" to JsonPrimitive("tile"), "entity" to JsonPrimitive(entry.entityId)),
           ),
       )
     return keyFor(tile, snapshot, style, dark, registry, cardStyle = cardStyle)
@@ -177,7 +177,7 @@ object CardDesignTemplates {
         List(CardDesignSlots.slotEntities(card)?.size ?: 0) { HaAction.None }
       } else {
         listOfNotNull(
-          entityId?.let { tapActionOf(card, card.raw["tap_action"] as? JsonObject, it) }
+          entityId?.let { tapActionOf(card, card.raw["tap_action"] as? JsonObject, it) },
         )
       }
     return CardTemplatePlayback(
@@ -361,7 +361,7 @@ object CardDesignTemplates {
         RcDocumentCodec.encode(
           RcDocumentCodec.decode(template, RcWireLimits())
             .hardcodeDensity(density, fontScale)
-            .optimize()
+            .optimize(),
         )
       }
         .getOrNull()
@@ -508,6 +508,6 @@ internal fun CardConfig.ofType(type: String): CardConfig =
     type = type,
     raw =
       kotlinx.serialization.json.JsonObject(
-        raw + ("type" to kotlinx.serialization.json.JsonPrimitive(type))
+        raw + ("type" to kotlinx.serialization.json.JsonPrimitive(type)),
       ),
   )

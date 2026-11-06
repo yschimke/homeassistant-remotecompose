@@ -32,7 +32,7 @@ class LiveCamerasTest {
           mapOf(
             "camera.yard" to camera("camera.yard", "/api/camera_proxy/camera.yard?token=t"),
             "camera.door" to camera("camera.door", "/api/camera_proxy/camera.door?token=t"),
-          )
+          ),
       )
 
     val framed = snapshot.withLiveFrames(mapOf("camera.yard" to "3"))
@@ -92,13 +92,13 @@ class LiveCamerasTest {
                         // Nested in a stack.
                         card(
                           """{"type":"vertical-stack","cards":[{"type":"picture-entity",""" +
-                            """"entity":"binary_sensor.door","camera_image":"camera.door"}]}"""
+                            """"entity":"binary_sensor.door","camera_image":"camera.door"}]}""",
                         ),
-                      )
-                  )
-                )
-            )
-          )
+                      ),
+                  ),
+                ),
+            ),
+          ),
       )
 
     assertEquals("camera.door", pairedCamera(dashboard, "binary_sensor.door"))
@@ -112,11 +112,11 @@ class LiveCamerasTest {
                 listOf(
                   card(
                     """{"type":"picture-glance","camera_image":"camera.yard",""" +
-                      """"entities":["light.yard",{"entity":"lock.gate"}]}"""
-                  )
-                )
-            )
-          )
+                      """"entities":["light.yard",{"entity":"lock.gate"}]}""",
+                  ),
+                ),
+            ),
+          ),
       )
     assertEquals("camera.yard", pairedCamera(glance, "light.yard"))
     assertEquals("camera.yard", pairedCamera(glance, "lock.gate"))

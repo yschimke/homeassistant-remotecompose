@@ -100,8 +100,8 @@ class HaDiscovery(context: Context) {
                   name = resolved.serviceName,
                   baseUrl = baseUrl,
                   version = attrs["version"]?.decode(),
-                )
-              )
+                ),
+              ),
             )
           }
         },

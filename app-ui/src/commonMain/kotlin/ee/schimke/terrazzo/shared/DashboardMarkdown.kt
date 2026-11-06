@@ -67,7 +67,7 @@ internal fun markdownInline(line: String): AnnotatedString = buildAnnotatedStrin
         LinkAnnotation.Url(
           target,
           TextLinkStyles(SpanStyle(textDecoration = TextDecoration.Underline)),
-        )
+        ),
       ) {
         appendBold(text)
       }

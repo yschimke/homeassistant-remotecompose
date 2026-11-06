@@ -10,7 +10,7 @@ class DemoActionTest {
       "entities",
       raw =
         Json.parseToJsonElement(
-            """{"entities":["sensor.demo_temperature","light.demo_lamp","switch.demo_coffee"]}"""
+            """{"entities":["sensor.demo_temperature","light.demo_lamp","switch.demo_coffee"]}""",
           )
           .jsonObject,
     )

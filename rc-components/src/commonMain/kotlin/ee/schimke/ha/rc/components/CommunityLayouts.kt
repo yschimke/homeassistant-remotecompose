@@ -42,7 +42,7 @@ internal fun communityFrame(family: HaVisualFamily, ink: RemoteColor): RemoteMod
       HaVisualFamily.Catppuccin -> RemoteModifier.padding(top = 6.rdp)
       HaVisualFamily.Obsidian -> RemoteModifier.padding(start = 8.rdp)
       else -> RemoteModifier
-    }
+    },
   )
 }
 
@@ -109,7 +109,7 @@ internal fun CommunityReadingLayout(
             RemoteModifier.size((if (small) 40 else 64).rdp)
               .clip(RemoteRoundedCornerShape((if (small) 20 else 32).rdp))
               .background(theme.placeholderBackground)
-              .padding(8.rdp)
+              .padding(8.rdp),
           ) {
             meter(RemoteModifier.fillMaxSize())
           }
@@ -130,7 +130,7 @@ internal fun CommunityReadingLayout(
             RemoteBox(
               RemoteModifier.clip(RemoteRoundedCornerShape(28.rdp))
                 .background(theme.placeholderBackground)
-                .padding(6.rdp)
+                .padding(6.rdp),
             ) {
               reading()
             }
@@ -148,7 +148,7 @@ internal fun CommunityReadingLayout(
             RemoteBox(
               RemoteModifier.clip(RemoteRoundedCornerShape(28.rdp))
                 .background(theme.placeholderBackground)
-                .padding(10.rdp)
+                .padding(10.rdp),
             ) {
               reading()
             }
@@ -183,7 +183,7 @@ internal fun CommunityReadingLayout(
               .fillMaxHeight()
               .clip(RemoteRoundedCornerShape(24.rdp))
               .background(theme.placeholderBackground)
-              .padding(6.rdp)
+              .padding(6.rdp),
           ) {
             RemoteHaBarMeter(fraction, color, RemoteModifier.fillMaxSize(), vertical = true)
           }
@@ -193,7 +193,7 @@ internal fun CommunityReadingLayout(
         RemoteBox(
           RemoteModifier.clip(RemoteRoundedCornerShape(5.rdp))
             .background(theme.placeholderBackground)
-            .padding(horizontal = 8.rdp, vertical = 3.rdp)
+            .padding(horizontal = 8.rdp, vertical = 3.rdp),
         ) {
           label()
         }
@@ -264,7 +264,7 @@ internal fun CommunityReadingLayout(
             RemoteModifier.width((if (small) 28 else 40).rdp)
               .fillMaxHeight()
               .background(theme.dashboardBackground)
-              .padding(5.rdp)
+              .padding(5.rdp),
           ) {
             RemoteHaBarMeter(fraction, color, RemoteModifier.fillMaxSize(), vertical = true)
           }

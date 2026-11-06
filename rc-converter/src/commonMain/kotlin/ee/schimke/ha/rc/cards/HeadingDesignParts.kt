@@ -35,8 +35,8 @@ object HeadingDesignParts {
     LocalCardInput.current
       ?: requireNotNull(
         converter.designTemplate(
-          DesignProperties.build { string(HeadingCardConverter.HEADING_STYLE, "title") }
-        )
+          DesignProperties.build { string(HeadingCardConverter.HEADING_STYLE, "title") },
+        ),
       )
 
   /** `ha-cards/heading-card-title`: the heading in its style, as a dashboard draws it. */
@@ -60,7 +60,7 @@ object HeadingDesignParts {
         HeadingCardConverter.NarrowWidthDp
     CenteredCell {
       RemoteBox(
-        modifier.fillMaxWidth().padding(horizontal = (if (narrow) HaSpace.XS else HaSpace.L).rdp)
+        modifier.fillMaxWidth().padding(horizontal = (if (narrow) HaSpace.XS else HaSpace.L).rdp),
       ) {
         val hero = captureHeroScale()
         if (hero != null && data.style == HaHeadingStyle.Title)

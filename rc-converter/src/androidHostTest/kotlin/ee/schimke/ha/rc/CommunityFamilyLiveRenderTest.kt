@@ -76,7 +76,7 @@ class CommunityFamilyLiveRenderTest {
           val id = "sensor.value$i"
           id to
             EntityState(id, level.toString(), buildJsonObject { put("unit_of_measurement", "%") })
-        }
+        },
     )
 
   private fun frame(name: String): Bitmap {
@@ -205,8 +205,8 @@ class CommunityFamilyLiveRenderTest {
                         put("unit_of_measurement", unit)
                         put("device_class", device)
                       },
-                    )
-                )
+                    ),
+                ),
             )
           val baked =
             kotlin.test.assertNotNull(
@@ -237,7 +237,7 @@ class CommunityFamilyLiveRenderTest {
           )
           val operations = arrayListOf<androidx.compose.remote.core.Operation>()
           androidx.compose.remote.core.RemoteComposeBuffer.fromInputStream(
-              platformWidgetDocument(baked.bytes).inputStream()
+              platformWidgetDocument(baked.bytes).inputStream(),
             )
             .inflateFromBuffer(operations)
           assertTrue(
@@ -268,7 +268,7 @@ class CommunityFamilyLiveRenderTest {
       val snapshot =
         HaSnapshot(
           states =
-            mapOf(id to EntityState(id, "on", buildJsonObject { put("friendly_name", "Kitchen") }))
+            mapOf(id to EntityState(id, "on", buildJsonObject { put("friendly_name", "Kitchen") })),
         )
       val baked =
         kotlin.test.assertNotNull(
@@ -283,7 +283,7 @@ class CommunityFamilyLiveRenderTest {
             systemTheme = false,
             registry = registry,
             look = look,
-          )
+          ),
         )
       // The surface's open-app tap aside, every tap is the card's own.
       val cardActions = baked.actions.values - WidgetOpenApp

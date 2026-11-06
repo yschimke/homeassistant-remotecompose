@@ -44,7 +44,7 @@ object GraphDesignParts {
           type,
           JsonObject(
             mapOf("type" to JsonPrimitive(type)) +
-              fields.associate { (k, v) -> k to JsonPrimitive(v) }
+              fields.associate { (k, v) -> k to JsonPrimitive(v) },
           ),
         ),
         HaSnapshot(),

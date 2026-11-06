@@ -235,7 +235,7 @@ public class ServiceComposableBitmapRenderer(
         Modifier.fillMaxSize().drawWithContent {
           graphicsLayer.record { this@drawWithContent.drawContent() }
           coroutineScope.launch { onResult(graphicsLayer.toImageBitmap()) }
-        }
+        },
     ) {
       content()
     }

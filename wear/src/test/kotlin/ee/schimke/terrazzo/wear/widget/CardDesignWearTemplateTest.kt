@@ -89,7 +89,7 @@ class CardDesignWearTemplateTest {
             "device_class" to "temperature",
           ),
           entity("switch.fan", "off", "friendly_name" to "Fan"),
-        )
+        ),
     )
 
   private fun card(json: String): CardConfig {
@@ -104,7 +104,7 @@ class CardDesignWearTemplateTest {
       "gauge" to card("""{"type":"gauge","entity":"sensor.living_temperature","min":0,"max":40}"""),
       "entities" to
         card(
-          """{"type":"entities","title":"Home","entities":["light.kitchen","sensor.living_temperature","switch.fan"]}"""
+          """{"type":"entities","title":"Home","entities":["light.kitchen","sensor.living_temperature","switch.fan"]}""",
         ),
     )
 

@@ -79,7 +79,7 @@ object HaCardsSeed {
             TextRole.Name -> 15.0
             TextRole.State -> 13.0
             TextRole.Label -> 12.0
-          }
+          },
         ),
       )
       if (light) {
@@ -259,11 +259,11 @@ object HaCardsSeed {
             JsonObject(
               value.jsonObject.mapValues { (_, ids) ->
                 JsonArray(ids.jsonArray.map { JsonPrimitive(prefix + it.jsonPrimitive.content) })
-              }
+              },
             )
           else -> value
         }
-      }
+      },
     )
 
   /** An editable sensor card made from the metric building block. */
@@ -545,7 +545,7 @@ object HaCardsSeed {
     wrapped["root"] =
       JsonObject(
         root +
-          ("slots" to JsonObject(mapOf("content" to JsonArray(listOf(JsonPrimitive("template"))))))
+          ("slots" to JsonObject(mapOf("content" to JsonArray(listOf(JsonPrimitive("template")))))),
       )
     val inTheme = if (theme != null) "theme" else "surface"
     wrapped["template"] =

@@ -67,7 +67,7 @@ class LauncherGridSweepTest {
                 is Number -> JsonPrimitive(v)
                 else -> JsonPrimitive(v.toString())
               }
-          }
+          },
         ),
       )
 
@@ -75,7 +75,7 @@ class LauncherGridSweepTest {
     JsonObject(
       fields.associate { (k, v) ->
         k to (if (v is Number) JsonPrimitive(v) else JsonPrimitive(v.toString()))
-      }
+      },
     )
 
   private val base = Instant.parse("2026-05-05T00:00:00Z")
@@ -207,7 +207,7 @@ class LauncherGridSweepTest {
                     "temperature" to 14.0,
                     "templow" to 7.3,
                   ),
-                )
+                ),
               ),
           ),
           entity(
@@ -229,7 +229,7 @@ class LauncherGridSweepTest {
                   obj("summary" to "Salt", "status" to "needs_action"),
                   obj("summary" to "Butter", "status" to "needs_action"),
                   obj("summary" to "Milk", "status" to "completed"),
-                )
+                ),
               ),
           ),
           entity(
@@ -242,7 +242,7 @@ class LauncherGridSweepTest {
                   obj("summary" to "Dentist appointment", "start" to "2026-05-08T09:30:00+01:00"),
                   obj("summary" to "Trash day", "start" to "2026-05-09"),
                   obj("summary" to "Anniversary", "start" to "2026-05-12"),
-                )
+                ),
               ),
           ),
           entity(
@@ -301,16 +301,16 @@ class LauncherGridSweepTest {
       "gauge" to card("""{"type":"gauge","entity":"sensor.living_temperature","min":0,"max":40}"""),
       "entities" to
         card(
-          """{"type":"entities","title":"Home","entities":["light.kitchen","sensor.living_temperature","switch.fan"]}"""
+          """{"type":"entities","title":"Home","entities":["light.kitchen","sensor.living_temperature","switch.fan"]}""",
         ),
       "glance" to
         card(
-          """{"type":"glance","title":"Glance","entities":["light.kitchen","sensor.living_temperature","switch.fan"]}"""
+          """{"type":"glance","title":"Glance","entities":["light.kitchen","sensor.living_temperature","switch.fan"]}""",
         ),
       "heading" to card("""{"type":"heading","heading":"Kitchen","heading_style":"title"}"""),
       "statistic" to
         card(
-          """{"type":"statistic","entity":"sensor.living_temperature","period":"day","stat_type":"mean"}"""
+          """{"type":"statistic","entity":"sensor.living_temperature","period":"day","stat_type":"mean"}""",
         ),
       "light" to card("""{"type":"light","entity":"light.kitchen"}"""),
       "thermostat" to card("""{"type":"thermostat","entity":"climate.living_room"}"""),
@@ -319,49 +319,49 @@ class LauncherGridSweepTest {
       "media-control" to card("""{"type":"media-control","entity":"media_player.speaker"}"""),
       "weather-forecast" to
         card(
-          """{"type":"weather-forecast","entity":"weather.home","show_current":true,"show_forecast":true}"""
+          """{"type":"weather-forecast","entity":"weather.home","show_current":true,"show_forecast":true}""",
         ),
       "markdown" to
         card(
-          """{"type":"markdown","title":"Notes","content":"Welcome home.\nTemperature is normal."}"""
+          """{"type":"markdown","title":"Notes","content":"Welcome home.\nTemperature is normal."}""",
         ),
       // Mixed emphasis takes the flow-row path, which a launcher can't play (no FlowLayout).
       "markdown-inline" to
         card(
-          """{"type":"markdown","title":"Networks","content":"**Download:** {{ states('sensor.download') }} Mbit/s · **Garage:** {{ states('sensor.garage') }} Mbit/s"}"""
+          """{"type":"markdown","title":"Networks","content":"**Download:** {{ states('sensor.download') }} Mbit/s · **Garage:** {{ states('sensor.garage') }} Mbit/s"}""",
         ),
       // One link on a line: drawn as one wrapping text that still taps through.
       "markdown-link" to
         card(
-          """{"type":"markdown","content":"Open the [energy dashboard](/energy) to see **today's** use."}"""
+          """{"type":"markdown","content":"Open the [energy dashboard](/energy) to see **today's** use."}""",
         ),
       "history-graph" to
         card(
-          """{"type":"history-graph","title":"Power","hours_to_show":24,"entities":["sensor.power","sensor.living_temperature"]}"""
+          """{"type":"history-graph","title":"Power","hours_to_show":24,"entities":["sensor.power","sensor.living_temperature"]}""",
         ),
       "statistics-graph" to
         card(
-          """{"type":"statistics-graph","title":"Power","period":"hour","stat_types":["mean"],"entities":["sensor.power"]}"""
+          """{"type":"statistics-graph","title":"Power","period":"hour","stat_types":["mean"],"entities":["sensor.power"]}""",
         ),
       // A stacked chart is one plot with a legend line per series below it.
       "statistics-graph-stacked" to
         card(
-          """{"type":"statistics-graph","title":"Power","period":"hour","stat_types":["mean"],"chart_type":"bar","stack":true,"entities":["sensor.power","sensor.living_temperature","sensor.humidity"]}"""
+          """{"type":"statistics-graph","title":"Power","period":"hour","stat_types":["mean"],"chart_type":"bar","stack":true,"entities":["sensor.power","sensor.living_temperature","sensor.humidity"]}""",
         ),
       "logbook" to
         card(
-          """{"type":"logbook","title":"Recent activity","hours_to_show":24,"entities":["binary_sensor.front_door","binary_sensor.garage_motion"]}"""
+          """{"type":"logbook","title":"Recent activity","hours_to_show":24,"entities":["binary_sensor.front_door","binary_sensor.garage_motion"]}""",
         ),
       "todo-list" to
         card("""{"type":"todo-list","entity":"todo.shopping","title":"Shopping list"}"""),
       "calendar" to
         card(
-          """{"type":"calendar","title":"Family calendar","initial_view":"listWeek","entities":["calendar.family"]}"""
+          """{"type":"calendar","title":"Family calendar","initial_view":"listWeek","entities":["calendar.family"]}""",
         ),
       "clock" to card("""{"type":"clock","clock_size":"medium","time_format":"24"}"""),
       "area" to
         card(
-          """{"type":"area","name":"Living room","entities":["sensor.living_temperature","sensor.humidity","light.kitchen","switch.fan","cover.blinds"]}"""
+          """{"type":"area","name":"Living room","entities":["sensor.living_temperature","sensor.humidity","light.kitchen","switch.fan","cover.blinds"]}""",
         ),
       "picture" to
         card("""{"type":"picture","image":"/local/floorplan.png","name":"Floor plan"}"""),
@@ -369,32 +369,32 @@ class LauncherGridSweepTest {
         card("""{"type":"picture-entity","entity":"camera.driveway","name":"Driveway"}"""),
       "picture-glance" to
         card(
-          """{"type":"picture-glance","title":"Living room","image":"/local/lr.png","entities":["light.kitchen","light.office","cover.blinds","switch.fan"]}"""
+          """{"type":"picture-glance","title":"Living room","image":"/local/lr.png","entities":["light.kitchen","light.office","cover.blinds","switch.fan"]}""",
         ),
       "picture-elements" to
         card(
-          """{"type":"picture-elements","image":"/local/floorplan.png","elements":[{"type":"state-icon","entity":"light.kitchen","style":{"left":"22%","top":"30%"}},{"type":"state-label","entity":"light.kitchen","style":{"left":"30%","top":"55%"}}]}"""
+          """{"type":"picture-elements","image":"/local/floorplan.png","elements":[{"type":"state-icon","entity":"light.kitchen","style":{"left":"22%","top":"30%"}},{"type":"state-label","entity":"light.kitchen","style":{"left":"30%","top":"55%"}}]}""",
         ),
       "map" to card("""{"type":"map","entities":["person.alex"]}"""),
       "vertical-stack" to
         card(
-          """{"type":"vertical-stack","cards":[{"type":"tile","entity":"light.kitchen"},{"type":"tile","entity":"switch.fan"}]}"""
+          """{"type":"vertical-stack","cards":[{"type":"tile","entity":"light.kitchen"},{"type":"tile","entity":"switch.fan"}]}""",
         ),
       "horizontal-stack" to
         card(
-          """{"type":"horizontal-stack","cards":[{"type":"button","entity":"light.kitchen"},{"type":"button","entity":"switch.fan"}]}"""
+          """{"type":"horizontal-stack","cards":[{"type":"button","entity":"light.kitchen"},{"type":"button","entity":"switch.fan"}]}""",
         ),
       "grid" to
         card(
-          """{"type":"grid","columns":2,"cards":[{"type":"button","entity":"light.kitchen"},{"type":"button","entity":"light.office"},{"type":"button","entity":"switch.fan"},{"type":"button","entity":"lock.front_door"}]}"""
+          """{"type":"grid","columns":2,"cards":[{"type":"button","entity":"light.kitchen"},{"type":"button","entity":"light.office"},{"type":"button","entity":"switch.fan"},{"type":"button","entity":"lock.front_door"}]}""",
         ),
       "conditional" to
         card(
-          """{"type":"conditional","conditions":[{"entity":"light.kitchen","state":"on"}],"card":{"type":"tile","entity":"light.kitchen"}}"""
+          """{"type":"conditional","conditions":[{"entity":"light.kitchen","state":"on"}],"card":{"type":"tile","entity":"light.kitchen"}}""",
         ),
       "entity-filter" to
         card(
-          """{"type":"entity-filter","state_filter":["on"],"entities":["light.kitchen","light.office","switch.fan"],"card":{"type":"glance","title":"On now"}}"""
+          """{"type":"entity-filter","state_filter":["on"],"entities":["light.kitchen","light.office","switch.fan"],"card":{"type":"glance","title":"On now"}}""",
         ),
     )
 
@@ -477,7 +477,7 @@ class LauncherGridSweepTest {
       val layout = LauncherCellLayout.of(image)
       val problems = layout.findings(columns = n, rows = m)
       report.append(
-        "$name\t${n}x$m\t${layout.top}\t${layout.bottom}\t${layout.left}\t${layout.right}\t"
+        "$name\t${n}x$m\t${layout.top}\t${layout.bottom}\t${layout.left}\t${layout.right}\t",
       )
       report.append(problems.joinToString(",")).append('\n')
       problems.forEach { findings += "$name ${n}x$m: $it" }

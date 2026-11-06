@@ -17,7 +17,7 @@ import kotlinx.datetime.toJavaLocalDateTime
 class JdkFreeFormattingTest {
   private val values: List<Double> = buildList {
     addAll(
-      listOf(0.0, -0.0, 0.5, 1.5, 2.5, -0.5, 0.05, 0.15, 0.25, 0.35, 1.005, 2.675, 1.0E-5, 1.0E-7)
+      listOf(0.0, -0.0, 0.5, 1.5, 2.5, -0.5, 0.05, 0.15, 0.25, 0.35, 1.005, 2.675, 1.0E-5, 1.0E-7),
     )
     addAll(listOf(100.0, 123.456, -123.456, 9.995, 99.95, 0.1 + 0.2, 1e15, 12345678.9, -0.01))
     addAll(listOf(20.5, 21.0, 0.1, 0.01, 7.0, 35.0, 33.333332061767578, 12.5, 99.99999))

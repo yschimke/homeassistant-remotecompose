@@ -41,7 +41,7 @@ class CardDeviceTest {
       cardDevice(
         card("""{"type":"entities","entities":["sensor.x","sensor.boiler_flow"]}"""),
         snapshot,
-      )
+      ),
     )
   }
 }

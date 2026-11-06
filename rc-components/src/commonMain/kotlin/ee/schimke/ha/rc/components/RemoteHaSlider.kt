@@ -150,7 +150,7 @@ fun RemoteHaSlider(
       modifier =
         modifier.fillMaxWidth().height(heightDp.rdp).semantics {
           contentDescription = spokenLabel.rs
-        }
+        },
     ) {
       RemoteCanvas(modifier = canvasModifier) {
         define?.invoke(this)
@@ -214,7 +214,7 @@ fun RemoteHaSlider(
         .height(heightDp.rdp)
         .clip(haControlShape(SliderCornerDp))
         .background(sliderTrack(theme.secondaryText))
-        .semantics { contentDescription = spokenLabel.rs }
+        .semantics { contentDescription = spokenLabel.rs },
   ) {
     RemoteCanvas(modifier = canvasModifier) {
       define?.invoke(this)

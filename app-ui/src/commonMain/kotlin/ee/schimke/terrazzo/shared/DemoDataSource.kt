@@ -81,7 +81,7 @@ class PublicDemoDataSource(baseUrl: String) : DemoDataSource {
     require(
       temperature.isFinite() &&
         temperature in 16.0..28.0 &&
-        temperature * 2 == (temperature * 2).toInt().toDouble()
+        temperature * 2 == (temperature * 2).toInt().toDouble(),
     )
     val response =
       http.post("$base/api/services/climate/set_temperature") {
@@ -91,7 +91,7 @@ class PublicDemoDataSource(baseUrl: String) : DemoDataSource {
             put("entity_id", "climate.demo_thermostat")
             put("temperature", temperature)
           }
-            .toString()
+            .toString(),
         )
       }
     check(response.status.value == 200) { "Demo thermostat unavailable" }
@@ -120,6 +120,6 @@ internal fun decodeDemoStates(states: JsonArray): HaSnapshot {
       }
       val entity = json.decodeFromJsonElement<EntityState>(normalized)
       entity.entityId to entity
-    }
+    },
   )
 }

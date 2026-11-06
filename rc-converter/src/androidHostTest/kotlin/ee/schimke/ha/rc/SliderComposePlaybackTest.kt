@@ -89,7 +89,7 @@ class SliderComposePlaybackTest {
             modifier =
               RemoteModifier.fillMaxWidth()
                 .height(40.rdp)
-                .then(if (tap != null) RemoteModifier.clickable(tap) else RemoteModifier)
+                .then(if (tap != null) RemoteModifier.clickable(tap) else RemoteModifier),
           )
         }
       }

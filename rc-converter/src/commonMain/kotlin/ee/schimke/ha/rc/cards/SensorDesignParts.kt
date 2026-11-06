@@ -43,8 +43,8 @@ object SensorDesignParts {
           DesignProperties.build {
             string(EntityDesign.DOMAIN, "sensor")
             enum(SeriesDesign.HAS_DATA, 1)
-          }
-        )
+          },
+        ),
       )
 
   /** `ha-cards/sensor-card-full`: the sensor card, its value over its history line. */

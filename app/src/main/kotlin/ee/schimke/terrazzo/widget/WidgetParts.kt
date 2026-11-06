@@ -36,7 +36,7 @@ internal fun widgetParts(
     fun walk(c: CardConfig) {
       val children = c.childCards()
       add(
-        WidgetPart(c, if (children.isEmpty()) widgetPartLabel(c, snapshot) else c.containerLabel())
+        WidgetPart(c, if (children.isEmpty()) widgetPartLabel(c, snapshot) else c.containerLabel()),
       )
       children.forEach(::walk)
     }
@@ -62,7 +62,7 @@ private fun sectionCard(cards: List<CardConfig>): CardConfig =
         mapOf(
           "type" to JsonPrimitive(CardTypes.VERTICAL_STACK),
           "cards" to JsonArray(cards.map { it.raw }),
-        )
+        ),
       ),
   )
 

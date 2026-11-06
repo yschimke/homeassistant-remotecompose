@@ -221,10 +221,10 @@ class HaClientSubscriptionTest {
                     put("message", "Hello there")
                     put("created_at", "2026-05-17T08:00:00+00:00")
                     put("status", "unread")
-                  }
+                  },
                 )
               },
-            )
+            ),
           )
         "subscribe_events" -> {
           subscriptionId = id
@@ -253,7 +253,7 @@ class HaClientSubscriptionTest {
               put("origin", "LOCAL")
             },
           )
-        }
+        },
       )
     }
 

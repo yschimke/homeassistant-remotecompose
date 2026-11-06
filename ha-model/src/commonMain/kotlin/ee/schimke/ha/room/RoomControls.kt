@@ -68,7 +68,7 @@ fun roomControls(
       compareByDescending<RoomEntity> { it.importance }
         .thenByDescending { it.active }
         .thenBy { DOMAIN_ORDER.indexOf(it.domain).let { i -> if (i < 0) Int.MAX_VALUE else i } }
-        .thenBy { it.name.lowercase() }
+        .thenBy { it.name.lowercase() },
     )
   val shown = ranked.filter { it.importance > 0f }
   return RoomControls(

@@ -44,8 +44,8 @@ object ButtonDesignParts {
     LocalCardInput.current
       ?: requireNotNull(
         converter.framedDesignTemplate(
-          DesignProperties.build { string(EntityDesign.DOMAIN, "light") }
-        )
+          DesignProperties.build { string(EntityDesign.DOMAIN, "light") },
+        ),
       )
 
   @Composable private fun data() = input().let { (card, snapshot) -> buttonData(card, snapshot) }

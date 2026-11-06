@@ -82,7 +82,7 @@ class WidgetPreviewActivity : Activity() {
         TextView(this).apply {
           text = "RemoteViews.DrawInstructions needs API 35+"
           gravity = Gravity.CENTER
-        }
+        },
       )
       return
     }
@@ -146,7 +146,7 @@ class WidgetPreviewActivity : Activity() {
         TextView(this).apply {
           text = "Capture failed — see $TAG logs"
           gravity = Gravity.CENTER
-        }
+        },
       )
       return
     }
@@ -189,7 +189,7 @@ class WidgetPreviewActivity : Activity() {
               "widget preview · ${WIDGET_PREVIEW_WIDTH_DP}x${WIDGET_PREVIEW_HEIGHT_DP}dp · " +
                 "${docBytes.size}b doc"
             setPadding(0, 0, 0, (8f * resources.displayMetrics.density).toInt())
-          }
+          },
         )
         addView(tile)
       }
@@ -216,7 +216,7 @@ class WidgetPreviewActivity : Activity() {
      */
     private val SAMPLE_CARD: CardConfig =
       Json.parseToJsonElement(
-          """{"type":"picture-entity","entity":"camera.widget_preview","name":"Widget preview","show_name":true,"show_state":true}"""
+          """{"type":"picture-entity","entity":"camera.widget_preview","name":"Widget preview","show_name":true,"show_state":true}""",
         )
         .let { it as JsonObject }
         .let { CardConfig(type = (it["type"] as JsonPrimitive).content, raw = it) }
@@ -239,10 +239,10 @@ class WidgetPreviewActivity : Activity() {
                     mapOf(
                       "friendly_name" to JsonPrimitive("Widget preview"),
                       "entity_picture" to JsonPrimitive("local://widget-preview-sample"),
-                    )
+                    ),
                   ),
-              )
-          )
+              ),
+          ),
       )
 
     /** Yellow disc on a blue field — same test bitmap as the JVM previews. */

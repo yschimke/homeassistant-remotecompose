@@ -84,7 +84,7 @@ class WidgetRoutineRefreshWorker(context: Context, params: WorkerParameters) :
       val request =
         PeriodicWorkRequestBuilder<WidgetRoutineRefreshWorker>(INTERVAL_MINUTES, TimeUnit.MINUTES)
           .setConstraints(
-            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build(),
           )
           .build()
       // Kept as it is when already scheduled, so each app start doesn't put the next run off.

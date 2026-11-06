@@ -66,7 +66,7 @@ class CoverLiveDocumentTest {
         mapOf("friendly_name" to JsonPrimitive("Garage Door")) +
           attributes.associate { (k, v) ->
             k to if (v is Number) JsonPrimitive(v) else JsonPrimitive(v.toString())
-          }
+          },
       ),
     )
 

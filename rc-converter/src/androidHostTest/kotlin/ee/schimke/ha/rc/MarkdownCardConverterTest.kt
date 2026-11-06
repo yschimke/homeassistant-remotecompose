@@ -23,7 +23,7 @@ class MarkdownCardConverterTest {
         mapOf(
           "sensor.living_room_temperature" to EntityState("sensor.living_room_temperature", "21.5"),
           "sensor.office_humidity" to EntityState("sensor.office_humidity", "44"),
-        )
+        ),
     )
 
   @Test
@@ -162,7 +162,7 @@ class MarkdownCardConverterTest {
         converter.designProperties(
           markdown("## **Title**\n\n_Tagline_\n\n- ***both***\n- `code`\n\nplain"),
           snapshot,
-        )
+        ),
       )
     // Italic draws upright, so it is not part of the key: `_Tagline_` keys as plain `P`.
     assertEquals("H2b,P,Bb,Bc,P", properties["blocks"])

@@ -57,8 +57,8 @@ class DesignProperties private constructor(val values: Map<String, String>) {
               val i = part.indexOf('=')
               require(i > 0) { "not a property: $part" }
               part.substring(0, i) to part.substring(i + 1)
-            }
-        )
+            },
+        ),
       )
 
     /** Sorted by name; `associate` keeps insertion order, so the result iterates in that order. */

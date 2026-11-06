@@ -258,7 +258,7 @@ fun Route.userDesignRoutes(
   get("/api/my/designs") {
     val login = call.requireUser() ?: return@get
     call.respondJson(
-      apiJson.encodeToString(ListSerializer(UserDesign.serializer()), store.designs(login))
+      apiJson.encodeToString(ListSerializer(UserDesign.serializer()), store.designs(login)),
     )
   }
 
@@ -417,10 +417,10 @@ object MyPage {
     if (token == null) {
       append(
         "<p>Your private designs show in harc once it is signed in: in harc's settings, " +
-          "under the design server, sign in with GitHub. Or make a device token to paste there.</p>"
+          "under the design server, sign in with GitHub. Or make a device token to paste there.</p>",
       )
       append(
-        "<form method=\"post\" action=\"/my/device-token\"><button>Create a device token</button></form>"
+        "<form method=\"post\" action=\"/my/device-token\"><button>Create a device token</button></form>",
       )
     } else {
       append("<p>Paste this into harc's settings, under the design server. Keep it private.</p>")
@@ -431,10 +431,10 @@ object MyPage {
     append("<form method=\"post\" action=\"/my/designs\">")
     append("<label>UI Builder design id <input name=\"designId\" required></label> ")
     append(
-      "<label>Card design it varies (from /designs/&lt;id&gt;) <input name=\"base\" required></label> "
+      "<label>Card design it varies (from /designs/&lt;id&gt;) <input name=\"base\" required></label> ",
     )
     append(
-      "<label>Variant name <input name=\"variant\" pattern=\"[a-z0-9][a-z0-9-]{0,39}\" required></label> "
+      "<label>Variant name <input name=\"variant\" pattern=\"[a-z0-9][a-z0-9-]{0,39}\" required></label> ",
     )
     append("<fieldset><legend>Only for one kind of device (optional)</legend>")
     append("<label>Integration <input name=\"integration\" placeholder=\"vaillant\"></label> ")
@@ -446,7 +446,7 @@ object MyPage {
       append("<p>Nothing yet. Publish a design from UI Builder or the app's card studio.</p>")
     } else {
       append(
-        "<table><tr><th>Card</th><th>Variant</th><th>Device</th><th>Theme</th><th>Shared</th><th></th></tr>"
+        "<table><tr><th>Card</th><th>Variant</th><th>Device</th><th>Theme</th><th>Shared</th><th></th></tr>",
       )
       for (design in designs) {
         val key = design.entry.key
@@ -460,7 +460,7 @@ object MyPage {
         if (design.readsAmbient == false) {
           append(
             "<br><small class=\"ambient-note\">Doesn't read <code>$RcAmbientValue</code>: keeps " +
-              "its interactive look on an always-on watch.</small>"
+              "its interactive look on an always-on watch.</small>",
           )
         }
         append("</td><td>${esc(key.variant)}</td>")
@@ -642,7 +642,7 @@ private suspend fun templates(
     // effort: without it the design publishes untitled.
     val source = client.design(designId, document.revision).getOrNull()
     return Result.success(
-      Templates(keys.associateWith { document.bytes }, document.revision, source)
+      Templates(keys.associateWith { document.bytes }, document.revision, source),
     )
   }
   val source =
@@ -661,8 +661,8 @@ private suspend fun templates(
     return Result.failure(
       IllegalStateException(
         "UI Builder couldn't export it (${exported.exceptionOrNull()?.message}), and it can't be " +
-          "built here: ${problems.joinToString("; ")}"
-      )
+          "built here: ${problems.joinToString("; ")}",
+      ),
     )
   }
   val bytes =
@@ -671,7 +671,7 @@ private suspend fun templates(
     } catch (e: Exception) {
       if (e is CancellationException) throw e
       return Result.failure(
-        IllegalStateException("it couldn't be built here: ${e.message ?: e.javaClass.simpleName}")
+        IllegalStateException("it couldn't be built here: ${e.message ?: e.javaClass.simpleName}"),
       )
     }
   return Result.success(
@@ -680,7 +680,7 @@ private suspend fun templates(
       source["revision"]?.jsonPrimitive?.longOrNull ?: revision,
       source,
       compiled = true,
-    )
+    ),
   )
 }
 

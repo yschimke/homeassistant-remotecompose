@@ -55,7 +55,7 @@ class WearCardValuesTest {
         mapOf(
           "light.kitchen" to EntityValue(state = "on"),
           "sensor.power" to EntityValue(state = "100", unit = "W"),
-        )
+        ),
       )
     compose.setContent { Screen(raw, values) }
     compose.waitForIdle()

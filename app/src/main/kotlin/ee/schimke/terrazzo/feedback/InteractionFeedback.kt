@@ -60,14 +60,14 @@ class InteractionFeedback(
         AudioAttributes.Builder()
           .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
           .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-          .build()
+          .build(),
       )
       .setAudioFormat(
         AudioFormat.Builder()
           .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
           .setSampleRate(FeedbackSampleRate)
           .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-          .build()
+          .build(),
       )
       .setTransferMode(AudioTrack.MODE_STATIC)
       .setBufferSizeInBytes(pcm.size * 2)

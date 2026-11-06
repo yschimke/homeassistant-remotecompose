@@ -235,7 +235,7 @@ fun DashboardDraftEditor(
                   history.clear()
                   selected = null
                 }
-              }
+              },
             ) {
               Icon(Icons.Filled.AutoAwesome, contentDescription = "Ask your agent")
             }
@@ -470,7 +470,7 @@ fun DashboardDraftEditor(
           onClick = {
             confirmDiscard = false
             onBack()
-          }
+          },
         ) {
           Text("Discard")
         }
@@ -729,8 +729,8 @@ private fun EditableCardGrid(
                     BorderStroke(3.dp, MaterialTheme.colorScheme.primary),
                     RoundedCornerShape(14.dp),
                   )
-                else Modifier
-              )
+                else Modifier,
+              ),
             ) {
               key(card) { preview(card) }
               // Over the player, so a tap selects the card rather than toggling its entity.
@@ -741,7 +741,7 @@ private fun EditableCardGrid(
                     contentDescription = "Card ${i + 1}: ${card.stringOf("type")}"
                     selected = isSelected
                   }
-                  .clickable(onClickLabel = "Select") { onSelect(i) }
+                  .clickable(onClickLabel = "Select") { onSelect(i) },
               )
               if (isSelected) {
                 ResizeHandle(
@@ -765,7 +765,7 @@ private fun EditableCardGrid(
             }
           }
         }
-      }
+      },
     ) { measurables, constraints ->
       val width = constraints.maxWidth
       val gapPx = gap.roundToPx()
@@ -780,7 +780,7 @@ private fun EditableCardGrid(
         val fixed = p.fixedHeightDp?.dp?.roundToPx()
         m.measure(
           if (fixed != null) Constraints.fixed(w, fixed)
-          else Constraints(minWidth = w, maxWidth = w)
+          else Constraints(minWidth = w, maxWidth = w),
         )
       }
       val rows = IntArray(plan.rowCount)
@@ -846,7 +846,7 @@ private fun ResizeHandle(
             dx = 0f
             dy = 0f
             latestStart()
-          }
+          },
         ) { change, amount ->
           change.consume()
           dx += amount.x

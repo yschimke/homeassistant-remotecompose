@@ -37,7 +37,7 @@ class DecodedDocumentCacheTest {
     val snapshot = HaSnapshot(states = mapOf("light.kitchen" to EntityState("light.kitchen", "on")))
     val key =
       assertNotNull(
-        CardDesignTemplates.keyFor(card, snapshot, ThemeStyle.TerrazzoHome, dark = false)
+        CardDesignTemplates.keyFor(card, snapshot, ThemeStyle.TerrazzoHome, dark = false),
       )
     val bytes = CardDesignLibrary.template(context, key)
 
@@ -66,7 +66,7 @@ class DecodedDocumentCacheTest {
     val snapshot = HaSnapshot(states = mapOf("switch.fan" to EntityState("switch.fan", "off")))
     val key =
       assertNotNull(
-        CardDesignTemplates.keyFor(card, snapshot, ThemeStyle.TerrazzoHome, dark = false)
+        CardDesignTemplates.keyFor(card, snapshot, ThemeStyle.TerrazzoHome, dark = false),
       )
     val bytes = CardDesignLibrary.template(context, key)
     val source = decodedForComposePlayer(bytes)

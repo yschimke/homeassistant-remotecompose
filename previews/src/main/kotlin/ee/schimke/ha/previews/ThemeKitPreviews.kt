@@ -62,7 +62,7 @@ private val KitNow: ZonedDateTime = ZonedDateTime.of(2026, 5, 5, 10, 8, 0, 0, Zo
 @Composable
 private fun KitShowcase(theme: HaUberTheme, darkTheme: Boolean) {
   Box(
-    Modifier.uiFillMaxSize().background(theme.palette(darkTheme).dashboardBackground).padding(8.dp)
+    Modifier.uiFillMaxSize().background(theme.palette(darkTheme).dashboardBackground).padding(8.dp),
   ) {
     CapturingRemoteContentPreview(profile = androidXExperimental) {
       CompositionLocalProvider(LocalHaClock provides FixedHaClock(KitNow)) {
@@ -77,7 +77,7 @@ private fun KitShowcase(theme: HaUberTheme, darkTheme: Boolean) {
               RenderChild(
                 card(
                   """{"type":"entities","title":"Living Room","entities":[
-                      "sensor.living_room","light.kitchen","switch.coffee_maker"]}"""
+                      "sensor.living_room","light.kitchen","switch.coffee_maker"]}""",
                 ),
                 Fixtures.mixed,
                 RemoteModifier.fillMaxWidth(),
@@ -145,7 +145,8 @@ private fun CarDoorsCard() {
 private fun KitCard(modifier: RemoteModifier, content: @Composable () -> Unit) {
   val theme = currentRemoteHaTheme()
   RemoteBox(
-    modifier = modifier.then(cardChrome(theme.cardBackground, theme.divider)).padding(HaSpace.M.rdp)
+    modifier =
+      modifier.then(cardChrome(theme.cardBackground, theme.divider)).padding(HaSpace.M.rdp),
   ) {
     content()
   }
@@ -196,7 +197,7 @@ fun Kit_RuggedDigital_Dark() = KitShowcase(HaUberTheme.RuggedDigital, darkTheme 
 private fun RuggedWatch(darkTheme: Boolean) {
   val theme = HaUberTheme.RuggedDigital
   Box(
-    Modifier.uiFillMaxSize().background(theme.palette(darkTheme).dashboardBackground).padding(8.dp)
+    Modifier.uiFillMaxSize().background(theme.palette(darkTheme).dashboardBackground).padding(8.dp),
   ) {
     CapturingRemoteContentPreview(profile = androidXExperimental) {
       CompositionLocalProvider(LocalHaClock provides FixedHaClock(KitNow.withSecond(37))) {
@@ -209,7 +210,7 @@ private fun RuggedWatch(darkTheme: Boolean) {
               RenderChild(
                 card(
                   """{"type":"clock","clock_size":"large","time_format":"24",
-                      "show_seconds":true}"""
+                      "show_seconds":true}""",
                 ),
                 Fixtures.mixed,
                 RemoteModifier.fillMaxWidth(),
@@ -218,7 +219,7 @@ private fun RuggedWatch(darkTheme: Boolean) {
                 card(
                   """{"type":"glance","columns":4,"show_name":false,"entities":[
                       "sensor.living_room","light.kitchen","lock.front_door",
-                      "light.office_lamp"]}"""
+                      "light.office_lamp"]}""",
                 ),
                 Fixtures.mixed,
                 RemoteModifier.fillMaxWidth(),
@@ -354,7 +355,7 @@ fun Kit_Keys() {
                 RenderChild(
                   card(
                     """{"type":"glance","entities":[
-                        "light.kitchen","switch.coffee_maker","lock.front_door"]}"""
+                        "light.kitchen","switch.coffee_maker","lock.front_door"]}""",
                   ),
                   Fixtures.mixed,
                   RemoteModifier.fillMaxWidth(),
@@ -536,7 +537,7 @@ fun Kit_History() =
     cards =
       listOf(
         """{"type":"history-graph","title":"Temperature","hours_to_show":24,
-            "entities":["sensor.outside_temp","sensor.upstairs_temp"]}"""
+            "entities":["sensor.outside_temp","sensor.upstairs_temp"]}""",
       ),
     snapshot = Fixtures.temperatureHistory,
   )
@@ -556,7 +557,7 @@ fun Kit_Statistics() =
     cards =
       listOf(
         """{"type":"statistics-graph","title":"Power","period":"hour","stat_types":["mean"],
-            "entities":["sensor.house_power","sensor.solar_power"]}"""
+            "entities":["sensor.house_power","sensor.solar_power"]}""",
       ),
     snapshot = Fixtures.energyStatistics,
   )

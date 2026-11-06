@@ -167,7 +167,7 @@ internal class FamilyVisuals private constructor(val family: HaVisualFamily) {
   companion object {
     /** A hand drawing: [draw] with the spec as its argument. */
     private fun drawn(
-      draw: androidx.compose.remote.creation.compose.layout.RemoteDrawScope.(HaVisualSpec) -> Unit
+      draw: androidx.compose.remote.creation.compose.layout.RemoteDrawScope.(HaVisualSpec) -> Unit,
     ) = HaVisualRenderer { spec -> draw(spec) }
 
     private val byFamily = HaVisualFamily.entries.associateWith { FamilyVisuals(it) }

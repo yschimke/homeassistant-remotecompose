@@ -41,7 +41,7 @@ class WearPictureSyncTest {
               entity("light.kitchen"),
               entity("camera.unpinned", "/api/camera_proxy/camera.unpinned?token=b"),
             )
-            .associateBy { it.entityId }
+            .associateBy { it.entityId },
       )
     val cards =
       listOf(
@@ -50,7 +50,7 @@ class WearPictureSyncTest {
           """{"type":"vertical-stack","cards":[
             {"type":"tile","entity":"person.anna"},
             {"type":"tile","entity":"light.kitchen"},
-            {"type":"picture-entity","entity":"camera.driveway"}]}"""
+            {"type":"picture-entity","entity":"camera.driveway"}]}""",
         ),
       )
     assertEquals(
@@ -76,7 +76,7 @@ class WearPictureSyncTest {
     val png = byteArrayOf(-119, 80, 78, 71, 1, 2, 3)
     val decoded =
       decodeProto<WearPicture>(
-        encodeProto(WearPicture("camera.driveway", "/x", png, updatedAtMs = 42))
+        encodeProto(WearPicture("camera.driveway", "/x", png, updatedAtMs = 42)),
       )
     assertEquals("camera.driveway", decoded?.entityId)
     assertEquals("/x", decoded?.url)

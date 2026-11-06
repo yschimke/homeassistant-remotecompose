@@ -440,7 +440,7 @@ object LibraryFixtures {
                   todoItem("Milk", "needs_action"),
                   todoItem("Bread", "needs_action"),
                   todoItem("Eggs", "completed"),
-                )
+                ),
               ),
             )
           },
@@ -470,7 +470,7 @@ object LibraryFixtures {
                       put("templow", "${9 + i}")
                       put("datetime", "${dt}T00:00:00")
                     }
-                  }
+                  },
               ),
             )
           },
@@ -702,7 +702,7 @@ private fun events(vararg e: Pair<String, String>) =
         put("summary", summary)
         put("start", start)
       }
-    }
+    },
   )
 
 private fun todoItem(summary: String, status: String) = buildJsonObject {

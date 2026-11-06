@@ -634,7 +634,7 @@ fun haTextStyle(): RemoteTextStyle {
     RemoteTextStyle(
       fontFamily = theme.fontFamily,
       letterSpacing = theme.letterSpacingSp.sp.asRemoteTextUnit(),
-    )
+    ),
   )
 }
 

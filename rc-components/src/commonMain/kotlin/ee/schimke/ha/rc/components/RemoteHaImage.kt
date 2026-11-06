@@ -49,7 +49,7 @@ fun RemoteHaImageInline(
 ) {
   val rb = rememberMutableRemoteImageBitmap(bitmap)
   RemoteImage(
-    remoteBitmap = rb,
+    bitmap = rb,
     contentDescription = contentDescription,
     modifier = modifier,
     contentScale = contentScale,
@@ -72,7 +72,7 @@ fun RemoteHaImageNamed(
 ) {
   val rb = rememberNamedRemoteImageBitmap(name = name, domain = domain, value = { bitmap })
   RemoteImage(
-    remoteBitmap = rb,
+    bitmap = rb,
     contentDescription = contentDescription,
     modifier = modifier,
     contentScale = contentScale,
@@ -99,7 +99,7 @@ fun RemoteHaImageUrl(
 ) {
   val rb = rememberNamedRemoteImageBitmap(name = name, url = url, domain = domain)
   RemoteImage(
-    remoteBitmap = rb,
+    bitmap = rb,
     contentDescription = contentDescription,
     modifier = modifier,
     contentScale = contentScale,

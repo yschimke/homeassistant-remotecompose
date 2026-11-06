@@ -178,7 +178,7 @@ class AddonAuthTest {
             "Bearer boom" -> respond("", HttpStatusCode.BadGateway)
             else -> respond("""{"message":"401: Unauthorized"}""", HttpStatusCode.Unauthorized)
           }
-        }
+        },
       )
     val validator = HaTokenValidator(http) { "http://homeassistant:8123" }
     assertEquals(TokenCheck.Valid, validator.validate("good-token"))
@@ -223,7 +223,7 @@ class AddonAuthTest {
           assertEquals("http://supervisor/core/info", request.url.toString())
           assertEquals("Bearer supervisor-token", request.headers[HttpHeaders.Authorization])
           respond(body, HttpStatusCode.OK, JSON)
-        }
+        },
       )
     val plain = supervisor("""{"result":"ok","data":{"port":8124,"ssl":false}}""")
     assertEquals("http://homeassistant:8124", SupervisorCoreUrl(plain, "supervisor-token")())

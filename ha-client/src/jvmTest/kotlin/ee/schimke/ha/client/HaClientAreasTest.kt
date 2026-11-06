@@ -33,7 +33,7 @@ class HaClientAreasTest {
             val id = command.getValue("id").jsonPrimitive.int
             val type = command.getValue("type").jsonPrimitive.content
             send(
-              Frame.Text("""{"id":$id,"type":"result","success":true,"result":${answer(type)}}""")
+              Frame.Text("""{"id":$id,"type":"result","success":true,"result":${answer(type)}}"""),
             )
           }
         }
@@ -49,10 +49,12 @@ class HaClientAreasTest {
 
   @Test
   fun areasCarryNamesFloorsAndAliases() =
-    fakeHa({
-      """[{"area_id":"living_room","name":"Living Room","floor_id":"ground","icon":"mdi:sofa",
+    fakeHa(
+      {
+        """[{"area_id":"living_room","name":"Living Room","floor_id":"ground","icon":"mdi:sofa",
          "aliases":["Lounge"]},{"area_id":"attic"}]"""
-    }) { client ->
+      },
+    ) { client ->
       assertEquals(
         mapOf(
           "living_room" to
@@ -65,18 +67,20 @@ class HaClientAreasTest {
 
   @Test
   fun anEntityTakesItsOwnAreaElseItsDevicesAndKeepsItsCategory() =
-    fakeHa({ type ->
-      when (type) {
-        "config/entity_registry/list_for_display" ->
-          """{"entities":[
+    fakeHa(
+      { type ->
+        when (type) {
+          "config/entity_registry/list_for_display" ->
+            """{"entities":[
             {"ei":"media_player.tv","di":"d1"},
             {"ei":"light.lamp","di":"d1","ai":"office"},
             {"ei":"switch.identify","di":"d1","ec":0},
             {"ei":"sensor.signal","di":"d1","ec":1,"hb":true}
           ]}"""
-        else -> """[{"id":"d1","area_id":"living_room","manufacturer":"Acme"}]"""
-      }
-    }) { client ->
+          else -> """[{"id":"d1","area_id":"living_room","manufacturer":"Acme"}]"""
+        }
+      },
+    ) { client ->
       val devices = client.fetchDevices()
       assertEquals("living_room", devices.getValue("media_player.tv").areaId)
       assertEquals("office", devices.getValue("light.lamp").areaId)

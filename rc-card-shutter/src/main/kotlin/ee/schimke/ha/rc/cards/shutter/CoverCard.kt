@@ -62,7 +62,7 @@ internal fun CoverCard(
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 12.rdp, vertical = 10.rdp)
+        .padding(horizontal = 12.rdp, vertical = 10.rdp),
   ) {
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(10.rdp)) {
       if (title != null) {

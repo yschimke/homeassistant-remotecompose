@@ -151,7 +151,7 @@ internal object TokenSwitch : HaSwitchRenderer {
           .size(width = SwitchTrackWidth, height = SwitchTrackHeight)
           .clip(trackShape)
           .background(
-            if (outlined) trackColor.copy(alpha = trackColor.alpha * ambient.fade) else trackColor
+            if (outlined) trackColor.copy(alpha = trackColor.alpha * ambient.fade) else trackColor,
           )
           .then(
             if (outlined)
@@ -160,9 +160,9 @@ internal object TokenSwitch : HaSwitchRenderer {
                 trackColor.copy(alpha = trackColor.alpha * ambient.fraction),
                 trackShape,
               )
-            else RemoteModifier
+            else RemoteModifier,
           )
-          .then(spec.clickable)
+          .then(spec.clickable),
     ) {
       RemoteBox(
         modifier =
@@ -170,9 +170,9 @@ internal object TokenSwitch : HaSwitchRenderer {
             .size(KnobSize)
             .clip(
               if (shape.squareKnob) RemoteRoundedCornerShape((shape.controlCornerDp / 2).rdp)
-              else RemoteCircleShape
+              else RemoteCircleShape,
             )
-            .then(knobFill)
+            .then(knobFill),
       )
     }
   }

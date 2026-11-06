@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
 @JsFun(
-  "() => /\\/demo\\/?$/.test(location.pathname) || new URLSearchParams(location.search).get('demo') === '1' ? 'demo' : 'app'"
+  "() => /\\/demo\\/?$/.test(location.pathname) || new URLSearchParams(location.search).get('demo') === '1' ? 'demo' : 'app'",
 )
 private external fun entryMode(): String
 
@@ -106,22 +106,22 @@ private external fun watchPanelTheme(listener: (String) -> Unit)
 
 // The panel fullscreens itself, hiding HA's sidebar too; elsewhere (or in an older panel) the page.
 @JsFun(
-  "(panel) => panel && window.frameElement.terrazzoHost.toggleFullscreen ? !!(window.parent.document.fullscreenEnabled || window.parent.document.webkitFullscreenEnabled) : !!(document.fullscreenEnabled || document.webkitFullscreenEnabled)"
+  "(panel) => panel && window.frameElement.terrazzoHost.toggleFullscreen ? !!(window.parent.document.fullscreenEnabled || window.parent.document.webkitFullscreenEnabled) : !!(document.fullscreenEnabled || document.webkitFullscreenEnabled)",
 )
 private external fun canFullScreen(panel: Boolean): Boolean
 
 @JsFun(
-  "(panel) => panel && window.frameElement.terrazzoHost.isFullscreen ? window.frameElement.terrazzoHost.isFullscreen() : !!(document.fullscreenElement || document.webkitFullscreenElement)"
+  "(panel) => panel && window.frameElement.terrazzoHost.isFullscreen ? window.frameElement.terrazzoHost.isFullscreen() : !!(document.fullscreenElement || document.webkitFullscreenElement)",
 )
 private external fun isFullScreen(panel: Boolean): Boolean
 
 @JsFun(
-  "(panel) => { const host = panel ? window.frameElement.terrazzoHost : null; if (host?.toggleFullscreen) return host.toggleFullscreen(); if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document); else Promise.resolve((document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen)?.call(document.documentElement)).catch(() => {}); }"
+  "(panel) => { const host = panel ? window.frameElement.terrazzoHost : null; if (host?.toggleFullscreen) return host.toggleFullscreen(); if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document); else Promise.resolve((document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen)?.call(document.documentElement)).catch(() => {}); }",
 )
 private external fun toggleFullScreen(panel: Boolean)
 
 @JsFun(
-  "(panel, listener) => { const host = panel ? window.frameElement.terrazzoHost : null; if (host?.setFullscreenListener) return host.setFullscreenListener(listener); for (const type of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(type, () => listener(!!(document.fullscreenElement || document.webkitFullscreenElement))); }"
+  "(panel, listener) => { const host = panel ? window.frameElement.terrazzoHost : null; if (host?.setFullscreenListener) return host.setFullscreenListener(listener); for (const type of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(type, () => listener(!!(document.fullscreenElement || document.webkitFullscreenElement))); }",
 )
 private external fun watchFullScreen(panel: Boolean, listener: (Boolean) -> Unit)
 

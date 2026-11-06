@@ -82,7 +82,7 @@ class HaCardUiModelsTest {
               summary = "12 kWh",
               accent = amber,
               points = listOf(1f, 2f),
-            )
+            ),
           ),
         chartType = HaStatisticsChartType.Bar,
         stacked = true,
@@ -148,7 +148,7 @@ class HaCardUiModelsTest {
             color = amber,
             remainPercent = 80,
             active = true,
-          )
+          ),
         )
         .toRemote()
     assertEquals("PLA", remote.slot.material.constantValueOrNull)
