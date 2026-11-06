@@ -34,3 +34,7 @@ jobs:
         with:
           category: integration
           comment: false
+          # Repository settings the catalog review (hacs/default) asks for, not an install from a
+          # link: a LICENSE file, and a description and topics set on GitHub. Drop this line
+          # before submitting to the catalog, which does not accept ignored checks.
+          ignore: license description topics
