@@ -432,7 +432,7 @@ jobs:
 
       - name: Attach assets to GitHub release
         if: github.event_name == 'push' || inputs.publish_release == true
-        uses: softprops/action-gh-release@v3.0.3
+        uses: softprops/action-gh-release@v3.0.4
         with:
           tag_name: ${{ env.TAG_NAME }}
           # The staged directory always contains the Apple assets; Android
