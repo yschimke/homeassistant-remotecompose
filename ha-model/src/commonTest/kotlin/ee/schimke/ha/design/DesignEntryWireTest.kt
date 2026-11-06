@@ -45,8 +45,19 @@ class DesignEntryWireTest {
     val entry = json.decodeFromString(DesignEntry.serializer(), old)
     assertNull(entry.designId)
     assertNull(entry.title)
+    assertNull(entry.fonts)
     // Unset, the new fields stay off the wire, so an old client reads exactly what it did.
-    assertFalse("designId" in json.encodeToString(DesignEntry.serializer(), entry))
+    val written = json.encodeToString(DesignEntry.serializer(), entry)
+    assertFalse("designId" in written)
+    assertFalse("fonts" in written)
+  }
+
+  @Test
+  fun aBitmapFontsEntryRoundTrips() {
+    val entry = DesignEntry(key, "00", 1, 1, fonts = DesignEntry.BITMAP_FONTS)
+    val text = json.encodeToString(DesignEntry.serializer(), entry)
+    assertTrue("\"fonts\":\"bitmap\"" in text)
+    assertEquals(entry, json.decodeFromString(DesignEntry.serializer(), text))
   }
 
   @Test

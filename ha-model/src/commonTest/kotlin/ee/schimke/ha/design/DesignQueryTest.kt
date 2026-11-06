@@ -12,6 +12,7 @@ class DesignQueryTest {
     theme: String = DesignKey.bakedTheme("Material3", dark = false),
     variant: String = DesignKey.DEFAULT_VARIANT,
     author: String = DesignEntry.BUILTIN_AUTHOR,
+    fonts: String? = null,
   ) =
     DesignEntry(
       key =
@@ -27,6 +28,7 @@ class DesignQueryTest {
       bytes = 1,
       slots = 1,
       author = author,
+      fonts = fonts,
     )
 
   @Test
@@ -50,6 +52,15 @@ class DesignQueryTest {
   }
 
   @Test
+  fun aFontsChoiceMatchesOnlyThatFormAndUnsetMatchesEither() {
+    val named = entry()
+    val bitmap = entry(fonts = DesignEntry.BITMAP_FONTS)
+    assertTrue(DesignQuery(fonts = DesignEntry.BITMAP_FONTS).matches(bitmap))
+    assertFalse(DesignQuery(fonts = DesignEntry.BITMAP_FONTS).matches(named))
+    assertTrue(DesignQuery().matches(named) && DesignQuery().matches(bitmap))
+  }
+
+  @Test
   fun parametersRoundTrip() {
     val query =
       DesignQuery(
@@ -57,6 +68,7 @@ class DesignQueryTest {
         style = "lcd",
         author = "github:a",
         surface = DesignSurface.MobileApp,
+        fonts = DesignEntry.BITMAP_FONTS,
       )
     val parameters = query.parameters().toMap()
     assertEquals(query, DesignQuery.of(parameters::get))
